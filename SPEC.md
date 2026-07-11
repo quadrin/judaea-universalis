@@ -1,0 +1,617 @@
+# JUDAEA UNIVERSALIS — Vertical Slice SPEC v1
+
+EU4-style grand strategy, Near East antiquity. This slice ships ONE bookmark — **The Great
+Revolt, 66 CE** — playable as **JUD (Judaea, hard)** or **ROM (Rome, moderate)**, with:
+province map (WebGL, EU4 "quasi-3D" look), 6 mapmodes, pausable daily tick + monthly economy,
+armies/battles/sieges, unrest & revolt as the flagship system, a scripted historical event
+chain (Josephus), and win/loss.
+
+This document is the AUTHORITATIVE contract. `main.js` (already written, read it) is the
+authoritative consumer of every cross-module API. If SPEC and main.js seem to disagree,
+main.js wins — code so that main.js works unmodified.
+
+---
+
+## 0. Hard rules for every module
+
+- Plain **ES modules**, browser-native, **zero dependencies**, no build step, no TypeScript
+  syntax. Served by `python3 -m http.server` from the repo root. Target latest Chrome.
+- **Write ONLY the files assigned to you.** Never touch files owned by other modules.
+- `js/sim/*` and `js/data/*` must be **DOM-free** (no `window`/`document`/canvas). They may
+  use the bus and rng.
+- Colors in data are `[r,g,b]` arrays, 0–255.
+- Provinces are referenced by **canonical name strings** in data/content and by **integer id**
+  (1..N, array index) in sim/render. `id = index in MAP_DATA.provinces + 1`. Id 0 = sea.
+- Every module must fail soft: unknown name → `console.warn` once, skip; never throw in the
+  render/tick loop.
+- Dates: `{y, m (1-12), d (1-30)}`. Every month has exactly **30 days**. Display real month
+  names. Start date 66-06-01 CE.
+
+## 1. File map & ownership
+
+| Owner agent | Files |
+|---|---|
+| (done) | `main.js`, `js/core/bus.js`, `js/core/rng.js`, `SPEC.md` |
+| defines | `js/data/defines.js` |
+| map-data | `js/data/map_data.js` |
+| renderer | `js/map/renderer.js`, `js/map/camera.js`, `js/map/geometry.js`, `js/map/mapmodes.js`, `js/map/overlay.js`, `js/map/labels.js` |
+| sim | `js/sim/init.js`, `js/sim/tick.js`, `js/sim/economy.js`, `js/sim/military.js`, `js/sim/unrest.js`, `js/sim/events.js`, `js/sim/ai.js` (internal split may vary; **public exports pinned below**) |
+| ui | `index.html`, `styles.css`, `js/ui/ui.js` (+ any extra `js/ui/*.js` it imports itself) |
+| content | `js/data/bookmark_66ce.js`, `js/data/events_66ce.js` |
+
+## 2. Map projection & constants
+
+Equirectangular, tuned distortion-free at ~32°N:
+
+```
+LON0=29.0  LON1=50.0  LAT0=25.5  LAT1=38.5
+MAP_W=2048 MAP_H=1496          // map units == province-ID texture pixels
+x = (lon - LON0) / (LON1 - LON0) * MAP_W
+y = (LAT1 - lat) / (LAT1 - LAT0) * MAP_H     // y=0 at TOP (north)
+```
+
+`MAP_DATA` exports these constants and `project(lon, lat) -> [x, y]`.
+`idArray` indexing: `idArray[y * MAP_W + x]`, row 0 = north.
+
+## 3. `js/data/defines.js` — export `const DEFINES`
+
+Pinned keys (values are the defines agent's to tune; other agents rely on the KEYS):
+
+```js
+DEFINES = {
+  SPEED_MS: {1:900, 2:450, 3:220, 4:100, 5:40},   // ms of real time per game day
+  DAYS_PER_MONTH: 30,
+  MONTH_NAMES: ['January',...,'December'],
+  TERRAINS: { coast, farmland, hills, mountains, desert, drylands, steppe, marsh, wasteland:
+    // each: {name, color:[r,g,b], moveCost:1..2.5, defBonus:0|1|2 (dice), attrition:0..5,
+    //         impassable?:true (wasteland only)}
+  },
+  GOODS: { grain, wine, olive_oil, dates, balsam, incense, purple_dye, glass, papyrus,
+           silver, salt, spices, timber, fish, livestock },
+    // each: {name, price (ducat-like "talents" per unit), color:[r,g,b]}
+  RELIGIONS: { judaism, samaritanism, hellenism, roman_cult, nabataean, zoroastrianism, egyptian },
+    // each: {name, color, group}   groups: 'judaic' | 'pagan' | 'iranic'
+    // judaism.name = 'Second Temple Judaism'
+  CULTURES: { judean, galilean, samaritan, idumean, nabataean, arab, aramean, phoenician,
+              greek, egyptian, roman, armenian, persian },
+    // each: {name, color, group}  groups: israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian
+  TAGS: {
+    ROM: {name:'Rome',            color:[168,36,36],  religion:'roman_cult', culture:'roman',  capital:'Antioch'},
+    JUD: {name:'Judaea',          color:[36,82,158],  religion:'judaism',    culture:'judean',  capital:'Jerusalem'},
+    PAR: {name:'Parthia',         color:[0,120,110],  religion:'zoroastrianism', culture:'persian', capital:'Seleucia-Ctesiphon'},
+    NAB: {name:'Nabataea',        color:[196,124,40], religion:'nabataean',  culture:'nabataean', capital:'Petra'},
+    ARM: {name:'Armenia',         color:[122,62,150], religion:'zoroastrianism', culture:'armenian', capital:'Tigranocerta'},
+    AGR: {name:'Kingdom of Agrippa II', color:[214,120,120], religion:'judaism', culture:'galilean', capital:'Caesarea Philippi'},
+    REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
+    WASTE:{name:'Wasteland',      color:[70,66,60]},
+    // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
+    //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
+    //   description:'one-liner for start screen / tooltips'
+  },
+  BASE: {  // balance constants, sim reads these — defines agent sets sane values
+    regSize:1000, regCost:{inf:10, cav:25}, maintPerReg:0.35,
+    moraleBase:3.0, moraleRecoveryPerMonth:0.6,
+    taxPerDevPerYear:1.0, prodMult:0.6,          // income scale
+    mpPerDev:250, mpRecoveryMonths:60,           // manpower pool scale
+    supportLimitBase:8, supportLimitPerDev:0.8,  // regiments supportable in province
+    fortGarrisonPerLevel:1000, siegePerFortLevel:? ,
+    unrestRevoltThreshold:5, revoltFireAt:100, rebelSizePerDev:0.4,
+    warExhaustionMax:20,
+    startTreasury:{...per tag via bookmark, keep 0 here}
+  },
+  UNREST: { heathen:3, sameGroupHeretic:1.5, wrongCultureGroup:1, occupied:3,
+            perWarExhaustion:0.25, perNegativeStability:1, perPositiveStability:-0.75 },
+}
+```
+
+## 4. `js/data/map_data.js` — export `const MAP_DATA`, `function validateMapData()`
+
+```js
+MAP_DATA = {
+  MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
+  provinces: [ ...see schema... ],      // id = index+1; TARGET 92-100 entries, HARD CAP 110
+  coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
+           lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
+  rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
+  heightPrimitives: [ ... MAX 24 ... ],
+  extraLinks: [ ['Salamis','Seleucia Pieria'], ['Paphos','Ptolemais'] ],  // strait/ferry adjacency, by name
+}
+```
+
+Province schema (static; sim copies/extends at runtime):
+
+```js
+{ name:'Jerusalem', lon:35.23, lat:31.78, weight:0.9,   // Voronoi weight: 0.7 small city .. 1.8 huge desert
+  terrain:'hills', good:'wine', religion:'judaism', culture:'judean',
+  dev:{tax:8, prod:6, mp:8}, owner:'JUD', fort:3,
+  holy:'temple_mount'|null, wonder:'temple'|null, impassable:false }
+```
+
+heightPrimitives (renderer consumes; ALL coords lon/lat):
+```js
+{type:'ridge', a:[lon,lat], b:[lon,lat], h:0.35..1.0, w:kmish-in-degrees(0.2..1.5)}
+{type:'dome',  c:[lon,lat], r:deg, h:...}
+{type:'basin', a:[lon,lat], b:[lon,lat], h:-0.2..-0.6, w:deg}   // Jordan rift / Dead Sea
+```
+Must include: Lebanon & Anti-Lebanon ridges, Mt Hermon dome, Judean-Samarian highlands ridge,
+Galilee dome, Carmel, Jordan rift basin (Galilee→Dead Sea→Arabah), Edomite plateau, Taurus arc
+(2-3 ridges along S Anatolia), Zagros (SE), Armenian highlands dome, Sinai domes, Hejaz edge.
+
+`validateMapData()` → array of warning strings (empty = ok). Must check: every seed lands
+inside a land polygon (point-in-polygon), seeds ≥ 6 map-units apart, every `owner` is a known
+tag, every terrain/good/religion/culture key exists in the pinned DEFINES key lists (hardcode
+the key lists locally to avoid importing defines), extraLinks names resolve.
+
+### Canonical province table (names are EXACT strings; content agent references them)
+
+Region · name (owner, terrain, good, religion/culture hints). Coordinates: use real historical
+locations. Owners at 1 June 66 CE:
+
+- **Judea (JUD):** Jerusalem (hills, fort 3, holy temple_mount, wonder temple, dev 8/6/8, judaism/judean), Jericho (drylands, balsam), Emmaus (hills), Lydda (farmland), Joppa (coast), Masada (desert, fort 3, salt), Engaddi (desert, balsam), Gadora (hills; Perea district, judaism/judean), Machaerus (desert, fort 2, salt), and in Galilee: Sepphoris (hills, judaism/galilean), Jotapata (hills, fort 2, olive_oil), Tiberias (coast(lake), fish), Tarichaea (coast(lake), fish), Gischala (hills, olive_oil). *(14 provinces)*
+- **Judea region under ROM:** Gaza (coast, incense), Ascalon (coast, wine), Azotus (coast), Jamnia (farmland, judaism), Hebron (hills, judaism), Adora (hills; Idumea, judaism/idumean), Sebaste (hills, hellenism/samaritan-mixed→hellenism/greek), Neapolis (hills, holy 'gerizim', samaritanism/samaritan), Antipatris (farmland), Caesarea Maritima (coast, dev 6/7/4, hellenism/greek), Dora (coast, purple_dye), Ptolemais (coast, glass), Scythopolis (farmland, grain, hellenism/greek), Pella, Gadara, Gerasa, Philadelphia (Decapolis: hills/drylands, hellenism/greek, wine/olive_oil/livestock).
+- **AGR:** Caesarea Philippi (hills), Batanea (farmland, grain), Gamala (hills, fort 2, judaism/galilean).
+- **Phoenicia (ROM):** Tyre (coast, purple_dye, dev 5/8/3), Sidon (coast, glass), Berytus (coast, timber), Byblos (coast, timber), Tripolis (coast), Aradus (coast, fish).
+- **Syria (ROM):** Damascus (drylands, dev 6/7/5), Chalcis (hills), Emesa (drylands), Apamea (farmland), Antioch (farmland, dev 9/10/6, fort 2, hellenism/greek), Seleucia Pieria (coast), Laodicea (coast, wine), Beroea (drylands), Cyrrhus (hills), Palmyra (desert, spices, dev 4/7/2, aramean), Zeugma (hills), Samosata (hills; Commagene), Tarsus (farmland, silver), Melitene (mountains), Iconium (steppe), Tyana (steppe), Pisidia (mountains), Attalia (coast).
+- **Egypt (ROM):** Pelusium (coast, salt), Rhinocolura (desert), Alexandria (coast, dev 10/12/6, fort 2, wonder 'library', hellenism/greek), Athribis (farmland, grain, egyptian), Leontopolis (farmland, grain, judaism/judean — Oniad temple district), Memphis (farmland, papyrus), Arsinoe (farmland, grain), Oxyrhynchus (farmland, papyrus), Thebes (drylands, grain), Myos Hormos (desert, spices — Red Sea port).
+- **Cyprus (ROM):** Salamis (coast, timber), Paphos (coast).
+- **Nabataea (NAB):** Petra (desert, incense, dev 4/8/3, fort 2, wonder 'petra'), Bostra (drylands, grain), Oboda (desert, incense), Aila (desert, spices), Hegra (desert, incense), Dumatha (desert, livestock), Medaba (drylands, livestock, nabataean but judaism-minority → religion nabataean).
+- **Parthia (PAR):** Edessa (hills; Osrhoene, aramean), Carrhae (drylands), Nisibis (drylands, judaism-minority → aramean/zoroastrianism your call, prefer zoroastrianism + aramean culture), Singara (drylands), Hatra (desert), Arbela (hills; Adiabene — judaism! royal converts, culture aramean), Seleucia-Ctesiphon (farmland, dev 8/9/6, fort 2), Babylon (farmland, dates), Nehardea (farmland, dates, judaism/judean — Babylonian diaspora), Charax (marsh, spices), Ecbatana (mountains), Dura-Europos (drylands, fort 1).
+- **Armenia (ARM):** Tigranocerta (mountains, fort 2), Sophene (mountains).
+- **Wasteland (WASTE, impassable):** Syrian Desert, Arabian Desert, Sinai Interior, Eastern Desert, Libyan Desert. Big weights (1.6-2.2).
+
+Dev guidance: metropolis 8-12 total-ish per component listed above; ordinary 3-5/3-5/2-4;
+desert towns 1-2. Unlisted attribute = your best historical judgment. You may ADD up to ~8
+filler provinces for map coverage (e.g. Upper Galilee interior, Auranitis, Cilicia Trachea)
+— but never rename canonical ones.
+
+## 5. Renderer package — `js/map/*` (one agent)
+
+### 5.1 `renderer.js` — `export async function initRenderer(canvas, MAP_DATA, DEFINES)`
+
+Returns:
+```js
+{ idArray,            // Uint8Array(MAP_W*MAP_H), province id per pixel, 0=sea, row 0 = north
+  provIdAt(mapX, mapY),          // clamped nearest-pixel lookup into idArray
+  setProvinceColors(primary, secondary, flags),
+      // Uint8Array((N+1)*4) RGBA ×2  +  Uint8Array(N+1) bitfield:
+      // bit0 = diagonal stripes of `secondary` over primary (occupation)
+      // bit1 = gray cross-hatch (impassable wasteland)
+  setMapmodeParams({relief=1, flat=0}),   // relief: terrain shading strength 0..1
+  setSelected(provId),                    // 0 = none; animated highlight
+  render(camera, timeMs),
+  resize() }
+```
+
+WebGL2, single fullscreen-quad main pass each frame + one-time generation passes:
+
+1. **Land mask** (CPU, offscreen 2D canvas at MAP_W×MAP_H): fill `coast.land` polygons white,
+   punch `coast.lakes` black → texture (LINEAR, mipmaps ON — mips reused for sea depth &
+   coast falloff). Also a **decor canvas**: rivers as stroked polylines (alpha), → texture.
+2. **Province-ID pass** (FBO, RGBA8, MAP_W×MAP_H, NEAREST): fragment shader loops seeds
+   (uniform `vec4 uSeeds[128]` = x,y,weight,unused + `uSeedCount`), warped weighted nearest:
+   `d = length(px + warp(px)*18.0 - seed.xy) / seed.z` where `warp` = 2-octave value-noise
+   fbm pair (same warp for all seeds — organic borders). Land-mask < 0.5 → id 0. Encode id
+   in R channel (id/255). Then `readPixels` → build `idArray` (handle GL y-flip: idArray row
+   0 must be NORTH).
+3. **Heightmap pass** (FBO RGBA8): height = coastFalloff (from land-mask mip sample) +
+   Σ primitives (uniform array, MAX 24: ridge = distance-to-segment gaussian; dome = radial;
+   basin = negative ridge) + 2-octave fbm detail scaled by local height. Encode 0..1 in R
+   (sea ≈ 0.05, plains ≈ 0.25).
+4. **Main pass** per frame: uniforms `uOffsetScale` (camera), `uTime`, `uZoom`, `uSelected`,
+   `uPaper` (parchment blend = smoothstep on zoom), `uRelief`. Samples: idTex (texelFetch),
+   heightTex, landMask (+mips), decorTex, and two `(N+1)×1` RGBA lookup textures (colorA/
+   colorB) + flags texture + owner-index texture (R = owner tag index, for border class).
+   - **Fill:** colorA over terrain-tinted relief; NW light `normalize(vec3(-0.5,-0.7,0.6))`,
+     normals from height gradient (offset samples).
+   - **Borders:** compare id to +1px x/y texels → province border (thin, dark 35%); if owner
+     index differs → country border (2px, darker). Border strength ↑ in paper mode.
+   - **Stripes/hatch** for flags bits (screen-space 45° stripes, 8px period).
+   - **Selected:** brighten fill + pulsing rim (uTime).
+   - **Sea:** deep→shallow gradient via land-mask high-LOD mip, faint animated noise; paper
+     mode → flat parchment-blue with darker coast line.
+   - **Rivers:** darken/tint where decor alpha > 0.
+   - **Paper mode:** desaturate & lift colors toward parchment `#e8dcc0`, kill relief except
+     faint hillshade, boost borders, add paper-grain noise (hash of map coords).
+- Canvas sized to container × devicePixelRatio. `UNPACK_FLIP_Y_WEBGL=false` everywhere;
+  handle orientation explicitly. NEAREST for id texture, LINEAR elsewhere. All shaders
+  `precision highp float;`. Guard `gl===null` with a visible error div.
+- Before first `setProvinceColors` call, render provinces in neutral tan so the start screen
+  backdrop already shows the map.
+
+### 5.2 `camera.js` — `export function createCamera(container, MAP_DATA)`
+
+```js
+{ x, y,                 // map coords at screen center
+  zoom,                 // screen px per map unit, clamp [0.35, 8], wheel-zoom to cursor
+  screenToMap(sx,sy)->[x,y], mapToScreen(x,y)->[sx,sy],
+  onClick(cb), onRightClick(cb),     // cb(mapX, mapY, sx, sy); click = <5px pointer travel;
+                                     // right-click must preventDefault contextmenu
+  centerOn(x,y,zoom?),               // smooth-ish (lerp over ~300ms ok, or instant)
+  update(dt), viewport:{w,h}, handleResize() }
+```
+Left-drag pans. Edge clamping: keep map roughly on screen. Attach listeners to `container`.
+
+### 5.3 `geometry.js` — `export function computeGeometry(idArray, MAP_DATA)`
+
+Single pass over idArray (compare right & down neighbors):
+```js
+{ neighbors,   // Array(N+1) of Set<int>, land adjacency + extraLinks merged (by name)
+  centroids,   // Array(N+1) of {x,y} (pixel-mass centroid, map coords)
+  areas,       // Int32Array(N+1) pixel counts
+  bbox }       // Array(N+1) of {x0,y0,x1,y1}
+```
+Ignore id 0. Wasteland provinces stay IN neighbors (sim filters impassable for pathing).
+
+### 5.4 `mapmodes.js` — `export function computeMapmodeColors(ctx, mode)`
+
+Returns `{primary, secondary, flags, params:{relief, flat}}` sized (N+1). Modes:
+- `political`: owner tag color; controller≠owner → secondary=controller color + stripe bit;
+  wasteland → hatch bit. relief 0.55.
+- `terrain`: DEFINES.TERRAINS color per province. relief 1.0.
+- `religion`: religion color. relief 0.35.
+- `culture`: culture color (group-tinted: mix culture color 70% with group-mate hue). relief 0.35.
+- `development`: total dev → 5-step green ramp (low #d8d2b0 → high #1e7a2e). relief 0.3.
+- `unrest`: 0 → quiet gray-green; ramp yellow→red at unrest 10+; provinces with
+  revoltProgress>0 pulse via secondary+stripe. relief 0.3.
+
+### 5.5 `overlay.js` — `export function createOverlay(canvas, geom, MAP_DATA, DEFINES)`
+
+```js
+{ draw(game, camera, timeMs), hitTestArmy(sx, sy, game, camera) -> armyId|null }
+```
+2D canvas, cleared each frame, sized like main canvas, `pointer-events:none` (CSS: ui agent).
+Draws (map→screen via camera): army chips (rounded rect in tag color, white regiment count
+"12k", tiny morale bar, gold ring if selected — read `game.ui.selectedArmy`), movement arrows
+(path polyline through centroids, arrowhead), battle icon (⚔ on white disc) where
+`game.battles` live, siege icon (tower glyph + progress arc) on besieged provinces, gold ✦ on
+wonder provinces when zoom > 1.5. Cull off-screen. Hit test = chip rects, topmost first.
+
+### 5.6 `labels.js` — `export function createLabels(el, MAP_DATA, geom)`
+
+`{ update(ctx, camera, mapmode) }` — ctx may be null pre-game (then clear). Absolutely
+positioned divs in `#labels-layer` (pointer-events:none). Zoom ≥ ~1.1: province names at
+centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: tag
+names (owner-weighted centroid over owned provinces, size ~ sqrt(total area), letter-spaced
+serif caps in darkened tag color). Recompute cheaply every call (N≈100); reuse divs.
+
+## 6. Sim package — `js/sim/*` (one agent; public API pinned, internals free)
+
+### 6.1 `init.js` exports
+
+```js
+export function initGame({DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed}) -> game
+export function makeCtx({game, DEFINES, MAP_DATA, geom, bus, bookmark, events}) -> ctx
+export function gameActions(ctx) -> actions
+export const simHelpers   // also attached as ctx.helpers
+```
+
+`ctx = { game, DEFINES, MAP_DATA, geom, bus, bookmark, events, rng, helpers,
+         prov(name)->province|null, provId(name)->id|0, byId(id)->province }`
+
+`initGame`: builds runtime provinces from MAP_DATA (owner=controller=static owner), tags from
+DEFINES.TAGS (skip WASTE; REB always alive), then calls `bookmark.setup(ctx)` — NOTE:
+initGame must construct a temp ctx internally or accept that main calls makeCtx first;
+IMPLEMENT: initGame builds game fully except bookmark.setup, and makeCtx runs
+`bookmark.setup(ctx)` exactly once (guard with `game.flags._setupDone`).
+
+### 6.2 Game state schema (exact)
+
+```js
+game = {
+  bookmarkId:'66ce', playerTag, over:false, result:null,
+  date:{y:66,m:6,d:1}, speed:2, paused:true,
+  tags: { [tag]: { tag, name, color, religion, culture, alive:true, ai:(tag!==playerTag),
+    treasury, income:0, expenses:0, manpower, maxManpower,
+    stability:0,            // -3..+3
+    legitimacy:50,          // 0..100
+    warExhaustion:0,        // 0..20
+    points:{gov:0, infl:0, mar:0},
+    ideas:{...from DEFINES.TAGS[tag].ideas},
+    modifiers:[ {id, name, months, effects:{}} ],   // months -1 = permanent
+    atWarWith:[], allies:[], opinion:{[tag]:0},     // -200..200
+    aiState:{} } },
+  provinces: [ null, { id, name, x, y, terrain, good, religion, culture,
+    dev:{tax,prod,mp}, owner, controller, autonomy:0.25, unrest:0, revoltProgress:0,
+    fort, garrison, maxGarrison, siege:null,   // {by:tag, progress:0-100, breach:0-3, days:0}
+    modifiers:[], holy, wonder, impassable } ],
+  armies: { [id]: { id, tag, name, prov, path:[], moveDaysLeft:0,
+    regiments:{inf, cav}, men, morale, maxMorale,
+    general:null|{name, fire:0-5, shock:0-5, maneuver:0-5},
+    inBattle:false, retreating:false } },
+  nextArmyId:1, nextEventInstance:1,
+  battles: [ {id, prov, atk:[armyIds], def:[armyIds], day:0, ...} ],
+  wars: [ {id, name, attackers:[], defenders:[], warscore:{}, started:{y,m,d}} ],
+  pendingEvents: [ {instanceId, eventId, forTag} ],
+  firedEvents: {}, flags: {}, rngSeed,
+  ui: { selectedProv:0, selectedArmy:null },   // sim never reads; ui/overlay share it
+}
+```
+
+### 6.3 `tick.js` — `export function tickDay(ctx)`
+
+Order: advance date → army movement (decrement moveDaysLeft; on arrival pop path; entering
+enemy-controlled province with no defender → start siege or auto-occupy if fort 0 after
+~10 days) → battles (daily round) → sieges (daily progress) → date-triggered events → if
+`d===1`: monthly block → emit `'day'` (and `'month'`).
+
+Monthly block: economy (income = Σ owned&controlled (tax·(1-autonomy)·taxPerDev/12 +
+good.price·prod·prodMult/12); expenses = maintenance; treasury can go negative → morale
+penalty scale) → manpower regen → reinforcements (drain manpower) → morale recovery →
+attrition (terrain attrition + over-supportLimit, worse in enemy territory) → unrest &
+revolt progression → rebel spawns → monthly triggered events → AI → war exhaustion drift →
+`bookmark.checkVictory(ctx)` → monarch points +(3..5 each)/month.
+
+**Battles** (internals yours; requirements): daily round, d10 + general shock (or fire on
+alternating 3-day phases if you like) + terrain defBonus for defender + river/fort skip;
+casualties & morale damage scale with enemy men & discipline; morale ≤ 0 → rout: loser
+retreats to nearest friendly-controlled province (path via BFS), 30% morale, `retreating`
+until arrival. Winner gets warscore. Stackwipe if no retreat option. Multiple armies same
+side stack. `discipline = ideas.disciplineMult × modifier effects`.
+
+**Sieges**: attacker army ≥ garrison/1000 regiments idles in hostile fort province →
+`siege={by,...}`; progress/day = f(besieger regiments vs fort level, breach from monthly
+d14-style roll; JUD ideas.fortDefense? use ideas keys present); at 100 → controller flips to
+besieger (`helpers.changeController`), garrison resets to 20%, emit `'siegeEnd'`. Fort 0
+provinces: occupied after ~10 days unopposed presence. Besieged Jerusalem with
+`flags.faminePenalty` (set by events) → garrison decays faster.
+
+**Unrest** (flagship): per §3 UNREST keys: religion (heathen/heretic by group), culture
+group, occupied-by-enemy, war exhaustion, stability (sign-dependent), modifiers, garrison
+> 0 → −1. `unrest>threshold` → `revoltProgress += (unrest-threshold)·2` monthly, else decay
+−10. At `revoltFireAt`: spawn rebels — **judaism-religion province → army for JUD** (if JUD
+alive & at war with owner; else REB) sized `dev.mp·rebelSizePerDev` regiments; province
+controller flips to spawner ONLY if no garrison. Emit `'notify'`.
+
+**Pathfinding**: BFS over geom.neighbors excluding impassable; enemy tags may not enter
+provinces of tags they're not at war with (allies of war-partners ok; keep simple:
+at-war-with-owner OR owner==self OR owner shares your war side). moveDaysLeft per hop =
+`4 + dist/24 · terrain.moveCost(dest)` days-ish (tune).
+
+**AI** (monthly): per AI tag at war: gather idle armies into stacks at rally points
+(`bookmark.aiHints[tag].rally` names), target = nearest enemy-controlled province weighted
+by dev & fort (prefer low fort early), path & go; if adjacent enemy stack > 1.4× strength →
+retreat toward nearest own fort. Recruit inf up to `aiHints.targetRegiments` while treasury
+> 50. Respect tag modifier `aiPassive` (armies hold, no new offensives). REB armies: attack
+nearest owner-controlled province, else siege in place. Non-warring AI tags idle.
+
+### 6.4 `simHelpers` (content agent's toolkit — signatures FROZEN)
+
+```js
+helpers.spawnArmy(ctx, tag, provName, {inf, cav=0, name, general:{name,fire,shock,maneuver}|null}) -> armyId
+helpers.removeArmy(ctx, armyId)
+helpers.changeOwner(ctx, provName, tag, {alsoController=true})
+helpers.changeController(ctx, provName, tag)
+helpers.addProvinceModifier(ctx, provName, {id, name, months, effects:{unrest, taxMult, prodMult, supplyMult}})
+helpers.addTagModifier(ctx, tag, {id, name, months, effects:{disciplineMult, moraleMult, unrestAll,
+    incomeMult, manpowerMult, reinforceMult, siegeBonus, aiPassive}})
+helpers.removeModifier(ctx, scopeTagOrProvName, id)
+helpers.adjust(ctx, tag, {treasury, manpower, stability, legitimacy, warExhaustion, gov, infl, mar})  // deltas, clamped
+helpers.declareWar(ctx, atk, def, name)
+helpers.setFlag(ctx, key, val) / helpers.getFlag(ctx, key)
+helpers.notify(ctx, {title, text, type:'info'|'war'|'good'|'bad', provName})
+helpers.endGame(ctx, {result:'win'|'loss', title, text, score})
+helpers.killGeneral(ctx, tag, generalName)          // removes general from any army
+helpers.armiesOf(ctx, tag) -> [army]
+helpers.controls(ctx, tag, provName) -> bool
+helpers.countControlled(ctx, tag, {religion}) -> int   // provinces controlled, optional religion filter
+```
+
+### 6.5 Event engine (`events.js` internals; event OBJECT schema frozen)
+
+```js
+{ id:'ev_beth_horon', title:'The Road from Beth Horon', desc:'...(2-6 sentences, sourced tone)',
+  forTag:'JUD'|'ROM'|'player'|'both',   // who sees popup; 'both' -> player sees, AI auto-picks
+  date:{y,m},                // fire on 1st of that month, OR:
+  trigger(ctx)->bool,        // checked monthly (after date events); use with `chance`
+  chance:0.5,                // optional monthly probability gate when trigger true
+  once:true,                 // default true
+  major:true,                // non-player events still toast the player
+  aiOption:0 | (ctx)=>idx,
+  options:[ {label:'...', tooltip:'...', effects(ctx){...}} ]  // 1-3 options
+}
+```
+Firing: push to `game.pendingEvents`; if `forTag` is player (or 'both'/'player') → pause game,
+emit `'event'` with `{instanceId, event, forTag}`; AI events apply `aiOption` silently (toast
+if major). `actions.chooseEventOption(instanceId, idx)` applies effects, removes pending,
+emits `'eventResolved'`. Queue multiple; UI shows one modal at a time (ui's job).
+
+### 6.6 `gameActions(ctx)` (frozen)
+
+```js
+{ setSpeed(n), togglePause(), setMapmode? NO (ui-local),
+  recruit(provId, type),            // 'inf'|'cav'; player-controlled&owned only; cost from BASE
+  moveArmy(armyId, provId),         // BFS path; ignore invalid silently (toast why via notify)
+  mergeArmies(fromId, intoId),
+  chooseEventOption(instanceId, idx),
+  requestParthianAid(),             // JUD only: costs 50 infl; opinion-scaled chance → subsidy/manpower or PAR joins later via event flag 'parthianSympathy'
+  explainUnrest(provId) -> [{label, value}],
+  explainIncome(tag) -> [{label, value}] }
+```
+
+## 7. `js/core/bus.js` (done) — events catalog
+
+`day {date}`, `month {date}`, `mapclick {mapX,mapY,sx,sy,provId,armyId}`, `maprightclick
+{...same minus armyId}`, `select provId|0`, `selectArmy armyId|null`, `mapmode str`,
+`notify {title,text,type,provName?}`, `event {instanceId,event,forTag}`, `eventResolved`,
+`battleStart/battleEnd {prov, winnerTag?}`, `siegeStart/siegeEnd {provId, by}`,
+`provinceOwner {provId,from,to}`, `provinceController {provId,from,to}`, `war {...}`,
+`speed n`, `pause bool`, `gameover {result,title,text,score}`.
+
+Emitters: sim emits game-state events; main emits mapclick/maprightclick; ui emits
+mapmode/select/selectArmy and calls actions.
+
+## 8. UI package — `index.html`, `styles.css`, `js/ui/ui.js` (one agent)
+
+### 8.1 DOM contract (index.html EXACT skeleton — main.js getElementById's these)
+
+```html
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Judaea Universalis — The Great Revolt</title>
+<link rel="stylesheet" href="styles.css"></head>
+<body>
+ <div id="app">
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+    <div id="labels-layer"></div>
+  </div>
+  <div id="ui-root">
+    <div id="topbar"></div>
+    <div id="province-panel" class="hidden"></div>
+    <div id="outliner"></div>
+    <div id="mapmode-bar"></div>
+    <div id="toast-container"></div>
+    <div id="event-modal" class="hidden"></div>
+    <div id="gameover-modal" class="hidden"></div>
+    <div id="tooltip" class="hidden"></div>
+    <div id="start-screen"><div class="loading">Loading the Eastern Mediterranean…</div></div>
+  </div>
+ </div>
+ <script type="module" src="main.js"></script>
+</body></html>
+```
+
+CSS essentials: `#map-container` fills viewport; `#overlay-canvas`, `#labels-layer`
+**pointer-events:none**; `#ui-root` children positioned absolutely & pointer-events:auto only
+on panels; `.hidden{display:none}`.
+
+### 8.2 `ui.js` — `export function initUI(staticCtx)` where
+`staticCtx = {DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels}`
+
+Returns `{ showStartScreen(bookmark, onPick), bindGame(ctx, actions) }`.
+
+- **Start screen:** title, bookmark blurb, two nation cards (from `bookmark.playableTags`:
+  tag, blurb, difficulty) → `onPick(tag)`, hide screen.
+- **bindGame** wires everything: topbar (player flag/name; treasury, income tooltip via
+  actions.explainIncome; manpower; stability; legitimacy; gov/infl/mar points; date; pause
+  + speed 1-5 buttons; update on `'day'`), mapmode-bar (6 buttons → emit `'mapmode'`),
+  province panel (opens on `'mapclick'` with provId & no armyId: name, owner/controller
+  flags, terrain, dev, religion, culture, good, unrest with `explainUnrest` tooltip, fort +
+  garrison bar, siege progress, revolt progress bar, recruit inf/cav buttons w/ costs —
+  disabled unless player owns & controls), outliner (right: player armies (name, men,
+  morale bar; click → select + camera.centerOn), sieges, battles, wars with warscore),
+  event modal (parchment card: title, body, option buttons with tooltips → 
+  `actions.chooseEventOption`; show one at a time, drain `game.pendingEvents` for player),
+  toasts (from `'notify'`, click → centerOn if provName; auto-fade 6s; color by type),
+  gameover modal (`'gameover'`: big verdict, score, "Continue observing" unhides), tooltip
+  system (elements with `data-tt` attr; follow mouse).
+- **Selection & orders:** ui owns selection state → writes `game.ui.selectedProv/selectedArmy`,
+  emits `'select'`/`'selectArmy'`. `'mapclick'` with armyId → select army (own armies only
+  selectable). `'maprightclick'` with an army selected → `actions.moveArmy`. Esc: close
+  panel/deselect. Space: togglePause. Keys 1-5: speed. Clicking sea (provId 0) deselects.
+- **Keyboard listener** on window; ignore when event modal open (except Enter = option 0? no
+  — keep it simple, buttons only).
+
+### 8.3 Look & feel
+
+EU4-inspired antiquity skin, pure CSS: near-black wood panels (#1d1710 → #2a2118 gradients),
+parchment texture cards (#e8dcc0, subtle inset shadows), gold trim (#c9a227 1px borders +
+corner accents), serif display font stack (`'Iowan Old Style','Palatino Linotype',Georgia,serif`),
+small-caps headers, unicode glyphs for icons (🪙 ⚔ 🛡 ▣ ☧ etc. sparingly, tasteful). Buttons:
+beveled, hover glow. Panels ~280-340px wide. Toasts top-right below topbar. It should look
+striking, not like a bootstrap demo. Dark scrollbars. No external assets/fonts.
+
+## 9. Content package — `js/data/bookmark_66ce.js`, `js/data/events_66ce.js` (one agent)
+
+### 9.1 `BOOKMARK_66` export
+
+```js
+{ id:'66ce', name:'The Great Revolt', startDate:{y:66,m:6,d:1},
+  blurb:'2-3 sentence scene-setter',
+  playableTags:[ {tag:'JUD', difficulty:'Hard', blurb:'...'},
+                 {tag:'ROM', difficulty:'Moderate', blurb:'...'} ],
+  setup(ctx),          // treasuries, manpower, stability, opinions, wars (ROM vs JUD already at war),
+                       // starting armies+generals, starting modifiers (e.g. JUD 'Religious Fervor'
+                       // moraleMult 1.15 / 36 months; ROM 'Distant Priorities' — small aiPassive
+                       // window until Cestius event), Temple treasury lump sum to JUD
+  aiHints:{ ROM:{rally:['Antioch','Caesarea Maritima'], targetRegiments:45},
+            JUD:{rally:['Jerusalem','Jotapata'], targetRegiments:28}, ... },
+  checkVictory(ctx),   // monthly; use helpers.endGame. Rules below.
+}
+```
+
+Victory (implement exactly):
+- **JUD player:** WIN if on 1 Jan 71 JUD controls Jerusalem AND ≥6 judaism-religion provinces
+  ("A Negotiated Peace" — Vespasian, secure on his throne, accepts a client Judaea). Early
+  WIN if warscore vs ROM ≥ 50 before that. LOSS when JUD controls 0 provinces, or Jerusalem
+  lost AND total JUD army men < 3000. Masada-epilogue flavor on the way down.
+- **ROM player:** WIN when JUD controls 0 provinces (score by date: before 70 = triumph).
+  LOSS if on 1 Jan 74 JUD still controls Jerusalem.
+- Both: game continues after win for observation (`game.over=true` stops victory checks).
+
+Starting armies (guidance, tune freely): JUD ~15k Jerusalem (Eleazar ben Simon 2/3/1),
+~8k Galilee (Josephus ben Matthias 1/2/4 at Jotapata), ~4k Masada (Menahem? via event),
+militia bits. ROM: Cestius Gallus (1/1/1) ~18k at Antioch, garrisons Caesarea/Scythopolis
+~4k, Agrippa II small force (AGR ally of ROM). PAR/NAB/ARM at peace, armies token.
+
+### 9.2 `EVENTS_66` — ~20-26 events, Josephus-grounded (BJ 2-7). Required spine:
+
+1. `ev_sacrifices_cease` 66-06 JUD: Eleazar halts the imperial sacrifice — choice: embrace
+   (legitimacy+, ROM opinion−−, fervor modifier) / hesitate (stability−).
+2. `ev_menahem` 66-07 JUD: Menahem seizes Masada armory, struts in royal robes — arm the
+   Sicarii (spawn 4k Masada + unrest Jerusalem) / strike him down (Menahem dies, Sicarii
+   sulk to Masada, unrest−).
+3. `ev_greek_city_massacres` 66-08 both/major: Caesarea & the Greek cities — unrest +
+   province modifiers in mixed-religion provinces, both sides' warExhaustion+.
+4. `ev_cestius_marches` 66-10 ROM: Cestius' AI unleashed (remove ROM aiPassive; if ROM is
+   AI, force-path his stack toward Jerusalem via helpers — spawn reinforcements at Ptolemais).
+5. `ev_beth_horon` trigger: Cestius' army retreats from Judea hills / takes 40% casualties
+   near Jerusalem before 67 — JUD: legions ambushed at Beth Horon: ROM army −8k men, JUD
+   +mar points, +legitimacy, captured engines (+siegeBonus modifier 24mo), major.
+6. `ev_organizing_the_revolt` 66-12 JUD: appoint regional commanders — Josephus fortifies
+   Galilee (+1 fort Jotapata/Gischala/Tarichaea, via province modifier or direct fort+1) OR
+   concentrate on Jerusalem (+garrison, Galilee unrest+).
+7. `ev_vespasian_arrives` 67-02 both/major: Nero sends Vespasian — spawn ~35k at Ptolemais
+   + 15k (Titus) at Caesarea, generals Vespasian 5/5/4, Titus 4/5/5; remove any ROM passivity.
+8. `ev_jotapata_falls` trigger (ROM controls Jotapata): Josephus surrenders & prophesies —
+   killGeneral Josephus; ROM choice: spare him (flavor, +infl) / execute (−legitimacy? inverse).
+9. `ev_gischala_falls` trigger (ROM controls Gischala): John of Gischala flees to Jerusalem
+   — Jerusalem unrest+3 modifier 'Zealot Coup', JUD stability−1, spawn 2k Jerusalem (John 2/3/2).
+10. `ev_zealot_coup` 68-02 JUD (if Jerusalem JUD): Zealots seize the Temple, Idumeans at the
+    gates — admit Idumeans (spawn 5k, unrest+, stability−) / resist (civil strife: Jerusalem
+    garrison −30%).
+11. `ev_nero_dies` 68-06 both/major: Nero falls; empire trembles.
+12. `ev_year_of_four_emperors` 69-01 both/major: ROM gets aiPassive + reinforceMult 0.5 for
+    12 months ("The legions look west"); JUD breathing room — the alt-history window.
+13. `ev_simon_bar_giora` 69-04 JUD: admit Simon (spawn 6k Jerusalem, Simon 3/4/2, unrest+2
+    'Faction Strife' modifier) / bar the gates (stability−1 but no strife).
+14. `ev_vespasian_emperor` 69-07 both/major: Vespasian proclaimed; Titus takes command —
+    ROM stability+, remove passivity, Titus becomes lead general if not present.
+15. `ev_famine_in_jerusalem` trigger (Jerusalem under siege ≥ 60 days): famine — garrison
+    decay flag, unrest+, grim Josephus-toned text.
+16. `ev_temple_burns` trigger (ROM takes control of Jerusalem): 9th of Av — the Temple in
+    flames. JUD legitimacy −40, all-province unrest event for judaism provinces, JUD
+    'Broken Covenant' moraleMult 0.85; ROM +score. Major, both. (Rabbinic-future flavor
+    line: "at Yavneh, the sages begin again.")
+17. `ev_masada_epilogue` trigger (JUD controls only Masada): the Sicarii hold the rock —
+    flavor; sets up the loss with dignity.
+18. `ev_parthian_posture` trigger (flag parthianSympathy && JUD warscore ≥ 25): PAR masses
+    on the Euphrates — ROM must garrison east: ROM 'Eastern Anxiety' aiPassive 6mo OR PAR
+    declares war (chance) — the big alt-history swing.
+19. `ev_adiabene_convoy` 67-? JUD flavor: Queen Helena's house sends grain & silver
+    (+treasury, +manpower).
+20. `ev_negotiated_peace` — fired by checkVictory on JUD win date (flavor text for the win).
+Plus 3-6 more flavor events (diaspora prayers, Sepphoris opens its gates to Rome — flips
+Sepphoris to ROM control 67-01 if ROM army within 2 hops, Nabataean archers join Rome,
+Tarichaea lake fight, coin minting "Year One of the Freedom of Zion" +legitimacy).
+
+Tone: grounded, specific, quotable — Josephus as source; no caricature. Dates approximate to
+history. Effects only via `helpers.*` and direct reads of `ctx.game`.
+
+## 10. Boot sequence (see main.js — already written)
+
+`initRenderer` → `computeGeometry` → `createCamera/Overlay/Labels` → `initUI` →
+`showStartScreen` → on pick: `initGame` → `makeCtx` (runs bookmark.setup) → `gameActions` →
+`bindGame` → rAF loop: camera.update → sim ticks by accumulator → mapmode colors on dirty →
+renderer.render → overlay.draw → labels.update.
+
+## 11. Definition of done (every agent)
+
+- Files parse as ES modules (mentally lint; no stray TS types, no JSX, matched braces).
+- Exports EXACTLY as pinned; no extra cross-module imports beyond: defines←nothing,
+  map_data←nothing, map/*←(bus? no — pure), sim←core+data schemas via ctx args,
+  ui←bus only via staticCtx, content←nothing (uses ctx.helpers at runtime).
+- No console spam per-frame; warn once patterns.
+- Self-review pass before finishing: re-read your files checking every SPEC-pinned
+  signature; state in your final report any deviation.

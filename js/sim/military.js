@@ -1,0 +1,761 @@
+// Judaea Universalis — military: armies, movement, battles, sieges, wars.
+// DOM-free leaf module: imports nothing from other sim files (they import us).
+
+const _warned = new Set();
+function warnOnce(key, ...args) {
+  if (_warned.has(key)) return;
+  _warned.add(key);
+  console.warn('[sim/military]', ...args);
+}
+
+export function num(v, d = 0) { return Number.isFinite(v) ? v : d; }
+export function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+export function B(ctx, key, fallback) {
+  const base = ctx && ctx.DEFINES && ctx.DEFINES.BASE;
+  const v = base ? base[key] : undefined;
+  return Number.isFinite(v) ? v : fallback;
+}
+export function devTotal(p) {
+  if (!p || !p.dev) return 0;
+  return num(p.dev.tax) + num(p.dev.prod) + num(p.dev.mp);
+}
+
+// ---------------------------------------------------------------- modifiers
+export function resolveTagMult(ctx, tag, key) {
+  const t = ctx.game.tags[tag];
+  if (!t) return 1;
+  let m = num(t.ideas && t.ideas[key], 1);
+  if (!(m > 0)) m = 1;
+  for (const mod of t.modifiers || []) {
+    const e = mod && mod.effects ? mod.effects[key] : undefined;
+    if (Number.isFinite(e) && e > 0) m *= e;
+  }
+  return m;
+}
+export function resolveTagAdd(ctx, tag, key) {
+  const t = ctx.game.tags[tag];
+  if (!t) return 0;
+  let s = num(t.ideas && t.ideas[key], 0);
+  for (const mod of t.modifiers || []) {
+    const e = mod && mod.effects ? mod.effects[key] : undefined;
+    if (Number.isFinite(e)) s += e;
+  }
+  return s;
+}
+export function disciplineOf(ctx, tag) {
+  return clamp(resolveTagMult(ctx, tag, 'disciplineMult'), 0.5, 2);
+}
+export function maxMoraleOf(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  let m = B(ctx, 'moraleBase', 3.0) * resolveTagMult(ctx, tag, 'moraleMult');
+  if (t && num(t.treasury) < 0) m *= 0.9; // indebted crown, wavering men
+  return clamp(m, 0.5, 8);
+}
+
+// ---------------------------------------------------------------- queries
+export function armiesOf(ctx, tag) {
+  const out = [];
+  for (const id in ctx.game.armies) {
+    const a = ctx.game.armies[id];
+    if (a && a.tag === tag) out.push(a);
+  }
+  return out;
+}
+export function armiesInProv(ctx, provId) {
+  const out = [];
+  for (const id in ctx.game.armies) {
+    const a = ctx.game.armies[id];
+    if (a && a.prov === provId) out.push(a);
+  }
+  return out;
+}
+export function regCount(a) {
+  if (!a || !a.regiments) return 0;
+  return num(a.regiments.inf) + num(a.regiments.cav);
+}
+
+// ---------------------------------------------------------------- diplomacy
+export function isHostile(ctx, a, b) {
+  if (!a || !b || a === b) return false;
+  if (a === 'REB' || b === 'REB') return true;
+  const t = ctx.game.tags[a];
+  return !!(t && t.atWarWith && t.atWarWith.indexOf(b) >= 0);
+}
+export function sameSide(ctx, a, b) {
+  if (a === b) return true;
+  if (a === 'REB' || b === 'REB') return false;
+  const ta = ctx.game.tags[a], tb = ctx.game.tags[b];
+  if (!ta || !tb) return false;
+  if ((ta.allies && ta.allies.indexOf(b) >= 0) || (tb.allies && tb.allies.indexOf(a) >= 0)) return true;
+  for (const w of ctx.game.wars) {
+    if ((w.attackers.indexOf(a) >= 0 && w.attackers.indexOf(b) >= 0) ||
+        (w.defenders.indexOf(a) >= 0 && w.defenders.indexOf(b) >= 0)) return true;
+  }
+  return false;
+}
+export function canEnter(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  if (!p || p.impassable) return false;
+  if (tag === 'REB') return true;
+  if (p.owner === tag) return true;
+  if (isHostile(ctx, tag, p.owner)) return true;
+  if (sameSide(ctx, tag, p.owner)) return true;
+  return false;
+}
+
+// ---------------------------------------------------------------- pathfinding
+function bfs(ctx, fromId, pass, isGoal, maxDepth) {
+  const nbs = ctx.geom && ctx.geom.neighbors;
+  if (!nbs || !fromId) return null;
+  const prev = new Map();
+  prev.set(fromId, 0);
+  let frontier = [fromId];
+  let depth = 0;
+  while (frontier.length && depth < (maxDepth || 64)) {
+    depth++;
+    const next = [];
+    for (const cur of frontier) {
+      const set = nbs[cur];
+      if (!set) continue;
+      for (const nb of set) {
+        if (prev.has(nb) || !pass(nb)) continue;
+        prev.set(nb, cur);
+        if (isGoal(nb)) {
+          const path = [nb];
+          let at = cur;
+          while (at !== fromId && at !== 0) { path.unshift(at); at = prev.get(at); }
+          return path;
+        }
+        next.push(nb);
+      }
+    }
+    frontier = next;
+  }
+  return null;
+}
+export function bfsDistances(ctx, fromId, pass, maxDepth) {
+  const dist = new Map();
+  const nbs = ctx.geom && ctx.geom.neighbors;
+  if (!nbs || !fromId) return dist;
+  dist.set(fromId, 0);
+  let frontier = [fromId];
+  let d = 0;
+  while (frontier.length && d < (maxDepth || 32)) {
+    d++;
+    const next = [];
+    for (const cur of frontier) {
+      const set = nbs[cur];
+      if (!set) continue;
+      for (const nb of set) {
+        if (dist.has(nb) || !pass(nb)) continue;
+        dist.set(nb, d);
+        next.push(nb);
+      }
+    }
+    frontier = next;
+  }
+  return dist;
+}
+export function findPath(ctx, tag, fromId, toId) {
+  if (!fromId || !toId) return null;
+  if (fromId === toId) return [];
+  if (!canEnter(ctx, tag, toId)) return null;
+  return bfs(ctx, fromId, (id) => canEnter(ctx, tag, id), (id) => id === toId, 64);
+}
+export function hopDays(ctx, fromId, destId) {
+  const cs = ctx.geom && ctx.geom.centroids;
+  const a = cs && cs[fromId], b = cs && cs[destId];
+  let dist = 60;
+  if (a && b && Number.isFinite(a.x) && Number.isFinite(b.x)) {
+    dist = Math.hypot(b.x - a.x, b.y - a.y);
+  }
+  const p = ctx.byId(destId);
+  const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+  const mc = terr ? num(terr.moveCost, 1.2) : 1.2;
+  return clamp(Math.round((4 + dist / 24) * mc), 3, 40);
+}
+export function issueMove(ctx, army, targetId) {
+  if (!army || army.inBattle) return false;
+  if (army.prov === targetId) { army.path = []; army.moveDaysLeft = 0; return true; }
+  const path = findPath(ctx, army.tag, army.prov, targetId);
+  if (!path || !path.length) return false;
+  army.path = path;
+  army.moveDaysLeft = 0; // first leg cost set on next day's tick
+  army.retreating = false;
+  return true;
+}
+
+// ---------------------------------------------------------------- spawn/remove
+export function spawnArmy(ctx, tag, provName, opts) {
+  const g = ctx.game;
+  const o = opts || {};
+  const pid = ctx.provId(provName);
+  if (!pid) { warnOnce('spawnp:' + provName, 'spawnArmy: unknown province', provName); return 0; }
+  if (!g.tags[tag]) { warnOnce('spawnt:' + tag, 'spawnArmy: unknown tag', tag); return 0; }
+  let inf = Math.max(0, Math.round(num(o.inf, 0)));
+  const cav = Math.max(0, Math.round(num(o.cav, 0)));
+  if (inf + cav <= 0) inf = 1;
+  const regSize = B(ctx, 'regSize', 1000);
+  const id = g.nextArmyId++;
+  const mm = maxMoraleOf(ctx, tag);
+  const gen = o.general ? {
+    name: String(o.general.name || 'General'),
+    fire: clamp(Math.round(num(o.general.fire, 0)), 0, 5),
+    shock: clamp(Math.round(num(o.general.shock, 0)), 0, 5),
+    maneuver: clamp(Math.round(num(o.general.maneuver, 0)), 0, 5),
+  } : null;
+  const army = {
+    id, tag,
+    name: o.name || ((g.tags[tag].name || tag) + ' Army'),
+    prov: pid, path: [], moveDaysLeft: 0,
+    regiments: { inf, cav },
+    men: (inf + cav) * regSize,
+    morale: mm, maxMorale: mm,
+    general: gen,
+    inBattle: false, retreating: false,
+  };
+  g.armies[id] = army;
+  engageIfNeeded(ctx, army);
+  return id;
+}
+export function removeArmy(ctx, armyId) {
+  const g = ctx.game;
+  const a = g.armies[armyId];
+  if (!a) return;
+  delete g.armies[armyId];
+  if (g.ui && g.ui.selectedArmy === armyId) g.ui.selectedArmy = null;
+  for (const b of g.battles.slice()) {
+    let i = b.atk.indexOf(a.id);
+    if (i >= 0) b.atk.splice(i, 1);
+    i = b.def.indexOf(a.id);
+    if (i >= 0) b.def.splice(i, 1);
+    if (!b.atk.length || !b.def.length) {
+      endBattle(ctx, b, b.atk.length ? 'atk' : 'def');
+    }
+  }
+}
+
+// ---------------------------------------------------------------- battles
+function battleSideArmies(ctx, b, key) {
+  const out = [];
+  for (const id of b[key]) {
+    const a = ctx.game.armies[id];
+    if (a && a.men > 0) out.push(a);
+  }
+  return out;
+}
+function startBattle(ctx, provId, atkArmies, defArmies) {
+  const g = ctx.game;
+  g.flags._nextBattleId = num(g.flags._nextBattleId, 0) + 1;
+  const b = {
+    id: 'b' + g.flags._nextBattleId, prov: provId,
+    atk: atkArmies.map((a) => a.id), def: defArmies.map((a) => a.id), day: 0,
+  };
+  for (const a of atkArmies) a.inBattle = true;
+  for (const a of defArmies) a.inBattle = true;
+  g.battles.push(b);
+  ctx.bus.emit('battleStart', { prov: provId });
+}
+function endBattle(ctx, b, winKey) {
+  const g = ctx.game;
+  const i = g.battles.indexOf(b);
+  if (i >= 0) g.battles.splice(i, 1);
+  const winners = battleSideArmies(ctx, b, winKey);
+  for (const a of winners) a.inBattle = false;
+  const winnerTag = winners.length ? winners[0].tag : null;
+  ctx.bus.emit('battleEnd', { prov: b.prov, winnerTag });
+  return winnerTag;
+}
+export function warBetween(ctx, a, b) {
+  for (const w of ctx.game.wars) {
+    const aA = w.attackers.indexOf(a) >= 0, aD = w.defenders.indexOf(a) >= 0;
+    const bA = w.attackers.indexOf(b) >= 0, bD = w.defenders.indexOf(b) >= 0;
+    if ((aA && bD) || (aD && bA)) return w;
+  }
+  return null;
+}
+function awardBattleScore(ctx, winnerTag, loserTag) {
+  const w = warBetween(ctx, winnerTag, loserTag);
+  if (!w) return;
+  if (!w._bs) w._bs = { att: 0, def: 0 };
+  const key = w.attackers.indexOf(winnerTag) >= 0 ? 'att' : 'def';
+  w._bs[key] = Math.min(40, num(w._bs[key]) + 2);
+}
+export function addWarExhaustion(ctx, tag, amt) {
+  const t = ctx.game.tags[tag];
+  if (!t) return;
+  t.warExhaustion = clamp(num(t.warExhaustion) + amt, 0, B(ctx, 'warExhaustionMax', 20));
+}
+export function engageIfNeeded(ctx, army) {
+  try {
+    const g = ctx.game;
+    if (!army || !g.armies[army.id] || army.retreating) return;
+    const pid = army.prov;
+    let b = null;
+    for (const bb of g.battles) if (bb.prov === pid) { b = bb; break; }
+    if (b) {
+      if (b.atk.indexOf(army.id) >= 0 || b.def.indexOf(army.id) >= 0) return;
+      const defTags = battleSideArmies(ctx, b, 'def').map((a) => a.tag);
+      const atkTags = battleSideArmies(ctx, b, 'atk').map((a) => a.tag);
+      if (defTags.some((t) => isHostile(ctx, army.tag, t))) { b.atk.push(army.id); army.inBattle = true; }
+      else if (atkTags.some((t) => isHostile(ctx, army.tag, t))) { b.def.push(army.id); army.inBattle = true; }
+      return;
+    }
+    const here = armiesInProv(ctx, pid);
+    const hostiles = here.filter((o) => o.id !== army.id && !o.retreating && o.men > 0 && isHostile(ctx, army.tag, o.tag));
+    if (hostiles.length) {
+      const friends = here.filter((o) => !o.retreating && !o.inBattle && o.men > 0 &&
+        (o.id === army.id || sameSide(ctx, army.tag, o.tag)));
+      startBattle(ctx, pid, friends.length ? friends : [army], hostiles);
+      return;
+    }
+    const p = ctx.byId(pid);
+    if (p && isHostile(ctx, army.tag, p.controller)) ensureSiege(ctx, p, army.tag);
+  } catch (e) {
+    warnOnce('engage', 'engageIfNeeded failed', e);
+  }
+}
+function casualtiesInflicted(X, Y, rollX, rollY) {
+  if (Y.men <= 0 || X.men <= 0) return 0;
+  const edge = Math.max(0, rollX - rollY);
+  const cas = X.men * 0.010 * (1 + 0.12 * edge) * (X.disc / Math.max(0.5, Y.disc));
+  return Math.min(Math.floor(cas), Math.floor(Y.men * 0.12));
+}
+function moraleDamage(X, Y, rollX, rollY) {
+  if (Y.men <= 0) return 0;
+  const edge = Math.max(0, rollX - rollY);
+  const ratio = clamp(X.men / Math.max(1, Y.men), 0.4, 2.5);
+  return (0.16 + 0.045 * edge) * ratio * X.disc;
+}
+function sideStats(ctx, armies, phase) {
+  let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0;
+  const tags = new Set();
+  for (const a of armies) {
+    men += a.men;
+    moraleW += num(a.morale) * a.men;
+    discW += disciplineOf(ctx, a.tag) * a.men;
+    if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
+    tags.add(a.tag);
+  }
+  for (const t of tags) hill = Math.max(hill, resolveTagAdd(ctx, t, 'hillDefBonus'));
+  return {
+    men,
+    morale: men > 0 ? moraleW / men : 0,
+    disc: men > 0 ? discW / men : 1,
+    pip, hill,
+  };
+}
+function applySideDamage(armies, sideMen, cas, moraleDmg) {
+  for (const a of armies) {
+    const share = sideMen > 0 ? a.men / sideMen : 0;
+    a.men = Math.max(0, a.men - Math.round(cas * share));
+    a.morale = Math.max(0, num(a.morale) - moraleDmg);
+  }
+}
+function sideMoraleAvg(armies) {
+  let men = 0, mw = 0;
+  for (const a of armies) { men += a.men; mw += num(a.morale) * a.men; }
+  return men > 0 ? mw / men : 0;
+}
+function isFriendlyControlled(ctx, tag, p) {
+  return p.controller === tag || sameSide(ctx, tag, p.controller);
+}
+function routArmy(ctx, army) {
+  army.inBattle = false;
+  army.morale = 0.3 * num(army.maxMorale, 1);
+  const path = bfs(ctx, army.prov,
+    (id) => { const p = ctx.byId(id); return !!p && !p.impassable; },
+    (id) => { const p = ctx.byId(id); return !!p && id !== army.prov && isFriendlyControlled(ctx, army.tag, p); },
+    16);
+  if (!path || !path.length) {
+    if (army.tag === ctx.game.playerTag) {
+      ctx.bus.emit('notify', { title: 'Army destroyed', text: army.name + ' was wiped out with no line of retreat.', type: 'bad' });
+    }
+    removeArmy(ctx, army.id);
+    return;
+  }
+  army.path = path;
+  army.moveDaysLeft = 0;
+  army.retreating = true;
+}
+function battleRound(ctx, b) {
+  const g = ctx.game;
+  b.day++;
+  let atk = battleSideArmies(ctx, b, 'atk');
+  let def = battleSideArmies(ctx, b, 'def');
+  if (!atk.length && !def.length) {
+    const i = g.battles.indexOf(b);
+    if (i >= 0) g.battles.splice(i, 1);
+    return;
+  }
+  if (!atk.length || !def.length) { endBattle(ctx, b, atk.length ? 'atk' : 'def'); return; }
+  const p = ctx.byId(b.prov);
+  const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+  const defBonus = terr ? num(terr.defBonus, 0) : 0;
+  const hilly = !!p && (p.terrain === 'hills' || p.terrain === 'mountains');
+  const phase = Math.floor((b.day - 1) / 3) % 2 === 0 ? 'fire' : 'shock';
+  const A = sideStats(ctx, atk, phase);
+  const D = sideStats(ctx, def, phase);
+  const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0);
+  const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0);
+  const casOnAtk = casualtiesInflicted(D, A, rollD, rollA);
+  const casOnDef = casualtiesInflicted(A, D, rollA, rollD);
+  const mdOnAtk = moraleDamage(D, A, rollD, rollA);
+  const mdOnDef = moraleDamage(A, D, rollA, rollD);
+  applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
+  applySideDamage(def, D.men, casOnDef, mdOnDef);
+  for (const a of atk.concat(def)) if (a.men <= 0) removeArmy(ctx, a.id);
+  if (g.battles.indexOf(b) < 0) return; // resolved via removals
+  atk = battleSideArmies(ctx, b, 'atk');
+  def = battleSideArmies(ctx, b, 'def');
+  if (!atk.length || !def.length) {
+    if (atk.length || def.length) endBattle(ctx, b, atk.length ? 'atk' : 'def');
+    else { const i = g.battles.indexOf(b); if (i >= 0) g.battles.splice(i, 1); }
+    return;
+  }
+  const atkBroke = sideMoraleAvg(atk) <= 0.05;
+  const defBroke = sideMoraleAvg(def) <= 0.05;
+  if (!atkBroke && !defBroke) return;
+  const winKey = atkBroke ? 'def' : 'atk'; // attacker yields the field on a mutual break
+  const losers = atkBroke ? atk : def;
+  const winners = winKey === 'atk' ? atk : def;
+  const winnerTag = winners[0].tag;
+  const loserTag = losers[0].tag;
+  endBattle(ctx, b, winKey); // remove battle first so routing can't double-resolve it
+  for (const a of losers.slice()) routArmy(ctx, a);
+  awardBattleScore(ctx, winnerTag, loserTag);
+  addWarExhaustion(ctx, loserTag, 1);
+  const player = g.playerTag;
+  if (winnerTag === player || loserTag === player) {
+    const won = winnerTag === player;
+    ctx.bus.emit('notify', {
+      title: 'Battle of ' + (p ? p.name : 'the field'),
+      text: (g.tags[winnerTag] ? g.tags[winnerTag].name : winnerTag) + ' holds the field after ' + b.day + ' days of fighting.',
+      type: won ? 'good' : 'bad',
+      provName: p ? p.name : undefined,
+    });
+  }
+}
+export function tickBattles(ctx) {
+  for (const b of ctx.game.battles.slice()) {
+    try { battleRound(ctx, b); } catch (e) { warnOnce('battle', 'battle round failed', e); }
+  }
+}
+
+// ---------------------------------------------------------------- movement
+export function moveArmiesDaily(ctx) {
+  const g = ctx.game;
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || a.inBattle) continue;
+    if (!a.path || !a.path.length) {
+      if (a.retreating) a.retreating = false;
+      continue;
+    }
+    if (a.moveDaysLeft <= 0) a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0]);
+    a.moveDaysLeft--;
+    if (a.moveDaysLeft > 0) continue;
+    const next = a.path[0];
+    if (!a.retreating && !canEnter(ctx, a.tag, next)) { a.path = []; a.moveDaysLeft = 0; continue; }
+    a.path.shift();
+    a.prov = next;
+    a.moveDaysLeft = 0;
+    if (a.retreating && !a.path.length) a.retreating = false;
+    engageIfNeeded(ctx, a);
+  }
+}
+
+// ---------------------------------------------------------------- sieges
+function playerConcerned(ctx, p, byTag) {
+  const pt = ctx.game.playerTag;
+  return byTag === pt || p.owner === pt || p.controller === pt;
+}
+export function ensureSiege(ctx, p, byTag) {
+  if (!p || p.impassable || p.siege) return;
+  if (!isHostile(ctx, byTag, p.controller)) return;
+  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && a.men > 0 &&
+    (a.tag === byTag || sameSide(ctx, a.tag, byTag)));
+  if (!besiegers.length) return;
+  const regs = besiegers.reduce((s, a) => s + regCount(a), 0);
+  const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
+  if ((p.fort | 0) > 0 && regs < need) return;
+  p.siege = { by: byTag, progress: 0, breach: 0, days: 0 };
+  ctx.bus.emit('siegeStart', { provId: p.id, by: byTag });
+  if (playerConcerned(ctx, p, byTag)) {
+    const bt = ctx.game.tags[byTag];
+    ctx.bus.emit('notify', {
+      title: 'Siege of ' + p.name,
+      text: (bt ? bt.name : byTag) + ' invests ' + p.name + '.',
+      type: 'war', provName: p.name,
+    });
+  }
+}
+function siegeDay(ctx, p) {
+  const g = ctx.game;
+  const s = p.siege;
+  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && a.men > 0 &&
+    (a.tag === s.by || sameSide(ctx, a.tag, s.by)));
+  if (!besiegers.length) { p.siege = null; return; }
+  if (g.battles.some((b) => b.prov === p.id)) return; // battle rages; siege pauses
+  s.days++;
+  const fort = p.fort | 0;
+  const regs = besiegers.reduce((sum, a) => sum + regCount(a), 0);
+  const bonus = resolveTagAdd(ctx, s.by, 'siegeBonus');
+  if (fort <= 0) {
+    s.progress += 10; // unwalled town: occupied after ~10 days of unopposed presence
+  } else {
+    const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
+    if (regs >= need) {
+      if (s.days % 14 === 0) {
+        const roll = ctx.rng.int(14) + 1;
+        if (roll + bonus >= 12 && s.breach < 3) {
+          s.breach++;
+          if (playerConcerned(ctx, p, s.by)) {
+            ctx.bus.emit('notify', { title: 'Walls breached', text: 'A breach opens in the walls of ' + p.name + '.', type: 'war', provName: p.name });
+          }
+        } else if (roll === 1) {
+          for (const a of besiegers) a.men = Math.max(0, a.men - Math.max(1, Math.floor(a.men * 0.02)));
+        }
+      }
+      s.progress += (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
+      if (p.garrison <= 0) s.progress += 3;
+    }
+    let decay = 0.0015;
+    if (g.flags.faminePenalty && p.name === 'Jerusalem') decay = 0.01;
+    if (p.garrison > 0) p.garrison = Math.max(0, p.garrison - Math.max(1, Math.floor(p.garrison * decay)));
+  }
+  if (s.progress >= 100) {
+    const prev = p.controller;
+    const by = s.by;
+    p.siege = null;
+    changeControllerCore(ctx, p, by);
+    p.garrison = Math.round(num(p.maxGarrison) * 0.2);
+    addWarExhaustion(ctx, prev, 0.5);
+    ctx.bus.emit('siegeEnd', { provId: p.id, by });
+    if (playerConcerned(ctx, p, by)) {
+      ctx.bus.emit('notify', {
+        title: p.name + ' has fallen',
+        text: (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
+        type: by === g.playerTag ? 'good' : 'bad', provName: p.name,
+      });
+    }
+  }
+}
+export function tickSieges(ctx) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || !p.siege) continue;
+    try { siegeDay(ctx, p); } catch (e) { warnOnce('siege', 'siege tick failed', e); }
+  }
+  // idle hostile armies begin sieges (freshly spawned, or freed after battle)
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || a.inBattle || a.retreating || (a.path && a.path.length)) continue;
+    const p = ctx.byId(a.prov);
+    if (p && !p.siege && isHostile(ctx, a.tag, p.controller)) ensureSiege(ctx, p, a.tag);
+  }
+}
+
+// ---------------------------------------------------------------- control/owner
+export function changeControllerCore(ctx, p, tag) {
+  if (!p || !tag || p.controller === tag) return;
+  const from = p.controller;
+  p.controller = tag;
+  p.siege = null;
+  ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
+}
+export function changeOwnerCore(ctx, p, tag) {
+  if (!p || !tag || p.owner === tag) return;
+  const from = p.owner;
+  p.owner = tag;
+  ctx.bus.emit('provinceOwner', { provId: p.id, from, to: tag });
+}
+
+// ---------------------------------------------------------------- monthly upkeep
+export function monthlyReinforce(ctx) {
+  const g = ctx.game;
+  const regSize = B(ctx, 'regSize', 1000);
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || a.inBattle || a.retreating || a.tag === 'REB') continue;
+    const t = g.tags[a.tag];
+    if (!t) continue;
+    const target = regCount(a) * regSize;
+    const missing = target - a.men;
+    if (missing <= 0) continue;
+    let rate = target * 0.10 * resolveTagMult(ctx, a.tag, 'reinforceMult');
+    const p = ctx.byId(a.prov);
+    if (p && isHostile(ctx, a.tag, p.controller)) rate *= 0.5;
+    const add = Math.floor(Math.min(missing, rate, Math.max(0, num(t.manpower))));
+    if (add <= 0) continue;
+    t.manpower = Math.max(0, num(t.manpower) - add);
+    a.men += add;
+  }
+}
+export function monthlyMoraleRecovery(ctx) {
+  const g = ctx.game;
+  const rec = B(ctx, 'moraleRecoveryPerMonth', 0.6);
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a) continue;
+    a.maxMorale = maxMoraleOf(ctx, a.tag);
+    if (!a.inBattle) a.morale = Math.min(a.maxMorale, num(a.morale) + rec);
+    a.morale = clamp(num(a.morale), 0, a.maxMorale);
+  }
+}
+export function monthlyAttrition(ctx) {
+  const g = ctx.game;
+  const regsByProv = new Map();
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (a) regsByProv.set(a.prov, (regsByProv.get(a.prov) || 0) + regCount(a));
+  }
+  const slBase = B(ctx, 'supportLimitBase', 8);
+  const slDev = B(ctx, 'supportLimitPerDev', 0.8);
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a) continue;
+    const p = ctx.byId(a.prov);
+    if (!p) continue;
+    const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+    let attr = terr ? num(terr.attrition, 0) : 0;
+    const limit = slBase + devTotal(p) * slDev;
+    attr += Math.min(10, Math.max(0, (regsByProv.get(a.prov) || 0) - limit));
+    if (isHostile(ctx, a.tag, p.controller)) attr += 1;
+    attr = clamp(attr, 0, 12);
+    if (attr <= 0) continue;
+    const loss = Math.floor(a.men * attr / 100);
+    if (loss <= 0) continue;
+    a.men = Math.max(0, a.men - loss);
+    if (a.men <= 0) {
+      if (a.tag === g.playerTag) {
+        ctx.bus.emit('notify', { title: 'Army lost', text: a.name + ' has melted away to attrition.', type: 'bad' });
+      }
+      removeArmy(ctx, a.id);
+    }
+  }
+}
+export function monthlyGarrisons(ctx) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.siege || !(p.maxGarrison > 0)) continue;
+    if (p.garrison < p.maxGarrison) {
+      p.garrison = Math.min(p.maxGarrison, Math.round(p.garrison + Math.max(10, p.maxGarrison * 0.05)));
+    }
+  }
+}
+export function updateTagLife(ctx) {
+  const g = ctx.game;
+  const owned = {};
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable) owned[p.owner] = (owned[p.owner] || 0) + 1;
+  }
+  for (const k of Object.keys(g.tags)) {
+    if (k === 'REB') continue; // REB always alive
+    g.tags[k].alive = !!(owned[k] || armiesOf(ctx, k).length);
+  }
+}
+
+// ---------------------------------------------------------------- recruiting & merging
+export function recruitRegiment(ctx, tag, provId, type) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const p = ctx.byId(provId);
+  if (!t || !p) return { ok: false, why: 'invalid province or tag' };
+  if (type !== 'inf' && type !== 'cav') return { ok: false, why: 'unknown unit type' };
+  const costs = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.regCost) || {};
+  const cost = num(costs[type], type === 'cav' ? 25 : 10);
+  const regSize = B(ctx, 'regSize', 1000);
+  if (num(t.treasury) <= -100) return { ok: false, why: 'the treasury is exhausted' };
+  if (num(t.manpower) < regSize) return { ok: false, why: 'not enough manpower' };
+  t.treasury = num(t.treasury) - cost;
+  t.manpower = num(t.manpower) - regSize;
+  let host = null;
+  for (const a of armiesInProv(ctx, provId)) {
+    if (a.tag === tag && !a.retreating && !a.inBattle) { host = a; break; }
+  }
+  if (host) {
+    host.regiments[type] = num(host.regiments[type]) + 1;
+    host.men += regSize;
+  } else {
+    spawnArmy(ctx, tag, p.name, { inf: type === 'inf' ? 1 : 0, cav: type === 'cav' ? 1 : 0, name: 'Levy of ' + p.name });
+  }
+  return { ok: true };
+}
+export function mergeInto(ctx, fromId, intoId) {
+  const g = ctx.game;
+  const f = g.armies[fromId];
+  const into = g.armies[intoId];
+  if (!f || !into || f === into) return false;
+  if (f.tag !== into.tag || f.prov !== into.prov) return false;
+  if (f.inBattle || into.inBattle || f.retreating || into.retreating) return false;
+  const totalMen = f.men + into.men;
+  into.morale = totalMen > 0 ? (num(f.morale) * f.men + num(into.morale) * into.men) / totalMen : into.morale;
+  into.regiments.inf = num(into.regiments.inf) + num(f.regiments.inf);
+  into.regiments.cav = num(into.regiments.cav) + num(f.regiments.cav);
+  into.men = totalMen;
+  if (!into.general && f.general) into.general = f.general;
+  removeArmy(ctx, fromId);
+  return true;
+}
+
+// ---------------------------------------------------------------- wars & warscore
+export function declareWar(ctx, atk, def, name) {
+  const g = ctx.game;
+  const A = g.tags[atk], D = g.tags[def];
+  if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
+  const existing = warBetween(ctx, atk, def);
+  if (existing) return existing;
+  const attackers = [atk];
+  const defenders = [def];
+  for (const al of A.allies || []) {
+    if (g.tags[al] && g.tags[al].alive && al !== def && (D.allies || []).indexOf(al) < 0) attackers.push(al);
+  }
+  for (const al of D.allies || []) {
+    if (g.tags[al] && g.tags[al].alive && al !== atk && attackers.indexOf(al) < 0) defenders.push(al);
+  }
+  const war = {
+    id: 'war' + (g.wars.length + 1),
+    name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
+    attackers, defenders, warscore: {}, started: { ...g.date }, _bs: { att: 0, def: 0 },
+  };
+  g.wars.push(war);
+  for (const a of attackers) {
+    for (const d of defenders) {
+      const ta = g.tags[a], td = g.tags[d];
+      if (ta && ta.atWarWith.indexOf(d) < 0) ta.atWarWith.push(d);
+      if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
+    }
+  }
+  ctx.bus.emit('war', { id: war.id, name: war.name, attackers: attackers.slice(), defenders: defenders.slice() });
+  ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+  return war;
+}
+function sideGross(ctx, w, key) {
+  const g = ctx.game;
+  const mine = key === 'att' ? w.attackers : w.defenders;
+  const theirs = key === 'att' ? w.defenders : w.attackers;
+  let enemyDev = 0, occupied = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (theirs.indexOf(p.owner) < 0) continue;
+    const d = devTotal(p);
+    enemyDev += d;
+    if (mine.indexOf(p.controller) >= 0) occupied += d;
+  }
+  const occScore = enemyDev > 0 ? Math.min(60, (occupied / enemyDev) * 60) : 0;
+  const bs = w._bs ? Math.min(40, num(w._bs[key])) : 0;
+  return bs + occScore;
+}
+export function updateWarscores(ctx) {
+  for (const w of ctx.game.wars) {
+    const att = sideGross(ctx, w, 'att');
+    const def = sideGross(ctx, w, 'def');
+    for (const t of w.attackers) w.warscore[t] = Math.round(clamp(att - def, -100, 100));
+    for (const t of w.defenders) w.warscore[t] = Math.round(clamp(def - att, -100, 100));
+  }
+}
