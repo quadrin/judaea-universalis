@@ -122,10 +122,10 @@ export const DEFINES = {
     moraleRecoveryPerMonth: 0.6,       // morale regained per month out of battle
     taxPerDevPerYear: 1.0,             // talents/year per point of tax dev
     prodMult: 0.6,                     // production income scale: price × prod dev × this / 12
-    mpPerDev: 250,                     // max manpower per point of mp dev
-    mpRecoveryMonths: 60,              // months to refill manpower pool from empty
-    supportLimitBase: 8,               // regiments supportable in any province before attrition
-    supportLimitPerDev: 0.8,           // extra supported regiments per total dev point
+    mpPerDev: 350,                     // max manpower per point of mp dev
+    mpRecoveryMonths: 36,              // months to refill manpower pool from empty
+    supportLimitBase: 12,              // regiments supportable in any province before attrition
+    supportLimitPerDev: 1.5,           // extra supported regiments per total dev point
     fortGarrisonPerLevel: 1000,        // garrison men per fort level
     siegePerFortLevel: 12,             // baseline days of siege work per fort level (progress divisor)
     unrestRevoltThreshold: 5,          // unrest above this accumulates revoltProgress

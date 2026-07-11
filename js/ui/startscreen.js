@@ -30,7 +30,7 @@ export function buildStartScreen(root, DEFINES, bookmark, onPick) {
   root.innerHTML = `
     <div class="ss-inner">
       <div class="ss-rule">— &nbsp;✦&nbsp; —</div>
-      <h1 class="ss-title">JVDAEA&nbsp;VNIVERSALIS</h1>
+      <h1 class="ss-title">JVDAEA VNIVERSALIS</h1>
       <div class="ss-sub">The Great Revolt &nbsp;·&nbsp; 66 CE</div>
       ${bookmark && bookmark.blurb ? `<p class="ss-blurb">${esc(bookmark.blurb)}</p>` : ''}
       <div class="ss-cards">${cards}</div>

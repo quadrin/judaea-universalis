@@ -289,7 +289,7 @@ export function addWarExhaustion(ctx, tag, amt) {
 export function engageIfNeeded(ctx, army) {
   try {
     const g = ctx.game;
-    if (!army || !g.armies[army.id] || army.retreating) return;
+    if (!army || !g.armies[army.id] || army.retreating || num(army.shatteredDays) > 0) return;
     const pid = army.prov;
     let b = null;
     for (const bb of g.battles) if (bb.prov === pid) { b = bb; break; }
@@ -302,7 +302,7 @@ export function engageIfNeeded(ctx, army) {
       return;
     }
     const here = armiesInProv(ctx, pid);
-    const hostiles = here.filter((o) => o.id !== army.id && !o.retreating && o.men > 0 && isHostile(ctx, army.tag, o.tag));
+    const hostiles = here.filter((o) => o.id !== army.id && !o.retreating && num(o.shatteredDays) <= 0 && o.men > 0 && isHostile(ctx, army.tag, o.tag));
     if (hostiles.length) {
       const friends = here.filter((o) => !o.retreating && !o.inBattle && o.men > 0 &&
         (o.id === army.id || sameSide(ctx, army.tag, o.tag)));
@@ -324,7 +324,7 @@ function casualtiesInflicted(X, Y, rollX, rollY) {
 function moraleDamage(X, Y, rollX, rollY) {
   if (Y.men <= 0) return 0;
   const edge = Math.max(0, rollX - rollY);
-  const ratio = clamp(X.men / Math.max(1, Y.men), 0.4, 2.5);
+  const ratio = clamp(X.men / Math.max(1, Y.men), 0.05, 2.5); // tiny remnants can't break a legion's will
   return (0.16 + 0.045 * edge) * ratio * X.disc;
 }
 function sideStats(ctx, armies, phase) {
@@ -363,10 +363,22 @@ function isFriendlyControlled(ctx, tag, p) {
 function routArmy(ctx, army) {
   army.inBattle = false;
   army.morale = 0.3 * num(army.maxMorale, 1);
-  const path = bfs(ctx, army.prov,
+  army.shatteredDays = 30; // no engagement either way until recovered (EU4 shattered retreat)
+  const safeGoal = (id) => {
+    const p = ctx.byId(id);
+    if (!p || id === army.prov || !isFriendlyControlled(ctx, army.tag, p)) return false;
+    return !armiesInProv(ctx, id).some((o) => o.men > 0 && isHostile(ctx, army.tag, o.tag));
+  };
+  let path = bfs(ctx, army.prov,
     (id) => { const p = ctx.byId(id); return !!p && !p.impassable; },
-    (id) => { const p = ctx.byId(id); return !!p && id !== army.prov && isFriendlyControlled(ctx, army.tag, p); },
-    16);
+    safeGoal, 16);
+  if (!path || !path.length) {
+    // fall back to any friendly province, even contested
+    path = bfs(ctx, army.prov,
+      (id) => { const p = ctx.byId(id); return !!p && !p.impassable; },
+      (id) => { const p = ctx.byId(id); return !!p && id !== army.prov && isFriendlyControlled(ctx, army.tag, p); },
+      16);
+  }
   if (!path || !path.length) {
     if (army.tag === ctx.game.playerTag) {
       ctx.bus.emit('notify', { title: 'Army destroyed', text: army.name + ' was wiped out with no line of retreat.', type: 'bad' });
@@ -422,7 +434,20 @@ function battleRound(ctx, b) {
   const winnerTag = winners[0].tag;
   const loserTag = losers[0].tag;
   endBattle(ctx, b, winKey); // remove battle first so routing can't double-resolve it
-  for (const a of losers.slice()) routArmy(ctx, a);
+  const winnersMen = winners.reduce((s, a) => s + num(a.men), 0);
+  const losersMen = losers.reduce((s, a) => s + num(a.men), 0);
+  if (winnersMen >= 10 * Math.max(1, losersMen) || losersMen < 300) {
+    // Stackwipe: an overwhelming victory annihilates the remnant instead of
+    // letting it rout, recover, and re-engage forever.
+    for (const a of losers.slice()) {
+      if (a.tag === g.playerTag) {
+        ctx.bus.emit('notify', { title: 'Army annihilated', text: a.name + ' was destroyed to the last man at ' + (p ? p.name : 'the field') + '.', type: 'bad', provName: p ? p.name : undefined });
+      }
+      removeArmy(ctx, a.id);
+    }
+  } else {
+    for (const a of losers.slice()) routArmy(ctx, a);
+  }
   awardBattleScore(ctx, winnerTag, loserTag);
   addWarExhaustion(ctx, loserTag, 1);
   const player = g.playerTag;
@@ -448,6 +473,7 @@ export function moveArmiesDaily(ctx) {
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a || a.inBattle) continue;
+    if (num(a.shatteredDays) > 0) a.shatteredDays--;
     if (!a.path || !a.path.length) {
       if (a.retreating) a.retreating = false;
       continue;
@@ -579,6 +605,16 @@ export function monthlyReinforce(ctx) {
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a || a.inBattle || a.retreating || a.tag === 'REB') continue;
+    // Consolidate badly hollowed armies: ghost regiments cost maintenance and
+    // support-limit headroom without adding men (post-battle death-spiral guard).
+    const effective = Math.max(1, Math.ceil(a.men / regSize));
+    if (regCount(a) > effective + 2) {
+      let drop = regCount(a) - (effective + 1);
+      const dropInf = Math.min(a.regiments.inf, Math.ceil(drop * a.regiments.inf / Math.max(1, regCount(a))));
+      a.regiments.inf -= dropInf; drop -= dropInf;
+      a.regiments.cav = Math.max(0, a.regiments.cav - Math.max(0, drop));
+      if (regCount(a) < 1) a.regiments.inf = 1;
+    }
     const t = g.tags[a.tag];
     if (!t) continue;
     const target = regCount(a) * regSize;
@@ -621,9 +657,13 @@ export function monthlyAttrition(ctx) {
     const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
     let attr = terr ? num(terr.attrition, 0) : 0;
     const limit = slBase + devTotal(p) * slDev;
-    attr += Math.min(10, Math.max(0, (regsByProv.get(a.prov) || 0) - limit));
+    attr += Math.min(6, Math.max(0, (regsByProv.get(a.prov) || 0) - limit));
     if (isHostile(ctx, a.tag, p.controller)) attr += 1;
     attr = clamp(attr, 0, 12);
+    // Supply lines: an organized siege camp caps attrition (Rome fed Masada's
+    // besiegers by road and ramp; so do we).
+    if (p.siege && (p.siege.by === a.tag || sameSide(ctx, a.tag, p.siege.by))) attr = Math.min(attr, 5);
+    if (a.tag === 'REB' && a.men < 100) { removeArmy(ctx, a.id); continue; } // starving bands scatter
     if (attr <= 0) continue;
     const loss = Math.floor(a.men * attr / 100);
     if (loss <= 0) continue;

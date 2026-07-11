@@ -722,8 +722,11 @@ export const EVENTS_66 = [
       + 'begin again.',
     forTag: 'both',
     major: true,
-    trigger: safeTrigger('ev_temple_burns', (ctx) =>
-      ctx.helpers.controls(ctx, 'ROM', 'Jerusalem')),
+    trigger: safeTrigger('ev_temple_burns', (ctx) => {
+      // Any occupier on Rome's side of the war burns as surely as Rome itself.
+      const jer = ctx.prov('Jerusalem');
+      return !!jer && ['ROM', 'AGR', 'NAB'].indexOf(jer.controller) >= 0;
+    }),
     aiOption: 0,
     options: [
       {

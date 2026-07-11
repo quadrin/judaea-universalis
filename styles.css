@@ -760,10 +760,12 @@ button {
   opacity: 0.85;
 }
 .ss-title {
-  font-size: clamp(26px, 4.8vw, 62px);
+  font-size: clamp(26px, 4.4vw, 56px);
   font-weight: 700;
   letter-spacing: 0.16em;
   line-height: 1.05;
+  text-align: center;
+  max-width: 100%;
   background: linear-gradient(180deg, #f0dc9a 8%, var(--gold-bright) 40%, #96741a 85%);
   -webkit-background-clip: text;
   background-clip: text;

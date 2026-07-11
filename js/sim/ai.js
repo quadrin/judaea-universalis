@@ -88,13 +88,25 @@ function threatened(ctx, army) {
 function pickTarget(ctx, army, enemies) {
   const g = ctx.game;
   const dists = bfsDistances(ctx, army.prov, (id) => canEnter(ctx, army.tag, id), 32);
+  const own = stackStrengthAt(ctx, army.prov, (a) => sameSide(ctx, army.tag, a.tag)) || armyStrength(ctx, army);
   let best = 0, bestScore = Infinity;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || i === army.prov) continue;
     if (enemies.indexOf(p.controller) < 0) continue;
     if (!dists.has(i)) continue;
-    const score = dists.get(i) * 3 + (p.fort | 0) * 4 - devTotal(p) * 0.15;
+    // Odds check: never march into a defended province we can't beat —
+    // terrain multiplies the defenders' effective strength.
+    const defenders = stackStrengthAt(ctx, i, (a) => isHostile(ctx, army.tag, a.tag));
+    if (defenders > 0) {
+      const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+      const defFactor = 1 + 0.25 * (terr ? num(terr.defBonus, 0) : 0);
+      if (defenders * defFactor > own * 0.9) continue;
+    }
+    // Reduce the countryside before the fortresses (Vespasian's method):
+    // forts and attrition terrain are strongly deprioritized, not forbidden.
+    const terr2 = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+    const score = dists.get(i) * 3 + (p.fort | 0) * 12 + (terr2 ? num(terr2.attrition, 0) * 3 : 0) - devTotal(p) * 0.15;
     if (score < bestScore) { bestScore = score; best = i; }
   }
   return best;

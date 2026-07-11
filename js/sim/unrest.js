@@ -83,10 +83,18 @@ function fireRevolt(ctx, p) {
       g.tags.JUD && g.tags.JUD.alive && isHostile(ctx, 'JUD', p.owner)) {
     rebelTag = 'JUD'; // the faithful rise for Judaea
   }
+  // Throttle the tide: at most 8 rebel bands under arms at once, and a province
+  // that has risen cannot rise again for 30 months.
+  if (rebelTag === 'REB') {
+    let rebCount = 0;
+    for (const id of Object.keys(g.armies)) { const a = g.armies[id]; if (a && a.tag === 'REB' && a.men > 0) rebCount++; }
+    if (rebCount >= 8) { p.revoltProgress = 0; p.revoltCooldownMonths = 6; return; }
+  }
   const name = rebelTag === 'JUD' ? 'Zealots of ' + p.name : 'Rebels of ' + p.name;
   spawnArmy(ctx, rebelTag, p.name, { inf: size, name });
   if (num(p.garrison) <= 0) changeControllerCore(ctx, p, rebelTag);
   p.revoltProgress = 0;
+  p.revoltCooldownMonths = 30;
   p.unrest = Math.max(0, num(p.unrest) - 4); // steam vented
   ctx.bus.emit('notify', {
     title: 'Revolt in ' + p.name,
@@ -106,6 +114,12 @@ export function monthlyUnrest(ctx) {
       if (!g.tags[p.owner]) { p.unrest = 0; continue; }
       const { total } = computeUnrestBreakdown(ctx, p);
       p.unrest = Math.max(0, total);
+      if (num(p.revoltCooldownMonths) > 0) {
+        // The province spent its fury; a fresh rising takes years to gather.
+        p.revoltCooldownMonths--;
+        p.revoltProgress = 0;
+        continue;
+      }
       if (p.unrest > threshold) {
         p.revoltProgress = Math.min(fireAt, num(p.revoltProgress) + (p.unrest - threshold) * 2);
       } else {

@@ -138,7 +138,7 @@ export function initUI(staticCtx) {
     if (!els.start.classList.contains('hidden')) return;
     if (eventModal.isOpen()) return; // buttons only while an event is up
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.code === 'Space') {
+    if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
       try { state.actions.togglePause(); } catch (err) { warnOnce('togglePause', err); }
       topbar.refresh();
