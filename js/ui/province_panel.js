@@ -34,6 +34,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-row"><span class="pp-k">Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
         <div class="pp-row"><span class="pp-k">Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
         <div class="pp-row" data-tt="Tax / Production / Manpower development"><span class="pp-k">Development</span><span class="pp-v" data-ref="dev"></span></div>
+        <div class="pp-row hidden" data-ref="devBtnsRow"><span class="pp-k">Develop</span><span class="pp-v pp-devbtns">
+          <button class="pp-dev" data-dev="tax" data-tt="+1 tax development (50 governance points)">+T</button>
+          <button class="pp-dev" data-dev="prod" data-tt="+1 production development (50 influence points)">+P</button>
+          <button class="pp-dev" data-dev="mp" data-tt="+1 manpower development (50 martial points)">+M</button>
+        </span></div>
         <div class="pp-row"><span class="pp-k">Autonomy</span><span class="pp-v" data-ref="autonomy"></span></div>
         <div class="pp-row hidden" data-ref="siteRow"><span class="pp-k">Sites</span><span class="pp-v pp-gold" data-ref="site"></span></div>
       </div>
@@ -62,6 +67,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
     refs.recruitCav.addEventListener('click', () => tryRecruit('cav', refs.recruitCav));
+    refs.devBtnsRow.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-dev]') : null;
+      if (!b || !actions) return;
+      try { actions.devProvince(provId, b.dataset.dev); } catch (err) { warnOnce('dev', err); }
+      refresh();
+    });
   }
 
   function tryRecruit(type, btn) {
@@ -123,6 +134,16 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     // Dev, autonomy, sites
     const dev = p.dev || {};
     setText(refs.dev, `${dev.tax || 0} / ${dev.prod || 0} / ${dev.mp || 0}`);
+    const mine = p.owner === g.playerTag && p.controller === g.playerTag;
+    refs.devBtnsRow.classList.toggle('hidden', !mine);
+    if (mine) {
+      const pts = (g.tags[g.playerTag] && g.tags[g.playerTag].points) || {};
+      const pool = { tax: pts.gov, prod: pts.infl, mp: pts.mar };
+      refs.devBtnsRow.querySelectorAll('[data-dev]').forEach((b) => {
+        const k = b.dataset.dev;
+        b.classList.toggle('afford', (pool[k] || 0) >= 50 && (dev[k] || 0) < 15);
+      });
+    }
     setText(refs.autonomy, Math.round((p.autonomy || 0) * 100) + '%');
     const sites = [];
     if (p.wonder) sites.push('✦ ' + titleCase(p.wonder));

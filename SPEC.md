@@ -615,3 +615,25 @@ renderer.render → overlay.draw → labels.update.
 - No console spam per-frame; warn once patterns.
 - Self-review pass before finishing: re-read your files checking every SPEC-pinned
   signature; state in your final report any deviation.
+
+---
+
+## 12. v1.1 additions (loop closers)
+
+- **Save/load.** `init.js` exports `SAVE_VERSION` and `reviveGame(saved)` (schema-default
+  merge; always resumes paused). main.js persists `{v, game}` to localStorage key
+  `ju_save_66ce` on the topbar save button (bus `'saveRequest'`) and each January (autosave).
+  Start screen shows a Continue button via `showStartScreen(bookmark, onPick, continueInfo?)`.
+  Both bookmark-setup guards (`flags._setupDone`, `flags._bookmarkSetupRan`) serialize, so a
+  loaded game never re-runs setup.
+- **Monarch-point sinks** (actions): `devProvince(provId, 'tax'|'prod'|'mp')` — 50
+  gov/infl/mar respectively, +1 dev, cap 15, own+controlled only, emits `'provinceDev'`;
+  `buyStability()` — 75 gov; `callReserves()` — 50 mar, +2,000 manpower. AI buys stability
+  under 1 and reserves under 20% pool (ai.js `aiSpendPoints`).
+- **Peace & truces** (military.js): `PEACE_TERMS` (white / tribute / cede-occupied),
+  `aiWillAccept` (enemy net warscore thresholds 5 / −25 / −50; war-weary white peace at
+  WE ≥ 15), `makePeace` (cessions, indemnity, status-quo reversion, atWarWith rebuild,
+  5-year truces in `game.truces`, stranded armies walk home), `truceActive` blocks
+  `declareWar`. Actions: `peaceTerms()`, `offerPeace(warId, level)` — 6-month envoy
+  cooldown on refusal. Wars flagged `noNegotiation` (the bookmark's scripted war) only
+  resolve through events/victory. UI: dove button on outliner war rows → `#peace-modal`.

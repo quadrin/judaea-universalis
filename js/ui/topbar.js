@@ -28,9 +28,11 @@ export function createTopbar(el, { DEFINES }) {
       </div>
       <div class="tb-item" data-ref="manpowerWrap">
         <span class="tb-ico">⚔</span><span class="tb-v" data-ref="manpower">0</span>
+        <button class="tb-buy" data-ref="buyMp" data-tt="Call up reserves: +2,000 manpower (50 martial points)">+</button>
       </div>
       <div class="tb-item" data-ref="stabilityWrap">
         <span class="tb-ico">⚖</span><span class="tb-v" data-ref="stability">0</span>
+        <button class="tb-buy" data-ref="buyStab" data-tt="Restore order: +1 stability (75 governance points)">+</button>
       </div>
       <div class="tb-item" data-ref="legitimacyWrap" data-tt="Legitimacy">
         <span class="tb-ico">♛</span><span class="tb-v" data-ref="legitimacy">0</span>
@@ -43,6 +45,7 @@ export function createTopbar(el, { DEFINES }) {
       <div class="tb-spacer"></div>
       <div class="tb-date" data-ref="date"></div>
       <div class="tb-speed">
+        <button class="tb-save" data-ref="save" data-tt="Save the campaign">🖋</button>
         <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">▶</button>
         <span class="tb-pips" data-ref="pips"></span>
       </div>`;
@@ -63,6 +66,17 @@ export function createTopbar(el, { DEFINES }) {
       if (!b) return;
       try { actions.setSpeed(Number(b.dataset.speed)); } catch (err) { warnOnce('setSpeed', err); }
       refresh();
+    });
+    refs.buyStab.addEventListener('click', () => {
+      try { actions.buyStability(); } catch (e) { warnOnce('buyStab', e); }
+      refresh();
+    });
+    refs.buyMp.addEventListener('click', () => {
+      try { actions.callReserves(); } catch (e) { warnOnce('buyMp', e); }
+      refresh();
+    });
+    refs.save.addEventListener('click', () => {
+      try { ctx.bus.emit('saveRequest', {}); } catch (e) { warnOnce('save', e); }
     });
   }
 
@@ -105,6 +119,8 @@ export function createTopbar(el, { DEFINES }) {
     setText(refs.gov, String(Math.floor(pts.gov || 0)));
     setText(refs.infl, String(Math.floor(pts.infl || 0)));
     setText(refs.mar, String(Math.floor(pts.mar || 0)));
+    refs.buyStab.classList.toggle('afford', (pts.gov || 0) >= 75 && (t.stability || 0) < 3);
+    refs.buyMp.classList.toggle('afford', (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0));
 
     // Date, pause, speed pips
     setText(refs.date, fmtDate(g.date, DEFINES.MONTH_NAMES));

@@ -1,7 +1,7 @@
 // js/ui/startscreen.js — title screen (SPEC §8.2 / §8.3).
 import { esc, rgb, rgba } from './format.js';
 
-export function buildStartScreen(root, DEFINES, bookmark, onPick) {
+export function buildStartScreen(root, DEFINES, bookmark, onPick, continueInfo) {
   if (!root) return;
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const playable = (bookmark && bookmark.playableTags) || [];
@@ -34,6 +34,7 @@ export function buildStartScreen(root, DEFINES, bookmark, onPick) {
       <div class="ss-sub">The Great Revolt &nbsp;·&nbsp; 66 CE</div>
       ${bookmark && bookmark.blurb ? `<p class="ss-blurb">${esc(bookmark.blurb)}</p>` : ''}
       <div class="ss-cards">${cards}</div>
+      ${continueInfo ? `<button class="ss-continue">✦ &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ✦</button>` : ''}
       <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed</div>
     </div>`;
 
@@ -50,4 +51,12 @@ export function buildStartScreen(root, DEFINES, bookmark, onPick) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(card); }
     });
   });
+  const cont = root.querySelector('.ss-continue');
+  if (cont && continueInfo && continueInfo.onContinue) {
+    cont.addEventListener('click', () => {
+      if (root.dataset.picked) return;
+      root.dataset.picked = '1';
+      continueInfo.onContinue();
+    });
+  }
 }

@@ -1,7 +1,7 @@
 // js/ui/outliner.js — right-side outliner: armies, battles, sieges, wars (SPEC §8.2).
 import { esc, fmtMen, signed, warnOnce } from './format.js';
 
-export function createOutliner(el, { onArmyClick, onFocusProv }) {
+export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
   let ctx = null;
   let body = null;
   let lastHtml = '';
@@ -17,6 +17,11 @@ export function createOutliner(el, { onArmyClick, onFocusProv }) {
 
   function onClick(e) {
     if (!(e.target instanceof Element)) return;
+    const pc = e.target.closest('[data-peace]');
+    if (pc) {
+      if (onPeaceClick) onPeaceClick(pc.dataset.peace);
+      return;
+    }
     const ar = e.target.closest('[data-army]');
     if (ar) {
       if (onArmyClick) onArmyClick(Number(ar.dataset.army));
@@ -111,10 +116,14 @@ export function createOutliner(el, { onArmyClick, onFocusProv }) {
       for (const w of wars) {
         const ws = Math.round(warscoreFor(w, player));
         const cls = ws > 0 ? 'pos' : ws < 0 ? 'neg' : '';
+        const peaceBtn = w.noNegotiation
+          ? ''
+          : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">🕊</button>`;
         html += `
-          <div class="ol-row ol-war" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%">
+          <div class="ol-row ol-war" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
             <span class="ol-name">🔥 ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
+            ${peaceBtn}
           </div>`;
       }
     }

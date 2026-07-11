@@ -5,6 +5,7 @@ import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, changeOwnerCore, changeControllerCore,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter,
+  makePeace, aiWillAccept, PEACE_TERMS,
 } from './military.js';
 import { maxManpowerOf, explainIncome } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -29,7 +30,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tags: {},
     provinces: [null],
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
-    battles: [], wars: [],
+    battles: [], wars: [], truces: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     rngSeed,
     ui: { selectedProv: 0, selectedArmy: null },
@@ -330,5 +331,88 @@ export function gameActions(ctx) {
     explainIncome(tag) {
       return explainIncome(ctx, tag);
     },
+
+    // ---- monarch-point sinks (v1.1) --------------------------------------
+    // EU4 mapping: tax dev = Governance, prod dev = Influence, mp dev = Martial.
+    devProvince(provId, kind) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        const pool = { tax: 'gov', prod: 'infl', mp: 'mar' }[kind];
+        if (!p || !t || !pool) return;
+        if (p.owner !== g.playerTag || p.controller !== g.playerTag) {
+          say('Development', 'We must own and control ' + p.name + ' to develop it.', 'bad'); return;
+        }
+        if (num(p.dev[kind]) >= 15) { say('Development', p.name + ' can grow no further.', 'info'); return; }
+        if (num(t.points[pool]) < 50) { say('Development', 'Not enough ' + pool + ' points (50 required).', 'bad'); return; }
+        t.points[pool] -= 50;
+        p.dev[kind] = num(p.dev[kind]) + 1;
+        ctx.bus.emit('provinceDev', { provId: p.id, kind });
+        say('Development', p.name + ' grows: +1 ' + kind + ' development.', 'good');
+      } catch (e) { warnOnce('dev', 'devProvince failed', e); }
+    },
+    buyStability() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return;
+        if (t.stability >= 3) { say('Stability', 'The realm is as steady as it will ever be.', 'info'); return; }
+        if (num(t.points.gov) < 75) { say('Stability', 'Not enough governance points (75 required).', 'bad'); return; }
+        t.points.gov -= 75;
+        t.stability = clamp(t.stability + 1, -3, 3);
+        say('Stability', 'Order is restored a measure (+1 stability).', 'good');
+      } catch (e) { warnOnce('stab', 'buyStability failed', e); }
+    },
+    callReserves() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return;
+        if (num(t.points.mar) < 50) { say('Reserves', 'Not enough martial points (50 required).', 'bad'); return; }
+        if (num(t.manpower) >= num(t.maxManpower)) { say('Reserves', 'Every fighting man is already mustered.', 'info'); return; }
+        t.points.mar -= 50;
+        t.manpower = Math.min(num(t.maxManpower), num(t.manpower) + 2000);
+        say('Reserves', 'The villages send their sons: +2,000 manpower.', 'good');
+      } catch (e) { warnOnce('reserves', 'callReserves failed', e); }
+    },
+
+    // ---- peace (v1.1) ------------------------------------------------------
+    peaceTerms() { return PEACE_TERMS; },
+    offerPeace(warId, level) {
+      try {
+        const war = g.wars.find((w) => w && w.id === warId);
+        const me = g.playerTag;
+        if (!war || !PEACE_TERMS[level]) return;
+        if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return;
+        if (war.noNegotiation) {
+          say('No terms', 'This war ends by the sword, or by events larger than treaties.', 'bad'); return;
+        }
+        const cd = war._peaceCooldown;
+        if (cd && (g.date.y < cd.y || (g.date.y === cd.y && g.date.m < cd.m))) {
+          say('Envoys rebuffed', 'The enemy will not receive our envoys again yet.', 'bad'); return;
+        }
+        if (aiWillAccept(ctx, war, me, level)) {
+          makePeace(ctx, war, me, level);
+        } else {
+          war._peaceCooldown = { y: g.date.y + (g.date.m >= 7 ? 1 : 0), m: ((g.date.m + 5) % 12) + 1 };
+          say('Terms refused', 'The enemy rejects ' + PEACE_TERMS[level].label.toLowerCase() + '. Six months until they will listen again.', 'bad');
+        }
+      } catch (e) { warnOnce('peace', 'offerPeace failed', e); }
+    },
   };
+}
+
+// ------------------------------------------------------------------ save/load
+// The game object is plain data by construction (SPEC §6.2); reviveGame merges
+// schema defaults so saves from older versions load after fields are added.
+export const SAVE_VERSION = 1;
+export function reviveGame(saved) {
+  if (!saved || typeof saved !== 'object' || !saved.tags || !saved.provinces) return null;
+  if (!saved.truces) saved.truces = {};
+  if (!saved.flags) saved.flags = {};
+  if (!saved.pendingEvents) saved.pendingEvents = [];
+  if (!saved.firedEvents) saved.firedEvents = {};
+  if (!saved.battles) saved.battles = [];
+  if (!saved.wars) saved.wars = [];
+  if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null };
+  saved.paused = true; // always resume paused
+  return saved;
 }

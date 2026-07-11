@@ -139,9 +139,20 @@ function runRebelAI(ctx) {
   }
 }
 
+function aiSpendPoints(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t || !t.points) return;
+  if (t.stability < 1 && num(t.points.gov) >= 100) { t.points.gov -= 75; t.stability = clamp(t.stability + 1, -3, 3); }
+  if (num(t.manpower) < num(t.maxManpower) * 0.2 && num(t.points.mar) >= 100) {
+    t.points.mar -= 50;
+    t.manpower = Math.min(num(t.maxManpower), num(t.manpower) + 2000);
+  }
+}
+
 function runTagAI(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
+  aiSpendPoints(ctx, tag);
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
   if (!enemies.length) return; // non-warring AI idles
   const hints = (ctx.bookmark && ctx.bookmark.aiHints && ctx.bookmark.aiHints[tag]) || {};

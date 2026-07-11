@@ -22,6 +22,8 @@ python3 -m http.server 8613 --directory .
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
+- Save/load (yearly autosave + Continue button), monarch-point sinks (develop provinces,
+  buy stability, call reserves), and peace treaties with truces for non-scripted wars.
 
 ## Architecture
 

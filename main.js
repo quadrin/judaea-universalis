@@ -11,7 +11,7 @@ import { computeGeometry } from './js/map/geometry.js';
 import { computeMapmodeColors } from './js/map/mapmodes.js';
 import { createOverlay } from './js/map/overlay.js';
 import { createLabels } from './js/map/labels.js';
-import { initGame, makeCtx, gameActions } from './js/sim/init.js';
+import { initGame, makeCtx, gameActions, reviveGame, SAVE_VERSION } from './js/sim/init.js';
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 
@@ -39,11 +39,12 @@ async function boot() {
   let colorsDirty = true;
 
   bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; });
-  ['month', 'provinceOwner', 'provinceController', 'siegeEnd', 'war', 'eventResolved']
+  ['month', 'provinceOwner', 'provinceController', 'siegeEnd', 'war', 'eventResolved', 'provinceDev']
     .forEach((ev) => bus.on(ev, () => { colorsDirty = true; }));
 
-  ui.showStartScreen(BOOKMARK_66, (playerTag) => {
-    const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66, events: EVENTS_66, playerTag, rngSeed: 20260711 });
+  // ------------------------------------------------------------- save/load --
+  const SAVE_KEY = 'ju_save_66ce';
+  function startGame(game) {
     ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events: EVENTS_66 });
     actions = gameActions(ctx);
     ui.bindGame(ctx, actions);
@@ -51,7 +52,39 @@ async function boot() {
     if (jer) camera.centerOn(jer.x, jer.y, 1.8);
     colorsDirty = true;
     window._ctx = ctx; // debug handle
-  });
+  }
+  function doSave(silent) {
+    if (!ctx) return;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, game: ctx.game }));
+      if (!silent) {
+        const d = ctx.game.date;
+        bus.emit('notify', { title: 'Chronicle written', text: 'Campaign saved — ' + (DEFINES.MONTH_NAMES[d.m - 1] || d.m) + ' ' + d.y + ' CE.', type: 'info' });
+      }
+    } catch (e) { console.warn('[save]', e); }
+  }
+  function readSave() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.v !== SAVE_VERSION) return null;
+      return reviveGame(parsed.game);
+    } catch (e) { return null; }
+  }
+  bus.on('saveRequest', () => doSave(false));
+  bus.on('month', ({ date }) => { if (date && date.m === 1) doSave(true); }); // yearly autosave
+
+  const saved = readSave();
+  const savedTag = saved && DEFINES.TAGS[saved.playerTag];
+  ui.showStartScreen(BOOKMARK_66, (playerTag) => {
+    const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66, events: EVENTS_66, playerTag, rngSeed: 20260711 });
+    startGame(game);
+  }, saved ? {
+    label: (savedTag ? savedTag.name : saved.playerTag) + ', '
+      + (DEFINES.MONTH_NAMES[saved.date.m - 1] || saved.date.m) + ' ' + saved.date.y + ' CE',
+    onContinue: () => startGame(saved),
+  } : null);
 
   camera.onClick((mapX, mapY, sx, sy) => {
     if (!ctx) return;

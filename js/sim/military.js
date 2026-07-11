@@ -771,10 +771,18 @@ export function mergeInto(ctx, fromId, intoId) {
 }
 
 // ---------------------------------------------------------------- wars & warscore
+export function truceKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+export function truceActive(ctx, a, b) {
+  const g = ctx.game;
+  const t = g.truces && g.truces[truceKey(a, b)];
+  if (!t) return false;
+  return g.date.y < t.y || (g.date.y === t.y && g.date.m < t.m);
+}
 export function declareWar(ctx, atk, def, name) {
   const g = ctx.game;
   const A = g.tags[atk], D = g.tags[def];
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
+  if (truceActive(ctx, atk, def)) return null; // the ink on the treaty is still wet
   const existing = warBetween(ctx, atk, def);
   if (existing) return existing;
   const attackers = [atk];
@@ -801,6 +809,97 @@ export function declareWar(ctx, atk, def, name) {
   ctx.bus.emit('war', { id: war.id, name: war.name, attackers: attackers.slice(), defenders: defenders.slice() });
   ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
   return war;
+}
+
+// ---------------------------------------------------------------- peace
+// Treaty levels and the warscore the enemy leader must be at (net, from THEIR
+// side) for the AI to accept. The bookmark's scripted war (war.noNegotiation)
+// resolves only through events/victory.
+export const PEACE_TERMS = {
+  white:   { label: 'White peace',            enemyWsAtMost: 5 },
+  tribute: { label: 'Peace with tribute',     enemyWsAtMost: -25 },
+  cede:    { label: 'Cede occupied lands',    enemyWsAtMost: -50 },
+};
+export function enemySideOf(war, tag) {
+  return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
+}
+export function aiWillAccept(ctx, war, byTag, level) {
+  const terms = PEACE_TERMS[level];
+  if (!terms) return false;
+  const g = ctx.game;
+  const enemyLeader = enemySideOf(war, byTag).find((t) => g.tags[t] && g.tags[t].alive);
+  if (!enemyLeader) return true;
+  const ws = num(war.warscore && war.warscore[enemyLeader]);
+  if (ws <= terms.enemyWsAtMost) return true;
+  // War-weariness accepts a white peace even from a mildly winning position.
+  return level === 'white' && num(g.tags[enemyLeader].warExhaustion) >= 15 && ws <= 15;
+}
+export function makePeace(ctx, war, byTag, level) {
+  const g = ctx.game;
+  const participants = war.attackers.concat(war.defenders);
+  const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
+  const theirSide = enemySideOf(war, byTag);
+  // Cession first: provinces the winners hold of the losers' land change owner.
+  if (level === 'cede') {
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable) continue;
+      if (theirSide.indexOf(p.owner) >= 0 && mySide.indexOf(p.controller) >= 0) {
+        changeOwnerCore(ctx, p, p.controller);
+      }
+    }
+  }
+  if (level === 'tribute') {
+    const payer = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
+    const t = payer && g.tags[payer], me = g.tags[byTag];
+    if (t && me) {
+      const sum = Math.min(200, Math.max(50, Math.round(num(t.treasury) * 0.3)));
+      t.treasury = num(t.treasury) - sum;
+      me.treasury = num(me.treasury) + sum;
+    }
+  }
+  // Status quo ante for everything still occupied, both directions.
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (participants.indexOf(p.owner) >= 0 && p.controller !== p.owner &&
+        participants.indexOf(p.controller) >= 0 && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    }
+  }
+  // Dissolve the war, rebuild atWarWith from the wars that remain, set truces.
+  const wi = g.wars.indexOf(war);
+  if (wi >= 0) g.wars.splice(wi, 1);
+  for (const t of Object.keys(g.tags)) if (g.tags[t]) g.tags[t].atWarWith = [];
+  for (const w of g.wars) {
+    for (const a of w.attackers) for (const d of w.defenders) {
+      const ta = g.tags[a], td = g.tags[d];
+      if (ta && ta.atWarWith.indexOf(d) < 0) ta.atWarWith.push(d);
+      if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
+    }
+  }
+  if (!g.truces) g.truces = {};
+  for (const a of war.attackers) for (const d of war.defenders) {
+    g.truces[truceKey(a, d)] = { y: g.date.y + 5, m: g.date.m };
+  }
+  // March stranded armies home through now-neutral land (retreating bypasses entry rules).
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || participants.indexOf(a.tag) < 0) continue;
+    const p = ctx.byId(a.prov);
+    if (!p || p.controller === a.tag || sameSide(ctx, a.tag, p.controller) || isHostile(ctx, a.tag, p.controller)) continue;
+    const path = bfs(ctx, a.prov,
+      (pid) => { const q = ctx.byId(pid); return !!q && !q.impassable; },
+      (pid) => { const q = ctx.byId(pid); return !!q && q.controller === a.tag; },
+      24);
+    if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
+  }
+  ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+  ctx.bus.emit('notify', {
+    title: 'Peace of ' + g.date.y + ' CE',
+    text: war.name + ' ends: ' + (PEACE_TERMS[level] ? PEACE_TERMS[level].label : level) + '. A five-year truce holds.',
+    type: 'good',
+  });
 }
 function sideGross(ctx, w, key) {
   const g = ctx.game;

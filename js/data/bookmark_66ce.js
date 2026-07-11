@@ -112,6 +112,9 @@ export const BOOKMARK_66 = {
     try {
       const war = findJudRomWar(g);
       if (war) {
+        // This war resolves only through the event chain and checkVictory —
+        // the generic peace table would short-circuit the designed arc.
+        war.noNegotiation = true;
         const romSide = (war.attackers || []).indexOf('ROM') !== -1 ? war.attackers : war.defenders;
         if (Array.isArray(romSide) && romSide.indexOf('AGR') === -1) romSide.push('AGR');
         if (war.warscore && typeof war.warscore === 'object' && war.warscore.AGR === undefined) {

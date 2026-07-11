@@ -59,6 +59,7 @@ export function initUI(staticCtx) {
   const topbar = createTopbar(els.topbar, { DEFINES });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const outliner = createOutliner(els.outliner, {
+    onPeaceClick(warId) { openPeaceDialog(warId); },
     onArmyClick(id) {
       const g = state.ctx && state.ctx.game;
       if (!g || !g.armies || !g.armies[id]) return;
@@ -81,6 +82,46 @@ export function initUI(staticCtx) {
     const g = state.ctx && state.ctx.game;
     if (g) g.over = false;
   });
+
+  // ---------------------------------------------------------- peace dialog --
+  let peaceEl = null;
+  function openPeaceDialog(warId) {
+    const g = state.ctx && state.ctx.game;
+    const actions = state.actions;
+    if (!g || !actions) return;
+    const war = (g.wars || []).find((w) => w && w.id === warId);
+    if (!war) return;
+    if (!peaceEl) {
+      peaceEl = document.createElement('div');
+      peaceEl.id = 'peace-modal';
+      document.getElementById('ui-root').appendChild(peaceEl);
+    }
+    const terms = actions.peaceTerms ? actions.peaceTerms() : {};
+    const rows = Object.keys(terms).map((k) => {
+      const hint = k === 'white' ? 'Occupations revert; five-year truce.'
+        : k === 'tribute' ? 'As white peace, plus the enemy pays an indemnity. Needs a winning war.'
+          : 'Every province you occupy becomes yours. Needs a crushing war.';
+      return `<button class="btn peace-opt" data-level="${k}">${terms[k].label}<span class="peace-hint">${hint}</span></button>`;
+    }).join('');
+    peaceEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card">
+        <h2 class="peace-title">Terms for ${war.name || 'the war'}</h2>
+        <div class="peace-body">Envoys can carry one offer; a refusal closes the enemy's door for six months.</div>
+        ${rows}
+        <button class="btn peace-cancel">Recall the envoys</button>
+      </div>`;
+    peaceEl.classList.remove('hidden');
+    peaceEl.querySelector('.peace-cancel').addEventListener('click', () => peaceEl.classList.add('hidden'));
+    peaceEl.querySelector('.modal-scrim').addEventListener('click', () => peaceEl.classList.add('hidden'));
+    peaceEl.querySelectorAll('.peace-opt').forEach((b) => {
+      b.addEventListener('click', () => {
+        peaceEl.classList.add('hidden');
+        try { actions.offerPeace(warId, b.dataset.level); } catch (e) { warnOnce('offerPeace', e); }
+        outliner.refresh(true);
+      });
+    });
+  }
 
   // ------------------------------------------------------------ selection --
   function setSelectedProv(id) {
@@ -153,12 +194,15 @@ export function initUI(staticCtx) {
   });
 
   // ------------------------------------------------------------------ API --
-  function showStartScreen(bookmark, onPick) {
+  function showStartScreen(bookmark, onPick, continueInfo) {
     els.start.classList.remove('hidden');
     buildStartScreen(els.start, DEFINES, bookmark, (tag) => {
       els.start.classList.add('hidden');
       onPick(tag);
-    });
+    }, continueInfo ? {
+      label: continueInfo.label,
+      onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },
+    } : null);
   }
 
   function bindGame(ctx, actions) {
@@ -189,6 +233,8 @@ export function initUI(staticCtx) {
     bus.on('provinceController', safe('provCtrl', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('siegeStart', safe('siegeStart', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('siegeEnd', safe('siegeEnd', () => { panel.refresh(); outliner.refresh(); }));
+    bus.on('war', safe('war', () => { outliner.refresh(true); topbar.refresh(); }));
+    bus.on('provinceDev', safe('provDev', () => { panel.refresh(); topbar.refresh(); }));
 
     bus.on('mapclick', safe('mapclick', onMapClick));
     bus.on('maprightclick', safe('maprightclick', onMapRightClick));
