@@ -271,6 +271,7 @@ export function gameActions(ctx) {
         if (a.tag !== g.playerTag) return;
         if (a.inBattle) { say('Orders refused', a.name + ' is locked in battle.', 'bad'); return; }
         if (a.retreating) { say('Orders refused', a.name + ' is retreating and will not rally yet.', 'bad'); return; }
+        if ((a.shatteredDays || 0) > 0) { say('Orders refused', a.name + ' is shattered and must reform (' + a.shatteredDays + ' days).', 'bad'); return; }
         const p = ctx.byId(provId);
         if (!p || p.impassable) return;
         if (!canEnter(ctx, a.tag, provId)) {

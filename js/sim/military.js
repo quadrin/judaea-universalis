@@ -297,14 +297,18 @@ export function engageIfNeeded(ctx, army) {
       if (b.atk.indexOf(army.id) >= 0 || b.def.indexOf(army.id) >= 0) return;
       const defTags = battleSideArmies(ctx, b, 'def').map((a) => a.tag);
       const atkTags = battleSideArmies(ctx, b, 'atk').map((a) => a.tag);
-      if (defTags.some((t) => isHostile(ctx, army.tag, t))) { b.atk.push(army.id); army.inBattle = true; }
-      else if (atkTags.some((t) => isHostile(ctx, army.tag, t))) { b.def.push(army.id); army.inBattle = true; }
+      const hostileToDef = defTags.some((t) => isHostile(ctx, army.tag, t));
+      const hostileToAtk = atkTags.some((t) => isHostile(ctx, army.tag, t));
+      // Join a side only when unambiguous; hostile to both (e.g. rebels) stands
+      // off and engages the survivor once the battle resolves.
+      if (hostileToDef && !hostileToAtk) { b.atk.push(army.id); army.inBattle = true; }
+      else if (hostileToAtk && !hostileToDef) { b.def.push(army.id); army.inBattle = true; }
       return;
     }
     const here = armiesInProv(ctx, pid);
     const hostiles = here.filter((o) => o.id !== army.id && !o.retreating && num(o.shatteredDays) <= 0 && o.men > 0 && isHostile(ctx, army.tag, o.tag));
     if (hostiles.length) {
-      const friends = here.filter((o) => !o.retreating && !o.inBattle && o.men > 0 &&
+      const friends = here.filter((o) => !o.retreating && !o.inBattle && num(o.shatteredDays) <= 0 && o.men > 0 &&
         (o.id === army.id || sameSide(ctx, army.tag, o.tag)));
       startBattle(ctx, pid, friends.length ? friends : [army], hostiles);
       return;
@@ -473,7 +477,12 @@ export function moveArmiesDaily(ctx) {
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a || a.inBattle) continue;
-    if (num(a.shatteredDays) > 0) a.shatteredDays--;
+    if (num(a.shatteredDays) > 0) {
+      a.shatteredDays--;
+      // Recovery is an engagement trigger: without this, co-located hostiles
+      // coexist forever once the arrival-driven engage has been skipped.
+      if (a.shatteredDays <= 0) engageIfNeeded(ctx, a);
+    }
     if (!a.path || !a.path.length) {
       if (a.retreating) a.retreating = false;
       continue;
@@ -492,6 +501,13 @@ export function moveArmiesDaily(ctx) {
 }
 
 // ---------------------------------------------------------------- sieges
+// A famine ends when its siege does — otherwise Jerusalem starves forever and
+// the penalty even turns against a later garrison of the other side.
+function clearFamine(ctx, p) {
+  if (!p || p.name !== 'Jerusalem') return;
+  if (ctx.game.flags) delete ctx.game.flags.faminePenalty;
+  if (Array.isArray(p.modifiers)) p.modifiers = p.modifiers.filter((m) => m && m.id !== 'famine');
+}
 function playerConcerned(ctx, p, byTag) {
   const pt = ctx.game.playerTag;
   return byTag === pt || p.owner === pt || p.controller === pt;
@@ -499,7 +515,7 @@ function playerConcerned(ctx, p, byTag) {
 export function ensureSiege(ctx, p, byTag) {
   if (!p || p.impassable || p.siege) return;
   if (!isHostile(ctx, byTag, p.controller)) return;
-  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && a.men > 0 &&
+  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
     (a.tag === byTag || sameSide(ctx, a.tag, byTag)));
   if (!besiegers.length) return;
   const regs = besiegers.reduce((s, a) => s + regCount(a), 0);
@@ -519,9 +535,15 @@ export function ensureSiege(ctx, p, byTag) {
 function siegeDay(ctx, p) {
   const g = ctx.game;
   const s = p.siege;
-  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && a.men > 0 &&
+  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
     (a.tag === s.by || sameSide(ctx, a.tag, s.by)));
-  if (!besiegers.length) { p.siege = null; return; }
+  if (!besiegers.length) { // siege abandoned
+    const by = s.by;
+    p.siege = null;
+    clearFamine(ctx, p);
+    ctx.bus.emit('siegeEnd', { provId: p.id, by });
+    return;
+  }
   if (g.battles.some((b) => b.prov === p.id)) return; // battle rages; siege pauses
   s.days++;
   const fort = p.fort | 0;
@@ -554,6 +576,7 @@ function siegeDay(ctx, p) {
     const prev = p.controller;
     const by = s.by;
     p.siege = null;
+    clearFamine(ctx, p);
     changeControllerCore(ctx, p, by);
     p.garrison = Math.round(num(p.maxGarrison) * 0.2);
     addWarExhaustion(ctx, prev, 0.5);
@@ -574,12 +597,12 @@ export function tickSieges(ctx) {
     if (!p || !p.siege) continue;
     try { siegeDay(ctx, p); } catch (e) { warnOnce('siege', 'siege tick failed', e); }
   }
-  // idle hostile armies begin sieges (freshly spawned, or freed after battle)
+  // Idle armies re-check their province daily: engage recovered hostiles first,
+  // fall through to starting a siege (engageIfNeeded does both, in that order).
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
-    if (!a || a.inBattle || a.retreating || (a.path && a.path.length)) continue;
-    const p = ctx.byId(a.prov);
-    if (p && !p.siege && isHostile(ctx, a.tag, p.controller)) ensureSiege(ctx, p, a.tag);
+    if (!a || a.inBattle || a.retreating || num(a.shatteredDays) > 0 || (a.path && a.path.length)) continue;
+    engageIfNeeded(ctx, a);
   }
 }
 
@@ -588,7 +611,12 @@ export function changeControllerCore(ctx, p, tag) {
   if (!p || !tag || p.controller === tag) return;
   const from = p.controller;
   p.controller = tag;
-  p.siege = null;
+  if (p.siege) { // a controller flip voids any active siege — close it loudly (SPEC §7 pairing)
+    const by = p.siege.by;
+    p.siege = null;
+    clearFamine(ctx, p);
+    ctx.bus.emit('siegeEnd', { provId: p.id, by });
+  }
   ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
 }
 export function changeOwnerCore(ctx, p, tag) {
@@ -789,7 +817,8 @@ function sideGross(ctx, w, key) {
   }
   const occScore = enemyDev > 0 ? Math.min(60, (occupied / enemyDev) * 60) : 0;
   const bs = w._bs ? Math.min(40, num(w._bs[key])) : 0;
-  return bs + occScore;
+  const ev = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
+  return bs + occScore + ev;
 }
 export function updateWarscores(ctx) {
   for (const w of ctx.game.wars) {

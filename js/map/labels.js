@@ -53,7 +53,8 @@ export function createLabels(el, MAP_DATA, geom) {
       d.style.fontWeight = caps ? '600' : '400';
       d._caps = caps;
     }
-    d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -50%)`;
+    const tr = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -50%)`;
+    if (d._tr !== tr) { d.style.transform = tr; d._tr = tr; } // avoid per-frame style invalidation when idle
     if (d._shown !== true) { d.style.display = 'block'; d._shown = true; }
   }
 

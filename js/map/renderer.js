@@ -381,6 +381,19 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const lookW = N + 1;
 
   let gl = null;
+  let contextLost = false;
+  // Chrome evicts WebGL contexts of long-backgrounded tabs; without this the
+  // map goes silently black while the sim keeps ticking. preventDefault is
+  // required for 'webglcontextrestored' to ever fire.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    contextLost = true;
+    showErrorDiv(canvas, 'Graphics context lost — the map is paused. Reload the page to restore it.');
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    // Full GPU-resource rebuild is out of scope for the slice; a reload restores everything.
+    window.location.reload();
+  });
   try {
     gl = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false });
   } catch (e) { gl = null; }
@@ -675,7 +688,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     },
 
     render(camera, timeMs) {
-      if (!mainProg) return;
+      if (!mainProg || contextLost) return;
       try {
         syncSize();
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);

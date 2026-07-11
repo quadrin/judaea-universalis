@@ -78,9 +78,9 @@ export const BOOKMARK_66 = {
   startDate: { y: 66, m: 6, d: 1 },
 
   blurb: 'The procurator Gessius Florus has taken seventeen talents from the Temple treasury, '
-    + 'and Jerusalem has answered with stones, then with steel. The daily sacrifice for Caesar '
-    + 'has ceased; the Roman garrison of the city is dead; and in Antioch the governor of Syria '
-    + 'is mustering the Twelfth Legion. Four years of fire begin now.',
+    + 'and Jerusalem has answered with stones, then with steel. In the Temple, the captain '
+    + 'Eleazar moves to refuse every offering from a foreign hand; in Antioch the governor of '
+    + 'Syria watches, and waits, and counts his legions. Four years of fire begin now.',
 
   playableTags: [
     {
@@ -147,7 +147,9 @@ export const BOOKMARK_66 = {
     setOpinion(g, 'AGR', 'ROM', 150);  setOpinion(g, 'ROM', 'AGR', 150);
     setOpinion(g, 'AGR', 'JUD', -50);  setOpinion(g, 'JUD', 'AGR', -75);
     setOpinion(g, 'PAR', 'JUD', 40);   setOpinion(g, 'JUD', 'PAR', 60);
-    setOpinion(g, 'ARM', 'ROM', -40);  setOpinion(g, 'ARM', 'PAR', 40);
+    // Post-Rhandeia: Tiridates was crowned by Nero weeks before the start date —
+    // Armenia is formally amicable with Rome while remaining an Arsacid house.
+    setOpinion(g, 'ARM', 'ROM', 15);  setOpinion(g, 'ARM', 'PAR', 40);
 
     // --- Starting modifiers. ---
     h.addTagModifier(ctx, 'JUD', {
@@ -250,16 +252,24 @@ export const BOOKMARK_66 = {
           return;
         }
         // Timed win: on (or after) 1 January 71, Jerusalem plus a living Jewish heartland.
+        // If the House burned during a Roman interlude, the win stands but the text
+        // and score must not pretend otherwise.
         if (dateGE(g.date, 71, 1) && jerusalemHeld
             && h.countControlled(ctx, 'JUD', { religion: 'judaism' }) >= 6) {
+          const burned = !!h.getFlag(ctx, 'templeBurned');
           fireEventById(ctx, 'ev_negotiated_peace');
           h.endGame(ctx, {
             result: 'win',
-            title: 'A Negotiated Peace',
-            text: 'Vespasian is secure on his throne and counting the cost of a fifth year of '
-              + 'war. A client Judaea — tributary, disarmed at the frontiers, but standing — '
-              + 'is cheaper than three legions in perpetuity. The Temple stands. The war ends.',
-            score: 150,
+            title: burned ? 'A Peace Among Ashes' : 'A Negotiated Peace',
+            text: burned
+              ? 'Vespasian is secure on his throne and counting the cost of a fifth year of '
+                + 'war. A client Judaea — tributary, disarmed at the frontiers, but standing — '
+                + 'is cheaper than three legions in perpetuity. The city is held; the sanctuary '
+                + 'is in ashes. On the Temple Mount, men clear the stones and remember.'
+              : 'Vespasian is secure on his throne and counting the cost of a fifth year of '
+                + 'war. A client Judaea — tributary, disarmed at the frontiers, but standing — '
+                + 'is cheaper than three legions in perpetuity. The Temple stands. The war ends.',
+            score: burned ? 100 : 150,
           });
           return;
         }

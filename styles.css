@@ -79,11 +79,12 @@ button {
   display: block;
 }
 #map-canvas { z-index: 1; }
-#overlay-canvas { z-index: 2; pointer-events: none; }
+/* Units and siege/battle icons read ABOVE geography text, not under it. */
+#overlay-canvas { z-index: 3; pointer-events: none; }
 #labels-layer {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 2;
   overflow: hidden;
   pointer-events: none;
   font-family: var(--serif);
@@ -897,3 +898,18 @@ button {
   color: var(--text-dim);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
+
+/* -------------------------------------------- narrow-width degradation ---
+   The pause/speed controls must never become unreachable: shed the
+   lowest-value readouts first, and keep a scroll backstop for the rest. */
+@media (max-width: 860px) {
+  #topbar { gap: 8px; padding: 0 8px; font-size: 13px; }
+  .tb-points, .tb-sub { display: none; }
+  .tb-date { font-size: 12px; letter-spacing: 0.02em; }
+}
+@media (max-width: 680px) {
+  .tb-item[data-ref="stabilityWrap"], .tb-item[data-ref="legitimacyWrap"] { display: none; }
+  #toast-container { right: 10px; width: min(300px, calc(100vw - 20px)); }
+  #outliner { width: 220px; }
+}
+#topbar { overflow-x: auto; scrollbar-width: none; }

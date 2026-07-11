@@ -217,6 +217,8 @@ const PROVINCES = [
   P('Machaerus', 35.63, 31.56, 0.90, 'JUD', 'desert', 'salt', 'judaism', 'judean', 1, 1, 2, 2),
   P('Sepphoris', 35.28, 32.75, 0.75, 'JUD', 'hills', 'grain', 'judaism', 'galilean', 5, 4, 4, 0),
   P('Jotapata', 35.28, 32.85, 0.70, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 2),
+  // Gameplay abstraction: Nero had granted Tiberias and Tarichaea to Agrippa II
+  // (BJ 2.252) — both cities promptly joined the revolt, which JUD ownership models.
   P('Tiberias', 35.49, 32.77, 0.70, 'JUD', 'coast', 'fish', 'judaism', 'galilean', 4, 4, 3, 0),
   P('Tarichaea', 35.50, 32.87, 0.70, 'JUD', 'coast', 'fish', 'judaism', 'galilean', 3, 4, 3, 0),
   P('Gischala', 35.45, 33.02, 0.75, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 0),
@@ -228,6 +230,8 @@ const PROVINCES = [
   P('Hebron', 35.10, 31.53, 0.85, 'ROM', 'hills', 'livestock', 'judaism', 'judean', 3, 3, 3, 0),
   P('Adora', 34.95, 31.40, 0.95, 'ROM', 'hills', 'livestock', 'judaism', 'idumean', 3, 3, 3, 0),
   P('Sebaste', 35.19, 32.28, 0.80, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
+  // Name anachronism (SPEC-pinned): Flavia Neapolis was founded 72/73 CE; in 66 the
+  // town below Gerizim was Shechem (Josephus' Mabartha). Rename needs a SPEC pass.
   P('Neapolis', 35.27, 32.22, 0.75, 'ROM', 'hills', 'olive_oil', 'samaritanism', 'samaritan', 4, 4, 4, 0,
     { holy: 'gerizim' }),
   P('Antipatris', 34.93, 32.10, 0.75, 'ROM', 'farmland', 'grain', 'judaism', 'judean', 3, 4, 3, 0),

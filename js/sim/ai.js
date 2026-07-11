@@ -151,11 +151,12 @@ function runTagAI(ctx, tag) {
   if (!armies.length) return;
   let main = armies[0];
   for (const a of armies) if (a.men > main.men) main = a;
-  // gather: small stacks converge on the main stack
+  // gather: every idle non-main stack converges on the main stack — a 0.6x
+  // threshold left mid-sized armies permanently orderless after a lost battle
   for (const a of armies) {
     if (a === main) continue;
     if (a.prov === main.prov) { mergeInto(ctx, a.id, main.id); continue; }
-    if (a.men < main.men * 0.6 && !busy(a) && !besiegingHere(ctx, a)) {
+    if (!busy(a) && !besiegingHere(ctx, a)) {
       issueMove(ctx, a, main.prov);
     }
   }

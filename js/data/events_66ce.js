@@ -66,14 +66,17 @@ function judWarscore(ctx) {
   return typeof v === 'number' ? v : 0;
 }
 
-// Direct warscore nudge for scripted catastrophes (no helper exists for this).
+// Scripted warscore swings persist in the war's eventScore side-bucket, which
+// sideGross folds into every monthly rebuild (writing w.warscore directly gets
+// clobbered by updateWarscores within the month).
 function addWarscore(ctx, tag, amount) {
   try {
     const w = findJudRomWar(ctx.game);
-    if (w && w.warscore && typeof w.warscore === 'object') {
-      const cur = typeof w.warscore[tag] === 'number' ? w.warscore[tag] : 0;
-      w.warscore[tag] = Math.max(-100, Math.min(100, cur + amount));
-    }
+    if (!w) return;
+    if (!w.eventScore) w.eventScore = { att: 0, def: 0 };
+    const side = (w.attackers || []).indexOf(tag) >= 0 ? 'att'
+      : (w.defenders || []).indexOf(tag) >= 0 ? 'def' : null;
+    if (side) w.eventScore[side] += amount;
   } catch (e) { warnOnce('addWarscore', e); }
 }
 
@@ -199,7 +202,8 @@ export const EVENTS_66 = [
         tooltip: 'Communal Massacres (+3 unrest, -20% tax, 18 months) in six mixed cities; +1 war exhaustion for both Judaea and Rome.',
         effects: guard('ev_greek_city_massacres:0', (ctx) => {
           const h = ctx.helpers;
-          const cities = ['Caesarea Maritima', 'Scythopolis', 'Ptolemais', 'Ascalon', 'Damascus', 'Alexandria'];
+          // Damascus' massacre followed Beth Horon (BJ 2.559-561) — applied there instead.
+          const cities = ['Caesarea Maritima', 'Scythopolis', 'Ptolemais', 'Ascalon', 'Alexandria'];
           for (const name of cities) {
             h.addProvinceModifier(ctx, name, {
               id: 'communal_massacres', name: 'Communal Massacres', months: 18,
@@ -218,7 +222,7 @@ export const EVENTS_66 = [
     id: 'ev_cestius_marches',
     title: 'Cestius Gallus Marches',
     desc: 'The governor of Syria can no longer wait upon events. Cestius Gallus leaves Antioch '
-      + 'with the Twelfth Legion Fulminata, two thousand picked men from the other legions, '
+      + 'with the Twelfth Legion Fulminata, two thousand picked men from each of the other legions, '
       + 'six cohorts of foot and four wings of horse, besides the royal contingents of Agrippa '
       + 'and Sohaemus. Ptolemais fills with soldiers; Chabulon burns; the column turns south '
       + 'along the coast, and then up into the hills, toward the city.',
@@ -296,7 +300,7 @@ export const EVENTS_66 = [
     options: [
       {
         label: 'The Twelfth has lost its eagle',
-        tooltip: 'Cestius loses ~8,000 men and flees to Ptolemais. Judaea: +25 military points, +15 legitimacy, +2,000 manpower, +15 warscore, and Captured Siege Engines (+1 siege, 24 months).',
+        tooltip: 'Cestius loses nearly six thousand men — and his baggage and engines — and flees to Ptolemais. Judaea: +25 military points, +15 legitimacy, +2,000 manpower, +15 warscore, and Captured Siege Engines (+1 siege, 24 months).',
         effects: guard('ev_beth_horon:0', (ctx) => {
           const h = ctx.helpers;
           const cest = armyByGeneral(ctx, 'ROM', 'Cestius Gallus');
@@ -304,7 +308,7 @@ export const EVENTS_66 = [
             const regs = cest.regiments
               ? ((cest.regiments.inf || 0) + (cest.regiments.cav || 0))
               : Math.round((cest.men || 12000) / 1000);
-            const keep = Math.max(2, regs - 8);
+            const keep = Math.max(2, regs - 6); // ~5,700 dead per Josephus (BJ 2.555)
             h.removeArmy(ctx, cest.id);
             h.spawnArmy(ctx, 'ROM', 'Ptolemais', {
               inf: keep, name: 'Remnants of the Twelfth',
@@ -319,6 +323,11 @@ export const EVENTS_66 = [
           });
           addWarscore(ctx, 'JUD', 15);
           h.setFlag(ctx, 'bethHoron', true);
+          // The Damascenes turned on their Jews in the panic after Cestius' rout (BJ 2.559-561).
+          h.addProvinceModifier(ctx, 'Damascus', {
+            id: 'communal_massacres', name: 'Communal Massacres', months: 18,
+            effects: { unrest: 3, taxMult: 0.8 },
+          });
           h.notify(ctx, {
             title: 'Disaster at Beth Horon', type: 'good', provName: 'Emmaus',
             text: 'The Twelfth Legion is mauled in the passes. Its engines are ours.',
@@ -335,8 +344,8 @@ export const EVENTS_66 = [
     desc: 'In the Temple, the coalition of priests and notables parcels out the country: '
       + 'Ananus ben Ananus holds the city, Eleazar ben Ananias takes Idumea, and the young '
       + 'priest Joseph ben Matthias — who will one day write this war\'s history under '
-      + 'another name — is sent north to Galilee, where the first blow must fall. He finds '
-      + 'the province quarrelsome, half-Greek, and unwalled.',
+      + 'another name — is confirmed in the Galilee command he already holds, where the first '
+      + 'blow must fall. He finds the province quarrelsome, half-Greek, and unwalled.',
     forTag: 'JUD',
     date: { y: 66, m: 12 },
     aiOption: 0,
@@ -717,13 +726,16 @@ export const EVENTS_66 = [
       + 'fire from the inner court to the roofline. The daily offering had already ceased for '
       + 'want of men; now the place itself ascends. Those who lived would remember the sound: '
       + 'not the flames but the cry, from the city and from the ridge across the valley, of a '
-      + 'people watching the center of the world go out. Far away, in a coastal town called '
-      + 'Yavneh, a scholar carried out of the siege in a coffin has begun to teach. The sages '
-      + 'begin again.',
+      + 'people watching the center of the world go out. Far away, in a town of the coastal '
+      + 'plain called Yavneh, a scholar carried out of the siege in a coffin has begun to '
+      + 'teach. The sages begin again.',
     forTag: 'both',
     major: true,
     trigger: safeTrigger('ev_temple_burns', (ctx) => {
-      // Any occupier on Rome's side of the war burns as surely as Rome itself.
+      // Any occupier on Rome's side of the war burns as surely as Rome itself —
+      // but the text presupposes the great siege: not before Titus is in theater
+      // (ev_vespasian_arrives, 67-02). A Cestius coup-de-main in 66 spares the House.
+      if (!ctx.game.firedEvents.ev_vespasian_arrives) return false;
       const jer = ctx.prov('Jerusalem');
       return !!jer && ['ROM', 'AGR', 'NAB'].indexOf(jer.controller) >= 0;
     }),
@@ -799,7 +811,7 @@ export const EVENTS_66 = [
     title: 'Shadows on the Euphrates',
     desc: 'The envoys sent beyond the river have not returned empty-handed. Vologases has '
       + 'moved his court toward the frontier; Parthian horse exercise within sight of '
-      + 'Zeugma\'s ferry, and the exilarch\'s agents in Nehardea are buying grain in the '
+      + 'Zeugma\'s ferry, and the agents of Nehardea\'s elders are buying grain in the '
       + 'quantities that feed armies. Rome remembers Carrhae the way a body remembers a '
       + 'wound. Every eastern legate now writes his dispatches with one eye over his shoulder.',
     forTag: 'both',
@@ -892,8 +904,9 @@ export const EVENTS_66 = [
   {
     id: 'ev_zion_coinage',
     title: 'Year One of the Freedom of Zion',
-    desc: 'For the first time since the Hasmoneans, Jewish silver: the Temple mint is '
-      + 'striking shekels of full weight — a chalice on one face, a stem of three '
+    desc: 'For the first time in Israel\'s history, Jewish silver — the Hasmoneans struck '
+      + 'only bronze, and the shekels of the Temple tax were always Tyre\'s. Now the Temple '
+      + 'mint is striking shekels of full weight — a chalice on one face, a stem of three '
       + 'pomegranates on the other, lettered in the old script: "Shekel of Israel. Year One '
       + 'of the Freedom of Zion." No emperor\'s face. Men who cannot read the ancient '
       + 'letters still understand exactly what the coin is saying.',

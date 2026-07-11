@@ -68,33 +68,39 @@ async function boot() {
 
   let last = performance.now();
   let acc = 0;
+  let frameWarned = false;
   function frame(now) {
-    const dt = Math.min(100, now - last);
-    last = now;
-    camera.update(dt);
-    if (ctx && !ctx.game.paused && !ctx.game.over) {
-      acc += dt;
-      const msPerDay = DEFINES.SPEED_MS[ctx.game.speed] || 450;
-      let guard = 0;
-      while (acc >= msPerDay && guard++ < 30) {
-        acc -= msPerDay;
-        tickDay(ctx);
-        colorsDirty = true;
-        if (ctx.game.paused || ctx.game.over) { acc = 0; break; }
-      }
-    } else {
-      acc = 0;
-    }
-    if (colorsDirty && ctx) {
-      const res = computeMapmodeColors(ctx, mapmode);
-      renderer.setProvinceColors(res.primary, res.secondary, res.flags);
-      if (res.params) renderer.setMapmodeParams(res.params);
-      colorsDirty = false;
-    }
-    renderer.render(camera, now);
-    overlay.draw(ctx ? ctx.game : null, camera, now);
-    labels.update(ctx, camera, mapmode);
+    // Re-schedule FIRST: one bad frame must cost a frame, not the whole game.
     requestAnimationFrame(frame);
+    try {
+      const dt = Math.min(100, now - last);
+      last = now;
+      camera.update(dt);
+      if (ctx && !ctx.game.paused && !ctx.game.over) {
+        acc += dt;
+        const msPerDay = DEFINES.SPEED_MS[ctx.game.speed] || 450;
+        let guard = 0;
+        while (acc >= msPerDay && guard++ < 30) {
+          acc -= msPerDay;
+          tickDay(ctx);
+          colorsDirty = true;
+          if (ctx.game.paused || ctx.game.over) { acc = 0; break; }
+        }
+      } else {
+        acc = 0;
+      }
+      if (colorsDirty && ctx) {
+        const res = computeMapmodeColors(ctx, mapmode);
+        renderer.setProvinceColors(res.primary, res.secondary, res.flags);
+        if (res.params) renderer.setMapmodeParams(res.params);
+        colorsDirty = false;
+      }
+      renderer.render(camera, now);
+      overlay.draw(ctx ? ctx.game : null, camera, now);
+      labels.update(ctx, camera, mapmode);
+    } catch (e) {
+      if (!frameWarned) { frameWarned = true; console.error('[frame]', e); }
+    }
   }
   requestAnimationFrame(frame);
 
