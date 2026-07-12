@@ -4,6 +4,8 @@ import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
 import { EVENTS_66 } from './js/data/events_66ce.js';
 import { BOOKMARK_66 } from './js/data/bookmark_66ce.js';
+import { EVENTS_167 } from './js/data/events_167bce.js';
+import { BOOKMARK_167 } from './js/data/bookmark_167bce.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
 import { createCamera } from './js/map/camera.js';
@@ -43,9 +45,18 @@ async function boot() {
     .forEach((ev) => bus.on(ev, () => { colorsDirty = true; }));
 
   // ------------------------------------------------------------- save/load --
-  const SAVE_KEY = 'ju_save_66ce';
-  function startGame(game) {
-    ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events: EVENTS_66 });
+  const BOOKMARKS = [
+    { bookmark: BOOKMARK_66, events: EVENTS_66 },
+    { bookmark: BOOKMARK_167, events: EVENTS_167 },
+  ];
+  const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
+  const saveKey = (id) => 'ju_save_' + id;
+  const fmtYr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
+
+  let activeEntry = BOOKMARKS[0];
+  function startGame(game, entry) {
+    activeEntry = entry;
+    ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark, events: entry.events });
     actions = gameActions(ctx);
     ui.bindGame(ctx, actions);
     const jer = ctx.prov('Jerusalem');
@@ -56,34 +67,42 @@ async function boot() {
   function doSave(silent) {
     if (!ctx) return;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, game: ctx.game }));
+      localStorage.setItem(saveKey(ctx.game.bookmarkId),
+        JSON.stringify({ v: SAVE_VERSION, savedAt: Date.now(), game: ctx.game }));
       if (!silent) {
         const d = ctx.game.date;
-        bus.emit('notify', { title: 'Chronicle written', text: 'Campaign saved — ' + (DEFINES.MONTH_NAMES[d.m - 1] || d.m) + ' ' + d.y + ' CE.', type: 'info' });
+        bus.emit('notify', { title: 'Chronicle written', text: 'Campaign saved — ' + (DEFINES.MONTH_NAMES[d.m - 1] || d.m) + ' ' + fmtYr(d.y) + '.', type: 'info' });
       }
     } catch (e) { console.warn('[save]', e); }
   }
-  function readSave() {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || parsed.v !== SAVE_VERSION) return null;
-      return reviveGame(parsed.game);
-    } catch (e) { return null; }
+  function readNewestSave() {
+    let best = null;
+    for (const entry of BOOKMARKS) {
+      try {
+        const raw = localStorage.getItem(saveKey(entry.bookmark.id));
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.v !== SAVE_VERSION) continue;
+        const game = reviveGame(parsed.game);
+        if (!game) continue;
+        if (!best || (parsed.savedAt || 0) > best.savedAt) best = { savedAt: parsed.savedAt || 0, game, entry };
+      } catch (e) { /* corrupt save: ignore */ }
+    }
+    return best;
   }
   bus.on('saveRequest', () => doSave(false));
   bus.on('month', ({ date }) => { if (date && date.m === 1) doSave(true); }); // yearly autosave
 
-  const saved = readSave();
-  const savedTag = saved && DEFINES.TAGS[saved.playerTag];
-  ui.showStartScreen(BOOKMARK_66, (playerTag) => {
-    const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66, events: EVENTS_66, playerTag, rngSeed: 20260711 });
-    startGame(game);
+  const saved = readNewestSave();
+  const savedTag = saved && DEFINES.TAGS[saved.game.playerTag];
+  ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag) => {
+    const entry = byId(bookmark.id);
+    const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events, playerTag, rngSeed: 20260711 });
+    startGame(game, entry);
   }, saved ? {
-    label: (savedTag ? savedTag.name : saved.playerTag) + ', '
-      + (DEFINES.MONTH_NAMES[saved.date.m - 1] || saved.date.m) + ' ' + saved.date.y + ' CE',
-    onContinue: () => startGame(saved),
+    label: (savedTag ? savedTag.name : saved.game.playerTag) + ', '
+      + (DEFINES.MONTH_NAMES[saved.game.date.m - 1] || saved.game.date.m) + ' ' + fmtYr(saved.game.date.y),
+    onContinue: () => startGame(saved.game, saved.entry),
   } : null);
 
   camera.onClick((mapX, mapY, sx, sy) => {

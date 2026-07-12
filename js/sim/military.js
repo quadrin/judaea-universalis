@@ -896,7 +896,7 @@ export function makePeace(ctx, war, byTag, level) {
   }
   ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
   ctx.bus.emit('notify', {
-    title: 'Peace of ' + g.date.y + ' CE',
+    title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
     text: war.name + ' ends: ' + (PEACE_TERMS[level] ? PEACE_TERMS[level].label : level) + '. A five-year truce holds.',
     type: 'good',
   });

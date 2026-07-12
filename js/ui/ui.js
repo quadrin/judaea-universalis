@@ -194,11 +194,11 @@ export function initUI(staticCtx) {
   });
 
   // ------------------------------------------------------------------ API --
-  function showStartScreen(bookmark, onPick, continueInfo) {
+  function showStartScreen(bookmarks, onPick, continueInfo) {
     els.start.classList.remove('hidden');
-    buildStartScreen(els.start, DEFINES, bookmark, (tag) => {
+    buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag) => {
       els.start.classList.add('hidden');
-      onPick(tag);
+      onPick(bookmark, tag);
     }, continueInfo ? {
       label: continueInfo.label,
       onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },

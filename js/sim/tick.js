@@ -26,7 +26,11 @@ function advanceDate(ctx) {
   if (g.date.d > dpm) {
     g.date.d = 1;
     g.date.m += 1;
-    if (g.date.m > 12) { g.date.m = 1; g.date.y += 1; }
+    if (g.date.m > 12) {
+      g.date.m = 1;
+      g.date.y += 1;
+      if (g.date.y === 0) g.date.y = 1; // no year zero: 1 BCE -> 1 CE
+    }
   }
 }
 

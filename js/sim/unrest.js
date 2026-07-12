@@ -78,10 +78,16 @@ export function explainUnrest(ctx, provId) {
 function fireRevolt(ctx, p) {
   const g = ctx.game;
   const size = Math.max(1, Math.round(num(p.dev && p.dev.mp) * B(ctx, 'rebelSizePerDev', 0.4)));
+  // The faithful rise for whichever living co-religionist power fights their
+  // ruler (JUD in 66 CE, HAS in 167 BCE); otherwise a generic rising.
   let rebelTag = 'REB';
-  if (p.religion === 'judaism' && p.owner !== 'JUD' &&
-      g.tags.JUD && g.tags.JUD.alive && isHostile(ctx, 'JUD', p.owner)) {
-    rebelTag = 'JUD'; // the faithful rise for Judaea
+  for (const key of Object.keys(g.tags)) {
+    const t = g.tags[key];
+    if (t && t.alive && key !== 'REB' && key !== p.owner &&
+        t.religion === p.religion && isHostile(ctx, key, p.owner)) {
+      rebelTag = key;
+      break;
+    }
   }
   // Throttle the tide: at most 8 rebel bands under arms at once, and a province
   // that has risen cannot rise again for 30 months.
@@ -90,7 +96,7 @@ function fireRevolt(ctx, p) {
     for (const id of Object.keys(g.armies)) { const a = g.armies[id]; if (a && a.tag === 'REB' && a.men > 0) rebCount++; }
     if (rebCount >= 8) { p.revoltProgress = 0; p.revoltCooldownMonths = 6; return; }
   }
-  const name = rebelTag === 'JUD' ? 'Zealots of ' + p.name : 'Rebels of ' + p.name;
+  const name = rebelTag !== 'REB' ? 'Zealots of ' + p.name : 'Rebels of ' + p.name;
   spawnArmy(ctx, rebelTag, p.name, { inf: size, name });
   if (num(p.garrison) <= 0) changeControllerCore(ctx, p, rebelTag);
   p.revoltProgress = 0;
@@ -98,7 +104,7 @@ function fireRevolt(ctx, p) {
   p.unrest = Math.max(0, num(p.unrest) - 4); // steam vented
   ctx.bus.emit('notify', {
     title: 'Revolt in ' + p.name,
-    text: (rebelTag === 'JUD' ? 'The province rises for Judaea — ' : 'Rebels take up arms — ') + size + ',000 men in the streets.',
+    text: (rebelTag !== 'REB' ? 'The province rises for ' + ((g.tags[rebelTag] && g.tags[rebelTag].name) || rebelTag) + ' — ' : 'Rebels take up arms — ') + size + ',000 men in the streets.',
     type: 'war', provName: p.name,
   });
 }

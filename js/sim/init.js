@@ -60,7 +60,9 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
         prod: num(s.dev && s.dev.prod),
         mp: num(s.dev && s.dev.mp),
       },
-      owner: s.owner || 'WASTE', controller: s.owner || 'WASTE',
+      // bookmark.owners overrides the map's default (66 CE) political layer
+      owner: (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE',
+      controller: (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE',
       autonomy: 0.25, unrest: 0, revoltProgress: 0,
       fort, garrison: maxGarrison, maxGarrison,
       siege: null, modifiers: [],
@@ -69,9 +71,12 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     });
   }
 
+  // Tags absent from a bookmark (e.g. Rome in 167 BCE) never enter play.
+  const active = bookmark && Array.isArray(bookmark.activeTags) ? bookmark.activeTags : null;
   const tagDefs = DEFINES.TAGS || {};
   for (const key of Object.keys(tagDefs)) {
     if (key === 'WASTE') continue;
+    if (active && key !== 'REB' && active.indexOf(key) < 0) continue;
     const d = tagDefs[key] || {};
     game.tags[key] = {
       tag: key,

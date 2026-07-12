@@ -53,11 +53,16 @@ export function fmtMen(n) {
   return String(n);
 }
 
-/** {y,m,d} -> '1 June 66 CE'. */
+/** Year -> '66 CE' / '167 BCE' (negative years are BCE; there is no year 0). */
+export function fmtYear(y) {
+  return y < 0 ? `${-y} BCE` : `${y} CE`;
+}
+
+/** {y,m,d} -> '1 June 66 CE' / '1 June 167 BCE'. */
 export function fmtDate(date, monthNames) {
   if (!date) return '';
   const m = (Array.isArray(monthNames) && monthNames[date.m - 1]) || ('M' + date.m);
-  return `${date.d} ${m} ${date.y} CE`;
+  return `${date.d} ${m} ${fmtYear(date.y)}`;
 }
 
 /** Signed value with explicit +/− and up to `digits` decimals. */

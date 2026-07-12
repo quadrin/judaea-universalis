@@ -1,7 +1,8 @@
 # Judaea Universalis
 
-An EU4-style grand-strategy vertical slice set in the Roman Near East. This build ships one
-bookmark — **The Great Revolt, 66 CE** — playable as **Judaea** (hard) or **Rome** (moderate).
+An EU4-style grand-strategy game set in the ancient Near East. Two bookmarks:
+**The Great Revolt, 66 CE** (Judaea or Rome) and **The Maccabean Revolt, 167 BCE**
+(Hasmonean Judaea or the Seleucid Empire).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
 

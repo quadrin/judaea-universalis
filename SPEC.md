@@ -637,3 +637,20 @@ renderer.render → overlay.draw → labels.update.
   `declareWar`. Actions: `peaceTerms()`, `offerPeace(warId, level)` — 6-month envoy
   cooldown on refusal. Wars flagged `noNegotiation` (the bookmark's scripted war) only
   resolve through events/victory. UI: dove button on outliner war rows → `#peace-modal`.
+
+## 13. v1.2: multiple bookmarks
+
+- Years may be NEGATIVE = BCE (no year 0; tick skips -1 → 1). All UI renders through
+  `fmtYear`. Event/bookmark dates use negative years, e.g. `{y:-167, m:11}`.
+- A bookmark file may additionally provide:
+  - `owners: { 'Province Name': 'TAG', ... }` — political overrides applied by initGame on
+    top of map_data's 66 CE defaults. MUST cover every province owned by a tag absent from
+    this bookmark (else it keeps a ghost owner; fails soft but looks wrong).
+  - `activeTags: ['SEL', 'PTO', ...]` — tags in play; all others (except REB) are never
+    created for this game. WASTE is not a tag.
+- main.js keeps a registry: `{bookmark, events}` pairs; saves are per-bookmark
+  (`ju_save_<id>`, wrapper `{v, savedAt, game}`); the newest save shows as Continue.
+- Start screen is two-step: bookmark cards → nation cards (startscreen.js §8.2 still owns it).
+- 167 BCE tags in DEFINES: SEL (Seleucid Empire), PTO (Ptolemaic Egypt), HAS (Hasmonean
+  Judaea). Content: `js/data/bookmark_167bce.js` (BOOKMARK_167), `js/data/events_167bce.js`
+  (EVENTS_167), same schemas as §9.

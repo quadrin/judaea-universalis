@@ -103,6 +103,22 @@ export const DEFINES = {
       description: 'The last Herodian: a Jewish king who has cast his lot with Rome.',
       ideas: { incomeMult: 1.05 },
     },
+    // --- 167 BCE era tags (Maccabean Revolt bookmark) ---
+    SEL: {
+      name: 'Seleucid Empire', color: [206, 178, 80], religion: 'hellenism', culture: 'greek', capital: 'Antioch',
+      description: 'Alexander\'s heirs in the east — vast, glittering, and coming apart at the dynastic seams.',
+      ideas: { disciplineMult: 1.08, siegeBonus: 1, incomeMult: 1.05 },
+    },
+    PTO: {
+      name: 'Ptolemaic Egypt', color: [90, 140, 190], religion: 'egyptian', culture: 'greek', capital: 'Alexandria',
+      description: 'The granary of the Mediterranean, ruled from Alexandria by Macedonian god-kings.',
+      ideas: { incomeMult: 1.15, manpowerMult: 0.9 },
+    },
+    HAS: {
+      name: 'Hasmonean Judaea', color: [40, 96, 170], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The sons of Mattathias — priests with swords, fighting for the Law in the hills they know.',
+      ideas: { moraleMult: 1.12, hillDefBonus: 1, manpowerMult: 0.8 },
+    },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
