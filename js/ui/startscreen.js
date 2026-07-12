@@ -1,6 +1,7 @@
 // js/ui/startscreen.js — title screen (SPEC §8.2 / §8.3, §13).
 // Two steps: pick a bookmark (era), then pick a nation within it.
 import { esc, rgb, rgba, fmtYear } from './format.js';
+import { icon, divider } from './icons.js';
 
 export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo) {
   if (!root) return;
@@ -10,7 +11,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo)
   function shell(inner) {
     return `
     <div class="ss-inner">
-      <div class="ss-rule">— &nbsp;✦&nbsp; —</div>
+      <div class="ss-rule">${divider()}</div>
       <h1 class="ss-title">JVDAEA VNIVERSALIS</h1>
       ${inner}
       <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed</div>
@@ -23,12 +24,12 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo)
         <div class="bm-year">${esc(fmtYear(b.startDate.y))}</div>
         <div class="bm-name">${esc(b.name)}</div>
         <div class="bm-blurb">${esc(b.blurb || '')}</div>
-        <div class="nc-cta">✦ &nbsp;Open this chapter&nbsp; ✦</div>
+        <div class="nc-cta">${icon('star4', 'icon-xs')} &nbsp;Open this chapter&nbsp; ${icon('star4', 'icon-xs')}</div>
       </div>`).join('');
     root.innerHTML = shell(`
       <div class="ss-sub">Choose a bookmark</div>
       <div class="ss-cards">${cards}</div>
-      ${continueInfo ? `<button class="ss-continue">✦ &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ✦</button>` : ''}`);
+      ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}`);
     root.querySelectorAll('.bm-card').forEach((card) => {
       const open = () => renderNations(list[Number(card.dataset.bm)]);
       card.addEventListener('click', open);
@@ -63,7 +64,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo)
             ${def.description ? `<div class="nc-desc">${esc(def.description)}</div>` : ''}
             <div class="nc-blurb">${esc(p.blurb || '')}</div>
           </div>
-          <div class="nc-cta">✦ &nbsp;Take up the standard&nbsp; ✦</div>
+          <div class="nc-cta">${icon('star4', 'icon-xs')} &nbsp;Take up the standard&nbsp; ${icon('star4', 'icon-xs')}</div>
         </div>`;
     }).join('');
     root.innerHTML = shell(`

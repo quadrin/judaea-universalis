@@ -8,14 +8,15 @@ import { createTopbar } from './topbar.js';
 import { createProvincePanel } from './province_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
+import { icon } from './icons.js';
 
 const MAPMODES = [
-  { id: 'political', ico: '🏛', name: 'Political' },
-  { id: 'terrain', ico: '⛰', name: 'Terrain' },
-  { id: 'religion', ico: '🕎', name: 'Religion' },
-  { id: 'culture', ico: '🗣', name: 'Culture' },
-  { id: 'development', ico: '🏗', name: 'Development' },
-  { id: 'unrest', ico: '🔥', name: 'Unrest' },
+  { id: 'political', ico: icon('temple'), name: 'Political' },
+  { id: 'terrain', ico: icon('mountain'), name: 'Terrain' },
+  { id: 'religion', ico: icon('altar'), name: 'Religion' },
+  { id: 'culture', ico: icon('amphora'), name: 'Culture' },
+  { id: 'development', ico: icon('bricks'), name: 'Development' },
+  { id: 'unrest', ico: icon('flame'), name: 'Unrest' },
 ];
 
 function buildMapmodeBar(bar, bus) {

@@ -149,11 +149,11 @@ button {
 
 .tb-item {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 5px;
   white-space: nowrap;
 }
-.tb-ico { font-size: 13px; opacity: 0.9; }
+.tb-ico { display: inline-flex; align-items: center; color: var(--gold); opacity: 0.9; }
 .tb-v { font-weight: bold; color: var(--parch); font-variant-numeric: tabular-nums; }
 .tb-v.neg { color: #e06a5a; }
 .tb-v.pos { color: #8fbf7a; }
@@ -1046,3 +1046,93 @@ button {
   border-radius: 3px;
 }
 .ss-back:hover { color: var(--gold-bright); border-color: var(--gold); }
+
+/* ============================================================
+   Hand-drawn inline-SVG icon set (js/ui/icons.js)
+   24x24 viewBox · stroke currentColor 1.6 · round caps/joins.
+   Icons inherit the gold/parchment palette from their context;
+   active states brighten via color, not filters.
+   ============================================================ */
+.icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  flex: none;
+}
+.icon-xs { width: 10px; height: 10px; vertical-align: -1px; }
+.icon-sm { width: 12px; height: 12px; vertical-align: -2px; }
+.icon-k { width: 12px; height: 12px; vertical-align: -2px; margin-right: 5px; opacity: 0.75; }
+.icon-row { width: 12px; height: 12px; vertical-align: -2px; }
+.icon-pip { width: 11px; height: 11px; vertical-align: -1px; }
+.icon-plus { width: 8px; height: 8px; }
+.divider { display: inline-block; }
+
+/* topbar */
+.tb-ico .icon { width: 15px; height: 15px; }
+.tb-pause, .tb-save, .tb-buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tb-pause .icon { width: 11px; height: 11px; }
+.tb-save .icon { width: 14px; height: 14px; }
+.tb-buy { width: 18px; height: 18px; padding: 0; }
+.tb-buy .icon { width: 9px; height: 9px; }
+.tb-pt b {
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.2), rgba(201, 162, 39, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* mapmode bar: icons dim by default, gold when hovered/active */
+.mm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+}
+.mm-btn .icon { width: 21px; height: 21px; }
+.mm-btn:hover { color: var(--parch); }
+.mm-btn.active { color: var(--gold-bright); }
+
+/* province panel */
+.pp-close { display: inline-flex; align-items: center; justify-content: center; }
+.pp-close .icon { width: 11px; height: 11px; }
+.pp-k .icon-k { color: var(--ink-soft); }
+.pp-bar-label > span { display: inline-flex; align-items: center; gap: 4px; }
+.pp-dev { display: inline-flex; align-items: center; gap: 2px; padding: 0 6px; height: 18px; }
+.pp-recruit-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.pp-recruit-btn .icon { width: 15px; height: 15px; }
+.pp-recruit-btn .icon-xs { width: 11px; height: 11px; }
+.pp-v .icon { width: 12px; height: 12px; }
+.pp-occupied .icon { margin-right: 3px; }
+.pp-unrest.danger .icon { color: var(--red-deep); }
+.pp-siege .pp-bar-label .icon { color: var(--red-deep); }
+
+/* outliner */
+.ol-name .icon-row { margin-right: 3px; color: var(--gold); opacity: 0.9; }
+.ol-peace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  color: var(--text-light);
+}
+.ol-peace .icon { width: 13px; height: 13px; }
+.ol-peace:hover { color: var(--gold-bright); }
+
+/* toasts */
+.toast-title { display: flex; align-items: center; gap: 6px; }
+.toast-title .icon { width: 14px; height: 14px; }
+
+/* modals */
+.ev-orn svg { width: 170px; height: 20px; }
+.go-orn { display: flex; justify-content: center; margin-bottom: 6px; }
+.go-orn .icon-go { width: 48px; height: 48px; }
+.go-win .go-orn { color: #8a6d1a; }
+.go-loss .go-orn { color: var(--red-deep); }
+
+/* start screen */
+.ss-rule svg { width: min(280px, 70vw); height: 32px; }
+.nc-cta .icon-xs, .ss-continue .icon-xs { vertical-align: 0; }

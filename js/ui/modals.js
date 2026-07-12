@@ -1,5 +1,6 @@
 // js/ui/modals.js — event modal queue + game-over modal (SPEC §8.2, §6.5).
 import { esc, warnOnce } from './format.js';
+import { icon, divider } from './icons.js';
 
 // ---------------------------------------------------------------- events ---
 export function createEventModal(el) {
@@ -61,7 +62,7 @@ export function createEventModal(el) {
     el.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card">
-        <div class="ev-orn">✦</div>
+        <div class="ev-orn">${divider('ev-divider')}</div>
         <h2 class="ev-title">${esc(ev.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(ev.desc || '')}</div>
         <div class="ev-opts">${opts}</div>
@@ -96,7 +97,7 @@ export function createGameoverModal(el, onContinue) {
     el.innerHTML = `
       <div class="modal-scrim dark"></div>
       <div class="go-card ${win ? 'go-win' : 'go-loss'}">
-        <div class="go-orn">${win ? '🏆' : '🕯'}</div>
+        <div class="go-orn">${icon(win ? 'laurel' : 'lamp', 'icon-go')}</div>
         <div class="go-verdict">${win ? 'VICTORIA' : 'DEFEAT'}</div>
         <h2 class="go-title">${esc(title || (win ? 'Victory' : 'Defeat'))}</h2>
         <div class="go-text">${esc(text || '')}</div>

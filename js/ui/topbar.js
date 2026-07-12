@@ -1,5 +1,6 @@
 // js/ui/topbar.js — top resource/date/speed bar (SPEC §8.2).
 import { esc, rgb, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
+import { icon } from './icons.js';
 
 export function createTopbar(el, { DEFINES }) {
   let ctx = null;
@@ -23,19 +24,19 @@ export function createTopbar(el, { DEFINES }) {
     el.innerHTML = `
       <div class="tb-flag" style="background:${rgb(def.color)}" data-tt="${esc(def.name || tag)}">${esc(tag)}</div>
       <div class="tb-item" data-ref="treasuryWrap">
-        <span class="tb-ico">🪙</span><span class="tb-v" data-ref="treasury">0</span>
+        <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>
         <span class="tb-sub" data-ref="income"></span>
       </div>
       <div class="tb-item" data-ref="manpowerWrap">
-        <span class="tb-ico">⚔</span><span class="tb-v" data-ref="manpower">0</span>
-        <button class="tb-buy" data-ref="buyMp" data-tt="Call up reserves: +2,000 manpower (50 martial points)">+</button>
+        <span class="tb-ico">${icon('spears')}</span><span class="tb-v" data-ref="manpower">0</span>
+        <button class="tb-buy" data-ref="buyMp" data-tt="Call up reserves: +2,000 manpower (50 martial points)">${icon('plus')}</button>
       </div>
       <div class="tb-item" data-ref="stabilityWrap">
-        <span class="tb-ico">⚖</span><span class="tb-v" data-ref="stability">0</span>
-        <button class="tb-buy" data-ref="buyStab" data-tt="Restore order: +1 stability (75 governance points)">+</button>
+        <span class="tb-ico">${icon('scales')}</span><span class="tb-v" data-ref="stability">0</span>
+        <button class="tb-buy" data-ref="buyStab" data-tt="Restore order: +1 stability (75 governance points)">${icon('plus')}</button>
       </div>
       <div class="tb-item" data-ref="legitimacyWrap" data-tt="Legitimacy">
-        <span class="tb-ico">♛</span><span class="tb-v" data-ref="legitimacy">0</span>
+        <span class="tb-ico">${icon('laurel')}</span><span class="tb-v" data-ref="legitimacy">0</span>
       </div>
       <div class="tb-points">
         <span class="tb-pt" data-tt="Government points"><b>G</b><span data-ref="gov">0</span></span>
@@ -45,8 +46,8 @@ export function createTopbar(el, { DEFINES }) {
       <div class="tb-spacer"></div>
       <div class="tb-date" data-ref="date"></div>
       <div class="tb-speed">
-        <button class="tb-save" data-ref="save" data-tt="Save the campaign">🖋</button>
-        <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">▶</button>
+        <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
+        <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">${icon('play')}</button>
         <span class="tb-pips" data-ref="pips"></span>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
@@ -125,7 +126,11 @@ export function createTopbar(el, { DEFINES }) {
     // Date, pause, speed pips
     setText(refs.date, fmtDate(g.date, DEFINES.MONTH_NAMES));
     refs.date.classList.toggle('paused', !!g.paused);
-    setText(refs.pause, g.paused ? '▶' : '❚❚');
+    const pauseGlyph = g.paused ? 'play' : 'pause';
+    if (refs.pause.dataset.glyph !== pauseGlyph) {
+      refs.pause.dataset.glyph = pauseGlyph;
+      refs.pause.innerHTML = icon(pauseGlyph);
+    }
     refs.pause.classList.toggle('paused', !!g.paused);
     refs.pips.querySelectorAll('.tb-pip').forEach((b) => {
       b.classList.toggle('on', Number(b.dataset.speed) <= (g.speed || 1));

@@ -16,6 +16,7 @@ import { createLabels } from './js/map/labels.js';
 import { initGame, makeCtx, gameActions, reviveGame, SAVE_VERSION } from './js/sim/init.js';
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
+import { initSound } from './js/ui/sound.js';
 
 async function boot() {
   const issues = validateMapData();
@@ -37,6 +38,7 @@ async function boot() {
 
   let ctx = null;
   let actions = null;
+  initSound(bus, () => (ctx ? ctx.game : null));
   let mapmode = 'political';
   let colorsDirty = true;
 
@@ -46,8 +48,9 @@ async function boot() {
 
   // ------------------------------------------------------------- save/load --
   const BOOKMARKS = [
-    { bookmark: BOOKMARK_66, events: EVENTS_66 },
+    // Chronological order — this is also the title-screen card order.
     { bookmark: BOOKMARK_167, events: EVENTS_167 },
+    { bookmark: BOOKMARK_66, events: EVENTS_66 },
   ];
   const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
   const saveKey = (id) => 'ju_save_' + id;

@@ -1,5 +1,6 @@
 // js/ui/outliner.js — right-side outliner: armies, battles, sieges, wars (SPEC §8.2).
 import { esc, fmtMen, signed, warnOnce } from './format.js';
+import { icon } from './icons.js';
 
 export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
   let ctx = null;
@@ -64,7 +65,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
       const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${regs.inf || 0} infantry, ${regs.cav || 0} cavalry\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `
         <div class="ol-row ol-army${sel ? ' sel' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
-          <span class="ol-name">${a.inBattle ? '⚔ ' : a.retreating ? '↩ ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
+          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
         </div>`;
@@ -81,7 +82,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
       for (const b of battles) {
         html += `
           <div class="ol-row ol-battle" data-prov="${b.prov}" data-tt="Click to view battle">
-            <span class="ol-name">⚔ ${esc(provName(g, b.prov))}</span>
+            <span class="ol-name">${icon('swords', 'icon-row')} ${esc(provName(g, b.prov))}</span>
             <span class="ol-sub">day ${b.day || 0}</span>
           </div>`;
       }
@@ -102,7 +103,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
         const ours = p.siege.by === player;
         html += `
           <div class="ol-row ol-siege" data-prov="${p.id}" data-tt="${ours ? 'Our siege' : 'Under enemy siege'} — click to view">
-            <span class="ol-name">${ours ? '🏰' : '⚠'} ${esc(p.name)}</span>
+            <span class="ol-name">${icon(ours ? 'tower' : 'alert', 'icon-row')} ${esc(p.name)}</span>
             <span class="ol-sub">${pct}%</span>
           </div>`;
       }
@@ -118,10 +119,10 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
         const cls = ws > 0 ? 'pos' : ws < 0 ? 'neg' : '';
         const peaceBtn = w.noNegotiation
           ? ''
-          : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">🕊</button>`;
+          : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
         html += `
           <div class="ol-row ol-war" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
-            <span class="ol-name">🔥 ${esc(w.name || 'War')}</span>
+            <span class="ol-name">${icon('flame', 'icon-row')} ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
             ${peaceBtn}
           </div>`;

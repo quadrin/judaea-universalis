@@ -1,7 +1,9 @@
 // js/ui/toasts.js — notification toasts (SPEC §8.2, bus 'notify').
 import { esc, warnOnce } from './format.js';
+import { icon } from './icons.js';
 
 const TYPES = { info: 1, war: 1, good: 1, bad: 1 };
+const TYPE_ICONS = { info: 'scroll', war: 'swords', good: 'laurel', bad: 'shieldCrack' };
 const MAX_TOASTS = 6;
 const LIFE_MS = 6000;
 const FADE_MS = 550;
@@ -14,7 +16,7 @@ export function createToasts(container, { onProvClick } = {}) {
     const div = document.createElement('div');
     div.className = 'toast toast-' + kind + (provName ? ' toast-link' : '');
     div.innerHTML =
-      `<div class="toast-title">${esc(title || 'Notice')}</div>` +
+      `<div class="toast-title">${icon(TYPE_ICONS[kind] || 'scroll')}<span>${esc(title || 'Notice')}</span></div>` +
       (text ? `<div class="toast-text">${esc(text)}</div>` : '');
     if (provName) div.dataset.tt = 'Click to view ' + provName;
 

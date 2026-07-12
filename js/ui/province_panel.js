@@ -1,5 +1,6 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
 import { esc, rgb, fmtInt, fmtMen, ttLines, titleCase, warnOnce } from './format.js';
+import { icon } from './icons.js';
 
 export function createProvincePanel(el, { DEFINES, onClose }) {
   let ctx = null;
@@ -9,6 +10,10 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
   function setText(node, s) {
     if (node && node.textContent !== s) node.textContent = s;
+  }
+
+  function setHtml(node, s) {
+    if (node && node.__html !== s) { node.__html = s; node.innerHTML = s; }
   }
 
   function bind(c, a) {
@@ -21,7 +26,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     el.innerHTML = `
       <div class="pp-head">
         <h2 class="pp-name" data-ref="name"></h2>
-        <button class="pp-close" data-ref="close" data-tt="Close (Esc)">✕</button>
+        <button class="pp-close" data-ref="close" data-tt="Close (Esc)">${icon('xmark')}</button>
       </div>
       <div class="pp-owner">
         <span class="flag-chip" data-ref="ownerChip"></span>
@@ -29,15 +34,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       </div>
       <div class="pp-occupied hidden" data-ref="occupied"></div>
       <div class="pp-grid">
-        <div class="pp-row" data-ref="terrainRow"><span class="pp-k">Terrain</span><span class="pp-v" data-ref="terrain"></span></div>
-        <div class="pp-row" data-ref="goodRow"><span class="pp-k">Trade good</span><span class="pp-v" data-ref="good"></span></div>
-        <div class="pp-row"><span class="pp-k">Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
-        <div class="pp-row"><span class="pp-k">Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
-        <div class="pp-row" data-tt="Tax / Production / Manpower development"><span class="pp-k">Development</span><span class="pp-v" data-ref="dev"></span></div>
+        <div class="pp-row" data-ref="terrainRow"><span class="pp-k">${icon('mountain', 'icon-k')}Terrain</span><span class="pp-v" data-ref="terrain"></span></div>
+        <div class="pp-row" data-ref="goodRow"><span class="pp-k">${icon('grain', 'icon-k')}Trade good</span><span class="pp-v" data-ref="good"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
+        <div class="pp-row" data-tt="Tax / Production / Manpower development"><span class="pp-k">${icon('bricks', 'icon-k')}Development</span><span class="pp-v" data-ref="dev"></span></div>
         <div class="pp-row hidden" data-ref="devBtnsRow"><span class="pp-k">Develop</span><span class="pp-v pp-devbtns">
-          <button class="pp-dev" data-dev="tax" data-tt="+1 tax development (50 governance points)">+T</button>
-          <button class="pp-dev" data-dev="prod" data-tt="+1 production development (50 influence points)">+P</button>
-          <button class="pp-dev" data-dev="mp" data-tt="+1 manpower development (50 martial points)">+M</button>
+          <button class="pp-dev" data-dev="tax" data-tt="+1 tax development (50 governance points)">${icon('plus', 'icon-plus')}T</button>
+          <button class="pp-dev" data-dev="prod" data-tt="+1 production development (50 influence points)">${icon('plus', 'icon-plus')}P</button>
+          <button class="pp-dev" data-dev="mp" data-tt="+1 manpower development (50 martial points)">${icon('plus', 'icon-plus')}M</button>
         </span></div>
         <div class="pp-row"><span class="pp-k">Autonomy</span><span class="pp-v" data-ref="autonomy"></span></div>
         <div class="pp-row hidden" data-ref="siteRow"><span class="pp-k">Sites</span><span class="pp-v pp-gold" data-ref="site"></span></div>
@@ -46,7 +51,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
       <div class="pp-block hidden" data-ref="revoltBlock">
-        <div class="pp-bar-label"><span>⚑ Revolt brewing</span><span data-ref="revoltPct"></span></div>
+        <div class="pp-bar-label"><span>${icon('flag', 'icon-sm')} Revolt brewing</span><span data-ref="revoltPct"></span></div>
         <div class="bar bar-revolt"><div class="bar-fill" data-ref="revoltFill"></div></div>
       </div>
       <div class="pp-block hidden" data-ref="fortBlock">
@@ -109,7 +114,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     setText(refs.ownerName, ownerDef.name || p.owner || 'Unowned');
     if (p.controller && p.controller !== p.owner) {
       const cDef = TAGS[p.controller] || {};
-      setText(refs.occupied, '⚑ Occupied by ' + (cDef.name || p.controller));
+      setHtml(refs.occupied, icon('flag', 'icon-sm') + ' Occupied by ' + esc(cDef.name || p.controller));
       refs.occupied.classList.remove('hidden');
     } else {
       refs.occupied.classList.add('hidden');
@@ -146,15 +151,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     }
     setText(refs.autonomy, Math.round((p.autonomy || 0) * 100) + '%');
     const sites = [];
-    if (p.wonder) sites.push('✦ ' + titleCase(p.wonder));
-    if (p.holy) sites.push('✧ ' + titleCase(p.holy));
+    if (p.wonder) sites.push(icon('star8', 'icon-sm') + ' ' + esc(titleCase(p.wonder)));
+    if (p.holy) sites.push(icon('star4', 'icon-sm') + ' ' + esc(titleCase(p.holy)));
     refs.siteRow.classList.toggle('hidden', sites.length === 0);
-    setText(refs.site, sites.join('  '));
+    setHtml(refs.site, sites.join('&nbsp; '));
 
-    // Unrest (red + ⚠ above threshold) with breakdown tooltip
+    // Unrest (red + warning icon above threshold) with breakdown tooltip
     const u = Math.round((p.unrest || 0) * 10) / 10;
     const danger = u > 5;
-    setText(refs.unrest, (danger ? '⚠ ' : '') + u.toFixed(1));
+    setHtml(refs.unrest, (danger ? icon('alert', 'icon-sm') + ' ' : '') + u.toFixed(1));
     refs.unrestRow.classList.toggle('danger', danger);
     let utt = 'Unrest: ' + u.toFixed(1);
     try {
@@ -177,7 +182,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const hasFort = (p.fort || 0) > 0 || (p.maxGarrison || 0) > 0;
     refs.fortBlock.classList.toggle('hidden', !hasFort);
     if (hasFort) {
-      setText(refs.fortLabel, (p.fort || 0) > 0 ? 'Fort ' + '▣'.repeat(Math.min(5, p.fort)) : 'Garrison');
+      setHtml(refs.fortLabel, (p.fort || 0) > 0
+        ? 'Fort ' + icon('tower', 'icon-pip').repeat(Math.min(5, p.fort))
+        : 'Garrison');
       const maxG = Math.max(1, p.maxGarrison || 0);
       setText(refs.garrisonText, `${fmtMen(p.garrison)} / ${fmtMen(p.maxGarrison)}`);
       refs.garrisonFill.style.width = Math.max(0, Math.min(100, ((p.garrison || 0) / maxG) * 100)) + '%';
@@ -187,7 +194,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.siegeBlock.classList.toggle('hidden', !p.siege);
     if (p.siege) {
       const byDef = TAGS[p.siege.by] || {};
-      setText(refs.siegeLabel, '⚔ Under siege by ' + (byDef.name || p.siege.by || '?'));
+      setHtml(refs.siegeLabel, icon('swords', 'icon-sm') + ' Under siege by ' + esc(byDef.name || p.siege.by || '?'));
       const sp = Math.max(0, Math.min(100, p.siege.progress || 0));
       setText(refs.siegePct, Math.round(sp) + '%');
       refs.siegeFill.style.width = sp + '%';
@@ -204,8 +211,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
   function updateRecruit(btn, type, cost, p, g, base) {
     const label = type === 'inf' ? 'Infantry' : 'Cavalry';
-    const glyph = type === 'inf' ? '⚔' : '♞';
-    setText(btn, `${glyph} ${label} — ${cost}🪙`);
+    const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
+    setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')}`);
     const t = g.tags && g.tags[g.playerTag];
     let reason = null;
     if (!t) reason = 'No nation to recruit for';

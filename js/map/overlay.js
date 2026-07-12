@@ -7,6 +7,26 @@ const CHIP_H = 20;
 const MORALE_H = 3;
 const CULL_MARGIN = 90;
 
+// Hand-drawn vector glyphs (Path2D, CSS-px coordinates around a 0,0 origin).
+// Drawn after ctx.setTransform(dpr,...), so devicePixelRatio scaling is free.
+// Crossed swords: two blades with guards and grips, matching the UI icon set.
+const SWORDS_PATH = new Path2D(
+  'M-5.6 -5.6L3.4 3.4M2 4.8L4.8 2M4.1 4.1L6 6' +
+  'M5.6 -5.6L-3.4 3.4M-2 4.8L-4.8 2M-4.1 4.1L-6 6'
+);
+// Siege tower: crenellated body, door, ground line.
+const TOWER_PATH = new Path2D(
+  'M-3.5 4.5V-3.5h7V4.5' +
+  'M-3.5 -3.5V-6h2.2v1.6h2.6V-6h2.2v2.5' +
+  'M-1.2 4.5V1h2.4v3.5' +
+  'M-5 4.5h10'
+);
+// Eight-point star (wonders), radius 6 / 2.5.
+const STAR8_PATH = new Path2D(
+  'M6 0L2.31 0.96L4.24 4.24L0.96 2.31L0 6L-0.96 2.31L-4.24 4.24L-2.31 0.96' +
+  'L-6 0L-2.31 -0.96L-4.24 -4.24L-0.96 -2.31L0 -6L0.96 -2.31L4.24 -4.24L2.31 -0.96Z'
+);
+
 const warned = new Set();
 function warnOnce(key, ...msg) {
   if (warned.has(key)) return;
@@ -130,11 +150,15 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.arc(sx, sy, 11, 0, Math.PI * 2);
     x2.fill();
     x2.stroke();
-    x2.fillStyle = '#4a3a1c';
-    x2.font = '12px Georgia, serif';
-    x2.textAlign = 'center';
-    x2.textBaseline = 'middle';
-    x2.fillText('♜', sx, sy + 1); // tower/rook glyph
+    // drawn siege tower glyph
+    x2.save();
+    x2.translate(sx, sy);
+    x2.strokeStyle = '#4a3a1c';
+    x2.lineWidth = 1.4;
+    x2.lineCap = 'round';
+    x2.lineJoin = 'round';
+    x2.stroke(TOWER_PATH);
+    x2.restore();
     const prog = Math.min(100, Math.max(0, (siege && siege.progress) || 0)) / 100;
     if (prog > 0) {
       x2.strokeStyle = '#c9a227';
@@ -153,11 +177,15 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.arc(sx, sy, 12, 0, Math.PI * 2);
     x2.fill();
     x2.stroke();
-    x2.fillStyle = '#7a1a12';
-    x2.font = '13px Georgia, serif';
-    x2.textAlign = 'center';
-    x2.textBaseline = 'middle';
-    x2.fillText('⚔', sx, sy + 1);
+    // crossed swords glyph on the disc
+    x2.save();
+    x2.translate(sx, sy);
+    x2.strokeStyle = '#7a1a12';
+    x2.lineWidth = 1.6;
+    x2.lineCap = 'round';
+    x2.lineJoin = 'round';
+    x2.stroke(SWORDS_PATH);
+    x2.restore();
   }
 
   function drawChip(game, ch) {
@@ -226,14 +254,16 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (showWonders && p.wonder) {
           const [sx, sy] = camera.mapToScreen(c.x, c.y);
           if (onScreen(sx, sy)) {
-            x2.font = '14px Georgia, serif';
-            x2.textAlign = 'center';
-            x2.textBaseline = 'middle';
+            // eight-point star: dark halo stroke under a gold fill
+            x2.save();
+            x2.translate(sx, sy + 16);
             x2.strokeStyle = 'rgba(30,22,8,0.85)';
             x2.lineWidth = 2.5;
-            x2.strokeText('✦', sx, sy + 16);
+            x2.lineJoin = 'round';
+            x2.stroke(STAR8_PATH);
             x2.fillStyle = '#e7c34c';
-            x2.fillText('✦', sx, sy + 16);
+            x2.fill(STAR8_PATH);
+            x2.restore();
           }
         }
       }
