@@ -630,13 +630,12 @@ renderer.render → overlay.draw → labels.update.
   gov/infl/mar respectively, +1 dev, cap 15, own+controlled only, emits `'provinceDev'`;
   `buyStability()` — 75 gov; `callReserves()` — 50 mar, +2,000 manpower. AI buys stability
   under 1 and reserves under 20% pool (ai.js `aiSpendPoints`).
-- **Peace & truces** (military.js): `PEACE_TERMS` (white / tribute / cede-occupied),
-  `aiWillAccept` (enemy net warscore thresholds 5 / −25 / −50; war-weary white peace at
-  WE ≥ 15), `makePeace` (cessions, indemnity, status-quo reversion, atWarWith rebuild,
-  5-year truces in `game.truces`, stranded armies walk home), `truceActive` blocks
-  `declareWar`. Actions: `peaceTerms()`, `offerPeace(warId, level)` — 6-month envoy
-  cooldown on refusal. Wars flagged `noNegotiation` (the bookmark's scripted war) only
-  resolve through events/victory. UI: dove button on outliner war rows → `#peace-modal`.
+- **Peace & truces** (military.js): superseded in v1.4 by the negotiated-peace deal
+  builder (§14) — `makePeace`'s wind-down machinery (status-quo reversion, atWarWith
+  rebuild, 5-year truces in `game.truces`, stranded armies walk home) lives on inside
+  `executePeaceDeal`. `truceActive` blocks `declareWar`. Wars flagged `noNegotiation`
+  (the bookmark's scripted war) only resolve through events/victory. UI: dove button on
+  outliner war rows → `#peace-modal`.
 
 ## 13. v1.2: multiple bookmarks
 
@@ -654,3 +653,40 @@ renderer.render → overlay.draw → labels.update.
 - 167 BCE tags in DEFINES: SEL (Seleucid Empire), PTO (Ptolemaic Egypt), HAS (Hasmonean
   Judaea). Content: `js/data/bookmark_167bce.js` (BOOKMARK_167), `js/data/events_167bce.js`
   (EVENTS_167), same schemas as §9.
+
+## 14. v1.4: the realm panel, rulers & negotiated peace
+
+- **Rulers.** Every tag (except REB) carries `ruler: {name, title, gov, infl, mar}`
+  (skills 0-6), assigned in `makeCtx` from `bookmark.rulers[tag]`; missing entries (and
+  pre-ruler saves) get a 2/2/2 ruling council. Monthly monarch-point gain = 2 + the
+  matching skill (tick.js).
+- **Nation panel** (`js/ui/nation_panel.js`, `#nation-panel` in index.html): opened by
+  clicking the topbar flag. Ruler & skills, religion/culture/capital/realm, stability,
+  legitimacy, war exhaustion, treasury & loans, manpower & armies, allies/wars (dove →
+  peace dialog)/truces, the central levers (call reserves, restore order, take/repay
+  loan) and the national decisions. Esc / swipe-down closes; bottom sheet on phones.
+- **National decisions** (init.js `DECISIONS`; actions `getDecisions()` /
+  `enactDecision(key)`): grand festival, great public rites, trade expeditions, army
+  drill, resettlement (peacetime-only). Effects run through ordinary tag modifiers;
+  cooldowns live in `game.diploCooldowns['decision:<key>']`.
+- **Negotiated peace, EU4-style** (military.js `PEACE`, `peaceDealInfo`,
+  `evaluatePeaceDeal`, `executePeaceDeal`; actions `getPeaceInfo(warId)`,
+  `evaluatePeace(warId, deal)`, `offerPeaceDeal(warId, deal)` with
+  `deal = {provinces:[ids], gold, humiliate}`): demand provinces your side occupies
+  (≈0.9 warscore per dev, min 4), an indemnity (10 warscore per 100 talents, capped by
+  the enemy treasury) and humiliation (15 warscore; ±legitimacy, points, stability).
+  Accepted when your warscore covers the price; a refusal costs a 6-month envoy
+  cooldown (`diploCooldowns['peace:<warId>']`). Empty deal = white peace, accepted per
+  the old thresholds (enemy ws ≤ 5, or war-weary at WE ≥ 15 and ws ≤ 15). The fixed
+  `PEACE_TERMS` / `offerPeace(level)` API from §12 is removed.
+- **Declaring war**: action `declareWarOn(tag)` (−2 stability, −5 legitimacy, −100
+  enemy opinion; allies join per `declareWar`), surfaced as a Declare War button in the
+  province panel's diplomacy block; truces and alliances gate it (`getDiplomacy` grew
+  `canWar`/`whyNotWar`).
+- **Living wars** (ai.js `monthlyWarDiplomacy`): an AI leader losing to the player
+  (ws ≤ −40, or ws ≤ −10 at WE ≥ 15) sues for peace via toast every 6 months; AI-AI
+  negotiable wars auto-resolve at |ws| ≥ 50 or 36 months — the winner takes what its
+  score covers, everything else reverts.
+- **Portrait phones**: instead of shedding them, the topbar wraps to two rows —
+  row 1: flag · treasury · manpower · pause/speed; row 2: stability · legitimacy ·
+  G/I/M points · date (styles.css portrait media block; `.tb-break` in topbar.js).

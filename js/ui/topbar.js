@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES }) {
+export function createTopbar(el, { DEFINES, onFlagClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -22,7 +22,8 @@ export function createTopbar(el, { DEFINES }) {
     const tag = ctx.game.playerTag;
     const def = (DEFINES.TAGS && DEFINES.TAGS[tag]) || {};
     el.innerHTML = `
-      <div class="tb-flag" data-tt="${esc(def.name || tag)}">${flagChip(tag, DEFINES, 28)}<span class="tb-flag-tag">${esc(tag)}</span></div>
+      <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(def.name || tag)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28)}<span class="tb-flag-tag">${esc(tag)}</span></button>
+      <div class="tb-break" aria-hidden="true"></div>
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>
         <span class="tb-sub" data-ref="income"></span>
@@ -60,6 +61,9 @@ export function createTopbar(el, { DEFINES }) {
     }
     refs.pips.innerHTML = pips;
 
+    refs.flagBtn.addEventListener('click', () => {
+      if (onFlagClick) { try { onFlagClick(); } catch (e) { warnOnce('flagClick', e); } }
+    });
     refs.pause.addEventListener('click', () => {
       try { actions.togglePause(); } catch (e) { warnOnce('togglePause', e); }
       refresh();

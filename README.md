@@ -25,8 +25,17 @@ python3 -m http.server 8613 --directory .
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
-- Save/load (yearly autosave + Continue button), monarch-point sinks (develop provinces,
-  buy stability, call reserves), and peace treaties with truces for non-scripted wars.
+- Save/load (yearly autosave + Continue button) and monarch-point sinks (develop provinces,
+  buy stability, call reserves).
+- A realm panel behind the topbar flag: your ruler and their skills (which drive monthly
+  monarch points), religion/culture/capital, stability, legitimacy, war exhaustion, economy,
+  manpower & armies, allies/wars/truces — plus the central levers (reserves, stability, loans)
+  and five national decisions (festival, rites, trade expeditions, drills, resettlement)
+  for peacetime play.
+- EU4-style peace negotiation for non-scripted wars: build a deal from occupied provinces,
+  an indemnity and humiliation, priced against your war score; losing AIs sue for peace,
+  AI-vs-AI wars settle themselves, and five-year truces follow every treaty. Declare war
+  from a foreign province's diplomacy block (at a stability cost).
 
 ## Architecture
 

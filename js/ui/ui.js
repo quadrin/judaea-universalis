@@ -1,11 +1,12 @@
 // js/ui/ui.js — UI package entry (SPEC §8). Single pinned export: initUI.
 // initUI(staticCtx) -> { showStartScreen(bookmark, onPick), bindGame(ctx, actions) }
-import { warnOnce } from './format.js';
+import { esc, signed, warnOnce } from './format.js';
 import { initTooltip } from './tooltip.js';
 import { createToasts } from './toasts.js';
 import { buildStartScreen } from './startscreen.js';
 import { createTopbar } from './topbar.js';
 import { createProvincePanel } from './province_panel.js';
+import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { icon } from './icons.js';
@@ -37,6 +38,7 @@ export function initUI(staticCtx) {
   const els = {
     topbar: $('topbar'),
     panel: $('province-panel'),
+    nation: $('nation-panel'),
     outliner: $('outliner'),
     mapmodeBar: $('mapmode-bar'),
     toasts: $('toast-container'),
@@ -121,8 +123,20 @@ export function initUI(staticCtx) {
       if (p && camera) camera.centerOn(p.x, p.y);
     },
   });
-  const topbar = createTopbar(els.topbar, { DEFINES });
+  const topbar = createTopbar(els.topbar, {
+    DEFINES,
+    onFlagClick() {
+      if (nationPanel.isOpen()) { nationPanel.close(); return; }
+      setSelectedProv(0); // the two left panels share the same berth
+      nationPanel.open();
+    },
+  });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
+  const nationPanel = createNationPanel(els.nation, {
+    DEFINES,
+    onClose: () => nationPanel.close(),
+    onPeaceClick(warId) { openPeaceDialog(warId); },
+  });
   const outliner = createOutliner(els.outliner, {
     onPeaceClick(warId) { openPeaceDialog(warId); },
     onArmyClick(id, shift) {
@@ -152,43 +166,108 @@ export function initUI(staticCtx) {
   });
 
   // ---------------------------------------------------------- peace dialog --
+  // EU4-style deal builder: tick occupied provinces, step an indemnity up and
+  // down, toggle humiliation; the running total is priced against our war
+  // score live, and the envoys go out only with an offer the enemy will take.
   let peaceEl = null;
+  function closePeaceDialog() { if (peaceEl) peaceEl.classList.add('hidden'); }
+  function peaceDialogOpen() { return !!peaceEl && !peaceEl.classList.contains('hidden'); }
   function openPeaceDialog(warId) {
     const g = state.ctx && state.ctx.game;
     const actions = state.actions;
-    if (!g || !actions) return;
-    const war = (g.wars || []).find((w) => w && w.id === warId);
-    if (!war) return;
+    if (!g || !actions || typeof actions.getPeaceInfo !== 'function') return;
+    const info = actions.getPeaceInfo(warId);
+    if (!info || info.noNegotiation) return;
     if (!peaceEl) {
       peaceEl = document.createElement('div');
       peaceEl.id = 'peace-modal';
       document.getElementById('ui-root').appendChild(peaceEl);
     }
-    const terms = actions.peaceTerms ? actions.peaceTerms() : {};
-    const rows = Object.keys(terms).map((k) => {
-      const hint = k === 'white' ? 'Occupations revert; five-year truce.'
-        : k === 'tribute' ? 'As white peace, plus the enemy pays an indemnity. Needs a winning war.'
-          : 'Every province you occupy becomes yours. Needs a crushing war.';
-      return `<button class="btn peace-opt" data-level="${k}">${terms[k].label}<span class="peace-hint">${hint}</span></button>`;
-    }).join('');
+    const deal = { provinces: [], gold: 0, humiliate: false };
+    const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
+    const provRows = info.provinces.map((p) =>
+      `<label class="peace-prov" data-tt="${esc(p.name)} — ${p.dev} development\nDemanding it costs ${p.cost} war score">
+        <input type="checkbox" data-prov="${p.id}">
+        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev</span></span>
+        <span class="peace-prov-cost">${p.cost}</span>
+      </label>`).join('');
     peaceEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card">
-        <h2 class="peace-title">Terms for ${war.name || 'the war'}</h2>
-        <div class="peace-body">Envoys can carry one offer; a refusal closes the enemy's door for six months.</div>
-        ${rows}
+        <h2 class="peace-title">Terms for ${esc(info.warName || 'the war')}</h2>
+        <div class="peace-ws">War score against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
+        <div class="peace-sec">Demand provinces</div>
+        ${info.provinces.length ? `<div class="peace-provs">${provRows}</div>`
+    : '<div class="peace-dim peace-none">Occupy enemy land to put it on the table.</div>'}
+        <div class="peace-sec">Demand payment <span class="peace-dim">(${info.goldCostPer100} war score per 100 talents)</span></div>
+        <div class="peace-gold">
+          <button class="btn peace-step" data-gold="-1" aria-label="Less gold">−</button>
+          <span class="peace-gold-v" data-ref="goldV">0</span>
+          <button class="btn peace-step" data-gold="1" aria-label="More gold">+</button>
+          <span class="peace-dim">of ${info.maxGold} talents</span>
+        </div>
+        <label class="peace-prov" data-tt="Force a public submission: +10 legitimacy and +25 of every monarch point for us; they lose legitimacy and stability.\nCosts ${info.humiliateCost} war score">
+          <input type="checkbox" data-ref="humiliate">
+          <span class="peace-prov-name">Humiliate them before the nations</span>
+          <span class="peace-prov-cost">${info.humiliateCost}</span>
+        </label>
+        <div class="peace-total" data-ref="total"></div>
+        <div class="peace-verdict" data-ref="verdict"></div>
+        <button class="btn peace-send" data-ref="send"></button>
         <button class="btn peace-cancel">Recall the envoys</button>
       </div>`;
     peaceEl.classList.remove('hidden');
-    peaceEl.querySelector('.peace-cancel').addEventListener('click', () => peaceEl.classList.add('hidden'));
-    peaceEl.querySelector('.modal-scrim').addEventListener('click', () => peaceEl.classList.add('hidden'));
-    peaceEl.querySelectorAll('.peace-opt').forEach((b) => {
-      b.addEventListener('click', () => {
-        peaceEl.classList.add('hidden');
-        try { actions.offerPeace(warId, b.dataset.level); } catch (e) { warnOnce('offerPeace', e); }
-        outliner.refresh(true);
+
+    const goldV = peaceEl.querySelector('[data-ref="goldV"]');
+    const totalEl = peaceEl.querySelector('[data-ref="total"]');
+    const verdictEl = peaceEl.querySelector('[data-ref="verdict"]');
+    const sendBtn = peaceEl.querySelector('[data-ref="send"]');
+    const humiliateBox = peaceEl.querySelector('[data-ref="humiliate"]');
+
+    function update() {
+      let ev = null;
+      try { ev = actions.evaluatePeace(warId, deal); } catch (e) { warnOnce('evaluatePeace', e); }
+      if (!ev) { closePeaceDialog(); return; }
+      goldV.textContent = String(deal.gold);
+      const white = !deal.provinces.length && deal.gold <= 0 && !deal.humiliate;
+      totalEl.textContent = white
+        ? 'A white peace: every occupation reverts, nothing changes hands.'
+        : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
+      verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
+      verdictEl.classList.toggle('pos', !!ev.acceptable);
+      verdictEl.classList.toggle('neg', !ev.acceptable);
+      sendBtn.textContent = white ? 'Offer white peace' : 'Send the terms';
+      sendBtn.classList.toggle('disabled', !ev.acceptable || info.envoyMonthsLeft > 0);
+    }
+
+    peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
+      box.addEventListener('change', () => {
+        const id = Number(box.dataset.prov);
+        const at = deal.provinces.indexOf(id);
+        if (box.checked && at < 0) deal.provinces.push(id);
+        else if (!box.checked && at >= 0) deal.provinces.splice(at, 1);
+        update();
       });
     });
+    peaceEl.querySelectorAll('[data-gold]').forEach((b) => {
+      b.addEventListener('click', () => {
+        deal.gold = Math.max(0, Math.min(info.maxGold, deal.gold + Number(b.dataset.gold) * info.goldStep));
+        update();
+      });
+    });
+    humiliateBox.addEventListener('change', () => { deal.humiliate = humiliateBox.checked; update(); });
+    sendBtn.addEventListener('click', () => {
+      if (sendBtn.classList.contains('disabled')) return;
+      closePeaceDialog();
+      try { actions.offerPeaceDeal(warId, deal); } catch (e) { warnOnce('offerPeaceDeal', e); }
+      outliner.refresh(true);
+      nationPanel.refresh();
+      topbar.refresh();
+    });
+    peaceEl.querySelector('.peace-cancel').addEventListener('click', closePeaceDialog);
+    peaceEl.querySelector('.modal-scrim').addEventListener('click', closePeaceDialog);
+    update();
   }
 
   // ------------------------------------------------------------ selection --
@@ -198,7 +277,7 @@ export function initUI(staticCtx) {
     id = id | 0;
     g.ui.selectedProv = id;
     bus.emit('select', id);
-    if (id > 0) panel.open(id);
+    if (id > 0) { nationPanel.close(); panel.open(id); }
     else panel.close();
   }
 
@@ -281,6 +360,8 @@ export function initUI(staticCtx) {
       try { state.actions.setSpeed(Number(e.key)); } catch (err) { warnOnce('setSpeed', err); }
       topbar.refresh();
     } else if (e.key === 'Escape') {
+      if (peaceDialogOpen()) { closePeaceDialog(); return; }
+      if (nationPanel.isOpen()) { nationPanel.close(); return; }
       const g = state.ctx.game;
       if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)) setSelectedArmy(null);
       if (g.ui.selectedProv) setSelectedProv(0);
@@ -289,19 +370,23 @@ export function initUI(staticCtx) {
 
   // ------------------------------------------------------ touch niceties --
   if (coarse) {
-    // Bottom sheet: swiping down on the panel header closes it (the ✕ works
-    // too). The header is a stable child of the panel across rebuilds.
-    let sheetY = null;
-    els.panel.addEventListener('touchstart', (e) => {
-      const onHead = e.target instanceof Element && e.target.closest('.pp-head');
-      sheetY = (onHead && e.touches.length === 1) ? e.touches[0].clientY : null;
-    }, { passive: true });
-    els.panel.addEventListener('touchmove', (e) => {
-      if (sheetY == null || !e.touches.length) return;
-      if (e.touches[0].clientY - sheetY > 52) { sheetY = null; setSelectedProv(0); }
-    }, { passive: true });
-    els.panel.addEventListener('touchend', () => { sheetY = null; });
-    els.panel.addEventListener('touchcancel', () => { sheetY = null; });
+    // Bottom sheets: swiping down on a panel header closes it (the ✕ works
+    // too). The header is a stable child of each panel across rebuilds.
+    const bindSheetSwipe = (sheet, closeFn) => {
+      let sheetY = null;
+      sheet.addEventListener('touchstart', (e) => {
+        const onHead = e.target instanceof Element && e.target.closest('.pp-head');
+        sheetY = (onHead && e.touches.length === 1) ? e.touches[0].clientY : null;
+      }, { passive: true });
+      sheet.addEventListener('touchmove', (e) => {
+        if (sheetY == null || !e.touches.length) return;
+        if (e.touches[0].clientY - sheetY > 52) { sheetY = null; closeFn(); }
+      }, { passive: true });
+      sheet.addEventListener('touchend', () => { sheetY = null; });
+      sheet.addEventListener('touchcancel', () => { sheetY = null; });
+    };
+    bindSheetSwipe(els.panel, () => setSelectedProv(0));
+    bindSheetSwipe(els.nation, () => nationPanel.close());
 
     // Tooltips: hover doesn't exist here, so any [data-tt] element shows its
     // tooltip on a 350ms press-and-hold instead (tooltip.js keeps handling
@@ -375,6 +460,7 @@ export function initUI(staticCtx) {
 
     topbar.bind(ctx, actions);
     panel.bind(ctx, actions);
+    nationPanel.bind(ctx, actions);
     outliner.bind(ctx, actions);
     eventModal.bind(ctx, actions);
     pillBtn.classList.remove('hidden');
@@ -399,6 +485,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
       outliner.refresh();
       panel.refresh();
+      nationPanel.refresh();
       updatePill();
     }));
     bus.on('pause', safe('pause', () => topbar.refresh()));
@@ -407,7 +494,7 @@ export function initUI(staticCtx) {
     bus.on('provinceController', safe('provCtrl', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('siegeStart', safe('siegeStart', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('siegeEnd', safe('siegeEnd', () => { panel.refresh(); outliner.refresh(); }));
-    bus.on('war', safe('war', () => { outliner.refresh(true); topbar.refresh(); }));
+    bus.on('war', safe('war', () => { outliner.refresh(true); topbar.refresh(); nationPanel.refresh(); }));
     bus.on('provinceDev', safe('provDev', () => { panel.refresh(); topbar.refresh(); }));
 
     bus.on('mapclick', safe('mapclick', onMapClick));

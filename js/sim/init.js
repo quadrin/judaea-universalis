@@ -5,7 +5,7 @@ import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, changeOwnerCore, changeControllerCore,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
-  makePeace, aiWillAccept, PEACE_TERMS,
+  peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
@@ -142,6 +142,25 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
       if (bookmark && typeof bookmark.setup === 'function') bookmark.setup(ctx);
     } catch (e) { console.warn('[sim/init] bookmark.setup failed:', e); }
   }
+  // Rulers: historical courts come from the bookmark; anything else (and tags
+  // in pre-ruler saves) gets a plain ruling council. Skill pips 0-6 feed the
+  // monthly monarch-point gain (tick.js) and the nation panel.
+  try {
+    const rulers = (bookmark && bookmark.rulers) || {};
+    for (const key of Object.keys(game.tags)) {
+      if (key === 'REB') continue;
+      const t = game.tags[key];
+      if (t.ruler) continue;
+      const src = rulers[key];
+      t.ruler = src ? {
+        name: String(src.name || 'Ruler'),
+        title: String(src.title || 'Ruler'),
+        gov: clamp(Math.round(num(src.gov, 2)), 0, 6),
+        infl: clamp(Math.round(num(src.infl, 2)), 0, 6),
+        mar: clamp(Math.round(num(src.mar, 2)), 0, 6),
+      } : { name: (t.name || key) + ' Council', title: 'Ruling Council', gov: 2, infl: 2, mar: 2 };
+    }
+  } catch (e) { console.warn('[sim/init] ruler assignment failed:', e); }
   return ctx;
 }
 
@@ -248,6 +267,70 @@ export const simHelpers = {
   },
 };
 
+// ------------------------------------------------------------------ national decisions
+// Peacetime statecraft enacted from the nation panel. Each decision spends a
+// resource, applies its effects through the ordinary modifier machinery, and
+// goes on cooldown (stored in game.diploCooldowns under 'decision:<key>').
+export const DECISIONS = {
+  grand_festival: {
+    name: 'Hold a Grand Festival', icon: 'laurel', cdMonths: 24, costText: '100 talents',
+    desc: 'Games, feasts and processions in every city: −2 unrest across the realm for a year, +5 legitimacy.',
+    can(g, t) { return num(t.treasury) >= 100 ? '' : 'Not enough treasury (100 talents).'; },
+    run(ctx, t) {
+      t.treasury = num(t.treasury) - 100;
+      simHelpers.addTagModifier(ctx, t.tag, { id: 'festival_joy', name: 'Festival Joy', months: 12, effects: { unrestAll: -2 } });
+      t.legitimacy = clamp(num(t.legitimacy) + 5, 0, 100);
+      return 'The realm rejoices: −2 unrest everywhere for a year, +5 legitimacy.';
+    },
+  },
+  great_rites: {
+    name: 'Great Public Rites', icon: 'altar', cdMonths: 18, costText: '50 governance points',
+    desc: 'The priesthood proclaims the ruler’s favor with heaven: +10 legitimacy, −1 unrest for a year.',
+    can(g, t) { return num(t.points.gov) >= 50 ? '' : 'Not enough governance points (50 required).'; },
+    run(ctx, t) {
+      t.points.gov = num(t.points.gov) - 50;
+      simHelpers.addTagModifier(ctx, t.tag, { id: 'pious_rule', name: 'Pious Rule', months: 12, effects: { unrestAll: -1 } });
+      t.legitimacy = clamp(num(t.legitimacy) + 10, 0, 100);
+      return 'The rites are performed before the people: +10 legitimacy, −1 unrest for a year.';
+    },
+  },
+  trade_expedition: {
+    name: 'Fund Trade Expeditions', icon: 'coins', cdMonths: 36, costText: '150 talents',
+    desc: 'Caravans and hulls flying our colors on every road and sea lane: +20% income for two years.',
+    can(g, t) { return num(t.treasury) >= 150 ? '' : 'Not enough treasury (150 talents).'; },
+    run(ctx, t) {
+      t.treasury = num(t.treasury) - 150;
+      simHelpers.addTagModifier(ctx, t.tag, { id: 'trade_winds', name: 'Trade Winds', months: 24, effects: { incomeMult: 1.2 } });
+      return 'The expeditions set out: +20% income for two years.';
+    },
+  },
+  drill_army: {
+    name: 'Drill the Army', icon: 'spears', cdMonths: 24, costText: '50 martial points',
+    desc: 'A season of drill, forced marches and mock battles: +5% discipline for 18 months.',
+    can(g, t) { return num(t.points.mar) >= 50 ? '' : 'Not enough martial points (50 required).'; },
+    run(ctx, t) {
+      t.points.mar = num(t.points.mar) - 50;
+      simHelpers.addTagModifier(ctx, t.tag, { id: 'drilled_ranks', name: 'Drilled Ranks', months: 18, effects: { disciplineMult: 1.05 } });
+      return 'The ranks are hardened: +5% discipline for 18 months.';
+    },
+  },
+  resettle_land: {
+    name: 'Resettle the Land', icon: 'grain', cdMonths: 24, costText: '100 talents · peacetime only',
+    desc: 'Veterans and landless families take up empty fields: +3,000 manpower now, +10% manpower for a year. Only while at peace.',
+    can(g, t) {
+      const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+      if (atWar) return 'The realm is at war — the fields must wait.';
+      return num(t.treasury) >= 100 ? '' : 'Not enough treasury (100 talents).';
+    },
+    run(ctx, t) {
+      t.treasury = num(t.treasury) - 100;
+      t.manpower = num(t.manpower) + 3000;
+      simHelpers.addTagModifier(ctx, t.tag, { id: 'settled_veterans', name: 'Settled Veterans', months: 12, effects: { manpowerMult: 1.1 } });
+      return 'The land fills with willing hands: +3,000 manpower, +10% manpower for a year.';
+    },
+  },
+};
+
 // ------------------------------------------------------------------ gameActions (§6.6, frozen)
 export function gameActions(ctx) {
   const g = ctx.game;
@@ -286,12 +369,17 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
+      let whyNotWar = '';
+      if (atWarWithUs) whyNotWar = 'We are already at war with them.';
+      else if (allied) whyNotWar = 'We are allied — break the alliance first.';
+      else if (truceUntil) whyNotWar = 'The ink on the truce is still wet.';
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
         opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
         canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
-        whyNotImprove, whyNotGift, whyNotAlly,
+        canWar: !whyNotWar,
+        whyNotImprove, whyNotGift, whyNotAlly, whyNotWar,
         improveCost: DIPLO.improveCost, giftCost: DIPLO.giftCost,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
@@ -661,28 +749,104 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('reserves', 'callReserves failed', e); }
     },
 
-    // ---- peace (v1.1) ------------------------------------------------------
-    peaceTerms() { return PEACE_TERMS; },
-    offerPeace(warId, level) {
+    // ---- peace (EU4-style deal builder) ------------------------------------
+    // getPeaceInfo -> what can be demanded; evaluatePeace -> live price &
+    // acceptance preview; offerPeaceDeal -> send the envoys.
+    getPeaceInfo(warId) {
       try {
         const war = g.wars.find((w) => w && w.id === warId);
         const me = g.playerTag;
-        if (!war || !PEACE_TERMS[level]) return;
+        if (!war) return null;
+        if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return null;
+        const info = peaceDealInfo(ctx, war, me);
+        info.envoyMonthsLeft = diploCdMonthsLeft(ctx, 'peace:' + war.id);
+        return info;
+      } catch (e) { warnOnce('peaceInfo', 'getPeaceInfo failed', e); return null; }
+    },
+    evaluatePeace(warId, deal) {
+      try {
+        const war = g.wars.find((w) => w && w.id === warId);
+        const me = g.playerTag;
+        if (!war) return null;
+        if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return null;
+        return evaluatePeaceDeal(ctx, war, me, deal);
+      } catch (e) { warnOnce('peaceEval', 'evaluatePeace failed', e); return null; }
+    },
+    offerPeaceDeal(warId, deal) {
+      try {
+        const war = g.wars.find((w) => w && w.id === warId);
+        const me = g.playerTag;
+        if (!war) return;
         if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return;
         if (war.noNegotiation) {
           say('No terms', 'This war ends by the sword, or by events larger than treaties.', 'bad'); return;
         }
-        const cd = war._peaceCooldown;
-        if (cd && (g.date.y < cd.y || (g.date.y === cd.y && g.date.m < cd.m))) {
-          say('Envoys rebuffed', 'The enemy will not receive our envoys again yet.', 'bad'); return;
+        if (diploCdActive(ctx, 'peace:' + war.id)) {
+          say('Envoys rebuffed', 'The enemy will not receive our envoys again yet ('
+            + diploCdMonthsLeft(ctx, 'peace:' + war.id) + ' months).', 'bad');
+          return;
         }
-        if (aiWillAccept(ctx, war, me, level)) {
-          makePeace(ctx, war, me, level);
+        const ev = evaluatePeaceDeal(ctx, war, me, deal);
+        if (ev.acceptable) {
+          executePeaceDeal(ctx, war, me, deal);
         } else {
-          war._peaceCooldown = { y: g.date.y + (g.date.m >= 7 ? 1 : 0), m: ((g.date.m + 5) % 12) + 1 };
-          say('Terms refused', 'The enemy rejects ' + PEACE_TERMS[level].label.toLowerCase() + '. Six months until they will listen again.', 'bad');
+          setDiploCd(ctx, 'peace:' + war.id, 6);
+          say('Terms refused', ev.reason + ' Six months until they will listen again.', 'bad');
         }
-      } catch (e) { warnOnce('peace', 'offerPeace failed', e); }
+      } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }
+    },
+
+    // ---- declaring war ------------------------------------------------------
+    declareWarOn(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canWar) { say('Declare war', d.whyNotWar || 'We cannot declare war on ' + d.name + '.', 'bad'); return; }
+        const mine = g.tags[g.playerTag];
+        mine.stability = clamp(num(mine.stability) - 2, -3, 3);
+        mine.legitimacy = clamp(num(mine.legitimacy) - 5, 0, 100);
+        addOpinion(ctx, tag, g.playerTag, -100);
+        declareWar(ctx, g.playerTag, tag, null);
+      } catch (e) { warnOnce('declareWarOn', 'declareWarOn failed', e); }
+    },
+
+    // ---- national decisions (nation panel) ----------------------------------
+    getDecisions() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return [];
+        return Object.keys(DECISIONS).map((key) => {
+          const d = DECISIONS[key];
+          const cdKey = 'decision:' + key;
+          let whyNot = '';
+          if (diploCdActive(ctx, cdKey)) {
+            whyNot = 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.';
+          } else {
+            whyNot = d.can(g, t) || '';
+          }
+          return {
+            key, name: d.name, icon: d.icon, desc: d.desc, costText: d.costText,
+            cooldownMonths: d.cdMonths, canEnact: !whyNot, whyNot,
+          };
+        });
+      } catch (e) { warnOnce('getDecisions', 'getDecisions failed', e); return []; }
+    },
+    enactDecision(key) {
+      try {
+        const t = g.tags[g.playerTag];
+        const d = DECISIONS[key];
+        if (!t || !d) return;
+        const cdKey = 'decision:' + key;
+        if (diploCdActive(ctx, cdKey)) {
+          say(d.name, 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.', 'bad');
+          return;
+        }
+        const why = d.can(g, t);
+        if (why) { say(d.name, why, 'bad'); return; }
+        const result = d.run(ctx, t);
+        setDiploCd(ctx, cdKey, d.cdMonths);
+        say(d.name, result || 'It is done.', 'good');
+      } catch (e) { warnOnce('enactDecision', 'enactDecision failed', e); }
     },
   };
 }

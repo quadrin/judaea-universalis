@@ -216,6 +216,16 @@ export const BOOKMARK_66 = {
     });
   },
 
+  // Courts of June 66 CE. Skills 0-6 feed monthly monarch points (base +2).
+  rulers: {
+    JUD: { name: 'Ananus ben Ananus', title: 'High Priest', gov: 3, infl: 3, mar: 2 },
+    ROM: { name: 'Nero Claudius Caesar', title: 'Emperor', gov: 1, infl: 4, mar: 1 },
+    PAR: { name: 'Vologases I', title: 'King of Kings', gov: 3, infl: 4, mar: 3 },
+    NAB: { name: 'Malichus II', title: 'King', gov: 2, infl: 3, mar: 1 },
+    ARM: { name: 'Tiridates I', title: 'King', gov: 2, infl: 3, mar: 2 },
+    AGR: { name: 'Agrippa II', title: 'King', gov: 2, infl: 4, mar: 1 },
+  },
+
   aiHints: {
     ROM: { rally: ['Antioch', 'Caesarea Maritima'], targetRegiments: 45 },
     JUD: { rally: ['Jerusalem', 'Jotapata'], targetRegiments: 28 },

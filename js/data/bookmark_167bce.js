@@ -326,6 +326,16 @@ export const BOOKMARK_167 = {
     });
   },
 
+  // Courts of November 167 BCE. Skills 0-6 feed monthly monarch points (base +2).
+  rulers: {
+    HAS: { name: 'Mattathias ben Yohanan', title: 'Priest of Modein', gov: 3, infl: 2, mar: 4 },
+    SEL: { name: 'Antiochus IV Epiphanes', title: 'Basileus', gov: 2, infl: 2, mar: 3 },
+    PTO: { name: 'Ptolemy VI Philometor', title: 'Pharaoh', gov: 2, infl: 3, mar: 1 },
+    NAB: { name: 'Aretas I', title: 'King', gov: 2, infl: 2, mar: 2 },
+    ARM: { name: 'Artaxias I', title: 'King', gov: 3, infl: 2, mar: 3 },
+    PAR: { name: 'Mithridates I', title: 'King of Kings', gov: 3, infl: 3, mar: 4 },
+  },
+
   aiHints: {
     SEL: { rally: ['Antioch', 'Damascus'], targetRegiments: 35 },
     HAS: { rally: ['Emmaus', 'Jerusalem'], targetRegiments: 15 },

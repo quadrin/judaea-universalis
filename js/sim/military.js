@@ -1033,52 +1033,126 @@ export function breakAllianceCore(ctx, breaker, other) {
 }
 
 // ---------------------------------------------------------------- peace
-// Treaty levels and the warscore the enemy leader must be at (net, from THEIR
-// side) for the AI to accept. The bookmark's scripted war (war.noNegotiation)
-// resolves only through events/victory.
-export const PEACE_TERMS = {
-  white:   { label: 'White peace',            enemyWsAtMost: 5 },
-  tribute: { label: 'Peace with tribute',     enemyWsAtMost: -25 },
-  cede:    { label: 'Cede occupied lands',    enemyWsAtMost: -50 },
+// EU4-style negotiated peace: the offering side assembles a deal — occupied
+// enemy provinces (warscore cost scales with development), an indemnity in
+// talents, a humiliation — and the enemy accepts when the offerer's warscore
+// covers the total. The bookmark's scripted war (war.noNegotiation) resolves
+// only through events/victory.
+export const PEACE = {
+  provCostPerDev: 0.9,   // warscore per point of demanded development
+  provCostMin: 4,        // floor per province
+  goldCostPer100: 10,    // warscore per 100 talents demanded
+  goldStep: 25,          // UI stepper granularity
+  humiliateCost: 15,
+  whiteEnemyWsAtMost: 5, // enemy accepts a white peace at/below this net score
+  warWearyWE: 15,        // war exhaustion at which a not-quite-winning enemy takes white peace
 };
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
-export function aiWillAccept(ctx, war, byTag, level) {
-  const terms = PEACE_TERMS[level];
-  if (!terms) return false;
-  const g = ctx.game;
-  const enemyLeader = enemySideOf(war, byTag).find((t) => g.tags[t] && g.tags[t].alive);
-  if (!enemyLeader) return true;
-  const ws = num(war.warscore && war.warscore[enemyLeader]);
-  if (ws <= terms.enemyWsAtMost) return true;
-  // War-weariness accepts a white peace even from a mildly winning position.
-  return level === 'white' && num(g.tags[enemyLeader].warExhaustion) >= 15 && ws <= 15;
+function provDemandCost(p) {
+  return Math.max(PEACE.provCostMin, Math.round(devTotal(p) * PEACE.provCostPerDev));
 }
-export function makePeace(ctx, war, byTag, level) {
+// Everything the peace dialog needs: our score, the enemy leader, which
+// provinces are on the table (enemy-owned, our-side-occupied) and their costs.
+export function peaceDealInfo(ctx, war, byTag) {
   const g = ctx.game;
-  const participants = war.attackers.concat(war.defenders);
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
   const theirSide = enemySideOf(war, byTag);
-  // Cession first: provinces the winners hold of the losers' land change owner.
-  if (level === 'cede') {
-    for (let i = 1; i < g.provinces.length; i++) {
-      const p = g.provinces[i];
-      if (!p || p.impassable) continue;
-      if (theirSide.indexOf(p.owner) >= 0 && mySide.indexOf(p.controller) >= 0) {
-        changeOwnerCore(ctx, p, p.controller);
-      }
-    }
+  const enemyLeader = theirSide.find((t) => g.tags[t] && g.tags[t].alive) || null;
+  const et = enemyLeader ? g.tags[enemyLeader] : null;
+  const provinces = [];
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (theirSide.indexOf(p.owner) < 0) continue;
+    if (mySide.indexOf(p.controller) < 0) continue; // must be occupied by our side
+    provinces.push({ id: i, name: p.name, dev: devTotal(p), owner: p.owner, cost: provDemandCost(p) });
   }
-  if (level === 'tribute') {
-    const payer = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
-    const t = payer && g.tags[payer], me = g.tags[byTag];
-    if (t && me) {
-      const sum = Math.min(200, Math.max(50, Math.round(num(t.treasury) * 0.3)));
-      t.treasury = num(t.treasury) - sum;
-      me.treasury = num(me.treasury) + sum;
-    }
+  provinces.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  const rawMax = et ? Math.max(0, num(et.treasury)) * 0.6 + 100 : 0;
+  return {
+    warId: war.id, warName: war.name,
+    myWs: Math.round(num(war.warscore && war.warscore[byTag])),
+    enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
+    enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
+    provinces,
+    maxGold: Math.floor(rawMax / PEACE.goldStep) * PEACE.goldStep,
+    goldStep: PEACE.goldStep,
+    goldCostPer100: PEACE.goldCostPer100,
+    humiliateCost: PEACE.humiliateCost,
+    noNegotiation: !!war.noNegotiation,
+  };
+}
+// deal = { provinces: [provId], gold: talents, humiliate: bool }. Returns the
+// warscore price, whether the enemy takes it, and a one-line reason.
+export function evaluatePeaceDeal(ctx, war, byTag, deal) {
+  const d = deal || {};
+  const info = peaceDealInfo(ctx, war, byTag);
+  const chosen = [];
+  let cost = 0;
+  for (const id of Array.isArray(d.provinces) ? d.provinces : []) {
+    const row = info.provinces.find((r) => r.id === (id | 0));
+    if (!row || chosen.indexOf(row) >= 0) continue;
+    chosen.push(row);
+    cost += row.cost;
   }
+  const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
+  cost += Math.round(gold * PEACE.goldCostPer100 / 100);
+  const humiliate = !!d.humiliate;
+  if (humiliate) cost += PEACE.humiliateCost;
+  const white = !chosen.length && gold <= 0 && !humiliate;
+  const enemyWs = -info.myWs;
+  let acceptable, reason;
+  if (white) {
+    acceptable = enemyWs <= PEACE.whiteEnemyWsAtMost ||
+      (info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15);
+    reason = acceptable
+      ? 'They are ready to lay down arms.'
+      : 'They believe they are winning, and will not settle for nothing.';
+  } else {
+    acceptable = info.myWs > 0 && cost <= info.myWs;
+    reason = acceptable
+      ? 'Our position compels them to accept.'
+      : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
+  }
+  return { cost, acceptable, reason, gold, humiliate, provinces: chosen.map((c) => c.id) };
+}
+// Applies an (already accepted) deal, then winds the war down: status quo for
+// the rest, truces, atWarWith rebuild, stranded armies march home.
+export function executePeaceDeal(ctx, war, byTag, deal) {
+  const g = ctx.game;
+  const info = peaceDealInfo(ctx, war, byTag);
+  const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
+  const me = g.tags[byTag];
+  const terms = [];
+  // Cession first: demanded provinces change owner to the peacemaker.
+  const cededNames = [];
+  for (const id of ev.provinces) {
+    const p = ctx.byId(id);
+    if (!p) continue;
+    cededNames.push(p.name);
+    changeOwnerCore(ctx, p, byTag);
+    changeControllerCore(ctx, p, byTag);
+  }
+  if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
+  if (ev.gold > 0 && info.enemyLeader && me) {
+    const et = g.tags[info.enemyLeader];
+    et.treasury = num(et.treasury) - ev.gold;
+    me.treasury = num(me.treasury) + ev.gold;
+    terms.push('pays ' + ev.gold + ' talents');
+  }
+  if (ev.humiliate && info.enemyLeader && me) {
+    const et = g.tags[info.enemyLeader];
+    me.legitimacy = clamp(num(me.legitimacy) + 10, 0, 100);
+    me.points.gov = clamp(num(me.points.gov) + 25, 0, 999);
+    me.points.infl = clamp(num(me.points.infl) + 25, 0, 999);
+    me.points.mar = clamp(num(me.points.mar) + 25, 0, 999);
+    et.legitimacy = clamp(num(et.legitimacy) - 15, 0, 100);
+    et.stability = clamp(num(et.stability) - 1, -3, 3);
+    terms.push('is humiliated before the nations');
+  }
+  const participants = war.attackers.concat(war.defenders);
   // Status quo ante for everything still occupied, both directions.
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
@@ -1116,11 +1190,22 @@ export function makePeace(ctx, war, byTag, level) {
     if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
   }
   ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+  const summary = terms.length
+    ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
+    : 'A white peace: every occupation reverts.';
   ctx.bus.emit('notify', {
     title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
-    text: war.name + ' ends: ' + (PEACE_TERMS[level] ? PEACE_TERMS[level].label : level) + '. A five-year truce holds.',
+    text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
     type: 'good',
   });
+}
+// Signed months between two game dates (BCE years are negative; no year zero).
+export function monthsBetween(a, b) {
+  if (!a || !b) return 0;
+  let m = (b.y - a.y) * 12 + (b.m - a.m);
+  if (a.y < 0 && b.y > 0) m -= 12;
+  if (a.y > 0 && b.y < 0) m += 12;
+  return m;
 }
 function sideGross(ctx, w, key) {
   const g = ctx.game;

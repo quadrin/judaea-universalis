@@ -34,14 +34,24 @@ function advanceDate(ctx) {
   }
 }
 
+// Base +2/month per pool, plus the ruler's matching skill (0-6). Tags without
+// a ruler (defensive fallback) keep the old 3-5 random gain.
 function monthlyMonarchPoints(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
     if (!t || !t.alive || tag === 'REB') continue;
-    t.points.gov = Math.min(999, t.points.gov + 3 + ctx.rng.int(3));
-    t.points.infl = Math.min(999, t.points.infl + 3 + ctx.rng.int(3));
-    t.points.mar = Math.min(999, t.points.mar + 3 + ctx.rng.int(3));
+    const r = t.ruler;
+    if (r) {
+      const skill = (k) => Math.max(0, Math.min(6, Number.isFinite(r[k]) ? r[k] : 2));
+      t.points.gov = Math.min(999, t.points.gov + 2 + skill('gov'));
+      t.points.infl = Math.min(999, t.points.infl + 2 + skill('infl'));
+      t.points.mar = Math.min(999, t.points.mar + 2 + skill('mar'));
+    } else {
+      t.points.gov = Math.min(999, t.points.gov + 3 + ctx.rng.int(3));
+      t.points.infl = Math.min(999, t.points.infl + 3 + ctx.rng.int(3));
+      t.points.mar = Math.min(999, t.points.mar + 3 + ctx.rng.int(3));
+    }
   }
 }
 

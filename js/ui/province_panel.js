@@ -91,6 +91,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
+          <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
         </div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
@@ -99,7 +100,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.dipBtns.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-dip]') : null;
       if (!b || !actions || !dipTag || b.classList.contains('disabled')) return;
-      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance' }[b.dataset.dip];
+      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance', war: 'declareWarOn' }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
       refresh();
@@ -362,6 +363,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     if (d.canBreak) {
       refs.dipBreak.classList.remove('disabled');
       refs.dipBreak.dataset.tt = 'Break the alliance — their opinion of us falls by 50';
+    }
+    // Declare war: hidden while already at war (the status row says so).
+    refs.dipWar.classList.toggle('hidden', !!d.atWarWithUs);
+    if (!d.atWarWithUs) {
+      setDipBtn(refs.dipWar, d.canWar, d.whyNotWar,
+        'Declare war — costs 2 stability and 5 legitimacy; their allies will answer the call');
     }
   }
 

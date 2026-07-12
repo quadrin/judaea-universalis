@@ -6,6 +6,7 @@ import {
   num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   breakAllianceCore, assaultInfo, doAssault,
+  peaceDealInfo, executePeaceDeal, monthsBetween,
 } from './military.js';
 import { LOAN_SIZE } from './economy.js';
 
@@ -238,6 +239,48 @@ function runTagAI(ctx, tag) {
   if (target) issueMove(ctx, main, target);
 }
 
+// Peace feelers (monthly). A losing AI leader sues the player for peace — a
+// nudge to open the dove dialog and dictate terms. Wars between two AI powers
+// resolve themselves once one side clearly prevails or both sides tire.
+function monthlyWarDiplomacy(ctx) {
+  const g = ctx.game;
+  const player = g.playerTag;
+  for (const w of (g.wars || []).slice()) {
+    if (!w || w.noNegotiation) continue;
+    const playerIn = w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0;
+    if (playerIn) {
+      const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
+      const leader = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
+      if (!leader) continue;
+      const lt = g.tags[leader];
+      const ws = num(w.warscore && w.warscore[leader]);
+      if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= 15)) continue;
+      if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;
+      w._sueCd = { ...g.date };
+      ctx.bus.emit('notify', {
+        title: (lt.name || leader) + ' sues for peace',
+        text: 'Their envoys ask what terms we would set. Open the war in the outliner to dictate them.',
+        type: 'good',
+      });
+    } else {
+      const attLead = w.attackers.find((t) => g.tags[t] && g.tags[t].alive);
+      const defLead = w.defenders.find((t) => g.tags[t] && g.tags[t].alive);
+      if (!attLead || !defLead) continue;
+      const wsAtt = num(w.warscore && w.warscore[attLead]);
+      const months = monthsBetween(w.started, g.date);
+      if (Math.abs(wsAtt) < 50 && months < 36) continue;
+      const winner = wsAtt >= 0 ? attLead : defLead;
+      const info = peaceDealInfo(ctx, w, winner);
+      const deal = { provinces: [], gold: 0, humiliate: false };
+      let budget = info.myWs;
+      for (const row of info.provinces) {
+        if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
+      }
+      executePeaceDeal(ctx, w, winner, deal);
+    }
+  }
+}
+
 export function runMonthlyAI(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -249,4 +292,5 @@ export function runMonthlyAI(ctx) {
       runTagAI(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
+  try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }
 }
