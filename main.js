@@ -172,3 +172,10 @@ boot().catch((e) => {
   el.textContent = 'Boot failed:\n' + (e.stack || e);
   document.body.appendChild(el);
 });
+
+// PWA: network-first service worker (offline shell + no stale modules when online).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('[sw]', e));
+  });
+}

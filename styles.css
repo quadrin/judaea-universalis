@@ -1401,3 +1401,236 @@ button {
 @media (max-width: 680px) {
   .tb-loan { display: none; }
 }
+
+/* ============================================================
+   Mobile / touch layer (mobile contract)
+   Everything below is scoped to coarse pointers and/or narrow
+   viewports: the desktop experience at >= 900px with a fine
+   pointer is pixel-identical.
+   ============================================================ */
+
+/* --- touch fundamentals (no visual effect anywhere) ---------------------- */
+html, body {
+  touch-action: manipulation; /* no double-tap zoom, no 300ms delay */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+}
+#map-container { touch-action: none; } /* camera owns every map gesture */
+
+/* --- fixed chrome built by ui.js: inert until a media query opts in ------ */
+#group-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 70px; /* clears the desktop mapmode bar on coarse wide screens */
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  pointer-events: auto;
+  color: var(--text-light);
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.10) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, var(--wood-light), var(--wood-dark));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+#group-toggle .icon { width: 23px; height: 23px; vertical-align: 0; }
+#group-toggle.active {
+  color: var(--gold-bright);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+#outliner-pill {
+  position: absolute;
+  top: 52px;
+  top: calc(52px + env(safe-area-inset-top));
+  right: 8px;
+  z-index: 20;
+  min-width: 44px;
+  height: 40px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  pointer-events: auto;
+  color: var(--parch);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--gold-dim);
+  border-radius: 20px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.10) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, rgba(42, 33, 24, 0.96), rgba(29, 23, 16, 0.96));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+#outliner-pill .icon { width: 17px; height: 17px; vertical-align: 0; color: var(--gold); }
+#outliner-pill.active {
+  color: var(--gold-bright);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+}
+
+/* --- portrait-phone layout (and coarse handhelds up to 900px) ------------ */
+@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+  /* topbar: one row — treasury / manpower / date / pause+speed — plus
+     safe-area padding; horizontal scroll stays as the backstop */
+  #topbar {
+    height: 46px;
+    height: calc(46px + env(safe-area-inset-top));
+    padding: 0 8px;
+    padding: env(safe-area-inset-top) max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+    gap: 8px;
+    font-size: 13px;
+  }
+  #topbar::-webkit-scrollbar { display: none; }
+  .tb-points, .tb-sub { display: none; }
+  .tb-item[data-ref="stabilityWrap"], .tb-item[data-ref="legitimacyWrap"] { display: none; }
+  .tb-date { font-size: 12px; letter-spacing: 0.02em; }
+
+  /* province panel -> bottom sheet: full width, ~45% tall, inner scroll */
+  #province-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 45vh;
+    max-height: 45dvh;
+    z-index: 40;
+    border-radius: 12px 12px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding-bottom: 14px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.7);
+  }
+  #province-panel::before, #province-panel::after { content: none; } /* no corner accents on the sheet */
+  #province-panel .pp-head { position: relative; padding-top: 13px; }
+  #province-panel .pp-head::after { /* grab handle: swipe down here to close */
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 46px;
+    height: 4px;
+    transform: translateX(-50%);
+    border-radius: 2px;
+    background: var(--gold-dim);
+  }
+
+  /* outliner -> pill + overlay drawer */
+  #outliner { display: none; }
+  #outliner.open {
+    display: block;
+    top: 98px;
+    top: calc(98px + env(safe-area-inset-top));
+    right: 8px;
+    width: min(320px, calc(100vw - 16px));
+    max-height: min(56vh, 460px);
+    max-height: min(56dvh, 460px);
+    z-index: 45;
+  }
+  #outliner-pill { display: inline-flex; }
+
+  /* mapmode bar: compact 3x2 grid, bottom-left, above the sound button */
+  #mapmode-bar {
+    right: auto;
+    left: 10px;
+    left: calc(10px + env(safe-area-inset-left));
+    bottom: 56px;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  /* sound button (style tag from sound.js loads after this sheet, so win on
+     specificity): tuck into the safe area under the mapmode grid */
+  #ui-root #ju-sound-btn {
+    left: 10px;
+    left: calc(10px + env(safe-area-inset-left));
+    bottom: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  /* group toggle: bottom-right corner (mapmode bar lives bottom-left here) */
+  #group-toggle {
+    right: 10px;
+    right: calc(10px + env(safe-area-inset-right));
+    bottom: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  /* toasts: full row under the topbar, clear of the outliner pill */
+  #toast-container {
+    top: 52px;
+    top: calc(52px + env(safe-area-inset-top));
+    left: 10px;
+    right: 64px;
+    width: auto;
+  }
+
+  /* modals and start screen sized to the dynamic viewport + safe areas */
+  .ev-card { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); }
+  .peace-card { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; }
+  .ss-inner {
+    padding: 24px 16px;
+    padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  }
+}
+
+/* --- 430px phones: shed the last non-essentials from the topbar ---------- */
+@media (max-width: 430px) {
+  #topbar { gap: 6px; font-size: 12.5px; }
+  .tb-save, .tb-buy { display: none; }
+  .tb-flag-tag { display: none; } /* the flag chip alone carries the tag */
+  .tb-speed { gap: 5px; }
+  .tb-date { font-size: 11px; }
+}
+
+/* --- coarse pointers: hit targets, touch tooltips, touch hint ------------ */
+@media (pointer: coarse) {
+  #group-toggle { display: inline-flex; }
+
+  /* 40px minimum tap targets: small controls get an invisible, centered
+     hit pad; visuals stay the same size */
+  .tb-pause, .tb-save, .tb-buy, .tb-pip, .pp-close, .pp-dev,
+  .ol-act, .ol-peace, .pp-bchip { position: relative; }
+  .tb-pause::after, .tb-save::after, .tb-buy::after, .tb-pip::after,
+  .pp-close::after, .pp-dev::after, .ol-act::after, .ol-peace::after,
+  .pp-bchip::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 40px);
+    height: max(100%, 40px);
+    transform: translate(-50%, -50%);
+  }
+  .tb-pip { width: 10px; height: 20px; }
+  .tb-pip::after { width: max(100%, 22px); } /* neighbouring pips: smaller pads */
+  .mm-btn { width: 44px; height: 40px; }
+  .ol-row { padding: 8px 6px; }
+  .pp-row { padding: 6px 0; }
+  .btn { padding: 10px 14px; }
+
+  /* tooltips: hover is meaningless — ui.js shows them on a 350ms
+     press-and-hold instead (adds .tt-touch); hide every hover-driven one */
+  #tooltip { display: none !important; }
+  #tooltip.tt-touch:not(.hidden) { display: block !important; }
+
+  /* start-screen hint, touch wording */
+  .ss-hint { font-size: 0; }
+  .ss-hint::after {
+    content: 'Long-press moves armies · Drag pans · Pinch zooms';
+    font-size: 13px;
+  }
+}

@@ -6,6 +6,12 @@ const CHIP_W = 46;
 const CHIP_H = 20;
 const MORALE_H = 3;
 const CULL_MARGIN = 90;
+// Touch screens get fatter hit targets (drawing unchanged). Live MediaQueryList:
+// .matches is read per hit test, so plugging in a mouse/touchscreen updates behavior.
+const TOUCH_HIT_PAD = 8;
+const coarsePointer = (typeof window !== 'undefined' && typeof window.matchMedia === 'function')
+  ? window.matchMedia('(pointer: coarse)')
+  : null;
 
 // Hand-drawn vector glyphs (Path2D, CSS-px coordinates around a 0,0 origin).
 // Drawn after ctx.setTransform(dpr,...), so devicePixelRatio scaling is free.
@@ -288,10 +294,12 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   function hitTestArmy(sx, sy, game, camera) {
     try {
       if (!game) return null;
+      const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
       const chips = chipList(game, camera);
       for (let i = chips.length - 1; i >= 0; i--) { // topmost first
         const c = chips[i];
-        if (sx >= c.x && sx <= c.x + c.w && sy >= c.y && sy <= c.y + c.h) return c.army.id;
+        if (sx >= c.x - pad && sx <= c.x + c.w + pad &&
+            sy >= c.y - pad && sy <= c.y + c.h + pad) return c.army.id;
       }
     } catch (e) {
       warnOnce('hit-throw', 'hitTestArmy failed', e);

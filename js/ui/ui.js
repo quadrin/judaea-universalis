@@ -47,8 +47,72 @@ export function initUI(staticCtx) {
   };
   const state = { ctx: null, actions: null, bound: false };
 
+  // Mobile contract: coarse-pointer detection via matchMedia, never UA sniffs.
+  const coarse = typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer: coarse)').matches;
+  // Group mode (mobile contract): while true, every own-army tap toggles that
+  // army in/out of the selection group — exactly like shift+click — and
+  // province taps do NOT clear the group. Desktop shift+click is unchanged.
+  let groupMode = false;
+
   initTooltip(els.tooltip);
   buildMapmodeBar(els.mapmodeBar, bus);
+
+  // ------------------------------------------------------- mobile chrome --
+  // Both buttons live in CSS-land until a media query shows them: the group
+  // toggle on coarse pointers, the outliner pill on narrow screens.
+  const uiRoot = document.getElementById('ui-root');
+
+  // Two-soldiers glyph in the icons.js hand: 24x24, stroke 1.6, currentColor.
+  const groupBtn = document.createElement('button');
+  groupBtn.id = 'group-toggle';
+  groupBtn.innerHTML =
+    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<circle cx="9" cy="7.8" r="3.1"/>'
+    + '<path d="M3.4 19.6c.6-3.6 2.6-5.4 5.6-5.4s5 1.8 5.6 5.4Z"/>'
+    + '<path d="M14.8 5.2c1.9.4 3 1.7 3 3.5 0 1.1-.4 2-1.2 2.6"/>'
+    + '<path d="M16.9 14.6c2.1.7 3.3 2.4 3.7 5h-3.2"/>'
+    + '</svg>';
+  groupBtn.dataset.tt = 'Group mode: tapping your armies adds them to (or drops them from) the group';
+  groupBtn.setAttribute('aria-label', 'Toggle group mode');
+  groupBtn.setAttribute('aria-pressed', 'false');
+  groupBtn.addEventListener('click', () => {
+    groupMode = !groupMode;
+    groupBtn.classList.toggle('active', groupMode);
+    groupBtn.setAttribute('aria-pressed', String(groupMode));
+  });
+  uiRoot.appendChild(groupBtn);
+
+  // Outliner pill: army-count badge that expands the outliner as a drawer.
+  const pillBtn = document.createElement('button');
+  pillBtn.id = 'outliner-pill';
+  pillBtn.className = 'hidden'; // unhidden once a game is bound
+  pillBtn.innerHTML = `${icon('shield')}<span data-ref="count">0</span>`;
+  pillBtn.dataset.tt = 'Armies in the field — tap for the outliner';
+  pillBtn.setAttribute('aria-label', 'Toggle outliner');
+  const pillCount = pillBtn.querySelector('[data-ref="count"]');
+  pillBtn.addEventListener('click', () => {
+    const open = els.outliner.classList.toggle('open');
+    pillBtn.classList.toggle('active', open);
+    if (open) updatePill();
+  });
+  uiRoot.appendChild(pillBtn);
+  // Splitting an army from the drawer changes the count while paused.
+  els.outliner.addEventListener('click', () => { setTimeout(updatePill, 0); });
+
+  function closeOutlinerDrawer() {
+    els.outliner.classList.remove('open');
+    pillBtn.classList.remove('active');
+  }
+
+  function updatePill() {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    let n = 0;
+    for (const a of Object.values(g.armies || {})) if (a && a.tag === g.playerTag) n++;
+    const s = String(n);
+    if (pillCount.textContent !== s) pillCount.textContent = s;
+  }
 
   const toasts = createToasts(els.toasts, {
     onProvClick(provName) {
@@ -64,7 +128,8 @@ export function initUI(staticCtx) {
     onArmyClick(id, shift) {
       const g = state.ctx && state.ctx.game;
       if (!g || !g.armies || !g.armies[id]) return;
-      if (shift) { toggleArmyInGroup(id); return; } // build the group without camera jumps
+      // build the group without camera jumps (shift, or group mode on touch)
+      if (shift || groupMode) { toggleArmyInGroup(id); return; }
       setSelectedArmy(id);
       const p = g.provinces[g.armies[id].prov];
       if (p && camera) camera.centerOn(p.x, p.y);
@@ -75,6 +140,7 @@ export function initUI(staticCtx) {
       const p = g.provinces[provId];
       if (p && camera) camera.centerOn(p.x, p.y);
       if (p) setSelectedProv(provId);
+      closeOutlinerDrawer(); // jumped to the map: get the drawer out of the way
     },
   });
   const eventModal = createEventModal(els.eventModal);
@@ -167,17 +233,20 @@ export function initUI(staticCtx) {
   function onMapClick(payload) {
     const g = state.ctx.game;
     const { provId, armyId, shift } = payload || {};
+    closeOutlinerDrawer(); // map taps dismiss the mobile drawer
+    // Group mode behaves exactly like a held shift key (mobile contract).
+    const grouping = shift || groupMode;
     if (armyId != null) {
       const a = g.armies && g.armies[armyId];
       if (a && a.tag === g.playerTag) {
-        if (shift) toggleArmyInGroup(armyId);
+        if (grouping) toggleArmyInGroup(armyId);
         else setSelectedArmy(armyId);
         setSelectedProv(0);
         return;
       }
       // Foreign army: fall through to the province underneath.
     }
-    if (shift) return; // shift-clicking terrain doesn't drop a built-up group
+    if (grouping) return; // shift/group taps on terrain don't drop a built-up group
     if (provId > 0) {
       setSelectedArmy(null);
       setSelectedProv(provId);
@@ -218,6 +287,74 @@ export function initUI(staticCtx) {
     }
   });
 
+  // ------------------------------------------------------ touch niceties --
+  if (coarse) {
+    // Bottom sheet: swiping down on the panel header closes it (the ✕ works
+    // too). The header is a stable child of the panel across rebuilds.
+    let sheetY = null;
+    els.panel.addEventListener('touchstart', (e) => {
+      const onHead = e.target instanceof Element && e.target.closest('.pp-head');
+      sheetY = (onHead && e.touches.length === 1) ? e.touches[0].clientY : null;
+    }, { passive: true });
+    els.panel.addEventListener('touchmove', (e) => {
+      if (sheetY == null || !e.touches.length) return;
+      if (e.touches[0].clientY - sheetY > 52) { sheetY = null; setSelectedProv(0); }
+    }, { passive: true });
+    els.panel.addEventListener('touchend', () => { sheetY = null; });
+    els.panel.addEventListener('touchcancel', () => { sheetY = null; });
+
+    // Tooltips: hover doesn't exist here, so any [data-tt] element shows its
+    // tooltip on a 350ms press-and-hold instead (tooltip.js keeps handling
+    // desktop hover untouched; CSS gates which path is visible). A hold that
+    // reached the tooltip swallows the release's click so reading a button's
+    // tooltip never triggers the button.
+    let ttTimer = 0;
+    let ttFrom = null;
+    let ttShownAt = 0;
+    const ttHide = () => {
+      if (ttTimer) { clearTimeout(ttTimer); ttTimer = 0; }
+      if (els.tooltip.classList.contains('tt-touch')) {
+        els.tooltip.classList.remove('tt-touch');
+        els.tooltip.classList.add('hidden');
+      }
+    };
+    document.addEventListener('touchstart', (e) => {
+      ttHide();
+      ttShownAt = 0;
+      const t = e.target instanceof Element ? e.target.closest('[data-tt]') : null;
+      if (!t || !t.dataset.tt || e.touches.length !== 1) { ttFrom = null; return; }
+      ttFrom = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      ttTimer = setTimeout(() => {
+        ttTimer = 0;
+        if (!document.contains(t) || !t.dataset.tt) return;
+        els.tooltip.textContent = t.dataset.tt;
+        els.tooltip.classList.add('tt-touch');
+        els.tooltip.classList.remove('hidden');
+        ttShownAt = Date.now();
+        const r = els.tooltip.getBoundingClientRect();
+        const x = Math.max(6, Math.min(ttFrom.x - r.width / 2, window.innerWidth - r.width - 6));
+        let y = ttFrom.y - r.height - 18; // above the finger…
+        if (y < 6) y = Math.min(ttFrom.y + 24, window.innerHeight - r.height - 6); // …or below it
+        els.tooltip.style.left = x + 'px';
+        els.tooltip.style.top = y + 'px';
+      }, 350);
+    }, { passive: true, capture: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!ttFrom || !e.touches.length) return;
+      const c = e.touches[0];
+      if (Math.hypot(c.clientX - ttFrom.x, c.clientY - ttFrom.y) > 10) ttHide();
+    }, { passive: true, capture: true });
+    document.addEventListener('touchend', ttHide, { passive: true, capture: true });
+    document.addEventListener('touchcancel', ttHide, { passive: true, capture: true });
+    document.addEventListener('click', (e) => {
+      if (ttShownAt && Date.now() - ttShownAt < 700) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      ttShownAt = 0;
+    }, true);
+  }
+
   // ------------------------------------------------------------------ API --
   function showStartScreen(bookmarks, onPick, continueInfo) {
     els.start.classList.remove('hidden');
@@ -240,6 +377,8 @@ export function initUI(staticCtx) {
     panel.bind(ctx, actions);
     outliner.bind(ctx, actions);
     eventModal.bind(ctx, actions);
+    pillBtn.classList.remove('hidden');
+    updatePill();
 
     const safe = (key, fn) => (p) => { try { fn(p); } catch (e) { warnOnce(key, e); } };
 
@@ -260,6 +399,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
       outliner.refresh();
       panel.refresh();
+      updatePill();
     }));
     bus.on('pause', safe('pause', () => topbar.refresh()));
     bus.on('speed', safe('speed', () => topbar.refresh()));
