@@ -183,7 +183,7 @@ export function initUI(staticCtx) {
       peaceEl.id = 'peace-modal';
       document.getElementById('ui-root').appendChild(peaceEl);
     }
-    const deal = { provinces: [], gold: 0, humiliate: false };
+    const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false };
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     const provRows = info.provinces.map((p) =>
       `<label class="peace-prov" data-tt="${esc(p.name)} — ${p.dev} development\nDemanding it costs ${p.cost} war score">
@@ -212,6 +212,13 @@ export function initUI(staticCtx) {
           <span class="peace-prov-name">Humiliate them before the nations</span>
           <span class="peace-prov-cost">${info.humiliateCost}</span>
         </label>
+        <label class="peace-prov${info.canSubjugate ? '' : ' peace-off'}" data-tt="${info.canSubjugate
+    ? esc('Make ' + (info.enemyName || 'them') + ' a client kingdom: they keep their lands but pay us 15% of their income and follow us to war.\nReplaces province demands. Costs ' + info.subjugateCost + ' war score')
+    : esc(info.whyNotSubjugate || 'They cannot be subjugated.')}">
+          <input type="checkbox" data-ref="subjugate" ${info.canSubjugate ? '' : 'disabled'}>
+          <span class="peace-prov-name">Make them a client kingdom</span>
+          <span class="peace-prov-cost">${info.subjugateCost}</span>
+        </label>
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <button class="btn peace-send" data-ref="send"></button>
@@ -224,13 +231,21 @@ export function initUI(staticCtx) {
     const verdictEl = peaceEl.querySelector('[data-ref="verdict"]');
     const sendBtn = peaceEl.querySelector('[data-ref="send"]');
     const humiliateBox = peaceEl.querySelector('[data-ref="humiliate"]');
+    const subjugateBox = peaceEl.querySelector('[data-ref="subjugate"]');
 
     function update() {
       let ev = null;
       try { ev = actions.evaluatePeace(warId, deal); } catch (e) { warnOnce('evaluatePeace', e); }
       if (!ev) { closePeaceDialog(); return; }
       goldV.textContent = String(deal.gold);
-      const white = !deal.provinces.length && deal.gold <= 0 && !deal.humiliate;
+      // Subjugation replaces province demands: a client keeps its lands.
+      peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
+        box.disabled = deal.subjugate;
+        if (deal.subjugate) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+      });
+      if (deal.subjugate) deal.provinces = [];
+      const white = !deal.provinces.length && deal.gold <= 0 && !deal.humiliate && !deal.subjugate;
       totalEl.textContent = white
         ? 'A white peace: every occupation reverts, nothing changes hands.'
         : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
@@ -257,6 +272,9 @@ export function initUI(staticCtx) {
       });
     });
     humiliateBox.addEventListener('change', () => { deal.humiliate = humiliateBox.checked; update(); });
+    if (subjugateBox) {
+      subjugateBox.addEventListener('change', () => { deal.subjugate = subjugateBox.checked; update(); });
+    }
     sendBtn.addEventListener('click', () => {
       if (sendBtn.classList.contains('disabled')) return;
       closePeaceDialog();

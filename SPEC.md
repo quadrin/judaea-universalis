@@ -690,3 +690,53 @@ renderer.render → overlay.draw → labels.update.
 - **Portrait phones**: instead of shedding them, the topbar wraps to two rows —
   row 1: flag · treasury · manpower · pause/speed; row 2: stability · legitimacy ·
   G/I/M points · date (styles.css portrait media block; `.tb-break` in topbar.js).
+
+## 15. v1.5: living realms — succession, integration, casus belli, missions, clients, 132 CE
+
+- **Mortal rulers & succession** (`js/sim/realm.js`): rulers carry `age`; tags may carry
+  `heir {name, gov, infl, mar, age}` and `regency` flag. Each January everyone ages; a
+  monthly actuarial roll (rising past age 50, cap 2%/month) can kill a ruler. On death:
+  adult heir crowned (−10 legitimacy), child heir → Regency Council rules until 16
+  (−20), no heir → a rolled courtier usurps (−25, −1 stability). Courts without an heir
+  eventually designate one. Content hooks: `helpers.setRuler / setHeir / rulerDies`;
+  the 66 CE chain now swaps Nero → Galba → Vitellius → Vespasian (heir Titus), and the
+  167 BCE chain seats Judah → Jonathan → Simon and Lysias' regency → Demetrius.
+  Bookmark `rulers[tag]` entries may carry `age` and `heir`.
+- **Post-conquest integration**: ceded provinces arrive at ≥0.6 autonomy with a
+  24-month `recent_conquest` (+3 unrest) modifier. Actions: `getIntegration(provId)`,
+  `establishRule(provId)` (25 gov → −0.15 autonomy, +2 unrest 6mo) and
+  `convertProvince(provId)` (50 infl → `p.conversion {by, monthsLeft:12}`, +3 unrest;
+  `monthlyIntegration` flips `p.religion` on completion; occupation pauses, a change of
+  owner voids). Province panel grows an Integration block.
+- **Claims & casus belli**: `t.claims [provId]`; `fabricateClaim(provId)` (30 infl,
+  −20 owner opinion, 12-month per-owner cooldown in `diploCooldowns['claim:<TAG>']`).
+  `casusBelli(atk, def)` → claim (war costs nothing) beats holy war (−1 stability;
+  target owns co-religionist land); no CB stays −2 stability −5 legitimacy. Wars carry
+  `war.cb`. Peace: claimed provinces cost ×0.7, co-religionist ×0.8.
+- **Opportunistic AI wars** (`ai.js aiConsiderWar`): a stable (stab ≥1, WE ≤5, ≥8k men,
+  not a client, at peace) AI power may declare on an adjacent realm it despises
+  (opinion ≤ −50) when clearly stronger (×1.6, or ×1.2 if the target is already at
+  war) — 8%/month when all gates pass, best CB applied.
+- **Missions** (`realm.js checkMissions`): `bookmark.missions[TAG]` = linear chain of
+  `{id, name, desc, rewardText, check(ctx), reward(ctx)}`; progress in `t.missionIdx`;
+  checked monthly for every tag with a chain (AI included), toast on player completion.
+  Action `getMissions()` feeds the nation panel's Missions section. 5-6 missions per
+  playable tag in all three bookmarks.
+- **Generic event pool** (`js/data/events_generic.js`, merged into every bookmark's
+  list in main.js): ~12 repeatable state-keyed events (harvests, drought, plague,
+  earthquake, comet, corruption, raiders, pilgrims, windfalls, games, moneylenders,
+  a veteran commander). Engine support: `once:false` + `cooldownMonths` (next-allowed
+  month index stored in `game.flags._evCd`).
+- **Client kingdoms**: `t.overlord`; peace deals gain `subjugate` (cost 25 + 0.25 ×
+  enemy-leader dev, cap 100; replaces province demands — a client keeps its lands).
+  Clients pay 15% of income as tribute (economy.js `TRIBUTE_SHARE`, shown in the income
+  breakdown), stand with their overlord (`sameSide`), join wars both directions
+  (declareWar pulls vassals and the defender's overlord), never start wars, and cannot
+  be allied/attacked by their overlord. A dead overlord frees its clients. AGR starts
+  as Rome's client in 66 CE. `requestParthianAid` is surfaced in the nation panel (JUD).
+- **Third bookmark** (`js/data/bookmark_132ce.js`, `events_132ce.js`): The Bar Kokhba
+  Revolt, 132 CE — activeTags ROM/JUD/PAR/ARM, Arabia is Roman, JUD holds a 7-province
+  hill-country core; rulers Hadrian and Simon bar Kosiba; ~13 events (Aelia Capitolina,
+  the decrees, Akiva's star, the lost legion, Julius Severus, the Method, Betar, the
+  Parthian shadow); victory mirrors 66 CE (hold Jerusalem + 6 provinces of the faith to
+  136, or ±50 warscore; Rome must extinguish the rising by 137).

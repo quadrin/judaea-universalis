@@ -7,6 +7,7 @@ import {
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween,
+  declareWar, truceActive, opinionOf, casusBelli,
 } from './military.js';
 import { LOAN_SIZE } from './economy.js';
 
@@ -239,6 +240,50 @@ function runTagAI(ctx, tag) {
   if (target) issueMove(ctx, main, target);
 }
 
+// Opportunistic wars (monthly). A stable, unengaged AI power that despises a
+// weaker neighbor — especially one already bleeding in another war — may
+// strike. Gated hard: strength ratio, opinion, stability, and a dice roll, so
+// peace is the norm and a war of opportunity is an event.
+function aiConsiderWar(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || t.overlord) return; // clients follow their overlord to war, never lead
+  if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
+  if (num(t.warExhaustion) > 5 || num(t.stability) < 1) return;
+  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+  const myMen = strength(tag);
+  if (myMen < 8000) return; // no army worth the name, no adventures
+  // Realms adjacent to ours, by province adjacency.
+  const nbTags = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    const set = ctx.geom && ctx.geom.neighbors ? ctx.geom.neighbors[i] : null;
+    if (!set) continue;
+    for (const nb of set) {
+      const q = ctx.byId(nb);
+      if (q && !q.impassable && q.owner !== tag && g.tags[q.owner]) nbTags.add(q.owner);
+    }
+  }
+  for (const tgt of nbTags) {
+    if (tgt === 'REB') continue;
+    const e = g.tags[tgt];
+    if (!e || !e.alive) continue;
+    if (truceActive(ctx, tag, tgt)) continue;
+    if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
+    if (opinionOf(ctx, tag, tgt) > -50) continue;
+    const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
+    const enemyMen = strength(tgt);
+    const ratio = enemyMen > 0 ? myMen / enemyMen : 99;
+    if (!(ratio >= 1.6 || (busyElsewhere && ratio >= 1.2))) continue;
+    if (!ctx.rng.chance(0.08)) continue;
+    const cb = casusBelli(ctx, tag, tgt);
+    t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
+    declareWar(ctx, tag, tgt, null, cb ? cb.type : null);
+    return; // at most one declaration a month, per power
+  }
+}
+
 // Peace feelers (monthly). A losing AI leader sues the player for peace — a
 // nudge to open the dove dialog and dictate terms. Wars between two AI powers
 // resolve themselves once one side clearly prevails or both sides tire.
@@ -289,6 +334,7 @@ export function runMonthlyAI(ctx) {
       if (!t || !t.alive || !t.ai) continue;
       if (tag === 'REB') { runRebelAI(ctx); continue; }
       aiDiploReciprocity(ctx, tag);
+      aiConsiderWar(ctx, tag);
       runTagAI(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }

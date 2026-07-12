@@ -129,6 +129,7 @@ export const BOOKMARK_66 = {
       if (agr && rom) {
         if (Array.isArray(agr.allies) && agr.allies.indexOf('ROM') === -1) agr.allies.push('ROM');
         if (Array.isArray(rom.allies) && rom.allies.indexOf('AGR') === -1) rom.allies.push('AGR');
+        agr.overlord = 'ROM'; // the last Herodian is a client king (tribute, wars shared)
       }
     } catch (e) { warnOnce('setup:agrJoin', e); }
 
@@ -216,14 +217,123 @@ export const BOOKMARK_66 = {
     });
   },
 
-  // Courts of June 66 CE. Skills 0-6 feed monthly monarch points (base +2).
+  // Courts of June 66 CE. Skills 0-6 feed monthly monarch points (base +2);
+  // ages drive mortality; heirs succeed (children get regencies). Nero dies
+  // heirless by design — the Year of the Four Emperors arrives by event.
   rulers: {
-    JUD: { name: 'Ananus ben Ananus', title: 'High Priest', gov: 3, infl: 3, mar: 2 },
-    ROM: { name: 'Nero Claudius Caesar', title: 'Emperor', gov: 1, infl: 4, mar: 1 },
-    PAR: { name: 'Vologases I', title: 'King of Kings', gov: 3, infl: 4, mar: 3 },
-    NAB: { name: 'Malichus II', title: 'King', gov: 2, infl: 3, mar: 1 },
-    ARM: { name: 'Tiridates I', title: 'King', gov: 2, infl: 3, mar: 2 },
-    AGR: { name: 'Agrippa II', title: 'King', gov: 2, infl: 4, mar: 1 },
+    JUD: {
+      name: 'Ananus ben Ananus', title: 'High Priest', gov: 3, infl: 3, mar: 2, age: 53,
+      heir: { name: 'Eleazar ben Ananias', gov: 2, infl: 2, mar: 3, age: 30 },
+    },
+    ROM: { name: 'Nero Claudius Caesar', title: 'Emperor', gov: 1, infl: 4, mar: 1, age: 28 },
+    PAR: {
+      name: 'Vologases I', title: 'King of Kings', gov: 3, infl: 4, mar: 3, age: 55,
+      heir: { name: 'Pacorus II', gov: 2, infl: 3, mar: 2, age: 20 },
+    },
+    NAB: {
+      name: 'Malichus II', title: 'King', gov: 2, infl: 3, mar: 1, age: 60,
+      heir: { name: 'Rabbel II', gov: 2, infl: 2, mar: 1, age: 6 }, // a child — his death means a regency
+    },
+    ARM: { name: 'Tiridates I', title: 'King', gov: 2, infl: 3, mar: 2, age: 45 },
+    AGR: { name: 'Agrippa II', title: 'King', gov: 2, infl: 4, mar: 1, age: 38 },
+  },
+
+  // Linear mission chains (realm panel). check/reward run through ctx.helpers.
+  missions: {
+    JUD: [
+      {
+        id: 'jm_arm_the_nation', name: 'Arm the Nation',
+        desc: 'Put twenty thousand men under arms — the revolt must become an army.',
+        rewardText: '"Levies of Zion": +10% manpower for 24 months.',
+        check: (ctx) => totalMen(ctx, 'JUD') >= 20000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'levies_of_zion', name: 'Levies of Zion', months: 24, effects: { manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'jm_throw_back', name: 'Throw Back the Governor',
+        desc: 'Bloody the legions: reach +10 war score against Rome.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => judWarscore(ctx) >= 10,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25 }),
+      },
+      {
+        id: 'jm_coastal_road', name: 'The Coastal Road',
+        desc: 'Take Caesarea Maritima, seat of the procurators and gate of the sea.',
+        rewardText: 'The procurator\'s treasury: +100 talents.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 }),
+      },
+      {
+        id: 'jm_diaspora', name: 'Brothers of the Diaspora',
+        desc: 'Win the East: gain Parthian sympathy, or raise their opinion of us to +80.',
+        rewardText: 'Silver and volunteers: +100 talents, +2,000 manpower.',
+        check: (ctx) => !!ctx.helpers.getFlag(ctx, 'parthianSympathy')
+          || ((ctx.game.tags.PAR && ctx.game.tags.PAR.opinion && ctx.game.tags.PAR.opinion.JUD) || 0) >= 80,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, manpower: 2000 }),
+      },
+      {
+        id: 'jm_samaria', name: 'Cleanse Samaria',
+        desc: 'Take Neapolis and Sebaste, and hold the spine of the hill country.',
+        rewardText: '+10 legitimacy, +25 governance points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Neapolis') && ctx.helpers.controls(ctx, 'JUD', 'Sebaste'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, gov: 25 }),
+      },
+      {
+        id: 'jm_freedom_of_zion', name: 'The Freedom of Zion',
+        desc: 'Reach +25 war score against Rome — make the revolt a fact of empire.',
+        rewardText: '"Year One" coinage: +15% income permanently, +15 legitimacy.',
+        check: (ctx) => judWarscore(ctx) >= 25,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'year_one_coinage', name: 'Year One Coinage', months: -1, effects: { incomeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+        },
+      },
+    ],
+    ROM: [
+      {
+        id: 'rm_secure_coast', name: 'Secure the Coast',
+        desc: 'Hold Caesarea Maritima and Ptolemais, and take Joppa: the sea must be Roman.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Caesarea Maritima')
+          && ctx.helpers.controls(ctx, 'ROM', 'Ptolemais')
+          && ctx.helpers.controls(ctx, 'ROM', 'Joppa'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { mar: 25 }),
+      },
+      {
+        id: 'rm_reduce_galilee', name: 'Reduce Galilee',
+        desc: 'Take all five fortified towns of Galilee — Vespasian\'s method: the countryside first.',
+        rewardText: '"Methodical Reduction": +1 siege bonus for 24 months.',
+        check: (ctx) => ['Sepphoris', 'Jotapata', 'Tiberias', 'Tarichaea', 'Gischala']
+          .every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'methodical_reduction', name: 'Methodical Reduction', months: 24, effects: { siegeBonus: 1 },
+        }),
+      },
+      {
+        id: 'rm_ring_closes', name: 'The Ring Closes',
+        desc: 'Take Emmaus, Jericho and Lydda; no supply or sally must reach Jerusalem.',
+        rewardText: 'Plunder of the approaches: +100 talents.',
+        check: (ctx) => ['Emmaus', 'Jericho', 'Lydda'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { treasury: 100 }),
+      },
+      {
+        id: 'rm_jerusalem', name: 'Jerusalem Must Fall',
+        desc: 'Take the city itself.',
+        rewardText: '+15 legitimacy, +25 of every monarch point: a triumph in all but name.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Jerusalem'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 15, gov: 25, infl: 25, mar: 25 }),
+      },
+      {
+        id: 'rm_desert_forts', name: 'No Stone Upon Stone',
+        desc: 'Reduce the last desert fortresses: Masada, Machaerus, Engaddi.',
+        rewardText: '+1 stability — the East is quiet.',
+        check: (ctx) => ['Masada', 'Machaerus', 'Engaddi'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
+      },
+    ],
   },
 
   aiHints: {

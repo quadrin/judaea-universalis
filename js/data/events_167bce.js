@@ -308,6 +308,8 @@ export const EVENTS_167 = [
             }
           }
           h.adjust(ctx, 'HAS', { legitimacy: 5, mar: 10 });
+          h.setRuler(ctx, 'HAS', { name: 'Judah Maccabee', title: 'Captain of Israel', gov: 2, infl: 3, mar: 5, age: 26 });
+          h.setHeir(ctx, 'HAS', { name: 'Jonathan Apphus', gov: 2, infl: 3, mar: 4, age: 24 });
           h.setFlag(ctx, 'judahCommands', true);
         }),
       },
@@ -677,6 +679,8 @@ export const EVENTS_167 = [
         effects: guard('ev_antiochus_dies:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -15 });
+          h.setRuler(ctx, 'SEL', { name: 'Lysias', title: 'Regent for Antiochus V', gov: 3, infl: 2, mar: 3, age: 50 });
+          h.setHeir(ctx, 'SEL', { name: 'Antiochus V Eupator', gov: 1, infl: 1, mar: 1, age: 9 });
           h.setFlag(ctx, 'antiochusDead', true);
         }),
       },
@@ -824,6 +828,8 @@ export const EVENTS_167 = [
         effects: guard('ev_demetrius:0', (ctx) => {
           const h = ctx.helpers;
           h.killGeneral(ctx, 'SEL', 'Lysias');
+          h.setRuler(ctx, 'SEL', { name: 'Demetrius I Soter', title: 'Basileus', gov: 3, infl: 2, mar: 3, age: 24 });
+          h.setHeir(ctx, 'SEL', null);
           h.adjust(ctx, 'SEL', { stability: -1 });
           h.spawnArmy(ctx, 'SEL', 'Damascus', {
             inf: 6, name: 'Army of Bacchides',
@@ -925,6 +931,8 @@ export const EVENTS_167 = [
               });
             }
           }
+          h.setRuler(ctx, 'HAS', { name: 'Jonathan Apphus', title: 'Captain of Israel', gov: 2, infl: 4, mar: 4, age: 30 });
+          h.setHeir(ctx, 'HAS', { name: 'Simon Thassi', gov: 4, infl: 3, mar: 3, age: 32 });
           h.setFlag(ctx, 'judahFallen', true);
           h.notify(ctx, {
             title: 'Judah Is Fallen', type: 'bad', provName: 'Emmaus',
@@ -1202,6 +1210,8 @@ export const EVENTS_167 = [
               });
             }
           }
+          h.setRuler(ctx, 'HAS', { name: 'Simon Thassi', title: 'High Priest and Leader', gov: 4, infl: 3, mar: 3, age: 50 });
+          h.setHeir(ctx, 'HAS', { name: 'John Hyrcanus', gov: 3, infl: 3, mar: 4, age: 21 });
           h.setFlag(ctx, 'jonathanTaken', true);
           h.notify(ctx, {
             title: 'Simon Takes Command', type: 'bad', provName: 'Ptolemais',

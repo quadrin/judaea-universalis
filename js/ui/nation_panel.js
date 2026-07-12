@@ -35,6 +35,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
         </div>
         <div class="np-pips" data-ref="rulerPips"></div>
       </div>
+      <div class="np-heir" data-ref="heirRow"></div>
       <div class="pp-grid">
         <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
@@ -53,6 +54,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
         <button class="pp-build-btn" data-act="buyStability" data-ref="actStability">${icon('scales')}<span>Restore Order</span></button>
         <button class="pp-build-btn" data-act="takeLoan" data-ref="actBorrow">${icon('borrow')}<span>Take Loan</span></button>
         <button class="pp-build-btn" data-act="repayLoan" data-ref="actRepay">${icon('repay')}<span>Repay Loan</span></button>
+        <button class="pp-build-btn hidden" data-act="requestParthianAid" data-ref="actParthia" data-tt="Send envoys to the King of Kings: 50 influence points for a chance at silver, volunteers, and Parthian sympathy">${icon('dove')}<span>Envoys to Parthia</span></button>
+      </div>
+      <div class="pp-build">
+        <div class="pp-build-title">Missions</div>
+        <div class="np-missions" data-ref="missions"></div>
       </div>
       <div class="pp-diplo">
         <div class="pp-diplo-title">Diplomacy</div>
@@ -109,12 +115,25 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
     // Ruler & skills (skills 0-6; monthly gain is base +2 per pool)
     const r = t.ruler || {};
     setText(refs.rulerName, r.name || '—');
-    setText(refs.rulerTitle, r.title || 'Ruler');
+    setText(refs.rulerTitle, (r.title || 'Ruler')
+      + (t.regency ? '' : (Number.isFinite(r.age) ? ' · age ' + r.age : '')));
     const sk = (k) => Math.max(0, Math.min(6, Number.isFinite(r[k]) ? r[k] : 2));
     setHtml(refs.rulerPips,
       `<span class="tb-pt" data-tt="Governance skill ${sk('gov')} — +${2 + sk('gov')} governance points a month"><b>G</b>${sk('gov')}</span>` +
       `<span class="tb-pt" data-tt="Influence skill ${sk('infl')} — +${2 + sk('infl')} influence points a month"><b>I</b>${sk('infl')}</span>` +
       `<span class="tb-pt" data-tt="Martial skill ${sk('mar')} — +${2 + sk('mar')} martial points a month"><b>M</b>${sk('mar')}</span>`);
+    // Heir line: the succession, or the lack of one.
+    const h = t.heir;
+    if (h) {
+      const minor = (h.age || 0) < 16;
+      setHtml(refs.heirRow, `Heir: <b>${esc(h.name || '—')}</b> (${h.gov | 0}/${h.infl | 0}/${h.mar | 0}, age ${h.age | 0})`
+        + (t.regency ? ' — <span class="np-lost">a council rules until they come of age</span>'
+          : (minor ? ' — <span class="np-dim2">a minor; their succession would mean a regency</span>' : '')));
+      refs.heirRow.classList.remove('hidden');
+    } else {
+      setHtml(refs.heirRow, '<span class="np-lost">No designated heir</span> — a sudden death would shake the realm.');
+      refs.heirRow.classList.remove('hidden');
+    }
 
     // Government block
     const rel = (DEFINES.RELIGIONS || {})[t.religion];
@@ -156,7 +175,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
     }
     setText(refs.armies, armyN + ' (' + fmtMen(men) + ' men)');
 
-    refreshActions(t);
+    refreshActions(t, g);
+    refreshMissions();
     refreshDiplomacy(g, t);
     refreshDecisions();
   }
@@ -166,7 +186,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
     btn.dataset.tt = tt;
   }
 
-  function refreshActions(t) {
+  function refreshActions(t, g) {
     const pts = t.points || {};
     const canRes = (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0);
     setAct(refs.actReserves, canRes, canRes
@@ -186,6 +206,28 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
     const canRepay = !!(loans && loans.canRepay);
     setAct(refs.actBorrow, canTake, 'Take a loan: 150 talents now, 3 talents/month interest until repaid');
     setAct(refs.actRepay, canRepay, canRepay ? 'Repay a loan: 150 talents' : 'Repaying a loan takes 150 talents in hand — and a debt to settle.');
+    // Parthian envoys: a Judaean lever, hidden everywhere else.
+    const showParthia = g.playerTag === 'JUD' && g.tags.PAR && g.tags.PAR.alive
+      && !(g.flags && g.flags.parthianSympathy)
+      && actions && typeof actions.requestParthianAid === 'function';
+    refs.actParthia.classList.toggle('hidden', !showParthia);
+    if (showParthia) {
+      refs.actParthia.classList.toggle('disabled', ((t.points && t.points.infl) || 0) < 50);
+    }
+  }
+
+  function refreshMissions() {
+    let list = [];
+    if (actions && typeof actions.getMissions === 'function') {
+      try { list = actions.getMissions() || []; } catch (e) { warnOnce('np-getMissions', e); }
+    }
+    setHtml(refs.missions, list.length ? list.map((m) => {
+      const tt = m.desc + (m.rewardText ? '\nReward: ' + m.rewardText : '');
+      const mark = m.status === 'done' ? icon('laurel', 'icon-row')
+        : m.status === 'current' ? icon('quill', 'icon-row') : '';
+      return `<div class="np-mission np-m-${m.status}" data-tt="${esc(tt)}">`
+        + `<span class="np-m-mark">${mark}</span><span class="np-m-name">${esc(m.name)}</span></div>`;
+    }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
   }
 
   function refreshDiplomacy(g, t) {
@@ -199,6 +241,21 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
     html += allies.length
       ? allies.map((a) => `<div class="np-dip-row">${chip(a)}<span class="np-dip-name">${nameOf(a)}</span></div>`).join('')
       : `<div class="np-dip-none">No sworn allies</div>`;
+
+    // Client kingdoms and overlord (tribute flows along these rows).
+    const clients = Object.keys(g.tags).filter((k) => g.tags[k] && g.tags[k].alive && g.tags[k].overlord === g.playerTag);
+    if (clients.length) {
+      html += `<div class="np-dip-sec">Client kingdoms</div>`;
+      for (const c of clients) {
+        html += `<div class="np-dip-row" data-tt="A client kingdom: pays us 15% of its income and follows us to war">`
+          + `${chip(c)}<span class="np-dip-name">${nameOf(c)}</span><span class="np-dip-ws">tributary</span></div>`;
+      }
+    }
+    if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
+      html += `<div class="np-dip-sec">Overlord</div>`;
+      html += `<div class="np-dip-row" data-tt="We are their client kingdom: 15% of our income flows to their court, and their wars are ours">`
+        + `${chip(t.overlord)}<span class="np-dip-name">${nameOf(t.overlord)}</span><span class="np-dip-ws">we pay tribute</span></div>`;
+    }
 
     const wars = (g.wars || []).filter((w) => w
       && ((w.attackers || []).indexOf(g.playerTag) >= 0 || (w.defenders || []).indexOf(g.playerTag) >= 0));

@@ -9,9 +9,11 @@ import {
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
+  casusBelli, hasClaim,
 } from './military.js';
 import { maxManpowerOf, explainIncome, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
+import { rulerDies } from './realm.js';
 import { resolveEventOption } from './events.js';
 
 const _warned = new Set();
@@ -70,6 +72,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       fort, garrison: maxGarrison, maxGarrison,
       siege: null, modifiers: [],
       buildings: [], construction: null, // {key, monthsLeft} while building
+      conversion: null, // {by, monthsLeft} while converting to the state faith
       holy: s.holy || null, wonder: s.wonder || null,
       impassable,
     });
@@ -96,6 +99,8 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       ideas: { ...(d.ideas || {}) },
       modifiers: [],
       atWarWith: [], allies: [], opinion: {},
+      claims: [], overlord: null,
+      heir: null, regency: false, missionIdx: 0,
       aiState: {},
     };
   }
@@ -144,21 +149,29 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
   }
   // Rulers: historical courts come from the bookmark; anything else (and tags
   // in pre-ruler saves) gets a plain ruling council. Skill pips 0-6 feed the
-  // monthly monarch-point gain (tick.js) and the nation panel.
+  // monthly monarch-point gain (tick.js) and the nation panel. Bookmark ruler
+  // entries may carry `age` and an `heir: {name, gov, infl, mar, age}`.
   try {
     const rulers = (bookmark && bookmark.rulers) || {};
+    const person = (src, fallbackName, fallbackAge) => ({
+      name: String((src && src.name) || fallbackName),
+      gov: clamp(Math.round(num(src && src.gov, 2)), 0, 6),
+      infl: clamp(Math.round(num(src && src.infl, 2)), 0, 6),
+      mar: clamp(Math.round(num(src && src.mar, 2)), 0, 6),
+      age: Math.max(0, Math.round(num(src && src.age, fallbackAge))),
+    });
     for (const key of Object.keys(game.tags)) {
       if (key === 'REB') continue;
       const t = game.tags[key];
-      if (t.ruler) continue;
+      if (t.ruler) {
+        if (!Number.isFinite(t.ruler.age)) t.ruler.age = 45; // pre-age saves
+        continue;
+      }
       const src = rulers[key];
-      t.ruler = src ? {
-        name: String(src.name || 'Ruler'),
-        title: String(src.title || 'Ruler'),
-        gov: clamp(Math.round(num(src.gov, 2)), 0, 6),
-        infl: clamp(Math.round(num(src.infl, 2)), 0, 6),
-        mar: clamp(Math.round(num(src.mar, 2)), 0, 6),
-      } : { name: (t.name || key) + ' Council', title: 'Ruling Council', gov: 2, infl: 2, mar: 2 };
+      t.ruler = src
+        ? { ...person(src, 'Ruler', 45), title: String(src.title || 'Ruler') }
+        : { name: (t.name || key) + ' Council', title: 'Ruling Council', gov: 2, infl: 2, mar: 2, age: 45 };
+      if (src && src.heir && !t.heir) t.heir = person(src.heir, 'Heir', 20);
     }
   } catch (e) { console.warn('[sim/init] ruler assignment failed:', e); }
   return ctx;
@@ -246,6 +259,36 @@ export const simHelpers = {
     for (const a of armiesOf(ctx, tag)) {
       if (a.general && a.general.name === generalName) a.general = null;
     }
+  },
+  // Scripted courts (content package): install a ruler / heir outright, or run
+  // a death through the ordinary succession machinery (heir, regency, usurper).
+  setRuler(ctx, tag, r) {
+    const t = ctx.game.tags[tag];
+    if (!t || !r) return;
+    t.ruler = {
+      name: String(r.name || 'Ruler'),
+      title: String(r.title || (t.ruler && t.ruler.title) || 'Ruler'),
+      gov: clamp(Math.round(num(r.gov, 2)), 0, 6),
+      infl: clamp(Math.round(num(r.infl, 2)), 0, 6),
+      mar: clamp(Math.round(num(r.mar, 2)), 0, 6),
+      age: Math.max(0, Math.round(num(r.age, 45))),
+    };
+    t.regency = false;
+    t.regencyTitle = null;
+  },
+  setHeir(ctx, tag, h) {
+    const t = ctx.game.tags[tag];
+    if (!t) return;
+    t.heir = h ? {
+      name: String(h.name || 'Heir'),
+      gov: clamp(Math.round(num(h.gov, 2)), 0, 6),
+      infl: clamp(Math.round(num(h.infl, 2)), 0, 6),
+      mar: clamp(Math.round(num(h.mar, 2)), 0, 6),
+      age: Math.max(0, Math.round(num(h.age, 20))),
+    } : null;
+  },
+  rulerDies(ctx, tag, causeText) {
+    rulerDies(ctx, tag, causeText);
   },
   armiesOf(ctx, tag) {
     return armiesOf(ctx, tag);
@@ -352,6 +395,9 @@ export function gameActions(ctx) {
       const atWarWithUs = (mine.atWarWith || []).indexOf(tag) >= 0 || (them.atWarWith || []).indexOf(me) >= 0;
       const tr = g.truces ? g.truces[truceKey(me, tag)] : null;
       const truceUntil = tr && truceActive(ctx, me, tag) ? { y: tr.y, m: tr.m } : null;
+      const ourClient = them.overlord === me;
+      const ourOverlord = mine.overlord === tag;
+      const theirOverlord = them.overlord && !ourClient ? them.overlord : null;
       let whyNotImprove = '';
       if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
         whyNotImprove = 'Our envoys were just received (' + diploCdMonthsLeft(ctx, dipKey(tag, 'improve')) + ' months).';
@@ -367,16 +413,24 @@ export function gameActions(ctx) {
       let whyNotAlly = '';
       if (allied) whyNotAlly = 'We are already allied.';
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
+      else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
+      else if (ourOverlord) whyNotAlly = 'They are our overlord.';
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
+      const cb = casusBelli(ctx, me, tag);
       let whyNotWar = '';
       if (atWarWithUs) whyNotWar = 'We are already at war with them.';
+      else if (ourClient) whyNotWar = 'They are our client kingdom.';
+      else if (ourOverlord) whyNotWar = 'They are our overlord.';
       else if (allied) whyNotWar = 'We are allied — break the alliance first.';
       else if (truceUntil) whyNotWar = 'The ink on the truce is still wet.';
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
         opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
+        ourClient, ourOverlord, theirOverlord,
+        theirOverlordName: theirOverlord && g.tags[theirOverlord] ? (g.tags[theirOverlord].name || theirOverlord) : '',
+        cb,
         canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
         canWar: !whyNotWar,
         whyNotImprove, whyNotGift, whyNotAlly, whyNotWar,
@@ -796,18 +850,137 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }
     },
 
-    // ---- declaring war ------------------------------------------------------
+    // ---- declaring war (a casus belli softens the cost) ---------------------
+    // no CB: -2 stability, -5 legitimacy · holy war: -1 stability · claim: free
     declareWarOn(tag) {
       try {
         const d = getDip(tag);
         if (!d) return;
         if (!d.canWar) { say('Declare war', d.whyNotWar || 'We cannot declare war on ' + d.name + '.', 'bad'); return; }
         const mine = g.tags[g.playerTag];
-        mine.stability = clamp(num(mine.stability) - 2, -3, 3);
-        mine.legitimacy = clamp(num(mine.legitimacy) - 5, 0, 100);
+        const cb = d.cb;
+        if (!cb) {
+          mine.stability = clamp(num(mine.stability) - 2, -3, 3);
+          mine.legitimacy = clamp(num(mine.legitimacy) - 5, 0, 100);
+        } else if (cb.type === 'holy') {
+          mine.stability = clamp(num(mine.stability) - 1, -3, 3);
+        }
         addOpinion(ctx, tag, g.playerTag, -100);
-        declareWar(ctx, g.playerTag, tag, null);
+        declareWar(ctx, g.playerTag, tag, null, cb ? cb.type : null);
       } catch (e) { warnOnce('declareWarOn', 'declareWarOn failed', e); }
+    },
+
+    // ---- claims --------------------------------------------------------------
+    getClaimInfo(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const mine = g.tags[g.playerTag];
+        if (!p || p.impassable || !mine) return null;
+        if (p.owner === g.playerTag || !g.tags[p.owner] || p.owner === 'REB') return null;
+        if (hasClaim(ctx, g.playerTag, provId)) return { hasClaim: true, canFabricate: false, whyNot: 'We already hold a claim here.' };
+        let whyNot = '';
+        const cdKey = 'claim:' + p.owner;
+        if (diploCdActive(ctx, cdKey)) {
+          whyNot = 'Our forgers need time (' + diploCdMonthsLeft(ctx, cdKey) + ' months before another claim on ' + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + ').';
+        } else if (num(mine.points.infl) < 30) {
+          whyNot = 'Not enough influence points (30 required).';
+        }
+        return { hasClaim: false, canFabricate: !whyNot, whyNot };
+      } catch (e) { warnOnce('claimInfo', 'getClaimInfo failed', e); return null; }
+    },
+    fabricateClaim(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const mine = g.tags[g.playerTag];
+        if (!p || p.impassable || !mine) return;
+        if (p.owner === g.playerTag || !g.tags[p.owner] || p.owner === 'REB') return;
+        if (hasClaim(ctx, g.playerTag, provId)) { say('Claim', 'We already hold a claim on ' + p.name + '.', 'info'); return; }
+        const cdKey = 'claim:' + p.owner;
+        if (diploCdActive(ctx, cdKey)) {
+          say('Claim', 'Our forgers need ' + diploCdMonthsLeft(ctx, cdKey) + ' more months before another claim on '
+            + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + '.', 'bad');
+          return;
+        }
+        if (num(mine.points.infl) < 30) { say('Claim', 'Not enough influence points (30 required).', 'bad'); return; }
+        mine.points.infl = num(mine.points.infl) - 30;
+        if (!Array.isArray(mine.claims)) mine.claims = [];
+        mine.claims.push(provId | 0);
+        addOpinion(ctx, p.owner, g.playerTag, -20);
+        setDiploCd(ctx, cdKey, 12);
+        say('A claim is fabricated', 'Genealogies, old treaties, convenient testimony: we now hold a claim on '
+          + p.name + '. A war for it costs no stability, and taking it at the peace table costs less.', 'good');
+      } catch (e) { warnOnce('fabricateClaim', 'fabricateClaim failed', e); }
+    },
+
+    // ---- post-conquest integration ------------------------------------------
+    getIntegration(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || p.impassable || !t) return null;
+        if (p.owner !== g.playerTag || p.controller !== g.playerTag) return null;
+        const autonomy = clamp(num(p.autonomy, 0.25), 0, 0.9);
+        let whyNotEstablish = '';
+        if (autonomy <= 0.001) whyNotEstablish = 'The province already answers directly to the crown.';
+        else if (num(t.points.gov) < 25) whyNotEstablish = 'Not enough governance points (25 required).';
+        const foreign = t.religion && p.religion !== t.religion;
+        let whyNotConvert = '';
+        if (!foreign) whyNotConvert = 'The province already follows the state faith.';
+        else if (p.conversion) whyNotConvert = 'The missionaries are already at work.';
+        else if (num(t.points.infl) < 50) whyNotConvert = 'Not enough influence points (50 required).';
+        return {
+          autonomy,
+          canEstablish: !whyNotEstablish, whyNotEstablish,
+          canConvert: !whyNotConvert, whyNotConvert,
+          converting: p.conversion ? { monthsLeft: Math.max(0, num(p.conversion.monthsLeft) | 0) } : null,
+        };
+      } catch (e) { warnOnce('integration', 'getIntegration failed', e); return null; }
+    },
+    establishRule(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
+        if (clamp(num(p.autonomy, 0.25), 0, 0.9) <= 0.001) { say('Establish rule', p.name + ' already answers directly to the crown.', 'info'); return; }
+        if (num(t.points.gov) < 25) { say('Establish rule', 'Not enough governance points (25 required).', 'bad'); return; }
+        t.points.gov = num(t.points.gov) - 25;
+        p.autonomy = Math.max(0, clamp(num(p.autonomy, 0.25), 0, 0.9) - 0.15);
+        p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
+        p.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+        say('Rule established', 'Our magistrates take ' + p.name + ' in hand: autonomy falls to '
+          + Math.round(p.autonomy * 100) + '%. The locals grumble for a season.', 'good');
+      } catch (e) { warnOnce('establishRule', 'establishRule failed', e); }
+    },
+    convertProvince(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
+        if (!t.religion || p.religion === t.religion) { say('Conversion', p.name + ' already follows the state faith.', 'info'); return; }
+        if (p.conversion) { say('Conversion', 'The missionaries are already at work in ' + p.name + '.', 'info'); return; }
+        if (num(t.points.infl) < 50) { say('Conversion', 'Not enough influence points (50 required).', 'bad'); return; }
+        t.points.infl = num(t.points.infl) - 50;
+        p.conversion = { by: g.playerTag, monthsLeft: 12 };
+        p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'religious_tension');
+        p.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
+        say('Conversion begun', 'Priests and teachers go out to ' + p.name + '; in a year it will follow the state faith. Expect unrest while the old gods are put away.', 'good');
+      } catch (e) { warnOnce('convertProvince', 'convertProvince failed', e); }
+    },
+
+    // ---- missions (nation panel) ---------------------------------------------
+    getMissions() {
+      try {
+        const list = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[g.playerTag];
+        const t = g.tags[g.playerTag];
+        if (!Array.isArray(list) || !t) return [];
+        const idx = Math.max(0, num(t.missionIdx, 0) | 0);
+        return list.map((m, i) => ({
+          name: m.name || m.id,
+          desc: m.desc || '',
+          rewardText: m.rewardText || '',
+          status: i < idx ? 'done' : i === idx ? 'current' : 'locked',
+        }));
+      } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
     // ---- national decisions (nation panel) ----------------------------------
@@ -875,7 +1048,18 @@ export function reviveGame(saved) {
   }
   for (const k of Object.keys(saved.tags)) {
     const t = saved.tags[k];
-    if (t && !Number.isFinite(t.loans)) t.loans = 0;
+    if (!t) continue;
+    if (!Number.isFinite(t.loans)) t.loans = 0;
+    // v1.5 realm fields (rulers themselves are re-crowned in makeCtx)
+    if (!Array.isArray(t.claims)) t.claims = [];
+    if (t.overlord === undefined) t.overlord = null;
+    if (t.heir === undefined) t.heir = null;
+    if (t.regency === undefined) t.regency = false;
+    if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
+  }
+  for (let i = 1; i < saved.provinces.length; i++) {
+    const p = saved.provinces[i];
+    if (p && p.conversion === undefined) p.conversion = null;
   }
   saved.paused = true; // always resume paused
   return saved;

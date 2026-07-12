@@ -6,6 +6,9 @@ import { EVENTS_66 } from './js/data/events_66ce.js';
 import { BOOKMARK_66 } from './js/data/bookmark_66ce.js';
 import { EVENTS_167 } from './js/data/events_167bce.js';
 import { BOOKMARK_167 } from './js/data/bookmark_167bce.js';
+import { EVENTS_132 } from './js/data/events_132ce.js';
+import { BOOKMARK_132 } from './js/data/bookmark_132ce.js';
+import { GENERIC_EVENTS } from './js/data/events_generic.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
 import { createCamera } from './js/map/camera.js';
@@ -48,9 +51,11 @@ async function boot() {
 
   // ------------------------------------------------------------- save/load --
   const BOOKMARKS = [
-    // Chronological order — this is also the title-screen card order.
-    { bookmark: BOOKMARK_167, events: EVENTS_167 },
-    { bookmark: BOOKMARK_66, events: EVENTS_66 },
+    // Chronological order — this is also the title-screen card order. Every
+    // bookmark gets the shared generic pool appended to its scripted chain.
+    { bookmark: BOOKMARK_167, events: EVENTS_167.concat(GENERIC_EVENTS) },
+    { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
+    { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
   ];
   const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
   const saveKey = (id) => 'ju_save_' + id;

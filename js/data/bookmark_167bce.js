@@ -326,14 +326,115 @@ export const BOOKMARK_167 = {
     });
   },
 
-  // Courts of November 167 BCE. Skills 0-6 feed monthly monarch points (base +2).
+  // Courts of November 167 BCE. Skills 0-6 feed monthly monarch points
+  // (base +2); ages drive mortality; heirs succeed. The Hasmonean succession
+  // (Mattathias → Judah → Jonathan → Simon) is carried by the event chain.
   rulers: {
-    HAS: { name: 'Mattathias ben Yohanan', title: 'Priest of Modein', gov: 3, infl: 2, mar: 4 },
-    SEL: { name: 'Antiochus IV Epiphanes', title: 'Basileus', gov: 2, infl: 2, mar: 3 },
-    PTO: { name: 'Ptolemy VI Philometor', title: 'Pharaoh', gov: 2, infl: 3, mar: 1 },
-    NAB: { name: 'Aretas I', title: 'King', gov: 2, infl: 2, mar: 2 },
-    ARM: { name: 'Artaxias I', title: 'King', gov: 3, infl: 2, mar: 3 },
-    PAR: { name: 'Mithridates I', title: 'King of Kings', gov: 3, infl: 3, mar: 4 },
+    HAS: {
+      name: 'Mattathias ben Yohanan', title: 'Priest of Modein', gov: 3, infl: 2, mar: 4, age: 79,
+      heir: { name: 'Judah Maccabee', gov: 2, infl: 3, mar: 5, age: 26 },
+    },
+    SEL: {
+      name: 'Antiochus IV Epiphanes', title: 'Basileus', gov: 2, infl: 2, mar: 3, age: 48,
+      heir: { name: 'Antiochus V Eupator', gov: 1, infl: 1, mar: 1, age: 6 },
+    },
+    PTO: {
+      name: 'Ptolemy VI Philometor', title: 'Pharaoh', gov: 2, infl: 3, mar: 1, age: 19,
+      heir: { name: 'Ptolemy VIII Physcon', gov: 2, infl: 2, mar: 2, age: 15 },
+    },
+    NAB: { name: 'Aretas I', title: 'King', gov: 2, infl: 2, mar: 2, age: 50 },
+    ARM: { name: 'Artaxias I', title: 'King', gov: 3, infl: 2, mar: 3, age: 63 },
+    PAR: { name: 'Mithridates I', title: 'King of Kings', gov: 3, infl: 3, mar: 4, age: 28 },
+  },
+
+  // Linear mission chains (realm panel).
+  missions: {
+    HAS: [
+      {
+        id: 'hm_hills', name: 'The Hills Are Ours',
+        desc: 'Put eight thousand men under arms in the Gophna country.',
+        rewardText: 'The villages send their sons: +1,500 manpower.',
+        check: (ctx) => totalMen(ctx, 'HAS') >= 8000,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { manpower: 1500 }),
+      },
+      {
+        id: 'hm_ascents', name: 'Masters of the Ascents',
+        desc: 'Bleed the king\'s columns in the passes: reach +10 war score against the Seleucids.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => hasWarscore(ctx) >= 10,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { mar: 25 }),
+      },
+      {
+        id: 'hm_city', name: 'The Road to the City',
+        desc: 'Take Jerusalem and the Temple mount.',
+        rewardText: '+20 legitimacy, +25 governance points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HAS', 'Jerusalem'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 20, gov: 25 }),
+      },
+      {
+        id: 'hm_heartland', name: 'Heirs of David',
+        desc: 'Hold six provinces of the faith.',
+        rewardText: '+1 stability.',
+        check: (ctx) => ctx.helpers.countControlled(ctx, 'HAS', { religion: 'judaism' }) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { stability: 1 }),
+      },
+      {
+        id: 'hm_freedom', name: 'The Yoke Is Broken',
+        desc: 'Reach +25 war score — make the kingdom of the Greeks let go.',
+        rewardText: 'Our own shekels: +15% income permanently, +10 legitimacy.',
+        check: (ctx) => hasWarscore(ctx) >= 25,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'shekel_coinage', name: 'Shekels of Israel', months: -1, effects: { incomeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 10 });
+        },
+      },
+    ],
+    SEL: [
+      {
+        id: 'sm_order', name: 'One Law for All',
+        desc: 'Break the rising\'s momentum: reach +10 war score against the Hasmoneans.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => {
+          const w = findHasSelWar(ctx.game);
+          return !!w && typeof w.warscore.SEL === 'number' && w.warscore.SEL >= 10;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SEL', { mar: 25 }),
+      },
+      {
+        id: 'sm_gophna', name: 'Burn Out the Nest',
+        desc: 'Take Emmaus and Lydda, the rebellion\'s hill-country base.',
+        rewardText: 'Plunder and confiscations: +100 talents.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'SEL', 'Emmaus') && ctx.helpers.controls(ctx, 'SEL', 'Lydda'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SEL', { treasury: 100 }),
+      },
+      {
+        id: 'sm_kings_peace', name: 'The King\'s Peace',
+        desc: 'Restore order across the satrapies: reach +2 stability.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => (ctx.game.tags.SEL.stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SEL', { gov: 25 }),
+      },
+      {
+        id: 'sm_mint', name: 'The Royal Mint',
+        desc: 'Fill the treasury to 400 talents.',
+        rewardText: '"Royal Mint": +10% income for 24 months.',
+        check: (ctx) => (ctx.game.tags.SEL.treasury || 0) >= 400,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SEL', {
+          id: 'royal_mint', name: 'Royal Mint', months: 24, effects: { incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'sm_grand_army', name: 'The Grand Army',
+        desc: 'Field thirty thousand men.',
+        rewardText: '"Phalanx Drill": +5% discipline for 12 months.',
+        check: (ctx) => totalMen(ctx, 'SEL') >= 30000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SEL', {
+          id: 'phalanx_drill', name: 'Phalanx Drill', months: 12, effects: { disciplineMult: 1.05 },
+        }),
+      },
+    ],
   },
 
   aiHints: {

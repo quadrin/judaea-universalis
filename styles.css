@@ -1694,12 +1694,39 @@ html, body {
   background: linear-gradient(180deg, rgba(201, 162, 39, 0.22), rgba(201, 162, 39, 0.08));
 }
 
+.np-heir {
+  margin: 4px 12px 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.np-heir b { color: var(--ink); }
+.np-dim2 { opacity: 0.85; font-style: italic; }
+
 .np-acts {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin: 10px 12px 0;
 }
+.np-acts [data-act="requestParthianAid"] { grid-column: 1 / -1; }
+
+/* missions: laurel = done, quill = current, dim = locked */
+.np-missions { display: flex; flex-direction: column; }
+.np-mission {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  font-weight: 600;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.25);
+}
+.np-mission:last-child { border-bottom: none; }
+.np-m-mark { width: 16px; flex: none; display: inline-flex; justify-content: center; }
+.np-m-done { color: var(--ink-soft); }
+.np-m-done .np-m-mark { color: #8a6d1a; }
+.np-m-current .np-m-name { color: var(--ink); }
+.np-m-current .np-m-mark { color: var(--red-deep); }
+.np-m-locked { opacity: 0.5; }
 .np-dip-sec {
   margin-top: 7px;
   font-variant: small-caps;
@@ -1778,6 +1805,7 @@ html, body {
   color: #8a6d1a;
   flex: none;
 }
+.peace-off { opacity: 0.45; }
 .peace-gold { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
 .peace-step { padding: 2px 12px; font-size: 15px; line-height: 1.3; }
 .peace-gold-v { min-width: 44px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }

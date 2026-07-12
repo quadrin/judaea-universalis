@@ -6,6 +6,7 @@ import {
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
+import { monthlySuccession, monthlyIntegration, checkMissions } from './realm.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 
@@ -66,6 +67,9 @@ function monthlyBlock(ctx) {
   safe('attrition', () => monthlyAttrition(ctx));
   safe('garrisons', () => monthlyGarrisons(ctx));
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
+  safe('succession', () => monthlySuccession(ctx));
+  safe('integration', () => monthlyIntegration(ctx));
+  safe('missions', () => checkMissions(ctx));
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
