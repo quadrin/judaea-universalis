@@ -1,5 +1,7 @@
 # Judaea Universalis
 
+**▶ Play it now: https://quadrin.github.io/judaea-universalis/**
+
 An EU4-style grand-strategy game set in the ancient Near East. Two bookmarks:
 **The Great Revolt, 66 CE** (Judaea or Rome) and **The Maccabean Revolt, 167 BCE**
 (Hasmonean Judaea or the Seleucid Empire).
