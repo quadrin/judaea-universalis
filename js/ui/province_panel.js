@@ -2,6 +2,9 @@
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
+// Building key -> icon name (falls back to 'bricks' for unknown keys).
+const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine' };
+
 export function createProvincePanel(el, { DEFINES, onClose }) {
   let ctx = null;
   let actions = null;
@@ -48,6 +51,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-row"><span class="pp-k">Autonomy</span><span class="pp-v" data-ref="autonomy"></span></div>
         <div class="pp-row hidden" data-ref="siteRow"><span class="pp-k">Sites</span><span class="pp-v pp-gold" data-ref="site"></span></div>
       </div>
+      <div class="pp-build hidden" data-ref="buildBlock">
+        <div class="pp-build-title">Buildings</div>
+        <div class="pp-built" data-ref="builtRow"></div>
+        <div class="pp-constr hidden" data-ref="constrRow"></div>
+        <div class="pp-build-grid" data-ref="buildBtns"></div>
+      </div>
       <div class="pp-unrest" data-ref="unrestRow">
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
@@ -63,6 +72,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-bar-label"><span data-ref="siegeLabel"></span><span data-ref="siegePct"></span></div>
         <div class="bar bar-siege"><div class="bar-fill" data-ref="siegeFill"></div></div>
         <div class="pp-breach" data-ref="breach"></div>
+        <button class="btn pp-assault hidden" data-ref="assault"></button>
       </div>
       <div class="pp-recruit">
         <button class="btn pp-recruit-btn" data-ref="recruitInf"></button>
@@ -100,6 +110,19 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const b = e.target instanceof Element ? e.target.closest('[data-dev]') : null;
       if (!b || !actions) return;
       try { actions.devProvince(provId, b.dataset.dev); } catch (err) { warnOnce('dev', err); }
+      refresh();
+    });
+    refs.buildBtns.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-build]') : null;
+      if (!b || b.classList.contains('disabled')) return;
+      if (!actions || typeof actions.buildBuilding !== 'function') return;
+      try { actions.buildBuilding(provId, b.dataset.build); } catch (err) { warnOnce('buildBuilding', err); }
+      refresh();
+    });
+    refs.assault.addEventListener('click', () => {
+      if (refs.assault.classList.contains('disabled')) return;
+      if (!actions || typeof actions.assaultSiege !== 'function') return;
+      try { actions.assaultSiege(provId); } catch (err) { warnOnce('assaultSiege', err); }
       refresh();
     });
   }
@@ -224,6 +247,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const br = Math.max(0, Math.min(3, p.siege.breach || 0));
       setText(refs.breach, 'Breach  ' + '●'.repeat(br) + '○'.repeat(3 - br));
     }
+    refreshAssault(p, g);
 
     // Recruit buttons
     const base = DEFINES.BASE || {};
@@ -231,8 +255,68 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
 
+    // Buildings (v1.3; gated on the sim providing getBuildInfo)
+    refreshBuildings();
+
     // Diplomacy with the owner (re-queried every refresh; fail-soft)
     refreshDiplomacy(p, g);
+  }
+
+  // 'Assault the walls' — shown while our side besieges; enabled when the sim
+  // says an assault can go in (breach open). Renders nothing without the action.
+  function refreshAssault(p, g) {
+    let as = null;
+    if (p.siege && actions && typeof actions.canAssault === 'function') {
+      try { as = actions.canAssault(provId); } catch (e) { warnOnce('canAssault', e); as = null; }
+    }
+    const show = !!(as && (as.can || p.siege.by === g.playerTag));
+    refs.assault.classList.toggle('hidden', !show);
+    if (!show) return;
+    setHtml(refs.assault, icon('swords', 'icon-sm') + ' Assault the walls');
+    refs.assault.classList.toggle('disabled', !as.can);
+    const odds = `Chance of success: ${Math.round(as.chancePct || 0)}%\nExpected losses: ~${Math.round(as.expectedLossesPct || 0)}% of the assaulting force`;
+    refs.assault.dataset.tt = as.can
+      ? 'Storm the breach — the ladders go up at dawn.\n' + odds
+      : (as.why || 'The walls still stand unbroken.') + (as.chancePct != null ? '\n' + odds : '');
+  }
+
+  // Built chips, active construction, and the 2x2 build grid.
+  function refreshBuildings() {
+    let info = null;
+    if (actions && typeof actions.getBuildInfo === 'function') {
+      try { info = actions.getBuildInfo(provId); } catch (e) { warnOnce('getBuildInfo', e); info = null; }
+    }
+    refs.buildBlock.classList.toggle('hidden', !info);
+    if (!info) return;
+    const DEFS = DEFINES.BUILDINGS || {};
+
+    const built = Array.isArray(info.built) ? info.built : [];
+    setHtml(refs.builtRow, built.length
+      ? built.map((k) => {
+        const d = DEFS[k] || {};
+        const name = d.name || titleCase(k);
+        return `<span class="pp-bchip" data-tt="${esc(d.desc ? name + '\n' + d.desc : name)}">${icon(BUILD_ICON[k] || 'bricks')}</span>`;
+      }).join('')
+      : '<span class="pp-build-none">Nothing yet built</span>');
+
+    const c = info.constructing;
+    refs.constrRow.classList.toggle('hidden', !c);
+    if (c) {
+      const m = Math.max(0, c.monthsLeft | 0);
+      setHtml(refs.constrRow,
+        `${icon(BUILD_ICON[c.key] || 'bricks')}<span class="pp-constr-name">${esc(c.name || titleCase(c.key))}</span>` +
+        `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
+    }
+
+    const opts = Array.isArray(info.options) ? info.options : [];
+    refs.buildBtns.classList.toggle('hidden', !opts.length);
+    setHtml(refs.buildBtns, opts.map((o) => {
+      const name = o.name || titleCase(o.key);
+      const terms = `${name} — ${o.cost} talents, ${o.months} months\n${o.desc || ''}`;
+      const tt = o.canBuild ? terms : `${o.whyNot || 'Unavailable'}\n――――――\n${terms}`;
+      return `<button class="pp-build-btn${o.canBuild ? '' : ' disabled'}" data-build="${esc(o.key)}" data-tt="${esc(tt)}">` +
+        `${icon(BUILD_ICON[o.key] || 'bricks')}<span>${esc(name)}</span></button>`;
+    }).join(''));
   }
 
   function refreshDiplomacy(p, g) {

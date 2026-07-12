@@ -5,8 +5,9 @@
 import {
   num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
-  breakAllianceCore,
+  breakAllianceCore, assaultInfo, doAssault,
 } from './military.js';
+import { LOAN_SIZE } from './economy.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -140,6 +141,39 @@ function runRebelAI(ctx) {
   }
 }
 
+// Wartime credit: borrow when the campaign chest runs dry (never past 3 loans
+// — the AI keeps headroom the player may spend to 5), settle debts in plenty.
+function aiLoans(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t) return;
+  if (num(t.treasury) > 400 && num(t.loans) > 0) {
+    t.treasury = num(t.treasury) - LOAN_SIZE;
+    t.loans = num(t.loans) - 1;
+    return;
+  }
+  const atWar = (t.atWarWith || []).some((e) => ctx.game.tags[e] && ctx.game.tags[e].alive);
+  if (atWar && num(t.treasury) < -50 && num(t.loans) < 3) {
+    t.treasury = num(t.treasury) + LOAN_SIZE;
+    t.loans = num(t.loans) + 1;
+  }
+}
+
+// Historical stormings: once the breach is wide (>= 2) and the besiegers can
+// soak the blood price (3x the garrison), the AI assaults rather than let a
+// long siege stall out.
+function aiAssaults(ctx, tag) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || !p.siege || p.siege.by !== tag) continue;
+    if (num(p.siege.breach) < 2) continue;
+    const info = assaultInfo(ctx, p, tag);
+    if (!info.can) continue;
+    if (info.besiegerMen < 3 * Math.max(1, num(p.garrison))) continue;
+    doAssault(ctx, p, tag);
+  }
+}
+
 function aiSpendPoints(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t || !t.points) return;
@@ -173,10 +207,15 @@ function runTagAI(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   aiSpendPoints(ctx, tag);
+  aiLoans(ctx, tag);
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
   if (!enemies.length) return; // non-warring AI idles
   const hints = (ctx.bookmark && ctx.bookmark.aiHints && ctx.bookmark.aiHints[tag]) || {};
   aiRecruit(ctx, tag, hints);
+  // Storming an already-invested fortress is siege prosecution, not a new
+  // offensive — it runs even under aiPassive so scripted lulls don't freeze
+  // half-finished sieges forever.
+  aiAssaults(ctx, tag);
   if (hasAiPassive(ctx, tag)) return; // armies hold, no new offensives
   const armies = armiesOf(ctx, tag).filter((a) => a.men > 0 && !a.inBattle && !a.retreating);
   if (!armies.length) return;

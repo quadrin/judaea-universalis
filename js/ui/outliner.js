@@ -4,11 +4,13 @@ import { icon, flagChip } from './icons.js';
 
 export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
   let ctx = null;
+  let actions = null;
   let body = null;
   let lastHtml = '';
 
-  function bind(c) {
+  function bind(c, a) {
     ctx = c;
+    actions = a || null;
     lastHtml = '';
     el.innerHTML = `<div class="ol-head">Outliner</div><div class="ol-body" data-ref="body"></div>`;
     body = el.querySelector('[data-ref="body"]');
@@ -16,8 +18,24 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
     refresh(true);
   }
 
+  function runArmyAction(name, armyId) {
+    if (!actions || typeof actions[name] !== 'function') return;
+    try { actions[name](armyId); } catch (err) { warnOnce(name, err); }
+    refresh(true);
+  }
+
   function onClick(e) {
     if (!(e.target instanceof Element)) return;
+    const sp = e.target.closest('[data-split]');
+    if (sp) {
+      if (!sp.classList.contains('disabled')) runArmyAction('splitArmy', Number(sp.dataset.split));
+      return;
+    }
+    const hg = e.target.closest('[data-hire]');
+    if (hg) {
+      if (!hg.classList.contains('disabled')) runArmyAction('hireGeneral', Number(hg.dataset.hire));
+      return;
+    }
     const pc = e.target.closest('[data-peace]');
     if (pc) {
       if (onPeaceClick) onPeaceClick(pc.dataset.peace);
@@ -25,7 +43,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
     }
     const ar = e.target.closest('[data-army]');
     if (ar) {
-      if (onArmyClick) onArmyClick(Number(ar.dataset.army));
+      if (onArmyClick) onArmyClick(Number(ar.dataset.army), !!e.shiftKey);
       return;
     }
     const pr = e.target.closest('[data-prov]');
@@ -35,6 +53,26 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
   function provName(g, id) {
     const p = g.provinces && g.provinces[id];
     return (p && p.name) || ('#' + id);
+  }
+
+  // Mini split / hire-general buttons on the selected army row (v1.3).
+  // Renders nothing unless the sim provides getArmyActions.
+  function armyActionsHtml(a) {
+    if (!actions || typeof actions.getArmyActions !== 'function') return '';
+    let aa = null;
+    try { aa = actions.getArmyActions(a.id); } catch (e) { warnOnce('getArmyActions', e); return ''; }
+    if (!aa) return '';
+    const splitTT = aa.canSplit
+      ? 'Split off half the regiments into a new army'
+      : (aa.whySplit || 'This army cannot be split');
+    const hireCost = aa.hireCost != null ? aa.hireCost : 50;
+    const hireTT = aa.canHire
+      ? `Hire a general to lead this army (${hireCost} martial points)`
+      : (aa.whyHire || 'No general can be hired');
+    return `<span class="ol-acts">` +
+      `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
+      `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
+      `</span>`;
   }
 
   function warscoreFor(w, tag) {
@@ -57,7 +95,8 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
     html += `<div class="ol-sec">Armies <span class="ol-count">${armies.length}</span></div>`;
     if (!armies.length) html += `<div class="ol-empty">No armies in the field</div>`;
     for (const a of armies) {
-      const sel = g.ui && g.ui.selectedArmy === a.id;
+      const sel = g.ui && (g.ui.selectedArmy === a.id
+        || (Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.indexOf(a.id) >= 0));
       const moralePct = Math.max(0, Math.min(100, ((a.morale || 0) / Math.max(0.01, a.maxMorale || 1)) * 100));
       const regs = a.regiments || {};
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire || 0}/${a.general.shock || 0}/${a.general.maneuver || 0})` : '';
@@ -68,6 +107,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
           <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
+          ${sel ? armyActionsHtml(a) : ''}
         </div>`;
     }
 

@@ -61,9 +61,10 @@ export function initUI(staticCtx) {
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const outliner = createOutliner(els.outliner, {
     onPeaceClick(warId) { openPeaceDialog(warId); },
-    onArmyClick(id) {
+    onArmyClick(id, shift) {
       const g = state.ctx && state.ctx.game;
       if (!g || !g.armies || !g.armies[id]) return;
+      if (shift) { toggleArmyInGroup(id); return; } // build the group without camera jumps
       setSelectedArmy(id);
       const p = g.provinces[g.armies[id].prov];
       if (p && camera) camera.centerOn(p.x, p.y);
@@ -139,23 +140,44 @@ export function initUI(staticCtx) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
     g.ui.selectedArmy = id == null ? null : id;
+    g.ui.selectedArmies = id == null ? [] : [id];
+    bus.emit('selectArmy', g.ui.selectedArmy);
+    outliner.refresh(true);
+  }
+
+  // Shift+click: grow/shrink the group. The last-added army is the primary
+  // (split/hire act on it); orders move the whole group.
+  function toggleArmyInGroup(id) {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    if (!Array.isArray(g.ui.selectedArmies)) g.ui.selectedArmies = [];
+    const grp = g.ui.selectedArmies;
+    const at = grp.indexOf(id);
+    if (at >= 0) {
+      grp.splice(at, 1);
+      if (g.ui.selectedArmy === id) g.ui.selectedArmy = grp.length ? grp[grp.length - 1] : null;
+    } else {
+      grp.push(id);
+      g.ui.selectedArmy = id;
+    }
     bus.emit('selectArmy', g.ui.selectedArmy);
     outliner.refresh(true);
   }
 
   function onMapClick(payload) {
     const g = state.ctx.game;
-    const { provId, armyId } = payload || {};
+    const { provId, armyId, shift } = payload || {};
     if (armyId != null) {
       const a = g.armies && g.armies[armyId];
       if (a && a.tag === g.playerTag) {
-        // Own army: select it (province panel closes).
-        setSelectedArmy(armyId);
+        if (shift) toggleArmyInGroup(armyId);
+        else setSelectedArmy(armyId);
         setSelectedProv(0);
         return;
       }
       // Foreign army: fall through to the province underneath.
     }
+    if (shift) return; // shift-clicking terrain doesn't drop a built-up group
     if (provId > 0) {
       setSelectedArmy(null);
       setSelectedProv(provId);
@@ -169,9 +191,11 @@ export function initUI(staticCtx) {
   function onMapRightClick(payload) {
     const g = state.ctx.game;
     const provId = payload ? payload.provId : 0;
-    if (g.ui.selectedArmy != null && provId > 0 && state.actions) {
-      state.actions.moveArmy(g.ui.selectedArmy, provId);
-    }
+    if (provId <= 0 || !state.actions) return;
+    const grp = Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length
+      ? g.ui.selectedArmies
+      : (g.ui.selectedArmy != null ? [g.ui.selectedArmy] : []);
+    for (const id of grp) state.actions.moveArmy(id, provId);
   }
 
   // ------------------------------------------------------------- keyboard --
@@ -189,7 +213,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
     } else if (e.key === 'Escape') {
       const g = state.ctx.game;
-      if (g.ui.selectedArmy != null) setSelectedArmy(null);
+      if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)) setSelectedArmy(null);
       if (g.ui.selectedProv) setSelectedProv(0);
     }
   });
@@ -221,7 +245,16 @@ export function initUI(staticCtx) {
 
     bus.on('day', safe('day-refresh', () => {
       const g = ctx.game;
-      if (g.ui.selectedArmy != null && (!g.armies || !g.armies[g.ui.selectedArmy])) {
+      if (Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length) {
+        const alive = g.ui.selectedArmies.filter((id) => g.armies && g.armies[id]);
+        if (alive.length !== g.ui.selectedArmies.length) {
+          g.ui.selectedArmies = alive;
+          if (g.ui.selectedArmy != null && alive.indexOf(g.ui.selectedArmy) < 0) {
+            g.ui.selectedArmy = alive.length ? alive[alive.length - 1] : null;
+            bus.emit('selectArmy', g.ui.selectedArmy);
+          }
+        }
+      } else if (g.ui.selectedArmy != null && (!g.armies || !g.armies[g.ui.selectedArmy])) {
         setSelectedArmy(null); // selected army died / merged away
       }
       topbar.refresh();

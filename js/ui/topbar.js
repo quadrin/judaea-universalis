@@ -26,6 +26,8 @@ export function createTopbar(el, { DEFINES }) {
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>
         <span class="tb-sub" data-ref="income"></span>
+        <button class="tb-buy tb-loan hidden" data-ref="borrow" data-tt="Take a loan: 150 talents now, 3 talents/month interest until repaid">${icon('borrow')}</button>
+        <button class="tb-buy tb-loan hidden" data-ref="repay" data-tt="Repay a loan: 150 talents">${icon('repay')}</button>
       </div>
       <div class="tb-item" data-ref="manpowerWrap">
         <span class="tb-ico">${icon('spears')}</span><span class="tb-v" data-ref="manpower">0</span>
@@ -79,6 +81,18 @@ export function createTopbar(el, { DEFINES }) {
     refs.save.addEventListener('click', () => {
       try { ctx.bus.emit('saveRequest', {}); } catch (e) { warnOnce('save', e); }
     });
+    refs.borrow.addEventListener('click', () => {
+      if (refs.borrow.classList.contains('disabled')) return;
+      if (!actions || typeof actions.takeLoan !== 'function') return;
+      try { actions.takeLoan(); } catch (e) { warnOnce('takeLoan', e); }
+      refresh();
+    });
+    refs.repay.addEventListener('click', () => {
+      if (refs.repay.classList.contains('disabled')) return;
+      if (!actions || typeof actions.repayLoan !== 'function') return;
+      try { actions.repayLoan(); } catch (e) { warnOnce('repayLoan', e); }
+      refresh();
+    });
   }
 
   function refresh() {
@@ -94,6 +108,25 @@ export function createTopbar(el, { DEFINES }) {
     setText(refs.income, (net >= 0 ? '+' : '−') + Math.abs(net).toFixed(1));
     refs.income.classList.toggle('neg', net < 0);
     let tt = `Treasury: ${fmtMoney(t.treasury)} talents\nIncome: +${(t.income || 0).toFixed(1)} / month\nExpenses: −${(t.expenses || 0).toFixed(1)} / month`;
+
+    // Loans (v1.3): borrow / repay beside the treasury, count in its tooltip.
+    // Renders nothing unless the sim provides getLoans.
+    let loans = null;
+    if (actions && typeof actions.getLoans === 'function') {
+      try { loans = actions.getLoans(); } catch (e) { warnOnce('getLoans', e); loans = null; }
+    }
+    refs.borrow.classList.toggle('hidden', !loans);
+    refs.repay.classList.toggle('hidden', !loans);
+    if (loans) {
+      refs.borrow.classList.toggle('afford', !!loans.canTake);
+      refs.borrow.classList.toggle('disabled', !loans.canTake);
+      refs.repay.classList.toggle('afford', !!loans.canRepay);
+      refs.repay.classList.toggle('disabled', !loans.canRepay);
+      if ((loans.loans | 0) > 0) {
+        tt += `\nLoans: ${loans.loans | 0} (−${loans.interestPerMonth || 0} talents/month interest)`;
+      }
+    }
+
     try {
       const rows = actions && actions.explainIncome ? actions.explainIncome(g.playerTag) : null;
       if (Array.isArray(rows) && rows.length) tt += '\n――――――\n' + ttLines(rows);

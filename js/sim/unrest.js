@@ -2,7 +2,7 @@
 // DOM-free.
 
 import {
-  num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore,
+  num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
 } from './military.js';
 
 const _warned = new Set();
@@ -51,6 +51,9 @@ export function computeUnrestBreakdown(ctx, prov) {
   const stab = num(owner.stability);
   if (stab < 0) rows.push({ label: 'Instability', value: r2(-stab * U(ctx, 'perNegativeStability', 1)) });
   else if (stab > 0) rows.push({ label: 'Stability', value: r2(stab * U(ctx, 'perPositiveStability', -0.75)) });
+  // Shrine soothes the province, but not under an occupier (buildingWorks
+  // requires owner === controller — no building benefits during occupation).
+  if (buildingWorks(prov, 'shrine')) rows.push({ label: 'Shrine', value: -1.5 });
   for (const mod of prov.modifiers || []) {
     const e = mod && mod.effects ? mod.effects.unrest : undefined;
     if (Number.isFinite(e) && e !== 0) rows.push({ label: mod.name || mod.id || 'Modifier', value: e });

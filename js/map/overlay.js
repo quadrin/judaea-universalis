@@ -191,7 +191,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   function drawChip(game, ch) {
     const a = ch.army;
     const col = tagColor(game, a.tag);
-    const selected = game.ui && game.ui.selectedArmy === a.id;
+    const selected = game.ui && (game.ui.selectedArmy === a.id
+      || (Array.isArray(game.ui.selectedArmies) && game.ui.selectedArmies.indexOf(a.id) >= 0));
     x2.globalAlpha = a.retreating ? 0.65 : 1;
     if (selected) {
       x2.strokeStyle = '#e7c34c';

@@ -1132,8 +1132,10 @@ button {
 
 /* ============================================================
    Country flag chips (js/ui/icons.js flagChip)
-   Rounded rect in the tag's color, thin gold border, emblem in
-   parchment-gold. Width/height come inline from flagChip(size).
+   Rounded rect in the tag's color (background-color comes inline
+   from flagChip; the gradient here lays a top-sheen over it), thin
+   gold border + inner highlight border, two-tone emblem on the
+   field. Width/height come inline from flagChip(size).
    ============================================================ */
 .fchip {
   display: inline-flex;
@@ -1142,10 +1144,17 @@ button {
   flex: none;
   border: 1px solid rgba(201, 162, 39, 0.75);
   border-radius: 3px;
-  color: #f0e3ba; /* parchment-gold emblem ink */
+  color: #f0e3ba; /* fallback-abbr ink */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.30) 0%,
+    rgba(255, 255, 255, 0.10) 30%,
+    rgba(0, 0, 0, 0.05) 55%,
+    rgba(0, 0, 0, 0.24) 100%
+  );
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.30),
     0 1px 2px rgba(0, 0, 0, 0.4);
   vertical-align: middle;
   overflow: hidden;
@@ -1265,3 +1274,130 @@ button {
   cursor: not-allowed;
 }
 .pp-dip.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }
+
+/* ============================================================
+   v1.3: buildings, loans, assault, army actions
+   ============================================================ */
+
+/* province panel — buildings section (under Development) */
+.pp-build {
+  margin: 10px 12px 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(85, 69, 46, 0.35);
+}
+.pp-build-title {
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.pp-built {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.pp-bchip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  color: #6d5726;
+  border: 1px solid rgba(85, 69, 46, 0.5);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(120, 90, 40, 0.14));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.pp-bchip .icon { width: 15px; height: 15px; vertical-align: 0; }
+.pp-build-none { font-size: 12px; font-style: italic; color: var(--ink-soft); opacity: 0.85; }
+.pp-constr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  border: 1px dashed rgba(85, 69, 46, 0.55);
+  border-radius: 3px;
+  background: rgba(120, 90, 40, 0.08);
+}
+.pp-constr .icon { width: 13px; height: 13px; flex: none; }
+.pp-constr-name { font-weight: 600; color: var(--ink); }
+.pp-constr-left { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pp-build-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.pp-build-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  font-size: 12.5px;
+  color: var(--parch);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(180deg, var(--wood-hi), #2e2415);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -2px 3px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: filter 0.12s, border-color 0.12s;
+}
+.pp-build-btn .icon { width: 14px; height: 14px; flex: none; }
+.pp-build-btn span { overflow: hidden; text-overflow: ellipsis; }
+.pp-build-btn:hover { border-color: var(--gold); filter: brightness(1.18); }
+.pp-build-btn:active { filter: brightness(0.92); }
+.pp-build-btn.disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; }
+.pp-build-btn.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }
+
+/* province panel — assault button inside the siege block */
+.pp-assault {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px;
+  font-size: 12.5px;
+}
+.pp-assault .icon { width: 13px; height: 13px; }
+
+/* outliner — mini action buttons on the selected army row */
+.ol-acts { display: inline-flex; gap: 3px; margin-left: 1px; flex: none; }
+.ol-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  color: var(--text-light);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.ol-act .icon { width: 13px; height: 13px; }
+.ol-act:hover { border-color: var(--gold); color: var(--gold-bright); filter: brightness(1.25); }
+.ol-act.disabled { opacity: 0.45; cursor: not-allowed; }
+.ol-act.disabled:hover {
+  border-color: rgba(201, 162, 39, 0.3);
+  color: var(--text-light);
+  filter: none;
+}
+
+/* topbar — borrow / repay beside the treasury */
+.tb-loan .icon { width: 11px; height: 11px; }
+.tb-buy.disabled { cursor: not-allowed; opacity: 0.55; }
+.tb-buy.disabled:hover { filter: none; }
+/* narrow-viewport shedding: loans go the way of the point-sink buttons */
+@media (max-width: 680px) {
+  .tb-loan { display: none; }
+}

@@ -130,6 +130,18 @@ export const DEFINES = {
     },
   },
 
+  // Province buildings (economy/military contract). Sim applies the effects:
+  // market  -> local tax & production ×1.2 (only while owner controls it)
+  // granary -> +3 support limit and −1 attrition in the province
+  // walls   -> one-time +1 fort level (max 3) and +1,000 garrison on completion
+  // shrine  -> −1.5 local unrest
+  BUILDINGS: {
+    market:  { name: 'Market',  cost: 60,  months: 12, desc: 'Local tax and production +20%' },
+    granary: { name: 'Granary', cost: 50,  months: 9,  desc: '+3 support limit; -1 attrition here' },
+    walls:   { name: 'Walls',   cost: 100, months: 18, desc: '+1 fort level (max 3), +1,000 garrison' },
+    shrine:  { name: 'Shrine',  cost: 40,  months: 9,  desc: '-1.5 local unrest' },
+  },
+
   BASE: {
     regSize: 1000,                     // men per regiment
     regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment

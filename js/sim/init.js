@@ -4,12 +4,13 @@
 import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, changeOwnerCore, changeControllerCore,
-  declareWar, issueMove, mergeInto, recruitRegiment, canEnter,
+  declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   makePeace, aiWillAccept, PEACE_TERMS,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
+  assaultInfo, doAssault, splitArmyCore, rollGeneral,
 } from './military.js';
-import { maxManpowerOf, explainIncome } from './economy.js';
+import { maxManpowerOf, explainIncome, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { resolveEventOption } from './events.js';
 
@@ -35,7 +36,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     rngSeed,
-    ui: { selectedProv: 0, selectedArmy: null },
+    ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [] },
   };
 
   const srcProvs = (MAP_DATA && MAP_DATA.provinces) || [];
@@ -68,6 +69,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       autonomy: 0.25, unrest: 0, revoltProgress: 0,
       fort, garrison: maxGarrison, maxGarrison,
       siege: null, modifiers: [],
+      buildings: [], construction: null, // {key, monthsLeft} while building
       holy: s.holy || null, wonder: s.wonder || null,
       impassable,
     });
@@ -87,7 +89,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       religion: d.religion, culture: d.culture,
       alive: true,
       ai: key !== playerTag,
-      treasury: 0, income: 0, expenses: 0,
+      treasury: 0, income: 0, expenses: 0, loans: 0,
       manpower: 0, maxManpower: 0,
       stability: 0, legitimacy: 50, warExhaustion: 0,
       points: { gov: 0, infl: 0, mar: 0 },
@@ -295,6 +297,25 @@ export function gameActions(ctx) {
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
 
+  // Shared gating for the player army actions (split / hire general).
+  const armyActionInfo = (armyId) => {
+    const out = { canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50 };
+    const a = g.armies[armyId];
+    if (!a || a.tag !== g.playerTag) {
+      out.whySplit = out.whyHire = 'That army does not answer to us.';
+      return out;
+    }
+    if (a.inBattle) out.whySplit = a.name + ' is locked in battle.';
+    else if (a.retreating) out.whySplit = a.name + ' is retreating and cannot divide.';
+    else if (num(a.shatteredDays) > 0) out.whySplit = a.name + ' is shattered and must reform.';
+    else if (regCount(a) < 2) out.whySplit = 'At least two regiments are needed to split.';
+    out.canSplit = !out.whySplit;
+    const t = g.tags[g.playerTag];
+    if (!t || num(t.points && t.points.mar) < 50) out.whyHire = 'Not enough martial points (50 required).';
+    out.canHire = !out.whyHire;
+    return out;
+  };
+
   return {
     setSpeed(n) {
       g.speed = clamp(Math.round(num(n, 2)), 1, 5);
@@ -381,6 +402,160 @@ export function gameActions(ctx) {
     },
     explainIncome(tag) {
       return explainIncome(ctx, tag);
+    },
+
+    // ---- buildings (frozen contract) ---------------------------------------
+    getBuildInfo(provId) {
+      try {
+        const p = ctx.byId(provId);
+        if (!p || p.impassable) return null;
+        if (p.owner !== g.playerTag || p.controller !== g.playerTag) return null;
+        const catalog = ctx.DEFINES.BUILDINGS || {};
+        const t = g.tags[g.playerTag];
+        const built = Array.isArray(p.buildings) ? p.buildings.slice() : [];
+        const cdef = p.construction ? catalog[p.construction.key] : null;
+        const constructing = p.construction ? {
+          key: p.construction.key,
+          name: (cdef && cdef.name) || p.construction.key,
+          monthsLeft: num(p.construction.monthsLeft),
+        } : null;
+        const options = [];
+        for (const key of Object.keys(catalog)) {
+          const b = catalog[key];
+          let whyNot = '';
+          if (built.indexOf(key) >= 0) whyNot = 'Already built.';
+          else if (p.construction) whyNot = 'Another work is already under way.';
+          else if (key === 'walls' && (p.fort | 0) >= 3) whyNot = 'The fortress can rise no higher (fort 3).';
+          else if (num(t && t.treasury) < num(b.cost)) whyNot = 'Not enough treasury (' + num(b.cost) + ' talents).';
+          options.push({
+            key, name: b.name || key, cost: num(b.cost), months: num(b.months, 1),
+            desc: b.desc || '', canBuild: !whyNot, whyNot,
+          });
+        }
+        return { built, constructing, options };
+      } catch (e) { warnOnce('buildInfo', 'getBuildInfo failed', e); return null; }
+    },
+    buildBuilding(provId, key) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        const b = (ctx.DEFINES.BUILDINGS || {})[key];
+        if (!p || p.impassable || !t || !b) return;
+        if (p.owner !== g.playerTag || p.controller !== g.playerTag) {
+          say('Cannot build', 'We must own and control ' + p.name + ' to build there.', 'bad'); return;
+        }
+        if (Array.isArray(p.buildings) && p.buildings.indexOf(key) >= 0) {
+          say('Cannot build', p.name + ' already has a ' + (b.name || key).toLowerCase() + '.', 'bad'); return;
+        }
+        if (p.construction) {
+          say('Cannot build', 'Another work is already under way in ' + p.name + '.', 'bad'); return;
+        }
+        if (key === 'walls' && (p.fort | 0) >= 3) {
+          say('Cannot build', 'The fortress of ' + p.name + ' can rise no higher (fort 3).', 'bad'); return;
+        }
+        if (num(t.treasury) < num(b.cost)) {
+          say('Cannot build', 'Not enough treasury (' + num(b.cost) + ' talents required).', 'bad'); return;
+        }
+        t.treasury = num(t.treasury) - num(b.cost);
+        p.construction = { key, monthsLeft: Math.max(1, num(b.months, 1)) };
+        say('Construction begun', 'Work begins on the ' + (b.name || key).toLowerCase() + ' of ' + p.name + ' (' + num(b.months, 1) + ' months).', 'good');
+      } catch (e) { warnOnce('build', 'buildBuilding failed', e); }
+    },
+
+    // ---- loans (frozen contract) -------------------------------------------
+    takeLoan() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return;
+        if (num(t.loans) >= MAX_LOANS) {
+          say('Loan refused', 'No moneylender will extend us a sixth loan.', 'bad'); return;
+        }
+        t.loans = num(t.loans) + 1;
+        t.treasury = num(t.treasury) + LOAN_SIZE;
+        say('Loan taken', '+' + LOAN_SIZE + ' talents borrowed at ' + LOAN_INTEREST_PER_MONTH +
+          ' talents interest a month (' + t.loans + ' of ' + MAX_LOANS + ' loans).', 'info');
+      } catch (e) { warnOnce('takeLoan', 'takeLoan failed', e); }
+    },
+    repayLoan() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return;
+        if (num(t.loans) <= 0) { say('No debts', 'We owe the moneylenders nothing.', 'info'); return; }
+        if (num(t.treasury) < LOAN_SIZE) {
+          say('Cannot repay', 'Repaying a loan takes ' + LOAN_SIZE + ' talents in hand.', 'bad'); return;
+        }
+        t.treasury = num(t.treasury) - LOAN_SIZE;
+        t.loans = num(t.loans) - 1;
+        say('Loan repaid', 'A debt of ' + LOAN_SIZE + ' talents is settled (' + t.loans + ' remaining).', 'good');
+      } catch (e) { warnOnce('repayLoan', 'repayLoan failed', e); }
+    },
+    getLoans() {
+      try {
+        const t = g.tags[g.playerTag];
+        const loans = Math.max(0, Math.round(num(t && t.loans)));
+        return {
+          loans,
+          interestPerMonth: loans * LOAN_INTEREST_PER_MONTH,
+          canTake: !!t && loans < MAX_LOANS,
+          canRepay: !!t && loans > 0 && num(t.treasury) >= LOAN_SIZE,
+        };
+      } catch (e) {
+        warnOnce('getLoans', 'getLoans failed', e);
+        return { loans: 0, interestPerMonth: 0, canTake: false, canRepay: false };
+      }
+    },
+
+    // ---- assault & army actions (frozen contract) ---------------------------
+    canAssault(provId) {
+      try {
+        const info = assaultInfo(ctx, ctx.byId(provId), g.playerTag);
+        return { can: info.can, why: info.why, chancePct: info.chancePct, expectedLossesPct: info.expectedLossesPct };
+      } catch (e) {
+        warnOnce('canAssault', 'canAssault failed', e);
+        return { can: false, why: 'No assault is possible.', chancePct: 0, expectedLossesPct: 0 };
+      }
+    },
+    assaultSiege(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const info = assaultInfo(ctx, p, g.playerTag);
+        if (!info.can) { say('No assault', info.why || 'The walls cannot be stormed.', 'bad'); return; }
+        doAssault(ctx, p, g.playerTag); // notifies success (fall path) / repulse itself
+      } catch (e) { warnOnce('assault', 'assaultSiege failed', e); }
+    },
+    getArmyActions(armyId) {
+      try { return armyActionInfo(armyId); }
+      catch (e) {
+        warnOnce('armyActions', 'getArmyActions failed', e);
+        return { canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50 };
+      }
+    },
+    splitArmy(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return 0;
+        const st = armyActionInfo(armyId);
+        if (!st.canSplit) { say('Cannot split', st.whySplit, 'bad'); return 0; }
+        const nid = splitArmyCore(ctx, a);
+        if (!nid) { say('Cannot split', a.name + ' is too depleted to divide.', 'bad'); return 0; }
+        const det = g.armies[nid];
+        say('Army divided', (det ? det.name : 'A detachment') + ' takes the field beside ' + a.name + '.', 'info');
+        return nid;
+      } catch (e) { warnOnce('split', 'splitArmy failed', e); return 0; }
+    },
+    hireGeneral(armyId) {
+      try {
+        const a = g.armies[armyId];
+        const t = g.tags[g.playerTag];
+        if (!a || a.tag !== g.playerTag || !t) return;
+        const st = armyActionInfo(armyId);
+        if (!st.canHire) { say('No general', st.whyHire, 'bad'); return; }
+        t.points.mar = num(t.points.mar) - 50;
+        const gen = rollGeneral(ctx, g.playerTag);
+        a.general = gen;
+        say('General hired', gen.name + ' takes command of ' + a.name +
+          ' (fire ' + gen.fire + ', shock ' + gen.shock + ', maneuver ' + gen.maneuver + ').', 'good');
+      } catch (e) { warnOnce('hire', 'hireGeneral failed', e); }
     },
 
     // ---- diplomacy (frozen) -----------------------------------------------
@@ -525,7 +700,19 @@ export function reviveGame(saved) {
   if (!saved.firedEvents) saved.firedEvents = {};
   if (!saved.battles) saved.battles = [];
   if (!saved.wars) saved.wars = [];
-  if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null };
+  if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
+  if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
+  // pre-buildings/loans saves: default the new economy & military fields
+  for (let i = 1; i < saved.provinces.length; i++) {
+    const p = saved.provinces[i];
+    if (!p) continue;
+    if (!Array.isArray(p.buildings)) p.buildings = [];
+    if (p.construction === undefined) p.construction = null;
+  }
+  for (const k of Object.keys(saved.tags)) {
+    const t = saved.tags[k];
+    if (t && !Number.isFinite(t.loans)) t.loans = 0;
+  }
   saved.paused = true; // always resume paused
   return saved;
 }

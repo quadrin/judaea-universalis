@@ -4,7 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife,
 } from './military.js';
-import { runMonthlyEconomy, monthlyManpower } from './economy.js';
+import { runMonthlyEconomy, monthlyManpower, monthlyConstruction } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
@@ -48,6 +48,7 @@ function monthlyMonarchPoints(ctx) {
 function monthlyBlock(ctx) {
   const g = ctx.game;
   safe('modifiers', () => tickModifiers(ctx));
+  safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
   safe('economy', () => runMonthlyEconomy(ctx));
   safe('manpower', () => monthlyManpower(ctx));
   safe('reinforce', () => monthlyReinforce(ctx));

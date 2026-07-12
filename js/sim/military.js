@@ -19,6 +19,14 @@ export function devTotal(p) {
   if (!p || !p.dev) return 0;
   return num(p.dev.tax) + num(p.dev.prod) + num(p.dev.mp);
 }
+// Buildings only work for their owner: an occupied province yields nothing
+// from its market, granary or shrine (walls' fort bump is one-time, physical).
+export function hasBuilding(p, key) {
+  return !!(p && Array.isArray(p.buildings) && p.buildings.indexOf(key) >= 0);
+}
+export function buildingWorks(p, key) {
+  return hasBuilding(p, key) && p.owner === p.controller;
+}
 
 // ---------------------------------------------------------------- modifiers
 export function resolveTagMult(ctx, tag, key) {
@@ -512,11 +520,15 @@ function playerConcerned(ctx, p, byTag) {
   const pt = ctx.game.playerTag;
   return byTag === pt || p.owner === pt || p.controller === pt;
 }
+// Armies in the province able to press the siege led by byTag.
+export function besiegersOf(ctx, p, byTag) {
+  return armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
+    (a.tag === byTag || sameSide(ctx, a.tag, byTag)));
+}
 export function ensureSiege(ctx, p, byTag) {
   if (!p || p.impassable || p.siege) return;
   if (!isHostile(ctx, byTag, p.controller)) return;
-  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
-    (a.tag === byTag || sameSide(ctx, a.tag, byTag)));
+  const besiegers = besiegersOf(ctx, p, byTag);
   if (!besiegers.length) return;
   const regs = besiegers.reduce((s, a) => s + regCount(a), 0);
   const need = Math.max(1, Math.ceil(num(p.garrison) / 1000));
@@ -532,11 +544,31 @@ export function ensureSiege(ctx, p, byTag) {
     });
   }
 }
+// The one true fall path (progress 100 or a successful storm): controller
+// flips, garrison resets to 20%, 'siegeEnd' + notify stay consistent.
+export function siegeFall(ctx, p) {
+  const g = ctx.game;
+  if (!p || !p.siege) return;
+  const prev = p.controller;
+  const by = p.siege.by;
+  p.siege = null;
+  clearFamine(ctx, p);
+  changeControllerCore(ctx, p, by);
+  p.garrison = Math.round(num(p.maxGarrison) * 0.2);
+  addWarExhaustion(ctx, prev, 0.5);
+  ctx.bus.emit('siegeEnd', { provId: p.id, by });
+  if (playerConcerned(ctx, p, by)) {
+    ctx.bus.emit('notify', {
+      title: p.name + ' has fallen',
+      text: (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
+      type: by === g.playerTag ? 'good' : 'bad', provName: p.name,
+    });
+  }
+}
 function siegeDay(ctx, p) {
   const g = ctx.game;
   const s = p.siege;
-  const besiegers = armiesInProv(ctx, p.id).filter((a) => !a.retreating && !a.inBattle && num(a.shatteredDays) <= 0 && a.men > 0 &&
-    (a.tag === s.by || sameSide(ctx, a.tag, s.by)));
+  const besiegers = besiegersOf(ctx, p, s.by);
   if (!besiegers.length) { // siege abandoned
     const by = s.by;
     p.siege = null;
@@ -572,23 +604,70 @@ function siegeDay(ctx, p) {
     if (g.flags.faminePenalty && p.name === 'Jerusalem') decay = 0.01;
     if (p.garrison > 0) p.garrison = Math.max(0, p.garrison - Math.max(1, Math.floor(p.garrison * decay)));
   }
-  if (s.progress >= 100) {
-    const prev = p.controller;
-    const by = s.by;
-    p.siege = null;
-    clearFamine(ctx, p);
-    changeControllerCore(ctx, p, by);
-    p.garrison = Math.round(num(p.maxGarrison) * 0.2);
-    addWarExhaustion(ctx, prev, 0.5);
-    ctx.bus.emit('siegeEnd', { provId: p.id, by });
-    if (playerConcerned(ctx, p, by)) {
+  if (s.progress >= 100) siegeFall(ctx, p);
+}
+
+// ---------------------------------------------------------------- assaults
+// Read-only feasibility + odds for storming a breached wall. byTag must lead
+// the siege or share its side; a raging field battle pauses everything.
+export function assaultInfo(ctx, p, byTag) {
+  const out = {
+    can: false, why: '', chancePct: 0, expectedLossesPct: 0,
+    chance: 0, lossMen: 0, besiegers: [], besiegerMen: 0,
+  };
+  const g = ctx.game;
+  if (!p || p.impassable || !p.siege) { out.why = 'No siege is under way here.'; return out; }
+  const s = p.siege;
+  if (s.by !== byTag && !sameSide(ctx, byTag, s.by)) { out.why = 'We do not lead this siege.'; return out; }
+  if (g.battles.some((b) => b.prov === p.id)) { out.why = 'A battle rages outside the walls.'; return out; }
+  if (num(s.breach) < 1) { out.why = 'The walls stand unbreached.'; return out; }
+  const besiegers = besiegersOf(ctx, p, s.by);
+  if (!besiegers.length) { out.why = 'No army is fit to storm the walls.'; return out; }
+  const men = besiegers.reduce((sum, a) => sum + num(a.men), 0);
+  if (men <= 0) { out.why = 'No army is fit to storm the walls.'; return out; }
+  const garrison = Math.max(0, num(p.garrison));
+  const fort = Math.max(0, p.fort | 0);
+  out.can = true;
+  out.chance = clamp(0.15 + 0.25 * num(s.breach) + 0.15 * (men / Math.max(1, garrison) - 1), 0.05, 0.9);
+  out.chancePct = Math.round(out.chance * 100);
+  out.lossMen = Math.round((0.5 + 0.5 * fort) * garrison); // attackers ALWAYS bleed
+  out.expectedLossesPct = Math.min(100, Math.round((out.lossMen / men) * 100));
+  out.besiegers = besiegers;
+  out.besiegerMen = men;
+  return out;
+}
+export function doAssault(ctx, p, byTag) {
+  const g = ctx.game;
+  const info = assaultInfo(ctx, p, byTag);
+  if (!info.can) return { success: false, blocked: true, why: info.why };
+  const s = p.siege;
+  // Blood price first, win or lose, spread over the besieging armies.
+  const total = Math.max(1, info.besiegerMen);
+  for (const a of info.besiegers.slice()) {
+    const loss = Math.min(a.men, Math.round(info.lossMen * a.men / total));
+    a.men = Math.max(0, a.men - loss);
+    if (a.men <= 0) {
+      if (a.tag === g.playerTag) {
+        ctx.bus.emit('notify', { title: 'Army destroyed', text: a.name + ' is consumed storming the walls of ' + p.name + '.', type: 'bad', provName: p.name });
+      }
+      removeArmy(ctx, a.id);
+    }
+  }
+  const success = ctx.rng.chance(info.chance);
+  if (success) {
+    if (p.siege) siegeFall(ctx, p); // the existing fall path: flip, 20% garrison, siegeEnd, notify
+  } else {
+    s.progress = Math.max(0, num(s.progress) - 10);
+    for (const a of besiegersOf(ctx, p, s.by)) a.morale = Math.max(0, num(a.morale) - 1.0);
+    if (playerConcerned(ctx, p, byTag)) {
       ctx.bus.emit('notify', {
-        title: p.name + ' has fallen',
-        text: (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
-        type: by === g.playerTag ? 'good' : 'bad', provName: p.name,
+        title: 'Assault repulsed',
+        text: 'The garrison of ' + p.name + ' throws the stormers back from the breach.',
+        type: byTag === g.playerTag ? 'bad' : 'good', provName: p.name,
       });
     }
   }
+  return { success };
 }
 export function tickSieges(ctx) {
   const g = ctx.game;
@@ -684,9 +763,11 @@ export function monthlyAttrition(ctx) {
     if (!p) continue;
     const terr = ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
     let attr = terr ? num(terr.attrition, 0) : 0;
-    const limit = slBase + devTotal(p) * slDev;
+    const granary = buildingWorks(p, 'granary'); // +3 support limit, -1 attrition
+    const limit = slBase + devTotal(p) * slDev + (granary ? 3 : 0);
     attr += Math.min(6, Math.max(0, (regsByProv.get(a.prov) || 0) - limit));
     if (isHostile(ctx, a.tag, p.controller)) attr += 1;
+    if (granary) attr -= 1;
     attr = clamp(attr, 0, 12);
     // Supply lines: an organized siege camp caps attrition (Rome fed Masada's
     // besiegers by road and ramp; so do we).
@@ -753,6 +834,40 @@ export function recruitRegiment(ctx, tag, provId, type) {
   }
   return { ok: true };
 }
+// Detach floor(half) the regiments (mix kept proportional) with a matching
+// share of men into a fresh, general-less army in the same province. The
+// detachment is a perfectly ordinary army — the AI merge pass, battles and
+// attrition treat it like any other. Returns the new army id, or 0.
+export function splitArmyCore(ctx, army) {
+  const g = ctx.game;
+  if (!army || !g.armies[army.id]) return 0;
+  const R = regCount(army);
+  if (R < 2) return 0;
+  const newRegs = Math.floor(R / 2);
+  const inf = num(army.regiments.inf), cav = num(army.regiments.cav);
+  let newInf = Math.round(inf * newRegs / R);
+  newInf = clamp(newInf, Math.max(0, newRegs - cav), Math.min(inf, newRegs));
+  const newCav = newRegs - newInf;
+  const newMen = Math.floor(num(army.men) * newRegs / R);
+  if (newMen < 1) return 0; // too hollowed out to divide
+  army.regiments.inf = inf - newInf;
+  army.regiments.cav = cav - newCav;
+  army.men = Math.max(0, num(army.men) - newMen);
+  const id = g.nextArmyId++;
+  const det = {
+    id, tag: army.tag,
+    name: (army.name || 'Army') + ' — Detachment',
+    prov: army.prov, path: [], moveDaysLeft: 0,
+    regiments: { inf: newInf, cav: newCav },
+    men: newMen,
+    morale: num(army.morale), maxMorale: num(army.maxMorale, 3),
+    general: null,
+    inBattle: false, retreating: false,
+  };
+  g.armies[id] = det;
+  engageIfNeeded(ctx, det);
+  return id;
+}
 export function mergeInto(ctx, fromId, intoId) {
   const g = ctx.game;
   const f = g.armies[fromId];
@@ -768,6 +883,42 @@ export function mergeInto(ctx, fromId, intoId) {
   if (!into.general && f.general) into.general = f.general;
   removeArmy(ctx, fromId);
   return true;
+}
+
+// ---------------------------------------------------------------- generals
+// Period name pools keyed by DEFINES.CULTURES group (a hired general speaks
+// the recruiting court's tongue). ~8 names per group.
+export const GENERAL_NAMES = {
+  israelite: ['Eleazar ben Yair', 'Simon ben Cathlas', 'Yohanan ben Levi', 'Judah ben Ari', 'Niger of Perea', 'Silas the Babylonian', 'Joseph ben Simon', 'Jesus ben Sapphias'],
+  hellenic:  ['Nikanor', 'Apollonios', 'Demetrios', 'Lysias', 'Antigonos', 'Philon', 'Kallistratos', 'Herakleides'],
+  latin:     ['Sextus Vettulenus', 'Aulus Larcius', 'Marcus Ulpius', 'Gaius Cetronius', 'Lucius Annius', 'Quintus Petillius', 'Titus Frigius', 'Gnaeus Pompeius Collega'],
+  iranian:   ['Vologases', 'Pacorus', 'Mithridates', 'Artabanus', 'Phraates', 'Gotarzes', 'Sanatruces', 'Osroes'],
+  arab:      ['Malichus', 'Obodas', 'Aretas', 'Rabbel', 'Syllaeus', 'Wahballat', 'Hareth', 'Amru'],
+  syrian:    ['Sohaemus', 'Azizus', 'Sampsiceramus', 'Abgar', 'Mannus', 'Iamblichus', 'Monimus', 'Bargates'],
+  egyptian:  ['Petosiris', 'Ammonios', 'Harpocras', 'Chaeremon', 'Apion', 'Onnophris', 'Psammis', 'Nechutes'],
+  armenian:  ['Tiridates', 'Artavasdes', 'Tigranes', 'Sanatruk', 'Mithrobarzanes', 'Vardanes', 'Zariadres', 'Orontes'],
+};
+function weightedIndex(rng, weights) {
+  let total = 0;
+  for (const w of weights) total += w;
+  let r = rng.next() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r < 0) return i;
+  }
+  return weights.length - 1;
+}
+// Pips weighted toward 1-3: fire/shock 0-4, maneuver 0-5.
+export function rollGeneral(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const cul = t && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
+  const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+  return {
+    name: ctx.rng.pick(pool),
+    fire: weightedIndex(ctx.rng, [2, 5, 6, 5, 2]),
+    shock: weightedIndex(ctx.rng, [2, 5, 6, 5, 2]),
+    maneuver: weightedIndex(ctx.rng, [2, 4, 5, 5, 3, 1]),
+  };
 }
 
 // ---------------------------------------------------------------- wars & warscore

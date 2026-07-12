@@ -85,7 +85,29 @@ export function createCamera(container, MAP_DATA) {
     };
   }
 
+  // Arrow-key panning: held arrows scroll the map at a screen-constant speed.
+  const heldArrows = new Set();
+  window.addEventListener('keydown', (e) => {
+    if (!e.key || !e.key.startsWith('Arrow')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    heldArrows.add(e.key);
+    e.preventDefault();
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key && e.key.startsWith('Arrow')) heldArrows.delete(e.key);
+  });
+  window.addEventListener('blur', () => heldArrows.clear());
+
   function update(dt) {
+    if (heldArrows.size) {
+      const step = 0.7 * (dt || 16) / cam.zoom; // ~700 screen px/s regardless of zoom
+      if (heldArrows.has('ArrowLeft')) cam.x -= step;
+      if (heldArrows.has('ArrowRight')) cam.x += step;
+      if (heldArrows.has('ArrowUp')) cam.y -= step;
+      if (heldArrows.has('ArrowDown')) cam.y += step;
+      target = null; // manual steering cancels any glide
+      clampPan();
+    }
     if (!target) return;
     const k = 1 - Math.exp(-(dt || 16) / 110); // ~300ms glide
     cam.x += (target.x - cam.x) * k;
@@ -110,10 +132,10 @@ export function createCamera(container, MAP_DATA) {
     return [e.clientX - r.left, e.clientY - r.top];
   }
 
-  function fire(cbs, sx, sy) {
+  function fire(cbs, sx, sy, mods) {
     const [mx, my] = screenToMap(sx, sy);
     for (const cb of cbs) {
-      try { cb(mx, my, sx, sy); } catch (e) { console.warn('[camera] click handler failed', e); }
+      try { cb(mx, my, sx, sy, mods || {}); } catch (e) { console.warn('[camera] click handler failed', e); }
     }
   }
 
@@ -151,7 +173,7 @@ export function createCamera(container, MAP_DATA) {
     try { container.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     if (travel < CLICK_SLOP_PX) {
       const [sx, sy] = localPos(e);
-      fire(clickCbs, sx, sy);
+      fire(clickCbs, sx, sy, { shift: !!e.shiftKey });
     }
   });
 
@@ -160,7 +182,7 @@ export function createCamera(container, MAP_DATA) {
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const [sx, sy] = localPos(e);
-    setZoomAt(sx, sy, cam.zoom * Math.exp(-e.deltaY * 0.0011));
+    setZoomAt(sx, sy, cam.zoom * Math.exp(-e.deltaY * 0.0019)); // ~21%/notch — snappy, EU4-like
   }, { passive: false });
 
   container.addEventListener('contextmenu', (e) => {

@@ -108,11 +108,11 @@ async function boot() {
     onContinue: () => startGame(saved.game, saved.entry),
   } : null);
 
-  camera.onClick((mapX, mapY, sx, sy) => {
+  camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;
     const armyId = overlay.hitTestArmy(sx, sy, ctx.game, camera);
     const provId = renderer.provIdAt(mapX, mapY);
-    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId });
+    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, shift: !!(mods && mods.shift) });
   });
   camera.onRightClick((mapX, mapY, sx, sy) => {
     if (!ctx) return;
