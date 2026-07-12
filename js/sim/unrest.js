@@ -136,6 +136,22 @@ export function monthlyUnrest(ctx) {
   }
 }
 
+// Opinions cool toward neutral by 1 point a month; between allies, friendship
+// settles warm at +60 instead of fading to indifference.
+export function monthlyOpinionDrift(ctx) {
+  const g = ctx.game;
+  for (const tag of Object.keys(g.tags)) {
+    const t = g.tags[tag];
+    if (!t || !t.opinion) continue;
+    for (const other of Object.keys(t.opinion)) {
+      if (other === tag) continue;
+      const target = (t.allies || []).indexOf(other) >= 0 ? 60 : 0;
+      const v = Math.round(num(t.opinion[other]));
+      t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
+    }
+  }
+}
+
 // +0.05/month at war, decays at peace; battle/siege bumps applied in military.js.
 export function monthlyWarExhaustion(ctx) {
   const g = ctx.game;

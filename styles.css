@@ -131,20 +131,19 @@ button {
 }
 
 .tb-flag {
-  min-width: 40px;
-  height: 26px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-  border: 1px solid var(--gold);
-  border-radius: 3px;
+  gap: 7px;
+  height: 32px;
+  padding: 0 2px;
+  flex: none;
+}
+.tb-flag-tag {
   font-weight: bold;
   font-size: 12px;
   letter-spacing: 0.12em;
-  color: #fff;
+  color: var(--parch);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -6px 8px rgba(0, 0, 0, 0.35);
 }
 
 .tb-item {
@@ -315,18 +314,7 @@ button {
 .flag-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 20px;
-  padding: 0 5px;
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  border-radius: 2px;
-  font-size: 10.5px;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -5px 6px rgba(0, 0, 0, 0.3);
+  flex: none;
 }
 .pp-occupied {
   margin: 4px 12px 0;
@@ -824,13 +812,18 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 7px 14px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.28)),
     var(--tagc, var(--wood-light));
   border-bottom: 1px solid var(--gold);
 }
 .nc-shield {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.nc-shield-tag {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -1136,3 +1129,139 @@ button {
 /* start screen */
 .ss-rule svg { width: min(280px, 70vw); height: 32px; }
 .nc-cta .icon-xs, .ss-continue .icon-xs { vertical-align: 0; }
+
+/* ============================================================
+   Country flag chips (js/ui/icons.js flagChip)
+   Rounded rect in the tag's color, thin gold border, emblem in
+   parchment-gold. Width/height come inline from flagChip(size).
+   ============================================================ */
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 1px solid rgba(201, 162, 39, 0.75);
+  border-radius: 3px;
+  color: #f0e3ba; /* parchment-gold emblem ink */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  vertical-align: middle;
+  overflow: hidden;
+}
+.fchip svg {
+  width: 84%;
+  height: 84%;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+}
+.fchip-abbr {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.tb-flag .fchip { border-color: var(--gold); }
+.ol-name .fchip { margin-right: 4px; vertical-align: -3px; }
+.ol-name .fchip svg { filter: none; } /* tiny sizes smear with drop-shadow */
+
+/* ============================================================
+   Map labels (js/map/labels.js) — EU4-style legibility:
+   dark ink + layered parchment halo, small-caps, set once per div.
+   ============================================================ */
+.mlabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  line-height: 1;
+  font-family: var(--serif);
+}
+.mlabel-prov {
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-shadow:
+    0 0 3px rgba(232, 220, 192, 0.9),
+    0 0 6px rgba(232, 220, 192, 0.55),
+    1px 1px 2px rgba(232, 220, 192, 0.85),
+    -1px -1px 2px rgba(232, 220, 192, 0.85),
+    1px -1px 2px rgba(232, 220, 192, 0.85),
+    -1px 1px 2px rgba(232, 220, 192, 0.85);
+}
+.mlabel-tag {
+  font-variant: small-caps;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  text-shadow:
+    0 0 3px rgba(232, 220, 192, 0.9),
+    0 0 7px rgba(232, 220, 192, 0.5),
+    1px 1px 2px rgba(232, 220, 192, 0.85),
+    -1px -1px 2px rgba(232, 220, 192, 0.85),
+    1px -1px 2px rgba(232, 220, 192, 0.85),
+    -1px 1px 2px rgba(232, 220, 192, 0.85);
+}
+
+/* ============================================================
+   Province panel — diplomacy block (foreign owners)
+   ============================================================ */
+.pp-diplo {
+  margin: 12px 12px 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(85, 69, 46, 0.35);
+}
+.pp-diplo-title {
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.pp-diplo-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.pp-diplo-chip { display: inline-flex; align-items: center; flex: none; }
+.pp-diplo .pp-row { border-bottom: 1px dotted rgba(85, 69, 46, 0.3); }
+.pp-diplo .pp-row:last-of-type { border-bottom: none; }
+#province-panel .pp-v.pos { color: var(--green); }
+#province-panel .pp-v.neg { color: var(--red-deep); }
+.pp-diplo-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+.pp-dip {
+  padding: 5px 6px;
+  font-size: 12px;
+  color: var(--parch);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(180deg, var(--wood-hi), #2e2415);
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -2px 3px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: filter 0.12s, border-color 0.12s;
+}
+.pp-dip:hover { border-color: var(--gold); filter: brightness(1.18); }
+.pp-dip:active { filter: brightness(0.92); }
+.pp-dip.disabled {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+  cursor: not-allowed;
+}
+.pp-dip.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }

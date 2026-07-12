@@ -5,7 +5,7 @@ import {
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower } from './economy.js';
-import { monthlyUnrest, monthlyWarExhaustion, tickModifiers } from './unrest.js';
+import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 
@@ -58,6 +58,7 @@ function monthlyBlock(ctx) {
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
+  safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   if (!g.over && !g.result) {

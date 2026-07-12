@@ -1,6 +1,6 @@
 // js/ui/outliner.js — right-side outliner: armies, battles, sieges, wars (SPEC §8.2).
 import { esc, fmtMen, signed, warnOnce } from './format.js';
-import { icon } from './icons.js';
+import { icon, flagChip } from './icons.js';
 
 export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
   let ctx = null;
@@ -120,9 +120,12 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
         const peaceBtn = w.noNegotiation
           ? ''
           : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
+        // Lead enemy's flag before the war name (falls back to the flame glyph).
+        const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
+        const lead = opp ? flagChip(opp, ctx.DEFINES, 14) : icon('flame', 'icon-row');
         html += `
           <div class="ol-row ol-war" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
-            <span class="ol-name">${icon('flame', 'icon-row')} ${esc(w.name || 'War')}</span>
+            <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
             ${peaceBtn}
           </div>`;

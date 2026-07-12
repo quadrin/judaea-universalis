@@ -811,6 +811,76 @@ export function declareWar(ctx, atk, def, name) {
   return war;
 }
 
+// ---------------------------------------------------------------- opinion & alliances
+// Costs, gains and cooldowns for the player-facing diplomacy actions (init.js
+// gameActions) and the AI reciprocity pass (ai.js). Frozen action contract.
+export const DIPLO = {
+  improveCost: 25, improveGain: 15, improveCdMonths: 4,
+  giftCost: 75, giftGain: 20, giftCdMonths: 6,
+  allyMinOpinion: 60, allyAcceptOpinion: 110, allyRefuseOpinion: -5, allyCdMonths: 6,
+  breakOpinion: -50,
+};
+export function opinionOf(ctx, whose, of) {
+  const t = ctx.game.tags[whose];
+  return t && t.opinion ? clamp(Math.round(num(t.opinion[of])), -200, 200) : 0;
+}
+export function addOpinion(ctx, whose, of, delta) {
+  const t = ctx.game.tags[whose];
+  if (!t || !of || whose === of) return;
+  if (!t.opinion) t.opinion = {};
+  t.opinion[of] = clamp(Math.round(num(t.opinion[of]) + num(delta)), -200, 200);
+}
+// Cooldowns live in game.diploCooldowns['<me>><them>:<kind>'] = {y, m} — the
+// first month the action is available again. Created lazily; older saves lack
+// the map entirely (reviveGame supplies the default).
+export function diploCdActive(ctx, key) {
+  const g = ctx.game;
+  const cd = g.diploCooldowns ? g.diploCooldowns[key] : null;
+  if (!cd) return false;
+  return g.date.y < cd.y || (g.date.y === cd.y && g.date.m < cd.m);
+}
+export function diploCdMonthsLeft(ctx, key) {
+  const g = ctx.game;
+  const cd = g.diploCooldowns ? g.diploCooldowns[key] : null;
+  if (!cd) return 0;
+  let months = (cd.y - g.date.y) * 12 + (cd.m - g.date.m);
+  if (g.date.y < 0 && cd.y > 0) months -= 12; // no year zero
+  return Math.max(0, months);
+}
+export function setDiploCd(ctx, key, months) {
+  const g = ctx.game;
+  if (!g.diploCooldowns) g.diploCooldowns = {};
+  const total = g.date.m - 1 + Math.max(0, months | 0);
+  let y = g.date.y + Math.floor(total / 12);
+  if (g.date.y < 0 && y >= 0) y += 1; // no year zero: -1 rolls straight to 1
+  g.diploCooldowns[key] = { y, m: (total % 12) + 1 };
+}
+// 'Shared common enemy' = some third tag alive that both have in atWarWith.
+export function sharedWarEnemy(ctx, a, b) {
+  const g = ctx.game;
+  const ta = g.tags[a], tb = g.tags[b];
+  if (!ta || !tb) return false;
+  for (const e of ta.atWarWith || []) {
+    if (e === a || e === b) continue;
+    if (!g.tags[e] || !g.tags[e].alive) continue;
+    if ((tb.atWarWith || []).indexOf(e) >= 0) return true;
+  }
+  return false;
+}
+// Mutual removal from both allies arrays; the jilted party's opinion of the
+// breaker drops. Returns true only when an alliance actually existed.
+export function breakAllianceCore(ctx, breaker, other) {
+  const g = ctx.game;
+  const a = g.tags[breaker], b = g.tags[other];
+  if (!a || !b) return false;
+  const had = (a.allies || []).indexOf(other) >= 0 || (b.allies || []).indexOf(breaker) >= 0;
+  if (!had) return false;
+  a.allies = (a.allies || []).filter((x) => x !== other);
+  b.allies = (b.allies || []).filter((x) => x !== breaker);
+  addOpinion(ctx, other, breaker, DIPLO.breakOpinion);
+  return true;
+}
+
 // ---------------------------------------------------------------- peace
 // Treaty levels and the warscore the enemy leader must be at (net, from THEIR
 // side) for the AI to accept. The bookmark's scripted war (war.noNegotiation)

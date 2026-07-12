@@ -6,6 +6,8 @@ import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, changeOwnerCore, changeControllerCore,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter,
   makePeace, aiWillAccept, PEACE_TERMS,
+  DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
+  sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
 } from './military.js';
 import { maxManpowerOf, explainIncome } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -30,7 +32,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tags: {},
     provinces: [null],
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
-    battles: [], wars: [], truces: {},
+    battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     rngSeed,
     ui: { selectedProv: 0, selectedArmy: null },
@@ -249,6 +251,50 @@ export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
 
+  // ---- diplomacy (frozen action contract) ---------------------------------
+  const dipKey = (them, kind) => g.playerTag + '>' + them + ':' + kind;
+  // Single source of truth for gating: the actions re-derive this instead of
+  // trusting whatever state the UI captured when it rendered.
+  const getDip = (tag) => {
+    try {
+      const me = g.playerTag;
+      if (!tag || tag === me || tag === 'REB') return null;
+      const them = g.tags[tag], mine = g.tags[me];
+      if (!them || !mine || !them.alive) return null;
+      const opinionOfUs = opinionOf(ctx, tag, me);
+      const ourOpinion = opinionOf(ctx, me, tag);
+      const allied = (mine.allies || []).indexOf(tag) >= 0 || (them.allies || []).indexOf(me) >= 0;
+      const atWarWithUs = (mine.atWarWith || []).indexOf(tag) >= 0 || (them.atWarWith || []).indexOf(me) >= 0;
+      const tr = g.truces ? g.truces[truceKey(me, tag)] : null;
+      const truceUntil = tr && truceActive(ctx, me, tag) ? { y: tr.y, m: tr.m } : null;
+      let whyNotImprove = '';
+      if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
+        whyNotImprove = 'Our envoys were just received (' + diploCdMonthsLeft(ctx, dipKey(tag, 'improve')) + ' months).';
+      } else if (num(mine.points && mine.points.infl) < DIPLO.improveCost) {
+        whyNotImprove = 'Not enough influence (' + DIPLO.improveCost + ' required).';
+      }
+      let whyNotGift = '';
+      if (diploCdActive(ctx, dipKey(tag, 'gift'))) {
+        whyNotGift = 'A gift was sent recently (' + diploCdMonthsLeft(ctx, dipKey(tag, 'gift')) + ' months).';
+      } else if (num(mine.treasury) < DIPLO.giftCost) {
+        whyNotGift = 'Not enough treasury (' + DIPLO.giftCost + ' talents required).';
+      }
+      let whyNotAlly = '';
+      if (allied) whyNotAlly = 'We are already allied.';
+      else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
+      else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
+      else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
+      return {
+        tag, name: them.name || tag,
+        color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
+        opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
+        canImprove: !whyNotImprove, canGift: !whyNotGift, canAlly: !whyNotAlly, canBreak: allied,
+        whyNotImprove, whyNotGift, whyNotAlly,
+        improveCost: DIPLO.improveCost, giftCost: DIPLO.giftCost,
+      };
+    } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
+  };
+
   return {
     setSpeed(n) {
       g.speed = clamp(Math.round(num(n, 2)), 1, 5);
@@ -337,6 +383,67 @@ export function gameActions(ctx) {
       return explainIncome(ctx, tag);
     },
 
+    // ---- diplomacy (frozen) -----------------------------------------------
+    getDiplomacy(tag) {
+      return getDip(tag);
+    },
+    improveRelations(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canImprove) { say('Improve relations', d.whyNotImprove || 'We cannot court ' + d.name + ' now.', 'bad'); return; }
+        const mine = g.tags[g.playerTag];
+        mine.points.infl = num(mine.points.infl) - DIPLO.improveCost;
+        addOpinion(ctx, tag, g.playerTag, DIPLO.improveGain);
+        setDiploCd(ctx, dipKey(tag, 'improve'), DIPLO.improveCdMonths);
+        say('Improve relations', 'Our envoys are warmly received in ' + d.name + ' (+' + DIPLO.improveGain + ' opinion).', 'good');
+      } catch (e) { warnOnce('improveRel', 'improveRelations failed', e); }
+    },
+    sendGift(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canGift) { say('Send gift', d.whyNotGift || 'No gift can reach ' + d.name + ' now.', 'bad'); return; }
+        const mine = g.tags[g.playerTag];
+        mine.treasury = num(mine.treasury) - DIPLO.giftCost;
+        addOpinion(ctx, tag, g.playerTag, DIPLO.giftGain);
+        setDiploCd(ctx, dipKey(tag, 'gift'), DIPLO.giftCdMonths);
+        say('Send gift', 'A caravan of gifts reaches ' + d.name + ' (+' + DIPLO.giftGain + ' opinion).', 'good');
+      } catch (e) { warnOnce('sendGift', 'sendGift failed', e); }
+    },
+    offerAlliance(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canAlly) { say('Alliance', d.whyNotAlly || 'No alliance is possible with ' + d.name + '.', 'bad'); return; }
+        const me = g.playerTag;
+        const mine = g.tags[me], them = g.tags[tag];
+        const accept = d.opinionOfUs >= DIPLO.allyAcceptOpinion ||
+          (d.opinionOfUs >= DIPLO.allyMinOpinion && sharedWarEnemy(ctx, me, tag));
+        if (accept) {
+          if (!mine.allies) mine.allies = [];
+          if (!them.allies) them.allies = [];
+          if (mine.allies.indexOf(tag) < 0) mine.allies.push(tag);
+          if (them.allies.indexOf(me) < 0) them.allies.push(me);
+          say('Alliance', d.name + ' binds itself to our cause. Our wars to come are theirs.', 'good');
+        } else {
+          addOpinion(ctx, tag, me, DIPLO.allyRefuseOpinion);
+          setDiploCd(ctx, dipKey(tag, 'ally'), DIPLO.allyCdMonths);
+          say('Alliance refused', d.name + ' declines our offer, and will hear no other for ' + DIPLO.allyCdMonths + ' months.', 'bad');
+        }
+      } catch (e) { warnOnce('offerAlliance', 'offerAlliance failed', e); }
+    },
+    breakAlliance(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canBreak) { say('Alliance', 'We have no alliance with ' + d.name + '.', 'bad'); return; }
+        if (breakAllianceCore(ctx, g.playerTag, tag)) {
+          say('Alliance broken', 'We renounce our alliance with ' + d.name + '. They will not soon forget it.', 'info');
+        }
+      } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
+    },
+
     // ---- monarch-point sinks (v1.1) --------------------------------------
     // EU4 mapping: tax dev = Governance, prod dev = Influence, mp dev = Martial.
     devProvince(provId, kind) {
@@ -412,6 +519,7 @@ export const SAVE_VERSION = 1;
 export function reviveGame(saved) {
   if (!saved || typeof saved !== 'object' || !saved.tags || !saved.provinces) return null;
   if (!saved.truces) saved.truces = {};
+  if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
   if (!saved.firedEvents) saved.firedEvents = {};

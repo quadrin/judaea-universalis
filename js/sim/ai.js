@@ -5,6 +5,7 @@
 import {
   num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
+  breakAllianceCore,
 } from './military.js';
 
 const _warned = new Set();
@@ -149,6 +150,25 @@ function aiSpendPoints(ctx, tag) {
   }
 }
 
+// Reciprocity: an ally whose opinion of the player has sunk below -25 walks
+// away from the alliance (breakAllianceCore handles the mutual removal and
+// the player's -50 opinion of the deserter).
+function aiDiploReciprocity(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const player = g.playerTag;
+  if (!t || !player || tag === player || !g.tags[player]) return;
+  if ((t.allies || []).indexOf(player) < 0) return;
+  if (num(t.opinion && t.opinion[player]) >= -25) return;
+  if (breakAllianceCore(ctx, tag, player)) {
+    ctx.bus.emit('notify', {
+      title: 'Alliance broken',
+      text: (t.name || tag) + ' renounces its alliance with us — our standing at their court has sunk too low.',
+      type: 'bad',
+    });
+  }
+}
+
 function runTagAI(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
@@ -186,6 +206,7 @@ export function runMonthlyAI(ctx) {
       const t = g.tags[tag];
       if (!t || !t.alive || !t.ai) continue;
       if (tag === 'REB') { runRebelAI(ctx); continue; }
+      aiDiploReciprocity(ctx, tag);
       runTagAI(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }

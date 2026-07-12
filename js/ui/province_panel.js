@@ -1,11 +1,12 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
-import { esc, rgb, fmtInt, fmtMen, ttLines, titleCase, warnOnce } from './format.js';
-import { icon } from './icons.js';
+import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
+import { icon, flagChip } from './icons.js';
 
 export function createProvincePanel(el, { DEFINES, onClose }) {
   let ctx = null;
   let actions = null;
   let provId = 0;
+  let dipTag = ''; // owner tag the diplomacy buttons currently act on
   const refs = {};
 
   function setText(node, s) {
@@ -66,10 +67,33 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       <div class="pp-recruit">
         <button class="btn pp-recruit-btn" data-ref="recruitInf"></button>
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
+      </div>
+      <div class="pp-diplo hidden" data-ref="diploBlock">
+        <div class="pp-diplo-title">Diplomacy</div>
+        <div class="pp-diplo-head">
+          <span class="pp-diplo-chip" data-ref="dipChip"></span>
+          <span class="pp-diplo-name" data-ref="dipName"></span>
+        </div>
+        <div class="pp-row"><span class="pp-k">Their opinion of us</span><span class="pp-v" data-ref="dipOpinion"></span></div>
+        <div class="pp-row"><span class="pp-k">Status</span><span class="pp-v" data-ref="dipStatus"></span></div>
+        <div class="pp-diplo-btns" data-ref="dipBtns">
+          <button class="pp-dip" data-dip="improve" data-ref="dipImprove">Improve Relations</button>
+          <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
+          <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
+          <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
+        </div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
+    refs.dipBtns.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-dip]') : null;
+      if (!b || !actions || !dipTag || b.classList.contains('disabled')) return;
+      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance' }[b.dataset.dip];
+      try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
+      catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
+      refresh();
+    });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
     refs.recruitCav.addEventListener('click', () => tryRecruit('cav', refs.recruitCav));
     refs.devBtnsRow.addEventListener('click', (e) => {
@@ -109,8 +133,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
     // Owner / occupation
     const ownerDef = TAGS[p.owner] || {};
-    refs.ownerChip.style.background = rgb(ownerDef.color);
-    setText(refs.ownerChip, p.owner || '—');
+    setHtml(refs.ownerChip, flagChip(p.owner, DEFINES, 20));
     setText(refs.ownerName, ownerDef.name || p.owner || 'Unowned');
     if (p.controller && p.controller !== p.owner) {
       const cDef = TAGS[p.controller] || {};
@@ -207,6 +230,61 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const costs = base.regCost || { inf: 10, cav: 25 };
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
+
+    // Diplomacy with the owner (re-queried every refresh; fail-soft)
+    refreshDiplomacy(p, g);
+  }
+
+  function refreshDiplomacy(p, g) {
+    let d = null;
+    const owner = p.owner;
+    if (actions && typeof actions.getDiplomacy === 'function' && !p.impassable
+        && owner && owner !== g.playerTag && owner !== 'REB' && owner !== 'WASTE') {
+      try { d = actions.getDiplomacy(owner); } catch (e) { warnOnce('getDiplomacy', e); d = null; }
+    }
+    dipTag = d ? d.tag : '';
+    refs.diploBlock.classList.toggle('hidden', !d);
+    if (!d) return;
+
+    setHtml(refs.dipChip, flagChip(d.tag, DEFINES, 20));
+    setText(refs.dipName, d.name || d.tag);
+
+    const op = Math.round(d.opinionOfUs || 0);
+    setText(refs.dipOpinion, signed(op));
+    refs.dipOpinion.classList.toggle('pos', op > 0);
+    refs.dipOpinion.classList.toggle('neg', op < 0);
+    refs.dipOpinion.dataset.tt = `Their opinion of us: ${signed(op)}\nOur opinion of them: ${signed(Math.round(d.ourOpinion || 0))}`;
+
+    let status = '—';
+    let cls = '';
+    if (d.atWarWithUs) { status = 'At war'; cls = 'neg'; }
+    else if (d.allied) { status = 'Allied'; cls = 'pos'; }
+    else if (d.truceUntil) {
+      const mn = (DEFINES.MONTH_NAMES || [])[d.truceUntil.m - 1] || ('M' + d.truceUntil.m);
+      status = `Truce until ${mn} ${fmtYear(d.truceUntil.y)}`;
+    }
+    setText(refs.dipStatus, status);
+    refs.dipStatus.classList.toggle('pos', cls === 'pos');
+    refs.dipStatus.classList.toggle('neg', cls === 'neg');
+
+    setDipBtn(refs.dipImprove, d.canImprove, d.whyNotImprove,
+      `Improve relations: ${d.improveCost} influence points → +15 opinion`);
+    setDipBtn(refs.dipGift, d.canGift, d.whyNotGift,
+      `Send a gift: ${d.giftCost} talents from the treasury → +20 opinion`);
+    setDipBtn(refs.dipAlly, d.canAlly, d.whyNotAlly,
+      'Offer a formal alliance — a refusal sours relations for six months');
+    // No alliance, nothing to break: hide rather than explain.
+    refs.dipBreak.classList.toggle('hidden', !d.canBreak);
+    if (d.canBreak) {
+      refs.dipBreak.classList.remove('disabled');
+      refs.dipBreak.dataset.tt = 'Break the alliance — their opinion of us falls by 50';
+    }
+  }
+
+  function setDipBtn(btn, can, whyNot, costLine) {
+    btn.classList.remove('hidden');
+    btn.classList.toggle('disabled', !can);
+    btn.dataset.tt = can ? costLine : (whyNot ? whyNot + '\n' + costLine : costLine);
   }
 
   function updateRecruit(btn, type, cost, p, g, base) {

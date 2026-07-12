@@ -1,6 +1,6 @@
 // js/ui/topbar.js — top resource/date/speed bar (SPEC §8.2).
-import { esc, rgb, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
-import { icon } from './icons.js';
+import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
+import { icon, flagChip } from './icons.js';
 
 export function createTopbar(el, { DEFINES }) {
   let ctx = null;
@@ -22,7 +22,7 @@ export function createTopbar(el, { DEFINES }) {
     const tag = ctx.game.playerTag;
     const def = (DEFINES.TAGS && DEFINES.TAGS[tag]) || {};
     el.innerHTML = `
-      <div class="tb-flag" style="background:${rgb(def.color)}" data-tt="${esc(def.name || tag)}">${esc(tag)}</div>
+      <div class="tb-flag" data-tt="${esc(def.name || tag)}">${flagChip(tag, DEFINES, 28)}<span class="tb-flag-tag">${esc(tag)}</span></div>
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>
         <span class="tb-sub" data-ref="income"></span>
