@@ -9,6 +9,7 @@ import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites } from './realm.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
+import { fleetsDaily, monthlyNavy } from './navy.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -76,6 +77,7 @@ function monthlyBlock(ctx) {
   safe('morale', () => monthlyMoraleRecovery(ctx));
   safe('attrition', () => monthlyAttrition(ctx));
   safe('garrisons', () => monthlyGarrisons(ctx));
+  safe('navy', () => monthlyNavy(ctx));
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
   safe('succession', () => monthlySuccession(ctx));
   safe('integration', () => monthlyIntegration(ctx));
@@ -102,6 +104,7 @@ export function tickDay(ctx) {
   try {
     advanceDate(ctx);
     safe('move', () => moveArmiesDaily(ctx));
+    safe('fleets', () => fleetsDaily(ctx));
     safe('battles', () => tickBattles(ctx));
     safe('sieges', () => tickSieges(ctx));
     safe('dateEvents', () => checkDateEvents(ctx));

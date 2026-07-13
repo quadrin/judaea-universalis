@@ -73,7 +73,7 @@ export function armiesInProv(ctx, provId) {
   const out = [];
   for (const id in ctx.game.armies) {
     const a = ctx.game.armies[id];
-    if (a && a.prov === provId) out.push(a);
+    if (a && a.prov === provId && !a.aboard) out.push(a); // aboard = at sea, out of land play
   }
   return out;
 }
@@ -300,7 +300,7 @@ export function addWarExhaustion(ctx, tag, amt) {
 export function engageIfNeeded(ctx, army) {
   try {
     const g = ctx.game;
-    if (!army || !g.armies[army.id] || army.retreating || num(army.shatteredDays) > 0) return;
+    if (!army || !g.armies[army.id] || army.retreating || army.aboard || num(army.shatteredDays) > 0) return;
     const pid = army.prov;
     let b = null;
     for (const bb of g.battles) if (bb.prov === pid) { b = bb; break; }
@@ -545,7 +545,7 @@ export function moveArmiesDaily(ctx) {
   const g = ctx.game;
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
-    if (!a || a.inBattle) continue;
+    if (!a || a.inBattle || a.aboard) continue;
     if (num(a.shatteredDays) > 0) {
       a.shatteredDays--;
       // Recovery is an engagement trigger: without this, co-located hostiles
@@ -659,6 +659,9 @@ function siegeDay(ctx, p) {
         }
       }
       const engineer = besiegers.some((a) => a.general && Array.isArray(a.general.traits) && a.general.traits.indexOf('engineer') >= 0);
+      const blockaded = Object.values(ctx.game.fleets || {}).some((f) =>
+        f && f.prov === p.id && f.ships > 0 && sameSide(ctx, f.tag, s.by));
+      if (blockaded) s.progress += 0.5; // nothing enters the harbor
       s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1)
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;

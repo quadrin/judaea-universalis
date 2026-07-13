@@ -38,6 +38,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tags: {},
     provinces: [null],
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
+    fleets: {}, nextFleetId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     rngSeed,
@@ -1270,6 +1271,8 @@ export function reviveGame(saved) {
   saved.pendingEvents = saved.pendingEvents.filter((pe) => !(pe && String(pe.eventId).startsWith('dyn_')));
   if (!saved.firedEvents) saved.firedEvents = {};
   if (!saved.battles) saved.battles = [];
+  if (!saved.fleets) saved.fleets = {};
+  if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.wars) saved.wars = [];
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
