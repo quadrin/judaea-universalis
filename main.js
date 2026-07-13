@@ -22,6 +22,7 @@ import { initGame, makeCtx, gameActions, reviveGame, SAVE_VERSION } from './js/s
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
+import { createLobby } from './js/ui/lobby.js';
 
 async function boot() {
   const issues = validateMapData();
@@ -65,16 +66,156 @@ async function boot() {
   const fmtYr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
 
   let activeEntry = BOOKMARKS[0];
-  function startGame(game, entry) {
+  function startGame(game, entry, wrapActions) {
     activeEntry = entry;
     ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark, events: entry.events });
     actions = gameActions(ctx);
+    if (wrapActions) actions = wrapActions(actions);
     ui.bindGame(ctx, actions);
     const jer = ctx.prov('Jerusalem');
     if (jer) camera.centerOn(jer.x, jer.y, 1.8);
     colorsDirty = true;
-    window._ctx = ctx; // debug handle
+    window._ctx = ctx; // debug handles
+    window._actions = actions;
   }
+
+  // ------------------------------------------------------------ multiplayer --
+  // No lobby server (the game is a static site): the host's browser IS the
+  // server. Host runs the sim and broadcasts snapshots; guests mirror the
+  // world, run read-only queries locally, and send their orders as commands
+  // that the host executes under the guest's chair (playerTag swap).
+  const mp = { role: null, guests: [], peer: null, myTag: null, lastSnapAt: 0, snapDirty: false };
+  const MP_QUERY_RE = /^(get|explain|can|evaluate)/;
+  window._mp = mp; // debug/test handle
+
+  function hostRunGuestCommand(guest, m) {
+    if (!ctx || !actions || !m || typeof m.name !== 'string') return;
+    if (MP_QUERY_RE.test(m.name) || typeof actions[m.name] !== 'function') return;
+    const g = ctx.game;
+    const prevTag = g.playerTag;
+    const captured = [];
+    const origEmit = bus.emit.bind(bus);
+    // While a guest's order runs, its toasts belong to the guest, not our screen.
+    bus.emit = (ev, payload) => {
+      if (ev === 'notify') { captured.push(payload || {}); return; }
+      return origEmit(ev, payload);
+    };
+    g.playerTag = guest.tag;
+    try {
+      actions[m.name](...(Array.isArray(m.args) ? m.args : []));
+    } catch (e) {
+      console.warn('[mp] guest command failed:', m.name, e);
+    } finally {
+      g.playerTag = prevTag;
+      bus.emit = origEmit;
+    }
+    if (captured.length) guest.peer.send({ t: 'toast', items: captured });
+    mp.snapDirty = true;
+    colorsDirty = true;
+  }
+
+  function mpBindHost(guests) {
+    mp.role = 'host';
+    mp.guests = guests;
+    for (const guest of guests) {
+      guest.peer.setHandlers({
+        onMessage: (m) => { if (m && m.t === 'cmd') hostRunGuestCommand(guest, m); },
+        onClose: () => {
+          const i = mp.guests.indexOf(guest);
+          if (i >= 0) mp.guests.splice(i, 1);
+          // hand the nation back to the AI unless another guest shares it
+          const stillHuman = (t) => t === ctx.game.playerTag || mp.guests.some((o) => o.tag === t);
+          if (ctx && ctx.game.tags[guest.tag] && !stillHuman(guest.tag)) {
+            ctx.game.tags[guest.tag].ai = true;
+            ctx.game.humanTags = [ctx.game.playerTag].concat(mp.guests.map((o) => o.tag));
+          }
+          bus.emit('notify', { title: 'A player has left', text: 'Their nation reverts to the AI.', type: 'bad' });
+          if (!mp.guests.length) mp.role = null; // the campaign carries on solo
+        },
+      });
+    }
+    // Verdicts carry title/text only on the bus — relay them to the guests.
+    bus.on('gameover', (p) => {
+      if (mp.role === 'host') for (const guest of mp.guests) guest.peer.send({ t: 'over', p: p || {} });
+    });
+  }
+
+  function mpApplySnapshot(snapGame) {
+    if (!ctx || !snapGame || typeof snapGame !== 'object') return;
+    const g = ctx.game;
+    const prev = { d: g.date.d, m: g.date.m, y: g.date.y };
+    const keepUi = g.ui;
+    for (const k of Object.keys(g)) delete g[k];
+    Object.assign(g, snapGame);
+    g.ui = keepUi;               // selections are ours, not the host's
+    g.playerTag = mp.myTag;      // our chair (snapshots carry the host's)
+    colorsDirty = true;
+    if (prev.d !== g.date.d || prev.m !== g.date.m || prev.y !== g.date.y) {
+      bus.emit('day', { date: { ...g.date } });
+      if (prev.m !== g.date.m || prev.y !== g.date.y) bus.emit('month', { date: { ...g.date } });
+    }
+  }
+
+  function startMultiplayerHost(entry, hostTag, guests) {
+    const game = initGame({
+      DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
+      playerTag: hostTag, rngSeed: (Date.now() % 2147483647) || 1,
+    });
+    game.humanTags = [hostTag].concat(guests.map((g) => g.tag))
+      .filter((t, i, a) => a.indexOf(t) === i);
+    for (const t of game.humanTags) if (game.tags[t]) game.tags[t].ai = false;
+    document.getElementById('start-screen').classList.add('hidden');
+    startGame(game, entry);
+    mpBindHost(guests);
+    const json = JSON.stringify(game);
+    for (const g of guests) {
+      g.peer.send({ t: 'start', bookmarkId: entry.bookmark.id, yourTag: g.tag, game: json });
+    }
+    bus.emit('notify', {
+      title: 'The campaign begins',
+      text: guests.length + (guests.length === 1 ? ' player has' : ' players have') + ' joined your world.',
+      type: 'good',
+    });
+  }
+
+  function startMultiplayerGuest(entry, myTag, gameJson, peer) {
+    let game = null;
+    try { game = JSON.parse(gameJson); } catch (e) { console.warn('[mp] bad start payload', e); return; }
+    game.playerTag = myTag;
+    mp.role = 'guest';
+    mp.peer = peer;
+    mp.myTag = myTag;
+    document.getElementById('start-screen').classList.add('hidden');
+    // Orders leave for the host; questions are answered from the local mirror.
+    startGame(game, entry, (local) => {
+      const out = {};
+      for (const k of Object.keys(local)) {
+        out[k] = MP_QUERY_RE.test(k)
+          ? local[k]
+          : (...args) => { mp.peer.send({ t: 'cmd', name: k, args }); };
+      }
+      return out;
+    });
+    peer.setHandlers({
+      onMessage: (m) => {
+        if (!m) return;
+        if (m.t === 'snap') mpApplySnapshot(m.game);
+        else if (m.t === 'toast') for (const p of m.items || []) bus.emit('notify', p || {});
+        else if (m.t === 'over') { ctx.game.over = true; bus.emit('gameover', m.p || {}); }
+      },
+      onClose: () => {
+        if (ctx) ctx.game.paused = true;
+        bus.emit('notify', { title: 'Connection lost', text: 'The host is gone. The world stands frozen where it was.', type: 'bad' });
+      },
+    });
+  }
+
+  const lobby = createLobby({
+    DEFINES,
+    bookmarks: BOOKMARKS,
+    onHostStart: startMultiplayerHost,
+    onGuestStart: startMultiplayerGuest,
+  });
   function doSave(silent) {
     if (!ctx) return;
     try {
@@ -141,7 +282,7 @@ async function boot() {
     label: (savedTag ? savedTag.name : saved.game.playerTag) + ', '
       + (DEFINES.MONTH_NAMES[saved.game.date.m - 1] || saved.game.date.m) + ' ' + fmtYr(saved.game.date.y),
     onContinue: () => startGame(saved.game, saved.entry),
-  } : null, saveTools);
+  } : null, saveTools, () => lobby.open());
 
   camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;
@@ -167,7 +308,8 @@ async function boot() {
       const dt = Math.min(100, now - last);
       last = now;
       camera.update(dt);
-      if (ctx && !ctx.game.paused && !ctx.game.over) {
+      // Guests never tick: the host's snapshots are the only source of time.
+      if (ctx && mp.role !== 'guest' && !ctx.game.paused && !ctx.game.over) {
         acc += dt;
         const msPerDay = DEFINES.SPEED_MS[ctx.game.speed] || 450;
         let guard = 0;
@@ -175,10 +317,20 @@ async function boot() {
           acc -= msPerDay;
           tickDay(ctx);
           colorsDirty = true;
+          mp.snapDirty = true;
           if (ctx.game.paused || ctx.game.over) { acc = 0; break; }
         }
       } else {
         acc = 0;
+      }
+      // Host: broadcast the world — promptly when dirty, and as a slow
+      // heartbeat so pause/speed changes reach guests even between ticks.
+      if (mp.role === 'host' && ctx && mp.guests.length
+          && (mp.snapDirty ? now - mp.lastSnapAt > 250 : now - mp.lastSnapAt > 1200)) {
+        mp.lastSnapAt = now;
+        mp.snapDirty = false;
+        const snap = { t: 'snap', game: ctx.game };
+        for (const g of mp.guests) g.peer.send(snap);
       }
       if (colorsDirty && ctx) {
         const res = computeMapmodeColors(ctx, mapmode);

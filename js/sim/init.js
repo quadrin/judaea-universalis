@@ -30,6 +30,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
   const game = {
     bookmarkId: (bookmark && bookmark.id) || '66ce',
     playerTag,
+    humanTags: [playerTag], // multiplayer adds guest tags; every human tag has ai:false
     over: false, result: null,
     date: { y: start.y, m: start.m, d: start.d },
     speed: 2, paused: true,
@@ -1170,7 +1171,11 @@ export function reviveGame(saved) {
     if (t.heir === undefined) t.heir = null;
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
+    // A save written mid-multiplayer leaves guest nations human (ai:false).
+    // Loading is always a solo continuation: everyone but the player is AI again.
+    t.ai = k !== saved.playerTag;
   }
+  saved.humanTags = [saved.playerTag]; // multiplayer roster never survives a reload
   for (let i = 1; i < saved.provinces.length; i++) {
     const p = saved.provinces[i];
     if (p && p.conversion === undefined) p.conversion = null;
