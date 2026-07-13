@@ -203,12 +203,20 @@ WebGL2, single fullscreen-quad main pass each frame + one-time generation passes
    colorB) + flags texture + owner-index texture (R = owner tag index, for border class).
    - **Fill:** colorA over terrain-tinted relief; NW light `normalize(vec3(-0.5,-0.7,0.6))`,
      normals from height gradient (offset samples).
+   - **Border melt (v1.7):** the ID lookup coordinate gets a static fbm wobble
+     (`JITTER_AMP` ≈ 1.35 texels, wavelength ≈ 5 texels) before `texelFetch`, so the
+     NEAREST staircase reads as a hand-inked organic line. Wobbled fragments that land on
+     id 0 inside the coastline paint `COAST_SAND` beach instead of sea.
+   - **Terrain grain (v1.7):** an `(N+1)×1` R8 lookup maps id → terrain class; per-class
+     procedural detail (dune bands, craggy ridges, rolling hills, field patches, reed
+     bands, speckle) modulates the land color, fading in past parchment zoom.
    - **Borders:** compare id to +1px x/y texels → province border (thin, dark 35%); if owner
      index differs → country border (2px, darker). Border strength ↑ in paper mode.
    - **Stripes/hatch** for flags bits (screen-space 45° stripes, 8px period).
    - **Selected:** brighten fill + pulsing rim (uTime).
    - **Sea:** deep→shallow gradient via land-mask high-LOD mip, faint animated noise; paper
-     mode → flat parchment-blue with darker coast line.
+     mode → flat parchment-blue with darker coast line. A breathing foam line brightens the
+     water just offshore (land-mask band × animated fbm), gone in paper mode (v1.7).
    - **Rivers:** darken/tint where decor alpha > 0.
    - **Paper mode:** desaturate & lift colors toward parchment `#e8dcc0`, kill relief except
      faint hillshade, boost borders, add paper-grain noise (hash of map coords).
@@ -257,14 +265,22 @@ Returns `{primary, secondary, flags, params:{relief, flat}}` sized (N+1). Modes:
 ### 5.5 `overlay.js` — `export function createOverlay(canvas, geom, MAP_DATA, DEFINES)`
 
 ```js
-{ draw(game, camera, timeMs), hitTestArmy(sx, sy, game, camera) -> armyId|null }
+{ draw(game, camera, timeMs, dayFrac),
+  hitTestArmy(sx, sy, game, camera) -> armyId|null,
+  hitTestBattle(sx, sy, game, camera) -> provId|0 }   // battle-disc click (v1.7)
 ```
 2D canvas, cleared each frame, sized like main canvas, `pointer-events:none` (CSS: ui agent).
-Draws (map→screen via camera): army chips (rounded rect in tag color, white regiment count
-"12k", tiny morale bar, gold ring if selected — read `game.ui.selectedArmy`), movement arrows
-(path polyline through centroids, arrowhead), battle icon (⚔ on white disc) where
-`game.battles` live, siege icon (tower glyph + progress arc) on besieged provinces, gold ✦ on
-wonder provinces when zoom > 1.5. Cull off-screen. Hit test = chip rects, topmost first.
+Draws (map→screen via camera): army standards (pole + swallow-tailed pennant in the tag
+color, white men count "12k", tiny morale bar, gold outline if selected — read
+`game.ui.selectedArmy`; the cloth ripples while marching, gold finial marks a general),
+movement arrows (path polyline through centroids, arrowhead), battle icon (⚔ on white disc,
+rocking with an expanding ripple ring and sparks) where `game.battles` live, siege icon
+(tower glyph + progress arc + rising smoke) on besieged provinces, gold ✦ on wonder
+provinces when zoom > 1.5. Cull off-screen. Hit test = chip rects, topmost first.
+**Marching interpolation (v1.7):** mid-hop armies slide from their province centroid toward
+`path[0]` by `(hopTotal − moveDaysLeft + dayFrac) / hopTotal` (`hopTotal` is stamped by
+`moveArmiesDaily` when a hop begins; `dayFrac` is main.js's sub-day accumulator fraction).
+Chips, arrows and picking all share the interpolated position.
 
 ### 5.6 `labels.js` — `export function createLabels(el, MAP_DATA, geom)`
 
@@ -778,3 +794,30 @@ renderer.render → overlay.draw → labels.update.
   of Holies. Victory: unify the kingdom and hold Jerusalem free by 60 BCE (180), as a
   Roman client (100), beat Rome's intervention at +40 warscore (200); the book closes at
   55 BCE either way.
+
+## 17. v1.7: the beautiful war — graphics upgrade & battle window
+
+- **Smooth borders** (renderer.js FS_MAIN): a static sub-texel fbm wobble on the ID-texture
+  lookup melts the NEAREST staircase into hand-inked organic border lines; wobbled id-0
+  fragments inside the coastline become `COAST_SAND` beaches.
+- **Terrain grain** (renderer.js): id → terrain-class R8 lookup (unit 7) drives per-class
+  procedural detail under the relief light — dune bands (desert), craggy ridges (mountains),
+  rolling lumps (hills), soft field patches (farmland), reed bands (marsh), speckle
+  (coast/steppe/drylands). Fades in past parchment zoom, off in flat mapmodes.
+- **Coastal foam** (renderer.js): a breathing bright line just offshore, animated by uTime.
+- **Marching armies** (military.js + overlay.js + main.js): `moveArmiesDaily` stamps
+  `army.hopTotal` when a hop begins; the overlay interpolates chips/arrows/picking along the
+  hop by whole days plus the frame loop's sub-day fraction (`overlay.draw(..., dayFrac)`).
+  Armies now walk the map instead of teleporting per province.
+- **Army standards** (overlay.js): rounded-rect chips became pole-and-pennant standards in
+  the tag color — rippling cloth while marching, gold finial when a general leads, unchanged
+  hit boxes.
+- **Combat FX** (overlay.js): battles pulse an expanding ripple ring, rock the crossed
+  swords and fling sparks; sieges breathe rising smoke wisps.
+- **Battle window** (`#battle-modal`, action `getBattleInfo(provId)` → `military.js
+  battleInfo`): opened from the outliner battle row or by clicking the battle disc on the
+  map (`overlay.hitTestBattle` → mapclick payload `battleProv`). Shows the day, fire/shock
+  phase, terrain (+def die), both hosts army by army with morale bars and generals, the
+  day's dice (`battle.last`, stamped each `battleRound`) and the running butcher's bill
+  (`battle.casAtk/casDef`). Re-renders on each game day; closes itself when the field falls
+  silent; Escape closes it first.

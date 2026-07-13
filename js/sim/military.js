@@ -429,6 +429,10 @@ function battleRound(ctx, b) {
   const casOnDef = casualtiesInflicted(A, D, rollA, rollD);
   const mdOnAtk = moraleDamage(D, A, rollD, rollA);
   const mdOnDef = moraleDamage(A, D, rollA, rollD);
+  // Battle-window feed: yesterday's dice and the running butcher's bill.
+  b.last = { phase, rollA, rollD };
+  b.casAtk = num(b.casAtk) + casOnAtk;
+  b.casDef = num(b.casDef) + casOnDef;
   applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
   applySideDamage(def, D.men, casOnDef, mdOnDef);
   for (const a of atk.concat(def)) if (a.men <= 0) removeArmy(ctx, a.id);
@@ -482,6 +486,60 @@ export function tickBattles(ctx) {
   }
 }
 
+// Everything the battle window shows: per-army rows, side totals, yesterday's
+// dice, terrain, and which side (if any) is the player's. Read-only.
+export function battleInfo(ctx, provId) {
+  const g = ctx.game;
+  const b = (g.battles || []).find((x) => x && x.prov === provId);
+  if (!b) return null;
+  const p = ctx.byId(provId);
+  const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
+  const me = g.playerTag;
+  const side = (key) => {
+    const armies = battleSideArmies(ctx, b, key);
+    let men = 0, mw = 0, pipF = 0, pipS = 0;
+    const rows = [];
+    const tags = [];
+    for (const a of armies) {
+      men += a.men;
+      mw += num(a.morale) * a.men;
+      if (a.general) { pipF = Math.max(pipF, num(a.general.fire)); pipS = Math.max(pipS, num(a.general.shock)); }
+      if (tags.indexOf(a.tag) < 0) tags.push(a.tag);
+      rows.push({
+        id: a.id, tag: a.tag, name: a.name || ('Army ' + a.id),
+        men: a.men,
+        inf: (a.regiments && a.regiments.inf) || 0,
+        cav: (a.regiments && a.regiments.cav) || 0,
+        morale: num(a.morale), maxMorale: Math.max(0.01, num(a.maxMorale, 1)),
+        general: a.general ? {
+          name: a.general.name,
+          fire: num(a.general.fire), shock: num(a.general.shock), maneuver: num(a.general.maneuver),
+        } : null,
+      });
+    }
+    return {
+      armies: rows, tags, men,
+      morale: men > 0 ? mw / men : 0,
+      pips: { fire: pipF, shock: pipS },
+      casualties: Math.round(num(key === 'atk' ? b.casAtk : b.casDef)),
+      isMine: tags.some((t) => t === me || sameSide(ctx, me, t)),
+    };
+  };
+  const atk = side('atk');
+  const def = side('def');
+  return {
+    prov: provId,
+    provName: p ? p.name : '#' + provId,
+    terrain: terr ? terr.name : ((p && p.terrain) || ''),
+    defBonus: terr ? num(terr.defBonus, 0) : 0,
+    day: b.day,
+    phase: b.last ? b.last.phase : 'fire', // round 1 opens with fire
+    last: b.last ? { ...b.last } : null,
+    atk, def,
+    playerSide: atk.isMine ? 'atk' : (def.isMine ? 'def' : null),
+  };
+}
+
 // ---------------------------------------------------------------- movement
 export function moveArmiesDaily(ctx) {
   const g = ctx.game;
@@ -498,7 +556,7 @@ export function moveArmiesDaily(ctx) {
       if (a.retreating) a.retreating = false;
       continue;
     }
-    if (a.moveDaysLeft <= 0) a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0]);
+    if (a.moveDaysLeft <= 0) { a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0]); a.hopTotal = a.moveDaysLeft; }
     a.moveDaysLeft--;
     if (a.moveDaysLeft > 0) continue;
     const next = a.path[0];

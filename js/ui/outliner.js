@@ -2,7 +2,7 @@
 import { esc, fmtMen, signed, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onWarClick }) {
+export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick }) {
   let ctx = null;
   let actions = null;
   let body = null;
@@ -49,6 +49,11 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     const wr = e.target.closest('[data-war]');
     if (wr) {
       if (onWarClick) onWarClick(wr.dataset.war);
+      return;
+    }
+    const bt = e.target.closest('[data-battle]');
+    if (bt) {
+      if (onBattleClick) onBattleClick(Number(bt.dataset.battle));
       return;
     }
     const ar = e.target.closest('[data-army]');
@@ -132,7 +137,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       html += `<div class="ol-sec">Battles <span class="ol-count">${battles.length}</span></div>`;
       for (const b of battles) {
         html += `
-          <div class="ol-row ol-battle" data-prov="${b.prov}" data-tt="Click to view battle">
+          <div class="ol-row ol-battle" data-battle="${b.prov}" data-tt="Click to open the battle window">
             <span class="ol-name">${icon('swords', 'icon-row')} ${esc(provName(g, b.prov))}</span>
             <span class="ol-sub">day ${b.day || 0}</span>
           </div>`;

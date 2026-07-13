@@ -161,6 +161,14 @@ export function initUI(staticCtx) {
       if (p) setSelectedProv(provId);
       closeOutlinerDrawer(); // jumped to the map: get the drawer out of the way
     },
+    onBattleClick(provId) {
+      const g = state.ctx && state.ctx.game;
+      if (!g) return;
+      const p = g.provinces[provId];
+      if (p && camera) camera.centerOn(p.x, p.y);
+      closeOutlinerDrawer();
+      openBattleWindow(provId);
+    },
   });
   const eventModal = createEventModal(els.eventModal);
   const gameover = createGameoverModal(els.gameoverModal, () => {
@@ -372,6 +380,83 @@ export function initUI(staticCtx) {
     try { return flagChip(tag, DEFINES, 15); } catch (e) { return ''; }
   }
 
+  // ---------------------------------------------------------- battle window --
+  // A live view of one field battle: the day's dice, both hosts army by army,
+  // morale draining, and the running butcher's bill. Re-rendered each game day.
+  let battleEl = null;
+  let battleProvOpen = 0;
+  function closeBattleWindow() {
+    battleProvOpen = 0;
+    if (battleEl) battleEl.classList.add('hidden');
+  }
+  function battleWindowOpen() { return !!battleEl && !battleEl.classList.contains('hidden'); }
+  function openBattleWindow(provId) {
+    const actions = state.actions;
+    if (!actions || typeof actions.getBattleInfo !== 'function') return;
+    let info = null;
+    try { info = actions.getBattleInfo(provId); } catch (e) { warnOnce('getBattleInfo', e); }
+    if (!info) return;
+    battleProvOpen = provId;
+    if (!battleEl) {
+      battleEl = document.createElement('div');
+      battleEl.id = 'battle-modal';
+      document.getElementById('ui-root').appendChild(battleEl);
+    }
+    const moraleBar = (m, mx) => {
+      const pct = Math.round(Math.max(0, Math.min(100, (m / Math.max(0.01, mx)) * 100)));
+      return `<span class="morale bw-morale"><span class="morale-fill" style="width:${pct}%"></span></span>`;
+    };
+    const armyRow = (a) => {
+      const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
+      return `
+      <div class="bw-army" data-tt="${esc(`${a.name} — ${a.inf} infantry, ${a.cav} cavalry\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
+        <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag)} ${esc(a.name)}</span>
+        <span class="bw-men">${fmtMen(a.men)}</span>
+        ${moraleBar(a.morale, a.maxMorale)}
+      </div>`;
+    };
+    const sideBlock = (s, key) => {
+      const roll = info.last ? (key === 'atk' ? info.last.rollA : info.last.rollD) : null;
+      const dieTT = key === 'def'
+        ? 'The day’s battle die: d10 + the best general’s pips + terrain'
+        : 'The day’s battle die: d10 + the best general’s pips';
+      return `
+      <div class="bw-side${s.isMine ? ' bw-mine' : ''}">
+        <div class="bw-side-head">${key === 'atk' ? 'Attackers' : 'Defenders'}${s.isMine ? ' <span class="bw-us">— our side</span>' : ''}</div>
+        <div class="bw-die-row">
+          <span class="bw-die${roll == null ? ' bw-die-none' : ''}" data-tt="${esc(roll == null ? 'No round fought yet' : dieTT)}">${roll == null ? '—' : roll}</span>
+          <span class="bw-total">${fmtMen(s.men)} men · morale ${s.morale.toFixed(1)}</span>
+        </div>
+        <div class="bw-armies">${s.armies.map(armyRow).join('')}</div>
+        <div class="bw-cas" data-tt="Casualties suffered in this battle so far">Fallen: ${fmtMen(s.casualties)}</div>
+      </div>`;
+    };
+    const phaseHtml = info.phase === 'fire'
+      ? icon('flame', 'icon-sm') + ' fire phase'
+      : icon('swords', 'icon-sm') + ' shock phase';
+    battleEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card bw-card">
+        <h2 class="peace-title">Battle of ${esc(info.provName)}</h2>
+        <div class="peace-dim bw-meta">Day ${info.day} · ${phaseHtml} · ${esc(info.terrain)}${info.defBonus ? ` <span data-tt="Terrain adds +${info.defBonus} to the defender’s die">(+${info.defBonus} def)</span>` : ''}</div>
+        <div class="bw-sides">
+          ${sideBlock(info.atk, 'atk')}
+          ${sideBlock(info.def, 'def')}
+        </div>
+        <button class="btn peace-cancel">Close</button>
+      </div>`;
+    battleEl.classList.remove('hidden');
+    battleEl.querySelector('.peace-cancel').addEventListener('click', closeBattleWindow);
+    battleEl.querySelector('.modal-scrim').addEventListener('click', closeBattleWindow);
+  }
+  function refreshBattleWindow() {
+    if (!battleWindowOpen()) return;
+    const g = state.ctx && state.ctx.game;
+    const still = g && (g.battles || []).some((b) => b && b.prov === battleProvOpen);
+    if (still) openBattleWindow(battleProvOpen);
+    else closeBattleWindow(); // the toast announces the outcome
+  }
+
   // ------------------------------------------------------------------ ledger --
   let ledgerEl = null;
   let ledgerSort = 'dev';
@@ -484,6 +569,11 @@ export function initUI(staticCtx) {
       // Foreign army: fall through to the province underneath.
     }
     if (grouping) return; // shift/group taps on terrain don't drop a built-up group
+    if (payload && payload.battleProv) {
+      setSelectedArmy(null);
+      openBattleWindow(payload.battleProv);
+      return;
+    }
     if (provId > 0) {
       setSelectedArmy(null);
       setSelectedProv(provId);
@@ -518,6 +608,7 @@ export function initUI(staticCtx) {
       try { state.actions.setSpeed(Number(e.key)); } catch (err) { warnOnce('setSpeed', err); }
       topbar.refresh();
     } else if (e.key === 'Escape') {
+      if (battleWindowOpen()) { closeBattleWindow(); return; }
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
       if (warOverviewOpen()) { closeWarOverview(); return; }
       if (ledgerOpen()) { closeLedger(); return; }
@@ -651,6 +742,7 @@ export function initUI(staticCtx) {
       panel.refresh();
       nationPanel.refresh();
       updatePill();
+      refreshBattleWindow();
     }));
     bus.on('pause', safe('pause', () => topbar.refresh()));
     bus.on('speed', safe('speed', () => topbar.refresh()));

@@ -52,16 +52,6 @@ function fmtMen(men) {
   return (k >= 9.95 ? Math.round(k) : Math.round(k * 10) / 10) + 'k';
 }
 
-function roundRect(x2, x, y, w, h, r) {
-  x2.beginPath();
-  x2.moveTo(x + r, y);
-  x2.arcTo(x + w, y, x + w, y + h, r);
-  x2.arcTo(x + w, y + h, x, y + h, r);
-  x2.arcTo(x, y + h, x, y, r);
-  x2.arcTo(x, y, x + w, y, r);
-  x2.closePath();
-}
-
 export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   const x2 = canvas.getContext('2d');
 
@@ -87,6 +77,23 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       [110, 110, 110];
   }
 
+  // Marching interpolation: sim positions are per-province; mid-hop armies slide
+  // toward path[0] by whole days marched plus the frame loop's sub-day fraction.
+  // curDayFrac is set once per draw() so hitTestArmy always agrees with the pixels.
+  let curDayFrac = 0;
+  function armyMapPos(a) {
+    const c = geom.centroids[a.prov];
+    if (!c) return null;
+    if (a.inBattle || !Array.isArray(a.path) || !a.path.length) return c;
+    const total = a.hopTotal || 0;
+    const left = a.moveDaysLeft || 0;
+    if (total <= 0 || left <= 0) return c;
+    const n = geom.centroids[a.path[0]];
+    if (!n) return c;
+    const f = Math.min(1, Math.max(0, (total - left + curDayFrac) / total));
+    return { x: c.x + (n.x - c.x) * f, y: c.y + (n.y - c.y) * f };
+  }
+
   // Shared by draw() and hitTestArmy() so picking always matches the pixels.
   // Returns chips in draw order (bottom -> top), positions in CSS px.
   function chipList(game, camera) {
@@ -98,7 +105,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const vw = camera.viewport.w;
     const vh = camera.viewport.h;
     for (const a of armies) {
-      const c = geom.centroids[a.prov];
+      const c = armyMapPos(a);
       if (!c) continue;
       const stack = perProv.get(a.prov) || 0;
       perProv.set(a.prov, stack + 1);
@@ -119,7 +126,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const path = a.path;
     if (!Array.isArray(path) || path.length === 0) return;
     const pts = [];
-    const start = geom.centroids[a.prov];
+    const start = armyMapPos(a); // line begins at the marching position, not the province seat
     if (start) pts.push(camera.mapToScreen(start.x, start.y));
     for (const pid of path) {
       const c = geom.centroids[pid];
@@ -148,7 +155,16 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.fill();
   }
 
-  function drawSiege(sx, sy, siege) {
+  function drawSiege(sx, sy, siege, timeMs) {
+    const t = (timeMs || 0) * 0.001;
+    // rising smoke wisps behind the disc
+    for (let i = 0; i < 2; i++) {
+      const p = (t * 0.35 + i * 0.5) % 1;
+      x2.fillStyle = `rgba(90,80,70,${((1 - p) * 0.35).toFixed(3)})`;
+      x2.beginPath();
+      x2.arc(sx + 6 + Math.sin((p + i) * 5) * 2.5, sy - 9 - p * 15, 2 + p * 3.5, 0, Math.PI * 2);
+      x2.fill();
+    }
     x2.fillStyle = '#e8dcc0';
     x2.strokeStyle = '#6b5a33';
     x2.lineWidth = 1.5;
@@ -175,7 +191,15 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  function drawBattle(sx, sy) {
+  function drawBattle(sx, sy, timeMs) {
+    const t = (timeMs || 0) * 0.001;
+    // expanding ripple ring — reads as "fighting here" even zoomed far out
+    const rp = (t % 1.4) / 1.4;
+    x2.strokeStyle = `rgba(190,60,40,${((1 - rp) * 0.55).toFixed(3)})`;
+    x2.lineWidth = 2;
+    x2.beginPath();
+    x2.arc(sx, sy, 12 + rp * 14, 0, Math.PI * 2);
+    x2.stroke();
     x2.fillStyle = '#f4efe2';
     x2.strokeStyle = '#7a1a12';
     x2.lineWidth = 1.5;
@@ -183,58 +207,111 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.arc(sx, sy, 12, 0, Math.PI * 2);
     x2.fill();
     x2.stroke();
-    // crossed swords glyph on the disc
+    // crossed swords glyph, rocking with the clash
     x2.save();
     x2.translate(sx, sy);
+    x2.rotate(Math.sin(t * 7.3) * 0.12);
     x2.strokeStyle = '#7a1a12';
     x2.lineWidth = 1.6;
     x2.lineCap = 'round';
     x2.lineJoin = 'round';
     x2.stroke(SWORDS_PATH);
     x2.restore();
+    // sparks flung from the melee
+    for (let i = 0; i < 3; i++) {
+      const p = (t * 1.1 + i * 0.37) % 1;
+      const ang = i * 2.094 + Math.floor(t * 1.1 + i * 0.37) * 2.39;
+      const r = 9 + p * 12;
+      x2.fillStyle = `rgba(230,170,60,${((1 - p) * 0.8).toFixed(3)})`;
+      x2.beginPath();
+      x2.arc(sx + Math.cos(ang) * r, sy + Math.sin(ang) * r, 1.5 * (1 - p * 0.5), 0, Math.PI * 2);
+      x2.fill();
+    }
   }
 
-  function drawChip(game, ch) {
+  // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
+  // ripples while marching (and breathes gently at rest); the hit box is
+  // unchanged from the old rounded-rect chips, so picking is unaffected.
+  function drawChip(game, ch, timeMs) {
     const a = ch.army;
     const col = tagColor(game, a.tag);
     const selected = game.ui && (game.ui.selectedArmy === a.id
       || (Array.isArray(game.ui.selectedArmies) && game.ui.selectedArmies.indexOf(a.id) >= 0));
+    const t = (timeMs || 0) * 0.001;
+    const marching = !a.inBattle && Array.isArray(a.path) && a.path.length > 0;
+    const sway = Math.sin(t * (marching ? 5.2 : 1.3) + (a.id || 0) * 1.7) * (marching ? 1.7 : 0.5);
+    const x = ch.x, y = ch.y;
+    const poleX = x + 2.5;
+    const clothX = x + 5;
+    const notch = 7;
+    const cloth = () => {
+      x2.beginPath();
+      x2.moveTo(clothX, y);
+      x2.lineTo(x + ch.w, y + sway * 0.6);
+      x2.lineTo(x + ch.w - notch, y + CHIP_H * 0.5 + sway);
+      x2.lineTo(x + ch.w, y + CHIP_H + sway * 0.6);
+      x2.lineTo(clothX, y + CHIP_H);
+      x2.closePath();
+    };
+
     x2.globalAlpha = a.retreating ? 0.65 : 1;
+
+    // pole reaching down toward the province anchor
+    x2.strokeStyle = 'rgba(30,22,10,0.9)';
+    x2.lineWidth = 1.6;
+    x2.beginPath();
+    x2.moveTo(poleX, y - 3);
+    x2.lineTo(poleX, y + CHIP_H + 9);
+    x2.stroke();
+
     if (selected) {
+      cloth();
       x2.strokeStyle = '#e7c34c';
-      x2.lineWidth = 2.5;
-      roundRect(x2, ch.x - 2, ch.y - 2, ch.w + 4, ch.h + 4, 6);
+      x2.lineWidth = 4;
+      x2.lineJoin = 'round';
       x2.stroke();
     }
-    roundRect(x2, ch.x, ch.y, ch.w, CHIP_H, 4);
-    x2.fillStyle = css(col);
+    cloth();
+    const grad = x2.createLinearGradient(0, y, 0, y + CHIP_H);
+    grad.addColorStop(0, css(col.map((v) => Math.min(255, v + 26))));
+    grad.addColorStop(1, css(col.map((v) => Math.max(0, v - 22))));
+    x2.fillStyle = grad;
     x2.fill();
-    x2.strokeStyle = 'rgba(15,10,5,0.8)';
+    x2.strokeStyle = 'rgba(15,10,5,0.85)';
     x2.lineWidth = 1;
+    x2.lineJoin = 'round';
     x2.stroke();
+
+    // finial: gold when a general carries the standard
+    x2.fillStyle = a.general ? '#e7c34c' : '#8a7a55';
+    x2.beginPath();
+    x2.arc(poleX, y - 4, 2.2, 0, Math.PI * 2);
+    x2.fill();
+
     x2.fillStyle = '#fff';
     x2.font = 'bold 11px Georgia, serif';
     x2.textAlign = 'center';
     x2.textBaseline = 'middle';
     x2.shadowColor = 'rgba(0,0,0,0.6)';
     x2.shadowBlur = 2;
-    x2.fillText(fmtMen(a.men), ch.x + ch.w * 0.5, ch.y + CHIP_H * 0.5 + 0.5);
+    x2.fillText(fmtMen(a.men), (clothX + x + ch.w - notch) * 0.5, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
     x2.shadowBlur = 0;
     // morale bar
     const frac = Math.min(1, Math.max(0, (a.morale || 0) / Math.max(0.01, a.maxMorale || 1)));
     x2.fillStyle = 'rgba(10,8,4,0.85)';
-    x2.fillRect(ch.x + 2, ch.y + CHIP_H, ch.w - 4, MORALE_H);
+    x2.fillRect(clothX, y + CHIP_H, ch.w - (clothX - x) - 4, MORALE_H);
     x2.fillStyle = frac > 0.5 ? '#5da43a' : frac > 0.25 ? '#c9a227' : '#b33a26';
-    x2.fillRect(ch.x + 2, ch.y + CHIP_H, (ch.w - 4) * frac, MORALE_H);
+    x2.fillRect(clothX, y + CHIP_H, (ch.w - (clothX - x) - 4) * frac, MORALE_H);
     x2.globalAlpha = 1;
   }
 
-  function draw(game, camera, timeMs) {
+  function draw(game, camera, timeMs, dayFrac) {
     try {
       const { cw, ch, dpr } = syncSize();
       x2.setTransform(dpr, 0, 0, dpr, 0, 0);
       x2.clearRect(0, 0, cw, ch);
       if (!game) return;
+      curDayFrac = Math.min(1, Math.max(0, dayFrac || 0));
 
       const vw = camera.viewport.w;
       const vh = camera.viewport.h;
@@ -256,7 +333,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (!c) continue;
         if (p.siege) {
           const [sx, sy] = camera.mapToScreen(c.x, c.y);
-          if (onScreen(sx, sy)) drawSiege(sx, sy, p.siege);
+          if (onScreen(sx, sy)) drawSiege(sx, sy, p.siege, timeMs);
         }
         if (showWonders && p.wonder) {
           const [sx, sy] = camera.mapToScreen(c.x, c.y);
@@ -280,15 +357,33 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         const c = b && geom.centroids[b.prov];
         if (!c) continue;
         const [sx, sy] = camera.mapToScreen(c.x, c.y);
-        if (onScreen(sx, sy)) drawBattle(sx, sy);
+        if (onScreen(sx, sy)) drawBattle(sx, sy, timeMs);
       }
 
       // army chips on top
       const chips = chipList(game, camera);
-      for (const chp of chips) drawChip(game, chp);
+      for (const chp of chips) drawChip(game, chp, timeMs);
     } catch (e) {
       warnOnce('draw-throw', 'draw failed', e);
     }
+  }
+
+  // Battle discs are clickable too (opens the battle window). Radius matches
+  // the drawn disc, padded on touch screens like the chips.
+  function hitTestBattle(sx, sy, game, camera) {
+    try {
+      if (!game) return 0;
+      const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
+      for (const b of game.battles || []) {
+        const c = b && geom.centroids[b.prov];
+        if (!c) continue;
+        const [bx, by] = camera.mapToScreen(c.x, c.y);
+        if (Math.hypot(sx - bx, sy - by) <= 13 + pad) return b.prov;
+      }
+    } catch (e) {
+      warnOnce('hitb-throw', 'hitTestBattle failed', e);
+    }
+    return 0;
   }
 
   function hitTestArmy(sx, sy, game, camera) {
@@ -307,5 +402,5 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     return null;
   }
 
-  return { draw, hitTestArmy };
+  return { draw, hitTestArmy, hitTestBattle };
 }

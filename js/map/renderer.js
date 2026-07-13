@@ -22,6 +22,8 @@ const CFG = {
   PAPER_ZOOM_HI: 0.92,   // above this zoom the parchment is gone
   WARP_AMP: 18.0,        // px of domain-warp wobble on province borders
   WARP_FREQ: 0.013,      // noise frequency for the warp
+  JITTER_AMP: 1.35,      // sub-texel sampling wobble (map px) — melts the ID-texture staircase
+  JITTER_FREQ: 0.2,      // wobble wavelength ~5 texels: smooth waves, not per-texel fray
   PRIM_SCALE: 0.62,      // global multiplier on heightPrimitives' h
   DETAIL_AMP: 0.13,      // fbm micro-relief amplitude
   NORMAL_STRENGTH: 26.0, // slope exaggeration for relief lighting
@@ -34,6 +36,7 @@ const CFG = {
   RIVER: [0.23, 0.41, 0.55],
   PARCHMENT: [0.910, 0.863, 0.753], // #e8dcc0
   NEUTRAL_TAN: [212, 199, 170],     // pre-game province fill
+  COAST_SAND: [0.78, 0.72, 0.58],   // id-0 fragments inside the drawn coastline
   SELECT_GOLD: [1.0, 0.90, 0.52],
 };
 
@@ -164,6 +167,7 @@ uniform sampler2D uDecor;
 uniform sampler2D uLookA;
 uniform sampler2D uLookB;
 uniform sampler2D uFlagsTex;
+uniform sampler2D uTerr;
 ${GLSL_NOISE}
 int idAt(ivec2 ip){
   ip = clamp(ip, ivec2(0), ivec2(uMapSize) - 1);
@@ -176,7 +180,11 @@ void main(){
   vec2 map = uOffsetScale.xy + vClip * uOffsetScale.zw;
   vec2 uv = map / uMapSize;
   bool inMap = uv.x >= 0.0 && uv.x < 1.0 && uv.y >= 0.0 && uv.y < 1.0;
-  ivec2 ip = ivec2(clamp(map, vec2(0.0), uMapSize - vec2(1.0)));
+  // Sub-texel wobble on the ID lookup only: melts the NEAREST staircase into an
+  // organic edge. Static in map space (no shimmer); sub-screen-pixel when zoomed out.
+  vec2 jw = vec2(fbm2(map * ${fN(CFG.JITTER_FREQ)}), fbm2(map * ${fN(CFG.JITTER_FREQ)} + vec2(53.1, 91.3)));
+  vec2 jmap = map + (jw - 0.5) * 2.0 * ${fN(CFG.JITTER_AMP)};
+  ivec2 ip = ivec2(clamp(jmap, vec2(0.0), uMapSize - vec2(1.0)));
   int id = inMap ? idAt(ip) : 0;
   float land = inMap ? texture(uLand, uv).r : 0.0;
   float coarse = inMap ? textureLod(uLand, uv, 4.5).r : 0.0;
@@ -184,6 +192,7 @@ void main(){
 
   // ---- fill (mapmode lookup + stripes/hatch) ----
   vec3 fill = texelFetch(uLookA, ivec2(id, 0), 0).rgb;
+  if (id == 0) fill = vec3(${f3(CFG.COAST_SAND)}); // jitter can land just past the coastline: beach, not black
   vec3 fillB = texelFetch(uLookB, ivec2(id, 0), 0).rgb;
   float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
   float stripeMix = ((flags & 4) != 0) ? (0.5 + 0.5 * pulse) : 0.92;
@@ -215,6 +224,28 @@ void main(){
   vec3 tinted = mix(fill, fill * vec3(0.93, 0.87, 0.78) + vec3(0.05), smoothstep(0.45, 0.95, h) * rs * 0.65);
   vec3 landCol = tinted * shade;
 
+  // ---- terrain grain (per-province class, fades in past parchment zoom) ----
+  float dfade = (1.0 - uPaper) * smoothstep(0.85, 1.7, uZoom) * (1.0 - 0.8 * uFlat);
+  if (id != 0 && dfade > 0.003) {
+    int tc = int(texelFetch(uTerr, ivec2(id, 0), 0).r * 255.0 + 0.5);
+    float d = 0.0;
+    if (tc == 5) {              // desert: wind-banded dunes
+      float band = sin(map.x * 0.55 + map.y * 0.22 + fbm2(map * 0.05) * 6.0);
+      d = band * (0.3 + 0.7 * fbm2(map * 0.11)) * 0.6;
+    } else if (tc == 4) {       // mountains: craggy ridged noise
+      d = (1.0 - abs(fbm2(map * 0.10) * 2.0 - 1.0)) - 0.55;
+    } else if (tc == 3) {       // hills: soft rolling lumps
+      d = (fbm2(map * 0.07) - 0.5) * 0.8;
+    } else if (tc == 2) {       // farmland: soft anisotropic field patches
+      d = (vnoise(map * vec2(0.09, 0.16)) - 0.5) * 0.65;
+    } else if (tc == 8) {       // marsh: wavering horizontal reed bands
+      d = sin(map.y * 0.85 + fbm2(map * 0.18) * 5.0) * 0.4 * (fbm2(map * vec2(0.3, 0.08)) - 0.2);
+    } else if (tc != 0) {       // coast/steppe/drylands: light speckle
+      d = (vnoise(map * 0.9) - 0.5) * 0.45;
+    }
+    landCol *= 1.0 + d * 0.16 * dfade;
+  }
+
   // ---- rivers (decor alpha) ----
   float riv = inMap ? texture(uDecor, uv).a : 0.0;
   landCol = mix(landCol, vec3(${f3(CFG.RIVER)}) * (0.65 + 0.35 * shade), riv * 0.8);
@@ -226,6 +257,10 @@ void main(){
   float lm = smoothstep(0.42, 0.58, land);
   float coastEdge = (1.0 - lm) * smoothstep(0.08, 0.42, land);
   seaCol = mix(seaCol, vec3(0.10, 0.16, 0.22), coastEdge * 0.55);
+  // ---- breathing foam line just offshore ----
+  float foam = smoothstep(0.30, 0.42, land) * (1.0 - lm);
+  float fn = fbm2(map * 0.10 + vec2(uTime * 0.12, -uTime * 0.07));
+  seaCol = mix(seaCol, vec3(0.75, 0.82, 0.84), foam * (0.18 + 0.32 * fn) * (1.0 - uPaper));
   vec3 col = mix(seaCol, landCol, lm);
 
   // ---- parchment crossfade ----
@@ -583,6 +618,22 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const lookBTex = lookupTexture(gl.RGBA8);
   const flagsTex = lookupTexture(gl.R8);
 
+  // Static terrain-class lookup (id -> grain style in FS_MAIN; keep indices in sync).
+  const TERRAIN_CLASS = {
+    coast: 1, farmland: 2, hills: 3, mountains: 4, desert: 5,
+    drylands: 6, steppe: 7, marsh: 8, wasteland: 0,
+  };
+  const terrTex = lookupTexture(gl.R8);
+  {
+    const t0 = new Uint8Array(lookW);
+    for (let id = 1; id <= N; id++) {
+      const pr = provinces[id - 1] || {};
+      t0[id] = TERRAIN_CLASS[pr.terrain] || 0;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, terrTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, lookW, 1, 0, gl.RED, gl.UNSIGNED_BYTE, t0);
+  }
+
   function uploadLookups(primary, secondary, flags) {
     gl.bindTexture(gl.TEXTURE_2D, lookATex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, lookW, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, primary.subarray(0, lookW * 4));
@@ -622,7 +673,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.useProgram(mainProg);
     for (const name of ['uOffsetScale', 'uMapSize', 'uTime', 'uZoom', 'uPaper', 'uRelief',
       'uFlat', 'uDpr', 'uSelected', 'uMaxId', 'uId', 'uHeight', 'uLand', 'uDecor',
-      'uLookA', 'uLookB', 'uFlagsTex']) {
+      'uLookA', 'uLookB', 'uFlagsTex', 'uTerr']) {
       U[name] = gl.getUniformLocation(mainProg, name);
     }
     gl.uniform1i(U.uId, 0);
@@ -632,10 +683,11 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.uniform1i(U.uLookA, 4);
     gl.uniform1i(U.uLookB, 5);
     gl.uniform1i(U.uFlagsTex, 6);
+    gl.uniform1i(U.uTerr, 7);
     gl.uniform2f(U.uMapSize, W, H);
     gl.uniform1i(U.uMaxId, N);
   }
-  const texUnits = [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex];
+  const texUnits = [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex, terrTex];
 
   const state = { relief: 1, flat: 0, selected: 0 };
 
