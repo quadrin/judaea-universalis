@@ -135,10 +135,32 @@ async function boot() {
         },
       });
     }
-    // Verdicts carry title/text only on the bus — relay them to the guests.
-    bus.on('gameover', (p) => {
-      if (mp.role === 'host') for (const guest of mp.guests) guest.peer.send({ t: 'over', p: p || {} });
-    });
+    // One realm, shared eyes: everything the host's chair sees goes to the
+    // guests too. Toasts raised by a guest's own command are captured before
+    // they reach the bus, so this never double-sends. Registered once.
+    if (!mp._relaysBound) {
+      mp._relaysBound = true;
+      const toGuests = (msg) => { if (mp.role === 'host') for (const guest of mp.guests) guest.peer.send(msg); };
+      bus.on('gameover', (p) => toGuests({ t: 'over', p: p || {} }));
+      bus.on('notify', (p) => toGuests({ t: 'toast', items: [p || {}] }));
+      // Event cards: guests see the card read-only; effects are functions and
+      // never cross the wire — only the display fields do.
+      bus.on('event', (p) => {
+        if (!p || !p.event) return;
+        const ev = p.event;
+        toGuests({
+          t: 'event',
+          p: {
+            instanceId: p.instanceId,
+            title: ev.title,
+            desc: ev.desc,
+            options: (Array.isArray(ev.options) ? ev.options : [])
+              .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip })),
+          },
+        });
+      });
+      bus.on('eventResolved', (p) => toGuests({ t: 'eventDone', instanceId: p && p.instanceId }));
+    }
   }
 
   function mpApplySnapshot(snapGame) {
@@ -202,6 +224,8 @@ async function boot() {
         if (!m) return;
         if (m.t === 'snap') mpApplySnapshot(m.game);
         else if (m.t === 'toast') for (const p of m.items || []) bus.emit('notify', p || {});
+        else if (m.t === 'event') ui.showRemoteEvent(m.p || {});
+        else if (m.t === 'eventDone') ui.closeRemoteEvent(m.instanceId);
         else if (m.t === 'over') { ctx.game.over = true; bus.emit('gameover', m.p || {}); }
       },
       onClose: () => {

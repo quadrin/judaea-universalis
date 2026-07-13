@@ -837,9 +837,15 @@ renderer.render → overlay.draw → labels.update.
     score reaches **±75** opens to the peace table (`noNegotiation` lifts, `_negOpened`
     guards the once-only notify "Envoys may cross the lines") — total victory in a
     scripted fight-to-the-death war is no longer a dead end.
-  - `helpers.endGame` closes every war the player is in before the verdict card:
-    a win keeps what the sword holds, a loss concedes it, anything else is a white
-    peace — "continue observing" resumes a world at peace.
+  - `helpers.endGame` closes every war the player is in, then decides HOW to tell the
+    player: the full VICTORIA/DEFEAT card appears only when the player's nation is
+    actually dead. A verdict while the nation still stands is *chronicled* — `g.result`
+    is recorded, the game pauses, and a good/bad toast carries the narrative ("…the
+    campaign continues") — sandbox play goes on.
+  - `checkElimination` (military.js, monthly in tick.js) owns the true game-over: when
+    the player's tag dies (`alive === false` — no provinces, no armies) it fires the
+    "Nation Extinguished" card once (`flags._eliminated` survives "continue observing"),
+    ends the player's wars, and sets `g.over`.
 
 - **Stack banners** (`overlay.js`, `main.js`, `ui.js`): same-tag armies sharing a
   province and a hop (same `path[0]` + `moveDaysLeft`) share ONE banner — total men on
@@ -887,6 +893,13 @@ renderer.render → overlay.draw → labels.update.
     — with shared rule the host always does. `reviveGame` resets `ai` from `playerTag`
     and collapses `humanTags` — a save written mid-multiplayer always loads as a solo
     campaign.
-  - **Known v1 limits** (documented, deliberate): the host is the arbiter — event cards
-    open on the host's screen and the host chooses for the realm; there is no reconnect —
-    a dropped guest rejoins via a fresh invite in a new lobby.
+  - **Shared eyes**: the host relays every toast (`{t:'toast'}`), event card
+    (`{t:'event'}` — display fields only, effects never cross the wire), event
+    resolution (`{t:'eventDone'}`) and verdict (`{t:'over'}`) to the guests. Guests see
+    the SAME event card read-only (`createEventModal.showRemote` — disabled options +
+    "The host speaks for the realm…"), and it closes when the host chooses
+    (`closeRemote` on `eventResolved`). Toasts raised by a guest's own command are
+    captured before the bus and routed only to that guest — never double-sent.
+  - **Known v1 limits** (documented, deliberate): the host holds the pen — guests see
+    event cards but the host clicks; there is no reconnect — a dropped guest rejoins
+    via a fresh invite in a new lobby.

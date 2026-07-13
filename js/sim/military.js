@@ -874,6 +874,34 @@ export function updateTagLife(ctx) {
   }
 }
 
+// The only true game-over: the player's nation has ceased to exist — no
+// provinces under its banner and no army in the field. Runs monthly, fires
+// once (the flag survives "continue observing").
+export function checkElimination(ctx) {
+  const g = ctx.game;
+  if (g.over || (g.flags && g.flags._eliminated)) return;
+  const t = g.tags[g.playerTag];
+  if (!t || t.alive !== false) return;
+  if (!g.flags) g.flags = {};
+  g.flags._eliminated = true;
+  g.result = 'loss';
+  g.over = true;
+  g.paused = true;
+  for (const w of g.wars.slice()) {
+    const onAtt = w.attackers.indexOf(g.playerTag) >= 0;
+    if (!onAtt && w.defenders.indexOf(g.playerTag) < 0) continue;
+    endWarBySword(ctx, w, onAtt ? 'def' : 'att', { silent: true });
+  }
+  ctx.bus.emit('pause', true);
+  ctx.bus.emit('gameover', {
+    result: 'loss',
+    title: 'The Nation Extinguished',
+    text: 'Every province is lost and no army remains under our banners. The story of '
+      + ((t && t.name) || 'the realm') + ' passes into memory.',
+    score: 0,
+  });
+}
+
 // ---------------------------------------------------------------- recruiting & merging
 export function recruitRegiment(ctx, tag, provId, type) {
   const g = ctx.game;
