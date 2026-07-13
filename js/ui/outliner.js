@@ -51,6 +51,20 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       if (onWarClick) onWarClick(wr.dataset.war);
       return;
     }
+    const fe = e.target.closest('[data-fleet-embark]');
+    if (fe) { runArmyAction('embarkFleet', Number(fe.dataset.fleetEmbark)); return; }
+    const fd = e.target.closest('[data-fleet-disembark]');
+    if (fd) { runArmyAction('disembarkFleet', Number(fd.dataset.fleetDisembark)); return; }
+    const fl = e.target.closest('[data-fleet]');
+    if (fl) {
+      const g = ctx && ctx.game;
+      if (g && g.ui) {
+        g.ui.selectedFleet = g.ui.selectedFleet === Number(fl.dataset.fleet) ? null : Number(fl.dataset.fleet);
+        if (g.ui.selectedFleet != null) { g.ui.selectedArmy = null; g.ui.selectedArmies = []; }
+      }
+      refresh(true);
+      return;
+    }
     const bt = e.target.closest('[data-battle]');
     if (bt) {
       if (onBattleClick) onBattleClick(Number(bt.dataset.battle));
@@ -126,6 +140,32 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
           ${sel ? armyActionsHtml(a) : ''}
         </div>`;
+    }
+
+    // Fleets
+    let navy = null;
+    if (actions && typeof actions.getNavy === 'function') {
+      try { navy = actions.getNavy(); } catch (e) { warnOnce('getNavy', e); }
+    }
+    const fleets = (navy && navy.fleets) || [];
+    if (fleets.length) {
+      html += `<div class="ol-sec">Fleets <span class="ol-count">${fleets.length}</span></div>`;
+      for (const f of fleets) {
+        const sel = g.ui && g.ui.selectedFleet === f.id;
+        const tt = `${f.name} — ${f.ships} ships (${fmtMen(f.capacity)} capacity)\n`
+          + (f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
+          + (f.aboardMen ? `\nCarrying ${fmtMen(f.aboardMen)} men` : '')
+          + '\nSelect, then right-click a coastal province to sail.';
+        html += `
+          <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
+            <span class="ol-name">⛵ ${esc(f.provName)}</span>
+            <span class="ol-men">${f.ships}</span>
+            ${sel ? `<span class="ol-acts">`
+    + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
+    + (f.canDisembark ? `<button class="ol-act" data-fleet-disembark="${f.id}" data-tt="Put the carried armies ashore here">${icon('retreat')}</button>` : '')
+    + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
+          </div>`;
+      }
     }
 
     // Battles involving player armies

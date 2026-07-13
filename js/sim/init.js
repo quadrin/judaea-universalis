@@ -10,9 +10,10 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES,
+  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
+import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
@@ -935,6 +936,77 @@ export function gameActions(ctx) {
           envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
         };
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
+    },
+
+    // ---- the fleet ------------------------------------------------------------------
+    getNavy() {
+      try {
+        const me = g.playerTag;
+        const fleets = Object.values(g.fleets || {}).filter((f) => f && f.tag === me && f.ships > 0)
+          .map((f) => {
+            const aboard = Object.values(g.armies).filter((a) => a && a.aboard === f.id);
+            const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === me && !a.inBattle);
+            const p = ctx.byId(f.prov);
+            return {
+              id: f.id, name: f.name, ships: f.ships, prov: f.prov,
+              provName: (p && p.name) || ('#' + f.prov),
+              sailing: !!(f.path && f.path.length),
+              moveDaysLeft: f.moveDaysLeft, hopTotal: f.hopTotal,
+              aboardMen: aboard.reduce((s2, a) => s2 + num(a.men), 0),
+              canEmbark: here.length > 0 && !(f.path && f.path.length),
+              canDisembark: aboard.length > 0 && !(f.path && f.path.length),
+              capacity: f.ships * 1000,
+            };
+          });
+        return { fleets };
+      } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
+    },
+    buildShip(provId) {
+      try {
+        const res = buildShipCore(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('No ship today', res.why, 'bad'); return; }
+        const p = ctx.byId(provId | 0);
+        say('A hull takes the water', 'A new ship joins ' + res.fleet.name + ' at ' + ((p && p.name) || 'port') + '.', 'good');
+      } catch (e) { warnOnce('buildShip', 'buildShip failed', e); }
+    },
+    moveFleet(fleetId, provId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        if (!isCoastal(ctx, provId | 0)) { say('No harbor there', 'Fleets sail port to port — pick a coastal province.', 'bad'); return; }
+        issueFleetMove(ctx, f, provId | 0);
+      } catch (e) { warnOnce('moveFleet', 'moveFleet failed', e); }
+    },
+    embarkFleet(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === g.playerTag && !a.inBattle);
+        let boarded = 0;
+        for (const a of here) {
+          const res = embarkCore(ctx, f, a.id);
+          if (res.ok) boarded++;
+          else if (!boarded) { say('They stay ashore', res.why, 'bad'); return; }
+        }
+        if (boarded) say('The army embarks', boarded + (boarded === 1 ? ' army is' : ' armies are') + ' aboard. Sail, then disembark.', 'good');
+      } catch (e) { warnOnce('embarkFleet', 'embarkFleet failed', e); }
+    },
+    disembarkFleet(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const n = disembarkCore(ctx, f);
+        if (n) {
+          const p = ctx.byId(f.prov);
+          say('Boots on the shore', n + (n === 1 ? ' army lands' : ' armies land') + ' at ' + ((p && p.name) || 'the coast') + '.', 'good');
+          // landing on hostile ground is an assault landing: engage at once
+          for (const a of Object.values(g.armies)) {
+            if (a && a.prov === f.prov && a.tag === g.playerTag && !a.aboard) {
+              try { engageIfNeeded(ctx, a); } catch (err) { /* engagement optional */ }
+            }
+          }
+        }
+      } catch (e) { warnOnce('disembarkFleet', 'disembarkFleet failed', e); }
     },
 
     // ---- the court (advisors) ------------------------------------------------------

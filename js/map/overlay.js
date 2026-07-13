@@ -401,6 +401,65 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (onScreen(sx, sy)) drawBattle(sx, sy, timeMs);
       }
 
+      // fleets: hull-and-sail chips riding at the offshore anchors
+      for (const f of Object.values(game.fleets || {})) {
+        if (!f || f.ships <= 0) continue;
+        const off = (geom.offshore && geom.offshore[f.prov]) || geom.centroids[f.prov];
+        if (!off) continue;
+        const [sx, sy] = camera.mapToScreen(off.x, off.y);
+        if (!onScreen(sx, sy)) continue;
+        const col = tagColor(game, f.tag);
+        const sel = game.ui && game.ui.selectedFleet === f.id;
+        const bob = Math.sin((timeMs || 0) * 0.0016 + f.id) * 1.5;
+        x2.save();
+        x2.translate(sx, sy + bob);
+        if (sel) {
+          x2.strokeStyle = '#e7c34c';
+          x2.lineWidth = 2.5;
+          x2.strokeRect(-16, -14, 32, 24);
+        }
+        // hull
+        x2.fillStyle = 'rgba(38,28,16,0.95)';
+        x2.beginPath();
+        x2.moveTo(-12, 2); x2.lineTo(12, 2); x2.lineTo(7, 8); x2.lineTo(-7, 8);
+        x2.closePath();
+        x2.fill();
+        // sail in the tag color
+        x2.fillStyle = css(col);
+        x2.strokeStyle = 'rgba(15,10,5,0.85)';
+        x2.lineWidth = 1;
+        x2.beginPath();
+        x2.moveTo(0, -12); x2.lineTo(9, 0); x2.lineTo(-9, 0);
+        x2.closePath();
+        x2.fill();
+        x2.stroke();
+        // ship count
+        x2.fillStyle = '#fff';
+        x2.font = 'bold 10px Georgia, serif';
+        x2.textAlign = 'center';
+        x2.textBaseline = 'middle';
+        x2.shadowColor = 'rgba(0,0,0,0.7)';
+        x2.shadowBlur = 2;
+        x2.fillText(String(f.ships), 0, 5);
+        x2.shadowBlur = 0;
+        x2.restore();
+        // sailing line
+        if (f.path && f.path.length) {
+          const dst = (geom.offshore && geom.offshore[f.path[0]]) || geom.centroids[f.path[0]];
+          if (dst) {
+            const [dx, dy] = camera.mapToScreen(dst.x, dst.y);
+            x2.strokeStyle = css(col, 0.5);
+            x2.lineWidth = 2;
+            x2.setLineDash([6, 6]);
+            x2.beginPath();
+            x2.moveTo(sx, sy);
+            x2.lineTo(dx, dy);
+            x2.stroke();
+            x2.setLineDash([]);
+          }
+        }
+      }
+
       // army chips on top
       const chips = chipList(game, camera);
       for (const chp of chips) drawChip(game, chp, timeMs);
