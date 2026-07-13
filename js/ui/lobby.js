@@ -1,8 +1,8 @@
 // js/ui/lobby.js — multiplayer lobby (SPEC §18). No lobby server: the host
 // mints an invite code per guest, the guest answers with a reply code, and a
 // WebRTC data channel opens between the two browsers. The host then owns the
-// simulation; guests mirror it. Same nation = shared rule; different nations
-// = rivals in one world.
+// simulation; guests mirror it. Everyone rules the HOST'S nation together —
+// one realm, many hands on the tiller.
 import { esc, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 import { createPeer } from '../net/rtc.js';
@@ -20,7 +20,6 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   // guest state
   let guestPeer = null;
   let guestLobby = null;     // last {t:'lobby'} payload from the host
-  let guestTag = '';
   let started = false;
 
   function ensureEl() {
@@ -75,11 +74,10 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   function renderMenu() {
     ensureEl().innerHTML = shellHtml(`
       <div class="peace-body">Play with friends over a direct browser-to-browser link —
-        no accounts, no servers. One of you hosts and runs the world; the others join it.
-        Share the same nation to rule together, or take different nations and share only
-        the map.</div>
+        no accounts, no servers. One of you hosts and runs the world; everyone who joins
+        rules the host's nation at their side: one realm, many hands on the tiller.</div>
       <button class="btn peace-opt" data-ref="host"><b>Host a campaign</b>
-        <span class="peace-hint">Pick the chapter, mint invite codes, begin when your friends are in.</span></button>
+        <span class="peace-hint">Pick the chapter and your nation, mint invite codes, begin when your friends are in.</span></button>
       <button class="btn peace-opt" data-ref="join"><b>Join a campaign</b>
         <span class="peace-hint">Paste the host's invite code and send back your reply code.</span></button>
       <button class="btn peace-cancel" data-ref="close">Close</button>`);
@@ -96,9 +94,10 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
       t: 'lobby',
       bookmarkId: b.id,
       bookmarkName: b.name,
-      playable: (b.playableTags || []).map((p) => p.tag),
+      tag: hostTag, // everyone shares the host's throne
+      nationName: (TAGS[hostTag] && TAGS[hostTag].name) || hostTag,
       players: [{ who: 'Host', tag: hostTag }]
-        .concat(hostPeers.map((g, i) => ({ who: 'Guest ' + (i + 1), tag: g.tag || '' }))),
+        .concat(hostPeers.map((g, i) => ({ who: 'Guest ' + (i + 1), tag: hostTag }))),
     };
   }
   function hostBroadcastLobby() {
@@ -115,13 +114,14 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     const tagOpts = playable.map((t) =>
       `<option value="${esc(t)}"${t === hostTag ? ' selected' : ''}>${esc((TAGS[t] && TAGS[t].name) || t)}</option>`).join('');
     const players = hostLobbyPayload().players.map((p) => `
-      <div class="mp-player">${p.tag ? flagChip(p.tag, DEFINES, 16) : ''}
-        <b>${esc(p.who)}</b> — ${p.tag ? esc((TAGS[p.tag] && TAGS[p.tag].name) || p.tag) : '<i>choosing a nation…</i>'}</div>`).join('');
+      <div class="mp-player">${flagChip(p.tag, DEFINES, 16)}
+        <b>${esc(p.who)}</b> — ${esc((TAGS[p.tag] && TAGS[p.tag].name) || p.tag)}</div>`).join('');
     const canInvite = hostPeers.length < MAX_GUESTS && !pendingPeer;
     ensureEl().innerHTML = shellHtml(`
       <div class="peace-sec">The campaign</div>
       <div class="mp-row"><label>Chapter</label><select data-ref="bm">${bmOpts}</select></div>
-      <div class="mp-row"><label>Your nation</label><select data-ref="tag">${tagOpts}</select></div>
+      <div class="mp-row"><label>The nation</label><select data-ref="tag">${tagOpts}</select></div>
+      <div class="mp-hint">Everyone who joins rules this nation with you.</div>
       <div class="peace-sec">Players</div>
       ${players}
       <div class="peace-sec">Invite</div>
@@ -199,7 +199,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     el.querySelector('[data-ref="begin"]').addEventListener('click', () => {
       const ready = hostPeers.filter((g) => g.open);
       if (!ready.length) return;
-      if (ready.some((g) => !g.tag)) { status('A guest is still choosing a nation.'); return; }
+      for (const g of ready) g.tag = hostTag; // one realm, shared by all
       started = true;
       el.classList.add('hidden');
       onHostStart(bookmarks[hostBookmark], hostTag, ready);
@@ -207,14 +207,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   }
 
   function hostOnGuestMessage(guest, m) {
-    if (!m) return;
-    if (m.t === 'pick') {
-      const playable = (bookmarks[hostBookmark].bookmark.playableTags || []).map((p) => p.tag);
-      if (playable.includes(m.tag)) guest.tag = m.tag;
-      hostBroadcastLobby();
-      if (!started) renderHost();
-    }
-    // in-game messages are handled by main.js once started
+    // lobby guests only listen; in-game messages are handled by main.js once started
   }
 
   // ------------------------------------------------------------------ join --
@@ -257,32 +250,21 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     });
   }
 
-  function renderGuestPick() {
+  function renderGuestInfo() {
     const wrap = el && el.querySelector('[data-ref="pickwrap"]');
     if (!wrap || !guestLobby) return;
-    const takenBy = (tag) => guestLobby.players.filter((p) => p.tag === tag).map((p) => p.who).join(', ');
     wrap.innerHTML = `
       <div class="peace-sec">${esc(guestLobby.bookmarkName)}</div>
-      <div class="mp-hint">Choose your nation — share another player's nation to rule it together.</div>
-      ${guestLobby.playable.map((t) => `
-        <button class="btn peace-opt mp-pick${t === guestTag ? ' on' : ''}" data-pick="${esc(t)}">
-          ${flagChip(t, DEFINES, 18)} <b>${esc((TAGS[t] && TAGS[t].name) || t)}</b>
-          ${takenBy(t) ? `<span class="peace-hint">also: ${esc(takenBy(t))}</span>` : ''}
-        </button>`).join('')}
-      <div class="mp-hint">${guestTag ? 'Waiting for the host to begin…' : ''}</div>`;
-    wrap.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
-      guestTag = b.dataset.pick;
-      guestPeer.send({ t: 'pick', tag: guestTag });
-      renderGuestPick();
-    }));
+      <div class="mp-player">${flagChip(guestLobby.tag, DEFINES, 18)}
+        <b>${esc(guestLobby.nationName)}</b> — you will rule it together with the host.</div>
+      <div class="mp-hint">Waiting for the host to begin…</div>`;
   }
 
   function guestOnHostMessage(m) {
     if (!m) return;
     if (m.t === 'lobby') {
       guestLobby = m;
-      if (guestTag && !m.playable.includes(guestTag)) guestTag = '';
-      renderGuestPick();
+      renderGuestInfo();
       return;
     }
     if (m.t === 'start') {

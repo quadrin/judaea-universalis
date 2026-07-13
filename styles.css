@@ -1949,8 +1949,6 @@ html, body {
 .mp-copy { margin-bottom: 8px; font-size: 12px; padding: 4px 12px; }
 .mp-hint { font-size: 12.5px; color: var(--ink-soft); margin: 8px 0 2px; }
 .mp-status { font-size: 12.5px; color: var(--red-deep); min-height: 18px; margin: 6px 0; }
-.mp-pick { display: flex; align-items: center; gap: 8px; }
-.mp-pick.on { border-color: var(--gold); box-shadow: 0 0 10px rgba(201, 162, 39, 0.35); }
 .ss-mp { color: var(--gold-bright); border-color: var(--gold); }
 
 /* ------------------------------------------------- battle window (v1.7) -- */
