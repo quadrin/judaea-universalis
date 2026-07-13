@@ -528,7 +528,10 @@ export function gameActions(ctx) {
           return;
         }
         if (!issueMove(ctx, a, provId)) {
-          say('Orders refused', 'No route to ' + p.name + '.', 'bad');
+          const overseas = isCoastal(ctx, provId) || isCoastal(ctx, a.prov);
+          say('Orders refused', overseas
+            ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
+            : 'No route to ' + p.name + '.', 'bad');
         }
       } catch (e) { warnOnce('moveArmy', 'moveArmy failed', e); }
     },
