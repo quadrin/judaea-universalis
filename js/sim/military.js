@@ -272,7 +272,7 @@ function endBattle(ctx, b, winKey) {
   const i = g.battles.indexOf(b);
   if (i >= 0) g.battles.splice(i, 1);
   const winners = battleSideArmies(ctx, b, winKey);
-  for (const a of winners) a.inBattle = false;
+  for (const a of winners) { a.inBattle = false; maybeGainTrait(ctx, a); }
   const winnerTag = winners.length ? winners[0].tag : null;
   ctx.bus.emit('battleEnd', { prov: b.prov, winnerTag });
   return winnerTag;
@@ -658,7 +658,8 @@ function siegeDay(ctx, p) {
           for (const a of besiegers) a.men = Math.max(0, a.men - Math.max(1, Math.floor(a.men * 0.02)));
         }
       }
-      s.progress += resolveTagMult(ctx, s.by, 'siegeMult')
+      const engineer = besiegers.some((a) => a.general && Array.isArray(a.general.traits) && a.general.traits.indexOf('engineer') >= 0);
+      s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1)
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
@@ -1004,6 +1005,36 @@ function weightedIndex(rng, weights) {
   return weights.length - 1;
 }
 // Pips weighted toward 1-3: fire/shock 0-4, maneuver 0-5.
+// Battle-earned laurels: most traits bump the general's pips permanently at
+// the moment of gain (they display through the existing pip readout);
+// 'Engineer' is consulted live by tickSieges.
+export const GENERAL_TRAITS = [
+  { key: 'methodical', name: 'Methodical', desc: '+1 fire', apply: (gen) => { gen.fire = Math.min(6, num(gen.fire) + 1); } },
+  { key: 'fearsome', name: 'Fearsome', desc: '+1 shock', apply: (gen) => { gen.shock = Math.min(6, num(gen.shock) + 1); } },
+  { key: 'swift', name: 'Swift', desc: '+1 maneuver', apply: (gen) => { gen.maneuver = Math.min(6, num(gen.maneuver) + 1); } },
+  { key: 'engineer', name: 'Engineer', desc: '+30% siege progress', apply: () => {} },
+  { key: 'veteran', name: 'Old Veteran', desc: '+1 fire and +1 shock', apply: (gen) => { gen.fire = Math.min(6, num(gen.fire) + 1); gen.shock = Math.min(6, num(gen.shock) + 1); } },
+];
+function maybeGainTrait(ctx, army) {
+  const gen = army && army.general;
+  if (!gen) return;
+  gen.wins = num(gen.wins) + 1;
+  if (!Array.isArray(gen.traits)) gen.traits = [];
+  if (gen.traits.length >= 2 || gen.wins < 2 || ctx.rng.int(100) >= 35) return;
+  const open = GENERAL_TRAITS.filter((tr) => gen.traits.indexOf(tr.key) < 0);
+  if (!open.length) return;
+  const tr = ctx.rng.pick(open);
+  gen.traits.push(tr.key);
+  try { tr.apply(gen); } catch (e) { /* stat bump only */ }
+  if (army.tag === ctx.game.playerTag) {
+    ctx.bus.emit('notify', {
+      title: 'A name is made',
+      text: gen.name + ' earns the epithet "' + tr.name + '" (' + tr.desc + ').',
+      type: 'good',
+    });
+  }
+}
+
 export function rollGeneral(ctx, tag) {
   const t = ctx.game.tags[tag];
   const cul = t && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;

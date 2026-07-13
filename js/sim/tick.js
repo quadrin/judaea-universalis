@@ -43,11 +43,21 @@ function monthlyMonarchPoints(ctx) {
     const t = g.tags[tag];
     if (!t || !t.alive || tag === 'REB') continue;
     const r = t.ruler;
+    // Advisors: +skill to their pool, wage skill*2 talents a month; an unpaid
+    // court (deep debt) walks out.
+    const adv = t.advisors || {};
+    const advGain = (k) => {
+      const a = adv[k];
+      if (!a) return 0;
+      if (t.treasury <= -200) { adv[k] = null; return 0; }
+      t.treasury -= (a.skill || 1) * 2;
+      return Math.max(0, Math.min(3, a.skill || 1));
+    };
     if (r) {
       const skill = (k) => Math.max(0, Math.min(6, Number.isFinite(r[k]) ? r[k] : 2));
-      t.points.gov = Math.min(999, t.points.gov + 2 + skill('gov'));
-      t.points.infl = Math.min(999, t.points.infl + 2 + skill('infl'));
-      t.points.mar = Math.min(999, t.points.mar + 2 + skill('mar'));
+      t.points.gov = Math.min(999, t.points.gov + 2 + skill('gov') + advGain('gov'));
+      t.points.infl = Math.min(999, t.points.infl + 2 + skill('infl') + advGain('infl'));
+      t.points.mar = Math.min(999, t.points.mar + 2 + skill('mar') + advGain('mar'));
     } else {
       t.points.gov = Math.min(999, t.points.gov + 3 + ctx.rng.int(3));
       t.points.infl = Math.min(999, t.points.infl + 3 + ctx.rng.int(3));

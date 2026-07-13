@@ -115,7 +115,8 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
         || (Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.indexOf(a.id) >= 0));
       const moralePct = Math.max(0, Math.min(100, ((a.morale || 0) / Math.max(0.01, a.maxMorale || 1)) * 100));
       const regs = a.regiments || {};
-      const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire || 0}/${a.general.shock || 0}/${a.general.maneuver || 0})` : '';
+      const gtr = a.general && Array.isArray(a.general.traits) && a.general.traits.length ? ', ' + a.general.traits.join(', ') : '';
+      const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire || 0}/${a.general.shock || 0}/${a.general.maneuver || 0}${gtr})` : '';
       const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '');
       const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${regs.inf || 0} infantry, ${regs.cav || 0} cavalry\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `

@@ -69,6 +69,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-decisions" data-ref="decisions"></div>
       </div>
       <div class="pp-build">
+        <div class="pp-build-title">The Court</div>
+        <div class="np-court" data-ref="court"></div>
+      </div>
+      <div class="pp-build">
         <div class="pp-build-title">Reforms</div>
         <div class="np-reforms" data-ref="reforms"></div>
       </div>`;
@@ -82,6 +86,22 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (act.classList.contains('disabled') || !actions) return;
         const fn = actions[act.dataset.act];
         if (typeof fn === 'function') { try { fn(); } catch (err) { warnOnce('np-' + act.dataset.act, err); } }
+        refresh();
+        return;
+      }
+      const hire = e.target.closest('[data-hire-adv]');
+      if (hire) {
+        if (!hire.classList.contains('disabled') && actions && actions.hireAdvisor) {
+          try { actions.hireAdvisor(hire.dataset.hireAdv, Number(hire.dataset.cand)); } catch (err) { warnOnce('np-hireAdv', err); }
+        }
+        refresh();
+        return;
+      }
+      const dis = e.target.closest('[data-dismiss-adv]');
+      if (dis) {
+        if (actions && actions.dismissAdvisor) {
+          try { actions.dismissAdvisor(dis.dataset.dismissAdv); } catch (err) { warnOnce('np-dismissAdv', err); }
+        }
         refresh();
         return;
       }
@@ -193,6 +213,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshDiplomacy(g, t);
     refreshDecisions();
     refreshReforms();
+    refreshCourt();
   }
 
   function setAct(btn, can, tt) {
@@ -309,6 +330,30 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
     }
     setHtml(refs.diploBody, html);
+  }
+
+  // Advisor seats: one per monarch-point pool. Seated advisors show their
+  // wage and a dismiss button; empty seats offer two candidates.
+  function refreshCourt() {
+    if (!refs.court) return;
+    let court = null;
+    if (actions && typeof actions.getCourt === 'function') {
+      try { court = actions.getCourt(); } catch (e) { warnOnce('np-getCourt', e); }
+    }
+    if (!court) { refs.court.innerHTML = ''; return; }
+    const label = { gov: 'Government', infl: 'Influence', mar: 'Martial' };
+    refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
+      const seat = court[k];
+      if (seat.seated) {
+        const a = seat.seated;
+        return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <b>${esc(a.name)}</b> (+${a.skill}/mo)</span>
+          <button class="pp-build-btn np-adv-btn" data-dismiss-adv="${k}" data-tt="Wage ${a.wage} talents a month. Click to dismiss.">Dismiss</button></div>`;
+      }
+      const cands = (seat.candidates || []).map((c, i) =>
+        `<button class="pp-build-btn np-adv-btn" data-hire-adv="${k}" data-cand="${i}"
+          data-tt="Hire for ${c.cost} talents; wage ${c.wage} talents a month; +${c.skill} ${esc(label[k].toLowerCase())} points monthly.">${esc(c.name)} (${c.skill})</button>`).join('');
+      return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <i>empty seat</i></span>${cands}</div>`;
+    }).join('');
   }
 
   // Three reform trees: tier pips, the next reform's name and price, one

@@ -10,7 +10,7 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword,
+  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
@@ -101,6 +101,8 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       points: { gov: 0, infl: 0, mar: 0 },
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
+      advisors: { gov: null, infl: null, mar: null },
+      courtCand: {},
       modifiers: [],
       atWarWith: [], allies: [], opinion: {},
       claims: [], overlord: null,
@@ -934,6 +936,54 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
     },
 
+    // ---- the court (advisors) ------------------------------------------------------
+    // Each pool can seat one advisor: +skill (1-3) to that pool's monthly gain,
+    // wage skill*2 talents a month (tick.js). Two candidates per empty seat,
+    // rerolled after every hire or dismissal.
+    getCourt() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return null;
+        if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
+        if (!t.courtCand) t.courtCand = {};
+        const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
+        const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        const out = {};
+        for (const k of ['gov', 'infl', 'mar']) {
+          if (!t.advisors[k] && (!Array.isArray(t.courtCand[k]) || !t.courtCand[k].length)) {
+            t.courtCand[k] = [0, 1].map(() => {
+              const skill = 1 + ctx.rng.int(3);
+              return { name: ctx.rng.pick(pool), skill, cost: skill * 30, wage: skill * 2 };
+            });
+          }
+          out[k] = { seated: t.advisors[k], candidates: t.advisors[k] ? [] : t.courtCand[k] };
+        }
+        return out;
+      } catch (e) { warnOnce('getCourt', 'getCourt failed', e); return null; }
+    },
+    hireAdvisor(kind, idx) {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t || ['gov', 'infl', 'mar'].indexOf(kind) < 0 || t.advisors[kind]) return;
+        const cand = t.courtCand && t.courtCand[kind] && t.courtCand[kind][idx | 0];
+        if (!cand) return;
+        if (num(t.treasury) < cand.cost) { say('The purse is light', 'Hiring ' + cand.name + ' costs ' + cand.cost + ' talents.', 'bad'); return; }
+        t.treasury = num(t.treasury) - cand.cost;
+        t.advisors[kind] = { name: cand.name, skill: cand.skill, wage: cand.wage };
+        t.courtCand[kind] = [];
+        say('An advisor takes their seat', cand.name + ' joins the court (+' + cand.skill + ' ' + kind + ' a month, ' + cand.wage + ' talents wage).', 'good');
+      } catch (e) { warnOnce('hireAdvisor', 'hireAdvisor failed', e); }
+    },
+    dismissAdvisor(kind) {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t || !t.advisors || !t.advisors[kind]) return;
+        say('Dismissed', t.advisors[kind].name + ' leaves the court.', 'info');
+        t.advisors[kind] = null;
+        if (t.courtCand) t.courtCand[kind] = [];
+      } catch (e) { warnOnce('dismissAdvisor', 'dismissAdvisor failed', e); }
+    },
+
     // ---- reforms (idea trees) ----------------------------------------------------
     getIdeas() {
       try {
@@ -1241,6 +1291,8 @@ export function reviveGame(saved) {
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
+    if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
+    if (!t.courtCand) t.courtCand = {};
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;
