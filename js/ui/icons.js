@@ -315,6 +315,20 @@ export const FLAGS = {
     `<path d="M5.2 16.2c-.8 1.6-.9 3.4-.3 5.3l1.5-.7c-.5-1.5-.4-2.9.2-4.2Z" ${SIL}/>` +
     `<path d="M18.8 16.2c.8 1.6.9 3.4.3 5.3l-1.5-.7c.5-1.5.4-2.9-.2-4.2Z" ${SIL}/>`,
 
+  // Herod's Judaea: the anchor of the Herodian coinage.
+  HER:
+    `<path d="M12 4.2c.9 0 1.6.7 1.6 1.6S12.9 7.4 12 7.4s-1.6-.7-1.6-1.6.7-1.6 1.6-1.6Zm0 1a.6.6 0 100 1.2.6.6 0 000-1.2Z" ${ACC}/>` +
+    `<path d="M11.3 7.4h1.4v10h-1.4Z" ${SIL}/>` +
+    `<path d="M8.2 9.4h7.6v1.4H8.2Z" ${SIL}/>` +
+    `<path d="M12 20.4c-3-.9-4.9-2.7-5.7-5.4l1.7-.5c.6 2 2 3.4 4 4.1 2-.7 3.4-2.1 4-4.1l1.7.5c-.8 2.7-2.7 4.5-5.7 5.4Z" ${SIL}/>`,
+  // Antigonus' Judaea: the seven-branched lampstand of his last coins.
+  ATG:
+    `<path d="M11.3 6h1.4v10.4h-1.4Z" ${ACC}/>` +
+    `<path d="M6 8.4c0 3 .9 4.9 2.7 5.9l.7-1.2C8 12.3 7.4 10.8 7.4 8.4Zm3 0c0 2.2.5 3.6 1.6 4.5l.7-1.2c-.7-.6-1-1.7-1-3.3Z" ${SIL}/>` +
+    `<path d="M18 8.4c0 3-.9 4.9-2.7 5.9l-.7-1.2c1.4-.8 2-2.3 2-4.7Zm-3 0c0 2.2-.5 3.6-1.6 4.5l-.7-1.2c.7-.6 1-1.7 1-3.3Z" ${SIL}/>` +
+    `<path d="M9 16.4h6v1.4H9Z" ${SIL}/>` +
+    `<path d="M8 18.6h8v1.6H8Z" ${ACC}/>`,
+
   // Agrippa II: the royal diadem — gold band, parchment gem and hanging ties.
   AGR:
     `<path d="M4.1 13.2c2.3-2.4 5-3.6 7.9-3.6s5.6 1.2 7.9 3.6l-1 1.8c-2-2.2-4.3-3.3-6.9-3.3s-4.9 1.1-6.9 3.3Z" ${ACC}/>` +
