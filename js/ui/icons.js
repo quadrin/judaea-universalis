@@ -296,6 +296,25 @@ export const FLAGS = {
     `<circle cx="12" cy="9.7" r="1.35" ${SIL}/>` +
     `<path d="M9.4 15.4c-1.4-.2-2.6-.7-3.7-1.6M14.6 15.4c1.4-.2 2.6-.7 3.7-1.6" ${DET}/>`,
 
+  // Hyrcanus' Judaea: the palm branch of the high-priestly coins — paired
+  // fronds on a straight stem over a gold base.
+  HYR:
+    `<path d="M11.2 19.6V8h1.6v11.6Z" ${SIL}/>` +
+    `<path d="M11.6 8.4C9.7 7.6 8.8 6.2 8.8 4.1c2.1.6 3.2 2 3.2 4.3Z" ${SIL}/>` +
+    `<path d="M12.4 8.4c1.9-.8 2.8-2.2 2.8-4.3-2.1.6-3.2 2-3.2 4.3Z" ${SIL}/>` +
+    `<path d="M11.6 11.6c-2.5-.5-4-1.7-4.7-3.7 2.6.1 4.2 1.4 4.7 3.7Z" ${SIL}/>` +
+    `<path d="M12.4 11.6c2.5-.5 4-1.7 4.7-3.7-2.6.1-4.2 1.4-4.7 3.7Z" ${SIL}/>` +
+    `<path d="M11.6 14.8c-2.9-.4-4.7-1.5-5.5-3.4 2.9 0 4.7 1.2 5.5 3.4Z" ${SIL}/>` +
+    `<path d="M12.4 14.8c2.9-.4 4.7-1.5 5.5-3.4-2.9 0-4.7 1.2-5.5 3.4Z" ${SIL}/>` +
+    `<rect x="8.4" y="19" width="7.2" height="1.9" rx="0.9" ${ACC}/>`,
+  // Aristobulus' Judaea: the diadem beneath the star of the royal coinage.
+  ARI:
+    `<path d="M12 2.9l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" ${ACC}/>` +
+    `<path d="M4.4 15.2c2.3-2.6 4.8-3.9 7.6-3.9s5.3 1.3 7.6 3.9l-1.1 1.8c-2-2.3-4.1-3.5-6.5-3.5s-4.5 1.2-6.5 3.5Z" ${ACC}/>` +
+    `<circle cx="12" cy="12.9" r="1.7" ${SIL}/>` +
+    `<path d="M5.2 16.2c-.8 1.6-.9 3.4-.3 5.3l1.5-.7c-.5-1.5-.4-2.9.2-4.2Z" ${SIL}/>` +
+    `<path d="M18.8 16.2c.8 1.6.9 3.4.3 5.3l-1.5-.7c.5-1.5.4-2.9-.2-4.2Z" ${SIL}/>`,
+
   // Agrippa II: the royal diadem — gold band, parchment gem and hanging ties.
   AGR:
     `<path d="M4.1 13.2c2.3-2.4 5-3.6 7.9-3.6s5.6 1.2 7.9 3.6l-1 1.8c-2-2.2-4.3-3.3-6.9-3.3s-4.9 1.1-6.9 3.3Z" ${ACC}/>` +

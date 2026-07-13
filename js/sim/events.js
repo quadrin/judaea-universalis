@@ -12,6 +12,8 @@ function eventList(ctx) {
   return Array.isArray(ctx.events) ? ctx.events : [];
 }
 export function findEventById(ctx, id) {
+  // Runtime-synthesized events (succession cards) live in ctx.dynEvents.
+  if (ctx.dynEvents && ctx.dynEvents.has(id)) return ctx.dynEvents.get(id);
   for (const ev of eventList(ctx)) if (ev && ev.id === id) return ev;
   return null;
 }

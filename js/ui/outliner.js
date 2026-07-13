@@ -2,7 +2,7 @@
 import { esc, fmtMen, signed, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
+export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onWarClick }) {
   let ctx = null;
   let actions = null;
   let body = null;
@@ -36,9 +36,19 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
       if (!hg.classList.contains('disabled')) runArmyAction('hireGeneral', Number(hg.dataset.hire));
       return;
     }
+    const ma = e.target.closest('[data-mergeall]');
+    if (ma) {
+      if (!ma.classList.contains('disabled')) runArmyAction('mergeAllInto', Number(ma.dataset.mergeall));
+      return;
+    }
     const pc = e.target.closest('[data-peace]');
     if (pc) {
       if (onPeaceClick) onPeaceClick(pc.dataset.peace);
+      return;
+    }
+    const wr = e.target.closest('[data-war]');
+    if (wr) {
+      if (onWarClick) onWarClick(wr.dataset.war);
       return;
     }
     const ar = e.target.closest('[data-army]');
@@ -72,6 +82,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
     return `<span class="ol-acts">` +
       `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
       `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
+      `<button class="ol-act" data-mergeall="${a.id}" data-tt="Merge every other army of ours in this province into this one">${icon('shield')}</button>` +
       `</span>`;
   }
 
@@ -164,7 +175,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick }) {
         const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
         const lead = opp ? flagChip(opp, ctx.DEFINES, 14) : icon('flame', 'icon-row');
         html += `
-          <div class="ol-row ol-war" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
+          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
             <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
             ${peaceBtn}

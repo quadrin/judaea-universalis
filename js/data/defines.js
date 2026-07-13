@@ -119,6 +119,17 @@ export const DEFINES = {
       description: 'The sons of Mattathias — priests with swords, fighting for the Law in the hills they know.',
       ideas: { moraleMult: 1.12, hillDefBonus: 1, manpowerMult: 0.8 },
     },
+    // --- 67 BCE era tags (the Judaean Civil War bookmark) ---
+    HYR: {
+      name: "Hyrcanus' Judaea", color: [82, 132, 196], religion: 'judaism', culture: 'judean', capital: 'Hebron',
+      description: 'The elder brother: weak in himself, strong in Antipater\'s cunning and Nabataean silver.',
+      ideas: { incomeMult: 1.1, hillDefBonus: 1 },
+    },
+    ARI: {
+      name: "Aristobulus' Judaea", color: [26, 60, 128], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The younger brother: the army, the fortresses, and the crown — everything but time.',
+      ideas: { moraleMult: 1.1, manpowerMult: 0.9 },
+    },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',

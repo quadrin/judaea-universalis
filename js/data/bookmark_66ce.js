@@ -82,6 +82,9 @@ export const BOOKMARK_66 = {
     + 'Eleazar moves to refuse every offering from a foreign hand; in Antioch the governor of '
     + 'Syria watches, and waits, and counts his legions. Four years of fire begin now.',
 
+  // Tags of other eras (SEL, PTO, HAS, HYR, ARI) never enter this game.
+  activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR'],
+
   playableTags: [
     {
       tag: 'JUD',

@@ -222,9 +222,18 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     }
     setText(refs.autonomy, Math.round((p.autonomy || 0) * 100) + '%');
     const sites = [];
+    const WONDER_TT = {
+      temple: '+1 governance point and +0.2 legitimacy a month to its keeper',
+      library: '+1 influence point a month to its keeper',
+      petra: '+2 talents a month to its keeper',
+    };
     if (p.wonder) sites.push(icon('star8', 'icon-sm') + ' ' + esc(titleCase(p.wonder)));
     if (p.holy) sites.push(icon('star4', 'icon-sm') + ' ' + esc(titleCase(p.holy)));
     refs.siteRow.classList.toggle('hidden', sites.length === 0);
+    const siteTT = [];
+    if (p.holy) siteTT.push('Holy site: a controller of the faith gains +1 of every monarch point and legitimacy each month; the faithful suffer while heathens hold it.');
+    if (p.wonder && WONDER_TT[p.wonder]) siteTT.push('Wonder: ' + WONDER_TT[p.wonder] + '.');
+    refs.siteRow.dataset.tt = siteTT.join('\n') || 'Sites';
     setHtml(refs.site, sites.join('&nbsp; '));
 
     // Unrest (red + warning icon above threshold) with breakdown tooltip

@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -49,6 +49,7 @@ export function createTopbar(el, { DEFINES, onFlagClick }) {
       <div class="tb-spacer"></div>
       <div class="tb-date" data-ref="date"></div>
       <div class="tb-speed">
+        <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
         <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">${icon('play')}</button>
         <span class="tb-pips" data-ref="pips"></span>
@@ -63,6 +64,9 @@ export function createTopbar(el, { DEFINES, onFlagClick }) {
 
     refs.flagBtn.addEventListener('click', () => {
       if (onFlagClick) { try { onFlagClick(); } catch (e) { warnOnce('flagClick', e); } }
+    });
+    refs.ledger.addEventListener('click', () => {
+      if (onLedgerClick) { try { onLedgerClick(); } catch (e) { warnOnce('ledgerClick', e); } }
     });
     refs.pause.addEventListener('click', () => {
       try { actions.togglePause(); } catch (e) { warnOnce('togglePause', e); }

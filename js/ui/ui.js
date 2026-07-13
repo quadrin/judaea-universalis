@@ -1,6 +1,6 @@
 // js/ui/ui.js — UI package entry (SPEC §8). Single pinned export: initUI.
 // initUI(staticCtx) -> { showStartScreen(bookmark, onPick), bindGame(ctx, actions) }
-import { esc, signed, warnOnce } from './format.js';
+import { esc, signed, fmtMen, warnOnce } from './format.js';
 import { initTooltip } from './tooltip.js';
 import { createToasts } from './toasts.js';
 import { buildStartScreen } from './startscreen.js';
@@ -9,10 +9,11 @@ import { createProvincePanel } from './province_panel.js';
 import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
-import { icon } from './icons.js';
+import { icon, flagChip } from './icons.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
+  { id: 'diplomatic', ico: icon('dove'), name: 'Diplomatic — friends, foes, truces and claims, seen from your throne' },
   { id: 'terrain', ico: icon('mountain'), name: 'Terrain' },
   { id: 'religion', ico: icon('altar'), name: 'Religion' },
   { id: 'culture', ico: icon('amphora'), name: 'Culture' },
@@ -123,22 +124,26 @@ export function initUI(staticCtx) {
       if (p && camera) camera.centerOn(p.x, p.y);
     },
   });
+  function toggleNationPanel() {
+    if (nationPanel.isOpen()) { nationPanel.close(); return; }
+    setSelectedProv(0); // the two left panels share the same berth
+    nationPanel.open();
+  }
   const topbar = createTopbar(els.topbar, {
     DEFINES,
-    onFlagClick() {
-      if (nationPanel.isOpen()) { nationPanel.close(); return; }
-      setSelectedProv(0); // the two left panels share the same berth
-      nationPanel.open();
-    },
+    onFlagClick: () => toggleNationPanel(),
+    onLedgerClick: () => toggleLedger(),
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
     DEFINES,
     onClose: () => nationPanel.close(),
     onPeaceClick(warId) { openPeaceDialog(warId); },
+    onWarClick(warId) { openWarOverview(warId); },
   });
   const outliner = createOutliner(els.outliner, {
     onPeaceClick(warId) { openPeaceDialog(warId); },
+    onWarClick(warId) { openWarOverview(warId); },
     onArmyClick(id, shift) {
       const g = state.ctx && state.ctx.game;
       if (!g || !g.armies || !g.armies[id]) return;
@@ -170,7 +175,16 @@ export function initUI(staticCtx) {
   // down, toggle humiliation; the running total is priced against our war
   // score live, and the envoys go out only with an offer the enemy will take.
   let peaceEl = null;
-  function closePeaceDialog() { if (peaceEl) peaceEl.classList.add('hidden'); }
+  function setPeaceHighlight(ids) {
+    const g = state.ctx && state.ctx.game;
+    if (!g || !g.ui) return;
+    g.ui.peaceHighlight = ids || [];
+    bus.emit('peaceHighlight', {}); // main.js: recompute mapmode colors
+  }
+  function closePeaceDialog() {
+    if (peaceEl) peaceEl.classList.add('hidden');
+    setPeaceHighlight([]);
+  }
   function peaceDialogOpen() { return !!peaceEl && !peaceEl.classList.contains('hidden'); }
   function openPeaceDialog(warId) {
     const g = state.ctx && state.ctx.game;
@@ -185,10 +199,11 @@ export function initUI(staticCtx) {
     }
     const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false };
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
+    const discountTxt = { claim: ' · our claim (30% off)', faith: ' · our faith (20% off)' };
     const provRows = info.provinces.map((p) =>
-      `<label class="peace-prov" data-tt="${esc(p.name)} — ${p.dev} development\nDemanding it costs ${p.cost} war score">
+      `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${discountTxt[p.discount] || ''}\nDemanding it costs ${p.cost} war score">
         <input type="checkbox" data-prov="${p.id}">
-        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev</span></span>
+        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${p.discount ? ' · ' + (p.discount === 'claim' ? 'claimed' : 'our faith') : ''}</span></span>
         <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
     peaceEl.innerHTML = `
@@ -283,9 +298,134 @@ export function initUI(staticCtx) {
       nationPanel.refresh();
       topbar.refresh();
     });
+    // Clicking a row also flies the camera to the province (it pulses gold on
+    // the map for the whole negotiation).
+    peaceEl.querySelectorAll('[data-center]').forEach((row) => {
+      row.addEventListener('click', () => {
+        const g2 = state.ctx && state.ctx.game;
+        const p = g2 && g2.provinces[Number(row.dataset.center)];
+        if (p && camera) camera.centerOn(p.x, p.y);
+      });
+    });
     peaceEl.querySelector('.peace-cancel').addEventListener('click', closePeaceDialog);
     peaceEl.querySelector('.modal-scrim').addEventListener('click', closePeaceDialog);
+    setPeaceHighlight(info.provinces.map((p) => p.id));
     update();
+  }
+
+  // ---------------------------------------------------------- war overview --
+  // The anatomy of a war: sides, the score taken apart (battles / occupation /
+  // events), who holds what, and the road to the peace table.
+  let warEl = null;
+  function closeWarOverview() { if (warEl) warEl.classList.add('hidden'); }
+  function warOverviewOpen() { return !!warEl && !warEl.classList.contains('hidden'); }
+  function openWarOverview(warId) {
+    const actions = state.actions;
+    if (!actions || typeof actions.getWarInfo !== 'function') return;
+    const info = actions.getWarInfo(warId);
+    if (!info) return;
+    if (!warEl) {
+      warEl = document.createElement('div');
+      warEl.id = 'war-modal';
+      document.getElementById('ui-root').appendChild(warEl);
+    }
+    const sideHtml = (rows) => rows.map((r) =>
+      `<span class="wo-tag${r.alive ? '' : ' wo-dead'}" data-tt="${esc(r.name)}${r.alive ? '' : ' (defeated)'}">${flagChipHtml(r.tag)} ${esc(r.name)}</span>`).join('');
+    const holdHtml = (list, none) => list.length
+      ? list.slice(0, 8).map((p) => esc(p.name)).join(', ') + (list.length > 8 ? ` +${list.length - 8} more` : '')
+      : `<span class="peace-dim">${none}</span>`;
+    const bd = info.breakdown;
+    const bdRow = (label, v, tt) =>
+      `<div class="pp-row" data-tt="${esc(tt)}"><span class="pp-k">${esc(label)}</span><span class="pp-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${signed(v)}</span></div>`;
+    const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
+    const barPct = Math.round(((info.myWs + 100) / 200) * 100);
+    warEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card wo-card">
+        <h2 class="peace-title">${esc(info.warName || 'War')}</h2>
+        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb) : ''}${info.noNegotiation ? ' · ends by the sword, or by events' : ''}</div>
+        <div class="wo-sides">
+          <div class="wo-side">${sideHtml(info.mySide)}</div>
+          <div class="wo-vs">against</div>
+          <div class="wo-side">${sideHtml(info.theirSide)}</div>
+        </div>
+        <div class="peace-sec">War score: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        <div class="bar wo-bar"><div class="bar-fill" style="width:${barPct}%"></div></div>
+        ${bdRow('From battles', bd.battles, 'Field victories, net of theirs (each side caps at 40)')}
+        ${bdRow('From occupation', bd.occupation, 'Enemy development under our control, net of theirs (each side caps at 60)')}
+        ${bd.events ? bdRow('From events', bd.events, 'Scripted swings of history') : ''}
+        <div class="peace-sec">We hold</div>
+        <div class="wo-hold">${holdHtml(info.weHold, 'None of their land')}</div>
+        <div class="peace-sec">They hold</div>
+        <div class="wo-hold">${holdHtml(info.theyHold, 'None of ours')}</div>
+        ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
+        ${info.noNegotiation ? '' : `<button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>`}
+        <button class="btn peace-cancel">Close</button>
+      </div>`;
+    warEl.classList.remove('hidden');
+    const neg = warEl.querySelector('[data-ref="negotiate"]');
+    if (neg) neg.addEventListener('click', () => { closeWarOverview(); openPeaceDialog(warId); });
+    warEl.querySelector('.peace-cancel').addEventListener('click', closeWarOverview);
+    warEl.querySelector('.modal-scrim').addEventListener('click', closeWarOverview);
+  }
+  function flagChipHtml(tag) {
+    try { return flagChip(tag, DEFINES, 15); } catch (e) { return ''; }
+  }
+
+  // ------------------------------------------------------------------ ledger --
+  let ledgerEl = null;
+  let ledgerSort = 'dev';
+  function closeLedger() { if (ledgerEl) ledgerEl.classList.add('hidden'); }
+  function ledgerOpen() { return !!ledgerEl && !ledgerEl.classList.contains('hidden'); }
+  function toggleLedger() { if (ledgerOpen()) closeLedger(); else openLedger(); }
+  function openLedger() {
+    const actions = state.actions;
+    if (!actions || typeof actions.getLedger !== 'function') return;
+    let rows = [];
+    try { rows = actions.getLedger() || []; } catch (e) { warnOnce('getLedger', e); }
+    if (!ledgerEl) {
+      ledgerEl = document.createElement('div');
+      ledgerEl.id = 'ledger-modal';
+      document.getElementById('ui-root').appendChild(ledgerEl);
+    }
+    const cols = [
+      { key: 'name', label: 'Nation' },
+      { key: 'provs', label: 'Provs' },
+      { key: 'dev', label: 'Dev' },
+      { key: 'income', label: 'Income' },
+      { key: 'treasury', label: 'Treasury' },
+      { key: 'troops', label: 'Troops' },
+      { key: 'manpower', label: 'Manpower' },
+      { key: 'warExhaustion', label: 'War Exh.' },
+    ];
+    rows.sort((a, b) => ledgerSort === 'name'
+      ? String(a.name).localeCompare(String(b.name))
+      : (b[ledgerSort] || 0) - (a[ledgerSort] || 0));
+    const fmtCell = (r, key) => key === 'name'
+      ? `${flagChipHtml(r.tag)} ${esc(r.name)}${r.overlord ? ' <span class="peace-dim">(client)</span>' : ''}`
+      : key === 'troops' || key === 'manpower' ? fmtMen(r[key])
+        : String(r[key]);
+    ledgerEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card ledger-card">
+        <h2 class="peace-title">The Ledger of Nations</h2>
+        <div class="ledger-wrap"><table class="ledger">
+          <thead><tr>${cols.map((c) =>
+    `<th class="${c.key === ledgerSort ? 'on' : ''}" data-sort="${c.key}" data-tt="Sort by ${esc(c.label)}">${esc(c.label)}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map((r) =>
+    `<tr class="${r.isPlayer ? 'me' : ''}">${cols.map((c) => `<td>${fmtCell(r, c.key)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>
+        <button class="btn peace-cancel">Close</button>
+      </div>`;
+    ledgerEl.classList.remove('hidden');
+    ledgerEl.querySelector('thead').addEventListener('click', (e) => {
+      const th = e.target instanceof Element ? e.target.closest('[data-sort]') : null;
+      if (!th) return;
+      ledgerSort = th.dataset.sort;
+      openLedger(); // re-render with the new sort
+    });
+    ledgerEl.querySelector('.peace-cancel').addEventListener('click', closeLedger);
+    ledgerEl.querySelector('.modal-scrim').addEventListener('click', closeLedger);
   }
 
   // ------------------------------------------------------------ selection --
@@ -379,10 +519,16 @@ export function initUI(staticCtx) {
       topbar.refresh();
     } else if (e.key === 'Escape') {
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
+      if (warOverviewOpen()) { closeWarOverview(); return; }
+      if (ledgerOpen()) { closeLedger(); return; }
       if (nationPanel.isOpen()) { nationPanel.close(); return; }
       const g = state.ctx.game;
       if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)) setSelectedArmy(null);
       if (g.ui.selectedProv) setSelectedProv(0);
+    } else if (e.key === 'n' || e.key === 'N') {
+      toggleNationPanel();
+    } else if (e.key === 'l' || e.key === 'L') {
+      toggleLedger();
     }
   });
 
@@ -459,7 +605,7 @@ export function initUI(staticCtx) {
   }
 
   // ------------------------------------------------------------------ API --
-  function showStartScreen(bookmarks, onPick, continueInfo) {
+  function showStartScreen(bookmarks, onPick, continueInfo, saveTools) {
     els.start.classList.remove('hidden');
     buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag) => {
       els.start.classList.add('hidden');
@@ -467,7 +613,7 @@ export function initUI(staticCtx) {
     }, continueInfo ? {
       label: continueInfo.label,
       onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },
-    } : null);
+    } : null, saveTools || null);
   }
 
   function bindGame(ctx, actions) {

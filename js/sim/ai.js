@@ -186,6 +186,52 @@ function aiSpendPoints(ctx, tag) {
   }
 }
 
+// Peacetime statecraft: the AI assimilates its conquests exactly like the
+// player — lowering autonomy with spare governance, converting the biggest
+// wrong-faith province with spare influence, drilling when flush at war.
+// One act per pool per month, always keeping a reserve for the basics.
+function aiIntegration(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || !t.points) return;
+  if (num(t.points.gov) >= 125) {
+    let best = null;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+      const au = num(p.autonomy, 0.25);
+      if (au > 0.3 && (!best || au > num(best.autonomy, 0))) best = p;
+    }
+    if (best) {
+      t.points.gov -= 25;
+      best.autonomy = Math.max(0, num(best.autonomy, 0.25) - 0.15);
+      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
+      best.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+    }
+  }
+  if (num(t.points.infl) >= 100 && t.religion) {
+    let best = null;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+      if (p.religion === t.religion || p.conversion) continue;
+      if (!best || devTotal(p) > devTotal(best)) best = p;
+    }
+    if (best) {
+      t.points.infl -= 50;
+      best.conversion = { by: tag, monthsLeft: 12 };
+      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'religious_tension');
+      best.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
+    }
+  }
+  const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (atWar && num(t.points.mar) >= 150
+      && !(t.modifiers || []).some((m) => m && m.id === 'drilled_ranks')) {
+    t.points.mar -= 50;
+    t.modifiers.push({ id: 'drilled_ranks', name: 'Drilled Ranks', months: 18, effects: { disciplineMult: 1.05 } });
+  }
+}
+
 // Reciprocity: an ally whose opinion of the player has sunk below -25 walks
 // away from the alliance (breakAllianceCore handles the mutual removal and
 // the player's -50 opinion of the deserter).
@@ -209,6 +255,7 @@ function runTagAI(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   aiSpendPoints(ctx, tag);
+  aiIntegration(ctx, tag);
   aiLoans(ctx, tag);
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
   if (!enemies.length) return; // non-warring AI idles

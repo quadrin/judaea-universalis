@@ -1307,23 +1307,27 @@ export function monthsBetween(a, b) {
   if (a.y > 0 && b.y < 0) m += 12;
   return m;
 }
-function sideGross(ctx, w, key) {
+// One side's gross score, broken into its parts (the war overview shows them).
+export function sideComponents(ctx, w, key) {
   const g = ctx.game;
   const mine = key === 'att' ? w.attackers : w.defenders;
   const theirs = key === 'att' ? w.defenders : w.attackers;
-  let enemyDev = 0, occupied = 0;
+  let enemyDev = 0, occupiedDev = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     if (theirs.indexOf(p.owner) < 0) continue;
     const d = devTotal(p);
     enemyDev += d;
-    if (mine.indexOf(p.controller) >= 0) occupied += d;
+    if (mine.indexOf(p.controller) >= 0) occupiedDev += d;
   }
-  const occScore = enemyDev > 0 ? Math.min(60, (occupied / enemyDev) * 60) : 0;
-  const bs = w._bs ? Math.min(40, num(w._bs[key])) : 0;
-  const ev = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
-  return bs + occScore + ev;
+  const occupation = enemyDev > 0 ? Math.min(60, (occupiedDev / enemyDev) * 60) : 0;
+  const battles = w._bs ? Math.min(40, num(w._bs[key])) : 0;
+  const events = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
+  return { battles, occupation, events, occupiedDev, enemyDev, gross: battles + occupation + events };
+}
+function sideGross(ctx, w, key) {
+  return sideComponents(ctx, w, key).gross;
 }
 export function updateWarscores(ctx) {
   for (const w of ctx.game.wars) {

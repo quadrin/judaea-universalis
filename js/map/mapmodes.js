@@ -71,7 +71,15 @@ const MODE_PARAMS = {
   culture: { relief: 0.35, flat: 0 },
   development: { relief: 0.3, flat: 0 },
   unrest: { relief: 0.3, flat: 0 },
+  diplomatic: { relief: 0.35, flat: 0 },
 };
+
+// Diplomatic mode palette (colors relative to the player).
+const DIP_ALLY = [86, 148, 86];
+const DIP_ENEMY = [182, 52, 46];
+const DIP_TRUCE = [206, 178, 84];
+const DIP_NEUTRAL = [158, 148, 128];
+const CLAIM_GOLD = [230, 192, 64];
 
 export function computeMapmodeColors(ctx, mode) {
   const game = ctx.game;
@@ -95,6 +103,35 @@ export function computeMapmodeColors(ctx, mode) {
     (game.tags[t] && game.tags[t].color) || (TAGS[t] && TAGS[t].color) || GRAY;
   const wasteColor = (TAGS.WASTE && TAGS.WASTE.color) || [70, 66, 60];
   const cultureDisplay = mode === 'culture' ? buildCultureDisplay(DEFINES) : null;
+
+  // Diplomatic mode: classify every tag once, relative to the player.
+  let dipColorOf = null;
+  if (mode === 'diplomatic') {
+    const me = game.playerTag;
+    const mine = game.tags[me] || {};
+    const myColor = tagColor(me);
+    const cache = new Map();
+    dipColorOf = (tag) => {
+      if (cache.has(tag)) return cache.get(tag);
+      const t = game.tags[tag];
+      let c = DIP_NEUTRAL;
+      if (tag === me) c = myColor;
+      else if (t && t.overlord === me) c = lerp3(myColor, [255, 255, 255], 0.35); // our clients
+      else if (t && ((mine.atWarWith || []).indexOf(tag) >= 0)) c = DIP_ENEMY;
+      else if (t && (mine.overlord === tag || (mine.overlord && t.overlord === mine.overlord))) {
+        c = lerp3(tagColor(mine.overlord), [255, 255, 255], 0.3); // our overlord's house
+      } else if (t && ((mine.allies || []).indexOf(tag) >= 0 || (t.allies || []).indexOf(me) >= 0)) c = DIP_ALLY;
+      else if (t && game.truces) {
+        const key = me < tag ? me + '|' + tag : tag + '|' + me;
+        const tr = game.truces[key];
+        const active = tr && (game.date.y < tr.y || (game.date.y === tr.y && game.date.m < tr.m));
+        if (active) c = DIP_TRUCE;
+      }
+      cache.set(tag, c);
+      return c;
+    };
+  }
+  const myClaims = (game.tags[game.playerTag] && game.tags[game.playerTag].claims) || [];
 
   for (let id = 1; id <= N; id++) {
     const p = provs[id];
@@ -153,6 +190,29 @@ export function computeMapmodeColors(ctx, mode) {
         }
         break;
       }
+      case 'diplomatic': {
+        if (p.impassable) {
+          cA = wasteColor;
+        } else {
+          cA = dipColorOf(p.owner);
+          if (myClaims.indexOf(id) >= 0) { // our claims, gold-striped
+            cB = CLAIM_GOLD;
+            fl |= 1;
+          } else if (p.controller && p.controller !== p.owner) {
+            cB = dipColorOf(p.controller);
+            fl |= 1;
+          }
+        }
+        break;
+      }
+    }
+
+    // While the peace dialog is open, the provinces on the table pulse gold in
+    // every mapmode (ui.js sets game.ui.peaceHighlight to the demandable ids).
+    const hl = game.ui && game.ui.peaceHighlight;
+    if (Array.isArray(hl) && hl.indexOf(id) >= 0 && !p.impassable) {
+      cB = CLAIM_GOLD;
+      fl |= 1 | 4;
     }
 
     setRGB(primary, id, cA);

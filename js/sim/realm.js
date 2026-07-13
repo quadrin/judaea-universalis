@@ -1,7 +1,9 @@
 // Judaea Universalis — realm systems: mortal rulers & succession, post-conquest
-// integration (autonomy & conversion), and mission chains. DOM-free.
+// integration (autonomy & conversion), mission chains, and the yields of holy
+// sites & wonders. DOM-free.
 
 import { num, clamp, GENERAL_NAMES } from './military.js';
+import { fireEvent } from './events.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -46,6 +48,24 @@ function crown(ctx, tag, heir, oldTitle) {
   t.regency = false;
 }
 
+// The player's own successions deserve a full event card, not a six-second
+// toast. Dynamic events live in ctx.dynEvents (rebuilt per session, never
+// saved); reviveGame drops any dyn_* entries left pending in an old save.
+function successionCard(ctx, title, text) {
+  const g = ctx.game;
+  if (!ctx.dynEvents) return false;
+  g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
+  const ev = {
+    id: 'dyn_succession_' + g.flags._dynEvN,
+    title,
+    desc: text,
+    forTag: g.playerTag,
+    options: [{ label: 'The realm endures', effects() {} }],
+  };
+  ctx.dynEvents.set(ev.id, ev);
+  try { fireEvent(ctx, ev); return true; } catch (e) { warnOnce('dynEv', 'succession card failed', e); return false; }
+}
+
 // The one true death path: crowns the heir, installs a regency for a child
 // heir, or lets an unrelated courtier seize power. Exposed so scripted events
 // (Nero, Mattathias) can kill rulers through the same machinery.
@@ -75,11 +95,15 @@ export function rulerDies(ctx, tag, causeText) {
     t.stability = clamp(num(t.stability) - 1, -3, 3);
     text = `${old.name} ${causeText || 'has died'} with no designated heir. ${nr.name} takes the ${title.toLowerCase()} amid whispers and drawn knives. (−25 legitimacy, −1 stability)`;
   }
-  ctx.bus.emit('notify', {
-    title: 'Death of ' + old.name,
-    text,
-    type: player ? 'bad' : 'info',
-  });
+  // The player's own succession pauses the game with a proper card; other
+  // courts' deaths stay world news in the toast stream.
+  if (!(player && successionCard(ctx, 'Death of ' + old.name, text))) {
+    ctx.bus.emit('notify', {
+      title: 'Death of ' + old.name,
+      text,
+      type: player ? 'bad' : 'info',
+    });
+  }
 }
 
 // Monthly: aging (each January), heir appearances, regencies ending, and the
@@ -160,6 +184,61 @@ export function monthlyIntegration(ctx) {
         });
       }
     } catch (e) { warnOnce('conv:' + i, 'conversion tick failed for province', i, e); }
+  }
+}
+
+// ---------------------------------------------------------------- holy sites & wonders
+// Each holy site belongs to a faith forever, whatever happens to the province.
+export const HOLY_FAITH = { temple_mount: 'judaism', gerizim: 'samaritanism' };
+// Wonders yield to whoever owns AND controls them (monthly).
+export const WONDER_YIELD = {
+  temple: { gov: 1, legitimacy: 0.2, desc: '+1 governance point and +0.2 legitimacy a month to its keeper' },
+  library: { infl: 1, desc: '+1 influence point a month to its keeper' },
+  petra: { treasury: 2, desc: '+2 talents a month to its keeper' },
+};
+export function monthlyHolySites(ctx) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    try {
+      // Holy sites: a controller of the same faith draws strength from it...
+      if (p.holy) {
+        const faith = HOLY_FAITH[p.holy] || p.religion;
+        const c = g.tags[p.controller];
+        if (c && c.alive && c.religion === faith) {
+          c.points.gov = clamp(num(c.points.gov) + 1, 0, 999);
+          c.points.infl = clamp(num(c.points.infl) + 1, 0, 999);
+          c.points.mar = clamp(num(c.points.mar) + 1, 0, 999);
+          c.legitimacy = clamp(num(c.legitimacy) + 0.3, 0, 100);
+        }
+        // ...while every realm of that faith aches to see it in heathen hands.
+        const cGroup = c && ctx.DEFINES.RELIGIONS && ctx.DEFINES.RELIGIONS[c.religion]
+          ? ctx.DEFINES.RELIGIONS[c.religion].group : null;
+        const fGroup = ctx.DEFINES.RELIGIONS && ctx.DEFINES.RELIGIONS[faith]
+          ? ctx.DEFINES.RELIGIONS[faith].group : null;
+        if (c && cGroup && fGroup && cGroup !== fGroup) {
+          for (const k of Object.keys(g.tags)) {
+            const t = g.tags[k];
+            if (t && t.alive && t.religion === faith) {
+              t.legitimacy = clamp(num(t.legitimacy) - 0.2, 25, 100);
+            }
+          }
+        }
+      }
+      // Wonders: flat yields for the keeper (owner === controller).
+      if (p.wonder && p.owner === p.controller) {
+        const y = WONDER_YIELD[p.wonder];
+        const t = g.tags[p.owner];
+        if (y && t && t.alive) {
+          if (y.gov) t.points.gov = clamp(num(t.points.gov) + y.gov, 0, 999);
+          if (y.infl) t.points.infl = clamp(num(t.points.infl) + y.infl, 0, 999);
+          if (y.mar) t.points.mar = clamp(num(t.points.mar) + y.mar, 0, 999);
+          if (y.treasury) t.treasury = num(t.treasury) + y.treasury;
+          if (y.legitimacy) t.legitimacy = clamp(num(t.legitimacy) + y.legitimacy, 0, 100);
+        }
+      }
+    } catch (e) { warnOnce('holy:' + i, 'holy site tick failed for province', i, e); }
   }
 }
 

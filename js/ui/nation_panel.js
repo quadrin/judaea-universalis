@@ -4,7 +4,7 @@
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
+export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -89,7 +89,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
         return;
       }
       const pc = e.target.closest('[data-peace]');
-      if (pc && onPeaceClick) onPeaceClick(pc.dataset.peace);
+      if (pc && onPeaceClick) { onPeaceClick(pc.dataset.peace); return; }
+      const wr = e.target.closest('[data-war]');
+      if (wr && onWarClick) onWarClick(wr.dataset.war);
     });
   }
 
@@ -267,7 +269,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick }) {
         const dove = w.noNegotiation
           ? ''
           : `<button class="ol-peace np-dove" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
-        html += `<div class="np-dip-row" data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">`
+        html += `<div class="np-dip-row np-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">`
           + (opp ? chip(opp) : icon('flame', 'icon-row'))
           + `<span class="np-dip-name">${esc(w.name || 'War')}</span>`
           + `<span class="np-dip-ws ${ws > 0 ? 'pos' : ws < 0 ? 'neg' : ''}">${signed(ws)}%</span>${dove}</div>`;

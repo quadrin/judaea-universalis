@@ -2,8 +2,9 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Three bookmarks:
+An EU4-style grand-strategy game set in the ancient Near East. Four bookmarks:
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea or the Seleucid Empire),
+**The Judaean Civil War, 67 BCE** (Hyrcanus or Aristobulus, with Pompey inbound),
 **The Great Revolt, 66 CE** (Judaea or Rome), and **The Bar Kokhba Revolt, 132 CE**
 (Judaea or Rome).
 
@@ -33,10 +34,15 @@ python3 -m http.server 8613 --directory .
   manpower & armies, allies/wars/truces — plus the central levers (reserves, stability, loans)
   and five national decisions (festival, rites, trade expeditions, drills, resettlement)
   for peacetime play.
-- EU4-style peace negotiation for non-scripted wars: build a deal from occupied provinces,
-  an indemnity and humiliation, priced against your war score; losing AIs sue for peace,
-  AI-vs-AI wars settle themselves, and five-year truces follow every treaty. Declare war
-  from a foreign province's diplomacy block (at a stability cost).
+- EU4-style peace negotiation for non-scripted wars: build a deal from occupied provinces
+  (highlighted gold on the map while you negotiate), an indemnity, humiliation, or
+  subjugation into a tribute-paying client kingdom — priced against your war score; losing
+  AIs sue for peace, AI-vs-AI wars settle themselves, and five-year truces follow every
+  treaty. Fabricate claims and declare war from a foreign province's diplomacy block.
+- Mortal rulers with heirs, regencies and succession crises; mission trees per playable
+  nation; a shared pool of random events; holy sites and wonders that pay their keeper.
+- A war overview (score broken into battles / occupation / events, who holds what), a
+  sortable ledger of nations (L), a diplomatic map mode, and save export/import.
 
 ## Architecture
 

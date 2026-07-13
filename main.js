@@ -8,6 +8,8 @@ import { EVENTS_167 } from './js/data/events_167bce.js';
 import { BOOKMARK_167 } from './js/data/bookmark_167bce.js';
 import { EVENTS_132 } from './js/data/events_132ce.js';
 import { BOOKMARK_132 } from './js/data/bookmark_132ce.js';
+import { EVENTS_67 } from './js/data/events_67bce.js';
+import { BOOKMARK_67 } from './js/data/bookmark_67bce.js';
 import { GENERIC_EVENTS } from './js/data/events_generic.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
@@ -46,7 +48,7 @@ async function boot() {
   let colorsDirty = true;
 
   bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; });
-  ['month', 'provinceOwner', 'provinceController', 'siegeEnd', 'war', 'eventResolved', 'provinceDev']
+  ['month', 'provinceOwner', 'provinceController', 'siegeEnd', 'war', 'eventResolved', 'provinceDev', 'peaceHighlight']
     .forEach((ev) => bus.on(ev, () => { colorsDirty = true; }));
 
   // ------------------------------------------------------------- save/load --
@@ -54,6 +56,7 @@ async function boot() {
     // Chronological order — this is also the title-screen card order. Every
     // bookmark gets the shared generic pool appended to its scripted chain.
     { bookmark: BOOKMARK_167, events: EVENTS_167.concat(GENERIC_EVENTS) },
+    { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
   ];
@@ -103,6 +106,33 @@ async function boot() {
 
   const saved = readNewestSave();
   const savedTag = saved && DEFINES.TAGS[saved.game.playerTag];
+  // Save tools (start screen): localStorage is fragile — especially on
+  // phones — so the newest save can leave as a file and come back as one.
+  const saveTools = {
+    onExport() {
+      // export the newest save verbatim
+      const best = readNewestSave();
+      if (!best) return null;
+      const raw = localStorage.getItem(saveKey(best.game.bookmarkId));
+      if (!raw) return null;
+      const d = best.game.date;
+      return {
+        filename: 'judaea-save-' + best.game.bookmarkId + '-' + best.game.playerTag + '-y' + Math.abs(d.y) + (d.y < 0 ? 'bce' : 'ce') + '.json',
+        json: raw,
+      };
+    },
+    onImport(text) {
+      try {
+        const parsed = JSON.parse(text);
+        if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game) return false;
+        const game = reviveGame(parsed.game);
+        if (!game || !byId(game.bookmarkId)) return false;
+        localStorage.setItem(saveKey(game.bookmarkId),
+          JSON.stringify({ v: SAVE_VERSION, savedAt: Date.now(), game: parsed.game }));
+        return true; // the start screen reloads the page to pick it up
+      } catch (e) { console.warn('[import]', e); return false; }
+    },
+  };
   ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag) => {
     const entry = byId(bookmark.id);
     const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events, playerTag, rngSeed: 20260711 });
@@ -111,7 +141,7 @@ async function boot() {
     label: (savedTag ? savedTag.name : saved.game.playerTag) + ', '
       + (DEFINES.MONTH_NAMES[saved.game.date.m - 1] || saved.game.date.m) + ' ' + fmtYr(saved.game.date.y),
     onContinue: () => startGame(saved.game, saved.entry),
-  } : null);
+  } : null, saveTools);
 
   camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;

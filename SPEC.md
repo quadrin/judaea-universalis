@@ -740,3 +740,41 @@ renderer.render → overlay.draw → labels.update.
   the decrees, Akiva's star, the lost legion, Julius Severus, the Method, Betar, the
   Parthian shadow); victory mirrors 66 CE (hold Jerusalem + 6 provinces of the faith to
   136, or ±50 warscore; Rome must extinguish the rising by 137).
+
+## 16. v1.6: reading the game — war overview, ledger, diplomatic mapmode, QoL, holy sites, 67 BCE
+
+- **War overview** (`#war-modal`): clicking a war row (outliner or realm panel) opens the
+  war's anatomy — sides with flags, duration & CB, the score bar, and the net breakdown
+  battles / occupation / events (`military.js sideComponents`, action `getWarInfo(warId)`),
+  plus who occupies what and a button into the peace dialog. Doves still negotiate directly.
+- **Ledger** (`#ledger-modal`, action `getLedger()`): every living nation's provinces, dev,
+  net income, treasury, troops, manpower and war exhaustion; sortable by column, player row
+  highlighted, clients marked. Topbar scroll button or `L`.
+- **Diplomatic mapmode** (7th button, `mapmodes.js 'diplomatic'`): colors relative to the
+  player — realm, clients (lightened), overlord's house, allies green, war-enemies red,
+  truces gold, neutrals gray; our claims striped gold. While the peace dialog is open the
+  demandable provinces pulse gold in EVERY mapmode (`game.ui.peaceHighlight`, bus event
+  `'peaceHighlight'`), and clicking a row flies the camera there.
+- **QoL**: merge-all button on the selected outliner army (action `mergeAllInto`); `N`
+  toggles the realm panel, `L` the ledger; the player's ruler deaths arrive as event
+  cards (runtime `ctx.dynEvents` registry — never saved, stale `dyn_*` pendings dropped
+  on revive); export/import save as a JSON file from the start screen
+  (`showStartScreen(..., saveTools)`); the AI now integrates its conquests (establish
+  rule / convert, `ai.js aiIntegration`) and drills when flush at war. 66 CE gained
+  `activeTags` so other eras' tags never ghost into it.
+- **Holy sites & wonders** (`realm.js monthlyHolySites`): a holy site controlled by its
+  own faith yields +1 of every monarch point and +0.3 legitimacy a month; in the hands of
+  another religious group it drains every realm of that faith (−0.2/month, floor 25).
+  Wonders pay their keeper monthly: the Temple +1 gov & +0.2 legitimacy, the Library +1
+  influence, Petra +2 talents. Province-panel tooltips explain the yields.
+- **Fourth bookmark** (`bookmark_67bce.js`, `events_67bce.js`): The Judaean Civil War,
+  67 BCE — new tags HYR/ARI (defines + flag emblems), the Hasmonean kingdom split between
+  the brothers, Seleucid rump Syria, Ptolemaic Egypt, Nabataean Damascus, Roman Cilicia.
+  The central war is NEGOTIABLE — the first bookmark fought with the full diplomacy kit
+  (subjugate your brother!). Event arc: Salome dies, Antipater, Aretas' price (Medaba for
+  8,000 lances), Honi the Circle-Drawer, the paschal pig, Tigranes kneels, Pompey annexes
+  Syria (SEL extinguished by event), the three embassies, Pompey's demands (submit as a
+  client or defy — AI Hyrcanus submits, AI Aristobulus defies), the arbitration, the Holy
+  of Holies. Victory: unify the kingdom and hold Jerusalem free by 60 BCE (180), as a
+  Roman client (100), beat Rome's intervention at +40 warscore (200); the book closes at
+  55 BCE either way.

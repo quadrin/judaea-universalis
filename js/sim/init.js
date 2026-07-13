@@ -10,8 +10,9 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
+  sideComponents, monthsBetween, armiesInProv, devTotal,
 } from './military.js';
-import { maxManpowerOf, explainIncome, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { resolveEventOption } from './events.js';
@@ -127,6 +128,7 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
   }
   const ctx = {
     game, DEFINES, MAP_DATA, geom, bus, bookmark, events,
+    dynEvents: new Map(), // runtime-synthesized events (succession cards); never saved
     rng: createRng((num(game.rngSeed, 1)) >>> 0),
     helpers: simHelpers,
     prov(name) {
@@ -850,6 +852,111 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }
     },
 
+    // ---- war overview --------------------------------------------------------
+    // Everything the war panel shows: sides, the player's score broken into
+    // battles / occupation / events (net of the enemy's same components),
+    // who occupies what, duration, CB, and whether the dove can fly.
+    getWarInfo(warId) {
+      try {
+        const war = g.wars.find((w) => w && w.id === warId);
+        const me = g.playerTag;
+        if (!war) return null;
+        const onAtt = war.attackers.indexOf(me) >= 0;
+        if (!onAtt && war.defenders.indexOf(me) < 0) return null;
+        const myKey = onAtt ? 'att' : 'def';
+        const theirKey = onAtt ? 'def' : 'att';
+        const mine = sideComponents(ctx, war, myKey);
+        const theirs = sideComponents(ctx, war, theirKey);
+        const mySide = onAtt ? war.attackers : war.defenders;
+        const theirSide = onAtt ? war.defenders : war.attackers;
+        const sideRow = (tag) => ({
+          tag,
+          name: (g.tags[tag] && g.tags[tag].name) || tag,
+          alive: !!(g.tags[tag] && g.tags[tag].alive),
+        });
+        const weHold = [];
+        const theyHold = [];
+        for (let i = 1; i < g.provinces.length; i++) {
+          const p = g.provinces[i];
+          if (!p || p.impassable || p.owner === p.controller) continue;
+          if (theirSide.indexOf(p.owner) >= 0 && mySide.indexOf(p.controller) >= 0) {
+            weHold.push({ id: i, name: p.name, dev: devTotal(p) });
+          } else if (mySide.indexOf(p.owner) >= 0 && theirSide.indexOf(p.controller) >= 0) {
+            theyHold.push({ id: i, name: p.name, dev: devTotal(p) });
+          }
+        }
+        weHold.sort((a, b) => b.dev - a.dev);
+        theyHold.sort((a, b) => b.dev - a.dev);
+        return {
+          warId: war.id, warName: war.name,
+          cb: war.cb || null,
+          started: { ...war.started },
+          months: Math.max(0, monthsBetween(war.started, g.date)),
+          mySide: mySide.map(sideRow), theirSide: theirSide.map(sideRow),
+          myWs: Math.round(num(war.warscore && war.warscore[me])),
+          breakdown: {
+            battles: Math.round(mine.battles - theirs.battles),
+            occupation: Math.round(mine.occupation - theirs.occupation),
+            events: Math.round(mine.events - theirs.events),
+          },
+          weHold, theyHold,
+          noNegotiation: !!war.noNegotiation,
+          envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
+        };
+      } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
+    },
+
+    // ---- ledger ----------------------------------------------------------------
+    getLedger() {
+      try {
+        const rows = [];
+        for (const tag of Object.keys(g.tags)) {
+          if (tag === 'REB') continue;
+          const t = g.tags[tag];
+          if (!t || !t.alive) continue;
+          let provs = 0, dev = 0;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== tag) continue;
+            provs++;
+            dev += devTotal(p);
+          }
+          let troops = 0;
+          for (const a of armiesOf(ctx, tag)) troops += num(a.men);
+          const bd = incomeBreakdown(ctx, tag);
+          rows.push({
+            tag,
+            name: t.name || tag,
+            isPlayer: tag === g.playerTag,
+            overlord: t.overlord || null,
+            provs, dev,
+            income: Math.round(bd.net * 10) / 10,
+            treasury: Math.round(num(t.treasury)),
+            troops,
+            manpower: Math.round(num(t.manpower)),
+            warExhaustion: Math.round(num(t.warExhaustion) * 10) / 10,
+          });
+        }
+        rows.sort((a, b) => b.dev - a.dev);
+        return rows;
+      } catch (e) { warnOnce('ledger', 'getLedger failed', e); return []; }
+    },
+
+    // ---- merge all -------------------------------------------------------------
+    mergeAllInto(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return;
+        let merged = 0;
+        for (const other of armiesInProv(ctx, a.prov)) {
+          if (other.id === a.id || other.tag !== g.playerTag) continue;
+          if (mergeInto(ctx, other.id, a.id)) merged++;
+        }
+        if (merged) say('Armies merged', merged + (merged === 1 ? ' army joins ' : ' armies join ') + a.name + '.', 'info');
+        else say('Nothing to merge', 'No other army of ours stands in this province (or they are locked in battle).', 'info');
+      } catch (e) { warnOnce('mergeAll', 'mergeAllInto failed', e); }
+    },
+
     // ---- declaring war (a casus belli softens the cost) ---------------------
     // no CB: -2 stability, -5 legitimacy · holy war: -1 stability · claim: free
     declareWarOn(tag) {
@@ -1034,6 +1141,8 @@ export function reviveGame(saved) {
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
+  // Runtime-synthesized events don't survive a reload — drop stale pendings.
+  saved.pendingEvents = saved.pendingEvents.filter((pe) => !(pe && String(pe.eventId).startsWith('dyn_')));
   if (!saved.firedEvents) saved.firedEvents = {};
   if (!saved.battles) saved.battles = [];
   if (!saved.wars) saved.wars = [];
