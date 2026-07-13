@@ -8,6 +8,11 @@ import { icon, flagChip } from './icons.js';
 import { createPeer } from '../net/rtc.js';
 
 const MAX_GUESTS = 3;
+// Bumped whenever the multiplayer protocol or lobby flow changes. A host and a
+// guest on different builds (one tab loaded before a deploy) otherwise glitch
+// silently — with this they get told to reload instead.
+const MP_PROTO = 2;
+const BUILD = 'v1.8.1';
 
 export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
@@ -47,6 +52,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
       <div class="ev-card peace-card mp-card">
         <h2 class="peace-title">${icon('spears', 'icon-sm')} Multiplayer</h2>
         ${inner}
+        <div class="mp-build">build ${esc(BUILD)} — all players should be on the same build (reload the page to update)</div>
       </div>`;
   }
 
@@ -92,6 +98,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     const b = bookmarks[hostBookmark].bookmark;
     return {
       t: 'lobby',
+      v: MP_PROTO,
       bookmarkId: b.id,
       bookmarkName: b.name,
       tag: hostTag, // everyone shares the host's throne
@@ -207,7 +214,12 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   }
 
   function hostOnGuestMessage(guest, m) {
-    // lobby guests only listen; in-game messages are handled by main.js once started
+    // Lobby guests mostly listen; in-game messages are handled by main.js once
+    // started. The hello lets us catch a guest running a different build.
+    if (m && m.t === 'hello' && m.v !== MP_PROTO && el) {
+      const d = el.querySelector('[data-ref="status"]');
+      if (d) d.textContent = 'A joining player is running a different version of the game — ask them to reload the page and rejoin with a fresh invite.';
+    }
   }
 
   // ------------------------------------------------------------------ join --
@@ -230,7 +242,10 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
         guestPeer = createPeer({
           initiator: false,
           onMessage: guestOnHostMessage,
-          onOpen: () => status('Connected. Waiting for the lobby…'),
+          onOpen: () => {
+            guestPeer.send({ t: 'hello', v: MP_PROTO });
+            status('Connected. Waiting for the lobby…');
+          },
           onClose: () => { if (!started) status('The connection closed.'); },
         });
         status('Building the reply…');
@@ -253,6 +268,8 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   function renderGuestInfo() {
     const wrap = el && el.querySelector('[data-ref="pickwrap"]');
     if (!wrap || !guestLobby) return;
+    const stat = el.querySelector('[data-ref="status"]');
+    if (stat) stat.textContent = ''; // the handshake chatter is over
     wrap.innerHTML = `
       <div class="peace-sec">${esc(guestLobby.bookmarkName)}</div>
       <div class="mp-player">${flagChip(guestLobby.tag, DEFINES, 18)}
@@ -263,6 +280,11 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   function guestOnHostMessage(m) {
     if (!m) return;
     if (m.t === 'lobby') {
+      if (m.v !== MP_PROTO) {
+        const d = el && el.querySelector('[data-ref="status"]');
+        if (d) d.textContent = 'You and the host are running different versions of the game — both of you reload the page, then try a fresh invite.';
+        return;
+      }
       guestLobby = m;
       renderGuestInfo();
       return;

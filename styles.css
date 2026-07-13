@@ -1950,6 +1950,14 @@ html, body {
 .mp-hint { font-size: 12.5px; color: var(--ink-soft); margin: 8px 0 2px; }
 .mp-status { font-size: 12.5px; color: var(--red-deep); min-height: 18px; margin: 6px 0; }
 .ss-mp { color: var(--gold-bright); border-color: var(--gold); }
+.mp-build {
+  margin-top: 12px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(43, 32, 21, 0.2);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  opacity: 0.75;
+}
 
 /* ------------------------------------------------- battle window (v1.7) -- */
 #battle-modal { position: absolute; inset: 0; z-index: 110; pointer-events: auto; }
