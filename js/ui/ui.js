@@ -14,6 +14,7 @@ import { icon, flagChip } from './icons.js';
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
   { id: 'diplomatic', ico: icon('dove'), name: 'Diplomatic — friends, foes, truces and claims, seen from your throne' },
+  { id: 'trade', ico: icon('coins'), name: 'Trade — the routes, their stops, and the chokepoints that pay double' },
   { id: 'terrain', ico: icon('mountain'), name: 'Terrain' },
   { id: 'religion', ico: icon('altar'), name: 'Religion' },
   { id: 'culture', ico: icon('amphora'), name: 'Culture' },

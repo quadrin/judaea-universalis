@@ -2,6 +2,8 @@
 // DOM-free.
 
 import { num, clamp, B, regCount, resolveTagMult, armiesOf, hasBuilding } from './military.js';
+import { blockadedBy } from './navy.js';
+import { TRADE_ROUTES } from '../data/trade.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
 export const LOAN_INTEREST_PER_MONTH = 3; // talents per loan per month
@@ -55,12 +57,32 @@ function ownIncome(ctx, tag) {
 
 // Returns {tax, prod, mult, base, income, tributeIn, tributeOut, maint,
 // interest, net} for a tag (monthly figures).
+// The routes pay whoever holds their stops — nothing from an occupied,
+// besieged, or (sea routes) blockaded harbor; the chokepoint pays double.
+export function tradeIncome(ctx, tag) {
+  let sum = 0;
+  for (const r of TRADE_ROUTES) {
+    const share = r.value / r.stops.length;
+    for (const stop of r.stops) {
+      const id = ctx.provId ? ctx.provId(stop) : 0;
+      const p = id ? ctx.byId(id) : null;
+      if (!p || p.owner !== tag) continue;
+      if (p.controller !== p.owner || p.siege) continue;
+      if (r.sea && blockadedBy(ctx, id)) continue;
+      sum += share * (r.chokepoint === stop ? 2 : 1);
+    }
+  }
+  return Math.round(sum * 100) / 100;
+}
+
 export function incomeBreakdown(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, interest: 0, net: 0 };
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, interest: 0, trade: 0, net: 0 };
   if (!t) return out;
   Object.assign(out, ownIncome(ctx, tag));
+  try { out.trade = tradeIncome(ctx, tag); } catch (e) { out.trade = 0; }
+  out.income += out.trade;
   // Client tribute: a share of each vassal's own income flows to the overlord.
   if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
     out.tributeOut = out.income * TRIBUTE_SHARE;
