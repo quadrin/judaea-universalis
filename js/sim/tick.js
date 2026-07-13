@@ -2,7 +2,7 @@
 
 import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
-  monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife,
+  monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -77,6 +77,7 @@ function monthlyBlock(ctx) {
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
+  safe('elimination', () => checkElimination(ctx));
   if (!g.over && !g.result) {
     safe('victory', () => {
       if (ctx.bookmark && typeof ctx.bookmark.checkVictory === 'function') ctx.bookmark.checkVictory(ctx);

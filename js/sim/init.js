@@ -253,10 +253,8 @@ export const simHelpers = {
     const g = ctx.game;
     if (g.result) return; // already decided
     g.result = result || 'loss';
-    g.over = true;
-    g.paused = true;
-    // The chapter's verdict closes the player's wars: a win keeps what the
-    // sword holds, a loss concedes it — continued observation is at peace.
+    // The verdict closes the player's wars: a win keeps what the sword holds,
+    // a loss concedes it — either way the world is at peace afterwards.
     try {
       for (const w of (g.wars || []).slice()) {
         const onAtt = w.attackers.indexOf(g.playerTag) >= 0;
@@ -267,8 +265,23 @@ export const simHelpers = {
         endWarBySword(ctx, w, winners, { silent: true });
       }
     } catch (e) { warnOnce('endGameWars', 'closing wars on game end failed', e); }
+    g.paused = true;
     ctx.bus.emit('pause', true);
-    ctx.bus.emit('gameover', { result: g.result, title: title || '', text: text || '', score: num(score, 0) });
+    // The full VICTORIA/DEFEAT card is reserved for actual elimination — a
+    // chapter verdict while the nation still stands is chronicled as a great
+    // moment and the campaign simply continues (checkElimination owns the
+    // true game-over).
+    const t = g.tags[g.playerTag];
+    if (!t || t.alive === false) {
+      g.over = true;
+      ctx.bus.emit('gameover', { result: g.result, title: title || '', text: text || '', score: num(score, 0) });
+    } else {
+      ctx.bus.emit('notify', {
+        title: title || (g.result === 'win' ? 'Victory' : 'Defeat'),
+        text: (text ? text + ' ' : '') + 'The chronicle records this moment — the campaign continues.',
+        type: g.result === 'win' ? 'good' : 'bad',
+      });
+    }
   },
   killGeneral(ctx, tag, generalName) {
     for (const a of armiesOf(ctx, tag)) {

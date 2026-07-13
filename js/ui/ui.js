@@ -774,5 +774,10 @@ export function initUI(staticCtx) {
     bus.on('gameover', safe('gameover', (p) => { gameover.show(p || {}); topbar.refresh(); }));
   }
 
-  return { showStartScreen, bindGame };
+  // Multiplayer guests mirror the host's event cards read-only (main.js wires
+  // these to the {t:'event'} / {t:'eventDone'} messages).
+  function showRemoteEvent(p) { try { eventModal.showRemote(p); } catch (e) { warnOnce('remoteEvent', e); } }
+  function closeRemoteEvent(instanceId) { try { eventModal.closeRemote(instanceId); } catch (e) { warnOnce('remoteEventDone', e); } }
+
+  return { showStartScreen, bindGame, showRemoteEvent, closeRemoteEvent };
 }

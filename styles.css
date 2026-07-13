@@ -1906,6 +1906,16 @@ html, body {
 .wo-card .pp-v.neg { color: var(--red-deep); }
 .wo-card .peace-send { margin-top: 12px; }
 
+/* Read-only event mirror for multiplayer guests (v1.9) */
+.ev-card.ev-remote .ev-opt[disabled] { opacity: 0.55; cursor: default; filter: grayscale(0.35); }
+.ev-host-note {
+  margin-top: 10px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-dim);
+  text-align: center;
+}
+
 /* --------------------------------------------- multiplayer lobby (v1.8) -- */
 #mp-lobby { position: fixed; inset: 0; z-index: 230; pointer-events: auto; }
 #mp-lobby.hidden { display: none !important; }

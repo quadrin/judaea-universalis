@@ -86,7 +86,46 @@ export function createEventModal(el) {
     maybeShow();
   }
 
-  return { bind, onBusEvent, isOpen: () => !!current };
+  // Read-only mirror for multiplayer guests: the same card the host sees, but
+  // the choice belongs to the host — options are shown disabled, and the card
+  // closes when the host's resolution arrives ({t:'eventDone'} -> closeRemote).
+  let remoteQueue = [];
+  function renderRemote() {
+    const p = remoteQueue[0];
+    if (!p) {
+      el.classList.add('hidden');
+      el.innerHTML = '';
+      return;
+    }
+    const options = Array.isArray(p.options) && p.options.length ? p.options : [{ label: 'So be it.' }];
+    const opts = options.map((o) =>
+      `<button class="btn ev-opt" disabled${o && o.tooltip ? ` data-tt="${esc(o.tooltip)}"` : ''}>${esc((o && o.label) || 'Continue')}</button>`
+    ).join('');
+    el.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card ev-remote">
+        <div class="ev-orn">${divider('ev-divider')}</div>
+        <h2 class="ev-title">${esc(p.title || 'A Dispatch Arrives')}</h2>
+        <div class="ev-desc">${esc(p.desc || '')}</div>
+        <div class="ev-opts">${opts}</div>
+        <div class="ev-host-note">The host speaks for the realm…</div>
+      </div>`;
+    el.classList.remove('hidden');
+  }
+  function showRemote(p) {
+    if (!p || remoteQueue.some((q) => q.instanceId === p.instanceId)) return;
+    remoteQueue.push(p);
+    renderRemote();
+  }
+  function closeRemote(instanceId) {
+    if (!remoteQueue.length) return;
+    remoteQueue = instanceId != null
+      ? remoteQueue.filter((q) => q.instanceId !== instanceId)
+      : remoteQueue.slice(1);
+    renderRemote();
+  }
+
+  return { bind, onBusEvent, showRemote, closeRemote, isOpen: () => !!current || remoteQueue.length > 0 };
 }
 
 // -------------------------------------------------------------- game over ---
