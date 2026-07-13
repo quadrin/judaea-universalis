@@ -43,6 +43,13 @@ python3 -m http.server 8613 --directory .
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
 - A war overview (score broken into battles / occupation / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and save export/import.
+- A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID
+  staircase), procedural terrain grain per province (dunes, crags, fields, reeds), sandy
+  beaches and a breathing coastal foam line.
+- Armies that march: standards (pole + rippling pennant) slide along their path day by day
+  instead of teleporting, battles rock and spark, sieges smoke — and clicking a battle (on
+  the map or in the outliner) opens a live battle window with the day's dice, both hosts
+  army by army, morale and the running butcher's bill.
 
 ## Architecture
 

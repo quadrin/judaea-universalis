@@ -10,7 +10,7 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal,
+  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo,
 } from './military.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -904,6 +904,11 @@ export function gameActions(ctx) {
           envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
         };
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
+    },
+
+    // ---- battle window ---------------------------------------------------------
+    getBattleInfo(provId) {
+      try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
     },
 
     // ---- ledger ----------------------------------------------------------------

@@ -146,8 +146,9 @@ async function boot() {
   camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;
     const armyId = overlay.hitTestArmy(sx, sy, ctx.game, camera);
+    const battleProv = overlay.hitTestBattle ? overlay.hitTestBattle(sx, sy, ctx.game, camera) : 0;
     const provId = renderer.provIdAt(mapX, mapY);
-    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, shift: !!(mods && mods.shift) });
+    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, battleProv, shift: !!(mods && mods.shift) });
   });
   camera.onRightClick((mapX, mapY, sx, sy) => {
     if (!ctx) return;
@@ -186,7 +187,10 @@ async function boot() {
         colorsDirty = false;
       }
       renderer.render(camera, now);
-      overlay.draw(ctx ? ctx.game : null, camera, now);
+      // sub-day fraction: overlay slides marching armies between the daily sim steps
+      const running = ctx && !ctx.game.paused && !ctx.game.over;
+      const dayFrac = running ? Math.min(1, acc / (DEFINES.SPEED_MS[ctx.game.speed] || 450)) : 0;
+      overlay.draw(ctx ? ctx.game : null, camera, now, dayFrac);
       labels.update(ctx, camera, mapmode);
     } catch (e) {
       if (!frameWarned) { frameWarned = true; console.error('[frame]', e); }
