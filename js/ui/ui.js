@@ -696,7 +696,7 @@ export function initUI(staticCtx) {
   }
 
   // ------------------------------------------------------------------ API --
-  function showStartScreen(bookmarks, onPick, continueInfo, saveTools) {
+  function showStartScreen(bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
     els.start.classList.remove('hidden');
     buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag) => {
       els.start.classList.add('hidden');
@@ -704,7 +704,7 @@ export function initUI(staticCtx) {
     }, continueInfo ? {
       label: continueInfo.label,
       onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },
-    } : null, saveTools || null);
+    } : null, saveTools || null, onMultiplayer || null);
   }
 
   function bindGame(ctx, actions) {

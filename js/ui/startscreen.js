@@ -3,7 +3,7 @@
 import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
 
-export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools) {
+export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
   if (!root) return;
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
@@ -18,26 +18,71 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
     </div>`;
   }
 
+  // Which bookmark the carousel shows; survives bookmark->nations->back trips.
+  let bmIndex = 0;
+
   function renderBookmarks() {
     const cards = list.map((b, i) => `
-      <div class="bm-card" data-bm="${i}" tabindex="0">
+      <div class="ss-slide"><div class="bm-card" data-bm="${i}" tabindex="0">
         <div class="bm-year">${esc(fmtYear(b.startDate.y))}</div>
         <div class="bm-name">${esc(b.name)}</div>
         <div class="bm-blurb">${esc(b.blurb || '')}</div>
         <div class="nc-cta">${icon('star4', 'icon-xs')} &nbsp;Open this chapter&nbsp; ${icon('star4', 'icon-xs')}</div>
-      </div>`).join('');
-    const tools = saveTools ? `
+      </div></div>`).join('');
+    const dots = list.map((b, i) =>
+      `<button class="ss-dot" data-dot="${i}" aria-label="${esc(b.name)}" data-tt="${esc(b.name)}"></button>`).join('');
+    const tools = (saveTools || onMultiplayer) ? `
       <div class="ss-savetools">
-        ${continueInfo && saveTools.onExport ? '<button class="ss-back ss-tool" data-ref="export">Export save</button>' : ''}
-        ${saveTools.onImport ? '<button class="ss-back ss-tool" data-ref="import">Import save</button>' : ''}
+        ${onMultiplayer ? '<button class="ss-back ss-tool ss-mp" data-ref="mp">⚔ Multiplayer</button>' : ''}
+        ${continueInfo && saveTools && saveTools.onExport ? '<button class="ss-back ss-tool" data-ref="export">Export save</button>' : ''}
+        ${saveTools && saveTools.onImport ? '<button class="ss-back ss-tool" data-ref="import">Import save</button>' : ''}
       </div>` : '';
     root.innerHTML = shell(`
       <div class="ss-sub">Choose a bookmark</div>
-      <div class="ss-cards">${cards}</div>
+      <div class="ss-carousel">
+        <button class="ss-arrow ss-prev" aria-label="Previous chapter">‹</button>
+        <div class="ss-viewport"><div class="ss-track">${cards}</div></div>
+        <button class="ss-arrow ss-next" aria-label="Next chapter">›</button>
+      </div>
+      <div class="ss-dots">${dots}</div>
       ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}
       ${tools}`);
-    root.querySelectorAll('.bm-card').forEach((card) => {
-      const open = () => renderNations(list[Number(card.dataset.bm)]);
+
+    const track = root.querySelector('.ss-track');
+    const cardEls = [...root.querySelectorAll('.bm-card')];
+    const dotEls = [...root.querySelectorAll('.ss-dot')];
+    const go = (i) => {
+      bmIndex = ((i % list.length) + list.length) % list.length; // wrap both ways
+      track.style.transform = `translateX(${-bmIndex * 100}%)`;
+      cardEls.forEach((c, k) => c.classList.toggle('current', k === bmIndex));
+      dotEls.forEach((d, k) => d.classList.toggle('on', k === bmIndex));
+    };
+    root.querySelector('.ss-prev').addEventListener('click', () => go(bmIndex - 1));
+    root.querySelector('.ss-next').addEventListener('click', () => go(bmIndex + 1));
+    dotEls.forEach((d) => d.addEventListener('click', () => go(Number(d.dataset.dot))));
+    root.addEventListener('keydown', (e) => {
+      if (!root.querySelector('.ss-track')) return; // left the bookmark step
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(bmIndex - 1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); go(bmIndex + 1); }
+    });
+    // touch swipe on the viewport
+    const vp = root.querySelector('.ss-viewport');
+    let swipeX = null;
+    vp.addEventListener('touchstart', (e) => { if (e.touches.length === 1) swipeX = e.touches[0].clientX; }, { passive: true });
+    vp.addEventListener('touchend', (e) => {
+      if (swipeX == null) return;
+      const dx = (e.changedTouches[0] ? e.changedTouches[0].clientX : swipeX) - swipeX;
+      swipeX = null;
+      if (Math.abs(dx) > 40) go(bmIndex + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    go(bmIndex);
+
+    cardEls.forEach((card) => {
+      const open = () => {
+        const i = Number(card.dataset.bm);
+        if (i !== bmIndex) { go(i); return; } // a peeked/offset card slides into place first
+        renderNations(list[i]);
+      };
       card.addEventListener('click', open);
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
@@ -66,6 +111,8 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       });
     }
+    const mpBtn = root.querySelector('[data-ref="mp"]');
+    if (mpBtn && onMultiplayer) mpBtn.addEventListener('click', onMultiplayer);
     const impBtn = root.querySelector('[data-ref="import"]');
     if (impBtn && saveTools && saveTools.onImport) {
       impBtn.addEventListener('click', () => {
