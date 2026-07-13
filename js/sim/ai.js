@@ -6,6 +6,8 @@ import {
   num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   breakAllianceCore, assaultInfo, doAssault,
+  peaceDealInfo, executePeaceDeal, monthsBetween,
+  declareWar, truceActive, opinionOf, casusBelli,
 } from './military.js';
 import { LOAN_SIZE } from './economy.js';
 
@@ -184,6 +186,52 @@ function aiSpendPoints(ctx, tag) {
   }
 }
 
+// Peacetime statecraft: the AI assimilates its conquests exactly like the
+// player — lowering autonomy with spare governance, converting the biggest
+// wrong-faith province with spare influence, drilling when flush at war.
+// One act per pool per month, always keeping a reserve for the basics.
+function aiIntegration(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || !t.points) return;
+  if (num(t.points.gov) >= 125) {
+    let best = null;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+      const au = num(p.autonomy, 0.25);
+      if (au > 0.3 && (!best || au > num(best.autonomy, 0))) best = p;
+    }
+    if (best) {
+      t.points.gov -= 25;
+      best.autonomy = Math.max(0, num(best.autonomy, 0.25) - 0.15);
+      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
+      best.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+    }
+  }
+  if (num(t.points.infl) >= 100 && t.religion) {
+    let best = null;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+      if (p.religion === t.religion || p.conversion) continue;
+      if (!best || devTotal(p) > devTotal(best)) best = p;
+    }
+    if (best) {
+      t.points.infl -= 50;
+      best.conversion = { by: tag, monthsLeft: 12 };
+      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'religious_tension');
+      best.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
+    }
+  }
+  const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (atWar && num(t.points.mar) >= 150
+      && !(t.modifiers || []).some((m) => m && m.id === 'drilled_ranks')) {
+    t.points.mar -= 50;
+    t.modifiers.push({ id: 'drilled_ranks', name: 'Drilled Ranks', months: 18, effects: { disciplineMult: 1.05 } });
+  }
+}
+
 // Reciprocity: an ally whose opinion of the player has sunk below -25 walks
 // away from the alliance (breakAllianceCore handles the mutual removal and
 // the player's -50 opinion of the deserter).
@@ -207,6 +255,7 @@ function runTagAI(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   aiSpendPoints(ctx, tag);
+  aiIntegration(ctx, tag);
   aiLoans(ctx, tag);
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
   if (!enemies.length) return; // non-warring AI idles
@@ -238,6 +287,92 @@ function runTagAI(ctx, tag) {
   if (target) issueMove(ctx, main, target);
 }
 
+// Opportunistic wars (monthly). A stable, unengaged AI power that despises a
+// weaker neighbor — especially one already bleeding in another war — may
+// strike. Gated hard: strength ratio, opinion, stability, and a dice roll, so
+// peace is the norm and a war of opportunity is an event.
+function aiConsiderWar(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || t.overlord) return; // clients follow their overlord to war, never lead
+  if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
+  if (num(t.warExhaustion) > 5 || num(t.stability) < 1) return;
+  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+  const myMen = strength(tag);
+  if (myMen < 8000) return; // no army worth the name, no adventures
+  // Realms adjacent to ours, by province adjacency.
+  const nbTags = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    const set = ctx.geom && ctx.geom.neighbors ? ctx.geom.neighbors[i] : null;
+    if (!set) continue;
+    for (const nb of set) {
+      const q = ctx.byId(nb);
+      if (q && !q.impassable && q.owner !== tag && g.tags[q.owner]) nbTags.add(q.owner);
+    }
+  }
+  for (const tgt of nbTags) {
+    if (tgt === 'REB') continue;
+    const e = g.tags[tgt];
+    if (!e || !e.alive) continue;
+    if (truceActive(ctx, tag, tgt)) continue;
+    if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
+    if (opinionOf(ctx, tag, tgt) > -50) continue;
+    const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
+    const enemyMen = strength(tgt);
+    const ratio = enemyMen > 0 ? myMen / enemyMen : 99;
+    if (!(ratio >= 1.6 || (busyElsewhere && ratio >= 1.2))) continue;
+    if (!ctx.rng.chance(0.08)) continue;
+    const cb = casusBelli(ctx, tag, tgt);
+    t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
+    declareWar(ctx, tag, tgt, null, cb ? cb.type : null);
+    return; // at most one declaration a month, per power
+  }
+}
+
+// Peace feelers (monthly). A losing AI leader sues the player for peace — a
+// nudge to open the dove dialog and dictate terms. Wars between two AI powers
+// resolve themselves once one side clearly prevails or both sides tire.
+function monthlyWarDiplomacy(ctx) {
+  const g = ctx.game;
+  const player = g.playerTag;
+  for (const w of (g.wars || []).slice()) {
+    if (!w || w.noNegotiation) continue;
+    const playerIn = w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0;
+    if (playerIn) {
+      const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
+      const leader = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
+      if (!leader) continue;
+      const lt = g.tags[leader];
+      const ws = num(w.warscore && w.warscore[leader]);
+      if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= 15)) continue;
+      if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;
+      w._sueCd = { ...g.date };
+      ctx.bus.emit('notify', {
+        title: (lt.name || leader) + ' sues for peace',
+        text: 'Their envoys ask what terms we would set. Open the war in the outliner to dictate them.',
+        type: 'good',
+      });
+    } else {
+      const attLead = w.attackers.find((t) => g.tags[t] && g.tags[t].alive);
+      const defLead = w.defenders.find((t) => g.tags[t] && g.tags[t].alive);
+      if (!attLead || !defLead) continue;
+      const wsAtt = num(w.warscore && w.warscore[attLead]);
+      const months = monthsBetween(w.started, g.date);
+      if (Math.abs(wsAtt) < 50 && months < 36) continue;
+      const winner = wsAtt >= 0 ? attLead : defLead;
+      const info = peaceDealInfo(ctx, w, winner);
+      const deal = { provinces: [], gold: 0, humiliate: false };
+      let budget = info.myWs;
+      for (const row of info.provinces) {
+        if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
+      }
+      executePeaceDeal(ctx, w, winner, deal);
+    }
+  }
+}
+
 export function runMonthlyAI(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -246,7 +381,9 @@ export function runMonthlyAI(ctx) {
       if (!t || !t.alive || !t.ai) continue;
       if (tag === 'REB') { runRebelAI(ctx); continue; }
       aiDiploReciprocity(ctx, tag);
+      aiConsiderWar(ctx, tag);
       runTagAI(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
+  try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }
 }

@@ -564,10 +564,12 @@ export const EVENTS_66 = [
     options: [
       {
         label: 'The world holds its breath',
-        tooltip: 'Rome: -1 stability, -15 legitimacy, armies stand down ("Awaiting Orders", 7 months). Judaea: +5 legitimacy — surely this is the hand of Heaven.',
+        tooltip: 'Galba (2/1/2) is hailed emperor. Rome: -1 stability, -15 legitimacy, armies stand down ("Awaiting Orders", 7 months). Judaea: +5 legitimacy — surely this is the hand of Heaven.',
         effects: guard('ev_nero_dies:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -15 });
+          h.setRuler(ctx, 'ROM', { name: 'Galba', title: 'Emperor', gov: 2, infl: 1, mar: 2, age: 70 });
+          h.setHeir(ctx, 'ROM', null);
           h.addTagModifier(ctx, 'ROM', {
             id: 'awaiting_orders', name: 'Awaiting Orders', months: 7,
             effects: { aiPassive: true },
@@ -596,9 +598,10 @@ export const EVENTS_66 = [
     options: [
       {
         label: 'The legions look west',
-        tooltip: 'Rome: armies passive and reinforcements halved for 12 months. Judaea: -2 war exhaustion. The alt-history window is open — use it.',
+        tooltip: 'Vitellius (1/1/1) holds the throne — for now. Rome: armies passive and reinforcements halved for 12 months. Judaea: -2 war exhaustion. The alt-history window is open — use it.',
         effects: guard('ev_year_of_four_emperors:0', (ctx) => {
           const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Vitellius', title: 'Emperor', gov: 1, infl: 1, mar: 1, age: 54 });
           h.addTagModifier(ctx, 'ROM', {
             id: 'legions_look_west', name: 'The Legions Look West', months: 12,
             effects: { aiPassive: true, reinforceMult: 0.5 },
@@ -665,10 +668,12 @@ export const EVENTS_66 = [
     options: [
       {
         label: 'Titus takes command',
-        tooltip: 'Rome: +1 stability, +20 legitimacy, all passivity ends, and Titus (4/5/5) leads the army of Judaea.',
+        tooltip: 'Vespasian (4/3/5) rules with Titus as heir. Rome: +1 stability, +20 legitimacy, all passivity ends, and Titus (4/5/5) leads the army of Judaea.',
         effects: guard('ev_vespasian_emperor:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'ROM', { stability: 1, legitimacy: 20 });
+          h.setRuler(ctx, 'ROM', { name: 'Vespasian', title: 'Emperor', gov: 4, infl: 3, mar: 5, age: 59 });
+          h.setHeir(ctx, 'ROM', { name: 'Titus', gov: 3, infl: 3, mar: 5, age: 29 });
           h.removeModifier(ctx, 'ROM', 'awaiting_orders');
           h.removeModifier(ctx, 'ROM', 'legions_look_west');
           h.removeModifier(ctx, 'ROM', 'governor_hesitates');

@@ -630,13 +630,12 @@ renderer.render → overlay.draw → labels.update.
   gov/infl/mar respectively, +1 dev, cap 15, own+controlled only, emits `'provinceDev'`;
   `buyStability()` — 75 gov; `callReserves()` — 50 mar, +2,000 manpower. AI buys stability
   under 1 and reserves under 20% pool (ai.js `aiSpendPoints`).
-- **Peace & truces** (military.js): `PEACE_TERMS` (white / tribute / cede-occupied),
-  `aiWillAccept` (enemy net warscore thresholds 5 / −25 / −50; war-weary white peace at
-  WE ≥ 15), `makePeace` (cessions, indemnity, status-quo reversion, atWarWith rebuild,
-  5-year truces in `game.truces`, stranded armies walk home), `truceActive` blocks
-  `declareWar`. Actions: `peaceTerms()`, `offerPeace(warId, level)` — 6-month envoy
-  cooldown on refusal. Wars flagged `noNegotiation` (the bookmark's scripted war) only
-  resolve through events/victory. UI: dove button on outliner war rows → `#peace-modal`.
+- **Peace & truces** (military.js): superseded in v1.4 by the negotiated-peace deal
+  builder (§14) — `makePeace`'s wind-down machinery (status-quo reversion, atWarWith
+  rebuild, 5-year truces in `game.truces`, stranded armies walk home) lives on inside
+  `executePeaceDeal`. `truceActive` blocks `declareWar`. Wars flagged `noNegotiation`
+  (the bookmark's scripted war) only resolve through events/victory. UI: dove button on
+  outliner war rows → `#peace-modal`.
 
 ## 13. v1.2: multiple bookmarks
 
@@ -654,3 +653,128 @@ renderer.render → overlay.draw → labels.update.
 - 167 BCE tags in DEFINES: SEL (Seleucid Empire), PTO (Ptolemaic Egypt), HAS (Hasmonean
   Judaea). Content: `js/data/bookmark_167bce.js` (BOOKMARK_167), `js/data/events_167bce.js`
   (EVENTS_167), same schemas as §9.
+
+## 14. v1.4: the realm panel, rulers & negotiated peace
+
+- **Rulers.** Every tag (except REB) carries `ruler: {name, title, gov, infl, mar}`
+  (skills 0-6), assigned in `makeCtx` from `bookmark.rulers[tag]`; missing entries (and
+  pre-ruler saves) get a 2/2/2 ruling council. Monthly monarch-point gain = 2 + the
+  matching skill (tick.js).
+- **Nation panel** (`js/ui/nation_panel.js`, `#nation-panel` in index.html): opened by
+  clicking the topbar flag. Ruler & skills, religion/culture/capital/realm, stability,
+  legitimacy, war exhaustion, treasury & loans, manpower & armies, allies/wars (dove →
+  peace dialog)/truces, the central levers (call reserves, restore order, take/repay
+  loan) and the national decisions. Esc / swipe-down closes; bottom sheet on phones.
+- **National decisions** (init.js `DECISIONS`; actions `getDecisions()` /
+  `enactDecision(key)`): grand festival, great public rites, trade expeditions, army
+  drill, resettlement (peacetime-only). Effects run through ordinary tag modifiers;
+  cooldowns live in `game.diploCooldowns['decision:<key>']`.
+- **Negotiated peace, EU4-style** (military.js `PEACE`, `peaceDealInfo`,
+  `evaluatePeaceDeal`, `executePeaceDeal`; actions `getPeaceInfo(warId)`,
+  `evaluatePeace(warId, deal)`, `offerPeaceDeal(warId, deal)` with
+  `deal = {provinces:[ids], gold, humiliate}`): demand provinces your side occupies
+  (≈0.9 warscore per dev, min 4), an indemnity (10 warscore per 100 talents, capped by
+  the enemy treasury) and humiliation (15 warscore; ±legitimacy, points, stability).
+  Accepted when your warscore covers the price; a refusal costs a 6-month envoy
+  cooldown (`diploCooldowns['peace:<warId>']`). Empty deal = white peace, accepted per
+  the old thresholds (enemy ws ≤ 5, or war-weary at WE ≥ 15 and ws ≤ 15). The fixed
+  `PEACE_TERMS` / `offerPeace(level)` API from §12 is removed.
+- **Declaring war**: action `declareWarOn(tag)` (−2 stability, −5 legitimacy, −100
+  enemy opinion; allies join per `declareWar`), surfaced as a Declare War button in the
+  province panel's diplomacy block; truces and alliances gate it (`getDiplomacy` grew
+  `canWar`/`whyNotWar`).
+- **Living wars** (ai.js `monthlyWarDiplomacy`): an AI leader losing to the player
+  (ws ≤ −40, or ws ≤ −10 at WE ≥ 15) sues for peace via toast every 6 months; AI-AI
+  negotiable wars auto-resolve at |ws| ≥ 50 or 36 months — the winner takes what its
+  score covers, everything else reverts.
+- **Portrait phones**: instead of shedding them, the topbar wraps to two rows —
+  row 1: flag · treasury · manpower · pause/speed; row 2: stability · legitimacy ·
+  G/I/M points · date (styles.css portrait media block; `.tb-break` in topbar.js).
+
+## 15. v1.5: living realms — succession, integration, casus belli, missions, clients, 132 CE
+
+- **Mortal rulers & succession** (`js/sim/realm.js`): rulers carry `age`; tags may carry
+  `heir {name, gov, infl, mar, age}` and `regency` flag. Each January everyone ages; a
+  monthly actuarial roll (rising past age 50, cap 2%/month) can kill a ruler. On death:
+  adult heir crowned (−10 legitimacy), child heir → Regency Council rules until 16
+  (−20), no heir → a rolled courtier usurps (−25, −1 stability). Courts without an heir
+  eventually designate one. Content hooks: `helpers.setRuler / setHeir / rulerDies`;
+  the 66 CE chain now swaps Nero → Galba → Vitellius → Vespasian (heir Titus), and the
+  167 BCE chain seats Judah → Jonathan → Simon and Lysias' regency → Demetrius.
+  Bookmark `rulers[tag]` entries may carry `age` and `heir`.
+- **Post-conquest integration**: ceded provinces arrive at ≥0.6 autonomy with a
+  24-month `recent_conquest` (+3 unrest) modifier. Actions: `getIntegration(provId)`,
+  `establishRule(provId)` (25 gov → −0.15 autonomy, +2 unrest 6mo) and
+  `convertProvince(provId)` (50 infl → `p.conversion {by, monthsLeft:12}`, +3 unrest;
+  `monthlyIntegration` flips `p.religion` on completion; occupation pauses, a change of
+  owner voids). Province panel grows an Integration block.
+- **Claims & casus belli**: `t.claims [provId]`; `fabricateClaim(provId)` (30 infl,
+  −20 owner opinion, 12-month per-owner cooldown in `diploCooldowns['claim:<TAG>']`).
+  `casusBelli(atk, def)` → claim (war costs nothing) beats holy war (−1 stability;
+  target owns co-religionist land); no CB stays −2 stability −5 legitimacy. Wars carry
+  `war.cb`. Peace: claimed provinces cost ×0.7, co-religionist ×0.8.
+- **Opportunistic AI wars** (`ai.js aiConsiderWar`): a stable (stab ≥1, WE ≤5, ≥8k men,
+  not a client, at peace) AI power may declare on an adjacent realm it despises
+  (opinion ≤ −50) when clearly stronger (×1.6, or ×1.2 if the target is already at
+  war) — 8%/month when all gates pass, best CB applied.
+- **Missions** (`realm.js checkMissions`): `bookmark.missions[TAG]` = linear chain of
+  `{id, name, desc, rewardText, check(ctx), reward(ctx)}`; progress in `t.missionIdx`;
+  checked monthly for every tag with a chain (AI included), toast on player completion.
+  Action `getMissions()` feeds the nation panel's Missions section. 5-6 missions per
+  playable tag in all three bookmarks.
+- **Generic event pool** (`js/data/events_generic.js`, merged into every bookmark's
+  list in main.js): ~12 repeatable state-keyed events (harvests, drought, plague,
+  earthquake, comet, corruption, raiders, pilgrims, windfalls, games, moneylenders,
+  a veteran commander). Engine support: `once:false` + `cooldownMonths` (next-allowed
+  month index stored in `game.flags._evCd`).
+- **Client kingdoms**: `t.overlord`; peace deals gain `subjugate` (cost 25 + 0.25 ×
+  enemy-leader dev, cap 100; replaces province demands — a client keeps its lands).
+  Clients pay 15% of income as tribute (economy.js `TRIBUTE_SHARE`, shown in the income
+  breakdown), stand with their overlord (`sameSide`), join wars both directions
+  (declareWar pulls vassals and the defender's overlord), never start wars, and cannot
+  be allied/attacked by their overlord. A dead overlord frees its clients. AGR starts
+  as Rome's client in 66 CE. `requestParthianAid` is surfaced in the nation panel (JUD).
+- **Third bookmark** (`js/data/bookmark_132ce.js`, `events_132ce.js`): The Bar Kokhba
+  Revolt, 132 CE — activeTags ROM/JUD/PAR/ARM, Arabia is Roman, JUD holds a 7-province
+  hill-country core; rulers Hadrian and Simon bar Kosiba; ~13 events (Aelia Capitolina,
+  the decrees, Akiva's star, the lost legion, Julius Severus, the Method, Betar, the
+  Parthian shadow); victory mirrors 66 CE (hold Jerusalem + 6 provinces of the faith to
+  136, or ±50 warscore; Rome must extinguish the rising by 137).
+
+## 16. v1.6: reading the game — war overview, ledger, diplomatic mapmode, QoL, holy sites, 67 BCE
+
+- **War overview** (`#war-modal`): clicking a war row (outliner or realm panel) opens the
+  war's anatomy — sides with flags, duration & CB, the score bar, and the net breakdown
+  battles / occupation / events (`military.js sideComponents`, action `getWarInfo(warId)`),
+  plus who occupies what and a button into the peace dialog. Doves still negotiate directly.
+- **Ledger** (`#ledger-modal`, action `getLedger()`): every living nation's provinces, dev,
+  net income, treasury, troops, manpower and war exhaustion; sortable by column, player row
+  highlighted, clients marked. Topbar scroll button or `L`.
+- **Diplomatic mapmode** (7th button, `mapmodes.js 'diplomatic'`): colors relative to the
+  player — realm, clients (lightened), overlord's house, allies green, war-enemies red,
+  truces gold, neutrals gray; our claims striped gold. While the peace dialog is open the
+  demandable provinces pulse gold in EVERY mapmode (`game.ui.peaceHighlight`, bus event
+  `'peaceHighlight'`), and clicking a row flies the camera there.
+- **QoL**: merge-all button on the selected outliner army (action `mergeAllInto`); `N`
+  toggles the realm panel, `L` the ledger; the player's ruler deaths arrive as event
+  cards (runtime `ctx.dynEvents` registry — never saved, stale `dyn_*` pendings dropped
+  on revive); export/import save as a JSON file from the start screen
+  (`showStartScreen(..., saveTools)`); the AI now integrates its conquests (establish
+  rule / convert, `ai.js aiIntegration`) and drills when flush at war. 66 CE gained
+  `activeTags` so other eras' tags never ghost into it.
+- **Holy sites & wonders** (`realm.js monthlyHolySites`): a holy site controlled by its
+  own faith yields +1 of every monarch point and +0.3 legitimacy a month; in the hands of
+  another religious group it drains every realm of that faith (−0.2/month, floor 25).
+  Wonders pay their keeper monthly: the Temple +1 gov & +0.2 legitimacy, the Library +1
+  influence, Petra +2 talents. Province-panel tooltips explain the yields.
+- **Fourth bookmark** (`bookmark_67bce.js`, `events_67bce.js`): The Judaean Civil War,
+  67 BCE — new tags HYR/ARI (defines + flag emblems), the Hasmonean kingdom split between
+  the brothers, Seleucid rump Syria, Ptolemaic Egypt, Nabataean Damascus, Roman Cilicia.
+  The central war is NEGOTIABLE — the first bookmark fought with the full diplomacy kit
+  (subjugate your brother!). Event arc: Salome dies, Antipater, Aretas' price (Medaba for
+  8,000 lances), Honi the Circle-Drawer, the paschal pig, Tigranes kneels, Pompey annexes
+  Syria (SEL extinguished by event), the three embassies, Pompey's demands (submit as a
+  client or defy — AI Hyrcanus submits, AI Aristobulus defies), the arbitration, the Holy
+  of Holies. Victory: unify the kingdom and hold Jerusalem free by 60 BCE (180), as a
+  Roman client (100), beat Rome's intervention at +40 warscore (200); the book closes at
+  55 BCE either way.

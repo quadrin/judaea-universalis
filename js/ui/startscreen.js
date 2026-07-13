@@ -3,7 +3,7 @@
 import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
 
-export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo) {
+export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools) {
   if (!root) return;
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
@@ -26,10 +26,16 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo)
         <div class="bm-blurb">${esc(b.blurb || '')}</div>
         <div class="nc-cta">${icon('star4', 'icon-xs')} &nbsp;Open this chapter&nbsp; ${icon('star4', 'icon-xs')}</div>
       </div>`).join('');
+    const tools = saveTools ? `
+      <div class="ss-savetools">
+        ${continueInfo && saveTools.onExport ? '<button class="ss-back ss-tool" data-ref="export">Export save</button>' : ''}
+        ${saveTools.onImport ? '<button class="ss-back ss-tool" data-ref="import">Import save</button>' : ''}
+      </div>` : '';
     root.innerHTML = shell(`
       <div class="ss-sub">Choose a bookmark</div>
       <div class="ss-cards">${cards}</div>
-      ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}`);
+      ${continueInfo ? `<button class="ss-continue">${icon('star4', 'icon-xs')} &nbsp;Continue — ${esc(continueInfo.label)}&nbsp; ${icon('star4', 'icon-xs')}</button>` : ''}
+      ${tools}`);
     root.querySelectorAll('.bm-card').forEach((card) => {
       const open = () => renderNations(list[Number(card.dataset.bm)]);
       card.addEventListener('click', open);
@@ -43,6 +49,41 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo)
         if (root.dataset.picked) return;
         root.dataset.picked = '1';
         continueInfo.onContinue();
+      });
+    }
+    // Save tools: export downloads the newest save as a file; import reads one
+    // back (localStorage is fragile, especially on phones).
+    const expBtn = root.querySelector('[data-ref="export"]');
+    if (expBtn && saveTools && saveTools.onExport) {
+      expBtn.addEventListener('click', () => {
+        const out = saveTools.onExport(); // {filename, json} | null
+        if (!out) return;
+        const blob = new Blob([out.json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = out.filename || 'judaea-save.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      });
+    }
+    const impBtn = root.querySelector('[data-ref="import"]');
+    if (impBtn && saveTools && saveTools.onImport) {
+      impBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.addEventListener('change', () => {
+          const f = input.files && input.files[0];
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const ok = saveTools.onImport(String(reader.result || ''));
+            impBtn.textContent = ok ? 'Save imported ✓' : 'Not a valid save file';
+            if (ok) setTimeout(() => window.location.reload(), 500);
+          };
+          reader.readAsText(f);
+        });
+        input.click();
       });
     }
   }

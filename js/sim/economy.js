@@ -27,12 +27,13 @@ function provMult(p, key) {
   return m;
 }
 
-// Returns {tax, prod, mult, base, income, maint, interest, net} for a tag (monthly figures).
-export function incomeBreakdown(ctx, tag) {
+export const TRIBUTE_SHARE = 0.15; // of a client kingdom's income, paid to its overlord
+
+// Own-provinces income only (tax + production × national multiplier) — shared
+// by incomeBreakdown and the tribute pass, which must not recurse.
+function ownIncome(ctx, tag) {
   const g = ctx.game;
-  const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, maint: 0, interest: 0, net: 0 };
-  if (!t) return out;
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0 };
   const taxPerDev = B(ctx, 'taxPerDevPerYear', 1.0);
   const prodMult = B(ctx, 'prodMult', 0.6);
   for (let i = 1; i < g.provinces.length; i++) {
@@ -49,10 +50,30 @@ export function incomeBreakdown(ctx, tag) {
   out.mult = resolveTagMult(ctx, tag, 'incomeMult');
   out.base = out.tax + out.prod;
   out.income = out.base * out.mult;
+  return out;
+}
+
+// Returns {tax, prod, mult, base, income, tributeIn, tributeOut, maint,
+// interest, net} for a tag (monthly figures).
+export function incomeBreakdown(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, interest: 0, net: 0 };
+  if (!t) return out;
+  Object.assign(out, ownIncome(ctx, tag));
+  // Client tribute: a share of each vassal's own income flows to the overlord.
+  if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
+    out.tributeOut = out.income * TRIBUTE_SHARE;
+  }
+  for (const k of Object.keys(g.tags)) {
+    const v = g.tags[k];
+    if (!v || !v.alive || v.overlord !== tag) continue;
+    out.tributeIn += ownIncome(ctx, k).income * TRIBUTE_SHARE;
+  }
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
   for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg;
   out.interest = Math.max(0, Math.round(num(t.loans))) * LOAN_INTEREST_PER_MONTH;
-  out.net = out.income - out.maint - out.interest;
+  out.net = out.income + out.tributeIn - out.tributeOut - out.maint - out.interest;
   return out;
 }
 
@@ -63,8 +84,8 @@ export function runMonthlyEconomy(ctx) {
       const t = g.tags[tag];
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
-      t.income = Math.round(bd.income * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.interest) * 100) / 100; // loan interest folded in
+      t.income = Math.round((bd.income + bd.tributeIn) * 100) / 100;
+      t.expenses = Math.round((bd.maint + bd.interest + bd.tributeOut) * 100) / 100; // interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       if (!Number.isFinite(t.treasury)) t.treasury = 0;
     } catch (e) { warnOnce('eco:' + tag, 'economy failed for', tag, e); }
@@ -108,6 +129,8 @@ export function explainIncome(ctx, tag) {
     if (Math.abs(bd.mult - 1) > 0.001) {
       rows.push({ label: 'National modifiers', value: r2(bd.base * (bd.mult - 1)) });
     }
+    if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
+    if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
     rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });
     rows.push({ label: 'Monthly balance', value: r2(bd.net) });

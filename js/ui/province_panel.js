@@ -57,6 +57,14 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-constr hidden" data-ref="constrRow"></div>
         <div class="pp-build-grid" data-ref="buildBtns"></div>
       </div>
+      <div class="pp-build hidden" data-ref="integBlock">
+        <div class="pp-build-title">Integration</div>
+        <div class="pp-constr hidden" data-ref="convRow"></div>
+        <div class="pp-build-grid">
+          <button class="pp-build-btn" data-integ="rule" data-ref="integRule">${icon('scales')}<span>Establish Rule</span></button>
+          <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
+        </div>
+      </div>
       <div class="pp-unrest" data-ref="unrestRow">
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
@@ -91,6 +99,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
+          <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
+          <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
         </div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
@@ -99,9 +109,24 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.dipBtns.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-dip]') : null;
       if (!b || !actions || !dipTag || b.classList.contains('disabled')) return;
-      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance' }[b.dataset.dip];
+      if (b.dataset.dip === 'claim') {
+        // Claims act on the province, not the tag.
+        try { if (typeof actions.fabricateClaim === 'function') actions.fabricateClaim(provId); }
+        catch (err) { warnOnce('diplo-claim', err); }
+        refresh();
+        return;
+      }
+      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance', war: 'declareWarOn' }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
+      refresh();
+    });
+    refs.integBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-integ]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      const fn = b.dataset.integ === 'rule' ? 'establishRule' : 'convertProvince';
+      try { if (typeof actions[fn] === 'function') actions[fn](provId); }
+      catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
       refresh();
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
@@ -197,9 +222,18 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     }
     setText(refs.autonomy, Math.round((p.autonomy || 0) * 100) + '%');
     const sites = [];
+    const WONDER_TT = {
+      temple: '+1 governance point and +0.2 legitimacy a month to its keeper',
+      library: '+1 influence point a month to its keeper',
+      petra: '+2 talents a month to its keeper',
+    };
     if (p.wonder) sites.push(icon('star8', 'icon-sm') + ' ' + esc(titleCase(p.wonder)));
     if (p.holy) sites.push(icon('star4', 'icon-sm') + ' ' + esc(titleCase(p.holy)));
     refs.siteRow.classList.toggle('hidden', sites.length === 0);
+    const siteTT = [];
+    if (p.holy) siteTT.push('Holy site: a controller of the faith gains +1 of every monarch point and legitimacy each month; the faithful suffer while heathens hold it.');
+    if (p.wonder && WONDER_TT[p.wonder]) siteTT.push('Wonder: ' + WONDER_TT[p.wonder] + '.');
+    refs.siteRow.dataset.tt = siteTT.join('\n') || 'Sites';
     setHtml(refs.site, sites.join('&nbsp; '));
 
     // Unrest (red + warning icon above threshold) with breakdown tooltip
@@ -258,8 +292,34 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     // Buildings (v1.3; gated on the sim providing getBuildInfo)
     refreshBuildings();
 
+    // Integration (v1.5): autonomy & conversion for owned provinces
+    refreshIntegration();
+
     // Diplomacy with the owner (re-queried every refresh; fail-soft)
     refreshDiplomacy(p, g);
+  }
+
+  // Establish Rule / Convert Faith for own provinces; conversion progress row.
+  function refreshIntegration() {
+    let info = null;
+    if (actions && typeof actions.getIntegration === 'function') {
+      try { info = actions.getIntegration(provId); } catch (e) { warnOnce('getIntegration', e); info = null; }
+    }
+    refs.integBlock.classList.toggle('hidden', !info);
+    if (!info) return;
+    const ruleTerms = 'Establish Rule — 25 governance points\n−15% autonomy (more of the province\'s taxes reach the crown); +2 unrest for 6 months while the locals adjust.';
+    refs.integRule.classList.toggle('disabled', !info.canEstablish);
+    refs.integRule.dataset.tt = info.canEstablish ? ruleTerms : `${info.whyNotEstablish}\n――――――\n${ruleTerms}`;
+    const convTerms = 'Convert the Faith — 50 influence points\nAfter 12 months the province adopts the state religion; +3 unrest while the old gods are put away.';
+    refs.integConv.classList.toggle('disabled', !info.canConvert);
+    refs.integConv.dataset.tt = info.canConvert ? convTerms : `${info.whyNotConvert}\n――――――\n${convTerms}`;
+    refs.convRow.classList.toggle('hidden', !info.converting);
+    if (info.converting) {
+      const m = Math.max(0, info.converting.monthsLeft | 0);
+      setHtml(refs.convRow,
+        `${icon('altar')}<span class="pp-constr-name">Conversion under way</span>` +
+        `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
+    }
   }
 
   // 'Assault the walls' — shown while our side besieges; enabled when the sim
@@ -342,10 +402,14 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     let status = '—';
     let cls = '';
     if (d.atWarWithUs) { status = 'At war'; cls = 'neg'; }
+    else if (d.ourClient) { status = 'Our client kingdom'; cls = 'pos'; }
+    else if (d.ourOverlord) { status = 'Our overlord'; }
     else if (d.allied) { status = 'Allied'; cls = 'pos'; }
     else if (d.truceUntil) {
       const mn = (DEFINES.MONTH_NAMES || [])[d.truceUntil.m - 1] || ('M' + d.truceUntil.m);
       status = `Truce until ${mn} ${fmtYear(d.truceUntil.y)}`;
+    } else if (d.theirOverlord) {
+      status = `Client of ${d.theirOverlordName || d.theirOverlord}`;
     }
     setText(refs.dipStatus, status);
     refs.dipStatus.classList.toggle('pos', cls === 'pos');
@@ -362,6 +426,32 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     if (d.canBreak) {
       refs.dipBreak.classList.remove('disabled');
       refs.dipBreak.dataset.tt = 'Break the alliance — their opinion of us falls by 50';
+    }
+    // Fabricate claim: per-province, priced in influence.
+    let ci = null;
+    if (actions && typeof actions.getClaimInfo === 'function') {
+      try { ci = actions.getClaimInfo(provId); } catch (e) { warnOnce('getClaimInfo', e); ci = null; }
+    }
+    refs.dipClaim.classList.toggle('hidden', !ci);
+    if (ci) {
+      setText(refs.dipClaim, ci.hasClaim ? 'Claim Held' : 'Fabricate Claim');
+      const terms = 'Fabricate a claim on this province — 30 influence points\nA war for a claim costs no stability, and the province is 30% cheaper at the peace table. Their opinion of us falls by 20.';
+      if (ci.hasClaim) {
+        refs.dipClaim.classList.add('disabled');
+        refs.dipClaim.dataset.tt = 'We hold a claim here: a war for it costs no stability, and it is 30% cheaper to demand in a peace.';
+      } else {
+        setDipBtn(refs.dipClaim, ci.canFabricate, ci.whyNot, terms);
+      }
+    }
+    // Declare war: hidden while already at war (the status row says so);
+    // the tooltip names the casus belli and its price.
+    refs.dipWar.classList.toggle('hidden', !!d.atWarWithUs);
+    if (!d.atWarWithUs) {
+      const warCost = d.cb
+        ? (d.cb.type === 'claim' ? d.cb.label + ': no stability cost' : d.cb.label + ': costs 1 stability')
+        : 'no casus belli: costs 2 stability and 5 legitimacy';
+      setDipBtn(refs.dipWar, d.canWar, d.whyNotWar,
+        `Declare war (${warCost}); their allies and overlord will answer the call`);
     }
   }
 

@@ -12,24 +12,39 @@ function eventList(ctx) {
   return Array.isArray(ctx.events) ? ctx.events : [];
 }
 export function findEventById(ctx, id) {
+  // Runtime-synthesized events (succession cards) live in ctx.dynEvents.
+  if (ctx.dynEvents && ctx.dynEvents.has(id)) return ctx.dynEvents.get(id);
   for (const ev of eventList(ctx)) if (ev && ev.id === id) return ev;
   return null;
 }
+function monthIndex(y, m) { return y * 12 + (m - 1); }
 function canFire(ctx, ev) {
+  const g = ctx.game;
   if (!ev || !ev.id || !Array.isArray(ev.options) || !ev.options.length) return false;
-  if (ev.once !== false && ctx.game.firedEvents[ev.id]) return false;
+  if (ev.once !== false && g.firedEvents[ev.id]) return false;
+  // Repeatable events honor a per-event cooldown (stored as the first month
+  // index at which they may fire again).
+  if (ev.once === false && Number.isFinite(ev.cooldownMonths)) {
+    const until = g.flags._evCd && g.flags._evCd[ev.id];
+    if (Number.isFinite(until) && monthIndex(g.date.y, g.date.m) < until) return false;
+  }
   // never double-queue the same event
-  for (const pe of ctx.game.pendingEvents) if (pe.eventId === ev.id) return false;
+  for (const pe of g.pendingEvents) if (pe.eventId === ev.id) return false;
   return true;
 }
-function monthIndex(y, m) { return y * 12 + (m - 1); }
 
 // Fire an event now (popup for the player, silent auto-pick for the AI).
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id) return;
   if (ev.once !== false) g.firedEvents[ev.id] = true;
-  else g.firedEvents[ev.id] = (g.firedEvents[ev.id] || 0) + 1;
+  else {
+    g.firedEvents[ev.id] = (g.firedEvents[ev.id] || 0) + 1;
+    if (Number.isFinite(ev.cooldownMonths)) {
+      if (!g.flags._evCd) g.flags._evCd = {};
+      g.flags._evCd[ev.id] = monthIndex(g.date.y, g.date.m) + Math.max(1, ev.cooldownMonths | 0);
+    }
+  }
   const player = g.playerTag;
   const audience = (ev.forTag === 'both' || ev.forTag === 'player') ? player : ev.forTag;
   const playerSees = audience === player;

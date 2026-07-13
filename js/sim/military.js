@@ -94,6 +94,9 @@ export function sameSide(ctx, a, b) {
   if (a === 'REB' || b === 'REB') return false;
   const ta = ctx.game.tags[a], tb = ctx.game.tags[b];
   if (!ta || !tb) return false;
+  // Overlord & client (and clients of one overlord) stand together.
+  if (ta.overlord === b || tb.overlord === a) return true;
+  if (ta.overlord && ta.overlord === tb.overlord) return true;
   if ((ta.allies && ta.allies.indexOf(b) >= 0) || (tb.allies && tb.allies.indexOf(a) >= 0)) return true;
   for (const w of ctx.game.wars) {
     if ((w.attackers.indexOf(a) >= 0 && w.attackers.indexOf(b) >= 0) ||
@@ -806,6 +809,11 @@ export function updateTagLife(ctx) {
     if (k === 'REB') continue; // REB always alive
     g.tags[k].alive = !!(owned[k] || armiesOf(ctx, k).length);
   }
+  // A dead overlord frees its clients; a dead client is simply struck off.
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (t && t.overlord && (!g.tags[t.overlord] || !g.tags[t.overlord].alive)) t.overlord = null;
+  }
 }
 
 // ---------------------------------------------------------------- recruiting & merging
@@ -929,7 +937,16 @@ export function truceActive(ctx, a, b) {
   if (!t) return false;
   return g.date.y < t.y || (g.date.y === t.y && g.date.m < t.m);
 }
-export function declareWar(ctx, atk, def, name) {
+export function vassalsOf(ctx, lord) {
+  const g = ctx.game;
+  const out = [];
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (t && t.alive && t.overlord === lord) out.push(k);
+  }
+  return out;
+}
+export function declareWar(ctx, atk, def, name, cb) {
   const g = ctx.game;
   const A = g.tags[atk], D = g.tags[def];
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
@@ -938,16 +955,26 @@ export function declareWar(ctx, atk, def, name) {
   if (existing) return existing;
   const attackers = [atk];
   const defenders = [def];
+  const join = (side, tag) => {
+    if (g.tags[tag] && g.tags[tag].alive && attackers.indexOf(tag) < 0 && defenders.indexOf(tag) < 0) side.push(tag);
+  };
   for (const al of A.allies || []) {
-    if (g.tags[al] && g.tags[al].alive && al !== def && (D.allies || []).indexOf(al) < 0) attackers.push(al);
+    if (al !== def && (D.allies || []).indexOf(al) < 0) join(attackers, al);
   }
-  for (const al of D.allies || []) {
-    if (g.tags[al] && g.tags[al].alive && al !== atk && attackers.indexOf(al) < 0) defenders.push(al);
+  for (const v of vassalsOf(ctx, atk)) join(attackers, v);
+  // Attacking a client kingdom is attacking its overlord — the whole house answers.
+  const lord = D.overlord && g.tags[D.overlord] && g.tags[D.overlord].alive ? D.overlord : null;
+  if (lord) {
+    join(defenders, lord);
+    for (const v of vassalsOf(ctx, lord)) join(defenders, v);
   }
+  for (const al of D.allies || []) join(defenders, al);
+  for (const v of vassalsOf(ctx, def)) join(defenders, v);
   const war = {
     id: 'war' + (g.wars.length + 1),
     name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
     attackers, defenders, warscore: {}, started: { ...g.date }, _bs: { att: 0, def: 0 },
+    cb: cb || null,
   };
   g.wars.push(war);
   for (const a of attackers) {
@@ -1018,6 +1045,27 @@ export function sharedWarEnemy(ctx, a, b) {
   }
   return false;
 }
+// ---------------------------------------------------------------- claims & casus belli
+export function hasClaim(ctx, tag, provId) {
+  const t = ctx.game.tags[tag];
+  return !!(t && Array.isArray(t.claims) && t.claims.indexOf(provId | 0) >= 0);
+}
+// Best available casus belli of atk against def: a fabricated claim on their
+// land beats a holy war for co-religionist provinces under their rule.
+export function casusBelli(ctx, atk, def) {
+  const g = ctx.game;
+  const A = g.tags[atk];
+  if (!A) return null;
+  let holy = false;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== def) continue;
+    if (hasClaim(ctx, atk, i)) return { type: 'claim', label: 'Pressing our claim' };
+    if (A.religion && p.religion === A.religion) holy = true;
+  }
+  return holy ? { type: 'holy', label: 'Liberating the faithful' } : null;
+}
+
 // Mutual removal from both allies arrays; the jilted party's opinion of the
 // breaker drops. Returns true only when an alliance actually existed.
 export function breakAllianceCore(ctx, breaker, other) {
@@ -1033,52 +1081,178 @@ export function breakAllianceCore(ctx, breaker, other) {
 }
 
 // ---------------------------------------------------------------- peace
-// Treaty levels and the warscore the enemy leader must be at (net, from THEIR
-// side) for the AI to accept. The bookmark's scripted war (war.noNegotiation)
-// resolves only through events/victory.
-export const PEACE_TERMS = {
-  white:   { label: 'White peace',            enemyWsAtMost: 5 },
-  tribute: { label: 'Peace with tribute',     enemyWsAtMost: -25 },
-  cede:    { label: 'Cede occupied lands',    enemyWsAtMost: -50 },
+// EU4-style negotiated peace: the offering side assembles a deal — occupied
+// enemy provinces (warscore cost scales with development), an indemnity in
+// talents, a humiliation — and the enemy accepts when the offerer's warscore
+// covers the total. The bookmark's scripted war (war.noNegotiation) resolves
+// only through events/victory.
+export const PEACE = {
+  provCostPerDev: 0.9,   // warscore per point of demanded development
+  provCostMin: 4,        // floor per province
+  claimDiscount: 0.7,    // claimed provinces cost 30% less
+  faithDiscount: 0.8,    // co-religionist provinces cost 20% less
+  goldCostPer100: 10,    // warscore per 100 talents demanded
+  goldStep: 25,          // UI stepper granularity
+  humiliateCost: 15,
+  subjugateBase: 25,     // warscore to make the enemy leader a client kingdom...
+  subjugatePerDev: 0.25, // ...plus this per point of their total development
+  subjugateMax: 100,
+  tributeShare: 0.15,    // of a client's income, paid to the overlord (economy.js)
+  whiteEnemyWsAtMost: 5, // enemy accepts a white peace at/below this net score
+  warWearyWE: 15,        // war exhaustion at which a not-quite-winning enemy takes white peace
 };
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
-export function aiWillAccept(ctx, war, byTag, level) {
-  const terms = PEACE_TERMS[level];
-  if (!terms) return false;
-  const g = ctx.game;
-  const enemyLeader = enemySideOf(war, byTag).find((t) => g.tags[t] && g.tags[t].alive);
-  if (!enemyLeader) return true;
-  const ws = num(war.warscore && war.warscore[enemyLeader]);
-  if (ws <= terms.enemyWsAtMost) return true;
-  // War-weariness accepts a white peace even from a mildly winning position.
-  return level === 'white' && num(g.tags[enemyLeader].warExhaustion) >= 15 && ws <= 15;
+function provDemandCost(p) {
+  return Math.max(PEACE.provCostMin, Math.round(devTotal(p) * PEACE.provCostPerDev));
 }
-export function makePeace(ctx, war, byTag, level) {
+// Everything the peace dialog needs: our score, the enemy leader, which
+// provinces are on the table (enemy-owned, our-side-occupied) and their costs
+// (discounted by claims and shared faith), plus subjugation terms.
+export function peaceDealInfo(ctx, war, byTag) {
   const g = ctx.game;
-  const participants = war.attackers.concat(war.defenders);
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
   const theirSide = enemySideOf(war, byTag);
-  // Cession first: provinces the winners hold of the losers' land change owner.
-  if (level === 'cede') {
-    for (let i = 1; i < g.provinces.length; i++) {
-      const p = g.provinces[i];
-      if (!p || p.impassable) continue;
-      if (theirSide.indexOf(p.owner) >= 0 && mySide.indexOf(p.controller) >= 0) {
-        changeOwnerCore(ctx, p, p.controller);
-      }
+  const enemyLeader = theirSide.find((t) => g.tags[t] && g.tags[t].alive) || null;
+  const et = enemyLeader ? g.tags[enemyLeader] : null;
+  const me = g.tags[byTag];
+  const myRel = me ? me.religion : null;
+  const provinces = [];
+  let enemyLeaderDev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (p.owner === enemyLeader) enemyLeaderDev += devTotal(p);
+    if (theirSide.indexOf(p.owner) < 0) continue;
+    if (mySide.indexOf(p.controller) < 0) continue; // must be occupied by our side
+    let cost = provDemandCost(p);
+    let discount = '';
+    if (hasClaim(ctx, byTag, i)) {
+      cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.claimDiscount));
+      discount = 'claim';
+    } else if (myRel && p.religion === myRel) {
+      cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.faithDiscount));
+      discount = 'faith';
     }
+    provinces.push({ id: i, name: p.name, dev: devTotal(p), owner: p.owner, cost, discount });
   }
-  if (level === 'tribute') {
-    const payer = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
-    const t = payer && g.tags[payer], me = g.tags[byTag];
-    if (t && me) {
-      const sum = Math.min(200, Math.max(50, Math.round(num(t.treasury) * 0.3)));
-      t.treasury = num(t.treasury) - sum;
-      me.treasury = num(me.treasury) + sum;
+  provinces.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  const rawMax = et ? Math.max(0, num(et.treasury)) * 0.6 + 100 : 0;
+  // Subjugation: the enemy leader becomes a client kingdom. Impossible for
+  // realms already sworn to someone, and priced by the realm's weight.
+  let canSubjugate = false;
+  let whyNotSubjugate = '';
+  if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
+  else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';
+  else canSubjugate = true;
+  const subjugateCost = clamp(Math.round(PEACE.subjugateBase + enemyLeaderDev * PEACE.subjugatePerDev),
+    PEACE.subjugateBase, PEACE.subjugateMax);
+  return {
+    warId: war.id, warName: war.name,
+    myWs: Math.round(num(war.warscore && war.warscore[byTag])),
+    enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
+    enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
+    provinces,
+    maxGold: Math.floor(rawMax / PEACE.goldStep) * PEACE.goldStep,
+    goldStep: PEACE.goldStep,
+    goldCostPer100: PEACE.goldCostPer100,
+    humiliateCost: PEACE.humiliateCost,
+    canSubjugate, whyNotSubjugate, subjugateCost,
+    cb: war.cb || null,
+    noNegotiation: !!war.noNegotiation,
+  };
+}
+// deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool }.
+// Subjugation supersedes province demands (a client keeps its lands). Returns
+// the warscore price, whether the enemy takes it, and a one-line reason.
+export function evaluatePeaceDeal(ctx, war, byTag, deal) {
+  const d = deal || {};
+  const info = peaceDealInfo(ctx, war, byTag);
+  const subjugate = !!d.subjugate && info.canSubjugate;
+  const chosen = [];
+  let cost = 0;
+  if (!subjugate) {
+    for (const id of Array.isArray(d.provinces) ? d.provinces : []) {
+      const row = info.provinces.find((r) => r.id === (id | 0));
+      if (!row || chosen.indexOf(row) >= 0) continue;
+      chosen.push(row);
+      cost += row.cost;
     }
+  } else {
+    cost += info.subjugateCost;
   }
+  const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
+  cost += Math.round(gold * PEACE.goldCostPer100 / 100);
+  const humiliate = !!d.humiliate;
+  if (humiliate) cost += PEACE.humiliateCost;
+  const white = !chosen.length && gold <= 0 && !humiliate && !subjugate;
+  const enemyWs = -info.myWs;
+  let acceptable, reason;
+  if (white) {
+    acceptable = enemyWs <= PEACE.whiteEnemyWsAtMost ||
+      (info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15);
+    reason = acceptable
+      ? 'They are ready to lay down arms.'
+      : 'They believe they are winning, and will not settle for nothing.';
+  } else {
+    acceptable = info.myWs > 0 && cost <= info.myWs;
+    reason = acceptable
+      ? 'Our position compels them to accept.'
+      : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
+  }
+  return { cost, acceptable, reason, gold, humiliate, subjugate, provinces: chosen.map((c) => c.id) };
+}
+// Applies an (already accepted) deal, then winds the war down: status quo for
+// the rest, truces, atWarWith rebuild, stranded armies march home.
+export function executePeaceDeal(ctx, war, byTag, deal) {
+  const g = ctx.game;
+  const info = peaceDealInfo(ctx, war, byTag);
+  const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
+  const me = g.tags[byTag];
+  const terms = [];
+  // Cession first: demanded provinces change owner to the peacemaker. New land
+  // arrives restive — high autonomy and a generation of resentment; integration
+  // (Establish Rule / Convert the Faith) is how it becomes truly yours.
+  const cededNames = [];
+  for (const id of ev.provinces) {
+    const p = ctx.byId(id);
+    if (!p) continue;
+    cededNames.push(p.name);
+    changeOwnerCore(ctx, p, byTag);
+    changeControllerCore(ctx, p, byTag);
+    p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
+    p.conversion = null;
+    p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+    p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
+    if (me && Array.isArray(me.claims)) me.claims = me.claims.filter((c) => c !== id); // claim satisfied
+  }
+  if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
+  if (ev.subjugate && info.enemyLeader && me) {
+    const et = g.tags[info.enemyLeader];
+    et.overlord = byTag;
+    // A client keeps no outside alliances of its own.
+    for (const al of (et.allies || []).slice()) breakAllianceCore(ctx, info.enemyLeader, al);
+    addOpinion(ctx, info.enemyLeader, byTag, -40);
+    terms.push('bends the knee as a client kingdom of ' + (me.name || byTag));
+  }
+  if (ev.gold > 0 && info.enemyLeader && me) {
+    const et = g.tags[info.enemyLeader];
+    et.treasury = num(et.treasury) - ev.gold;
+    me.treasury = num(me.treasury) + ev.gold;
+    terms.push('pays ' + ev.gold + ' talents');
+  }
+  if (ev.humiliate && info.enemyLeader && me) {
+    const et = g.tags[info.enemyLeader];
+    me.legitimacy = clamp(num(me.legitimacy) + 10, 0, 100);
+    me.points.gov = clamp(num(me.points.gov) + 25, 0, 999);
+    me.points.infl = clamp(num(me.points.infl) + 25, 0, 999);
+    me.points.mar = clamp(num(me.points.mar) + 25, 0, 999);
+    et.legitimacy = clamp(num(et.legitimacy) - 15, 0, 100);
+    et.stability = clamp(num(et.stability) - 1, -3, 3);
+    terms.push('is humiliated before the nations');
+  }
+  const participants = war.attackers.concat(war.defenders);
   // Status quo ante for everything still occupied, both directions.
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
@@ -1116,29 +1290,44 @@ export function makePeace(ctx, war, byTag, level) {
     if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
   }
   ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+  const summary = terms.length
+    ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
+    : 'A white peace: every occupation reverts.';
   ctx.bus.emit('notify', {
     title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
-    text: war.name + ' ends: ' + (PEACE_TERMS[level] ? PEACE_TERMS[level].label : level) + '. A five-year truce holds.',
+    text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
     type: 'good',
   });
 }
-function sideGross(ctx, w, key) {
+// Signed months between two game dates (BCE years are negative; no year zero).
+export function monthsBetween(a, b) {
+  if (!a || !b) return 0;
+  let m = (b.y - a.y) * 12 + (b.m - a.m);
+  if (a.y < 0 && b.y > 0) m -= 12;
+  if (a.y > 0 && b.y < 0) m += 12;
+  return m;
+}
+// One side's gross score, broken into its parts (the war overview shows them).
+export function sideComponents(ctx, w, key) {
   const g = ctx.game;
   const mine = key === 'att' ? w.attackers : w.defenders;
   const theirs = key === 'att' ? w.defenders : w.attackers;
-  let enemyDev = 0, occupied = 0;
+  let enemyDev = 0, occupiedDev = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     if (theirs.indexOf(p.owner) < 0) continue;
     const d = devTotal(p);
     enemyDev += d;
-    if (mine.indexOf(p.controller) >= 0) occupied += d;
+    if (mine.indexOf(p.controller) >= 0) occupiedDev += d;
   }
-  const occScore = enemyDev > 0 ? Math.min(60, (occupied / enemyDev) * 60) : 0;
-  const bs = w._bs ? Math.min(40, num(w._bs[key])) : 0;
-  const ev = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
-  return bs + occScore + ev;
+  const occupation = enemyDev > 0 ? Math.min(60, (occupiedDev / enemyDev) * 60) : 0;
+  const battles = w._bs ? Math.min(40, num(w._bs[key])) : 0;
+  const events = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
+  return { battles, occupation, events, occupiedDev, enemyDev, gross: battles + occupation + events };
+}
+function sideGross(ctx, w, key) {
+  return sideComponents(ctx, w, key).gross;
 }
 export function updateWarscores(ctx) {
   for (const w of ctx.game.wars) {
