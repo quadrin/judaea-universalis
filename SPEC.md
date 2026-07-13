@@ -822,6 +822,34 @@ renderer.render → overlay.draw → labels.update.
   (`battle.casAtk/casDef`). Re-renders on each game day; closes itself when the field falls
   silent; Escape closes it first.
 
+## 19. v1.9: wars that end & stacks that obey
+
+- **Wars end properly** (`military.js`):
+  - `dissolveWar(ctx, war)` — the extracted war-dissolution tail (splice, `atWarWith`
+    rebuild, 5-year truces, stranded armies march home, `'war'` bus event); the peace
+    deal now calls it.
+  - `endWarBySword(ctx, war, winnersKey, opts)` — ends a war without a treaty.
+    `'att'`/`'def'`: uti possidetis — the winning side takes OWNERSHIP of every enemy
+    province it controls (autonomy 0.6 + recent-conquest unrest, like a cession);
+    everything else reverts. `null`: white peace, all occupations revert.
+  - `updateWarscores` sweeps monthly: a war whose entire side is dead ends by the sword
+    (no more eternal wars against extinguished nations), and a `noNegotiation` war whose
+    score reaches **±75** opens to the peace table (`noNegotiation` lifts, `_negOpened`
+    guards the once-only notify "Envoys may cross the lines") — total victory in a
+    scripted fight-to-the-death war is no longer a dead end.
+  - `helpers.endGame` closes every war the player is in before the verdict card:
+    a win keeps what the sword holds, a loss concedes it, anything else is a white
+    peace — "continue observing" resumes a world at peace.
+
+- **Stack banners** (`overlay.js`, `main.js`, `ui.js`): same-tag armies sharing a
+  province and a hop (same `path[0]` + `moveDaysLeft`) share ONE banner — total men on
+  the cloth, men-weighted morale bar, and a gold-ringed count badge; the largest army
+  carries the standard. `hitTestStack` returns `{id, ids}`; the mapclick payload carries
+  `armyIds`, and clicking a banner selects the WHOLE stack (`selectArmyStack`) so one
+  right-click marches the host together; shift/group-mode toggles the stack in and out
+  of a larger group. The outliner still lists armies singly, and its merge-all button
+  turns a selected stack into one real army.
+
 ## 18. v1.8: the carousel & the shared world — start-screen slider, multiplayer
 
 - **Bookmark carousel** (`startscreen.js`, `.ss-carousel`): the bookmark step shows ONE

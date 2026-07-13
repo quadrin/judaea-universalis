@@ -351,7 +351,7 @@ export function initUI(staticCtx) {
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card wo-card">
         <h2 class="peace-title">${esc(info.warName || 'War')}</h2>
-        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb) : ''}${info.noNegotiation ? ' · ends by the sword, or by events' : ''}</div>
+        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb) : ''}${info.noNegotiation ? ' · ends by the sword, by events — or by 75% dominance' : ''}</div>
         <div class="wo-sides">
           <div class="wo-side">${sideHtml(info.mySide)}</div>
           <div class="wo-vs">against</div>
@@ -533,6 +533,17 @@ export function initUI(staticCtx) {
     outliner.refresh(true);
   }
 
+  // Banner click on a stack: every army under the standard is selected at once,
+  // so one click grabs the whole host and one right-click marches it together.
+  function selectArmyStack(ids) {
+    const g = state.ctx && state.ctx.game;
+    if (!g || !ids.length) return;
+    g.ui.selectedArmies = ids.slice();
+    g.ui.selectedArmy = ids[0];
+    bus.emit('selectArmy', g.ui.selectedArmy);
+    outliner.refresh(true);
+  }
+
   // Shift+click: grow/shrink the group. The last-added army is the primary
   // (split/hire act on it); orders move the whole group.
   function toggleArmyInGroup(id) {
@@ -561,7 +572,10 @@ export function initUI(staticCtx) {
     if (armyId != null) {
       const a = g.armies && g.armies[armyId];
       if (a && a.tag === g.playerTag) {
-        if (grouping) toggleArmyInGroup(armyId);
+        const ids = (Array.isArray(payload.armyIds) ? payload.armyIds : [armyId])
+          .filter((id) => g.armies[id] && g.armies[id].tag === g.playerTag);
+        if (grouping) for (const id of ids) toggleArmyInGroup(id);
+        else if (ids.length > 1) selectArmyStack(ids);
         else setSelectedArmy(armyId);
         setSelectedProv(0);
         return;

@@ -56,6 +56,12 @@ python3 -m http.server 8613 --directory .
   spend the treasury, and steer the clock. The host is the arbiter for story events.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,
   swipe) instead of a wall of cards.
+- Wars that actually end: annihilating or utterly dominating an enemy closes the war
+  (winners keep what the sword holds), a chapter's verdict signs the peace, and even
+  fight-to-the-death scripted wars open to negotiation at 75% war score.
+- Stacks: armies of one nation sharing a province march under a single banner with a
+  count badge — click it to grab the whole host, right-click to move it as one, and
+  merge-all to make it one army.
 
 ## Architecture
 

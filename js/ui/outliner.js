@@ -180,7 +180,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
         const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
         const lead = opp ? flagChip(opp, ctx.DEFINES, 14) : icon('flame', 'icon-row');
         html += `
-          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">
+          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, by events — or at the peace table once one side reaches 75% war score.' : ''}">
             <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
             ${peaceBtn}

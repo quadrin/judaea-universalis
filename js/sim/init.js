@@ -10,7 +10,7 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo,
+  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword,
 } from './military.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -255,6 +255,18 @@ export const simHelpers = {
     g.result = result || 'loss';
     g.over = true;
     g.paused = true;
+    // The chapter's verdict closes the player's wars: a win keeps what the
+    // sword holds, a loss concedes it — continued observation is at peace.
+    try {
+      for (const w of (g.wars || []).slice()) {
+        const onAtt = w.attackers.indexOf(g.playerTag) >= 0;
+        if (!onAtt && w.defenders.indexOf(g.playerTag) < 0) continue;
+        const myKey = onAtt ? 'att' : 'def';
+        const theirKey = onAtt ? 'def' : 'att';
+        const winners = g.result === 'win' ? myKey : g.result === 'loss' ? theirKey : null;
+        endWarBySword(ctx, w, winners, { silent: true });
+      }
+    } catch (e) { warnOnce('endGameWars', 'closing wars on game end failed', e); }
     ctx.bus.emit('pause', true);
     ctx.bus.emit('gameover', { result: g.result, title: title || '', text: text || '', score: num(score, 0) });
   },
