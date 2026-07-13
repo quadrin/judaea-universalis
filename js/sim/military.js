@@ -1263,6 +1263,77 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
 }
 // Applies an (already accepted) deal, then winds the war down: status quo for
 // the rest, truces, atWarWith rebuild, stranded armies march home.
+// Dissolve a war object: strike it from the list, rebuild atWarWith from the
+// wars that remain, set five-year truces, march stranded armies home through
+// now-neutral land (retreating bypasses entry rules). Territory settlements
+// are the CALLER's business — do them before calling this.
+export function dissolveWar(ctx, war) {
+  const g = ctx.game;
+  const participants = war.attackers.concat(war.defenders);
+  const wi = g.wars.indexOf(war);
+  if (wi >= 0) g.wars.splice(wi, 1);
+  for (const t of Object.keys(g.tags)) if (g.tags[t]) g.tags[t].atWarWith = [];
+  for (const w of g.wars) {
+    for (const a of w.attackers) for (const d of w.defenders) {
+      const ta = g.tags[a], td = g.tags[d];
+      if (ta && ta.atWarWith.indexOf(d) < 0) ta.atWarWith.push(d);
+      if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
+    }
+  }
+  if (!g.truces) g.truces = {};
+  for (const a of war.attackers) for (const d of war.defenders) {
+    g.truces[truceKey(a, d)] = { y: g.date.y + 5, m: g.date.m };
+  }
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || participants.indexOf(a.tag) < 0) continue;
+    const p = ctx.byId(a.prov);
+    if (!p || p.controller === a.tag || sameSide(ctx, a.tag, p.controller) || isHostile(ctx, a.tag, p.controller)) continue;
+    const path = bfs(ctx, a.prov,
+      (pid) => { const q = ctx.byId(pid); return !!q && !q.impassable; },
+      (pid) => { const q = ctx.byId(pid); return !!q && q.controller === a.tag; },
+      24);
+    if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
+  }
+  ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+}
+
+// End a war without a treaty. winnersKey 'att'/'def': the sword keeps what it
+// holds — the winning side takes ownership of every enemy province it controls,
+// everything else reverts. null: white peace, all occupations revert. Used when
+// one side is annihilated and when a chapter's verdict closes the book.
+export function endWarBySword(ctx, war, winnersKey, opts) {
+  const g = ctx.game;
+  const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
+  const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
+  const participants = war.attackers.concat(war.defenders);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.controller === p.owner) continue;
+    if (participants.indexOf(p.owner) < 0 || participants.indexOf(p.controller) < 0) continue;
+    if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
+      changeOwnerCore(ctx, p, p.controller); // uti possidetis
+      p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
+      p.conversion = null;
+      p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+      p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
+    } else if (g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    }
+  }
+  dissolveWar(ctx, war);
+  if (opts && opts.silent) return;
+  const pt = g.playerTag;
+  if (participants.indexOf(pt) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'The war is over',
+      text: (war.name || 'The war') + ' has ended'
+        + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.'),
+      type: winners.indexOf(pt) >= 0 ? 'good' : losers.indexOf(pt) >= 0 ? 'bad' : 'info',
+    });
+  }
+}
+
 export function executePeaceDeal(ctx, war, byTag, deal) {
   const g = ctx.game;
   const info = peaceDealInfo(ctx, war, byTag);
@@ -1320,34 +1391,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
-  // Dissolve the war, rebuild atWarWith from the wars that remain, set truces.
-  const wi = g.wars.indexOf(war);
-  if (wi >= 0) g.wars.splice(wi, 1);
-  for (const t of Object.keys(g.tags)) if (g.tags[t]) g.tags[t].atWarWith = [];
-  for (const w of g.wars) {
-    for (const a of w.attackers) for (const d of w.defenders) {
-      const ta = g.tags[a], td = g.tags[d];
-      if (ta && ta.atWarWith.indexOf(d) < 0) ta.atWarWith.push(d);
-      if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
-    }
-  }
-  if (!g.truces) g.truces = {};
-  for (const a of war.attackers) for (const d of war.defenders) {
-    g.truces[truceKey(a, d)] = { y: g.date.y + 5, m: g.date.m };
-  }
-  // March stranded armies home through now-neutral land (retreating bypasses entry rules).
-  for (const id of Object.keys(g.armies)) {
-    const a = g.armies[id];
-    if (!a || participants.indexOf(a.tag) < 0) continue;
-    const p = ctx.byId(a.prov);
-    if (!p || p.controller === a.tag || sameSide(ctx, a.tag, p.controller) || isHostile(ctx, a.tag, p.controller)) continue;
-    const path = bfs(ctx, a.prov,
-      (pid) => { const q = ctx.byId(pid); return !!q && !q.impassable; },
-      (pid) => { const q = ctx.byId(pid); return !!q && q.controller === a.tag; },
-      24);
-    if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
-  }
-  ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+  dissolveWar(ctx, war);
   const summary = terms.length
     ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
     : 'A white peace: every occupation reverts.';
@@ -1388,10 +1432,31 @@ function sideGross(ctx, w, key) {
   return sideComponents(ctx, w, key).gross;
 }
 export function updateWarscores(ctx) {
-  for (const w of ctx.game.wars) {
+  const g = ctx.game;
+  for (const w of g.wars.slice()) {
+    // A war whose side has ceased to exist is over, not eternal.
+    const aliveAtt = w.attackers.some((t) => g.tags[t] && g.tags[t].alive);
+    const aliveDef = w.defenders.some((t) => g.tags[t] && g.tags[t].alive);
+    if (!aliveAtt || !aliveDef) {
+      endWarBySword(ctx, w, aliveAtt ? 'att' : aliveDef ? 'def' : null);
+      continue;
+    }
     const att = sideGross(ctx, w, 'att');
     const def = sideGross(ctx, w, 'def');
     for (const t of w.attackers) w.warscore[t] = Math.round(clamp(att - def, -100, 100));
     for (const t of w.defenders) w.warscore[t] = Math.round(clamp(def - att, -100, 100));
+    // Even a fight-to-the-death war opens to the peace table once one side
+    // utterly dominates — total victory should not leave you stuck at war.
+    if (w.noNegotiation && !w._negOpened && Math.abs(clamp(att - def, -100, 100)) >= 75) {
+      w._negOpened = true;
+      w.noNegotiation = false;
+      if (w.attackers.indexOf(g.playerTag) >= 0 || w.defenders.indexOf(g.playerTag) >= 0) {
+        ctx.bus.emit('notify', {
+          title: 'Envoys may cross the lines',
+          text: 'The war has found its master. What began as a fight to the death can now end at the peace table.',
+          type: 'info',
+        });
+      }
+    }
   }
 }

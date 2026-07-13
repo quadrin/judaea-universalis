@@ -94,10 +94,13 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     return { x: c.x + (n.x - c.x) * f, y: c.y + (n.y - c.y) * f };
   }
 
-  // Shared by draw() and hitTestArmy() so picking always matches the pixels.
+  // Shared by draw() and the hit tests so picking always matches the pixels.
+  // Same-tag armies moving as one (same province, same hop, same days left)
+  // share ONE banner — a stack — so a big host isn't a fan of tiny chips.
   // Returns chips in draw order (bottom -> top), positions in CSS px.
   function chipList(game, camera) {
     const out = [];
+    const groups = new Map(); // tag|prov|hop -> chip
     const perProv = new Map();
     const armies = Object.values(game.armies || {})
       .filter(Boolean)
@@ -107,18 +110,37 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     for (const a of armies) {
       const c = armyMapPos(a);
       if (!c) continue;
+      const hopKey = (!a.inBattle && Array.isArray(a.path) && a.path.length)
+        ? a.path[0] + ':' + (a.moveDaysLeft | 0)
+        : 'idle';
+      const key = a.tag + '|' + a.prov + '|' + hopKey;
+      const grp = groups.get(key);
+      if (grp) {
+        grp.armies.push(a);
+        grp.men += a.men || 0;
+        grp.moraleW += (a.morale || 0) * (a.men || 0);
+        grp.maxMoraleW += (a.maxMorale || 1) * (a.men || 0);
+        if ((a.men || 0) > (grp.army.men || 0)) grp.army = a; // largest carries the standard
+        continue;
+      }
       const stack = perProv.get(a.prov) || 0;
       perProv.set(a.prov, stack + 1);
       const [sx, sy] = camera.mapToScreen(c.x, c.y);
-      if (sx < -CULL_MARGIN || sy < -CULL_MARGIN || sx > vw + CULL_MARGIN || sy > vh + CULL_MARGIN) continue;
-      out.push({
+      const chip = {
         army: a,
+        armies: [a],
+        men: a.men || 0,
+        moraleW: (a.morale || 0) * (a.men || 0),
+        maxMoraleW: (a.maxMorale || 1) * (a.men || 0),
         x: sx - CHIP_W * 0.5 + stack * 7,
         y: sy - CHIP_H - 10 - stack * 8,
         w: CHIP_W,
         h: CHIP_H + MORALE_H,
-      });
+        onScreen: !(sx < -CULL_MARGIN || sy < -CULL_MARGIN || sx > vw + CULL_MARGIN || sy > vh + CULL_MARGIN),
+      };
+      groups.set(key, chip);
     }
+    for (const chip of groups.values()) if (chip.onScreen) out.push(chip);
     return out;
   }
 
@@ -235,8 +257,10 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   function drawChip(game, ch, timeMs) {
     const a = ch.army;
     const col = tagColor(game, a.tag);
-    const selected = game.ui && (game.ui.selectedArmy === a.id
-      || (Array.isArray(game.ui.selectedArmies) && game.ui.selectedArmies.indexOf(a.id) >= 0));
+    const selIds = game.ui
+      ? [game.ui.selectedArmy].concat(Array.isArray(game.ui.selectedArmies) ? game.ui.selectedArmies : [])
+      : [];
+    const selected = ch.armies.some((x) => selIds.indexOf(x.id) >= 0);
     const t = (timeMs || 0) * 0.001;
     const marching = !a.inBattle && Array.isArray(a.path) && a.path.length > 0;
     const sway = Math.sin(t * (marching ? 5.2 : 1.3) + (a.id || 0) * 1.7) * (marching ? 1.7 : 0.5);
@@ -294,14 +318,31 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.textBaseline = 'middle';
     x2.shadowColor = 'rgba(0,0,0,0.6)';
     x2.shadowBlur = 2;
-    x2.fillText(fmtMen(a.men), (clothX + x + ch.w - notch) * 0.5, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
+    x2.fillText(fmtMen(ch.men), (clothX + x + ch.w - notch) * 0.5, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
     x2.shadowBlur = 0;
-    // morale bar
-    const frac = Math.min(1, Math.max(0, (a.morale || 0) / Math.max(0.01, a.maxMorale || 1)));
+    // morale bar (men-weighted across the whole stack)
+    const frac = Math.min(1, Math.max(0, ch.moraleW / Math.max(0.01, ch.maxMoraleW)));
     x2.fillStyle = 'rgba(10,8,4,0.85)';
     x2.fillRect(clothX, y + CHIP_H, ch.w - (clothX - x) - 4, MORALE_H);
     x2.fillStyle = frac > 0.5 ? '#5da43a' : frac > 0.25 ? '#c9a227' : '#b33a26';
     x2.fillRect(clothX, y + CHIP_H, (ch.w - (clothX - x) - 4) * frac, MORALE_H);
+    // stack badge: how many armies march under this one standard
+    if (ch.armies.length > 1) {
+      const bx = x + ch.w - 1;
+      const by = y - 1;
+      x2.fillStyle = 'rgba(24,18,8,0.95)';
+      x2.strokeStyle = '#c9a227';
+      x2.lineWidth = 1;
+      x2.beginPath();
+      x2.arc(bx, by, 7.5, 0, Math.PI * 2);
+      x2.fill();
+      x2.stroke();
+      x2.fillStyle = '#f4e8c8';
+      x2.font = 'bold 9px Georgia, serif';
+      x2.textAlign = 'center';
+      x2.textBaseline = 'middle';
+      x2.fillText(String(ch.armies.length), bx, by + 0.5);
+    }
     x2.globalAlpha = 1;
   }
 
@@ -386,21 +427,38 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     return 0;
   }
 
-  function hitTestArmy(sx, sy, game, camera) {
-    try {
-      if (!game) return null;
-      const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
-      const chips = chipList(game, camera);
-      for (let i = chips.length - 1; i >= 0; i--) { // topmost first
-        const c = chips[i];
-        if (sx >= c.x - pad && sx <= c.x + c.w + pad &&
-            sy >= c.y - pad && sy <= c.y + c.h + pad) return c.army.id;
-      }
-    } catch (e) {
-      warnOnce('hit-throw', 'hitTestArmy failed', e);
+  function findChip(sx, sy, game, camera) {
+    if (!game) return null;
+    const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
+    const chips = chipList(game, camera);
+    for (let i = chips.length - 1; i >= 0; i--) { // topmost first
+      const c = chips[i];
+      if (sx >= c.x - pad && sx <= c.x + c.w + pad &&
+          sy >= c.y - pad && sy <= c.y + c.h + pad) return c;
     }
     return null;
   }
 
-  return { draw, hitTestArmy, hitTestBattle };
+  function hitTestArmy(sx, sy, game, camera) {
+    try {
+      const c = findChip(sx, sy, game, camera);
+      return c ? c.army.id : null;
+    } catch (e) {
+      warnOnce('hit-throw', 'hitTestArmy failed', e);
+      return null;
+    }
+  }
+
+  // Banner click = the whole stack: primary id plus every army under the standard.
+  function hitTestStack(sx, sy, game, camera) {
+    try {
+      const c = findChip(sx, sy, game, camera);
+      return c ? { id: c.army.id, ids: c.armies.map((a) => a.id) } : null;
+    } catch (e) {
+      warnOnce('hits-throw', 'hitTestStack failed', e);
+      return null;
+    }
+  }
+
+  return { draw, hitTestArmy, hitTestStack, hitTestBattle };
 }

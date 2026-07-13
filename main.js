@@ -40,6 +40,7 @@ async function boot() {
   const labels = createLabels(labelsEl, MAP_DATA, geom);
 
   const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels };
+  window._camera = camera; // debug/test handle
   const ui = initUI(staticCtx);
 
   let ctx = null;
@@ -286,10 +287,12 @@ async function boot() {
 
   camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;
-    const armyId = overlay.hitTestArmy(sx, sy, ctx.game, camera);
+    const stack = overlay.hitTestStack ? overlay.hitTestStack(sx, sy, ctx.game, camera) : null;
+    const armyId = stack ? stack.id : overlay.hitTestArmy(sx, sy, ctx.game, camera);
+    const armyIds = stack ? stack.ids : (armyId != null ? [armyId] : null);
     const battleProv = overlay.hitTestBattle ? overlay.hitTestBattle(sx, sy, ctx.game, camera) : 0;
     const provId = renderer.provIdAt(mapX, mapY);
-    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, battleProv, shift: !!(mods && mods.shift) });
+    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, armyIds, battleProv, shift: !!(mods && mods.shift) });
   });
   camera.onRightClick((mapX, mapY, sx, sy) => {
     if (!ctx) return;
