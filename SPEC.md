@@ -837,9 +837,13 @@ renderer.render → overlay.draw → labels.update.
   Engineer gives +30% siege progress live. One advisor seat per point pool: +skill
   (1-3)/month, wage skill×2 talents (deep debt empties the court), two culture-named
   candidates per empty seat.
-- **Navies** (`js/sim/navy.js`; geometry.js coastal detection): the open-sea id-0
-  component is flood-filled from the map corners (lakes don't count); coastal provinces
-  get an offshore anchor where fleets ride. Ships cost 30t (0.5t upkeep, hulls rot in
+- **Navies** (`js/sim/navy.js`; geometry.js coastal detection): open sea = any id-0
+  component ≥1% of the map (the Med is an INTERIOR sea on this land-framed map; the
+  Dead Sea and Galilee are specks and don't count); coastal provinces get an offshore
+  anchor where fleets ride. **Armies need ships to cross water**: the old Cyprus
+  strait `extraLinks` became `seaLinks` (no land adjacency), accidental raster
+  bridges are cut via `severLinks`, and a refused march to an overseas coast tells
+  the player to build ships and embark. Ships cost 30t (0.5t upkeep, hulls rot in
   deep debt), carry 1,000 men each; fleets sail port-to-port (straight-line hops,
   `hopTotal` for the overlay), embark/disembark armies (`a.aboard` leaves land play;
   hostile-shore landings engage at once), fight daily broadsides where hostile

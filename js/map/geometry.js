@@ -77,6 +77,17 @@ export function computeGeometry(idArray, MAP_DATA) {
     neighbors[a].add(b);
     neighbors[b].add(a);
   }
+  // Sever water-crossing raster adjacencies: armies need ships (SPEC §20).
+  for (const link of MAP_DATA.severLinks || []) {
+    const a = link && byName.get(link[0]);
+    const b = link && byName.get(link[1]);
+    if (!a || !b) {
+      console.warn('[geometry] severLink did not resolve, skipped:', link);
+      continue;
+    }
+    neighbors[a].delete(b);
+    neighbors[b].delete(a);
+  }
 
   // ---- coastal detection (v2.0, navies) -----------------------------------
   // The OPEN sea is the id-0 component connected to the map corners (lakes —
@@ -87,20 +98,29 @@ export function computeGeometry(idArray, MAP_DATA) {
   const coastal = new Array(N + 1).fill(false);
   const offshore = new Array(N + 1).fill(null);
   if (idArray && idArray.length >= W * H) {
+    // The map is land-framed (Anatolia, Armenia, Egypt, Arabia at the corners),
+    // so the Mediterranean is an INTERIOR sea: open sea = any id-0 component
+    // big enough that it cannot be a lake (the Med is ~a third of the map;
+    // the Dead Sea and Galilee are specks).
     const sea = new Uint8Array(W * H); // 1 = open sea
-    const stack = [];
-    const push = (x, y) => {
-      const i = y * W + x;
-      if (idArray[i] === 0 && !sea[i]) { sea[i] = 1; stack.push(i); }
-    };
-    push(0, 0); push(W - 1, 0); push(0, H - 1); push(W - 1, H - 1);
-    while (stack.length) {
-      const i = stack.pop();
-      const x = i % W, y = (i / W) | 0;
-      if (x > 0) push(x - 1, y);
-      if (x + 1 < W) push(x + 1, y);
-      if (y > 0) push(x, y - 1);
-      if (y + 1 < H) push(x, y + 1);
+    const seen = new Uint8Array(W * H);
+    const MIN_SEA_PX = Math.max(20000, (W * H / 100) | 0); // ≥1% of the map
+    const comp = new Int32Array(W * H); // scratch: current component's pixels
+    for (let start = 0; start < W * H; start++) {
+      if (idArray[start] !== 0 || seen[start]) continue;
+      let n = 0;
+      comp[n++] = start;
+      seen[start] = 1;
+      for (let head = 0; head < n; head++) {
+        const i = comp[head];
+        const x = i % W, y = (i / W) | 0;
+        const tryPx = (j) => { if (idArray[j] === 0 && !seen[j]) { seen[j] = 1; comp[n++] = j; } };
+        if (x > 0) tryPx(i - 1);
+        if (x + 1 < W) tryPx(i + 1);
+        if (y > 0) tryPx(i - W);
+        if (y + 1 < H) tryPx(i + W);
+      }
+      if (n >= MIN_SEA_PX) for (let k = 0; k < n; k++) sea[comp[k]] = 1;
     }
     const offX = new Float64Array(N + 1);
     const offY = new Float64Array(N + 1);

@@ -368,7 +368,14 @@ export const MAP_DATA = {
   coast: { land: [MAINLAND, CYPRUS], lakes: LAKES },
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
-  extraLinks: [['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais']],
+  // Land ferries/bridges only — armies may walk these. (None at present.)
+  extraLinks: [],
+  // Sea crossings: shown nowhere in land adjacency — armies need ships
+  // (embark -> sail -> disembark). Kept as data for AI hints and tooltips.
+  seaLinks: [['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais']],
+  // Accidental raster adjacencies across open water (the province-ID Voronoi
+  // cells touch where the real coastlines do not): severed in geometry.js.
+  severLinks: [['Salamis', 'Seleucia Trachea']],
 };
 
 // ---------------------------------------------------------------------------
@@ -463,7 +470,7 @@ export function validateMapData() {
       }
     }
 
-    for (const link of MAP_DATA.extraLinks) {
+    for (const link of MAP_DATA.extraLinks.concat(MAP_DATA.seaLinks || [])) {
       if (!Array.isArray(link) || link.length !== 2) {
         warnings.push(`malformed extraLink: ${JSON.stringify(link)}`);
         continue;
