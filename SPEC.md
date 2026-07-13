@@ -822,6 +822,44 @@ renderer.render → overlay.draw → labels.update.
   (`battle.casAtk/casDef`). Re-renders on each game day; closes itself when the field falls
   silent; Escape closes it first.
 
+## 20. v2.0: the deep game — reforms, the court, navies, trade, Herod's Rise
+
+- **Reform trees** (`js/data/ideas.js`, actions `getIdeas`/`buyIdea`): three five-tier
+  lines — The Way of the Sword (martial), The Art of Rule (government), The Voice of
+  Heaven (influence) — bought in order at 50+25·tier of the matching point. Unlocked
+  tiers merge (Mult keys multiply, others add) over the tag's static national bonuses
+  into `tag.ideas`, the map `resolveTagMult`/`resolveTagAdd` already consult. New
+  consumption hooks: `siegeMult`, `convertMult`, `legitimacyAdd`. The AI enacts one
+  affordable tier a month above a 150-point buffer. Realm panel: tier pips + buy button.
+- **The court** (`GENERAL_TRAITS` in military.js; `getCourt`/`hireAdvisor`/
+  `dismissAdvisor`): generals earn epithets from their second victory (35%/win, max
+  two) — Methodical/Fearsome/Swift/Old Veteran bump pips permanently at gain,
+  Engineer gives +30% siege progress live. One advisor seat per point pool: +skill
+  (1-3)/month, wage skill×2 talents (deep debt empties the court), two culture-named
+  candidates per empty seat.
+- **Navies** (`js/sim/navy.js`; geometry.js coastal detection): the open-sea id-0
+  component is flood-filled from the map corners (lakes don't count); coastal provinces
+  get an offshore anchor where fleets ride. Ships cost 30t (0.5t upkeep, hulls rot in
+  deep debt), carry 1,000 men each; fleets sail port-to-port (straight-line hops,
+  `hopTotal` for the overlay), embark/disembark armies (`a.aboard` leaves land play;
+  hostile-shore landings engage at once), fight daily broadsides where hostile
+  squadrons share an anchorage (a sunk fleet drowns 3/4 of its cargo), and blockade —
+  +0.5/day siege progress and a silenced harbor. UI: outliner Fleets section
+  (select → right-click a coast to sail), bobbing hull-and-sail overlay chips, Build
+  Ship on owned harbors in the province panel.
+- **Trade routes** (`js/data/trade.js`, `economy.js tradeIncome`, trade mapmode): five
+  routes — the Incense Road (Petra), the King's Highway (Gerasa), the Via Maris
+  (Gaza), the Grain Fleets (Alexandria, sea), the Desert Crossing (Palmyra). Each stop
+  pays its owner value/stops monthly, double at the chokepoint; occupied, besieged, or
+  (sea) blockaded stops pay nothing. Folded into `incomeBreakdown.trade`. The coins
+  mapmode paints stops in route colors, chokepoints brighter.
+- **Fifth bookmark** (`bookmark_40bce.js`, `events_40bce.js`): Herod's Rise, 40 BCE —
+  new tags HER (anchor emblem) and ATG (menorah emblem); Parthian-held inner Syria,
+  Roman coast, Cleopatra's Egypt; the War for the Crown (ATG+PAR vs HER, to the death);
+  five missions a side; the Rome arc (the flight, Rex Iudaeorum — Rome joins by
+  decree), Gindarus (Parthian Syria falls Roman, Parthia exits), the Hasmonean bride,
+  the sabbatical year, Cleopatra's price, the axe for a king.
+
 ## 19. v1.9: wars that end & stacks that obey
 
 - **Wars end properly** (`military.js`):

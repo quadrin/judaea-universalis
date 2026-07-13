@@ -2,9 +2,10 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Four bookmarks:
+An EU4-style grand-strategy game set in the ancient Near East. Five bookmarks:
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea or the Seleucid Empire),
 **The Judaean Civil War, 67 BCE** (Hyrcanus or Aristobulus, with Pompey inbound),
+**Herod's Rise, 40 BCE** (Herod or Antigonus, with Parthia in Syria),
 **The Great Revolt, 66 CE** (Judaea or Rome), and **The Bar Kokhba Revolt, 132 CE**
 (Judaea or Rome).
 
@@ -65,6 +66,11 @@ python3 -m http.server 8613 --directory .
 - Stacks: armies of one nation sharing a province march under a single banner with a
   count badge — click it to grab the whole host, right-click to move it as one, and
   merge-all to make it one army.
+- Reform trees (three five-tier idea lines as monarch-point sinks), a hired court
+  (advisors per point pool; generals earn epithets from their victories), navies
+  (build ships at your harbors, carry armies over the sea, blockade enemy ports,
+  fight broadsides), and five trade routes whose stops and chokepoints pay whoever
+  holds them — with a trade mapmode to read it all.
 
 ## Architecture
 
