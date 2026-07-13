@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES } from './military.js';
+import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd } from './military.js';
 import { fireEvent } from './events.js';
 
 const _warned = new Set();
@@ -159,6 +159,13 @@ export function monthlySuccession(ctx) {
 // the province adopts the state faith. Occupation or a change of owner voids it.
 export function monthlyIntegration(ctx) {
   const g = ctx.game;
+  // Reforms and modifiers can grant a steady legitimacy drip.
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || !t.alive || k === 'REB') continue;
+    const drip = resolveTagAdd(ctx, k, 'legitimacyAdd');
+    if (drip) t.legitimacy = Math.max(0, Math.min(100, num(t.legitimacy) + drip));
+  }
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || !p.conversion) continue;
@@ -170,7 +177,7 @@ export function monthlyIntegration(ctx) {
         continue;
       }
       if (p.controller !== p.owner) continue; // the missionaries wait out the occupation
-      c.monthsLeft = num(c.monthsLeft, 1) - 1;
+      c.monthsLeft = num(c.monthsLeft, 1) - resolveTagMult(ctx, p.owner, 'convertMult');
       if (c.monthsLeft > 0) continue;
       p.conversion = null;
       p.religion = owner.religion;

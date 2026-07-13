@@ -658,7 +658,8 @@ function siegeDay(ctx, p) {
           for (const a of besiegers) a.men = Math.max(0, a.men - Math.max(1, Math.floor(a.men * 0.02)));
         }
       }
-      s.progress += (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
+      s.progress += resolveTagMult(ctx, s.by, 'siegeMult')
+        * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
     let decay = 0.0015;

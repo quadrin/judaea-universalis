@@ -12,6 +12,7 @@ import {
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword,
 } from './military.js';
+import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
@@ -99,6 +100,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       stability: 0, legitimacy: 50, warExhaustion: 0,
       points: { gov: 0, infl: 0, mar: 0 },
       ideas: { ...(d.ideas || {}) },
+      reforms: { mil: 0, civ: 0, rel: 0 },
       modifiers: [],
       atWarWith: [], allies: [], opinion: {},
       claims: [], overlord: null,
@@ -932,6 +934,48 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
     },
 
+    // ---- reforms (idea trees) ----------------------------------------------------
+    getIdeas() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return null;
+        const reforms = t.reforms || { mil: 0, civ: 0, rel: 0 };
+        return Object.keys(IDEA_TREES).map((key) => {
+          const tree = IDEA_TREES[key];
+          const owned = reforms[key] | 0;
+          const next = owned < tree.tiers.length ? tree.tiers[owned] : null;
+          const cost = next ? ideaCost(owned) : 0;
+          const have = num(t.points[tree.point]);
+          return {
+            key, name: tree.name, point: tree.point, owned, cost,
+            tiers: tree.tiers.map((ti, i) => ({ name: ti.name, desc: ti.desc, owned: i < owned })),
+            canBuy: !!next && have >= cost,
+            whyNot: !next ? 'Every reform in this tree is enacted.'
+              : have < cost ? `Needs ${cost} ${tree.point === 'mar' ? 'martial' : tree.point === 'gov' ? 'government' : 'influence'} points.` : '',
+          };
+        });
+      } catch (e) { warnOnce('getIdeas', 'getIdeas failed', e); return null; }
+    },
+    buyIdea(treeKey) {
+      try {
+        const t = g.tags[g.playerTag];
+        const tree = IDEA_TREES[treeKey];
+        if (!t || !tree) return;
+        if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 };
+        const owned = t.reforms[treeKey] | 0;
+        if (owned >= tree.tiers.length) return;
+        const cost = ideaCost(owned);
+        if (num(t.points[tree.point]) < cost) {
+          say('The realm is not ready', 'This reform needs ' + cost + ' points.', 'bad');
+          return;
+        }
+        t.points[tree.point] = num(t.points[tree.point]) - cost;
+        t.reforms[treeKey] = owned + 1;
+        applyReformsToTag(ctx.DEFINES, t, g.playerTag);
+        say('Reform enacted', tree.tiers[owned].name + ' — ' + tree.tiers[owned].desc, 'good');
+      } catch (e) { warnOnce('buyIdea', 'buyIdea failed', e); }
+    },
+
     // ---- battle window ---------------------------------------------------------
     getBattleInfo(provId) {
       try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
@@ -1196,6 +1240,7 @@ export function reviveGame(saved) {
     if (t.heir === undefined) t.heir = null;
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
+    if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;
