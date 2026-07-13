@@ -14,6 +14,7 @@ import { icon, flagChip } from './icons.js';
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
   { id: 'diplomatic', ico: icon('dove'), name: 'Diplomatic — friends, foes, truces and claims, seen from your throne' },
+  { id: 'trade', ico: icon('coins'), name: 'Trade — the routes, their stops, and the chokepoints that pay double' },
   { id: 'terrain', ico: icon('mountain'), name: 'Terrain' },
   { id: 'religion', ico: icon('altar'), name: 'Religion' },
   { id: 'culture', ico: icon('amphora'), name: 'Culture' },
@@ -527,6 +528,7 @@ export function initUI(staticCtx) {
   function setSelectedArmy(id) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
+    if (id != null) g.ui.selectedFleet = null; // one helm at a time
     g.ui.selectedArmy = id == null ? null : id;
     g.ui.selectedArmies = id == null ? [] : [id];
     bus.emit('selectArmy', g.ui.selectedArmy);
@@ -602,6 +604,11 @@ export function initUI(staticCtx) {
     const g = state.ctx.game;
     const provId = payload ? payload.provId : 0;
     if (provId <= 0 || !state.actions) return;
+    if (g.ui.selectedFleet != null && typeof state.actions.moveFleet === 'function') {
+      state.actions.moveFleet(g.ui.selectedFleet, provId);
+      outliner.refresh(true);
+      return;
+    }
     const grp = Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length
       ? g.ui.selectedArmies
       : (g.ui.selectedArmy != null ? [g.ui.selectedArmy] : []);

@@ -130,6 +130,16 @@ export const DEFINES = {
       description: 'The younger brother: the army, the fortresses, and the crown — everything but time.',
       ideas: { moraleMult: 1.1, manpowerMult: 0.9 },
     },
+    HER: {
+      name: "Herod's Judaea", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
+      description: 'The Idumean commoner with a Roman decree: a crown of paper, to be made iron.',
+      ideas: { incomeMult: 1.1, siegeMult: 1.1 },
+    },
+    ATG: {
+      name: "Antigonus' Judaea", color: [30, 82, 96], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The last fighting Hasmonean: king and high priest, with Parthia at his back — for now.',
+      ideas: { moraleMult: 1.1, hillDefBonus: 1 },
+    },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',

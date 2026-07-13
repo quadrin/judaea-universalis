@@ -85,6 +85,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       <div class="pp-recruit">
         <button class="btn pp-recruit-btn" data-ref="recruitInf"></button>
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
+        <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
       </div>
       <div class="pp-diplo hidden" data-ref="diploBlock">
         <div class="pp-diplo-title">Diplomacy</div>
@@ -127,6 +128,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const fn = b.dataset.integ === 'rule' ? 'establishRule' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
+      refresh();
+    });
+    refs.buildShip.addEventListener('click', () => {
+      if (!actions || typeof actions.buildShip !== 'function' || refs.buildShip.classList.contains('disabled')) return;
+      try { actions.buildShip(provId); } catch (e) { warnOnce('buildShip', e); }
       refresh();
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
@@ -288,6 +294,17 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const costs = base.regCost || { inf: 10, cav: 25 };
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
+
+    // Build Ship (v2.0): owned coastal harbors only
+    const coastal = !!(ctx.geom && Array.isArray(ctx.geom.coastal) && ctx.geom.coastal[provId]);
+    const myPort = p.owner === g.playerTag && p.controller === g.playerTag;
+    refs.buildShip.classList.toggle('hidden', !(coastal && myPort && actions && typeof actions.buildShip === 'function'));
+    if (coastal && myPort) {
+      refs.buildShip.textContent = 'Build Ship (30t)';
+      refs.buildShip.dataset.tt = 'Lay down a hull: 30 talents, upkeep 0.5 a month, carries 1,000 men. Ships gather into the fleet riding off this port.';
+      const t = g.tags[g.playerTag];
+      refs.buildShip.classList.toggle('disabled', !t || (t.treasury || 0) < 30);
+    }
 
     // Buildings (v1.3; gated on the sim providing getBuildInfo)
     refreshBuildings();

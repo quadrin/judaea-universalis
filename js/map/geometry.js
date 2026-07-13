@@ -78,5 +78,62 @@ export function computeGeometry(idArray, MAP_DATA) {
     neighbors[b].add(a);
   }
 
-  return { neighbors, centroids, areas, bbox };
+  // ---- coastal detection (v2.0, navies) -----------------------------------
+  // The OPEN sea is the id-0 component connected to the map corners (lakes —
+  // the Dead Sea, Galilee — are id-0 too, but landlocked, so they don't
+  // count). A province touching open sea is coastal; its offshore anchor is
+  // the mean of its sea-facing boundary pixels, nudged one step seaward —
+  // where fleets ride and blockades sit.
+  const coastal = new Array(N + 1).fill(false);
+  const offshore = new Array(N + 1).fill(null);
+  if (idArray && idArray.length >= W * H) {
+    const sea = new Uint8Array(W * H); // 1 = open sea
+    const stack = [];
+    const push = (x, y) => {
+      const i = y * W + x;
+      if (idArray[i] === 0 && !sea[i]) { sea[i] = 1; stack.push(i); }
+    };
+    push(0, 0); push(W - 1, 0); push(0, H - 1); push(W - 1, H - 1);
+    while (stack.length) {
+      const i = stack.pop();
+      const x = i % W, y = (i / W) | 0;
+      if (x > 0) push(x - 1, y);
+      if (x + 1 < W) push(x + 1, y);
+      if (y > 0) push(x, y - 1);
+      if (y + 1 < H) push(x, y + 1);
+    }
+    const offX = new Float64Array(N + 1);
+    const offY = new Float64Array(N + 1);
+    const offN = new Int32Array(N + 1);
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const id = idArray[y * W + x];
+        if (id === 0 || id > N) continue;
+        // any 4-neighbor on open sea?
+        let sx = 0, sy = 0, sn = 0;
+        if (sea[y * W + x - 1]) { sx -= 1; sn++; }
+        if (sea[y * W + x + 1]) { sx += 1; sn++; }
+        if (sea[(y - 1) * W + x]) { sy -= 1; sn++; }
+        if (sea[(y + 1) * W + x]) { sy += 1; sn++; }
+        if (!sn) continue;
+        coastal[id] = true;
+        offX[id] += x + sx * 6; // nudged ~6px seaward
+        offY[id] += y + sy * 6;
+        offN[id]++;
+      }
+    }
+    for (let i = 1; i <= N; i++) {
+      if (offN[i] > 0) offshore[i] = { x: offX[i] / offN[i], y: offY[i] / offN[i] };
+    }
+  } else {
+    // Fake-geom fallback (headless tests): coast terrain counts as coastal.
+    provs.forEach((p, idx) => {
+      if (p && p.terrain === 'coast') {
+        coastal[idx + 1] = true;
+        offshore[idx + 1] = centroids[idx + 1];
+      }
+    });
+  }
+
+  return { neighbors, centroids, areas, bbox, coastal, offshore };
 }

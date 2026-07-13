@@ -73,7 +73,7 @@ export function armiesInProv(ctx, provId) {
   const out = [];
   for (const id in ctx.game.armies) {
     const a = ctx.game.armies[id];
-    if (a && a.prov === provId) out.push(a);
+    if (a && a.prov === provId && !a.aboard) out.push(a); // aboard = at sea, out of land play
   }
   return out;
 }
@@ -272,7 +272,7 @@ function endBattle(ctx, b, winKey) {
   const i = g.battles.indexOf(b);
   if (i >= 0) g.battles.splice(i, 1);
   const winners = battleSideArmies(ctx, b, winKey);
-  for (const a of winners) a.inBattle = false;
+  for (const a of winners) { a.inBattle = false; maybeGainTrait(ctx, a); }
   const winnerTag = winners.length ? winners[0].tag : null;
   ctx.bus.emit('battleEnd', { prov: b.prov, winnerTag });
   return winnerTag;
@@ -300,7 +300,7 @@ export function addWarExhaustion(ctx, tag, amt) {
 export function engageIfNeeded(ctx, army) {
   try {
     const g = ctx.game;
-    if (!army || !g.armies[army.id] || army.retreating || num(army.shatteredDays) > 0) return;
+    if (!army || !g.armies[army.id] || army.retreating || army.aboard || num(army.shatteredDays) > 0) return;
     const pid = army.prov;
     let b = null;
     for (const bb of g.battles) if (bb.prov === pid) { b = bb; break; }
@@ -545,7 +545,7 @@ export function moveArmiesDaily(ctx) {
   const g = ctx.game;
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
-    if (!a || a.inBattle) continue;
+    if (!a || a.inBattle || a.aboard) continue;
     if (num(a.shatteredDays) > 0) {
       a.shatteredDays--;
       // Recovery is an engagement trigger: without this, co-located hostiles
@@ -658,7 +658,12 @@ function siegeDay(ctx, p) {
           for (const a of besiegers) a.men = Math.max(0, a.men - Math.max(1, Math.floor(a.men * 0.02)));
         }
       }
-      s.progress += (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
+      const engineer = besiegers.some((a) => a.general && Array.isArray(a.general.traits) && a.general.traits.indexOf('engineer') >= 0);
+      const blockaded = Object.values(ctx.game.fleets || {}).some((f) =>
+        f && f.prov === p.id && f.ships > 0 && sameSide(ctx, f.tag, s.by));
+      if (blockaded) s.progress += 0.5; // nothing enters the harbor
+      s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1)
+        * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
     let decay = 0.0015;
@@ -1003,6 +1008,36 @@ function weightedIndex(rng, weights) {
   return weights.length - 1;
 }
 // Pips weighted toward 1-3: fire/shock 0-4, maneuver 0-5.
+// Battle-earned laurels: most traits bump the general's pips permanently at
+// the moment of gain (they display through the existing pip readout);
+// 'Engineer' is consulted live by tickSieges.
+export const GENERAL_TRAITS = [
+  { key: 'methodical', name: 'Methodical', desc: '+1 fire', apply: (gen) => { gen.fire = Math.min(6, num(gen.fire) + 1); } },
+  { key: 'fearsome', name: 'Fearsome', desc: '+1 shock', apply: (gen) => { gen.shock = Math.min(6, num(gen.shock) + 1); } },
+  { key: 'swift', name: 'Swift', desc: '+1 maneuver', apply: (gen) => { gen.maneuver = Math.min(6, num(gen.maneuver) + 1); } },
+  { key: 'engineer', name: 'Engineer', desc: '+30% siege progress', apply: () => {} },
+  { key: 'veteran', name: 'Old Veteran', desc: '+1 fire and +1 shock', apply: (gen) => { gen.fire = Math.min(6, num(gen.fire) + 1); gen.shock = Math.min(6, num(gen.shock) + 1); } },
+];
+function maybeGainTrait(ctx, army) {
+  const gen = army && army.general;
+  if (!gen) return;
+  gen.wins = num(gen.wins) + 1;
+  if (!Array.isArray(gen.traits)) gen.traits = [];
+  if (gen.traits.length >= 2 || gen.wins < 2 || ctx.rng.int(100) >= 35) return;
+  const open = GENERAL_TRAITS.filter((tr) => gen.traits.indexOf(tr.key) < 0);
+  if (!open.length) return;
+  const tr = ctx.rng.pick(open);
+  gen.traits.push(tr.key);
+  try { tr.apply(gen); } catch (e) { /* stat bump only */ }
+  if (army.tag === ctx.game.playerTag) {
+    ctx.bus.emit('notify', {
+      title: 'A name is made',
+      text: gen.name + ' earns the epithet "' + tr.name + '" (' + tr.desc + ').',
+      type: 'good',
+    });
+  }
+}
+
 export function rollGeneral(ctx, tag) {
   const t = ctx.game.tags[tag];
   const cul = t && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;

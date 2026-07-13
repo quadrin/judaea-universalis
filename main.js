@@ -10,6 +10,8 @@ import { EVENTS_132 } from './js/data/events_132ce.js';
 import { BOOKMARK_132 } from './js/data/bookmark_132ce.js';
 import { EVENTS_67 } from './js/data/events_67bce.js';
 import { BOOKMARK_67 } from './js/data/bookmark_67bce.js';
+import { EVENTS_40 } from './js/data/events_40bce.js';
+import { BOOKMARK_40 } from './js/data/bookmark_40bce.js';
 import { GENERIC_EVENTS } from './js/data/events_generic.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
@@ -59,6 +61,7 @@ async function boot() {
     // bookmark gets the shared generic pool appended to its scripted chain.
     { bookmark: BOOKMARK_167, events: EVENTS_167.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
+    { bookmark: BOOKMARK_40, events: EVENTS_40.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
   ];

@@ -67,6 +67,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build">
         <div class="pp-build-title">Decisions</div>
         <div class="np-decisions" data-ref="decisions"></div>
+      </div>
+      <div class="pp-build">
+        <div class="pp-build-title">The Court</div>
+        <div class="np-court" data-ref="court"></div>
+      </div>
+      <div class="pp-build">
+        <div class="pp-build-title">Reforms</div>
+        <div class="np-reforms" data-ref="reforms"></div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
 
@@ -78,6 +86,29 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (act.classList.contains('disabled') || !actions) return;
         const fn = actions[act.dataset.act];
         if (typeof fn === 'function') { try { fn(); } catch (err) { warnOnce('np-' + act.dataset.act, err); } }
+        refresh();
+        return;
+      }
+      const hire = e.target.closest('[data-hire-adv]');
+      if (hire) {
+        if (!hire.classList.contains('disabled') && actions && actions.hireAdvisor) {
+          try { actions.hireAdvisor(hire.dataset.hireAdv, Number(hire.dataset.cand)); } catch (err) { warnOnce('np-hireAdv', err); }
+        }
+        refresh();
+        return;
+      }
+      const dis = e.target.closest('[data-dismiss-adv]');
+      if (dis) {
+        if (actions && actions.dismissAdvisor) {
+          try { actions.dismissAdvisor(dis.dataset.dismissAdv); } catch (err) { warnOnce('np-dismissAdv', err); }
+        }
+        refresh();
+        return;
+      }
+      const idea = e.target.closest('[data-idea]');
+      if (idea) {
+        if (idea.classList.contains('disabled') || !actions || typeof actions.buyIdea !== 'function') return;
+        try { actions.buyIdea(idea.dataset.idea); } catch (err) { warnOnce('np-idea', err); }
         refresh();
         return;
       }
@@ -181,6 +212,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshMissions();
     refreshDiplomacy(g, t);
     refreshDecisions();
+    refreshReforms();
+    refreshCourt();
   }
 
   function setAct(btn, can, tt) {
@@ -297,6 +330,57 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
     }
     setHtml(refs.diploBody, html);
+  }
+
+  // Advisor seats: one per monarch-point pool. Seated advisors show their
+  // wage and a dismiss button; empty seats offer two candidates.
+  function refreshCourt() {
+    if (!refs.court) return;
+    let court = null;
+    if (actions && typeof actions.getCourt === 'function') {
+      try { court = actions.getCourt(); } catch (e) { warnOnce('np-getCourt', e); }
+    }
+    if (!court) { refs.court.innerHTML = ''; return; }
+    const label = { gov: 'Government', infl: 'Influence', mar: 'Martial' };
+    refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
+      const seat = court[k];
+      if (seat.seated) {
+        const a = seat.seated;
+        return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <b>${esc(a.name)}</b> (+${a.skill}/mo)</span>
+          <button class="pp-build-btn np-adv-btn" data-dismiss-adv="${k}" data-tt="Wage ${a.wage} talents a month. Click to dismiss.">Dismiss</button></div>`;
+      }
+      const cands = (seat.candidates || []).map((c, i) =>
+        `<button class="pp-build-btn np-adv-btn" data-hire-adv="${k}" data-cand="${i}"
+          data-tt="Hire for ${c.cost} talents; wage ${c.wage} talents a month; +${c.skill} ${esc(label[k].toLowerCase())} points monthly.">${esc(c.name)} (${c.skill})</button>`).join('');
+      return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <i>empty seat</i></span>${cands}</div>`;
+    }).join('');
+  }
+
+  // Three reform trees: tier pips, the next reform's name and price, one
+  // buy button per tree. Renders nothing on sims without getIdeas.
+  function refreshReforms() {
+    if (!refs.reforms) return;
+    let trees = null;
+    if (actions && typeof actions.getIdeas === 'function') {
+      try { trees = actions.getIdeas(); } catch (e) { warnOnce('np-getIdeas', e); }
+    }
+    if (!trees) { refs.reforms.innerHTML = ''; return; }
+    const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
+    refs.reforms.innerHTML = trees.map((tr) => {
+      const pips = tr.tiers.map((ti) =>
+        `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+      const next = tr.tiers[tr.owned];
+      const tt = next
+        ? `${next.name} — ${next.desc}\nCosts ${tr.cost} ${ptName[tr.point] || tr.point} points.${tr.canBuy ? '' : '\n' + tr.whyNot}`
+        : tr.whyNot;
+      return `
+        <div class="np-reform">
+          <div class="np-reform-head"><b>${esc(tr.name)}</b><span class="np-pips">${pips}</span></div>
+          <button class="pp-build-btn np-reform-btn${tr.canBuy ? '' : ' disabled'}" data-idea="${esc(tr.key)}" data-tt="${esc(tt)}">
+            ${next ? `${esc(next.name)} <span class="np-reform-cost">${tr.cost} ${esc(tr.point)}</span>` : 'Complete'}
+          </button>
+        </div>`;
+    }).join('');
   }
 
   function refreshDecisions() {

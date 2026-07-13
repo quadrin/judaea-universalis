@@ -9,6 +9,7 @@ import {
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
 } from './military.js';
+import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { LOAN_SIZE } from './economy.js';
 
 const _warned = new Set();
@@ -373,6 +374,25 @@ function monthlyWarDiplomacy(ctx) {
   }
 }
 
+// With a healthy surplus the AI enacts the next reform tier — one per month,
+// keeping a buffer so it can still develop, drill and convert.
+function aiReforms(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t) return;
+  if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 };
+  for (const key of Object.keys(IDEA_TREES)) {
+    const tree = IDEA_TREES[key];
+    const owned = t.reforms[key] | 0;
+    if (owned >= tree.tiers.length) continue;
+    const cost = ideaCost(owned);
+    if (num(t.points[tree.point]) < cost + 150) continue;
+    t.points[tree.point] -= cost;
+    t.reforms[key] = owned + 1;
+    applyReformsToTag(ctx.DEFINES, t, tag);
+    return; // one tier a month
+  }
+}
+
 export function runMonthlyAI(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -383,6 +403,7 @@ export function runMonthlyAI(ctx) {
       aiDiploReciprocity(ctx, tag);
       aiConsiderWar(ctx, tag);
       runTagAI(ctx, tag);
+      aiReforms(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
   try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }

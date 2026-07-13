@@ -9,6 +9,7 @@
 //               class of adjacent provinces differs — so country borders stay correct in
 //               every mapmode and after conquests, without extra API surface.
 
+import { tradeIndex } from '../data/trade.js';
 const GRAY = [128, 128, 128];
 const DEV_LOW = [216, 210, 176];   // #d8d2b0
 const DEV_HIGH = [30, 122, 46];    // #1e7a2e
@@ -65,6 +66,7 @@ function buildCultureDisplay(DEFINES) {
 }
 
 const MODE_PARAMS = {
+  trade: { relief: 0.35, flat: 0 },
   political: { relief: 0.55, flat: 0 },
   terrain: { relief: 1.0, flat: 0 },
   religion: { relief: 0.35, flat: 0 },
@@ -98,6 +100,7 @@ export function computeMapmodeColors(ctx, mode) {
 
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const tagKeys = Object.keys(TAGS);
+  const tradeIdx = mode === 'trade' ? tradeIndex() : null;
   const tagClass = (t) => Math.min(31, tagKeys.indexOf(t) + 1); // unknown -> 0
   const tagColor = (t) =>
     (game.tags[t] && game.tags[t].color) || (TAGS[t] && TAGS[t].color) || GRAY;
@@ -151,6 +154,22 @@ export function computeMapmodeColors(ctx, mode) {
             cB = tagColor(p.controller);
             fl |= 1;
           }
+        }
+        break;
+      }
+      case 'trade': {
+        // Routes glow in their own colors over muted parchment; chokepoints
+        // shine brighter. Occupied/besieged stops show the stripes.
+        const stops = tradeIdx.get(p.name);
+        if (stops && stops.length) {
+          const best = stops.find((x) => x.isChokepoint) || stops[0];
+          cA = best.isChokepoint ? lerp3(best.route.color, [255, 240, 190], 0.35) : best.route.color;
+          if (p.controller !== p.owner || p.siege) {
+            cB = [120, 120, 120];
+            fl |= 1;
+          }
+        } else {
+          cA = [196, 188, 168];
         }
         break;
       }

@@ -10,8 +10,10 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword,
+  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
 } from './military.js';
+import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
+import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
@@ -37,6 +39,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tags: {},
     provinces: [null],
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
+    fleets: {}, nextFleetId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     rngSeed,
@@ -99,6 +102,9 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       stability: 0, legitimacy: 50, warExhaustion: 0,
       points: { gov: 0, infl: 0, mar: 0 },
       ideas: { ...(d.ideas || {}) },
+      reforms: { mil: 0, civ: 0, rel: 0 },
+      advisors: { gov: null, infl: null, mar: null },
+      courtCand: {},
       modifiers: [],
       atWarWith: [], allies: [], opinion: {},
       claims: [], overlord: null,
@@ -932,6 +938,167 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
     },
 
+    // ---- the fleet ------------------------------------------------------------------
+    getNavy() {
+      try {
+        const me = g.playerTag;
+        const fleets = Object.values(g.fleets || {}).filter((f) => f && f.tag === me && f.ships > 0)
+          .map((f) => {
+            const aboard = Object.values(g.armies).filter((a) => a && a.aboard === f.id);
+            const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === me && !a.inBattle);
+            const p = ctx.byId(f.prov);
+            return {
+              id: f.id, name: f.name, ships: f.ships, prov: f.prov,
+              provName: (p && p.name) || ('#' + f.prov),
+              sailing: !!(f.path && f.path.length),
+              moveDaysLeft: f.moveDaysLeft, hopTotal: f.hopTotal,
+              aboardMen: aboard.reduce((s2, a) => s2 + num(a.men), 0),
+              canEmbark: here.length > 0 && !(f.path && f.path.length),
+              canDisembark: aboard.length > 0 && !(f.path && f.path.length),
+              capacity: f.ships * 1000,
+            };
+          });
+        return { fleets };
+      } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
+    },
+    buildShip(provId) {
+      try {
+        const res = buildShipCore(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('No ship today', res.why, 'bad'); return; }
+        const p = ctx.byId(provId | 0);
+        say('A hull takes the water', 'A new ship joins ' + res.fleet.name + ' at ' + ((p && p.name) || 'port') + '.', 'good');
+      } catch (e) { warnOnce('buildShip', 'buildShip failed', e); }
+    },
+    moveFleet(fleetId, provId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        if (!isCoastal(ctx, provId | 0)) { say('No harbor there', 'Fleets sail port to port — pick a coastal province.', 'bad'); return; }
+        issueFleetMove(ctx, f, provId | 0);
+      } catch (e) { warnOnce('moveFleet', 'moveFleet failed', e); }
+    },
+    embarkFleet(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === g.playerTag && !a.inBattle);
+        let boarded = 0;
+        for (const a of here) {
+          const res = embarkCore(ctx, f, a.id);
+          if (res.ok) boarded++;
+          else if (!boarded) { say('They stay ashore', res.why, 'bad'); return; }
+        }
+        if (boarded) say('The army embarks', boarded + (boarded === 1 ? ' army is' : ' armies are') + ' aboard. Sail, then disembark.', 'good');
+      } catch (e) { warnOnce('embarkFleet', 'embarkFleet failed', e); }
+    },
+    disembarkFleet(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const n = disembarkCore(ctx, f);
+        if (n) {
+          const p = ctx.byId(f.prov);
+          say('Boots on the shore', n + (n === 1 ? ' army lands' : ' armies land') + ' at ' + ((p && p.name) || 'the coast') + '.', 'good');
+          // landing on hostile ground is an assault landing: engage at once
+          for (const a of Object.values(g.armies)) {
+            if (a && a.prov === f.prov && a.tag === g.playerTag && !a.aboard) {
+              try { engageIfNeeded(ctx, a); } catch (err) { /* engagement optional */ }
+            }
+          }
+        }
+      } catch (e) { warnOnce('disembarkFleet', 'disembarkFleet failed', e); }
+    },
+
+    // ---- the court (advisors) ------------------------------------------------------
+    // Each pool can seat one advisor: +skill (1-3) to that pool's monthly gain,
+    // wage skill*2 talents a month (tick.js). Two candidates per empty seat,
+    // rerolled after every hire or dismissal.
+    getCourt() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return null;
+        if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
+        if (!t.courtCand) t.courtCand = {};
+        const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
+        const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        const out = {};
+        for (const k of ['gov', 'infl', 'mar']) {
+          if (!t.advisors[k] && (!Array.isArray(t.courtCand[k]) || !t.courtCand[k].length)) {
+            t.courtCand[k] = [0, 1].map(() => {
+              const skill = 1 + ctx.rng.int(3);
+              return { name: ctx.rng.pick(pool), skill, cost: skill * 30, wage: skill * 2 };
+            });
+          }
+          out[k] = { seated: t.advisors[k], candidates: t.advisors[k] ? [] : t.courtCand[k] };
+        }
+        return out;
+      } catch (e) { warnOnce('getCourt', 'getCourt failed', e); return null; }
+    },
+    hireAdvisor(kind, idx) {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t || ['gov', 'infl', 'mar'].indexOf(kind) < 0 || t.advisors[kind]) return;
+        const cand = t.courtCand && t.courtCand[kind] && t.courtCand[kind][idx | 0];
+        if (!cand) return;
+        if (num(t.treasury) < cand.cost) { say('The purse is light', 'Hiring ' + cand.name + ' costs ' + cand.cost + ' talents.', 'bad'); return; }
+        t.treasury = num(t.treasury) - cand.cost;
+        t.advisors[kind] = { name: cand.name, skill: cand.skill, wage: cand.wage };
+        t.courtCand[kind] = [];
+        say('An advisor takes their seat', cand.name + ' joins the court (+' + cand.skill + ' ' + kind + ' a month, ' + cand.wage + ' talents wage).', 'good');
+      } catch (e) { warnOnce('hireAdvisor', 'hireAdvisor failed', e); }
+    },
+    dismissAdvisor(kind) {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t || !t.advisors || !t.advisors[kind]) return;
+        say('Dismissed', t.advisors[kind].name + ' leaves the court.', 'info');
+        t.advisors[kind] = null;
+        if (t.courtCand) t.courtCand[kind] = [];
+      } catch (e) { warnOnce('dismissAdvisor', 'dismissAdvisor failed', e); }
+    },
+
+    // ---- reforms (idea trees) ----------------------------------------------------
+    getIdeas() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return null;
+        const reforms = t.reforms || { mil: 0, civ: 0, rel: 0 };
+        return Object.keys(IDEA_TREES).map((key) => {
+          const tree = IDEA_TREES[key];
+          const owned = reforms[key] | 0;
+          const next = owned < tree.tiers.length ? tree.tiers[owned] : null;
+          const cost = next ? ideaCost(owned) : 0;
+          const have = num(t.points[tree.point]);
+          return {
+            key, name: tree.name, point: tree.point, owned, cost,
+            tiers: tree.tiers.map((ti, i) => ({ name: ti.name, desc: ti.desc, owned: i < owned })),
+            canBuy: !!next && have >= cost,
+            whyNot: !next ? 'Every reform in this tree is enacted.'
+              : have < cost ? `Needs ${cost} ${tree.point === 'mar' ? 'martial' : tree.point === 'gov' ? 'government' : 'influence'} points.` : '',
+          };
+        });
+      } catch (e) { warnOnce('getIdeas', 'getIdeas failed', e); return null; }
+    },
+    buyIdea(treeKey) {
+      try {
+        const t = g.tags[g.playerTag];
+        const tree = IDEA_TREES[treeKey];
+        if (!t || !tree) return;
+        if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 };
+        const owned = t.reforms[treeKey] | 0;
+        if (owned >= tree.tiers.length) return;
+        const cost = ideaCost(owned);
+        if (num(t.points[tree.point]) < cost) {
+          say('The realm is not ready', 'This reform needs ' + cost + ' points.', 'bad');
+          return;
+        }
+        t.points[tree.point] = num(t.points[tree.point]) - cost;
+        t.reforms[treeKey] = owned + 1;
+        applyReformsToTag(ctx.DEFINES, t, g.playerTag);
+        say('Reform enacted', tree.tiers[owned].name + ' — ' + tree.tiers[owned].desc, 'good');
+      } catch (e) { warnOnce('buyIdea', 'buyIdea failed', e); }
+    },
+
     // ---- battle window ---------------------------------------------------------
     getBattleInfo(provId) {
       try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
@@ -1176,6 +1343,8 @@ export function reviveGame(saved) {
   saved.pendingEvents = saved.pendingEvents.filter((pe) => !(pe && String(pe.eventId).startsWith('dyn_')));
   if (!saved.firedEvents) saved.firedEvents = {};
   if (!saved.battles) saved.battles = [];
+  if (!saved.fleets) saved.fleets = {};
+  if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.wars) saved.wars = [];
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
@@ -1196,6 +1365,9 @@ export function reviveGame(saved) {
     if (t.heir === undefined) t.heir = null;
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
+    if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
+    if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
+    if (!t.courtCand) t.courtCand = {};
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;

@@ -1916,6 +1916,34 @@ html, body {
   text-align: center;
 }
 
+/* ---------------------------------------------------- the court (v2.0) -- */
+.np-adv { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; font-size: 12.5px; }
+.np-adv-name { flex: 1 1 100%; }
+.np-adv-btn { font-size: 11.5px; padding: 3px 10px; }
+
+/* --------------------------------------------------- reform trees (v2.0) -- */
+.np-reform { margin-bottom: 8px; }
+.np-reform-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+.np-pips { display: flex; gap: 4px; }
+.np-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  background: transparent;
+  opacity: 0.5;
+}
+.np-pip.on { background: var(--gold-bright); opacity: 1; }
+.np-reform-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.np-reform-cost { font-size: 11px; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+
 /* --------------------------------------------- multiplayer lobby (v1.8) -- */
 #mp-lobby { position: fixed; inset: 0; z-index: 230; pointer-events: auto; }
 #mp-lobby.hidden { display: none !important; }
