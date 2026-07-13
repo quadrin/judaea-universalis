@@ -50,10 +50,10 @@ python3 -m http.server 8613 --directory .
   instead of teleporting, battles rock and spark, sieges smoke — and clicking a battle (on
   the map or in the outliner) opens a live battle window with the day's dice, both hosts
   army by army, morale and the running butcher's bill.
-- Multiplayer with no server: the host's browser runs the world and friends join over a
-  direct WebRTC link by swapping invite/reply codes (⚔ Multiplayer on the title screen).
-  Share one nation to rule it together, or take different nations and fight over the same
-  map. The host is the arbiter; a dropped guest's nation reverts to the AI.
+- Co-op multiplayer with no server: the host's browser runs the world and friends join
+  over a direct WebRTC link by swapping invite/reply codes (⚔ Multiplayer on the title
+  screen). Everyone rules the host's nation together — any player can move the armies,
+  spend the treasury, and steer the clock. The host is the arbiter for story events.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,
   swipe) instead of a wall of cards.
 

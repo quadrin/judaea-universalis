@@ -839,10 +839,10 @@ renderer.render → overlay.draw → labels.update.
     messages; anything big is chunked at 48KB and reassembled (`{_c,i,n,s}` envelopes).
     `setHandlers()` lets the lobby hand a live peer to main.js for the game phase.
   - **Lobby** (`js/ui/lobby.js`, `#mp-lobby`, opened from the start screen's ⚔ Multiplayer
-    button): host picks chapter + nation and mints one invite per guest (up to 3); guests
-    pick any playable nation — the SAME nation as another player means shared rule (co-op),
-    a different nation means rivals in one world. Begin ships each guest
-    `{t:'start', yourTag, bookmarkId, game}`.
+    button): host picks chapter + nation and mints one invite per guest (up to 3). The
+    campaign is CO-OP: every guest rules the host's nation together with the host — one
+    realm, many hands on the tiller (guests do not pick a nation). Begin ships each guest
+    `{t:'start', yourTag: hostTag, bookmarkId, game}`.
   - **Model — host-authoritative** (main.js `mp` block): the host runs the sim; guests
     never tick (`mp.role === 'guest'` skips the tick loop). Host broadcasts `{t:'snap',
     game}` — promptly (250ms throttle) when dirty, as a 1.2s heartbeat otherwise. Guests
@@ -853,12 +853,12 @@ renderer.render → overlay.draw → labels.update.
     executed on the host under the guest's chair (a scoped `playerTag` swap). Toasts
     raised by a guest's command are captured (scoped `bus.emit` shim) and forwarded as
     `{t:'toast'}` instead of showing on the host. Game-over verdicts relay as `{t:'over'}`.
-  - **Sim contract**: `game.humanTags` lists every human nation; each has `ai:false` so
-    `runMonthlyAI` leaves them alone (the AI already keys off `t.ai`). A guest who
-    disconnects hands their nation back to the AI. `reviveGame` resets `ai` from
-    `playerTag` and collapses `humanTags` — a save written mid-multiplayer always loads
-    as a solo campaign.
+  - **Sim contract**: `game.humanTags` lists every human nation (with shared rule that
+    is just the host's tag); each has `ai:false` so `runMonthlyAI` leaves them alone (the
+    AI already keys off `t.ai`). The nation only reverts to the AI when NO human sits it
+    — with shared rule the host always does. `reviveGame` resets `ai` from `playerTag`
+    and collapses `humanTags` — a save written mid-multiplayer always loads as a solo
+    campaign.
   - **Known v1 limits** (documented, deliberate): the host is the arbiter — event cards
-    fire on the host's chair only (guest-tag scripted events auto-resolve), victory
-    verdicts are written from the host's perspective, and there is no reconnect — a
-    dropped guest rejoins via a fresh invite in a new lobby.
+    open on the host's screen and the host chooses for the realm; there is no reconnect —
+    a dropped guest rejoins via a fresh invite in a new lobby.
