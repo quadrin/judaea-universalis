@@ -1274,3 +1274,35 @@ foreign court **read-only**.
   the AI paves a runway at its capital and fills the hangars once tech and
   treasury allow (`aiAirPower`). Upkeep rides the maintenance line;
   formables re-flag their wings; pre-air saves heal to empty skies.
+
+## 30. v3.0: the bomber's moon — raids, and the works made beautiful
+
+- **Bombing raids** (military.js `raidTargets`/`airRaidCore`, action
+  `raidProvince`): a rearmed wing can strike any hostile presence within its
+  range ring (AIR.rangeHops) — thinning a hostile host (3%, 40–350 men, and
+  a −0.35 morale shock), softening walls its side besieges (+4 siege
+  progress), or cracking a hostile garrison (−10%). Wings fly with their
+  crews aboard — no troops attached, none needed. Each sortie costs
+  AIR.raidCdDays (12) of rearming, counted down by the daily sweep. Enemy
+  wings based within range of the target scramble: 32% of contested raids
+  are driven off, 18% end with the raiding wing shot down (seeded rng).
+  The AI flies every rearmed wing at the richest target in reach while at
+  war. The province panel's airfield block grows raid buttons (✈ target,
+  with what the bombs would do in the tooltip) and a rearming countdown;
+  the victim player is told when their men are hit.
+- **The raid on the map** (overlay `addRaidFx`, wired to the `airRaid` bus
+  event in main.js): a plane in the raider's color sweeps from its field
+  through the target and fades on the far side while three staggered bombs
+  blossom — flash core, fire ring, climbing smoke — over ~2.4 s. A
+  synthesized raid cue (engine drone, falling whistle, three bomb thumps)
+  plays when the player's wings fly or the player's ground is hit.
+- **The works made beautiful**: the v2.9 structure glyphs were redrawn —
+  every building now sits on a soft ground shadow: the market's awning is
+  striped gold with a crate set out front, the granary is a shaded silo
+  under a straw cone with hoop bands, the walls became a gate tower with an
+  arched gate, masonry courses and a shaded flank, the shrine a stepped
+  three-column temple with a gilded pediment, and the runway gained
+  threshold bars, a dashed centerline and edge lights. The warplane
+  silhouette was rebuilt (elliptical fuselage, swept wings, tailplane,
+  canopy glint, wing roundels) and is shared by the parked planes and the
+  raid animation.

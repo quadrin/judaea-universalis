@@ -551,13 +551,8 @@ export function airWingsAt(ctx, provId) {
 export function airWingsOf(ctx, tag) {
   return Object.values(ctx.game.airwings || {}).filter((w) => w && w.tag === tag);
 }
-// Does any wing of `tags`' side sit within range of the province?
-export function airCoverFor(ctx, provId, tags) {
-  const g = ctx.game;
-  const wings = Object.values(g.airwings || {});
-  if (!wings.length || !tags || !tags.length) return false;
-  const range = AIRC(ctx, 'rangeHops', 2);
-  // small BFS ring around the battlefield
+// Small BFS ring: every province within `range` hops (inclusive of start).
+export function provsWithin(ctx, provId, range) {
   const seen = new Set([provId]);
   let frontier = [provId];
   for (let d = 0; d < range; d++) {
@@ -573,8 +568,95 @@ export function airCoverFor(ctx, provId, tags) {
     }
     frontier = next;
   }
+  return seen;
+}
+// Does any wing of `tags`' side sit within range of the province?
+export function airCoverFor(ctx, provId, tags) {
+  const g = ctx.game;
+  const wings = Object.values(g.airwings || {});
+  if (!wings.length || !tags || !tags.length) return false;
+  const seen = provsWithin(ctx, provId, AIRC(ctx, 'rangeHops', 2));
   return wings.some((w) => seen.has(w.prov)
     && tags.some((t) => w.tag === t || sameSide(ctx, w.tag, t)));
+}
+// What a wing could bomb from its field: hostile hosts, walls we besiege,
+// hostile garrisons — everything within its range ring, biggest prize first.
+export function raidTargets(ctx, wing) {
+  const out = [];
+  const ring = provsWithin(ctx, wing.prov, AIRC(ctx, 'rangeHops', 2));
+  for (const id of ring) {
+    const p = ctx.byId(id);
+    if (!p || p.impassable) continue;
+    const foes = armiesInProv(ctx, id).filter((a) => a.men > 0 && isHostile(ctx, wing.tag, a.tag));
+    const men = foes.reduce((s, a) => s + a.men, 0);
+    const ourSiege = !!(p.siege && sameSide(ctx, wing.tag, p.siege.by));
+    const garrison = (isHostile(ctx, wing.tag, p.controller) && (p.garrison | 0) > 0) ? (p.garrison | 0) : 0;
+    if (!men && !ourSiege && !garrison) continue;
+    out.push({ id, name: p.name, men, siege: ourSiege, garrison });
+  }
+  out.sort((a, b) => (b.men + b.garrison * 0.5) - (a.men + a.garrison * 0.5));
+  return out;
+}
+// The raid itself (SPEC §30). Enemy air cover over the target scrambles:
+// the raid may be driven off, or the wing may fall. A hit thins hostile
+// hosts (3%, 40..350 men) and shakes their morale, softens walls we are
+// besieging (+4 siege progress), or cracks a hostile garrison (−10%).
+export function airRaidCore(ctx, tag, wingId, provId) {
+  const g = ctx.game;
+  const w = (g.airwings || {})[wingId];
+  if (!w || w.tag !== tag) return { ok: false, why: 'no such wing' };
+  if ((w.raidCd | 0) > 0) return { ok: false, why: 'rearming (' + w.raidCd + ' more days)' };
+  if (!provsWithin(ctx, w.prov, AIRC(ctx, 'rangeHops', 2)).has(provId)) {
+    return { ok: false, why: 'beyond the wing’s range' };
+  }
+  const p = ctx.byId(provId);
+  const tgt = p && raidTargets(ctx, w).find((t) => t.id === provId);
+  if (!tgt) return { ok: false, why: 'no hostile target there' };
+  w.raidCd = AIRC(ctx, 'raidCdDays', 12);
+  // fighters based near the target rise to meet the raid
+  const intercepted = Object.values(g.airwings).some((o) => o && o.id !== w.id
+    && isHostile(ctx, w.tag, o.tag) && provsWithin(ctx, o.prov, AIRC(ctx, 'rangeHops', 2)).has(provId));
+  let result = 'hit';
+  let killed = 0;
+  if (intercepted) {
+    const roll = ctx.rng.next();
+    if (roll < 0.18) result = 'lost';
+    else if (roll < 0.5) result = 'repelled';
+  }
+  if (result === 'lost') {
+    delete g.airwings[wingId];
+  } else if (result === 'hit') {
+    const foes = armiesInProv(ctx, provId).filter((a) => a.men > 0 && isHostile(ctx, w.tag, a.tag));
+    const men = foes.reduce((s, a) => s + a.men, 0);
+    if (men > 0) {
+      killed = Math.min(350, Math.max(40, Math.round(men * 0.03)));
+      for (const a of foes) {
+        a.men = Math.max(0, a.men - Math.round(killed * (a.men / men)));
+        a.morale = Math.max(0, num(a.morale) - 0.35);
+        if (a.men <= 0) removeArmy(ctx, a.id);
+      }
+    }
+    if (p.siege && sameSide(ctx, w.tag, p.siege.by)) {
+      p.siege.progress = Math.min(99, num(p.siege.progress) + 4);
+    } else if (isHostile(ctx, w.tag, p.controller) && (p.garrison | 0) > 0) {
+      p.garrison = Math.max(0, Math.round(p.garrison * 0.9) - 50);
+    }
+  }
+  // the bombed side hears the sirens
+  const victimTag = p.controller;
+  if (result !== 'repelled' && g.playerTag !== tag) {
+    const hitPlayer = victimTag === g.playerTag
+      || armiesInProv(ctx, provId).some((a) => a.tag === g.playerTag);
+    if (hitPlayer && result === 'hit') {
+      ctx.bus.emit('notify', {
+        title: 'Bombing raid!',
+        text: 'Enemy aircraft strike ' + p.name + (killed ? ' — ' + killed + ' men lost.' : '.'),
+        type: 'bad', provName: p.name,
+      });
+    }
+  }
+  ctx.bus.emit('airRaid', { wing: wingId, tag, victimTag, from: w.prov, prov: provId, result, killed });
+  return { ok: true, result, killed, provName: p.name };
 }
 export function raiseAirWing(ctx, tag, provId) {
   const g = ctx.game;
@@ -617,6 +699,7 @@ export function sweepAirfields(ctx) {
   for (const id of Object.keys(g.airwings || {})) {
     const w = g.airwings[id];
     if (!w) { delete g.airwings[id]; continue; }
+    if (w.raidCd > 0) w.raidCd--; // the armorers hang fresh bombs
     const t = g.tags[w.tag];
     if (!t || !t.alive) { delete g.airwings[id]; continue; }
     const p = ctx.byId(w.prov);

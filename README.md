@@ -131,6 +131,12 @@ python3 -m http.server 8613 --directory .
   rebase between your fields, and lend their +1 to the fire die over any
   friendly battle within two provinces. Fields that fall burn the wings on
   the ground.
+- Wings fly with their crews aboard, and they carry bombs: raid any hostile
+  presence in range — thin an enemy host, soften walls you besiege, crack a
+  garrison — then rearm for twelve days. Enemy fighters in range contest the
+  sky (raids driven off, or downed). The raid plays out on the map: a plane
+  in your colors sweeps the target, bombs blossom, smoke climbs — with
+  engines, a falling whistle and the thump of bombs in the soundtrack.
 - Every flag is a door: click a nation's chip anywhere — the ledger, a war
   overview, a battle window, a province panel, the outliner, another court's
   treaty rows — and that nation's panel opens read-only: their ruler and heir,

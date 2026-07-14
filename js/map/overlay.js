@@ -255,63 +255,207 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   // province center — a market awning, a silo, a crenellated tower, a
   // shrine's pediment, an airfield's runway — drawn only when zoomed in.
   const STRUCT_ORDER = ['market', 'granary', 'walls', 'shrine', 'airfield'];
+  const INK = 'rgba(28,20,8,0.9)';       // dark outline ink
+  const PARCH = '#e9d7a3';               // lit parchment stone
+  const PARCH_SHADE = '#c4ad74';         // its shaded face
+  const GOLD = '#d9a929';                // gilded cloth & roofs
+  const GOLD_DEEP = '#a87c1c';
+  function groundShadow(w) {
+    x2.fillStyle = 'rgba(15,10,5,0.25)';
+    x2.beginPath();
+    x2.ellipse(0.6, 4.6, w, 1.5, 0, 0, Math.PI * 2);
+    x2.fill();
+  }
   function drawStructGlyph(key, x, y, s) {
     x2.save();
     x2.translate(x, y);
     x2.scale(s || 1, s || 1);
-    x2.lineWidth = 1;
+    x2.lineWidth = 0.9;
     x2.lineJoin = 'round';
-    x2.strokeStyle = 'rgba(28,20,8,0.9)';
-    x2.fillStyle = '#e3cf96';
+    x2.strokeStyle = INK;
     if (key === 'market') {
-      // stall under a gold awning
-      x2.beginPath(); x2.rect(-3.5, 0, 7, 4); x2.fill(); x2.stroke();
-      x2.beginPath(); x2.moveTo(-5, 0); x2.lineTo(-3.5, -4); x2.lineTo(3.5, -4); x2.lineTo(5, 0); x2.closePath();
-      x2.fillStyle = '#c9a227'; x2.fill(); x2.stroke();
-    } else if (key === 'granary') {
-      // round-topped silo with a band
-      x2.beginPath(); x2.moveTo(-3.5, 4); x2.lineTo(-3.5, -1); x2.arc(0, -1, 3.5, Math.PI, 0); x2.lineTo(3.5, 4); x2.closePath();
+      // a striped awning over a stall, one crate set out front
+      groundShadow(5);
+      x2.fillStyle = PARCH;
+      x2.beginPath(); x2.rect(-3.4, -0.4, 6.8, 4.6); x2.fill(); x2.stroke();
+      x2.fillStyle = PARCH_SHADE;                       // counter shadow
+      x2.fillRect(-3.4, 1.4, 6.8, 1.1);
+      x2.fillStyle = GOLD;                              // the awning
+      x2.beginPath(); x2.moveTo(-5.2, 0); x2.lineTo(-3.8, -4.2); x2.lineTo(3.8, -4.2); x2.lineTo(5.2, 0); x2.closePath();
       x2.fill(); x2.stroke();
-      x2.beginPath(); x2.moveTo(-3.5, 1.5); x2.lineTo(3.5, 1.5); x2.stroke();
-    } else if (key === 'walls') {
-      // crenellated tower
+      x2.strokeStyle = GOLD_DEEP;                       // awning stripes
+      x2.lineWidth = 0.8;
       x2.beginPath();
-      x2.moveTo(-4, 4); x2.lineTo(-4, -2); x2.lineTo(-2.6, -2); x2.lineTo(-2.6, -4); x2.lineTo(-0.9, -4); x2.lineTo(-0.9, -2);
-      x2.lineTo(0.9, -2); x2.lineTo(0.9, -4); x2.lineTo(2.6, -4); x2.lineTo(2.6, -2); x2.lineTo(4, -2); x2.lineTo(4, 4);
+      x2.moveTo(-2.4, -4.2); x2.lineTo(-3.1, 0);
+      x2.moveTo(0, -4.2); x2.lineTo(0, 0);
+      x2.moveTo(2.4, -4.2); x2.lineTo(3.1, 0);
+      x2.stroke();
+      x2.strokeStyle = INK;
+      x2.fillStyle = PARCH_SHADE;                       // a crate
+      x2.beginPath(); x2.rect(2.1, 2.4, 2.2, 1.9); x2.fill(); x2.stroke();
+    } else if (key === 'granary') {
+      // a fat silo under a straw cone, shaded on the east face
+      groundShadow(4.4);
+      x2.fillStyle = PARCH;
+      x2.beginPath(); x2.moveTo(-3.4, 4.2); x2.lineTo(-3.4, -1.2); x2.arc(0, -1.2, 3.4, Math.PI, 0); x2.lineTo(3.4, 4.2); x2.closePath();
+      x2.fill(); x2.stroke();
+      x2.fillStyle = 'rgba(120,95,50,0.35)';            // shaded flank
+      x2.beginPath(); x2.moveTo(1.4, 4.2); x2.lineTo(1.4, -3.9); x2.quadraticCurveTo(3.4, -3.2, 3.4, -1.2); x2.lineTo(3.4, 4.2); x2.closePath();
+      x2.fill();
+      x2.strokeStyle = 'rgba(28,20,8,0.55)';            // hoop bands
+      x2.beginPath(); x2.moveTo(-3.4, 0.6); x2.lineTo(3.4, 0.6); x2.moveTo(-3.4, 2.4); x2.lineTo(3.4, 2.4); x2.stroke();
+      x2.strokeStyle = INK;
+      x2.fillStyle = GOLD;                              // straw cap
+      x2.beginPath(); x2.moveTo(-4.1, -3.2); x2.lineTo(0, -6); x2.lineTo(4.1, -3.2); x2.closePath();
+      x2.fill(); x2.stroke();
+    } else if (key === 'walls') {
+      // a gate tower: merlons, an arched gate, a shaded flank
+      groundShadow(4.8);
+      x2.fillStyle = PARCH;
+      x2.beginPath();
+      x2.moveTo(-4, 4.4); x2.lineTo(-4, -2); x2.lineTo(-2.6, -2); x2.lineTo(-2.6, -4); x2.lineTo(-0.9, -4); x2.lineTo(-0.9, -2);
+      x2.lineTo(0.9, -2); x2.lineTo(0.9, -4); x2.lineTo(2.6, -4); x2.lineTo(2.6, -2); x2.lineTo(4, -2); x2.lineTo(4, 4.4);
       x2.closePath(); x2.fill(); x2.stroke();
+      x2.fillStyle = 'rgba(120,95,50,0.35)';            // shaded flank
+      x2.fillRect(1.8, -2, 2.2, 6.4);
+      x2.fillStyle = 'rgba(30,22,10,0.85)';             // the gate
+      x2.beginPath(); x2.moveTo(-1.3, 4.4); x2.lineTo(-1.3, 1.2); x2.arc(0, 1.2, 1.3, Math.PI, 0); x2.lineTo(1.3, 4.4); x2.closePath();
+      x2.fill();
+      x2.strokeStyle = 'rgba(28,20,8,0.45)';            // masonry courses
+      x2.beginPath(); x2.moveTo(-4, 0.2); x2.lineTo(-1.6, 0.2); x2.moveTo(1.6, 0.2); x2.lineTo(4, 0.2); x2.moveTo(-4, 2.3); x2.lineTo(-1.5, 2.3); x2.moveTo(1.5, 2.3); x2.lineTo(4, 2.3);
+      x2.stroke();
+      x2.strokeStyle = INK;
     } else if (key === 'shrine') {
-      // pediment over two columns
-      x2.beginPath(); x2.moveTo(-4.5, -1.5); x2.lineTo(0, -4.5); x2.lineTo(4.5, -1.5); x2.closePath(); x2.fill(); x2.stroke();
-      x2.beginPath(); x2.rect(-3, -1, 2, 5); x2.rect(1, -1, 2, 5); x2.fill(); x2.stroke();
+      // a small temple: stepped base, three columns, gilded pediment
+      groundShadow(5);
+      x2.fillStyle = PARCH;
+      x2.beginPath(); x2.rect(-4.6, 3.2, 9.2, 1.2); x2.fill(); x2.stroke();   // stylobate
+      x2.beginPath(); x2.rect(-3.9, 2.2, 7.8, 1.0); x2.fill(); x2.stroke();   // upper step
+      for (const cx of [-2.7, 0, 2.7]) {                                       // columns
+        x2.beginPath(); x2.rect(cx - 0.65, -1.6, 1.3, 3.8); x2.fill(); x2.stroke();
+      }
+      x2.beginPath(); x2.rect(-3.9, -2.4, 7.8, 0.9); x2.fill(); x2.stroke();  // architrave
+      x2.fillStyle = GOLD;                                                     // pediment
+      x2.beginPath(); x2.moveTo(-4.4, -2.4); x2.lineTo(0, -5.4); x2.lineTo(4.4, -2.4); x2.closePath();
+      x2.fill(); x2.stroke();
+      x2.strokeStyle = GOLD_DEEP;                                              // raking cornice
+      x2.beginPath(); x2.moveTo(-3.1, -2.8); x2.lineTo(0, -4.8); x2.lineTo(3.1, -2.8); x2.stroke();
+      x2.strokeStyle = INK;
     } else if (key === 'airfield') {
-      // a dark runway strip with a dashed centerline
-      x2.beginPath(); x2.moveTo(-6, 3); x2.lineTo(-2, -3); x2.lineTo(6, -3); x2.lineTo(2, 3); x2.closePath();
-      x2.fillStyle = 'rgba(60,52,38,0.95)'; x2.fill(); x2.stroke();
-      x2.strokeStyle = '#e3cf96';
-      x2.setLineDash([1.5, 1.5]);
-      x2.beginPath(); x2.moveTo(-3.2, 1.6); x2.lineTo(2.6, -1.8); x2.stroke();
+      // an asphalt runway: threshold bars, centerline, edge lights
+      groundShadow(6);
+      x2.fillStyle = 'rgba(58,50,38,0.96)';
+      x2.beginPath(); x2.moveTo(-6.4, 3.4); x2.lineTo(-2.2, -3.4); x2.lineTo(6.4, -3.4); x2.lineTo(2.2, 3.4); x2.closePath();
+      x2.fill(); x2.stroke();
+      x2.strokeStyle = '#ded0a2';
+      x2.lineWidth = 0.8;
+      x2.setLineDash([1.4, 1.4]);                       // centerline
+      x2.beginPath(); x2.moveTo(-3.6, 1.9); x2.lineTo(3.6, -1.9); x2.stroke();
       x2.setLineDash([]);
+      x2.beginPath();                                    // threshold bars
+      x2.moveTo(-5.6, 2.7); x2.lineTo(-4.2, 0.4);
+      x2.moveTo(4.2, -0.4); x2.lineTo(5.6, -2.7);
+      x2.stroke();
+      x2.fillStyle = '#f0c95c';                          // edge lights
+      for (const [lx, ly] of [[-2.6, -3.9], [2.2, -3.9], [-2.2, 3.9], [2.6, 3.9]]) {
+        x2.beginPath(); x2.arc(lx, ly, 0.55, 0, Math.PI * 2); x2.fill();
+      }
+      x2.lineWidth = 0.9;
+      x2.strokeStyle = INK;
     }
     x2.restore();
   }
-  // A parked warplane in the wing's color: swept wings, fuselage, tailplane.
-  function drawPlane(x, y, col, s) {
-    x2.save();
-    x2.translate(x, y);
-    x2.scale(s || 1, s || 1);
+  // The warplane silhouette, drawn at the current origin pointing up (-y).
+  // Elliptical fuselage, swept wings, tailplane, a glinting canopy.
+  function drawPlaneShape(col) {
     x2.fillStyle = css(col);
     x2.strokeStyle = 'rgba(15,10,5,0.9)';
     x2.lineWidth = 0.9;
     x2.lineJoin = 'round';
     x2.beginPath();
-    x2.moveTo(0, -5);
-    x2.lineTo(1.1, -1.5); x2.lineTo(5.5, 1.2); x2.lineTo(5.5, 2.4); x2.lineTo(1.1, 1.2);
-    x2.lineTo(0.9, 4); x2.lineTo(2.6, 5.2); x2.lineTo(-2.6, 5.2); x2.lineTo(-0.9, 4);
-    x2.lineTo(-1.1, 1.2); x2.lineTo(-5.5, 2.4); x2.lineTo(-5.5, 1.2); x2.lineTo(-1.1, -1.5);
+    x2.moveTo(0, -5.6);                                  // spinner
+    x2.quadraticCurveTo(1.2, -4.6, 1.1, -1.6);           // starboard nose
+    x2.lineTo(5.8, 1.0);                                 // leading edge
+    x2.lineTo(5.8, 2.3);                                 // wingtip
+    x2.lineTo(1.0, 1.4);                                 // trailing edge
+    x2.quadraticCurveTo(0.9, 3.2, 0.8, 4.0);             // tail boom
+    x2.lineTo(2.7, 5.1); x2.lineTo(2.7, 5.9); x2.lineTo(0, 5.4);   // starboard tailplane
+    x2.lineTo(-2.7, 5.9); x2.lineTo(-2.7, 5.1); x2.lineTo(-0.8, 4.0); // port tailplane
+    x2.quadraticCurveTo(-0.9, 3.2, -1.0, 1.4);
+    x2.lineTo(-5.8, 2.3); x2.lineTo(-5.8, 1.0);          // port wing
+    x2.lineTo(-1.1, -1.6);
+    x2.quadraticCurveTo(-1.2, -4.6, 0, -5.6);            // port nose
     x2.closePath();
     x2.fill();
     x2.stroke();
+    x2.fillStyle = 'rgba(240,235,215,0.85)';             // canopy glint
+    x2.beginPath(); x2.ellipse(0, -1.8, 0.6, 1.2, 0, 0, Math.PI * 2); x2.fill();
+    x2.strokeStyle = 'rgba(15,10,5,0.5)';                // wing roundel hints
+    x2.lineWidth = 0.6;
+    x2.beginPath(); x2.arc(-3.6, 1.5, 0.7, 0, Math.PI * 2); x2.arc(3.6, 1.5, 0.7, 0, Math.PI * 2); x2.stroke();
+  }
+  // A parked warplane: soft shadow beneath, then the silhouette.
+  function drawPlane(x, y, col, s) {
+    x2.save();
+    x2.translate(x, y);
+    x2.scale(s || 1, s || 1);
+    x2.fillStyle = 'rgba(15,10,5,0.22)';
+    x2.beginPath(); x2.ellipse(0.7, 5.6, 4.6, 1.4, 0, 0, Math.PI * 2); x2.fill();
+    drawPlaneShape(col);
     x2.restore();
+  }
+
+  // ---------------------------------------------------------- bombing raids
+  // Transient raid theater (SPEC §30): a plane sweeps from its field to the
+  // target, bombs blossom, smoke drifts, the plane flies through and fades.
+  const raidFx = [];
+  function addRaidFx(fromProv, toProv, col) {
+    const a = geom.centroids[fromProv];
+    const b = geom.centroids[toProv];
+    if (!a || !b) return;
+    raidFx.push({ ax: a.x, ay: a.y, bx: b.x, by: b.y, col: col || [200, 60, 40], start: null });
+    if (raidFx.length > 6) raidFx.shift();
+  }
+  const RAID_MS = 2400;
+  function drawRaids(camera, timeMs) {
+    for (let i = raidFx.length - 1; i >= 0; i--) {
+      const fx = raidFx[i];
+      if (fx.start === null) fx.start = timeMs;
+      const t = (timeMs - fx.start) / RAID_MS;
+      if (t >= 1) { raidFx.splice(i, 1); continue; }
+      const [ax, ay] = camera.mapToScreen(fx.ax, fx.ay);
+      const [bx, by] = camera.mapToScreen(fx.bx, fx.by);
+      const ang = Math.atan2(by - ay, bx - ax) + Math.PI / 2;
+      // the run: overshoot the target and fade out on the far side
+      const flight = Math.min(1, t / 0.75);
+      const px = ax + (bx - ax) * flight * 1.25;
+      const py = ay + (by - ay) * flight * 1.25;
+      const fade = t < 0.55 ? 1 : Math.max(0, 1 - (t - 0.55) / 0.35);
+      if (fade > 0) {
+        x2.save();
+        x2.globalAlpha = fade;
+        x2.translate(px, py);
+        x2.rotate(ang);
+        x2.scale(1.3, 1.3);
+        drawPlaneShape(fx.col);
+        x2.restore();
+      }
+      // bombs blossom as the plane passes: three staggered bursts
+      for (let k = 0; k < 3; k++) {
+        const p = (t - (0.38 + k * 0.12)) / 0.5;
+        if (p <= 0 || p >= 1) continue;
+        const ox = (k - 1) * 7;
+        const oy = (k % 2) * 5 - 2;
+        // flash core, fire bloom, climbing smoke
+        x2.fillStyle = `rgba(255,232,160,${(1 - p) * 0.9})`;
+        x2.beginPath(); x2.arc(bx + ox, by + oy, 2 + p * 4, 0, Math.PI * 2); x2.fill();
+        x2.strokeStyle = `rgba(214,92,40,${(1 - p) * 0.8})`;
+        x2.lineWidth = 2;
+        x2.beginPath(); x2.arc(bx + ox, by + oy, 3 + p * 12, 0, Math.PI * 2); x2.stroke();
+        x2.fillStyle = `rgba(80,68,55,${(1 - p) * 0.5})`;
+        x2.beginPath(); x2.arc(bx + ox + p * 3, by + oy - p * 9, 3.5 + p * 6, 0, Math.PI * 2); x2.fill();
+      }
+    }
   }
 
   // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
@@ -602,6 +746,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       // army chips on top
       const chips = chipList(game, camera);
       for (const chp of chips) drawChip(game, chp, timeMs);
+
+      // bombing raids fly above everything (SPEC §30)
+      drawRaids(camera, timeMs);
     } catch (e) {
       warnOnce('draw-throw', 'draw failed', e);
     }
@@ -658,5 +805,5 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  return { draw, hitTestArmy, hitTestStack, hitTestBattle };
+  return { draw, hitTestArmy, hitTestStack, hitTestBattle, addRaidFx };
 }

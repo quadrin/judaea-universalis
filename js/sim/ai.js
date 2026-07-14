@@ -9,7 +9,7 @@ import {
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
   modernizeInfo, modernizeArmyCore, switchTagCore,
-  hasAirfield, airWingsAt, airWingsOf, raiseAirWing,
+  hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
@@ -568,6 +568,14 @@ function aiAirPower(ctx, tag) {
       && airWingsOf(ctx, tag).length < 2
       && num(t.treasury) > num(AIR.wingCost, 40) + 120) {
     raiseAirWing(ctx, tag, cap.id);
+  }
+  // At war, every rearmed wing flies against the richest target in reach.
+  if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {
+    for (const w of airWingsOf(ctx, tag)) {
+      if ((w.raidCd | 0) > 0) continue;
+      const tgts = raidTargets(ctx, w);
+      if (tgts.length) airRaidCore(ctx, tag, w.id, tgts[0].id);
+    }
   }
 }
 
