@@ -52,6 +52,7 @@ export function computeTechEffects(tech) {
   return {
     incomeMult: Math.pow(1.03, g),
     unrestAll: -0.03 * g,
+    growthMult: 1 + 0.04 * g, // towns grow faster in ordered ages (SPEC §24)
     tradeMult: Math.pow(1.05, i),
     navalMult: Math.pow(1.04, i),
     legitimacyAdd: 0.01 * i,

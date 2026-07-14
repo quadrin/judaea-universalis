@@ -309,6 +309,34 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `${chip(t.overlord)}<span class="np-dip-name">${nameOf(t.overlord)}</span><span class="np-dip-ws">we pay tribute</span></div>`;
     }
 
+    // Guarantees & subsidies (SPEC §24)
+    const ourGuarantees = (t.guarantees || []).filter((x) => g.tags[x] && g.tags[x].alive);
+    const guaranteedBy = Object.keys(g.tags).filter((k) => k !== g.playerTag
+      && g.tags[k] && g.tags[k].alive && (g.tags[k].guarantees || []).indexOf(g.playerTag) >= 0);
+    if (ourGuarantees.length || guaranteedBy.length) {
+      html += `<div class="np-dip-sec">Guarantees</div>`;
+      for (const x of ourGuarantees) {
+        html += `<div class="np-dip-row" data-tt="Our word protects them: their attacker fights us too">`
+          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws">our word</span></div>`;
+      }
+      for (const x of guaranteedBy) {
+        html += `<div class="np-dip-row" data-tt="Their word protects us: our attacker fights them too">`
+          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws pos">shields us</span></div>`;
+      }
+    }
+    const flows = (g.subsidies || []).filter((s) => s && (s.from === g.playerTag || s.to === g.playerTag)
+      && g.tags[s.from] && g.tags[s.to]);
+    if (flows.length) {
+      html += `<div class="np-dip-sec">Subsidies</div>`;
+      for (const s of flows) {
+        const out = s.from === g.playerTag;
+        const other = out ? s.to : s.from;
+        html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
+          + `${chip(other)}<span class="np-dip-name">${nameOf(other)}</span>`
+          + `<span class="np-dip-ws ${out ? 'neg' : 'pos'}">${out ? '−' : '+'}${s.amount}/mo · ${s.monthsLeft}m</span></div>`;
+      }
+    }
+
     const wars = (g.wars || []).filter((w) => w
       && ((w.attackers || []).indexOf(g.playerTag) >= 0 || (w.defenders || []).indexOf(g.playerTag) >= 0));
     html += `<div class="np-dip-sec">Wars</div>`;

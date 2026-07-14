@@ -1064,3 +1064,43 @@ renderer.render → overlay.draw → labels.update.
   white field, two horizontal stripes and the Star of David in flag blue
   (#0038b8) — as a full-field emblem; `.fchip` gains `overflow: hidden` so
   full-field emblems clip to the chip's rounded corners.
+
+## 24. v2.4: the living land — growth, deeper diplomacy, new crowns, era names
+
+- **Development growth** (`yearlyGrowth` in economy.js, each January): every
+  settled province rolls for +1 dev — 5% base, +4% each for market/granary,
+  +6% at a capital, up to +4.5% for low autonomy; halved at war, frozen under
+  occupation/siege/unrest>4; government tech scales the whole curve
+  (`growthMult`, +4%/level). The player is toasted when their towns grow.
+- **Deliberate development** (`developCore`, action `devProvince`): +1 tax/prod/mp
+  bought with the matching monarch point pool at 50+5×dev — the province-panel
+  buttons now price live and explain refusals. The AI develops its capital
+  when a pool nears the 999 cap (points otherwise wasted).
+- **Deeper diplomacy** (SPEC §24 additions to the frozen action contract):
+  - **Subsidies** (`g.subsidies`, `sendSubsidy`/`cancelSubsidy`): 10 talents a
+    month for 12 months, +20 opinion; both ledgers carry the flow through
+    `incomeBreakdown` (subsIn/subsOut rows in the income tooltip);
+    `monthlySubsidies` counts them down and lets deep-debt payers default.
+  - **Guarantees** (`t.guarantees`, `guaranteeNation`/`revokeGuarantee`): 50
+    influence, +15 opinion — and `declareWar` pulls every guarantor of the
+    defender into the defense ("A guarantee is honored").
+  - **War reparations** (peace term, 15 warscore): the loser pays 8 talents a
+    month for 24 months, riding the subsidy pipe with `reparation: true`
+    (uncancelable; defaults only in deep debt). The AI takes reparations with
+    leftover warscore when the land is already spoken for.
+- **New formables**: JUD→MLI and HAS→MLI (**Kingdom of Israel** — Jerusalem,
+  15 provinces, legitimacy 70, at peace: the endgame crown of every Jewish
+  arc, including a chained HYR→HAS→MLI), EGY→UAR and JOR→UAR (**United Arab
+  Republic** — crush Israel and hold both Jerusalem and Tel Aviv), BYZ→ROM
+  (**Restore the Roman Empire** — hold Antioch, Alexandria, Jerusalem and
+  Ctesiphon in 614). New tags MLI/UAR with emblems (crowned star; crescent
+  and star). All player-only.
+- **Era place-names** (`bookmark.provinceNames`): initGame renames `p.name` to
+  the era's name and keeps `p.canon` as the content key; makeCtx aliases both
+  in `prov()`/`provId()`, so every label, panel, toast and battle title speaks
+  1948 (Tel Aviv-Jaffa, Latrun, Amman, Cairo, Baghdad…) while content packages
+  keep addressing Joppa. `bookmark.devTweaks` overlays modern populations
+  (Cairo 14 tax dev, Tel Aviv 12) — the 1948 armies are sized like 1948.
+  Note: the province mesh itself is one canonical raster for all eras by
+  design; a true per-era re-mesh (different border shapes) would need per-era
+  Voronoi seed sets and geometry snapshots — a possible future project.

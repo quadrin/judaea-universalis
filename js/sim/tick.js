@@ -4,7 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
 } from './military.js';
-import { runMonthlyEconomy, monthlyManpower, monthlyConstruction } from './economy.js';
+import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites } from './realm.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
@@ -70,8 +70,10 @@ function monthlyMonarchPoints(ctx) {
 function monthlyBlock(ctx) {
   const g = ctx.game;
   safe('modifiers', () => tickModifiers(ctx));
+  if (g.date.m === 1) safe('growth', () => yearlyGrowth(ctx)); // towns grow each January (SPEC §24)
   safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
   safe('economy', () => runMonthlyEconomy(ctx));
+  safe('subsidies', () => monthlySubsidies(ctx)); // after economy: this month's flow was paid, now count it down
   safe('manpower', () => monthlyManpower(ctx));
   safe('reinforce', () => monthlyReinforce(ctx));
   safe('morale', () => monthlyMoraleRecovery(ctx));

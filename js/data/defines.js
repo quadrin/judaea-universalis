@@ -62,6 +62,9 @@ export const DEFINES = {
     SAU: { aggression: 0.2, caution: 1.8 },
     IRN: { aggression: 0.1, caution: 2.0 },
     UK: { aggression: 0.1, caution: 2.0 },
+    // formable crowns (SPEC §24)
+    MLI: { aggression: 1.0, caution: 1.0 },
+    UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
   },
 
   // Trade goods: price in talents per unit of production
@@ -266,6 +269,17 @@ export const DEFINES = {
       name: 'Britain', color: [156, 64, 92], religion: 'christianity', culture: 'greek', capital: 'Salamis',
       description: 'The departing mandatory power: a garrison on Cyprus and a schedule to keep.',
       ideas: { disciplineMult: 1.1 },
+    },
+    // ---- formable crowns (SPEC §24): never in a bookmark's activeTags ----
+    MLI: {
+      name: 'Kingdom of Israel', color: [46, 70, 172], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The crown of David restored: won by the sword, kept by the Law.',
+      ideas: { moraleMult: 1.1, incomeMult: 1.1, legitimacyAdd: 0.2 },
+    },
+    UAR: {
+      name: 'United Arab Republic', color: [26, 96, 54], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
+      description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
+      ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
     },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
