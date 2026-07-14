@@ -56,7 +56,13 @@ function pickRecruitProv(ctx, tag, hints) {
 }
 function aiRecruit(ctx, tag, hints) {
   const t = ctx.game.tags[tag];
-  const target = num(hints && hints.targetRegiments, 20);
+  // Affordability governor (balance harness, SPEC §21): the hint is an
+  // ambition, the treasury is a fact. Cap the standing army at what ~75% of
+  // gross income can maintain — small realms stop drilling themselves into
+  // debt spirals.
+  const maintPerReg = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35;
+  const affordable = Math.max(3, Math.floor((num(t.income) * 0.75) / maintPerReg));
+  const target = Math.min(num(hints && hints.targetRegiments, 20), affordable);
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
   let guard = 0;
@@ -66,6 +72,41 @@ function aiRecruit(ctx, tag, hints) {
     const res = recruitRegiment(ctx, tag, pid, 'inf');
     if (!res.ok) break;
     cur++;
+  }
+}
+
+// A realm drowning in debt at peace pays off its soldiers: one regiment a
+// month from the smallest army until the books balance. Wartime armies fight
+// on — debt is cheaper than conquest.
+function aiShedUnaffordable(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t) return;
+  if (num(t.income) >= num(t.expenses)) return;
+  const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  // At peace, shed before the debt starts; at war, only when deep in it
+  // (deserters) — a war chest running dry is normal, a collapse is not.
+  if (num(t.treasury) > (atWar ? -150 : 25)) return;
+  const armies = armiesOf(ctx, tag).filter((a) => regCount(a) > 0 && !a.inBattle);
+  if (!armies.length) return;
+  // Desertion scales with the hole in the treasury: one regiment a month,
+  // plus one more per hundred talents of debt (cap 3) — a deep-broke army
+  // melts fast enough to matter.
+  const shed = Math.min(3, 1 + Math.max(0, Math.floor(-num(t.treasury) / 100)));
+  const regSize = B(ctx, 'regSize', 1000);
+  for (let k = 0; k < shed; k++) {
+    armies.sort((a, b) => a.men - b.men);
+    const a = armies[0];
+    if (!a) break;
+    const regs = a.regiments || {};
+    if ((regs.cav | 0) > 0) regs.cav--;
+    else if ((regs.inf | 0) > 0) regs.inf--;
+    a.men = Math.max(0, num(a.men) - regSize);
+    t.manpower = num(t.manpower) + Math.round(regSize * 0.5); // half go home to the rolls
+    if (regCount(a) <= 0 || a.men <= 0) {
+      delete g.armies[a.id];
+      armies.shift();
+    }
   }
 }
 function retreatToFort(ctx, army) {
@@ -262,6 +303,7 @@ function runTagAI(ctx, tag) {
   if (!enemies.length) return; // non-warring AI idles
   const hints = (ctx.bookmark && ctx.bookmark.aiHints && ctx.bookmark.aiHints[tag]) || {};
   aiRecruit(ctx, tag, hints);
+  aiShedUnaffordable(ctx, tag);
   // Storming an already-invested fortress is siege prosecution, not a new
   // offensive — it runs even under aiPassive so scripted lulls don't freeze
   // half-finished sieges forever.
@@ -340,7 +382,11 @@ function monthlyWarDiplomacy(ctx) {
   const player = g.playerTag;
   for (const w of (g.wars || []).slice()) {
     if (!w || w.noNegotiation) continue;
-    const playerIn = w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0;
+    // Only a HUMAN player holds up auto-settlement — if the player tag is
+    // AI-driven (balance autoruns, an abandoned multiplayer realm), its wars
+    // settle like anyone else's.
+    const playerIn = (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)
+      && g.tags[player] && !g.tags[player].ai;
     if (playerIn) {
       const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
       const leader = theirSide.find((t) => g.tags[t] && g.tags[t].alive);

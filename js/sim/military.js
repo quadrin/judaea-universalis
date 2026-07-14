@@ -1508,17 +1508,27 @@ export function updateWarscores(ctx) {
     const def = sideGross(ctx, w, 'def');
     for (const t of w.attackers) w.warscore[t] = Math.round(clamp(att - def, -100, 100));
     for (const t of w.defenders) w.warscore[t] = Math.round(clamp(def - att, -100, 100));
-    // Even a fight-to-the-death war opens to the peace table once one side
-    // utterly dominates — total victory should not leave you stuck at war.
-    if (w.noNegotiation && !w._negOpened && Math.abs(clamp(att - def, -100, 100)) >= 75) {
-      w._negOpened = true;
-      w.noNegotiation = false;
-      if (w.attackers.indexOf(g.playerTag) >= 0 || w.defenders.indexOf(g.playerTag) >= 0) {
-        ctx.bus.emit('notify', {
-          title: 'Envoys may cross the lines',
-          text: 'The war has found its master. What began as a fight to the death can now end at the peace table.',
-          type: 'info',
-        });
+    // A fight-to-the-death war opens to the peace table two ways: one side
+    // utterly dominates (75%), or BOTH sides are bled white in a years-long
+    // stalemate — exhaustion is the other master of wars (balance harness:
+    // without this, all-AI scripted wars grind economies forever).
+    if (w.noNegotiation && !w._negOpened) {
+      const score = Math.abs(clamp(att - def, -100, 100));
+      const months = monthsBetween(w.started, g.date);
+      const exhausted = (side) => side.some((t2) => g.tags[t2] && num(g.tags[t2].warExhaustion) >= 15);
+      const stalemate = months >= 48 && score < 25 && exhausted(w.attackers) && exhausted(w.defenders);
+      if (score >= 75 || stalemate) {
+        w._negOpened = true;
+        w.noNegotiation = false;
+        if (w.attackers.indexOf(g.playerTag) >= 0 || w.defenders.indexOf(g.playerTag) >= 0) {
+          ctx.bus.emit('notify', {
+            title: 'Envoys may cross the lines',
+            text: score >= 75
+              ? 'The war has found its master. What began as a fight to the death can now end at the peace table.'
+              : 'Four years of blood and neither side can win. Quietly, both courts begin to listen to their envoys.',
+            type: 'info',
+          });
+        }
       }
     }
   }
