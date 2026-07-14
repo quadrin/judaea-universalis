@@ -255,9 +255,10 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   // province center — a market awning, a silo, a crenellated tower, a
   // shrine's pediment, an airfield's runway — drawn only when zoomed in.
   const STRUCT_ORDER = ['market', 'granary', 'walls', 'shrine', 'airfield'];
-  function drawStructGlyph(key, x, y) {
+  function drawStructGlyph(key, x, y, s) {
     x2.save();
     x2.translate(x, y);
+    x2.scale(s || 1, s || 1);
     x2.lineWidth = 1;
     x2.lineJoin = 'round';
     x2.strokeStyle = 'rgba(28,20,8,0.9)';
@@ -294,9 +295,10 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.restore();
   }
   // A parked warplane in the wing's color: swept wings, fuselage, tailplane.
-  function drawPlane(x, y, col) {
+  function drawPlane(x, y, col, s) {
     x2.save();
     x2.translate(x, y);
+    x2.scale(s || 1, s || 1);
     x2.fillStyle = css(col);
     x2.strokeStyle = 'rgba(15,10,5,0.9)';
     x2.lineWidth = 0.9;
@@ -505,21 +507,24 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
             x2.restore();
           }
         }
-        // the province's works, in a small row below the center (SPEC §29)
+        // the province's works, in a small row below the center (SPEC §29);
+        // glyphs grow gently with the zoom so a close look rewards the eye
         if (showWonders) {
           const built = Array.isArray(p.buildings) ? p.buildings : [];
           const wings = wingsByProv[id];
           if (built.length || (wings && wings.length)) {
             const [sx, sy] = camera.mapToScreen(c.x, c.y);
             if (onScreen(sx, sy)) {
+              const s = Math.min(2.2, 0.8 + camera.zoom * 0.25);
+              const step = 13 * s;
               const keys = STRUCT_ORDER.filter((k) => built.indexOf(k) >= 0);
               const gy = sy + (p.wonder ? 30 : 26);
-              let gx = sx - ((keys.length - 1) * 13) / 2;
-              for (const k of keys) { drawStructGlyph(k, gx, gy); gx += 13; }
+              let gx = sx - ((keys.length - 1) * step) / 2;
+              for (const k of keys) { drawStructGlyph(k, gx, gy, s); gx += step; }
               if (wings && wings.length) {
                 const n = Math.min(3, wings.length);
                 for (let i = 0; i < n; i++) {
-                  drawPlane(sx - ((n - 1) * 7) + i * 14, gy + 13, tagColor(game, wings[i].tag));
+                  drawPlane(sx - ((n - 1) * 7 * s) + i * 14 * s, gy + 13 * s, tagColor(game, wings[i].tag), s);
                 }
               }
             }
