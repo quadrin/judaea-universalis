@@ -251,6 +251,67 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
+  // The land wears its works (SPEC §29): tiny structure glyphs under the
+  // province center — a market awning, a silo, a crenellated tower, a
+  // shrine's pediment, an airfield's runway — drawn only when zoomed in.
+  const STRUCT_ORDER = ['market', 'granary', 'walls', 'shrine', 'airfield'];
+  function drawStructGlyph(key, x, y) {
+    x2.save();
+    x2.translate(x, y);
+    x2.lineWidth = 1;
+    x2.lineJoin = 'round';
+    x2.strokeStyle = 'rgba(28,20,8,0.9)';
+    x2.fillStyle = '#e3cf96';
+    if (key === 'market') {
+      // stall under a gold awning
+      x2.beginPath(); x2.rect(-3.5, 0, 7, 4); x2.fill(); x2.stroke();
+      x2.beginPath(); x2.moveTo(-5, 0); x2.lineTo(-3.5, -4); x2.lineTo(3.5, -4); x2.lineTo(5, 0); x2.closePath();
+      x2.fillStyle = '#c9a227'; x2.fill(); x2.stroke();
+    } else if (key === 'granary') {
+      // round-topped silo with a band
+      x2.beginPath(); x2.moveTo(-3.5, 4); x2.lineTo(-3.5, -1); x2.arc(0, -1, 3.5, Math.PI, 0); x2.lineTo(3.5, 4); x2.closePath();
+      x2.fill(); x2.stroke();
+      x2.beginPath(); x2.moveTo(-3.5, 1.5); x2.lineTo(3.5, 1.5); x2.stroke();
+    } else if (key === 'walls') {
+      // crenellated tower
+      x2.beginPath();
+      x2.moveTo(-4, 4); x2.lineTo(-4, -2); x2.lineTo(-2.6, -2); x2.lineTo(-2.6, -4); x2.lineTo(-0.9, -4); x2.lineTo(-0.9, -2);
+      x2.lineTo(0.9, -2); x2.lineTo(0.9, -4); x2.lineTo(2.6, -4); x2.lineTo(2.6, -2); x2.lineTo(4, -2); x2.lineTo(4, 4);
+      x2.closePath(); x2.fill(); x2.stroke();
+    } else if (key === 'shrine') {
+      // pediment over two columns
+      x2.beginPath(); x2.moveTo(-4.5, -1.5); x2.lineTo(0, -4.5); x2.lineTo(4.5, -1.5); x2.closePath(); x2.fill(); x2.stroke();
+      x2.beginPath(); x2.rect(-3, -1, 2, 5); x2.rect(1, -1, 2, 5); x2.fill(); x2.stroke();
+    } else if (key === 'airfield') {
+      // a dark runway strip with a dashed centerline
+      x2.beginPath(); x2.moveTo(-6, 3); x2.lineTo(-2, -3); x2.lineTo(6, -3); x2.lineTo(2, 3); x2.closePath();
+      x2.fillStyle = 'rgba(60,52,38,0.95)'; x2.fill(); x2.stroke();
+      x2.strokeStyle = '#e3cf96';
+      x2.setLineDash([1.5, 1.5]);
+      x2.beginPath(); x2.moveTo(-3.2, 1.6); x2.lineTo(2.6, -1.8); x2.stroke();
+      x2.setLineDash([]);
+    }
+    x2.restore();
+  }
+  // A parked warplane in the wing's color: swept wings, fuselage, tailplane.
+  function drawPlane(x, y, col) {
+    x2.save();
+    x2.translate(x, y);
+    x2.fillStyle = css(col);
+    x2.strokeStyle = 'rgba(15,10,5,0.9)';
+    x2.lineWidth = 0.9;
+    x2.lineJoin = 'round';
+    x2.beginPath();
+    x2.moveTo(0, -5);
+    x2.lineTo(1.1, -1.5); x2.lineTo(5.5, 1.2); x2.lineTo(5.5, 2.4); x2.lineTo(1.1, 1.2);
+    x2.lineTo(0.9, 4); x2.lineTo(2.6, 5.2); x2.lineTo(-2.6, 5.2); x2.lineTo(-0.9, 4);
+    x2.lineTo(-1.1, 1.2); x2.lineTo(-5.5, 2.4); x2.lineTo(-5.5, 1.2); x2.lineTo(-1.1, -1.5);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    x2.restore();
+  }
+
   // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
   // ripples while marching (and breathes gently at rest); the hit box is
   // unchanged from the old rounded-rect chips, so picking is unaffected.
@@ -411,9 +472,15 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         if (a && a.path && a.path.length) drawArrow(game, camera, a);
       }
 
-      // sieges + wonders per province
+      // sieges + wonders + structures per province
       const provs = game.provinces || [];
       const showWonders = camera.zoom > 1.5;
+      // wings parked at their airfields (SPEC §29)
+      const wingsByProv = {};
+      for (const w of Object.values(game.airwings || {})) {
+        if (!w) continue;
+        (wingsByProv[w.prov] || (wingsByProv[w.prov] = [])).push(w);
+      }
       for (let id = 1; id < provs.length; id++) {
         const p = provs[id];
         if (!p) continue;
@@ -436,6 +503,26 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
             x2.fillStyle = '#e7c34c';
             x2.fill(STAR8_PATH);
             x2.restore();
+          }
+        }
+        // the province's works, in a small row below the center (SPEC §29)
+        if (showWonders) {
+          const built = Array.isArray(p.buildings) ? p.buildings : [];
+          const wings = wingsByProv[id];
+          if (built.length || (wings && wings.length)) {
+            const [sx, sy] = camera.mapToScreen(c.x, c.y);
+            if (onScreen(sx, sy)) {
+              const keys = STRUCT_ORDER.filter((k) => built.indexOf(k) >= 0);
+              const gy = sy + (p.wonder ? 30 : 26);
+              let gx = sx - ((keys.length - 1) * 13) / 2;
+              for (const k of keys) { drawStructGlyph(k, gx, gy); gx += 13; }
+              if (wings && wings.length) {
+                const n = Math.min(3, wings.length);
+                for (let i = 0; i < n; i++) {
+                  drawPlane(sx - ((n - 1) * 7) + i * 14, gy + 13, tagColor(game, wings[i].tag));
+                }
+              }
+            }
           }
         }
       }

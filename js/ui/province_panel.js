@@ -1,9 +1,10 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
+import { unlockedGen, genName } from '../data/tech.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
-const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine' };
+const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', airfield: 'plane' };
 
 export function createProvincePanel(el, { DEFINES, onClose }) {
   let ctx = null;
@@ -87,6 +88,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
       </div>
+      <div class="pp-air hidden" data-ref="airBlock">
+        <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
+        <div data-ref="airWings"></div>
+        <button class="btn pp-recruit-btn" data-ref="recruitWing"></button>
+      </div>
       <div class="pp-diplo hidden" data-ref="diploBlock">
         <div class="pp-diplo-title">Diplomacy</div>
         <div class="pp-diplo-head">
@@ -161,6 +167,18 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       if (refs.assault.classList.contains('disabled')) return;
       if (!actions || typeof actions.assaultSiege !== 'function') return;
       try { actions.assaultSiege(provId); } catch (err) { warnOnce('assaultSiege', err); }
+      refresh();
+    });
+    refs.recruitWing.addEventListener('click', () => {
+      if (refs.recruitWing.classList.contains('disabled')) return;
+      if (!actions || typeof actions.recruitAirWing !== 'function') return;
+      try { actions.recruitAirWing(provId); } catch (err) { warnOnce('recruitAirWing', err); }
+      refresh();
+    });
+    refs.airWings.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-wing]') : null;
+      if (!b || !actions || typeof actions.moveAirWing !== 'function') return;
+      try { actions.moveAirWing(Number(b.dataset.wing), Number(b.dataset.dest)); } catch (err) { warnOnce('moveAirWing', err); }
       refresh();
     });
   }
@@ -324,6 +342,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
     // Buildings (v1.3; gated on the sim providing getBuildInfo)
     refreshBuildings();
+
+    // Air power (SPEC §29): the airfield's wings
+    refreshAir(p, g);
 
     // Integration (v1.5): autonomy & conversion for owned provinces
     refreshIntegration();
@@ -523,10 +544,13 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   }
 
   function updateRecruit(btn, type, cost, p, g, base) {
-    const label = type === 'inf' ? 'Infantry' : 'Cavalry';
+    // The button speaks the age (SPEC §29): a 1948 barracks raises Rifle
+    // Brigades and Armored Corps, not "infantry" and "cavalry".
+    const t = g.tags && g.tags[g.playerTag];
+    const gen = unlockedGen((t && t.tech && t.tech.mar) | 0);
+    const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
     const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
     setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')}`);
-    const t = g.tags && g.tags[g.playerTag];
     let reason = null;
     if (!t) reason = 'No nation to recruit for';
     else if (p.impassable) reason = 'Impassable wasteland';
@@ -535,7 +559,33 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     else if ((t.treasury || 0) < cost) reason = `Not enough talents (${cost} needed)`;
     btn.classList.toggle('disabled', !!reason);
     btn.dataset.tt = reason
-      || `Recruit ${fmtInt(base.regSize || 1000)} ${label.toLowerCase()} for ${cost} talents`;
+      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents`;
+  }
+
+  // The airfield block (SPEC §29): wings based here, a recruit button, and a
+  // rebase button per other friendly field. Hidden without an airfield.
+  function refreshAir(p, g) {
+    let info = null;
+    if (actions && typeof actions.getAirInfo === 'function') {
+      try { info = actions.getAirInfo(provId); } catch (e) { warnOnce('getAirInfo', e); }
+    }
+    refs.airBlock.classList.toggle('hidden', !info);
+    if (!info) return;
+    const rows = info.wings.map((w) => {
+      const moves = info.targets.filter((tg) => tg.room > 0).slice(0, 3).map((tg) =>
+        `<button class="pp-dip pp-air-move" data-wing="${w.id}" data-dest="${tg.id}"
+          data-tt="Fly ${esc(w.name)} to the airfield of ${esc(tg.name)}">&rarr; ${esc(tg.name)}</button>`).join('');
+      return `<div class="pp-air-wing">${icon('plane', 'icon-row')} <b>${esc(w.name)}</b>${moves
+        || ' <span class="peace-dim">(no other field to fly to)</span>'}</div>`;
+    }).join('');
+    setHtml(refs.airWings, rows || '<div class="peace-dim">The hangars stand empty.</div>');
+    setHtml(refs.recruitWing, `${icon('plane')} Raise Air Wing — ${info.cost} ${icon('coins', 'icon-xs')}`);
+    refs.recruitWing.classList.toggle('disabled', !info.canRecruit);
+    refs.recruitWing.dataset.tt = info.canRecruit
+      ? `Raise a fighter squadron: ${info.cost} talents, ${info.upkeep}/month upkeep. `
+        + `Covers battles within ${info.range} provinces of its field (+1 to the fire die); `
+        + `${info.cap} wings fit on one field. Lost if the field falls.`
+      : info.whyNot;
   }
 
   return {

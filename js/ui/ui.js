@@ -10,6 +10,7 @@ import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { icon, flagChip } from './icons.js';
+import { genName } from '../data/tech.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
@@ -438,9 +439,12 @@ export function initUI(staticCtx) {
       return `<span class="morale bw-morale"><span class="morale-fill" style="width:${pct}%"></span></span>`;
     };
     const armyRow = (a) => {
+      // Regiments speak their pattern (SPEC §29): "8 Rifle Brigades", not
+      // "8 infantry" — each army remembers what it was raised as.
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
+      const comp = `${a.inf} × ${genName(a.gen || 0, 'inf')}, ${a.cav} × ${genName(a.gen || 0, 'cav')}`;
       return `
-      <div class="bw-army" data-tt="${esc(`${a.name} — ${a.inf} infantry, ${a.cav} cavalry\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
+      <div class="bw-army" data-tt="${esc(`${a.name} — ${comp}\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
         <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
         <span class="bw-men">${fmtMen(a.men)}</span>
         ${moraleBar(a.morale, a.maxMorale)}
@@ -448,12 +452,15 @@ export function initUI(staticCtx) {
     };
     const sideBlock = (s, key) => {
       const roll = info.last ? (key === 'atk' ? info.last.rollA : info.last.rollD) : null;
-      const dieTT = key === 'def'
-        ? 'The day’s battle die: d10 + the best general’s pips + terrain'
-        : 'The day’s battle die: d10 + the best general’s pips';
+      const doct = (s.doctrines || []).map((d) => `${d.name} — ${d.desc}`).join('\n');
+      const dieTT = (key === 'def'
+        ? 'The day’s battle die: d10 + the best general’s pips + terrain + doctrine'
+        : 'The day’s battle die: d10 + the best general’s pips + doctrine')
+        + (doct ? '\n' + doct : '')
+        + (s.air ? '\nAir cover — a wing in range adds +1 in the fire phase.' : '');
       return `
       <div class="bw-side${s.isMine ? ' bw-mine' : ''}">
-        <div class="bw-side-head">${key === 'atk' ? 'Attackers' : 'Defenders'}${s.isMine ? ' <span class="bw-us">— our side</span>' : ''}</div>
+        <div class="bw-side-head">${key === 'atk' ? 'Attackers' : 'Defenders'}${s.air ? ' ' + icon('plane', 'icon-sm') : ''}${s.isMine ? ' <span class="bw-us">— our side</span>' : ''}</div>
         <div class="bw-die-row">
           <span class="bw-die${roll == null ? ' bw-die-none' : ''}" data-tt="${esc(roll == null ? 'No round fought yet' : dieTT)}">${roll == null ? '—' : roll}</span>
           <span class="bw-total">${fmtMen(s.men)} men · morale ${s.morale.toFixed(1)}</span>

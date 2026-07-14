@@ -6,7 +6,7 @@
 // and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
-import { unlockedGen, genName } from '../data/tech.js';
+import { unlockedGen, genName, doctrinesFor } from '../data/tech.js';
 import { IDEA_TREES } from '../data/ideas.js';
 
 export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
@@ -497,8 +497,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const rows = ['gov', 'infl', 'mar'].map((k) =>
         `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b><span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
       const gi = unlockedGen(th.mar | 0);
+      const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
       refs.tech.innerHTML = rows
-        + `<div class="np-tech-unit" data-tt="The pattern their armies are raised to.">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`;
+        + `<div class="np-tech-unit" data-tt="${esc('The pattern their armies are raised to.'
+          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`;
       return;
     }
     let info = null;
@@ -517,8 +519,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         </div>`;
     }).join('');
     const u = info.unit;
+    const selfGen = unlockedGen(((t.tech && t.tech.mar) | 0));
+    const selfDoct = doctrinesFor(selfGen).map((d) => `${d.name} — ${d.desc}`).join('\n');
     const unitLine = u ? `<div class="np-tech-unit" data-tt="${esc('The pattern our armies are raised to. '
-      + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.'))}">`
+      + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
+      + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
       + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
     refs.tech.innerHTML = rows + unitLine;
   }

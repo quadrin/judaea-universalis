@@ -12,6 +12,7 @@ import {
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
+  hasAirfield, airWingsAt, raiseAirWing, rebaseAirWing,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -43,6 +44,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     provinces: [null],
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
     fleets: {}, nextFleetId: 1,
+    airwings: {}, nextWingId: 1, // squadrons at their airfields (SPEC §29)
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
@@ -756,9 +758,13 @@ export function gameActions(ctx) {
         const options = [];
         for (const key of Object.keys(catalog)) {
           const b = catalog[key];
+          const marTech = num(t && t.tech && t.tech.mar);
           let whyNot = '';
           if (built.indexOf(key) >= 0) whyNot = 'Already built.';
-          else if (p.construction) whyNot = 'Another work is already under way.';
+          else if (Number.isFinite(b.tech) && marTech < b.tech) {
+            // Late works (SPEC §29): the airfield waits for the age of flight.
+            whyNot = 'Beyond this age: requires military tech ' + b.tech + ' (ours is ' + marTech + ').';
+          } else if (p.construction) whyNot = 'Another work is already under way.';
           else if (key === 'walls' && (p.fort | 0) >= 3) whyNot = 'The fortress can rise no higher (fort 3).';
           else if (num(t && t.treasury) < num(b.cost)) whyNot = 'Not enough treasury (' + num(b.cost) + ' talents).';
           options.push({
@@ -787,6 +793,9 @@ export function gameActions(ctx) {
         if (key === 'walls' && (p.fort | 0) >= 3) {
           say('Cannot build', 'The fortress of ' + p.name + ' can rise no higher (fort 3).', 'bad'); return;
         }
+        if (Number.isFinite(b.tech) && num(t.tech && t.tech.mar) < b.tech) {
+          say('Cannot build', 'The ' + (b.name || key).toLowerCase() + ' is beyond this age (military tech ' + b.tech + ' required).', 'bad'); return;
+        }
         if (num(t.treasury) < num(b.cost)) {
           say('Cannot build', 'Not enough treasury (' + num(b.cost) + ' talents required).', 'bad'); return;
         }
@@ -794,6 +803,54 @@ export function gameActions(ctx) {
         p.construction = { key, monthsLeft: Math.max(1, num(b.months, 1)) };
         say('Construction begun', 'Work begins on the ' + (b.name || key).toLowerCase() + ' of ' + p.name + ' (' + num(b.months, 1) + ' months).', 'good');
       } catch (e) { warnOnce('build', 'buildBuilding failed', e); }
+    },
+
+    // ---- air power (SPEC §29) ----------------------------------------------
+    // The province panel's airfield block: wings based here, hangar space,
+    // recruiting terms, and every other field of ours a wing could fly to.
+    getAirInfo(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || !t || !hasAirfield(p)) return null;
+        if (p.owner !== g.playerTag) return null;
+        const AIR = ctx.DEFINES.AIR || {};
+        const cap = num(AIR.wingsPerField, 2);
+        const wings = airWingsAt(ctx, provId).filter((w) => w.tag === g.playerTag)
+          .map((w) => ({ id: w.id, name: w.name }));
+        const targets = [];
+        for (let i = 1; i < g.provinces.length; i++) {
+          const q = g.provinces[i];
+          if (!q || i === provId || q.owner !== g.playerTag || q.controller !== g.playerTag) continue;
+          if (!hasAirfield(q)) continue;
+          targets.push({ id: i, name: q.name, room: cap - airWingsAt(ctx, i).length });
+        }
+        let whyNot = '';
+        if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
+        else if (wings.length >= cap) whyNot = 'The hangars are full (' + cap + ' wings).';
+        else if (num(t.treasury) < num(AIR.wingCost, 40)) whyNot = 'Not enough talents (' + num(AIR.wingCost, 40) + ' needed).';
+        return {
+          wings, cap, targets,
+          cost: num(AIR.wingCost, 40), upkeep: num(AIR.wingUpkeep, 1), range: num(AIR.rangeHops, 2),
+          canRecruit: !whyNot, whyNot,
+        };
+      } catch (e) { warnOnce('airInfo', 'getAirInfo failed', e); return null; }
+    },
+    recruitAirWing(provId) {
+      try {
+        const res = raiseAirWing(ctx, g.playerTag, provId);
+        if (!res.ok) { say('Cannot raise a wing', 'The squadron is refused: ' + res.why + '.', 'bad'); return; }
+        const p = ctx.byId(provId);
+        say('A wing takes the air', res.wing.name + ' forms up over ' + ((p && p.name) || 'the field') + '.', 'good');
+      } catch (e) { warnOnce('recruitWing', 'recruitAirWing failed', e); }
+    },
+    moveAirWing(wingId, provId) {
+      try {
+        const res = rebaseAirWing(ctx, g.playerTag, wingId | 0, provId | 0);
+        if (!res.ok) { say('Cannot rebase', 'The wing stays put: ' + res.why + '.', 'bad'); return; }
+        const p = ctx.byId(provId | 0);
+        say('Wing rebased', 'The squadron flies to ' + ((p && p.name) || 'its new field') + '.', 'info');
+      } catch (e) { warnOnce('moveWing', 'moveAirWing failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------
@@ -1630,6 +1687,8 @@ export function reviveGame(saved) {
   if (!saved.battles) saved.battles = [];
   if (!saved.fleets) saved.fleets = {};
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
+  if (!saved.airwings) saved.airwings = {}; // pre-air-power saves
+  if (!Number.isFinite(saved.nextWingId)) saved.nextWingId = 1;
   if (!saved.wars) saved.wars = [];
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves

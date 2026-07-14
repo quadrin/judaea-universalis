@@ -9,6 +9,7 @@ import {
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
   modernizeInfo, modernizeArmyCore, switchTagCore,
+  hasAirfield, airWingsAt, airWingsOf, raiseAirWing,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
@@ -546,6 +547,30 @@ function aiDevelop(ctx, tag) {
   }
 }
 
+// Air power (SPEC §29): once the age of flight arrives, a solvent AI lays a
+// runway at its capital, then fills the hangars — one act a month.
+function aiAirPower(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t || num(t.tech && t.tech.mar) < 19) return;
+  const AIR = ctx.DEFINES.AIR || {};
+  const capName = (ctx.DEFINES.TAGS[tag] || {}).capital;
+  const cap = capName && ctx.prov ? ctx.prov(capName) : null;
+  if (!cap || cap.owner !== tag || cap.controller !== tag) return;
+  if (!hasAirfield(cap)) {
+    const b = (ctx.DEFINES.BUILDINGS || {}).airfield;
+    if (!b || cap.construction || num(t.treasury) < num(b.cost) + 150) return;
+    t.treasury = num(t.treasury) - num(b.cost);
+    cap.construction = { key: 'airfield', monthsLeft: Math.max(1, num(b.months, 1)) };
+    return;
+  }
+  if (airWingsAt(ctx, cap.id).length < num(AIR.wingsPerField, 2)
+      && airWingsOf(ctx, tag).length < 2
+      && num(t.treasury) > num(AIR.wingCost, 40) + 120) {
+    raiseAirWing(ctx, tag, cap.id);
+  }
+}
+
 // Re-equip old-pattern armies when the coffers allow — cheapest first, one a month.
 function aiModernize(ctx, tag) {
   const t = ctx.game.tags[tag];
@@ -572,6 +597,7 @@ export function runMonthlyAI(ctx) {
       aiTech(ctx, tag);
       aiReforms(ctx, tag);
       aiModernize(ctx, tag);
+      aiAirPower(ctx, tag);
       aiDevelop(ctx, tag);
       // Last in the sequence: if the tag forms a greater nation the old key is
       // gone and nothing may touch it again this month.

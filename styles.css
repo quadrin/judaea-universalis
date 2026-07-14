@@ -439,6 +439,19 @@ button {
 }
 .pp-recruit-btn { flex: 1; text-align: center; white-space: nowrap; padding: 8px 6px; }
 
+/* The airfield block (SPEC §29): wings based here, rebase buttons per field */
+.pp-air { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
+.pp-air-wing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 4px 0;
+  font-size: 12.5px;
+}
+.pp-air-move { padding: 2px 7px; font-size: 11px; }
+.pp-air .pp-recruit-btn { width: 100%; margin-top: 6px; }
+
 /* ------------------------------------------------------------ outliner --- */
 #outliner {
   position: absolute;

@@ -1,7 +1,10 @@
 // Judaea Universalis — military: armies, movement, battles, sieges, wars.
 // DOM-free leaf module: imports nothing from other sim files (they import us).
 // Zero-dependency data modules (tech ladders) are fair game — no cycles.
-import { unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN } from '../data/tech.js';
+import {
+  unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
+  doctrinePips, doctrineSiegeMult, doctrinesFor,
+} from '../data/tech.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -377,13 +380,14 @@ function moraleDamage(X, Y, rollX, rollY) {
   return (0.16 + 0.045 * edge) * ratio * X.disc;
 }
 function sideStats(ctx, armies, phase) {
-  let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0;
+  let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0;
   const tags = new Set();
   for (const a of armies) {
     men += a.men;
     moraleW += num(a.morale) * a.men;
     discW += disciplineOf(ctx, a.tag) * armyPowerOf(ctx, a) * a.men;
     if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
+    gen = Math.max(gen, num(a.gen, 0));
     tags.add(a.tag);
   }
   for (const t of tags) hill = Math.max(hill, resolveTagAdd(ctx, t, 'hillDefBonus'));
@@ -391,7 +395,8 @@ function sideStats(ctx, armies, phase) {
     men,
     morale: men > 0 ? moraleW / men : 0,
     disc: men > 0 ? discW / men : 1,
-    pip, hill,
+    pip, hill, gen,
+    tags: [...tags],
   };
 }
 function applySideDamage(armies, sideMen, cas, moraleDmg) {
@@ -457,14 +462,22 @@ function battleRound(ctx, b) {
   const phase = Math.floor((b.day - 1) / 3) % 2 === 0 ? 'fire' : 'shock';
   const A = sideStats(ctx, atk, phase);
   const D = sideStats(ctx, def, phase);
-  const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0);
-  const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0);
+  // Doctrines (SPEC §29): the side's best pattern adds pips — shieldwall for
+  // the defender, shock charge, volley fire, combined arms. Air wings based
+  // within range add one more in the fire phase (they cancel when both
+  // sides fly).
+  const airA = airCoverFor(ctx, b.prov, A.tags);
+  const airD = airCoverFor(ctx, b.prov, D.tags);
+  const docA = doctrinePips(A.gen, phase, false) + (phase === 'fire' && airA ? 1 : 0);
+  const docD = doctrinePips(D.gen, phase, true) + (phase === 'fire' && airD ? 1 : 0);
+  const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0) + docA;
+  const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0) + docD;
   const casOnAtk = casualtiesInflicted(D, A, rollD, rollA);
   const casOnDef = casualtiesInflicted(A, D, rollA, rollD);
   const mdOnAtk = moraleDamage(D, A, rollD, rollA);
   const mdOnDef = moraleDamage(A, D, rollA, rollD);
   // Battle-window feed: yesterday's dice and the running butcher's bill.
-  b.last = { phase, rollA, rollD };
+  b.last = { phase, rollA, rollD, airA, airD };
   b.casAtk = num(b.casAtk) + casOnAtk;
   b.casDef = num(b.casDef) + casOnDef;
   applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
@@ -520,6 +533,106 @@ export function tickBattles(ctx) {
   }
 }
 
+// ---------------------------------------------------------------- air power
+// SPEC §29: wings live at airfields (a late building — mar tech 19), rebase
+// freely between your own fields, add a fire-phase pip to friendly battles
+// within AIR.rangeHops, and burn on the ground if their field falls.
+function AIRC(ctx, key, fallback) {
+  const air = ctx && ctx.DEFINES && ctx.DEFINES.AIR;
+  const v = air ? air[key] : undefined;
+  return Number.isFinite(v) ? v : fallback;
+}
+export function hasAirfield(p) {
+  return !!(p && Array.isArray(p.buildings) && p.buildings.indexOf('airfield') >= 0);
+}
+export function airWingsAt(ctx, provId) {
+  return Object.values(ctx.game.airwings || {}).filter((w) => w && w.prov === provId);
+}
+export function airWingsOf(ctx, tag) {
+  return Object.values(ctx.game.airwings || {}).filter((w) => w && w.tag === tag);
+}
+// Does any wing of `tags`' side sit within range of the province?
+export function airCoverFor(ctx, provId, tags) {
+  const g = ctx.game;
+  const wings = Object.values(g.airwings || {});
+  if (!wings.length || !tags || !tags.length) return false;
+  const range = AIRC(ctx, 'rangeHops', 2);
+  // small BFS ring around the battlefield
+  const seen = new Set([provId]);
+  let frontier = [provId];
+  for (let d = 0; d < range; d++) {
+    const next = [];
+    for (const id of frontier) {
+      const nb = ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[id];
+      if (!nb) continue;
+      for (const n of nb) {
+        if (seen.has(n)) continue;
+        seen.add(n);
+        next.push(n);
+      }
+    }
+    frontier = next;
+  }
+  return wings.some((w) => seen.has(w.prov)
+    && tags.some((t) => w.tag === t || sameSide(ctx, w.tag, t)));
+}
+export function raiseAirWing(ctx, tag, provId) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const p = ctx.byId(provId);
+  if (!t || !t.alive || !p) return { ok: false, why: 'invalid province or tag' };
+  if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
+  if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
+  const cost = AIRC(ctx, 'wingCost', 40);
+  if (num(t.treasury) < cost) return { ok: false, why: 'not enough talents (' + cost + ' needed)' };
+  if (airWingsAt(ctx, provId).length >= AIRC(ctx, 'wingsPerField', 2)) {
+    return { ok: false, why: 'the hangars are full' };
+  }
+  t.treasury = num(t.treasury) - cost;
+  if (!g.airwings) g.airwings = {};
+  if (!Number.isFinite(g.nextWingId)) g.nextWingId = 1;
+  const id = g.nextWingId++;
+  const nth = airWingsOf(ctx, tag).length + 1;
+  g.airwings[id] = { id, tag, prov: provId, name: 'No. ' + nth + ' Squadron' };
+  return { ok: true, wing: g.airwings[id] };
+}
+export function rebaseAirWing(ctx, tag, wingId, provId) {
+  const g = ctx.game;
+  const w = (g.airwings || {})[wingId];
+  const p = ctx.byId(provId);
+  if (!w || w.tag !== tag || !p) return { ok: false, why: 'no such wing or field' };
+  if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
+  if (!hasAirfield(p)) return { ok: false, why: 'no airfield there' };
+  if (w.prov === provId) return { ok: false, why: 'already based there' };
+  if (airWingsAt(ctx, provId).length >= AIRC(ctx, 'wingsPerField', 2)) {
+    return { ok: false, why: 'the hangars there are full' };
+  }
+  w.prov = provId;
+  return { ok: true };
+}
+// Daily sweep: wings whose field is gone, or in hostile hands, are lost on
+// the ground. Dead nations' wings dissolve silently.
+export function sweepAirfields(ctx) {
+  const g = ctx.game;
+  for (const id of Object.keys(g.airwings || {})) {
+    const w = g.airwings[id];
+    if (!w) { delete g.airwings[id]; continue; }
+    const t = g.tags[w.tag];
+    if (!t || !t.alive) { delete g.airwings[id]; continue; }
+    const p = ctx.byId(w.prov);
+    const lost = !p || !hasAirfield(p) || isHostile(ctx, w.tag, p.controller);
+    if (!lost) continue;
+    delete g.airwings[id];
+    if (w.tag === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'Wing lost on the ground',
+        text: w.name + ' was caught at ' + ((p && p.name) || 'its field') + ' — the aircraft burn in their revetments.',
+        type: 'bad', provName: p && p.name,
+      });
+    }
+  }
+}
+
 // Everything the battle window shows: per-army rows, side totals, yesterday's
 // dice, terrain, and which side (if any) is the player's. Read-only.
 export function battleInfo(ctx, provId) {
@@ -531,7 +644,7 @@ export function battleInfo(ctx, provId) {
   const me = g.playerTag;
   const side = (key) => {
     const armies = battleSideArmies(ctx, b, key);
-    let men = 0, mw = 0, pipF = 0, pipS = 0;
+    let men = 0, mw = 0, pipF = 0, pipS = 0, gen = 0;
     const rows = [];
     const tags = [];
     for (const a of armies) {
@@ -539,11 +652,13 @@ export function battleInfo(ctx, provId) {
       mw += num(a.morale) * a.men;
       if (a.general) { pipF = Math.max(pipF, num(a.general.fire)); pipS = Math.max(pipS, num(a.general.shock)); }
       if (tags.indexOf(a.tag) < 0) tags.push(a.tag);
+      gen = Math.max(gen, num(a.gen, 0));
       rows.push({
         id: a.id, tag: a.tag, name: a.name || ('Army ' + a.id),
         men: a.men,
         inf: (a.regiments && a.regiments.inf) || 0,
         cav: (a.regiments && a.regiments.cav) || 0,
+        gen: num(a.gen, 0),
         morale: num(a.morale), maxMorale: Math.max(0.01, num(a.maxMorale, 1)),
         general: a.general ? {
           name: a.general.name,
@@ -555,6 +670,9 @@ export function battleInfo(ctx, provId) {
       armies: rows, tags, men,
       morale: men > 0 ? mw / men : 0,
       pips: { fire: pipF, shock: pipS },
+      gen,
+      doctrines: doctrinesFor(gen).map((d) => ({ key: d.key, name: d.name, desc: d.desc })),
+      air: airCoverFor(ctx, provId, tags),
       casualties: Math.round(num(key === 'atk' ? b.casAtk : b.casDef)),
       isMine: tags.some((t) => t === me || sameSide(ctx, me, t)),
     };
@@ -698,9 +816,10 @@ function siegeDay(ctx, p) {
       if (blockaded) s.progress += 0.5; // nothing enters the harbor
       // Modern firepower against old walls (SPEC §25): a musket-age stack
       // (gen 4) sieges +25% faster, a modern one (gen 5, artillery and air)
-      // +50%. Antiquity and the lance ages dig like they always did.
+      // +50%. The Siegecraft doctrine (SPEC §29, gen 2+, professional
+      // engineers) adds 20% on top. Antiquity digs like it always did.
       const stackGen = besiegers.reduce((m, a) => Math.max(m, num(a.gen, 0)), 0);
-      const firepower = 1 + 0.25 * Math.max(0, stackGen - 3);
+      const firepower = (1 + 0.25 * Math.max(0, stackGen - 3)) * doctrineSiegeMult(stackGen);
       s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
@@ -1105,6 +1224,10 @@ export function switchTagCore(ctx, from, to) {
   for (const id of Object.keys(g.fleets || {})) {
     const f = g.fleets[id];
     if (f && f.tag === from) f.tag = to;
+  }
+  for (const id of Object.keys(g.airwings || {})) {
+    const w = g.airwings[id];
+    if (w && w.tag === from) w.tag = to;
   }
   for (const w of g.wars || []) {
     for (const side of [w.attackers, w.defenders]) {

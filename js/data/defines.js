@@ -341,6 +341,19 @@ export const DEFINES = {
     granary: { name: 'Granary', cost: 50,  months: 9,  desc: '+3 support limit; -1 attrition here' },
     walls:   { name: 'Walls',   cost: 100, months: 18, desc: '+1 fort level (max 3), +1,000 garrison' },
     shrine:  { name: 'Shrine',  cost: 40,  months: 9,  desc: '-1.5 local unrest' },
+    // The age of flight (SPEC §29): gated on military tech, parks air wings.
+    airfield: { name: 'Airfield', cost: 120, months: 10, tech: 19,
+      desc: 'A runway and hangars: base up to 2 air wings, whose fighters cover battles nearby' },
+  },
+
+  // Air power (SPEC §29): wings live at airfields, rebase freely between
+  // your own, cover friendly battles within `rangeHops`, and are destroyed
+  // on the ground if their field falls.
+  AIR: {
+    wingCost: 40,          // talents to raise one air wing
+    wingUpkeep: 1,         // talents/month per wing
+    wingsPerField: 2,      // hangar space per airfield
+    rangeHops: 2,          // provinces of combat cover from the base
   },
 
   BASE: {
