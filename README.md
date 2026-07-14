@@ -137,6 +137,14 @@ python3 -m http.server 8613 --directory .
   the Terms from Antioch are now an offer you may accept (Judaea keeps the
   hills of the faith it holds — not half of occupied Syria) or refuse and
   fight on for everything.
+- Nothing decides for you: every "the enemy concedes" ending in every era —
+  Pompey's settlement, Rome suing after Beth Horon, the emperor's terms in
+  the Kitos War, Hadrian letting go, Persia returning the Cross — arrives as
+  an event card you may accept or refuse, offered exactly once.
+- The Mount stands bare after 70 CE — and Bar Kokhba's Judaea or the
+  Persian-era Return can crown its mission chain by raising the Third
+  Temple: hold Jerusalem rich and steady, spend 300 talents, and the House
+  (and its wonder-star on the map, and its monthly yield) returns.
 - Navies age like armies: hulls are laid down to the era's pattern —
   Penteconters through Trireme Squadrons to Destroyer Flotillas — hit harder
   each generation, and re-rig at anchor when the art advances. Fleets take

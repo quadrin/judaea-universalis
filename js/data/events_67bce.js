@@ -580,4 +580,54 @@ export const EVENTS_67 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_67.checkVictory when the unified kingdom reaches +40
+  // war score against Rome (SPEC §32); never fires on its own. Pompey's
+  // settlement is an OFFER — accepted, the war ends and every occupied
+  // province outside the faith returns; refused, the legions keep coming.
+  {
+    id: 'ev4_rome_recoils',
+    title: 'Rome Recoils',
+    desc: 'The legions came expecting an arbitration and found a kingdom — one king, '
+      + 'one army, and hill country that eats cohorts. Pompey, who never fights wars '
+      + 'he might lose slowly, sends word: Rome will recognize the kingdom of Judaea, '
+      + 'call the recognition his own wise settlement, and march elsewhere. The hills '
+      + 'of the faith would be Judaea\u2019s; the Greek cities go home. Or the passes can '
+      + 'keep eating cohorts.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_rome_recoils', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Accept the settlement',
+        tooltip: 'Victory (score 200). The Roman war ends; Judaea keeps the provinces of the faith it holds, and every other occupied town returns.',
+        effects: guard('ev4_rome_recoils:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = g.playerTag;
+          h.fireEvent(ctx, 'ev4_kingdom_restored');
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf(me) >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
+          const key = w && (w.attackers || []).indexOf(me) >= 0 ? 'att' : 'def';
+          h.endWar(ctx, me, 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'Rome Recoils',
+            text: 'The legions came expecting an arbitration and found a kingdom. Pompey '
+              + 'recognizes the kingdom of Judaea and calls it his own wise settlement.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'The passes are not yet full',
+        tooltip: 'The war goes on. +5 legitimacy; the settlement will not be offered twice.',
+        effects: guard('ev4_rome_recoils:1', (ctx) => {
+          ctx.helpers.adjust(ctx, ctx.game.playerTag, { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];

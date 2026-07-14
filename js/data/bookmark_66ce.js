@@ -379,18 +379,11 @@ export const BOOKMARK_66 = {
       const ws = judWarscore(ctx);
 
       if (g.playerTag === 'JUD') {
-        // Early win: Rome bleeds white.
-        if (ws >= 50) {
-          fireEventById(ctx, 'ev_negotiated_peace');
-          h.endGame(ctx, {
-            result: 'win',
-            title: 'Rome Sues for Peace',
-            text: 'The legions are broken and the east is in flames. Rather than feed another '
-              + 'army into the Judean hills, the emperor grants Judaea its own king, its own '
-              + 'Law, and its Temple. No shekel of tribute was ever better spent than the '
-              + 'blood at Beth Horon.',
-            score: 200,
-          });
+        // Early concession (SPEC §32): Rome OFFERS peace at +50 — an event
+        // card the player may accept or refuse. Offered once.
+        if (ws >= 50 && !h.getFlag(ctx, 'romeTermsOffered')) {
+          h.setFlag(ctx, 'romeTermsOffered', true);
+          h.fireEvent(ctx, 'ev_rome_sues');
           return;
         }
         // Timed win: on (or after) 1 January 71, Jerusalem plus a living Jewish heartland.

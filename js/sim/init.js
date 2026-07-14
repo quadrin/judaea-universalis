@@ -98,7 +98,12 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       siege: null, modifiers: [],
       buildings: [], construction: null, // {key, monthsLeft} while building
       conversion: null, // {by, monthsLeft} while converting to the state faith
-      holy: s.holy || null, wonder: s.wonder || null,
+      // bookmark.wonderTweaks (SPEC §32): eras where a wonder is rubble —
+      // the Temple burned in 70 CE, so the later bookmarks bare the Mount
+      // (a mission may raise the Third House and set it back).
+      holy: s.holy || null,
+      wonder: (bookmark && bookmark.wonderTweaks && s.name in bookmark.wonderTweaks)
+        ? bookmark.wonderTweaks[s.name] : (s.wonder || null),
       impassable,
     });
   }
@@ -319,6 +324,31 @@ export const simHelpers = {
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
+  },
+  // Fire a scripted event by id, once (SPEC §32). The same machinery the
+  // bookmarks' local fireEventById uses — exposed so event effects and
+  // checkVictory hooks can queue cards without duplicating it.
+  fireEvent(ctx, eventId) {
+    try {
+      const g = ctx.game;
+      const list = ctx.events || [];
+      let ev = null;
+      for (const e of list) { if (e && e.id === eventId) { ev = e; break; } }
+      if (!ev) { warnOnce('fireEvent:' + eventId, 'unknown event id', eventId); return false; }
+      if (g.firedEvents && g.firedEvents[eventId]) return false;
+      if (g.firedEvents) g.firedEvents[eventId] = true;
+      const instanceId = g.nextEventInstance++;
+      g.pendingEvents.push({ instanceId, eventId, forTag: ev.forTag });
+      const playerFacing = ev.forTag === 'player' || ev.forTag === 'both' || ev.forTag === g.playerTag;
+      if (playerFacing) {
+        g.paused = true;
+        if (ctx.bus) {
+          ctx.bus.emit('event', { instanceId, event: ev, forTag: ev.forTag });
+          ctx.bus.emit('pause', true);
+        }
+      }
+      return true;
+    } catch (e) { warnOnce('fireEvent', 'fireEvent failed', e); return false; }
   },
   getFlag(ctx, key) {
     return ctx.game.flags[key];

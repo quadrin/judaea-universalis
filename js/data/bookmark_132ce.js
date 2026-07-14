@@ -94,6 +94,8 @@ export const BOOKMARK_132 = {
   // been Provincia Arabia since 106; Agrippa's kingdom is long absorbed; the
   // rising holds the Judean hill country while Rome keeps the cities, the
   // coast, Galilee (which does not rise), and the fortresses.
+  // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
+  wonderTweaks: { Jerusalem: null },
   owners: {
     // -- The rising (JUD): the Judean hills and the rift edge ------------------
     'Hebron': 'JUD',
@@ -201,6 +203,21 @@ export const BOOKMARK_132 = {
             id: 'redemption_coinage', name: 'Redemption Coinage', months: -1, effects: { incomeMult: 1.15 },
           });
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+        },
+      },
+      {
+        // SPEC §32: the bare Mount can bear a House again. Bar Kokhba's
+        // coins showed the Temple facade — this is what they promised.
+        id: 'j2_third_temple', name: 'Raise the Third House',
+        desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — the House the coins promised.',
+        rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+          && (ctx.game.tags.JUD.treasury || 0) >= 500
+          && (ctx.game.tags.JUD.stability || 0) >= 1,
+        reward: (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 20 });
+          const p = ctx.prov && ctx.prov('Jerusalem');
+          if (p) p.wonder = 'temple';
         },
       },
     ],
@@ -360,18 +377,11 @@ export const BOOKMARK_132 = {
       const ws = judWarscore(ctx);
 
       if (g.playerTag === 'JUD') {
-        if (ws >= 50) {
-          fireEventById(ctx, 'ev2_redemption_peace');
-          h.endGame(ctx, {
-            result: 'win',
-            title: 'Rome Lets Go',
-            text: 'Dio\'s arithmetic wins the argument in the Senate: so many legions mauled, '
-              + 'so many years, for hills that grow stones. Hadrian, older and ill, accepts a '
-              + 'tributary prince in Judea — circumcision unbanned, the colony unbuilt — and '
-              + 'writes to the Senate without the customary formula, for he and the army are '
-              + 'not well.',
-            score: 200,
-          });
+        // Early concession (SPEC §32): Hadrian's offer arrives at +50 as an
+        // event card the player may accept or refuse. Offered once.
+        if (ws >= 50 && !h.getFlag(ctx, 'romeTermsOffered')) {
+          h.setFlag(ctx, 'romeTermsOffered', true);
+          h.fireEvent(ctx, 'ev132_terms');
           return;
         }
         if (dateGE(g.date, 136, 1) && jerusalemHeld

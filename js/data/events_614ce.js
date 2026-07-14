@@ -366,4 +366,50 @@ export const EVENTS_614 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_614.checkVictory when Byzantium reaches +35 war score
+  // against Persia (SPEC §32); never fires on its own. Khosrow's peace is
+  // an OFFER.
+  {
+    id: 'ev614_persia_sues',
+    title: 'Persia Sues for Peace',
+    desc: 'The King of Kings\u2019 court is done: the fire temples will pay for the churches '
+      + 'they burned, the True Cross returns, and every Christian land the Emperor '
+      + 'holds is his. Persia proper — the plateau and the fire — goes home. Or the '
+      + 'Emperor can march on Ctesiphon and see what the arithmetic of empires says.',
+    forTag: 'BYZ',
+    major: true,
+    trigger: safeTrigger('ev614_persia_sues', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Cross returns to Jerusalem',
+        tooltip: 'Victory (score 200). The Persian war ends; Byzantium keeps the Christian provinces it holds, and occupied Persia proper returns.',
+        effects: guard('ev614_persia_sues:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf('BYZ') >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('SAS') >= 0);
+          const key = w && (w.attackers || []).indexOf('BYZ') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'BYZ', 'SAS', key, { keep: (p) => p.religion === 'christianity' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The Empire Endures',
+            text: 'The fire temples pay for the churches they burned; the Cross returns '
+              + 'to Jerusalem on the Emperor\u2019s own shoulders. It is the greatest victory '
+              + 'Rome ever won — and the last, though no one yet knows it.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'March on Ctesiphon',
+        tooltip: 'The war goes on. +5 legitimacy; the King of Kings will not sue twice.',
+        effects: guard('ev614_persia_sues:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];
