@@ -432,7 +432,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       try { list = actions.getDecisions() || []; } catch (e) { warnOnce('np-getDecisions', e); }
     }
     setHtml(refs.decisions, list.map((d) => {
-      const terms = `${d.name} — ${d.costText}\n${d.desc}\nCan be repeated every ${d.cooldownMonths} months.`;
+      const terms = `${d.name} — ${d.costText}\n${d.desc}`
+        + (d.cooldownMonths ? `\nCan be repeated every ${d.cooldownMonths} months.` : '');
       const tt = d.canEnact ? terms : `${d.whyNot}\n――――――\n${terms}`;
       return `<button class="pp-build-btn np-dec${d.canEnact ? '' : ' disabled'}" data-decision="${esc(d.key)}" data-tt="${esc(tt)}">`
         + `${icon(d.icon || 'scroll')}<span>${esc(d.name)}</span><span class="np-dec-cost">${esc(d.costText)}</span></button>`;

@@ -1037,3 +1037,30 @@ renderer.render → overlay.draw → labels.update.
   Tech 19: Rifle Brigades and Armored Corps. The coalition invades on day one;
   the truces, the Altalena, the Burma Road, Bernadotte, Yoav/Hiram/Horev, and
   the Rhodes armistice that ends the war on the lines held. Playable ISR/JOR.
+
+## 23. v2.3: a new banner — formable nations & the true flag
+
+- **Formable nations** (`js/data/formables.js`, `switchTagCore` in military.js):
+  when a court fulfills a greater crown's requirements it may take a new tag
+  outright, EU4-style. `switchTagCore(ctx, from, to)` rewrites every reference
+  in the world — provinces (owner/controller/siege/conversion), armies, fleets,
+  wars and their warscore keys, every court's atWarWith/allies/overlord/opinion,
+  the truce and cooldown books (pair keys re-sorted), and the player's own
+  chair (playerTag/humanTags) — then the caller rebuilds `t.ideas` via
+  applyReformsToTag so the new banner's national ideas replace the old, applies
+  the formable's bonus (legitimacy/stability/permanent modifier), and emits
+  `tagSwitched` (the topbar re-binds) + `provinceOwner` (the map repaints).
+  The chronicle records the day ('X is no more: the banners of Y rise').
+  Formables surface through the existing Decisions panel with a live ✓/✗
+  requirement checklist in the tooltip; forming costs nothing but the doing.
+  Shipped: HYR→HAS and ARI→HAS (67 BCE — reunite the brothers' war under one
+  throne: Jerusalem, 12 provinces, the rival broken, legitimacy 50),
+  ATG→HAS and HER→JUD (40 BCE). A formable with `ai: true` may be taken by an
+  AI court the month it qualifies; the four dynastic restorations ship
+  player-only — the 67/40 BCE event chains reference the dynasts by tag, and
+  in testing an AI Aristobulus legitimately formed Hasmonean Judaea the moment
+  Pompey made his brother a client, orphaning the scripted arc.
+- **The flag of Israel** (icons.js): the ISR chip now renders the real flag —
+  white field, two horizontal stripes and the Star of David in flag blue
+  (#0038b8) — as a full-field emblem; `.fchip` gains `overflow: hidden` so
+  full-field emblems clip to the chip's rounded corners.

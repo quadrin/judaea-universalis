@@ -95,6 +95,11 @@ python3 -m http.server 8613 --directory .
   Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes hands in the last
   great war of antiquity), and the War of Independence (1948 — five armies, every
   border, and the armistice lines becoming a state).
+- Formable nations: win the brothers' war as Hyrcanus or Aristobulus and restore
+  Hasmonean Judaea; break Antigonus as Herod and proclaim the Kingdom of Judaea —
+  the whole realm (map color, armies, wars, treaties, your own throne) takes the
+  new banner, with a requirement checklist in the Decisions panel and a permanent
+  founding bonus.
 
 ## Architecture
 
