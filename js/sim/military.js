@@ -28,6 +28,20 @@ export function buildingWorks(p, key) {
   return hasBuilding(p, key) && p.owner === p.controller;
 }
 
+// ---------------------------------------------------------------- chronicle
+// The running record of the world (SPEC §21). Entries are plain data on
+// game.chronicle — saves and MP snapshots carry them for free; the Chronicle
+// screen reads them newest-first. Lives in this leaf module so every sim file
+// and content package can write history without new import edges.
+const CHRONICLE_CAP = 400; // a long campaign's worth; the oldest pages crumble
+export function chronicle(ctx, kind, text) {
+  const g = ctx && ctx.game;
+  if (!g || !text) return;
+  if (!Array.isArray(g.chronicle)) g.chronicle = [];
+  g.chronicle.push({ y: g.date.y, m: g.date.m, kind: String(kind || 'note'), text: String(text) });
+  if (g.chronicle.length > CHRONICLE_CAP) g.chronicle.splice(0, g.chronicle.length - CHRONICLE_CAP);
+}
+
 // ---------------------------------------------------------------- modifiers
 export function resolveTagMult(ctx, tag, key) {
   const t = ctx.game.tags[tag];
@@ -874,7 +888,15 @@ export function updateTagLife(ctx) {
   }
   for (const k of Object.keys(g.tags)) {
     if (k === 'REB') continue; // REB always alive
-    g.tags[k].alive = !!(owned[k] || armiesOf(ctx, k).length);
+    const t = g.tags[k];
+    const was = !!t.alive;
+    t.alive = !!(owned[k] || armiesOf(ctx, k).length);
+    if (was && !t.alive) {
+      chronicle(ctx, 'fall', 'The banners of ' + (t.name || k) + ' are cast down; the nation passes into memory.');
+      if (k !== g.playerTag) {
+        ctx.bus.emit('notify', { title: 'News from abroad', text: (t.name || k) + ' is no more.', type: 'info' });
+      }
+    }
   }
   // A dead overlord frees its clients; a dead client is simply struck off.
   for (const k of Object.keys(g.tags)) {
@@ -1119,6 +1141,8 @@ export function declareWar(ctx, atk, def, name, cb) {
   const coal = coalitionAgainst(ctx, atk);
   if (coal.indexOf(def) >= 0) {
     for (const m of coal) join(defenders, m);
+    chronicle(ctx, 'coalition', 'The realms that feared ' + (A.name || atk) + ' league together: '
+      + coal.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + ' answer as one.');
     if (atk === g.playerTag || def === g.playerTag) {
       ctx.bus.emit('notify', {
         title: 'The coalition marches',
@@ -1141,8 +1165,15 @@ export function declareWar(ctx, atk, def, name, cb) {
       if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
     }
   }
+  const names = (list) => list.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ');
+  chronicle(ctx, 'war', war.name + ' begins: ' + names(attackers) + ' against ' + names(defenders) + '.');
   ctx.bus.emit('war', { id: war.id, name: war.name, attackers: attackers.slice(), defenders: defenders.slice() });
-  ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+  if (attackers.indexOf(g.playerTag) >= 0 || defenders.indexOf(g.playerTag) >= 0) {
+    ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+  } else {
+    // Other people's wars are still news — just quieter news.
+    ctx.bus.emit('notify', { title: 'News from abroad', text: names(attackers) + ' march against ' + names(defenders) + '.', type: 'info' });
+  }
   return war;
 }
 
@@ -1423,15 +1454,19 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     }
   }
   dissolveWar(ctx, war);
+  const endText = (war.name || 'The war') + ' has ended'
+    + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.');
+  chronicle(ctx, 'peace', endText);
   if (opts && opts.silent) return;
   const pt = g.playerTag;
   if (participants.indexOf(pt) >= 0) {
     ctx.bus.emit('notify', {
       title: 'The war is over',
-      text: (war.name || 'The war') + ' has ended'
-        + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.'),
+      text: endText,
       type: winners.indexOf(pt) >= 0 ? 'good' : losers.indexOf(pt) >= 0 ? 'bad' : 'info',
     });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text: endText, type: 'info' });
   }
 }
 
@@ -1504,11 +1539,16 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   const summary = terms.length
     ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
     : 'A white peace: every occupation reverts.';
-  ctx.bus.emit('notify', {
-    title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
-    text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
-    type: 'good',
-  });
+  chronicle(ctx, 'peace', war.name + ' ends. ' + summary);
+  if (participants.indexOf(g.playerTag) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
+      text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
+      type: 'good',
+    });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text: war.name + ' ends. ' + summary, type: 'info' });
+  }
 }
 // Signed months between two game dates (BCE years are negative; no year zero).
 export function monthsBetween(a, b) {

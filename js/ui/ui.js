@@ -134,6 +134,7 @@ export function initUI(staticCtx) {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
     onLedgerClick: () => toggleLedger(),
+    onChronicleClick: () => toggleChronicle(),
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
@@ -514,6 +515,53 @@ export function initUI(staticCtx) {
     ledgerEl.querySelector('.modal-scrim').addEventListener('click', closeLedger);
   }
 
+  // --------------------------------------------------------------- chronicle --
+  // The world's recorded history (SPEC §21): wars, peaces, crowns, coalitions
+  // and the fall of nations, newest first under year headings.
+  let chronEl = null;
+  function closeChronicle() { if (chronEl) chronEl.classList.add('hidden'); }
+  function chronicleOpen() { return !!chronEl && !chronEl.classList.contains('hidden'); }
+  function toggleChronicle() { if (chronicleOpen()) closeChronicle(); else openChronicle(); }
+  const CHRON_ICONS = {
+    era: 'lamp', war: 'swords', peace: 'dove', ruler: 'laurel',
+    coalition: 'alert', fall: 'shieldCrack', verdict: 'scales',
+  };
+  function openChronicle() {
+    const actions = state.actions;
+    if (!actions || typeof actions.getChronicle !== 'function') return;
+    let entries = [];
+    try { entries = actions.getChronicle() || []; } catch (e) { warnOnce('getChronicle', e); }
+    if (!chronEl) {
+      chronEl = document.createElement('div');
+      chronEl.id = 'chronicle-modal';
+      document.getElementById('ui-root').appendChild(chronEl);
+    }
+    const months = (state.ctx && state.ctx.DEFINES && state.ctx.DEFINES.MONTH_NAMES) || [];
+    const yr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
+    let rows = '';
+    let lastY = null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const en = entries[i];
+      if (!en) continue;
+      if (en.y !== lastY) { lastY = en.y; rows += `<div class="chron-year">${esc(yr(en.y))}</div>`; }
+      rows += `<div class="chron-row">`
+        + `<span class="chron-ico">${icon(CHRON_ICONS[en.kind] || 'scroll')}</span>`
+        + `<span class="chron-m">${esc(String(months[((en.m | 0) - 1 + 12) % 12] || ''))}</span>`
+        + `<span class="chron-text">${esc(en.text)}</span></div>`;
+    }
+    if (!rows) rows = '<div class="chron-empty">The page is still blank — history is waiting to be made.</div>';
+    chronEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card ledger-card chron-card">
+        <h2 class="peace-title">The Chronicle</h2>
+        <div class="chron-wrap">${rows}</div>
+        <button class="btn peace-cancel">Close</button>
+      </div>`;
+    chronEl.classList.remove('hidden');
+    chronEl.querySelector('.peace-cancel').addEventListener('click', closeChronicle);
+    chronEl.querySelector('.modal-scrim').addEventListener('click', closeChronicle);
+  }
+
   // ------------------------------------------------------------ selection --
   function setSelectedProv(id) {
     const g = state.ctx && state.ctx.game;
@@ -633,6 +681,7 @@ export function initUI(staticCtx) {
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
       if (warOverviewOpen()) { closeWarOverview(); return; }
       if (ledgerOpen()) { closeLedger(); return; }
+      if (chronicleOpen()) { closeChronicle(); return; }
       if (nationPanel.isOpen()) { nationPanel.close(); return; }
       const g = state.ctx.game;
       if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)) setSelectedArmy(null);
@@ -641,6 +690,8 @@ export function initUI(staticCtx) {
       toggleNationPanel();
     } else if (e.key === 'l' || e.key === 'L') {
       toggleLedger();
+    } else if (e.key === 'c' || e.key === 'C') {
+      toggleChronicle();
     }
   });
 

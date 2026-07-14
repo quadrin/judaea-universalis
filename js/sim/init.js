@@ -11,6 +11,7 @@ import {
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
+  chronicle as chronicleCore,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
@@ -42,6 +43,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     fleets: {}, nextFleetId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
+    chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [] },
   };
@@ -256,10 +258,15 @@ export const simHelpers = {
   notify(ctx, { title, text, type, provName } = {}) {
     ctx.bus.emit('notify', { title: title || '', text: text || '', type: type || 'info', provName });
   },
+  chronicle(ctx, kind, text) {
+    chronicleCore(ctx, kind, text);
+  },
   endGame(ctx, { result, title, text, score } = {}) {
     const g = ctx.game;
     if (g.result) return; // already decided
     g.result = result || 'loss';
+    chronicleCore(ctx, 'verdict', (title ? title + ' — ' : '')
+      + (text || (g.result === 'win' ? 'Victory.' : 'Defeat.')));
     // The verdict closes the player's wars: a win keeps what the sword holds,
     // a loss concedes it — either way the world is at peace afterwards.
     try {
@@ -1145,6 +1152,11 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('ledger', 'getLedger failed', e); return []; }
     },
 
+    // ---- chronicle -------------------------------------------------------------
+    getChronicle() {
+      try { return Array.isArray(g.chronicle) ? g.chronicle.slice() : []; } catch (e) { warnOnce('chronicle', 'getChronicle failed', e); return []; }
+    },
+
     // ---- merge all -------------------------------------------------------------
     mergeAllInto(armyId) {
       try {
@@ -1351,6 +1363,7 @@ export function reviveGame(saved) {
   if (!saved.fleets) saved.fleets = {};
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.wars) saved.wars = [];
+  if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
   // pre-buildings/loans saves: default the new economy & military fields
