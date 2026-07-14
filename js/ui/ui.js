@@ -126,7 +126,8 @@ export function initUI(staticCtx) {
     },
   });
   function toggleNationPanel() {
-    if (nationPanel.isOpen()) { nationPanel.close(); return; }
+    // Open on a foreign court? The flag brings you home instead of closing.
+    if (nationPanel.isOpen() && !nationPanel.viewing()) { nationPanel.close(); return; }
     setSelectedProv(0); // the two left panels share the same berth
     nationPanel.open();
   }
@@ -347,7 +348,7 @@ export function initUI(staticCtx) {
       document.getElementById('ui-root').appendChild(warEl);
     }
     const sideHtml = (rows) => rows.map((r) =>
-      `<span class="wo-tag${r.alive ? '' : ' wo-dead'}" data-tt="${esc(r.name)}${r.alive ? '' : ' (defeated)'}">${flagChipHtml(r.tag)} ${esc(r.name)}</span>`).join('');
+      `<span class="wo-tag${r.alive ? '' : ' wo-dead'}" data-tt="${esc(r.name)}${r.alive ? '' : ' (defeated)'}">${flagChipHtml(r.tag, true)} ${esc(r.name)}</span>`).join('');
     const holdHtml = (list, none) => list.length
       ? list.slice(0, 8).map((p) => esc(p.name)).join(', ') + (list.length > 8 ? ` +${list.length - 8} more` : '')
       : `<span class="peace-dim">${none}</span>`;
@@ -385,9 +386,30 @@ export function initUI(staticCtx) {
     warEl.querySelector('.peace-cancel').addEventListener('click', closeWarOverview);
     warEl.querySelector('.modal-scrim').addEventListener('click', closeWarOverview);
   }
-  function flagChipHtml(tag) {
-    try { return flagChip(tag, DEFINES, 15); } catch (e) { return ''; }
+  function flagChipHtml(tag, link) {
+    try { return flagChip(tag, DEFINES, 15, !!link); } catch (e) { return ''; }
   }
+
+  // Any linked flag chip, anywhere (ledger, war overview, battle window,
+  // province panel, outliner, the realm panel's own diplomacy rows), opens
+  // that nation's court. Capture phase so the chip wins over whatever row
+  // it sits in (a war row, a sortable header); modals close so the panel
+  // isn't buried under a scrim.
+  document.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element)) return;
+    const chip = e.target.closest('[data-open-tag]');
+    if (!chip) return;
+    const g = state.ctx && state.ctx.game;
+    const tag = chip.dataset.openTag;
+    if (!g || !g.tags || !g.tags[tag]) return;
+    e.preventDefault();
+    e.stopPropagation();
+    closeLedger();
+    closeWarOverview();
+    closeBattleWindow();
+    setSelectedProv(0); // the two left panels share the same berth
+    nationPanel.open(tag);
+  }, true);
 
   // ---------------------------------------------------------- battle window --
   // A live view of one field battle: the day's dice, both hosts army by army,
@@ -419,7 +441,7 @@ export function initUI(staticCtx) {
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
       return `
       <div class="bw-army" data-tt="${esc(`${a.name} — ${a.inf} infantry, ${a.cav} cavalry\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
-        <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag)} ${esc(a.name)}</span>
+        <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
         <span class="bw-men">${fmtMen(a.men)}</span>
         ${moraleBar(a.morale, a.maxMorale)}
       </div>`;
@@ -497,7 +519,7 @@ export function initUI(staticCtx) {
       ? String(a[ledgerSort]).localeCompare(String(b[ledgerSort]))
       : (b[ledgerSort] || 0) - (a[ledgerSort] || 0));
     const fmtCell = (r, key) => key === 'name'
-      ? `${flagChipHtml(r.tag)} ${esc(r.name)}${r.overlord ? ' <span class="peace-dim">(client)</span>' : ''}`
+      ? `${flagChipHtml(r.tag, true)} ${esc(r.name)}${r.overlord ? ' <span class="peace-dim">(client)</span>' : ''}`
       : key === 'troops' || key === 'manpower' ? fmtMen(r[key])
         : String(r[key]);
     ledgerEl.innerHTML = `

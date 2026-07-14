@@ -119,6 +119,13 @@ python3 -m http.server 8613 --directory .
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls
   with artillery, while Bar Kokhba's war stays hill forts and patience.
+- Every flag is a door: click a nation's chip anywhere — the ledger, a war
+  overview, a battle window, a province panel, the outliner, another court's
+  treaty rows — and that nation's panel opens read-only: their ruler and heir,
+  purse and armies, technology and reforms, seated advisors, their whole web
+  of treaties (walkable court to court), and how they feel about you. Your
+  own flag in the corner of a foreign panel, or the topbar flag, brings you
+  home.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a generative score that improvises on a breathing

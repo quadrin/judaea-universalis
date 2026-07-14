@@ -1241,6 +1241,15 @@ button {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
+/* Clickable chips: anywhere a linked flag appears, it opens that court. */
+.fchip-link { cursor: pointer; }
+.fchip-link:hover {
+  border-color: #f4d76a;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 6px rgba(224, 194, 90, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}
 .tb-flag .fchip { border-color: var(--gold); }
 .ol-name .fchip { margin-right: 4px; vertical-align: -3px; }
 .ol-name .fchip svg { filter: none; } /* tiny sizes smear with drop-shadow */
@@ -1721,6 +1730,16 @@ html, body {
 #nation-panel .neg { color: var(--red-deep); }
 .np-title { display: inline-flex; align-items: center; gap: 8px; }
 .np-lost { color: var(--red-deep); font-size: 12px; }
+/* Foreign-court dress: our flag as the way home, and the envoys' note. */
+.np-home { display: inline-flex; margin-left: auto; margin-right: 8px; }
+.np-foreign-note {
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--gold, #c9a227);
+  opacity: 0.85;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+}
 
 .np-ruler {
   display: flex;

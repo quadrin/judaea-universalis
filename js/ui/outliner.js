@@ -228,7 +228,7 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
           : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
         // Lead enemy's flag before the war name (falls back to the flame glyph).
         const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
-        const lead = opp ? flagChip(opp, ctx.DEFINES, 14) : icon('flame', 'icon-row');
+        const lead = opp ? flagChip(opp, ctx.DEFINES, 14, true) : icon('flame', 'icon-row');
         html += `
           <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, by events — or at the peace table once one side reaches 75% war score.' : ''}">
             <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>

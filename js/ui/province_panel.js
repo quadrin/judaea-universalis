@@ -194,7 +194,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
     // Owner / occupation
     const ownerDef = TAGS[p.owner] || {};
-    setHtml(refs.ownerChip, flagChip(p.owner, DEFINES, 20));
+    setHtml(refs.ownerChip, flagChip(p.owner, DEFINES, 20, true));
     setText(refs.ownerName, ownerDef.name || p.owner || 'Unowned');
     if (p.controller && p.controller !== p.owner) {
       const cDef = TAGS[p.controller] || {};
@@ -423,7 +423,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.diploBlock.classList.toggle('hidden', !d);
     if (!d) return;
 
-    setHtml(refs.dipChip, flagChip(d.tag, DEFINES, 20));
+    setHtml(refs.dipChip, flagChip(d.tag, DEFINES, 20, true));
     setText(refs.dipName, d.name || d.tag);
 
     const op = Math.round(d.opinionOfUs || 0);
