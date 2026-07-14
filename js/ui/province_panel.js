@@ -176,8 +176,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       refresh();
     });
     refs.airWings.addEventListener('click', (e) => {
-      const b = e.target instanceof Element ? e.target.closest('[data-wing]') : null;
-      if (!b || !actions || typeof actions.moveAirWing !== 'function') return;
+      if (!(e.target instanceof Element) || !actions) return;
+      const raid = e.target.closest('[data-raid-wing]');
+      if (raid && typeof actions.raidProvince === 'function') {
+        try { actions.raidProvince(Number(raid.dataset.raidWing), Number(raid.dataset.raidDest)); } catch (err) { warnOnce('raidProvince', err); }
+        refresh();
+        return;
+      }
+      const b = e.target.closest('[data-wing]');
+      if (!b || typeof actions.moveAirWing !== 'function') return;
       try { actions.moveAirWing(Number(b.dataset.wing), Number(b.dataset.dest)); } catch (err) { warnOnce('moveAirWing', err); }
       refresh();
     });
@@ -575,8 +582,20 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const moves = info.targets.filter((tg) => tg.room > 0).slice(0, 3).map((tg) =>
         `<button class="pp-dip pp-air-move" data-wing="${w.id}" data-dest="${tg.id}"
           data-tt="Fly ${esc(w.name)} to the airfield of ${esc(tg.name)}">&rarr; ${esc(tg.name)}</button>`).join('');
-      return `<div class="pp-air-wing">${icon('plane', 'icon-row')} <b>${esc(w.name)}</b>${moves
-        || ' <span class="peace-dim">(no other field to fly to)</span>'}</div>`;
+      // Bombing raids (SPEC §30): one button per target in range, or the
+      // rearming countdown while the armorers hang fresh bombs.
+      let raids = '';
+      if (w.raidCd > 0) {
+        raids = ` <span class="pp-air-cd" data-tt="The wing is rearming: ready in ${w.raidCd} day${w.raidCd === 1 ? '' : 's'}">rearming ${w.raidCd}d</span>`;
+      } else {
+        raids = (w.raids || []).map((r) => {
+          const what = r.men ? fmtMen(r.men) + ' hostile men' : r.siege ? 'the walls we besiege' : 'the garrison';
+          return `<button class="pp-dip pp-air-raid" data-raid-wing="${w.id}" data-raid-dest="${r.id}"
+            data-tt="Bomb ${esc(r.name)} — ${esc(what)}.${r.men ? ' Kills ~3% (40–350 men) and shakes morale.' : r.siege ? ' +4 siege progress.' : ' Cracks the garrison by a tenth.'}\nEnemy air cover may drive the raid off — or down it.">✈ ${esc(r.name)}</button>`;
+        }).join('');
+      }
+      return `<div class="pp-air-wing">${icon('plane', 'icon-row')} <b>${esc(w.name)}</b>${raids}${moves
+        || (w.raidCd > 0 || (w.raids || []).length ? '' : ' <span class="peace-dim">(no other field to fly to)</span>')}</div>`;
     }).join('');
     setHtml(refs.airWings, rows || '<div class="peace-dim">The hangars stand empty.</div>');
     setHtml(refs.recruitWing, `${icon('plane')} Raise Air Wing — ${info.cost} ${icon('coins', 'icon-xs')}`);

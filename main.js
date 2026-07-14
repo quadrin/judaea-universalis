@@ -58,6 +58,14 @@ async function boot() {
   let colorsDirty = true;
 
   bus.on('mapmode', (m) => { mapmode = m; colorsDirty = true; });
+  // Bombing raids play out on the overlay (SPEC §30), in the raider's color.
+  bus.on('airRaid', (p) => {
+    if (!p || !ctx) return;
+    try {
+      const t = ctx.game.tags[p.tag];
+      overlay.addRaidFx(p.from, p.prov, t && t.color);
+    } catch (e) { /* the theater is optional */ }
+  });
   ['month', 'provinceOwner', 'provinceController', 'siegeEnd', 'war', 'eventResolved', 'provinceDev', 'peaceHighlight']
     .forEach((ev) => bus.on(ev, () => { colorsDirty = true; }));
 

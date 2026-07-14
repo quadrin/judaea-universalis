@@ -350,10 +350,11 @@ export const DEFINES = {
   // your own, cover friendly battles within `rangeHops`, and are destroyed
   // on the ground if their field falls.
   AIR: {
-    wingCost: 40,          // talents to raise one air wing
+    wingCost: 40,          // talents to raise one air wing (crews included)
     wingUpkeep: 1,         // talents/month per wing
     wingsPerField: 2,      // hangar space per airfield
-    rangeHops: 2,          // provinces of combat cover from the base
+    rangeHops: 2,          // provinces of combat cover / raid reach from the base
+    raidCdDays: 12,        // days to rearm between bombing raids
   },
 
   BASE: {

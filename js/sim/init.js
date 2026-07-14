@@ -12,7 +12,7 @@ import {
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
-  hasAirfield, airWingsAt, raiseAirWing, rebaseAirWing,
+  hasAirfield, airWingsAt, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -817,7 +817,12 @@ export function gameActions(ctx) {
         const AIR = ctx.DEFINES.AIR || {};
         const cap = num(AIR.wingsPerField, 2);
         const wings = airWingsAt(ctx, provId).filter((w) => w.tag === g.playerTag)
-          .map((w) => ({ id: w.id, name: w.name }));
+          .map((w) => ({
+            id: w.id, name: w.name,
+            raidCd: w.raidCd | 0,
+            raids: raidTargets(ctx, w).slice(0, 3)
+              .map((r) => ({ id: r.id, name: r.name, men: r.men, siege: r.siege, garrison: r.garrison })),
+          }));
         const targets = [];
         for (let i = 1; i < g.provinces.length; i++) {
           const q = g.provinces[i];
@@ -851,6 +856,21 @@ export function gameActions(ctx) {
         const p = ctx.byId(provId | 0);
         say('Wing rebased', 'The squadron flies to ' + ((p && p.name) || 'its new field') + '.', 'info');
       } catch (e) { warnOnce('moveWing', 'moveAirWing failed', e); }
+    },
+    raidProvince(wingId, provId) {
+      try {
+        const res = airRaidCore(ctx, g.playerTag, wingId | 0, provId | 0);
+        if (!res.ok) { say('No raid', 'The wing stays grounded: ' + res.why + '.', 'bad'); return; }
+        if (res.result === 'lost') {
+          say('Wing shot down', 'Enemy fighters met the raid over ' + res.provName + ' — the squadron is lost.', 'bad');
+        } else if (res.result === 'repelled') {
+          say('Raid driven off', 'Enemy fighters over ' + res.provName + ' turned the raid back before its bombs fell.', 'info');
+        } else {
+          say('Bombs away', 'The raid strikes ' + res.provName
+            + (res.killed ? ' — ' + res.killed + ' enemy men lost' : '')
+            + '. The wing returns to rearm.', 'good');
+        }
+      } catch (e) { warnOnce('raidProv', 'raidProvince failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------

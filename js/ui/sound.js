@@ -18,7 +18,7 @@ export function initSound(bus, getGame) {
 
   let lastLoudAt = 0;                    // timestamp of last non-click cue
   const cooldowns = Object.create(null); // category -> last play time
-  const COOLDOWN_MS = { click: 150, battle: 1200, siege: 1200, notify: 600, event: 500, war: 1500, fanfare: 400, save: 400, tick: 90 };
+  const COOLDOWN_MS = { click: 150, battle: 1200, siege: 1200, notify: 600, event: 500, war: 1500, fanfare: 400, save: 400, tick: 90, raid: 2000 };
   const warned = Object.create(null);
   const battleTags = new Map();          // provId -> Set of participant tags
 
@@ -279,6 +279,18 @@ export function initSound(bus, getGame) {
       const grains = [[0, 0.07], [0.09, 0.05], [0.17, 0.1], [0.3, 0.06]];
       for (const [off, dur] of grains) {
         noise({ t: t0 + off, dur, attack: 0.01, gain: 0.12, type: 'bandpass', freq: 3400 + off * 2000, q: 2.2 });
+      }
+    },
+    airRaid() {
+      // engines droning in, a falling whistle, three bombs walking the target
+      const t = ac.currentTime;
+      tone({ t, freq: 88, type: 'sawtooth', attack: 0.18, dur: 1.25, gain: 0.10, detune: 9, lpf: 420 });
+      tone({ t, freq: 66, type: 'sawtooth', attack: 0.18, dur: 1.25, gain: 0.08, detune: 7, lpf: 360 });
+      tone({ t: t + 0.5, freq: 1400, glideTo: 260, glideDur: 0.55, type: 'sine', attack: 0.03, dur: 0.6, gain: 0.06 });
+      for (let i = 0; i < 3; i++) {
+        const bt = t + 0.95 + i * 0.24;
+        noise({ t: bt, dur: 0.4, attack: 0.004, gain: 0.3, type: 'lowpass', freq: 900, freqEnd: 130, q: 0.7, send: 0.5 });
+        tone({ t: bt, freq: 72, glideTo: 34, glideDur: 0.3, type: 'sine', attack: 0.004, dur: 0.42, gain: 0.26 });
       }
     },
   };
@@ -628,6 +640,13 @@ export function initSound(bus, getGame) {
   on('pause', 'tick', () => { sfx.woodTick(); });
   on('speed', 'tick', () => { sfx.woodTick(); });
   on('tagSwitched', 'fanfare', () => { sfx.fanfareWin(); }); // a new banner rises (SPEC §25)
+
+  // Bombing raids (SPEC §30): heard when our wings fly or our ground is hit.
+  on('airRaid', 'raid', (p) => {
+    const me = playerTag();
+    if (!me || !p) return;
+    if (p.tag === me || p.victimTag === me) sfx.airRaid();
+  });
 
   // very soft tick for any <button> click, unless a louder cue just played
   window.addEventListener('click', (e) => {
