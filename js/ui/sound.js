@@ -1,6 +1,8 @@
-// js/ui/sound.js — synthesized Web Audio SFX for Judaea Universalis.
-// Zero assets: oscillators, filtered noise, envelopes, a light feedback-delay reverb.
-// All playback is a silent no-op until the first user gesture creates the AudioContext.
+// js/ui/sound.js — synthesized Web Audio SFX + generative music (SPEC §27).
+// Zero assets: oscillators, filtered noise, envelopes, a light feedback-delay
+// reverb — and a procedural ensemble (drone, lyre, ney, drums) that improvises
+// the era's mood. All playback is a silent no-op until the first user gesture
+// creates the AudioContext.
 
 export function initSound(bus, getGame) {
   // ------------------------------------------------------------- state
@@ -10,7 +12,9 @@ export function initSound(bus, getGame) {
   let verbIn = null;        // reverb send input
   let noiseBuf = null;      // shared white-noise buffer
   let muted = false;
+  let musicOn = true;
   try { muted = localStorage.getItem('ju_muted') === '1'; } catch (e) { /* ignore */ }
+  try { musicOn = localStorage.getItem('ju_music') !== '0'; } catch (e) { /* ignore */ }
 
   let lastLoudAt = 0;                    // timestamp of last non-click cue
   const cooldowns = Object.create(null); // category -> last play time
@@ -74,6 +78,7 @@ export function initSound(bus, getGame) {
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    try { startMusic(); } catch (e) { warnOnce('music-start', e); }
     return true;
   }
 
@@ -278,6 +283,249 @@ export function initSound(bus, getGame) {
     },
   };
 
+  // ------------------------------------------------------------- music (SPEC §27)
+  // A small procedural ensemble that improvises the era's mood. Three layers
+  // over a drone: lyre plucks on a random-walk melody, occasional ney phrases,
+  // and drums that only wake in wartime. Peace speaks Dorian; war and battle
+  // speak Freygish (the Ahava Rabbah mode). 1948 swaps the frame drum for a
+  // military snare; the 614 age thickens the drone. Everything crossfades.
+  const MODES = {
+    dorian: [0, 2, 3, 5, 7, 9, 10],
+    freygish: [0, 1, 4, 5, 7, 8, 10],
+  };
+  const MUSIC_LVL = 0.55;   // into master (which already sits at ~0.22)
+  const mus = {
+    started: false,
+    gain: null, droneGain: null, droneFilter: null, droneOscs: [],
+    droneThick: null,       // the third voice (614+): its own gain
+    timer: null,
+    nextBeat: 0, beat: 0,
+    deg: 7,                 // melodic random-walk degree (D5-ish register)
+    phraseLeft: 0, phraseDeg: 10,
+    mood: 'peace', era: 'antique',
+    notes: 0,               // debug counter (tests read this)
+  };
+
+  function noteHz(rootHz, mode, degree) {
+    const scale = MODES[mode] || MODES.dorian;
+    const oct = Math.floor(degree / scale.length);
+    const semi = scale[((degree % scale.length) + scale.length) % scale.length];
+    return rootHz * Math.pow(2, oct + semi / 12);
+  }
+
+  function pollMood() {
+    let mood = 'peace';
+    let era = 'antique';
+    try {
+      const g = getGame ? getGame() : null;
+      if (g) {
+        era = g.date.y >= 1900 ? 'modern' : g.date.y >= 500 ? 'medieval' : 'antique';
+        const me = g.playerTag;
+        const t = g.tags && g.tags[me];
+        const inBattle = (g.battles || []).some((b) =>
+          [].concat(b.atk || [], b.def || []).some((id) => {
+            const a = g.armies && g.armies[id];
+            return a && a.tag === me;
+          }));
+        if (inBattle) mood = 'battle';
+        else if (t && (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) mood = 'war';
+      }
+    } catch (e) { warnOnce('mood', e); }
+    mus.mood = mood;
+    mus.era = era;
+  }
+
+  function musTone(opts) {
+    // like tone(), but into the music bus
+    const t0 = opts.t !== undefined ? opts.t : ac.currentTime;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(opts.gain || 0.1, t0 + (opts.attack || 0.005));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (opts.attack || 0.005) + (opts.dur || 0.8));
+    let out = g;
+    if (opts.lpf) {
+      const f = ac.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = opts.lpf;
+      g.connect(f);
+      out = f;
+    }
+    out.connect(mus.gain);
+    if (opts.send) {
+      const s = ac.createGain();
+      s.gain.value = opts.send;
+      out.connect(s);
+      s.connect(verbIn);
+    }
+    const o = ac.createOscillator();
+    o.type = opts.type || 'triangle';
+    o.frequency.setValueAtTime(opts.freq, t0);
+    if (opts.glideTo) o.frequency.exponentialRampToValueAtTime(Math.max(1, opts.glideTo), t0 + (opts.glideDur || opts.dur || 0.4));
+    if (opts.detune) o.detune.value = opts.detune;
+    o.connect(g);
+    o.start(t0);
+    o.stop(t0 + (opts.attack || 0.005) + (opts.dur || 0.8) + 0.1);
+    mus.notes++;
+  }
+
+  function musNoise(opts) {
+    const t0 = opts.t !== undefined ? opts.t : ac.currentTime;
+    const src = ac.createBufferSource();
+    src.buffer = noiseBuf;
+    src.loop = true;
+    const f = ac.createBiquadFilter();
+    f.type = opts.type || 'bandpass';
+    f.frequency.value = opts.freq || 2000;
+    f.Q.value = opts.q !== undefined ? opts.q : 1;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(opts.gain || 0.05, t0 + (opts.attack || 0.004));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (opts.attack || 0.004) + (opts.dur || 0.08));
+    src.connect(f);
+    f.connect(g);
+    g.connect(mus.gain);
+    src.start(t0);
+    src.stop(t0 + (opts.attack || 0.004) + (opts.dur || 0.08) + 0.1);
+  }
+
+  function startMusic() {
+    if (mus.started || !ac) return;
+    mus.started = true;
+    mus.gain = ac.createGain();
+    mus.gain.gain.value = musicOn ? MUSIC_LVL : 0;
+    mus.gain.connect(master);
+
+    // The drone: an open fifth (D2 + A2) through a slow-breathing lowpass.
+    mus.droneGain = ac.createGain();
+    mus.droneGain.gain.value = 0.05;
+    mus.droneFilter = ac.createBiquadFilter();
+    mus.droneFilter.type = 'lowpass';
+    mus.droneFilter.frequency.value = 420;
+    mus.droneFilter.Q.value = 0.6;
+    mus.droneFilter.connect(mus.droneGain);
+    mus.droneGain.connect(mus.gain);
+    for (const [hz, level] of [[73.42, 1], [110, 0.7]]) {
+      const o = ac.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = hz;
+      o.detune.value = (Math.random() * 8) - 4;
+      const og = ac.createGain();
+      og.gain.value = level * 0.5;
+      o.connect(og);
+      og.connect(mus.droneFilter);
+      o.start();
+      mus.droneOscs.push(o);
+    }
+    // The third voice (F3): silent in antiquity, awake from the 614 age on.
+    {
+      const o = ac.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = 87.31; // F2 — the fifth becomes a quiet minor triad
+      const og = ac.createGain();
+      og.gain.value = 0;
+      o.connect(og);
+      og.connect(mus.droneFilter);
+      o.start();
+      mus.droneThick = og;
+      mus.droneOscs.push(o);
+    }
+    // A very slow LFO breathes the drone's filter.
+    const lfo = ac.createOscillator();
+    lfo.frequency.value = 0.045;
+    const lfoGain = ac.createGain();
+    lfoGain.gain.value = 120;
+    lfo.connect(lfoGain);
+    lfoGain.connect(mus.droneFilter.frequency);
+    lfo.start();
+
+    mus.nextBeat = ac.currentTime + 0.2;
+    mus.timer = setInterval(scheduleAhead, 200);
+  }
+
+  function scheduleAhead() {
+    if (!ac || !musicOn || muted) return;
+    try {
+      pollMood();
+      // after a mute/toggle, resume from now — never burst-schedule the gap
+      if (mus.nextBeat < ac.currentTime) mus.nextBeat = ac.currentTime + 0.1;
+      const horizon = ac.currentTime + 0.6;
+      while (mus.nextBeat < horizon) {
+        scheduleBeat(mus.nextBeat, mus.beat++);
+        const beatDur = mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.55 : 0.75;
+        mus.nextBeat += beatDur;
+      }
+    } catch (e) { warnOnce('sched', e); }
+  }
+
+  function scheduleBeat(t, i) {
+    const mood = mus.mood;
+    const mode = mood === 'peace' ? 'dorian' : 'freygish';
+    // the piece breathes: a slow wave leaves near-silent bars every so often
+    const breath = 0.55 + 0.45 * Math.sin(i / 21);
+
+    // drone follows the mood
+    const droneTarget = (mood === 'battle' ? 0.085 : mood === 'war' ? 0.07 : 0.05) * breath;
+    mus.droneGain.gain.setTargetAtTime(droneTarget, t, 1.2);
+    mus.droneFilter.frequency.setTargetAtTime(mood === 'peace' ? 430 : 300, t, 1.5);
+    mus.droneThick.gain.setTargetAtTime(mus.era !== 'antique' ? 0.28 : 0, t, 2);
+
+    // the lyre: a random-walk melody, denser in wartime
+    const pluckChance = (mood === 'peace' ? 0.42 : 0.58) * breath;
+    if (Math.random() < pluckChance) {
+      mus.deg += [-2, -1, -1, 0, 1, 1, 2][(Math.random() * 7) | 0];
+      if (mus.deg < 3) mus.deg = 3 + ((Math.random() * 3) | 0);
+      if (mus.deg > 13) mus.deg = 13 - ((Math.random() * 3) | 0);
+      const hz = noteHz(146.83, mode, mus.deg); // rooted on D3
+      musTone({ t, freq: hz, type: 'triangle', attack: 0.004, dur: 1.15, gain: 0.085, lpf: 2600, send: 0.5, detune: 3 });
+      musTone({ t, freq: hz / 2, type: 'sine', attack: 0.004, dur: 0.9, gain: 0.04, send: 0.4 });
+      if (Math.random() < 0.22) { // a double-stop on the open fifth below
+        musTone({ t: t + 0.02, freq: noteHz(146.83, mode, mus.deg - 4), type: 'triangle', attack: 0.004, dur: 0.9, gain: 0.045, lpf: 2200, send: 0.5 });
+      }
+    }
+
+    // the ney: an occasional wandering phrase, one note per beat
+    if (mus.phraseLeft > 0) {
+      mus.phraseLeft--;
+      const from = noteHz(293.66, mode, mus.phraseDeg);
+      mus.phraseDeg += [-1, 0, 1, 1, 2][(Math.random() * 5) | 0] * (Math.random() < 0.3 ? -1 : 1);
+      if (mus.phraseDeg < 5) mus.phraseDeg = 5;
+      if (mus.phraseDeg > 12) mus.phraseDeg = 12;
+      const to = noteHz(293.66, mode, mus.phraseDeg);
+      musTone({ t, freq: from, glideTo: to, glideDur: 0.3, type: 'sine', attack: 0.09, dur: 0.62, gain: 0.055, send: 0.6 });
+      musNoise({ t, type: 'bandpass', freq: to * 2, q: 2.5, attack: 0.06, dur: 0.3, gain: 0.008 });
+    } else if (Math.random() < 0.035 * breath) {
+      mus.phraseLeft = 3 + ((Math.random() * 4) | 0);
+      mus.phraseDeg = 7 + ((Math.random() * 4) | 0);
+    }
+
+    // drums wake in wartime: a frame-drum heartbeat, or a 1948 snare kit
+    if (mood !== 'peace') {
+      const bar = i % 4;
+      if (bar === 0) {
+        musTone({ t, freq: 105, glideTo: 42, glideDur: 0.2, type: 'sine', attack: 0.004, dur: mus.era === 'modern' ? 0.2 : 0.32, gain: 0.24 });
+      } else if (bar === 2) {
+        musTone({ t, freq: 95, glideTo: 44, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: mood === 'battle' ? 0.2 : 0.12 });
+      }
+      if (mus.era === 'modern') {
+        if (bar === 1 || bar === 3 || mood === 'battle') {
+          musNoise({ t, type: 'bandpass', freq: 1800, q: 0.9, attack: 0.002, dur: 0.11, gain: bar === 3 ? 0.075 : 0.045 });
+        }
+      } else if (mood === 'battle' && (bar === 1 || bar === 3)) {
+        musNoise({ t, type: 'bandpass', freq: 3200, q: 3, attack: 0.002, dur: 0.05, gain: 0.035 }); // rim tick
+      }
+    }
+  }
+
+  function setMusicOn(v) {
+    musicOn = !!v;
+    try { localStorage.setItem('ju_music', musicOn ? '1' : '0'); } catch (e) { /* ignore */ }
+    if (mus.gain && ac) {
+      try { mus.gain.gain.setTargetAtTime(musicOn ? MUSIC_LVL : 0, ac.currentTime, 0.4); }
+      catch (e) { mus.gain.gain.value = musicOn ? MUSIC_LVL : 0; }
+    }
+    if (musicBtn) applyMusicBtn();
+  }
+
   // named access for debugging / other modules
   const byName = {
     click: () => sfx.uiTick(),
@@ -379,6 +627,7 @@ export function initSound(bus, getGame) {
   on('saveRequest', 'save', () => { sfx.quillScratch(); });
   on('pause', 'tick', () => { sfx.woodTick(); });
   on('speed', 'tick', () => { sfx.woodTick(); });
+  on('tagSwitched', 'fanfare', () => { sfx.fanfareWin(); }); // a new banner rises (SPEC §25)
 
   // very soft tick for any <button> click, unless a louder cue just played
   window.addEventListener('click', (e) => {
@@ -404,7 +653,20 @@ export function initSound(bus, getGame) {
     '<path d="M11 5 6.5 9H3v6h3.5L11 19V5z" fill="currentColor" stroke="none"/>' +
     '<path d="M15.5 9.5 20 14"/><path d="M20 9.5 15.5 14"/></svg>';
 
+  const SVG_NOTE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M9 18V6l10-2v11.5"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor" stroke="none"/>' +
+    '<circle cx="16.5" cy="15.5" r="2.5" fill="currentColor" stroke="none"/></svg>';
+
   let btn = null;
+  let musicBtn = null;
+  function applyMusicBtn() {
+    if (!musicBtn) return;
+    musicBtn.innerHTML = SVG_NOTE;
+    musicBtn.title = musicOn ? 'Music on — click to silence the lyre' : 'Music off — click for the lyre';
+    musicBtn.setAttribute('aria-label', musicBtn.title);
+    musicBtn.classList.toggle('ju-sound-muted', !musicOn);
+  }
   function applyMute() {
     if (muteGain) {
       try { muteGain.gain.setTargetAtTime(muted ? 0 : 1, ac.currentTime, 0.01); }
@@ -424,15 +686,16 @@ export function initSound(bus, getGame) {
     try {
       const style = document.createElement('style');
       style.textContent =
-        '#ju-sound-btn{position:fixed;left:12px;bottom:12px;z-index:9999;width:34px;height:34px;' +
+        '#ju-sound-btn,#ju-music-btn{position:fixed;left:12px;z-index:9999;width:34px;height:34px;' +
         'display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;' +
         'pointer-events:auto;color:#c9a227;border:1px solid #c9a227;border-radius:6px;' +
         'background:linear-gradient(180deg,#2a2118,#1d1710);' +
         'box-shadow:0 2px 6px rgba(0,0,0,.55),inset 0 1px 0 rgba(201,162,39,.18);}' +
-        '#ju-sound-btn:hover{color:#e8dcc0;border-color:#e0c25a;' +
+        '#ju-sound-btn{bottom:12px;}#ju-music-btn{bottom:52px;}' +
+        '#ju-sound-btn:hover,#ju-music-btn:hover{color:#e8dcc0;border-color:#e0c25a;' +
         'box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 8px rgba(201,162,39,.35),inset 0 1px 0 rgba(201,162,39,.25);}' +
-        '#ju-sound-btn.ju-sound-muted{color:#7a6a45;border-color:#6e5c33;}' +
-        '#ju-sound-btn svg{display:block;}';
+        '#ju-sound-btn.ju-sound-muted,#ju-music-btn.ju-sound-muted{color:#7a6a45;border-color:#6e5c33;}' +
+        '#ju-sound-btn svg,#ju-music-btn svg{display:block;}';
       document.head.appendChild(style);
 
       btn = document.createElement('button');
@@ -446,6 +709,17 @@ export function initSound(bus, getGame) {
       const root = document.getElementById('ui-root') || document.body;
       root.appendChild(btn);
       applyMute();
+
+      musicBtn = document.createElement('button');
+      musicBtn.id = 'ju-music-btn';
+      musicBtn.type = 'button';
+      musicBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        try { ensureCtx(); } catch (err) { warnOnce('musicBtn', err); }
+        setMusicOn(!musicOn);
+      });
+      root.appendChild(musicBtn);
+      applyMusicBtn();
     } catch (e) { warnOnce('button', e); }
   }
   if (document.body) buildButton();
@@ -456,6 +730,12 @@ export function initSound(bus, getGame) {
     play,
     mute() { setMuted(true); },
     unmute() { setMuted(false); },
+    music: {
+      on() { setMusicOn(true); },
+      off() { setMusicOn(false); },
+      toggle() { setMusicOn(!musicOn); },
+      state() { return { on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, notes: mus.notes }; },
+    },
   };
 
   return window._sound;

@@ -119,6 +119,13 @@ python3 -m http.server 8613 --directory .
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls
   with artillery, while Bar Kokhba's war stays hill forts and patience.
+- The sound of the age, synthesized from nothing (no audio files): parchment
+  and chimes for events, clashing steel for battles, horns for war and bells
+  for good news — under a generative score that improvises on a breathing
+  drone: a lyre and a ney in Dorian while you're at peace, Freygish with
+  frame drums when war comes (a military snare in 1948), faster and harder
+  as your armies fight. Speaker and note buttons (bottom-left) mute the lot
+  or just the music; both choices persist.
 
 ## Architecture
 

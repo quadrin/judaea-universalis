@@ -1159,3 +1159,44 @@ renderer.render → overlay.draw → labels.update.
   coin (OSR), the royal tiara of the converted house (ADI), a merchant hull
   on the Gulf swell (CHX), and the phylarchs' cross over a lance pennon (GHA).
   The `.fchip-abbr` text fallback no longer appears anywhere in play.
+
+## 27. v2.7: the sound of the age — synthesized SFX & a generative score
+
+All audio lives in `js/ui/sound.js` (`initSound(bus, getGame)`, called from
+main.js) and is **synthesized from nothing** — oscillators, filtered white
+noise, envelopes, and a feedback-delay reverb bus. Zero assets, zero network
+fetches, and the sim never knows sound exists (pure bus listener; the module
+is UI-layer and headless tests never load it). Everything is a silent no-op
+until the first user gesture (`pointerdown`/`keydown`, once, capture) creates
+the lazy `AudioContext`.
+
+- **SFX palette** (each a small recipe over `tone()`/`noise()` primitives):
+  ui ticks, a parchment-whoosh + chime for event cards, a metallic clash for
+  battles joined, rising/falling three-note motifs for battles won/lost,
+  siege drums, a horn swell for war declared and a cadence for peace, a bell
+  for good fortune, a low thud for bad, a fanfare on victory or a formable
+  proclaimed (`tagSwitched`), a lament on elimination, and a quill scratch on
+  save. Per-category cooldowns (`COOLDOWN_MS`) keep dense months from
+  stuttering; cues about foreign wars are filtered to the player's own.
+- **The generative score**: a procedural ensemble that improvises the era's
+  mood, sharing the SFX context and master bus. The foundation is a drone —
+  an open fifth (D2+A2 saws, slightly detuned) breathing through a slow-LFO
+  lowpass, with a third voice (F2) that wakes outside antiquity to darken the
+  fifth into a minor triad. Above it a **lyre** plucks a random-walk melody
+  (triangle + sine sub-octave, occasional open-fifth double-stops) and a
+  **ney** wanders in occasional glided phrases with a breath-noise halo. A
+  200 ms lookahead scheduler (`scheduleAhead`, 0.6 s horizon) beats at 0.75 s
+  in peace, 0.55 s at war, 0.44 s in battle, and a slow `sin(i/21)` "breath"
+  wave leaves near-silent bars so the score never wallpapers.
+- **The mood machine** (`pollMood`, read every scheduler tick): *peace* plays
+  Dorian; *war* (any living enemy) and *battle* (player army in `g.battles`)
+  switch to **Freygish** (Ahava Rabbah) and wake the drums — a frame-drum
+  heartbeat in the ancient eras, rim ticks in battle, and in the modern era
+  (y ≥ 1900) a military snare on the off-bars. Mode, tempo, drone level, and
+  filter all crossfade; nothing hard-cuts.
+- **Controls & persistence**: two fixed buttons bottom-left — the speaker
+  (`#ju-sound-btn`, `ju_muted`) mutes everything; the beamed-note
+  (`#ju-music-btn`, `ju_music`) silences only the score (music gain ramps
+  over 0.4 s; the scheduler stops scheduling and clamps `nextBeat` on resume
+  so re-enabling never burst-schedules the silent gap). `window._sound.music`
+  exposes `{on/off/toggle/state()}` for tests and debugging.

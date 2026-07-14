@@ -38,9 +38,11 @@ armistice freezes the lines on schedule.
 
 Since v2.4 (development growth) the small-token realms breathe a little
 differently: PAR's two-province western outpost in 167 BCE hovers a hair
-below break-even (accepted, same class as ARM), while ARI (67 BCE) and
-ROM-in-40-BCE dropped OFF the bleeding list — growing towns pay for the
-armies that once bankrupted them.
+below break-even (accepted, same class as ARM), and ROM-in-40-BCE dropped
+OFF the bleeding list — growing towns pay for the armies that once
+bankrupted them. ARI (67 BCE) drifts on and off the BLEEDING line from
+version to version as sim tuning shifts (the runs themselves are seeded);
+it is the documented brothers'-stalemate case either way.
 
 ## geom-snapshot.json
 
