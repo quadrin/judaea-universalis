@@ -75,6 +75,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-court" data-ref="court"></div>
       </div>
       <div class="pp-build">
+        <div class="pp-build-title">Technology</div>
+        <div class="np-reforms" data-ref="tech"></div>
+      </div>
+      <div class="pp-build">
         <div class="pp-build-title">Reforms</div>
         <div class="np-reforms" data-ref="reforms"></div>
       </div>`;
@@ -111,6 +115,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (idea) {
         if (idea.classList.contains('disabled') || !actions || typeof actions.buyIdea !== 'function') return;
         try { actions.buyIdea(idea.dataset.idea); } catch (err) { warnOnce('np-idea', err); }
+        refresh();
+        return;
+      }
+      const tech = e.target.closest('[data-tech]');
+      if (tech) {
+        if (tech.classList.contains('disabled') || !actions || typeof actions.buyTech !== 'function') return;
+        try { actions.buyTech(tech.dataset.tech); } catch (err) { warnOnce('np-tech', err); }
         refresh();
         return;
       }
@@ -217,6 +228,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshMissions();
     refreshDiplomacy(g, t);
     refreshDecisions();
+    refreshTech();
     refreshReforms();
     refreshCourt();
   }
@@ -359,6 +371,32 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           data-tt="Hire for ${c.cost} talents; wage ${c.wage} talents a month; +${c.skill} ${esc(label[k].toLowerCase())} points monthly.">${esc(c.name)} (${c.skill})</button>`).join('');
       return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <i>empty seat</i></span>${cands}</div>`;
     }).join('');
+  }
+
+  // Technology ladders (SPEC §22): level, next price (with the ahead-of-age
+  // markup), and the pattern of soldier the military ladder has unlocked.
+  function refreshTech() {
+    if (!refs.tech) return;
+    let info = null;
+    if (actions && typeof actions.getTech === 'function') {
+      try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
+    }
+    if (!info) { refs.tech.innerHTML = ''; return; }
+    const rows = info.rows.map((r) => {
+      const tt = `${r.desc}\nThe age expects level ${r.eraBase}.` + (r.whyNot ? '\n' + r.whyNot : '');
+      return `
+        <div class="np-reform">
+          <div class="np-reform-head"><b>${esc(r.name)}</b><span class="np-tech-lvl">${r.level}</span></div>
+          <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(tt)}">
+            Advance to ${r.level + 1}${r.ahead ? ' ⚠' : ''} <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>
+          </button>
+        </div>`;
+    }).join('');
+    const u = info.unit;
+    const unitLine = u ? `<div class="np-tech-unit" data-tt="${esc('The pattern our armies are raised to. '
+      + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.'))}">`
+      + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
+    refs.tech.innerHTML = rows + unitLine;
   }
 
   // Three reform trees: tier pips, the next reform's name and price, one

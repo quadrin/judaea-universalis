@@ -991,3 +991,49 @@ renderer.render → overlay.draw → labels.update.
   snapshots carry the book for free, and guests read it via the local `get*` query
   path. Toast filtering: events among AI courts arrive as quiet "News from abroad"
   info toasts; only the player's own wars sound the "War!" alarm.
+
+## 22. v2.2: the long arc — technology, unit patterns, and three far eras
+
+- **Technology ladders** (`js/data/tech.js`, actions `getTech`/`buyTech`): three
+  EU4-style ladders bought level by level with the matching monarch point —
+  government (+3% income, −0.03 unrest per level), influence (+5% trade, +4%
+  fleet strength, +0.01 legitimacy/mo per level), military (+4% army strength,
+  +2% manpower, +1 siege bonus per 6 levels). Cost 250+15·L points; the AGE
+  expects `bookmark.techBase` (+1 per 25 game years) — level era+1 is a free
+  grace level, each level beyond costs +50%/level (the ahead-of-time penalty).
+  Effects fold into `tag.ideas` inside `applyReformsToTag` (base ideas + reform
+  tiers + tech), so every `resolveTagMult/Add` consumer works unchanged; new
+  consumers: `tradeMult` (tradeIncome), `navalMult` (broadsides), `milPowerMult`
+  (battle). The AI buys the cheapest affordable level monthly but never races
+  the age. Realm-panel Technology block; ledger Tech column; pre-tech saves
+  join the age at 3.
+- **Unit patterns & modernization** (`UNIT_GENS`, `army.gen`, `modernizeArmy`):
+  six pattern generations — Tribal Levies → Drilled Spearmen (mil 4) →
+  Professional Legions (6) → Thematic Regulars (10) → Musket Battalions (14) →
+  Rifle Brigades / Armored Corps (19) — each a battle-strength mult
+  (1.0→2.8). Armies remember the pattern they were raised to; splits inherit
+  it, merges blend by men, Modernize re-equips for 6t per regiment per
+  generation crossed (outliner button; the AI re-equips its cheapest stale
+  army monthly). In `sideStats`, effective discipline = `disciplineOf ×
+  milPowerMult × genMult(a.gen)` — tech is the single biggest lever on the
+  field, exactly as ordered.
+- **Era plumbing**: bookmarks may now carry `techBase`, `techTweaks`
+  (per-tag level nudges — Rome's legions run mar+2 from 67 BCE on),
+  `religions` and `cultures` (per-province overlays applied in initGame — a
+  Christian 614, an Islamic 1948), and `helpers.endWar(ctx, a, b, winnersKey)`
+  for scripted armistices (Hadrian's withdrawal, Kavad's peace, Rhodes —
+  'def' freezes the lines uti possidetis where the defenders' side stands).
+- **115 CE, The Kitos War** (`bookmark_115ce.js`): the diaspora rises behind
+  Trajan's Parthian campaign. Two simultaneous wars (Trajan vs Osroes;
+  the Rising, noNegotiation until Hadrian). Playable JUD (Very Hard)/ROM.
+- **614 CE, The Persian Gambit** (`bookmark_614ce.js`): new tags BYZ/SAS/GHA,
+  christianity; the last great war of antiquity with the Jewish revolt riding
+  the Persian advance. Jerusalem falls by event; the Betrayal of 617 is a real
+  choice (submit, or defy and fight both empires); Heraclius' counteroffensive,
+  Nineveh, and the fall of the House of Sasan close the arc. Playable JUD/BYZ.
+- **1948, The War of Independence** (`bookmark_1948.js`): tags ISR/EGY/JOR/SYR/
+  LEB/IRQ/SAU/TUR/IRN/UK, islam, modern culture groups and name pools, the map
+  in its ancient names (Joppa=Tel Aviv, Emmaus=Latrun, Philadelphia=Amman).
+  Tech 19: Rifle Brigades and Armored Corps. The coalition invades on day one;
+  the truces, the Altalena, the Burma Road, Bernadotte, Yoav/Hiram/Horev, and
+  the Rhodes armistice that ends the war on the lines held. Playable ISR/JOR.

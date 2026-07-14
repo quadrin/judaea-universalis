@@ -41,6 +41,11 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       if (!ma.classList.contains('disabled')) runArmyAction('mergeAllInto', Number(ma.dataset.mergeall));
       return;
     }
+    const mz = e.target.closest('[data-modernize]');
+    if (mz) {
+      if (!mz.classList.contains('disabled')) runArmyAction('modernizeArmy', Number(mz.dataset.modernize));
+      return;
+    }
     const pc = e.target.closest('[data-peace]');
     if (pc) {
       if (onPeaceClick) onPeaceClick(pc.dataset.peace);
@@ -98,10 +103,14 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     const hireTT = aa.canHire
       ? `Hire a general to lead this army (${hireCost} martial points)`
       : (aa.whyHire || 'No general can be hired');
+    const modTT = aa.canModernize
+      ? `Modernize: re-equip ${aa.genName || 'the old pattern'} as ${aa.newGenName || 'the new pattern'} (${aa.modernizeCost} talents)`
+      : (aa.genName ? `${aa.genName} — ` + (aa.whyModernize || 'nothing newer to re-equip to') : (aa.whyModernize || ''));
     return `<span class="ol-acts">` +
       `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
       `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
       `<button class="ol-act" data-mergeall="${a.id}" data-tt="Merge every other army of ours in this province into this one">${icon('shield')}</button>` +
+      `<button class="ol-act${aa.canModernize ? '' : ' disabled'}" data-modernize="${a.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>` +
       `</span>`;
   }
 

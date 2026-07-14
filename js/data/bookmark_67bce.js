@@ -83,6 +83,10 @@ export const BOOKMARK_67 = {
   id: '67bce',
   name: 'The Judaean Civil War',
   startDate: { y: -67, m: 4, d: 1 },
+  // Technology of the age (SPEC §22): Pompey's Rome fields the Marian legion,
+  // two patterns ahead of the quarreling Levant.
+  techBase: 4,
+  techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'Queen Salome Alexandra is dead, and her sons cannot both be king. Hyrcanus the '
     + 'elder has the high priesthood, the law of succession, and no spine; Aristobulus the '

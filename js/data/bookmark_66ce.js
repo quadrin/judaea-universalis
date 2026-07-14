@@ -76,6 +76,10 @@ export const BOOKMARK_66 = {
   id: '66ce',
   name: 'The Great Revolt',
   startDate: { y: 66, m: 6, d: 1 },
+  // Technology of the age (SPEC §22): imperial Rome musters Professional
+  // Legions; Judaea's host is drilled but a pattern behind.
+  techBase: 5,
+  techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'The procurator Gessius Florus has taken seventeen talents from the Temple treasury, '
     + 'and Jerusalem has answered with stones, then with steel. In the Temple, the captain '

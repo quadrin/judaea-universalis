@@ -1,0 +1,369 @@
+// Judaea Universalis — event chain: The Persian Gambit, 614–629 CE.
+// Content package. Zero imports; all effects run through ctx.helpers at runtime.
+// Source spine: the Chronicon Paschale; Sebeos; Antiochus Strategos on the fall
+// of Jerusalem; Theophanes on the counteroffensive; the piyyutim of the brief
+// Return. Dates map to the real chronology (30-day game months).
+
+const _warned = new Set();
+function warnOnce(key, e) {
+  if (_warned.has(key)) return;
+  _warned.add(key);
+  console.warn('[events_614ce] ' + key, e || '');
+}
+
+function guard(key, fn) {
+  return function (ctx) {
+    try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
+  };
+}
+
+function safeTrigger(key, fn) {
+  return function (ctx) {
+    try { return !!fn(ctx); } catch (e) { warnOnce('trigger:' + key, e); return false; }
+  };
+}
+
+function dateGE(ctx, y, m) {
+  const d = ctx.game.date;
+  return d.y > y || (d.y === y && d.m >= m);
+}
+
+function findWar(game, a, b) {
+  for (const w of (game && game.wars) || []) {
+    if (!w) continue;
+    const all = (w.attackers || []).concat(w.defenders || []);
+    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+  }
+  return null;
+}
+
+function addWarscore(ctx, war, tag, amount) {
+  try {
+    if (!war) return;
+    if (!war.eventScore) war.eventScore = { att: 0, def: 0 };
+    const side = (war.attackers || []).indexOf(tag) >= 0 ? 'att'
+      : (war.defenders || []).indexOf(tag) >= 0 ? 'def' : null;
+    if (side) war.eventScore[side] += amount;
+  } catch (e) { warnOnce('addWarscore', e); }
+}
+
+export const EVENTS_614 = [
+  // ── 1 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_jerusalem_falls',
+    title: 'The Holy City Falls',
+    desc: 'After a twenty-day siege the wall is mined, and for the first time since '
+      + 'Pompey the city belongs to neither Rome nor its God\'s newer church. The True '
+      + 'Cross is carried east as a trophy of the fire temples; the Jewish fighters who '
+      + 'stormed the breach are given — for now — the governance of Jerusalem.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_jerusalem', (ctx) =>
+      dateGE(ctx, 614, 6)
+      && (ctx.game.playerTag !== 'BYZ'
+        || ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+        || ctx.helpers.controls(ctx, 'SAS', 'Jerusalem'))),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'After five hundred years',
+        tooltip: 'Jerusalem passes to the Return (owner) with a garrison. Byzantium: −15 legitimacy. Persia: +100 talents of relics and ransom.',
+        effects: guard('ev_p_jerusalem:0', (ctx) => {
+          ctx.helpers.changeOwner(ctx, 'Jerusalem', 'JUD');
+          ctx.helpers.spawnArmy(ctx, 'JUD', 'Jerusalem', { inf: 3, name: 'Guard of the Return' });
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: -15 });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'SAS', { treasury: 100 });
+          ctx.helpers.chronicle(ctx, 'war', 'Jerusalem falls to Shahrbaraz and the fighters of the Return; the True Cross goes east to Ctesiphon.');
+        }),
+      },
+    ],
+  },
+
+  // ── 2 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_governance',
+    title: 'Governing the Ungovernable City',
+    desc: 'Nehemiah ben Hushiel holds the city that every faith on earth claims. The '
+      + 'community expects the altar restored on the Mount; the Christian majority of '
+      + 'the countryside expects the sky to fall on whoever tries.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_governance', (ctx) =>
+      dateGE(ctx, 614, 8) && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Restore the sacrifice',
+        tooltip: 'Judaea: +12 legitimacy. Every Christian province we hold: +2 unrest for 24 months.',
+        effects: guard('ev_p_gov:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 12 });
+          const g = ctx.game;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== 'JUD' || p.religion !== 'christianity') continue;
+            ctx.helpers.addProvinceModifier(ctx, p.name, {
+              id: 'altar_restored', name: 'The Altar Restored', months: 24, effects: { unrest: 2 },
+            });
+          }
+        }),
+      },
+      {
+        label: 'A city held gently',
+        tooltip: 'Jerusalem: −1 unrest for 24 months. Judaea: +4 legitimacy.',
+        effects: guard('ev_p_gov:1', (ctx) => {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'held_gently', name: 'A City Held Gently', months: 24, effects: { unrest: -1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 4 });
+        }),
+      },
+    ],
+  },
+
+  // ── 3 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_khosrow_letter',
+    title: '"Khosrow, Greatest of Gods"',
+    desc: 'The Senate\'s peace embassy returns with the King of Kings\' reply, addressed '
+      + 'from "Khosrow, greatest of gods, master of the earth" to "Heraclius, his vile '
+      + 'and insensate slave." He will consider mercy, the letter continues, when the '
+      + 'Emperor abjures the crucified god and worships the sun.',
+    forTag: 'BYZ',
+    date: { y: 615, m: 2 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Read it to the army',
+        tooltip: 'Byzantium: +25 martial points, +10% morale for 24 months ("The Blasphemy Answered").',
+        effects: guard('ev_p_letter:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { mar: 25 });
+          ctx.helpers.addTagModifier(ctx, 'BYZ', {
+            id: 'blasphemy_answered', name: 'The Blasphemy Answered', months: 24, effects: { moraleMult: 1.1 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 4 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_betrayal',
+    title: 'The Price of Empires',
+    desc: 'The order arrives from Ctesiphon with royal seals: the Christian majority of '
+      + 'Palestine is to be conciliated, and the Jewish garrison of Jerusalem is to be '
+      + 'thanked, disbanded, and removed. Persia has weighed its new subjects against '
+      + 'its old allies and found the allies lighter. Nehemiah is summoned to hear the '
+      + 'decision — summoned, notably, without his guard.',
+    forTag: 'both',
+    date: { y: 617, m: 6 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Submit — and endure',
+        tooltip: 'Jerusalem passes to Persia (if the Return holds it); the alliance survives; +150 talents of "gratitude."',
+        effects: guard('ev_p_betrayal:0', (ctx) => {
+          if (ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')) {
+            ctx.helpers.changeOwner(ctx, 'Jerusalem', 'SAS');
+          }
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, legitimacy: -10, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'peace', 'Persia trades the Return away: the Jewish garrison of Jerusalem is disbanded by its own ally.');
+        }),
+      },
+      {
+        label: 'Defy the King of Kings',
+        tooltip: 'Keep everything — and Persia turns on us: war with SAS, the alliance in ashes.',
+        effects: guard('ev_p_betrayal:1', (ctx) => {
+          const g = ctx.game;
+          const jud = g.tags.JUD, sas = g.tags.SAS;
+          if (jud && sas) {
+            jud.allies = (jud.allies || []).filter((t) => t !== 'SAS');
+            sas.allies = (sas.allies || []).filter((t) => t !== 'JUD');
+            if (jud.opinion) jud.opinion.SAS = -150;
+            if (sas.opinion) sas.opinion.JUD = -150;
+          }
+          ctx.helpers.declareWar(ctx, 'SAS', 'JUD', 'The Betrayal Repaid');
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
+          ctx.helpers.chronicle(ctx, 'war', 'The Return refuses to be sold: Persia turns its lancers on its own allies.');
+        }),
+      },
+    ],
+  },
+
+  // ── 5 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_egypt_falls',
+    title: 'Egypt Falls',
+    desc: 'Nicetas holds Alexandria until a traitor shows the Persians a dry canal under '
+      + 'the walls. With Egypt gone, the grain dole of Constantinople ends after six '
+      + 'centuries — the bread of empire is now barley, rationed, and prayed over.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_egypt', (ctx) =>
+      dateGE(ctx, 619, 3)
+      && !!findWar(ctx.game, 'SAS', 'BYZ')
+      && ctx.game.playerTag !== 'BYZ'
+      && ctx.helpers.controls(ctx, 'BYZ', 'Alexandria')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The dry canal',
+        tooltip: 'Alexandria, Memphis and Pelusium pass to Persia. Byzantium: −1 stability.',
+        effects: guard('ev_p_egypt:0', (ctx) => {
+          for (const n of ['Alexandria', 'Memphis', 'Pelusium']) {
+            ctx.helpers.changeOwner(ctx, n, 'SAS');
+          }
+          ctx.helpers.adjust(ctx, 'BYZ', { stability: -1 });
+          ctx.helpers.chronicle(ctx, 'war', 'Alexandria falls; the grain dole of Constantinople ends after six hundred years.');
+        }),
+      },
+    ],
+  },
+
+  // ── 6 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_heraclius_sails',
+    title: 'The Emperor Sails East',
+    desc: 'Heraclius does what no emperor has done since Theodosius: he leaves the City '
+      + 'in God\'s hands and the Patriarch\'s, melts the church plate into soldiers\' pay, '
+      + 'and sails — not for Syria, but for the heart of Persia itself, gambling the '
+      + 'last army of Rome on the shortest road: the enemy\'s own country.',
+    forTag: 'both',
+    date: { y: 622, m: 4 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'God wills a reckoning',
+        tooltip: 'Byzantium: the Emperor lands at Attalia with 13 regiments; +10% discipline for 36 months. The war can now be negotiated.',
+        effects: guard('ev_p_sails:0', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'BYZ', 'Attalia', {
+            inf: 10, cav: 3, name: 'The Emperor\'s Army',
+            general: { name: 'Heraclius', fire: 3, shock: 4, maneuver: 4 },
+          });
+          ctx.helpers.addTagModifier(ctx, 'BYZ', {
+            id: 'reformed_army', name: 'The Reformed Army', months: 36, effects: { disciplineMult: 1.1 },
+          });
+          const w = findWar(ctx.game, 'SAS', 'BYZ');
+          if (w) w.noNegotiation = false;
+          ctx.helpers.chronicle(ctx, 'war', 'Heraclius sails east with the melted plate of every church, gambling the Empire on one campaign.');
+        }),
+      },
+    ],
+  },
+
+  // ── 7 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_constantinople',
+    title: 'The City Under Siege',
+    desc: 'Avar hordes on the European shore, a Persian army at Chalcedon, and the '
+      + 'Emperor a thousand miles away in the Caucasus. For ten days the walls of '
+      + 'Theodosius and the ships of the fleet decide whether there will be an empire '
+      + 'to come home to. The Virgin, the citizens swear afterward, walked the walls.',
+    forTag: 'both',
+    date: { y: 626, m: 7 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The walls hold',
+        tooltip: 'Byzantium: −100 talents (the fleet\'s cost), then +10% morale for 24 months. Persia: −1 stability — the gamble failed.',
+        effects: guard('ev_p_cple:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { treasury: -100 });
+          ctx.helpers.addTagModifier(ctx, 'BYZ', {
+            id: 'city_held', name: 'The City Held', months: 24, effects: { moraleMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -1 });
+          ctx.helpers.chronicle(ctx, 'war', 'Constantinople holds against Avar and Persian together; the Virgin, they say, walked the walls.');
+        }),
+      },
+    ],
+  },
+
+  // ── 8 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_nineveh',
+    title: 'Nineveh',
+    desc: 'On the plain by the ruins of Assyria\'s dead capital, Heraclius catches the '
+      + 'last Persian field army and destroys it in an eleven-hour battle, killing its '
+      + 'general with his own hand — so the chroniclers insist, and no soldier who was '
+      + 'there contradicts them. The road to Ctesiphon is open.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_nineveh', (ctx) =>
+      dateGE(ctx, 627, 12) && !!findWar(ctx.game, 'SAS', 'BYZ')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The eleventh hour',
+        tooltip: 'Byzantium: +15 war score. Persia: −2 stability.',
+        effects: guard('ev_p_nineveh:0', (ctx) => {
+          addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 15);
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -2 });
+          ctx.helpers.chronicle(ctx, 'war', 'Nineveh: the last Persian field army is destroyed among the ruins of Assyria.');
+        }),
+      },
+    ],
+  },
+
+  // ── 9 ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_khosrow_falls',
+    title: 'The Fall of the House of Sasan',
+    desc: 'Khosrow, who would not make peace while a Roman lived, is deposed by his own '
+      + 'nobles and murdered in a dungeon by his own son. Kavad II\'s first act is to '
+      + 'sue for peace on any terms; his second is to die of plague; and the empire of '
+      + 'four centuries begins to eat itself alive.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_khosrow_falls', (ctx) =>
+      dateGE(ctx, 628, 2) && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_nineveh)),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The wheel turns',
+        tooltip: 'Kavad II takes the throne; the great war ends in a white peace; Persia stands down.',
+        effects: guard('ev_p_khosrow:0', (ctx) => {
+          ctx.helpers.setRuler(ctx, 'SAS', {
+            name: 'Kavad II', title: 'King of Kings', gov: 1, infl: 2, mar: 1, age: 38,
+          });
+          ctx.helpers.endWar(ctx, 'SAS', 'BYZ', null);
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -1, legitimacy: -20 });
+          ctx.helpers.addTagModifier(ctx, 'SAS', {
+            id: 'house_eats_itself', name: 'The House Eats Itself', months: 24, effects: { aiPassive: true },
+          });
+          ctx.helpers.chronicle(ctx, 'peace', 'Khosrow is murdered by his own son; the last great war of antiquity ends where it began.');
+        }),
+      },
+    ],
+  },
+
+  // ── 10 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_cross_returns',
+    title: 'The Cross Returns',
+    desc: 'Heraclius carries the True Cross into Jerusalem on his own shoulders, barefoot, '
+      + 'through the gate his enemies breached fifteen years before. It is the high-water '
+      + 'mark of Christian Rome. To the Jewish communities that chose Persia, the '
+      + 'Emperor\'s mercy will be brief and his memory long.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_cross', (ctx) =>
+      dateGE(ctx, 629, 3) && !findWar(ctx.game, 'SAS', 'BYZ')
+      && ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Barefoot through the gate',
+        tooltip: 'Byzantium: +20 legitimacy, +1 stability. The Return: −10 legitimacy, and the Emperor\'s eye upon it.',
+        effects: guard('ev_p_cross:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 20, stability: 1 });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: -10 });
+          const byz = ctx.game.tags.BYZ;
+          if (byz && byz.opinion) byz.opinion.JUD = -180;
+          ctx.helpers.chronicle(ctx, 'era', 'Heraclius restores the True Cross to Jerusalem, barefoot, through the breached gate.');
+        }),
+      },
+    ],
+  },
+];

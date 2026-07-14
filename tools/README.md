@@ -12,7 +12,7 @@ Runs every bookmark (or one) with EVERY nation on AI for N game years
 trajectory (provinces, dev, income, treasury, troops, manpower, reforms)
 and anomaly flags:
 
-- SNOWBALL     provinces grew >=1.6x (often scripted: Pompey, Gindarus)
+- SNOWBALL     provinces grew >=1.6x AND by >=4 (often scripted: Pompey, Gindarus)
 - DEBT-SPIRAL  treasury below -200 at the end
 - BLEEDING     negative net income at mid-run AND end
 - EXHAUSTED    manpower zero with almost no army
@@ -20,9 +20,21 @@ and anomaly flags:
 
 Accepted flags (by design, do not "fix"): SEL dies in 67 BCE (Pompey's
 arc), JUD dies in 132 CE (history), ROM snowballs in 67/40 BCE (scripted
-annexations), HAS/HER bleed while their fight-to-the-death scripted wars
-run (plunder-funded underdogs), ARM hovers a hair below break-even (poor
-mountain kingdom).
+annexations) and bleeds in 40 BCE while it does (fresh conquests sit at
+high autonomy and pay almost nothing — victorious overstretch), HAS/HER/ATG
+bleed while their fight-to-the-death scripted wars run (plunder-funded
+underdogs), HYR/ARI (the brothers' stalemate, 67 BCE) run mildly negative
+until debt-desertion rebalances them — self-limiting, no spiral, and only
+Pompey's arrival truly settles that war. ARM hovers a hair below
+break-even (poor mountain kingdom).
+
+The far eras: in 115 CE the all-AI diaspora rising is never crushed (JUD
+SNOWBALL) — with Rome's field army locked against Parthia, the AI cannot
+play Turbo's part; a human ROM ends it easily, a human JUD achieves
+exactly this. In 614 CE longer runs show JUD SNOWBALL — the scripted
+Return (Jerusalem by event, Persian-backed gains) holding a small state.
+1948 runs clean: the coalition invades, the truces bite, and the Rhodes
+armistice freezes the lines on schedule.
 
 ## geom-snapshot.json
 

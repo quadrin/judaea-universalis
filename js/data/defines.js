@@ -47,6 +47,21 @@ export const DEFINES = {
     OSR: { aggression: 0.5, caution: 1.5 },
     ADI: { aggression: 0.8, caution: 1.1 },
     CHX: { aggression: 0.3, caution: 1.6 },
+    // -- 614 CE --
+    BYZ: { aggression: 0.9, caution: 1.1, ponderous: true },
+    SAS: { aggression: 1.3, caution: 0.8, ponderous: true },
+    GHA: { aggression: 0.6, caution: 1.3 },
+    // -- 1948 CE --
+    ISR: { aggression: 1.1, caution: 0.9 },
+    EGY: { aggression: 1.0, caution: 1.0 },
+    JOR: { aggression: 0.8, caution: 1.1 },
+    SYR: { aggression: 1.1, caution: 0.9 },
+    LEB: { aggression: 0.2, caution: 1.8 },
+    IRQ: { aggression: 0.9, caution: 1.0 },
+    TUR: { aggression: 0.1, caution: 2.0 },
+    SAU: { aggression: 0.2, caution: 1.8 },
+    IRN: { aggression: 0.1, caution: 2.0 },
+    UK: { aggression: 0.1, caution: 2.0 },
   },
 
   // Trade goods: price in talents per unit of production
@@ -68,7 +83,7 @@ export const DEFINES = {
     livestock:  { name: 'Livestock',  price: 2.0,  color: [158, 122, 96] },
   },
 
-  // Religions: groups 'judaic' | 'pagan' | 'iranic'
+  // Religions: groups 'judaic' | 'pagan' | 'iranic' | 'christian' | 'islamic'
   RELIGIONS: {
     judaism:        { name: 'Second Temple Judaism', color: [46, 96, 178],  group: 'judaic' },
     samaritanism:   { name: 'Samaritanism',          color: [92, 150, 196], group: 'judaic' },
@@ -77,6 +92,8 @@ export const DEFINES = {
     nabataean:      { name: 'Nabataean Cult',        color: [206, 128, 60], group: 'pagan' },
     zoroastrianism: { name: 'Zoroastrianism',        color: [150, 84, 168], group: 'iranic' },
     egyptian:       { name: 'Egyptian Cults',        color: [72, 152, 130], group: 'pagan' },
+    christianity:   { name: 'Christianity',          color: [172, 68, 100], group: 'christian' },
+    islam:          { name: 'Islam',                 color: [52, 138, 86],  group: 'islamic' },
   },
 
   // Cultures: groups israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian
@@ -94,6 +111,10 @@ export const DEFINES = {
     roman:      { name: 'Roman',      color: [184, 70, 62],   group: 'latin' },
     armenian:   { name: 'Armenian',   color: [140, 78, 122],  group: 'armenian' },
     persian:    { name: 'Persian',    color: [158, 96, 176],  group: 'iranian' },
+    // -- far eras (SPEC §22) --
+    israeli:    { name: 'Israeli',       color: [40, 110, 200],  group: 'israeli' },
+    arab_modern: { name: 'Arab',         color: [96, 140, 84],   group: 'arab_modern' },
+    turkish:    { name: 'Turkish',       color: [200, 84, 72],   group: 'turkish' },
   },
 
   TAGS: {
@@ -178,6 +199,73 @@ export const DEFINES = {
       name: "Antigonus' Judaea", color: [30, 82, 96], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The last fighting Hasmonean: king and high priest, with Parthia at his back — for now.',
       ideas: { moraleMult: 1.1, hillDefBonus: 1 },
+    },
+    // ---- 614 CE: the last great war of antiquity ----
+    BYZ: {
+      name: 'Byzantium', color: [110, 48, 130], religion: 'christianity', culture: 'greek', capital: 'Antioch',
+      description: 'Rome that did not fall: the themes, the walls, and God\'s own empire — bleeding from every border.',
+      ideas: { disciplineMult: 1.08, siegeBonus: 1 },
+    },
+    SAS: {
+      name: 'Sasanian Persia', color: [188, 128, 44], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
+      description: 'The House of Sasan at high tide: the royal banner, the armored lancers, and a King of Kings who dreams of Alexander in reverse.',
+      ideas: { moraleMult: 1.05, reinforceMult: 1.1 },
+    },
+    GHA: {
+      name: 'Ghassanids', color: [150, 44, 52], religion: 'christianity', culture: 'arab', capital: 'Bostra',
+      description: 'The phylarchs of the desert edge: Rome\'s Arab shield, unpaid for a generation.',
+      ideas: { moraleMult: 1.05 },
+    },
+    // ---- 1948 CE: the War of Independence ----
+    ISR: {
+      name: 'Israel', color: [36, 104, 196], religion: 'judaism', culture: 'israeli', capital: 'Joppa',
+      description: 'A state declared between one war and the next, defended by everyone it has.',
+      ideas: { moraleMult: 1.15, reinforceMult: 1.15, manpowerMult: 0.85 },
+    },
+    EGY: {
+      name: 'Egypt', color: [46, 128, 78], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
+      description: 'The largest Arab army in the field — long columns, short supply lines home.',
+      ideas: { manpowerMult: 1.15 },
+    },
+    JOR: {
+      name: 'Transjordan', color: [128, 72, 40], religion: 'islam', culture: 'arab_modern', capital: 'Philadelphia',
+      description: 'The Arab Legion: small, British-drilled, and the only army in this war that has read its own manuals.',
+      ideas: { disciplineMult: 1.12 },
+    },
+    SYR: {
+      name: 'Syria', color: [88, 128, 104], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
+      description: 'Damascus rides south with more conviction than coordination.',
+      ideas: {},
+    },
+    LEB: {
+      name: 'Lebanon', color: [170, 40, 66], religion: 'christianity', culture: 'arab_modern', capital: 'Berytus',
+      description: 'A merchant republic at war mostly on paper.',
+      ideas: { incomeMult: 1.1 },
+    },
+    IRQ: {
+      name: 'Iraq', color: [72, 72, 80], religion: 'islam', culture: 'arab_modern', capital: 'Seleucia-Ctesiphon',
+      description: 'An expeditionary army a long way from Baghdad.',
+      ideas: { manpowerMult: 1.05 },
+    },
+    TUR: {
+      name: 'Turkey', color: [200, 84, 72], religion: 'islam', culture: 'turkish', capital: 'Iconium',
+      description: 'Watching its southern neighbors with studied neutrality.',
+      ideas: { disciplineMult: 1.05 },
+    },
+    SAU: {
+      name: 'Saudi Arabia', color: [40, 116, 60], religion: 'islam', culture: 'arab_modern', capital: 'Hegra',
+      description: 'The desert kingdom sends a token force and keeps its counsel.',
+      ideas: {},
+    },
+    IRN: {
+      name: 'Iran', color: [136, 148, 70], religion: 'islam', culture: 'persian', capital: 'Ecbatana',
+      description: 'The old empire east of the war, watching.',
+      ideas: {},
+    },
+    UK: {
+      name: 'Britain', color: [156, 64, 92], religion: 'christianity', culture: 'greek', capital: 'Salamis',
+      description: 'The departing mandatory power: a garrison on Cyprus and a schedule to keep.',
+      ideas: { disciplineMult: 1.1 },
     },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',

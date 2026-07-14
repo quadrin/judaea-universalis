@@ -26,7 +26,10 @@ const BOOKS = [
   ['67bce', 'bookmark_67bce.js', 'BOOKMARK_67', 'events_67bce.js', 'EVENTS_67'],
   ['40bce', 'bookmark_40bce.js', 'BOOKMARK_40', 'events_40bce.js', 'EVENTS_40'],
   ['66ce', 'bookmark_66ce.js', 'BOOKMARK_66', 'events_66ce.js', 'EVENTS_66'],
+  ['115ce', 'bookmark_115ce.js', 'BOOKMARK_115', 'events_115ce.js', 'EVENTS_115'],
   ['132ce', 'bookmark_132ce.js', 'BOOKMARK_132', 'events_132ce.js', 'EVENTS_132'],
+  ['614ce', 'bookmark_614ce.js', 'BOOKMARK_614', 'events_614ce.js', 'EVENTS_614'],
+  ['1948ce', 'bookmark_1948.js', 'BOOKMARK_1948', 'events_1948.js', 'EVENTS_1948'],
 ];
 
 const YEARS = Math.max(1, Number(process.argv[2]) || 8);
@@ -125,7 +128,9 @@ async function runBookmark(entry, geom) {
     if (!s || !e) continue;
     const flags = [];
     if (!game.tags[t].alive) flags.push('DEAD');
-    if (e.provs >= Math.max(4, s.provs * 1.6)) flags.push('SNOWBALL');
+    // Real snowballs grow by whole regions; a 2-province minor scripted up to 4
+    // is history, not imbalance — hence the absolute-growth floor.
+    if (e.provs >= Math.max(4, s.provs * 1.6) && e.provs - s.provs >= 4) flags.push('SNOWBALL');
     if (e.treasury < -200) flags.push('DEBT-SPIRAL');
     const mid = yearly[Math.floor(yearly.length / 2)][t];
     if (mid && mid.income < 0 && e.income < 0) flags.push('BLEEDING');

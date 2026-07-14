@@ -72,6 +72,8 @@ export function tradeIncome(ctx, tag) {
       sum += share * (r.chokepoint === stop ? 2 : 1);
     }
   }
+  // Influence tech widens the caravans' margins (tradeMult, SPEC §22).
+  sum *= resolveTagMult(ctx, tag, 'tradeMult');
   return Math.round(sum * 100) / 100;
 }
 
@@ -151,6 +153,7 @@ export function explainIncome(ctx, tag) {
     if (Math.abs(bd.mult - 1) > 0.001) {
       rows.push({ label: 'National modifiers', value: r2(bd.base * (bd.mult - 1)) });
     }
+    if (bd.trade > 0) rows.push({ label: 'Trade routes', value: r2(bd.trade) });
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
     rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
