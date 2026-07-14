@@ -360,15 +360,122 @@ export const FLAGS = {
     `<rect x="0.6" y="18.1" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
     `<path d="M12 7.3 16.05 14.35H7.95Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>` +
     `<path d="M12 16.7 7.95 9.65h8.1Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>`,
+  // Nabataea: the crow-stepped facade of Petra's tombs, an urn above.
+  NAB:
+    `<path d="M4 18.6h16v1.8H4Z" ${ACC}/>` +
+    `<path d="M5 18.6v-3.4h2.4v-3h2.4V8.9h4.4v3.3h2.4v3h2.4v3.4Z" ${SIL}/>` +
+    `<path d="M12 3.6c1.3 0 2.1.8 2.1 2 0 .9-.5 1.6-1.2 1.9v1h-1.8v-1c-.7-.3-1.2-1-1.2-1.9 0-1.2.8-2 2.1-2Z" ${ACC}/>`,
+  // Armenia: the twin peaks of Ararat under the Artaxiad star.
+  ARM:
+    `<path d="M3.6 19 9 9.6l2.6 4.4L14.6 8l5.8 11Z" ${SIL}/>` +
+    `<path d="M9 9.6 7.4 12.4h3.2Z M14.6 8l-1.8 3.4h3.6Z" ${ACC}/>` +
+    `<path d="M12 2.8l.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.6.9.3-1.9-1.4-1.3 1.9-.3Z" ${ACC}/>`,
+  // Hyrcanus: the high priest's breastplate — twelve stones in gold setting.
+  HYR:
+    `<rect x="7" y="5.5" width="10" height="13" rx="1.6" ${SIL}/>` +
+    `<path d="M9 3.8h6v2.2H9Z" ${ACC}/>` +
+    ['8.9,8.3', '12,8.3', '15.1,8.3', '8.9,11.3', '12,11.3', '15.1,11.3',
+      '8.9,14.3', '12,14.3', '15.1,14.3', '8.9,17', '12,17', '15.1,17']
+      .map((p) => { const [cx, cy] = p.split(','); return `<circle cx="${cx}" cy="${cy}" r="1" ${ACC}/>`; }).join(''),
+  // Aristobulus: the usurper's diadem over a bared sword.
+  ARI:
+    `<path d="M5.4 9.8c2.1-2 4.3-3 6.6-3s4.5 1 6.6 3l-.9 1.6c-1.8-1.8-3.7-2.7-5.7-2.7s-3.9.9-5.7 2.7Z" ${ACC}/>` +
+    `<circle cx="12" cy="7.8" r="1.3" ${SIL}/>` +
+    `<path d="M11.2 12h1.6v6.4l-.8 1.8-.8-1.8Z" ${SIL}/>` +
+    `<path d="M8.6 13.4h6.8v1.4H8.6Z" ${ACC}/>`,
+  // Osrhoene: the crescent and star of the Edessan coins.
+  OSR:
+    `<path d="M13.8 5.4a7 7 0 100 13.2 7.8 7.8 0 010-13.2Z" ${SIL}/>` +
+    `<path d="M15.4 9.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.2-1.2 1.7-.2Z" ${ACC}/>`,
+  // Adiabene: the royal tiara of the converted house.
+  ADI:
+    `<path d="M6.4 17h11.2v1.8H6.4Z" ${ACC}/>` +
+    `<path d="M7 17c0-4.4 1.6-7.6 5-9.6 3.4 2 5 5.2 5 9.6Z" ${SIL}/>` +
+    `<path d="M12 9.4l.7 1.5 1.6.2-1.2 1.1.3 1.6-1.4-.7-1.4.7.3-1.6-1.2-1.1 1.6-.2Z" ${ACC}/>`,
+  // Characene: a merchant hull riding the Gulf swell.
+  CHX:
+    `<path d="M4.6 14.2h14.8l-2.2 3.6H6.8Z" ${SIL}/>` +
+    `<path d="M11.2 5.2h1.4v9h-1.4Z" ${ACC}/>` +
+    `<path d="M12.6 5.6c2.6.6 4.2 2 4.8 4.2l-4.8.4Z" ${SIL}/>` +
+    `<path d="M4.2 19.6c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.2.9 2.4 1 3.6.3" ${DET}/>`,
+  // Ghassanids: the cross of the phylarchs over a lance pennon.
+  GHA:
+    `<path d="M11.1 4h1.8v9h-1.8Z" ${ACC}/>` +
+    `<path d="M8 6.6h8v1.8H8Z" ${ACC}/>` +
+    `<path d="M9 14.6h6l4 2.6-4 2.6H9Z" ${SIL}/>`,
+  // Egypt 1948: the green royal flag — crescent and three stars.
+  EGY:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1a6a3c" stroke="none"/>` +
+    `<path d="M10.5 5.4a7.4 7.4 0 100 13.2 8.3 8.3 0 010-13.2Z" fill="#f2f4f4" stroke="none"/>` +
+    ['15.5,8.2', '17.3,12', '15.5,15.8'].map((p) => {
+      const [cx, cy] = p.split(',').map(Number);
+      return `<path d="M${cx} ${cy - 1.6}l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#f2f4f4" stroke="none"/>`;
+    }).join(''),
+  // Transjordan: the Hashemite tricolor, red chevron, seven-pointed star.
+  JOR:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
+    `<path d="M0.6 0.6 13.4 12 0.6 23.4Z" fill="#b5342c" stroke="none"/>` +
+    `<path d="M5.6 12l.5-1.5.9 1.3 1.5-.5-.7 1.4 1.3.8-1.5.4.1 1.6-1.2-1-1.2 1 .1-1.6-1.5-.4 1.3-.8-.7-1.4Z" fill="#f2f4f4" stroke="none"/>`,
+  // Syria 1948: green-white-black, three red stars.
+  SYR:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    ['6.5', '12', '17.5'].map((cx) =>
+      `<path d="M${cx} 10.2l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#b5342c" stroke="none"/>`).join(''),
+  // Lebanon: red-white-red and the cedar.
+  LEB:
+    `<rect x="0.6" y="0.6" width="22.8" height="5.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="6.2" width="22.8" height="11.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="17.8" width="22.8" height="5.6" fill="#b5342c" stroke="none"/>` +
+    `<path d="M12 7.2l3.4 3h-2l2.6 2.4h-1.8l2.2 2.2H13v1.6h-2v-1.6H7.6l2.2-2.2H8l2.6-2.4h-2Z" fill="#2c7a3f" stroke="none"/>`,
+  // Iraq 1948: black-white-green, red trapezoid, two seven-pointed stars.
+  IRQ:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
+    `<path d="M0.6 0.6h6.8L11 12 7.4 23.4H0.6Z" fill="#b5342c" stroke="none"/>` +
+    `<circle cx="4.6" cy="8.4" r="1.4" fill="#f2f4f4" stroke="none"/>` +
+    `<circle cx="4.6" cy="15.6" r="1.4" fill="#f2f4f4" stroke="none"/>`,
+  // Turkey: the red flag, white crescent and star.
+  TUR:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#c8102e" stroke="none"/>` +
+    `<path d="M11.5 4.9a7.2 7.2 0 100 14.2 8 8 0 010-14.2Z" fill="#f2f4f4" stroke="none"/>` +
+    `<path d="M15.6 9.5l.7 1.6 1.7.2-1.3 1.2.3 1.7-1.4-.9-1.5.9.4-1.7-1.3-1.2 1.7-.2Z" fill="#f2f4f4" stroke="none"/>`,
+  // Saudi Arabia: green, the sword beneath the creed (a calligraphy band).
+  SAU:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1a6a3c" stroke="none"/>` +
+    `<path d="M4.5 8.2c1.4-1.2 2.6.6 4 .1s2.2-1.4 3.6-.8 2 1.2 3.4.7 2-1.3 3.5-.4" fill="none" stroke="#f2f4f4" stroke-width="1.2" stroke-linecap="round"/>` +
+    `<path d="M4.5 11.2c1.4-1.2 2.6.6 4 .1s2.2-1.4 3.6-.8 2 1.2 3.4.7 2-1.3 3.5-.4" fill="none" stroke="#f2f4f4" stroke-width="1.2" stroke-linecap="round"/>` +
+    `<path d="M4.6 16.6h13l1.8 1-1.8 1h-13Z" fill="#f2f4f4" stroke="none"/>`,
+  // Iran: green-white-red, the sun of the lion-and-sun in gold.
+  IRN:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<circle cx="12" cy="12" r="2.6" fill="#d9a520" stroke="none"/>` +
+    `<path d="M12 7.6v1.6M12 14.8v1.6M8.2 12h-1.6M17.4 12h-1.6M9.3 9.3 8.2 8.2M15.8 15.8l-1.1-1.1M14.7 9.3l1.1-1.1M8.2 15.8l1.1-1.1" stroke="#d9a520" stroke-width="1" fill="none"/>`,
+  // Britain: the Union Flag, near enough for a chip.
+  UK:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1d3c6e" stroke="none"/>` +
+    `<path d="M0.6 0.6 23.4 23.4M23.4 0.6 0.6 23.4" stroke="#f2f4f4" stroke-width="4.4" fill="none"/>` +
+    `<path d="M0.6 0.6 23.4 23.4M23.4 0.6 0.6 23.4" stroke="#b5342c" stroke-width="1.8" fill="none"/>` +
+    `<path d="M12 0.6v22.8M0.6 12h22.8" stroke="#f2f4f4" stroke-width="6" fill="none"/>` +
+    `<path d="M12 0.6v22.8M0.6 12h22.8" stroke="#b5342c" stroke-width="3" fill="none"/>`,
   // Kingdom of Israel (formable): the star of David crowned in gold.
   MLI:
     `<path d="M12 4.6 15.9 11.4H8.1Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>` +
     `<path d="M12 16 8.1 9.2h7.8Z" fill="none" ${S} stroke="${FP}" stroke-width="1.5"/>` +
     `<path d="M6.8 17.4l1.3 1.6 1.9-1.6 2 1.6 2-1.6 1.9 1.6 1.3-1.6v3H6.8Z" ${ACC}/>`,
-  // United Arab Republic (formable): crescent and star.
+  // United Arab Republic (formable): the two-star pan-Arab tricolor.
   UAR:
-    `<path d="M14.6 4.6a7.6 7.6 0 100 14.8 8.6 8.6 0 010-14.8Z" ${SIL}/>` +
-    `<path d="M16.4 9.4l.9 1.9 2.1.3-1.5 1.5.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3Z" ${ACC}/>`,
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    ['8.5', '15.5'].map((cx) =>
+      `<path d="M${cx} 10.2l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#2c7a3f" stroke="none"/>`).join(''),
 };
 
 function escText(s) {

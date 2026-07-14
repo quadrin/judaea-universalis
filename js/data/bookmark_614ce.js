@@ -101,6 +101,14 @@ export const BOOKMARK_614 = {
   techBase: 10,
   techTweaks: { SAS: { mar: 1 }, BYZ: { gov: 1 } },
 
+  // The map speaks its era (SPEC §25): Byzantine and Sasanian names.
+  provinceNames: {
+    'Salamis': 'Constantia',      // rebuilt and renamed after the 4th-century quakes
+    'Ecbatana': 'Hamadan',        // the Middle Persian name
+    'Dura-Europos': 'Circesium',  // Dura is dust; Circesium holds the Euphrates reach
+    'Charax': 'Maishan',          // the old port is now the Maishan district
+  },
+
   blurb: 'The Roman and Persian empires are killing each other at last, totally, after '
     + 'seven hundred years of border wars. Shahrbaraz has taken Damascus and marches on '
     + 'Jerusalem; beside his lancers ride thousands of Jewish fighters under Nehemiah ben '

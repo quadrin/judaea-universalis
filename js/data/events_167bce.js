@@ -334,7 +334,7 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Send Apollonius up from Samaria',
-        tooltip: 'The kingdom bestirs itself: armies unleashed, and the Samaria command reinforced (+2,000 men at Sebaste).',
+        tooltip: 'The kingdom bestirs itself: armies unleashed, and the Samaria command reinforced (+2,000 men at Samaria).',
         effects: guard('ev_apollonius:0', (ctx) => {
           const h = ctx.helpers;
           h.removeModifier(ctx, 'SEL', 'empire_of_distractions');
