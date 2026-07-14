@@ -19,6 +19,11 @@ function warnOnce(key, ...args) {
   console.warn('[sim/ai]', ...args);
 }
 
+function personality(ctx, tag) {
+  const P = ctx.DEFINES.PERSONALITIES || {};
+  return P[tag] || { aggression: 1, caution: 1 };
+}
+
 function hasAiPassive(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t) return false;
@@ -125,9 +130,10 @@ function threatened(ctx, army) {
   const own = stackStrengthAt(ctx, army.prov, (a) => sameSide(ctx, army.tag, a.tag)) || armyStrength(ctx, army);
   const nbs = ctx.geom && ctx.geom.neighbors ? ctx.geom.neighbors[army.prov] : null;
   if (!nbs) return false;
+  const shy = 1.4 / Math.max(0.5, num(personality(ctx, army.tag).caution, 1));
   for (const nb of nbs) {
     const enemy = stackStrengthAt(ctx, nb, (a) => isHostile(ctx, army.tag, a.tag));
-    if (enemy > own * 1.4) return true;
+    if (enemy > own * shy) return true;
   }
   return false;
 }
@@ -367,8 +373,11 @@ function aiConsiderWar(ctx, tag) {
     const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
     const enemyMen = strength(tgt);
     const ratio = enemyMen > 0 ? myMen / enemyMen : 99;
-    if (!(ratio >= 1.6 || (busyElsewhere && ratio >= 1.2))) continue;
-    if (!ctx.rng.chance(0.08)) continue;
+    const pers = personality(ctx, tag);
+    // A ponderous empire moves only for a sure thing; a firebrand jumps early.
+    const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1));
+    if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
+    if (!ctx.rng.chance(0.08 * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
     t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
     declareWar(ctx, tag, tgt, null, cb ? cb.type : null);
@@ -395,7 +404,8 @@ function monthlyWarDiplomacy(ctx) {
       if (!leader) continue;
       const lt = g.tags[leader];
       const ws = num(w.warscore && w.warscore[leader]);
-      if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= 15)) continue;
+      const sueAt = 15 / Math.max(0.5, num(personality(ctx, leader).caution, 1));
+      if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= sueAt)) continue;
       if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;
       w._sueCd = { ...g.date };
       ctx.bus.emit('notify', {

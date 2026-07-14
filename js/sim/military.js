@@ -794,6 +794,10 @@ export function monthlyReinforce(ctx) {
     const missing = target - a.men;
     if (missing <= 0) continue;
     let rate = target * 0.10 * resolveTagMult(ctx, a.tag, 'reinforceMult');
+    // Great powers refill their ranks half again as fast: the depth of an
+    // empire is felt in the second year of a war, not the first month.
+    const pers = (ctx.DEFINES.PERSONALITIES || {})[a.tag];
+    if (pers && pers.ponderous) rate *= 1.5;
     const p = ctx.byId(a.prov);
     if (p && isHostile(ctx, a.tag, p.controller)) rate *= 0.5;
     const add = Math.floor(Math.min(missing, rate, Math.max(0, num(t.manpower))));
