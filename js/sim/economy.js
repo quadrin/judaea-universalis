@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, hasBuilding, devTotal } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, devTotal } from './military.js';
 import { blockadedBy } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 
@@ -96,6 +96,9 @@ export function incomeBreakdown(ctx, tag) {
   }
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
   for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg;
+  // Air wings (SPEC §29): fuel, spares and pay ride the maintenance line.
+  const wingUpkeep = (ctx.DEFINES.AIR && ctx.DEFINES.AIR.wingUpkeep) || 1;
+  out.maint += airWingsOf(ctx, tag).length * wingUpkeep;
   out.interest = Math.max(0, Math.round(num(t.loans))) * LOAN_INTEREST_PER_MONTH;
   // Subsidies & reparations (SPEC §24): monthly flows between courts. Both
   // sides read the same list, so the transfer balances by construction.

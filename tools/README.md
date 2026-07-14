@@ -40,9 +40,15 @@ Since v2.4 (development growth) the small-token realms breathe a little
 differently: PAR's two-province western outpost in 167 BCE hovers a hair
 below break-even (accepted, same class as ARM), and ROM-in-40-BCE dropped
 OFF the bleeding list — growing towns pay for the armies that once
-bankrupted them. ARI (67 BCE) drifts on and off the BLEEDING line from
+bankrupted them. ARI/HYR (67 BCE) drift on and off the BLEEDING line from
 version to version as sim tuning shifts (the runs themselves are seeded);
-it is the documented brothers'-stalemate case either way.
+either brother is the documented stalemate case. Since v2.9 (doctrines)
+two more self-limiting bleeds sit in the accepted set: ATG in 40 BCE
+(the fight-to-the-death class above) and JUD in 66 CE — the all-AI
+Great Revolt now ends negotiated with Judaea intact but keeping its
+wartime host, which costs a hair more than peace pays; debt-desertion
+trims it. Bar Kokhba still dies on schedule (132 CE JUD DEAD) — the
+Drill doctrine exists precisely so that arc holds.
 
 ## geom-snapshot.json
 

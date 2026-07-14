@@ -213,6 +213,12 @@ export const ICONS = {
     '<path d="M6.3 8.9c1 .9 1.5 1.8 1.5 2.6a1.6 1.6 0 1 1-3.2 0c0-.8.5-1.7 1.7-2.6Z"/>' +
     '<path d="M12 18.1v2.5"/>' +
     '<path d="M9.5 20.6h6"/>',
+  // Aircraft (SPEC §29 air power): swept wings, fuselage, tailplane
+  plane:
+    '<path d="M12 3.5v7"/>' +
+    '<path d="M12 10.5 3.5 15v2.2l8.5-2.6 8.5 2.6V15Z"/>' +
+    '<path d="M12 14.6v4.4"/>' +
+    '<path d="M9.4 20.2 12 19l2.6 1.2"/>',
 };
 
 // --- country flag emblems (v2) -----------------------------------------------

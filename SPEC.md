@@ -1237,3 +1237,40 @@ foreign court **read-only**.
   your realm). `viewing()` exposes the foreign tag (null when home);
   Esc closes as ever, and a foreign court that dies mid-view falls back
   to your own realm on the next refresh.
+
+## 29. v2.9: the arsenal of the age — doctrines, works on the map, air power
+
+- **Recruiting speaks the age**: the province panel's recruit buttons (and the
+  battle window's army compositions) use the pattern names — a 1948 barracks
+  raises Rifle Brigades and Armored Corps; 66 CE Judaea drills spearmen. The
+  words "infantry" and "cavalry" no longer appear in play; every army row
+  names what its regiments were actually raised as (`army.gen`).
+- **Doctrines** (`DOCTRINES` in tech.js, cumulative by generation): what each
+  pattern KNOWS beyond raw power. A pip is worth a general's star, applied to
+  the battle dice in battleRound and the siege clock:
+  - gen 1 *Shieldwall* — +1 to the die when defending.
+  - gen 2 *Professional Drill* — +1 when attacking, sieges +20%.
+  - gen 3 *Shock Charge* — +1 in the shock phase.
+  - gen 4 *Volley Fire* — +1 in the fire phase.
+  - gen 5 *Combined Arms* — +1 in every phase (plus the SPEC §25 march speed
+    and wall-breaking artillery).
+  Shieldwall and Drill deliberately cancel in equal-generation fights so the
+  scripted arcs hold (the first cut lacked Drill, and all-AI Bar Kokhba
+  survived Rome — history requires otherwise); the edge appears when one side
+  is a generation ahead. The battle window lists each side's doctrines in the
+  die tooltip.
+- **The land wears its works** (overlay.js): at label zoom every province
+  draws a glyph row under its center — a market's gold awning, a granary
+  silo, a crenellated tower, a shrine's pediment, an airfield's runway.
+  Fleets already ride visibly at their anchors.
+- **Air power** (SPEC §29 core): the Airfield building (120t, 10 months)
+  gates on military tech 19 — the age of flight, reached only in 1948. Wings
+  (`g.airwings`, `raiseAirWing`/`rebaseAirWing`/`sweepAirfields`) cost 40t
+  + 1t/month, two per field, park as visible warplanes on the map in the
+  owner's color, rebase freely between your own fields (province panel
+  buttons), and add +1 to the fire-phase die for friendly battles within
+  2 hops (`airCoverFor`; both sides flying cancels). Wings are destroyed on
+  the ground when their field falls — the daily sweep checks control — and
+  the AI paves a runway at its capital and fills the hangars once tech and
+  treasury allow (`aiAirPower`). Upkeep rides the maintenance line;
+  formables re-flag their wings; pre-air saves heal to empty skies.

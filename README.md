@@ -119,6 +119,18 @@ python3 -m http.server 8613 --directory .
   lance ages' pennons, and squared modern brigade flags with rifle or tank
   glyphs — and modern armies march half again as fast and break fortress walls
   with artillery, while Bar Kokhba's war stays hill forts and patience.
+- Armies know their age too: recruiting raises the era's actual pattern
+  (Rifle Brigades in 1948, Drilled Spearmen in 66 CE — never "infantry"), and
+  each generation carries doctrines that ride the battle dice: the shieldwall
+  holds, professional drill presses assaults and sieges, lancers charge,
+  muskets volley, and combined arms does it all. Equal ages cancel; a
+  generation's edge is felt.
+- The land wears its works: markets, granaries, walls, shrines and airfields
+  appear as tiny glyphs on their provinces, fleets ride at anchor — and in
+  1948 the Airfield building bases air wings that park as visible warplanes,
+  rebase between your fields, and lend their +1 to the fire die over any
+  friendly battle within two provinces. Fields that fall burn the wings on
+  the ground.
 - Every flag is a door: click a nation's chip anywhere — the ledger, a war
   overview, a battle window, a province panel, the outliner, another court's
   treaty rows — and that nation's panel opens read-only: their ruler and heir,

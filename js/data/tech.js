@@ -97,3 +97,45 @@ export function genName(genIdx, kind) {
 
 // Talents to re-equip one regiment one full pattern-generation forward.
 export const MODERNIZE_COST_PER_REG_PER_GEN = 6;
+
+// ---------------------------------------------------------------- doctrines
+// What each pattern generation KNOWS, beyond raw power (SPEC §29). Cumulative:
+// a generation keeps everything the earlier ones learned. These ride the
+// battle dice (a pip is worth as much as a general's star) and the siege
+// clock, so a stack a generation ahead fights meaningfully differently —
+// not just harder.
+export const DOCTRINES = [
+  { at: 1, key: 'shieldwall', name: 'Shieldwall',
+    desc: 'Drilled ranks hold ground: +1 to the die when defending.' },
+  { at: 2, key: 'drill', name: 'Professional Drill',
+    desc: 'Standing soldiers press the assault: +1 to the die when attacking, and sieges progress 20% faster.' },
+  { at: 3, key: 'charge', name: 'Shock Charge',
+    desc: 'Armored lancers break lines: +1 to the die in the shock phase.' },
+  { at: 4, key: 'volley', name: 'Volley Fire',
+    desc: 'Massed muskets: +1 to the die in the fire phase.' },
+  { at: 5, key: 'combined', name: 'Combined Arms',
+    desc: 'Armor, artillery and radio: +1 to the die in every phase, half-again march speed, and artillery that breaks old walls.' },
+];
+
+export function doctrinesFor(genIdx) {
+  const gi = genIdx | 0;
+  return DOCTRINES.filter((d) => gi >= d.at);
+}
+
+// Die-roll bonus a side's best pattern earns in the given phase. Shieldwall
+// and drill balance each other in equal-generation fights, so scripted-era
+// battle arcs hold; the edge appears when one side is a generation ahead.
+export function doctrinePips(genIdx, phase, defending) {
+  const gi = genIdx | 0;
+  let pips = 0;
+  if (defending && gi >= 1) pips += 1;            // shieldwall
+  if (!defending && gi >= 2) pips += 1;           // professional drill
+  if (phase === 'shock' && gi >= 3) pips += 1;    // shock charge
+  if (phase === 'fire' && gi >= 4) pips += 1;     // volley fire
+  if (gi >= 5) pips += 1;                         // combined arms, every phase
+  return pips;
+}
+
+export function doctrineSiegeMult(genIdx) {
+  return (genIdx | 0) >= 2 ? 1.2 : 1;             // siegecraft
+}
