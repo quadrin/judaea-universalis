@@ -48,7 +48,10 @@ two more self-limiting bleeds sit in the accepted set: ATG in 40 BCE
 Great Revolt now ends negotiated with Judaea intact but keeping its
 wartime host, which costs a hair more than peace pays; debt-desertion
 trims it. Bar Kokhba still dies on schedule (132 CE JUD DEAD) — the
-Drill doctrine exists precisely so that arc holds.
+Drill doctrine exists precisely so that arc holds. Since v3.1 the 167
+Terms-from-Antioch end is an event card (auto-accepted by aiOption in
+harness runs) that keeps only the provinces of the faith — the anomaly
+set is unchanged, but an all-AI HAS no longer inherits occupied Syria.
 
 ## geom-snapshot.json
 

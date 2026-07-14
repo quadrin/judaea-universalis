@@ -11,6 +11,7 @@ import {
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
 } from './military.js';
+import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
@@ -579,7 +580,8 @@ function aiAirPower(ctx, tag) {
   }
 }
 
-// Re-equip old-pattern armies when the coffers allow — cheapest first, one a month.
+// Re-equip old-pattern armies (and re-rig old fleets, SPEC §31) when the
+// coffers allow — cheapest first, one a month.
 function aiModernize(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t || num(t.treasury) < 100) return;
@@ -588,6 +590,16 @@ function aiModernize(ctx, tag) {
     const mi = modernizeInfo(ctx, a);
     if (!mi.can || mi.cost > num(t.treasury) - 60) continue;
     if (!best || mi.cost < best.cost) best = { a, cost: mi.cost };
+  }
+  if (!best) {
+    for (const f of Object.values(ctx.game.fleets || {})) {
+      if (!f || f.tag !== tag) continue;
+      const mi = modernizeFleetInfo(ctx, f);
+      if (!mi.can || mi.cost > num(t.treasury) - 60) continue;
+      if (!best || mi.cost < best.cost) best = { f, cost: mi.cost };
+    }
+    if (best) { modernizeFleetCore(ctx, best.f); return; }
+    return;
   }
   if (best) modernizeArmyCore(ctx, best.a);
 }

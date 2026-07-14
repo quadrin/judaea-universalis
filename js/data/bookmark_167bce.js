@@ -485,20 +485,12 @@ export const BOOKMARK_167 = {
       const ws = hasWarscore(ctx);
 
       if (g.playerTag === 'HAS') {
-        // Early win: the kingdom concedes rather than bleed further.
-        if (ws >= 50) {
-          h.endGame(ctx, {
-            result: 'win',
-            title: 'Terms from Antioch',
-            text: 'Lysias speaks to the king’s council as he once spoke beneath Jerusalem’s walls, with Philip at his back: '
-              + '"We grow weaker daily, and the kingdom’s affairs press on every side. '
-              + 'Let us give these men their right to live by their own laws, as before; '
-              + 'for it was on account of their laws which we abolished that they were '
-              + 'angered, and did all these things." The decree goes out under the royal '
-              + 'seal. Judea keeps its Law, its arms, and its hills — and the kingdom '
-              + 'of the Greeks keeps its distance.',
-            score: 200,
-          });
+        // Early concession: at 50% war score Antioch OFFERS terms (SPEC §31) —
+        // an event card the player may accept (win; keeps only the provinces
+        // of the faith) or refuse (the war goes on). Offered once.
+        if (ws >= 50 && !h.getFlag(ctx, 'termsOffered')) {
+          h.setFlag(ctx, 'termsOffered', true);
+          fireEventById(ctx, 'ev_terms_antioch');
           return;
         }
         // Timed win: on (or after) 1 January 140 BCE, Jerusalem plus a living

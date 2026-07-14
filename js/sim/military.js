@@ -613,15 +613,17 @@ export function airRaidCore(ctx, tag, wingId, provId) {
   const tgt = p && raidTargets(ctx, w).find((t) => t.id === provId);
   if (!tgt) return { ok: false, why: 'no hostile target there' };
   w.raidCd = AIRC(ctx, 'raidCdDays', 12);
-  // fighters based near the target rise to meet the raid
+  // fighters based near the target rise to meet the raid; a good commander
+  // (SPEC §31 wing leaders) slips the net more often and dies less
   const intercepted = Object.values(g.airwings).some((o) => o && o.id !== w.id
     && isHostile(ctx, w.tag, o.tag) && provsWithin(ctx, o.prov, AIRC(ctx, 'rangeHops', 2)).has(provId));
+  const evade = w.leader ? num(w.leader.maneuver, 0) : 0;
   let result = 'hit';
   let killed = 0;
   if (intercepted) {
     const roll = ctx.rng.next();
-    if (roll < 0.18) result = 'lost';
-    else if (roll < 0.5) result = 'repelled';
+    if (roll < Math.max(0.06, 0.18 - 0.02 * evade)) result = 'lost';
+    else if (roll < Math.max(0.25, 0.5 - 0.04 * evade)) result = 'repelled';
   }
   if (result === 'lost') {
     delete g.airwings[wingId];
@@ -629,7 +631,8 @@ export function airRaidCore(ctx, tag, wingId, provId) {
     const foes = armiesInProv(ctx, provId).filter((a) => a.men > 0 && isHostile(ctx, w.tag, a.tag));
     const men = foes.reduce((s, a) => s + a.men, 0);
     if (men > 0) {
-      killed = Math.min(350, Math.max(40, Math.round(men * 0.03)));
+      const aim = 1 + 0.1 * (w.leader ? num(w.leader.fire, 0) : 0);
+      killed = Math.min(400, Math.max(40, Math.round(men * 0.03 * aim)));
       for (const a of foes) {
         a.men = Math.max(0, a.men - Math.round(killed * (a.men / men)));
         a.morale = Math.max(0, num(a.morale) - 0.35);
@@ -677,6 +680,20 @@ export function raiseAirWing(ctx, tag, provId) {
   const nth = airWingsOf(ctx, tag).length + 1;
   g.airwings[id] = { id, tag, prov: provId, name: 'No. ' + nth + ' Squadron' };
   return { ok: true, wing: g.airwings[id] };
+}
+// A named commander for a squadron (SPEC §31): fire pips sharpen the bombs
+// (+10%/pip), maneuver pips slip interception. Costs 50 martial points,
+// like an army general.
+export function hireWingLeaderCore(ctx, tag, wingId) {
+  const g = ctx.game;
+  const w = (g.airwings || {})[wingId];
+  const t = g.tags[tag];
+  if (!w || w.tag !== tag || !t) return { ok: false, why: 'no such wing' };
+  if (w.leader) return { ok: false, why: 'the squadron already has its commander' };
+  if (num(t.points && t.points.mar) < 50) return { ok: false, why: 'a commander costs 50 martial points' };
+  t.points.mar = num(t.points.mar) - 50;
+  w.leader = rollGeneral(ctx, tag);
+  return { ok: true, leader: w.leader };
 }
 export function rebaseAirWing(ctx, tag, wingId, provId) {
   const g = ctx.game;
@@ -1811,15 +1828,23 @@ export function dissolveWar(ctx, war) {
 // holds — the winning side takes ownership of every enemy province it controls,
 // everything else reverts. null: white peace, all occupations revert. Used when
 // one side is annihilated and when a chapter's verdict closes the book.
+// opts.keep (SPEC §31): a predicate deciding which occupied provinces the
+// winners actually annex; everything else returns to its owner. Scripted
+// concessions use it — "Judea keeps its hills" must not mean all of Syria.
 export function endWarBySword(ctx, war, winnersKey, opts) {
   const g = ctx.game;
   const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
   const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
   const participants = war.attackers.concat(war.defenders);
+  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.controller === p.owner) continue;
     if (participants.indexOf(p.owner) < 0 || participants.indexOf(p.controller) < 0) continue;
+    if (keep && !keep(p) && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner); // handed back at the table
+      continue;
+    }
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
       if (conqueror) conqueror.aggression = num(conqueror.aggression) + Math.round(devTotal(p) / 3);

@@ -131,6 +131,18 @@ python3 -m http.server 8613 --directory .
   rebase between your fields, and lend their +1 to the fire die over any
   friendly battle within two provinces. Fields that fall burn the wings on
   the ground.
+- You can always sue for peace — every war, even the scripted fights to the
+  death, hears your envoys: white peace when even, territory when winning,
+  refusal when you're beaten. And scripted endings stopped gifting empires:
+  the Terms from Antioch are now an offer you may accept (Judaea keeps the
+  hills of the faith it holds — not half of occupied Syria) or refuse and
+  fight on for everything.
+- Navies age like armies: hulls are laid down to the era's pattern —
+  Penteconters through Trireme Squadrons to Destroyer Flotillas — hit harder
+  each generation, and re-rig at anchor when the art advances. Fleets take
+  admirals and wings take squadron commanders (both rolled like generals);
+  fleets and air wings sit in the outliner beside your armies with counts,
+  cargo, rearm clocks and hire buttons.
 - Wings fly with their crews aboard, and they carry bombs: raid any hostile
   presence in range — thin an enemy host, soften walls you besiege, crack a
   garrison — then rearm for twelve days. Enemy fighters in range contest the

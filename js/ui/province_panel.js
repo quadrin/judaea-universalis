@@ -1,7 +1,7 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
-import { unlockedGen, genName } from '../data/tech.js';
+import { unlockedGen, genName, navalGenName } from '../data/tech.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
 const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', airfield: 'plane' };
@@ -341,9 +341,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const myPort = p.owner === g.playerTag && p.controller === g.playerTag;
     refs.buildShip.classList.toggle('hidden', !(coastal && myPort && actions && typeof actions.buildShip === 'function'));
     if (coastal && myPort) {
-      refs.buildShip.textContent = 'Build Ship (30t)';
-      refs.buildShip.dataset.tt = 'Lay down a hull: 30 talents, upkeep 0.5 a month, carries 1,000 men. Ships gather into the fleet riding off this port.';
+      // Hulls speak the age too (SPEC §31): Penteconters through Destroyers.
       const t = g.tags[g.playerTag];
+      const shipPattern = navalGenName(unlockedGen(((t && t.tech && t.tech.mar) | 0)));
+      refs.buildShip.textContent = `Lay down ${shipPattern} (30t)`;
+      refs.buildShip.dataset.tt = `Lay down a hull of ${shipPattern}: 30 talents, upkeep 0.5 a month, carries 1,000 men. Ships gather into the fleet riding off this port; older fleets can be re-rigged from the outliner.`;
       refs.buildShip.classList.toggle('disabled', !t || (t.treasury || 0) < 30);
     }
 

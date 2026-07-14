@@ -670,6 +670,15 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
                 for (let i = 0; i < n; i++) {
                   drawPlane(sx - ((n - 1) * 7 * s) + i * 14 * s, gy + 13 * s, tagColor(game, wings[i].tag), s);
                 }
+                // the squadron count reads like an army banner's (SPEC §31)
+                x2.fillStyle = '#fff';
+                x2.font = `bold ${Math.round(9 * s)}px Georgia, serif`;
+                x2.textAlign = 'left';
+                x2.textBaseline = 'middle';
+                x2.shadowColor = 'rgba(0,0,0,0.75)';
+                x2.shadowBlur = 2;
+                x2.fillText(String(wings.length), sx + (n - 1) * 7 * s + 9 * s, gy + 13 * s);
+                x2.shadowBlur = 0;
               }
             }
           }
