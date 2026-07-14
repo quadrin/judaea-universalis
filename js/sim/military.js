@@ -1071,6 +1071,25 @@ export function vassalsOf(ctx, lord) {
   }
   return out;
 }
+// The world closes ranks against a conqueror: every living, unaligned realm
+// that both fears (infamy >= 30) and hates (opinion <= -75) the expander
+// stands in its defensive coalition.
+export function coalitionAgainst(ctx, expander) {
+  const g = ctx.game;
+  const t = g.tags[expander];
+  if (!t || num(t.aggression) < 30) return [];
+  const out = [];
+  for (const k of Object.keys(g.tags)) {
+    if (k === expander || k === 'REB') continue;
+    const o = g.tags[k];
+    if (!o || !o.alive || o.overlord === expander) continue;
+    if ((t.allies || []).indexOf(k) >= 0) continue;
+    if (num(o.opinion && o.opinion[expander], 0) > -75) continue;
+    out.push(k);
+  }
+  return out;
+}
+
 export function declareWar(ctx, atk, def, name, cb) {
   const g = ctx.game;
   const A = g.tags[atk], D = g.tags[def];
@@ -1095,6 +1114,19 @@ export function declareWar(ctx, atk, def, name, cb) {
   }
   for (const al of D.allies || []) join(defenders, al);
   for (const v of vassalsOf(ctx, def)) join(defenders, v);
+  // The coalition answers: realms leagued against an infamous conqueror
+  // defend anyone he attacks (anti-snowball, SPEC §21).
+  const coal = coalitionAgainst(ctx, atk);
+  if (coal.indexOf(def) >= 0) {
+    for (const m of coal) join(defenders, m);
+    if (atk === g.playerTag || def === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'The coalition marches',
+        text: 'The realms that feared ' + (A.name || atk) + ' answer as one.',
+        type: atk === g.playerTag ? 'bad' : 'good',
+      });
+    }
+  }
   const war = {
     id: 'war' + (g.wars.length + 1),
     name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
@@ -1379,6 +1411,8 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     if (!p || p.impassable || p.controller === p.owner) continue;
     if (participants.indexOf(p.owner) < 0 || participants.indexOf(p.controller) < 0) continue;
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
+      const conqueror = g.tags[p.controller];
+      if (conqueror) conqueror.aggression = num(conqueror.aggression) + Math.round(devTotal(p) / 3);
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -1423,7 +1457,15 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
     if (me && Array.isArray(me.claims)) me.claims = me.claims.filter((c) => c !== id); // claim satisfied
   }
-  if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
+  if (cededNames.length) {
+    terms.push('cedes ' + cededNames.join(', '));
+    // Conquest is remembered: infamy proportional to what was taken (decays
+    // one point a month — see monthlyOpinionDrift).
+    if (me) me.aggression = num(me.aggression) + Math.round(ev.provinces.reduce((sum, pid) => {
+      const q = ctx.byId(pid);
+      return sum + (q ? devTotal(q) : 0);
+    }, 0) / 3);
+  }
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];
     et.overlord = byTag;

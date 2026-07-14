@@ -348,6 +348,7 @@ function aiConsiderWar(ctx, tag) {
   if (!t || t.overlord) return; // clients follow their overlord to war, never lead
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
   if (num(t.warExhaustion) > 5 || num(t.stability) < 1) return;
+  if (num(t.aggression) > 40) return; // the world is watching: digest first
   const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
   const myMen = strength(tag);
   if (myMen < 8000) return; // no army worth the name, no adventures

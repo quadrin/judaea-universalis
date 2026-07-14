@@ -104,6 +104,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       advisors: { gov: null, infl: null, mar: null },
+      aggression: 0,
       courtCand: {},
       modifiers: [],
       atWarWith: [], allies: [], opinion: {},
@@ -1022,6 +1023,7 @@ export function gameActions(ctx) {
         if (!t) return null;
         if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
         if (!t.courtCand) t.courtCand = {};
+    if (!Number.isFinite(t.aggression)) t.aggression = 0;
         const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
         const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
         const out = {};
@@ -1371,6 +1373,7 @@ export function reviveGame(saved) {
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};
+    if (!Number.isFinite(t.aggression)) t.aggression = 0;
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;
