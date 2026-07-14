@@ -71,6 +71,9 @@ export const BOOKMARK_40 = {
   id: '40bce',
   name: "Herod's Rise",
   startDate: { y: -40, m: 7, d: 1 },
+  // Technology of the age (SPEC §22): the legions and the cataphract East.
+  techBase: 4,
+  techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'The Parthians have crossed the Euphrates and nothing stood. Syria is overrun, '
     + 'and in Jerusalem they have crowned Antigonus, the last fighting Hasmonean, who paid '

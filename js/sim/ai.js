@@ -8,8 +8,10 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
+  modernizeInfo, modernizeArmyCore,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
 import { LOAN_SIZE } from './economy.js';
 
 const _warned = new Set();
@@ -66,7 +68,9 @@ function aiRecruit(ctx, tag, hints, fraction) {
   // gross income can maintain — small realms stop drilling themselves into
   // debt spirals.
   const maintPerReg = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35;
-  const affordable = Math.max(3, Math.floor((num(t.income) * 0.75) / maintPerReg));
+  // 0.65 of income may go to upkeep — the rest is headroom for the day war
+  // occupation halves the tax rolls (tech-boosted incomes made 0.75 too greedy).
+  const affordable = Math.max(3, Math.floor((num(t.income) * 0.65) / maintPerReg));
   const target = Math.ceil(Math.min(num(hints && hints.targetRegiments, 20), affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
@@ -452,6 +456,43 @@ function aiReforms(ctx, tag) {
   }
 }
 
+// Keep pace with the age (SPEC §22): the AI buys the cheapest affordable tech
+// level each month — never racing ahead of the era (the +50%/level penalty is
+// a trap for computers), always catching up when behind.
+function aiTech(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t || !t.tech) return;
+  const bm = ctx.bookmark;
+  const eraBase = eraBaseline(num(bm && bm.techBase, 3) | 0,
+    monthsBetween((bm && bm.startDate) || ctx.game.date, ctx.game.date));
+  let best = null;
+  for (const key of Object.keys(TECH_CATEGORIES)) {
+    const level = num(t.tech[key]) | 0;
+    const next = level + 1;
+    if (next > TECH_MAX || next > eraBase + 1) continue; // never ahead of the age
+    const cost = Math.round(techCost(next) * aheadMult(next, eraBase));
+    if (num(t.points[TECH_CATEGORIES[key].point]) < cost + 100) continue;
+    if (!best || cost < best.cost) best = { key, next, cost };
+  }
+  if (!best) return;
+  t.points[TECH_CATEGORIES[best.key].point] -= best.cost;
+  t.tech[best.key] = best.next;
+  applyReformsToTag(ctx.DEFINES, t, tag);
+}
+
+// Re-equip old-pattern armies when the coffers allow — cheapest first, one a month.
+function aiModernize(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t || num(t.treasury) < 100) return;
+  let best = null;
+  for (const a of armiesOf(ctx, tag)) {
+    const mi = modernizeInfo(ctx, a);
+    if (!mi.can || mi.cost > num(t.treasury) - 60) continue;
+    if (!best || mi.cost < best.cost) best = { a, cost: mi.cost };
+  }
+  if (best) modernizeArmyCore(ctx, best.a);
+}
+
 export function runMonthlyAI(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -462,7 +503,9 @@ export function runMonthlyAI(ctx) {
       aiDiploReciprocity(ctx, tag);
       aiConsiderWar(ctx, tag);
       runTagAI(ctx, tag);
+      aiTech(ctx, tag);
       aiReforms(ctx, tag);
+      aiModernize(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
   try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }

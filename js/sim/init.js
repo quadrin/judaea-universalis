@@ -11,9 +11,10 @@ import {
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
-  chronicle as chronicleCore,
+  chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, genName } from '../data/tech.js';
 import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
 import { explainUnrest } from './unrest.js';
@@ -116,6 +117,22 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     };
   }
 
+  // Technology (SPEC §22): every court starts at its era's level — the
+  // bookmark's techBase, nudged per tag by techTweaks (Rome's legions are a
+  // pattern ahead). Effects bake into t.ideas before manpower pools compute.
+  const techBase = Math.max(0, num(bookmark && bookmark.techBase, 3) | 0);
+  const tweaks = (bookmark && bookmark.techTweaks) || {};
+  for (const key of Object.keys(game.tags)) {
+    const t = game.tags[key];
+    const tw = tweaks[key] || {};
+    t.tech = {
+      gov: Math.max(0, Math.min(TECH_MAX, techBase + (tw.gov | 0))),
+      infl: Math.max(0, Math.min(TECH_MAX, techBase + (tw.infl | 0))),
+      mar: Math.max(0, Math.min(TECH_MAX, techBase + (tw.mar | 0))),
+    };
+    applyReformsToTag(DEFINES, t, key);
+  }
+
   // starting manpower pools from owned development
   const tmpCtx = {
     game, DEFINES,
@@ -186,6 +203,14 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
       if (src && src.heir && !t.heir) t.heir = person(src.heir, 'Heir', 20);
     }
   } catch (e) { console.warn('[sim/init] ruler assignment failed:', e); }
+  // Rebuild every court's merged modifiers (static ideas + reforms + tech) —
+  // saves written before a formula change heal themselves on load.
+  try {
+    for (const key of Object.keys(game.tags)) {
+      const t = game.tags[key];
+      if (t) applyReformsToTag(DEFINES, t, key);
+    }
+  } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }
   return ctx;
 }
 
@@ -481,12 +506,15 @@ export function gameActions(ctx) {
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
 
-  // Shared gating for the player army actions (split / hire general).
+  // Shared gating for the player army actions (split / hire general / modernize).
   const armyActionInfo = (armyId) => {
-    const out = { canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50 };
+    const out = {
+      canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50,
+      canModernize: false, whyModernize: '', modernizeCost: 0, genName: '', newGenName: '',
+    };
     const a = g.armies[armyId];
     if (!a || a.tag !== g.playerTag) {
-      out.whySplit = out.whyHire = 'That army does not answer to us.';
+      out.whySplit = out.whyHire = out.whyModernize = 'That army does not answer to us.';
       return out;
     }
     if (a.inBattle) out.whySplit = a.name + ' is locked in battle.';
@@ -497,7 +525,53 @@ export function gameActions(ctx) {
     const t = g.tags[g.playerTag];
     if (!t || num(t.points && t.points.mar) < 50) out.whyHire = 'Not enough martial points (50 required).';
     out.canHire = !out.whyHire;
+    try {
+      const mi = modernizeInfo(ctx, a);
+      out.canModernize = mi.can;
+      out.whyModernize = mi.why;
+      out.modernizeCost = mi.cost;
+      out.genName = genName(num(a.gen, 0), 'inf');
+      out.newGenName = genName(mi.unlocked, 'inf');
+    } catch (e) { warnOnce('modInfo', 'modernizeInfo failed', e); }
     return out;
+  };
+
+  // The player's tech ladder, priced against the age (SPEC §22).
+  const techInfo = () => {
+    const t = g.tags[g.playerTag];
+    if (!t || !t.tech) return null;
+    const base = num(ctx.bookmark && ctx.bookmark.techBase, 3) | 0;
+    const months = monthsBetween((ctx.bookmark && ctx.bookmark.startDate) || g.date, g.date);
+    const eraBase = eraBaseline(base, months);
+    const rows = Object.keys(TECH_CATEGORIES).map((key) => {
+      const cat = TECH_CATEGORIES[key];
+      const level = num(t.tech[key]) | 0;
+      const next = level + 1;
+      const atMax = next > TECH_MAX;
+      const mult = aheadMult(next, eraBase);
+      const cost = atMax ? 0 : Math.round(techCost(next) * mult);
+      const have = num(t.points[cat.point]);
+      return {
+        key, name: cat.name, desc: cat.desc, point: cat.point,
+        level, cost, eraBase,
+        ahead: !atMax && mult > 1,
+        canBuy: !atMax && have >= cost,
+        whyNot: atMax ? 'The ladder ends here — for now.'
+          : have < cost ? `Needs ${cost} ${cat.point === 'mar' ? 'martial' : cat.point === 'gov' ? 'government' : 'influence'} points`
+            + (mult > 1 ? ' (ahead of the age: +' + Math.round((mult - 1) * 100) + '%)' : '') + '.'
+            : (mult > 1 ? 'Ahead of the age: +' + Math.round((mult - 1) * 100) + '% cost.' : ''),
+      };
+    });
+    const gi = unlockedGen(num(t.tech.mar) | 0);
+    const nextGen = UNIT_GENS[gi + 1] || null;
+    return {
+      rows, eraBase,
+      unit: {
+        gen: gi, inf: genName(gi, 'inf'), cav: genName(gi, 'cav'),
+        nextAt: nextGen ? nextGen.at : null,
+        nextInf: nextGen ? nextGen.inf : null,
+      },
+    };
   };
 
   return {
@@ -1111,6 +1185,42 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('buyIdea', 'buyIdea failed', e); }
     },
 
+    // ---- technology (SPEC §22) ---------------------------------------------------
+    getTech() {
+      try { return techInfo(); } catch (e) { warnOnce('getTech', 'getTech failed', e); return null; }
+    },
+    buyTech(catKey) {
+      try {
+        const t = g.tags[g.playerTag];
+        const cat = TECH_CATEGORIES[catKey];
+        if (!t || !cat || !t.tech) return;
+        const info = techInfo();
+        const row = info && info.rows.find((r) => r.key === catKey);
+        if (!row || row.level >= TECH_MAX) return;
+        if (!row.canBuy) { say('The age is not ready', row.whyNot || 'Not enough points.', 'bad'); return; }
+        const before = tagGen(ctx, g.playerTag);
+        t.points[cat.point] = num(t.points[cat.point]) - row.cost;
+        t.tech[catKey] = row.level + 1;
+        applyReformsToTag(ctx.DEFINES, t, g.playerTag);
+        say('Advancement', cat.name + ' rises to ' + t.tech[catKey] + '.', 'good');
+        const after = tagGen(ctx, g.playerTag);
+        if (after > before) {
+          say('A new pattern of soldier', genName(after, 'inf') + ' and ' + genName(after, 'cav')
+            + ' may now be raised — armies at the old pattern can be modernized for gold.', 'good');
+        }
+      } catch (e) { warnOnce('buyTech', 'buyTech failed', e); }
+    },
+    modernizeArmy(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return;
+        const r = modernizeArmyCore(ctx, a);
+        if (!r.ok) { say('Cannot modernize', r.why, 'bad'); return; }
+        say('Army modernized', a.name + ' re-equips as ' + genName(num(a.gen, 0), 'inf')
+          + ' for ' + r.cost + ' talents.', 'good');
+      } catch (e) { warnOnce('modernize', 'modernizeArmy failed', e); }
+    },
+
     // ---- battle window ---------------------------------------------------------
     getBattleInfo(provId) {
       try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
@@ -1145,6 +1255,7 @@ export function gameActions(ctx) {
             troops,
             manpower: Math.round(num(t.manpower)),
             warExhaustion: Math.round(num(t.warExhaustion) * 10) / 10,
+            tech: t.tech ? (t.tech.gov | 0) + '/' + (t.tech.infl | 0) + '/' + (t.tech.mar | 0) : '-',
           });
         }
         rows.sort((a, b) => b.dev - a.dev);
@@ -1384,6 +1495,7 @@ export function reviveGame(saved) {
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
+    if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};
     if (!Number.isFinite(t.aggression)) t.aggression = 0;
@@ -1395,6 +1507,13 @@ export function reviveGame(saved) {
   for (let i = 1; i < saved.provinces.length; i++) {
     const p = saved.provinces[i];
     if (p && p.conversion === undefined) p.conversion = null;
+  }
+  // Pre-tech saves: armies take their nation's current pattern (SPEC §22).
+  for (const id of Object.keys(saved.armies || {})) {
+    const a = saved.armies[id];
+    if (!a || Number.isFinite(a.gen)) continue;
+    const t = saved.tags[a.tag];
+    a.gen = unlockedGen(num(t && t.tech && t.tech.mar, 0));
   }
   saved.paused = true; // always resume paused
   return saved;

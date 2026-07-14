@@ -4,7 +4,7 @@
 // open water (straight line — the Mediterranean has no walls). Each ship
 // carries 1000 men. Armies aboard (a.aboard=true) are out of land play.
 
-import { num, clamp, isHostile, sameSide, armiesInProv } from './military.js';
+import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult } from './military.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
 const SHIP_UPKEEP = 0.5;     // talents per ship per month
@@ -147,8 +147,11 @@ export function fleetsDaily(ctx) {
         const A = fleets[i], B = fleets[j];
         if (!isHostile(ctx, A.tag, B.tag) || A.ships <= 0 || B.ships <= 0) continue;
         const rollA = ctx.rng.int(6) + 1, rollB = ctx.rng.int(6) + 1;
-        const lossB = Math.max(0, Math.round(A.ships * 0.12 * (1 + 0.15 * Math.max(0, rollA - rollB))));
-        const lossA = Math.max(0, Math.round(B.ships * 0.12 * (1 + 0.15 * Math.max(0, rollB - rollA))));
+        // Influence tech sharpens the broadside (navalMult, SPEC §22).
+        const nmA = resolveTagMult(ctx, A.tag, 'navalMult');
+        const nmB = resolveTagMult(ctx, B.tag, 'navalMult');
+        const lossB = Math.max(0, Math.round(A.ships * 0.12 * nmA * (1 + 0.15 * Math.max(0, rollA - rollB))));
+        const lossA = Math.max(0, Math.round(B.ships * 0.12 * nmB * (1 + 0.15 * Math.max(0, rollB - rollA))));
         A.ships = Math.max(0, A.ships - lossA);
         B.ships = Math.max(0, B.ships - lossB);
         const player = g.playerTag;

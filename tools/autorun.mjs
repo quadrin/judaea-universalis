@@ -125,7 +125,9 @@ async function runBookmark(entry, geom) {
     if (!s || !e) continue;
     const flags = [];
     if (!game.tags[t].alive) flags.push('DEAD');
-    if (e.provs >= Math.max(4, s.provs * 1.6)) flags.push('SNOWBALL');
+    // Real snowballs grow by whole regions; a 2-province minor scripted up to 4
+    // is history, not imbalance — hence the absolute-growth floor.
+    if (e.provs >= Math.max(4, s.provs * 1.6) && e.provs - s.provs >= 4) flags.push('SNOWBALL');
     if (e.treasury < -200) flags.push('DEBT-SPIRAL');
     const mid = yearly[Math.floor(yearly.length / 2)][t];
     if (mid && mid.income < 0 && e.income < 0) flags.push('BLEEDING');

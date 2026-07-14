@@ -2107,6 +2107,23 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   font-weight: 700;
 }
 
+/* technology (v2.2): ladder levels + the current pattern of soldier */
+.np-tech-lvl {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #8a6d1a;
+  background: rgba(201, 162, 39, 0.16);
+  border-radius: 9px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.np-tech-unit {
+  font-size: 12px;
+  color: var(--ink-soft);
+  padding: 4px 2px 0;
+  font-style: italic;
+}
+
 /* the chronicle (v2.1): the world's recorded history, newest first */
 #chronicle-modal { position: absolute; inset: 0; z-index: 110; pointer-events: auto; }
 #chronicle-modal.hidden { display: none !important; }

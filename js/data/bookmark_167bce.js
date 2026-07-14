@@ -78,6 +78,10 @@ export const BOOKMARK_167 = {
   id: '167bce',
   name: 'The Maccabean Revolt',
   startDate: { y: -167, m: 11, d: 1 },
+  // Technology of the age (SPEC §22). Everyone starts level: the Seleucid
+  // edge is already scripted into armies and events — a tech edge on top
+  // crushes the designed underdog arc flat.
+  techBase: 3,
 
   blurb: 'The king has decreed one law for all his peoples: the daily offering has ceased, '
     + 'the scrolls burn, and on the altar of the Lord stands an abomination sacred to Olympian '

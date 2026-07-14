@@ -77,6 +77,9 @@ export const BOOKMARK_132 = {
   id: '132ce',
   name: 'The Bar Kokhba Revolt',
   startDate: { y: 132, m: 4, d: 1 },
+  // Technology of the age (SPEC §22): Hadrian's legions at their zenith.
+  techBase: 5,
+  techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'Sixty years after the Temple burned, Hadrian has ploughed the sacred hill for a '
     + 'colony named Aelia Capitolina, with a temple of Jupiter where the House once stood. '

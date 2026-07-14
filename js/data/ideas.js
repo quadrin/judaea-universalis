@@ -3,6 +3,7 @@
 // point. Unlocked tiers merge into tag.ideas — the effects map that
 // resolveTagMult / resolveTagAdd already consult (mult keys default 1 and
 // multiply; everything else adds).
+import { computeTechEffects } from './tech.js';
 
 export const IDEA_TREES = {
   mil: {
@@ -45,16 +46,19 @@ export function ideaCost(tier) { // tier index 0..4
 }
 
 // Rebuild tag.ideas = the tag's static national bonuses (DEFINES.TAGS[tag].ideas)
-// merged with everything its enacted reforms grant. Pure; call after any change
-// to t.reforms.
+// merged with everything its enacted reforms grant and everything its tech
+// levels confer (SPEC §22). Pure; call after any change to t.reforms or t.tech.
 export function applyReformsToTag(DEFINES, t, tagKey) {
   const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[tagKey] && DEFINES.TAGS[tagKey].ideas) || {};
   const merged = { ...base };
-  const eff = computeIdeaEffects(t.reforms);
-  for (const k of Object.keys(eff)) {
-    if (k.endsWith('Mult')) merged[k] = (Number.isFinite(merged[k]) ? merged[k] : 1) * eff[k];
-    else merged[k] = (Number.isFinite(merged[k]) ? merged[k] : 0) + eff[k];
-  }
+  const fold = (eff) => {
+    for (const k of Object.keys(eff)) {
+      if (k.endsWith('Mult')) merged[k] = (Number.isFinite(merged[k]) ? merged[k] : 1) * eff[k];
+      else merged[k] = (Number.isFinite(merged[k]) ? merged[k] : 0) + eff[k];
+    }
+  };
+  fold(computeIdeaEffects(t.reforms));
+  if (t.tech) fold(computeTechEffects(t.tech));
   t.ideas = merged;
 }
 

@@ -1,5 +1,7 @@
 // Judaea Universalis — military: armies, movement, battles, sieges, wars.
 // DOM-free leaf module: imports nothing from other sim files (they import us).
+// Zero-dependency data modules (tech ladders) are fair game — no cycles.
+import { unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN } from '../data/tech.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -66,6 +68,16 @@ export function resolveTagAdd(ctx, tag, key) {
 }
 export function disciplineOf(ctx, tag) {
   return clamp(resolveTagMult(ctx, tag, 'disciplineMult'), 0.5, 2);
+}
+// Tech's hand on the battlefield (SPEC §22): the nation's military-tech mult
+// times the pattern its regiments were actually raised to. An army equipped a
+// generation behind fights like it.
+export function armyPowerOf(ctx, army) {
+  return resolveTagMult(ctx, army.tag, 'milPowerMult') * genMult(num(army.gen, 0));
+}
+export function tagGen(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return unlockedGen(num(t && t.tech && t.tech.mar, 0));
 }
 export function maxMoraleOf(ctx, tag) {
   const t = ctx.game.tags[tag];
@@ -223,7 +235,7 @@ export function spawnArmy(ctx, tag, provName, opts) {
   const regSize = B(ctx, 'regSize', 1000);
   const id = g.nextArmyId++;
   const mm = maxMoraleOf(ctx, tag);
-  const gen = o.general ? {
+  const leader = o.general ? {
     name: String(o.general.name || 'General'),
     fire: clamp(Math.round(num(o.general.fire, 0)), 0, 5),
     shock: clamp(Math.round(num(o.general.shock, 0)), 0, 5),
@@ -236,7 +248,8 @@ export function spawnArmy(ctx, tag, provName, opts) {
     regiments: { inf, cav },
     men: (inf + cav) * regSize,
     morale: mm, maxMorale: mm,
-    general: gen,
+    general: leader,
+    gen: Number.isFinite(o.gen) ? (o.gen | 0) : tagGen(ctx, tag), // unit pattern (SPEC §22)
     inBattle: false, retreating: false,
   };
   g.armies[id] = army;
@@ -362,7 +375,7 @@ function sideStats(ctx, armies, phase) {
   for (const a of armies) {
     men += a.men;
     moraleW += num(a.morale) * a.men;
-    discW += disciplineOf(ctx, a.tag) * a.men;
+    discW += disciplineOf(ctx, a.tag) * armyPowerOf(ctx, a) * a.men;
     if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
     tags.add(a.tag);
   }
@@ -987,11 +1000,36 @@ export function splitArmyCore(ctx, army) {
     men: newMen,
     morale: num(army.morale), maxMorale: num(army.maxMorale, 3),
     general: null,
+    gen: num(army.gen, 0), // the detachment marches in its parent's pattern
     inBattle: false, retreating: false,
   };
   g.armies[id] = det;
   engageIfNeeded(ctx, det);
   return id;
+}
+
+// ---------------------------------------------------------------- modernization (SPEC §22)
+// Re-equip an army to the nation's newest unlocked pattern. Gold per regiment
+// per generation crossed; refused mid-battle and mid-rout.
+export function modernizeInfo(ctx, army) {
+  const t = army ? ctx.game.tags[army.tag] : null;
+  const unlocked = army ? tagGen(ctx, army.tag) : 0;
+  const cur = num(army && army.gen, 0);
+  const gap = Math.max(0, unlocked - cur);
+  const cost = army ? regCount(army) * MODERNIZE_COST_PER_REG_PER_GEN * gap : 0;
+  let why = '';
+  if (!gap) why = 'Already at the newest pattern';
+  else if (army.inBattle || army.retreating) why = 'Not in the middle of a fight';
+  else if (!t || num(t.treasury) < cost) why = 'Needs ' + cost + ' talents';
+  return { unlocked, cur, gap, cost, can: !why, why };
+}
+export function modernizeArmyCore(ctx, army) {
+  const info = modernizeInfo(ctx, army);
+  if (!info.can) return { ok: false, why: info.why };
+  const t = ctx.game.tags[army.tag];
+  t.treasury = num(t.treasury) - info.cost;
+  army.gen = info.unlocked;
+  return { ok: true, cost: info.cost };
 }
 export function mergeInto(ctx, fromId, intoId) {
   const g = ctx.game;
@@ -1002,6 +1040,8 @@ export function mergeInto(ctx, fromId, intoId) {
   if (f.inBattle || into.inBattle || f.retreating || into.retreating) return false;
   const totalMen = f.men + into.men;
   into.morale = totalMen > 0 ? (num(f.morale) * f.men + num(into.morale) * into.men) / totalMen : into.morale;
+  // Mixed patterns blend by weight of men — merging levies into legions dilutes them.
+  into.gen = totalMen > 0 ? Math.round((num(f.gen, 0) * f.men + num(into.gen, 0) * into.men) / totalMen) : num(into.gen, 0);
   into.regiments.inf = num(into.regiments.inf) + num(f.regiments.inf);
   into.regiments.cav = num(into.regiments.cav) + num(f.regiments.cav);
   into.men = totalMen;

@@ -483,10 +483,11 @@ export function initUI(staticCtx) {
       { key: 'treasury', label: 'Treasury' },
       { key: 'troops', label: 'Troops' },
       { key: 'manpower', label: 'Manpower' },
+      { key: 'tech', label: 'Tech' },
       { key: 'warExhaustion', label: 'War Exh.' },
     ];
-    rows.sort((a, b) => ledgerSort === 'name'
-      ? String(a.name).localeCompare(String(b.name))
+    rows.sort((a, b) => (ledgerSort === 'name' || typeof a[ledgerSort] === 'string')
+      ? String(a[ledgerSort]).localeCompare(String(b[ledgerSort]))
       : (b[ledgerSort] || 0) - (a[ledgerSort] || 0));
     const fmtCell = (r, key) => key === 'name'
       ? `${flagChipHtml(r.tag)} ${esc(r.name)}${r.overlord ? ' <span class="peace-dim">(client)</span>' : ''}`
