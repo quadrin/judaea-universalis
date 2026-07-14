@@ -40,6 +40,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('temple', 'icon-k')}Capital</span><span class="pp-v" data-ref="capital"></span></div>
+        <div class="pp-row" data-ref="govRow"><span class="pp-k">${icon('scales', 'icon-k')}Government</span><span class="pp-v" data-ref="govType"></span></div>
         <div class="pp-row" data-ref="provRow" data-tt="Provinces owned · total development"><span class="pp-k">${icon('bricks', 'icon-k')}Realm</span><span class="pp-v" data-ref="realm"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}Legitimacy</span><span class="pp-v" data-ref="legitimacy"></span></div>
@@ -188,6 +189,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const cul = (DEFINES.CULTURES || {})[t.culture];
     setText(refs.culture, (cul && cul.name) || titleCase(t.culture));
     refs.cultureDot.style.background = rgb(cul && cul.color);
+    // Government type (SPEC §25): the constitution, with elections counted down.
+    const gov = (DEFINES.GOV_TYPES || {})[t.govType];
+    if (gov) {
+      const months = t.govType === 'republic' ? Math.max(0, Math.round(t.electionIn || 0)) : 0;
+      setText(refs.govType, gov.name + (t.govType === 'republic' ? ` · vote in ${months}m` : ''));
+      refs.govRow.dataset.tt = gov.desc || gov.name;
+    } else {
+      setText(refs.govType, titleCase(t.govType || 'monarchy'));
+    }
     const capName = def.capital || '';
     if (capName) {
       const cap = ctx.prov ? ctx.prov(capName) : null;

@@ -110,6 +110,15 @@ python3 -m http.server 8613 --directory .
 - The map speaks each era's language: in 1948 the labels read Tel Aviv-Jaffa,
   Latrun, Amman, Cairo and Baghdad, and the modern cities carry modern
   populations — while the sim keeps its canonical ancient keys underneath.
+- Governments: monarchies crown heirs (and suffer regencies), republics vote
+  every four years — Rome is a republic until the emperors, and 1948 Israel
+  elects its head of government — theocracies never anoint a child, and tribal
+  confederations field every tent's sons. Forming a nation adopts its
+  constitution.
+- Armies wear their age on the map: antiquity's swallow-tailed standards, the
+  lance ages' pennons, and squared modern brigade flags with rifle or tank
+  glyphs — and modern armies march half again as fast and break fortress walls
+  with artillery, while Bar Kokhba's war stays hill forts and patience.
 
 ## Architecture
 

@@ -199,7 +199,13 @@ export function findPath(ctx, tag, fromId, toId) {
   if (!canEnter(ctx, tag, toId)) return null;
   return bfs(ctx, fromId, (id) => canEnter(ctx, tag, id), (id) => id === toId, 64);
 }
-export function hopDays(ctx, fromId, destId) {
+// Marching speed by unit pattern (SPEC §25): antiquity walks, the lance ages
+// ride a little faster, the musket age has roads, the modern age has trucks.
+const GEN_SPEED = [1, 1, 1, 1.1, 1.25, 1.5];
+export function genSpeed(genIdx) {
+  return GEN_SPEED[Math.max(0, Math.min(GEN_SPEED.length - 1, genIdx | 0))];
+}
+export function hopDays(ctx, fromId, destId, army) {
   const cs = ctx.geom && ctx.geom.centroids;
   const a = cs && cs[fromId], b = cs && cs[destId];
   let dist = 60;
@@ -209,7 +215,8 @@ export function hopDays(ctx, fromId, destId) {
   const p = ctx.byId(destId);
   const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
   const mc = terr ? num(terr.moveCost, 1.2) : 1.2;
-  return clamp(Math.round((4 + dist / 24) * mc), 3, 40);
+  const spd = army ? genSpeed(num(army.gen, 0)) : 1;
+  return clamp(Math.round((4 + dist / 24) * mc / spd), 2, 40);
 }
 export function issueMove(ctx, army, targetId) {
   if (!army || army.inBattle) return false;
@@ -583,7 +590,7 @@ export function moveArmiesDaily(ctx) {
       if (a.retreating) a.retreating = false;
       continue;
     }
-    if (a.moveDaysLeft <= 0) { a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0]); a.hopTotal = a.moveDaysLeft; }
+    if (a.moveDaysLeft <= 0) { a.moveDaysLeft = hopDays(ctx, a.prov, a.path[0], a); a.hopTotal = a.moveDaysLeft; }
     a.moveDaysLeft--;
     if (a.moveDaysLeft > 0) continue;
     const next = a.path[0];
@@ -689,7 +696,12 @@ function siegeDay(ctx, p) {
       const blockaded = Object.values(ctx.game.fleets || {}).some((f) =>
         f && f.prov === p.id && f.ships > 0 && sameSide(ctx, f.tag, s.by));
       if (blockaded) s.progress += 0.5; // nothing enters the harbor
-      s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1)
+      // Modern firepower against old walls (SPEC §25): a musket-age stack
+      // (gen 4) sieges +25% faster, a modern one (gen 5, artillery and air)
+      // +50%. Antiquity and the lance ages dig like they always did.
+      const stackGen = besiegers.reduce((m, a) => Math.max(m, num(a.gen, 0)), 0);
+      const firepower = 1 + 0.25 * Math.max(0, stackGen - 3);
+      s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
@@ -1067,6 +1079,14 @@ export function switchTagCore(ctx, from, to) {
   nt.tag = to;
   nt.name = def.name || to;
   nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
+  // The new crown brings its constitution (SPEC §25): a proclaimed republic
+  // votes, a proclaimed kingdom crowns.
+  const gov = (ctx.DEFINES.GOV_OF || {})[to];
+  if (gov && gov !== nt.govType) {
+    nt.govType = gov;
+    nt.electionIn = 48;
+    if (gov === 'republic') { nt.heir = null; nt.regency = false; }
+  }
   g.tags[to] = nt;
   delete g.tags[from];
 

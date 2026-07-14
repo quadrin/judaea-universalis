@@ -59,6 +59,9 @@ export function applyReformsToTag(DEFINES, t, tagKey) {
   };
   fold(computeIdeaEffects(t.reforms));
   if (t.tech) fold(computeTechEffects(t.tech));
+  // Government type (SPEC §25): the constitution has its price and its dividend.
+  const gov = t.govType && DEFINES && DEFINES.GOV_TYPES && DEFINES.GOV_TYPES[t.govType];
+  if (gov && gov.effects) fold(gov.effects);
   t.ideas = merged;
 }
 

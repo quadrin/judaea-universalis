@@ -66,9 +66,18 @@ function successionCard(ctx, title, text) {
   try { fireEvent(ctx, ev); return true; } catch (e) { warnOnce('dynEv', 'succession card failed', e); return false; }
 }
 
+// The better of two candidates from the court — how republics choose (SPEC §25).
+function electWinner(ctx, tag) {
+  const a = rollCourtier(ctx, tag);
+  const b = rollCourtier(ctx, tag);
+  const s = (c) => num(c.gov) + num(c.infl) + num(c.mar);
+  return s(a) >= s(b) ? a : b;
+}
+
 // The one true death path: crowns the heir, installs a regency for a child
-// heir, or lets an unrelated courtier seize power. Exposed so scripted events
-// (Nero, Mattathias) can kill rulers through the same machinery.
+// heir, or lets an unrelated courtier seize power. Republics hold an emergency
+// election instead; theocracies never seat a child regency (SPEC §25). Exposed
+// so scripted events (Nero, Mattathias) can kill rulers through this machinery.
 export function rulerDies(ctx, tag, causeText) {
   const g = ctx.game;
   const t = g.tags[tag];
@@ -77,17 +86,32 @@ export function rulerDies(ctx, tag, causeText) {
   const title = old.title || 'Ruler';
   const player = tag === g.playerTag;
   let text;
-  if (t.heir && num(t.heir.age, 20) >= 16) {
+  if (t.govType === 'republic') {
+    const w = electWinner(ctx, tag);
+    t.ruler = { name: w.name, title, gov: w.gov, infl: w.infl, mar: w.mar, age: w.age };
+    t.heir = null;
+    t.regency = false;
+    t.electionIn = 48;
+    t.legitimacy = clamp(num(t.legitimacy) - 5, 0, 100);
+    text = `${old.name} ${causeText || 'has died'} in office. An emergency election raises ${w.name} to the ${title.toLowerCase()}. (−5 legitimacy)`;
+  } else if (t.heir && num(t.heir.age, 20) >= 16) {
     const heirName = t.heir.name;
     crown(ctx, tag, t.heir, title);
     t.legitimacy = clamp(num(t.legitimacy) - 10, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. ${heirName} succeeds as ${title}. (−10 legitimacy)`;
-  } else if (t.heir) {
+  } else if (t.heir && t.govType !== 'theocracy') {
     t.regency = true;
     t.regencyTitle = title; // restored when the heir comes of age
     t.ruler = { name: 'Regency Council', title: 'Regents for ' + t.heir.name, gov: 1, infl: 2, mar: 1, age: 0 };
     t.legitimacy = clamp(num(t.legitimacy) - 20, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. ${t.heir.name} is a child of ${Math.max(0, num(t.heir.age, 0))}; a council rules in the heir's name. (−20 legitimacy)`;
+  } else if (t.heir) {
+    // Theocracy with a child heir: the elders will not anoint a minor — a
+    // senior priest takes office and the young heir waits their turn.
+    const nr = rollCourtier(ctx, tag);
+    t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: Math.max(50, nr.age) };
+    t.legitimacy = clamp(num(t.legitimacy) - 15, 0, 100);
+    text = `${old.name} ${causeText || 'has died'}. The elders will not anoint a child: ${nr.name} takes the ${title.toLowerCase()} while ${t.heir.name} comes of age. (−15 legitimacy)`;
   } else {
     const nr = rollCourtier(ctx, tag);
     t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: nr.age };
@@ -134,8 +158,37 @@ export function monthlySuccession(ctx) {
           }
         }
       }
+      // Republics vote (SPEC §25): every four years the nation chooses, and
+      // the incumbent must beat the field to stay.
+      if (t.govType === 'republic') {
+        t.heir = null;
+        t.regency = false;
+        t.electionIn = num(t.electionIn, 48) - 1;
+        if (t.electionIn <= 0) {
+          const inc = { name: r.name, gov: num(r.gov, 2), infl: num(r.infl, 2), mar: num(r.mar, 2), age: num(r.age, 50) };
+          const ch = electWinner(ctx, tag);
+          const score = (c) => num(c.gov) + num(c.infl) + num(c.mar);
+          const winner = score(inc) >= score(ch) ? inc : ch;
+          const reelected = winner === inc;
+          t.ruler = { name: winner.name, title: r.title || 'Head of Government', gov: winner.gov, infl: winner.infl, mar: winner.mar, age: winner.age };
+          t.electionIn = 48;
+          t.legitimacy = clamp(num(t.legitimacy) + 5, 0, 100);
+          chronicle(ctx, 'ruler', (t.name || tag) + ': ' + (reelected
+            ? r.name + ' is returned to office at the polls.'
+            : ch.name + ' wins the election; ' + r.name + ' leaves office.'));
+          if (tag === g.playerTag) {
+            ctx.bus.emit('notify', {
+              title: 'The nation votes',
+              text: reelected
+                ? r.name + ' is returned to office with a fresh mandate (+5 legitimacy).'
+                : ch.name + ' (' + ch.gov + '/' + ch.infl + '/' + ch.mar + ') wins the election and takes office (+5 legitimacy).',
+              type: 'good',
+            });
+          }
+        }
+      }
       // A court without an heir designates one, eventually.
-      if (!t.heir && !t.regency && ctx.rng.chance(0.015)) {
+      if (!t.heir && !t.regency && t.govType !== 'republic' && ctx.rng.chance(0.015)) {
         const heir = rollCourtier(ctx, tag);
         heir.age = clamp(num(r.age, 45) - 26, 14, 45);
         t.heir = heir;

@@ -1104,3 +1104,33 @@ renderer.render → overlay.draw → labels.update.
   Note: the province mesh itself is one canonical raster for all eras by
   design; a true per-era re-mesh (different border shapes) would need per-era
   Voronoi seed sets and geometry snapshots — a possible future project.
+
+## 25. v2.5: constitutions & the face of war — government types, era units
+
+- **Government types** (`DEFINES.GOV_TYPES` + `GOV_OF` defaults +
+  `bookmark.govTypes` overrides; state `t.govType`/`t.electionIn`): monarchy
+  (heirs, regencies, +0.05 legitimacy/mo), republic (elections every 48
+  months — the incumbent must beat the field; emergency election when a head
+  of government dies in office; no heirs, no regencies; +5% income), theocracy
+  (the elders never anoint a child — a senior priest bridges to the waiting
+  heir; +20% conversion), tribal (+10% manpower). Effects fold into `t.ideas`
+  in applyReformsToTag like reforms/tech/formables. Rome is a REPUBLIC in the
+  three BCE bookmarks (bookmark.govTypes) and an empire after; Judaea rules by
+  High Priest (theocracy); Israel, Syria, Lebanon and Turkey vote in 1948;
+  forming a nation adopts the new crown's constitution (a proclaimed UAR
+  votes; the Kingdom of Israel crowns). Realm-panel Government row shows the
+  type and the election countdown; elections are chronicled and toasted.
+- **Era units on the map** (SPEC §25, `army.gen` consumed by the overlay and
+  the movement/siege math):
+  - **Banners wear their age**: antiquity flies the swallow-tailed standard
+    (unchanged, gens 0–2), the lance ages a pointed pennon (gen 3), the
+    modern ages a squared brigade flag with a unit glyph — crossed rifles for
+    infantry stacks, a tank silhouette for armor-heavy ones (gens 4–5).
+  - **Motorized march** (`genSpeed`, hopDays): gen 3 ×1.1, gen 4 ×1.25,
+    gen 5 ×1.5 — trucks beat sandals; antiquity marches exactly as before.
+  - **Modern firepower vs old walls** (tickSieges): a gen-4 stack sieges +25%
+    faster, a gen-5 stack (artillery and air support, abstracted) +50%.
+  Aircraft/artillery are deliberately abstracted into siege power and march
+  speed rather than separate unit types — each bookmark keeps its own feel
+  (the 1948 war is fast and wall-breaking; Bar Kokhba is still a war of
+  hill forts and patience).
