@@ -86,6 +86,8 @@ export const BOOKMARK_67 = {
   // Technology of the age (SPEC §22): Pompey's Rome fields the Marian legion,
   // two patterns ahead of the quarreling Levant.
   techBase: 4,
+  // Rome is a republic until the emperors (SPEC §25).
+  govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'Queen Salome Alexandra is dead, and her sons cannot both be king. Hyrcanus the '

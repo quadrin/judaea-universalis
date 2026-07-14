@@ -67,6 +67,45 @@ export const DEFINES = {
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
   },
 
+  // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
+  // tech; succession behavior lives in realm.js (republics elect every four
+  // years and know no regencies; theocracies never crown a child).
+  GOV_TYPES: {
+    monarchy: {
+      name: 'Monarchy',
+      desc: 'Crown and dynasty: heirs succeed, and the throne slowly accrues legitimacy.',
+      effects: { legitimacyAdd: 0.05 },
+    },
+    republic: {
+      name: 'Republic',
+      desc: 'Elected government: the nation votes every four years, no heirs and no regencies — and civic economies prosper (+5% income).',
+      effects: { incomeMult: 1.05 },
+    },
+    theocracy: {
+      name: 'Theocracy',
+      desc: 'Rule by the anointed: successors are chosen from among the elders — never a child regency — and the faith spreads with authority (+20% conversion).',
+      effects: { convertMult: 1.2 },
+    },
+    tribal: {
+      name: 'Tribal Confederation',
+      desc: 'Chiefs and elders: every tent sends its sons (+10% manpower).',
+      effects: { manpowerMult: 1.1 },
+    },
+  },
+  // Default government per tag; bookmarks may override (bookmark.govTypes —
+  // Rome is a republic until the emperors).
+  GOV_OF: {
+    ROM: 'monarchy', JUD: 'theocracy', HAS: 'theocracy', SEL: 'monarchy',
+    PTO: 'monarchy', PAR: 'monarchy', NAB: 'monarchy', ARM: 'monarchy',
+    AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
+    ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
+    BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal',
+    ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
+    LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
+    IRN: 'monarchy', UK: 'monarchy', MLI: 'monarchy', UAR: 'republic',
+    REB: 'tribal',
+  },
+
   // Trade goods: price in talents per unit of production
   GOODS: {
     grain:      { name: 'Grain',      price: 2.0,  color: [222, 196, 110] },

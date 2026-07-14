@@ -121,6 +121,9 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       courtCand: {},
       modifiers: [],
       atWarWith: [], allies: [], guarantees: [], opinion: {},
+      govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
+        || (DEFINES.GOV_OF || {})[key] || 'monarchy',
+      electionIn: 48, // months to the next vote (republics only)
       claims: [], overlord: null,
       heir: null, regency: false, missionIdx: 0,
       aiState: {},
@@ -217,12 +220,18 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
       if (src && src.heir && !t.heir) t.heir = person(src.heir, 'Heir', 20);
     }
   } catch (e) { console.warn('[sim/init] ruler assignment failed:', e); }
-  // Rebuild every court's merged modifiers (static ideas + reforms + tech) —
-  // saves written before a formula change heal themselves on load.
+  // Rebuild every court's merged modifiers (static ideas + reforms + tech +
+  // government) — saves written before a formula change heal themselves on load.
   try {
     for (const key of Object.keys(game.tags)) {
       const t = game.tags[key];
-      if (t) applyReformsToTag(DEFINES, t, key);
+      if (!t) continue;
+      if (!t.govType) {
+        t.govType = (bookmark && bookmark.govTypes && bookmark.govTypes[key])
+          || (DEFINES.GOV_OF || {})[key] || 'monarchy';
+      }
+      if (!Number.isFinite(t.electionIn)) t.electionIn = 48;
+      applyReformsToTag(DEFINES, t, key);
     }
   } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }
   return ctx;

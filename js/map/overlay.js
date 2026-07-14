@@ -267,14 +267,29 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     const x = ch.x, y = ch.y;
     const poleX = x + 2.5;
     const clothX = x + 5;
-    const notch = 7;
+    // The banner wears its age (SPEC §25): antiquity flies the swallow-tailed
+    // standard, the lance ages a pointed pennon, the modern ages a squared
+    // brigade flag with a unit glyph.
+    const gen = Math.max(0, (a.gen | 0));
+    const notch = gen >= 4 ? 0 : 7;
     const cloth = () => {
       x2.beginPath();
-      x2.moveTo(clothX, y);
-      x2.lineTo(x + ch.w, y + sway * 0.6);
-      x2.lineTo(x + ch.w - notch, y + CHIP_H * 0.5 + sway);
-      x2.lineTo(x + ch.w, y + CHIP_H + sway * 0.6);
-      x2.lineTo(clothX, y + CHIP_H);
+      if (gen >= 4) { // squared colors
+        x2.moveTo(clothX, y);
+        x2.lineTo(x + ch.w, y + sway * 0.6);
+        x2.lineTo(x + ch.w, y + CHIP_H + sway * 0.6);
+        x2.lineTo(clothX, y + CHIP_H);
+      } else if (gen === 3) { // lance pennon
+        x2.moveTo(clothX, y);
+        x2.lineTo(x + ch.w + 3, y + CHIP_H * 0.5 + sway);
+        x2.lineTo(clothX, y + CHIP_H);
+      } else { // the swallow-tailed standard of antiquity
+        x2.moveTo(clothX, y);
+        x2.lineTo(x + ch.w, y + sway * 0.6);
+        x2.lineTo(x + ch.w - notch, y + CHIP_H * 0.5 + sway);
+        x2.lineTo(x + ch.w, y + CHIP_H + sway * 0.6);
+        x2.lineTo(clothX, y + CHIP_H);
+      }
       x2.closePath();
     };
 
@@ -318,8 +333,40 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.textBaseline = 'middle';
     x2.shadowColor = 'rgba(0,0,0,0.6)';
     x2.shadowBlur = 2;
-    x2.fillText(fmtMen(ch.men), (clothX + x + ch.w - notch) * 0.5, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
+    const textX = gen === 3
+      ? clothX + (ch.w - (clothX - x)) * 0.36 // the pennon narrows to its point
+      : (clothX + x + ch.w - notch) * 0.5;
+    x2.fillText(fmtMen(ch.men), textX, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
     x2.shadowBlur = 0;
+    // Modern unit glyph (SPEC §25): armor if the stack rides, rifles if it walks.
+    if (gen >= 4) {
+      let cav = 0, inf = 0;
+      for (const ar of ch.armies) {
+        cav += (ar.regiments && ar.regiments.cav) || 0;
+        inf += (ar.regiments && ar.regiments.inf) || 0;
+      }
+      const gx = clothX + 2, gy = y + 2;
+      x2.strokeStyle = 'rgba(255,255,255,0.9)';
+      x2.fillStyle = 'rgba(255,255,255,0.9)';
+      x2.lineWidth = 1;
+      if (cav >= Math.max(1, inf)) {
+        // a tank in eight pixels: hull, turret, barrel
+        x2.fillRect(gx, gy + 2.5, 7, 2.6);
+        x2.fillRect(gx + 2, gy + 0.8, 3, 2);
+        x2.beginPath();
+        x2.moveTo(gx + 5, gy + 1.7);
+        x2.lineTo(gx + 8.5, gy + 1.7);
+        x2.stroke();
+      } else {
+        // crossed rifles
+        x2.beginPath();
+        x2.moveTo(gx, gy + 0.5);
+        x2.lineTo(gx + 6.5, gy + 5);
+        x2.moveTo(gx + 6.5, gy + 0.5);
+        x2.lineTo(gx, gy + 5);
+        x2.stroke();
+      }
+    }
     // morale bar (men-weighted across the whole stack)
     const frac = Math.min(1, Math.max(0, ch.moraleW / Math.max(0.01, ch.maxMoraleW)));
     x2.fillStyle = 'rgba(10,8,4,0.85)';

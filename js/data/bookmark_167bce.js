@@ -82,6 +82,8 @@ export const BOOKMARK_167 = {
   // edge is already scripted into armies and events — a tech edge on top
   // crushes the designed underdog arc flat.
   techBase: 3,
+  // Rome is a republic until the emperors (SPEC §25).
+  govTypes: { ROM: 'republic' },
 
   blurb: 'The king has decreed one law for all his peoples: the daily offering has ceased, '
     + 'the scrolls burn, and on the altar of the Lord stands an abomination sacred to Olympian '
