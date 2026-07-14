@@ -81,6 +81,9 @@ export const BOOKMARK_66 = {
   techBase: 5,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
+  // Era name (SPEC §25): Flavia Neapolis is founded only in 72 CE.
+  provinceNames: { 'Neapolis': 'Shechem' },
+
   blurb: 'The procurator Gessius Florus has taken seventeen talents from the Temple treasury, '
     + 'and Jerusalem has answered with stones, then with steel. In the Temple, the captain '
     + 'Eleazar moves to refuse every offering from a foreign hand; in Antioch the governor of '
@@ -287,7 +290,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_samaria', name: 'Cleanse Samaria',
-        desc: 'Take Neapolis and Sebaste, and hold the spine of the hill country.',
+        desc: 'Take Shechem and Sebaste, and hold the spine of the hill country.',
         rewardText: '+10 legitimacy, +25 governance points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Neapolis') && ctx.helpers.controls(ctx, 'JUD', 'Sebaste'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, gov: 25 }),

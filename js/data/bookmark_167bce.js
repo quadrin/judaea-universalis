@@ -85,6 +85,19 @@ export const BOOKMARK_167 = {
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
 
+  // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
+  provinceNames: {
+    'Caesarea Maritima': "Straton's Tower", // Herod builds Caesarea decades later
+    'Antipatris': 'Aphek',                  // Antipatris is Herod's foundation
+    'Sebaste': 'Samaria',                   // renamed for Augustus in 27 BCE
+    'Neapolis': 'Shechem',                  // Flavia Neapolis is founded 72 CE
+    'Caesarea Philippi': 'Panion',          // the grotto of Pan, not yet a Caesarea
+    'Tiberias': 'Rakkath',                  // Tiberias is founded 20 CE
+    'Tarichaea': 'Magdala',
+    'Caesarea Mazaca': 'Mazaca',            // named for Caesar only in 14 CE
+    'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
+  },
+
   blurb: 'The king has decreed one law for all his peoples: the daily offering has ceased, '
     + 'the scrolls burn, and on the altar of the Lord stands an abomination sacred to Olympian '
     + 'Zeus. In the village of Modein an old priest has killed the king’s officer beside '

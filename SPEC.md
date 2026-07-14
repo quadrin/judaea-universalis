@@ -1134,3 +1134,28 @@ renderer.render → overlay.draw → labels.update.
   speed rather than separate unit types — each bookmark keeps its own feel
   (the 1948 war is fast and wall-breaking; Bar Kokhba is still a war of
   hill forts and patience).
+
+## 26. v2.6: the map remembers — era names everywhere, a flag for every nation
+
+- **Era-proper names in every bookmark** (`bookmark.provinceNames`, SPEC §24
+  machinery): the three BCE bookmarks now speak pre-Herodian — Straton's Tower
+  (not yet Caesarea), Aphek (not yet Antipatris), Samaria (not yet Sebaste),
+  Shechem (Flavia Neapolis is founded 72 CE — so 66 CE says Shechem too),
+  Panion, Rakkath (Tiberias is founded 20 CE), Magdala, Mazaca,
+  Seleucia-on-Tigris (Ctesiphon is still a camp across the river). 614 CE
+  speaks Byzantine and Sasanian: Constantia, Hamadan, Circesium, Maishan.
+  115/132 CE keep the canonical (Roman) layer, which is their era. Canonical
+  names remain the content keys via p.canon aliases; prose in missions and
+  event tooltips was retouched where it named a renamed town.
+- **A flag for every nation** (icons.js FLAGS — 32 of 32 tags): the 1948 tags
+  fly their real flags chip-size — Egypt's crescent and three stars, the
+  Hashemite chevron and seven-pointed star, Syria's three red stars, the
+  Lebanese cedar, Iraq's two-star trapezoid flag, the Turkish crescent-star,
+  Saudi Arabia's creed-and-sword, Iran's lion-and-sun tricolor, the Union
+  Flag, and the UAR's two-star pan-Arab tricolor. The ancient courts get
+  parchment-and-gold emblems: Petra's crow-stepped tomb facade (NAB), Ararat
+  under the Artaxiad star (ARM), the high priest's twelve-stone breastplate
+  (HYR), the usurper's diadem over a sword (ARI), the Edessan crescent-star
+  coin (OSR), the royal tiara of the converted house (ADI), a merchant hull
+  on the Gulf swell (CHX), and the phylarchs' cross over a lance pennon (GHA).
+  The `.fchip-abbr` text fallback no longer appears anywhere in play.

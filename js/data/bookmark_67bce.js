@@ -90,6 +90,19 @@ export const BOOKMARK_67 = {
   govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
+  // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
+  provinceNames: {
+    'Caesarea Maritima': "Straton's Tower", // Herod builds Caesarea decades later
+    'Antipatris': 'Aphek',                  // Antipatris is Herod's foundation
+    'Sebaste': 'Samaria',                   // renamed for Augustus in 27 BCE
+    'Neapolis': 'Shechem',                  // Flavia Neapolis is founded 72 CE
+    'Caesarea Philippi': 'Panion',          // the grotto of Pan, not yet a Caesarea
+    'Tiberias': 'Rakkath',                  // Tiberias is founded 20 CE
+    'Tarichaea': 'Magdala',
+    'Caesarea Mazaca': 'Mazaca',            // named for Caesar only in 14 CE
+    'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
+  },
+
   blurb: 'Queen Salome Alexandra is dead, and her sons cannot both be king. Hyrcanus the '
     + 'elder has the high priesthood, the law of succession, and no spine; Aristobulus the '
     + 'younger has the army, the fortresses, and no patience. Idumean Antipater whispers to '
