@@ -831,6 +831,13 @@ export function initUI(staticCtx) {
     bus.on('event', safe('event', (p) => eventModal.onBusEvent(p)));
     bus.on('notify', safe('notify', (p) => toasts.push(p || {})));
     bus.on('gameover', safe('gameover', (p) => { gameover.show(p || {}); topbar.refresh(); }));
+    // Forming a nation (SPEC §22): the chrome is rebuilt so the new banner,
+    // name and color appear everywhere at once.
+    bus.on('tagSwitched', safe('tagSwitched', () => {
+      topbar.bind(ctx, state.actions);
+      nationPanel.refresh();
+      outliner.refresh(true);
+    }));
   }
 
   // Multiplayer guests mirror the host's event cards read-only (main.js wires

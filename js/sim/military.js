@@ -1050,6 +1050,85 @@ export function mergeInto(ctx, fromId, intoId) {
   return true;
 }
 
+// ---------------------------------------------------------------- forming nations (SPEC §22)
+// The whole realm changes its name: every reference to the old tag — provinces,
+// armies, fleets, wars and their scores, other courts' opinions and alliances,
+// truces, cooldowns, the player's own chair — is rewritten to the new one. The
+// new tag inherits the old tag's entire runtime state (treasury, tech, reforms,
+// ruler, modifiers...) but takes the new banner's name and color; the caller
+// rebuilds t.ideas afterwards (applyReformsToTag) so the new static national
+// ideas replace the old.
+export function switchTagCore(ctx, from, to) {
+  const g = ctx.game;
+  const old = g.tags[from];
+  const def = (ctx.DEFINES.TAGS || {})[to];
+  if (!old || !def || g.tags[to]) return false; // the target banner must be free
+  const nt = JSON.parse(JSON.stringify(old));
+  nt.tag = to;
+  nt.name = def.name || to;
+  nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
+  g.tags[to] = nt;
+  delete g.tags[from];
+
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p) continue;
+    if (p.owner === from) p.owner = to;
+    if (p.controller === from) p.controller = to;
+    if (p.siege && p.siege.by === from) p.siege.by = to;
+    if (p.conversion && p.conversion.by === from) p.conversion.by = to;
+  }
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (a && a.tag === from) a.tag = to;
+  }
+  for (const id of Object.keys(g.fleets || {})) {
+    const f = g.fleets[id];
+    if (f && f.tag === from) f.tag = to;
+  }
+  for (const w of g.wars || []) {
+    for (const side of [w.attackers, w.defenders]) {
+      if (!Array.isArray(side)) continue;
+      const at = side.indexOf(from);
+      if (at >= 0) side[at] = to;
+    }
+    if (w.warscore && typeof w.warscore[from] === 'number') {
+      w.warscore[to] = w.warscore[from];
+      delete w.warscore[from];
+    }
+  }
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t) continue;
+    if (Array.isArray(t.atWarWith)) t.atWarWith = t.atWarWith.map((x) => (x === from ? to : x));
+    if (Array.isArray(t.allies)) t.allies = t.allies.map((x) => (x === from ? to : x));
+    if (t.overlord === from) t.overlord = to;
+    if (t.opinion && t.opinion[from] !== undefined) {
+      t.opinion[to] = t.opinion[from];
+      delete t.opinion[from];
+    }
+  }
+  // Truce and cooldown books are keyed by tag pair — rewrite entries that name us.
+  const rekey = (book, sep, sorted) => {
+    if (!book) return;
+    for (const key of Object.keys(book)) {
+      const parts = key.split(sep);
+      if (parts.indexOf(from) < 0) continue;
+      const next = parts.map((x) => (x === from ? to : x));
+      const nk = sorted ? next.slice().sort().join(sep) : next.join(sep);
+      book[nk] = book[key];
+      delete book[key];
+    }
+  };
+  rekey(g.truces, '|', true);
+  rekey(g.diploCooldowns, ':', false);
+
+  if (g.playerTag === from) g.playerTag = to;
+  if (Array.isArray(g.humanTags)) g.humanTags = g.humanTags.map((x) => (x === from ? to : x));
+  chronicle(ctx, 'era', (old.name || from) + ' is no more: the banners of ' + (nt.name || to) + ' rise over its cities.');
+  return true;
+}
+
 // ---------------------------------------------------------------- generals
 // Period name pools keyed by DEFINES.CULTURES group (a hired general speaks
 // the recruiting court's tongue). ~8 names per group.

@@ -1212,6 +1212,7 @@ button {
   flex: none;
   border: 1px solid rgba(201, 162, 39, 0.75);
   border-radius: 3px;
+  overflow: hidden; /* full-field emblems (ISR) clip to the chip's corners */
   color: #f0e3ba; /* fallback-abbr ink */
   background-image: linear-gradient(
     180deg,

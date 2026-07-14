@@ -11,8 +11,9 @@ import {
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
-  chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen,
+  chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
 } from './military.js';
+import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, genName } from '../data/tech.js';
 import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
@@ -550,6 +551,24 @@ export function gameActions(ctx) {
       out.genName = genName(num(a.gen, 0), 'inf');
       out.newGenName = genName(mi.unlocked, 'inf');
     } catch (e) { warnOnce('modInfo', 'modernizeInfo failed', e); }
+    return out;
+  };
+
+  // Formable nations (SPEC §22): the crowns this court could claim, with a
+  // live requirement checklist. Surfaced through the Decisions panel.
+  const formableList = () => {
+    const out = [];
+    for (const f of FORMABLES) {
+      if (f.from !== g.playerTag) continue;
+      if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
+      if (g.tags[f.to]) continue; // that banner already flies elsewhere
+      const rows = (f.requires || []).map((r) => {
+        let ok = false;
+        try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }
+        return { label: r.label, ok };
+      });
+      out.push({ f, rows, met: rows.every((r) => r.ok) });
+    }
     return out;
   };
 
@@ -1438,7 +1457,7 @@ export function gameActions(ctx) {
       try {
         const t = g.tags[g.playerTag];
         if (!t) return [];
-        return Object.keys(DECISIONS).map((key) => {
+        const list = Object.keys(DECISIONS).map((key) => {
           const d = DECISIONS[key];
           const cdKey = 'decision:' + key;
           let whyNot = '';
@@ -1452,10 +1471,44 @@ export function gameActions(ctx) {
             cooldownMonths: d.cdMonths, canEnact: !whyNot, whyNot,
           };
         });
+        // Formable crowns lead the list — the requirement checklist rides the tooltip.
+        for (const { f, rows, met } of formableList().reverse()) {
+          const checklist = rows.map((r) => (r.ok ? '✓ ' : '✗ ') + r.label).join('\n');
+          list.unshift({
+            key: f.id, name: f.name, icon: 'laurel',
+            desc: f.desc + '\n――――――\n' + checklist,
+            costText: 'a new banner', cooldownMonths: 0,
+            canEnact: met,
+            whyNot: met ? '' : 'Not yet — the unmet requirements are marked ✗.',
+          });
+        }
+        return list;
       } catch (e) { warnOnce('getDecisions', 'getDecisions failed', e); return []; }
     },
     enactDecision(key) {
       try {
+        // Forming a nation routes through the decisions surface (SPEC §22).
+        if (String(key).indexOf('form_') === 0) {
+          const entry = formableList().find((x) => x.f.id === key);
+          if (!entry) return;
+          if (!entry.met) {
+            say(entry.f.name, 'Not yet — the unmet requirements are marked in the decision\'s scroll.', 'bad');
+            return;
+          }
+          const f = entry.f;
+          const oldName = (g.tags[f.from] && g.tags[f.from].name) || f.from;
+          if (!switchTagCore(ctx, f.from, f.to)) return;
+          const nt = g.tags[f.to];
+          applyReformsToTag(ctx.DEFINES, nt, f.to);
+          const b = f.bonus || {};
+          if (Number.isFinite(b.legitimacy)) nt.legitimacy = clamp(num(nt.legitimacy) + b.legitimacy, 0, 100);
+          if (Number.isFinite(b.stability)) nt.stability = clamp(num(nt.stability) + b.stability, -3, 3);
+          if (b.modifier) simHelpers.addTagModifier(ctx, f.to, b.modifier);
+          ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
+          ctx.bus.emit('provinceOwner', {}); // the map wears the new color
+          say('A new banner', oldName + ' is no more: ' + (nt.name || f.to) + ' rises. The chronicle will remember this day.', 'good');
+          return;
+        }
         const t = g.tags[g.playerTag];
         const d = DECISIONS[key];
         if (!t || !d) return;

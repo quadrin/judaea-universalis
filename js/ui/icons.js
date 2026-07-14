@@ -353,10 +353,13 @@ export const FLAGS = {
     `<path d="M10.4 11.8h3.2v5h-3.2Z" ${SIL}/>` +
     `<path d="M8 16.8h8v1.6H8Z" ${SIL}/>` +
     `<path d="M6.4 18.4h11.2v1.6H6.4Z" ${ACC}/>`,
-  // Israel: the shield of David — two interlocked triangles.
+  // Israel: the real flag — white field, two blue stripes, blue Star of David.
   ISR:
-    `<path d="M12 4.5 17.8 14.6H6.2Z" fill="none" ${S} stroke="${FP}" stroke-width="1.5"/>` +
-    `<path d="M12 19.5 6.2 9.4h11.6Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>`,
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="3.4" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
+    `<rect x="0.6" y="18.1" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
+    `<path d="M12 7.3 16.05 14.35H7.95Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>` +
+    `<path d="M12 16.7 7.95 9.65h8.1Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>`,
 };
 
 function escText(s) {

@@ -8,10 +8,11 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
-  modernizeInfo, modernizeArmyCore,
+  modernizeInfo, modernizeArmyCore, switchTagCore,
 } from './military.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
+import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE } from './economy.js';
 
 const _warned = new Set();
@@ -480,6 +481,44 @@ function aiTech(ctx, tag) {
   applyReformsToTag(ctx.DEFINES, t, tag);
 }
 
+// A crown within reach is taken (SPEC §22): the AI forms its greater nation
+// the month the requirements are met. Returns true if the tag changed — the
+// caller must stop touching the old tag object.
+function aiFormNation(ctx, tag) {
+  const g = ctx.game;
+  for (const f of FORMABLES) {
+    if (!f.ai) continue; // scripted arcs reference the dynasts by tag — only opted-in formables are AI-safe
+    if (f.from !== tag) continue;
+    if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
+    if (g.tags[f.to]) continue;
+    let met = true;
+    for (const r of f.requires || []) {
+      try { if (!r.check(ctx, tag)) { met = false; break; } } catch (e) { met = false; break; }
+    }
+    if (!met) continue;
+    const oldName = (g.tags[tag] && g.tags[tag].name) || tag;
+    if (!switchTagCore(ctx, tag, f.to)) return false;
+    const nt = g.tags[f.to];
+    applyReformsToTag(ctx.DEFINES, nt, f.to);
+    const b = f.bonus || {};
+    if (Number.isFinite(b.legitimacy)) nt.legitimacy = clamp(num(nt.legitimacy) + b.legitimacy, 0, 100);
+    if (Number.isFinite(b.stability)) nt.stability = clamp(num(nt.stability) + b.stability, -3, 3);
+    if (b.modifier) {
+      nt.modifiers = (nt.modifiers || []).filter((m) => m && m.id !== b.modifier.id);
+      nt.modifiers.push(JSON.parse(JSON.stringify(b.modifier)));
+    }
+    ctx.bus.emit('tagSwitched', { from: tag, to: f.to });
+    ctx.bus.emit('provinceOwner', {});
+    ctx.bus.emit('notify', {
+      title: 'News from abroad',
+      text: oldName + ' proclaims itself ' + (nt.name || f.to) + '.',
+      type: 'info',
+    });
+    return true;
+  }
+  return false;
+}
+
 // Re-equip old-pattern armies when the coffers allow — cheapest first, one a month.
 function aiModernize(ctx, tag) {
   const t = ctx.game.tags[tag];
@@ -506,6 +545,9 @@ export function runMonthlyAI(ctx) {
       aiTech(ctx, tag);
       aiReforms(ctx, tag);
       aiModernize(ctx, tag);
+      // Last in the sequence: if the tag forms a greater nation the old key is
+      // gone and nothing may touch it again this month.
+      aiFormNation(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
   try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }
