@@ -1200,3 +1200,40 @@ the lazy `AudioContext`.
   over 0.4 s; the scheduler stops scheduling and clamps `nextBeat` on resume
   so re-enabling never burst-schedules the silent gap). `window._sound.music`
   exposes `{on/off/toggle/state()}` for tests and debugging.
+
+## 28. v2.8: the open court — every flag is a door
+
+Clicking a nation's flag chip, anywhere one appears, opens that nation's
+realm panel. The panel (`nation_panel.js`) now serves two masters:
+`open()` is the player's own realm as before; `open(tag)` renders any
+foreign court **read-only**.
+
+- **Linked chips**: `flagChip(tag, DEFINES, size, link)` grew a fourth
+  argument; with `link` the chip gains `.fchip-link` (pointer cursor, gold
+  hover glow) and `data-open-tag`. A single document-level **capture-phase**
+  listener in ui.js resolves every such click — capture so the chip wins
+  over whatever row it sits in (a war row that would open the war overview,
+  a sortable ledger header) — closes any covering modal, and opens the
+  court. REB and WASTE never link. Linked surfaces: the ledger, the war
+  overview's sides, the battle window's army rows, the province panel's
+  owner and diplomacy chips, the outliner's war rows, and every diplomacy
+  row inside the realm panel itself — so you can walk the treaty graph
+  court by court.
+- **The foreign view**: ruler & skills, heir, religion/culture/capital,
+  government (with election countdown), realm size, stability, legitimacy,
+  war exhaustion, infamy, treasury, loans, manpower and armies — plus two
+  rows only envoys see: **Opinion of us** and **Standing** (at war with us /
+  our client / our overlord / allied / truce until / no treaties). Their
+  diplomacy renders with neutral pronouns ("pays tribute", "their word");
+  their tech levels, muster pattern, reform pips and seated advisors render
+  read-only (straight from `t.tech` / `t.reforms` / `t.advisors` — the
+  panel imports `tech.js` and `ideas.js`, both zero-dep data modules).
+  Every lever is hidden: actions, missions, decisions, buy buttons, the
+  peace dove; war rows are clickable into the war overview only when the
+  player fights in that war (getWarInfo answers from the player's side).
+- **The way home**: a small chip of your own flag sits in the foreign
+  panel's head; clicking it — or the topbar flag — returns to your own
+  realm (the topbar flag only closes the panel when it is already showing
+  your realm). `viewing()` exposes the foreign tag (null when home);
+  Esc closes as ever, and a foreign court that dies mid-view falls back
+  to your own realm on the next refresh.

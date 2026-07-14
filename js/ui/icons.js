@@ -487,8 +487,10 @@ function escText(s) {
 // Country chip: rounded rect in the tag's color (CSS .fchip layers a subtle
 // top-sheen gradient over the background-color set here), thin gold border,
 // two-tone emblem centered on the field. Falls back to the 3-letter tag when
-// no emblem exists. `size` is the chip's edge in px.
-export function flagChip(tag, DEFINES, size = 20) {
+// no emblem exists. `size` is the chip's edge in px. With `link` the chip
+// becomes a click target: a document-level handler (ui.js) opens that
+// nation's realm panel wherever such a chip is clicked.
+export function flagChip(tag, DEFINES, size = 20, link = false) {
   const t = String(tag || '');
   const def = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[t]) || {};
   const c = Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
@@ -497,7 +499,11 @@ export function flagChip(tag, DEFINES, size = 20) {
   const inner = body
     ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
-  return `<span class="fchip" style="background-color:rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0});width:${s}px;height:${s}px" aria-label="${escText(def.name || t)}">${inner}</span>`;
+  const linked = link && t && t !== 'REB' && t !== 'WASTE';
+  const linkAttrs = linked
+    ? ` data-open-tag="${escText(t)}" role="button" data-tt="${escText((def.name || t) + ' — see their court')}"`
+    : '';
+  return `<span class="fchip${linked ? ' fchip-link' : ''}" style="background-color:rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0});width:${s}px;height:${s}px" aria-label="${escText(def.name || t)}"${linkAttrs}>${inner}</span>`;
 }
 
 // Build one icon: 24x24, inherits currentColor, sized via CSS (.icon + modifier).

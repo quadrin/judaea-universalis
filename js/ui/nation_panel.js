@@ -1,12 +1,18 @@
 // js/ui/nation_panel.js — the realm panel, opened by clicking the topbar flag.
 // Ruler & skills, government, economy, military, diplomacy at a glance, the
 // central levers (reserves, stability, loans) and the national decisions.
+// The same panel also serves as the window into FOREIGN courts: open(tag)
+// renders any nation read-only — their ruler, purse, armies, diplomacy, tech
+// and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
+import { unlockedGen, genName } from '../data/tech.js';
+import { IDEA_TREES } from '../data/ideas.js';
 
 export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
   let ctx = null;
   let actions = null;
+  let viewTag = null; // null = the player's own realm; a tag = a foreign court
   const refs = {};
 
   function setText(node, s) {
@@ -26,8 +32,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     el.innerHTML = `
       <div class="pp-head">
         <h2 class="pp-name np-title"><span data-ref="flag"></span><span data-ref="name"></span></h2>
+        <span class="np-home hidden" data-ref="homeChip"></span>
         <button class="pp-close" data-ref="close" data-tt="Close (Esc)">${icon('xmark')}</button>
       </div>
+      <div class="np-foreign-note hidden" data-ref="foreignNote">A foreign court — what our envoys can see.</div>
       <div class="np-ruler">
         <div class="np-ruler-text">
           <div class="np-ruler-name" data-ref="rulerName"></div>
@@ -47,19 +55,21 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
         <div class="pp-row hidden" data-ref="infamyRow" data-tt="Conquest is remembered: courts abroad turn against you (opinion falls monthly), and at 30+ the fearful league into a defensive coalition. Decays one point a month.">
           <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
+        <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
+        <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}Manpower</span><span class="pp-v" data-ref="manpower"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
       </div>
-      <div class="np-acts">
+      <div class="np-acts" data-ref="acts">
         <button class="pp-build-btn" data-act="callReserves" data-ref="actReserves">${icon('spears')}<span>Call Reserves</span></button>
         <button class="pp-build-btn" data-act="buyStability" data-ref="actStability">${icon('scales')}<span>Restore Order</span></button>
         <button class="pp-build-btn" data-act="takeLoan" data-ref="actBorrow">${icon('borrow')}<span>Take Loan</span></button>
         <button class="pp-build-btn" data-act="repayLoan" data-ref="actRepay">${icon('repay')}<span>Repay Loan</span></button>
         <button class="pp-build-btn hidden" data-act="requestParthianAid" data-ref="actParthia" data-tt="Send envoys to the King of Kings: 50 influence points for a chance at silver, volunteers, and Parthian sympathy">${icon('dove')}<span>Envoys to Parthia</span></button>
       </div>
-      <div class="pp-build">
+      <div class="pp-build" data-ref="missionsBlock">
         <div class="pp-build-title">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
       </div>
@@ -67,11 +77,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
       </div>
-      <div class="pp-build">
+      <div class="pp-build" data-ref="decisionsBlock">
         <div class="pp-build-title">Decisions</div>
         <div class="np-decisions" data-ref="decisions"></div>
       </div>
-      <div class="pp-build">
+      <div class="pp-build" data-ref="courtBlock">
         <div class="pp-build-title">The Court</div>
         <div class="np-court" data-ref="court"></div>
       </div>
@@ -140,24 +150,37 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     });
   }
 
-  function open() {
+  // open() shows the player's own realm; open('ROM') shows Rome's court
+  // read-only. viewing() reports the foreign tag (null when it's our own).
+  function open(tag) {
     if (!ctx) return;
+    const g = ctx.game;
+    viewTag = (tag && tag !== g.playerTag && g.tags && g.tags[tag]) ? tag : null;
     el.classList.remove('hidden');
     refresh();
+    el.scrollTop = 0;
   }
-  function close() { el.classList.add('hidden'); }
+  function close() { el.classList.add('hidden'); viewTag = null; }
   function isOpen() { return !el.classList.contains('hidden'); }
+  function viewing() { return viewTag; }
 
   function refresh() {
     if (!ctx || !isOpen()) return;
     const g = ctx.game;
-    const t = g.tags && g.tags[g.playerTag];
+    if (viewTag && !(g.tags && g.tags[viewTag])) viewTag = null;
+    const tag = viewTag || g.playerTag;
+    const self = tag === g.playerTag;
+    const t = g.tags && g.tags[tag];
     if (!t) { close(); return; }
     const TAGS = DEFINES.TAGS || {};
-    const def = TAGS[g.playerTag] || {};
+    const def = TAGS[tag] || {};
 
-    setHtml(refs.flag, flagChip(g.playerTag, DEFINES, 22));
-    setText(refs.name, t.name || g.playerTag);
+    setHtml(refs.flag, flagChip(tag, DEFINES, 22));
+    setText(refs.name, (t.name || tag) + (t.alive === false ? ' †' : ''));
+    // Foreign dress: the note, and our own flag as the way home.
+    refs.foreignNote.classList.toggle('hidden', self);
+    refs.homeChip.classList.toggle('hidden', self);
+    if (!self) setHtml(refs.homeChip, flagChip(g.playerTag, DEFINES, 18, true));
 
     // Ruler & skills (skills 0-6; monthly gain is base +2 per pool)
     const r = t.ruler || {};
@@ -201,7 +224,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const capName = def.capital || '';
     if (capName) {
       const cap = ctx.prov ? ctx.prov(capName) : null;
-      const held = cap && cap.controller === g.playerTag;
+      const held = cap && cap.controller === tag;
       setHtml(refs.capital, esc(capName) + (held ? '' : ' <span class="np-lost">(lost)</span>'));
     } else {
       setText(refs.capital, '—');
@@ -209,7 +232,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     let provs = 0, devSum = 0;
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
-      if (!p || p.impassable || p.owner !== g.playerTag) continue;
+      if (!p || p.impassable || p.owner !== tag) continue;
       provs++;
       devSum += (p.dev ? (p.dev.tax || 0) + (p.dev.prod || 0) + (p.dev.mp || 0) : 0);
     }
@@ -230,17 +253,50 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.manpower, fmtMen(t.manpower) + ' / ' + fmtMen(t.maxManpower));
     let armyN = 0, men = 0;
     for (const a of Object.values(g.armies || {})) {
-      if (a && a.tag === g.playerTag) { armyN++; men += a.men || 0; }
+      if (a && a.tag === tag) { armyN++; men += a.men || 0; }
     }
     setText(refs.armies, armyN + ' (' + fmtMen(men) + ' men)');
 
-    refreshActions(t, g);
-    refreshMissions();
-    refreshDiplomacy(g, t);
-    refreshDecisions();
-    refreshTech();
-    refreshReforms();
-    refreshCourt();
+    // How the two courts stand with each other — foreign view only.
+    refs.opinionRow.classList.toggle('hidden', self);
+    refs.standingRow.classList.toggle('hidden', self);
+    if (!self) {
+      const me = g.playerTag;
+      const meT = g.tags[me] || {};
+      const theirs = Math.round((t.opinion && t.opinion[me]) || 0);
+      const ours = Math.round((meT.opinion && meT.opinion[tag]) || 0);
+      setHtml(refs.opinion, `<span class="${theirs > 0 ? 'pos' : theirs < 0 ? 'neg' : ''}">${signed(theirs)}</span>`);
+      refs.opinionRow.dataset.tt = `How their court regards ours: ${signed(theirs)}\nHow we regard them: ${signed(ours)}`;
+      let standing = 'No treaties bind us';
+      let cls = '';
+      if ((t.atWarWith || []).indexOf(me) >= 0) { standing = 'At war with us'; cls = 'neg'; }
+      else if (t.overlord === me) { standing = 'Our client kingdom'; cls = 'pos'; }
+      else if (meT.overlord === tag) { standing = 'Our overlord'; }
+      else if ((t.allies || []).indexOf(me) >= 0) { standing = 'Allied with us'; cls = 'pos'; }
+      else {
+        const key = me < tag ? me + '|' + tag : tag + '|' + me;
+        const tr = (g.truces || {})[key];
+        if (tr && !(g.date.y > tr.y || (g.date.y === tr.y && g.date.m >= tr.m))) {
+          const mn = (DEFINES.MONTH_NAMES || [])[tr.m - 1] || ('M' + tr.m);
+          standing = `Truce until ${mn} ${fmtYear(tr.y)}`;
+        }
+      }
+      setHtml(refs.standing, `<span class="${cls}">${esc(standing)}</span>`);
+    }
+
+    // The levers of state belong to the player alone.
+    refs.acts.classList.toggle('hidden', !self);
+    refs.missionsBlock.classList.toggle('hidden', !self);
+    refs.decisionsBlock.classList.toggle('hidden', !self);
+    if (self) {
+      refreshActions(t, g);
+      refreshMissions();
+      refreshDecisions();
+    }
+    refreshDiplomacy(g, t, tag, self);
+    refreshTech(t, self);
+    refreshReforms(t, self);
+    refreshCourt(t, self);
   }
 
   function setAct(btn, can, tt) {
@@ -292,9 +348,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
   }
 
-  function refreshDiplomacy(g, t) {
+  // Renders the viewed nation's treaties and wars. `who` is the viewed tag;
+  // when it isn't the player (`self` false) the pronouns turn neutral and the
+  // peace dove stays sheathed. Every chip is a link to that court.
+  function refreshDiplomacy(g, t, who, self) {
     const TAGS = DEFINES.TAGS || {};
-    const chip = (tag) => flagChip(tag, DEFINES, 15);
+    const chip = (tag) => flagChip(tag, DEFINES, 15, true);
     const nameOf = (tag) => esc((g.tags[tag] && g.tags[tag].name) || (TAGS[tag] && TAGS[tag].name) || tag);
     let html = '';
 
@@ -305,41 +364,41 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       : `<div class="np-dip-none">No sworn allies</div>`;
 
     // Client kingdoms and overlord (tribute flows along these rows).
-    const clients = Object.keys(g.tags).filter((k) => g.tags[k] && g.tags[k].alive && g.tags[k].overlord === g.playerTag);
+    const clients = Object.keys(g.tags).filter((k) => g.tags[k] && g.tags[k].alive && g.tags[k].overlord === who);
     if (clients.length) {
       html += `<div class="np-dip-sec">Client kingdoms</div>`;
       for (const c of clients) {
-        html += `<div class="np-dip-row" data-tt="A client kingdom: pays us 15% of its income and follows us to war">`
+        html += `<div class="np-dip-row" data-tt="A client kingdom: pays ${self ? 'us' : 'them'} 15% of its income and follows ${self ? 'us' : 'them'} to war">`
           + `${chip(c)}<span class="np-dip-name">${nameOf(c)}</span><span class="np-dip-ws">tributary</span></div>`;
       }
     }
     if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
       html += `<div class="np-dip-sec">Overlord</div>`;
-      html += `<div class="np-dip-row" data-tt="We are their client kingdom: 15% of our income flows to their court, and their wars are ours">`
-        + `${chip(t.overlord)}<span class="np-dip-name">${nameOf(t.overlord)}</span><span class="np-dip-ws">we pay tribute</span></div>`;
+      html += `<div class="np-dip-row" data-tt="${self ? 'We are their client kingdom: 15% of our income flows to their court, and their wars are ours' : 'A client kingdom: 15% of its income flows to the overlord, whose wars it must join'}">`
+        + `${chip(t.overlord)}<span class="np-dip-name">${nameOf(t.overlord)}</span><span class="np-dip-ws">${self ? 'we pay' : 'pays'} tribute</span></div>`;
     }
 
     // Guarantees & subsidies (SPEC §24)
     const ourGuarantees = (t.guarantees || []).filter((x) => g.tags[x] && g.tags[x].alive);
-    const guaranteedBy = Object.keys(g.tags).filter((k) => k !== g.playerTag
-      && g.tags[k] && g.tags[k].alive && (g.tags[k].guarantees || []).indexOf(g.playerTag) >= 0);
+    const guaranteedBy = Object.keys(g.tags).filter((k) => k !== who
+      && g.tags[k] && g.tags[k].alive && (g.tags[k].guarantees || []).indexOf(who) >= 0);
     if (ourGuarantees.length || guaranteedBy.length) {
       html += `<div class="np-dip-sec">Guarantees</div>`;
       for (const x of ourGuarantees) {
-        html += `<div class="np-dip-row" data-tt="Our word protects them: their attacker fights us too">`
-          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws">our word</span></div>`;
+        html += `<div class="np-dip-row" data-tt="${self ? 'Our word protects them: their attacker fights us too' : 'Their word protects this nation: its attacker fights them too'}">`
+          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws">${self ? 'our' : 'their'} word</span></div>`;
       }
       for (const x of guaranteedBy) {
-        html += `<div class="np-dip-row" data-tt="Their word protects us: our attacker fights them too">`
-          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws pos">shields us</span></div>`;
+        html += `<div class="np-dip-row" data-tt="${self ? 'Their word protects us: our attacker fights them too' : 'That court’s word protects this nation: an attacker fights them too'}">`
+          + `${chip(x)}<span class="np-dip-name">${nameOf(x)}</span><span class="np-dip-ws pos">shields ${self ? 'us' : 'them'}</span></div>`;
       }
     }
-    const flows = (g.subsidies || []).filter((s) => s && (s.from === g.playerTag || s.to === g.playerTag)
+    const flows = (g.subsidies || []).filter((s) => s && (s.from === who || s.to === who)
       && g.tags[s.from] && g.tags[s.to]);
     if (flows.length) {
       html += `<div class="np-dip-sec">Subsidies</div>`;
       for (const s of flows) {
-        const out = s.from === g.playerTag;
+        const out = s.from === who;
         const other = out ? s.to : s.from;
         html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
           + `${chip(other)}<span class="np-dip-name">${nameOf(other)}</span>`
@@ -348,16 +407,20 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
 
     const wars = (g.wars || []).filter((w) => w
-      && ((w.attackers || []).indexOf(g.playerTag) >= 0 || (w.defenders || []).indexOf(g.playerTag) >= 0));
+      && ((w.attackers || []).indexOf(who) >= 0 || (w.defenders || []).indexOf(who) >= 0));
     html += `<div class="np-dip-sec">Wars</div>`;
     if (wars.length) {
       for (const w of wars) {
-        const ws = Math.round((w.warscore && w.warscore[g.playerTag]) || 0);
-        const opp = (w.attackers || []).indexOf(g.playerTag) >= 0 ? (w.defenders || [])[0] : (w.attackers || [])[0];
-        const dove = w.noNegotiation
-          ? ''
-          : `<button class="ol-peace np-dove" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
-        html += `<div class="np-dip-row np-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">`
+        const ws = Math.round((w.warscore && w.warscore[who]) || 0);
+        const opp = (w.attackers || []).indexOf(who) >= 0 ? (w.defenders || [])[0] : (w.attackers || [])[0];
+        // The overview and the dove are the player's: shown only for wars we
+        // fight in ourselves (getWarInfo answers from our side of the table).
+        const mine = (w.attackers || []).indexOf(g.playerTag) >= 0 || (w.defenders || []).indexOf(g.playerTag) >= 0;
+        const dove = (self && !w.noNegotiation)
+          ? `<button class="ol-peace np-dove" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`
+          : '';
+        const warAttr = mine ? ` data-war="${esc(w.id)}"` : '';
+        html += `<div class="np-dip-row${mine ? ' np-war' : ''}"${warAttr} data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%${mine ? '\nClick for the war overview' : ''}${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">`
           + (opp ? chip(opp) : icon('flame', 'icon-row'))
           + `<span class="np-dip-name">${esc(w.name || 'War')}</span>`
           + `<span class="np-dip-ws ${ws > 0 ? 'pos' : ws < 0 ? 'neg' : ''}">${signed(ws)}%</span>${dove}</div>`;
@@ -369,8 +432,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const truces = [];
     for (const key of Object.keys(g.truces || {})) {
       const parts = key.split('|');
-      if (parts.indexOf(g.playerTag) < 0) continue;
-      const other = parts[0] === g.playerTag ? parts[1] : parts[0];
+      if (parts.indexOf(who) < 0) continue;
+      const other = parts[0] === who ? parts[1] : parts[0];
       const tr = g.truces[key];
       if (!tr || !g.tags[other]) continue;
       if (g.date.y > tr.y || (g.date.y === tr.y && g.date.m >= tr.m)) continue; // expired
@@ -388,15 +451,27 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   }
 
   // Advisor seats: one per monarch-point pool. Seated advisors show their
-  // wage and a dismiss button; empty seats offer two candidates.
-  function refreshCourt() {
+  // wage and a dismiss button; empty seats offer two candidates. A foreign
+  // court shows who sits, and nothing more.
+  function refreshCourt(t, self) {
     if (!refs.court) return;
+    const label = { gov: 'Government', infl: 'Influence', mar: 'Martial' };
+    if (!self) {
+      const adv = t.advisors || {};
+      const any = ['gov', 'infl', 'mar'].some((k) => adv[k]);
+      refs.courtBlock.classList.toggle('hidden', !any);
+      refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
+        const a = adv[k];
+        return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: ${a ? `<b>${esc(a.name)}</b> (+${a.skill}/mo)` : '<i>empty seat</i>'}</span></div>`;
+      }).join('');
+      return;
+    }
+    refs.courtBlock.classList.remove('hidden');
     let court = null;
     if (actions && typeof actions.getCourt === 'function') {
       try { court = actions.getCourt(); } catch (e) { warnOnce('np-getCourt', e); }
     }
     if (!court) { refs.court.innerHTML = ''; return; }
-    const label = { gov: 'Government', infl: 'Influence', mar: 'Martial' };
     refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
       const seat = court[k];
       if (seat.seated) {
@@ -413,8 +488,19 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
   // Technology ladders (SPEC §22): level, next price (with the ahead-of-age
   // markup), and the pattern of soldier the military ladder has unlocked.
-  function refreshTech() {
+  // Foreign courts show their levels and pattern, with no buy buttons.
+  function refreshTech(t, self) {
     if (!refs.tech) return;
+    if (!self) {
+      const th = t.tech || {};
+      const names = { gov: 'Government', infl: 'Influence', mar: 'Military' };
+      const rows = ['gov', 'infl', 'mar'].map((k) =>
+        `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b><span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
+      const gi = unlockedGen(th.mar | 0);
+      refs.tech.innerHTML = rows
+        + `<div class="np-tech-unit" data-tt="The pattern their armies are raised to.">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`;
+      return;
+    }
     let info = null;
     if (actions && typeof actions.getTech === 'function') {
       try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
@@ -439,8 +525,20 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
   // Three reform trees: tier pips, the next reform's name and price, one
   // buy button per tree. Renders nothing on sims without getIdeas.
-  function refreshReforms() {
+  // Foreign courts show their pips read-only, straight from t.reforms.
+  function refreshReforms(t, self) {
     if (!refs.reforms) return;
+    if (!self) {
+      const owned = t.reforms || {};
+      refs.reforms.innerHTML = Object.keys(IDEA_TREES).map((key) => {
+        const tree = IDEA_TREES[key];
+        const have = owned[key] | 0;
+        const pips = tree.tiers.map((ti, i) =>
+          `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+        return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
+      }).join('');
+      return;
+    }
     let trees = null;
     if (actions && typeof actions.getIdeas === 'function') {
       try { trees = actions.getIdeas(); } catch (e) { warnOnce('np-getIdeas', e); }
@@ -478,5 +576,5 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join('') || '<div class="np-dip-none">No decisions available</div>');
   }
 
-  return { bind, open, close, refresh, isOpen };
+  return { bind, open, close, refresh, isOpen, viewing };
 }
