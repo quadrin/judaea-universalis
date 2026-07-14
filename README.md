@@ -83,6 +83,18 @@ python3 -m http.server 8613 --directory .
   affairs arrive as quiet "News from abroad" toasts; only your own wars sound the
   alarm. Balance is enforced by an all-AI harness (`tools/autorun.mjs`) that replays
   every bookmark and flags snowballs, debt spirals and dead economies.
+- Technology: three ladders (government, influence, military) bought with monarch
+  points, EU4-style — keeping pace with the age is cheap, racing ahead costs +50% a
+  level. Military tech is the biggest lever on the battlefield and unlocks new
+  patterns of soldier (Tribal Levies → Professional Legions → … → Rifle Brigades and
+  Armored Corps); armies remember what they were raised as, and you modernize them
+  for gold when the art advances.
+- Eight chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE), the
+  Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE), the
+  Kitos War (115 CE — the diaspora rises behind Trajan's back), the Bar Kokhba
+  Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes hands in the last
+  great war of antiquity), and the War of Independence (1948 — five armies, every
+  border, and the armistice lines becoming a state).
 
 ## Architecture
 

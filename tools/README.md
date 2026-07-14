@@ -28,6 +28,14 @@ until debt-desertion rebalances them — self-limiting, no spiral, and only
 Pompey's arrival truly settles that war. ARM hovers a hair below
 break-even (poor mountain kingdom).
 
+The far eras: in 115 CE the all-AI diaspora rising is never crushed (JUD
+SNOWBALL) — with Rome's field army locked against Parthia, the AI cannot
+play Turbo's part; a human ROM ends it easily, a human JUD achieves
+exactly this. In 614 CE longer runs show JUD SNOWBALL — the scripted
+Return (Jerusalem by event, Persian-backed gains) holding a small state.
+1948 runs clean: the coalition invades, the truces bite, and the Rhodes
+armistice freezes the lines on schedule.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
