@@ -100,6 +100,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
+          <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
+          <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
         </div>
@@ -117,7 +119,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         refresh();
         return;
       }
-      const fn = { improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance', war: 'declareWarOn' }[b.dataset.dip];
+      const fn = {
+        improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
+        war: 'declareWarOn',
+        guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
+        subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
+      }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
       refresh();
@@ -219,11 +226,20 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const mine = p.owner === g.playerTag && p.controller === g.playerTag;
     refs.devBtnsRow.classList.toggle('hidden', !mine);
     if (mine) {
-      const pts = (g.tags[g.playerTag] && g.tags[g.playerTag].points) || {};
-      const pool = { tax: pts.gov, prod: pts.infl, mp: pts.mar };
+      // Scaled costs (SPEC §24): 50 + 5×dev, live from the sim when it offers them.
+      let di = null;
+      if (actions && typeof actions.getDevelopInfo === 'function') {
+        try { di = actions.getDevelopInfo(provId); } catch (e) { warnOnce('devInfo', e); }
+      }
+      const poolName = { tax: 'governance', prod: 'influence', mp: 'martial' };
+      const kindName = { tax: 'tax', prod: 'production', mp: 'manpower' };
       refs.devBtnsRow.querySelectorAll('[data-dev]').forEach((b) => {
         const k = b.dataset.dev;
-        b.classList.toggle('afford', (pool[k] || 0) >= 50 && (dev[k] || 0) < 15);
+        const info = di && di[k];
+        b.classList.toggle('afford', !!(info && info.can));
+        b.dataset.tt = info
+          ? `+1 ${kindName[k]} development (${info.cost} ${poolName[k]} points)` + (info.can ? '' : `\n${info.why}`)
+          : b.dataset.tt;
       });
     }
     setText(refs.autonomy, Math.round((p.autonomy || 0) * 100) + '%');
@@ -443,6 +459,34 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     if (d.canBreak) {
       refs.dipBreak.classList.remove('disabled');
       refs.dipBreak.dataset.tt = 'Break the alliance — their opinion of us falls by 50';
+    }
+    // Guarantees & subsidies (SPEC §24): the same button extends or withdraws.
+    refs.dipGuarantee.classList.toggle('pp-dip-on', !!d.weGuarantee);
+    setText(refs.dipGuarantee, d.weGuarantee ? 'Withdraw Guarantee' : 'Guarantee');
+    if (d.weGuarantee) {
+      refs.dipGuarantee.classList.remove('disabled');
+      refs.dipGuarantee.dataset.tt = 'Our word protects them: attack them and the attacker fights us too.\nWithdrawing costs 20 opinion.'
+        + (d.theyGuarantee ? '\nThey guarantee us in turn.' : '');
+    } else {
+      setDipBtn(refs.dipGuarantee, d.canGuarantee, d.whyNotGuarantee,
+        'Guarantee their independence: 50 influence points → +15 opinion, and any attacker on them fights us too.'
+        + (d.theyGuarantee ? '\nThey guarantee us.' : ''));
+    }
+    refs.dipSubsidize.classList.toggle('pp-dip-on', !!d.subsidyOut);
+    setText(refs.dipSubsidize, d.subsidyOut ? 'End Subsidy' : 'Send Subsidy');
+    if (d.subsidyOut) {
+      const s = d.subsidyOut;
+      if (s.reparation) {
+        refs.dipSubsidize.classList.add('disabled');
+        refs.dipSubsidize.dataset.tt = `We pay them reparations: ${s.amount} talents/month for ${s.monthsLeft} more months. A debt of defeat cannot be cancelled.`;
+      } else {
+        refs.dipSubsidize.classList.remove('disabled');
+        refs.dipSubsidize.dataset.tt = `Our subsidy: ${s.amount} talents/month, ${s.monthsLeft} months left.\nEnding it early costs 10 opinion.`;
+      }
+    } else {
+      setDipBtn(refs.dipSubsidize, d.canSubsidize, d.whyNotSubsidize,
+        'Subsidize their court: 10 talents a month for a year → +20 opinion.'
+        + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : ''));
     }
     // Fabricate claim: per-province, priced in influence.
     let ci = null;

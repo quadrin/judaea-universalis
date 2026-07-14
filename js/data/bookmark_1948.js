@@ -131,6 +131,60 @@ export const BOOKMARK_1948 = {
   religions: RELIGIONS,
   cultures: CULTURES,
 
+  // The map speaks 1948 (SPEC §24): canonical names stay the content keys;
+  // these are what the labels, panels and toasts show.
+  provinceNames: {
+    'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
+    'Ptolemais': 'Acre', 'Jamnia': 'Yavne', 'Lydda': 'Lod', 'Emmaus': 'Latrun',
+    'Sepphoris': 'Nazareth', 'Jotapata': 'Yodfat', 'Tarichaea': 'Migdal',
+    'Gischala': 'Safed', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
+    'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod', 'Neapolis': 'Nablus',
+    'Sebaste': 'Samaria', 'Gadora': 'Salt', 'Machaerus': 'Karak',
+    'Medaba': 'Madaba', 'Philadelphia': 'Amman', 'Gerasa': 'Jerash',
+    'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'Nitzana',
+    'Caesarea Philippi': 'Banias', 'Batanea': 'Quneitra', 'Gamala': 'Golan',
+    'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
+    'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
+    'Apamea': 'Hama', 'Bostra': 'Daraa', 'Dura-Europos': 'Deir ez-Zor',
+    'Chalcis': 'Zabadani', 'Cyrrhus': 'Azaz',
+    'Antioch': 'Antakya', 'Seleucia Pieria': 'Iskenderun', 'Zeugma': 'Gaziantep',
+    'Samosata': 'Samsat', 'Edessa': 'Urfa', 'Carrhae': 'Harran',
+    'Amida': 'Diyarbakır', 'Tigranocerta': 'Siirt', 'Sophene': 'Elazığ',
+    'Melitene': 'Malatya', 'Caesarea Mazaca': 'Kayseri', 'Iconium': 'Konya',
+    'Tyana': 'Niğde', 'Attalia': 'Antalya', 'Seleucia Trachea': 'Silifke',
+    'Nisibis': 'Qamishli', 'Singara': 'Sinjar', 'Arbela': 'Erbil',
+    'Assur': 'Shirqat', 'Hatra': 'al-Hadr', 'Seleucia-Ctesiphon': 'Baghdad',
+    'Babylon': 'Hilla', 'Nehardea': 'Fallujah', 'Uruk': 'Nasiriyah',
+    'Charax': 'Basra', 'Ecbatana': 'Hamadan', 'Susa': 'Ahvaz', 'Gazaca': 'Tabriz',
+    'Pelusium': 'Port Said', 'Rhinocolura': 'El Arish', 'Leontopolis': 'Ismailia',
+    'Athribis': 'Benha', 'Memphis': 'Cairo', 'Arsinoe': 'Faiyum',
+    'Oxyrhynchus': 'Minya', 'Thebes': 'Luxor', 'Myos Hormos': 'Hurghada',
+    'Salamis': 'Famagusta', 'Hegra': 'Hejaz', 'Dumatha': 'Al-Jawf',
+    'Tayma': 'Tayma', 'Petra': 'Ma\'an',
+  },
+
+  // Population of 1948 (SPEC §24): the modern cities dwarf their ancient
+  // selves; unlisted provinces keep the map's antique development.
+  devTweaks: {
+    'Joppa': { tax: 12, prod: 10, mp: 8 },        // Tel Aviv
+    'Dora': { tax: 8, prod: 9, mp: 6 },           // Haifa & the port
+    'Jerusalem': { tax: 9, prod: 6, mp: 6 },
+    'Memphis': { tax: 14, prod: 11, mp: 10 },     // Cairo
+    'Alexandria': { tax: 12, prod: 10, mp: 8 },
+    'Seleucia-Ctesiphon': { tax: 11, prod: 9, mp: 8 }, // Baghdad
+    'Damascus': { tax: 10, prod: 8, mp: 7 },
+    'Beroea': { tax: 9, prod: 8, mp: 6 },         // Aleppo
+    'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
+    'Philadelphia': { tax: 6, prod: 5, mp: 5 },   // Amman
+    'Charax': { tax: 7, prod: 7, mp: 5 },         // Basra
+    'Ptolemais': { tax: 5, prod: 5, mp: 4 },      // Acre
+    'Antipatris': { tax: 6, prod: 6, mp: 5 },     // Petah Tikva & the plain
+    'Iconium': { tax: 8, prod: 7, mp: 7 },        // Konya
+    'Tarsus': { tax: 7, prod: 7, mp: 6 },         // Adana plain
+    'Ecbatana': { tax: 8, prod: 7, mp: 7 },       // Hamadan
+    'Susa': { tax: 8, prod: 9, mp: 6 },           // Ahvaz & the oil
+  },
+
   playableTags: [
     {
       tag: 'ISR',

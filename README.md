@@ -99,7 +99,17 @@ python3 -m http.server 8613 --directory .
   Hasmonean Judaea; break Antigonus as Herod and proclaim the Kingdom of Judaea —
   the whole realm (map color, armies, wars, treaties, your own throne) takes the
   new banner, with a requirement checklist in the Decisions panel and a permanent
-  founding bonus.
+  founding bonus. Endgame crowns too: the Kingdom of Israel for any victorious
+  Jewish arc, the United Arab Republic for an Arab power that crushes Israel in
+  1948, and the Roman Empire restored for a Heraclius who takes Ctesiphon.
+- A living land: towns grow each January (markets, granaries, capitals and low
+  autonomy help; war and unrest freeze it), and you can develop provinces with
+  monarch points at prices that scale with size. Deeper diplomacy: monthly
+  subsidies, guarantees of independence that pull you into your ward's defensive
+  wars, and war reparations at the peace table.
+- The map speaks each era's language: in 1948 the labels read Tel Aviv-Jaffa,
+  Latrun, Amman, Cairo and Baghdad, and the modern cities carry modern
+  populations — while the sim keeps its canonical ancient keys underneath.
 
 ## Architecture
 

@@ -1102,11 +1102,17 @@ export function switchTagCore(ctx, from, to) {
     if (!t) continue;
     if (Array.isArray(t.atWarWith)) t.atWarWith = t.atWarWith.map((x) => (x === from ? to : x));
     if (Array.isArray(t.allies)) t.allies = t.allies.map((x) => (x === from ? to : x));
+    if (Array.isArray(t.guarantees)) t.guarantees = t.guarantees.map((x) => (x === from ? to : x));
     if (t.overlord === from) t.overlord = to;
     if (t.opinion && t.opinion[from] !== undefined) {
       t.opinion[to] = t.opinion[from];
       delete t.opinion[from];
     }
+  }
+  for (const s of g.subsidies || []) {
+    if (!s) continue;
+    if (s.from === from) s.from = to;
+    if (s.to === from) s.to = to;
   }
   // Truce and cooldown books are keyed by tag pair — rewrite entries that name us.
   const rekey = (book, sep, sorted) => {
@@ -1261,6 +1267,22 @@ export function declareWar(ctx, atk, def, name, cb) {
   for (const v of vassalsOf(ctx, def)) join(defenders, v);
   // The coalition answers: realms leagued against an infamous conqueror
   // defend anyone he attacks (anti-snowball, SPEC §21).
+  // Guarantors honor their word (SPEC §24): any court that guaranteed the
+  // defender's independence joins the defense.
+  for (const k of Object.keys(g.tags)) {
+    const gt = g.tags[k];
+    if (!gt || !gt.alive || k === atk || k === def) continue;
+    if (!Array.isArray(gt.guarantees) || gt.guarantees.indexOf(def) < 0) continue;
+    const before = defenders.length;
+    join(defenders, k);
+    if (defenders.length > before && (atk === g.playerTag || def === g.playerTag || k === g.playerTag)) {
+      ctx.bus.emit('notify', {
+        title: 'A guarantee is honored',
+        text: (gt.name || k) + ' stands by its word and joins the defense of ' + (D.name || def) + '.',
+        type: k === g.playerTag || def === g.playerTag ? 'good' : 'bad',
+      });
+    }
+  }
   const coal = coalitionAgainst(ctx, atk);
   if (coal.indexOf(def) >= 0) {
     for (const m of coal) join(defenders, m);
@@ -1405,6 +1427,9 @@ export const PEACE = {
   goldCostPer100: 10,    // warscore per 100 talents demanded
   goldStep: 25,          // UI stepper granularity
   humiliateCost: 15,
+  reparationsCost: 15,   // warscore for 8 talents/month over 24 months (SPEC §24)
+  reparationsAmount: 8,
+  reparationsMonths: 24,
   subjugateBase: 25,     // warscore to make the enemy leader a client kingdom...
   subjugatePerDev: 0.25, // ...plus this per point of their total development
   subjugateMax: 100,
@@ -1469,6 +1494,9 @@ export function peaceDealInfo(ctx, war, byTag) {
     goldStep: PEACE.goldStep,
     goldCostPer100: PEACE.goldCostPer100,
     humiliateCost: PEACE.humiliateCost,
+    reparationsCost: PEACE.reparationsCost,
+    reparationsAmount: PEACE.reparationsAmount,
+    reparationsMonths: PEACE.reparationsMonths,
     canSubjugate, whyNotSubjugate, subjugateCost,
     cb: war.cb || null,
     noNegotiation: !!war.noNegotiation,
@@ -1497,7 +1525,9 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
   const humiliate = !!d.humiliate;
   if (humiliate) cost += PEACE.humiliateCost;
-  const white = !chosen.length && gold <= 0 && !humiliate && !subjugate;
+  const reparations = !!d.reparations;
+  if (reparations) cost += PEACE.reparationsCost;
+  const white = !chosen.length && gold <= 0 && !humiliate && !subjugate && !reparations;
   const enemyWs = -info.myWs;
   let acceptable, reason;
   if (white) {
@@ -1512,7 +1542,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       ? 'Our position compels them to accept.'
       : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
   }
-  return { cost, acceptable, reason, gold, humiliate, subjugate, provinces: chosen.map((c) => c.id) };
+  return { cost, acceptable, reason, gold, humiliate, subjugate, reparations, provinces: chosen.map((c) => c.id) };
 }
 // Applies an (already accepted) deal, then winds the war down: status quo for
 // the rest, truces, atWarWith rebuild, stranded armies march home.
@@ -1637,6 +1667,17 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     et.treasury = num(et.treasury) - ev.gold;
     me.treasury = num(me.treasury) + ev.gold;
     terms.push('pays ' + ev.gold + ' talents');
+  }
+  if (ev.reparations && info.enemyLeader && me) {
+    // Reparations ride the subsidy pipe (SPEC §24): a forced monthly flow.
+    if (!Array.isArray(g.subsidies)) g.subsidies = [];
+    g.subsidies = g.subsidies.filter((s) => !(s && s.reparation && s.from === info.enemyLeader && s.to === byTag));
+    g.subsidies.push({
+      from: info.enemyLeader, to: byTag,
+      amount: PEACE.reparationsAmount, monthsLeft: PEACE.reparationsMonths, reparation: true,
+    });
+    terms.push('pays reparations (' + PEACE.reparationsAmount + ' talents a month for '
+      + Math.round(PEACE.reparationsMonths / 12) + ' years)');
   }
   if (ev.humiliate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];

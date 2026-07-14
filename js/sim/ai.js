@@ -13,7 +13,7 @@ import {
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
-import { LOAN_SIZE } from './economy.js';
+import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -428,10 +428,15 @@ function monthlyWarDiplomacy(ctx) {
       if (Math.abs(wsAtt) < 50 && months < 36) continue;
       const winner = wsAtt >= 0 ? attLead : defLead;
       const info = peaceDealInfo(ctx, w, winner);
-      const deal = { provinces: [], gold: 0, humiliate: false };
+      const deal = { provinces: [], gold: 0, humiliate: false, reparations: false };
       let budget = info.myWs;
       for (const row of info.provinces) {
         if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
+      }
+      // What the sword can't hold, the treaty can bleed: leftover score buys reparations.
+      if (budget >= (info.reparationsCost || 15)) {
+        deal.reparations = true;
+        budget -= (info.reparationsCost || 15);
       }
       executePeaceDeal(ctx, w, winner, deal);
     }
@@ -519,6 +524,28 @@ function aiFormNation(ctx, tag) {
   return false;
 }
 
+// Points that would otherwise hit the 999 cap go into the land (SPEC §24):
+// with a fat pool the AI develops its best integrated province, capital first.
+function aiDevelop(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t) return;
+  const capital = (ctx.DEFINES.TAGS[tag] || {}).capital;
+  for (const kind of Object.keys(DEV_KINDS)) {
+    const pool = DEV_KINDS[kind];
+    if (num(t.points[pool]) < 500) continue; // tech and reforms eat first
+    let best = null, bestScore = -1;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag || p.siege) continue;
+      const score = devTotal(p) + ((p.canon || p.name) === capital ? 100 : 0) - num(p.autonomy, 0.25) * 20;
+      if (score > bestScore) { bestScore = score; best = i; }
+    }
+    if (best && developInfo(ctx, tag, best, kind).can) developCore(ctx, tag, best, kind);
+    return; // one improvement a month
+  }
+}
+
 // Re-equip old-pattern armies when the coffers allow — cheapest first, one a month.
 function aiModernize(ctx, tag) {
   const t = ctx.game.tags[tag];
@@ -545,6 +572,7 @@ export function runMonthlyAI(ctx) {
       aiTech(ctx, tag);
       aiReforms(ctx, tag);
       aiModernize(ctx, tag);
+      aiDevelop(ctx, tag);
       // Last in the sequence: if the tag forms a greater nation the old key is
       // gone and nothing may touch it again this month.
       aiFormNation(ctx, tag);

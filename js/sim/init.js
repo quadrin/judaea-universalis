@@ -17,7 +17,7 @@ import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, genName } from '../data/tech.js';
 import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { resolveEventOption } from './events.js';
@@ -46,6 +46,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
+    subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
     rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [] },
   };
@@ -66,17 +67,21 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     const impassable = !!(s.impassable || (terr && terr.impassable));
     const fort = Math.max(0, s.fort | 0);
     const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
+    // bookmark.provinceNames renames places for far eras (Joppa → Tel Aviv-Jaffa);
+    // p.canon keeps the map's canonical key, and makeCtx aliases both in prov().
+    const eraName = (bookmark && bookmark.provinceNames && bookmark.provinceNames[s.name]) || null;
+    const dt = (bookmark && bookmark.devTweaks && bookmark.devTweaks[s.name]) || null;
     game.provinces.push({
-      id, name: s.name || ('Province ' + id), x, y,
+      id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
       terrain: s.terrain, good: s.good,
       // bookmark.religions / bookmark.cultures overlay the map's 66 CE faith
       // and tongue for far-era bookmarks (SPEC §22: 614 CE, 1948 CE)
       religion: (bookmark && bookmark.religions && bookmark.religions[s.name]) || s.religion,
       culture: (bookmark && bookmark.cultures && bookmark.cultures[s.name]) || s.culture,
       dev: {
-        tax: num(s.dev && s.dev.tax),
-        prod: num(s.dev && s.dev.prod),
-        mp: num(s.dev && s.dev.mp),
+        tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
+        prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
+        mp: num(dt && dt.mp, num(s.dev && s.dev.mp)),
       },
       // bookmark.owners overrides the map's default (66 CE) political layer
       owner: (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE',
@@ -115,7 +120,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       aggression: 0,
       courtCand: {},
       modifiers: [],
-      atWarWith: [], allies: [], opinion: {},
+      atWarWith: [], allies: [], guarantees: [], opinion: {},
       claims: [], overlord: null,
       heir: null, regency: false, missionIdx: 0,
       aiState: {},
@@ -156,7 +161,11 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
   const nameToId = new Map();
   for (let i = 1; i < game.provinces.length; i++) {
     const p = game.provinces[i];
-    if (p) nameToId.set(p.name, i);
+    if (!p) continue;
+    nameToId.set(p.name, i);
+    // Era-renamed provinces (SPEC §24) answer to their canonical map name too,
+    // so content packages keep addressing 'Joppa' when the label reads Tel Aviv.
+    if (p.canon && p.canon !== p.name) nameToId.set(p.canon, i);
   }
   const ctx = {
     game, DEFINES, MAP_DATA, geom, bus, bookmark, events,
@@ -509,6 +518,20 @@ export function gameActions(ctx) {
       else if (ourOverlord) whyNotWar = 'They are our overlord.';
       else if (allied) whyNotWar = 'We are allied — break the alliance first.';
       else if (truceUntil) whyNotWar = 'The ink on the truce is still wet.';
+      // Guarantees & subsidies (SPEC §24)
+      const weGuarantee = Array.isArray(mine.guarantees) && mine.guarantees.indexOf(tag) >= 0;
+      const theyGuarantee = Array.isArray(them.guarantees) && them.guarantees.indexOf(me) >= 0;
+      const subOut = (g.subsidies || []).find((s) => s && s.from === me && s.to === tag);
+      const subIn = (g.subsidies || []).find((s) => s && s.from === tag && s.to === me);
+      let whyNotGuarantee = '';
+      if (weGuarantee) whyNotGuarantee = 'Our word already protects them.';
+      else if (atWarWithUs) whyNotGuarantee = 'We are at war with them.';
+      else if (ourClient || ourOverlord) whyNotGuarantee = 'The bond of fealty already binds us.';
+      else if (num(mine.points && mine.points.infl) < 50) whyNotGuarantee = 'Not enough influence (50 required).';
+      let whyNotSubsidize = '';
+      if (subOut) whyNotSubsidize = 'A subsidy already flows (' + subOut.monthsLeft + ' months left).';
+      else if (atWarWithUs) whyNotSubsidize = 'We are at war with them.';
+      else if (num(mine.treasury) < 60) whyNotSubsidize = 'The treasury is too thin (60 talents in hand required).';
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -520,6 +543,11 @@ export function gameActions(ctx) {
         canWar: !whyNotWar,
         whyNotImprove, whyNotGift, whyNotAlly, whyNotWar,
         improveCost: DIPLO.improveCost, giftCost: DIPLO.giftCost,
+        weGuarantee, theyGuarantee,
+        subsidyOut: subOut ? { amount: subOut.amount, monthsLeft: subOut.monthsLeft, reparation: !!subOut.reparation } : null,
+        subsidyIn: subIn ? { amount: subIn.amount, monthsLeft: subIn.monthsLeft, reparation: !!subIn.reparation } : null,
+        canGuarantee: !whyNotGuarantee, whyNotGuarantee,
+        canSubsidize: !whyNotSubsidize, whyNotSubsidize,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -883,6 +911,51 @@ export function gameActions(ctx) {
         say('Send gift', 'A caravan of gifts reaches ' + d.name + ' (+' + DIPLO.giftGain + ' opinion).', 'good');
       } catch (e) { warnOnce('sendGift', 'sendGift failed', e); }
     },
+    // Guarantees & subsidies (SPEC §24)
+    guaranteeNation(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canGuarantee) { say('Guarantee', d.whyNotGuarantee || 'We cannot extend our word to ' + d.name + '.', 'bad'); return; }
+        const mine = g.tags[g.playerTag];
+        mine.points.infl = num(mine.points.infl) - 50;
+        if (!Array.isArray(mine.guarantees)) mine.guarantees = [];
+        mine.guarantees.push(tag);
+        addOpinion(ctx, tag, g.playerTag, 15);
+        say('Guarantee', 'Our word now protects ' + d.name + ': attack them, and you fight us (+15 opinion).', 'good');
+      } catch (e) { warnOnce('guarantee', 'guaranteeNation failed', e); }
+    },
+    revokeGuarantee(tag) {
+      try {
+        const mine = g.tags[g.playerTag];
+        if (!mine || !Array.isArray(mine.guarantees) || mine.guarantees.indexOf(tag) < 0) return;
+        mine.guarantees = mine.guarantees.filter((x) => x !== tag);
+        addOpinion(ctx, tag, g.playerTag, -20);
+        say('Guarantee withdrawn', 'Our protection of ' + ((g.tags[tag] && g.tags[tag].name) || tag)
+          + ' is quietly ended (−20 opinion).', 'info');
+      } catch (e) { warnOnce('revokeGuarantee', 'revokeGuarantee failed', e); }
+    },
+    sendSubsidy(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        if (!d.canSubsidize) { say('Subsidy', d.whyNotSubsidize || 'No subsidy can reach ' + d.name + '.', 'bad'); return; }
+        if (!Array.isArray(g.subsidies)) g.subsidies = [];
+        g.subsidies.push({ from: g.playerTag, to: tag, amount: 10, monthsLeft: 12 });
+        addOpinion(ctx, tag, g.playerTag, 20);
+        say('Subsidy', 'Our silver will flow to ' + d.name + ': 10 talents a month for a year (+20 opinion).', 'good');
+      } catch (e) { warnOnce('sendSubsidy', 'sendSubsidy failed', e); }
+    },
+    cancelSubsidy(tag) {
+      try {
+        if (!Array.isArray(g.subsidies)) return;
+        const at = g.subsidies.findIndex((s) => s && s.from === g.playerTag && s.to === tag && !s.reparation);
+        if (at < 0) { say('Subsidy', 'Reparations cannot be cancelled — only paid.', 'bad'); return; }
+        g.subsidies.splice(at, 1);
+        addOpinion(ctx, tag, g.playerTag, -10);
+        say('Subsidy ended', 'The silver stops (−10 opinion).', 'info');
+      } catch (e) { warnOnce('cancelSubsidy', 'cancelSubsidy failed', e); }
+    },
     offerAlliance(tag) {
       try {
         const d = getDip(tag);
@@ -918,21 +991,15 @@ export function gameActions(ctx) {
 
     // ---- monarch-point sinks (v1.1) --------------------------------------
     // EU4 mapping: tax dev = Governance, prod dev = Influence, mp dev = Martial.
+    // Development (SPEC §24): cost scales with the town's size — 50 + 5×dev.
     devProvince(provId, kind) {
       try {
-        const p = ctx.byId(provId);
-        const t = g.tags[g.playerTag];
-        const pool = { tax: 'gov', prod: 'infl', mp: 'mar' }[kind];
-        if (!p || !t || !pool) return;
-        if (p.owner !== g.playerTag || p.controller !== g.playerTag) {
-          say('Development', 'We must own and control ' + p.name + ' to develop it.', 'bad'); return;
-        }
-        if (num(p.dev[kind]) >= 15) { say('Development', p.name + ' can grow no further.', 'info'); return; }
-        if (num(t.points[pool]) < 50) { say('Development', 'Not enough ' + pool + ' points (50 required).', 'bad'); return; }
-        t.points[pool] -= 50;
-        p.dev[kind] = num(p.dev[kind]) + 1;
-        ctx.bus.emit('provinceDev', { provId: p.id, kind });
-        say('Development', p.name + ' grows: +1 ' + kind + ' development.', 'good');
+        const p = ctx.byId(provId | 0);
+        const r = developCore(ctx, g.playerTag, provId | 0, kind);
+        if (!r.ok) { say('Development', r.why, 'bad'); return; }
+        say('Development', (p ? p.name : 'The province') + ' grows: +1 '
+          + (kind === 'tax' ? 'tax' : kind === 'prod' ? 'production' : 'manpower')
+          + ' development (' + r.cost + ' points).', 'good');
       } catch (e) { warnOnce('dev', 'devProvince failed', e); }
     },
     buyStability() {
@@ -1257,6 +1324,17 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('modernize', 'modernizeArmy failed', e); }
     },
 
+    // ---- development (SPEC §24) --------------------------------------------------
+    getDevelopInfo(provId) {
+      try {
+        const out = {};
+        for (const kind of Object.keys(DEV_KINDS)) {
+          out[kind] = developInfo(ctx, g.playerTag, provId | 0, kind);
+        }
+        return out;
+      } catch (e) { warnOnce('devInfo', 'getDevelopInfo failed', e); return null; }
+    },
+
     // ---- battle window ---------------------------------------------------------
     getBattleInfo(provId) {
       try { return battleInfo(ctx, provId | 0); } catch (e) { warnOnce('battleInfo', 'getBattleInfo failed', e); return null; }
@@ -1545,6 +1623,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.wars) saved.wars = [];
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
+  if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
   // pre-buildings/loans saves: default the new economy & military fields
@@ -1569,6 +1648,7 @@ export function reviveGame(saved) {
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};
     if (!Number.isFinite(t.aggression)) t.aggression = 0;
+    if (!Array.isArray(t.guarantees)) t.guarantees = []; // pre-diplomacy-depth saves
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;

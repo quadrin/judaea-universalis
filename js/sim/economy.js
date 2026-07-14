@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, hasBuilding } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, hasBuilding, devTotal } from './military.js';
 import { blockadedBy } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 
@@ -97,8 +97,51 @@ export function incomeBreakdown(ctx, tag) {
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
   for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg;
   out.interest = Math.max(0, Math.round(num(t.loans))) * LOAN_INTEREST_PER_MONTH;
-  out.net = out.income + out.tributeIn - out.tributeOut - out.maint - out.interest;
+  // Subsidies & reparations (SPEC §24): monthly flows between courts. Both
+  // sides read the same list, so the transfer balances by construction.
+  out.subsIn = 0;
+  out.subsOut = 0;
+  for (const s of g.subsidies || []) {
+    if (!s || !(s.monthsLeft > 0)) continue;
+    if (s.to === tag) out.subsIn += num(s.amount);
+    if (s.from === tag) out.subsOut += num(s.amount);
+  }
+  out.net = out.income + out.tributeIn + out.subsIn - out.tributeOut - out.subsOut - out.maint - out.interest;
   return out;
+}
+
+// Monthly upkeep of the subsidy book: count the flows down, and let a payer in
+// deep debt default (their creditors are told).
+export function monthlySubsidies(ctx) {
+  const g = ctx.game;
+  if (!Array.isArray(g.subsidies) || !g.subsidies.length) return;
+  const keep = [];
+  for (const s of g.subsidies) {
+    if (!s) continue;
+    const payer = g.tags[s.from];
+    const taker = g.tags[s.to];
+    if (!payer || !payer.alive || !taker || !taker.alive) continue; // a dead court owes nothing
+    if (num(payer.treasury) <= -150) {
+      if (s.from === g.playerTag || s.to === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: s.reparation ? 'Reparations default' : 'A subsidy lapses',
+          text: (payer.name || s.from) + ' can no longer pay ' + (taker.name || s.to) + '.',
+          type: s.to === g.playerTag ? 'bad' : 'info',
+        });
+      }
+      continue;
+    }
+    s.monthsLeft = num(s.monthsLeft) - 1;
+    if (s.monthsLeft > 0) keep.push(s);
+    else if (s.from === g.playerTag || s.to === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: s.reparation ? 'Reparations paid in full' : 'A subsidy ends',
+        text: 'The agreed flow from ' + (payer.name || s.from) + ' to ' + (taker.name || s.to) + ' is complete.',
+        type: 'info',
+      });
+    }
+  }
+  g.subsidies = keep;
 }
 
 export function runMonthlyEconomy(ctx) {
@@ -156,6 +199,8 @@ export function explainIncome(ctx, tag) {
     if (bd.trade > 0) rows.push({ label: 'Trade routes', value: r2(bd.trade) });
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
+    if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
+    if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });
     rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });
     rows.push({ label: 'Monthly balance', value: r2(bd.net) });
@@ -164,6 +209,78 @@ export function explainIncome(ctx, tag) {
     warnOnce('explainIncome', 'explainIncome failed', e);
     return [];
   }
+}
+
+// ---------------------------------------------------------------- development (SPEC §24)
+// Towns grow. Each January every settled, peaceful, integrated province rolls
+// for +1 development — markets and granaries help, capitals bloom, war and
+// unrest freeze everything. Government tech raises the whole curve (growthMult).
+export function yearlyGrowth(ctx) {
+  const g = ctx.game;
+  const capitals = {};
+  for (const k of Object.keys(ctx.DEFINES.TAGS || {})) {
+    const c = ctx.DEFINES.TAGS[k] && ctx.DEFINES.TAGS[k].capital;
+    if (c) capitals[c] = k;
+  }
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    const t = g.tags[p.owner];
+    if (!t || !t.alive || p.owner === 'REB') continue;
+    if (p.controller !== p.owner || p.siege) continue; // war-torn towns don't grow
+    if (num(p.unrest) > 4) continue; // nor restive ones
+    let chance = 0.05;
+    if (hasBuilding(p, 'market')) chance += 0.04;
+    if (hasBuilding(p, 'granary')) chance += 0.04;
+    if (capitals[p.canon || p.name] === p.owner) chance += 0.06;
+    chance += (0.9 - clamp(num(p.autonomy, 0.25), 0, 0.9)) * 0.05; // integrated land grows
+    if (t.atWarWith && t.atWarWith.length) chance *= 0.5; // wartime economy
+    chance *= resolveTagMult(ctx, p.owner, 'growthMult');
+    if (!(ctx.rng.next() < chance)) continue;
+    const roll = ctx.rng.next();
+    const kind = roll < 0.4 ? 'tax' : roll < 0.75 ? 'prod' : 'mp';
+    p.dev[kind] = num(p.dev[kind]) + 1;
+    ctx.bus.emit('provinceDev', { id: i });
+    if (p.owner === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: (p.name || 'A town') + ' grows',
+        text: 'Prosperity: +1 ' + (kind === 'tax' ? 'tax' : kind === 'prod' ? 'production' : 'manpower')
+          + ' development (' + devTotal(p) + ' total).',
+        type: 'good', provName: p.name,
+      });
+    }
+  }
+}
+
+// Deliberate development: monarch points buy +1 dev — tax with government,
+// production with influence, manpower with martial. Dearer as the town grows.
+export const DEV_KINDS = { tax: 'gov', prod: 'infl', mp: 'mar' };
+export function developCost(p) {
+  return 50 + 5 * devTotal(p);
+}
+export function developInfo(ctx, tag, provId, kind) {
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  const pool = DEV_KINDS[kind];
+  if (!p || !t || !pool) return { can: false, why: 'invalid', cost: 0 };
+  const cost = developCost(p);
+  let why = '';
+  if (p.impassable) why = 'The wasteland cannot be developed.';
+  else if (p.owner !== tag) why = 'Not our province.';
+  else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
+  else if (p.siege) why = 'Under siege.';
+  else if (num(t.points[pool]) < cost) why = 'Needs ' + cost + ' ' + (pool === 'gov' ? 'government' : pool === 'infl' ? 'influence' : 'martial') + ' points.';
+  return { can: !why, why, cost, pool };
+}
+export function developCore(ctx, tag, provId, kind) {
+  const info = developInfo(ctx, tag, provId, kind);
+  if (!info.can) return { ok: false, why: info.why };
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  t.points[info.pool] = num(t.points[info.pool]) - info.cost;
+  p.dev[kind] = num(p.dev[kind]) + 1;
+  ctx.bus.emit('provinceDev', { id: provId });
+  return { ok: true, cost: info.cost };
 }
 
 // ---------------------------------------------------------------- construction

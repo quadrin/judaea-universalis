@@ -360,6 +360,15 @@ export const FLAGS = {
     `<rect x="0.6" y="18.1" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
     `<path d="M12 7.3 16.05 14.35H7.95Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>` +
     `<path d="M12 16.7 7.95 9.65h8.1Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>`,
+  // Kingdom of Israel (formable): the star of David crowned in gold.
+  MLI:
+    `<path d="M12 4.6 15.9 11.4H8.1Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>` +
+    `<path d="M12 16 8.1 9.2h7.8Z" fill="none" ${S} stroke="${FP}" stroke-width="1.5"/>` +
+    `<path d="M6.8 17.4l1.3 1.6 1.9-1.6 2 1.6 2-1.6 1.9 1.6 1.3-1.6v3H6.8Z" ${ACC}/>`,
+  // United Arab Republic (formable): crescent and star.
+  UAR:
+    `<path d="M14.6 4.6a7.6 7.6 0 100 14.8 8.6 8.6 0 010-14.8Z" ${SIL}/>` +
+    `<path d="M16.4 9.4l.9 1.9 2.1.3-1.5 1.5.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3Z" ${ACC}/>`,
 };
 
 function escText(s) {

@@ -36,6 +36,12 @@ Return (Jerusalem by event, Persian-backed gains) holding a small state.
 1948 runs clean: the coalition invades, the truces bite, and the Rhodes
 armistice freezes the lines on schedule.
 
+Since v2.4 (development growth) the small-token realms breathe a little
+differently: PAR's two-province western outpost in 167 BCE hovers a hair
+below break-even (accepted, same class as ARM), while ARI (67 BCE) and
+ROM-in-40-BCE dropped OFF the bleeding list — growing towns pay for the
+armies that once bankrupted them.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
