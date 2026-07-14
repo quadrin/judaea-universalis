@@ -60,6 +60,23 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     if (fe) { runArmyAction('embarkFleet', Number(fe.dataset.fleetEmbark)); return; }
     const fd = e.target.closest('[data-fleet-disembark]');
     if (fd) { runArmyAction('disembarkFleet', Number(fd.dataset.fleetDisembark)); return; }
+    const fa = e.target.closest('[data-fleet-admiral]');
+    if (fa) {
+      if (!fa.classList.contains('disabled')) runArmyAction('hireAdmiral', Number(fa.dataset.fleetAdmiral));
+      return;
+    }
+    const fm = e.target.closest('[data-fleet-modernize]');
+    if (fm) {
+      if (!fm.classList.contains('disabled')) runArmyAction('modernizeFleet', Number(fm.dataset.fleetModernize));
+      return;
+    }
+    const wl = e.target.closest('[data-wing-leader]');
+    if (wl) {
+      if (!wl.classList.contains('disabled')) runArmyAction('hireWingLeader', Number(wl.dataset.wingLeader));
+      return;
+    }
+    const wg = e.target.closest('[data-wing]');
+    if (wg && onFocusProv) { onFocusProv(Number(wg.dataset.wing)); return; }
     const fl = e.target.closest('[data-fleet]');
     if (fl) {
       const g = ctx && ctx.game;
@@ -161,18 +178,51 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       html += `<div class="ol-sec">Fleets <span class="ol-count">${fleets.length}</span></div>`;
       for (const f of fleets) {
         const sel = g.ui && g.ui.selectedFleet === f.id;
-        const tt = `${f.name} — ${f.ships} ships (${fmtMen(f.capacity)} capacity)\n`
+        const adm = f.admiral ? `\nAdmiral: ${f.admiral.name} (seamanship ${f.admiral.maneuver})` : '';
+        const tt = `${f.name} — ${f.ships} ships of ${f.genName || 'the old pattern'} (${fmtMen(f.capacity)} capacity)${adm}\n`
           + (f.sailing ? 'Under sail' : 'Riding at ' + f.provName)
           + (f.aboardMen ? `\nCarrying ${fmtMen(f.aboardMen)} men` : '')
           + '\nSelect, then right-click a coastal province to sail.';
+        const admTT = f.canHireAdmiral
+          ? 'Hire an admiral for this fleet (50 martial points) — seamanship rides the battle die'
+          : (f.admiral ? `${f.admiral.name} commands` : 'An admiral costs 50 martial points');
+        const modTT = f.canModernize
+          ? `Re-rig ${f.genName} as ${f.newGenName} (${f.modernizeCost} talents)`
+          : (f.whyModernize || 'Nothing newer to re-rig to');
         html += `
           <div class="ol-row ol-fleet${sel ? ' sel' : ''}" data-fleet="${f.id}" data-tt="${esc(tt)}">
-            <span class="ol-name">⛵ ${esc(f.provName)}</span>
+            <span class="ol-name">⛵ ${f.admiral ? icon('helmet', 'icon-row') + ' ' : ''}${esc(f.provName)}</span>
             <span class="ol-men">${f.ships}</span>
             ${sel ? `<span class="ol-acts">`
     + (f.canEmbark ? `<button class="ol-act" data-fleet-embark="${f.id}" data-tt="Embark our armies at this port">${icon('shield')}</button>` : '')
     + (f.canDisembark ? `<button class="ol-act" data-fleet-disembark="${f.id}" data-tt="Put the carried armies ashore here">${icon('retreat')}</button>` : '')
+    + `<button class="ol-act${f.canHireAdmiral ? '' : ' disabled'}" data-fleet-admiral="${f.id}" data-tt="${esc(admTT)}">${icon('helmet')}</button>`
+    + `<button class="ol-act${f.canModernize ? '' : ' disabled'}" data-fleet-modernize="${f.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>`
     + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
+          </div>`;
+      }
+    }
+
+    // Air wings (SPEC §31): squadrons at their fields, like armies in theirs
+    let wings = [];
+    if (actions && typeof actions.getAirWings === 'function') {
+      try { wings = actions.getAirWings() || []; } catch (e) { warnOnce('getAirWings', e); }
+    }
+    if (wings.length) {
+      html += `<div class="ol-sec">Air Wings <span class="ol-count">${wings.length}</span></div>`;
+      for (const w of wings) {
+        const lead = w.leader ? `\nCommander: ${w.leader.name} (bombing ${w.leader.fire}, evasion ${w.leader.maneuver})` : '';
+        const tt = `${w.name} — based at ${w.provName}${lead}\n`
+          + (w.raidCd > 0 ? `Rearming: ready in ${w.raidCd} day${w.raidCd === 1 ? '' : 's'}` : 'Bombed up and ready')
+          + '\nRaid and rebase from the base province’s panel.';
+        const leadTT = w.canHireLeader
+          ? 'Hire a squadron commander (50 martial points) — bombing pips sharpen raids, evasion slips interception'
+          : (w.leader ? `${w.leader.name} leads` : 'A commander costs 50 martial points');
+        html += `
+          <div class="ol-row ol-wing" data-wing="${w.prov}" data-tt="${esc(tt)}">
+            <span class="ol-name">✈ ${w.leader ? icon('helmet', 'icon-row') + ' ' : ''}${esc(w.name)}</span>
+            <span class="ol-sub">${w.raidCd > 0 ? w.raidCd + 'd' : 'ready'}</span>
+            <button class="ol-act${w.canHireLeader ? '' : ' disabled'}" data-wing-leader="${w.id}" data-tt="${esc(leadTT)}">${icon('helmet')}</button>
           </div>`;
       }
     }
@@ -223,14 +273,12 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       for (const w of wars) {
         const ws = Math.round(warscoreFor(w, player));
         const cls = ws > 0 ? 'pos' : ws < 0 ? 'neg' : '';
-        const peaceBtn = w.noNegotiation
-          ? ''
-          : `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`;
+        const peaceBtn = `<button class="ol-peace" data-peace="${esc(w.id)}" data-tt="Negotiate peace${w.noNegotiation ? ' — a fight to the death, but envoys may still be sent' : ''}">${icon('dove')}</button>`;
         // Lead enemy's flag before the war name (falls back to the flame glyph).
         const opp = (w.attackers || []).includes(player) ? (w.defenders || [])[0] : (w.attackers || [])[0];
         const lead = opp ? flagChip(opp, ctx.DEFINES, 14, true) : icon('flame', 'icon-row');
         html += `
-          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview${w.noNegotiation ? '\nThis war ends by the sword, by events — or at the peace table once one side reaches 75% war score.' : ''}">
+          <div class="ol-row ol-war" data-war="${esc(w.id)}" data-tt="${esc(w.name || 'War')}\nWarscore: ${signed(ws)}%\nClick for the war overview">
             <span class="ol-name">${lead} ${esc(w.name || 'War')}</span>
             <span class="ol-sub ${cls}">${signed(ws)}%</span>
             ${peaceBtn}

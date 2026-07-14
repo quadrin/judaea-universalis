@@ -1306,3 +1306,40 @@ foreign court **read-only**.
   silhouette was rebuilt (elliptical fuselage, swept wings, tailplane,
   canopy glint, wing roundels) and is shared by the parked planes and the
   raid animation.
+
+## 31. v3.1: the peace table and the sea — agency, eras afloat, parity aloft
+
+- **The player can always sue for peace.** `offerPeaceDeal` no longer refuses
+  scripted (noNegotiation) wars; the peace dialog, war overview, outliner and
+  realm panel show the dove on every war. Whether the enemy LISTENS is still
+  `evaluatePeaceDeal`'s affair — white peace when even, territory when
+  winning, nothing when losing badly ("unless you're severely screwed"). The
+  AI keeps its old counsel: it never initiates peace in a scripted war, so
+  the all-AI harness arcs are untouched.
+- **Scripted concessions stopped gifting Syria.** `endWarBySword` grew an
+  `opts.keep(p)` predicate: occupied provinces failing it return to their
+  owner instead of transferring (uti possidetis remains the default). The
+  167 BCE "Terms from Antioch" is now an EVENT CARD fired once at 50% war
+  score, not an auto-verdict: accept and the revolt ends with Judaea keeping
+  only the provinces of the faith it holds (the decree's own words — the
+  Law, the arms, the hills; Gaza goes home), or refuse (+5 legitimacy, the
+  decree is never offered twice) and fight on for the whole inheritance —
+  by the sword, at the table, or to the independence of 140 BCE.
+- **Hulls speak the age** (`NAVAL_GENS`, same thresholds and power curve as
+  the army ladder): Penteconters → Trireme Squadrons → Quinquereme Fleets →
+  Dromon Flotillas → Galleon Squadrons → Destroyer Flotillas. New fleets are
+  laid down to the builder's current pattern (`fleet.gen`); sea battles
+  multiply the broadside by `genMult` (on top of influence tech's
+  navalMult); old fleets re-rig at anchor for 4 talents per hull per
+  generation (`modernizeFleetCore`, AI included via aiModernize). The
+  shipyard button names the pattern it lays down.
+- **Admirals & squadron commanders** (50 martial points each, `rollGeneral`
+  names and pips): a fleet's admiral adds his seamanship (maneuver) to the
+  sea-battle die; a wing's commander sharpens raids (+10% per fire pip) and
+  slips interception (per maneuver pip). Hired from the outliner rows.
+- **Fleets and wings are first-class in the outliner**: fleets show their
+  hull count, pattern, cargo, admiral, embark/disembark/hire/re-rig buttons;
+  air wings list by squadron name with base, rearm countdown and commander
+  button, and click through to their field. On the map, parked planes carry
+  a squadron count like an army banner's; fleets already sail with theirs.
+- Save compat: pre-era fleets heal to gen 0 with no admiral.

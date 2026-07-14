@@ -76,6 +76,23 @@ export const UNIT_GENS = [
   { at: 19, inf: 'Rifle Brigades',      cav: 'Armored Corps',     mult: 2.8 },
 ];
 
+// Hulls age like soldiers (SPEC §31): same thresholds, same power curve.
+// A fleet remembers the pattern it was laid down to; modernizing re-rigs it.
+export const NAVAL_GENS = [
+  { at: 0,  name: 'Penteconters' },
+  { at: 4,  name: 'Trireme Squadrons' },
+  { at: 6,  name: 'Quinquereme Fleets' },
+  { at: 10, name: 'Dromon Flotillas' },
+  { at: 14, name: 'Galleon Squadrons' },
+  { at: 19, name: 'Destroyer Flotillas' },
+];
+export function navalGenName(genIdx) {
+  const n = NAVAL_GENS[Math.max(0, Math.min(NAVAL_GENS.length - 1, genIdx | 0))];
+  return n ? n.name : '';
+}
+// Talents to re-rig one hull one full pattern-generation forward.
+export const MODERNIZE_COST_PER_SHIP_PER_GEN = 4;
+
 // Index of the newest pattern a military tech level has unlocked.
 export function unlockedGen(marLevel) {
   let gi = 0;

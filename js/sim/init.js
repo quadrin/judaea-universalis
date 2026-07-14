@@ -12,12 +12,17 @@ import {
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
-  hasAirfield, airWingsAt, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
+  hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
+  hireWingLeaderCore,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, genName } from '../data/tech.js';
-import { isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays } from './navy.js';
+import {
+  isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
+  navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
+} from './navy.js';
+import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
@@ -302,12 +307,12 @@ export const simHelpers = {
   // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
   // ends the war between a and b by the sword — winnersKey 'att'/'def' or
   // null/undefined for a white peace where every occupation reverts.
-  endWar(ctx, a, b, winnersKey) {
+  endWar(ctx, a, b, winnersKey, opts) {
     const g = ctx.game;
     for (const w of (g.wars || []).slice()) {
       const all = (w.attackers || []).concat(w.defenders || []);
       if (all.indexOf(a) < 0 || all.indexOf(b) < 0) continue;
-      endWarBySword(ctx, w, winnersKey === 'att' || winnersKey === 'def' ? winnersKey : null);
+      endWarBySword(ctx, w, winnersKey === 'att' || winnersKey === 'def' ? winnersKey : null, opts);
       return true;
     }
     return false;
@@ -1140,9 +1145,9 @@ export function gameActions(ctx) {
         const me = g.playerTag;
         if (!war) return;
         if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return;
-        if (war.noNegotiation) {
-          say('No terms', 'This war ends by the sword, or by events larger than treaties.', 'bad'); return;
-        }
+        // SPEC §31: the player may ALWAYS sue for peace — even in scripted
+        // fight-to-the-death wars. Whether the enemy listens is another
+        // matter (evaluatePeaceDeal), and the AI keeps its own counsel.
         if (diploCdActive(ctx, 'peace:' + war.id)) {
           say('Envoys rebuffed', 'The enemy will not receive our envoys again yet ('
             + diploCdMonthsLeft(ctx, 'peace:' + war.id) + ' months).', 'bad');
@@ -1221,6 +1226,7 @@ export function gameActions(ctx) {
             const aboard = Object.values(g.armies).filter((a) => a && a.aboard === f.id);
             const here = Object.values(g.armies).filter((a) => a && !a.aboard && a.prov === f.prov && a.tag === me && !a.inBattle);
             const p = ctx.byId(f.prov);
+            const mi = modernizeFleetInfo(ctx, f);
             return {
               id: f.id, name: f.name, ships: f.ships, prov: f.prov,
               provName: (p && p.name) || ('#' + f.prov),
@@ -1230,10 +1236,59 @@ export function gameActions(ctx) {
               canEmbark: here.length > 0 && !(f.path && f.path.length),
               canDisembark: aboard.length > 0 && !(f.path && f.path.length),
               capacity: f.ships * 1000,
+              // eras at sea & their commanders (SPEC §31)
+              gen: num(f.gen, 0),
+              genName: navalGenName(num(f.gen, 0)),
+              newGenName: mi.can ? navalGenName(mi.cur) : null,
+              canModernize: mi.can, modernizeCost: mi.cost, whyModernize: mi.why || '',
+              admiral: f.admiral ? { name: f.admiral.name, maneuver: num(f.admiral.maneuver) } : null,
+              canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
             };
           });
         return { fleets };
       } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
+    },
+    modernizeFleet(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const res = modernizeFleetCore(ctx, f);
+        if (!res.ok) { say('No refit', res.why, 'bad'); return; }
+        say('Fleet re-rigged', f.name + ' refits as ' + res.name + ' (' + res.cost + ' talents).', 'good');
+      } catch (e) { warnOnce('modernizeFleet', 'modernizeFleet failed', e); }
+    },
+    hireAdmiral(fleetId) {
+      try {
+        const f = (g.fleets || {})[fleetId];
+        if (!f || f.tag !== g.playerTag) return;
+        const res = hireAdmiralCore(ctx, f);
+        if (!res.ok) { say('No admiral', res.why, 'bad'); return; }
+        say('An admiral takes the deck', res.admiral.name + ' commands ' + f.name
+          + ' (seamanship ' + num(res.admiral.maneuver) + ').', 'good');
+      } catch (e) { warnOnce('hireAdmiral', 'hireAdmiral failed', e); }
+    },
+    // ---- air wings for the outliner (SPEC §31) -------------------------------
+    getAirWings() {
+      try {
+        return airWingsOf(ctx, g.playerTag).map((w) => {
+          const p = ctx.byId(w.prov);
+          return {
+            id: w.id, name: w.name, prov: w.prov,
+            provName: (p && p.name) || ('#' + w.prov),
+            raidCd: w.raidCd | 0,
+            leader: w.leader ? { name: w.leader.name, fire: num(w.leader.fire), maneuver: num(w.leader.maneuver) } : null,
+            canHireLeader: !w.leader && num(g.tags[g.playerTag].points && g.tags[g.playerTag].points.mar) >= 50,
+          };
+        });
+      } catch (e) { warnOnce('getAirWings', 'getAirWings failed', e); return []; }
+    },
+    hireWingLeader(wingId) {
+      try {
+        const res = hireWingLeaderCore(ctx, g.playerTag, wingId | 0);
+        if (!res.ok) { say('No commander', res.why, 'bad'); return; }
+        say('A commander takes the squadron', res.leader.name + ' leads the wing '
+          + '(bombing ' + num(res.leader.fire) + ', evasion ' + num(res.leader.maneuver) + ').', 'good');
+      } catch (e) { warnOnce('hireWingLeader', 'hireWingLeader failed', e); }
     },
     buildShip(provId) {
       try {
@@ -1709,6 +1764,11 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.airwings) saved.airwings = {}; // pre-air-power saves
   if (!Number.isFinite(saved.nextWingId)) saved.nextWingId = 1;
+  for (const f of Object.values(saved.fleets)) { // pre-naval-era saves (SPEC §31)
+    if (!f) continue;
+    if (!Number.isFinite(f.gen)) f.gen = 0;
+    if (f.admiral === undefined) f.admiral = null;
+  }
   if (!saved.wars) saved.wars = [];
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves

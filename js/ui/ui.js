@@ -203,7 +203,7 @@ export function initUI(staticCtx) {
     const actions = state.actions;
     if (!g || !actions || typeof actions.getPeaceInfo !== 'function') return;
     const info = actions.getPeaceInfo(warId);
-    if (!info || info.noNegotiation) return;
+    if (!info) return; // even scripted wars hear envoys now (SPEC §31)
     if (!peaceEl) {
       peaceEl = document.createElement('div');
       peaceEl.id = 'peace-modal';
@@ -362,7 +362,7 @@ export function initUI(staticCtx) {
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card wo-card">
         <h2 class="peace-title">${esc(info.warName || 'War')}</h2>
-        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb) : ''}${info.noNegotiation ? ' · ends by the sword, by events — or by 75% dominance' : ''}</div>
+        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb) : ''}${info.noNegotiation ? ' · a fight to the death — but envoys may still be sent' : ''}</div>
         <div class="wo-sides">
           <div class="wo-side">${sideHtml(info.mySide)}</div>
           <div class="wo-vs">against</div>
@@ -378,7 +378,7 @@ export function initUI(staticCtx) {
         <div class="peace-sec">They hold</div>
         <div class="wo-hold">${holdHtml(info.theyHold, 'None of ours')}</div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
-        ${info.noNegotiation ? '' : `<button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>`}
+        <button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>
         <button class="btn peace-cancel">Close</button>
       </div>`;
     warEl.classList.remove('hidden');

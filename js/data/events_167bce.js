@@ -1351,4 +1351,55 @@ export const EVENTS_167 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_167.checkVictory when HAS reaches 50% war score; never
+  // fires on its own. SPEC §31: the decree is an OFFER, not a verdict — the
+  // player chooses. Accepting ends the revolt keeping only the provinces of
+  // the faith (the hills the decree names); every other occupied town goes
+  // back. Refusing stakes it all on the sword.
+  {
+    id: 'ev_terms_antioch',
+    title: 'Terms from Antioch',
+    desc: 'Lysias speaks to the king’s council as he once spoke beneath Jerusalem’s walls, '
+      + 'with Philip at his back: "We grow weaker daily, and the kingdom’s affairs press '
+      + 'on every side. Let us give these men their right to live by their own laws, as '
+      + 'before; for it was on account of their laws which we abolished that they were '
+      + 'angered, and did all these things." The scribes wait with the royal seal. The '
+      + 'elders of Judah may take the decree — the Law, the arms, the hills — or send '
+      + 'the envoys home, and stake everything won and unwon on the sword.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_terms_antioch', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Take the decree — the Law, the arms, the hills',
+        tooltip: 'Victory (score 200). The revolt ends: Judaea keeps the provinces of the faith it holds; every other occupied town returns to the kingdom of the Greeks.',
+        effects: guard('ev_terms_antioch:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = (g.wars || []).find((x) => x
+            && ((x.attackers || []).indexOf('HAS') >= 0 || (x.defenders || []).indexOf('HAS') >= 0)
+            && ((x.attackers || []).indexOf('SEL') >= 0 || (x.defenders || []).indexOf('SEL') >= 0));
+          const key = w && (w.attackers || []).indexOf('HAS') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'HAS', 'SEL', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'Terms from Antioch',
+            text: 'The decree goes out under the royal seal. Judea keeps its Law, its arms, '
+              + 'and its hills — and the kingdom of the Greeks keeps its distance.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'Send the envoys home — the whole inheritance',
+        tooltip: 'The war goes on. +5 legitimacy for the defiance; the decree will not be offered twice. Win by the sword, or by the independence of 140 BCE.',
+        effects: guard('ev_terms_antioch:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 5 });
+          ctx.helpers.setFlag(ctx, 'termsRefused', true);
+        }),
+      },
+    ],
+  },
 ];

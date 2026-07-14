@@ -416,11 +416,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         // The overview and the dove are the player's: shown only for wars we
         // fight in ourselves (getWarInfo answers from our side of the table).
         const mine = (w.attackers || []).indexOf(g.playerTag) >= 0 || (w.defenders || []).indexOf(g.playerTag) >= 0;
-        const dove = (self && !w.noNegotiation)
+        const dove = self
           ? `<button class="ol-peace np-dove" data-peace="${esc(w.id)}" data-tt="Negotiate peace">${icon('dove')}</button>`
           : '';
         const warAttr = mine ? ` data-war="${esc(w.id)}"` : '';
-        html += `<div class="np-dip-row${mine ? ' np-war' : ''}"${warAttr} data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%${mine ? '\nClick for the war overview' : ''}${w.noNegotiation ? '\nThis war ends by the sword, or by events.' : ''}">`
+        html += `<div class="np-dip-row${mine ? ' np-war' : ''}"${warAttr} data-tt="${esc(w.name || 'War')}\nWar score: ${signed(ws)}%${mine ? '\nClick for the war overview' : ''}">`
           + (opp ? chip(opp) : icon('flame', 'icon-row'))
           + `<span class="np-dip-name">${esc(w.name || 'War')}</span>`
           + `<span class="np-dip-ws ${ws > 0 ? 'pos' : ws < 0 ? 'neg' : ''}">${signed(ws)}%</span>${dove}</div>`;
