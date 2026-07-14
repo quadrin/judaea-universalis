@@ -54,7 +54,7 @@ function pickRecruitProv(ctx, tag, hints) {
   }
   return 0;
 }
-function aiRecruit(ctx, tag, hints) {
+function aiRecruit(ctx, tag, hints, fraction) {
   const t = ctx.game.tags[tag];
   // Affordability governor (balance harness, SPEC §21): the hint is an
   // ambition, the treasury is a fact. Cap the standing army at what ~75% of
@@ -62,7 +62,7 @@ function aiRecruit(ctx, tag, hints) {
   // debt spirals.
   const maintPerReg = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35;
   const affordable = Math.max(3, Math.floor((num(t.income) * 0.75) / maintPerReg));
-  const target = Math.min(num(hints && hints.targetRegiments, 20), affordable);
+  const target = Math.ceil(Math.min(num(hints && hints.targetRegiments, 20), affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
   let guard = 0;
@@ -300,10 +300,12 @@ function runTagAI(ctx, tag) {
   aiIntegration(ctx, tag);
   aiLoans(ctx, tag);
   const enemies = (t.atWarWith || []).filter((e) => g.tags[e] && g.tags[e].alive);
-  if (!enemies.length) return; // non-warring AI idles
   const hints = (ctx.bookmark && ctx.bookmark.aiHints && ctx.bookmark.aiHints[tag]) || {};
-  aiRecruit(ctx, tag, hints);
+  // Peace keeps half the wartime establishment under arms — no nation stands
+  // naked just because nobody has attacked it yet (v2.1 harness finding).
+  aiRecruit(ctx, tag, hints, enemies.length ? 1 : 0.5);
   aiShedUnaffordable(ctx, tag);
+  if (!enemies.length) return; // non-warring AI holds its garrisons and waits
   // Storming an already-invested fortress is siege prosecution, not a new
   // offensive — it runs even under aiPassive so scripted lulls don't freeze
   // half-finished sieges forever.

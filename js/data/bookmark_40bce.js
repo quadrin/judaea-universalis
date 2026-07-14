@@ -79,7 +79,7 @@ export const BOOKMARK_40 = {
     + 'can hold, Petra can be bargained with, and in Rome there is a Senate that hates a '
     + 'vacuum more than it loves any king.',
 
-  activeTags: ['HER', 'ATG', 'ROM', 'PAR', 'NAB', 'PTO', 'ARM'],
+  activeTags: ['HER', 'ATG', 'ROM', 'PAR', 'NAB', 'PTO', 'ARM', 'OSR', 'ADI', 'CHX'],
 
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.
@@ -288,6 +288,12 @@ export const BOOKMARK_40 = {
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
 
+    // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
+    // King of Kings, paying tribute, joining his wars through sameSide.
+    for (const cl of ['OSR', 'ADI', 'CHX']) {
+      if (g.tags[cl] && g.tags.PAR) g.tags[cl].overlord = 'PAR';
+    }
+
     // --- The War for the Crown: Antigonus + Parthia against Herod. Rome joins
     // when the Senate crowns him (ev5_senate). To the death — until dominance.
     h.declareWar(ctx, 'ATG', 'HER', 'The War for the Crown');
@@ -383,6 +389,9 @@ export const BOOKMARK_40 = {
     PTO: { rally: ['Alexandria'], targetRegiments: 14 },
     NAB: { rally: ['Petra'], targetRegiments: 12 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 8 },
+    OSR: { rally: ['Edessa'], targetRegiments: 5 },
+    ADI: { rally: ['Arbela'], targetRegiments: 7 },
+    CHX: { rally: ['Charax'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

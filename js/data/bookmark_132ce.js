@@ -85,7 +85,7 @@ export const BOOKMARK_132 = {
     + 'rises as one — with a prince, an administration, and coins that read "Year One of '
     + 'the Redemption of Israel."',
 
-  activeTags: ['ROM', 'JUD', 'PAR', 'ARM'],
+  activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX'],
 
   // Political layer for 132 CE over map_data's 66 CE defaults. Nabataea has
   // been Provincia Arabia since 106; Agrippa's kingdom is long absorbed; the
@@ -253,6 +253,12 @@ export const BOOKMARK_132 = {
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
 
+    // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
+    // King of Kings, paying tribute, joining his wars through sameSide.
+    for (const cl of ['OSR', 'ADI', 'CHX']) {
+      if (g.tags[cl] && g.tags.PAR) g.tags[cl].overlord = 'PAR';
+    }
+
     // --- The war. It ends by the sword or by events, never at the peace table. ---
     h.declareWar(ctx, 'JUD', 'ROM', 'The Bar Kokhba Revolt');
     try {
@@ -331,6 +337,9 @@ export const BOOKMARK_132 = {
     JUD: { rally: ['Hebron', 'Emmaus'], targetRegiments: 24 },
     PAR: { rally: ['Seleucia-Ctesiphon'], targetRegiments: 22 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 4 },
+    OSR: { rally: ['Edessa'], targetRegiments: 5 },
+    ADI: { rally: ['Arbela'], targetRegiments: 7 },
+    CHX: { rally: ['Charax'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

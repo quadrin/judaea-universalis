@@ -130,6 +130,21 @@ export const DEFINES = {
       description: 'The younger brother: the army, the fortresses, and the crown — everything but time.',
       ideas: { moraleMult: 1.1, manpowerMult: 0.9 },
     },
+    OSR: {
+      name: 'Osrhoene', color: [86, 148, 132], religion: 'hellenism', culture: 'aramean', capital: 'Edessa',
+      description: 'The Abgarid kings of Edessa: small, shrewd, and always on the winning side eventually.',
+      ideas: { incomeMult: 1.05, hillDefBonus: 1 },
+    },
+    ADI: {
+      name: 'Adiabene', color: [138, 96, 160], religion: 'judaism', culture: 'aramean', capital: 'Arbela',
+      description: 'The kingdom beyond the Tigris whose royal house took the God of Israel — and sent grain and swords to Jerusalem.',
+      ideas: { manpowerMult: 1.1, legitimacyAdd: 0.05 },
+    },
+    CHX: {
+      name: 'Characene', color: [92, 152, 172], religion: 'hellenism', culture: 'arab', capital: 'Charax',
+      description: 'Merchant kings at the head of the Gulf, growing rich on everything that floats.',
+      ideas: { incomeMult: 1.15 },
+    },
     HER: {
       name: "Herod's Judaea", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
       description: 'The Idumean commoner with a Roman decree: a crown of paper, to be made iron.',

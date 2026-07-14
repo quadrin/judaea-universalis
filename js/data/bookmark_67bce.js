@@ -91,7 +91,7 @@ export const BOOKMARK_67 = {
     + 'Pompey the Great is finishing the last war that matters, after which he will need '
     + 'something to organize.',
 
-  activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR'],
+  activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR', 'OSR', 'ADI', 'CHX'],
 
   // Political layer for 67 BCE over map_data's 66 CE defaults. The Hasmonean
   // kingdom of Jannaeus is split between the brothers; Syria is the Seleucid
@@ -313,6 +313,12 @@ export const BOOKMARK_67 = {
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
 
+    // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
+    // King of Kings, paying tribute, joining his wars through sameSide.
+    for (const cl of ['OSR', 'ADI', 'CHX']) {
+      if (g.tags[cl] && g.tags.PAR) g.tags[cl].overlord = 'PAR';
+    }
+
     // --- The war of the brothers. NEGOTIABLE: this is the first bookmark whose
     // central war can end at the peace table — cede, tribute, or a brother
     // bent to clienthood. Aristobulus struck first, historically and here.
@@ -405,6 +411,9 @@ export const BOOKMARK_67 = {
     NAB: { rally: ['Petra'], targetRegiments: 12 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 8 },
     PAR: { rally: ['Seleucia-Ctesiphon'], targetRegiments: 20 },
+    OSR: { rally: ['Edessa'], targetRegiments: 5 },
+    ADI: { rally: ['Arbela'], targetRegiments: 7 },
+    CHX: { rally: ['Charax'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 
