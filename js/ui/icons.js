@@ -340,6 +340,23 @@ export const FLAGS = {
     `<rect x="5.9" y="3.4" width="1.5" height="17.4" rx="0.7" ${ACC}/>` +
     `<path d="M7.4 4.9h10.2l-1.5 1.8 1.6 1.5-2 .8 1.1 2-2.5-.6-1.3 1.8-1-1.6H7.4Z" ${SIL}/>` +
     `<path d="M9.7 5.6v4.2" ${DET}/>`,
+  // Byzantium: the chi-rho of the labarum, gold on parchment roundel.
+  BYZ:
+    `<circle cx="12" cy="12" r="8.2" ${SIL}/>` +
+    `<path d="M11.2 6h1.6v12h-1.6Z" ${ACC}/>` +
+    `<path d="M12 6.6c1.7 0 2.9 1 2.9 2.4S13.7 11.4 12 11.4h-.8V9.9h.8c.8 0 1.3-.3 1.3-.9s-.5-.9-1.3-.9Z" ${ACC}/>` +
+    `<path d="M7.6 8.2 16.4 17M16.4 8.2 7.6 17" ${DET}/>`,
+  // Sasanian Persia: the fire altar of the drachm reverses.
+  SAS:
+    `<path d="M12 3.6c1 1.5 1.5 2.7 1.5 3.7 0 1.1-.6 1.9-1.5 2.3-.9-.4-1.5-1.2-1.5-2.3 0-1 .5-2.2 1.5-3.7Z" ${ACC}/>` +
+    `<path d="M8.6 10.2h6.8v1.6H8.6Z" ${SIL}/>` +
+    `<path d="M10.4 11.8h3.2v5h-3.2Z" ${SIL}/>` +
+    `<path d="M8 16.8h8v1.6H8Z" ${SIL}/>` +
+    `<path d="M6.4 18.4h11.2v1.6H6.4Z" ${ACC}/>`,
+  // Israel: the shield of David — two interlocked triangles.
+  ISR:
+    `<path d="M12 4.5 17.8 14.6H6.2Z" fill="none" ${S} stroke="${FP}" stroke-width="1.5"/>` +
+    `<path d="M12 19.5 6.2 9.4h11.6Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>`,
 };
 
 function escText(s) {

@@ -1062,6 +1062,10 @@ export const GENERAL_NAMES = {
   syrian:    ['Sohaemus', 'Azizus', 'Sampsiceramus', 'Abgar', 'Mannus', 'Iamblichus', 'Monimus', 'Bargates'],
   egyptian:  ['Petosiris', 'Ammonios', 'Harpocras', 'Chaeremon', 'Apion', 'Onnophris', 'Psammis', 'Nechutes'],
   armenian:  ['Tiridates', 'Artavasdes', 'Tigranes', 'Sanatruk', 'Mithrobarzanes', 'Vardanes', 'Zariadres', 'Orontes'],
+  // far eras (SPEC §22)
+  israeli:   ['Yigael Yadin', 'Yitzhak Sadeh', 'Yigal Allon', 'Moshe Carmel', 'Shimon Avidan', 'David Shaltiel', 'Mickey Marcus', 'Yitzhak Rabin'],
+  arab_modern: ['Abdullah el-Tell', 'Habis Majali', 'Fawzi al-Qawuqji', 'Ahmed Ali al-Mwawi', 'Taha al-Hashimi', 'Ismail Safwat', 'Muhammad Naguib', 'Sami al-Hinnawi'],
+  turkish:   ['Kâzım Orbay', 'Salih Omurtak', 'Nuri Yamut', 'Abdurrahman Nafiz Gürman', 'Şükrü Kanatlı', 'Muzaffer Tuğsavul', 'İzzet Aksalur', 'Asım Tınaztepe'],
 };
 function weightedIndex(rng, weights) {
   let total = 0;

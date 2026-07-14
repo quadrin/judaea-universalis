@@ -26,7 +26,10 @@ const BOOKS = [
   ['67bce', 'bookmark_67bce.js', 'BOOKMARK_67', 'events_67bce.js', 'EVENTS_67'],
   ['40bce', 'bookmark_40bce.js', 'BOOKMARK_40', 'events_40bce.js', 'EVENTS_40'],
   ['66ce', 'bookmark_66ce.js', 'BOOKMARK_66', 'events_66ce.js', 'EVENTS_66'],
+  ['115ce', 'bookmark_115ce.js', 'BOOKMARK_115', 'events_115ce.js', 'EVENTS_115'],
   ['132ce', 'bookmark_132ce.js', 'BOOKMARK_132', 'events_132ce.js', 'EVENTS_132'],
+  ['614ce', 'bookmark_614ce.js', 'BOOKMARK_614', 'events_614ce.js', 'EVENTS_614'],
+  ['1948ce', 'bookmark_1948.js', 'BOOKMARK_1948', 'events_1948.js', 'EVENTS_1948'],
 ];
 
 const YEARS = Math.max(1, Number(process.argv[2]) || 8);

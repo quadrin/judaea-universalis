@@ -1,0 +1,461 @@
+// Judaea Universalis — bookmark: The War of Independence, 1948 CE (SPEC §9.1).
+// Content package. Zero imports; all effects run through ctx.helpers at runtime.
+// Historical spine: 14 May 1948 — the Mandate ends at midnight, the State of
+// Israel is declared in Tel Aviv, and five Arab armies cross the borders by
+// morning. The map wears its ancient names (Joppa is Tel Aviv–Jaffa, Emmaus is
+// Latrun, Philadelphia is Amman, Memphis stands for Cairo); the war is 1948's.
+
+const _warned = new Set();
+function warnOnce(key, e) {
+  if (_warned.has(key)) return;
+  _warned.add(key);
+  console.warn('[bookmark_1948] ' + key, e || '');
+}
+
+function findWar(game, a, b) {
+  for (const w of (game && game.wars) || []) {
+    if (!w) continue;
+    const all = (w.attackers || []).concat(w.defenders || []);
+    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+  }
+  return null;
+}
+
+function totalMen(ctx, tag) {
+  try {
+    return ctx.helpers.armiesOf(ctx, tag).reduce((s, a) => s + ((a && a.men) || 0), 0);
+  } catch (e) { warnOnce('totalMen', e); return 0; }
+}
+
+function setOpinion(game, a, b, val) {
+  try {
+    const ta = game.tags && game.tags[a];
+    if (!ta) return;
+    if (!ta.opinion || typeof ta.opinion !== 'object') ta.opinion = {};
+    ta.opinion[b] = Math.max(-200, Math.min(200, val));
+  } catch (e) { warnOnce('setOpinion', e); }
+}
+
+function dateGE(date, y, m) {
+  return date.y > y || (date.y === y && date.m >= m);
+}
+
+// ---- the map of May 1948, in the map's ancient names ------------------------
+const ISR_LANDS = [
+  // the coastal plain and the Valley, held at midnight
+  'Joppa', 'Antipatris', 'Caesarea Maritima', 'Dora', 'Ptolemais', 'Jamnia',
+  'Scythopolis',
+  // eastern Galilee (Tiberias and Safed fell before the Mandate ended)
+  'Tiberias', 'Tarichaea', 'Jotapata', 'Sepphoris',
+  // west Jerusalem and the Dead Sea outposts
+  'Jerusalem', 'Masada', 'Engaddi',
+];
+const JOR_LANDS = [
+  // the Arab Legion's positions and the kingdom proper
+  'Emmaus', 'Lydda', 'Jericho', 'Hebron', 'Adora', 'Neapolis', 'Sebaste',
+  'Gadora', 'Machaerus', 'Medaba', 'Philadelphia', 'Gerasa', 'Pella',
+  'Gadara', 'Petra', 'Aila',
+];
+const EGY_LANDS = [
+  // the expeditionary axis and Egypt itself
+  'Gaza', 'Ascalon', 'Azotus', 'Rhinocolura', 'Oboda', 'Pelusium',
+  'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
+  'Oxyrhynchus', 'Thebes', 'Myos Hormos',
+];
+const SYR_LANDS = [
+  'Damascus', 'Chalcis', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
+  'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra',
+  // the Golan approaches
+  'Caesarea Philippi', 'Batanea', 'Gamala',
+];
+const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Gischala'];
+const IRQ_LANDS = [
+  'Singara', 'Hatra', 'Arbela', 'Assur', 'Seleucia-Ctesiphon', 'Babylon',
+  'Nehardea', 'Uruk', 'Charax', 'Nisibis',
+];
+const TUR_LANDS = [
+  'Tarsus', 'Iconium', 'Tyana', 'Pisidia', 'Attalia', 'Seleucia Trachea',
+  'Caesarea Mazaca', 'Melitene', 'Samosata', 'Zeugma', 'Edessa', 'Carrhae',
+  'Amida', 'Tigranocerta', 'Sophene', 'Antioch', 'Seleucia Pieria',
+];
+const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma'];
+const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca'];
+const UK_LANDS = ['Salamis', 'Paphos'];
+
+const OWNERS = {};
+for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
+for (const n of JOR_LANDS) OWNERS[n] = 'JOR';
+for (const n of EGY_LANDS) OWNERS[n] = 'EGY';
+for (const n of SYR_LANDS) OWNERS[n] = 'SYR';
+for (const n of LEB_LANDS) OWNERS[n] = 'LEB';
+for (const n of IRQ_LANDS) OWNERS[n] = 'IRQ';
+for (const n of TUR_LANDS) OWNERS[n] = 'TUR';
+for (const n of SAU_LANDS) OWNERS[n] = 'SAU';
+for (const n of IRN_LANDS) OWNERS[n] = 'IRN';
+for (const n of UK_LANDS) OWNERS[n] = 'UK';
+
+// ---- faiths and tongues, nineteen centuries on -------------------------------
+const RELIGIONS = {};
+const CULTURES = {};
+for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, IRQ_LANDS, TUR_LANDS, SAU_LANDS, IRN_LANDS)) {
+  RELIGIONS[n] = 'islam';
+}
+for (const n of ISR_LANDS) RELIGIONS[n] = 'judaism';
+for (const n of ['Tyre', 'Sidon', 'Gischala']) RELIGIONS[n] = 'islam';
+for (const n of ['Berytus', 'Byblos', 'Tripolis']) RELIGIONS[n] = 'christianity';
+RELIGIONS['Salamis'] = 'christianity';
+RELIGIONS['Paphos'] = 'christianity';
+for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, LEB_LANDS, IRQ_LANDS, SAU_LANDS)) {
+  CULTURES[n] = 'arab_modern';
+}
+for (const n of ISR_LANDS) CULTURES[n] = 'israeli';
+for (const n of TUR_LANDS) CULTURES[n] = 'turkish';
+
+export const BOOKMARK_1948 = {
+  id: '1948ce',
+  name: 'The War of Independence',
+  startDate: { y: 1948, m: 5, d: 15 },
+  // Technology of the age (SPEC §22): rifle brigades and armored corps.
+  techBase: 19,
+  techTweaks: { JOR: { mar: 1 }, UK: { mar: 1 }, ISR: { infl: 1 } },
+
+  blurb: 'At midnight the Mandate ended; at four in the afternoon, in the Tel Aviv '
+    + 'museum, the State of Israel was declared; by morning the armies of Egypt, '
+    + 'Transjordan, Syria, Lebanon and Iraq were across the borders. Eighteen and a '
+    + 'half centuries after Betar fell, there is again a Jewish state — for exactly as '
+    + 'long as it can defend itself.',
+
+  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK'],
+
+  owners: OWNERS,
+  religions: RELIGIONS,
+  cultures: CULTURES,
+
+  playableTags: [
+    {
+      tag: 'ISR',
+      difficulty: 'Hard',
+      blurb: 'Five armies, every border, no strategic depth and no second chances — but '
+        + 'interior lines, total mobilization, and truces you can use better than your '
+        + 'enemies. Hold everywhere at once until the Czech rifles land, then take the '
+        + 'offensive one front at a time. The armistice lines you hold become the state.',
+    },
+    {
+      tag: 'JOR',
+      difficulty: 'Moderate',
+      blurb: 'You command the only professional army in this war — small, drilled, and '
+        + 'British-officered. The King wants Jerusalem and the hill country, not Tel '
+        + 'Aviv; take what the Legion can hold, refuse the battles it cannot, and end '
+        + 'this war as the only Arab ruler with something to show for it.',
+    },
+  ],
+
+  setup(ctx) {
+    const g = ctx.game;
+    const h = ctx.helpers;
+    if (g.flags && g.flags._bookmarkSetupRan) return;
+    if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- The invasion: one coalition war against the new state. ---
+    h.declareWar(ctx, 'EGY', 'ISR', 'The War of Independence');
+    try {
+      const w = findWar(g, 'EGY', 'ISR');
+      if (w) {
+        w.noNegotiation = true; // the guns talk until Rhodes (ev_i_armistice unlocks)
+        const arabSide = (w.attackers || []).indexOf('EGY') !== -1 ? w.attackers : w.defenders;
+        for (const t of ['JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
+          if (g.tags[t] && arabSide.indexOf(t) === -1) arabSide.push(t);
+          if (w.warscore && w.warscore[t] === undefined) w.warscore[t] = 0;
+        }
+        for (const t of ['JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
+          const tt = g.tags[t], isr = g.tags.ISR;
+          if (tt && isr) {
+            if (tt.atWarWith.indexOf('ISR') === -1) tt.atWarWith.push('ISR');
+            if (isr.atWarWith.indexOf(t) === -1) isr.atWarWith.push(t);
+          }
+        }
+      }
+    } catch (e) { warnOnce('setup:war', e); }
+
+    // --- Treasuries, manpower, stability. ---
+    h.adjust(ctx, 'ISR', { treasury: 150, manpower: 8000, stability: 1, legitimacy: 40 });
+    h.adjust(ctx, 'EGY', { treasury: 300, manpower: 15000, stability: 0, legitimacy: 50 });
+    h.adjust(ctx, 'JOR', { treasury: 120, manpower: 4000, stability: 2, legitimacy: 60 });
+    h.adjust(ctx, 'SYR', { treasury: 100, manpower: 6000, stability: -1 });
+    h.adjust(ctx, 'LEB', { treasury: 100, manpower: 2000 });
+    h.adjust(ctx, 'IRQ', { treasury: 150, manpower: 8000 });
+    h.adjust(ctx, 'SAU', { treasury: 100, manpower: 2000 });
+
+    // --- Opinions. ---
+    for (const t of ['EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
+      setOpinion(g, t, 'ISR', -160);
+      setOpinion(g, 'ISR', t, -140);
+    }
+    setOpinion(g, 'EGY', 'JOR', -40); setOpinion(g, 'JOR', 'EGY', -40); // rival ambitions
+    setOpinion(g, 'UK', 'JOR', 100);  setOpinion(g, 'JOR', 'UK', 100);
+
+    // --- Starting modifiers. ---
+    h.addTagModifier(ctx, 'ISR', {
+      id: 'ein_breira', name: 'Ein Breira — No Alternative', months: 24,
+      effects: { moraleMult: 1.15, manpowerMult: 1.15 },
+    });
+    h.addTagModifier(ctx, 'EGY', {
+      id: 'long_columns', name: 'Long Columns, Short Maps', months: 12,
+      effects: { reinforceMult: 0.85 },
+    });
+    // The blockade: no heavy arms until the truce runs it through Prague.
+    h.addTagModifier(ctx, 'ISR', {
+      id: 'arms_embargo', name: 'The Embargo', months: 2,
+      effects: { disciplineMult: 0.9 },
+    });
+
+    // --- Starting armies (brigades wear their real names). ---
+    h.spawnArmy(ctx, 'ISR', 'Ptolemais', {
+      inf: 3, name: 'Carmeli Brigade',
+      general: { name: 'Moshe Carmel', fire: 2, shock: 2, maneuver: 3 },
+    });
+    h.spawnArmy(ctx, 'ISR', 'Tiberias', { inf: 3, name: 'Golani Brigade' });
+    h.spawnArmy(ctx, 'ISR', 'Antipatris', { inf: 3, name: 'Alexandroni Brigade' });
+    h.spawnArmy(ctx, 'ISR', 'Jamnia', {
+      inf: 3, name: 'Givati Brigade',
+      general: { name: 'Shimon Avidan', fire: 2, shock: 3, maneuver: 2 },
+    });
+    h.spawnArmy(ctx, 'ISR', 'Jerusalem', {
+      inf: 2, name: 'Etzioni Brigade',
+      general: { name: 'David Shaltiel', fire: 2, shock: 1, maneuver: 2 },
+    });
+    h.spawnArmy(ctx, 'ISR', 'Jotapata', {
+      inf: 2, cav: 1, name: 'Palmach Yiftach',
+      general: { name: 'Yigal Allon', fire: 2, shock: 3, maneuver: 4 },
+    });
+
+    h.spawnArmy(ctx, 'EGY', 'Gaza', {
+      inf: 5, cav: 1, name: 'Egyptian Expeditionary Force',
+      general: { name: 'Ahmed Ali al-Mwawi', fire: 1, shock: 2, maneuver: 1 },
+    });
+    h.spawnArmy(ctx, 'EGY', 'Rhinocolura', { inf: 3, name: 'Sinai Reserve' });
+    h.spawnArmy(ctx, 'EGY', 'Memphis', { inf: 4, name: 'Home Army' });
+
+    h.spawnArmy(ctx, 'JOR', 'Jericho', {
+      inf: 3, cav: 1, name: 'Arab Legion, 1st Brigade',
+      general: { name: 'Habis Majali', fire: 3, shock: 3, maneuver: 3 },
+    });
+    h.spawnArmy(ctx, 'JOR', 'Emmaus', {
+      inf: 2, name: 'Arab Legion, 4th Regiment',
+      general: { name: 'Abdullah el-Tell', fire: 2, shock: 3, maneuver: 2 },
+    });
+
+    h.spawnArmy(ctx, 'SYR', 'Caesarea Philippi', { inf: 3, cav: 1, name: 'Syrian 1st Brigade' });
+    h.spawnArmy(ctx, 'SYR', 'Damascus', { inf: 3, name: 'Damascus Garrison' });
+    h.spawnArmy(ctx, 'LEB', 'Tyre', { inf: 2, name: 'Lebanese Column' });
+    h.spawnArmy(ctx, 'IRQ', 'Neapolis', {
+      inf: 4, name: 'Iraqi Expeditionary Force',
+      general: { name: 'Taha al-Hashimi', fire: 1, shock: 2, maneuver: 2 },
+    });
+    h.spawnArmy(ctx, 'IRQ', 'Seleucia-Ctesiphon', { inf: 3, name: 'Baghdad Garrison' });
+    h.spawnArmy(ctx, 'SAU', 'Hegra', { inf: 1, name: 'Hejaz Volunteers' });
+    h.spawnArmy(ctx, 'TUR', 'Iconium', { inf: 5, name: 'Second Army' });
+    h.spawnArmy(ctx, 'IRN', 'Ecbatana', { inf: 3, name: 'Imperial Guard' });
+    h.spawnArmy(ctx, 'UK', 'Salamis', { inf: 2, name: 'Cyprus Garrison' });
+
+    h.notify(ctx, {
+      title: 'The War of Independence',
+      text: 'The Mandate has ended, the State is declared, and five armies are across '
+        + 'the borders by morning.',
+      type: 'war', provName: 'Joppa',
+    });
+  },
+
+  // Cabinets and courts of May 1948.
+  rulers: {
+    ISR: { name: 'David Ben-Gurion', title: 'Prime Minister', gov: 5, infl: 4, mar: 3, age: 61 },
+    EGY: { name: 'Farouk I', title: 'King', gov: 1, infl: 3, mar: 1, age: 28 },
+    JOR: { name: 'Abdullah I', title: 'King', gov: 3, infl: 4, mar: 3, age: 66 },
+    SYR: { name: 'Shukri al-Quwatli', title: 'President', gov: 2, infl: 3, mar: 1, age: 56 },
+    LEB: { name: 'Bechara El Khoury', title: 'President', gov: 3, infl: 3, mar: 0, age: 57 },
+    IRQ: { name: 'Abd al-Ilah', title: 'Regent', gov: 2, infl: 2, mar: 2, age: 35 },
+    SAU: { name: 'Ibn Saud', title: 'King', gov: 3, infl: 4, mar: 3, age: 73 },
+    TUR: { name: 'İsmet İnönü', title: 'President', gov: 4, infl: 3, mar: 3, age: 63 },
+    IRN: { name: 'Mohammad Reza Pahlavi', title: 'Shah', gov: 2, infl: 3, mar: 2, age: 28 },
+    UK: { name: 'Clement Attlee', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 65 },
+  },
+
+  missions: {
+    ISR: [
+      {
+        id: 'i_plain', name: 'Hold the Plain',
+        desc: 'Keep the coastal spine: Joppa, Caesarea Maritima and Ptolemais.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => ['Joppa', 'Caesarea Maritima', 'Ptolemais'].every((n) => ctx.helpers.controls(ctx, 'ISR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 25 }),
+      },
+      {
+        id: 'i_jerusalem_road', name: 'The Road to Jerusalem',
+        desc: 'Open the corridor: take Emmaus — Latrun — or build past it.',
+        rewardText: '"The Burma Road": Jerusalem −2 unrest for 24 months.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Emmaus'),
+        reward: (ctx) => ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+          id: 'burma_road', name: 'The Road Open', months: 24, effects: { unrest: -2 },
+        }),
+      },
+      {
+        id: 'i_galilee', name: 'Galilee Whole',
+        desc: 'Take Sepphoris and Gischala — Operations Dekel and Hiram.',
+        rewardText: '+2,000 manpower (the northern villages mobilize).',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Sepphoris') && ctx.helpers.controls(ctx, 'ISR', 'Gischala'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000 }),
+      },
+      {
+        id: 'i_yoav', name: 'Open the South',
+        desc: 'Break the Egyptian line: take Ascalon.',
+        rewardText: '+25 martial points, +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Ascalon'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'i_eilat', name: 'The Ink Flag',
+        desc: 'Reach the Red Sea: take Aila — Eilat — and the state has two seas.',
+        rewardText: '+15 legitimacy, +50 talents.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Aila'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, treasury: 50 }),
+      },
+    ],
+    JOR: [
+      {
+        id: 'jr_latrun', name: 'Latrun Holds',
+        desc: 'Keep Emmaus — the police fort commands the road, and the Legion holds forts.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Emmaus') && dateGE(ctx.game.date, 1948, 8),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { mar: 25 }),
+      },
+      {
+        id: 'jr_oldcity', name: 'The Old City',
+        desc: 'Take Jerusalem — the King must pray where his father could not.',
+        rewardText: '+20 legitimacy, +25 influence points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Jerusalem'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 20, infl: 25 }),
+      },
+      {
+        id: 'jr_westbank', name: 'The Hill Country',
+        desc: 'Hold the West Bank whole: Neapolis, Hebron and Jericho.',
+        rewardText: '+1 stability.',
+        check: (ctx) => ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { stability: 1 }),
+      },
+      {
+        id: 'jr_solvent', name: 'A Kingdom Solvent',
+        desc: 'End 1948 with a positive treasury — the Legion is paid in sterling.',
+        rewardText: '+50 talents (London approves).',
+        check: (ctx) => dateGE(ctx.game.date, 1949, 1) && (ctx.game.tags.JOR.treasury || 0) > 0,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { treasury: 50 }),
+      },
+      {
+        id: 'jr_armistice', name: 'Something to Show',
+        desc: 'Reach 1949 holding Jerusalem or the whole hill country.',
+        rewardText: '+25 legitimacy — the only Arab crown the war made heavier.',
+        check: (ctx) => dateGE(ctx.game.date, 1949, 2)
+          && (ctx.helpers.controls(ctx, 'JOR', 'Jerusalem')
+            || ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n))),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 25 }),
+      },
+    ],
+  },
+
+  aiHints: {
+    ISR: { rally: ['Joppa', 'Tiberias'], targetRegiments: 22 },
+    EGY: { rally: ['Gaza', 'Memphis'], targetRegiments: 20 },
+    JOR: { rally: ['Jericho'], targetRegiments: 10 },
+    SYR: { rally: ['Damascus'], targetRegiments: 10 },
+    LEB: { rally: ['Berytus'], targetRegiments: 4 },
+    IRQ: { rally: ['Neapolis'], targetRegiments: 10 },
+    SAU: { rally: ['Hegra'], targetRegiments: 2 },
+    TUR: { rally: ['Iconium'], targetRegiments: 10 },
+    IRN: { rally: ['Ecbatana'], targetRegiments: 4 },
+    UK: { rally: ['Salamis'], targetRegiments: 2 },
+    REB: { rally: [], targetRegiments: 0 },
+  },
+
+  checkVictory(ctx) {
+    try {
+      const g = ctx.game;
+      const h = ctx.helpers;
+      if (!g || g.over || g.result) return;
+
+      const isrTag = g.tags && g.tags.ISR;
+      const isrAlive = !!(isrTag && isrTag.alive !== false);
+      const isrProvs = isrAlive ? h.countControlled(ctx, 'ISR', {}) : 0;
+      const warOver = !findWar(g, 'EGY', 'ISR');
+
+      if (g.playerTag === 'ISR') {
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 16 && h.controls(ctx, 'ISR', 'Jerusalem')) {
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'From Dan to Eilat',
+            text: 'The armistice lines are drawn where your soldiers stand — and they '
+              + 'stand everywhere the state needs them: the plain, the Galilee, '
+              + 'Jerusalem, the road south. The war of survival is won; the age of '
+              + 'building begins.',
+            score: 200,
+          });
+          return;
+        }
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 11) {
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'Independence',
+            text: 'It cost one percent of everyone, and the map is smaller than the '
+              + 'dream — but the state declared in a museum hall has survived five '
+              + 'armies, and the armistice signatures make it a fact of the world.',
+            score: 150,
+          });
+          return;
+        }
+        if (!isrAlive || (isrProvs < 4 && dateGE(g.date, 1948, 9))) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The State Strangled',
+            text: 'The plain is cut, the roads are closed, and the declaration read in '
+              + 'Tel Aviv becomes one more document in the archive of things that '
+              + 'almost were.',
+            score: 0,
+          });
+          return;
+        }
+      } else if (g.playerTag === 'JOR') {
+        if (dateGE(g.date, 1949, 2) && h.controls(ctx, 'JOR', 'Jerusalem')
+            && ['Neapolis', 'Hebron', 'Jericho'].every((n) => h.controls(ctx, 'JOR', n))) {
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The King of Jerusalem',
+            text: 'The Legion holds the Old City and the whole hill country; every other '
+              + 'Arab army holds excuses. The Hashemite crown is the only one this war '
+              + 'made heavier.',
+            score: 200,
+          });
+          return;
+        }
+        if (dateGE(g.date, 1949, 6)
+            && ['Neapolis', 'Hebron', 'Jericho'].every((n) => h.controls(ctx, 'JOR', n))) {
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The West Bank',
+            text: 'The Legion kept what the Legion could hold — the hill country is '
+              + 'Hashemite, annexed with British blessing and Arab fury.',
+            score: 130,
+          });
+          return;
+        }
+        if (!g.tags.JOR.alive || !h.controls(ctx, 'JOR', 'Philadelphia')) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The Throne Undone',
+            text: 'Amman itself is lost, and with it the kingdom the Emir built out of '
+              + 'desert and subsidy.',
+            score: 0,
+          });
+          return;
+        }
+      }
+    } catch (e) { warnOnce('checkVictory', e); }
+  },
+};

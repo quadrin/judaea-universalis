@@ -67,7 +67,11 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
     game.provinces.push({
       id, name: s.name || ('Province ' + id), x, y,
-      terrain: s.terrain, good: s.good, religion: s.religion, culture: s.culture,
+      terrain: s.terrain, good: s.good,
+      // bookmark.religions / bookmark.cultures overlay the map's 66 CE faith
+      // and tongue for far-era bookmarks (SPEC §22: 614 CE, 1948 CE)
+      religion: (bookmark && bookmark.religions && bookmark.religions[s.name]) || s.religion,
+      culture: (bookmark && bookmark.cultures && bookmark.cultures[s.name]) || s.culture,
       dev: {
         tax: num(s.dev && s.dev.tax),
         prod: num(s.dev && s.dev.prod),
@@ -273,6 +277,19 @@ export const simHelpers = {
   },
   declareWar(ctx, atk, def, name) {
     return declareWar(ctx, atk, def, name);
+  },
+  // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
+  // ends the war between a and b by the sword — winnersKey 'att'/'def' or
+  // null/undefined for a white peace where every occupation reverts.
+  endWar(ctx, a, b, winnersKey) {
+    const g = ctx.game;
+    for (const w of (g.wars || []).slice()) {
+      const all = (w.attackers || []).concat(w.defenders || []);
+      if (all.indexOf(a) < 0 || all.indexOf(b) < 0) continue;
+      endWarBySword(ctx, w, winnersKey === 'att' || winnersKey === 'def' ? winnersKey : null);
+      return true;
+    }
+    return false;
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
