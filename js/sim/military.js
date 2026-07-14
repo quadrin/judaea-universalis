@@ -28,6 +28,20 @@ export function buildingWorks(p, key) {
   return hasBuilding(p, key) && p.owner === p.controller;
 }
 
+// ---------------------------------------------------------------- chronicle
+// The running record of the world (SPEC §21). Entries are plain data on
+// game.chronicle — saves and MP snapshots carry them for free; the Chronicle
+// screen reads them newest-first. Lives in this leaf module so every sim file
+// and content package can write history without new import edges.
+const CHRONICLE_CAP = 400; // a long campaign's worth; the oldest pages crumble
+export function chronicle(ctx, kind, text) {
+  const g = ctx && ctx.game;
+  if (!g || !text) return;
+  if (!Array.isArray(g.chronicle)) g.chronicle = [];
+  g.chronicle.push({ y: g.date.y, m: g.date.m, kind: String(kind || 'note'), text: String(text) });
+  if (g.chronicle.length > CHRONICLE_CAP) g.chronicle.splice(0, g.chronicle.length - CHRONICLE_CAP);
+}
+
 // ---------------------------------------------------------------- modifiers
 export function resolveTagMult(ctx, tag, key) {
   const t = ctx.game.tags[tag];
@@ -794,6 +808,10 @@ export function monthlyReinforce(ctx) {
     const missing = target - a.men;
     if (missing <= 0) continue;
     let rate = target * 0.10 * resolveTagMult(ctx, a.tag, 'reinforceMult');
+    // Great powers refill their ranks half again as fast: the depth of an
+    // empire is felt in the second year of a war, not the first month.
+    const pers = (ctx.DEFINES.PERSONALITIES || {})[a.tag];
+    if (pers && pers.ponderous) rate *= 1.5;
     const p = ctx.byId(a.prov);
     if (p && isHostile(ctx, a.tag, p.controller)) rate *= 0.5;
     const add = Math.floor(Math.min(missing, rate, Math.max(0, num(t.manpower))));
@@ -870,7 +888,15 @@ export function updateTagLife(ctx) {
   }
   for (const k of Object.keys(g.tags)) {
     if (k === 'REB') continue; // REB always alive
-    g.tags[k].alive = !!(owned[k] || armiesOf(ctx, k).length);
+    const t = g.tags[k];
+    const was = !!t.alive;
+    t.alive = !!(owned[k] || armiesOf(ctx, k).length);
+    if (was && !t.alive) {
+      chronicle(ctx, 'fall', 'The banners of ' + (t.name || k) + ' are cast down; the nation passes into memory.');
+      if (k !== g.playerTag) {
+        ctx.bus.emit('notify', { title: 'News from abroad', text: (t.name || k) + ' is no more.', type: 'info' });
+      }
+    }
   }
   // A dead overlord frees its clients; a dead client is simply struck off.
   for (const k of Object.keys(g.tags)) {
@@ -1067,6 +1093,25 @@ export function vassalsOf(ctx, lord) {
   }
   return out;
 }
+// The world closes ranks against a conqueror: every living, unaligned realm
+// that both fears (infamy >= 30) and hates (opinion <= -75) the expander
+// stands in its defensive coalition.
+export function coalitionAgainst(ctx, expander) {
+  const g = ctx.game;
+  const t = g.tags[expander];
+  if (!t || num(t.aggression) < 30) return [];
+  const out = [];
+  for (const k of Object.keys(g.tags)) {
+    if (k === expander || k === 'REB') continue;
+    const o = g.tags[k];
+    if (!o || !o.alive || o.overlord === expander) continue;
+    if ((t.allies || []).indexOf(k) >= 0) continue;
+    if (num(o.opinion && o.opinion[expander], 0) > -75) continue;
+    out.push(k);
+  }
+  return out;
+}
+
 export function declareWar(ctx, atk, def, name, cb) {
   const g = ctx.game;
   const A = g.tags[atk], D = g.tags[def];
@@ -1091,6 +1136,21 @@ export function declareWar(ctx, atk, def, name, cb) {
   }
   for (const al of D.allies || []) join(defenders, al);
   for (const v of vassalsOf(ctx, def)) join(defenders, v);
+  // The coalition answers: realms leagued against an infamous conqueror
+  // defend anyone he attacks (anti-snowball, SPEC §21).
+  const coal = coalitionAgainst(ctx, atk);
+  if (coal.indexOf(def) >= 0) {
+    for (const m of coal) join(defenders, m);
+    chronicle(ctx, 'coalition', 'The realms that feared ' + (A.name || atk) + ' league together: '
+      + coal.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + ' answer as one.');
+    if (atk === g.playerTag || def === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'The coalition marches',
+        text: 'The realms that feared ' + (A.name || atk) + ' answer as one.',
+        type: atk === g.playerTag ? 'bad' : 'good',
+      });
+    }
+  }
   const war = {
     id: 'war' + (g.wars.length + 1),
     name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
@@ -1105,8 +1165,15 @@ export function declareWar(ctx, atk, def, name, cb) {
       if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
     }
   }
+  const names = (list) => list.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ');
+  chronicle(ctx, 'war', war.name + ' begins: ' + names(attackers) + ' against ' + names(defenders) + '.');
   ctx.bus.emit('war', { id: war.id, name: war.name, attackers: attackers.slice(), defenders: defenders.slice() });
-  ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+  if (attackers.indexOf(g.playerTag) >= 0 || defenders.indexOf(g.playerTag) >= 0) {
+    ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+  } else {
+    // Other people's wars are still news — just quieter news.
+    ctx.bus.emit('notify', { title: 'News from abroad', text: names(attackers) + ' march against ' + names(defenders) + '.', type: 'info' });
+  }
   return war;
 }
 
@@ -1375,6 +1442,8 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     if (!p || p.impassable || p.controller === p.owner) continue;
     if (participants.indexOf(p.owner) < 0 || participants.indexOf(p.controller) < 0) continue;
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
+      const conqueror = g.tags[p.controller];
+      if (conqueror) conqueror.aggression = num(conqueror.aggression) + Math.round(devTotal(p) / 3);
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -1385,15 +1454,19 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     }
   }
   dissolveWar(ctx, war);
+  const endText = (war.name || 'The war') + ' has ended'
+    + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.');
+  chronicle(ctx, 'peace', endText);
   if (opts && opts.silent) return;
   const pt = g.playerTag;
   if (participants.indexOf(pt) >= 0) {
     ctx.bus.emit('notify', {
       title: 'The war is over',
-      text: (war.name || 'The war') + ' has ended'
-        + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.'),
+      text: endText,
       type: winners.indexOf(pt) >= 0 ? 'good' : losers.indexOf(pt) >= 0 ? 'bad' : 'info',
     });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text: endText, type: 'info' });
   }
 }
 
@@ -1419,7 +1492,15 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
     if (me && Array.isArray(me.claims)) me.claims = me.claims.filter((c) => c !== id); // claim satisfied
   }
-  if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
+  if (cededNames.length) {
+    terms.push('cedes ' + cededNames.join(', '));
+    // Conquest is remembered: infamy proportional to what was taken (decays
+    // one point a month — see monthlyOpinionDrift).
+    if (me) me.aggression = num(me.aggression) + Math.round(ev.provinces.reduce((sum, pid) => {
+      const q = ctx.byId(pid);
+      return sum + (q ? devTotal(q) : 0);
+    }, 0) / 3);
+  }
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];
     et.overlord = byTag;
@@ -1458,11 +1539,16 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   const summary = terms.length
     ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
     : 'A white peace: every occupation reverts.';
-  ctx.bus.emit('notify', {
-    title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
-    text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
-    type: 'good',
-  });
+  chronicle(ctx, 'peace', war.name + ' ends. ' + summary);
+  if (participants.indexOf(g.playerTag) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'Peace of ' + (g.date.y < 0 ? (-g.date.y) + ' BCE' : g.date.y + ' CE'),
+      text: war.name + ' ends. ' + summary + ' A five-year truce holds.',
+      type: 'good',
+    });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text: war.name + ' ends. ' + summary, type: 'info' });
+  }
 }
 // Signed months between two game dates (BCE years are negative; no year zero).
 export function monthsBetween(a, b) {
@@ -1508,17 +1594,27 @@ export function updateWarscores(ctx) {
     const def = sideGross(ctx, w, 'def');
     for (const t of w.attackers) w.warscore[t] = Math.round(clamp(att - def, -100, 100));
     for (const t of w.defenders) w.warscore[t] = Math.round(clamp(def - att, -100, 100));
-    // Even a fight-to-the-death war opens to the peace table once one side
-    // utterly dominates — total victory should not leave you stuck at war.
-    if (w.noNegotiation && !w._negOpened && Math.abs(clamp(att - def, -100, 100)) >= 75) {
-      w._negOpened = true;
-      w.noNegotiation = false;
-      if (w.attackers.indexOf(g.playerTag) >= 0 || w.defenders.indexOf(g.playerTag) >= 0) {
-        ctx.bus.emit('notify', {
-          title: 'Envoys may cross the lines',
-          text: 'The war has found its master. What began as a fight to the death can now end at the peace table.',
-          type: 'info',
-        });
+    // A fight-to-the-death war opens to the peace table two ways: one side
+    // utterly dominates (75%), or BOTH sides are bled white in a years-long
+    // stalemate — exhaustion is the other master of wars (balance harness:
+    // without this, all-AI scripted wars grind economies forever).
+    if (w.noNegotiation && !w._negOpened) {
+      const score = Math.abs(clamp(att - def, -100, 100));
+      const months = monthsBetween(w.started, g.date);
+      const exhausted = (side) => side.some((t2) => g.tags[t2] && num(g.tags[t2].warExhaustion) >= 15);
+      const stalemate = months >= 48 && score < 25 && exhausted(w.attackers) && exhausted(w.defenders);
+      if (score >= 75 || stalemate) {
+        w._negOpened = true;
+        w.noNegotiation = false;
+        if (w.attackers.indexOf(g.playerTag) >= 0 || w.defenders.indexOf(g.playerTag) >= 0) {
+          ctx.bus.emit('notify', {
+            title: 'Envoys may cross the lines',
+            text: score >= 75
+              ? 'The war has found its master. What began as a fight to the death can now end at the peace table.'
+              : 'Four years of blood and neither side can win. Quietly, both courts begin to listen to their envoys.',
+            type: 'info',
+          });
+        }
       }
     }
   }

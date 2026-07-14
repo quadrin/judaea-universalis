@@ -44,6 +44,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}Legitimacy</span><span class="pp-v" data-ref="legitimacy"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
+        <div class="pp-row hidden" data-ref="infamyRow" data-tt="Conquest is remembered: courts abroad turn against you (opinion falls monthly), and at 30+ the fearful league into a defensive coalition. Decays one point a month.">
+          <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}Manpower</span><span class="pp-v" data-ref="manpower"></span></div>
@@ -194,6 +196,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const stab = Math.round(t.stability || 0);
     setHtml(refs.stability, `<span class="${stab > 0 ? 'pos' : stab < 0 ? 'neg' : ''}">${signed(stab)}</span>`);
     setText(refs.legitimacy, String(Math.round(t.legitimacy || 0)));
+    const inf = Math.round(t.aggression || 0);
+    refs.infamyRow.classList.toggle('hidden', inf <= 0);
+    if (inf > 0) setText(refs.infamy, String(inf) + (inf >= 30 ? ' (coalition!)' : ''));
     setText(refs.warExh, (t.warExhaustion || 0).toFixed(1) + ' / 20');
 
     // Economy & military

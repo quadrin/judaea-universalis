@@ -71,6 +71,18 @@ python3 -m http.server 8613 --directory .
   (build ships at your harbors, carry armies over the sea, blockade enemy ports,
   fight broadsides), and five trade routes whose stops and chokepoints pay whoever
   holds them — with a trade mapmode to read it all.
+- A living world: nations have personalities (cautious Characene, rapacious Rome —
+  and the great powers are ponderous, slow to anger but relentless once roused),
+  armies sized to what treasuries can actually pay, and a wider east — Osrhoene,
+  Adiabene and Characene as Parthian client kingdoms astride the new Gulf Road.
+- Conquest has a price: infamy that sours every court, defensive coalitions that
+  league against a rampaging conqueror, and overextension unrest when too much of
+  the realm is freshly seized land.
+- The Chronicle (topbar lamp, C key): the era's history — wars, peaces, crowns,
+  coalitions, fallen nations — recorded newest-first under year headings. Foreign
+  affairs arrive as quiet "News from abroad" toasts; only your own wars sound the
+  alarm. Balance is enforced by an all-AI harness (`tools/autorun.mjs`) that replays
+  every bookmark and flags snowballs, debt spirals and dead economies.
 
 ## Architecture
 

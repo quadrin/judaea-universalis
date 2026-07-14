@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd } from './military.js';
+import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle } from './military.js';
 import { fireEvent } from './events.js';
 
 const _warned = new Set();
@@ -95,6 +95,7 @@ export function rulerDies(ctx, tag, causeText) {
     t.stability = clamp(num(t.stability) - 1, -3, 3);
     text = `${old.name} ${causeText || 'has died'} with no designated heir. ${nr.name} takes the ${title.toLowerCase()} amid whispers and drawn knives. (−25 legitimacy, −1 stability)`;
   }
+  chronicle(ctx, 'ruler', (t.name || tag) + ': ' + text);
   // The player's own succession pauses the game with a proper card; other
   // courts' deaths stay world news in the toast stream.
   if (!(player && successionCard(ctx, 'Death of ' + old.name, text))) {

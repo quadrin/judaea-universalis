@@ -300,16 +300,16 @@ const PROVINCES = [
   P('Dumatha', 39.87, 29.80, 2.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 2, 1, 0),
   P('Medaba', 35.80, 31.72, 0.95, 'NAB', 'drylands', 'livestock', 'nabataean', 'nabataean', 2, 3, 2, 0),
   // --- Parthia & the east (PAR) --------------------------------------------
-  P('Edessa', 38.79, 37.16, 0.95, 'PAR', 'hills', 'grain', 'hellenism', 'aramean', 4, 5, 4, 0),
-  P('Carrhae', 39.03, 36.87, 1.00, 'PAR', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
-  P('Nisibis', 41.22, 37.07, 1.10, 'PAR', 'drylands', 'grain', 'zoroastrianism', 'aramean', 4, 5, 4, 0),
+  P('Edessa', 38.79, 37.16, 0.95, 'OSR', 'hills', 'grain', 'hellenism', 'aramean', 4, 5, 4, 0),
+  P('Carrhae', 39.03, 36.87, 1.00, 'OSR', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
+  P('Nisibis', 41.22, 37.07, 1.10, 'ADI', 'drylands', 'grain', 'zoroastrianism', 'aramean', 4, 5, 4, 0),
   P('Singara', 41.85, 36.33, 1.20, 'PAR', 'drylands', 'livestock', 'zoroastrianism', 'aramean', 2, 3, 2, 0),
   P('Hatra', 42.72, 35.59, 1.50, 'PAR', 'desert', 'livestock', 'hellenism', 'aramean', 2, 3, 2, 0),
-  P('Arbela', 44.01, 36.19, 1.10, 'PAR', 'hills', 'grain', 'judaism', 'aramean', 4, 4, 4, 0),
+  P('Arbela', 44.01, 36.19, 1.10, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 4, 4, 4, 0),
   P('Seleucia-Ctesiphon', 44.58, 33.10, 0.85, 'PAR', 'farmland', 'grain', 'zoroastrianism', 'aramean', 8, 9, 6, 2),
   P('Babylon', 44.42, 32.54, 0.90, 'PAR', 'farmland', 'dates', 'hellenism', 'aramean', 5, 6, 4, 0),
   P('Nehardea', 44.20, 33.37, 0.90, 'PAR', 'farmland', 'dates', 'judaism', 'judean', 4, 5, 4, 0),
-  P('Charax', 47.55, 30.75, 1.00, 'PAR', 'marsh', 'spices', 'hellenism', 'arab', 3, 6, 2, 0),
+  P('Charax', 47.55, 30.75, 1.00, 'CHX', 'marsh', 'spices', 'hellenism', 'arab', 3, 6, 4, 0),
   P('Ecbatana', 48.52, 34.80, 1.50, 'PAR', 'mountains', 'silver', 'zoroastrianism', 'persian', 5, 5, 4, 0),
   P('Dura-Europos', 40.73, 34.75, 1.20, 'PAR', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 1),
   P('Susa', 48.25, 32.19, 1.30, 'PAR', 'farmland', 'grain', 'zoroastrianism', 'persian', 5, 5, 4, 0),
@@ -328,6 +328,12 @@ const PROVINCES = [
     { impassable: true }),
   P('Libyan Desert', 29.80, 28.50, 2.00, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { impassable: true }),
+
+  // --- v2.1 additions: 4 provinces where the east ran thin ------------------
+  P('Amida', 40.21, 37.91, 0.95, 'ARM', 'hills', 'livestock', 'zoroastrianism', 'armenian', 3, 3, 3, 1),
+  P('Assur', 43.26, 35.46, 0.90, 'ADI', 'drylands', 'livestock', 'zoroastrianism', 'aramean', 2, 2, 2, 0),
+  P('Uruk', 45.63, 31.32, 1.05, 'PAR', 'farmland', 'dates', 'hellenism', 'aramean', 3, 4, 2, 0),
+  P('Tayma', 38.55, 27.63, 1.40, 'NAB', 'desert', 'incense', 'nabataean', 'arab', 2, 2, 1, 0),
 ];
 
 // ---------------------------------------------------------------------------
@@ -382,7 +388,7 @@ export const MAP_DATA = {
 // Validation (SPEC §4). Key lists hardcoded from SPEC §3 — do not import defines.
 // ---------------------------------------------------------------------------
 
-const TAG_KEYS = ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'REB', 'WASTE'];
+const TAG_KEYS = ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX', 'REB', 'WASTE'];
 const TERRAIN_KEYS = ['coast', 'farmland', 'hills', 'mountains', 'desert', 'drylands', 'steppe', 'marsh', 'wasteland'];
 const GOOD_KEYS = ['grain', 'wine', 'olive_oil', 'dates', 'balsam', 'incense', 'purple_dye', 'glass',
   'papyrus', 'silver', 'salt', 'spices', 'timber', 'fish', 'livestock'];

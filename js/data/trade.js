@@ -29,6 +29,11 @@ export const TRADE_ROUTES = [
     stops: ['Damascus', 'Palmyra'], chokepoint: 'Palmyra',
     blurb: 'Palmyrene caravans stitching Rome to Parthia.',
   },
+  {
+    id: 'gulf_road', name: 'The Gulf Road', color: [92, 152, 172], value: 10, sea: false,
+    stops: ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], chokepoint: 'Charax',
+    blurb: 'India\'s cargoes, unloaded at Charax and poled up the rivers.',
+  },
 ];
 
 // name -> [{route, isChokepoint}] for quick per-province lookups.

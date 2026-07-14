@@ -25,6 +25,30 @@ export const DEFINES = {
     wasteland: { name: 'Wasteland', color: [86, 82, 74],    moveCost: 2.5,  defBonus: 0, attrition: 5, impassable: true },
   },
 
+  // AI temperament per nation (SPEC §21). aggression multiplies the monthly
+  // war-declaration chance; caution scales retreat thresholds and how early a
+  // realm sues for peace; ponderous marks a great power — slow to anger,
+  // needing a bigger edge to strike, but reinforcing half again as fast.
+  // Missing tags default to {aggression:1, caution:1}.
+  PERSONALITIES: {
+    ROM: { aggression: 1.4, caution: 0.7, ponderous: true },
+    PAR: { aggression: 1.1, caution: 1.0, ponderous: true },
+    SEL: { aggression: 1.2, caution: 0.9, ponderous: true },
+    PTO: { aggression: 0.6, caution: 1.3 },
+    NAB: { aggression: 0.5, caution: 1.4 },
+    ARM: { aggression: 0.8, caution: 1.2 },
+    JUD: { aggression: 1.0, caution: 1.0 },
+    HAS: { aggression: 1.3, caution: 0.8 },
+    HER: { aggression: 1.3, caution: 0.8 },
+    ATG: { aggression: 1.2, caution: 0.9 },
+    HYR: { aggression: 0.7, caution: 1.3 },
+    ARI: { aggression: 1.4, caution: 0.6 },
+    AGR: { aggression: 0.4, caution: 1.6 },
+    OSR: { aggression: 0.5, caution: 1.5 },
+    ADI: { aggression: 0.8, caution: 1.1 },
+    CHX: { aggression: 0.3, caution: 1.6 },
+  },
+
   // Trade goods: price in talents per unit of production
   GOODS: {
     grain:      { name: 'Grain',      price: 2.0,  color: [222, 196, 110] },
@@ -129,6 +153,21 @@ export const DEFINES = {
       name: "Aristobulus' Judaea", color: [26, 60, 128], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The younger brother: the army, the fortresses, and the crown — everything but time.',
       ideas: { moraleMult: 1.1, manpowerMult: 0.9 },
+    },
+    OSR: {
+      name: 'Osrhoene', color: [86, 148, 132], religion: 'hellenism', culture: 'aramean', capital: 'Edessa',
+      description: 'The Abgarid kings of Edessa: small, shrewd, and always on the winning side eventually.',
+      ideas: { incomeMult: 1.05, hillDefBonus: 1 },
+    },
+    ADI: {
+      name: 'Adiabene', color: [138, 96, 160], religion: 'judaism', culture: 'aramean', capital: 'Arbela',
+      description: 'The kingdom beyond the Tigris whose royal house took the God of Israel — and sent grain and swords to Jerusalem.',
+      ideas: { manpowerMult: 1.1, legitimacyAdd: 0.05 },
+    },
+    CHX: {
+      name: 'Characene', color: [92, 152, 172], religion: 'hellenism', culture: 'arab', capital: 'Charax',
+      description: 'Merchant kings at the head of the Gulf, growing rich on everything that floats.',
+      ideas: { incomeMult: 1.15 },
     },
     HER: {
       name: "Herod's Judaea", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',

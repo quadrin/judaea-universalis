@@ -83,7 +83,7 @@ export const BOOKMARK_66 = {
     + 'Syria watches, and waits, and counts his legions. Four years of fire begin now.',
 
   // Tags of other eras (SEL, PTO, HAS, HYR, ARI) never enter this game.
-  activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR'],
+  activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX'],
 
   playableTags: [
     {
@@ -109,6 +109,12 @@ export const BOOKMARK_66 = {
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
+    // King of Kings, paying tribute, joining his wars through sameSide.
+    for (const cl of ['OSR', 'ADI', 'CHX']) {
+      if (g.tags[cl] && g.tags.PAR) g.tags[cl].overlord = 'PAR';
+    }
 
     // --- The war: Judaea has risen; Agrippa's kingdom fights beside Rome. ---
     h.declareWar(ctx, 'JUD', 'ROM', 'The Great Revolt');
@@ -346,6 +352,9 @@ export const BOOKMARK_66 = {
     NAB: { rally: ['Petra'], targetRegiments: 8 },
     PAR: { rally: ['Seleucia-Ctesiphon'], targetRegiments: 22 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 4 },
+    OSR: { rally: ['Edessa'], targetRegiments: 5 },
+    ADI: { rally: ['Arbela'], targetRegiments: 7 },
+    CHX: { rally: ['Charax'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

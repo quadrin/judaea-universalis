@@ -170,6 +170,7 @@ export const BOOKMARK_167 = {
     'Singara': 'SEL',
     'Hatra': 'SEL',
     'Arbela': 'SEL',
+    'Assur': 'SEL',
     'Dura-Europos': 'SEL',
     'Babylon': 'SEL',
     'Nehardea': 'SEL',

@@ -945,3 +945,49 @@ renderer.render → overlay.draw → labels.update.
   - **Known v1 limits** (documented, deliberate): the host holds the pen — guests see
     event cards but the host clicks; there is no reconnect — a dropped guest rejoins
     via a fresh invite in a new lobby.
+
+## 21. v2.1: the living world — balance, the wider east, personalities, coalitions, the chronicle
+
+- **Balance harness** (`tools/autorun.mjs`, zero deps): runs every bookmark with the
+  whole world on AI (`game.tags[playable].ai = true`) for N game years against the REAL
+  map adjacency (`tools/geom-snapshot.json`, regenerated from the browser's
+  `window._ctx.geom` whenever map_data changes — see `tools/README.md`), resolving
+  player-facing event cards via their `aiOption`. Prints per-nation trajectories
+  (provinces, dev, income, treasury, troops, manpower, reforms) and flags anomalies:
+  DEAD, SNOWBALL (provs ≥ max(4, start×1.6)), DEBT-SPIRAL (< −200t), BLEEDING
+  (negative income at mid AND end), EXHAUSTED. The accepted flag set (scripted history
+  doing its job — Rome wins its wars, doomed underdogs are doomed) is documented in
+  `tools/README.md`; any run that adds a NEW flag is a regression.
+- **The wider east** (map_data): a political carve-out of Parthia's western marches —
+  Osrhoene (OSR: Edessa, Carrhae), Adiabene (ADI: Nisibis, Arbela, Assur — the
+  historical Jewish-convert kingdom), Characene (CHX: Charax, the Gulf port,
+  incomeMult 1.15) — all clients of PAR in the four later bookmarks, plus four new
+  provinces (Amida, Assur, Uruk, Tayma) and the Gulf Road trade route
+  (Charax→Uruk→Babylon→Seleucia-Ctesiphon, chokepoint Charax). Buffer states make the
+  east political terrain: coalitions, defections, a Parthia that can fray at the edges.
+- **AI personalities** (`DEFINES.PERSONALITIES`, `personality(ctx, tag)` in ai.js):
+  per-tag `aggression` (scales war appetite: chance 0.08×aggr/month), `caution`
+  (scales the strength edge demanded, the sue-for-peace threshold `15/caution`, and
+  ally-shyness), and `ponderous` — the great-power texture (ROM/PAR/SEL): giants need
+  a 1.9× edge to bother declaring but reinforce at 1.5× once committed. Armies are
+  now governed by affordability (`income×0.75/maintPerReg` caps the recruit target,
+  peacetime keeps a half-strength standing army, debt causes proportional desertion),
+  so client kingdoms field real armies and nobody death-spirals on upkeep.
+- **Anti-snowball** (SPEC-anchored in military.js/unrest.js): conquest earns
+  **infamy** (`tag.aggression` += ceded dev/3, decays 1/month, nation-panel row with
+  a warning at 30+). While infamy ≥20 every non-client, non-ally court sours monthly
+  (−aggr/15 opinion, grudges stop drifting back); at ≥30 `coalitionAgainst()` leagues
+  the fearful (opinion ≤ −75) into a defensive coalition that joins `declareWar`
+  against the expander en masse ("The coalition marches"). The AI stops declaring
+  above 40 infamy (digestion pause). **Overextension**: when autonomy-0.6+ land holds
+  >15% of a realm's dev, every province gains an Overextension unrest row (share×3).
+- **The chronicle + news from abroad** (`chronicle()` in the military.js leaf,
+  `ctx.helpers.chronicle` for content): `game.chronicle` records the era as plain data
+  — `{y, m, kind, text}`, capped at 400 — wars declared/ended (both `endWarBySword`
+  and `executePeaceDeal` chronicle every ending, silent or not), peace terms, ruler
+  successions, coalitions leaguing, chapter verdicts, and the fall of nations
+  (detected as an alive→dead transition in `updateTagLife`). The Chronicle screen
+  (topbar lamp, C key) lists it newest-first under year headings; saves and MP
+  snapshots carry the book for free, and guests read it via the local `get*` query
+  path. Toast filtering: events among AI courts arrive as quiet "News from abroad"
+  info toasts; only the player's own wars sound the "War!" alarm.

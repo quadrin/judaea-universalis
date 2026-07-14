@@ -58,6 +58,21 @@ export function computeUnrestBreakdown(ctx, prov) {
     const e = mod && mod.effects ? mod.effects.unrest : undefined;
     if (Number.isFinite(e) && e !== 0) rows.push({ label: mod.name || mod.id || 'Modifier', value: e });
   }
+  // Overextension: unintegrated conquests (autonomy >= 0.6) strain the whole
+  // realm in proportion to how much of it they are (anti-snowball, SPEC §21).
+  {
+    const g2 = ctx.game;
+    let hot = 0, all = 0;
+    for (let i = 1; i < g2.provinces.length; i++) {
+      const q = g2.provinces[i];
+      if (!q || q.impassable || q.owner !== prov.owner) continue;
+      const d = (q.dev ? (q.dev.tax || 0) + (q.dev.prod || 0) + (q.dev.mp || 0) : 0);
+      all += d;
+      if (num(q.autonomy, 0.25) >= 0.6) hot += d;
+    }
+    const over = all > 0 ? hot / all : 0;
+    if (over > 0.15) rows.push({ label: 'Overextension', value: r2(over * 3) });
+  }
   const nat = resolveTagAdd(ctx, prov.owner, 'unrestAll');
   if (Math.abs(nat) > 0.001) rows.push({ label: 'National unrest', value: r2(nat) });
   if (num(prov.garrison) > 0) rows.push({ label: 'Garrison', value: -1 });
@@ -143,11 +158,27 @@ export function monthlyUnrest(ctx) {
 // settles warm at +60 instead of fading to indifference.
 export function monthlyOpinionDrift(ctx) {
   const g = ctx.game;
+  // Infamy: decays a point a month, and while it lasts every court in the
+  // world thinks a little less of the conqueror each month (anti-snowball).
+  const infamous = [];
+  for (const tag of Object.keys(g.tags)) {
+    const t = g.tags[tag];
+    if (!t) continue;
+    if (num(t.aggression) > 0) {
+      t.aggression = Math.max(0, num(t.aggression) - 1);
+      if (t.aggression >= 20) infamous.push(tag);
+    }
+  }
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
     if (!t || !t.opinion) continue;
+    for (const bad of infamous) {
+      if (bad === tag || t.overlord === bad || (g.tags[bad].allies || []).indexOf(tag) >= 0) continue;
+      t.opinion[bad] = clamp(num(t.opinion[bad], 0) - Math.ceil(num(g.tags[bad].aggression) / 15), -200, 200);
+    }
     for (const other of Object.keys(t.opinion)) {
       if (other === tag) continue;
+      if (infamous.indexOf(other) >= 0 && num(t.opinion[other]) < 0) continue; // grudges against conquerors don't fade yet
       const target = (t.allies || []).indexOf(other) >= 0 ? 60 : 0;
       const v = Math.round(num(t.opinion[other]));
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
