@@ -361,4 +361,49 @@ export const EVENTS_115 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_115.checkVictory when the rising reaches +40 war score
+  // (SPEC §32); never fires on its own. The new emperor's terms are an OFFER.
+  {
+    id: 'ev115_terms',
+    title: 'The Fire Unquenched',
+    desc: 'Egypt starves the wolf, Cyprus is a Jewish island, and the legions recalled '
+      + 'from Parthia arrive to a war already lost. The new emperor offers what no '
+      + 'Roman will read aloud: the eastern diaspora keeps the lands of the faith it '
+      + 'holds, and the rest returns to the peace of Rome. Or the fire can burn on, '
+      + 'and be answered with fire.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev115_terms', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sign what no Roman will read aloud',
+        tooltip: 'Victory (score 200). The war ends; the diaspora keeps the provinces of the faith it holds, and every other occupied town returns.',
+        effects: guard('ev115_terms:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The Fire Unquenched',
+            text: 'The new emperor signs what no Roman will read aloud: the eastern '
+              + 'diaspora keeps what it holds of the faith.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'Let it burn',
+        tooltip: 'The war goes on. +5 legitimacy; the terms will not be offered twice.',
+        effects: guard('ev115_terms:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];

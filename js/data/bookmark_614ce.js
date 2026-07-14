@@ -118,6 +118,8 @@ export const BOOKMARK_614 = {
 
   activeTags: ['BYZ', 'SAS', 'JUD', 'GHA'],
 
+  // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
+  wonderTweaks: { Jerusalem: null },
   owners: OWNERS,
   religions: RELIGIONS,
 
@@ -289,6 +291,21 @@ export const BOOKMARK_614 = {
         check: (ctx) => dateGE(ctx.game.date, 620, 1) && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 5,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
       },
+      {
+        // SPEC §32: Nehemiah ben Hushiel's dream — five centuries after the
+        // fire, the sacrifices resume on the Mount.
+        id: 'p_third_temple', name: 'Raise the Third House',
+        desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — begin the sacrifices again.',
+        rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+          && (ctx.game.tags.JUD.treasury || 0) >= 500
+          && (ctx.game.tags.JUD.stability || 0) >= 1,
+        reward: (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 20 });
+          const p = ctx.prov && ctx.prov('Jerusalem');
+          if (p) p.wonder = 'temple';
+        },
+      },
     ],
     BYZ: [
       {
@@ -395,7 +412,15 @@ export const BOOKMARK_614 = {
       } else if (g.playerTag === 'BYZ') {
         const w = findWar(g, 'SAS', 'BYZ');
         const byzScore = w && typeof w.warscore.BYZ === 'number' ? w.warscore.BYZ : 0;
-        if (byzScore >= 35 || (!w && h.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(g.date, 620, 1))) {
+        // Mid-war concession (SPEC §32): Khosrow's court sues at +35 — an
+        // event card the player may accept or refuse. Offered once.
+        if (w && byzScore >= 35 && !h.getFlag(ctx, 'persiaTermsOffered')) {
+          h.setFlag(ctx, 'persiaTermsOffered', true);
+          h.fireEvent(ctx, 'ev614_persia_sues');
+          return;
+        }
+        // War already over with the Cross home: the win stands on its own.
+        if (!w && h.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(g.date, 620, 1)) {
           h.endGame(ctx, {
             result: 'win',
             title: 'The Empire Endures',

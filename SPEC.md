@@ -1343,3 +1343,31 @@ foreign court **read-only**.
   button, and click through to their field. On the map, parked planes carry
   a squadron count like an army banner's; fleets already sail with theirs.
 - Save compat: pre-era fleets heal to gen 0 with no admiral.
+
+## 32. v3.2: nothing decides for you — offers everywhere, and the Third House
+
+- **Every warscore auto-verdict became an offer.** The audit after the Terms
+  fix (SPEC §31) found five more "it just triggered" endings — 67 BCE "Rome
+  Recoils" (+40 vs Rome), 66 CE "Rome Sues for Peace" (+50), 115 CE "The
+  Fire Unquenched" (+40), 132 CE "Rome Lets Go" (+50), and 614 CE "The
+  Empire Endures" (+35 vs Persia, mid-war). All five now fire ONCE as major
+  event cards (flag-guarded in checkVictory, `helpers.fireEvent` — the
+  bookmarks' fireEventById machinery exposed as a helper): accept and the
+  war ends with the faith-filtered keep (judaism for the Jewish arcs,
+  christianity for Heraclius — occupied land outside it returns) plus the
+  original win verdict and score; refuse (+5 legitimacy, never offered
+  twice) and the war continues. Timed and territorial wins (independence
+  of 140, the armistice of 1949, holding Jerusalem after the war) stand —
+  they are goals the player works toward, not surprises. The harness
+  auto-accepts via aiOption; its anomaly set is unchanged.
+- **The Mount stands bare after 70 CE** (`bookmark.wonderTweaks`): the
+  canonical map gives Jerusalem the `temple` wonder (+1 governance point,
+  +0.2 legitimacy a month to its keeper) — correct in 66 CE, wrong after
+  the fire. The 115, 132, 614 and 1948 bookmarks now start Jerusalem with
+  `wonder: null` (the Temple Mount holy site remains).
+- **Raise the Third House** (SPEC §32 missions, JUD in 132 CE and 614 CE):
+  the final mission of both chains — hold Jerusalem with 500 talents in the
+  treasury and stability ≥ +1 — spends 300 talents, grants +20 legitimacy,
+  and sets Jerusalem's wonder back to `temple`: the yield returns, and the
+  wonder's gold star stands on the map again. Bar Kokhba's coins promised
+  the facade; Nehemiah ben Hushiel dreamed the sacrifices resumed.

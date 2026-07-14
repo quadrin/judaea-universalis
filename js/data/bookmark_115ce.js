@@ -71,6 +71,8 @@ export const BOOKMARK_115 = {
   // absorbed. The rising begins on Cyprus and in the Jewish towns of Egypt;
   // Osrhoene has bent the knee to Trajan; Adiabene and Characene stand with
   // the Arsacid king.
+  // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
+  wonderTweaks: { Jerusalem: null },
   owners: {
     // -- Judaea & Galilee: Roman, garrisoned, watching -------------------------
     'Jerusalem': 'ROM', 'Jericho': 'ROM', 'Emmaus': 'ROM', 'Lydda': 'ROM',
@@ -325,15 +327,11 @@ export const BOOKMARK_115 = {
       const ws = judWarscore(ctx);
 
       if (g.playerTag === 'JUD') {
-        if (ws >= 40) {
-          h.endGame(ctx, {
-            result: 'win',
-            title: 'The Fire Unquenched',
-            text: 'Egypt starves the wolf, Cyprus is a Jewish island, and the legions '
-              + 'recalled from Parthia arrive to a war already lost. The new emperor signs '
-              + 'what no Roman will read aloud: the eastern diaspora keeps what it holds.',
-            score: 200,
-          });
+        // Early concession (SPEC §32): the emperor's terms arrive at +40 as
+        // an event card the player may accept or refuse. Offered once.
+        if (ws >= 40 && !h.getFlag(ctx, 'romeTermsOffered')) {
+          h.setFlag(ctx, 'romeTermsOffered', true);
+          h.fireEvent(ctx, 'ev115_terms');
           return;
         }
         // Outlive Trajan: Hadrian buys peace in the East (August 117 on).

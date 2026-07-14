@@ -480,18 +480,11 @@ export const BOOKMARK_67 = {
         });
         return;
       }
-      // Early win: unified and Rome's intervention beaten back.
-      if (unified && atWarWithRome && romWs >= 40) {
-        fireEventById(ctx, 'ev4_kingdom_restored');
-        h.endGame(ctx, {
-          result: 'win',
-          title: 'Rome Recoils',
-          text: 'The legions came expecting an arbitration and found a kingdom — one king, '
-            + 'one army, and hill country that eats cohorts. Pompey, who never fights wars '
-            + 'he might lose slowly, recognizes the kingdom of Judaea and calls it his own '
-            + 'wise settlement.',
-          score: 200,
-        });
+      // Early concession (SPEC §32): Pompey OFFERS his settlement at +40 —
+      // an event card the player may accept or refuse. Offered once.
+      if (unified && atWarWithRome && romWs >= 40 && !h.getFlag(ctx, 'romeTermsOffered')) {
+        h.setFlag(ctx, 'romeTermsOffered', true);
+        h.fireEvent(ctx, 'ev4_rome_recoils');
         return;
       }
       // Timed reckonings: 60 BCE for the free crown, 55 BCE closes the book.

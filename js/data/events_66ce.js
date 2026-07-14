@@ -1065,4 +1065,50 @@ export const EVENTS_66 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_66.checkVictory when Judaea reaches +50 war score
+  // (SPEC §32); never fires on its own. Rome's peace is an OFFER.
+  {
+    id: 'ev_rome_sues',
+    title: 'Rome Sues for Peace',
+    desc: 'The legions are broken and the east is in flames. Rather than feed another '
+      + 'army into the Judean hills, the emperor offers terms: Judaea keeps its own '
+      + 'king, its own Law, and its Temple — the hills of the faith it holds. The '
+      + 'Greek cities and the coast it merely occupies go home. Or the elders can '
+      + 'wager the House itself on the next campaign season.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_rome_sues', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Take the peace — king, Law and Temple',
+        tooltip: 'Victory (score 200). The Roman war ends; Judaea keeps the provinces of the faith it holds, and every other occupied town returns.',
+        effects: guard('ev_rome_sues:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.fireEvent(ctx, 'ev_negotiated_peace');
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'Rome Sues for Peace',
+            text: 'The emperor grants Judaea its own king, its own Law, and its Temple. '
+              + 'No shekel of tribute was ever better spent than the blood at Beth Horon.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'The next season decides it',
+        tooltip: 'The war goes on. +5 legitimacy; Rome will not offer twice.',
+        effects: guard('ev_rome_sues:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];

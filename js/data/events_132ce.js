@@ -466,4 +466,51 @@ export const EVENTS_132 = [
       },
     ],
   },
+
+  // Fired by BOOKMARK_132.checkVictory when the revolt reaches +50 war score
+  // (SPEC §32); never fires on its own. Hadrian's concession is an OFFER.
+  {
+    id: 'ev132_terms',
+    title: 'Rome Lets Go',
+    desc: 'Dio\u2019s arithmetic wins the argument in the Senate: so many legions mauled, '
+      + 'so many years, for hills that grow stones. Hadrian, older and ill, offers a '
+      + 'tributary prince in Judea — circumcision unbanned, the colony unbuilt, the '
+      + 'hills of the faith under the Nasi\u2019s coins. The occupied Greek cities return. '
+      + 'Or the Prince of Israel can refuse the half, and dig for the whole.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev132_terms', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'A tributary prince in Judea',
+        tooltip: 'Victory (score 200). The war ends; Judaea keeps the provinces of the faith it holds, and every other occupied town returns.',
+        effects: guard('ev132_terms:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.fireEvent(ctx, 'ev2_redemption_peace');
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'Rome Lets Go',
+            text: 'Hadrian accepts a tributary prince in Judea — circumcision unbanned, '
+              + 'the colony unbuilt — and writes to the Senate without the customary '
+              + 'formula, for he and the army are not well.',
+            score: 200,
+          });
+        }),
+      },
+      {
+        label: 'Dig for the whole',
+        tooltip: 'The war goes on. +5 legitimacy; Hadrian will not offer twice.',
+        effects: guard('ev132_terms:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];

@@ -165,6 +165,8 @@ export const BOOKMARK_1948 = {
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient
   // selves; unlisted provinces keep the map's antique development.
+  // No Temple stands in 1948 — only the Western Wall remains (SPEC §32).
+  wonderTweaks: { Jerusalem: null },
   devTweaks: {
     'Joppa': { tax: 12, prod: 10, mp: 8 },        // Tel Aviv
     'Dora': { tax: 8, prod: 9, mp: 6 },           // Haifa & the port
