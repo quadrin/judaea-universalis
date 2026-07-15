@@ -63,14 +63,18 @@ await page.evaluate(() => {
   ctx.bus.emit('provinceOwner', { id: p.id });
 });
 await page.waitForSelector('#province-panel .pp-merchant:not(.hidden)');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('#province-panel [data-ref="merchantShip"]').click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 ok(/1 \/ 5 merchant ships/.test(await page.locator('#province-panel [data-ref="merchantStatus"]').textContent()),
   'commissioning a merchantman updates the persistent port count');
 
 console.log('== selected armies can stand down ==');
 const before = await page.evaluate(() => Object.values(window._ctx.game.armies).filter((a) => a && a.tag === window._ctx.game.playerTag).length);
 await page.locator('#outliner .ol-army').first().click();
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('#outliner .ol-disband:not(.disabled)').first().click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 const after = await page.evaluate(() => Object.values(window._ctx.game.armies).filter((a) => a && a.tag === window._ctx.game.playerTag).length);
 ok(after === before - 1, 'the confirmed outliner action removes one army');
 

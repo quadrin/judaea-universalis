@@ -82,7 +82,9 @@ async function boot(page) {
   const verdict = (await page.locator('[data-ref="verdict"]').textContent()).trim();
   ok(/accept/.test(verdict), 'verdict shows acceptance: ' + verdict);
   await page.screenshot({ path: OUT + 'desktop-peace.png' });
+  await page.evaluate(() => { window._ctx.game.paused = false; });
   await page.locator('[data-ref="send"]').click();
+  await page.evaluate(() => { window._ctx.game.paused = true; });
   await page.waitForTimeout(300);
   const res = await page.evaluate(() => {
     const g = window._ctx.game;

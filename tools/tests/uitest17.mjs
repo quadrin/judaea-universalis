@@ -58,13 +58,20 @@ const shipTxt = (await page.locator('[data-ref="buildShip"]').textContent()) || 
 ok(/Destroyer Flotillas/.test(shipTxt), '1948 lays down Destroyer Flotillas at ' + port.name + ': ' + shipTxt.trim());
 ok(await page.evaluate(() => document.querySelector('[data-ref="buildShip"]')?.parentElement?.classList.contains('pp-recruit')),
   'warships recruit beside infantry and cavalry');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('[data-ref="buildShip"]').click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
+await page.evaluate(async () => {
+  const { monthlyRecruitment } = await import('/js/sim/recruitment.js');
+  for (let i = 0; i < window._ctx.DEFINES.BASE.unitRecruitMonths.ship; i++) monthlyRecruitment(window._ctx);
+});
 await page.waitForTimeout(250);
 
 console.log('== fleets and wings in the outliner ==');
-await page.evaluate(() => {
+await page.evaluate(async () => {
   const ctx = window._ctx;
   const g = ctx.game;
+  g.paused = false;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (p && p.owner === 'ISR' && p.controller === 'ISR') {
@@ -74,6 +81,9 @@ await page.evaluate(() => {
       break;
     }
   }
+  g.paused = true;
+  const { monthlyRecruitment } = await import('/js/sim/recruitment.js');
+  for (let i = 0; i < ctx.DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
   ctx.bus.emit('war', {}); // nudge the outliner to re-render
 });
 await page.waitForTimeout(500);
@@ -84,7 +94,9 @@ ok(/Squadron/.test(olText), 'the squadron appears by name');
 
 const wingBtn = page.locator('#outliner [data-wing-leader]').first();
 ok((await wingBtn.count()) === 1, 'the wing row offers a commander');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await wingBtn.click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(250);
 const wingState = await page.evaluate(() => Object.values(window._ctx.game.airwings)[0]);
 ok(!!wingState.leader, 'a commander leads the squadron: ' + (wingState.leader && wingState.leader.name));
@@ -93,7 +105,9 @@ await page.locator('#outliner [data-fleet]').first().click();
 await page.waitForTimeout(200);
 const admBtn = page.locator('#outliner [data-fleet-admiral]').first();
 ok((await admBtn.count()) === 1, 'the selected fleet offers an admiral');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await admBtn.click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(250);
 const fleetState = await page.evaluate(() => Object.values(window._ctx.game.fleets)[0]);
 ok(!!fleetState.admiral, 'an admiral takes the deck: ' + (fleetState.admiral && fleetState.admiral.name));
@@ -148,7 +162,9 @@ const fleetDestPt = await page.evaluate((provId) => {
   const r = document.getElementById('map-container').getBoundingClientRect();
   return { x: r.left + x, y: r.top + y };
 }, mapUnits.fleetDest);
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.mouse.click(fleetDestPt.x, fleetDestPt.y, { button: 'right' });
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(150);
 ok(await page.evaluate(({ fleetId, fleetDest }) => window._ctx.game.fleets[fleetId].path[0] === fleetDest,
   mapUnits), 'right-clicking a coastal province orders the fleet to sail');
@@ -184,7 +200,9 @@ const wingDestPt = await page.evaluate((provId) => {
   const r = document.getElementById('map-container').getBoundingClientRect();
   return { x: r.left + x, y: r.top + y };
 }, mapUnits.wingDest);
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.mouse.click(wingDestPt.x, wingDestPt.y, { button: 'right' });
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(150);
 ok(await page.evaluate(({ wingId, wingDest }) => window._ctx.game.airwings[wingId].prov === wingDest,
   mapUnits), 'right-clicking another airfield rebases the selected wing');

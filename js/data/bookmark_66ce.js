@@ -227,14 +227,6 @@ export const BOOKMARK_66 = {
         + 'years Rome will be busy murdering its own emperors. Survive to 71 with Jerusalem '
         + 'and the Temple standing, and Vespasian may find a client king cheaper than a war.',
     },
-    {
-      tag: 'ROM',
-      difficulty: 'Moderate',
-      blurb: 'A tax riot has become a rebellion, and a rebellion unpunished is an empire '
-        + 'unravelling. Reduce Galilee, close the ring on Jerusalem, and finish this before '
-        + 'the succession crisis at home pulls your legions west. The Senate expects a triumph, '
-        + 'not a stalemate.',
-    },
   ],
 
   setup(ctx) {

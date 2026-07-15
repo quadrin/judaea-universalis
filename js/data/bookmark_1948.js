@@ -321,14 +321,6 @@ export const BOOKMARK_1948 = {
         + 'enemies. Hold everywhere at once until the Czech rifles land, then take the '
         + 'offensive one front at a time. The armistice lines you hold become the state.',
     },
-    {
-      tag: 'JOR',
-      difficulty: 'Moderate',
-      blurb: 'You command the only professional army in this war — small, drilled, and '
-        + 'British-officered. The King wants Jerusalem and the hill country, not Tel '
-        + 'Aviv; take what the Legion can hold, refuse the battles it cannot, and end '
-        + 'this war as the only Arab ruler with something to show for it.',
-    },
   ],
 
   setup(ctx) {

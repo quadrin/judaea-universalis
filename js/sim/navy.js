@@ -6,6 +6,7 @@
 
 import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding } from './military.js';
 import { unlockedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
+import { queueUnitRecruitment } from './recruitment.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
 const SHIP_UPKEEP = 0.5;     // talents per ship per month
@@ -67,21 +68,11 @@ export function buildShipCore(ctx, tag, provId) {
   if (!hasBuilding(p, 'shipyard')) return { ok: false, why: 'build a shipyard before laying down warships' };
   if (num(t.treasury) < SHIP_COST) return { ok: false, why: 'a hull costs ' + SHIP_COST + ' talents' };
   t.treasury = num(t.treasury) - SHIP_COST;
-  let fleet = fleetsAt(ctx, provId).find((f) => f.tag === tag && !f.path.length);
-  if (!fleet) {
-    g.nextFleetId = num(g.nextFleetId, 1);
-    fleet = {
-      id: g.nextFleetId++, tag, prov: provId, ships: 0,
-      path: [], moveDaysLeft: 0, hopTotal: 0,
-      name: 'Fleet of ' + p.name,
-      gen: navalGen(ctx, tag), // the pattern the hulls are laid down to (SPEC §31)
-      admiral: null,
-    };
-    if (!g.fleets) g.fleets = {};
-    g.fleets[fleet.id] = fleet;
-  }
-  fleet.ships++;
-  return { ok: true, fleet };
+  const queued = queueUnitRecruitment(ctx, tag, provId, 'ship', {
+    cost: SHIP_COST,
+    gen: navalGen(ctx, tag), // the pattern the hull is laid down to (SPEC §31)
+  });
+  return queued ? { ok: true, queued } : { ok: false, why: 'the hull could not be scheduled' };
 }
 
 // Civilian hulls are a port investment, not military counters. They remain

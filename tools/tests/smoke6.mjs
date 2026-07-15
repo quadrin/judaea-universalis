@@ -9,6 +9,7 @@ const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { tickDay } = await import(R + '/js/sim/tick.js');
 const navy = await import(R + '/js/sim/navy.js');
+const { monthlyRecruitment } = await import(R + '/js/sim/recruitment.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -52,6 +53,7 @@ const noYard = navy.buildShipCore(ctx, 'JUD', home);
 ok(!noYard.ok && /shipyard/.test(noYard.why), 'warships wait for a completed shipyard: ' + noYard.why);
 game.provinces[home].buildings = Array.from(new Set([...(game.provinces[home].buildings || []), 'shipyard']));
 for (let i = 0; i < 5; i++) actions.buildShip(home);
+for (let i = 0; i < 5 * DEFINES.BASE.unitRecruitMonths.ship; i++) monthlyRecruitment(ctx);
 const fleet = Object.values(game.fleets).find((f) => f && f.tag === 'JUD');
 ok(!!fleet && fleet.ships === 5, 'five hulls in the water: ' + (fleet && fleet.ships));
 ok(t.treasury === 350, 'treasury paid 150: ' + t.treasury);

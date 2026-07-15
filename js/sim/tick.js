@@ -12,6 +12,7 @@ import { monthlyFactions } from './factions.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, monthlyNavy } from './navy.js';
+import { monthlyRecruitment } from './recruitment.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -74,6 +75,7 @@ function monthlyBlock(ctx) {
   safe('modifiers', () => tickModifiers(ctx));
   if (g.date.m === 1) safe('growth', () => yearlyGrowth(ctx)); // towns grow each January (SPEC §24)
   safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
+  safe('recruitment', () => monthlyRecruitment(ctx)); // one queued unit per province advances
   safe('economy', () => runMonthlyEconomy(ctx));
   safe('subsidies', () => monthlySubsidies(ctx)); // after economy: this month's flow was paid, now count it down
   safe('manpower', () => monthlyManpower(ctx));
@@ -107,6 +109,10 @@ export function tickDay(ctx) {
   if (!ctx || !ctx.game) return;
   const g = ctx.game;
   try {
+    // UI commands issued during a pause are plain-data orders. Direct callers
+    // may resume by setting game.paused themselves, so the first live tick is
+    // a second safe place to release them after the pause-toggle action.
+    if (!g.paused && typeof ctx.flushPausedActions === 'function') ctx.flushPausedActions();
     advanceDate(ctx);
     safe('move', () => moveArmiesDaily(ctx));
     safe('fleets', () => fleetsDaily(ctx));

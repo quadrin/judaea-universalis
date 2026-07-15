@@ -1,10 +1,11 @@
 // Judaea Universalis — military: armies, movement, battles, sieges, wars.
-// DOM-free leaf module: imports nothing from other sim files (they import us).
-// Zero-dependency data modules (tech ladders) are fair game — no cycles.
+// DOM-free module. Recruitment is a zero-dependency sim leaf, so importing its
+// queue helpers keeps the military graph cycle-free.
 import {
   unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
+import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -696,16 +697,12 @@ export function raiseAirWing(ctx, tag, provId) {
   if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
   const cost = AIRC(ctx, 'wingCost', 40);
   if (num(t.treasury) < cost) return { ok: false, why: 'not enough talents (' + cost + ' needed)' };
-  if (airWingsAt(ctx, provId).length >= AIRC(ctx, 'wingsPerField', 2)) {
+  if (airWingsAt(ctx, provId).length + queuedUnitCount(ctx, provId, 'wing', tag) >= AIRC(ctx, 'wingsPerField', 2)) {
     return { ok: false, why: 'the hangars are full' };
   }
   t.treasury = num(t.treasury) - cost;
-  if (!g.airwings) g.airwings = {};
-  if (!Number.isFinite(g.nextWingId)) g.nextWingId = 1;
-  const id = g.nextWingId++;
-  const nth = airWingsOf(ctx, tag).length + 1;
-  g.airwings[id] = { id, tag, prov: provId, name: 'No. ' + nth + ' Squadron' };
-  return { ok: true, wing: g.airwings[id] };
+  const queued = queueUnitRecruitment(ctx, tag, provId, 'wing', { cost });
+  return queued ? { ok: true, queued } : { ok: false, why: 'the squadron could not be scheduled' };
 }
 // A named commander for a squadron (SPEC §31): fire pips sharpen the bombs
 // (+10%/pip), maneuver pips slip interception. Costs 50 martial points,
@@ -1237,17 +1234,10 @@ export function recruitRegiment(ctx, tag, provId, type) {
   if (num(t.manpower) < regSize) return { ok: false, why: 'not enough manpower' };
   t.treasury = num(t.treasury) - cost;
   t.manpower = num(t.manpower) - regSize;
-  let host = null;
-  for (const a of armiesInProv(ctx, provId)) {
-    if (a.tag === tag && !a.retreating && !a.inBattle) { host = a; break; }
-  }
-  if (host) {
-    host.regiments[type] = num(host.regiments[type]) + 1;
-    host.men += regSize;
-  } else {
-    spawnArmy(ctx, tag, p.name, { inf: type === 'inf' ? 1 : 0, cav: type === 'cav' ? 1 : 0, name: 'Levy of ' + p.name });
-  }
-  return { ok: true };
+  const queued = queueUnitRecruitment(ctx, tag, provId, type, {
+    cost, manpower: regSize, gen: tagGen(ctx, tag),
+  });
+  return queued ? { ok: true, queued } : { ok: false, why: 'the regiment could not be scheduled' };
 }
 // Detach floor(half) the regiments (mix kept proportional) with a matching
 // share of men into a fresh, general-less army in the same province. The

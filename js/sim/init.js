@@ -30,6 +30,7 @@ import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
+import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -53,6 +54,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
     fleets: {}, nextFleetId: 1,
     airwings: {}, nextWingId: 1, // squadrons at their airfields (SPEC §29)
+    nextRecruitId: 1, pendingCommands: [], nextCommandId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
@@ -100,6 +102,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       fort, garrison: maxGarrison, maxGarrison,
       siege: null, modifiers: [],
       buildings: [], construction: null, // {key, monthsLeft} while building
+      unitQueue: [], // FIFO land/ship/air recruitment orders
       conversion: null, // {by, monthsLeft} while converting to the state faith
       // bookmark.wonderTweaks (SPEC §32): eras where a wonder is rubble —
       // the Temple burned in 70 CE, so the later bookmarks bare the Mount
@@ -539,7 +542,7 @@ export const DECISIONS = {
 };
 
 // ------------------------------------------------------------------ gameActions (§6.6, frozen)
-export function gameActions(ctx) {
+export function gameActions(ctx, { deferWhilePaused = false } = {}) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
 
@@ -716,7 +719,7 @@ export function gameActions(ctx) {
     };
   };
 
-  return {
+  const actions = {
     setSpeed(n) {
       g.speed = clamp(Math.round(num(n, 2)), 1, 5);
       ctx.bus.emit('speed', g.speed);
@@ -724,6 +727,39 @@ export function gameActions(ctx) {
     togglePause() {
       g.paused = !g.paused;
       ctx.bus.emit('pause', g.paused);
+    },
+    getRecruitmentQueue(provId) {
+      try {
+        const p = ctx.byId(provId | 0);
+        if (!p) return null;
+        const nameOf = (type, gen) => type === 'ship' ? navalGenName(num(gen, 0))
+          : type === 'wing' ? 'Air Wing'
+            : genName(num(gen, 0), type) || (type === 'cav' ? 'Cavalry' : 'Infantry');
+        const rows = (Array.isArray(p.unitQueue) ? p.unitQueue : []).map((row, i) => ({
+          id: row.id, type: row.type, name: nameOf(row.type, row.gen),
+          monthsLeft: Math.max(0, num(row.monthsLeft) | 0),
+          totalMonths: Math.max(1, num(row.totalMonths, unitRecruitMonths(ctx, row.type)) | 0),
+          position: i + 1, stalled: row.stalled || '', pending: false,
+        }));
+        // Commands issued while paused have not spent resources or entered the
+        // production line yet. Show them anyway, so the player's click never
+        // disappears into an invisible queue.
+        for (const cmd of (g.pendingCommands || [])) {
+          if (!cmd || cmd.tag !== g.playerTag || num(cmd.args && cmd.args[0]) !== (provId | 0)) continue;
+          let type = '';
+          if (cmd.name === 'recruit') type = cmd.args && cmd.args[1];
+          else if (cmd.name === 'buildShip') type = 'ship';
+          else if (cmd.name === 'recruitAirWing') type = 'wing';
+          if (!['inf', 'cav', 'ship', 'wing'].includes(type)) continue;
+          const gen = type === 'ship' ? navalGen(ctx, g.playerTag) : tagGen(ctx, g.playerTag);
+          rows.push({
+            id: 'command-' + cmd.id, type, name: nameOf(type, gen),
+            monthsLeft: unitRecruitMonths(ctx, type), totalMonths: unitRecruitMonths(ctx, type),
+            position: rows.length + 1, stalled: '', pending: true,
+          });
+        }
+        return { paused: !!g.paused, rows };
+      } catch (e) { warnOnce('recruitQueue', 'getRecruitmentQueue failed', e); return null; }
     },
     recruit(provId, type) {
       try {
@@ -735,6 +771,11 @@ export function gameActions(ctx) {
         }
         const res = recruitRegiment(ctx, g.playerTag, provId, type);
         if (!res.ok) say('Cannot recruit', 'Recruitment failed: ' + res.why + '.', 'bad');
+        else {
+          const label = genName(num(res.queued && res.queued.gen, tagGen(ctx, g.playerTag)), type);
+          say('Recruitment ordered', (label || 'A regiment') + ' will muster in '
+            + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, type)) + ' months. Units train one at a time in each province.', 'good');
+        }
       } catch (e) { warnOnce('recruit', 'recruit failed', e); }
     },
     moveArmy(armyId, provId) {
@@ -904,11 +945,13 @@ export function gameActions(ctx) {
         }
         let whyNot = '';
         if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
-        else if (wings.length >= cap) whyNot = 'The hangars are full (' + cap + ' wings).';
+        const queued = queuedUnitCount(ctx, provId, 'wing', g.playerTag);
+        if (!whyNot && wings.length + queued >= cap) whyNot = 'The hangars are full or already committed (' + cap + ' wings).';
         else if (num(t.treasury) < num(AIR.wingCost, 40)) whyNot = 'Not enough talents (' + num(AIR.wingCost, 40) + ' needed).';
         return {
-          wings, cap, targets,
+          wings, queued, cap, targets,
           cost: num(AIR.wingCost, 40), upkeep: num(AIR.wingUpkeep, 1), range: num(AIR.rangeHops, 2),
+          months: unitRecruitMonths(ctx, 'wing'),
           canRecruit: !whyNot, whyNot,
         };
       } catch (e) { warnOnce('airInfo', 'getAirInfo failed', e); return null; }
@@ -918,7 +961,8 @@ export function gameActions(ctx) {
         const res = raiseAirWing(ctx, g.playerTag, provId);
         if (!res.ok) { say('Cannot raise a wing', 'The squadron is refused: ' + res.why + '.', 'bad'); return; }
         const p = ctx.byId(provId);
-        say('A wing takes the air', res.wing.name + ' forms up over ' + ((p && p.name) || 'the field') + '.', 'good');
+        say('Squadron ordered', 'Crews begin forming at ' + ((p && p.name) || 'the field') + '; the wing will be ready in '
+          + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, 'wing')) + ' months.', 'good');
       } catch (e) { warnOnce('recruitWing', 'recruitAirWing failed', e); }
     },
     moveAirWing(wingId, provId) {
@@ -1381,7 +1425,8 @@ export function gameActions(ctx) {
         const res = buildShipCore(ctx, g.playerTag, provId | 0);
         if (!res.ok) { say('No ship today', res.why, 'bad'); return; }
         const p = ctx.byId(provId | 0);
-        say('A hull takes the water', 'A new ship joins ' + res.fleet.name + ' at ' + ((p && p.name) || 'port') + '.', 'good');
+        say('Hull laid down', 'A new warship begins fitting out at ' + ((p && p.name) || 'port') + '; it will be ready in '
+          + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, 'ship')) + ' months.', 'good');
       } catch (e) { warnOnce('buildShip', 'buildShip failed', e); }
     },
     getMerchantShipInfo(provId) {
@@ -1895,6 +1940,62 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('enactDecision', 'enactDecision failed', e); }
     },
   };
+
+  if (!deferWhilePaused) return actions;
+
+  if (!Array.isArray(g.pendingCommands)) g.pendingCommands = [];
+  if (!Number.isFinite(g.nextCommandId)) g.nextCommandId = 1;
+  const rawActions = { ...actions };
+  const immediate = new Set(['setSpeed', 'togglePause', 'chooseEventOption']);
+  const isQuery = (name) => /^(get|explain|can|evaluate)/.test(name);
+  const orderLabel = (name) => String(name || 'order')
+    .replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+  let flushingCommands = false;
+
+  const flushPausedActions = () => {
+    if (g.paused || g.over || flushingCommands || !g.pendingCommands.length) return 0;
+    const startingTag = g.playerTag;
+    let count = 0;
+    flushingCommands = true;
+    try {
+      // An executed order may open an event and pause the game. Keep the rest
+      // in FIFO order until the player resolves it and resumes again.
+      while (!g.paused && !g.over && g.pendingCommands.length) {
+        const cmd = g.pendingCommands.shift();
+        if (!cmd || typeof rawActions[cmd.name] !== 'function') continue;
+        if (cmd.tag && !g.tags[cmd.tag]) continue;
+        if (cmd.tag) g.playerTag = cmd.tag;
+        rawActions[cmd.name](...(Array.isArray(cmd.args) ? cmd.args : []));
+        count++;
+      }
+    } finally {
+      if (g.tags[startingTag]) g.playerTag = startingTag;
+      flushingCommands = false;
+    }
+    if (count && ctx.bus) ctx.bus.emit('commandsFlushed', { count, remaining: g.pendingCommands.length });
+    return count;
+  };
+
+  for (const name of Object.keys(rawActions)) {
+    if (immediate.has(name) || isQuery(name) || typeof rawActions[name] !== 'function') continue;
+    actions[name] = (...args) => {
+      if (!g.paused || flushingCommands) return rawActions[name](...args);
+      const cmd = { id: g.nextCommandId++, tag: g.playerTag, name, args };
+      g.pendingCommands.push(cmd);
+      say('Order queued', orderLabel(name) + ' will be carried out when time resumes.', 'info');
+      if (ctx.bus) ctx.bus.emit('commandQueued', { ...cmd, args: args.slice() });
+      return true;
+    };
+  }
+  actions.togglePause = () => {
+    rawActions.togglePause();
+    if (!g.paused) flushPausedActions();
+  };
+  actions.getPendingCommands = () => g.pendingCommands.map((cmd) => ({
+    id: cmd.id, tag: cmd.tag, name: cmd.name, args: Array.isArray(cmd.args) ? cmd.args.slice() : [],
+  }));
+  ctx.flushPausedActions = flushPausedActions;
+  return actions;
 }
 
 // ------------------------------------------------------------------ save/load
@@ -1917,6 +2018,9 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.airwings) saved.airwings = {}; // pre-air-power saves
   if (!Number.isFinite(saved.nextWingId)) saved.nextWingId = 1;
+  if (!Number.isFinite(saved.nextRecruitId)) saved.nextRecruitId = 1;
+  if (!Array.isArray(saved.pendingCommands)) saved.pendingCommands = [];
+  if (!Number.isFinite(saved.nextCommandId)) saved.nextCommandId = 1;
   for (const f of Object.values(saved.fleets)) { // pre-naval-era saves (SPEC §31)
     if (!f) continue;
     if (!Number.isFinite(f.gen)) f.gen = 0;
@@ -1935,6 +2039,7 @@ export function reviveGame(saved) {
     if (!p) continue;
     if (!Array.isArray(p.buildings)) p.buildings = [];
     if (p.construction === undefined) p.construction = null;
+    if (!Array.isArray(p.unitQueue)) p.unitQueue = [];
   }
   for (const k of Object.keys(saved.tags)) {
     const t = saved.tags[k];

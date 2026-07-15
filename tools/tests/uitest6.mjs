@@ -32,10 +32,12 @@ await page.waitForTimeout(600);
 console.log('== split the Host of Jerusalem into three armies ==');
 const setup = await page.evaluate(() => {
   const g = window._ctx.game;
+  g.paused = false;
   const host = Object.values(g.armies).find((a) => a && a.tag === 'JUD' && g.provinces[a.prov].name === 'Jerusalem');
   window._actions.splitArmy(host.id);
   window._actions.splitArmy(host.id);
   const inProv = Object.values(g.armies).filter((a) => a && a.prov === host.prov && a.tag === 'JUD');
+  g.paused = true;
   return { prov: host.prov, count: inProv.length, ids: inProv.map((a) => a.id) };
 });
 ok(setup.count === 3, 'three JUD armies in Jerusalem: ' + JSON.stringify(setup.ids));
@@ -66,7 +68,9 @@ const marched = await page.evaluate((prov) => {
   const c = ctx.geom.centroids[dest];
   return { dest, ...(() => { const [x, y] = window._camera.mapToScreen(c.x, c.y); return { x, y }; })() };
 }, setup.prov);
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.mouse.click(marched.x, marched.y, { button: 'right' });
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(300);
 const paths = await page.evaluate((ids) => ids.map((id) => {
   const a = window._ctx.game.armies[id];
@@ -75,7 +79,9 @@ const paths = await page.evaluate((ids) => ids.map((id) => {
 ok(paths.every((p) => p === marched.dest), 'right-click marched the whole stack to #' + marched.dest + ': ' + JSON.stringify(paths));
 
 console.log('== merge-all consolidates the stack into one army ==');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('.ol-row.ol-army.sel [data-mergeall]').first().click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(200);
 const afterMerge = await page.evaluate((prov) =>
   Object.values(window._ctx.game.armies).filter((a) => a && a.prov === prov && a.tag === 'JUD').length, setup.prov);
@@ -84,12 +90,15 @@ ok(afterMerge === 1, 'merge-all left one army: ' + afterMerge);
 console.log('== the sea is a wall without ships ==');
 const cyprus = await page.evaluate(() => {
   const ctx = window._ctx;
+  ctx.game.paused = false;
   const sal = ctx.provId('Salamis');
   const nbrs = [...ctx.geom.neighbors[sal]].map((n) => ctx.game.provinces[n].name);
   const a = Object.values(ctx.game.armies).find((x) => x && x.tag === 'JUD');
   a.path = []; a.moveDaysLeft = 0; // clear the earlier march so a refusal is visible
   window._actions.moveArmy(a.id, sal);
-  return { neighbors: nbrs, path: ctx.game.armies[a.id].path.length };
+  const path = ctx.game.armies[a.id].path.length;
+  ctx.game.paused = true;
+  return { neighbors: nbrs, path };
 });
 ok(!cyprus.neighbors.includes('Seleucia Pieria') && !cyprus.neighbors.includes('Ptolemais'),
   'Salamis has no land bridge to the mainland: [' + cyprus.neighbors.join(', ') + ']');

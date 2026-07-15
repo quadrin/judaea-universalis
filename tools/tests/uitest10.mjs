@@ -87,7 +87,9 @@ async function boot(page, cardText, nationIdx = 0) {
   await page.locator('.tb-flag').click(); await page.waitForTimeout(400);
   const formBtn = page.locator('[data-decision^="form_"]');
   ok(!(await formBtn.getAttribute('class')).includes('disabled'), 'the crown is within reach');
+  await page.evaluate(() => { window._ctx.game.paused = false; });
   await formBtn.click();
+  await page.evaluate(() => { window._ctx.game.paused = true; });
   await page.waitForTimeout(500);
 
   const after = await page.evaluate(() => ({

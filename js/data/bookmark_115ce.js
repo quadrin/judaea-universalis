@@ -227,15 +227,6 @@ export const BOOKMARK_115 = {
         + 'burn what holds you, link the risings, and outlive Trajan. His heir would rather '
         + 'give up provinces than feed this war.',
     },
-    {
-      tag: 'ROM',
-      difficulty: 'Moderate',
-      blurb: 'The greatest conquest in Roman history is one march from completion — and the '
-        + 'rear of your empire is on fire from Cyrene to the Tigris. Every cohort sent to '
-        + 'Egypt is a cohort not at Ctesiphon. Take the Parthian capital if you can, crush '
-        + 'the risings you must, and decide — as Trajan never could — which victory Rome '
-        + 'actually needs.',
-    },
   ],
 
   setup(ctx) {
