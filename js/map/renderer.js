@@ -177,13 +177,20 @@ uniform sampler2D uLookA;
 uniform sampler2D uLookB;
 uniform sampler2D uFlagsTex;
 uniform sampler2D uTerr;
+uniform sampler2D uProvinceMap;
 ${GLSL_NOISE}
-int idAt(ivec2 ip){
+int cellIdAt(ivec2 ip){
   ip = clamp(ip, ivec2(0), ivec2(uMapSize) - 1);
   vec2 enc = texelFetch(uId, ip, 0).rg;
   int id = int(enc.r * 255.0 + 0.5) + 256 * int(enc.g * 255.0 + 0.5);
   return min(id, uMaxId);
 }
+int provinceOf(int cellId){
+  if (cellId == 0) return 0;
+  vec2 enc = texelFetch(uProvinceMap, ivec2(cellId, 0), 0).rg;
+  return int(enc.r * 255.0 + 0.5) + 256 * int(enc.g * 255.0 + 0.5);
+}
+int idAt(ivec2 ip){ return provinceOf(cellIdAt(ip)); }
 int flagsOf(int id){
   return int(texelFetch(uFlagsTex, ivec2(id, 0), 0).r * 255.0 + 0.5);
 }
@@ -395,14 +402,21 @@ function buildDecorCanvas(MAP_DATA) {
 
 function makeStub(MAP_DATA) {
   const W = MAP_DATA.MAP_W | 0, H = MAP_DATA.MAP_H | 0;
+  const N = (MAP_DATA.provinces || []).length;
   const idArray = new Uint16Array(W * H);
+  const provinceMap = new Uint16Array(N + 1);
+  for (let id = 0; id <= N; id++) provinceMap[id] = id;
   const noop = () => {};
   return {
     idArray,
     provIdAt(mapX, mapY) {
       const x = Math.min(W - 1, Math.max(0, Math.floor(mapX)));
       const y = Math.min(H - 1, Math.max(0, Math.floor(mapY)));
-      return idArray[y * W + x];
+      return provinceMap[idArray[y * W + x]] || 0;
+    },
+    setProvinceMapping(mapping) {
+      if (!mapping || mapping.length < N + 1) return;
+      provinceMap.set(mapping.subarray(0, N + 1));
     },
     setProvinceColors: noop,
     setMapmodeParams: noop,
@@ -639,6 +653,25 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const lookATex = lookupTexture(gl.RGBA8);
   const lookBTex = lookupTexture(gl.RGBA8);
   const flagsTex = lookupTexture(gl.R8);
+  const provinceMapTex = lookupTexture(gl.RGBA8);
+  const provinceMap = new Uint16Array(lookW);
+  function uploadProvinceMap(mapping) {
+    const enc = new Uint8Array(lookW * 4);
+    for (let id = 0; id <= N; id++) {
+      const target = mapping[id] <= N ? mapping[id] : id;
+      provinceMap[id] = target;
+      enc[id * 4] = target & 255;
+      enc[id * 4 + 1] = (target >> 8) & 255;
+      enc[id * 4 + 3] = 255;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, provinceMapTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, lookW, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, enc);
+  }
+  {
+    const identity = new Uint16Array(lookW);
+    for (let id = 0; id <= N; id++) identity[id] = id;
+    uploadProvinceMap(identity);
+  }
 
   // Static terrain-class lookup (id -> grain style in FS_MAIN; keep indices in sync).
   const TERRAIN_CLASS = {
@@ -695,7 +728,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.useProgram(mainProg);
     for (const name of ['uOffsetScale', 'uMapSize', 'uTime', 'uZoom', 'uPaper', 'uRelief',
       'uFlat', 'uDpr', 'uSelected', 'uMaxId', 'uId', 'uHeight', 'uLand', 'uDecor',
-      'uLookA', 'uLookB', 'uFlagsTex', 'uTerr']) {
+      'uLookA', 'uLookB', 'uFlagsTex', 'uTerr', 'uProvinceMap']) {
       U[name] = gl.getUniformLocation(mainProg, name);
     }
     gl.uniform1i(U.uId, 0);
@@ -706,10 +739,12 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.uniform1i(U.uLookB, 5);
     gl.uniform1i(U.uFlagsTex, 6);
     gl.uniform1i(U.uTerr, 7);
+    gl.uniform1i(U.uProvinceMap, 8);
     gl.uniform2f(U.uMapSize, W, H);
     gl.uniform1i(U.uMaxId, N);
   }
-  const texUnits = [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex, terrTex];
+  const texUnits = [idTex, heightTex, landTex, decorTex, lookATex, lookBTex, flagsTex, terrTex,
+    provinceMapTex];
 
   const state = { relief: 1, flat: 0, selected: 0 };
 
@@ -735,7 +770,19 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     provIdAt(mapX, mapY) {
       const x = Math.min(W - 1, Math.max(0, Math.floor(mapX)));
       const y = Math.min(H - 1, Math.max(0, Math.floor(mapY)));
-      return idArray[y * W + x];
+      return provinceMap[idArray[y * W + x]] || 0;
+    },
+
+    setProvinceMapping(mapping) {
+      try {
+        if (!mapping || mapping.length < lookW) {
+          warnOnce('bad-province-map', 'setProvinceMapping: mapping is missing or too short');
+          return;
+        }
+        uploadProvinceMap(mapping);
+      } catch (e) {
+        warnOnce('province-map-throw', 'setProvinceMapping failed', e);
+      }
     },
 
     setProvinceColors(primary, secondary, flags) {

@@ -2,11 +2,17 @@
 // Single pass over idArray comparing right & down neighbors. idArray row 0 = north.
 // Every land cell stays IN neighbors; the sim filters current impassability for pathing.
 
-export function computeGeometry(idArray, MAP_DATA) {
+export function computeGeometry(idArray, MAP_DATA, provinceMap) {
   const W = MAP_DATA.MAP_W | 0;
   const H = MAP_DATA.MAP_H | 0;
   const provs = MAP_DATA.provinces || [];
   const N = provs.length;
+  const mappedId = (raw) => {
+    if (!raw || raw > N) return 0;
+    const target = provinceMap && provinceMap.length > raw ? provinceMap[raw] : raw;
+    return target && target <= N ? target : 0;
+  };
+  const isActive = (id) => !provinceMap || provinceMap[id] === id;
 
   const neighbors = new Array(N + 1);
   for (let i = 0; i <= N; i++) neighbors[i] = new Set();
@@ -20,7 +26,7 @@ export function computeGeometry(idArray, MAP_DATA) {
     for (let y = 0; y < H; y++) {
       const row = y * W;
       for (let x = 0; x < W; x++) {
-        const id = idArray[row + x];
+        const id = mappedId(idArray[row + x]);
         if (id === 0 || id > N) continue;
         areas[id]++;
         sumX[id] += x + 0.5;
@@ -31,11 +37,11 @@ export function computeGeometry(idArray, MAP_DATA) {
         if (y < b.y0) b.y0 = y;
         if (y > b.y1) b.y1 = y;
         if (x + 1 < W) {
-          const r = idArray[row + x + 1];
+          const r = mappedId(idArray[row + x + 1]);
           if (r !== id && r !== 0 && r <= N) { neighbors[id].add(r); neighbors[r].add(id); }
         }
         if (y + 1 < H) {
-          const d = idArray[row + W + x];
+          const d = mappedId(idArray[row + W + x]);
           if (d !== id && d !== 0 && d <= N) { neighbors[id].add(d); neighbors[d].add(id); }
         }
       }
@@ -49,7 +55,7 @@ export function computeGeometry(idArray, MAP_DATA) {
   for (let i = 1; i <= N; i++) {
     if (areas[i] > 0) {
       centroids[i] = { x: sumX[i] / areas[i], y: sumY[i] / areas[i] };
-    } else {
+    } else if (isActive(i)) {
       const p = provs[i - 1];
       let fx = W * 0.5;
       let fy = H * 0.5;
@@ -63,13 +69,21 @@ export function computeGeometry(idArray, MAP_DATA) {
       console.warn(`[geometry] province ${i} (${p && p.name}) covers zero pixels in idArray`);
     }
   }
+  // Inactive fine cells deliberately have no sim geometry. Mirror the parent
+  // so diagnostics and optional UI lookups remain safe without creating a node.
+  for (let i = 1; i <= N; i++) {
+    if (isActive(i)) continue;
+    const target = mappedId(i);
+    centroids[i] = centroids[target] || { x: 0, y: 0 };
+    bbox[i] = bbox[target] || { x0: 0, y0: 0, x1: 0, y1: 0 };
+  }
 
   // Merge extraLinks (strait/ferry adjacency, referenced by canonical name).
   const byName = new Map();
   provs.forEach((p, idx) => { if (p && p.name) byName.set(p.name, idx + 1); });
   for (const link of MAP_DATA.extraLinks || []) {
-    const a = link && byName.get(link[0]);
-    const b = link && byName.get(link[1]);
+    const a = mappedId(link && byName.get(link[0]));
+    const b = mappedId(link && byName.get(link[1]));
     if (!a || !b) {
       console.warn('[geometry] extraLink did not resolve, skipped:', link);
       continue;
@@ -79,8 +93,8 @@ export function computeGeometry(idArray, MAP_DATA) {
   }
   // Sever water-crossing raster adjacencies: armies need ships (SPEC §20).
   for (const link of MAP_DATA.severLinks || []) {
-    const a = link && byName.get(link[0]);
-    const b = link && byName.get(link[1]);
+    const a = mappedId(link && byName.get(link[0]));
+    const b = mappedId(link && byName.get(link[1]));
     if (!a || !b) {
       console.warn('[geometry] severLink did not resolve, skipped:', link);
       continue;
@@ -127,7 +141,7 @@ export function computeGeometry(idArray, MAP_DATA) {
     const offN = new Int32Array(N + 1);
     for (let y = 1; y < H - 1; y++) {
       for (let x = 1; x < W - 1; x++) {
-        const id = idArray[y * W + x];
+        const id = mappedId(idArray[y * W + x]);
         if (id === 0 || id > N) continue;
         // any 4-neighbor on open sea?
         let sx = 0, sy = 0, sn = 0;
@@ -153,6 +167,13 @@ export function computeGeometry(idArray, MAP_DATA) {
         offshore[idx + 1] = centroids[idx + 1];
       }
     });
+  }
+
+  for (let i = 1; i <= N; i++) {
+    if (isActive(i)) continue;
+    const target = mappedId(i);
+    coastal[i] = coastal[target] || false;
+    offshore[i] = offshore[target] || null;
   }
 
   return { neighbors, centroids, areas, bbox, coastal, offshore };
