@@ -83,6 +83,7 @@ node_modules contains playwright. Chromium defaults to `/opt/pw-browsers/chromiu
 set `JU_CHROMIUM` to another executable when needed:
 `JU_PW_DIR=... JU_CHROMIUM=... sh tools/tests/run-ui.sh`. Screenshots land in `JU_OUT`
 (default /tmp). Every feature batch since v1.5 keeps its assertions here —
-20 headless suites and 19 browser suites at v3.5. Run both runners plus
+21 headless suites and 20 browser suites at v3.6. Run both runners plus
 `node tools/autorun.mjs 8` before shipping; `smoke20.mjs` owns the background-
-history/state-aware-conquest contract.
+history/state-aware-conquest contract; `smoke21.mjs` owns demobilization,
+peace-aware war chapters, era-gated works, and merchant-shipping economics.

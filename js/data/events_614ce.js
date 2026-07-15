@@ -119,6 +119,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_jerusalem_falls',
     title: 'The Holy City Falls',
+    requiresWar: [['SAS', 'BYZ'], ['JUD', 'BYZ']],
     desc: 'After a twenty-day siege the wall is mined, and for the first time since '
       + 'Pompey the city belongs to neither Rome nor its God\'s newer church. The True '
       + 'Cross is carried east as a trophy of the fire temples; the Jewish fighters who '
@@ -191,6 +192,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_khosrow_letter',
     title: '"Khosrow, Greatest of Gods"',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'The Senate\'s peace embassy returns with the King of Kings\' reply, addressed '
       + 'from "Khosrow, greatest of gods, master of the earth" to "Heraclius, his vile '
       + 'and insensate slave." He will consider mercy, the letter continues, when the '
@@ -263,6 +265,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_egypt_falls',
     title: 'Egypt Falls',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Nicetas holds Alexandria until a traitor shows the Persians a dry canal under '
       + 'the walls. With Egypt gone, the grain dole of Constantinople ends after six '
       + 'centuries — the bread of empire is now barley, rationed, and prayed over.',
@@ -293,6 +296,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_heraclius_sails',
     title: 'The Emperor Sails East',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Heraclius does what no emperor has done since Theodosius: he leaves the City '
       + 'in God\'s hands and the Patriarch\'s, melts the church plate into soldiers\' pay, '
       + 'and sails — not for Syria, but for the heart of Persia itself, gambling the '
@@ -326,6 +330,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_constantinople',
     title: 'The City Under Siege',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Avar hordes on the European shore, a Persian army at Chalcedon, and the '
       + 'Emperor a thousand miles away in the Caucasus. For ten days the walls of '
       + 'Theodosius and the ships of the fleet decide whether there will be an empire '
@@ -355,6 +360,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_nineveh',
     title: 'Nineveh',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'On the plain by the ruins of Assyria\'s dead capital, Heraclius catches the '
       + 'last Persian field army and destroys it in an eleven-hour battle, killing its '
       + 'general with his own hand — so the chroniclers insist, and no soldier who was '
@@ -567,6 +573,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_yarmouk',
     title: 'The Yarmouk Campaign',
+    requiresWar: ['RSH', 'BYZ'],
     worldLabel: 'The armies converge around the Yarmouk',
     desc: 'The armies maneuver among the tributaries east of the Jordan. If Rome still '
       + 'contests Syria, this is the campaign on which its eastern provinces turn. If an '

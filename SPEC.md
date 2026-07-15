@@ -1399,8 +1399,8 @@ foreign court **read-only**.
 - **Help (H or ?)**: a one-page primer modal — hotkeys, monarch points,
   missions vs decisions, the peace table, flags-are-doors — plus a pointer
   on the title screen's hint line.
-- **The suites live in the repo now** (`tools/tests/`): all 20 headless sim
-  suites and 19 Playwright suites, with `run-smoke.sh` / `run-ui.sh`
+- **The suites live in the repo now** (`tools/tests/`): all 21 headless sim
+  suites and 20 Playwright suites, with `run-smoke.sh` / `run-ui.sh`
   runners. Paths are portable: repo root derives from each file's location,
   the playwright install dir comes from `JU_PW_DIR`, screenshots go to
   `JU_OUT`. (A container rollback mid-session briefly lost three
@@ -1474,3 +1474,33 @@ foreign court **read-only**.
   campaigns, the no-free-Ctesiphon rule, the 1952 coup, Baghdad Pact, political
   UAR formation, and the Iraqi revolution. The browser suite verifies both local
   and world clocks; multiplayer event cards retain the world-history badge.
+
+## 36. v3.6: demobilization, binding peace, and working harbors
+
+- **Stand armies down** (`disbandArmyCore`, action `disbandArmy`): a confirmed
+  outliner action permanently removes a safe army and therefore its monthly
+  maintenance. Seventy-five percent of surviving men return to manpower when
+  demobilized in owned, controlled territory; disbanding abroad returns none.
+  Armies cannot vanish out of battle, rout, or a transport fleet.
+- **Peace binds the script** (`event.requiresWar`): dissolving a war records
+  each opposing pair in `_settledWars`. Dated and triggered battlefield phases
+  declare the live war they require and retire silently after its treaty,
+  rather than presenting stale sieges, offensives, or armistices. Political and
+  world-history events that do not require the concluded campaign continue.
+- **No anachronistic controls**: technology-gated buildings are omitted until
+  their requirement is met, so ancient province panels no longer advertise a
+  disabled airfield. Coastal-only works are likewise absent inland.
+- **Shipyards and merchantmen**: the coastal shipyard costs 90 talents, raises
+  local production 15%, and opens five civilian berths. Each 25-talent
+  merchantman earns 0.75 trade per month at its home port; occupation, siege,
+  or blockade suspends that income. The province panel and outliner expose the
+  local and realm-wide merchant marine.
+- **Panel fit**: recruitment is a wrapping two-column grid, buttons may break
+  their labels, and the province panel clips horizontal overflow. Units remain
+  readable without dragging the parchment sideways at narrow desktop and
+  handheld widths.
+- **Regression contract**: `smoke21.mjs` covers demobilization and manpower
+  recovery, treaty-cancelled date/trigger events, technology visibility,
+  coastal shipyards, merchant persistence, and trade income. `uitest20.mjs`
+  owns panel width, ancient building visibility, merchant commissioning, and
+  the confirmed stand-down control.

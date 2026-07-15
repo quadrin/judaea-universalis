@@ -26,6 +26,31 @@ export function eventMonthIndex(y, m) {
 }
 function monthIndex(y, m) { return eventMonthIndex(y, m); }
 
+function requiredWarPairs(ev) {
+  const req = ev && ev.requiresWar;
+  if (!Array.isArray(req) || !req.length) return [];
+  if (req.length === 2 && typeof req[0] === 'string' && typeof req[1] === 'string') return [req];
+  return req.filter((p) => Array.isArray(p) && p.length === 2
+    && typeof p[0] === 'string' && typeof p[1] === 'string');
+}
+function warPairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+function pairAtWar(g, a, b) {
+  return (g.wars || []).some((w) => w && (
+    ((w.attackers || []).includes(a) && (w.defenders || []).includes(b))
+    || ((w.attackers || []).includes(b) && (w.defenders || []).includes(a))));
+}
+function requiredWarActive(ctx, ev) {
+  const pairs = requiredWarPairs(ev);
+  return !pairs.length || pairs.some(([a, b]) => pairAtWar(ctx.game, a, b));
+}
+function requiredWarSettled(ctx, ev) {
+  const book = ctx.game.flags && ctx.game.flags._settledWars;
+  return !!book && requiredWarPairs(ev).some(([a, b]) => !!book[warPairKey(a, b)]);
+}
+function skipEvent(ctx, ev) {
+  if (ev && ev.id && ev.once !== false) ctx.game.firedEvents[ev.id] = true;
+}
+
 // The next dated development that belongs to world history rather than the
 // bookmark's local script. `world: true` is intentionally metadata only: the
 // event still goes through the ordinary deterministic scheduler, save state,
@@ -37,6 +62,7 @@ export function nextWorldEvent(ctx) {
   let best = null;
   for (const ev of eventList(ctx)) {
     if (!ev || ev.world !== true || !ev.date || (g.firedEvents && g.firedEvents[ev.id])) continue;
+    if (!requiredWarActive(ctx, ev) && requiredWarSettled(ctx, ev)) continue;
     const at = monthIndex(ev.date.y, ev.date.m);
     if (at < now || (best && best.at <= at)) continue;
     best = { ev, at };
@@ -68,6 +94,10 @@ function canFire(ctx, ev) {
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id) return;
+  if (!requiredWarActive(ctx, ev)) {
+    if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev);
+    return;
+  }
   if (ev.once !== false) g.firedEvents[ev.id] = true;
   else {
     g.firedEvents[ev.id] = (g.firedEvents[ev.id] || 0) + 1;
@@ -112,6 +142,9 @@ export function checkDateEvents(ctx) {
     try {
       if (!ev || !ev.date || !canFire(ctx, ev)) continue;
       if (monthIndex(ev.date.y, ev.date.m) > now) continue;
+      // A dated battlefield chapter is a deadline, not a command to undo a
+      // treaty. Once its month arrives without the required war, retire it.
+      if (!requiredWarActive(ctx, ev)) { skipEvent(ctx, ev); continue; }
       fireEvent(ctx, ev);
     } catch (e) { warnOnce('date:' + (ev && ev.id), 'date event check failed', e); }
   }
@@ -122,6 +155,12 @@ export function checkTriggeredEvents(ctx) {
   for (const ev of eventList(ctx)) {
     try {
       if (!ev || typeof ev.trigger !== 'function' || ev.date || !canFire(ctx, ev)) continue;
+      if (!requiredWarActive(ctx, ev)) {
+        // Triggered battle phases may wait for the front to develop, but a
+        // recorded settlement permanently cancels the stale canonical phase.
+        if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev);
+        continue;
+      }
       let ok = false;
       try { ok = !!ev.trigger(ctx); } catch (e) { warnOnce('trig:' + ev.id, 'trigger threw for', ev.id, e); }
       if (!ok) continue;
@@ -142,7 +181,10 @@ export function resolveEventOption(ctx, instanceId, idx) {
   if (ev) {
     const opt = ev.options[idx] || ev.options[0];
     try {
-      if (opt && typeof opt.effects === 'function') opt.effects(ctx);
+      // A battle card may already have been queued behind another modal when
+      // peace was signed. It can close harmlessly, but it may not resurrect
+      // the concluded campaign through its option effects.
+      if (requiredWarActive(ctx, ev) && opt && typeof opt.effects === 'function') opt.effects(ctx);
     } catch (e) { warnOnce('rfx:' + pe.eventId, 'event effects threw for', pe.eventId, e); }
   } else {
     warnOnce('miss:' + pe.eventId, 'resolveEventOption: unknown event', pe.eventId);

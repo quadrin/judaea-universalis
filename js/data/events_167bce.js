@@ -328,6 +328,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_apollonius',
     title: 'Apollonius Marches',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'The reports from the hill country can no longer be filed as banditry: the tax '
       + 'convoys do not arrive, the king’s altars burn in the night, and whatever is sent '
       + 'against the renegade priest’s son is ambushed in the passes. Apollonius has '
@@ -380,6 +381,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_sword_of_apollonius',
     title: 'The Sword of Apollonius',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Apollonius’ force is broken and Apollonius is dead on the field, and the man '
       + 'who killed him has taken his sword. Judah fought with it all the rest of his '
       + 'life — the chroniclers say it as plainly as that, because every man who followed '
@@ -416,6 +418,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_beth_horon_ascent',
     title: 'The Ascent of Beth-Horon',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Seron, commander of the army of Syria, heard that Judah had gathered a '
       + 'congregation of the faithful, and thought to make himself a name in the kingdom. '
       + 'He came up by the ascent of Beth-Horon, where the road climbs out of the plain '
@@ -512,6 +515,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_emmaus_night_march',
     title: 'The Night March to Emmaus',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Gorgias took five thousand foot and a thousand chosen horse out of the great '
       + 'camp by night, to fall on the camp of Judah in the dark — and found it empty, '
       + 'and went looking for him in the mountains, saying, "They flee from us." At first '
@@ -549,6 +553,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_beth_zur',
     title: 'Beth-Zur',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Lysias, guardian of the king\'s son and vicegerent from the Euphrates to the borders of '
       + 'Egypt, has come up at last himself, by the road through Idumea, with a greater '
       + 'army than any yet sent — and at Beth-Zur, where the road narrows toward the hill '
@@ -733,6 +738,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_royal_expedition',
     title: 'The Boy King Takes the Field',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Antiochus Eupator is nine years old, and his regent has decided the boy will '
       + 'be seen to make war. The muster at Damascus is the greatest the south has known '
       + 'in a generation — phalanx and horse and the beasts of war in their mail, each '
@@ -765,6 +771,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_beth_zechariah',
     title: 'Beth-Zechariah',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'The regent came again, with the boy king in the camp, and this time the '
       + 'elephants came too — beasts in mail, each with its wooden tower and its '
       + 'fighting men, shown the blood of grapes and mulberries to rouse them for '
@@ -892,6 +899,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_elasa',
     title: 'Elasa',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Bacchides came in the first month with the strength of the kingdom, and at '
       + 'the sight of it the army of Israel melted away, until there were left with '
       + 'Judah eight hundred men. Those who remained begged him to fall back and wait '
@@ -955,6 +963,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_bacchides',
     title: 'Bacchides Builds in Stone',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'The rebellion’s great captain is dead, and Bacchides intends that no '
       + 'successor shall find the country as Judah found it. He is building: Jericho and '
       + 'Emmaus, Beth-Horon and Bethel, Timnath, Pharathon and Tephon — walled, gated, '
@@ -1391,6 +1400,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_terms_antioch',
     title: 'Terms from Antioch',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'Lysias speaks to the king’s council as he once spoke beneath Jerusalem’s walls, '
       + 'with Philip at his back: "We grow weaker daily, and the kingdom’s affairs press '
       + 'on every side. Let us give these men their right to live by their own laws, as '

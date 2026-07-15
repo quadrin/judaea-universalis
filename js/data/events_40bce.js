@@ -164,6 +164,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_gindarus',
     title: 'The Day at Gindarus',
+    requiresWar: ['ROM', 'PAR'],
     desc: 'Ventidius, who was once paraded as a captive in a Roman triumph, now gives '
       + 'Rome the neatest victory of the age: he lets the Parthian horse charge uphill '
       + 'into slingers and legionaries, and Pacorus — the best of Orodes\' sons, the '
@@ -243,6 +244,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_joseph',
     title: 'Joseph at Jericho',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Herod\'s brother Joseph, told to hold and wait, does neither: he takes raw '
       + 'recruits harvesting toward Jericho and Antigonus\' men catch him in the hills. '
       + 'The head is brought to Antigonus, who — the age being what it is — has it '
@@ -446,6 +448,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_alexandria',
     title: 'Alexandria and the Last Ptolemy',
+    requiresWar: ['ROM', 'PTO'],
     worldLabel: 'Octavian reaches the historical end of Ptolemaic rule',
     desc: 'Octavian reaches Egypt. The received history ends Antony and Cleopatra here, '
       + 'but this campaign first asks who actually holds Alexandria and whether Egypt still '
@@ -521,6 +524,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_antigonus_end',
     title: 'The Axe for a King',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Antigonus is taken to Antioch in chains. He clings to Sosius\' feet and is '
       + 'called "Antigone" for it — soldiers are cruel about lost dignity. Antony '
       + 'decides a live Hasmonean is more dangerous than a precedent: for the first '

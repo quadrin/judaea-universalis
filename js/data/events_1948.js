@@ -145,6 +145,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_truce1',
     title: 'The First Truce',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'Count Bernadotte\'s cease-fire takes hold on every front: four weeks in which '
       + 'no one may fight and no one may re-arm. Nobody keeps the second clause. The '
       + 'Czech rifles, the Messerschmitts in crates, the artillery bought from three '
@@ -204,6 +205,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_burma_road',
     title: 'The Burma Road',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'Latrun\'s police fort has thrown back every frontal assault, and Jewish '
       + 'Jerusalem is starving behind it. So the engineers do the impossible instead: '
       + 'a goat track through the hills, bulldozed by night into a road the Legion\'s '
@@ -231,6 +233,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_ten_days',
     title: 'The Ten Days',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'Between the truces the initiative changes hands for good: Operations Dani '
       + 'and Dekel take Lydda, Ramle and lower Galilee in ten days of open-field '
       + 'fighting the Arab commands believed impossible. The improvised state has '
@@ -254,6 +257,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_truce2',
     title: 'The Second Truce',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'The Security Council orders a truce of indefinite duration, on pain of '
       + 'sanctions. Both sides sign; both sides plan. The war will now be decided in '
       + 'whatever week somebody chooses to break the quiet.',
@@ -304,6 +308,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_yoav',
     title: 'Operation Yoav',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'A convoy is fired on (it was meant to be); the truce is declared broken (it '
       + 'was meant to be); and eight months of siege end in a week as Allon\'s columns '
       + 'cut the Egyptian line at three points. An Egyptian brigade digs in at Faluja '
@@ -335,6 +340,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_hiram',
     title: 'Hiram and Horev',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'In sixty hours the northern command clears the Galilee to the Litani '
       + 'approaches; in the south the columns wheel into Sinai itself until London '
       + 'threatens to invoke its treaty with Cairo. The war has one ending now, and '
@@ -362,6 +368,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_armistice',
     title: 'Rhodes',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'On the island of Rhodes, under a UN flag and Ralph Bunche\'s exhausted '
       + 'patience, the delegations initial the maps: the lines where the armies stand '
       + 'become the lines on the atlas — armistice, not peace, as every signature is '

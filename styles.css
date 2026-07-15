@@ -271,6 +271,7 @@ button {
   width: 312px;
   max-height: calc(100vh - 130px);
   overflow-y: auto;
+  overflow-x: hidden;
   pointer-events: auto;
   border-radius: 4px;
   padding: 0 0 12px;
@@ -433,11 +434,24 @@ button {
 }
 
 .pp-recruit {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 12px 12px 0;
 }
-.pp-recruit-btn { flex: 1; text-align: center; white-space: nowrap; padding: 8px 6px; }
+.pp-recruit-btn {
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+  padding: 8px 6px;
+}
+
+.pp-merchant { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
+.pp-merchant-status { margin: 4px 0 7px; color: var(--ink-soft); font-size: 12px; }
+.pp-merchant .pp-recruit-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ol-merchant { cursor: default; }
 
 /* The airfield block (SPEC §29): wings based here, rebase buttons per field */
 .pp-air { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
@@ -1580,6 +1594,8 @@ button {
   color: var(--text-light);
   filter: none;
 }
+.ol-disband { color: #d98779; border-color: rgba(196, 86, 70, 0.35); }
+.ol-disband:hover { color: #ffb1a3; border-color: #cf6654; }
 
 /* topbar — borrow / repay beside the treasury */
 .tb-loan .icon { width: 11px; height: 11px; }

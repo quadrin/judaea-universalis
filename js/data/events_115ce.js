@@ -59,6 +59,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_lukuas',
     title: 'The King Out of Cyrene',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Cyrenaica is behind him — the temples of Apollo and Hecate pulled down, the '
       + 'roads to the city broken, and the Greeks of the Pentapolis fled or dead. Now '
       + 'Lukuas, whom his people crown king, turns east along the coast into Egypt, and '
@@ -90,6 +91,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_alexandria_street_war',
     title: 'Street War in Alexandria',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The oldest hatred in the city — Greek against Jew, quarter against quarter — '
       + 'has become open war inside the second city of the world. The prefect has too few '
       + 'men to hold the streets and the mob knows it. Somebody will rule the ruins.',
@@ -124,6 +126,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_artemion',
     title: 'The Island in Arms',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Salamis has fallen to Artemion and the Greeks of Cyprus are fleeing to the '
       + 'hills or the sea. Dio will set the dead at two hundred and forty thousand — a '
       + 'number to be doubted, a terror not to be. There is no Roman force on the island '
@@ -147,6 +150,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_turbo',
     title: 'Marcius Turbo Sails South',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Trajan has chosen: the granary before the conquest. Quintus Marcius Turbo — '
       + 'the emperor\'s best trouble-shooter — sails for Egypt with legionary detachments '
       + 'and a fleet, under orders that use words like "extirpate."',
@@ -172,6 +176,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_ctesiphon',
     title: 'Ctesiphon Falls',
+    requiresWar: ['ROM', 'PAR'],
     desc: 'The winter capital of the King of Kings is Roman. Osroes\' golden throne and '
       + 'his daughter go west as trophies; Trajan sails down to the Persian Gulf and, '
       + 'watching a merchantman leave for India, says he would follow it — were he younger. '
@@ -199,6 +204,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_rivers_rise',
     title: 'The Rivers Rise',
+    requiresWar: ['ROM', 'PAR'],
     desc: 'Rome holds Mesopotamia the way a hand holds water. In Nehardea and along the '
       + 'canals the Jewish towns — the oldest diaspora of all, Babylon\'s own — rise '
       + 'behind the legions, and the whole occupied east goes up with them: Seleucia, '
@@ -227,6 +233,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_quietus',
     title: 'Quietus Unleashed',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Trajan gives Mesopotamia to Lusius Quietus, the Moorish cavalry prince who '
       + 'learned war raiding for and against Rome — with orders to clear the province of '
       + 'its rebels by whatever arithmetic he prefers. His methods will give this whole '
@@ -287,6 +294,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_reduction',
     title: 'The Reduction',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Village by village, canal by canal, Turbo grinds the Delta back into the '
       + 'empire — "many battles, in many manners," Eusebius writes, and after each one '
       + 'fewer rebels and fewer prisoners. A second fleet retakes the Cypriot ports '
@@ -346,6 +354,7 @@ export const EVENTS_115 = [
   {
     id: 'ev_k_withdrawal',
     title: 'The Frontier Comes Home',
+    requiresWar: ['ROM', 'PAR'],
     desc: 'Hadrian\'s first act is the one Trajan could never speak: Mesopotamia and '
       + 'Armenia are abandoned, the client kings restored, the legions pulled back to '
       + 'the Euphrates. "The first duty of a new prince," he writes, "is to know the '
@@ -459,6 +468,7 @@ export const EVENTS_115 = [
   {
     id: 'ev115_terms',
     title: 'The Fire Unquenched',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Egypt starves the wolf, Cyprus is a Jewish island, and the legions recalled '
       + 'from Parthia arrive to a war already lost. The new emperor offers what no '
       + 'Roman will read aloud: the eastern diaspora keeps the lands of the faith it '

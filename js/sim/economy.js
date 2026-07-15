@@ -2,7 +2,7 @@
 // DOM-free.
 
 import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, devTotal } from './military.js';
-import { blockadedBy } from './navy.js';
+import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
@@ -47,7 +47,8 @@ function ownIncome(ctx, tag) {
     const market = hasBuilding(p, 'market') ? 1.2 : 1;
     const autonomy = clamp(num(p.autonomy, 0.25), 0, 0.9);
     out.tax += num(p.dev && p.dev.tax) * (1 - autonomy) * (taxPerDev / 12) * provMult(p, 'taxMult') * market;
-    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * (prodMult / 12) * provMult(p, 'prodMult') * market;
+    const shipyard = hasBuilding(p, 'shipyard') ? 1.15 : 1;
+    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * (prodMult / 12) * provMult(p, 'prodMult') * market * shipyard;
   }
   out.mult = resolveTagMult(ctx, tag, 'incomeMult');
   out.base = out.tax + out.prod;
@@ -71,6 +72,15 @@ export function tradeIncome(ctx, tag) {
       if (r.sea && blockadedBy(ctx, id)) continue;
       sum += share * (r.chokepoint === stop ? 2 : 1);
     }
+  }
+  // A shipyard's civilian hulls earn at their home port. Occupation, siege and
+  // blockade halt the flow without deleting the long-lived investment.
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    const p = ctx.game.provinces[i];
+    const ships = Math.max(0, Math.round(num(p && p.merchantShips)));
+    if (!p || p.owner !== tag || p.controller !== tag || p.siege || !ships) continue;
+    if (!hasBuilding(p, 'shipyard') || blockadedBy(ctx, i)) continue;
+    sum += ships * MERCHANT_SHIP_INCOME;
   }
   // Influence tech widens the caravans' margins (tradeMult, SPEC §22).
   sum *= resolveTagMult(ctx, tag, 'tradeMult');

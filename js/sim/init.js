@@ -3,7 +3,7 @@
 
 import { createRng } from '../core/rng.js';
 import {
-  num, clamp, B, armiesOf, spawnArmy, removeArmy, changeOwnerCore, changeControllerCore,
+  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -21,6 +21,7 @@ import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS,
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
+  merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
@@ -614,15 +615,16 @@ export function gameActions(ctx) {
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
 
-  // Shared gating for the player army actions (split / hire general / modernize).
+  // Shared gating for the player army actions (split / hire / refit / disband).
   const armyActionInfo = (armyId) => {
     const out = {
       canSplit: false, whySplit: '', canHire: false, whyHire: '', hireCost: 50,
       canModernize: false, whyModernize: '', modernizeCost: 0, genName: '', newGenName: '',
+      canDisband: false, whyDisband: '', disbandReturn: 0,
     };
     const a = g.armies[armyId];
     if (!a || a.tag !== g.playerTag) {
-      out.whySplit = out.whyHire = out.whyModernize = 'That army does not answer to us.';
+      out.whySplit = out.whyHire = out.whyModernize = out.whyDisband = 'That army does not answer to us.';
       return out;
     }
     if (a.inBattle) out.whySplit = a.name + ' is locked in battle.';
@@ -641,6 +643,13 @@ export function gameActions(ctx) {
       out.genName = genName(num(a.gen, 0), 'inf');
       out.newGenName = genName(mi.unlocked, 'inf');
     } catch (e) { warnOnce('modInfo', 'modernizeInfo failed', e); }
+    if (a.inBattle) out.whyDisband = a.name + ' is locked in battle.';
+    else if (a.retreating || num(a.shatteredDays) > 0) out.whyDisband = a.name + ' must reform before standing down.';
+    else if (a.aboard) out.whyDisband = a.name + ' must disembark before standing down.';
+    const p = ctx.byId(a.prov);
+    out.disbandReturn = p && p.owner === a.tag && p.controller === a.tag
+      ? Math.max(0, Math.floor(num(a.men) * 0.75)) : 0;
+    out.canDisband = !out.whyDisband;
     return out;
   };
 
@@ -810,12 +819,14 @@ export function gameActions(ctx) {
         for (const key of Object.keys(catalog)) {
           const b = catalog[key];
           const marTech = num(t && t.tech && t.tech.mar);
+          const coastal = isCoastal(ctx, provId);
+          // Do not advertise inventions the realm cannot yet conceive, or
+          // coastal infrastructure in inland towns. They appear when relevant.
+          if (Number.isFinite(b.tech) && marTech < b.tech) continue;
+          if (b.coastal && !coastal) continue;
           let whyNot = '';
           if (built.indexOf(key) >= 0) whyNot = 'Already built.';
-          else if (Number.isFinite(b.tech) && marTech < b.tech) {
-            // Late works (SPEC §29): the airfield waits for the age of flight.
-            whyNot = 'Beyond this age: requires military tech ' + b.tech + ' (ours is ' + marTech + ').';
-          } else if (p.construction) whyNot = 'Another work is already under way.';
+          else if (p.construction) whyNot = 'Another work is already under way.';
           else if (key === 'walls' && (p.fort | 0) >= 3) whyNot = 'The fortress can rise no higher (fort 3).';
           else if (num(t && t.treasury) < num(b.cost)) whyNot = 'Not enough treasury (' + num(b.cost) + ' talents).';
           options.push({
@@ -843,6 +854,9 @@ export function gameActions(ctx) {
         }
         if (key === 'walls' && (p.fort | 0) >= 3) {
           say('Cannot build', 'The fortress of ' + p.name + ' can rise no higher (fort 3).', 'bad'); return;
+        }
+        if (b.coastal && !isCoastal(ctx, provId)) {
+          say('Cannot build', 'A ' + (b.name || key).toLowerCase() + ' needs a coastal harbor.', 'bad'); return;
         }
         if (Number.isFinite(b.tech) && num(t.tech && t.tech.mar) < b.tech) {
           say('Cannot build', 'The ' + (b.name || key).toLowerCase() + ' is beyond this age (military tech ' + b.tech + ' required).', 'bad'); return;
@@ -1004,6 +1018,19 @@ export function gameActions(ctx) {
         say('Army divided', (det ? det.name : 'A detachment') + ' takes the field beside ' + a.name + '.', 'info');
         return nid;
       } catch (e) { warnOnce('split', 'splitArmy failed', e); return 0; }
+    },
+    disbandArmy(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a || a.tag !== g.playerTag) return false;
+        const st = armyActionInfo(armyId);
+        if (!st.canDisband) { say('Cannot stand down', st.whyDisband, 'bad'); return false; }
+        const res = disbandArmyCore(ctx, a);
+        if (!res.ok) { say('Cannot stand down', res.why, 'bad'); return false; }
+        say('Army stood down', res.name + ' is disbanded; maintenance ends'
+          + (res.returned ? ', and ' + res.returned.toLocaleString() + ' men return to the manpower pool.' : '.'), 'info');
+        return true;
+      } catch (e) { warnOnce('disband', 'disbandArmy failed', e); return false; }
     },
     hireGeneral(armyId) {
       try {
@@ -1291,7 +1318,13 @@ export function gameActions(ctx) {
               canHireAdmiral: !f.admiral && num(g.tags[me].points && g.tags[me].points.mar) >= 50,
             };
           });
-        return { fleets };
+        const merchant = merchantShipsOf(ctx, me);
+        return {
+          fleets,
+          merchant,
+          merchantCount: merchant.reduce((sum, row) => sum + row.count, 0),
+          merchantActive: merchant.reduce((sum, row) => sum + (row.active ? row.count : 0), 0),
+        };
       } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
     },
     modernizeFleet(fleetId) {
@@ -1343,6 +1376,20 @@ export function gameActions(ctx) {
         const p = ctx.byId(provId | 0);
         say('A hull takes the water', 'A new ship joins ' + res.fleet.name + ' at ' + ((p && p.name) || 'port') + '.', 'good');
       } catch (e) { warnOnce('buildShip', 'buildShip failed', e); }
+    },
+    getMerchantShipInfo(provId) {
+      try { return merchantShipInfo(ctx, g.playerTag, provId | 0); }
+      catch (e) { warnOnce('merchantInfo', e); return { visible: false, can: false, why: 'Unavailable.' }; }
+    },
+    commissionMerchantShip(provId) {
+      try {
+        const p = ctx.byId(provId | 0);
+        const res = commissionMerchantShipCore(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('No merchantman today', res.why, 'bad'); return false; }
+        say('A merchantman takes the water', ((p && p.name) || 'The port') + ' now supports '
+          + res.count + ' of ' + res.cap + ' civilian ships (+' + res.incomeEach + ' trade each month while the harbor is open).', 'good');
+        return true;
+      } catch (e) { warnOnce('commissionMerchant', e); return false; }
     },
     moveFleet(fleetId, provId) {
       try {

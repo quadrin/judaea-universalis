@@ -160,7 +160,15 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The whole 39-suite verification battery ships in `tools/tests/`.
+  marching. The whole 41-suite verification battery ships in `tools/tests/`.
+- Armies can be stood down from the outliner when the treasury needs relief;
+  troops demobilized in controlled home territory mostly return to manpower.
+  Peace changes the event timeline too: later canonical battle phases retire
+  instead of firing after their war has already ended.
+- Coastal provinces can build shipyards and commission a five-berth merchant
+  marine. Civilian hulls earn trade while their home port is controlled, open,
+  and unblocked. Future infrastructure stays out of earlier building lists
+  until the required technology exists.
 - The 1948 chapter no longer freezes at Rhodes: the armed armistice suppresses
   random border wars while the Arab League's 1950 joint-defense treaty builds
   a mutual guarantee web, rival staffs slow coordination, and threatened states

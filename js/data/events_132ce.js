@@ -79,6 +79,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_aelia',
     title: 'Aelia Capitolina',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The emperor\'s surveyors have run their plough over the Temple Mount, marking '
       + 'the sacred furrow of a Roman colony: Aelia Capitolina, with a temple of Jupiter '
       + 'where the House of the Lord once stood. It is not desecration by accident or by a '
@@ -104,6 +105,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_decrees',
     title: 'The Decrees',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'To the colony is added the edict: the covenant of circumcision is forbidden, '
       + 'listed by the jurists beside castration, as though the mark of Abraham were a '
       + 'mutilation. The synagogues read the decree aloud in silence. There is no argument '
@@ -128,6 +130,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_prince_of_israel',
     title: 'A Star Out of Jacob',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Rabbi Akiva, the greatest of the sages, has seen Simon bar Kosiba and quoted '
       + 'Balaam\'s oracle: "A star shall come out of Jacob" — bar Kokhba, Son of the Star. '
       + 'Other sages answer that grass will grow from Akiva\'s chin before the son of David '
@@ -165,6 +168,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_rufus_response',
     title: 'The Governor Strikes Back',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Tineius Rufus has two legions on paper and rather less in fact, and a province '
       + 'where every road now runs through hostile hills. His officers urge reprisals — '
       + 'the old grammar of empire. His engineers urge camps, walls, and patience until '
@@ -195,6 +199,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_galilee_quiet',
     title: 'Galilee Does Not Rise',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The messengers went north with the Nasi\'s letters and came back with courtesies. '
       + 'Galilee remembers Jotapata and Tarichaea — sixty years is nothing in these hills — '
       + 'and its towns have made their peace with the world as it is. The war will be won '
@@ -217,6 +222,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_legion_lost',
     title: 'A Legion Struck from the Rolls',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The Twenty-Second, Deiotariana, marched up from Egypt into the hill country and '
       + 'has not marched anywhere since. No battle is named; no eagle is displayed in '
       + 'triumph; the legion simply ceases to appear in the army lists, which is the way '
@@ -245,6 +251,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_hadrian_summons',
     title: 'Severus Is Sent For',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Hadrian has stopped writing "I and the army are well" to the Senate, and has '
       + 'done something no emperor does lightly: pulled his best general off the edge of '
       + 'the world. Sextus Julius Severus leaves Britain with his staff and his methods, '
@@ -279,6 +286,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_severus_method',
     title: 'The Method of Severus',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Severus does not offer battle. He takes the war apart joint by joint: '
       + 'intercepting food, sealing wells, walling off districts, starving the hideouts '
       + 'cave by cave — slower than glory, and surer. Dio will write it plainly: he could '
@@ -317,6 +325,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_letters',
     title: 'Letters from the Nasi',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'His letters survive him: curt, practical, terrifying. "From Simon bar Kosiba: '
       + 'that you send the wheat, and if you do not, punishment will be exacted." "That '
       + 'you seize the men of Tekoa who repair their houses while the war is fought." He '
@@ -388,6 +397,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_akiva',
     title: 'The Martyrdom of Akiva',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'They took the old sage at Caesarea and combed his flesh with iron combs, and he '
       + 'died reciting the Shema, drawing out the word "One" until the breath went with it. '
       + 'His students asked, even now? He answered: all my life I wondered when I would be '
@@ -418,6 +428,7 @@ export const EVENTS_132 = [
   {
     id: 'ev2_betar',
     title: 'The Rock of Betar',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'What is left of the rising has gathered onto one spur of rock southwest of '
       + 'Jerusalem, where the Nasi holds his last court behind walls the engineers circle '
       + 'patiently with a wall of their own. The tradition will remember that Betar fell '
@@ -503,6 +514,7 @@ export const EVENTS_132 = [
   {
     id: 'ev132_terms',
     title: 'Rome Lets Go',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Dio\u2019s arithmetic wins the argument in the Senate: so many legions mauled, '
       + 'so many years, for hills that grow stones. Hadrian, older and ill, offers a '
       + 'tributary prince in Judea — circumcision unbanned, the colony unbuilt, the '

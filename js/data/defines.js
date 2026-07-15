@@ -347,6 +347,8 @@ export const DEFINES = {
     granary: { name: 'Granary', cost: 50,  months: 9,  desc: '+3 support limit; -1 attrition here' },
     walls:   { name: 'Walls',   cost: 100, months: 18, desc: '+1 fort level (max 3), +1,000 garrison' },
     shrine:  { name: 'Shrine',  cost: 40,  months: 9,  desc: '-1.5 local unrest' },
+    shipyard: { name: 'Shipyard', cost: 90, months: 14, coastal: true,
+      desc: 'A working harbor: local production +15%; commission up to 5 merchant ships' },
     // The age of flight (SPEC §29): gated on military tech, parks air wings.
     airfield: { name: 'Airfield', cost: 120, months: 10, tech: 19,
       desc: 'A runway and hangars: base up to 2 air wings, whose fighters cover battles nearby' },

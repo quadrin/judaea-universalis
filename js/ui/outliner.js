@@ -41,6 +41,16 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       if (!ma.classList.contains('disabled')) runArmyAction('mergeAllInto', Number(ma.dataset.mergeall));
       return;
     }
+    const da = e.target.closest('[data-disband]');
+    if (da) {
+      if (da.classList.contains('disabled')) return;
+      const row = da.closest('[data-army]');
+      const name = row && row.querySelector('.ol-name') ? row.querySelector('.ol-name').textContent.trim() : 'this army';
+      if (typeof globalThis.confirm === 'function'
+          && !globalThis.confirm('Stand down ' + name + '? This permanently removes the army and ends its maintenance cost.')) return;
+      runArmyAction('disbandArmy', Number(da.dataset.disband));
+      return;
+    }
     const mz = e.target.closest('[data-modernize]');
     if (mz) {
       if (!mz.classList.contains('disabled')) runArmyAction('modernizeArmy', Number(mz.dataset.modernize));
@@ -123,11 +133,15 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     const modTT = aa.canModernize
       ? `Modernize: re-equip ${aa.genName || 'the old pattern'} as ${aa.newGenName || 'the new pattern'} (${aa.modernizeCost} talents)`
       : (aa.genName ? `${aa.genName} — ` + (aa.whyModernize || 'nothing newer to re-equip to') : (aa.whyModernize || ''));
+    const disbandTT = aa.canDisband
+      ? `Stand down this army and end its upkeep${aa.disbandReturn ? `; ${fmtMen(aa.disbandReturn)} men return to manpower here` : '; no manpower returns outside controlled home territory'}`
+      : (aa.whyDisband || 'This army cannot stand down now');
     return `<span class="ol-acts">` +
       `<button class="ol-act${aa.canSplit ? '' : ' disabled'}" data-split="${a.id}" data-tt="${esc(splitTT)}">${icon('split')}</button>` +
       `<button class="ol-act${aa.canHire ? '' : ' disabled'}" data-hire="${a.id}" data-tt="${esc(hireTT)}">${icon('helmet')}</button>` +
       `<button class="ol-act" data-mergeall="${a.id}" data-tt="Merge every other army of ours in this province into this one">${icon('shield')}</button>` +
       `<button class="ol-act${aa.canModernize ? '' : ' disabled'}" data-modernize="${a.id}" data-tt="${esc(modTT)}">${icon('bricks')}</button>` +
+      `<button class="ol-act ol-disband${aa.canDisband ? '' : ' disabled'}" data-disband="${a.id}" data-tt="${esc(disbandTT)}">${icon('xmark')}</button>` +
       `</span>`;
   }
 
@@ -225,6 +239,16 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     + `</span>` : (f.aboardMen ? `<span class="ol-sub">${fmtMen(f.aboardMen)}</span>` : '')}
           </div>`;
       }
+    }
+    if (navy && navy.merchantCount > 0) {
+      const inactive = Math.max(0, navy.merchantCount - (navy.merchantActive || 0));
+      const tt = `${navy.merchantCount} civilian ship${navy.merchantCount === 1 ? '' : 's'} in the merchant marine`
+        + (inactive ? `\n${inactive} idle under occupation, siege or blockade` : '\nEvery home port is trading');
+      html += `<div class="ol-sec">Merchant Marine <span class="ol-count">${navy.merchantCount}</span></div>
+        <div class="ol-row ol-merchant" data-tt="${esc(tt)}">
+          <span class="ol-name">${icon('ship', 'icon-row')} Civilian shipping</span>
+          <span class="ol-sub">${navy.merchantActive || 0} active</span>
+        </div>`;
     }
 
     // Air wings (SPEC §31): squadrons at their fields, like armies in theirs
