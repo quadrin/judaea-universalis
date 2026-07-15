@@ -183,8 +183,10 @@ const RIVERS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Provinces. id = index + 1. 100 entries (95 canonical + wastelands, 4 fillers
-// within the current theater: Seleucia Trachea, Caesarea Mazaca, Susa, Gazaca).
+// Permanent land cells. id = index + 1. The first 104 IDs are the original
+// theater; modern southern-Levant cells are appended so old save IDs stay put.
+// A latentParent collapses a fine cell into an older administrative province
+// until a bookmark explicitly activates it (js/data/map_profile.js).
 // ---------------------------------------------------------------------------
 
 function P(name, lon, lat, weight, owner, terrain, good, religion, culture,
@@ -205,6 +207,7 @@ function P(name, lon, lat, weight, owner, terrain, good, religion, culture,
     if (extra.impassable) p.impassable = true;
     if (extra.habitation) p.habitation = extra.habitation;
     if (extra.settleable === false) p.settleable = false;
+    if (extra.latentParent) p.latentParent = extra.latentParent;
   }
   return p;
 }
@@ -340,6 +343,53 @@ const PROVINCES = [
   P('Assur', 43.26, 35.46, 0.90, 'ADI', 'drylands', 'livestock', 'zoroastrianism', 'aramean', 2, 2, 2, 0),
   P('Uruk', 45.63, 31.32, 1.05, 'PAR', 'farmland', 'dates', 'hellenism', 'aramean', 3, 4, 2, 0),
   P('Tayma', 38.55, 27.63, 1.40, 'NAB', 'desert', 'incense', 'nabataean', 'arab', 2, 2, 1, 0),
+
+  // --- v4.1 permanent southern-Levant cells -------------------------------
+  // These cells are invisible administrative subdivisions in the ancient
+  // bookmarks (their pixels, adjacency and clicks resolve to latentParent).
+  // The 1948 bookmark activates them as independent modern gameplay regions.
+  P('Safed', 35.50, 32.97, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 1, 1, 1, 0,
+    { latentParent: 'Gischala' }),
+  P('Nahariya', 35.09, 33.01, 0.65, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Ptolemais' }),
+  P('Afula', 35.29, 32.61, 0.68, 'ROM', 'farmland', 'grain', 'judaism', 'galilean', 1, 1, 1, 0,
+    { latentParent: 'Scythopolis' }),
+  P('Hadera', 34.92, 32.44, 0.62, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 1, 1, 1, 0,
+    { latentParent: 'Caesarea Maritima' }),
+  P('Netanya', 34.86, 32.32, 0.62, 'ROM', 'coast', 'fish', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Caesarea Maritima' }),
+  P('Herzliya', 34.84, 32.17, 0.58, 'JUD', 'coast', 'fish', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Joppa' }),
+  P('Kfar Saba', 34.91, 32.18, 0.58, 'ROM', 'farmland', 'olive_oil', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Antipatris' }),
+  P('Rishon LeZion', 34.79, 31.97, 0.58, 'ROM', 'farmland', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Jamnia' }),
+  P('Rehovot', 34.81, 31.89, 0.58, 'ROM', 'farmland', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Jamnia' }),
+  P("Modi'in Hills", 35.01, 31.93, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Emmaus' }),
+  P('Jenin', 35.30, 32.46, 0.66, 'ROM', 'hills', 'olive_oil', 'samaritanism', 'samaritan', 1, 1, 1, 0,
+    { latentParent: 'Neapolis' }),
+  P('Tulkarm', 35.03, 32.31, 0.62, 'ROM', 'farmland', 'olive_oil', 'samaritanism', 'samaritan', 1, 1, 1, 0,
+    { latentParent: 'Sebaste' }),
+  P('Qalqilya', 34.98, 32.19, 0.58, 'ROM', 'farmland', 'grain', 'samaritanism', 'samaritan', 1, 1, 1, 0,
+    { latentParent: 'Sebaste' }),
+  P('Ramallah', 35.20, 31.90, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Sebaste' }),
+  P('Bethlehem', 35.20, 31.70, 0.60, 'JUD', 'hills', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Hebron' }),
+  P('Beit Shemesh', 34.99, 31.75, 0.60, 'JUD', 'hills', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
+    { latentParent: 'Emmaus' }),
+  P('Kiryat Gat', 34.76, 31.61, 0.66, 'ROM', 'drylands', 'grain', 'hellenism', 'idumean', 1, 1, 1, 0,
+    { latentParent: 'Ascalon' }),
+  P('Beersheba', 34.79, 31.25, 0.72, 'NAB', 'drylands', 'livestock', 'nabataean', 'idumean', 1, 1, 1, 0,
+    { latentParent: 'Oboda' }),
+  P('Arad', 35.21, 31.26, 0.68, 'ROM', 'desert', 'salt', 'judaism', 'idumean', 1, 1, 1, 0,
+    { latentParent: 'Adora' }),
+  P('Khan Yunis', 34.30, 31.35, 0.70, 'ROM', 'coast', 'grain', 'hellenism', 'greek', 1, 1, 1, 0,
+    { latentParent: 'Gaza' }),
+  P('Rafah', 34.25, 31.28, 0.70, 'ROM', 'coast', 'grain', 'egyptian', 'egyptian', 1, 1, 1, 0,
+    { latentParent: 'Gaza' }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -463,6 +513,9 @@ export function validateMapData() {
       if (!CULTURE_KEYS.includes(p.culture)) warnings.push(`${p.name}: unknown culture '${p.culture}'`);
       if (p.habitation != null && !['uninhabited', 'frontier', 'rural', 'town', 'urban'].includes(p.habitation)) {
         warnings.push(`${p.name}: unknown habitation tier '${p.habitation}'`);
+      }
+      if (p.latentParent && (!names.has(p.latentParent) || p.latentParent === p.name)) {
+        warnings.push(`${p.name}: invalid latent parent '${p.latentParent}'`);
       }
       if (!(p.weight >= 0.5 && p.weight <= 2.5)) {
         warnings.push(`${p.name}: weight ${p.weight} outside sane range 0.5-2.5`);

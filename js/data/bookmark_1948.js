@@ -49,18 +49,24 @@ const ISR_LANDS = [
   'Tiberias', 'Tarichaea', 'Jotapata', 'Sepphoris',
   // west Jerusalem and the Dead Sea outposts
   'Jerusalem', 'Masada', 'Engaddi',
+  // independently rendered modern districts and cities
+  'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
+  'Rishon LeZion', 'Rehovot',
 ];
 const JOR_LANDS = [
   // the Arab Legion's positions and the kingdom proper
   'Emmaus', 'Lydda', 'Jericho', 'Hebron', 'Adora', 'Neapolis', 'Sebaste',
   'Gadora', 'Machaerus', 'Medaba', 'Philadelphia', 'Gerasa', 'Pella',
   'Gadara', 'Petra', 'Aila',
+  'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah', 'Bethlehem',
+  'Beit Shemesh', 'Arad',
 ];
 const EGY_LANDS = [
   // the expeditionary axis and Egypt itself
   'Gaza', 'Ascalon', 'Azotus', 'Rhinocolura', 'Oboda', 'Pelusium',
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos',
+  'Kiryat Gat', 'Beersheba', 'Khan Yunis', 'Rafah',
   // sovereign but still empty/impassable at this map scale
   'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
@@ -83,6 +89,16 @@ const TUR_LANDS = [
 const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma', 'Arabian Desert'];
 const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca'];
 const UK_LANDS = ['Salamis', 'Paphos'];
+
+// These permanent cells collapse into their ancient parents in every earlier
+// bookmark. In 1948 they become real provinces: distinct borders, clicks,
+// movement nodes, labels, ownership, development and victory-count land.
+const MODERN_PROVINCES = [
+  'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
+  'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
+  'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Beersheba', 'Arad',
+  'Khan Yunis', 'Rafah',
+];
 
 const OWNERS = {};
 for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
@@ -128,6 +144,30 @@ export const BOOKMARK_1948 = {
     + 'long as it can defend itself.',
 
   activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK'],
+  activeProvinces: MODERN_PROVINCES,
+  // One-time save migration: preserve any development the player added above
+  // the old coarse province baseline while redistributing that baseline among
+  // the new cells. Fresh campaigns already start at mapProfileVersion 1.
+  mapProfileMigration: {
+    version: 1,
+    previousDev: {
+      'Gischala': { tax: 3, prod: 3, mp: 3 },
+      'Ptolemais': { tax: 5, prod: 5, mp: 4 },
+      'Scythopolis': { tax: 4, prod: 5, mp: 3 },
+      'Caesarea Maritima': { tax: 6, prod: 7, mp: 4 },
+      'Joppa': { tax: 12, prod: 10, mp: 8 },
+      'Antipatris': { tax: 6, prod: 6, mp: 5 },
+      'Jamnia': { tax: 3, prod: 3, mp: 3 },
+      'Emmaus': { tax: 3, prod: 3, mp: 3 },
+      'Neapolis': { tax: 4, prod: 4, mp: 4 },
+      'Sebaste': { tax: 4, prod: 4, mp: 3 },
+      'Hebron': { tax: 3, prod: 3, mp: 3 },
+      'Ascalon': { tax: 4, prod: 4, mp: 3 },
+      'Oboda': { tax: 1, prod: 3, mp: 1 },
+      'Adora': { tax: 3, prod: 3, mp: 3 },
+      'Gaza': { tax: 4, prod: 5, mp: 3 },
+    },
+  },
 
   owners: OWNERS,
   religions: RELIGIONS,
@@ -137,11 +177,12 @@ export const BOOKMARK_1948 = {
   // these are what the labels, panels and toasts show.
   provinceNames: {
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
-    'Ptolemais': 'Acre', 'Jamnia': 'Yavne', 'Lydda': 'Lod', 'Emmaus': 'Latrun',
+    'Ptolemais': 'Acre', 'Caesarea Maritima': 'Caesarea', 'Jamnia': 'Yavne',
+    'Lydda': 'Lod', 'Emmaus': 'Latrun',
     'Sepphoris': 'Nazareth', 'Jotapata': 'Yodfat', 'Tarichaea': 'Migdal',
-    'Gischala': 'Safed', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
+    'Gischala': 'Jish', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
     'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod', 'Neapolis': 'Nablus',
-    'Sebaste': 'Samaria', 'Gadora': 'Salt', 'Machaerus': 'Karak',
+    'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Karak',
     'Medaba': 'Madaba', 'Philadelphia': 'Amman', 'Gerasa': 'Jerash',
     'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'Nitzana',
     'Caesarea Philippi': 'Banias', 'Batanea': 'Quneitra', 'Gamala': 'Golan',
@@ -162,7 +203,7 @@ export const BOOKMARK_1948 = {
     'Athribis': 'Benha', 'Memphis': 'Cairo', 'Arsinoe': 'Faiyum',
     'Oxyrhynchus': 'Minya', 'Thebes': 'Luxor', 'Myos Hormos': 'Hurghada',
     'Salamis': 'Famagusta', 'Hegra': 'Hejaz', 'Dumatha': 'Al-Jawf',
-    'Tayma': 'Tayma', 'Petra': 'Ma\'an',
+    'Tayma': 'Tayma', 'Petra': 'Ma\'an', 'Beersheba': 'Be\'er Sheva',
   },
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient
@@ -170,7 +211,7 @@ export const BOOKMARK_1948 = {
   // No Temple stands in 1948 — only the Western Wall remains (SPEC §32).
   wonderTweaks: { Jerusalem: null },
   devTweaks: {
-    'Joppa': { tax: 12, prod: 10, mp: 8 },        // Tel Aviv
+    'Joppa': { tax: 12, prod: 7, mp: 6 },         // Tel Aviv
     'Dora': { tax: 8, prod: 9, mp: 6 },           // Haifa & the port
     'Jerusalem': { tax: 9, prod: 6, mp: 6 },
     'Memphis': { tax: 14, prod: 11, mp: 10 },     // Cairo
@@ -181,18 +222,63 @@ export const BOOKMARK_1948 = {
     'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
     'Philadelphia': { tax: 6, prod: 5, mp: 5 },   // Amman
     'Charax': { tax: 7, prod: 7, mp: 5 },         // Basra
-    'Ptolemais': { tax: 5, prod: 5, mp: 4 },      // Acre
-    'Antipatris': { tax: 6, prod: 6, mp: 5 },     // Petah Tikva & the plain
+    'Gischala': { tax: 1, prod: 1, mp: 1 },       // Jish, no longer a Safed alias
+    'Ptolemais': { tax: 4, prod: 4, mp: 3 },      // Acre
+    'Scythopolis': { tax: 3, prod: 4, mp: 2 },    // Beit She'an & the valley
+    'Caesarea Maritima': { tax: 3, prod: 3, mp: 2 },
+    'Antipatris': { tax: 5, prod: 5, mp: 4 },     // Petah Tikva & the plain
+    'Jamnia': { tax: 1, prod: 1, mp: 1 },
+    'Emmaus': { tax: 1, prod: 1, mp: 1 },
+    'Neapolis': { tax: 3, prod: 3, mp: 3 },       // Nablus
+    'Sebaste': { tax: 1, prod: 1, mp: 1 },
+    'Hebron': { tax: 2, prod: 2, mp: 2 },
+    'Ascalon': { tax: 3, prod: 3, mp: 2 },        // Ashkelon
+    'Oboda': { tax: 1, prod: 1, mp: 0 },          // Nitzana
+    'Adora': { tax: 2, prod: 2, mp: 2 },          // Dura
+    'Gaza': { tax: 2, prod: 2, mp: 2 },
     'Iconium': { tax: 8, prod: 7, mp: 7 },        // Konya
     'Tarsus': { tax: 7, prod: 7, mp: 6 },         // Adana plain
     'Ecbatana': { tax: 8, prod: 7, mp: 7 },       // Hamadan
     'Susa': { tax: 8, prod: 9, mp: 6 },           // Ahvaz & the oil
+    // The following are subdivisions, not newly created wealth: their parent
+    // province's old total is redistributed across the active modern cells.
+    'Safed': { tax: 2, prod: 2, mp: 2 },
+    'Nahariya': { tax: 1, prod: 1, mp: 1 },
+    'Afula': { tax: 1, prod: 1, mp: 1 },
+    'Hadera': { tax: 1, prod: 1, mp: 1 },
+    'Netanya': { tax: 2, prod: 2, mp: 2 },
+    'Herzliya': { tax: 2, prod: 2, mp: 1 },
+    'Kfar Saba': { tax: 1, prod: 1, mp: 1 },
+    'Rishon LeZion': { tax: 1, prod: 1, mp: 1 },
+    'Rehovot': { tax: 1, prod: 1, mp: 1 },
+    'Modi\'in Hills': { tax: 1, prod: 1, mp: 1 },
+    'Jenin': { tax: 1, prod: 1, mp: 1 },
+    'Tulkarm': { tax: 1, prod: 1, mp: 1 },
+    'Qalqilya': { tax: 1, prod: 1, mp: 0 },
+    'Ramallah': { tax: 1, prod: 1, mp: 1 },
+    'Bethlehem': { tax: 1, prod: 1, mp: 1 },
+    'Beit Shemesh': { tax: 1, prod: 1, mp: 1 },
+    'Kiryat Gat': { tax: 1, prod: 1, mp: 1 },
+    'Beersheba': { tax: 1, prod: 1, mp: 1 },
+    'Arad': { tax: 1, prod: 1, mp: 1 },
+    'Khan Yunis': { tax: 1, prod: 1, mp: 1 },
+    'Rafah': { tax: 1, prod: 1, mp: 1 },
+  },
+
+  // Several familiar modern Israeli cities did not yet exist in May 1948.
+  // Their land is sovereign and playable, but starts as frontier rather than
+  // being back-filled with the population it gains later.
+  habitation: {
+    'Modi\'in Hills': 'frontier',
+    'Beit Shemesh': 'frontier',
+    'Kiryat Gat': 'frontier',
+    'Arad': 'frontier',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
     ISR: [
-      'Win: end the war holding 16+ provinces including Jerusalem (the greater verdict), or 11+ (the armistice lines).',
+      'Win: end the war holding 25+ provinces including Jerusalem (the greater verdict), or 20+ (the armistice lines).',
       'Air power decides late wars: airfields, wings, and bombing raids are yours from military tech 19.',
       'Lose: the state overrun in its first year.',
     ],
@@ -562,7 +648,7 @@ export const BOOKMARK_1948 = {
       const warOver = !findWar(g, 'EGY', 'ISR');
 
       if (g.playerTag === 'ISR') {
-        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 16 && h.controls(ctx, 'ISR', 'Jerusalem')) {
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 25 && h.controls(ctx, 'ISR', 'Jerusalem')) {
           h.endGame(ctx, {
             result: 'win',
             title: 'From Dan to Eilat',
@@ -574,7 +660,7 @@ export const BOOKMARK_1948 = {
           });
           return;
         }
-        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 11) {
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 20) {
           h.endGame(ctx, {
             result: 'win',
             title: 'Independence',
@@ -585,7 +671,7 @@ export const BOOKMARK_1948 = {
           });
           return;
         }
-        if (!isrAlive || (isrProvs < 4 && dateGE(g.date, 1948, 9))) {
+        if (!isrAlive || (isrProvs < 7 && dateGE(g.date, 1948, 9))) {
           h.endGame(ctx, {
             result: 'loss',
             title: 'The State Strangled',

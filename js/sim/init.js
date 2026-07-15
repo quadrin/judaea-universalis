@@ -31,6 +31,7 @@ import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
+import { buildProvinceMapping } from '../data/map_profile.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -47,8 +48,70 @@ function inferredHabitation(owner, dev) {
   return 'rural';
 }
 
+function bookmarkField(bookmark, field, source, inheritParent = true) {
+  const table = bookmark && bookmark[field];
+  if (!table || !source) return undefined;
+  if (Object.prototype.hasOwnProperty.call(table, source.name)) return table[source.name];
+  if (inheritParent && source.latentParent
+      && Object.prototype.hasOwnProperty.call(table, source.latentParent)) {
+    return table[source.latentParent];
+  }
+  return undefined;
+}
+
+function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
+  const s = source || {};
+  let x = 0, y = 0;
+  const c = geom && geom.centroids && geom.centroids[id];
+  if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) {
+    x = c.x; y = c.y;
+  } else if (MAP_DATA && typeof MAP_DATA.project === 'function') {
+    const xy = MAP_DATA.project(num(s.lon), num(s.lat));
+    x = num(xy && xy[0]); y = num(xy && xy[1]);
+  }
+
+  const impassableOverride = bookmarkField(bookmark, 'impassable', s);
+  const impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!s.impassable;
+  const fort = Math.max(0, s.fort | 0);
+  const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
+  const eraName = bookmarkField(bookmark, 'provinceNames', s, false) || null;
+  const dt = bookmarkField(bookmark, 'devTweaks', s) || null;
+  const owner = bookmarkField(bookmark, 'owners', s) || s.owner || 'WASTE';
+  const dev = {
+    tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
+    prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
+    mp: num(dt && dt.mp, num(s.dev && s.dev.mp)),
+  };
+  const habitation = bookmarkField(bookmark, 'habitation', s)
+    || s.habitation || inferredHabitation(owner, dev);
+  const settleableOverride = bookmarkField(bookmark, 'settleable', s);
+
+  return {
+    id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
+    terrain: s.terrain, good: s.good,
+    religion: bookmarkField(bookmark, 'religions', s) || s.religion,
+    culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
+    dev,
+    owner,
+    controller: owner,
+    habitation,
+    settleable: typeof settleableOverride === 'boolean' ? settleableOverride : s.settleable !== false,
+    autonomy: 0.25, unrest: 0, revoltProgress: 0,
+    fort, garrison: maxGarrison, maxGarrison,
+    siege: null, modifiers: [],
+    buildings: [], construction: null,
+    unitQueue: [],
+    conversion: null,
+    holy: s.holy || null,
+    wonder: (bookmark && bookmark.wonderTweaks
+      && Object.prototype.hasOwnProperty.call(bookmark.wonderTweaks, s.name))
+      ? bookmark.wonderTweaks[s.name] : (s.wonder || null),
+    impassable,
+  };
+}
+
 // ------------------------------------------------------------------ initGame
-export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed }) {
+export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed, provinceMap }) {
   const start = (bookmark && bookmark.startDate) || { y: 66, m: 6, d: 1 };
   const game = {
     bookmarkId: (bookmark && bookmark.id) || '66ce',
@@ -72,61 +135,14 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
   };
 
   const srcProvs = (MAP_DATA && MAP_DATA.provinces) || [];
+  const activeMap = provinceMap || buildProvinceMapping(MAP_DATA, bookmark);
+  game.mapProfileVersion = 1;
   for (let i = 0; i < srcProvs.length; i++) {
-    const s = srcProvs[i] || {};
     const id = i + 1;
-    let x = 0, y = 0;
-    const c = geom && geom.centroids && geom.centroids[id];
-    if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) {
-      x = c.x; y = c.y;
-    } else if (MAP_DATA && typeof MAP_DATA.project === 'function') {
-      const xy = MAP_DATA.project(num(s.lon), num(s.lat));
-      x = num(xy && xy[0]); y = num(xy && xy[1]);
-    }
-    // Terrain no longer implies political emptiness or impassability. Those
-    // are cell state: a wasteland may be claimed, crossed, or settled later.
-    const impassable = !!s.impassable;
-    const fort = Math.max(0, s.fort | 0);
-    const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
-    // bookmark.provinceNames renames places for far eras (Joppa → Tel Aviv-Jaffa);
-    // p.canon keeps the map's canonical key, and makeCtx aliases both in prov().
-    const eraName = (bookmark && bookmark.provinceNames && bookmark.provinceNames[s.name]) || null;
-    const dt = (bookmark && bookmark.devTweaks && bookmark.devTweaks[s.name]) || null;
-    const owner = (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE';
-    const dev = {
-      tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
-      prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
-      mp: num(dt && dt.mp, num(s.dev && s.dev.mp)),
-    };
-    const habitation = (bookmark && bookmark.habitation && bookmark.habitation[s.name])
-      || s.habitation || inferredHabitation(owner, dev);
-    game.provinces.push({
-      id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
-      terrain: s.terrain, good: s.good,
-      // bookmark.religions / bookmark.cultures overlay the map's 66 CE faith
-      // and tongue for far-era bookmarks (SPEC §22: 614 CE, 1948 CE)
-      religion: (bookmark && bookmark.religions && bookmark.religions[s.name]) || s.religion,
-      culture: (bookmark && bookmark.cultures && bookmark.cultures[s.name]) || s.culture,
-      dev,
-      // bookmark.owners overrides the map's default (66 CE) political layer
-      owner,
-      controller: owner,
-      habitation,
-      settleable: s.settleable !== false,
-      autonomy: 0.25, unrest: 0, revoltProgress: 0,
-      fort, garrison: maxGarrison, maxGarrison,
-      siege: null, modifiers: [],
-      buildings: [], construction: null, // {key, monthsLeft} while building
-      unitQueue: [], // FIFO land/ship/air recruitment orders
-      conversion: null, // {by, monthsLeft} while converting to the state faith
-      // bookmark.wonderTweaks (SPEC §32): eras where a wonder is rubble —
-      // the Temple burned in 70 CE, so the later bookmarks bare the Mount
-      // (a mission may raise the Third House and set it back).
-      holy: s.holy || null,
-      wonder: (bookmark && bookmark.wonderTweaks && s.name in bookmark.wonderTweaks)
-        ? bookmark.wonderTweaks[s.name] : (s.wonder || null),
-      impassable,
-    });
+    if (activeMap[id] !== id) { game.provinces.push(null); continue; }
+    game.provinces.push(makeProvinceState({
+      DEFINES, MAP_DATA, geom, bookmark, source: srcProvs[i], id,
+    }));
   }
 
   // Tags absent from a bookmark (e.g. Rome in 167 BCE) never enter play.
@@ -193,7 +209,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
 }
 
 // ------------------------------------------------------------------ makeCtx
-export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }) {
+export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, provinceMap }) {
   const nameToId = new Map();
   for (let i = 1; i < game.provinces.length; i++) {
     const p = game.provinces[i];
@@ -207,7 +223,7 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
   game.rngState = rngStart;
   const rng = createRng(rngStart, (state) => { game.rngState = state; });
   const ctx = {
-    game, DEFINES, MAP_DATA, geom, bus, bookmark, events,
+    game, DEFINES, MAP_DATA, geom, bus, bookmark, events, provinceMap,
     dynEvents: new Map(), // runtime-synthesized events (succession cards); never saved
     rng,
     helpers: simHelpers,
@@ -1979,6 +1995,57 @@ export function gameActions(ctx) {
 // ------------------------------------------------------------------ save/load
 // The game object is plain data by construction (SPEC §6.2); reviveGame merges
 // schema defaults so saves from older versions load after fields are added.
+export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark, provinceMap }) {
+  if (!game || !Array.isArray(game.provinces)) return provinceMap || null;
+  const srcProvs = (MAP_DATA && MAP_DATA.provinces) || [];
+  const activeMap = provinceMap || buildProvinceMapping(MAP_DATA, bookmark);
+  const migration = bookmark && bookmark.mapProfileMigration;
+  const migrationVersion = Math.max(0, num(migration && migration.version, 0) | 0);
+  const upgrading = Math.max(0, num(game.mapProfileVersion, 0) | 0) < migrationVersion;
+  const wantedLength = srcProvs.length + 1;
+  if (game.provinces.length < wantedLength) game.provinces.length = wantedLength;
+
+  for (let id = 1; id < wantedLength; id++) {
+    const source = srcProvs[id - 1] || {};
+    if (activeMap[id] !== id) {
+      // Latent cells are part of their historical parent in this bookmark and
+      // must not quietly add income, armies, borders, or victory-count land.
+      game.provinces[id] = null;
+      continue;
+    }
+
+    let p = game.provinces[id];
+    if (!p) {
+      p = makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id });
+      game.provinces[id] = p;
+    } else {
+      // Geometry and display names are map-profile data, not campaign state.
+      // Refreshing them also prevents an old 1948 save from retaining the old
+      // Gischala-as-Safed alias after Safed becomes its own province.
+      const c = geom && geom.centroids && geom.centroids[id];
+      if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) { p.x = c.x; p.y = c.y; }
+      p.canon = source.name || p.canon || p.name;
+      p.name = bookmarkField(bookmark, 'provinceNames', source, false) || source.name || p.name;
+      const previousDev = upgrading && migration && migration.previousDev
+        && migration.previousDev[source.name];
+      if (previousDev) {
+        const baseline = bookmarkField(bookmark, 'devTweaks', source) || source.dev || {};
+        const current = p.dev || {};
+        p.dev = {
+          tax: num(baseline.tax) + Math.max(0, num(current.tax) - num(previousDev.tax)),
+          prod: num(baseline.prod) + Math.max(0, num(current.prod) - num(previousDev.prod)),
+          mp: num(baseline.mp) + Math.max(0, num(current.mp) - num(previousDev.mp)),
+        };
+      }
+    }
+  }
+
+  if (!game.ui) game.ui = {};
+  if (!game.provinces[game.ui.selectedProv]) game.ui.selectedProv = 0;
+  game.mapProfileVersion = Math.max(1, migrationVersion);
+  return activeMap;
+}
+
 export const SAVE_VERSION = 1;
 export function reviveGame(saved) {
   if (!saved || typeof saved !== 'object' || !saved.tags || !saved.provinces) return null;

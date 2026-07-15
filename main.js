@@ -2,6 +2,7 @@
 // every cross-module API (see SPEC.md §10). Modules must load unmodified under it.
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
+import { buildProvinceMapping } from './js/data/map_profile.js';
 import { EVENTS_66 } from './js/data/events_66ce.js';
 import { BOOKMARK_66 } from './js/data/bookmark_66ce.js';
 import { EVENTS_167 } from './js/data/events_167bce.js';
@@ -26,7 +27,9 @@ import { computeGeometry } from './js/map/geometry.js';
 import { computeMapmodeColors } from './js/map/mapmodes.js';
 import { createOverlay } from './js/map/overlay.js';
 import { createLabels } from './js/map/labels.js';
-import { initGame, makeCtx, gameActions, reviveGame, SAVE_VERSION } from './js/sim/init.js';
+import {
+  initGame, makeCtx, gameActions, reviveGame, reconcileGameProvinces, SAVE_VERSION,
+} from './js/sim/init.js';
 import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
@@ -43,13 +46,27 @@ async function boot() {
   const container = document.getElementById('map-container');
 
   const renderer = await initRenderer(canvas, MAP_DATA, DEFINES);
-  const geom = computeGeometry(renderer.idArray, MAP_DATA);
+  let provinceMap = buildProvinceMapping(MAP_DATA, null);
+  renderer.setProvinceMapping(provinceMap);
+  const geom = computeGeometry(renderer.idArray, MAP_DATA, provinceMap);
+  let mapProfileKey = '';
+  function applyMapProfile(bookmark) {
+    const active = (bookmark && bookmark.activeProvinces) || [];
+    const nextKey = active.slice().sort().join('|');
+    if (nextKey === mapProfileKey) return provinceMap;
+    provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
+    renderer.setProvinceMapping(provinceMap);
+    Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap));
+    mapProfileKey = nextKey;
+    return provinceMap;
+  }
   const camera = createCamera(container, MAP_DATA);
   const overlay = createOverlay(overlayCanvas, geom, MAP_DATA, DEFINES);
   const labels = createLabels(labelsEl, MAP_DATA, geom);
 
   const staticCtx = { DEFINES, MAP_DATA, geom, bus, renderer, camera, overlay, labels };
   window._camera = camera; // debug/test handle
+  window._renderer = renderer;
   const ui = initUI(staticCtx);
 
   let ctx = null;
@@ -90,7 +107,14 @@ async function boot() {
   let activeEntry = BOOKMARKS[0];
   function startGame(game, entry, wrapActions) {
     activeEntry = entry;
-    ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark, events: entry.events });
+    const activeProvinceMap = applyMapProfile(entry.bookmark);
+    reconcileGameProvinces({
+      game, DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, provinceMap: activeProvinceMap,
+    });
+    ctx = makeCtx({
+      game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark,
+      events: entry.events, provinceMap: activeProvinceMap,
+    });
     actions = gameActions(ctx);
     if (wrapActions) actions = wrapActions(actions);
     ui.bindGame(ctx, actions);
@@ -216,9 +240,11 @@ async function boot() {
   }
 
   function startMultiplayerHost(entry, hostTag, guests) {
+    const activeProvinceMap = applyMapProfile(entry.bookmark);
     const game = initGame({
       DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
       playerTag: hostTag, rngSeed: (Date.now() % 2147483647) || 1,
+      provinceMap: activeProvinceMap,
     });
     game.humanTags = [hostTag].concat(guests.map((g) => g.tag))
       .filter((t, i, a) => a.indexOf(t) === i);
@@ -338,7 +364,11 @@ async function boot() {
   };
   ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag) => {
     const entry = byId(bookmark.id);
-    const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events, playerTag, rngSeed: 20260711 });
+    const activeProvinceMap = applyMapProfile(entry.bookmark);
+    const game = initGame({
+      DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
+      playerTag, rngSeed: 20260711, provinceMap: activeProvinceMap,
+    });
     startGame(game, entry);
   }, saved ? {
     label: (savedTag ? savedTag.name : saved.game.playerTag) + ', '
