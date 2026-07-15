@@ -1578,3 +1578,24 @@ foreign court **read-only**.
   coastal shipyards, merchant persistence, and trade income. `uitest20.mjs`
   owns panel width, ancient building visibility, merchant commissioning, and
   the confirmed stand-down control.
+
+## 38. v3.8: the open table — the map negotiates
+
+- **The peace card docks left** (`#peace-modal` overrides in styles.css): no
+  scrim, `pointer-events: none` on the container, the card at the panel slot
+  (12px, 56px) with its own scroll — the map stays fully visible for the
+  whole negotiation. The war overview keeps its centered card and scrim;
+  the overrides are the peace table's alone.
+- **Map clicks negotiate** (`peaceProvToggle` bridge in ui.js): while the
+  table is open, clicking a demandable province on the map writes it into
+  the deal — the checkbox follows — and clicking it again strikes it from
+  the terms. Every other map click is inert (no selections, no panels, no
+  battle windows): the envoys have the floor until they are recalled (Esc
+  or the button — the scrim click-away is gone with the scrim).
+- **The terms read off the map** (`game.ui.peaceSelected`, mapmodes.js):
+  provinces on the table keep their gold pulse; the ones already written
+  into the deal burn SOLID gold, so the shape of the peace is visible at a
+  glance. A hint line under the title teaches the interaction.
+- **Verified**: `uitest22.mjs` — the docked card, the missing scrim, the
+  map toggle round-trip (checkbox + peaceSelected + cost line), inert
+  off-table clicks, and the war overview keeping its scrim.

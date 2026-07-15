@@ -227,11 +227,15 @@ export function computeMapmodeColors(ctx, mode) {
     }
 
     // While the peace dialog is open, the provinces on the table pulse gold in
-    // every mapmode (ui.js sets game.ui.peaceHighlight to the demandable ids).
+    // every mapmode (ui.js sets game.ui.peaceHighlight to the demandable ids);
+    // the ones already written into the deal (game.ui.peaceSelected) burn
+    // solid gold so the terms can be read straight off the map.
     const hl = game.ui && game.ui.peaceHighlight;
     if (Array.isArray(hl) && hl.indexOf(id) >= 0 && !p.impassable) {
       cB = CLAIM_GOLD;
       fl |= 1 | 4;
+      const sel = game.ui.peaceSelected;
+      if (Array.isArray(sel) && sel.indexOf(id) >= 0) cA = CLAIM_GOLD;
     }
 
     setRGB(primary, id, cA);

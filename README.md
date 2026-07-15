@@ -214,6 +214,10 @@ python3 -m http.server 8613 --directory .
   chapter's verdict is in, a freshly declared war refuses white peace for a
   year unless the aggressor is actually losing, and defying Persia over
   Jerusalem in 614 brings a punitive column to your border, not a paper war.
+- The peace table stands beside the map, not over it: the terms card docks
+  to the left with no dimming scrim, and the map itself negotiates — click
+  a gold-pulsing occupied province to demand it (it burns solid gold in the
+  deal), click again to strike it from the terms.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a generative score that improvises on a breathing
