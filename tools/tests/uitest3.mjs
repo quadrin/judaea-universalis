@@ -37,6 +37,27 @@ ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil w
 ok(await page.locator('[data-ref="import"]').isVisible(), 'Import save button on start screen');
 ok(!(await page.locator('[data-ref="export"]').count()), 'no Export button without a save');
 
+const expectedRosters = [
+  ['HAS'],
+  ['HYR', 'ARI'],
+  ['HER', 'ATG'],
+  ['JUD'],
+  ['JUD'],
+  ['JUD'],
+  ['JUD'],
+  ['ISR'],
+];
+for (let i = 0; i < expectedRosters.length; i++) {
+  await page.locator(`.ss-dot[data-dot="${i}"]`).click();
+  await page.locator('.bm-card.current').click();
+  await page.waitForSelector('.nation-card');
+  const tags = await page.locator('.nation-card').evaluateAll((els) => els.map((el) => el.dataset.tag));
+  ok(JSON.stringify(tags) === JSON.stringify(expectedRosters[i]),
+    `bookmark ${i + 1} has the Jewish-only roster: ${tags.join(',')}`);
+  await page.locator('.ss-back').first().click();
+  await page.waitForSelector('.bm-card.current');
+}
+
 // ---- boot 66 CE as JUD -----------------------------------------------------
 await pickBookmark(page, 'Great Revolt');
 await page.waitForSelector('.nation-card');
@@ -123,7 +144,9 @@ const hostId = await page.evaluate(() => {
 await page.locator('.ol-row.ol-army', { hasText: 'Host of Jerusalem' }).click(); // real selection path
 await page.waitForTimeout(200);
 ok(await page.locator(`[data-mergeall="${hostId}"]`).isVisible(), 'merge-all button on selected army');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator(`[data-mergeall="${hostId}"]`).click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(200);
 const merged = await page.evaluate((id) => {
   const g = window._ctx.game;

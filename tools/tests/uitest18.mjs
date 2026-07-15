@@ -68,7 +68,9 @@ await page.waitForTimeout(300);
 await page.locator('#outliner [data-battle]').first().click();
 await page.waitForSelector('#battle-modal:not(.hidden)');
 ok((await page.locator('[data-ref="withdraw"]').count()) === 1, 'the Withdraw button stands');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('[data-ref="withdraw"]').click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(300);
 const after = await page.evaluate(() => {
   const a = window._ctx.game.armies[window._doomedId];

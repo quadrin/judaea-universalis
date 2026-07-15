@@ -46,7 +46,9 @@ await page.locator('.tb-flag').click(); await page.waitForTimeout(150);
 await page.locator('.tb-flag').click(); await page.waitForTimeout(300); // reopen to re-render
 const govBtn = page.locator('[data-tech="gov"]');
 ok(!(await govBtn.getAttribute('class')).includes('disabled'), 'Advance button live with 999 points');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await govBtn.click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(300);
 const lvl = await page.evaluate(() => window._ctx.game.tags.JUD.tech.gov);
 ok(lvl === 6, 'government tech now 6');
@@ -75,7 +77,9 @@ await page.waitForTimeout(400);
 const mzBtn = page.locator(`[data-modernize="${setup.id}"]`);
 ok(await mzBtn.count() === 1, 'Modernize button rendered on the selected army');
 ok(!(await mzBtn.getAttribute('class')).includes('disabled'), 'it is affordable and live');
+await page.evaluate(() => { window._ctx.game.paused = false; });
 await mzBtn.click();
+await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(300);
 const after = await page.evaluate((id) => ({
   gen: window._ctx.game.armies[id].gen,

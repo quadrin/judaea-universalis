@@ -11,6 +11,7 @@ const { initGame, makeCtx, gameActions, reviveGame } = await import(R + '/js/sim
 const mil = await import(R + '/js/sim/military.js');
 const eco = await import(R + '/js/sim/economy.js');
 const tech = await import(R + '/js/data/tech.js');
+const { monthlyRecruitment } = await import(R + '/js/sim/recruitment.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -83,12 +84,16 @@ isr.treasury = 500;
 const noField = mil.raiseAirWing(ctx, 'ISR', home);
 ok(!noField.ok && /airfield/.test(noField.why), 'air wings wait for a completed airfield: ' + noField.why);
 p0.buildings.push('airfield');
-const r1 = mil.raiseAirWing(ctx, 'ISR', home);
-ok(r1.ok && game.airwings[r1.wing.id], 'a wing forms: ' + r1.wing.name);
+const q1 = mil.raiseAirWing(ctx, 'ISR', home);
+for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
+const r1 = { ...q1, wing: Object.values(game.airwings)[0] };
+ok(r1.ok && r1.wing && game.airwings[r1.wing.id], 'a wing forms after training: ' + (r1.wing && r1.wing.name));
 ok(isr.treasury === 500 - (DEFINES.AIR.wingCost || 40), 'the wing was paid for: ' + isr.treasury);
-const r2 = mil.raiseAirWing(ctx, 'ISR', home);
+const q2 = mil.raiseAirWing(ctx, 'ISR', home);
 const r3 = mil.raiseAirWing(ctx, 'ISR', home);
-ok(r2.ok && !r3.ok && /full/.test(r3.why), 'the hangars cap at ' + DEFINES.AIR.wingsPerField + ': ' + r3.why);
+ok(q2.ok && !r3.ok && /full/.test(r3.why), 'completed and queued wings reserve all ' + DEFINES.AIR.wingsPerField + ' hangars: ' + r3.why);
+for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
+const r2 = { ...q2, wing: Object.values(game.airwings).find((w) => w.id !== r1.wing.id) };
 // upkeep rides the maintenance line
 const bd = eco.incomeBreakdown(ctx, 'ISR');
 const bdNoWings = (() => {

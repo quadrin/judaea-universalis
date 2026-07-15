@@ -13,6 +13,7 @@ const { initGame, makeCtx, gameActions, reviveGame } = await import(R + '/js/sim
 const mil = await import(R + '/js/sim/military.js');
 const navy = await import(R + '/js/sim/navy.js');
 const tech = await import(R + '/js/data/tech.js');
+const { monthlyRecruitment } = await import(R + '/js/sim/recruitment.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -98,9 +99,10 @@ console.log('== hulls speak the age ==');
   sel.treasury = 500;
   port.buildings = Array.from(new Set([...(port.buildings || []), 'shipyard']));
   const b1 = navy.buildShipCore(ctx, 'SEL', port.id);
-  ok(b1.ok && Number.isFinite(b1.fleet.gen) && b1.fleet.gen === navy.navalGen(ctx, 'SEL'),
-    'the hull is laid down to the age’s pattern: gen ' + b1.fleet.gen + ' (' + tech.navalGenName(b1.fleet.gen) + ')');
-  const f = b1.fleet;
+  for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.ship; i++) monthlyRecruitment(ctx);
+  const f = Object.values(game.fleets).find((row) => row && row.tag === 'SEL');
+  ok(b1.ok && f && Number.isFinite(f.gen) && f.gen === navy.navalGen(ctx, 'SEL'),
+    'the hull is laid down to the age’s pattern: gen ' + (f && f.gen) + ' (' + tech.navalGenName(f && f.gen) + ')');
   f.ships = 5;
   f.gen = 0;
   sel.tech.mar = 6;
@@ -135,7 +137,9 @@ console.log('== squadron commanders ==');
   }
   game.provinces[home].buildings = ['airfield'];
   isr.treasury = 200;
-  const wing = mil.raiseAirWing(ctx, 'ISR', home).wing;
+  mil.raiseAirWing(ctx, 'ISR', home);
+  for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
+  const wing = Object.values(game.airwings)[0];
   isr.points.mar = 100;
   const hire = mil.hireWingLeaderCore(ctx, 'ISR', wing.id);
   ok(hire.ok && wing.leader && typeof wing.leader.name === 'string',

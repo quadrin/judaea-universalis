@@ -18,6 +18,7 @@ const { EVENTS_1948 } = await import(R + '/js/data/events_1948.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const { runMonthlyAI } = await import(R + '/js/sim/ai.js');
+const { queuedUnitsOf } = await import(R + '/js/sim/recruitment.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -56,17 +57,23 @@ function regiments(game, tag) {
 }
 
 console.log('== every standard has a campaign contract ==');
-for (const [id, file, exp] of [
-  ['167bce', 'bookmark_167bce', 'BOOKMARK_167'],
-  ['67bce', 'bookmark_67bce', 'BOOKMARK_67'],
-  ['40bce', 'bookmark_40bce', 'BOOKMARK_40'],
-  ['66ce', 'bookmark_66ce', 'BOOKMARK_66'],
-  ['115ce', 'bookmark_115ce', 'BOOKMARK_115'],
-  ['132ce', 'bookmark_132ce', 'BOOKMARK_132'],
-  ['614ce', 'bookmark_614ce', 'BOOKMARK_614'],
-  ['1948ce', 'bookmark_1948', 'BOOKMARK_1948'],
+ok(DEFINES.RELIGIONS.judaism.name === 'Judaism', 'the Jewish religion is displayed as Judaism');
+for (const [id, file, exp, expectedTags] of [
+  ['167bce', 'bookmark_167bce', 'BOOKMARK_167', ['HAS']],
+  ['67bce', 'bookmark_67bce', 'BOOKMARK_67', ['HYR', 'ARI']],
+  ['40bce', 'bookmark_40bce', 'BOOKMARK_40', ['HER', 'ATG']],
+  ['66ce', 'bookmark_66ce', 'BOOKMARK_66', ['JUD']],
+  ['115ce', 'bookmark_115ce', 'BOOKMARK_115', ['JUD']],
+  ['132ce', 'bookmark_132ce', 'BOOKMARK_132', ['JUD']],
+  ['614ce', 'bookmark_614ce', 'BOOKMARK_614', ['JUD']],
+  ['1948ce', 'bookmark_1948', 'BOOKMARK_1948', ['ISR']],
 ]) {
   const { [exp]: bm } = await import(R + '/js/data/' + file + '.js');
+  const playable = bm.playableTags.map((p) => p.tag);
+  ok(JSON.stringify(playable) === JSON.stringify(expectedTags),
+    id + ': playable roster is ' + playable.join(', '));
+  ok(playable.every((tag) => DEFINES.TAGS[tag] && DEFINES.TAGS[tag].religion === 'judaism'),
+    id + ': every playable standard is Jewish');
   for (const p of bm.playableTags) {
     const guide = campaignGuidance(id, p.tag, bm.startDate);
     ok(guide && guide.opening.length === 3 && guide.next,
@@ -148,7 +155,8 @@ console.log('== the armed armistice builds defensive commitments ==');
   game.tags.LEB.income = 30;
   const before = regiments(game, 'LEB');
   runMonthlyAI(ctx);
-  ok(regiments(game, 'LEB') > before, 'a solvent threatened state builds above its frozen old target');
+  ok(regiments(game, 'LEB') + queuedUnitsOf(ctx, 'LEB', ['inf', 'cav']) > before,
+    'a solvent threatened state commits recruits above its frozen old target');
 
   const arms = EVENTS_1948.find((e) => e.id === 'ev_i_arms_race');
   const egyptBefore = regiments(game, 'EGY');

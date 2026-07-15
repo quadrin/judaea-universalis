@@ -353,16 +353,6 @@ export const BOOKMARK_167 = {
         + 'windows take Jerusalem, relight the lamps, and hold the city until the kingdom '
         + 'of the Greeks lets go — to 140, and freedom.',
     },
-    {
-      tag: 'SEL',
-      difficulty: 'Moderate',
-      blurb: 'One more provincial rising, in an empire that has outlived a hundred — '
-        + 'but this one is led by a family that does not stay dead, and your dynasty is '
-        + 'about to devour itself. Crush the rebellion in the hills before the regency and '
-        + 'the pretenders paralyze Antioch, and keep men beyond the Tigris while the Arsacid '
-        + 'gathers: every year of delay costs a satrapy. The empire of Seleucus is vast. '
-        + 'It is also mortal.',
-    },
   ],
 
   setup(ctx) {

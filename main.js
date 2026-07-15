@@ -91,7 +91,7 @@ async function boot() {
   function startGame(game, entry, wrapActions) {
     activeEntry = entry;
     ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark, events: entry.events });
-    actions = gameActions(ctx);
+    actions = gameActions(ctx, { deferWhilePaused: true });
     if (wrapActions) actions = wrapActions(actions);
     ui.bindGame(ctx, actions);
     const jer = ctx.prov('Jerusalem');

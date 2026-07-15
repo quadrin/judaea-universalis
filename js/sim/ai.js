@@ -18,6 +18,7 @@ import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
+import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -103,6 +104,7 @@ function aiRecruit(ctx, tag, hints, fraction) {
   const target = Math.ceil(Math.min(desired, affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
+  cur += queuedUnitsOf(ctx, tag, ['inf', 'cav']);
   let guard = 0;
   while (cur < target && num(t.treasury) > 50 && num(t.manpower) >= B(ctx, 'regSize', 1000) && guard++ < 5) {
     const pid = pickRecruitProv(ctx, tag, hints);
@@ -652,8 +654,9 @@ function aiAirPower(ctx, tag) {
     cap.construction = { key: 'airfield', monthsLeft: Math.max(1, num(b.months, 1)) };
     return;
   }
-  if (airWingsAt(ctx, cap.id).length < num(AIR.wingsPerField, 2)
-      && airWingsOf(ctx, tag).length < 2
+  const queuedWings = queuedUnitCount(ctx, cap.id, 'wing', tag);
+  if (airWingsAt(ctx, cap.id).length + queuedWings < num(AIR.wingsPerField, 2)
+      && airWingsOf(ctx, tag).length + queuedUnitsOf(ctx, tag, ['wing']) < 2
       && num(t.treasury) > num(AIR.wingCost, 40) + 120) {
     raiseAirWing(ctx, tag, cap.id);
   }

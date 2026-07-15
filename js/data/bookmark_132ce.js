@@ -267,15 +267,6 @@ export const BOOKMARK_132 = {
         + 'and the heartland to 136, and even Rome may prefer a tributary prince to a '
         + 'second desert.',
     },
-    {
-      tag: 'ROM',
-      difficulty: 'Moderate',
-      blurb: 'Dio will write that this was no small war: fifty fortresses, near a thousand '
-        + 'villages, and legions mauled badly enough that Hadrian dropped the customary '
-        + '"I and the army are well" from his letters to the Senate. Contain the rising, '
-        + 'wait for Julius Severus, then reduce the hills the slow way — every cistern, '
-        + 'every cave. Rome does not lose provinces. See that it stays true.',
-    },
   ],
 
   // Courts of 132 CE.
