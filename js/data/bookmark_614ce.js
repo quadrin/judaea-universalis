@@ -116,7 +116,9 @@ export const BOOKMARK_614 = {
     + 'their city. The True Cross, the Empire, and every certainty of six centuries are '
     + 'about to change hands.',
 
-  activeTags: ['BYZ', 'SAS', 'JUD', 'GHA'],
+  // RSH begins off-map and dormant. Dated world events awaken it after the
+  // Hijra and bring its armies through the northern Arabian map edge.
+  activeTags: ['BYZ', 'SAS', 'JUD', 'GHA', 'RSH'],
 
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
   wonderTweaks: { Jerusalem: null },
@@ -277,6 +279,8 @@ export const BOOKMARK_614 = {
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
 
+    if (g.tags.RSH) g.tags.RSH.alive = false;
+
     // The Ghassanid phylarchate still answers the Empire.
     if (g.tags.GHA) g.tags.GHA.overlord = 'BYZ';
 
@@ -327,6 +331,13 @@ export const BOOKMARK_614 = {
     h.addTagModifier(ctx, 'JUD', {
       id: 'return_to_zion', name: 'The Return to Zion', months: 36,
       effects: { moraleMult: 1.15, manpowerMult: 1.1 },
+    });
+    // The Return fields an army because it marches inside Persia's invasion,
+    // using Persian magazines and roads. That support lasts only until
+    // Ctesiphon decides the client has become more expensive than useful.
+    h.addTagModifier(ctx, 'JUD', {
+      id: 'persian_supply_trains', name: 'Persian Supply Trains', months: 38,
+      effects: { maintMult: 0.65, reinforceMult: 1.08 },
     });
 
     // --- Starting armies. ---
@@ -379,6 +390,7 @@ export const BOOKMARK_614 = {
     SAS: { name: 'Khosrow II', title: 'King of Kings', gov: 3, infl: 4, mar: 3, age: 44 },
     JUD: { name: 'Nehemiah ben Hushiel', title: 'Prince of the Return', gov: 2, infl: 3, mar: 3, age: 30 },
     GHA: { name: 'Jabala', title: 'Phylarch', gov: 2, infl: 2, mar: 3, age: 42 },
+    RSH: { name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 41 },
   },
 
   missions: {
@@ -486,6 +498,7 @@ export const BOOKMARK_614 = {
     SAS: { rally: ['Damascus', 'Seleucia-Ctesiphon'], targetRegiments: 45 },
     JUD: { rally: ['Tiberias'], targetRegiments: 12 },
     GHA: { rally: ['Bostra'], targetRegiments: 6 },
+    RSH: { rally: ['Hegra', 'Dumatha'], targetRegiments: 32 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

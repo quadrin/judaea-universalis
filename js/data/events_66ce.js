@@ -221,6 +221,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_cestius_marches',
     title: 'Cestius Gallus Marches',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The governor of Syria can no longer wait upon events. Cestius Gallus leaves Antioch '
       + 'with the Twelfth Legion Fulminata, two thousand picked men from each of the other legions, '
       + 'six cohorts of foot and four wings of horse, besides the royal contingents of Agrippa '
@@ -267,6 +268,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_beth_horon',
     title: 'The Road from Beth Horon',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Cestius had the city within his grasp — Josephus swears the war would have ended '
       + 'there — and then, for no reason the defenders could see, he broke off the assault '
       + 'and fell back. In the narrow descent at Beth Horon the withdrawal became a rout: the '
@@ -341,6 +343,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_organizing_the_revolt',
     title: 'Organizing the Revolt',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'In the Temple, the coalition of priests and notables parcels out the country: '
       + 'Ananus ben Ananus holds the city, Eleazar ben Ananias takes Idumea, and the young '
       + 'priest Joseph ben Matthias — who will one day write this war\'s history under '
@@ -392,6 +395,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_vespasian_arrives',
     title: 'Vespasian Takes Command',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Nero, hearing in Achaea of Cestius\' disgrace, has given the war to a man with too '
       + 'little ambition to be dangerous and too much experience to fail: Titus Flavius '
       + 'Vespasianus, who broke the Britons in their wet forests. He travels overland to '
@@ -430,6 +434,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_jotapata_falls',
     title: 'The Prophet of Jotapata',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Forty-seven days the town held on its cliff, until a deserter told the Romans the '
       + 'hour when the last watch slept. Now the commander of Galilee is dragged from a '
       + 'cistern where forty of his men lie dead by one another\'s hands — he contrived, by '
@@ -467,6 +472,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_gischala_falls',
     title: 'John Flees to Jerusalem',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Gischala, last of Galilee, asked Titus to respect the Sabbath while its people '
       + 'considered his terms — and in the night John ben Levi slipped away south with his '
       + 'fighting men, abandoning the women and children on the road when the cavalry caught '
@@ -505,6 +511,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_zealot_coup',
     title: 'The Zealots Seize the Temple',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The Zealots have made the sanctuary their fortress and chosen a village nobody as '
       + 'high priest by casting lots, while old Ananus ben Ananus — whose voice can still '
       + 'fill the outer court — raises the citizens against them. Besieged in the inner '
@@ -559,6 +566,7 @@ export const EVENTS_66 = [
       + 'general but a pretender — and he intends, for now, to be neither.',
     forTag: 'both',
     date: { y: 68, m: 6 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -593,6 +601,7 @@ export const EVENTS_66 = [
       + 'sally could — time.',
     forTag: 'both',
     date: { y: 69, m: 1 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -616,6 +625,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_simon_bar_giora',
     title: 'Simon bar Giora',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The strongman of Acrabatene stands before the walls with an army of freed slaves '
       + 'and desperate men — the same Simon whose raiding has made Idumea a wilderness, '
       + 'invited now by the remnant of the chief priests for one reason only: the city fears '
@@ -663,6 +673,7 @@ export const EVENTS_66 = [
       + 'this siege has been postponed too long.',
     forTag: 'both',
     date: { y: 69, m: 7 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -693,6 +704,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_famine_in_jerusalem',
     title: 'Famine in the City',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The markets are a memory. Inside the walls, men who were rich sift the sewers for '
       + 'grains of wheat, and the fighters search the houses of the dead — those they suspect '
       + 'of dying with bread still hidden. Whole families climb to the rooftops to die in the '
@@ -726,6 +738,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_temple_burns',
     title: 'The Ninth of Av',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'A soldier — unbidden, Josephus insists, though who can say what Titus wanted — '
       + 'hurled a burning brand through the golden window, and by evening the House stood in '
       + 'fire from the inner court to the roofline. The daily offering had already ceased for '
@@ -777,6 +790,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_masada_epilogue',
     title: 'The Rock of Masada',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Of all Judaea there remains one place where no Roman order runs: Herod\'s casemate '
       + 'fortress above the Dead Sea, provisioned for years, held by Eleazar ben Yair and the '
       + 'last of the Sicarii with their wives and children. Below on the salt plain the Tenth '
@@ -971,6 +985,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_sepphoris_opens_gates',
     title: 'Sepphoris Opens Its Gates',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The largest city of Galilee has weighed the walls Josephus built for it against '
       + 'the legions on the coast road, and chosen. Its magistrates ride out to the Roman '
       + 'camp with garlands and ask for a garrison; the mint of Sepphoris will soon strike '
@@ -1015,6 +1030,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_nabataean_archers',
     title: 'The Arabian Contingent',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Malichus of Nabataea has read the omens of trade, which are surer than birds: a '
       + 'thousand horse and five thousand foot, most of them archers, arrive at Ptolemais '
       + 'under their own sheikhs to join the Roman muster. Petra\'s caravans need Roman '
@@ -1040,6 +1056,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_tarichaea_lake',
     title: 'The Lake Ran Red',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Tarichaea\'s fighters fled onto the water in anything that would float, and '
       + 'Vespasian sent rafts after them. It was not a battle: the lake\'s own fishermen '
       + 'were hunted across their own water until, Josephus writes, the whole of Gennesaret '
@@ -1071,6 +1088,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_rome_sues',
     title: 'Rome Sues for Peace',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'The legions are broken and the east is in flames. Rather than feed another '
       + 'army into the Judean hills, the emperor offers terms: Judaea keeps its own '
       + 'king, its own Law, and its Temple — the hills of the faith it holds. The '

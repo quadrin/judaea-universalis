@@ -2,6 +2,7 @@
 // Two steps: pick a bookmark (era), then pick a nation within it.
 import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
+import { campaignGuidance } from '../data/campaign_guidance.js';
 
 export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
   if (!root) return;
@@ -140,6 +141,18 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
     const cards = playable.map((p) => {
       const def = TAGS[p.tag] || {};
       const diff = String(p.difficulty || '');
+      const guide = campaignGuidance(bookmark.id, p.tag, bookmark.startDate);
+      const objectives = bookmark.objectives && Array.isArray(bookmark.objectives[p.tag])
+        ? bookmark.objectives[p.tag] : [];
+      const opening = guide && guide.opening.length
+        ? `<div class="nc-plan"><div class="nc-plan-title">First moves · ${esc(guide.system)}</div><ol>${guide.opening.map((line) => `<li>${esc(line)}</li>`).join('')}</ol></div>`
+        : '';
+      const objective = objectives.length
+        ? `<div class="nc-contract"><b>Campaign contract</b><span>${esc(objectives[0])}</span>${objectives.find((line) => /^Lose:/.test(line)) ? `<span class="neg">${esc(objectives.find((line) => /^Lose:/.test(line)))}</span>` : ''}</div>`
+        : '';
+      const pressure = guide && guide.next
+        ? `<div class="nc-pressure">${icon('alert', 'icon-xs')} First pressure: ${esc(guide.next.label)} · ${guide.next.months} month${guide.next.months === 1 ? '' : 's'}</div>`
+        : '';
       return `
         <div class="nation-card" data-tag="${esc(p.tag)}" tabindex="0"
              style="--tagc:${rgb(def.color)};--tagglow:${rgba(def.color, 0.45)}">
@@ -151,6 +164,9 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
             <div class="nc-name">${esc(def.name || p.tag)}</div>
             ${def.description ? `<div class="nc-desc">${esc(def.description)}</div>` : ''}
             <div class="nc-blurb">${esc(p.blurb || '')}</div>
+            ${opening}
+            ${objective}
+            ${pressure}
           </div>
           <div class="nc-cta">${icon('star4', 'icon-xs')} &nbsp;Take up the standard&nbsp; ${icon('star4', 'icon-xs')}</div>
         </div>`;

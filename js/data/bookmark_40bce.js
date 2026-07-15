@@ -486,7 +486,11 @@ export const BOOKMARK_40 = {
     });
     h.addTagModifier(ctx, 'ATG', {
       id: 'parthian_favor', name: 'The Parthian Favor', months: 24,
-      effects: { moraleMult: 1.05 },
+      effects: { moraleMult: 1.05, maintMult: 0.75 },
+    });
+    h.addTagModifier(ctx, 'HER', {
+      id: 'roman_credit', name: 'Credit of the Senate', months: 36,
+      effects: { maintMult: 0.75, incomeMult: 1.05 },
     });
 
     // --- Starting armies. -------------------------------------------------------

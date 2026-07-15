@@ -4,7 +4,7 @@ import { icon, flagChip } from './icons.js';
 import { unlockedGen, genName, navalGenName } from '../data/tech.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
-const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', airfield: 'plane' };
+const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', shipyard: 'shipyard', airfield: 'plane' };
 
 export function createProvincePanel(el, { DEFINES, onClose }) {
   let ctx = null;
@@ -88,6 +88,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
       </div>
+      <div class="pp-merchant hidden" data-ref="merchantBlock">
+        <div class="pp-build-title">${icon('ship', 'icon-sm')} Merchant Marine</div>
+        <div class="pp-merchant-status" data-ref="merchantStatus"></div>
+        <button class="btn pp-recruit-btn" data-ref="merchantShip"></button>
+      </div>
       <div class="pp-air hidden" data-ref="airBlock">
         <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
         <div data-ref="airWings"></div>
@@ -146,6 +151,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.buildShip.addEventListener('click', () => {
       if (!actions || typeof actions.buildShip !== 'function' || refs.buildShip.classList.contains('disabled')) return;
       try { actions.buildShip(provId); } catch (e) { warnOnce('buildShip', e); }
+      refresh();
+    });
+    refs.merchantShip.addEventListener('click', () => {
+      if (!actions || typeof actions.commissionMerchantShip !== 'function'
+          || refs.merchantShip.classList.contains('disabled')) return;
+      try { actions.commissionMerchantShip(provId); } catch (e) { warnOnce('merchantShip', e); }
       refresh();
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
@@ -352,6 +363,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     // Buildings (v1.3; gated on the sim providing getBuildInfo)
     refreshBuildings();
 
+    // A completed coastal shipyard opens the civilian fitting-out yard.
+    refreshMerchant();
+
     // Air power (SPEC §29): the airfield's wings
     refreshAir(p, g);
 
@@ -440,6 +454,22 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       return `<button class="pp-build-btn${o.canBuild ? '' : ' disabled'}" data-build="${esc(o.key)}" data-tt="${esc(tt)}">` +
         `${icon(BUILD_ICON[o.key] || 'bricks')}<span>${esc(name)}</span></button>`;
     }).join(''));
+  }
+
+  function refreshMerchant() {
+    let info = null;
+    if (actions && typeof actions.getMerchantShipInfo === 'function') {
+      try { info = actions.getMerchantShipInfo(provId); } catch (e) { warnOnce('merchantInfo', e); info = null; }
+    }
+    refs.merchantBlock.classList.toggle('hidden', !info || !info.visible);
+    if (!info || !info.visible) return;
+    const activeIncome = (info.count * info.incomeEach).toFixed(2).replace(/\.00$/, '');
+    setText(refs.merchantStatus, info.count + ' / ' + info.cap + ' merchant ships · +' + activeIncome + ' trade/month');
+    setHtml(refs.merchantShip, `${icon('ship')} Commission merchantman — ${info.cost} ${icon('coins', 'icon-xs')}`);
+    refs.merchantShip.classList.toggle('disabled', !info.can);
+    refs.merchantShip.dataset.tt = info.can
+      ? `Commission a civilian merchant ship. Each earns ${info.incomeEach} talents a month while this harbor is controlled, unsieged and unblocked.`
+      : (info.why || 'No merchantman can be fitted out now.');
   }
 
   function refreshDiplomacy(p, g) {

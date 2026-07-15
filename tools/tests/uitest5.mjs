@@ -10,7 +10,7 @@ let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  PASS', msg); else { failures++; console.error('  FAIL', msg); } };
 
 const browser = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium',
+  executablePath: process.env.JU_CHROMIUM || '/opt/pw-browsers/chromium',
   args: ['--enable-unsafe-swiftshader', '--disable-features=WebRtcHideLocalIpsWithMdns'],
 });
 

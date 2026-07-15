@@ -280,6 +280,12 @@ export const BOOKMARK_115 = {
       id: 'messianic_fire', name: 'Messianic Fire', months: 30,
       effects: { moraleMult: 1.15, manpowerMult: 1.1 },
     });
+    // Five theaters share a name, not a staff. Until the risings establish
+    // reliable routes, local victories do not instantly become one field army.
+    h.addTagModifier(ctx, 'JUD', {
+      id: 'scattered_risings', name: 'Scattered Risings', months: 30,
+      effects: { disciplineMult: 0.9, reinforceMult: 0.8, maintMult: 1.1 },
+    });
     // Rome's field army is committed east; the rear must improvise for a season.
     h.addTagModifier(ctx, 'ROM', {
       id: 'committed_east', name: 'The Army Is East', months: 8,

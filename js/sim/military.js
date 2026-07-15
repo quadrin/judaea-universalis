@@ -272,6 +272,9 @@ export function removeArmy(ctx, armyId) {
   if (!a) return;
   delete g.armies[armyId];
   if (g.ui && g.ui.selectedArmy === armyId) g.ui.selectedArmy = null;
+  if (g.ui && Array.isArray(g.ui.selectedArmies)) {
+    g.ui.selectedArmies = g.ui.selectedArmies.filter((id) => id !== armyId);
+  }
   for (const b of g.battles.slice()) {
     let i = b.atk.indexOf(a.id);
     if (i >= 0) b.atk.splice(i, 1);
@@ -281,6 +284,29 @@ export function removeArmy(ctx, armyId) {
       endBattle(ctx, b, b.atk.length ? 'atk' : 'def');
     }
   }
+}
+
+// Voluntarily stand an army down to shed its monthly maintenance. An army in
+// friendly, controlled land returns most of its surviving men to the manpower
+// pool; disbanding abroad still cuts the expense, but disperses the ranks.
+export function disbandArmyCore(ctx, army) {
+  const g = ctx.game;
+  if (!army || !g.armies[army.id]) return { ok: false, why: 'No such army.' };
+  if (army.inBattle) return { ok: false, why: 'An army cannot disband in battle.' };
+  if (army.retreating || num(army.shatteredDays) > 0) {
+    return { ok: false, why: 'A routed army must reform before it can stand down.' };
+  }
+  if (army.aboard) return { ok: false, why: 'An embarked army must return to land first.' };
+  const t = g.tags[army.tag];
+  if (!t) return { ok: false, why: 'The army has no realm to return to.' };
+  const p = ctx.byId(army.prov);
+  const home = !!p && p.owner === army.tag && p.controller === army.tag;
+  const returned = home ? Math.max(0, Math.floor(num(army.men) * 0.75)) : 0;
+  const ceiling = Number.isFinite(t.maxManpower) ? Math.max(0, num(t.maxManpower)) : Infinity;
+  t.manpower = Math.min(ceiling, Math.max(0, num(t.manpower)) + returned);
+  const name = army.name || 'The army';
+  removeArmy(ctx, army.id);
+  return { ok: true, returned, home, name };
 }
 
 // ---------------------------------------------------------------- battles
@@ -1835,8 +1861,15 @@ export function dissolveWar(ctx, war) {
     }
   }
   if (!g.truces) g.truces = {};
+  if (!g.flags) g.flags = {};
+  if (!g.flags._settledWars) g.flags._settledWars = {};
   for (const a of war.attackers) for (const d of war.defenders) {
-    g.truces[truceKey(a, d)] = { y: g.date.y + 5, m: g.date.m };
+    const key = truceKey(a, d);
+    g.truces[key] = { y: g.date.y + 5, m: g.date.m };
+    // Historical event chains consult this ledger so a treaty actually
+    // changes the timeline: stale battle/armistice cards do not pop up after
+    // the player has already ended their campaign.
+    g.flags._settledWars[key] = { y: g.date.y, m: g.date.m, name: war.name || '' };
   }
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];

@@ -271,6 +271,7 @@ button {
   width: 312px;
   max-height: calc(100vh - 130px);
   overflow-y: auto;
+  overflow-x: hidden;
   pointer-events: auto;
   border-radius: 4px;
   padding: 0 0 12px;
@@ -433,11 +434,24 @@ button {
 }
 
 .pp-recruit {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 12px 12px 0;
 }
-.pp-recruit-btn { flex: 1; text-align: center; white-space: nowrap; padding: 8px 6px; }
+.pp-recruit-btn {
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+  padding: 8px 6px;
+}
+
+.pp-merchant { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
+.pp-merchant-status { margin: 4px 0 7px; color: var(--ink-soft); font-size: 12px; }
+.pp-merchant .pp-recruit-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.ol-merchant { cursor: default; }
 
 /* The airfield block (SPEC §29): wings based here, rebase buttons per field */
 .pp-air { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
@@ -485,6 +499,42 @@ button {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 .ol-body { padding: 4px 6px 8px; }
+.ol-campaign {
+  margin: 4px 0 8px;
+  padding: 7px 8px;
+  border: 1px solid rgba(201, 162, 39, 0.32);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.ol-campaign-title {
+  color: var(--gold-bright);
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+}
+.ol-clock {
+  margin-top: 5px;
+  color: #e8b04a;
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+.ol-world-clock {
+  padding-top: 5px;
+  border-top: 1px dotted rgba(111, 168, 190, 0.35);
+  color: #9bc6d5;
+}
+.ol-world-clock > span { font-variant: small-caps; letter-spacing: 0.04em; }
+.ol-goals { margin-top: 5px; }
+.ol-goal {
+  padding-left: 8px;
+  border-left: 2px solid rgba(201, 162, 39, 0.25);
+  color: var(--text-dim);
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+.ol-goal + .ol-goal { margin-top: 3px; }
+.ol-goal.pos { color: #9cc98a; border-left-color: rgba(143, 191, 122, 0.65); }
+.ol-goal.neg { color: #e48678; border-left-color: rgba(224, 106, 90, 0.65); }
 .ol-sec {
   margin: 7px 4px 3px;
   font-variant: small-caps;
@@ -652,6 +702,17 @@ button {
   letter-spacing: 0.5em;
   margin-bottom: 6px;
 }
+.ev-world {
+  width: fit-content;
+  margin: 0 auto 5px;
+  padding: 2px 7px;
+  border: 1px solid rgba(64, 116, 139, 0.55);
+  border-radius: 10px;
+  color: #315f73;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+}
 .ev-title {
   font-variant: small-caps;
   letter-spacing: 0.06em;
@@ -673,6 +734,18 @@ button {
 }
 .ev-opts { display: flex; flex-direction: column; gap: 8px; }
 .ev-opt { width: 100%; text-align: center; }
+.ev-opt-label { display: block; }
+.ev-effect {
+  display: block;
+  margin-top: 4px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.78;
+}
 
 @keyframes card-in {
   from { opacity: 0; transform: scale(0.955) translateY(8px); }
@@ -755,7 +828,10 @@ button {
   inset: 0;
   z-index: 200;
   display: flex;
-  align-items: center;
+  /* A nation brief can be taller than a laptop viewport. Flex centering an
+     overflowing child pushes its top above the scroll origin, so anchor the
+     flex line and let auto margins center only when spare height exists. */
+  align-items: flex-start;
   justify-content: center;
   overflow-y: auto;
   pointer-events: auto;
@@ -763,6 +839,7 @@ button {
     radial-gradient(ellipse at 50% 38%, rgba(20, 16, 10, 0.42) 0%, rgba(14, 11, 7, 0.88) 72%, rgba(10, 8, 5, 0.96) 100%);
 }
 #start-screen .loading {
+  margin: auto;
   font-variant: small-caps;
   letter-spacing: 0.2em;
   font-size: 19px;
@@ -772,6 +849,7 @@ button {
 @keyframes loading-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
 .ss-inner {
+  margin: 0 auto;
   text-align: center;
   padding: 40px 20px 30px;
   max-width: 900px;
@@ -903,6 +981,31 @@ button {
   line-height: 1.5;
   color: var(--text-light);
   min-height: 60px;
+}
+.nc-plan, .nc-contract {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 162, 39, 0.2);
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--text-dim);
+}
+.nc-plan-title, .nc-contract b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--gold);
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+.nc-plan ol { margin: 0; padding-left: 18px; }
+.nc-plan li + li { margin-top: 3px; }
+.nc-contract span { display: block; }
+.nc-contract span + span { margin-top: 3px; }
+.nc-pressure {
+  margin-top: 8px;
+  color: #e8b04a;
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 .nc-cta {
   text-align: center;
@@ -1491,6 +1594,8 @@ button {
   color: var(--text-light);
   filter: none;
 }
+.ol-disband { color: #d98779; border-color: rgba(196, 86, 70, 0.35); }
+.ol-disband:hover { color: #ffb1a3; border-color: #cf6654; }
 
 /* topbar — borrow / repay beside the treasury */
 .tb-loan .icon { width: 11px; height: 11px; }

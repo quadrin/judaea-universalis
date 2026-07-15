@@ -31,6 +31,7 @@ import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
 import { createLobby } from './js/ui/lobby.js';
+import { remapGuestChairs, resolveSnapshotChair, restoreHostChair } from './js/net/mp_state.js';
 
 async function boot() {
   const issues = validateMapData();
@@ -113,6 +114,7 @@ async function boot() {
     if (!ctx || !actions || !m || typeof m.name !== 'string') return;
     if (MP_QUERY_RE.test(m.name) || typeof actions[m.name] !== 'function') return;
     const g = ctx.game;
+    if (!guest || !g.tags[guest.tag]) return;
     const prevTag = g.playerTag;
     const captured = [];
     const origEmit = bus.emit.bind(bus);
@@ -127,7 +129,10 @@ async function boot() {
     } catch (e) {
       console.warn('[mp] guest command failed:', m.name, e);
     } finally {
-      g.playerTag = prevTag;
+      // A formable may replace the commanded tag while the action runs. Restore
+      // the old host chair only if it still exists; tagSwitched remaps guest.tag.
+      const restoreTag = restoreHostChair(g, prevTag, guest.tag);
+      if (restoreTag) g.playerTag = restoreTag;
       bus.emit = origEmit;
     }
     if (captured.length) guest.peer.send({ t: 'toast', items: captured });
@@ -163,6 +168,10 @@ async function boot() {
       const toGuests = (msg) => { if (mp.role === 'host') for (const guest of mp.guests) guest.peer.send(msg); };
       bus.on('gameover', (p) => toGuests({ t: 'over', p: p || {} }));
       bus.on('notify', (p) => toGuests({ t: 'toast', items: [p || {}] }));
+      bus.on('tagSwitched', (p) => {
+        if (!p || typeof p.from !== 'string' || typeof p.to !== 'string') return;
+        remapGuestChairs(mp.guests, p.from, p.to);
+      });
       // Event cards: guests see the card read-only; effects are functions and
       // never cross the wire — only the display fields do.
       bus.on('event', (p) => {
@@ -174,6 +183,7 @@ async function boot() {
             instanceId: p.instanceId,
             title: ev.title,
             desc: ev.desc,
+            world: ev.world === true,
             options: (Array.isArray(ev.options) ? ev.options : [])
               .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip })),
           },
@@ -187,12 +197,18 @@ async function boot() {
     if (!ctx || !snapGame || typeof snapGame !== 'object') return;
     const g = ctx.game;
     const prev = { d: g.date.d, m: g.date.m, y: g.date.y };
+    const prevTag = g.playerTag;
     const keepUi = g.ui;
     for (const k of Object.keys(g)) delete g[k];
     Object.assign(g, snapGame);
     g.ui = keepUi;               // selections are ours, not the host's
-    g.playerTag = mp.myTag;      // our chair (snapshots carry the host's)
+    // Keep our assigned chair when it still exists. If a formable replaced it,
+    // the authoritative snapshot's chair is the safe fallback.
+    const snapTag = g.playerTag;
+    g.playerTag = resolveSnapshotChair(g.tags, mp.myTag, snapTag) || snapTag;
+    mp.myTag = g.playerTag;
     colorsDirty = true;
+    if (prevTag !== g.playerTag) bus.emit('tagSwitched', { from: prevTag, to: g.playerTag });
     if (prev.d !== g.date.d || prev.m !== g.date.m || prev.y !== g.date.y) {
       bus.emit('day', { date: { ...g.date } });
       if (prev.m !== g.date.m || prev.y !== g.date.y) bus.emit('month', { date: { ...g.date } });
@@ -243,6 +259,7 @@ async function boot() {
       onMessage: (m) => {
         if (!m) return;
         if (m.t === 'snap') mpApplySnapshot(m.game);
+        else if (m.t === 'chair' && typeof m.tag === 'string') mp.myTag = m.tag;
         else if (m.t === 'toast') for (const p of m.items || []) bus.emit('notify', p || {});
         else if (m.t === 'event') ui.showRemoteEvent(m.p || {});
         else if (m.t === 'eventDone') ui.closeRemoteEvent(m.instanceId);

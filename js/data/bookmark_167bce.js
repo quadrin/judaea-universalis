@@ -405,7 +405,7 @@ export const BOOKMARK_167 = {
     // --- Starting modifiers. ---
     h.addTagModifier(ctx, 'HAS', {
       id: 'zeal_for_the_law', name: 'Zeal for the Law', months: 48,
-      effects: { moraleMult: 1.15 },
+      effects: { moraleMult: 1.15, reinforceMult: 1.2, maintMult: 0.55 },
     });
     // Antioch treats the rising as banditry; ev_apollonius (-166.6) removes this.
     // Months 9 is a safety net in case the event chain is disturbed.

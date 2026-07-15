@@ -4,13 +4,16 @@
 // open water (straight line — the Mediterranean has no walls). Each ship
 // carries 1000 men. Armies aboard (a.aboard=true) are out of land play.
 
-import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral } from './military.js';
+import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding } from './military.js';
 import { unlockedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
 const SHIP_UPKEEP = 0.5;     // talents per ship per month
 const SEA_PX_PER_DAY = 34;   // fleets are faster than legions
 const CAPACITY = 1000;       // men per ship
+export const MERCHANT_SHIP_COST = 25;
+export const MERCHANT_SHIP_INCOME = 0.75; // talents/month while the home port trades
+export const MERCHANT_SHIP_CAP = 5;       // berths supported by one shipyard
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -78,6 +81,48 @@ export function buildShipCore(ctx, tag, provId) {
   }
   fleet.ships++;
   return { ok: true, fleet };
+}
+
+// Civilian hulls are a port investment, not military counters. They remain
+// attached to their home province, where occupation or blockade suspends their
+// trade income. A shipyard supports a deliberately small merchant marine so
+// the investment is useful without replacing territorial trade routes.
+export function merchantShipInfo(ctx, tag, provId) {
+  const t = ctx.game.tags[tag];
+  const p = ctx.byId(provId);
+  const count = Math.max(0, Math.round(num(p && p.merchantShips)));
+  let why = '';
+  if (!t || !p) why = 'No such port.';
+  else if (!isCoastal(ctx, provId)) why = 'Merchant ships need a coastal harbor.';
+  else if (p.owner !== tag || p.controller !== tag) why = 'The harbor is not in our hands.';
+  else if (!hasBuilding(p, 'shipyard')) why = 'Build a shipyard first.';
+  else if (p.siege || blockadedBy(ctx, provId)) why = 'A besieged or blockaded harbor cannot fit out merchantmen.';
+  else if (count >= MERCHANT_SHIP_CAP) why = 'Every shipyard berth is occupied.';
+  else if (num(t.treasury) < MERCHANT_SHIP_COST) why = 'A merchantman costs ' + MERCHANT_SHIP_COST + ' talents.';
+  return {
+    visible: !!t && !!p && isCoastal(ctx, provId) && hasBuilding(p, 'shipyard'),
+    can: !why, why, count, cap: MERCHANT_SHIP_CAP, cost: MERCHANT_SHIP_COST,
+    incomeEach: MERCHANT_SHIP_INCOME,
+  };
+}
+export function commissionMerchantShipCore(ctx, tag, provId) {
+  const info = merchantShipInfo(ctx, tag, provId);
+  if (!info.can) return { ok: false, why: info.why, ...info };
+  const t = ctx.game.tags[tag];
+  const p = ctx.byId(provId);
+  t.treasury = num(t.treasury) - info.cost;
+  p.merchantShips = info.count + 1;
+  return { ok: true, count: p.merchantShips, cap: info.cap, cost: info.cost, incomeEach: info.incomeEach };
+}
+export function merchantShipsOf(ctx, tag) {
+  const out = [];
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    const p = ctx.game.provinces[i];
+    const count = Math.max(0, Math.round(num(p && p.merchantShips)));
+    if (!p || p.owner !== tag || !count) continue;
+    out.push({ prov: i, provName: p.name, count, active: p.controller === tag && !p.siege && !blockadedBy(ctx, i) });
+  }
+  return out;
 }
 
 // ---- eras at sea & the men who command them (SPEC §31) ----------------------

@@ -5,6 +5,7 @@
 import {
   num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
+  resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween,
   declareWar, truceActive, opinionOf, casusBelli,
@@ -37,6 +38,11 @@ function hasAiPassive(ctx, tag) {
     if (mod && mod.effects && mod.effects.aiPassive) return true;
   }
   return false;
+}
+function hasTagEffect(ctx, tag, key) {
+  const t = ctx.game.tags[tag];
+  if (!t) return false;
+  return (t.modifiers || []).some((mod) => mod && mod.effects && mod.effects[key]);
 }
 function armyStrength(ctx, a) {
   const moraleFrac = a.maxMorale > 0 ? clamp(num(a.morale) / a.maxMorale, 0.1, 1) : 0.5;
@@ -71,11 +77,30 @@ function aiRecruit(ctx, tag, hints, fraction) {
   // ambition, the treasury is a fact. Cap the standing army at what ~75% of
   // gross income can maintain — small realms stop drilling themselves into
   // debt spirals.
-  const maintPerReg = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35;
+  const maintPerReg = ((ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35)
+    * resolveTagMult(ctx, tag, 'maintMult');
   // 0.65 of income may go to upkeep — the rest is headroom for the day war
   // occupation halves the tax rolls (tech-boosted incomes made 0.75 too greedy).
   const affordable = Math.max(3, Math.floor((num(t.income) * 0.65) / maintPerReg));
-  const target = Math.ceil(Math.min(num(hints && hints.targetRegiments, 20), affordable) * (fraction || 1));
+  let desired = num(hints && hints.targetRegiments, 20);
+  // Modern deterrence: once a bookmark opens a rearmament phase, countries
+  // with threatRearm size their establishment partly against hostile armies,
+  // bounded by a scenario-specific ceiling. This prevents rich postwar states
+  // from banking thousands while their army target remains frozen forever.
+  if (hints && hints.threatRearm && ctx.game.flags && ctx.game.flags.postwarRearmament) {
+    let hostileRegs = 0;
+    for (const other of Object.keys(ctx.game.tags)) {
+      if (other === tag || other === 'REB') continue;
+      const ot = ctx.game.tags[other];
+      if (!ot || !ot.alive) continue;
+      if (num(t.opinion && t.opinion[other]) > -75) continue;
+      for (const a of armiesOf(ctx, other)) hostileRegs += regCount(a);
+    }
+    const escalation = ctx.game.flags.armsRaceEscalated ? 1.15 : 1;
+    const threatTarget = Math.ceil(hostileRegs * num(hints.threatShare, 0.75) * escalation);
+    desired = Math.max(desired, Math.min(num(hints.maxThreatRegiments, desired * 1.75), threatTarget));
+  }
+  const target = Math.ceil(Math.min(desired, affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
   let guard = 0;
@@ -317,7 +342,9 @@ function runTagAI(ctx, tag) {
   const hints = (ctx.bookmark && ctx.bookmark.aiHints && ctx.bookmark.aiHints[tag]) || {};
   // Peace keeps half the wartime establishment under arms — no nation stands
   // naked just because nobody has attacked it yet (v2.1 harness finding).
-  aiRecruit(ctx, tag, hints, enemies.length ? 1 : 0.5);
+  const rearmingAtPeace = !enemies.length && hints.threatRearm
+    && g.flags && g.flags.postwarRearmament;
+  aiRecruit(ctx, tag, hints, enemies.length || rearmingAtPeace ? 1 : 0.5);
   aiShedUnaffordable(ctx, tag);
   if (!enemies.length) return; // non-warring AI holds its garrisons and waits
   // Storming an already-invested fortress is siege prosecution, not a new
@@ -354,6 +381,7 @@ function aiConsiderWar(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || t.overlord) return; // clients follow their overlord to war, never lead
+  if (hasTagEffect(ctx, tag, 'noOpportunisticWars')) return;
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
   if (num(t.warExhaustion) > 5 || num(t.stability) < 1) return;
   if (num(t.aggression) > 40) return; // the world is watching: digest first

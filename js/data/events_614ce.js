@@ -28,6 +28,73 @@ function dateGE(ctx, y, m) {
   return d.y > y || (d.y === y && d.m >= m);
 }
 
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
+function warBetween(ctx, a, b) {
+  return !!findWar(ctx.game, a, b);
+}
+
+function stagingProvince(ctx) {
+  for (const name of ['Tayma', 'Hegra', 'Dumatha']) {
+    const p = ctx.prov(name);
+    if (p && p.owner === 'RSH') return name;
+  }
+  return 'Hegra';
+}
+
+function awakenCaliphate(ctx) {
+  const h = ctx.helpers;
+  const r = ctx.game.tags.RSH;
+  if (!r) return false;
+  r.alive = true;
+  r.govType = 'theocracy';
+  h.setRuler(ctx, 'RSH', {
+    name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 59,
+  });
+  h.adjust(ctx, 'RSH', { treasury: 240, manpower: 18000, stability: 2, legitimacy: 75, mar: 40 });
+  h.addTagModifier(ctx, 'RSH', {
+    id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 48,
+    effects: { moraleMult: 1.1, reinforceMult: 1.1 },
+  });
+  // The actual centers lie beyond this map. Tayma is the least distorting
+  // northern-edge bridge; if an alternate-history player already holds it,
+  // the off-map army appears at Hegra without confiscating the player's land.
+  const tayma = ctx.prov('Tayma');
+  if (tayma && tayma.owner !== ctx.game.playerTag && tayma.controller !== ctx.game.playerTag) {
+    h.changeOwner(ctx, 'Tayma', 'RSH');
+    tayma.religion = 'islam';
+  }
+  h.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+    inf: 5, cav: 5, name: 'Army of the Ridda',
+    general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
+  });
+  return true;
+}
+
+function ownerOf(ctx, names, preferred) {
+  if (preferred && alive(ctx, preferred)) {
+    for (const name of names) {
+      const p = ctx.prov(name);
+      if (p && p.owner === preferred) return preferred;
+    }
+  }
+  for (const name of names) {
+    const p = ctx.prov(name);
+    const tag = p && p.owner;
+    if (tag && tag !== 'RSH' && tag !== 'REB' && tag !== 'WASTE' && alive(ctx, tag)) return tag;
+  }
+  return null;
+}
+
+function countOwned(ctx, tag) {
+  let n = 0;
+  for (const p of ctx.game.provinces || []) if (p && !p.impassable && p.owner === tag) n++;
+  return n;
+}
+
 function findWar(game, a, b) {
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
@@ -52,6 +119,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_jerusalem_falls',
     title: 'The Holy City Falls',
+    requiresWar: [['SAS', 'BYZ'], ['JUD', 'BYZ']],
     desc: 'After a twenty-day siege the wall is mined, and for the first time since '
       + 'Pompey the city belongs to neither Rome nor its God\'s newer church. The True '
       + 'Cross is carried east as a trophy of the fire temples; the Jewish fighters who '
@@ -245,6 +313,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_khosrow_letter',
     title: '"Khosrow, Greatest of Gods"',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'The Senate\'s peace embassy returns with the King of Kings\' reply, addressed '
       + 'from "Khosrow, greatest of gods, master of the earth" to "Heraclius, his vile '
       + 'and insensate slave." He will consider mercy, the letter continues, when the '
@@ -282,18 +351,19 @@ export const EVENTS_614 = [
     options: [
       {
         label: 'Submit — and endure',
-        tooltip: 'Jerusalem passes to Persia (if the Return holds it); the alliance survives; +150 talents of "gratitude."',
+        tooltip: 'Jerusalem passes to Persia (if the Return holds it); Persian supply support ends; the alliance survives; +150 talents of "gratitude."',
         effects: guard('ev_p_betrayal:0', (ctx) => {
           if (ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')) {
             ctx.helpers.changeOwner(ctx, 'Jerusalem', 'SAS');
           }
+          ctx.helpers.removeModifier(ctx, 'JUD', 'persian_supply_trains');
           ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, legitimacy: -10, stability: -1 });
           ctx.helpers.chronicle(ctx, 'peace', 'Persia trades the Return away: the Jewish garrison of Jerusalem is disbanded by its own ally.');
         }),
       },
       {
         label: 'Defy the King of Kings',
-        tooltip: 'Keep everything — and Persia turns on us: war with SAS, a punitive column marching from Damascus, and no cheap peace while the King\'s anger is fresh.',
+        tooltip: 'Keep everything — Persian supply support ends, and Persia turns on us: war with SAS, a punitive column marching from Damascus, and no cheap peace while the King\'s anger is fresh.',
         effects: guard('ev_p_betrayal:1', (ctx) => {
           const g = ctx.game;
           const jud = g.tags.JUD, sas = g.tags.SAS;
@@ -303,6 +373,7 @@ export const EVENTS_614 = [
             if (jud.opinion) jud.opinion.SAS = -150;
             if (sas.opinion) sas.opinion.JUD = -150;
           }
+          ctx.helpers.removeModifier(ctx, 'JUD', 'persian_supply_trains');
           ctx.helpers.declareWar(ctx, 'SAS', 'JUD', 'The Betrayal Repaid');
           // Defiance has a price tag: the King of Kings sends an actual army,
           // not a diplomatic note — the war arrives, it is not merely declared.
@@ -321,6 +392,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_egypt_falls',
     title: 'Egypt Falls',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Nicetas holds Alexandria until a traitor shows the Persians a dry canal under '
       + 'the walls. With Egypt gone, the grain dole of Constantinople ends after six '
       + 'centuries — the bread of empire is now barley, rationed, and prayed over.',
@@ -384,12 +456,14 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_heraclius_sails',
     title: 'The Emperor Sails East',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Heraclius does what no emperor has done since Theodosius: he leaves the City '
       + 'in God\'s hands and the Patriarch\'s, melts the church plate into soldiers\' pay, '
       + 'and sails — not for Syria, but for the heart of Persia itself, gambling the '
       + 'last army of Rome on the shortest road: the enemy\'s own country.',
     forTag: 'both',
     date: { y: 622, m: 4 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -416,12 +490,14 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_constantinople',
     title: 'The City Under Siege',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Avar hordes on the European shore, a Persian army at Chalcedon, and the '
       + 'Emperor a thousand miles away in the Caucasus. For ten days the walls of '
       + 'Theodosius and the ships of the fleet decide whether there will be an empire '
       + 'to come home to. The Virgin, the citizens swear afterward, walked the walls.',
     forTag: 'both',
     date: { y: 626, m: 7 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -504,11 +580,13 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_nineveh',
     title: 'Nineveh',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'On the plain by the ruins of Assyria\'s dead capital, Heraclius catches the '
       + 'last Persian field army and destroys it in an eleven-hour battle, killing its '
       + 'general with his own hand — so the chroniclers insist, and no soldier who was '
       + 'there contradicts them. The road to Ctesiphon is open.',
     forTag: 'both',
+    world: true,
     trigger: safeTrigger('ev_p_nineveh', (ctx) =>
       dateGE(ctx, 627, 12) && !!findWar(ctx.game, 'SAS', 'BYZ')),
     major: true,
@@ -535,6 +613,7 @@ export const EVENTS_614 = [
       + 'sue for peace on any terms; his second is to die of plague; and the empire of '
       + 'four centuries begins to eat itself alive.',
     forTag: 'both',
+    world: true,
     trigger: safeTrigger('ev_p_khosrow_falls', (ctx) =>
       dateGE(ctx, 628, 2) && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_nineveh)),
     major: true,
@@ -593,6 +672,7 @@ export const EVENTS_614 = [
       + 'mark of Christian Rome. To the Jewish communities that chose Persia, the '
       + 'Emperor\'s mercy will be brief and his memory long.',
     forTag: 'both',
+    world: true,
     trigger: safeTrigger('ev_p_cross', (ctx) =>
       dateGE(ctx, 629, 3) && !findWar(ctx.game, 'SAS', 'BYZ')
       && ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem')),
@@ -611,6 +691,266 @@ export const EVENTS_614 = [
         }),
       },
     ],
+  },
+
+  // ── THE WORLD SOUTH OF THE MAP ────────────────────────────────────────────
+  {
+    id: 'ev_p_hijra',
+    title: 'The Hijra',
+    worldLabel: 'The Hijra establishes a new polity in Arabia',
+    desc: 'South of the imperial roads, Muhammad and his followers leave Mecca for '
+      + 'Yathrib. The journey creates more than a refuge: Medina becomes a political '
+      + 'community with treaties, obligations, and an army. Rome and Persia are too '
+      + 'occupied with one another to notice what has begun beyond their maps.',
+    forTag: 'both',
+    date: { y: 622, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'A new reckoning begins',
+      tooltip: 'The Medinan polity forms off-map. No province changes hands; Arabia now advances on its own historical clock.',
+      effects: guard('ev_p_hijra:0', (ctx) => {
+        ctx.helpers.setFlag(ctx, 'hijra', true);
+        ctx.helpers.chronicle(ctx, 'era', 'The Hijra: a new political community takes shape at Medina, beyond the southern edge of the imperial war.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_mecca',
+    title: 'Arabia Consolidates',
+    worldLabel: 'Mecca submits and Arabia begins to consolidate',
+    desc: 'While Khosrow\'s heirs consume one another and Heraclius restores the old '
+      + 'frontier, the balance inside Arabia changes. Mecca submits to Muhammad. The '
+      + 'sanctuary remains; the idols do not. Tribes that once negotiated separately '
+      + 'must now reckon with a single expanding center.',
+    forTag: 'both',
+    date: { y: 630, m: 1 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The peninsula is no longer a strategic void',
+      tooltip: 'Records the consolidation of Arabia. The northern empires receive no arbitrary penalty yet.',
+      effects: guard('ev_p_mecca:0', (ctx) => {
+        ctx.helpers.setFlag(ctx, 'arabiaConsolidated', true);
+        ctx.helpers.chronicle(ctx, 'diplomacy', 'Mecca submits; Arabia begins to act as one political theater rather than a collection of distant tribes.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_rashidun',
+    title: 'The Succession in Medina',
+    worldLabel: 'Muhammad dies; the Rashidun succession begins',
+    desc: 'Muhammad is dead, and the community does not dissolve. Abu Bakr is acclaimed '
+      + 'as successor. The tribes that break their agreements are fought back into the '
+      + 'new order; commanders and armies emerge from the Ridda wars with the peninsula '
+      + 'behind them and two exhausted empires ahead.',
+    forTag: 'both',
+    date: { y: 632, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The polity survives its founder',
+      tooltip: 'The Rashidun Caliphate becomes active off-map. A mobile field army gathers at the northern Arabian edge.',
+      effects: guard('ev_p_rashidun:0', (ctx) => {
+        if (!awakenCaliphate(ctx)) return;
+        ctx.helpers.chronicle(ctx, 'era', 'Muhammad dies; Abu Bakr succeeds him, and the armies of the Ridda gather beyond the desert frontier.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_iraq_raids',
+    title: 'The Raids Become a War',
+    worldLabel: 'Arab armies move into Iraq',
+    desc: 'Columns out of northeastern Arabia cross the waste toward the lower rivers. '
+      + 'They are not bound to the old roads, the old frontier forts, or the diplomatic '
+      + 'arithmetic of Rome and Persia. Whoever now holds Iraq discovers that the desert '
+      + 'edge has become a front.',
+    forTag: 'both',
+    date: { y: 633, m: 4 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The southern frontier opens',
+      tooltip: 'The Caliphate declares war on the live holder of lower Iraq and fields a second army. No province is transferred by script.',
+      effects: guard('ev_p_iraq_raids:0', (ctx) => {
+        if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        const target = ownerOf(ctx, ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], 'SAS');
+        if (target && !warBetween(ctx, 'RSH', target)) ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of Iraq');
+        ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+          inf: 6, cav: 4, name: 'Army of al-Muthanna',
+          general: { name: 'al-Muthanna ibn Haritha', fire: 2, shock: 4, maneuver: 4 },
+        });
+        ctx.helpers.chronicle(ctx, 'war', 'Arab columns move into Iraq against whoever holds the rivers; the desert edge becomes a front.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_levant_campaign',
+    title: 'The Armies Enter the Levant',
+    worldLabel: 'The Rashidun campaign enters the Levant',
+    desc: 'Separate columns move north through the steppe, converging on Bostra and '
+      + 'Damascus. The target is not a vanished historical border but the power that '
+      + 'actually holds Syria now. The victors of the last great war have had only a few '
+      + 'years to rebuild; the new war does not wait for them.',
+    forTag: 'both',
+    date: { y: 634, m: 4 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Syria is a battlefield again',
+      tooltip: 'The Caliphate declares war on the current Levantine power—preferentially Byzantium if it still holds the region—and reinforces from Arabia.',
+      effects: guard('ev_p_levant_campaign:0', (ctx) => {
+        if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        const target = ownerOf(ctx, ['Damascus', 'Bostra', 'Jerusalem', 'Emesa'], 'BYZ');
+        if (target && !warBetween(ctx, 'RSH', target)) ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of the Levant');
+        ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+          inf: 8, cav: 4, name: 'Army of Syria',
+          general: { name: 'Abu Ubayda ibn al-Jarrah', fire: 3, shock: 3, maneuver: 4 },
+        });
+        ctx.helpers.chronicle(ctx, 'war', 'The Rashidun armies enter the Levant against the power that now holds Syria.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_yarmouk',
+    title: 'The Yarmouk Campaign',
+    requiresWar: ['RSH', 'BYZ'],
+    worldLabel: 'The armies converge around the Yarmouk',
+    desc: 'The armies maneuver among the tributaries east of the Jordan. If Rome still '
+      + 'contests Syria, this is the campaign on which its eastern provinces turn. If an '
+      + 'alternate power has replaced Rome, there is no predestined battle—only the same '
+      + 'mobile army and the same strategic crossing.',
+    forTag: 'both',
+    date: { y: 636, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Let the live map decide the field',
+      tooltip: 'If Byzantium and the Caliphate are at war, both receive campaign armies and short military modifiers. The result is fought in the simulation.',
+      effects: guard('ev_p_yarmouk:0', (ctx) => {
+        if (warBetween(ctx, 'RSH', 'BYZ')) {
+          ctx.helpers.addTagModifier(ctx, 'RSH', {
+            id: 'yarmouk_maneuver', name: 'Maneuver at the Yarmouk', months: 12,
+            effects: { moraleMult: 1.08 },
+          });
+          ctx.helpers.addTagModifier(ctx, 'BYZ', {
+            id: 'last_army_of_the_east', name: 'The Last Army of the East', months: 12,
+            effects: { reinforceMult: 1.08 },
+          });
+          ctx.helpers.spawnArmy(ctx, 'BYZ', ctx.helpers.controls(ctx, 'BYZ', 'Damascus') ? 'Damascus' : 'Antioch', {
+            inf: 8, cav: 2, name: 'Army of Vahan',
+            general: { name: 'Vahan', fire: 3, shock: 3, maneuver: 2 },
+          });
+        } else {
+          ctx.helpers.addTagModifier(ctx, 'RSH', {
+            id: 'unopposed_levant', name: 'No Imperial Field Army', months: 12,
+            effects: { siegeBonus: 1 },
+          });
+        }
+        ctx.helpers.chronicle(ctx, 'war', 'The armies converge around the Yarmouk; history supplies the pressure, and the living map supplies the result.');
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_ctesiphon_pressure',
+    title: 'The Road to Ctesiphon',
+    worldLabel: 'The campaign reaches the Persian capital',
+    desc: 'The lower rivers and the royal road lead toward Ctesiphon. If Arab armies '
+      + 'already hold it, the Sasanian court breaks into flight. If they do not, the '
+      + 'campaign receives engineers and replacements—but no chronicler is permitted to '
+      + 'capture a city the player has successfully defended.',
+    forTag: 'both',
+    date: { y: 637, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The rivers decide',
+      tooltip: 'Control is checked live. A captured Ctesiphon shakes Persia; a defended one faces renewed siege pressure, never a scripted transfer.',
+      effects: guard('ev_p_ctesiphon_pressure:0', (ctx) => {
+        if (ctx.helpers.controls(ctx, 'RSH', 'Seleucia-Ctesiphon')) {
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -2, legitimacy: -25 });
+          ctx.helpers.adjust(ctx, 'RSH', { legitimacy: 15, treasury: 100 });
+          ctx.helpers.chronicle(ctx, 'fall', 'Ctesiphon is lost and the Sasanian court flees east.');
+        } else if (alive(ctx, 'RSH')) {
+          ctx.helpers.addTagModifier(ctx, 'RSH', {
+            id: 'road_to_ctesiphon', name: 'The Road to Ctesiphon', months: 18,
+            effects: { siegeBonus: 1, reinforceMult: 1.08 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'Ctesiphon still stands; the campaign on the rivers receives men and engines, not a scripted victory.');
+        }
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_jerusalem_pressure',
+    title: 'The Southern Gate of Jerusalem',
+    worldLabel: 'The new power reaches Palestine',
+    desc: 'The campaign reaches Palestine. Jerusalem may be Byzantine, Persian, Jewish, '
+      + 'or something no earlier chronicle imagined. Its actual ruler now receives the '
+      + 'demand, and its actual walls must answer it.',
+    forTag: 'both',
+    date: { y: 638, m: 2 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'No city changes hands in a sentence',
+      tooltip: 'If the Caliphate already holds Jerusalem it gains legitimacy. Otherwise the live holder receives frontier unrest and the war continues normally.',
+      effects: guard('ev_p_jerusalem_pressure:0', (ctx) => {
+        if (ctx.helpers.controls(ctx, 'RSH', 'Jerusalem')) {
+          ctx.helpers.adjust(ctx, 'RSH', { legitimacy: 15, infl: 20 });
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Jerusalem submits to the Caliphate under terms negotiated with its live defenders.');
+        } else {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'southern_armies_approach', name: 'The Southern Armies Approach', months: 18,
+            effects: { unrest: 1.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'The armies from Arabia reach Palestine; Jerusalem remains in the hands that can defend it.');
+        }
+      }),
+    }],
+  },
+  {
+    id: 'ev_p_sasanian_horizon',
+    title: 'The Last King of the House of Sasan',
+    worldLabel: 'The Sasanian succession reaches its historical horizon',
+    desc: 'The old chronology ends here with Yazdegerd III dead in the east. But this '
+      + 'chronicle has counted the provinces and armies that actually survive. A shattered '
+      + 'Persia loses its dynasty; a restored one earns the right to defy the date.',
+    forTag: 'both',
+    date: { y: 651, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Judge the living realm, not the old atlas',
+      tooltip: 'A Sasanian rump enters dynastic collapse. A Persia still holding more than four provinces instead gains a restoration bonus.',
+      effects: guard('ev_p_sasanian_horizon:0', (ctx) => {
+        const sas = ctx.game.tags.SAS;
+        if (!sas || !sas.alive) return;
+        if (countOwned(ctx, 'SAS') <= 4) {
+          sas.name = 'Persian Interregnum';
+          ctx.helpers.setRuler(ctx, 'SAS', { name: 'The Provincial Lords', title: 'Interregnum', gov: 1, infl: 1, mar: 2, age: 45 });
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -3, legitimacy: -60 });
+          ctx.helpers.setFlag(ctx, 'sasanianDynastyEnded', true);
+          ctx.helpers.chronicle(ctx, 'fall', 'The House of Sasan ends; the remaining Persian banners belong to provincial lords.');
+        } else {
+          ctx.helpers.addTagModifier(ctx, 'SAS', {
+            id: 'sasanian_restoration', name: 'The Dynasty Defies the Horizon', months: -1,
+            effects: { moraleMult: 1.08, legitimacyAdd: 0.1 },
+          });
+          ctx.helpers.adjust(ctx, 'SAS', { stability: 1, legitimacy: 20 });
+          ctx.helpers.chronicle(ctx, 'era', 'The Sasanian state survives beyond its historical horizon, restored by victories the old chronicle never knew.');
+        }
+      }),
+    }],
   },
 
   // Fired by BOOKMARK_614.checkVictory when Byzantium reaches +35 war score

@@ -19,9 +19,7 @@ and anomaly flags:
 - DEAD         eliminated
 
 Accepted flags (by design, do not "fix"): SEL dies in 67 BCE (Pompey's
-arc), JUD dies in 132 CE (history), ROM snowballs in 67/40 BCE (scripted
-annexations) and bleeds in 40 BCE while it does (fresh conquests sit at
-high autonomy and pay almost nothing — victorious overstretch), HAS/HER/ATG
+arc), ROM snowballs in 67/40 BCE (scripted annexations), and HAS/HER/ATG
 bleed while their fight-to-the-death scripted wars run (plunder-funded
 underdogs), HYR/ARI (the brothers' stalemate, 67 BCE) run mildly negative
 until debt-desertion rebalances them — self-limiting, no spiral, and only
@@ -29,12 +27,16 @@ Pompey's arrival truly settles that war. ARM hovers a hair below
 break-even (poor mountain kingdom).
 
 The far eras: in 115 CE the all-AI diaspora rising is never crushed (JUD
-SNOWBALL) — with Rome's field army locked against Parthia, the AI cannot
-play Turbo's part; a human ROM ends it easily, a human JUD achieves
-exactly this. In 614 CE longer runs show JUD SNOWBALL — the scripted
-Return (Jerusalem by event, Persian-backed gains) holding a small state.
-1948 runs clean: the coalition invades, the truces bite, and the Rhodes
-armistice freezes the lines on schedule.
+SNOWBALL) — even with scattered-command penalties and larger Roman relief
+columns, Rome's field army is locked against Parthia and the AI cannot play
+Turbo's reduction; a human ROM can, while a human JUD is trying to achieve
+exactly this. In 132 CE the prepared opening now lets the all-AI Return survive
+past its campaign horizon, although a long post-campaign run leaves it bleeding
+and in debt after the hidden armories expire; the playable campaign has already
+resolved by then. In 614 CE the Persian-backed Return runs clean through the
+eight-year window. 1948 runs clean: the coalition invades, the truces bite,
+Rhodes freezes the fighting, and the postwar guarantee/rearmament system builds
+the regional establishments instead of leaving rich states demobilized.
 
 Since v2.4 (development growth) the small-token realms breathe a little
 differently: PAR's two-province western outpost in 167 BCE hovers a hair
@@ -47,18 +49,25 @@ two more self-limiting bleeds sit in the accepted set: ATG in 40 BCE
 (the fight-to-the-death class above) and JUD in 66 CE — the all-AI
 Great Revolt now ends negotiated with Judaea intact but keeping its
 wartime host, which costs a hair more than peace pays; debt-desertion
-trims it. Bar Kokhba still dies on schedule (132 CE JUD DEAD) — the
-Drill doctrine exists precisely so that arc holds. Since v3.1 the 167
-Terms-from-Antioch end is an event card (auto-accepted by aiOption in
-harness runs) that keeps only the provinces of the faith — the anomaly
-set is unchanged, but an all-AI HAS no longer inherits occupied Syria.
-Since v3.4 (the deepened 40 BCE chain) the crown war reads differently:
-Sosius arrives with two real legions and Herod's coast pays customs, so
-HER drops OFF the bleeding list while ROM returns to it (the v2.4
-victorious-overstretch class — Sosius' legions cost more than fresh
-conquests pay) — the accepted 40bce line is now ROM SNOWBALL,BLEEDING +
-ATG BLEEDING. Court factions (SPEC §34) are player-only and leave every
-all-AI trajectory untouched; every other bookmark's set is unchanged.
+trims it. The Drill doctrine still gives the Severus phase its
+historical Roman edge. Since v3.1 the 167 Terms-from-Antioch end is an
+event card (auto-accepted by aiOption in harness runs) that keeps only
+the provinces of the faith — an all-AI HAS no longer inherits occupied
+Syria. Since v3.4 (the deepened 40 BCE chain) Sosius arrives with two
+real legions and Herod's coast pays customs, so HER sits off the
+bleeding list while ROM drifts on and off the SNOWBALL/BLEEDING lines
+with the seeded chaos (the v2.4 victorious-overstretch class); ATG
+BLEEDING remains the accepted 40bce constant. Court factions (SPEC §34)
+are player-only and leave every all-AI trajectory untouched. Since v3.5
+(the provincial-response rebalance: Rome's first answer to Bar Kokhba is
+provincial and passive for a year) the all-AI 132 CE war ends negotiated
+with a rump Judaea in debt rather than JUD DEAD — the 66 CE class:
+self-limiting, debt-desertion zeroes its host, and a human ROM still
+crushes the revolt easily. PAR-in-167 also dropped off the bleeding
+line (the merchant marine pays for its outpost). The accepted set as of
+v3.7: 167 HAS BLEEDING · 67 ROM SNOWBALL + SEL DEAD + HYR BLEEDING ·
+40 ATG BLEEDING · 66 JUD BLEEDING · 115 JUD SNOWBALL · 132 JUD
+DEBT-SPIRAL,BLEEDING · 614 none · 1948 none.
 
 ## geom-snapshot.json
 
@@ -84,7 +93,11 @@ The full verification battery, in-repo (SPEC §33). `smoke*.mjs` are
 headless sim suites (no browser): `sh tools/tests/run-smoke.sh`.
 `uitest*.mjs` are Playwright suites and need (1) the game served at
 http://127.0.0.1:8613 and (2) `JU_PW_DIR` pointing at a directory whose
-node_modules contains playwright, with a chromium at /opt/pw-browsers:
-`JU_PW_DIR=... sh tools/tests/run-ui.sh`. Screenshots land in `JU_OUT`
+node_modules contains playwright. Chromium defaults to `/opt/pw-browsers/chromium`;
+set `JU_CHROMIUM` to another executable when needed:
+`JU_PW_DIR=... JU_CHROMIUM=... sh tools/tests/run-ui.sh`. Screenshots land in `JU_OUT`
 (default /tmp). Every feature batch since v1.5 keeps its assertions here —
-run both runners plus `node tools/autorun.mjs 8` before shipping.
+21 headless suites and 20 browser suites at v3.6. Run both runners plus
+`node tools/autorun.mjs 8` before shipping; `smoke20.mjs` owns the background-
+history/state-aware-conquest contract; `smoke21.mjs` owns demobilization,
+peace-aware war chapters, era-gated works, and merchant-shipping economics.
