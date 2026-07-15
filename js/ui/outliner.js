@@ -2,7 +2,9 @@
 import { esc, fmtMen, signed, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick }) {
+export function createOutliner(el, {
+  onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
+}) {
   let ctx = null;
   let actions = null;
   let body = null;
@@ -86,15 +88,13 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
       return;
     }
     const wg = e.target.closest('[data-wing]');
-    if (wg && onFocusProv) { onFocusProv(Number(wg.dataset.wing)); return; }
+    if (wg) {
+      if (onWingClick) onWingClick(Number(wg.dataset.wing));
+      return;
+    }
     const fl = e.target.closest('[data-fleet]');
     if (fl) {
-      const g = ctx && ctx.game;
-      if (g && g.ui) {
-        g.ui.selectedFleet = g.ui.selectedFleet === Number(fl.dataset.fleet) ? null : Number(fl.dataset.fleet);
-        if (g.ui.selectedFleet != null) { g.ui.selectedArmy = null; g.ui.selectedArmies = []; }
-      }
-      refresh(true);
+      if (onFleetClick) onFleetClick(Number(fl.dataset.fleet));
       return;
     }
     const bt = e.target.closest('[data-battle]');
@@ -259,15 +259,16 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     if (wings.length) {
       html += `<div class="ol-sec">Air Wings <span class="ol-count">${wings.length}</span></div>`;
       for (const w of wings) {
+        const sel = g.ui && g.ui.selectedWing === w.id;
         const lead = w.leader ? `\nCommander: ${w.leader.name} (bombing ${w.leader.fire}, evasion ${w.leader.maneuver})` : '';
         const tt = `${w.name} — based at ${w.provName}${lead}\n`
           + (w.raidCd > 0 ? `Rearming: ready in ${w.raidCd} day${w.raidCd === 1 ? '' : 's'}` : 'Bombed up and ready')
-          + '\nRaid and rebase from the base province’s panel.';
+          + '\nSelect, then right-click one of your airfields to rebase.';
         const leadTT = w.canHireLeader
           ? 'Hire a squadron commander (50 martial points) — bombing pips sharpen raids, evasion slips interception'
           : (w.leader ? `${w.leader.name} leads` : 'A commander costs 50 martial points');
         html += `
-          <div class="ol-row ol-wing" data-wing="${w.prov}" data-tt="${esc(tt)}">
+          <div class="ol-row ol-wing${sel ? ' sel' : ''}" data-wing="${w.id}" data-tt="${esc(tt)}">
             <span class="ol-name">✈ ${w.leader ? icon('helmet', 'icon-row') + ' ' : ''}${esc(w.name)}</span>
             <span class="ol-sub">${w.raidCd > 0 ? w.raidCd + 'd' : 'ready'}</span>
             <button class="ol-act${w.canHireLeader ? '' : ' disabled'}" data-wing-leader="${w.id}" data-tt="${esc(leadTT)}">${icon('helmet')}</button>

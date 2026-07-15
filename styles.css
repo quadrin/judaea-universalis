@@ -472,7 +472,6 @@ button {
 }
 .pp-air-raid:hover { color: #ffd27a; border-color: #e8964a; }
 .pp-air-cd { font-size: 10.5px; font-style: italic; opacity: 0.75; }
-.pp-air .pp-recruit-btn { width: 100%; margin-top: 6px; }
 
 /* ------------------------------------------------------------ outliner --- */
 #outliner {
@@ -1806,6 +1805,22 @@ html, body {
   /* modals and start screen sized to the dynamic viewport + safe areas */
   .ev-card { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); }
   .peace-card { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; }
+  /* Negotiation stays on the map on handhelds.  The old desktop-width card
+     covered essentially the whole phone viewport, leaving no province to
+     tap.  A short bottom sheet keeps the upper half of the map exposed while
+     the terms remain scrollable. */
+  #peace-modal .peace-card {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    box-sizing: border-box;
+    max-height: 46vh;
+    max-height: 46dvh;
+    padding: 16px;
+    border-radius: 12px;
+  }
   .ss-inner {
     padding: 24px 16px;
     padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));

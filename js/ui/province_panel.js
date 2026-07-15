@@ -87,6 +87,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <button class="btn pp-recruit-btn" data-ref="recruitInf"></button>
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
+        <button class="btn pp-recruit-btn hidden" data-ref="recruitWing"></button>
       </div>
       <div class="pp-merchant hidden" data-ref="merchantBlock">
         <div class="pp-build-title">${icon('ship', 'icon-sm')} Merchant Marine</div>
@@ -96,7 +97,6 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       <div class="pp-air hidden" data-ref="airBlock">
         <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
         <div data-ref="airWings"></div>
-        <button class="btn pp-recruit-btn" data-ref="recruitWing"></button>
       </div>
       <div class="pp-diplo hidden" data-ref="diploBlock">
         <div class="pp-diplo-title">Diplomacy</div>
@@ -347,11 +347,13 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
 
-    // Build Ship (v2.0): owned coastal harbors only
+    // Warships recruit alongside the army, once a completed shipyard opens.
     const coastal = !!(ctx.geom && Array.isArray(ctx.geom.coastal) && ctx.geom.coastal[provId]);
     const myPort = p.owner === g.playerTag && p.controller === g.playerTag;
-    refs.buildShip.classList.toggle('hidden', !(coastal && myPort && actions && typeof actions.buildShip === 'function'));
-    if (coastal && myPort) {
+    const hasShipyard = Array.isArray(p.buildings) && p.buildings.indexOf('shipyard') >= 0;
+    refs.buildShip.classList.toggle('hidden', !(coastal && myPort && hasShipyard
+      && actions && typeof actions.buildShip === 'function'));
+    if (coastal && myPort && hasShipyard) {
       // Hulls speak the age too (SPEC §31): Penteconters through Destroyers.
       const t = g.tags[g.playerTag];
       const shipPattern = navalGenName(unlockedGen(((t && t.tech && t.tech.mar) | 0)));
@@ -608,6 +610,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     if (actions && typeof actions.getAirInfo === 'function') {
       try { info = actions.getAirInfo(provId); } catch (e) { warnOnce('getAirInfo', e); }
     }
+    refs.recruitWing.classList.toggle('hidden', !info);
     refs.airBlock.classList.toggle('hidden', !info);
     if (!info) return;
     const rows = info.wings.map((w) => {

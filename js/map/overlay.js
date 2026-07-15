@@ -5,6 +5,10 @@
 const CHIP_W = 46;
 const CHIP_H = 20;
 const MORALE_H = 3;
+const FLEET_W = 32;
+const FLEET_H = 28;
+const WING_W = 32;
+const WING_H = 24;
 const CULL_MARGIN = 90;
 // Touch screens get fatter hit targets (drawing unchanged). Live MediaQueryList:
 // .matches is read per hit test, so plugging in a mouse/touchscreen updates behavior.
@@ -142,6 +146,61 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
     for (const chip of groups.values()) if (chip.onScreen) out.push(chip);
     return out;
+  }
+
+  // Fleets and wings use the same marker geometry for drawing and picking.
+  // Air wings are individual counters (rather than an aggregate structure
+  // ornament), so two squadrons at one field can be selected independently.
+  function fleetMarkerList(game, camera) {
+    const perProv = new Map();
+    const out = [];
+    const fleets = Object.values(game.fleets || {}).filter((f) => f && f.ships > 0)
+      .sort((a, b) => a.id - b.id);
+    for (const fleet of fleets) {
+      const off = (geom.offshore && geom.offshore[fleet.prov]) || geom.centroids[fleet.prov];
+      if (!off) continue;
+      const n = perProv.get(fleet.prov) || 0;
+      perProv.set(fleet.prov, n + 1);
+      const [sx, sy] = camera.mapToScreen(off.x, off.y);
+      out.push({ fleet, x: sx + n * 10, y: sy + n * 7 });
+    }
+    return out;
+  }
+
+  function wingMarkerList(game, camera) {
+    const byProv = new Map();
+    for (const wing of Object.values(game.airwings || {}).filter(Boolean).sort((a, b) => a.id - b.id)) {
+      const rows = byProv.get(wing.prov) || [];
+      rows.push(wing);
+      byProv.set(wing.prov, rows);
+    }
+    const out = [];
+    for (const [provId, wings] of byProv) {
+      const c = geom.centroids[provId];
+      if (!c) continue;
+      const [sx, sy] = camera.mapToScreen(c.x, c.y);
+      for (let i = 0; i < wings.length; i++) {
+        out.push({ wing: wings[i], x: sx + (i - (wings.length - 1) / 2) * (WING_W + 4), y: sy + 48 });
+      }
+    }
+    return out;
+  }
+
+  function drawWingMarker(game, marker) {
+    const w = marker.wing;
+    const selected = game.ui && game.ui.selectedWing === w.id;
+    const col = tagColor(game, w.tag);
+    x2.save();
+    x2.translate(marker.x, marker.y);
+    x2.fillStyle = 'rgba(28,24,18,0.92)';
+    x2.strokeStyle = selected ? '#e7c34c' : css(col, 0.95);
+    x2.lineWidth = selected ? 2.5 : 1.5;
+    x2.beginPath();
+    x2.rect(-WING_W / 2, -WING_H / 2, WING_W, WING_H);
+    x2.fill();
+    x2.stroke();
+    x2.restore();
+    drawPlane(marker.x, marker.y, col, 1.25);
   }
 
   function drawArrow(game, camera, a) {
@@ -621,12 +680,6 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       // sieges + wonders + structures per province
       const provs = game.provinces || [];
       const showWonders = camera.zoom > 1.5;
-      // wings parked at their airfields (SPEC §29)
-      const wingsByProv = {};
-      for (const w of Object.values(game.airwings || {})) {
-        if (!w) continue;
-        (wingsByProv[w.prov] || (wingsByProv[w.prov] = [])).push(w);
-      }
       for (let id = 1; id < provs.length; id++) {
         const p = provs[id];
         if (!p) continue;
@@ -655,8 +708,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         // glyphs grow gently with the zoom so a close look rewards the eye
         if (showWonders) {
           const built = Array.isArray(p.buildings) ? p.buildings : [];
-          const wings = wingsByProv[id];
-          if (built.length || (wings && wings.length)) {
+          if (built.length) {
             const [sx, sy] = camera.mapToScreen(c.x, c.y);
             if (onScreen(sx, sy)) {
               const s = Math.min(2.2, 0.8 + camera.zoom * 0.25);
@@ -665,24 +717,14 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
               const gy = sy + (p.wonder ? 30 : 26);
               let gx = sx - ((keys.length - 1) * step) / 2;
               for (const k of keys) { drawStructGlyph(k, gx, gy, s); gx += step; }
-              if (wings && wings.length) {
-                const n = Math.min(3, wings.length);
-                for (let i = 0; i < n; i++) {
-                  drawPlane(sx - ((n - 1) * 7 * s) + i * 14 * s, gy + 13 * s, tagColor(game, wings[i].tag), s);
-                }
-                // the squadron count reads like an army banner's (SPEC §31)
-                x2.fillStyle = '#fff';
-                x2.font = `bold ${Math.round(9 * s)}px Georgia, serif`;
-                x2.textAlign = 'left';
-                x2.textBaseline = 'middle';
-                x2.shadowColor = 'rgba(0,0,0,0.75)';
-                x2.shadowBlur = 2;
-                x2.fillText(String(wings.length), sx + (n - 1) * 7 * s + 9 * s, gy + 13 * s);
-                x2.shadowBlur = 0;
-              }
             }
           }
         }
+      }
+
+      // Air wings are persistent unit counters at every zoom level.
+      for (const marker of wingMarkerList(game, camera)) {
+        if (onScreen(marker.x, marker.y)) drawWingMarker(game, marker);
       }
 
       // battles
@@ -694,11 +736,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       }
 
       // fleets: hull-and-sail chips riding at the offshore anchors
-      for (const f of Object.values(game.fleets || {})) {
-        if (!f || f.ships <= 0) continue;
-        const off = (geom.offshore && geom.offshore[f.prov]) || geom.centroids[f.prov];
-        if (!off) continue;
-        const [sx, sy] = camera.mapToScreen(off.x, off.y);
+      for (const marker of fleetMarkerList(game, camera)) {
+        const f = marker.fleet;
+        const sx = marker.x, sy = marker.y;
         if (!onScreen(sx, sy)) continue;
         const col = tagColor(game, f.tag);
         const sel = game.ui && game.ui.selectedFleet === f.id;
@@ -803,6 +843,40 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
+  function hitTestFleet(sx, sy, game, camera) {
+    try {
+      if (!game) return null;
+      const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
+      const markers = fleetMarkerList(game, camera);
+      for (let i = markers.length - 1; i >= 0; i--) {
+        const m = markers[i];
+        if (m.fleet.tag !== game.playerTag) continue;
+        if (sx >= m.x - FLEET_W / 2 - pad && sx <= m.x + FLEET_W / 2 + pad
+            && sy >= m.y - FLEET_H / 2 - pad && sy <= m.y + FLEET_H / 2 + pad) return m.fleet.id;
+      }
+    } catch (e) {
+      warnOnce('hitf-throw', 'hitTestFleet failed', e);
+    }
+    return null;
+  }
+
+  function hitTestWing(sx, sy, game, camera) {
+    try {
+      if (!game) return null;
+      const pad = coarsePointer && coarsePointer.matches ? TOUCH_HIT_PAD : 0;
+      const markers = wingMarkerList(game, camera);
+      for (let i = markers.length - 1; i >= 0; i--) {
+        const m = markers[i];
+        if (m.wing.tag !== game.playerTag) continue;
+        if (sx >= m.x - WING_W / 2 - pad && sx <= m.x + WING_W / 2 + pad
+            && sy >= m.y - WING_H / 2 - pad && sy <= m.y + WING_H / 2 + pad) return m.wing.id;
+      }
+    } catch (e) {
+      warnOnce('hitw-throw', 'hitTestWing failed', e);
+    }
+    return null;
+  }
+
   // Banner click = the whole stack: primary id plus every army under the standard.
   function hitTestStack(sx, sy, game, camera) {
     try {
@@ -814,5 +888,5 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  return { draw, hitTestArmy, hitTestStack, hitTestBattle, addRaidFx };
+  return { draw, hitTestArmy, hitTestStack, hitTestFleet, hitTestWing, hitTestBattle, addRaidFx };
 }

@@ -52,10 +52,22 @@ const scrimVisible = await page.evaluate(() => {
 ok(!scrimVisible, 'no scrim — the map stays in view');
 ok(/click a gold province/i.test(await page.locator('#peace-modal .peace-hint').textContent()),
   'the hint teaches the map interaction');
+ok(!(await page.locator('#province-panel:not(.hidden), #nation-panel:not(.hidden)').count()),
+  'the peace table clears the ordinary panel berth');
 
 console.log('== the map negotiates ==');
 const petraId = await page.evaluate(() => window._ctx.prov('Petra').id);
-await page.evaluate((id) => window._ctx.bus.emit('mapclick', { provId: id }), petraId);
+const petraPoint = await page.evaluate(() => {
+  const p = window._ctx.prov('Petra');
+  const [x, y] = window._camera.mapToScreen(p.x, p.y);
+  return { x, y };
+});
+const hit = await page.evaluate(({ x, y }) => {
+  const el = document.elementFromPoint(x, y);
+  return el && el.id;
+}, petraPoint);
+ok(hit === 'map-canvas', 'the real pointer target is the map canvas, not the peace overlay: ' + hit);
+await page.mouse.click(petraPoint.x, petraPoint.y);
 await page.waitForTimeout(150);
 let checked = await page.locator(`#peace-modal [data-prov="${petraId}"]`).isChecked();
 let sel = await page.evaluate(() => (window._ctx.game.ui.peaceSelected || []).slice());
@@ -64,25 +76,45 @@ ok(sel.length === 1 && sel[0] === petraId, 'the chosen demand burns solid gold: 
 const total = await page.locator('#peace-modal [data-ref="total"]').textContent();
 ok(/Demands cost \d+ war score/.test(total), 'the cost line updates: ' + total.trim());
 
-await page.evaluate((id) => window._ctx.bus.emit('mapclick', { provId: id }), petraId);
+await page.mouse.click(petraPoint.x, petraPoint.y);
 await page.waitForTimeout(150);
 checked = await page.locator(`#peace-modal [data-prov="${petraId}"]`).isChecked();
 sel = await page.evaluate(() => (window._ctx.game.ui.peaceSelected || []).slice());
 ok(!checked && sel.length === 0, 'clicking again strikes it from the terms');
 
 console.log('== everything else stays inert ==');
-const jerId = await page.evaluate(() => window._ctx.prov('Jerusalem').id);
-await page.evaluate((id) => window._ctx.bus.emit('mapclick', { provId: id }), jerId);
+const jerPoint = await page.evaluate(() => {
+  const p = window._ctx.prov('Jerusalem');
+  const [x, y] = window._camera.mapToScreen(p.x, p.y);
+  return { x, y };
+});
+await page.mouse.click(jerPoint.x, jerPoint.y);
 await page.waitForTimeout(150);
 ok(!(await page.locator('#province-panel:not(.hidden)').count()),
   'clicking a province not on the table opens nothing — the envoys have the floor');
 ok(await page.locator('#peace-modal:not(.hidden)').count() === 1, 'the table stays open through map clicks');
+
+console.log('== handhelds keep a live map above the terms ==');
+await page.setViewportSize({ width: 390, height: 844 });
+await page.waitForTimeout(150);
+const mobileBox = await page.locator('#peace-modal .peace-card').boundingBox();
+ok(mobileBox && mobileBox.y >= 400 && mobileBox.x >= 0 && mobileBox.x + mobileBox.width <= 390,
+  'the terms become a bounded bottom sheet: ' + JSON.stringify(mobileBox));
+const mobileHit = await page.evaluate(() => {
+  const el = document.elementFromPoint(195, 150);
+  return el && el.id;
+});
+ok(mobileHit === 'map-canvas', 'the upper handheld map remains a real pointer target: ' + mobileHit);
+await page.setViewportSize({ width: 1440, height: 900 });
+await page.waitForTimeout(100);
 
 await page.waitForTimeout(300);
 await page.screenshot({ path: OUT + 'uitest22-peace-map.png' });
 
 console.log('== the war overview keeps its scrim (scoped override) ==');
 await page.locator('#peace-modal .peace-cancel').click();
+await page.keyboard.press('n');
+await page.waitForSelector('#nation-panel:not(.hidden)');
 await page.locator('#nation-panel [data-war]').first().click();
 await page.waitForSelector('#war-modal:not(.hidden)');
 const woScrim = await page.evaluate(() => {

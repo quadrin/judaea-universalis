@@ -39,14 +39,25 @@ const port = await page.evaluate(() => {
     const p = g.provinces[i];
     if (p && p.owner === 'ISR' && p.controller === 'ISR' && ctx.geom.coastal[i]) {
       ctx.bus.emit('mapclick', { provId: i, armyId: null });
-      return p.name;
+      return { id: i, name: p.name };
     }
   }
   return null;
 });
 await page.waitForSelector('#province-panel:not(.hidden)');
+ok(await page.locator('[data-ref="buildShip"]').evaluate((el) => el.classList.contains('hidden')),
+  'a coastal province cannot raise warships before its shipyard is built');
+await page.evaluate((portId) => {
+  const ctx = window._ctx;
+  const p = ctx.game.provinces[portId];
+  p.buildings = Array.from(new Set([...(p.buildings || []), 'shipyard']));
+  ctx.bus.emit('mapclick', { provId: portId, armyId: null });
+}, port.id);
+await page.waitForFunction(() => !document.querySelector('[data-ref="buildShip"]').classList.contains('hidden'));
 const shipTxt = (await page.locator('[data-ref="buildShip"]').textContent()) || '';
-ok(/Destroyer Flotillas/.test(shipTxt), '1948 lays down Destroyer Flotillas at ' + port + ': ' + shipTxt.trim());
+ok(/Destroyer Flotillas/.test(shipTxt), '1948 lays down Destroyer Flotillas at ' + port.name + ': ' + shipTxt.trim());
+ok(await page.evaluate(() => document.querySelector('[data-ref="buildShip"]')?.parentElement?.classList.contains('pp-recruit')),
+  'warships recruit beside infantry and cavalry');
 await page.locator('[data-ref="buildShip"]').click();
 await page.waitForTimeout(250);
 
@@ -87,6 +98,96 @@ await page.waitForTimeout(250);
 const fleetState = await page.evaluate(() => Object.values(window._ctx.game.fleets)[0]);
 ok(!!fleetState.admiral, 'an admiral takes the deck: ' + (fleetState.admiral && fleetState.admiral.name));
 ok(fleetState.gen === 5, 'the hull was laid down modern: gen ' + fleetState.gen);
+
+console.log('== fleets and wings answer map orders ==');
+const mapUnits = await page.evaluate(() => {
+  const ctx = window._ctx;
+  const g = ctx.game;
+  const fleet = Object.values(g.fleets).find((f) => f && f.tag === g.playerTag);
+  const wing = Object.values(g.airwings).find((w) => w && w.tag === g.playerTag);
+  let fleetDest = 0, wingDest = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p) continue;
+    if (!fleetDest && i !== fleet.prov && ctx.geom.coastal[i]) fleetDest = i;
+    if (!wingDest && i !== wing.prov && p.owner === g.playerTag && p.controller === g.playerTag && !p.impassable) wingDest = i;
+  }
+  const dest = g.provinces[wingDest];
+  dest.buildings = Array.from(new Set([...(dest.buildings || []), 'airfield']));
+  return { fleetId: fleet.id, fleetProv: fleet.prov, fleetDest, wingId: wing.id, wingProv: wing.prov, wingDest };
+});
+await page.keyboard.press('Escape');
+
+await page.evaluate((provId) => {
+  const p = window._ctx.game.provinces[provId];
+  window._camera.centerOn(p.x, p.y, 2.2);
+}, mapUnits.fleetProv);
+await page.waitForTimeout(900);
+const fleetPt = await page.evaluate((fleetId) => {
+  const ctx = window._ctx;
+  const f = ctx.game.fleets[fleetId];
+  const off = (ctx.geom.offshore && ctx.geom.offshore[f.prov]) || ctx.geom.centroids[f.prov];
+  const [x, y] = window._camera.mapToScreen(off.x, off.y);
+  const r = document.getElementById('map-container').getBoundingClientRect();
+  return { x: r.left + x, y: r.top + y };
+}, mapUnits.fleetId);
+await page.mouse.click(fleetPt.x, fleetPt.y);
+await page.waitForTimeout(150);
+ok(await page.evaluate((id) => window._ctx.game.ui.selectedFleet === id, mapUnits.fleetId),
+  'clicking the ship counter selects the fleet');
+ok((await page.locator('#outliner .ol-fleet.sel').count()) === 1, 'fleet selection is reflected in the outliner');
+
+await page.evaluate((provId) => {
+  const p = window._ctx.game.provinces[provId];
+  window._camera.centerOn(p.x, p.y, 2.2);
+}, mapUnits.fleetDest);
+await page.waitForTimeout(900);
+const fleetDestPt = await page.evaluate((provId) => {
+  const c = window._ctx.geom.centroids[provId];
+  const [x, y] = window._camera.mapToScreen(c.x, c.y);
+  const r = document.getElementById('map-container').getBoundingClientRect();
+  return { x: r.left + x, y: r.top + y };
+}, mapUnits.fleetDest);
+await page.mouse.click(fleetDestPt.x, fleetDestPt.y, { button: 'right' });
+await page.waitForTimeout(150);
+ok(await page.evaluate(({ fleetId, fleetDest }) => window._ctx.game.fleets[fleetId].path[0] === fleetDest,
+  mapUnits), 'right-clicking a coastal province orders the fleet to sail');
+
+await page.evaluate((provId) => {
+  const p = window._ctx.game.provinces[provId];
+  window._camera.centerOn(p.x, p.y, 2.2);
+}, mapUnits.wingProv);
+await page.waitForTimeout(900);
+const wingPt = await page.evaluate((wingId) => {
+  const ctx = window._ctx;
+  const w = ctx.game.airwings[wingId];
+  const c = ctx.geom.centroids[w.prov];
+  const [x, y] = window._camera.mapToScreen(c.x, c.y);
+  const r = document.getElementById('map-container').getBoundingClientRect();
+  return { x: r.left + x, y: r.top + y + 48 };
+}, mapUnits.wingId);
+await page.mouse.click(wingPt.x, wingPt.y);
+await page.waitForTimeout(150);
+ok(await page.evaluate((id) => window._ctx.game.ui.selectedWing === id, mapUnits.wingId),
+  'clicking the aircraft counter selects the air wing');
+ok(await page.evaluate(() => window._ctx.game.ui.selectedFleet == null), 'selecting a wing clears the fleet selection');
+ok((await page.locator('#outliner .ol-wing.sel').count()) === 1, 'wing selection is reflected in the outliner');
+
+await page.evaluate((provId) => {
+  const p = window._ctx.game.provinces[provId];
+  window._camera.centerOn(p.x, p.y, 2.2);
+}, mapUnits.wingDest);
+await page.waitForTimeout(900);
+const wingDestPt = await page.evaluate((provId) => {
+  const c = window._ctx.geom.centroids[provId];
+  const [x, y] = window._camera.mapToScreen(c.x, c.y);
+  const r = document.getElementById('map-container').getBoundingClientRect();
+  return { x: r.left + x, y: r.top + y };
+}, mapUnits.wingDest);
+await page.mouse.click(wingDestPt.x, wingDestPt.y, { button: 'right' });
+await page.waitForTimeout(150);
+ok(await page.evaluate(({ wingId, wingDest }) => window._ctx.game.airwings[wingId].prov === wingDest,
+  mapUnits), 'right-clicking another airfield rebases the selected wing');
 
 console.log('== the scripted war hears envoys ==');
 const dove = await page.evaluate(() => {
