@@ -17,7 +17,38 @@ export function findEventById(ctx, id) {
   for (const ev of eventList(ctx)) if (ev && ev.id === id) return ev;
   return null;
 }
-function monthIndex(y, m) { return y * 12 + (m - 1); }
+// Calendar month index with no year zero. Keeping this shared by the scheduler
+// and the "world keeps moving" clock prevents a BCE/CE crossing from gaining a
+// phantom year.
+export function eventMonthIndex(y, m) {
+  const year = y > 0 ? y - 1 : y;
+  return year * 12 + (m - 1);
+}
+function monthIndex(y, m) { return eventMonthIndex(y, m); }
+
+// The next dated development that belongs to world history rather than the
+// bookmark's local script. `world: true` is intentionally metadata only: the
+// event still goes through the ordinary deterministic scheduler, save state,
+// modal queue and multiplayer replication.
+export function nextWorldEvent(ctx) {
+  const g = ctx && ctx.game;
+  if (!g) return null;
+  const now = monthIndex(g.date.y, g.date.m);
+  let best = null;
+  for (const ev of eventList(ctx)) {
+    if (!ev || ev.world !== true || !ev.date || (g.firedEvents && g.firedEvents[ev.id])) continue;
+    const at = monthIndex(ev.date.y, ev.date.m);
+    if (at < now || (best && best.at <= at)) continue;
+    best = { ev, at };
+  }
+  if (!best) return null;
+  return {
+    id: best.ev.id,
+    label: best.ev.worldLabel || best.ev.title || best.ev.id,
+    date: { ...best.ev.date },
+    months: best.at - now,
+  };
+}
 function canFire(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id || !Array.isArray(ev.options) || !ev.options.length) return false;

@@ -90,6 +90,14 @@ function findHasSelWar(game) {
   return null;
 }
 
+function findWar(game, a, b) {
+  for (const w of (game && game.wars) || []) {
+    const all = w ? (w.attackers || []).concat(w.defenders || []) : [];
+    if (all.indexOf(a) >= 0 && all.indexOf(b) >= 0) return w;
+  }
+  return null;
+}
+
 // Scripted warscore swings persist in the war's eventScore side-bucket, which
 // sideGross folds into every monthly rebuild (writing w.warscore directly gets
 // clobbered by updateWarscores within the month). Same pattern as events_66ce.
@@ -1078,20 +1086,25 @@ export const EVENTS_167 = [
       + 'satrapal armies stand beyond the Euphrates, the taxes will ride east.',
     forTag: 'both',
     date: { y: -148, m: 4 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
       {
         label: 'A province at a time',
-        tooltip: 'Unless the kingdom keeps 8,000 men beyond the Euphrates, Ecbatana and Susa pass to Parthia and Seleucid income suffers.',
+        tooltip: 'Parthia opens a war against the live holder of Media. A prepared eastern army contains the advance; an unprepared frontier faces an Arsacid field host and lasting fiscal pressure.',
         effects: guard('ev_mithridates_rises:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'PAR')) return;
-          setOpinion(ctx, 'SEL', 'PAR', -100);
-          setOpinion(ctx, 'PAR', 'SEL', -100);
-          if (menIn(ctx, 'SEL', EASTERN_PROVINCES) >= 8000) {
+          const media = ctx.prov('Ecbatana');
+          const target = media && media.owner !== 'PAR' ? media.owner : null;
+          if (!target || !alive(ctx, target)) return;
+          setOpinion(ctx, target, 'PAR', -100);
+          setOpinion(ctx, 'PAR', target, -100);
+          if (!findWar(ctx.game, 'PAR', target)) h.declareWar(ctx, 'PAR', target, 'The Arsacid Conquest of Media');
+          if (menIn(ctx, target, EASTERN_PROVINCES) >= 8000) {
             // The east holds — for now, and at a price.
-            h.addTagModifier(ctx, 'SEL', {
+            h.addTagModifier(ctx, target, {
               id: 'holding_the_east', name: 'Holding the East', months: 24,
               effects: { incomeMult: 0.9 },
             });
@@ -1101,17 +1114,25 @@ export const EVENTS_167 = [
               text: 'The satrapal armies stand, and the Arsacid waits for a thinner year.',
             });
           } else {
-            h.changeOwner(ctx, 'Ecbatana', 'PAR', { alsoController: true });
-            h.changeOwner(ctx, 'Susa', 'PAR', { alsoController: true });
-            h.addTagModifier(ctx, 'SEL', {
+            const base = ctx.helpers.controls(ctx, 'PAR', 'Susa') ? 'Susa'
+              : ctx.helpers.controls(ctx, 'PAR', 'Gazaca') ? 'Gazaca' : 'Ecbatana';
+            h.spawnArmy(ctx, 'PAR', base, {
+              inf: 6, cav: 8, name: 'Host of Mithridates',
+              general: { name: 'Mithridates I', fire: 2, shock: 4, maneuver: 4 },
+            });
+            h.addTagModifier(ctx, target, {
               id: 'east_slips_away', name: 'The East Slips Away', months: -1,
               effects: { incomeMult: 0.9 },
+            });
+            h.addTagModifier(ctx, 'PAR', {
+              id: 'arsacid_momentum', name: 'Arsacid Momentum', months: 24,
+              effects: { siegeBonus: 1 },
             });
             h.adjust(ctx, 'PAR', { treasury: 50 });
             h.setFlag(ctx, 'mediaLost', true);
             h.notify(ctx, {
-              title: 'Media Is Parthian', type: 'war', provName: 'Ecbatana',
-              text: 'Ecbatana and Susa pass to the Arsacid. Babylonia lies open behind them.',
+              title: 'The Arsacid comes west', type: 'war', provName: 'Ecbatana',
+              text: 'Mithridates enters Media with a field army. Its cities must now be won on the live map.',
             });
           }
         }),
@@ -1131,18 +1152,22 @@ export const EVENTS_167 = [
       + 'Alexander’s heirs will be reduced, in one season, to Syria.',
     forTag: 'both',
     major: true,
-    trigger: safeTrigger('ev_parthia_babylon', (ctx) =>
-      dateGE(ctx, -141, 4) && alive(ctx, 'PAR') && !!ctx.helpers.getFlag(ctx, 'mediaLost')),
+    date: { y: -141, m: 4 },
+    world: true,
     aiOption: 0,
     options: [
       {
         label: 'One king of kings for another',
-        tooltip: 'Unless 10,000 Seleucid men stand in Babylonia, Babylon, Seleucia-Ctesiphon, Nehardea, and Charax pass to Parthia, and Seleucid income falls hard.',
+        tooltip: 'Parthia presses the live holder of Babylonia. Ten thousand defenders can contain it; otherwise an Arsacid river army and siege momentum arrive. No province is transferred by script.',
         effects: guard('ev_parthia_babylon:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'PAR')) return;
-          if (menIn(ctx, 'SEL', BABYLONIAN_PROVINCES) >= 10000) {
-            h.addTagModifier(ctx, 'SEL', {
+          const river = ctx.prov('Seleucia-Ctesiphon');
+          const target = river && river.owner !== 'PAR' ? river.owner : null;
+          if (!target || !alive(ctx, target)) return;
+          if (!findWar(ctx.game, 'PAR', target)) h.declareWar(ctx, 'PAR', target, 'The Arsacid Conquest of Babylonia');
+          if (menIn(ctx, target, BABYLONIAN_PROVINCES) >= 10000) {
+            h.addTagModifier(ctx, target, {
               id: 'king_in_the_east', name: 'The King in the East', months: 24,
               effects: { incomeMult: 0.95 },
             });
@@ -1151,19 +1176,25 @@ export const EVENTS_167 = [
               text: 'The riverlands are held at ruinous cost. The Arsacid can afford patience.',
             });
           } else {
-            for (const name of BABYLONIAN_PROVINCES) {
-              h.changeOwner(ctx, name, 'PAR', { alsoController: true });
-            }
-            h.removeModifier(ctx, 'SEL', 'east_slips_away');
-            h.addTagModifier(ctx, 'SEL', {
+            const base = ctx.helpers.controls(ctx, 'PAR', 'Ecbatana') ? 'Ecbatana' : 'Susa';
+            h.spawnArmy(ctx, 'PAR', base, {
+              inf: 8, cav: 8, name: 'Army of the Rivers',
+              general: { name: 'Mithridates I', fire: 2, shock: 4, maneuver: 4 },
+            });
+            h.removeModifier(ctx, target, 'east_slips_away');
+            h.addTagModifier(ctx, target, {
               id: 'empire_of_syria_alone', name: 'An Empire of Syria Alone', months: -1,
               effects: { incomeMult: 0.85 },
             });
+            h.addTagModifier(ctx, 'PAR', {
+              id: 'horsemen_at_the_rivers', name: 'Horsemen at the Rivers', months: 24,
+              effects: { siegeBonus: 1, reinforceMult: 1.08 },
+            });
             h.adjust(ctx, 'PAR', { treasury: 100 });
-            h.setFlag(ctx, 'babylonLost', true);
+            h.setFlag(ctx, 'babylonUnderPressure', true);
             h.notify(ctx, {
-              title: 'Babylonia Is Parthian', type: 'war', provName: 'Seleucia-Ctesiphon',
-              text: 'The riverlands pass to Mithridates. Syria alone remains to the dynasty.',
+              title: 'The horsemen reach the rivers', type: 'war', provName: 'Seleucia-Ctesiphon',
+              text: 'Mithridates has reached Babylonia. The cities will be decided by armies, not the event text.',
             });
           }
         }),

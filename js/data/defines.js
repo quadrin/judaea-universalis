@@ -51,6 +51,7 @@ export const DEFINES = {
     BYZ: { aggression: 0.9, caution: 1.1, ponderous: true },
     SAS: { aggression: 1.3, caution: 0.8, ponderous: true },
     GHA: { aggression: 0.6, caution: 1.3 },
+    RSH: { aggression: 1.35, caution: 0.75, ponderous: true },
     // -- 1948 CE --
     ISR: { aggression: 1.1, caution: 0.9 },
     EGY: { aggression: 1.0, caution: 1.0 },
@@ -99,7 +100,7 @@ export const DEFINES = {
     PTO: 'monarchy', PAR: 'monarchy', NAB: 'monarchy', ARM: 'monarchy',
     AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
     ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
-    BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal',
+    BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal', RSH: 'theocracy',
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', MLI: 'monarchy', UAR: 'republic',
@@ -257,6 +258,11 @@ export const DEFINES = {
       name: 'Ghassanids', color: [150, 44, 52], religion: 'christianity', culture: 'arab', capital: 'Bostra',
       description: 'The phylarchs of the desert edge: Rome\'s Arab shield, unpaid for a generation.',
       ideas: { moraleMult: 1.05 },
+    },
+    RSH: {
+      name: 'Rashidun Caliphate', color: [38, 116, 72], religion: 'islam', culture: 'arab', capital: 'Hegra',
+      description: 'The polity rising beyond the southern map edge: mobile, zealous, and entering an exhausted imperial world.',
+      ideas: { moraleMult: 1.1, manpowerMult: 1.1, reinforceMult: 1.08 },
     },
     // ---- 1948 CE: the War of Independence ----
     ISR: {

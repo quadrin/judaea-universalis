@@ -559,6 +559,7 @@ export const EVENTS_66 = [
       + 'general but a pretender — and he intends, for now, to be neither.',
     forTag: 'both',
     date: { y: 68, m: 6 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -593,6 +594,7 @@ export const EVENTS_66 = [
       + 'sally could — time.',
     forTag: 'both',
     date: { y: 69, m: 1 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -663,6 +665,7 @@ export const EVENTS_66 = [
       + 'this siege has been postponed too long.',
     forTag: 'both',
     date: { y: 69, m: 7 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [

@@ -2,12 +2,14 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Five bookmarks:
+An EU4-style grand-strategy game set in the ancient Near East. Eight bookmarks:
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea or the Seleucid Empire),
 **The Judaean Civil War, 67 BCE** (Hyrcanus or Aristobulus, with Pompey inbound),
 **Herod's Rise, 40 BCE** (Herod or Antigonus, with Parthia in Syria),
-**The Great Revolt, 66 CE** (Judaea or Rome), and **The Bar Kokhba Revolt, 132 CE**
-(Judaea or Rome).
+**The Great Revolt, 66 CE** (Judaea or Rome), **The Kitos War, 115 CE**
+(Judaea or Rome), **The Bar Kokhba Revolt, 132 CE** (Judaea or Rome),
+**The Persian Gambit, 614 CE** (the Return or Byzantium), and **The War of
+Independence, 1948** (Israel or Jordan).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
 
@@ -83,6 +85,12 @@ python3 -m http.server 8613 --directory .
   affairs arrive as quiet "News from abroad" toasts; only your own wars sound the
   alarm. Balance is enforced by an all-AI harness (`tools/autorun.mjs`) that replays
   every bookmark and flags snowballs, debt spirals and dead economies.
+- The world keeps moving after the local chapter turns: a separate world-history
+  clock follows Parthia, Roman civil wars, Actium and Augustus, Hadrian's
+  succession, the rise of the Rashidun Caliphate, and the coups, pacts, unions,
+  and wars of the 1950s. These events launch pressure against the realm that
+  actually holds a region; they do not hand historical provinces across a map
+  the player has already changed.
 - Technology: three ladders (government, influence, military) bought with monarch
   points, EU4-style — keeping pace with the age is cheap, racing ahead costs +50% a
   level. Military tech is the biggest lever on the battlefield and unlocks new
@@ -100,8 +108,9 @@ python3 -m http.server 8613 --directory .
   the whole realm (map color, armies, wars, treaties, your own throne) takes the
   new banner, with a requirement checklist in the Decisions panel and a permanent
   founding bonus. Endgame crowns too: the Kingdom of Israel for any victorious
-  Jewish arc, the United Arab Republic for an Arab power that crushes Israel in
-  1948, and the Roman Empire restored for a Heraclius who takes Ctesiphon.
+  Jewish arc, the United Arab Republic through a victorious Arab campaign or
+  the 1958 Egyptian-Syrian union, and the Roman Empire restored for a Heraclius
+  who takes Ctesiphon.
 - A living land: towns grow each January (markets, granaries, capitals and low
   autonomy help; war and unrest freeze it), and you can develop provinces with
   monarch points at prices that scale with size. Deeper diplomacy: monthly
@@ -145,11 +154,18 @@ python3 -m http.server 8613 --directory .
   Persian-era Return can crown its mission chain by raising the Third
   Temple: hold Jerusalem rich and steady, spend 300 talents, and the House
   (and its wonder-star on the map, and its monthly yield) returns.
-- The game tells you how to play it: every era lists its win and loss
-  conditions at the top of the realm panel, H opens a one-page primer,
-  winning enemies send ultimatums you may accept or refuse, and a battle
-  going wrong has a Withdraw button — shattered, but marching. The whole
-  35-suite verification battery now ships in `tools/tests/`.
+- The game tells you how to play it: every standard names three first moves,
+  the campaign's signature system, its win/loss contract, and the first dated
+  pressure; the contract and next danger clock stay pinned beside your armies.
+  Event choices print their consequences instead of hiding them behind hover.
+  H opens a one-page primer, winning enemies send ultimatums you may accept or
+  refuse, and a battle going wrong has a Withdraw button — shattered, but
+  marching. The whole 39-suite verification battery ships in `tools/tests/`.
+- The 1948 chapter no longer freezes at Rhodes: the armed armistice suppresses
+  random border wars while the Arab League's 1950 joint-defense treaty builds
+  a mutual guarantee web, rival staffs slow coordination, and threatened states
+  turn their treasuries into peacetime forces. The 1955 arms agreement raises
+  both Egyptian and Israeli readiness for the next war.
 - Navies age like armies: hulls are laid down to the era's pattern —
   Penteconters through Trireme Squadrons to Destroyer Flotillas — hit harder
   each generation, and re-rig at anchor when the art advances. Fleets take

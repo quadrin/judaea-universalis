@@ -467,6 +467,37 @@ export const EVENTS_132 = [
     ],
   },
 
+  {
+    id: 'ev2_hadrian_dies',
+    title: 'Hadrian Is Dead',
+    worldLabel: 'Antoninus Pius succeeds Hadrian',
+    desc: 'Hadrian dies at Baiae after a long illness, leaving Antoninus to inherit the '
+      + 'empire, the Senate he humiliated, and whatever settlement the Judaean war has '
+      + 'actually produced. A new reign changes Roman posture; it does not erase armies '
+      + 'or award a victory the map does not support.',
+    forTag: 'both',
+    date: { y: 138, m: 7 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The rescript bears a new name',
+      tooltip: 'Antoninus Pius becomes emperor. Rome gains stability and loses its emergency passivity; any surviving war continues under the live balance of power.',
+      effects: guard('ev2_hadrian_dies:0', (ctx) => {
+        if (!alive(ctx, 'ROM')) return;
+        ctx.helpers.setRuler(ctx, 'ROM', { name: 'Antoninus Pius', title: 'Emperor', gov: 4, infl: 4, mar: 2, age: 51 });
+        ctx.helpers.adjust(ctx, 'ROM', { stability: 1, legitimacy: 15, warExhaustion: -2 });
+        ctx.helpers.removeModifier(ctx, 'ROM', 'provincial_response');
+        ctx.helpers.removeModifier(ctx, 'ROM', 'eastern_anxiety');
+        ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'antonine_succession', name: 'The Antonine Succession', months: 36,
+          effects: { incomeMult: 1.05 },
+        });
+        ctx.helpers.chronicle(ctx, 'ruler', 'Hadrian dies; Antoninus Pius inherits the empire and the settlement the live war has made.');
+      }),
+    }],
+  },
+
   // Fired by BOOKMARK_132.checkVictory when the revolt reaches +50 war score
   // (SPEC §32); never fires on its own. Hadrian's concession is an OFFER.
   {

@@ -26,7 +26,8 @@ import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
-import { resolveEventOption } from './events.js';
+import { nextWorldEvent, resolveEventOption } from './events.js';
+import { campaignGuidance } from '../data/campaign_guidance.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -54,7 +55,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
-    rngSeed,
+    rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [] },
   };
 
@@ -182,10 +183,13 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events }
     // so content packages keep addressing 'Joppa' when the label reads Tel Aviv.
     if (p.canon && p.canon !== p.name) nameToId.set(p.canon, i);
   }
+  const rngStart = (Number.isFinite(game.rngState) ? game.rngState : num(game.rngSeed, 1)) >>> 0;
+  game.rngState = rngStart;
+  const rng = createRng(rngStart, (state) => { game.rngState = state; });
   const ctx = {
     game, DEFINES, MAP_DATA, geom, bus, bookmark, events,
     dynEvents: new Map(), // runtime-synthesized events (succession cards); never saved
-    rng: createRng((num(game.rngSeed, 1)) >>> 0),
+    rng,
     helpers: simHelpers,
     prov(name) {
       const id = nameToId.get(name);
@@ -349,6 +353,18 @@ export const simHelpers = {
       }
       return true;
     } catch (e) { warnOnce('fireEvent', 'fireEvent failed', e); return false; }
+  },
+  // Content-driven political unions and restorations use the same complete
+  // reference rewrite as player formable nations.
+  switchTag(ctx, from, to) {
+    try {
+      if (!switchTagCore(ctx, from, to)) return false;
+      const nt = ctx.game.tags[to];
+      if (nt) applyReformsToTag(ctx.DEFINES, nt, to);
+      ctx.bus.emit('tagSwitched', { from, to });
+      ctx.bus.emit('provinceOwner', {});
+      return true;
+    } catch (e) { warnOnce('switchTag', 'switchTag failed', e); return false; }
   },
   getFlag(ctx, key) {
     return ctx.game.flags[key];
@@ -1569,6 +1585,18 @@ export function gameActions(ctx) {
         return Array.isArray(list) && list.length ? list.slice() : null;
       } catch (e) { warnOnce('objectives', 'getObjectives failed', e); return null; }
     },
+    getCampaignGuidance() {
+      try {
+        const guide = campaignGuidance(g.bookmarkId, g.playerTag, g.date);
+        if (!guide) return null;
+        const list = ctx.bookmark && ctx.bookmark.objectives && ctx.bookmark.objectives[g.playerTag];
+        return {
+          ...guide,
+          objectives: Array.isArray(list) ? list.slice() : [],
+          worldNext: nextWorldEvent(ctx),
+        };
+      } catch (e) { warnOnce('campaignGuide', 'getCampaignGuidance failed', e); return null; }
+    },
     getChronicle() {
       try { return Array.isArray(g.chronicle) ? g.chronicle.slice() : []; } catch (e) { warnOnce('chronicle', 'getChronicle failed', e); return []; }
     },
@@ -1802,6 +1830,8 @@ export function gameActions(ctx) {
 export const SAVE_VERSION = 1;
 export function reviveGame(saved) {
   if (!saved || typeof saved !== 'object' || !saved.tags || !saved.provinces) return null;
+  if (!Number.isFinite(saved.rngSeed)) saved.rngSeed = 1;
+  if (!Number.isFinite(saved.rngState)) saved.rngState = saved.rngSeed;
   if (!saved.truces) saved.truces = {};
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.flags) saved.flags = {};

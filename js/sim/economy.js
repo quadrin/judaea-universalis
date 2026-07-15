@@ -96,6 +96,10 @@ export function incomeBreakdown(ctx, tag) {
   }
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
   for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg;
+  // Irregular hosts, subsidized expeditionary forces, and unusually costly
+  // modern establishments can tune upkeep without changing the global price
+  // of a regiment. Missing effects resolve to 1 for old saves/bookmarks.
+  out.maint *= resolveTagMult(ctx, tag, 'maintMult');
   // Air wings (SPEC §29): fuel, spares and pay ride the maintenance line.
   const wingUpkeep = (ctx.DEFINES.AIR && ctx.DEFINES.AIR.wingUpkeep) || 1;
   out.maint += airWingsOf(ctx, tag).length * wingUpkeep;

@@ -320,12 +320,12 @@ export const BOOKMARK_132 = {
     });
     h.addTagModifier(ctx, 'JUD', {
       id: 'hidden_armories', name: 'Hidden Armories', months: 24,
-      effects: { reinforceMult: 1.25 },
+      effects: { reinforceMult: 1.25, maintMult: 0.55 },
     });
     // The emperor is far away and the first response is provincial.
     h.addTagModifier(ctx, 'ROM', {
       id: 'provincial_response', name: 'A Provincial Response', months: 14,
-      effects: { reinforceMult: 0.75 },
+      effects: { reinforceMult: 0.75, aiPassive: true },
     });
 
     // --- Starting armies & generals. -------------------------------------------

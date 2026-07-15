@@ -2,9 +2,9 @@
 # Run every Playwright browser suite. Requires:
 #   1. the game served at http://127.0.0.1:8613  (python3 -m http.server 8613 --directory .)
 #   2. playwright resolvable: set JU_PW_DIR to a directory whose node_modules
-#      contains playwright (npm i playwright), and a chromium at /opt/pw-browsers
-#      (or edit the executablePath in the suites).
-# Usage: JU_PW_DIR=/path/to/dir sh tools/tests/run-ui.sh
+#      contains playwright (npm i playwright).
+# Chromium defaults to /opt/pw-browsers/chromium; override it with JU_CHROMIUM.
+# Usage: JU_PW_DIR=/path/to/dir JU_CHROMIUM=/path/to/chromium sh tools/tests/run-ui.sh
 cd "$(dirname "$0")" || exit 1
 fail=0
 for f in $(ls uitest*.mjs | sort -V); do

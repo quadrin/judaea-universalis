@@ -56,13 +56,18 @@ export function createEventModal(el) {
   function render() {
     const ev = current.event || {};
     const options = Array.isArray(ev.options) && ev.options.length ? ev.options : [{ label: 'So be it.' }];
-    const opts = options.map((o, i) =>
-      `<button class="btn ev-opt" data-idx="${i}"${o && o.tooltip ? ` data-tt="${esc(o.tooltip)}"` : ''}>${esc((o && o.label) || 'Continue')}</button>`
-    ).join('');
+    const opts = options.map((o, i) => {
+      const tip = o && o.tooltip ? String(o.tooltip) : '';
+      return `<button class="btn ev-opt" data-idx="${i}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
+        + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
+        + (tip ? `<span class="ev-effect">${esc(tip)}</span>` : '')
+        + `</button>`;
+    }).join('');
     el.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card">
         <div class="ev-orn">${divider('ev-divider')}</div>
+        ${ev.world ? '<div class="ev-world">World history</div>' : ''}
         <h2 class="ev-title">${esc(ev.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(ev.desc || '')}</div>
         <div class="ev-opts">${opts}</div>
@@ -98,13 +103,18 @@ export function createEventModal(el) {
       return;
     }
     const options = Array.isArray(p.options) && p.options.length ? p.options : [{ label: 'So be it.' }];
-    const opts = options.map((o) =>
-      `<button class="btn ev-opt" disabled${o && o.tooltip ? ` data-tt="${esc(o.tooltip)}"` : ''}>${esc((o && o.label) || 'Continue')}</button>`
-    ).join('');
+    const opts = options.map((o) => {
+      const tip = o && o.tooltip ? String(o.tooltip) : '';
+      return `<button class="btn ev-opt" disabled${tip ? ` data-tt="${esc(tip)}"` : ''}>`
+        + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
+        + (tip ? `<span class="ev-effect">${esc(tip)}</span>` : '')
+        + `</button>`;
+    }).join('');
     el.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card ev-remote">
         <div class="ev-orn">${divider('ev-divider')}</div>
+        ${p.world ? '<div class="ev-world">World history</div>' : ''}
         <h2 class="ev-title">${esc(p.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(p.desc || '')}</div>
         <div class="ev-opts">${opts}</div>

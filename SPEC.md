@@ -338,7 +338,7 @@ game = {
   battles: [ {id, prov, atk:[armyIds], def:[armyIds], day:0, ...} ],
   wars: [ {id, name, attackers:[], defenders:[], warscore:{}, started:{y,m,d}} ],
   pendingEvents: [ {instanceId, eventId, forTag} ],
-  firedEvents: {}, flags: {}, rngSeed,
+  firedEvents: {}, flags: {}, rngSeed, rngState, // cursor advances with every draw; saves resume exactly
   ui: { selectedProv:0, selectedArmy:null },   // sim never reads; ui/overlay share it
 }
 ```
@@ -641,7 +641,8 @@ renderer.render → overlay.draw → labels.update.
   `ju_save_66ce` on the topbar save button (bus `'saveRequest'`) and each January (autosave).
   Start screen shows a Continue button via `showStartScreen(bookmark, onPick, continueInfo?)`.
   Both bookmark-setup guards (`flags._setupDone`, `flags._bookmarkSetupRan`) serialize, so a
-  loaded game never re-runs setup.
+  loaded game never re-runs setup. `rngState` is plain game data updated after every random
+  draw, so saves resume the stream exactly; pre-`rngState` saves fall back to `rngSeed`.
 - **Monarch-point sinks** (actions): `devProvince(provId, 'tax'|'prod'|'mp')` — 50
   gov/infl/mar respectively, +1 dev, cap 15, own+controlled only, emits `'provinceDev'`;
   `buyStability()` — 75 gov; `callReserves()` — 50 mar, +2,000 manpower. AI buys stability
@@ -923,8 +924,11 @@ renderer.render → overlay.draw → labels.update.
     never tick (`mp.role === 'guest'` skips the tick loop). Host broadcasts `{t:'snap',
     game}` — promptly (250ms throttle) when dirty, as a 1.2s heartbeat otherwise. Guests
     apply snapshots by *mutating the game object in place* (ctx closures survive), keeping
-    their own `ui` state and `playerTag`, then emit `day`/`month` locally so every panel
-    refreshes. Guest actions are proxied: reads (`get*/explain*/can*/evaluate*`) run
+    their own `ui` state and assigned `playerTag` while that tag exists, then emit
+    `day`/`month` locally so every panel refreshes. A `tagSwitched` remaps every matching
+    host-side guest chair and sends `{t:'chair'}`; snapshots fall back to the authoritative
+    chair if a stale assigned tag was replaced. Guest actions are proxied: reads
+    (`get*/explain*/can*/evaluate*`) run
     against the local mirror; everything else is sent as `{t:'cmd', name, args}` and
     executed on the host under the guest's chair (a scoped `playerTag` swap). Toasts
     raised by a guest's command are captured (scoped `bus.emit` shim) and forwarded as
@@ -1395,9 +1399,78 @@ foreign court **read-only**.
 - **Help (H or ?)**: a one-page primer modal — hotkeys, monarch points,
   missions vs decisions, the peace table, flags-are-doors — plus a pointer
   on the title screen's hint line.
-- **The suites live in the repo now** (`tools/tests/`): all 17 headless sim
-  suites and 18 Playwright suites, with `run-smoke.sh` / `run-ui.sh`
+- **The suites live in the repo now** (`tools/tests/`): all 20 headless sim
+  suites and 19 Playwright suites, with `run-smoke.sh` / `run-ui.sh`
   runners. Paths are portable: repo root derives from each file's location,
   the playwright install dir comes from `JU_PW_DIR`, screenshots go to
   `JU_OUT`. (A container rollback mid-session briefly lost three
   scratchpad-only suites — never again.)
+
+## 34. v3.4: campaign readability and bookmark power balance
+
+- **Campaign guidance** (`campaign_guidance.js`, action
+  `getCampaignGuidance`): all sixteen playable standards have a signature
+  system, exactly three concrete opening moves, and a chronological danger
+  clock. The nation card joins that guidance to the bookmark's win/loss
+  contract before selection; the outliner pins the contract and recomputes the
+  next pressure from the live date. BCE arithmetic observes the missing year
+  zero.
+- **Consequences in the open** (`modals.js`): an event option's tooltip remains
+  available to the tooltip system but is also printed beneath the option label,
+  for both local and multiplayer-guest event cards. Decisions no longer depend
+  on hover or memory.
+- **Era-specific establishments** (`maintMult`): army upkeep and the AI's
+  affordability ceiling now honor tag modifiers. Religious fervor and hidden
+  armories make the 66 and 132 revolt hosts temporarily affordable; Hasmonean
+  zeal does the same in 167. Antipater's credit and Roman senatorial credit
+  finance the patronage wars of 67 and 40 BCE. In 614, Persian supply trains
+  pay for the Return until either answer to the 617 betrayal removes them.
+- **Revolt pacing**: the Kitos hosts suffer thirty months of scattered command
+  (discipline and reinforcement penalties) while Turbo, Quietus, and the Cyprus
+  reduction arrive as credible Roman relief columns. Bar Kokhba receives a
+  short prepared-revolt window before the provincial response, while Severus's
+  arrival still removes the restraint.
+- **The armed armistice, 1949–56**: Rhodes applies five years of restraint in
+  place of ahistorical random wars. The 1950 Joint Defence Council makes Egypt,
+  Jordan, Syria, Lebanon, Iraq, and Saudi Arabia guarantee one another, with a
+  reinforcement penalty for rival commands, and opens threat-driven peacetime
+  recruitment bounded by per-state ceilings. The 1955 arms agreement fields
+  Egyptian cadres, triggers an Israeli response, and raises the regional force
+  calculation by 15%. The eight-year harness ends with no 1948 anomaly and
+  materially larger postwar establishments rather than idle treasuries.
+
+## 35. v3.5: the world keeps moving
+
+- **World history is explicit metadata** (`event.world === true`): it uses the
+  ordinary deterministic date scheduler, fired-event save state, event modal,
+  and multiplayer relay. `nextWorldEvent` exposes the nearest unfired dated
+  development; the outliner shows it as a blue world clock beside the local
+  campaign pressure. A chapter verdict does not stop either scheduler.
+- **Historical inertia, not historical determinism**: background events inspect
+  live owners, surviving tags, current wars, and army preparation. They open
+  wars, field armies, change rulers and governments, or apply pressure; they do
+  not transfer provinces merely because an old atlas says a conquest occurred.
+  Parthia's Media and Babylonia events were converted from automatic ownership
+  changes to real campaigns.
+- **Ancient continuations**: 67 BCE now continues through the First Triumvirate,
+  Crassus's Parthian campaign, and Caesar's civil war; 40 BCE continues through
+  Antony's eastern campaign, Actium, Alexandria, and Augustus; 115 CE can flow
+  into Aelia Capitolina and a state-aware Bar Kokhba second chapter; 132 CE
+  reaches the Antonine succession. Nero's death, the Four Emperors, Trajan's
+  death, and the existing Roman–Persian turning points are classified as world
+  history too.
+- **614–651**: the dormant `RSH` tag records the Hijra and Arabian consolidation,
+  activates with the Rashidun succession, and sends separate campaigns into
+  Iraq and the Levant through the northern Arabian map edge. Yarmouk, Ctesiphon,
+  Jerusalem, and the Sasanian horizon check the living map. Victories must still
+  be fought; a Persia that survives strongly enough can defy 651.
+- **1952–58**: Egypt's Free Officers replace the monarchy, the Baghdad Pact forms
+  a rival northern bloc, Suez becomes a conditional live war, Egypt and Syria
+  can form the UAR without first destroying Israel, and the Iraqi revolution
+  breaks the monarchy's alignment. The older conquest-based UAR decision remains
+  available as an alternate-history path.
+- **Regression contract** (`smoke20.mjs`): verifies post-verdict scheduling,
+  state-aware Parthian and Roman pressure, Rashidun activation and two-front
+  campaigns, the no-free-Ctesiphon rule, the 1952 coup, Baghdad Pact, political
+  UAR formation, and the Iraqi revolution. The browser suite verifies both local
+  and world clocks; multiplayer event cards retain the world-history badge.

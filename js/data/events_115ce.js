@@ -37,6 +37,11 @@ function findWar(game, a, b) {
   return null;
 }
 
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
 // Scripted warscore swings persist in the war's eventScore side-bucket.
 function addWarscore(ctx, tag, amount) {
   try {
@@ -152,10 +157,10 @@ export const EVENTS_115 = [
     options: [
       {
         label: 'The empire answers',
-        tooltip: 'Rome: Turbo lands at Pelusium with 11 regiments and a hard commission.',
+        tooltip: 'Rome: Turbo lands at Pelusium with 13 regiments and a hard commission.',
         effects: guard('ev_k_turbo:0', (ctx) => {
           ctx.helpers.spawnArmy(ctx, 'ROM', 'Pelusium', {
-            inf: 9, cav: 2, name: "Turbo's Expedition",
+            inf: 11, cav: 2, name: "Turbo's Expedition",
             general: { name: 'Marcius Turbo', fire: 2, shock: 3, maneuver: 3 },
           });
         }),
@@ -233,10 +238,10 @@ export const EVENTS_115 = [
     options: [
       {
         label: 'The Moor rides',
-        tooltip: 'Rome: Quietus at Nisibis with 9 regiments and +20% siege for 24 months. Judaea: +5 legitimacy — the massacres preach.',
+        tooltip: 'Rome: Quietus at Nisibis with 11 regiments and +20% siege for 24 months. Judaea: +5 legitimacy — the massacres preach.',
         effects: guard('ev_k_quietus:0', (ctx) => {
           ctx.helpers.spawnArmy(ctx, 'ROM', 'Nisibis', {
-            inf: 6, cav: 3, name: "Quietus' Column",
+            inf: 7, cav: 4, name: "Quietus' Column",
             general: { name: 'Lusius Quietus', fire: 2, shock: 4, maneuver: 4 },
           });
           ctx.helpers.addTagModifier(ctx, 'ROM', {
@@ -292,9 +297,9 @@ export const EVENTS_115 = [
     options: [
       {
         label: 'The grind',
-        tooltip: 'Rome: 6 fresh regiments land at Paphos; +10 war score against the rising.',
+        tooltip: 'Rome: 8 fresh regiments land at Paphos; +10 war score against the rising.',
         effects: guard('ev_k_reduction:0', (ctx) => {
-          ctx.helpers.spawnArmy(ctx, 'ROM', 'Paphos', { inf: 5, cav: 1, name: 'Fleet Detachment' });
+          ctx.helpers.spawnArmy(ctx, 'ROM', 'Paphos', { inf: 6, cav: 2, name: 'Fleet Detachment' });
           addWarscore(ctx, 'ROM', 10);
         }),
       },
@@ -311,6 +316,7 @@ export const EVENTS_115 = [
       + 'governor of Syria, is emperor — and Hadrian has never believed in this war.',
     forTag: 'both',
     date: { y: 117, m: 8 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -345,6 +351,7 @@ export const EVENTS_115 = [
       + 'the Euphrates. "The first duty of a new prince," he writes, "is to know the '
       + 'size of his own hand."',
     forTag: 'ROM',
+    world: true,
     trigger: safeTrigger('ev_k_withdrawal', (ctx) =>
       dateGE(ctx, 117, 10) && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_k_trajan_dies)),
     aiOption: 0,
@@ -360,6 +367,91 @@ export const EVENTS_115 = [
         }),
       },
     ],
+  },
+
+  // ── A SECOND CHAPTER, IF THE CAMPAIGN RUNS LONG ───────────────────────────
+  {
+    id: 'ev_k_aelia_horizon',
+    title: 'The Colony on the Sacred Hill',
+    worldLabel: 'Hadrian orders Aelia Capitolina at Jerusalem',
+    desc: 'Hadrian\'s surveyors mark a Roman colony at Jerusalem and a new civic center '
+      + 'on the sacred hill. The order is issued by the wider empire regardless of how the '
+      + 'diaspora war ended. Whether it can be built depends on who actually holds the city.',
+    forTag: 'both',
+    date: { y: 130, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The decree meets the live map',
+      tooltip: 'If Rome holds Jerusalem, the colony raises unrest across Roman-held Jewish provinces. Otherwise Hadrian’s plan is frustrated and the holder gains legitimacy.',
+      effects: guard('ev_k_aelia_horizon:0', (ctx) => {
+        const holder = ctx.prov('Jerusalem');
+        if (holder && holder.owner === 'ROM' && alive(ctx, 'ROM')) {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'aelia_colony', name: 'Aelia Capitolina Survey', months: -1,
+            effects: { unrest: 2 },
+          });
+          for (const p of ctx.game.provinces || []) {
+            if (!p || p.owner !== 'ROM' || p.religion !== 'judaism') continue;
+            ctx.helpers.addProvinceModifier(ctx, p.name, {
+              id: 'aelia_anger', name: 'The Aelia Decree', months: 30, effects: { unrest: 1.5 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Hadrian orders Aelia Capitolina laid out at Jerusalem; the hill country begins to organize again.');
+        } else if (holder && ctx.game.tags[holder.owner]) {
+          ctx.helpers.adjust(ctx, holder.owner, { legitimacy: 10 });
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Hadrian names a colony he cannot build: Jerusalem lies beyond Roman surveyors.');
+        }
+      }),
+    }],
+  },
+  {
+    id: 'ev_k_bar_kokhba_horizon',
+    title: 'The Hills Rise Again',
+    worldLabel: 'The prepared revolt in Judaea reaches its horizon',
+    desc: 'Weapons come out of caves and workshops; Simon bar Kosiba is acclaimed Nasi. '
+      + 'If Judaea already won lasting independence, the mobilization strengthens that '
+      + 'state instead of reenacting a revolt. If Rome still holds the hills, a new war '
+      + 'begins under conditions created by fifteen years of alternate history.',
+    forTag: 'both',
+    date: { y: 132, m: 4 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Year One—again, or for the first time',
+      tooltip: 'An independent Jewish realm receives mobilization. If Rome holds Judaea and JUD still exists, the revolt revives with an army and declares war; no province is handed over.',
+      effects: guard('ev_k_bar_kokhba_horizon:0', (ctx) => {
+        const independent = alive(ctx, 'MLI') ? 'MLI'
+          : alive(ctx, 'JUD') && !ctx.game.tags.JUD.overlord && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 5 ? 'JUD' : null;
+        if (independent) {
+          ctx.helpers.adjust(ctx, independent, { manpower: 5000, legitimacy: 15, mar: 30 });
+          ctx.helpers.addTagModifier(ctx, independent, {
+            id: 'prepared_generation', name: 'A Prepared Generation', months: 30,
+            effects: { moraleMult: 1.1, manpowerMult: 1.1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The prepared generation joins an independent Jewish state; the revolt becomes mobilization rather than reenactment.');
+          return;
+        }
+        const jud = ctx.game.tags.JUD;
+        if (!jud || !alive(ctx, 'ROM')) return;
+        jud.alive = true;
+        jud.overlord = null;
+        ctx.helpers.setRuler(ctx, 'JUD', { name: 'Simon bar Kosiba', title: 'Nasi Israel', gov: 2, infl: 3, mar: 5, age: 45 });
+        ctx.helpers.adjust(ctx, 'JUD', { treasury: 120, manpower: 7000, stability: 1, legitimacy: 45, mar: 30 });
+        ctx.helpers.spawnArmy(ctx, 'JUD', 'Hebron', {
+          inf: 7, cav: 1, name: 'The Hidden Host',
+          general: { name: 'Simon bar Kosiba', fire: 2, shock: 4, maneuver: 4 },
+        });
+        if (!findWar(ctx.game, 'JUD', 'ROM')) ctx.helpers.declareWar(ctx, 'JUD', 'ROM', 'The Bar Kokhba Revolt');
+        ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'hidden_armories', name: 'The Hidden Armories', months: 30,
+          effects: { moraleMult: 1.1, reinforceMult: 1.1 },
+        });
+        ctx.helpers.chronicle(ctx, 'war', 'The prepared revolt breaks from the Judaean hills under Simon bar Kosiba.');
+      }),
+    }],
   },
 
   // Fired by BOOKMARK_115.checkVictory when the rising reaches +40 war score

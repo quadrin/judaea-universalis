@@ -146,6 +146,30 @@ export function createOutliner(el, { onArmyClick, onFocusProv, onPeaceClick, onW
     const player = g.playerTag;
     let html = '';
 
+    // The campaign contract stays visible beside the armies: what this
+    // bookmark is about, what can end it, and which historical pressure comes
+    // next. The full mission chain remains in the realm panel.
+    if (actions && typeof actions.getCampaignGuidance === 'function') {
+      let guide = null;
+      try { guide = actions.getCampaignGuidance(); } catch (e) { warnOnce('campaignGuide', e); }
+      if (guide) {
+        const next = guide.next;
+        const world = guide.worldNext;
+        const when = next ? (next.months === 0 ? 'this month' : `in ${next.months} month${next.months === 1 ? '' : 's'}`) : '';
+        const worldWhen = world ? (world.months === 0 ? 'this month' : `in ${world.months} month${world.months === 1 ? '' : 's'}`) : '';
+        const goals = (guide.objectives || []).slice(0, 3).map((line) => {
+          const cls = /^Win:/.test(line) ? 'pos' : /^Lose:/.test(line) ? 'neg' : '';
+          return `<div class="ol-goal ${cls}">${esc(line)}</div>`;
+        }).join('');
+        html += `<div class="ol-campaign">
+          <div class="ol-campaign-title">${icon('star4', 'icon-row')} ${esc(guide.system || 'Campaign')}</div>
+          ${next ? `<div class="ol-clock">${icon('alert', 'icon-row')} <b>${esc(next.label)}</b> ${esc(when)}</div>` : ''}
+          ${world ? `<div class="ol-clock ol-world-clock">${icon('scroll', 'icon-row')} <span>World:</span> <b>${esc(world.label)}</b> ${esc(worldWhen)}</div>` : ''}
+          <div class="ol-goals">${goals}</div>
+        </div>`;
+      }
+    }
+
     // Armies
     const armies = Object.values(g.armies || {}).filter((a) => a && a.tag === player);
     html += `<div class="ol-sec">Armies <span class="ol-count">${armies.length}</span></div>`;
