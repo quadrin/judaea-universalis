@@ -27,6 +27,7 @@ import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
+import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 
@@ -369,6 +370,12 @@ export const simHelpers = {
   },
   getFlag(ctx, key) {
     return ctx.game.flags[key];
+  },
+  // Move a court faction's approval (SPEC §34). shiftFaction already fails
+  // soft everywhere it can — AI realms, eras without factions and unknown
+  // ids are quiet no-ops — so content may call it unconditionally.
+  factionShift(ctx, tag, factionId, delta) {
+    return shiftFaction(ctx, tag, factionId, delta);
   },
   notify(ctx, { title, text, type, provName } = {}) {
     ctx.bus.emit('notify', { title: title || '', text: text || '', type: type || 'info', provName });
@@ -1625,8 +1632,15 @@ export function gameActions(ctx) {
     },
     // What the era asks of the player (SPEC §33): the bookmark's win/loss
     // lines for the tag being played, or null when a bookmark predates them.
+    // Once the chapter's verdict is in, the goals retire — the panel shows
+    // the settled state instead of win/loss lines that can no longer trip.
     getObjectives() {
       try {
+        if (g.result) {
+          return [g.result === 'win'
+            ? 'Win: the verdict is ours. The Chronicle (C) records it; the campaign sails on.'
+            : 'Lose: the verdict went against us. The Chronicle (C) records it; the campaign sails on.'];
+        }
         const bk = ctx.bookmark;
         const list = bk && bk.objectives && bk.objectives[g.playerTag];
         return Array.isArray(list) && list.length ? list.slice() : null;
@@ -1780,6 +1794,18 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('convertProvince', 'convertProvince failed', e); }
     },
 
+    // ---- factions (nation panel, SPEC §34) -----------------------------------
+    getFactions() {
+      try { return getFactionsInfo(ctx); } catch (e) { warnOnce('factions', 'getFactions failed', e); return null; }
+    },
+    appeaseFaction(factionId) {
+      try {
+        const res = appeaseFactionCore(ctx, g.playerTag, String(factionId));
+        if (!res.ok) { say('The court is cold', res.why || 'They will not hear us.', 'bad'); return; }
+        say('A faction courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
+      } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
+    },
+
     // ---- missions (nation panel) ---------------------------------------------
     getMissions() {
       try {
@@ -1924,6 +1950,7 @@ export function reviveGame(saved) {
     if (!t.courtCand) t.courtCand = {};
     if (!Number.isFinite(t.aggression)) t.aggression = 0;
     if (!Array.isArray(t.guarantees)) t.guarantees = []; // pre-diplomacy-depth saves
+    if (t.factions === undefined) t.factions = null; // pre-faction saves (SPEC §34): reseeded lazily
     // A save written mid-multiplayer leaves guest nations human (ai:false).
     // Loading is always a solo continuation: everyone but the player is AI again.
     t.ai = k !== saved.playerTag;

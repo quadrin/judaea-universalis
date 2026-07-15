@@ -1,7 +1,8 @@
-// UI verification — campaign guidance on the standard and outliner, plus
-// always-visible consequences on event choices.
+// UI verification — SPEC §34: the Factions block sits in the realm panel with
+// approval bars and a working appeasement lever, and stays hidden for foreign
+// courts (their politics are offstage).
 import { createRequire } from 'module';
-const require = createRequire((process.env.JU_PW_DIR || '/tmp/claude-0/-home-user-judaea-universalis/14e3ad23-6546-5a93-b028-f73783a98caf/scratchpad') + '/');
+const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
@@ -18,44 +19,63 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: 20000 });
-await page.locator('.bm-card.current').click();
+await page.locator('.bm-card.current').click(); // 167 BCE
 await page.waitForSelector('.nation-card');
-
-console.log('== the standard explains the campaign ==');
-const card = page.locator('.nation-card').first();
-ok((await card.locator('.nc-plan li').count()) === 3, 'three concrete first moves stand on the nation card');
-const contract = (await card.locator('.nc-contract').textContent()) || '';
-ok(/Win:/.test(contract) && /Lose:/.test(contract), 'the campaign contract names victory and defeat');
-const pressure = (await card.locator('.nc-pressure').textContent()) || '';
-ok(/First pressure:/.test(pressure) && /month/.test(pressure), 'the first historical pressure is dated');
-await page.screenshot({ path: OUT + 'v34-campaign-standard.png' });
-
-await card.click();
+await page.locator('.nation-card').first().click(); // HAS
 await page.waitForFunction(() => !!window._ctx);
-await page.waitForTimeout(500);
+await page.waitForTimeout(400);
 
-console.log('== the contract stays pinned during play ==');
-ok((await page.locator('#outliner .ol-campaign').count()) === 1, 'the outliner pins the campaign contract');
-ok((await page.locator('#outliner .ol-clock:not(.ol-world-clock)').count()) === 1, 'the next local danger clock remains visible');
-ok((await page.locator('#outliner .ol-world-clock').count()) === 1, 'the next independent world development has its own clock');
-ok((await page.locator('#outliner .ol-goal').count()) >= 3, 'the win and loss conditions remain visible');
+console.log('== the court sits in the realm panel ==');
+await page.locator('.tb-flag').click();
+await page.waitForSelector('#nation-panel:not(.hidden)');
+const facRows = await page.locator('.np-faction').count();
+ok(facRows === 3, 'three factions at the Hasmonean court: ' + facRows);
+const names = await page.locator('.np-fac-name').allTextContents();
+ok(names.some((n) => /Hasideans/.test(n)) && names.some((n) => /Hellenizers/.test(n)),
+  'the era\'s parties by name: ' + names.join(' · '));
+const bars = await page.locator('.np-fac-fill').count();
+ok(bars === 3, 'every faction carries its approval bar');
+const state = await page.locator('.np-fac-state').first().textContent();
+ok(/content · 50/.test(state), 'factions open content at 50: "' + state.trim() + '"');
 
-console.log('== event consequences are readable without hovering ==');
-await page.evaluate(() => {
-  const ctx = window._ctx;
-  const ev = (ctx.events || []).find((row) => row && row.options
-    && row.options.some((opt) => opt && opt.tooltip)
-    && (row.forTag === 'both' || row.forTag === 'player' || row.forTag === ctx.game.playerTag));
-  if (ev) ctx.helpers.fireEvent(ctx, ev.id);
+console.log('== the appeasement lever works ==');
+await page.evaluate(() => { window._ctx.game.tags.HAS.points.gov = 200; });
+// re-open the panel so the lever re-renders against the fuller purse
+await page.locator('#nation-panel .pp-close').click();
+await page.locator('.tb-flag').click();
+await page.waitForSelector('#nation-panel:not(.hidden)');
+const hasBtn = await page.locator('.np-fac-btn[data-appease="hasideans"]').count();
+ok(hasBtn === 1, 'the lever renders for the Hasideans');
+await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
+await page.waitForTimeout(200);
+const after = await page.locator('.np-fac-state').first().textContent();
+ok(/content · 60/.test(after), 'courting the Hasideans: 50 → 60 ("' + after.trim() + '")');
+const gov = await page.evaluate(() => window._ctx.game.tags.HAS.points.gov);
+ok(gov === 160, 'the price was 40 governance points (200 → ' + gov + ')');
+await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
+await page.waitForTimeout(200);
+const again = await page.locator('.np-fac-state').first().textContent();
+ok(/content · 60/.test(again), 'the lever cools down — no double-courting (' + again.trim() + ')');
+
+console.log('== foreign courts keep their politics offstage ==');
+// every flag is a door (SPEC §28): click the enemy's chip in our own
+// diplomacy block and their court opens read-only — with no Factions block.
+const foreignChip = page.locator('#nation-panel .fchip-link[data-open-tag="SEL"]').first();
+ok(await foreignChip.count() >= 1, 'the Seleucid chip is a door');
+await foreignChip.click();
+await page.waitForTimeout(300);
+const viewedName = await page.locator('#nation-panel .np-title').textContent();
+ok(/Seleucid/.test(viewedName), 'the foreign court opens: ' + viewedName.trim());
+const foreignHidden = await page.evaluate(() => {
+  const block = document.querySelector('#nation-panel [data-ref="factionsBlock"]');
+  return block ? block.classList.contains('hidden') : null;
 });
-await page.waitForSelector('#event-modal:not(.hidden)', { timeout: 5000 });
-const effects = await page.locator('#event-modal .ev-effect').count();
-ok(effects >= 1, 'choice effects are printed directly beneath their labels');
-await page.screenshot({ path: OUT + 'v34-event-effects.png' });
+ok(foreignHidden === true, 'the Factions block hides for a foreign court');
 
-console.log('== no page errors ==');
-ok(errors.length === 0, 'no page errors: ' + JSON.stringify(errors.slice(0, 3)));
+console.log('== no console errors ==');
+ok(errors.length === 0, errors.length ? 'errors: ' + errors.slice(0, 3).join(' | ') : 'the console stays clean');
 
+await page.screenshot({ path: OUT + 'uitest19-factions.png' });
 await browser.close();
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

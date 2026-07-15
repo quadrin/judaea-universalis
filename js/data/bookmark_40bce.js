@@ -194,6 +194,122 @@ export const BOOKMARK_40 = {
       'Lose: Jerusalem gone and fewer than 3,000 men — Rome uses the axe for kings.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    HER: [
+      {
+        id: 'kin', name: 'The House of Antipater',
+        desc: 'Brothers, cousins and in-laws in every office you can fill — the family machine that raised you.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Family Machine', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'Feuds in the House', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Divide the offices (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Family Presents Its Claims',
+          text: 'Pheroras wants a command, Joseph wants Jerusalem\'s revenues promised, and your '
+            + 'mother-in-law wants everyone else dead — the usual. A king who cannot pay his own '
+            + 'blood discovers that blood keeps its own accounts.',
+          grant: { label: 'Something for everyone', cost: { gov: 50 } },
+          refuse: { label: 'The crown owes the family nothing', tooltip: 'The accounts stay open.' },
+        },
+      },
+      {
+        id: 'sanhedrin', name: 'The Sanhedrin',
+        desc: 'The lawyers of Jerusalem, who tried you for murder once and have not changed their minds — only their circumstances.',
+        drift(ctx, t) { return (t.legitimacy || 0) >= 50 ? 0.3 : -0.5; },
+        boon: { name: 'The Court Acquiesces', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Court Remembers Galilee', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Honor the Law\'s forms (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Sanhedrin Asks for Its Prerogatives',
+          text: 'An Idumean commoner who marries into the priest-kings is still an Idumean commoner '
+            + 'to the seventy-one. They will bless what they cannot prevent — for the return of the '
+            + 'council\'s prerogatives, in writing, witnessed.',
+          grant: { label: 'The prerogatives, in writing', cost: { infl: 50 } },
+          refuse: { label: 'A king is not judged twice', tooltip: 'Seventy-one memories sharpen.' },
+        },
+      },
+      {
+        id: 'swords', name: 'The Hired Swords',
+        desc: 'Idumean bands, Cilician veterans, whoever the silver reaches: the army that is yours exactly as long as the pay is.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.8;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'Paid Steel', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'Pay or March Home', text: '−20% reinforcement', effects: { reinforceMult: 0.8 } },
+        appease: { label: 'A donative for the bands (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Bands Count the Silver',
+          text: 'The paymasters are two months behind and the Cilicians have begun doing arithmetic '
+            + 'out loud around the fires. Antigonus\' agents circulate with purses. Mercenaries do '
+            + 'not desert kings — only debtors.',
+          grant: { label: 'Empty the chest for them', cost: { treasury: 150 } },
+          refuse: { label: 'They will be paid from Jerusalem', tooltip: 'The purses circulate freely.' },
+        },
+      },
+    ],
+    ATG: [
+      {
+        id: 'priesthood', name: 'The Priesthood',
+        desc: 'You are king and high priest — Mattathias on your coins — and the courses of the altar hold you to both.',
+        drift(ctx, t) {
+          try { return ctx.helpers.controls(ctx, 'ATG', 'Jerusalem') ? 0.5 : -0.7; } catch (e) { return 0; }
+        },
+        boon: { name: 'The Altar Blesses the Maccabee', text: '−0.75 unrest everywhere', effects: { unrestAll: -0.75 } },
+        bane: { name: 'The Ephod Sits Crooked', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Serve the altar in person (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Priests Ask for Their King',
+          text: 'A high priest who is always in the field is a high priest the courses never see. '
+            + 'Come to the altar, keep the feasts in person, let Jerusalem watch the last Hasmonean '
+            + 'serve — or let them whisper that the ephod was only ever a campaign banner.',
+          grant: { label: 'Keep the feast in person', cost: { gov: 50 } },
+          refuse: { label: 'The war is my office', tooltip: 'The whisper spreads.' },
+        },
+      },
+      {
+        id: 'parthians', name: 'The Parthian Party',
+        desc: 'The courtiers who rode in with the horsemen and know exactly whose lances made you king.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const par = g.tags.PAR;
+          const parFighting = !!(par && par.alive && (par.atWarWith || []).some((e) => e === 'ROM' || e === 'HER'));
+          return parFighting ? 0.4 : -0.6;
+        },
+        boon: { name: 'The King of Kings Remembers', text: '+12% manpower', effects: { manpowerMult: 1.12 } },
+        bane: { name: 'A Client Without a Patron', text: '−5% morale', effects: { moraleMult: 0.95 } },
+        appease: { label: 'Gifts eastward (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Parthian Party Wants Tribute Sent',
+          text: 'Pacorus took Hyrcanus and five hundred talents\' promise when he gave you the city; '
+            + 'the party that came with him suggests — with the delicacy of men holding receipts — '
+            + 'that the balance travel east before the prince has to ask.',
+          grant: { label: 'Send the balance east', cost: { treasury: 100 } },
+          refuse: { label: 'Jerusalem pays no tribute', tooltip: 'The receipts are filed, not forgotten.' },
+        },
+      },
+      {
+        id: 'street', name: 'The Street of Jerusalem',
+        desc: 'The crowd that cheered the horsemen at the Fish Gate: they love the Hasmonean name and eat every day.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 4 ? 0.3 : -0.5; },
+        boon: { name: 'The City\'s Sons', text: '+12% manpower', effects: { manpowerMult: 1.12 } },
+        bane: { name: 'The Crowd Turns', text: '+1.25 unrest everywhere', effects: { unrestAll: 1.25 } },
+        appease: { label: 'Bread for the quarters (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Street Asks for Bread',
+          text: 'The siege economy reaches the ovens first: the queues lengthen, the loaves shrink, '
+            + 'and the crowd that made you king with its cheering can unmake the cheering overnight. '
+            + 'Open the granaries while there is something in them to open.',
+          grant: { label: 'Open the granaries', cost: { treasury: 120 } },
+          refuse: { label: 'The garrison eats first', tooltip: 'The queues learn new songs.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'HER',

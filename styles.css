@@ -1086,14 +1086,33 @@ button {
 .ol-peace:hover { border-color: var(--gold); filter: brightness(1.3); }
 
 /* peace dialog */
-#peace-modal { position: absolute; inset: 0; z-index: 110; pointer-events: auto; }
-#peace-modal.hidden { display: none !important; }
 .peace-card {
   position: absolute;
   left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   width: min(420px, calc(100vw - 40px));
   padding: 22px 24px;
+}
+/* The peace table stands beside the map, not over it: no scrim, clicks pass
+   through to the provinces (gold = on the table, solid gold = in the deal),
+   and the card docks left where the panels live. The war overview keeps its
+   centered card and scrim — these overrides are the peace table's alone. */
+#peace-modal { position: absolute; inset: 0; z-index: 110; pointer-events: none; }
+#peace-modal.hidden { display: none !important; }
+#peace-modal .modal-scrim { display: none; }
+#peace-modal .peace-card {
+  left: 12px; top: 56px;
+  transform: none;
+  max-height: calc(100vh - 76px);
+  max-height: calc(100dvh - 76px);
+  overflow-y: auto;
+  pointer-events: auto;
+}
+.peace-hint {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin: -2px 0 8px;
 }
 .peace-title {
   font-variant: small-caps;
@@ -1953,6 +1972,31 @@ html, body {
 .np-m-current .np-m-name { color: var(--ink); }
 .np-m-current .np-m-mark { color: var(--red-deep); }
 .np-m-locked { opacity: 0.5; }
+
+/* factions (SPEC §34): approval bars and the appeasement lever */
+.np-factions { display: flex; flex-direction: column; }
+.np-faction {
+  padding: 5px 2px 6px;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.25);
+}
+.np-faction:last-child { border-bottom: none; }
+.np-fac-top { display: flex; align-items: center; gap: 7px; }
+.np-fac-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-fac-state { font-size: 12px; font-variant: small-caps; letter-spacing: 0.04em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.np-fac-btn { flex: none; width: 26px; padding: 2px 0; justify-content: center; }
+.np-fac-bar {
+  margin-top: 4px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(85, 69, 46, 0.18);
+  border: 1px solid rgba(85, 69, 46, 0.25);
+  overflow: hidden;
+}
+.np-fac-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.np-fac-fill.np-fac-devoted { background: #6f8a3d; }
+.np-fac-fill.np-fac-content { background: #a08a4f; }
+.np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
+
 .np-dip-sec {
   margin-top: 7px;
   font-variant: small-caps;

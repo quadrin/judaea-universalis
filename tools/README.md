@@ -49,11 +49,25 @@ two more self-limiting bleeds sit in the accepted set: ATG in 40 BCE
 (the fight-to-the-death class above) and JUD in 66 CE — the all-AI
 Great Revolt now ends negotiated with Judaea intact but keeping its
 wartime host, which costs a hair more than peace pays; debt-desertion
-trims it. The Drill doctrine still gives the Severus phase its historical
-Roman edge. Since v3.1 the 167 Terms-from-Antioch end is an event card
-(auto-accepted by aiOption in harness runs) that keeps only the provinces of
-the faith — the anomaly set is unchanged, but an all-AI HAS no longer inherits
-occupied Syria.
+trims it. The Drill doctrine still gives the Severus phase its
+historical Roman edge. Since v3.1 the 167 Terms-from-Antioch end is an
+event card (auto-accepted by aiOption in harness runs) that keeps only
+the provinces of the faith — an all-AI HAS no longer inherits occupied
+Syria. Since v3.4 (the deepened 40 BCE chain) Sosius arrives with two
+real legions and Herod's coast pays customs, so HER sits off the
+bleeding list while ROM drifts on and off the SNOWBALL/BLEEDING lines
+with the seeded chaos (the v2.4 victorious-overstretch class); ATG
+BLEEDING remains the accepted 40bce constant. Court factions (SPEC §34)
+are player-only and leave every all-AI trajectory untouched. Since v3.5
+(the provincial-response rebalance: Rome's first answer to Bar Kokhba is
+provincial and passive for a year) the all-AI 132 CE war ends negotiated
+with a rump Judaea in debt rather than JUD DEAD — the 66 CE class:
+self-limiting, debt-desertion zeroes its host, and a human ROM still
+crushes the revolt easily. PAR-in-167 also dropped off the bleeding
+line (the merchant marine pays for its outpost). The accepted set as of
+v3.7: 167 HAS BLEEDING · 67 ROM SNOWBALL + SEL DEAD + HYR BLEEDING ·
+40 ATG BLEEDING · 66 JUD BLEEDING · 115 JUD SNOWBALL · 132 JUD
+DEBT-SPIRAL,BLEEDING · 614 none · 1948 none.
 
 ## geom-snapshot.json
 

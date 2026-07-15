@@ -148,6 +148,127 @@ export const EVENTS_614 = [
     ],
   },
 
+  // ── 1b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_benjamin',
+    title: 'Benjamin of Tiberias',
+    desc: 'The richest Jew in Galilee opens his strongrooms: Benjamin of Tiberias '
+      + 'arms and pays the men of Tiberias, Nazareth and the hill villages, and '
+      + 'marches with them himself. He is buying, with his own silver, the thing his '
+      + 'grandfathers only prayed for — a Jewish army on the road to Jerusalem.',
+    forTag: 'both',
+    date: { y: 614, m: 8 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The strongrooms open',
+        tooltip: 'The Return: +100 talents, +1,500 manpower; the Fighters of the Return +8 approval.',
+        effects: guard('ev_p_benjamin:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, manpower: 1500 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'fighters', 8);
+        }),
+      },
+    ],
+  },
+
+  // ── 1c ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_reckoning',
+    title: 'The Reckoning in the City',
+    desc: 'The city has fallen and the score-settling begins: churches fired, captives '
+      + 'herded by the Mamilla pool, and men on both sides of a five-century grudge '
+      + 'deciding what victory permits. The chroniclers who hate you will write down '
+      + 'everything. What they write is, for one week, yours to choose.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_reckoning', (ctx) =>
+      !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_jerusalem_falls)
+      && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Stay the hand — ransom the captives',
+        tooltip: '−80 talents; +10 legitimacy, Jerusalem −1 unrest for 12 months, and the Exilarch\'s House +8 approval.',
+        effects: guard('ev_p_reckoning:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -80, legitimacy: 10 });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'hand_stayed', name: 'The Hand Stayed', months: 12, effects: { unrest: -1 },
+          });
+          ctx.helpers.factionShift(ctx, 'JUD', 'exilarch', 8);
+          ctx.helpers.chronicle(ctx, 'era', 'The Return stays the hand: captives ransomed at Mamilla, the score left unsettled.');
+        }),
+      },
+      {
+        label: 'Let the week run',
+        tooltip: '+15 martial points; −10 legitimacy, Jerusalem +2 unrest for 24 months — and the chroniclers write everything.',
+        effects: guard('ev_p_reckoning:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { mar: 15, legitimacy: -10 });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'week_ran', name: 'The Reckoning Remembered', months: 24, effects: { unrest: 2 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'The reckoning runs its week in Jerusalem; Antiochus Strategos sharpens his pen.');
+        }),
+      },
+    ],
+  },
+
+  // ── 1d ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_zacharias',
+    title: 'The Patriarch Goes East',
+    desc: 'Patriarch Zacharias walks into captivity beside the reliquary of the True '
+      + 'Cross, and the Christian East walks with him in spirit: the lamentation '
+      + 'literature begins before the column clears the Mount of Olives. Ctesiphon '
+      + 'gains a hostage worth more than a province; Constantinople gains a grievance '
+      + 'worth more than an army.',
+    forTag: 'both',
+    date: { y: 614, m: 9 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Cross goes to Ctesiphon',
+        tooltip: 'Persia: +50 talents of ransom traffic. Byzantium: −5 legitimacy now — and a cause that will pay for twenty years of war.',
+        effects: guard('ev_p_zacharias:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'SAS', { treasury: 50 });
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: -5 });
+          ctx.helpers.chronicle(ctx, 'era', 'Zacharias and the True Cross go east in the Persian baggage train.');
+        }),
+      },
+    ],
+  },
+
+  // ── 1e ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_piyyut',
+    title: '"On That Day"',
+    desc: 'In the synagogues the poets are already at work: piyyutim that read the '
+      + 'Persian war as the birth-pangs of the end — the wicked kingdom fallen, the '
+      + 'ingathering begun, the House about to descend rebuilt from heaven. The '
+      + 'congregations sing them and weep. Messianic time is a fire: it warms the '
+      + 'fighters, and it burns the patient.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_piyyut', (ctx) =>
+      dateGE(ctx, 615, 1) && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Proclaim the hour',
+        tooltip: '+10 legitimacy; the Priests of the Mount +10 approval. The hour, once proclaimed, must arrive.',
+        effects: guard('ev_p_piyyut:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'priests', 10);
+        }),
+      },
+      {
+        label: 'Counsel patience from the pulpits',
+        tooltip: '+1 stability; the Exilarch\'s House +8 approval — Babylon has outlived four messianic hours.',
+        effects: guard('ev_p_piyyut:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'exilarch', 8);
+        }),
+      },
+    ],
+  },
+
   // ── 2 ─────────────────────────────────────────────────────────────────────
   {
     id: 'ev_p_governance',
@@ -242,7 +363,7 @@ export const EVENTS_614 = [
       },
       {
         label: 'Defy the King of Kings',
-        tooltip: 'Keep everything — Persian supply support ends, and Persia turns on us: war with SAS, the alliance in ashes.',
+        tooltip: 'Keep everything — Persian supply support ends, and Persia turns on us: war with SAS, a punitive column marching from Damascus, and no cheap peace while the King\'s anger is fresh.',
         effects: guard('ev_p_betrayal:1', (ctx) => {
           const g = ctx.game;
           const jud = g.tags.JUD, sas = g.tags.SAS;
@@ -254,8 +375,14 @@ export const EVENTS_614 = [
           }
           ctx.helpers.removeModifier(ctx, 'JUD', 'persian_supply_trains');
           ctx.helpers.declareWar(ctx, 'SAS', 'JUD', 'The Betrayal Repaid');
+          // Defiance has a price tag: the King of Kings sends an actual army,
+          // not a diplomatic note — the war arrives, it is not merely declared.
+          ctx.helpers.spawnArmy(ctx, 'SAS', 'Damascus', {
+            inf: 5, cav: 2, name: 'The Punitive Column',
+            general: { name: 'Shahin', fire: 2, shock: 3, maneuver: 3 },
+          });
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
-          ctx.helpers.chronicle(ctx, 'war', 'The Return refuses to be sold: Persia turns its lancers on its own allies.');
+          ctx.helpers.chronicle(ctx, 'war', 'The Return refuses to be sold: Persia turns its lancers on its own allies, and a punitive column marches from Damascus.');
         }),
       },
     ],
@@ -287,6 +414,39 @@ export const EVENTS_614 = [
           }
           ctx.helpers.adjust(ctx, 'BYZ', { stability: -1 });
           ctx.helpers.chronicle(ctx, 'war', 'Alexandria falls; the grain dole of Constantinople ends after six hundred years.');
+        }),
+      },
+    ],
+  },
+
+  // ── 5b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_carthage',
+    title: 'The Ships for Carthage',
+    desc: 'The treasure is crated on the wharves and the rumor runs through the City '
+      + 'in a morning: the Emperor is leaving — moving the government to Carthage, '
+      + 'where his family rose, beyond the King of Kings\' reach. The Patriarch bars '
+      + 'his way at the Great Church with the whole city at his back and requires an '
+      + 'oath at the altar: that he will live and die with the City.',
+    forTag: 'BYZ',
+    date: { y: 619, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Swear at the altar',
+        tooltip: '+1 stability, +5 legitimacy; the Church +10 approval. The City and the Emperor are one flesh now.',
+        effects: guard('ev_p_carthage:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { stability: 1, legitimacy: 5 });
+          ctx.helpers.factionShift(ctx, 'BYZ', 'church', 10);
+          ctx.helpers.chronicle(ctx, 'era', 'Heraclius swears at the altar of the Great Church: he will live and die with the City.');
+        }),
+      },
+      {
+        label: 'Load the ships anyway',
+        tooltip: '+150 talents reach safety; −15 legitimacy, and the Church −15 approval. Some oaths are refused at a price.',
+        effects: guard('ev_p_carthage:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { treasury: 150, legitimacy: -15 });
+          ctx.helpers.factionShift(ctx, 'BYZ', 'church', -15);
         }),
       },
     ],
@@ -356,6 +516,66 @@ export const EVENTS_614 = [
     ],
   },
 
+  // ── 7b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_turks',
+    title: 'The Khagan\'s Bargain',
+    desc: 'Before the walls of Tiflis the Emperor of the Romans takes the crown from '
+      + 'his own head and sets it on the Khagan of the Turks, promises him his '
+      + 'daughter\'s portrait and hand, and receives in return forty thousand horsemen '
+      + 'who fight for plunder and keep their bargains. Rome has bought allies before; '
+      + 'it has rarely needed them this badly or paid this personally.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_turks', (ctx) =>
+      dateGE(ctx, 626, 10) && !!findWar(ctx.game, 'SAS', 'BYZ')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The steppe rides south',
+        tooltip: 'Byzantium: 2 regiments of Khazar horse at Attalia, +3 war score.',
+        effects: guard('ev_p_turks:0', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'BYZ', 'Attalia', {
+            cav: 2, name: 'The Khagan\'s Horsemen',
+            general: { name: 'Ziebel', fire: 1, shock: 3, maneuver: 4 },
+          });
+          addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 3);
+        }),
+      },
+    ],
+  },
+
+  // ── 7c ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_intercepted',
+    title: 'The Intercepted Letter',
+    desc: 'Khosrow, who forgives nothing and learns less, orders his best marshal '
+      + 'executed for the crime of retreating competently. The courier is taken; '
+      + 'Heraclius reads the letter, adds four hundred names of Persian officers to '
+      + 'the death list with a forger\'s patience, and sends it on to Shahrbaraz — '
+      + 'who reads his own death warrant aloud to his staff. The army of the west '
+      + 'sits down where it stands, and Persia\'s best sword stays in its sheath '
+      + 'for the rest of the war.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_intercepted', (ctx) =>
+      dateGE(ctx, 627, 6) && !!findWar(ctx.game, 'SAS', 'BYZ')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The sword stays sheathed',
+        tooltip: 'Persia: the army stands down for 4 months ("The Marshal Sits Still"), −1 stability. Byzantium: +5 war score.',
+        effects: guard('ev_p_intercepted:0', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'SAS', {
+            id: 'marshal_sits', name: 'The Marshal Sits Still', months: 4, effects: { aiPassive: true },
+          });
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -1 });
+          addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 5);
+          ctx.helpers.chronicle(ctx, 'war', 'Shahrbaraz reads his own death warrant, forged fatter by Heraclius, and sits out the war.');
+        }),
+      },
+    ],
+  },
+
   // ── 8 ─────────────────────────────────────────────────────────────────────
   {
     id: 'ev_p_nineveh',
@@ -412,6 +632,32 @@ export const EVENTS_614 = [
             id: 'house_eats_itself', name: 'The House Eats Itself', months: 24, effects: { aiPassive: true },
           });
           ctx.helpers.chronicle(ctx, 'peace', 'Khosrow is murdered by his own son; the last great war of antiquity ends where it began.');
+        }),
+      },
+    ],
+  },
+
+  // ── 9b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_plague',
+    title: 'The Plague of Sheroe',
+    desc: 'Kavad II — Sheroe to his subjects — signed the peace, murdered his '
+      + 'brothers to secure a throne he would hold for eight months, and now dies of '
+      + 'the plague that bears his name, leaving an infant king in a court of '
+      + 'regicides. In four centuries the House of Sasan has survived Rome, the '
+      + 'Huns and its own satraps; it will not survive its own peace.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_plague', (ctx) =>
+      dateGE(ctx, 628, 10)
+      && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_khosrow_falls)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The house eats itself',
+        tooltip: 'Persia: −2 stability, −10 legitimacy. The last great war of antiquity has no victor east of the Euphrates.',
+        effects: guard('ev_p_plague:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -2, legitimacy: -10 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'Kavad II dies of the plague named for him; an infant rules the House of Sasan.');
         }),
       },
     ],

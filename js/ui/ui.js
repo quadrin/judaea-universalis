@@ -187,15 +187,22 @@ export function initUI(staticCtx) {
   // down, toggle humiliation; the running total is priced against our war
   // score live, and the envoys go out only with an offer the enemy will take.
   let peaceEl = null;
-  function setPeaceHighlight(ids) {
+  // While the table is open, map clicks negotiate: this bridge (set by
+  // openPeaceDialog, cleared on close) toggles a demandable province in and
+  // out of the deal. Everything else on the map stays inert — the envoys
+  // have the floor.
+  let peaceProvToggle = null;
+  function setPeaceHighlight(ids, selected) {
     const g = state.ctx && state.ctx.game;
     if (!g || !g.ui) return;
     g.ui.peaceHighlight = ids || [];
+    g.ui.peaceSelected = selected || []; // the chosen demands burn solid gold
     bus.emit('peaceHighlight', {}); // main.js: recompute mapmode colors
   }
   function closePeaceDialog() {
     if (peaceEl) peaceEl.classList.add('hidden');
-    setPeaceHighlight([]);
+    peaceProvToggle = null;
+    setPeaceHighlight([], []);
   }
   function peaceDialogOpen() { return !!peaceEl && !peaceEl.classList.contains('hidden'); }
   function openPeaceDialog(warId) {
@@ -222,6 +229,7 @@ export function initUI(staticCtx) {
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card">
         <h2 class="peace-title">Terms for ${esc(info.warName || 'the war')}</h2>
+        <div class="peace-hint">The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.</div>
         <div class="peace-ws">War score against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
         <div class="peace-sec">Demand provinces</div>
@@ -287,6 +295,9 @@ export function initUI(staticCtx) {
       verdictEl.classList.toggle('neg', !ev.acceptable);
       sendBtn.textContent = white ? 'Offer white peace' : 'Send the terms';
       sendBtn.classList.toggle('disabled', !ev.acceptable || info.envoyMonthsLeft > 0);
+      // The chosen demands burn solid gold on the map; the rest of the table
+      // keeps its pulse.
+      setPeaceHighlight(info.provinces.map((p) => p.id), deal.provinces.slice());
     }
 
     peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
@@ -328,7 +339,20 @@ export function initUI(staticCtx) {
     });
     peaceEl.querySelector('.peace-cancel').addEventListener('click', closePeaceDialog);
     peaceEl.querySelector('.modal-scrim').addEventListener('click', closePeaceDialog);
-    setPeaceHighlight(info.provinces.map((p) => p.id));
+    // The map negotiates too: clicking a demandable province toggles it in
+    // and out of the deal (the checkbox follows); a client keeps its lands,
+    // so subjugation deals ignore the map.
+    const demandable = new Set(info.provinces.map((p) => p.id));
+    peaceProvToggle = (pid) => {
+      if (deal.subjugate || !demandable.has(pid)) return;
+      const at = deal.provinces.indexOf(pid);
+      if (at >= 0) deal.provinces.splice(at, 1);
+      else deal.provinces.push(pid);
+      const box = peaceEl.querySelector('[data-prov="' + pid + '"]');
+      if (box) box.checked = at < 0;
+      update();
+    };
+    setPeaceHighlight(info.provinces.map((p) => p.id), deal.provinces.slice());
     update();
   }
 
@@ -664,6 +688,13 @@ export function initUI(staticCtx) {
     const g = state.ctx.game;
     const { provId, armyId, shift } = payload || {};
     closeOutlinerDrawer(); // map taps dismiss the mobile drawer
+    // The peace table is open: the map negotiates. Demandable provinces
+    // toggle in and out of the deal; every other click stays inert — the
+    // envoys have the floor until they are recalled.
+    if (peaceDialogOpen() && typeof peaceProvToggle === 'function') {
+      if (provId > 0) peaceProvToggle(provId);
+      return;
+    }
     // Group mode behaves exactly like a held shift key (mobile contract).
     const grouping = shift || groupMode;
     if (armyId != null) {

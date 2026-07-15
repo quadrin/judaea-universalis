@@ -1,23 +1,16 @@
-// Headless smoke test — campaign guidance, visible-era mechanics, irregular
-// upkeep, revolt pacing, Persian patronage, and the 1948–56 defense/rearmament arc.
+// Headless smoke test — SPEC §34: the deepened eras and the playtest fixes.
+// The four thin chains (40 BCE, 115 CE, 614 CE, 1948) carry their new events
+// well-formed; dated cards fire on schedule; the 614 defiance arrives with an
+// actual army and no cheap white peace behind it (fresh-grudge rule); and the
+// Objectives block retires once the chapter's verdict is in.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
-const { campaignGuidance } = await import(R + '/js/data/campaign_guidance.js');
-const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
-const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
-const { BOOKMARK_115 } = await import(R + '/js/data/bookmark_115ce.js');
-const { EVENTS_115 } = await import(R + '/js/data/events_115ce.js');
-const { BOOKMARK_132 } = await import(R + '/js/data/bookmark_132ce.js');
-const { EVENTS_132 } = await import(R + '/js/data/events_132ce.js');
-const { BOOKMARK_614 } = await import(R + '/js/data/bookmark_614ce.js');
-const { EVENTS_614 } = await import(R + '/js/data/events_614ce.js');
-const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
-const { EVENTS_1948 } = await import(R + '/js/data/events_1948.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
-const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
-const { runMonthlyAI } = await import(R + '/js/sim/ai.js');
+const { checkDateEvents } = await import(R + '/js/sim/events.js');
+const mil = await import(R + '/js/sim/military.js');
+const fac = await import(R + '/js/sim/factions.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -39,124 +32,102 @@ const geom = {
   })],
   areas: new Int32Array(N + 1), bbox: [],
 };
-
-function boot(bookmark, events, playerTag, seed = 91) {
+const boot = async (bmFile, bmKey, evFile, evKey, playerTag, seed) => {
+  const { [bmKey]: bookmark } = await import(R + '/js/data/' + bmFile);
+  const { [evKey]: events } = await import(R + '/js/data/' + evFile);
   const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed: seed });
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events });
-  return { game, ctx, actions: gameActions(ctx) };
-}
+  return { game, ctx, events, actions: gameActions(ctx) };
+};
 
-function regiments(game, tag) {
-  let n = 0;
-  for (const a of Object.values(game.armies || {})) {
-    if (!a || a.tag !== tag) continue;
-    n += ((a.regiments && a.regiments.inf) || 0) + ((a.regiments && a.regiments.cav) || 0);
-  }
-  return n;
-}
-
-console.log('== every standard has a campaign contract ==');
-for (const [id, file, exp] of [
-  ['167bce', 'bookmark_167bce', 'BOOKMARK_167'],
-  ['67bce', 'bookmark_67bce', 'BOOKMARK_67'],
-  ['40bce', 'bookmark_40bce', 'BOOKMARK_40'],
-  ['66ce', 'bookmark_66ce', 'BOOKMARK_66'],
-  ['115ce', 'bookmark_115ce', 'BOOKMARK_115'],
-  ['132ce', 'bookmark_132ce', 'BOOKMARK_132'],
-  ['614ce', 'bookmark_614ce', 'BOOKMARK_614'],
-  ['1948ce', 'bookmark_1948', 'BOOKMARK_1948'],
+console.log('== the deepened chains are well-formed ==');
+const provNames = new Set(MAP_DATA.provinces.map((p) => p.name));
+for (const [evFile, evKey, minCount] of [
+  ['events_40bce.js', 'EVENTS_40', 22],
+  ['events_115ce.js', 'EVENTS_115', 19],
+  ['events_614ce.js', 'EVENTS_614', 19],
+  ['events_1948.js', 'EVENTS_1948', 22],
 ]) {
-  const { [exp]: bm } = await import(R + '/js/data/' + file + '.js');
-  for (const p of bm.playableTags) {
-    const guide = campaignGuidance(id, p.tag, bm.startDate);
-    ok(guide && guide.opening.length === 3 && guide.next,
-      id + '/' + p.tag + ': three first moves and a live pressure clock');
+  const { [evKey]: evs } = await import(R + '/js/data/' + evFile);
+  const ids = evs.map((e) => e && e.id);
+  const dupes = ids.filter((x, i) => ids.indexOf(x) !== i);
+  const sound = evs.every((e) => e && e.id && e.title && e.desc
+    && (e.date || typeof e.trigger === 'function')
+    && Array.isArray(e.options) && e.options.length
+    && e.options.every((o) => o && o.label && typeof o.effects === 'function'));
+  ok(evs.length >= minCount && !dupes.length && sound,
+    evFile.replace('events_', '').replace('.js', '') + ': ' + evs.length + ' events, unique and sound');
+}
+
+console.log('== the new dated cards fire on schedule (40 BCE) ==');
+{
+  const { game, ctx, actions } = await boot('bookmark_40bce.js', 'BOOKMARK_40', 'events_40bce.js', 'EVENTS_40', 'HER', 40);
+  game.date = { y: -39, m: 1, d: 1 };
+  checkDateEvents(ctx); // catch-up: everything dated -40 fires
+  const fired = () => Object.keys(game.firedEvents);
+  // resolve the queue the way a player would
+  let guard = 0;
+  while (game.pendingEvents.length && guard++ < 20) {
+    actions.chooseEventOption(game.pendingEvents[0].instanceId, 0);
   }
+  ok(fired().includes('ev5_labienus'), 'the Parthian Roman rides (dated -40/9)');
+  ok(fired().includes('ev5_masada'), 'the cisterns of Masada fill (dated -40/12)');
+  const her = game.tags.HER;
+  ok(her.points.infl >= 10, 'Masada\'s story travels: HER influence banked');
 }
 
-console.log('== irregular hosts pay irregular upkeep ==');
+console.log('== the 614 defiance has teeth ==');
 {
-  const { game, ctx, actions } = boot(BOOKMARK_66, EVENTS_66, 'JUD');
-  const withFervor = incomeBreakdown(ctx, 'JUD').maint;
-  game.tags.JUD.modifiers = game.tags.JUD.modifiers.filter((m) => m.id !== 'religious_fervor');
-  const regular = incomeBreakdown(ctx, 'JUD').maint;
-  ok(regular > 0 && Math.abs(withFervor / regular - 0.65) < 0.001,
-    'Great Revolt upkeep is discounted to 65% while the irregular host lasts');
-  const guide = actions.getCampaignGuidance();
-  ok(guide && guide.objectives.some((line) => /^Lose:/.test(line)),
-    'the sim exposes the pinned campaign objectives');
+  const { game, ctx, events } = await boot('bookmark_614ce.js', 'BOOKMARK_614', 'events_614ce.js', 'EVENTS_614', 'JUD', 614);
+  game.date = { y: 617, m: 6, d: 1 };
+  const ev = events.find((e) => e.id === 'ev_p_betrayal');
+  ev.options[1].effects(ctx); // defy the King of Kings
+  const w = game.wars.find((x) => x && x.name === 'The Betrayal Repaid');
+  ok(!!w, 'defiance declares the war');
+  const column = Object.values(game.armies).find((a) => a && a.name === 'The Punitive Column');
+  ok(!!column && column.tag === 'SAS' && column.men > 5000, 'the punitive column marches: '
+    + (column ? column.men + ' men' : 'missing'));
+  const white = { provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false };
+  const fresh = mil.evaluatePeaceDeal(ctx, w, 'JUD', white);
+  ok(!fresh.acceptable && /young/.test(fresh.reason), 'no cheap peace while the grudge is fresh: ' + fresh.reason);
+  game.date = { y: 618, m: 7, d: 1 };
+  const later = mil.evaluatePeaceDeal(ctx, w, 'JUD', white);
+  ok(later.acceptable, 'a year on, an even war can end white');
+  game.date = { y: 617, m: 8, d: 1 };
+  w.warscore = w.warscore || {};
+  w.warscore.JUD = 30;
+  w.warscore.SAS = -30;
+  const losing = mil.evaluatePeaceDeal(ctx, w, 'JUD', white);
+  ok(losing.acceptable, 'a fresh enemy who is LOSING still takes the white peace');
 }
 
-console.log('== the prepared revolt receives an opening window ==');
+console.log('== objectives retire with the verdict ==');
 {
-  const { game } = boot(BOOKMARK_132, EVENTS_132, 'JUD');
-  const response = game.tags.ROM.modifiers.find((m) => m.id === 'provincial_response');
-  const armories = game.tags.JUD.modifiers.find((m) => m.id === 'hidden_armories');
-  ok(response && response.effects.aiPassive, 'Rome holds during the provincial-response phase');
-  ok(armories && armories.effects.maintMult === 0.55, 'the underground host is affordable while the armories last');
+  const { game, actions } = await boot('bookmark_614ce.js', 'BOOKMARK_614', 'events_614ce.js', 'EVENTS_614', 'JUD', 6141);
+  const live = actions.getObjectives();
+  ok(Array.isArray(live) && live.length >= 3 && live.some((l) => /^Win:/.test(l)),
+    'before the verdict: the era\'s goals stand (' + live.length + ' lines)');
+  game.result = 'win';
+  const won = actions.getObjectives();
+  ok(won.length === 1 && /^Win: the verdict is ours/.test(won[0]), 'after a win: one settled line, still green');
+  game.result = 'loss';
+  const lost = actions.getObjectives();
+  ok(lost.length === 1 && /^Lose:/.test(lost[0]), 'after a loss: one settled line, still red');
 }
 
-console.log('== separate Kitos theaters do not share an instant staff ==');
+console.log('== the era events speak to the court (1948) ==');
 {
-  const { game, ctx } = boot(BOOKMARK_115, EVENTS_115, 'JUD');
-  const friction = game.tags.JUD.modifiers.find((m) => m.id === 'scattered_risings');
-  ok(friction && friction.effects.disciplineMult === 0.9 && friction.effects.reinforceMult === 0.8,
-    'coordination friction weakens the unified field army abstraction');
-  const beforeRelief = regiments(game, 'ROM');
-  for (const id of ['ev_k_turbo', 'ev_k_quietus', 'ev_k_reduction']) {
-    EVENTS_115.find((e) => e.id === id).options[0].effects(ctx);
-  }
-  ok(regiments(game, 'ROM') === beforeRelief + 32,
-    'Turbo, Quietus, and the Cyprus reduction deliver 32 regiments in distinct relief columns');
-}
-
-console.log('== Persian patronage pays for the Return, until it does not ==');
-{
-  const { game, ctx } = boot(BOOKMARK_614, EVENTS_614, 'JUD');
-  const subsidized = incomeBreakdown(ctx, 'JUD').maint;
-  const supply = game.tags.JUD.modifiers.find((m) => m.id === 'persian_supply_trains');
-  ok(supply && supply.effects.maintMult === 0.65,
-    'Persian supply trains make the allied rising economically viable');
-  const betrayal = EVENTS_614.find((e) => e.id === 'ev_p_betrayal');
-  betrayal.options[0].effects(ctx);
-  const unsupported = incomeBreakdown(ctx, 'JUD').maint;
-  ok(unsupported > 0 && Math.abs(subsidized / unsupported - 0.65) < 0.001,
-    'Ctesiphon withdraws its logistical subsidy when it trades the client away');
-}
-
-console.log('== the armed armistice builds defensive commitments ==');
-{
-  const { game, ctx } = boot(BOOKMARK_1948, EVENTS_1948, 'ISR');
-  const armistice = EVENTS_1948.find((e) => e.id === 'ev_i_armistice');
-  armistice.options[0].effects(ctx);
-  ok(!game.wars.some((w) => (w.attackers || []).includes('ISR') || (w.defenders || []).includes('ISR')),
-    'Rhodes ends the coalition war');
-  ok(['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU'].every((t) =>
-    game.tags[t].modifiers.some((m) => m.id === 'armistice_restraint' && m.effects.noOpportunisticWars)),
-  'the five-year armed armistice suppresses ahistorical random wars');
-
-  const pact = EVENTS_1948.find((e) => e.id === 'ev_i_joint_defence');
-  pact.options[0].effects(ctx);
-  const members = ['EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU'];
-  ok(members.every((a) => members.every((b) => a === b || game.tags[a].guarantees.includes(b))),
-    'the Arab League members guarantee one another defensively');
-  ok(game.flags.postwarRearmament, 'the postwar force-planning phase is active');
-
-  for (const t of Object.values(game.tags)) if (t) t.ai = true;
-  game.tags.LEB.treasury = 1000;
-  game.tags.LEB.manpower = 10000;
-  game.tags.LEB.income = 30;
-  const before = regiments(game, 'LEB');
-  runMonthlyAI(ctx);
-  ok(regiments(game, 'LEB') > before, 'a solvent threatened state builds above its frozen old target');
-
-  const arms = EVENTS_1948.find((e) => e.id === 'ev_i_arms_race');
-  const egyptBefore = regiments(game, 'EGY');
-  arms.options[0].effects(ctx);
-  ok(game.flags.armsRaceEscalated && regiments(game, 'EGY') >= egyptBefore + 8,
-    'the 1955 agreement adds Egyptian formations and raises regional ceilings');
-  ok(game.tags.ISR.modifiers.some((m) => m.id === 'arms_race_response'),
-    'Israel receives a matching rearmament response');
+  const { game, ctx, events } = await boot('bookmark_1948.js', 'BOOKMARK_1948', 'events_1948.js', 'EVENTS_1948', 'ISR', 1948);
+  fac.monthlyFactions(ctx); // seat the court
+  const t = game.tags.ISR;
+  ok(Math.round(t.factions.revisionists) === 50, 'the Revisionists open content at 50');
+  const altalena = events.find((e) => e.id === 'ev_i_altalena');
+  altalena.options[0].effects(ctx); // one state, one army — fire
+  ok(Math.round(t.factions.revisionists) === 30 && Math.round(t.factions.coalition) === 60,
+    'the Altalena moves the court: Revisionists 30, Coalition 60');
+  const knesset = events.find((e) => e.id === 'ev_i_knesset');
+  knesset.options[0].effects(ctx);
+  ok(Math.round(t.factions.coalition) === 70, 'the first Knesset rewards the Coalition (70)');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

@@ -146,6 +146,39 @@ export const EVENTS_115 = [
     ],
   },
 
+  // ── 3b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_temples',
+    title: 'The Temples Burn',
+    desc: 'Word comes north from Cyrene with the refugees: the temple of Apollo pulled '
+      + 'down, Hecate\'s and Zeus\'s after it, the baths and the basilica cracked with '
+      + 'fire. The rising is answering three generations of Greek pogroms in the only '
+      + 'currency the cities respect — and every burned altar preaches Rome\'s sermon '
+      + 'for it.',
+    forTag: 'JUD',
+    date: { y: 115, m: 12 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Restrain the iconoclasm',
+        tooltip: '+10 influence points; the Elders of the Communities +8 approval — the reprisals will find fewer excuses.',
+        effects: guard('ev_k_temples:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 10 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'elders', 8);
+        }),
+      },
+      {
+        label: 'Let it burn',
+        tooltip: '+20 martial points; the Elders −10 approval. Rome: +5 legitimacy — the atrocity propaganda writes itself.',
+        effects: guard('ev_k_temples:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { mar: 20 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'elders', -10);
+          ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
   // ── 4 ─────────────────────────────────────────────────────────────────────
   {
     id: 'ev_k_turbo',
@@ -167,6 +200,66 @@ export const EVENTS_115 = [
             inf: 11, cav: 2, name: "Turbo's Expedition",
             general: { name: 'Marcius Turbo', fire: 2, shock: 3, maneuver: 3 },
           });
+        }),
+      },
+    ],
+  },
+
+  // ── 4b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_villagers',
+    title: 'The Villages Take Sides',
+    desc: 'The papyri will preserve it for eighteen centuries: village councils of the '
+      + 'Delta voting to arm themselves against "the impious Jews," Greek strategoi '
+      + 'drilling Egyptian peasants who despise them almost as much as the enemy. The '
+      + 'prefect can have a militia tomorrow — and a countryside full of settled '
+      + 'scores the day after.',
+    forTag: 'ROM',
+    date: { y: 116, m: 2 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Arm the villages',
+        tooltip: '+10% manpower for 12 months ("The Peasant Levies") — and the Delta provinces +1 unrest for 12 months as the scores settle.',
+        effects: guard('ev_k_villagers:0', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ROM', {
+            id: 'peasant_levies', name: 'The Peasant Levies', months: 12, effects: { manpowerMult: 1.1 },
+          });
+          for (const n of ['Athribis', 'Memphis', 'Arsinoe']) {
+            ctx.helpers.addProvinceModifier(ctx, n, {
+              id: 'settled_scores', name: 'Settled Scores', months: 12, effects: { unrest: 1 },
+            });
+          }
+        }),
+      },
+      {
+        label: 'Regulars only — militias are mobs with permits',
+        tooltip: '+15 martial points; the villages keep their knives at home.',
+        effects: guard('ev_k_villagers:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { mar: 15 });
+        }),
+      },
+    ],
+  },
+
+  // ── 4c ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_appian',
+    title: 'The Historian Runs for the Delta',
+    desc: 'Among the Greeks fleeing the Delta is a young Alexandrian lawyer named '
+      + 'Appian, guided through the marshes by night — he will tell the story himself, '
+      + 'decades later, in a history of Rome\'s wars: the wrong turn, the Jewish '
+      + 'patrols, the ship at Pelusium that saved him. Empires keep their records; '
+      + 'this war\'s best witness nearly drowned in it.',
+    forTag: 'ROM',
+    date: { y: 116, m: 5 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The reports reach Rome vivid',
+        tooltip: '+10 influence points — nothing moves a Senate like an eyewitness with literary gifts.',
+        effects: guard('ev_k_appian:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { infl: 10 });
         }),
       },
     ],
@@ -255,6 +348,57 @@ export const EVENTS_115 = [
             id: 'quietus_methods', name: "Quietus' Methods", months: 24, effects: { siegeMult: 1.2 },
           });
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 7b ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_mesopotamia_broken',
+    title: 'Seleucia Burns, Nisibis Falls',
+    desc: 'Quietus does what he was hired to do: Nisibis stormed, Edessa sacked with '
+      + 'its king dead in the ruins, and Seleucia — half a million people, Greek and '
+      + 'Babylonian and Jew — burned by two columns working in concert. Mesopotamia '
+      + 'is quiet now, in the way the historians mean when they stop describing it.',
+    forTag: 'both',
+    date: { y: 117, m: 1 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The arithmetic he prefers',
+        tooltip: 'Rome: +8 war score against the rising. The rising: −5 legitimacy between the rivers. Parthia: −1 stability — it was their city too.',
+        effects: guard('ev_k_meso:0', (ctx) => {
+          addWarscore(ctx, 'ROM', 8);
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: -5 });
+          ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
+          ctx.helpers.chronicle(ctx, 'war', 'Quietus breaks Mesopotamia: Nisibis stormed, Edessa sacked, Seleucia burned.');
+        }),
+      },
+    ],
+  },
+
+  // ── 7c ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_hatra',
+    title: 'The Walls of Hatra',
+    desc: 'One desert city refuses the script: Hatra, ringed by sand and served by a '
+      + 'single spring, shuts its gates on the emperor himself. The siege fails in '
+      + 'heat, flies and cavalry sorties; Trajan takes a fever under its walls he '
+      + 'will never fully shake. The desert, it turns out, is also a fortification.',
+    forTag: 'both',
+    date: { y: 117, m: 4 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The desert holds',
+        tooltip: 'Rome: −5% morale for 6 months ("The Desert Repulse"). Parthia: +10 legitimacy.',
+        effects: guard('ev_k_hatra:0', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ROM', {
+            id: 'desert_repulse', name: 'The Desert Repulse', months: 6, effects: { moraleMult: 0.95 },
+          });
+          ctx.helpers.adjust(ctx, 'PAR', { legitimacy: 10 });
         }),
       },
     ],
@@ -373,6 +517,66 @@ export const EVENTS_115 = [
           ctx.helpers.addTagModifier(ctx, 'ROM', {
             id: 'peace_dividend', name: 'The Peace Dividend', months: 24, effects: { incomeMult: 1.05 },
           });
+        }),
+      },
+    ],
+  },
+
+  // ── 10b ───────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_quietus_end',
+    title: 'Hadrian\'s List',
+    desc: 'Lusius Quietus — consul, governor of Judaea, the most decorated Moor in '
+      + 'Roman history — is quietly removed from his province, then from the army '
+      + 'list, then from the world, executed with three other consulars for a '
+      + 'conspiracy nobody bothers to prove. The men who fought Trajan\'s wars are '
+      + 'learning what the new peace costs, and the province he governed briefly '
+      + 'files the name away: the war of Qitos.',
+    forTag: 'ROM',
+    trigger: safeTrigger('ev_k_quietus_end', (ctx) =>
+      dateGE(ctx, 118, 2)
+      && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_k_trajan_dies)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The list is short and final',
+        tooltip: '+1 stability (the old guard is settled); −5 legitimacy, and the Legions −10 approval — they remember who won their battles.',
+        effects: guard('ev_k_quietus_end:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { stability: 1, legitimacy: -5 });
+          ctx.helpers.factionShift(ctx, 'ROM', 'legions', -10);
+          ctx.helpers.chronicle(ctx, 'ruler', 'The four consulars die; Quietus\' name outlives him only in the war his victims named.');
+        }),
+      },
+      {
+        label: 'Exile, not execution',
+        tooltip: '−1 stability (the conspiracies stay plausible); the Legions +5 approval.',
+        effects: guard('ev_k_quietus_end:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ROM', 'legions', 5);
+        }),
+      },
+    ],
+  },
+
+  // ── 10c ───────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_k_mourning',
+    title: 'The Decrees of Mourning',
+    desc: 'In the academies of Judaea — spectators, this time, to a war that consumed '
+      + 'their diaspora — the sages rule: in memory of the war of Qitos, brides shall '
+      + 'not go out in wreathed crowns. A small decree. The Mishnah will carry it '
+      + 'across eighteen centuries, one line of mourning for half a million dead the '
+      + 'chronicles barely count.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_k_mourning', (ctx) => dateGE(ctx, 117, 11)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'What is remembered, lives',
+        tooltip: '+5 legitimacy; the Sages +8 approval.',
+        effects: guard('ev_k_mourning:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'sages', 8);
         }),
       },
     ],

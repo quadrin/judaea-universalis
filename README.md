@@ -193,6 +193,31 @@ python3 -m http.server 8613 --directory .
   of treaties (walkable court to court), and how they feel about you. Your
   own flag in the corner of a foreign panel, or the topbar flag, brings you
   home.
+- The realm divided: every playable crown seats two or three court factions —
+  Pharisees and Sadducees, Zealots and the peace party, Senate and legions,
+  the Blues and Greens of the Hippodrome, the Coalition and the Revisionists
+  of 1948 — each with an approval bar in the realm panel that drifts with the
+  era's politics. Devoted factions (65+) grant their boon, hostile ones (35−)
+  exact their bane, the despairing send demand cards you may grant or refuse,
+  and an appeasement lever pays a faction's price once a year. Scripted
+  history moves the court: fire on the Altalena and the Revisionists remember;
+  burn the list of the Forty-Five and the Sanhedrin does. Your politics only —
+  the AI's courts stay offstage.
+- The thin eras made thick: Herod's Rise, the Kitos War, the Persian Gambit
+  and 1948 roughly double their scripted chains — the cisterns of Masada,
+  Silo's winter and the basket-men at the caves; the temples of Cyrene and
+  Hadrian's list; Benjamin of Tiberias, the ships for Carthage and the
+  intercepted letter that benched Persia's best marshal; Spitfires over
+  Tel Aviv, the roads from Lydda, the secret wire to Amman and the ballot
+  under fire.
+- Wars end honestly: objectives retire into a single settled line once the
+  chapter's verdict is in, a freshly declared war refuses white peace for a
+  year unless the aggressor is actually losing, and defying Persia over
+  Jerusalem in 614 brings a punitive column to your border, not a paper war.
+- The peace table stands beside the map, not over it: the terms card docks
+  to the left with no dimming scrim, and the map itself negotiates — click
+  a gold-pulsing occupied province to demand it (it burns solid gold in the
+  deal), click again to strike it from the terms.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a generative score that improvises on a breathing

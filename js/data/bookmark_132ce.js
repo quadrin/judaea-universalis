@@ -143,6 +143,119 @@ export const BOOKMARK_132 = {
       'Lose: the war still open when the Senate counts the mauled legions.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    JUD: [
+      {
+        id: 'captains', name: 'The Prince\'s Captains',
+        desc: 'Bar Kokhba\'s commanders, sworn men of a leader who signs his letters with threats to his own officers.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.4;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.3;
+        },
+        boon: { name: 'The Prince\'s Discipline', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Letters Grow Sharp', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'Inspect the hill forts (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Captains Ask for Stores',
+          text: 'From Herodium the letters come up sealed and short: wheat, salt and iron for the '
+            + 'hill forts, and the names of whoever failed to send them. The Prince\'s discipline '
+            + 'is the state\'s spine — feed it, or feel it.',
+          grant: { label: 'Wheat, salt and iron', cost: { mar: 50 } },
+          refuse: { label: 'Every fort fends for itself', tooltip: 'The short letters get shorter.' },
+        },
+      },
+      {
+        id: 'sages', name: 'The Sages',
+        desc: 'Akiva called him the star out of Jacob; not every academy agreed, and all of them are watching.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'Akiva\'s Blessing', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Blessing Withdrawn', text: '−0.3 legitimacy a month', effects: { legitimacyAdd: -0.3 } },
+        appease: { label: 'Shelter the scholars (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Sages Ask for Their Students',
+          text: 'The academies have emptied into the war, and the old men ask what will be left to '
+            + 'teach if every student dies at a wall: exempt the scholars, endow the study houses '
+            + '— the state fights for a Law someone must still know.',
+          grant: { label: 'The study houses endowed', cost: { gov: 50 } },
+          refuse: { label: 'The Law fights or falls', tooltip: 'Grass will grow from Akiva\'s jaw before some forgive this.' },
+        },
+      },
+      {
+        id: 'villages', name: 'The Villages',
+        desc: 'The terraces and vineyards that feed the war and hide its tunnels — and empty a little every season it lasts.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.6; },
+        boon: { name: 'The Terraces Feed the War', text: '+12% manpower', effects: { manpowerMult: 1.12 } },
+        bane: { name: 'The Land Empties', text: '−15% manpower', effects: { manpowerMult: 0.85 } },
+        appease: { label: 'Seed corn and remitted taxes (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Villages Ask for the Harvest',
+          text: 'The requisition parties have taken the seed corn twice, and the village elders '
+            + 'stand in your doorway with empty hands and full memories. Remit a season, or the '
+            + 'terraces will feed only the crows.',
+          grant: { label: 'Remit the season', cost: { treasury: 120 } },
+          refuse: { label: 'The war eats first', tooltip: 'The terraces begin to go quiet.' },
+        },
+      },
+    ],
+    ROM: [
+      {
+        id: 'senate', name: 'The Senate',
+        desc: 'The fathers, who have learned not to ask where the emperor travels — only what the wars cost.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Fathers Approve', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
+        bane: { name: 'Obstruction in the Curia', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Provinces and praetorships (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Senate Reads the Casualty Lists',
+          text: 'When a war goes well the emperor writes "I and the legions are in health" — the '
+            + 'fathers have noticed the phrase is missing. They will vote the reinforcements, and '
+            + 'they expect the courtesy of consulships in return.',
+          grant: { label: 'The consulships', cost: { gov: 50 } },
+          refuse: { label: 'The lists are a state secret', tooltip: 'Secrets have prices too.' },
+        },
+      },
+      {
+        id: 'legions', name: 'The Legions',
+        desc: 'Dragged from Britain and the Danube to dig out a hill country stone by stone: the eagles are grim this reign.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'The Eagles Content', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'Mutinous Winter Quarters', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'The donative (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Legions Hate This War',
+          text: 'No battles, no plunder, no glory — tunnels, snipers and burned farms, and a '
+            + 'legion\'s eagle rumored lost. The camps ask for the siege pay Hadrian\'s '
+            + 'quartermasters keep studying. Studying does not spend.',
+          grant: { label: 'The siege pay, doubled', cost: { treasury: 150 } },
+          refuse: { label: 'Duty is the pay', tooltip: 'The camps compose their own phrases.' },
+        },
+      },
+      {
+        id: 'people', name: 'The People of Rome',
+        desc: 'The city, for whom Judaea is a rumor and the games schedule is a sacred text.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 4 ? 0.3 : -0.5; },
+        boon: { name: 'The Levies Come Willing', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'Bread Riots', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Games and grain (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The City Wants Spectacle',
+          text: 'A war with no triumphs is, to the Circus crowd, a scheduling failure. The aediles '
+            + 'beg for something to announce — games, grain, a victory lap of any size — before '
+            + 'the crowd writes its own program.',
+          grant: { label: 'Fund the games', cost: { treasury: 120 } },
+          refuse: { label: 'Rome can wait for the real triumph', tooltip: 'The crowd\'s program stars the emperor.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

@@ -1406,7 +1406,81 @@ foreign court **read-only**.
   `JU_OUT`. (A container rollback mid-session briefly lost three
   scratchpad-only suites — never again.)
 
-## 34. v3.4: campaign readability and bookmark power balance
+## 34. v3.4: the realm divided — court factions, and the thin eras made thick
+
+- **Court factions** (`js/sim/factions.js`, monthly via tick's `monthlyFactions`):
+  every playable tag carries two-or-three internal parties defined by its
+  bookmark (`bookmark.factions[TAG]` — content owns the politics, the engine
+  owns the arithmetic). Approval runs 0-100 (seeded at `start`, default 50,
+  stored in `t.factions`), drifts monthly — a slow regression to 50 plus the
+  faction's own `drift(ctx, t)` closure, clamped to ±1.5 — and answers events
+  through `helpers.factionShift(ctx, tag, id, delta)` (a quiet no-op for AI
+  realms, unknown ids and eras without factions, so content calls it
+  unconditionally). A devoted faction (65+) grants its `boon`, a hostile one
+  (35−) exacts its `bane` — both plain tag modifiers (`faction_<id>_boon/_bane`,
+  months: 2, refreshed each court session, self-expiring). A faction left at
+  40 or under sends a **demand card** every two years (dyn_faction_* — the
+  ultimatum machinery, SPEC §33): grant it (pay `demand.grant.cost` — points
+  clamp at zero, treasury may go into debt — +12 approval) or refuse (−8).
+  The **appeasement lever** (action `appeaseFaction`, realm-panel button)
+  pays `appease.cost` in full for +10 approval, once a year per faction.
+  PLAYER-ONLY, the ultimatum's rule: an AI-driven player tag (`t.ai`, the
+  harness) seats no court, so the anomaly set is untouched. Save compat:
+  `t.factions` heals to null and reseeds lazily; pending dyn_* cards drop on
+  load as before.
+- **Sixteen courts**: era-flavored faction sets for every victory-branch tag —
+  Hasideans/Hellenizers/Captains (HAS) and Friends/Phalanx/Cities (SEL) in
+  167; Pharisees/Antipater/Priesthood (HYR) and Sadducees/Captains/Priesthood
+  (ARI) in 67; kin/Sanhedrin/hired swords (HER) and Priesthood/Parthian
+  party/the Street (ATG) in 40; Zealots/Peace Party/Priesthood (JUD) and
+  Senate/Legions/People (ROM) in 66, 115 and 132 with era-tuned texts (the
+  rising's Host/Elders/Sages in 115, the Prince's Captains/Sages/Villages in
+  132); Fighters/Exilarch/Priests (JUD) and Church/Army/Demes (BYZ) in 614;
+  Coalition/Revisionists/Kibbutzim (ISR) and Palace/Legion/Tribes (JOR) in
+  1948. Scripted events move them: the Altalena and Bernadotte affair swing
+  the Revisionists, the Forty-Five breaks or wins the Sanhedrin, the piyyutim
+  choose between the Priests and the Exilarch.
+- **The Factions block** (nation_panel `refreshFactions`, styles `np-fac-*`):
+  name, state word and approval (devoted green / content / hostile red), an
+  approval bar, tooltips carrying the boon and bane, and the appeasement
+  lever with its cost and cooldown in the tooltip. Self-only — a foreign
+  court's politics stay offstage.
+- **The thin eras made thick**: 40 BCE grows 10 → 22 events (the cisterns of
+  Masada, Labienus Parthicus and the Cilician Gates, Antigonus' double-legend
+  coins, the landing at Joppa, Silo's winter, the basket-men at the caves,
+  Machaeras, the embrace at Samosata — Sosius' two legions and Antony's war
+  chest, Pappus at Isana, the roof at Jericho, and the Forty-Five as the
+  reign's first choice); 1948 grows 10 → 22 (Spitfires over Tel Aviv, the
+  Old City's fall, Ad Halom, the Latrun assaults, the roads from Lydda,
+  MAHAL/GAHAL, Kaukji's pocket, the All-Palestine Government, the secret
+  wire to Amman, the Faluja pocket, the Jericho Conference, the ballot under
+  fire); 115 CE grows 11 → 19 (the temples burn, the villages take sides,
+  Appian's escape, Seleucia/Nisibis broken, the walls of Hatra, Hadrian's
+  list, the decrees of mourning); 614 CE grows 11 → 19 (Benjamin of
+  Tiberias, the reckoning at Mamilla, Zacharias goes east, the piyyutim,
+  the ships for Carthage, the Khagan's bargain, the intercepted letter,
+  the plague of Sheroe).
+- **Objectives retire with the verdict** (playtest): once `g.result` is set,
+  `getObjectives` returns a single settled line (green for the win, red for
+  the loss) pointing at the Chronicle — no more live win/loss conditions
+  outliving the chapter they decided.
+- **A fresh grudge does not white-peace** (playtest): `evaluatePeaceDeal`
+  refuses a white peace in a war's first year (`PEACE.freshWarMonths`)
+  unless the enemy is actually losing (−10 warscore) or war-weary — no more
+  declaring a war, shrugging, and shaking hands a month later. And the 614
+  betrayal's defiance now spawns Persia's actual answer: a punitive column
+  under Shahin at Damascus.
+- **Verified**: smoke18 (the faction engine end-to-end, 35 assertions
+  including harness-safety), smoke19 (the deepened chains, the defiance's
+  teeth, the fresh-grudge rule, objectives retirement, events moving the
+  1948 court), uitest19 (the Factions block renders, the lever pays and
+  cools down, foreign courts stay hidden). Harness note: 40 BCE's accepted
+  flags drift with Sosius' legions and Herod's customs revenue — HER drops
+  off the bleeding list (the coast pays for his armies), ROM returns to it
+  (victorious overstretch, the v2.4 class); every other bookmark's set is
+  byte-identical.
+
+## 35. v3.5: campaign readability and bookmark power balance
 
 - **Campaign guidance** (`campaign_guidance.js`, action
   `getCampaignGuidance`): all sixteen playable standards have a signature
@@ -1439,7 +1513,7 @@ foreign court **read-only**.
   calculation by 15%. The eight-year harness ends with no 1948 anomaly and
   materially larger postwar establishments rather than idle treasuries.
 
-## 35. v3.5: the world keeps moving
+## 36. v3.6: the world keeps moving
 
 - **World history is explicit metadata** (`event.world === true`): it uses the
   ordinary deterministic date scheduler, fired-event save state, event modal,
@@ -1475,7 +1549,7 @@ foreign court **read-only**.
   UAR formation, and the Iraqi revolution. The browser suite verifies both local
   and world clocks; multiplayer event cards retain the world-history badge.
 
-## 36. v3.6: demobilization, binding peace, and working harbors
+## 37. v3.7: demobilization, binding peace, and working harbors
 
 - **Stand armies down** (`disbandArmyCore`, action `disbandArmy`): a confirmed
   outliner action permanently removes a safe army and therefore its monthly
@@ -1504,3 +1578,24 @@ foreign court **read-only**.
   coastal shipyards, merchant persistence, and trade income. `uitest20.mjs`
   owns panel width, ancient building visibility, merchant commissioning, and
   the confirmed stand-down control.
+
+## 38. v3.8: the open table — the map negotiates
+
+- **The peace card docks left** (`#peace-modal` overrides in styles.css): no
+  scrim, `pointer-events: none` on the container, the card at the panel slot
+  (12px, 56px) with its own scroll — the map stays fully visible for the
+  whole negotiation. The war overview keeps its centered card and scrim;
+  the overrides are the peace table's alone.
+- **Map clicks negotiate** (`peaceProvToggle` bridge in ui.js): while the
+  table is open, clicking a demandable province on the map writes it into
+  the deal — the checkbox follows — and clicking it again strikes it from
+  the terms. Every other map click is inert (no selections, no panels, no
+  battle windows): the envoys have the floor until they are recalled (Esc
+  or the button — the scrim click-away is gone with the scrim).
+- **The terms read off the map** (`game.ui.peaceSelected`, mapmodes.js):
+  provinces on the table keep their gold pulse; the ones already written
+  into the deal burn SOLID gold, so the shape of the peace is visible at a
+  glance. A hint line under the title teaches the interaction.
+- **Verified**: `uitest22.mjs` — the docked card, the missing scrim, the
+  map toggle round-trip (checkbox + peaceSelected + cost line), inert
+  off-table clicks, and the war overview keeping its scrim.
