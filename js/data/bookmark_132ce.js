@@ -50,29 +50,6 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
-// Manually fire an event by id (win flavor). Mirrors SPEC §6.5 firing semantics.
-function fireEventById(ctx, eventId) {
-  try {
-    const g = ctx.game;
-    const list = ctx.events || [];
-    let ev = null;
-    for (const e of list) { if (e && e.id === eventId) { ev = e; break; } }
-    if (!ev) { warnOnce('fireEventById: unknown ' + eventId); return; }
-    if (g.firedEvents && g.firedEvents[eventId]) return;
-    if (g.firedEvents) g.firedEvents[eventId] = true;
-    const instanceId = g.nextEventInstance++;
-    g.pendingEvents.push({ instanceId, eventId, forTag: ev.forTag });
-    const playerFacing = ev.forTag === 'player' || ev.forTag === 'both' || ev.forTag === g.playerTag;
-    if (playerFacing) {
-      g.paused = true;
-      if (ctx.bus) {
-        ctx.bus.emit('event', { instanceId, event: ev, forTag: ev.forTag });
-        ctx.bus.emit('pause', true);
-      }
-    }
-  } catch (e) { warnOnce('fireEventById', e); }
-}
-
 export const BOOKMARK_132 = {
   id: '132ce',
   name: 'The Bar Kokhba Revolt',
@@ -134,7 +111,7 @@ export const BOOKMARK_132 = {
   objectives: {
     JUD: [
       'Win: maul Rome to +50 war score — Hadrian will offer a tributary prince (accept, or dig for the whole).',
-      'Win: hold Jerusalem and the heartland into 136 CE.',
+      'Win: hold Jerusalem and the heartland into 136 CE — Rome offers a settlement you may accept or refuse.',
       'Crown the chain: the final mission raises the Third House on the Mount.',
       'Lose: the revolt crushed — Betar\'s fate.',
     ],
@@ -510,18 +487,14 @@ export const BOOKMARK_132 = {
           h.fireEvent(ctx, 'ev132_terms');
           return;
         }
+        // Enduring into 136 earns another Roman offer; it does not sign a
+        // treaty for the player. The old direct endGame call also applied
+        // uti possidetis to every occupied province before any click.
         if (dateGE(g.date, 136, 1) && jerusalemHeld
-            && h.countControlled(ctx, 'JUD', { religion: 'judaism' }) >= 6) {
-          fireEventById(ctx, 'ev2_redemption_peace');
-          h.endGame(ctx, {
-            result: 'win',
-            title: 'The Redemption of Israel',
-            text: 'Four campaigning seasons, and the standards still cannot stay in the hills '
-              + 'through a winter. Rome keeps the coast and calls it victory; in Jerusalem the '
-              + 'Nasi keeps the city, the Law, and the mint. The coins of Year Four read: '
-              + '"For the Freedom of Jerusalem."',
-            score: 150,
-          });
+            && h.countControlled(ctx, 'JUD', { religion: 'judaism' }) >= 6
+            && !h.getFlag(ctx, 'enduranceTermsOffered')) {
+          h.setFlag(ctx, 'enduranceTermsOffered', true);
+          h.fireEvent(ctx, 'ev132_endurance_terms');
           return;
         }
         if (judProvs === 0) {

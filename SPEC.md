@@ -1360,10 +1360,11 @@ foreign court **read-only**.
   war ends with the faith-filtered keep (judaism for the Jewish arcs,
   christianity for Heraclius — occupied land outside it returns) plus the
   original win verdict and score; refuse (+5 legitimacy, never offered
-  twice) and the war continues. Timed and territorial wins (independence
-  of 140, the armistice of 1949, holding Jerusalem after the war) stand —
-  they are goals the player works toward, not surprises. The harness
-  auto-accepts via aiOption; its anomaly set is unchanged.
+  twice) and the war continues. Timed and territorial goals remain campaign
+  milestones, but the 132 CE endurance settlement is also an explicit offer:
+  reaching January 136 changes no borders and ends no war until the player
+  accepts; refusal preserves every occupation. The harness auto-accepts via
+  aiOption; its anomaly set is unchanged.
 - **The Mount stands bare after 70 CE** (`bookmark.wonderTweaks`): the
   canonical map gives Jerusalem the `temple` wonder (+1 governance point,
   +0.2 legitimacy a month to its keeper) — correct in 66 CE, wrong after

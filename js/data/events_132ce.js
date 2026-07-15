@@ -556,4 +556,53 @@ export const EVENTS_132 = [
       },
     ],
   },
+
+  // Holding Jerusalem and the heartland into 136 earns a second settlement
+  // offer. It must remain a player decision: merely reaching the date changes
+  // neither ownership nor the state of the war.
+  {
+    id: 'ev132_endurance_terms',
+    title: 'Four Years and the Hills Still Answer',
+    requiresWar: ['JUD', 'ROM'],
+    desc: 'Four campaigning seasons, and the standards still cannot stay in the hills '
+      + 'through a winter. Hadrian offers to withdraw from the country of the faith and '
+      + 'leave the Nasi in Jerusalem, while Rome keeps the coast and the Greek cities. '
+      + 'The settlement can make the coins of Year Four true — or the war can go on.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev132_endurance_terms', () => false),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Take the freedom of Jerusalem',
+        tooltip: 'Victory (score 150). The war ends; Judaea keeps the provinces of the faith it holds, and every other occupied town returns.',
+        effects: guard('ev132_endurance_terms:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = (g.wars || []).find((x) => x
+            && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
+            && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.fireEvent(ctx, 'ev2_redemption_peace');
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The Redemption of Israel',
+            text: 'Four campaigning seasons, and the standards still cannot stay in the hills '
+              + 'through a winter. Rome keeps the coast and calls it victory; in Jerusalem the '
+              + 'Nasi keeps the city, the Law, and the mint. The coins of Year Four read: '
+              + '"For the Freedom of Jerusalem."',
+            score: 150,
+          });
+        }),
+      },
+      {
+        label: 'The whole land, or nothing',
+        tooltip: 'The war and every occupation continue exactly as they stand. Rome will not repeat this offer.',
+        effects: guard('ev132_endurance_terms:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];

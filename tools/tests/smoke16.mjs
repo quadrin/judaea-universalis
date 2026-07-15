@@ -79,6 +79,51 @@ for (const [bm, evf, exBm, exEv, tag, enemy, evId, scoreKey, ws] of [
     bm.replace('bookmark_', '') + ': offered once');
 }
 
+console.log('== Bar Kokhba endurance is an offer, not an automatic annexation ==');
+function stageEnduranceOffer(game) {
+  game.date = { y: 136, m: 1, d: 1 };
+  const war = findWar(game, 'JUD', 'ROM');
+  war.warscore.JUD = 0;
+  const holy = game.provinces.find((p) => p && p.owner === 'ROM' && p.religion === 'judaism');
+  const pagan = game.provinces.find((p) => p && p.owner === 'ROM' && p.religion !== 'judaism');
+  holy.controller = 'JUD';
+  pagan.controller = 'JUD';
+  return { war, holy, pagan };
+}
+{
+  const { game, ctx, actions, bookmark } = await boot(
+    'bookmark_132ce', 'events_132ce', 'BOOKMARK_132', 'EVENTS_132', 'JUD', 47,
+  );
+  const { holy, pagan } = stageEnduranceOffer(game);
+  bookmark.checkVictory(ctx);
+  const pe = game.pendingEvents.find((x) => x && x.eventId === 'ev132_endurance_terms');
+  ok(!!pe && !game.result && !!findWar(game, 'JUD', 'ROM'),
+    '136 CE: holding the heartland queues a settlement card and leaves the war running');
+  ok(holy.owner === 'ROM' && pagan.owner === 'ROM',
+    '136 CE: reaching the deadline annexes nothing before the player chooses');
+  bookmark.checkVictory(ctx);
+  ok(game.pendingEvents.filter((x) => x && x.eventId === 'ev132_endurance_terms').length === 1,
+    '136 CE: the endurance offer is queued only once');
+  actions.chooseEventOption(pe.instanceId, 1);
+  ok(!game.result && !!findWar(game, 'JUD', 'ROM'), 'refusing the settlement keeps the war running');
+  ok(holy.owner === 'ROM' && pagan.owner === 'ROM'
+      && holy.controller === 'JUD' && pagan.controller === 'JUD',
+    'refusing preserves ownership and occupations exactly as they stood');
+}
+{
+  const { game, ctx, actions, bookmark } = await boot(
+    'bookmark_132ce', 'events_132ce', 'BOOKMARK_132', 'EVENTS_132', 'JUD', 48,
+  );
+  const { holy, pagan } = stageEnduranceOffer(game);
+  bookmark.checkVictory(ctx);
+  const pe = game.pendingEvents.find((x) => x && x.eventId === 'ev132_endurance_terms');
+  actions.chooseEventOption(pe.instanceId, 0);
+  ok(game.result === 'win' && !findWar(game, 'JUD', 'ROM'),
+    'accepting the settlement is the action that ends the war');
+  ok(holy.owner === 'JUD' && pagan.owner === 'ROM',
+    'acceptance keeps occupied Jewish land and returns the other occupied provinces');
+}
+
 console.log('== the Mount stands bare after 70 CE ==');
 {
   const { game } = await boot('bookmark_66ce', 'events_66ce', 'BOOKMARK_66', 'EVENTS_66', 'JUD', 43);
