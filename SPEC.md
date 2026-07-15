@@ -63,9 +63,10 @@ DEFINES = {
   DAYS_PER_MONTH: 30,
   MONTH_NAMES: ['January',...,'December'],
   TERRAINS: { coast, farmland, hills, mountains, desert, drylands, steppe, marsh, wasteland:
-    // each: {name, color:[r,g,b], moveCost:1..2.5, defBonus:0|1|2 (dice), attrition:0..5,
-    //         impassable?:true (wasteland only)}
+    // each: {name, color:[r,g,b], moveCost:1..2.5, defBonus:0|1|2 (dice), attrition:0..5}
   },
+  HABITATION: { uninhabited, frontier, rural, town, urban },
+    // each: {name, level:0..4}; independent of terrain, ownership and passability
   GOODS: { grain, wine, olive_oil, dates, balsam, incense, purple_dye, glass, papyrus,
            silver, salt, spices, timber, fish, livestock },
     // each: {name, price (ducat-like "talents" per unit), color:[r,g,b]}
@@ -109,7 +110,7 @@ DEFINES = {
 ```js
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
-  provinces: [ ...see schema... ],      // id = index+1; TARGET 92-100 entries, HARD CAP 110
+  provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
            lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
   rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
@@ -124,8 +125,14 @@ Province schema (static; sim copies/extends at runtime):
 { name:'Jerusalem', lon:35.23, lat:31.78, weight:0.9,   // Voronoi weight: 0.7 small city .. 1.8 huge desert
   terrain:'hills', good:'wine', religion:'judaism', culture:'judean',
   dev:{tax:8, prod:6, mp:8}, owner:'JUD', fort:3,
-  holy:'temple_mount'|null, wonder:'temple'|null, impassable:false }
+  holy:'temple_mount'|null, wonder:'temple'|null,
+  habitation:null|'uninhabited'|'frontier'|'rural'|'town'|'urban',
+  settleable:true, impassable:false }
 ```
+
+`habitation`, `owner`, `terrain`, and `impassable` are separate axes. A cell may be
+uninhabited but sovereign-owned, desert but passable, or temporarily impassable yet
+settleable. A null static habitation tier is inferred from each bookmark's development.
 
 heightPrimitives (renderer consumes; ALL coords lon/lat):
 ```js
@@ -157,7 +164,7 @@ locations. Owners at 1 June 66 CE:
 - **Nabataea (NAB):** Petra (desert, incense, dev 4/8/3, fort 2, wonder 'petra'), Bostra (drylands, grain), Oboda (desert, incense), Aila (desert, spices), Hegra (desert, incense), Dumatha (desert, livestock), Medaba (drylands, livestock, nabataean but judaism-minority → religion nabataean).
 - **Parthia (PAR):** Edessa (hills; Osrhoene, aramean), Carrhae (drylands), Nisibis (drylands, judaism-minority → aramean/zoroastrianism your call, prefer zoroastrianism + aramean culture), Singara (drylands), Hatra (desert), Arbela (hills; Adiabene — judaism! royal converts, culture aramean), Seleucia-Ctesiphon (farmland, dev 8/9/6, fort 2), Babylon (farmland, dates), Nehardea (farmland, dates, judaism/judean — Babylonian diaspora), Charax (marsh, spices), Ecbatana (mountains), Dura-Europos (drylands, fort 1).
 - **Armenia (ARM):** Tigranocerta (mountains, fort 2), Sophene (mountains).
-- **Wasteland (WASTE, impassable):** Syrian Desert, Arabian Desert, Sinai Interior, Eastern Desert, Libyan Desert. Big weights (1.6-2.2).
+- **Initially unowned and impassable:** Syrian Desert, Arabian Desert, Sinai Interior, Eastern Desert, Libyan Desert. These start `WASTE` and `uninhabited`, but those states are explicit rather than consequences of their terrain. Big weights (1.6-2.2).
 
 Dev guidance: metropolis 8-12 total-ish per component listed above; ordinary 3-5/3-5/2-4;
 desert towns 1-2. Unlisted attribute = your best historical judgment. You may ADD up to ~8
@@ -170,12 +177,12 @@ filler provinces for map coverage (e.g. Upper Galilee interior, Auranitis, Cilic
 
 Returns:
 ```js
-{ idArray,            // Uint8Array(MAP_W*MAP_H), province id per pixel, 0=sea, row 0 = north
+{ idArray,            // Uint16Array(MAP_W*MAP_H), province id per pixel, 0=sea, row 0 = north
   provIdAt(mapX, mapY),          // clamped nearest-pixel lookup into idArray
   setProvinceColors(primary, secondary, flags),
       // Uint8Array((N+1)*4) RGBA ×2  +  Uint8Array(N+1) bitfield:
       // bit0 = diagonal stripes of `secondary` over primary (occupation)
-      // bit1 = gray cross-hatch (impassable wasteland)
+      // bit1 = gray cross-hatch (uninhabited or impassable land)
   setMapmodeParams({relief=1, flat=0}),   // relief: terrain shading strength 0..1
   setSelected(provId),                    // 0 = none; animated highlight
   render(camera, timeMs),
@@ -187,12 +194,12 @@ WebGL2, single fullscreen-quad main pass each frame + one-time generation passes
 1. **Land mask** (CPU, offscreen 2D canvas at MAP_W×MAP_H): fill `coast.land` polygons white,
    punch `coast.lakes` black → texture (LINEAR, mipmaps ON — mips reused for sea depth &
    coast falloff). Also a **decor canvas**: rivers as stroked polylines (alpha), → texture.
-2. **Province-ID pass** (FBO, RGBA8, MAP_W×MAP_H, NEAREST): fragment shader loops seeds
-   (uniform `vec4 uSeeds[128]` = x,y,weight,unused + `uSeedCount`), warped weighted nearest:
+2. **Province-ID pass** (FBO, RGBA8, MAP_W×MAP_H, NEAREST): fragment shader loops up to
+   512 seeds stored in a 1-row `RGBA32F` texture (`x,y,weight,unused`), warped weighted nearest:
    `d = length(px + warp(px)*18.0 - seed.xy) / seed.z` where `warp` = 2-octave value-noise
    fbm pair (same warp for all seeds — organic borders). Land-mask < 0.5 → id 0. Encode id
-   in R channel (id/255). Then `readPixels` → build `idArray` (handle GL y-flip: idArray row
-   0 must be NORTH).
+   low byte in R and high byte in G. Then `readPixels` → build the `Uint16Array` (handle GL
+   y-flip: idArray row 0 must be NORTH).
 3. **Heightmap pass** (FBO RGBA8): height = coastFalloff (from land-mask mip sample) +
    Σ primitives (uniform array, MAX 24: ridge = distance-to-segment gaussian; dome = radial;
    basin = negative ridge) + 2-octave fbm detail scaled by local height. Encode 0..1 in R
@@ -329,6 +336,7 @@ game = {
     aiState:{} } },
   provinces: [ null, { id, name, x, y, terrain, good, religion, culture,
     dev:{tax,prod,mp}, owner, controller, autonomy:0.25, unrest:0, revoltProgress:0,
+    habitation:'uninhabited'|'frontier'|'rural'|'town'|'urban', settleable:true,
     unitQueue:[], // one FIFO line for land regiments, warships, and air wings
     fort, garrison, maxGarrison, siege:null,   // {by:tag, progress:0-100, breach:0-3, days:0}
     modifiers:[], holy, wonder, impassable } ],
@@ -1656,3 +1664,31 @@ foreign court **read-only**.
 - **Regression contract**: `smoke25.mjs` proves that a distant Leontopolis
   revolt stays REB, border-adjacent Jamnia joins JUD, and occupied Jerusalem may
   still join HAS through the ancient-heartland exception.
+
+## 41. v4.0: land before provinces
+
+- **The map can grow**: province seeds live in a float texture instead of the
+  old 128-entry uniform array. IDs use two texture channels and a `Uint16Array`,
+  with a deliberate 512-cell renderer cap. IDs above 255 survive rendering,
+  geometry, lookup and map hit-testing.
+- **Land state is explicit**: habitation (`uninhabited`, `frontier`, `rural`,
+  `town`, `urban`), sovereign owner, terrain, current passability and future
+  settleability are separate fields. The terrain named wasteland no longer
+  silently dictates all of them.
+- **Empty land can lie inside a state**: political mode colors a cell by its
+  sovereign owner even while an uninhabited cross-hatch remains. Truly unowned
+  cells retain the WASTE color. The five existing deserts remain explicitly
+  impassable, preserving every bookmark's current pathing and balance. In 1948,
+  those cells belong to Syria, Saudi Arabia and Egypt, so the modern sovereign
+  border includes its empty interior without turning it into productive land.
+- **Bookmarks and saves survive**: static null habitation is inferred from the
+  bookmark's era-specific development, so modern cities become urban without
+  changing their permanent map key. Old saves reconstruct habitation and
+  settleability on revival.
+- **Foundation, not the settlement action**: this version establishes permanent
+  land-state semantics and scalable IDs. Later versions may add latent cells,
+  claims, surveys, settlements and administrative province regrouping without
+  redefining ownership or terrain.
+- **Regression contract**: `smoke26.mjs` covers tier inference, old-save revival,
+  and sovereign-owned empty land. `uitest24.mjs` renders and hit-tests 260
+  synthetic provinces, proving the high-byte ID path in a real browser.

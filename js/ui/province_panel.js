@@ -40,6 +40,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       <div class="pp-occupied hidden" data-ref="occupied"></div>
       <div class="pp-grid">
         <div class="pp-row" data-ref="terrainRow"><span class="pp-k">${icon('mountain', 'icon-k')}Terrain</span><span class="pp-v" data-ref="terrain"></span></div>
+        <div class="pp-row" data-ref="habitationRow"><span class="pp-k">${icon('bricks', 'icon-k')}Habitation</span><span class="pp-v" data-ref="habitation"></span></div>
         <div class="pp-row" data-ref="goodRow"><span class="pp-k">${icon('grain', 'icon-k')}Trade good</span><span class="pp-v" data-ref="good"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
@@ -247,6 +248,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.terrainRow.dataset.tt = terr
       ? `Move cost ×${terr.moveCost != null ? terr.moveCost : 1} · Defence +${terr.defBonus || 0} · Attrition ${terr.attrition || 0}`
       : titleCase(p.terrain);
+    const hab = (DEFINES.HABITATION || {})[p.habitation];
+    setText(refs.habitation, (hab && hab.name) || titleCase(p.habitation) || 'Rural');
+    refs.habitationRow.dataset.tt = p.habitation === 'uninhabited'
+      ? (p.settleable ? 'Empty land that may be claimed and settled by a future regional project.' : 'Land with no permanent settlement.')
+      : 'Settlement tier, independent of terrain and sovereign ownership.';
     const good = (DEFINES.GOODS || {})[p.good];
     setText(refs.good, (good && good.name) || titleCase(p.good) || '—');
     refs.goodRow.dataset.tt = good ? `Base price: ${good.price} talents` : 'Trade good';

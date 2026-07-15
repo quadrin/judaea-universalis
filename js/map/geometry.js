@@ -1,6 +1,6 @@
 // js/map/geometry.js — derived map geometry from the province-ID raster. SPEC §5.3.
 // Single pass over idArray comparing right & down neighbors. idArray row 0 = north.
-// Wasteland provinces stay IN neighbors (the sim filters impassable for pathing).
+// Every land cell stays IN neighbors; the sim filters current impassability for pathing.
 
 export function computeGeometry(idArray, MAP_DATA) {
   const W = MAP_DATA.MAP_W | 0;

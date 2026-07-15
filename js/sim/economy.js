@@ -282,7 +282,8 @@ export function developInfo(ctx, tag, provId, kind) {
   if (!p || !t || !pool) return { can: false, why: 'invalid', cost: 0 };
   const cost = developCost(p);
   let why = '';
-  if (p.impassable) why = 'The wasteland cannot be developed.';
+  if (p.habitation === 'uninhabited') why = 'The region needs a settlement project first.';
+  else if (p.impassable) why = 'The land is currently impassable.';
   else if (p.owner !== tag) why = 'Not our province.';
   else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
   else if (p.siege) why = 'Under siege.';

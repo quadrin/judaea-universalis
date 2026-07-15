@@ -22,7 +22,20 @@ export const DEFINES = {
     drylands:  { name: 'Drylands',  color: [198, 168, 104], moveCost: 1.2,  defBonus: 0, attrition: 1 },
     steppe:    { name: 'Steppe',    color: [196, 200, 138], moveCost: 1.1,  defBonus: 0, attrition: 1 },
     marsh:     { name: 'Marsh',     color: [110, 148, 138], moveCost: 2.0,  defBonus: 1, attrition: 2 },
-    wasteland: { name: 'Wasteland', color: [86, 82, 74],    moveCost: 2.5,  defBonus: 0, attrition: 5, impassable: true },
+    // "Wasteland" describes land cover, not political or physical state.
+    // Individual map cells decide whether they are currently impassable; this
+    // lets a desert sit inside sovereign borders and later be settled.
+    wasteland: { name: 'Wasteland', color: [86, 82, 74],    moveCost: 2.5,  defBonus: 0, attrition: 5 },
+  },
+
+  // A province's habitation is independent of terrain, ownership and army
+  // passability. Regional modernization will advance through these stable tiers.
+  HABITATION: {
+    uninhabited: { name: 'Uninhabited', level: 0 },
+    frontier:    { name: 'Frontier',    level: 1 },
+    rural:       { name: 'Rural',       level: 2 },
+    town:        { name: 'Town',        level: 3 },
+    urban:       { name: 'Urban',       level: 4 },
   },
 
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly

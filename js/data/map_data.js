@@ -184,7 +184,7 @@ const RIVERS = [
 
 // ---------------------------------------------------------------------------
 // Provinces. id = index + 1. 100 entries (95 canonical + wastelands, 4 fillers
-// within the allowed budget: Seleucia Trachea, Caesarea Mazaca, Susa, Gazaca).
+// within the current theater: Seleucia Trachea, Caesarea Mazaca, Susa, Gazaca).
 // ---------------------------------------------------------------------------
 
 function P(name, lon, lat, weight, owner, terrain, good, religion, culture,
@@ -194,11 +194,17 @@ function P(name, lon, lat, weight, owner, terrain, good, religion, culture,
     dev: { tax, prod, mp },
     owner, fort: fort || 0,
     holy: null, wonder: null, impassable: false,
+    // Null lets initGame infer rural/town/urban from the bookmark's actual
+    // development. WASTE cells begin empty but may still be settleable later.
+    habitation: owner === 'WASTE' ? 'uninhabited' : null,
+    settleable: true,
   };
   if (extra) {
     if (extra.holy) p.holy = extra.holy;
     if (extra.wonder) p.wonder = extra.wonder;
     if (extra.impassable) p.impassable = true;
+    if (extra.habitation) p.habitation = extra.habitation;
+    if (extra.settleable === false) p.settleable = false;
   }
   return p;
 }
@@ -424,8 +430,8 @@ export function validateMapData() {
   try {
     const provs = MAP_DATA.provinces;
 
-    if (provs.length > 110) {
-      warnings.push(`province count ${provs.length} exceeds hard cap 110`);
+    if (provs.length > 512) {
+      warnings.push(`province count ${provs.length} exceeds renderer cap 512`);
     }
     if (MAP_DATA.heightPrimitives.length > 24) {
       warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 24`);
@@ -455,6 +461,9 @@ export function validateMapData() {
       if (!GOOD_KEYS.includes(p.good)) warnings.push(`${p.name}: unknown good '${p.good}'`);
       if (!RELIGION_KEYS.includes(p.religion)) warnings.push(`${p.name}: unknown religion '${p.religion}'`);
       if (!CULTURE_KEYS.includes(p.culture)) warnings.push(`${p.name}: unknown culture '${p.culture}'`);
+      if (p.habitation != null && !['uninhabited', 'frontier', 'rural', 'town', 'urban'].includes(p.habitation)) {
+        warnings.push(`${p.name}: unknown habitation tier '${p.habitation}'`);
+      }
       if (!(p.weight >= 0.5 && p.weight <= 2.5)) {
         warnings.push(`${p.name}: weight ${p.weight} outside sane range 0.5-2.5`);
       }
