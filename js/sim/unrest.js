@@ -17,6 +17,35 @@ function U(ctx, key, fallback) {
   const v = u ? u[key] : undefined;
   return Number.isFinite(v) ? v : fallback;
 }
+
+// Ancient Judaean states may receive a rising inside the map's canonical
+// Judaea region even after losing every bordering province. This deliberately
+// excludes diaspora kingdoms (ADI) and modern Israel (ISR): outside the ancient
+// revolt bookmarks, ordinary risings still have to touch the country's border.
+const JUDAEAN_HOMELAND_TAGS = new Set(['JUD', 'HAS', 'HYR', 'ARI', 'HER', 'ATG', 'MLI']);
+
+function bordersTag(ctx, p, tag) {
+  const neighbors = ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[p.id];
+  if (!neighbors) return false;
+  for (const id of neighbors) {
+    const q = ctx.game.provinces[id];
+    if (q && !q.impassable && (q.owner === tag || q.controller === tag)) return true;
+  }
+  return false;
+}
+
+function isJudaeanHomeland(ctx, p, tag) {
+  if (!JUDAEAN_HOMELAND_TAGS.has(tag)) return false;
+  // MAP_DATA is immutable scenario geography. Its JUD-owned province group is
+  // the project's existing Judaea/Galilee heartland, independent of bookmark
+  // ownership changes during setup or play.
+  const base = ctx.MAP_DATA && ctx.MAP_DATA.provinces && ctx.MAP_DATA.provinces[p.id - 1];
+  return !!base && base.owner === 'JUD';
+}
+
+function canRevoltJoin(ctx, p, tag) {
+  return bordersTag(ctx, p, tag) || isJudaeanHomeland(ctx, p, tag);
+}
 function religionGroup(ctx, rel) {
   const r = ctx.DEFINES.RELIGIONS ? ctx.DEFINES.RELIGIONS[rel] : null;
   return r ? r.group : null;
@@ -96,13 +125,15 @@ export function explainUnrest(ctx, provId) {
 function fireRevolt(ctx, p) {
   const g = ctx.game;
   const size = Math.max(1, Math.round(num(p.dev && p.dev.mp) * B(ctx, 'rebelSizePerDev', 0.4)));
-  // The faithful rise for whichever living co-religionist power fights their
-  // ruler (JUD in 66 CE, HAS in 167 BCE); otherwise a generic rising.
+  // A local rising may join a neighboring co-religionist power fighting its
+  // ruler (JUD in 66 CE, HAS in 167 BCE). Remote diaspora revolts remain REB;
+  // the ancient Judaean heartland is the exception when the rising is landless.
   let rebelTag = 'REB';
   for (const key of Object.keys(g.tags)) {
     const t = g.tags[key];
     if (t && t.alive && key !== 'REB' && key !== p.owner &&
-        t.religion === p.religion && isHostile(ctx, key, p.owner)) {
+        t.religion === p.religion && isHostile(ctx, key, p.owner) &&
+        canRevoltJoin(ctx, p, key)) {
       rebelTag = key;
       break;
     }
