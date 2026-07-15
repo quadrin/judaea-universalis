@@ -1,4 +1,4 @@
-// Headless regression — paused player commands and sequential timed military
+// Headless regression — paused planning and sequential timed military
 // recruitment across land, sea, and air.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
@@ -32,7 +32,7 @@ const game = initGame({
   playerTag: 'ISR', rngSeed: 240,
 });
 const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_1948, events: EVENTS_1948 });
-const actions = gameActions(ctx, { deferWhilePaused: true });
+const actions = gameActions(ctx);
 const israel = game.tags.ISR;
 israel.treasury = 1000;
 israel.points.gov = 500;
@@ -44,33 +44,37 @@ const totalRegs = () => Object.values(game.armies).filter((a) => a && a.tag === 
 const totalShips = () => Object.values(game.fleets).filter((f) => f && f.tag === 'ISR').reduce((n, f) => n + (f.ships || 0), 0);
 const totalWings = () => Object.values(game.airwings).filter((w) => w && w.tag === 'ISR').length;
 const start = {
-  tax: port.dev.tax, treasury: israel.treasury, manpower: israel.manpower,
+  tax: port.dev.tax, gov: israel.points.gov, treasury: israel.treasury, manpower: israel.manpower,
   regs: totalRegs(), ships: totalShips(), wings: totalWings(),
+  armies: Object.values(game.armies).filter((a) => a && a.tag === 'ISR').length,
 };
+const devCost = actions.getDevelopInfo(port.id).tax.cost;
+const host = Object.values(game.armies).find((a) => a && a.tag === 'ISR' && !a.inBattle && regCount(a) >= 2);
 
-console.log('== paused commands wait for resume ==');
+console.log('== paused planning commits immediately ==');
+const detachmentId = actions.splitArmy(host.id);
 actions.devProvince(port.id, 'tax');
 actions.recruit(port.id, 'inf');
 actions.recruit(port.id, 'inf');
 actions.buildShip(port.id);
 actions.recruitAirWing(port.id);
-ok(game.pendingCommands.length === 5, 'five paused actions are held as commands');
-ok(port.dev.tax === start.tax && israel.treasury === start.treasury && israel.manpower === start.manpower,
-  'paused commands spend and change nothing');
-ok(!port.unitQueue.length && totalRegs() === start.regs && totalShips() === start.ships && totalWings() === start.wings,
-  'no unit begins or appears while paused');
+ok(game.paused, 'the campaign remains paused while orders are given');
+ok(!!detachmentId && Object.values(game.armies).filter((a) => a && a.tag === 'ISR').length === start.armies + 1,
+  'an army splits immediately while paused');
+ok(port.dev.tax === start.tax + 1 && israel.points.gov === start.gov - devCost,
+  'development and its point cost are visible immediately while paused');
+ok(port.unitQueue.map((row) => row.type).join(',') === 'inf,inf,ship,wing',
+  'paused military purchases enter one FIFO province queue immediately');
+ok(israel.treasury === start.treasury - 90 && israel.manpower === start.manpower - 2000,
+  'money and manpower are committed immediately while paused');
+ok(totalRegs() === start.regs && totalShips() === start.ships && totalWings() === start.wings,
+  'committed work creates no instant units');
 const preview = actions.getRecruitmentQueue(port.id);
-ok(preview.rows.length === 4 && preview.rows.every((row) => row.pending), 'the province panel can preview held unit orders');
+ok(preview.paused && preview.rows.map((row) => row.monthsLeft).join(',') === '2,2,6,4',
+  'the real production line is visible with frozen remaining times');
 
 actions.togglePause();
-ok(!game.paused && !game.pendingCommands.length, 'resume releases the command queue');
-ok(port.dev.tax === start.tax + 1, 'the held development action executes on resume');
-ok(port.unitQueue.map((row) => row.type).join(',') === 'inf,inf,ship,wing',
-  'all military orders enter one FIFO province queue');
-ok(totalRegs() === start.regs && totalShips() === start.ships && totalWings() === start.wings,
-  'releasing orders still creates no instant units');
-ok(israel.treasury === start.treasury - 90 && israel.manpower === start.manpower - 2000,
-  'resources are committed only when the queued orders begin');
+ok(!game.paused, 'resume starts the clock without changing the committed queue');
 
 console.log('== the province completes one order at a time ==');
 monthlyRecruitment(ctx);
@@ -91,8 +95,17 @@ monthlyRecruitment(ctx);
 ok(totalWings() === start.wings + 1 && !port.unitQueue.length, 'the air wing completes after four months and clears the queue');
 
 const revived = reviveGame(JSON.parse(JSON.stringify(game)));
-ok(revived && Array.isArray(revived.provinces[port.id].unitQueue) && Array.isArray(revived.pendingCommands),
-  'save revival preserves the new queue schema');
+ok(revived && Array.isArray(revived.provinces[port.id].unitQueue),
+  'save revival preserves the production queue schema');
+
+console.log('== v3.9 held orders migrate on load ==');
+revived.tags.ISR.points.gov = 500;
+revived.pendingCommands = [{ id: 1, tag: 'ISR', name: 'devProvince', args: [port.id, 'tax'] }];
+const revivedCtx = makeCtx({ game: revived, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_1948, events: EVENTS_1948 });
+const revivedTax = revived.provinces[port.id].dev.tax;
+gameActions(revivedCtx);
+ok(revived.provinces[port.id].dev.tax === revivedTax + 1 && !('pendingCommands' in revived),
+  'a legacy held click applies immediately and the obsolete queue is removed');
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

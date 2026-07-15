@@ -177,9 +177,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       refs.pause.innerHTML = icon(pauseGlyph);
     }
     refs.pause.classList.toggle('paused', !!g.paused);
-    const held = Array.isArray(g.pendingCommands) ? g.pendingCommands.length : 0;
-    refs.pause.dataset.tt = (g.paused ? 'Resume' : 'Pause') + ' (Space)'
-      + (held ? `\n${held} queued order${held === 1 ? '' : 's'} will execute on resume.` : '');
+    refs.pause.dataset.tt = (g.paused ? 'Resume' : 'Pause') + ' (Space)';
     refs.pips.querySelectorAll('.tb-pip').forEach((b) => {
       b.classList.toggle('on', Number(b.dataset.speed) <= (g.speed || 1));
     });

@@ -131,20 +131,24 @@ const judArmy = await guest.evaluate(() => {
   return { id: a.id, from: a.prov, dest };
 });
 ok(!!judArmy, 'guest ordered a Judaean march: ' + JSON.stringify(judArmy));
-await host.waitForFunction(() => window._ctx.game.pendingCommands.some((cmd) => cmd && cmd.name === 'moveArmy'), null, { timeout: 10000 });
-const heldPath = await host.evaluate((id) => window._ctx.game.armies[id].path.length, judArmy.id);
-ok(heldPath === 0, 'the host holds the march while the shared clock is paused');
-await guest.evaluate(() => { window._actions.togglePause(); });
 await host.waitForFunction((id) => {
   const a = window._ctx.game.armies[id];
   return a && a.path && a.path.length > 0;
 }, judArmy.id, { timeout: 10000 });
-ok(true, 'host executed the order after the guest resumed time (path set)');
+const accepted = await host.evaluate((id) => {
+  const g = window._ctx.game;
+  const a = g.armies[id];
+  return { paused: g.paused, prov: a.prov, next: a.path[0] };
+}, judArmy.id);
+ok(accepted.paused && accepted.prov === judArmy.from && accepted.next === judArmy.dest,
+  'the paused host accepts the path but does not move the army: ' + JSON.stringify(accepted));
 const echoed = await guest.waitForFunction((id) => {
   const a = window._ctx.game.armies[id];
   return a && a.path && a.path.length > 0;
 }, judArmy.id, { timeout: 10000 }).then(() => true).catch(() => false);
-ok(echoed, 'the marching column echoed back in a snapshot');
+ok(echoed, 'the paused movement order echoed back in a snapshot');
+await guest.evaluate(() => { window._actions.togglePause(); });
+await host.waitForFunction(() => !window._ctx.game.paused, null, { timeout: 8000 });
 
 console.log('== guest steers the shared clock ==');
 await guest.evaluate(() => { window._actions.setSpeed(4); });

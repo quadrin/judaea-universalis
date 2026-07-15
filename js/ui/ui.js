@@ -1038,8 +1038,9 @@ export function initUI(staticCtx) {
     }));
     bus.on('pause', safe('pause', () => { topbar.refresh(); panel.refresh(); }));
     bus.on('speed', safe('speed', () => topbar.refresh()));
-    bus.on('commandQueued', safe('commandQueued', () => { topbar.refresh(); panel.refresh(); }));
-    bus.on('commandsFlushed', safe('commandsFlushed', () => { topbar.refresh(); panel.refresh(); outliner.refresh(true); }));
+    bus.on('actionTaken', safe('actionTaken', () => {
+      topbar.refresh(); panel.refresh(); outliner.refresh(true); nationPanel.refresh(); updatePill();
+    }));
     bus.on('recruitmentComplete', safe('recruitmentComplete', () => { panel.refresh(); outliner.refresh(true); }));
     bus.on('provinceOwner', safe('provOwner', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('provinceController', safe('provCtrl', () => { panel.refresh(); outliner.refresh(); }));

@@ -54,7 +54,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
     fleets: {}, nextFleetId: 1,
     airwings: {}, nextWingId: 1, // squadrons at their airfields (SPEC §29)
-    nextRecruitId: 1, pendingCommands: [], nextCommandId: 1,
+    nextRecruitId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
@@ -542,7 +542,7 @@ export const DECISIONS = {
 };
 
 // ------------------------------------------------------------------ gameActions (§6.6, frozen)
-export function gameActions(ctx, { deferWhilePaused = false } = {}) {
+export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
 
@@ -739,25 +739,8 @@ export function gameActions(ctx, { deferWhilePaused = false } = {}) {
           id: row.id, type: row.type, name: nameOf(row.type, row.gen),
           monthsLeft: Math.max(0, num(row.monthsLeft) | 0),
           totalMonths: Math.max(1, num(row.totalMonths, unitRecruitMonths(ctx, row.type)) | 0),
-          position: i + 1, stalled: row.stalled || '', pending: false,
+          position: i + 1, stalled: row.stalled || '',
         }));
-        // Commands issued while paused have not spent resources or entered the
-        // production line yet. Show them anyway, so the player's click never
-        // disappears into an invisible queue.
-        for (const cmd of (g.pendingCommands || [])) {
-          if (!cmd || cmd.tag !== g.playerTag || num(cmd.args && cmd.args[0]) !== (provId | 0)) continue;
-          let type = '';
-          if (cmd.name === 'recruit') type = cmd.args && cmd.args[1];
-          else if (cmd.name === 'buildShip') type = 'ship';
-          else if (cmd.name === 'recruitAirWing') type = 'wing';
-          if (!['inf', 'cav', 'ship', 'wing'].includes(type)) continue;
-          const gen = type === 'ship' ? navalGen(ctx, g.playerTag) : tagGen(ctx, g.playerTag);
-          rows.push({
-            id: 'command-' + cmd.id, type, name: nameOf(type, gen),
-            monthsLeft: unitRecruitMonths(ctx, type), totalMonths: unitRecruitMonths(ctx, type),
-            position: rows.length + 1, stalled: '', pending: true,
-          });
-        }
         return { paused: !!g.paused, rows };
       } catch (e) { warnOnce('recruitQueue', 'getRecruitmentQueue failed', e); return null; }
     },
@@ -1065,8 +1048,6 @@ export function gameActions(ctx, { deferWhilePaused = false } = {}) {
         if (!st.canSplit) { say('Cannot split', st.whySplit, 'bad'); return 0; }
         const nid = splitArmyCore(ctx, a);
         if (!nid) { say('Cannot split', a.name + ' is too depleted to divide.', 'bad'); return 0; }
-        const det = g.armies[nid];
-        say('Army divided', (det ? det.name : 'A detachment') + ' takes the field beside ' + a.name + '.', 'info');
         return nid;
       } catch (e) { warnOnce('split', 'splitArmy failed', e); return 0; }
     },
@@ -1717,8 +1698,7 @@ export function gameActions(ctx, { deferWhilePaused = false } = {}) {
           if (other.id === a.id || other.tag !== g.playerTag) continue;
           if (mergeInto(ctx, other.id, a.id)) merged++;
         }
-        if (merged) say('Armies merged', merged + (merged === 1 ? ' army joins ' : ' armies join ') + a.name + '.', 'info');
-        else say('Nothing to merge', 'No other army of ours stands in this province (or they are locked in battle).', 'info');
+        if (!merged) say('Nothing to merge', 'No other army of ours stands in this province (or they are locked in battle).', 'info');
       } catch (e) { warnOnce('mergeAll', 'mergeAllInto failed', e); }
     },
 
@@ -1941,60 +1921,43 @@ export function gameActions(ctx, { deferWhilePaused = false } = {}) {
     },
   };
 
-  if (!deferWhilePaused) return actions;
-
-  if (!Array.isArray(g.pendingCommands)) g.pendingCommands = [];
-  if (!Number.isFinite(g.nextCommandId)) g.nextCommandId = 1;
   const rawActions = { ...actions };
-  const immediate = new Set(['setSpeed', 'togglePause', 'chooseEventOption']);
+  const controls = new Set(['setSpeed', 'togglePause']);
   const isQuery = (name) => /^(get|explain|can|evaluate)/.test(name);
-  const orderLabel = (name) => String(name || 'order')
-    .replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
-  let flushingCommands = false;
 
-  const flushPausedActions = () => {
-    if (g.paused || g.over || flushingCommands || !g.pendingCommands.length) return 0;
+  // Saves written by v3.9 may contain clicks that were held by the old blanket
+  // pause queue. Apply those once, immediately and in order, so loading the
+  // save adopts the new contract without silently losing the player's work.
+  const legacyCommands = Array.isArray(g.pendingCommands) ? g.pendingCommands.slice() : [];
+  if (legacyCommands.length && !g.over) {
     const startingTag = g.playerTag;
-    let count = 0;
-    flushingCommands = true;
     try {
-      // An executed order may open an event and pause the game. Keep the rest
-      // in FIFO order until the player resolves it and resumes again.
-      while (!g.paused && !g.over && g.pendingCommands.length) {
-        const cmd = g.pendingCommands.shift();
+      for (const cmd of legacyCommands) {
         if (!cmd || typeof rawActions[cmd.name] !== 'function') continue;
         if (cmd.tag && !g.tags[cmd.tag]) continue;
         if (cmd.tag) g.playerTag = cmd.tag;
         rawActions[cmd.name](...(Array.isArray(cmd.args) ? cmd.args : []));
-        count++;
       }
     } finally {
       if (g.tags[startingTag]) g.playerTag = startingTag;
-      flushingCommands = false;
     }
-    if (count && ctx.bus) ctx.bus.emit('commandsFlushed', { count, remaining: g.pendingCommands.length });
-    return count;
-  };
+  }
+  delete g.pendingCommands;
+  delete g.nextCommandId;
 
+  // Pausing stops the simulation clock, not the player's hands. Every command
+  // takes effect immediately; actions that represent work merely create a
+  // path, construction site, or recruitment order whose clock advances from
+  // tickDay/monthly systems after play resumes. The generic event keeps the
+  // paused UI honest about resources, queues, splits, merges, and other edits.
   for (const name of Object.keys(rawActions)) {
-    if (immediate.has(name) || isQuery(name) || typeof rawActions[name] !== 'function') continue;
+    if (controls.has(name) || isQuery(name) || typeof rawActions[name] !== 'function') continue;
     actions[name] = (...args) => {
-      if (!g.paused || flushingCommands) return rawActions[name](...args);
-      const cmd = { id: g.nextCommandId++, tag: g.playerTag, name, args };
-      g.pendingCommands.push(cmd);
-      say('Order queued', orderLabel(name) + ' will be carried out when time resumes.', 'info');
-      if (ctx.bus) ctx.bus.emit('commandQueued', { ...cmd, args: args.slice() });
-      return true;
+      const result = rawActions[name](...args);
+      if (ctx.bus) ctx.bus.emit('actionTaken', { name });
+      return result;
     };
   }
-  actions.togglePause = () => {
-    rawActions.togglePause();
-    if (!g.paused) flushPausedActions();
-  };
-  actions.getPendingCommands = () => g.pendingCommands.map((cmd) => ({
-    id: cmd.id, tag: cmd.tag, name: cmd.name, args: Array.isArray(cmd.args) ? cmd.args.slice() : [],
-  }));
-  ctx.flushPausedActions = flushPausedActions;
   return actions;
 }
 

@@ -469,7 +469,6 @@ button {
 .pp-recruit-order b { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-recruit-order small { flex: none; font-size: 11px; font-style: italic; }
 .pp-recruit-order em { font-style: normal; font-variant-numeric: tabular-nums; opacity: 0.7; }
-.pp-recruit-order.pending { color: #7a641f; }
 
 .pp-merchant { margin: 12px 12px 0; padding-top: 8px; border-top: 1px solid rgba(201, 162, 39, 0.25); }
 .pp-merchant-status { margin: 4px 0 7px; color: var(--ink-soft); font-size: 12px; }
