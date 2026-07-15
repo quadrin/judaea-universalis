@@ -14,7 +14,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       <div class="ss-rule">${divider()}</div>
       <h1 class="ss-title">JVDAEA VNIVERSALIS</h1>
       ${inner}
-      <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed</div>
+      <div class="ss-hint">Right-click moves armies &nbsp;·&nbsp; Space pauses &nbsp;·&nbsp; 1–5 sets speed &nbsp;·&nbsp; H for help in-game</div>
     </div>`;
   }
 

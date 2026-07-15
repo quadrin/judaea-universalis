@@ -130,6 +130,19 @@ export const BOOKMARK_132 = {
     // PAR and ARM keep their map_data holdings.
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    JUD: [
+      'Win: maul Rome to +50 war score — Hadrian will offer a tributary prince (accept, or dig for the whole).',
+      'Win: hold Jerusalem and the heartland into 136 CE.',
+      'Crown the chain: the final mission raises the Third House on the Mount.',
+      'Lose: the revolt crushed — Betar\'s fate.',
+    ],
+    ROM: [
+      'Win: reduce the Nasi\'s state to nothing.',
+      'Lose: the war still open when the Senate counts the mauled legions.',
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

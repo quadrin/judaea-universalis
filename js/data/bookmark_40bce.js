@@ -183,6 +183,17 @@ export const BOOKMARK_40 = {
     'Gerasa': 'NAB',
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    HER: [
+      'Win: take Jerusalem and unify the realm — before 36 BCE for the brighter verdict.',
+      'Lose: 35 BCE arrives and the city still laughs at the Senate\'s decree.',
+    ],
+    ATG: [
+      'Win: still hold Jerusalem, alive, in 36 BCE — the last Hasmonean ends standing up.',
+      'Lose: Jerusalem gone and fewer than 3,000 men — Rome uses the axe for kings.',
+    ],
+  },
   playableTags: [
     {
       tag: 'HER',
