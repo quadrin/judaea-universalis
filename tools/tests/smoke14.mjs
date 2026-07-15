@@ -79,8 +79,10 @@ console.log('== wings raise, rebase, and cover ==');
 // Complete an airfield instantly (construction is tested elsewhere).
 const p0 = game.provinces[home];
 p0.buildings = p0.buildings || [];
-p0.buildings.push('airfield');
 isr.treasury = 500;
+const noField = mil.raiseAirWing(ctx, 'ISR', home);
+ok(!noField.ok && /airfield/.test(noField.why), 'air wings wait for a completed airfield: ' + noField.why);
+p0.buildings.push('airfield');
 const r1 = mil.raiseAirWing(ctx, 'ISR', home);
 ok(r1.ok && game.airwings[r1.wing.id], 'a wing forms: ' + r1.wing.name);
 ok(isr.treasury === 500 - (DEFINES.AIR.wingCost || 40), 'the wing was paid for: ' + isr.treasury);

@@ -62,6 +62,8 @@ async function boot(page, cardText) {
   });
   await page.waitForSelector('.pp-air:not(.hidden)');
   ok(true, 'the airfield block appears');
+  ok(await page.evaluate(() => document.querySelector('[data-ref="recruitWing"]')?.parentElement?.classList.contains('pp-recruit')),
+    'air wings recruit beside infantry and cavalry');
   await page.locator('[data-ref="recruitWing"]').click();
   await page.waitForTimeout(200);
   let wings = await page.evaluate(() => Object.values(window._ctx.game.airwings));

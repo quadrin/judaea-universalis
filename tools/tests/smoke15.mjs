@@ -96,6 +96,7 @@ console.log('== hulls speak the age ==');
   const port = game.provinces.find((p) => p && p.owner === 'SEL' && p.terrain === 'coast' && p.controller === 'SEL');
   ok(!!port, 'a Seleucid harbor found: ' + (port && port.name));
   sel.treasury = 500;
+  port.buildings = Array.from(new Set([...(port.buildings || []), 'shipyard']));
   const b1 = navy.buildShipCore(ctx, 'SEL', port.id);
   ok(b1.ok && Number.isFinite(b1.fleet.gen) && b1.fleet.gen === navy.navalGen(ctx, 'SEL'),
     'the hull is laid down to the age’s pattern: gen ' + b1.fleet.gen + ' (' + tech.navalGenName(b1.fleet.gen) + ')');

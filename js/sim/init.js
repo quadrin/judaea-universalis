@@ -58,7 +58,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
     rngSeed, rngState: rngSeed,
-    ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [] },
+    ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
   };
 
   const srcProvs = (MAP_DATA && MAP_DATA.provinces) || [];
@@ -1925,8 +1925,10 @@ export function reviveGame(saved) {
   if (!saved.wars) saved.wars = [];
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves
-  if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [] };
+  if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null };
   if (!Array.isArray(saved.ui.selectedArmies)) saved.ui.selectedArmies = [];
+  if (saved.ui.selectedFleet === undefined) saved.ui.selectedFleet = null;
+  if (saved.ui.selectedWing === undefined) saved.ui.selectedWing = null;
   // pre-buildings/loans saves: default the new economy & military fields
   for (let i = 1; i < saved.provinces.length; i++) {
     const p = saved.provinces[i];

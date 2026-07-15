@@ -48,6 +48,9 @@ for (let i = 1; i < game.provinces.length; i++) {
 ok(home > 0 && away > 0, `ports found: home ${game.provinces[home].name}, away ${game.provinces[away].name}`);
 const t = game.tags.JUD;
 t.treasury = 500;
+const noYard = navy.buildShipCore(ctx, 'JUD', home);
+ok(!noYard.ok && /shipyard/.test(noYard.why), 'warships wait for a completed shipyard: ' + noYard.why);
+game.provinces[home].buildings = Array.from(new Set([...(game.provinces[home].buildings || []), 'shipyard']));
 for (let i = 0; i < 5; i++) actions.buildShip(home);
 const fleet = Object.values(game.fleets).find((f) => f && f.tag === 'JUD');
 ok(!!fleet && fleet.ships === 5, 'five hulls in the water: ' + (fleet && fleet.ships));

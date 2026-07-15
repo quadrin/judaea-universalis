@@ -157,6 +157,28 @@ export function initUI(staticCtx) {
       const p = g.provinces[g.armies[id].prov];
       if (p && camera) camera.centerOn(p.x, p.y);
     },
+    onFleetClick(id) {
+      const g = state.ctx && state.ctx.game;
+      const f = g && g.fleets && g.fleets[id];
+      if (!f || f.tag !== g.playerTag) return;
+      const next = g.ui.selectedFleet === id ? null : id;
+      setSelectedFleet(next);
+      if (next != null) setSelectedProv(0);
+      const p = next != null && g.provinces[f.prov];
+      if (p && camera) camera.centerOn(p.x, p.y);
+      closeOutlinerDrawer();
+    },
+    onWingClick(id) {
+      const g = state.ctx && state.ctx.game;
+      const w = g && g.airwings && g.airwings[id];
+      if (!w || w.tag !== g.playerTag) return;
+      const next = g.ui.selectedWing === id ? null : id;
+      setSelectedWing(next);
+      if (next != null) setSelectedProv(0);
+      const p = next != null && g.provinces[w.prov];
+      if (p && camera) camera.centerOn(p.x, p.y);
+      closeOutlinerDrawer();
+    },
     onFocusProv(provId) {
       const g = state.ctx && state.ctx.game;
       if (!g) return;
@@ -211,6 +233,12 @@ export function initUI(staticCtx) {
     if (!g || !actions || typeof actions.getPeaceInfo !== 'function') return;
     const info = actions.getPeaceInfo(warId);
     if (!info) return; // even scripted wars hear envoys now (SPEC §31)
+    // The peace table owns the panel berth while the envoys are present.
+    // Closing the ordinary panels is especially important on narrow screens,
+    // where they are bottom sheets and would otherwise sit under the terms.
+    setSelectedProv(0);
+    nationPanel.close();
+    closeOutlinerDrawer();
     if (!peaceEl) {
       peaceEl = document.createElement('div');
       peaceEl.id = 'peace-modal';
@@ -647,10 +675,50 @@ export function initUI(staticCtx) {
   function setSelectedArmy(id) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
-    if (id != null) g.ui.selectedFleet = null; // one helm at a time
+    if (id != null) {
+      g.ui.selectedFleet = null;
+      g.ui.selectedWing = null;
+    }
     g.ui.selectedArmy = id == null ? null : id;
     g.ui.selectedArmies = id == null ? [] : [id];
     bus.emit('selectArmy', g.ui.selectedArmy);
+    outliner.refresh(true);
+  }
+
+  function setSelectedFleet(id) {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    g.ui.selectedFleet = id == null ? null : id;
+    if (id != null) {
+      g.ui.selectedWing = null;
+      g.ui.selectedArmy = null;
+      g.ui.selectedArmies = [];
+      bus.emit('selectArmy', null);
+    }
+    outliner.refresh(true);
+  }
+
+  function setSelectedWing(id) {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    g.ui.selectedWing = id == null ? null : id;
+    if (id != null) {
+      g.ui.selectedFleet = null;
+      g.ui.selectedArmy = null;
+      g.ui.selectedArmies = [];
+      bus.emit('selectArmy', null);
+    }
+    outliner.refresh(true);
+  }
+
+  function clearSelectedUnits() {
+    const g = state.ctx && state.ctx.game;
+    if (!g) return;
+    g.ui.selectedArmy = null;
+    g.ui.selectedArmies = [];
+    g.ui.selectedFleet = null;
+    g.ui.selectedWing = null;
+    bus.emit('selectArmy', null);
     outliner.refresh(true);
   }
 
@@ -659,6 +727,8 @@ export function initUI(staticCtx) {
   function selectArmyStack(ids) {
     const g = state.ctx && state.ctx.game;
     if (!g || !ids.length) return;
+    g.ui.selectedFleet = null;
+    g.ui.selectedWing = null;
     g.ui.selectedArmies = ids.slice();
     g.ui.selectedArmy = ids[0];
     bus.emit('selectArmy', g.ui.selectedArmy);
@@ -670,6 +740,8 @@ export function initUI(staticCtx) {
   function toggleArmyInGroup(id) {
     const g = state.ctx && state.ctx.game;
     if (!g) return;
+    g.ui.selectedFleet = null;
+    g.ui.selectedWing = null;
     if (!Array.isArray(g.ui.selectedArmies)) g.ui.selectedArmies = [];
     const grp = g.ui.selectedArmies;
     const at = grp.indexOf(id);
@@ -686,7 +758,7 @@ export function initUI(staticCtx) {
 
   function onMapClick(payload) {
     const g = state.ctx.game;
-    const { provId, armyId, shift } = payload || {};
+    const { provId, armyId, fleetId, wingId, shift } = payload || {};
     closeOutlinerDrawer(); // map taps dismiss the mobile drawer
     // The peace table is open: the map negotiates. Demandable provinces
     // toggle in and out of the deal; every other click stays inert — the
@@ -710,18 +782,34 @@ export function initUI(staticCtx) {
       }
       // Foreign army: fall through to the province underneath.
     }
+    if (fleetId != null) {
+      const f = g.fleets && g.fleets[fleetId];
+      if (f && f.tag === g.playerTag) {
+        setSelectedFleet(fleetId);
+        setSelectedProv(0);
+        return;
+      }
+    }
+    if (wingId != null) {
+      const w = g.airwings && g.airwings[wingId];
+      if (w && w.tag === g.playerTag) {
+        setSelectedWing(wingId);
+        setSelectedProv(0);
+        return;
+      }
+    }
     if (grouping) return; // shift/group taps on terrain don't drop a built-up group
     if (payload && payload.battleProv) {
-      setSelectedArmy(null);
+      clearSelectedUnits();
       openBattleWindow(payload.battleProv);
       return;
     }
     if (provId > 0) {
-      setSelectedArmy(null);
+      clearSelectedUnits();
       setSelectedProv(provId);
     } else {
       // Sea click deselects everything.
-      setSelectedArmy(null);
+      clearSelectedUnits();
       setSelectedProv(0);
     }
   }
@@ -733,6 +821,12 @@ export function initUI(staticCtx) {
     if (g.ui.selectedFleet != null && typeof state.actions.moveFleet === 'function') {
       state.actions.moveFleet(g.ui.selectedFleet, provId);
       outliner.refresh(true);
+      return;
+    }
+    if (g.ui.selectedWing != null && typeof state.actions.moveAirWing === 'function') {
+      state.actions.moveAirWing(g.ui.selectedWing, provId);
+      outliner.refresh(true);
+      panel.refresh();
       return;
     }
     const grp = Array.isArray(g.ui.selectedArmies) && g.ui.selectedArmies.length
@@ -763,7 +857,8 @@ export function initUI(staticCtx) {
       if (chronicleOpen()) { closeChronicle(); return; }
       if (nationPanel.isOpen()) { nationPanel.close(); return; }
       const g = state.ctx.game;
-      if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)) setSelectedArmy(null);
+      if (g.ui.selectedArmy != null || (g.ui.selectedArmies && g.ui.selectedArmies.length)
+          || g.ui.selectedFleet != null || g.ui.selectedWing != null) clearSelectedUnits();
       if (g.ui.selectedProv) setSelectedProv(0);
     } else if (e.key === 'n' || e.key === 'N') {
       toggleNationPanel();
@@ -796,8 +891,8 @@ export function initUI(staticCtx) {
               <div class="help-row"><b>Space</b> pause · <b>1–5</b> speed</div>
               <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle</div>
               <div class="help-row"><b>H</b> this help · <b>Esc</b> close / deselect</div>
-              <div class="help-row"><b>Click</b> select province or army · <b>Shift-click</b> group armies</div>
-              <div class="help-row"><b>Right-click</b> move the selected army (or sail the selected fleet)</div>
+              <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
+              <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
             </div>
             <div>
               <div class="peace-sec">The pieces</div>
@@ -932,6 +1027,8 @@ export function initUI(staticCtx) {
       } else if (g.ui.selectedArmy != null && (!g.armies || !g.armies[g.ui.selectedArmy])) {
         setSelectedArmy(null); // selected army died / merged away
       }
+      if (g.ui.selectedFleet != null && (!g.fleets || !g.fleets[g.ui.selectedFleet])) setSelectedFleet(null);
+      if (g.ui.selectedWing != null && (!g.airwings || !g.airwings[g.ui.selectedWing])) setSelectedWing(null);
       topbar.refresh();
       outliner.refresh();
       panel.refresh();

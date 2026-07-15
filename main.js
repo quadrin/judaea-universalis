@@ -351,9 +351,14 @@ async function boot() {
     const stack = overlay.hitTestStack ? overlay.hitTestStack(sx, sy, ctx.game, camera) : null;
     const armyId = stack ? stack.id : overlay.hitTestArmy(sx, sy, ctx.game, camera);
     const armyIds = stack ? stack.ids : (armyId != null ? [armyId] : null);
+    const fleetId = overlay.hitTestFleet ? overlay.hitTestFleet(sx, sy, ctx.game, camera) : null;
+    const wingId = overlay.hitTestWing ? overlay.hitTestWing(sx, sy, ctx.game, camera) : null;
     const battleProv = overlay.hitTestBattle ? overlay.hitTestBattle(sx, sy, ctx.game, camera) : 0;
     const provId = renderer.provIdAt(mapX, mapY);
-    bus.emit('mapclick', { mapX, mapY, sx, sy, provId, armyId, armyIds, battleProv, shift: !!(mods && mods.shift) });
+    bus.emit('mapclick', {
+      mapX, mapY, sx, sy, provId, armyId, armyIds, fleetId, wingId, battleProv,
+      shift: !!(mods && mods.shift),
+    });
   });
   camera.onRightClick((mapX, mapY, sx, sy) => {
     if (!ctx) return;

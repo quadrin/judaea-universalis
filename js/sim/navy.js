@@ -64,6 +64,7 @@ export function buildShipCore(ctx, tag, provId) {
   if (!t || !p) return { ok: false, why: 'invalid province' };
   if (!isCoastal(ctx, provId)) return { ok: false, why: 'not a port — the sea is elsewhere' };
   if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the harbor is not in our hands' };
+  if (!hasBuilding(p, 'shipyard')) return { ok: false, why: 'build a shipyard before laying down warships' };
   if (num(t.treasury) < SHIP_COST) return { ok: false, why: 'a hull costs ' + SHIP_COST + ' talents' };
   t.treasury = num(t.treasury) - SHIP_COST;
   let fleet = fleetsAt(ctx, provId).find((f) => f.tag === tag && !f.path.length);
