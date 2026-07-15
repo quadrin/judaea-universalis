@@ -1036,8 +1036,11 @@ export function initUI(staticCtx) {
       updatePill();
       refreshBattleWindow();
     }));
-    bus.on('pause', safe('pause', () => topbar.refresh()));
+    bus.on('pause', safe('pause', () => { topbar.refresh(); panel.refresh(); }));
     bus.on('speed', safe('speed', () => topbar.refresh()));
+    bus.on('commandQueued', safe('commandQueued', () => { topbar.refresh(); panel.refresh(); }));
+    bus.on('commandsFlushed', safe('commandsFlushed', () => { topbar.refresh(); panel.refresh(); outliner.refresh(true); }));
+    bus.on('recruitmentComplete', safe('recruitmentComplete', () => { panel.refresh(); outliner.refresh(true); }));
     bus.on('provinceOwner', safe('provOwner', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('provinceController', safe('provCtrl', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('siegeStart', safe('siegeStart', () => { panel.refresh(); outliner.refresh(); }));

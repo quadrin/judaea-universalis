@@ -131,11 +131,15 @@ const judArmy = await guest.evaluate(() => {
   return { id: a.id, from: a.prov, dest };
 });
 ok(!!judArmy, 'guest ordered a Judaean march: ' + JSON.stringify(judArmy));
+await host.waitForFunction(() => window._ctx.game.pendingCommands.some((cmd) => cmd && cmd.name === 'moveArmy'), null, { timeout: 10000 });
+const heldPath = await host.evaluate((id) => window._ctx.game.armies[id].path.length, judArmy.id);
+ok(heldPath === 0, 'the host holds the march while the shared clock is paused');
+await guest.evaluate(() => { window._actions.togglePause(); });
 await host.waitForFunction((id) => {
   const a = window._ctx.game.armies[id];
   return a && a.path && a.path.length > 0;
 }, judArmy.id, { timeout: 10000 });
-ok(true, 'host executed the order (path set)');
+ok(true, 'host executed the order after the guest resumed time (path set)');
 const echoed = await guest.waitForFunction((id) => {
   const a = window._ctx.game.armies[id];
   return a && a.path && a.path.length > 0;

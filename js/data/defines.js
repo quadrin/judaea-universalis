@@ -128,7 +128,7 @@ export const DEFINES = {
 
   // Religions: groups 'judaic' | 'pagan' | 'iranic' | 'christian' | 'islamic'
   RELIGIONS: {
-    judaism:        { name: 'Second Temple Judaism', color: [46, 96, 178],  group: 'judaic' },
+    judaism:        { name: 'Judaism',               color: [46, 96, 178],  group: 'judaic' },
     samaritanism:   { name: 'Samaritanism',          color: [92, 150, 196], group: 'judaic' },
     hellenism:      { name: 'Hellenism',             color: [196, 170, 86], group: 'pagan' },
     roman_cult:     { name: 'Roman State Cult',      color: [178, 62, 56],  group: 'pagan' },
@@ -368,6 +368,9 @@ export const DEFINES = {
   BASE: {
     regSize: 1000,                     // men per regiment
     regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment
+    // Every province trains/fits one queued military unit at a time. Paused
+    // time never advances these clocks.
+    unitRecruitMonths: { inf: 2, cav: 3, ship: 6, wing: 4 },
     maintPerReg: 0.35,                 // talents/month upkeep per regiment
     moraleBase: 3.0,                   // base max morale before multipliers
     moraleRecoveryPerMonth: 0.6,       // morale regained per month out of battle

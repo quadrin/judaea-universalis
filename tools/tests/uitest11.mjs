@@ -57,26 +57,32 @@ const devInfo = await page.evaluate(() => window._actions.getDevelopInfo(window.
 ok(devInfo && devInfo.tax.cost === 50 + 5 * 30, 'Tel Aviv (30 dev) costs ' + devInfo.tax.cost + ' to develop');
 const devWorks = await page.evaluate(() => {
   const g = window._ctx.game;
+  g.paused = false;
   g.tags.ISR.points.gov = 999;
   const before = window._ctx.prov('Joppa').dev.tax;
   window._actions.devProvince(window._ctx.provId('Joppa'), 'tax');
-  return { before, after: window._ctx.prov('Joppa').dev.tax };
+  const after = window._ctx.prov('Joppa').dev.tax;
+  g.paused = true;
+  return { before, after };
 });
 ok(devWorks.after === devWorks.before + 1, 'develop works in-browser: tax ' + devWorks.before + ' → ' + devWorks.after);
 
 console.log('== guarantee & subsidy in the sim ==');
 const dip = await page.evaluate(() => {
   const g = window._ctx.game;
+  g.paused = false;
   g.tags.ISR.points.infl = 200;
   g.tags.ISR.treasury = 300;
   // Turkey is neutral: a valid guarantee/subsidy target
   window._actions.guaranteeNation('TUR');
   window._actions.sendSubsidy('TUR');
-  return {
+  const out = {
     guarantees: g.tags.ISR.guarantees.slice(),
     subsidies: g.subsidies.map((s) => s.from + '->' + s.to + ':' + s.amount),
     dip: window._actions.getDiplomacy('TUR'),
   };
+  g.paused = true;
+  return out;
 });
 ok(dip.guarantees.indexOf('TUR') >= 0, 'guarantee recorded: ' + dip.guarantees.join(','));
 ok(dip.subsidies.length === 1, 'subsidy flowing: ' + dip.subsidies.join(','));

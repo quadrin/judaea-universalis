@@ -263,14 +263,6 @@ export const BOOKMARK_614 = {
         + 'and never forget that your ally is an empire, and empires trade. When Persia '
         + 'sells you (and it will try), be strong enough to be worth more unsold.',
     },
-    {
-      tag: 'BYZ',
-      difficulty: 'Hard',
-      blurb: 'Syria is gone, Jerusalem is about to fall, and the Persians will have Egypt '
-        + 'within five years — the Empire is losing this war everywhere at once. Hold the '
-        + 'Anatolian line, keep the fleet, and endure until you can do what Heraclius did: '
-        + 'gamble the whole Empire on one campaign into the enemy\'s heart.',
-    },
   ],
 
   setup(ctx) {

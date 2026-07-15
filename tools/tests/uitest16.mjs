@@ -64,7 +64,13 @@ async function boot(page, cardText) {
   ok(true, 'the airfield block appears');
   ok(await page.evaluate(() => document.querySelector('[data-ref="recruitWing"]')?.parentElement?.classList.contains('pp-recruit')),
     'air wings recruit beside infantry and cavalry');
+  await page.evaluate(() => { window._ctx.game.paused = false; });
   await page.locator('[data-ref="recruitWing"]').click();
+  await page.evaluate(() => { window._ctx.game.paused = true; });
+  await page.evaluate(async () => {
+    const { monthlyRecruitment } = await import('/js/sim/recruitment.js');
+    for (let i = 0; i < window._ctx.DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(window._ctx);
+  });
   await page.waitForTimeout(200);
   let wings = await page.evaluate(() => Object.values(window._ctx.game.airwings));
   ok(wings.length === 1 && /Squadron/.test(wings[0].name), 'a wing is raised: ' + (wings[0] && wings[0].name));
@@ -81,7 +87,9 @@ async function boot(page, cardText) {
   const moveBtn = page.locator('.pp-air-move').first();
   ok((await page.locator('.pp-air-move').count()) >= 1, 'a rebase button appears');
   const before = wings[0].prov;
+  await page.evaluate(() => { window._ctx.game.paused = false; });
   await moveBtn.click();
+  await page.evaluate(() => { window._ctx.game.paused = true; });
   await page.waitForTimeout(250);
   wings = await page.evaluate(() => Object.values(window._ctx.game.airwings));
   ok(wings[0].prov !== before, 'the wing flew to its new field (prov ' + before + ' → ' + wings[0].prov + ')');

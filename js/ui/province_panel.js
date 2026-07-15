@@ -89,6 +89,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="recruitWing"></button>
       </div>
+      <div class="pp-recruit-queue hidden" data-ref="recruitQueue"></div>
       <div class="pp-merchant hidden" data-ref="merchantBlock">
         <div class="pp-build-title">${icon('ship', 'icon-sm')} Merchant Marine</div>
         <div class="pp-merchant-status" data-ref="merchantStatus"></div>
@@ -346,6 +347,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const costs = base.regCost || { inf: 10, cav: 25 };
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
+    refreshRecruitmentQueue(g);
 
     // Warships recruit alongside the army, once a completed shipyard opens.
     const coastal = !!(ctx.geom && Array.isArray(ctx.geom.coastal) && ctx.geom.coastal[provId]);
@@ -357,8 +359,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       // Hulls speak the age too (SPEC §31): Penteconters through Destroyers.
       const t = g.tags[g.playerTag];
       const shipPattern = navalGenName(unlockedGen(((t && t.tech && t.tech.mar) | 0)));
-      refs.buildShip.textContent = `Lay down ${shipPattern} (30t)`;
-      refs.buildShip.dataset.tt = `Lay down a hull of ${shipPattern}: 30 talents, upkeep 0.5 a month, carries 1,000 men. Ships gather into the fleet riding off this port; older fleets can be re-rigged from the outliner.`;
+      const months = (base.unitRecruitMonths && base.unitRecruitMonths.ship) || 6;
+      refs.buildShip.textContent = `Lay down ${shipPattern} — 30t · ${months}m`;
+      refs.buildShip.dataset.tt = `Lay down a hull of ${shipPattern}: 30 talents and ${months} months in this province's unit queue. Upkeep is 0.5 a month after launch; carries 1,000 men. Ships gather into the fleet riding off this port; older fleets can be re-rigged from the outliner.`;
       refs.buildShip.classList.toggle('disabled', !t || (t.treasury || 0) < 30);
     }
 
@@ -591,7 +594,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const gen = unlockedGen((t && t.tech && t.tech.mar) | 0);
     const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
     const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
-    setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')}`);
+    const months = (base.unitRecruitMonths && base.unitRecruitMonths[type]) || (type === 'cav' ? 3 : 2);
+    setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')} · ${months}m`);
     let reason = null;
     if (!t) reason = 'No nation to recruit for';
     else if (p.impassable) reason = 'Impassable wasteland';
@@ -600,7 +604,30 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     else if ((t.treasury || 0) < cost) reason = `Not enough talents (${cost} needed)`;
     btn.classList.toggle('disabled', !!reason);
     btn.dataset.tt = reason
-      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents`;
+      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents. Muster takes ${months} months; this province trains one queued unit at a time.`;
+  }
+
+  function refreshRecruitmentQueue(g) {
+    let info = null;
+    if (actions && typeof actions.getRecruitmentQueue === 'function') {
+      try { info = actions.getRecruitmentQueue(provId); } catch (e) { warnOnce('getRecruitmentQueue', e); }
+    }
+    const rows = info && Array.isArray(info.rows) ? info.rows : [];
+    refs.recruitQueue.classList.toggle('hidden', !rows.length);
+    if (!rows.length) return;
+    setHtml(refs.recruitQueue, rows.map((row, i) => {
+      const glyph = icon(row.type === 'ship' ? 'ship' : row.type === 'wing' ? 'plane'
+        : row.type === 'cav' ? 'horseshoe' : 'shield');
+      let state = '';
+      if (row.pending) state = 'held until resume';
+      else if (row.stalled) state = esc(row.stalled);
+      else if (info.paused) state = `${row.monthsLeft}m left · paused`;
+      else if (i > 0) state = `${row.monthsLeft}m · waiting`;
+      else state = `${row.monthsLeft}m left`;
+      return `<div class="pp-recruit-order${row.pending ? ' pending' : ''}">${glyph}`
+        + `<span><b>${esc(row.name)}</b><small>${state}</small></span>`
+        + `<em>#${i + 1}</em></div>`;
+    }).join(''));
   }
 
   // The airfield block (SPEC §29): wings based here, a recruit button, and a
@@ -633,10 +660,10 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         || (w.raidCd > 0 || (w.raids || []).length ? '' : ' <span class="peace-dim">(no other field to fly to)</span>')}</div>`;
     }).join('');
     setHtml(refs.airWings, rows || '<div class="peace-dim">The hangars stand empty.</div>');
-    setHtml(refs.recruitWing, `${icon('plane')} Raise Air Wing — ${info.cost} ${icon('coins', 'icon-xs')}`);
+    setHtml(refs.recruitWing, `${icon('plane')} Raise Air Wing — ${info.cost} ${icon('coins', 'icon-xs')} · ${info.months}m`);
     refs.recruitWing.classList.toggle('disabled', !info.canRecruit);
     refs.recruitWing.dataset.tt = info.canRecruit
-      ? `Raise a fighter squadron: ${info.cost} talents, ${info.upkeep}/month upkeep. `
+      ? `Raise a fighter squadron: ${info.cost} talents, ${info.months} months in this province's unit queue, ${info.upkeep}/month upkeep after completion. `
         + `Covers battles within ${info.range} provinces of its field (+1 to the fire die); `
         + `${info.cap} wings fit on one field. Lost if the field falls.`
       : info.whyNot;
