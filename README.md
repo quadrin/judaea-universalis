@@ -145,6 +145,11 @@ python3 -m http.server 8613 --directory .
   Persian-era Return can crown its mission chain by raising the Third
   Temple: hold Jerusalem rich and steady, spend 300 talents, and the House
   (and its wonder-star on the map, and its monthly yield) returns.
+- The game tells you how to play it: every era lists its win and loss
+  conditions at the top of the realm panel, H opens a one-page primer,
+  winning enemies send ultimatums you may accept or refuse, and a battle
+  going wrong has a Withdraw button — shattered, but marching. The whole
+  35-suite verification battery now ships in `tools/tests/`.
 - Navies age like armies: hulls are laid down to the era's pattern —
   Penteconters through Trireme Squadrons to Destroyer Flotillas — hit harder
   each generation, and re-rig at anchor when the art advances. Fleets take

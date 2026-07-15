@@ -1371,3 +1371,33 @@ foreign court **read-only**.
   and sets Jerusalem's wonder back to `temple`: the yield returns, and the
   wonder's gold star stands on the map again. Bar Kokhba's coins promised
   the facade; Nehemiah ben Hushiel dreamed the sacrifices resumed.
+
+## 33. v3.3: the playable game — objectives, ultimatums, withdrawal, help
+
+- **Objectives** (`bookmark.objectives[TAG]`, action `getObjectives`): every
+  bookmark states its win and loss conditions per playable tag in plain
+  lines, shown in a block at the top of the realm panel (Win: green, Lose:
+  red). The player no longer discovers the era's victory rules by tripping
+  them.
+- **Ultimatums** (`sendUltimatum` in ai.js, SPEC §33): losing wars now have
+  an exit the ENEMY opens. When the enemy leads a negotiable war at +40,
+  every eight months their herald delivers a dynamic event card carrying
+  their actual demands (the provinces of ours they control, budgeted by
+  their score via peaceDealInfo; reparations at +60): accept and
+  executePeaceDeal signs it as written, or send the herald home and fight
+  on. Scripted (noNegotiation) wars send no heralds; all-AI wars are
+  untouched (the harness holds its set).
+- **Withdraw from battle** (`withdrawFromBattle`, action `withdrawBattle`,
+  battle-window button): the player's whole side quits the field through
+  the rout machinery — shattered (30 days), morale broken to 30%, marching
+  for friendly ground — and the enemy keeps the field. The exit that every
+  losing battle used to lack.
+- **Help (H or ?)**: a one-page primer modal — hotkeys, monarch points,
+  missions vs decisions, the peace table, flags-are-doors — plus a pointer
+  on the title screen's hint line.
+- **The suites live in the repo now** (`tools/tests/`): all 17 headless sim
+  suites and 18 Playwright suites, with `run-smoke.sh` / `run-ui.sh`
+  runners. Paths are portable: repo root derives from each file's location,
+  the playwright install dir comes from `JU_PW_DIR`, screenshots go to
+  `JU_OUT`. (A container rollback mid-session briefly lost three
+  scratchpad-only suites — never again.)

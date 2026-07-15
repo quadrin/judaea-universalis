@@ -187,6 +187,19 @@ export const BOOKMARK_1948 = {
     'Susa': { tax: 8, prod: 9, mp: 6 },           // Ahvaz & the oil
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    ISR: [
+      'Win: end the war holding 16+ provinces including Jerusalem (the greater verdict), or 11+ (the armistice lines).',
+      'Air power decides late wars: airfields, wings, and bombing raids are yours from military tech 19.',
+      'Lose: the state overrun in its first year.',
+    ],
+    JOR: [
+      'Win: hold Jerusalem when the armistice comes (February 1949 on).',
+      'Win: the West Bank secured by mid-1949.',
+      'Lose: the Legion broken west of the river.',
+    ],
+  },
   playableTags: [
     {
       tag: 'ISR',

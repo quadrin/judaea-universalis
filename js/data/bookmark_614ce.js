@@ -123,6 +123,20 @@ export const BOOKMARK_614 = {
   owners: OWNERS,
   religions: RELIGIONS,
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    JUD: [
+      'Win: hold Jerusalem and Caesarea with 8 provinces — a state, not a garrison.',
+      'Win: still hold Jerusalem with 4+ provinces in mid-628, when the empires\' war ends.',
+      'Crown the chain: the final mission raises the Third House on the Mount.',
+      'Lose: the Return extinguished — by either empire.',
+    ],
+    BYZ: [
+      'Win: reach +35 war score against Persia — Khosrow\'s court will sue (accept, or march on Ctesiphon).',
+      'Win: the war ended and the Cross home in Jerusalem by 620.',
+      'Lose: Alexandria and the East slipping away by 624.',
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

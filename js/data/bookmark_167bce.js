@@ -214,6 +214,18 @@ export const BOOKMARK_167 = {
     // Media and Babylonia remain Seleucid in 167 and fall by event.
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    HAS: [
+      'Win: reach +50 war score against the Seleucids — Antioch will offer terms (accept, or fight for the whole inheritance).',
+      'Win: by 140 BCE hold Jerusalem and a living Jewish heartland (5+ provinces of the faith). Rededicate the Temple for the fuller verdict.',
+      'Lose: the last band broken — no provinces and fewer than 1,500 men.',
+    ],
+    SEL: [
+      'Win: stamp out the rising — Hasmonean Judaea reduced to nothing (before 163 BCE for the swifter verdict).',
+      'The longer the hills burn, the poorer the verdict — and Parthia waits in the east.',
+    ],
+  },
   playableTags: [
     {
       tag: 'HAS',

@@ -13,7 +13,7 @@ import {
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
-  hireWingLeaderCore,
+  hireWingLeaderCore, withdrawFromBattle,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -1549,6 +1549,26 @@ export function gameActions(ctx) {
     },
 
     // ---- chronicle -------------------------------------------------------------
+    // Quit a losing field (SPEC §33): our whole side leaves through the rout
+    // machinery — shattered and marching — and the enemy keeps the ground.
+    withdrawBattle(provId) {
+      try {
+        const res = withdrawFromBattle(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('No withdrawal', res.why, 'bad'); return; }
+        const p = ctx.byId(provId | 0);
+        say('Withdrawal sounded', 'Our banners quit the field at ' + ((p && p.name) || 'the battle')
+          + ' — shattered, but marching. The enemy keeps the ground.', 'info');
+      } catch (e) { warnOnce('withdraw', 'withdrawBattle failed', e); }
+    },
+    // What the era asks of the player (SPEC §33): the bookmark's win/loss
+    // lines for the tag being played, or null when a bookmark predates them.
+    getObjectives() {
+      try {
+        const bk = ctx.bookmark;
+        const list = bk && bk.objectives && bk.objectives[g.playerTag];
+        return Array.isArray(list) && list.length ? list.slice() : null;
+      } catch (e) { warnOnce('objectives', 'getObjectives failed', e); return null; }
+    },
     getChronicle() {
       try { return Array.isArray(g.chronicle) ? g.chronicle.slice() : []; } catch (e) { warnOnce('chronicle', 'getChronicle failed', e); return []; }
     },

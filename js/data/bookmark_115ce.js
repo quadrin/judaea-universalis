@@ -93,6 +93,18 @@ export const BOOKMARK_115 = {
     // OSR/ADI/CHX on the Tigris).
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    JUD: [
+      'Win: ride the diaspora\'s fire to +40 war score — the new emperor will offer terms (accept, or let it burn).',
+      'Win: outlive Trajan — alive with 3+ provinces into 118 CE, when Hadrian buys peace in the East.',
+      'Lose: the rising extinguished.',
+    ],
+    ROM: [
+      'Win: put the rising down — before August 117 to spare Trajan the news on his deathbed.',
+      'Lose: the East still burning as the new reign opens.',
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

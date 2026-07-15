@@ -70,3 +70,14 @@ boot any bookmark in a browser with window._ctx, and save the value of
 
 to this file (a Playwright script that does exactly this lives in the dev
 scratchpad; any browser console works too).
+
+## tests/
+
+The full verification battery, in-repo (SPEC §33). `smoke*.mjs` are
+headless sim suites (no browser): `sh tools/tests/run-smoke.sh`.
+`uitest*.mjs` are Playwright suites and need (1) the game served at
+http://127.0.0.1:8613 and (2) `JU_PW_DIR` pointing at a directory whose
+node_modules contains playwright, with a chromium at /opt/pw-browsers:
+`JU_PW_DIR=... sh tools/tests/run-ui.sh`. Screenshots land in `JU_OUT`
+(default /tmp). Every feature batch since v1.5 keeps its assertions here —
+run both runners plus `node tools/autorun.mjs 8` before shipping.

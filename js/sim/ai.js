@@ -12,6 +12,7 @@ import {
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
+import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
@@ -396,6 +397,54 @@ function aiConsiderWar(ctx, tag) {
 // Peace feelers (monthly). A losing AI leader sues the player for peace — a
 // nudge to open the dove dialog and dictate terms. Wars between two AI powers
 // resolve themselves once one side clearly prevails or both sides tire.
+// A winning enemy dictates (SPEC §33): a dynamic event card carrying their
+// demands — the provinces of ours they hold, budgeted by their score, plus
+// reparations when they dominate. Accept and the deal executes as if we had
+// signed it at the table; refuse and the war goes on.
+function sendUltimatum(ctx, w, leader, ws) {
+  const g = ctx.game;
+  if (!ctx.dynEvents) return;
+  const lt = g.tags[leader];
+  const info = peaceDealInfo(ctx, w, leader);
+  const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: ws >= 60 };
+  let budget = ws;
+  for (const row of (info.provinces || [])) {
+    if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
+  }
+  const names = deal.provinces.map((id) => {
+    const p = ctx.byId(id);
+    return (p && p.name) || ('#' + id);
+  });
+  const demandTxt = (names.length ? 'the cession of ' + names.join(', ') : 'our submission')
+    + (deal.reparations ? ', and reparations' : '');
+  g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
+  const ev = {
+    id: 'dyn_ultimatum_' + g.flags._dynEvN,
+    title: 'Terms from ' + (lt.name || leader),
+    desc: 'Their herald reads the terms without looking up: ' + demandTxt + '. '
+      + 'The war stands at ' + Math.round(ws) + '% against us. We may take these terms '
+      + 'and end it — or send the herald home and trust the next campaign to answer him.',
+    forTag: g.playerTag,
+    major: true,
+    options: [
+      {
+        label: 'Accept their terms',
+        tooltip: 'The war ends on their terms: ' + demandTxt + '.',
+        effects: () => {
+          try { executePeaceDeal(ctx, w, leader, deal); } catch (e) { warnOnce('ultimatum-accept', 'ultimatum accept failed', e); }
+        },
+      },
+      {
+        label: 'Send the herald home',
+        tooltip: 'The war goes on. They will not ask again soon.',
+        effects: () => {},
+      },
+    ],
+  };
+  ctx.dynEvents.set(ev.id, ev);
+  try { fireEvent(ctx, ev); } catch (e) { warnOnce('ultimatum', 'ultimatum card failed', e); }
+}
+
 function monthlyWarDiplomacy(ctx) {
   const g = ctx.game;
   const player = g.playerTag;
@@ -412,6 +461,16 @@ function monthlyWarDiplomacy(ctx) {
       if (!leader) continue;
       const lt = g.tags[leader];
       const ws = num(w.warscore && w.warscore[leader]);
+      // The enemy is WINNING (SPEC §33): every eight months they send an
+      // ultimatum card — accept their demands (they take what they hold, up
+      // to their score) or fight on. Losing wars now have an exit the enemy
+      // opens, not just the one the player begs for.
+      if (ws >= 40) {
+        if (w._demandCd && monthsBetween(w._demandCd, g.date) < 8) continue;
+        w._demandCd = { ...g.date };
+        sendUltimatum(ctx, w, leader, ws);
+        continue;
+      }
       const sueAt = 15 / Math.max(0.5, num(personality(ctx, leader).caution, 1));
       if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= sueAt)) continue;
       if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;

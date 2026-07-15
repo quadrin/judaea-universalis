@@ -92,6 +92,18 @@ export const BOOKMARK_66 = {
   // Tags of other eras (SEL, PTO, HAS, HYR, ARI) never enter this game.
   activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX'],
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    JUD: [
+      'Win: bleed Rome to +50 war score — the emperor will sue for peace (accept, or wager the House on the next season).',
+      'Win: hold Jerusalem and a living heartland into 71 CE — Vespasian finds a client cheaper than a war.',
+      'Lose: the last ember — no provinces and the bands scattered.',
+    ],
+    ROM: [
+      'Win: erase the revolt — Judaea reduced to nothing (before 70 CE for the triumph).',
+      'Lose: Jerusalem still defiant in 74 CE while Parthia arms.',
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

@@ -199,6 +199,19 @@ export const BOOKMARK_67 = {
     // Phraates III watching everyone).
   },
 
+  // What the era asks of you (SPEC §33) — shown in the realm panel.
+  objectives: {
+    HYR: [
+      'Win: break your brother and unify the realm, then beat Rome back (+40 war score — Pompey will offer his settlement).',
+      'Win: by 60 BCE stand unified with Jerusalem, no Roman collar. A client crown by 55 BCE is the lesser verdict.',
+      'Lose: the dynasty extinguished, or Jerusalem in the rival\'s hands when the ledger closes.',
+    ],
+    ARI: [
+      'Win: break your brother and unify the realm, then beat Rome back (+40 war score — Pompey will offer his settlement).',
+      'Win: by 60 BCE stand unified with Jerusalem, no Roman collar. A client crown by 55 BCE is the lesser verdict.',
+      'Lose: the dynasty extinguished, or Jerusalem in the rival\'s hands when the ledger closes.',
+    ],
+  },
   playableTags: [
     {
       tag: 'HYR',

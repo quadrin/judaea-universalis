@@ -481,9 +481,19 @@ export function initUI(staticCtx) {
           ${sideBlock(info.atk, 'atk')}
           ${sideBlock(info.def, 'def')}
         </div>
+        ${info.playerSide ? `<button class="btn bw-withdraw" data-ref="withdraw" data-tt="Sound the withdrawal: our whole side quits the field shattered — broken morale, a forced march to friendly ground — and the enemy keeps the field.">${icon('retreat', 'icon-sm')} Withdraw</button>` : ''}
         <button class="btn peace-cancel">Close</button>
       </div>`;
     battleEl.classList.remove('hidden');
+    const wd = battleEl.querySelector('[data-ref="withdraw"]');
+    if (wd) {
+      wd.addEventListener('click', () => {
+        if (state.actions && typeof state.actions.withdrawBattle === 'function') {
+          try { state.actions.withdrawBattle(provId); } catch (e) { warnOnce('withdrawBattle', e); }
+        }
+        closeBattleWindow();
+      });
+    }
     battleEl.querySelector('.peace-cancel').addEventListener('click', closeBattleWindow);
     battleEl.querySelector('.modal-scrim').addEventListener('click', closeBattleWindow);
   }
@@ -714,6 +724,7 @@ export function initUI(staticCtx) {
       try { state.actions.setSpeed(Number(e.key)); } catch (err) { warnOnce('setSpeed', err); }
       topbar.refresh();
     } else if (e.key === 'Escape') {
+      if (helpOpen()) { closeHelp(); return; }
       if (battleWindowOpen()) { closeBattleWindow(); return; }
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
       if (warOverviewOpen()) { closeWarOverview(); return; }
@@ -729,8 +740,52 @@ export function initUI(staticCtx) {
       toggleLedger();
     } else if (e.key === 'c' || e.key === 'C') {
       toggleChronicle();
+    } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+      toggleHelp();
     }
   });
+
+  // ------------------------------------------------------------- help (H) --
+  // The one-page primer (SPEC §33): hotkeys and how the pieces fit together.
+  let helpEl = null;
+  function helpOpen() { return !!helpEl && !helpEl.classList.contains('hidden'); }
+  function closeHelp() { if (helpEl) helpEl.classList.add('hidden'); }
+  function toggleHelp() {
+    if (helpOpen()) { closeHelp(); return; }
+    if (!helpEl) {
+      helpEl = document.createElement('div');
+      helpEl.id = 'help-modal';
+      helpEl.innerHTML = `
+        <div class="modal-scrim"></div>
+        <div class="ev-card peace-card ledger-card">
+          <h2 class="peace-title">How to Play</h2>
+          <div class="help-cols">
+            <div>
+              <div class="peace-sec">Keys</div>
+              <div class="help-row"><b>Space</b> pause · <b>1–5</b> speed</div>
+              <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle</div>
+              <div class="help-row"><b>H</b> this help · <b>Esc</b> close / deselect</div>
+              <div class="help-row"><b>Click</b> select province or army · <b>Shift-click</b> group armies</div>
+              <div class="help-row"><b>Right-click</b> move the selected army (or sail the selected fleet)</div>
+            </div>
+            <div>
+              <div class="peace-sec">The pieces</div>
+              <div class="help-row">Your <b>Objectives</b> sit at the top of the realm panel (N) — the era's win and loss conditions.</div>
+              <div class="help-row"><b>Monarch points</b> (G/I/M in the topbar) buy tech, reforms, development, stability, generals.</div>
+              <div class="help-row"><b>Missions</b> (realm panel) pay as you play the era's story; <b>Decisions</b> hold the formable nations.</div>
+              <div class="help-row"><b>Wars</b>: every war can be negotiated (dove buttons). Winning enemies send ultimatums; losing ones sue.</div>
+              <div class="help-row"><b>Battles</b>: click the clash on the map for the battle window — and Withdraw when a field is lost.</div>
+              <div class="help-row"><b>Flags are doors</b>: click any nation's chip to inspect its court.</div>
+            </div>
+          </div>
+          <button class="btn peace-cancel">Close</button>
+        </div>`;
+      document.getElementById('ui-root').appendChild(helpEl);
+      helpEl.querySelector('.peace-cancel').addEventListener('click', closeHelp);
+      helpEl.querySelector('.modal-scrim').addEventListener('click', closeHelp);
+    }
+    helpEl.classList.remove('hidden');
+  }
 
   // ------------------------------------------------------ touch niceties --
   if (coarse) {

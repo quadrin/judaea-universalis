@@ -733,6 +733,26 @@ export function sweepAirfields(ctx) {
   }
 }
 
+// Sound the withdrawal (SPEC §33): every army of the tag's side quits the
+// field through the rout machinery — shattered, morale broken, marching for
+// friendly ground — and the enemy keeps the field (and the battle credit,
+// when the round resolves). The player's exit from a battle going wrong.
+export function withdrawFromBattle(ctx, tag, provId) {
+  const g = ctx.game;
+  const b = (g.battles || []).find((x) => x && x.prov === provId);
+  if (!b) return { ok: false, why: 'no battle here' };
+  const mine = [];
+  for (const key of ['atk', 'def']) {
+    for (const id of b[key] || []) {
+      const a = g.armies[id];
+      if (a && a.men > 0 && (a.tag === tag || sameSide(ctx, tag, a.tag))) mine.push(a);
+    }
+  }
+  if (!mine.length) return { ok: false, why: 'none of our armies stand in this battle' };
+  for (const a of mine) routArmy(ctx, a);
+  return { ok: true, armies: mine.length };
+}
+
 // Everything the battle window shows: per-army rows, side totals, yesterday's
 // dice, terrain, and which side (if any) is the player's. Read-only.
 export function battleInfo(ctx, provId) {
