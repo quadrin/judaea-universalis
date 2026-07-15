@@ -376,9 +376,12 @@ provinces: occupied after ~10 days unopposed presence. Besieged Jerusalem with
 **Unrest** (flagship): per §3 UNREST keys: religion (heathen/heretic by group), culture
 group, occupied-by-enemy, war exhaustion, stability (sign-dependent), modifiers, garrison
 > 0 → −1. `unrest>threshold` → `revoltProgress += (unrest-threshold)·2` monthly, else decay
-−10. At `revoltFireAt`: spawn rebels — **judaism-religion province → army for JUD** (if JUD
-alive & at war with owner; else REB) sized `dev.mp·rebelSizePerDev` regiments; province
-controller flips to spawner ONLY if no garrison. Emit `'notify'`.
+−10. At `revoltFireAt`: spawn rebels sized `dev.mp·rebelSizePerDev` regiments. A rising
+may join a living co-religionist power at war with its owner only when the province directly
+borders land that power owns or controls. Ancient Judaean successor tags also treat the base
+map's JUD province group as their homeland, so the revolt can survive there while landless.
+Every other rising remains REB; province controller flips to the spawner ONLY if no garrison.
+Emit `'notify'`.
 
 **Pathfinding**: BFS over geom.neighbors excluding impassable; enemy tags may not enter
 provinces of tags they're not at war with (allies of war-partners ok; keep simple:
@@ -1637,3 +1640,19 @@ foreign court **read-only**.
   revival. `uitest23.mjs` covers the same path through real paused clicks and
   the rendered production line; the multiplayer suite proves a guest path is
   accepted while paused but cannot move its army until the host clock resumes.
+
+## 40. v3.10: local revolts, not teleporting armies
+
+- **Revolt defections are local**: an ordinary unrest-generated army joins a
+  co-religionist belligerent only when its province shares a land border with
+  territory that country owns or controls. Remote diaspora risings remain REB,
+  rather than becoming free player armies across the map.
+- **The ancient heartland survives occupation**: JUD, HAS and the other ancient
+  Judaean successor tags may still receive a rising inside the base map's JUD
+  province group even when they have temporarily lost every adjacent holding.
+  This is a scenario-specific gameplay region, not a claim about modern borders.
+- **Scripted history is unchanged**: named event reinforcements still arrive at
+  the locations and dates stated on their event cards.
+- **Regression contract**: `smoke25.mjs` proves that a distant Leontopolis
+  revolt stays REB, border-adjacent Jamnia joins JUD, and occupied Jerusalem may
+  still join HAS through the ancient-heartland exception.
