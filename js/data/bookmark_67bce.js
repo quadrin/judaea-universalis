@@ -396,6 +396,10 @@ export const BOOKMARK_67 = {
       id: 'kings_army', name: 'The King\'s Army', months: 24,
       effects: { disciplineMult: 1.05 },
     });
+    h.addTagModifier(ctx, 'HYR', {
+      id: 'antipaters_credit', name: 'Antipater\'s Credit', months: 36,
+      effects: { maintMult: 0.8, incomeMult: 1.05 },
+    });
 
     // --- Starting armies & generals. ---------------------------------------------
     h.spawnArmy(ctx, 'ARI', 'Jerusalem', {

@@ -111,6 +111,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_aretas_price',
     title: 'The Price of Petra',
+    requiresWar: ['HYR', 'ARI'],
     desc: 'Aretas the king receives your envoys under a fringed canopy and lets the '
       + 'silence do the bargaining. His price is written down, because Nabataeans write '
       + 'everything down: the twelve cities of Moab that Jannaeus took from his fathers, '
@@ -166,6 +167,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_honi',
     title: 'The Circle-Drawer',
+    requiresWar: ['HYR', 'ARI'],
     desc: 'They found Honi, the old man whose prayers famously brought rain, hiding from '
       + 'the war, and dragged him before the camp to curse the men inside the walls. He '
       + 'stood in the ring of soldiers and prayed instead: "Lord of the universe — these '
@@ -198,6 +200,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_paschal_beasts',
     title: 'The Beasts for the Sacrifice',
+    requiresWar: ['HYR', 'ARI'],
     desc: 'The priests inside the walls lowered a basket of silver each day, and the '
       + 'besiegers sent up the paschal lambs, war or no war — until someone in the camp '
       + 'thought it clever to send up a pig. The chroniclers say the earth shook. What is '
@@ -278,6 +281,7 @@ export const EVENTS_67 = [
       + 'from Antioch now ends wherever Pompey decides it does.',
     forTag: 'both',
     date: { y: -64, m: 5 },
+    world: true,
     major: true,
     aiOption: 0,
     options: [
@@ -317,6 +321,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_embassy_hyr',
     title: 'Three Embassies at Damascus',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
       + 'come three embassies at once: your brother\'s, with a golden vine said to be worth '
       + 'five hundred talents; yours, with Antipater\'s arithmetic of legitimacy; and a '
@@ -351,6 +356,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_embassy_ari',
     title: 'Three Embassies at Damascus',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
       + 'come three embassies at once: yours, with a golden vine worth five hundred '
       + 'talents; your brother\'s, with Antipater\'s patient arithmetic; and a third, from '
@@ -387,6 +393,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_pompey_demands_hyr',
     title: 'Pompey Requires an Answer',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'The proconsul\'s letter is courteous the way a drawn blade is bright. Rome '
       + 'takes note of the disorders in Judaea; Rome desires the country quiet; the '
       + 'high priest will present himself, place his cause in Rome\'s hands, and open his '
@@ -422,6 +429,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_pompey_demands_ari',
     title: 'Pompey Requires an Answer',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'The proconsul\'s letter is courteous the way a drawn blade is bright. Rome '
       + 'takes note of the disorders in Judaea; Rome desires the country quiet; the king '
       + 'will present himself, place his cause in Rome\'s hands, and open his fortresses '
@@ -459,6 +467,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_arbitration',
     title: 'Pompey Chooses the Elder',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'Both brothers knelt, so the Roman judged: the elder is the lawful heir, the '
       + 'younger the abler man — and Rome has no shortage of able men. Hyrcanus is '
       + 'confirmed; Aristobulus is invited, in the manner of an arrest warrant, to '
@@ -487,6 +496,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_holy_of_holies',
     title: 'The Roman in the Sanctuary',
+    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'On the day the Temple fell to him, Pompey did what no living Jew had done: he '
       + 'walked through the Veil into the Holy of Holies, and found — nothing. No statue, '
       + 'no relic, no treasure hoard; an empty room, and the presence that empty rooms '
@@ -559,6 +569,100 @@ export const EVENTS_67 = [
     ],
   },
 
+  // ── THE ROMAN CLOCK CONTINUES ─────────────────────────────────────────────
+  {
+    id: 'ev4_first_triumvirate',
+    title: 'Three Men Divide the Republic',
+    worldLabel: 'Caesar, Pompey, and Crassus form their compact',
+    desc: 'In Rome, Caesar, Pompey, and Crassus discover that three private ambitions '
+      + 'can govern more efficiently than the public constitution. Eastern clients now '
+      + 'have several Roman patrons to court—and several Roman quarrels in which to be '
+      + 'spent.',
+    forTag: 'both',
+    date: { y: -60, m: 7 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Every embassy needs three copies',
+      tooltip: 'Rome gains influence and income for six years, but patronage competition costs legitimacy. Local Judaean outcomes are not rewritten.',
+      effects: guard('ev4_first_triumvirate:0', (ctx) => {
+        if (!alive(ctx, 'ROM')) return;
+        ctx.helpers.adjust(ctx, 'ROM', { infl: 40, legitimacy: -10 });
+        ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'first_triumvirate', name: 'The Compact of Three', months: 72,
+          effects: { incomeMult: 1.06 },
+        });
+        ctx.helpers.chronicle(ctx, 'diplomacy', 'Caesar, Pompey, and Crassus form the compact later called the First Triumvirate.');
+      }),
+    }],
+  },
+  {
+    id: 'ev4_carrhae_campaign',
+    title: 'Crassus Crosses the Euphrates',
+    worldLabel: 'Crassus opens the campaign that leads to Carrhae',
+    desc: 'Crassus has the wealth, the consulship, and no conquest to place beside those '
+      + 'of his partners. He crosses the Euphrates in search of one. Surena gathers the '
+      + 'Parthian horse. The old chronicle knows the name Carrhae; this one will let the '
+      + 'armies decide whether it means the same thing.',
+    forTag: 'both',
+    date: { y: -53, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The eagles enter Mesopotamia',
+      tooltip: 'Rome and Parthia go to war if both survive. Historical field armies appear, but Carrhae is fought rather than declared by text.',
+      effects: guard('ev4_carrhae_campaign:0', (ctx) => {
+        if (!alive(ctx, 'ROM') || !alive(ctx, 'PAR')) return;
+        const already = (ctx.game.wars || []).some((w) => {
+          const all = (w.attackers || []).concat(w.defenders || []);
+          return all.indexOf('ROM') >= 0 && all.indexOf('PAR') >= 0;
+        });
+        if (!already) ctx.helpers.declareWar(ctx, 'ROM', 'PAR', "Crassus' Parthian War");
+        ctx.helpers.spawnArmy(ctx, 'ROM', 'Carrhae', {
+          inf: 12, cav: 3, name: 'Army of Crassus',
+          general: { name: 'Marcus Licinius Crassus', fire: 2, shock: 2, maneuver: 1 },
+        });
+        ctx.helpers.spawnArmy(ctx, 'PAR', 'Dura-Europos', {
+          inf: 2, cav: 10, name: 'Horse of Surena',
+          general: { name: 'Surena', fire: 2, shock: 5, maneuver: 5 },
+        });
+        ctx.helpers.addTagModifier(ctx, 'PAR', {
+          id: 'surenas_screen', name: "Surena's Screen", months: 12,
+          effects: { moraleMult: 1.08 },
+        });
+        ctx.helpers.chronicle(ctx, 'war', 'Crassus crosses the Euphrates; Surena rides to meet him, and the result belongs to the field.');
+      }),
+    }],
+  },
+  {
+    id: 'ev4_caesar_civil_war',
+    title: 'The Republic Divides',
+    worldLabel: 'Caesar and Pompey begin the Roman civil war',
+    desc: 'Caesar crosses the Rubicon; Pompey and the Senate leave Rome; every governor '
+      + 'and client king must decide which Roman Republic is the lawful one. The eastern '
+      + 'garrisons remain on the map, but their orders, money, and reinforcements now look west.',
+    forTag: 'both',
+    date: { y: -49, m: 1 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'Rome has two centers and no peace',
+      tooltip: 'Rome loses stability and reinforcement capacity for three years. Its eastern neighbors gain a strategic opening.',
+      effects: guard('ev4_caesar_civil_war:0', (ctx) => {
+        if (!alive(ctx, 'ROM')) return;
+        ctx.helpers.adjust(ctx, 'ROM', { stability: -2, legitimacy: -20, manpower: -8000 });
+        ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'caesar_pompey_war', name: 'The Great Roman Civil War', months: 36,
+          effects: { reinforceMult: 0.65, aiPassive: true },
+        });
+        ctx.helpers.chronicle(ctx, 'war', 'Caesar crosses the Rubicon; the Roman Republic divides against itself.');
+      }),
+    }],
+  },
+
   // ── 13 ────────────────────────────────────────────────────────────────────
   {
     id: 'ev4_kingdom_restored',
@@ -588,6 +692,7 @@ export const EVENTS_67 = [
   {
     id: 'ev4_rome_recoils',
     title: 'Rome Recoils',
+    requiresWar: [['ROM', 'HYR'], ['ROM', 'ARI']],
     desc: 'The legions came expecting an arbitration and found a kingdom — one king, '
       + 'one army, and hill country that eats cohorts. Pompey, who never fights wars '
       + 'he might lose slowly, sends word: Rome will recognize the kingdom of Judaea, '

@@ -186,7 +186,7 @@ export const BOOKMARK_66 = {
     // --- Starting modifiers. ---
     h.addTagModifier(ctx, 'JUD', {
       id: 'religious_fervor', name: 'Religious Fervor', months: 36,
-      effects: { moraleMult: 1.15 },
+      effects: { moraleMult: 1.15, maintMult: 0.65 },
     });
     // Cestius waits on events at Antioch; ev_cestius_marches (66-10) removes this.
     // Months 6 is a safety net in case the event chain is disturbed.

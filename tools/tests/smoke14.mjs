@@ -67,12 +67,12 @@ ok(isr.tech.mar >= 19, '1948 Israel already flies: mar tech ' + isr.tech.mar);
 const bi = actions.getBuildInfo(home);
 const afOpt = bi.options.find((o) => o.key === 'airfield');
 ok(afOpt && afOpt.canBuild === (isr.treasury >= afOpt.cost), 'airfield offered in 1948: ' + JSON.stringify({ can: afOpt.canBuild, why: afOpt.whyNot }));
-// The same option under an ancient tech level is refused.
+// The same option under an ancient tech level is not advertised at all.
 const savedMar = isr.tech.mar;
 isr.tech.mar = 5;
 const biOld = actions.getBuildInfo(home);
 const afOld = biOld.options.find((o) => o.key === 'airfield');
-ok(afOld && !afOld.canBuild && /tech 19/.test(afOld.whyNot), 'an ancient realm is refused: ' + afOld.whyNot);
+ok(!afOld, 'an ancient realm does not see the airfield before it can conceive of flight');
 isr.tech.mar = savedMar;
 
 console.log('== wings raise, rebase, and cover ==');

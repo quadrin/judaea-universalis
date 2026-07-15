@@ -19,7 +19,7 @@ const OUT = (process.env.JU_OUT || '/tmp') + '/';
 let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  PASS', msg); else { failures++; console.error('  FAIL', msg); } };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ executablePath: process.env.JU_CHROMIUM || '/opt/pw-browsers/chromium', args: ['--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
@@ -105,8 +105,11 @@ const bset = await page.evaluate(async () => {
 });
 ok(!bset.fail && bset.battles > 0, 'battle manufactured at ' + bset.provName);
 
-// one tick so the outliner refreshes and the dice roll
-await runFor(400);
+// Refresh the chrome while the manufactured battle is guaranteed to be live.
+// Advancing at speed 5 here can legitimately resolve a lopsided battle before
+// Playwright observes its row, which makes this UI assertion timing-dependent.
+await page.evaluate(() => window._ctx.bus.emit('day'));
+await page.waitForTimeout(100);
 const battleRow = page.locator('.ol-row.ol-battle').first();
 ok(await battleRow.count() === 1, 'outliner shows the battle row');
 await battleRow.click();

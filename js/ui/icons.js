@@ -171,6 +171,16 @@ export const ICONS = {
     '<path d="M6.6 8.6v8.6M17.4 8.6v8.6"/>' +
     '<path d="M5.4 17.2h13.2M6.2 19.5h11.6"/>' +
     '<path d="M12 9.9c1.1 1.05 1.65 2 1.65 2.9a1.65 1.65 0 1 1-3.3 0c0-.9.55-1.85 1.65-2.9Z"/>',
+  // Shipyard: slipway, hull ribs and a simple lifting crane
+  shipyard:
+    '<path d="M4 20h16M6 17.5h12l-2 2.5H8Z"/>' +
+    '<path d="M7 17.5V9h8M15 9V5h3M15 9l4 4"/>' +
+    '<path d="M10 17.5v-5M13 17.5v-5"/>',
+  // Merchantman: square sail over a broad civilian hull
+  ship:
+    '<path d="M12 4v11M12 5.2 6.5 8v5H12M12 6l5 2.4V13h-5"/>' +
+    '<path d="M3.8 15h16.4l-2.5 4H7Z"/>' +
+    '<path d="M4 21c1.4-.8 2.8-.8 4.2 0 1.4.8 2.8.8 4.2 0 1.4-.8 2.8-.8 4.2 0 1.1.6 2.2.7 3.3.2"/>',
 
   // --- army actions (outliner) --------------------------------------------------
   // Split army: one column branching into two arrows
