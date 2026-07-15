@@ -105,6 +105,118 @@ export const BOOKMARK_115 = {
       'Lose: the East still burning as the new reign opens.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    JUD: [
+      {
+        id: 'host', name: 'The Host of Lukuas',
+        desc: 'The king out of Cyrene and the fighters who crowned him: the rising\'s sword, restless in any scabbard.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.5;
+        },
+        boon: { name: 'The King\'s Fire', text: '+5% morale', effects: { moraleMult: 1.05 } },
+        bane: { name: 'The Host Questions Its King', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'March at their head (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Host Demands the March',
+          text: 'They crossed a desert behind a man they crowned themselves, and they did not do it '
+            + 'to garrison canal towns. Lukuas\' captains want the next city named — Alexandria, '
+            + 'Memphis, anywhere forward — or the fire will choose its own direction.',
+          grant: { label: 'Name the next city', cost: { mar: 50 } },
+          refuse: { label: 'The fire must learn patience', tooltip: 'Fires do not.' },
+        },
+      },
+      {
+        id: 'elders', name: 'The Elders of the Communities',
+        desc: 'The synagogue councils of five countries: they hide the fighters, feed them, and bury the price.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.5; },
+        boon: { name: 'The Communities Provision', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Doors Close', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Hear the councils (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Elders Count the Cost',
+          text: 'Every reprisal falls on the quarters that shelter you: the elders of what remains '
+            + 'ask that the war spare what it claims to redeem — discipline in the towns you hold, '
+            + 'and no more temples burned for the joy of it.',
+          grant: { label: 'Discipline in the towns', cost: { gov: 50 } },
+          refuse: { label: 'War is not a synagogue court', tooltip: 'The doors close one by one.' },
+        },
+      },
+      {
+        id: 'sages', name: 'The Sages',
+        desc: 'The academies\' voices, weighing a war the Law neither commanded nor quite forbade.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'A Blessing on the Rising', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Academies Dissent', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Honor the students of the Law (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Sages Ask for the Law in Arms',
+          text: 'Word travels from the academies: a rising that keeps the Sabbath, spares the '
+            + 'captive and honors the scholar can be blessed; a mob with a king cannot. They ask '
+            + 'which one is marching under your standards.',
+          grant: { label: 'The Law marches with us', cost: { infl: 50 } },
+          refuse: { label: 'Survival has its own law', tooltip: 'The blessing is withheld pending review.' },
+        },
+      },
+    ],
+    ROM: [
+      {
+        id: 'senate', name: 'The Senate',
+        desc: 'The fathers, applauding Trajan\'s conquests at exactly the volume required, and auditing them silently.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Fathers Approve', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
+        bane: { name: 'Obstruction in the Curia', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Provinces and praetorships (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Senate Expects Its Share',
+          text: 'Optimus princeps or not, the new provinces need governors and the old families '
+            + 'expect the letters patent: feed the ladder of honors, or the Curia will discover '
+            + 'grave constitutional questions about eastern commands.',
+          grant: { label: 'Feed the ladder', cost: { gov: 50 } },
+          refuse: { label: 'Merit rules the East', tooltip: 'The constitutional questions multiply.' },
+        },
+      },
+      {
+        id: 'legions', name: 'The Legions',
+        desc: 'Stretched from the Danube to the Gulf: the finest army Rome ever fielded, one province too far.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'The Eagles Content', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'Mutinous Winter Quarters', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'The donative (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Legions Count the Miles',
+          text: 'Twenty years of Dacia, Arabia, Armenia, Parthia — the ranks are gray, the '
+            + 'discharges overdue, and the veterans\' land-grants exist chiefly as rumors. Pay '
+            + 'what the eagles are owed, or learn what tired legions do with their opinions.',
+          grant: { label: 'Discharges and land', cost: { treasury: 150 } },
+          refuse: { label: 'One more campaign first', tooltip: 'The opinions harden.' },
+        },
+      },
+      {
+        id: 'people', name: 'The People of Rome',
+        desc: 'The city, which has never heard of Lukuas and knows only that bread is dearer this year.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 4 ? 0.3 : -0.5; },
+        boon: { name: 'The Levies Come Willing', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'Bread Riots', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Games and grain (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The City Wants Its Grain',
+          text: 'Egypt is the bread-basket and Egypt is on fire: the annona runs short, the '
+            + 'prefect is mobbed on his own steps, and the Circus has begun to chant about it. '
+            + 'Buy grain at Sicilian prices, or let Rome learn geography the hard way.',
+          grant: { label: 'Buy at any price', cost: { treasury: 120 } },
+          refuse: { label: 'The Delta will be retaken', tooltip: 'The chants continue meanwhile.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

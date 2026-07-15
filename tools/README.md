@@ -52,6 +52,13 @@ Drill doctrine exists precisely so that arc holds. Since v3.1 the 167
 Terms-from-Antioch end is an event card (auto-accepted by aiOption in
 harness runs) that keeps only the provinces of the faith — the anomaly
 set is unchanged, but an all-AI HAS no longer inherits occupied Syria.
+Since v3.4 (the deepened 40 BCE chain) the crown war reads differently:
+Sosius arrives with two real legions and Herod's coast pays customs, so
+HER drops OFF the bleeding list while ROM returns to it (the v2.4
+victorious-overstretch class — Sosius' legions cost more than fresh
+conquests pay) — the accepted 40bce line is now ROM SNOWBALL,BLEEDING +
+ATG BLEEDING. Court factions (SPEC §34) are player-only and leave every
+all-AI trajectory untouched; every other bookmark's set is unchanged.
 
 ## geom-snapshot.json
 

@@ -212,6 +212,122 @@ export const BOOKMARK_67 = {
       'Lose: the dynasty extinguished, or Jerusalem in the rival\'s hands when the ledger closes.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    HYR: [
+      {
+        id: 'pharisees', name: 'The Pharisees',
+        desc: 'The sages and their followings: they crowned your grandmother\'s peace and they prefer the elder line — yours.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.5 : -0.4; },
+        boon: { name: 'The Sages Preach the Elder Line', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Synagogues Turn', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Defer to the sages (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Pharisees Ask for the Council',
+          text: 'Salome Alexandra gave them the Sanhedrin and her son Aristobulus would take it back. '
+            + 'They ask what you would give: confirm the sages in the council\'s seats, and every '
+            + 'synagogue in the land preaches your right — hedge, and they start weighing your brother.',
+          grant: { label: 'The seats are theirs', cost: { gov: 50 } },
+          refuse: { label: 'A king above the schools', tooltip: 'The weighing begins.' },
+        },
+      },
+      {
+        id: 'antipater', name: 'The House of Antipater',
+        desc: 'The Idumean who wanted this war for you: money, spies, Nabataean in-laws, and sons worth watching.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.3;
+        },
+        boon: { name: 'Idumean Silver', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Fixer Withholds', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Trust the fixer (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'Antipater Asks for His Sons',
+          text: 'He has bought you an army, an ally and half the coast, and he presents the bill with '
+            + 'perfect courtesy: offices for Phasael and the boy Herod. Every court needs able men, '
+            + 'he says. Every able man needs a court, he does not say.',
+          grant: { label: 'Offices for the sons', cost: { infl: 50 } },
+          refuse: { label: 'Idumea serves; it does not rule', tooltip: 'The perfect courtesy cools.' },
+        },
+      },
+      {
+        id: 'priesthood', name: 'The Temple Priesthood',
+        desc: 'The courses of the altar: they anointed you high priest once and want to know who pays for the incense now.',
+        drift(ctx, t) {
+          try { return ctx.helpers.controls(ctx, 'HYR', 'Jerusalem') ? 0.4 : -0.6; } catch (e) { return 0; }
+        },
+        boon: { name: 'The Daily Offering Steadies', text: '−0.75 unrest everywhere', effects: { unrestAll: -0.75 } },
+        bane: { name: 'The Altar Withholds Its Blessing', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Endow the offerings (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Priesthood Presents the Accounts',
+          text: 'War has emptied the Temple\'s storerooms — the tithes unpaid, the courses unfed, and '
+            + 'a brother\'s army between the villages and the altar. The priests ask the high priest '
+            + 'to remember what he is high priest of.',
+          grant: { label: 'The tithes made whole', cost: { treasury: 120 } },
+          refuse: { label: 'The altar must wait for the crown', tooltip: 'The blessing grows faint.' },
+        },
+      },
+    ],
+    ARI: [
+      {
+        id: 'sadducees', name: 'The Sadducees',
+        desc: 'The great priestly houses your father favored: rich, proud, and yours as long as you are winning.',
+        drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.4 : -0.4; },
+        boon: { name: 'The Great Houses Open Their Purses', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Great Houses Hedge', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Confirm the estates (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Sadducees Want Their Estates',
+          text: 'Nine years of your mother\'s Pharisees cost the great houses land, offices and pride, '
+            + 'and they backed you to get all three back. The deeds are drawn; they need only a seal '
+            + '— yours, and soon, while your seal still means something.',
+          grant: { label: 'Seal the deeds', cost: { gov: 50 } },
+          refuse: { label: 'After the war', tooltip: 'The purses close to a slit.' },
+        },
+      },
+      {
+        id: 'captains', name: 'The King\'s Captains',
+        desc: 'The mercenaries and garrison commanders who declared for you first — professionals, with professional appetites.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.6;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.4;
+        },
+        boon: { name: 'The Garrisons Stand Fast', text: '+5% morale', effects: { moraleMult: 1.05 } },
+        bane: { name: 'The Captains Bargain', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'A donative for the captains (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Captains Name the Donative',
+          text: 'Twenty-two fortresses declared for you in a single week — your father\'s men, bought '
+            + 'with your father\'s reputation. The reputation is spent; the men remain, and they '
+            + 'remind you, respectfully, that fortresses can declare twice.',
+          grant: { label: 'Pay the donative', cost: { treasury: 150 } },
+          refuse: { label: 'Loyalty is not for sale', tooltip: 'Everything is for sale. The price merely rises.' },
+        },
+      },
+      {
+        id: 'priesthood', name: 'The Temple Priesthood',
+        desc: 'The courses of the altar: you wear the diadem and the ephod both, and the priests watch how you carry each.',
+        drift(ctx, t) {
+          try { return ctx.helpers.controls(ctx, 'ARI', 'Jerusalem') ? 0.4 : -0.6; } catch (e) { return 0; }
+        },
+        boon: { name: 'The Daily Offering Steadies', text: '−0.75 unrest everywhere', effects: { unrestAll: -0.75 } },
+        bane: { name: 'The Altar Withholds Its Blessing', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Endow the offerings (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Priesthood Presents the Accounts',
+          text: 'The storerooms empty, the courses unfed, and the high priesthood itself the prize of '
+            + 'a civil war: the priests ask the younger son to prove the altar gains by his winning '
+            + '— in silver, the language every argument at court eventually reaches.',
+          grant: { label: 'The tithes made whole', cost: { treasury: 120 } },
+          refuse: { label: 'The altar must wait for the crown', tooltip: 'The blessing grows faint.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'HYR',

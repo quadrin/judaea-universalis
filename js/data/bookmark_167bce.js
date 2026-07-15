@@ -226,6 +226,122 @@ export const BOOKMARK_167 = {
       'The longer the hills burn, the poorer the verdict — and Parthia waits in the east.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    HAS: [
+      {
+        id: 'hasideans', name: 'The Hasideans',
+        desc: 'The pious who fight for the Law, not for a crown — and will go home the day the Law is safe.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Pious Bless the House', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
+        bane: { name: 'The Pious Go Home', text: '−15% manpower', effects: { manpowerMult: 0.85 } },
+        appease: { label: 'Honor the Law\'s courts (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Hasideans Ask for the Law',
+          text: 'They came to the hills for the Torah, not for the sons of Mattathias, and they say '
+            + 'so to your face: let the courts of the Law sit again in every village you hold, or '
+            + 'the pious will conclude that one king of this world is much like another.',
+          grant: { label: 'The courts sit', cost: { gov: 50 } },
+          refuse: { label: 'The war cannot wait on judges', tooltip: 'The pious begin counting your sins instead of the enemy\'s.' },
+        },
+      },
+      {
+        id: 'hellenizers', name: 'The Hellenizers',
+        desc: 'The gymnasium party — Jason\'s people, rich, connected, and certain this rebellion ruins them.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+          return atWar ? -0.4 : ((t.treasury || 0) > 0 ? 0.4 : 0);
+        },
+        boon: { name: 'The Cities Trade Anyway', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Cities Conspire', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Leave their houses standing (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Hellenizers Name Their Price',
+          text: 'The men who bought the high priesthood twice send a discreet delegation: they can '
+            + 'make the coastal money flow toward the hills — or toward Antioch. They ask only that '
+            + 'the zealous stop burning the houses of everyone who ever spoke Greek.',
+          grant: { label: 'Restrain the zealous', cost: { infl: 50 } },
+          refuse: { label: 'They chose their side long ago', tooltip: 'Their silver goes to Antioch.' },
+        },
+      },
+      {
+        id: 'warparty', name: 'The Brothers\' Captains',
+        desc: 'Judas\' commanders and the young men of the ascents: the war party, hungriest when the war stalls.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.6;
+        },
+        boon: { name: 'The Hammer\'s Men', text: '+5% morale', effects: { moraleMult: 1.05 } },
+        bane: { name: 'The Bands Drift Home', text: '−20% reinforcement', effects: { reinforceMult: 0.8 } },
+        appease: { label: 'Feast the captains (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Captains Want the Offensive',
+          text: 'They did not leave their farms to hold ground. The captains crowd the tent: strike '
+            + 'the garrisons, take the fight down from the hills — or watch the bands drift home '
+            + 'for the plowing season and come back only if there is something to win.',
+          grant: { label: 'Sound the advance', cost: { mar: 50 } },
+          refuse: { label: 'Patience wins this war', tooltip: 'The tents empty a little each week.' },
+        },
+      },
+    ],
+    SEL: [
+      {
+        id: 'court', name: 'The Friends of the King',
+        desc: 'The purple-wearers of Antioch: regents, treasurers and cousins, every one a rival to every other.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Court Aligned', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
+        bane: { name: 'The Ministers Embezzle', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Preferments and titles (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Friends Demand Preferment',
+          text: 'Lysias\' rivals and Philip\'s friends and the treasurer\'s nephews all want the same '
+            + 'thing: more. A king in Persis is far away; a satrapy signed today is near. Pay the '
+            + 'court in offices, or discover what an unpaid court does to a regency.',
+          grant: { label: 'Sign the appointments', cost: { gov: 50 } },
+          refuse: { label: 'The king will judge them all', tooltip: 'The knives come out of their sheaths a finger\'s width.' },
+        },
+      },
+      {
+        id: 'phalanx', name: 'The Phalanx',
+        desc: 'The settler-soldiers of the military colonies: the empire\'s spine, paid in land and arrears.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'The Sarissas Level', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'Pay in Arrears', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'A donative for the ranks (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Phalanx Counts Its Pay',
+          text: 'The colonies of Syria have sent their sons to Egypt, to Persis, and now to a war in '
+            + 'the Judaean hills, and the pay-chests run three months behind. Elephants eat; so do '
+            + 'phalangites. The ranks would like to be reminded which comes first.',
+          grant: { label: 'Open the war chest', cost: { treasury: 150 } },
+          refuse: { label: 'Victory pays all debts', tooltip: 'The muster rolls grow quietly shorter.' },
+        },
+      },
+      {
+        id: 'cities', name: 'The Greek Cities',
+        desc: 'The poleis of the coast and the Decapolis: the tax base, forever petitioning for exemptions.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.5; },
+        boon: { name: 'The Harbors Pay Gladly', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Assemblies Grumble', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Hear their embassies (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Cities Petition the Regent',
+          text: 'Ptolemais and Gaza have paid for one royal war already this decade, and their '
+            + 'assemblies vote long resolutions about ancient liberties whenever the tribute is '
+            + 'mentioned. Remit a season\'s taxes, or let the resolutions grow teeth.',
+          grant: { label: 'Remit the season\'s tribute', cost: { treasury: 120 } },
+          refuse: { label: 'Liberties are for the loyal', tooltip: 'The resolutions grow teeth.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'HAS',

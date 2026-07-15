@@ -77,6 +77,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
       </div>
+      <div class="pp-build hidden" data-ref="factionsBlock">
+        <div class="pp-build-title">Factions</div>
+        <div class="np-factions" data-ref="factions"></div>
+      </div>
       <div class="pp-diplo">
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
@@ -114,6 +118,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (hire) {
         if (!hire.classList.contains('disabled') && actions && actions.hireAdvisor) {
           try { actions.hireAdvisor(hire.dataset.hireAdv, Number(hire.dataset.cand)); } catch (err) { warnOnce('np-hireAdv', err); }
+        }
+        refresh();
+        return;
+      }
+      const fac = e.target.closest('[data-appease]');
+      if (fac) {
+        if (!fac.classList.contains('disabled') && actions && typeof actions.appeaseFaction === 'function') {
+          try { actions.appeaseFaction(fac.dataset.appease); } catch (err) { warnOnce('np-appease', err); }
         }
         refresh();
         return;
@@ -310,6 +322,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       refreshMissions();
       refreshDecisions();
     }
+    refreshFactions(self);
     refreshDiplomacy(g, t, tag, self);
     refreshTech(t, self);
     refreshReforms(t, self);
@@ -363,6 +376,34 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       return `<div class="np-mission np-m-${m.status}" data-tt="${esc(tt)}">`
         + `<span class="np-m-mark">${mark}</span><span class="np-m-name">${esc(m.name)}</span></div>`;
     }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
+  }
+
+  // The court factions (SPEC §34): approval bars, the boon or bane in force,
+  // and the appeasement lever. The player's own politics — foreign courts
+  // keep theirs offstage.
+  function refreshFactions(self) {
+    let list = null;
+    if (self && actions && typeof actions.getFactions === 'function') {
+      try { list = actions.getFactions(); } catch (e) { warnOnce('np-getFactions', e); }
+    }
+    const show = Array.isArray(list) && list.length > 0;
+    refs.factionsBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    setHtml(refs.factions, list.map((f) => {
+      const cls = f.state === 'devoted' ? 'pos' : f.state === 'hostile' ? 'neg' : '';
+      const stateWord = f.state === 'devoted' ? 'devoted' : f.state === 'hostile' ? 'hostile' : 'content';
+      const tt = f.desc
+        + (f.boonText ? '\nDevoted (65+): ' + f.boonText : '')
+        + (f.baneText ? '\nHostile (35−): ' + f.baneText : '');
+      const btnTt = f.canAppease ? f.appeaseLabel + ' — +10 approval'
+        : (f.whyNot || '') + '\n' + f.appeaseLabel + ' — +10 approval';
+      return `<div class="np-faction" data-tt="${esc(tt)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(f.name)}</span>`
+        + `<span class="np-fac-state ${cls}">${esc(stateWord)} · ${f.approval}</span>`
+        + `<button class="pp-build-btn np-fac-btn${f.canAppease ? '' : ' disabled'}" data-appease="${esc(f.id)}" data-tt="${esc(btnTt)}">${icon('laurel')}</button></div>`
+        + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
+        + `</div>`;
+    }).join(''));
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;

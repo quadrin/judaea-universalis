@@ -104,6 +104,120 @@ export const BOOKMARK_66 = {
       'Lose: Jerusalem still defiant in 74 CE while Parthia arms.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    JUD: [
+      {
+        id: 'zealots', name: 'The Zealots',
+        desc: 'The war party of the lower city: Eleazar\'s priests, the sicarii, and every man who burned his debts.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.6 : -0.7;
+        },
+        boon: { name: 'The Bands Muster', text: '+15% manpower', effects: { manpowerMult: 1.15 } },
+        bane: { name: 'The Daggers Turn Inward', text: '+1.25 unrest everywhere', effects: { unrestAll: 1.25 } },
+        appease: { label: 'Arm the bands (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Zealots Smell Treachery',
+          text: 'Every week of quiet is, to them, a week of secret embassies: the daggers move '
+            + 'through the festival crowds asking who has been writing to the Romans. Give the war '
+            + 'party its war footing — or be the next name the sicarii whisper.',
+          grant: { label: 'The city arms', cost: { mar: 50 } },
+          refuse: { label: 'No knife commands this city', tooltip: 'Your name enters the whispers.' },
+        },
+      },
+      {
+        id: 'notables', name: 'The Peace Party',
+        desc: 'The high-priestly houses and the men of property: they fund the war they never wanted, and count the exits.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 4 ? 0.3 : -0.5; },
+        boon: { name: 'The Notables Keep the Markets', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Notables Withhold', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Guard their houses (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Notables Ask for a Door',
+          text: 'They have seen Roman sieges. They ask — quietly, over dinner, deniably — that '
+            + 'someone keep a door open to negotiation, that the city\'s wealth not be spent down '
+            + 'to the last stone of the last wall. Courage, they say, is knowing when.',
+          grant: { label: 'A door stays open', cost: { infl: 50 } },
+          refuse: { label: 'The doors are walled up', tooltip: 'The wealth finds its own doors.' },
+        },
+      },
+      {
+        id: 'priesthood', name: 'The Temple Priesthood',
+        desc: 'The courses of the altar, keeping the daily sacrifice while the world decides whether the House stands.',
+        drift(ctx, t) {
+          try { return ctx.helpers.controls(ctx, 'JUD', 'Jerusalem') ? 0.4 : -0.8; } catch (e) { return 0; }
+        },
+        boon: { name: 'The Daily Sacrifice Steadies', text: '−0.75 unrest everywhere', effects: { unrestAll: -0.75 } },
+        bane: { name: 'The Altar Doubts', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Endow the offerings (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Priesthood Presents the Accounts',
+          text: 'The Temple treasury bought grain, walls and javelins; the courses ask when the '
+            + 'sacred shekels come home. A war fought from the House\'s strongbox had better be '
+            + 'a war the House can bless.',
+          grant: { label: 'The shekels come home', cost: { treasury: 120 } },
+          refuse: { label: 'The House gave them to the war', tooltip: 'The blessing grows conditional.' },
+        },
+      },
+    ],
+    ROM: [
+      {
+        id: 'senate', name: 'The Senate',
+        desc: 'The fathers, who vote Nero\'s honors and remember every governor\'s failure in perfect detail.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Fathers Approve', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
+        bane: { name: 'Obstruction in the Curia', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Provinces and praetorships (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Senate Expects Its Share',
+          text: 'The fathers have sons, and the sons need provinces, quaestorships, commissions in '
+            + 'legions that are actually fighting. Feed the ladder of honors, or the Curia will '
+            + 'debate the eastern command with unusual thoroughness.',
+          grant: { label: 'Feed the ladder', cost: { gov: 50 } },
+          refuse: { label: 'The princeps appoints whom he likes', tooltip: 'The debates grow thorough.' },
+        },
+      },
+      {
+        id: 'legions', name: 'The Legions',
+        desc: 'The eagles of the East: they make emperors when unpaid, and this decade will prove it.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'The Eagles Content', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'Mutinous Winter Quarters', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'The donative (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Legions Expect the Donative',
+          text: 'The eastern legions have marched, dug and bled, and the accession donative Nero '
+            + 'promised is a camp legend by now. Legionaries are patient creatures — right up '
+            + 'until the year they start naming emperors.',
+          grant: { label: 'Pay the donative', cost: { treasury: 150 } },
+          refuse: { label: 'Rome pays in glory', tooltip: 'The camps begin naming names.' },
+        },
+      },
+      {
+        id: 'people', name: 'The People of Rome',
+        desc: 'The city that must be fed and amused whatever burns in the provinces.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 4 ? 0.3 : -0.5; },
+        boon: { name: 'The Levies Come Willing', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'Bread Riots', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Games and grain (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The City Wants Its Games',
+          text: 'The grain fleet is late, the war in Judaea threatens the Alexandrian sailing, and '
+            + 'the Circus crowd has started chanting arithmetic at the emperor\'s box. Rome forgives '
+            + 'any war it does not have to feel at the baker\'s.',
+          grant: { label: 'Grain and games', cost: { treasury: 120 } },
+          refuse: { label: 'Let them chant', tooltip: 'The chants find the emperor\'s box.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

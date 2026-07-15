@@ -200,6 +200,118 @@ export const BOOKMARK_1948 = {
       'Lose: the Legion broken west of the river.',
     ],
   },
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    ISR: [
+      {
+        id: 'coalition', name: 'The Coalition',
+        desc: 'Mapai and the cabinet: the men and women who ran the Yishuv and now must run a state under fire.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'A Government That Governs', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'Coalition Crisis', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Settle the portfolios (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Coalition Wants Order',
+          text: 'The cabinet table is a front of its own: budgets unwritten, ministries improvised, '
+            + 'and every party of the provisional council demanding its share of a state that is '
+            + 'three weeks old. Give the machine its grease, or govern by decree and be resented for it.',
+          grant: { label: 'Portfolios and budgets', cost: { gov: 50 } },
+          refuse: { label: 'There is a war on', tooltip: 'The parties will remember when the votes are counted.' },
+        },
+      },
+      {
+        id: 'revisionists', name: 'The Revisionists',
+        desc: 'The Irgun\'s fighters and their political heirs: one state, they agree — but whose?',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.3;
+        },
+        boon: { name: 'The Fighting Family Enlists', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'One State, Two Armies', text: '+1.25 unrest everywhere', effects: { unrestAll: 1.25 } },
+        appease: { label: 'Honor their dead (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Revisionists Demand Their Place',
+          text: 'Their battalions bled at Jaffa and their ship burned off Tel Aviv, and now they are '
+            + 'asked to dissolve into an army commanded by the men who shelled it. They will wear the '
+            + 'uniform — if the state will say aloud that they were soldiers all along.',
+          grant: { label: 'Their units keep their names', cost: { infl: 50 } },
+          refuse: { label: 'One army, one command', tooltip: 'The wound stays open.' },
+        },
+      },
+      {
+        id: 'kibbutzim', name: 'The Kibbutzim',
+        desc: 'The border settlements and the Palmach they raised: the line the invasion broke against.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.4; },
+        boon: { name: 'The Settlements Hold the Line', text: '+15% reinforcement', effects: { reinforceMult: 1.15 } },
+        bane: { name: 'The Settlements Look Inward', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Arms for the border settlements (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Settlements Ask for Rifles',
+          text: 'Negba and Yad Mordechai stopped tank columns with fence wire and grenades, and the '
+            + 'survivors are asking where the Czech rifles went. The border holds where a kibbutz '
+            + 'stands; it costs money to keep them standing.',
+          grant: { label: 'Strip the depots for them', cost: { treasury: 120 } },
+          refuse: { label: 'The brigades come first', tooltip: 'The fences stay wire.' },
+        },
+      },
+    ],
+    JOR: [
+      {
+        id: 'palace', name: 'The Palace',
+        desc: 'The King\'s court at Amman: cautious, British-advised, and dreaming of Jerusalem.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Throne Secure', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'Whispers at Court', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'The King\'s prerogative (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Palace Wants Its Way',
+          text: 'The King treats with whom he pleases — Cairo\'s newspapers and the League\'s '
+            + 'resolutions notwithstanding. His ministers ask that the government act like it '
+            + 'believes him.',
+          grant: { label: 'The King decides alone', cost: { gov: 50 } },
+          refuse: { label: 'The League must be managed', tooltip: 'The court sulks.' },
+        },
+      },
+      {
+        id: 'legion', name: 'The Arab Legion',
+        desc: 'The one professional army in this war — small, drilled, and paid in sterling.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'Glubb\'s Standards', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'Ammunition Counted in Rounds', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'Shells and sterling (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Legion Counts Its Shells',
+          text: 'The embargo starves the Legion of the 25-pounder shells that hold Latrun, and the '
+            + 'quartermasters are issuing ammunition by the round. An army this small wins by being '
+            + 'perfectly supplied — or it does not win.',
+          grant: { label: 'Buy at any price', cost: { treasury: 150 } },
+          refuse: { label: 'Husband what we hold', tooltip: 'The gunners ration their answers.' },
+        },
+      },
+      {
+        id: 'tribes', name: 'The Tribes',
+        desc: 'The desert sheikhs whose sons fill the Legion\'s ranks and whose loyalty built the throne.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.4; },
+        boon: { name: 'The Tents Send Their Sons', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'The Tents Grow Cold', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Coffee and subsidies (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Sheikhs Come to Amman',
+          text: 'The subsidies that bound the desert to the throne have been eaten by the war, and '
+            + 'the sheikhs sit in the majlis with long faces and longer memories. The Emir bought '
+            + 'this kingdom with patience and gold; it is rented, never owned.',
+          grant: { label: 'Open the King\'s hand', cost: { treasury: 120 } },
+          refuse: { label: 'The war eats the gold', tooltip: 'The majlis empties early.' },
+        },
+      },
+    ],
+  },
+
   playableTags: [
     {
       tag: 'ISR',

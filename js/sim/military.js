@@ -1699,6 +1699,7 @@ export const PEACE = {
   tributeShare: 0.15,    // of a client's income, paid to the overlord (economy.js)
   whiteEnemyWsAtMost: 5, // enemy accepts a white peace at/below this net score
   warWearyWE: 15,        // war exhaustion at which a not-quite-winning enemy takes white peace
+  freshWarMonths: 12,    // a war younger than this refuses white peace unless the enemy is losing
 };
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
@@ -1794,11 +1795,18 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const enemyWs = -info.myWs;
   let acceptable, reason;
   if (white) {
-    acceptable = enemyWs <= PEACE.whiteEnemyWsAtMost ||
-      (info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15);
+    // A fresh grudge does not go home for nothing: in a war's first year the
+    // enemy signs a white peace only if actually losing or war-weary — no
+    // more declaring a war, shrugging, and shaking hands a month later.
+    const monthsIn = monthsBetween(war.started || ctx.game.date, ctx.game.date);
+    const freshGrudge = monthsIn < PEACE.freshWarMonths && enemyWs > -10;
+    const warWeary = info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15;
+    acceptable = (enemyWs <= PEACE.whiteEnemyWsAtMost && !freshGrudge) || warWeary;
     reason = acceptable
       ? 'They are ready to lay down arms.'
-      : 'They believe they are winning, and will not settle for nothing.';
+      : freshGrudge && enemyWs <= PEACE.whiteEnemyWsAtMost
+        ? 'The war is young and their blood is up — they will not go home for nothing yet.'
+        : 'They believe they are winning, and will not settle for nothing.';
   } else {
     acceptable = info.myWs > 0 && cost <= info.myWs;
     reason = acceptable

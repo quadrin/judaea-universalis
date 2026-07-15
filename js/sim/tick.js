@@ -8,6 +8,7 @@ import {
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites } from './realm.js';
+import { monthlyFactions } from './factions.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, monthlyNavy } from './navy.js';
@@ -86,6 +87,7 @@ function monthlyBlock(ctx) {
   safe('integration', () => monthlyIntegration(ctx));
   safe('holySites', () => monthlyHolySites(ctx));
   safe('missions', () => checkMissions(ctx));
+  safe('factions', () => monthlyFactions(ctx)); // the court convenes (SPEC §34)
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));

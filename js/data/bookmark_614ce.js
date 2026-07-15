@@ -137,6 +137,121 @@ export const BOOKMARK_614 = {
       'Lose: Alexandria and the East slipping away by 624.',
     ],
   },
+
+  // The court factions (SPEC §34): the realm's internal parties. The engine
+  // ticks them for the human player alone; the AI keeps its politics offstage.
+  factions: {
+    JUD: [
+      {
+        id: 'fighters', name: 'The Fighters of the Return',
+        desc: 'Benjamin of Tiberias\' armed men and everyone who stormed the breach beside the Persians.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.4;
+        },
+        boon: { name: 'The Breach-Stormers', text: '+5% morale', effects: { moraleMult: 1.05 } },
+        bane: { name: 'The Swords Go Home', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Arms for the Return (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Fighters Ask What They Fought For',
+          text: 'They took the city no Jewish army had held in five centuries, and they watch the '
+            + 'Persian garrison commanders with narrowing eyes: arm the Return in its own right, '
+            + 'or admit the breach was stormed for another empire\'s convenience.',
+          grant: { label: 'The Return arms itself', cost: { mar: 50 } },
+          refuse: { label: 'Patience — the alliance holds', tooltip: 'The eyes narrow further.' },
+        },
+      },
+      {
+        id: 'exilarch', name: 'The Exilarch\'s House',
+        desc: 'Babylonian money and Babylonian caution: the oldest Jewish power on earth, and the most careful.',
+        drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.4 : -0.4; },
+        boon: { name: 'Silver from Mahoza', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Purses of Babylon Close', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Honor the Exilarch (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'Mahoza Counsels Caution',
+          text: 'The Exilarch\'s letters are masterpieces of the conditional: the House will fund '
+            + 'what endures, not what blazes. Show Babylon a state — budgets, garrisons, quiet '
+            + 'roads — and the silver flows; show it a bonfire and it warms its hands from afar.',
+          grant: { label: 'Show them a state', cost: { infl: 50 } },
+          refuse: { label: 'The bonfire is the point', tooltip: 'The hands warm from afar.' },
+        },
+      },
+      {
+        id: 'priests', name: 'The Priests of the Mount',
+        desc: 'The men who kept the genealogies five hundred years for exactly this: the altar, dreamed nightly.',
+        drift(ctx, t) {
+          try { return ctx.helpers.controls(ctx, 'JUD', 'Jerusalem') ? 0.5 : -0.7; } catch (e) { return 0; }
+        },
+        boon: { name: 'The Altar Dreamed', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Dream Deferred', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Provision the courses (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Priests Ask for the Mount',
+          text: 'The genealogies are proved, the vessels are begun, and the piyyutim already '
+            + 'rehearse the restored service. The courses ask for workmen, stone and a date — '
+            + 'the Mount has waited five centuries and refuses to wait politely.',
+          grant: { label: 'Workmen, stone, a date', cost: { gov: 50 } },
+          refuse: { label: 'The hour is not yet', tooltip: 'The piyyutim acquire a mournful verse.' },
+        },
+      },
+    ],
+    BYZ: [
+      {
+        id: 'church', name: 'The Church',
+        desc: 'Patriarch Sergius and the wealth of a thousand altars: the empire\'s soul, and its last credit line.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
+        boon: { name: 'The Patriarch\'s Blessing', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Plate Withheld', text: '−7% income', effects: { incomeMult: 0.93 } },
+        appease: { label: 'Endow the churches (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Church Presents the Loan',
+          text: 'The melted plate of a thousand churches marches in your pay-chests, and Sergius '
+            + 'reminds the crown — gently, liturgically — that God\'s loan bears interest in '
+            + 'churches rebuilt and heresies suppressed. Begin repaying, in stone or in zeal.',
+          grant: { label: 'Rebuild what burned', cost: { treasury: 120 } },
+          refuse: { label: 'Victory first, ledgers after', tooltip: 'The liturgy acquires an edge.' },
+        },
+      },
+      {
+        id: 'army', name: 'The Army',
+        desc: 'What remains of Rome\'s field forces: rebuilt by one man\'s will, paid with one Church\'s plate.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.4 : -0.2;
+        },
+        boon: { name: 'The Reformed Ranks', text: '+4% discipline', effects: { disciplineMult: 1.04 } },
+        bane: { name: 'The Themes Grumble', text: '−6% morale', effects: { moraleMult: 0.94 } },
+        appease: { label: 'The donative (100 talents)', cost: { treasury: 100 } },
+        demand: {
+          title: 'The Army Asks for Its Arrears',
+          text: 'The ranks that survived Antioch and the long retreat have been paid in halves and '
+            + 'promises since before the Persians reached the sea. An emperor who marches with '
+            + 'his men, they say, should also pay with them.',
+          grant: { label: 'The arrears in full', cost: { treasury: 150 } },
+          refuse: { label: 'The empire\'s need is the pay', tooltip: 'The promises stop being believed.' },
+        },
+      },
+      {
+        id: 'demes', name: 'The Demes',
+        desc: 'The Blues and Greens of the Hippodrome: mobs, militias and the loudest opinion in the City.',
+        drift(ctx, t) { return (t.warExhaustion || 0) <= 5 ? 0.3 : -0.5; },
+        boon: { name: 'The Factions Man the Walls', text: '+10% manpower', effects: { manpowerMult: 1.1 } },
+        bane: { name: 'Riot in the Hippodrome', text: '+1.25 unrest everywhere', effects: { unrestAll: 1.25 } },
+        appease: { label: 'Races and bread (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Demes Want the Races',
+          text: 'The grain dole is finished, the Persians hold the Asian shore, and the Blues and '
+            + 'Greens agree on one thing for the first time in living memory: the City needs races, '
+            + 'bread and the sight of its emperor. Emperors who forget the Hippodrome are remembered '
+            + 'by it.',
+          grant: { label: 'The races run', cost: { treasury: 120 } },
+          refuse: { label: 'The City must fast with the army', tooltip: 'The factions agree a second time.' },
+        },
+      },
+    ],
+  },
   playableTags: [
     {
       tag: 'JUD',

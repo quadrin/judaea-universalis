@@ -36,6 +36,18 @@ function crownWar(game) {
   return null;
 }
 
+// Scripted warscore swings persist in the crown war's eventScore side-bucket.
+function addCrownScore(ctx, tag, amount) {
+  try {
+    const w = crownWar(ctx.game);
+    if (!w) return;
+    if (!w.eventScore) w.eventScore = { att: 0, def: 0 };
+    const side = (w.attackers || []).indexOf(tag) >= 0 ? 'att'
+      : (w.defenders || []).indexOf(tag) >= 0 ? 'def' : null;
+    if (side) w.eventScore[side] += amount;
+  } catch (e) { warnOnce('addCrownScore', e); }
+}
+
 // Rome enters the crown war at Herod's side and wakes from passivity.
 function romeJoins(ctx) {
   const g = ctx.game;
@@ -75,6 +87,54 @@ export const EVENTS_40 = [
         effects: guard('ev5_parthians:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 10 });
           ctx.helpers.adjust(ctx, 'HER', { mar: 10 });
+        }),
+      },
+    ],
+  },
+
+  // ── 1b: the Parthian tide in Asia ─────────────────────────────────────────
+  {
+    id: 'ev5_labienus',
+    title: 'The Parthian Roman',
+    desc: 'Quintus Labienus — son of Caesar\'s best officer, ambassador of the assassins, '
+      + 'and now, by the strange bookkeeping of civil war, a Roman general in Parthian '
+      + 'service — has overrun Asia Minor with Pacorus\' horsemen. He mints coins reading '
+      + 'PARTHICUS IMPERATOR: conqueror of Parthia, by Parthia\'s leave. Rome\'s East is '
+      + 'a rumor this year, and every throne in Syria knows it.',
+    forTag: 'both',
+    date: { y: -40, m: 9 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The East belongs to the horsemen',
+        tooltip: 'Parthia: +25 martial points, +1 stability. Antigonus: +5 legitimacy — his patron bestrides the world.',
+        effects: guard('ev5_labienus:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'PAR', { mar: 25, stability: 1 });
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 1c: the rock holds ────────────────────────────────────────────────────
+  {
+    id: 'ev5_masada',
+    title: 'The Cisterns of Masada',
+    desc: 'On the rock above the Dead Sea, Herod\'s family and eight hundred fighters '
+      + 'watch Antigonus\' siege lines and their own water jars. When the jars are nearly '
+      + 'dry, rain comes in the night — enough to fill every cistern in the casemates. '
+      + 'The garrison takes it as a verdict from heaven; the besiegers, watching the '
+      + 'gutters run on a desert fortress, privately agree.',
+    forTag: 'both',
+    date: { y: -40, m: 12 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Heaven keeps its own garrisons',
+        tooltip: 'Herod: +10 influence points, +5 legitimacy (the family endures; the story travels). Antigonus: −5 legitimacy.',
+        effects: guard('ev5_masada:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { infl: 10, legitimacy: 5 });
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: -5 });
         }),
       },
     ],
@@ -146,6 +206,165 @@ export const EVENTS_40 = [
     ],
   },
 
+  // ── 3b: the priest-king's silver ──────────────────────────────────────────
+  {
+    id: 'ev5_coins',
+    title: 'Mattathias, High Priest',
+    desc: 'Antigonus\' mint hammers out the answer to the Senate\'s decree: bronze coins '
+      + 'with MATTATHIAS THE HIGH PRIEST in Hebrew on one face and KING ANTIGONUS in '
+      + 'Greek on the other — the last coins a Hasmonean will ever strike. A crown from '
+      + 'Rome is paper; the altar and the language of the fathers are an argument every '
+      + 'marketplace understands.',
+    forTag: 'ATG',
+    date: { y: -39, m: 3 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strike the double legend',
+        tooltip: '−30 talents; +8 legitimacy, and the Priesthood +10 approval. Every purse in Judaea carries your claim.',
+        effects: guard('ev5_coins:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -30, legitimacy: 8 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 10);
+        }),
+      },
+      {
+        label: 'Melt the temple gifts for pay',
+        tooltip: '+40 talents; the Priesthood −10 approval. Wars are won with soldiers, not slogans.',
+        effects: guard('ev5_coins:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: 40 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', -10);
+        }),
+      },
+    ],
+  },
+
+  // ── 3c: the paper king lands ──────────────────────────────────────────────
+  {
+    id: 'ev5_joppa',
+    title: 'The Landing at Joppa',
+    desc: 'Herod comes back from Rome with a title and no army, lands at Ptolemais, and '
+      + 'discovers what a title is for: Galilee begins to declare — village strongmen, '
+      + 'old clients of his father, men who can read a Senate decree and a weather vane '
+      + 'alike. He takes Joppa to open the coast, and the road to Masada with it.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_joppa', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'herodKing')
+      && (ctx.game.date.y > -39 || (ctx.game.date.y === -39 && ctx.game.date.m >= 4))
+      && alive(ctx, 'HER')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Galilee declares',
+        tooltip: 'Herod: 2 regiments of Galilean recruits at Ptolemais, +1,500 manpower, +60 talents — the customs of the coast start paying their king.',
+        effects: guard('ev5_joppa:0', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'HER', 'Ptolemais', { inf: 2, name: 'Galilean Recruits' });
+          ctx.helpers.adjust(ctx, 'HER', { manpower: 1500, treasury: 60 });
+        }),
+      },
+    ],
+  },
+
+  // ── 3d: Ventidius turns the tide ──────────────────────────────────────────
+  {
+    id: 'ev5_cilician_gates',
+    title: 'The Cilician Gates',
+    desc: 'Ventidius — who marched in Pompey\'s triumph as a boy captive and sold mules '
+      + 'to legions before he commanded them — meets Labienus at the passes and breaks '
+      + 'him. The renegade dies in flight; the Parthian horse learns that slingers on '
+      + 'high ground kill cataphracts. The tide that flooded Asia last year has met '
+      + 'its first wall.',
+    forTag: 'both',
+    date: { y: -39, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The mule-seller\'s first lesson',
+        tooltip: 'Parthia: −1 stability. Rome: +10 legitimacy. Antigonus\' Parthian Party −10 approval — the patron looks mortal.',
+        effects: guard('ev5_gates:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
+          ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -10);
+        }),
+      },
+    ],
+  },
+
+  // ── 3e: the Roman shadow takes bribes ─────────────────────────────────────
+  {
+    id: 'ev5_silo',
+    title: 'Silo\'s Winter',
+    desc: 'The legate Silo was sent to help the new king take his kingdom. Antigonus '
+      + 'pays him better to be helpless: the legions discover urgent needs in winter '
+      + 'quarters, provisioning difficulties, the impossibility of siegework before '
+      + 'spring. Everyone involved understands the transaction perfectly, which is '
+      + 'what makes it Roman.',
+    forTag: 'HER',
+    date: { y: -39, m: 11 },
+    aiOption: 1,
+    options: [
+      {
+        label: 'Outbid Antigonus for your own allies',
+        tooltip: '−80 talents; Silo\'s men stay in the field: +4% discipline for 6 months.',
+        effects: guard('ev5_silo:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -80 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'silo_bought', name: 'Silo, Paid Twice', months: 6,
+            effects: { disciplineMult: 1.04 },
+          });
+        }),
+      },
+      {
+        label: 'Let him winter — fight with your own',
+        tooltip: 'The Hired Swords +8 approval (the king trusts his own steel); Antigonus +5 legitimacy for the respite.',
+        effects: guard('ev5_silo:1', (ctx) => {
+          ctx.helpers.factionShift(ctx, 'HER', 'swords', 8);
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 3f: the caves above the lake ──────────────────────────────────────────
+  {
+    id: 'ev5_caves',
+    title: 'The Caves of the Cliffs',
+    desc: 'The brigand clans of Galilee — Antigonus\' irregulars, or bandits, depending '
+      + 'on who is paying — hole up in caves set into cliffs above the lake, where no '
+      + 'path leads. Herod\'s answer is remembered for a century: soldiers lowered from '
+      + 'the clifftop in great baskets, swinging at the cave mouths with fire and '
+      + 'grappling hooks. One old man kills his own family rather than surrender.',
+    forTag: 'HER',
+    date: { y: -38, m: 2 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The baskets go down',
+        tooltip: 'Galilee is broken to the king: +20 martial points, Tarichaea and Sepphoris −2 unrest for 12 months. The Sanhedrin −8 approval.',
+        effects: guard('ev5_caves:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { mar: 20 });
+          for (const n of ['Tarichaea', 'Sepphoris']) {
+            ctx.helpers.addProvinceModifier(ctx, n, {
+              id: 'caves_cleared', name: 'The Caves Cleared', months: 12, effects: { unrest: -2 },
+            });
+          }
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', -8);
+        }),
+      },
+      {
+        label: 'Offer the clans terms',
+        tooltip: '+15 influence points; the clans melt away instead of dying: Galilee +1 unrest for 6 months.',
+        effects: guard('ev5_caves:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { infl: 15 });
+          for (const n of ['Tarichaea', 'Sepphoris']) {
+            ctx.helpers.addProvinceModifier(ctx, n, {
+              id: 'clans_dispersed', name: 'The Clans Disperse', months: 6, effects: { unrest: 1 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+
   // ── 4: Gindarus — Parthia broken ──────────────────────────────────────────
   {
     id: 'ev5_gindarus',
@@ -187,6 +406,61 @@ export const EVENTS_40 = [
           h.removeModifier(ctx, 'ATG', 'parthian_favor');
           h.adjust(ctx, 'ATG', { legitimacy: -10 });
           h.adjust(ctx, 'PAR', { stability: -2 });
+        }),
+      },
+    ],
+  },
+
+  // ── 4b: friend and foe alike ──────────────────────────────────────────────
+  {
+    id: 'ev5_machaeras',
+    title: 'Machaeras Kills Everyone',
+    desc: 'The Roman officer Machaeras, sent with two legions and no judgment, takes '
+      + 'Antigonus\' bribe, is refused the city anyway, and avenges the insult on the '
+      + 'countryside — killing Herod\'s partisans and Antigonus\' with democratic '
+      + 'thoroughness. Herod rides for Samosata to put the complaint to Antony in '
+      + 'person. There are allies, and there are weather events wearing armor.',
+    forTag: 'HER',
+    date: { y: -38, m: 8 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Take the complaint to Antony himself',
+        tooltip: '−800 manpower (the villages pay for Rome\'s discipline); +15 influence points — the road to Samosata is open.',
+        effects: guard('ev5_machaeras:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { manpower: -800, infl: 15 });
+        }),
+      },
+    ],
+  },
+
+  // ── 4c: the embrace at Samosata ───────────────────────────────────────────
+  {
+    id: 'ev5_samosata',
+    title: 'The Walls of Samosata',
+    desc: 'Herod arrives at Antony\'s siege of Samosata with reinforcements gathered on '
+      + 'the road and a convoy rescued from ambush on the way in — the kind of arrival '
+      + 'generals remember. Antony embraces him before the officers, and when the town '
+      + 'falls he sends Sosius south with two legions and unambiguous orders: make the '
+      + 'paper king a king in fact.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_samosata', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'herodKing')
+      && (ctx.game.date.y > -38 || (ctx.game.date.y === -38 && ctx.game.date.m >= 10))
+      && alive(ctx, 'HER') && alive(ctx, 'ATG')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sosius marches south',
+        tooltip: 'Rome: two legions under Sosius (6 regiments) at Antioch. Herod: +15 legitimacy, +2,000 manpower, +5 war score in the crown war.',
+        effects: guard('ev5_samosata:0', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'ROM', 'Antioch', {
+            inf: 5, cav: 1, name: 'Sosius\' Legions',
+            general: { name: 'Gaius Sosius', fire: 2, shock: 3, maneuver: 2 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 15, manpower: 2000, treasury: 80 });
+          addCrownScore(ctx, 'HER', 5);
         }),
       },
     ],
@@ -243,6 +517,65 @@ export const EVENTS_40 = [
         effects: guard('ev5_joseph:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'HER', { stability: -1, mar: 20 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 6b: Joseph avenged ────────────────────────────────────────────────────
+  {
+    id: 'ev5_pappus',
+    title: 'Pappus at Isana',
+    desc: 'Antigonus\' best general meets Herod in open field at Isana and loses '
+      + 'everything: the battle, the army, and — because wars between kings are wars '
+      + 'between families — his head, which Herod sends to Pheroras as consolation for '
+      + 'their brother Joseph. The road to Jerusalem has no more armies on it, only '
+      + 'winter and the walls.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_pappus', (ctx) =>
+      !!(ctx.game.firedEvents && ctx.game.firedEvents.ev5_joseph)
+      && (ctx.game.date.y > -37 || (ctx.game.date.y === -37 && ctx.game.date.m >= 1))
+      && alive(ctx, 'HER') && alive(ctx, 'ATG')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A head for a head',
+        tooltip: 'Herod: +8 war score, +20 martial points. Antigonus: −10 legitimacy, and the Street of Jerusalem −10 approval as the field armies fail.',
+        effects: guard('ev5_pappus:0', (ctx) => {
+          addCrownScore(ctx, 'HER', 8);
+          ctx.helpers.adjust(ctx, 'HER', { mar: 20 });
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: -10 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', -10);
+        }),
+      },
+    ],
+  },
+
+  // ── 6c: the omen at Jericho ───────────────────────────────────────────────
+  {
+    id: 'ev5_roof',
+    title: 'The Roof at Jericho',
+    desc: 'After the day\'s skirmish Herod dines with his officers in a house at '
+      + 'Jericho; the company has barely walked out when the roof drops into the '
+      + 'dining room behind them. No one is hurt. An army that has just watched its '
+      + 'general outlive a falling building will follow him through anything — soldiers '
+      + 'keep theological ledgers too.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_roof', (ctx) =>
+      (ctx.game.date.y > -37 || (ctx.game.date.y === -37 && ctx.game.date.m >= 2))
+      && alive(ctx, 'HER') && alive(ctx, 'ATG')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Heaven audits its investments',
+        tooltip: '+10 legitimacy; +5% morale for 12 months ("The Preserved King").',
+        effects: guard('ev5_roof:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 10 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'preserved_king', name: 'The Preserved King', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
         }),
       },
     ],
@@ -364,6 +697,41 @@ export const EVENTS_40 = [
         label: 'So die the Maccabees',
         tooltip: 'The age of the Hasmoneans ends; the age of Herod begins.',
         effects: guard('ev5_antigonus_end:0', () => {}),
+      },
+    ],
+  },
+
+  // ── 11: the coda — the king counts the votes ──────────────────────────────
+  {
+    id: 'ev5_forty_five',
+    title: 'The Forty-Five',
+    desc: 'The lists are drawn up within the week: forty-five of Jerusalem\'s richest '
+      + 'men — the Sanhedrin\'s core, Antigonus\' council — marked for the executioner, '
+      + 'their estates for the new king\'s empty treasury. Guards at the gates search '
+      + 'even the coffins going out for hidden silver. Or the list can be burned, and '
+      + 'the new reign opened with a pardon nobody in the room believes.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_forty_five', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'herodKing') && alive(ctx, 'HER') && !alive(ctx, 'ATG')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The list is signed',
+        tooltip: '+150 talents from the confiscations; −5 legitimacy, and the Sanhedrin −20 approval. The debt of the trial in Galilee is paid.',
+        effects: guard('ev5_forty_five:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 150, legitimacy: -5 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', -20);
+          ctx.helpers.chronicle(ctx, 'era', 'Herod opens his reign with the Forty-Five: the executioner works, the treasury fills, the Sanhedrin learns silence.');
+        }),
+      },
+      {
+        label: 'Burn the list',
+        tooltip: '+10 legitimacy, and the Sanhedrin +15 approval — mercy from a king who owes none is remembered.',
+        effects: guard('ev5_forty_five:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 15);
+          ctx.helpers.chronicle(ctx, 'era', 'The list of the Forty-Five is burned unsigned: the new king opens his reign with a pardon.');
+        }),
       },
     ],
   },
