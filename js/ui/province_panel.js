@@ -619,12 +619,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const glyph = icon(row.type === 'ship' ? 'ship' : row.type === 'wing' ? 'plane'
         : row.type === 'cav' ? 'horseshoe' : 'shield');
       let state = '';
-      if (row.pending) state = 'held until resume';
-      else if (row.stalled) state = esc(row.stalled);
+      if (row.stalled) state = esc(row.stalled);
       else if (info.paused) state = `${row.monthsLeft}m left · paused`;
       else if (i > 0) state = `${row.monthsLeft}m · waiting`;
       else state = `${row.monthsLeft}m left`;
-      return `<div class="pp-recruit-order${row.pending ? ' pending' : ''}">${glyph}`
+      return `<div class="pp-recruit-order">${glyph}`
         + `<span><b>${esc(row.name)}</b><small>${state}</small></span>`
         + `<em>#${i + 1}</em></div>`;
     }).join(''));

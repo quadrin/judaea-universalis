@@ -109,10 +109,6 @@ export function tickDay(ctx) {
   if (!ctx || !ctx.game) return;
   const g = ctx.game;
   try {
-    // UI commands issued during a pause are plain-data orders. Direct callers
-    // may resume by setting game.paused themselves, so the first live tick is
-    // a second safe place to release them after the pause-toggle action.
-    if (!g.paused && typeof ctx.flushPausedActions === 'function') ctx.flushPausedActions();
     advanceDate(ctx);
     safe('move', () => moveArmiesDaily(ctx));
     safe('fleets', () => fleetsDaily(ctx));

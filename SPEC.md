@@ -316,7 +316,6 @@ IMPLEMENT: initGame builds game fully except bookmark.setup, and makeCtx runs
 game = {
   bookmarkId:'66ce', playerTag, over:false, result:null,
   date:{y:66,m:6,d:1}, speed:2, paused:true,
-  pendingCommands:[], nextCommandId:1, // player clicks held while paused; plain save-safe data
   nextRecruitId:1,
   tags: { [tag]: { tag, name, color, religion, culture, alive:true, ai:(tag!==playerTag),
     treasury, income:0, expenses:0, manpower, maxManpower,
@@ -447,10 +446,11 @@ emits `'eventResolved'`. Queue multiple; UI shows one modal at a time (ui's job)
   explainIncome(tag) -> [{label, value}] }
 ```
 
-The application binds `gameActions(ctx, {deferWhilePaused:true})`: every
-mutating player command except pause/speed and event-option resolution is
-serialized in `pendingCommands` while paused. Resuming drains the FIFO until it
-is empty or an executed order pauses the game again. Queries remain immediate.
+The application binds `gameActions(ctx)` directly. Pausing stops the simulation
+clock, not player commands: splits, merges, development, purchases and issued
+movement paths take effect immediately. Time-based work commits its cost and
+enters its ordinary construction or recruitment queue immediately, but its
+remaining time advances only through the live daily/monthly clock.
 
 ## 7. `js/core/bus.js` (done) — events catalog
 
@@ -459,7 +459,7 @@ is empty or an executed order pauses the game again. Queries remain immediate.
 `notify {title,text,type,provName?}`, `event {instanceId,event,forTag}`, `eventResolved`,
 `battleStart/battleEnd {prov, winnerTag?}`, `siegeStart/siegeEnd {provId, by}`,
 `provinceOwner {provId,from,to}`, `provinceController {provId,from,to}`, `war {...}`,
-`speed n`, `pause bool`, `gameover {result,title,text,score}`.
+`actionTaken {name}`, `speed n`, `pause bool`, `gameover {result,title,text,score}`.
 
 Emitters: sim emits game-state events; main emits mapclick/maprightclick; ui emits
 mapmode/select/selectArmy and calls actions.
@@ -1609,30 +1609,31 @@ foreign court **read-only**.
   map toggle round-trip (checkbox + peaceSelected + cost line), inert
   off-table clicks, and the war overview keeping its scrim.
 
-## 39. v3.9: orders wait, armies muster
+## 39. v3.9: paused planning, armies muster
 
-- **A pause is a real pause**: mutating player actions issued while time is
-  stopped become plain-data `pendingCommands`. They spend nothing and alter no
-  world state until resume, when they execute in click order. The pause control
-  reports the held count, save files retain it, and multiplayer guests place
-  the same authoritative orders on the host. Queries and event choices remain
-  immediate so panels can render and a pausing event can be resolved.
+- **A pause stops time, not planning**: player actions execute immediately while
+  the clock is stopped. Armies can split or merge, movement paths can be laid,
+  development and other point purchases update at once, and multiplayer guest
+  commands do the same on the host. Successful split, merge and movement orders
+  are silent; refused orders may still explain why they failed. Movement,
+  construction and production make no temporal progress until the clock resumes.
 - **Military units take time**: infantry needs 2 months, cavalry 3, air wings
-  4, and warships 6. Money and manpower are committed when the order actually
-  starts, not when its paused click is recorded. Scripted historical spawns are
-  still immediate content effects; ordinary player and AI recruitment uses the
-  timed system.
+  4, and warships 6. Money and manpower are committed, displayed, and placed in
+  the provincial production line as soon as the order is given—even while
+  paused—but the first order's remaining months fall only while time runs.
+  Scripted historical spawns remain immediate content effects; ordinary player
+  and AI recruitment uses the timed system.
 - **One provincial line** (`province.unitQueue`): land, naval, and air orders
   share one FIFO queue per province. Only its first entry counts down each
   month, so repeated purchases cannot all materialize together. Siege or enemy
   occupation stalls the line; ships still require a completed shipyard and
   wings a completed airfield. Queued wings reserve hangar capacity.
 - **Visible work**: recruitment buttons state their duration and the province
-  panel lists every order, its place, remaining months, and whether it is held,
+  panel lists every order, its place, remaining months, and whether it is
   paused, waiting, or stalled. Completion creates the ordinary selectable map
   counter and announces it.
-- **Regression contract**: `smoke24.mjs` covers deferred resources/state,
-  FIFO land/ship/air completion dates, and save revival. `uitest23.mjs` covers
-  the same path through real paused clicks and the rendered production line;
-  the multiplayer suite proves a guest order remains held on the host until
-  resume.
+- **Regression contract**: `smoke24.mjs` covers immediate paused splits,
+  resource and point commitment, FIFO land/ship/air completion dates, and save
+  revival. `uitest23.mjs` covers the same path through real paused clicks and
+  the rendered production line; the multiplayer suite proves a guest path is
+  accepted while paused but cannot move its army until the host clock resumes.
