@@ -2,7 +2,7 @@
 //
 // Flags bitfield contract (shared with js/map/renderer.js — keep in sync):
 //   bit0 (1)  = diagonal stripes of `secondary` over primary (occupation)
-//   bit1 (2)  = gray cross-hatch (impassable wasteland)
+//   bit1 (2)  = gray cross-hatch (uninhabited or impassable land)
 //   bit2 (4)  = pulse the stripes (revolt brewing, unrest mode)
 //   bits 3..7 = owner class index (position of the owner tag in DEFINES.TAGS key order,
 //               +1, capped at 31). The renderer draws the 2px country border where the
@@ -142,11 +142,11 @@ export function computeMapmodeColors(ctx, mode) {
     let cA = GRAY;
     let cB = null;
     let fl = tagClass(p.owner) << 3;
-    if (p.impassable) fl |= 2; // hatch in every mode
+    if (p.impassable || p.habitation === 'uninhabited') fl |= 2; // hatch in every mode
 
     switch (mode) {
       case 'political': {
-        if (p.impassable) {
+        if (p.owner === 'WASTE') {
           cA = wasteColor;
         } else {
           cA = tagColor(p.owner);
@@ -210,7 +210,7 @@ export function computeMapmodeColors(ctx, mode) {
         break;
       }
       case 'diplomatic': {
-        if (p.impassable) {
+        if (p.owner === 'WASTE') {
           cA = wasteColor;
         } else {
           cA = dipColorOf(p.owner);

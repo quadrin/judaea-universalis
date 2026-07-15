@@ -39,6 +39,14 @@ function warnOnce(key, ...args) {
   console.warn('[sim/init]', ...args);
 }
 
+function inferredHabitation(owner, dev) {
+  if (owner === 'WASTE') return 'uninhabited';
+  const total = num(dev && dev.tax) + num(dev && dev.prod) + num(dev && dev.mp);
+  if (total >= 24) return 'urban';
+  if (total >= 14) return 'town';
+  return 'rural';
+}
+
 // ------------------------------------------------------------------ initGame
 export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed }) {
   const start = (bookmark && bookmark.startDate) || { y: 66, m: 6, d: 1 };
@@ -75,14 +83,23 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       const xy = MAP_DATA.project(num(s.lon), num(s.lat));
       x = num(xy && xy[0]); y = num(xy && xy[1]);
     }
-    const terr = DEFINES.TERRAINS ? DEFINES.TERRAINS[s.terrain] : null;
-    const impassable = !!(s.impassable || (terr && terr.impassable));
+    // Terrain no longer implies political emptiness or impassability. Those
+    // are cell state: a wasteland may be claimed, crossed, or settled later.
+    const impassable = !!s.impassable;
     const fort = Math.max(0, s.fort | 0);
     const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
     // bookmark.provinceNames renames places for far eras (Joppa → Tel Aviv-Jaffa);
     // p.canon keeps the map's canonical key, and makeCtx aliases both in prov().
     const eraName = (bookmark && bookmark.provinceNames && bookmark.provinceNames[s.name]) || null;
     const dt = (bookmark && bookmark.devTweaks && bookmark.devTweaks[s.name]) || null;
+    const owner = (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE';
+    const dev = {
+      tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
+      prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
+      mp: num(dt && dt.mp, num(s.dev && s.dev.mp)),
+    };
+    const habitation = (bookmark && bookmark.habitation && bookmark.habitation[s.name])
+      || s.habitation || inferredHabitation(owner, dev);
     game.provinces.push({
       id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
       terrain: s.terrain, good: s.good,
@@ -90,14 +107,12 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       // and tongue for far-era bookmarks (SPEC §22: 614 CE, 1948 CE)
       religion: (bookmark && bookmark.religions && bookmark.religions[s.name]) || s.religion,
       culture: (bookmark && bookmark.cultures && bookmark.cultures[s.name]) || s.culture,
-      dev: {
-        tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
-        prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
-        mp: num(dt && dt.mp, num(s.dev && s.dev.mp)),
-      },
+      dev,
       // bookmark.owners overrides the map's default (66 CE) political layer
-      owner: (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE',
-      controller: (bookmark && bookmark.owners && bookmark.owners[s.name]) || s.owner || 'WASTE',
+      owner,
+      controller: owner,
+      habitation,
+      settleable: s.settleable !== false,
       autonomy: 0.25, unrest: 0, revoltProgress: 0,
       fort, garrison: maxGarrison, maxGarrison,
       siege: null, modifiers: [],
@@ -2003,6 +2018,8 @@ export function reviveGame(saved) {
     if (!Array.isArray(p.buildings)) p.buildings = [];
     if (p.construction === undefined) p.construction = null;
     if (!Array.isArray(p.unitQueue)) p.unitQueue = [];
+    if (!p.habitation) p.habitation = inferredHabitation(p.owner, p.dev);
+    if (p.settleable === undefined) p.settleable = true;
   }
   for (const k of Object.keys(saved.tags)) {
     const t = saved.tags[k];

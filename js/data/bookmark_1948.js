@@ -61,10 +61,12 @@ const EGY_LANDS = [
   'Gaza', 'Ascalon', 'Azotus', 'Rhinocolura', 'Oboda', 'Pelusium',
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos',
+  // sovereign but still empty/impassable at this map scale
+  'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
 const SYR_LANDS = [
   'Damascus', 'Chalcis', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
-  'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra',
+  'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra', 'Syrian Desert',
   // the Golan approaches
   'Caesarea Philippi', 'Batanea', 'Gamala',
 ];
@@ -78,7 +80,7 @@ const TUR_LANDS = [
   'Caesarea Mazaca', 'Melitene', 'Samosata', 'Zeugma', 'Edessa', 'Carrhae',
   'Amida', 'Tigranocerta', 'Sophene', 'Antioch', 'Seleucia Pieria',
 ];
-const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma'];
+const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma', 'Arabian Desert'];
 const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca'];
 const UK_LANDS = ['Salamis', 'Paphos'];
 

@@ -12,7 +12,7 @@
 //
 // Flags bitfield contract (shared with js/map/mapmodes.js — keep in sync):
 //   bit0 (1)  = diagonal stripes of secondary color over primary (occupation)
-//   bit1 (2)  = gray cross-hatch (impassable wasteland)
+//   bit1 (2)  = gray cross-hatch (uninhabited or impassable land)
 //   bit2 (4)  = pulse the stripes (unrest/revolt)
 //   bits 3..7 = owner class index (0 = none); differing classes draw the 2px country border.
 
@@ -39,6 +39,12 @@ const CFG = {
   COAST_SAND: [0.78, 0.72, 0.58],   // id-0 fragments inside the drawn coastline
   SELECT_GOLD: [1.0, 0.90, 0.52],
 };
+
+// Province seeds live in a float texture rather than a fragment-uniform array.
+// This keeps the map expandable beyond WebGL's small guaranteed uniform budget;
+// IDs themselves are encoded across two 8-bit channels, so 0 remains sea while
+// future layouts can safely grow well past the old 128/255 ceilings.
+const MAX_PROVINCE_SEEDS = 512;
 
 const fN = (x) => x.toFixed(4);
 const f3 = (c) => c.map(fN).join(', ');
@@ -86,7 +92,7 @@ precision highp float;
 precision highp int;
 uniform sampler2D uLand;
 uniform vec2 uMapSize;
-uniform vec4 uSeeds[128];
+uniform sampler2D uSeedTex;
 uniform int uSeedCount;
 uniform float uWarpAmp;
 uniform float uWarpFreq;
@@ -102,13 +108,16 @@ void main(){
     vec2 wv = vec2(fbm2(px * uWarpFreq), fbm2(px * uWarpFreq + vec2(37.2, 91.7)));
     vec2 wp = px + (wv - 0.5) * 2.0 * uWarpAmp;
     float bd = 1e12;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < ${MAX_PROVINCE_SEEDS}; i++) {
       if (i >= uSeedCount) break;
-      float d = distance(wp, uSeeds[i].xy) / max(uSeeds[i].z, 0.05);
+      vec4 seed = texelFetch(uSeedTex, ivec2(i, 0), 0);
+      float d = distance(wp, seed.xy) / max(seed.z, 0.05);
       if (d < bd) { bd = d; best = i + 1; }
     }
   }
-  outColor = vec4(float(best) / 255.0, 0.0, 0.0, 1.0);
+  int lo = best % 256;
+  int hi = best / 256;
+  outColor = vec4(float(lo) / 255.0, float(hi) / 255.0, 0.0, 1.0);
 }
 `;
 
@@ -171,7 +180,9 @@ uniform sampler2D uTerr;
 ${GLSL_NOISE}
 int idAt(ivec2 ip){
   ip = clamp(ip, ivec2(0), ivec2(uMapSize) - 1);
-  return min(int(texelFetch(uId, ip, 0).r * 255.0 + 0.5), uMaxId);
+  vec2 enc = texelFetch(uId, ip, 0).rg;
+  int id = int(enc.r * 255.0 + 0.5) + 256 * int(enc.g * 255.0 + 0.5);
+  return min(id, uMaxId);
 }
 int flagsOf(int id){
   return int(texelFetch(uFlagsTex, ivec2(id, 0), 0).r * 255.0 + 0.5);
@@ -384,7 +395,7 @@ function buildDecorCanvas(MAP_DATA) {
 
 function makeStub(MAP_DATA) {
   const W = MAP_DATA.MAP_W | 0, H = MAP_DATA.MAP_H | 0;
-  const idArray = new Uint8Array(W * H);
+  const idArray = new Uint16Array(W * H);
   const noop = () => {};
   return {
     idArray,
@@ -513,7 +524,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const heightTex = targetTexture(gl.LINEAR);
 
   // -- generation passes -----------------------------------------------------
-  const idArray = new Uint8Array(W * H);
+  const idArray = new Uint16Array(W * H);
   const fbo = gl.createFramebuffer();
   function runPass(prog, target, label, setup) {
     if (!prog) return false;
@@ -533,9 +544,13 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   }
 
   // Province-ID pass: warped weighted-nearest-seed diagram, land-masked.
-  const seedCount = Math.min(N, 128);
-  if (N > 128) warnOnce('seed-cap', `province count ${N} exceeds the 128-seed uniform array; extras get no territory`);
-  const seedArr = new Float32Array(128 * 4);
+  // A texture carries seed data so the shader's uniform budget does not cap
+  // expansion. The fixed loop bound remains deliberately finite for mobile GPUs.
+  const seedCount = Math.min(N, MAX_PROVINCE_SEEDS);
+  if (N > MAX_PROVINCE_SEEDS) {
+    warnOnce('seed-cap', `province count ${N} exceeds the ${MAX_PROVINCE_SEEDS}-seed renderer cap; extras get no territory`);
+  }
+  const seedArr = new Float32Array(Math.max(1, seedCount) * 4);
   for (let i = 0; i < seedCount; i++) {
     const p = provinces[i];
     const xy = (p && typeof p.lon === 'number') ? MAP_DATA.project(p.lon, p.lat) : [0, 0];
@@ -544,12 +559,19 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     seedArr[i * 4 + 2] = (p && p.weight) || 1.0;
     seedArr[i * 4 + 3] = 0;
   }
+  const seedTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, seedTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, Math.max(1, seedCount), 1,
+    0, gl.RGBA, gl.FLOAT, seedArr);
+  setTexParams(gl.NEAREST, false);
   const idOk = runPass(idProg, idTex, 'id-pass', (prog) => {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, landTex);
     gl.uniform1i(gl.getUniformLocation(prog, 'uLand'), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, seedTex);
+    gl.uniform1i(gl.getUniformLocation(prog, 'uSeedTex'), 1);
     gl.uniform2f(gl.getUniformLocation(prog, 'uMapSize'), W, H);
-    gl.uniform4fv(gl.getUniformLocation(prog, 'uSeeds[0]'), seedArr);
     gl.uniform1i(gl.getUniformLocation(prog, 'uSeedCount'), seedCount);
     gl.uniform1f(gl.getUniformLocation(prog, 'uWarpAmp'), CFG.WARP_AMP);
     gl.uniform1f(gl.getUniformLocation(prog, 'uWarpFreq'), CFG.WARP_FREQ);
@@ -560,7 +582,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     const buf = new Uint8Array(W * H * 4);
     gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     for (let i = 0, n = W * H; i < n; i++) {
-      const v = buf[i * 4];
+      const v = buf[i * 4] + buf[i * 4 + 1] * 256;
       idArray[i] = v > N ? 0 : v;
     }
   }
@@ -661,7 +683,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       s0[id * 4 + 3] = 255;
       const cls = Math.min(31, tagKeys.indexOf(pr.owner) + 1); // -1+1 = 0 for unknown
       let fl = cls << 3;
-      if (pr.impassable || pr.owner === 'WASTE') fl |= 2;
+      if (pr.impassable || pr.habitation === 'uninhabited' || pr.owner === 'WASTE') fl |= 2;
       f0[id] = fl;
     }
     uploadLookups(p0, s0, f0);
