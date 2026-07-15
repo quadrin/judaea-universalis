@@ -25,6 +25,8 @@ export const FACTION = {
   demandCdMonths: 24,
   appeaseCdMonths: 12,
   appeaseGain: 10,
+  demandGrant: 12,  // approval for granting a demand…
+  demandRefuse: -8, // …and the cost of sending it away
 };
 
 function monthIndex(d) { return d.y * 12 + (d.m - 1); }
@@ -124,21 +126,21 @@ function sendDemand(ctx, tag, def) {
       {
         label: (d.grant && d.grant.label) || 'Grant it',
         tooltip: 'Costs ' + costText(d.grant && d.grant.cost) + '. '
-          + def.name + ': +12 approval.'
+          + def.name + ': +' + FACTION.demandGrant + ' approval.'
           + ((d.grant && d.grant.tooltip) ? ' ' + d.grant.tooltip : ''),
         effects: () => {
           try {
             applyCost(ctx, tag, d.grant && d.grant.cost);
-            shiftFaction(ctx, tag, def.id, 12);
+            shiftFaction(ctx, tag, def.id, FACTION.demandGrant);
           } catch (e) { warnOnce('grant:' + def.id, 'demand grant failed', e); }
         },
       },
       {
         label: (d.refuse && d.refuse.label) || 'Refuse them',
-        tooltip: def.name + ': −8 approval.'
+        tooltip: def.name + ': ' + FACTION.demandRefuse + ' approval.'
           + ((d.refuse && d.refuse.tooltip) ? ' ' + d.refuse.tooltip : ' They will remember.'),
         effects: () => {
-          try { shiftFaction(ctx, tag, def.id, -8); } catch (e) { warnOnce('refuse:' + def.id, 'demand refuse failed', e); }
+          try { shiftFaction(ctx, tag, def.id, FACTION.demandRefuse); } catch (e) { warnOnce('refuse:' + def.id, 'demand refuse failed', e); }
         },
       },
     ],
@@ -196,6 +198,23 @@ export function monthlyFactions(ctx) {
   }
 }
 
+// Why the appeasement lever cannot pull right now, or '' when it can — the
+// ONE place the cooldown and the four cost gates live, so the panel's
+// disabled-tooltip and the click path can never disagree.
+function appeaseBlocker(ctx, t, fid, cost) {
+  const g = ctx.game;
+  const now = monthIndex(g.date);
+  const until = g.flags._factionAppCd && g.flags._factionAppCd[fid];
+  if (Number.isFinite(until) && now < until) {
+    return 'We courted them too recently (' + (until - now) + ' months before they will hear us again).';
+  }
+  if (Number.isFinite(cost.gov) && num(t.points.gov) < cost.gov) return 'Not enough governance points (' + cost.gov + ' required).';
+  if (Number.isFinite(cost.infl) && num(t.points.infl) < cost.infl) return 'Not enough influence points (' + cost.infl + ' required).';
+  if (Number.isFinite(cost.mar) && num(t.points.mar) < cost.mar) return 'Not enough martial points (' + cost.mar + ' required).';
+  if (Number.isFinite(cost.treasury) && num(t.treasury) < cost.treasury) return 'The treasury cannot spare ' + cost.treasury + ' talents.';
+  return '';
+}
+
 // The appeasement lever (realm panel): pay the faction's price for +10
 // approval, once a year per faction.
 export function appeaseFactionCore(ctx, tag, fid) {
@@ -207,19 +226,12 @@ export function appeaseFactionCore(ctx, tag, fid) {
   const table = ensureFactions(ctx, tag);
   if (!table) return { ok: false, why: 'The court is not in session.' };
   const cost = (def.appease && def.appease.cost) || {};
-  if (!g.flags._factionAppCd) g.flags._factionAppCd = {};
-  const now = monthIndex(g.date);
-  const until = g.flags._factionAppCd[fid];
-  if (Number.isFinite(until) && now < until) {
-    return { ok: false, why: 'We courted them too recently (' + (until - now) + ' months before they will hear us again).' };
-  }
-  if (Number.isFinite(cost.gov) && num(t.points.gov) < cost.gov) return { ok: false, why: 'Not enough governance points (' + cost.gov + ' required).' };
-  if (Number.isFinite(cost.infl) && num(t.points.infl) < cost.infl) return { ok: false, why: 'Not enough influence points (' + cost.infl + ' required).' };
-  if (Number.isFinite(cost.mar) && num(t.points.mar) < cost.mar) return { ok: false, why: 'Not enough martial points (' + cost.mar + ' required).' };
-  if (Number.isFinite(cost.treasury) && num(t.treasury) < cost.treasury) return { ok: false, why: 'The treasury cannot spare ' + cost.treasury + ' talents.' };
+  const why = appeaseBlocker(ctx, t, fid, cost);
+  if (why) return { ok: false, why };
   applyCost(ctx, tag, cost);
   table[fid] = clamp(num(table[fid], 50) + FACTION.appeaseGain, 0, 100);
-  g.flags._factionAppCd[fid] = now + FACTION.appeaseCdMonths;
+  if (!g.flags._factionAppCd) g.flags._factionAppCd = {};
+  g.flags._factionAppCd[fid] = monthIndex(g.date) + FACTION.appeaseCdMonths;
   return { ok: true, name: def.name, approval: Math.round(table[fid]) };
 }
 
@@ -233,17 +245,10 @@ export function getFactionsInfo(ctx) {
   const t = g.tags[tag];
   const table = ensureFactions(ctx, tag);
   if (!table) return null;
-  const now = monthIndex(g.date);
   return defs.filter((d) => d && d.id).map((def) => {
     const app = Math.round(num(table[def.id], 50));
     const cost = (def.appease && def.appease.cost) || {};
-    const until = g.flags._factionAppCd && g.flags._factionAppCd[def.id];
-    let whyNot = '';
-    if (Number.isFinite(until) && now < until) whyNot = 'We courted them too recently (' + (until - now) + ' months).';
-    else if (Number.isFinite(cost.gov) && num(t.points.gov) < cost.gov) whyNot = 'Not enough governance points (' + cost.gov + ' required).';
-    else if (Number.isFinite(cost.infl) && num(t.points.infl) < cost.infl) whyNot = 'Not enough influence points (' + cost.infl + ' required).';
-    else if (Number.isFinite(cost.mar) && num(t.points.mar) < cost.mar) whyNot = 'Not enough martial points (' + cost.mar + ' required).';
-    else if (Number.isFinite(cost.treasury) && num(t.treasury) < cost.treasury) whyNot = 'The treasury cannot spare ' + cost.treasury + ' talents.';
+    const whyNot = appeaseBlocker(ctx, t, def.id, cost);
     return {
       id: def.id,
       name: def.name || def.id,
@@ -255,6 +260,7 @@ export function getFactionsInfo(ctx) {
       baneName: def.bane ? (def.bane.name || '') : '',
       baneText: def.bane ? (def.bane.text || '') : '',
       appeaseLabel: (def.appease && def.appease.label) || ('Court them (' + costText(cost) + ')'),
+      appeaseGain: FACTION.appeaseGain,
       canAppease: !whyNot,
       whyNot,
     };

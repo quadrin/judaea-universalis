@@ -1826,11 +1826,12 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
     // more declaring a war, shrugging, and shaking hands a month later.
     const monthsIn = monthsBetween(war.started || ctx.game.date, ctx.game.date);
     const freshGrudge = monthsIn < PEACE.freshWarMonths && enemyWs > -10;
+    const wouldSettle = enemyWs <= PEACE.whiteEnemyWsAtMost;
     const warWeary = info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15;
-    acceptable = (enemyWs <= PEACE.whiteEnemyWsAtMost && !freshGrudge) || warWeary;
+    acceptable = (wouldSettle && !freshGrudge) || warWeary;
     reason = acceptable
       ? 'They are ready to lay down arms.'
-      : freshGrudge && enemyWs <= PEACE.whiteEnemyWsAtMost
+      : wouldSettle
         ? 'The war is young and their blood is up — they will not go home for nothing yet.'
         : 'They believe they are winning, and will not settle for nothing.';
   } else {

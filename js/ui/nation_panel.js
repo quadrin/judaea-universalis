@@ -391,15 +391,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!show) return;
     setHtml(refs.factions, list.map((f) => {
       const cls = f.state === 'devoted' ? 'pos' : f.state === 'hostile' ? 'neg' : '';
-      const stateWord = f.state === 'devoted' ? 'devoted' : f.state === 'hostile' ? 'hostile' : 'content';
       const tt = f.desc
         + (f.boonText ? '\nDevoted (65+): ' + f.boonText : '')
         + (f.baneText ? '\nHostile (35−): ' + f.baneText : '');
-      const btnTt = f.canAppease ? f.appeaseLabel + ' — +10 approval'
-        : (f.whyNot || '') + '\n' + f.appeaseLabel + ' — +10 approval';
+      const lever = f.appeaseLabel + ' — +' + (f.appeaseGain || 10) + ' approval';
+      const btnTt = f.canAppease ? lever : (f.whyNot || '') + '\n' + lever;
       return `<div class="np-faction" data-tt="${esc(tt)}">`
         + `<div class="np-fac-top"><span class="np-fac-name">${esc(f.name)}</span>`
-        + `<span class="np-fac-state ${cls}">${esc(stateWord)} · ${f.approval}</span>`
+        + `<span class="np-fac-state ${cls}">${esc(f.state)} · ${f.approval}</span>`
         + `<button class="pp-build-btn np-fac-btn${f.canAppease ? '' : ' disabled'}" data-appease="${esc(f.id)}" data-tt="${esc(btnTt)}">${icon('laurel')}</button></div>`
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
         + `</div>`;

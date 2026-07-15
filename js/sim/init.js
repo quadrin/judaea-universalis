@@ -371,11 +371,11 @@ export const simHelpers = {
   getFlag(ctx, key) {
     return ctx.game.flags[key];
   },
-  // Move a court faction's approval (SPEC §34). Fails soft everywhere it can:
-  // AI realms, eras without factions and unknown ids are quiet no-ops, so
-  // content may call it unconditionally.
+  // Move a court faction's approval (SPEC §34). shiftFaction already fails
+  // soft everywhere it can — AI realms, eras without factions and unknown
+  // ids are quiet no-ops — so content may call it unconditionally.
   factionShift(ctx, tag, factionId, delta) {
-    try { return shiftFaction(ctx, tag, factionId, delta); } catch (e) { warnOnce('facShift', 'factionShift failed', e); return false; }
+    return shiftFaction(ctx, tag, factionId, delta);
   },
   notify(ctx, { title, text, type, provName } = {}) {
     ctx.bus.emit('notify', { title: title || '', text: text || '', type: type || 'info', provName });
