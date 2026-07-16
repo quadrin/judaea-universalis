@@ -118,6 +118,15 @@ export const BOOKMARK_614 = {
 
   // RSH begins off-map and dormant. Dated world events awaken it after the
   // Hijra and bring its armies through the northern Arabian map edge.
+  // The map wears its era's shape (SPEC §47): the fortress-towns the Great
+  // Revolt consumed were never rebuilt — Jotapata and Gamala fell in 67,
+  // Machaerus and Masada by 74 — and their districts answer to their
+  // neighbors ever after.
+  mergeProvinces: {
+    'Jotapata': 'Sepphoris', 'Gamala': 'Batanea',
+    'Machaerus': 'Medaba', 'Masada': 'Engaddi',
+  },
+
   activeTags: ['BYZ', 'SAS', 'JUD', 'GHA', 'RSH'],
 
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).

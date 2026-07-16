@@ -128,7 +128,10 @@ python3 -m http.server 8613 --directory .
   shape: Lebanon holds the Beqaa, Syria holds Qamishli and the Golan, Jordan
   reaches its eastern panhandle — and Israel's modern borders are actually
   formable: the greater verdict — From Dan to Eilat — requires marching the
-  Arabah and holding Eilat, just as Operation Uvda did. Empty land is real land now: every province sits on a habitation
+  Arabah and holding Eilat, just as Operation Uvda did. The ancient eras keep
+  the same honesty: Masada and Machaerus don't exist before Jannaeus builds
+  them and never return after Rome razes them, Modi'in stands in 167 BCE as
+  the rebels' home village, and Betar stands in 132 CE for the last stand. Empty land is real land now: every province sits on a habitation
   ladder (uninhabited → frontier → rural → town → urban), and a settlement
   project spends influence to raise a settleable province one rung — founding on
   the frontier so you can then develop what you founded. Only prosperity makes

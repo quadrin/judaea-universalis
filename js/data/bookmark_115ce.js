@@ -63,6 +63,15 @@ export const BOOKMARK_115 = {
     + 'a king the Greeks call Lukuas. The granaries of Egypt burn. The emperor must '
     + 'choose which war he is actually fighting.',
 
+  // The map wears its era's shape (SPEC §47): the fortress-towns the Great
+  // Revolt consumed were never rebuilt — Jotapata and Gamala fell in 67,
+  // Machaerus and Masada by 74 — and their districts answer to their
+  // neighbors ever after.
+  mergeProvinces: {
+    'Jotapata': 'Sepphoris', 'Gamala': 'Batanea',
+    'Machaerus': 'Medaba', 'Masada': 'Engaddi',
+  },
+
   activeTags: ['ROM', 'JUD', 'PAR', 'OSR', 'ADI', 'CHX'],
 
   // Political layer for 115 CE over map_data's 66 CE defaults: Judaea is a
