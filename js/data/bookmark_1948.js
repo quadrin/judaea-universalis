@@ -102,11 +102,20 @@ const TUR_LANDS = [
 const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma', 'Arabian Desert',
   // v5.0: the Hejaz holy cities' province and the eastern oil coast
   'Yathrib', 'Khaybar', 'Gerrha'];
-const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca', 'Persepolis', 'Gabae'];
-// Cyrenaica in May 1948 is the British Military Administration, not yet Libya
-const UK_LANDS = ['Salamis', 'Paphos', 'Cyrene', 'Marmarica'];
+const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca', 'Persepolis', 'Gabae',
+  'Hyrcania']; // v5.4: Mazandaran on the Caspian
+// Cyrenaica AND Tripolitania in May 1948 are the British Military
+// Administrations, not yet Libya (v5.4 adds the Tripolitanian shore).
+const UK_LANDS = ['Salamis', 'Paphos', 'Cyrene', 'Marmarica',
+  'Oea', 'Leptis Magna', 'Macomades'];
 // Greece is a neutral neighbor, three years past its own liberation
-const GRC_LANDS = ['Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes'];
+// (v5.4: with Salonika on the map at last)
+const GRC_LANDS = ['Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Thessalonica'];
+// v5.4: the Republic of Italy, watching the sea it once ruled
+const ITA_LANDS = ['Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae'];
+// v5.4: Turkey's true 1948 shape — Thrace, the straits, Anatolia to Kars' edge
+const TUR_1948_NORTH = ['Hadrianopolis', 'Byzantion', 'Nicaea', 'Smyrna',
+  'Ancyra', 'Sinope', 'Trapezus'];
 
 // These permanent cells collapse into their ancient parents in every earlier
 // bookmark. In 1948 they become real provinces: distinct borders, clicks,
@@ -130,10 +139,17 @@ for (const n of SYR_LANDS) OWNERS[n] = 'SYR';
 for (const n of LEB_LANDS) OWNERS[n] = 'LEB';
 for (const n of IRQ_LANDS) OWNERS[n] = 'IRQ';
 for (const n of TUR_LANDS) OWNERS[n] = 'TUR';
+for (const n of TUR_1948_NORTH) OWNERS[n] = 'TUR';
 for (const n of SAU_LANDS) OWNERS[n] = 'SAU';
 for (const n of IRN_LANDS) OWNERS[n] = 'IRN';
 for (const n of UK_LANDS) OWNERS[n] = 'UK';
 for (const n of GRC_LANDS) OWNERS[n] = 'GRC';
+for (const n of ITA_LANDS) OWNERS[n] = 'ITA';
+// v5.4: the sealed borders of 1948 — Hoxha's Albania and the Soviet Caucasus
+// are closed frontiers, not playfields: no one crosses, no one owns.
+OWNERS['Dyrrhachium'] = 'WASTE';
+OWNERS['Phasis'] = 'WASTE';
+OWNERS['Caucasian Albania'] = 'WASTE';
 
 // ---- faiths and tongues, nineteen centuries on -------------------------------
 const RELIGIONS = {};
@@ -155,6 +171,12 @@ for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, LEB_LANDS, IRQ_LANDS, SAU
 for (const n of ISR_LANDS) CULTURES[n] = 'israeli';
 for (const n of TUR_LANDS) CULTURES[n] = 'turkish';
 for (const n of GRC_LANDS) CULTURES[n] = 'greek';
+// v5.4: the wider frame's modern faiths and tongues
+for (const n of ITA_LANDS) { RELIGIONS[n] = 'christianity'; CULTURES[n] = 'roman'; }
+for (const n of TUR_1948_NORTH) { RELIGIONS[n] = 'islam'; CULTURES[n] = 'turkish'; }
+RELIGIONS['Thessalonica'] = 'christianity'; CULTURES['Thessalonica'] = 'greek';
+for (const n of ['Oea', 'Leptis Magna', 'Macomades']) { RELIGIONS[n] = 'islam'; CULTURES[n] = 'arab_modern'; }
+RELIGIONS['Hyrcania'] = 'islam'; CULTURES['Hyrcania'] = 'persian';
 
 export const BOOKMARK_1948 = {
   id: '1948ce',
@@ -170,7 +192,7 @@ export const BOOKMARK_1948 = {
     + 'half centuries after Betar fell, there is again a Jewish state — for exactly as '
     + 'long as it can defend itself.',
 
-  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC'],
+  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC', 'ITA'],
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among
@@ -245,6 +267,15 @@ export const BOOKMARK_1948 = {
     'Cyrene': 'Derna', 'Yathrib': 'Medina', 'Gerrha': 'Dammam',
     'Persepolis': 'Shiraz', 'Gabae': 'Isfahan', 'Halicarnassus': 'Bodrum',
     'Gortyn': 'Heraklion',
+    // v5.4: the wider frame in its 1948 names
+    'Roma': 'Rome', 'Capua': 'Naples', 'Tarentum': 'Taranto',
+    'Brundisium': 'Brindisi', 'Rhegium': 'Reggio Calabria',
+    'Panormus': 'Palermo', 'Syracusae': 'Syracuse',
+    'Oea': 'Tripoli (Libya)', 'Leptis Magna': 'Al-Khums', 'Macomades': 'Sirte',
+    'Thessalonica': 'Salonika', 'Hadrianopolis': 'Edirne',
+    'Byzantion': 'Istanbul', 'Nicaea': 'Bursa', 'Smyrna': 'İzmir',
+    'Ancyra': 'Ankara', 'Sinope': 'Sinop', 'Trapezus': 'Trabzon',
+    'Hyrcania': 'Mazandaran',
   },
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient
@@ -345,6 +376,11 @@ export const BOOKMARK_1948 = {
     'Libyan Desert': false,
     'Arabian Desert': false,
     'Syrian Desert': false,
+    // v5.4: the sealed borders — no army enters Hoxha's Albania or the
+    // Soviet Caucasus in this chapter.
+    'Dyrrhachium': true,
+    'Phasis': true,
+    'Caucasian Albania': true,
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
@@ -611,6 +647,7 @@ export const BOOKMARK_1948 = {
     TUR: { name: 'İsmet İnönü', title: 'President', gov: 4, infl: 3, mar: 3, age: 63 },
     IRN: { name: 'Mohammad Reza Pahlavi', title: 'Shah', gov: 2, infl: 3, mar: 2, age: 28 },
     UK: { name: 'Clement Attlee', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 65 },
+    ITA: { name: 'Alcide De Gasperi', title: 'Prime Minister', gov: 4, infl: 3, mar: 1, age: 67 },
   },
 
   missions: {

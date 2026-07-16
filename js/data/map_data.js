@@ -1,16 +1,20 @@
-// js/data/map_data.js — Judaea Universalis: Eastern Mediterranean & Near East, 66 CE.
+// js/data/map_data.js — Judaea Universalis: the central Mediterranean & Near East, 66 CE.
 // Owns MAP_DATA (SPEC §2, §4) and validateMapData(). DOM-free, zero imports.
-// Frame: lon 29–50°E, lat 25.5–38.5°N. Equirectangular, y=0 at north.
+// Frame: lon 12–53.5°E, lat 23.5–42.5°N. Equirectangular, y=0 at north.
 
 // v5.0: the frame grows all around — west to Cyrenaica and Greece, south to
-// the Hejaz and Upper Egypt, east to Persis and the lower Gulf. Density is
-// unchanged (~97.5 px/°lon, ~115 px/°lat); only the world got bigger.
-const MAP_W = 3168;
-const MAP_H = 1728;
-const LON0 = 21.0;
+// the Hejaz and Upper Egypt, east to Persis and the lower Gulf.
+// v5.4: the frame grows again — west to Rome, Sicily and Tripolitania, north
+// to the Black Sea, the Bosporus, the Caucasus rim and the south Caspian.
+// Density is unchanged (~97.5 px/°lon, ~115 px/°lat); only the world got
+// bigger. 4046px stays under the common 4096 MAX_TEXTURE_SIZE floor — the
+// whole-Earth map waits on a tiled renderer (SPEC §53).
+const MAP_W = 4046;
+const MAP_H = 2189;
+const LON0 = 12.0;
 const LON1 = 53.5;
 const LAT0 = 23.5;
-const LAT1 = 38.5;
+const LAT1 = 42.5;
 
 function project(lon, lat) {
   return [
@@ -20,14 +24,17 @@ function project(lon, lat) {
 }
 
 // ---------------------------------------------------------------------------
-// Coastline. One mainland polygon (clockwise from the Lycian coast at the west
-// edge), plus Cyprus. Water = Mediterranean, Gulf of Suez, Gulf of Aqaba,
+// Coastline. One mainland polygon (clockwise from the Ionian coast), plus the
+// island and peninsular landmasses. Water = Mediterranean, Adriatic, Aegean,
+// Marmara, Black Sea, the Caspian corner, Gulf of Suez, Gulf of Aqaba,
 // Red Sea, and the head of the Persian Gulf (66 CE shoreline, near Charax).
+// The Bosporus, Dardanelles and Messina straits are drawn a few pixels wide
+// so the seas stay connected water; armies cross only by seaLink ferries.
 // ---------------------------------------------------------------------------
 
 const MAINLAND = [
-  // Ionia & Caria, entering at the top edge (Smyrna clipped), south to Lycia
-  [27.05, 38.50], [26.98, 38.12], [27.30, 37.72], [27.28, 37.30],
+  // Ionia & Caria (v5.4: the Smyrna clip is real coast now), south to Lycia
+  [26.90, 38.44], [26.98, 38.12], [27.30, 37.72], [27.28, 37.30],
   [27.58, 37.05], [27.98, 36.78], [28.35, 36.62], [28.68, 36.55],
   // Anatolian south coast, west -> east (Lycia, Pamphylia, Cilicia)
   [29.00, 36.62], [29.12, 36.67], [29.35, 36.50], [29.48, 36.32], [29.62, 36.20],
@@ -69,9 +76,15 @@ const MAINLAND = [
   [24.60, 31.95], [23.97, 32.08],                                 // Tobruk
   [23.45, 32.40], [22.90, 32.65], [22.64, 32.77],                 // the Gulf of Bomba, Derna
   [21.97, 32.90], [21.45, 32.80],                                 // Apollonia, the Cyrenaican shoulder
-  [21.00, 32.55],                                                 // cut at the west edge toward Benghazi
+  // v5.4: the African shore continues — Benghazi, the Gulf of Sirte, Tripolitania
+  [20.40, 32.35], [20.05, 32.10],                                 // Berenice (Benghazi)
+  [19.90, 31.60], [19.75, 30.85],                                 // down the Syrtic shore
+  [19.20, 30.42], [18.40, 30.30], [17.60, 30.95], [16.60, 31.20], // Syrtis Major, Macomades, Sirte
+  [15.75, 31.40], [15.30, 32.00], [15.10, 32.40],                 // Misrata
+  [14.30, 32.63], [13.60, 32.80], [13.19, 32.90],                 // Leptis Magna, Oea (Tripoli)
+  [12.60, 32.80], [12.00, 32.72],                                 // Sabratha, cut at the west edge
   // Frame: west edge down, south edge east to the Red Sea shore
-  [21.00, 23.50], [35.55, 23.50],
+  [12.00, 23.50], [35.55, 23.50],
   // Egyptian Red Sea coast, northward past Berenice
   [35.48, 23.90], [35.05, 24.55], [34.62, 25.30],
   [34.30, 26.10], [34.10, 26.40], [33.95, 26.70], [33.85, 27.25], [33.55, 27.80],
@@ -102,21 +115,92 @@ const MAINLAND = [
   [48.00, 30.45], [48.50, 30.25], [49.00, 30.10], [49.50, 30.00], [50.00, 29.90],
   [50.60, 29.45], [50.85, 28.95],                                 // Bushehr
   [51.60, 28.30], [52.40, 27.65], [53.10, 27.05], [53.50, 26.85], // the Persis shore
-  // Frame: east edge up, top edge west (back to the Ionian entry)
-  [53.50, 38.50],
+  // v5.4: frame east edge up to the Caspian's southeast shore
+  [53.50, 36.55],
+  // The south Caspian shore, westward: Hyrcania, Tabaristan, Gilan
+  [53.00, 36.72], [52.20, 36.62], [51.40, 36.72], [50.60, 36.90],
+  [50.00, 37.15], [49.55, 37.45],
+  // The Caspian west shore, northward: Talysh, the Kura mouth, Absheron, Derbent
+  [49.30, 37.90], [48.90, 38.40], [48.85, 38.90], [49.15, 39.40],
+  [49.35, 39.85], [50.30, 40.25],                                 // the Absheron peninsula (Baku)
+  [49.80, 40.60], [49.55, 41.10], [48.95, 41.55], [48.55, 42.00],
+  [48.30, 42.50],                                                 // cut at the top edge below Derbent
+  // Frame: top edge west across the Great Caucasus
+  [41.85, 42.50],
+  // The Black Sea east coast, southward: Colchis, Batumi
+  [41.60, 42.10], [41.55, 41.85],
+  // The Black Sea south coast, westward: the Pontic shore
+  [40.95, 41.15], [39.72, 41.08],                                 // Trapezus
+  [38.40, 40.92], [37.05, 41.15], [36.55, 41.28], [36.35, 41.30], // Cerasus, Samsun delta
+  [35.90, 41.70], [35.15, 42.03], [34.85, 42.00],                 // the Bafra cape, Sinope
+  [33.40, 42.02], [32.30, 41.75], [31.40, 41.30], [31.25, 41.12], // Paphlagonia, Heraclea
+  [30.25, 41.15], [29.55, 41.18], [29.18, 41.25],                 // toward the Bosporus mouth
+  // The Bosporus east shore, southward (the strait stays water)
+  [29.22, 41.05], [29.12, 40.90],
+  // The Marmara south shore, westward
+  [29.45, 40.75], [28.85, 40.52], [28.00, 40.40], [27.35, 40.50], [26.95, 40.55],
+  // The Dardanelles east shore, southward
+  [26.80, 40.32], [26.45, 40.10], [26.18, 39.98],
+  // The Aegean coast of Anatolia, southward: the Troad, Aeolis, toward Smyrna
+  [26.15, 39.55], [26.60, 39.30], [26.85, 39.10],                 // Troy, the Edremit gulf
+  [26.70, 38.85], [26.85, 38.60],                                 // toward the Smyrna gulf (closes to the entry)
 ];
 
-// Greece enters at the frame's northwest: a single simplified lobe — Attica
-// and the Peloponnese fused at a broad isthmus, clipped by the top edge.
-const GREECE = [
-  [24.10, 38.50], [24.06, 38.10], [24.04, 37.68],                 // Marathon shore, Sounion
+// v5.4: Greece grows into the whole southern Balkan peninsula — one landmass
+// from the Adriatic to the Black Sea, clipped by the top edge across the
+// interior. The Peloponnese keeps its v5.0 shape; Chalkidiki and Euboea are
+// single simplified lobes. The Dardanelles and Bosporus west shores keep a
+// few pixels of water against the Anatolian side.
+const BALKANS = [
+  // enters at the top edge on the Thracian Black Sea coast
+  [27.95, 42.50], [28.05, 42.10], [28.15, 41.60],                 // toward the gulf of Burgas
+  [28.60, 41.35], [29.02, 41.25],                                 // the Bosporus mouth (Europe)
+  [29.05, 41.05], [28.95, 41.00],                                 // Byzantion on the strait
+  [28.60, 40.97], [28.00, 40.97], [27.50, 40.95], [27.30, 40.85], // the Marmara north shore
+  [26.80, 40.55], [26.55, 40.30], [26.20, 40.05], [26.05, 40.10], // the Gallipoli peninsula
+  [26.35, 40.55], [26.00, 40.72], [25.30, 40.85], [24.60, 40.78], // the Thracian Aegean coast
+  [24.00, 40.72], [23.70, 40.55], [23.35, 40.25], [23.70, 40.05], // Chalkidiki, one lobe
+  [23.05, 40.30], [22.85, 40.50], [22.60, 40.48],                 // the Thermaic gulf (Thessalonica)
+  [22.60, 40.10], [22.85, 39.65], [23.05, 39.30], [22.95, 38.95], // the Thessalian coast
+  [23.30, 38.85], [23.70, 38.65], [24.15, 38.48],                 // Euboea fused as a lobe
+  [24.06, 38.10], [24.04, 37.68],                                 // Marathon shore, Sounion
   [23.45, 37.95], [23.15, 37.60], [23.18, 37.30],                 // the Saronic gulf, Argolid
   [22.78, 37.32], [23.05, 36.90], [23.10, 36.43],                 // Argolic gulf, Malea
   [22.55, 36.72], [22.38, 36.42],                                 // the Laconian gulf, Tainaron
   [22.15, 36.85], [21.85, 36.72],                                 // the Messenian gulf
   [21.55, 36.95], [21.30, 37.40], [21.12, 37.95],                 // the western coast, Elis
-  [21.25, 38.30], [21.00, 38.40],                                 // toward the gulf of Patras, cut west
-  [21.00, 38.50],
+  [21.25, 38.30], [21.05, 38.35],                                 // the gulf of Patras
+  [20.75, 38.95], [20.75, 39.35], [20.20, 39.70],                 // the Ionian coast, Epirus
+  [19.65, 40.15], [19.40, 40.45],                                 // the bay of Vlora
+  [19.48, 40.95], [19.45, 41.32], [19.58, 41.80], [19.35, 42.10], // the Illyrian coast, Dyrrhachium
+  [19.25, 42.50],                                                 // cut at the top edge (closes across the interior)
+];
+
+// v5.4: the Italian peninsula from the Tyrrhenian shore north of Rome to the
+// Abruzzo coast, clipped by the frame's top and west edges. Sicily rides
+// across the Messina strait (kept ~0.16° of water; the ferry is a seaLink).
+const ITALY = [
+  [12.00, 42.42],                                                 // enters at the west edge (Tarquinia shore)
+  [12.25, 41.90], [12.28, 41.74],                                 // Ostia, the Tiber mouth
+  [12.80, 41.42], [13.20, 41.28], [13.60, 41.25], [14.05, 40.83], // Terracina, the gulf of Gaeta, Naples bay
+  [14.45, 40.62], [14.90, 40.40], [15.30, 40.05], [15.65, 39.55], // Sorrento, the Salerno gulf, Cilento
+  [15.95, 38.90], [15.65, 38.35],                                 // the Tyrrhenian toe
+  [15.68, 38.23], [15.75, 38.15], [16.10, 37.95],                 // Rhegium; Capo Spartivento
+  [16.60, 38.80], [17.15, 38.95], [17.20, 39.40],                 // the gulf of Squillace, Crotone
+  [16.95, 39.90], [16.60, 40.25], [17.25, 40.45], [17.95, 40.25], // the gulf of Taranto
+  [18.40, 39.80],                                                 // Cape Leuca (the heel)
+  [18.50, 40.15], [18.00, 40.65], [17.35, 40.90], [16.85, 41.13], // Otranto, Brundisium, Barium
+  [16.20, 41.35], [15.95, 41.60], [16.20, 41.75], [15.90, 41.92], // the Gargano spur
+  [15.15, 41.95], [14.70, 42.15], [14.15, 42.50],                 // the Abruzzo shore, cut at the top edge
+  [12.00, 42.50],                                                 // frame: top edge west (west edge closes to the entry)
+];
+
+const SICILY = [
+  [15.52, 38.20], [15.20, 38.22], [14.75, 38.15], [14.20, 38.02], // the strait side and the north coast
+  [13.70, 38.11], [13.35, 38.20], [12.90, 38.03], [12.45, 37.80], // Panormus, Lilybaeum
+  [12.60, 37.55], [13.20, 37.18], [13.90, 37.10], [14.60, 36.78], // the African-facing south coast
+  [15.10, 36.68],                                                 // Pachynus (the southeast cape)
+  [15.30, 37.05], [15.22, 37.50], [15.35, 37.75], [15.52, 38.05], // Syracusae, Catana, under Etna
 ];
 
 const CRETE = [
@@ -153,13 +237,17 @@ const LAKES = [
     [35.54, 32.88], [35.62, 32.86], [35.65, 32.75], [35.60, 32.70],
     [35.55, 32.72], [35.52, 32.78], [35.52, 32.84],
   ],
-  // Lake Van (clipped by the top edge)
+  // Lake Van (v5.4: whole, now that the frame reaches past it)
   [
-    [42.30, 38.50], [43.35, 38.50], [43.30, 38.25], [42.90, 38.15], [42.45, 38.28],
+    [42.30, 38.62], [42.75, 38.95], [43.35, 38.90], [43.30, 38.25], [42.90, 38.15], [42.45, 38.28],
   ],
-  // Lake Urmia (clipped by the top edge)
+  // Lake Urmia (v5.4: whole)
   [
-    [45.05, 37.70], [45.35, 38.20], [45.90, 38.25], [45.85, 37.50], [45.40, 37.15], [45.10, 37.30],
+    [45.05, 37.70], [44.95, 38.10], [45.35, 38.42], [45.90, 38.25], [45.85, 37.50], [45.40, 37.15], [45.10, 37.30],
+  ],
+  // Lake Tatta (Tuz Gölü), the salt lake of the Anatolian plateau
+  [
+    [33.15, 39.05], [33.50, 38.95], [33.42, 38.55], [33.10, 38.68],
   ],
 ];
 
@@ -205,6 +293,7 @@ const RIVERS = [
   {
     name: 'Euphrates', width: 3,
     points: [
+      [41.10, 39.95], [39.85, 39.70], [38.90, 39.30],               // v5.4: the Armenian headwaters
       [38.55, 38.50], [38.52, 37.95], [38.60, 37.55], [38.20, 37.25], [37.87, 37.06],
       [38.00, 36.83], [38.40, 36.50], [39.00, 35.95], [39.60, 35.65], [40.15, 35.33],
       [40.73, 34.75], [41.30, 34.55], [41.95, 34.37], [42.83, 33.64], [43.55, 33.40],
@@ -215,6 +304,7 @@ const RIVERS = [
   {
     name: 'Tigris', width: 3,
     points: [
+      [39.60, 38.85],                                               // v5.4: the springs above Amida
       [40.20, 38.50], [40.23, 37.91], [40.90, 37.65], [41.80, 37.50], [42.35, 37.30],
       [42.70, 36.85], [43.15, 36.35], [43.30, 35.90], [43.26, 35.45], [43.70, 34.60],
       [43.87, 34.20], [44.35, 33.60], [44.58, 33.09], [45.30, 32.70], [45.85, 32.40],
@@ -224,6 +314,22 @@ const RIVERS = [
   {
     name: 'Khabur', width: 1,
     points: [[40.05, 36.85], [40.40, 36.50], [40.70, 36.00], [40.60, 35.55], [40.45, 35.17]],
+  },
+  // v5.4 rivers of the new frame
+  {
+    name: 'Halys', width: 2,
+    points: [
+      [37.00, 39.75], [35.80, 39.20], [34.75, 38.70], [33.95, 39.05],
+      [33.60, 39.95], [34.10, 40.70], [34.95, 41.10], [36.00, 41.55], [36.35, 41.30],
+    ],
+  },
+  {
+    name: 'Tiber', width: 1,
+    points: [[12.60, 42.40], [12.50, 42.10], [12.45, 41.95], [12.28, 41.74]],
+  },
+  {
+    name: 'Axios', width: 1,
+    points: [[21.75, 41.95], [22.15, 41.45], [22.55, 40.95], [22.62, 40.52]],
   },
 ];
 
@@ -491,10 +597,48 @@ const PROVINCES = [
   // seed that keeps Hegra's voronoi from bleeding across the water to claim
   // the African shore.
   P('Berenice', 34.90, 24.45, 1.00, 'ROM', 'desert', 'spices', 'egyptian', 'egyptian', 1, 3, 1, 0),
+
+  // --- v5.4: the frame grows west and north ---------------------------------
+  // Appended so no save ID shifts. Base owners are 66 CE, like everything
+  // above: the Roman west, the Parthian Caspian corner, and the Sahara.
+  // Italy & Sicily (the heart of the empire, and its granary)
+  P('Roma', 12.48, 41.89, 0.80, 'ROM', 'farmland', 'grain', 'roman_cult', 'roman', 10, 9, 8, 2),
+  P('Capua', 14.25, 41.02, 0.85, 'ROM', 'farmland', 'wine', 'roman_cult', 'roman', 6, 7, 5, 0),
+  P('Tarentum', 17.24, 40.47, 0.95, 'ROM', 'coast', 'purple_dye', 'hellenism', 'greek', 4, 5, 3, 0),
+  P('Brundisium', 17.94, 40.63, 0.90, 'ROM', 'coast', 'olive_oil', 'roman_cult', 'roman', 4, 5, 3, 0),
+  P('Rhegium', 16.05, 38.45, 0.95, 'ROM', 'hills', 'timber', 'hellenism', 'greek', 3, 3, 3, 0),
+  P('Panormus', 13.36, 38.05, 0.90, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 4, 5, 3, 0),
+  P('Syracusae', 15.10, 37.10, 0.90, 'ROM', 'coast', 'grain', 'hellenism', 'greek', 5, 6, 3, 0),
+  // Tripolitania and the Syrtic shore
+  P('Oea', 13.30, 32.70, 1.00, 'ROM', 'coast', 'olive_oil', 'hellenism', 'phoenician', 3, 4, 2, 0),
+  P('Leptis Magna', 14.50, 32.45, 1.00, 'ROM', 'coast', 'olive_oil', 'hellenism', 'phoenician', 4, 5, 3, 0),
+  P('Macomades', 18.00, 30.30, 1.60, 'ROM', 'desert', 'livestock', 'hellenism', 'phoenician', 1, 2, 1, 0),
+  // The southern Balkans and Thrace
+  P('Dyrrhachium', 19.55, 41.20, 0.95, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 4, 3, 0),
+  P('Thessalonica', 22.95, 40.65, 0.90, 'ROM', 'coast', 'grain', 'hellenism', 'greek', 6, 7, 4, 0),
+  // Name anachronism (SPEC-pinned, same class as Neapolis): Hadrian refounds
+  // Uscudama/Orestias as Hadrianopolis in the 120s; the canon uses the name
+  // the later chapters know. Rename needs a SPEC pass.
+  P('Hadrianopolis', 26.55, 41.68, 1.20, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 3, 4, 3, 0),
+  P('Byzantion', 28.75, 41.12, 0.75, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 6, 8, 4, 2),
+  // Northern and western Anatolia
+  P('Nicaea', 29.72, 40.43, 1.00, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 3, 0),
+  P('Smyrna', 27.14, 38.42, 0.85, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 5, 6, 3, 0),
+  P('Ancyra', 32.85, 39.93, 1.60, 'ROM', 'steppe', 'livestock', 'hellenism', 'greek', 3, 3, 3, 0),
+  P('Sinope', 35.15, 41.90, 0.90, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 5, 2, 0),
+  P('Trapezus', 39.72, 40.92, 1.00, 'ROM', 'coast', 'silver', 'hellenism', 'greek', 3, 4, 3, 0),
+  // The Caucasus rim and the south Caspian
+  P('Phasis', 41.95, 42.05, 1.20, 'ROM', 'marsh', 'timber', 'hellenism', 'greek', 2, 3, 2, 0),
+  P('Caucasian Albania', 47.20, 41.20, 1.80, 'PAR', 'steppe', 'livestock', 'zoroastrianism', 'persian', 2, 2, 2, 0),
+  P('Hyrcania', 52.55, 36.40, 1.30, 'PAR', 'coast', 'timber', 'zoroastrianism', 'persian', 3, 4, 3, 0),
+  // The deep Sahara behind the Syrtic shore — and the seed that keeps the
+  // Tripolitanian cells from claiming the map's whole southwest.
+  P('Sahara', 16.50, 27.20, 2.50, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
+    { impassable: true }),
 ];
 
 // ---------------------------------------------------------------------------
-// Height primitives (renderer; all coords lon/lat). 21 entries (max 24).
+// Height primitives (renderer; all coords lon/lat). 32 entries (max 32 — full).
 // ---------------------------------------------------------------------------
 
 const HEIGHT_PRIMITIVES = [
@@ -524,6 +668,13 @@ const HEIGHT_PRIMITIVES = [
   { type: 'ridge', a: [23.90, 35.25], b: [26.05, 35.20], h: 0.60, w: 0.28 }, // the White Mountains & Ida (Crete)
   { type: 'ridge', a: [37.80, 25.70], b: [39.70, 23.60], h: 0.85, w: 0.90 }, // Hejaz escarpment, south to Medina
   { type: 'ridge', a: [49.60, 31.60], b: [52.90, 29.40], h: 0.90, w: 1.20 }, // Zagros into Persis
+  // v5.4: the mountains of the wider frame
+  { type: 'ridge', a: [13.30, 42.45], b: [16.10, 40.05], h: 0.85, w: 0.75 }, // the Apennines
+  { type: 'dome', c: [15.00, 37.73], r: 0.35, h: 1.00 },                     // Etna
+  { type: 'ridge', a: [20.20, 40.60], b: [21.90, 38.70], h: 0.85, w: 0.70 }, // the Pindus
+  { type: 'ridge', a: [35.50, 40.65], b: [41.20, 40.55], h: 0.90, w: 0.75 }, // the Pontic Alps
+  { type: 'ridge', a: [40.80, 42.50], b: [48.60, 41.60], h: 1.00, w: 0.90 }, // the Great Caucasus (clipped)
+  { type: 'ridge', a: [48.80, 38.40], b: [53.30, 36.15], h: 1.00, w: 0.70 }, // the Alborz above Hyrcania
 ];
 
 // ---------------------------------------------------------------------------
@@ -533,14 +684,19 @@ const HEIGHT_PRIMITIVES = [
 export const MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project,
   provinces: PROVINCES,
-  coast: { land: [MAINLAND, CYPRUS, GREECE, CRETE, RHODES], lakes: LAKES },
+  coast: { land: [MAINLAND, CYPRUS, BALKANS, CRETE, RHODES, ITALY, SICILY], lakes: LAKES },
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
   // Land ferries/bridges only — armies may walk these. (None at present.)
   extraLinks: [],
   // Sea crossings: shown nowhere in land adjacency — armies need ships
   // (embark -> sail -> disembark). Kept as data for AI hints and tooltips.
-  seaLinks: [['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais']],
+  // v5.4 adds the three famous ferries of the new frame: Otranto (the via
+  // Egnatia's sea leg), Messina, and the Bosporus.
+  seaLinks: [
+    ['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais'],
+    ['Brundisium', 'Dyrrhachium'], ['Rhegium', 'Syracusae'], ['Byzantion', 'Nicaea'],
+  ],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
   severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus']],

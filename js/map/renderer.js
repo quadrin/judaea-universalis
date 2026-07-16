@@ -714,7 +714,9 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       }
       p0[id * 4 + 3] = 255;
       s0[id * 4 + 3] = 255;
-      const cls = Math.min(31, tagKeys.indexOf(pr.owner) + 1); // -1+1 = 0 for unknown
+      // 5-bit class field: WASTE takes the reserved top slot so the catalog's
+      // growth past 31 tags (v5.4) can never clamp two real owners together.
+      const cls = pr.owner === 'WASTE' ? 31 : Math.min(30, tagKeys.indexOf(pr.owner) + 1);
       let fl = cls << 3;
       if (pr.impassable || pr.habitation === 'uninhabited' || pr.owner === 'WASTE') fl |= 2;
       f0[id] = fl;

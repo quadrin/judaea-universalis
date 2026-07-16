@@ -10,7 +10,7 @@ const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
 const { GENERIC_EVENTS } = await import(R + '/js/data/events_generic.js');
-const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
+const { initGame, makeCtx, gameActions, reconcileGameProvinces } = await import(R + '/js/sim/init.js');
 const { checkTriggeredEvents } = await import(R + '/js/sim/events.js');
 const { incomeBreakdown, adminExpense, fuelExpense, controlsOilProvince } = await import(R + '/js/sim/economy.js');
 const { monthlyNavy } = await import(R + '/js/sim/navy.js');
@@ -218,6 +218,44 @@ console.log('== fuelExpense unit shape ==');
   ok(isr > 0, 'fuelExpense bills a mechanized establishment');
   const a = boot(BOOKMARK_66, [], 'JUD');
   ok(fuelExpense(a.ctx, 'ROM') === 0, 'fuelExpense is zero for pre-oil patterns');
+}
+
+console.log('== old saves meet the wider world (v5.4 reconcile) ==');
+{
+  // Simulate a pre-v5.4 1948 save: no ITA court, no oil overlay, no new cells.
+  const m = boot(BOOKMARK_1948, [], 'ISR');
+  const legacy = JSON.parse(JSON.stringify(m.game));
+  delete legacy.tags.ITA;
+  const idOf = (name) => MAP_DATA.provinces.findIndex((p) => p.name === name) + 1;
+  legacy.provinces.length = 149; // the pre-v5.4 148-cell schema
+  legacy.provinces[idOf('Arbela')].good = 'grain'; // pre-oil-overlay save
+  reconcileGameProvinces({
+    game: legacy, DEFINES, MAP_DATA, geom,
+    bookmark: BOOKMARK_1948,
+  });
+  const ita = legacy.tags.ITA;
+  ok(!!ita && ita.alive && ita.tech && ita.tech.mar === 19 && ita.maxManpower > 0,
+    'a missing court is backfilled alive, at era tech, with a manpower pool');
+  ok(legacy.provinces[idOf('Roma')] && legacy.provinces[idOf('Roma')].owner === 'ITA',
+    'the backfilled court owns its new land');
+  ok(legacy.provinces[idOf('Arbela')].good === 'oil',
+    'the goods overlay reaches provinces saved before it existed');
+  const mctx = makeCtx({
+    game: legacy, DEFINES, MAP_DATA, geom, bus,
+    bookmark: BOOKMARK_1948, events: [],
+  });
+  ok(!!legacy.tags.ITA.ruler, 'makeCtx crowns the backfilled court');
+  ok(controlsOilProvince(mctx, 'IRQ'), 'the migrated save pumps Kirkuk again');
+  // An ancient save meets Rome and Pontus the same way.
+  const a = boot(BOOKMARK_66, [], 'JUD');
+  const oldRome = JSON.parse(JSON.stringify(a.game));
+  delete oldRome.tags.ROM;
+  oldRome.provinces.length = 149;
+  reconcileGameProvinces({
+    game: oldRome, DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66,
+  });
+  ok(!!oldRome.tags.ROM && oldRome.tags.ROM.alive,
+    'an owner tag the save never seated is backfilled on reconcile');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

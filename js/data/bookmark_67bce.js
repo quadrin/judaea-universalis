@@ -110,7 +110,8 @@ export const BOOKMARK_67 = {
     + 'Pompey the Great is finishing the last war that matters, after which he will need '
     + 'something to organize.',
 
-  activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR', 'OSR', 'ADI', 'CHX'],
+  // v5.4: PNT joins — Mithridates VI, restored at Zela, awaiting Pompey.
+  activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR', 'OSR', 'ADI', 'CHX', 'PNT'],
 
   // Political layer for 67 BCE over map_data's 66 CE defaults. The Hasmonean
   // kingdom of Jannaeus is split between the brothers; Syria is the Seleucid
@@ -203,6 +204,13 @@ export const BOOKMARK_67 = {
     'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
     'Yathrib': 'NAB', 'Khaybar': 'NAB', 'Berenice': 'PTO',
     'Persepolis': 'PAR', 'Gabae': 'PAR', 'Gerrha': 'CHX',
+    // -- v5.4: the frame grows west and north ----------------------------------
+    // Italy, Sicily, Libya, Macedonia, Bithynia and Galatia keep their base
+    // Roman ownership. Mithridates, back at Zela this very year, holds the
+    // Pontic core and Colchis for one more act; Tigranes' Caucasus sphere
+    // stands; Hyrcania is long Parthian.
+    'Sinope': 'PNT', 'Trapezus': 'PNT', 'Phasis': 'PNT',
+    'Caucasian Albania': 'ARM',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
@@ -374,6 +382,8 @@ export const BOOKMARK_67 = {
       heir: { name: 'Artavasdes II', gov: 2, infl: 3, mar: 2, age: 25 },
     },
     PAR: { name: 'Phraates III', title: 'King of Kings', gov: 2, infl: 3, mar: 3, age: 45 },
+    // v5.4: the old lion, restored at Zela this very year, waiting for Pompey
+    PNT: { name: 'Mithridates VI Eupator', title: 'King', gov: 3, infl: 4, mar: 4, age: 68 },
   },
 
   // Linear mission chains (realm panel).

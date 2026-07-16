@@ -54,7 +54,9 @@ await page.evaluate(() => {
 });
 // open via click on the map center (panel opens through UI paths) — use actions instead
 const devInfo = await page.evaluate(() => window._actions.getDevelopInfo(window._ctx.provId('Joppa')));
-ok(devInfo && devInfo.tax.cost === 50 + 5 * 30, 'Tel Aviv (30 dev) costs ' + devInfo.tax.cost + ' to develop');
+// 25 dev since v4.1 redistributed Tel Aviv's old 30 among the new coastal
+// cells (the stale 30 fixed in v5.4).
+ok(devInfo && devInfo.tax.cost === 50 + 5 * 25, 'Tel Aviv (25 dev) costs ' + devInfo.tax.cost + ' to develop');
 const devWorks = await page.evaluate(() => {
   const g = window._ctx.game;
   g.paused = false;

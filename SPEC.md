@@ -2085,3 +2085,62 @@ standing army now all know what year it is.
   fuel line, destroyer bunkerage, and administration (including the
   occupied-land exemption). The full battery and the 8-year all-AI autorun
   pass with the anomaly set a strict subset of the pre-change baseline.
+
+## 53. v5.4: from Rome to the Caspian — the frame grows west and north
+
+The 1948 request was "the whole world"; the renderer's answer is "as much
+world as one raster can carry." A full globe needs ~35,000px of texture at
+playable density (or a tiled/multi-resolution renderer) — that rewrite is
+the staged path beyond this release. What ships is the maximum the current
+architecture supports, and it changes every chapter.
+
+- **The frame expands** from 21–53.5°E × 23.5–38.5°N to **12–53.5°E ×
+  23.5–42.5°N** (raster 3168×1728 → 4046×2189 at unchanged density —
+  deliberately under the common 4096 MAX_TEXTURE_SIZE floor). New coasts:
+  the Italian peninsula and Sicily (the Messina, Otranto and Bosporus
+  crossings are seaLink ferries over real water), the Gulf of Sirte and
+  Tripolitania, the whole southern Balkans with Chalkidiki and the
+  Gallipoli peninsula, the Sea of Marmara with both straits, the Black Sea
+  south and east coasts, the Caucasus rim, and the Caspian corner with its
+  Hyrcanian shore. Lakes Van and Urmia become whole; Lake Tatta (Tuz)
+  joins. New rivers: Halys, Tiber, Axios; the Euphrates and Tigris grow
+  their Armenian headwaters. Six new height primitives (Apennines, Etna,
+  Pindus, Pontic Alps, Great Caucasus, Alborz) fill the renderer's cap at
+  exactly 32. The camera's MIN_ZOOM drops 0.35 → 0.22 so a laptop still
+  frames the whole stage.
+- **Twenty-three new permanent cells** (appended; no save ID shifts):
+  Roma, Capua, Tarentum, Brundisium, Rhegium; Panormus, Syracusae; Oea,
+  Leptis Magna, Macomades; Dyrrhachium, Thessalonica, Hadrianopolis
+  (name-anachronism pinned, the Neapolis class), Byzantion; Nicaea,
+  Smyrna, Ancyra, Sinope, Trapezus; Phasis, Caucasian Albania, Hyrcania;
+  and the Sahara waste that keeps Tripolitania's voronoi off the deep
+  desert. 171 cells total (cap 512).
+- **Two new tags.** **PNT — Pontus** (wary, spent: aggression 0.7): the
+  Black Sea kingdom under Pharnaces' heirs in 167, and Mithridates VI
+  restored at Zela in 67, holding Sinope, Trapezus and Colchis while
+  Pompey gathers. **ITA — Italy** (1948): the neutral republic reborn from
+  the war, seven provinces from Rome to Syracuse.
+- **Rome enters 167 BCE**: the year after Pydna, Italy, Sicily,
+  Tripolitania and Illyria are the Republic's — its shadow now lies ON the
+  map (the 8-year all-AI run shows Rome banking quietly and starting no
+  wars: Popillius' circle stays diplomacy). Hellas keeps the Aegean north;
+  every later ancient chapter inherits the Roman west from the base map.
+  614 hands the west to the Exarchate's Byzantium — and **Constantinople
+  itself finally stands on the map** (Byzantion, BYZ, fort 2), with the
+  Sasanian Caucasus and Hyrcania across the board.
+- **1948 wears its true north and west**: Italy neutral; Turkey in its
+  real shape (Edirne, Istanbul, Bursa, İzmir, Ankara, Sinop, Trabzon);
+  Salonika Greek; Tripolitania joins Cyrenaica under the British Military
+  Administration; Mazandaran Iranian. **The sealed borders**: Hoxha's
+  Albania and the Soviet Caucasus (Dyrrhachium, Phasis, Caucasian Albania)
+  are closed frontiers — WASTE-owned and impassable by bookmark overlay, a
+  deliberate carve-out from the v4.3 "no wasteland in 1948" rule, which
+  now applies to the playable theater (smoke29 pins both halves).
+- **Balance holds**: the geometry snapshot is regenerated at the new
+  resolution; the full smoke battery passes; the 8-year all-AI autorun
+  shows the accepted set (tools/README) — 40 BCE and 66 CE run clean, 167
+  gains no new flag with two new great powers on the map, 1948 runs clean
+  with twelve tags. Rome's 66 CE ledger row grows 66 → 86 provinces
+  (smoke3); 132's rump-Judaea debt returns to its long-documented class;
+  614's Return keeps its Persian-tide snowball with a self-limiting
+  post-subsidy bleed (Persian supply trains now carry adminMult 0.5).

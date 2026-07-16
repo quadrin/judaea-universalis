@@ -77,6 +77,12 @@ const BYZ_LANDS = [
   // v5.0: the empire's west — Hellas, Crete, Cyrenaica, Upper Egypt
   'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Halicarnassus',
   'Cyrene', 'Marmarica', 'Paraetonium', 'Syene', 'Berenice',
+  // v5.4: the wider frame — Italy and Sicily (the Ravenna exarchate's south),
+  // Tripolitania, the Balkan and Anatolian themes, the City itself, Lazica.
+  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae',
+  'Oea', 'Leptis Magna', 'Macomades',
+  'Dyrrhachium', 'Thessalonica', 'Hadrianopolis', 'Byzantion',
+  'Nicaea', 'Smyrna', 'Ancyra', 'Sinope', 'Trapezus', 'Phasis',
 ];
 
 const OWNERS = {};
@@ -88,6 +94,9 @@ for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
 // until the Hijra events wake the tag (Khaybar keeps its Jewish farmers).
 OWNERS['Yathrib'] = 'RSH';
 OWNERS['Khaybar'] = 'RSH';
+// v5.4: the Sasanian Caucasus and the Caspian shore
+OWNERS['Caucasian Albania'] = 'SAS';
+OWNERS['Hyrcania'] = 'SAS';
 
 // ---- the map of faiths, six centuries on ------------------------------------
 // Christianity nearly everywhere Rome or Persia rules settled land; Judaism in
@@ -95,7 +104,8 @@ OWNERS['Khaybar'] = 'RSH';
 // the Iranian heartland.
 const RELIGIONS = {};
 for (const n of SAS_LANDS.concat(GHA_LANDS, BYZ_LANDS)) RELIGIONS[n] = 'christianity';
-for (const n of ['Seleucia-Ctesiphon', 'Ecbatana', 'Susa', 'Gazaca', 'Assur', 'Singara']) RELIGIONS[n] = 'zoroastrianism';
+for (const n of ['Seleucia-Ctesiphon', 'Ecbatana', 'Susa', 'Gazaca', 'Assur', 'Singara',
+  'Caucasian Albania', 'Hyrcania']) RELIGIONS[n] = 'zoroastrianism';
 for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela', 'Khaybar'])) RELIGIONS[n] = 'judaism';
 RELIGIONS['Neapolis'] = 'samaritanism';
 RELIGIONS['Sebaste'] = 'samaritanism';
@@ -113,6 +123,7 @@ export const BOOKMARK_614 = {
     'Salamis': 'Constantia',      // rebuilt and renamed after the 4th-century quakes
     'Persepolis': 'Istakhr',      // the Sasanian town beside the dead palaces
     'Gabae': 'Spahan',            // Middle Persian, before Isfahan
+    'Byzantion': 'Constantinople', // v5.4: the City, at last on the map
     'Ecbatana': 'Hamadan',        // the Middle Persian name
     'Dura-Europos': 'Circesium',  // Dura is dust; Circesium holds the Euphrates reach
     'Charax': 'Maishan',          // the old port is now the Maishan district
@@ -347,7 +358,9 @@ export const BOOKMARK_614 = {
     // Ctesiphon decides the client has become more expensive than useful.
     h.addTagModifier(ctx, 'JUD', {
       id: 'persian_supply_trains', name: 'Persian Supply Trains', months: 38,
-      effects: { maintMult: 0.65, reinforceMult: 1.08 },
+      // adminMult (SPEC §52): Ctesiphon's silver carries the Return's clerks
+      // as well as its rations while the client is useful.
+      effects: { maintMult: 0.65, reinforceMult: 1.08, adminMult: 0.5 },
     });
 
     // --- Starting armies. ---

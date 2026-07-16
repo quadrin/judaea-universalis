@@ -78,6 +78,19 @@ bleeding line — occupied land no longer bills their clerks) · 40 none ·
 66 none · 132 JUD BLEEDING · 614 JUD SNOWBALL (the all-AI Return has
 ridden the Persian tide since v5.0) · 1948 none.
 
+Since v5.4 (the frame grows to Rome and the Caspian; ROM + PNT enter 167,
+ITA enters 1948): 167 Rome banks quietly in Italy and starts no wars —
+no new 167 flag. 67's ROM SNOWBALL retires arithmetically (with the
+Roman west on the map, Pompey's annexations no longer clear the 1.6×
+ratio). 132's rump Judaea returns to its long-documented
+DEBT-SPIRAL,BLEEDING class (seeded drift, self-limiting). 614's Return
+adds a post-subsidy BLEEDING to its accepted SNOWBALL — treasury still
+rises throughout (plunder-funded, the 66/132 class); the supply trains
+carry adminMult 0.5 while they run. Accepted as of v5.4:
+167 PAR BLEEDING · 67 SEL DEAD + ARI (or HYR) BLEEDING · 40 none ·
+66 none · 132 JUD DEBT-SPIRAL,BLEEDING · 614 JUD SNOWBALL,BLEEDING ·
+1948 none.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
@@ -115,3 +128,14 @@ set `JU_CHROMIUM` to another executable when needed:
 `node tools/autorun.mjs 8` before shipping; `smoke20.mjs` owns the background-
 history/state-aware-conquest contract; `smoke21.mjs` owns demobilization,
 peace-aware war chapters, era-gated works, and merchant-shipping economics.
+
+## UI battery state (v5.4 audit)
+
+v5.4 ran the full browser battery and repaired the stale suites it could
+attribute: uitest2 and uitest5's carousel (eight→seven cards, stale since
+v5.1 retired Kitos), uitest11 (Tel Aviv 30→25 dev, stale since the v4.1
+subdivision), uitest13 (GRC had shipped without flag art since v5.0; GRC,
+PNT and ITA emblems added). uitest3, 8, 10, 16, 17, 19, 20 and uitest5's
+multiplayer section fail identically on the pre-v5.3 tree in this
+environment (modal-timing/lobby timeouts under software GL) — pre-existing,
+not regressions; they need their own pass.

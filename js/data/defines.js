@@ -74,6 +74,10 @@ export const DEFINES = {
     OSR: { aggression: 0.5, caution: 1.5 },
     ADI: { aggression: 0.8, caution: 1.1 },
     CHX: { aggression: 0.3, caution: 1.6 },
+    // -- v5.4: the wider frame's ancient north --
+    // Pontus appears twice, both times spent: Pharnaces after the treaty of
+    // 179, Mithridates after Lucullus. A wary kingdom, not a conqueror.
+    PNT: { aggression: 0.7, caution: 1.3 },
     // -- 614 CE --
     BYZ: { aggression: 0.9, caution: 1.1, ponderous: true },
     SAS: { aggression: 1.3, caution: 0.8, ponderous: true },
@@ -91,6 +95,7 @@ export const DEFINES = {
     SAU: { aggression: 0.2, caution: 1.8 },
     IRN: { aggression: 0.1, caution: 2.0 },
     UK: { aggression: 0.1, caution: 2.0 },
+    ITA: { aggression: 0.1, caution: 2.0 },
     // formable crowns (SPEC §24)
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
@@ -129,9 +134,11 @@ export const DEFINES = {
     AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
     ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
     BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal', RSH: 'theocracy',
+    PNT: 'monarchy',
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
-    IRN: 'monarchy', UK: 'monarchy', MLI: 'monarchy', UAR: 'republic',
+    IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
+    MLI: 'monarchy', UAR: 'republic',
     REB: 'tribal',
   },
 
@@ -194,6 +201,9 @@ export const DEFINES = {
 
   TAGS: {
     ROM: {
+      // v5.4: Roma is on the map, but the capital stays the eastern command —
+      // every scripted war is eastern, and the AI rallies (and the growth
+      // bonus lands) where the game is actually played.
       name: 'Rome', color: [168, 36, 36], religion: 'roman_cult', culture: 'roman', capital: 'Antioch',
       description: 'The empire that does not forgive: legions, siegecraft, and bottomless reserves.',
       ideas: { disciplineMult: 1.12, siegeBonus: 1, reinforceMult: 1.15 },
@@ -275,6 +285,12 @@ export const DEFINES = {
       description: 'The last fighting Hasmonean: king and high priest, with Parthia at his back — for now.',
       ideas: { moraleMult: 1.1, hillDefBonus: 1 },
     },
+    // ---- v5.4: the wider frame's ancient north ----
+    PNT: {
+      name: 'Pontus', color: [0, 110, 140], religion: 'hellenism', culture: 'greek', capital: 'Sinope',
+      description: 'The kingdom of the Black Sea coast — Persian blood, Greek cities, and a long memory of Rome.',
+      ideas: { moraleMult: 1.05, navalMult: 1.05 },
+    },
     // ---- 614 CE: the last great war of antiquity ----
     BYZ: {
       name: 'Byzantium', color: [110, 48, 130], religion: 'christianity', culture: 'greek', capital: 'Antioch',
@@ -351,6 +367,11 @@ export const DEFINES = {
       name: 'Britain', color: [156, 64, 92], religion: 'christianity', culture: 'greek', capital: 'Salamis',
       description: 'The departing mandatory power: a garrison on Cyprus and a schedule to keep.',
       ideas: { disciplineMult: 1.1 },
+    },
+    ITA: {
+      name: 'Italy', color: [46, 139, 87], religion: 'christianity', culture: 'roman', capital: 'Roma',
+      description: 'The republic reborn from the war — watching the eastern sea it once ruled.',
+      ideas: { incomeMult: 1.05 },
     },
     // ---- formable crowns (SPEC §24): never in a bookmark's activeTags ----
     MLI: {

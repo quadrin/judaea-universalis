@@ -34,6 +34,12 @@ export const TRADE_ROUTES = [
     stops: ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], chokepoint: 'Charax',
     blurb: 'India\'s cargoes, unloaded at Charax and poled up the rivers.',
   },
+  // v5.4: the west is on the map — the greatest sea lane of antiquity joins.
+  {
+    id: 'annona', name: 'The Annona', color: [222, 196, 110], value: 12, sea: true,
+    stops: ['Alexandria', 'Syracusae', 'Roma'], chokepoint: 'Alexandria',
+    blurb: 'The grain that feeds Rome: Egypt to Italy by way of Sicily.',
+  },
 ];
 
 // name -> [{route, isChokepoint}] for quick per-province lookups.

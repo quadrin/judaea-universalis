@@ -419,6 +419,18 @@ export const FLAGS = {
     `<path d="M11.1 4h1.8v9h-1.8Z" ${ACC}/>` +
     `<path d="M8 6.6h8v1.8H8Z" ${ACC}/>` +
     `<path d="M9 14.6h6l4 2.6-4 2.6H9Z" ${SIL}/>`,
+  // Hellas (v5.4): the laurel wreath — two branches meeting under an open
+  // crown, timeless enough for the leagues of 167 and the kingdom of 1948.
+  GRC:
+    `<path d="M12 20.2c-3.9-.9-6.4-3.4-7.2-7.2-.4-2 0-4.2 1-6.2.5 2.2 1.3 4 2.5 5.6 1.2 1.6 2.5 2.7 3.7 3.4Z" ${SIL}/>` +
+    `<path d="M12 20.2c3.9-.9 6.4-3.4 7.2-7.2.4-2 0-4.2-1-6.2-.5 2.2-1.3 4-2.5 5.6-1.2 1.6-2.5 2.7-3.7 3.4Z" ${SIL}/>` +
+    `<path d="M6.6 8.2c1 .1 1.8.6 2.3 1.4-.9.3-1.8.2-2.6-.3ZM7.6 11.4c1 .1 1.8.6 2.3 1.4-.9.3-1.8.2-2.6-.3ZM17.4 8.2c-1 .1-1.8.6-2.3 1.4.9.3 1.8.2 2.6-.3ZM16.4 11.4c-1 .1-1.8.6-2.3 1.4.9.3 1.8.2 2.6-.3Z" ${ACC}/>` +
+    `<circle cx="12" cy="20" r="0.9" ${ACC}/>`,
+  // Pontus (v5.4): the star and crescent of the Mithridatic royal badge,
+  // straight off the Sinope drachms.
+  PNT:
+    `<path d="M13.6 6.2a6.9 6.9 0 100 11.6 7.8 7.8 0 010-11.6Z" ${SIL}/>` +
+    `<path d="M15.4 9.6l.8 1.9 2 .2-1.5 1.4.4 2-1.7-1-1.7 1 .4-2-1.5-1.4 2-.2Z" ${ACC}/>`,
   // Egypt 1948: the green royal flag — crescent and three stars.
   EGY:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1a6a3c" stroke="none"/>` +
@@ -480,6 +492,11 @@ export const FLAGS = {
     `<path d="M0.6 0.6 23.4 23.4M23.4 0.6 0.6 23.4" stroke="#b5342c" stroke-width="1.8" fill="none"/>` +
     `<path d="M12 0.6v22.8M0.6 12h22.8" stroke="#f2f4f4" stroke-width="6" fill="none"/>` +
     `<path d="M12 0.6v22.8M0.6 12h22.8" stroke="#b5342c" stroke-width="3" fill="none"/>`,
+  // Italy (v5.4): il Tricolore, full-field.
+  ITA:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#1a7a44" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>`,
   // Kingdom of Israel (formable): the star of David crowned in gold.
   MLI:
     `<path d="M12 4.6 15.9 11.4H8.1Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>` +

@@ -41,6 +41,13 @@ const ONLY = process.argv[3] || null;
 // province mapping — exactly what computeGeometry does from the live raster.
 function loadGeom() {
   const snap = JSON.parse(readFileSync(join(HERE, 'geom-snapshot.json'), 'utf8'));
+  // The snapshot must be regenerated whenever map_data.js changes (README).
+  // A stale snapshot silently leaves the new cells with no adjacency —
+  // armies freeze there and the balance harness lies. Fail loudly instead.
+  if (snap.neighbors.length !== MAP_DATA.provinces.length + 1) {
+    throw new Error(`geom-snapshot.json is stale: ${snap.neighbors.length - 1} cells vs `
+      + `${MAP_DATA.provinces.length} in map_data.js — regenerate it (tools/README.md).`);
+  }
   return {
     neighbors: snap.neighbors.map((arr) => new Set(arr)),
     centroids: snap.centroids.map((c) => (c ? { x: c[0], y: c[1] } : null)),

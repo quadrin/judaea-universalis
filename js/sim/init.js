@@ -2068,6 +2068,11 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       p.impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable;
       const habOverride = bookmarkField(bookmark, 'habitation', source);
       if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
+      // Goods are era data too (SPEC §52) — nothing mutates them in play. The
+      // 1948 overlay pumps oil where the base map ran caravans, and a save
+      // from before the overlay must not spend the whole campaign without a
+      // well anywhere (every mechanized realm would import at double forever).
+      p.good = bookmarkField(bookmark, 'goods', source) || source.good || p.good;
       const previousDev = upgrading && migration && migration.previousDev
         && migration.previousDev[source.name];
       if (previousDev) {
@@ -2080,6 +2085,62 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
         };
       }
     }
+  }
+
+  // A widened map can hand reconciled provinces to courts the old save never
+  // seated (Rome in a pre-v5.4 167 BCE save; Pontus; Italy). Backfill each
+  // missing tag exactly as initGame would have — otherwise the new land is
+  // painted scenery: no AI, no economy, no diplomacy, and armies can never
+  // enter it. makeCtx then crowns the new court like any ruler-less tag.
+  const tagDefs = DEFINES.TAGS || {};
+  const techBase = Math.max(0, num(bookmark && bookmark.techBase, 3) | 0);
+  const techTweaks = (bookmark && bookmark.techTweaks) || {};
+  const wantedTags = new Set();
+  for (const p of game.provinces) {
+    if (!p) continue;
+    if (p.owner && p.owner !== 'WASTE') wantedTags.add(p.owner);
+    if (p.controller && p.controller !== 'WASTE') wantedTags.add(p.controller);
+  }
+  if (!game.tags || typeof game.tags !== 'object') game.tags = {};
+  for (const key of wantedTags) {
+    if (game.tags[key] || !tagDefs[key]) continue;
+    const d = tagDefs[key];
+    const t = {
+      tag: key,
+      name: d.name || key,
+      color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+      religion: d.religion, culture: d.culture,
+      alive: true,
+      ai: true,
+      treasury: 0, income: 0, expenses: 0, loans: 0,
+      manpower: 0, maxManpower: 0,
+      stability: 0, legitimacy: 50, warExhaustion: 0,
+      points: { gov: 0, infl: 0, mar: 0 },
+      ideas: { ...(d.ideas || {}) },
+      reforms: { mil: 0, civ: 0, rel: 0 },
+      advisors: { gov: null, infl: null, mar: null },
+      aggression: 0,
+      courtCand: {},
+      modifiers: [],
+      atWarWith: [], allies: [], guarantees: [], opinion: {},
+      govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
+        || (DEFINES.GOV_OF || {})[key] || 'monarchy',
+      electionIn: 48,
+      claims: [], overlord: null,
+      heir: null, regency: false, missionIdx: 0,
+      aiState: {},
+    };
+    const tw = techTweaks[key] || {};
+    t.tech = {
+      gov: Math.max(0, Math.min(TECH_MAX, techBase + (tw.gov | 0))),
+      infl: Math.max(0, Math.min(TECH_MAX, techBase + (tw.infl | 0))),
+      mar: Math.max(0, Math.min(TECH_MAX, techBase + (tw.mar | 0))),
+    };
+    applyReformsToTag(DEFINES, t, key);
+    game.tags[key] = t;
+    const tmpCtx = { game, DEFINES, byId: (pid) => game.provinces[pid] || null };
+    t.maxManpower = maxManpowerOf(tmpCtx, key);
+    t.manpower = t.maxManpower;
   }
 
   if (!game.ui) game.ui = {};
