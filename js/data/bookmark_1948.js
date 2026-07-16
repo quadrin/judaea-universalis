@@ -71,7 +71,7 @@ const EGY_LANDS = [
   // the expeditionary axis and Egypt itself
   'Gaza', 'Ascalon', 'Azotus', 'Rhinocolura', 'Oboda', 'Pelusium',
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
-  'Oxyrhynchus', 'Thebes', 'Myos Hormos',
+  'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Paraetonium', 'Syene', 'Berenice',
   'Kiryat Gat', 'Beersheba', 'Khan Yunis', 'Rafah',
   // the Egyptian claim in the deep Negev: the Auja axis and the Kurnub tracks
   'Mitzpe Ramon', 'Dimona',
@@ -94,13 +94,19 @@ const IRQ_LANDS = [
   'Rutba', // the western desert: the Rutbah wells and pumping stations
 ];
 const TUR_LANDS = [
+  'Halicarnassus', // Bodrum
   'Tarsus', 'Iconium', 'Tyana', 'Pisidia', 'Attalia', 'Seleucia Trachea',
   'Caesarea Mazaca', 'Melitene', 'Samosata', 'Zeugma', 'Edessa', 'Carrhae',
   'Amida', 'Tigranocerta', 'Sophene', 'Antioch', 'Seleucia Pieria',
 ];
-const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma', 'Arabian Desert'];
-const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca'];
-const UK_LANDS = ['Salamis', 'Paphos'];
+const SAU_LANDS = ['Hegra', 'Dumatha', 'Tayma', 'Arabian Desert',
+  // v5.0: the Hejaz holy cities' province and the eastern oil coast
+  'Yathrib', 'Khaybar', 'Gerrha'];
+const IRN_LANDS = ['Ecbatana', 'Susa', 'Gazaca', 'Persepolis', 'Gabae'];
+// Cyrenaica in May 1948 is the British Military Administration, not yet Libya
+const UK_LANDS = ['Salamis', 'Paphos', 'Cyrene', 'Marmarica'];
+// Greece is a neutral neighbor, three years past its own liberation
+const GRC_LANDS = ['Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes'];
 
 // These permanent cells collapse into their ancient parents in every earlier
 // bookmark. In 1948 they become real provinces: distinct borders, clicks,
@@ -127,6 +133,7 @@ for (const n of TUR_LANDS) OWNERS[n] = 'TUR';
 for (const n of SAU_LANDS) OWNERS[n] = 'SAU';
 for (const n of IRN_LANDS) OWNERS[n] = 'IRN';
 for (const n of UK_LANDS) OWNERS[n] = 'UK';
+for (const n of GRC_LANDS) OWNERS[n] = 'GRC';
 
 // ---- faiths and tongues, nineteen centuries on -------------------------------
 const RELIGIONS = {};
@@ -139,11 +146,15 @@ for (const n of ['Tyre', 'Sidon', 'Gischala', 'Chalcis']) RELIGIONS[n] = 'islam'
 for (const n of ['Berytus', 'Byblos', 'Tripolis']) RELIGIONS[n] = 'christianity';
 RELIGIONS['Salamis'] = 'christianity';
 RELIGIONS['Paphos'] = 'christianity';
+for (const n of GRC_LANDS) RELIGIONS[n] = 'christianity';
+RELIGIONS['Cyrene'] = 'islam'; RELIGIONS['Marmarica'] = 'islam';
+RELIGIONS['Halicarnassus'] = 'islam';
 for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, LEB_LANDS, IRQ_LANDS, SAU_LANDS)) {
   CULTURES[n] = 'arab_modern';
 }
 for (const n of ISR_LANDS) CULTURES[n] = 'israeli';
 for (const n of TUR_LANDS) CULTURES[n] = 'turkish';
+for (const n of GRC_LANDS) CULTURES[n] = 'greek';
 
 export const BOOKMARK_1948 = {
   id: '1948ce',
@@ -159,7 +170,7 @@ export const BOOKMARK_1948 = {
     + 'half centuries after Betar fell, there is again a Jewish state — for exactly as '
     + 'long as it can defend itself.',
 
-  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK'],
+  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC'],
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among
@@ -220,6 +231,10 @@ export const BOOKMARK_1948 = {
     'Oxyrhynchus': 'Minya', 'Thebes': 'Luxor', 'Myos Hormos': 'Hurghada',
     'Salamis': 'Famagusta', 'Hegra': 'Hejaz', 'Dumatha': 'Al-Jawf',
     'Tayma': 'Tayma', 'Petra': 'Ma\'an', 'Beersheba': 'Be\'er Sheva',
+    'Syene': 'Aswan', 'Paraetonium': 'Marsa Matruh', 'Marmarica': 'Tobruk',
+    'Cyrene': 'Derna', 'Yathrib': 'Medina', 'Gerrha': 'Dammam',
+    'Persepolis': 'Shiraz', 'Gabae': 'Isfahan', 'Halicarnassus': 'Bodrum',
+    'Gortyn': 'Heraklion',
   },
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient

@@ -2,11 +2,14 @@
 // Owns MAP_DATA (SPEC §2, §4) and validateMapData(). DOM-free, zero imports.
 // Frame: lon 29–50°E, lat 25.5–38.5°N. Equirectangular, y=0 at north.
 
-const MAP_W = 2048;
-const MAP_H = 1496;
-const LON0 = 29.0;
-const LON1 = 50.0;
-const LAT0 = 25.5;
+// v5.0: the frame grows all around — west to Cyrenaica and Greece, south to
+// the Hejaz and Upper Egypt, east to Persis and the lower Gulf. Density is
+// unchanged (~97.5 px/°lon, ~115 px/°lat); only the world got bigger.
+const MAP_W = 3168;
+const MAP_H = 1728;
+const LON0 = 21.0;
+const LON1 = 53.5;
+const LAT0 = 23.5;
 const LAT1 = 38.5;
 
 function project(lon, lat) {
@@ -23,7 +26,10 @@ function project(lon, lat) {
 // ---------------------------------------------------------------------------
 
 const MAINLAND = [
-  // Anatolian south coast, west edge -> east (Lycia, Pamphylia, Cilicia)
+  // Ionia & Caria, entering at the top edge (Smyrna clipped), south to Lycia
+  [27.05, 38.50], [26.98, 38.12], [27.30, 37.72], [27.28, 37.30],
+  [27.58, 37.05], [27.98, 36.78], [28.35, 36.62], [28.68, 36.55],
+  // Anatolian south coast, west -> east (Lycia, Pamphylia, Cilicia)
   [29.00, 36.62], [29.12, 36.67], [29.35, 36.50], [29.48, 36.32], [29.62, 36.20],
   [29.80, 36.16], [29.95, 36.20], [30.12, 36.28], [30.30, 36.30], [30.48, 36.22],
   [30.58, 36.55], [30.68, 36.72], [30.73, 36.85],                 // Gulf of Antalya head
@@ -57,10 +63,17 @@ const MAINLAND = [
   [31.60, 31.55], [31.45, 31.56], [31.20, 31.60], [31.00, 31.58], [30.70, 31.55],
   [30.38, 31.46],                                                 // Rosetta mouth
   [30.05, 31.28], [29.85, 31.20],                                 // Canopus, Alexandria
-  [29.50, 31.02], [29.00, 30.92],                                 // to the west edge
+  [29.50, 31.02], [28.90, 30.95],                                 // the Marmarican shore begins
+  [27.90, 31.15], [27.24, 31.35],                                 // Paraetonium (Marsa Matruh)
+  [26.40, 31.50], [25.60, 31.58], [25.15, 31.57],                 // Sollum
+  [24.60, 31.95], [23.97, 32.08],                                 // Tobruk
+  [23.45, 32.40], [22.90, 32.65], [22.64, 32.77],                 // the Gulf of Bomba, Derna
+  [21.97, 32.90], [21.45, 32.80],                                 // Apollonia, the Cyrenaican shoulder
+  [21.00, 32.55],                                                 // cut at the west edge toward Benghazi
   // Frame: west edge down, south edge east to the Red Sea shore
-  [29.00, 25.50], [34.55, 25.50],
-  // Egyptian Red Sea coast, northward
+  [21.00, 23.50], [35.55, 23.50],
+  // Egyptian Red Sea coast, northward past Berenice
+  [35.48, 23.90], [35.05, 24.55], [34.62, 25.30],
   [34.30, 26.10], [34.10, 26.40], [33.95, 26.70], [33.85, 27.25], [33.55, 27.80],
   [33.30, 28.10], [33.10, 28.35], [32.85, 28.85], [32.65, 29.35], [32.58, 29.70],
   [32.55, 29.95],                                                 // head of the Gulf of Suez
@@ -73,17 +86,48 @@ const MAINLAND = [
   // Aqaba east shore, southward, then the Arabian Red Sea coast
   [35.00, 29.32], [34.90, 28.90], [34.80, 28.45], [34.78, 28.05],
   [35.15, 27.55], [35.55, 27.30], [36.10, 26.55], [36.50, 26.10], [36.90, 25.55],
-  [36.95, 25.50],
-  // Frame: south edge east to the corner, up the east edge to the Gulf coast
-  [50.00, 25.50], [50.00, 26.45],
+  [37.20, 25.10], [37.60, 24.65], [38.05, 24.05],                 // toward Yanbu
+  [38.55, 23.70], [38.80, 23.50],                                 // cut at the south edge
+  // Frame: south edge east to the corner, up the east edge to the lower Gulf
+  [53.50, 23.50], [53.50, 24.10],
+  // The lower Gulf shore, westward: the Trucial coast and the Qatar thumb
+  [52.60, 24.20], [51.90, 24.45], [51.60, 24.60],
+  [51.55, 25.90], [51.20, 26.10], [51.10, 25.55], [50.85, 24.90], // Qatar
+  [50.55, 25.05], [50.20, 25.60], [50.05, 26.35],                 // the Bahrain bay shore
   // Arabian shore of the Persian Gulf, northwestward
   [49.55, 27.00], [49.05, 27.55], [48.70, 28.10], [48.45, 28.70], [48.15, 29.15],
   [47.95, 29.35], [47.70, 29.45], [47.85, 29.65],                 // Kuwait Bay
   [47.70, 30.10], [47.60, 30.55],                                 // head of the Gulf (66 CE, near Charax)
   // Elamite / Persian shore, southeastward to the east edge
   [48.00, 30.45], [48.50, 30.25], [49.00, 30.10], [49.50, 30.00], [50.00, 29.90],
-  // Frame: east edge up, top edge west (back to start via the west edge)
-  [50.00, 38.50], [29.00, 38.50],
+  [50.60, 29.45], [50.85, 28.95],                                 // Bushehr
+  [51.60, 28.30], [52.40, 27.65], [53.10, 27.05], [53.50, 26.85], // the Persis shore
+  // Frame: east edge up, top edge west (back to the Ionian entry)
+  [53.50, 38.50],
+];
+
+// Greece enters at the frame's northwest: a single simplified lobe — Attica
+// and the Peloponnese fused at a broad isthmus, clipped by the top edge.
+const GREECE = [
+  [24.10, 38.50], [24.06, 38.10], [24.04, 37.68],                 // Marathon shore, Sounion
+  [23.45, 37.95], [23.15, 37.60], [23.18, 37.30],                 // the Saronic gulf, Argolid
+  [22.78, 37.32], [23.05, 36.90], [23.10, 36.43],                 // Argolic gulf, Malea
+  [22.55, 36.72], [22.38, 36.42],                                 // the Laconian gulf, Tainaron
+  [22.15, 36.85], [21.85, 36.72],                                 // the Messenian gulf
+  [21.55, 36.95], [21.30, 37.40], [21.12, 37.95],                 // the western coast, Elis
+  [21.25, 38.30], [21.00, 38.40],                                 // toward the gulf of Patras, cut west
+  [21.00, 38.50],
+];
+
+const CRETE = [
+  [23.55, 35.24], [24.30, 35.38], [25.00, 35.43], [25.75, 35.34],
+  [26.30, 35.30], [26.10, 35.03], [25.50, 34.95], [24.75, 34.93],
+  [24.05, 35.05], [23.60, 35.09],
+];
+
+const RHODES = [
+  [27.72, 36.45], [28.10, 36.42], [28.24, 36.30], [28.05, 36.02],
+  [27.75, 36.12],
 ];
 
 const CYPRUS = [
@@ -127,6 +171,7 @@ const RIVERS = [
   {
     name: 'Nile', width: 3,
     points: [
+      [32.87, 23.50], [32.90, 24.09], [32.75, 24.70], [32.55, 25.15],
       [32.60, 25.50], [32.64, 25.72], [32.72, 26.19], [32.24, 26.05], [31.70, 26.56],
       [31.18, 27.18], [30.75, 28.10], [31.10, 29.07], [31.25, 29.85], [31.20, 30.20],
     ],
@@ -417,6 +462,35 @@ const PROVINCES = [
     { latentParent: 'Bostra' }),
   P('Rutba', 41.50, 32.80, 1.60, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
+
+  // --- v5.0: the wider world ------------------------------------------------
+  // Greece and the islands (the Roman west of this stage)
+  P('Corinth', 22.93, 37.94, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 6, 3, 0),
+  P('Athens', 23.73, 37.98, 0.85, 'ROM', 'coast', 'olive_oil', 'hellenism', 'greek', 5, 6, 3, 0),
+  P('Sparta', 22.43, 37.07, 0.95, 'ROM', 'hills', 'livestock', 'hellenism', 'greek', 3, 3, 4, 0),
+  P('Gortyn', 24.95, 35.06, 1.00, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 4, 3, 0),
+  P('Rhodes', 28.00, 36.25, 0.70, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 4, 6, 3, 0),
+  P('Halicarnassus', 27.68, 37.00, 0.95, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 5, 2, 0),
+  // Cyrenaica and the western desert — the Kitos War's first theater
+  P('Cyrene', 21.86, 32.82, 0.95, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 5, 5, 3, 0),
+  P('Marmarica', 23.95, 32.05, 1.45, 'ROM', 'desert', 'livestock', 'hellenism', 'egyptian', 1, 1, 1, 0),
+  P('Paraetonium', 27.24, 31.32, 1.25, 'ROM', 'desert', 'salt', 'egyptian', 'egyptian', 1, 2, 1, 0),
+  // Upper Egypt: Syene and the first cataract (Elephantine's old garrison)
+  P('Syene', 32.90, 24.09, 1.05, 'ROM', 'drylands', 'grain', 'egyptian', 'egyptian', 3, 4, 2, 0),
+  // The Hejaz oases: Yathrib of the tribes, Khaybar of the Jewish farmers
+  P('Yathrib', 39.61, 24.47, 1.15, 'NAB', 'desert', 'dates', 'nabataean', 'arab', 2, 2, 2, 0),
+  P('Khaybar', 39.29, 25.70, 0.90, 'NAB', 'desert', 'dates', 'nabataean', 'arab', 2, 3, 1, 0),
+  // (Khaybar's famous Jewish farmers arrive via the 614 bookmark's religion
+  // overlay — a base-map 'judaism' would hand ancient Judaea a standing holy
+  // casus belli against Nabataea that the ancient chapters never intended.)
+  // Persis and the lower Gulf
+  P('Persepolis', 52.60, 29.90, 1.15, 'PAR', 'drylands', 'silver', 'zoroastrianism', 'persian', 4, 4, 4, 0),
+  P('Gabae', 51.67, 32.65, 1.15, 'PAR', 'drylands', 'livestock', 'zoroastrianism', 'persian', 3, 3, 3, 0),
+  P('Gerrha', 49.70, 25.35, 1.40, 'CHX', 'desert', 'incense', 'nabataean', 'arab', 2, 4, 1, 0),
+  // Berenice Troglodytica: the Red Sea port of the incense route — and the
+  // seed that keeps Hegra's voronoi from bleeding across the water to claim
+  // the African shore.
+  P('Berenice', 34.90, 24.45, 1.00, 'ROM', 'desert', 'spices', 'egyptian', 'egyptian', 1, 3, 1, 0),
 ];
 
 // ---------------------------------------------------------------------------
@@ -445,6 +519,11 @@ const HEIGHT_PRIMITIVES = [
   { type: 'ridge', a: [34.00, 25.80], b: [33.00, 28.60], h: 0.60, w: 0.55 }, // Red Sea Hills (Egypt)
   { type: 'dome', c: [36.70, 32.62], r: 0.50, h: 0.45 },                     // Hauran / Jebel Druze
   { type: 'dome', c: [32.90, 34.95], r: 0.40, h: 0.75 },                     // Troodos (Cyprus)
+  { type: 'dome', c: [22.20, 32.60], r: 0.55, h: 0.50 },                     // Jebel Akhdar (Cyrenaica)
+  { type: 'ridge', a: [22.30, 37.35], b: [22.35, 36.55], h: 0.70, w: 0.35 }, // Taygetus (Peloponnese)
+  { type: 'ridge', a: [23.90, 35.25], b: [26.05, 35.20], h: 0.60, w: 0.28 }, // the White Mountains & Ida (Crete)
+  { type: 'ridge', a: [37.80, 25.70], b: [39.70, 23.60], h: 0.85, w: 0.90 }, // Hejaz escarpment, south to Medina
+  { type: 'ridge', a: [49.60, 31.60], b: [52.90, 29.40], h: 0.90, w: 1.20 }, // Zagros into Persis
 ];
 
 // ---------------------------------------------------------------------------
@@ -454,7 +533,7 @@ const HEIGHT_PRIMITIVES = [
 export const MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project,
   provinces: PROVINCES,
-  coast: { land: [MAINLAND, CYPRUS], lakes: LAKES },
+  coast: { land: [MAINLAND, CYPRUS, GREECE, CRETE, RHODES], lakes: LAKES },
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
   // Land ferries/bridges only — armies may walk these. (None at present.)
@@ -464,7 +543,7 @@ export const MAP_DATA = {
   seaLinks: [['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais']],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
-  severLinks: [['Salamis', 'Seleucia Trachea']],
+  severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus']],
 };
 
 // ---------------------------------------------------------------------------
@@ -510,8 +589,8 @@ export function validateMapData() {
     if (provs.length > 512) {
       warnings.push(`province count ${provs.length} exceeds renderer cap 512`);
     }
-    if (MAP_DATA.heightPrimitives.length > 24) {
-      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 24`);
+    if (MAP_DATA.heightPrimitives.length > 32) {
+      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 32`);
     }
 
     const names = new Set();

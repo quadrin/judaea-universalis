@@ -197,6 +197,12 @@ export const BOOKMARK_67 = {
     'Paphos': 'PTO',
     // PAR and ARM keep their map_data holdings (Tigranes licking his wounds,
     // Phraates III watching everyone).
+    // -- v5.0: the wider world -------------------------------------------------
+    'Corinth': 'ROM', 'Athens': 'ROM', 'Sparta': 'ROM', 'Gortyn': 'ROM',
+    'Rhodes': 'ROM', 'Halicarnassus': 'ROM', 'Cyrene': 'ROM',
+    'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
+    'Yathrib': 'NAB', 'Khaybar': 'NAB', 'Berenice': 'PTO',
+    'Persepolis': 'PAR', 'Gabae': 'PAR', 'Gerrha': 'CHX',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
