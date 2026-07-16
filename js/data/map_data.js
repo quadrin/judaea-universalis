@@ -367,7 +367,7 @@ const PROVINCES = [
   P('Rehovot', 34.81, 31.89, 0.58, 'ROM', 'farmland', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
     { latentParent: 'Jamnia' }),
   P("Modi'in Hills", 35.01, 31.93, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'judean', 1, 1, 1, 0,
-    { latentParent: 'Emmaus' }),
+    { latentParent: 'Lydda' }), // the toparchy of Lydda held Modi'in (1 Macc 11:34)
   P('Jenin', 35.30, 32.46, 0.66, 'ROM', 'hills', 'olive_oil', 'samaritanism', 'samaritan', 1, 1, 1, 0,
     { latentParent: 'Neapolis' }),
   P('Tulkarm', 35.03, 32.31, 0.62, 'ROM', 'farmland', 'olive_oil', 'samaritanism', 'samaritan', 1, 1, 1, 0,
@@ -375,7 +375,7 @@ const PROVINCES = [
   P('Qalqilya', 34.98, 32.19, 0.58, 'ROM', 'farmland', 'grain', 'samaritanism', 'samaritan', 1, 1, 1, 0,
     { latentParent: 'Sebaste' }),
   P('Ramallah', 35.20, 31.90, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'judean', 1, 1, 1, 0,
-    { latentParent: 'Sebaste' }),
+    { latentParent: 'Jerusalem' }), // the Gophna toparchy: Judea proper, not Samaria
   P('Bethlehem', 35.20, 31.70, 0.60, 'JUD', 'hills', 'wine', 'judaism', 'judean', 1, 1, 1, 0,
     { latentParent: 'Hebron' }),
   P('Beit Shemesh', 34.99, 31.75, 0.60, 'JUD', 'hills', 'wine', 'judaism', 'judean', 1, 1, 1, 0,

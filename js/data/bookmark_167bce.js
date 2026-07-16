@@ -101,8 +101,8 @@ export const BOOKMARK_167 = {
 
   // The map wears its era's shape (SPEC §47): the desert fortresses are not
   // yet built — Jannaeus raises Machaerus and the Masada fort decades later —
-  // and Modi'in, the Hasmoneans' home village, stands as its own place in the
-  // Gophna hills (it inherits the rebels' ownership from Emmaus).
+  // and Modi'in, the Hasmoneans' home village, stands as its own place
+  // (it inherits the rebels' ownership from Lydda, its toparchy).
   mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
   activeProvinces: ['Modi\'in Hills'],
 

@@ -1881,7 +1881,8 @@ foreign court **read-only**.
   Batanea, Medaba and Engaddi — the razed fortress-towns never return.
 - **History demands its villages**: 167 BCE activates the Modi'in cell as
   **Modi'in**, the village where the revolt began — it inherits Hasmonean
-  ownership through its Emmaus parent, and Eleazar's band ("Men of Modein",
+  ownership through its Lydda parent (the toparchy that held Modi'in,
+  1 Macc 11:34), and Eleazar's band ("Men of Modein",
   3 inf) now musters at home; the third rebel province widened the front, so
   the band grew to match (all-AI HAS survives across seeds, still the
   bleeding underdog, never a snowball). 132 CE activates Beit Shemesh as
