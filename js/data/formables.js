@@ -121,7 +121,7 @@ export const FORMABLES = [
     desc: 'Not a revolt that survived, not a client on sufferance — a kingdom, with '
       + 'Jerusalem for its seat and the Law for its charter. The crown of David, '
       + 'claimed in the only court that matters: the field.',
-    bookmarks: ['66ce', '115ce', '132ce', '614ce'],
+    bookmarks: ['66ce', '132ce', '614ce'],
     requires: [
       { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
       { label: 'Hold fifteen provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 15 },

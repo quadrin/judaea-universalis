@@ -44,7 +44,6 @@ const expectedRosters = [
   ['JUD'],
   ['JUD'],
   ['JUD'],
-  ['JUD'],
   ['ISR'],
 ];
 for (let i = 0; i < expectedRosters.length; i++) {

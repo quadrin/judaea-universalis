@@ -44,7 +44,6 @@ for (const [f, ex, tags] of [
   ['bookmark_67bce', 'BOOKMARK_67', ['HYR', 'ARI']],
   ['bookmark_40bce', 'BOOKMARK_40', ['HER', 'ATG']],
   ['bookmark_66ce', 'BOOKMARK_66', ['JUD', 'ROM']],
-  ['bookmark_115ce', 'BOOKMARK_115', ['JUD', 'ROM']],
   ['bookmark_132ce', 'BOOKMARK_132', ['JUD', 'ROM']],
   ['bookmark_614ce', 'BOOKMARK_614', ['JUD', 'BYZ']],
   ['bookmark_1948', 'BOOKMARK_1948', ['ISR', 'JOR']],

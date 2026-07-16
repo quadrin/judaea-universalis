@@ -1963,3 +1963,23 @@ foreign court **read-only**.
   ledger row grows to 66 provinces (`smoke3.mjs`); Egypt's 1948 development
   total to 207 (`smoke27.mjs`). The geometry snapshot is regenerated at the
   new resolution.
+
+## 50. v5.1: the Kitos War retires from the carousel
+
+- **The 115 CE chapter is no longer a playable era.** It was always the odd
+  chapter out: a diaspora revolt — Cyrene, Cyprus, Egypt, Mesopotamia — that
+  barely touched Judaea proper, wearing a "Judaea vs Rome" frame it never
+  quite fit. `bookmark_115ce.js` and `events_115ce.js` are deleted (git
+  history keeps them); the title carousel, the autorun harness, the music
+  style map, the Kingdom of Israel formable, and the campaign guidance all
+  drop the era. Seven chapters remain.
+- **The map keeps everything the era taught it**: Cyrene, Marmarica and the
+  western-desert route stay (they serve 67 BCE through 614 as Roman and
+  Byzantine land, and 1948 as British Cyrenaica); the razed-fortress merges
+  and every other v4.6 profile survive in the remaining eras.
+- **Old 115 saves fail soft**: `readNewestSave` iterates the live bookmark
+  list, so an orphaned Kitos save is simply never offered.
+- **Tests follow**: the multi-era engine suites (`smoke16-19`, `smoke23`,
+  `smoke31`) drop their 115 fixture rows; `uitest9` keeps its 614/1948
+  sections; the carousel dot indices shift down in `uitest23/25/26/27`
+  (1948 is dot 6, Bar Kokhba dot 4); `uitest3`'s roster table loses a row.

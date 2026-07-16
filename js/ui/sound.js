@@ -303,7 +303,7 @@ export function initSound(bus, getGame) {
   //   'lyre'    (167 BCE – 66 CE): the kinnor court — plucked random-walk
   //             melody, wandering ney phrases, a frame drum in wartime.
   //             Peace speaks Dorian; war speaks Freygish (Ahava Rabbah).
-  //   'klezmer' (115 – 614): a reedy clarinet that ornaments its phrases
+  //   'klezmer' (132 – 614): a reedy clarinet that ornaments its phrases
   //             (grace notes, krekhts sobs) over an oom-pah bass. Peace
   //             speaks Mi Sheberakh (Ukrainian Dorian); war Freygish.
   //   'hora'    (1948): a Hava Nagila hora — the traditional nigun is public
@@ -352,7 +352,7 @@ export function initSound(bus, getGame) {
   // Which age sings (SPEC §48): by bookmark, falling back to the year.
   const STYLE_BY_BOOKMARK = {
     '167bce': 'lyre', '67bce': 'lyre', '40bce': 'lyre', '66ce': 'lyre',
-    '115ce': 'klezmer', '132ce': 'klezmer', '614ce': 'klezmer',
+    '132ce': 'klezmer', '614ce': 'klezmer',
     '1948ce': 'hora',
   };
 

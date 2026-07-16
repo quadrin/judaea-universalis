@@ -34,7 +34,7 @@ await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 
 console.log('== 1948 modern profile ==');
-await startBookmark(7);
+await startBookmark(6);
 const modern = await page.evaluate(() => {
   const names = [
     'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',

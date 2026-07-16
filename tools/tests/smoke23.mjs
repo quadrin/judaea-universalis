@@ -7,8 +7,6 @@ const { bus } = await import(R + '/js/core/bus.js');
 const { campaignGuidance } = await import(R + '/js/data/campaign_guidance.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
-const { BOOKMARK_115 } = await import(R + '/js/data/bookmark_115ce.js');
-const { EVENTS_115 } = await import(R + '/js/data/events_115ce.js');
 const { BOOKMARK_132 } = await import(R + '/js/data/bookmark_132ce.js');
 const { EVENTS_132 } = await import(R + '/js/data/events_132ce.js');
 const { BOOKMARK_614 } = await import(R + '/js/data/bookmark_614ce.js');
@@ -63,7 +61,6 @@ for (const [id, file, exp, expectedTags] of [
   ['67bce', 'bookmark_67bce', 'BOOKMARK_67', ['HYR', 'ARI']],
   ['40bce', 'bookmark_40bce', 'BOOKMARK_40', ['HER', 'ATG']],
   ['66ce', 'bookmark_66ce', 'BOOKMARK_66', ['JUD']],
-  ['115ce', 'bookmark_115ce', 'BOOKMARK_115', ['JUD']],
   ['132ce', 'bookmark_132ce', 'BOOKMARK_132', ['JUD']],
   ['614ce', 'bookmark_614ce', 'BOOKMARK_614', ['JUD']],
   ['1948ce', 'bookmark_1948', 'BOOKMARK_1948', ['ISR']],
@@ -101,20 +98,6 @@ console.log('== the prepared revolt receives an opening window ==');
   const armories = game.tags.JUD.modifiers.find((m) => m.id === 'hidden_armories');
   ok(response && response.effects.aiPassive, 'Rome holds during the provincial-response phase');
   ok(armories && armories.effects.maintMult === 0.55, 'the underground host is affordable while the armories last');
-}
-
-console.log('== separate Kitos theaters do not share an instant staff ==');
-{
-  const { game, ctx } = boot(BOOKMARK_115, EVENTS_115, 'JUD');
-  const friction = game.tags.JUD.modifiers.find((m) => m.id === 'scattered_risings');
-  ok(friction && friction.effects.disciplineMult === 0.9 && friction.effects.reinforceMult === 0.8,
-    'coordination friction weakens the unified field army abstraction');
-  const beforeRelief = regiments(game, 'ROM');
-  for (const id of ['ev_k_turbo', 'ev_k_quietus', 'ev_k_reduction']) {
-    EVENTS_115.find((e) => e.id === id).options[0].effects(ctx);
-  }
-  ok(regiments(game, 'ROM') === beforeRelief + 32,
-    'Turbo, Quietus, and the Cyprus reduction deliver 32 regiments in distinct relief columns');
 }
 
 console.log('== Persian patronage pays for the Return, until it does not ==');

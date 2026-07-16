@@ -1,5 +1,5 @@
 // Headless smoke test — SPEC §32: every warscore auto-verdict is now an
-// OFFER (67/66/115/132 vs Rome, 614 BYZ vs Persia), and the Third Temple
+// OFFER (67/66/132 vs Rome, 614 BYZ vs Persia), and the Third Temple
 // missions raise the House on a Mount the later eras start bare.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
@@ -56,7 +56,6 @@ console.log('== every concession is an offer now ==');
 }
 for (const [bm, evf, exBm, exEv, tag, enemy, evId, scoreKey, ws] of [
   ['bookmark_67bce', 'events_67bce', 'BOOKMARK_67', 'EVENTS_67', 'HYR', 'ROM', 'ev4_rome_recoils', 'HYR', 45],
-  ['bookmark_115ce', 'events_115ce', 'BOOKMARK_115', 'EVENTS_115', 'JUD', 'ROM', 'ev115_terms', 'JUD', 45],
   ['bookmark_132ce', 'events_132ce', 'BOOKMARK_132', 'EVENTS_132', 'JUD', 'ROM', 'ev132_terms', 'JUD', 55],
   ['bookmark_614ce', 'events_614ce', 'BOOKMARK_614', 'EVENTS_614', 'BYZ', 'SAS', 'ev614_persia_sues', 'BYZ', 40],
 ]) {
@@ -131,7 +130,6 @@ console.log('== the Mount stands bare after 70 CE ==');
   ok(j.wonder === 'temple', '66 CE: the Second Temple stands');
 }
 for (const [bm, evf, exBm, exEv, tag] of [
-  ['bookmark_115ce', 'events_115ce', 'BOOKMARK_115', 'EVENTS_115', 'JUD'],
   ['bookmark_132ce', 'events_132ce', 'BOOKMARK_132', 'EVENTS_132', 'JUD'],
   ['bookmark_614ce', 'events_614ce', 'BOOKMARK_614', 'EVENTS_614', 'JUD'],
   ['bookmark_1948', 'events_1948', 'BOOKMARK_1948', 'EVENTS_1948', 'ISR'],

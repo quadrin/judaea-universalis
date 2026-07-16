@@ -113,34 +113,6 @@ export const CAMPAIGN_GUIDANCE = {
       ],
     },
   },
-  '115ce': {
-    JUD: {
-      system: 'A diaspora rising across separate theaters',
-      opening: [
-        'Keep Cyprus and Egypt alive as distinct bases; neither can rescue the other quickly.',
-        'Seize the Nile granaries to hurt Rome without fighting its eastern field army.',
-        'Raise Mesopotamia only when Rome has committed its response elsewhere.',
-      ],
-      clocks: [
-        { y: 116, m: 1, label: 'Marcius Turbo sails south' },
-        { y: 116, m: 8, label: 'Quietus is unleashed in the east' },
-        { y: 117, m: 8, label: 'Trajan dies; survive to force Hadrian’s choice' },
-      ],
-    },
-    ROM: {
-      system: 'Conquest abroad, revolt behind',
-      opening: [
-        'Choose which matters more: Ctesiphon or the Egyptian grain route.',
-        'Use the fleet to isolate Cyprus before the theaters can reinforce one another.',
-        'Keep a reserve for Mesopotamia; the rivers will not stay quiet.',
-      ],
-      clocks: [
-        { y: 116, m: 1, label: 'Turbo begins the southern reduction' },
-        { y: 116, m: 6, label: 'The communities between the rivers rise' },
-        { y: 117, m: 8, label: 'Trajan’s death changes the imperial objective' },
-      ],
-    },
-  },
   '132ce': {
     JUD: {
       system: 'Prepared revolt and underground survival',

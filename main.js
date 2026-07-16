@@ -13,8 +13,6 @@ import { EVENTS_67 } from './js/data/events_67bce.js';
 import { BOOKMARK_67 } from './js/data/bookmark_67bce.js';
 import { EVENTS_40 } from './js/data/events_40bce.js';
 import { BOOKMARK_40 } from './js/data/bookmark_40bce.js';
-import { EVENTS_115 } from './js/data/events_115ce.js';
-import { BOOKMARK_115 } from './js/data/bookmark_115ce.js';
 import { EVENTS_614 } from './js/data/events_614ce.js';
 import { BOOKMARK_614 } from './js/data/bookmark_614ce.js';
 import { EVENTS_1948 } from './js/data/events_1948.js';
@@ -99,7 +97,6 @@ async function boot() {
     { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_40, events: EVENTS_40.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_115, events: EVENTS_115.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_614, events: EVENTS_614.concat(GENERIC_EVENTS) },
     { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(GENERIC_EVENTS) },
