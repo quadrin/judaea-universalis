@@ -13,6 +13,7 @@ import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
+import { monthlyPowers } from './powers.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -95,6 +96,7 @@ function monthlyBlock(ctx) {
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('opinions', () => monthlyOpinionDrift(ctx));
+  safe('powers', () => monthlyPowers(ctx)); // standings cool toward the old climate (SPEC §55)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   safe('elimination', () => checkElimination(ctx));

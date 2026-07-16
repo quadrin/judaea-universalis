@@ -85,6 +85,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
       </div>
+      <div class="pp-build hidden" data-ref="powersBlock">
+        <div class="pp-build-title">The Powers Beyond the Map</div>
+        <div class="np-powers" data-ref="powers"></div>
+      </div>
       <div class="pp-build" data-ref="decisionsBlock">
         <div class="pp-build-title">Decisions</div>
         <div class="np-decisions" data-ref="decisions"></div>
@@ -156,6 +160,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (dec) {
         if (dec.classList.contains('disabled') || !actions || typeof actions.enactDecision !== 'function') return;
         try { actions.enactDecision(dec.dataset.decision); } catch (err) { warnOnce('np-decision', err); }
+        refresh();
+        return;
+      }
+      const pcourt = e.target.closest('[data-power-court]');
+      if (pcourt) {
+        if (!pcourt.classList.contains('disabled') && actions && typeof actions.courtPower === 'function') {
+          try { actions.courtPower(pcourt.dataset.powerCourt); } catch (err) { warnOnce('np-courtPower', err); }
+        }
+        refresh();
+        return;
+      }
+      const pask = e.target.closest('[data-power-ask]');
+      if (pask) {
+        if (!pask.classList.contains('disabled') && actions && typeof actions.askPower === 'function') {
+          const [pid, aid] = String(pask.dataset.powerAsk).split(':');
+          try { actions.askPower(pid, aid); } catch (err) { warnOnce('np-askPower', err); }
+        }
         refresh();
         return;
       }
@@ -324,9 +345,47 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     refreshFactions(self);
     refreshDiplomacy(g, t, tag, self);
+    refreshPowers(self);
     refreshTech(t, self);
     refreshReforms(t, self);
     refreshCourt(t, self);
+  }
+
+  // The powers beyond the map (SPEC §55): standing, an envoy button, and the
+  // asks that standing unlocks. Player's own realm only — foreign courts keep
+  // their dealings with the great to themselves.
+  function refreshPowers(self) {
+    let list = [];
+    if (self && actions && typeof actions.getPowers === 'function') {
+      try { list = actions.getPowers() || []; } catch (e) { warnOnce('getPowers', e); }
+    }
+    refs.powersBlock.classList.toggle('hidden', !list.length);
+    if (!list.length) return;
+    refs.powers.innerHTML = list.map((p) => {
+      const courtTT = p.blurb + '\n――――――\nSend an envoy: ' + p.court.cost + ' influence points → +'
+        + p.court.gain + ' standing' + (p.court.rivalName ? ' (chills ' + p.court.rivalName + ')' : '')
+        + (p.court.whyNot ? '\n' + p.court.whyNot : '');
+      const asks = p.asks.map((a) => {
+        const costBits = Object.entries(a.cost || {})
+          .filter(([, v]) => v > 0)
+          .map(([k, v]) => v + ' ' + (k === 'treasury' ? 'talents' : k === 'mar' ? 'martial' : k === 'gov' ? 'governance' : 'influence'));
+        const tt = a.desc + '\n――――――\nNeeds standing ' + a.need
+          + (costBits.length ? ' · costs ' + costBits.join(', ') : '')
+          + (a.whyNot ? '\n' + a.whyNot : '');
+        return `<button class="np-power-ask${a.can ? '' : ' disabled'}" data-power-ask="${esc(p.id)}:${esc(a.id)}" data-tt="${esc(tt)}">${esc(a.name)}${a.cdLeft ? ' (' + a.cdLeft + 'mo)' : ''}</button>`;
+      }).join('');
+      return `
+      <div class="np-power">
+        <div class="np-power-head">
+          <span class="dot" style="background:${rgb(p.color)}"></span>
+          <span class="np-power-name" data-tt="${esc(p.blurb)}">${esc(p.name)}</span>
+          <span class="np-power-standing" data-tt="Our standing, 0–100. It drifts back toward the old climate each month.">${p.standing}</span>
+          <span class="np-power-bar"><span class="np-power-fill" style="width:${Math.max(0, Math.min(100, p.standing))}%"></span></span>
+          <button class="np-power-court${p.court.can ? '' : ' disabled'}" data-power-court="${esc(p.id)}" data-tt="${esc(courtTT)}">Envoy</button>
+        </div>
+        ${asks ? `<div class="np-power-asks">${asks}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   function setAct(btn, can, tt) {

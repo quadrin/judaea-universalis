@@ -29,6 +29,7 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
+import { getPowersInfo, courtPowerCore, askPowerCore } from './powers.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
@@ -133,6 +134,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
+    powers: {}, // standings with the powers beyond the map (SPEC §55)
     rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
   };
@@ -1076,6 +1078,26 @@ export function gameActions(ctx) {
         }
         return (out.armies.length || out.fleet || out.wing) ? out : null;
       } catch (e) { warnOnce('unitDetails', 'getUnitDetails failed', e); return null; }
+    },
+
+    // ---- the powers beyond the map (SPEC §55) --------------------------------
+    getPowers() {
+      try { return getPowersInfo(ctx, g.playerTag); } catch (e) { warnOnce('getPowers', e); return []; }
+    },
+    courtPower(powerId) {
+      try {
+        const res = courtPowerCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('The envoys stay home', res.why + '.', 'bad'); return; }
+        say('Envoys received', 'Our standing with ' + res.name + ' rises to ' + Math.round(res.standing)
+          + (res.rival ? ' — and ' + res.rival + '\'s patron takes note.' : '.'), 'good');
+      } catch (e) { warnOnce('courtPower', 'courtPower failed', e); }
+    },
+    askPower(powerId, askId) {
+      try {
+        const res = askPowerCore(ctx, g.playerTag, String(powerId), String(askId));
+        if (!res.ok) { say('The favor is refused', res.why + '.', 'bad'); return; }
+        say('The favor is granted', res.power + ': ' + res.name.toLowerCase() + '.', 'good');
+      } catch (e) { warnOnce('askPower', 'askPower failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------
@@ -2223,6 +2245,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.rngState)) saved.rngState = saved.rngSeed;
   if (!saved.truces) saved.truces = {};
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
+  if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
   // Runtime-synthesized events don't survive a reload — drop stale pendings.

@@ -2144,3 +2144,41 @@ architecture supports, and it changes every chapter.
   (smoke3); 132's rump-Judaea debt returns to its long-documented class;
   614's Return keeps its Persian-tide snowball with a self-limiting
   post-subsidy bleed (Persian supply trains now carry adminMult 0.5).
+
+## 55. v5.6: the powers beyond the map
+
+The frame can only grow so far (SPEC §53) — but the world's weight can still
+press on it. Off-map great powers are diplomatic entities, not tags: no
+provinces, no armies, unkillable — a STANDING (0–100) with every court,
+courting envoys, and asks that standing unlocks.
+
+- **The engine** (`js/data/powers.js`, `js/sim/powers.js`): per-bookmark
+  power definitions; state in `game.powers` (saves carry it free; reviveGame
+  backfills). Courting costs influence on a cooldown (reusing the
+  diploCooldowns book with `P:` keys) and may chill a rival's standing —
+  the Cold War is a seesaw. Asks gate on standing, war state, a patron
+  power's standing (`needsPower`), tag allowlists, and costs; their effects
+  are ordinary adjustments and timed tag modifiers, so every downstream
+  system already understands them. Standings drift one point a month back
+  toward the era's baseline: friendship with the great must be tended.
+- **1948**: the **United States** (credits and recognition — no arms; the
+  Neutrality Act embargo IS its ask list), the **Soviet Union** (whose nod
+  opens Prague), **Czechoslovakia** (the arms deal: hard currency for
+  rifles, discipline and reinforcement — requires Moscow's standing),
+  **France** (the quiet quays), and the **United Nations** (a wartime
+  appeal steadies legitimacy and calms the streets). Courting Washington
+  chills Moscow and vice versa.
+- **614**: the **Western Khaganate** (Heraclius' Türk alliance: a wartime
+  host for gold) and the **Avar Khaganate** (Byzantium buys its rear;
+  Persia aims the horde west).
+- **167/66/132**: the **Diaspora** — the communities of Alexandria,
+  Babylon and Cyrene send silver and volunteers, but only to the House
+  they love (asks are gated to the Jewish tags; Rome can court their
+  goodwill, not their sons).
+- **UI**: the nation panel grows "The Powers Beyond the Map" — standing
+  bars, an Envoy button, and ask buttons with full terms in the tooltips.
+  Player's own realm only.
+- **Regression contract**: `smoke34.mjs` — roster per era, courting gain
+  and rival chill, cooldowns, ask gates (standing / patron / war / funds),
+  the Prague chain, Diaspora tag-gating, drift both directions, and the
+  pre-powers save backfill.
