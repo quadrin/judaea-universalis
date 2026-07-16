@@ -78,6 +78,11 @@ export function nextWorldEvent(ctx) {
 function canFire(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id || !Array.isArray(ev.options) || !ev.options.length) return false;
+  // Era window (SPEC §52): an event may declare the years it belongs to
+  // (BCE years are negative). Ancient omens stop stalking 1948, and modern
+  // incidents never haunt the Hasmoneans. Events without bounds are timeless.
+  if (Number.isFinite(ev.minYear) && g.date.y < ev.minYear) return false;
+  if (Number.isFinite(ev.maxYear) && g.date.y > ev.maxYear) return false;
   if (ev.once !== false && g.firedEvents[ev.id]) return false;
   // Repeatable events honor a per-event cooldown (stored as the first month
   // index at which they may fire again).

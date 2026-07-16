@@ -152,6 +152,10 @@ export const DEFINES = {
     timber:     { name: 'Timber',     price: 2.2,  color: [110, 86, 56] },
     fish:       { name: 'Fish',       price: 1.8,  color: [92, 130, 168] },
     livestock:  { name: 'Livestock',  price: 2.0,  color: [158, 122, 96] },
+    // The modern age's prize (SPEC §52): assigned only by bookmark `goods`
+    // overlays (1948 Kirkuk/Khuzestan/al-Hasa) — no base-map province carries
+    // it, so the ancient chapters never see a barrel.
+    oil:        { name: 'Oil',        price: 5.5,  color: [44, 42, 48] },
   },
 
   // Religions: groups 'judaic' | 'pagan' | 'iranic' | 'christian' | 'islamic'
@@ -378,8 +382,16 @@ export const DEFINES = {
   BUILDINGS: {
     market:  { name: 'Market',  cost: 60,  months: 12, desc: 'Local tax and production +20%' },
     granary: { name: 'Granary', cost: 50,  months: 9,  desc: '+3 support limit; -1 attrition here' },
-    walls:   { name: 'Walls',   cost: 100, months: 18, desc: '+1 fort level (max 3), +1,000 garrison' },
-    shrine:  { name: 'Shrine',  cost: 40,  months: 9,  desc: '-1.5 local unrest' },
+    // A building may wear the face of its age (SPEC §52): at/after `modern.tech`
+    // (military), its name/desc/months are read from the modern variant — the
+    // key, cost and completion effects stay the same, so saves and glyphs hold.
+    // Nobody rings 1948 towns with curtain walls; they dig.
+    walls:   { name: 'Walls',   cost: 100, months: 18, desc: '+1 fort level (max 3), +1,000 garrison',
+      modern: { tech: 19, name: 'Fortified Line', months: 12,
+        desc: 'Trenches, pillboxes, wire and mines: +1 fort level (max 3), +1,000 garrison' } },
+    shrine:  { name: 'Shrine',  cost: 40,  months: 9,  desc: '-1.5 local unrest',
+      modern: { tech: 19, name: 'House of Worship',
+        desc: 'A synagogue, church or mosque for the town: -1.5 local unrest' } },
     shipyard: { name: 'Shipyard', cost: 90, months: 14, coastal: true,
       desc: 'A working harbor: local production +15%; commission up to 5 merchant ships' },
     // The age of flight (SPEC §29): gated on military tech, parks air wings.
@@ -398,13 +410,32 @@ export const DEFINES = {
     raidCdDays: 12,        // days to rearm between bombing raids
   },
 
+  // Oil spending (SPEC §52): the mechanized patterns burn fuel. Regiments of
+  // generation `gen`+ and every air wing pay a monthly fuel line on top of
+  // ordinary maintenance; a realm that controls no oil-producing province
+  // buys its fuel abroad at `importMult` the price. Ancient eras never reach
+  // gen 5, so the line is zero there by construction.
+  FUEL: {
+    gen: 5,                // first unit-pattern generation that burns fuel
+    perReg: 0.2,           // talents/month per fueled regiment
+    perWing: 0.5,          // talents/month per air wing (on top of wingUpkeep)
+    shipMult: 1.5,         // oil-fired hulls: ship upkeep multiplier at gen 5+
+    importMult: 2,         // fuel bill multiplier with no controlled oil province
+  },
+
   BASE: {
     regSize: 1000,                     // men per regiment
     regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment
     // Every province trains/fits one queued military unit at a time. Paused
     // time never advances these clocks.
     unitRecruitMonths: { inf: 2, cav: 3, ship: 6, wing: 4 },
-    maintPerReg: 0.35,                 // talents/month upkeep per regiment
+    maintPerReg: 0.35,                 // talents/month upkeep per regiment (× the pattern's upkeep mult)
+    // Administration (SPEC §52): governing costs money, and more realm costs
+    // more. Every point of owned development beyond the free allowance bills
+    // the treasury monthly — the scaling expense that keeps a snowballing
+    // empire's books honest. Small realms (under the allowance) pay nothing.
+    adminFreeDev: 40,                  // development a court governs for free
+    adminPerDev: 0.03,                 // talents/month per owned dev point beyond it
     moraleBase: 3.0,                   // base max morale before multipliers
     moraleRecoveryPerMonth: 0.6,       // morale regained per month out of battle
     taxPerDevPerYear: 1.0,             // talents/year per point of tax dev

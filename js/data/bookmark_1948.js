@@ -200,6 +200,16 @@ export const BOOKMARK_1948 = {
   religions: RELIGIONS,
   cultures: CULTURES,
 
+  // The tools of the age (SPEC §52): no modern state runs missionary
+  // conversion of districts — integration in 1948 is schools, land and
+  // votes, not priests. Everything unnamed stays on.
+  mechanics: { conversion: false },
+
+  // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,
+  // Abadan and Khuzestan behind Susa, the al-Hasa fields behind Gerrha —
+  // the wells that paid for the region's armies.
+  goods: { Arbela: 'oil', Susa: 'oil', Gerrha: 'oil' },
+
   // The map speaks 1948 (SPEC §24): canonical names stay the content keys;
   // these are what the labels, panels and toasts show.
   provinceNames: {

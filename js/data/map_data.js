@@ -553,7 +553,8 @@ export const MAP_DATA = {
 const TAG_KEYS = ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX', 'REB', 'WASTE'];
 const TERRAIN_KEYS = ['coast', 'farmland', 'hills', 'mountains', 'desert', 'drylands', 'steppe', 'marsh', 'wasteland'];
 const GOOD_KEYS = ['grain', 'wine', 'olive_oil', 'dates', 'balsam', 'incense', 'purple_dye', 'glass',
-  'papyrus', 'silver', 'salt', 'spices', 'timber', 'fish', 'livestock'];
+  'papyrus', 'silver', 'salt', 'spices', 'timber', 'fish', 'livestock',
+  'oil']; // modern-era good: assigned only by bookmark `goods` overlays (SPEC §52)
 const RELIGION_KEYS = ['judaism', 'samaritanism', 'hellenism', 'roman_cult', 'nabataean', 'zoroastrianism', 'egyptian'];
 const CULTURE_KEYS = ['judean', 'galilean', 'samaritan', 'idumean', 'nabataean', 'arab', 'aramean',
   'phoenician', 'greek', 'egyptian', 'roman', 'armenian', 'persian'];

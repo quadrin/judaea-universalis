@@ -2011,3 +2011,77 @@ foreign court **read-only**.
   `uitest14` (gesture start, mood machine, toggle persistence) and
   `uitest27` (each chapter plays its style, notes actually scheduled) pass
   unchanged.
+
+## 52. v5.3: every age by its own rules — era gates, oil, and honest books
+
+The old-timey remnants stop leaking forward (and the modern ones stop
+leaking back): mechanics, buildings, background events and the price of a
+standing army now all know what year it is.
+
+- **The first mechanics gate** (`bookmark.mechanics`, `mechanicOn(ctx, key)`
+  in military.js): a bookmark may declare a whole mechanic off —
+  `mechanics: { conversion: false }` in 1948 retires the Convert Faith
+  action. `getIntegration` reports `showConvert` and the province panel
+  drops the control entirely (absent, not greyed); `convertProvince` and the
+  AI's monthly missionary pass honor the same helper. Everything unnamed
+  stays on, so every other bookmark and every old save is untouched. No
+  modern republic re-faiths a district by decree; integration in 1948 is
+  schools, land and votes.
+- **Buildings wear the face of their age** (`BUILDINGS.*.modern`,
+  `buildingFace(def, marTech)`): at/after `modern.tech` (military) the same
+  key keeps its cost, effects, glyph and save identity but changes its
+  name, description and build time. Walls become the **Fortified Line**
+  (trenches, pillboxes, wire — 12 months instead of 18), the shrine a
+  **House of Worship**. Build menu, construction row, refusal messages and
+  completion toasts all speak through the face; nobody rings a 1948 town
+  with curtain walls.
+- **The era-windowed murmur** (`event.minYear` / `event.maxYear`, honored in
+  `canFire`): the generic pool splits into ten antique events
+  (`maxYear: 1799` — comets read by astrologers, caravan tolls, pestilence
+  and burial societies, Greco-Roman games) and ten modern twins
+  (`minYear: 1900`) that speak the same mechanics in the language of 1948:
+  **Epidemic** in the crowded quarters, **Incident on the Line**,
+  **General Strike**, **A Line of Credit**, **The Reservoirs Fall**,
+  **A Record Season**, an officer with a staff-college record whose name
+  pool follows the player's culture, holy places drawing charter ships, and
+  **The Concession Money** for oil states. Embezzlement and creditors stay
+  timeless because their vices are. BCE years are negative, so the window
+  arithmetic needs no special casing; `smoke32` proves both directions.
+- **Oil** (`GOODS.oil`, `bookmark.goods` overlay, `DEFINES.FUEL`): a new
+  bookmark lever re-goods provinces per era — no base-map cell carries oil,
+  and 1948 assigns it to Kirkuk (Arbela), Khuzestan (Susa) and al-Hasa
+  (Gerrha), at the priciest tier in the game (5.5). Gen-5 regiments and
+  every air wing pay a monthly **fuel line** (`fuelExpense`): 0.2/regiment
+  and 0.5/wing, **doubled** for a realm that controls no oil province —
+  Israel imports; Iraq pumps. Oil-fired hulls bunker at 1.5× ship upkeep
+  (`monthlyNavy`). The ancient chapters never reach the fuel generation, so
+  the line is structurally zero there. The AI's affordability governor
+  budgets for the dear case before it drills regiments it cannot fuel.
+- **Upkeep grows with the age** (`UNIT_GENS[].upkeep`, `genUpkeepMult`):
+  maintenance per regiment scales with the pattern the army was raised to —
+  1.0 for Tribal Levies through 2.4 for Rifle Brigades / Armored Corps. An
+  armored corps devours pay, parts and shells; 1948 no longer bills its
+  establishment like 167 BCE. Armies remember their pattern, so a stale
+  legion is cheap until modernized.
+- **Administration: the books finally scale** (`BASE.adminPerDev` 0.03,
+  `BASE.adminFreeDev` 40, `adminExpense`): every owned-AND-controlled dev
+  point beyond the free allowance bills the treasury monthly. Small realms
+  pay nothing; a snowballing empire pays for the bureaucracy that counts
+  its new rolls (Rome's 66 CE ledger: ~20/month), and January's growth
+  ratchet now raises costs alongside income. Occupied land drops off the
+  bill — income already stops there, and billing it anyway made occupation
+  a debt ratchet. `adminMult` joins `maintMult` as an era-financing lever:
+  the 40 BCE Parthian favor and senatorial credit carry the client kings'
+  clerks through their scripted death-war, keeping the accepted anomaly set
+  intact (40 BCE actually comes up clean now, and both 67 BCE brothers sit
+  off the bleeding line).
+- **The ledger tells the truth**: `incomeBreakdown` carries `fuel` and
+  `admin` fields, `explainIncome` prints Fuel and Administration rows, and
+  `t.expenses` folds both in — the AI's debt-shedding reads the same
+  number the player does.
+- **Regression contract**: `smoke32.mjs` — the conversion gate both ways,
+  building faces both ways, the 10/10/2 event-pool split with certain-fire
+  probes in both eras, pattern-scaled maintenance, the import-vs-domestic
+  fuel line, destroyer bunkerage, and administration (including the
+  occupied-land exemption). The full battery and the 8-year all-AI autorun
+  pass with the anomaly set a strict subset of the pre-change baseline.

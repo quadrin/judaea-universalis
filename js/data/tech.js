@@ -67,13 +67,17 @@ export function computeTechEffects(tech) {
 // remember the pattern they were raised to (army.gen); Modernize re-equips
 // them to the nation's current pattern for gold. The mult multiplies army
 // strength in battle — the single biggest lever tech owns.
+// `upkeep` scales BASE.maintPerReg (SPEC §52): a levy eats bread, a legion
+// draws pay, an armored corps devours pay, parts and shells. Better patterns
+// hit harder AND cost more to keep standing — the maintenance line finally
+// grows with the age instead of billing 1948 like 167 BCE.
 export const UNIT_GENS = [
-  { at: 0,  inf: 'Tribal Levies',       cav: 'Raider Horse',      mult: 1.0 },
-  { at: 4,  inf: 'Drilled Spearmen',    cav: 'Noble Cavalry',     mult: 1.25 },
-  { at: 6,  inf: 'Professional Legions', cav: 'Cataphract Horse', mult: 1.55 },
-  { at: 10, inf: 'Thematic Regulars',   cav: 'Armored Lancers',   mult: 1.9 },
-  { at: 14, inf: 'Musket Battalions',   cav: 'Dragoon Squadrons', mult: 2.3 },
-  { at: 19, inf: 'Rifle Brigades',      cav: 'Armored Corps',     mult: 2.8 },
+  { at: 0,  inf: 'Tribal Levies',       cav: 'Raider Horse',      mult: 1.0,  upkeep: 1.0 },
+  { at: 4,  inf: 'Drilled Spearmen',    cav: 'Noble Cavalry',     mult: 1.25, upkeep: 1.1 },
+  { at: 6,  inf: 'Professional Legions', cav: 'Cataphract Horse', mult: 1.55, upkeep: 1.25 },
+  { at: 10, inf: 'Thematic Regulars',   cav: 'Armored Lancers',   mult: 1.9,  upkeep: 1.5 },
+  { at: 14, inf: 'Musket Battalions',   cav: 'Dragoon Squadrons', mult: 2.3,  upkeep: 1.9 },
+  { at: 19, inf: 'Rifle Brigades',      cav: 'Armored Corps',     mult: 2.8,  upkeep: 2.4 },
 ];
 
 // Hulls age like soldiers (SPEC §31): same thresholds, same power curve.
@@ -105,6 +109,11 @@ export function unlockedGen(marLevel) {
 export function genMult(genIdx) {
   const g = UNIT_GENS[Math.max(0, Math.min(UNIT_GENS.length - 1, genIdx | 0))];
   return g ? g.mult : 1;
+}
+
+export function genUpkeepMult(genIdx) {
+  const g = UNIT_GENS[Math.max(0, Math.min(UNIT_GENS.length - 1, genIdx | 0))];
+  return g && Number.isFinite(g.upkeep) ? g.upkeep : 1;
 }
 
 export function genName(genIdx, kind) {

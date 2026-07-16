@@ -69,6 +69,15 @@ v3.7: 167 HAS BLEEDING · 67 ROM SNOWBALL + SEL DEAD + HYR BLEEDING ·
 40 ATG BLEEDING · 66 JUD BLEEDING · 115 JUD SNOWBALL · 132 JUD
 DEBT-SPIRAL,BLEEDING · 614 none · 1948 none.
 
+Since v5.3 (scaling administration, pattern-priced upkeep, fuel): the
+occupied-land admin exemption and the 40 BCE `adminMult` credits leave the
+set a strict subset of the v5.0 baseline. Accepted as of v5.3:
+167 PAR BLEEDING (the two-province outpost drifted back on with v5.0's
+wider map) · 67 ROM SNOWBALL + SEL DEAD (both brothers sit OFF the
+bleeding line — occupied land no longer bills their clerks) · 40 none ·
+66 none · 132 JUD BLEEDING · 614 JUD SNOWBALL (the all-AI Return has
+ridden the Persian tide since v5.0) · 1948 none.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)

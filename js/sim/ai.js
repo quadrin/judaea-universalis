@@ -11,11 +11,12 @@ import {
   declareWar, truceActive, opinionOf, casusBelli,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
+  tagGen, mechanicOn,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult } from '../data/tech.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
@@ -78,8 +79,16 @@ function aiRecruit(ctx, tag, hints, fraction) {
   // ambition, the treasury is a fact. Cap the standing army at what ~75% of
   // gross income can maintain — small realms stop drilling themselves into
   // debt spirals.
-  const maintPerReg = ((ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35)
+  // What a NEW regiment will actually cost this court per month: the flat
+  // rate × its current pattern's upkeep (SPEC §52) × tag tuning, plus the
+  // fuel a mechanized pattern burns (import-priced when it has no oil).
+  let maintPerReg = ((ctx.DEFINES.BASE && ctx.DEFINES.BASE.maintPerReg) || 0.35)
+    * genUpkeepMult(tagGen(ctx, tag))
     * resolveTagMult(ctx, tag, 'maintMult');
+  const F = ctx.DEFINES.FUEL;
+  if (F && tagGen(ctx, tag) >= num(F.gen, 5)) {
+    maintPerReg += num(F.perReg, 0.2) * num(F.importMult, 2); // budget for the dear case
+  }
   // 0.65 of income may go to upkeep — the rest is headroom for the day war
   // occupation halves the tax rolls (tech-boosted incomes made 0.75 too greedy).
   const affordable = Math.max(3, Math.floor((num(t.income) * 0.65) / maintPerReg));
@@ -292,7 +301,7 @@ function aiIntegration(ctx, tag) {
       best.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
     }
   }
-  if (num(t.points.infl) >= 100 && t.religion) {
+  if (num(t.points.infl) >= 100 && t.religion && mechanicOn(ctx, 'conversion')) {
     let best = null;
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
