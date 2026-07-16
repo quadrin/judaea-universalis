@@ -187,6 +187,11 @@ export const BOOKMARK_40 = {
     'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
     'Yathrib': 'NAB', 'Khaybar': 'NAB', 'Berenice': 'PTO',
     'Persepolis': 'PAR', 'Gabae': 'PAR', 'Gerrha': 'CHX',
+    // -- v5.4: the frame grows west and north ----------------------------------
+    // The Roman west keeps its base ownership (Antony's east, Octavian's
+    // Italy — one tag models the whole squabbling Republic). The Parthian
+    // invasion year: the Caucasus leans to the Arsacids.
+    'Caucasian Albania': 'PAR',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
@@ -492,11 +497,11 @@ export const BOOKMARK_40 = {
     });
     h.addTagModifier(ctx, 'ATG', {
       id: 'parthian_favor', name: 'The Parthian Favor', months: 24,
-      effects: { moraleMult: 1.05, maintMult: 0.75 },
+      effects: { moraleMult: 1.05, maintMult: 0.75, adminMult: 0.5 },
     });
     h.addTagModifier(ctx, 'HER', {
       id: 'roman_credit', name: 'Credit of the Senate', months: 36,
-      effects: { maintMult: 0.75, incomeMult: 1.05 },
+      effects: { maintMult: 0.75, incomeMult: 1.05, adminMult: 0.5 },
     });
 
     // --- Starting armies. -------------------------------------------------------

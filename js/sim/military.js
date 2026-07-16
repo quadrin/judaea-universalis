@@ -33,6 +33,28 @@ export function hasBuilding(p, key) {
 export function buildingWorks(p, key) {
   return hasBuilding(p, key) && p.owner === p.controller;
 }
+// A building's face for the given military-tech level (SPEC §52): the same
+// key, cost and effects may wear a modern name past `modern.tech` — 1948
+// digs a Fortified Line where 66 CE raised Walls.
+export function buildingFace(def, marTech) {
+  if (def && def.modern && Number.isFinite(def.modern.tech) && (marTech | 0) >= def.modern.tech) {
+    return {
+      name: def.modern.name || def.name,
+      desc: def.modern.desc || def.desc,
+      months: Number.isFinite(def.modern.months) ? def.modern.months : def.months,
+    };
+  }
+  return def ? { name: def.name, desc: def.desc, months: def.months } : { name: '', desc: '', months: 1 };
+}
+
+// ------------------------------------------------------------ era mechanics
+// The first declarative mechanics gate (SPEC §52): a bookmark may switch off
+// a whole mechanic (`mechanics: { conversion: false }`). Anything not named
+// stays on, so every earlier bookmark and save behaves exactly as before.
+export function mechanicOn(ctx, key) {
+  const m = ctx && ctx.bookmark && ctx.bookmark.mechanics;
+  return !m || m[key] !== false;
+}
 
 // ---------------------------------------------------------------- chronicle
 // The running record of the world (SPEC §21). Entries are plain data on

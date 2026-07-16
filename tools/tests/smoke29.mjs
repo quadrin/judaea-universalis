@@ -40,16 +40,26 @@ const modern = initGame({
   DEFINES, MAP_DATA, geom: fakeGeom, bookmark: BOOKMARK_1948, events: [],
   playerTag: 'ISR', rngSeed: 1948, provinceMap: modernMap,
 });
+// v5.4 carve-out: the sealed borders of 1948. Hoxha's Albania and the Soviet
+// Caucasus sit at the frame's edge OUTSIDE the playable theater — closed
+// frontiers by design (SPEC §53), unlike the theater's own deserts, which the
+// v4.3 rule keeps sovereign and open. The Sahara behind the Syrtic shore is
+// base-map wasteland in every era, like the deep deserts before v4.3.
+const SEALED_1948 = new Set(['Dyrrhachium', 'Phasis', 'Caucasian Albania', 'Sahara']);
 let unowned = 0; let walled = 0; let empty = 0;
 for (const p of modern.provinces) {
-  if (!p) continue;
+  if (!p || SEALED_1948.has(p.canon)) continue;
   if (p.owner === 'WASTE') unowned++;
   if (p.impassable) walled++;
   if (p.habitation === 'uninhabited') empty++;
 }
-ok(unowned === 0, 'no 1948 province is unowned');
-ok(walled === 0, 'no 1948 province is impassable');
-ok(empty === 0, 'no 1948 province is uninhabited (nothing hatches)');
+ok(unowned === 0, 'no 1948 theater province is unowned');
+ok(walled === 0, 'no 1948 theater province is impassable');
+ok(empty === 0, 'no 1948 theater province is uninhabited (nothing hatches)');
+ok(['Dyrrhachium', 'Phasis', 'Caucasian Albania'].every((n) => {
+  const p = modern.provinces[idOf(n)];
+  return p && p.owner === 'WASTE' && p.impassable;
+}), 'the sealed borders stand closed in 1948');
 ok(Object.entries(DESERTS).every(([name, tag]) => {
   const p = modern.provinces[idOf(name)];
   return p && p.owner === tag && p.habitation === 'frontier' && p.settleable !== false;

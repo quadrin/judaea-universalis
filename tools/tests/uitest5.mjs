@@ -29,9 +29,10 @@ async function boot(ctxB) {
 console.log('== carousel ==');
 const ctxH = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const { page: host, errors: hostErrors } = await boot(ctxH);
-ok(await host.locator('.bm-card').count() === 8, 'all eight chapters in the track');
+// Seven since v5.1 retired the Kitos card (stale eights fixed in v5.4).
+ok(await host.locator('.bm-card').count() === 7, 'all seven chapters in the track');
 ok(await host.locator('.ss-arrow').count() === 2, 'prev/next arrows present');
-ok(await host.locator('.ss-dot').count() === 8, 'eight dots');
+ok(await host.locator('.ss-dot').count() === 7, 'seven dots');
 const first = await host.locator('.bm-card.current').textContent();
 ok(first.includes('Maccabean'), 'starts on 167 BCE: ' + first.slice(0, 40).trim());
 await host.locator('.ss-next').click();

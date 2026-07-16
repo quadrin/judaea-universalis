@@ -2011,3 +2011,136 @@ foreign court **read-only**.
   `uitest14` (gesture start, mood machine, toggle persistence) and
   `uitest27` (each chapter plays its style, notes actually scheduled) pass
   unchanged.
+
+## 52. v5.3: every age by its own rules — era gates, oil, and honest books
+
+The old-timey remnants stop leaking forward (and the modern ones stop
+leaking back): mechanics, buildings, background events and the price of a
+standing army now all know what year it is.
+
+- **The first mechanics gate** (`bookmark.mechanics`, `mechanicOn(ctx, key)`
+  in military.js): a bookmark may declare a whole mechanic off —
+  `mechanics: { conversion: false }` in 1948 retires the Convert Faith
+  action. `getIntegration` reports `showConvert` and the province panel
+  drops the control entirely (absent, not greyed); `convertProvince` and the
+  AI's monthly missionary pass honor the same helper. Everything unnamed
+  stays on, so every other bookmark and every old save is untouched. No
+  modern republic re-faiths a district by decree; integration in 1948 is
+  schools, land and votes.
+- **Buildings wear the face of their age** (`BUILDINGS.*.modern`,
+  `buildingFace(def, marTech)`): at/after `modern.tech` (military) the same
+  key keeps its cost, effects, glyph and save identity but changes its
+  name, description and build time. Walls become the **Fortified Line**
+  (trenches, pillboxes, wire — 12 months instead of 18), the shrine a
+  **House of Worship**. Build menu, construction row, refusal messages and
+  completion toasts all speak through the face; nobody rings a 1948 town
+  with curtain walls.
+- **The era-windowed murmur** (`event.minYear` / `event.maxYear`, honored in
+  `canFire`): the generic pool splits into ten antique events
+  (`maxYear: 1799` — comets read by astrologers, caravan tolls, pestilence
+  and burial societies, Greco-Roman games) and ten modern twins
+  (`minYear: 1900`) that speak the same mechanics in the language of 1948:
+  **Epidemic** in the crowded quarters, **Incident on the Line**,
+  **General Strike**, **A Line of Credit**, **The Reservoirs Fall**,
+  **A Record Season**, an officer with a staff-college record whose name
+  pool follows the player's culture, holy places drawing charter ships, and
+  **The Concession Money** for oil states. Embezzlement and creditors stay
+  timeless because their vices are. BCE years are negative, so the window
+  arithmetic needs no special casing; `smoke32` proves both directions.
+- **Oil** (`GOODS.oil`, `bookmark.goods` overlay, `DEFINES.FUEL`): a new
+  bookmark lever re-goods provinces per era — no base-map cell carries oil,
+  and 1948 assigns it to Kirkuk (Arbela), Khuzestan (Susa) and al-Hasa
+  (Gerrha), at the priciest tier in the game (5.5). Gen-5 regiments and
+  every air wing pay a monthly **fuel line** (`fuelExpense`): 0.2/regiment
+  and 0.5/wing, **doubled** for a realm that controls no oil province —
+  Israel imports; Iraq pumps. Oil-fired hulls bunker at 1.5× ship upkeep
+  (`monthlyNavy`). The ancient chapters never reach the fuel generation, so
+  the line is structurally zero there. The AI's affordability governor
+  budgets for the dear case before it drills regiments it cannot fuel.
+- **Upkeep grows with the age** (`UNIT_GENS[].upkeep`, `genUpkeepMult`):
+  maintenance per regiment scales with the pattern the army was raised to —
+  1.0 for Tribal Levies through 2.4 for Rifle Brigades / Armored Corps. An
+  armored corps devours pay, parts and shells; 1948 no longer bills its
+  establishment like 167 BCE. Armies remember their pattern, so a stale
+  legion is cheap until modernized.
+- **Administration: the books finally scale** (`BASE.adminPerDev` 0.03,
+  `BASE.adminFreeDev` 40, `adminExpense`): every owned-AND-controlled dev
+  point beyond the free allowance bills the treasury monthly. Small realms
+  pay nothing; a snowballing empire pays for the bureaucracy that counts
+  its new rolls (Rome's 66 CE ledger: ~20/month), and January's growth
+  ratchet now raises costs alongside income. Occupied land drops off the
+  bill — income already stops there, and billing it anyway made occupation
+  a debt ratchet. `adminMult` joins `maintMult` as an era-financing lever:
+  the 40 BCE Parthian favor and senatorial credit carry the client kings'
+  clerks through their scripted death-war, keeping the accepted anomaly set
+  intact (40 BCE actually comes up clean now, and both 67 BCE brothers sit
+  off the bleeding line).
+- **The ledger tells the truth**: `incomeBreakdown` carries `fuel` and
+  `admin` fields, `explainIncome` prints Fuel and Administration rows, and
+  `t.expenses` folds both in — the AI's debt-shedding reads the same
+  number the player does.
+- **Regression contract**: `smoke32.mjs` — the conversion gate both ways,
+  building faces both ways, the 10/10/2 event-pool split with certain-fire
+  probes in both eras, pattern-scaled maintenance, the import-vs-domestic
+  fuel line, destroyer bunkerage, and administration (including the
+  occupied-land exemption). The full battery and the 8-year all-AI autorun
+  pass with the anomaly set a strict subset of the pre-change baseline.
+
+## 53. v5.4: from Rome to the Caspian — the frame grows west and north
+
+The 1948 request was "the whole world"; the renderer's answer is "as much
+world as one raster can carry." A full globe needs ~35,000px of texture at
+playable density (or a tiled/multi-resolution renderer) — that rewrite is
+the staged path beyond this release. What ships is the maximum the current
+architecture supports, and it changes every chapter.
+
+- **The frame expands** from 21–53.5°E × 23.5–38.5°N to **12–53.5°E ×
+  23.5–42.5°N** (raster 3168×1728 → 4046×2189 at unchanged density —
+  deliberately under the common 4096 MAX_TEXTURE_SIZE floor). New coasts:
+  the Italian peninsula and Sicily (the Messina, Otranto and Bosporus
+  crossings are seaLink ferries over real water), the Gulf of Sirte and
+  Tripolitania, the whole southern Balkans with Chalkidiki and the
+  Gallipoli peninsula, the Sea of Marmara with both straits, the Black Sea
+  south and east coasts, the Caucasus rim, and the Caspian corner with its
+  Hyrcanian shore. Lakes Van and Urmia become whole; Lake Tatta (Tuz)
+  joins. New rivers: Halys, Tiber, Axios; the Euphrates and Tigris grow
+  their Armenian headwaters. Six new height primitives (Apennines, Etna,
+  Pindus, Pontic Alps, Great Caucasus, Alborz) fill the renderer's cap at
+  exactly 32. The camera's MIN_ZOOM drops 0.35 → 0.22 so a laptop still
+  frames the whole stage.
+- **Twenty-three new permanent cells** (appended; no save ID shifts):
+  Roma, Capua, Tarentum, Brundisium, Rhegium; Panormus, Syracusae; Oea,
+  Leptis Magna, Macomades; Dyrrhachium, Thessalonica, Hadrianopolis
+  (name-anachronism pinned, the Neapolis class), Byzantion; Nicaea,
+  Smyrna, Ancyra, Sinope, Trapezus; Phasis, Caucasian Albania, Hyrcania;
+  and the Sahara waste that keeps Tripolitania's voronoi off the deep
+  desert. 171 cells total (cap 512).
+- **Two new tags.** **PNT — Pontus** (wary, spent: aggression 0.7): the
+  Black Sea kingdom under Pharnaces' heirs in 167, and Mithridates VI
+  restored at Zela in 67, holding Sinope, Trapezus and Colchis while
+  Pompey gathers. **ITA — Italy** (1948): the neutral republic reborn from
+  the war, seven provinces from Rome to Syracuse.
+- **Rome enters 167 BCE**: the year after Pydna, Italy, Sicily,
+  Tripolitania and Illyria are the Republic's — its shadow now lies ON the
+  map (the 8-year all-AI run shows Rome banking quietly and starting no
+  wars: Popillius' circle stays diplomacy). Hellas keeps the Aegean north;
+  every later ancient chapter inherits the Roman west from the base map.
+  614 hands the west to the Exarchate's Byzantium — and **Constantinople
+  itself finally stands on the map** (Byzantion, BYZ, fort 2), with the
+  Sasanian Caucasus and Hyrcania across the board.
+- **1948 wears its true north and west**: Italy neutral; Turkey in its
+  real shape (Edirne, Istanbul, Bursa, İzmir, Ankara, Sinop, Trabzon);
+  Salonika Greek; Tripolitania joins Cyrenaica under the British Military
+  Administration; Mazandaran Iranian. **The sealed borders**: Hoxha's
+  Albania and the Soviet Caucasus (Dyrrhachium, Phasis, Caucasian Albania)
+  are closed frontiers — WASTE-owned and impassable by bookmark overlay, a
+  deliberate carve-out from the v4.3 "no wasteland in 1948" rule, which
+  now applies to the playable theater (smoke29 pins both halves).
+- **Balance holds**: the geometry snapshot is regenerated at the new
+  resolution; the full smoke battery passes; the 8-year all-AI autorun
+  shows the accepted set (tools/README) — 40 BCE and 66 CE run clean, 167
+  gains no new flag with two new great powers on the map, 1948 runs clean
+  with twelve tags. Rome's 66 CE ledger row grows 66 → 86 provinces
+  (smoke3); 132's rump-Judaea debt returns to its long-documented class;
+  614's Return keeps its Persian-tide snowball with a self-limiting
+  post-subsidy bleed (Persian supply trains now carry adminMult 0.5).

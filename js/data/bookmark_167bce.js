@@ -112,7 +112,10 @@ export const BOOKMARK_167 = {
     + 'the pagan altar and fled to the hills with his five sons. Antiochus rules from the '
     + 'Taurus to Persis; against him stands the hill country of Judea, and a family.',
 
-  activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC'],
+  // v5.4: ROM and PNT join — Rome watches from Italy the year after Pydna
+  // (Popillius' circle in the sand is diplomacy, not conquest), and Pontus
+  // keeps its Black Sea coast.
+  activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC', 'ROM', 'PNT'],
 
   // Political layer for 167 BCE, applied by initGame over map_data's 66 CE defaults.
   // Covers every province owned by ROM/JUD/AGR (tags absent from this bookmark),
@@ -229,6 +232,15 @@ export const BOOKMARK_167 = {
     // Arabia and the Seleucid east (Persis is still nominally the king's)
     'Yathrib': 'NAB', 'Khaybar': 'NAB', 'Berenice': 'PTO',
     'Persepolis': 'SEL', 'Gabae': 'SEL', 'Gerrha': 'SEL',
+    // -- v5.4: the frame grows west and north ----------------------------------
+    // Rome enters the map the year after Pydna: Italy, Sicily, Tripolitania
+    // and the Illyrian shore are the Republic's (base map_data holdings), and
+    // its shadow now lies ON the map. The Aegean north stays Greek; Pontus
+    // holds its Black Sea kingdom under Pharnaces' heirs.
+    'Thessalonica': 'GRC', 'Hadrianopolis': 'GRC', 'Byzantion': 'GRC',
+    'Nicaea': 'GRC', 'Smyrna': 'GRC', 'Ancyra': 'GRC',
+    'Sinope': 'PNT', 'Trapezus': 'PNT', 'Phasis': 'PNT',
+    'Caucasian Albania': 'ARM', 'Hyrcania': 'SEL',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
@@ -503,6 +515,9 @@ export const BOOKMARK_167 = {
     NAB: { name: 'Aretas I', title: 'King', gov: 2, infl: 2, mar: 2, age: 50 },
     ARM: { name: 'Artaxias I', title: 'King', gov: 3, infl: 2, mar: 3, age: 63 },
     PAR: { name: 'Mithridates I', title: 'King of Kings', gov: 3, infl: 3, mar: 4, age: 28 },
+    // v5.4: the wider frame's crowned heads
+    ROM: { name: 'The Senate and People', title: 'Res Publica', gov: 4, infl: 4, mar: 4, age: 40 },
+    PNT: { name: 'Pharnaces I', title: 'King', gov: 3, infl: 2, mar: 3, age: 60 },
   },
 
   // Linear mission chains (realm panel).

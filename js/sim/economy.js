@@ -1,9 +1,10 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, devTotal } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal } from './military.js';
 import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
+import { genUpkeepMult } from '../data/tech.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
 export const LOAN_INTEREST_PER_MONTH = 3; // talents per loan per month
@@ -30,6 +31,56 @@ function provMult(p, key) {
 }
 
 export const TRIBUTE_SHARE = 0.15; // of a client kingdom's income, paid to its overlord
+
+// Oil spending (SPEC §52): does the realm pump its own fuel? Owned AND
+// controlled — an occupied field pumps for the occupier's ledger, not ours.
+export function controlsOilProvince(ctx, tag) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.good === 'oil' && p.owner === tag && p.controller === tag) return true;
+  }
+  return false;
+}
+
+// The monthly fuel line (SPEC §52): mechanized regiments and every air wing
+// burn oil; realms without a controlled oil province import at a premium.
+// Zero before the fuel generation, so the ancient chapters never pay it.
+export function fuelExpense(ctx, tag) {
+  const F = ctx.DEFINES.FUEL;
+  if (!F) return 0;
+  const fuelGen = num(F.gen, 5);
+  let regs = 0;
+  for (const a of armiesOf(ctx, tag)) {
+    if (num(a.gen, 0) >= fuelGen) regs += regCount(a);
+  }
+  const wings = airWingsOf(ctx, tag).length;
+  let fuel = regs * num(F.perReg, 0.2) + (wings ? wings * num(F.perWing, 0.5) : 0);
+  if (fuel > 0 && !controlsOilProvince(ctx, tag)) fuel *= num(F.importMult, 2);
+  return fuel;
+}
+
+// Administration (SPEC §52): every governed dev point beyond the free
+// allowance costs adminPerDev a month. This is the expense that finally grows
+// with the realm — conquest doubles the rolls AND the bureaucracy that counts
+// them. Only owned-AND-controlled land bills (nobody administers a province
+// the enemy holds — and income already stops there, so admin must too or
+// occupation becomes a debt ratchet). `adminMult` is the era-tuning lever,
+// same class as maintMult: Parthian favor or senatorial credit can carry a
+// client king's clerks through a scripted war.
+export function adminExpense(ctx, tag) {
+  const g = ctx.game;
+  const perDev = B(ctx, 'adminPerDev', 0);
+  if (!(perDev > 0)) return 0;
+  let dev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+    dev += devTotal(p);
+  }
+  return Math.max(0, dev - B(ctx, 'adminFreeDev', 0)) * perDev
+    * resolveTagMult(ctx, tag, 'adminMult');
+}
 
 // Own-provinces income only (tax + production × national multiplier) — shared
 // by incomeBreakdown and the tribute pass, which must not recurse.
@@ -90,7 +141,7 @@ export function tradeIncome(ctx, tag) {
 export function incomeBreakdown(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, interest: 0, trade: 0, net: 0 };
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, interest: 0, trade: 0, net: 0 };
   if (!t) return out;
   Object.assign(out, ownIncome(ctx, tag));
   try { out.trade = tradeIncome(ctx, tag); } catch (e) { out.trade = 0; }
@@ -105,14 +156,21 @@ export function incomeBreakdown(ctx, tag) {
     out.tributeIn += ownIncome(ctx, k).income * TRIBUTE_SHARE;
   }
   const maintPerReg = B(ctx, 'maintPerReg', 0.35);
-  for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg;
+  // A regiment costs what its pattern costs (SPEC §52): an Armored Corps
+  // draws pay, parts and shells where a tribal levy drew bread — armies
+  // remember the pattern they were raised to, and pay for that one.
+  for (const a of armiesOf(ctx, tag)) out.maint += regCount(a) * maintPerReg * genUpkeepMult(num(a.gen, 0));
   // Irregular hosts, subsidized expeditionary forces, and unusually costly
   // modern establishments can tune upkeep without changing the global price
   // of a regiment. Missing effects resolve to 1 for old saves/bookmarks.
   out.maint *= resolveTagMult(ctx, tag, 'maintMult');
-  // Air wings (SPEC §29): fuel, spares and pay ride the maintenance line.
+  // Air wings (SPEC §29): spares and pay ride the maintenance line.
   const wingUpkeep = (ctx.DEFINES.AIR && ctx.DEFINES.AIR.wingUpkeep) || 1;
   out.maint += airWingsOf(ctx, tag).length * wingUpkeep;
+  // Oil (SPEC §52) and administration (SPEC §52): the two lines that grow
+  // with the age and the realm respectively.
+  out.fuel = fuelExpense(ctx, tag);
+  out.admin = adminExpense(ctx, tag);
   out.interest = Math.max(0, Math.round(num(t.loans))) * LOAN_INTEREST_PER_MONTH;
   // Subsidies & reparations (SPEC §24): monthly flows between courts. Both
   // sides read the same list, so the transfer balances by construction.
@@ -123,7 +181,8 @@ export function incomeBreakdown(ctx, tag) {
     if (s.to === tag) out.subsIn += num(s.amount);
     if (s.from === tag) out.subsOut += num(s.amount);
   }
-  out.net = out.income + out.tributeIn + out.subsIn - out.tributeOut - out.subsOut - out.maint - out.interest;
+  out.net = out.income + out.tributeIn + out.subsIn
+    - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.interest;
   return out;
 }
 
@@ -169,7 +228,7 @@ export function runMonthlyEconomy(ctx) {
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
       t.income = Math.round((bd.income + bd.tributeIn) * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.interest + bd.tributeOut) * 100) / 100; // interest & tribute folded in
+      t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       if (!Number.isFinite(t.treasury)) t.treasury = 0;
     } catch (e) { warnOnce('eco:' + tag, 'economy failed for', tag, e); }
@@ -219,6 +278,8 @@ export function explainIncome(ctx, tag) {
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
     if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });
     rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
+    if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
+    if (bd.admin > 0) rows.push({ label: 'Administration', value: r2(-bd.admin) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });
     rows.push({ label: 'Monthly balance', value: r2(bd.net) });
     return rows;
@@ -422,12 +483,16 @@ export function monthlyConstruction(ctx) {
       if (!Array.isArray(p.buildings)) p.buildings = [];
       if (p.buildings.indexOf(c.key) < 0) p.buildings.push(c.key);
       const mine = p.owner === g.playerTag;
+      // The finished work is announced under the face of its age (SPEC §52).
+      const ot = g.tags[p.owner];
+      const face = buildingFace(def, num(ot && ot.tech && ot.tech.mar, 0));
       if (c.key === 'walls') {
         if ((p.fort | 0) >= 3) {
           // Fort rose to 3 some other way while we built — the bump is skipped.
           if (mine) {
             ctx.bus.emit('notify', {
-              title: 'Walls completed', text: 'The walls of ' + p.name + ' are finished, but the fortress can rise no higher (fort 3).',
+              title: (face.name || 'Walls') + ' completed',
+              text: 'The ' + (face.name || 'walls').toLowerCase() + ' of ' + p.name + ' are finished, but the fortress can rise no higher (fort 3).',
               type: 'info', provName: p.name,
             });
           }
@@ -440,8 +505,8 @@ export function monthlyConstruction(ctx) {
       }
       if (mine) {
         ctx.bus.emit('notify', {
-          title: (def.name || c.key) + ' completed',
-          text: 'The ' + (def.name || c.key).toLowerCase() + ' of ' + p.name + ' stands finished.',
+          title: (face.name || c.key) + ' completed',
+          text: 'The ' + (face.name || c.key).toLowerCase() + ' of ' + p.name + ' stands finished.',
           type: 'good', provName: p.name,
         });
       }

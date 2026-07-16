@@ -3,7 +3,9 @@
 // mapToScreen/screenToMap MUST land on the same screen points as the GL main pass
 // (renderer.js builds uOffsetScale from exactly these fields).
 
-const MIN_ZOOM = 0.35;
+// v5.4: the frame grew to 4046×2189 — the floor drops so a laptop viewport
+// can still frame the whole world from Rome to the Caspian.
+const MIN_ZOOM = 0.22;
 const MAX_ZOOM = 8;
 const CLICK_SLOP_PX = 5;
 

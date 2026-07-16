@@ -261,14 +261,20 @@ export function fleetsDaily(ctx) {
   }
 }
 
-// Monthly: upkeep. An exhausted treasury lets hulls rot.
+// Monthly: upkeep. An exhausted treasury lets hulls rot. Oil-fired patterns
+// (SPEC §52) pay a fuel premium — a destroyer flotilla bunkers oil where a
+// penteconter shipped oars.
 export function monthlyNavy(ctx) {
   const g = ctx.game;
+  const F = ctx.DEFINES.FUEL;
+  const fuelGen = F ? num(F.gen, 5) : Infinity;
+  const shipMult = F ? num(F.shipMult, 1.5) : 1;
   for (const f of Object.values(g.fleets || {})) {
     if (!f || f.ships <= 0) continue;
     const t = g.tags[f.tag];
     if (!t) continue;
-    t.treasury = num(t.treasury) - f.ships * SHIP_UPKEEP;
+    const fueled = num(f.gen, 0) >= fuelGen;
+    t.treasury = num(t.treasury) - f.ships * SHIP_UPKEEP * (fueled ? shipMult : 1);
     if (t.treasury <= -150 && f.ships > 0) f.ships--; // rot
   }
 }

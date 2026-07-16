@@ -82,7 +82,9 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   const agr = led.find((r) => r.tag === 'AGR');
   // v5.0: Rome gains Greece, Crete, Rhodes, Caria, Cyrenaica, the western
   // desert, Upper Egypt and Berenice — eleven new imperial provinces.
-  ok(rom && rom.provs === 66 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // 66 with the v5.0 frame; v5.4 adds the empire's west — Italy, Sicily,
+  // Tripolitania, the Balkans, northern Anatolia and Colchis (+20).
+  ok(rom && rom.provs === 86 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

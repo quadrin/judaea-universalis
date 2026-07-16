@@ -401,6 +401,10 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const ruleTerms = 'Establish Rule — 25 governance points\n−15% autonomy (more of the province\'s taxes reach the crown); +2 unrest for 6 months while the locals adjust.';
     refs.integRule.classList.toggle('disabled', !info.canEstablish);
     refs.integRule.dataset.tt = info.canEstablish ? ruleTerms : `${info.whyNotEstablish}\n――――――\n${ruleTerms}`;
+    // Eras without state conversion (SPEC §52) drop the control entirely —
+    // absent, not greyed. Old getIntegration results (no showConvert) show it.
+    const showConvert = info.showConvert !== false;
+    refs.integConv.classList.toggle('hidden', !showConvert);
     const convTerms = 'Convert the Faith — 50 influence points\nAfter 12 months the province adopts the state religion; +3 unrest while the old gods are put away.';
     refs.integConv.classList.toggle('disabled', !info.canConvert);
     refs.integConv.dataset.tt = info.canConvert ? convTerms : `${info.whyNotConvert}\n――――――\n${convTerms}`;

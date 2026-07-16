@@ -13,7 +13,7 @@ import {
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
-  hireWingLeaderCore, withdrawFromBattle,
+  hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -88,7 +88,9 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
 
   return {
     id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
-    terrain: s.terrain, good: s.good,
+    // A bookmark may re-good a province (SPEC §52): the wells of the ancient
+    // caravan country pump oil in 1948.
+    terrain: s.terrain, good: bookmarkField(bookmark, 'goods', s) || s.good,
     religion: bookmarkField(bookmark, 'religions', s) || s.religion,
     culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
     dev,
@@ -875,7 +877,7 @@ export function gameActions(ctx) {
         const cdef = p.construction ? catalog[p.construction.key] : null;
         const constructing = p.construction ? {
           key: p.construction.key,
-          name: (cdef && cdef.name) || p.construction.key,
+          name: (cdef && buildingFace(cdef, num(t && t.tech && t.tech.mar)).name) || p.construction.key,
           monthsLeft: num(p.construction.monthsLeft),
         } : null;
         const options = [];
@@ -892,9 +894,12 @@ export function gameActions(ctx) {
           else if (p.construction) whyNot = 'Another work is already under way.';
           else if (key === 'walls' && (p.fort | 0) >= 3) whyNot = 'The fortress can rise no higher (fort 3).';
           else if (num(t && t.treasury) < num(b.cost)) whyNot = 'Not enough treasury (' + num(b.cost) + ' talents).';
+          // Buildings wear the face of their age (SPEC §52): same key and
+          // effects, but 1948 digs a Fortified Line where 66 CE raised Walls.
+          const face = buildingFace(b, marTech);
           options.push({
-            key, name: b.name || key, cost: num(b.cost), months: num(b.months, 1),
-            desc: b.desc || '', canBuild: !whyNot, whyNot,
+            key, name: face.name || key, cost: num(b.cost), months: num(face.months, 1),
+            desc: face.desc || '', canBuild: !whyNot, whyNot,
           });
         }
         return { built, constructing, options };
@@ -906,11 +911,13 @@ export function gameActions(ctx) {
         const t = g.tags[g.playerTag];
         const b = (ctx.DEFINES.BUILDINGS || {})[key];
         if (!p || p.impassable || !t || !b) return;
+        const face = buildingFace(b, num(t.tech && t.tech.mar));
+        const bname = (face.name || key).toLowerCase();
         if (p.owner !== g.playerTag || p.controller !== g.playerTag) {
           say('Cannot build', 'We must own and control ' + p.name + ' to build there.', 'bad'); return;
         }
         if (Array.isArray(p.buildings) && p.buildings.indexOf(key) >= 0) {
-          say('Cannot build', p.name + ' already has a ' + (b.name || key).toLowerCase() + '.', 'bad'); return;
+          say('Cannot build', p.name + ' already has a ' + bname + '.', 'bad'); return;
         }
         if (p.construction) {
           say('Cannot build', 'Another work is already under way in ' + p.name + '.', 'bad'); return;
@@ -919,17 +926,17 @@ export function gameActions(ctx) {
           say('Cannot build', 'The fortress of ' + p.name + ' can rise no higher (fort 3).', 'bad'); return;
         }
         if (b.coastal && !isCoastal(ctx, provId)) {
-          say('Cannot build', 'A ' + (b.name || key).toLowerCase() + ' needs a coastal harbor.', 'bad'); return;
+          say('Cannot build', 'A ' + bname + ' needs a coastal harbor.', 'bad'); return;
         }
         if (Number.isFinite(b.tech) && num(t.tech && t.tech.mar) < b.tech) {
-          say('Cannot build', 'The ' + (b.name || key).toLowerCase() + ' is beyond this age (military tech ' + b.tech + ' required).', 'bad'); return;
+          say('Cannot build', 'The ' + bname + ' is beyond this age (military tech ' + b.tech + ' required).', 'bad'); return;
         }
         if (num(t.treasury) < num(b.cost)) {
           say('Cannot build', 'Not enough treasury (' + num(b.cost) + ' talents required).', 'bad'); return;
         }
         t.treasury = num(t.treasury) - num(b.cost);
-        p.construction = { key, monthsLeft: Math.max(1, num(b.months, 1)) };
-        say('Construction begun', 'Work begins on the ' + (b.name || key).toLowerCase() + ' of ' + p.name + ' (' + num(b.months, 1) + ' months).', 'good');
+        p.construction = { key, monthsLeft: Math.max(1, num(face.months, 1)) };
+        say('Construction begun', 'Work begins on the ' + bname + ' of ' + p.name + ' (' + num(face.months, 1) + ' months).', 'good');
       } catch (e) { warnOnce('build', 'buildBuilding failed', e); }
     },
 
@@ -1808,8 +1815,13 @@ export function gameActions(ctx) {
         if (autonomy <= 0.001) whyNotEstablish = 'The province already answers directly to the crown.';
         else if (num(t.points.gov) < 25) whyNotEstablish = 'Not enough governance points (25 required).';
         const foreign = t.religion && p.religion !== t.religion;
+        // A bookmark may retire state conversion outright (SPEC §52) — no
+        // modern republic sends missionaries to re-faith a district. The
+        // control disappears rather than sit disabled.
+        const showConvert = mechanicOn(ctx, 'conversion');
         let whyNotConvert = '';
-        if (!foreign) whyNotConvert = 'The province already follows the state faith.';
+        if (!showConvert) whyNotConvert = 'Not a tool of this age.';
+        else if (!foreign) whyNotConvert = 'The province already follows the state faith.';
         else if (p.conversion) whyNotConvert = 'The missionaries are already at work.';
         else if (num(t.points.infl) < 50) whyNotConvert = 'Not enough influence points (50 required).';
         const settle = settlementInfo(ctx, g.playerTag, provId);
@@ -1819,6 +1831,7 @@ export function gameActions(ctx) {
         return {
           autonomy,
           canEstablish: !whyNotEstablish, whyNotEstablish,
+          showConvert,
           canConvert: !whyNotConvert, whyNotConvert,
           converting: p.conversion ? { monthsLeft: Math.max(0, num(p.conversion.monthsLeft) | 0) } : null,
           showSettle,
@@ -1849,6 +1862,7 @@ export function gameActions(ctx) {
         const p = ctx.byId(provId);
         const t = g.tags[g.playerTag];
         if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
+        if (!mechanicOn(ctx, 'conversion')) { say('Conversion', 'State conversion is not a tool of this age.', 'info'); return; }
         if (!t.religion || p.religion === t.religion) { say('Conversion', p.name + ' already follows the state faith.', 'info'); return; }
         if (p.conversion) { say('Conversion', 'The missionaries are already at work in ' + p.name + '.', 'info'); return; }
         if (num(t.points.infl) < 50) { say('Conversion', 'Not enough influence points (50 required).', 'bad'); return; }
@@ -2054,6 +2068,11 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       p.impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable;
       const habOverride = bookmarkField(bookmark, 'habitation', source);
       if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
+      // Goods are era data too (SPEC §52) — nothing mutates them in play. The
+      // 1948 overlay pumps oil where the base map ran caravans, and a save
+      // from before the overlay must not spend the whole campaign without a
+      // well anywhere (every mechanized realm would import at double forever).
+      p.good = bookmarkField(bookmark, 'goods', source) || source.good || p.good;
       const previousDev = upgrading && migration && migration.previousDev
         && migration.previousDev[source.name];
       if (previousDev) {
@@ -2066,6 +2085,62 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
         };
       }
     }
+  }
+
+  // A widened map can hand reconciled provinces to courts the old save never
+  // seated (Rome in a pre-v5.4 167 BCE save; Pontus; Italy). Backfill each
+  // missing tag exactly as initGame would have — otherwise the new land is
+  // painted scenery: no AI, no economy, no diplomacy, and armies can never
+  // enter it. makeCtx then crowns the new court like any ruler-less tag.
+  const tagDefs = DEFINES.TAGS || {};
+  const techBase = Math.max(0, num(bookmark && bookmark.techBase, 3) | 0);
+  const techTweaks = (bookmark && bookmark.techTweaks) || {};
+  const wantedTags = new Set();
+  for (const p of game.provinces) {
+    if (!p) continue;
+    if (p.owner && p.owner !== 'WASTE') wantedTags.add(p.owner);
+    if (p.controller && p.controller !== 'WASTE') wantedTags.add(p.controller);
+  }
+  if (!game.tags || typeof game.tags !== 'object') game.tags = {};
+  for (const key of wantedTags) {
+    if (game.tags[key] || !tagDefs[key]) continue;
+    const d = tagDefs[key];
+    const t = {
+      tag: key,
+      name: d.name || key,
+      color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+      religion: d.religion, culture: d.culture,
+      alive: true,
+      ai: true,
+      treasury: 0, income: 0, expenses: 0, loans: 0,
+      manpower: 0, maxManpower: 0,
+      stability: 0, legitimacy: 50, warExhaustion: 0,
+      points: { gov: 0, infl: 0, mar: 0 },
+      ideas: { ...(d.ideas || {}) },
+      reforms: { mil: 0, civ: 0, rel: 0 },
+      advisors: { gov: null, infl: null, mar: null },
+      aggression: 0,
+      courtCand: {},
+      modifiers: [],
+      atWarWith: [], allies: [], guarantees: [], opinion: {},
+      govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
+        || (DEFINES.GOV_OF || {})[key] || 'monarchy',
+      electionIn: 48,
+      claims: [], overlord: null,
+      heir: null, regency: false, missionIdx: 0,
+      aiState: {},
+    };
+    const tw = techTweaks[key] || {};
+    t.tech = {
+      gov: Math.max(0, Math.min(TECH_MAX, techBase + (tw.gov | 0))),
+      infl: Math.max(0, Math.min(TECH_MAX, techBase + (tw.infl | 0))),
+      mar: Math.max(0, Math.min(TECH_MAX, techBase + (tw.mar | 0))),
+    };
+    applyReformsToTag(DEFINES, t, key);
+    game.tags[key] = t;
+    const tmpCtx = { game, DEFINES, byId: (pid) => game.provinces[pid] || null };
+    t.maxManpower = maxManpowerOf(tmpCtx, key);
+    t.manpower = t.maxManpower;
   }
 
   if (!game.ui) game.ui = {};

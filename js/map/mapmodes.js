@@ -99,9 +99,19 @@ export function computeMapmodeColors(ctx, mode) {
   const flags = new Uint8Array(N + 1);
 
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
-  const tagKeys = Object.keys(TAGS);
   const tradeIdx = mode === 'trade' ? tradeIndex() : null;
-  const tagClass = (t) => Math.min(31, tagKeys.indexOf(t) + 1); // unknown -> 0
+  // Owner class rides a 5-bit field in the flags byte (renderer contract:
+  // bits 3..7; differing classes draw the country border). DEFINES.TAGS has
+  // outgrown 31 keys (v5.4), so classes index the LIVE game's tags — any one
+  // era seats far fewer than 30 courts — with 31 reserved for WASTE. Indexing
+  // the full catalog clamped IRN/UK/ITA/UAR into one class and their shared
+  // borders vanished.
+  const liveKeys = Object.keys(game.tags || {});
+  const tagClass = (t) => {
+    if (t === 'WASTE') return 31;
+    const i = liveKeys.indexOf(t);
+    return i >= 0 ? Math.min(30, i + 1) : 0; // unknown -> 0
+  };
   const tagColor = (t) =>
     (game.tags[t] && game.tags[t].color) || (TAGS[t] && TAGS[t].color) || GRAY;
   const wasteColor = (TAGS.WASTE && TAGS.WASTE.color) || [70, 66, 60];
