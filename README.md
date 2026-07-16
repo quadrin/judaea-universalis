@@ -239,15 +239,15 @@ python3 -m http.server 8613 --directory .
   deal), click again to strike it from the terms.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
-  for good news — under a generative score of Jewish music that changes with
-  the chapter. The ancient bookmarks pluck the kinnor lyre with a wandering
-  ney (Dorian in peace, Freygish with frame drums at war); the middle
-  chapters give the melody to an ornamented klezmer clarinet — grace notes,
-  sobbing krekhts, an oom-pah bass — in the Mi Sheberakh mode; and 1948
-  dances a Hava Nagila hora that trades sets with an original laid-back
-  Tel Aviv groove, under a military snare when the war is on. Faster and
-  harder as your armies fight. Speaker and note buttons (bottom-left) mute
-  the lot or just the music; both choices persist.
+  for good news — under a sweeping generative score. A warm string pad
+  strides through slow chord progressions (peace in Adonai Malakh, the
+  majestic synagogue mode; war in Freygish), a heroic refrain returns on the
+  quiet stretches and hardens as the fighting does, and harp arpeggios carry
+  the bars between. Each chapter keeps its own lead voice — kinnor plucks
+  and a soft horn in antiquity, a breathing reed in the middle ages, a horn
+  ensemble in 1948, where Hava Nagila itself takes a turn as the refrain.
+  Speaker and note buttons (bottom-left) mute the lot or just the music;
+  both choices persist.
 
 ## Architecture
 

@@ -1,10 +1,10 @@
-// js/ui/sound.js — synthesized Web Audio SFX + generative music (SPEC §27, §48).
+// js/ui/sound.js — synthesized Web Audio SFX + generative music (SPEC §27, §51).
 // Zero assets: oscillators, filtered noise, envelopes, a light feedback-delay
-// reverb — and a procedural ensemble that improvises each era's Jewish music:
-// the kinnor lyre for the ancient chapters, an ornamented klezmer clarinet for
-// the middle ones, and a Hava Nagila hora (with an original Tel Aviv groove)
-// for 1948. All playback is a silent no-op until the first user gesture
-// creates the AudioContext.
+// reverb — and a sweeping generative score: chord progressions on a warm
+// string pad, a recurring heroic refrain (Hava Nagila takes its turn in
+// 1948), harp arpeggios in the quiet stretches, drums that swell with the
+// mood. Each age keeps its own lead voice — kinnor, reed, horns. All playback
+// is a silent no-op until the first user gesture creates the AudioContext.
 
 export function initSound(bus, getGame) {
   // ------------------------------------------------------------- state
@@ -297,48 +297,53 @@ export function initSound(bus, getGame) {
     },
   };
 
-  // ------------------------------------------------------------- music (SPEC §27, §48)
-  // A small procedural ensemble that improvises each era's Jewish music.
-  // Three ages, chosen by bookmark:
-  //   'lyre'    (167 BCE – 66 CE): the kinnor court — plucked random-walk
-  //             melody, wandering ney phrases, a frame drum in wartime.
-  //             Peace speaks Dorian; war speaks Freygish (Ahava Rabbah).
-  //   'klezmer' (132 – 614): a reedy clarinet that ornaments its phrases
-  //             (grace notes, krekhts sobs) over an oom-pah bass. Peace
-  //             speaks Mi Sheberakh (Ukrainian Dorian); war Freygish.
-  //   'hora'    (1948): a Hava Nagila hora — the traditional nigun is public
-  //             domain — alternating with an original laid-back Tel Aviv
-  //             groove; a military snare underlines the war.
-  // Everything crossfades; the drone breathes under all three ages.
+  // ------------------------------------------------------------- music (SPEC §27, §51)
+  // A sweeping generative score: slow chord progressions on a warm string
+  // pad (no static drone), a recurring heroic refrain, harp arpeggios in the
+  // quiet stretches, drums that swell with the mood. The Jewish identity
+  // lives in the modes — peace speaks Adonai Malakh (the majestic synagogue
+  // mode, major with a flat seventh), war Freygish (Ahava Rabbah) — and in
+  // each age's lead voice:
+  //   'lyre'    (167 BCE – 66 CE): kinnor plucks doubled by a soft horn.
+  //   'klezmer' (132 – 614):       a warm, gently breathing reed.
+  //   'hora'    (1948):            a horn ensemble — and Hava Nagila (the
+  //             traditional nigun) returns as an occasional refrain rather
+  //             than a loop; a military snare underlines the war.
   const MODES = {
     dorian: [0, 2, 3, 5, 7, 9, 10],
     freygish: [0, 1, 4, 5, 7, 8, 10],       // Ahava Rabbah
-    mishebeyrekh: [0, 2, 3, 6, 7, 9, 10],   // Ukrainian Dorian (raised 4th)
+    adonai: [0, 2, 4, 5, 7, 9, 10],         // Adonai Malakh — major, flat 7
   };
-  // The Hava Nagila hora, as freygish scale degrees on an eighth-note grid
-  // (null = rest). Rise from the root, circle the fifth, fall home — then the
-  // insistent "Uru achim" call on the fifth. The nigun is traditional.
+  // The Hava Nagila refrain (freygish degrees, eighth grid, null = rest).
   const HORA_TUNE = [
     0, null, 1, 2, 3, null, 3, null, 4, 3, 2, 3, 2, 1, null, null,
     0, null, 1, 2, 3, null, 3, null, 4, 3, 2, 1, 0, null, null, null,
-    3, null, 3, 3, 4, null, 4, null, 5, 4, 3, 4, 3, 2, null, null,
-    3, 3, 4, 4, 5, 4, 3, 2, 1, null, 2, 1, 0, null, null, null,
   ];
-  // The original groove's bass vamp (semitone offsets from D2): I – bVII – IV.
-  const GROOVE_BASS = [0, 0, -2, -2, 5, 5, 0, 0];
+  // The heroic refrain (scale degrees, one per beat; 7 = the octave): a
+  // rising arpeggio sweep, a settling answer, the sweep again, a high close.
+  const THEME = [0, 2, 4, 7, 5, 4, 2, 4, 0, 2, 4, 7, 8, 7, null, null];
+  // Chord progressions (semitone offset from D, minor?) — one chord per two
+  // bars. Peace strides I–bVII–IV–I; war marches i–bVI–bVII–i; battle surges
+  // on the phrygian second.
+  const PROGS = {
+    peace: [[0, false], [-2, false], [5, false], [0, false]],
+    war: [[0, true], [8, false], [10, false], [0, true]],
+    battle: [[0, true], [1, false], [10, false], [0, true]],
+  };
+  const CHORD_BEATS = 8;
   const MUSIC_LVL = 0.55;   // into master (which already sits at ~0.22)
   const mus = {
     started: false,
     gain: null, droneGain: null, droneFilter: null, droneOscs: [],
-    droneThick: null,       // the third voice (klezmer/hora ages): its own gain
+    padVoices: [],          // [{osc, gain}] — root, fifth, third of the chord
     timer: null,
     nextBeat: 0, beat: 0,
-    deg: 7,                 // melodic random-walk degree (D5-ish register)
-    phraseLeft: 0, phraseDeg: 10,
     mood: 'peace', era: 'antique', style: 'lyre',
-    songPos: 0,             // hora: position in the tune, in eighths
-    grooveBar: 0,           // hora: bars into the current set (tune vs groove)
-    grooveDeg: 4,           // hora groove: pentatonic noodle degree
+    chordIdx: -1,           // which chord of the progression is sounding
+    themePos: -1,           // -1 = between refrains; else index into the tune
+    refrainIn: 18,          // beats until the next refrain begins
+    horaTurn: 0,            // 1948 alternates the heroic theme and the hora
+    arpStep: 0,             // harp arpeggio position on the chord tones
     notes: 0,               // debug counter (tests read this)
   };
 
@@ -452,16 +457,18 @@ export function initSound(bus, getGame) {
     mus.gain.gain.value = musicOn ? MUSIC_LVL : 0;
     mus.gain.connect(master);
 
-    // The drone: an open fifth (D2 + A2) through a slow-breathing lowpass.
+    // The string pad: three persistent voices (root, fifth, third) that
+    // glide between chords through a slow-breathing lowpass — a section,
+    // not a drone. The progression sequencer retunes them every two bars.
     mus.droneGain = ac.createGain();
     mus.droneGain.gain.value = 0.05;
     mus.droneFilter = ac.createBiquadFilter();
     mus.droneFilter.type = 'lowpass';
-    mus.droneFilter.frequency.value = 420;
+    mus.droneFilter.frequency.value = 640;
     mus.droneFilter.Q.value = 0.6;
     mus.droneFilter.connect(mus.droneGain);
     mus.droneGain.connect(mus.gain);
-    for (const [hz, level] of [[73.42, 1], [110, 0.7]]) {
+    for (const [hz, level] of [[73.42, 1], [110, 0.7], [92.5, 0.55]]) {
       const o = ac.createOscillator();
       o.type = 'sawtooth';
       o.frequency.value = hz;
@@ -472,25 +479,13 @@ export function initSound(bus, getGame) {
       og.connect(mus.droneFilter);
       o.start();
       mus.droneOscs.push(o);
+      mus.padVoices.push({ osc: o, gain: og, level });
     }
-    // The third voice (F3): silent in antiquity, awake from the 614 age on.
-    {
-      const o = ac.createOscillator();
-      o.type = 'sawtooth';
-      o.frequency.value = 87.31; // F2 — the fifth becomes a quiet minor triad
-      const og = ac.createGain();
-      og.gain.value = 0;
-      o.connect(og);
-      og.connect(mus.droneFilter);
-      o.start();
-      mus.droneThick = og;
-      mus.droneOscs.push(o);
-    }
-    // A very slow LFO breathes the drone's filter.
+    // A very slow LFO breathes the pad's filter.
     const lfo = ac.createOscillator();
     lfo.frequency.value = 0.045;
     const lfoGain = ac.createGain();
-    lfoGain.gain.value = 120;
+    lfoGain.gain.value = 160;
     lfo.connect(lfoGain);
     lfoGain.connect(mus.droneFilter.frequency);
     lfo.start();
@@ -507,192 +502,121 @@ export function initSound(bus, getGame) {
       if (mus.nextBeat < ac.currentTime) mus.nextBeat = ac.currentTime + 0.1;
       const horizon = ac.currentTime + 0.6;
       while (mus.nextBeat < horizon) {
-        const beatDur = mus.style === 'hora'
-          ? (mus.mood === 'battle' ? 0.4 : mus.mood === 'war' ? 0.46 : 0.5)
-          : mus.style === 'klezmer'
-            ? (mus.mood === 'battle' ? 0.42 : mus.mood === 'war' ? 0.5 : 0.62)
-            : (mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.55 : 0.75);
+        const beatDur = mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.52 : 0.66;
         scheduleBeat(mus.nextBeat, mus.beat++, beatDur);
         mus.nextBeat += beatDur;
       }
     } catch (e) { warnOnce('sched', e); }
   }
 
+  // The progression sequencer: retune the pad to the mood's current chord.
+  function tuneChord(t, mood, chordIdx) {
+    const prog = PROGS[mood] || PROGS.peace;
+    const [off, minor] = prog[chordIdx % prog.length];
+    const root = 73.42 * Math.pow(2, off / 12); // around D2
+    const targets = [root, root * Math.pow(2, 7 / 12), root * Math.pow(2, (minor ? 3 : 4) / 12) * 2];
+    for (let v = 0; v < mus.padVoices.length; v++) {
+      const pv = mus.padVoices[v];
+      try { pv.osc.frequency.setTargetAtTime(targets[v] || root, t, 0.5); }
+      catch (e) { pv.osc.frequency.value = targets[v] || root; }
+    }
+    return { off, minor, root };
+  }
+
+  // The lead: each age's voice, warm and unhurried — no squares, no sobbing.
+  function leadNote(t, hz, dur, gain, style) {
+    if (style === 'lyre') {
+      musTone({ t, freq: hz, type: 'triangle', attack: 0.005, dur: dur * 1.15, gain, lpf: 2400, send: 0.5, detune: 3 });
+      musTone({ t, freq: hz / 2, type: 'sawtooth', attack: 0.09, dur, gain: gain * 0.45, lpf: 950, send: 0.55, vibrato: { hz: 4.4, cents: 7 } });
+    } else if (style === 'klezmer') {
+      musTone({ t, freq: hz, type: 'triangle', attack: 0.05, dur, gain, lpf: 2100, send: 0.5, vibrato: { hz: 5, cents: 9 } });
+      musTone({ t, freq: hz / 2, type: 'sine', attack: 0.05, dur, gain: gain * 0.5, send: 0.35 });
+    } else {
+      musTone({ t, freq: hz, type: 'sawtooth', attack: 0.07, dur, gain: gain * 0.7, lpf: 1500, send: 0.55, detune: -5, vibrato: { hz: 4.8, cents: 8 } });
+      musTone({ t, freq: hz, type: 'sawtooth', attack: 0.07, dur, gain: gain * 0.7, lpf: 1500, send: 0.55, detune: 5 });
+      musTone({ t, freq: hz / 2, type: 'sine', attack: 0.06, dur, gain: gain * 0.4, send: 0.3 });
+    }
+  }
+
   function scheduleBeat(t, i, beatDur) {
     const mood = mus.mood;
     const style = mus.style;
-    // the piece breathes: a slow wave leaves near-silent bars every so often
-    const breath = 0.55 + 0.45 * Math.sin(i / 21);
+    const mode = mood === 'peace' ? 'adonai' : 'freygish';
+    // the piece breathes, gently — swells, never dead air
+    const breath = 0.75 + 0.25 * Math.sin(i / 24);
 
-    // drone follows the mood; the later ages thicken it into a quiet triad
-    const droneBase = style === 'klezmer' ? 0.035 : style === 'hora' ? 0.025 : 0.05;
-    const droneTarget = (mood === 'battle' ? droneBase + 0.035 : mood === 'war' ? droneBase + 0.02 : droneBase) * breath;
-    mus.droneGain.gain.setTargetAtTime(droneTarget, t, 1.2);
-    mus.droneFilter.frequency.setTargetAtTime(mood === 'peace' ? 430 : 300, t, 1.5);
-    mus.droneThick.gain.setTargetAtTime(style !== 'lyre' ? 0.28 : 0, t, 2);
-
-    if (style === 'klezmer') scheduleKlezmerBeat(t, i, mood, breath, beatDur);
-    else if (style === 'hora') scheduleHoraBeat(t, i, mood, breath, beatDur);
-    else scheduleLyreBeat(t, i, mood, breath);
-  }
-
-  // ---- the lyre age (167 BCE – 66 CE): the kinnor court -------------------
-  function scheduleLyreBeat(t, i, mood, breath) {
-    const mode = mood === 'peace' ? 'dorian' : 'freygish';
-
-    // the lyre: a random-walk melody, denser in wartime
-    const pluckChance = (mood === 'peace' ? 0.42 : 0.58) * breath;
-    if (Math.random() < pluckChance) {
-      mus.deg += [-2, -1, -1, 0, 1, 1, 2][(Math.random() * 7) | 0];
-      if (mus.deg < 3) mus.deg = 3 + ((Math.random() * 3) | 0);
-      if (mus.deg > 13) mus.deg = 13 - ((Math.random() * 3) | 0);
-      const hz = noteHz(146.83, mode, mus.deg); // rooted on D3
-      musTone({ t, freq: hz, type: 'triangle', attack: 0.004, dur: 1.15, gain: 0.085, lpf: 2600, send: 0.5, detune: 3 });
-      musTone({ t, freq: hz / 2, type: 'sine', attack: 0.004, dur: 0.9, gain: 0.04, send: 0.4 });
-      if (Math.random() < 0.22) { // a double-stop on the open fifth below
-        musTone({ t: t + 0.02, freq: noteHz(146.83, mode, mus.deg - 4), type: 'triangle', attack: 0.004, dur: 0.9, gain: 0.045, lpf: 2200, send: 0.5 });
-      }
+    // ---- harmony: one chord per two bars, pads swelling with the mood ----
+    const chordIdx = (i / CHORD_BEATS) | 0;
+    let chord = null;
+    if (chordIdx !== mus.chordIdx) {
+      mus.chordIdx = chordIdx;
+      chord = tuneChord(t, mood, chordIdx);
     }
+    const padTarget = (mood === 'battle' ? 0.085 : mood === 'war' ? 0.068 : 0.052) * breath;
+    mus.droneGain.gain.setTargetAtTime(padTarget, t, 1.2);
+    mus.droneFilter.frequency.setTargetAtTime(mood === 'peace' ? 680 : mood === 'war' ? 500 : 580, t, 1.5);
 
-    // the ney: an occasional wandering phrase, one note per beat
-    if (mus.phraseLeft > 0) {
-      mus.phraseLeft--;
-      const from = noteHz(293.66, mode, mus.phraseDeg);
-      mus.phraseDeg += [-1, 0, 1, 1, 2][(Math.random() * 5) | 0] * (Math.random() < 0.3 ? -1 : 1);
-      if (mus.phraseDeg < 5) mus.phraseDeg = 5;
-      if (mus.phraseDeg > 12) mus.phraseDeg = 12;
-      const to = noteHz(293.66, mode, mus.phraseDeg);
-      musTone({ t, freq: from, glideTo: to, glideDur: 0.3, type: 'sine', attack: 0.09, dur: 0.62, gain: 0.055, send: 0.6 });
-      musNoise({ t, type: 'bandpass', freq: to * 2, q: 2.5, attack: 0.06, dur: 0.3, gain: 0.008 });
-    } else if (Math.random() < 0.035 * breath) {
-      mus.phraseLeft = 3 + ((Math.random() * 4) | 0);
-      mus.phraseDeg = 7 + ((Math.random() * 4) | 0);
-    }
+    const prog = PROGS[mood] || PROGS.peace;
+    const [chordOff, chordMinor] = prog[chordIdx % prog.length];
+    const chordRootHz = 146.83 * Math.pow(2, chordOff / 12); // D3 region
 
-    // the frame drum wakes in wartime
-    if (mood !== 'peace') {
-      const bar = i % 4;
-      if (bar === 0) {
-        musTone({ t, freq: 105, glideTo: 42, glideDur: 0.2, type: 'sine', attack: 0.004, dur: 0.32, gain: 0.24 });
-      } else if (bar === 2) {
-        musTone({ t, freq: 95, glideTo: 44, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: mood === 'battle' ? 0.2 : 0.12 });
-      }
-      if (mood === 'battle' && (bar === 1 || bar === 3)) {
-        musNoise({ t, type: 'bandpass', freq: 3200, q: 3, attack: 0.002, dur: 0.05, gain: 0.035 }); // rim tick
-      }
-    }
-  }
-
-  // ---- the klezmer age (115 – 614): the clarinet and the oom-pah ----------
-  // A single reedy voice carries ornamented phrases — a quick upper grace
-  // note into the beat, a sobbing krekhts fall at phrase ends — over a bass
-  // that alternates root and fifth with offbeat chord stabs.
-  function klezNote(t, hz, dur, gain) {
-    musTone({
-      t, freq: hz, type: 'square', attack: 0.03, dur, gain: gain * 0.8,
-      lpf: 1900, send: 0.45, vibrato: { hz: 5.2, cents: 14 },
-    });
-    musTone({ t, freq: hz, type: 'triangle', attack: 0.02, dur, gain: gain * 0.5, send: 0.3 });
-  }
-  function scheduleKlezmerBeat(t, i, mood, breath, beatDur) {
-    const mode = mood === 'peace' ? 'mishebeyrekh' : 'freygish';
-    const root = 220; // the clarinet sings around A3–A4
-
-    // the clarinet: phrase-driven, like the ney but ornamented
-    if (mus.phraseLeft > 0) {
-      mus.phraseLeft--;
-      const step = [-2, -1, -1, 0, 1, 1, 2][(Math.random() * 7) | 0];
-      mus.phraseDeg = Math.max(4, Math.min(13, mus.phraseDeg + step));
-      const hz = noteHz(root, mode, mus.phraseDeg);
-      if (Math.random() < 0.45) { // the grace note leans in from above
-        klezNote(t - 0.07, noteHz(root, mode, mus.phraseDeg + 1), 0.07, 0.05);
-      }
-      klezNote(t, hz, mus.phraseLeft === 0 ? beatDur * 1.6 : beatDur * 0.85, 0.09 * breath + 0.03);
-      if (mus.phraseLeft === 0 && Math.random() < 0.5) { // the krekhts: a sobbing fall
-        musTone({
-          t: t + beatDur * 0.9, freq: hz, glideTo: hz * 0.84, glideDur: 0.22,
-          type: 'square', attack: 0.01, dur: 0.24, gain: 0.045, lpf: 1700, send: 0.5,
-        });
-        musNoise({ t: t + beatDur * 0.9, type: 'bandpass', freq: hz * 2.2, q: 2, attack: 0.02, dur: 0.14, gain: 0.01 });
-      }
-    } else if (Math.random() < (mood === 'peace' ? 0.16 : 0.24) * breath + 0.04) {
-      mus.phraseLeft = 4 + ((Math.random() * 5) | 0);
-      mus.phraseDeg = 7 + ((Math.random() * 4) | 0);
-    }
-
-    // the oom-pah: bass on the beat, chord stabs off it
-    const bar = i % 4;
-    const bassHz = (bar === 0 || bar === 2) ? 110 : 82.4; // A2 / E2
-    if (bar === 0 || bar === 2) {
-      musTone({ t, freq: bassHz, type: 'sine', attack: 0.006, dur: 0.3, gain: 0.11 });
-    } else {
-      const chordRoot = noteHz(root, mode, 0);
-      musTone({ t, freq: chordRoot, type: 'triangle', attack: 0.004, dur: 0.12, gain: 0.035, lpf: 2000 });
-      musTone({ t, freq: noteHz(root, mode, 2), type: 'triangle', attack: 0.004, dur: 0.12, gain: 0.03, lpf: 2000 });
-    }
-
-    // wartime adds the frame drum under the dance
-    if (mood !== 'peace') {
-      if (bar === 0) musTone({ t, freq: 100, glideTo: 42, glideDur: 0.18, type: 'sine', attack: 0.004, dur: 0.26, gain: 0.2 });
-      if (mood === 'battle' && (bar === 1 || bar === 3)) {
-        musNoise({ t, type: 'bandpass', freq: 3000, q: 2.5, attack: 0.002, dur: 0.05, gain: 0.03 });
-      }
-    }
-  }
-
-  // ---- the hora age (1948): Hava Nagila, and a Tel Aviv groove ------------
-  // Peacetime alternates sets: 16 bars of the hora (the traditional nigun,
-  // public domain), then 16 bars of an original laid-back groove — bass vamp,
-  // backbeat, a pentatonic lead noodling — in the spirit of 70s Israeli rock
-  // without quoting anyone's record. War keeps the tune and adds the snare.
-  function scheduleHoraBeat(t, i, mood, breath, beatDur) {
-    const bar = i % 4;
-    mus.grooveBar = ((i / 4) | 0) % 32;
-    const inTune = mood !== 'peace' || mus.grooveBar < 16;
-
-    if (inTune) {
-      // the tune: two eighths per beat off the HORA_TUNE grid
-      for (const half of [0, 1]) {
-        const deg = HORA_TUNE[mus.songPos % HORA_TUNE.length];
-        mus.songPos++;
-        if (deg !== null) {
-          const hz = noteHz(293.66, 'freygish', deg); // rooted on D4
-          const tt = t + half * beatDur * 0.5;
-          const accent = half === 0 ? 1 : 0.75;
-          const g = (mood === 'battle' ? 0.05 : 0.085) * accent;
-          musTone({ t: tt, freq: hz, type: 'square', attack: 0.02, dur: beatDur * 0.62, gain: g * 0.75, lpf: 2100, send: 0.4, vibrato: { hz: 5.5, cents: 10 } });
-          musTone({ t: tt, freq: hz, type: 'triangle', attack: 0.01, dur: beatDur * 0.6, gain: g * 0.55, send: 0.25 });
+    // ---- the refrain: the heroic theme returns; 1948 alternates the hora ----
+    if (mus.themePos >= 0) {
+      const horaRefrain = style === 'hora' && (mus.horaTurn % 2 === 1);
+      if (horaRefrain) {
+        for (const half of [0, 1]) {
+          const slot = mus.themePos * 2 + half;
+          if (slot < HORA_TUNE.length) {
+            const deg = HORA_TUNE[slot];
+            if (deg !== null) leadNote(t + half * beatDur * 0.5, noteHz(293.66, 'freygish', deg), beatDur * 0.6, 0.075, style);
+          }
         }
+        mus.themePos++;
+        if (mus.themePos * 2 >= HORA_TUNE.length) mus.themePos = -1;
+      } else {
+        const deg = THEME[mus.themePos];
+        if (deg !== null) {
+          leadNote(t, noteHz(293.66, mode, deg), beatDur * 1.5, mood === 'battle' ? 0.11 : 0.09, style);
+        }
+        mus.themePos++;
+        if (mus.themePos >= THEME.length) mus.themePos = -1;
       }
-      // the hora kit: bass on the beat, clap on the off
-      musTone({ t, freq: bar === 0 ? 73.4 : 110, type: 'sine', attack: 0.005, dur: 0.22, gain: 0.1 });
-      musNoise({ t: t + beatDur * 0.5, type: 'highpass', freq: 2600, q: 0.7, attack: 0.002, dur: 0.06, gain: mood === 'peace' ? 0.035 : 0.02 });
-    } else {
-      // the groove: an original vamp — I, bVII, IV — under a minor-pentatonic lead
-      mus.songPos = 0; // the tune restarts fresh after every groove set
-      const vampSemi = GROOVE_BASS[((i / 4) | 0) % GROOVE_BASS.length];
-      const bassHz = 73.42 * Math.pow(2, vampSemi / 12);
-      if (bar === 0 || bar === 2) {
-        musTone({ t, freq: bassHz, type: 'triangle', attack: 0.006, dur: 0.34, gain: 0.12, lpf: 700 });
+      if (mus.themePos === -1) {
+        mus.horaTurn++;
+        mus.refrainIn = mood === 'battle' ? 16 + ((Math.random() * 8) | 0)
+          : mood === 'war' ? 28 + ((Math.random() * 12) | 0)
+            : 44 + ((Math.random() * 28) | 0);
       }
-      if (bar === 2 || (bar === 3 && Math.random() < 0.3)) { // the backbeat
-        musNoise({ t, type: 'bandpass', freq: 1900, q: 0.8, attack: 0.002, dur: 0.1, gain: 0.05 });
-      }
-      if (Math.random() < 0.5 * breath + 0.15) { // the lead noodles, original all the way
-        const PENTA = [0, 3, 5, 7, 10];
-        mus.grooveDeg = Math.max(0, Math.min(9, mus.grooveDeg + [-2, -1, 0, 1, 1, 2][(Math.random() * 6) | 0]));
-        const oct = (mus.grooveDeg / PENTA.length) | 0;
-        const semi = PENTA[mus.grooveDeg % PENTA.length];
-        const hz = 293.66 * Math.pow(2, oct + (vampSemi + semi) / 12);
-        musTone({ t: t + (Math.random() < 0.4 ? beatDur * 0.5 : 0), freq: hz, type: 'sawtooth', attack: 0.01, dur: 0.3, gain: 0.045, lpf: 2400, send: 0.5, detune: 4 });
-      }
+    } else if (--mus.refrainIn <= 0) {
+      mus.themePos = 0;
     }
 
-    // the military snare underlines the war
+    // ---- the quiet texture: harp arpeggios on the chord tones ----
+    const arpChance = (mus.themePos >= 0 ? 0.18 : mood === 'peace' ? 0.5 : 0.34) * breath;
+    if (Math.random() < arpChance) {
+      const tones = [0, chordMinor ? 3 : 4, 7, 12, chordMinor ? 15 : 16];
+      mus.arpStep = (mus.arpStep + 1 + ((Math.random() * 2) | 0)) % tones.length;
+      const hz = chordRootHz * 2 * Math.pow(2, tones[mus.arpStep] / 12);
+      musTone({ t: t + (Math.random() < 0.35 ? beatDur * 0.5 : 0), freq: hz, type: 'triangle', attack: 0.004, dur: 1.0, gain: 0.05 * breath + 0.015, lpf: 2600, send: 0.55 });
+    }
+
+    // ---- the low pulse and the drums ----
+    const bar = i % 4;
     if (mood !== 'peace') {
-      if (bar === 0) musTone({ t, freq: 105, glideTo: 42, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: 0.22 });
-      if (bar === 1 || bar === 3 || mood === 'battle') {
-        musNoise({ t, type: 'bandpass', freq: 1800, q: 0.9, attack: 0.002, dur: 0.11, gain: bar === 3 ? 0.075 : 0.045 });
+      if (bar === 0 || (mood === 'battle' && bar === 2)) {
+        musTone({ t, freq: chordRootHz / 2, type: 'sine', attack: 0.008, dur: 0.4, gain: mood === 'battle' ? 0.13 : 0.1 });
+      }
+      if (style === 'hora') {
+        if (bar === 0) musTone({ t, freq: 105, glideTo: 42, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: 0.2 });
+        if (bar === 1 || bar === 3 || mood === 'battle') {
+          musNoise({ t, type: 'bandpass', freq: 1800, q: 0.9, attack: 0.002, dur: 0.11, gain: bar === 3 ? 0.07 : 0.04 });
+        }
+      } else {
+        if (bar === 0) musTone({ t, freq: 100, glideTo: 40, glideDur: 0.2, type: 'sine', attack: 0.004, dur: 0.3, gain: mood === 'battle' ? 0.24 : 0.18 });
+        if (bar === 2) musTone({ t, freq: 92, glideTo: 44, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: mood === 'battle' ? 0.16 : 0.09 });
+        if (mood === 'battle' && (bar === 1 || bar === 3)) {
+          musNoise({ t, type: 'bandpass', freq: 3000, q: 2.5, attack: 0.002, dur: 0.05, gain: 0.03 });
+        }
       }
     }
   }
