@@ -59,7 +59,8 @@ console.log('== the desert is a road, and a harsh one ==');
 const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 const sinaiN = new Set(snap.neighbors[idOf('Sinai Interior')] || []);
 const egyptSide = ['Pelusium', 'Arsinoe', 'Memphis', 'Rhinocolura'].some((n) => sinaiN.has(idOf(n)));
-const negevSide = ['Oboda', 'Beersheba', 'Aila', 'Petra', 'Gaza', 'Rafah'].some((n) => sinaiN.has(idOf(n)));
+const negevSide = ['Oboda', 'Beersheba', 'Aila', 'Petra', 'Gaza', 'Rafah',
+  'Mitzpe Ramon', 'Paran', 'Eilat'].some((n) => sinaiN.has(idOf(n)));
 ok(egyptSide && negevSide, 'the open Sinai bridges Egypt proper and the Negev on the real map');
 const wl = DEFINES.TERRAINS && DEFINES.TERRAINS.wasteland;
 ok(wl && wl.attrition >= 4 && wl.moveCost >= 2,

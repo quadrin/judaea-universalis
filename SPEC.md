@@ -1799,3 +1799,38 @@ foreign court **read-only**.
   1948 save opens on load without losing an earned tier. `smoke26.mjs` pins
   the updated 1948 contract (open frontier, no hatch), and `smoke27.mjs`
   carries the desert development into Egypt's counted total.
+
+## 45. v4.4: from Dan to Eilat — the Negev on the map
+
+- **Four new permanent cells** complete the modern Israeli south: **Dimona**
+  (parent Oboda), **Mitzpe Ramon** (parent Oboda), **Paran** (parent Aila) and
+  **Eilat** (parent Aila) — appended after the existing cells so no save ID
+  shifts, latent in every ancient bookmark (folding into the Nabataean Negev,
+  never into waste), active in 1948. With them the armistice shape of Israel
+  is actually formable: the map now carries the whole Negev triangle down to
+  the Red Sea.
+- **The 1948 south has claimants**: Egypt's deep-Negev claim (the Auja axis)
+  holds Mitzpe Ramon and Dimona; Transjordan patrols the Arabah from Aqaba —
+  Paran and Eilat. All four start as sovereign frontier (their towns are
+  post-war foundations), so they are settlement-project targets after
+  conquest.
+- **The Uvda route is real**: on the regenerated raster, Eilat borders Paran —
+  Israel can march Beersheba → the highlands → the Arabah → Eilat without
+  taking Jordanian Aqaba, exactly as Operation Uvda did in March 1949. Eilat
+  still faces Aila across the head of the gulf.
+- **The greater verdict is honest at last**: "From Dan to Eilat" now requires
+  *holding Eilat* (and Jerusalem, and 25+ provinces). Without the south the
+  same position ends in "Independence" — the armistice, not the modern
+  borders. The ISR objective text names the requirement.
+- **Tooling**: `tools/geom-snapshot.json` is regenerated at full resolution
+  (from a 1948 boot, where every latent cell is active — it had been stale
+  since before v4.1, missing all modern cells) and `tools/autorun.mjs` now
+  folds it per bookmark through `buildProvinceMapping`, mirroring what
+  `computeGeometry` does from the live raster; the balance harness therefore
+  exercises real modern-cell adjacency for the first time.
+- **Regression contract**: `smoke30.mjs` proves the four cells' 1948 owners
+  and tiers, the Uvda adjacency chain on the real snapshot, the ancient
+  collapse into Oboda/Aila, and — end to end through `checkVictory` — that
+  25+ provinces with Jerusalem but without Eilat earns only "Independence"
+  while adding the Negev and Eilat earns "From Dan to Eilat". `smoke27.mjs`
+  and `uitest25.mjs` count all 25 modern cells.

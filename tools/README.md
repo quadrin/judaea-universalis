@@ -73,8 +73,13 @@ DEBT-SPIRAL,BLEEDING · 614 none · 1948 none.
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
 dumped from the browser's WebGL province raster so headless tools get true
-pathing. REGENERATE whenever js/data/map_data.js changes: serve the repo,
-boot any bookmark in a browser with window._ctx, and save the value of
+pathing. The snapshot is FULL-RESOLUTION: dump it from the 1948 bookmark,
+where every latent cell is active, so it carries every permanent cell's own
+geometry. Headless consumers fold it per bookmark through
+buildProvinceMapping (autorun's foldGeom) — the same collapse computeGeometry
+performs from the live raster. REGENERATE whenever js/data/map_data.js
+changes: serve the repo, boot the 1948 bookmark in a browser with
+window._ctx, and save the value of
 
     JSON.stringify({
       neighbors: _ctx.geom.neighbors.map(s => [...s]),
