@@ -24,7 +24,7 @@ import {
   merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
@@ -102,6 +102,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     buildings: [], construction: null,
     unitQueue: [],
     conversion: null,
+    settlement: null, // {by, monthsLeft, toTier} while a settlement project runs (SPEC §43)
     holy: s.holy || null,
     wonder: (bookmark && bookmark.wonderTweaks
       && Object.prototype.hasOwnProperty.call(bookmark.wonderTweaks, s.name))
@@ -1811,11 +1812,20 @@ export function gameActions(ctx) {
         if (!foreign) whyNotConvert = 'The province already follows the state faith.';
         else if (p.conversion) whyNotConvert = 'The missionaries are already at work.';
         else if (num(t.points.infl) < 50) whyNotConvert = 'Not enough influence points (50 required).';
+        const settle = settlementInfo(ctx, g.playerTag, provId);
+        // Hide the settlement control entirely on land that can never take a
+        // project (unsettleable), so it only appears where it means something.
+        const showSettle = p.settleable !== false;
         return {
           autonomy,
           canEstablish: !whyNotEstablish, whyNotEstablish,
           canConvert: !whyNotConvert, whyNotConvert,
           converting: p.conversion ? { monthsLeft: Math.max(0, num(p.conversion.monthsLeft) | 0) } : null,
+          showSettle,
+          canSettle: settle.can, whyNotSettle: settle.why,
+          settleCost: settle.cost, settleToName: settle.toName,
+          settling: p.settlement
+            ? { monthsLeft: Math.max(0, num(p.settlement.monthsLeft) | 0) } : null,
         };
       } catch (e) { warnOnce('integration', 'getIntegration failed', e); return null; }
     },
@@ -1848,6 +1858,16 @@ export function gameActions(ctx) {
         p.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
         say('Conversion begun', 'Priests and teachers go out to ' + p.name + '; in a year it will follow the state faith. Expect unrest while the old gods are put away.', 'good');
       } catch (e) { warnOnce('convertProvince', 'convertProvince failed', e); }
+    },
+    settleProvince(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const res = settlementStart(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('Settlement', res.why || 'The land will not take it.', 'bad'); return; }
+        say('Settlers set out', 'Surveyors and settlers make for ' + (p ? p.name : 'the frontier')
+          + '; in a few months it will grow into a ' + String(res.toName || 'settlement').toLowerCase()
+          + ' (' + res.cost + ' influence points).', 'good');
+      } catch (e) { warnOnce('settleProvince', 'settleProvince failed', e); }
     },
 
     // ---- factions (nation panel, SPEC §34) -----------------------------------
@@ -2087,6 +2107,7 @@ export function reviveGame(saved) {
     if (!Array.isArray(p.unitQueue)) p.unitQueue = [];
     if (!p.habitation) p.habitation = inferredHabitation(p.owner, p.dev);
     if (p.settleable === undefined) p.settleable = true;
+    if (p.settlement === undefined) p.settlement = null; // pre-settlement saves (SPEC §43)
   }
   for (const k of Object.keys(saved.tags)) {
     const t = saved.tags[k];

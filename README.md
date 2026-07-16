@@ -119,6 +119,15 @@ python3 -m http.server 8613 --directory .
 - The map speaks each era's language: in 1948 the labels read Tel Aviv-Jaffa,
   Latrun, Amman, Cairo and Baghdad, and the modern cities carry modern
   populations — while the sim keeps its canonical ancient keys underneath.
+- Provinces that are subdivisions of an ancient region in one bookmark become
+  their own borders in another: 1948 splits the south Levant into 21 modern
+  districts and cities (Netanya, Ramallah, Beersheba, Gaza's Khan Yunis and
+  Rafah…) over the very same land raster, redistributing — not inventing — their
+  development. Empty land is real land now: every province sits on a habitation
+  ladder (uninhabited → frontier → rural → town → urban), and a settlement
+  project spends influence to raise a settleable province one rung — founding on
+  the frontier so you can then develop what you founded. Only prosperity makes
+  the final leap to a metropolis.
 - Governments: monarchies crown heirs (and suffer regencies), republics vote
   every four years — Rome is a republic until the emperors, and 1948 Israel
   elects its head of government — theocracies never anoint a child, and tribal
