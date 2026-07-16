@@ -240,11 +240,15 @@ python3 -m http.server 8613 --directory .
   deal), click again to strike it from the terms.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
-  for good news — under a generative score that improvises on a breathing
-  drone: a lyre and a ney in Dorian while you're at peace, Freygish with
-  frame drums when war comes (a military snare in 1948), faster and harder
-  as your armies fight. Speaker and note buttons (bottom-left) mute the lot
-  or just the music; both choices persist.
+  for good news — under a generative score of Jewish music that changes with
+  the chapter. The ancient bookmarks pluck the kinnor lyre with a wandering
+  ney (Dorian in peace, Freygish with frame drums at war); the middle
+  chapters give the melody to an ornamented klezmer clarinet — grace notes,
+  sobbing krekhts, an oom-pah bass — in the Mi Sheberakh mode; and 1948
+  dances a Hava Nagila hora that trades sets with an original laid-back
+  Tel Aviv groove, under a military snare when the war is on. Faster and
+  harder as your armies fight. Speaker and note buttons (bottom-left) mute
+  the lot or just the music; both choices persist.
 
 ## Architecture
 
