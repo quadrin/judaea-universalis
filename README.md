@@ -120,13 +120,15 @@ python3 -m http.server 8613 --directory .
   Latrun, Amman, Cairo and Baghdad, and the modern cities carry modern
   populations — while the sim keeps its canonical ancient keys underneath.
 - Provinces that are subdivisions of an ancient region in one bookmark become
-  their own borders in another: 1948 splits the south Levant into 25 modern
-  districts and cities (Netanya, Ramallah, Beersheba, Dimona, Mitzpe Ramon,
-  Eilat, Gaza's Khan Yunis and Rafah…) over the very same land raster,
-  redistributing — not inventing — their development. The whole Negev triangle
-  is on the map, so Israel's modern borders are actually formable: the greater
-  1948 verdict — From Dan to Eilat — requires marching the Arabah and holding
-  Eilat, just as Operation Uvda did. Empty land is real land now: every province sits on a habitation
+  their own borders in another: 1948 splits the Levant into 28 modern
+  districts and cells (Netanya, Ramallah, Beersheba, Dimona, Mitzpe Ramon,
+  Eilat, Gaza's Khan Yunis and Rafah, the Galilee panhandle, Jordan's Azraq
+  Badia, Iraq's Rutba desert…) over the very same land raster, redistributing
+  — not inventing — their development. Every 1948 nation wears its real
+  shape: Lebanon holds the Beqaa, Syria holds Qamishli and the Golan, Jordan
+  reaches its eastern panhandle — and Israel's modern borders are actually
+  formable: the greater verdict — From Dan to Eilat — requires marching the
+  Arabah and holding Eilat, just as Operation Uvda did. Empty land is real land now: every province sits on a habitation
   ladder (uninhabited → frontier → rural → town → urban), and a settlement
   project spends influence to raise a settleable province one rung — founding on
   the frontier so you can then develop what you founded. Only prosperity makes

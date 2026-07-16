@@ -53,6 +53,8 @@ ok(nb('Paran').has(idOf('Eilat')),
   'Eilat is reachable through Paran — the march of Operation Uvda, no Aqaba required');
 ok(nb('Eilat').has(idOf('Aila')),
   'Eilat still faces Jordanian Aqaba across the gulf head');
+ok(!!snap.coastal[idOf('Eilat')] && nb('Eilat').has(idOf('Sinai Interior')),
+  'Eilat owns the shore of the gulf and meets Egyptian Sinai at the border — the port, not an inland box');
 
 console.log('== ancient eras fold the Negev into Nabataea ==');
 const ancientMap = buildProvinceMapping(MAP_DATA, BOOKMARK_66);
