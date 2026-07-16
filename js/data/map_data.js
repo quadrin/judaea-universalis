@@ -399,9 +399,11 @@ const PROVINCES = [
     { latentParent: 'Oboda' }),
   P('Mitzpe Ramon', 34.80, 30.61, 0.90, 'NAB', 'desert', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Oboda' }),
-  P('Paran', 34.88, 29.98, 1.05, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
+  P('Paran', 34.88, 29.92, 1.05, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
-  P('Eilat', 34.88, 29.66, 0.85, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  // Seeded at the head of the gulf so the cell owns the northwest shore:
+  // Eilat is the port the greater 1948 verdict marches for, not an inland box.
+  P('Eilat', 34.92, 29.57, 1.05, 'NAB', 'coast', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Aila' }),
 ];
 
