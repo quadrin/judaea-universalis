@@ -1893,3 +1893,32 @@ foreign court **read-only**.
   Modi'in's rebel ownership, Betar's Judean stand, Rakkath's survival, and —
   for all eight bookmarks — that every owners-table key names a real map
   cell. The autorun harness folds each era's mapping automatically.
+
+## 48. v4.7: the music of the ages — lyre, klezmer, hora
+
+- **Each age sings its own Jewish music**, chosen by bookmark (year-based
+  fallback for saves without one). Still zero assets — everything is
+  synthesized in the Web Audio ensemble of §27, which gains per-style beat
+  tempos, an optional vibrato LFO on `musTone`, and a third mode:
+  **Mi Sheberakh** (Ukrainian Dorian, the raised-4th klezmer mode) joins
+  Dorian and Freygish (Ahava Rabbah).
+- **The lyre age** (167 BCE, 67 BCE, 40 BCE, 66 CE): the kinnor court — the
+  existing plucked random-walk melody, wandering ney phrases, and a frame
+  drum that wakes in wartime. Peace speaks Dorian, war Freygish.
+- **The klezmer age** (115, 132, 614 CE): a reedy clarinet (filtered square
+  with vibrato) carries ornamented phrases — a grace note leaning in from
+  above, a sobbing krekhts fall with a breath of noise at phrase ends —
+  over an oom-pah bass (root/fifth on the beat, chord stabs off it). Peace
+  speaks Mi Sheberakh, war Freygish; the drone thins to make room.
+- **The hora age** (1948): peacetime alternates sets — sixteen bars of
+  **Hava Nagila** (the traditional nigun is public domain; encoded as
+  freygish degrees on an eighth-note grid in `HORA_TUNE`, with bass and
+  offbeat claps), then sixteen bars of an **original** laid-back Tel Aviv
+  groove (a I–bVII–IV vamp, backbeat, minor-pentatonic lead) in the spirit
+  of 70s Israeli rock. No copyrighted melody is quoted — Kaveret's Golyat
+  stays on the record shelf where it belongs. War keeps the tune under a
+  military snare; battle thins the melody and hardens the kit.
+- **Regression contract**: `uitest27.mjs` boots three chapters and proves
+  each plays its style with notes actually scheduled (`music.state()` now
+  reports `style`); `uitest14.mjs` — the §27 contract (gesture start, mood
+  machine, toggle persistence) — passes unchanged.

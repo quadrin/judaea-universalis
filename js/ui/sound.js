@@ -1,7 +1,9 @@
-// js/ui/sound.js — synthesized Web Audio SFX + generative music (SPEC §27).
+// js/ui/sound.js — synthesized Web Audio SFX + generative music (SPEC §27, §48).
 // Zero assets: oscillators, filtered noise, envelopes, a light feedback-delay
-// reverb — and a procedural ensemble (drone, lyre, ney, drums) that improvises
-// the era's mood. All playback is a silent no-op until the first user gesture
+// reverb — and a procedural ensemble that improvises each era's Jewish music:
+// the kinnor lyre for the ancient chapters, an ornamented klezmer clarinet for
+// the middle ones, and a Hava Nagila hora (with an original Tel Aviv groove)
+// for 1948. All playback is a silent no-op until the first user gesture
 // creates the AudioContext.
 
 export function initSound(bus, getGame) {
@@ -295,26 +297,48 @@ export function initSound(bus, getGame) {
     },
   };
 
-  // ------------------------------------------------------------- music (SPEC §27)
-  // A small procedural ensemble that improvises the era's mood. Three layers
-  // over a drone: lyre plucks on a random-walk melody, occasional ney phrases,
-  // and drums that only wake in wartime. Peace speaks Dorian; war and battle
-  // speak Freygish (the Ahava Rabbah mode). 1948 swaps the frame drum for a
-  // military snare; the 614 age thickens the drone. Everything crossfades.
+  // ------------------------------------------------------------- music (SPEC §27, §48)
+  // A small procedural ensemble that improvises each era's Jewish music.
+  // Three ages, chosen by bookmark:
+  //   'lyre'    (167 BCE – 66 CE): the kinnor court — plucked random-walk
+  //             melody, wandering ney phrases, a frame drum in wartime.
+  //             Peace speaks Dorian; war speaks Freygish (Ahava Rabbah).
+  //   'klezmer' (115 – 614): a reedy clarinet that ornaments its phrases
+  //             (grace notes, krekhts sobs) over an oom-pah bass. Peace
+  //             speaks Mi Sheberakh (Ukrainian Dorian); war Freygish.
+  //   'hora'    (1948): a Hava Nagila hora — the traditional nigun is public
+  //             domain — alternating with an original laid-back Tel Aviv
+  //             groove; a military snare underlines the war.
+  // Everything crossfades; the drone breathes under all three ages.
   const MODES = {
     dorian: [0, 2, 3, 5, 7, 9, 10],
-    freygish: [0, 1, 4, 5, 7, 8, 10],
+    freygish: [0, 1, 4, 5, 7, 8, 10],       // Ahava Rabbah
+    mishebeyrekh: [0, 2, 3, 6, 7, 9, 10],   // Ukrainian Dorian (raised 4th)
   };
+  // The Hava Nagila hora, as freygish scale degrees on an eighth-note grid
+  // (null = rest). Rise from the root, circle the fifth, fall home — then the
+  // insistent "Uru achim" call on the fifth. The nigun is traditional.
+  const HORA_TUNE = [
+    0, null, 1, 2, 3, null, 3, null, 4, 3, 2, 3, 2, 1, null, null,
+    0, null, 1, 2, 3, null, 3, null, 4, 3, 2, 1, 0, null, null, null,
+    3, null, 3, 3, 4, null, 4, null, 5, 4, 3, 4, 3, 2, null, null,
+    3, 3, 4, 4, 5, 4, 3, 2, 1, null, 2, 1, 0, null, null, null,
+  ];
+  // The original groove's bass vamp (semitone offsets from D2): I – bVII – IV.
+  const GROOVE_BASS = [0, 0, -2, -2, 5, 5, 0, 0];
   const MUSIC_LVL = 0.55;   // into master (which already sits at ~0.22)
   const mus = {
     started: false,
     gain: null, droneGain: null, droneFilter: null, droneOscs: [],
-    droneThick: null,       // the third voice (614+): its own gain
+    droneThick: null,       // the third voice (klezmer/hora ages): its own gain
     timer: null,
     nextBeat: 0, beat: 0,
     deg: 7,                 // melodic random-walk degree (D5-ish register)
     phraseLeft: 0, phraseDeg: 10,
-    mood: 'peace', era: 'antique',
+    mood: 'peace', era: 'antique', style: 'lyre',
+    songPos: 0,             // hora: position in the tune, in eighths
+    grooveBar: 0,           // hora: bars into the current set (tune vs groove)
+    grooveDeg: 4,           // hora groove: pentatonic noodle degree
     notes: 0,               // debug counter (tests read this)
   };
 
@@ -325,13 +349,23 @@ export function initSound(bus, getGame) {
     return rootHz * Math.pow(2, oct + semi / 12);
   }
 
+  // Which age sings (SPEC §48): by bookmark, falling back to the year.
+  const STYLE_BY_BOOKMARK = {
+    '167bce': 'lyre', '67bce': 'lyre', '40bce': 'lyre', '66ce': 'lyre',
+    '115ce': 'klezmer', '132ce': 'klezmer', '614ce': 'klezmer',
+    '1948ce': 'hora',
+  };
+
   function pollMood() {
     let mood = 'peace';
     let era = 'antique';
+    let style = 'lyre';
     try {
       const g = getGame ? getGame() : null;
       if (g) {
         era = g.date.y >= 1900 ? 'modern' : g.date.y >= 500 ? 'medieval' : 'antique';
+        style = STYLE_BY_BOOKMARK[g.bookmarkId]
+          || (era === 'modern' ? 'hora' : era === 'medieval' ? 'klezmer' : 'lyre');
         const me = g.playerTag;
         const t = g.tags && g.tags[me];
         const inBattle = (g.battles || []).some((b) =>
@@ -345,6 +379,7 @@ export function initSound(bus, getGame) {
     } catch (e) { warnOnce('mood', e); }
     mus.mood = mood;
     mus.era = era;
+    mus.style = style;
   }
 
   function musTone(opts) {
@@ -374,6 +409,16 @@ export function initSound(bus, getGame) {
     o.frequency.setValueAtTime(opts.freq, t0);
     if (opts.glideTo) o.frequency.exponentialRampToValueAtTime(Math.max(1, opts.glideTo), t0 + (opts.glideDur || opts.dur || 0.4));
     if (opts.detune) o.detune.value = opts.detune;
+    if (opts.vibrato) { // {hz, cents} — the clarinet breathes (SPEC §48)
+      const lfo = ac.createOscillator();
+      lfo.frequency.value = opts.vibrato.hz || 5.5;
+      const vg = ac.createGain();
+      vg.gain.value = opts.vibrato.cents || 12;
+      lfo.connect(vg);
+      vg.connect(o.detune);
+      lfo.start(t0);
+      lfo.stop(t0 + (opts.attack || 0.005) + (opts.dur || 0.8) + 0.1);
+    }
     o.connect(g);
     o.start(t0);
     o.stop(t0 + (opts.attack || 0.005) + (opts.dur || 0.8) + 0.1);
@@ -462,24 +507,38 @@ export function initSound(bus, getGame) {
       if (mus.nextBeat < ac.currentTime) mus.nextBeat = ac.currentTime + 0.1;
       const horizon = ac.currentTime + 0.6;
       while (mus.nextBeat < horizon) {
-        scheduleBeat(mus.nextBeat, mus.beat++);
-        const beatDur = mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.55 : 0.75;
+        const beatDur = mus.style === 'hora'
+          ? (mus.mood === 'battle' ? 0.4 : mus.mood === 'war' ? 0.46 : 0.5)
+          : mus.style === 'klezmer'
+            ? (mus.mood === 'battle' ? 0.42 : mus.mood === 'war' ? 0.5 : 0.62)
+            : (mus.mood === 'battle' ? 0.44 : mus.mood === 'war' ? 0.55 : 0.75);
+        scheduleBeat(mus.nextBeat, mus.beat++, beatDur);
         mus.nextBeat += beatDur;
       }
     } catch (e) { warnOnce('sched', e); }
   }
 
-  function scheduleBeat(t, i) {
+  function scheduleBeat(t, i, beatDur) {
     const mood = mus.mood;
-    const mode = mood === 'peace' ? 'dorian' : 'freygish';
+    const style = mus.style;
     // the piece breathes: a slow wave leaves near-silent bars every so often
     const breath = 0.55 + 0.45 * Math.sin(i / 21);
 
-    // drone follows the mood
-    const droneTarget = (mood === 'battle' ? 0.085 : mood === 'war' ? 0.07 : 0.05) * breath;
+    // drone follows the mood; the later ages thicken it into a quiet triad
+    const droneBase = style === 'klezmer' ? 0.035 : style === 'hora' ? 0.025 : 0.05;
+    const droneTarget = (mood === 'battle' ? droneBase + 0.035 : mood === 'war' ? droneBase + 0.02 : droneBase) * breath;
     mus.droneGain.gain.setTargetAtTime(droneTarget, t, 1.2);
     mus.droneFilter.frequency.setTargetAtTime(mood === 'peace' ? 430 : 300, t, 1.5);
-    mus.droneThick.gain.setTargetAtTime(mus.era !== 'antique' ? 0.28 : 0, t, 2);
+    mus.droneThick.gain.setTargetAtTime(style !== 'lyre' ? 0.28 : 0, t, 2);
+
+    if (style === 'klezmer') scheduleKlezmerBeat(t, i, mood, breath, beatDur);
+    else if (style === 'hora') scheduleHoraBeat(t, i, mood, breath, beatDur);
+    else scheduleLyreBeat(t, i, mood, breath);
+  }
+
+  // ---- the lyre age (167 BCE – 66 CE): the kinnor court -------------------
+  function scheduleLyreBeat(t, i, mood, breath) {
+    const mode = mood === 'peace' ? 'dorian' : 'freygish';
 
     // the lyre: a random-walk melody, denser in wartime
     const pluckChance = (mood === 'peace' ? 0.42 : 0.58) * breath;
@@ -510,20 +569,130 @@ export function initSound(bus, getGame) {
       mus.phraseDeg = 7 + ((Math.random() * 4) | 0);
     }
 
-    // drums wake in wartime: a frame-drum heartbeat, or a 1948 snare kit
+    // the frame drum wakes in wartime
     if (mood !== 'peace') {
       const bar = i % 4;
       if (bar === 0) {
-        musTone({ t, freq: 105, glideTo: 42, glideDur: 0.2, type: 'sine', attack: 0.004, dur: mus.era === 'modern' ? 0.2 : 0.32, gain: 0.24 });
+        musTone({ t, freq: 105, glideTo: 42, glideDur: 0.2, type: 'sine', attack: 0.004, dur: 0.32, gain: 0.24 });
       } else if (bar === 2) {
         musTone({ t, freq: 95, glideTo: 44, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: mood === 'battle' ? 0.2 : 0.12 });
       }
-      if (mus.era === 'modern') {
-        if (bar === 1 || bar === 3 || mood === 'battle') {
-          musNoise({ t, type: 'bandpass', freq: 1800, q: 0.9, attack: 0.002, dur: 0.11, gain: bar === 3 ? 0.075 : 0.045 });
-        }
-      } else if (mood === 'battle' && (bar === 1 || bar === 3)) {
+      if (mood === 'battle' && (bar === 1 || bar === 3)) {
         musNoise({ t, type: 'bandpass', freq: 3200, q: 3, attack: 0.002, dur: 0.05, gain: 0.035 }); // rim tick
+      }
+    }
+  }
+
+  // ---- the klezmer age (115 – 614): the clarinet and the oom-pah ----------
+  // A single reedy voice carries ornamented phrases — a quick upper grace
+  // note into the beat, a sobbing krekhts fall at phrase ends — over a bass
+  // that alternates root and fifth with offbeat chord stabs.
+  function klezNote(t, hz, dur, gain) {
+    musTone({
+      t, freq: hz, type: 'square', attack: 0.03, dur, gain: gain * 0.8,
+      lpf: 1900, send: 0.45, vibrato: { hz: 5.2, cents: 14 },
+    });
+    musTone({ t, freq: hz, type: 'triangle', attack: 0.02, dur, gain: gain * 0.5, send: 0.3 });
+  }
+  function scheduleKlezmerBeat(t, i, mood, breath, beatDur) {
+    const mode = mood === 'peace' ? 'mishebeyrekh' : 'freygish';
+    const root = 220; // the clarinet sings around A3–A4
+
+    // the clarinet: phrase-driven, like the ney but ornamented
+    if (mus.phraseLeft > 0) {
+      mus.phraseLeft--;
+      const step = [-2, -1, -1, 0, 1, 1, 2][(Math.random() * 7) | 0];
+      mus.phraseDeg = Math.max(4, Math.min(13, mus.phraseDeg + step));
+      const hz = noteHz(root, mode, mus.phraseDeg);
+      if (Math.random() < 0.45) { // the grace note leans in from above
+        klezNote(t - 0.07, noteHz(root, mode, mus.phraseDeg + 1), 0.07, 0.05);
+      }
+      klezNote(t, hz, mus.phraseLeft === 0 ? beatDur * 1.6 : beatDur * 0.85, 0.09 * breath + 0.03);
+      if (mus.phraseLeft === 0 && Math.random() < 0.5) { // the krekhts: a sobbing fall
+        musTone({
+          t: t + beatDur * 0.9, freq: hz, glideTo: hz * 0.84, glideDur: 0.22,
+          type: 'square', attack: 0.01, dur: 0.24, gain: 0.045, lpf: 1700, send: 0.5,
+        });
+        musNoise({ t: t + beatDur * 0.9, type: 'bandpass', freq: hz * 2.2, q: 2, attack: 0.02, dur: 0.14, gain: 0.01 });
+      }
+    } else if (Math.random() < (mood === 'peace' ? 0.16 : 0.24) * breath + 0.04) {
+      mus.phraseLeft = 4 + ((Math.random() * 5) | 0);
+      mus.phraseDeg = 7 + ((Math.random() * 4) | 0);
+    }
+
+    // the oom-pah: bass on the beat, chord stabs off it
+    const bar = i % 4;
+    const bassHz = (bar === 0 || bar === 2) ? 110 : 82.4; // A2 / E2
+    if (bar === 0 || bar === 2) {
+      musTone({ t, freq: bassHz, type: 'sine', attack: 0.006, dur: 0.3, gain: 0.11 });
+    } else {
+      const chordRoot = noteHz(root, mode, 0);
+      musTone({ t, freq: chordRoot, type: 'triangle', attack: 0.004, dur: 0.12, gain: 0.035, lpf: 2000 });
+      musTone({ t, freq: noteHz(root, mode, 2), type: 'triangle', attack: 0.004, dur: 0.12, gain: 0.03, lpf: 2000 });
+    }
+
+    // wartime adds the frame drum under the dance
+    if (mood !== 'peace') {
+      if (bar === 0) musTone({ t, freq: 100, glideTo: 42, glideDur: 0.18, type: 'sine', attack: 0.004, dur: 0.26, gain: 0.2 });
+      if (mood === 'battle' && (bar === 1 || bar === 3)) {
+        musNoise({ t, type: 'bandpass', freq: 3000, q: 2.5, attack: 0.002, dur: 0.05, gain: 0.03 });
+      }
+    }
+  }
+
+  // ---- the hora age (1948): Hava Nagila, and a Tel Aviv groove ------------
+  // Peacetime alternates sets: 16 bars of the hora (the traditional nigun,
+  // public domain), then 16 bars of an original laid-back groove — bass vamp,
+  // backbeat, a pentatonic lead noodling — in the spirit of 70s Israeli rock
+  // without quoting anyone's record. War keeps the tune and adds the snare.
+  function scheduleHoraBeat(t, i, mood, breath, beatDur) {
+    const bar = i % 4;
+    mus.grooveBar = ((i / 4) | 0) % 32;
+    const inTune = mood !== 'peace' || mus.grooveBar < 16;
+
+    if (inTune) {
+      // the tune: two eighths per beat off the HORA_TUNE grid
+      for (const half of [0, 1]) {
+        const deg = HORA_TUNE[mus.songPos % HORA_TUNE.length];
+        mus.songPos++;
+        if (deg !== null) {
+          const hz = noteHz(293.66, 'freygish', deg); // rooted on D4
+          const tt = t + half * beatDur * 0.5;
+          const accent = half === 0 ? 1 : 0.75;
+          const g = (mood === 'battle' ? 0.05 : 0.085) * accent;
+          musTone({ t: tt, freq: hz, type: 'square', attack: 0.02, dur: beatDur * 0.62, gain: g * 0.75, lpf: 2100, send: 0.4, vibrato: { hz: 5.5, cents: 10 } });
+          musTone({ t: tt, freq: hz, type: 'triangle', attack: 0.01, dur: beatDur * 0.6, gain: g * 0.55, send: 0.25 });
+        }
+      }
+      // the hora kit: bass on the beat, clap on the off
+      musTone({ t, freq: bar === 0 ? 73.4 : 110, type: 'sine', attack: 0.005, dur: 0.22, gain: 0.1 });
+      musNoise({ t: t + beatDur * 0.5, type: 'highpass', freq: 2600, q: 0.7, attack: 0.002, dur: 0.06, gain: mood === 'peace' ? 0.035 : 0.02 });
+    } else {
+      // the groove: an original vamp — I, bVII, IV — under a minor-pentatonic lead
+      mus.songPos = 0; // the tune restarts fresh after every groove set
+      const vampSemi = GROOVE_BASS[((i / 4) | 0) % GROOVE_BASS.length];
+      const bassHz = 73.42 * Math.pow(2, vampSemi / 12);
+      if (bar === 0 || bar === 2) {
+        musTone({ t, freq: bassHz, type: 'triangle', attack: 0.006, dur: 0.34, gain: 0.12, lpf: 700 });
+      }
+      if (bar === 2 || (bar === 3 && Math.random() < 0.3)) { // the backbeat
+        musNoise({ t, type: 'bandpass', freq: 1900, q: 0.8, attack: 0.002, dur: 0.1, gain: 0.05 });
+      }
+      if (Math.random() < 0.5 * breath + 0.15) { // the lead noodles, original all the way
+        const PENTA = [0, 3, 5, 7, 10];
+        mus.grooveDeg = Math.max(0, Math.min(9, mus.grooveDeg + [-2, -1, 0, 1, 1, 2][(Math.random() * 6) | 0]));
+        const oct = (mus.grooveDeg / PENTA.length) | 0;
+        const semi = PENTA[mus.grooveDeg % PENTA.length];
+        const hz = 293.66 * Math.pow(2, oct + (vampSemi + semi) / 12);
+        musTone({ t: t + (Math.random() < 0.4 ? beatDur * 0.5 : 0), freq: hz, type: 'sawtooth', attack: 0.01, dur: 0.3, gain: 0.045, lpf: 2400, send: 0.5, detune: 4 });
+      }
+    }
+
+    // the military snare underlines the war
+    if (mood !== 'peace') {
+      if (bar === 0) musTone({ t, freq: 105, glideTo: 42, glideDur: 0.16, type: 'sine', attack: 0.004, dur: 0.2, gain: 0.22 });
+      if (bar === 1 || bar === 3 || mood === 'battle') {
+        musNoise({ t, type: 'bandpass', freq: 1800, q: 0.9, attack: 0.002, dur: 0.11, gain: bar === 3 ? 0.075 : 0.045 });
       }
     }
   }
@@ -753,7 +922,7 @@ export function initSound(bus, getGame) {
       on() { setMusicOn(true); },
       off() { setMusicOn(false); },
       toggle() { setMusicOn(!musicOn); },
-      state() { return { on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, notes: mus.notes }; },
+      state() { return { on: musicOn, started: mus.started, mood: mus.mood, era: mus.era, style: mus.style, notes: mus.notes }; },
     },
   };
 
