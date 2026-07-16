@@ -65,6 +65,20 @@ export const BOOKMARK_132 = {
     + 'rises as one — with a prince, an administration, and coins that read "Year One of '
     + 'the Redemption of Israel."',
 
+  // The map wears its era's shape (SPEC §47): the fortress-towns the Great
+  // Revolt consumed were never rebuilt — Jotapata and Gamala fell in 67,
+  // Machaerus and Masada by 74 — and their districts answer to their
+  // neighbors ever after.
+  mergeProvinces: {
+    'Jotapata': 'Sepphoris', 'Gamala': 'Batanea',
+    'Machaerus': 'Medaba', 'Masada': 'Engaddi',
+  },
+
+  // ...and Betar stands: the fortress village of the revolt's last stand
+  // becomes its own place (it inherits Judean ownership from Emmaus).
+  activeProvinces: ['Beit Shemesh'],
+  provinceNames: { 'Beit Shemesh': 'Betar' },
+
   activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX'],
 
   // Political layer for 132 CE over map_data's 66 CE defaults. Nabataea has

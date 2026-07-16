@@ -1862,3 +1862,33 @@ foreign court **read-only**.
 - **Regression contract**: `smoke27.mjs` counts all 28 modern cells and the
   redistributed development (ISR 205, JOR 170, EGY 189); `uitest25.mjs`
   renders, hit-tests and click-resolves all 28 in a real browser.
+
+## 47. v4.6: every era wears its true map
+
+- **A second profile lever**: alongside `bookmark.activeProvinces` (latent
+  cells that become real provinces), `buildProvinceMapping` now honors
+  `bookmark.mergeProvinces` — base cells that do NOT exist in that era fold
+  into a named neighbor (`{'Masada': 'Engaddi'}`). Pixels, clicks, adjacency,
+  labels and campaign state all follow: the era simply has no such province.
+  Chain resolution handles merge→latent chains; `main.js` keys its profile
+  cache on both levers so eras with identical activations but different
+  merges never share a mapping.
+- **The fortresses obey their construction dates**: in 167 BCE Masada and
+  Machaerus are not yet built (Jannaeus raises them decades later) — their
+  crags belong to Engaddi and Medaba. They stand from 67 BCE through 66 CE.
+  After the Great Revolt razes Jotapata, Gamala, Machaerus and Masada
+  (67–74 CE), the 115, 132 and 614 bookmarks fold them into Sepphoris,
+  Batanea, Medaba and Engaddi — the razed fortress-towns never return.
+- **History demands its villages**: 167 BCE activates the Modi'in cell as
+  **Modi'in**, the village where the revolt began — it inherits Hasmonean
+  ownership through its Emmaus parent, and Eleazar's band ("Men of Modein",
+  3 inf) now musters at home; the third rebel province widened the front, so
+  the band grew to match (all-AI HAS survives across seeds, still the
+  bleeding underdog, never a snowball). 132 CE activates Beit Shemesh as
+  **Betar**, Judean — the fortress village of the revolt's last stand.
+  Districts persist even when their central town is unfounded: pre-20 CE
+  eras keep the lakeshore as **Rakkath**, they do not erase it.
+- **Regression contract**: `smoke31.mjs` pins every era's fortress dates,
+  Modi'in's rebel ownership, Betar's Judean stand, Rakkath's survival, and —
+  for all eight bookmarks — that every owners-table key names a real map
+  cell. The autorun harness folds each era's mapping automatically.

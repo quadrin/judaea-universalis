@@ -52,7 +52,11 @@ async function boot() {
   let mapProfileKey = '';
   function applyMapProfile(bookmark) {
     const active = (bookmark && bookmark.activeProvinces) || [];
-    const nextKey = active.slice().sort().join('|');
+    const merges = (bookmark && bookmark.mergeProvinces) || {};
+    // The key must cover BOTH profile levers: two eras with the same active
+    // list can still merge different base cells (SPEC §47).
+    const nextKey = active.slice().sort().join('|') + '||'
+      + Object.keys(merges).sort().map((k) => k + '>' + merges[k]).join('|');
     if (nextKey === mapProfileKey) return provinceMap;
     provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
     renderer.setProvinceMapping(provinceMap);

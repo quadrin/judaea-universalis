@@ -2,6 +2,14 @@
 // Every MAP_DATA province remains a stable cell ID. A latent cell may collapse
 // into a parent province in one bookmark and become independently playable in
 // another without changing IDs, save keys, or the underlying land raster.
+//
+// Two per-bookmark levers (SPEC §47):
+//   bookmark.activeProvinces — latent cells that become real provinces here
+//     (Safed in 1948, Modi'in in 167 BCE, Betar in 132 CE).
+//   bookmark.mergeProvinces  — base cells that do NOT exist in this era and
+//     fold into a neighbor ({'Masada': 'Engaddi'} before the fortress was
+//     built and after it burned). The pixels, clicks and adjacency join the
+//     parent; the era has no such province.
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -31,6 +39,20 @@ export function buildProvinceMapping(MAP_DATA, bookmark) {
       continue;
     }
     mapping[i + 1] = parentId;
+  }
+
+  // Era merges: base cells that do not exist in this bookmark fold into a
+  // named neighbor. Chain resolution below handles merge→latent chains.
+  const merges = (bookmark && bookmark.mergeProvinces) || {};
+  for (const child of Object.keys(merges)) {
+    const cid = byName.get(child);
+    const pid = byName.get(merges[child]);
+    if (!cid || !pid || cid === pid) {
+      warnOnce('merge:' + child,
+        `mergeProvinces: "${child}" -> "${merges[child]}" does not resolve; ignored`);
+      continue;
+    }
+    mapping[cid] = pid;
   }
 
   // Resolve parent chains once. The guard keeps malformed future content from

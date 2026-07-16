@@ -96,7 +96,15 @@ export const BOOKMARK_167 = {
     'Tarichaea': 'Magdala',
     'Caesarea Mazaca': 'Mazaca',            // named for Caesar only in 14 CE
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
+    'Modi\'in Hills': 'Modi\'in',           // the village where the revolt began
   },
+
+  // The map wears its era's shape (SPEC §47): the desert fortresses are not
+  // yet built — Jannaeus raises Machaerus and the Masada fort decades later —
+  // and Modi'in, the Hasmoneans' home village, stands as its own place in the
+  // Gophna hills (it inherits the rebels' ownership from Emmaus).
+  mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
+  activeProvinces: ['Modi\'in Hills'],
 
   blurb: 'The king has decreed one law for all his peoples: the daily offering has ceased, '
     + 'the scrolls burn, and on the altar of the Lord stands an abomination sacred to Olympian '
@@ -415,8 +423,11 @@ export const BOOKMARK_167 = {
       inf: 3, name: 'Band of the Maccabee',
       general: { name: 'Judah Maccabee', fire: 2, shock: 4, maneuver: 3 },
     });
-    h.spawnArmy(ctx, 'HAS', 'Lydda', {
-      inf: 1, name: 'Men of Modein',
+    // The village that raised the revolt now stands on the map (SPEC §47),
+    // and its sons muster at home — a second band, or the wider front the
+    // third province opens would stretch the rising to breaking.
+    h.spawnArmy(ctx, 'HAS', 'Modi\'in Hills', {
+      inf: 3, name: 'Men of Modein',
       general: { name: 'Eleazar Avaran', fire: 1, shock: 3, maneuver: 1 },
     });
 
