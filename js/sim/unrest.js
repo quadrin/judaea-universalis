@@ -4,6 +4,7 @@
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
 } from './military.js';
+import { popTension, popTotal } from './population.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -63,14 +64,30 @@ export function computeUnrestBreakdown(ctx, prov) {
   const g = ctx.game;
   const owner = g.tags[prov.owner];
   if (!owner) return { total: 0, rows };
-  if (prov.religion && owner.religion && prov.religion !== owner.religion) {
-    const gp = religionGroup(ctx, prov.religion);
-    const go = religionGroup(ctx, owner.religion);
-    if (gp && go && gp === go) rows.push({ label: 'Heretic faith', value: U(ctx, 'sameGroupHeretic', 1.5) });
-    else rows.push({ label: 'Heathen faith', value: U(ctx, 'heathen', 3) });
-  }
-  if (prov.culture && owner.culture && cultureGroup(ctx, prov.culture) !== cultureGroup(ctx, owner.culture)) {
-    rows.push({ label: 'Foreign culture', value: U(ctx, 'wrongCultureGroup', 1) });
+  // Communal tension (SPEC §56): where a makeup exists, unrest is the
+  // UNINTEGRATED minority share, weighted by how foreign each community is —
+  // a 12% minority frets, it does not convulse; integration calms it toward
+  // zero. A homogeneous conquest (share 1.0) reproduces the old binary
+  // numbers exactly. Provinces without a makeup keep the classic rows.
+  const tension = popTotal(prov) > 0 ? popTension(ctx, prov, owner) : null;
+  if (tension) {
+    const integ = 1 - clamp(num(prov.integration), 0, 1);
+    const heathen = tension.heathen * U(ctx, 'heathen', 3) * integ;
+    const heretic = tension.heretic * U(ctx, 'sameGroupHeretic', 1.5) * integ;
+    const culture = tension.foreignCulture * U(ctx, 'wrongCultureGroup', 1) * integ;
+    if (heathen > 0.01) rows.push({ label: 'Heathen communities (' + Math.round(tension.heathen * 100) + '%)', value: r2(heathen) });
+    if (heretic > 0.01) rows.push({ label: 'Heretic communities (' + Math.round(tension.heretic * 100) + '%)', value: r2(heretic) });
+    if (culture > 0.01) rows.push({ label: 'Foreign culture (' + Math.round(tension.foreignCulture * 100) + '%)', value: r2(culture) });
+  } else {
+    if (prov.religion && owner.religion && prov.religion !== owner.religion) {
+      const gp = religionGroup(ctx, prov.religion);
+      const go = religionGroup(ctx, owner.religion);
+      if (gp && go && gp === go) rows.push({ label: 'Heretic faith', value: U(ctx, 'sameGroupHeretic', 1.5) });
+      else rows.push({ label: 'Heathen faith', value: U(ctx, 'heathen', 3) });
+    }
+    if (prov.culture && owner.culture && cultureGroup(ctx, prov.culture) !== cultureGroup(ctx, owner.culture)) {
+      rows.push({ label: 'Foreign culture', value: U(ctx, 'wrongCultureGroup', 1) });
+    }
   }
   if (prov.controller !== prov.owner) {
     rows.push({ label: 'Enemy occupation', value: U(ctx, 'occupied', 3) });

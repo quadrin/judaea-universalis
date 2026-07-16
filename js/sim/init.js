@@ -30,6 +30,7 @@ import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { getPowersInfo, courtPowerCore, askPowerCore } from './powers.js';
+import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
@@ -87,7 +88,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     || s.habitation || inferredHabitation(owner, dev);
   const settleableOverride = bookmarkField(bookmark, 'settleable', s);
 
-  return {
+  const out = {
     id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
     // A bookmark may re-good a province (SPEC §52): the wells of the ancient
     // caravan country pump oil in 1948.
@@ -100,6 +101,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     habitation,
     settleable: typeof settleableOverride === 'boolean' ? settleableOverride : s.settleable !== false,
     autonomy: 0.25, unrest: 0, revoltProgress: 0,
+    integration: 0, integrating: null, // the long work of making subjects citizens (SPEC §56)
     fort, garrison: maxGarrison, maxGarrison,
     siege: null, modifiers: [],
     buildings: [], construction: null,
@@ -112,6 +114,12 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
       ? bookmark.wonderTweaks[s.name] : (s.wonder || null),
     impassable,
   };
+  // Who actually lives here (SPEC §56): a bookmark `pops` share table for
+  // the mixed cities, a homogeneous majority everywhere else. The largest
+  // community names the province's religion and culture.
+  const mix = bookmarkField(bookmark, 'pops', s) || null;
+  seedPop(out, mix, bookmark && bookmark.popMult);
+  return out;
 }
 
 // ------------------------------------------------------------------ initGame
@@ -338,6 +346,11 @@ export const simHelpers = {
     if (t) { t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== id); return; }
     const p = ctx.prov(scope);
     if (p) p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== id);
+  },
+  // Immigration and flight (SPEC §56): events move real people. n < 0 drains.
+  addPopulation(ctx, provName, entry) {
+    const p = ctx.prov(provName);
+    if (p) addPopulation(p, entry);
   },
   adjust(ctx, tag, d) {
     const t = ctx.game.tags[tag];
@@ -1917,8 +1930,27 @@ export function gameActions(ctx) {
         // Hide the settlement control entirely on land that can never take a
         // project (unsettleable), so it only appears where it means something.
         const showSettle = p.settleable !== false;
+        // Integration (SPEC §56): the modern answer where conversion is
+        // era-gated off, a gentler tool beside it everywhere else.
+        const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
+        const hasTension = !!tension && (tension.minority + tension.foreignCulture) > 0.001;
+        let whyNotIntegrate = '';
+        if (!hasTension) whyNotIntegrate = 'Every community here already stands with the state.';
+        else if (num(p.integration) >= 1) whyNotIntegrate = 'The province is fully integrated.';
+        else if (p.integrating) whyNotIntegrate = 'The program is already under way.';
+        else if (num(t.points.gov) < 25) whyNotIntegrate = 'Not enough governance points (25 required).';
+        const popRows = (p.pop || []).map((e) => ({
+          label: communityLabel(ctx.DEFINES, e.r, e.c), n: e.n, r: e.r, c: e.c,
+        }));
         return {
           autonomy,
+          pop: popTotal(p) > 0 ? {
+            total: popTotal(p), rows: popRows,
+            integration: clamp(num(p.integration), 0, 1),
+          } : null,
+          canIntegrate: !whyNotIntegrate, whyNotIntegrate,
+          integrating: p.integrating
+            ? { monthsLeft: Math.max(0, num(p.integrating.monthsLeft) | 0) } : null,
           canEstablish: !whyNotEstablish, whyNotEstablish,
           showConvert,
           canConvert: !whyNotConvert, whyNotConvert,
@@ -1961,6 +1993,26 @@ export function gameActions(ctx) {
         p.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
         say('Conversion begun', 'Priests and teachers go out to ' + p.name + '; in a year it will follow the state faith. Expect unrest while the old gods are put away.', 'good');
       } catch (e) { warnOnce('convertProvince', 'convertProvince failed', e); }
+    },
+    integrateProvince(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
+        const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
+        if (!tension || (tension.minority + tension.foreignCulture) <= 0.001) {
+          say('Integration', 'Every community of ' + p.name + ' already stands with the state.', 'info'); return;
+        }
+        if (num(p.integration) >= 1) { say('Integration', p.name + ' is fully integrated.', 'info'); return; }
+        if (p.integrating) { say('Integration', 'The program in ' + p.name + ' is already under way.', 'info'); return; }
+        if (num(t.points.gov) < 25) { say('Integration', 'Not enough governance points (25 required).', 'bad'); return; }
+        t.points.gov = num(t.points.gov) - 25;
+        p.integrating = { by: g.playerTag, monthsLeft: 12 };
+        p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'reforms_resented');
+        p.modifiers.push({ id: 'reforms_resented', name: 'Reforms Resented', months: 12, effects: { unrest: 1 } });
+        say('Integration begun', 'Schools, land titles and the civil service go to work in ' + p.name
+          + '; in a year its communities will stand closer to the state. Old hands grumble meanwhile.', 'good');
+      } catch (e) { warnOnce('integrateProvince', 'integrateProvince failed', e); }
     },
     settleProvince(provId) {
       try {

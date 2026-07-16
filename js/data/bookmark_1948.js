@@ -232,6 +232,50 @@ export const BOOKMARK_1948 = {
   // the wells that paid for the region's armies.
   goods: { Arbela: 'oil', Susa: 'oil', Gerrha: 'oil' },
 
+  // Who actually lives here (SPEC §56): the crowded 20th century, and the
+  // mixed cities of 1948 in their real proportions. Unlisted provinces are
+  // homogeneous behind their religion/culture overlay.
+  popMult: 2.5,
+  pops: {
+    'Jerusalem': [
+      { r: 'judaism', c: 'israeli', share: 0.60 },
+      { r: 'islam', c: 'arab_modern', share: 0.32 },
+      { r: 'christianity', c: 'arab_modern', share: 0.08 },
+    ],
+    'Dora': [ // Haifa
+      { r: 'judaism', c: 'israeli', share: 0.55 },
+      { r: 'islam', c: 'arab_modern', share: 0.33 },
+      { r: 'christianity', c: 'arab_modern', share: 0.12 },
+    ],
+    'Joppa': [ // Tel Aviv-Jaffa
+      { r: 'judaism', c: 'israeli', share: 0.75 },
+      { r: 'islam', c: 'arab_modern', share: 0.22 },
+      { r: 'christianity', c: 'arab_modern', share: 0.03 },
+    ],
+    'Ptolemais': [ // Acre
+      { r: 'islam', c: 'arab_modern', share: 0.63 },
+      { r: 'judaism', c: 'israeli', share: 0.25 },
+      { r: 'christianity', c: 'arab_modern', share: 0.12 },
+    ],
+    'Sepphoris': [ // Nazareth
+      { r: 'christianity', c: 'arab_modern', share: 0.55 },
+      { r: 'islam', c: 'arab_modern', share: 0.35 },
+      { r: 'judaism', c: 'israeli', share: 0.10 },
+    ],
+    'Tiberias': [
+      { r: 'judaism', c: 'israeli', share: 0.70 },
+      { r: 'islam', c: 'arab_modern', share: 0.30 },
+    ],
+    'Safed': [
+      { r: 'judaism', c: 'israeli', share: 0.78 },
+      { r: 'islam', c: 'arab_modern', share: 0.22 },
+    ],
+    'Berytus': [ // Beirut
+      { r: 'christianity', c: 'arab_modern', share: 0.55 },
+      { r: 'islam', c: 'arab_modern', share: 0.45 },
+    ],
+  },
+
   // The map speaks 1948 (SPEC §24): canonical names stay the content keys;
   // these are what the labels, panels and toasts show.
   provinceNames: {

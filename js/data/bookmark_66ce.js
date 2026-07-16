@@ -81,6 +81,25 @@ export const BOOKMARK_66 = {
   techBase: 5,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
+  // Who actually lives here (SPEC §56): the mixed cities whose riots lit the
+  // Revolt — Caesarea's Greek-Jewish knife's edge (BJ 2.266), Scythopolis,
+  // and Alexandria's three quarters. Unlisted provinces are homogeneous.
+  pops: {
+    'Caesarea Maritima': [
+      { r: 'hellenism', c: 'greek', share: 0.55 },
+      { r: 'judaism', c: 'judean', share: 0.45 },
+    ],
+    'Scythopolis': [
+      { r: 'hellenism', c: 'greek', share: 0.62 },
+      { r: 'judaism', c: 'galilean', share: 0.38 },
+    ],
+    'Alexandria': [
+      { r: 'hellenism', c: 'greek', share: 0.55 },
+      { r: 'egyptian', c: 'egyptian', share: 0.27 },
+      { r: 'judaism', c: 'judean', share: 0.18 },
+    ],
+  },
+
   // Era name (SPEC §25): Flavia Neapolis is founded only in 72 CE.
   provinceNames: { 'Neapolis': 'Shechem' },
 

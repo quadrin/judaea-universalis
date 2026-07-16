@@ -2,6 +2,7 @@
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 import { unlockedGen, genName, navalGenName } from '../data/tech.js';
+import { communityLabel } from '../sim/population.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
 const BUILD_ICON = { market: 'market', granary: 'granary', walls: 'walls', shrine: 'shrine', shipyard: 'shipyard', airfield: 'plane' };
@@ -44,6 +45,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-row" data-ref="goodRow"><span class="pp-k">${icon('grain', 'icon-k')}Trade good</span><span class="pp-v" data-ref="good"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
+        <div class="pp-row hidden" data-ref="popRow"><span class="pp-k">${icon('helmet', 'icon-k')}Population</span><span class="pp-v" data-ref="population"></span></div>
         <div class="pp-row" data-tt="Tax / Production / Manpower development"><span class="pp-k">${icon('bricks', 'icon-k')}Development</span><span class="pp-v" data-ref="dev"></span></div>
         <div class="pp-row hidden" data-ref="devBtnsRow"><span class="pp-k">Develop</span><span class="pp-v pp-devbtns">
           <button class="pp-dev" data-dev="tax" data-tt="+1 tax development (50 governance points)">${icon('plus', 'icon-plus')}T</button>
@@ -63,9 +65,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-build-title">Integration</div>
         <div class="pp-constr hidden" data-ref="convRow"></div>
         <div class="pp-constr hidden" data-ref="settleRow"></div>
+        <div class="pp-constr hidden" data-ref="integProgRow"></div>
         <div class="pp-build-grid">
           <button class="pp-build-btn" data-integ="rule" data-ref="integRule">${icon('scales')}<span>Establish Rule</span></button>
           <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
+          <button class="pp-build-btn" data-integ="integrate" data-ref="integInteg">${icon('scroll')}<span>Integrate</span></button>
           <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
         </div>
       </div>
@@ -148,7 +152,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const b = e.target instanceof Element ? e.target.closest('[data-integ]') : null;
       if (!b || b.classList.contains('disabled') || !actions) return;
       const fn = b.dataset.integ === 'rule' ? 'establishRule'
-        : b.dataset.integ === 'settle' ? 'settleProvince' : 'convertProvince';
+        : b.dataset.integ === 'settle' ? 'settleProvince'
+          : b.dataset.integ === 'integrate' ? 'integrateProvince' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
       refresh();
@@ -265,6 +270,17 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const cul = (DEFINES.CULTURES || {})[p.culture];
     setText(refs.culture, (cul && cul.name) || titleCase(p.culture));
     refs.cultureDot.style.background = rgb(cul && cul.color);
+    // The population makeup (SPEC §56): who actually lives here — visible on
+    // any province, ours or theirs. Hidden on pre-population saves.
+    const pop = Array.isArray(p.pop) ? p.pop.filter((e) => e && e.n > 0) : [];
+    refs.popRow.classList.toggle('hidden', !pop.length);
+    if (pop.length) {
+      const parts = pop.slice(0, 3).map((e) => `${fmtMen(e.n)} ${communityLabel(DEFINES, e.r, e.c)}`);
+      setText(refs.population, parts.join(' · ') + (pop.length > 3 ? ' …' : ''));
+      refs.popRow.dataset.tt = pop.map((e) => `${fmtMen(e.n)} ${communityLabel(DEFINES, e.r, e.c)}`).join('\n')
+        + `\nIntegration: ${Math.round(Math.max(0, Math.min(1, p.integration || 0)) * 100)}%`
+        + ' — unintegrated minorities drive unrest.';
+    }
 
     // Dev, autonomy, sites
     const dev = p.dev || {};
@@ -401,6 +417,17 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     const ruleTerms = 'Establish Rule — 25 governance points\n−15% autonomy (more of the province\'s taxes reach the crown); +2 unrest for 6 months while the locals adjust.';
     refs.integRule.classList.toggle('disabled', !info.canEstablish);
     refs.integRule.dataset.tt = info.canEstablish ? ruleTerms : `${info.whyNotEstablish}\n――――――\n${ruleTerms}`;
+    // Integrate (SPEC §56): schools, land and the civil service.
+    const integTerms = 'Integrate the Province — 25 governance points\nA year of schools, land titles and civil service: +34% integration; +1 unrest while old hands grumble.';
+    refs.integInteg.classList.toggle('disabled', !info.canIntegrate);
+    refs.integInteg.dataset.tt = info.canIntegrate ? integTerms : `${info.whyNotIntegrate}\n――――――\n${integTerms}`;
+    refs.integProgRow.classList.toggle('hidden', !info.integrating);
+    if (info.integrating) {
+      const m = Math.max(0, info.integrating.monthsLeft | 0);
+      setHtml(refs.integProgRow,
+        `${icon('scroll')}<span class="pp-constr-name">Integration under way</span>` +
+        `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
+    }
     // Eras without state conversion (SPEC §52) drop the control entirely —
     // absent, not greyed. Old getIntegration results (no showConvert) show it.
     const showConvert = info.showConvert !== false;
