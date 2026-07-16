@@ -1829,8 +1829,36 @@ foreign court **read-only**.
   `computeGeometry` does from the live raster; the balance harness therefore
   exercises real modern-cell adjacency for the first time.
 - **Regression contract**: `smoke30.mjs` proves the four cells' 1948 owners
-  and tiers, the Uvda adjacency chain on the real snapshot, the ancient
+  and tiers, the Uvda adjacency chain on the real snapshot (including that
+  Eilat is coastal and meets Egyptian Sinai at the border), the ancient
   collapse into Oboda/Aila, and — end to end through `checkVictory` — that
-  25+ provinces with Jerusalem but without Eilat earns only "Independence"
-  while adding the Negev and Eilat earns "From Dan to Eilat". `smoke27.mjs`
-  and `uitest25.mjs` count all 25 modern cells.
+  a Jerusalem-holding position without Eilat earns only "Independence"
+  while adding the Negev and Eilat earns "From Dan to Eilat".
+
+## 46. v4.5: the neighbors' modern shapes — the Levant borders drawn true
+
+- **Three more latent cells** finish the theater's modern political geography:
+  **Kiryat Shmona** (parent Caesarea Philippi) — Israel's Galilee panhandle,
+  Hula marsh under Banias' ancient shadow, so the Syrian brigade at Banias
+  invades across a real border instead of owning the panhandle; **Azraq**
+  (parent Bostra) — Jordan's eastern Badia, bordering Saudi Dumatha along
+  Wadi Sirhan, so the kingdom has its true desert east; **Rutba** (parent
+  Syrian Desert) — Iraq's western desert from the Syrian border to the
+  Euphrates approaches (Dura-Europos, Hatra, Nehardea, Babylon), so the
+  Syrian Desert cell stops standing in for Iraqi Anbar. All three collapse
+  latent in every ancient era; Azraq's pixels fold into Nabataean Bostra
+  (the real Wadi Sirhan caravan range), Rutba's into the waste.
+- **Two owner corrections** on existing cells: **Chalcis** is the Beqaa —
+  era-named **Zahle** and Lebanese (Greater Lebanon's 1920 line put the
+  valley in the republic), no longer a Syrian "Zabadani"; **Nisibis** is
+  era-named Qamishli and passes from Iraq to **Syria** — the Jazira corner.
+- **Fronts are not border errors**: Gischala (Jish) stays Lebanese-held —
+  the central Galilee pocket really was Arab-held in May 1948, and the ISR
+  mission (Operations Dekel and Hiram) exists to take it. Starting owners
+  are the de facto lines of 15 May; the modern borders are what you *make*.
+- **Thresholds track the new start**: Israel begins with 24 provinces (the
+  panhandle joins the roster), so the greater verdict asks 26+ (with
+  Jerusalem and Eilat) and the armistice 21+ — the same margins as before.
+- **Regression contract**: `smoke27.mjs` counts all 28 modern cells and the
+  redistributed development (ISR 205, JOR 170, EGY 189); `uitest25.mjs`
+  renders, hit-tests and click-resolves all 28 in a real browser.

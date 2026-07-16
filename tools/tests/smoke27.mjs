@@ -33,7 +33,7 @@ const ancientMap = buildProvinceMapping(MAP_DATA, BOOKMARK_66);
 const modernMap = buildProvinceMapping(MAP_DATA, BOOKMARK_1948);
 ok(ancientMap[childId] === parentId, 'ancient Safed cell resolves to Gischala');
 ok(modernMap[childId] === childId, '1948 Safed cell resolves to itself');
-ok(BOOKMARK_1948.activeProvinces.length === 25, '1948 activates all 25 modern cells');
+ok(BOOKMARK_1948.activeProvinces.length === 28, '1948 activates all 28 modern cells');
 
 const tinyMap = {
   MAP_W: 3, MAP_H: 1,
@@ -79,8 +79,9 @@ for (const p of modern.provinces) {
 }
 // EGY counts 189: its old 174, the three desert interiors v4.3 opened (dev 3
 // each), and the Negev claims v4.4 added (Dimona, Mitzpe Ramon — dev 3 each).
-// JOR counts 167: its old 162 plus the Arabah (Paran 2, Eilat 3).
-ok(devByOwner.ISR === 202 && devByOwner.JOR === 167 && devByOwner.EGY === 189,
+// JOR counts 170: its old 162, the Arabah (Paran 2, Eilat 3), the Badia
+// (Azraq 3). ISR counts 205: its old 202 plus the panhandle (Kiryat Shmona 3).
+ok(devByOwner.ISR === 205 && devByOwner.JOR === 170 && devByOwner.EGY === 189,
   'subdivision redistributes development instead of duplicating regional wealth');
 const ctx = makeCtx({
   game: modern, DEFINES, MAP_DATA, geom: fakeGeom, bus: null,

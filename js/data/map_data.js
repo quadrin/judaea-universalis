@@ -405,6 +405,18 @@ const PROVINCES = [
   // Eilat is the port the greater 1948 verdict marches for, not an inland box.
   P('Eilat', 34.92, 29.57, 1.05, 'NAB', 'coast', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Aila' }),
+
+  // --- v4.5: the modern borders of the Levant ------------------------------
+  // Three more latent cells so 1948's neighbors wear their real shapes:
+  // Israel's Galilee panhandle (the Hula, under Banias' ancient shadow),
+  // Jordan's eastern Badia (the Azraq oasis and Wadi Sirhan caravan land),
+  // and Iraq's western desert (the Rutbah wells on the Baghdad road).
+  P('Kiryat Shmona', 35.58, 33.18, 0.62, 'AGR', 'marsh', 'fish', 'judaism', 'galilean', 1, 1, 1, 0,
+    { latentParent: 'Caesarea Philippi' }),
+  P('Azraq', 37.20, 32.00, 1.15, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Bostra' }),
+  P('Rutba', 41.50, 32.80, 1.60, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Syrian Desert' }),
 ];
 
 // ---------------------------------------------------------------------------

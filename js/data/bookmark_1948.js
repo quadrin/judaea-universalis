@@ -47,6 +47,8 @@ const ISR_LANDS = [
   'Scythopolis',
   // eastern Galilee (Tiberias and Safed fell before the Mandate ended)
   'Tiberias', 'Tarichaea', 'Jotapata', 'Sepphoris',
+  // the Galilee panhandle: Metula, the Hula settlements, the Dan springs
+  'Kiryat Shmona',
   // west Jerusalem and the Dead Sea outposts
   'Jerusalem', 'Masada', 'Engaddi',
   // independently rendered modern districts and cities
@@ -62,6 +64,8 @@ const JOR_LANDS = [
   'Beit Shemesh', 'Arad',
   // the Arabah, patrolled from Aqaba — Operation Uvda's long march
   'Paran', 'Eilat',
+  // the eastern Badia: the Azraq oasis, Wadi Sirhan, the desert patrol's beat
+  'Azraq',
 ];
 const EGY_LANDS = [
   // the expeditionary axis and Egypt itself
@@ -75,15 +79,19 @@ const EGY_LANDS = [
   'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
 const SYR_LANDS = [
-  'Damascus', 'Chalcis', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
+  'Damascus', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
   'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra', 'Syrian Desert',
+  'Nisibis', // Qamishli — the Jazira corner is Syrian, not Iraqi
   // the Golan approaches
   'Caesarea Philippi', 'Batanea', 'Gamala',
 ];
-const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Gischala'];
+// Chalcis is the Beqaa (era name Zahle): Lebanese, not Syrian, since Greater
+// Lebanon's 1920 borders — the republic is the coast AND the valley.
+const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Gischala', 'Chalcis'];
 const IRQ_LANDS = [
   'Singara', 'Hatra', 'Arbela', 'Assur', 'Seleucia-Ctesiphon', 'Babylon',
-  'Nehardea', 'Uruk', 'Charax', 'Nisibis',
+  'Nehardea', 'Uruk', 'Charax',
+  'Rutba', // the western desert: the Rutbah wells and pumping stations
 ];
 const TUR_LANDS = [
   'Tarsus', 'Iconium', 'Tyana', 'Pisidia', 'Attalia', 'Seleucia Trachea',
@@ -104,6 +112,8 @@ const MODERN_PROVINCES = [
   'Khan Yunis', 'Rafah',
   // v4.4: the Negev triangle — the armistice shape is formable down to Eilat
   'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+  // v4.5: the neighbors' modern shapes — the panhandle, the Badia, the wells
+  'Kiryat Shmona', 'Azraq', 'Rutba',
 ];
 
 const OWNERS = {};
@@ -125,7 +135,7 @@ for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, IRQ_LANDS, TUR_LANDS, SAU
   RELIGIONS[n] = 'islam';
 }
 for (const n of ISR_LANDS) RELIGIONS[n] = 'judaism';
-for (const n of ['Tyre', 'Sidon', 'Gischala']) RELIGIONS[n] = 'islam';
+for (const n of ['Tyre', 'Sidon', 'Gischala', 'Chalcis']) RELIGIONS[n] = 'islam';
 for (const n of ['Berytus', 'Byblos', 'Tripolis']) RELIGIONS[n] = 'christianity';
 RELIGIONS['Salamis'] = 'christianity';
 RELIGIONS['Paphos'] = 'christianity';
@@ -195,7 +205,7 @@ export const BOOKMARK_1948 = {
     'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
     'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
     'Apamea': 'Hama', 'Bostra': 'Daraa', 'Dura-Europos': 'Deir ez-Zor',
-    'Chalcis': 'Zabadani', 'Cyrrhus': 'Azaz',
+    'Chalcis': 'Zahle', 'Cyrrhus': 'Azaz',
     'Antioch': 'Antakya', 'Seleucia Pieria': 'Iskenderun', 'Zeugma': 'Gaziantep',
     'Samosata': 'Samsat', 'Edessa': 'Urfa', 'Carrhae': 'Harran',
     'Amida': 'Diyarbakır', 'Tigranocerta': 'Siirt', 'Sophene': 'Elazığ',
@@ -273,6 +283,9 @@ export const BOOKMARK_1948 = {
     'Mitzpe Ramon': { tax: 1, prod: 1, mp: 1 },
     'Paran': { tax: 1, prod: 1, mp: 0 },
     'Eilat': { tax: 1, prod: 1, mp: 1 },
+    'Kiryat Shmona': { tax: 1, prod: 1, mp: 1 },
+    'Azraq': { tax: 1, prod: 1, mp: 1 },
+    'Rutba': { tax: 1, prod: 1, mp: 1 },
   },
 
   // Several familiar modern Israeli cities did not yet exist in May 1948.
@@ -293,6 +306,8 @@ export const BOOKMARK_1948 = {
     'Mitzpe Ramon': 'frontier',
     'Paran': 'frontier',
     'Eilat': 'frontier',
+    'Azraq': 'frontier',
+    'Rutba': 'frontier',
     'Sinai Interior': 'frontier',
     'Eastern Desert': 'frontier',
     'Libyan Desert': 'frontier',
@@ -310,7 +325,7 @@ export const BOOKMARK_1948 = {
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
     ISR: [
-      'Win: end the war holding 25+ provinces including Jerusalem and Eilat — the modern borders, from Dan to Eilat (the greater verdict) — or 20+ (the armistice lines).',
+      'Win: end the war holding 26+ provinces including Jerusalem and Eilat — the modern borders, from Dan to Eilat (the greater verdict) — or 21+ (the armistice lines).',
       'Air power decides late wars: airfields, wings, and bombing raids are yours from military tech 19.',
       'Lose: the state overrun in its first year.',
     ],
@@ -680,7 +695,7 @@ export const BOOKMARK_1948 = {
       const warOver = !findWar(g, 'EGY', 'ISR');
 
       if (g.playerTag === 'ISR') {
-        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 25
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 26
             && h.controls(ctx, 'ISR', 'Jerusalem') && h.controls(ctx, 'ISR', 'Eilat')) {
           h.endGame(ctx, {
             result: 'win',
@@ -693,7 +708,7 @@ export const BOOKMARK_1948 = {
           });
           return;
         }
-        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 20) {
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 21) {
           h.endGame(ctx, {
             result: 'win',
             title: 'Independence',
