@@ -468,6 +468,213 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
   // Transient raid theater (SPEC §30): a plane sweeps from its field to the
   // target, bombs blossom, smoke drifts, the plane flies through and fades.
   const raidFx = [];
+  // ------------------------------------------------------------- warships --
+  // One glyph per naval pattern era (v5.5) — a fleet of war must never be
+  // mistaken for the merchant marine. Drawn in the fleet chip's local space.
+  function drawWarshipGlyph(f, col) {
+    const gen = f.gen | 0;
+    const ink = 'rgba(15,10,5,0.85)';
+    if (gen >= 5) {
+      // Destroyer flotilla: long grey hull, superstructure, gun and funnel;
+      // the tag color flies as a stern pennant.
+      x2.fillStyle = 'rgba(74,78,84,0.96)';
+      x2.beginPath();
+      x2.moveTo(-15, 2); x2.lineTo(14, 2); x2.lineTo(16, -1); x2.lineTo(-15, -1);
+      x2.lineTo(-13, 2);
+      x2.closePath();
+      x2.fill();
+      x2.fillRect(-14, 2, 27, 5); // lower hull
+      x2.fillStyle = 'rgba(96,100,106,0.96)';
+      x2.fillRect(-6, -6, 9, 5);  // superstructure
+      x2.fillRect(-1, -10, 3, 4); // funnel
+      x2.strokeStyle = ink;
+      x2.lineWidth = 1.2;
+      x2.beginPath(); // forward gun
+      x2.moveTo(6, -2); x2.lineTo(12, -5);
+      x2.stroke();
+      x2.fillStyle = css(col); // stern pennant
+      x2.beginPath();
+      x2.moveTo(-15, -1); x2.lineTo(-15, -9); x2.lineTo(-9, -5);
+      x2.closePath();
+      x2.fill();
+      x2.strokeStyle = ink;
+      x2.lineWidth = 0.8;
+      x2.stroke();
+    } else if (gen >= 3) {
+      // Sailing squadrons: high dark hull, two masts of tag-colored canvas.
+      x2.fillStyle = 'rgba(38,28,16,0.95)';
+      x2.beginPath();
+      x2.moveTo(-13, 1); x2.lineTo(13, 1); x2.lineTo(9, 8); x2.lineTo(-9, 8);
+      x2.closePath();
+      x2.fill();
+      x2.fillStyle = css(col);
+      x2.strokeStyle = ink;
+      x2.lineWidth = 1;
+      x2.beginPath(); // main
+      x2.moveTo(-4, -12); x2.lineTo(4, -12); x2.lineTo(6, -1); x2.lineTo(-6, -1);
+      x2.closePath();
+      x2.fill();
+      x2.stroke();
+      x2.beginPath(); // fore
+      x2.moveTo(8, -8); x2.lineTo(12, -1); x2.lineTo(5, -1);
+      x2.closePath();
+      x2.fill();
+      x2.stroke();
+    } else {
+      // War galley: low hull with a bronze ram, oar strokes, one square sail.
+      x2.fillStyle = 'rgba(38,28,16,0.95)';
+      x2.beginPath();
+      x2.moveTo(-12, 2); x2.lineTo(12, 2); x2.lineTo(16, 0); x2.lineTo(12, 5);
+      x2.lineTo(-9, 5);
+      x2.closePath();
+      x2.fill();
+      x2.strokeStyle = 'rgba(200,170,90,0.9)'; // the ram catches the light
+      x2.lineWidth = 1.4;
+      x2.beginPath();
+      x2.moveTo(12, 1); x2.lineTo(16, 0);
+      x2.stroke();
+      x2.strokeStyle = ink; // oars
+      x2.lineWidth = 1;
+      x2.beginPath();
+      for (let i = -8; i <= 8; i += 4) { x2.moveTo(i, 5); x2.lineTo(i - 2, 9); }
+      x2.stroke();
+      x2.fillStyle = css(col);
+      x2.beginPath(); // square sail
+      x2.moveTo(-5, -11); x2.lineTo(5, -11); x2.lineTo(6, -2); x2.lineTo(-6, -2);
+      x2.closePath();
+      x2.fill();
+      x2.stroke();
+    }
+  }
+
+  // Merchantmen ride at their harbors (v5.5): small neutral tubs, clearly
+  // not ships of the line — beige canvas, round hull, no banner.
+  function drawMerchants(game, camera) {
+    if (camera.zoom < 0.7) return;
+    for (let i = 1; i < game.provinces.length; i++) {
+      const p = game.provinces[i];
+      const n = p && (p.merchantShips | 0);
+      if (!n) continue;
+      const anchor = (geom.offshore && geom.offshore[i]) || geom.centroids[i];
+      if (!anchor) continue;
+      const [sx, sy] = camera.mapToScreen(anchor.x, anchor.y);
+      const mx = sx + 16, my = sy + 14; // clear of the war fleet stagger
+      if (mx < -40 || my < -40 || mx > camera.viewport.w + 40 || my > camera.viewport.h + 40) continue;
+      x2.save();
+      x2.translate(mx, my);
+      x2.globalAlpha = 0.9;
+      x2.fillStyle = 'rgba(92,66,38,0.95)'; // round-bellied hull
+      x2.beginPath();
+      x2.moveTo(-7, 0); x2.lineTo(7, 0);
+      x2.quadraticCurveTo(5, 5, 0, 5);
+      x2.quadraticCurveTo(-5, 5, -7, 0);
+      x2.closePath();
+      x2.fill();
+      x2.fillStyle = 'rgba(232,220,192,0.95)'; // working canvas, no colors
+      x2.strokeStyle = 'rgba(15,10,5,0.7)';
+      x2.lineWidth = 0.8;
+      x2.beginPath();
+      x2.moveTo(0, -8); x2.lineTo(5, -1); x2.lineTo(-5, -1);
+      x2.closePath();
+      x2.fill();
+      x2.stroke();
+      if (n > 1) {
+        x2.fillStyle = '#fff';
+        x2.font = 'bold 8px Georgia, serif';
+        x2.textAlign = 'center';
+        x2.textBaseline = 'middle';
+        x2.shadowColor = 'rgba(0,0,0,0.7)';
+        x2.shadowBlur = 2;
+        x2.fillText(String(n), 9, 2);
+        x2.shadowBlur = 0;
+      }
+      x2.restore();
+    }
+  }
+
+  // ------------------------------------------------------ raid targeting --
+  // The reach of a selected wing (v5.5): BFS ring over the land graph, cached
+  // per wing+base. The sim's airRaidCore revalidates on click — these are eyes,
+  // not authority.
+  let raidReach = { key: '', set: null };
+  function wingReach(wing) {
+    const key = wing.id + ':' + wing.prov;
+    if (raidReach.key === key) return raidReach.set;
+    const hops = (DEFINES.AIR && DEFINES.AIR.rangeHops) || 2;
+    const set = new Set([wing.prov]);
+    let frontier = [wing.prov];
+    for (let h = 0; h < hops; h++) {
+      const next = [];
+      for (const id of frontier) {
+        for (const nb of (geom.neighbors[id] || [])) {
+          if (!set.has(nb)) { set.add(nb); next.push(nb); }
+        }
+      }
+      frontier = next;
+    }
+    raidReach = { key, set };
+    return set;
+  }
+
+  function drawRaidTargeting(game, camera) {
+    const wid = game.ui && game.ui.selectedWing;
+    const wing = wid != null && game.airwings ? game.airwings[wid] : null;
+    if (!wing || wing.tag !== game.playerTag) return;
+    const base = geom.centroids[wing.prov];
+    if (!base) return;
+    const reach = wingReach(wing);
+    const [bx, by] = camera.mapToScreen(base.x, base.y);
+    let maxR = 48;
+    for (const id of reach) {
+      const c = geom.centroids[id];
+      if (!c) continue;
+      const [sx, sy] = camera.mapToScreen(c.x, c.y);
+      maxR = Math.max(maxR, Math.hypot(sx - bx, sy - by));
+    }
+    x2.save();
+    x2.strokeStyle = wing.raidCd > 0 ? 'rgba(160,150,120,0.45)' : 'rgba(231,195,76,0.55)';
+    x2.lineWidth = 1.5;
+    x2.setLineDash([9, 7]);
+    x2.beginPath();
+    x2.arc(bx, by, maxR + 20, 0, Math.PI * 2);
+    x2.stroke();
+    x2.setLineDash([]);
+    // Bomb reticles where there is something worth hitting: hostile hosts or
+    // a hostile garrison inside the ring.
+    const me = game.tags[wing.tag] || {};
+    const hostile = new Set((me.atWarWith || []).filter((e) => game.tags[e] && game.tags[e].alive));
+    hostile.add('REB');
+    const hot = new Set();
+    for (const aid in game.armies) {
+      const a = game.armies[aid];
+      if (a && hostile.has(a.tag) && reach.has(a.prov)) hot.add(a.prov);
+    }
+    for (const id of reach) {
+      const p = game.provinces[id];
+      if (p && hostile.has(p.controller) && (p.garrison | 0) > 0) hot.add(id);
+    }
+    const inView = (sx, sy) => sx > -60 && sy > -60
+      && sx < camera.viewport.w + 60 && sy < camera.viewport.h + 60;
+    for (const id of hot) {
+      const c = geom.centroids[id];
+      if (!c) continue;
+      const [sx, sy] = camera.mapToScreen(c.x, c.y);
+      if (!inView(sx, sy)) continue;
+      x2.strokeStyle = wing.raidCd > 0 ? 'rgba(160,150,120,0.7)' : 'rgba(214,74,52,0.9)';
+      x2.lineWidth = 1.6;
+      x2.beginPath();
+      x2.arc(sx, sy, 11, 0, Math.PI * 2);
+      x2.stroke();
+      x2.beginPath();
+      x2.moveTo(sx - 15, sy); x2.lineTo(sx - 7, sy);
+      x2.moveTo(sx + 7, sy); x2.lineTo(sx + 15, sy);
+      x2.moveTo(sx, sy - 15); x2.lineTo(sx, sy - 7);
+      x2.moveTo(sx, sy + 7); x2.lineTo(sx, sy + 15);
+      x2.stroke();
+    }
+    x2.restore();
+  }
+
   function addRaidFx(fromProv, toProv, col) {
     const a = geom.centroids[fromProv];
     const b = geom.centroids[toProv];
@@ -723,6 +930,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       }
 
       // Air wings are persistent unit counters at every zoom level.
+      // Raid targeting rides under the unit markers (v5.5).
+      drawRaidTargeting(game, camera);
+
       for (const marker of wingMarkerList(game, camera)) {
         if (onScreen(marker.x, marker.y)) drawWingMarker(game, marker);
       }
@@ -750,21 +960,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
           x2.lineWidth = 2.5;
           x2.strokeRect(-16, -14, 32, 24);
         }
-        // hull
-        x2.fillStyle = 'rgba(38,28,16,0.95)';
-        x2.beginPath();
-        x2.moveTo(-12, 2); x2.lineTo(12, 2); x2.lineTo(7, 8); x2.lineTo(-7, 8);
-        x2.closePath();
-        x2.fill();
-        // sail in the tag color
-        x2.fillStyle = css(col);
-        x2.strokeStyle = 'rgba(15,10,5,0.85)';
-        x2.lineWidth = 1;
-        x2.beginPath();
-        x2.moveTo(0, -12); x2.lineTo(9, 0); x2.lineTo(-9, 0);
-        x2.closePath();
-        x2.fill();
-        x2.stroke();
+        // The warship wears its age (v5.5): a ram-bowed galley for the oared
+        // patterns, a tall-rigged hull for sail, a grey destroyer for oil.
+        drawWarshipGlyph(f, col);
         // ship count
         x2.fillStyle = '#fff';
         x2.font = 'bold 10px Georgia, serif';
@@ -772,7 +970,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
         x2.textBaseline = 'middle';
         x2.shadowColor = 'rgba(0,0,0,0.7)';
         x2.shadowBlur = 2;
-        x2.fillText(String(f.ships), 0, 5);
+        x2.fillText(String(f.ships), 0, 6);
         x2.shadowBlur = 0;
         x2.restore();
         // sailing line
@@ -791,6 +989,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
           }
         }
       }
+
+      // the merchant marine, riding small at its harbors (v5.5)
+      drawMerchants(game, camera);
 
       // army chips on top
       const chips = chipList(game, camera);
@@ -850,7 +1051,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const markers = fleetMarkerList(game, camera);
       for (let i = markers.length - 1; i >= 0; i--) {
         const m = markers[i];
-        if (m.fleet.tag !== game.playerTag) continue;
+        // v5.5: foreign fleets are pickable too — ui.js decides select vs inspect.
         if (sx >= m.x - FLEET_W / 2 - pad && sx <= m.x + FLEET_W / 2 + pad
             && sy >= m.y - FLEET_H / 2 - pad && sy <= m.y + FLEET_H / 2 + pad) return m.fleet.id;
       }
@@ -867,7 +1068,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const markers = wingMarkerList(game, camera);
       for (let i = markers.length - 1; i >= 0; i--) {
         const m = markers[i];
-        if (m.wing.tag !== game.playerTag) continue;
+        // v5.5: foreign wings are pickable too — ui.js decides select vs inspect.
         if (sx >= m.x - WING_W / 2 - pad && sx <= m.x + WING_W / 2 + pad
             && sy >= m.y - WING_H / 2 - pad && sy <= m.y + WING_H / 2 + pad) return m.wing.id;
       }

@@ -19,6 +19,7 @@ import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
+import { popTotal, popTension } from './population.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 
 const _warned = new Set();
@@ -299,6 +300,26 @@ function aiIntegration(ctx, tag) {
       best.autonomy = Math.max(0, num(best.autonomy, 0.25) - 0.15);
       best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'tightened_grip');
       best.modifiers.push({ id: 'tightened_grip', name: 'Tightened Grip', months: 6, effects: { unrest: 2 } });
+    }
+  }
+  // Integration (SPEC §56): with governance to spare, the AI runs the
+  // program in its most valuable restless province — the only tool it has
+  // where missionary conversion is era-gated off.
+  if (num(t.points.gov) >= 150) {
+    let best = null;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+      if (p.integrating || num(p.integration) >= 1) continue;
+      const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
+      if (!tension || (tension.minority + tension.foreignCulture) < 0.15) continue;
+      if (!best || devTotal(p) > devTotal(best)) best = p;
+    }
+    if (best) {
+      t.points.gov -= 25;
+      best.integrating = { by: tag, monthsLeft: 12 };
+      best.modifiers = (best.modifiers || []).filter((m) => m && m.id !== 'reforms_resented');
+      best.modifiers.push({ id: 'reforms_resented', name: 'Reforms Resented', months: 12, effects: { unrest: 1 } });
     }
   }
   if (num(t.points.infl) >= 100 && t.religion && mechanicOn(ctx, 'conversion')) {

@@ -4,6 +4,7 @@
 
 import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle } from './military.js';
 import { fireEvent } from './events.js';
+import { shiftPopToReligion } from './population.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -234,7 +235,11 @@ export function monthlyIntegration(ctx) {
       c.monthsLeft = num(c.monthsLeft, 1) - resolveTagMult(ctx, p.owner, 'convertMult');
       if (c.monthsLeft > 0) continue;
       p.conversion = null;
-      p.religion = owner.religion;
+      // With a makeup (SPEC §56), conversion moves PEOPLE — every foreign
+      // community adopts the state faith and the majority follows; without
+      // one, the old binary flip stands.
+      if (Array.isArray(p.pop) && p.pop.length) shiftPopToReligion(p, owner.religion, 1);
+      else p.religion = owner.religion;
       p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'religious_tension');
       if (p.owner === g.playerTag) {
         const rel = ctx.DEFINES.RELIGIONS ? ctx.DEFINES.RELIGIONS[p.religion] : null;
@@ -245,6 +250,29 @@ export function monthlyIntegration(ctx) {
         });
       }
     } catch (e) { warnOnce('conv:' + i, 'conversion tick failed for province', i, e); }
+  }
+  // Integration projects (SPEC §56): schools, land titles, the civil service.
+  // Slow, unglamorous, and it works — each finished program raises the
+  // province's integration and the communal unrest fades to match.
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || !p.integrating) continue;
+    try {
+      if (p.owner !== p.integrating.by) { p.integrating = null; continue; }
+      if (p.controller !== p.owner) continue; // the program waits out the occupation
+      p.integrating.monthsLeft = num(p.integrating.monthsLeft, 1) - 1;
+      if (p.integrating.monthsLeft > 0) continue;
+      p.integrating = null;
+      p.integration = Math.min(1, num(p.integration) + 0.34);
+      p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'reforms_resented');
+      if (p.owner === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'Integration advances',
+          text: p.name + ' is ' + Math.round(p.integration * 100) + '% integrated: its communities answer to the state, not against it.',
+          type: 'good', provName: p.name,
+        });
+      }
+    } catch (e) { warnOnce('integ:' + i, 'integration tick failed for province', i, e); }
   }
 }
 

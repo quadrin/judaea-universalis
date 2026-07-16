@@ -29,6 +29,8 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
+import { getPowersInfo, courtPowerCore, askPowerCore } from './powers.js';
+import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
@@ -86,7 +88,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     || s.habitation || inferredHabitation(owner, dev);
   const settleableOverride = bookmarkField(bookmark, 'settleable', s);
 
-  return {
+  const out = {
     id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
     // A bookmark may re-good a province (SPEC §52): the wells of the ancient
     // caravan country pump oil in 1948.
@@ -99,6 +101,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     habitation,
     settleable: typeof settleableOverride === 'boolean' ? settleableOverride : s.settleable !== false,
     autonomy: 0.25, unrest: 0, revoltProgress: 0,
+    integration: 0, integrating: null, // the long work of making subjects citizens (SPEC §56)
     fort, garrison: maxGarrison, maxGarrison,
     siege: null, modifiers: [],
     buildings: [], construction: null,
@@ -111,6 +114,12 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
       ? bookmark.wonderTweaks[s.name] : (s.wonder || null),
     impassable,
   };
+  // Who actually lives here (SPEC §56): a bookmark `pops` share table for
+  // the mixed cities, a homogeneous majority everywhere else. The largest
+  // community names the province's religion and culture.
+  const mix = bookmarkField(bookmark, 'pops', s) || null;
+  seedPop(out, mix, bookmark && bookmark.popMult);
+  return out;
 }
 
 // ------------------------------------------------------------------ initGame
@@ -133,6 +142,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
+    powers: {}, // standings with the powers beyond the map (SPEC §55)
     rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
   };
@@ -336,6 +346,11 @@ export const simHelpers = {
     if (t) { t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== id); return; }
     const p = ctx.prov(scope);
     if (p) p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== id);
+  },
+  // Immigration and flight (SPEC §56): events move real people. n < 0 drains.
+  addPopulation(ctx, provName, entry) {
+    const p = ctx.prov(provName);
+    if (p) addPopulation(p, entry);
   },
   adjust(ctx, tag, d) {
     const t = ctx.game.tags[tag];
@@ -1009,6 +1024,93 @@ export function gameActions(ctx) {
             + '. The wing returns to rearm.', 'good');
         }
       } catch (e) { warnOnce('raidProv', 'raidProvince failed', e); }
+    },
+    // The bombsight (v5.5): which provinces a wing may legally strike right
+    // now — ui.js consults this before turning a map click into a raid.
+    getWingRaidTargets(wingId) {
+      try {
+        const w = g.airwings && g.airwings[wingId];
+        if (!w || w.tag !== g.playerTag) return [];
+        return raidTargets(ctx, w).map((r) => r.id);
+      } catch (e) { warnOnce('wingTargets', 'getWingRaidTargets failed', e); return []; }
+    },
+
+    // ---- the unit inspector (v5.5) ------------------------------------------
+    // Details for ANY clicked unit, friend or foe — what a field commander
+    // could see through glasses: banners, strength, patterns, the general's
+    // reputation, morale. No hidden rolls are exposed.
+    getUnitDetails(sel) {
+      try {
+        const out = { armies: [], fleet: null, wing: null, provName: '' };
+        const ids = sel && Array.isArray(sel.armyIds) ? sel.armyIds
+          : (sel && sel.armyId != null ? [sel.armyId] : []);
+        for (const id of ids) {
+          const a = g.armies && g.armies[id];
+          if (!a) continue;
+          const t = g.tags[a.tag] || {};
+          const p = ctx.byId(a.prov);
+          if (p && !out.provName) out.provName = p.name;
+          const gen = num(a.gen, 0);
+          out.armies.push({
+            id: a.id, tag: a.tag, tagName: t.name || a.tag,
+            name: a.name || 'Army', men: Math.round(num(a.men)),
+            inf: (a.regiments && a.regiments.inf) | 0,
+            cav: (a.regiments && a.regiments.cav) | 0,
+            infName: genName(gen, 'inf'), cavName: genName(gen, 'cav'),
+            morale: num(a.morale), maxMorale: Math.max(0.1, num(a.maxMorale, 3)),
+            general: a.general ? {
+              name: a.general.name,
+              fire: a.general.fire | 0, shock: a.general.shock | 0, maneuver: a.general.maneuver | 0,
+            } : null,
+            inBattle: !!a.inBattle, retreating: !!a.retreating,
+            isOwn: a.tag === g.playerTag,
+          });
+        }
+        if (sel && sel.fleetId != null && g.fleets && g.fleets[sel.fleetId]) {
+          const f = g.fleets[sel.fleetId];
+          const t = g.tags[f.tag] || {};
+          const p = ctx.byId(f.prov);
+          if (p && !out.provName) out.provName = p.name;
+          out.fleet = {
+            id: f.id, tag: f.tag, tagName: t.name || f.tag,
+            ships: f.ships | 0, patternName: navalGenName(f.gen | 0),
+            isOwn: f.tag === g.playerTag,
+          };
+        }
+        if (sel && sel.wingId != null && g.airwings && g.airwings[sel.wingId]) {
+          const w = g.airwings[sel.wingId];
+          const t = g.tags[w.tag] || {};
+          const p = ctx.byId(w.prov);
+          if (p && !out.provName) out.provName = p.name;
+          out.wing = {
+            id: w.id, tag: w.tag, tagName: t.name || w.tag,
+            leader: (w.leader && w.leader.name) || null,
+            rearming: Math.max(0, w.raidCd | 0),
+            isOwn: w.tag === g.playerTag,
+          };
+        }
+        return (out.armies.length || out.fleet || out.wing) ? out : null;
+      } catch (e) { warnOnce('unitDetails', 'getUnitDetails failed', e); return null; }
+    },
+
+    // ---- the powers beyond the map (SPEC §55) --------------------------------
+    getPowers() {
+      try { return getPowersInfo(ctx, g.playerTag); } catch (e) { warnOnce('getPowers', e); return []; }
+    },
+    courtPower(powerId) {
+      try {
+        const res = courtPowerCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('The envoys stay home', res.why + '.', 'bad'); return; }
+        say('Envoys received', 'Our standing with ' + res.name + ' rises to ' + Math.round(res.standing)
+          + (res.rival ? ' — and ' + res.rival + '\'s patron takes note.' : '.'), 'good');
+      } catch (e) { warnOnce('courtPower', 'courtPower failed', e); }
+    },
+    askPower(powerId, askId) {
+      try {
+        const res = askPowerCore(ctx, g.playerTag, String(powerId), String(askId));
+        if (!res.ok) { say('The favor is refused', res.why + '.', 'bad'); return; }
+        say('The favor is granted', res.power + ': ' + res.name.toLowerCase() + '.', 'good');
+      } catch (e) { warnOnce('askPower', 'askPower failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------
@@ -1828,8 +1930,27 @@ export function gameActions(ctx) {
         // Hide the settlement control entirely on land that can never take a
         // project (unsettleable), so it only appears where it means something.
         const showSettle = p.settleable !== false;
+        // Integration (SPEC §56): the modern answer where conversion is
+        // era-gated off, a gentler tool beside it everywhere else.
+        const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
+        const hasTension = !!tension && (tension.minority + tension.foreignCulture) > 0.001;
+        let whyNotIntegrate = '';
+        if (!hasTension) whyNotIntegrate = 'Every community here already stands with the state.';
+        else if (num(p.integration) >= 1) whyNotIntegrate = 'The province is fully integrated.';
+        else if (p.integrating) whyNotIntegrate = 'The program is already under way.';
+        else if (num(t.points.gov) < 25) whyNotIntegrate = 'Not enough governance points (25 required).';
+        const popRows = (p.pop || []).map((e) => ({
+          label: communityLabel(ctx.DEFINES, e.r, e.c), n: e.n, r: e.r, c: e.c,
+        }));
         return {
           autonomy,
+          pop: popTotal(p) > 0 ? {
+            total: popTotal(p), rows: popRows,
+            integration: clamp(num(p.integration), 0, 1),
+          } : null,
+          canIntegrate: !whyNotIntegrate, whyNotIntegrate,
+          integrating: p.integrating
+            ? { monthsLeft: Math.max(0, num(p.integrating.monthsLeft) | 0) } : null,
           canEstablish: !whyNotEstablish, whyNotEstablish,
           showConvert,
           canConvert: !whyNotConvert, whyNotConvert,
@@ -1872,6 +1993,26 @@ export function gameActions(ctx) {
         p.modifiers.push({ id: 'religious_tension', name: 'Religious Tension', months: 12, effects: { unrest: 3 } });
         say('Conversion begun', 'Priests and teachers go out to ' + p.name + '; in a year it will follow the state faith. Expect unrest while the old gods are put away.', 'good');
       } catch (e) { warnOnce('convertProvince', 'convertProvince failed', e); }
+    },
+    integrateProvince(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const t = g.tags[g.playerTag];
+        if (!p || !t || p.owner !== g.playerTag || p.controller !== g.playerTag) return;
+        const tension = popTotal(p) > 0 ? popTension(ctx, p, t) : null;
+        if (!tension || (tension.minority + tension.foreignCulture) <= 0.001) {
+          say('Integration', 'Every community of ' + p.name + ' already stands with the state.', 'info'); return;
+        }
+        if (num(p.integration) >= 1) { say('Integration', p.name + ' is fully integrated.', 'info'); return; }
+        if (p.integrating) { say('Integration', 'The program in ' + p.name + ' is already under way.', 'info'); return; }
+        if (num(t.points.gov) < 25) { say('Integration', 'Not enough governance points (25 required).', 'bad'); return; }
+        t.points.gov = num(t.points.gov) - 25;
+        p.integrating = { by: g.playerTag, monthsLeft: 12 };
+        p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'reforms_resented');
+        p.modifiers.push({ id: 'reforms_resented', name: 'Reforms Resented', months: 12, effects: { unrest: 1 } });
+        say('Integration begun', 'Schools, land titles and the civil service go to work in ' + p.name
+          + '; in a year its communities will stand closer to the state. Old hands grumble meanwhile.', 'good');
+      } catch (e) { warnOnce('integrateProvince', 'integrateProvince failed', e); }
     },
     settleProvince(provId) {
       try {
@@ -2156,6 +2297,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.rngState)) saved.rngState = saved.rngSeed;
   if (!saved.truces) saved.truces = {};
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
+  if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
   // Runtime-synthesized events don't survive a reload — drop stale pendings.

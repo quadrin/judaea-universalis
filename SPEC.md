@@ -2144,3 +2144,108 @@ architecture supports, and it changes every chapter.
   (smoke3); 132's rump-Judaea debt returns to its long-documented class;
   614's Return keeps its Persian-tide snowball with a self-limiting
   post-subsidy bleed (Persian supply trains now carry adminMult 0.5).
+
+## 54. v5.5: the map as bombsight, the glasses on every banner
+
+- **Click-to-raid** (`ui.js` bombsight interception, overlay range ring):
+  selecting a wing turns the map into a bombsight. A dashed ring shows its
+  reach (grey while rearming), red reticles mark provinces holding hostile
+  hosts or garrisons, and clicking a legal target — the province or an
+  enemy banner on it — flies the sortie via the same `raidProvince` action
+  the panel buttons use. The wing stays selected for the next sortie; the
+  sim revalidates every click (`getWingRaidTargets` feeds legality).
+- **The unit inspector** (`getUnitDetails`, `#inspect-modal`): clicking ANY
+  banner, sail, or parked wing — friend or foe — opens the field-glasses
+  card: composition in era pattern names, strength, morale bar, the
+  general's pips, battle/retreat state. Foreign fleets and wings became
+  hit-testable; ui.js decides select (own) vs inspect (foreign). Escape
+  and scrim close it.
+- **Warships wear their age** (`drawWarshipGlyph`): a ram-bowed oared
+  galley for the ancient patterns, a tall-rigged two-master for sail, a
+  grey destroyer with funnel, gun and stern pennant for the oil age — and
+  the **merchant marine now rides visibly at its harbors** as small
+  neutral tubs (round hull, working canvas, no banner), unmistakably not
+  ships of the line.
+- **Regression contract**: `smoke33.mjs` (inspector shapes for any
+  ownership, bombsight legality and range) and `uitest28.mjs` (real
+  Chromium clicks: inspector open/close, banner-click sortie flies and
+  rearms, ship render staging, zero page errors).
+
+## 55. v5.6: the powers beyond the map
+
+The frame can only grow so far (SPEC §53) — but the world's weight can still
+press on it. Off-map great powers are diplomatic entities, not tags: no
+provinces, no armies, unkillable — a STANDING (0–100) with every court,
+courting envoys, and asks that standing unlocks.
+
+- **The engine** (`js/data/powers.js`, `js/sim/powers.js`): per-bookmark
+  power definitions; state in `game.powers` (saves carry it free; reviveGame
+  backfills). Courting costs influence on a cooldown (reusing the
+  diploCooldowns book with `P:` keys) and may chill a rival's standing —
+  the Cold War is a seesaw. Asks gate on standing, war state, a patron
+  power's standing (`needsPower`), tag allowlists, and costs; their effects
+  are ordinary adjustments and timed tag modifiers, so every downstream
+  system already understands them. Standings drift one point a month back
+  toward the era's baseline: friendship with the great must be tended.
+- **1948**: the **United States** (credits and recognition — no arms; the
+  Neutrality Act embargo IS its ask list), the **Soviet Union** (whose nod
+  opens Prague), **Czechoslovakia** (the arms deal: hard currency for
+  rifles, discipline and reinforcement — requires Moscow's standing),
+  **France** (the quiet quays), and the **United Nations** (a wartime
+  appeal steadies legitimacy and calms the streets). Courting Washington
+  chills Moscow and vice versa.
+- **614**: the **Western Khaganate** (Heraclius' Türk alliance: a wartime
+  host for gold) and the **Avar Khaganate** (Byzantium buys its rear;
+  Persia aims the horde west).
+- **167/66/132**: the **Diaspora** — the communities of Alexandria,
+  Babylon and Cyrene send silver and volunteers, but only to the House
+  they love (asks are gated to the Jewish tags; Rome can court their
+  goodwill, not their sons).
+- **UI**: the nation panel grows "The Powers Beyond the Map" — standing
+  bars, an Envoy button, and ask buttons with full terms in the tooltips.
+  Player's own realm only.
+- **Regression contract**: `smoke34.mjs` — roster per era, courting gain
+  and rival chill, cooldowns, ask gates (standing / patron / war / funds),
+  the Prague chain, Diaspora tag-gating, drift both directions, and the
+  pre-powers save backfill.
+
+## 56. v5.7: who actually lives here — population and integration
+
+Faith and culture stop being map paint: a province carries its PEOPLE.
+
+- **The makeup** (`js/sim/population.js`, `p.pop = [{r, c, n}]`): seeded at
+  creation from development (`POP_PER_DEV` 2,500 × the bookmark's
+  `popMult` — 2.5 for the crowded 20th century, 0.8 for 614, 1.0 for the
+  ancient chapters) through a bookmark `pops` share table for the mixed
+  cities, homogeneous elsewhere. 1948 seeds Jerusalem 60/32/8
+  Jewish/Muslim/Christian, Haifa, Jaffa, Acre, Nazareth (whose Christian
+  plurality overrides the blanket overlay), Tiberias, Safed and Beirut;
+  66 CE seeds Caesarea's Greek-Jewish knife's edge, Scythopolis and
+  Alexandria's three quarters. **The largest community IS the province's
+  religion and culture** — every legacy consumer (mapmodes, holy war CBs,
+  holy sites, conversion) keeps working. Communities read as people
+  ("112k: 67k Jews · 39k Muslim Arabs"), in the panel's Population row —
+  visible on any province, ours or theirs.
+- **Communal unrest is proportional** (`computeUnrestBreakdown`): where a
+  makeup exists, the old binary heathen/heretic/foreign-culture rows become
+  the UNINTEGRATED minority share × the same UNREST weights — a 12%
+  minority frets, it does not convulse; a 100% foreign conquest still
+  bites for the full 3. Pre-population saves keep the classic rows.
+- **Integrate** (`integrateProvince`, 25 governance, 12 months): schools,
+  land titles and the civil service raise `p.integration` +34% per
+  program (+1 unrest while it runs — "Reforms Resented"), scaling all
+  communal tension by (1 − integration). It is THE tool of 1948, where
+  conversion is era-gated off — integration in the modern age is
+  citizenship, not baptism — and a gentler tool beside the missionaries
+  everywhere else. The AI runs programs in its most valuable restless
+  provinces once governance allows.
+- **Conversion moves people**: completing the missionaries' year shifts
+  every foreign-faith community to the state religion — keeping its
+  tongue (Greek-speaking Jews, as history had them) — and the majority
+  follows. Immigration is people too: `helpers.addPopulation` lands real
+  souls (the MAHAL/GAHAL boats grow Jaffa and Haifa by 40,000), and
+  drains them when events demand flight.
+- **Regression contract**: `smoke35.mjs` — seeding and density per era,
+  majority derivation, proportional tension and its integration scaling,
+  the binary-parity case, the full Integrate loop, conversion-as-people,
+  and immigration arithmetic. The autorun anomaly set is unchanged.

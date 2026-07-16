@@ -440,6 +440,12 @@ export const EVENTS_1948 = [
           ctx.helpers.addTagModifier(ctx, 'ISR', {
             id: 'gates_open', name: 'The Gates Open', months: 12, effects: { manpowerMult: 1.1 },
           });
+          // The ships land people, not just soldiers (SPEC §56): the coastal
+          // cities grow Jewish by the boatload.
+          if (typeof ctx.helpers.addPopulation === 'function') {
+            ctx.helpers.addPopulation(ctx, 'Joppa', { r: 'judaism', c: 'israeli', n: 25000 });
+            ctx.helpers.addPopulation(ctx, 'Dora', { r: 'judaism', c: 'israeli', n: 15000 });
+          }
         }),
       },
     ],

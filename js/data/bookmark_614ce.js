@@ -117,6 +117,7 @@ export const BOOKMARK_614 = {
   // Technology of the age (SPEC §22): thematic regulars and armored lancers.
   techBase: 10,
   techTweaks: { SAS: { mar: 1 }, BYZ: { gov: 1 } },
+  popMult: 0.8, // the late-antique world, thinner than 1948 but denser than the Hasmoneans' (SPEC §56)
 
   // The map speaks its era (SPEC §25): Byzantine and Sasanian names.
   provinceNames: {

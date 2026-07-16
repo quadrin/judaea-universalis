@@ -464,6 +464,76 @@ export function initUI(staticCtx) {
     nationPanel.open(tag);
   }, true);
 
+  // ---------------------------------------------------------- unit inspector --
+  // Click any banner, sail, or parked wing — friend or foe — and read it like
+  // a field commander through glasses (v5.5): strength, patterns, the
+  // general's reputation, morale. Foe details come from getUnitDetails.
+  let inspectEl = null;
+  function closeUnitInspector() {
+    if (inspectEl) inspectEl.classList.add('hidden');
+  }
+  function openUnitInspector(sel) {
+    const actions = state.actions;
+    if (!actions || typeof actions.getUnitDetails !== 'function') return;
+    let info = null;
+    try { info = actions.getUnitDetails(sel); } catch (e) { warnOnce('getUnitDetails', e); }
+    if (!info) return;
+    if (!inspectEl) {
+      inspectEl = document.createElement('div');
+      inspectEl.id = 'inspect-modal';
+      document.getElementById('ui-root').appendChild(inspectEl);
+    }
+    const moraleBar = (m, mx) => {
+      const pct = Math.round(Math.max(0, Math.min(100, (m / Math.max(0.01, mx)) * 100)));
+      return `<span class="morale bw-morale"><span class="morale-fill" style="width:${pct}%"></span></span>`;
+    };
+    const rows = [];
+    for (const a of info.armies) {
+      const comp = [
+        a.inf ? `${a.inf} × ${a.infName}` : '',
+        a.cav ? `${a.cav} × ${a.cavName}` : '',
+      ].filter(Boolean).join(' · ') || 'skeleton formation';
+      const st = a.inBattle ? ' — in battle' : a.retreating ? ' — retreating' : '';
+      const gen = a.general
+        ? `${icon('helmet', 'icon-sm')} ${esc(a.general.name)} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})`
+        : '<span class="peace-dim">no general</span>';
+      rows.push(`
+        <div class="bw-army insp-army">
+          <span class="bw-aname">${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
+          <span class="bw-men">${fmtMen(a.men)}</span>
+          ${moraleBar(a.morale, a.maxMorale)}
+        </div>
+        <div class="insp-sub">${esc(comp)}${esc(st)}<br>${gen} · morale ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}</div>`);
+    }
+    if (info.fleet) {
+      rows.push(`
+        <div class="bw-army insp-army">
+          <span class="bw-aname">${flagChipHtml(info.fleet.tag, true)} Fleet of ${esc(info.fleet.tagName)}</span>
+          <span class="bw-men">${info.fleet.ships} ships</span>
+        </div>
+        <div class="insp-sub">${esc(info.fleet.patternName)}</div>`);
+    }
+    if (info.wing) {
+      rows.push(`
+        <div class="bw-army insp-army">
+          <span class="bw-aname">${flagChipHtml(info.wing.tag, true)} Air wing of ${esc(info.wing.tagName)}</span>
+          <span class="bw-men">${info.wing.rearming ? 'rearming ' + info.wing.rearming + 'd' : 'ready'}</span>
+        </div>
+        <div class="insp-sub">${info.wing.leader ? esc('Wing leader: ' + info.wing.leader) : 'no wing leader'}</div>`);
+    }
+    const who = info.armies[0] || info.fleet || info.wing || {};
+    inspectEl.innerHTML = `
+      <div class="modal-scrim"></div>
+      <div class="ev-card peace-card insp-card">
+        <h2 class="peace-title">${who.isOwn ? 'Our forces' : 'Foreign forces'}${info.provName ? ' at ' + esc(info.provName) : ''}</h2>
+        <div class="bw-armies">${rows.join('')}</div>
+        <button class="btn peace-cancel">Close</button>
+      </div>`;
+    inspectEl.classList.remove('hidden');
+    inspectEl.querySelector('.peace-cancel').addEventListener('click', closeUnitInspector);
+    inspectEl.querySelector('.modal-scrim').addEventListener('click', closeUnitInspector);
+  }
+
   // ---------------------------------------------------------- battle window --
   // A live view of one field battle: the day's dice, both hosts army by army,
   // morale draining, and the running butcher's bill. Re-rendered each game day.
@@ -769,6 +839,27 @@ export function initUI(staticCtx) {
     }
     // Group mode behaves exactly like a held shift key (mobile contract).
     const grouping = shift || groupMode;
+    // A selected wing turns the map into a bombsight (v5.5): clicking a
+    // legal target in range — a province or an enemy banner — sends the
+    // planes. Anything else falls through to ordinary selection.
+    const selWingId = g.ui.selectedWing;
+    const selWing = selWingId != null && g.airwings ? g.airwings[selWingId] : null;
+    if (selWing && selWing.tag === g.playerTag && !grouping
+        && state.actions && typeof state.actions.raidProvince === 'function') {
+      let target = provId > 0 ? provId : 0;
+      if (armyId != null) {
+        const a = g.armies && g.armies[armyId];
+        if (a && a.tag !== g.playerTag) target = a.prov;
+      }
+      let legal = [];
+      try { legal = state.actions.getWingRaidTargets(selWingId) || []; } catch (e) { legal = []; }
+      if (target > 0 && legal.indexOf(target) >= 0) {
+        state.actions.raidProvince(selWingId, target);
+        outliner.refresh(true);
+        panel.refresh();
+        return; // the wing stays selected for the next sortie
+      }
+    }
     if (armyId != null) {
       const a = g.armies && g.armies[armyId];
       if (a && a.tag === g.playerTag) {
@@ -780,7 +871,12 @@ export function initUI(staticCtx) {
         setSelectedProv(0);
         return;
       }
-      // Foreign army: fall through to the province underneath.
+      if (a) {
+        // Foreign army (v5.5): read it through the glasses.
+        clearSelectedUnits();
+        openUnitInspector({ armyIds: Array.isArray(payload.armyIds) ? payload.armyIds : [armyId] });
+        return;
+      }
     }
     if (fleetId != null) {
       const f = g.fleets && g.fleets[fleetId];
@@ -789,12 +885,22 @@ export function initUI(staticCtx) {
         setSelectedProv(0);
         return;
       }
+      if (f) {
+        clearSelectedUnits();
+        openUnitInspector({ fleetId });
+        return;
+      }
     }
     if (wingId != null) {
       const w = g.airwings && g.airwings[wingId];
       if (w && w.tag === g.playerTag) {
         setSelectedWing(wingId);
         setSelectedProv(0);
+        return;
+      }
+      if (w) {
+        clearSelectedUnits();
+        openUnitInspector({ wingId });
         return;
       }
     }
@@ -850,6 +956,7 @@ export function initUI(staticCtx) {
       topbar.refresh();
     } else if (e.key === 'Escape') {
       if (helpOpen()) { closeHelp(); return; }
+      if (inspectEl && !inspectEl.classList.contains('hidden')) { closeUnitInspector(); return; }
       if (battleWindowOpen()) { closeBattleWindow(); return; }
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
       if (warOverviewOpen()) { closeWarOverview(); return; }
