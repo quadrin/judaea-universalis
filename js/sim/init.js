@@ -29,7 +29,7 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
-import { getPowersInfo, courtPowerCore, askPowerCore } from './powers.js';
+import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
@@ -1111,6 +1111,27 @@ export function gameActions(ctx) {
         if (!res.ok) { say('The favor is refused', res.why + '.', 'bad'); return; }
         say('The favor is granted', res.power + ': ' + res.name.toLowerCase() + '.', 'good');
       } catch (e) { warnOnce('askPower', 'askPower failed', e); }
+    },
+    signPowerPact(powerId) {
+      try {
+        const res = signPactCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
+        say('A pact is signed', res.power + ': ' + res.name + '. Their bloc is ours — and the rival\'s door closes.', 'good');
+      } catch (e) { warnOnce('signPowerPact', 'signPowerPact failed', e); }
+    },
+    leavePowerPact(powerId) {
+      try {
+        const res = leavePactCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
+        say('The pact is ended', 'We walk out of the alignment with ' + res.power + '. They will remember.', 'info');
+      } catch (e) { warnOnce('leavePowerPact', 'leavePowerPact failed', e); }
+    },
+    signPowerTrade(powerId) {
+      try {
+        const res = signTradeCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No agreement', res.why + '.', 'bad'); return; }
+        say('Trade opens', res.power + ': ' + res.name + '. The monthly flow starts at once.', 'good');
+      } catch (e) { warnOnce('signPowerTrade', 'signPowerTrade failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------

@@ -2249,3 +2249,37 @@ Faith and culture stop being map paint: a province carries its PEOPLE.
   majority derivation, proportional tension and its integration scaling,
   the binary-parity case, the full Integrate loop, conversion-as-people,
   and immigration arithmetic. The autorun anomaly set is unchanged.
+
+## 57. v5.8: blocs, contracts, and the arsenal abroad
+
+The powers beyond the map (SPEC §55) learn three deeper relationships.
+
+- **Pacts** (`signPactCore`/`leavePactCore`, `power.pact` defs): alignment
+  with a power at high standing (75). A pact mounts a permanent tag
+  modifier, pays monthly funding through the ledger, and anchors the
+  standing drift at a floor of 70 — but **the rival's bloc closes** (one
+  bloc at a time; signing chills the rival −20), walking out costs −10,
+  and a pact left to rot below standing 45 dissolves on its own. 1948:
+  *American Alignment* (grant-in-aid, +5% income) vs *Eastern Alignment*
+  (fraternal aid, +8% reinforcement); 614: *The Steppe Alliance* for
+  Byzantium; the Diaspora offers *One People* to the Jewish tags.
+- **Trade agreements** (`signTradeCore`, `power.trade` defs): colder and
+  cheaper — a monthly treasury flow (the *Dollar Trade*, the *Skoda
+  Contracts*, the *Marseille Run*, the *Half-Shekel*) for as long as
+  standing stays within 15 of the signing bar. Flows ride
+  `incomeBreakdown.powerIn` → the net, `t.income`, and an
+  "aid & trade" ledger row — the AI's affordability sees the same money
+  the player does.
+- **Matériel** (`effects.modernize`, new asks): buying upgrades, not just
+  bonuses. *Re-equip from the Czech depots* (140 talents, Moscow's nod
+  required) re-arms every stale formation to the nation's current
+  pattern on the spot; *Soviet surplus armor* mounts a 24-month +6%
+  power multiplier and martial points. The existing one-off deals stand.
+- **UI**: pact and trade appear as the first chips of each power's row —
+  ★ marks a standing pact (click to walk out), ⚖ a live agreement —
+  with full terms in the tooltips.
+- **Regression contract**: `smoke36.mjs` — bloc exclusivity and the −20
+  chill, permanent-modifier mount/unmount, ledger flows (13/month
+  verified through incomeBreakdown and explainIncome), lapse-on-neglect
+  for both relationship kinds, the pact floor at 70, both matériel
+  purchases, and Diaspora tag-gating.

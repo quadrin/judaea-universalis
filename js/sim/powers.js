@@ -5,7 +5,7 @@
 // so saves carry it for free; cooldowns reuse game.diploCooldowns with
 // 'P:<power>:<kind>' keys.
 
-import { num, clamp, setDiploCd, diploCdActive, diploCdMonthsLeft } from './military.js';
+import { num, clamp, setDiploCd, diploCdActive, diploCdMonthsLeft, armiesOf, tagGen } from './military.js';
 import { POWERS } from '../data/powers.js';
 
 const _warned = new Set();
@@ -144,6 +144,114 @@ function applyAskEffects(ctx, tag, fx) {
       months: fx.modifier.months, effects: { ...(fx.modifier.effects || {}) },
     });
   }
+  // Matériel (SPEC §57): the power's depots re-equip every stale formation
+  // to the nation's current pattern — bought upgrades, not raised ones.
+  if (fx.modernize) {
+    const cur = tagGen(ctx, tag);
+    for (const a of armiesOf(ctx, tag)) {
+      if (num(a.gen, 0) < cur) a.gen = cur;
+    }
+  }
+}
+
+// ------------------------------------------------------------- pacts & trade
+// A PACT is alignment: a standing floor, a persistent modifier, and monthly
+// funding — but the rival's bloc is closed to you while it holds, and it
+// dissolves if the friendship is left to rot. A TRADE AGREEMENT is colder:
+// a monthly flow through the ledger for as long as standing stays warm.
+const PACT_FLOOR = 70;    // drift target while pacted
+const PACT_LAPSE = 45;    // standing below this dissolves the pact
+
+function pactState(ctx, powerId) {
+  ensurePowers(ctx);
+  const st = ctx.game.powers[powerId];
+  if (!st.pact || typeof st.pact !== 'object') st.pact = {};
+  return st.pact;
+}
+function tradeState(ctx, powerId) {
+  ensurePowers(ctx);
+  const st = ctx.game.powers[powerId];
+  if (!st.trade || typeof st.trade !== 'object') st.trade = {};
+  return st.trade;
+}
+export function hasPact(ctx, powerId, tag) { return !!pactState(ctx, powerId)[tag]; }
+export function hasTrade(ctx, powerId, tag) { return !!tradeState(ctx, powerId)[tag]; }
+
+export function pactGate(ctx, tag, def) {
+  const t = ctx.game.tags[tag];
+  const p = def.pact;
+  if (!t || !p) return 'no pact is on offer';
+  if (Array.isArray(p.tags) && p.tags.indexOf(tag) < 0) return 'not offered to our court';
+  if (hasPact(ctx, def.id, tag)) return 'the pact already stands';
+  const rival = def.court && def.court.rival;
+  if (rival && hasPact(ctx, rival, tag)) {
+    const r = powerDefs(ctx).find((d) => d.id === rival);
+    return 'our pact with ' + ((r && r.name) || rival) + ' bars it — one bloc at a time';
+  }
+  const need = num(p.need, 75);
+  if (standingOf(ctx, def.id, tag) < need) return 'our standing is too low (' + need + ' required)';
+  return '';
+}
+
+export function signPactCore(ctx, tag, powerId) {
+  const def = powerDefs(ctx).find((d) => d.id === powerId);
+  if (!def) return { ok: false, why: 'no such power in this age' };
+  const why = pactGate(ctx, tag, def);
+  if (why) return { ok: false, why };
+  pactState(ctx, powerId)[tag] = true;
+  const rival = def.court && def.court.rival;
+  if (rival) addStanding(ctx, rival, tag, -20); // the other bloc remembers
+  if (def.pact.effects) {
+    ctx.helpers.addTagModifier(ctx, tag, {
+      id: 'power_pact_' + powerId, name: def.pact.name || ('Pact with ' + def.name),
+      months: -1, effects: { ...def.pact.effects },
+    });
+  }
+  try { ctx.helpers.chronicle(ctx, 'diplo', (ctx.game.tags[tag].name || tag) + ' aligns with ' + def.name + '.'); } catch (e) { /* flavor */ }
+  return { ok: true, name: def.pact.name || def.name, power: def.name };
+}
+
+export function leavePactCore(ctx, tag, powerId, why) {
+  const def = powerDefs(ctx).find((d) => d.id === powerId);
+  if (!def || !hasPact(ctx, powerId, tag)) return { ok: false, why: 'no pact stands' };
+  delete pactState(ctx, powerId)[tag];
+  ctx.helpers.removeModifier(ctx, tag, 'power_pact_' + powerId);
+  if (!why) addStanding(ctx, powerId, tag, -10); // walking out is noticed
+  return { ok: true, power: def.name };
+}
+
+export function tradeGate(ctx, tag, def) {
+  const t = ctx.game.tags[tag];
+  const tr = def.trade;
+  if (!t || !tr) return 'no agreement is on offer';
+  if (Array.isArray(tr.tags) && tr.tags.indexOf(tag) < 0) return 'not offered to our court';
+  if (hasTrade(ctx, def.id, tag)) return 'the agreement already stands';
+  const need = num(tr.need, 55);
+  if (standingOf(ctx, def.id, tag) < need) return 'our standing is too low (' + need + ' required)';
+  return '';
+}
+
+export function signTradeCore(ctx, tag, powerId) {
+  const def = powerDefs(ctx).find((d) => d.id === powerId);
+  if (!def) return { ok: false, why: 'no such power in this age' };
+  const why = tradeGate(ctx, tag, def);
+  if (why) return { ok: false, why };
+  tradeState(ctx, powerId)[tag] = true;
+  try { ctx.helpers.chronicle(ctx, 'diplo', (ctx.game.tags[tag].name || tag) + ' opens trade with ' + def.name + '.'); } catch (e) { /* flavor */ }
+  return { ok: true, name: def.trade.name || 'trade', power: def.name };
+}
+
+// The monthly talents the powers send a court: pact funding plus trade flow.
+// Rides incomeBreakdown so the ledger, the AI, and the treasury all agree.
+export function powerFlows(ctx, tag) {
+  const defs = powerDefs(ctx);
+  if (!defs.length) return 0;
+  let sum = 0;
+  for (const def of defs) {
+    if (def.pact && hasPact(ctx, def.id, tag)) sum += num(def.pact.monthly && def.pact.monthly.treasury);
+    if (def.trade && hasTrade(ctx, def.id, tag)) sum += num(def.trade.monthly && def.trade.monthly.treasury);
+  }
+  return sum;
 }
 
 // Monthly: standing drifts one point back toward its baseline — friendship
@@ -158,10 +266,39 @@ export function monthlyPowers(ctx) {
     for (const tag of Object.keys(st.s)) {
       const t = g.tags[tag];
       if (!t || !t.alive) continue;
-      const base = baseline(def, tag);
+      // A standing pact anchors the friendship high (SPEC §57).
+      const base = hasPact(ctx, def.id, tag)
+        ? Math.max(baseline(def, tag), PACT_FLOOR) : baseline(def, tag);
       const cur = num(st.s[tag], base);
       if (cur > base) st.s[tag] = Math.max(base, cur - 1);
       else if (cur < base) st.s[tag] = Math.min(base, cur + 1);
+    }
+    // Neglected relationships dissolve (SPEC §57): pacts below the lapse
+    // line, agreements grown too cold to honor.
+    for (const tag of Object.keys(pactState(ctx, def.id))) {
+      if (standingOf(ctx, def.id, tag) >= PACT_LAPSE) continue;
+      leavePactCore(ctx, tag, def.id, 'lapsed');
+      if (tag === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'A pact dissolves',
+          text: def.name + ' lets the alignment quietly die — our standing sank too low to sustain it.',
+          type: 'bad',
+        });
+      }
+    }
+    if (def.trade) {
+      const floor = Math.max(0, num(def.trade.need, 55) - 15);
+      for (const tag of Object.keys(tradeState(ctx, def.id))) {
+        if (standingOf(ctx, def.id, tag) >= floor) continue;
+        delete tradeState(ctx, def.id)[tag];
+        if (tag === g.playerTag) {
+          ctx.bus.emit('notify', {
+            title: 'An agreement lapses',
+            text: def.name + ' lets the trade agreement expire — the friendship grew too cold.',
+            type: 'bad',
+          });
+        }
+      }
     }
   }
 }
@@ -182,6 +319,8 @@ export function getPowersInfo(ctx, tag) {
       let whyNotCourt = '';
       if (courtCd > 0) whyNotCourt = 'our envoys were just there (' + courtCd + ' months)';
       else if (num(t.points.infl) < inflCost) whyNotCourt = 'not enough influence points (' + inflCost + ' required)';
+      const offeredPact = def.pact && (!Array.isArray(def.pact.tags) || def.pact.tags.indexOf(tag) >= 0);
+      const offeredTrade = def.trade && (!Array.isArray(def.trade.tags) || def.trade.tags.indexOf(tag) >= 0);
       return {
         id: def.id, name: def.name, blurb: def.blurb || '', color: def.color || [120, 120, 120],
         standing: Math.round(standingOf(ctx, def.id, tag)),
@@ -190,6 +329,18 @@ export function getPowersInfo(ctx, tag) {
           cost: inflCost, gain: num(c.gain, 10),
           rivalName: c.rival ? (((defs.find((d) => d.id === c.rival)) || {}).name || c.rival) : null,
         },
+        pact: offeredPact ? {
+          name: def.pact.name || ('Pact with ' + def.name), desc: def.pact.desc || '',
+          need: num(def.pact.need, 75), active: hasPact(ctx, def.id, tag),
+          monthly: num(def.pact.monthly && def.pact.monthly.treasury),
+          can: !pactGate(ctx, tag, def), whyNot: pactGate(ctx, tag, def),
+        } : null,
+        trade: offeredTrade ? {
+          name: def.trade.name || ('Trade with ' + def.name), desc: def.trade.desc || '',
+          need: num(def.trade.need, 55), active: hasTrade(ctx, def.id, tag),
+          monthly: num(def.trade.monthly && def.trade.monthly.treasury),
+          can: !tradeGate(ctx, tag, def), whyNot: tradeGate(ctx, tag, def),
+        } : null,
         asks: (def.asks || [])
           .filter((a) => !Array.isArray(a.tags) || a.tags.indexOf(tag) >= 0)
           .map((a) => {

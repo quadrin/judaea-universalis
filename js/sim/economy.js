@@ -5,6 +5,7 @@ import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuild
 import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
+import { powerFlows } from './powers.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
 export const LOAN_INTEREST_PER_MONTH = 3; // talents per loan per month
@@ -181,7 +182,10 @@ export function incomeBreakdown(ctx, tag) {
     if (s.to === tag) out.subsIn += num(s.amount);
     if (s.from === tag) out.subsOut += num(s.amount);
   }
-  out.net = out.income + out.tributeIn + out.subsIn
+  // Aid and trade from the powers beyond the map (SPEC §57): pact funding
+  // and standing trade agreements, a monthly flow like any other.
+  try { out.powerIn = powerFlows(ctx, tag); } catch (e) { out.powerIn = 0; }
+  out.net = out.income + out.tributeIn + out.subsIn + out.powerIn
     - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.interest;
   return out;
 }
@@ -227,7 +231,7 @@ export function runMonthlyEconomy(ctx) {
       const t = g.tags[tag];
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
-      t.income = Math.round((bd.income + bd.tributeIn) * 100) / 100;
+      t.income = Math.round((bd.income + bd.tributeIn + (bd.powerIn || 0)) * 100) / 100;
       t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       if (!Number.isFinite(t.treasury)) t.treasury = 0;
@@ -276,6 +280,7 @@ export function explainIncome(ctx, tag) {
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
+    if (bd.powerIn > 0) rows.push({ label: 'The powers: aid & trade', value: r2(bd.powerIn) });
     if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });
     rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
     if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
