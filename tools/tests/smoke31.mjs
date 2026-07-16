@@ -14,7 +14,6 @@ for (const [id, file, name] of [
   ['67bce', 'bookmark_67bce.js', 'BOOKMARK_67'],
   ['40bce', 'bookmark_40bce.js', 'BOOKMARK_40'],
   ['66ce', 'bookmark_66ce.js', 'BOOKMARK_66'],
-  ['115ce', 'bookmark_115ce.js', 'BOOKMARK_115'],
   ['132ce', 'bookmark_132ce.js', 'BOOKMARK_132'],
   ['614ce', 'bookmark_614ce.js', 'BOOKMARK_614'],
   ['1948ce', 'bookmark_1948.js', 'BOOKMARK_1948'],
@@ -47,7 +46,7 @@ for (const era of ['67bce', '40bce', '66ce']) {
   ok(['Masada', 'Machaerus', 'Jotapata', 'Gamala'].every((n) => m[idOf(n)] === idOf(n)),
     era + ': the Hasmonean and Herodian fortresses stand');
 }
-for (const era of ['115ce', '132ce', '614ce']) {
+for (const era of ['132ce', '614ce']) {
   const m = mapOf(era);
   ok(m[idOf('Jotapata')] === idOf('Sepphoris') && m[idOf('Gamala')] === idOf('Batanea')
       && m[idOf('Machaerus')] === idOf('Medaba') && m[idOf('Masada')] === idOf('Engaddi'),

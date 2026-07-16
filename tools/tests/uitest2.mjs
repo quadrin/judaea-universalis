@@ -32,7 +32,7 @@ await page.waitForSelector('.bm-card', { timeout: 20000 });
 
 // Three bookmark cards, chronological
 const cards = await page.locator('.bm-card').count();
-ok(cards === 8, 'eight bookmark cards on the start screen: ' + cards);
+ok(cards === 7, 'seven bookmark cards on the start screen: ' + cards);
 const lastCard = (await page.locator('.bm-card').nth(7).textContent()) || '';
 ok(/Independence/.test(lastCard), 'last card is the War of Independence: ' + lastCard.slice(0, 60));
 

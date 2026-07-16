@@ -41,7 +41,7 @@ await page.waitForFunction((n) => window._sound.music.state().notes > n, lyreBas
 ok(true, 'the lyre schedules notes');
 
 console.log('== the klezmer age ==');
-await bootBookmark(5); // 132 CE
+await bootBookmark(4); // 132 CE
 await page.waitForFunction(() => window._sound.music.state().style === 'klezmer', null, { timeout: 5000 });
 st = await page.evaluate(() => window._sound.music.state());
 ok(st.style === 'klezmer', '132 CE plays klezmer: ' + st.style);
@@ -50,7 +50,7 @@ await page.waitForFunction((n) => window._sound.music.state().notes > n, klezBas
 ok(true, 'the clarinet and oom-pah schedule notes');
 
 console.log('== the hora age ==');
-await bootBookmark(7); // 1948
+await bootBookmark(6); // 1948
 await page.waitForFunction(() => window._sound.music.state().style === 'hora', null, { timeout: 5000 });
 st = await page.evaluate(() => window._sound.music.state());
 ok(st.style === 'hora', '1948 dances the hora: ' + st.style);

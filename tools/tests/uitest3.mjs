@@ -31,7 +31,7 @@ await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: 20000 });
 
 const cards = await page.locator('.bm-card').count();
-ok(cards === 8, 'eight bookmark cards: ' + cards);
+ok(cards === 7, 'seven bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
 ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
 ok(await page.locator('[data-ref="import"]').isVisible(), 'Import save button on start screen');
@@ -41,7 +41,6 @@ const expectedRosters = [
   ['HAS'],
   ['HYR', 'ARI'],
   ['HER', 'ATG'],
-  ['JUD'],
   ['JUD'],
   ['JUD'],
   ['JUD'],

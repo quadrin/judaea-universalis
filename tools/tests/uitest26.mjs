@@ -54,7 +54,7 @@ await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 
 console.log('== settlement control in 1948 ==');
-await startBookmark(7); // Israel, the only playable side in 1948
+await startBookmark(6); // Israel, the only playable side in 1948
 
 // Fund the crown's influence so the project is affordable, and record the
 // starting state of an Israeli rural province the player can grow into a town.

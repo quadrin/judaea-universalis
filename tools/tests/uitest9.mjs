@@ -1,4 +1,4 @@
-// UI verification — the three new eras (115 CE, 614 CE, 1948 CE): each boots
+// UI verification — the far eras (614 CE, 1948 CE): each boots
 // from the carousel without page errors, with the right political map, era
 // tech, and unit patterns.
 import { createRequire } from 'module';
@@ -26,33 +26,6 @@ async function boot(page, cardText) {
   await page.locator('.nation-card').first().click();
   await page.waitForFunction(() => !!window._ctx);
   await page.waitForTimeout(500);
-}
-
-// ---- 115 CE -----------------------------------------------------------------
-{
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  console.log('== The Kitos War, 115 CE ==');
-  await boot(page, 'Kitos');
-  const s = await page.evaluate(() => {
-    const ctx = window._ctx;
-    return {
-      player: ctx.game.playerTag,
-      salamis: ctx.prov('Salamis').owner,
-      jerusalem: ctx.prov('Jerusalem').owner,
-      petra: ctx.prov('Petra').owner,
-      wars: ctx.game.wars.map((w) => w.name),
-      tech: ctx.game.tags.ROM.tech,
-    };
-  });
-  ok(s.salamis === 'JUD', 'Artemion holds Salamis: ' + s.salamis);
-  ok(s.jerusalem === 'ROM' && s.petra === 'ROM', 'Judaea and Arabia are Roman provinces');
-  ok(s.wars.length === 2, 'two wars at once: ' + s.wars.join(' | '));
-  ok(s.tech.mar === 7, 'Trajan\'s army at mar 7: ' + JSON.stringify(s.tech));
-  ok(errors.length === 0, 'no page errors: ' + JSON.stringify(errors.slice(0, 2)));
-  await page.close();
 }
 
 // ---- 614 CE -----------------------------------------------------------------

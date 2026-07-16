@@ -1,5 +1,5 @@
 // Headless smoke test — SPEC §34: the deepened eras and the playtest fixes.
-// The four thin chains (40 BCE, 115 CE, 614 CE, 1948) carry their new events
+// The thin chains (40 BCE, 614 CE, 1948) carry their new events
 // well-formed; dated cards fire on schedule; the 614 defiance arrives with an
 // actual army and no cheap white peace behind it (fresh-grudge rule); and the
 // Objectives block retires once the chapter's verdict is in.
@@ -44,7 +44,6 @@ console.log('== the deepened chains are well-formed ==');
 const provNames = new Set(MAP_DATA.provinces.map((p) => p.name));
 for (const [evFile, evKey, minCount] of [
   ['events_40bce.js', 'EVENTS_40', 22],
-  ['events_115ce.js', 'EVENTS_115', 19],
   ['events_614ce.js', 'EVENTS_614', 19],
   ['events_1948.js', 'EVENTS_1948', 22],
 ]) {

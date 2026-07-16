@@ -23,7 +23,7 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card');
-await page.locator('.ss-dot[data-dot="7"]').click();
+await page.locator('.ss-dot[data-dot="6"]').click();
 await page.locator('.bm-card.current').click();
 await page.waitForSelector('.nation-card');
 await page.locator('.nation-card').first().click();

@@ -1963,3 +1963,51 @@ foreign court **read-only**.
   ledger row grows to 66 provinces (`smoke3.mjs`); Egypt's 1948 development
   total to 207 (`smoke27.mjs`). The geometry snapshot is regenerated at the
   new resolution.
+
+## 50. v5.1: the Kitos War retires from the carousel
+
+- **The 115 CE chapter is no longer a playable era.** It was always the odd
+  chapter out: a diaspora revolt — Cyrene, Cyprus, Egypt, Mesopotamia — that
+  barely touched Judaea proper, wearing a "Judaea vs Rome" frame it never
+  quite fit. `bookmark_115ce.js` and `events_115ce.js` are deleted (git
+  history keeps them); the title carousel, the autorun harness, the music
+  style map, the Kingdom of Israel formable, and the campaign guidance all
+  drop the era. Seven chapters remain.
+- **The map keeps everything the era taught it**: Cyrene, Marmarica and the
+  western-desert route stay (they serve 67 BCE through 614 as Roman and
+  Byzantine land, and 1948 as British Cyrenaica); the razed-fortress merges
+  and every other v4.6 profile survive in the remaining eras.
+- **Old 115 saves fail soft**: `readNewestSave` iterates the live bookmark
+  list, so an orphaned Kitos save is simply never offered.
+- **Tests follow**: the multi-era engine suites (`smoke16-19`, `smoke23`,
+  `smoke31`) drop their 115 fixture rows; `uitest9` keeps its 614/1948
+  sections; the carousel dot indices shift down in `uitest23/25/26/27`
+  (1948 is dot 6, Bar Kokhba dot 4); `uitest3`'s roster table loses a row,
+  and the card-count assertions in `uitest2/3` read seven.
+
+## 51. v5.2: the score sweeps — chords, refrains, warm ensemble
+
+- **The complaint**: the original drone score was atmospheric but sad,
+  even a little creepy; the v4.7 klezmer and hora leads (squares, krekhts
+  sobs, a looping tune) grated. The reference the score now chases is the
+  EU4 songbook — sweeping, inspiring, intense, with occasional refrains on
+  quieter stretches.
+- **Harmony instead of a drone**: the pad is three persistent voices
+  (root, fifth, third) that glide between chords of a slow progression —
+  one chord per two bars. Peace strides **I–bVII–IV–I** in **Adonai
+  Malakh** (the majestic synagogue mode — major with a flat seventh, so
+  the Jewish identity survives the brightening); war marches
+  **i–bVI–bVII–i** in Freygish; battle surges on the phrygian second.
+- **A recurring refrain**: a rising heroic theme (arpeggio sweep, settling
+  answer, high close) returns every so often — rarely in peace, insistently
+  in war, fortissimo in battle. In 1948 the refrain alternates with one
+  pass of **Hava Nagila** — the nigun returns as an event, not a loop.
+- **Warm voices, no wailing**: the lead is per-age — kinnor plucks doubled
+  by a soft horn, a gently breathing reed for the middle chapters, a
+  detuned horn ensemble for 1948. No square waves, no krekhts, no oom-pah.
+  Between refrains, harp arpeggios on the chord tones carry the quiet
+  stretches; a low root pulse and the era's drums swell with the mood.
+- **The contract holds**: `music.state()` still reports the style names,
+  `uitest14` (gesture start, mood machine, toggle persistence) and
+  `uitest27` (each chapter plays its style, notes actually scheduled) pass
+  unchanged.

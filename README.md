@@ -2,14 +2,13 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Eight bookmarks:
+An EU4-style grand-strategy game set in the ancient Near East. Seven bookmarks:
 **The Maccabean Revolt, 167 BCE** (Hasmonean Judaea or the Seleucid Empire),
 **The Judaean Civil War, 67 BCE** (Hyrcanus or Aristobulus, with Pompey inbound),
 **Herod's Rise, 40 BCE** (Herod or Antigonus, with Parthia in Syria),
-**The Great Revolt, 66 CE** (Judaea or Rome), **The Kitos War, 115 CE**
-(Judaea or Rome), **The Bar Kokhba Revolt, 132 CE** (Judaea or Rome),
-**The Persian Gambit, 614 CE** (the Return or Byzantium), and **The War of
-Independence, 1948** (Israel or Jordan).
+**The Great Revolt, 66 CE** (Judaea or Rome), **The Bar Kokhba Revolt, 132 CE**
+(Judaea or Rome), **The Persian Gambit, 614 CE** (the Return or Byzantium),
+and **The War of Independence, 1948** (Israel or Jordan).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
 
@@ -98,12 +97,11 @@ python3 -m http.server 8613 --directory .
   patterns of soldier (Tribal Levies → Professional Legions → … → Rifle Brigades and
   Armored Corps); armies remember what they were raised as, and you modernize them
   for gold when the art advances.
-- Eight chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE), the
-  Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE), the
-  Kitos War (115 CE — the diaspora rises behind Trajan's back), the Bar Kokhba
-  Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes hands in the last
-  great war of antiquity), and the War of Independence (1948 — five armies, every
-  border, and the armistice lines becoming a state).
+- Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
+  the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
+  the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes
+  hands in the last great war of antiquity), and the War of Independence (1948 —
+  five armies, every border, and the armistice lines becoming a state).
 - Formable nations: win the brothers' war as Hyrcanus or Aristobulus and restore
   Hasmonean Judaea; break Antigonus as Herod and proclaim the Kingdom of Judaea —
   the whole realm (map color, armies, wars, treaties, your own throne) takes the
@@ -168,9 +166,9 @@ python3 -m http.server 8613 --directory .
   hills of the faith it holds — not half of occupied Syria) or refuse and
   fight on for everything.
 - Nothing decides for you: every "the enemy concedes" ending in every era —
-  Pompey's settlement, Rome suing after Beth Horon, the emperor's terms in
-  the Kitos War, Hadrian letting go, Persia returning the Cross — arrives as
-  an event card you may accept or refuse, offered exactly once.
+  Pompey's settlement, Rome suing after Beth Horon, Hadrian letting go,
+  Persia returning the Cross — arrives as an event card you may accept or
+  refuse, offered exactly once.
 - The Mount stands bare after 70 CE — and Bar Kokhba's Judaea or the
   Persian-era Return can crown its mission chain by raising the Third
   Temple: hold Jerusalem rich and steady, spend 300 talents, and the House
@@ -224,11 +222,11 @@ python3 -m http.server 8613 --directory .
   history moves the court: fire on the Altalena and the Revisionists remember;
   burn the list of the Forty-Five and the Sanhedrin does. Your politics only —
   the AI's courts stay offstage.
-- The thin eras made thick: Herod's Rise, the Kitos War, the Persian Gambit
-  and 1948 roughly double their scripted chains — the cisterns of Masada,
-  Silo's winter and the basket-men at the caves; the temples of Cyrene and
-  Hadrian's list; Benjamin of Tiberias, the ships for Carthage and the
-  intercepted letter that benched Persia's best marshal; Spitfires over
+- The thin eras made thick: Herod's Rise, the Persian Gambit and 1948
+  roughly double their scripted chains — the cisterns of Masada, Silo's
+  winter and the basket-men at the caves; Benjamin of Tiberias, the ships
+  for Carthage and the intercepted letter that benched Persia's best
+  marshal; Spitfires over
   Tel Aviv, the roads from Lydda, the secret wire to Amman and the ballot
   under fire.
 - Wars end honestly: objectives retire into a single settled line once the
@@ -241,15 +239,15 @@ python3 -m http.server 8613 --directory .
   deal), click again to strike it from the terms.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
-  for good news — under a generative score of Jewish music that changes with
-  the chapter. The ancient bookmarks pluck the kinnor lyre with a wandering
-  ney (Dorian in peace, Freygish with frame drums at war); the middle
-  chapters give the melody to an ornamented klezmer clarinet — grace notes,
-  sobbing krekhts, an oom-pah bass — in the Mi Sheberakh mode; and 1948
-  dances a Hava Nagila hora that trades sets with an original laid-back
-  Tel Aviv groove, under a military snare when the war is on. Faster and
-  harder as your armies fight. Speaker and note buttons (bottom-left) mute
-  the lot or just the music; both choices persist.
+  for good news — under a sweeping generative score. A warm string pad
+  strides through slow chord progressions (peace in Adonai Malakh, the
+  majestic synagogue mode; war in Freygish), a heroic refrain returns on the
+  quiet stretches and hardens as the fighting does, and harp arpeggios carry
+  the bars between. Each chapter keeps its own lead voice — kinnor plucks
+  and a soft horn in antiquity, a breathing reed in the middle ages, a horn
+  ensemble in 1948, where Hava Nagila itself takes a turn as the refrain.
+  Speaker and note buttons (bottom-left) mute the lot or just the music;
+  both choices persist.
 
 ## Architecture
 

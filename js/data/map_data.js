@@ -471,7 +471,7 @@ const PROVINCES = [
   P('Gortyn', 24.95, 35.06, 1.00, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Rhodes', 28.00, 36.25, 0.70, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 4, 6, 3, 0),
   P('Halicarnassus', 27.68, 37.00, 0.95, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 5, 2, 0),
-  // Cyrenaica and the western desert — the Kitos War's first theater
+  // Cyrenaica and the western desert
   P('Cyrene', 21.86, 32.82, 0.95, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 5, 5, 3, 0),
   P('Marmarica', 23.95, 32.05, 1.45, 'ROM', 'desert', 'livestock', 'hellenism', 'egyptian', 1, 1, 1, 0),
   P('Paraetonium', 27.24, 31.32, 1.25, 'ROM', 'desert', 'salt', 'egyptian', 'egyptian', 1, 2, 1, 0),
