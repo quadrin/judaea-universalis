@@ -38,7 +38,7 @@ function warBetween(ctx, a, b) {
 }
 
 function stagingProvince(ctx) {
-  for (const name of ['Tayma', 'Hegra', 'Dumatha']) {
+  for (const name of ['Yathrib', 'Khaybar', 'Tayma', 'Hegra', 'Dumatha']) {
     const p = ctx.prov(name);
     if (p && p.owner === 'RSH') return name;
   }
@@ -59,13 +59,20 @@ function awakenCaliphate(ctx) {
     id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 48,
     effects: { moraleMult: 1.1, reinforceMult: 1.1 },
   });
-  // The actual centers lie beyond this map. Tayma is the least distorting
-  // northern-edge bridge; if an alternate-history player already holds it,
-  // the off-map army appears at Hegra without confiscating the player's land.
-  const tayma = ctx.prov('Tayma');
-  if (tayma && tayma.owner !== ctx.game.playerTag && tayma.controller !== ctx.game.playerTag) {
-    h.changeOwner(ctx, 'Tayma', 'RSH');
-    tayma.religion = 'islam';
+  // v5.0: the movement's true home is on the map. Yathrib — Medina — has
+  // belonged to the dormant tag since the start; the awakening makes it the
+  // City of the Prophet. (Khaybar keeps its Jewish farmers until the sword
+  // settles that too.) The old Tayma bridge remains only for saves from the
+  // smaller map, where Yathrib does not exist.
+  const yathrib = ctx.prov('Yathrib');
+  if (yathrib && yathrib.owner === 'RSH') {
+    yathrib.religion = 'islam';
+  } else {
+    const tayma = ctx.prov('Tayma');
+    if (tayma && tayma.owner !== ctx.game.playerTag && tayma.controller !== ctx.game.playerTag) {
+      h.changeOwner(ctx, 'Tayma', 'RSH');
+      tayma.religion = 'islam';
+    }
   }
   h.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
     inf: 5, cav: 5, name: 'Army of the Ridda',

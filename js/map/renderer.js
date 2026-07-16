@@ -126,8 +126,8 @@ precision highp float;
 precision highp int;
 uniform sampler2D uLand;
 uniform vec2 uMapSize;
-uniform vec4 uPrimA[24];   // ridge/basin: ax,ay,bx,by · dome: cx,cy,0,0
-uniform vec4 uPrimB[24];   // h(pre-scaled), width px, type(0 ridge,1 dome,2 basin), 0
+uniform vec4 uPrimA[32];   // ridge/basin: ax,ay,bx,by · dome: cx,cy,0,0
+uniform vec4 uPrimB[32];   // h(pre-scaled), width px, type(0 ridge,1 dome,2 basin), 0
 uniform int uPrimCount;
 out vec4 outColor;
 ${GLSL_NOISE}
@@ -142,7 +142,7 @@ void main(){
   float land = texture(uLand, uv).r;
   float coarse = textureLod(uLand, uv, 5.0).r;   // smoothed mask -> coast falloff
   float h = 0.045 + 0.15 * coarse + 0.055 * land; // sea ~0.05, plains ~0.25
-  for (int i = 0; i < 24; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= uPrimCount) break;
     vec4 A = uPrimA[i];
     vec4 B = uPrimB[i];
@@ -602,11 +602,11 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   }
 
   // Heightmap pass: coast falloff + primitives + fbm detail.
-  const prims = (MAP_DATA.heightPrimitives || []).slice(0, 24);
-  if ((MAP_DATA.heightPrimitives || []).length > 24) warnOnce('prim-cap', 'heightPrimitives exceeds 24; extras ignored');
+  const prims = (MAP_DATA.heightPrimitives || []).slice(0, 32);
+  if ((MAP_DATA.heightPrimitives || []).length > 32) warnOnce('prim-cap', 'heightPrimitives exceeds 32; extras ignored');
   const pxPerDeg = ((W / (MAP_DATA.LON1 - MAP_DATA.LON0)) + (H / (MAP_DATA.LAT1 - MAP_DATA.LAT0))) * 0.5;
-  const primA = new Float32Array(24 * 4);
-  const primB = new Float32Array(24 * 4);
+  const primA = new Float32Array(32 * 4);
+  const primB = new Float32Array(32 * 4);
   let primCount = 0;
   for (const pr of prims) {
     try {

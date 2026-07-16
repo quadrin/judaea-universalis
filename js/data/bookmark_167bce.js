@@ -112,7 +112,7 @@ export const BOOKMARK_167 = {
     + 'the pagan altar and fled to the hills with his five sons. Antiochus rules from the '
     + 'Taurus to Persis; against him stands the hill country of Judea, and a family.',
 
-  activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR'],
+  activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC'],
 
   // Political layer for 167 BCE, applied by initGame over map_data's 66 CE defaults.
   // Covers every province owned by ROM/JUD/AGR (tags absent from this bookmark),
@@ -220,6 +220,15 @@ export const BOOKMARK_167 = {
     'Paphos': 'PTO',
     // NAB and ARM keep their map_data holdings; PAR keeps Gazaca only —
     // Media and Babylonia remain Seleucid in 167 and fall by event.
+    // -- v5.0: the wider world -------------------------------------------------
+    // Hellas: the leagues and free cities (GRC — Rome's shadow lies off-map)
+    'Corinth': 'GRC', 'Athens': 'GRC', 'Sparta': 'GRC', 'Gortyn': 'GRC',
+    'Rhodes': 'GRC', 'Halicarnassus': 'GRC',
+    // Ptolemaic Africa: the Pentapolis and the Nile to the cataract
+    'Cyrene': 'PTO', 'Marmarica': 'PTO', 'Paraetonium': 'PTO', 'Syene': 'PTO',
+    // Arabia and the Seleucid east (Persis is still nominally the king's)
+    'Yathrib': 'NAB', 'Khaybar': 'NAB', 'Berenice': 'PTO',
+    'Persepolis': 'SEL', 'Gabae': 'SEL', 'Gerrha': 'SEL',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.

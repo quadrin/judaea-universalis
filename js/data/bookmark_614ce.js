@@ -45,7 +45,7 @@ function dateGE(date, y, m) {
 const SAS_LANDS = [
   // the Persian homeland and the Mesopotamia it never lost
   'Seleucia-Ctesiphon', 'Babylon', 'Nehardea', 'Uruk', 'Charax', 'Ecbatana',
-  'Susa', 'Gazaca', 'Dura-Europos', 'Hatra', 'Assur', 'Singara', 'Arbela',
+  'Susa', 'Gazaca', 'Persepolis', 'Gabae', 'Gerrha', 'Dura-Europos', 'Hatra', 'Assur', 'Singara', 'Arbela',
   'Nisibis', 'Edessa', 'Carrhae',
   // Persarmenia and the upper Euphrates, taken 607-611
   'Tigranocerta', 'Sophene', 'Amida', 'Melitene', 'Samosata', 'Zeugma', 'Cyrrhus',
@@ -74,6 +74,9 @@ const BYZ_LANDS = [
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Salamis', 'Paphos', 'Petra',
   'Oboda', 'Aila',
+  // v5.0: the empire's west — Hellas, Crete, Cyrenaica, Upper Egypt
+  'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Halicarnassus',
+  'Cyrene', 'Marmarica', 'Paraetonium', 'Syene', 'Berenice',
 ];
 
 const OWNERS = {};
@@ -81,6 +84,10 @@ for (const n of SAS_LANDS) OWNERS[n] = 'SAS';
 for (const n of JUD_LANDS) OWNERS[n] = 'JUD';
 for (const n of GHA_LANDS) OWNERS[n] = 'GHA';
 for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
+// v5.0: the Hejaz oases belong to the dormant Caliphate — quiet neutral towns
+// until the Hijra events wake the tag (Khaybar keeps its Jewish farmers).
+OWNERS['Yathrib'] = 'RSH';
+OWNERS['Khaybar'] = 'RSH';
 
 // ---- the map of faiths, six centuries on ------------------------------------
 // Christianity nearly everywhere Rome or Persia rules settled land; Judaism in
@@ -89,7 +96,7 @@ for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
 const RELIGIONS = {};
 for (const n of SAS_LANDS.concat(GHA_LANDS, BYZ_LANDS)) RELIGIONS[n] = 'christianity';
 for (const n of ['Seleucia-Ctesiphon', 'Ecbatana', 'Susa', 'Gazaca', 'Assur', 'Singara']) RELIGIONS[n] = 'zoroastrianism';
-for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela'])) RELIGIONS[n] = 'judaism';
+for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela', 'Khaybar'])) RELIGIONS[n] = 'judaism';
 RELIGIONS['Neapolis'] = 'samaritanism';
 RELIGIONS['Sebaste'] = 'samaritanism';
 
@@ -104,6 +111,8 @@ export const BOOKMARK_614 = {
   // The map speaks its era (SPEC §25): Byzantine and Sasanian names.
   provinceNames: {
     'Salamis': 'Constantia',      // rebuilt and renamed after the 4th-century quakes
+    'Persepolis': 'Istakhr',      // the Sasanian town beside the dead palaces
+    'Gabae': 'Spahan',            // Middle Persian, before Isfahan
     'Ecbatana': 'Hamadan',        // the Middle Persian name
     'Dura-Europos': 'Circesium',  // Dura is dust; Circesium holds the Euphrates reach
     'Charax': 'Maishan',          // the old port is now the Maishan district

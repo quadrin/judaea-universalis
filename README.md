@@ -22,8 +22,9 @@ python3 -m http.server 8613 --directory .
 
 ## What's in the slice
 
-- Province map of the Eastern Mediterranean (~95 provinces, Judaea at city/district density),
-  GPU-generated province-ID texture, EU4-style mapmode shaders, heightmap relief, parchment
+- Province map from Greece and Cyrenaica to Persepolis, from Ionia to the Hejaz
+  (~148 permanent cells, Judaea at city/district density), GPU-generated
+  province-ID texture, EU4-style mapmode shaders, heightmap relief, parchment
   crossfade at strategic zoom.
 - Mapmodes: political, terrain, religion, culture, development, unrest.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.

@@ -1922,3 +1922,44 @@ foreign court **read-only**.
   each plays its style with notes actually scheduled (`music.state()` now
   reports `style`); `uitest14.mjs` — the §27 contract (gesture start, mood
   machine, toggle persistence) — passes unchanged.
+
+## 49. v5.0: the wider world — the frame grows all around
+
+- **The frame expands** from 29–50°E × 25.5–38.5°N to **21–53.5°E ×
+  23.5–38.5°N** (raster 2048×1496 → 3168×1728 at unchanged density). New
+  coastlines: Ionia and Caria, the Cyrenaican shoulder, both Red Sea shores
+  south past Berenice and Yanbu, the Qatar thumb and the Trucial coast, the
+  Persis shore — plus three new landmasses (a simplified Greece, Crete,
+  Rhodes) beside Cyprus. Five new height primitives (Jebel Akhdar, Taygetus,
+  the Cretan spine, the southern Hejaz escarpment, Zagros-into-Persis);
+  the renderer's primitive cap rises 24 → 32.
+- **Sixteen new permanent cells**: Corinth, Athens, Sparta, Gortyn (Crete),
+  Rhodes, Halicarnassus, Cyrene, Marmarica, Paraetonium, Syene, Berenice,
+  Yathrib, Khaybar, Persepolis, Gabae, Gerrha — appended so no save ID
+  shifts. Berenice's seed also stops Hegra's voronoi bleeding across the
+  Red Sea; a severLink keeps armies from walking the Rhodes strait.
+- **A new tag**: **GRC** — the leagues and cities of Hellas in 167 BCE,
+  the neutral Kingdom of Greece in 1948 (Rhodes is Greek since 1947;
+  Cyrenaica is the British Military Administration, so UK holds Derna and
+  Tobruk). Rome holds the west from 67 BCE; Byzantium in 614.
+- **The Kitos War gets its first theater**: a new 115 CE event — *The Fire
+  in the Pentapolis* — raises Cyrene for Judaea under Lukuas in June 115,
+  with unrest rolling east through Marmarica and Paraetonium; the existing
+  *King Out of Cyrene* event then marches him into Egypt over a land route
+  that now actually exists (Cyrene → Marmarica → Paraetonium → Alexandria).
+- **The Caliphate rises from its true home**: Yathrib and Khaybar start the
+  614 chapter owned by the dormant RSH tag — quiet neutral oases — and the
+  Hijra awakening now stages at Yathrib itself (Medina), converting it;
+  Khaybar keeps its Jewish farmers, per the 614 religion overlay. The old
+  Tayma bridge survives only for saves from the smaller map. In 1948 the
+  Hejaz is Saudi (Yathrib wears the name Medina) and Iran holds Shiraz and
+  Isfahan (Persepolis and Gabae).
+- **Khaybar's base religion stays pagan-Arab**: a base-map `judaism` would
+  hand ancient Judaea a standing holy casus belli against Nabataea that the
+  ancient chapters never intended; the Jewish Khaybar of the sources enters
+  with the 614 overlay.
+- **Balance holds**: the 8-year all-AI autorun on the expanded map shows
+  exactly the documented accepted flags — no era destabilizes. Rome's 66 CE
+  ledger row grows to 66 provinces (`smoke3.mjs`); Egypt's 1948 development
+  total to 207 (`smoke27.mjs`). The geometry snapshot is regenerated at the
+  new resolution.

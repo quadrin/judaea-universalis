@@ -57,6 +57,38 @@ function addWarscore(ctx, tag, amount) {
 export const EVENTS_115 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
+    id: 'ev_k_cyrene',
+    title: 'The Fire in the Pentapolis',
+    requiresWar: ['JUD', 'ROM'],
+    desc: 'It begins in Cyrene: the Jews of the Pentapolis rise as one, and at their '
+      + 'head stands Lukuas, whom the Greeks call Andreas and his own people will '
+      + 'crown king. The temples burn, the Roman ala is cut down on the coast road, '
+      + 'and the richest wheat country west of Egypt is suddenly his.',
+    forTag: 'both',
+    date: { y: 115, m: 6 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Cyrenaica rises',
+        tooltip: 'Cyrene joins Judaea; a host of the Pentapolis musters there. Marmarica and Paraetonium: +2 unrest for 12 months.',
+        effects: guard('ev_k_cyrene:0', (ctx) => {
+          ctx.helpers.changeOwner(ctx, 'Cyrene', 'JUD');
+          const cy = ctx.prov('Cyrene');
+          if (cy) cy.religion = 'judaism';
+          ctx.helpers.spawnArmy(ctx, 'JUD', 'Cyrene', {
+            inf: 4, name: 'Host of the Pentapolis',
+          });
+          for (const n of ['Marmarica', 'Paraetonium']) {
+            ctx.helpers.addProvinceModifier(ctx, n, {
+              id: 'diaspora_rising', name: 'The Diaspora Rising', months: 12, effects: { unrest: 2 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+  {
     id: 'ev_k_lukuas',
     title: 'The King Out of Cyrene',
     requiresWar: ['JUD', 'ROM'],

@@ -87,6 +87,7 @@ export const DEFINES = {
     LEB: { aggression: 0.2, caution: 1.8 },
     IRQ: { aggression: 0.9, caution: 1.0 },
     TUR: { aggression: 0.1, caution: 2.0 },
+    GRC: { aggression: 0.3, caution: 1.6 },
     SAU: { aggression: 0.2, caution: 1.8 },
     IRN: { aggression: 0.1, caution: 2.0 },
     UK: { aggression: 0.1, caution: 2.0 },
@@ -326,6 +327,11 @@ export const DEFINES = {
       name: 'Turkey', color: [200, 84, 72], religion: 'islam', culture: 'turkish', capital: 'Iconium',
       description: 'Watching its southern neighbors with studied neutrality.',
       ideas: { disciplineMult: 1.05 },
+    },
+    GRC: {
+      name: 'Greece', color: [52, 106, 180], religion: 'hellenism', culture: 'greek', capital: 'Corinth',
+      description: 'The leagues and cities of Hellas — old in glory, careful in war.',
+      ideas: {},
     },
     SAU: {
       name: 'Saudi Arabia', color: [40, 116, 60], religion: 'islam', culture: 'arab_modern', capital: 'Hegra',
