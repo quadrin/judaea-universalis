@@ -1010,6 +1010,73 @@ export function gameActions(ctx) {
         }
       } catch (e) { warnOnce('raidProv', 'raidProvince failed', e); }
     },
+    // The bombsight (v5.5): which provinces a wing may legally strike right
+    // now — ui.js consults this before turning a map click into a raid.
+    getWingRaidTargets(wingId) {
+      try {
+        const w = g.airwings && g.airwings[wingId];
+        if (!w || w.tag !== g.playerTag) return [];
+        return raidTargets(ctx, w).map((r) => r.id);
+      } catch (e) { warnOnce('wingTargets', 'getWingRaidTargets failed', e); return []; }
+    },
+
+    // ---- the unit inspector (v5.5) ------------------------------------------
+    // Details for ANY clicked unit, friend or foe — what a field commander
+    // could see through glasses: banners, strength, patterns, the general's
+    // reputation, morale. No hidden rolls are exposed.
+    getUnitDetails(sel) {
+      try {
+        const out = { armies: [], fleet: null, wing: null, provName: '' };
+        const ids = sel && Array.isArray(sel.armyIds) ? sel.armyIds
+          : (sel && sel.armyId != null ? [sel.armyId] : []);
+        for (const id of ids) {
+          const a = g.armies && g.armies[id];
+          if (!a) continue;
+          const t = g.tags[a.tag] || {};
+          const p = ctx.byId(a.prov);
+          if (p && !out.provName) out.provName = p.name;
+          const gen = num(a.gen, 0);
+          out.armies.push({
+            id: a.id, tag: a.tag, tagName: t.name || a.tag,
+            name: a.name || 'Army', men: Math.round(num(a.men)),
+            inf: (a.regiments && a.regiments.inf) | 0,
+            cav: (a.regiments && a.regiments.cav) | 0,
+            infName: genName(gen, 'inf'), cavName: genName(gen, 'cav'),
+            morale: num(a.morale), maxMorale: Math.max(0.1, num(a.maxMorale, 3)),
+            general: a.general ? {
+              name: a.general.name,
+              fire: a.general.fire | 0, shock: a.general.shock | 0, maneuver: a.general.maneuver | 0,
+            } : null,
+            inBattle: !!a.inBattle, retreating: !!a.retreating,
+            isOwn: a.tag === g.playerTag,
+          });
+        }
+        if (sel && sel.fleetId != null && g.fleets && g.fleets[sel.fleetId]) {
+          const f = g.fleets[sel.fleetId];
+          const t = g.tags[f.tag] || {};
+          const p = ctx.byId(f.prov);
+          if (p && !out.provName) out.provName = p.name;
+          out.fleet = {
+            id: f.id, tag: f.tag, tagName: t.name || f.tag,
+            ships: f.ships | 0, patternName: navalGenName(f.gen | 0),
+            isOwn: f.tag === g.playerTag,
+          };
+        }
+        if (sel && sel.wingId != null && g.airwings && g.airwings[sel.wingId]) {
+          const w = g.airwings[sel.wingId];
+          const t = g.tags[w.tag] || {};
+          const p = ctx.byId(w.prov);
+          if (p && !out.provName) out.provName = p.name;
+          out.wing = {
+            id: w.id, tag: w.tag, tagName: t.name || w.tag,
+            leader: (w.leader && w.leader.name) || null,
+            rearming: Math.max(0, w.raidCd | 0),
+            isOwn: w.tag === g.playerTag,
+          };
+        }
+        return (out.armies.length || out.fleet || out.wing) ? out : null;
+      } catch (e) { warnOnce('unitDetails', 'getUnitDetails failed', e); return null; }
+    },
 
     // ---- loans (frozen contract) -------------------------------------------
     takeLoan() {
