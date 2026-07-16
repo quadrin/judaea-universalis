@@ -67,7 +67,7 @@ const EGY_LANDS = [
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos',
   'Kiryat Gat', 'Beersheba', 'Khan Yunis', 'Rafah',
-  // sovereign but still empty/impassable at this map scale
+  // the desert interiors: sovereign, administered, and (in 1948) crossable
   'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
 const SYR_LANDS = [
@@ -268,11 +268,29 @@ export const BOOKMARK_1948 = {
   // Several familiar modern Israeli cities did not yet exist in May 1948.
   // Their land is sovereign and playable, but starts as frontier rather than
   // being back-filled with the population it gains later.
+  //
+  // The great desert interiors are wasteland no longer (SPEC §44): by 1948
+  // they are administered territory with motor roads, pipelines and garrisons —
+  // Egypt attacked through the Sinai and Operation Horev crossed back into it.
+  // They open as sovereign frontier, passable but harsh (wasteland terrain
+  // keeps its 2.5× movement cost and 5%/month attrition).
   habitation: {
     'Modi\'in Hills': 'frontier',
     'Beit Shemesh': 'frontier',
     'Kiryat Gat': 'frontier',
     'Arad': 'frontier',
+    'Sinai Interior': 'frontier',
+    'Eastern Desert': 'frontier',
+    'Libyan Desert': 'frontier',
+    'Arabian Desert': 'frontier',
+    'Syrian Desert': 'frontier',
+  },
+  impassable: {
+    'Sinai Interior': false,
+    'Eastern Desert': false,
+    'Libyan Desert': false,
+    'Arabian Desert': false,
+    'Syrian Desert': false,
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.

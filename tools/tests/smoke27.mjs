@@ -77,7 +77,9 @@ for (const p of modern.provinces) {
   if (!p || p.impassable) continue;
   devByOwner[p.owner] = (devByOwner[p.owner] || 0) + p.dev.tax + p.dev.prod + p.dev.mp;
 }
-ok(devByOwner.ISR === 202 && devByOwner.JOR === 162 && devByOwner.EGY === 174,
+// EGY counts 183: its old 174 plus the three desert interiors (dev 3 each)
+// that v4.3 opens as passable sovereign land (SPEC §44).
+ok(devByOwner.ISR === 202 && devByOwner.JOR === 162 && devByOwner.EGY === 183,
   'subdivision redistributes development instead of duplicating regional wealth');
 const ctx = makeCtx({
   game: modern, DEFINES, MAP_DATA, geom: fakeGeom, bus: null,

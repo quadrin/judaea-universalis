@@ -37,10 +37,12 @@ ok(byCanon(game, 'Joppa').habitation === 'urban',
   'modern Tel Aviv-Jaffa infers an urban habitation tier from bookmark development');
 ok(byCanon(game, 'Philadelphia').habitation === 'town',
   'modern Amman infers a town tier without changing the permanent map cell');
+// v4.3 (SPEC §44): by 1948 the desert interiors are administered territory —
+// sovereign, passable frontier land (smoke29 covers the opening in depth).
 const syrian = byCanon(game, 'Syrian Desert');
-ok(syrian.owner === 'SYR' && syrian.habitation === 'uninhabited'
-    && syrian.impassable && syrian.settleable,
-  'the 1948 Syrian Desert is sovereign land while staying empty, blocked, and settleable');
+ok(syrian.owner === 'SYR' && syrian.habitation === 'frontier'
+    && !syrian.impassable && syrian.settleable,
+  'the 1948 Syrian Desert is sovereign, open frontier land');
 ok(byCanon(game, 'Sinai Interior').owner === 'EGY'
     && byCanon(game, 'Arabian Desert').owner === 'SAU',
   'the 1948 Sinai and Arabian deserts likewise sit inside sovereign borders');
@@ -64,12 +66,17 @@ ok(byCanon(reRevived, 'Syrian Desert').habitation === 'uninhabited'
   'an old wasteland save reconstructs empty, settleable land');
 
 console.log('== sovereignty survives empty land ==');
-const colors = computeMapmodeColors({ game, DEFINES }, 'political');
-ok(rgb(colors.primary, syrian.id).join(',') === game.tags.SYR.color.join(','),
-  'sovereign-owned empty land uses its real political color');
-ok((colors.flags[syrian.id] & 2) === 2,
-  'the same land keeps an uninhabited cross-hatch independent of its owner');
+// The hatch marks emptiness, not ownership: flip one cell back to uninhabited
+// (no live 1948 cell is empty since v4.3 opened the interiors).
 const arabian = byCanon(game, 'Arabian Desert');
+arabian.habitation = 'uninhabited';
+const colors = computeMapmodeColors({ game, DEFINES }, 'political');
+ok(rgb(colors.primary, arabian.id).join(',') === game.tags.SAU.color.join(','),
+  'sovereign-owned empty land uses its real political color');
+ok((colors.flags[arabian.id] & 2) === 2,
+  'the same land keeps an uninhabited cross-hatch independent of its owner');
+ok((colors.flags[syrian.id] & 2) === 0,
+  'the open 1948 Syrian Desert draws no hatch at all');
 arabian.owner = 'WASTE';
 const unownedColors = computeMapmodeColors({ game, DEFINES }, 'political');
 ok(rgb(unownedColors.primary, arabian.id).join(',') === DEFINES.TAGS.WASTE.color.join(','),

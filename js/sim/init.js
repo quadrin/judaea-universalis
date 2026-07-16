@@ -2046,6 +2046,14 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) { p.x = c.x; p.y = c.y; }
       p.canon = source.name || p.canon || p.name;
       p.name = bookmarkField(bookmark, 'provinceNames', source, false) || source.name || p.name;
+      // Passability is era data, not campaign state — nothing mutates it in
+      // play. v4.3 opens the 1948 desert interiors (SPEC §44), and an old save
+      // must not keep the wall. Untouched empty land likewise adopts the era's
+      // tier; a tier the player earned (settlement, growth) is never clobbered.
+      const impassableOverride = bookmarkField(bookmark, 'impassable', source);
+      p.impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable;
+      const habOverride = bookmarkField(bookmark, 'habitation', source);
+      if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
       const previousDev = upgrading && migration && migration.previousDev
         && migration.previousDev[source.name];
       if (previousDev) {

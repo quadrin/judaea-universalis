@@ -94,9 +94,14 @@ ok(!settlementInfo(ctx, 'EGY', idOf('Memphis')).can, 'a city cannot be founded h
 ok(!settlementInfo(ctx, 'EGY', idOf('Netanya')).can
     && /our province/i.test(settlementInfo(ctx, 'EGY', idOf('Netanya')).why),
   'foreign (Israeli) land is refused');
-const sinai = g.provinces[idOf('Sinai Interior')];
-ok(sinai.owner === 'EGY' && sinai.impassable && !settlementInfo(ctx, 'EGY', idOf('Sinai Interior')).can,
-  'impassable waste is refused');
+// v4.3 opened the 1948 deserts, so no live cell is impassable in this era;
+// flip one synthetically to prove the gate still holds.
+const pelusium = g.provinces[idOf('Pelusium')];
+pelusium.impassable = true;
+ok(!settlementInfo(ctx, 'EGY', idOf('Pelusium')).can
+    && /impassable/i.test(settlementInfo(ctx, 'EGY', idOf('Pelusium')).why),
+  'impassable land is refused');
+pelusium.impassable = false;
 // A defensively-handled unsettleable cell (no such content ships today).
 const synthetic = g.provinces[idOf('Khan Yunis')];
 synthetic.settleable = false;

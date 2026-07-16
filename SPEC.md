@@ -1768,3 +1768,34 @@ foreign court **read-only**.
   unsettleable cells, plus occupation voiding and save revival. `uitest26.mjs`
   drives the panel control in a real browser: the offered, enabled button, its
   tier tooltip, the spent influence, and the progress row that replaces it.
+
+## 44. v4.3: wasteland does not exist in 1948
+
+- **The interiors open**: by May 1948 the five great deserts — Sinai Interior,
+  Eastern Desert, Libyan Desert (Egypt), Arabian Desert (Saudi Arabia), Syrian
+  Desert (Syria) — are administered sovereign territory with motor roads,
+  pipelines and garrisons, not the trackless waste of antiquity. Egypt attacked
+  *through* the Sinai and Operation Horev crossed back into it. The 1948
+  bookmark overrides them to `impassable: false` and `habitation: 'frontier'`
+  via the era-override tables `makeProvinceState` already reads (SPEC §42), so
+  nothing on the 1948 map is unowned, impassable, or uninhabited — nothing
+  hatches; every cell wears its sovereign's color.
+- **Passable is not comfortable**: the cells keep their `wasteland` terrain,
+  whose 2.5× movement cost and 5%/month attrition make deep-desert campaigns
+  possible but punishing — a road, not a highway. Being frontier land, they are
+  live settlement-project targets (SPEC §43): Egypt may settle the Sinai.
+- **Ancient eras keep their walls**: every earlier bookmark leaves the deserts
+  unowned (`WASTE`), impassable, and uninhabited — pathing and balance in the
+  other seven bookmarks are untouched.
+- **Old saves lift the wall**: `reconcileGameProvinces` now refreshes
+  `p.impassable` from era data on every load (nothing mutates passability in
+  play, so this is safe), and lifts an `uninhabited` habitation to the
+  bookmark's override — while a tier the player *earned* (settlement, growth)
+  is never clobbered.
+- **Regression contract**: `smoke29.mjs` proves the 1948 map holds no unowned,
+  impassable, or uninhabited cell; the Sinai bridges Egypt proper and the
+  Negev on the real geometry snapshot; wasteland terrain still punishes the
+  crossing; Egypt can settle the interior; 66 CE keeps its walls; and an old
+  1948 save opens on load without losing an earned tier. `smoke26.mjs` pins
+  the updated 1948 contract (open frontier, no hatch), and `smoke27.mjs`
+  carries the desert development into Egypt's counted total.

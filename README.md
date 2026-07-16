@@ -127,7 +127,10 @@ python3 -m http.server 8613 --directory .
   ladder (uninhabited → frontier → rural → town → urban), and a settlement
   project spends influence to raise a settleable province one rung — founding on
   the frontier so you can then develop what you founded. Only prosperity makes
-  the final leap to a metropolis.
+  the final leap to a metropolis. And wasteland does not exist in 1948: the
+  Sinai, the Syrian and Arabian deserts open as sovereign frontier — crossable,
+  settleable, and brutal to campaign through — while the ancient eras keep
+  their walls.
 - Governments: monarchies crown heirs (and suffer regencies), republics vote
   every four years — Rome is a republic until the emperors, and 1948 Israel
   elects its head of government — theocracies never anoint a child, and tribal
