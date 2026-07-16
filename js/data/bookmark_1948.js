@@ -60,6 +60,8 @@ const JOR_LANDS = [
   'Gadara', 'Petra', 'Aila',
   'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah', 'Bethlehem',
   'Beit Shemesh', 'Arad',
+  // the Arabah, patrolled from Aqaba — Operation Uvda's long march
+  'Paran', 'Eilat',
 ];
 const EGY_LANDS = [
   // the expeditionary axis and Egypt itself
@@ -67,7 +69,9 @@ const EGY_LANDS = [
   'Alexandria', 'Athribis', 'Leontopolis', 'Memphis', 'Arsinoe',
   'Oxyrhynchus', 'Thebes', 'Myos Hormos',
   'Kiryat Gat', 'Beersheba', 'Khan Yunis', 'Rafah',
-  // sovereign but still empty/impassable at this map scale
+  // the Egyptian claim in the deep Negev: the Auja axis and the Kurnub tracks
+  'Mitzpe Ramon', 'Dimona',
+  // the desert interiors: sovereign, administered, and (in 1948) crossable
   'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
 const SYR_LANDS = [
@@ -98,6 +102,8 @@ const MODERN_PROVINCES = [
   'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
   'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Beersheba', 'Arad',
   'Khan Yunis', 'Rafah',
+  // v4.4: the Negev triangle — the armistice shape is formable down to Eilat
+  'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
 ];
 
 const OWNERS = {};
@@ -263,22 +269,48 @@ export const BOOKMARK_1948 = {
     'Arad': { tax: 1, prod: 1, mp: 1 },
     'Khan Yunis': { tax: 1, prod: 1, mp: 1 },
     'Rafah': { tax: 1, prod: 1, mp: 1 },
+    'Dimona': { tax: 1, prod: 1, mp: 1 },
+    'Mitzpe Ramon': { tax: 1, prod: 1, mp: 1 },
+    'Paran': { tax: 1, prod: 1, mp: 0 },
+    'Eilat': { tax: 1, prod: 1, mp: 1 },
   },
 
   // Several familiar modern Israeli cities did not yet exist in May 1948.
   // Their land is sovereign and playable, but starts as frontier rather than
   // being back-filled with the population it gains later.
+  //
+  // The great desert interiors are wasteland no longer (SPEC §44): by 1948
+  // they are administered territory with motor roads, pipelines and garrisons —
+  // Egypt attacked through the Sinai and Operation Horev crossed back into it.
+  // They open as sovereign frontier, passable but harsh (wasteland terrain
+  // keeps its 2.5× movement cost and 5%/month attrition).
   habitation: {
     'Modi\'in Hills': 'frontier',
     'Beit Shemesh': 'frontier',
     'Kiryat Gat': 'frontier',
     'Arad': 'frontier',
+    'Dimona': 'frontier',
+    'Mitzpe Ramon': 'frontier',
+    'Paran': 'frontier',
+    'Eilat': 'frontier',
+    'Sinai Interior': 'frontier',
+    'Eastern Desert': 'frontier',
+    'Libyan Desert': 'frontier',
+    'Arabian Desert': 'frontier',
+    'Syrian Desert': 'frontier',
+  },
+  impassable: {
+    'Sinai Interior': false,
+    'Eastern Desert': false,
+    'Libyan Desert': false,
+    'Arabian Desert': false,
+    'Syrian Desert': false,
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
     ISR: [
-      'Win: end the war holding 25+ provinces including Jerusalem (the greater verdict), or 20+ (the armistice lines).',
+      'Win: end the war holding 25+ provinces including Jerusalem and Eilat — the modern borders, from Dan to Eilat (the greater verdict) — or 20+ (the armistice lines).',
       'Air power decides late wars: airfields, wings, and bombing raids are yours from military tech 19.',
       'Lose: the state overrun in its first year.',
     ],
@@ -648,14 +680,15 @@ export const BOOKMARK_1948 = {
       const warOver = !findWar(g, 'EGY', 'ISR');
 
       if (g.playerTag === 'ISR') {
-        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 25 && h.controls(ctx, 'ISR', 'Jerusalem')) {
+        if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 25
+            && h.controls(ctx, 'ISR', 'Jerusalem') && h.controls(ctx, 'ISR', 'Eilat')) {
           h.endGame(ctx, {
             result: 'win',
             title: 'From Dan to Eilat',
             text: 'The armistice lines are drawn where your soldiers stand — and they '
               + 'stand everywhere the state needs them: the plain, the Galilee, '
-              + 'Jerusalem, the road south. The war of survival is won; the age of '
-              + 'building begins.',
+              + 'Jerusalem, and the Negev down to the Red Sea. The war of survival is '
+              + 'won; the age of building begins.',
             score: 200,
           });
           return;

@@ -37,6 +37,20 @@ export const DEFINES = {
     town:        { name: 'Town',        level: 3 },
     urban:       { name: 'Urban',       level: 4 },
   },
+  // A settlement project (actions.settleProvince, SPEC §43) raises a settleable
+  // province one habitation tier — clearing land, planting a frontier, growing a
+  // town. It spends influence, runs for a few months, and grants a little
+  // development on completion. Only prosperity (yearly growth + develop) ever
+  // makes the final leap to `urban`; settlement caps at `town`.
+  SETTLEMENT: {
+    maxTier: 3,          // habitation level a project can reach (town); urban is earned, not founded
+    baseCost: 40,        // influence points, plus perTier per level of the target tier
+    perTier: 35,
+    months: 6,           // duration of one settlement project
+    devReward: { tax: 1, prod: 1 }, // development added when the project completes
+    unrest: 1,           // temporary unrest while the newcomers settle in
+    unrestMonths: 6,
+  },
 
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly
   // war-declaration chance; caution scales retreat thresholds and how early a

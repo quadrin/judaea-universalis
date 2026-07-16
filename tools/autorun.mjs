@@ -18,6 +18,7 @@ const { DEFINES } = await import(join(R, 'js/data/defines.js'));
 const { MAP_DATA } = await import(join(R, 'js/data/map_data.js'));
 const { bus } = await import(join(R, 'js/core/bus.js'));
 const { initGame, makeCtx, gameActions } = await import(join(R, 'js/sim/init.js'));
+const { buildProvinceMapping } = await import(join(R, 'js/data/map_profile.js'));
 const { tickDay } = await import(join(R, 'js/sim/tick.js'));
 const eco = await import(join(R, 'js/sim/economy.js'));
 
@@ -36,7 +37,9 @@ const YEARS = Math.max(1, Number(process.argv[2]) || 8);
 const ONLY = process.argv[3] || null;
 
 // Real adjacency, headless: the snapshot is regenerated from the browser
-// whenever the map changes (see tools/README.md).
+// whenever the map changes (see tools/README.md). It is full-resolution
+// (every latent cell active), so each bookmark folds it through its own
+// province mapping — exactly what computeGeometry does from the live raster.
 function loadGeom() {
   const snap = JSON.parse(readFileSync(join(HERE, 'geom-snapshot.json'), 'utf8'));
   return {
@@ -49,17 +52,43 @@ function loadGeom() {
   };
 }
 
+function foldGeom(raw, mapping) {
+  const N = raw.neighbors.length - 1;
+  const to = (id) => (mapping && mapping[id]) || id;
+  const neighbors = Array.from({ length: N + 1 }, () => new Set());
+  const areas = new Int32Array(N + 1);
+  const coastal = new Array(N + 1).fill(false);
+  const centroids = raw.centroids.slice();
+  const offshore = raw.offshore.slice();
+  for (let id = 1; id <= N; id++) {
+    const t = to(id);
+    areas[t] += raw.areas[id];
+    if (raw.coastal[id]) coastal[t] = true;
+    if (!offshore[t] && raw.offshore[id]) offshore[t] = raw.offshore[id];
+    for (const nb of raw.neighbors[id]) {
+      const tn = to(nb);
+      if (tn !== t) { neighbors[t].add(tn); neighbors[tn].add(t); }
+    }
+  }
+  for (let id = 1; id <= N; id++) {
+    if (to(id) !== id) { centroids[id] = centroids[to(id)]; offshore[id] = offshore[to(id)]; }
+  }
+  return { neighbors, centroids, areas, coastal, offshore, bbox: [] };
+}
+
 function fmt(n, w) {
   return String(n).padStart(w);
 }
 
-async function runBookmark(entry, geom) {
+async function runBookmark(entry, rawGeom) {
   const [id, bmFile, bmName, evFile, evName] = entry;
   const bookmark = (await import(join(R, 'js/data', bmFile)))[bmName];
   const events = (await import(join(R, 'js/data', evFile)))[evName];
   const playable = bookmark.playableTags[0].tag;
-  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag: playable, rngSeed: 1234567 });
-  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events });
+  const provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
+  const geom = foldGeom(rawGeom, provinceMap);
+  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag: playable, rngSeed: 1234567, provinceMap });
+  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, provinceMap });
   const actions = gameActions(ctx);
   game.tags[playable].ai = true; // nobody home: the whole world runs itself
   game.paused = false;

@@ -301,6 +301,107 @@ export function developCore(ctx, tag, provId, kind) {
   return { ok: true, cost: info.cost };
 }
 
+// ---------------------------------------------------------------- settlement
+// A settlement project (actions.settleProvince, SPEC §43) raises a settleable
+// province one habitation tier over a few months: empty land is claimed, a
+// frontier is planted, a town takes root. It spends influence and grants a
+// little development on completion. Only prosperity (yearly growth + develop)
+// ever reaches `urban`; a settlement project caps at `town`.
+const HAB_ORDER = ['uninhabited', 'frontier', 'rural', 'town', 'urban'];
+export function habLevel(ctx, p) {
+  const def = ctx.DEFINES.HABITATION && ctx.DEFINES.HABITATION[p && p.habitation];
+  if (def && Number.isFinite(def.level)) return def.level | 0;
+  const i = HAB_ORDER.indexOf(p && p.habitation);
+  return i < 0 ? 2 : i; // absent/unknown reads as rural, matching inferredHabitation
+}
+function settlementCfg(ctx) { return (ctx.DEFINES && ctx.DEFINES.SETTLEMENT) || {}; }
+function tierName(ctx, level) {
+  const key = HAB_ORDER[Math.max(0, Math.min(HAB_ORDER.length - 1, level | 0))];
+  const def = ctx.DEFINES.HABITATION && ctx.DEFINES.HABITATION[key];
+  return { key, name: (def && def.name) || key };
+}
+export function settlementCost(ctx, targetLevel) {
+  const s = settlementCfg(ctx);
+  return num(s.baseCost, 40) + num(s.perTier, 35) * Math.max(1, targetLevel | 0);
+}
+export function settlementInfo(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  if (!p || !t) return { can: false, why: 'invalid', cost: 0 };
+  const maxTier = num(settlementCfg(ctx).maxTier, 3);
+  const level = habLevel(ctx, p);
+  const target = tierName(ctx, level + 1);
+  const cost = settlementCost(ctx, level + 1);
+  let why = '';
+  if (p.settleable === false) why = 'This land cannot support a permanent settlement.';
+  else if (p.impassable) why = 'The land is currently impassable.';
+  else if (level >= maxTier) why = 'A thriving town already — only prosperity makes it a city.';
+  else if (p.owner !== tag) why = 'Not our province.';
+  else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
+  else if (p.siege) why = 'Under siege.';
+  else if (p.settlement) why = 'A settlement project is already under way.';
+  else if (num(t.points.infl) < cost) why = 'Needs ' + cost + ' influence points.';
+  return {
+    can: !why, why, cost, pool: 'infl',
+    toLevel: level + 1, toTier: target.key, toName: target.name,
+  };
+}
+export function settlementStart(ctx, tag, provId) {
+  const info = settlementInfo(ctx, tag, provId);
+  if (!info.can) return { ok: false, why: info.why };
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  const s = settlementCfg(ctx);
+  t.points.infl = num(t.points.infl) - info.cost;
+  p.settlement = { by: tag, monthsLeft: Math.max(1, num(s.months, 6) | 0), toTier: info.toTier };
+  const um = Math.max(0, num(s.unrestMonths, 6) | 0);
+  const uu = num(s.unrest, 1);
+  if (uu > 0 && um > 0) {
+    p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'settling');
+    p.modifiers.push({ id: 'settling', name: 'Newcomers Settling', months: um, effects: { unrest: uu } });
+  }
+  return { ok: true, cost: info.cost, toName: info.toName };
+}
+// Monthly: advance every province's settlement project. Occupation, loss of the
+// province, a change of owner, or the land turning impassable/unsettleable voids
+// it. On completion the province climbs one habitation tier and gains a little
+// development — and, if it was uninhabited, becomes developable at last.
+export function monthlySettlement(ctx) {
+  const g = ctx.game;
+  const maxTier = num(settlementCfg(ctx).maxTier, 3);
+  const reward = settlementCfg(ctx).devReward || {};
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || !p.settlement) continue;
+    try {
+      const c = p.settlement;
+      if (p.owner !== c.by || p.controller !== p.owner || p.impassable || p.settleable === false) {
+        p.settlement = null;
+        continue;
+      }
+      c.monthsLeft = num(c.monthsLeft, 1) - 1;
+      if (c.monthsLeft > 0) continue;
+      p.settlement = null;
+      const level = habLevel(ctx, p);
+      if (level >= maxTier) continue; // capped since the project began; drop it quietly
+      p.habitation = HAB_ORDER[level + 1];
+      if (!p.dev) p.dev = { tax: 0, prod: 0, mp: 0 };
+      p.dev.tax = num(p.dev.tax) + num(reward.tax);
+      p.dev.prod = num(p.dev.prod) + num(reward.prod);
+      p.dev.mp = num(p.dev.mp) + num(reward.mp);
+      ctx.bus.emit('provinceDev', { id: i });
+      if (p.owner === g.playerTag) {
+        const def = ctx.DEFINES.HABITATION && ctx.DEFINES.HABITATION[p.habitation];
+        ctx.bus.emit('notify', {
+          title: p.name + ' takes root',
+          text: p.name + ' grows into a ' + (((def && def.name) || p.habitation).toLowerCase()) + '.',
+          type: 'good', provName: p.name,
+        });
+      }
+    } catch (e) { warnOnce('settle:' + i, 'settlement tick failed for province', i, e); }
+  }
+}
+
 // ---------------------------------------------------------------- construction
 // Monthly: advance every province's building site; on completion add the key,
 // apply walls' one-time fort/garrison bump (fort hard-capped at 3), and tell

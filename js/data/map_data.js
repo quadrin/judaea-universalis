@@ -390,6 +390,19 @@ const PROVINCES = [
     { latentParent: 'Gaza' }),
   P('Rafah', 34.25, 31.28, 0.70, 'ROM', 'coast', 'grain', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { latentParent: 'Gaza' }),
+
+  // --- v4.4: the Negev triangle -------------------------------------------
+  // The rest of the modern Israeli south, so the armistice shape — from Dan
+  // to Eilat — is actually formable in 1948. In ancient eras these fold into
+  // the Nabataean Negev (Oboda's highlands, Aila's Arabah hinterland).
+  P('Dimona', 35.03, 31.06, 0.70, 'NAB', 'desert', 'salt', 'nabataean', 'idumean', 1, 1, 1, 0,
+    { latentParent: 'Oboda' }),
+  P('Mitzpe Ramon', 34.80, 30.61, 0.90, 'NAB', 'desert', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Oboda' }),
+  P('Paran', 34.88, 29.98, 1.05, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
+    { latentParent: 'Aila' }),
+  P('Eilat', 34.88, 29.66, 0.85, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Aila' }),
 ];
 
 // ---------------------------------------------------------------------------

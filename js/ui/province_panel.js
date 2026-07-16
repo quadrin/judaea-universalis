@@ -62,9 +62,11 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       <div class="pp-build hidden" data-ref="integBlock">
         <div class="pp-build-title">Integration</div>
         <div class="pp-constr hidden" data-ref="convRow"></div>
+        <div class="pp-constr hidden" data-ref="settleRow"></div>
         <div class="pp-build-grid">
           <button class="pp-build-btn" data-integ="rule" data-ref="integRule">${icon('scales')}<span>Establish Rule</span></button>
           <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
+          <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
         </div>
       </div>
       <div class="pp-unrest" data-ref="unrestRow">
@@ -145,7 +147,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.integBlock.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-integ]') : null;
       if (!b || b.classList.contains('disabled') || !actions) return;
-      const fn = b.dataset.integ === 'rule' ? 'establishRule' : 'convertProvince';
+      const fn = b.dataset.integ === 'rule' ? 'establishRule'
+        : b.dataset.integ === 'settle' ? 'settleProvince' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
       refresh();
@@ -406,6 +409,24 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const m = Math.max(0, info.converting.monthsLeft | 0);
       setHtml(refs.convRow,
         `${icon('altar')}<span class="pp-constr-name">Conversion under way</span>` +
+        `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
+    }
+    // Settlement (SPEC §43): raise this province one habitation tier.
+    const showSettle = !!info.showSettle && !info.settling;
+    refs.integSettle.classList.toggle('hidden', !showSettle);
+    if (showSettle) {
+      const settleTerms = `Settle the Land — ${info.settleCost} influence points\n`
+        + `Over a few months the province grows into a ${(info.settleToName || 'settlement').toLowerCase()}, `
+        + 'gaining development; newly claimed land becomes developable. A little unrest while the newcomers settle in.';
+      refs.integSettle.classList.toggle('disabled', !info.canSettle);
+      refs.integSettle.dataset.tt = info.canSettle
+        ? settleTerms : `${info.whyNotSettle}\n――――――\n${settleTerms}`;
+    }
+    refs.settleRow.classList.toggle('hidden', !info.settling);
+    if (info.settling) {
+      const m = Math.max(0, info.settling.monthsLeft | 0);
+      setHtml(refs.settleRow,
+        `${icon('bricks')}<span class="pp-constr-name">Settlers arriving</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
     }
   }

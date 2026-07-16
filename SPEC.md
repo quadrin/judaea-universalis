@@ -1692,3 +1692,145 @@ foreign court **read-only**.
 - **Regression contract**: `smoke26.mjs` covers tier inference, old-save revival,
   and sovereign-owned empty land. `uitest24.mjs` renders and hit-tests 260
   synthetic provinces, proving the high-byte ID path in a real browser.
+
+## 42. v4.1: bookmark administrative geography — the modern south Levant
+
+- **One raster, era-specific provinces**: a permanent land cell may be an
+  invisible subdivision of an older province in one bookmark and an independent,
+  playable province in another — same pixels, same stable ID, same save key. A
+  cell carries a `latentParent` (a canonical province name); `js/data/map_profile.js`
+  `buildProvinceMapping(MAP_DATA, bookmark)` resolves each cell to the province
+  it belongs to in that era, collapsing latent cells into their parent unless the
+  bookmark lists them in `activeProvinces`. The mapping resolves parent chains
+  once and guards against cycles.
+- **The map remaps in the shader, not the data**: the renderer uploads the
+  mapping as a `uProvinceMap` lookup texture and the ID shader resolves every
+  raster pixel (`cellIdAt` → `provinceOf` → `idAt`); `provIdAt` and
+  `setProvinceMapping` mirror it on the CPU for hit-testing. `computeGeometry`
+  takes the mapping so a collapsed cell's pixels, adjacency, coast and centroid
+  fold into its parent and draw no internal border, while an activated cell gains
+  its own area and movement node. `main.js` rebuilds the mapping, geometry, and
+  renderer texture whenever a bookmark's active set changes.
+- **21 modern cells in the southern Levant**: appended after the original theater
+  (so old save IDs never shift), the 1948 bookmark activates Safed, Nahariya,
+  Afula, Hadera, Netanya, Herzliya, Kfar Saba, Rishon LeZion, Rehovot, Modi'in
+  Hills, Jenin, Tulkarm, Qalqilya, Ramallah, Bethlehem, Beit Shemesh, Kiryat
+  Gat, Beersheba, Arad, Khan Yunis and Rafah as independent provinces with their
+  own borders, clicks, labels, ownership (Israel, the West Bank, Gaza), and
+  victory-count land. In every earlier bookmark those pixels resolve to their
+  ancient parents (Gischala, Ptolemais, Caesarea, Joppa, Jamnia, Sebaste, Gaza…).
+- **Subdivision, not new wealth**: `bookmark.devTweaks` redistributes each parent
+  province's old development across its active children instead of duplicating
+  regional income; `mapProfileMigration` (with `game.mapProfileVersion`) upgrades
+  a pre-expansion save once, preserving any player-added development above the
+  old coarse baseline and refreshing display names so a stale Gischala-as-Safed
+  alias is dropped. Cities not yet founded in May 1948 (Modi'in Hills, Beit
+  Shemesh, Kiryat Gat, Arad) start as sovereign `frontier` land rather than being
+  back-filled. `reconcileGameProvinces` nulls latent cells and builds active ones
+  on load; `makeProvinceState` (shared by init and reconcile) reads bookmark
+  fields with latent-parent inheritance.
+- **Regression contract**: `smoke27.mjs` covers profile mapping, collapsed vs
+  activated geometry on a synthetic map, the redistributed 1948 development
+  totals, separately-addressable Safed/Jish, and pre-expansion save
+  reconciliation. `uitest25.mjs` proves all 21 modern cells own pixels, geometry
+  and click IDs in a real browser, and that the same raw Safed pixel clicks
+  through to Gischala in 66 CE.
+
+## 43. v4.2: settle the land — the habitation ladder becomes playable
+
+- **A settlement project**: `actions.settleProvince(provId)` raises a settleable
+  province one habitation tier — clearing empty land into a `frontier`, growing a
+  `frontier` into `rural`, a `rural` into a `town`. It spends influence
+  (`DEFINES.SETTLEMENT.baseCost + perTier × target level`), runs for
+  `SETTLEMENT.months`, applies a temporary "Newcomers Settling" unrest modifier,
+  and on completion grants `SETTLEMENT.devReward` development. Only prosperity
+  (yearly growth and `develop`) ever reaches `urban`; a project caps at `town`
+  (`SETTLEMENT.maxTier`).
+- **The empty-land loop closes**: uninhabited land could never be developed
+  (economy gates it). Settling it to `frontier` makes it developable at last, so
+  the land-state tiers introduced in v4.0 now drive a real decision: found on the
+  frontier, then grow what you founded.
+- **Honest gating and honest voiding**: `settlementInfo` refuses unsettleable
+  land, impassable waste, foreign or occupied provinces, besieged provinces, a
+  province already at the cap, a second concurrent project, and insufficient
+  influence — each with its own reason. `monthlySettlement` (in the monthly tick,
+  after construction) voids a project if the province is lost, occupied, changes
+  owner, or turns impassable/unsettleable mid-work, exactly like conversion.
+  `province.settlement` is `{by, monthsLeft, toTier}`, saved as plain data and
+  defaulted to `null` on revival of pre-settlement saves.
+- **In the panel**: the province's Integration block gains a "Settle the Land"
+  control that states its cost and target tier, disables with the blocking reason
+  when it cannot run, and gives way to a "Settlers arriving — N months" progress
+  row while a project is under way.
+- **Regression contract**: `smoke28.mjs` covers cost, a project running to
+  completion with its tier rise and development reward, empty land becoming
+  developable, the town cap, and refusal of foreign land, impassable waste, and
+  unsettleable cells, plus occupation voiding and save revival. `uitest26.mjs`
+  drives the panel control in a real browser: the offered, enabled button, its
+  tier tooltip, the spent influence, and the progress row that replaces it.
+
+## 44. v4.3: wasteland does not exist in 1948
+
+- **The interiors open**: by May 1948 the five great deserts — Sinai Interior,
+  Eastern Desert, Libyan Desert (Egypt), Arabian Desert (Saudi Arabia), Syrian
+  Desert (Syria) — are administered sovereign territory with motor roads,
+  pipelines and garrisons, not the trackless waste of antiquity. Egypt attacked
+  *through* the Sinai and Operation Horev crossed back into it. The 1948
+  bookmark overrides them to `impassable: false` and `habitation: 'frontier'`
+  via the era-override tables `makeProvinceState` already reads (SPEC §42), so
+  nothing on the 1948 map is unowned, impassable, or uninhabited — nothing
+  hatches; every cell wears its sovereign's color.
+- **Passable is not comfortable**: the cells keep their `wasteland` terrain,
+  whose 2.5× movement cost and 5%/month attrition make deep-desert campaigns
+  possible but punishing — a road, not a highway. Being frontier land, they are
+  live settlement-project targets (SPEC §43): Egypt may settle the Sinai.
+- **Ancient eras keep their walls**: every earlier bookmark leaves the deserts
+  unowned (`WASTE`), impassable, and uninhabited — pathing and balance in the
+  other seven bookmarks are untouched.
+- **Old saves lift the wall**: `reconcileGameProvinces` now refreshes
+  `p.impassable` from era data on every load (nothing mutates passability in
+  play, so this is safe), and lifts an `uninhabited` habitation to the
+  bookmark's override — while a tier the player *earned* (settlement, growth)
+  is never clobbered.
+- **Regression contract**: `smoke29.mjs` proves the 1948 map holds no unowned,
+  impassable, or uninhabited cell; the Sinai bridges Egypt proper and the
+  Negev on the real geometry snapshot; wasteland terrain still punishes the
+  crossing; Egypt can settle the interior; 66 CE keeps its walls; and an old
+  1948 save opens on load without losing an earned tier. `smoke26.mjs` pins
+  the updated 1948 contract (open frontier, no hatch), and `smoke27.mjs`
+  carries the desert development into Egypt's counted total.
+
+## 45. v4.4: from Dan to Eilat — the Negev on the map
+
+- **Four new permanent cells** complete the modern Israeli south: **Dimona**
+  (parent Oboda), **Mitzpe Ramon** (parent Oboda), **Paran** (parent Aila) and
+  **Eilat** (parent Aila) — appended after the existing cells so no save ID
+  shifts, latent in every ancient bookmark (folding into the Nabataean Negev,
+  never into waste), active in 1948. With them the armistice shape of Israel
+  is actually formable: the map now carries the whole Negev triangle down to
+  the Red Sea.
+- **The 1948 south has claimants**: Egypt's deep-Negev claim (the Auja axis)
+  holds Mitzpe Ramon and Dimona; Transjordan patrols the Arabah from Aqaba —
+  Paran and Eilat. All four start as sovereign frontier (their towns are
+  post-war foundations), so they are settlement-project targets after
+  conquest.
+- **The Uvda route is real**: on the regenerated raster, Eilat borders Paran —
+  Israel can march Beersheba → the highlands → the Arabah → Eilat without
+  taking Jordanian Aqaba, exactly as Operation Uvda did in March 1949. Eilat
+  still faces Aila across the head of the gulf.
+- **The greater verdict is honest at last**: "From Dan to Eilat" now requires
+  *holding Eilat* (and Jerusalem, and 25+ provinces). Without the south the
+  same position ends in "Independence" — the armistice, not the modern
+  borders. The ISR objective text names the requirement.
+- **Tooling**: `tools/geom-snapshot.json` is regenerated at full resolution
+  (from a 1948 boot, where every latent cell is active — it had been stale
+  since before v4.1, missing all modern cells) and `tools/autorun.mjs` now
+  folds it per bookmark through `buildProvinceMapping`, mirroring what
+  `computeGeometry` does from the live raster; the balance harness therefore
+  exercises real modern-cell adjacency for the first time.
+- **Regression contract**: `smoke30.mjs` proves the four cells' 1948 owners
+  and tiers, the Uvda adjacency chain on the real snapshot, the ancient
+  collapse into Oboda/Aila, and — end to end through `checkVictory` — that
+  25+ provinces with Jerusalem but without Eilat earns only "Independence"
+  while adding the Negev and Eilat earns "From Dan to Eilat". `smoke27.mjs`
+  and `uitest25.mjs` count all 25 modern cells.
