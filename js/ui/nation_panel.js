@@ -36,10 +36,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <button class="pp-close" data-ref="close" data-tt="Close (Esc)">${icon('xmark')}</button>
       </div>
       <div class="np-foreign-note hidden" data-ref="foreignNote">A foreign court — what our envoys can see.</div>
-      <div class="pp-build hidden" data-ref="objectivesBlock">
-        <div class="pp-build-title">Objectives</div>
-        <div class="np-objectives" data-ref="objectives"></div>
-      </div>
       <div class="np-ruler">
         <div class="np-ruler-text">
           <div class="np-ruler-name" data-ref="rulerName"></div>
@@ -342,18 +338,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       setHtml(refs.standing, `<span class="${cls}">${esc(standing)}</span>`);
     }
 
-    // What the era asks (SPEC §33) — the player's own goals, not envoy talk.
-    let objectives = null;
-    if (self && actions && typeof actions.getObjectives === 'function') {
-      try { objectives = actions.getObjectives(); } catch (e) { warnOnce('np-objectives', e); }
-    }
-    refs.objectivesBlock.classList.toggle('hidden', !objectives);
-    if (objectives) {
-      setHtml(refs.objectives, objectives.map((line) => {
-        const cls = /^Win:/.test(line) ? 'pos' : /^Lose:/.test(line) ? 'neg' : '';
-        return `<div class="np-objective"><span class="${cls}">${esc(line)}</span></div>`;
-      }).join(''));
-    }
+    // The era's objectives moved out of the court panel (v5.8): the war
+    // overview carries the contract where it is actually fought, and the
+    // outliner keeps pinning the live pressure.
 
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);

@@ -2276,6 +2276,7 @@ html, body {
   background: rgba(120, 96, 48, 0.18);
   font-weight: 600;
 }
+.wo-objective { font-size: 12.5px; margin: 3px 0; }
 .np-power-asks { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0 0 17px; }
 
 /* ------------------------------------------- unit inspector (v5.5) -------- */

@@ -395,6 +395,23 @@ export function initUI(staticCtx) {
     if (!actions || typeof actions.getWarInfo !== 'function') return;
     const info = actions.getWarInfo(warId);
     if (!info) return;
+    // The chapter's contract rides the war it is fought in (v5.8) — not the
+    // court panel. Only wars we stand in carry it, and a settled verdict
+    // shows as the verdict, not as stale win/loss lines.
+    const contractHtml = () => {
+      try {
+        const g = state.ctx && state.ctx.game;
+        const me = g && g.playerTag;
+        if (!me || !(info.mySide || []).some((r) => r.tag === me)) return '';
+        const lines = typeof actions.getObjectives === 'function' ? actions.getObjectives() : null;
+        if (!lines || !lines.length) return '';
+        return `<div class="peace-sec">The chapter's contract</div>`
+          + lines.map((line) => {
+            const cls = /^Win:/.test(line) ? 'pos' : /^Lose:/.test(line) ? 'neg' : '';
+            return `<div class="np-objective wo-objective"><span class="${cls}">${esc(line)}</span></div>`;
+          }).join('');
+      } catch (e) { warnOnce('woContract', e); return ''; }
+    };
     if (!warEl) {
       warEl = document.createElement('div');
       warEl.id = 'war-modal';
@@ -429,6 +446,7 @@ export function initUI(staticCtx) {
         <div class="wo-hold">${holdHtml(info.weHold, 'None of their land')}</div>
         <div class="peace-sec">They hold</div>
         <div class="wo-hold">${holdHtml(info.theyHold, 'None of ours')}</div>
+        ${contractHtml()}
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
         <button class="btn peace-send" data-ref="negotiate">${icon('dove', 'icon-sm')} Negotiate peace</button>
         <button class="btn peace-cancel">Close</button>
@@ -1003,7 +1021,7 @@ export function initUI(staticCtx) {
             </div>
             <div>
               <div class="peace-sec">The pieces</div>
-              <div class="help-row">Your <b>Objectives</b> sit at the top of the realm panel (N) — the era's win and loss conditions.</div>
+              <div class="help-row">Your <b>Objectives</b> ride the outliner's campaign block and each war's overview — the era's win and loss conditions, where they are fought.</div>
               <div class="help-row"><b>Monarch points</b> (G/I/M in the topbar) buy tech, reforms, development, stability, generals.</div>
               <div class="help-row"><b>Missions</b> (realm panel) pay as you play the era's story; <b>Decisions</b> hold the formable nations.</div>
               <div class="help-row"><b>Wars</b>: every war can be negotiated (dove buttons). Winning enemies send ultimatums; losing ones sue.</div>
