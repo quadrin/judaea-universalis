@@ -475,6 +475,7 @@ export const EVENTS_167 = [
   {
     id: 'ev_anabasis',
     title: 'The King Marches East',
+    requiresWar: ['HAS', 'SEL'],
     desc: 'The treasury is empty — the wars and the gifts have seen to that — and the '
       + 'upper satrapies pay nothing while Armenia and Persis drift. So the king has '
       + 'divided his forces: half the army of the kingdom crosses the Euphrates with him '

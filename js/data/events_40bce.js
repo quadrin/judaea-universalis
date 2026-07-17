@@ -134,6 +134,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_masada',
     title: 'The Cisterns of Masada',
+    requiresWar: ['HER', 'ATG'],
     desc: 'On the rock above the Dead Sea, Herod\'s family and eight hundred fighters '
       + 'watch Antigonus\' siege lines and their own water jars. When the jars are nearly '
       + 'dry, rain comes in the night — enough to fill every cistern in the casemates. '
@@ -256,6 +257,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_joppa',
     title: 'The Landing at Joppa',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Herod comes back from Rome with a title and no army, lands at Ptolemais, and '
       + 'discovers what a title is for: Galilee begins to declare — village strongmen, '
       + 'old clients of his father, men who can read a Senate decree and a weather vane '
@@ -282,6 +284,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_cilician_gates',
     title: 'The Cilician Gates',
+    requiresWar: ['ROM', 'PAR'],
     desc: 'Ventidius — who marched in Pompey\'s triumph as a boy captive and sold mules '
       + 'to legions before he commanded them — meets Labienus at the passes and breaks '
       + 'him. The renegade dies in flight; the Parthian horse learns that slingers on '
@@ -307,6 +310,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_silo',
     title: 'Silo\'s Winter',
+    requiresWar: ['HER', 'ATG'],
     desc: 'The legate Silo was sent to help the new king take his kingdom. Antigonus '
       + 'pays him better to be helpless: the legions discover urgent needs in winter '
       + 'quarters, provisioning difficulties, the impossibility of siegework before '
@@ -342,6 +346,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_caves',
     title: 'The Caves of the Cliffs',
+    requiresWar: ['HER', 'ATG'],
     desc: 'The brigand clans of Galilee — Antigonus\' irregulars, or bandits, depending '
       + 'on who is paying — hole up in caves set into cliffs above the lake, where no '
       + 'path leads. Herod\'s answer is remembered for a century: soldiers lowered from '
@@ -431,6 +436,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_machaeras',
     title: 'Machaeras Kills Everyone',
+    requiresWar: ['HER', 'ATG'],
     desc: 'The Roman officer Machaeras, sent with two legions and no judgment, takes '
       + 'Antigonus\' bribe, is refused the city anyway, and avenges the insult on the '
       + 'countryside — killing Herod\'s partisans and Antigonus\' with democratic '
@@ -454,6 +460,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_samosata',
     title: 'The Walls of Samosata',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Herod arrives at Antony\'s siege of Samosata with reinforcements gathered on '
       + 'the road and a convoy rescued from ambush on the way in — the kind of arrival '
       + 'generals remember. Antony embraces him before the officers, and when the town '
@@ -543,6 +550,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_pappus',
     title: 'Pappus at Isana',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Antigonus\' best general meets Herod in open field at Isana and loses '
       + 'everything: the battle, the army, and — because wars between kings are wars '
       + 'between families — his head, which Herod sends to Pheroras as consolation for '
@@ -573,6 +581,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_roof',
     title: 'The Roof at Jericho',
+    requiresWar: ['HER', 'ATG'],
     desc: 'After the day\'s skirmish Herod dines with his officers in a house at '
       + 'Jericho; the company has barely walked out when the roof drops into the '
       + 'dining room behind them. No one is hurt. An army that has just watched its '
@@ -627,6 +636,7 @@ export const EVENTS_40 = [
   {
     id: 'ev5_works',
     title: 'The Works Begin',
+    requiresWar: ['HER', 'ATG'],
     desc: 'Like Pompey a generation ago, the attackers come at Jerusalem from the '
       + 'north, where the ground allows engines. Three ramparts rise; the defenders '
       + 'sally by night and burn what they can. Sosius sends more timber.',
