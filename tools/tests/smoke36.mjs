@@ -126,6 +126,21 @@ console.log('== matériel: re-equip from the depots ==');
     'Soviet surplus armor is bought and mounted');
 }
 
+console.log('== a chapter verdict is not an armistice (the auto-truce fix) ==');
+{
+  // 66 CE opens with the Great Revolt already burning. A dated verdict landing
+  // mid-war must chronicle the moment and leave the war exactly as it stands.
+  const { game, ctx } = boot(BOOKMARK_66, 'JUD');
+  const warsBefore = game.wars.length;
+  ok(warsBefore >= 1, 'the Revolt is live at the start');
+  const occupied = game.provinces.find((p) => p && p.owner === 'JUD');
+  occupied.controller = 'ROM'; // Rome stands on Judaean ground when the verdict falls
+  ctx.helpers.endGame(ctx, { result: 'win', title: 'A Verdict Mid-War', text: 'The chronicle notes it.' });
+  ok(game.result === 'win', 'the verdict is recorded');
+  ok(game.wars.length === warsBefore, 'the war does NOT end with the verdict');
+  ok(occupied.controller === 'ROM', 'no silent uti-possidetis: the lines stand where the armies do');
+}
+
 console.log('== the Diaspora binds only to its own ==');
 {
   const { game, ctx } = boot(BOOKMARK_66, 'ROM');

@@ -2278,6 +2278,12 @@ The powers beyond the map (SPEC §55) learn three deeper relationships.
 - **UI**: pact and trade appear as the first chips of each power's row —
   ★ marks a standing pact (click to walk out), ⚖ a live agreement —
   with full terms in the tooltips.
+- **No more auto-truce** (the reported glitch): a chapter verdict landing
+  mid-war used to sword-peace every live war under the player, silently.
+  `endGame` now only chronicles the verdict — wars keep running until the
+  player (or a scripted armistice like Terms from Antioch, which calls
+  `helpers.endWar` itself) actually ends them. The same pass protects
+  multiplayer guests: a war with ANY human belligerent never auto-settles.
 - **Regression contract**: `smoke36.mjs` — bloc exclusivity and the −20
   chill, permanent-modifier mount/unmount, ledger flows (13/month
   verified through incomeBreakdown and explainIncome), lapse-on-neglect

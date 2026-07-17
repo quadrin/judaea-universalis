@@ -65,11 +65,11 @@ console.log('== A. total dominance opens a fight-to-the-death war ==');
   ok(game.provinces[info.provinces[0].id].owner === 'JUD', 'the ceded province changed owner');
 }
 
-console.log('== B. the verdict closes the war (win keeps what the sword holds) ==');
+console.log('== B. the verdict leaves the war standing (v5.8: no auto-truce) ==');
 {
   const { game, ctx } = boot();
   const war = game.wars[0];
-  // JUD occupies a Roman province, then the chapter is won.
+  // JUD occupies a Roman province, then the chapter is won mid-war.
   let romProv = 0;
   for (let i = 1; i < game.provinces.length; i++) {
     const p = game.provinces[i];
@@ -79,10 +79,15 @@ console.log('== B. the verdict closes the war (win keeps what the sword holds) =
   ctx.helpers.endGame(ctx, { result: 'win', title: 'Test Verdict', text: 'x', score: 100 });
   ok(game.result === 'win' && game.over === false, 'verdict chronicled, no game-over while the nation stands');
   ok(notes.some((n) => /Test Verdict/.test(n.title) && /campaign continues/.test(n.text)), 'the chronicle toast fired');
-  ok(!game.wars.includes(war), 'the scripted war ended with the verdict');
-  ok(game.provinces[romProv].owner === 'JUD', 'the sword keeps what it holds (owner flipped)');
-  const t = game.tags.JUD.atWarWith || [];
-  ok(t.length === 0, 'JUD is at war with no one afterwards');
+  ok(game.wars.includes(war), 'the war stands — a verdict is not an armistice');
+  ok(game.provinces[romProv].owner === 'ROM' && game.provinces[romProv].controller === 'JUD',
+    'the occupation stands too: nothing is annexed behind the player\'s back');
+  // The sword mechanics themselves are unchanged: a scripted armistice
+  // (helpers.endWar, as Terms from Antioch uses) still keeps what it holds.
+  ctx.helpers.endWar(ctx, 'JUD', 'ROM', game.wars[0].attackers.indexOf('JUD') >= 0 ? 'att' : 'def');
+  ok(!game.wars.includes(war), 'a SCRIPTED armistice still dissolves the war');
+  ok(game.provinces[romProv].owner === 'JUD', 'and the sword keeps what it holds (owner flipped)');
+  ok((game.tags.JUD.atWarWith || []).length === 0, 'JUD is at war with no one afterwards');
 }
 
 console.log('== D. elimination is the ONLY full game-over card ==');

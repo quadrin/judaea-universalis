@@ -129,6 +129,16 @@ set `JU_CHROMIUM` to another executable when needed:
 history/state-aware-conquest contract; `smoke21.mjs` owns demobilization,
 peace-aware war chapters, era-gated works, and merchant-shipping economics.
 
+Since v5.8 (verdicts no longer force-peace the verdict-holder's wars):
+harness campaigns fight past their verdicts until the ordinary AI
+settlement closes them, so the 40 BCE death-war underdogs return to the
+bleeding line and 614's Return trades its snowball for the same
+self-limiting bleed. All within the long-documented accepted families.
+Accepted as of v5.8: 167 PAR BLEEDING · 67 SEL DEAD + ARI (or HYR)
+BLEEDING · 40 HER and/or ATG BLEEDING · 66 none · 132 JUD
+DEBT-SPIRAL,BLEEDING · 614 JUD BLEEDING (SNOWBALL comes and goes) ·
+1948 none.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could

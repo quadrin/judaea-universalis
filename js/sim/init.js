@@ -441,18 +441,13 @@ export const simHelpers = {
     g.result = result || 'loss';
     chronicleCore(ctx, 'verdict', (title ? title + ' — ' : '')
       + (text || (g.result === 'win' ? 'Victory.' : 'Defeat.')));
-    // The verdict closes the player's wars: a win keeps what the sword holds,
-    // a loss concedes it — either way the world is at peace afterwards.
-    try {
-      for (const w of (g.wars || []).slice()) {
-        const onAtt = w.attackers.indexOf(g.playerTag) >= 0;
-        if (!onAtt && w.defenders.indexOf(g.playerTag) < 0) continue;
-        const myKey = onAtt ? 'att' : 'def';
-        const theirKey = onAtt ? 'def' : 'att';
-        const winners = g.result === 'win' ? myKey : g.result === 'loss' ? theirKey : null;
-        endWarBySword(ctx, w, winners, { silent: true });
-      }
-    } catch (e) { warnOnce('endGameWars', 'closing wars on game end failed', e); }
+    // The verdict does NOT touch the player's wars (v5.8 fix — 'nothing
+    // decides for you', SPEC §32). A dated verdict landing mid-campaign used
+    // to sword-peace every live war under the player — the reported
+    // "auto-truce". Scripted arcs whose history demands an armistice (Terms
+    // from Antioch, Rhodes, Hadrian's withdrawal) end their wars explicitly
+    // via helpers.endWar in their own effects; elimination still closes the
+    // book in checkElimination. Everything else keeps fighting.
     g.paused = true;
     ctx.bus.emit('pause', true);
     // The full VICTORIA/DEFEAT card is reserved for actual elimination — a
