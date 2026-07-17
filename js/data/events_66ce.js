@@ -141,6 +141,7 @@ export const EVENTS_66 = [
   {
     id: 'ev_menahem',
     title: 'Menahem at the Gates',
+    requiresWar: ['JUD', 'ROM'],
     desc: 'Menahem ben Judah — son of the Galilean who raised the census revolt sixty years '
       + 'ago — has broken open Herod\'s armory on Masada and returned to Jerusalem at the '
       + 'head of armed Sicarii, entering the Temple courts in royal robes to pray. He directs '
