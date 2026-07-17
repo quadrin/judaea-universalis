@@ -248,11 +248,26 @@ export const BOOKMARK_66 = {
     },
   ],
 
+  // Pre-existing works (SPEC §58): the built world of 66 CE — Herod's harbor
+  // at Caesarea, the grain machine at Alexandria, the markets of the great
+  // cities — stands before the first player order.
+  buildings: {
+    'Alexandria': ['shipyard', 'granary', 'market'],
+    'Caesarea Maritima': ['shipyard'], // Sebastos, Herod's great harbor
+    'Seleucia Pieria': ['shipyard'],   // the port of Antioch
+    'Jerusalem': ['market'],
+    'Antioch': ['market'],
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): Rome's standing provincial squadrons. ---
+    h.spawnFleet(ctx, 'ROM', 'Alexandria', 8, { name: 'Classis Alexandrina' });
+    h.spawnFleet(ctx, 'ROM', 'Seleucia Pieria', 6, { name: 'Classis Syriaca' });
 
     // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
     // King of Kings, paying tribute, joining his wars through sameSide.

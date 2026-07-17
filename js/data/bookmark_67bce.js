@@ -471,11 +471,21 @@ export const BOOKMARK_67 = {
     ],
   },
 
+  // Pre-existing works (SPEC §58): the harbors the Hellenistic kings built
+  // do not vanish with their power.
+  buildings: {
+    'Seleucia Pieria': ['shipyard'], // the port of Antioch, in rump-Seleucid hands
+    'Alexandria': ['shipyard'],
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): Egypt still keeps a real navy. ---
+    h.spawnFleet(ctx, 'PTO', 'Alexandria', 4, { name: 'Fleet of Alexandria' });
 
     // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
     // King of Kings, paying tribute, joining his wars through sameSide.

@@ -414,7 +414,7 @@ export const DEFINES = {
       modern: { tech: 19, name: 'House of Worship',
         desc: 'A synagogue, church or mosque for the town: -1.5 local unrest' } },
     shipyard: { name: 'Shipyard', cost: 90, months: 14, coastal: true,
-      desc: 'A working harbor: local production +15%; commission up to 5 merchant ships' },
+      desc: 'A working harbor: local production +15%; berths 3 merchant ships, which may sail between your shipyard harbors' },
     // The age of flight (SPEC §29): gated on military tech, parks air wings.
     airfield: { name: 'Airfield', cost: 120, months: 10, tech: 19,
       desc: 'A runway and hangars: base up to 2 air wings, whose fighters cover battles nearby' },

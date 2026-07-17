@@ -241,13 +241,15 @@ export function createOutliner(el, {
       }
     }
     if (navy && navy.merchantCount > 0) {
-      const inactive = Math.max(0, navy.merchantCount - (navy.merchantActive || 0));
+      const atSea = (navy.voyages || []).length;
+      const inactive = Math.max(0, navy.merchantCount - (navy.merchantActive || 0) - atSea);
       const tt = `${navy.merchantCount} civilian ship${navy.merchantCount === 1 ? '' : 's'} in the merchant marine`
-        + (inactive ? `\n${inactive} idle under occupation, siege or blockade` : '\nEvery home port is trading');
+        + (atSea ? `\n${atSea} at sea: ` + navy.voyages.map((v) => `${v.fromName} → ${v.toName} (${v.daysLeft}d)`).join(', ') : '')
+        + (inactive ? `\n${inactive} idle under occupation, siege or blockade` : (atSea ? '' : '\nEvery home port is trading'));
       html += `<div class="ol-sec">Merchant Marine <span class="ol-count">${navy.merchantCount}</span></div>
         <div class="ol-row ol-merchant" data-tt="${esc(tt)}">
           <span class="ol-name">${icon('ship', 'icon-row')} Civilian shipping</span>
-          <span class="ol-sub">${navy.merchantActive || 0} active</span>
+          <span class="ol-sub">${navy.merchantActive || 0} active${atSea ? ' · ' + atSea + ' at sea' : ''}</span>
         </div>`;
     }
 

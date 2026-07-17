@@ -139,6 +139,16 @@ BLEEDING · 40 HER and/or ATG BLEEDING · 66 none · 132 JUD
 DEBT-SPIRAL,BLEEDING · 614 JUD BLEEDING (SNOWBALL comes and goes) ·
 1948 none.
 
+Since v5.9 (pre-existing works & starting fleets, SPEC §58) the seeded
+establishments bill real upkeep, and Byzantium's changed ledger nudges
+614's Ghassanids a hair below break-even — treasury still rising
+(50→391 over the run), the ARM/PAR hovering class, drifting on and off
+the line with the seeds like ARI/HYR. Accepted as of v5.9:
+167 PAR BLEEDING · 67 SEL DEAD + ARI (or HYR) BLEEDING · 40 HER and/or
+ATG BLEEDING · 66 none · 132 JUD DEBT-SPIRAL,BLEEDING · 614 JUD
+BLEEDING (SNOWBALL comes and goes) + GHA BLEEDING (comes and goes) ·
+1948 none.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could

@@ -2289,3 +2289,53 @@ The powers beyond the map (SPEC §55) learn three deeper relationships.
   verified through incomeBreakdown and explainIncome), lapse-on-neglect
   for both relationship kinds, the pact floor at 70, both matériel
   purchases, and Diaspora tag-gating.
+
+## 58. v5.9: the built world, and tubs that sail
+
+Some bookmarks open onto a world already built — Herod's harbor is not
+waiting for a construction order in 66 CE, and Israel does not invent the
+airplane in June 1948. And the merchant marine stops being furniture: the
+civilian hulls can sail.
+
+- **The `buildings` overlay**: a bookmark may seed per-province works
+  (`buildings: { 'Dora': ['shipyard'], ... }`), resolved through
+  `bookmarkField` like owners and religions, so latent-parent inheritance
+  works and every other bookmark is untouched. 1948 opens with the real
+  infrastructure of May '48 (Haifa/Alexandria/Beirut/Famagusta shipyards;
+  Tel Aviv, Cairo, Damascus, Baghdad, Amman and Nicosia airfields); 66
+  and 132 CE with Sebastos, the port of Antioch and the Alexandrian grain
+  machine; 167/67/40 BCE with the two great Hellenistic harbors; 614 with
+  the Golden Horn and Alexandria.
+- **Starting forces** (`helpers.spawnFleet`, `helpers.spawnAirWing`):
+  setup-time siblings of `spawnArmy`, minting full-shape fleets and wings
+  (gen from `navalGen`, wing gated on a real airfield). 1948 opens with
+  the Sea Corps at Haifa, 101 Squadron at Tel Aviv, two REAF squadrons at
+  Cairo, an Iraqi squadron at Baghdad, and Britain's Mediterranean Fleet
+  and No. 32 Squadron on Cyprus; Rome's Classis Alexandrina and Classis
+  Syriaca patrol 66/132; the Royal and Ptolemaic fleets open 167;
+  Cleopatra's navy rides at Alexandria in 40; the Imperial Fleet holds
+  the Horn in 614.
+- **Merchant voyages** (`sendMerchantCore`, `merchantVoyagesDaily`):
+  a hull may be SENT to any other friendly, working shipyard harbor.
+  The berth cap drops 5 → 3 (`MERCHANT_SHIP_CAP`) — no stacking one
+  boom port — and berths are RESERVED by inbound voyages, so two ports
+  cannot promise the same anchorage (commissioning counts inbound too).
+  Voyages (`g.merchantVoyages`, revive-backfilled) sail at 22 px/day
+  (slower than war fleets), earn nothing at sea (income reads
+  `p.merchantShips`, which the voyage leaves), and on arrival dock, or
+  divert home if the port fell or filled, or — with no port open — are
+  lost with a notice. Blockade seals the harbor mouth outbound too.
+- **UI**: the province panel's merchant block grows "Send to <harbor> ·
+  Nd" buttons (berth math in the tooltips); the outliner's civilian
+  shipping row counts hulls at sea with per-voyage tooltips; the map
+  draws the same neutral tub mid-passage, interpolated along its course.
+- **Balance note**: the seeded establishments bill real upkeep and fuel.
+  The autorun set is unchanged except 614's GHA, which drifts a hair
+  below break-even (treasury still rising — the documented ARM/PAR
+  hovering class) from Byzantium's changed ledger; accepted in
+  tools/README.
+- **Regression contract**: `smoke37.mjs` — overlay seeding across eras,
+  spawn-helper shapes, the 1948 establishments, the 3-berth cap, berth
+  reservation against inbound hulls, voyage arrival, divert-home,
+  lost-at-sea, at-sea income exclusion, and the revive backfill.
+  `smoke14/15/32` re-anchored to the seeded world.

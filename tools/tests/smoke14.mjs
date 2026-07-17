@@ -81,6 +81,9 @@ console.log('== wings raise, rebase, and cover ==');
 const p0 = game.provinces[home];
 p0.buildings = p0.buildings || [];
 isr.treasury = 500;
+// v5.9 (SPEC §58) seeds historical squadrons at the bookmark's dawn; this
+// suite exercises the raising mechanics from an empty sky.
+game.airwings = {};
 const noField = mil.raiseAirWing(ctx, 'ISR', home);
 ok(!noField.ok && /airfield/.test(noField.why), 'air wings wait for a completed airfield: ' + noField.why);
 p0.buildings.push('airfield');

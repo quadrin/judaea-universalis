@@ -295,11 +295,22 @@ export const BOOKMARK_614 = {
     },
   ],
 
+  // Pre-existing works (SPEC §58): the two imperial harbors still standing
+  // after three centuries of Christian empire.
+  buildings: {
+    'Byzantion': ['shipyard', 'market'],  // the Golden Horn
+    'Alexandria': ['shipyard', 'granary'], // the grain fleet's home
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): the sea is the one element Heraclius
+    // still commands outright. ---
+    h.spawnFleet(ctx, 'BYZ', 'Byzantion', 8, { name: 'The Imperial Fleet' });
 
     if (g.tags.RSH) g.tags.RSH.alive = false;
 

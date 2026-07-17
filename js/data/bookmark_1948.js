@@ -563,11 +563,36 @@ export const BOOKMARK_1948 = {
     },
   ],
 
+  // Pre-existing works (SPEC §58): the ports and runways of May 1948 are
+  // already built — nobody digs Haifa harbor after the Mandate ends.
+  buildings: {
+    'Dora': ['shipyard'],               // Haifa — the deep-water port
+    'Alexandria': ['shipyard'],
+    'Berytus': ['shipyard'],            // Beirut
+    'Salamis': ['shipyard', 'airfield'], // Famagusta docks, RAF Nicosia
+    'Joppa': ['airfield'],              // Sde Dov and the coastal strips
+    'Memphis': ['airfield'],            // Cairo West
+    'Damascus': ['airfield'],           // Mezzeh
+    'Seleucia-Ctesiphon': ['airfield'], // Baghdad
+    'Philadelphia': ['airfield'],       // RAF Marka, Amman
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting establishments (SPEC §58): the fleets and squadrons that
+    // already exist at midnight — Israel's corvettes and first fighters included.
+    h.spawnFleet(ctx, 'ISR', 'Dora', 3, { name: 'The Sea Corps' });
+    h.spawnFleet(ctx, 'EGY', 'Alexandria', 5, { name: 'Egyptian Royal Fleet' });
+    h.spawnFleet(ctx, 'UK', 'Salamis', 6, { name: 'Mediterranean Fleet' });
+    h.spawnAirWing(ctx, 'ISR', 'Joppa', { name: '101 Squadron' });
+    h.spawnAirWing(ctx, 'EGY', 'Memphis', { name: 'No. 2 Squadron REAF' });
+    h.spawnAirWing(ctx, 'EGY', 'Memphis', { name: 'No. 5 Squadron REAF' });
+    h.spawnAirWing(ctx, 'IRQ', 'Seleucia-Ctesiphon', { name: 'No. 7 Squadron RIrAF' });
+    h.spawnAirWing(ctx, 'UK', 'Salamis', { name: 'No. 32 Squadron RAF' });
 
     // --- The invasion: one coalition war against the new state. ---
     h.declareWar(ctx, 'EGY', 'ISR', 'The War of Independence');

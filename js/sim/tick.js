@@ -11,7 +11,7 @@ import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites 
 import { monthlyFactions } from './factions.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
-import { fleetsDaily, monthlyNavy } from './navy.js';
+import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyPowers } from './powers.js';
 
@@ -115,6 +115,7 @@ export function tickDay(ctx) {
     advanceDate(ctx);
     safe('move', () => moveArmiesDaily(ctx));
     safe('fleets', () => fleetsDaily(ctx));
+    safe('merchants', () => merchantVoyagesDaily(ctx));
     safe('battles', () => tickBattles(ctx));
     safe('sieges', () => tickSieges(ctx));
     safe('airfields', () => sweepAirfields(ctx)); // wings caught on fallen fields
