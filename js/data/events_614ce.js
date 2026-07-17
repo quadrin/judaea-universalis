@@ -159,6 +159,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_benjamin',
     title: 'Benjamin of Tiberias',
+    requiresWar: ['JUD', 'BYZ'],
     desc: 'The richest Jew in Galilee opens his strongrooms: Benjamin of Tiberias '
       + 'arms and pays the men of Tiberias, Nazareth and the hill villages, and '
       + 'marches with them himself. He is buying, with his own silver, the thing his '
@@ -527,6 +528,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_turks',
     title: 'The Khagan\'s Bargain',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Before the walls of Tiflis the Emperor of the Romans takes the crown from '
       + 'his own head and sets it on the Khagan of the Turks, promises him his '
       + 'daughter\'s portrait and hand, and receives in return forty thousand horsemen '
@@ -555,6 +557,7 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_intercepted',
     title: 'The Intercepted Letter',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'Khosrow, who forgives nothing and learns less, orders his best marshal '
       + 'executed for the crime of retreating competently. The courier is taken; '
       + 'Heraclius reads the letter, adds four hundred names of Persian officers to '
@@ -966,6 +969,7 @@ export const EVENTS_614 = [
   {
     id: 'ev614_persia_sues',
     title: 'Persia Sues for Peace',
+    requiresWar: ['SAS', 'BYZ'],
     desc: 'The King of Kings\u2019 court is done: the fire temples will pay for the churches '
       + 'they burned, the True Cross returns, and every Christian land the Emperor '
       + 'holds is his. Persia proper — the plateau and the fire — goes home. Or the '

@@ -2271,6 +2271,12 @@ html, body {
   background: rgba(43, 32, 21, 0.08); color: inherit;
 }
 .np-power-court.disabled, .np-power-ask.disabled { opacity: 0.45; cursor: default; }
+.np-power-ask.np-power-active {
+  border-color: rgba(120, 96, 48, 0.9);
+  background: rgba(120, 96, 48, 0.18);
+  font-weight: 600;
+}
+.wo-objective { font-size: 12.5px; margin: 3px 0; }
 .np-power-asks { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0 0 17px; }
 
 /* ------------------------------------------- unit inspector (v5.5) -------- */

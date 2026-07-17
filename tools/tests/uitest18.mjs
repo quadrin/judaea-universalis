@@ -24,14 +24,20 @@ await page.locator('.nation-card').first().click();
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(400);
 
-console.log('== the era states its objectives ==');
+console.log('== the era states its objectives — in the war it is fought (v5.8) ==');
 await page.locator('.tb-flag').click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
-const objRows = await page.locator('.np-objective').count();
-ok(objRows >= 3, 'objectives listed in the realm panel: ' + objRows + ' lines');
-const objTxt = (await page.locator('[data-ref="objectivesBlock"]').textContent()) || '';
+ok((await page.locator('.np-objective').count()) === 0,
+  'the court panel no longer carries the contract');
+await page.keyboard.press('Escape');
+// Open the active war's overview from the outliner: the contract rides there.
+await page.locator('.ol-row[data-war]').first().click();
+await page.waitForSelector('#war-modal:not(.hidden)');
+const objRows = await page.locator('.wo-objective').count();
+ok(objRows >= 3, 'objectives listed in the war overview: ' + objRows + ' lines');
+const objTxt = (await page.locator('#war-modal').textContent()) || '';
 ok(/Win:/.test(objTxt) && /Lose:/.test(objTxt), 'wins and losses named');
-await page.screenshot({ path: OUT + 'v33-objectives.png', clip: { x: 0, y: 40, width: 400, height: 560 } });
+await page.screenshot({ path: OUT + 'v33-objectives.png', clip: { x: 400, y: 40, width: 640, height: 700 } });
 await page.keyboard.press('Escape');
 
 console.log('== H is for help ==');

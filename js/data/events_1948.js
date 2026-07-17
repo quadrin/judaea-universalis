@@ -155,6 +155,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_spitfires',
     title: 'Bombs on Tel Aviv',
+    requiresWar: ['ISR', 'EGY'],
     desc: 'Egyptian Spitfires come in low over the city that declared itself last week '
       + 'and bomb the central bus station in the morning rush. The new state counts its '
       + 'dead in the street where it read its declaration — and understands, in one '
@@ -180,6 +181,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_oldcity',
     title: 'The Old City Falls',
+    requiresWar: ['ISR', 'JOR'],
     desc: 'After two weeks of house-to-house fighting the Jewish Quarter of the Old '
       + 'City surrenders to the Arab Legion: the defenders marched into captivity, the '
       + 'residents evacuated through the Zion Gate, the synagogues burning behind them. '
@@ -207,6 +209,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_adhalom',
     title: 'Four Planes at Ad Halom',
+    requiresWar: ['ISR', 'EGY'],
     desc: 'The Egyptian column is a day\'s drive from Tel Aviv when four Avia S-199s — '
       + 'Czech-built Messerschmitts, assembled in secret, flown by pilots who met them '
       + 'this week — hit it at the Ad Halom bridge. Two of the four are lost. The '
@@ -328,6 +331,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_binnun',
     title: 'Bin Nun at Latrun',
+    requiresWar: ['ISR', 'JOR'],
     desc: 'Three assaults on the police fort at Latrun; three repulses. Some of the '
       + 'infantry are immigrants who landed this month, drilled on the beach, and died '
       + 'with the Hebrew for "retreat" still unlearned. The fort commands the road; '
@@ -383,6 +387,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_lydda',
     title: 'The Roads from Lydda',
+    requiresWar: ['ISR', 'JOR'],
     desc: 'Dani took Lydda and Ramle in two days; what followed took longer to name. '
       + 'Tens of thousands walked east toward the Legion\'s lines in the July heat, '
       + 'carrying what could be carried. The orders were terse, the arguments about '
@@ -477,6 +482,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_bernadotte',
     title: 'The Bernadotte Affair',
+    requiresWar: [['ISR', 'EGY'], ['ISR', 'JOR'], ['ISR', 'SYR'], ['ISR', 'LEB'], ['ISR', 'IRQ']],
     desc: 'The UN mediator proposes handing the Negev to Transjordan and '
       + 'internationalizing Jerusalem — and is shot dead in his car by Lehi gunmen '
       + 'the next week. The state\'s enemies call it policy; the state must decide '
@@ -508,6 +514,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_kaukji',
     title: 'Kaukji\'s Pocket',
+    requiresWar: [['ISR', 'SYR'], ['ISR', 'LEB']],
     desc: 'Fawzi al-Kaukji and the Arab Liberation Army still hold a pocket of central '
       + 'Galilee — the one Arab force in this war answerable to no government at all. '
       + 'In October he breaks the truce on his own authority and takes a hilltop from '
@@ -622,6 +629,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_abdullah_meir',
     title: 'The Secret Wire',
+    requiresWar: ['ISR', 'JOR'],
     desc: 'The contacts never quite stopped: emissaries in disguise, a villa in the '
       + 'night, the King explaining with perfect courtesy that he is the only Arab '
       + 'ruler who will still be at this table in ten years. Amman and Tel Aviv are '
@@ -656,6 +664,7 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_faluja',
     title: 'The Pocket Holds',
+    requiresWar: ['ISR', 'EGY'],
     desc: 'An Egyptian brigade sits encircled at Faluja and declines, week after week, '
       + 'to surrender — the one unambiguous piece of honor Cairo will carry home from '
       + 'this war. Among the staff officers keeping it alive is a young major named '

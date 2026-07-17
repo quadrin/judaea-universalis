@@ -29,7 +29,7 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
-import { getPowersInfo, courtPowerCore, askPowerCore } from './powers.js';
+import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
@@ -441,18 +441,13 @@ export const simHelpers = {
     g.result = result || 'loss';
     chronicleCore(ctx, 'verdict', (title ? title + ' — ' : '')
       + (text || (g.result === 'win' ? 'Victory.' : 'Defeat.')));
-    // The verdict closes the player's wars: a win keeps what the sword holds,
-    // a loss concedes it — either way the world is at peace afterwards.
-    try {
-      for (const w of (g.wars || []).slice()) {
-        const onAtt = w.attackers.indexOf(g.playerTag) >= 0;
-        if (!onAtt && w.defenders.indexOf(g.playerTag) < 0) continue;
-        const myKey = onAtt ? 'att' : 'def';
-        const theirKey = onAtt ? 'def' : 'att';
-        const winners = g.result === 'win' ? myKey : g.result === 'loss' ? theirKey : null;
-        endWarBySword(ctx, w, winners, { silent: true });
-      }
-    } catch (e) { warnOnce('endGameWars', 'closing wars on game end failed', e); }
+    // The verdict does NOT touch the player's wars (v5.8 fix — 'nothing
+    // decides for you', SPEC §32). A dated verdict landing mid-campaign used
+    // to sword-peace every live war under the player — the reported
+    // "auto-truce". Scripted arcs whose history demands an armistice (Terms
+    // from Antioch, Rhodes, Hadrian's withdrawal) end their wars explicitly
+    // via helpers.endWar in their own effects; elimination still closes the
+    // book in checkElimination. Everything else keeps fighting.
     g.paused = true;
     ctx.bus.emit('pause', true);
     // The full VICTORIA/DEFEAT card is reserved for actual elimination — a
@@ -1111,6 +1106,27 @@ export function gameActions(ctx) {
         if (!res.ok) { say('The favor is refused', res.why + '.', 'bad'); return; }
         say('The favor is granted', res.power + ': ' + res.name.toLowerCase() + '.', 'good');
       } catch (e) { warnOnce('askPower', 'askPower failed', e); }
+    },
+    signPowerPact(powerId) {
+      try {
+        const res = signPactCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
+        say('A pact is signed', res.power + ': ' + res.name + '. Their bloc is ours — and the rival\'s door closes.', 'good');
+      } catch (e) { warnOnce('signPowerPact', 'signPowerPact failed', e); }
+    },
+    leavePowerPact(powerId) {
+      try {
+        const res = leavePactCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
+        say('The pact is ended', 'We walk out of the alignment with ' + res.power + '. They will remember.', 'info');
+      } catch (e) { warnOnce('leavePowerPact', 'leavePowerPact failed', e); }
+    },
+    signPowerTrade(powerId) {
+      try {
+        const res = signTradeCore(ctx, g.playerTag, String(powerId));
+        if (!res.ok) { say('No agreement', res.why + '.', 'bad'); return; }
+        say('Trade opens', res.power + ': ' + res.name + '. The monthly flow starts at once.', 'good');
+      } catch (e) { warnOnce('signPowerTrade', 'signPowerTrade failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------

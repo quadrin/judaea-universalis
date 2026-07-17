@@ -510,11 +510,16 @@ function monthlyWarDiplomacy(ctx) {
   const player = g.playerTag;
   for (const w of (g.wars || []).slice()) {
     if (!w || w.noNegotiation) continue;
-    // Only a HUMAN player holds up auto-settlement — if the player tag is
+    // Only a HUMAN holds up auto-settlement — if the player tag is
     // AI-driven (balance autoruns, an abandoned multiplayer realm), its wars
-    // settle like anyone else's.
-    const playerIn = (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)
+    // settle like anyone else's. ANY human belligerent counts (v5.8 fix):
+    // a multiplayer guest's war must not settle behind their back either.
+    const humans = (Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [player])
+      .filter((t) => g.tags[t] && !g.tags[t].ai);
+    const humanIn = humans.some((t) => w.attackers.indexOf(t) >= 0 || w.defenders.indexOf(t) >= 0);
+    const playerIn = humanIn && (w.attackers.indexOf(player) >= 0 || w.defenders.indexOf(player) >= 0)
       && g.tags[player] && !g.tags[player].ai;
+    if (humanIn && !playerIn) continue; // a guest's war: no auto-deal, their own cards come via MP
     if (playerIn) {
       const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
       const leader = theirSide.find((t) => g.tags[t] && g.tags[t].alive);

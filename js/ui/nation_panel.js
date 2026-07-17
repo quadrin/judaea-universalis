@@ -36,10 +36,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <button class="pp-close" data-ref="close" data-tt="Close (Esc)">${icon('xmark')}</button>
       </div>
       <div class="np-foreign-note hidden" data-ref="foreignNote">A foreign court — what our envoys can see.</div>
-      <div class="pp-build hidden" data-ref="objectivesBlock">
-        <div class="pp-build-title">Objectives</div>
-        <div class="np-objectives" data-ref="objectives"></div>
-      </div>
       <div class="np-ruler">
         <div class="np-ruler-text">
           <div class="np-ruler-name" data-ref="rulerName"></div>
@@ -160,6 +156,27 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (dec) {
         if (dec.classList.contains('disabled') || !actions || typeof actions.enactDecision !== 'function') return;
         try { actions.enactDecision(dec.dataset.decision); } catch (err) { warnOnce('np-decision', err); }
+        refresh();
+        return;
+      }
+      const ppact = e.target.closest('[data-power-pact]');
+      if (ppact) {
+        if (!actions) return;
+        const active = ppact.classList.contains('np-power-active');
+        if (active && typeof actions.leavePowerPact === 'function') {
+          try { actions.leavePowerPact(ppact.dataset.powerPact); } catch (err) { warnOnce('np-leavePact', err); }
+        } else if (!active && !ppact.classList.contains('disabled') && typeof actions.signPowerPact === 'function') {
+          try { actions.signPowerPact(ppact.dataset.powerPact); } catch (err) { warnOnce('np-signPact', err); }
+        }
+        refresh();
+        return;
+      }
+      const ptrade = e.target.closest('[data-power-trade]');
+      if (ptrade) {
+        if (actions && !ptrade.classList.contains('disabled') && !ptrade.classList.contains('np-power-active')
+            && typeof actions.signPowerTrade === 'function') {
+          try { actions.signPowerTrade(ptrade.dataset.powerTrade); } catch (err) { warnOnce('np-signTrade', err); }
+        }
         refresh();
         return;
       }
@@ -321,18 +338,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       setHtml(refs.standing, `<span class="${cls}">${esc(standing)}</span>`);
     }
 
-    // What the era asks (SPEC §33) — the player's own goals, not envoy talk.
-    let objectives = null;
-    if (self && actions && typeof actions.getObjectives === 'function') {
-      try { objectives = actions.getObjectives(); } catch (e) { warnOnce('np-objectives', e); }
-    }
-    refs.objectivesBlock.classList.toggle('hidden', !objectives);
-    if (objectives) {
-      setHtml(refs.objectives, objectives.map((line) => {
-        const cls = /^Win:/.test(line) ? 'pos' : /^Lose:/.test(line) ? 'neg' : '';
-        return `<div class="np-objective"><span class="${cls}">${esc(line)}</span></div>`;
-      }).join(''));
-    }
+    // The era's objectives moved out of the court panel (v5.8): the war
+    // overview carries the contract where it is actually fought, and the
+    // outliner keeps pinning the live pressure.
 
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);
@@ -365,7 +373,22 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const courtTT = p.blurb + '\n――――――\nSend an envoy: ' + p.court.cost + ' influence points → +'
         + p.court.gain + ' standing' + (p.court.rivalName ? ' (chills ' + p.court.rivalName + ')' : '')
         + (p.court.whyNot ? '\n' + p.court.whyNot : '');
-      const asks = p.asks.map((a) => {
+      const rel = [];
+      if (p.pact) {
+        const tt = p.pact.desc + '\n――――――\nNeeds standing ' + p.pact.need
+          + (p.pact.monthly ? ' · +' + p.pact.monthly + ' talents/month' : '')
+          + '\nSigning chills the rival bloc; the pact dissolves if standing rots.'
+          + (p.pact.active ? '\nThe pact stands — click to walk out of it.' : (p.pact.whyNot ? '\n' + p.pact.whyNot : ''));
+        rel.push(`<button class="np-power-ask${p.pact.active ? ' np-power-active' : p.pact.can ? '' : ' disabled'}" data-power-pact="${esc(p.id)}" data-tt="${esc(tt)}">${p.pact.active ? '★ ' : ''}${esc(p.pact.name)}</button>`);
+      }
+      if (p.trade) {
+        const tt = p.trade.desc + '\n――――――\nNeeds standing ' + p.trade.need
+          + (p.trade.monthly ? ' · +' + p.trade.monthly + ' talents/month' : '')
+          + '\nLapses if the friendship grows cold.'
+          + (p.trade.active ? '\nThe agreement stands.' : (p.trade.whyNot ? '\n' + p.trade.whyNot : ''));
+        rel.push(`<button class="np-power-ask${p.trade.active ? ' np-power-active' : p.trade.can ? '' : ' disabled'}" data-power-trade="${esc(p.id)}" data-tt="${esc(tt)}">${p.trade.active ? '⚖ ' : ''}${esc(p.trade.name)}</button>`);
+      }
+      const asks = rel.join('') + p.asks.map((a) => {
         const costBits = Object.entries(a.cost || {})
           .filter(([, v]) => v > 0)
           .map(([k, v]) => v + ' ' + (k === 'treasury' ? 'talents' : k === 'mar' ? 'martial' : k === 'gov' ? 'governance' : 'influence'));

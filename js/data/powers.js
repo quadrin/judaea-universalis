@@ -28,6 +28,17 @@ export const POWERS = {
         + 'weight of the word "recognized."',
       start: { ISR: 30, EGY: 20, JOR: 25, SYR: 15, LEB: 35, IRQ: 20, SAU: 45, TUR: 45, IRN: 40, UK: 65, GRC: 50, ITA: 50 },
       court: { cost: { infl: 25 }, gain: 10, cd: 6, rival: 'USSR' },
+      pact: {
+        name: 'American Alignment', need: 75,
+        desc: 'Grant-in-aid, favorable loans, and a friend on the Security Council. The other bloc closes its doors.',
+        monthly: { treasury: 8 },
+        effects: { incomeMult: 1.05 },
+      },
+      trade: {
+        name: 'The Dollar Trade', need: 55,
+        desc: 'Most-favored terms in the American market: citrus out, machine tools in.',
+        monthly: { treasury: 5 },
+      },
       asks: [
         {
           id: 'usa_credits', name: 'Ask for credits',
@@ -49,7 +60,25 @@ export const POWERS = {
         + 'embargoes. Its friendship is real, priced, and watched by the other side.',
       start: { ISR: 35, EGY: 15, JOR: 5, SYR: 25, LEB: 15, IRQ: 10, SAU: 5, TUR: 5, IRN: 15, UK: 10, GRC: 15, ITA: 25 },
       court: { cost: { infl: 25 }, gain: 10, cd: 6, rival: 'USA' },
+      pact: {
+        name: 'Eastern Alignment', need: 75,
+        desc: 'The bloc\'s embrace: fraternal aid and the arsenals open — and Washington\'s door closes.',
+        monthly: { treasury: 5 },
+        effects: { reinforceMult: 1.08 },
+      },
       asks: [
+        {
+          id: 'ussr_armor', name: 'Buy Soviet surplus armor',
+          desc: 'T-34s with the factory grease still on them, sold through intermediaries.',
+          need: 70, cd: 36, cost: { treasury: 120 },
+          effects: {
+            mar: 10,
+            modifier: {
+              id: 'power_soviet_armor', name: 'Soviet Surplus Armor', months: 24,
+              effects: { milPowerMult: 1.06 },
+            },
+          },
+        },
         {
           id: 'ussr_bloc', name: 'Open the Prague channel',
           desc: 'Moscow\'s nod is the key to the Czech arsenals — the deal itself is struck in Prague.',
@@ -64,7 +93,18 @@ export const POWERS = {
         + 'sold for hard currency to whoever Moscow permits.',
       start: { ISR: 40, EGY: 20, JOR: 10, SYR: 20, LEB: 15, IRQ: 15, SAU: 5, TUR: 15, IRN: 10, UK: 15, GRC: 15, ITA: 25 },
       court: { cost: { infl: 20 }, gain: 10, cd: 6 },
+      trade: {
+        name: 'The Skoda Contracts', need: 55,
+        desc: 'Standing orders with the Brno and Pilsen works: spares, barrels, ammunition.',
+        monthly: { treasury: 3 },
+      },
       asks: [
+        {
+          id: 'cze_reequip', name: 'Re-equip from the Czech depots',
+          desc: 'Every stale formation re-armed to the current pattern — crated, shipped, and paid in dollars. Moscow must approve.',
+          need: 65, cd: 48, needsPower: { USSR: 45 }, cost: { treasury: 140 },
+          effects: { modernize: true },
+        },
         {
           id: 'cze_arms', name: 'Strike the arms deal',
           desc: 'Mausers, MG-34s and Avia fighters, cash on the dock at Žatec. Moscow must approve.',
@@ -85,6 +125,11 @@ export const POWERS = {
         + '"agricultural machinery" are not weighed too closely.',
       start: { ISR: 40, EGY: 25, JOR: 15, SYR: 20, LEB: 45, IRQ: 15, SAU: 15, TUR: 30, IRN: 25, UK: 45, GRC: 35, ITA: 45 },
       court: { cost: { infl: 20 }, gain: 10, cd: 6 },
+      trade: {
+        name: 'The Marseille Run', need: 55,
+        desc: 'Freight and finance through the French ports, no questions logged.',
+        monthly: { treasury: 4 },
+      },
       asks: [
         {
           id: 'fra_quiet', name: 'Open the quiet channels',
@@ -130,6 +175,12 @@ export const POWERS = {
         + 'answer to gold and to the promise of Persian plunder.',
       start: { BYZ: 40, SAS: 15, JUD: 20, GHA: 25 },
       court: { cost: { infl: 25 }, gain: 10, cd: 6 },
+      pact: {
+        name: 'The Steppe Alliance', need: 75, tags: ['BYZ'],
+        desc: 'The khagan\'s oath at Tiflis: horsemen when you march, and the Caucasus gates held open.',
+        monthly: { treasury: 0 },
+        effects: { reinforceMult: 1.06, moraleMult: 1.03 },
+      },
       asks: [
         {
           id: 'gok_rides', name: 'The Khagan rides south',
@@ -187,6 +238,17 @@ const DIASPORA = (jewishTag, romeTag) => ({
     + 'Cyrene, Rome itself. Their silver and their sons follow their hearts.',
   start: { [jewishTag]: 55, [romeTag]: 20 },
   court: { cost: { infl: 20 }, gain: 10, cd: 6 },
+  pact: {
+    name: 'One People', need: 75, tags: [jewishTag],
+    desc: 'The dispersion binds itself to the Land: a steady stream of silver and sons.',
+    monthly: { treasury: 3 },
+    effects: { manpowerMult: 1.05 },
+  },
+  trade: {
+    name: 'The Half-Shekel Flows', need: 55, tags: [jewishTag],
+    desc: 'The communities\' yearly dues, gathered and sent up with the caravans.',
+    monthly: { treasury: 2 },
+  },
   asks: [
     {
       id: 'dia_silver', name: 'The communities send silver',
