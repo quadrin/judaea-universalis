@@ -549,6 +549,38 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
 
   // Merchantmen ride at their harbors (v5.5): small neutral tubs, clearly
   // not ships of the line — beige canvas, round hull, no banner.
+  function drawMerchantTub(mx, my, n) {
+    x2.save();
+    x2.translate(mx, my);
+    x2.globalAlpha = 0.9;
+    x2.fillStyle = 'rgba(92,66,38,0.95)'; // round-bellied hull
+    x2.beginPath();
+    x2.moveTo(-7, 0); x2.lineTo(7, 0);
+    x2.quadraticCurveTo(5, 5, 0, 5);
+    x2.quadraticCurveTo(-5, 5, -7, 0);
+    x2.closePath();
+    x2.fill();
+    x2.fillStyle = 'rgba(232,220,192,0.95)'; // working canvas, no colors
+    x2.strokeStyle = 'rgba(15,10,5,0.7)';
+    x2.lineWidth = 0.8;
+    x2.beginPath();
+    x2.moveTo(0, -8); x2.lineTo(5, -1); x2.lineTo(-5, -1);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    if (n > 1) {
+      x2.fillStyle = '#fff';
+      x2.font = 'bold 8px Georgia, serif';
+      x2.textAlign = 'center';
+      x2.textBaseline = 'middle';
+      x2.shadowColor = 'rgba(0,0,0,0.7)';
+      x2.shadowBlur = 2;
+      x2.fillText(String(n), 9, 2);
+      x2.shadowBlur = 0;
+    }
+    x2.restore();
+  }
+
   function drawMerchants(game, camera) {
     if (camera.zoom < 0.7) return;
     for (let i = 1; i < game.provinces.length; i++) {
@@ -560,35 +592,19 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const [sx, sy] = camera.mapToScreen(anchor.x, anchor.y);
       const mx = sx + 16, my = sy + 14; // clear of the war fleet stagger
       if (mx < -40 || my < -40 || mx > camera.viewport.w + 40 || my > camera.viewport.h + 40) continue;
-      x2.save();
-      x2.translate(mx, my);
-      x2.globalAlpha = 0.9;
-      x2.fillStyle = 'rgba(92,66,38,0.95)'; // round-bellied hull
-      x2.beginPath();
-      x2.moveTo(-7, 0); x2.lineTo(7, 0);
-      x2.quadraticCurveTo(5, 5, 0, 5);
-      x2.quadraticCurveTo(-5, 5, -7, 0);
-      x2.closePath();
-      x2.fill();
-      x2.fillStyle = 'rgba(232,220,192,0.95)'; // working canvas, no colors
-      x2.strokeStyle = 'rgba(15,10,5,0.7)';
-      x2.lineWidth = 0.8;
-      x2.beginPath();
-      x2.moveTo(0, -8); x2.lineTo(5, -1); x2.lineTo(-5, -1);
-      x2.closePath();
-      x2.fill();
-      x2.stroke();
-      if (n > 1) {
-        x2.fillStyle = '#fff';
-        x2.font = 'bold 8px Georgia, serif';
-        x2.textAlign = 'center';
-        x2.textBaseline = 'middle';
-        x2.shadowColor = 'rgba(0,0,0,0.7)';
-        x2.shadowBlur = 2;
-        x2.fillText(String(n), 9, 2);
-        x2.shadowBlur = 0;
-      }
-      x2.restore();
+      drawMerchantTub(mx, my, n);
+    }
+    // Hulls under sail (SPEC §58): the same tub, alone on open water,
+    // interpolated along its from→to line by voyage progress.
+    for (const v of game.merchantVoyages || []) {
+      if (!v || !(v.daysTotal > 0)) continue;
+      const a = (geom.offshore && geom.offshore[v.from]) || geom.centroids[v.from];
+      const b = (geom.offshore && geom.offshore[v.to]) || geom.centroids[v.to];
+      if (!a || !b) continue;
+      const t = Math.min(1, Math.max(0, 1 - v.daysLeft / v.daysTotal));
+      const [sx, sy] = camera.mapToScreen(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+      if (sx < -40 || sy < -40 || sx > camera.viewport.w + 40 || sy > camera.viewport.h + 40) continue;
+      drawMerchantTub(sx, sy, 1);
     }
   }
 

@@ -14,7 +14,8 @@ const SEA_PX_PER_DAY = 34;   // fleets are faster than legions
 const CAPACITY = 1000;       // men per ship
 export const MERCHANT_SHIP_COST = 25;
 export const MERCHANT_SHIP_INCOME = 0.75; // talents/month while the home port trades
-export const MERCHANT_SHIP_CAP = 5;       // berths supported by one shipyard
+export const MERCHANT_SHIP_CAP = 3;       // berths supported by one shipyard (SPEC §58)
+const MERCHANT_PX_PER_DAY = 22;           // round-bellied tubs sail slower than war fleets
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -75,25 +76,38 @@ export function buildShipCore(ctx, tag, provId) {
   return queued ? { ok: true, queued } : { ok: false, why: 'the hull could not be scheduled' };
 }
 
-// Civilian hulls are a port investment, not military counters. They remain
-// attached to their home province, where occupation or blockade suspends their
-// trade income. A shipyard supports a deliberately small merchant marine so
-// the investment is useful without replacing territorial trade routes.
+// Civilian hulls are a port investment, not military counters. They live at a
+// harbor (p.merchantShips), where occupation or blockade suspends their trade
+// income, and they can SAIL: a hull may be sent to any other friendly shipyard
+// harbor with a free berth (SPEC §58). A shipyard supports a deliberately
+// small merchant marine — three berths — so the fleet spreads across ports
+// instead of stacking in one.
+export function merchantInbound(ctx, provId) {
+  let n = 0;
+  for (const v of ctx.game.merchantVoyages || []) if (v && v.to === provId) n++;
+  return n;
+}
+export function merchantBerthsFree(ctx, provId) {
+  const p = ctx.byId(provId);
+  const count = Math.max(0, Math.round(num(p && p.merchantShips)));
+  return Math.max(0, MERCHANT_SHIP_CAP - count - merchantInbound(ctx, provId));
+}
 export function merchantShipInfo(ctx, tag, provId) {
   const t = ctx.game.tags[tag];
   const p = ctx.byId(provId);
   const count = Math.max(0, Math.round(num(p && p.merchantShips)));
+  const inbound = p ? merchantInbound(ctx, provId) : 0;
   let why = '';
   if (!t || !p) why = 'No such port.';
   else if (!isCoastal(ctx, provId)) why = 'Merchant ships need a coastal harbor.';
   else if (p.owner !== tag || p.controller !== tag) why = 'The harbor is not in our hands.';
   else if (!hasBuilding(p, 'shipyard')) why = 'Build a shipyard first.';
   else if (p.siege || blockadedBy(ctx, provId)) why = 'A besieged or blockaded harbor cannot fit out merchantmen.';
-  else if (count >= MERCHANT_SHIP_CAP) why = 'Every shipyard berth is occupied.';
+  else if (count + inbound >= MERCHANT_SHIP_CAP) why = 'Every shipyard berth is claimed' + (inbound ? ' (some by ships at sea)' : '') + '.';
   else if (num(t.treasury) < MERCHANT_SHIP_COST) why = 'A merchantman costs ' + MERCHANT_SHIP_COST + ' talents.';
   return {
     visible: !!t && !!p && isCoastal(ctx, provId) && hasBuilding(p, 'shipyard'),
-    can: !why, why, count, cap: MERCHANT_SHIP_CAP, cost: MERCHANT_SHIP_COST,
+    can: !why, why, count, inbound, cap: MERCHANT_SHIP_CAP, cost: MERCHANT_SHIP_COST,
     incomeEach: MERCHANT_SHIP_INCOME,
   };
 }
@@ -115,6 +129,105 @@ export function merchantShipsOf(ctx, tag) {
     out.push({ prov: i, provName: p.name, count, active: p.controller === tag && !p.siege && !blockadedBy(ctx, i) });
   }
   return out;
+}
+
+// ---- merchant voyages (SPEC §58): the tubs are navigable -------------------
+// A voyage is {tag, from, to, daysLeft, daysTotal}. The hull leaves its home
+// count when it sails and joins the destination count when it docks; at sea it
+// earns nothing (income reads p.merchantShips). Berths are reserved when the
+// voyage is booked so two ports cannot both promise the same anchorage.
+export function merchantHopDays(ctx, fromId, toId) {
+  const a = anchor(ctx, fromId), b = anchor(ctx, toId);
+  const dist = Math.hypot(b.x - a.x, b.y - a.y);
+  return clamp(Math.round(2 + dist / MERCHANT_PX_PER_DAY), 2, 45);
+}
+// A harbor a tag's merchantmen may dock at: theirs, working, with a shipyard.
+function merchantHarborOpen(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  return !!p && isCoastal(ctx, provId) && p.owner === tag && p.controller === tag
+    && hasBuilding(p, 'shipyard') && !p.siege && !blockadedBy(ctx, provId);
+}
+export function merchantDestinations(ctx, tag, fromId) {
+  const out = [];
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    if (i === fromId || !merchantHarborOpen(ctx, tag, i)) continue;
+    const p = ctx.byId(i);
+    out.push({
+      prov: i, provName: p.name,
+      count: Math.max(0, Math.round(num(p.merchantShips))),
+      inbound: merchantInbound(ctx, i), cap: MERCHANT_SHIP_CAP,
+      free: merchantBerthsFree(ctx, i), days: merchantHopDays(ctx, fromId, i),
+    });
+  }
+  out.sort((a, b) => a.days - b.days);
+  return out;
+}
+export function sendMerchantCore(ctx, tag, fromId, toId) {
+  const g = ctx.game;
+  const from = ctx.byId(fromId);
+  if (!from || from.owner !== tag) return { ok: false, why: 'The home port is not ours.' };
+  if (Math.max(0, Math.round(num(from.merchantShips))) <= 0) return { ok: false, why: 'No merchantman rides at this harbor.' };
+  if (blockadedBy(ctx, fromId)) return { ok: false, why: 'A blockade seals the harbor mouth.' };
+  if (fromId === toId) return { ok: false, why: 'The ship is already home.' };
+  if (!merchantHarborOpen(ctx, tag, toId)) return { ok: false, why: 'Merchantmen dock only at our own working shipyard harbors.' };
+  if (merchantBerthsFree(ctx, toId) <= 0) return { ok: false, why: 'Every berth there is claimed.' };
+  const days = merchantHopDays(ctx, fromId, toId);
+  from.merchantShips = Math.max(0, Math.round(num(from.merchantShips))) - 1;
+  if (!Array.isArray(g.merchantVoyages)) g.merchantVoyages = [];
+  g.merchantVoyages.push({ tag, from: fromId, to: toId, daysLeft: days, daysTotal: days });
+  return { ok: true, days, toName: ctx.byId(toId).name };
+}
+export function merchantVoyagesOf(ctx, tag) {
+  return (ctx.game.merchantVoyages || []).filter((v) => v && v.tag === tag);
+}
+// Daily: the tubs make way. A voyage whose destination has fallen (or filled)
+// turns for home; if home too is closed, the hull is lost with a notice.
+export function merchantVoyagesDaily(ctx) {
+  const g = ctx.game;
+  const list = g.merchantVoyages;
+  if (!Array.isArray(list) || !list.length) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const v = list[i];
+    if (!v || !(v.daysLeft > 0)) { list.splice(i, 1); continue; }
+    v.daysLeft--;
+    if (v.daysLeft > 0) continue;
+    list.splice(i, 1);
+    const dest = ctx.byId(v.to);
+    const docked = merchantHarborOpen(ctx, v.tag, v.to)
+      && Math.max(0, Math.round(num(dest.merchantShips))) < MERCHANT_SHIP_CAP;
+    if (docked) {
+      dest.merchantShips = Math.max(0, Math.round(num(dest.merchantShips))) + 1;
+      if (v.tag === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'A merchantman docks',
+          text: 'Our hull ties up at ' + dest.name + ' — ' + dest.merchantShips + ' / ' + MERCHANT_SHIP_CAP + ' berths taken.',
+          type: 'econ',
+        });
+      }
+      continue;
+    }
+    // Divert home; the home leg is a fresh voyage at sea speed.
+    if (v.from !== v.to && merchantHarborOpen(ctx, v.tag, v.from) && merchantBerthsFree(ctx, v.from) > 0) {
+      const days = merchantHopDays(ctx, v.to, v.from);
+      list.push({ tag: v.tag, from: v.to, to: v.from, daysLeft: days, daysTotal: days });
+      if (v.tag === g.playerTag) {
+        const destName = (dest && dest.name) || 'the far port';
+        ctx.bus.emit('notify', {
+          title: 'A merchantman turns back',
+          text: 'No safe berth at ' + destName + ' — the master runs for home.',
+          type: 'econ',
+        });
+      }
+      continue;
+    }
+    if (v.tag === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'A merchantman is lost',
+        text: 'With no port left open to her, the hull is sold off in foreign waters.',
+        type: 'bad',
+      });
+    }
+  }
 }
 
 // ---- eras at sea & the men who command them (SPEC §31) ----------------------

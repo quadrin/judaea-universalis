@@ -438,11 +438,20 @@ export const BOOKMARK_40 = {
     ],
   },
 
+  // Pre-existing works (SPEC §58): the old royal harbors still work.
+  buildings: {
+    'Seleucia Pieria': ['shipyard'], // the port of Antioch, now Rome's
+    'Alexandria': ['shipyard'],
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): Cleopatra's navy rides at Alexandria. ---
+    h.spawnFleet(ctx, 'PTO', 'Alexandria', 4, { name: "The Queen's Fleet" });
 
     // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
     // King of Kings, paying tribute, joining his wars through sameSide.

@@ -375,11 +375,23 @@ export const BOOKMARK_132 = {
     ],
   },
 
+  // Pre-existing works (SPEC §58): the imperial infrastructure of 132 CE.
+  buildings: {
+    'Alexandria': ['shipyard', 'granary', 'market'],
+    'Caesarea Maritima': ['shipyard'], // Sebastos, seat of the governor
+    'Seleucia Pieria': ['shipyard'],   // the port of Antioch
+    'Antioch': ['market'],
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): Rome's standing provincial squadrons. ---
+    h.spawnFleet(ctx, 'ROM', 'Alexandria', 8, { name: 'Classis Alexandrina' });
+    h.spawnFleet(ctx, 'ROM', 'Seleucia Pieria', 6, { name: 'Classis Syriaca' });
 
     // The Tigris kingdoms ride in Parthia's train (v2.1): clients of the
     // King of Kings, paying tribute, joining his wars through sameSide.

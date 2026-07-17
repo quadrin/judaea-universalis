@@ -22,6 +22,7 @@ import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
   merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
+  merchantDestinations, sendMerchantCore, merchantVoyagesOf,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart } from './economy.js';
@@ -104,7 +105,10 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     integration: 0, integrating: null, // the long work of making subjects citizens (SPEC §56)
     fort, garrison: maxGarrison, maxGarrison,
     siege: null, modifiers: [],
-    buildings: [], construction: null,
+    // Pre-existing works (SPEC §58): a bookmark may seed buildings — Herod's
+    // harbor at Caesarea, the 1948 airfields — via a `buildings` overlay.
+    buildings: (bookmarkField(bookmark, 'buildings', s) || []).slice(),
+    construction: null,
     unitQueue: [],
     conversion: null,
     settlement: null, // {by, monthsLeft, toTier} while a settlement project runs (SPEC §43)
@@ -137,6 +141,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     armies: {}, nextArmyId: 1, nextEventInstance: 1,
     fleets: {}, nextFleetId: 1,
     airwings: {}, nextWingId: 1, // squadrons at their airfields (SPEC §29)
+    merchantVoyages: [], // civilian hulls at sea between harbors (SPEC §58)
     nextRecruitId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     pendingEvents: [], firedEvents: {}, flags: {},
@@ -351,6 +356,38 @@ export const simHelpers = {
   addPopulation(ctx, provName, entry) {
     const p = ctx.prov(provName);
     if (p) addPopulation(p, entry);
+  },
+  // Standing forces at the bookmark's opening (SPEC §58): fleets riding at
+  // anchor and squadrons on their fields from day one — Israel did not
+  // paddle out to meet the Egyptian navy in rowboats.
+  spawnFleet(ctx, tag, provName, ships, opts = {}) {
+    const g = ctx.game;
+    const p = ctx.prov(provName);
+    if (!p || !g.tags[tag] || !(ships > 0)) return null;
+    if (!g.fleets) g.fleets = {};
+    if (!Number.isFinite(g.nextFleetId)) g.nextFleetId = 1;
+    const fleet = {
+      id: g.nextFleetId++, tag, prov: p.id, ships: Math.round(ships),
+      path: [], moveDaysLeft: 0, hopTotal: 0,
+      name: opts.name || ('Fleet of ' + p.name),
+      gen: Number.isFinite(opts.gen) ? opts.gen : navalGen(ctx, tag),
+      admiral: opts.admiral || null,
+    };
+    g.fleets[fleet.id] = fleet;
+    return fleet;
+  },
+  spawnAirWing(ctx, tag, provName, opts = {}) {
+    const g = ctx.game;
+    const p = ctx.prov(provName);
+    if (!p || !g.tags[tag]) return null;
+    if (!hasAirfield(p)) return null; // seed the airfield building first
+    if (!g.airwings) g.airwings = {};
+    if (!Number.isFinite(g.nextWingId)) g.nextWingId = 1;
+    const id = g.nextWingId++;
+    const nth = Object.values(g.airwings).filter((w) => w && w.tag === tag).length + 1;
+    const wing = { id, tag, prov: p.id, name: opts.name || ('No. ' + nth + ' Squadron') };
+    g.airwings[id] = wing;
+    return wing;
   },
   adjust(ctx, tag, d) {
     const t = ctx.game.tags[tag];
@@ -1508,10 +1545,16 @@ export function gameActions(ctx) {
             };
           });
         const merchant = merchantShipsOf(ctx, me);
+        const voyages = merchantVoyagesOf(ctx, me).map((v) => ({
+          from: v.from, to: v.to, daysLeft: v.daysLeft,
+          fromName: (ctx.byId(v.from) || {}).name || ('#' + v.from),
+          toName: (ctx.byId(v.to) || {}).name || ('#' + v.to),
+        }));
         return {
           fleets,
           merchant,
-          merchantCount: merchant.reduce((sum, row) => sum + row.count, 0),
+          voyages,
+          merchantCount: merchant.reduce((sum, row) => sum + row.count, 0) + voyages.length,
           merchantActive: merchant.reduce((sum, row) => sum + (row.active ? row.count : 0), 0),
         };
       } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
@@ -1580,6 +1623,21 @@ export function gameActions(ctx) {
           + res.count + ' of ' + res.cap + ' civilian ships (+' + res.incomeEach + ' trade each month while the harbor is open).', 'good');
         return true;
       } catch (e) { warnOnce('commissionMerchant', e); return false; }
+    },
+    // Where this port's merchantmen may sail (SPEC §58): our other working
+    // shipyard harbors, nearest first, with berth availability.
+    getMerchantDestinations(provId) {
+      try { return merchantDestinations(ctx, g.playerTag, provId | 0); }
+      catch (e) { warnOnce('merchantDest', e); return []; }
+    },
+    sendMerchantShip(fromId, toId) {
+      try {
+        const res = sendMerchantCore(ctx, g.playerTag, fromId | 0, toId | 0);
+        if (!res.ok) { say('The ship stays home', res.why, 'bad'); return false; }
+        say('A merchantman puts to sea', 'She makes for ' + res.toName + ' — about '
+          + res.days + ' days under sail. She earns nothing while at sea.', 'good');
+        return true;
+      } catch (e) { warnOnce('sendMerchant', e); return false; }
     },
     moveFleet(fleetId, provId) {
       try {
@@ -2324,6 +2382,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.nextFleetId)) saved.nextFleetId = 1;
   if (!saved.airwings) saved.airwings = {}; // pre-air-power saves
   if (!Number.isFinite(saved.nextWingId)) saved.nextWingId = 1;
+  if (!Array.isArray(saved.merchantVoyages)) saved.merchantVoyages = []; // pre-§58 saves
   if (!Number.isFinite(saved.nextRecruitId)) saved.nextRecruitId = 1;
   if (!Array.isArray(saved.pendingCommands)) saved.pendingCommands = [];
   if (!Number.isFinite(saved.nextCommandId)) saved.nextCommandId = 1;

@@ -384,11 +384,22 @@ export const BOOKMARK_167 = {
     },
   ],
 
+  // Pre-existing works (SPEC §58): the two great Hellenistic harbors are
+  // working shipyards at the bookmark's dawn.
+  buildings: {
+    'Seleucia Pieria': ['shipyard'], // the port of Antioch
+    'Alexandria': ['shipyard'],
+  },
+
   setup(ctx) {
     const g = ctx.game;
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- Starting fleets (SPEC §58): the royal navies are afloat on day one. ---
+    h.spawnFleet(ctx, 'SEL', 'Seleucia Pieria', 5, { name: 'The Royal Fleet' });
+    h.spawnFleet(ctx, 'PTO', 'Alexandria', 5, { name: 'Fleet of Alexandria' });
 
     // --- The war. It ends by the sword or by events, never at the peace table. ---
     h.declareWar(ctx, 'HAS', 'SEL', 'The Maccabean Revolt');

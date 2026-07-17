@@ -101,6 +101,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-build-title">${icon('ship', 'icon-sm')} Merchant Marine</div>
         <div class="pp-merchant-status" data-ref="merchantStatus"></div>
         <button class="btn pp-recruit-btn" data-ref="merchantShip"></button>
+        <div class="pp-merchant-send" data-ref="merchantSend"></div>
       </div>
       <div class="pp-air hidden" data-ref="airBlock">
         <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
@@ -167,6 +168,13 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       if (!actions || typeof actions.commissionMerchantShip !== 'function'
           || refs.merchantShip.classList.contains('disabled')) return;
       try { actions.commissionMerchantShip(provId); } catch (e) { warnOnce('merchantShip', e); }
+      refresh();
+    });
+    refs.merchantSend.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-send-to]') : null;
+      if (!b || b.classList.contains('disabled') || !actions
+          || typeof actions.sendMerchantShip !== 'function') return;
+      try { actions.sendMerchantShip(provId, b.dataset.sendTo | 0); } catch (err) { warnOnce('merchantSend', err); }
       refresh();
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
@@ -527,12 +535,27 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.merchantBlock.classList.toggle('hidden', !info || !info.visible);
     if (!info || !info.visible) return;
     const activeIncome = (info.count * info.incomeEach).toFixed(2).replace(/\.00$/, '');
-    setText(refs.merchantStatus, info.count + ' / ' + info.cap + ' merchant ships · +' + activeIncome + ' trade/month');
+    const inbound = info.inbound ? ' · ' + info.inbound + ' inbound' : '';
+    setText(refs.merchantStatus, info.count + ' / ' + info.cap + ' merchant ships' + inbound + ' · +' + activeIncome + ' trade/month');
     setHtml(refs.merchantShip, `${icon('ship')} Commission merchantman — ${info.cost} ${icon('coins', 'icon-xs')}`);
     refs.merchantShip.classList.toggle('disabled', !info.can);
     refs.merchantShip.dataset.tt = info.can
       ? `Commission a civilian merchant ship. Each earns ${info.incomeEach} talents a month while this harbor is controlled, unsieged and unblocked.`
       : (info.why || 'No merchantman can be fitted out now.');
+    // Send a hull to another of our shipyard harbors (SPEC §58).
+    let dests = [];
+    if (info.count > 0 && actions && typeof actions.getMerchantDestinations === 'function') {
+      try { dests = actions.getMerchantDestinations(provId) || []; } catch (e) { warnOnce('merchantDest', e); dests = []; }
+    }
+    refs.merchantSend.classList.toggle('hidden', !dests.length);
+    setHtml(refs.merchantSend, dests.map((d) => {
+      const full = d.free <= 0;
+      const tt = full
+        ? `Every berth at ${esc(d.provName)} is claimed (${d.count} docked${d.inbound ? ', ' + d.inbound + ' inbound' : ''}).`
+        : `Send one merchantman to ${esc(d.provName)} — about ${d.days} days at sea, earning nothing until she docks (${d.count + d.inbound} / ${d.cap} berths claimed).`;
+      return `<button class="pp-build-btn${full ? ' disabled' : ''}" data-send-to="${d.prov}" data-tt="${esc(tt)}">` +
+        `${icon('ship', 'icon-sm')}<span>Send to ${esc(d.provName)} · ${d.days}d</span></button>`;
+    }).join(''));
   }
 
   function refreshDiplomacy(p, g) {

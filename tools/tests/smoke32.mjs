@@ -136,12 +136,16 @@ console.log('== upkeep grows with the age ==');
   for (const army of armiesOf(m.ctx, 'ISR')) regs += regCount(army);
   ok(regs > 0, '1948 Israel starts with a standing army');
   const bd = incomeBreakdown(m.ctx, 'ISR');
-  const wings = 0; // no starting wings in 1948
-  const expectMaint = regs * DEFINES.BASE.maintPerReg * 2.4 * resolveTagMult(m.ctx, 'ISR', 'maintMult') + wings;
+  // v5.9 (SPEC §58): 101 Squadron flies from day one — count the real wings.
+  const wings = Object.values(m.game.airwings).filter((w) => w && w.tag === 'ISR').length;
+  ok(wings === 1, '1948 Israel starts with one squadron');
+  const wingUpkeep = (DEFINES.AIR && DEFINES.AIR.wingUpkeep) || 1;
+  const expectMaint = regs * DEFINES.BASE.maintPerReg * 2.4 * resolveTagMult(m.ctx, 'ISR', 'maintMult')
+    + wings * wingUpkeep;
   ok(near(bd.maint, expectMaint, 0.01),
     `Israeli maintenance is pattern-scaled (${bd.maint.toFixed(2)} for ${regs} regiments)`);
   ok(!controlsOilProvince(m.ctx, 'ISR'), 'Israel controls no oil province');
-  const expectFuel = regs * DEFINES.FUEL.perReg * DEFINES.FUEL.importMult;
+  const expectFuel = (regs * DEFINES.FUEL.perReg + wings * DEFINES.FUEL.perWing) * DEFINES.FUEL.importMult;
   ok(bd.fuel > 0 && near(bd.fuel, expectFuel, 0.01),
     `Israel pays the imported-fuel line (${bd.fuel.toFixed(2)}/month)`);
   ok(controlsOilProvince(m.ctx, 'IRQ') && controlsOilProvince(m.ctx, 'IRN') && controlsOilProvince(m.ctx, 'SAU'),
@@ -149,7 +153,8 @@ console.log('== upkeep grows with the age ==');
   const bdIrq = incomeBreakdown(m.ctx, 'IRQ');
   let irqRegs = 0;
   for (const army of armiesOf(m.ctx, 'IRQ')) irqRegs += regCount(army);
-  ok(irqRegs === 0 || near(bdIrq.fuel, irqRegs * DEFINES.FUEL.perReg, 0.01),
+  const irqWings = Object.values(m.game.airwings).filter((w) => w && w.tag === 'IRQ').length;
+  ok(irqRegs === 0 || near(bdIrq.fuel, irqRegs * DEFINES.FUEL.perReg + irqWings * DEFINES.FUEL.perWing, 0.01),
     'an oil state pays the domestic fuel rate');
   // The ancient chapters: no fuel, milder pattern multiplier.
   const bdJud = incomeBreakdown(a.ctx, 'JUD');

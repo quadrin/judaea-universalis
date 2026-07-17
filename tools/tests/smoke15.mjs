@@ -100,7 +100,9 @@ console.log('== hulls speak the age ==');
   port.buildings = Array.from(new Set([...(port.buildings || []), 'shipyard']));
   const b1 = navy.buildShipCore(ctx, 'SEL', port.id);
   for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.ship; i++) monthlyRecruitment(ctx);
-  const f = Object.values(game.fleets).find((row) => row && row.tag === 'SEL');
+  // v5.9 seeds the Royal Fleet at Seleucia Pieria (SPEC §58) — pick the hull
+  // we just launched at THIS port, not the standing navy.
+  const f = Object.values(game.fleets).find((row) => row && row.tag === 'SEL' && row.prov === port.id);
   ok(b1.ok && f && Number.isFinite(f.gen) && f.gen === navy.navalGen(ctx, 'SEL'),
     'the hull is laid down to the age’s pattern: gen ' + (f && f.gen) + ' (' + tech.navalGenName(f && f.gen) + ')');
   f.ships = 5;
@@ -137,6 +139,7 @@ console.log('== squadron commanders ==');
   }
   game.provinces[home].buildings = ['airfield'];
   isr.treasury = 200;
+  game.airwings = {}; // v5.9 seeds 101 Squadron (SPEC §58); test a fresh sky
   mil.raiseAirWing(ctx, 'ISR', home);
   for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
   const wing = Object.values(game.airwings)[0];
