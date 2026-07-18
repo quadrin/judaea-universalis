@@ -4,7 +4,7 @@
 // open water (straight line — the Mediterranean has no walls). Each ship
 // carries 1000 men. Armies aboard (a.aboard=true) are out of land play.
 
-import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding } from './military.js';
+import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding, opinionOf, devTotal } from './military.js';
 import { unlockedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
 import { queueUnitRecruitment } from './recruitment.js';
 
@@ -84,7 +84,13 @@ export function buildShipCore(ctx, tag, provId) {
 // instead of stacking in one.
 export function merchantInbound(ctx, provId) {
   let n = 0;
-  for (const v of ctx.game.merchantVoyages || []) if (v && v.to === provId) n++;
+  for (const v of ctx.game.merchantVoyages || []) {
+    if (!v) continue;
+    // A rebase reserves its destination berth; a trade run reserves its HOME
+    // berth for the whole round trip (the foreign harbor lends an anchorage,
+    // never a berth — their cap is their own).
+    if (v.kind === 'trade' ? v.home === provId : v.to === provId) n++;
+  }
   return n;
 }
 export function merchantBerthsFree(ctx, provId) {
@@ -180,17 +186,199 @@ export function sendMerchantCore(ctx, tag, fromId, toId) {
 export function merchantVoyagesOf(ctx, tag) {
   return (ctx.game.merchantVoyages || []).filter((v) => v && v.tag === tag);
 }
+
+// ---- trade runs (v6.1): the tubs go abroad ---------------------------------
+// A merchantman may be sent to a FRIENDLY FOREIGN shipyard harbor whose court
+// thinks well enough of us (opinion >= TRADE_RUN.opinionMin). The run is a
+// round trip — out, a month in their market, home — and pays a single lump
+// sum when the hull ties up at its home berth again, instead of the docked
+// trickle. War with the host while trading seizes ship and cargo both.
+export const TRADE_RUN = {
+  opinionMin: 25,     // how warmly the host court must regard us
+  dwellDays: 30,      // days spent trading in the foreign market
+  payoutBase: 10,     // talents per completed run...
+  payoutPerDev: 1.0,  // ...plus per point of the foreign port's development
+};
+// A foreign harbor open to OUR traders: theirs, working, welcoming.
+export function tradeHarborStatus(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  if (!p || !isCoastal(ctx, provId) || !hasBuilding(p, 'shipyard')) return { can: false, why: 'No working foreign harbor there.' };
+  const host = p.owner;
+  const ht = ctx.game.tags[host];
+  if (!ht || !ht.alive || host === 'REB') return { can: false, why: 'No court rules that harbor.' };
+  if (host === tag) return { can: false, why: 'That harbor is our own.' };
+  if (p.controller !== p.owner || p.siege || blockadedBy(ctx, provId)) return { can: false, why: 'Their harbor is not at peace.' };
+  if (isHostile(ctx, tag, host)) return { can: false, why: 'We are at war with ' + (ht.name || host) + '.' };
+  const op = opinionOf(ctx, host, tag);
+  if (op < TRADE_RUN.opinionMin) {
+    return {
+      can: false, opinion: op, host, hostName: ht.name || host,
+      why: (ht.name || host) + ' will not open its market to us (opinion ' + Math.round(op) + ', needs ' + TRADE_RUN.opinionMin + '+).',
+    };
+  }
+  return { can: true, opinion: op, host, hostName: ht.name || host, why: '' };
+}
+export function tradeRunPayout(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  const base = TRADE_RUN.payoutBase + devTotal(p) * TRADE_RUN.payoutPerDev;
+  return Math.round(base * resolveTagMult(ctx, tag, 'tradeMult'));
+}
+// Every foreign shipyard harbor, marked eligible or not (the UI shows the
+// closed ones grey with the reason — the opinion gate should be learnable).
+export function tradeRunDestinations(ctx, tag, fromId) {
+  const out = [];
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    const p = ctx.byId(i);
+    if (!p || p.impassable || i === fromId) continue;
+    if (!isCoastal(ctx, i) || !hasBuilding(p, 'shipyard') || p.owner === tag) continue;
+    if (!ctx.game.tags[p.owner] || !ctx.game.tags[p.owner].alive || p.owner === 'REB') continue;
+    const st = tradeHarborStatus(ctx, tag, i);
+    const outDays = merchantHopDays(ctx, fromId, i);
+    const homeDays = merchantHopDays(ctx, i, fromId);
+    out.push({
+      prov: i, provName: p.name, host: p.owner,
+      hostName: (ctx.game.tags[p.owner] && ctx.game.tags[p.owner].name) || p.owner,
+      can: st.can, why: st.why, opinion: Math.round(num(st.opinion, opinionOf(ctx, p.owner, tag))),
+      days: outDays + TRADE_RUN.dwellDays + homeDays,
+      payout: tradeRunPayout(ctx, tag, i),
+    });
+  }
+  out.sort((a, b) => (b.can - a.can) || (b.payout / b.days - a.payout / a.days));
+  return out;
+}
+export function sendTradeRunCore(ctx, tag, fromId, toId) {
+  const g = ctx.game;
+  const from = ctx.byId(fromId);
+  if (!from || from.owner !== tag) return { ok: false, why: 'The home port is not ours.' };
+  if (Math.max(0, Math.round(num(from.merchantShips))) <= 0) return { ok: false, why: 'No merchantman rides at this harbor.' };
+  if (blockadedBy(ctx, fromId)) return { ok: false, why: 'A blockade seals the harbor mouth.' };
+  const st = tradeHarborStatus(ctx, tag, toId);
+  if (!st.can) return { ok: false, why: st.why };
+  const days = merchantHopDays(ctx, fromId, toId);
+  const payout = tradeRunPayout(ctx, tag, toId);
+  from.merchantShips = Math.max(0, Math.round(num(from.merchantShips))) - 1;
+  if (!Array.isArray(g.merchantVoyages)) g.merchantVoyages = [];
+  g.merchantVoyages.push({
+    tag, kind: 'trade', leg: 'out', home: fromId,
+    from: fromId, to: toId, daysLeft: days, daysTotal: days, payout,
+  });
+  return { ok: true, days, payout, toName: ctx.byId(toId).name, hostName: st.hostName };
+}
+// The trade legs, advanced from merchantVoyagesDaily. Returns true when the
+// voyage entry should be removed from the list.
+function tradeVoyageArrive(ctx, v) {
+  const g = ctx.game;
+  const mine = v.tag === g.playerTag;
+  if (v.leg === 'out') {
+    const st = tradeHarborStatus(ctx, v.tag, v.to);
+    if (st.can) {
+      // Ride at anchor in their roads and trade a month (from=to keeps the
+      // map drawing the hull in the foreign harbor).
+      v.leg = 'dwell';
+      v.from = v.to;
+      v.daysLeft = TRADE_RUN.dwellDays;
+      v.daysTotal = TRADE_RUN.dwellDays;
+      return false;
+    }
+    if (mine) {
+      ctx.bus.emit('notify', {
+        title: 'The market is closed',
+        text: 'No trading at ' + ((ctx.byId(v.to) || {}).name || 'the far port') + ' — ' + st.why + ' The master turns for home empty.',
+        type: 'econ',
+      });
+    }
+    v.leg = 'home';
+    v.payout = 0;
+    const days = merchantHopDays(ctx, v.to, v.home);
+    v.from = v.to; v.to = v.home; v.daysLeft = days; v.daysTotal = days;
+    return false;
+  }
+  if (v.leg === 'dwell') {
+    v.leg = 'home';
+    const days = merchantHopDays(ctx, v.from, v.home);
+    v.to = v.home; v.daysLeft = days; v.daysTotal = days;
+    return false;
+  }
+  // leg 'home': tie up and land the profit. The run reserved its own home
+  // berth (merchantInbound counts v.home), so only the raw cap is checked.
+  if (merchantHarborOpen(ctx, v.tag, v.home)
+      && Math.max(0, Math.round(num(ctx.byId(v.home).merchantShips))) < MERCHANT_SHIP_CAP) {
+    const home = ctx.byId(v.home);
+    home.merchantShips = Math.max(0, Math.round(num(home.merchantShips))) + 1;
+    const t = g.tags[v.tag];
+    if (t && v.payout > 0) t.treasury = num(t.treasury) + v.payout;
+    if (mine) {
+      ctx.bus.emit('notify', {
+        title: v.payout > 0 ? 'A trade run pays' : 'A merchantman returns',
+        text: v.payout > 0
+          ? 'The hull ties up at ' + home.name + ' with ' + v.payout + ' talents of cargo sold.'
+          : 'The hull is home at ' + home.name + ', hold empty.',
+        type: v.payout > 0 ? 'good' : 'econ',
+      });
+    }
+    return true;
+  }
+  // Home is closed: run for any other harbor of ours; else sold abroad.
+  let best = 0, bestDays = Infinity;
+  for (let i = 1; i < g.provinces.length; i++) {
+    if (!merchantHarborOpen(ctx, v.tag, i) || merchantBerthsFree(ctx, i) <= 0) continue;
+    const d = merchantHopDays(ctx, v.to, i);
+    if (d < bestDays) { bestDays = d; best = i; }
+  }
+  if (best) {
+    v.home = best; v.from = v.to; v.to = best; v.daysLeft = bestDays; v.daysTotal = bestDays;
+    return false;
+  }
+  if (mine) {
+    ctx.bus.emit('notify', {
+      title: 'A merchantman is lost',
+      text: 'With no port left open to her, the hull is sold off in foreign waters.',
+      type: 'bad',
+    });
+  }
+  return true;
+}
+// War reaches into the harbor: a trading hull caught in a now-hostile port is
+// seized with its cargo. Checked daily for dwelling voyages.
+function tradeSeizures(ctx) {
+  const g = ctx.game;
+  const list = g.merchantVoyages;
+  if (!Array.isArray(list)) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const v = list[i];
+    if (!v || v.kind !== 'trade' || v.leg !== 'dwell') continue;
+    const p = ctx.byId(v.to);
+    const host = p ? p.owner : null;
+    if (host && isHostile(ctx, v.tag, host)) {
+      list.splice(i, 1);
+      if (v.tag === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'Merchantman seized',
+          text: 'War closes ' + ((p && p.name) || 'the foreign harbor') + ' around our trader — ship and cargo are taken.',
+          type: 'bad',
+        });
+      }
+    }
+  }
+}
 // Daily: the tubs make way. A voyage whose destination has fallen (or filled)
 // turns for home; if home too is closed, the hull is lost with a notice.
 export function merchantVoyagesDaily(ctx) {
   const g = ctx.game;
   const list = g.merchantVoyages;
   if (!Array.isArray(list) || !list.length) return;
+  tradeSeizures(ctx);
   for (let i = list.length - 1; i >= 0; i--) {
     const v = list[i];
     if (!v || !(v.daysLeft > 0)) { list.splice(i, 1); continue; }
     v.daysLeft--;
     if (v.daysLeft > 0) continue;
+    // Trade runs live across several legs; the entry survives until the
+    // round trip closes (or the hull is lost).
+    if (v.kind === 'trade') {
+      if (tradeVoyageArrive(ctx, v)) list.splice(i, 1);
+      continue;
+    }
     list.splice(i, 1);
     const dest = ctx.byId(v.to);
     const docked = merchantHarborOpen(ctx, v.tag, v.to)
