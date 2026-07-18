@@ -194,6 +194,19 @@ console.log('== war exhaustion drags morale recovery ==');
   ok(Math.abs(weary - fresh * 0.5) < 1e-9, `at 20 exhaustion the ranks mend at half pace (${weary} vs ${fresh})`);
 }
 
+console.log('== the campaign contract retires with its verdict (outliner path) ==');
+{
+  const { game, actions } = boot('JUD');
+  const live = actions.getCampaignGuidance();
+  ok(live && live.objectives.length > 1 && live.objectives.some((l) => /^Win:/.test(l)),
+    'before the verdict the outliner carries the full contract');
+  game.result = 'win';
+  const after = actions.getCampaignGuidance();
+  ok(after && after.objectives.length === 1 && /^Win: the verdict is ours/.test(after.objectives[0]),
+    'after the verdict the war goals collapse to the settled line');
+  ok(actions.getObjectives().length === 1, 'realm panel and outliner agree');
+}
+
 console.log('== Veteran difficulty hardens only the AI ==');
 {
   const { game, ctx } = boot('JUD');
