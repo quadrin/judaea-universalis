@@ -431,7 +431,7 @@ export function initUI(staticCtx) {
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card wo-card">
         <h2 class="peace-title">${esc(info.warName || 'War')}</h2>
-        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb === 'coalition' ? 'a punitive league' : info.cb === 'containment' ? 'a war of containment' : info.cb) : ''}${info.noNegotiation ? ' · a fight to the death — but envoys may still be sent' : ''}</div>
+        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb === 'coalition' ? 'a punitive league' : info.cb === 'containment' ? 'a war of containment' : info.cb === 'independence' ? 'a war of independence' : info.cb) : ''}${info.noNegotiation ? ' · a fight to the death — but envoys may still be sent' : ''}</div>
         <div class="wo-sides">
           <div class="wo-side">${sideHtml(info.mySide)}</div>
           <div class="wo-vs">against</div>

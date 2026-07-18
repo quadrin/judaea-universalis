@@ -8,7 +8,7 @@ import {
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween, buildAiPeaceProvinces,
-  coalitionAgainst, forceLimitOf,
+  coalitionAgainst, forceLimitOf, vassalsOf,
   declareWar, truceActive, opinionOf, casusBelli, addOpinion,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
@@ -494,6 +494,67 @@ function aiConsiderWar(ctx, tag) {
   }
 }
 
+// The yoke thrown off (SPEC §61). An AI client that despises its overlord
+// (opinion <= revoltOpinion), with the strength to dare — its own host plus
+// every fellow client angry enough to seize the moment — severs the bond and
+// declares its war of independence. The severing is immediate: they ARE free
+// unless the overlord wins the war and puts the yoke back on at the table
+// (the subjugation clause). Works against AI and human overlords alike.
+function vassalIndependence(ctx) {
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || !t.alive || !t.ai || !t.overlord) continue;
+    const lordTag = t.overlord;
+    const lord = g.tags[lordTag];
+    if (!lord || !lord.alive) continue;
+    if (opinionOf(ctx, k, lordTag) > num(V.revoltOpinion, -75)) continue;
+    if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
+    if (truceActive(ctx, k, lordTag)) continue;
+    // Fellow clients angry enough to rise with them.
+    const coRebels = vassalsOf(ctx, lordTag).filter((v) => {
+      if (v === k) return false;
+      const vt = g.tags[v];
+      return vt && vt.ai && opinionOf(ctx, v, lordTag) < num(V.loyalOpinion, -25)
+        && !(vt.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+    });
+    let ours = strength(k);
+    for (const v of coRebels) ours += strength(v);
+    if (ours < strength(lordTag) * num(V.revoltStrength, 0.4)) continue;
+    if (!ctx.rng.chance(num(V.revoltChance, 0.04))) continue;
+    // The bond breaks first — free courts declare, clients cannot.
+    t.overlord = null;
+    for (const v of coRebels) g.tags[v].overlord = null;
+    const war = declareWar(ctx, k, lordTag,
+      (t.name || k) + '’s War of Independence', 'independence');
+    if (war) {
+      for (const v of coRebels) {
+        if (war.attackers.indexOf(v) >= 0 || war.defenders.indexOf(v) >= 0) continue;
+        war.attackers.push(v);
+        for (const d of war.defenders) {
+          const vt = g.tags[v], dt = g.tags[d];
+          if (vt && vt.atWarWith.indexOf(d) < 0) vt.atWarWith.push(d);
+          if (dt && dt.atWarWith.indexOf(v) < 0) dt.atWarWith.push(v);
+        }
+      }
+      if (lordTag === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'The clients rise!',
+          text: (t.name || k) + (coRebels.length ? ' and ' + coRebels.map((v) => (g.tags[v] && g.tags[v].name) || v).join(', ') : '')
+            + ' cast off our yoke and declare independence. Win this war and the subjugation clause at the table can bind them again.',
+          type: 'war',
+        });
+      }
+      return; // one rising a month is plenty
+    }
+    // The declaration failed (a truce surfaced): restore the bond.
+    t.overlord = lordTag;
+    for (const v of coRebels) g.tags[v].overlord = lordTag;
+  }
+}
+
 // The coalition marches (SPEC §21 extended). Against a HUMAN conqueror whose
 // infamy has leagued the world together, the coalition does not wait to be
 // attacked: once its combined strength clearly overmatches the expander, it
@@ -887,6 +948,7 @@ export function runMonthlyAI(ctx) {
       aiFormNation(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
+  try { vassalIndependence(ctx); } catch (e) { warnOnce('vassalWar', 'independence rising failed', e); }
   try { coalitionPunitiveWars(ctx); } catch (e) { warnOnce('coalWar', 'punitive coalition failed', e); }
   try { hegemonContainment(ctx); } catch (e) { warnOnce('contain', 'containment failed', e); }
   try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }

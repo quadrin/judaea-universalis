@@ -505,6 +505,21 @@ export const DEFINES = {
   // like a hardened power. Applied inside resolveTagMult — never to humans.
   HARD_AI: { disciplineMult: 1.05, incomeMult: 1.25, manpowerMult: 1.25 },
 
+  // The vassal loop (SPEC §61): fealty is a relationship, not a flag. A loved
+  // client can be absorbed; a resentful one stays home from your wars; a
+  // hostile one rises, and only the sword (and the subjugation clause at the
+  // table) puts the yoke back on.
+  VASSALS: {
+    incorporateOpinion: 50,      // client opinion of the overlord needed to absorb it
+    incorporateBase: 50,         // influence points to incorporate...
+    incorporatePerDev: 1.5,      // ...plus per point of the client's development
+    incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest
+    loyalOpinion: -25,           // below this a client refuses the overlord's war calls
+    revoltOpinion: -75,          // at/below this a client may rise for independence
+    revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's
+    revoltChance: 0.04,          // monthly rising roll once every condition holds
+  },
+
   UNREST: {
     heathen: 3,                // province religion in a different group than owner's
     sameGroupHeretic: 1.5,     // same religious group, different religion

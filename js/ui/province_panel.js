@@ -123,6 +123,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
           <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
+          <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
         </div>
@@ -142,7 +143,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       }
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
-        war: 'declareWarOn',
+        war: 'declareWarOn', incorporate: 'incorporateVassal',
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
       }[b.dataset.dip];
@@ -657,6 +658,16 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       setDipBtn(refs.dipSubsidize, d.canSubsidize, d.whyNotSubsidize,
         'Subsidize their court: 10 talents a month for a year → +20 opinion.'
         + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : ''));
+    }
+    // Incorporation (SPEC §61): only shown for our own client kingdoms.
+    refs.dipIncorporate.classList.toggle('hidden', !d.incorporate);
+    if (d.incorporate) {
+      const inc = d.incorporate;
+      setDipBtn(refs.dipIncorporate, inc.can, inc.why,
+        `Incorporate the client kingdom: ${inc.cost} influence points (${inc.dev} development).\n`
+        + `Their lands, treasury and people join the realm outright — their court must be willing `
+        + `(opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed), both at peace.\n`
+        + `The world counts absorption at half a conquest's infamy.`);
     }
     // Fabricate claim: per-province, priced in influence.
     let ci = null;
