@@ -3,7 +3,7 @@
 import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
-  sweepAirfields, flyPendingRaids,
+  sweepAirfields, flyPendingRaids, monthlyIncorporation,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -89,6 +89,7 @@ function monthlyBlock(ctx) {
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
   safe('succession', () => monthlySuccession(ctx));
   safe('integration', () => monthlyIntegration(ctx));
+  safe('incorporation', () => monthlyIncorporation(ctx)); // unions weave, or unravel (SPEC §61)
   safe('holySites', () => monthlyHolySites(ctx));
   safe('missions', () => checkMissions(ctx));
   safe('factions', () => monthlyFactions(ctx)); // the court convenes (SPEC §34)

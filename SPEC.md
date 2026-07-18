@@ -2455,16 +2455,20 @@ Fealty stops being a flag on a tag and becomes a relationship with three
 live edges, all keyed to the client's OPINION of its overlord
 (`DEFINES.VASSALS`).
 
-- **Incorporation** (`incorporateInfo`/`incorporateCore`, military.js; the
-  Incorporate button in the diplomacy block): a client at opinion ≥ 50,
-  both courts at peace, can be absorbed outright for influence
-  (50 + 1.5 × its development). Its lands join the realm at ≥ 0.5
-  autonomy with a 12-month "Incorporated" adjustment (+1 unrest), its
-  treasury transfers, half its standing host returns as manpower (no
-  free doomstack; fleets and wings are struck), and the world counts
-  the absorption at half a conquest's infamy. Subjugation leaves a
-  court at −40 opinion, so the road from client to province runs
-  through years of gifts and good faith — no same-day annexations.
+- **Incorporation** (`incorporateInfo`/`incorporateCore`/
+  `monthlyIncorporation`, military.js; the Incorporate button in the
+  diplomacy block): a client that has come to nearly LOVE its overlord
+  (opinion ≥ 80), both courts at peace, can begin the union — a heavy
+  influence price up front (75 + 2.5 × its development), then
+  12 + dev/2 MONTHS of weaving that unravels (influence lost) if war
+  touches either court, the bond breaks, or their affection cools below
+  the gate. On completion its lands join the realm at ≥ 0.5 autonomy
+  with a 12-month "Incorporated" adjustment (+1 unrest), its treasury
+  transfers, half its standing host returns as manpower (no free
+  doomstack; fleets and wings are struck), and the world counts the
+  absorption at half a conquest's infamy. Subjugation leaves a court at
+  −40 opinion, so the road from client to province runs through years
+  of gifts and good faith — and then more years still.
 - **Loyalty-gated war calls** (declareWar): a client below −25 opinion
   of its overlord stays home from the overlord's wars — attacking and
   defending both — with a "client stays home" notice for a player lord.

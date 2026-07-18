@@ -724,8 +724,8 @@ export function gameActions(ctx) {
         canGuarantee: !whyNotGuarantee, whyNotGuarantee,
         canSubsidize: !whyNotSubsidize, whyNotSubsidize,
         incorporate: inc ? {
-          can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev,
-          opinion: inc.opinion, needOpinion: inc.needOpinion,
+          can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
+          opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
         } : null,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
@@ -1404,13 +1404,14 @@ export function gameActions(ctx) {
         }
       } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
     },
-    // Incorporation (SPEC §61): a willing client kingdom joins the realm.
+    // Incorporation (SPEC §61): begin weaving a devoted client into the realm.
     incorporateVassal(tag) {
       try {
         const res = incorporateCore(ctx, g.playerTag, tag);
         if (!res.ok) { say('The union waits', res.why, 'bad'); return; }
-        say('One realm', res.name + ' is incorporated — its lands, treasury and people join ours'
-          + ' (' + res.cost + ' influence points). The world takes note.', 'good');
+        say('The union begins', 'The weaving of ' + res.name + ' into the realm begins: '
+          + res.cost + ' influence points spent, ' + res.months + ' months of patient work ahead. '
+          + 'War, or their affection faltering, would undo it all.', 'good');
       } catch (e) { warnOnce('incorporate', 'incorporateVassal failed', e); }
     },
 

@@ -41,19 +41,20 @@ function enfeoff(game) {
   return game.tags.AGR;
 }
 
-console.log('== incorporation: a willing client joins the realm ==');
+console.log('== incorporation: slow, dear, and only for the nearly devoted ==');
 {
   const { game, ctx } = boot();
   const agr = enfeoff(game);
   const me = game.tags.JUD;
-  agr.opinion.JUD = 0;
+  agr.opinion.JUD = 60; // warm, but not devoted
   me.points.infl = 999;
   let info = mil.incorporateInfo(ctx, 'JUD', 'AGR');
-  ok(!info.can && /not willing/.test(info.why), 'a cool client cannot be absorbed: ' + info.why);
-  agr.opinion.JUD = 60;
+  ok(!info.can && /devoted/.test(info.why), 'even +60 opinion is not enough: ' + info.why);
+  agr.opinion.JUD = 90;
   info = mil.incorporateInfo(ctx, 'JUD', 'AGR');
-  ok(info.can && info.cost === Math.round(50 + info.dev * 1.5),
-    `at +60 opinion the union is priced: ${info.cost} influence for ${info.dev} dev`);
+  ok(info.can && info.cost === Math.round(75 + info.dev * 2.5),
+    `at +90 the union is priced dear: ${info.cost} influence for ${info.dev} dev`);
+  ok(info.months >= 12, `and slow: ${info.months} months of weaving`);
   const agrProvs = [];
   for (let i = 1; i < game.provinces.length; i++) {
     if (game.provinces[i] && game.provinces[i].owner === 'AGR') agrProvs.push(i);
@@ -62,14 +63,37 @@ console.log('== incorporation: a willing client joins the realm ==');
   const mpBefore = me.manpower;
   const infamyBefore = me.aggression || 0;
   const res = mil.incorporateCore(ctx, 'JUD', 'AGR');
-  ok(res.ok, 'the incorporation seals');
-  ok(agrProvs.every((i) => game.provinces[i].owner === 'JUD'), 'every client province joins the realm');
+  ok(res.ok && res.started && game.tags.AGR.alive, 'the union BEGINS — nothing transfers on day one');
+  ok(me.points.infl === 999 - res.cost, 'the influence is spent up front');
+  for (let m = 0; m < res.months; m++) mil.monthlyIncorporation(ctx);
+  ok(agrProvs.every((i) => game.provinces[i].owner === 'JUD'), 'months later, every client province joins the realm');
   ok(game.tags.AGR.alive === false, 'the client crown is retired');
   ok(me.treasury >= 120, 'their treasury comes to the union');
   ok(me.manpower > mpBefore, 'half their host returns to our rolls');
   ok((me.aggression || 0) > infamyBefore, 'the world counts the absorption');
   ok(game.provinces[agrProvs[0]].modifiers.some((m) => m.id === 'incorporated'),
     'the new provinces feel a season of adjustment');
+}
+
+console.log('== the union unravels when affection cools or war comes ==');
+{
+  const { game, ctx } = boot();
+  const agr = enfeoff(game);
+  game.tags.JUD.points.infl = 999;
+  agr.opinion.JUD = 90;
+  const res = mil.incorporateCore(ctx, 'JUD', 'AGR');
+  ok(res.ok, 'the union begins');
+  agr.opinion.JUD = 60; // their court cools mid-weave
+  mil.monthlyIncorporation(ctx);
+  ok(!agr.incorporating && agr.alive, 'cooled affection unravels the work — the client stands');
+  ok(game.tags.JUD.points.infl === 999 - res.cost, 'and the influence spent is simply lost');
+  // War voids it too.
+  agr.opinion.JUD = 90;
+  const res2 = mil.incorporateCore(ctx, 'JUD', 'AGR');
+  ok(res2.ok, 'the union begins again');
+  mil.declareWar(ctx, 'NAB', 'JUD', 'Test War');
+  mil.monthlyIncorporation(ctx);
+  ok(!agr.incorporating && agr.alive, 'war interrupts the weaving');
 }
 
 console.log('== a wartime or unwilling union is refused ==');

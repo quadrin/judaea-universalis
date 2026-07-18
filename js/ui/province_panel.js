@@ -663,11 +663,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.dipIncorporate.classList.toggle('hidden', !d.incorporate);
     if (d.incorporate) {
       const inc = d.incorporate;
+      setText(refs.dipIncorporate, inc.inProgress > 0 ? `Incorporating… ${inc.inProgress}m` : 'Incorporate');
       setDipBtn(refs.dipIncorporate, inc.can, inc.why,
-        `Incorporate the client kingdom: ${inc.cost} influence points (${inc.dev} development).\n`
-        + `Their lands, treasury and people join the realm outright — their court must be willing `
-        + `(opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed), both at peace.\n`
-        + `The world counts absorption at half a conquest's infamy.`);
+        `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
+        + `(${inc.dev} development).\nTheir court must be nearly devoted — opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed — and both at peace the whole way: `
+        + `war or cooling affection unravels the work and the influence is lost.\n`
+        + `On completion their lands, treasury and people join the realm; the world counts absorption at half a conquest's infamy.`);
     }
     // Fabricate claim: per-province, priced in influence.
     let ci = null;

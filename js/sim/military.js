@@ -1623,17 +1623,19 @@ export function vassalsOf(ctx, lord) {
 }
 
 // ---------------------------------------------------------------- the vassal loop (SPEC §61)
-// A client that thinks well enough of its overlord can be INCORPORATED: its
-// lands join the realm outright, priced in influence and remembered by the
-// world as absorption (half a conquest's infamy). Subjugation leaves a court
-// at −40 opinion, so the road from client to province runs through years of
-// gifts and good faith — no same-day annexations.
+// A client that has come to nearly LOVE its overlord (opinion >= 80) can be
+// INCORPORATED — but the weaving of two realms is slow and dear: a heavy
+// influence price to begin, then a year and more of patient union that
+// collapses if war comes or their affection falters. The world remembers the
+// absorption at half a conquest's infamy. Subjugation leaves a court at −40
+// opinion, so the road from client to province runs through years of gifts
+// and good faith — and then more years still.
 export function incorporateInfo(ctx, tag, vassalTag) {
   const g = ctx.game;
   const V = ctx.DEFINES.VASSALS || {};
   const me = g.tags[tag];
   const them = g.tags[vassalTag];
-  const out = { can: false, why: '', cost: 0, dev: 0, opinion: 0, needOpinion: num(V.incorporateOpinion, 50) };
+  const out = { can: false, why: '', cost: 0, dev: 0, months: 0, opinion: 0, needOpinion: num(V.incorporateOpinion, 80), inProgress: 0 };
   if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
   if (them.overlord !== tag) { out.why = 'They are not our client kingdom.'; return out; }
   let dev = 0;
@@ -1642,27 +1644,49 @@ export function incorporateInfo(ctx, tag, vassalTag) {
     if (p && !p.impassable && p.owner === vassalTag) dev += devTotal(p);
   }
   out.dev = dev;
-  out.cost = Math.round(num(V.incorporateBase, 50) + dev * num(V.incorporatePerDev, 1.5));
+  out.cost = Math.round(num(V.incorporateBase, 75) + dev * num(V.incorporatePerDev, 2.5));
+  out.months = Math.max(1, Math.round(num(V.incorporateMonthsBase, 12) + dev * num(V.incorporateMonthsPerDev, 0.5)));
   out.opinion = Math.round(opinionOf(ctx, vassalTag, tag));
+  if (them.incorporating && them.incorporating.by === tag) {
+    out.inProgress = them.incorporating.monthsLeft | 0;
+    out.why = 'The union is already being woven — ' + out.inProgress + ' month' + (out.inProgress === 1 ? '' : 's') + ' remain.';
+    return out;
+  }
   const meAtWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
   const themAtWar = (them.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
-  if (meAtWar || themAtWar) out.why = 'Not in wartime — the union must be sealed in peace.';
+  if (meAtWar || themAtWar) out.why = 'Not in wartime — the union must be woven in peace.';
   else if (out.opinion < out.needOpinion) {
-    out.why = 'Their court is not willing (opinion ' + out.opinion + ', needs ' + out.needOpinion + '+). Gifts, subsidies and years of good faith bring them closer.';
+    out.why = 'Their court is not nearly devoted enough (opinion ' + out.opinion + ', needs ' + out.needOpinion + '+). Years of gifts, subsidies and good faith bring them closer.';
   } else if (num(me.points && me.points.infl) < out.cost) {
     out.why = 'Weaving two realms into one takes ' + out.cost + ' influence points.';
   }
   out.can = !out.why;
   return out;
 }
+// Begin the union: the influence is spent NOW; the realms merge only after
+// months of patient work (monthlyIncorporation), and the price is lost if
+// the union collapses on the way.
 export function incorporateCore(ctx, tag, vassalTag) {
   const info = incorporateInfo(ctx, tag, vassalTag);
   if (!info.can) return { ok: false, why: info.why };
   const g = ctx.game;
-  const V = ctx.DEFINES.VASSALS || {};
   const me = g.tags[tag];
   const them = g.tags[vassalTag];
   me.points.infl = num(me.points.infl) - info.cost;
+  them.incorporating = { by: tag, monthsLeft: info.months };
+  return { ok: true, started: true, cost: info.cost, months: info.months, dev: info.dev, name: them.name || vassalTag };
+}
+// The union completes: everything transfers, the client crown retires.
+function finishIncorporation(ctx, tag, vassalTag) {
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[tag];
+  const them = g.tags[vassalTag];
+  let dev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === vassalTag) dev += devTotal(p);
+  }
   // Their lands join the realm — willingly, so gentler than conquest: some
   // autonomy, a season of adjustment, no generation of resentment.
   for (let i = 1; i < g.provinces.length; i++) {
@@ -1688,14 +1712,52 @@ export function incorporateCore(ctx, tag, vassalTag) {
   }
   them.alive = false;
   them.overlord = null;
+  them.incorporating = null;
   them.atWarWith = [];
   for (const al of (them.allies || []).slice()) breakAllianceCore(ctx, vassalTag, al);
   // The world counts absorption — at half a conquest's rate.
-  me.aggression = num(me.aggression) + Math.round(info.dev * num(V.incorporateInfamyPerDev, 0.25));
+  me.aggression = num(me.aggression) + Math.round(dev * num(V.incorporateInfamyPerDev, 0.25));
   chronicle(ctx, 'fall', (them.name || vassalTag) + ' is incorporated into ' + (me.name || tag)
     + ' — the client crown is retired with honors, and its lands answer to one throne.');
   ctx.bus.emit('provinceOwner', {});
-  return { ok: true, cost: info.cost, dev: info.dev, name: them.name || vassalTag };
+  return { ok: true, dev, name: them.name || vassalTag };
+}
+// Monthly: the unions being woven advance — or unravel. War on either court,
+// a broken bond, or affection fallen below the gate voids the work (and the
+// influence already spent). Completion retires the client crown.
+export function monthlyIncorporation(ctx) {
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  for (const k of Object.keys(g.tags)) {
+    const them = g.tags[k];
+    if (!them || !them.incorporating) continue;
+    const c = them.incorporating;
+    const lordTag = c.by;
+    const me = g.tags[lordTag];
+    const tell = (title, text, type) => {
+      if (lordTag === g.playerTag) ctx.bus.emit('notify', { title, text, type: type || 'info' });
+    };
+    const meAtWar = me && (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+    const themAtWar = (them.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+    if (!them.alive || !me || !me.alive || them.overlord !== lordTag) {
+      them.incorporating = null;
+      continue;
+    }
+    if (meAtWar || themAtWar) {
+      them.incorporating = null;
+      tell('The union unravels', 'War interrupts the weaving of ' + (them.name || k) + ' into the realm — the work (and the influence spent) is lost.', 'bad');
+      continue;
+    }
+    if (opinionOf(ctx, k, lordTag) < num(V.incorporateOpinion, 80)) {
+      them.incorporating = null;
+      tell('The union unravels', (them.name || k) + '\'s devotion has cooled below what the union demands — the work (and the influence spent) is lost.', 'bad');
+      continue;
+    }
+    c.monthsLeft = num(c.monthsLeft, 1) - 1;
+    if (c.monthsLeft > 0) continue;
+    const res = finishIncorporation(ctx, lordTag, k);
+    tell('One realm', (res.name || k) + ' is incorporated — its lands, treasury and people join ours. The world takes note.', 'good');
+  }
 }
 // The world closes ranks against a conqueror: every living, unaligned realm
 // that both fears (infamy >= 30) and hates (opinion <= -75) the expander
