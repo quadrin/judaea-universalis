@@ -215,6 +215,27 @@ export const EVENTS_66 = [
           h.adjust(ctx, 'ROM', { warExhaustion: 1 });
         }),
       },
+      {
+        label: 'Gather the survivors behind the walls',
+        tooltip: 'The massacres run their course regardless (+3 unrest, −20% tax, 18 months in the mixed cities; +1 war exhaustion for both) — but the survivors who reach Judaea are taken in: +2,000 manpower, −20 treasury, and Jerusalem +1 unrest for 12 months as the refugees crowd in.',
+        effects: guard('ev_greek_city_massacres:1', (ctx) => {
+          const h = ctx.helpers;
+          const cities = ['Caesarea Maritima', 'Scythopolis', 'Ptolemais', 'Ascalon', 'Alexandria'];
+          for (const name of cities) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'communal_massacres', name: 'Communal Massacres', months: 18,
+              effects: { unrest: 3, taxMult: 0.8 },
+            });
+          }
+          h.adjust(ctx, 'JUD', { warExhaustion: 1 });
+          h.adjust(ctx, 'ROM', { warExhaustion: 1 });
+          h.adjust(ctx, 'JUD', { manpower: 2000, treasury: -20 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'refugee_influx', name: 'The Refugees of the Coast', months: 12,
+            effects: { unrest: 1 },
+          });
+        }),
+      },
     ],
   },
 
@@ -337,6 +358,42 @@ export const EVENTS_66 = [
           });
         }),
       },
+      {
+        label: 'Hound them down to Antipatris',
+        tooltip: 'The pursuit is pressed past the hills: Cestius loses another thousand men on the coast road. Judaea: +25 military points, +15 legitimacy, +15 warscore, and Captured Siege Engines (+1 siege, 24 months) — but only +1,000 manpower; the pursuit has its own price.',
+        effects: guard('ev_beth_horon:1', (ctx) => {
+          const h = ctx.helpers;
+          const cest = armyByGeneral(ctx, 'ROM', 'Cestius Gallus');
+          if (cest && !cest.inBattle) {
+            const regs = cest.regiments
+              ? ((cest.regiments.inf || 0) + (cest.regiments.cav || 0))
+              : Math.round((cest.men || 12000) / 1000);
+            const keep = Math.max(2, regs - 7); // one more cohort dies on the road south
+            h.removeArmy(ctx, cest.id);
+            h.spawnArmy(ctx, 'ROM', 'Ptolemais', {
+              inf: keep, name: 'Remnants of the Twelfth',
+              general: { name: 'Cestius Gallus', fire: 1, shock: 1, maneuver: 1 },
+            });
+          }
+          h.adjust(ctx, 'JUD', { mar: 25, legitimacy: 15, manpower: 1000 });
+          h.adjust(ctx, 'ROM', { warExhaustion: 2, legitimacy: -5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'captured_engines', name: 'Captured Siege Engines', months: 24,
+            effects: { siegeBonus: 1 },
+          });
+          addWarscore(ctx, 'JUD', 15);
+          h.setFlag(ctx, 'bethHoron', true);
+          // The Damascenes turned on their Jews in the panic after Cestius' rout (BJ 2.559-561).
+          h.addProvinceModifier(ctx, 'Damascus', {
+            id: 'communal_massacres', name: 'Communal Massacres', months: 18,
+            effects: { unrest: 3, taxMult: 0.8 },
+          });
+          h.notify(ctx, {
+            title: 'Disaster at Beth Horon', type: 'good', provName: 'Emmaus',
+            text: 'The Twelfth is hounded to Antipatris and beyond. Its engines are ours.',
+          });
+        }),
+      },
     ],
   },
 
@@ -428,6 +485,25 @@ export const EVENTS_66 = [
           h.setFlag(ctx, 'vespasianArrived', true);
         }),
       },
+      {
+        label: 'The client kings must empty their levies',
+        tooltip: 'Vespasian (5/5/4) lands 36,000 at Ptolemais with the kings\' full contingents; Titus (4/5/5) brings 15,000 to Caesarea. Rome +10,000 manpower — but −50 treasury in subsidies and gifts to Agrippa, Sohaemus, and Antiochus.',
+        effects: guard('ev_vespasian_arrives:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'ROM')) return;
+          h.spawnArmy(ctx, 'ROM', 'Ptolemais', {
+            inf: 31, cav: 5, name: 'Army of Vespasian',
+            general: { name: 'Vespasian', fire: 5, shock: 5, maneuver: 4 },
+          });
+          h.spawnArmy(ctx, 'ROM', 'Caesarea Maritima', {
+            inf: 13, cav: 2, name: 'Legio XV Apollinaris',
+            general: { name: 'Titus', fire: 4, shock: 5, maneuver: 5 },
+          });
+          h.removeModifier(ctx, 'ROM', 'governor_hesitates');
+          h.adjust(ctx, 'ROM', { manpower: 10000, treasury: -50 });
+          h.setFlag(ctx, 'vespasianArrived', true);
+        }),
+      },
     ],
   },
 
@@ -503,6 +579,25 @@ export const EVENTS_66 = [
             });
           }
           h.adjust(ctx, 'JUD', { stability: -1 });
+        }),
+      },
+      {
+        label: 'Let his tale ring from the porticoes',
+        tooltip: 'If Jerusalem holds: John\'s boasting raises 3,000 Zealots under his command (2/3/2), but the city gains "Zealot Coup" (+3 unrest, 24 months) and Judaea loses 1 stability and 5 legitimacy — the lie becomes the government\'s policy.',
+        effects: guard('ev_gischala_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          if (h.controls(ctx, 'JUD', 'Jerusalem')) {
+            h.spawnArmy(ctx, 'JUD', 'Jerusalem', {
+              inf: 3, name: "John's Zealots",
+              general: { name: 'John of Gischala', fire: 2, shock: 3, maneuver: 2 },
+            });
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'zealot_coup', name: 'Zealot Coup', months: 24,
+              effects: { unrest: 3 },
+            });
+          }
+          h.adjust(ctx, 'JUD', { stability: -1, legitimacy: -5 });
         }),
       },
     ],
@@ -732,6 +827,24 @@ export const EVENTS_66 = [
           h.adjust(ctx, 'JUD', { warExhaustion: 2 });
         }),
       },
+      {
+        label: 'The fighters eat first',
+        tooltip: 'Jerusalem: Famine (permanent while the siege endures — +4 unrest, half taxes) — but the last granaries are seized for the men on the walls: +5% morale for 12 months. Judaea +2 war exhaustion and −10 legitimacy; the searchers of houses are not forgiven.',
+        effects: guard('ev_famine_in_jerusalem:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'faminePenalty', true);
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'famine', name: 'Famine', months: -1,
+            effects: { unrest: 4, taxMult: 0.5 },
+          });
+          h.adjust(ctx, 'JUD', { warExhaustion: 2 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'fighters_fed', name: 'The Fighters Eat First', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+        }),
+      },
     ],
   },
 
@@ -784,6 +897,31 @@ export const EVENTS_66 = [
           h.setFlag(ctx, 'templeBurned', true);
         }),
       },
+      {
+        label: 'Carry the scrolls to Yavneh',
+        tooltip: 'Judaea: −40 legitimacy, "Broken Covenant" (−15% morale, permanent), mourning (+2 unrest, 24 months) in every Jewish province — but the sages begin again: +15 government points, +1 war exhaustion as the fight goes out of the men. Rome: +10 legitimacy, +10 gov, +25 warscore.',
+        effects: guard('ev_temple_burns:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: -40 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'broken_covenant', name: 'Broken Covenant', months: -1,
+            effects: { moraleMult: 0.85 },
+          });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'temple_mourning', name: 'Mourning for the Temple', months: 24,
+                effects: { unrest: 2 },
+              });
+            }
+          }
+          h.adjust(ctx, 'ROM', { legitimacy: 10, gov: 10 });
+          addWarscore(ctx, 'ROM', 25);
+          h.setFlag(ctx, 'templeBurned', true);
+          h.adjust(ctx, 'JUD', { gov: 15, warExhaustion: 1 });
+        }),
+      },
     ],
   },
 
@@ -819,6 +957,23 @@ export const EVENTS_66 = [
           h.notify(ctx, {
             title: 'Masada Stands Alone', type: 'bad', provName: 'Masada',
             text: 'The war is over. The ending is not.',
+          });
+        }),
+      },
+      {
+        label: 'Meet the ramp with swords drawn',
+        tooltip: 'Judaea: "Swords in Hand" (+10% morale, permanent) and +15 military points; Rome +1 war exhaustion — the Tenth pays in blood for its geometry.',
+        effects: guard('ev_masada_epilogue:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'last_fortress', name: 'Swords in Hand', months: -1,
+            effects: { moraleMult: 1.1 },
+          });
+          h.adjust(ctx, 'JUD', { mar: 15 });
+          h.adjust(ctx, 'ROM', { warExhaustion: 1 });
+          h.notify(ctx, {
+            title: 'Masada Stands Alone', type: 'bad', provName: 'Masada',
+            text: 'The war is over. The last of it will be paid for at the breach.',
           });
         }),
       },
@@ -866,6 +1021,29 @@ export const EVENTS_66 = [
           }
         }),
       },
+      {
+        label: 'Send gold over the river to tip the scales',
+        tooltip: 'Judaea: −40 treasury to Nehardea\'s elders and the court at Ctesiphon. Either Parthia declares war on Rome (50% chance), or Rome must garrison the east: "Eastern Anxiety" (armies passive, 6 months).',
+        effects: guard('ev_parthian_posture:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -40 });
+          const par = ctx.game.tags.PAR;
+          const alreadyAtWar = !!(par && Array.isArray(par.atWarWith) && par.atWarWith.indexOf('ROM') !== -1);
+          const roll = ctx.rng && typeof ctx.rng.chance === 'function' ? ctx.rng.chance(0.5) : false;
+          if (roll && !alreadyAtWar && alive(ctx, 'PAR')) {
+            h.declareWar(ctx, 'PAR', 'ROM', 'War of the Euphrates');
+            h.notify(ctx, {
+              title: 'Parthia Declares War', type: 'war', provName: 'Zeugma',
+              text: 'The King of Kings crosses the Euphrates. Rome\'s eastern frontier is aflame.',
+            });
+          } else {
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'eastern_anxiety', name: 'Eastern Anxiety', months: 6,
+              effects: { aiPassive: true },
+            });
+          }
+        }),
+      },
     ],
   },
 
@@ -888,6 +1066,19 @@ export const EVENTS_66 = [
         effects: guard('ev_adiabene_convoy:0', (ctx) => {
           if (!alive(ctx, 'JUD')) return;
           ctx.helpers.adjust(ctx, 'JUD', { treasury: 40, manpower: 2000 });
+        }),
+      },
+      {
+        label: 'Grain for the widows, as in Helena\'s day',
+        tooltip: 'Judaea: +20 treasury, +1,000 manpower, +5 legitimacy — and the queen\'s grain feeds Jerusalem (−2 unrest, 24 months).',
+        effects: guard('ev_adiabene_convoy:1', (ctx) => {
+          if (!alive(ctx, 'JUD')) return;
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: 20, manpower: 1000, legitimacy: 5 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'helenas_grain', name: 'Queen Helena\'s Grain', months: 24,
+            effects: { unrest: -2 },
+          });
         }),
       },
     ],
@@ -915,6 +1106,18 @@ export const EVENTS_66 = [
         tooltip: 'Judaea: +20 legitimacy, +1 stability. The Temple stands.',
         effects: guard('ev_negotiated_peace:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1 });
+        }),
+      },
+      {
+        label: 'Pour the tribute\'s first fruits into the land',
+        tooltip: 'Judaea: +10 legitimacy, +1 stability, −60 treasury spent on the ruined countryside — and Jerusalem quiets ("The Land Restored", −2 unrest, 36 months). The Temple stands.',
+        effects: guard('ev_negotiated_peace:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1, treasury: -60 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'land_restored', name: 'The Land Restored', months: 36,
+            effects: { unrest: -2 },
+          });
         }),
       },
     ],
@@ -1025,6 +1228,23 @@ export const EVENTS_66 = [
           });
         }),
       },
+      {
+        label: 'Strip the fields of the City of Peace',
+        tooltip: 'Sepphoris still passes under Roman control and quiets (−3 unrest, 36 months) — but Judaean raiders strip its countryside first: Judaea +20 treasury, −5 legitimacy; Sepphoris "Ravaged Hinterland" (−30% tax, 12 months).',
+        effects: guard('ev_sepphoris_opens_gates:1', (ctx) => {
+          const h = ctx.helpers;
+          h.changeController(ctx, 'Sepphoris', 'ROM');
+          h.addProvinceModifier(ctx, 'Sepphoris', {
+            id: 'city_of_peace', name: 'City of Peace', months: 36,
+            effects: { unrest: -3 },
+          });
+          h.addProvinceModifier(ctx, 'Sepphoris', {
+            id: 'ravaged_hinterland', name: 'Ravaged Hinterland', months: 12,
+            effects: { taxMult: 0.7 },
+          });
+          h.adjust(ctx, 'JUD', { treasury: 20, legitimacy: -5 });
+        }),
+      },
     ],
   },
 
@@ -1049,6 +1269,19 @@ export const EVENTS_66 = [
             inf: 5, cav: 1, name: 'Nabataean Auxiliaries',
           });
           setOpinion(ctx, 'ROM', 'NAB', 100);
+        }),
+      },
+      {
+        label: 'Buy the king\'s horsemen too',
+        tooltip: 'Rome: −40 treasury; 5,000 foot archers and 2,000 horse join at Ptolemais — Petra sells its cavalry at Petra\'s prices.',
+        effects: guard('ev_nabataean_archers:1', (ctx) => {
+          if (!alive(ctx, 'ROM')) return;
+          const h = ctx.helpers;
+          h.spawnArmy(ctx, 'ROM', 'Ptolemais', {
+            inf: 5, cav: 2, name: 'Nabataean Auxiliaries',
+          });
+          setOpinion(ctx, 'ROM', 'NAB', 100);
+          h.adjust(ctx, 'ROM', { treasury: -40 });
         }),
       },
     ],
@@ -1079,6 +1312,19 @@ export const EVENTS_66 = [
             effects: { taxMult: 0.6, unrest: 2 },
           });
           h.adjust(ctx, 'JUD', { warExhaustion: 1 });
+        }),
+      },
+      {
+        label: 'The auctioneer\'s spear does its work',
+        tooltip: 'Tarichaea: "The Lake Ran Red" (−40% tax, +2 unrest, 36 months); Judaea +1 war exhaustion. Rome: +30 treasury from the slave auctions — and −5 legitimacy for the pledge broken in the stadium of Tiberias.',
+        effects: guard('ev_tarichaea_lake:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addProvinceModifier(ctx, 'Tarichaea', {
+            id: 'lake_massacre', name: 'The Lake Ran Red', months: 36,
+            effects: { taxMult: 0.6, unrest: 2 },
+          });
+          h.adjust(ctx, 'JUD', { warExhaustion: 1 });
+          h.adjust(ctx, 'ROM', { treasury: 30, legitimacy: -5 });
         }),
       },
     ],
