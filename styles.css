@@ -493,6 +493,7 @@ button {
   border-color: rgba(196, 110, 40, 0.65);
 }
 .pp-air-raid:hover { color: #ffd27a; border-color: #e8964a; }
+.pp-air-ordered { color: #ffd27a; border-color: #c9a227; box-shadow: 0 0 6px rgba(201, 162, 39, 0.35) inset; }
 .pp-air-cd { font-size: 10.5px; font-style: italic; opacity: 0.75; }
 
 /* ------------------------------------------------------------ outliner --- */
