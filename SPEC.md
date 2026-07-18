@@ -2339,3 +2339,70 @@ civilian hulls can sail.
   reservation against inbound hulls, voyage arrival, divert-home,
   lost-at-sea, at-sea income exclusion, and the revive backfill.
   `smoke14/15/32` re-anchored to the seeded world.
+
+## 59. v6.0: the world pushes back — anti-snowball and the Veteran dial
+
+Every defensive mechanic before this section waited for the player to make
+a mistake; a competent player never did, and beat the scripted enemy into
+an unopposed snowball. v6.0 makes the world INITIATE. All dials live in
+`DEFINES.BALANCE`; the two war initiators are HUMAN-ONLY by design, so the
+all-AI harness histories (and every scripted arc) stand untouched.
+
+- **Infamy retuned** (military.js, unrest.js): conquest earns dev/2 (was
+  dev/3), subjugation +12 and humiliation +5 (both previously escaped
+  infamy entirely); decay is 1/month at peace but 0.25 while the conqueror
+  is still at war — the window can no longer be waited out mid-campaign.
+- **The punitive coalition** (`coalitionPunitiveWars`, ai.js): against a
+  HUMAN tag at infamy ≥ 30, the leagued courts (the existing
+  `coalitionAgainst` set, minus truce-bound, busy and sworn realms) no
+  longer wait to be attacked: once their combined strength clears 1.2× the
+  expander's, the strongest free member declares (10%/month) and the whole
+  league lands on the attacker side (`cb: 'coalition'` in `declareWar`).
+- **Hegemon containment** (`hegemonContainment`, ai.js): the era's
+  ponderous great powers watch the human player's share of world
+  development (client kingdoms counted). Past 25% their courts sour
+  2 opinion/month (one-time "the powers take notice" card); past 32% a
+  watcher at peace, stable, and at ≥ 0.7× the player's strength may open a
+  war of containment (6%/month × aggression, `cb: 'containment'`) — the
+  ratio gates that protect ordinary neighbors do not protect a
+  hegemon-in-the-making. The opinion slide also unlocks the ordinary
+  opportunism path, so pressure arrives one way or the other.
+- **The AI arms with the times** (aiRecruit): the bookmark's
+  `targetRegiments` is now a floor, not a frozen ceiling — the AI aims for
+  0.3 regiments per point of its own development, and any court BORDERING
+  a tag at infamy ≥ 20 arms toward 0.7× that conqueror's regiment count
+  (the arms race that ends "safe because strong"). Every fourth regiment
+  raised is cavalry when the purse allows. All targets cap at the force
+  limit and the old affordability governor.
+- **The national force limit** (`forceLimitOf`, military.js; economy.js):
+  8 regiments + 0.15/dev (`forceLimitMult` is the modifier lever). The
+  overlimit FRACTION of the army pays 3× maintenance — the doomstack
+  becomes an economic decision. The ledger shows the surcharge as its own
+  line; the realm panel shows regiments/limit; the AI never exceeds it.
+- **Conquest priced honestly** (military.js): province war-score cost
+  gains a ×1.25 surcharge for land of another religious GROUP (before the
+  claim/faith discounts); packages price superlinearly — each additional
+  province in one treaty costs +15% more (cheapest-first ordering,
+  `priceProvincePackage`) — and no single treaty may strip more than 40%
+  of the losing side's development (floor 25 dev, so minors stay
+  annexable; `peaceDevCap`). The AI's ultimatums and auto-settlements
+  build their packages through the same pricer (`buildAiPeaceProvinces`).
+- **War exhaustion wears the ranks** (monthlyMoraleRecovery): morale
+  recovery scales by 1 − WE/40 (floor 0.4×) — at the WE cap of 20 the
+  ranks mend at half pace, so the long war finally degrades the field
+  host instead of resetting it monthly.
+- **The Veteran dial** (start screen → `game.difficulty`,
+  `DEFINES.HARD_AI` via `resolveTagMult`): a per-campaign challenge
+  toggle on the nation-select screen. On Veteran every AI court (never
+  humans, never rebels) earns +25% income and manpower and fights at +5%
+  discipline. Saves carry it; pre-v6.0 saves revive as Normal.
+- **Balance note**: the autorun set shifts by one flag — 66 CE PAR now
+  BLEEDING (Parthia arms against an infamous Rome and keeps its wartime
+  host; treasury flat, the self-limiting debt-desertion class). 614's
+  come-and-go flags sat off this run. Accepted in tools/README.
+- **Regression contract**: `smoke38.mjs` — force-limit math and the
+  overlimit ledger line, package escalation, the alien surcharge, the
+  treaty dev cap, war-time infamy decay, the punitive coalition marching
+  on a human (and NOT on an AI realm), containment watch/souring/war,
+  exhausted morale recovery, and the Veteran multipliers (AI-only,
+  save-revive default). `smoke2` re-anchored to the dearer peace table.

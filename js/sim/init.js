@@ -127,11 +127,12 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
 }
 
 // ------------------------------------------------------------------ initGame
-export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed, provinceMap }) {
+export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag, rngSeed, provinceMap, difficulty }) {
   const start = (bookmark && bookmark.startDate) || { y: 66, m: 6, d: 1 };
   const game = {
     bookmarkId: (bookmark && bookmark.id) || '66ce',
     playerTag,
+    difficulty: difficulty === 'hard' ? 'hard' : 'normal', // veteran AI bonuses (resolveTagMult)
     humanTags: [playerTag], // multiplayer adds guest tags; every human tag has ai:false
     over: false, result: null,
     date: { y: start.y, m: start.m, d: start.d },
@@ -2370,6 +2371,7 @@ export function reviveGame(saved) {
   if (!Number.isFinite(saved.rngSeed)) saved.rngSeed = 1;
   if (!Number.isFinite(saved.rngState)) saved.rngState = saved.rngSeed;
   if (!saved.truces) saved.truces = {};
+  if (saved.difficulty !== 'hard') saved.difficulty = 'normal'; // pre-difficulty saves
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
   if (!saved.flags) saved.flags = {};

@@ -904,6 +904,39 @@ button {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
+.ss-challenge {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: -14px auto 22px;
+}
+.ss-challenge-label {
+  font-variant: small-caps;
+  letter-spacing: 0.18em;
+  font-size: 13px;
+  color: var(--text-light);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  margin-right: 6px;
+}
+.ss-chal-opt {
+  font: inherit;
+  font-size: 13px;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  padding: 4px 16px;
+  cursor: pointer;
+  color: var(--text-light);
+  background: linear-gradient(180deg, rgba(42, 33, 24, 0.92), rgba(24, 19, 13, 0.95));
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+}
+.ss-chal-opt.on {
+  color: var(--parch);
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(200, 164, 82, 0.35) inset;
+}
+
 .ss-cards {
   display: flex;
   gap: 26px;

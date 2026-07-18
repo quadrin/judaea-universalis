@@ -149,6 +149,18 @@ ATG BLEEDING · 66 none · 132 JUD DEBT-SPIRAL,BLEEDING · 614 JUD
 BLEEDING (SNOWBALL comes and goes) + GHA BLEEDING (comes and goes) ·
 1948 none.
 
+Since v6.0 (anti-snowball, SPEC §59): the punitive coalition and hegemon
+containment are HUMAN-only, so no all-AI trajectory starts a new war —
+but the AI now arms with the times (dev-scaled targets, the infamy arms
+race), and 66 CE's Parthia therefore keeps a wartime host against an
+infamous scripted Rome and drifts onto the bleeding line (treasury flat
+at ~190, the self-limiting debt-desertion class of 66/132 JUD). 614's
+come-and-go flags sat off the v6.0 run. Accepted as of v6.0:
+167 PAR BLEEDING · 67 SEL DEAD + ARI (or HYR) BLEEDING · 40 HER and/or
+ATG BLEEDING · 66 PAR BLEEDING (comes and goes) · 132 JUD
+DEBT-SPIRAL,BLEEDING · 614 JUD/GHA BLEEDING and JUD SNOWBALL (all come
+and go) · 1948 none.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could
