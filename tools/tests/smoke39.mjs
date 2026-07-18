@@ -121,5 +121,22 @@ console.log('== a market that closes mid-passage sends her home empty ==');
     'home safe, hold empty, not a talent landed');
 }
 
+console.log('== every player-facing scripted event offers a real choice (v6.1) ==');
+{
+  // World-history dispatches may stay single-option notices; anything the
+  // player is asked to answer must offer at least two answers, and any
+  // multi-option event must pin aiOption so harness runs stay historical.
+  for (const era of ['167bce', '67bce', '40bce', '66ce', '132ce', '614ce', '1948']) {
+    const mod = await import(R + '/js/data/events_' + era + '.js');
+    const evs = Object.values(mod).find(Array.isArray) || [];
+    const oneOpt = evs.filter((e) => e && !e.world && (!e.options || e.options.length < 2));
+    ok(oneOpt.length === 0, era + ': no single-option player events'
+      + (oneOpt.length ? ' — ' + oneOpt.map((e) => e.id).join(', ') : ''));
+    const noAi = evs.filter((e) => e && e.options && e.options.length > 1 && !Number.isFinite(e.aiOption));
+    ok(noAi.length === 0, era + ': every multi-option event pins aiOption'
+      + (noAi.length ? ' — ' + noAi.map((e) => e.id).join(', ') : ''));
+  }
+}
+
 if (failures) { console.error(failures + ' FAILURES'); process.exit(1); }
 console.log('\nALL PASS');

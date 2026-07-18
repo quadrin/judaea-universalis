@@ -148,6 +148,14 @@ export const EVENTS_1948 = [
           ctx.helpers.chronicle(ctx, 'era', 'The State of Israel is declared in Tel Aviv; five Arab armies cross the borders by morning.');
         }),
       },
+      {
+        label: 'Guns before ceremony',
+        tooltip: 'Israel: +5 legitimacy, +1,000 manpower — and +150 talents as the bond drive abroad outruns the flag-raisings.',
+        effects: guard('ev_i_decl:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5, manpower: 1000, treasury: 150 });
+          ctx.helpers.chronicle(ctx, 'era', 'The State of Israel is declared in Tel Aviv — the ceremony is short; the purchasing missions are already abroad.');
+        }),
+      },
     ],
   },
 
@@ -172,6 +180,15 @@ export const EVENTS_1948 = [
             id: 'bus_station', name: 'The Morning of the Spitfires', months: 6, effects: { unrest: 1 },
           });
           ctx.helpers.adjust(ctx, 'ISR', { mar: 15 });
+        }),
+      },
+      {
+        label: 'Sirens and shelters first',
+        tooltip: 'Tel Aviv: −1 unrest for 12 months — civil defense steadies the city, but the air force argument waits.',
+        effects: guard('ev_i_spitfires:1', (ctx) => {
+          ctx.helpers.addProvinceModifier(ctx, 'Joppa', {
+            id: 'bus_station', name: 'Sirens and Shelters', months: 12, effects: { unrest: -1 },
+          });
         }),
       },
     ],
@@ -200,6 +217,16 @@ export const EVENTS_1948 = [
           addWarscore(ctx, 'JOR', 3);
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
           ctx.helpers.chronicle(ctx, 'war', 'The Jewish Quarter of the Old City surrenders to the Arab Legion.');
+        }),
+      },
+      {
+        label: 'The Legion presses its triumph',
+        tooltip: 'Transjordan: +5 war score but −5 legitimacy (the synagogues burn on camera). Israel: +10 martial points — rage arms the counterattack.',
+        effects: guard('ev_i_oldcity:1', (ctx) => {
+          addWarscore(ctx, 'JOR', 5);
+          ctx.helpers.adjust(ctx, 'JOR', { legitimacy: -5 });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5, mar: 10 });
+          ctx.helpers.chronicle(ctx, 'war', 'The Jewish Quarter falls and the Legion presses its triumph; the fires are seen from every hill.');
         }),
       },
     ],
@@ -232,6 +259,18 @@ export const EVENTS_1948 = [
           ctx.helpers.chronicle(ctx, 'war', 'Four fighters stop the Egyptian column at Ad Halom bridge; the air war opens.');
         }),
       },
+      {
+        label: 'Counterattack the stalled column',
+        tooltip: 'Israel: +5 war score, −1,000 manpower — the infantry goes in behind the planes. Egypt: −5% morale for 6 months.',
+        effects: guard('ev_i_adhalom:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'EGY', {
+            id: 'checked_bridge', name: 'Checked at the Bridge', months: 6, effects: { moraleMult: 0.95 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -1000 });
+          addWarscore(ctx, 'ISR', 5);
+          ctx.helpers.chronicle(ctx, 'war', 'The column checked at Ad Halom is counterattacked in the dunes; the price is paid in infantry.');
+        }),
+      },
     ],
   },
 
@@ -259,6 +298,17 @@ export const EVENTS_1948 = [
           });
           ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000 });
           ctx.helpers.chronicle(ctx, 'peace', 'The First Truce: four weeks of quiet guns, and the arms ships land by night.');
+        }),
+      },
+      {
+        label: 'Fight through the count\'s truce',
+        tooltip: 'No stand-down — the fronts stay hot. Israel: the Czech arms land rushed (+5% discipline permanently), −10 legitimacy and −1 stability for defying the UN.',
+        effects: guard('ev_i_truce1:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'czech_arms', name: 'The Czech Arms, Rushed to the Line', months: -1, effects: { disciplineMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'peace', 'The First Truce is ordered — and ignored: the guns never quite stop.');
         }),
       },
     ],
@@ -324,6 +374,16 @@ export const EVENTS_1948 = [
           });
         }),
       },
+      {
+        label: 'Pave it properly',
+        tooltip: 'Israel: −60 talents to the engineers; Jerusalem −2 unrest for 24 months — a road, not a track. No convoy escort to spare.',
+        effects: guard('ev_i_burma:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -60 });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'burma_road_ev', name: 'The Burma Road, Paved', months: 24, effects: { unrest: -2 },
+          });
+        }),
+      },
     ],
   },
 
@@ -378,6 +438,14 @@ export const EVENTS_1948 = [
         effects: guard('ev_i_tendays:0', (ctx) => {
           addWarscore(ctx, 'ISR', 5);
           ctx.helpers.adjust(ctx, 'ISR', { mar: 25 });
+        }),
+      },
+      {
+        label: 'Push past the plan',
+        tooltip: 'Israel: +8 war score, but −1,500 manpower and +1 war exhaustion — the brigades run to the end of their maps and keep going.',
+        effects: guard('ev_i_tendays:1', (ctx) => {
+          addWarscore(ctx, 'ISR', 8);
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -1500, warExhaustion: 1 });
         }),
       },
     ],
@@ -453,6 +521,20 @@ export const EVENTS_1948 = [
           }
         }),
       },
+      {
+        label: 'Screen for the professionals',
+        tooltip: 'Israel: +1,000 manpower now and +5% discipline for 12 months ("The Veterans of Five Armies") — cadres over columns; the same ships land the same families.',
+        effects: guard('ev_i_mahal:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 1000 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'gates_open', name: 'The Veterans of Five Armies', months: 12, effects: { disciplineMult: 1.05 },
+          });
+          if (typeof ctx.helpers.addPopulation === 'function') {
+            ctx.helpers.addPopulation(ctx, 'Joppa', { r: 'judaism', c: 'israeli', n: 25000 });
+            ctx.helpers.addPopulation(ctx, 'Dora', { r: 'judaism', c: 'israeli', n: 15000 });
+          }
+        }),
+      },
     ],
   },
 
@@ -473,6 +555,14 @@ export const EVENTS_1948 = [
         tooltip: 'Every army stands down a month.',
         effects: guard('ev_i_truce2:0', (ctx) => {
           imposeTruce(ctx, 'truce_2', 'The Second Truce');
+        }),
+      },
+      {
+        label: 'Refuse the indefinite truce',
+        tooltip: 'No stand-down. Israel: −10 legitimacy, −1 stability under the sanction threat, but +15 martial points — the fronts stay hot and the staffs stay sharp.',
+        effects: guard('ev_i_truce2:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, stability: -1, mar: 15 });
+          ctx.helpers.chronicle(ctx, 'war', 'The indefinite truce is ordered on pain of sanctions — and the guns answer for themselves.');
         }),
       },
     ],
@@ -534,6 +624,17 @@ export const EVENTS_1948 = [
           });
         }),
       },
+      {
+        label: 'Spoil the pocket before it forms',
+        tooltip: 'Israel: −500 manpower in spoiling raids; Syria fields only 1 Liberation Army regiment — Kaukji digs in with half his men.',
+        effects: guard('ev_i_kaukji:1', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'SYR', 'Gischala', {
+            inf: 1, name: 'Jaysh al-Inqadh',
+            general: { name: 'Fawzi al-Kaukji', fire: 1, shock: 2, maneuver: 2 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -500 });
+        }),
+      },
     ],
   },
 
@@ -560,6 +661,18 @@ export const EVENTS_1948 = [
           setOpinionDelta(g, 'EGY', 'JOR', -30);
           setOpinionDelta(g, 'JOR', 'EGY', -30);
           ctx.helpers.chronicle(ctx, 'era', 'The All-Palestine Government is proclaimed in Gaza — aimed less at Tel Aviv than at Amman.');
+        }),
+      },
+      {
+        label: 'Cairo funds its client properly',
+        tooltip: 'Egypt: −80 talents but +10 legitimacy — the government of nothing at least has offices. Transjordan: −5 legitimacy; Cairo and Amman −30 opinion of each other.',
+        effects: guard('ev_i_allpal:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'EGY', { treasury: -80, legitimacy: 10 });
+          ctx.helpers.adjust(ctx, 'JOR', { legitimacy: -5 });
+          const g = ctx.game;
+          setOpinionDelta(g, 'EGY', 'JOR', -30);
+          setOpinionDelta(g, 'JOR', 'EGY', -30);
+          ctx.helpers.chronicle(ctx, 'era', 'The All-Palestine Government is proclaimed in Gaza — and, unusually, paid for.');
         }),
       },
     ],
@@ -594,6 +707,21 @@ export const EVENTS_1948 = [
           });
         }),
       },
+      {
+        label: 'Into Sinai, and damn London',
+        tooltip: 'Israel: 3 regiments at Jamnia, +8 war score — but −10 legitimacy and +1 war exhaustion as Britain threatens its treaty. Egypt: the Faluja Pocket (−10% morale, 12 months).',
+        effects: guard('ev_i_yoav:1', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'ISR', 'Jamnia', {
+            inf: 2, cav: 1, name: 'Southern Front',
+            general: { name: 'Yigal Allon', fire: 2, shock: 3, maneuver: 4 },
+          });
+          addWarscore(ctx, 'ISR', 8);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, warExhaustion: 1 });
+          ctx.helpers.addTagModifier(ctx, 'EGY', {
+            id: 'faluja_pocket', name: 'The Faluja Pocket', months: 12, effects: { moraleMult: 0.9 },
+          });
+        }),
+      },
     ],
   },
 
@@ -620,6 +748,17 @@ export const EVENTS_1948 = [
           const w = findWar(ctx.game, 'EGY', 'ISR');
           if (w) w.noNegotiation = false;
           ctx.helpers.chronicle(ctx, 'war', 'Operations Hiram and Horev end the fighting war; the wires to Rhodes begin to hum.');
+        }),
+      },
+      {
+        label: 'One more week first',
+        tooltip: 'Israel: +12 war score, but +1.5 war exhaustion and −5 legitimacy — the last week of a war is the most expensive. Armistice talks still open.',
+        effects: guard('ev_i_hiram:1', (ctx) => {
+          addWarscore(ctx, 'ISR', 12);
+          ctx.helpers.adjust(ctx, 'ISR', { warExhaustion: 1.5, legitimacy: -5 });
+          const w = findWar(ctx.game, 'EGY', 'ISR');
+          if (w) w.noNegotiation = false;
+          ctx.helpers.chronicle(ctx, 'war', 'Hiram and Horev run a week past their maps before the wires to Rhodes finally hum.');
         }),
       },
     ],
@@ -686,6 +825,17 @@ export const EVENTS_1948 = [
           ctx.helpers.adjust(ctx, 'ISR', { infl: 10 });
         }),
       },
+      {
+        label: 'Tighten the ring to the end',
+        tooltip: 'Israel: +3 war score, no talks. Egypt: −5 legitimacy and −5% morale for 6 months — the pocket holds, but nothing else does.',
+        effects: guard('ev_i_faluja:1', (ctx) => {
+          addWarscore(ctx, 'ISR', 3);
+          ctx.helpers.adjust(ctx, 'EGY', { legitimacy: -5 });
+          ctx.helpers.addTagModifier(ctx, 'EGY', {
+            id: 'faluja_honor', name: 'The Pocket, Starved', months: 6, effects: { moraleMult: 0.95 },
+          });
+        }),
+      },
     ],
   },
 
@@ -712,6 +862,17 @@ export const EVENTS_1948 = [
           ctx.helpers.chronicle(ctx, 'era', 'The Jericho Conference proclaims Abdullah king of Arab Palestine; the League fumes.');
         }),
       },
+      {
+        label: 'A crown paid for in silver',
+        tooltip: 'Transjordan: −100 talents in subventions to the notables; +10 legitimacy, +25 influence — and Cairo and Damascus only −10 opinion. Money smooths what proclamations inflame.',
+        effects: guard('ev_i_jericho:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JOR', { treasury: -100, legitimacy: 10, infl: 25 });
+          const g = ctx.game;
+          setOpinionDelta(g, 'EGY', 'JOR', -10);
+          setOpinionDelta(g, 'SYR', 'JOR', -10);
+          ctx.helpers.chronicle(ctx, 'era', 'The Jericho Conference crowns Abdullah quietly — the notables paid, the League merely irritated.');
+        }),
+      },
     ],
   },
 
@@ -735,6 +896,14 @@ export const EVENTS_1948 = [
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: 1 });
           ctx.helpers.factionShift(ctx, 'ISR', 'coalition', 10);
           ctx.helpers.chronicle(ctx, 'era', 'Israel votes under fire: the first Knesset convenes.');
+        }),
+      },
+      {
+        label: 'A war cabinet first, elections after',
+        tooltip: 'Israel: +25 government points and +10 martial points now, but −5 legitimacy — the democracies frown at the postponement.',
+        effects: guard('ev_i_knesset:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 25, mar: 10, legitimacy: -5 });
+          ctx.helpers.chronicle(ctx, 'era', 'The election waits on the war: a war cabinet governs by decree a season longer.');
         }),
       },
     ],
@@ -771,6 +940,18 @@ export const EVENTS_1948 = [
             });
           }
           ctx.helpers.chronicle(ctx, 'peace', 'The Rhodes armistices: the lines where the armies stand become the lines on the atlas.');
+        }),
+      },
+      {
+        label: 'Send the delegations home',
+        tooltip: 'The war goes on: no armistice, no stand-down. Israel: −15 legitimacy under UN censure, and every belligerent +2 war exhaustion. The peace, when it comes, will be dictated at the table — not initialed at Rhodes.',
+        effects: guard('ev_i_armistice:1', (ctx) => {
+          for (const t of ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ']) {
+            if (!ctx.game.tags[t]) continue;
+            ctx.helpers.adjust(ctx, t, { warExhaustion: 2 });
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -15 });
+          ctx.helpers.chronicle(ctx, 'war', 'The Rhodes talks collapse: the delegations sail home and the lines stay lines of battle.');
         }),
       },
     ],
