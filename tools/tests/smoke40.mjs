@@ -109,6 +109,33 @@ console.log('== a resentful client stays home from our wars ==');
   ok(war && war.defenders.indexOf('JUD') >= 0, 'the overlord still defends its client');
 }
 
+console.log('== liberation, not occupation: a retaken client town goes home ==');
+{
+  const { game, ctx } = boot();
+  const agr = enfeoff(game);
+  agr.opinion.JUD = 20;
+  mil.declareWar(ctx, 'NAB', 'AGR', 'Test War'); // JUD defends its client
+  const prov = game.provinces.findIndex((p) => p && !p.impassable && p.owner === 'AGR');
+  const p = game.provinces[prov];
+  p.controller = 'NAB'; // the enemy took it
+  p.siege = { by: 'JUD', progress: 99, breach: 0, days: 0 }; // and we took it back
+  mil.siegeFall(ctx, p);
+  ok(p.controller === 'AGR', 'the overlord hands back the keys: controller is the client, not us');
+  // Our own land, by contrast, returns to us as ever.
+  const own = game.provinces.findIndex((q) => q && !q.impassable && q.owner === 'JUD');
+  const q = game.provinces[own];
+  q.controller = 'NAB';
+  q.siege = { by: 'JUD', progress: 99, breach: 0, days: 0 };
+  mil.siegeFall(ctx, q);
+  ok(q.controller === 'JUD', 'our own province returns to our own hand');
+  // Enemy land we take stays OCCUPIED by us — conquest is still conquest.
+  const theirs = game.provinces.findIndex((r) => r && !r.impassable && r.owner === 'NAB');
+  const r = game.provinces[theirs];
+  r.siege = { by: 'JUD', progress: 99, breach: 0, days: 0 };
+  mil.siegeFall(ctx, r);
+  ok(r.controller === 'JUD', 'enemy land falls to the besieger as before');
+}
+
 console.log('== the yoke thrown off: the independence rising ==');
 {
   const { game, ctx } = boot();

@@ -1014,15 +1014,23 @@ export function siegeFall(ctx, p) {
   const by = p.siege.by;
   p.siege = null;
   clearFamine(ctx, p);
-  changeControllerCore(ctx, p, by);
+  // Liberation, not occupation (SPEC §61): a fallen province whose OWNER
+  // fights on the besieger's side goes home to its owner — the overlord who
+  // storms a client's stolen town hands back the keys, and an ally's land
+  // returns to the ally.
+  const owner = g.tags[p.owner];
+  const liberated = p.owner !== by && owner && owner.alive && sameSide(ctx, by, p.owner);
+  changeControllerCore(ctx, p, liberated ? p.owner : by);
   p.garrison = Math.round(num(p.maxGarrison) * 0.2);
   addWarExhaustion(ctx, prev, 0.5);
   ctx.bus.emit('siegeEnd', { provId: p.id, by });
-  if (playerConcerned(ctx, p, by)) {
+  if (playerConcerned(ctx, p, by) || (liberated && p.owner === g.playerTag)) {
     ctx.bus.emit('notify', {
-      title: p.name + ' has fallen',
-      text: (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
-      type: by === g.playerTag ? 'good' : 'bad', provName: p.name,
+      title: liberated ? p.name + ' is liberated' : p.name + ' has fallen',
+      text: liberated
+        ? (g.tags[by] ? g.tags[by].name : by) + ' restores ' + p.name + ' to ' + ((owner && owner.name) || p.owner) + '.'
+        : (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
+      type: by === g.playerTag || (liberated && p.owner === g.playerTag) ? 'good' : 'bad', provName: p.name,
     });
   }
 }
