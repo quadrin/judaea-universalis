@@ -68,6 +68,15 @@ export const EVENTS_67 = [
           h.adjust(ctx, 'HYR', { gov: 10 });
         }),
       },
+      {
+        label: 'Riders to the fortresses',
+        tooltip: 'Jerusalem asserts the succession before the funeral is cold: Hyrcanus +5 legitimacy; Aristobulus +10 martial points (the commanders drill for the answer).',
+        effects: guard('ev4_salome_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { legitimacy: 5 });
+          h.adjust(ctx, 'ARI', { mar: 10 });
+        }),
+      },
     ],
   },
 
@@ -193,6 +202,21 @@ export const EVENTS_67 = [
           });
         }),
       },
+      {
+        label: 'Let the old man go',
+        tooltip: 'The prayer stands, unanswered and unbloodied: both armies −5% morale for 12 months ("Honi\'s Prayer") — but Jerusalem is spared the scandal.',
+        effects: guard('ev4_honi:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'honis_prayer', name: 'Honi\'s Prayer', months: 12,
+            effects: { moraleMult: 0.95 },
+          });
+          h.addTagModifier(ctx, 'ARI', {
+            id: 'honis_prayer', name: 'Honi\'s Prayer', months: 12,
+            effects: { moraleMult: 0.95 },
+          });
+        }),
+      },
     ],
   },
 
@@ -233,6 +257,19 @@ export const EVENTS_67 = [
           }
         }),
       },
+      {
+        label: 'Send up the lambs, war or no war',
+        tooltip: 'The silver goes down, the beasts go up, and the rite is kept: Hyrcanus and Aristobulus −50 talents each; Jerusalem −1 unrest for 12 months ("The Lambs Still Ascend").',
+        effects: guard('ev4_paschal_beasts:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { treasury: -50 });
+          h.adjust(ctx, 'ARI', { treasury: -50 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'paschal_outrage', name: 'The Lambs Still Ascend', months: 12,
+            effects: { unrest: -1 },
+          });
+        }),
+      },
     ],
   },
 
@@ -264,6 +301,28 @@ export const EVENTS_67 = [
             effects: { aiPassive: true },
           });
           h.setFlag(ctx, 'tigranesBowed', true);
+        }),
+      },
+      {
+        label: 'Send gifts before he asks',
+        tooltip: 'Armenia stands down as before — and both courts spend to be remembered kindly: Hyrcanus and Aristobulus −50 talents each; Rome\'s opinion of each +15.',
+        effects: guard('ev4_tigranes_bows:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (g.tags.ARM && g.tags.ARM.opinion) g.tags.ARM.opinion.ROM = 100;
+          if (g.tags.ROM && g.tags.ROM.opinion) g.tags.ROM.opinion.ARM = 60;
+          h.addTagModifier(ctx, 'ARM', {
+            id: 'chastened', name: 'Chastened by Pompey', months: 36,
+            effects: { aiPassive: true },
+          });
+          h.setFlag(ctx, 'tigranesBowed', true);
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -50 });
+            if (g.tags.ROM && g.tags.ROM.opinion) {
+              g.tags.ROM.opinion[t] = Math.min(200, (g.tags.ROM.opinion[t] || 0) + 15);
+            }
+          }
         }),
       },
     ],
@@ -489,6 +548,16 @@ export const EVENTS_67 = [
           if (alive(ctx, 'ARI')) h.declareWar(ctx, 'ROM', 'ARI', 'Pompey\'s Judaean War');
         }),
       },
+      {
+        label: 'Silver for the legate',
+        tooltip: 'Aristobulus pays Scaurus to soften the finding: Aristobulus −100 talents, −5 legitimacy; Hyrcanus +10. Rome still declares war to enforce the award.',
+        effects: guard('ev4_arbitration:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { legitimacy: 10 });
+          h.adjust(ctx, 'ARI', { treasury: -100, legitimacy: -5 });
+          if (alive(ctx, 'ARI')) h.declareWar(ctx, 'ROM', 'ARI', 'Pompey\'s Judaean War');
+        }),
+      },
     ],
   },
 
@@ -523,6 +592,25 @@ export const EVENTS_67 = [
             h.addProvinceModifier(ctx, p.name, {
               id: 'profaned_veil', name: 'The Profaned Veil', months: 24,
               effects: { unrest: 2 },
+            });
+          }
+          h.setFlag(ctx, 'veilProfaned', true);
+        }),
+      },
+      {
+        label: 'Purify the courts at dawn',
+        tooltip: 'The rites resume before the rumor does: each brother −100 talents and −5 legitimacy; the provinces of the faith +1 unrest for 24 months ("The Rites Resumed").',
+        effects: guard('ev4_holy_of_holies:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'HYR')) h.adjust(ctx, 'HYR', { legitimacy: -5, treasury: -100 });
+          if (alive(ctx, 'ARI')) h.adjust(ctx, 'ARI', { legitimacy: -5, treasury: -100 });
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'profaned_veil', name: 'The Rites Resumed', months: 24,
+              effects: { unrest: 1 },
             });
           }
           h.setFlag(ctx, 'veilProfaned', true);
@@ -563,6 +651,34 @@ export const EVENTS_67 = [
               id: 'eastern_anxiety', name: 'Eastern Anxiety', months: 6,
               effects: { aiPassive: true },
             });
+          }
+        }),
+      },
+      {
+        label: 'A gift for the far bank',
+        tooltip: 'Phraates masses — or crosses — all the same, but the brothers hedge: each court alive −50 talents; Parthia\'s opinion of each +20.',
+        effects: guard('ev4_parthia_stirs:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (ctx.rng.chance(0.3) && alive(ctx, 'PAR') && alive(ctx, 'ROM')) {
+            h.declareWar(ctx, 'PAR', 'ROM', 'The Euphrates War');
+            h.notify(ctx, {
+              title: 'Parthia crosses the Euphrates',
+              text: 'Phraates has chosen his moment — with the legions entangled in Judaea.',
+              type: 'war',
+            });
+          } else {
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'eastern_anxiety', name: 'Eastern Anxiety', months: 6,
+              effects: { aiPassive: true },
+            });
+          }
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -50 });
+            if (g.tags.PAR && g.tags.PAR.opinion) {
+              g.tags.PAR.opinion[t] = Math.min(200, (g.tags.PAR.opinion[t] || 0) + 20);
+            }
           }
         }),
       },
@@ -680,6 +796,23 @@ export const EVENTS_67 = [
         tooltip: 'The kingdom is whole. +1 stability.',
         effects: guard('ev4_kingdom_restored:0', (ctx) => {
           ctx.helpers.adjust(ctx, ctx.game.playerTag, { stability: 1 });
+        }),
+      },
+      {
+        label: 'Open the granaries',
+        tooltip: 'A year of the king\'s bread instead of a psalm: −100 talents; every province of the faith −1 unrest for 12 months ("The King\'s Bread").',
+        effects: guard('ev4_kingdom_restored:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.adjust(ctx, g.playerTag, { treasury: -100 });
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'kings_bread', name: 'The King\'s Bread', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
         }),
       },
     ],

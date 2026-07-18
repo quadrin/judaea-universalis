@@ -98,6 +98,14 @@ export const EVENTS_132 = [
           stirOccupiedJudaea(ctx, 'ploughed_mount', 'The Ploughed Mount', 24, 2);
         }),
       },
+      {
+        label: 'Dig the armories deeper',
+        tooltip: 'Not yet, not loudly: Judaea +25 martial points. Jewish provinces under Rome: only +1 unrest for 24 months ("The Ploughed Mount").',
+        effects: guard('ev2_aelia:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { mar: 25 });
+          stirOccupiedJudaea(ctx, 'ploughed_mount', 'The Ploughed Mount', 24, 1);
+        }),
+      },
     ],
   },
 
@@ -121,6 +129,13 @@ export const EVENTS_132 = [
         effects: guard('ev2_decrees:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
           stirOccupiedJudaea(ctx, 'the_decrees', 'The Decrees', 36, 1);
+        }),
+      },
+      {
+        label: 'Keep the covenant in secret',
+        tooltip: 'The Law endures in the caves and the streets stay quiet: Judaea +1 stability.',
+        effects: guard('ev2_decrees:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1 });
         }),
       },
     ],
@@ -215,6 +230,13 @@ export const EVENTS_132 = [
           ctx.helpers.adjust(ctx, 'ROM', { gov: 10 });
         }),
       },
+      {
+        label: 'Send south those who will come',
+        tooltip: 'Judaea: +1,000 manpower from the hill villages that do answer — and −5 legitimacy when the north\'s courtesies are read aloud.',
+        effects: guard('ev2_galilee_quiet:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { manpower: 1000, legitimacy: -5 });
+        }),
+      },
     ],
   },
 
@@ -241,6 +263,20 @@ export const EVENTS_132 = [
           const h = ctx.helpers;
           h.adjust(ctx, 'ROM', { manpower: -8000, legitimacy: -10 });
           h.adjust(ctx, 'JUD', { mar: 25 });
+          addWarscore(ctx, 'JUD', 5);
+        }),
+      },
+      {
+        label: 'Name the ravines like psalms',
+        tooltip: 'Rome: −8,000 manpower, −10 legitimacy. Judaea: +5 war score, +5 legitimacy; "The Ravines Remember": +5% morale for 12 months.',
+        effects: guard('ev2_legion_lost:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { manpower: -8000, legitimacy: -10 });
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'ravines_remember', name: 'The Ravines Remember', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
           addWarscore(ctx, 'JUD', 5);
         }),
       },
@@ -276,6 +312,24 @@ export const EVENTS_132 = [
             inf: 9, cav: 1, name: 'Vexillations of the Danube',
             general: { name: 'Publicius Marcellus', fire: 2, shock: 3, maneuver: 2 },
           });
+          h.setFlag(ctx, 'severusArrived', true);
+        }),
+      },
+      {
+        label: 'Strip the frontiers barer still',
+        tooltip: 'Rome: Julius Severus (4/4/5) lands at Ptolemais with 21,000 men; 10,000 more at Caesarea; the provincial hesitation ends — and +1 war exhaustion, for every army between the Rhine and Egypt is a cohort thinner.',
+        effects: guard('ev2_hadrian_summons:1', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'ROM', 'provincial_response');
+          h.spawnArmy(ctx, 'ROM', 'Ptolemais', {
+            inf: 18, cav: 3, name: 'Army of Julius Severus',
+            general: { name: 'Julius Severus', fire: 4, shock: 4, maneuver: 5 },
+          });
+          h.spawnArmy(ctx, 'ROM', 'Caesarea Maritima', {
+            inf: 9, cav: 1, name: 'Vexillations of the Danube',
+            general: { name: 'Publicius Marcellus', fire: 2, shock: 3, maneuver: 2 },
+          });
+          h.adjust(ctx, 'ROM', { warExhaustion: 1 });
           h.setFlag(ctx, 'severusArrived', true);
         }),
       },
@@ -390,6 +444,27 @@ export const EVENTS_132 = [
           }
         }),
       },
+      {
+        label: 'Send envoys across the river',
+        tooltip: 'The same held breath — either Rome garrisons the river or the King of Kings crosses it. Judaea: −25 influence points, +5 legitimacy, for the Nasi\'s couriers ride east with the merchants.',
+        effects: guard('ev2_parthian_shadow:1', (ctx) => {
+          const h = ctx.helpers;
+          if (ctx.rng.chance(0.35) && alive(ctx, 'PAR') && alive(ctx, 'ROM')) {
+            h.declareWar(ctx, 'PAR', 'ROM', 'The Euphrates War');
+            h.notify(ctx, {
+              title: 'Parthia crosses the Euphrates',
+              text: 'The arithmetic was right: the King of Kings has chosen his moment.',
+              type: 'war',
+            });
+          } else {
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'eastern_anxiety', name: 'Eastern Anxiety', months: 6,
+              effects: { aiPassive: true },
+            });
+          }
+          h.adjust(ctx, 'JUD', { infl: -25, legitimacy: 5 });
+        }),
+      },
     ],
   },
 
@@ -419,6 +494,13 @@ export const EVENTS_132 = [
             id: 'sanctified_name', name: 'The Sanctified Name', months: 18,
             effects: { moraleMult: 1.1 },
           });
+        }),
+      },
+      {
+        label: 'Ordain the students in secret',
+        tooltip: 'No banner over the grave, but the chain of the Law unbroken: Judaea −5 legitimacy, +25 influence points.',
+        effects: guard('ev2_akiva:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: -5, infl: 25 });
         }),
       },
     ],
@@ -453,6 +535,16 @@ export const EVENTS_132 = [
           });
         }),
       },
+      {
+        label: 'Water and walls',
+        tooltip: '"Water and Walls": +1 hill defense for 12 months — the rock, not the sally, will decide it.',
+        effects: guard('ev2_betar:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'betar_walls', name: 'Water and Walls', months: 12,
+            effects: { hillDefBonus: 1 },
+          });
+        }),
+      },
     ],
   },
 
@@ -473,6 +565,16 @@ export const EVENTS_132 = [
         tooltip: 'The war is won. +1 stability.',
         effects: guard('ev2_redemption_peace:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'JUD', { stability: 1 });
+        }),
+      },
+      {
+        label: 'Overstrike the enemy\'s silver',
+        tooltip: 'The mint before the study house — "For the Freedom of Jerusalem": +10% income for 24 months.',
+        effects: guard('ev2_redemption_peace:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'freedom_coinage', name: 'For the Freedom of Jerusalem', months: 24,
+            effects: { incomeMult: 1.1 },
+          });
         }),
       },
     ],

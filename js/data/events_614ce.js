@@ -152,6 +152,18 @@ export const EVENTS_614 = [
           ctx.helpers.chronicle(ctx, 'war', 'Jerusalem falls to Shahrbaraz and the fighters of the Return; the True Cross goes east to Ctesiphon.');
         }),
       },
+      {
+        label: 'Man the walls before the psalms',
+        tooltip: 'Jerusalem passes to the Return (owner) with a heavier garrison (4 regiments); −60 talents for the works. The Return: +8 legitimacy. Byzantium: −15 legitimacy. Persia: +100 talents of relics and ransom.',
+        effects: guard('ev_p_jerusalem:1', (ctx) => {
+          ctx.helpers.changeOwner(ctx, 'Jerusalem', 'JUD');
+          ctx.helpers.spawnArmy(ctx, 'JUD', 'Jerusalem', { inf: 4, name: 'Guard of the Return' });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -60, legitimacy: 8 });
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: -15 });
+          ctx.helpers.adjust(ctx, 'SAS', { treasury: 100 });
+          ctx.helpers.chronicle(ctx, 'war', 'Jerusalem falls to Shahrbaraz and the fighters of the Return, who repair the breach before they sing in it; the True Cross goes east to Ctesiphon.');
+        }),
+      },
     ],
   },
 
@@ -174,6 +186,14 @@ export const EVENTS_614 = [
         effects: guard('ev_p_benjamin:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, manpower: 1500 });
           ctx.helpers.factionShift(ctx, 'JUD', 'fighters', 8);
+        }),
+      },
+      {
+        label: 'The silver marches alone',
+        tooltip: 'The Return: +150 talents, +500 manpower; the Fighters of the Return +3 approval — Benjamin pays in full, but the hill villages stay to bring in the harvest.',
+        effects: guard('ev_p_benjamin:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, manpower: 500 });
+          ctx.helpers.factionShift(ctx, 'JUD', 'fighters', 3);
         }),
       },
     ],
@@ -239,6 +259,15 @@ export const EVENTS_614 = [
           ctx.helpers.adjust(ctx, 'SAS', { treasury: 50 });
           ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: -5 });
           ctx.helpers.chronicle(ctx, 'era', 'Zacharias and the True Cross go east in the Persian baggage train.');
+        }),
+      },
+      {
+        label: 'The Queen intercedes',
+        tooltip: 'Persia: −25 talents to keep the Patriarch as an honored guest of Shirin\'s court, +5 legitimacy. Byzantium: −5 legitimacy — the grievance goes east with the Cross regardless.',
+        effects: guard('ev_p_zacharias:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'SAS', { treasury: -25, legitimacy: 5 });
+          ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: -5 });
+          ctx.helpers.chronicle(ctx, 'era', 'Zacharias and the True Cross go east; Shirin the queen houses the Patriarch as a guest, not a trophy.');
         }),
       },
     ],
@@ -340,6 +369,13 @@ export const EVENTS_614 = [
           });
         }),
       },
+      {
+        label: 'Buy another season',
+        tooltip: 'Byzantium: −100 talents send the embassy back with gifts — +1 stability, −1 war exhaustion. The blasphemy goes unanswered, for now.',
+        effects: guard('ev_p_letter:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { treasury: -100, stability: 1, warExhaustion: -1 });
+        }),
+      },
     ],
   },
 
@@ -422,6 +458,20 @@ export const EVENTS_614 = [
           }
           ctx.helpers.adjust(ctx, 'BYZ', { stability: -1 });
           ctx.helpers.chronicle(ctx, 'war', 'Alexandria falls; the grain dole of Constantinople ends after six hundred years.');
+        }),
+      },
+      {
+        label: 'Burn what cannot be held',
+        tooltip: 'Alexandria, Memphis and Pelusium still pass to Persia. Byzantium: −1 stability, −5 legitimacy; Alexandria\'s granaries burn — −15% income there for 24 months.',
+        effects: guard('ev_p_egypt:1', (ctx) => {
+          for (const n of ['Alexandria', 'Memphis', 'Pelusium']) {
+            ctx.helpers.changeOwner(ctx, n, 'SAS');
+          }
+          ctx.helpers.adjust(ctx, 'BYZ', { stability: -1, legitimacy: -5 });
+          ctx.helpers.addProvinceModifier(ctx, 'Alexandria', {
+            id: 'granaries_burned', name: 'The Granaries Burned', months: 24, effects: { taxMult: 0.85, prodMult: 0.85 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'Alexandria falls with its granaries alight; Persia takes a hungry prize, and the grain dole of Constantinople ends all the same.');
         }),
       },
     ],
@@ -550,6 +600,18 @@ export const EVENTS_614 = [
           addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 3);
         }),
       },
+      {
+        label: 'Pay the steppe in full',
+        tooltip: 'Byzantium: −120 talents of gifts to the Khagan buy 3 regiments of Khazar horse at Attalia, +3 war score.',
+        effects: guard('ev_p_turks:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'BYZ', { treasury: -120 });
+          ctx.helpers.spawnArmy(ctx, 'BYZ', 'Attalia', {
+            cav: 3, name: 'The Khagan\'s Horsemen',
+            general: { name: 'Ziebel', fire: 1, shock: 3, maneuver: 4 },
+          });
+          addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 3);
+        }),
+      },
     ],
   },
 
@@ -581,6 +643,19 @@ export const EVENTS_614 = [
           ctx.helpers.adjust(ctx, 'SAS', { stability: -1 });
           addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 5);
           ctx.helpers.chronicle(ctx, 'war', 'Shahrbaraz reads his own death warrant, forged fatter by Heraclius, and sits out the war.');
+        }),
+      },
+      {
+        label: 'Court the marshal in secret',
+        tooltip: 'Persia: the army stands down for 4 months ("The Marshal Sits Still"), −1 stability. Byzantium: +3 war score and +15 influence points — a marshal courted outlasts a marshal shamed.',
+        effects: guard('ev_p_intercepted:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'SAS', {
+            id: 'marshal_sits', name: 'The Marshal Sits Still', months: 4, effects: { aiPassive: true },
+          });
+          ctx.helpers.adjust(ctx, 'SAS', { stability: -1 });
+          addWarscore(ctx, findWar(ctx.game, 'SAS', 'BYZ'), 'BYZ', 3);
+          ctx.helpers.adjust(ctx, 'BYZ', { infl: 15 });
+          ctx.helpers.chronicle(ctx, 'war', 'Shahrbaraz reads his own death warrant — and, folded beneath it, the Emperor\'s discreet letters; the army of the west sits out the war.');
         }),
       },
     ],
@@ -668,6 +743,14 @@ export const EVENTS_614 = [
         effects: guard('ev_p_plague:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'SAS', { stability: -2, legitimacy: -10 });
           ctx.helpers.chronicle(ctx, 'ruler', 'Kavad II dies of the plague named for him; an infant rules the House of Sasan.');
+        }),
+      },
+      {
+        label: 'Silver holds what blood cannot',
+        tooltip: 'Persia: −100 talents in donatives to the court; −1 stability, −10 legitimacy. The infant king is bought a quieter cradle.',
+        effects: guard('ev_p_plague:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'SAS', { treasury: -100, stability: -1, legitimacy: -10 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'Kavad II dies of the plague named for him; donatives from the treasury keep the court, for now, around an infant king.');
         }),
       },
     ],

@@ -103,6 +103,15 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'HER', { mar: 10 });
         }),
       },
+      {
+        label: 'Five hundred talents, promised',
+        tooltip: 'Antigonus: −60 talents sent east, and the Parthian Party +10 approval — the patron\'s bill is paid before it is presented. Herod: +5 influence points as the city\'s silver rides away.',
+        effects: guard('ev5_parthians:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -60 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'parthians', 10);
+          ctx.helpers.adjust(ctx, 'HER', { infl: 5 });
+        }),
+      },
     ],
   },
 
@@ -124,6 +133,14 @@ export const EVENTS_40 = [
         tooltip: 'Parthia: +25 martial points, +1 stability. Antigonus: +5 legitimacy — his patron bestrides the world.',
         effects: guard('ev5_labienus:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'PAR', { mar: 25, stability: 1 });
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
+        }),
+      },
+      {
+        label: 'Asia pays for its conquerors',
+        tooltip: 'Parthia: +40 talents from the plundered cities, +10 martial points — the lancers are paid, not inspired. Antigonus: +5 legitimacy.',
+        effects: guard('ev5_labienus:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'PAR', { treasury: 40, mar: 10 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
         }),
       },
@@ -150,6 +167,14 @@ export const EVENTS_40 = [
         effects: guard('ev5_masada:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'HER', { infl: 10, legitimacy: 5 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'Press the siege through the rains',
+        tooltip: 'Antigonus: +10 martial points, +1 war exhaustion — the lines hold under the downpour, whatever heaven thinks. Herod: +5 legitimacy (the rock still stands).',
+        effects: guard('ev5_masada:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { mar: 10, warExhaustion: 1 });
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 5 });
         }),
       },
     ],
@@ -218,6 +243,20 @@ export const EVENTS_40 = [
           });
         }),
       },
+      {
+        label: 'Borrow against the decree',
+        tooltip: 'Herod is King by decree: +15 legitimacy, +100 talents raised on the Senate\'s word, the herodKing flag; Rome enters the War for the Crown at his side.',
+        effects: guard('ev5_senate:1', (ctx) => {
+          ctx.helpers.setFlag(ctx, 'herodKing', true);
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 15, treasury: 100 });
+          romeJoins(ctx);
+          ctx.helpers.notify(ctx, {
+            title: 'Rome takes the field',
+            text: 'The legions of Syria now fight for Herod\'s crown.',
+            type: 'war',
+          });
+        }),
+      },
     ],
   },
 
@@ -277,6 +316,14 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'HER', { manpower: 1500, treasury: 60 });
         }),
       },
+      {
+        label: 'Buy the strongmen outright',
+        tooltip: 'Herod: 3 regiments of Galilean recruits at Ptolemais, +1,000 manpower — but the bounties cost 40 talents, and the customs of the coast stay in local hands.',
+        effects: guard('ev5_joppa:1', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'HER', 'Ptolemais', { inf: 3, name: 'Galilean Recruits' });
+          ctx.helpers.adjust(ctx, 'HER', { manpower: 1000, treasury: -40 });
+        }),
+      },
     ],
   },
 
@@ -301,6 +348,15 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
           ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
           ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -10);
+        }),
+      },
+      {
+        label: 'Hound them to the Euphrates',
+        tooltip: 'Rome: +15 martial points, +1 war exhaustion — the pursuit is paid for in marching flesh. Parthia: −1 stability. Antigonus\' Parthian Party −5 approval.',
+        effects: guard('ev5_cilician_gates:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ROM', { mar: 15, warExhaustion: 1 });
+          ctx.helpers.adjust(ctx, 'PAR', { stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -5);
         }),
       },
     ],
@@ -453,6 +509,13 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'HER', { manpower: -800, infl: 15 });
         }),
       },
+      {
+        label: 'Stand between Rome and your villages',
+        tooltip: '−300 manpower; +5 legitimacy — the king shields his partisans in person, and the complaint travels to Antony by letter, which is to say slowly.',
+        effects: guard('ev5_machaeras:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { manpower: -300, legitimacy: 5 });
+        }),
+      },
     ],
   },
 
@@ -483,6 +546,18 @@ export const EVENTS_40 = [
             general: { name: 'Gaius Sosius', fire: 2, shock: 3, maneuver: 2 },
           });
           ctx.helpers.adjust(ctx, 'HER', { legitimacy: 15, manpower: 2000, treasury: 80 });
+          addCrownScore(ctx, 'HER', 5);
+        }),
+      },
+      {
+        label: 'Feast the legions on the road south',
+        tooltip: 'Rome: two legions under Sosius (6 regiments) at Antioch. Herod feasts the army at his own table: −40 talents, +20 legitimacy, +1,500 manpower, +5 war score in the crown war.',
+        effects: guard('ev5_samosata:1', (ctx) => {
+          ctx.helpers.spawnArmy(ctx, 'ROM', 'Antioch', {
+            inf: 5, cav: 1, name: 'Sosius\' Legions',
+            general: { name: 'Gaius Sosius', fire: 2, shock: 3, maneuver: 2 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 20, manpower: 1500, treasury: -40 });
           addCrownScore(ctx, 'HER', 5);
         }),
       },
@@ -543,6 +618,14 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5 });
         }),
       },
+      {
+        label: 'Ransom the head for burial',
+        tooltip: 'Herod: −50 talents to Antigonus for his brother\'s head, +10 influence points — the family buries its dead whole. Antigonus: +50 talents.',
+        effects: guard('ev5_joseph:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -50, infl: 10 });
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: 50 });
+        }),
+      },
     ],
   },
 
@@ -572,6 +655,15 @@ export const EVENTS_40 = [
           ctx.helpers.adjust(ctx, 'HER', { mar: 20 });
           ctx.helpers.adjust(ctx, 'ATG', { legitimacy: -10 });
           ctx.helpers.factionShift(ctx, 'ATG', 'street', -10);
+        }),
+      },
+      {
+        label: 'Spare the routed rank and file',
+        tooltip: 'Herod: +5 war score, +15 influence points — mercy to the beaten travels ahead of the army. Antigonus: −10 legitimacy, but the Street of Jerusalem is not stirred.',
+        effects: guard('ev5_pappus:1', (ctx) => {
+          addCrownScore(ctx, 'HER', 5);
+          ctx.helpers.adjust(ctx, 'HER', { infl: 15 });
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: -10 });
         }),
       },
     ],
@@ -604,6 +696,17 @@ export const EVENTS_40 = [
           });
         }),
       },
+      {
+        label: 'Check the roofs, double the watch',
+        tooltip: '+10 governance points; +4% discipline for 6 months ("The Careful King") — a king who inspects his lodgings outlives his omens.',
+        effects: guard('ev5_roof:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { gov: 10 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'careful_king', name: 'The Careful King', months: 6,
+            effects: { disciplineMult: 1.04 },
+          });
+        }),
+      },
     ],
   },
 
@@ -626,6 +729,18 @@ export const EVENTS_40 = [
             id: 'shmita', name: 'The Seventh Year', months: 8,
             effects: { unrestAll: 1.5 },
           });
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -50 });
+        }),
+      },
+      {
+        label: 'Grain ships from Alexandria',
+        tooltip: 'Antigonus: −60 talents for Egyptian grain, and the famine runs 4 months instead of 8. Herod\'s coastal lands import as before: −50 talents.',
+        effects: guard('ev5_sabbath:1', (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'shmita', name: 'The Seventh Year', months: 4,
+            effects: { unrestAll: 1.5 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -60 });
           ctx.helpers.adjust(ctx, 'HER', { treasury: -50 });
         }),
       },
@@ -659,6 +774,21 @@ export const EVENTS_40 = [
               id: 'siege_works', name: 'The Siege Works', months: 12,
               effects: { siegeMult: 1.3 },
             });
+          }
+        }),
+      },
+      {
+        label: 'Heralds before the rams',
+        tooltip: 'The besieger of Jerusalem gains +15% siege progress for 6 months and +10 influence points — terms are offered before the assault, and refused with dignity.',
+        effects: guard('ev5_works:1', (ctx) => {
+          const jer = ctx.prov('Jerusalem');
+          const by = jer && jer.siege && jer.siege.by;
+          if (by) {
+            ctx.helpers.addTagModifier(ctx, by, {
+              id: 'siege_parley', name: 'Terms Before the Walls', months: 6,
+              effects: { siegeMult: 1.15 },
+            });
+            ctx.helpers.adjust(ctx, by, { infl: 10 });
           }
         }),
       },
@@ -883,6 +1013,13 @@ export const EVENTS_40 = [
         label: 'So die the Maccabees',
         tooltip: 'The age of the Hasmoneans ends; the age of Herod begins.',
         effects: guard('ev5_antigonus_end:0', () => {}),
+      },
+      {
+        label: 'Pay for the precedent',
+        tooltip: 'Herod: −100 talents to Antony; +10 legitimacy — the axe is bought as well as borrowed, and no one will crown a Hasmonean against him again.',
+        effects: guard('ev5_antigonus_end:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -100, legitimacy: 10 });
+        }),
       },
     ],
   },
