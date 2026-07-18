@@ -206,14 +206,18 @@ export function monthlyUnrest(ctx) {
 // settles warm at +60 instead of fading to indifference.
 export function monthlyOpinionDrift(ctx) {
   const g = ctx.game;
-  // Infamy: decays a point a month, and while it lasts every court in the
-  // world thinks a little less of the conqueror each month (anti-snowball).
+  // Infamy: decays monthly — a point at peace, a quarter-point while the
+  // conqueror is still at war (the sword stays in view) — and while it lasts
+  // every court in the world thinks a little less of them (anti-snowball).
+  const BALd = ctx.DEFINES.BALANCE || {};
   const infamous = [];
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
     if (!t) continue;
     if (num(t.aggression) > 0) {
-      t.aggression = Math.max(0, num(t.aggression) - 1);
+      const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+      const decay = atWar ? num(BALd.infamyDecayWar, 0.25) : num(BALd.infamyDecayPeace, 1);
+      t.aggression = Math.max(0, num(t.aggression) - decay);
       if (t.aggression >= 20) infamous.push(tag);
     }
   }

@@ -363,12 +363,13 @@ async function boot() {
       } catch (e) { console.warn('[import]', e); return false; }
     },
   };
-  ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag) => {
+  ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag, opts) => {
     const entry = byId(bookmark.id);
     const activeProvinceMap = applyMapProfile(entry.bookmark);
     const game = initGame({
       DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
       playerTag, rngSeed: 20260711, provinceMap: activeProvinceMap,
+      difficulty: opts && opts.difficulty,
     });
     startGame(game, entry);
   }, saved ? {

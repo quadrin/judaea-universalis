@@ -124,6 +124,10 @@ c1.byId(hatra).controller = 'JUD';
 // v2.1: PAR's client kingdoms (OSR/ADI/CHX) join their overlord's defense,
 // widening the enemy side — occupy Singara too so the score covers the demand.
 c1.byId(c1.provId('Singara')).controller = 'JUD';
+// v6.0 (anti-snowball): land of another religious group costs peaceAlienMult
+// more at the table (Dura is 6 -> 7 warscore for judaic JUD taking iranic
+// PAR's land) — occupy Nehardea too so the score still covers the demand.
+c1.byId(c1.provId('Nehardea')).controller = 'JUD';
 mil.updateWarscores(c1);
 const pinfo = a1.getPeaceInfo(parWar.id);
 const rowDura = pinfo.provinces.find((r) => r.id === dura);

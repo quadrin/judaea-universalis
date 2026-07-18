@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf } from './military.js';
 import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
@@ -165,6 +165,22 @@ export function incomeBreakdown(ctx, tag) {
   // modern establishments can tune upkeep without changing the global price
   // of a regiment. Missing effects resolve to 1 for old saves/bookmarks.
   out.maint *= resolveTagMult(ctx, tag, 'maintMult');
+  // National force limit (SPEC §21 extended): the overlimit fraction of the
+  // army pays overLimitMult × its share of maintenance. A host beyond what
+  // the realm's land sustains bleeds the treasury, not just the supply lines.
+  {
+    const bal = ctx.DEFINES.BALANCE || {};
+    let regsTotal = 0;
+    for (const a of armiesOf(ctx, tag)) regsTotal += regCount(a);
+    out.forceLimit = forceLimitOf(ctx, tag);
+    out.regiments = regsTotal;
+    out.overLimit = 0;
+    if (regsTotal > out.forceLimit && out.maint > 0) {
+      const overFrac = (regsTotal - out.forceLimit) / regsTotal;
+      out.overLimit = out.maint * overFrac * Math.max(0, num(bal.overLimitMult, 3) - 1);
+      out.maint += out.overLimit;
+    }
+  }
   // Air wings (SPEC §29): spares and pay ride the maintenance line.
   const wingUpkeep = (ctx.DEFINES.AIR && ctx.DEFINES.AIR.wingUpkeep) || 1;
   out.maint += airWingsOf(ctx, tag).length * wingUpkeep;
@@ -282,7 +298,12 @@ export function explainIncome(ctx, tag) {
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
     if (bd.powerIn > 0) rows.push({ label: 'The powers: aid & trade', value: r2(bd.powerIn) });
     if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });
-    rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
+    if (bd.overLimit > 0) {
+      rows.push({ label: 'Army maintenance', value: r2(-(bd.maint - bd.overLimit)) });
+      rows.push({ label: `Over force limit (${bd.regiments}/${bd.forceLimit} regiments)`, value: r2(-bd.overLimit) });
+    } else {
+      rows.push({ label: 'Army maintenance', value: r2(-bd.maint) });
+    }
     if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
     if (bd.admin > 0) rows.push({ label: 'Administration', value: r2(-bd.admin) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });

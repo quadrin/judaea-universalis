@@ -21,6 +21,8 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
 
   // Which bookmark the carousel shows; survives bookmark->nations->back trips.
   let bmIndex = 0;
+  // The challenge dial: 'normal' or 'hard' (veteran AI). Survives back-trips.
+  let challenge = 'normal';
 
   function renderBookmarks() {
     const cards = list.map((b, i) => `
@@ -174,14 +176,26 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
     root.innerHTML = shell(`
       <div class="ss-sub">${esc(bookmark.name)} &nbsp;·&nbsp; ${esc(fmtYear(bookmark.startDate.y))}</div>
       ${bookmark.blurb ? `<p class="ss-blurb">${esc(bookmark.blurb)}</p>` : ''}
+      <div class="ss-challenge">
+        <span class="ss-challenge-label">The challenge</span>
+        <button class="ss-chal-opt${challenge === 'normal' ? ' on' : ''}" data-chal="normal"
+          data-tt="The world as written: every court plays by the same rules.">Normal</button>
+        <button class="ss-chal-opt${challenge === 'hard' ? ' on' : ''}" data-chal="hard"
+          data-tt="Veteran: every rival court fights and earns like a hardened power — AI discipline +5%, AI income & manpower +25%.">Veteran</button>
+      </div>
       <div class="ss-cards">${cards}</div>
       <button class="ss-back">← All bookmarks</button>`);
     const pick = (card) => {
       if (root.dataset.picked) return;
       root.dataset.picked = '1';
       card.classList.add('picked');
-      onPick(bookmark, card.dataset.tag);
+      onPick(bookmark, card.dataset.tag, { difficulty: challenge });
     };
+    root.querySelectorAll('.ss-chal-opt').forEach((b) => b.addEventListener('click', () => {
+      challenge = b.dataset.chal === 'hard' ? 'hard' : 'normal';
+      root.querySelectorAll('.ss-chal-opt').forEach((o) =>
+        o.classList.toggle('on', o.dataset.chal === challenge));
+    }));
     root.querySelectorAll('.nation-card').forEach((card) => {
       card.addEventListener('click', () => pick(card));
       card.addEventListener('keydown', (e) => {

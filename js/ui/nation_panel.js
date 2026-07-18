@@ -7,6 +7,7 @@
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
 import { unlockedGen, genName, doctrinesFor } from '../data/tech.js';
+import { forceLimitOf, regCount } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 
 export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
@@ -305,11 +306,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.treasuryRow.dataset.tt = `Income: +${(t.income || 0).toFixed(1)} / month\nExpenses: −${(t.expenses || 0).toFixed(1)} / month`;
     setText(refs.loans, String(Math.max(0, Math.round(t.loans || 0))));
     setText(refs.manpower, fmtMen(t.manpower) + ' / ' + fmtMen(t.maxManpower));
-    let armyN = 0, men = 0;
+    let armyN = 0, men = 0, regs = 0;
     for (const a of Object.values(g.armies || {})) {
-      if (a && a.tag === tag) { armyN++; men += a.men || 0; }
+      if (a && a.tag === tag) { armyN++; men += a.men || 0; regs += regCount(a); }
     }
-    setText(refs.armies, armyN + ' (' + fmtMen(men) + ' men)');
+    let fl = 0;
+    try { fl = forceLimitOf(ctx, tag); } catch (e) { /* pre-balance saves */ }
+    setText(refs.armies, armyN + ' (' + fmtMen(men) + ' men' + (fl ? `, ${regs}/${fl} regiments` : '') + ')');
+    refs.armies.classList.toggle('neg', fl > 0 && regs > fl);
+    if (fl) {
+      refs.armies.parentElement.dataset.tt = `Force limit: the ${fl} regiments this realm's lands sustain.`
+        + (regs > fl ? `\nAt ${regs} regiments the ${regs - fl} beyond the limit cost triple maintenance.` : '');
+    }
 
     // How the two courts stand with each other — foreign view only.
     refs.opinionRow.classList.toggle('hidden', self);

@@ -474,6 +474,37 @@ export const DEFINES = {
     startTreasury: {},                 // per-tag starting treasuries are set by the bookmark
   },
 
+  // Anti-snowball & challenge levers (SPEC §21 extended). Everything that
+  // keeps a human steamroll honest lives here: infamy pricing, the punitive
+  // coalition, great-power containment, the national force limit, and the
+  // escalating price of conquest at the peace table.
+  BALANCE: {
+    infamyPerDev: 0.5,       // infamy per point of ceded development (was 1/3)
+    infamySubjugate: 12,     // infamy for forcing a crown to bend the knee
+    infamyHumiliate: 5,      // infamy for a humiliation
+    infamyDecayPeace: 1,     // infamy shed per month at peace...
+    infamyDecayWar: 0.25,    // ...and while at war — conquest mid-war is not forgotten
+    coalitionInfamy: 30,     // infamy at which the coalition may march on its own
+    coalitionStrength: 1.2,  // combined coalition strength needed, × the expander's
+    coalitionChance: 0.1,    // monthly punitive-war roll once conditions hold
+    containDevShare: 0.25,   // human share of world development at which great powers take note
+    containWarShare: 0.32,   // ...and at which containment wars become possible
+    containOpinionDrift: 2,  // monthly opinion slide toward hostility while oversized
+    containChance: 0.06,     // monthly containment-war roll per watching great power
+    forceLimitBase: 8,       // regiments any court keeps in the field for free...
+    forceLimitPerDev: 0.15,  // ...plus this per point of owned development
+    overLimitMult: 3,        // the overlimit fraction of the army pays this × maintenance
+    peaceProvStep: 0.15,     // each additional province in one deal costs +15% more
+    peaceAlienMult: 1.25,    // land of another religious group costs 25% more to take
+    peaceMaxDevShare: 0.4,   // no single treaty strips more than this share of the loser's dev
+    weMoraleFloor: 0.4,      // morale recovery never drops below this fraction...
+    weMoraleAt: 40,          // ...which it reaches as war exhaustion approaches this
+  },
+
+  // Veteran difficulty (start-screen choice): every AI court fights and earns
+  // like a hardened power. Applied inside resolveTagMult — never to humans.
+  HARD_AI: { disciplineMult: 1.05, incomeMult: 1.25, manpowerMult: 1.25 },
+
   UNREST: {
     heathen: 3,                // province religion in a different group than owner's
     sameGroupHeretic: 1.5,     // same religious group, different religion

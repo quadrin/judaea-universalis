@@ -80,6 +80,12 @@ export function resolveTagMult(ctx, tag, key) {
     const e = mod && mod.effects ? mod.effects[key] : undefined;
     if (Number.isFinite(e) && e > 0) m *= e;
   }
+  // Veteran difficulty (start-screen choice, SPEC §21 extended): every AI
+  // court fights and earns like a hardened power. Never humans, never rebels.
+  if (ctx.game.difficulty === 'hard' && t.ai && tag !== 'REB') {
+    const h = ctx.DEFINES.HARD_AI ? ctx.DEFINES.HARD_AI[key] : undefined;
+    if (Number.isFinite(h) && h > 0) m *= h;
+  }
   return m;
 }
 export function resolveTagAdd(ctx, tag, key) {
@@ -110,6 +116,22 @@ export function maxMoraleOf(ctx, tag) {
   let m = B(ctx, 'moraleBase', 3.0) * resolveTagMult(ctx, tag, 'moraleMult');
   if (t && num(t.treasury) < 0) m *= 0.9; // indebted crown, wavering men
   return clamp(m, 0.5, 8);
+}
+// National force limit (SPEC §21 extended): the establishment a realm's land
+// can sustain. Regiments beyond it pay overLimitMult × maintenance (economy.js)
+// — the doomstack becomes an economic decision, not a free win button.
+export function forceLimitOf(ctx, tag) {
+  const g = ctx.game;
+  const bal = ctx.DEFINES.BALANCE || {};
+  let dev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    dev += devTotal(p);
+  }
+  return Math.max(4, Math.round(
+    (num(bal.forceLimitBase, 8) + dev * num(bal.forceLimitPerDev, 0.15))
+    * resolveTagMult(ctx, tag, 'forceLimitMult')));
 }
 
 // ---------------------------------------------------------------- queries
@@ -1132,11 +1154,18 @@ export function monthlyReinforce(ctx) {
 export function monthlyMoraleRecovery(ctx) {
   const g = ctx.game;
   const rec = B(ctx, 'moraleRecoveryPerMonth', 0.6);
+  // A weary nation's armies mend slowly (SPEC §21 extended): war exhaustion
+  // drags recovery toward weMoraleFloor — the long war finally degrades the
+  // field host instead of resetting it every month.
+  const floor = BAL(ctx, 'weMoraleFloor', 0.4);
+  const weAt = Math.max(1, BAL(ctx, 'weMoraleAt', 40));
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a) continue;
     a.maxMorale = maxMoraleOf(ctx, a.tag);
-    if (!a.inBattle) a.morale = Math.min(a.maxMorale, num(a.morale) + rec);
+    const t = g.tags[a.tag];
+    const weMult = Math.max(floor, 1 - num(t && t.warExhaustion) / weAt);
+    if (!a.inBattle) a.morale = Math.min(a.maxMorale, num(a.morale) + rec * weMult);
     a.morale = clamp(num(a.morale), 0, a.maxMorale);
   }
 }
@@ -1558,6 +1587,17 @@ export function declareWar(ctx, atk, def, name, cb) {
     if (al !== def && (D.allies || []).indexOf(al) < 0) join(attackers, al);
   }
   for (const v of vassalsOf(ctx, atk)) join(attackers, v);
+  // A punitive league (SPEC §21 extended): when the coalition itself declares
+  // the war, every member without a standing truce marches on the attacker's
+  // side — the world's answer to a conqueror, not one rival's.
+  if (cb === 'coalition') {
+    const league = coalitionAgainst(ctx, def).filter((m) => !truceActive(ctx, m, def));
+    for (const m of league) join(attackers, m);
+    if (league.length) {
+      chronicle(ctx, 'coalition', 'The nations that feared ' + (D.name || def) + ' march as one: '
+        + league.map((m) => (g.tags[m] && g.tags[m].name) || m).join(', ') + ' take the field.');
+    }
+  }
   // Attacking a client kingdom is attacking its overlord — the whole house answers.
   const lord = D.overlord && g.tags[D.overlord] && g.tags[D.overlord].alive ? D.overlord : null;
   if (lord) {
@@ -1742,8 +1782,26 @@ export const PEACE = {
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
-function provDemandCost(p) {
-  return Math.max(PEACE.provCostMin, Math.round(devTotal(p) * PEACE.provCostPerDev));
+// The anti-snowball dial block (SPEC §21 extended, defines.js BALANCE).
+export function BAL(ctx, key, fallback) {
+  const b = ctx && ctx.DEFINES && ctx.DEFINES.BALANCE;
+  const v = b ? b[key] : undefined;
+  return Number.isFinite(v) ? v : fallback;
+}
+// Infamy earned for taking `dev` points of land in one settlement.
+function infamyForDev(ctx, dev) {
+  return Math.round(Math.max(0, dev) * BAL(ctx, 'infamyPerDev', 0.5));
+}
+function provDemandCost(ctx, p, byTag) {
+  let cost = devTotal(p) * PEACE.provCostPerDev;
+  // Alien land is dearer at the table: a province of another religious group
+  // resists absorption, and the world prices that resistance in.
+  const R = ctx.DEFINES.RELIGIONS || {};
+  const me = ctx.game.tags[byTag];
+  const myGroup = me && R[me.religion] ? R[me.religion].group : null;
+  const provGroup = R[p.religion] ? R[p.religion].group : null;
+  if (myGroup && provGroup && myGroup !== provGroup) cost *= BAL(ctx, 'peaceAlienMult', 1.25);
+  return Math.max(PEACE.provCostMin, Math.round(cost));
 }
 // Everything the peace dialog needs: our score, the enemy leader, which
 // provinces are on the table (enemy-owned, our-side-occupied) and their costs
@@ -1758,13 +1816,15 @@ export function peaceDealInfo(ctx, war, byTag) {
   const myRel = me ? me.religion : null;
   const provinces = [];
   let enemyLeaderDev = 0;
+  let theirSideDev = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     if (p.owner === enemyLeader) enemyLeaderDev += devTotal(p);
     if (theirSide.indexOf(p.owner) < 0) continue;
+    theirSideDev += devTotal(p);
     if (mySide.indexOf(p.controller) < 0) continue; // must be occupied by our side
-    let cost = provDemandCost(p);
+    let cost = provDemandCost(ctx, p, byTag);
     let discount = '';
     if (hasClaim(ctx, byTag, i)) {
       cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.claimDiscount));
@@ -1792,6 +1852,7 @@ export function peaceDealInfo(ctx, war, byTag) {
     enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
     enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
     provinces,
+    theirSideDev,
     maxGold: Math.floor(rawMax / PEACE.goldStep) * PEACE.goldStep,
     goldStep: PEACE.goldStep,
     goldCostPer100: PEACE.goldCostPer100,
@@ -1803,6 +1864,37 @@ export function peaceDealInfo(ctx, war, byTag) {
     cb: war.cb || null,
     noNegotiation: !!war.noNegotiation,
   };
+}
+// Pricing a package of demanded provinces: sorted cheapest-first, each
+// additional province in the SAME treaty costs peaceProvStep more than face
+// value — one great dismemberment is dearer than three modest treaties, and
+// the truce clock between them is where the defeated catch their breath.
+export function priceProvincePackage(ctx, rows) {
+  const step = BAL(ctx, 'peaceProvStep', 0.15);
+  const sorted = rows.slice().sort((a, b) => a.cost - b.cost);
+  let sum = 0;
+  sorted.forEach((r, i) => { sum += r.cost * (1 + step * i); });
+  return Math.round(sum);
+}
+// The most development one treaty may strip from the losing side. Small
+// realms can still be taken whole (the floor); empires must be carved over
+// several wars.
+export function peaceDevCap(ctx, info) {
+  return Math.max(25, Math.round(num(info && info.theirSideDev) * BAL(ctx, 'peaceMaxDevShare', 0.4)));
+}
+// The AI's package builder: biggest prizes first, priced with the same
+// escalation the player pays, stopping at the budget and the treaty dev cap.
+export function buildAiPeaceProvinces(ctx, info, budget) {
+  const capDev = peaceDevCap(ctx, info);
+  const chosen = [];
+  let dev = 0;
+  for (const row of info.provinces || []) { // sorted by dev, descending
+    if (dev + row.dev > capDev) continue;
+    chosen.push(row);
+    if (priceProvincePackage(ctx, chosen) > budget) { chosen.pop(); continue; }
+    dev += row.dev;
+  }
+  return { ids: chosen.map((r) => r.id), cost: priceProvincePackage(ctx, chosen) };
 }
 // deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool }.
 // Subjugation supersedes province demands (a client keeps its lands). Returns
@@ -1818,8 +1910,8 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       const row = info.provinces.find((r) => r.id === (id | 0));
       if (!row || chosen.indexOf(row) >= 0) continue;
       chosen.push(row);
-      cost += row.cost;
     }
+    cost += priceProvincePackage(ctx, chosen);
   } else {
     cost += info.subjugateCost;
   }
@@ -1847,10 +1939,17 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
         ? 'The war is young and their blood is up — they will not go home for nothing yet.'
         : 'They believe they are winning, and will not settle for nothing.';
   } else {
-    acceptable = info.myWs > 0 && cost <= info.myWs;
-    reason = acceptable
-      ? 'Our position compels them to accept.'
-      : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
+    const chosenDev = chosen.reduce((s, r) => s + num(r.dev), 0);
+    const capDev = peaceDevCap(ctx, info);
+    if (chosenDev > capDev) {
+      acceptable = false;
+      reason = `No single treaty could strip so much land — the nations would not bear it (${chosenDev} development asked, ${capDev} is the most one settlement will carry).`;
+    } else {
+      acceptable = info.myWs > 0 && cost <= info.myWs;
+      reason = acceptable
+        ? 'Our position compels them to accept.'
+        : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
+    }
   }
   return { cost, acceptable, reason, gold, humiliate, subjugate, reparations, provinces: chosen.map((c) => c.id) };
 }
@@ -1921,7 +2020,7 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     }
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
-      if (conqueror) conqueror.aggression = num(conqueror.aggression) + Math.round(devTotal(p) / 3);
+      if (conqueror) conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -1973,11 +2072,11 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   if (cededNames.length) {
     terms.push('cedes ' + cededNames.join(', '));
     // Conquest is remembered: infamy proportional to what was taken (decays
-    // one point a month — see monthlyOpinionDrift).
-    if (me) me.aggression = num(me.aggression) + Math.round(ev.provinces.reduce((sum, pid) => {
+    // monthly — see monthlyOpinionDrift; slower while the taker is still at war).
+    if (me) me.aggression = num(me.aggression) + infamyForDev(ctx, ev.provinces.reduce((sum, pid) => {
       const q = ctx.byId(pid);
       return sum + (q ? devTotal(q) : 0);
-    }, 0) / 3);
+    }, 0));
   }
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];
@@ -1985,6 +2084,9 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // A client keeps no outside alliances of its own.
     for (const al of (et.allies || []).slice()) breakAllianceCore(ctx, info.enemyLeader, al);
     addOpinion(ctx, info.enemyLeader, byTag, -40);
+    // Breaking a crown to the yoke is conquest by another name — the world
+    // counts it (previously subjugation escaped infamy entirely).
+    me.aggression = num(me.aggression) + BAL(ctx, 'infamySubjugate', 12);
     terms.push('bends the knee as a client kingdom of ' + (me.name || byTag));
   }
   if (ev.gold > 0 && info.enemyLeader && me) {
@@ -2012,6 +2114,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     me.points.mar = clamp(num(me.points.mar) + 25, 0, 999);
     et.legitimacy = clamp(num(et.legitimacy) - 15, 0, 100);
     et.stability = clamp(num(et.stability) - 1, -3, 3);
+    me.aggression = num(me.aggression) + BAL(ctx, 'infamyHumiliate', 5);
     terms.push('is humiliated before the nations');
   }
   const participants = war.attackers.concat(war.defenders);

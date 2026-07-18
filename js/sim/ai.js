@@ -7,8 +7,9 @@ import {
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
-  peaceDealInfo, executePeaceDeal, monthsBetween,
-  declareWar, truceActive, opinionOf, casusBelli,
+  peaceDealInfo, executePeaceDeal, monthsBetween, buildAiPeaceProvinces,
+  coalitionAgainst, forceLimitOf,
+  declareWar, truceActive, opinionOf, casusBelli, addOpinion,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn,
@@ -94,6 +95,39 @@ function aiRecruit(ctx, tag, hints, fraction) {
   // occupation halves the tax rolls (tech-boosted incomes made 0.75 too greedy).
   const affordable = Math.max(3, Math.floor((num(t.income) * 0.65) / maintPerReg));
   let desired = num(hints && hints.targetRegiments, 20);
+  // The establishment grows with the realm (SPEC §21 extended): the bookmark
+  // hint is a floor frozen at start, not a ceiling — a court that has doubled
+  // its lands garrisons them, and the player's neighbors keep pace with the
+  // decades instead of fielding 167 BCE armies in 150.
+  let ownDev = 0;
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    const p = ctx.game.provinces[i];
+    if (p && !p.impassable && p.owner === tag) ownDev += devTotal(p);
+  }
+  desired = Math.max(desired, Math.ceil(ownDev * 0.3));
+  // Arms race: a neighbor wearing real infamy (>= 20) is armed against,
+  // whoever they are — the answer to the conqueror who felt safe because
+  // nobody dared match his host.
+  const nbTags = new Set();
+  const geoNb = ctx.geom && ctx.geom.neighbors;
+  if (geoNb) {
+    for (let i = 1; i < ctx.game.provinces.length; i++) {
+      const p = ctx.game.provinces[i];
+      if (!p || p.impassable || p.owner !== tag || !geoNb[i]) continue;
+      for (const nb of geoNb[i]) {
+        const q = ctx.byId(nb);
+        if (q && !q.impassable && q.owner !== tag && ctx.game.tags[q.owner]) nbTags.add(q.owner);
+      }
+    }
+  }
+  for (const nb of nbTags) {
+    if (nb === 'REB') continue;
+    const et = ctx.game.tags[nb];
+    if (!et || !et.alive || num(et.aggression) < 20) continue;
+    let theirRegs = 0;
+    for (const a of armiesOf(ctx, nb)) theirRegs += regCount(a);
+    desired = Math.max(desired, Math.ceil(theirRegs * 0.7));
+  }
   // Modern deterrence: once a bookmark opens a rearmament phase, countries
   // with threatRearm size their establishment partly against hostile armies,
   // bounded by a scenario-specific ceiling. This prevents rich postwar states
@@ -111,6 +145,9 @@ function aiRecruit(ctx, tag, hints, fraction) {
     const threatTarget = Math.ceil(hostileRegs * num(hints.threatShare, 0.75) * escalation);
     desired = Math.max(desired, Math.min(num(hints.maxThreatRegiments, desired * 1.75), threatTarget));
   }
+  // Never past what the land itself can sustain — the AI does not pay the
+  // overlimit surcharge the player may choose to.
+  desired = Math.min(desired, forceLimitOf(ctx, tag));
   const target = Math.ceil(Math.min(desired, affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
@@ -119,7 +156,10 @@ function aiRecruit(ctx, tag, hints, fraction) {
   while (cur < target && num(t.treasury) > 50 && num(t.manpower) >= B(ctx, 'regSize', 1000) && guard++ < 5) {
     const pid = pickRecruitProv(ctx, tag, hints);
     if (!pid) break;
-    const res = recruitRegiment(ctx, tag, pid, 'inf');
+    // A cavalry arm rides with the foot: every fourth regiment raised is
+    // horse when the treasury can bear its price (2.5× an infantryman's).
+    const type = cur % 4 === 3 && num(t.treasury) > 150 ? 'cav' : 'inf';
+    const res = recruitRegiment(ctx, tag, pid, type);
     if (!res.ok) break;
     cur++;
   }
@@ -454,6 +494,108 @@ function aiConsiderWar(ctx, tag) {
   }
 }
 
+// The coalition marches (SPEC §21 extended). Against a HUMAN conqueror whose
+// infamy has leagued the world together, the coalition does not wait to be
+// attacked: once its combined strength clearly overmatches the expander, it
+// declares a punitive war of its own. AI expanders keep the old
+// defensive-only coalition — their conquests are the scripted arcs' business,
+// and all-AI harness runs must not unmake history.
+function coalitionPunitiveWars(ctx) {
+  const g = ctx.game;
+  const bal = ctx.DEFINES.BALANCE || {};
+  const humans = (Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [g.playerTag])
+    .filter((k) => g.tags[k] && g.tags[k].alive && !g.tags[k].ai);
+  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+  for (const target of humans) {
+    const t = g.tags[target];
+    if (num(t.aggression) < num(bal.coalitionInfamy, 30)) continue;
+    const free = coalitionAgainst(ctx, target).filter((k) => {
+      const m = g.tags[k];
+      if (!m || !m.alive || m.overlord) return false;
+      if (truceActive(ctx, k, target)) return false;
+      if ((m.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return false; // busy courts sit out
+      return true;
+    });
+    if (free.length < 2) continue; // a league of one is just a war
+    let ours = 0, leader = free[0];
+    for (const m of free) {
+      const s = strength(m);
+      ours += s;
+      if (s > strength(leader)) leader = m;
+    }
+    if (ours < strength(target) * num(bal.coalitionStrength, 1.2)) continue;
+    if (!ctx.rng.chance(num(bal.coalitionChance, 0.1))) continue;
+    const war = declareWar(ctx, leader, target,
+      'The Coalition against ' + (t.name || target), 'coalition');
+    if (war) return; // one league a month is plenty
+  }
+}
+
+// Great-power containment (SPEC §21 extended). The era's ponderous empires
+// watch the HUMAN player's share of the settled world's development. Past
+// containDevShare their courts sour month by month; past containWarShare a
+// watching power that is not hopelessly outmatched may open a war of
+// containment — the ratio gates that protect ordinary neighbors do not
+// protect a hegemon-in-the-making. This is the answer to "beat the scripted
+// enemy, then snowball unopposed."
+function hegemonContainment(ctx) {
+  const g = ctx.game;
+  const bal = ctx.DEFINES.BALANCE || {};
+  const player = g.playerTag;
+  const pt = g.tags[player];
+  if (!pt || !pt.alive || pt.ai) return; // aimed at humans only; all-AI histories stand
+  let mine = 0, world = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    const o = g.tags[p && p.owner];
+    if (!p || p.impassable || !o) continue;
+    const d = devTotal(p);
+    world += d;
+    if (p.owner === player || o.overlord === player) mine += d; // the player's bloc, clients included
+  }
+  if (!(world > 0)) return;
+  if (!g.flags) g.flags = {};
+  const share = mine / world;
+  if (share < num(bal.containDevShare, 0.25)) {
+    delete g.flags.containmentWatch;
+    return;
+  }
+  const P = ctx.DEFINES.PERSONALITIES || {};
+  const watchers = [];
+  for (const k of Object.keys(g.tags)) {
+    if (k === player || k === 'REB') continue;
+    const o = g.tags[k];
+    if (!o || !o.alive || !o.ai) continue;
+    if (!(P[k] && P[k].ponderous)) continue;
+    if (o.overlord === player || pt.overlord === k) continue;
+    if ((pt.allies || []).indexOf(k) >= 0) continue;
+    watchers.push(k);
+  }
+  if (!watchers.length) return;
+  if (!g.flags.containmentWatch) {
+    g.flags.containmentWatch = true;
+    ctx.bus.emit('notify', {
+      title: 'The powers take notice',
+      text: 'Our realm now spans ' + Math.round(share * 100) + '% of the settled world. '
+        + 'In the courts of the great powers they have begun to speak of containment.',
+      type: 'bad',
+    });
+  }
+  for (const k of watchers) addOpinion(ctx, k, player, -num(bal.containOpinionDrift, 2));
+  if (share < num(bal.containWarShare, 0.32)) return;
+  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+  for (const k of watchers) {
+    const o = g.tags[k];
+    if ((o.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
+    if (truceActive(ctx, k, player)) continue;
+    if (num(o.stability) < 0 || num(o.warExhaustion) > 8) continue;
+    if (strength(k) < strength(player) * 0.7) continue; // not suicidal, merely resolved
+    if (!ctx.rng.chance(num(bal.containChance, 0.06) * num(personality(ctx, k).aggression, 1))) continue;
+    declareWar(ctx, k, player, (o.name || k) + '’s War of Containment', 'containment');
+    return; // one hegemon war a month
+  }
+}
+
 // Peace feelers (monthly). A losing AI leader sues the player for peace — a
 // nudge to open the dove dialog and dictate terms. Wars between two AI powers
 // resolve themselves once one side clearly prevails or both sides tire.
@@ -467,10 +609,7 @@ function sendUltimatum(ctx, w, leader, ws) {
   const lt = g.tags[leader];
   const info = peaceDealInfo(ctx, w, leader);
   const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: ws >= 60 };
-  let budget = ws;
-  for (const row of (info.provinces || [])) {
-    if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
-  }
+  deal.provinces = buildAiPeaceProvinces(ctx, info, ws).ids;
   const names = deal.provinces.map((id) => {
     const p = ctx.byId(id);
     return (p && p.name) || ('#' + id);
@@ -555,10 +694,9 @@ function monthlyWarDiplomacy(ctx) {
       const winner = wsAtt >= 0 ? attLead : defLead;
       const info = peaceDealInfo(ctx, w, winner);
       const deal = { provinces: [], gold: 0, humiliate: false, reparations: false };
-      let budget = info.myWs;
-      for (const row of info.provinces) {
-        if (row.cost <= budget) { deal.provinces.push(row.id); budget -= row.cost; }
-      }
+      const pack = buildAiPeaceProvinces(ctx, info, info.myWs);
+      deal.provinces = pack.ids;
+      let budget = info.myWs - pack.cost;
       // What the sword can't hold, the treaty can bleed: leftover score buys reparations.
       if (budget >= (info.reparationsCost || 15)) {
         deal.reparations = true;
@@ -749,5 +887,7 @@ export function runMonthlyAI(ctx) {
       aiFormNation(ctx, tag);
     } catch (e) { warnOnce('ai:' + tag, 'AI failed for', tag, e); }
   }
+  try { coalitionPunitiveWars(ctx); } catch (e) { warnOnce('coalWar', 'punitive coalition failed', e); }
+  try { hegemonContainment(ctx); } catch (e) { warnOnce('contain', 'containment failed', e); }
   try { monthlyWarDiplomacy(ctx); } catch (e) { warnOnce('warDiplo', 'war diplomacy failed', e); }
 }
