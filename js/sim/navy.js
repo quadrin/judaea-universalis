@@ -194,13 +194,28 @@ export function merchantVoyagesOf(ctx, tag) {
 // sum when the hull ties up at its home berth again, instead of the docked
 // trickle. War with the host while trading seizes ship and cargo both.
 export const TRADE_RUN = {
-  opinionMin: 25,     // how warmly the host court must regard us
-  dwellDays: 30,      // days spent trading in the foreign market
-  payoutBase: 10,     // talents per completed run...
-  payoutPerDev: 1.0,  // ...plus per point of the foreign port's development
+  opinionMin: 25,       // how warmly the host court must regard us
+  dwellDays: 30,        // days spent trading in the foreign market
+  payoutBase: 6,        // talents per completed run...
+  payoutPerDev: 0.5,    // ...plus per point of the foreign port's development
+  distFactorMin: 0.6,   // short hops earn thin margins...
+  distFactorMax: 1.5,   // ...the long hauls earn the fortunes
+  saturationMonths: 6,  // a market wants no more of our goods for this long after a run
 };
-// A foreign harbor open to OUR traders: theirs, working, welcoming.
-export function tradeHarborStatus(ctx, tag, provId) {
+// The glut ledger: after a run books at a foreign port, that market is
+// saturated for OUR goods until saturationMonths pass — no shuttle-spamming
+// Alexandria into a money press. Keyed 'tag|provId' on game.tradeGluts.
+function glutMonthsLeft(ctx, tag, provId) {
+  const g = ctx.game;
+  const stamp = g.tradeGluts && g.tradeGluts[tag + '|' + provId];
+  if (!stamp) return 0;
+  const elapsed = (g.date.y - stamp.y) * 12 + (g.date.m - stamp.m);
+  return Math.max(0, TRADE_RUN.saturationMonths - elapsed);
+}
+// A foreign harbor open to OUR traders: theirs, working, welcoming, hungry.
+// opts.ignoreGlut: the run already at sea OWNS its market — the glut gate is
+// for booking new runs, never for turning away the one that set it.
+export function tradeHarborStatus(ctx, tag, provId, opts) {
   const p = ctx.byId(provId);
   if (!p || !isCoastal(ctx, provId) || !hasBuilding(p, 'shipyard')) return { can: false, why: 'No working foreign harbor there.' };
   const host = p.owner;
@@ -216,12 +231,27 @@ export function tradeHarborStatus(ctx, tag, provId) {
       why: (ht.name || host) + ' will not open its market to us (opinion ' + Math.round(op) + ', needs ' + TRADE_RUN.opinionMin + '+).',
     };
   }
+  const glut = (opts && opts.ignoreGlut) ? 0 : glutMonthsLeft(ctx, tag, provId);
+  if (glut > 0) {
+    return {
+      can: false, opinion: op, host, hostName: ht.name || host, glut,
+      why: 'Their market is glutted with our goods — no buyers for another '
+        + glut + ' month' + (glut === 1 ? '' : 's') + '.',
+    };
+  }
   return { can: true, opinion: op, host, hostName: ht.name || host, why: '' };
 }
-export function tradeRunPayout(ctx, tag, provId) {
+// The margin follows the risk: a run pays for the port's wealth AND the
+// length of the haul — short shuttles earn short money.
+export function tradeRunPayout(ctx, tag, provId, fromId) {
   const p = ctx.byId(provId);
   const base = TRADE_RUN.payoutBase + devTotal(p) * TRADE_RUN.payoutPerDev;
-  return Math.round(base * resolveTagMult(ctx, tag, 'tradeMult'));
+  let dist = 1;
+  if (fromId) {
+    const roundTrip = merchantHopDays(ctx, fromId, provId) + merchantHopDays(ctx, provId, fromId);
+    dist = clamp(0.5 + roundTrip / 60, TRADE_RUN.distFactorMin, TRADE_RUN.distFactorMax);
+  }
+  return Math.round(base * dist * resolveTagMult(ctx, tag, 'tradeMult'));
 }
 // Every foreign shipyard harbor, marked eligible or not (the UI shows the
 // closed ones grey with the reason — the opinion gate should be learnable).
@@ -240,7 +270,7 @@ export function tradeRunDestinations(ctx, tag, fromId) {
       hostName: (ctx.game.tags[p.owner] && ctx.game.tags[p.owner].name) || p.owner,
       can: st.can, why: st.why, opinion: Math.round(num(st.opinion, opinionOf(ctx, p.owner, tag))),
       days: outDays + TRADE_RUN.dwellDays + homeDays,
-      payout: tradeRunPayout(ctx, tag, i),
+      payout: tradeRunPayout(ctx, tag, i, fromId),
     });
   }
   out.sort((a, b) => (b.can - a.can) || (b.payout / b.days - a.payout / a.days));
@@ -255,13 +285,17 @@ export function sendTradeRunCore(ctx, tag, fromId, toId) {
   const st = tradeHarborStatus(ctx, tag, toId);
   if (!st.can) return { ok: false, why: st.why };
   const days = merchantHopDays(ctx, fromId, toId);
-  const payout = tradeRunPayout(ctx, tag, toId);
+  const payout = tradeRunPayout(ctx, tag, toId, fromId);
   from.merchantShips = Math.max(0, Math.round(num(from.merchantShips))) - 1;
   if (!Array.isArray(g.merchantVoyages)) g.merchantVoyages = [];
   g.merchantVoyages.push({
     tag, kind: 'trade', leg: 'out', home: fromId,
     from: fromId, to: toId, daysLeft: days, daysTotal: days, payout,
   });
+  // The market is spoken for the moment the run books (not when it lands) —
+  // three hulls cannot promise the same buyers.
+  if (!g.tradeGluts) g.tradeGluts = {};
+  g.tradeGluts[tag + '|' + toId] = { y: g.date.y, m: g.date.m };
   return { ok: true, days, payout, toName: ctx.byId(toId).name, hostName: st.hostName };
 }
 // The trade legs, advanced from merchantVoyagesDaily. Returns true when the
@@ -270,7 +304,7 @@ function tradeVoyageArrive(ctx, v) {
   const g = ctx.game;
   const mine = v.tag === g.playerTag;
   if (v.leg === 'out') {
-    const st = tradeHarborStatus(ctx, v.tag, v.to);
+    const st = tradeHarborStatus(ctx, v.tag, v.to, { ignoreGlut: true });
     if (st.can) {
       // Ride at anchor in their roads and trade a month (from=to keeps the
       // map drawing the hull in the foreign harbor).
