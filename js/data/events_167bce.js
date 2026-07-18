@@ -274,6 +274,21 @@ export const EVENTS_167 = [
           h.adjust(ctx, 'HAS', { manpower: 1000, legitimacy: 5 });
         }),
       },
+      {
+        label: 'Under one captain, or not at all',
+        tooltip: '2,000 Hasideans muster at Emmaus under Hasmonean discipline; +1,000 manpower, −5 legitimacy among the scrupulous; "Under One Captain" (+5% discipline, 24 months).',
+        effects: guard('ev_hasidim:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          const at = firstControlled(ctx, 'HAS', ['Emmaus', 'Lydda']);
+          if (at) h.spawnArmy(ctx, 'HAS', at, { inf: 2, name: 'Company of the Hasideans' });
+          h.adjust(ctx, 'HAS', { manpower: 1000, legitimacy: -5 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'under_one_captain', name: 'Under One Captain', months: 24,
+            effects: { disciplineMult: 1.05 },
+          });
+        }),
+      },
     ],
   },
 
@@ -316,6 +331,32 @@ export const EVENTS_167 = [
             }
           }
           h.adjust(ctx, 'HAS', { legitimacy: 5, mar: 10 });
+          h.setRuler(ctx, 'HAS', { name: 'Judah Maccabee', title: 'Captain of Israel', gov: 2, infl: 3, mar: 5, age: 26 });
+          h.setHeir(ctx, 'HAS', { name: 'Jonathan Apphus', gov: 2, infl: 3, mar: 4, age: 24 });
+          h.setFlag(ctx, 'judahCommands', true);
+        }),
+      },
+      {
+        label: 'Hear Simon always',
+        tooltip: 'Judah Maccabee (2/4/3) commands the war, and Simon’s counsel governs the camp: +10 legitimacy, +10 governance.',
+        effects: guard('ev_death_of_mattathias:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          if (!armyByGeneral(ctx, 'HAS', 'Judah Maccabee')) {
+            const a = biggestArmy(ctx, 'HAS', true);
+            if (a) {
+              a.general = { name: 'Judah Maccabee', fire: 2, shock: 4, maneuver: 3 };
+            } else {
+              const at = firstControlled(ctx, 'HAS', ['Emmaus', 'Lydda', 'Jerusalem']);
+              if (at) {
+                h.spawnArmy(ctx, 'HAS', at, {
+                  inf: 2, name: 'Band of the Maccabee',
+                  general: { name: 'Judah Maccabee', fire: 2, shock: 4, maneuver: 3 },
+                });
+              }
+            }
+          }
+          h.adjust(ctx, 'HAS', { legitimacy: 10, gov: 10 });
           h.setRuler(ctx, 'HAS', { name: 'Judah Maccabee', title: 'Captain of Israel', gov: 2, infl: 3, mar: 5, age: 26 });
           h.setHeir(ctx, 'HAS', { name: 'Jonathan Apphus', gov: 2, infl: 3, mar: 4, age: 24 });
           h.setFlag(ctx, 'judahCommands', true);
@@ -411,6 +452,15 @@ export const EVENTS_167 = [
           h.setFlag(ctx, 'apolloniusFallen', true);
         }),
       },
+      {
+        label: 'Share out the arms of the fallen',
+        tooltip: 'The spoils of the field arm the naked: +5 military points, +1,000 manpower, +20 treasury.',
+        effects: guard('ev_sword_of_apollonius:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { mar: 5, manpower: 1000, treasury: 20 });
+          h.setFlag(ctx, 'apolloniusFallen', true);
+        }),
+      },
     ],
   },
 
@@ -468,6 +518,21 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Pursue them into the plain',
+        tooltip: 'The pursuit is pressed to the land of the Philistines: +15 military points, +15 warscore, −500 manpower; the kingdom’s war-weariness grows.',
+        effects: guard('ev_beth_horon_ascent:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { mar: 15, manpower: -500 });
+          h.adjust(ctx, 'SEL', { warExhaustion: 1 });
+          addWarscore(ctx, 'HAS', 15);
+          h.setFlag(ctx, 'seronBroken', true);
+          h.notify(ctx, {
+            title: 'Seron Broken at Beth-Horon', type: 'good', provName: 'Emmaus',
+            text: 'The pursuit runs down out of the pass and into the plain, and does not stop cheaply.',
+          });
+        }),
+      },
     ],
   },
 
@@ -509,6 +574,27 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Strip the satrapies for the regent',
+        tooltip: 'Lysias takes the field in greater strength (+14,000 men at Damascus, Seleucids −100 treasury) — and the kingdom still reinforces at half rate for 36 months.',
+        effects: guard('ev_anabasis:1', (ctx) => {
+          const h = ctx.helpers;
+          h.spawnArmy(ctx, 'SEL', 'Damascus', {
+            inf: 12, cav: 2, name: 'The Regent\'s Army',
+            general: { name: 'Lysias', fire: 3, shock: 2, maneuver: 2 },
+          });
+          h.adjust(ctx, 'SEL', { treasury: -100 });
+          h.addTagModifier(ctx, 'SEL', {
+            id: 'army_beyond_euphrates', name: 'Half the Army Beyond the Euphrates', months: 36,
+            effects: { reinforceMult: 0.5 },
+          });
+          h.setFlag(ctx, 'anabasis', true);
+          h.notify(ctx, {
+            title: 'Lysias Takes the Field', type: 'war', provName: 'Damascus',
+            text: 'The regent\'s army musters at Damascus in strength, and the satrapies pay for it.',
+          });
+        }),
+      },
     ],
   },
 
@@ -547,6 +633,22 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'A portion for the widows and orphans',
+        tooltip: 'The spoils are divided with the maimed, the widows, and the orphans: +20 military points, +20 legitimacy, +1,000 manpower, +10 warscore — and nothing for the treasury.',
+        effects: guard('ev_emmaus_night_march:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { mar: 20, legitimacy: 20, manpower: 1000 });
+          h.adjust(ctx, 'SEL', { warExhaustion: 1 });
+          addWarscore(ctx, 'HAS', 10);
+          h.setFlag(ctx, 'emmausBurned', true);
+          h.notify(ctx, {
+            title: 'The Camp at Emmaus Burns', type: 'good', provName: 'Emmaus',
+            text: 'The spoils go to the persecuted, the widows, and the orphans; the fear stays with the kingdom.',
+          });
+        }),
+      },
     ],
   },
 
@@ -579,6 +681,21 @@ export const EVENTS_167 = [
             effects: { reinforceMult: 0.8 },
           });
           addWarscore(ctx, 'HAS', 5);
+          h.setFlag(ctx, 'lysiasRepulsed', true);
+        }),
+      },
+      {
+        label: 'Harry the retreat through Idumea',
+        tooltip: 'Judaea: +10 military points, +10 warscore, −500 manpower. The kingdom must raise mercenaries: −20% reinforcements for 6 months, +1 war exhaustion.',
+        effects: guard('ev_beth_zur:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { mar: 10, manpower: -500 });
+          h.adjust(ctx, 'SEL', { warExhaustion: 1 });
+          h.addTagModifier(ctx, 'SEL', {
+            id: 'mercenaries_must_be_raised', name: 'Mercenaries Must Be Raised', months: 6,
+            effects: { reinforceMult: 0.8 },
+          });
+          addWarscore(ctx, 'HAS', 10);
           h.setFlag(ctx, 'lysiasRepulsed', true);
         }),
       },
@@ -632,6 +749,34 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Wall the mountain even as they sing',
+        tooltip: 'The Abomination is removed and Mount Zion is fortified: +15 legitimacy, +1 stability, −40 treasury; Jerusalem keeps the "Feast of Dedication" and gains +1 fort level.',
+        effects: guard('ev_rededication:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'templeRededicated', true);
+          h.setFlag(ctx, 'rededicatedYear', ctx.game.date.y);
+          h.removeModifier(ctx, 'Jerusalem', 'abomination_of_desolation');
+          h.adjust(ctx, 'HAS', { legitimacy: 15, stability: 1, treasury: -40 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'feast_of_dedication', name: 'Feast of Dedication', months: 60,
+            effects: { unrest: -2, taxMult: 1.1 },
+          });
+          const per = (ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.fortGarrisonPerLevel) || 1000;
+          const p = ctx.prov('Jerusalem');
+          if (p && (p.fort || 0) < 3) { // the game's fort ceiling (walls contract, defines.js)
+            p.fort = (p.fort || 0) + 1;
+            if (typeof p.maxGarrison === 'number') {
+              p.maxGarrison += per;
+              p.garrison = Math.min((p.garrison || 0) + per, p.maxGarrison);
+            }
+          }
+          h.notify(ctx, {
+            title: 'The Lamps Are Relit', type: 'good', provName: 'Jerusalem',
+            text: 'The altar is rebuilt of unhewn stones, and Mount Zion is walled about with towers.',
+          });
+        }),
+      },
     ],
   },
 
@@ -667,6 +812,19 @@ export const EVENTS_167 = [
           }
         }),
       },
+      {
+        label: 'Hold Galilee for the scattered brethren',
+        tooltip: 'Garrisons are left with the brethren where they stand: −500 manpower, +15 legitimacy; the nation arms to shield its own ("Shield of the Scattered": +10% manpower, 24 months).',
+        effects: guard('ev_galilee_evacuation:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { manpower: -500, legitimacy: 15 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'shield_of_the_scattered', name: 'Shield of the Scattered', months: 24,
+            effects: { manpowerMult: 1.1 },
+          });
+        }),
+      },
     ],
   },
 
@@ -693,6 +851,17 @@ export const EVENTS_167 = [
         effects: guard('ev_antiochus_dies:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -15 });
+          h.setRuler(ctx, 'SEL', { name: 'Lysias', title: 'Regent for Antiochus V', gov: 3, infl: 2, mar: 3, age: 50 });
+          h.setHeir(ctx, 'SEL', { name: 'Antiochus V Eupator', gov: 1, infl: 1, mar: 1, age: 9 });
+          h.setFlag(ctx, 'antiochusDead', true);
+        }),
+      },
+      {
+        label: 'Bury him as kings are buried',
+        tooltip: 'A royal funeral steadies the diadem: Seleucids −1 stability, −5 legitimacy, −60 treasury.',
+        effects: guard('ev_antiochus_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -5, treasury: -60 });
           h.setRuler(ctx, 'SEL', { name: 'Lysias', title: 'Regent for Antiochus V', gov: 3, infl: 2, mar: 3, age: 50 });
           h.setHeir(ctx, 'SEL', { name: 'Antiochus V Eupator', gov: 1, infl: 1, mar: 1, age: 9 });
           h.setFlag(ctx, 'antiochusDead', true);
@@ -766,6 +935,21 @@ export const EVENTS_167 = [
           h.setFlag(ctx, 'royalExpedition', true);
         }),
       },
+      {
+        label: 'Hire the horse of Media besides',
+        tooltip: 'The muster is swelled with mercenaries: +17,000 men with the elephant corps at Damascus, Seleucids −100 treasury; any regency passivity ends.',
+        effects: guard('ev_royal_expedition:1', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'SEL', 'child_on_the_throne');
+          h.removeModifier(ctx, 'SEL', 'empire_of_distractions');
+          h.spawnArmy(ctx, 'SEL', 'Damascus', {
+            inf: 11, cav: 6, name: 'The King\'s Elephants',
+            general: { name: 'Lysias', fire: 3, shock: 3, maneuver: 2 },
+          });
+          h.adjust(ctx, 'SEL', { treasury: -100 });
+          h.setFlag(ctx, 'royalExpedition', true);
+        }),
+      },
     ],
   },
 
@@ -819,6 +1003,22 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Break off and save the army',
+        tooltip: 'Eleazar Avaran dies beneath the elephant and the field is yielded in good order: Judaea’s largest army loses 1,000 men, −1 stability, −5 legitimacy; the kingdom gains +15 warscore.',
+        effects: guard('ev_beth_zechariah:1', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'HAS', 'Eleazar Avaran');
+          maulArmy(ctx, biggestArmy(ctx, 'HAS', false), 1);
+          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: -5, warExhaustion: 1 });
+          addWarscore(ctx, 'SEL', 15);
+          h.setFlag(ctx, 'bethZechariah', true);
+          h.notify(ctx, {
+            title: 'The Field Is Lost', type: 'bad', provName: 'Hebron',
+            text: 'Eleazar lies beneath the beast he killed. The army breaks off whole, and the road lies open.',
+          });
+        }),
+      },
     ],
   },
 
@@ -849,6 +1049,22 @@ export const EVENTS_167 = [
           h.adjust(ctx, 'SEL', { stability: -1 });
           h.spawnArmy(ctx, 'SEL', 'Damascus', {
             inf: 6, name: 'Army of Bacchides',
+            general: { name: 'Bacchides', fire: 2, shock: 2, maneuver: 2 },
+          });
+          h.setFlag(ctx, 'demetriusKing', true);
+        }),
+      },
+      {
+        label: 'Give Bacchides the strength of the kingdom',
+        tooltip: 'Lysias and the boy king are put to death; Bacchides takes the southern command in force (+7,000 men at Damascus, −80 treasury); Seleucids −1 stability.',
+        effects: guard('ev_demetrius:1', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'SEL', 'Lysias');
+          h.setRuler(ctx, 'SEL', { name: 'Demetrius I Soter', title: 'Basileus', gov: 3, infl: 2, mar: 3, age: 24 });
+          h.setHeir(ctx, 'SEL', null);
+          h.adjust(ctx, 'SEL', { stability: -1, treasury: -80 });
+          h.spawnArmy(ctx, 'SEL', 'Damascus', {
+            inf: 7, name: 'Army of Bacchides',
             general: { name: 'Bacchides', fire: 2, shock: 2, maneuver: 2 },
           });
           h.setFlag(ctx, 'demetriusKing', true);
@@ -957,6 +1173,39 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Into the wilderness of Tekoa',
+        tooltip: 'Judah Maccabee is dead, and the remnant withdraws to the wild country. −1 stability, −15 legitimacy, +1 war exhaustion; the kingdom gains +10 warscore. Jonathan (2/3/4) takes up the war ("Camp in the Wilderness": +1 hill defense, 24 months).',
+        effects: guard('ev_elasa:1', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'HAS', 'Judah Maccabee');
+          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: -15, warExhaustion: 1 });
+          addWarscore(ctx, 'SEL', 10);
+          const a = biggestArmy(ctx, 'HAS', true);
+          if (a) {
+            a.general = { name: 'Jonathan Apphus', fire: 2, shock: 3, maneuver: 4 };
+          } else {
+            const at = firstControlled(ctx, 'HAS', ['Emmaus', 'Lydda', 'Jerusalem', 'Hebron']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 2, name: 'The Brothers’ Remnant',
+                general: { name: 'Jonathan Apphus', fire: 2, shock: 3, maneuver: 4 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'camp_in_the_wilderness', name: 'Camp in the Wilderness', months: 24,
+            effects: { hillDefBonus: 1 },
+          });
+          h.setRuler(ctx, 'HAS', { name: 'Jonathan Apphus', title: 'Captain of Israel', gov: 2, infl: 4, mar: 4, age: 30 });
+          h.setHeir(ctx, 'HAS', { name: 'Simon Thassi', gov: 4, infl: 3, mar: 3, age: 32 });
+          h.setFlag(ctx, 'judahFallen', true);
+          h.notify(ctx, {
+            title: 'Judah Is Fallen', type: 'bad', provName: 'Emmaus',
+            text: 'All Israel mourns many days. Jonathan leads the remnant into the wilderness of Tekoa.',
+          });
+        }),
+      },
     ],
   },
 
@@ -993,6 +1242,22 @@ export const EVENTS_167 = [
               }
             }
           }
+          h.setFlag(ctx, 'bacchidesForts', true);
+        }),
+      },
+      {
+        label: 'Take hostages of the great families',
+        tooltip: 'The sons of the leading houses go into the citadel: −2 unrest in every Seleucid-held town of Judea for 36 months; Seleucids −5 legitimacy.',
+        effects: guard('ev_bacchides:1', (ctx) => {
+          const h = ctx.helpers;
+          for (const name of ['Jerusalem', 'Jericho', 'Emmaus', 'Lydda', 'Hebron']) {
+            if (!h.controls(ctx, 'SEL', name)) continue;
+            h.addProvinceModifier(ctx, name, {
+              id: 'hostages_in_the_citadel', name: 'Hostages in the Citadel', months: 36,
+              effects: { unrest: -2 },
+            });
+          }
+          h.adjust(ctx, 'SEL', { legitimacy: -5 });
           h.setFlag(ctx, 'bacchidesForts', true);
         }),
       },
@@ -1072,6 +1337,21 @@ export const EVENTS_167 = [
         effects: guard('ev_wedding_at_ptolemais:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { legitimacy: 10, infl: 10 });
+          setOpinion(ctx, 'PTO', 'HAS', 60);
+          setOpinion(ctx, 'HAS', 'PTO', 60);
+          setOpinion(ctx, 'PTO', 'SEL', -100);
+          setOpinion(ctx, 'SEL', 'PTO', -100);
+          if (alive(ctx, 'PTO')) {
+            h.spawnArmy(ctx, 'PTO', 'Pelusium', { inf: 6, name: 'Army of Philometor' });
+          }
+        }),
+      },
+      {
+        label: 'Come with gifts of silver and gold',
+        tooltip: '−50 treasury, +5 legitimacy, +20 influence; Egypt warms to Judaea — and masses 6,000 men at Pelusium, watching Syria.',
+        effects: guard('ev_wedding_at_ptolemais:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -50, legitimacy: 5, infl: 20 });
           setOpinion(ctx, 'PTO', 'HAS', 60);
           setOpinion(ctx, 'HAS', 'PTO', 60);
           setOpinion(ctx, 'PTO', 'SEL', -100);
@@ -1260,6 +1540,34 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Pay the hundred talents, though it be a snare',
+        tooltip: 'The silver and the children are sent, and Jonathan is not returned. −100 treasury, −1 stability, +15 legitimacy — none can say Simon grudged his brother’s ransom. Simon (2/3/3) takes command.',
+        effects: guard('ev_tryphon:1', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'HAS', 'Jonathan Apphus');
+          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: 15, treasury: -100 });
+          const a = biggestArmy(ctx, 'HAS', true);
+          if (a) {
+            a.general = { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 };
+          } else {
+            const at = firstControlled(ctx, 'HAS', ['Jerusalem', 'Emmaus', 'Lydda']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 2, name: 'Army of Simon',
+                general: { name: 'Simon Thassi', fire: 2, shock: 3, maneuver: 3 },
+              });
+            }
+          }
+          h.setRuler(ctx, 'HAS', { name: 'Simon Thassi', title: 'High Priest and Leader', gov: 4, infl: 3, mar: 3, age: 50 });
+          h.setHeir(ctx, 'HAS', { name: 'John Hyrcanus', gov: 3, infl: 3, mar: 4, age: 21 });
+          h.setFlag(ctx, 'jonathanTaken', true);
+          h.notify(ctx, {
+            title: 'Simon Takes Command', type: 'bad', provName: 'Ptolemais',
+            text: 'The ransom is paid and betrayed. Jonathan does not return; the last brother leads.',
+          });
+        }),
+      },
     ],
   },
 
@@ -1283,6 +1591,13 @@ export const EVENTS_167 = [
         tooltip: '+5 legitimacy, +10 influence.',
         effects: guard('ev_spartan_letters:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 5, infl: 10 });
+        }),
+      },
+      {
+        label: 'Send a shield of gold with the letters',
+        tooltip: '−50 treasury, +5 legitimacy, +25 influence — a gift of a thousand pounds, that the nations may reckon with us.',
+        effects: guard('ev_spartan_letters:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HAS', { treasury: -50, legitimacy: 5, infl: 25 });
         }),
       },
     ],
@@ -1320,6 +1635,23 @@ export const EVENTS_167 = [
           h.notify(ctx, {
             title: 'The Akra Falls', type: 'good', provName: 'Jerusalem',
             text: 'The citadel is starved out. No foreign garrison remains in the city of David.',
+          });
+        }),
+      },
+      {
+        label: 'Cast the citadel down, stone from stone',
+        tooltip: '+20 legitimacy, +1 stability, −40 treasury; Jerusalem: "The Citadel Cast Down" (−1 unrest, permanent) — no king shall garrison it again.',
+        effects: guard('ev_akra_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 20, stability: 1, treasury: -40 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'citadel_cast_down', name: 'The Citadel Cast Down', months: -1,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'akraFallen', true);
+          h.notify(ctx, {
+            title: 'The Akra Falls', type: 'good', provName: 'Jerusalem',
+            text: 'The citadel is starved out and leveled to its foundations. The Temple stands over the city alone.',
           });
         }),
       },
@@ -1361,6 +1693,18 @@ export const EVENTS_167 = [
           });
         }),
       },
+      {
+        label: 'Keep the feast at the leader’s charge',
+        tooltip: 'The gates stand open and no toll is taken: −30 treasury, +10 legitimacy; Jerusalem: "The Open Gates" (−2 unrest, 12 months).',
+        effects: guard('ev_hanukkah_pilgrims:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -30, legitimacy: 10 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'dedication_pilgrims', name: 'The Open Gates', months: 12,
+            effects: { unrest: -2 },
+          });
+        }),
+      },
     ],
   },
 
@@ -1388,6 +1732,13 @@ export const EVENTS_167 = [
         tooltip: 'Judaea: +25 legitimacy, +1 stability. The war of Mattathias is over.',
         effects: guard('ev_independence:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 25, stability: 1 });
+        }),
+      },
+      {
+        label: 'Leader and priest, but not king',
+        tooltip: 'Simon takes no diadem, and the scribes set the nation’s instruments in order: Judaea +15 legitimacy, +1 stability, +10 governance, +10 influence. The war of Mattathias is over.',
+        effects: guard('ev_independence:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 15, stability: 1, gov: 10, infl: 10 });
         }),
       },
     ],

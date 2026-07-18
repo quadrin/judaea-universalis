@@ -23,6 +23,7 @@ import {
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
   merchantShipInfo, commissionMerchantShipCore, merchantShipsOf,
   merchantDestinations, sendMerchantCore, merchantVoyagesOf,
+  tradeRunDestinations, sendTradeRunCore,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart } from './economy.js';
@@ -1562,7 +1563,9 @@ export function gameActions(ctx) {
         const voyages = merchantVoyagesOf(ctx, me).map((v) => ({
           from: v.from, to: v.to, daysLeft: v.daysLeft,
           fromName: (ctx.byId(v.from) || {}).name || ('#' + v.from),
-          toName: (ctx.byId(v.to) || {}).name || ('#' + v.to),
+          toName: v.kind === 'trade' && v.leg === 'dwell'
+            ? 'trading at ' + (((ctx.byId(v.to) || {}).name) || ('#' + v.to)) + (v.payout ? ', ~' + v.payout + ' talents' : '')
+            : ((ctx.byId(v.to) || {}).name || ('#' + v.to)) + (v.kind === 'trade' && v.leg === 'home' && v.payout ? ' (~' + v.payout + ' talents aboard)' : ''),
         }));
         return {
           fleets,
@@ -1652,6 +1655,21 @@ export function gameActions(ctx) {
           + res.days + ' days under sail. She earns nothing while at sea.', 'good');
         return true;
       } catch (e) { warnOnce('sendMerchant', e); return false; }
+    },
+    // Trade runs (v6.1): the foreign harbors open (or closed) to this port's
+    // merchantmen, with the lump sum a completed round trip lands.
+    getTradeRunDestinations(provId) {
+      try { return tradeRunDestinations(ctx, g.playerTag, provId | 0); }
+      catch (e) { warnOnce('tradeDest', e); return []; }
+    },
+    sendTradeRun(fromId, toId) {
+      try {
+        const res = sendTradeRunCore(ctx, g.playerTag, fromId | 0, toId | 0);
+        if (!res.ok) { say('The market is closed to us', res.why, 'bad'); return false; }
+        say('A trade run puts to sea', 'She makes for ' + res.toName + ' under ' + res.hostName
+          + '\'s peace — a month in their market, then home with about ' + res.payout + ' talents.', 'good');
+        return true;
+      } catch (e) { warnOnce('sendTradeRun', e); return false; }
     },
     moveFleet(fleetId, provId) {
       try {

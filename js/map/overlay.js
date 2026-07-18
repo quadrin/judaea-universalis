@@ -547,27 +547,80 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
-  // Merchantmen ride at their harbors (v5.5): small neutral tubs, clearly
-  // not ships of the line — beige canvas, round hull, no banner.
-  function drawMerchantTub(mx, my, n) {
+  // Merchantmen ride at their harbors (retextured v6.1): a corbita in
+  // miniature — planked round belly, upswept stern post, steering oar, and a
+  // bellied working sail with a terracotta stripe. Clearly not a ship of the
+  // line: no banner, no ram. Under sail she trails a small wake.
+  function drawMerchantTub(mx, my, n, underSail) {
     x2.save();
     x2.translate(mx, my);
-    x2.globalAlpha = 0.9;
-    x2.fillStyle = 'rgba(92,66,38,0.95)'; // round-bellied hull
-    x2.beginPath();
-    x2.moveTo(-7, 0); x2.lineTo(7, 0);
-    x2.quadraticCurveTo(5, 5, 0, 5);
-    x2.quadraticCurveTo(-5, 5, -7, 0);
-    x2.closePath();
-    x2.fill();
-    x2.fillStyle = 'rgba(232,220,192,0.95)'; // working canvas, no colors
-    x2.strokeStyle = 'rgba(15,10,5,0.7)';
+    x2.globalAlpha = 0.95;
+    x2.lineJoin = 'round';
+    if (underSail) { // a whisper of wake astern
+      x2.strokeStyle = 'rgba(226,236,238,0.4)';
+      x2.lineWidth = 1.2;
+      x2.beginPath();
+      x2.moveTo(-8, 3); x2.quadraticCurveTo(-12, 4.5, -15, 3.5);
+      x2.moveTo(-8, 5); x2.quadraticCurveTo(-11, 6.5, -14, 6);
+      x2.stroke();
+    }
+    // hull: dark planking below, a lighter strake at the gunwale
+    x2.fillStyle = 'rgba(74,50,28,0.98)';
+    x2.strokeStyle = 'rgba(20,12,6,0.8)';
     x2.lineWidth = 0.8;
     x2.beginPath();
-    x2.moveTo(0, -8); x2.lineTo(5, -1); x2.lineTo(-5, -1);
+    x2.moveTo(-8, -1);
+    x2.quadraticCurveTo(-9, -4, -7.5, -5.5); // upswept stern post
+    x2.lineTo(-6.5, -1.5);
+    x2.lineTo(7, -1.5);
+    x2.quadraticCurveTo(8.6, -2.2, 8.2, -0.6); // short bow
+    x2.quadraticCurveTo(6, 5.4, 0, 5.4);
+    x2.quadraticCurveTo(-6, 5.4, -8, -1);
     x2.closePath();
     x2.fill();
     x2.stroke();
+    x2.strokeStyle = 'rgba(196,158,104,0.85)'; // gunwale strake
+    x2.lineWidth = 1;
+    x2.beginPath();
+    x2.moveTo(-6.8, -0.4); x2.quadraticCurveTo(0, 0.8, 7.6, -0.4);
+    x2.stroke();
+    x2.strokeStyle = 'rgba(30,18,8,0.55)'; // a plank line in the belly
+    x2.lineWidth = 0.6;
+    x2.beginPath();
+    x2.moveTo(-5.5, 2.2); x2.quadraticCurveTo(0, 3.6, 5.8, 2.2);
+    x2.stroke();
+    // steering oar aft
+    x2.strokeStyle = 'rgba(20,12,6,0.8)';
+    x2.lineWidth = 0.9;
+    x2.beginPath();
+    x2.moveTo(-7, -1); x2.lineTo(-9.5, 3.5);
+    x2.stroke();
+    // mast and yard
+    x2.beginPath();
+    x2.moveTo(0.5, -1.5); x2.lineTo(0.5, -10);
+    x2.moveTo(-4.5, -9); x2.lineTo(5.5, -9);
+    x2.stroke();
+    // the working sail: cream canvas bellied to leeward, terracotta stripe
+    x2.fillStyle = 'rgba(236,226,200,0.97)';
+    x2.strokeStyle = 'rgba(20,12,6,0.6)';
+    x2.lineWidth = 0.7;
+    x2.beginPath();
+    x2.moveTo(-4.2, -8.6);
+    x2.lineTo(5.2, -8.6);
+    x2.quadraticCurveTo(7.4, -5, 5.6, -2);
+    x2.quadraticCurveTo(0.5, -3.6, -3.4, -2);
+    x2.quadraticCurveTo(-5.6, -5.4, -4.2, -8.6);
+    x2.closePath();
+    x2.fill();
+    x2.stroke();
+    x2.fillStyle = 'rgba(178,96,58,0.85)'; // the stripe every harbor knows
+    x2.beginPath();
+    x2.moveTo(-4.6, -6.6);
+    x2.quadraticCurveTo(0.8, -5.2, 6.5, -6.6);
+    x2.lineTo(6.2, -5);
+    x2.quadraticCurveTo(0.8, -3.7, -4.4, -5);
+    x2.closePath();
+    x2.fill();
     if (n > 1) {
       x2.fillStyle = '#fff';
       x2.font = 'bold 8px Georgia, serif';
@@ -575,7 +628,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       x2.textBaseline = 'middle';
       x2.shadowColor = 'rgba(0,0,0,0.7)';
       x2.shadowBlur = 2;
-      x2.fillText(String(n), 9, 2);
+      x2.fillText(String(n), 11, 2);
       x2.shadowBlur = 0;
     }
     x2.restore();
@@ -604,7 +657,8 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       const t = Math.min(1, Math.max(0, 1 - v.daysLeft / v.daysTotal));
       const [sx, sy] = camera.mapToScreen(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
       if (sx < -40 || sy < -40 || sx > camera.viewport.w + 40 || sy > camera.viewport.h + 40) continue;
-      drawMerchantTub(sx, sy, 1);
+      // A dwelling trader sits in the foreign roads (from === to): no wake.
+      drawMerchantTub(sx, sy, 1, v.from !== v.to);
     }
   }
 

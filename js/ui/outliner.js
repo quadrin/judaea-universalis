@@ -171,15 +171,12 @@ export function createOutliner(el, {
         const world = guide.worldNext;
         const when = next ? (next.months === 0 ? 'this month' : `in ${next.months} month${next.months === 1 ? '' : 's'}`) : '';
         const worldWhen = world ? (world.months === 0 ? 'this month' : `in ${world.months} month${world.months === 1 ? '' : 's'}`) : '';
-        const goals = (guide.objectives || []).slice(0, 3).map((line) => {
-          const cls = /^Win:/.test(line) ? 'pos' : /^Lose:/.test(line) ? 'neg' : '';
-          return `<div class="ol-goal ${cls}">${esc(line)}</div>`;
-        }).join('');
+        // The Win/Lose contract lives in the WAR PANEL ("the chapter's
+        // contract") — the outliner keeps only the campaign clocks.
         html += `<div class="ol-campaign">
           <div class="ol-campaign-title">${icon('star4', 'icon-row')} ${esc(guide.system || 'Campaign')}</div>
           ${next ? `<div class="ol-clock">${icon('alert', 'icon-row')} <b>${esc(next.label)}</b> ${esc(when)}</div>` : ''}
           ${world ? `<div class="ol-clock ol-world-clock">${icon('scroll', 'icon-row')} <span>World:</span> <b>${esc(world.label)}</b> ${esc(worldWhen)}</div>` : ''}
-          <div class="ol-goals">${goals}</div>
         </div>`;
       }
     }

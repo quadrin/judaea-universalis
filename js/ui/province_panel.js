@@ -102,6 +102,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <div class="pp-merchant-status" data-ref="merchantStatus"></div>
         <button class="btn pp-recruit-btn" data-ref="merchantShip"></button>
         <div class="pp-merchant-send" data-ref="merchantSend"></div>
+        <div class="pp-merchant-send" data-ref="merchantTrade"></div>
       </div>
       <div class="pp-air hidden" data-ref="airBlock">
         <div class="pp-build-title">${icon('plane', 'icon-sm')} The Airfield</div>
@@ -175,6 +176,13 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       if (!b || b.classList.contains('disabled') || !actions
           || typeof actions.sendMerchantShip !== 'function') return;
       try { actions.sendMerchantShip(provId, b.dataset.sendTo | 0); } catch (err) { warnOnce('merchantSend', err); }
+      refresh();
+    });
+    refs.merchantTrade.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-trade-to]') : null;
+      if (!b || b.classList.contains('disabled') || !actions
+          || typeof actions.sendTradeRun !== 'function') return;
+      try { actions.sendTradeRun(provId, b.dataset.tradeTo | 0); } catch (err) { warnOnce('merchantTrade', err); }
       refresh();
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
@@ -555,6 +563,22 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         : `Send one merchantman to ${esc(d.provName)} — about ${d.days} days at sea, earning nothing until she docks (${d.count + d.inbound} / ${d.cap} berths claimed).`;
       return `<button class="pp-build-btn${full ? ' disabled' : ''}" data-send-to="${d.prov}" data-tt="${esc(tt)}">` +
         `${icon('ship', 'icon-sm')}<span>Send to ${esc(d.provName)} · ${d.days}d</span></button>`;
+    }).join(''));
+    // Trade runs abroad (v6.1): the foreign markets, open or not — the closed
+    // ones stay visible so the opinion gate is learnable.
+    let trades = [];
+    if (info.count > 0 && actions && typeof actions.getTradeRunDestinations === 'function') {
+      try { trades = actions.getTradeRunDestinations(provId) || []; } catch (e) { warnOnce('tradeDest', e); trades = []; }
+    }
+    refs.merchantTrade.classList.toggle('hidden', !trades.length);
+    setHtml(refs.merchantTrade, trades.map((d) => {
+      const tt = d.can
+        ? `A round trip to ${esc(d.provName)} (${esc(d.hostName)}, opinion ${d.opinion >= 0 ? '+' : ''}${d.opinion}): `
+          + `about ${d.days} days out and back, a month trading in their market, and ~${d.payout} talents landed when she ties up at home. `
+          + `War with ${esc(d.hostName)} while she trades would see ship and cargo seized.`
+        : d.why;
+      return `<button class="pp-build-btn${d.can ? '' : ' disabled'}" data-trade-to="${d.prov}" data-tt="${esc(tt)}">` +
+        `${icon('coins', 'icon-sm')}<span>Trade run: ${esc(d.provName)} · ${d.days}d · ~${d.payout} ${icon('coins', 'icon-xs')}</span></button>`;
     }).join(''));
   }
 

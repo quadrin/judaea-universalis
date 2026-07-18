@@ -2406,3 +2406,45 @@ all-AI harness histories (and every scripted arc) stand untouched.
   on a human (and NOT on an AI realm), containment watch/souring/war,
   exhausted morale recovery, and the Veteran multipliers (AI-only,
   save-revive default). `smoke2` re-anchored to the dearer peace table.
+
+## 60. v6.1: the choice and the cargo — event options everywhere, trade runs abroad
+
+Two player-agency features. The scripted chains stop being railroads, and
+the merchant marine learns to leave home.
+
+- **Every player-facing scripted event offers a real choice.** All ~90
+  single-option player events across the seven chains gain a second
+  option with a genuine mechanical tradeoff (the Rhodes conference can
+  now be refused; the truces can be fought through; the Old City's fall
+  can be pressed or tempered). The CONTRACT: option 0 is always the
+  historical course, byte-identical to the old single option, and every
+  multi-option event pins `aiOption: 0` — so AI realms and the all-AI
+  autorun harness walk exactly the old history. Alternative options
+  never fork a scripted chain: any chain-critical operation option 0
+  performs (endWar, setFlag, switchTag, spawns later events depend on)
+  is replicated identically; alternates trade only in resources,
+  modifiers, war score, opinion and legitimacy. World-history dispatches
+  (`world: true`) remain single-option notices by design. `smoke39`
+  enforces both halves of the contract structurally, forever.
+- **Trade runs** (navy.js `TRADE_RUN`, SPEC §58 extended): a merchantman
+  may be sent to a FRIENDLY FOREIGN shipyard harbor — the host court
+  must hold us at opinion ≥ 25 — for a round trip: out under sail, a
+  month trading in their market, home again, landing the profit as ONE
+  lump sum at the home berth (10 + 1 × the foreign port's development,
+  × tradeMult) instead of the docked monthly trickle. The run reserves
+  its home berth for the whole trip; the foreign port lends an
+  anchorage, never a berth. War with the host mid-market seizes ship
+  and cargo; a market that closes en route turns her home empty; a
+  fallen home port diverts her to the nearest open harbor of ours or
+  she is sold abroad. Province-panel buttons list every foreign market,
+  the closed ones greyed with the reason, so the opinion gate teaches
+  itself.
+- **The tub retextured**: the merchant marine draws as a miniature
+  corbita — planked round belly, upswept stern post, steering oar,
+  bellied cream sail with a terracotta stripe — and trails a wake under
+  way. Dwelling traders ride at anchor in the foreign roads.
+- **Regression contract**: `smoke39.mjs` — the opinion gate, the round
+  trip and its lump payout, wartime seizure, the empty-handed return,
+  home-berth reservation, and the two structural event-contract sweeps
+  (no single-option player events; every multi-option event pins
+  aiOption).
