@@ -510,9 +510,11 @@ export const DEFINES = {
   // hostile one rises, and only the sword (and the subjugation clause at the
   // table) puts the yoke back on.
   VASSALS: {
-    incorporateOpinion: 50,      // client opinion of the overlord needed to absorb it
-    incorporateBase: 50,         // influence points to incorporate...
-    incorporatePerDev: 1.5,      // ...plus per point of the client's development
+    incorporateOpinion: 80,      // a client is absorbed only by a court it nearly loves
+    incorporateBase: 75,         // influence points to begin the union...
+    incorporatePerDev: 2.5,      // ...plus per point of the client's development
+    incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...
+    incorporateMonthsPerDev: 0.5, // ...and longer for every point of their development
     incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest
     loyalOpinion: -25,           // below this a client refuses the overlord's war calls
     revoltOpinion: -75,          // at/below this a client may rise for independence
