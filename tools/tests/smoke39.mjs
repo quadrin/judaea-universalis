@@ -91,6 +91,36 @@ console.log('== the round trip pays a lump sum ==');
   ok(Math.round(after - before) === res.payout, `the cargo sells as one sum: +${Math.round(after - before)} talents`);
 }
 
+console.log('== a glutted market buys nothing more (anti-money-press) ==');
+{
+  const { game, ctx } = boot();
+  const { home, far } = harbors(ctx);
+  game.tags[far.owner].opinion = { JUD: 40 };
+  home.merchantShips = 2;
+  const first = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
+  ok(first.ok, 'the first run books');
+  const second = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
+  ok(!second.ok && /glutted/.test(second.why), 'the second is refused: ' + second.why);
+  // The run at sea owns its market: it still docks and trades despite the glut.
+  runDays(ctx, first.days);
+  ok(game.merchantVoyages[0] && game.merchantVoyages[0].leg === 'dwell',
+    'the booked run itself is not turned away by its own glut');
+  // Six months on, the buyers are hungry again.
+  game.date.m += navy.TRADE_RUN.saturationMonths;
+  while (game.date.m > 12) { game.date.m -= 12; game.date.y += 1; }
+  const third = navy.sendTradeRunCore(ctx, 'JUD', home.id, far.id);
+  ok(third.ok, 'after ' + navy.TRADE_RUN.saturationMonths + ' months the market reopens');
+}
+
+console.log('== the margin follows the haul ==');
+{
+  const { ctx } = boot();
+  const { home, far } = harbors(ctx);
+  const near = navy.tradeRunPayout(ctx, 'JUD', far.id, far.id); // zero-distance floor
+  const real = navy.tradeRunPayout(ctx, 'JUD', far.id, home.id);
+  ok(real > near, `a real haul outearns a doorstep shuttle (${real} vs ${near})`);
+}
+
 console.log('== war in the host harbor seizes ship and cargo ==');
 {
   const { game, ctx } = boot();
