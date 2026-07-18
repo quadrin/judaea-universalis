@@ -627,6 +627,19 @@ export const DECISIONS = {
 export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
+  // The campaign contract as it stands NOW: the bookmark's win/loss lines
+  // until the chapter's verdict is in, then a single settled line. Shared by
+  // getObjectives (realm panel) and getCampaignGuidance (outliner) so no
+  // surface keeps flying war goals for a war already decided.
+  const liveObjectives = () => {
+    if (g.result) {
+      return [g.result === 'win'
+        ? 'Win: the verdict is ours. The Chronicle (C) records it; the campaign sails on.'
+        : 'Lose: the verdict went against us. The Chronicle (C) records it; the campaign sails on.'];
+    }
+    const list = ctx.bookmark && ctx.bookmark.objectives && ctx.bookmark.objectives[g.playerTag];
+    return Array.isArray(list) && list.length ? list.slice() : null;
+  };
 
   // ---- diplomacy (frozen action contract) ---------------------------------
   const dipKey = (them, kind) => g.playerTag + '>' + them + ':' + kind;
@@ -1877,25 +1890,17 @@ export function gameActions(ctx) {
     // Once the chapter's verdict is in, the goals retire — the panel shows
     // the settled state instead of win/loss lines that can no longer trip.
     getObjectives() {
-      try {
-        if (g.result) {
-          return [g.result === 'win'
-            ? 'Win: the verdict is ours. The Chronicle (C) records it; the campaign sails on.'
-            : 'Lose: the verdict went against us. The Chronicle (C) records it; the campaign sails on.'];
-        }
-        const bk = ctx.bookmark;
-        const list = bk && bk.objectives && bk.objectives[g.playerTag];
-        return Array.isArray(list) && list.length ? list.slice() : null;
-      } catch (e) { warnOnce('objectives', 'getObjectives failed', e); return null; }
+      try { return liveObjectives(); } catch (e) { warnOnce('objectives', 'getObjectives failed', e); return null; }
     },
     getCampaignGuidance() {
       try {
         const guide = campaignGuidance(g.bookmarkId, g.playerTag, g.date);
         if (!guide) return null;
-        const list = ctx.bookmark && ctx.bookmark.objectives && ctx.bookmark.objectives[g.playerTag];
+        // Same verdict-aware list the realm panel shows — the outliner must
+        // not keep flying war goals for a war already decided.
         return {
           ...guide,
-          objectives: Array.isArray(list) ? list.slice() : [],
+          objectives: liveObjectives() || [],
           worldNext: nextWorldEvent(ctx),
         };
       } catch (e) { warnOnce('campaignGuide', 'getCampaignGuidance failed', e); return null; }
