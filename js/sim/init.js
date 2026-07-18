@@ -8,7 +8,7 @@ import {
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
-  incorporateInfo, incorporateCore,
+  incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
@@ -707,6 +707,14 @@ export function gameActions(ctx) {
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
       }
+      // Royal marriage (SPEC §62): only surfaced in the ages that arrange them.
+      let marriage = null;
+      if (mechanicOn(ctx, 'royalMarriage')) {
+        try {
+          const mi = royalMarriageInfo(ctx, me, tag);
+          marriage = { married: mi.married, can: mi.can, why: mi.why, cost: mi.cost };
+        } catch (e) { marriage = null; }
+      }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -727,6 +735,7 @@ export function gameActions(ctx) {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
         } : null,
+        marriage,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -1403,6 +1412,15 @@ export function gameActions(ctx) {
           say('Alliance broken', 'We renounce our alliance with ' + d.name + '. They will not soon forget it.', 'info');
         }
       } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
+    },
+    // Royal marriage (SPEC §62): join two crowned houses.
+    royalMarriage(tag) {
+      try {
+        const res = royalMarriageCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('No match', res.why, 'bad'); return; }
+        say('The houses are joined', 'Our house is wed to that of ' + res.name
+          + ' (+' + DIPLO.marryOpinionGain + ' opinion both ways). A married dynasty is likelier to be blessed with an heir.', 'good');
+      } catch (e) { warnOnce('royalMarriage', 'royalMarriage failed', e); }
     },
     // Incorporation (SPEC §61): begin weaving a devoted client into the realm.
     incorporateVassal(tag) {

@@ -225,7 +225,7 @@ export const BOOKMARK_1948 = {
   // The tools of the age (SPEC §52): no modern state runs missionary
   // conversion of districts — integration in 1948 is schools, land and
   // votes, not priests. Everything unnamed stays on.
-  mechanics: { conversion: false },
+  mechanics: { conversion: false, royalMarriage: false }, // modern states neither convert provinces nor wed each other
 
   // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,
   // Abadan and Khuzestan behind Susa, the al-Hasa fields behind Gerrha —

@@ -188,5 +188,45 @@ console.log('== the yoke thrown off: the independence rising ==');
   ok(game.tags.AGR.overlord === 'JUD', 'the war won, the client kneels again');
 }
 
+console.log('== royal marriage: beds, cradles, and the age that has them (SPEC §62) ==');
+{
+  const { game, ctx } = boot();
+  const { heirChance } = await import(R + '/js/sim/realm.js');
+  const me = game.tags.JUD;
+  const nab = game.tags.NAB;
+  me.govType = 'monarchy';
+  nab.govType = 'monarchy';
+  me.points.infl = 999;
+  nab.opinion = { JUD: 0 };
+  let info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
+  ok(!info.can && /too cool/.test(info.why), 'a cool court declines the match: ' + info.why);
+  nab.opinion.JUD = 30;
+  nab.govType = 'republic';
+  info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
+  ok(!info.can && /crowned/.test(info.why), 'only two crowned houses can be joined');
+  nab.govType = 'monarchy';
+  const baseChance = heirChance(ctx, 'JUD');
+  const res = mil.royalMarriageCore(ctx, 'JUD', 'NAB');
+  ok(res.ok && mil.marriedTo(ctx, 'JUD', 'NAB') && mil.marriedTo(ctx, 'NAB', 'JUD'),
+    'the houses are joined, mutually');
+  ok(me.points.infl === 999 - 25, 'the match costs its influence');
+  ok((nab.opinion.JUD | 0) >= 55, 'their court warms on the wedding day');
+  ok(Math.abs(heirChance(ctx, 'JUD') - baseChance * 2) < 1e-9,
+    `a married dynasty is likelier blessed: heir chance ${baseChance} → ${heirChance(ctx, 'JUD')}`);
+  // War annuls the match, and is not forgotten.
+  mil.declareWar(ctx, 'JUD', 'NAB', 'Test War');
+  ok(!mil.marriedTo(ctx, 'JUD', 'NAB'), 'war sunders the joined houses');
+  ok((nab.opinion.JUD | 0) < 30, 'and the annulment is remembered bitterly');
+  ok(Math.abs(heirChance(ctx, 'JUD') - baseChance) < 1e-9, 'the blessing fades with the match');
+}
+{
+  // The modern age does not arrange its marriages.
+  const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
+  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_1948, events: [], playerTag: 'ISR', rngSeed: 63 });
+  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_1948, events: [] });
+  const info = mil.royalMarriageInfo(ctx, 'ISR', 'JOR');
+  ok(!info.can && /age/.test(info.why), '1948 has no royal marriages: ' + info.why);
+}
+
 if (failures) { console.error(failures + ' FAILURES'); process.exit(1); }
 console.log('\nALL PASS');

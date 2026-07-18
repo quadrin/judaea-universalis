@@ -120,6 +120,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="improve" data-ref="dipImprove">Improve Relations</button>
           <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
+          <button class="pp-dip" data-dip="marry" data-ref="dipMarry">Royal Marriage</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
           <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
@@ -143,7 +144,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       }
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
-        war: 'declareWarOn', incorporate: 'incorporateVassal',
+        war: 'declareWarOn', incorporate: 'incorporateVassal', marry: 'royalMarriage',
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
       }[b.dataset.dip];
@@ -625,6 +626,21 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       `Send a gift: ${d.giftCost} talents from the treasury → +20 opinion`);
     setDipBtn(refs.dipAlly, d.canAlly, d.whyNotAlly,
       'Offer a formal alliance — a refusal sours relations for six months');
+    // Royal marriage (SPEC §62): hidden entirely in the ages without it.
+    refs.dipMarry.classList.toggle('hidden', !d.marriage);
+    if (d.marriage) {
+      if (d.marriage.married) {
+        setText(refs.dipMarry, 'Houses Joined');
+        refs.dipMarry.classList.add('disabled');
+        refs.dipMarry.dataset.tt = 'Our houses are joined in marriage: the dynasty is likelier to be blessed with an heir. War between us would annul it — and not be forgiven.';
+      } else {
+        setText(refs.dipMarry, 'Royal Marriage');
+        setDipBtn(refs.dipMarry, d.marriage.can, d.marriage.why,
+          `Arrange a royal marriage: ${d.marriage.cost} influence points → +25 opinion both ways, `
+          + 'and each living marriage raises the chance of an heir appearing (capped at ×3). '
+          + 'War between married houses annuls the match at a heavy cost in opinion.');
+      }
+    }
     // No alliance, nothing to break: hide rather than explain.
     refs.dipBreak.classList.toggle('hidden', !d.canBreak);
     if (d.canBreak) {
