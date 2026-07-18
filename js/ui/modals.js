@@ -60,7 +60,6 @@ export function createEventModal(el) {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
       return `<button class="btn ev-opt" data-idx="${i}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
-        + (tip ? `<span class="ev-effect">${esc(tip)}</span>` : '')
         + `</button>`;
     }).join('');
     el.innerHTML = `
@@ -107,7 +106,6 @@ export function createEventModal(el) {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
       return `<button class="btn ev-opt" disabled${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
-        + (tip ? `<span class="ev-effect">${esc(tip)}</span>` : '')
         + `</button>`;
     }).join('');
     el.innerHTML = `
