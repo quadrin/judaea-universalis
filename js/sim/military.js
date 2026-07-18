@@ -1867,6 +1867,14 @@ export function declareWar(ctx, atk, def, name, cb) {
       const ta = g.tags[a], td = g.tags[d];
       if (ta && ta.atWarWith.indexOf(d) < 0) ta.atWarWith.push(d);
       if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
+      // War annuls the joined houses across the lines (SPEC §62).
+      if (breakMarriagesForWar(ctx, a, d) && (a === g.playerTag || d === g.playerTag)) {
+        ctx.bus.emit('notify', {
+          title: 'A marriage annulled',
+          text: 'War sunders the joined houses of ' + ((ta && ta.name) || a) + ' and ' + ((td && td.name) || d) + '.',
+          type: 'bad',
+        });
+      }
     }
   }
   const names = (list) => list.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ');
@@ -1898,6 +1906,14 @@ export const DIPLO = {
   giftCost: 75, giftGain: 20, giftCdMonths: 6,
   allyMinOpinion: 60, allyAcceptOpinion: 110, allyRefuseOpinion: -5, allyCdMonths: 6,
   breakOpinion: -50,
+  // Royal marriage (SPEC §62): dynasties bind, and children follow. Both
+  // courts must be monarchies; the mechanic is era-gated off for 1948.
+  marryCost: 25,          // influence points to arrange the match
+  marryMinOpinion: 20,    // the other court must at least receive our envoys warmly
+  marryOpinionGain: 25,   // both courts, on the wedding day
+  marryHeirBonus: 1,      // each living royal marriage adds this ×base heir chance...
+  marryHeirCap: 3,        // ...capped at this multiple of the base
+  marryWarBreakOpinion: -40, // drawing the sword on kin is not forgotten
 };
 export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
@@ -1965,6 +1981,70 @@ export function casusBelli(ctx, atk, def) {
     if (A.religion && p.religion === A.religion) holy = true;
   }
   return holy ? { type: 'holy', label: 'Liberating the faithful' } : null;
+}
+
+// ---------------------------------------------------------------- royal marriage (SPEC §62)
+// The old world's diplomacy of beds and cradles: two monarchies bind their
+// houses, both courts warm, and a married dynasty is likelier to produce an
+// heir (realm.js heirChance). Era-gated: 1948's republics and kings do not
+// arrange each other's marriages (bookmark mechanics.royalMarriage: false).
+export function marriedTo(ctx, a, b) {
+  const t = ctx.game.tags[a];
+  return !!(t && Array.isArray(t.marriages) && t.marriages.indexOf(b) >= 0);
+}
+// Living marriages only — a fallen house binds nobody.
+export function marriageCount(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t || !Array.isArray(t.marriages)) return 0;
+  return t.marriages.filter((k) => ctx.game.tags[k] && ctx.game.tags[k].alive).length;
+}
+export function royalMarriageInfo(ctx, tag, other) {
+  const g = ctx.game;
+  const me = g.tags[tag];
+  const them = g.tags[other];
+  const out = { can: false, why: '', cost: DIPLO.marryCost, married: marriedTo(ctx, tag, other) };
+  if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
+  if (!mechanicOn(ctx, 'royalMarriage')) { out.why = 'This age does not arrange its marriages between states.'; return out; }
+  if (out.married) { out.why = 'Our houses are already joined.'; return out; }
+  if (me.govType !== 'monarchy' || them.govType !== 'monarchy') { out.why = 'Only two crowned houses can be joined.'; return out; }
+  if (isHostile(ctx, tag, other)) { out.why = 'We are at war with them.'; return out; }
+  if (opinionOf(ctx, other, tag) < DIPLO.marryMinOpinion) {
+    out.why = 'Their court is too cool for a match (opinion ' + Math.round(opinionOf(ctx, other, tag)) + ', needs ' + DIPLO.marryMinOpinion + '+).';
+    return out;
+  }
+  if (num(me.points && me.points.infl) < DIPLO.marryCost) {
+    out.why = 'Arranging the match takes ' + DIPLO.marryCost + ' influence points.';
+    return out;
+  }
+  out.can = true;
+  return out;
+}
+export function royalMarriageCore(ctx, tag, other) {
+  const info = royalMarriageInfo(ctx, tag, other);
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const me = g.tags[tag];
+  const them = g.tags[other];
+  me.points.infl = num(me.points.infl) - DIPLO.marryCost;
+  if (!Array.isArray(me.marriages)) me.marriages = [];
+  if (!Array.isArray(them.marriages)) them.marriages = [];
+  me.marriages.push(other);
+  them.marriages.push(tag);
+  addOpinion(ctx, other, tag, DIPLO.marryOpinionGain);
+  addOpinion(ctx, tag, other, DIPLO.marryOpinionGain);
+  chronicle(ctx, 'ruler', 'The houses of ' + (me.name || tag) + ' and ' + (them.name || other)
+    + ' are joined in marriage.');
+  return { ok: true, name: them.name || other };
+}
+// Drawing the sword on kin annuls the match — and is not forgotten.
+export function breakMarriagesForWar(ctx, a, b) {
+  const ta = ctx.game.tags[a], tb = ctx.game.tags[b];
+  if (!marriedTo(ctx, a, b) && !marriedTo(ctx, b, a)) return false;
+  if (ta && Array.isArray(ta.marriages)) ta.marriages = ta.marriages.filter((k) => k !== b);
+  if (tb && Array.isArray(tb.marriages)) tb.marriages = tb.marriages.filter((k) => k !== a);
+  addOpinion(ctx, a, b, DIPLO.marryWarBreakOpinion);
+  addOpinion(ctx, b, a, DIPLO.marryWarBreakOpinion);
+  return true;
 }
 
 // Mutual removal from both allies arrays; the jilted party's opinion of the

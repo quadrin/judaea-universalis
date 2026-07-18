@@ -2490,3 +2490,27 @@ live edges, all keyed to the client's OPINION of its overlord
   the refusal, the loyal march, and the never-lapsing defense of the
   client; the rising, the immediate severing, and the subjugation road
   back.
+
+## 62. v6.4: royal marriage — beds, cradles, and the succession
+
+The old world's other diplomacy, for every chapter before 1948
+(`mechanics.royalMarriage: false` era-gates the modern age off).
+
+- **The match** (`royalMarriageInfo`/`royalMarriageCore`, military.js;
+  the Royal Marriage button in the diplomacy block): two MONARCHIES,
+  not at war, the other court at opinion ≥ 20, for 25 influence. Both
+  courts warm +25 on the wedding day; the bond is mutual
+  (`tag.marriages`) and lives until a house falls — or war between the
+  married houses annuls it at −40 opinion both ways ("drawing the
+  sword on kin is not forgotten"), announced when the player is party.
+- **The cradle** (`heirChance`, realm.js): a heirless monarchy's
+  monthly chance of an heir appearing (base 1.5%) is multiplied by
+  1 + living marriages, capped at ×3 — the mechanical answer to the
+  succession-crisis roulette: marry two houses and heirs come at
+  triple the rate.
+- All dials in `DIPLO` (marryCost/MinOpinion/OpinionGain/HeirBonus/
+  HeirCap/WarBreakOpinion).
+- **Regression contract**: in `smoke40.mjs` — the opinion and
+  crowned-houses gates, mutual formation and its price, the doubled
+  heir chance, war's annulment and its bitter memory, and the 1948
+  era gate.

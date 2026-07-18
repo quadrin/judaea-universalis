@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle } from './military.js';
+import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO } from './military.js';
 import { fireEvent } from './events.js';
 import { shiftPopToReligion } from './population.js';
 
@@ -132,6 +132,14 @@ export function rulerDies(ctx, tag, causeText) {
   }
 }
 
+// The monthly chance a heirless court is blessed with an heir: the base
+// rate, multiplied up by living royal marriages (SPEC §62), capped.
+export function heirChance(ctx, tag) {
+  const base = 0.015;
+  const bonus = num(DIPLO.marryHeirBonus, 1) * marriageCount(ctx, tag);
+  return base * Math.min(num(DIPLO.marryHeirCap, 3), 1 + bonus);
+}
+
 // Monthly: aging (each January), heir appearances, regencies ending, and the
 // actuarial tables. Scripted deaths (events) dominate the playable window;
 // this keeps long campaigns honest.
@@ -188,8 +196,10 @@ export function monthlySuccession(ctx) {
           }
         }
       }
-      // A court without an heir designates one, eventually.
-      if (!t.heir && !t.regency && t.govType !== 'republic' && ctx.rng.chance(0.015)) {
+      // A court without an heir designates one, eventually. A married
+      // dynasty is likelier to be blessed (SPEC §62): each living royal
+      // marriage raises the monthly chance, capped.
+      if (!t.heir && !t.regency && t.govType !== 'republic' && ctx.rng.chance(heirChance(ctx, tag))) {
         const heir = rollCourtier(ctx, tag);
         heir.age = clamp(num(r.age, 45) - 26, 14, 45);
         t.heir = heir;
