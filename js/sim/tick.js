@@ -3,7 +3,7 @@
 import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
-  sweepAirfields,
+  sweepAirfields, flyPendingRaids,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -118,6 +118,7 @@ export function tickDay(ctx) {
     safe('merchants', () => merchantVoyagesDaily(ctx));
     safe('battles', () => tickBattles(ctx));
     safe('sieges', () => tickSieges(ctx));
+    safe('raids', () => flyPendingRaids(ctx)); // ordered strikes fly when time moves
     safe('airfields', () => sweepAirfields(ctx)); // wings caught on fallen fields
     safe('dateEvents', () => checkDateEvents(ctx));
     const monthly = g.date.d === 1;

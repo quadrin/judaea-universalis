@@ -261,7 +261,9 @@ export function createOutliner(el, {
         const sel = g.ui && g.ui.selectedWing === w.id;
         const lead = w.leader ? `\nCommander: ${w.leader.name} (bombing ${w.leader.fire}, evasion ${w.leader.maneuver})` : '';
         const tt = `${w.name} — based at ${w.provName}${lead}\n`
-          + (w.raidCd > 0 ? `Rearming: ready in ${w.raidCd} day${w.raidCd === 1 ? '' : 's'}` : 'Bombed up and ready')
+          + (w.raidCd > 0 ? `Rearming: ready in ${w.raidCd} day${w.raidCd === 1 ? '' : 's'}`
+            : w.pendingName ? `Strike ordered on ${w.pendingName} — flies when time moves`
+              : 'Bombed up and ready')
           + '\nSelect, then right-click one of your airfields to rebase.';
         const leadTT = w.canHireLeader
           ? 'Hire a squadron commander (50 martial points) — bombing pips sharpen raids, evasion slips interception'

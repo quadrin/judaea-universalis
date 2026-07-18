@@ -756,8 +756,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       } else {
         raids = (w.raids || []).map((r) => {
           const what = r.men ? fmtMen(r.men) + ' hostile men' : r.siege ? 'the walls we besiege' : 'the garrison';
-          return `<button class="pp-dip pp-air-raid" data-raid-wing="${w.id}" data-raid-dest="${r.id}"
-            data-tt="Bomb ${esc(r.name)} — ${esc(what)}.${r.men ? ' Kills ~3% (40–350 men) and shakes morale.' : r.siege ? ' +4 siege progress.' : ' Cracks the garrison by a tenth.'}\nEnemy air cover may drive the raid off — or down it.">✈ ${esc(r.name)}</button>`;
+          const ordered = w.pendingRaid === r.id;
+          return `<button class="pp-dip pp-air-raid${ordered ? ' pp-air-ordered' : ''}" data-raid-wing="${w.id}" data-raid-dest="${r.id}"
+            data-tt="${ordered ? `Strike ordered — flies the moment time moves. Click again to call it off.\n` : ''}Bomb ${esc(r.name)} — ${esc(what)}.${r.men ? ' Kills ~3% (40–350 men) and shakes morale.' : r.siege ? ' +4 siege progress.' : ' Cracks the garrison by a tenth.'}\nEnemy air cover may drive the raid off — or down it.">✈ ${esc(r.name)}${ordered ? ' ·ordered' : ''}</button>`;
         }).join('');
       }
       return `<div class="pp-air-wing">${icon('plane', 'icon-row')} <b>${esc(w.name)}</b>${raids}${moves

@@ -7,7 +7,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
-const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
+const { initGame, makeCtx, gameActions, simHelpers } = await import(R + '/js/sim/init.js');
 const navy = await import(R + '/js/sim/navy.js');
 const mil = await import(R + '/js/sim/military.js');
 
@@ -119,6 +119,30 @@ console.log('== a market that closes mid-passage sends her home empty ==');
   runDays(ctx, v.daysTotal + 1);
   ok(home.merchantShips === 1 && Math.round((Number(game.tags.JUD.treasury) || 0) - before) === 0,
     'home safe, hold empty, not a talent landed');
+}
+
+console.log('== an ordered strike flies only when time moves (v6.2) ==');
+{
+  const { game, ctx } = boot();
+  const joppa = ctx.prov('Joppa');
+  joppa.owner = 'JUD'; joppa.controller = 'JUD';
+  game.airwings = { 1: { id: 1, tag: 'JUD', prov: joppa.id, name: 'Test Wing' } };
+  mil.declareWar(ctx, 'JUD', 'ROM', 'Test War');
+  const foeId = simHelpers.spawnArmy(ctx, 'ROM', 'Joppa', { inf: 5, name: 'Target Host' });
+  const foe = game.armies[foeId];
+  const menBefore = foe.men;
+  const res = mil.orderAirRaid(ctx, 'JUD', 1, joppa.id);
+  ok(res.ok && game.airwings[1].pendingRaid === joppa.id, 'the order is scheduled, not flown');
+  ok(foe.men === menBefore && (game.airwings[1].raidCd | 0) === 0,
+    'while paused nothing burns: target untouched, no cooldown paid');
+  const cancel = mil.orderAirRaid(ctx, 'JUD', 1, joppa.id);
+  ok(cancel.ok && cancel.cancelled && game.airwings[1].pendingRaid === undefined,
+    'the same order again calls the strike off');
+  mil.orderAirRaid(ctx, 'JUD', 1, joppa.id);
+  mil.flyPendingRaids(ctx); // the daily tick
+  ok(foe.men < menBefore, 'when time moves the bombs fall: ' + (menBefore - foe.men) + ' men lost');
+  ok((game.airwings[1].raidCd | 0) > 0 && game.airwings[1].pendingRaid === undefined,
+    'the wing rearms and the order is spent');
 }
 
 console.log('== every player-facing scripted event offers a real choice (v6.1) ==');

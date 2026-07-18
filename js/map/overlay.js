@@ -745,6 +745,34 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.restore();
   }
 
+  // Ordered strikes waiting on the clock (v6.2): a dashed amber thread from
+  // the wing's field to its target — the promise of bombs, until time moves
+  // or the order is clicked off.
+  function drawPendingStrikes(game, camera) {
+    for (const wid in game.airwings || {}) {
+      const w = game.airwings[wid];
+      if (!w || w.tag !== game.playerTag || w.pendingRaid == null) continue;
+      const a = geom.centroids[w.prov];
+      const b = geom.centroids[w.pendingRaid];
+      if (!a || !b) continue;
+      const [ax, ay] = camera.mapToScreen(a.x, a.y);
+      const [bx, by] = camera.mapToScreen(b.x, b.y);
+      x2.save();
+      x2.strokeStyle = 'rgba(231,195,76,0.75)';
+      x2.lineWidth = 1.6;
+      x2.setLineDash([7, 6]);
+      x2.beginPath();
+      x2.moveTo(ax, ay);
+      x2.lineTo(bx, by);
+      x2.stroke();
+      x2.setLineDash([]);
+      x2.beginPath(); // a waiting reticle over the target
+      x2.arc(bx, by, 9, 0, Math.PI * 2);
+      x2.stroke();
+      x2.restore();
+    }
+  }
+
   function addRaidFx(fromProv, toProv, col) {
     const a = geom.centroids[fromProv];
     const b = geom.centroids[toProv];
@@ -1002,6 +1030,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       // Air wings are persistent unit counters at every zoom level.
       // Raid targeting rides under the unit markers (v5.5).
       drawRaidTargeting(game, camera);
+      drawPendingStrikes(game, camera);
 
       for (const marker of wingMarkerList(game, camera)) {
         if (onScreen(marker.x, marker.y)) drawWingMarker(game, marker);

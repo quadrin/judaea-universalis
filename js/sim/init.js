@@ -12,7 +12,7 @@ import {
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
-  hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore,
+  hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
@@ -1017,6 +1017,8 @@ export function gameActions(ctx) {
           .map((w) => ({
             id: w.id, name: w.name,
             raidCd: w.raidCd | 0,
+            pendingRaid: w.pendingRaid || 0,
+            pendingName: w.pendingRaid ? ((ctx.byId(w.pendingRaid) || {}).name || '') : '',
             raids: raidTargets(ctx, w).slice(0, 3)
               .map((r) => ({ id: r.id, name: r.name, men: r.men, siege: r.siege, garrison: r.garrison })),
           }));
@@ -1057,18 +1059,17 @@ export function gameActions(ctx) {
         say('Wing rebased', 'The squadron flies to ' + ((p && p.name) || 'its new field') + '.', 'info');
       } catch (e) { warnOnce('moveWing', 'moveAirWing failed', e); }
     },
+    // A strike order is SCHEDULED (v6.2): it flies on the next daily tick,
+    // never while the world stands paused. Same target again calls it off.
     raidProvince(wingId, provId) {
       try {
-        const res = airRaidCore(ctx, g.playerTag, wingId | 0, provId | 0);
+        const res = orderAirRaid(ctx, g.playerTag, wingId | 0, provId | 0);
         if (!res.ok) { say('No raid', 'The wing stays grounded: ' + res.why + '.', 'bad'); return; }
-        if (res.result === 'lost') {
-          say('Wing shot down', 'Enemy fighters met the raid over ' + res.provName + ' — the squadron is lost.', 'bad');
-        } else if (res.result === 'repelled') {
-          say('Raid driven off', 'Enemy fighters over ' + res.provName + ' turned the raid back before its bombs fell.', 'info');
+        if (res.cancelled) {
+          say('Strike called off', 'The wing stands down' + (res.provName ? ' — ' + res.provName + ' is reprieved' : '') + '.', 'info');
         } else {
-          say('Bombs away', 'The raid strikes ' + res.provName
-            + (res.killed ? ' — ' + res.killed + ' enemy men lost' : '')
-            + '. The wing returns to rearm.', 'good');
+          say('Strike ordered', 'The squadron bombs up for ' + res.provName
+            + ' — it flies the moment time moves.', 'info');
         }
       } catch (e) { warnOnce('raidProv', 'raidProvince failed', e); }
     },
@@ -1604,6 +1605,7 @@ export function gameActions(ctx) {
             id: w.id, name: w.name, prov: w.prov,
             provName: (p && p.name) || ('#' + w.prov),
             raidCd: w.raidCd | 0,
+            pendingName: w.pendingRaid ? ((ctx.byId(w.pendingRaid) || {}).name || '') : '',
             leader: w.leader ? { name: w.leader.name, fire: num(w.leader.fire), maneuver: num(w.leader.maneuver) } : null,
             canHireLeader: !w.leader && num(g.tags[g.playerTag].points && g.tags[g.playerTag].points.mar) >= 50,
           };

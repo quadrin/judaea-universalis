@@ -732,6 +732,66 @@ export function airRaidCore(ctx, tag, wingId, provId) {
   ctx.bus.emit('airRaid', { wing: wingId, tag, victimTag, from: w.prov, prov: provId, result, killed });
   return { ok: true, result, killed, provName: p.name };
 }
+// Ordering a strike (v6.2): the player's click SCHEDULES the raid — it flies
+// on the next daily tick, so nothing explodes while the world is paused.
+// Clicking the same target again calls the strike off. The cooldown is paid
+// when the wing actually flies, not when the order is given.
+export function orderAirRaid(ctx, tag, wingId, provId) {
+  const g = ctx.game;
+  const w = (g.airwings || {})[wingId];
+  if (!w || w.tag !== tag) return { ok: false, why: 'no such wing' };
+  if ((w.raidCd | 0) > 0) return { ok: false, why: 'rearming (' + w.raidCd + ' more days)' };
+  if (w.pendingRaid === provId) {
+    delete w.pendingRaid;
+    return { ok: true, cancelled: true, provName: (ctx.byId(provId) || {}).name || '' };
+  }
+  if (!provsWithin(ctx, w.prov, AIRC(ctx, 'rangeHops', 2)).has(provId)) {
+    return { ok: false, why: 'beyond the wing’s range' };
+  }
+  const p = ctx.byId(provId);
+  if (!p || !raidTargets(ctx, w).find((t) => t.id === provId)) {
+    return { ok: false, why: 'no hostile target there' };
+  }
+  w.pendingRaid = provId;
+  return { ok: true, provName: p.name };
+}
+// Daily: ordered strikes fly. airRaidCore revalidates everything — a target
+// that dissolved overnight simply stands the wing down with a notice.
+export function flyPendingRaids(ctx) {
+  const g = ctx.game;
+  for (const id of Object.keys(g.airwings || {})) {
+    const w = g.airwings[id];
+    if (!w || w.pendingRaid == null) continue;
+    const target = w.pendingRaid;
+    delete w.pendingRaid;
+    const mine = w.tag === g.playerTag;
+    const res = airRaidCore(ctx, w.tag, w.id, target);
+    if (!mine) continue; // AI raids stay silent for the raider; victims already hear sirens
+    if (!res.ok) {
+      ctx.bus.emit('notify', {
+        title: 'Strike called back',
+        text: 'The wing stays grounded: ' + res.why + '.', type: 'info',
+      });
+    } else if (res.result === 'lost') {
+      ctx.bus.emit('notify', {
+        title: 'Wing shot down',
+        text: 'Enemy fighters met the raid over ' + res.provName + ' — the squadron is lost.', type: 'bad',
+      });
+    } else if (res.result === 'repelled') {
+      ctx.bus.emit('notify', {
+        title: 'Raid driven off',
+        text: 'Enemy fighters over ' + res.provName + ' turned the raid back before its bombs fell.', type: 'info',
+      });
+    } else {
+      ctx.bus.emit('notify', {
+        title: 'Bombs away',
+        text: 'The raid strikes ' + res.provName
+          + (res.killed ? ' — ' + res.killed + ' enemy men lost' : '')
+          + '. The wing returns to rearm.', type: 'good',
+      });
+    }
+  }
+}
 export function raiseAirWing(ctx, tag, provId) {
   const g = ctx.game;
   const t = g.tags[tag];
@@ -774,6 +834,7 @@ export function rebaseAirWing(ctx, tag, wingId, provId) {
     return { ok: false, why: 'the hangars there are full' };
   }
   w.prov = provId;
+  delete w.pendingRaid; // a new field means a new bombsight — orders re-issued
   return { ok: true };
 }
 // Daily sweep: wings whose field is gone, or in hostile hands, are lost on
