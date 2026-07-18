@@ -8,6 +8,7 @@ import {
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
+  incorporateInfo, incorporateCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, hasClaim,
   sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
@@ -701,6 +702,11 @@ export function gameActions(ctx) {
       if (subOut) whyNotSubsidize = 'A subsidy already flows (' + subOut.monthsLeft + ' months left).';
       else if (atWarWithUs) whyNotSubsidize = 'We are at war with them.';
       else if (num(mine.treasury) < 60) whyNotSubsidize = 'The treasury is too thin (60 talents in hand required).';
+      // Incorporation (SPEC §61): a willing client can join the realm outright.
+      let inc = null;
+      if (ourClient) {
+        try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
+      }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -717,6 +723,10 @@ export function gameActions(ctx) {
         subsidyIn: subIn ? { amount: subIn.amount, monthsLeft: subIn.monthsLeft, reparation: !!subIn.reparation } : null,
         canGuarantee: !whyNotGuarantee, whyNotGuarantee,
         canSubsidize: !whyNotSubsidize, whyNotSubsidize,
+        incorporate: inc ? {
+          can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev,
+          opinion: inc.opinion, needOpinion: inc.needOpinion,
+        } : null,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -1393,6 +1403,15 @@ export function gameActions(ctx) {
           say('Alliance broken', 'We renounce our alliance with ' + d.name + '. They will not soon forget it.', 'info');
         }
       } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
+    },
+    // Incorporation (SPEC §61): a willing client kingdom joins the realm.
+    incorporateVassal(tag) {
+      try {
+        const res = incorporateCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('The union waits', res.why, 'bad'); return; }
+        say('One realm', res.name + ' is incorporated — its lands, treasury and people join ours'
+          + ' (' + res.cost + ' influence points). The world takes note.', 'good');
+      } catch (e) { warnOnce('incorporate', 'incorporateVassal failed', e); }
     },
 
     // ---- monarch-point sinks (v1.1) --------------------------------------

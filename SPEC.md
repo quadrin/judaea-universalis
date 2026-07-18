@@ -2448,3 +2448,41 @@ the merchant marine learns to leave home.
   home-berth reservation, and the two structural event-contract sweeps
   (no single-option player events; every multi-option event pins
   aiOption).
+
+## 61. v6.3: the vassal loop — incorporation, loyalty, and the rising
+
+Fealty stops being a flag on a tag and becomes a relationship with three
+live edges, all keyed to the client's OPINION of its overlord
+(`DEFINES.VASSALS`).
+
+- **Incorporation** (`incorporateInfo`/`incorporateCore`, military.js; the
+  Incorporate button in the diplomacy block): a client at opinion ≥ 50,
+  both courts at peace, can be absorbed outright for influence
+  (50 + 1.5 × its development). Its lands join the realm at ≥ 0.5
+  autonomy with a 12-month "Incorporated" adjustment (+1 unrest), its
+  treasury transfers, half its standing host returns as manpower (no
+  free doomstack; fleets and wings are struck), and the world counts
+  the absorption at half a conquest's infamy. Subjugation leaves a
+  court at −40 opinion, so the road from client to province runs
+  through years of gifts and good faith — no same-day annexations.
+- **Loyalty-gated war calls** (declareWar): a client below −25 opinion
+  of its overlord stays home from the overlord's wars — attacking and
+  defending both — with a "client stays home" notice for a player lord.
+  The one half of the bargain that never lapses: an attack on the
+  CLIENT itself still brings the overlord (and the client defends
+  itself, however it feels).
+- **The independence rising** (`vassalIndependence`, ai.js, monthly): an
+  AI client at ≤ −75 opinion, at peace, no truce, with the strength to
+  dare (its host plus every fellow client below −25, together ≥ 0.4 ×
+  the overlord's) rolls 4%/month to SEVER the bond and declare its war
+  of independence (`cb: 'independence'`), co-rebels on the attacker
+  side. The severing is immediate — they are free unless the overlord
+  wins and puts the yoke back on via the ordinary subjugation clause at
+  the peace table. Works against AI and human overlords alike; opinions
+  of −75 never arise in the scripted all-AI histories (a lord's infamy
+  does not sour its own clients), so the autorun set stands.
+- **Regression contract**: `smoke40.mjs` — the opinion and peacetime
+  gates, pricing, full transfer effects and infamy of incorporation;
+  the refusal, the loyal march, and the never-lapsing defense of the
+  client; the rising, the immediate severing, and the subjugation road
+  back.

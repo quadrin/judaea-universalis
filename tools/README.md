@@ -161,6 +161,19 @@ ATG BLEEDING · 66 PAR BLEEDING (comes and goes) · 132 JUD
 DEBT-SPIRAL,BLEEDING · 614 JUD/GHA BLEEDING and JUD SNOWBALL (all come
 and go) · 1948 none.
 
+Since v6.3 (the vassal loop + liberation, SPEC §61): a fallen province
+whose owner fights on the besieger's side goes home to its owner, so
+allied and client land earns through a war instead of sitting occupied.
+66 CE's books improve overall (PAR off the bleeding line, treasury
+rising), and the flag migrates to AGR — Rome's client, whose liberated
+lands now genuinely return to it — running a hair negative with a flat
+treasury and a debt-deserting host: the ARM/PAR hovering class, comes
+and goes with the seeds. Accepted as of v6.3: 167 PAR BLEEDING ·
+67 SEL DEAD + ARI (or HYR) BLEEDING · 40 HER and/or ATG BLEEDING ·
+66 PAR and/or AGR BLEEDING (come and go) · 132 JUD
+DEBT-SPIRAL,BLEEDING · 614 JUD/GHA BLEEDING and JUD SNOWBALL (all come
+and go) · 1948 none.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could

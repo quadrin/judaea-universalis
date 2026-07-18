@@ -1014,15 +1014,23 @@ export function siegeFall(ctx, p) {
   const by = p.siege.by;
   p.siege = null;
   clearFamine(ctx, p);
-  changeControllerCore(ctx, p, by);
+  // Liberation, not occupation (SPEC §61): a fallen province whose OWNER
+  // fights on the besieger's side goes home to its owner — the overlord who
+  // storms a client's stolen town hands back the keys, and an ally's land
+  // returns to the ally.
+  const owner = g.tags[p.owner];
+  const liberated = p.owner !== by && owner && owner.alive && sameSide(ctx, by, p.owner);
+  changeControllerCore(ctx, p, liberated ? p.owner : by);
   p.garrison = Math.round(num(p.maxGarrison) * 0.2);
   addWarExhaustion(ctx, prev, 0.5);
   ctx.bus.emit('siegeEnd', { provId: p.id, by });
-  if (playerConcerned(ctx, p, by)) {
+  if (playerConcerned(ctx, p, by) || (liberated && p.owner === g.playerTag)) {
     ctx.bus.emit('notify', {
-      title: p.name + ' has fallen',
-      text: (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
-      type: by === g.playerTag ? 'good' : 'bad', provName: p.name,
+      title: liberated ? p.name + ' is liberated' : p.name + ' has fallen',
+      text: liberated
+        ? (g.tags[by] ? g.tags[by].name : by) + ' restores ' + p.name + ' to ' + ((owner && owner.name) || p.owner) + '.'
+        : (g.tags[by] ? g.tags[by].name : by) + ' takes ' + p.name + '.',
+      type: by === g.playerTag || (liberated && p.owner === g.playerTag) ? 'good' : 'bad', provName: p.name,
     });
   }
 }
@@ -1613,6 +1621,82 @@ export function vassalsOf(ctx, lord) {
   }
   return out;
 }
+
+// ---------------------------------------------------------------- the vassal loop (SPEC §61)
+// A client that thinks well enough of its overlord can be INCORPORATED: its
+// lands join the realm outright, priced in influence and remembered by the
+// world as absorption (half a conquest's infamy). Subjugation leaves a court
+// at −40 opinion, so the road from client to province runs through years of
+// gifts and good faith — no same-day annexations.
+export function incorporateInfo(ctx, tag, vassalTag) {
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[tag];
+  const them = g.tags[vassalTag];
+  const out = { can: false, why: '', cost: 0, dev: 0, opinion: 0, needOpinion: num(V.incorporateOpinion, 50) };
+  if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
+  if (them.overlord !== tag) { out.why = 'They are not our client kingdom.'; return out; }
+  let dev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === vassalTag) dev += devTotal(p);
+  }
+  out.dev = dev;
+  out.cost = Math.round(num(V.incorporateBase, 50) + dev * num(V.incorporatePerDev, 1.5));
+  out.opinion = Math.round(opinionOf(ctx, vassalTag, tag));
+  const meAtWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  const themAtWar = (them.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (meAtWar || themAtWar) out.why = 'Not in wartime — the union must be sealed in peace.';
+  else if (out.opinion < out.needOpinion) {
+    out.why = 'Their court is not willing (opinion ' + out.opinion + ', needs ' + out.needOpinion + '+). Gifts, subsidies and years of good faith bring them closer.';
+  } else if (num(me.points && me.points.infl) < out.cost) {
+    out.why = 'Weaving two realms into one takes ' + out.cost + ' influence points.';
+  }
+  out.can = !out.why;
+  return out;
+}
+export function incorporateCore(ctx, tag, vassalTag) {
+  const info = incorporateInfo(ctx, tag, vassalTag);
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[tag];
+  const them = g.tags[vassalTag];
+  me.points.infl = num(me.points.infl) - info.cost;
+  // Their lands join the realm — willingly, so gentler than conquest: some
+  // autonomy, a season of adjustment, no generation of resentment.
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== vassalTag) continue;
+    changeOwnerCore(ctx, p, tag);
+    if (p.controller === vassalTag) changeControllerCore(ctx, p, tag);
+    p.autonomy = Math.max(num(p.autonomy, 0.25), 0.5);
+    p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'incorporated');
+    p.modifiers.push({ id: 'incorporated', name: 'Incorporated', months: 12, effects: { unrest: 1 } });
+  }
+  // Their treasury comes to the union; their standing army goes home to the
+  // rolls (half returns as our manpower — no free doomstack).
+  me.treasury = num(me.treasury) + Math.max(0, num(them.treasury));
+  let men = 0;
+  for (const a of armiesOf(ctx, vassalTag)) { men += num(a.men); removeArmy(ctx, a.id); }
+  me.manpower = num(me.manpower) + Math.round(men * 0.5);
+  for (const id of Object.keys(g.fleets || {})) {
+    if (g.fleets[id] && g.fleets[id].tag === vassalTag) delete g.fleets[id];
+  }
+  for (const id of Object.keys(g.airwings || {})) {
+    if (g.airwings[id] && g.airwings[id].tag === vassalTag) delete g.airwings[id];
+  }
+  them.alive = false;
+  them.overlord = null;
+  them.atWarWith = [];
+  for (const al of (them.allies || []).slice()) breakAllianceCore(ctx, vassalTag, al);
+  // The world counts absorption — at half a conquest's rate.
+  me.aggression = num(me.aggression) + Math.round(info.dev * num(V.incorporateInfamyPerDev, 0.25));
+  chronicle(ctx, 'fall', (them.name || vassalTag) + ' is incorporated into ' + (me.name || tag)
+    + ' — the client crown is retired with honors, and its lands answer to one throne.');
+  ctx.bus.emit('provinceOwner', {});
+  return { ok: true, cost: info.cost, dev: info.dev, name: them.name || vassalTag };
+}
 // The world closes ranks against a conqueror: every living, unaligned realm
 // that both fears (infamy >= 30) and hates (opinion <= -75) the expander
 // stands in its defensive coalition.
@@ -1644,10 +1728,21 @@ export function declareWar(ctx, atk, def, name, cb) {
   const join = (side, tag) => {
     if (g.tags[tag] && g.tags[tag].alive && attackers.indexOf(tag) < 0 && defenders.indexOf(tag) < 0) side.push(tag);
   };
+  // A client's loyalty is not a formality (SPEC §61): a court that thinks
+  // ill of its overlord (below loyalOpinion) stays home from the overlord's
+  // wars — attacking and defending both. Only its OWN defense still binds
+  // the house, the half of the bargain that never lapses.
+  const V = ctx.DEFINES.VASSALS || {};
+  const refusals = [];
+  const loyal = (v, lord) => {
+    if (opinionOf(ctx, v, lord) >= num(V.loyalOpinion, -25)) return true;
+    refusals.push({ v, lord });
+    return false;
+  };
   for (const al of A.allies || []) {
     if (al !== def && (D.allies || []).indexOf(al) < 0) join(attackers, al);
   }
-  for (const v of vassalsOf(ctx, atk)) join(attackers, v);
+  for (const v of vassalsOf(ctx, atk)) if (loyal(v, atk)) join(attackers, v);
   // A punitive league (SPEC §21 extended): when the coalition itself declares
   // the war, every member without a standing truce marches on the attacker's
   // side — the world's answer to a conqueror, not one rival's.
@@ -1663,10 +1758,10 @@ export function declareWar(ctx, atk, def, name, cb) {
   const lord = D.overlord && g.tags[D.overlord] && g.tags[D.overlord].alive ? D.overlord : null;
   if (lord) {
     join(defenders, lord);
-    for (const v of vassalsOf(ctx, lord)) join(defenders, v);
+    for (const v of vassalsOf(ctx, lord)) if (v === def || loyal(v, lord)) join(defenders, v);
   }
   for (const al of D.allies || []) join(defenders, al);
-  for (const v of vassalsOf(ctx, def)) join(defenders, v);
+  for (const v of vassalsOf(ctx, def)) if (loyal(v, def)) join(defenders, v);
   // The coalition answers: realms leagued against an infamous conqueror
   // defend anyone he attacks (anti-snowball, SPEC §21).
   // Guarantors honor their word (SPEC §24): any court that guaranteed the
@@ -1717,6 +1812,15 @@ export function declareWar(ctx, atk, def, name, cb) {
   ctx.bus.emit('war', { id: war.id, name: war.name, attackers: attackers.slice(), defenders: defenders.slice() });
   if (attackers.indexOf(g.playerTag) >= 0 || defenders.indexOf(g.playerTag) >= 0) {
     ctx.bus.emit('notify', { title: 'War!', text: war.name + ' has begun.', type: 'war' });
+    const mine = refusals.filter((r) => r.lord === g.playerTag);
+    if (mine.length) {
+      ctx.bus.emit('notify', {
+        title: 'A client stays home',
+        text: mine.map((r) => (g.tags[r.v] && g.tags[r.v].name) || r.v).join(', ')
+          + ' refuse' + (mine.length === 1 ? 's' : '') + ' our call to war — their court thinks too ill of us to march.',
+        type: 'bad',
+      });
+    }
   } else {
     // Other people's wars are still news — just quieter news.
     ctx.bus.emit('notify', { title: 'News from abroad', text: names(attackers) + ' march against ' + names(defenders) + '.', type: 'info' });
