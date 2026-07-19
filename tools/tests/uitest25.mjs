@@ -43,6 +43,7 @@ const modern = await page.evaluate(() => {
     'Khan Yunis', 'Rafah',
     'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
     'Kiryat Shmona', 'Azraq', 'Rutba',
+    'Kadesh Barnea', 'Dizahab', 'Zoara',
   ];
   const ctx = window._ctx;
   const renderer = window._renderer;
@@ -84,8 +85,8 @@ const modern = await page.evaluate(() => {
     click: { x: rect.left + sx, y: rect.top + sy },
   };
 });
-ok(modern.rows.length === 28 && modern.rows.every((r) => r.raw && r.area > 0 && r.hit === r.id),
-  'all 28 modern cells own pixels, geometry, and their click IDs');
+ok(modern.rows.length === 31 && modern.rows.every((r) => r.raw && r.area > 0 && r.hit === r.id),
+  'all 31 modern cells own pixels, geometry, and their click IDs');
 ok(modern.rows.find((r) => r.name === 'Safed').owner === 'ISR'
     && modern.rows.find((r) => r.name === 'Ramallah').owner === 'JOR'
     && modern.rows.find((r) => r.name === 'Rafah').owner === 'EGY',

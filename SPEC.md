@@ -2602,3 +2602,46 @@ and by presence.
   the 1948 Sahara on the real geometry snapshot (costs, the folded camp,
   the rival refusal, the planted people, the opened routes), and the
   sealed 1948 borders refusing the mechanic end to end.
+
+## 65. v6.7: the southern borders drawn true — the Negev wears its real edges
+
+The Negev triangle's OWNERS were right (v4.4) but its EDGES were not: the
+weighted-Voronoi seeds thin out in the desert, and with the nearest
+Egyptian seeds at El Arish and the deep Sinai interior, the Israeli
+Negev cells bled 25-40 km west across the 1906 Rafah-Taba line, Eilat's
+cell ran down the Egyptian gulf coast far past Taba, Jordanian Aqaba
+curled around the gulf head onto the Sinai shore, and Petra reached west
+over the Arabah into the Negev highlands.
+
+- **Three latent border cells** (appended — no save ID shifts; latent in
+  every ancient era like all modern cells): **Kadesh Barnea** (era name
+  El Quseima; parent Sinai Interior) — the Egyptian side of the Auja
+  axis, pinning the upper 1906 line; **Dizahab** (era name Taba; parent
+  Sinai Interior) — the east-Sinai gulf coast from Taba south, so Eilat
+  ends at the border and the west shore of the gulf is Egyptian;
+  **Zoara** (era name Safi; parent Petra, its real ancient sovereign) —
+  Jordan's Ghor es-Safi, holding the kingdom's side of the southern
+  Dead Sea and upper Arabah. Both Sinai cells are Egyptian in 1948,
+  Safi is Jordanian; all three open as frontier with token development.
+- **Seed corrections beside the line**: Sinai Interior's anchor moves
+  toward the border it now shares (34.05, 29.85 — it is a vast cell
+  either way); Gaza sits at the real city (34.45, 31.50) and slims to
+  0.75 weight, so the strip's east edge tracks ~34.6 instead of
+  swallowing the Kiryat Gat approaches; Mitzpe Ramon firms to 1.0 (the
+  highlands hold the Arabah rim against Petra); Paran and Eilat trim to
+  0.95 and Aila to 1.10 so the triangle's tip is a port at the gulf
+  head, not a smear along two coasts. Measured against the real 1906
+  line, every crossing is now within ~6 km — inside the ID shader's own
+  organic warp.
+- **The map proves it**: at the armistice shape, the south reads as the
+  textbook triangle — Beersheba to a point at Eilat, the diagonal
+  against Sinai, the strip on the coast, Jordan across the Arabah.
+- **Tooling**: `tools/geom-snapshot.json` regenerated at full resolution
+  from a 1948 boot (174 cells); the Uvda chain and Eilat's coastal flag
+  survive on the new raster, with Eilat now meeting Egyptian Sinai at
+  the Taba cell rather than the distant interior.
+- **Regression contract**: `smoke27.mjs` counts all 31 modern cells and
+  the new totals (EGY 213, JOR 173, ISR 183); `smoke30.mjs` pins the
+  Uvda chain against the Taba coast; `uitest25.mjs` renders, hit-tests
+  and click-resolves all 31 in a real browser; the 8-year 1948 balance
+  harness runs clean on the new geometry.

@@ -64,6 +64,8 @@ const JOR_LANDS = [
   'Beit Shemesh', 'Arad',
   // the Arabah, patrolled from Aqaba — Operation Uvda's long march
   'Paran', 'Eilat',
+  // v6.7: the kingdom's side of the Arabah — the Ghor es-Safi
+  'Zoara',
   // the eastern Badia: the Azraq oasis, Wadi Sirhan, the desert patrol's beat
   'Azraq',
 ];
@@ -75,6 +77,9 @@ const EGY_LANDS = [
   'Kiryat Gat', 'Beersheba', 'Khan Yunis', 'Rafah',
   // the Egyptian claim in the deep Negev: the Auja axis and the Kurnub tracks
   'Mitzpe Ramon', 'Dimona',
+  // v6.7: the Sinai side of the 1906 line — Quseima on the Auja axis, and
+  // the gulf coast from Taba south
+  'Kadesh Barnea', 'Dizahab',
   // the desert interiors: sovereign, administered, and (in 1948) crossable
   'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
 ];
@@ -133,6 +138,9 @@ const MODERN_PROVINCES = [
   'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
   // v4.5: the neighbors' modern shapes — the panhandle, the Badia, the wells
   'Kiryat Shmona', 'Azraq', 'Rutba',
+  // v6.7: the southern borders drawn true — the Sinai side of the 1906 line
+  // and Jordan's Ghor es-Safi, so the Negev triangle wears its real edges
+  'Kadesh Barnea', 'Dizahab', 'Zoara',
 ];
 
 const OWNERS = {};
@@ -317,6 +325,8 @@ export const BOOKMARK_1948 = {
     'Cyrene': 'Derna', 'Yathrib': 'Medina', 'Gerrha': 'Dammam',
     'Persepolis': 'Shiraz', 'Gabae': 'Isfahan', 'Halicarnassus': 'Bodrum',
     'Gortyn': 'Heraklion',
+    // v6.7: the southern border cells in their 1948 names
+    'Kadesh Barnea': 'El Quseima', 'Dizahab': 'Taba', 'Zoara': 'Safi',
     // v5.4: the wider frame in its 1948 names
     'Roma': 'Rome', 'Capua': 'Naples', 'Tarentum': 'Taranto',
     'Brundisium': 'Brindisi', 'Rhegium': 'Reggio Calabria',
@@ -392,6 +402,9 @@ export const BOOKMARK_1948 = {
     'Kiryat Shmona': { tax: 1, prod: 1, mp: 1 },
     'Azraq': { tax: 1, prod: 1, mp: 1 },
     'Rutba': { tax: 1, prod: 1, mp: 1 },
+    'Kadesh Barnea': { tax: 1, prod: 1, mp: 1 },
+    'Dizahab': { tax: 1, prod: 1, mp: 1 },
+    'Zoara': { tax: 1, prod: 1, mp: 1 },
   },
 
   // Several familiar modern Israeli cities did not yet exist in May 1948.
@@ -404,6 +417,9 @@ export const BOOKMARK_1948 = {
   // They open as sovereign frontier, passable but harsh (wasteland terrain
   // keeps its 2.5× movement cost and 5%/month attrition).
   habitation: {
+    'Kadesh Barnea': 'frontier',
+    'Dizahab': 'frontier',
+    'Zoara': 'frontier',
     'Modi\'in Hills': 'frontier',
     'Beit Shemesh': 'frontier',
     'Kiryat Gat': 'frontier',
