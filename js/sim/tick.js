@@ -5,7 +5,7 @@ import {
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
   sweepAirfields, flyPendingRaids, monthlyIncorporation,
 } from './military.js';
-import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, yearlyGrowth, monthlySubsidies } from './economy.js';
+import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites } from './realm.js';
 import { monthlyFactions } from './factions.js';
@@ -76,6 +76,7 @@ function monthlyBlock(ctx) {
   safe('modifiers', () => tickModifiers(ctx));
   if (g.date.m === 1) safe('growth', () => yearlyGrowth(ctx)); // towns grow each January (SPEC §24)
   safe('construction', () => monthlyConstruction(ctx)); // before economy: a finished market earns this month
+  safe('expeditions', () => monthlyExpeditions(ctx)); // camps in the waste check their supply line (SPEC §64)
   safe('settlement', () => monthlySettlement(ctx)); // frontier land climbs the habitation ladder (SPEC §43)
   safe('recruitment', () => monthlyRecruitment(ctx)); // one queued unit per province advances
   safe('economy', () => runMonthlyEconomy(ctx));

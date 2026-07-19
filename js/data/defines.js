@@ -51,6 +51,14 @@ export const DEFINES = {
     unrest: 1,           // temporary unrest while the newcomers settle in
     unrestMonths: 6,
   },
+  // An expedition into the unclaimed waste (SPEC §64): soldiers from an army
+  // beside an ownerless wasteland pitch a camp there; a settlement project
+  // plants the frontier; and annexation makes it a province of the realm.
+  EXPEDITION: {
+    men: 1000,     // soldiers detached from the adjacent army to hold the camp
+    treasury: 50,  // talents of supplies to put the columns on the trail
+    annexGov: 50,  // governance points to annex once the frontier is planted
+  },
 
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly
   // war-declaration chance; caution scales retreat thresholds and how early a

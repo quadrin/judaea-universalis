@@ -432,6 +432,13 @@ export const BOOKMARK_1948 = {
     'Phasis': true,
     'Caucasian Albania': true,
   },
+  // The sealed borders are closed frontiers, not colonizable waste (SPEC §64):
+  // no expedition crosses into Albania or the Soviet Caucasus either.
+  settleable: {
+    'Dyrrhachium': false,
+    'Phasis': false,
+    'Caucasian Albania': false,
+  },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {

@@ -2548,3 +2548,57 @@ already owned.
 - **Regression contract**: `smoke27.mjs` re-pins the redistributed 1948
   development (ISR 183, JOR 170, EGY 207); `smoke35.mjs` already proves
   Nazareth's Christian plurality names the province and still does.
+
+## 64. v6.6: the plough and the flag — settlers people the land, and the waste can be won
+
+Two answers to the same question — how does land become *yours*? By people,
+and by presence.
+
+- **Settlement plants the settler's people** (`monthlySettlement`,
+  economy.js): a completed settlement project no longer just raises the
+  habitation tier — the wagons carry the settler nation's own community
+  (the tag's religion and culture), sized to lead the province's makeup
+  (SPEC §56), so the majority — and with it the province's religion and
+  culture — flips to the settler. Israel settling a conquered frontier
+  makes it Jewish and Israeli; Jordan settling the Badia makes it Arab.
+  Provinces without a makeup (old saves) flip the classic binary fields
+  directly. A repeat project by the same people just grows them.
+- **The unclaimed waste can be won** (SPEC §64's second half; economy.js
+  `expeditionInfo/Start`, `monthlyExpeditions`, `annexInfo/Core`; all
+  dials in `DEFINES.EXPEDITION`): wasteland nobody owns (owner WASTE)
+  that shares a border with you can be taken in hand, in three steps that
+  compose with everything above:
+  1. **Occupy** — with an army of over 1,000 men standing in an adjacent
+     province, detach 1,000 of them (and 50 talents of supplies) to march
+     in and pitch camp: the cell's controller becomes yours while the
+     land stays impassable to ordinary movement — the expedition IS the
+     presence, no pathfinding through the void.
+  2. **Develop** — the camp takes an ordinary settlement project though
+     the land is unowned (the camp stands in for ownership); on
+     completion the frontier tier is planted and — via the mechanic
+     above — peopled by YOUR settlers.
+  3. **Annex** — with the frontier planted, 50 governance points make the
+     waste a province of the realm: owned, controller yours, impassable
+     cleared. The terrain stays `wasteland` (2.5× movement, 5%/month
+     attrition, v4.3's rule) — sovereign, harsh, and counted.
+- **Camps live off the border**: the monthly check folds the expedition
+  (and voids its settlement project) if you stop controlling every
+  adjacent province, if the owner stops being WASTE, or if the tag dies.
+  One camp per waste — a rival is refused while another power sits there.
+- **Sealed frontiers refuse every column**: `bookmark.settleable` (the
+  per-province boolean override init.js already honored) now guards the
+  mechanic, and 1948 marks Dyrrhachium, Phasis and Caucasian Albania
+  `settleable: false` — Hoxha's Albania and the Soviet Caucasus stay
+  closed borders, not colonization targets. The Sahara, the one true
+  waste of the 1948 map, is fair game from British Tripolitania.
+- **UI** (province_panel.js "The Unclaimed Waste" block; init.js
+  `getWasteland`/`sendExpedition`/`annexWasteland` actions): clicking an
+  unclaimed waste offers Send an Expedition, then Plant a Settlement,
+  then Annex the Land, each tooltip pricing its step; a camp/progress row
+  shows whose flag flies over the tents. The AI does not yet mount
+  expeditions — a human lever for now, like the factions (SPEC §34).
+- **Regression contract**: `smoke41.mjs` — the culture flip on a settled
+  conquest (Israeli Kiryat Gat), the full occupy → plant → annex flow in
+  the 1948 Sahara on the real geometry snapshot (costs, the folded camp,
+  the rival refusal, the planted people, the opened routes), and the
+  sealed 1948 borders refusing the mechanic end to end.

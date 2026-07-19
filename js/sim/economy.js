@@ -1,7 +1,8 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore } from './military.js';
+import { POP_PER_DEV, addPopulation } from './population.js';
 import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
@@ -419,11 +420,14 @@ export function settlementInfo(ctx, tag, provId) {
   const level = habLevel(ctx, p);
   const target = tierName(ctx, level + 1);
   const cost = settlementCost(ctx, level + 1);
+  // An expedition camp (SPEC §64) may settle unclaimed waste it does not own
+  // yet: the pitched camp stands in for ownership and passability.
+  const camp = p.owner === 'WASTE' && !!p.expedition && p.expedition.by === tag && p.controller === tag;
   let why = '';
   if (p.settleable === false) why = 'This land cannot support a permanent settlement.';
-  else if (p.impassable) why = 'The land is currently impassable.';
+  else if (p.impassable && !camp) why = 'The land is currently impassable.';
   else if (level >= maxTier) why = 'A thriving town already — only prosperity makes it a city.';
-  else if (p.owner !== tag) why = 'Not our province.';
+  else if (p.owner !== tag && !camp) why = 'Not our province.';
   else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
   else if (p.siege) why = 'Under siege.';
   else if (p.settlement) why = 'A settlement project is already under way.';
@@ -462,7 +466,13 @@ export function monthlySettlement(ctx) {
     if (!p || !p.settlement) continue;
     try {
       const c = p.settlement;
-      if (p.owner !== c.by || p.controller !== p.owner || p.impassable || p.settleable === false) {
+      // An expedition camp (SPEC §64) settles land it does not own: the
+      // project stands while the camp does. Everywhere else the old guards hold.
+      const camp = p.owner === 'WASTE' && p.expedition && p.expedition.by === c.by && p.controller === c.by;
+      const voided = camp
+        ? p.settleable === false
+        : (p.owner !== c.by || p.controller !== p.owner || p.impassable || p.settleable === false);
+      if (voided) {
         p.settlement = null;
         continue;
       }
@@ -476,8 +486,27 @@ export function monthlySettlement(ctx) {
       p.dev.tax = num(p.dev.tax) + num(reward.tax);
       p.dev.prod = num(p.dev.prod) + num(reward.prod);
       p.dev.mp = num(p.dev.mp) + num(reward.mp);
+      // The wagons carry people (SPEC §64): a finished project plants the
+      // settler nation's own community at the head of the makeup — settled
+      // land comes to speak the settler's tongue and pray at their altar.
+      const settler = g.tags[c.by];
+      if (settler && settler.religion && settler.culture) {
+        const grown = Math.round(POP_PER_DEV
+          * Math.max(1, num(reward.tax) + num(reward.prod) + num(reward.mp)));
+        if (Array.isArray(p.pop) && p.pop.length) {
+          const lead = p.pop[0];
+          const already = lead.r === settler.religion && lead.c === settler.culture;
+          addPopulation(p, {
+            r: settler.religion, c: settler.culture,
+            n: already ? grown : num(lead.n) + grown,
+          });
+        } else {
+          p.religion = settler.religion;
+          p.culture = settler.culture;
+        }
+      }
       ctx.bus.emit('provinceDev', { id: i });
-      if (p.owner === g.playerTag) {
+      if ((camp ? c.by : p.owner) === g.playerTag) {
         const def = ctx.DEFINES.HABITATION && ctx.DEFINES.HABITATION[p.habitation];
         ctx.bus.emit('notify', {
           title: p.name + ' takes root',
@@ -487,6 +516,147 @@ export function monthlySettlement(ctx) {
       }
     } catch (e) { warnOnce('settle:' + i, 'settlement tick failed for province', i, e); }
   }
+}
+
+// ---------------------------------------------------------------- expeditions
+// The unclaimed waste (SPEC §64): wasteland nobody owns (owner WASTE) on your
+// border can be taken in hand. Soldiers detached from an adjacent army march
+// in and pitch a camp (the cell stays impassable to ordinary movement — the
+// expedition IS the presence); a settlement project then plants a frontier;
+// and once the frontier stands the land may be annexed outright — owned,
+// passable, and peopled by the settlers. Wasteland terrain stays harsh after
+// annexation (2.5× movement, 5%/month attrition). A sealed frontier
+// (settleable: false, SPEC §52's closed borders) refuses every column.
+function expeditionCfg(ctx) { return (ctx.DEFINES && ctx.DEFINES.EXPEDITION) || {}; }
+
+// The strongest of tag's armies standing beside the waste, and whether tag
+// controls any adjacent province at all (the camp's lifeline).
+function expeditionBase(ctx, tag, provId) {
+  const g = ctx.game;
+  const nbs = ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[provId];
+  const out = { adjacent: false, army: null };
+  if (!nbs) return out;
+  for (const nb of nbs) {
+    const q = ctx.byId(nb);
+    if (q && !q.impassable && q.controller === tag) { out.adjacent = true; break; }
+  }
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (!a || a.tag !== tag || a.inBattle || a.retreating || !nbs.has(a.prov)) continue;
+    const q = ctx.byId(a.prov);
+    if (!q || q.impassable) continue;
+    if (!out.army || num(a.men) > num(out.army.men)) out.army = a;
+  }
+  return out;
+}
+
+export function expeditionInfo(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  const s = expeditionCfg(ctx);
+  const men = Math.max(1, num(s.men, 1000) | 0);
+  const cost = Math.max(0, num(s.treasury, 50));
+  const out = { show: false, can: false, why: '', men, cost, fromName: '' };
+  if (!p || !t) { out.why = 'invalid'; return out; }
+  if (p.owner !== 'WASTE' || !p.impassable) return out; // not unclaimed waste
+  if (p.settleable === false) return out;               // a sealed frontier
+  out.show = true;
+  const base = expeditionBase(ctx, tag, provId);
+  if (p.expedition && p.expedition.by === tag) out.why = 'Our expedition already holds this waste.';
+  else if (p.expedition) out.why = 'Another power\'s expedition holds this waste.';
+  else if (!base.adjacent) out.why = 'We control no province on this border.';
+  else if (!base.army || num(base.army.men) <= men) {
+    out.why = 'Needs an army with over ' + men.toLocaleString() + ' men in an adjacent province.';
+  } else if (num(t.treasury) < cost) {
+    out.why = 'Needs ' + cost + ' talents to supply the columns.';
+  }
+  if (!out.why) {
+    out.can = true;
+    const from = ctx.byId(base.army.prov);
+    out.fromName = (from && from.name) || '';
+  }
+  return out;
+}
+
+export function expeditionStart(ctx, tag, provId) {
+  const info = expeditionInfo(ctx, tag, provId);
+  if (!info.show || !info.can) return { ok: false, why: info.why || 'Not unclaimed wasteland.' };
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  const base = expeditionBase(ctx, tag, provId);
+  base.army.men = Math.max(0, num(base.army.men) - info.men);
+  t.treasury = num(t.treasury) - info.cost;
+  p.expedition = { by: tag, men: info.men };
+  p.controller = tag;
+  return { ok: true, men: info.men, cost: info.cost, fromName: info.fromName };
+}
+
+// Monthly: a camp lives off the border that supplies it. Lose every adjacent
+// province (or the land stops being unclaimed waste) and the expedition folds,
+// taking any settlement project with it.
+export function monthlyExpeditions(ctx) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || !p.expedition) continue;
+    try {
+      const by = p.expedition.by;
+      const t = g.tags[by];
+      let folds = !t || t.alive === false || p.owner !== 'WASTE' || p.settleable === false;
+      if (!folds) {
+        const nbs = ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[i];
+        let supplied = false;
+        if (nbs) {
+          for (const nb of nbs) {
+            const q = ctx.byId(nb);
+            if (q && !q.impassable && q.controller === by) { supplied = true; break; }
+          }
+        }
+        folds = !supplied;
+      }
+      if (!folds) continue;
+      p.expedition = null;
+      p.settlement = null;
+      if (p.controller === by) p.controller = 'WASTE';
+      if (by === g.playerTag && t && t.alive !== false) {
+        ctx.bus.emit('notify', {
+          title: 'The expedition folds its tents',
+          text: 'Cut off from any friendly border, our camp in ' + p.name + ' packs up and walks home.',
+          type: 'bad', provName: p.name,
+        });
+      }
+    } catch (e) { warnOnce('exped:' + i, 'expedition tick failed for province', i, e); }
+  }
+}
+
+// Annexation: once the expedition's settlement has taken root (habitation
+// out of `uninhabited`), governance ink makes the waste a province of the
+// realm — owned, passable, counted.
+export function annexInfo(ctx, tag, provId) {
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  const cost = Math.max(0, num(expeditionCfg(ctx).annexGov, 50));
+  const out = { show: false, can: false, why: '', cost };
+  if (!p || !t) return out;
+  if (p.owner !== 'WASTE' || !p.expedition || p.expedition.by !== tag) return out;
+  out.show = true;
+  if (habLevel(ctx, p) < 1) out.why = 'Plant a settlement first — the flag follows the plough.';
+  else if (num(t.points.gov) < cost) out.why = 'Needs ' + cost + ' governance points.';
+  else out.can = true;
+  return out;
+}
+
+export function annexCore(ctx, tag, provId) {
+  const info = annexInfo(ctx, tag, provId);
+  if (!info.show || !info.can) return { ok: false, why: info.why || 'No expedition of ours holds this land.' };
+  const p = ctx.byId(provId);
+  const t = ctx.game.tags[tag];
+  t.points.gov = num(t.points.gov) - info.cost;
+  p.expedition = null;
+  p.impassable = false; // the routes open; the terrain stays wasteland-harsh
+  p.controller = tag;
+  changeOwnerCore(ctx, p, tag);
+  return { ok: true, cost: info.cost };
 }
 
 // ---------------------------------------------------------------- construction
