@@ -2514,3 +2514,37 @@ The old world's other diplomacy, for every chapter before 1948
   crowned-houses gates, mutual formation and its price, the doubled
   heir chance, war's annulment and its bitter memory, and the 1948
   era gate.
+
+## 63. v6.5: the Galilee pocket — the lines of 15 May drawn true
+
+§46 laid down the rule ("starting owners are the de facto lines of 15
+May; the modern borders are what you *make*") and then broke it one
+valley north: ISR opened holding Sepphoris and Jotapata — the heart of
+the central Galilee pocket §46 itself calls "really Arab-held in May
+1948" — so the Dekel/Hiram mission asked Israel to take a Nazareth it
+already owned.
+
+- **The pocket is carved out**: `Sepphoris` (Nazareth) and `Jotapata`
+  join `Gischala` (Jish) in `LEB_LANDS` — the Lebanese proxy that has
+  carried the Liberation Army since v4.5 — making the pocket contiguous
+  from Nazareth through Sakhnin to Jish and the Lebanese border, exactly
+  the ground Operations Dekel (July) and Hiram (October) existed to
+  take. The `i_galilee` mission is now a real conquest, and Israel's
+  modern-borders shape is *formed* in the north the way it is in the
+  Negev.
+- **The pocket has people and names**: Sepphoris overlays `christianity`
+  (Nazareth's Christian plurality, its mixed-city table now 60/40
+  Christian/Muslim with no 1948 Jewish community); Jotapata overlays
+  `islam` and era-names **Sakhnin** — kibbutz Yodfat is a 1960
+  foundation, and the map speaks 1948 (SPEC §24).
+- **The pocket has defenders**: a 2-regiment ALA "First Yarmouk
+  Regiment" garrisons Nazareth from the start; Kaukji himself still
+  arrives by event (`ev_i_kaukji`, unchanged). Palmach Yiftach spawns at
+  Safed — Operation Yiftach's actual ground — instead of inside the
+  now-hostile pocket.
+- **Thresholds hold**: Israel begins with 22 provinces (§46's 24 minus
+  the pocket); the verdicts stay 26+ (greater) and 21+ (armistice) —
+  the war still supplies the difference, it just supplies more of it.
+- **Regression contract**: `smoke27.mjs` re-pins the redistributed 1948
+  development (ISR 183, JOR 170, EGY 207); `smoke35.mjs` already proves
+  Nazareth's Christian plurality names the province and still does.
