@@ -46,7 +46,7 @@ const ISR_LANDS = [
   'Joppa', 'Antipatris', 'Caesarea Maritima', 'Dora', 'Ptolemais', 'Jamnia',
   'Scythopolis',
   // eastern Galilee (Tiberias and Safed fell before the Mandate ended)
-  'Tiberias', 'Tarichaea', 'Jotapata', 'Sepphoris',
+  'Tiberias', 'Tarichaea',
   // the Galilee panhandle: Metula, the Hula settlements, the Dan springs
   'Kiryat Shmona',
   // west Jerusalem and the Dead Sea outposts
@@ -87,7 +87,11 @@ const SYR_LANDS = [
 ];
 // Chalcis is the Beqaa (era name Zahle): Lebanese, not Syrian, since Greater
 // Lebanon's 1920 borders — the republic is the coast AND the valley.
-const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Gischala', 'Chalcis'];
+// Gischala, Sepphoris and Jotapata (Jish, Nazareth, Sakhnin) are the central
+// Galilee pocket: Arab-held on 15 May and garrisoned by Kaukji's Liberation
+// Army, carried here under the Lebanese proxy until Dekel and Hiram take it.
+const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Chalcis',
+  'Gischala', 'Sepphoris', 'Jotapata'];
 const IRQ_LANDS = [
   'Singara', 'Hatra', 'Arbela', 'Assur', 'Seleucia-Ctesiphon', 'Babylon',
   'Nehardea', 'Uruk', 'Charax',
@@ -158,8 +162,9 @@ for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, IRQ_LANDS, TUR_LANDS, SAU
   RELIGIONS[n] = 'islam';
 }
 for (const n of ISR_LANDS) RELIGIONS[n] = 'judaism';
-for (const n of ['Tyre', 'Sidon', 'Gischala', 'Chalcis']) RELIGIONS[n] = 'islam';
+for (const n of ['Tyre', 'Sidon', 'Gischala', 'Jotapata', 'Chalcis']) RELIGIONS[n] = 'islam';
 for (const n of ['Berytus', 'Byblos', 'Tripolis']) RELIGIONS[n] = 'christianity';
+RELIGIONS['Sepphoris'] = 'christianity'; // Nazareth's Christian plurality
 RELIGIONS['Salamis'] = 'christianity';
 RELIGIONS['Paphos'] = 'christianity';
 for (const n of GRC_LANDS) RELIGIONS[n] = 'christianity';
@@ -257,10 +262,9 @@ export const BOOKMARK_1948 = {
       { r: 'judaism', c: 'israeli', share: 0.25 },
       { r: 'christianity', c: 'arab_modern', share: 0.12 },
     ],
-    'Sepphoris': [ // Nazareth
-      { r: 'christianity', c: 'arab_modern', share: 0.55 },
-      { r: 'islam', c: 'arab_modern', share: 0.35 },
-      { r: 'judaism', c: 'israeli', share: 0.10 },
+    'Sepphoris': [ // Nazareth — no Jewish community in the 1948 town
+      { r: 'christianity', c: 'arab_modern', share: 0.60 },
+      { r: 'islam', c: 'arab_modern', share: 0.40 },
     ],
     'Tiberias': [
       { r: 'judaism', c: 'israeli', share: 0.70 },
@@ -282,7 +286,9 @@ export const BOOKMARK_1948 = {
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
     'Ptolemais': 'Acre', 'Caesarea Maritima': 'Caesarea', 'Jamnia': 'Yavne',
     'Lydda': 'Lod', 'Emmaus': 'Latrun',
-    'Sepphoris': 'Nazareth', 'Jotapata': 'Yodfat', 'Tarichaea': 'Migdal',
+    // Jotapata wears Sakhnin: kibbutz Yodfat is a 1960 foundation, and in
+    // 1948 the cell's town is Arab Sakhnin at the pocket's heart.
+    'Sepphoris': 'Nazareth', 'Jotapata': 'Sakhnin', 'Tarichaea': 'Migdal',
     'Gischala': 'Jish', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
     'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod', 'Neapolis': 'Nablus',
     'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Karak',
@@ -425,6 +431,13 @@ export const BOOKMARK_1948 = {
     'Dyrrhachium': true,
     'Phasis': true,
     'Caucasian Albania': true,
+  },
+  // The sealed borders are closed frontiers, not colonizable waste (SPEC §64):
+  // no expedition crosses into Albania or the Soviet Caucasus either.
+  settleable: {
+    'Dyrrhachium': false,
+    'Phasis': false,
+    'Caucasian Albania': false,
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
@@ -662,8 +675,8 @@ export const BOOKMARK_1948 = {
       inf: 2, name: 'Etzioni Brigade',
       general: { name: 'David Shaltiel', fire: 2, shock: 1, maneuver: 2 },
     });
-    h.spawnArmy(ctx, 'ISR', 'Jotapata', {
-      inf: 2, cav: 1, name: 'Palmach Yiftach',
+    h.spawnArmy(ctx, 'ISR', 'Safed', {
+      inf: 2, cav: 1, name: 'Palmach Yiftach', // Operation Yiftach's ground: Safed and the eastern Galilee
       general: { name: 'Yigal Allon', fire: 2, shock: 3, maneuver: 4 },
     });
 
@@ -686,6 +699,9 @@ export const BOOKMARK_1948 = {
     h.spawnArmy(ctx, 'SYR', 'Caesarea Philippi', { inf: 3, cav: 1, name: 'Syrian 1st Brigade' });
     h.spawnArmy(ctx, 'SYR', 'Damascus', { inf: 3, name: 'Damascus Garrison' });
     h.spawnArmy(ctx, 'LEB', 'Tyre', { inf: 2, name: 'Lebanese Column' });
+    // The pocket has defenders: the ALA's Yarmouk battalions hold Nazareth
+    // until Dekel — Kaukji himself returns by event (ev_i_kaukji).
+    h.spawnArmy(ctx, 'LEB', 'Sepphoris', { inf: 2, name: 'First Yarmouk Regiment' });
     h.spawnArmy(ctx, 'IRQ', 'Neapolis', {
       inf: 4, name: 'Iraqi Expeditionary Force',
       general: { name: 'Taha al-Hashimi', fire: 1, shock: 2, maneuver: 2 },

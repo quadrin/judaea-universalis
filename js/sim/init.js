@@ -27,7 +27,7 @@ import {
   tradeRunDestinations, sendTradeRunCore,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies } from './realm.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
@@ -114,6 +114,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     unitQueue: [],
     conversion: null,
     settlement: null, // {by, monthsLeft, toTier} while a settlement project runs (SPEC §43)
+    expedition: null, // {by, men} while a camp holds unclaimed waste (SPEC §64)
     holy: s.holy || null,
     wonder: (bookmark && bookmark.wonderTweaks
       && Object.prototype.hasOwnProperty.call(bookmark.wonderTweaks, s.name))
@@ -2161,6 +2162,53 @@ export function gameActions(ctx) {
           + '; in a few months it will grow into a ' + String(res.toName || 'settlement').toLowerCase()
           + ' (' + res.cost + ' influence points).', 'good');
       } catch (e) { warnOnce('settleProvince', 'settleProvince failed', e); }
+    },
+
+    // ---- the unclaimed waste (SPEC §64) --------------------------------------
+    getWasteland(provId) {
+      try {
+        const p = ctx.byId(provId);
+        if (!p || p.owner !== 'WASTE' || !p.impassable || p.settleable === false) return null;
+        const exp = expeditionInfo(ctx, g.playerTag, provId | 0);
+        const annex = annexInfo(ctx, g.playerTag, provId | 0);
+        if (!exp.show && !annex.show) return null;
+        const ours = !!(p.expedition && p.expedition.by === g.playerTag);
+        const settle = ours ? settlementInfo(ctx, g.playerTag, provId | 0) : null;
+        return {
+          ours,
+          campBy: p.expedition ? p.expedition.by : null,
+          expedition: {
+            show: exp.show && !p.expedition,
+            can: exp.can, why: exp.why, men: exp.men, cost: exp.cost, fromName: exp.fromName,
+          },
+          settle: settle ? {
+            show: !p.settlement, can: settle.can, why: settle.why,
+            cost: settle.cost, toName: settle.toName,
+          } : null,
+          settling: p.settlement
+            ? { monthsLeft: Math.max(0, num(p.settlement.monthsLeft) | 0) } : null,
+          annex: { show: annex.show, can: annex.can, why: annex.why, cost: annex.cost },
+        };
+      } catch (e) { warnOnce('getWasteland', 'getWasteland failed', e); return null; }
+    },
+    sendExpedition(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const res = expeditionStart(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('Expedition', res.why || 'The columns cannot march.', 'bad'); return; }
+        say('The columns march', res.men.toLocaleString() + ' men leave '
+          + (res.fromName || 'the border') + ' and pitch camp in ' + (p ? p.name : 'the waste')
+          + ' (' + res.cost + ' talents). Plant a settlement there and the land can be annexed.', 'good');
+      } catch (e) { warnOnce('sendExpedition', 'sendExpedition failed', e); }
+    },
+    annexWasteland(provId) {
+      try {
+        const p = ctx.byId(provId);
+        const res = annexCore(ctx, g.playerTag, provId | 0);
+        if (!res.ok) { say('Annexation', res.why || 'The land is not ours to take.', 'bad'); return; }
+        say('The waste is annexed', (p ? p.name : 'The frontier') + ' enters the realm ('
+          + res.cost + ' governance points): its routes open, its settlers count, its flag is ours.', 'good');
+      } catch (e) { warnOnce('annexWasteland', 'annexWasteland failed', e); }
     },
 
     // ---- factions (nation panel, SPEC §34) -----------------------------------

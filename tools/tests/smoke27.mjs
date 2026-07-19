@@ -78,8 +78,10 @@ for (const p of modern.provinces) {
   devByOwner[p.owner] = (devByOwner[p.owner] || 0) + p.dev.tax + p.dev.prod + p.dev.mp;
 }
 // EGY counts 207: the 189 of v4.3-v4.5 (deserts, Negev claims) plus v5.0's
-// Marsa Matruh (4), Aswan (9) and Berenice (5). JOR counts 170; ISR 205.
-ok(devByOwner.ISR === 205 && devByOwner.JOR === 170 && devByOwner.EGY === 207,
+// Marsa Matruh (4), Aswan (9) and Berenice (5). JOR counts 170; ISR 183:
+// the v6.5 Galilee pocket moves Nazareth (13) and Sakhnin (9) off the
+// old 205 into the Lebanese-proxied Liberation Army lands.
+ok(devByOwner.ISR === 183 && devByOwner.JOR === 170 && devByOwner.EGY === 207,
   'subdivision redistributes development instead of duplicating regional wealth');
 const ctx = makeCtx({
   game: modern, DEFINES, MAP_DATA, geom: fakeGeom, bus: null,

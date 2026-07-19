@@ -73,6 +73,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
         </div>
       </div>
+      <div class="pp-build hidden" data-ref="wasteBlock">
+        <div class="pp-build-title">The Unclaimed Waste</div>
+        <div class="pp-constr hidden" data-ref="wasteCampRow"></div>
+        <div class="pp-build-grid">
+          <button class="pp-build-btn hidden" data-waste="expedition" data-ref="wasteExpedition">${icon('flag')}<span>Send an Expedition</span></button>
+          <button class="pp-build-btn hidden" data-waste="settle" data-ref="wasteSettle">${icon('bricks')}<span>Plant a Settlement</span></button>
+          <button class="pp-build-btn hidden" data-waste="annex" data-ref="wasteAnnex">${icon('scales')}<span>Annex the Land</span></button>
+        </div>
+      </div>
       <div class="pp-unrest" data-ref="unrestRow">
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
@@ -160,6 +169,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           : b.dataset.integ === 'integrate' ? 'integrateProvince' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
+      refresh();
+    });
+    refs.wasteBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-waste]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      const fn = b.dataset.waste === 'expedition' ? 'sendExpedition'
+        : b.dataset.waste === 'settle' ? 'settleProvince' : 'annexWasteland';
+      try { if (typeof actions[fn] === 'function') actions[fn](provId); }
+      catch (err) { warnOnce('waste-' + b.dataset.waste, err); }
       refresh();
     });
     refs.buildShip.addEventListener('click', () => {
@@ -419,6 +437,8 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
     // Integration (v1.5): autonomy & conversion for owned provinces
     refreshIntegration();
+    // The unclaimed waste (SPEC §64): expedition, plantation, annexation
+    refreshWasteland();
 
     // Diplomacy with the owner (re-queried every refresh; fail-soft)
     refreshDiplomacy(p, g);
@@ -477,6 +497,55 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       setHtml(refs.settleRow,
         `${icon('bricks')}<span class="pp-constr-name">Settlers arriving</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
+    }
+  }
+
+  // The unclaimed waste (SPEC §64): send soldiers to camp in ownerless
+  // wasteland on our border, plant a settlement, and annex the planted land.
+  function refreshWasteland() {
+    let info = null;
+    if (actions && typeof actions.getWasteland === 'function') {
+      try { info = actions.getWasteland(provId); } catch (e) { warnOnce('getWasteland', e); info = null; }
+    }
+    refs.wasteBlock.classList.toggle('hidden', !info);
+    if (!info) return;
+    // The camp/progress row: whose flag flies over the tents, and what grows.
+    const showCamp = !!info.campBy || !!info.settling;
+    refs.wasteCampRow.classList.toggle('hidden', !showCamp);
+    if (showCamp) {
+      const label = info.settling
+        ? 'Settlers arriving' : info.ours ? 'Our expedition holds the camp' : 'A foreign expedition camps here';
+      const right = info.settling
+        ? `${Math.max(0, info.settling.monthsLeft | 0)} month${info.settling.monthsLeft === 1 ? '' : 's'} left` : '';
+      setHtml(refs.wasteCampRow,
+        `${icon('flag')}<span class="pp-constr-name">${esc(label)}</span>`
+        + `<span class="pp-constr-left">${esc(right)}</span>`);
+    }
+    const exp = info.expedition || {};
+    refs.wasteExpedition.classList.toggle('hidden', !exp.show);
+    if (exp.show) {
+      const terms = `Send an Expedition — ${fmtInt(exp.men || 0)} men and ${exp.cost} talents\n`
+        + 'Soldiers from an adjacent army march into the waste and pitch camp. '
+        + 'Plant a settlement there and the land can be annexed.';
+      refs.wasteExpedition.classList.toggle('disabled', !exp.can);
+      refs.wasteExpedition.dataset.tt = exp.can ? terms : `${exp.why}\n――――――\n${terms}`;
+    }
+    const st = info.settle;
+    refs.wasteSettle.classList.toggle('hidden', !(st && st.show));
+    if (st && st.show) {
+      const terms = `Plant a Settlement — ${st.cost} influence points\n`
+        + `Over a few months the camp grows into a ${String(st.toName || 'frontier').toLowerCase()} `
+        + 'of our own people — the step annexation waits on.';
+      refs.wasteSettle.classList.toggle('disabled', !st.can);
+      refs.wasteSettle.dataset.tt = st.can ? terms : `${st.why}\n――――――\n${terms}`;
+    }
+    const ax = info.annex || {};
+    refs.wasteAnnex.classList.toggle('hidden', !ax.show);
+    if (ax.show) {
+      const terms = `Annex the Land — ${ax.cost} governance points\n`
+        + 'The planted waste enters the realm: owned, passable (though still harsh), and counted.';
+      refs.wasteAnnex.classList.toggle('disabled', !ax.can);
+      refs.wasteAnnex.dataset.tt = ax.can ? terms : `${ax.why}\n――――――\n${terms}`;
     }
   }
 
