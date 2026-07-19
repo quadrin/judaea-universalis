@@ -383,7 +383,7 @@ const PROVINCES = [
   P('Tarichaea', 35.50, 32.87, 0.70, 'JUD', 'coast', 'fish', 'judaism', 'galilean', 3, 4, 3, 0),
   P('Gischala', 35.45, 33.02, 0.75, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 0),
   // --- Judea region under Rome (ROM) --------------------------------------
-  P('Gaza', 34.50, 31.48, 0.85, 'ROM', 'coast', 'incense', 'hellenism', 'greek', 4, 5, 3, 0),
+  P('Gaza', 34.45, 31.50, 0.75, 'ROM', 'coast', 'incense', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Ascalon', 34.62, 31.65, 0.75, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Azotus', 34.70, 31.78, 0.75, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 3, 2, 0),
   P('Jamnia', 34.75, 31.87, 0.75, 'ROM', 'farmland', 'grain', 'judaism', 'judean', 3, 3, 3, 0),
@@ -455,7 +455,7 @@ const PROVINCES = [
     { wonder: 'petra' }),
   P('Bostra', 36.48, 32.52, 1.10, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 3, 4, 3, 0),
   P('Oboda', 34.78, 30.79, 1.30, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 3, 1, 0),
-  P('Aila', 35.08, 29.62, 1.30, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 2, 4, 1, 0),
+  P('Aila', 35.08, 29.62, 1.10, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 2, 4, 1, 0),
   P('Hegra', 37.95, 26.80, 1.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 2, 3, 1, 0),
   P('Dumatha', 39.87, 29.80, 2.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 2, 1, 0),
   P('Medaba', 35.80, 31.72, 0.95, 'NAB', 'drylands', 'livestock', 'nabataean', 'nabataean', 2, 3, 2, 0),
@@ -482,7 +482,7 @@ const PROVINCES = [
     { impassable: true }),
   P('Arabian Desert', 40.50, 27.50, 2.20, 'WASTE', 'wasteland', 'livestock', 'nabataean', 'arab', 1, 1, 1, 0,
     { impassable: true }),
-  P('Sinai Interior', 33.80, 29.50, 1.80, 'WASTE', 'wasteland', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
+  P('Sinai Interior', 34.05, 29.85, 1.80, 'WASTE', 'wasteland', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { impassable: true }),
   P('Eastern Desert', 32.80, 27.50, 1.80, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { impassable: true }),
@@ -548,13 +548,13 @@ const PROVINCES = [
   // the Nabataean Negev (Oboda's highlands, Aila's Arabah hinterland).
   P('Dimona', 35.03, 31.06, 0.70, 'NAB', 'desert', 'salt', 'nabataean', 'idumean', 1, 1, 1, 0,
     { latentParent: 'Oboda' }),
-  P('Mitzpe Ramon', 34.80, 30.61, 0.90, 'NAB', 'desert', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Mitzpe Ramon', 34.80, 30.61, 1.00, 'NAB', 'desert', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Oboda' }),
-  P('Paran', 34.88, 29.92, 1.05, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
+  P('Paran', 34.88, 29.92, 0.95, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
   // Seeded at the head of the gulf so the cell owns the northwest shore:
   // Eilat is the port the greater 1948 verdict marches for, not an inland box.
-  P('Eilat', 34.92, 29.57, 1.05, 'NAB', 'coast', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Eilat', 34.92, 29.57, 0.95, 'NAB', 'coast', 'spices', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Aila' }),
 
   // --- v4.5: the modern borders of the Levant ------------------------------
@@ -635,6 +635,21 @@ const PROVINCES = [
   // Tripolitanian cells from claiming the map's whole southwest.
   P('Sahara', 16.50, 27.20, 2.50, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { impassable: true }),
+
+  // --- v6.7: the southern borders drawn true (appended; no save ID shifts) --
+  // Three latent border cells pin the Negev's modern frontiers, which the
+  // sparse desert seeds let wander: without an Egyptian seed east of Sinai
+  // Interior, the Israeli Negev cells bled 25-40 km across the 1906
+  // Rafah-Taba line, Eilat's cell ran down the Egyptian gulf coast past
+  // Taba, and Petra reached west over the Arabah. All three collapse latent
+  // in every ancient era — the Sinai pair into the interior waste, Zoara
+  // into Nabataean Petra, its real ancient sovereign.
+  P('Kadesh Barnea', 34.30, 30.62, 1.10, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Sinai Interior' }),
+  P('Dizahab', 34.62, 29.42, 1.10, 'NAB', 'coast', 'fish', 'nabataean', 'arab', 1, 1, 1, 0,
+    { latentParent: 'Sinai Interior' }),
+  P('Zoara', 35.50, 30.90, 0.90, 'NAB', 'desert', 'salt', 'nabataean', 'nabataean', 1, 1, 1, 0,
+    { latentParent: 'Petra' }),
 ];
 
 // ---------------------------------------------------------------------------

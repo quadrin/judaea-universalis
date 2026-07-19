@@ -2085,6 +2085,11 @@ html, body {
 .peace-ws { font-size: 13.5px; margin-bottom: 8px; color: var(--ink-soft); }
 .peace-ws .pos { color: var(--green); }
 .peace-ws .neg { color: var(--red-deep); }
+/* The congress or the corridor: pick the whole coalition or one court (SPEC §67) */
+.peace-targets { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.peace-target { font-size: 12px; padding: 3px 9px; }
+.peace-target-on { border-color: var(--gold); color: var(--gold); }
+.peace-target .peace-dim { font-size: 11px; }
 .peace-envoy {
   margin-bottom: 8px;
   padding: 5px 8px;

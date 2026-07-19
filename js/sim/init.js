@@ -3,7 +3,7 @@
 
 import { createRng } from '../core/rng.js';
 import {
-  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore,
+  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -1473,14 +1473,17 @@ export function gameActions(ctx) {
     // ---- peace (EU4-style deal builder) ------------------------------------
     // getPeaceInfo -> what can be demanded; evaluatePeace -> live price &
     // acceptance preview; offerPeaceDeal -> send the envoys.
-    getPeaceInfo(warId) {
+    getPeaceInfo(warId, enemyTag) {
       try {
         const war = g.wars.find((w) => w && w.id === warId);
         const me = g.playerTag;
         if (!war) return null;
         if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return null;
-        const info = peaceDealInfo(ctx, war, me);
-        info.envoyMonthsLeft = diploCdMonthsLeft(ctx, 'peace:' + war.id);
+        const info = peaceDealInfo(ctx, war, me, enemyTag);
+        // Rebuffed envoys cool per court (SPEC §67): a door slammed in Amman
+        // does not close the one in Damascus.
+        info.envoyMonthsLeft = diploCdMonthsLeft(ctx,
+          'peace:' + war.id + (info.separate ? ':' + info.enemyLeader : ''));
         return info;
       } catch (e) { warnOnce('peaceInfo', 'getPeaceInfo failed', e); return null; }
     },
@@ -1502,16 +1505,18 @@ export function gameActions(ctx) {
         // SPEC §31: the player may ALWAYS sue for peace — even in scripted
         // fight-to-the-death wars. Whether the enemy listens is another
         // matter (evaluatePeaceDeal), and the AI keeps its own counsel.
-        if (diploCdActive(ctx, 'peace:' + war.id)) {
-          say('Envoys rebuffed', 'The enemy will not receive our envoys again yet ('
-            + diploCdMonthsLeft(ctx, 'peace:' + war.id) + ' months).', 'bad');
+        const scope = peaceDealInfo(ctx, war, me, deal && deal.enemy);
+        const cdKey = 'peace:' + war.id + (scope.separate ? ':' + scope.enemyLeader : '');
+        if (diploCdActive(ctx, cdKey)) {
+          say('Envoys rebuffed', 'That court will not receive our envoys again yet ('
+            + diploCdMonthsLeft(ctx, cdKey) + ' months).', 'bad');
           return;
         }
         const ev = evaluatePeaceDeal(ctx, war, me, deal);
         if (ev.acceptable) {
           executePeaceDeal(ctx, war, me, deal);
         } else {
-          setDiploCd(ctx, 'peace:' + war.id, 6);
+          setDiploCd(ctx, cdKey, 6);
           say('Terms refused', ev.reason + ' Six months until they will listen again.', 'bad');
         }
       } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }
@@ -2387,12 +2392,19 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) { p.x = c.x; p.y = c.y; }
       p.canon = source.name || p.canon || p.name;
       p.name = bookmarkField(bookmark, 'provinceNames', source, false) || source.name || p.name;
-      // Passability is era data, not campaign state — nothing mutates it in
-      // play. v4.3 opens the 1948 desert interiors (SPEC §44), and an old save
-      // must not keep the wall. Untouched empty land likewise adopts the era's
-      // tier; a tier the player earned (settlement, growth) is never clobbered.
+      // ...then re-earn any owner rename the campaign had achieved (SPEC §66):
+      // integration and culture are campaign state and survive the save.
+      resolveDisplayName({ game, bookmark, bus: null }, p);
+      // Passability is era data, not campaign state — v4.3 opens the 1948
+      // desert interiors (SPEC §44), and an old save must not keep the wall.
+      // One campaign fact does move it: an annexed waste (SPEC §64) stays
+      // open — the routes the expedition cut are not un-cut by loading.
+      // Untouched empty land likewise adopts the era's tier; a tier the
+      // player earned (settlement, growth) is never clobbered.
       const impassableOverride = bookmarkField(bookmark, 'impassable', source);
-      p.impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable;
+      const annexedWaste = p.owner && p.owner !== 'WASTE' && (source.owner || 'WASTE') === 'WASTE';
+      p.impassable = annexedWaste ? false
+        : (typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable);
       const habOverride = bookmarkField(bookmark, 'habitation', source);
       if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
       // Goods are era data too (SPEC §52) — nothing mutates them in play. The

@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
 import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
 import { TRADE_ROUTES } from '../data/trade.js';
@@ -504,6 +504,8 @@ export function monthlySettlement(ctx) {
           p.religion = settler.religion;
           p.culture = settler.culture;
         }
+        // Land peopled by the settler's own is theirs to name (SPEC §66).
+        resolveDisplayName(ctx, p);
       }
       ctx.bus.emit('provinceDev', { id: i });
       if ((camp ? c.by : p.owner) === g.playerTag) {

@@ -1178,10 +1178,44 @@ export function changeControllerCore(ctx, p, tag) {
   }
   ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
 }
+// The maps speak the owner's tongue only once the land is truly theirs
+// (SPEC §66): a bookmark's `integratedNames[tag]` gives the name a tag
+// writes on a province — but it applies only after the province is properly
+// integrated (integration at 1) or peopled by the owner's own culture
+// (a completed settlement, SPEC §64). Until then — and again the moment it
+// changes hands — the province carries the era's original name.
+export function resolveDisplayName(ctx, p) {
+  if (!p || !p.canon) return p && p.name;
+  const bm = ctx.bookmark;
+  const eraTable = (bm && bm.provinceNames) || {};
+  const era = Object.prototype.hasOwnProperty.call(eraTable, p.canon) ? eraTable[p.canon] : p.canon;
+  const t = ctx.game.tags && ctx.game.tags[p.owner];
+  const table = bm && bm.integratedNames && bm.integratedNames[p.owner];
+  const renamed = table && table[p.canon];
+  const theirs = !!t && (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture));
+  const next = (renamed && theirs) ? renamed : era;
+  if (p.name !== next) {
+    const was = p.name;
+    p.name = next;
+    if (ctx.bus) {
+      ctx.bus.emit('provinceRenamed', { provId: p.id, from: was, to: next });
+      if (renamed && theirs && p.owner === ctx.game.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'The maps are redrawn',
+          text: was + ' is ours in more than law — the signposts now read ' + next + '.',
+          type: 'good', provName: next,
+        });
+      }
+    }
+  }
+  return p.name;
+}
+
 export function changeOwnerCore(ctx, p, tag) {
   if (!p || !tag || p.owner === tag) return;
   const from = p.owner;
   p.owner = tag;
+  resolveDisplayName(ctx, p);
   ctx.bus.emit('provinceOwner', { provId: p.id, from, to: tag });
 }
 
@@ -2089,6 +2123,38 @@ export const PEACE = {
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
+// The bilateral ledger behind a separate peace (SPEC §67): how the war
+// stands between us and ONE member of the enemy coalition. Occupation of
+// their own land and their war exhaustion push them toward the door; land
+// they hold of ours holds them in. Side-pooled battle glory counts at half
+// weight — a coalition member shares its side's victories, but feels its
+// own burned fields entirely.
+export function separateWarscore(ctx, war, byTag, enemyTag) {
+  const g = ctx.game;
+  const att = war.attackers.indexOf(byTag) >= 0;
+  const mySide = att ? war.attackers : war.defenders;
+  const myKey = att ? 'att' : 'def';
+  const theirKey = att ? 'def' : 'att';
+  let theirDev = 0, occByUs = 0, ourDev = 0, occByThem = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    const d = devTotal(p);
+    if (p.owner === enemyTag) {
+      theirDev += d;
+      if (mySide.indexOf(p.controller) >= 0) occByUs += d;
+    } else if (mySide.indexOf(p.owner) >= 0) {
+      ourDev += d;
+      if (p.controller === enemyTag) occByThem += d;
+    }
+  }
+  const occ = theirDev > 0 ? (occByUs / theirDev) * 60 : 0;
+  const counterOcc = ourDev > 0 ? (occByThem / ourDev) * 60 : 0;
+  const battles = war._bs ? clamp((num(war._bs[myKey]) - num(war._bs[theirKey])) * 0.5, -20, 20) : 0;
+  const et = g.tags[enemyTag];
+  const weary = Math.min(20, num(et && et.warExhaustion) * 1.5);
+  return Math.round(clamp(occ - counterOcc + battles + weary, -100, 100));
+}
 // The anti-snowball dial block (SPEC §21 extended, defines.js BALANCE).
 export function BAL(ctx, key, fallback) {
   const b = ctx && ctx.DEFINES && ctx.DEFINES.BALANCE;
@@ -2113,11 +2179,17 @@ function provDemandCost(ctx, p, byTag) {
 // Everything the peace dialog needs: our score, the enemy leader, which
 // provinces are on the table (enemy-owned, our-side-occupied) and their costs
 // (discounted by claims and shared faith), plus subjugation terms.
-export function peaceDealInfo(ctx, war, byTag) {
+// With `enemyTag` (SPEC §67) the table is a SEPARATE PEACE with that one
+// coalition member: only their provinces, their gold, their exhaustion — and
+// the bilateral separateWarscore instead of the side ledger. Valid only
+// while at least one other enemy remains to carry the war on.
+export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   const g = ctx.game;
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
   const theirSide = enemySideOf(war, byTag);
-  const enemyLeader = theirSide.find((t) => g.tags[t] && g.tags[t].alive) || null;
+  const aliveEnemies = theirSide.filter((t) => g.tags[t] && g.tags[t].alive);
+  const separate = !!enemyTag && aliveEnemies.indexOf(enemyTag) >= 0 && aliveEnemies.length >= 2;
+  const enemyLeader = separate ? enemyTag : (aliveEnemies[0] || null);
   const et = enemyLeader ? g.tags[enemyLeader] : null;
   const me = g.tags[byTag];
   const myRel = me ? me.religion : null;
@@ -2128,7 +2200,7 @@ export function peaceDealInfo(ctx, war, byTag) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     if (p.owner === enemyLeader) enemyLeaderDev += devTotal(p);
-    if (theirSide.indexOf(p.owner) < 0) continue;
+    if (separate ? p.owner !== enemyLeader : theirSide.indexOf(p.owner) < 0) continue;
     theirSideDev += devTotal(p);
     if (mySide.indexOf(p.controller) < 0) continue; // must be occupied by our side
     let cost = provDemandCost(ctx, p, byTag);
@@ -2148,14 +2220,26 @@ export function peaceDealInfo(ctx, war, byTag) {
   // realms already sworn to someone, and priced by the realm's weight.
   let canSubjugate = false;
   let whyNotSubjugate = '';
-  if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
+  if (separate) whyNotSubjugate = 'A separate peace cannot break a crown — subjugation waits for the full congress.';
+  else if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
   else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';
   else canSubjugate = true;
   const subjugateCost = clamp(Math.round(PEACE.subjugateBase + enemyLeaderDev * PEACE.subjugatePerDev),
     PEACE.subjugateBase, PEACE.subjugateMax);
   return {
     warId: war.id, warName: war.name,
-    myWs: Math.round(num(war.warscore && war.warscore[byTag])),
+    myWs: separate
+      ? separateWarscore(ctx, war, byTag, enemyLeader)
+      : Math.round(num(war.warscore && war.warscore[byTag])),
+    separate,
+    // Every court a separate word could be had with (shown when the enemy
+    // is a coalition; empty when there is only one court to talk to).
+    separateTargets: aliveEnemies.length >= 2
+      ? aliveEnemies.map((t) => ({
+        tag: t, name: (g.tags[t] && g.tags[t].name) || t,
+        ws: separateWarscore(ctx, war, byTag, t),
+      }))
+      : [],
     enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
     enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
     provinces,
@@ -2208,7 +2292,7 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
 // the warscore price, whether the enemy takes it, and a one-line reason.
 export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const d = deal || {};
-  const info = peaceDealInfo(ctx, war, byTag);
+  const info = peaceDealInfo(ctx, war, byTag, d.enemy); // d.enemy: separate peace (SPEC §67)
   const subjugate = !!d.subjugate && info.canSubjugate;
   const chosen = [];
   let cost = 0;
@@ -2266,11 +2350,8 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
 // wars that remain, set five-year truces, march stranded armies home through
 // now-neutral land (retreating bypasses entry rules). Territory settlements
 // are the CALLER's business — do them before calling this.
-export function dissolveWar(ctx, war) {
+function rebuildAtWarWith(ctx) {
   const g = ctx.game;
-  const participants = war.attackers.concat(war.defenders);
-  const wi = g.wars.indexOf(war);
-  if (wi >= 0) g.wars.splice(wi, 1);
   for (const t of Object.keys(g.tags)) if (g.tags[t]) g.tags[t].atWarWith = [];
   for (const w of g.wars) {
     for (const a of w.attackers) for (const d of w.defenders) {
@@ -2279,20 +2360,27 @@ export function dissolveWar(ctx, war) {
       if (td && td.atWarWith.indexOf(a) < 0) td.atWarWith.push(a);
     }
   }
+}
+// Truce + settled-war ledger between two courts. Historical event chains
+// consult the ledger so a treaty actually changes the timeline: stale
+// battle/armistice cards do not pop up after the player has already ended
+// their campaign.
+function setTruce(ctx, a, d, warName) {
+  const g = ctx.game;
   if (!g.truces) g.truces = {};
   if (!g.flags) g.flags = {};
   if (!g.flags._settledWars) g.flags._settledWars = {};
-  for (const a of war.attackers) for (const d of war.defenders) {
-    const key = truceKey(a, d);
-    g.truces[key] = { y: g.date.y + 5, m: g.date.m };
-    // Historical event chains consult this ledger so a treaty actually
-    // changes the timeline: stale battle/armistice cards do not pop up after
-    // the player has already ended their campaign.
-    g.flags._settledWars[key] = { y: g.date.y, m: g.date.m, name: war.name || '' };
-  }
+  const key = truceKey(a, d);
+  g.truces[key] = { y: g.date.y + 5, m: g.date.m };
+  g.flags._settledWars[key] = { y: g.date.y, m: g.date.m, name: warName || '' };
+}
+// March armies of `tags` home from land that is no longer theirs to stand on
+// (retreating bypasses entry rules).
+function marchStrandedHome(ctx, tags) {
+  const g = ctx.game;
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
-    if (!a || participants.indexOf(a.tag) < 0) continue;
+    if (!a || tags.indexOf(a.tag) < 0) continue;
     const p = ctx.byId(a.prov);
     if (!p || p.controller === a.tag || sameSide(ctx, a.tag, p.controller) || isHostile(ctx, a.tag, p.controller)) continue;
     const path = bfs(ctx, a.prov,
@@ -2301,7 +2389,45 @@ export function dissolveWar(ctx, war) {
       24);
     if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
   }
+}
+export function dissolveWar(ctx, war) {
+  const g = ctx.game;
+  const participants = war.attackers.concat(war.defenders);
+  const wi = g.wars.indexOf(war);
+  if (wi >= 0) g.wars.splice(wi, 1);
+  rebuildAtWarWith(ctx);
+  for (const a of war.attackers) for (const d of war.defenders) setTruce(ctx, a, d, war.name);
+  marchStrandedHome(ctx, participants);
   ctx.bus.emit('war', { id: war.id, name: war.name, ended: true });
+}
+// A separate peace (SPEC §67): one member of the enemy coalition leaves the
+// war while the rest fight on. Status quo is settled between the departing
+// court and OUR side only — the caller applies cessions first; every other
+// front keeps its occupations. Five-year truces bind the leaver to everyone
+// on our side. If the leaver was the last court standing, the caller should
+// have ended the war instead (peaceDealInfo refuses that table).
+export function releaseFromWar(ctx, war, leaverTag, byTag) {
+  const g = ctx.game;
+  const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
+  const theirSide = enemySideOf(war, byTag);
+  // Status quo between the leaver and our side, both directions.
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (p.owner === leaverTag && mySide.indexOf(p.controller) >= 0 && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    } else if (mySide.indexOf(p.owner) >= 0 && p.controller === leaverTag
+        && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    }
+  }
+  const at = theirSide.indexOf(leaverTag);
+  if (at >= 0) theirSide.splice(at, 1);
+  if (war.warscore) delete war.warscore[leaverTag];
+  rebuildAtWarWith(ctx);
+  for (const t of mySide) setTruce(ctx, leaverTag, t, war.name);
+  marchStrandedHome(ctx, [leaverTag].concat(mySide));
+  ctx.bus.emit('war', { id: war.id, name: war.name, left: leaverTag });
 }
 
 // End a war without a treaty. winnersKey 'att'/'def': the sword keeps what it
@@ -2328,6 +2454,8 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
       if (conqueror) conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
+      p.integration = 0; // integration is with a sovereign, not the soil (SPEC §66)
+      p.integrating = null; // cleared before the owner change: no inherited rename
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -2356,7 +2484,7 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
 
 export function executePeaceDeal(ctx, war, byTag, deal) {
   const g = ctx.game;
-  const info = peaceDealInfo(ctx, war, byTag);
+  const info = peaceDealInfo(ctx, war, byTag, deal && deal.enemy); // separate peace scope (SPEC §67)
   const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
   const me = g.tags[byTag];
   const terms = [];
@@ -2368,6 +2496,11 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     const p = ctx.byId(id);
     if (!p) continue;
     cededNames.push(p.name);
+    // A new state starts over with the communities (SPEC §66): integration
+    // is with a sovereign, not with the soil — cleared BEFORE the owner
+    // change so the incoming owner cannot inherit a rename it never earned.
+    p.integration = 0;
+    p.integrating = null;
     changeOwnerCore(ctx, p, byTag);
     changeControllerCore(ctx, p, byTag);
     p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
@@ -2425,6 +2558,23 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     terms.push('is humiliated before the nations');
   }
   const participants = war.attackers.concat(war.defenders);
+  if (info.separate) {
+    // One court leaves the table; the war goes on without them. Status quo
+    // and truces are theirs alone — every other front keeps its occupations.
+    releaseFromWar(ctx, war, info.enemyLeader, byTag);
+    const summary = terms.length
+      ? (info.enemyName || 'They') + ' ' + terms.join('; ') + ' and leaves the war.'
+      : (info.enemyName || 'They') + ' leaves the war; occupations between us revert.';
+    chronicle(ctx, 'peace', 'A separate peace: ' + summary);
+    if (participants.indexOf(g.playerTag) >= 0) {
+      ctx.bus.emit('notify', {
+        title: 'A separate peace',
+        text: summary + ' A five-year truce holds between us. The rest of the war goes on.',
+        type: participants.indexOf(byTag) >= 0 && byTag === g.playerTag ? 'good' : 'info',
+      });
+    }
+    return;
+  }
   // Status quo ante for everything still occupied, both directions.
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
