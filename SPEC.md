@@ -2645,3 +2645,43 @@ over the Arabah into the Negev highlands.
   Uvda chain against the Taba coast; `uitest25.mjs` renders, hit-tests
   and click-resolves all 31 in a real browser; the 8-year 1948 balance
   harness runs clean on the new geometry.
+
+## 66. v6.8: the victors' pens wait on the schoolhouse — names follow integration
+
+Conquest paints the map; it should not yet rewrite it. Newly annexed
+provinces carry their original names until they are properly integrated.
+
+- **The rule** (`resolveDisplayName`, military.js): a bookmark may carry
+  `integratedNames: { TAG: { canon: name } }` — the name a state writes
+  on a province. It applies only while that tag owns the province AND
+  the land is truly theirs: `integration` at 1 (three Integrate
+  programs, SPEC §56) or the province peopled by the owner's own
+  culture (a completed settlement, SPEC §64). Otherwise the label is
+  the era name (SPEC §24). The resolver runs at every moment the answer
+  can change: owner change (`changeOwnerCore` — so a retaken town
+  reverts on the spot), integration completion, settlement completion,
+  and save reconciliation. Canonical names stay the content keys;
+  `ctx.prov` answers to old and new labels alike. The player gets a
+  toast when their signposts go up.
+- **Integration is with a sovereign, not the soil**: both conquest
+  paths (peace-table cession and uti possidetis) now zero
+  `p.integration` and void any running program BEFORE the owner change,
+  so an incoming owner cannot inherit a rename — or an integration —
+  it never earned.
+- **1948 opens under the names of 15 May**: Lydda (not Lod), al-Majdal
+  (not Ashkelon), Isdud (not Ashdod), Bir Saba (not Be'er Sheva),
+  al-Auja (not Nitzana), al-Faluja (not Kiryat Gat), Ayn Shams (not
+  Beit Shemesh), Umm Rashrash (not Eilat). Israel's `integratedNames`
+  supplies the Hebrew names it wrote after the war; the Hashemite pen
+  gets its one longing — a fully integrated Jordanian Jerusalem is
+  written Al-Quds. Symmetric, data-driven, and empty for the ancient
+  bookmarks (zero behavior change there).
+- **Save fidelity**: reconciliation re-resolves names after refreshing
+  era data — earned renames survive a load, unearned ones cannot sneak
+  in — and an annexed waste (SPEC §64) is no longer re-walled by the
+  era's impassable override on load (a v6.6 latent bug, fixed).
+- **Regression contract**: `smoke42.mjs` — the 15-May originals at
+  start, conquest-alone not renaming, integration earning Be'er Sheva,
+  reversion on a change of hands, the by-the-sword reset arriving
+  unintegrated and unrenamed, settlers naming Kiryat Gat, Al-Quds, and
+  the save round-trip keeping exactly what was earned.

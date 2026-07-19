@@ -289,19 +289,21 @@ export const BOOKMARK_1948 = {
   },
 
   // The map speaks 1948 (SPEC §24): canonical names stay the content keys;
-  // these are what the labels, panels and toasts show.
+  // these are what the labels, panels and toasts show. Places another state
+  // renamed AFTER conquering them open under their 15-May originals — the
+  // victors' names wait in `integratedNames` below (SPEC §66).
   provinceNames: {
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
     'Ptolemais': 'Acre', 'Caesarea Maritima': 'Caesarea', 'Jamnia': 'Yavne',
-    'Lydda': 'Lod', 'Emmaus': 'Latrun',
+    'Emmaus': 'Latrun',
     // Jotapata wears Sakhnin: kibbutz Yodfat is a 1960 foundation, and in
     // 1948 the cell's town is Arab Sakhnin at the pocket's heart.
     'Sepphoris': 'Nazareth', 'Jotapata': 'Sakhnin', 'Tarichaea': 'Migdal',
     'Gischala': 'Jish', 'Scythopolis': 'Beit She\'an', 'Engaddi': 'Ein Gedi',
-    'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod', 'Neapolis': 'Nablus',
+    'Ascalon': 'al-Majdal', 'Azotus': 'Isdud', 'Neapolis': 'Nablus',
     'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Karak',
     'Medaba': 'Madaba', 'Philadelphia': 'Amman', 'Gerasa': 'Jerash',
-    'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'Nitzana',
+    'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'al-Auja',
     'Caesarea Philippi': 'Banias', 'Batanea': 'Quneitra', 'Gamala': 'Golan',
     'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
     'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
@@ -320,13 +322,16 @@ export const BOOKMARK_1948 = {
     'Athribis': 'Benha', 'Memphis': 'Cairo', 'Arsinoe': 'Faiyum',
     'Oxyrhynchus': 'Minya', 'Thebes': 'Luxor', 'Myos Hormos': 'Hurghada',
     'Salamis': 'Famagusta', 'Hegra': 'Hejaz', 'Dumatha': 'Al-Jawf',
-    'Tayma': 'Tayma', 'Petra': 'Ma\'an', 'Beersheba': 'Be\'er Sheva',
+    'Tayma': 'Tayma', 'Petra': 'Ma\'an', 'Beersheba': 'Bir Saba',
     'Syene': 'Aswan', 'Paraetonium': 'Marsa Matruh', 'Marmarica': 'Tobruk',
     'Cyrene': 'Derna', 'Yathrib': 'Medina', 'Gerrha': 'Dammam',
     'Persepolis': 'Shiraz', 'Gabae': 'Isfahan', 'Halicarnassus': 'Bodrum',
     'Gortyn': 'Heraklion',
     // v6.7: the southern border cells in their 1948 names
     'Kadesh Barnea': 'El Quseima', 'Dizahab': 'Taba', 'Zoara': 'Safi',
+    // v6.8: the 15-May originals of places their conquerors later renamed
+    'Kiryat Gat': 'al-Faluja', 'Beit Shemesh': 'Ayn Shams',
+    'Eilat': 'Umm Rashrash',
     // v5.4: the wider frame in its 1948 names
     'Roma': 'Rome', 'Capua': 'Naples', 'Tarentum': 'Taranto',
     'Brundisium': 'Brindisi', 'Rhegium': 'Reggio Calabria',
@@ -336,6 +341,22 @@ export const BOOKMARK_1948 = {
     'Byzantion': 'Istanbul', 'Nicaea': 'Bursa', 'Smyrna': 'İzmir',
     'Ancyra': 'Ankara', 'Sinope': 'Sinop', 'Trapezus': 'Trabzon',
     'Hyrcania': 'Mazandaran',
+  },
+
+  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
+  // writes on a conquered province, applied only once the province is
+  // properly integrated (integration at 1) or peopled by the owner's own
+  // culture (a completed settlement). Until then — and again the moment the
+  // land changes hands — the labels keep the 15-May originals above.
+  integratedNames: {
+    ISR: {
+      'Lydda': 'Lod', 'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod',
+      'Beersheba': 'Be\'er Sheva', 'Oboda': 'Nitzana',
+      'Kiryat Gat': 'Kiryat Gat', 'Beit Shemesh': 'Beit Shemesh',
+      'Eilat': 'Eilat',
+    },
+    // The Hashemite pen has one name it longs to write.
+    JOR: { 'Jerusalem': 'Al-Quds' },
   },
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient

@@ -3,7 +3,7 @@
 
 import { createRng } from '../core/rng.js';
 import {
-  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore,
+  num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
@@ -2387,12 +2387,19 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) { p.x = c.x; p.y = c.y; }
       p.canon = source.name || p.canon || p.name;
       p.name = bookmarkField(bookmark, 'provinceNames', source, false) || source.name || p.name;
-      // Passability is era data, not campaign state — nothing mutates it in
-      // play. v4.3 opens the 1948 desert interiors (SPEC §44), and an old save
-      // must not keep the wall. Untouched empty land likewise adopts the era's
-      // tier; a tier the player earned (settlement, growth) is never clobbered.
+      // ...then re-earn any owner rename the campaign had achieved (SPEC §66):
+      // integration and culture are campaign state and survive the save.
+      resolveDisplayName({ game, bookmark, bus: null }, p);
+      // Passability is era data, not campaign state — v4.3 opens the 1948
+      // desert interiors (SPEC §44), and an old save must not keep the wall.
+      // One campaign fact does move it: an annexed waste (SPEC §64) stays
+      // open — the routes the expedition cut are not un-cut by loading.
+      // Untouched empty land likewise adopts the era's tier; a tier the
+      // player earned (settlement, growth) is never clobbered.
       const impassableOverride = bookmarkField(bookmark, 'impassable', source);
-      p.impassable = typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable;
+      const annexedWaste = p.owner && p.owner !== 'WASTE' && (source.owner || 'WASTE') === 'WASTE';
+      p.impassable = annexedWaste ? false
+        : (typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable);
       const habOverride = bookmarkField(bookmark, 'habitation', source);
       if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
       // Goods are era data too (SPEC §52) — nothing mutates them in play. The

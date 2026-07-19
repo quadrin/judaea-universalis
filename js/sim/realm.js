@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO } from './military.js';
+import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName } from './military.js';
 import { fireEvent } from './events.js';
 import { shiftPopToReligion } from './population.js';
 
@@ -274,6 +274,8 @@ export function monthlyIntegration(ctx) {
       if (p.integrating.monthsLeft > 0) continue;
       p.integrating = null;
       p.integration = Math.min(1, num(p.integration) + 0.34);
+      // Full integration lets the owner write its own name on the map (SPEC §66).
+      if (p.integration >= 1) resolveDisplayName(ctx, p);
       p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'reforms_resented');
       if (p.owner === g.playerTag) {
         ctx.bus.emit('notify', {

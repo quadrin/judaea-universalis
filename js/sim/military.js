@@ -1178,10 +1178,44 @@ export function changeControllerCore(ctx, p, tag) {
   }
   ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
 }
+// The maps speak the owner's tongue only once the land is truly theirs
+// (SPEC §66): a bookmark's `integratedNames[tag]` gives the name a tag
+// writes on a province — but it applies only after the province is properly
+// integrated (integration at 1) or peopled by the owner's own culture
+// (a completed settlement, SPEC §64). Until then — and again the moment it
+// changes hands — the province carries the era's original name.
+export function resolveDisplayName(ctx, p) {
+  if (!p || !p.canon) return p && p.name;
+  const bm = ctx.bookmark;
+  const eraTable = (bm && bm.provinceNames) || {};
+  const era = Object.prototype.hasOwnProperty.call(eraTable, p.canon) ? eraTable[p.canon] : p.canon;
+  const t = ctx.game.tags && ctx.game.tags[p.owner];
+  const table = bm && bm.integratedNames && bm.integratedNames[p.owner];
+  const renamed = table && table[p.canon];
+  const theirs = !!t && (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture));
+  const next = (renamed && theirs) ? renamed : era;
+  if (p.name !== next) {
+    const was = p.name;
+    p.name = next;
+    if (ctx.bus) {
+      ctx.bus.emit('provinceRenamed', { provId: p.id, from: was, to: next });
+      if (renamed && theirs && p.owner === ctx.game.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'The maps are redrawn',
+          text: was + ' is ours in more than law — the signposts now read ' + next + '.',
+          type: 'good', provName: next,
+        });
+      }
+    }
+  }
+  return p.name;
+}
+
 export function changeOwnerCore(ctx, p, tag) {
   if (!p || !tag || p.owner === tag) return;
   const from = p.owner;
   p.owner = tag;
+  resolveDisplayName(ctx, p);
   ctx.bus.emit('provinceOwner', { provId: p.id, from, to: tag });
 }
 
@@ -2328,6 +2362,8 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
       if (conqueror) conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
+      p.integration = 0; // integration is with a sovereign, not the soil (SPEC §66)
+      p.integrating = null; // cleared before the owner change: no inherited rename
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -2368,6 +2404,11 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     const p = ctx.byId(id);
     if (!p) continue;
     cededNames.push(p.name);
+    // A new state starts over with the communities (SPEC §66): integration
+    // is with a sovereign, not with the soil — cleared BEFORE the owner
+    // change so the incoming owner cannot inherit a rename it never earned.
+    p.integration = 0;
+    p.integrating = null;
     changeOwnerCore(ctx, p, byTag);
     changeControllerCore(ctx, p, byTag);
     p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
