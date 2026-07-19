@@ -1473,14 +1473,17 @@ export function gameActions(ctx) {
     // ---- peace (EU4-style deal builder) ------------------------------------
     // getPeaceInfo -> what can be demanded; evaluatePeace -> live price &
     // acceptance preview; offerPeaceDeal -> send the envoys.
-    getPeaceInfo(warId) {
+    getPeaceInfo(warId, enemyTag) {
       try {
         const war = g.wars.find((w) => w && w.id === warId);
         const me = g.playerTag;
         if (!war) return null;
         if (war.attackers.indexOf(me) < 0 && war.defenders.indexOf(me) < 0) return null;
-        const info = peaceDealInfo(ctx, war, me);
-        info.envoyMonthsLeft = diploCdMonthsLeft(ctx, 'peace:' + war.id);
+        const info = peaceDealInfo(ctx, war, me, enemyTag);
+        // Rebuffed envoys cool per court (SPEC §67): a door slammed in Amman
+        // does not close the one in Damascus.
+        info.envoyMonthsLeft = diploCdMonthsLeft(ctx,
+          'peace:' + war.id + (info.separate ? ':' + info.enemyLeader : ''));
         return info;
       } catch (e) { warnOnce('peaceInfo', 'getPeaceInfo failed', e); return null; }
     },
@@ -1502,16 +1505,18 @@ export function gameActions(ctx) {
         // SPEC §31: the player may ALWAYS sue for peace — even in scripted
         // fight-to-the-death wars. Whether the enemy listens is another
         // matter (evaluatePeaceDeal), and the AI keeps its own counsel.
-        if (diploCdActive(ctx, 'peace:' + war.id)) {
-          say('Envoys rebuffed', 'The enemy will not receive our envoys again yet ('
-            + diploCdMonthsLeft(ctx, 'peace:' + war.id) + ' months).', 'bad');
+        const scope = peaceDealInfo(ctx, war, me, deal && deal.enemy);
+        const cdKey = 'peace:' + war.id + (scope.separate ? ':' + scope.enemyLeader : '');
+        if (diploCdActive(ctx, cdKey)) {
+          say('Envoys rebuffed', 'That court will not receive our envoys again yet ('
+            + diploCdMonthsLeft(ctx, cdKey) + ' months).', 'bad');
           return;
         }
         const ev = evaluatePeaceDeal(ctx, war, me, deal);
         if (ev.acceptable) {
           executePeaceDeal(ctx, war, me, deal);
         } else {
-          setDiploCd(ctx, 'peace:' + war.id, 6);
+          setDiploCd(ctx, cdKey, 6);
           say('Terms refused', ev.reason + ' Six months until they will listen again.', 'bad');
         }
       } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }

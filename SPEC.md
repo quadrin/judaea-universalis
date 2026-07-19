@@ -2685,3 +2685,51 @@ provinces carry their original names until they are properly integrated.
   reversion on a change of hands, the by-the-sword reset arriving
   unintegrated and unrenamed, settlers naming Kiryat Gat, Al-Quds, and
   the save round-trip keeping exactly what was earned.
+
+## 67. v6.9: the separate peace — coalitions come apart one court at a time
+
+A coalition war could only end all at once, at the leader's table. Now,
+exhaust one member enough and you can negotiate them out of the war
+alone — while the rest fight on. Rhodes, as it actually went: Egypt in
+February, Lebanon in March, Jordan in April, Syria in July.
+
+- **The bilateral ledger** (`separateWarscore`, military.js): a per-court
+  score, distinct from the side score — occupation of THEIR land (up to
+  60) and THEIR war exhaustion (1.5× WE, up to 20) push a member toward
+  the door; land they hold of OUR side's holds them in (up to −60);
+  side-pooled battle glory counts at half weight (±20) — a member shares
+  its side's victories but feels its own burned fields entirely.
+- **The scoped table** (`peaceDealInfo(ctx, war, byTag, enemyTag)`): with
+  an enemy named, the deal builder prices against the bilateral score
+  and offers only that court's provinces, gold and reparations; the dev
+  cap scales to their realm alone; subjugation is refused ("a separate
+  peace cannot break a crown — subjugation waits for the full
+  congress"). The table exists only while at least one OTHER enemy
+  remains alive — the last court standing negotiates the war's end, not
+  an exit. White separate peaces follow the same acceptance rules
+  (losing badly, or war-weary), judged bilaterally.
+- **The exit** (`releaseFromWar`): the leaver is struck from its side;
+  status quo reverts occupations between the leaver and our side ONLY —
+  every other front keeps its lines; five-year truces (and the
+  settled-war ledger the event chains consult) bind the leaver to our
+  whole side; `atWarWith` rebuilds; stranded armies march home. Emits
+  `war {left}` rather than `{ended}`. `dissolveWar` now shares these
+  internals (`rebuildAtWarWith`/`setTruce`/`marchStrandedHome` — pure
+  refactor, no behavior change).
+- **Envoys cool per court** (init.js): a rebuffed offer locks that
+  court's door for six months (`peace:<war>:<tag>`) — a door slammed in
+  Amman does not close the one in Damascus.
+- **UI** (the peace dialog): when the enemy is a coalition, a chip row —
+  "The whole coalition" plus each court with its bilateral score —
+  switches the table between the congress and each corridor; the scoped
+  view retitles, explains that the rest fight on, and shows the separate
+  score. Existing whole-war flow, AI deal-building and scripted wars are
+  untouched (`noNegotiation` gates separate tables identically; all AI
+  call sites use the unscoped forms). AI-initiated separate exits are
+  future work — the AI accepts separate offers but does not yet make
+  them.
+- **Regression contract**: `smoke43.mjs` — the six 1948 corridors, the
+  bilateral score under full occupation, the scoped table's contents and
+  refusals, a ceding exit that leaves five armies fighting and Gaza's
+  front untouched, the war-weary white exit, the last-court guard, and
+  the subjugation refusal. The 8-year 1948 harness runs clean.

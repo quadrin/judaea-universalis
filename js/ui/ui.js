@@ -227,11 +227,11 @@ export function initUI(staticCtx) {
     setPeaceHighlight([], []);
   }
   function peaceDialogOpen() { return !!peaceEl && !peaceEl.classList.contains('hidden'); }
-  function openPeaceDialog(warId) {
+  function openPeaceDialog(warId, enemyTag) {
     const g = state.ctx && state.ctx.game;
     const actions = state.actions;
     if (!g || !actions || typeof actions.getPeaceInfo !== 'function') return;
-    const info = actions.getPeaceInfo(warId);
+    const info = actions.getPeaceInfo(warId, enemyTag);
     if (!info) return; // even scripted wars hear envoys now (SPEC §31)
     // The peace table owns the panel berth while the envoys are present.
     // Closing the ordinary panels is especially important on narrow screens,
@@ -244,8 +244,23 @@ export function initUI(staticCtx) {
       peaceEl.id = 'peace-modal';
       document.getElementById('ui-root').appendChild(peaceEl);
     }
-    const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false };
+    const deal = {
+      provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
+      enemy: info.separate ? info.enemyLeader : undefined, // separate peace (SPEC §67)
+    };
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
+    // A coalition can be talked out of the war one court at a time: chips
+    // switch the table between the whole congress and each separate corridor.
+    const targetChips = (info.separateTargets || []).length
+      ? `<div class="peace-targets">
+          <button class="btn peace-target${!info.separate ? ' peace-target-on' : ''}" data-target=""
+            data-tt="One treaty with the whole coalition, priced against the war's side score.">The whole coalition</button>
+          ${info.separateTargets.map((t) =>
+    `<button class="btn peace-target${info.separate && info.enemyLeader === t.tag ? ' peace-target-on' : ''}"
+              data-target="${esc(t.tag)}"
+              data-tt="${esc('A separate peace with ' + t.name + ' alone — they leave the war, the rest fight on.\nWar score against them alone: ' + signed(t.ws) + '%')}">${esc(t.name)} <span class="peace-dim">${signed(t.ws)}%</span></button>`).join('')}
+        </div>`
+      : '';
     const discountTxt = { claim: ' · our claim (30% off)', faith: ' · our faith (20% off)' };
     const provRows = info.provinces.map((p) =>
       `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${discountTxt[p.discount] || ''}\nDemanding it costs ${p.cost} war score">
@@ -256,9 +271,14 @@ export function initUI(staticCtx) {
     peaceEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card">
-        <h2 class="peace-title">Terms for ${esc(info.warName || 'the war')}</h2>
-        <div class="peace-hint">The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.</div>
-        <div class="peace-ws">War score against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
+        <h2 class="peace-title">${info.separate
+    ? 'A separate peace with ' + esc(info.enemyName || 'the enemy')
+    : 'Terms for ' + esc(info.warName || 'the war')}</h2>
+        ${targetChips}
+        <div class="peace-hint">${info.separate
+    ? esc((info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
+    : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
+        <div class="peace-ws">${info.separate ? 'Separate war score' : 'War score'} against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
         <div class="peace-sec">Demand provinces</div>
         ${info.provinces.length ? `<div class="peace-provs">${provRows}</div>`
@@ -367,6 +387,14 @@ export function initUI(staticCtx) {
     });
     peaceEl.querySelector('.peace-cancel').addEventListener('click', closePeaceDialog);
     peaceEl.querySelector('.modal-scrim').addEventListener('click', closePeaceDialog);
+    // Switching courts rebuilds the table for that enemy (or the congress).
+    peaceEl.querySelectorAll('.peace-target').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const t = chip.dataset.target || undefined;
+        setPeaceHighlight([], []);
+        openPeaceDialog(warId, t);
+      });
+    });
     // The map negotiates too: clicking a demandable province toggles it in
     // and out of the deal (the checkbox follows); a client keeps its lands,
     // so subjugation deals ignore the map.
