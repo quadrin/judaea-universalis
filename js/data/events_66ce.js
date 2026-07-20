@@ -1376,4 +1376,1052 @@ export const EVENTS_66 = [
       },
     ],
   },
+
+  // ═══ Aftermath: the generation after the House, 70–96 CE ══════════════════
+  // These events continue the scripted history into the Flavian era. Everything
+  // that presupposes Rome's victory is gated on the templeBurned flag (set by
+  // ev_temple_burns) and, where it matters, on ROM actually holding the ground —
+  // in an alternate history where Judaea won (ev_rome_sues / the timed win),
+  // those triggers simply never come true and the world walks a different road.
+  // Pure world history (imperial successions, Vesuvius) fires regardless.
+
+  // ── 21 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_city_razed',
+    title: 'So That None Would Believe It Inhabited',
+    desc: 'The order comes down from the young commander\'s tribunal: dig the city up. The '
+      + 'soldiers work for weeks with the same patience they gave the ramp and the '
+      + 'circumvallation, until wall and house and colonnade lie level with the rock — all '
+      + 'but three towers of Herod\'s palace and a stretch of the western wall, left standing '
+      + 'to show posterity what manner of city Rome had taken. Josephus writes it plainly: '
+      + 'nothing remained to make a visitor believe the place had ever been inhabited. On '
+      + 'the emptied plateau the Tenth Legion Fretensis pitches its camp among the stones '
+      + 'it broke.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_city_razed', (ctx) => {
+      const h = ctx.helpers;
+      return !!h.getFlag(ctx, 'templeBurned') && h.controls(ctx, 'ROM', 'Jerusalem');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Leave the three towers as a boast',
+        tooltip: 'Jerusalem: "A City Ploughed Under" (−70% tax, −3 unrest, permanent — there is no one left to be restless). Rome +40 treasury in plunder; Judaea −10 legitimacy.',
+        effects: guard('ev_city_razed:0', (ctx) => {
+          const h = ctx.helpers;
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_razed', name: 'A City Ploughed Under', months: -1,
+            effects: { taxMult: 0.3, unrest: -3 },
+          });
+          h.adjust(ctx, 'ROM', { treasury: 40 });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+          h.setFlag(ctx, 'jerusalemRazed', true);
+          h.notify(ctx, {
+            title: 'Jerusalem Razed', type: 'bad', provName: 'Jerusalem',
+            text: 'The Tenth Legion camps on the levelled rock. Three towers remain, as a boast.',
+          });
+        }),
+      },
+      {
+        label: 'Let the Tenth quarry the ruins for its camp',
+        tooltip: 'Jerusalem: "A City Ploughed Under" (−70% tax, −3 unrest, permanent). Rome: only +20 treasury, but "The Tenth on the Ruins" (−5% army maintenance, 36 months) — the garrison houses itself in the wreckage. Judaea −10 legitimacy.',
+        effects: guard('ev_city_razed:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_razed', name: 'A City Ploughed Under', months: -1,
+            effects: { taxMult: 0.3, unrest: -3 },
+          });
+          h.adjust(ctx, 'ROM', { treasury: 20 });
+          h.addTagModifier(ctx, 'ROM', {
+            id: 'tenth_on_the_ruins', name: 'The Tenth on the Ruins', months: 36,
+            effects: { maintMult: 0.95 },
+          });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+          h.setFlag(ctx, 'jerusalemRazed', true);
+          h.notify(ctx, {
+            title: 'Jerusalem Razed', type: 'bad', provName: 'Jerusalem',
+            text: 'The Tenth Legion builds its huts from the stones of the upper city.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 22 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_yavneh_academy',
+    title: 'Yavneh and Its Sages',
+    desc: 'The story will be told for two thousand years: how Yohanan ben Zakkai, oldest of '
+      + 'the disciples of Hillel, had himself carried out of the dying city in a coffin — '
+      + 'the only Jew the guards at the gate would not search — and, brought before the '
+      + 'Roman commander, asked for nothing but a town of the coastal plain and its scholars. '
+      + '"Give me Yavneh and its sages." No throne, no walls, no ransom for the House. In a '
+      + 'vineyard at Yavneh the survivors of the schools now sit in rows as they once sat in '
+      + 'the Temple courts, and rule on festivals and damages and marriages as though the '
+      + 'altar still smoked. The Law, it appears, can live without the House. Whether the '
+      + 'nation can is the question the next generation must answer.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_yavneh_academy', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'templeBurned') && alive(ctx, 'JUD')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Give me Yavneh and its sages',
+        tooltip: 'The quietism of the schools: Judaea +25 governance points, +1 stability, +5 legitimacy — but "The Sages Counsel Patience" (−10% morale, 60 months). The academy is founded.',
+        effects: guard('ev_yavneh_academy:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 25, stability: 1, legitimacy: 5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'sages_quietism', name: 'The Sages Counsel Patience', months: 60,
+            effects: { moraleMult: 0.9 },
+          });
+          h.setFlag(ctx, 'yavnehFounded', true);
+        }),
+      },
+      {
+        label: 'Keep faith with the ruins',
+        tooltip: 'The academy gathers regardless — but the mourners set the tone: Judaea +10 governance points, +5 legitimacy, "Faith with the Ruins" (+5% morale, 60 months) — and −1 stability; grief is not a constitution.',
+        effects: guard('ev_yavneh_academy:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 10, legitimacy: 5, stability: -1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'faith_with_ruins', name: 'Faith with the Ruins', months: 60,
+            effects: { moraleMult: 1.05 },
+          });
+          h.setFlag(ctx, 'yavnehFounded', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 23 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_flavian_triumph',
+    title: 'The Triumph of the Flavians',
+    desc: 'Rome has not seen its like in a generation: father and son in one chariot\'s '
+      + 'train, the streets in white, and the spoils of the House of God carried shoulder-high '
+      + 'up the Sacred Way — the seven-branched lampstand of gold, the table of the '
+      + 'showbread, the scroll of the Law borne last of all. At the climax, by the old '
+      + 'custom, the enemy general is taken from the procession to the Mamertine and the '
+      + 'crowd waits in silence until the cry comes up that Simon bar Giora is dead. Then '
+      + 'the sacrifices, and the feasting. A relief of the lampstand will stand in carved '
+      + 'stone over the Sacred Way when everyone in this crowd is dust.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_flavian_triumph', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 71, 6) && alive(ctx, 'ROM')
+        && !!h.getFlag(ctx, 'templeBurned')
+        && !!h.getFlag(ctx, 'vespasianEmperor')
+        && h.controls(ctx, 'ROM', 'Jerusalem');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Up the Sacred Way',
+        tooltip: 'Simon bar Giora dies at the Mamertine; John of Gischala goes to a prison he will never leave. Rome: +15 legitimacy, +20 treasury. Judaea: −10 legitimacy.',
+        effects: guard('ev_flavian_triumph:0', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'JUD', 'Simon bar Giora');
+          h.killGeneral(ctx, 'JUD', 'John of Gischala');
+          h.adjust(ctx, 'ROM', { legitimacy: 15, treasury: 20 });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+          h.setFlag(ctx, 'flavianTriumph', true);
+        }),
+      },
+      {
+        label: 'Spare the spectacle nothing',
+        tooltip: 'Simon dies; John disappears into the dark. Rome: −40 treasury on largesse and games, but +25 legitimacy and +1 stability — the new dynasty buys its legend outright. Judaea: −10 legitimacy.',
+        effects: guard('ev_flavian_triumph:1', (ctx) => {
+          const h = ctx.helpers;
+          h.killGeneral(ctx, 'JUD', 'Simon bar Giora');
+          h.killGeneral(ctx, 'JUD', 'John of Gischala');
+          h.adjust(ctx, 'ROM', { treasury: -40, legitimacy: 25, stability: 1 });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+          h.setFlag(ctx, 'flavianTriumph', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 24 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_judaea_capta',
+    title: 'IVDAEA CAPTA',
+    desc: 'The mint speaks the empire\'s plainest language. In bronze, in silver, in gold, '
+      + 'the same image passes now through every market from Gades to the Euphrates: a '
+      + 'woman seated weeping beneath a palm tree, a soldier standing over her with his '
+      + 'spear grounded, and the legend around the rim — Judaea Captured. A farmer in '
+      + 'Galilee selling his oil will take the coin, because there is no other coin, and '
+      + 'carry the picture of his own defeat home in his purse. That is the point of it.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_judaea_capta', (ctx) =>
+      dateGE(ctx, 71, 8) && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The coin passes from hand to hand',
+        tooltip: 'Every Jewish province: "The Weeping Woman" (+1 unrest, 36 months). Rome +5 legitimacy; Judaea −5 legitimacy.',
+        effects: guard('ev_judaea_capta:0', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'judaea_capta_coin', name: 'The Weeping Woman', months: 36,
+                effects: { unrest: 1 },
+              });
+            }
+          }
+          h.adjust(ctx, 'ROM', { legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'Let the coin teach what Rome forgets',
+        tooltip: 'The same coin, read the other way: every Jewish province +1 unrest for 36 months and Judaea −10 legitimacy — but "A Long Memory" (+5% manpower, permanent). The woman under the palm has sons.',
+        effects: guard('ev_judaea_capta:1', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'judaea_capta_coin', name: 'The Weeping Woman', months: 36,
+                effects: { unrest: 1 },
+              });
+            }
+          }
+          h.adjust(ctx, 'ROM', { legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'long_memory', name: 'A Long Memory', months: -1,
+            effects: { manpowerMult: 1.05 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 25 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fiscus_judaicus',
+    title: 'The Half-Shekel for Jupiter',
+    desc: 'For as long as anyone living can remember, every Jew in the world sent a '
+      + 'half-shekel a year to the House in Jerusalem. Vespasian, who wastes nothing, has '
+      + 'not abolished the tax — he has redirected it. Two denarii from every Jew, man, '
+      + 'woman and child, everywhere in the empire, paid now into a new bureau, the fiscus '
+      + 'Judaicus, for the rebuilding of Jupiter Best and Greatest on the Capitol, which '
+      + 'burned in Rome\'s own civil war. The money that built the sanctuary will build the '
+      + 'idol. Of all the instruments of the defeat, the accountants\' is the one that '
+      + 'reaches every single household.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_fiscus_judaicus', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 71, 9) && alive(ctx, 'ROM')
+        && !!h.getFlag(ctx, 'templeBurned')
+        && h.controls(ctx, 'ROM', 'Jerusalem');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Two denarii, from every Jew, everywhere',
+        tooltip: 'Every Jewish province: "Fiscus Judaicus" (−10% tax, +1 unrest, permanent — until some emperor relents). Rome: "Receipts of the Fiscus" (+3% income, permanent).',
+        effects: guard('ev_fiscus_judaicus:0', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'fiscus_judaicus', name: 'Fiscus Judaicus', months: -1,
+                effects: { taxMult: 0.9, unrest: 1 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'ROM', {
+            id: 'fiscus_receipts', name: 'Receipts of the Fiscus', months: -1,
+            effects: { incomeMult: 1.03 },
+          });
+          h.setFlag(ctx, 'fiscusJudaicus', true);
+        }),
+      },
+      {
+        label: 'Farm the collection to the publicani',
+        tooltip: 'Every Jewish province: "Fiscus Judaicus" (−10% tax, +2 unrest, permanent — the tax farmers collect twice). Rome: +50 treasury up front and "Receipts of the Fiscus" (+3% income, permanent), −5 legitimacy for the methods.',
+        effects: guard('ev_fiscus_judaicus:1', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'fiscus_judaicus', name: 'Fiscus Judaicus', months: -1,
+                effects: { taxMult: 0.9, unrest: 2 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'ROM', {
+            id: 'fiscus_receipts', name: 'Receipts of the Fiscus', months: -1,
+            effects: { incomeMult: 1.03 },
+          });
+          h.adjust(ctx, 'ROM', { treasury: 50, legitimacy: -5 });
+          h.setFlag(ctx, 'fiscusJudaicus', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 26 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_imperial_estate',
+    title: 'The Emperor\'s Land',
+    desc: 'A survey commission moves through the hill country with chains and registers. By '
+      + 'imperial rescript the soil of Judaea is declared the emperor\'s private property — '
+      + 'not the Senate\'s, not the army\'s, Vespasian\'s — and the men who have farmed these '
+      + 'terraces since the Return now lease their fathers\' fields back from Caesar\'s '
+      + 'procurator, season by season. Only at Emmaus does anything new take root: eight '
+      + 'hundred discharged veterans, settled on confiscated ground, their pensions paid '
+      + 'in other men\'s vineyards.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_imperial_estate', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 72, 3) && alive(ctx, 'ROM')
+        && !!h.getFlag(ctx, 'templeBurned')
+        && h.controls(ctx, 'ROM', 'Jerusalem');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Lease the fields to their farmers',
+        tooltip: 'The Judaean hill provinces: "Imperial Leases" (−15% tax to the province, +1 unrest, 60 months). Rome +40 treasury from the first rents.',
+        effects: guard('ev_imperial_estate:0', (ctx) => {
+          const h = ctx.helpers;
+          for (const name of JUDEA_HILL_PROVINCES) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'imperial_leases', name: 'Imperial Leases', months: 60,
+              effects: { taxMult: 0.85, unrest: 1 },
+            });
+          }
+          h.adjust(ctx, 'ROM', { treasury: 40 });
+        }),
+      },
+      {
+        label: 'Plant the veterans at Emmaus',
+        tooltip: 'The hill provinces: "Imperial Leases" (−10% tax, +1 unrest, 60 months); Rome −20 treasury settling the colony — but Emmaus gains "Veteran Colony" (−2 unrest, permanent): eight hundred discharged spears keep their own peace.',
+        effects: guard('ev_imperial_estate:1', (ctx) => {
+          const h = ctx.helpers;
+          for (const name of JUDEA_HILL_PROVINCES) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'imperial_leases', name: 'Imperial Leases', months: 60,
+              effects: { taxMult: 0.9, unrest: 1 },
+            });
+          }
+          h.adjust(ctx, 'ROM', { treasury: -20 });
+          h.addProvinceModifier(ctx, 'Emmaus', {
+            id: 'veteran_colony', name: 'Veteran Colony', months: -1,
+            effects: { unrest: -2 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 27 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_machaerus_taken',
+    title: 'Machaerus Comes Down',
+    desc: 'The fortress east of the Dead Sea — where the Baptist died in Herod\'s day — '
+      + 'has surrendered its lower town and its garrison after the Romans took a young '
+      + 'defender alive and raised a cross in sight of the walls. Lucilius Bassus grants '
+      + 'the fighters their lives for the fortress, then hunts the refugees who fled to '
+      + 'the Jordan thickets until the river, Josephus says, could be crossed on the dead. '
+      + 'One rock now remains.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_machaerus_taken', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 72, 1) && !!h.getFlag(ctx, 'templeBurned')
+        && h.controls(ctx, 'ROM', 'Machaerus');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Honor the terms given',
+        tooltip: 'The garrison walks free. Rome: +15 military points, +5 legitimacy — a governor whose word is worth a fortress.',
+        effects: guard('ev_machaerus_taken:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { mar: 15, legitimacy: 5 });
+        }),
+      },
+      {
+        label: 'Slight the walls and sell the town',
+        tooltip: 'Rome: +15 military points, +25 treasury from the auctions — but −5 legitimacy, and Machaerus is "A Broken District" (−30% tax, 24 months).',
+        effects: guard('ev_machaerus_taken:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { mar: 15, treasury: 25, legitimacy: -5 });
+          h.addProvinceModifier(ctx, 'Machaerus', {
+            id: 'broken_district', name: 'A Broken District', months: 24,
+            effects: { taxMult: 0.7 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 28 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_masada_falls',
+    title: 'The Nine Hundred and Sixty',
+    desc: 'Flavius Silva built his wall around the rock, and then his ramp up the western '
+      + 'spur, earth and timber rising for months by the labor of thousands until the ram '
+      + 'could touch the casemate wall. The defenders sheathed their inner wall in earth '
+      + 'and beams; the Romans fired it; the wind, which turned once against the besiegers, '
+      + 'turned back. That night Eleazar ben Yair spoke twice to his people — the second '
+      + 'time none argued. When the legionaries came over the burned wall at dawn they '
+      + 'found nine hundred and sixty dead by their own hands, the storehouses left full '
+      + 'to show it was not hunger, and silence. Two women and five children, hidden in '
+      + 'the cisterns, lived to say how it was done.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_masada_falls', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 72, 9) && !!h.getFlag(ctx, 'templeBurned')
+        && h.controls(ctx, 'ROM', 'Masada');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The war is over',
+        tooltip: 'The last fortress is silent. Rome: +10 legitimacy, +1 stability — the East is quiet at last. Judaea: "The Memory of Masada" (+5% morale, permanent).',
+        effects: guard('ev_masada_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'JUD', 'last_fortress');
+          h.adjust(ctx, 'ROM', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'memory_of_masada', name: 'The Memory of Masada', months: -1,
+            effects: { moraleMult: 1.05 },
+          });
+          h.setFlag(ctx, 'masadaFallen', true);
+          h.notify(ctx, {
+            title: 'Masada Has Fallen', type: 'bad', provName: 'Masada',
+            text: 'Nine hundred and sixty dead by their own hands. The storehouses were full.',
+          });
+        }),
+      },
+      {
+        label: 'Let the two women tell it everywhere',
+        tooltip: 'The story travels faster than any legion. Rome: +5 legitimacy — a victory it is awkward to celebrate. Judaea: +10 legitimacy and "The Memory of Masada" (+5% morale, permanent).',
+        effects: guard('ev_masada_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'JUD', 'last_fortress');
+          h.adjust(ctx, 'ROM', { legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'memory_of_masada', name: 'The Memory of Masada', months: -1,
+            effects: { moraleMult: 1.05 },
+          });
+          h.setFlag(ctx, 'masadaFallen', true);
+          h.notify(ctx, {
+            title: 'Masada Has Fallen', type: 'bad', provName: 'Masada',
+            text: 'Two women and five children climbed out of the cisterns to tell it.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 29 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_leontopolis_closed',
+    title: 'The Last Altar',
+    desc: 'Sicarii who slipped the fall of Judaea have surfaced in Alexandria and Cyrene, '
+      + 'preaching no lord but God to communities that buried their dead in the riots of '
+      + '66 and want no second lesson; in Cyrenaica one Jonathan, a weaver, leads the poor '
+      + 'into the desert promising signs, and the governor\'s cavalry brings them back in '
+      + 'chains or not at all. Vespasian, taking no chances with sanctuaries, orders closed '
+      + 'the temple of Onias at Leontopolis — the little rival House that priests fleeing '
+      + 'Antiochus built in Egypt two centuries ago. Its lamps are put out by an inventory '
+      + 'clerk. Nowhere in the world does a Jewish altar now burn.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_leontopolis_closed', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 73, 6) && alive(ctx, 'ROM')
+        && !!h.getFlag(ctx, 'templeBurned')
+        && h.controls(ctx, 'ROM', 'Alexandria');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Close it, seal it, inventory the gold',
+        tooltip: 'Rome +20 treasury. Alexandria: "The Hunt for the Sicarii" (+2 unrest, 24 months). Judaea −5 legitimacy: the last altar anywhere is extinguished.',
+        effects: guard('ev_leontopolis_closed:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: 20 });
+          h.addProvinceModifier(ctx, 'Alexandria', {
+            id: 'sicarii_hunted', name: 'The Hunt for the Sicarii', months: 24,
+            effects: { unrest: 2 },
+          });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'The elders of Alexandria give up the fugitives',
+        tooltip: 'The community polices itself to save itself: Alexandria +1 unrest for only 12 months, Rome +5 legitimacy — but Judaea −10 legitimacy; handing over the last fighters is not forgotten either.',
+        effects: guard('ev_leontopolis_closed:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addProvinceModifier(ctx, 'Alexandria', {
+            id: 'sicarii_hunted', name: 'The Hunt for the Sicarii', months: 12,
+            effects: { unrest: 1 },
+          });
+          h.adjust(ctx, 'ROM', { legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { legitimacy: -10 });
+        }),
+      },
+    ],
+  },
+
+  // ── 30 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_temple_of_peace',
+    title: 'The Temple of Peace',
+    desc: 'Vespasian dedicates his Templum Pacis beside the Forum: gardens, a library, the '
+      + 'masterworks of Greece that Nero had hoarded in his Golden House given back to '
+      + 'public view — and, arranged among them like any other trophy, the golden lampstand '
+      + 'and the table of the showbread from Jerusalem. The vessels of the Holy of Holies '
+      + 'stand on display between statues, furniture now of Rome\'s victory. Jews of the '
+      + 'city walk past the precinct without turning their heads, which is its own kind '
+      + 'of looking.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_temple_of_peace', (ctx) =>
+      dateGE(ctx, 75, 1) && alive(ctx, 'ROM') && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Peace, and the proceeds of peace',
+        tooltip: 'Rome: −30 treasury on the dedication, +10 legitimacy, and "Pax Flavia" (+3% income, 36 months) — peace is good for trade.',
+        effects: guard('ev_temple_of_peace:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: -30, legitimacy: 10 });
+          h.addTagModifier(ctx, 'ROM', {
+            id: 'pax_flavia', name: 'Pax Flavia', months: 36,
+            effects: { incomeMult: 1.03 },
+          });
+        }),
+      },
+      {
+        label: 'Set the lampstand where all Rome must pass it',
+        tooltip: 'Rome +15 legitimacy: the dynasty\'s founding story in gold. Judaea −5 legitimacy — and every pilgrim to Rome carries home the same wound.',
+        effects: guard('ev_temple_of_peace:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { legitimacy: 15 });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 31 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_josephus_history',
+    title: 'The Historian in the Flavians\' House',
+    desc: 'In Rome, in the emperor\'s own former house, with a pension, citizenship, and the '
+      + 'family name Flavius, the man who commanded Galilee for the revolt writes the history '
+      + 'of the war he fought on both sides of. He works from the legions\' field notebooks '
+      + 'and his own unforgiving memory; Titus himself signs the finished volumes for '
+      + 'publication. In Judaea they do not speak his name. In his preface he swears he will '
+      + 'neither flatter Rome nor spare his own people, and the strange thing — the thing '
+      + 'that will keep the book alive for twenty centuries — is how close he comes.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_josephus_history', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 77, 1) && alive(ctx, 'ROM')
+        && !!h.getFlag(ctx, 'josephusSpared') && !!h.getFlag(ctx, 'vespasianEmperor');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Titus signs the volumes for publication',
+        tooltip: 'The war becomes the record Rome keeps. Rome: +15 influence points, +5 legitimacy. Judaea: −5 legitimacy — the traitor\'s book is the only book.',
+        effects: guard('ev_josephus_history:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { infl: 15, legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'Yavneh keeps its own memory',
+        tooltip: 'The sages answer a book with a curriculum. Rome +5 influence points; Judaea +15 governance points — what the academy remembers, no library in Rome can edit.',
+        effects: guard('ev_josephus_history:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { infl: 5 });
+          h.adjust(ctx, 'JUD', { gov: 15 });
+        }),
+      },
+    ],
+  },
+
+  // ── 32 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_berenice_in_rome',
+    title: 'The Queen on the Palatine',
+    desc: 'Berenice has come to Rome — sister of Agrippa, great-granddaughter of Herod, the '
+      + 'queen who once stood barefoot before Florus\' tribunal begging him to stop the '
+      + 'killing — and she lives on the Palatine, openly, as Titus\' consort in all but law. '
+      + 'The heir of the empire and a Judaean queen: Rome has swallowed strange things, but '
+      + 'the pamphleteers have found their theme, and the old men remember Cleopatra. '
+      + 'Everyone in the city knows how this must end except, perhaps, the two people '
+      + 'concerned.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_berenice_in_rome', (ctx) =>
+      dateGE(ctx, 75, 3) && alive(ctx, 'AGR') && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'vespasianEmperor')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Invitus invitam — he sends her away',
+        tooltip: 'Against his will, against hers. Rome +10 legitimacy — the city forgives what it is not asked to accept. Agrippa\'s house −5 legitimacy.',
+        effects: guard('ev_berenice_in_rome:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          h.adjust(ctx, 'AGR', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'Let her keep her court a season longer',
+        tooltip: 'Rome −10 legitimacy — the pamphlets write themselves. Agrippa\'s house +10 legitimacy, and his kingdom leans closer to Rome (+opinion).',
+        effects: guard('ev_berenice_in_rome:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { legitimacy: -10 });
+          h.adjust(ctx, 'AGR', { legitimacy: 10 });
+          setOpinion(ctx, 'AGR', 'ROM', 180);
+        }),
+      },
+    ],
+  },
+
+  // ── 33 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_vespasian_dies',
+    title: 'An Emperor Should Die Standing',
+    desc: 'Ten years the mule-breeder\'s son has held the world together — solvent, '
+      + 'unassassinated, faintly amused by the whole business. Now, at his summer villa in '
+      + 'the Sabine country, the flux has him, and he knows the arithmetic of his own body '
+      + 'as well as he ever knew a tax roll. He jokes on his deathbed — "Dear me, I think '
+      + 'I am becoming a god" — and at the end demands to be helped to his feet, because '
+      + 'an emperor should die standing. Titus succeeds without a sword drawn: the first '
+      + 'son to follow his father in the principate\'s history.',
+    forTag: 'both',
+    date: { y: 79, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Titus, without a sword drawn',
+        tooltip: 'Titus (3/3/5) is emperor; Domitian (3/1/2) is heir. Rome: +10 legitimacy — the smoothest succession in a century.',
+        effects: guard('ev_vespasian_dies:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Titus', title: 'Emperor', gov: 3, infl: 3, mar: 5, age: 39 });
+          h.setHeir(ctx, 'ROM', { name: 'Domitian', gov: 3, infl: 1, mar: 2, age: 27 });
+          h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          h.setFlag(ctx, 'titusEmperor', true);
+        }),
+      },
+      {
+        label: 'Deify the old man properly',
+        tooltip: 'Titus (3/3/5) is emperor; Domitian (3/1/2) is heir. Rome: −25 treasury on the temple of Divus Vespasianus, +15 legitimacy — the dynasty acquires a god of its own.',
+        effects: guard('ev_vespasian_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Titus', title: 'Emperor', gov: 3, infl: 3, mar: 5, age: 39 });
+          h.setHeir(ctx, 'ROM', { name: 'Domitian', gov: 3, infl: 1, mar: 2, age: 27 });
+          h.adjust(ctx, 'ROM', { treasury: -25, legitimacy: 15 });
+          h.setFlag(ctx, 'titusEmperor', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 34 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_vesuvius',
+    title: 'The Mountain Over the Bay',
+    desc: 'Two months into the new reign, the mountain over the Bay of Naples splits open. '
+      + 'A column of ash stands miles into the sky like a pine tree, day becomes night as '
+      + 'far as Misenum, and when it is over Pompeii and Herculaneum are simply gone — '
+      + 'sealed under the fall with their bread in the ovens. The admiral of the fleet dies '
+      + 'taking ships in to the rescue. And in the towns of Judaea and among the Jews of '
+      + 'Puteoli, men note the arithmetic aloud in the market: nine years, almost to the '
+      + 'season, since the House burned — and the general who burned it wears the purple '
+      + 'two months before the fire finds his own cities. It is what people said. The '
+      + 'mountain, for its part, said nothing.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_vesuvius', (ctx) =>
+      dateGE(ctx, 79, 8) && alive(ctx, 'ROM') && !!ctx.helpers.getFlag(ctx, 'templeBurned')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The emperor empties his purse for the survivors',
+        tooltip: 'Rome: −40 treasury on relief, −1 stability — but +10 legitimacy; Titus gives like a man paying a debt.',
+        effects: guard('ev_vesuvius:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: -40, stability: -1, legitimacy: 10 });
+        }),
+      },
+      {
+        label: 'What was said in the markets',
+        tooltip: 'Rome: −20 treasury, −1 stability, −5 legitimacy — the whisper of judgment sticks. Every Jewish province: "A Bitter Comfort" (−1 unrest, 12 months). Judaea +5 legitimacy.',
+        effects: guard('ev_vesuvius:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: -20, stability: -1, legitimacy: -5 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'bitter_comfort', name: 'A Bitter Comfort', months: 12,
+                effects: { unrest: -1 },
+              });
+            }
+          }
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 35 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_colosseum_opens',
+    title: 'Ex Manubiis',
+    desc: 'Where Nero\'s private lake glittered, the Flavians have raised the largest '
+      + 'building in the world: an amphitheater for fifty thousand, and over its entrance '
+      + 'a dedication whose shorthand every mason can expand — built ex manubiis, from the '
+      + 'spoils of war. There was only one war with spoils on that scale. Judaean gold '
+      + 'paid for the stone, and Judaean captives, by the thousand, carried it. Titus opens '
+      + 'it with a hundred days of games; the crowd that watches has already half-forgotten '
+      + 'where the money came from, which is what monuments are for.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_colosseum_opens', (ctx) =>
+      dateGE(ctx, 80, 6) && alive(ctx, 'ROM') && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'A hundred days of games',
+        tooltip: 'Rome: −50 treasury, +15 legitimacy, +1 stability — the city is fed, amused, and loyal.',
+        effects: guard('ev_colosseum_opens:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: -50, legitimacy: 15, stability: 1 });
+        }),
+      },
+      {
+        label: 'Let the inscription say whose spoils',
+        tooltip: 'Rome: +10 legitimacy at no cost — the stone does the boasting. Judaea: −5 legitimacy, and every Jewish province +1 unrest for 12 months; the captives\' kin can read.',
+        effects: guard('ev_colosseum_opens:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'ex_manubiis', name: 'Ex Manubiis', months: 12,
+                effects: { unrest: 1 },
+              });
+            }
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 36 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_titus_dies',
+    title: 'One Mistake',
+    desc: 'Two years and two months, and the reign everyone called a golden morning is over: '
+      + 'fever takes Titus at the same Sabine villa where his father died. His last words '
+      + 'run through the empire faster than the courier who carries them — "I have made but '
+      + 'one mistake" — and no one who repeats them agrees on what it was. Rome guesses '
+      + 'Berenice, or guesses Domitian left alive and unnamed. In the schools of Judaea '
+      + 'they will tell it otherwise, and not kindly. His brother does not wait for the '
+      + 'body to cool before riding to the praetorian camp.',
+    forTag: 'both',
+    date: { y: 81, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Domitian rides to the camp',
+        tooltip: 'Domitian (3/1/2) is emperor, and names no heir. Rome: −5 legitimacy — the succession is legal, and chilly.',
+        effects: guard('ev_titus_dies:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Domitian', title: 'Emperor', gov: 3, infl: 1, mar: 2, age: 29 });
+          h.setHeir(ctx, 'ROM', null);
+          h.adjust(ctx, 'ROM', { legitimacy: -5 });
+          h.setFlag(ctx, 'domitianEmperor', true);
+        }),
+      },
+      {
+        label: 'Deify the brother, bury the question',
+        tooltip: 'Domitian (3/1/2) is emperor; −20 treasury on Divus Titus and the arch with the lampstand carved on it. Rome +5 legitimacy — piety is cheaper than answers.',
+        effects: guard('ev_titus_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Domitian', title: 'Emperor', gov: 3, infl: 1, mar: 2, age: 29 });
+          h.setHeir(ctx, 'ROM', null);
+          h.adjust(ctx, 'ROM', { treasury: -20, legitimacy: 5 });
+          h.setFlag(ctx, 'domitianEmperor', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 37 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fiscus_tightens',
+    title: 'The Informers of the Fiscus',
+    desc: 'Under Domitian the Jewish tax has grown teeth. The fiscus now pursues not only '
+      + 'those who profess the faith but those who "live a Jewish life without professing '
+      + 'it," and those who merely "conceal their origin" — categories elastic enough to '
+      + 'fit any purse an informer covets. Suetonius will remember, from his own boyhood, '
+      + 'a crowded courtroom where a procurator had a man of ninety examined before the '
+      + 'assembly to see whether he was circumcised. Jewishness itself has become a '
+      + 'taxable, deniable, dangerous condition — a thing the delatores can smell on '
+      + 'a man\'s dinner or his idle Sabbaths.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_fiscus_tightens', (ctx) =>
+      dateGE(ctx, 85, 1) && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'fiscusJudaicus')
+        && !!ctx.helpers.getFlag(ctx, 'domitianEmperor')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The informers eat well',
+        tooltip: 'Rome: +40 treasury, −10 legitimacy. Every Jewish province: "The Delatores" (+2 unrest, −10% tax, 60 months) — fear is bad for markets.',
+        effects: guard('ev_fiscus_tightens:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { treasury: 40, legitimacy: -10 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'delatores', name: 'The Delatores', months: 60,
+                effects: { unrest: 2, taxMult: 0.9 },
+              });
+            }
+          }
+        }),
+      },
+      {
+        label: 'The communities pay before they are asked',
+        tooltip: 'The elders assess themselves and hand over the ledgers sealed. Judaea −40 treasury; Rome +20 treasury. Every Jewish province: "Quiet Ledgers" (+1 unrest, −10% tax, 60 months) — humiliation, at a discount.',
+        effects: guard('ev_fiscus_tightens:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -40 });
+          h.adjust(ctx, 'ROM', { treasury: 20 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'quiet_ledgers', name: 'Quiet Ledgers', months: 60,
+                effects: { unrest: 1, taxMult: 0.9 },
+              });
+            }
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 38 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_gamaliel_yavneh',
+    title: 'The Vineyard at Yavneh',
+    desc: 'A generation on, the academy has become what the Temple\'s courts were: the place '
+      + 'where the nation argues with itself and is governed by the argument. Under Gamaliel '
+      + 'the Second — grandson of the Gamaliel at whose feet Paul once sat — the daily '
+      + 'prayers are fixed at eighteen benedictions in an ordered rite any village can keep; '
+      + 'a nineteenth, against the sectarians, fences the community that has no walls left; '
+      + 'and the calendar goes out from Yavneh, so that Adar falls together from Rome to '
+      + 'Babylon. Gamaliel rules it all with a high hand — the sages will depose him once '
+      + 'for humiliating a colleague, and restore him when his rival refuses to profit by '
+      + 'it. An institution that can discipline its own patriarch and survive is an '
+      + 'institution. The House burned; the argument did not.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_gamaliel_yavneh', (ctx) =>
+      dateGE(ctx, 90, 1) && alive(ctx, 'JUD') && !!ctx.helpers.getFlag(ctx, 'yavnehFounded')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Fix the order of the prayers',
+        tooltip: 'One rite, one calendar, one people without a country. Judaea: +25 governance points, +1 stability, +5 legitimacy.',
+        effects: guard('ev_gamaliel_yavneh:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 25, stability: 1, legitimacy: 5 });
+        }),
+      },
+      {
+        label: 'An authority that bends without breaking',
+        tooltip: 'The deposition and the restoration both become precedent. Judaea: +15 governance points, +15 influence points, +10 legitimacy — the argument itself is the constitution.',
+        effects: guard('ev_gamaliel_yavneh:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 15, infl: 15, legitimacy: 10 });
+        }),
+      },
+    ],
+  },
+
+  // ── 39 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_flavius_clemens',
+    title: 'The Emperor\'s Cousin',
+    desc: 'The terror has reached the dynasty\'s own table. Flavius Clemens — Domitian\'s '
+      + 'first cousin, consul this very year, whose two small sons the emperor had named '
+      + 'his heirs — is executed on a charge the courts render as "atheism": the crime of '
+      + 'those who drift into Jewish ways. His wife Domitilla, the emperor\'s own niece, is '
+      + 'banished to the island of Pandateria. If a consul of the Flavian house can die for '
+      + 'inclining toward the God of a razed province, no one in Rome is safe, and everyone '
+      + 'in Rome now knows it. The senators check their dinner guests. The informers check '
+      + 'the senators.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_flavius_clemens', (ctx) =>
+      dateGE(ctx, 95, 1) && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'fiscusJudaicus')
+        && !!ctx.helpers.getFlag(ctx, 'domitianEmperor')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The charge is atheism',
+        tooltip: 'Rome: −1 stability, −10 legitimacy — a reign that eats its own heirs is ending, though the emperor is the last to know. Every Jewish province +1 unrest for 12 months; no one is safe.',
+        effects: guard('ev_flavius_clemens:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -10 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'terror_reaches_all', name: 'No One Is Safe', months: 12,
+                effects: { unrest: 1 },
+              });
+            }
+          }
+        }),
+      },
+      {
+        label: 'The story travels to Yavneh',
+        tooltip: 'Rome: −1 stability, −5 legitimacy. Judaea: +5 legitimacy — even Caesar\'s house, the sages note, inclines toward the Law; the tradition will remember Domitilla kindly.',
+        effects: guard('ev_flavius_clemens:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -5 });
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 40 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_domitian_dies',
+    title: 'The Last of the Flavians',
+    desc: 'The conspiracy is domestic: a steward with a dagger in a bandaged arm, the '
+      + 'empress\'s knowledge, the palace servants holding the doors. Domitian dies fighting '
+      + 'on the floor of his bedroom, and the dynasty of the Judaean war dies with him — '
+      + 'father, son, and brother, twenty-seven years from Galilee to this. The Senate, '
+      + 'which feared him living, damns his memory before nightfall and hails Nerva: old, '
+      + 'childless, moderate — a caretaker chosen precisely because he threatens no one. '
+      + 'The informers of the fiscus go very quiet, very fast.',
+    forTag: 'both',
+    date: { y: 96, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Senate hails Nerva',
+        tooltip: 'Nerva (3/4/1) is emperor, heirless — for now. Rome: −1 stability (the praetorians grumble), +5 legitimacy.',
+        effects: guard('ev_domitian_dies:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Nerva', title: 'Emperor', gov: 3, infl: 4, mar: 1, age: 65 });
+          h.setHeir(ctx, 'ROM', null);
+          h.adjust(ctx, 'ROM', { stability: -1, legitimacy: 5 });
+          h.setFlag(ctx, 'nervaEmperor', true);
+        }),
+      },
+      {
+        label: 'Damnatio memoriae',
+        tooltip: 'Nerva (3/4/1) is emperor. Rome: −20 treasury recarving every inscription in the empire, −1 stability — but +10 legitimacy; the new reign is founded on the erasure of the old.',
+        effects: guard('ev_domitian_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'ROM', { name: 'Nerva', title: 'Emperor', gov: 3, infl: 4, mar: 1, age: 65 });
+          h.setHeir(ctx, 'ROM', null);
+          h.adjust(ctx, 'ROM', { treasury: -20, stability: -1, legitimacy: 10 });
+          h.setFlag(ctx, 'nervaEmperor', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 41 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_calumnia_sublata',
+    title: 'The Slander of the Jewish Tax Removed',
+    desc: 'Among Nerva\'s first acts is a coin — and this time the mint speaks mercy. FISCI '
+      + 'IUDAICI CALUMNIA SUBLATA, the bronze says: the slander of the Jewish tax is '
+      + 'abolished. The tax itself remains — Rome forgives, it does not refund — but the '
+      + 'informers\' trade is ended, the examinations cease, and no man need again prove '
+      + 'before a courtroom what he is or is not. Thirty years since the sacrifices ceased. '
+      + 'The generation that saw the House burn is going to its graves now, in Galilee and '
+      + 'Babylon and Rome — and what they built in place of the House, the ordered prayers '
+      + 'and the argued Law and the academy that survives everything, has held. It holds yet.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_calumnia_sublata', (ctx) =>
+      alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'nervaEmperor')
+        && !!ctx.helpers.getFlag(ctx, 'fiscusJudaicus')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strike the coin of mercy',
+        tooltip: 'The informers\' reign ends: "The Delatores" and "Quiet Ledgers" lifted everywhere; every Jewish province −1 unrest for 24 months. Rome +10 legitimacy; Judaea +10 legitimacy, +1 stability.',
+        effects: guard('ev_calumnia_sublata:0', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (!p || p.religion !== 'judaism') continue;
+            h.removeModifier(ctx, p.name, 'delatores');
+            h.removeModifier(ctx, p.name, 'quiet_ledgers');
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'calumnia_sublata', name: 'The Slander Removed', months: 24,
+              effects: { unrest: -1 },
+            });
+          }
+          h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
+        }),
+      },
+      {
+        label: 'What they built instead has held',
+        tooltip: 'The examinations end ("Delatores" and "Quiet Ledgers" lifted; −1 unrest, 24 months, in every Jewish province) — and the generation\'s work is sealed: Judaea +20 governance points, +5 legitimacy; Rome +5 legitimacy.',
+        effects: guard('ev_calumnia_sublata:1', (ctx) => {
+          const h = ctx.helpers;
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (!p || p.religion !== 'judaism') continue;
+            h.removeModifier(ctx, p.name, 'delatores');
+            h.removeModifier(ctx, p.name, 'quiet_ledgers');
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'calumnia_sublata', name: 'The Slander Removed', months: 24,
+              effects: { unrest: -1 },
+            });
+          }
+          h.adjust(ctx, 'ROM', { legitimacy: 5 });
+          h.adjust(ctx, 'JUD', { gov: 20, legitimacy: 5 });
+        }),
+      },
+    ],
+  },
 ];
