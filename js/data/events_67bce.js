@@ -43,6 +43,47 @@ function findBrothersWar(game) {
   return null;
 }
 
+// ── Helpers for the alternate-history victory strand ────────────────────────
+// (fires only in worlds that beat the parchment; never in historical ones).
+
+// The player's Hasmonean tag, or null when playing someone else.
+function playerHasmonean(ctx) {
+  const me = ctx.game.playerTag;
+  return (me === 'HYR' || me === 'ARI') ? me : null;
+}
+
+// True while any province of the faith answers to Rome.
+function romHoldsJudaea(ctx) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.religion !== 'judaism') continue;
+    if (p.owner === 'ROM' || p.controller === 'ROM') return true;
+  }
+  return false;
+}
+
+// The brothers' war actually WON: the rival line dead, annexed, or bent to clienthood.
+function unifiedUnder(ctx, tag) {
+  const rival = tag === 'HYR' ? 'ARI' : 'HYR';
+  const r = ctx.game.tags && ctx.game.tags[rival];
+  return !r || r.alive === false || r.overlord === tag;
+}
+
+// Alive, no Roman collar, and no Roman war still burning.
+function freeOfRome(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false && !t.overlord
+    && (t.atWarWith || []).indexOf('ROM') === -1);
+}
+
+function bumpOpinion(g, of, toward, delta) {
+  const t = g.tags && g.tags[of];
+  if (!t) return;
+  if (!t.opinion || typeof t.opinion !== 'object') t.opinion = {};
+  t.opinion[toward] = Math.max(-200, Math.min(200, (t.opinion[toward] || 0) + delta));
+}
+
 export const EVENTS_67 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
@@ -2105,6 +2146,599 @@ export const EVENTS_67 = [
           });
           h.setHeir(ctx, 'HYR', { name: 'Alexander son of Mariamne', gov: 2, infl: 2, mar: 2, age: 6 });
           h.chronicle(ctx, 'diplomacy', 'The sentence against Queen Mariamne is stayed; the whispers that swore it continue their work.');
+        }),
+      },
+    ],
+  },
+
+  // ══ THE ROAD NOT TAKEN — the victory strand ═══════════════════════════════
+  // Alternate history for the worlds that beat the parchment: a Hasmonean line
+  // that repels Pompey, heals the brothers' schism, and rides out Rome's civil
+  // wars as a sovereign. Every trigger is gated on world-state (independence,
+  // unification, Rome holding no Judaean soil) so none of these can fire in a
+  // world that followed Josephus.
+
+  // ── V1 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_eagle_refused',
+    title: 'The Eagle Refused',
+    desc: 'It has never happened before, and every chancery from Alexandria to '
+      + 'Ecbatana is checking its archives to be sure: Pompey came to organize the '
+      + 'East, and one small kingdom shut its gates, kept its hills, and is still '
+      + 'standing. The settlement of the East has a hole in it shaped like Judaea. In '
+      + 'Rome the proconsul\'s friends explain, at length, why the hills were not worth '
+      + 'the cohorts; in Ctesiphon the King of Kings has the dispatch read to him '
+      + 'twice, and smiles at the second reading.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_eagle_refused', (ctx) => {
+      const me = playerHasmonean(ctx);
+      return !!me && !!ctx.helpers.getFlag(ctx, 'pompeyCame')
+        && dateGE(ctx, -62, 6) && alive(ctx, 'ROM')
+        && freeOfRome(ctx, me) && !romHoldsJudaea(ctx);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let every harbor tell it',
+        tooltip: 'The kingdom that shut its gates: +10 legitimacy; "The Gates That Held" (+0.1 legitimacy a month, permanent). Rome\'s opinion of us −60; Parthia\'s +40.',
+        effects: guard('ev4_v_eagle_refused:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { legitimacy: 10 });
+          h.addTagModifier(ctx, me, {
+            id: 'gates_that_held', name: 'The Gates That Held', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          bumpOpinion(g, 'ROM', me, -60);
+          bumpOpinion(g, 'PAR', me, 40);
+          h.setFlag(ctx, 'eagleRefused', true);
+          h.chronicle(ctx, 'war', 'Pompey turns away from Judaea: the one gate in the East that shut and held. The settlement of the East has a hole in it.');
+        }),
+      },
+      {
+        label: 'Courtesies for the disappointed proconsul',
+        tooltip: 'Gild the refusal: −100 talents in gifts; Rome\'s opinion −20 only, Parthia\'s +20, +15 governance points. The gates still held — quietly.',
+        effects: guard('ev4_v_eagle_refused:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -100, gov: 15 });
+          bumpOpinion(g, 'ROM', me, -20);
+          bumpOpinion(g, 'PAR', me, 20);
+          h.setFlag(ctx, 'eagleRefused', true);
+          h.chronicle(ctx, 'diplomacy', 'Pompey turns away from Judaea; the refusal travels wrapped in gifts, and both parties pretend it was a treaty.');
+        }),
+      },
+    ],
+  },
+
+  // ── V2 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_parthian_embassy',
+    title: 'An Embassy from the King of Kings',
+    desc: 'They arrive without hurry, because Parthians are never seen to hurry: forty '
+      + 'riders, a chamberlain with a written speech, and gifts chosen by someone who '
+      + 'did research — a Torah scroll cased in ivory, taken west by some forgotten '
+      + 'exile and now formally returned. The speech is short. The King of Kings has '
+      + 'observed that there is exactly one power between the Euphrates and the sea '
+      + 'that has refused Rome and lived. He proposes that it remain living, and that '
+      + 'between great Parthia and small Judaea there should stand — nothing at all, '
+      + 'except friendship.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_parthian_embassy', (ctx) => {
+      const me = playerHasmonean(ctx);
+      return !!me && !!ctx.helpers.getFlag(ctx, 'eagleRefused')
+        && dateGE(ctx, -61, 1) && alive(ctx, 'PAR') && freeOfRome(ctx, me);
+    }),
+    aiOption: 1,
+    options: [
+      {
+        label: 'The buffer kingdom takes the hand',
+        tooltip: 'Alliance with Parthia; Parthia\'s opinion of us +60, ours of Parthia +60 — and Rome\'s opinion of us −30. The Euphrates now has a western friend.',
+        effects: guard('ev4_v_parthian_embassy:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me || !alive(ctx, 'PAR')) return;
+          const mine = g.tags[me], par = g.tags.PAR;
+          if (mine && par && Array.isArray(mine.allies) && Array.isArray(par.allies)) {
+            if (mine.allies.indexOf('PAR') === -1) mine.allies.push('PAR');
+            if (par.allies.indexOf(me) === -1) par.allies.push(me);
+          }
+          bumpOpinion(g, 'PAR', me, 60);
+          bumpOpinion(g, me, 'PAR', 60);
+          bumpOpinion(g, 'ROM', me, -30);
+          h.setFlag(ctx, 'parthianAccord', true);
+          h.chronicle(ctx, 'diplomacy', 'Judaea and Parthia swear friendship: the buffer-kingdom gambit, with the buffer holding the pen.');
+        }),
+      },
+      {
+        label: 'Polite gifts, no oaths',
+        tooltip: 'Keep the scroll, return the riders: Parthia\'s opinion +20, Rome\'s +10 (restraint is noticed), +10 governance points. No alliance, no entanglement.',
+        effects: guard('ev4_v_parthian_embassy:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { gov: 10 });
+          bumpOpinion(g, 'PAR', me, 20);
+          bumpOpinion(g, 'ROM', me, 10);
+          h.chronicle(ctx, 'diplomacy', 'The Parthian embassy departs with courtesies and without oaths; the scroll in the ivory case stays.');
+        }),
+      },
+    ],
+  },
+
+  // ── V3 ────────────────────────────────────────────────────────────────────
+  // The war of the brothers WON outright by the younger: the soldier-king must
+  // now heal the split his father's party made (the bookmark's ARI is the
+  // Sadducee strand — the great houses, the fortress captains, the diadem
+  // worn over the ephod).
+  {
+    id: 'ev4_v_one_crown_ari',
+    title: 'The Soldier-King\'s Peace',
+    desc: 'The war is won the way your father would have won it: outright. Now the '
+      + 'harder arithmetic. Half the kingdom prayed against you from behind your '
+      + 'brother\'s walls, and their sages — the Pharisees your mother raised up and '
+      + 'your Sadducees pulled down — wait to learn whether the soldier-king intends '
+      + 'to be king of them too. The great houses say hang the ringleaders and seal '
+      + 'the estates. The old men of the Sanhedrin say a kingdom of half its people '
+      + 'is a garrison. Both are watching your hands.',
+    forTag: 'ARI',
+    major: true,
+    trigger: safeTrigger('ev4_v_one_crown_ari', (ctx) =>
+      alive(ctx, 'ARI') && unifiedUnder(ctx, 'ARI') && freeOfRome(ctx, 'ARI')
+      && ctx.helpers.controls(ctx, 'ARI', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Recall the Pharisees from exile',
+        tooltip: 'The schools reconciled: +1 stability, +10 legitimacy; "One Law, One Crown" (−0.5 unrest everywhere, permanent). The Sadducees mutter (faction approval −10).',
+        effects: guard('ev4_v_one_crown_ari:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ARI', { stability: 1, legitimacy: 10 });
+          h.addTagModifier(ctx, 'ARI', {
+            id: 'schools_reconciled', name: 'One Law, One Crown', months: -1,
+            effects: { unrestAll: -0.5 },
+          });
+          h.factionShift(ctx, 'ARI', 'sadducees', -10);
+          h.setFlag(ctx, 'crownHealed', true);
+          h.chronicle(ctx, 'diplomacy', 'The soldier-king recalls the Pharisees and seats both schools; the priesthood and the crown stop being two prizes.');
+        }),
+      },
+      {
+        label: 'The great houses have won; let them govern',
+        tooltip: 'The Sadducee settlement: faction approval +15; "The Great Houses Triumphant" (+6% income, permanent) — but Jerusalem\'s synagogues seethe (+1 unrest, 24 months).',
+        effects: guard('ev4_v_one_crown_ari:1', (ctx) => {
+          const h = ctx.helpers;
+          h.factionShift(ctx, 'ARI', 'sadducees', 15);
+          h.addTagModifier(ctx, 'ARI', {
+            id: 'great_houses', name: 'The Great Houses Triumphant', months: -1,
+            effects: { incomeMult: 1.06 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'synagogues_seethe', name: 'The Synagogues Seethe', months: 24,
+            effects: { unrest: 1 },
+          });
+          h.setFlag(ctx, 'crownHealed', true);
+          h.chronicle(ctx, 'diplomacy', 'The Sadducee settlement: estates sealed, offices filled, and the sages sent home to wait for another queen.');
+        }),
+      },
+    ],
+  },
+
+  // ── V4 ────────────────────────────────────────────────────────────────────
+  // The mirror: the elder wins outright. The bookmark's HYR is the
+  // Pharisee-backed priest strand — the high priesthood, the law of
+  // succession, the sages preaching the elder line.
+  {
+    id: 'ev4_v_one_crown_hyr',
+    title: 'The Priest-King\'s Peace',
+    desc: 'Nobody expected the weak brother to win, which is one reason he did. Now the '
+      + 'high priest holds crown and altar both, the Pharisees who preached his right '
+      + 'expect the kingdom their sermons bought, and the Sadducee houses that armed '
+      + 'your brother wait behind shut doors to learn the price of losing. Your '
+      + 'grandmother faced this exact morning and gave the sages everything; the '
+      + 'kingdom got nine quiet years and this war. The scrolls do not say what the '
+      + 'other choice would have bought.',
+    forTag: 'HYR',
+    major: true,
+    trigger: safeTrigger('ev4_v_one_crown_hyr', (ctx) =>
+      alive(ctx, 'HYR') && unifiedUnder(ctx, 'HYR') && freeOfRome(ctx, 'HYR')
+      && ctx.helpers.controls(ctx, 'HYR', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Seat both schools in the Sanhedrin',
+        tooltip: 'The schools reconciled: +1 stability, +10 legitimacy; "One Law, One Crown" (−0.5 unrest everywhere, permanent). The Pharisees mutter at sharing (faction approval −10).',
+        effects: guard('ev4_v_one_crown_hyr:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { stability: 1, legitimacy: 10 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'schools_reconciled', name: 'One Law, One Crown', months: -1,
+            effects: { unrestAll: -0.5 },
+          });
+          h.factionShift(ctx, 'HYR', 'pharisees', -10);
+          h.setFlag(ctx, 'crownHealed', true);
+          h.chronicle(ctx, 'diplomacy', 'The priest-king seats both schools in the council; the crown and the ephod stop quarreling through proxies.');
+        }),
+      },
+      {
+        label: 'The sages write the settlement',
+        tooltip: 'The Pharisee kingdom: faction approval +15; "The Sages Preach One Crown" (+0.15 legitimacy a month, permanent) — but the great houses\' city seethes (Jerusalem +1 unrest, 24 months).',
+        effects: guard('ev4_v_one_crown_hyr:1', (ctx) => {
+          const h = ctx.helpers;
+          h.factionShift(ctx, 'HYR', 'pharisees', 15);
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'sages_settlement', name: 'The Sages Preach One Crown', months: -1,
+            effects: { legitimacyAdd: 0.15 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'great_houses_shut', name: 'The Great Houses Shut Their Doors', months: 24,
+            effects: { unrest: 1 },
+          });
+          h.setFlag(ctx, 'crownHealed', true);
+          h.chronicle(ctx, 'diplomacy', 'The sages write the settlement of the kingdom; the Sadducee houses shut their doors and keep their ledgers.');
+        }),
+      },
+    ],
+  },
+
+  // ── V5 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_caesar_or_pompey',
+    title: 'The Sovereign\'s Choice',
+    desc: 'Rome has split down the middle, and for once nobody is asking Judaea to '
+      + 'kneel — both halves are too busy asking it to help. Caesar\'s agent wants '
+      + 'grain shipped to Greece and a loan at interest; Pompey\'s wants the old '
+      + 'settlement honored and the ports closed to his enemy. A generation ago this '
+      + 'letter would have been an ultimatum with a legion behind it. It is pleasant, '
+      + 'the old councilors agree, to be courted instead of collected — and everyone '
+      + 'in the room knows the courtship lasts exactly until one Roman is left.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_caesar_or_pompey', (ctx) => {
+      const me = playerHasmonean(ctx);
+      return !!me && dateGE(ctx, -49, 2) && alive(ctx, 'ROM')
+        && freeOfRome(ctx, me) && unifiedUnder(ctx, me);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Grain and gold for Caesar',
+        tooltip: 'Back the new man: −100 talents; Rome\'s opinion of us +10. A sovereign\'s wager, not a vassal\'s tribute — the settlement waits on Pharsalus.',
+        effects: guard('ev4_v_caesar_or_pompey:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -100 });
+          bumpOpinion(g, 'ROM', me, 10);
+          h.setFlag(ctx, 'jvBackedCaesar', true);
+          h.chronicle(ctx, 'diplomacy', 'Sovereign Judaea wagers on Caesar: grain and gold sail west, by treaty and not by tribute.');
+        }),
+      },
+      {
+        label: 'Honor Pompey\'s settlement — such as it was',
+        tooltip: 'Back the old order: +5 legitimacy (treaties kept are legitimacy banked); Rome\'s opinion of us +10. The settlement waits on Pharsalus.',
+        effects: guard('ev4_v_caesar_or_pompey:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { legitimacy: 5 });
+          bumpOpinion(g, 'ROM', me, 10);
+          h.setFlag(ctx, 'jvBackedPompey', true);
+          h.chronicle(ctx, 'diplomacy', 'Sovereign Judaea holds to the old settlement and closes its ports to Caesar — a kingdom keeping a treaty with a ghost.');
+        }),
+      },
+    ],
+  },
+
+  // ── V6 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_pharsalus_wager',
+    title: 'The Wager Comes Due',
+    desc: 'Pharsalus has sorted the Romans, and the couriers fan out across the East '
+      + 'with the accounting. In Jerusalem the council convenes to learn what its '
+      + 'wager bought: a kingdom that backed the victor may name its price while the '
+      + 'gratitude is warm; a kingdom that backed the corpse must decide how much a '
+      + 'pardon costs when purchased from a man who forgets nothing and forgives at '
+      + 'interest. Either way — and this is the novelty the chroniclers will note — '
+      + 'the letter goes out from a free city, under the kingdom\'s own seal.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_pharsalus_wager', (ctx) => {
+      const me = playerHasmonean(ctx);
+      const h = ctx.helpers;
+      return !!me && dateGE(ctx, -47, 3) && alive(ctx, 'ROM') && freeOfRome(ctx, me)
+        && (!!h.getFlag(ctx, 'jvBackedCaesar') || !!h.getFlag(ctx, 'jvBackedPompey'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send envoys to the victor',
+        tooltip: 'Backed Caesar: "Amicitia" treaty (+5% income, permanent), Rome\'s opinion +40, +10 legitimacy. Backed Pompey: −150 talents buys the pardon, Rome\'s opinion +15.',
+        effects: guard('ev4_v_pharsalus_wager:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          if (h.getFlag(ctx, 'jvBackedCaesar')) {
+            h.adjust(ctx, me, { legitimacy: 10 });
+            h.addTagModifier(ctx, me, {
+              id: 'amicitia', name: 'Amicitia — Treaty with Rome', months: -1,
+              effects: { incomeMult: 1.05 },
+            });
+            bumpOpinion(g, 'ROM', me, 40);
+            h.chronicle(ctx, 'diplomacy', 'Caesar receives the envoys of a kingdom that backed him freely, and signs a treaty between sovereigns: amicitia, not clientela.');
+          } else {
+            h.adjust(ctx, me, { treasury: -150 });
+            bumpOpinion(g, 'ROM', me, 15);
+            h.chronicle(ctx, 'diplomacy', 'The pardon is purchased at the victor\'s rate; expensive, but invoiced to a kingdom, not a province.');
+          }
+        }),
+      },
+      {
+        label: 'A sovereign owes no accounting',
+        tooltip: 'Send nothing: +15 governance points, +5 legitimacy at home — but Rome\'s opinion of us −15. The ledgers stay open in Roman memory.',
+        effects: guard('ev4_v_pharsalus_wager:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { gov: 15, legitimacy: 5 });
+          bumpOpinion(g, 'ROM', me, -15);
+          h.chronicle(ctx, 'diplomacy', 'No envoys go west; the kingdom lets the Roman civil war settle its own accounts.');
+        }),
+      },
+    ],
+  },
+
+  // ── V7 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_caravan_tribute',
+    title: 'The Tribute of the Caravans',
+    desc: 'The maps in the counting house have been redrawn, and the clerks keep '
+      + 'reaching the same delightful total: the incense road now runs mile after '
+      + 'mile through the king\'s territory. Frankincense out of Arabia, silk off the '
+      + 'Euphrates ferries, balsam from the king\'s own Jericho — and at the end of '
+      + 'every route, a customs house flying the kingdom\'s colors where the caravan '
+      + 'masters queue with the particular patience of men calculating what they will '
+      + 'add to their prices. Petra\'s old monopoly is broken. The question is what to '
+      + 'do with the pieces.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_caravan_tribute', (ctx) => {
+      const me = playerHasmonean(ctx);
+      const h = ctx.helpers;
+      return !!me && alive(ctx, me) && !ctx.game.tags[me].overlord
+        && (h.controls(ctx, me, 'Damascus') || h.controls(ctx, me, 'Petra'))
+        && h.controls(ctx, me, 'Gaza');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Tax the incense road',
+        tooltip: '"The Tribute of the Caravans": +10% income, permanently — but Nabataea\'s opinion of us −30. Monopolies make money and enemies at the same counter.',
+        effects: guard('ev4_v_caravan_tribute:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.addTagModifier(ctx, me, {
+            id: 'caravan_tribute', name: 'The Tribute of the Caravans', months: -1,
+            effects: { incomeMult: 1.1 },
+          });
+          bumpOpinion(g, 'NAB', me, -30);
+          h.setFlag(ctx, 'caravanTribute', true);
+          h.chronicle(ctx, 'diplomacy', 'The incense road pays its tribute to Jerusalem: the customs of Damascus, the desert road, and the sea at Gaza under one seal.');
+        }),
+      },
+      {
+        label: 'Low tolls, long friendship',
+        tooltip: 'The open road: +5% income permanently, Nabataea\'s opinion +20, Parthia\'s +10 — half the tribute, twice the traffic, and no one sharpening knives.',
+        effects: guard('ev4_v_caravan_tribute:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.addTagModifier(ctx, me, {
+            id: 'caravan_tribute', name: 'The Open Road', months: -1,
+            effects: { incomeMult: 1.05 },
+          });
+          bumpOpinion(g, 'NAB', me, 20);
+          bumpOpinion(g, 'PAR', me, 10);
+          h.setFlag(ctx, 'caravanTribute', true);
+          h.chronicle(ctx, 'diplomacy', 'The kingdom sets its tolls low and its scales honest; the caravan masters spread the word from Charax to Alexandria.');
+        }),
+      },
+    ],
+  },
+
+  // ── V8 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_antony_or_octavian',
+    title: 'Two Romans, One World',
+    desc: 'The Republic has run out of republic: Antony holds the East with Egypt\'s '
+      + 'queen and Egypt\'s treasury, Octavian holds Italy with Caesar\'s name and '
+      + 'Caesar\'s veterans, and between them the last neutral harbors are being asked, '
+      + 'politely, to stop being neutral. Both send ambassadors to Jerusalem in the '
+      + 'same season — a compliment the councilors savor for exactly one meeting, '
+      + 'because a kingdom courted by two Romans is a kingdom one Roman will '
+      + 'eventually invoice. The grandfathers chose between Caesar and Pompey. Now the '
+      + 'same dice, thrown by the same free hand.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_antony_or_octavian', (ctx) => {
+      const me = playerHasmonean(ctx);
+      const h = ctx.helpers;
+      return !!me && dateGE(ctx, -33, 6) && alive(ctx, 'ROM')
+        && freeOfRome(ctx, me) && unifiedUnder(ctx, me)
+        && !h.getFlag(ctx, 'actiumFought');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The grain fleets sail west, to Octavian',
+        tooltip: 'Back the cold young man: −80 talents in grain and pilots. The wager settles at Actium.',
+        effects: guard('ev4_v_antony_or_octavian:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -80 });
+          h.setFlag(ctx, 'jvBackedOctavian', true);
+          h.chronicle(ctx, 'diplomacy', 'Sovereign Judaea provisions Octavian\'s squadrons: a wager on the cold young man who forgets nothing.');
+        }),
+      },
+      {
+        label: 'The East holds with Antony',
+        tooltip: 'Back the near Roman: −80 talents; Egypt\'s opinion of us +20 — the queen approves of neighbors who choose her side. The wager settles at Actium.',
+        effects: guard('ev4_v_antony_or_octavian:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -80 });
+          bumpOpinion(g, 'PTO', me, 20);
+          h.setFlag(ctx, 'jvBackedAntony', true);
+          h.chronicle(ctx, 'diplomacy', 'Sovereign Judaea holds with Antony and the East; the queen of Egypt approves, which is worth something, for now.');
+        }),
+      },
+    ],
+  },
+
+  // ── V9 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_v_actium_sovereign',
+    title: 'The Kingdom That Kept Its Gates',
+    desc: 'Actium is decided, the world has one master, and every client king in the '
+      + 'East is sailing to Rhodes to grovel with the diadem in his luggage. One '
+      + 'kingdom is not sailing anywhere. Judaea backed its Roman as a sovereign backs '
+      + 'an ally — by treaty, for value received — and whatever Octavian thinks of the '
+      + 'choice, his clerks confirm the legal novelty: there is no submission on file '
+      + 'to revoke, no crown of his giving to take back. The master of the world must '
+      + 'now do the one thing masters of the world find hardest: negotiate.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_actium_sovereign', (ctx) => {
+      const me = playerHasmonean(ctx);
+      const h = ctx.helpers;
+      return !!me && !!h.getFlag(ctx, 'actiumFought') && alive(ctx, 'ROM')
+        && freeOfRome(ctx, me)
+        && (!!h.getFlag(ctx, 'jvBackedOctavian') || !!h.getFlag(ctx, 'jvBackedAntony'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'A treaty between sovereigns',
+        tooltip: 'Backed Octavian: "Friend, Not Subject" (+8% income, permanent), Rome\'s opinion +50, +15 legitimacy. Backed Antony: −200 talents indemnity, Rome\'s opinion −30, −5 legitimacy — but the kingdom stays free.',
+        effects: guard('ev4_v_actium_sovereign:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          if (h.getFlag(ctx, 'jvBackedOctavian')) {
+            h.adjust(ctx, me, { legitimacy: 15 });
+            h.addTagModifier(ctx, me, {
+              id: 'friend_not_subject', name: 'Friend, Not Subject', months: -1,
+              effects: { incomeMult: 1.08 },
+            });
+            bumpOpinion(g, 'ROM', me, 50);
+            h.chronicle(ctx, 'diplomacy', 'Octavian signs with the one eastern crown he never gave: a treaty between sovereigns, filed under amicitia and read, in Jerusalem, as vindication.');
+          } else {
+            h.adjust(ctx, me, { treasury: -200, legitimacy: -5 });
+            bumpOpinion(g, 'ROM', me, -30);
+            h.chronicle(ctx, 'diplomacy', 'The indemnity for backing Antony is paid in full and on time — by a kingdom, to a treasury, with no diadem changing hands.');
+          }
+        }),
+      },
+      {
+        label: 'Neither tribute nor treaty',
+        tooltip: 'The gates stay shut: +10 legitimacy; "The Watchful Frontier" (+5% morale, 36 months) — but Rome\'s opinion of us −40. Let the master of the world blink first.',
+        effects: guard('ev4_v_actium_sovereign:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { legitimacy: 10 });
+          h.addTagModifier(ctx, me, {
+            id: 'watchful_frontier', name: 'The Watchful Frontier', months: 36,
+            effects: { moraleMult: 1.05 },
+          });
+          bumpOpinion(g, 'ROM', me, -40);
+          h.chronicle(ctx, 'war', 'No envoys to the master of the world: the kingdom that kept its gates keeps them still, and drills its levies in sight of the coast road.');
+        }),
+      },
+    ],
+  },
+
+  // ── V10 ───────────────────────────────────────────────────────────────────
+  // The closing chronicle of the road not taken: survive united, free, and
+  // unconquered into the mid-thirties, and the scribes get to write the
+  // sentence no scribe of the other world ever wrote.
+  {
+    id: 'ev4_v_never_renamed',
+    title: 'The Kingdom They Never Renamed',
+    desc: 'In the other history — the one the court astrologers deal in after wine — '
+      + 'there is a Roman province here by now. Its ports have Latin charters, its '
+      + 'high priest holds office by a prefect\'s letter, and in time even the land\'s '
+      + 'name is taken away and a conqueror\'s word written over it. In this history '
+      + 'the scribes take the census in Hebrew, the Temple treasury audits itself, and '
+      + 'the road tolls from Damascus to Gaza are payable to the house of the '
+      + 'Maccabees. Two generations of Romans came east to organize the world, and the '
+      + 'world is organized — around one kingdom-shaped exception that no one in Rome '
+      + 'can quite explain, and no one in Jerusalem will ever stop explaining.',
+    forTag: 'player',
+    major: true,
+    trigger: safeTrigger('ev4_v_never_renamed', (ctx) => {
+      const me = playerHasmonean(ctx);
+      return !!me && dateGE(ctx, -35, 1) && freeOfRome(ctx, me)
+        && unifiedUnder(ctx, me) && ctx.helpers.controls(ctx, me, 'Jerusalem')
+        && !romHoldsJudaea(ctx);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Write it in the chronicle',
+        tooltip: 'The line unbroken: +1 stability; "No Roman Name" (+0.1 legitimacy a month, permanent). The verdict of the scribes, entered in ink.',
+        effects: guard('ev4_v_never_renamed:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { stability: 1 });
+          h.addTagModifier(ctx, me, {
+            id: 'no_roman_name', name: 'No Roman Name', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.setFlag(ctx, 'neverRenamed', true);
+          h.chronicle(ctx, 'diplomacy', 'The chronicle enters its proudest sentence: two generations of Romans organized the East, and the kingdom kept its name, its Law, and its gates.');
+        }),
+      },
+      {
+        label: 'Strike the jubilee shekels',
+        tooltip: 'Silver for every hand: −100 talents; +5 legitimacy; every province of the faith −1 unrest for 24 months ("The Jubilee Shekels").',
+        effects: guard('ev4_v_never_renamed:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = playerHasmonean(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -100, legitimacy: 5 });
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'jubilee_shekels', name: 'The Jubilee Shekels', months: 24,
+              effects: { unrest: -1 },
+            });
+          }
+          h.setFlag(ctx, 'neverRenamed', true);
+          h.chronicle(ctx, 'diplomacy', 'Jubilee shekels — freedom of Zion, year of the unbroken line — ring on every counter from Akko to Petra.');
         }),
       },
     ],

@@ -1703,4 +1703,478 @@ export const EVENTS_132 = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // THE STANDING STATE, 136–166. The victory strand deepened: the world where
+  // the Nasi's Israel holds Jerusalem and must now do the thing no revolt
+  // rehearses — govern. Gated on judaeaStands() with date floors; the shared
+  // world events (Antoninus, the Parthian war, the plague) still fire above.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── 39 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_era_of_redemption',
+    title: 'The Years of the Redemption',
+    desc: 'The war coins climbed from "Year One of the Redemption of Israel" to "Year Two," '
+      + 'and then — the treasurers being honest men — retreated to the safer legend, "For '
+      + 'the Freedom of Jerusalem": freedom is a fact, redemption is a verdict. Now the '
+      + 'scribes of the land want a ruling, because every deed, ketubah and loan must be '
+      + 'dated by something. Date the documents by the Redemption and the state has made '
+      + 'a claim upon heaven in every bill of sale. Date them by the Freedom and the state '
+      + 'has promised only what it can enforce.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev2_era_of_redemption', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 137, 1)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Year One of the Redemption of Israel',
+        tooltip: 'The calendar resets and every contract preaches: +10 legitimacy — and the claim cannot survive a bad harvest quietly: −1 stability.',
+        effects: guard('ev2_era_of_redemption:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: -1 });
+          h.setFlag(ctx, 'redemptionEra', true);
+          h.chronicle(ctx, 'era', 'The scribes of Israel reset the calendar: every deed is dated from Year One of the Redemption.');
+        }),
+      },
+      {
+        label: 'For the Freedom of Jerusalem',
+        tooltip: 'The modest legend, the merchants\' trust: +1 stability, +25 talents as the overstruck silver circulates at par.',
+        effects: guard('ev2_era_of_redemption:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { stability: 1, treasury: 25 });
+          h.setFlag(ctx, 'freedomEra', true);
+          h.chronicle(ctx, 'era', 'The mint keeps the sober legend — "For the Freedom of Jerusalem" — and the deeds are dated by what can be enforced.');
+        }),
+      },
+    ],
+  },
+
+  // ── 40 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_fetters',
+    title: 'Fetters for the Men of Tekoa',
+    desc: 'The Nasi\'s peacetime letters read exactly like his war letters: "From Simon bar '
+      + 'Kosiba to Yeshua ben Galgula — I call heaven to witness against me: if any man of '
+      + 'the Galileans who are with you is mistreated, I shall put fetters on your feet." '
+      + 'The wheat is still requisitioned; the men of Tekoa are still seized. The courts '
+      + 'answer, respectfully, that the war is over, and that the Law has procedures where '
+      + 'the letters have threats. A state can be run by either. It cannot forever be run '
+      + 'by both.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_fetters', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 137, 6)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'The letters keep their teeth',
+        tooltip: '"The Prince\'s Peace": +5% discipline for 36 months — and −5 legitimacy, for fetters make poor citizens of good soldiers.',
+        effects: guard('ev2_fetters:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'princes_peace', name: 'The Prince\'s Peace', months: 36,
+            effects: { disciplineMult: 1.05 },
+          });
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+        }),
+      },
+      {
+        label: 'The courts above the captains',
+        tooltip: 'The Law has procedures: +10 legitimacy, +1 stability, −15 martial points — the requisition parties are disbanded, and the sages remember it.',
+        effects: guard('ev2_fetters:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.removeModifier(ctx, 'JUD', 'iron_discipline');
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1, mar: -15 });
+          h.chronicle(ctx, 'era', 'The Nasi\'s letters yield to the courts: the Law, not the fetters, runs the standing state.');
+        }),
+      },
+    ],
+  },
+
+  // ── 41 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_third_house',
+    title: 'Until a Prophet Should Come',
+    desc: 'The Mount is cleared, the plans are drawn, and the whole question is authority. '
+      + 'The war coins named "Eleazar the Priest" — but which line is the true line, after '
+      + 'sixty years of no altar and three generations of disputed genealogies? The old '
+      + 'precedent cuts both ways: when the Maccabees found the altar defiled, they tore it '
+      + 'down and stored the stones on the Mount "until a prophet should come to tell what '
+      + 'should be done with them." There is no prophet. There is a king, a court, and a '
+      + 'people who fought four years for the House the coins promised.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev2_third_house', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 138, 6)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Raise the altar by the Nasi\'s writ',
+        tooltip: 'The daily offering resumes on royal authority: +15 legitimacy; Jerusalem −1 unrest permanently ("The Daily Offering") — and −1 stability, for half the academies call the priesthood disputed and the writ presumption.',
+        effects: guard('ev2_third_house:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: 15, stability: -1 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'daily_offering', name: 'The Daily Offering', months: -1,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'altarRaised', true);
+          h.chronicle(ctx, 'era', 'The altar is raised on the cleared Mount by the Nasi\'s writ — no prophet having come, a king sufficing.');
+        }),
+      },
+      {
+        label: 'Store the stones, as the Maccabees did',
+        tooltip: 'The Mount waits for a prophet: +1 stability, +25 influence points — and −5 legitimacy, for the coins promised a House and the people can count the years.',
+        effects: guard('ev2_third_house:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { stability: 1, infl: 25, legitimacy: -5 });
+          h.setFlag(ctx, 'altarDeferred', true);
+          h.chronicle(ctx, 'era', 'The stones are stored on the Mount until a prophet should come; the academies approve, and the veterans count the years.');
+        }),
+      },
+    ],
+  },
+
+  // ── 42 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_gerizim',
+    title: 'Gerizim Watches',
+    desc: 'The restored state has subjects who never asked for it: the Samaritans on their '
+      + 'own holy mountain, who kept out of the war and keep their own Torah; the Greek '
+      + 'towns of the coast, whose gods are the ones the war was fought against. The '
+      + 'jurists put the question in their flat way: is this Israel a kingdom with '
+      + 'strangers in it, subject to the law of the stranger within the gates — or a camp, '
+      + 'from which the uncircumcised are eventually struck like a bad entry?',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_gerizim', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 139, 6)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'One law for the stranger within the gates',
+        tooltip: 'Judaea +5 legitimacy; Neapolis (if held) −2 unrest for 36 months ("The Stranger Within the Gates"); Ascalon and Azotus (if held) −1 unrest for 36 months.',
+        effects: guard('ev2_gerizim:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          if (h.controls(ctx, 'JUD', 'Neapolis')) {
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'stranger_within_gates', name: 'The Stranger Within the Gates', months: 36,
+              effects: { unrest: -2 },
+            });
+          }
+          for (const name of ['Ascalon', 'Azotus']) {
+            if (h.controls(ctx, 'JUD', name)) {
+              h.addProvinceModifier(ctx, name, {
+                id: 'stranger_within_gates', name: 'The Stranger Within the Gates', months: 36,
+                effects: { unrest: -1 },
+              });
+            }
+          }
+        }),
+      },
+      {
+        label: 'The land is for Israel',
+        tooltip: 'Confiscations from the temples of the coast: +75 talents — Neapolis (if held) +2 unrest for 36 months ("The Confiscated Terraces"), and −5 legitimacy where the courts read the law of the stranger aloud.',
+        effects: guard('ev2_gerizim:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { treasury: 75, legitimacy: -5 });
+          if (h.controls(ctx, 'JUD', 'Neapolis')) {
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'confiscated_terraces', name: 'The Confiscated Terraces', months: 36,
+              effects: { unrest: 2 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 43 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_galilee_returns',
+    title: 'The North Comes to Terms',
+    desc: 'Galilee did not rise, and Galilee is now inside the kingdom anyway — the lake '
+      + 'towns that answered the Nasi\'s wartime letters with courtesies now send '
+      + 'delegations with tax schedules. The veterans of the hill war have long memories '
+      + 'and short tempers: they know which villages sent sons south and which sent '
+      + 'regrets. The north, for its part, observes that somebody kept the terraces and '
+      + 'the dye-works intact, and that the kingdom will eat from them either way.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_galilee_returns', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 140, 1) && ctx.helpers.controls(ctx, 'JUD', 'Sepphoris')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'No reckoning for the courteous',
+        tooltip: 'One kingdom, no lists: +5 legitimacy; Sepphoris and Tiberias (if held) −1 unrest permanently ("The North Reconciled").',
+        effects: guard('ev2_galilee_returns:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          for (const name of ['Sepphoris', 'Tiberias']) {
+            if (h.controls(ctx, 'JUD', name)) {
+              h.addProvinceModifier(ctx, name, {
+                id: 'north_reconciled', name: 'The North Reconciled', months: -1,
+                effects: { unrest: -1 },
+              });
+            }
+          }
+        }),
+      },
+      {
+        label: 'The latecomers pay the war-tax',
+        tooltip: 'The veterans\' arithmetic: +100 talents — Sepphoris and Tiberias (if held) +1 unrest for 24 months ("The War-Tax"), and the north keeps its own lists.',
+        effects: guard('ev2_galilee_returns:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { treasury: 100 });
+          for (const name of ['Sepphoris', 'Tiberias']) {
+            if (h.controls(ctx, 'JUD', name)) {
+              h.addProvinceModifier(ctx, name, {
+                id: 'the_war_tax', name: 'The War-Tax', months: 24,
+                effects: { unrest: 1 },
+              });
+            }
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 44 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_antonine_reckoning',
+    title: 'The Wound in the Ledgers',
+    desc: 'Antoninus inherits what Hadrian could not close: a tributary that calls itself '
+      + 'a kingdom, in the hinge of the eastern roads. The staff studies a second '
+      + 'expedition every winter and files it every spring — the arithmetic of the first '
+      + 'one being what it is. The Senate, for its part, has found the durable Roman '
+      + 'solution: it does not write the word "kingdom." The dispatches say "the district"; '
+      + 'the maps say what they said; the tax rolls of Judaea simply stop, and no clerk '
+      + 'is instructed to explain why.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev2_antonine_reckoning', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 142, 1) && alive(ctx, 'ROM')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Let the accountants argue',
+        tooltip: 'If Rome is strong, the expedition may march (35% if Rome fields the manpower): war returns. If not — the de-facto recognition: Judaea +10 legitimacy, Rome −5 legitimacy, and the tax rolls stop.',
+        effects: guard('ev2_antonine_reckoning:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD') || !alive(ctx, 'ROM')) return;
+          const strong = ((ctx.game.tags.ROM && ctx.game.tags.ROM.manpower) || 0) >= 15000;
+          if (strong && ctx.rng.chance(0.35)) {
+            h.declareWar(ctx, 'ROM', 'JUD', 'The Second Judaean Expedition');
+            h.notify(ctx, {
+              title: 'The Expedition Marches', type: 'war', provName: 'Caesarea Maritima',
+              text: 'The winter study becomes a spring order: Rome comes back for the hills.',
+            });
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: 10 });
+            h.adjust(ctx, 'ROM', { legitimacy: -5 });
+            h.setFlag(ctx, 'taxRollsStopped', true);
+            h.chronicle(ctx, 'era', 'The Senate does not write the word "kingdom"; the tax rolls of Judaea simply stop.');
+          }
+        }),
+      },
+      {
+        label: 'Tribute, unnamed, unrecorded',
+        tooltip: 'The peace is purchased and never mentioned: Judaea −100 talents, Rome +100 talents; the expedition stays filed and the tax rolls stop.',
+        effects: guard('ev2_antonine_reckoning:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD') || !alive(ctx, 'ROM')) return;
+          h.adjust(ctx, 'JUD', { treasury: -100 });
+          h.adjust(ctx, 'ROM', { treasury: 100 });
+          h.setFlag(ctx, 'taxRollsStopped', true);
+          h.chronicle(ctx, 'era', 'A sum leaves Jerusalem each year and arrives in no ledger; the expedition is studied, and filed.');
+        }),
+      },
+    ],
+  },
+
+  // ── 45 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_parthian_gift',
+    title: 'Gifts from the King of Kings',
+    desc: 'Vologases sends no embassy — kings whisper through merchants — but the caravans '
+      + 'from Ctesiphon arrive heavier than trade explains: silver, silk, and a letter '
+      + 'that calls the Nasi "brother" in three languages. The meaning requires no '
+      + 'translator. A Judaea in Rome\'s side is worth paying for; a Judaea in Parthia\'s '
+      + 'camp would be worth a war. The council weighs the gift, which is real, against '
+      + 'the friendship, which is a position on someone else\'s map.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_parthian_gift', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 144, 1) && alive(ctx, 'PAR')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Take the silver, seal nothing',
+        tooltip: '+100 talents, +25 influence points — and Rome\'s residents note every caravan: the next Roman reckoning remembers the word "brother."',
+        effects: guard('ev2_parthian_gift:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { treasury: 100, infl: 25 });
+          h.setFlag(ctx, 'parthianCourtship', true);
+          h.chronicle(ctx, 'era', 'The caravans from Ctesiphon arrive heavier than trade explains; Jerusalem takes the silver and signs nothing.');
+        }),
+      },
+      {
+        label: 'Neither Rome\'s client nor Parthia\'s',
+        tooltip: 'The gift returns with courtesies: +1 stability, +5 legitimacy — the small state\'s only durable foreign policy.',
+        effects: guard('ev2_parthian_gift:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { stability: 1, legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── 46 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_ascents',
+    title: 'The Ascents Are Full',
+    desc: 'Word of a standing Israel travels the exile roads faster than any decree: '
+      + 'families from Alexandria, from Cyrene, from the river towns of Babylon, selling '
+      + 'out and coming up the ascents with their scrolls in ordinary baskets. Babylon\'s '
+      + 'academies bless the aliyah through clenched teeth — every student who goes up is '
+      + 'a lamp that goes out in Nehardea. Their letters ask, politely, whether the Land '
+      + 'means to gather the exiles or merely to empty the exile.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_ascents', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 146, 1)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Call the exiles up',
+        tooltip: '+2,000 manpower; "The Ingathering": +10% manpower for 60 months — and −25 influence points, for Babylon\'s academies do not forgive the drain.',
+        effects: guard('ev2_ascents:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { manpower: 2000, infl: -25 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_ingathering', name: 'The Ingathering', months: 60,
+            effects: { manpowerMult: 1.1 },
+          });
+          h.chronicle(ctx, 'era', 'The ascents are full: the exile empties into the Land, and Nehardea\'s lamps go out one by one.');
+        }),
+      },
+      {
+        label: 'Two centers, one Law',
+        tooltip: 'Babylon keeps its lamps lit and the Land keeps the calendar: +50 influence points — and −5 legitimacy at home, where the veterans ask what the war was for if not this.',
+        effects: guard('ev2_ascents:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { infl: 50, legitimacy: -5 });
+          h.chronicle(ctx, 'era', 'Jerusalem rules the calendar and lets Babylon keep its academies: two centers, one Law, one argument forever.');
+        }),
+      },
+    ],
+  },
+
+  // ── 47 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_second_generation',
+    title: 'The State That Outlived Its Miracle',
+    desc: 'A generation has grown up that never hid in a cave, never counted a Roman '
+      + 'column, and files suit over field boundaries in courts that have always existed, '
+      + 'in a Jerusalem that has always been theirs. The old men find this intolerable '
+      + 'and miraculous in equal measure. The schools must now decide what the state\'s '
+      + 'children are heirs to: the war, which made the state and cannot be repeated — '
+      + 'or the Law, which made the war worth it and can.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev2_second_generation', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 163, 1)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Teach them the caves',
+        tooltip: 'The war curriculum: +5 legitimacy; "The Memory of the Caves": +5% morale for 60 months — a state kept on a war footing by its own schoolbooks.',
+        effects: guard('ev2_second_generation:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'memory_of_caves', name: 'The Memory of the Caves', months: 60,
+            effects: { moraleMult: 1.05 },
+          });
+        }),
+      },
+      {
+        label: 'Teach them the boundary-stones',
+        tooltip: 'An ordinary country, the rarest kind: +1 stability; "An Ordinary Country": +5% income for 60 months — the miracle retired to the archives.',
+        effects: guard('ev2_second_generation:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'ordinary_country', name: 'An Ordinary Country', months: 60,
+            effects: { incomeMult: 1.05 },
+          });
+          h.chronicle(ctx, 'era', 'The second generation inherits deeds, courts and boundary-stones: the state has outlived its miracle, which is what states are for.');
+        }),
+      },
+    ],
+  },
+
+  // ── 48 ────────────────────────────────────────────────────────────────────
+  // Complements the shared ev2_antonine_plague (166.3), which already takes
+  // the manpower toll from a standing Judaea — this is the victory world's
+  // reckoning with it, not a second outbreak.
+  {
+    id: 'ev2_ninth_day',
+    title: 'The Dead of the Ninth Day',
+    desc: 'The pestilence the legions carried home from Ctesiphon does not check '
+      + 'genealogies: it walks up the ascents with the pilgrims and dies its ninth-day '
+      + 'death in the redeemed city like everywhere else. The preachers have a hard '
+      + 'season of it — was the Redemption not supposed to bar this door? The priests '
+      + 'answer with practice rather than doctrine: the courses go out from the Mount '
+      + 'to the tents of the sick, in order, by rota, as though burial were a form '
+      + 'of the daily offering. Perhaps it is.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev2_ninth_day', (ctx) =>
+      judaeaStands(ctx) && dateGE(ctx, 166, 6)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The courses go out to the tents',
+        tooltip: '−25 talents; +5 legitimacy; Jerusalem −1 unrest for 24 months ("The Courses Go Out") — the state buries its dead in order, which is what the sick city needed to see.',
+        effects: guard('ev2_ninth_day:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { treasury: -25, legitimacy: 5 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'courses_go_out', name: 'The Courses Go Out', months: 24,
+            effects: { unrest: -1 },
+          });
+          h.chronicle(ctx, 'era', 'The pestilence reaches the redeemed city; the priestly courses go out to the tents of the sick, in order, by rota.');
+        }),
+      },
+      {
+        label: 'Seal the gates of the city',
+        tooltip: 'Jerusalem is quarantined against its own hills: "Sealed Gates": −10% tax in Jerusalem for 12 months, −5 legitimacy — the villages remember who was let in, and who was not.',
+        effects: guard('ev2_ninth_day:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'JUD')) return;
+          h.adjust(ctx, 'JUD', { legitimacy: -5 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'sealed_gates', name: 'Sealed Gates', months: 12,
+            effects: { taxMult: 0.9 },
+          });
+        }),
+      },
+    ],
+  },
 ];

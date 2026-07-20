@@ -66,6 +66,15 @@ function judWarscore(ctx) {
   return typeof v === 'number' ? v : 0;
 }
 
+// The victory-timeline gate (mirror of the templeBurned gate below): a living
+// Judaea, sovereign in Jerusalem, with the Roman war over. In the history
+// where the legions won, this is never true and the strand never fires.
+function judaeaFree(ctx) {
+  return alive(ctx, 'JUD')
+    && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+    && !findJudRomWar(ctx.game);
+}
+
 // Scripted warscore swings persist in the war's eventScore side-bucket, which
 // sideGross folds into every monthly rebuild (writing w.warscore directly gets
 // clobbered by updateWarscores within the month).
@@ -2420,6 +2429,662 @@ export const EVENTS_66 = [
           }
           h.adjust(ctx, 'ROM', { legitimacy: 5 });
           h.adjust(ctx, 'JUD', { gov: 20, legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ═══ The Second Kingdom: the victory timeline, 70–96 CE ═══════════════════
+  // The mirror of the aftermath strand above. Where those events presuppose
+  // Rome's victory (templeBurned, ROM on the ground), these presuppose
+  // Judaea's — the war ended (ev_rome_sues accepted, or however the peace
+  // came) with Jerusalem in Judaean hands. The whole strand is gated through
+  // judaeaFree(): JUD alive + JUD holding Jerusalem + no live JUD–ROM war;
+  // in the defeat world those triggers never come true and this future never
+  // happens. The imperial spine (Nero, the Four Emperors, Vespasian, Titus,
+  // Domitian, Nerva) is world history and runs in both timelines.
+
+  // ── 42 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_house_that_stood',
+    title: 'The House That Stood',
+    desc: 'The month of Av arrives, and the House stands. The pilgrim roads are full for '
+      + 'the first time since Cestius — Galilee and Idumea afoot, the Delta quarter of '
+      + 'Alexandria by sea, Nehardea from beyond the rivers — and the half-shekel flows '
+      + 'to Jerusalem and nowhere else, as it has since Moses counted the camp. In the '
+      + 'outer courts the priests walk the line of the scorched porticoes, the war\'s one '
+      + 'scar on the sanctuary, and the elders remember a precedent: when the sons of '
+      + 'Hasmon cleansed this House, they ordained eight days for it, forever. What the '
+      + 'sword did not take, let the calendar keep.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_house_that_stood', (ctx) =>
+      dateGE(ctx, 70, 6) && judaeaFree(ctx) && !ctx.helpers.getFlag(ctx, 'templeBurned')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Ordain a feast of the House That Stood',
+        tooltip: 'A new festival in the calendar, as the Hasmoneans ordained the Dedication: +15 legitimacy, +1 stability, and Jerusalem gains "The Pilgrim Roads" (+25% tax, −1 unrest, permanent). The Second Kingdom begins.',
+        effects: guard('ev_house_that_stood:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'pilgrim_roads', name: 'The Pilgrim Roads', months: -1,
+            effects: { taxMult: 1.25, unrest: -1 },
+          });
+          h.setFlag(ctx, 'secondKingdom', true);
+        }),
+      },
+      {
+        label: 'The arrears first, the feasting after',
+        tooltip: 'The war years\' half-shekels come home in one caravan: +80 treasury, +5 legitimacy, and Jerusalem gains "The Pilgrim Roads" for 36 months (+25% tax, −1 unrest). The Second Kingdom begins.',
+        effects: guard('ev_house_that_stood:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: 80, legitimacy: 5 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'pilgrim_roads', name: 'The Pilgrim Roads', months: 36,
+            effects: { taxMult: 1.25, unrest: -1 },
+          });
+          h.setFlag(ctx, 'secondKingdom', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 43 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_victors_quarrel',
+    title: 'The Victors Quarrel',
+    desc: 'Peace has done what Vespasian could not: set the victors at one another\'s '
+      + 'throats. John\'s northerners hold the Temple mount like a camp; Simon\'s freed '
+      + 'men swagger in the upper city; Eleazar\'s priests claim the war was theirs '
+      + 'because the first refusal was; and the surviving elders of the Sanhedrin '
+      + 'observe — correctly — that not one of these heroes can read a boundary deed. '
+      + 'Every one of them beat Rome. None of them has yet been asked to collect a tax, '
+      + 'judge an orchard dispute, or disband.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_victors_quarrel', (ctx) =>
+      dateGE(ctx, 70, 10) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pension the bands off the streets',
+        tooltip: '−80 treasury in land grants and back pay; +1 stability, and Jerusalem quiets ("Swords into Pruning Hooks", −2 unrest, 24 months). The captains grumble: −10 military points.',
+        effects: guard('ev_victors_quarrel:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -80, stability: 1, mar: -10 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'swords_to_hooks', name: 'Swords into Pruning Hooks', months: 24,
+            effects: { unrest: -2 },
+          });
+          h.setFlag(ctx, 'victorsQuarrel', true);
+        }),
+      },
+      {
+        label: 'Keep the war-bands in commission',
+        tooltip: 'The kingdom keeps its edge: +25 military points and "The Bands Stand Ready" (+5% manpower, 36 months) — but the captains keep their quarrels too: −1 stability, and Jerusalem +2 unrest for 24 months.',
+        effects: guard('ev_victors_quarrel:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { mar: 25, stability: -1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'bands_ready', name: 'The Bands Stand Ready', months: 36,
+            effects: { manpowerMult: 1.05 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'captains_quarrel', name: 'The Captains\' Quarrels', months: 24,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'victorsQuarrel', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 44 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_crown_or_council',
+    title: 'A Crown or a Council',
+    desc: 'The war cry was "No King but God" — and now the state must have a shape, '
+      + 'because the tribute, the courts and the frontier all wait on a signature. '
+      + 'Simon bar Giora\'s name is shouted from the walls his freed men held; the sword '
+      + 'argues that the sword saved the House. Against it stands the Chamber of Hewn '
+      + 'Stone: seventy-one seats, the high priest presiding, a Sanhedrin that judged '
+      + 'Israel before Rome came and means to judge it after. Whichever instrument is '
+      + 'chosen, the other will remember being refused.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_crown_or_council', (ctx) =>
+      dateGE(ctx, 71, 3) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'victorsQuarrel')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'The sword made this state — crown it',
+        tooltip: 'Simon bar Giora (2/2/4) is proclaimed king. +15 military points and "A King from the War" (+10% morale, 36 months) — but the pious remember the war cry: −10 legitimacy, and Jerusalem +2 unrest for 24 months.',
+        effects: guard('ev_crown_or_council:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'JUD', { name: 'Simon bar Giora', title: 'King', gov: 2, infl: 2, mar: 4, age: 36 });
+          h.setHeir(ctx, 'JUD', null);
+          h.adjust(ctx, 'JUD', { mar: 15, legitimacy: -10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'king_from_war', name: 'A King from the War', months: 36,
+            effects: { moraleMult: 1.1 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'crowned_sword', name: 'No King but God', months: 24,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'kingSimon', true);
+        }),
+      },
+      {
+        label: 'The Chamber of Hewn Stone',
+        tooltip: 'No king but God: the restored Sanhedrin governs, the high priest presiding. +20 governance points, +10 legitimacy, +1 stability, and "The Sanhedrin Restored" (−0.5 unrest everywhere, permanent) — but the captains are passed over: −15 military points.',
+        effects: guard('ev_crown_or_council:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 20, legitimacy: 10, stability: 1, mar: -15 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'sanhedrin_restored', name: 'The Sanhedrin Restored', months: -1,
+            effects: { unrestAll: -0.5 },
+          });
+          h.setFlag(ctx, 'sanhedrinRule', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 45 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_redemption_coinage',
+    title: 'To the Redemption of Zion',
+    desc: 'The mint struck the war\'s years in silver — One, Two, Three of the Freedom of '
+      + 'Zion — and in the fourth year, when everything hung in the balance, the legend '
+      + 'changed of itself: no longer herut, freedom, but geulah — "To the Redemption of '
+      + 'Zion." Now the engravers stand before the council with a new die and an old '
+      + 'question: what does a free state write on its money once the redemption has '
+      + 'arrived? The chalice and the pomegranates, they propose, as before; the palm '
+      + 'tree upright; and the year counted, from now on, of the Redemption — for the '
+      + 'schoolchildren who will one day ask when their world began.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_redemption_coinage', (ctx) =>
+      dateGE(ctx, 71, 7) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Silver of full weight, and the new era',
+        tooltip: '+10 legitimacy and "Redemption Coinage" (+5% income, permanent) — money men trust is a tax men pay.',
+        effects: guard('ev_redemption_coinage:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'redemption_coinage', name: 'Redemption Coinage', months: -1,
+            effects: { incomeMult: 1.05 },
+          });
+        }),
+      },
+      {
+        label: 'Bronze for the villages first',
+        tooltip: 'Small coin for small markets: +40 treasury, and every Jewish province −1 unrest for 12 months — the peace reaches the bread stalls.',
+        effects: guard('ev_redemption_coinage:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: 40 });
+          const provinces = ctx.game.provinces || [];
+          for (const p of provinces) {
+            if (p && p.religion === 'judaism') {
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'small_coin', name: 'Bronze in the Markets', months: 12,
+                effects: { unrest: -1 },
+              });
+            }
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 46 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_diaspora_homecoming',
+    title: 'The Diaspora Looks Home',
+    desc: 'The ships come with the spring sailing: gold from the elders of Alexandria and '
+      + 'Cyrene, subscribed in the synagogues for the rebuilding — and, on the same '
+      + 'decks, the young men. Every hothead of the Delta quarter who dreamed the war '
+      + 'from a distance now wants to finish it, and Cyrene sends a weaver named '
+      + 'Jonathan who preaches signs in the desert to anyone who will march behind him. '
+      + 'The elders\' letters are careful: take the gift, they ask, and take also our '
+      + 'sons — before the governors take them first.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_diaspora_homecoming', (ctx) =>
+      dateGE(ctx, 72, 2) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Every son who wishes to return',
+        tooltip: '+4,000 manpower and +40 treasury — but the zealots of the diaspora did not come home to farm: Jerusalem +2 unrest for 24 months, and Rome\'s opinion darkens.',
+        effects: guard('ev_diaspora_homecoming:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { manpower: 4000, treasury: 40 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'returned_zealots', name: 'The Returned Zealots', months: 24,
+            effects: { unrest: 2 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -160);
+        }),
+      },
+      {
+        label: 'The gold, quietly; the hotheads held at Joppa',
+        tooltip: '+100 treasury and +10 legitimacy — the kingdom takes the gift and vets the shiploads. The refused young men remember: −1,000 manpower of volunteers turned away.',
+        effects: guard('ev_diaspora_homecoming:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10, manpower: -1000 });
+        }),
+      },
+    ],
+  },
+
+  // ── 47 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_flavian_grudge',
+    title: 'The Cold War of the Flavians',
+    desc: 'Vespasian wears a purple bought with a war that failed, and he is too good an '
+      + 'accountant to pretend otherwise. There will be no legions this year — Rome\'s '
+      + 'books will not carry them — so the empire fights the way empires fight when '
+      + 'they cannot march: the ports of Syria close to Judaean hulls, Tyre\'s bankers '
+      + 'discover scruples, the customs houses invent a tariff for every jar of Judaean '
+      + 'oil, and in Caesarea\'s harbor agents of the fiscus count masts and write '
+      + 'letters. The instruments signed at the peace are not torn up. They are merely '
+      + 'starved.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_flavian_grudge', (ctx) =>
+      dateGE(ctx, 72, 6) && judaeaFree(ctx) && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The caravans learn the Petra road',
+        tooltip: 'Rome\'s embargo bites: "The Ports Close" (−10% income, 48 months). Judaea spends −40 treasury opening the incense road instead, and Nabataea warms to a paying neighbor.',
+        effects: guard('ev_flavian_grudge:0', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'ports_close', name: 'The Ports Close', months: 48,
+            effects: { incomeMult: 0.9 },
+          });
+          h.adjust(ctx, 'JUD', { treasury: -40 });
+          setOpinion(ctx, 'NAB', 'JUD', 40);
+          setOpinion(ctx, 'JUD', 'NAB', 40);
+          setOpinion(ctx, 'ROM', 'JUD', -150);
+          h.setFlag(ctx, 'flavianGrudge', true);
+        }),
+      },
+      {
+        label: 'Answer the ledger with a ledger',
+        tooltip: 'Judaea undercuts the tariff wall with silver: −60 treasury in discounts and harbor bounties, and the embargo only grazes ("The Ports Close", −5% income, 48 months). Rome\'s opinion darkens all the same.',
+        effects: guard('ev_flavian_grudge:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -60 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'ports_close', name: 'The Ports Close', months: 48,
+            effects: { incomeMult: 0.95 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -150);
+          h.setFlag(ctx, 'flavianGrudge', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 48 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_rebuilding_the_land',
+    title: 'The War\'s Bill Is Presented',
+    desc: 'The war\'s bill is presented slowly. The porticoes of the outer court still '
+      + 'show their burned beams; Jotapata is a wall around rubble; Tarichaea\'s fishing '
+      + 'fleet is what the Roman rafts left of it; and in the terraces of Galilee whole '
+      + 'villages are one old man and a mule track. The treasury can heal the city that '
+      + 'carried the war, or the province that bled for it — first. Both, says the '
+      + 'council. First, says the mason, holding out his hand.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_rebuilding_the_land', (ctx) =>
+      dateGE(ctx, 73, 1) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Galilee first',
+        tooltip: '−80 treasury. Jotapata, Tarichaea, Gischala and Tiberias gain "The Land Rebuilt" (+15% tax, −1 unrest, 60 months) — the north bled first and is paid first.',
+        effects: guard('ev_rebuilding_the_land:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -80 });
+          for (const name of ['Jotapata', 'Tarichaea', 'Gischala', 'Tiberias']) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'land_rebuilt', name: 'The Land Rebuilt', months: 60,
+              effects: { taxMult: 1.15, unrest: -1 },
+            });
+          }
+        }),
+      },
+      {
+        label: 'The House first',
+        tooltip: '−60 treasury. Jerusalem gains "The Porticoes Restored" (+10% tax, −1 unrest, permanent) and Judaea +10 legitimacy — but the north waits: Galilee\'s towns +1 unrest for 24 months.',
+        effects: guard('ev_rebuilding_the_land:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -60, legitimacy: 10 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'porticoes_restored', name: 'The Porticoes Restored', months: -1,
+            effects: { taxMult: 1.1, unrest: -1 },
+          });
+          for (const name of ['Jotapata', 'Tarichaea', 'Gischala', 'Tiberias']) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'north_waits', name: 'The North Waits', months: 24,
+              effects: { unrest: 1 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 49 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_parthia_offers',
+    title: 'The Hand from Beyond the River',
+    desc: 'An embassy out of the east, with the gifts a king sends kings: Vologases '
+      + 'offers the Second Kingdom a compact — Parthia\'s guarantee against the legions, '
+      + 'the Euphrates crossings open to Judaean trade, the communities of Nehardea and '
+      + 'Adiabene free to give with both hands. The price is written nowhere in the '
+      + 'letters and everywhere between their lines: Jerusalem in the King of Kings\' '
+      + 'train means Rome\'s undying certainty that Judaea is Parthia\'s knife laid '
+      + 'against Syria. Some doors, once walked through, close behind you.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_parthia_offers', (ctx) =>
+      dateGE(ctx, 73, 8) && judaeaFree(ctx) && alive(ctx, 'PAR')
+        && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Take the outstretched hand',
+        tooltip: 'Alliance with Parthia: the King of Kings guarantees the kingdom (+40 treasury in gifts). Rome\'s opinion falls to open enmity — a second expedition becomes likelier, and Judaea will not face it alone.',
+        effects: guard('ev_parthia_offers:0', (ctx) => {
+          const h = ctx.helpers;
+          const par = ctx.game.tags.PAR, jud = ctx.game.tags.JUD;
+          if (par && Array.isArray(par.allies) && par.allies.indexOf('JUD') === -1) par.allies.push('JUD');
+          if (jud && Array.isArray(jud.allies) && jud.allies.indexOf('PAR') === -1) jud.allies.push('PAR');
+          h.adjust(ctx, 'JUD', { treasury: 40 });
+          setOpinion(ctx, 'PAR', 'JUD', 150);
+          setOpinion(ctx, 'JUD', 'PAR', 150);
+          setOpinion(ctx, 'ROM', 'JUD', -200);
+          h.setFlag(ctx, 'parthianPact', true);
+        }),
+      },
+      {
+        label: 'A courteous refusal, with gifts',
+        tooltip: 'The kingdom stands on its own feet: +10 legitimacy, −20 treasury in return gifts. Rome notes the refusal and thaws a little; Parthia\'s warmth cools.',
+        effects: guard('ev_parthia_offers:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, treasury: -20 });
+          setOpinion(ctx, 'ROM', 'JUD', -100);
+          setOpinion(ctx, 'PAR', 'JUD', 30);
+        }),
+      },
+    ],
+  },
+
+  // ── 50 ────────────────────────────────────────────────────────────────────
+  // Rome's decision, not Judaea's: fires on the AI's judgment. If the Syrian
+  // command has been rebuilt (or Judaea sits in Parthia's train), the eagles
+  // come again; otherwise the empire grudgingly renews the peace it can afford.
+  {
+    id: 'ev_second_expedition',
+    title: 'The Question at the Emperor\'s Table',
+    desc: 'The Syrian command has been rebuilt man by man and ledger by ledger — Marcus '
+      + 'Ulpius Traianus, the governor, drills his legions at Antioch and reports them '
+      + 'ready. In Rome the question is put plainly at the emperor\'s table: the East '
+      + 'cannot be governed forever around a hole where Judaea was, so it must be '
+      + 'either reconquered or re-recognized. Titus, who was cheated of his siege, has '
+      + 'an opinion. The treasury, which was cheated of nothing and remembers '
+      + 'everything, has another.',
+    forTag: 'ROM',
+    major: true,
+    chance: 0.25,
+    trigger: safeTrigger('ev_second_expedition', (ctx) =>
+      dateGE(ctx, 75, 1) && judaeaFree(ctx) && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'flavianGrudge')
+        && !ctx.helpers.getFlag(ctx, 'secondPeace')),
+    aiOption: (ctx) => {
+      try {
+        if (ctx.helpers.getFlag(ctx, 'parthianPact')) return 0;
+        return totalMen(ctx, 'ROM') >= 30000 ? 0 : 1;
+      } catch (e) { warnOnce('aiOption:ev_second_expedition', e); return 1; }
+    },
+    options: [
+      {
+        label: 'The lesson must be taught again',
+        tooltip: 'Rome declares the Second Judaean War: Traianus (3/4/3) marches from Antioch with 21,000 men, and Rome gains +10,000 manpower for the effort.',
+        effects: guard('ev_second_expedition:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'ROM') || !alive(ctx, 'JUD')) return;
+          if (findJudRomWar(ctx.game)) return;
+          h.declareWar(ctx, 'ROM', 'JUD', 'The Second Judaean War');
+          h.spawnArmy(ctx, 'ROM', 'Antioch', {
+            inf: 18, cav: 3, name: 'Army of Syria',
+            general: { name: 'Marcus Ulpius Traianus', fire: 3, shock: 4, maneuver: 3 },
+          });
+          h.adjust(ctx, 'ROM', { manpower: 10000 });
+          h.setFlag(ctx, 'secondExpedition', true);
+          h.notify(ctx, {
+            title: 'The Eagles Come East Again', type: 'war', provName: 'Antioch',
+            text: 'Rome has not forgiven the peace. The Syrian legions march on Judaea a second time.',
+          });
+        }),
+      },
+      {
+        label: 'Recognize what exists — at a price',
+        tooltip: 'The instruments of the peace are renewed, grudgingly: the embargo lifts, and Judaea pays −100 treasury in tribute arrears (Rome +100). The cold war ends in a cold peace.',
+        effects: guard('ev_second_expedition:1', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'JUD', 'ports_close');
+          h.adjust(ctx, 'JUD', { treasury: -100 });
+          h.adjust(ctx, 'ROM', { treasury: 100 });
+          setOpinion(ctx, 'ROM', 'JUD', -80);
+          h.setFlag(ctx, 'secondPeace', true);
+          h.notify(ctx, {
+            title: 'The Treaty Renewed', type: 'good', provName: 'Jerusalem',
+            text: 'Rome re-recognizes the Second Kingdom — for tribute, and without warmth.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 51 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_eagles_go_home',
+    title: 'Twice Is an Answer',
+    // No requiresWar tag: the engine permanently cancels requiresWar events
+    // once a JUD–ROM war is recorded settled (the FIRST peace would cancel
+    // this one before the second war ever began). The trigger checks the
+    // live war itself.
+    desc: 'The second war has broken like the first, on the same hills and for the same '
+      + 'reasons: walls the engineers must buy with months, a countryside that empties '
+      + 'before the column and closes behind it, and a treasury in Rome that bleeds by '
+      + 'the week. The emperor\'s men count what the Flavians have now spent on Judaea '
+      + 'in two wars, and set it beside what Judaea has ever cost as a neighbor. The '
+      + 'couriers go out. Twice, it turns out, is an answer.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_eagles_go_home', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'secondExpedition')
+        && alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+        && !!findJudRomWar(ctx.game) && judWarscore(ctx) >= 20),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Peace, the second time',
+        tooltip: 'The Second Judaean War ends: occupied towns go home; Judaea keeps the provinces of the faith it holds. Judaea +20 legitimacy, +1 stability; Rome −10 legitimacy, +2 war exhaustion. The embargo dies with the war.',
+        effects: guard('ev_eagles_go_home:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = findJudRomWar(g);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1 });
+          h.adjust(ctx, 'ROM', { legitimacy: -10, warExhaustion: 2 });
+          h.removeModifier(ctx, 'JUD', 'ports_close');
+          h.setFlag(ctx, 'secondPeace', true);
+        }),
+      },
+      {
+        label: 'Peace, and an indemnity',
+        tooltip: 'As above — and Rome pays 60 talents toward the peace (Judaea +60 treasury, Rome −60). But an indemnity is a humiliation with a receipt: Rome\'s opinion falls to the floor, and the grudge outlives the treaty.',
+        effects: guard('ev_eagles_go_home:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const w = findJudRomWar(g);
+          const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1, treasury: 60 });
+          h.adjust(ctx, 'ROM', { legitimacy: -10, warExhaustion: 2, treasury: -60 });
+          h.removeModifier(ctx, 'JUD', 'ports_close');
+          h.setFlag(ctx, 'secondPeace', true);
+          setOpinion(ctx, 'ROM', 'JUD', -200);
+        }),
+      },
+    ],
+  },
+
+  // ── 52 ────────────────────────────────────────────────────────────────────
+  // Yavneh inverted: with the House standing, the academy must argue its way
+  // past the altar instead of inheriting its ruins (compare ev_yavneh_academy).
+  {
+    id: 'ev_academy_and_altar',
+    title: 'The Academy and the Altar',
+    desc: 'Yohanan ben Zakkai never needed the coffin. The old man teaches in the shadow '
+      + 'of the standing House, and still he comes before the council to ask for what — '
+      + 'in some other, worse history — he would have begged from a Roman general: '
+      + 'Yavneh and its sages. Academies with their own courts and their own purse; a '
+      + 'Law that lives in argument, and not only in altar smoke. The priests hear him '
+      + 'out coldly. The House stands, they say — why build the Law a second house? '
+      + 'Because, says the old man, no house stands forever, and the Law must be able '
+      + 'to live anywhere. Even here.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_academy_and_altar', (ctx) =>
+      dateGE(ctx, 74, 6) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Give him Yavneh and its sages',
+        tooltip: '−30 treasury endows the academies. Judaea +20 governance points, +5 legitimacy, and "The Schools Beside the Altar" (−0.25 unrest everywhere, permanent). The priesthood mutters.',
+        effects: guard('ev_academy_and_altar:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -30, gov: 20, legitimacy: 5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'schools_beside_altar', name: 'The Schools Beside the Altar', months: -1,
+            effects: { unrestAll: -0.25 },
+          });
+          h.setFlag(ctx, 'academiesChartered', true);
+        }),
+      },
+      {
+        label: 'The altar is the crown of the Law',
+        tooltip: 'Priestly primacy confirmed: +10 legitimacy, +1 stability — but the schools scatter quietly toward Babylon: −15 governance points.',
+        effects: guard('ev_academy_and_altar:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1, gov: -15 });
+        }),
+      },
+    ],
+  },
+
+  // ── 53 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_domitian_demands',
+    title: 'The Rescript of Domitian',
+    desc: 'Domitian inherited his father\'s peace the way a man inherits a debt. He has '
+      + 'no Judaean triumph — his father and brother at least had their war — and an '
+      + 'emperor who fears the Senate\'s wit needs money, and postures. His envoys '
+      + 'arrive in Jerusalem with a rescript: the tribute reassessed — doubled — and '
+      + 'sons of the great houses invited to be "educated at Rome," which is the Latin '
+      + 'for hostages. The council reads it twice. Somewhere behind the words stands an '
+      + 'army; somewhere behind the army, a treasury that cannot pay for it. The '
+      + 'question is which lies nearer the surface.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_domitian_demands', (ctx) =>
+      dateGE(ctx, 86, 1) && judaeaFree(ctx) && alive(ctx, 'ROM')
+        && !!ctx.helpers.getFlag(ctx, 'secondKingdom')
+        && !!ctx.helpers.getFlag(ctx, 'domitianEmperor')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pay, and outlive him',
+        tooltip: '−80 treasury. The kingdom bends and endures: +1 stability, and Rome\'s opinion settles. The elders note that emperors of this kind rarely die old.',
+        effects: guard('ev_domitian_demands:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -80, stability: 1 });
+          setOpinion(ctx, 'ROM', 'JUD', -80);
+        }),
+      },
+      {
+        label: 'The kingdom kneels to no accountant',
+        tooltip: 'Refusal: +10 legitimacy and "The Refusal of Domitian" (+5% morale, 24 months) — but the walls must be manned for the answer: −20 treasury, and Rome\'s opinion falls to the floor.',
+        effects: guard('ev_domitian_demands:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, treasury: -20 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'refusal_domitian', name: 'The Refusal of Domitian', months: 24,
+            effects: { moraleMult: 1.05 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -200);
+        }),
+      },
+    ],
+  },
+
+  // ── 54 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_children_of_the_war',
+    title: 'The Children of the War',
+    desc: 'The men who held the wall are grandfathers now, and they have discovered that '
+      + 'a victory is also an inheritance dispute. A generation is grown that never saw '
+      + 'a legion: they marry Greek-speaking wives from the coast their fathers '
+      + 'conquered, quote the sages at the priests and the priests at the sages, and '
+      + 'ask why the watchtowers on the Joppa road are still manned. Because we '
+      + 'remember, the old men answer. It is the correct answer, and it will not serve '
+      + 'forever. A state built by a miracle must decide what it is for, once the '
+      + 'miracle is a generation of ordinary mornings old.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_children_of_the_war', (ctx) =>
+      dateGE(ctx, 90, 6) && judaeaFree(ctx) && !!ctx.helpers.getFlag(ctx, 'secondKingdom')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Open the gates the war shut',
+        tooltip: 'The coast\'s Greeks admitted to the markets, the diaspora\'s scholars to the schools: "The Open Kingdom" (+5% income, permanent) and +15 influence points — but the veterans mutter: Jerusalem +1 unrest for 12 months.',
+        effects: guard('ev_children_of_the_war:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { infl: 15 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'open_kingdom', name: 'The Open Kingdom', months: -1,
+            effects: { incomeMult: 1.05 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'veterans_mutter', name: 'The Veterans Mutter', months: 12,
+            effects: { unrest: 1 },
+          });
+        }),
+      },
+      {
+        label: 'Keep the covenant of the walls',
+        tooltip: 'The kingdom stays girded: +10 legitimacy, +1 stability, and "The Guarded Kingdom" (+5% manpower, −3% income, permanent). The watchtowers stay manned; so do the habits.',
+        effects: guard('ev_children_of_the_war:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'guarded_kingdom', name: 'The Guarded Kingdom', months: -1,
+            effects: { manpowerMult: 1.05, incomeMult: 0.97 },
+          });
         }),
       },
     ],

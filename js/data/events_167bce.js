@@ -155,11 +155,42 @@ function maulArmy(ctx, army, lostInf) {
   } catch (e) { warnOnce('maulArmy', e); }
 }
 
+// HAS war score against SEL (the bookmark keeps the same reader for missions).
+function hasWarscore(ctx) {
+  try {
+    const w = findHasSelWar(ctx.game);
+    if (!w || !w.warscore || typeof w.warscore !== 'object') return 0;
+    const v = w.warscore.HAS;
+    return typeof v === 'number' ? v : 0;
+  } catch (e) { warnOnce('hasWarscore', e); return 0; }
+}
+
+function controlsAny(ctx, tag, names) {
+  try {
+    for (const n of names) if (ctx.helpers.controls(ctx, tag, n)) return true;
+  } catch (e) { warnOnce('controlsAny', e); }
+  return false;
+}
+
+function countControlledOf(ctx, tag, names) {
+  let n = 0;
+  try {
+    for (const name of names) if (ctx.helpers.controls(ctx, tag, name)) n++;
+  } catch (e) { warnOnce('countControlledOf', e); }
+  return n;
+}
+
 const JUDEAN_HILLS = ['Jerusalem', 'Emmaus', 'Hebron', 'Adora', 'Sebaste', 'Neapolis'];
 const SOUTHERN_APPROACH = ['Hebron', 'Adora', 'Engaddi', 'Jerusalem', 'Emmaus'];
 const EASTERN_PROVINCES = ['Ecbatana', 'Susa', 'Seleucia-Ctesiphon', 'Babylon', 'Nehardea',
   'Charax', 'Hatra', 'Singara', 'Nisibis', 'Arbela'];
 const BABYLONIAN_PROVINCES = ['Babylon', 'Seleucia-Ctesiphon', 'Nehardea', 'Charax'];
+// The greater-victory strand's geography: the lands beyond every border the
+// chronicles record. History never put a Hasmonean garrison in any of these.
+const COELE_SYRIA = ['Damascus', 'Tyre', 'Sidon', 'Berytus', 'Chalcis'];
+const GREEK_CITIES = ['Gaza', 'Ascalon', 'Azotus', 'Jamnia', 'Ptolemais', 'Dora',
+  'Scythopolis', 'Gadara', 'Pella', 'Gerasa', 'Philadelphia'];
+const PHILISTINE_COAST = ['Joppa', 'Azotus', 'Ascalon', 'Gaza'];
 
 export const EVENTS_167 = [
 
@@ -3230,6 +3261,550 @@ export const EVENTS_167 = [
             title: 'Alexander Jannaeus', type: 'info', provName: 'Jerusalem',
             text: 'The widow frees the brothers, crowns the eldest, and pays the city to cheer.',
           });
+        }),
+      },
+    ],
+  },
+
+  // ═══ The greater victory: the world the chronicles never reached. The
+  // historical spine above IS the win — survival, the lamps, the tablets of
+  // brass. These events fire only in campaigns that outran the chronicle:
+  // Hasmonean garrisons in Coele-Syria, Damascus under the Law, the diadem of
+  // Seleucus in the dust. No dates; every trigger reads the live map, and none
+  // can fire in a world that merely repeats 1 Maccabees. ═══════════════════════
+
+  // ── V1 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_hammer_beyond_hills',
+    title: 'The Hammer Beyond the Hills',
+    desc: 'The watchfires of Israel burn north of the old borders. The armies that were '
+      + 'once a band in the Gophna caves stand in Coele-Syria itself, among the cities '
+      + 'that sent levies against Judah in the first years — and the cities have read '
+      + 'the new arithmetic. Their elders come out with crowns of gold and careful '
+      + 'speeches, as their fathers went out to Alexander; the nations that mustered '
+      + 'against Israel now send the muster-money to it. The old men of Jerusalem, who '
+      + 'remember when the king’s tax convoys rolled SOUTH through these hills, watch '
+      + 'the wagons pass and say nothing, because there is nothing in the books of '
+      + 'their fathers that tells them what to say.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_hammer_beyond_hills', (ctx) =>
+      alive(ctx, 'HAS') && controlsAny(ctx, 'HAS', COELE_SYRIA)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let the nations bring the muster-money',
+        tooltip: '+100 treasury, +10 legitimacy; "Tribute of the Nations" (+10% income, 24 months).',
+        effects: guard('ev_hammer_beyond_hills:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: 100, legitimacy: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'tribute_of_the_nations', name: 'Tribute of the Nations', months: 24,
+            effects: { incomeMult: 1.1 },
+          });
+          h.setFlag(ctx, 'hammerBeyondHills', true);
+          h.notify(ctx, {
+            title: 'The Hammer Beyond the Hills', type: 'good', provName: 'Damascus',
+            text: 'The cities of Coele-Syria send tribute south. The wagons roll the other way now.',
+          });
+        }),
+      },
+      {
+        label: 'Garrison the passes of Lebanon',
+        tooltip: '−40 treasury, +10 military points; "The Passes Garrisoned" (+1 hill defense, 24 months) — tribute can wait on security.',
+        effects: guard('ev_hammer_beyond_hills:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -40, mar: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'passes_garrisoned', name: 'The Passes Garrisoned', months: 24,
+            effects: { hillDefBonus: 1 },
+          });
+          h.setFlag(ctx, 'hammerBeyondHills', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V2 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_damascus_of_david',
+    title: 'Damascus, Which David Took',
+    desc: 'The oldest city of the north has opened its gates to the high priest’s army, '
+      + 'and in Jerusalem the scribes have been in the scrolls all week. It is written: '
+      + 'David put garrisons in Aram of Damascus, and the Arameans brought gifts — the '
+      + 'furthest boundary the kingdom ever held, eight hundred years asleep and now '
+      + 'awake and asking questions. Is Damascus a spoil, or an inheritance? Idumea '
+      + 'was offered the covenant and took it. But Idumea was Esau, Israel’s brother, '
+      + 'pressed against Judah since the exile; Damascus is Aram, a nation entire, '
+      + 'with gods older than the quarrel. What is decided at Damascus will be the '
+      + 'precedent for every gate the armies open after it.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_damascus_of_david', (ctx) =>
+      alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Damascus')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Under the Law, as Idumea came',
+        tooltip: 'Aram is offered the covenant: +1,000 manpower, +5 legitimacy; "The Levies of Aram" (+10% manpower, 24 months); Damascus chafes under the new Law (+2 unrest, 36 months).',
+        effects: guard('ev_damascus_of_david:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { manpower: 1000, legitimacy: 5 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'levies_of_aram', name: 'The Levies of Aram', months: 24,
+            effects: { manpowerMult: 1.1 },
+          });
+          h.addProvinceModifier(ctx, 'Damascus', {
+            id: 'damascus_under_the_law', name: 'Damascus Under the Law', months: 36,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'damascusUnderLaw', true);
+          h.notify(ctx, {
+            title: 'Damascus Takes the Covenant', type: 'good', provName: 'Damascus',
+            text: 'The boundary of David is the boundary of the Law. Aram will be long in learning it.',
+          });
+        }),
+      },
+      {
+        label: 'Garrisons and gifts, as David held it',
+        tooltip: 'A tributary overlordship: +10 governance; "Gifts of Aram" on Damascus (+20% tax, permanent) — and Damascus keeps its gods, and sends no sons to the muster.',
+        effects: guard('ev_damascus_of_david:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          h.addProvinceModifier(ctx, 'Damascus', {
+            id: 'gifts_of_aram', name: 'Gifts of Aram', months: -1,
+            effects: { taxMult: 1.2 },
+          });
+          h.setFlag(ctx, 'damascusTributary', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V3 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_gates_of_the_sea',
+    title: 'The Gates of the Sea',
+    desc: 'Tyre and Sidon fly the standard of Jerusalem. It has to be written twice to '
+      + 'be believed: the harbors that shipped cedar to Solomon and slaves from Judea '
+      + 'to the islands in the evil years now clear their cargoes under the seal of the '
+      + 'high priest. Israel has been a people of the hills since the Philistines held '
+      + 'the coast — the sea in its scriptures is a thing that drowns armies and '
+      + 'swallows prophets. Now the sea pays harbor dues. The shipwrights wait at '
+      + 'the mole to learn whether the nation of the Law means to remain a customer '
+      + 'of the sea, or become a power on it.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_gates_of_the_sea', (ctx) =>
+      alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Tyre')
+      && ctx.helpers.controls(ctx, 'HAS', 'Sidon')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Lay down keels at Tyre',
+        tooltip: '−60 treasury; 3 ships muster at Tyre ("Fleet of the Covenant") — the first Israel has ever floated.',
+        effects: guard('ev_gates_of_the_sea:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -60 });
+          h.spawnFleet(ctx, 'HAS', 'Tyre', 3, { name: 'Fleet of the Covenant' });
+          h.setFlag(ctx, 'gatesOfTheSea', true);
+          h.notify(ctx, {
+            title: 'Keels at Tyre', type: 'good', provName: 'Tyre',
+            text: 'The first fleet of Israel takes the water where Hiram’s shipwrights worked for Solomon.',
+          });
+        }),
+      },
+      {
+        label: 'Farm the harbors; hire the sailors',
+        tooltip: 'The Phoenicians sail, Israel collects: +10 governance; "Harbor Dues" (+10% income, 36 months).',
+        effects: guard('ev_gates_of_the_sea:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'harbor_dues', name: 'Harbor Dues', months: 36,
+            effects: { incomeMult: 1.1 },
+          });
+          h.setFlag(ctx, 'gatesOfTheSea', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V4 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_border_of_philistines',
+    title: 'The Border of the Philistines',
+    desc: 'From Joppa to Gaza the whole seaboard answers to Jerusalem — the coast of '
+      + 'the five lords, the old enemy’s country from the days of the judges, held '
+      + 'entire for the first time since there was an Israel to hold it. Judah burned '
+      + 'the towers of Azotus once and went back up into the hills, because the hills '
+      + 'were all that could be kept. Nothing needs to be given back now. The question '
+      + 'the coast asks is the settler’s question, not the raider’s: whether the '
+      + 'faithful will come down from the hill villages to live in the ports of '
+      + 'Dagon’s old towns, and make the sea road a road of Israel.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_border_of_philistines', (ctx) =>
+      alive(ctx, 'HAS')
+      && countControlledOf(ctx, 'HAS', PHILISTINE_COAST) >= PHILISTINE_COAST.length),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Settle the faithful in the port towns',
+        tooltip: '+5 legitimacy; Joppa, Azotus, Ascalon and Gaza are settled (−1 unrest, +10% tax, 36 months each).',
+        effects: guard('ev_border_of_philistines:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 5 });
+          for (const name of PHILISTINE_COAST) {
+            if (!h.controls(ctx, 'HAS', name)) continue;
+            h.addProvinceModifier(ctx, name, {
+              id: 'settled_faithful', name: 'The Faithful Come Down to the Sea', months: 36,
+              effects: { unrest: -1, taxMult: 1.1 },
+            });
+          }
+          h.setFlag(ctx, 'philistineCoast', true);
+        }),
+      },
+      {
+        label: 'A fleet out of Joppa',
+        tooltip: '−50 treasury, +10 military points; 2 ships muster at Joppa ("Ships of Joppa") — the port Simon coveted, used as he meant to use it.',
+        effects: guard('ev_border_of_philistines:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -50, mar: 10 });
+          h.spawnFleet(ctx, 'HAS', 'Joppa', 2, { name: 'Ships of Joppa' });
+          h.setFlag(ctx, 'philistineCoast', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V5 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_cities_of_the_nations',
+    title: 'The Cities of the Nations',
+    desc: 'The poleis have surrendered by the handful — the coast and the Decapolis, '
+      + 'the gymnasium towns with their theaters and their tutelary gods, the whole '
+      + 'archipelago of Greece that the kings planted in the land of Israel. Their '
+      + 'councils meet under Judaean garrisons and petition in excellent rhetoric for '
+      + 'their ancient liberties, meaning their statues. The men of the hills who '
+      + 'stormed them remember what came out of these gates in the year of the '
+      + 'abomination: the levies of the nations, marching up the ascents behind '
+      + 'Apollonius. A generation later, the gates are Israel’s, and the garrison '
+      + 'commanders wait to know what a Greek city is for.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_cities_of_the_nations', (ctx) =>
+      alive(ctx, 'HAS') && countControlledOf(ctx, 'HAS', GREEK_CITIES) >= 4),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The gymnasium closes; the synagogue opens',
+        tooltip: '+1,500 manpower, +5 legitimacy — the cities pass under the Law, and seethe (+1 unrest in each held Greek city, 36 months).',
+        effects: guard('ev_cities_of_the_nations:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { manpower: 1500, legitimacy: 5 });
+          for (const name of GREEK_CITIES) {
+            if (!h.controls(ctx, 'HAS', name)) continue;
+            h.addProvinceModifier(ctx, name, {
+              id: 'cities_under_the_law', name: 'The Cities Under the Law', months: 36,
+              effects: { unrest: 1 },
+            });
+          }
+          h.setFlag(ctx, 'greekCitiesUnderLaw', true);
+        }),
+      },
+      {
+        label: 'Their liberties, at a price',
+        tooltip: '+10 governance; each held Greek city keeps its constitution and pays for it ("Civic Tribute": +10% tax, permanent).',
+        effects: guard('ev_cities_of_the_nations:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          for (const name of GREEK_CITIES) {
+            if (!h.controls(ctx, 'HAS', name)) continue;
+            h.addProvinceModifier(ctx, name, {
+              id: 'civic_tribute', name: 'Civic Tribute', months: -1,
+              effects: { taxMult: 1.1 },
+            });
+          }
+          h.setFlag(ctx, 'greekCitiesTributary', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V6 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_yoke_reversed',
+    title: 'The Yoke Reversed',
+    requiresWar: ['HAS', 'SEL'],
+    desc: 'The war has passed the point the mapmakers can disguise. The kingdom of the '
+      + 'Greeks no longer sends armies south; it sends letters, and the letters have '
+      + 'begun to arrive unsealed, because everyone between Antioch and Jerusalem '
+      + 'knows what is in them: terms, and the terms improve monthly. Forty years ago '
+      + 'an Antiochus stripped the Temple treasury to the last lamp and taxed the '
+      + 'nation for the privilege of being robbed. The council of the nation now '
+      + 'debates, without hurry, what the kingdom’s peace is worth — and whether the '
+      + 'sons of the men who paid the tribute of Judea will live to see Antioch pay '
+      + 'the tribute of Syria.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_yoke_reversed', (ctx) =>
+      alive(ctx, 'HAS') && alive(ctx, 'SEL') && hasWarscore(ctx) >= 75),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let Antioch pay as Jerusalem paid',
+        tooltip: 'An indemnity in the old style: Judaea +150 treasury, +10 legitimacy; Seleucids −150 treasury, +2 war exhaustion.',
+        effects: guard('ev_yoke_reversed:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: 150, legitimacy: 10 });
+          h.adjust(ctx, 'SEL', { treasury: -150, warExhaustion: 2 });
+          h.setFlag(ctx, 'yokeReversed', true);
+          h.notify(ctx, {
+            title: 'The Yoke Reversed', type: 'good', provName: 'Jerusalem',
+            text: 'The silver goes south to north no longer. Antioch pays the tribute of Syria.',
+          });
+        }),
+      },
+      {
+        label: 'Take hostages of the house of Seleucus',
+        tooltip: 'As the kings once took the sons of Israel: Judaea +10 legitimacy, +15 influence; Seleucids −1 stability, −10 legitimacy.',
+        effects: guard('ev_yoke_reversed:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10, infl: 15 });
+          h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -10 });
+          h.setFlag(ctx, 'yokeReversed', true);
+          h.notify(ctx, {
+            title: 'The Yoke Reversed', type: 'good', provName: 'Jerusalem',
+            text: 'Princes of the house of Seleucus ride south under guard, as the sons of Israel once rode north.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── V7 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_diadem_in_dust',
+    title: 'The Diadem in the Dust',
+    desc: 'It is finished, and no one in the world quite believes it, least of all the '
+      + 'men who did it. The kingdom of the house of Seleucus — the fourth of the '
+      + 'beasts, the iron that broke the whole earth, the dynasty that burned the '
+      + 'scrolls and built the abomination — is not defeated but GONE: its capital '
+      + 'taken or its last king’s writ run out, its diadem in the dust of its own '
+      + 'colonnades. In the Temple courts they are reading Daniel aloud to crowds who '
+      + 'weep. And in the citadel the practical men are already asking the practical '
+      + 'question: Syria exists, whether or not anyone rules it. A hundred cities, '
+      + 'ten nations, the roads of the world — masterless, and looking south.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_diadem_in_dust', (ctx) =>
+      alive(ctx, 'HAS')
+      && (!alive(ctx, 'SEL') || ctx.helpers.controls(ctx, 'HAS', 'Antioch'))),
+    aiOption: 0,
+    options: [
+      {
+        label: 'A protectorate over Syria',
+        tooltip: 'Israel takes up the inheritance: +10 legitimacy, +15 governance; "The Burden of Syria" (+10% income, +1 unrest everywhere, permanent). The Hasideans mislike the shape of it.',
+        effects: guard('ev_diadem_in_dust:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10, gov: 15 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'burden_of_syria', name: 'The Burden of Syria', months: -1,
+            effects: { incomeMult: 1.1, unrestAll: 1 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', -10);
+          h.setFlag(ctx, 'diademInDust', true);
+          h.setFlag(ctx, 'syrianProtectorate', true);
+          h.notify(ctx, {
+            title: 'The Diadem in the Dust', type: 'good', provName: 'Antioch',
+            text: 'The kingdom of the Greeks is ended, and Jerusalem holds its inheritance in trust — or in fact.',
+          });
+        }),
+      },
+      {
+        label: 'Cast it down, and come home to Zion',
+        tooltip: 'No throne of the nations: +20 legitimacy, +1 stability; the pious rejoice. Syria is left to its cities, and the armies come home.',
+        effects: guard('ev_diadem_in_dust:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 20, stability: 1 });
+          h.factionShift(ctx, 'HAS', 'hasideans', 15);
+          h.setFlag(ctx, 'diademInDust', true);
+          h.setFlag(ctx, 'diademRefused', true);
+          h.notify(ctx, {
+            title: 'The Diadem in the Dust', type: 'good', provName: 'Jerusalem',
+            text: 'The diadem of Seleucus is left where it fell. The armies of Israel come home singing.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── V8 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_hasidean_admonition',
+    title: 'The Watchmen’s Admonition',
+    desc: 'The heirs of the Hasideans have come up to Jerusalem — the old companies’ '
+      + 'grandsons, gray men who learned the Law in caves — and they have asked for an '
+      + 'audience and been given one, because no ruler of this house can refuse them '
+      + 'and keep his name. Their spokesman does not raise his voice. Antiochus, he '
+      + 'says, also ruled a hundred cities. Antiochus also garrisoned other men’s '
+      + 'temples, and taxed other men’s altars, and called it peace. The Lord did not '
+      + 'break the hammer of the whole earth to forge another; we were delivered '
+      + 'from the empire of the Greeks, not INTO it. Then he waits, as men wait who '
+      + 'have said the thing they climbed the hill to say.',
+    forTag: 'HAS',
+    chance: 0.35,
+    trigger: safeTrigger('ev_hasidean_admonition', (ctx) =>
+      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'diademInDust')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Hear them: the Law is not a spoil of war',
+        tooltip: '+10 legitimacy, +1 stability; "A Nation of Priests" (−1 unrest everywhere, −5% income, permanent) — the pious stand with the house.',
+        effects: guard('ev_hasidean_admonition:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'nation_of_priests', name: 'A Nation of Priests', months: -1,
+            effects: { unrestAll: -1, incomeMult: 0.95 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', 20);
+          h.setFlag(ctx, 'watchmenHeeded', true);
+        }),
+      },
+      {
+        label: 'The empire is heaven’s gift; keep it',
+        tooltip: '−10 legitimacy; "The Imperial Purple" (+8% income, +5% discipline, permanent) — and the pious begin counting this house’s sins.',
+        effects: guard('ev_hasidean_admonition:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'imperial_purple', name: 'The Imperial Purple', months: -1,
+            effects: { incomeMult: 1.08, disciplineMult: 1.05 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', -20);
+          h.setFlag(ctx, 'watchmenRefused', true);
+        }),
+      },
+    ],
+  },
+
+  // ── V9 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_embassies_of_powers',
+    title: 'The Embassies of the Great Powers',
+    desc: 'They arrive in the same season, which is not a coincidence: a legate of the '
+      + 'Senate with the grave courtesy Rome spends on powers it has decided to take '
+      + 'seriously, and an envoy of the Arsacid with gifts of horses and the long '
+      + 'patience of the east. Both have crossed half the world to say the same '
+      + 'astonishing thing — that their masters wish to know the mind of Judaea. Not '
+      + 'its submission; its MIND. The scribes hunt the chronicles for a precedent '
+      + 'and find only Solomon, when the kings of the earth sought his face. Between '
+      + 'the wolf of the west and the horseman of the east there is room to stand, '
+      + 'for a while, and the while must be chosen well.',
+    forTag: 'HAS',
+    major: true,
+    chance: 0.5,
+    trigger: safeTrigger('ev_embassies_of_powers', (ctx) => {
+      const h = ctx.helpers;
+      if (!alive(ctx, 'HAS')) return false;
+      if (!alive(ctx, 'ROM') && !alive(ctx, 'PAR')) return false;
+      return !!h.getFlag(ctx, 'diademInDust') || !!h.getFlag(ctx, 'yokeReversed')
+        || (!!h.getFlag(ctx, 'hammerBeyondHills') && h.countControlled(ctx, 'HAS', {}) >= 12);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The friendship of Rome, renewed as equals',
+        tooltip: '+15 influence; Rome embraces Judaea (opinions rise to friendship) — and Parthia takes cold note (−60 opinion).',
+        effects: guard('ev_embassies_of_powers:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { infl: 15 });
+          if (alive(ctx, 'ROM')) {
+            setOpinion(ctx, 'ROM', 'HAS', 100);
+            setOpinion(ctx, 'HAS', 'ROM', 80);
+          }
+          if (alive(ctx, 'PAR')) setOpinion(ctx, 'PAR', 'HAS', -60);
+          h.setFlag(ctx, 'alignedRome', true);
+          h.notify(ctx, {
+            title: 'The Embassies Depart', type: 'info', provName: 'Jerusalem',
+            text: 'The bronze tablets are renewed — this time between powers. The horseman rides east unanswered.',
+          });
+        }),
+      },
+      {
+        label: 'A covenant with the King of Kings',
+        tooltip: '+10 influence, +50 treasury (the eastern roads open); Parthia warms to Judaea (+80 opinion) — and Rome files the slight where Rome files everything (−40 opinion).',
+        effects: guard('ev_embassies_of_powers:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { infl: 10, treasury: 50 });
+          if (alive(ctx, 'PAR')) {
+            setOpinion(ctx, 'PAR', 'HAS', 80);
+            setOpinion(ctx, 'HAS', 'PAR', 60);
+          }
+          if (alive(ctx, 'ROM')) setOpinion(ctx, 'ROM', 'HAS', -40);
+          h.setFlag(ctx, 'alignedParthia', true);
+          h.notify(ctx, {
+            title: 'The Embassies Depart', type: 'info', provName: 'Jerusalem',
+            text: 'The caravans of the east will pass through Judaea’s peace. Rome answers with a shorter letter than last year’s.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── V10 ───────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_law_of_the_nations',
+    title: 'What Does the Law Say of the Nations?',
+    desc: 'The question has outgrown the study house. Israel rules multitudes now who '
+      + 'have never kept a Sabbath — Aram and Philistia, the cities of the Greeks, '
+      + 'the tribes of the high country — more of the nations than of the covenant, '
+      + 'some say, if anyone dared count. In the chamber the schools divide as they '
+      + 'always divide, but louder. The sages of the people: the Law is a gate, and '
+      + 'gates are for entering — let the nations come in by conversion and judgment '
+      + 'and the seventh day, or the empire will paganize the Law faster than the Law '
+      + 'can hallow the empire. The priests and the great houses: the Law is a wall, '
+      + 'and walls are for keeping — Israel a kingdom apart, the nations governed and '
+      + 'taxed and left to their gods. Between the gate and the wall stands the ruler, '
+      + 'who must now say which the Law is, and be remembered for it longer than for '
+      + 'any conquest.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_law_of_the_nations', (ctx) => {
+      const h = ctx.helpers;
+      if (!alive(ctx, 'HAS') || !h.controls(ctx, 'HAS', 'Jerusalem')) return false;
+      const all = h.countControlled(ctx, 'HAS', {});
+      if (all < 15) return false;
+      // More of the nations than of the covenant: the ahistorical condition.
+      return all - h.countControlled(ctx, 'HAS', { religion: 'judaism' }) >= all / 2;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Law is a gate: let the nations enter',
+        tooltip: 'The schools of the people prevail: +5 legitimacy; "One Law in Every Gate" (+10% manpower, +1 unrest everywhere, 36 months); the Hasideans’ heirs are content.',
+        effects: guard('ev_law_of_the_nations:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 5 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'one_law_in_every_gate', name: 'One Law in Every Gate', months: 36,
+            effects: { manpowerMult: 1.1, unrestAll: 1 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', 10);
+          h.setFlag(ctx, 'lawIsAGate', true);
+        }),
+      },
+      {
+        label: 'The Law is a wall: Israel a kingdom apart',
+        tooltip: 'The priests and the great houses prevail: −5 legitimacy; "The Nations Pay" (+12% income, permanent); the coastal money is pleased.',
+        effects: guard('ev_law_of_the_nations:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -5 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_nations_pay', name: 'The Nations Pay', months: -1,
+            effects: { incomeMult: 1.12 },
+          });
+          h.factionShift(ctx, 'HAS', 'hellenizers', 10);
+          h.setFlag(ctx, 'lawIsAWall', true);
         }),
       },
     ],

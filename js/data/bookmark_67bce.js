@@ -103,6 +103,40 @@ export const BOOKMARK_67 = {
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
   },
 
+  // The conquerors' pens wait on integration (SPEC §66): the name a state
+  // writes on a province, applied only once it is properly integrated
+  // (integration at 1) or peopled by the owner's own culture. Until then —
+  // and again the moment the land changes hands — the era names above hold.
+  integratedNames: {
+    // The Roman pen: what the dispatches and itineraries wrote on the
+    // conquered east. Pompey's Decapolis needs no entries — the "liberated"
+    // poleis (Scythopolis, Pella, Gadara, Gerasa, Philadelphia) already wear
+    // their Greek names on this bookmark's map, so the pen only writes where
+    // the era table (or the Hebrew map) says something else.
+    ROM: {
+      'Jerusalem': 'Hierosolyma',              // the name in Pompey's dispatches
+      'Jericho': 'Hiericus',                   // Strabo's spelling for the balsam garden
+      'Joppa': 'Iope',                         // the harbor detached from Judaea, Greek again
+      'Sebaste': 'Gabinia',                    // Gabinius rebuilds Samaria and signs it
+      'Caesarea Maritima': 'Turris Stratonis', // Straton's Tower in the itineraries' Latin
+    },
+    // The Hasmonean pens (either brother writes the same Hebrew): the Greek
+    // coast and the Decapolis under the names of the conquering Law — only
+    // once truly absorbed, as Jannaeus absorbed them once before.
+    HYR: {
+      'Ptolemais': 'Akko', 'Dora': 'Dor', 'Joppa': 'Yafo',
+      'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon', 'Gaza': 'Azza',
+      'Scythopolis': 'Beit She\'an', 'Pella': 'Pehal', 'Gadara': 'Gader',
+      'Philadelphia': 'Rabbat Ammon',
+    },
+    ARI: {
+      'Ptolemais': 'Akko', 'Dora': 'Dor', 'Joppa': 'Yafo',
+      'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon', 'Gaza': 'Azza',
+      'Scythopolis': 'Beit She\'an', 'Pella': 'Pehal', 'Gadara': 'Gader',
+      'Philadelphia': 'Rabbat Ammon',
+    },
+  },
+
   blurb: 'Queen Salome Alexandra is dead, and her sons cannot both be king. Hyrcanus the '
     + 'elder has the high priesthood, the law of succession, and no spine; Aristobulus the '
     + 'younger has the army, the fortresses, and no patience. Idumean Antipater whispers to '

@@ -99,6 +99,24 @@ export const BOOKMARK_167 = {
     'Modi\'in Hills': 'Modi\'in',           // the village where the revolt began
   },
 
+  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
+  // writes on a conquered province, applied only once the land is truly its
+  // own — owned, and either integrated or peopled by the owner's culture.
+  // The Hebrew pen writes the old names back over the Greek foundations of
+  // the kings; until then, and again the moment the land changes hands, the
+  // labels keep the era names above.
+  integratedNames: {
+    HAS: {
+      'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an', 'Sebaste': 'Shomron',
+      'Joppa': 'Yafo', 'Jamnia': 'Yavneh', 'Azotus': 'Ashdod',
+      'Ascalon': 'Ashkelon', 'Gaza': 'Azza', 'Dora': 'Dor',
+      'Sepphoris': 'Tzippori', 'Gadara': 'Gader', 'Philadelphia': 'Rabbat Ammon',
+    },
+    // The Seleucid pen has one name it longs to write: Epiphanes re-founded
+    // the city of David as Antiochia-in-Judaea, gymnasium and all.
+    SEL: { 'Jerusalem': 'Antiochia' },
+  },
+
   // The map wears its era's shape (SPEC §47): the desert fortresses are not
   // yet built — Jannaeus raises Machaerus and the Masada fort decades later —
   // and Modi'in, the Hasmoneans' home village, stands as its own place
