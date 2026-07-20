@@ -1058,4 +1058,1011 @@ export const EVENTS_40 = [
       },
     ],
   },
+
+  // ═══ THE AUGUSTAN KINGDOM, 27 BCE – 6 CE ═══════════════════════════════════
+  // The war is long over; the reign is the story now. Source spine: Josephus,
+  // Antiquitates XV–XVII; Bellum I–II. Dated chapters fire even in a diverged
+  // world — every effect is guarded on tag survival and actual control.
+
+  // ── 12: Samaria becomes Sebaste ───────────────────────────────────────────
+  {
+    id: 'ev5_sebaste',
+    title: 'Sebaste',
+    worldLabel: 'Herod rebuilds Samaria as Sebaste',
+    desc: 'Samaria — where the kings of Israel reigned, where Herod married Mariamne '
+      + 'in the middle of a war — is rebuilt and renamed for Sebastos, which is Greek '
+      + 'for Augustus. Six thousand veterans and country settlers take allotments '
+      + 'inside a wall two miles around, and on the summit, over Omri\'s old palace, '
+      + 'rises a temple to Roma and the emperor. Loyal, Greek, and garrisoned: a city '
+      + 'the king can retreat to if Jerusalem ever remembers what it thinks of him.',
+    forTag: 'both',
+    date: { y: -27, m: 10 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Veterans, walls, and a temple to the emperor',
+        tooltip: 'Herod: −120 talents. Sebaste permanently +15% tax, −1 unrest; +5 legitimacy; Rome\'s opinion +20. The Sanhedrin −8 approval — an idol\'s house on Israel\'s old high place.',
+        effects: guard('ev5_sebaste:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -120, legitimacy: 5 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Sebaste')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Sebaste', {
+              id: 'sebaste_founded', name: 'The City of Sebastos', months: -1,
+              effects: { taxMult: 1.15, unrest: -1 },
+            });
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 20);
+          }
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', -8);
+          ctx.helpers.chronicle(ctx, 'era', 'Samaria is reborn as Sebaste: veterans on the land, the emperor\'s temple on the summit.');
+        }),
+      },
+      {
+        label: 'Walls and veterans — no temple',
+        tooltip: 'Herod: −80 talents. Sebaste permanently +10% tax; the Sanhedrin is not provoked — but Rome\'s opinion −20. Augustus notices what his client did not build.',
+        effects: guard('ev5_sebaste:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -80 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Sebaste')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Sebaste', {
+              id: 'sebaste_founded', name: 'The Veterans\' City', months: -1,
+              effects: { taxMult: 1.1 },
+            });
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.max(-200, (rom.opinion.HER || 0) - 20);
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 13: the great famine ──────────────────────────────────────────────────
+  {
+    id: 'ev5_famine',
+    title: 'The Great Famine',
+    desc: 'The rains fail, then fail again; after drought comes pestilence, and after '
+      + 'pestilence the discovery that last year\'s seed corn was eaten in the winter. '
+      + 'The countryside walks to the cities and the cities have nothing either. In '
+      + 'the palace there is gold plate, ornament, the furniture of majesty — and in '
+      + 'Egypt there is grain, if the prefect Petronius can be persuaded to sell it '
+      + 'against his own export rules.',
+    forTag: 'player',
+    date: { y: -25, m: 3 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strip the palace plate for Egyptian grain',
+        tooltip: '−150 talents (the plate goes to the mint, the silver goes to Alexandria). Egyptian corn: −1 unrest everywhere for 12 months, +10 legitimacy — the executions are, for a season, forgiven.',
+        effects: guard('ev5_famine:0', (ctx) => {
+          const me = ctx.game.playerTag;
+          if (!alive(ctx, me)) return;
+          ctx.helpers.adjust(ctx, me, { treasury: -150, legitimacy: 10 });
+          ctx.helpers.addTagModifier(ctx, me, {
+            id: 'egyptian_corn', name: 'Corn from Egypt', months: 12,
+            effects: { unrestAll: -1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The king strips his own palace of its plate and buys Egyptian grain: the famine is fought with the furniture of majesty.');
+        }),
+      },
+      {
+        label: 'The treasury is the kingdom — guard it',
+        tooltip: 'Keep the silver. The famine runs its course: +1.5 unrest everywhere and −15% manpower for 18 months, −10 legitimacy. The hungry keep their own ledgers.',
+        effects: guard('ev5_famine:1', (ctx) => {
+          const me = ctx.game.playerTag;
+          if (!alive(ctx, me)) return;
+          ctx.helpers.adjust(ctx, me, { legitimacy: -10 });
+          ctx.helpers.addTagModifier(ctx, me, {
+            id: 'great_famine', name: 'The Great Famine', months: 18,
+            effects: { unrestAll: 1.5, manpowerMult: 0.85 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 13b: Petronius delivers ───────────────────────────────────────────────
+  {
+    id: 'ev5_petronius',
+    title: 'The Prefect\'s Grain Ships',
+    desc: 'Petronius, prefect of Egypt, lets the convoys sail — for Herod\'s silver and '
+      + 'Herod\'s friendship, in roughly that order. The ships bring corn for the '
+      + 'hungry, seed for the spring fields, and wool for a population that sold its '
+      + 'cloaks in the summer of the hunger. Bread is distributed by the king\'s own '
+      + 'officers, baked in the king\'s own ovens, and nobody is allowed to forget '
+      + 'whose ovens they were.',
+    forTag: 'player',
+    trigger: safeTrigger('ev5_petronius', (ctx) =>
+      !!(ctx.game.firedEvents && ctx.game.firedEvents.ev5_famine)
+      && (ctx.game.date.y > -25 || (ctx.game.date.y === -25 && ctx.game.date.m >= 10))
+      && alive(ctx, ctx.game.playerTag)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Corn, seed, and wool for winter',
+        tooltip: '−80 talents. The fields are resown and the flocks reclothed: +6% income and +8% manpower for 12 months, +5 legitimacy.',
+        effects: guard('ev5_petronius:0', (ctx) => {
+          const me = ctx.game.playerTag;
+          if (!alive(ctx, me)) return;
+          ctx.helpers.adjust(ctx, me, { treasury: -80, legitimacy: 5 });
+          ctx.helpers.addTagModifier(ctx, me, {
+            id: 'seed_and_wool', name: 'Seed Corn and Winter Wool', months: 12,
+            effects: { incomeMult: 1.06, manpowerMult: 1.08 },
+          });
+        }),
+      },
+      {
+        label: 'Corn only — count the change',
+        tooltip: '−30 talents. The hungry are fed and the accounts stay tidy: −0.5 unrest everywhere for 6 months, +5 governance points. The spring fields fend for themselves.',
+        effects: guard('ev5_petronius:1', (ctx) => {
+          const me = ctx.game.playerTag;
+          if (!alive(ctx, me)) return;
+          ctx.helpers.adjust(ctx, me, { treasury: -30, gov: 5 });
+          ctx.helpers.addTagModifier(ctx, me, {
+            id: 'corn_alone', name: 'The Grain Dole', months: 6,
+            effects: { unrestAll: -0.5 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 14: Strato's Tower becomes Caesarea ───────────────────────────────────
+  {
+    id: 'ev5_caesarea_start',
+    title: 'A Harbor Where None Was',
+    worldLabel: 'Herod begins the works at Caesarea',
+    desc: 'Strato\'s Tower is a fishing anchorage on a harborless coast, and Herod has '
+      + 'decided it will be the greatest port between Alexandria and Piraeus. The '
+      + 'engineers propose the impossible in the flat voice engineers use for it: '
+      + 'blocks of stone fifty feet long, sunk in twenty fathoms of open sea, until a '
+      + 'breakwater stands where there was only weather. Twelve years, they say. A '
+      + 'city on the grid behind it, a theater facing the sea, and the whole of it '
+      + 'named for Caesar.',
+    forTag: 'HER',
+    date: { y: -24, m: 5 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sink the stones in twenty fathoms',
+        tooltip: '−200 talents to open the works; +10 governance points. Twelve years of wages: −1 unrest at Caesarea while the works run. The full harbor Sebastos will be dedicated around 10 BCE.',
+        effects: guard('ev5_caesarea_start:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'caesareaWorks', true);
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -200, gov: 10 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Caesarea Maritima')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Caesarea Maritima', {
+              id: 'harbor_works', name: 'The Works of Caesarea', months: 168,
+              effects: { unrest: -1 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'At Strato\'s Tower the divers begin sinking stones into open sea: Caesarea is begun.');
+        }),
+      },
+      {
+        label: 'A modest anchorage will serve',
+        tooltip: '−80 talents; +0.5 fewer unrest at Caesarea for 6 years of smaller works. Cheaper — but the dedication, when it comes, will crown a lesser harbor.',
+        effects: guard('ev5_caesarea_start:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -80 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Caesarea Maritima')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Caesarea Maritima', {
+              id: 'harbor_works', name: 'The Lesser Works', months: 72,
+              effects: { unrest: -0.5 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 15: the palace, and the brigand-lands ─────────────────────────────────
+  {
+    id: 'ev5_tetrarchies',
+    title: 'The Lands Beyond Jordan',
+    desc: 'Augustus has a problem shaped like a gift: Trachonitis, Batanaea and '
+      + 'Auranitis — cave country, brigand country, land that pays no tax because '
+      + 'no collector comes back from it. He offers it to Herod, who alone of the '
+      + 'client kings treats banditry as an engineering problem. Meanwhile in '
+      + 'Jerusalem\'s upper city the masons wait to begin the royal palace: two wings, '
+      + 'to be named Caesareum and Agrippium — flattery in load-bearing form.',
+    forTag: 'HER',
+    date: { y: -23, m: 4 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Clear the brigand-lands for Caesar',
+        tooltip: '−60 talents of columns and cavalry sweeps; Batanea joins the kingdom if Rome holds it; +10 martial points; Rome\'s opinion +20. The palace waits a season.',
+        effects: guard('ev5_tetrarchies:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -60, mar: 10 });
+          const p = ctx.prov('Batanea');
+          if (alive(ctx, 'ROM') && p && p.owner === 'ROM') {
+            ctx.helpers.changeOwner(ctx, 'Batanea', 'HER');
+            ctx.helpers.notify(ctx, {
+              title: 'The kingdom grows',
+              text: 'Augustus adds the brigand-lands beyond Jordan to Herod\'s realm.',
+              type: 'good', provName: 'Batanea',
+            });
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 20);
+          }
+        }),
+      },
+      {
+        label: 'The palace first — the caves can wait',
+        tooltip: '−100 talents. Jerusalem gains the upper-city palace: permanently +10% tax; +5 legitimacy. The brigand-lands stay Rome\'s problem, and Rome remembers being told so.',
+        effects: guard('ev5_tetrarchies:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -100, legitimacy: 5 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'upper_city_palace', name: 'The Palace of the Upper City', months: -1,
+              effects: { taxMult: 1.1 },
+            });
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.max(-200, (rom.opinion.HER || 0) - 10);
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 16: Augustus in Syria ─────────────────────────────────────────────────
+  {
+    id: 'ev5_zenodorus',
+    title: 'Augustus in Syria',
+    desc: 'The emperor comes east to settle the province in person, and the client '
+      + 'kings assemble like schoolboys at inspection. Zenodorus — the tetrarch who '
+      + 'rented out his own territory to bandits and took a percentage — has died of a '
+      + 'burst intestine at Antioch, leaving his lands conveniently vacant. Augustus '
+      + 'walks Herod through Syria at his side, and gives him Panion, the grotto '
+      + 'country under Hermon where the Jordan rises.',
+    forTag: 'both',
+    date: { y: -20, m: 4 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'The grotto country joins the kingdom',
+        tooltip: 'Panion joins Herod\'s realm if Rome holds it; +5 legitimacy; Rome\'s opinion +20. The kingdom now runs from the desert to the springs of Jordan.',
+        effects: guard('ev5_zenodorus:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 5 });
+          const p = ctx.prov('Caesarea Philippi');
+          if (alive(ctx, 'ROM') && p && p.owner === 'ROM') {
+            ctx.helpers.changeOwner(ctx, 'Caesarea Philippi', 'HER');
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 20);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Augustus tours Syria with Herod at his side and adds Zenodorus\' lands to the kingdom.');
+        }),
+      },
+      {
+        label: 'A temple at Panion, in white marble',
+        tooltip: 'Panion joins the realm if Rome holds it, and gains a temple to Augustus: −80 talents; Rome\'s opinion +40; the Sanhedrin −6 approval. Gratitude, in load-bearing form.',
+        effects: guard('ev5_zenodorus:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -80 });
+          const p = ctx.prov('Caesarea Philippi');
+          if (alive(ctx, 'ROM') && p && p.owner === 'ROM') {
+            ctx.helpers.changeOwner(ctx, 'Caesarea Philippi', 'HER');
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 40);
+          }
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', -6);
+        }),
+      },
+    ],
+  },
+
+  // ── 17: the Temple ────────────────────────────────────────────────────────
+  {
+    id: 'ev5_temple',
+    title: 'The Temple Shall Be Rebuilt',
+    worldLabel: 'Herod announces the rebuilding of the Temple',
+    desc: 'In the Temple court the king announces the unthinkable: Zerubbabel\'s '
+      + 'modest sanctuary will come down, and in its place will rise a house vaster '
+      + 'than Solomon\'s — the platform doubled, porticoes on a scale no Greek city '
+      + 'can match. The crowd\'s first reaction is terror: a king who demolishes the '
+      + 'Temple may not rebuild it. So Herod stages the answer first: a thousand '
+      + 'priests trained as masons and carpenters, so no profane hand ever touches '
+      + 'the sanctuary, and every stone stockpiled before the first one is moved.',
+    forTag: 'HER',
+    date: { y: -20, m: 11 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Vaster than Solomon\'s',
+        tooltip: '−300 talents, and the works run for a generation: Jerusalem −1 unrest and +10% tax while pilgrims and wages flow. +10 legitimacy; the Sanhedrin +15 approval.',
+        effects: guard('ev5_temple:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'templeBegun', true);
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -300, legitimacy: 10 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'temple_rising', name: 'The Temple Rising', months: 216,
+              effects: { unrest: -1, taxMult: 1.1 },
+            });
+          }
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 15);
+          ctx.helpers.chronicle(ctx, 'era', 'Herod announces the rebuilding of the Temple: a thousand priests take up the mason\'s hammer.');
+        }),
+      },
+      {
+        label: 'Repair and gild — spare the treasury',
+        tooltip: '−100 talents. Zerubbabel\'s house is restored, not replaced: Jerusalem −0.5 unrest for 5 years; +5 legitimacy; the Sanhedrin +5 approval. No one will ever say they have seen a beautiful thing.',
+        effects: guard('ev5_temple:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -100, legitimacy: 5 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'temple_regilded', name: 'The Temple Regilded', months: 60,
+              effects: { unrest: -0.5 },
+            });
+          }
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 5);
+        }),
+      },
+    ],
+  },
+
+  // ── 17b: the sanctuary stands ─────────────────────────────────────────────
+  {
+    id: 'ev5_sanctuary',
+    title: 'The Sanctuary in Eighteen Months',
+    desc: 'The priest-masons finish the sanctuary itself in a year and a half — white '
+      + 'stone and gold plate, so bright at sunrise that men look away — and the story '
+      + 'runs that in all that time it rained only at night, so the work never stopped. '
+      + 'The courts and porticoes will take a lifetime more; the outer works will '
+      + 'still be building when the kingdom that ordered them is gone. In the days of '
+      + 'the rabbis men will say: he who has not seen Herod\'s building has never '
+      + 'seen a beautiful thing.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_sanctuary', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'templeBegun')
+      && (ctx.game.date.y > -18 || (ctx.game.date.y === -18 && ctx.game.date.m >= 6))
+      && alive(ctx, 'HER')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A feast of dedication for the city',
+        tooltip: '−60 talents; +10 legitimacy; the Sanhedrin +10 approval; −1 unrest everywhere for 6 months. Three hundred oxen for the altar, and no one counts the king\'s old sins today.',
+        effects: guard('ev5_sanctuary:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -60, legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 10);
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'dedication_feast', name: 'The Feast of the Dedication', months: 6,
+            effects: { unrestAll: -1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The sanctuary stands, raised in eighteen months by priests with masons\' hands; the city feasts.');
+        }),
+      },
+      {
+        label: 'No feast — back to the porticoes',
+        tooltip: '+10 governance points; the Sanhedrin +5 approval. The scaffolding never comes down; neither does the payroll, and the payroll is the point.',
+        effects: guard('ev5_sanctuary:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { gov: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 5);
+        }),
+      },
+    ],
+  },
+
+  // ── 18: Agrippa in Judaea ─────────────────────────────────────────────────
+  {
+    id: 'ev5_agrippa',
+    title: 'Agrippa Comes to Jerusalem',
+    desc: 'Marcus Agrippa — Augustus\' general, son-in-law, and other half — comes to '
+      + 'Judaea as a guest and does everything right: a hecatomb of a hundred oxen at '
+      + 'the Temple altar, no image carried past the gates, a feast for the whole city. '
+      + 'Jerusalem, which reserves judgment on kings, decides it likes this Roman. '
+      + 'Herod glows like a man showing his two families to each other. Next season '
+      + 'there is talk of sailing with him to the Black Sea, where the fleet has '
+      + 'business and a king who owns twenty ships would be welcome.',
+    forTag: 'HER',
+    date: { y: -14, m: 5 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A hecatomb and a feasted city',
+        tooltip: '−80 talents for the feast; +10 legitimacy, +10 influence points; the Sanhedrin +8 approval; Rome\'s opinion +30.',
+        effects: guard('ev5_agrippa:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -80, legitimacy: 10, infl: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 8);
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 30);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Agrippa sacrifices a hecatomb in the Temple and feasts the people; Jerusalem cheers a Roman.');
+        }),
+      },
+      {
+        label: 'Sail with him to the Black Sea',
+        tooltip: '−60 talents; +20 influence points, +5 martial points; Rome\'s opinion +40 — but the king abroad: +0.5 unrest everywhere for 6 months.',
+        effects: guard('ev5_agrippa:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -60, infl: 20, mar: 5 });
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 40);
+          }
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'king_abroad', name: 'The King on the Euxine', months: 6,
+            effects: { unrestAll: 0.5 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 18b: the rights of the diaspora ───────────────────────────────────────
+  {
+    id: 'ev5_ionia',
+    title: 'The Pleading at Ionia',
+    desc: 'The Greek cities of Ionia have been dragging their Jews into court on the '
+      + 'sabbath, taxing the Temple contributions, conscripting men the Law exempts. '
+      + 'Before Agrippa\'s tribunal, Herod\'s minister Nicolaus of Damascus argues the '
+      + 'diaspora\'s case like a paid professional, because he is one — and wins. The '
+      + 'edicts go out under Roman seal: the sabbath protected, the Temple tax '
+      + 'inviolate, from Asia to Cyrene. A king of Judaea has just become something '
+      + 'larger: the patron of every Jew in the world.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_ionia', (ctx) =>
+      !!(ctx.game.firedEvents && ctx.game.firedEvents.ev5_agrippa)
+      && (ctx.game.date.y > -14 || (ctx.game.date.y === -14 && ctx.game.date.m >= 11))
+      && alive(ctx, 'HER')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The edicts, read aloud in every agora',
+        tooltip: 'The Temple tax flows unmolested: +5% income for 10 years; +10 influence points, +5 legitimacy.',
+        effects: guard('ev5_ionia:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { infl: 10, legitimacy: 5 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'diaspora_edicts', name: 'The Edicts of Agrippa', months: 120,
+            effects: { incomeMult: 1.05 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'Roman edicts protect the sabbath and the Temple tax across the diaspora: Herod is patron of every Jew in the world.');
+        }),
+      },
+      {
+        label: 'Press further — citizenship itself',
+        tooltip: '−50 talents of advocacy; +20 influence points. The greater ask sours the hearing: the edicts are confirmed but narrowly, and no income follows.',
+        effects: guard('ev5_ionia:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -50, infl: 20 });
+        }),
+      },
+    ],
+  },
+
+  // ── 19: the house begins to eat itself ────────────────────────────────────
+  {
+    id: 'ev5_sons_accused',
+    title: 'The Sons of Mariamne',
+    desc: 'Alexander and Aristobulus have come home from their Roman education: tall, '
+      + 'Hasmonean on their dead mother\'s side, adored in the street — and loathed by '
+      + 'Antipater, the firstborn of the repudiated first wife, who has spent the '
+      + 'years learning what whispers cost and where to buy them. Now the whispers '
+      + 'reach the king: the boys talk of vengeance for their mother. Augustus, at '
+      + 'Aquileia, has offered to hear the family himself.',
+    forTag: 'HER',
+    date: { y: -12, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sail to Augustus, all three of you',
+        tooltip: '−60 talents of travel and gifts; the emperor reconciles father and sons: +1 stability, the House of Antipater +8 approval. For now.',
+        effects: guard('ev5_sons_accused:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'aquileiaPeace', true);
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -60, stability: 1 });
+          ctx.helpers.factionShift(ctx, 'HER', 'kin', 8);
+          ctx.helpers.chronicle(ctx, 'era', 'At Aquileia Augustus reconciles Herod and the sons of Mariamne; the family sails home smiling.');
+        }),
+      },
+      {
+        label: 'Let Antipater manage the court',
+        tooltip: '+10 governance points — the firstborn is efficient. The House of Antipater −10 approval, and the whispers institutionalize: +0.25 unrest everywhere for 36 months.',
+        effects: guard('ev5_sons_accused:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { gov: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'kin', -10);
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'court_whispers', name: 'The Court of Whispers', months: 36,
+            effects: { unrestAll: 0.25 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 20: the harbor Sebastos ───────────────────────────────────────────────
+  {
+    id: 'ev5_caesarea_done',
+    title: 'Caesarea Dedicated',
+    worldLabel: 'The harbor Sebastos is dedicated at Caesarea',
+    desc: 'Twelve years after the first stones went down in twenty fathoms, the '
+      + 'breakwater stands and ships ride inside it: the harbor Sebastos, larger than '
+      + 'Piraeus, on a coast that had none. Behind it a city on the grid — theater '
+      + 'facing the sea, amphitheater, aqueduct, a temple of Roma and Augustus '
+      + 'visible far offshore. Herod dedicates it with games and proposes to repeat '
+      + 'them every fifth year, forever, which is how a king says the word forever.',
+    forTag: 'both',
+    date: { y: -10, m: 9 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Games every fifth year',
+        tooltip: '−100 talents for the games; +10 legitimacy; Rome\'s opinion +20. Caesarea becomes the kingdom\'s port: permanent tax and production bonus (larger if the full works were funded).',
+        effects: guard('ev5_caesarea_done:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -100, legitimacy: 10 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Caesarea Maritima')) {
+            const full = !!ctx.helpers.getFlag(ctx, 'caesareaWorks');
+            ctx.helpers.addProvinceModifier(ctx, 'Caesarea Maritima', {
+              id: 'sebastos_harbor', name: full ? 'The Harbor Sebastos' : 'The Anchorage of Caesarea', months: -1,
+              effects: full ? { taxMult: 1.2, prodMult: 1.2, unrest: -1 } : { taxMult: 1.1, prodMult: 1.1 },
+            });
+          }
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.min(200, (rom.opinion.HER || 0) + 20);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Caesarea and the harbor Sebastos are dedicated with games: a port larger than Piraeus where there was only weather.');
+        }),
+      },
+      {
+        label: 'The harbor is spectacle enough',
+        tooltip: 'No games: the harbor dues start the same afternoon (+50 talents). Caesarea gains the permanent harbor bonus; Rome\'s opinion unchanged, and the crowds go home unfed.',
+        effects: guard('ev5_caesarea_done:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 50 });
+          if (ctx.helpers.controls(ctx, 'HER', 'Caesarea Maritima')) {
+            const full = !!ctx.helpers.getFlag(ctx, 'caesareaWorks');
+            ctx.helpers.addProvinceModifier(ctx, 'Caesarea Maritima', {
+              id: 'sebastos_harbor', name: full ? 'The Harbor Sebastos' : 'The Anchorage of Caesarea', months: -1,
+              effects: full ? { taxMult: 1.2, prodMult: 1.2, unrest: -1 } : { taxMult: 1.1, prodMult: 1.1 },
+            });
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 21: the Nabataean blunder ─────────────────────────────────────────────
+  {
+    id: 'ev5_syllaeus',
+    title: 'Syllaeus at Rome',
+    desc: 'Herod\'s border war against the Nabataean raiders was legal to the letter — '
+      + 'debts unpaid, raiders sheltered, the Syrian governor\'s permission in writing. '
+      + 'But Syllaeus, the Nabataean minister, reaches Rome first and tells it his '
+      + 'way: an old king invading a neighbor unprovoked. Augustus writes Herod the '
+      + 'coldest sentence of the reign: that having long treated him as a friend, he '
+      + 'will now treat him as a subject. No audience. No appeal, yet.',
+    forTag: 'HER',
+    date: { y: -9, m: 6 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send Nicolaus to unsay it',
+        tooltip: '−60 talents of embassy. The displeasure runs 12 months (−0.25 legitimacy a month) before Nicolaus exposes Syllaeus\' lies; Nabataea\'s opinion −20.',
+        effects: guard('ev5_syllaeus:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -60 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'augustus_displeasure', name: 'The Emperor\'s Displeasure', months: 12,
+            effects: { legitimacyAdd: -0.25 },
+          });
+          const nab = ctx.game.tags.NAB;
+          if (nab) {
+            if (!nab.opinion) nab.opinion = {};
+            nab.opinion.HER = Math.max(-200, (nab.opinion.HER || 0) - 20);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Augustus writes that he has long treated Herod as a friend and will now treat him as a subject; Nicolaus sails to unsay it.');
+        }),
+      },
+      {
+        label: 'A subject, then — press the border war',
+        tooltip: 'No embassy: +10 martial points against the raiders, but the displeasure runs 24 months (−0.25 legitimacy a month) and Nabataea\'s opinion −40.',
+        effects: guard('ev5_syllaeus:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { mar: 10 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'augustus_displeasure', name: 'The Emperor\'s Displeasure', months: 24,
+            effects: { legitimacyAdd: -0.25 },
+          });
+          const nab = ctx.game.tags.NAB;
+          if (nab) {
+            if (!nab.opinion) nab.opinion = {};
+            nab.opinion.HER = Math.max(-200, (nab.opinion.HER || 0) - 40);
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 22: the trial at Berytus ──────────────────────────────────────────────
+  {
+    id: 'ev5_berytus',
+    title: 'The Trial at Berytus',
+    worldLabel: 'Herod tries the sons of Mariamne',
+    desc: 'The reconciliation of Aquileia did not hold; nothing in this family holds. '
+      + 'Antipater\'s evidence has widened with every torture session, and now, with '
+      + 'Augustus\' weary permission, a court of Roman assessors convenes at Berytus '
+      + 'to try Alexander and Aristobulus for designs on their father\'s life. The '
+      + 'sons are not present. The verdict is not in doubt. The only question left '
+      + 'to the king is what a father does with it.',
+    forTag: 'HER',
+    date: { y: -7, m: 4 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strangled at Sebaste',
+        tooltip: 'The sentence is carried out where their parents were married: −1 stability, −5 legitimacy, the House of Antipater −12 approval. Augustus\' joke travels the empire: better to be Herod\'s pig than his son.',
+        effects: guard('ev5_berytus:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'sonsExecuted', true);
+          ctx.helpers.adjust(ctx, 'HER', { stability: -1, legitimacy: -5 });
+          ctx.helpers.factionShift(ctx, 'HER', 'kin', -12);
+          ctx.helpers.chronicle(ctx, 'fall', 'Alexander and Aristobulus are strangled at Sebaste, where their father married their mother. Augustus\' joke travels the empire: better to be Herod\'s pig than his son.');
+        }),
+      },
+      {
+        label: 'Prison at Sebaste — not the cord',
+        tooltip: 'Mercy at the last step: +10 legitimacy, the House of Antipater +10 approval — but Antipater keeps working: +0.5 unrest everywhere for 36 months while two live claimants breathe.',
+        effects: guard('ev5_berytus:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'HER', 'kin', 10);
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'living_claimants', name: 'Two Living Claimants', months: 36,
+            effects: { unrestAll: 0.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'At the last step Herod sends the sons of Mariamne to prison, not the cord; the house holds its breath.');
+        }),
+      },
+    ],
+  },
+
+  // ── 23: Antipater's turn ──────────────────────────────────────────────────
+  {
+    id: 'ev5_antipater',
+    title: 'The Cup for Antipater',
+    desc: 'The heir apparent has grown impatient with his father\'s dying, and bought '
+      + 'poison to help it along. The plot unravels the way plots do — a widow\'s '
+      + 'testimony, a freedman\'s panic — and the drug itself is produced in court and '
+      + 'tested, in the Roman manner, on a condemned prisoner, who obliges everyone '
+      + 'by dying at once. The old king, rotting alive at Jericho, signs with a '
+      + 'steady hand. Antipater has five days to live; Herod, as it will turn out, '
+      + 'has ten.',
+    forTag: 'HER',
+    date: { y: -5, m: 11 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The kingdom\'s last execution',
+        tooltip: 'Antipater dies; his estates escheat: +80 talents, −1 stability. Archelaus becomes heir. The kingdom\'s heir apparent, the kingdom\'s last execution.',
+        effects: guard('ev5_antipater:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 80, stability: -1 });
+          ctx.helpers.setHeir(ctx, 'HER', { name: 'Archelaus', gov: 1, infl: 2, mar: 1, age: 18 });
+          ctx.helpers.chronicle(ctx, 'fall', 'Antipater is executed five days before his father\'s death: the kingdom\'s heir apparent, the kingdom\'s last execution.');
+        }),
+      },
+      {
+        label: 'Chains, and a letter to Augustus',
+        tooltip: 'Send him to Rome for the emperor\'s verdict: −30 talents, +10 influence points. Archelaus becomes heir anyway — but the plotter breathes, and the court knows it: +0.5 unrest everywhere for 12 months.',
+        effects: guard('ev5_antipater:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -30, infl: 10 });
+          ctx.helpers.setHeir(ctx, 'HER', { name: 'Archelaus', gov: 1, infl: 2, mar: 1, age: 18 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'plotter_breathes', name: 'The Plotter in Chains', months: 12,
+            effects: { unrestAll: 0.5 },
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 24: the golden eagle ──────────────────────────────────────────────────
+  {
+    id: 'ev5_eagle',
+    title: 'The Golden Eagle',
+    desc: 'Over the great gate of the Temple hangs a golden eagle — Rome\'s bird, on '
+      + 'the house where no image may be. When the rumor runs that the king is dead, '
+      + 'the students of the teachers Judas and Matthias go up by rope in broad '
+      + 'daylight and hack it down before a cheering crowd. The king is not dead. He '
+      + 'has himself carried to the tribunal to pass sentence, and that night — the '
+      + 'one night in Josephus a man can date — the moon goes into eclipse over '
+      + 'Jericho.',
+    forTag: 'HER',
+    date: { y: -4, m: 2 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Burn the teachers alive',
+        tooltip: 'The sentence of a dying king: −5 legitimacy, the Sanhedrin −15 approval, Jerusalem +2 unrest for 12 months. No one hacks at what is his while he breathes.',
+        effects: guard('ev5_eagle:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: -5 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', -15);
+          if (ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'eagle_burnings', name: 'The Teachers Burned', months: 12,
+              effects: { unrest: 2 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'fall', 'The golden eagle is hacked from the Temple gate; the teachers are burned alive; the moon goes into eclipse over Jericho.');
+        }),
+      },
+      {
+        label: 'Depose the high priest, spare the students',
+        tooltip: 'The ringleaders alone answer for it: +5 legitimacy, the Sanhedrin +8 approval — but the eagle stays down, and Rome\'s opinion −20.',
+        effects: guard('ev5_eagle:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: 5 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 8);
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.max(-200, (rom.opinion.HER || 0) - 20);
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 25: the death of Herod ────────────────────────────────────────────────
+  {
+    id: 'ev5_herod_dies',
+    title: 'The King Is Dead',
+    worldLabel: 'Herod dies at Jericho',
+    desc: 'Herod dies at Jericho in the spring, in an agony the physicians catalogue '
+      + 'and cannot name, five days after Antipater and thirty-four years after the '
+      + 'axe fell on the last Hasmonean. The testament — the sixth — divides the '
+      + 'realm: Archelaus to rule Judaea as ethnarch, Antipas to hold Galilee and '
+      + 'Peraea, Philip the northern wilds, all of it subject to Augustus\' pleasure. '
+      + 'The funeral procession is a mile of purple and gold. The mourning, by most '
+      + 'accounts, is shorter.',
+    forTag: 'both',
+    date: { y: -4, m: 3 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The testament stands',
+        tooltip: 'Archelaus rules as Ethnarch (Antipas heir). The divided testament: −10% income and +0.5 unrest everywhere for 36 months as the tetrarchies pull apart.',
+        effects: guard('ev5_herod_dies:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setRuler(ctx, 'HER', { name: 'Archelaus', title: 'Ethnarch of Judaea', gov: 1, infl: 2, mar: 1, age: 19 });
+          ctx.helpers.setHeir(ctx, 'HER', { name: 'Herod Antipas', gov: 2, infl: 3, mar: 2, age: 16 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'divided_testament', name: 'The Divided Testament', months: 36,
+            effects: { incomeMult: 0.9, unrestAll: 0.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'ruler', 'Herod dies at Jericho; by testament Archelaus takes Judaea as ethnarch, Antipas Galilee, Philip the north.');
+        }),
+      },
+      {
+        label: 'The army acclaims Antipas alone',
+        tooltip: 'Overturn the testament: Antipas rules the whole realm undivided (−10 legitimacy, −1 stability for defying the dead king\'s seal — and Augustus\' arithmetic).',
+        effects: guard('ev5_herod_dies:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setRuler(ctx, 'HER', { name: 'Herod Antipas', title: 'King of the Jews', gov: 3, infl: 3, mar: 2, age: 16 });
+          ctx.helpers.setHeir(ctx, 'HER', null);
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: -10, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'The testament is set aside: the army acclaims Antipas over the whole undivided realm.');
+        }),
+      },
+    ],
+  },
+
+  // ── 25b: the war of Varus ─────────────────────────────────────────────────
+  {
+    id: 'ev5_varus',
+    title: 'The War of Varus',
+    worldLabel: 'Judaea rises after Herod\'s death',
+    desc: 'The dam breaks with the king dead: Archelaus opens his rule by killing '
+      + 'three thousand pilgrims in the Temple courts at Passover, and the country '
+      + 'answers in kind. Judas son of Hezekiah raises Galilee; Simon of Peraea burns '
+      + 'the Jericho palace and wears a diadem; Athronges the shepherd holds the hills '
+      + 'with four brothers and a crown of his own. Sabinus the procurator loots '
+      + 'whatever is not on fire. It ends the way these things end: Varus comes down '
+      + 'from Syria with the legions, Sepphoris burns, and two thousand men die on '
+      + 'crosses before Jerusalem\'s walls.',
+    forTag: 'both',
+    date: { y: -4, m: 7 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send for Varus and the legions',
+        tooltip: 'Rome fields the Legions of Varus at Antioch. The realm bleeds: −2,000 manpower, −1 stability, +2 war exhaustion; Jerusalem, Sepphoris and Jericho +2 unrest for 12 months.',
+        effects: guard('ev5_varus:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          if (alive(ctx, 'ROM')) {
+            ctx.helpers.spawnArmy(ctx, 'ROM', 'Antioch', {
+              inf: 5, cav: 1, name: 'Legions of Varus',
+              general: { name: 'Publius Quinctilius Varus', fire: 2, shock: 2, maneuver: 2 },
+            });
+          }
+          ctx.helpers.adjust(ctx, 'HER', { manpower: -2000, stability: -1, warExhaustion: 2 });
+          const marks = [
+            ['Jerusalem', 'varus_passover', 'The Passover Massacre'],
+            ['Sepphoris', 'varus_sepphoris', 'Sepphoris Burned'],
+            ['Jericho', 'varus_jericho', 'The Palace in Ashes'],
+          ];
+          for (const [prov, id, name] of marks) {
+            if (ctx.prov(prov)) {
+              ctx.helpers.addProvinceModifier(ctx, prov, {
+                id, name, months: 12, effects: { unrest: 2 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'war', 'The war of Varus: Sepphoris burns, and two thousand men die on crosses before Jerusalem\'s walls.');
+        }),
+      },
+      {
+        label: 'The ethnarch\'s own sword',
+        tooltip: 'Put it down without Rome: −3,000 manpower, −100 talents, +10 martial points — and the wounds fester longer: the same three provinces +2 unrest for 18 months.',
+        effects: guard('ev5_varus:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { manpower: -3000, treasury: -100, mar: 10 });
+          const marks = [
+            ['Jerusalem', 'varus_passover', 'The Passover Massacre'],
+            ['Sepphoris', 'varus_sepphoris', 'Sepphoris Burned'],
+            ['Jericho', 'varus_jericho', 'The Palace in Ashes'],
+          ];
+          for (const [prov, id, name] of marks) {
+            if (ctx.prov(prov)) {
+              ctx.helpers.addProvinceModifier(ctx, prov, {
+                id, name, months: 18, effects: { unrest: 2 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'war', 'The succession revolt is drowned by the ethnarch\'s own troops; the countryside remembers whose troops they were.');
+        }),
+      },
+    ],
+  },
+
+  // ── 26: Judaea a Roman province ───────────────────────────────────────────
+  {
+    id: 'ev5_provincia',
+    title: 'Provincia Iudaea',
+    worldLabel: 'Archelaus deposed; Judaea becomes a Roman province',
+    desc: 'Ten years of Archelaus have achieved the impossible: a joint embassy of '
+      + 'Jews and Samaritans, agreeing on one thing, which is him. Augustus hears '
+      + 'them, strips the ethnarch, and ships him to Vienne in Gaul — the empire\'s '
+      + 'polite oubliette. There will be no third Herod in Jerusalem: Judaea passes '
+      + 'under direct rule, a minor province governed by a prefect of the equestrian '
+      + 'order from Caesarea, the vestments of the high priest locked in the Antonia '
+      + 'between feasts. Rome will appoint the high priests now, and unmake them at '
+      + 'pleasure.',
+    forTag: 'both',
+    date: { y: 6, m: 6 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A prefect from Caesarea',
+        tooltip: 'Coponius governs as Prefect of Judaea: −20 legitimacy (a foreign hand on the vestments), +1 stability — Roman order is at least order. Rome\'s peace: −0.5 unrest everywhere for 10 years.',
+        effects: guard('ev5_provincia:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          if (!alive(ctx, 'ROM')) {
+            // No Rome to annex anyone: the ethnarchy stumbles on alone.
+            ctx.helpers.adjust(ctx, 'HER', { stability: -1 });
+            ctx.helpers.chronicle(ctx, 'era', 'With no Rome left to depose him, Archelaus keeps his diminished throne — alternate history keeps its own counsel.');
+            return;
+          }
+          ctx.helpers.setRuler(ctx, 'HER', { name: 'Coponius', title: 'Prefect of Judaea', gov: 2, infl: 1, mar: 2, age: 40 });
+          ctx.helpers.setHeir(ctx, 'HER', null);
+          ctx.helpers.adjust(ctx, 'HER', { legitimacy: -20, stability: 1 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'provincia_iudaea', name: 'Provincia Iudaea', months: 120,
+            effects: { unrestAll: -0.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'Archelaus is deposed to Vienne in Gaul; Judaea becomes a Roman province under a prefect of the equestrian order.');
+        }),
+      },
+      {
+        label: 'Beg the emperor for Antipas instead',
+        tooltip: '−100 talents of embassy and gifts: a Herodian keeps the throne (Antipas rules, +10 legitimacy) — but Rome\'s opinion −30, and no Roman peace follows.',
+        effects: guard('ev5_provincia:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -100, legitimacy: 10 });
+          ctx.helpers.setRuler(ctx, 'HER', { name: 'Herod Antipas', title: 'Ethnarch of Judaea', gov: 3, infl: 3, mar: 2, age: 26 });
+          const rom = ctx.game.tags.ROM;
+          if (rom) {
+            if (!rom.opinion) rom.opinion = {};
+            rom.opinion.HER = Math.max(-200, (rom.opinion.HER || 0) - 30);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Gold and pleading keep a Herodian in Jerusalem: Antipas takes the ethnarchy his brother lost.');
+        }),
+      },
+    ],
+  },
+
+  // ── 27: the census, and the fourth philosophy ─────────────────────────────
+  {
+    id: 'ev5_census',
+    title: 'The Census of Quirinius',
+    worldLabel: 'The census of Quirinius; the fourth philosophy is born',
+    desc: 'Quirinius, legate of Syria, orders what every new province gets: a census, '
+      + 'so that Rome may know what it owns. Property is declared, valued, registered '
+      + '— and in Galilee a teacher named Judas begins to preach that the registration '
+      + 'itself is slavery, that God alone is master, and that a man who writes his '
+      + 'field into a Roman ledger has written himself out of the covenant. The high '
+      + 'priest talks most of the country into compliance. The rest become something '
+      + 'new — a fourth philosophy beside the three old schools — and its harvest is '
+      + 'sixty years off.',
+    forTag: 'both',
+    date: { y: 6, m: 10 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The assessment proceeds',
+        tooltip: 'Rome counts everything: +120 talents of assessed revenue — and the fourth philosophy takes root: +0.5 unrest everywhere, permanently. Sixty years from now, this bill comes due.',
+        effects: guard('ev5_census:0', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'fourthPhilosophy', true);
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 120 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'fourth_philosophy', name: 'The Fourth Philosophy', months: -1,
+            effects: { unrestAll: 0.5 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The census of Quirinius registers Judaea into the Roman ledger; Judas the Galilean preaches no master but God. The fourth philosophy is born, and its harvest is sixty years off.');
+        }),
+      },
+      {
+        label: 'Register gently, assess lightly',
+        tooltip: 'The high priest\'s compromise: only +40 talents assessed, the Sanhedrin +8 approval — and the new zeal finds thinner soil: +0.25 unrest everywhere, permanently.',
+        effects: guard('ev5_census:1', (ctx) => {
+          if (!alive(ctx, 'HER')) return;
+          ctx.helpers.setFlag(ctx, 'fourthPhilosophy', true);
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 40 });
+          ctx.helpers.factionShift(ctx, 'HER', 'sanhedrin', 8);
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'fourth_philosophy', name: 'The Fourth Philosophy', months: -1,
+            effects: { unrestAll: 0.25 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The census passes gently under the high priest\'s hand — but in Galilee the fourth philosophy is preached all the same.');
+        }),
+      },
+    ],
+  },
 ];
