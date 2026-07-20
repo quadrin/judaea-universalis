@@ -685,6 +685,16 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     } else if (d.theirOverlord) {
       status = `Client of ${d.theirOverlordName || d.theirOverlord}`;
     }
+    // SPEC §67: an open wound outranks pleasantries on the status line.
+    if (d.grudge && !d.atWarWithUs) {
+      status = (status === '—' ? '' : status + ' · ')
+        + `They remember ${d.grudge.count} lost province${d.grudge.count > 1 ? 's' : ''}`;
+      cls = 'neg';
+      refs.dipStatus.dataset.tt = `We hold land they lost to us in war (${d.grudge.names}). `
+        + `Their opinion of us is capped at ${d.grudge.ceiling} until the land is theirs again.`;
+    } else if (refs.dipStatus.dataset) {
+      delete refs.dipStatus.dataset.tt;
+    }
     setText(refs.dipStatus, status);
     refs.dipStatus.classList.toggle('pos', cls === 'pos');
     refs.dipStatus.classList.toggle('neg', cls === 'neg');

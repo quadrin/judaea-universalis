@@ -1541,6 +1541,12 @@ export function switchTagCore(ctx, from, to) {
       t.opinion[to] = t.opinion[from];
       delete t.opinion[from];
     }
+    // Grudge books follow the new name on both sides (SPEC §67): a renamed
+    // conqueror is still sitting on the same land.
+    if (t.grudges && t.grudges[from] !== undefined) {
+      t.grudges[to] = t.grudges[from];
+      delete t.grudges[from];
+    }
   }
   for (const s of g.subsidies || []) {
     if (!s) continue;
@@ -1953,11 +1959,63 @@ export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
   return t && t.opinion ? clamp(Math.round(num(t.opinion[of])), -200, 200) : 0;
 }
+// The lost lands are remembered (SPEC §67). When a court loses provinces in
+// war — at the peace table or by the sword — it records the taker in
+// `tag.grudges[taker] = { provs: [ids], y, m }`. While the taker still owns
+// any of that land, the victim's opinion of them cannot be raised above a
+// deep negative ceiling: envoys and gifts do not talk a court out of its
+// occupied patrimony. The grudge dies only when the land stops being the
+// taker's (returned, retaken, or either house falls) — monthlyOpinionDrift
+// prunes it — and even then the wound heals only at ordinary drift speed.
+export function recordGrudge(ctx, victim, taker, provId) {
+  const g = ctx.game;
+  const t = g.tags[victim];
+  if (!t || !taker || victim === taker || !(provId | 0)) return;
+  if (!t.grudges) t.grudges = {};
+  const gr = t.grudges[taker] || (t.grudges[taker] = { provs: [], y: g.date.y, m: g.date.m });
+  if (gr.provs.indexOf(provId | 0) < 0) gr.provs.push(provId | 0);
+  gr.y = g.date.y; gr.m = g.date.m;
+  // The wound is fresh: the victim's opinion drops straight to the ceiling.
+  if (!t.opinion) t.opinion = {};
+  const cap = grudgeCeiling(ctx, victim, taker);
+  t.opinion[taker] = Math.min(Math.round(num(t.opinion[taker])), cap);
+}
+// The recorded provinces the taker still actually owns — the live part of the
+// grudge. Null when no grudge is held (or either house has fallen).
+export function liveGrudge(ctx, victim, taker) {
+  const g = ctx.game;
+  const t = g.tags[victim];
+  const gr = t && t.grudges && t.grudges[taker];
+  if (!gr || !Array.isArray(gr.provs)) return null;
+  if (!t.alive || !g.tags[taker] || !g.tags[taker].alive) return null;
+  const held = gr.provs.filter((id) => {
+    const p = ctx.byId ? ctx.byId(id) : g.provinces[id];
+    return p && !p.impassable && p.owner === taker;
+  });
+  return held.length ? held : null;
+}
+// The warmest the victim can be made to feel about the taker while the taker
+// sits on the land: -(base + perProv × provinces held), floored at -max.
+// +200 (no ceiling) when no grudge is live.
+export function grudgeCeiling(ctx, victim, taker) {
+  const held = liveGrudge(ctx, victim, taker);
+  if (!held) return 200;
+  const B = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  return -Math.min(num(B.grudgeCeilingMax, 180),
+    num(B.grudgeCeilingBase, 100) + num(B.grudgeCeilingPerProv, 10) * (held.length - 1));
+}
 export function addOpinion(ctx, whose, of, delta) {
   const t = ctx.game.tags[whose];
   if (!t || !of || whose === of) return;
   if (!t.opinion) t.opinion = {};
-  t.opinion[of] = clamp(Math.round(num(t.opinion[of]) + num(delta)), -200, 200);
+  const cur = Math.round(num(t.opinion[of]));
+  let next = clamp(Math.round(cur + num(delta)), -200, 200);
+  // A live grudge caps what goodwill can buy (SPEC §67): positive deltas
+  // cannot push opinion past the ceiling. Anything already above the ceiling
+  // (a scripted treaty, an old friendship) is left where it stands rather
+  // than dragged down here — the monthly drift owns that.
+  if (num(delta) > 0) next = Math.min(next, Math.max(cur, grudgeCeiling(ctx, whose, of)));
+  t.opinion[of] = next;
 }
 // Cooldowns live in game.diploCooldowns['<me>><them>:<kind>'] = {y, m} — the
 // first month the action is available again. Created lazily; older saves lack
@@ -2456,6 +2514,7 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
       if (conqueror) conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
       p.integration = 0; // integration is with a sovereign, not the soil (SPEC §66)
       p.integrating = null; // cleared before the owner change: no inherited rename
+      recordGrudge(ctx, p.owner, p.controller, i); // the lost lands are remembered (SPEC §67)
       changeOwnerCore(ctx, p, p.controller); // uti possidetis
       p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
       p.conversion = null;
@@ -2501,6 +2560,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // change so the incoming owner cannot inherit a rename it never earned.
     p.integration = 0;
     p.integrating = null;
+    recordGrudge(ctx, p.owner, byTag, id); // the lost lands are remembered (SPEC §67)
     changeOwnerCore(ctx, p, byTag);
     changeControllerCore(ctx, p, byTag);
     p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);

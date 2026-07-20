@@ -492,6 +492,15 @@ export const DEFINES = {
     infamyHumiliate: 5,      // infamy for a humiliation
     infamyDecayPeace: 1,     // infamy shed per month at peace...
     infamyDecayWar: 0.25,    // ...and while at war — conquest mid-war is not forgotten
+    // The lost lands are remembered (SPEC §67): while a conqueror still sits
+    // on land taken from a court in war, that court's opinion of the taker is
+    // capped at -(base + perProv × provinces still held), up to -max. Envoys
+    // and gifts cannot raise it past the cap; only giving the land back (or
+    // losing it) ends the grudge, and the wound then heals at drift speed.
+    grudgeCeilingBase: 100,  // cap starts at -100 for a single lost province
+    grudgeCeilingPerProv: 10, // ...and deepens per additional province held
+    grudgeCeilingMax: 180,   // the coldest a court can be compelled to sit
+    grudgeBite: 4,           // monthly pull toward the cap while above it
     coalitionInfamy: 30,     // infamy at which the coalition may march on its own
     coalitionStrength: 1.2,  // combined coalition strength needed, × the expander's
     coalitionChance: 0.1,    // monthly punitive-war roll once conditions hold

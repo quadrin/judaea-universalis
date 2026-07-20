@@ -3,6 +3,7 @@
 
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
+  liveGrudge, grudgeCeiling,
 } from './military.js';
 import { popTension, popTotal } from './population.js';
 
@@ -223,7 +224,26 @@ export function monthlyOpinionDrift(ctx) {
   }
   for (const tag of Object.keys(g.tags)) {
     const t = g.tags[tag];
-    if (!t || !t.opinion) continue;
+    if (!t) continue;
+    // The lost lands are remembered (SPEC §67): prune grudge entries whose
+    // land the taker no longer owns (returned, retaken, or a fallen house) —
+    // from then on the old wound heals at ordinary drift speed below. While
+    // a grudge is live, opinion above the ceiling is pulled down toward it.
+    const grudged = [];
+    if (t.grudges) {
+      for (const taker of Object.keys(t.grudges)) {
+        if (!liveGrudge(ctx, tag, taker)) { delete t.grudges[taker]; continue; }
+        grudged.push(taker);
+        const cap = grudgeCeiling(ctx, tag, taker);
+        if (!t.opinion) t.opinion = {};
+        const v = Math.round(num(t.opinion[taker]));
+        if (v > cap) {
+          t.opinion[taker] = clamp(Math.max(cap, v - num(BALd.grudgeBite, 4)), -200, 200);
+        }
+      }
+      if (!Object.keys(t.grudges).length) delete t.grudges;
+    }
+    if (!t.opinion) continue;
     for (const bad of infamous) {
       if (bad === tag || t.overlord === bad || (g.tags[bad].allies || []).indexOf(tag) >= 0) continue;
       t.opinion[bad] = clamp(num(t.opinion[bad], 0) - Math.ceil(num(g.tags[bad].aggression) / 15), -200, 200);
@@ -231,6 +251,7 @@ export function monthlyOpinionDrift(ctx) {
     for (const other of Object.keys(t.opinion)) {
       if (other === tag) continue;
       if (infamous.indexOf(other) >= 0 && num(t.opinion[other]) < 0) continue; // grudges against conquerors don't fade yet
+      if (grudged.indexOf(other) >= 0) continue; // occupied patrimony does not warm toward neutral
       const target = (t.allies || []).indexOf(other) >= 0 ? 60 : 0;
       const v = Math.round(num(t.opinion[other]));
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
