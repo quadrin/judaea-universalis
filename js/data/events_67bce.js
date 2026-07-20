@@ -868,4 +868,1245 @@ export const EVENTS_67 = [
       },
     ],
   },
+
+  // ══ THE HERODIAN DECADES, 48–29 BCE ═══════════════════════════════════════
+  // The chronicle continues past the bookmark's verdicts (SPEC §32: a chapter
+  // verdict never closes the book). Source spine: Josephus, Antiquitates XIV–XV;
+  // Bellum I.9–22; Cassius Dio XLII–LI; Suetonius, Divus Iulius 84. The house of
+  // Antipater rides the Hyrcanan line (HYR); Antigonus inherits his father's
+  // cause (ARI). Every effect is guarded — by 48 BCE the world may have
+  // diverged far from the parchment.
+
+  // ── 14 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_pharsalus',
+    title: 'No Grave but the Sand',
+    worldLabel: 'Pharsalus — Caesar breaks Pompey; murder at Pelusium',
+    desc: 'At Pharsalus in Thessaly, Caesar\'s thin veterans broke the largest army the '
+      + 'Republic ever raised against itself, and Pompey the Great — conqueror of the '
+      + 'East, organizer of Syria, the man who walked through the Veil into the Holy of '
+      + 'Holies and touched nothing — fled to Egypt in a hired ship. The boy-king\'s '
+      + 'ministers met him in the shallows off Pelusium and stabbed him in the back as he '
+      + 'read over his landing speech. In Jerusalem the news is repeated slowly, like a '
+      + 'verse: the profaner of the sanctuary has no grave but the sand.',
+    forTag: 'both',
+    date: { y: -48, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Lord repays; the sand receives',
+        tooltip: 'Rome consolidates under one master (+10 legitimacy). The Profaned Veil is lifted from every province of the faith; each surviving Judaean court +5 legitimacy.',
+        effects: guard('ev4_pharsalus:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          if (h.getFlag(ctx, 'veilProfaned')) {
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.religion !== 'judaism') continue;
+              h.removeModifier(ctx, p.name, 'profaned_veil');
+            }
+          }
+          for (const t of ['HYR', 'ARI']) {
+            if (alive(ctx, t)) h.adjust(ctx, t, { legitimacy: 5 });
+          }
+          h.setFlag(ctx, 'pompeyDead', true);
+          h.chronicle(ctx, 'war', 'Pharsalus: Caesar breaks Pompey, who is murdered on the beach at Pelusium.');
+        }),
+      },
+      {
+        label: 'Light no lamps; count the consequences',
+        tooltip: 'Rome consolidates (+10 legitimacy). The courts study the new order instead of the old grudge: each surviving Judaean court +15 governance points.',
+        effects: guard('ev4_pharsalus:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 10 });
+          for (const t of ['HYR', 'ARI']) {
+            if (alive(ctx, t)) h.adjust(ctx, t, { gov: 15 });
+          }
+          h.setFlag(ctx, 'pompeyDead', true);
+          h.chronicle(ctx, 'war', 'Pharsalus: Caesar breaks Pompey, who is murdered on the beach at Pelusium.');
+        }),
+      },
+    ],
+  },
+
+  // ── 15 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_jewish_legion_alexandria',
+    title: 'The Road to Alexandria',
+    desc: 'Caesar has chased his dead rival into Egypt with two under-strength legions and '
+      + 'is now besieged in Alexandria by the whole Ptolemaic army — the conqueror of the '
+      + 'world trapped in a palace quarter. Mithridates of Pergamon marches to relieve him '
+      + 'and stalls at Pelusium, and it is Antipater who unsticks the war: three thousand '
+      + 'Jewish heavy infantry down the coast road, and a letter from the high priest that '
+      + 'persuades the Jews of Onias\' land to open the road to Memphis. Caesar keeps '
+      + 'accounts. Everyone knows Caesar keeps accounts.',
+    forTag: 'HYR',
+    date: { y: -47, m: 2 },
+    major: true,
+    // The AI sends the men when it can spare them (engine catches throws).
+    aiOption: (ctx) => {
+      try {
+        const t = ctx.game.tags.HYR;
+        return t && (t.manpower || 0) > 2500 ? 0 : 1;
+      } catch (e) { return 0; }
+    },
+    options: [
+      {
+        label: 'Three thousand men down the coast road',
+        tooltip: '−1,500 manpower, −50 talents. Rome\'s opinion of us +40; the land of Onias opens its gates (Leontopolis −1 unrest, 12 months). Caesar will remember.',
+        effects: guard('ev4_jewish_legion_alexandria:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.adjust(ctx, 'HYR', { manpower: -1500, treasury: -50 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 40);
+          }
+          h.addProvinceModifier(ctx, 'Leontopolis', {
+            id: 'onias_gate', name: 'The Land of Onias Opens the Road', months: 12,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'jewsOpenedTheRoad', true);
+          h.notify(ctx, {
+            title: 'Antipater marches for Caesar',
+            text: 'Three thousand Jewish soldiers cross the frontier at Pelusium; the Jews of Onias\' land open the road to Memphis.',
+            type: 'info', provName: 'Pelusium',
+          });
+        }),
+      },
+      {
+        label: 'Egypt\'s wars are Egypt\'s',
+        tooltip: 'Keep the men home. Rome\'s opinion of us −10 — Caesar keeps those accounts too.',
+        effects: guard('ev4_jewish_legion_alexandria:1', (ctx) => {
+          const g = ctx.game;
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.max(-200, (g.tags.ROM.opinion.HYR || 0) - 10);
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 16 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_caesars_charter',
+    title: 'Caesar\'s Gratitude',
+    desc: 'The dictator pays his debts in parchment, which outlasts silver: Hyrcanus is '
+      + 'confirmed ethnarch and high priest of the Jews in perpetuity; the walls Pompey '
+      + 'threw down may rise again; Joppa and its harbor dues come home; the tribute is '
+      + 'remitted in every seventh year, because Caesar has read that the land itself '
+      + 'keeps the Sabbath. And a line near the bottom, easy to miss: Antipater the '
+      + 'Idumean, citizen of Rome, free of tribute, procurator of Judaea — the servant '
+      + 'now holds a Roman title the master cannot revoke.',
+    forTag: 'both',
+    date: { y: -47, m: 7 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Read the charters in every synagogue',
+        tooltip: 'Hyrcanus: +15 legitimacy, +1 stability; "Caesar\'s Charter" (+8% income, permanent); Jerusalem rebuilds her walls (−1 unrest, permanent); Joppa returns if Rome holds it; Rome\'s opinion +30.',
+        effects: guard('ev4_caesars_charter:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 15, stability: 1 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'caesars_charter', name: 'Caesar\'s Charter', months: -1,
+            effects: { incomeMult: 1.08 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'walls_rebuilt', name: 'The Walls Rise Again', months: -1,
+            effects: { unrest: -1 },
+          });
+          const joppa = ctx.prov('Joppa');
+          if (joppa && joppa.controller === 'ROM') h.changeOwner(ctx, 'Joppa', 'HYR');
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 30);
+          }
+          h.setFlag(ctx, 'caesarsCharter', true);
+          h.chronicle(ctx, 'diplomacy', 'Caesar confirms Hyrcanus as ethnarch and high priest; Antipater is made procurator of Judaea and citizen of Rome.');
+        }),
+      },
+      {
+        label: 'Bank the sabbatical remission',
+        tooltip: 'The quieter reading: Hyrcanus +10 legitimacy, +150 talents held back from the tax farmers; Rome\'s opinion +15. No charter modifier — parchment unread is parchment spent.',
+        effects: guard('ev4_caesars_charter:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 10, treasury: 150 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 15);
+          }
+          h.setFlag(ctx, 'caesarsCharter', true);
+          h.chronicle(ctx, 'diplomacy', 'Caesar confirms Hyrcanus as ethnarch; the sabbatical-year remission is banked before it is read aloud.');
+        }),
+      },
+    ],
+  },
+
+  // ── 17 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_sons_of_antipater',
+    title: 'The Procurator Sets His Sons',
+    desc: 'Antipater, who never takes anything for himself twice when once will do, '
+      + 'distributes the kingdom the way a careful man banks a fortune: Phasael, the '
+      + 'steady elder, receives Jerusalem and the hill country; Galilee — bandit-ridden, '
+      + 'frontier Galilee, where reputations are made — goes to the younger son, Herod, '
+      + 'who is twenty-five and already walks like a man who has read his own future. The '
+      + 'ethnarch signs the appointments. It is not entirely clear he read them first.',
+    forTag: 'HYR',
+    date: { y: -47, m: 10 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Galilee for the young one',
+        tooltip: '+10 influence points; Herod (2/3/4) takes command of new Galilean levies at Sepphoris. The house of Antipater grows a second head.',
+        effects: guard('ev4_sons_of_antipater:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { infl: 10 });
+          h.spawnArmy(ctx, 'HYR', 'Sepphoris', {
+            inf: 2, cav: 1, name: 'Levies of Galilee',
+            general: { name: 'Herod', fire: 2, shock: 3, maneuver: 4 },
+          });
+          h.setFlag(ctx, 'herodRises', true);
+        }),
+      },
+      {
+        label: 'The offices stay Hasmonean',
+        tooltip: '+5 legitimacy — and the House of Antipater takes note of the slight (faction approval falls).',
+        effects: guard('ev4_sons_of_antipater:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 5 });
+          h.factionShift(ctx, 'HYR', 'antipater', -15);
+        }),
+      },
+    ],
+  },
+
+  // ── 18 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_sanhedrin_herod',
+    title: 'The Young Man in Purple',
+    desc: 'Herod\'s first act in Galilee was to hunt down Hezekiah the brigand-chief and '
+      + 'execute him with his whole band — no trial, no Sanhedrin, no law but the sword '
+      + 'and the applause of the Syrian towns. The mothers of the slain cried out in the '
+      + 'Temple daily until the council summoned him. He came: in purple, hair dressed, '
+      + 'a bodyguard at the door, and the judges studied the floor — all but old Sameas, '
+      + 'who rose and said: "Know this, that he whom you would acquit for fear will one '
+      + 'day punish you." The ethnarch, catching a look from the Roman legate\'s man, '
+      + 'adjourned the court. Herod rode for Damascus before nightfall, and he will '
+      + 'remember every face in that room.',
+    forTag: 'HYR',
+    date: { y: -46, m: 6 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Adjourn the trial',
+        tooltip: 'Galilee is quiet (−1 unrest in Sepphoris and Gischala, 12 months); +10 martial points — but −5 legitimacy, the Pharisees seethe, and Herod remembers.',
+        effects: guard('ev4_sanhedrin_herod:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: -5, mar: 10 });
+          h.factionShift(ctx, 'HYR', 'pharisees', -10);
+          for (const pn of ['Sepphoris', 'Gischala']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'hezekiah_broken', name: 'The Brigands Broken', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
+          h.setFlag(ctx, 'herodRemembers', true);
+        }),
+      },
+      {
+        label: 'Let Sameas be heard',
+        tooltip: 'The court condemns; Herod flees his command to Damascus (Herod is removed as general). +10 legitimacy, the Pharisees approve, Galilee still quiet — but −10 martial points.',
+        effects: guard('ev4_sanhedrin_herod:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 10, mar: -10 });
+          h.factionShift(ctx, 'HYR', 'pharisees', 15);
+          h.killGeneral(ctx, 'HYR', 'Herod');
+          for (const pn of ['Sepphoris', 'Gischala']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'hezekiah_broken', name: 'The Brigands Broken', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
+          h.setFlag(ctx, 'herodRemembers', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 19 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_ides_of_march',
+    title: 'The Ides of March',
+    worldLabel: 'Caesar is assassinated in the Senate house',
+    desc: 'Twenty-three wounds in the Senate house, at the foot of Pompey\'s statue. '
+      + 'Caesar — who confirmed the ethnarch, rebuilt the walls, remitted the seventh '
+      + 'year, and never once asked the Jews to break their Law — is dead, and the men '
+      + 'who killed him call it liberty. Suetonius will record that of all the foreign '
+      + 'peoples who mourned at the pyre, the Jews came longest: night after night in the '
+      + 'Forum, chanting the dirges each in their own fashion, for the one Roman who had '
+      + 'been, in his way, a friend.',
+    forTag: 'both',
+    date: { y: -44, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Night after night at the pyre',
+        tooltip: 'Rome: −1 stability, −15 legitimacy. Each surviving Judaean court: +5 legitimacy; Rome\'s opinion of each +10 — grief, publicly kept, is also policy.',
+        effects: guard('ev4_ides_of_march:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -15 });
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { legitimacy: 5 });
+            if (g.tags.ROM && g.tags.ROM.opinion) {
+              g.tags.ROM.opinion[t] = Math.min(200, (g.tags.ROM.opinion[t] || 0) + 10);
+            }
+          }
+          h.setFlag(ctx, 'caesarDead', true);
+          h.chronicle(ctx, 'war', 'Caesar is assassinated; of all foreigners, the Jews mourn longest at the pyre.');
+        }),
+      },
+      {
+        label: 'Guard the charters before the pyre cools',
+        tooltip: 'Rome: −1 stability, −15 legitimacy. Each surviving Judaean court: +20 governance points — the dead man\'s grants must outlive the dead man\'s party.',
+        effects: guard('ev4_ides_of_march:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { stability: -1, legitimacy: -15 });
+          for (const t of ['HYR', 'ARI']) {
+            if (alive(ctx, t)) h.adjust(ctx, t, { gov: 20 });
+          }
+          h.setFlag(ctx, 'caesarDead', true);
+          h.chronicle(ctx, 'war', 'Caesar is assassinated; his eastern charters are copied and hidden before the pyre cools.');
+        }),
+      },
+    ],
+  },
+
+  // ── 20 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_cassius_talents',
+    title: 'Seven Hundred Talents',
+    desc: 'Cassius the tyrannicide holds Syria now, and a man raising an army against '
+      + 'Antony and the young Caesar does not ask; he assesses. Judaea\'s share is seven '
+      + 'hundred talents, due at once. Herod delivers Galilee\'s hundred first, wrapped '
+      + 'and inventoried, and is made stratégos of Coele-Syria for his promptness. The '
+      + 'towns that cannot pay learn the other arithmetic: Gophna, Emmaus, Lydda and '
+      + 'Thamna are marked for the slave-dealers, populations and all, to balance the '
+      + 'ledger.',
+    forTag: 'both',
+    date: { y: -43, m: 5 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pay, by any means, in full',
+        tooltip: 'Each surviving Judaean court −120 talents; Rome\'s opinion of each +20. Hyrcanus\' court: +10 martial points (Herod, stratégos of Coele-Syria, delivers first).',
+        effects: guard('ev4_cassius_talents:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -120 });
+            if (g.tags.ROM && g.tags.ROM.opinion) {
+              g.tags.ROM.opinion[t] = Math.min(200, (g.tags.ROM.opinion[t] || 0) + 20);
+            }
+          }
+          if (alive(ctx, 'HYR')) h.adjust(ctx, 'HYR', { mar: 10 });
+          h.chronicle(ctx, 'diplomacy', 'Cassius exacts 700 talents from Judaea; Herod delivers Galilee\'s share first and is named stratégos of Coele-Syria.');
+        }),
+      },
+      {
+        label: 'The quota fails; the dealers come',
+        tooltip: 'Each surviving court −40 talents only — but Emmaus and Lydda are sold into slavery (+3 unrest, 24 months) and Rome\'s opinion of each −30.',
+        effects: guard('ev4_cassius_talents:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -40 });
+            if (g.tags.ROM && g.tags.ROM.opinion) {
+              g.tags.ROM.opinion[t] = Math.max(-200, (g.tags.ROM.opinion[t] || 0) - 30);
+            }
+          }
+          for (const pn of ['Emmaus', 'Lydda']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'sold_into_slavery', name: 'Sold by the Tyrannicide', months: 24,
+              effects: { unrest: 3 },
+            });
+          }
+          h.chronicle(ctx, 'war', 'Four towns fail Cassius\' quota and are sold into slavery: Gophna, Emmaus, Lydda, Thamna.');
+        }),
+      },
+    ],
+  },
+
+  // ── 21 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_antipater_poisoned',
+    title: 'Poison at the Ethnarch\'s Table',
+    desc: 'Malichus wanted the procuratorship and took the shortest road: the cupbearer '
+      + 'was bought, and Antipater the Idumean — who had survived three Roman civil wars '
+      + 'by always being useful to the winner before the war started — died at Hyrcanus\' '
+      + 'own table, between the fish and the wine. Malichus weeps loudest at the funeral. '
+      + 'Herod, in Galilee, writes to Cassius for permission of a certain kind, and '
+      + 'receives it by return courier.',
+    forTag: 'HYR',
+    date: { y: -43, m: 11 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Roman daggers on the beach at Tyre',
+        tooltip: 'Antipater is dead; his arrangements fray (lose Antipater\'s modifiers). Herod avenges his father — Malichus dies at Tyre: +10 martial points, −5 legitimacy (murder answers murder at court).',
+        effects: guard('ev4_antipater_poisoned:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.killGeneral(ctx, 'HYR', 'Antipater the Idumean');
+          h.removeModifier(ctx, 'HYR', 'antipaters_web');
+          h.removeModifier(ctx, 'HYR', 'antipaters_credit');
+          h.adjust(ctx, 'HYR', { mar: 10, legitimacy: -5 });
+          h.setFlag(ctx, 'antipaterDead', true);
+          h.notify(ctx, {
+            title: 'Malichus dies at Tyre',
+            text: 'Roman daggers, borrowed with Cassius\' blessing, kill Antipater\'s poisoner on the beach outside Tyre. Herod is head of his house now.',
+            type: 'war', provName: 'Tyre',
+          });
+        }),
+      },
+      {
+        label: 'Let the law have Malichus',
+        tooltip: 'Antipater is dead; his arrangements fray. The courts move slowly: +10 governance points, but "The Web Unravels" (−10% income, 12 months) while the fixer\'s debtors test the heirs.',
+        effects: guard('ev4_antipater_poisoned:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.killGeneral(ctx, 'HYR', 'Antipater the Idumean');
+          h.removeModifier(ctx, 'HYR', 'antipaters_web');
+          h.removeModifier(ctx, 'HYR', 'antipaters_credit');
+          h.adjust(ctx, 'HYR', { gov: 10 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'web_unravels', name: 'The Web Unravels', months: 12,
+            effects: { incomeMult: 0.9 },
+          });
+          h.setFlag(ctx, 'antipaterDead', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 22 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_antony_daphne',
+    title: 'Antony at Daphne',
+    desc: 'Philippi has changed the East\'s master again, and Antony holds court in the '
+      + 'pleasure-groves of Daphne outside Antioch. A hundred notables of the Jews come '
+      + 'to accuse the sons of Antipater; Antony, who remembers young Herod from '
+      + 'Gabinius\' campaigns and remembers Antipater\'s money from his own thin years, '
+      + 'listens with the patience of a man who has already decided. Herod and Phasael '
+      + 'are named tetrarchs of the Jews. A second delegation, a thousand strong, tries '
+      + 'again at Tyre; his soldiers meet it on the shore, and not gently.',
+    forTag: 'both',
+    date: { y: -41, m: 10 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Tetrarchs by Antony\'s word',
+        tooltip: 'Hyrcanus\' court: +20 influence points, +5 legitimacy; Rome\'s opinion +20 — but the delegation whipped at Tyre is not forgotten (Jerusalem +1 unrest, 12 months).',
+        effects: guard('ev4_antony_daphne:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { infl: 20, legitimacy: 5 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 20);
+          }
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'tyre_scourging', name: 'The Delegation Scourged at Tyre', months: 12,
+            effects: { unrest: 1 },
+          });
+          h.setFlag(ctx, 'tetrarchsNamed', true);
+          h.chronicle(ctx, 'diplomacy', 'Antony names Herod and Phasael tetrarchs of the Jews; the protesting delegation at Tyre is driven off by soldiers.');
+        }),
+      },
+      {
+        label: 'Buy the delegations a hearing',
+        tooltip: 'Each surviving Judaean court −80 talents to keep the accusers and the soldiers apart. No tetrarchy boost, no scourging, no unrest — Antony pockets the silver and decides nothing.',
+        effects: guard('ev4_antony_daphne:1', (ctx) => {
+          const h = ctx.helpers;
+          for (const t of ['HYR', 'ARI']) {
+            if (alive(ctx, t)) h.adjust(ctx, t, { treasury: -80 });
+          }
+          h.setFlag(ctx, 'tetrarchsNamed', true);
+          h.chronicle(ctx, 'diplomacy', 'Antony at Daphne hears the Jewish delegations, takes their gifts, and confirms everyone in ambiguity.');
+        }),
+      },
+    ],
+  },
+
+  // ── 23 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_parthian_flood',
+    title: 'The Parthian Flood',
+    worldLabel: 'Pacorus and Barzapharnes overrun Syria',
+    desc: 'The Euphrates has finally been a door. Pacorus the king\'s son and the satrap '
+      + 'Barzapharnes pour across the river and Syria goes down like a tent in a storm — '
+      + 'and riding with the horse-archers comes Antigonus, son of Aristobulus, who has '
+      + 'bought the invasion of his own country at a quoted price: a thousand talents of '
+      + 'silver and five hundred women, payable on delivery of Jerusalem. The Hasmonean '
+      + 'claim rides home under Parthian lances.',
+    forTag: 'both',
+    date: { y: -40, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The river is a door',
+        tooltip: 'Parthian armies enter Syria; Parthia declares war on Rome and on Hyrcanus\' court. If the Aristobulid line survives, Antigonus (2/3/3) takes its crown, +10 legitimacy, and turns on Hyrcanus.',
+        effects: guard('ev4_parthian_flood:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'PAR')) return;
+          h.spawnArmy(ctx, 'PAR', 'Damascus', {
+            inf: 4, cav: 8, name: 'Horse of Pacorus',
+            general: { name: 'Pacorus', fire: 3, shock: 4, maneuver: 4 },
+          });
+          h.spawnArmy(ctx, 'PAR', 'Chalcis', {
+            inf: 3, cav: 5, name: 'Riders of Barzapharnes',
+            general: { name: 'Barzapharnes', fire: 2, shock: 3, maneuver: 4 },
+          });
+          const atWar = (a, b) => (g.wars || []).some((w) => {
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
+          });
+          if (alive(ctx, 'ROM') && !atWar('PAR', 'ROM')) h.declareWar(ctx, 'PAR', 'ROM', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'HYR') && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'ARI')) {
+            h.setRuler(ctx, 'ARI', { name: 'Antigonus II Mattathias', title: 'King and High Priest', gov: 2, infl: 3, mar: 3, age: 38 });
+            h.adjust(ctx, 'ARI', { legitimacy: 10 });
+            if (g.tags.ARI && g.tags.ARI.opinion) g.tags.ARI.opinion.PAR = 100;
+            if (g.tags.PAR && g.tags.PAR.opinion) g.tags.PAR.opinion.ARI = 80;
+            if (alive(ctx, 'HYR') && !atWar('ARI', 'HYR')) h.declareWar(ctx, 'ARI', 'HYR', 'Antigonus\' Bid for the Crown');
+          }
+          h.setFlag(ctx, 'parthianFlood', true);
+          h.notify(ctx, {
+            title: 'The Parthians cross the Euphrates',
+            text: 'Pacorus and Barzapharnes overrun Syria. Antigonus son of Aristobulus rides with them, the price of Jerusalem already agreed.',
+            type: 'war', provName: 'Damascus',
+          });
+        }),
+      },
+      {
+        label: 'Silver for the satrap, before he asks',
+        tooltip: 'The flood comes all the same — but each surviving Judaean court pays −100 talents to be warned of its hour ("Forewarned": +5% morale, 12 months).',
+        effects: guard('ev4_parthian_flood:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -100 });
+            h.addTagModifier(ctx, t, {
+              id: 'forewarned', name: 'Forewarned', months: 12,
+              effects: { moraleMult: 1.05 },
+            });
+          }
+          if (!alive(ctx, 'PAR')) return;
+          h.spawnArmy(ctx, 'PAR', 'Damascus', {
+            inf: 4, cav: 8, name: 'Horse of Pacorus',
+            general: { name: 'Pacorus', fire: 3, shock: 4, maneuver: 4 },
+          });
+          h.spawnArmy(ctx, 'PAR', 'Chalcis', {
+            inf: 3, cav: 5, name: 'Riders of Barzapharnes',
+            general: { name: 'Barzapharnes', fire: 2, shock: 3, maneuver: 4 },
+          });
+          const atWar = (a, b) => (g.wars || []).some((w) => {
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
+          });
+          if (alive(ctx, 'ROM') && !atWar('PAR', 'ROM')) h.declareWar(ctx, 'PAR', 'ROM', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'HYR') && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'ARI')) {
+            h.setRuler(ctx, 'ARI', { name: 'Antigonus II Mattathias', title: 'King and High Priest', gov: 2, infl: 3, mar: 3, age: 38 });
+            h.adjust(ctx, 'ARI', { legitimacy: 10 });
+            if (g.tags.ARI && g.tags.ARI.opinion) g.tags.ARI.opinion.PAR = 100;
+            if (g.tags.PAR && g.tags.PAR.opinion) g.tags.PAR.opinion.ARI = 80;
+            if (alive(ctx, 'HYR') && !atWar('ARI', 'HYR')) h.declareWar(ctx, 'ARI', 'HYR', 'Antigonus\' Bid for the Crown');
+          }
+          h.setFlag(ctx, 'parthianFlood', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 24 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_night_flight',
+    title: 'The Night Flight',
+    desc: 'Jerusalem is betrayed by parley: Phasael and old Hyrcanus, invited to treat '
+      + 'with Barzapharnes, wake in chains. Phasael, denied a sword, dashes out his own '
+      + 'brains against the stone of his cell. Hyrcanus\' ears are cropped — some say by '
+      + 'Antigonus\' own teeth — so that no blemished man may ever again stand as high '
+      + 'priest. And Herod, who never went to a parley in his life, loads his household, '
+      + 'his mother, his betrothed Mariamne and eight hundred fighting men onto the night '
+      + 'road south, beating back pursuit at every defile, toward the rock of Masada and '
+      + 'the long way to Petra.',
+    forTag: 'both',
+    date: { y: -40, m: 8 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The night road to Masada',
+        tooltip: 'Hyrcanus\' court: −15 legitimacy (the high priest mutilated, the tetrarch dead), +10 martial points — the escape hardens the survivor. A household garrison holds Masada if we still control it.',
+        effects: guard('ev4_night_flight:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: -15, mar: 10 });
+          if (h.controls(ctx, 'HYR', 'Masada')) {
+            h.spawnArmy(ctx, 'HYR', 'Masada', {
+              inf: 1, name: 'Household of Herod',
+            });
+          }
+          h.setFlag(ctx, 'nightFlight', true);
+          h.chronicle(ctx, 'war', 'Jerusalem betrayed: Phasael dead by his own hand, Hyrcanus\' ears cropped, Herod on the night road to Masada and Petra.');
+        }),
+      },
+      {
+        label: 'Stand and die at the walls',
+        tooltip: 'No flight: −1,500 manpower and −10 legitimacy as the household is spent in the streets — but "Blood in the Gates" (+10% morale, 6 months) for those who remember it.',
+        effects: guard('ev4_night_flight:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { manpower: -1500, legitimacy: -10 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'blood_in_the_gates', name: 'Blood in the Gates', months: 6,
+            effects: { moraleMult: 1.1 },
+          });
+          h.setFlag(ctx, 'nightFlight', true);
+          h.chronicle(ctx, 'war', 'The household stands at the walls of Jerusalem and is spent there; Phasael dead, Hyrcanus mutilated.');
+        }),
+      },
+    ],
+  },
+
+  // ── 25 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_king_without_kingdom',
+    title: 'A King with No Kingdom',
+    desc: 'Rome, in winter. Herod came to beg a crown for Mariamne\'s young brother and '
+      + 'walked out with one for himself: Antony moved it, Octavian seconded it, the '
+      + 'Senate voted it in an afternoon — rex socius et amicus populi Romani, king of '
+      + 'Judaea. He left the Senate house between Antony and Caesar\'s heir and went up '
+      + 'to sacrifice on the Capitol, an Idumean commoner with a Hasmonean bride promised '
+      + 'and not one city in his kingdom actually his. The Senate has given him a title. '
+      + 'The sword must give him everything else.',
+    forTag: 'both',
+    date: { y: -40, m: 12 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Between Antony and Caesar\'s heir',
+        tooltip: 'Herod (4/4/5) becomes ruler of Hyrcanus\' realm: +20 legitimacy, Rome\'s opinion +60 — but every province of the faith murmurs ("An Idumean on the Throne": +1 unrest, 24 months).',
+        effects: guard('ev4_king_without_kingdom:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.setRuler(ctx, 'HYR', { name: 'Herod', title: 'King of Judaea', gov: 4, infl: 4, mar: 5, age: 33 });
+          h.setHeir(ctx, 'HYR', null);
+          h.adjust(ctx, 'HYR', { legitimacy: 20 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 60);
+          }
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'idumean_throne', name: 'An Idumean on the Throne', months: 24,
+              effects: { unrest: 1 },
+            });
+          }
+          h.setFlag(ctx, 'herodKing', true);
+          h.notify(ctx, {
+            title: 'The Senate names Herod king',
+            text: 'On Antony\'s motion, with Octavian consenting, Herod is voted king of Judaea — a king with no kingdom, and a sword to win one with.',
+            type: 'info', provName: 'Jerusalem',
+          });
+          h.chronicle(ctx, 'diplomacy', 'The Roman Senate names Herod king of Judaea; he sacrifices on the Capitol between Antony and Octavian.');
+        }),
+      },
+      {
+        label: 'Regent for the Hasmoneans',
+        tooltip: 'Herod takes the power but not the diadem: ruler of Hyrcanus\' realm as regent, +10 legitimacy, Rome\'s opinion +20, and no unrest — the throne stays formally Hasmonean.',
+        effects: guard('ev4_king_without_kingdom:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.setRuler(ctx, 'HYR', { name: 'Herod', title: 'Regent for the Hasmoneans', gov: 4, infl: 4, mar: 5, age: 33 });
+          h.adjust(ctx, 'HYR', { legitimacy: 10 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 20);
+          }
+          h.setFlag(ctx, 'herodKing', true);
+          h.chronicle(ctx, 'diplomacy', 'The Senate offers Herod a crown; he takes the power and leaves the diadem, ruling as regent for the Hasmonean line.');
+        }),
+      },
+    ],
+  },
+
+  // ── 26 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_arbela_caves',
+    title: 'The Caves of Arbela',
+    desc: 'The reconquest goes by the book Antipater never wrote down: Joppa first, so the '
+      + 'sea is a friend; Masada relieved, so the family debt is paid; then Galilee, where '
+      + 'the brigands of the cliffs above Magdala live in caves no ladder reaches. Herod '
+      + 'lowers soldiers down the cliff face in cradles on iron chains, with grappling '
+      + 'hooks and fire, and hauls the brigands out of the rock like mussels out of a '
+      + 'shell. One old man at a cave mouth kills his seven children and his wife rather '
+      + 'than surrender, and steps off the cliff. Galilee is quiet after that, in the way '
+      + 'of quiet things.',
+    forTag: 'HYR',
+    date: { y: -38, m: 3 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Cradles, chains, and fire',
+        tooltip: 'An army of the reconquest lands at Joppa. Galilee is scoured (−2 unrest in Sepphoris, Jotapata, Gischala and Tarichaea, 12 months); +10 martial points; −500 manpower.',
+        effects: guard('ev4_arbela_caves:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.spawnArmy(ctx, 'HYR', 'Joppa', {
+            inf: 5, cav: 1, name: 'Army of the King\'s Return',
+            general: { name: 'Herod', fire: 3, shock: 4, maneuver: 4 },
+          });
+          h.adjust(ctx, 'HYR', { mar: 10, manpower: -500 });
+          for (const pn of ['Sepphoris', 'Jotapata', 'Gischala', 'Tarichaea']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'arbela_scoured', name: 'The Caves of Arbela Cleared', months: 12,
+              effects: { unrest: -2 },
+            });
+          }
+          h.setFlag(ctx, 'arbelaCleared', true);
+          h.notify(ctx, {
+            title: 'The cliff-caves fall',
+            text: 'Soldiers in cradles on iron chains clear the brigand caves above Magdala. Galilee is quiet, in the way of quiet things.',
+            type: 'war', provName: 'Tarichaea',
+          });
+        }),
+      },
+      {
+        label: 'Offer the caves terms first',
+        tooltip: 'The army lands at Joppa all the same. Mercy where mercy is taken: −1 unrest in the four Galilean towns for 12 months, +5 legitimacy — but no martial gain, and the cliffs stay half-wild.',
+        effects: guard('ev4_arbela_caves:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.spawnArmy(ctx, 'HYR', 'Joppa', {
+            inf: 5, cav: 1, name: 'Army of the King\'s Return',
+            general: { name: 'Herod', fire: 3, shock: 4, maneuver: 4 },
+          });
+          h.adjust(ctx, 'HYR', { legitimacy: 5 });
+          for (const pn of ['Sepphoris', 'Jotapata', 'Gischala', 'Tarichaea']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'arbela_scoured', name: 'Terms at the Cave Mouths', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
+          h.setFlag(ctx, 'arbelaCleared', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 27 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_siege_37',
+    title: 'Sosius Marches on Jerusalem',
+    desc: 'Antony has finally sent a general instead of a letter: Gaius Sosius, governor '
+      + 'of Syria, with legions enough to end the question of Judaea. The army closes on '
+      + 'Jerusalem where Antigonus holds the walls Pompey once breached, and the '
+      + 'engineers begin the ramps in the same scars the old ones left. Five months, the '
+      + 'veterans reckon, studying the stone. The men on the walls reckon in psalms.',
+    forTag: 'both',
+    date: { y: -37, m: 4 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The ramps rise in the old scars',
+        tooltip: 'Sosius\' legions (10 inf, 2 cav) land at Emmaus; Rome and Hyrcanus\' court go to war with the Aristobulid line if they are not already.',
+        effects: guard('ev4_siege_37:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const atWar = (a, b) => (g.wars || []).some((w) => {
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
+          });
+          if (alive(ctx, 'ROM')) {
+            h.spawnArmy(ctx, 'ROM', 'Emmaus', {
+              inf: 10, cav: 2, name: 'Legions of Sosius',
+              general: { name: 'Gaius Sosius', fire: 3, shock: 3, maneuver: 3 },
+            });
+            if (alive(ctx, 'ARI') && !atWar('ROM', 'ARI')) h.declareWar(ctx, 'ROM', 'ARI', 'The War for Jerusalem');
+          }
+          if (alive(ctx, 'HYR') && alive(ctx, 'ARI') && !atWar('HYR', 'ARI')) {
+            h.declareWar(ctx, 'HYR', 'ARI', 'The War for Jerusalem');
+          }
+          h.setFlag(ctx, 'sosiusMarched', true);
+          h.notify(ctx, {
+            title: 'Sosius marches',
+            text: 'Antony\'s governor of Syria brings his legions against Jerusalem. The engineers build their ramps in the scars Pompey left.',
+            type: 'war', provName: 'Jerusalem',
+          });
+        }),
+      },
+      {
+        label: 'Give the walls the winter',
+        tooltip: 'The same war, begun deliberately: Sosius\' legions land, but the defenders dig in first ("Zion Fortified": +10% morale for the Aristobulid line, 12 months) and Hyrcanus\' court loses 5 legitimacy for the delay.',
+        effects: guard('ev4_siege_37:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const atWar = (a, b) => (g.wars || []).some((w) => {
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
+          });
+          if (alive(ctx, 'ROM')) {
+            h.spawnArmy(ctx, 'ROM', 'Emmaus', {
+              inf: 10, cav: 2, name: 'Legions of Sosius',
+              general: { name: 'Gaius Sosius', fire: 3, shock: 3, maneuver: 3 },
+            });
+            if (alive(ctx, 'ARI') && !atWar('ROM', 'ARI')) h.declareWar(ctx, 'ROM', 'ARI', 'The War for Jerusalem');
+          }
+          if (alive(ctx, 'HYR') && alive(ctx, 'ARI') && !atWar('HYR', 'ARI')) {
+            h.declareWar(ctx, 'HYR', 'ARI', 'The War for Jerusalem');
+          }
+          if (alive(ctx, 'ARI')) {
+            h.addTagModifier(ctx, 'ARI', {
+              id: 'zion_fortified', name: 'Zion Fortified', months: 12,
+              effects: { moraleMult: 1.1 },
+            });
+          }
+          if (alive(ctx, 'HYR')) h.adjust(ctx, 'HYR', { legitimacy: -5 });
+          h.setFlag(ctx, 'sosiusMarched', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 28 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_city_stormed',
+    title: 'Pay the Soldiers Not to Sack',
+    desc: 'Five months, as the veterans reckoned, and then the storming: the outer wall, '
+      + 'the inner, the Temple courts, and a killing in the streets that stopped '
+      + 'answering to orders. Antigonus came out of the citadel and fell at Sosius\' feet '
+      + 'weeping, and the Roman looked down and said "Antigone" — a woman\'s name for a '
+      + 'kneeling king — and sent him to Antony at Antioch, where he was scourged at the '
+      + 'post and beheaded: the first king Rome ever executed. Somewhere between the '
+      + 'second wall and the citadel, Herod found time to be married — Mariamne, '
+      + 'granddaughter of both warring brothers, the two bloods made one bed. Now his '
+      + 'own soldiers and Sosius\' legionaries look at the richest city in the south the '
+      + 'way soldiers look at a thing they have paid five months for.',
+    forTag: 'HYR',
+    major: true,
+    trigger: safeTrigger('ev4_city_stormed', (ctx) =>
+      dateGE(ctx, -37, 6) && alive(ctx, 'HYR')
+      && !!ctx.helpers.getFlag(ctx, 'sosiusMarched')
+      && ctx.helpers.controls(ctx, 'HYR', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Empty the treasury into their fists',
+        tooltip: '−150 talents to buy back our own capital from its conquerors: Jerusalem is spared (−1 unrest, 12 months), +15 legitimacy (the city spared, the Hasmonean bride wed). Antigonus dies at Antioch.',
+        effects: guard('ev4_city_stormed:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { treasury: -150, legitimacy: 15 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_spared', name: 'The City Bought Back', months: 12,
+            effects: { unrest: -1 },
+          });
+          if (alive(ctx, 'ARI')) h.adjust(ctx, 'ARI', { legitimacy: -20 });
+          h.setFlag(ctx, 'antigonusExecuted', true);
+          h.chronicle(ctx, 'war', 'Jerusalem stormed; Herod pays the soldiers not to sack his own capital, marries Mariamne, and Antigonus — scourged and beheaded at Antioch — becomes the first king Rome ever executed.');
+        }),
+      },
+      {
+        label: 'The laws of war are the laws of war',
+        tooltip: 'Let the soldiers have three hours: +150 talents in plunder shares — but Jerusalem is sacked (+3 unrest, 24 months) and the new reign opens with −10 legitimacy.',
+        effects: guard('ev4_city_stormed:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HYR', { treasury: 150, legitimacy: -10 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_sacked', name: 'The Sack of Jerusalem', months: 24,
+            effects: { unrest: 3 },
+          });
+          if (alive(ctx, 'ARI')) h.adjust(ctx, 'ARI', { legitimacy: -20 });
+          h.setFlag(ctx, 'antigonusExecuted', true);
+          h.chronicle(ctx, 'war', 'Jerusalem stormed and given to the soldiers; Antigonus is scourged and beheaded at Antioch, the first king Rome ever executed.');
+        }),
+      },
+    ],
+  },
+
+  // ── 29 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_cleopatra_balsam',
+    title: 'The Queen\'s Appetite',
+    desc: 'Cleopatra collects kingdoms the way other queens collect pearls, and Antony, '
+      + 'who can refuse her nothing that is not actually Rome\'s, has given her the best '
+      + 'of Judaea without moving a single border stone: the balsam groves of Jericho — '
+      + 'the most valuable orchard on earth, ounce for ounce — and the coastal tolls. The '
+      + 'title stays with the king; the income sails to Alexandria. Her steward arrives '
+      + 'with the lease documents already drawn: the king may rent his own Jericho back '
+      + 'from Egypt\'s queen, at a rate she has set herself.',
+    forTag: 'HYR',
+    date: { y: -36, m: 9 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Rent your own garden back',
+        tooltip: '"Cleopatra\'s Rent": −8% income until her fall. Egypt\'s opinion of us +30 — she is paid, therefore pleasant.',
+        effects: guard('ev4_cleopatra_balsam:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'cleopatras_rent', name: 'Cleopatra\'s Rent', months: -1,
+            effects: { incomeMult: 0.92 },
+          });
+          if (g.tags.PTO && g.tags.PTO.opinion) {
+            g.tags.PTO.opinion.HYR = Math.min(200, (g.tags.PTO.opinion.HYR || 0) + 30);
+          }
+          h.chronicle(ctx, 'diplomacy', 'Antony gives Cleopatra the balsam of Jericho and the coast; Herod rents his own groves back from Egypt\'s queen.');
+        }),
+      },
+      {
+        label: 'Refuse the queen her rent',
+        tooltip: 'Keep the income — but Egypt\'s opinion of us −60, −5 legitimacy as Antony frowns, and "The Queen\'s Grudge" (−4% income, 48 months) as her agents work the coast.',
+        effects: guard('ev4_cleopatra_balsam:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: -5 });
+          if (g.tags.PTO && g.tags.PTO.opinion) {
+            g.tags.PTO.opinion.HYR = Math.max(-200, (g.tags.PTO.opinion.HYR || 0) - 60);
+          }
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'cleopatras_grudge', name: 'The Queen\'s Grudge', months: 48,
+            effects: { incomeMult: 0.96 },
+          });
+          h.chronicle(ctx, 'diplomacy', 'Herod refuses Cleopatra her rents; her agents begin their patient work along the coast.');
+        }),
+      },
+    ],
+  },
+
+  // ── 30 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_fishponds_jericho',
+    title: 'A Game in the Water',
+    desc: 'Aristobulus, Mariamne\'s brother, is seventeen, beautiful, Hasmonean to the '
+      + 'fingertips, and since his investiture as high priest the crowds in the Temple '
+      + 'court weep when he raises his hands. The king watches the weeping with great '
+      + 'attention. At Jericho, after dinner, the young men swim in the fishponds in the '
+      + 'evening cool, and the king\'s Gauls hold the high priest under, in sport, a '
+      + 'little too long, laughing, until the sport is over. A drowning at a party. '
+      + 'Antony summons Herod to Laodicea to explain; Herod brings money, and explains.',
+    forTag: 'HYR',
+    date: { y: -35, m: 9 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A drowning at a party',
+        tooltip: 'The last plausible Hasmonean is gone: −10 legitimacy; Jerusalem and Jericho mourn (+2 unrest, 12 months); −100 talents to satisfy Antony at Laodicea. No rival remains.',
+        effects: guard('ev4_fishponds_jericho:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: -10, treasury: -100 });
+          for (const pn of ['Jerusalem', 'Jericho']) {
+            h.addProvinceModifier(ctx, pn, {
+              id: 'drowned_priest', name: 'The Drowned High Priest', months: 12,
+              effects: { unrest: 2 },
+            });
+          }
+          h.factionShift(ctx, 'HYR', 'priesthood', -15);
+          h.setFlag(ctx, 'aristobulusDrowned', true);
+          h.chronicle(ctx, 'war', 'The young high priest Aristobulus III drowns in the fishponds at Jericho — a game in the water. Herod talks his way home from Laodicea.');
+        }),
+      },
+      {
+        label: 'Let the boy live and be loved',
+        tooltip: 'The crowds keep their high priest: +5 legitimacy, the priesthood approves — but "The Hasmonean Shadow" (−0.2 legitimacy a month, 36 months) as every procession measures the king against the boy.',
+        effects: guard('ev4_fishponds_jericho:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 5 });
+          h.factionShift(ctx, 'HYR', 'priesthood', 15);
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'hasmonean_shadow', name: 'The Hasmonean Shadow', months: 36,
+            effects: { legitimacyAdd: -0.2 },
+          });
+          h.chronicle(ctx, 'diplomacy', 'The young high priest lives; the crowds weep when he raises his hands, and the king watches the weeping.');
+        }),
+      },
+    ],
+  },
+
+  // ── 31 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_earthquake_31',
+    title: 'The Year the Ground Moved',
+    desc: 'In the seventh year of the reign the earth convulsed — Josephus will write '
+      + 'thirty thousand dead, villages swallowed whole, the herds crushed in their '
+      + 'folds. And the timing is Cleopatra\'s: she has maneuvered Antony into loosing '
+      + 'Judaea against Nabataea over unpaid rents, so that whichever kingdom bleeds, '
+      + 'her lease-book grows. The Arab raiders cross the ruined frontier the week the '
+      + 'aftershocks stop, reasoning that a flattened country cannot form a line of '
+      + 'battle. The army, camped in the open, is untouched.',
+    forTag: 'both',
+    date: { y: -31, m: 4 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The dead cannot hear the living',
+        tooltip: 'Earthquake: +2 unrest in every province of the faith (12 months), Hyrcanus\' court −3,000 manpower. Herod\'s oration rallies the army (+10% morale, 12 months; +10 martial points) and the Nabataean war begins.',
+        effects: guard('ev4_earthquake_31:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'earthquake_31', name: 'The Great Earthquake', months: 12,
+              effects: { unrest: 2 },
+            });
+          }
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { manpower: -3000, mar: 10 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'herods_oration', name: 'The King\'s Oration', months: 12,
+            effects: { moraleMult: 1.1 },
+          });
+          const atWar = (a, b) => (g.wars || []).some((w) => {
+            const all = (w.attackers || []).concat(w.defenders || []);
+            return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
+          });
+          if (alive(ctx, 'NAB') && !atWar('HYR', 'NAB')) {
+            h.declareWar(ctx, 'HYR', 'NAB', 'The Nabataean War');
+          }
+          h.chronicle(ctx, 'war', 'The great earthquake kills thirty thousand in Judaea; the war with Nabataea that Cleopatra engineered begins over the rubble.');
+        }),
+      },
+      {
+        label: 'Bury the dead before the war',
+        tooltip: 'Earthquake as above, −3,000 manpower — and −150 talents in relief carts ("The King\'s Relief": net +1 unrest instead of +2). No Nabataean war this year.',
+        effects: guard('ev4_earthquake_31:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'earthquake_31', name: 'The Great Earthquake', months: 12,
+              effects: { unrest: 2 },
+            });
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'kings_relief', name: 'The King\'s Relief', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { manpower: -3000, treasury: -150 });
+          h.chronicle(ctx, 'war', 'The great earthquake kills thirty thousand in Judaea; the kingdom buries its dead before it answers the raiders.');
+        }),
+      },
+    ],
+  },
+
+  // ── 32 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_actium',
+    title: 'Actium',
+    worldLabel: 'Octavian breaks Antony and Cleopatra at sea',
+    desc: 'Off a promontory in western Greece the world was decided in an afternoon: '
+      + 'Cleopatra\'s squadron broke through and ran for Egypt with the war chest, Antony '
+      + 'ran after her, and the greatest fleet the East ever manned surrendered at its '
+      + 'moorings when it understood it had been abandoned. Octavian — Caesar\'s heir, '
+      + 'the cold young man who seconds motions and forgets nothing — is now simply the '
+      + 'master of the world. Every eastern king who took Antony\'s coin, made Antony\'s '
+      + 'war, or married by Antony\'s leave is composing the same letter tonight, and '
+      + 'knows every other king is composing it too.',
+    forTag: 'both',
+    date: { y: -31, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The world has one master',
+        tooltip: 'Rome: +1 stability, +15 legitimacy — the civil wars end. Egypt: −2 stability, −20 legitimacy; the queen\'s kingdom has a year to live.',
+        effects: guard('ev4_actium:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { stability: 1, legitimacy: 15 });
+          if (alive(ctx, 'PTO')) h.adjust(ctx, 'PTO', { stability: -2, legitimacy: -20 });
+          h.setFlag(ctx, 'actiumFought', true);
+          h.chronicle(ctx, 'war', 'Actium: Octavian breaks Antony and Cleopatra at sea. The Roman civil wars are ending; the East has backed the loser.');
+        }),
+      },
+      {
+        label: 'Corn for the victor\'s fleet',
+        tooltip: 'The same verdict — and each surviving Judaean court spends −80 talents provisioning Octavian\'s squadrons before being asked. Rome\'s opinion of each +20.',
+        effects: guard('ev4_actium:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { stability: 1, legitimacy: 15 });
+          if (alive(ctx, 'PTO')) h.adjust(ctx, 'PTO', { stability: -2, legitimacy: -20 });
+          for (const t of ['HYR', 'ARI']) {
+            if (!alive(ctx, t)) continue;
+            h.adjust(ctx, t, { treasury: -80 });
+            if (g.tags.ROM && g.tags.ROM.opinion) {
+              g.tags.ROM.opinion[t] = Math.min(200, (g.tags.ROM.opinion[t] || 0) + 20);
+            }
+          }
+          h.setFlag(ctx, 'actiumFought', true);
+          h.chronicle(ctx, 'war', 'Actium: Octavian breaks Antony at sea, and the corn ships from the Judaean coast reach his fleet before his quartermasters ask.');
+        }),
+      },
+    ],
+  },
+
+  // ── 33 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_rhodes_diadem',
+    title: 'The Diadem at Rhodes',
+    desc: 'Before sailing, the king closed the last account: old Hyrcanus II, eighty and '
+      + 'earless, was shown letters — real or manufactured — proving correspondence with '
+      + 'Nabataea, and executed. The last male Hasmonean of his line, who had been high '
+      + 'priest, ethnarch, prisoner and pensioner, ended as an exhibit in a treason file. '
+      + 'Then Rhodes: Herod came before Octavian without his diadem, set it on the table '
+      + 'between them, and offered no excuses — only the accounting of what he had done '
+      + 'for Antony: the money, the grain, the soldiers, the loyalty kept to the end. '
+      + '"Consider not whose friend I was," he said, "but what kind of friend I am." '
+      + 'Octavian, who valued exactly one quality in kings, picked up the diadem and '
+      + 'handed it back — with Jericho, and more besides.',
+    forTag: 'both',
+    date: { y: -30, m: 5 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Not whose friend, but what kind',
+        tooltip: 'Cleopatra\'s rents are void. Hyrcanus\' court: +15 legitimacy, Rome\'s opinion +40, "Friend of Caesar" (+10% income, permanent, replacing Caesar\'s Charter) — and the priesthood remembers the old man in the treason file.',
+        effects: guard('ev4_rhodes_diadem:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.removeModifier(ctx, 'HYR', 'cleopatras_rent');
+          h.removeModifier(ctx, 'HYR', 'cleopatras_grudge');
+          h.removeModifier(ctx, 'HYR', 'caesars_charter');
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'friend_of_caesar', name: 'Friend of Caesar', months: -1,
+            effects: { incomeMult: 1.1 },
+          });
+          h.adjust(ctx, 'HYR', { legitimacy: 15 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 40);
+          }
+          h.factionShift(ctx, 'HYR', 'priesthood', -10);
+          h.setFlag(ctx, 'rhodesForgiven', true);
+          h.chronicle(ctx, 'diplomacy', 'At Rhodes, Herod lays his diadem before Octavian and offers loyalty instead of excuses; Octavian returns it and enlarges the kingdom. Old Hyrcanus II, the last male Hasmonean of his line, was executed before the king sailed.');
+        }),
+      },
+      {
+        label: 'Excuses, gifts, and intermediaries',
+        tooltip: 'The safer speech: −200 talents, +5 legitimacy, Rome\'s opinion +20. Cleopatra\'s rents still void — but no "Friend of Caesar," and the old man dies in the file all the same.',
+        effects: guard('ev4_rhodes_diadem:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (!alive(ctx, 'HYR')) return;
+          h.removeModifier(ctx, 'HYR', 'cleopatras_rent');
+          h.removeModifier(ctx, 'HYR', 'cleopatras_grudge');
+          h.adjust(ctx, 'HYR', { treasury: -200, legitimacy: 5 });
+          if (g.tags.ROM && g.tags.ROM.opinion) {
+            g.tags.ROM.opinion.HYR = Math.min(200, (g.tags.ROM.opinion.HYR || 0) + 20);
+          }
+          h.factionShift(ctx, 'HYR', 'priesthood', -10);
+          h.setFlag(ctx, 'rhodesForgiven', true);
+          h.chronicle(ctx, 'diplomacy', 'Herod sends gifts and intermediaries ahead of himself to Octavian at Rhodes, and keeps his crown at a price.');
+        }),
+      },
+    ],
+  },
+
+  // ── 34 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev4_mariamne',
+    title: 'The King Calls for the Queen',
+    desc: 'The whispers did their work by relay: his sister swore Mariamne mocked him, '
+      + 'the cupbearer swore she had bought poison, the old chamberlain broke under '
+      + 'questioning and confirmed whatever was put to him. Mariamne — Hasmonean on both '
+      + 'sides, the marriage that made an Idumean adventurer a dynasty — went to the '
+      + 'block without weeping, which the court found insolent, and her mother shrieked '
+      + 'accusations at her to save herself, which the court found prudent. Afterward the '
+      + 'king was seen walking the palace corridors calling her name, ordering the '
+      + 'servants to fetch the queen, raging when they did not; and for the rest of his '
+      + 'reign, Josephus says, the dead woman governed him more absolutely than the '
+      + 'living one ever had.',
+    forTag: 'HYR',
+    date: { y: -29, m: 11 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The sentence stands',
+        tooltip: 'The queen dies: −10 legitimacy; "The King\'s Grief" (+0.5 unrest everywhere, −0.2 legitimacy a month, 24 months). The Hasmonean line now survives only in her children.',
+        effects: guard('ev4_mariamne:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: -10 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'herods_grief', name: 'The King\'s Grief', months: 24,
+            effects: { unrestAll: 0.5, legitimacyAdd: -0.2 },
+          });
+          h.setHeir(ctx, 'HYR', { name: 'Alexander son of Mariamne', gov: 2, infl: 2, mar: 2, age: 6 });
+          h.setFlag(ctx, 'mariamneExecuted', true);
+          h.chronicle(ctx, 'war', 'Mariamne the Hasmonean is executed on sworn whispers; afterward the king walks the palace calling for the queen as though she lived.');
+        }),
+      },
+      {
+        label: 'Stay the sentence',
+        tooltip: 'The queen lives, watched: +5 legitimacy — but the court of whispers keeps its knives (−20 influence points, and "The Court of Whispers": −0.1 legitimacy a month, 36 months).',
+        effects: guard('ev4_mariamne:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HYR')) return;
+          h.adjust(ctx, 'HYR', { legitimacy: 5, infl: -20 });
+          h.addTagModifier(ctx, 'HYR', {
+            id: 'court_of_whispers', name: 'The Court of Whispers', months: 36,
+            effects: { legitimacyAdd: -0.1 },
+          });
+          h.setHeir(ctx, 'HYR', { name: 'Alexander son of Mariamne', gov: 2, infl: 2, mar: 2, age: 6 });
+          h.chronicle(ctx, 'diplomacy', 'The sentence against Queen Mariamne is stayed; the whispers that swore it continue their work.');
+        }),
+      },
+    ],
+  },
 ];
