@@ -37,6 +37,14 @@ function warBetween(ctx, a, b) {
   return !!findWar(ctx.game, a, b);
 }
 
+// The gate of the whole victory strand (events V1–V9 below): the Return still
+// stands as a polity AND still holds Jerusalem. Historically false from 617
+// on — Persia trades the city away in ev_p_betrayal and Heraclius takes it
+// back — so none of the alternate-decades events ever fire on the real rails.
+function returnStands(ctx) {
+  return alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
+}
+
 function stagingProvince(ctx) {
   for (const name of ['Yathrib', 'Khaybar', 'Tayma', 'Hegra', 'Dumatha']) {
     const p = ctx.prov(name);
@@ -2320,6 +2328,469 @@ export const EVENTS_614 = [
           h.setFlag(ctx, 'secondFitna', false);
           h.adjust(ctx, 'RSH', { treasury: -100, stability: 1, legitimacy: 15 });
           h.chronicle(ctx, 'era', 'Mecca is starved rather than stoned; Ibn al-Zubayr falls at the sanctuary door all the same, and the civil war closes its books.');
+        }),
+      },
+    ],
+  },
+
+  // ══ THE ROAD NOT TAKEN — THE RETURN THAT STOOD, 622–695 ══════════════════
+  // The victory strand: the Persian-sponsored autonomy of 614 SURVIVING the
+  // decades that history denied it. Every event here runs through
+  // returnStands() — the Return alive AND holding Jerusalem — so on the real
+  // rails (Persia's trade of 617, Heraclius' return of 629, the conquests)
+  // none of them ever fires. They complement, never duplicate, the historical
+  // cards: ev_p_dome_rock already knows what to do when the platform is
+  // Hebrew, and the Third Temple is raised by the mission chain, not here —
+  // these events write its consequences.
+
+  // ── V1 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_charter',
+    title: 'The Charter of the Return',
+    desc: 'Persia weighed selling the Return and found it too expensive to sell; the '
+      + 'eighth year finds Jewish courts still sitting in Jerusalem, and a war-camp '
+      + 'must finally say what it is. The genealogists trace Nehemiah ben Hushiel\'s '
+      + 'house to the exilarchs — David\'s line kept alive through Babylon — and ask '
+      + 'for a written charter of Davidic rule. The priests answer that a state on '
+      + 'this mountain has an older constitution, and a mitre in it.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_charter', (ctx) =>
+      dateGE(ctx, 622, 1) && returnStands(ctx)
+      && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_betrayal)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The scepter of the exile-house',
+        tooltip: 'Davidic rule made law: +1 stability, +20 governance points; the Exilarch\'s House +10 approval; "The Line of David Restored" (+0.15 legitimacy a month, permanent).',
+        effects: guard('ev_p_v_charter:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { stability: 1, gov: 20 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'line_of_david', name: 'The Line of David Restored', months: -1,
+            effects: { legitimacyAdd: 0.15 },
+          });
+          h.setFlag(ctx, 'charterDavidic', true);
+          h.chronicle(ctx, 'era', 'The Charter of the Return: the exilarch-line of Nehemiah ben Hushiel is written into law, and the autonomy Persia granted becomes a constitution Persia was never asked about.');
+        }),
+      },
+      {
+        label: 'The mitre beside the scepter',
+        tooltip: 'A priestly co-regency: +12 legitimacy; the Priests of the Mount +10 approval, the Exilarch\'s House −5; "The Two Anointings" (+0.1 legitimacy a month, permanent) — and the old argument gets a standing budget (+0.5 unrest everywhere for 24 months).',
+        effects: guard('ev_p_v_charter:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 12 });
+          h.factionShift(ctx, 'JUD', 'priests', 10);
+          h.factionShift(ctx, 'JUD', 'exilarch', -5);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'two_anointings', name: 'The Two Anointings', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'charter_dispute', name: 'Scepter and Mitre Dispute the Charter', months: 24,
+            effects: { unrestAll: 0.5 },
+          });
+          h.setFlag(ctx, 'charterDavidic', false);
+          h.chronicle(ctx, 'era', 'The Charter of the Return: prince and priest are anointed side by side, as in the days of Zerubbabel and Joshua — and argue from the first morning, as in those days too.');
+        }),
+      },
+    ],
+  },
+
+  // ── V2 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_heraclius_terms',
+    title: 'The Emperor\'s Protection',
+    desc: 'Heraclius has broken Persia and wants his city back, but the arithmetic of '
+      + 'his exhausted empire is against a second siege. His envoys arrive with the '
+      + 'next best thing: a charter of Roman "protection" — tribute, the churches '
+      + 'reopened, and the prince\'s sons educated at Constantinople, where the '
+      + 'baptistery is conveniently near the schoolroom. The God-Bearing Emperor '
+      + 'does not name what happens to those who refuse; his chroniclers have '
+      + 'already written it for him.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_heraclius_terms', (ctx) =>
+      dateGE(ctx, 629, 6) && returnStands(ctx) && alive(ctx, 'BYZ')
+      && !findWar(ctx.game, 'SAS', 'BYZ') && !warBetween(ctx, 'JUD', 'BYZ')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Buy the seal, keep the walls',
+        tooltip: '−150 talents and "Tribute to the Basileus" (−5% income) for 120 months; Jerusalem −1 unrest for 60 months (the churches reopen); +1 stability. Byzantine enmity cools to a watch (opinion −40).',
+        effects: guard('ev_p_v_heraclius_terms:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -150, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'tribute_to_basileus', name: 'Tribute to the Basileus', months: 120,
+            effects: { incomeMult: 0.95 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'churches_reopened', name: 'The Churches Reopened', months: 60, effects: { unrest: -1 },
+          });
+          const byz = ctx.game.tags.BYZ, jud = ctx.game.tags.JUD;
+          if (byz && byz.opinion) byz.opinion.JUD = -40;
+          if (jud && jud.opinion) jud.opinion.BYZ = -40;
+          h.chronicle(ctx, 'diplomacy', 'The Return buys the Emperor\'s seal: tribute to Constantinople, the churches of Jerusalem reopened, and the sons of the prince pointedly educated at home.');
+        }),
+      },
+      {
+        label: 'The walls answer the envoys',
+        tooltip: '+12 legitimacy, +15 martial points; the Fighters of the Return +8 approval. Byzantium\'s opinion falls to −180 — the Emperor\'s memory is long, and his chroniclers are patient.',
+        effects: guard('ev_p_v_heraclius_terms:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 12, mar: 15 });
+          h.factionShift(ctx, 'JUD', 'fighters', 8);
+          const byz = ctx.game.tags.BYZ, jud = ctx.game.tags.JUD;
+          if (byz && byz.opinion) byz.opinion.JUD = -180;
+          if (jud && jud.opinion) jud.opinion.BYZ = -170;
+          h.chronicle(ctx, 'diplomacy', 'The Emperor\'s envoys are shown the repaired breach of 614 and escorted to the gate; the Return will be protected by its own walls or not at all.');
+        }),
+      },
+    ],
+  },
+
+  // ── V3 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_last_embassy',
+    title: 'The Last Embassy from Ctesiphon',
+    desc: 'The ally that once weighed selling the Return now comes to be weighed '
+      + 'itself: Persian envoys — threadbare, magnificent, out of everything but '
+      + 'protocol — ask the Jewish state their king once sponsored for silver and '
+      + 'swords against the armies out of Arabia. The letter recalls fifteen years '
+      + 'of friendship with great care and omits one summer of it with greater.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_v_last_embassy', (ctx) =>
+      dateGE(ctx, 636, 1) && returnStands(ctx) && alive(ctx, 'SAS') && alive(ctx, 'RSH')
+      && !warBetween(ctx, 'JUD', 'SAS')
+      && !ctx.helpers.getFlag(ctx, 'sasanianDynastyEnded')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Silver for the old ally',
+        tooltip: '−80 talents; +15 influence points; Persia\'s opinion rises to +100. The debt of 614 is remembered — and priced.',
+        effects: guard('ev_p_v_last_embassy:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -80, infl: 15 });
+          h.adjust(ctx, 'SAS', { treasury: 80 });
+          const sas = ctx.game.tags.SAS, jud = ctx.game.tags.JUD;
+          if (sas && sas.opinion) sas.opinion.JUD = 100;
+          if (jud && jud.opinion) jud.opinion.SAS = 60;
+          h.chronicle(ctx, 'diplomacy', 'Silver goes east to the dying House of Sasan: the Return repays the sponsor of 614, minus a discount for the summer of 617.');
+        }),
+      },
+      {
+        label: 'The sold do not ransom the seller',
+        tooltip: '+5 legitimacy; the Exilarch\'s House +5 approval — Babylon\'s communities must live under whoever wins Iraq, and prefer their kin in Jerusalem uncommitted.',
+        effects: guard('ev_p_v_last_embassy:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 5);
+          h.chronicle(ctx, 'diplomacy', 'The Persian envoys are fed, honored, and refused; the clerk who drafts the reply was a boy in Jerusalem the year Ctesiphon ordered the garrison disbanded.');
+        }),
+      },
+    ],
+  },
+
+  // ── V4 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_dhimma',
+    title: 'The Letter from the Commander of the Faithful',
+    desc: 'The armies that took Damascus from Rome now stand a march from Jerusalem, '
+      + 'and their master writes ahead: the People of the Book holding the city of '
+      + 'the prophets may keep their law, their courts, and their Mount — under the '
+      + 'tax and under the peace, dhimma with more honor than any emperor ever '
+      + 'drafted. The alternative is not stated. The seventy years of chronicles '
+      + 'that follow will depend on the next sentence written in Jerusalem.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_dhimma', (ctx) =>
+      dateGE(ctx, 637, 10) && returnStands(ctx) && alive(ctx, 'RSH')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Terms with honor',
+        tooltip: 'Peace with the Caliphate (any war between you ends); −100 talents now and "The Covenant of the Book" (−7% income, permanent tribute); +1 stability; mutual opinion set to +60.',
+        effects: guard('ev_p_v_dhimma:0', (ctx) => {
+          const h = ctx.helpers;
+          if (warBetween(ctx, 'RSH', 'JUD')) h.endWar(ctx, 'RSH', 'JUD', null);
+          h.adjust(ctx, 'JUD', { treasury: -100, stability: 1 });
+          h.adjust(ctx, 'RSH', { treasury: 100 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'covenant_of_the_book', name: 'The Covenant of the Book', months: -1,
+            effects: { incomeMult: 0.93 },
+          });
+          const rsh = ctx.game.tags.RSH, jud = ctx.game.tags.JUD;
+          if (rsh && rsh.opinion) rsh.opinion.JUD = 60;
+          if (jud && jud.opinion) jud.opinion.RSH = 60;
+          h.chronicle(ctx, 'peace', 'The Covenant of the Book: Jerusalem pays the tax and keeps its law, its courts and its Mount — a dhimma negotiated by a state, not granted to a remnant.');
+        }),
+      },
+      {
+        label: 'The city is not granted twice',
+        tooltip: '+15 legitimacy, +20 martial points; the Fighters of the Return +10 approval. The Caliphate\'s opinion falls to −150, and if there is no war yet, its army of Palestine marches to make one.',
+        effects: guard('ev_p_v_dhimma:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 15, mar: 20 });
+          h.factionShift(ctx, 'JUD', 'fighters', 10);
+          const rsh = ctx.game.tags.RSH, jud = ctx.game.tags.JUD;
+          if (rsh && rsh.opinion) rsh.opinion.JUD = -150;
+          if (jud && jud.opinion) jud.opinion.RSH = -100;
+          if (!warBetween(ctx, 'RSH', 'JUD')) {
+            h.declareWar(ctx, 'RSH', 'JUD', 'The Reduction of the Holy House');
+            const base = ['Damascus', 'Bostra', 'Emesa'].find((n) => h.controls(ctx, 'RSH', n)) || stagingProvince(ctx);
+            h.spawnArmy(ctx, 'RSH', base, {
+              inf: 8, cav: 4, name: 'Army of Palestine',
+              general: { name: 'Amr ibn al-As', fire: 3, shock: 3, maneuver: 4 },
+            });
+          }
+          h.chronicle(ctx, 'war', 'Jerusalem answers the Commander of the Faithful: the city was granted once, by Heaven, and is not in the gift of any second empire. The army of Palestine turns south.');
+        }),
+      },
+    ],
+  },
+
+  // ── V5 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_house_standing',
+    title: 'Smoke on the Mount',
+    desc: 'The Third House stands, and the morning sacrifice has stopped being news '
+      + 'and started being the calendar. Now come the consequences: pilgrim roads '
+      + 'filling from Babylon and Egypt at the three festivals; Byzantine preachers '
+      + 'in genuine theological pain — the ruined Temple was their proof text, and '
+      + 'it has stopped being ruined; and long letters from the academies of the '
+      + 'rivers asking, with citations, whether an altar without a prophet to '
+      + 'sanctify it binds anyone at all.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_house_standing', (ctx) => {
+      if (!returnStands(ctx)) return false;
+      const p = ctx.prov('Jerusalem');
+      return !!(p && p.wonder === 'temple');
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Open the festivals to every exile',
+        tooltip: 'Jerusalem gains "The Pilgrim Roads" (+10% tax, +5% production, permanent) and 500 souls settle from the diaspora; +10 legitimacy. Byzantium, if it lives: −10 legitimacy and its opinion falls to −180 — the proof text un-ruined.',
+        effects: guard('ev_p_v_house_standing:0', (ctx) => {
+          const h = ctx.helpers;
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'pilgrim_roads', name: 'The Pilgrim Roads', months: -1,
+            effects: { taxMult: 1.1, prodMult: 1.05 },
+          });
+          h.addPopulation(ctx, 'Jerusalem', { r: 'judaism', c: 'judean', n: 500 });
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          if (alive(ctx, 'BYZ')) {
+            h.adjust(ctx, 'BYZ', { legitimacy: -10 });
+            const byz = ctx.game.tags.BYZ;
+            if (byz && byz.opinion) byz.opinion.JUD = -180;
+          }
+          h.chronicle(ctx, 'era', 'The pilgrim roads fill at the three festivals for the first time in five centuries; the House on the Mount collects what the exile only counted.');
+        }),
+      },
+      {
+        label: 'A House with guarded courts',
+        tooltip: 'Purity before traffic: +5 legitimacy; the Priests of the Mount +10 approval, the Exilarch\'s House −5 (Babylon reads the rulings as a rebuke); Jerusalem −1 unrest for 120 months. Byzantium, if it lives: −5 legitimacy.',
+        effects: guard('ev_p_v_house_standing:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.factionShift(ctx, 'JUD', 'priests', 10);
+          h.factionShift(ctx, 'JUD', 'exilarch', -5);
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'guarded_courts', name: 'The Guarded Courts', months: 120, effects: { unrest: -1 },
+          });
+          if (alive(ctx, 'BYZ')) h.adjust(ctx, 'BYZ', { legitimacy: -5 });
+          h.chronicle(ctx, 'era', 'The Third House keeps its courts narrow and its purity codes narrower; the pilgrims wait at the barriers, and the priests count that as the point.');
+        }),
+      },
+    ],
+  },
+
+  // ── V6 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_written_law',
+    title: 'The Written and the Spoken',
+    desc: 'A sovereign community needs statutes, and the old argument the exile could '
+      + 'defer now has a courtroom to happen in: teachers by the lake hold that the '
+      + 'written Torah alone binds the judge — search the Scripture, not the chain '
+      + 'of the sages — while the academies answer that the oral Law IS the law, '
+      + 'and its chain of transmission the state\'s true constitution. Every '
+      + 'inheritance case is now a theology exam.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_v_written_law', (ctx) =>
+      dateGE(ctx, 648, 1) && returnStands(ctx)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The chain of the sages holds the bench',
+        tooltip: '+1 stability, +15 governance points; "The Oral Crown" (+0.1 legitimacy a month) for 120 months; the Exilarch\'s House +8 approval — Babylon\'s own jurisprudence enthroned in Zion.',
+        effects: guard('ev_p_v_written_law:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { stability: 1, gov: 15 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'oral_crown', name: 'The Oral Crown', months: 120,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.factionShift(ctx, 'JUD', 'exilarch', 8);
+          h.chronicle(ctx, 'era', 'The courts of the Return rule that the oral Law is the law: the chain of the sages holds the bench, and the lake teachers keep their reading circles and lose their dockets.');
+        }),
+      },
+      {
+        label: 'Scripture alone in the courts',
+        tooltip: '+15 influence points and "The Bare Text" (−15% administration — simpler statutes, cheaper clerks) for 120 months; −5 legitimacy, and the Exilarch\'s House −10 approval — Babylon\'s academies are the chain being cut.',
+        effects: guard('ev_p_v_written_law:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { infl: 15, legitimacy: -5 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'bare_text', name: 'The Bare Text', months: 120,
+            effects: { adminMult: 0.85 },
+          });
+          h.factionShift(ctx, 'JUD', 'exilarch', -10);
+          h.chronicle(ctx, 'era', 'The courts of the Return seat the written text alone on the bench; the academies of the rivers reply in eleven volumes, and the argument acquires a border.');
+        }),
+      },
+    ],
+  },
+
+  // ── V7 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_vowel_points',
+    title: 'The Crowns of the Letters',
+    desc: 'In Tiberias — Benjamin\'s city, still the community\'s second capital — the '
+      + 'masters of the tradition have begun a work of patient audacity: points and '
+      + 'marks above and below the consonants, fixing forever how the unwritten '
+      + 'vowels of Scripture are to be sounded. A text every synagogue from Spain '
+      + 'to Persia will read identically: it is a kind of empire, built entirely '
+      + 'of diacritics.',
+    forTag: 'JUD',
+    trigger: safeTrigger('ev_p_v_vowel_points', (ctx) =>
+      dateGE(ctx, 660, 1) && returnStands(ctx)
+      && ctx.helpers.controls(ctx, 'JUD', 'Tiberias')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Endow the pointing of the Books',
+        tooltip: '−60 talents; +10 influence points; "The Tiberian Pointing" (+0.1 legitimacy a month, permanent), and Tiberias +5% production permanently — the scriptorium becomes an industry.',
+        effects: guard('ev_p_v_vowel_points:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -60, infl: 10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'tiberian_pointing', name: 'The Tiberian Pointing', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.addProvinceModifier(ctx, 'Tiberias', {
+            id: 'masoretic_scriptorium', name: 'The Masoretic Scriptorium', months: -1,
+            effects: { prodMult: 1.05 },
+          });
+          h.chronicle(ctx, 'era', 'The crown endows the pointing of the Books at Tiberias: every synagogue on earth will one day sound its Scripture in the accent of a sovereign Galilee.');
+        }),
+      },
+      {
+        label: 'Let every synagogue keep its song',
+        tooltip: 'No cost; +5 influence points; the Exilarch\'s House +5 approval — Babylon\'s rival pointing gains ground, and the readings stay a family of dialects rather than a law.',
+        effects: guard('ev_p_v_vowel_points:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { infl: 5 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 5);
+          h.chronicle(ctx, 'era', 'The masoretes of Tiberias work on without a royal endowment; Babylon points its own Books, and for a century the Scriptures sing in two accents.');
+        }),
+      },
+    ],
+  },
+
+  // ── V8 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_two_crowns',
+    title: 'Two Crowns, One Torah',
+    desc: 'For five centuries authority sat where the money and the safety were: '
+      + 'Babylon. Now Sura and Pumbedita write to a Jerusalem that ordains its own '
+      + 'judges, fixes its own calendar, and collects its own half-shekel — and the '
+      + 'letters have begun to read less like rulings and more like negotiations. '
+      + 'The exilarch is owed honor; the question is whether he is still owed '
+      + 'obedience, and every community from Spain to Persia is waiting on the '
+      + 'answer to address its questions accordingly.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_two_crowns', (ctx) =>
+      dateGE(ctx, 668, 1) && returnStands(ctx)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The calendar is set from Zion',
+        tooltip: '+15 legitimacy, +1 stability; "The Calendar Set from Zion" (+0.1 legitimacy a month, permanent); the Exilarch\'s House −10 approval — primacy comes home, and Babylon feels the door close.',
+        effects: guard('ev_p_v_two_crowns:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'calendar_from_zion', name: 'The Calendar Set from Zion', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.factionShift(ctx, 'JUD', 'exilarch', -10);
+          h.chronicle(ctx, 'era', 'The intercalation is proclaimed from Jerusalem and the diaspora keeps the festivals by it: after five centuries the seat of authority crosses the desert westward.');
+        }),
+      },
+      {
+        label: 'Honor the academies of the rivers',
+        tooltip: '+25 influence points and +80 talents (Babylonian silver resumes); the Exilarch\'s House +10 approval — two crowns, one Torah, and the questions keep flowing to both addresses.',
+        effects: guard('ev_p_v_two_crowns:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { infl: 25, treasury: 80 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 10);
+          h.chronicle(ctx, 'era', 'Jerusalem writes to Sura as a colleague, not a sovereign: two crowns share one Torah, and the silver of the rivers flows west without a ruling ever forcing it.');
+        }),
+      },
+    ],
+  },
+
+  // ── V9 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_v_outlived',
+    title: 'The State That Outlived Them Both',
+    desc: 'Eighty years since Shahrbaraz mined the wall. The King of Kings who '
+      + 'sponsored the Return is dust and so is his empire; the God-Bearing Emperor '
+      + 'who swore to undo it died with the East already lost; the successors of '
+      + 'the Prophet have buried two civil wars and an octagon\'s worth of '
+      + 'ambitions. And the polity that every chancery in three empires filed '
+      + 'under "temporary" is still here — still Jewish, still sovereign, still '
+      + 'Jerusalem\'s. The chroniclers who hate it have begun, resentfully, to '
+      + 'date things by it.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_outlived', (ctx) =>
+      dateGE(ctx, 694, 1) && returnStands(ctx)
+      && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 4),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let the chronicle say it plainly',
+        tooltip: '+20 legitimacy, +1 stability; "The Return That Stood" (+5% morale, +0.1 legitimacy a month, permanent).',
+        effects: guard('ev_p_v_outlived:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'return_that_stood', name: 'The Return That Stood', months: -1,
+            effects: { moraleMult: 1.05, legitimacyAdd: 0.1 },
+          });
+          h.chronicle(ctx, 'era', 'The eightieth year of the Return: the state that outlived the God-Bearing Emperor of the Romans and the successors of the Prophet alike still keeps its courts in Jerusalem.');
+        }),
+      },
+      {
+        label: 'Cut it into the wall by the gate',
+        tooltip: '−100 talents; +15 legitimacy; the same "The Return That Stood" (+5% morale, +0.1 legitimacy a month, permanent), and Jerusalem gains "The Inscription at the Gate" (−0.5 unrest, permanent).',
+        effects: guard('ev_p_v_outlived:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -100, legitimacy: 15 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'return_that_stood', name: 'The Return That Stood', months: -1,
+            effects: { moraleMult: 1.05, legitimacyAdd: 0.1 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'inscription_at_gate', name: 'The Inscription at the Gate', months: -1,
+            effects: { unrest: -0.5 },
+          });
+          h.chronicle(ctx, 'era', 'By the breach Shahrbaraz opened, masons cut the tally into the repaired stone: the kings who came against this city, and the dates on which the city outlived them.');
         }),
       },
     ],

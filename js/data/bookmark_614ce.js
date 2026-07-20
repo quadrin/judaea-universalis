@@ -130,6 +130,29 @@ export const BOOKMARK_614 = {
     'Charax': 'Maishan',          // the old port is now the Maishan district
   },
 
+  // The victors' pens wait on the land being truly theirs (SPEC §66): a name
+  // below is written on a province only once its owner has integration at 1
+  // or its own people settled there; until then — and again the moment it
+  // changes hands — the labels keep the era's names above.
+  integratedNames: {
+    // The Arab pen writes the conquest's actual 7th-century names: Iliya from
+    // Aelia (Bayt al-Maqdis is a later usage), and the forms the Arabic
+    // geographers fixed for the towns of Filastin and al-Urdunn.
+    RSH: {
+      'Jerusalem': 'Iliya', 'Caesarea Maritima': 'Qaysariyya',
+      'Scythopolis': 'Baysan', 'Ptolemais': 'Akka', 'Neapolis': 'Nablus',
+      'Emmaus': 'Imwas', 'Hebron': 'al-Khalil', 'Tiberias': 'Tabariyya',
+      'Sepphoris': 'Saffuriyya', 'Gaza': 'Ghazza', 'Damascus': 'Dimashq',
+    },
+    // The Hebrew pen restores the names the Greek administration wrote over.
+    JUD: {
+      'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an',
+      'Sepphoris': 'Tzippori', 'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon',
+      'Joppa': 'Yafo', 'Neapolis': 'Shechem',
+    },
+    // No Byzantine pen: the era's names above are already the Empire's.
+  },
+
   blurb: 'The Roman and Persian empires are killing each other at last, totally, after '
     + 'seven hundred years of border wars. Shahrbaraz has taken Damascus and marches on '
     + 'Jerusalem; beside his lancers ride thousands of Jewish fighters under Nehemiah ben '
