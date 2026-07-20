@@ -90,6 +90,34 @@ export const BOOKMARK_40 = {
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
   },
 
+  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
+  // writes on a province it truly holds — integration at 1, or peopled by its
+  // own culture. Until then, and again the moment the land changes hands, the
+  // labels keep the era originals above.
+  integratedNames: {
+    // The builder's pen: Herod's historical re-foundations, written onto the
+    // era names (Samaria, Straton's Tower, Aphek...) once the land is his in
+    // more than title. Panion and Rakkath are his sons' foundations — the
+    // dynasty's pen writes ahead for Philip and Antipas.
+    HER: {
+      'Sebaste': 'Sebaste',                     // Samaria, renamed for Sebastos
+      'Caesarea Maritima': 'Caesarea',          // Straton's Tower, renamed for Caesar
+      'Antipatris': 'Antipatris',               // Aphek, renamed for his father
+      'Caesarea Philippi': 'Caesarea Philippi', // Panion, Philip's Caesarea
+      'Tiberias': 'Tiberias',                   // Rakkath, Antipas' city for Tiberius
+    },
+    // The Hasmonean pen: Hebrew names back onto the Greek cities, as Jannaeus
+    // wrote them — the map of a restored kingdom speaks the fathers' tongue.
+    ATG: {
+      'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an',
+      'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon', 'Joppa': 'Yafo',
+      'Dora': 'Dor', 'Gaza': 'Azzah', 'Sebaste': 'Shomron',
+      'Philadelphia': 'Rabbat Ammon',
+    },
+    // The Roman pen has one name it longs to file correctly.
+    ROM: { 'Jerusalem': 'Hierosolyma' },
+  },
+
   blurb: 'The Parthians have crossed the Euphrates and nothing stood. Syria is overrun, '
     + 'and in Jerusalem they have crowned Antigonus, the last fighting Hasmonean, who paid '
     + 'them in silver and promises. Herod — Idumean, commoner, Antipater\'s son — runs '

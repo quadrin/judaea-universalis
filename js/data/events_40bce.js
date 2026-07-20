@@ -62,6 +62,64 @@ function countOwned(ctx, tag) {
   return n;
 }
 
+function after(ctx, y, m) {
+  const d = ctx.game.date;
+  return d.y > y || (d.y === y && d.m >= m);
+}
+
+// ── alternate-history gates ─────────────────────────────────────────────────
+// The world where the Hasmonean held (never the historical one): the crown
+// war has settled, Antigonus lives and keeps Jerusalem, and Herod is dead,
+// landless, bent to clienthood — or still sulking in Idumea past the deadline
+// history gave him.
+function hasmoneanWorld(ctx) {
+  const g = ctx.game;
+  if (!alive(ctx, 'ATG')) return false;
+  if (crownWar(g)) return false; // the War for the Crown still runs
+  if (!ctx.helpers.controls(ctx, 'ATG', 'Jerusalem')) return false;
+  const her = g.tags.HER;
+  const herBroken = !her || her.alive === false || her.overlord === 'ATG'
+    || countOwned(ctx, 'HER') === 0;
+  return herBroken || after(ctx, -36, 1);
+}
+
+// Later chapters of the strand ride on the coronation flag but re-check the
+// ground each month: the moment Jerusalem is lost, the pen stops writing.
+function hasmoneanHolds(ctx) {
+  return !!ctx.helpers.getFlag(ctx, 'hasmoneanHolds')
+    && alive(ctx, 'ATG') && ctx.helpers.controls(ctx, 'ATG', 'Jerusalem');
+}
+
+// The mirror: Herod wins BIGGER than history — the crown war settled, the
+// Hasmonean done, and the kingdom overspilling its historical leash into
+// Damascus or Petra.
+function greaterHerod(ctx) {
+  const g = ctx.game;
+  if (!alive(ctx, 'HER')) return false;
+  if (crownWar(g)) return false;
+  if (!ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) return false;
+  const atg = g.tags.ATG;
+  const atgGone = !atg || atg.alive === false || atg.overlord === 'HER';
+  if (!atgGone) return false;
+  return ctx.helpers.controls(ctx, 'HER', 'Damascus')
+    || ctx.helpers.controls(ctx, 'HER', 'Petra');
+}
+
+function nudgeOpinion(ctx, ofTag, aboutTag, delta) {
+  const t = ctx.game.tags[ofTag];
+  if (!t) return;
+  if (!t.opinion) t.opinion = {};
+  t.opinion[aboutTag] = Math.max(-200, Math.min(200, (t.opinion[aboutTag] || 0) + delta));
+}
+
+function floorOpinion(ctx, ofTag, aboutTag, floor) {
+  const t = ctx.game.tags[ofTag];
+  if (!t) return;
+  if (!t.opinion) t.opinion = {};
+  const cur = typeof t.opinion[aboutTag] === 'number' ? t.opinion[aboutTag] : 0;
+  t.opinion[aboutTag] = Math.min(cur, floor);
+}
+
 // Rome enters the crown war at Herod's side and wakes from passivity.
 function romeJoins(ctx) {
   const g = ctx.game;
@@ -2061,6 +2119,502 @@ export const EVENTS_40 = [
             effects: { unrestAll: 0.25 },
           });
           ctx.helpers.chronicle(ctx, 'era', 'The census passes gently under the high priest\'s hand — but in Galilee the fourth philosophy is preached all the same.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE HASMONEAN RESTORATION (alternate history) ═════════════════════════
+  // The strand history never wrote: Antigonus holds. Every trigger reads the
+  // live world — the crown war settled, ATG alive in Jerusalem, Herod broken —
+  // and none of it can fire on the historical track, where the Hasmonean dies
+  // under Sosius' axe. Chapters after the coronation ride the hasmoneanHolds
+  // flag and re-check the ground monthly.
+
+  // ── A1: the coronation Rome never allowed ─────────────────────────────────
+  {
+    id: 'ev5_atg_crowned',
+    title: 'The Last Son of the House',
+    worldLabel: 'Antigonus holds: the Hasmonean crown survives',
+    desc: 'Against the Senate\'s decree, against the legions\' schedule, against every '
+      + 'sensible man\'s arithmetic — the city held, and the king who held it walks to '
+      + 'the altar as king and high priest both, the offices of the Maccabees reunited '
+      + 'in the last man of the line willing to fight for them. The diadem is his '
+      + 'grandfather\'s; the prayers are older. In Rome the clerks are already drafting '
+      + 'the letters that call him a brigand, because the alternative is calling him '
+      + 'what the crowd in the Temple court calls him: the son of the house that '
+      + 'would not die.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_atg_crowned', (ctx) =>
+      hasmoneanWorld(ctx) && after(ctx, -37, 1)),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Diadem and ephod together',
+        tooltip: 'Antigonus: +25 legitimacy, +1 stability; the Priesthood +15 approval. Rome\'s opinion collapses to −150: a king Rome did not make is a king Rome must unmake.',
+        effects: guard('ev5_atg_crowned:0', (ctx) => {
+          ctx.helpers.setFlag(ctx, 'hasmoneanHolds', true);
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 25, stability: 1 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 15);
+          floorOpinion(ctx, 'ROM', 'ATG', -150);
+          ctx.helpers.chronicle(ctx, 'era', 'Antigonus is crowned in a Jerusalem that kept him: diadem and high priesthood reunited in the last Hasmonean. Rome files the letters that call him a brigand.');
+        }),
+      },
+      {
+        label: 'The crown for me, the ephod for a cousin',
+        tooltip: 'Split the offices to soothe the scrupulous: +15 legitimacy, +15 governance points; the Priesthood −5 approval (their fighting priest steps back from the altar). Rome\'s opinion still collapses to −120.',
+        effects: guard('ev5_atg_crowned:1', (ctx) => {
+          ctx.helpers.setFlag(ctx, 'hasmoneanHolds', true);
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15, gov: 15 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', -5);
+          floorOpinion(ctx, 'ROM', 'ATG', -120);
+          ctx.helpers.chronicle(ctx, 'era', 'Antigonus keeps the diadem and gives the ephod to a cousin of the house: the fighting king steps back from the altar he defended.');
+        }),
+      },
+    ],
+  },
+
+  // ── A2: the suzerain presents the bill ────────────────────────────────────
+  {
+    id: 'ev5_atg_pacorus_bill',
+    title: 'The Parthian Bargain Comes Due',
+    desc: 'Pacorus\' lances bought the city, and the price agreed in the year of the '
+      + 'horsemen was five hundred talents and five hundred women of the noble '
+      + 'houses. The King of Kings has a long memory and clerks with longer ones: '
+      + 'now an envoy stands in the restored court, courteous as a creditor, and '
+      + 'asks when the balance travels east. The women\'s families are in the room. '
+      + 'So is the Parthian Party, holding the receipts.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_pacorus_bill', (ctx) =>
+      hasmoneanHolds(ctx) && alive(ctx, 'PAR') && after(ctx, -36, 4)),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pay the promised price',
+        tooltip: '−200 talents east, and the five hundred women with them: −10 legitimacy and the Street −10 approval — but the Parthian Party +15, and Parthia\'s opinion +60. The suzerain is satisfied.',
+        effects: guard('ev5_atg_pacorus_bill:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -200, legitimacy: -10 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', -10);
+          ctx.helpers.factionShift(ctx, 'ATG', 'parthians', 15);
+          nudgeOpinion(ctx, 'PAR', 'ATG', 60);
+          ctx.helpers.chronicle(ctx, 'era', 'The Parthian bargain is honored in full: silver and five hundred women travel east, and Jerusalem learns what a patron\'s receipt weighs.');
+        }),
+      },
+      {
+        label: 'Jerusalem sells no daughters',
+        tooltip: 'Defy the King of Kings: +15 legitimacy, the Street +10 and the Priesthood +10 approval, the Parthian Party −20. Parthia\'s opinion −80, the alliance is dead — and if the Arsacid court stands free, it declares war on the ingrate.',
+        effects: guard('ev5_atg_pacorus_bill:1', (ctx) => {
+          const g = ctx.game;
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', 10);
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 10);
+          ctx.helpers.factionShift(ctx, 'ATG', 'parthians', -20);
+          nudgeOpinion(ctx, 'PAR', 'ATG', -80);
+          const atg = g.tags.ATG, par = g.tags.PAR;
+          if (atg) atg.allies = (atg.allies || []).filter((t) => t !== 'PAR');
+          if (par) par.allies = (par.allies || []).filter((t) => t !== 'ATG');
+          if (alive(ctx, 'PAR') && !warBetween(g, 'PAR', 'ATG') && !warBetween(g, 'PAR', 'ROM')) {
+            ctx.helpers.declareWar(ctx, 'PAR', 'ATG', 'The Suzerain\'s Due');
+            ctx.helpers.notify(ctx, {
+              title: 'The lances turn around',
+              text: 'The horsemen who crowned the king ride back for the unpaid balance.',
+              type: 'war', provName: 'Jerusalem',
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Antigonus refuses the Parthian balance: Jerusalem sells no daughters, whatever the lances say.');
+        }),
+      },
+    ],
+  },
+
+  // ── A3: the internal reckoning — Herod's people ───────────────────────────
+  {
+    id: 'ev5_atg_idumean_question',
+    title: 'The Idumean Question',
+    desc: 'The pretender\'s people did not vanish with the pretender. Half the '
+      + 'garrison officers of the south are Idumean; the clans of Hebron kept '
+      + 'Herod\'s peace for a generation and could keep anyone\'s. The Street wants '
+      + 'lists drawn up — it remembers which houses cheered the Senate\'s king — '
+      + 'and the confiscations would fill a treasury the war emptied. Or the clans '
+      + 'can kneel, keep their gates, and be told the war died with the man.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_idumean_question', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -36, 6)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Draw up the lists',
+        tooltip: 'The purge: +120 talents of confiscations, the Street +10 approval — but −1 stability, and Hebron and Adora +2 unrest for 18 months. The south learns to hate quietly.',
+        effects: guard('ev5_atg_idumean_question:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: 120, stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', 10);
+          for (const n of ['Hebron', 'Adora']) {
+            if (ctx.helpers.controls(ctx, 'ATG', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'idumean_purge', name: 'The Purge of the South', months: 18,
+                effects: { unrest: 2 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The lists are drawn: Herod\'s partisans pay for their king with estates and necks, and Idumea learns to hate quietly.');
+        }),
+      },
+      {
+        label: 'The war died with the man',
+        tooltip: 'Reconciliation: the Idumean captains kneel and keep their gates. +5 legitimacy, +1 stability; Hebron and Adora −1 unrest for 24 months — but the Street −8 approval, cheated of its lists.',
+        effects: guard('ev5_atg_idumean_question:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 5, stability: 1 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', -8);
+          for (const n of ['Hebron', 'Adora']) {
+            if (ctx.helpers.controls(ctx, 'ATG', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'idumea_reconciled', name: 'The South Reconciled', months: 24,
+                effects: { unrest: -1 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The Idumean captains kneel and keep their gates: the king announces that the war died with the man.');
+        }),
+      },
+    ],
+  },
+
+  // ── A4: the mint of a free Jerusalem ──────────────────────────────────────
+  {
+    id: 'ev5_atg_freedom_coinage',
+    title: 'The Coinage of the Liberation',
+    desc: 'The mint that hammered MATTATHIAS THE HIGH PRIEST against a paper king '
+      + 'now strikes for a victorious one. The die-cutters propose silver — the '
+      + 'first Hasmonean silver — reading FOR THE FREEDOM OF ZION, year one of a '
+      + 'new count, as if the Senate\'s decree and the siege had been a long '
+      + 'parenthesis. Silver argues with every Roman denarius it shares a purse '
+      + 'with. Bronze does the same work cheaper, and the garrisons want paying.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_freedom_coinage', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -36, 9)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Silver, and year one of the freedom',
+        tooltip: '−40 talents to the mint: +10 legitimacy, the Street +10 approval. Every purse from Galilee to Alexandria carries the argument.',
+        effects: guard('ev5_atg_freedom_coinage:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -40, legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'street', 10);
+          ctx.helpers.chronicle(ctx, 'era', 'The first Hasmonean silver is struck: FOR THE FREEDOM OF ZION, year one — the liberation put into every purse.');
+        }),
+      },
+      {
+        label: 'Bronze — and the melt to the garrisons',
+        tooltip: 'The slogan in base metal, the silver for pay: +30 talents, +5 martial points, +5 legitimacy only. Wars are held with soldiers, not year-counts.',
+        effects: guard('ev5_atg_freedom_coinage:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: 30, mar: 5, legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  // ── A5: Rome's answer, if Rome can give one ───────────────────────────────
+  {
+    id: 'ev5_atg_rome_returns',
+    title: 'Rome Does Not Forgive',
+    worldLabel: 'A Roman punitive expedition marches on Judaea',
+    desc: 'Somewhere in the Republic\'s ledgers there is a decree naming another man '
+      + 'King of Judaea, and Rome does not amend its paperwork to fit the facts — '
+      + 'it amends the facts. The Hasmonean on the throne is, in Latin, a brigand '
+      + 'in possession of a Roman province; the legions assembling in Syria are, '
+      + 'in Latin, a survey party. However the dispatches phrase it, the eagles '
+      + 'are coming south, and this time there is no Idumean to hold their coats.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_atg_rome_returns', (ctx) =>
+      hasmoneanHolds(ctx) && alive(ctx, 'ROM') && countOwned(ctx, 'ROM') >= 12
+      && !warBetween(ctx.game, 'ROM', 'ATG') && after(ctx, -35, 4)),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Man the walls the Maccabees built',
+        tooltip: 'Rome declares war and fields a punitive army in Syria (8 regiments). Antigonus: +20 martial points, and +5% morale for 24 months — the city that held once believes it can hold twice.',
+        effects: guard('ev5_atg_rome_returns:0', (ctx) => {
+          if (!alive(ctx, 'ROM') || !alive(ctx, 'ATG')) return;
+          ctx.helpers.declareWar(ctx, 'ROM', 'ATG', 'The Roman Reckoning');
+          const base = ctx.helpers.controls(ctx, 'ROM', 'Antioch') ? 'Antioch' : 'Tarsus';
+          ctx.helpers.spawnArmy(ctx, 'ROM', base, {
+            inf: 7, cav: 1, name: 'The Punitive Legions',
+            general: { name: 'Gaius Sosius', fire: 2, shock: 3, maneuver: 2 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { mar: 20 });
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'city_that_held', name: 'The City That Held', months: 24,
+            effects: { moraleMult: 1.05 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'Rome sends the legions to unmake the king it never made: the punitive expedition marches on Judaea.');
+        }),
+      },
+      {
+        label: 'Silver to the legate, before the trumpets',
+        tooltip: 'The war comes anyway, but bought smaller: −150 talents, and the expedition arrives under-strength (5 regiments — some legions discover urgent business in Cilicia). +10 influence points.',
+        effects: guard('ev5_atg_rome_returns:1', (ctx) => {
+          if (!alive(ctx, 'ROM') || !alive(ctx, 'ATG')) return;
+          ctx.helpers.declareWar(ctx, 'ROM', 'ATG', 'The Roman Reckoning');
+          const base = ctx.helpers.controls(ctx, 'ROM', 'Antioch') ? 'Antioch' : 'Tarsus';
+          ctx.helpers.spawnArmy(ctx, 'ROM', base, {
+            inf: 4, cav: 1, name: 'The Punitive Legions',
+            general: { name: 'Gaius Sosius', fire: 2, shock: 3, maneuver: 2 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -150, infl: 10 });
+          ctx.helpers.chronicle(ctx, 'war', 'Rome marches on Judaea — but half the expedition, paid in Hasmonean silver, discovers urgent business in Cilicia.');
+        }),
+      },
+    ],
+  },
+
+  // ── A6: the priesthood under a fighting king ──────────────────────────────
+  {
+    id: 'ev5_atg_ephod',
+    title: 'The Ephod on a Soldier\'s Shoulders',
+    desc: 'A high priest is forbidden the dead, and this one has waded through '
+      + 'them for years. The courses of the altar have kept a tactful silence '
+      + 'through the emergency; with the emergency over, the silence is ending. '
+      + 'A king who serves the feasts in person binds the altar to the throne as '
+      + 'no Hasmonean has since Simon — but the frontiers of a kingdom Rome '
+      + 'refuses to recognize do not keep the festal calendar.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_ephod', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -35, 9)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Keep every feast in person',
+        tooltip: 'The Priesthood +12 approval, and +0.2 legitimacy a month for 24 months — but the king off the frontier: −10 martial points.',
+        effects: guard('ev5_atg_ephod:0', (ctx) => {
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 12);
+          ctx.helpers.adjust(ctx, 'ATG', { mar: -10 });
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'priest_king', name: 'The Priest-King at the Altar', months: 24,
+            effects: { legitimacyAdd: 0.2 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The fighting king keeps the feasts in person: the altar and the throne bound as they have not been since Simon.');
+        }),
+      },
+      {
+        label: 'A deputy at the altar',
+        tooltip: 'A segan serves what the king cannot: +10 governance points, +5 martial points — the Priesthood −8 approval, and the whisper returns that the ephod was only ever a campaign banner.',
+        effects: guard('ev5_atg_ephod:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { gov: 10, mar: 5 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', -8);
+        }),
+      },
+    ],
+  },
+
+  // ── A7: the elder of the line ─────────────────────────────────────────────
+  {
+    id: 'ev5_atg_hyrcanus',
+    title: 'The Old Man in Babylon',
+    desc: 'Hyrcanus — uncle, rival, high priest that was — lives on among the Jews '
+      + 'of Babylonia, honored by a community that remembers forty years of his '
+      + 'mildness and forgets none of his nephew\'s knife-work on his ears. He can '
+      + 'never serve at the altar again; that was the point of the knife. But an '
+      + 'elder of the house, brought home in honor, would say the dynasty is whole '
+      + '— or would put two Hasmoneans in one city, which has never once gone well.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_hyrcanus', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -35, 1)),
+    aiOption: 1,
+    options: [
+      {
+        label: 'Bring him home with honor',
+        tooltip: '+10 legitimacy, the Priesthood +10 approval — but two Hasmoneans in one city: Jerusalem +0.5 unrest for 24 months while every malcontent finds the old man\'s door.',
+        effects: guard('ev5_atg_hyrcanus:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 10);
+          if (ctx.helpers.controls(ctx, 'ATG', 'Jerusalem')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'two_hasmoneans', name: 'Two Hasmoneans in One City', months: 24,
+              effects: { unrest: 0.5 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Hyrcanus comes home from Babylon in honor: the dynasty is whole again, and every malcontent learns the old man\'s address.');
+        }),
+      },
+      {
+        label: 'Let Babylon keep its treasure',
+        tooltip: 'A pension eastward instead of a homecoming: −20 talents, +10 governance points. The diaspora notes the coldness: −5 influence points.',
+        effects: guard('ev5_atg_hyrcanus:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: -20, gov: 10, infl: -5 });
+        }),
+      },
+    ],
+  },
+
+  // ── A8: the pretender's family, if the Rock has fallen ────────────────────
+  {
+    id: 'ev5_atg_rock_yields',
+    title: 'The Rock Yields',
+    desc: 'With no relief left to signal for, Masada opens its gates: Herod\'s '
+      + 'mother, his sister Salome, and Mariamne — the Hasmonean girl betrothed to '
+      + 'the Idumean as a graft onto the old stock. The graft is now a captive of '
+      + 'the trunk. She is Hyrcanus\' granddaughter; her sons by anyone would carry '
+      + 'the blood twice over. The court has opinions about every possible use of '
+      + 'her, which is what courts are for.',
+    forTag: 'ATG',
+    trigger: safeTrigger('ev5_atg_rock_yields', (ctx) =>
+      hasmoneanHolds(ctx) && !alive(ctx, 'HER')
+      && ctx.helpers.controls(ctx, 'ATG', 'Masada')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Marry Mariamne to a son of the house',
+        tooltip: 'The rival branch grafted back into the trunk: +15 legitimacy, the Priesthood +5 approval. The Idumean women are pensioned to Idumea.',
+        effects: guard('ev5_atg_rock_yields:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15 });
+          ctx.helpers.factionShift(ctx, 'ATG', 'priesthood', 5);
+          ctx.helpers.chronicle(ctx, 'era', 'Masada yields, and Mariamne is married back into the trunk of the house: the rival claim ends at a wedding, not a scaffold.');
+        }),
+      },
+      {
+        label: 'Hostages, kept gently',
+        tooltip: 'The family held in comfort against Idumea\'s good behavior: +10 influence points, and Rome\'s opinion +10 — mercy is legible even in Latin.',
+        effects: guard('ev5_atg_rock_yields:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { infl: 10 });
+          nudgeOpinion(ctx, 'ROM', 'ATG', 10);
+        }),
+      },
+    ],
+  },
+
+  // ── A9: the world that left Judaea alone ──────────────────────────────────
+  {
+    id: 'ev5_atg_republic_looks_away',
+    title: 'The Republic Looks Away',
+    worldLabel: 'Rome\'s civil wars leave the Hasmonean throne standing',
+    desc: 'The reckoning never came, or came and broke. Rome has discovered that '
+      + 'before it can unmake a king in Judaea it must decide who Rome is, and '
+      + 'that question is being put to the fleets. From the palace roof the war '
+      + 'of the Roman world is a rumor of masts and grain prices: Octavian and '
+      + 'Antony spending on each other the legions that were promised, in some '
+      + 'ledger, for Jerusalem. The last Hasmonean has outlasted the attention '
+      + 'span of the Republic — which is, on the evidence, how dynasties survive.',
+    forTag: 'both',
+    trigger: safeTrigger('ev5_atg_republic_looks_away', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -32, 1)
+      && !warBetween(ctx.game, 'ROM', 'ATG')
+      && (!alive(ctx, 'ROM') || countOwned(ctx, 'ROM') < 12
+        || !!(ctx.game.firedEvents && ctx.game.firedEvents.ev5_atg_rome_returns))),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Light no beacons for either fleet',
+        tooltip: 'Strict neutrality while Rome eats itself: +1 stability, +10 governance points, and +5% income for 24 months as the eastern trade routes detour through a quiet kingdom.',
+        effects: guard('ev5_atg_republic_looks_away:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { stability: 1, gov: 10 });
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'quiet_kingdom', name: 'The Quiet Kingdom', months: 24,
+            effects: { incomeMult: 1.05 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'While Rome decides who Rome is, Judaea lights no beacons: the trade routes learn the way to a quiet kingdom.');
+        }),
+      },
+      {
+        label: 'Sell the victor grain and call it homage',
+        tooltip: 'Court whichever Roman wins: +80 talents of contracts, Rome\'s opinion +30 — but −5 legitimacy: the freedom coinage sits oddly beside a Roman invoice.',
+        effects: guard('ev5_atg_republic_looks_away:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ATG', { treasury: 80, legitimacy: -5 });
+          nudgeOpinion(ctx, 'ROM', 'ATG', 30);
+          ctx.helpers.chronicle(ctx, 'era', 'Jerusalem sells the victor grain and calls it homage; the invoice is filed next to the freedom coinage.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE GREATER HEROD (alternate history mirror) ══════════════════════════
+  // Herod wins BIGGER than history: the crown war settled, the Hasmonean done,
+  // and the kingdom overspilling its leash into Damascus or Petra.
+
+  // ── B1: Augustus' unease ──────────────────────────────────────────────────
+  {
+    id: 'ev5_her_leash',
+    title: 'The King Who Outgrew His Leash',
+    worldLabel: 'Augustus grows uneasy at Herod\'s conquests',
+    desc: 'Client kings are supposed to be walls, not rivers. Herod\'s kingdom has '
+      + 'overflowed the lines the Senate drew for it — Damascus, or the incense '
+      + 'roads of Arabia, provinces no decree ever granted — and the dispatches '
+      + 'from Syria have begun using the word that ends client kings: capable. '
+      + 'Augustus\' letter is warm, personal, and contains a single sentence of '
+      + 'winter: he wonders whether so great a realm is not too heavy a burden '
+      + 'for one friend to carry unshared.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_her_leash', (ctx) =>
+      greaterHerod(ctx) && alive(ctx, 'ROM') && after(ctx, -26, 6)),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Lay the conquests at Caesar\'s feet',
+        tooltip: '−120 talents of tribute, and the titles re-granted from Rome\'s hand: Rome\'s opinion +30, +10 legitimacy. What Caesar re-gives, Caesar has blessed.',
+        effects: guard('ev5_her_leash:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -120, legitimacy: 10 });
+          nudgeOpinion(ctx, 'ROM', 'HER', 30);
+          ctx.helpers.chronicle(ctx, 'era', 'Herod lays his conquests at Caesar\'s feet and receives them back re-titled: the overgrown client bends before he is pruned.');
+        }),
+      },
+      {
+        label: 'What I hold, I hold',
+        tooltip: 'No tribute, no re-granting: +15 martial points — but Rome\'s opinion −40, and the legions watch: +10% army maintenance for 36 months, since a watched king keeps his powder dry.',
+        effects: guard('ev5_her_leash:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { mar: 15 });
+          nudgeOpinion(ctx, 'ROM', 'HER', -40);
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'watched_client', name: 'The Watched Client', months: 36,
+            effects: { maintMult: 1.1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'Herod keeps what he took and says so: in Syria the legates begin filing reports on the client who outgrew his leash.');
+        }),
+      },
+    ],
+  },
+
+  // ── B2: the incense road, if Petra is his ─────────────────────────────────
+  {
+    id: 'ev5_her_incense',
+    title: 'The Incense Road Pays Its Toll',
+    desc: 'Whoever holds Petra holds the narrows of the frankincense trade: every '
+      + 'camel from Arabia Felix to the Gaza wharves passes under the rose-red '
+      + 'cliffs and pays. The Nabataean kings grew fat on the tolls for a century; '
+      + 'now the toll-house flies Herod\'s standard, and the caravan masters wait '
+      + 'to learn whether the new landlord means to milk the road or bleed it.',
+    forTag: 'HER',
+    trigger: safeTrigger('ev5_her_incense', (ctx) =>
+      greaterHerod(ctx) && ctx.helpers.controls(ctx, 'HER', 'Petra')
+      && after(ctx, -25, 1)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Milk the road, never bleed it',
+        tooltip: 'The Nabataean toll schedule, kept to the obol: Petra permanently +20% tax. Nabataea\'s opinion −30, if any Nabataean court survives to hold one.',
+        effects: guard('ev5_her_incense:0', (ctx) => {
+          if (ctx.helpers.controls(ctx, 'HER', 'Petra')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Petra', {
+              id: 'incense_tolls', name: 'The Incense Tolls', months: -1,
+              effects: { taxMult: 1.2 },
+            });
+          }
+          if (alive(ctx, 'NAB')) nudgeOpinion(ctx, 'NAB', 'HER', -30);
+          ctx.helpers.chronicle(ctx, 'era', 'The incense road pays its toll to a Herodian toll-house: the frankincense narrows are the king\'s.');
+        }),
+      },
+      {
+        label: 'Cut the tolls — flood the road',
+        tooltip: 'Undercut every rival route: +8% income for 24 months across the kingdom as the caravans detour through Herod\'s peace; +10 influence points. Petra itself keeps only the old rates.',
+        effects: guard('ev5_her_incense:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { infl: 10 });
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'incense_flood', name: 'The Incense Road Diverted', months: 24,
+            effects: { incomeMult: 1.08 },
+          });
         }),
       },
     ],
