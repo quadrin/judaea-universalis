@@ -7,6 +7,7 @@ import {
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
+  liveGrudge, grudgeCeiling,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
@@ -663,14 +664,31 @@ export function gameActions(ctx) {
       const ourClient = them.overlord === me;
       const ourOverlord = mine.overlord === tag;
       const theirOverlord = them.overlord && !ourClient ? them.overlord : null;
+      // The lost lands are remembered (SPEC §67): land we took from them in
+      // war, and still hold, caps their opinion of us — goodwill cannot buy
+      // past it, and the actions that only exist to buy goodwill say so.
+      const grudgeHeld = liveGrudge(ctx, tag, me);
+      const grudgeCap = grudgeHeld ? grudgeCeiling(ctx, tag, me) : null;
+      const grudgeNames = (grudgeHeld || []).map((id) => {
+        const p = ctx.byId(id);
+        return p ? p.name : null;
+      }).filter(Boolean);
+      const grudgeLabel = grudgeNames.slice(0, 3).join(', ')
+        + (grudgeNames.length > 3 ? '…' : '');
+      const grudgeWall = grudgeHeld && opinionOfUs >= grudgeCap
+        ? 'They will not hear us while we hold ' + grudgeLabel
+          + ' — the lost lands are remembered (opinion capped at ' + grudgeCap + ').'
+        : '';
       let whyNotImprove = '';
-      if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
+      if (grudgeWall) whyNotImprove = grudgeWall;
+      else if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
         whyNotImprove = 'Our envoys were just received (' + diploCdMonthsLeft(ctx, dipKey(tag, 'improve')) + ' months).';
       } else if (num(mine.points && mine.points.infl) < DIPLO.improveCost) {
         whyNotImprove = 'Not enough influence (' + DIPLO.improveCost + ' required).';
       }
       let whyNotGift = '';
-      if (diploCdActive(ctx, dipKey(tag, 'gift'))) {
+      if (grudgeWall) whyNotGift = grudgeWall;
+      else if (diploCdActive(ctx, dipKey(tag, 'gift'))) {
         whyNotGift = 'A gift was sent recently (' + diploCdMonthsLeft(ctx, dipKey(tag, 'gift')) + ' months).';
       } else if (num(mine.treasury) < DIPLO.giftCost) {
         whyNotGift = 'Not enough treasury (' + DIPLO.giftCost + ' talents required).';
@@ -680,6 +698,7 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
       else if (ourOverlord) whyNotAlly = 'They are our overlord.';
+      else if (grudgeHeld) whyNotAlly = 'No alliance while we hold ' + grudgeLabel + ' — the lost lands are remembered.';
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
       const cb = casusBelli(ctx, me, tag);
@@ -719,6 +738,13 @@ export function gameActions(ctx) {
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
+        // SPEC §67: their grudge against us (land of theirs we hold), and ours
+        // against them — for the panel's status line and action tooltips.
+        grudge: grudgeHeld ? { count: grudgeHeld.length, names: grudgeLabel, ceiling: grudgeCap } : null,
+        ourGrudge: (() => {
+          const held = liveGrudge(ctx, me, tag);
+          return held ? { count: held.length, ceiling: grudgeCeiling(ctx, me, tag) } : null;
+        })(),
         opinionOfUs, ourOpinion, allied, atWarWithUs, truceUntil,
         ourClient, ourOverlord, theirOverlord,
         theirOverlordName: theirOverlord && g.tags[theirOverlord] ? (g.tags[theirOverlord].name || theirOverlord) : '',

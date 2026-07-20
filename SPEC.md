@@ -2733,3 +2733,37 @@ February, Lebanon in March, Jordan in April, Syria in July.
   refusals, a ceding exit that leaves five armies fighting and Gaza's
   front untouched, the war-weary white exit, the last-court guard, and
   the subjugation refusal. The 8-year 1948 harness runs clean.
+
+## 67. The lost lands are remembered — conquest grudges
+
+A court whose provinces were taken in war does not warm to the taker
+while the taker still sits on them. Both conquest paths — the peace
+table (`executePeaceDeal`) and uti possidetis (`endWarBySword`) —
+record the taken province on the loser: `tag.grudges[taker] =
+{ provs: [ids], y, m }`.
+
+- **The ceiling** (`grudgeCeiling`, military.js): while the taker owns
+  any recorded province, the victim's opinion of them is capped at
+  −(`grudgeCeilingBase` + `grudgeCeilingPerProv` × provinces held),
+  floored at −`grudgeCeilingMax` (defaults: one province −100, deepening
+  to −180). `addOpinion` refuses to let positive deltas cross the cap,
+  so envoys, gifts, marriages and AI reciprocity all hit the same wall;
+  values a scripted treaty set above the cap are not raised further but
+  are pulled down by drift (`grudgeBite`/month) rather than clobbered.
+- **Drift** (`monthlyOpinionDrift`, unrest.js): live-grudge pairs are
+  excluded from the heal-toward-neutral pass — occupied patrimony does
+  not fade to indifference. A grudge dies only when the land stops
+  being the taker's: returned at a later peace, retaken in war, or
+  either house falls. The entry is pruned monthly, and from then on the
+  wound heals at the ordinary one point a month — restitution starts
+  the clock, it does not finish it.
+- **The player sees the wall**: the diplomacy panel's status line shows
+  "They remember N lost provinces" with the held names in the tooltip;
+  Improve Relations and Send Gift refuse at the cap with the reason,
+  and alliance is refused outright while a grudge is live. Tag renames
+  carry grudge books to the new name on both sides.
+- **Regression contract**: `smoke45.mjs` — cession records the grudge
+  and slams opinion to the cap, goodwill cannot cross the cap, drift
+  neither heals the pair nor prunes a live grudge, the sword path
+  records too, returning the land prunes the grudge and reopens normal
+  healing, and the book survives a save round-trip.
