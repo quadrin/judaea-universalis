@@ -1,5 +1,5 @@
-// Judaea Universalis — event chain: The War of Independence and the armed
-// armistice, 1948–56.
+// Judaea Universalis — event chain: The War of Independence, the armed
+// armistice, and the wars and peace that follow, 1948–79.
 // Content package. Zero imports; all effects run through ctx.helpers at runtime.
 // Historical spine: the declaration and invasion (14-15 May), the First and
 // Second Truces, the Altalena, the Czech arms, the Bernadotte affair, the
@@ -122,6 +122,148 @@ function imposeTruce(ctx, id, name) {
     ctx.helpers.addTagModifier(ctx, t, {
       id, name, months: 1, effects: { aiPassive: true },
     });
+  }
+}
+
+// ── The long armistice, 1958–79: shared plumbing ────────────────────────────
+// The map may have diverged by the sixties — the UAR may stand or Egypt may
+// stand alone, Israel may or may not hold Jerusalem and Sinai — so the later
+// arcs resolve their casts and their fronts at runtime instead of assuming
+// the atlas.
+function egyTag(ctx) {
+  if (alive(ctx, 'EGY')) return 'EGY';
+  if (alive(ctx, 'UAR')) return 'UAR';
+  return null;
+}
+function syrTag(ctx) {
+  if (alive(ctx, 'SYR')) return 'SYR';
+  if (alive(ctx, 'UAR')) return 'UAR';
+  return null;
+}
+// Opinion check in the ev_i_suez idiom: an unrecorded opinion between these
+// courts is old hatred, not indifference.
+function hostileToward(ctx, a, b, threshold) {
+  const t = ctx.game.tags[a];
+  if (!t || t.alive === false) return false;
+  const op = t.opinion && Number.isFinite(t.opinion[b]) ? t.opinion[b] : -200;
+  return op <= threshold;
+}
+// eventScore for any war (addWarscore above is wired to the 1948 EGY–ISR war).
+function warEventScore(ctx, a, b, tag, amount) {
+  try {
+    const w = findWar(ctx.game, a, b);
+    if (!w) return;
+    if (!w.eventScore) w.eventScore = { att: 0, def: 0 };
+    const side = (w.attackers || []).indexOf(tag) >= 0 ? 'att'
+      : (w.defenders || []).indexOf(tag) >= 0 ? 'def' : null;
+    if (side) w.eventScore[side] += amount;
+  } catch (e) { warnOnce('warEventScore', e); }
+}
+// Spawn at the first listed province the tag actually controls — fronts move.
+function spawnAt(ctx, tag, provNames, opts) {
+  for (const n of provNames) {
+    if (ctx.helpers.controls(ctx, tag, n)) return ctx.helpers.spawnArmy(ctx, tag, n, opts);
+  }
+  return null;
+}
+
+// June 1967, both doors. Called by both options of ev_i_moked: the strike, or
+// the waiting continued until the coalition chooses the hour instead.
+function sixDayOutbreak(ctx, preempt) {
+  const g = ctx.game;
+  const e = egyTag(ctx), s = syrTag(ctx);
+  if (!alive(ctx, 'ISR') || !e) {
+    ctx.helpers.chronicle(ctx, 'era', 'June 1967 arrives in a world whose 1948 ended differently; the six days belong to another history.');
+    return;
+  }
+  const enemies = [];
+  if (hostileToward(ctx, e, 'ISR', -50)) enemies.push(e);
+  if (alive(ctx, 'JOR') && hostileToward(ctx, 'JOR', 'ISR', -40)) enemies.push('JOR');
+  if (s && s !== e && enemies.indexOf(s) < 0 && hostileToward(ctx, s, 'ISR', -40)) enemies.push(s);
+  if (!enemies.length) {
+    ctx.helpers.chronicle(ctx, 'diplomacy', 'The May crisis finds no coalition hostile enough to fight; the June that history expected does not come.');
+    return;
+  }
+  g.flags.jorHeldJerusalem = alive(ctx, 'JOR') && ctx.helpers.controls(ctx, 'JOR', 'Jerusalem');
+  g.flags.sixDayWar = true;
+  if (preempt) {
+    for (const t of enemies) {
+      if (!findWar(g, 'ISR', t)) ctx.helpers.declareWar(ctx, 'ISR', t, 'The Six-Day War');
+      ctx.helpers.addTagModifier(ctx, t, {
+        id: 'moked', name: 'The Air Force Destroyed on the Ground', months: 12,
+        effects: { moraleMult: 0.85 },
+      });
+      warEventScore(ctx, 'ISR', t, 'ISR', 8);
+    }
+    ctx.helpers.adjust(ctx, 'ISR', { mar: 25 });
+    spawnAt(ctx, 'ISR', ['Beersheba', 'Kiryat Gat', 'Gaza', 'Joppa'], {
+      inf: 5, cav: 4, name: 'Southern Command',
+      general: { name: 'Yeshayahu Gavish', fire: 3, shock: 3, maneuver: 4 },
+    });
+    spawnAt(ctx, 'ISR', ['Tiberias', 'Safed', 'Afula'], {
+      inf: 3, cav: 2, name: 'Northern Command',
+      general: { name: 'David Elazar', fire: 3, shock: 3, maneuver: 3 },
+    });
+    ctx.helpers.chronicle(ctx, 'war', 'Moked: three air forces are destroyed on the ground by mid-morning, and the Six-Day War opens with the sky already decided.');
+  } else {
+    for (const t of enemies) {
+      if (!findWar(g, 'ISR', t)) ctx.helpers.declareWar(ctx, t, 'ISR', 'The June War');
+      ctx.helpers.addTagModifier(ctx, t, {
+        id: 'first_blow', name: 'The First Blow', months: 6,
+        effects: { moraleMult: 1.08 },
+      });
+    }
+    ctx.helpers.adjust(ctx, 'ISR', { stability: -1, warExhaustion: 1 });
+    ctx.helpers.chronicle(ctx, 'war', 'The waiting is decided from the other side: the coalition strikes first, and the June War opens on borders Israel chose not to cross.');
+  }
+}
+
+// October 1973, both doors. Called by both options of ev_i_yom_kippur.
+function octoberOutbreak(ctx, preempt) {
+  const g = ctx.game;
+  const e = egyTag(ctx), s = syrTag(ctx);
+  if (!alive(ctx, 'ISR') || !e || !hostileToward(ctx, e, 'ISR', -60) || findWar(g, 'ISR', e)) {
+    ctx.helpers.chronicle(ctx, 'era', 'The Day of Atonement of 1973 passes without sirens; the October war belongs to a history this world declined.');
+    return;
+  }
+  g.flags.yomKippurWar = true;
+  ctx.helpers.declareWar(ctx, e, 'ISR', 'The Yom Kippur War');
+  spawnAt(ctx, e, ['Pelusium', 'Arsinoe', 'Memphis'], {
+    inf: 6, cav: 3, name: 'Second and Third Armies',
+    general: { name: 'Saad el-Shazly', fire: 3, shock: 2, maneuver: 3 },
+  });
+  if (s && s !== e && hostileToward(ctx, s, 'ISR', -60) && !findWar(g, 'ISR', s)) {
+    ctx.helpers.declareWar(ctx, s, 'ISR', 'The Yom Kippur War');
+    spawnAt(ctx, s, ['Damascus', 'Batanea', 'Caesarea Philippi'], {
+      inf: 5, cav: 4, name: 'Syrian Armoured Divisions',
+      general: { name: 'Yusuf Shakkur', fire: 2, shock: 3, maneuver: 2 },
+    });
+  }
+  if (preempt) {
+    ctx.helpers.adjust(ctx, 'ISR', { mar: 10, legitimacy: -15, infl: -20 });
+    warEventScore(ctx, e, 'ISR', 'ISR', 5);
+    ctx.helpers.chronicle(ctx, 'war', 'Israel preempts on the fast itself: the crossing is blunted, and the chancelleries that would have armed the defender go cold.');
+  } else {
+    ctx.helpers.addTagModifier(ctx, e, {
+      id: 'the_crossing', name: 'The Crossing', months: 6,
+      effects: { moraleMult: 1.1, disciplineMult: 1.05 },
+    });
+    if (s && s !== e) {
+      ctx.helpers.addTagModifier(ctx, s, {
+        id: 'golan_flood', name: 'The Golan Flood', months: 3,
+        effects: { moraleMult: 1.08 },
+      });
+    }
+    ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: -1 });
+    ctx.helpers.addTagModifier(ctx, 'ISR', {
+      id: 'nickel_grass', name: 'The Airlift', months: 12,
+      effects: { reinforceMult: 1.15 },
+    });
+    ctx.helpers.chronicle(ctx, 'war', 'The sirens go up on the fast: the Canal is crossed and the Golan floods, and the world sees exactly who fired first.');
+  }
+  if (g.flags.mobilizedEarly) {
+    spawnAt(ctx, 'ISR', ['Tiberias', 'Safed', 'Joppa'], { inf: 3, cav: 2, name: 'The Reserves, Already Rolling' });
+    warEventScore(ctx, e, 'ISR', 'ISR', 3);
   }
 }
 
@@ -1237,5 +1379,1289 @@ export const EVENTS_1948 = [
         ctx.helpers.chronicle(ctx, 'ruler', 'The Iraqi monarchy falls; Abd al-Karim Qasim proclaims a republic and leaves the Baghdad Pact.');
       }),
     }],
+  },
+
+  // ── THE STATE IN ITS SECOND DECADE, 1960–66 ───────────────────────────────
+  {
+    id: 'ev_i_garibaldi',
+    title: 'The Man at the Bus Stop',
+    worldLabel: 'Mossad takes Eichmann on Garibaldi Street',
+    desc: 'A clerk of the Buenos Aires suburbs walks home from the bus stop on '
+      + 'Garibaldi Street and is in a safe house before his supper goes cold. Ricardo '
+      + 'Klement\'s papers are false; the hands that filed a continent\'s worth of '
+      + 'transports are real. A special El Al flight is fueling. The question is what '
+      + 'a state built by the survivors owes the dead: a verdict, or merely an end.',
+    forTag: 'both',
+    date: { y: 1960, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Bring him to Jerusalem',
+        tooltip: 'Israel: +5 legitimacy, −10 influence points (Argentina and the Security Council are not amused). The trial will follow.',
+        effects: guard('ev_i_garibaldi:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5, infl: -10 });
+          ctx.game.flags.eichmannToJerusalem = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Adolf Eichmann is taken from a Buenos Aires bus stop and flown to Israel to stand trial.');
+        }),
+      },
+      {
+        label: 'A grave in the pampas',
+        tooltip: 'Israel: +10 martial points (the service proves its reach), −5 legitimacy — justice done in the dark persuades no one, and there will be no trial.',
+        effects: guard('ev_i_garibaldi:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10, legitimacy: -5 });
+          ctx.helpers.chronicle(ctx, 'era', 'The man from Garibaldi Street is never seen again; the rumor is left to do the work a courtroom might have done.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_glass_booth',
+    title: 'The Glass Booth',
+    desc: 'For four months a man in a glass booth answers questions in a Jerusalem '
+      + 'theater, and a hundred survivors testify to what until now was spoken of, if '
+      + 'at all, in kitchens. The country hears the whole of it aloud for the first '
+      + 'time: the schoolteachers weep at the radio, the sabras discover what their '
+      + 'parents did not say. The verdict is never in doubt; the hearing is the point. '
+      + 'Afterward, the only civil execution in the state\'s history, and the ashes '
+      + 'scattered outside territorial waters — so that nothing of him remains in any '
+      + 'country\'s soil.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_glass_booth', (ctx) =>
+      dateGE(ctx, 1961, 4) && alive(ctx, 'ISR') && !!ctx.game.flags.eichmannToJerusalem),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let the survivors speak',
+        tooltip: 'Israel: +10 legitimacy, +1 stability; Jerusalem −1 unrest for 12 months — the country becomes, for a season, one household.',
+        effects: guard('ev_i_glass_booth:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: 1 });
+          const seat = ctx.helpers.controls(ctx, 'ISR', 'Jerusalem') ? 'Jerusalem' : 'Joppa';
+          ctx.helpers.addProvinceModifier(ctx, seat, {
+            id: 'the_country_listens', name: 'The Country Listens', months: 12, effects: { unrest: -1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The Eichmann trial: a hundred survivors testify, one man hangs, and the ashes are scattered beyond the territorial waters.');
+        }),
+      },
+      {
+        label: 'A soldier\'s tribunal, swift and closed',
+        tooltip: 'Israel: +20 government points, −5 legitimacy — efficient, unimpeachable, and the testimony the country needed to hear stays in the transcript.',
+        effects: guard('ev_i_glass_booth:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 20, legitimacy: -5 });
+          ctx.helpers.chronicle(ctx, 'era', 'Eichmann is tried quickly and hanged quietly; the reckoning is legal, and only legal.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_eshkol',
+    title: 'The Old Man Goes South',
+    desc: 'Ben-Gurion resigns — again, and this time it holds — and goes back to his '
+      + 'hut at Sde Boker to write and to quarrel by mail. Levi Eshkol inherits: a '
+      + 'compromiser, a treasurer, a man who speaks four languages and haggles in all '
+      + 'of them. The reparations economy is pouring foundations faster than the '
+      + 'ideologues can argue about the money\'s smell, and in the south something '
+      + 'unphotographed hums at Dimona.',
+    forTag: 'ISR',
+    date: { y: 1963, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Eshkol — the manager, not the prophet',
+        tooltip: 'Levi Eshkol becomes Prime Minister: +1 stability, and the reparations boom pays +5% income for 36 months.',
+        effects: guard('ev_i_eshkol:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Levi Eshkol', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 67 });
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'reparations_boom', name: 'The Reparations Economy', months: 36, effects: { incomeMult: 1.05 },
+          });
+          ctx.helpers.chronicle(ctx, 'ruler', 'Ben-Gurion retires to Sde Boker; Levi Eshkol becomes Prime Minister of Israel.');
+        }),
+      },
+      {
+        label: 'Beg the Old Man to stay',
+        tooltip: '+5 legitimacy now, but −1 stability and the Coalition −10 approval — the founder\'s last years are spent on feuds, and the party splits under him.',
+        effects: guard('ev_i_eshkol:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5, stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'coalition', -10);
+          ctx.helpers.chronicle(ctx, 'ruler', 'Ben-Gurion is persuaded to stay on; the founder governs, and the founder feuds.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_water_carrier',
+    title: 'The Kinneret Goes South',
+    worldLabel: 'The National Water Carrier opens; the PLO is founded',
+    desc: 'The National Water Carrier opens: the Kinneret piped a hundred miles to the '
+      + 'Negev, the engineering project the state was half-built to justify. The Arab '
+      + 'League summit answers in kind — plans to divert the Jordan\'s headwaters in '
+      + 'Syria, and a new instrument founded in Jerusalem\'s Intercontinental Hotel: '
+      + 'the Palestine Liberation Organization, chaired for now by a lawyer the '
+      + 'governments trust precisely because he frightens no one.',
+    forTag: 'both',
+    date: { y: 1964, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Open the taps at full capacity',
+        tooltip: 'Israel: +8% income permanently, Beersheba and Dimona +15% production. The League answers: headwater diversion begins, and the PLO is founded.',
+        effects: guard('ev_i_water_carrier:0', (ctx) => {
+          const g = ctx.game;
+          if (alive(ctx, 'ISR') && ctx.helpers.controls(ctx, 'ISR', 'Tiberias')) {
+            ctx.helpers.addTagModifier(ctx, 'ISR', {
+              id: 'water_carrier', name: 'The National Water Carrier', months: -1, effects: { incomeMult: 1.08 },
+            });
+            for (const n of ['Beersheba', 'Dimona']) {
+              if (ctx.helpers.controls(ctx, 'ISR', n)) {
+                ctx.helpers.addProvinceModifier(ctx, n, {
+                  id: 'negev_water', name: 'The Desert Watered', months: -1, effects: { prodMult: 1.15 },
+                });
+              }
+            }
+            g.flags.headwaterDiversion = true;
+            ctx.helpers.chronicle(ctx, 'era', 'The National Water Carrier opens: the Kinneret flows to the Negev, and the Arab League reaches for the headwaters.');
+          } else {
+            ctx.helpers.chronicle(ctx, 'era', 'The decade of the great water schemes arrives on a map where the Kinneret answers to someone else; the carrier stays a blueprint.');
+          }
+          g.flags.ploFounded = true;
+          const seat = alive(ctx, 'JOR') && ctx.helpers.controls(ctx, 'JOR', 'Jerusalem') ? 'Jerusalem\'s Intercontinental Hotel' : 'Cairo';
+          const e = egyTag(ctx);
+          if (e && alive(ctx, 'ISR')) {
+            setOpinionDelta(ctx.game, e, 'ISR', -10);
+          }
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The Palestine Liberation Organization is founded at ' + seat + ' — an instrument of the governments, for now.');
+        }),
+      },
+      {
+        label: 'Meter the Jordan, and say so at the UN',
+        tooltip: 'Israel: +4% income permanently and +10 influence points — the Johnston quotas are honored aloud; the diversion answer loses its pretext (no headwater arc). The PLO is founded regardless.',
+        effects: guard('ev_i_water_carrier:1', (ctx) => {
+          const g = ctx.game;
+          if (alive(ctx, 'ISR') && ctx.helpers.controls(ctx, 'ISR', 'Tiberias')) {
+            ctx.helpers.addTagModifier(ctx, 'ISR', {
+              id: 'water_carrier', name: 'The Carrier, Metered', months: -1, effects: { incomeMult: 1.04 },
+            });
+            ctx.helpers.adjust(ctx, 'ISR', { infl: 10 });
+            const s = syrTag(ctx);
+            if (s) setOpinionDelta(ctx.game, s, 'ISR', 10);
+            if (alive(ctx, 'JOR')) setOpinionDelta(ctx.game, 'JOR', 'ISR', 10);
+          }
+          g.flags.ploFounded = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The carrier opens within the published quotas; the summit founds its organization anyway, but the bulldozers stay home.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_water_war',
+    title: 'The War Over Water',
+    maxYear: 1967,
+    desc: 'On the Golan slopes the earthmovers are cutting a channel to send the '
+      + 'Banias away from the Jordan, and the argument is conducted in the only '
+      + 'grammar both sides trust: a tractor plows a disputed field, a gun answers, a '
+      + 'longer gun answers that. The tank gunners of the northern command are '
+      + 'becoming, shot by shot, the best in the world at hitting bulldozers.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_i_water_war', (ctx) =>
+      dateGE(ctx, 1965, 3) && !!ctx.game.flags.headwaterDiversion
+      && alive(ctx, 'ISR') && !!syrTag(ctx)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Long-barrel answers',
+        tooltip: 'Tank fire wrecks the works: Syria −100 talents and −3% income for 24 months; Israel +10 martial points; opinions −20 both ways. The slide to war steepens.',
+        effects: guard('ev_i_water_war:0', (ctx) => {
+          const s = syrTag(ctx);
+          if (!s) return;
+          ctx.helpers.adjust(ctx, s, { treasury: -100 });
+          ctx.helpers.addTagModifier(ctx, s, {
+            id: 'diversion_wrecked', name: 'The Diversion Wrecked', months: 24, effects: { incomeMult: 0.97 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10 });
+          setOpinionDelta(ctx.game, s, 'ISR', -20);
+          setOpinionDelta(ctx.game, 'ISR', s, -20);
+          ctx.helpers.chronicle(ctx, 'war', 'The war over water: tank fire at extreme range ends the headwater diversion, one earthmover at a time.');
+        }),
+      },
+      {
+        label: 'Send the air force against the works',
+        tooltip: 'The diversion ends at once: Syria −1 stability. Israel −5 legitimacy and opinions −40 both ways — escalation chooses its own schedule now.',
+        effects: guard('ev_i_water_war:1', (ctx) => {
+          const s = syrTag(ctx);
+          if (!s) return;
+          ctx.helpers.adjust(ctx, s, { stability: -1 });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
+          setOpinionDelta(ctx.game, s, 'ISR', -40);
+          setOpinionDelta(ctx.game, 'ISR', s, -40);
+          ctx.helpers.chronicle(ctx, 'war', 'Aircraft finish the argument over the headwaters; the diversion dies, and the border learns what comes after artillery.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_end_mil_gov',
+    title: 'Citizens, at Last',
+    desc: 'Eighteen years after the war, the military government over Israel\'s Arab '
+      + 'citizens is abolished: no more travel permits, no more governors, the '
+      + 'emergency regulations folded away if not repealed. The same December, Stockholm: '
+      + 'S.Y. Agnon shares the Nobel in literature, accepting in the accents of '
+      + 'Buczacz and Jerusalem both. A state that can retire an occupation of its own '
+      + 'citizens and export its dreams in Hebrew is becoming, at last, a country.',
+    forTag: 'ISR',
+    date: { y: 1966, m: 12 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Abolish it outright',
+        tooltip: 'Israel: +10 legitimacy, +1 stability; the Galilee (Sepphoris, Afula) −1.5 unrest permanently.',
+        effects: guard('ev_i_end_mil_gov:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: 1 });
+          for (const n of ['Sepphoris', 'Afula']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'mil_gov_lifted', name: 'The Military Government Lifted', months: -1, effects: { unrest: -1.5 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The military government over Israel\'s Arab citizens is abolished; the same season, Agnon shares the Nobel in literature.');
+        }),
+      },
+      {
+        label: 'District by district, permit by permit',
+        tooltip: 'Israel: +15 government points, +5 legitimacy; the Galilee −0.5 unrest for 36 months — caution keeps the apparatus, and the apparatus keeps the grievance.',
+        effects: guard('ev_i_end_mil_gov:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 15, legitimacy: 5 });
+          for (const n of ['Sepphoris', 'Afula']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'mil_gov_lifted', name: 'The Permits Thinned', months: 36, effects: { unrest: -0.5 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The military government is dismantled by installments; Agnon\'s Nobel is toasted in a country still carrying its permits.');
+        }),
+      },
+    ],
+  },
+
+  // ── THE SLIDE TO WAR AND THE SIX DAYS, 1966–67 ────────────────────────────
+  {
+    id: 'ev_i_slide_to_war',
+    title: 'Samu, and the Sky over the Golan',
+    maxYear: 1968,
+    desc: 'A mine on the Hebron road, and the reprisal goes in by daylight at Samu — a '
+      + 'battalion with armor where a platoon by night was the custom, and the young '
+      + 'King\'s own subjects burn his portrait for failing to protect a village his '
+      + 'army never reached in time. In April the argument moves upstairs: a dogfight '
+      + 'over the Golan ends with six MiGs down and the victors circling Damascus '
+      + 'itself. Every capital reads the same forecast now, and none of them orders '
+      + 'umbrellas.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_i_slide_to_war', (ctx) =>
+      dateGE(ctx, 1966, 11) && alive(ctx, 'ISR')
+      && (alive(ctx, 'JOR') || !!syrTag(ctx))),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Battalions in daylight',
+        tooltip: 'Israel: +10 martial points, −5 legitimacy. Jordan −5 legitimacy; Amman and Damascus −25 opinion of Israel — deterrence is served, and so is the war it was meant to prevent.',
+        effects: guard('ev_i_slide:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10, legitimacy: -5 });
+          if (alive(ctx, 'JOR')) {
+            ctx.helpers.adjust(ctx, 'JOR', { legitimacy: -5 });
+            setOpinionDelta(ctx.game, 'JOR', 'ISR', -25);
+            const j = ctx.game.tags.JOR;
+            if (j && j.ruler && j.ruler.name.indexOf('Hussein') < 0) {
+              ctx.helpers.setRuler(ctx, 'JOR', { name: 'Hussein bin Talal', title: 'King', gov: 3, infl: 4, mar: 3, age: 31 });
+            }
+          }
+          const s = syrTag(ctx);
+          if (s) setOpinionDelta(ctx.game, s, 'ISR', -25);
+          ctx.game.flags.slideToWar = true;
+          ctx.helpers.chronicle(ctx, 'war', 'Samu by daylight, six MiGs down over the Golan: the reprisal policy and the air war walk the region toward June.');
+        }),
+      },
+      {
+        label: 'Reprisal by night, and notes to the powers',
+        tooltip: 'Israel: +10 influence points, no legitimacy loss; opinions only −10 — restraint, which the radios of Cairo and Damascus will report as weakness.',
+        effects: guard('ev_i_slide:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 10 });
+          if (alive(ctx, 'JOR')) {
+            setOpinionDelta(ctx.game, 'JOR', 'ISR', -10);
+            const j = ctx.game.tags.JOR;
+            if (j && j.ruler && j.ruler.name.indexOf('Hussein') < 0) {
+              ctx.helpers.setRuler(ctx, 'JOR', { name: 'Hussein bin Talal', title: 'King', gov: 3, infl: 4, mar: 3, age: 31 });
+            }
+          }
+          const s = syrTag(ctx);
+          if (s) setOpinionDelta(ctx.game, s, 'ISR', -10);
+          ctx.game.flags.slideToWar = true;
+          ctx.helpers.chronicle(ctx, 'war', 'The reprisals stay small and the notes stay polite; the broadcasts call it fear, and the slide continues at its own pace.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_hamtana',
+    title: 'HAMTANA — The Waiting',
+    worldLabel: 'Nasser closes the Straits of Tiran; the region mobilizes',
+    desc: 'It comes in three weeks: the divisions into Sinai on a false Soviet report, '
+      + 'the UN force expelled with a single letter, and then the words themselves — '
+      + 'the Straits of Tiran closed to Israeli shipping. Armies mobilize on every '
+      + 'border. In Israel the economy simply stops: the reserves are the economy. '
+      + 'Trenches are dug in the city parks, and the rabbinate quietly consecrates '
+      + 'mass graves in Tel Aviv for the ten thousand the plans assume. The state is '
+      + 'nineteen years old and waiting to learn if it gets to be twenty.',
+    forTag: 'both',
+    date: { y: 1967, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Call everyone — and form the unity government',
+        tooltip: 'Israel: +4,000 manpower, +15% reinforcement for 12 months, Dayan to Defense (+25 martial points) — but −1 stability and −8% income while the straits stay closed. The corner is now the historical one.',
+        effects: guard('ev_i_hamtana:0', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !hostileToward(ctx, e, 'ISR', -50)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'May 1967 passes without its crisis; the straits stay open in a world that diverged.');
+            return;
+          }
+          spawnAt(ctx, e, ['Rhinocolura', 'Sinai Interior', 'Pelusium', 'Memphis'], {
+            inf: 5, cav: 2, name: 'Sinai Field Divisions',
+            general: { name: 'Abdel Mohsen Murtagi', fire: 2, shock: 2, maneuver: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 4000, mar: 25, stability: -1 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'hamtana_mobilized', name: 'The Nation Under Arms', months: 12, effects: { reinforceMult: 1.15 },
+          });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'straits_closed', name: 'The Straits Closed', months: 12, effects: { incomeMult: 0.92 },
+          });
+          ctx.game.flags.hamtana = true;
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.helpers.chronicle(ctx, 'war', 'The Straits of Tiran are closed and the graves are consecrated in advance; Israel mobilizes everything and waits.');
+        }),
+      },
+      {
+        label: 'Partial call-up; let Washington try the straits',
+        tooltip: 'Israel: +1,500 manpower, +20 influence points, +5 legitimacy — but −8% income for 12 months anyway, and the corner is not forced: the decision passes to others.',
+        effects: guard('ev_i_hamtana:1', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !hostileToward(ctx, e, 'ISR', -50)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'May 1967 passes without its crisis; the straits stay open in a world that diverged.');
+            return;
+          }
+          spawnAt(ctx, e, ['Rhinocolura', 'Sinai Interior', 'Pelusium', 'Memphis'], {
+            inf: 5, cav: 2, name: 'Sinai Field Divisions',
+            general: { name: 'Abdel Mohsen Murtagi', fire: 2, shock: 2, maneuver: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 1500, infl: 20, legitimacy: 5 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'straits_closed', name: 'The Straits Closed', months: 12, effects: { incomeMult: 0.92 },
+          });
+          ctx.game.flags.hamtanaWaited = true;
+          ctx.helpers.chronicle(ctx, 'war', 'The straits close and Israel waits for the maritime powers to reopen them; the armada of notes assembles slowly.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_moked',
+    title: 'The Six Days',
+    worldLabel: 'War in the first week of June',
+    desc: 'The cabinet has sat through the night twice. The air force asks for one '
+      + 'word and three hours of morning fog. If it comes, the war will open with '
+      + 'Moked — every runway from the Nile to the Euphrates cratered before the '
+      + 'enemy\'s pilots finish breakfast — Sinai in four days, and a plea to the King '
+      + 'of Jordan to stay out that no one in the room expects him to hear. If it '
+      + 'does not come, the coalition on the borders will choose its own morning.',
+    forTag: 'both',
+    date: { y: 1967, m: 6 },
+    world: true,
+    major: true,
+    aiOption: (ctx) => (ctx.game.flags && ctx.game.flags.hamtana ? 0 : 1),
+    options: [
+      {
+        label: 'Moked — strike first',
+        tooltip: 'War with every hostile neighbor: their armies fight at −15% morale for 12 months ("The Air Force Destroyed on the Ground"), Israel +25 martial points, +8 war score per front, and fresh commands in the north and south.',
+        effects: guard('ev_i_moked:0', (ctx) => {
+          sixDayOutbreak(ctx, true);
+        }),
+      },
+      {
+        label: 'Wait for the powers',
+        tooltip: 'No first strike. If the coalition attacks anyway, it does so with +8% morale for 6 months ("The First Blow") and Israel takes −1 stability, +1 war exhaustion.',
+        effects: guard('ev_i_moked:1', (ctx) => {
+          sixDayOutbreak(ctx, false);
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_har_habayit',
+    title: 'Har HaBayit BeYadeinu',
+    minYear: 1967,
+    maxYear: 1972,
+    desc: 'The plea to Hussein was ignored, and so the paratroopers go through the '
+      + 'Lions\' Gate at dawn — men fighting alley by alley through a city their '
+      + 'commanders know from postcards and their grandfathers from prayer. At 10:08 '
+      + 'the radio net carries four words that stop the country cold: "The Temple '
+      + 'Mount is in our hands." Rabbi Goren\'s shofar sounds at the Wall over the '
+      + 'shooting; secular colonels weep without knowing why. Nineteen years after '
+      + 'the Quarter emptied, the paratroopers hang a flag where the Legion took it '
+      + 'down.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_har_habayit', (ctx) =>
+      !!ctx.game.flags.sixDayWar && !!ctx.game.flags.jorHeldJerusalem
+      && alive(ctx, 'ISR') && ctx.helpers.controls(ctx, 'ISR', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Wall — and the keys of the Mount to the Waqf',
+        tooltip: 'Israel: +15 legitimacy, +1 stability; Jerusalem −1 unrest for 24 months. Dayan hands the Mount back to its clerics: sovereignty with a long fuse removed.',
+        effects: guard('ev_i_har_habayit:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, stability: 1 });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_reunited', name: 'The City Reunited', months: 24, effects: { unrest: -1 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', '"Har HaBayit beYadeinu": paratroopers take the Old City through the Lions\' Gate, and the shofar sounds at the Wall.');
+        }),
+      },
+      {
+        label: 'Annex, unify, build',
+        tooltip: 'Israel: +10 legitimacy, the Revisionists +10 approval — but Jerusalem +1.5 unrest for 24 months and the neighbors −20 opinion: the city is claimed whole, at once, aloud.',
+        effects: guard('ev_i_har_habayit:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'city_reunited', name: 'The City Claimed Whole', months: 24, effects: { unrest: 1.5 },
+          });
+          const e = egyTag(ctx);
+          if (e) setOpinionDelta(ctx.game, e, 'ISR', -20);
+          if (alive(ctx, 'JOR')) setOpinionDelta(ctx.game, 'JOR', 'ISR', -20);
+          ctx.helpers.chronicle(ctx, 'war', 'The Old City falls and is annexed in the same week; the shofar and the surveyors arrive together.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_lines_of_june',
+    title: 'The Map Triples',
+    desc: 'The cease-fires take hold where the columns stop: the Canal, the river, the '
+      + 'crest of the Golan. The map has tripled in a week, and the euphoria is real '
+      + 'and photographs well. Less photographed: a French embargo on the aircraft '
+      + 'already paid for, and 1.1 million Palestinians who woke under military rule '
+      + 'and will not stop being there when the parades end. The victory is total. '
+      + 'What it is *for* — that argument now begins, and does not end.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_lines_of_june', (ctx) => {
+      if (!ctx.game.flags.sixDayWar || !dateGE(ctx, 1967, 9) || !alive(ctx, 'ISR')) return false;
+      const e = egyTag(ctx), s = syrTag(ctx);
+      return [e, 'JOR', s].some((t) => t && findWar(ctx.game, 'ISR', t));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Cease-fire on the lines',
+        tooltip: 'Every June-War front ends where the armies stand (Israel\'s side keeps its conquests). Israel: +15 legitimacy, −2 war exhaustion — plus the French embargo (−10% reinforcement, 24 months) and military rule (+1 unrest) in the occupied hill country and Gaza.',
+        effects: guard('ev_i_lines_of_june:0', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) {
+            if (!t) continue;
+            const w = findWar(ctx.game, 'ISR', t);
+            if (!w) continue;
+            const side = (w.attackers || []).indexOf('ISR') >= 0 ? 'att' : 'def';
+            ctx.helpers.endWar(ctx, 'ISR', t, side);
+            ctx.helpers.adjust(ctx, t, { warExhaustion: -1 });
+          }
+          ctx.helpers.removeModifier(ctx, 'ISR', 'straits_closed');
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, warExhaustion: -2 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'french_embargo', name: 'The French Embargo', months: 24, effects: { reinforceMult: 0.9 },
+          });
+          for (const n of ['Neapolis', 'Hebron', 'Ramallah', 'Jenin', 'Jericho', 'Bethlehem', 'Tulkarm', 'Qalqilya', 'Gaza', 'Khan Yunis', 'Rafah']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'military_rule', name: 'Military Government', months: -1, effects: { unrest: 1 },
+              });
+            }
+          }
+          ctx.game.flags.sixDayEnded = true;
+          ctx.helpers.chronicle(ctx, 'peace', 'The cease-fire lines of June: the map triples, the embargo begins, and 1.1 million Palestinians wake under military rule.');
+        }),
+      },
+      {
+        label: 'Press to the capitals',
+        tooltip: 'No cease-fire: the wars continue, +8 war score on every live front — but Israel −10 legitimacy, +2 war exhaustion, and the powers begin discussing the word "sanctions".',
+        effects: guard('ev_i_lines_of_june:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) {
+            if (!t || !findWar(ctx.game, 'ISR', t)) continue;
+            warEventScore(ctx, 'ISR', t, 'ISR', 8);
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, warExhaustion: 2 });
+          ctx.game.flags.sixDayEnded = true;
+          ctx.helpers.chronicle(ctx, 'war', 'The columns do not stop at the cease-fire lines; the June War runs past its week, and the world\'s patience with it.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_khartoum',
+    title: 'Khartoum, and Resolution 242',
+    desc: 'The Arab summit at Khartoum answers the defeat with three no\'s: no peace '
+      + 'with Israel, no recognition of Israel, no negotiations with it. In November '
+      + 'the Security Council adopts Resolution 242 — withdrawal from territories '
+      + 'occupied, in exchange for secure and recognized boundaries: land for peace, '
+      + 'the founding text of every negotiation for the next half century. Between '
+      + 'the no\'s and the resolution, a first convoy of families drives back up to '
+      + 'Kfar Etzion, where the fathers died in \'48 — and the settlement question '
+      + 'opens like a door nobody can close.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_khartoum', (ctx) =>
+      dateGE(ctx, 1967, 9) && !!ctx.game.flags.sixDayEnded && alive(ctx, 'ISR')),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Answer the no\'s with facts on the ground',
+        tooltip: 'Kfar Etzion resettled, Hebron next: the Kibbutzim and the Revisionists +10 approval each — but Hebron and Bethlehem +1 unrest permanently and −5 legitimacy abroad. The settlement arc opens.',
+        effects: guard('ev_i_khartoum:0', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) if (t) setOpinionDelta(ctx.game, t, 'ISR', -20);
+          ctx.helpers.factionShift(ctx, 'ISR', 'kibbutzim', 10);
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
+          for (const n of ['Hebron', 'Bethlehem']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'settlement_question', name: 'The Settlement Question', months: -1, effects: { unrest: 1 },
+              });
+            }
+          }
+          ctx.game.flags.settlementArc = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Khartoum\'s three no\'s; Resolution 242\'s land-for-peace; and the first families back at Kfar Etzion — all in one autumn.');
+        }),
+      },
+      {
+        label: 'Hold the territories as a bargaining card',
+        tooltip: 'Israel: +20 influence points, +5 legitimacy — everything is negotiable, nothing is settled, and the door at Kfar Etzion stays shut for now.',
+        effects: guard('ev_i_khartoum:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) if (t) setOpinionDelta(ctx.game, t, 'ISR', -20);
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 20, legitimacy: 5 });
+          ctx.game.flags.landForPeacePosture = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Khartoum says no three times; Jerusalem answers by holding everything and promising nothing — the territories become a single enormous card.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_attrition',
+    title: 'The War of Attrition',
+    desc: 'Eshkol dies at his desk in February and the party summons Golda Meir back '
+      + 'from retirement to preside. What she inherits on the Canal is not peace and '
+      + 'not war: artillery duels across the water, commando raids on radar stations, '
+      + 'the Bar-Lev forts counting incoming by the thousand, and Soviet pilots — '
+      + 'everyone knows, no one says — flying Egyptian skies. It is the longest war '
+      + 'the state will fight, and the only one measured entirely in patience.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_i_attrition', (ctx) => {
+      const e = egyTag(ctx);
+      return dateGE(ctx, 1969, 3) && alive(ctx, 'ISR') && !!e
+        && !!ctx.game.flags.sixDayEnded && hostileToward(ctx, e, 'ISR', -50);
+    }),
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Deep-penetration bombing',
+        tooltip: 'Golda Meir takes office. Egypt: −1 stability and −5% morale for 12 months — but Soviet advisers arrive (+5% discipline, 24 months). Israel: −800 manpower, +1.5 war exhaustion.',
+        effects: guard('ev_i_attrition:0', (ctx) => {
+          const e = egyTag(ctx);
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Golda Meir', title: 'Prime Minister', gov: 4, infl: 4, mar: 2, age: 70 });
+          if (e) {
+            ctx.helpers.adjust(ctx, e, { stability: -1 });
+            ctx.helpers.addTagModifier(ctx, e, {
+              id: 'canal_pounded', name: 'The Canal Cities Emptied', months: 12, effects: { moraleMult: 0.95 },
+            });
+            ctx.helpers.addTagModifier(ctx, e, {
+              id: 'soviet_advisers', name: 'Soviet Advisers', months: 24, effects: { disciplineMult: 1.05 },
+            });
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -800, warExhaustion: 1.5 });
+          ctx.helpers.chronicle(ctx, 'war', 'The War of Attrition: deep-penetration raids over Egypt, Soviet pilots in Egyptian skies, and the Rogers cease-fire of August 1970 to end it.');
+        }),
+      },
+      {
+        label: 'The Bar-Lev Line — absorb and endure',
+        tooltip: 'Golda Meir takes office. Israel: −150 talents for the forts, +8% reinforcement for 36 months, −500 manpower, +1 war exhaustion — the sand absorbs what the treasury pays for.',
+        effects: guard('ev_i_attrition:1', (ctx) => {
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Golda Meir', title: 'Prime Minister', gov: 4, infl: 4, mar: 2, age: 70 });
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -150, manpower: -500, warExhaustion: 1 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'bar_lev', name: 'The Bar-Lev Line', months: 36, effects: { reinforceMult: 1.08 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'The War of Attrition is fought from the Bar-Lev forts, shell for shell, until the Rogers cease-fire of August 1970.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_black_september',
+    title: 'Black September',
+    worldLabel: 'Nasser dies; civil war in Jordan',
+    desc: 'A month after brokering the Jordan cease-fire, Nasser\'s heart stops, and '
+      + 'four million people follow the coffin through Cairo. In Amman the succession '
+      + 'crisis is someone else\'s: the fedayeen — famous since they stood at Karameh '
+      + '— now run a state within the Hashemite state, and in September they hijack '
+      + 'four airliners to a desert strip and dare the King to object. The Arab '
+      + 'Legion\'s artillery answers the dare.',
+    forTag: 'both',
+    date: { y: 1970, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The King\'s artillery speaks',
+        tooltip: 'Sadat succeeds Nasser. Jordan: +15 martial points, the Palace +10 — but +1 unrest everywhere for 12 months, and the expelled fedayeen carry their war to Lebanon (Tyre and Sidon +1.5 unrest for 60 months).',
+        effects: guard('ev_i_black_september:0', (ctx) => {
+          const e = egyTag(ctx);
+          if (e) {
+            const t = ctx.game.tags[e];
+            if (t && t.ruler && t.ruler.name.indexOf('Nasser') >= 0) {
+              ctx.helpers.setRuler(ctx, e, { name: 'Anwar Sadat', title: 'President', gov: 3, infl: 4, mar: 3, age: 51 });
+              ctx.helpers.chronicle(ctx, 'ruler', 'Gamal Abdel Nasser is dead at fifty-two; Anwar Sadat, the underestimated deputy, succeeds him.');
+            }
+          }
+          if (alive(ctx, 'JOR')) {
+            ctx.helpers.adjust(ctx, 'JOR', { mar: 15, stability: -1 });
+            ctx.helpers.factionShift(ctx, 'JOR', 'palace', 10);
+            ctx.helpers.addTagModifier(ctx, 'JOR', {
+              id: 'black_september', name: 'Black September', months: 12, effects: { unrestAll: 1 },
+            });
+            if (alive(ctx, 'LEB')) {
+              for (const n of ['Tyre', 'Sidon']) {
+                if (ctx.helpers.controls(ctx, 'LEB', n)) {
+                  ctx.helpers.addProvinceModifier(ctx, n, {
+                    id: 'fedayeen_bases', name: 'The Fedayeen Encamped', months: 60, effects: { unrest: 1.5 },
+                  });
+                }
+              }
+            }
+            ctx.helpers.chronicle(ctx, 'war', 'Black September: the Arab Legion breaks the fedayeen state-within-the-state; the survivors regroup in Lebanon.');
+          }
+        }),
+      },
+      {
+        label: 'Accommodate the organizations',
+        tooltip: 'Sadat succeeds Nasser. Jordan: −10 legitimacy, −1 stability, Amman +2 unrest for 24 months — the crown shares its house and hopes the lodgers tire first.',
+        effects: guard('ev_i_black_september:1', (ctx) => {
+          const e = egyTag(ctx);
+          if (e) {
+            const t = ctx.game.tags[e];
+            if (t && t.ruler && t.ruler.name.indexOf('Nasser') >= 0) {
+              ctx.helpers.setRuler(ctx, e, { name: 'Anwar Sadat', title: 'President', gov: 3, infl: 4, mar: 3, age: 51 });
+              ctx.helpers.chronicle(ctx, 'ruler', 'Gamal Abdel Nasser is dead at fifty-two; Anwar Sadat, the underestimated deputy, succeeds him.');
+            }
+          }
+          if (alive(ctx, 'JOR')) {
+            ctx.helpers.adjust(ctx, 'JOR', { legitimacy: -10, stability: -1 });
+            ctx.helpers.addProvinceModifier(ctx, 'Philadelphia', {
+              id: 'black_september', name: 'A Kingdom Shared', months: 24, effects: { unrest: 2 },
+            });
+            ctx.helpers.chronicle(ctx, 'war', 'The King chooses accommodation over artillery; the fedayeen keep their checkpoints inside his capital.');
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── MUNICH AND THE YOM KIPPUR WAR, 1972–74 ────────────────────────────────
+  {
+    id: 'ev_i_munich',
+    title: 'Eleven Athletes',
+    worldLabel: 'The Munich massacre',
+    desc: 'It was to be the Games that erased 1936: a Jewish team competing in Germany '
+      + 'under its own flag. Instead, Black September gunmen take the Israeli quarters '
+      + 'at dawn, the world watches a man in a stocking mask on a balcony for a day, '
+      + 'and the rescue at the airfield fails in ninety seconds of floodlit '
+      + 'incompetence. Eleven athletes come home in coffins. The same summer, '
+      + 'gunmen hired from another continent opened fire on the crowds at Lod '
+      + 'airport. The question on the cabinet table is not whether to answer.',
+    forTag: 'ISR',
+    date: { y: 1972, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Wrath of God',
+        tooltip: 'Israel: +15 martial points — the committee\'s list will be worked through for years, in Rome, Paris, Nicosia, Beirut. −5 legitimacy when the work is noticed, and Europe cools (−10 opinion where it matters).',
+        effects: guard('ev_i_munich:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 15, legitimacy: -5 });
+          for (const t of ['UK', 'ITA']) {
+            if (alive(ctx, t)) setOpinionDelta(ctx.game, t, 'ISR', -10);
+          }
+          ctx.game.flags.wrathOfGod = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Munich: eleven athletes murdered at the Games. The committee convenes; the Wrath of God will take years, and does.');
+        }),
+      },
+      {
+        label: 'Ask the world for justice',
+        tooltip: 'Israel: +10 influence points, +5 legitimacy, −1 stability — the extraditions never come, the country seethes, and the files stay open.',
+        effects: guard('ev_i_munich:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 10, legitimacy: 5, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'era', 'Munich: eleven athletes murdered at the Games. The warrants are filed in courts that will never serve them.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_concept',
+    title: 'The Concept',
+    desc: 'Military Intelligence has a doctrine and calls it the Concept: Egypt will '
+      + 'not attack without air superiority, Syria will not attack without Egypt, '
+      + 'therefore quiet. Against it: Sadat saying "this year" once a season, a warning '
+      + 'flown in personally by the King of Jordan, and Egyptian divisions rehearsing '
+      + 'their crossing in plain sight — which the Concept files under "maneuvers." '
+      + 'Mobilizing the reserves costs a fortune and looks like panic. Not mobilizing '
+      + 'costs nothing, unless it costs everything.',
+    forTag: 'ISR',
+    date: { y: 1973, m: 9 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Trust the Concept',
+        tooltip: 'Israel: +100 talents (the reserves stay at the harvest and the lathes). If war comes on the fast, it comes with the reserves at home.',
+        effects: guard('ev_i_concept:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: 100 });
+          ctx.helpers.chronicle(ctx, 'era', 'The warnings are filed under maneuvers: the Concept holds that Egypt cannot attack, and the reserves stay home.');
+        }),
+      },
+      {
+        label: 'Call the reserves — and be wrong in public if need be',
+        tooltip: 'Israel: −150 talents, −1 stability (a costly cry of wolf) — but +3,000 manpower, +10% reinforcement for 6 months, and the reserves are already rolling if the sirens come.',
+        effects: guard('ev_i_concept:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -150, manpower: 3000, stability: -1 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'mobilized_early', name: 'Mobilized on a Warning', months: 6, effects: { reinforceMult: 1.1 },
+          });
+          ctx.game.flags.mobilizedEarly = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The Prime Minister overrules the Concept and calls the reserves on a warning — expensive, embarrassing, and possibly everything.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_yom_kippur',
+    title: 'Yom Kippur',
+    worldLabel: 'War on the Day of Atonement',
+    desc: 'Two o\'clock in the afternoon on the fast, the one day the country is '
+      + 'stopped entirely — and the sirens go up over empty streets. The Canal is '
+      + 'crossed in hours behind two thousand guns; on the Golan, mere dozens of '
+      + 'tanks stand against a flood of them. There is still a last morning\'s room '
+      + 'to strike first, and a superpower watching for exactly that. The state is '
+      + 'twenty-five years old and has forgotten, briefly, that it can lose.',
+    forTag: 'both',
+    date: { y: 1973, m: 10 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Absorb the first blow',
+        tooltip: 'Egypt crosses at +10% morale ("The Crossing"), Syria floods the Golan — Israel takes −1 stability but +10 legitimacy, and the American airlift follows (+15% reinforcement, 12 months). The world sees who fired first.',
+        effects: guard('ev_i_yom_kippur:0', (ctx) => {
+          octoberOutbreak(ctx, false);
+        }),
+      },
+      {
+        label: 'Preempt at noon',
+        tooltip: 'The crossing is blunted (+5 war score, +10 martial points, no enemy surge) — but −15 legitimacy, −20 influence, and no airlift: the defender who struck first defends alone.',
+        effects: guard('ev_i_yom_kippur:1', (ctx) => {
+          octoberOutbreak(ctx, true);
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_deversoir',
+    title: 'The Valley of Tears, and the Farm',
+    maxYear: 1975,
+    desc: 'On the Golan, the 77th Battalion holds the valley until seven tanks remain '
+      + 'and the Syrian columns, inexplicably, turn back — the crews will call it the '
+      + 'Valley of Tears and argue forever about why. In the south the answer takes '
+      + 'two weeks to assemble: a seam found between two Egyptian armies at '
+      + 'Deversoir, Sharon\'s division over the Canal on rafts by night, the missile '
+      + 'batteries rolled up from behind, and the Third Army encircled at kilometer '
+      + '101 of the Cairo road when the powers order the music stopped.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_deversoir', (ctx) => {
+      if (!ctx.game.flags.yomKippurWar || !dateGE(ctx, 1973, 11) || !alive(ctx, 'ISR')) return false;
+      const e = egyTag(ctx), s = syrTag(ctx);
+      return (e && findWar(ctx.game, 'ISR', e)) || (s && findWar(ctx.game, 'ISR', s));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Over the Canal — cut the Third Army\'s throat, gently',
+        tooltip: 'Israel: +10 war score on each live front, but −2,000 manpower and +1.5 war exhaustion. Egypt: the Third Army encircled (−15% morale for 6 months).',
+        effects: guard('ev_i_deversoir:0', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          if (e && findWar(ctx.game, 'ISR', e)) {
+            warEventScore(ctx, 'ISR', e, 'ISR', 10);
+            ctx.helpers.addTagModifier(ctx, e, {
+              id: 'third_army_cut', name: 'The Third Army Encircled', months: 6, effects: { moraleMult: 0.85 },
+            });
+          }
+          if (s && s !== e && findWar(ctx.game, 'ISR', s)) warEventScore(ctx, 'ISR', s, 'ISR', 10);
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -2000, warExhaustion: 1.5 });
+          ctx.helpers.chronicle(ctx, 'war', 'The Valley of Tears holds and Sharon crosses at Deversoir: the war that opened with the sirens closes at kilometer 101.');
+        }),
+      },
+      {
+        label: 'Consolidate on the ridgelines',
+        tooltip: 'Israel: +4 war score per front, −800 manpower, +1 war exhaustion — the lines are restored and no more than restored; the counterstroke is left unwritten.',
+        effects: guard('ev_i_deversoir:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          if (e && findWar(ctx.game, 'ISR', e)) warEventScore(ctx, 'ISR', e, 'ISR', 4);
+          if (s && s !== e && findWar(ctx.game, 'ISR', s)) warEventScore(ctx, 'ISR', s, 'ISR', 4);
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -800, warExhaustion: 1 });
+          ctx.helpers.chronicle(ctx, 'war', 'The Golan holds by seven tanks and the south by counting; the fronts are restored to their scars and no further.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_agranat',
+    title: 'The Earthquake',
+    desc: 'Kissinger\'s aircraft shuttles the disengagement accords into being: '
+      + 'separation of forces on both fronts, the armies stepped back from each '
+      + 'other\'s throats. Then the country counts — 2,656 dead in nineteen days, in '
+      + 'a nation of three million — and turns on its own government. The Agranat '
+      + 'Commission blames the generals and somehow not the ministers, which the '
+      + 'public reads correctly as an indictment of everyone. The protest movements '
+      + 'are born on the pavement outside the Prime Minister\'s office, and they do '
+      + 'not go home.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_agranat', (ctx) =>
+      dateGE(ctx, 1974, 2) && !!ctx.game.flags.yomKippurWar && alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The commission spares no one who matters',
+        tooltip: 'The wars end by disengagement (occupations revert on both fronts, −2 war exhaustion each). Golda and Dayan fall: Yitzhak Rabin — the first sabra Prime Minister — takes office. Israel: −1 stability now, +10 legitimacy kept.',
+        effects: guard('ev_i_agranat:0', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, s]) {
+            if (!t || !findWar(ctx.game, 'ISR', t)) continue;
+            ctx.helpers.endWar(ctx, 'ISR', t, null);
+            ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { warExhaustion: -2, stability: -1, legitimacy: 10 });
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Yitzhak Rabin', title: 'Prime Minister', gov: 3, infl: 3, mar: 5, age: 52 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'coalition', -10);
+          ctx.helpers.chronicle(ctx, 'ruler', 'The Agranat earthquake: Golda and Dayan fall, and Yitzhak Rabin becomes the first native-born Prime Minister.');
+        }),
+      },
+      {
+        label: 'Close ranks around the government',
+        tooltip: 'The wars end by disengagement (−2 war exhaustion each), Golda stays — Israel: +1 stability now, but −15 legitimacy as the pavement fills with reservists who will not be told to go home.',
+        effects: guard('ev_i_agranat:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, s]) {
+            if (!t || !findWar(ctx.game, 'ISR', t)) continue;
+            ctx.helpers.endWar(ctx, 'ISR', t, null);
+            ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { warExhaustion: -2, stability: 1, legitimacy: -15 });
+          ctx.helpers.chronicle(ctx, 'peace', 'The disengagement accords hold and the government does too — over the sound, every day louder, of the protest outside.');
+        }),
+      },
+    ],
+  },
+
+  // ── THE LONG SEVENTIES, 1974–79 ───────────────────────────────────────────
+  {
+    id: 'ev_i_gun_olive',
+    title: 'The Gun and the Olive Branch',
+    worldLabel: 'Arafat at the UN; Gush Emunim at Sebastia',
+    desc: 'A year of definitions. Ma\'alot: a school taken, twenty-two children dead '
+      + 'when the rescue goes in. November: Arafat at the General Assembly rostrum '
+      + 'with a holster on his hip — "I have come bearing an olive branch and a '
+      + 'freedom fighter\'s gun; do not let the olive branch fall from my hand" — and '
+      + 'a standing ovation. And in Samaria, a new movement called Gush Emunim camps '
+      + 'at the old railway station of Sebastia, seven times removed and seven times '
+      + 'returned, until the government must choose between its soldiers and its '
+      + 'believers.',
+    forTag: 'ISR',
+    date: { y: 1974, m: 11 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Sebastia compromise — thirty families, "temporarily"',
+        tooltip: 'The Revisionists +10, the Kibbutzim −5; Neapolis and Sebaste +1 unrest permanently; −5 legitimacy. The settlement movement now has its founding myth.',
+        effects: guard('ev_i_gun_olive:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.helpers.factionShift(ctx, 'ISR', 'kibbutzim', -5);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
+          for (const n of ['Neapolis', 'Sebaste']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'settlement_hilltops', name: 'The Hilltops', months: -1, effects: { unrest: 1 },
+              });
+            }
+          }
+          ctx.game.flags.gushEmunim = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Arafat\'s gun and olive branch at the UN; Gush Emunim\'s thirty families at Sebastia — both movements get their founding scene the same season.');
+        }),
+      },
+      {
+        label: 'Clear the station — an eighth time, a ninth, forever',
+        tooltip: 'Israel: +5 legitimacy, +10 influence points, −1 stability — the believers are carried off the hill again and again, and the coalition strains at every carry.',
+        effects: guard('ev_i_gun_olive:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5, infl: 10, stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', -10);
+          ctx.helpers.chronicle(ctx, 'era', 'Arafat gets his ovation in New York; Gush Emunim gets carried off the Sebastia hilltop — and comes back with more families each time.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_resolution_3379',
+    title: 'Zionism Is Racism',
+    worldLabel: 'General Assembly Resolution 3379',
+    desc: 'By seventy-two votes to thirty-five the General Assembly determines that '
+      + 'Zionism is a form of racism. Ambassador Herzog answers from the podium on '
+      + 'the anniversary of Kristallnacht, and finishes by tearing the resolution in '
+      + 'half: "For us, the Jewish people, this is no more than a piece of paper, '
+      + 'and we shall treat it as such." The same season, quieter ink: the Sinai II '
+      + 'interim agreement, Egyptian and Israeli signatures on the same page, a '
+      + 'thing the resolution\'s drafters would have called impossible.',
+    forTag: 'both',
+    date: { y: 1975, m: 11 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Tear the paper at the podium',
+        tooltip: 'Israel: +10 legitimacy, +1 stability, +10 influence points — isolation, answered aloud, binds the country tighter. Sinai II still holds (+15 opinion with Egypt).',
+        effects: guard('ev_i_3379:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: 1, infl: 10 });
+          const e = egyTag(ctx);
+          if (e && !findWar(ctx.game, 'ISR', e)) {
+            setOpinionDelta(ctx.game, e, 'ISR', 15);
+            setOpinionDelta(ctx.game, 'ISR', e, 15);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Resolution 3379 declares Zionism racism; Herzog tears it in half at the podium — while Sinai II is initialed in quieter rooms.');
+        }),
+      },
+      {
+        label: 'Walk out, and work the corridors instead',
+        tooltip: 'Israel: +20 influence points, no legitimacy gain — the answer is procedural, the repeal campaign begins its sixteen-year walk. Sinai II still holds (+15 opinion with Egypt).',
+        effects: guard('ev_i_3379:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 20 });
+          const e = egyTag(ctx);
+          if (e && !findWar(ctx.game, 'ISR', e)) {
+            setOpinionDelta(ctx.game, e, 'ISR', 15);
+            setOpinionDelta(ctx.game, 'ISR', e, 15);
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Resolution 3379 passes; the delegation walks out to begin the long procedural war for its repeal.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_entebbe',
+    title: 'Entebbe',
+    worldLabel: 'The raid on Entebbe',
+    desc: 'An Air France flight is hijacked to Idi Amin\'s Uganda, and at the old '
+      + 'terminal the selection is conducted by nationality and by name — Jewish '
+      + 'passengers kept, the rest released — a sorting the hostages\' parents '
+      + 'recognize from memory. Two thousand five hundred miles. Four Hercules '
+      + 'transports, a black Mercedes with a flag, ninety minutes on the ground. The '
+      + 'military option is madness; the alternative is the precedent.',
+    forTag: 'ISR',
+    date: { y: 1976, m: 7 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send the Hercules',
+        tooltip: 'Israel: +20 martial points, +15 legitimacy, +1 stability — the hostages come home over Lake Victoria. The force commander, Yoni Netanyahu, does not.',
+        effects: guard('ev_i_entebbe:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 20, legitimacy: 15, stability: 1 });
+          ctx.helpers.chronicle(ctx, 'era', 'Entebbe: ninety minutes on the ground and the hostages come home over Lake Victoria; Yoni Netanyahu dies at the old terminal.');
+        }),
+      },
+      {
+        label: 'Negotiate through Paris',
+        tooltip: 'Israel: −100 talents and −10 legitimacy, −1 stability — the hostages come home by ransom, and every future hijacker learns the price list.',
+        effects: guard('ev_i_entebbe:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -100, legitimacy: -10, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'era', 'The Entebbe hostages are ransomed home through intermediaries; the precedent boards the next flight.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_mahapach',
+    title: 'The Mahapach',
+    worldLabel: 'Begin ends 29 years of Labor rule',
+    desc: 'At 11 p.m. the anchorman uses a word the newsroom invented for the '
+      + 'occasion: mahapach — upheaval. Menachem Begin, eight elections a loser, '
+      + 'perpetual leader of the perpetual opposition, has won. The development '
+      + 'towns did it — the Moroccan and Iraqi and Yemenite second Israel that '
+      + 'built the state\'s roads and was never invited to run it, voting against '
+      + 'the founders\' party in one motion, twenty-nine years deep. Labor\'s '
+      + 'Israel ends at a television desk on a Tuesday night.',
+    forTag: 'both',
+    date: { y: 1977, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The upheaval, whole',
+        tooltip: 'Menachem Begin becomes Prime Minister: the Revisionists +25, the Coalition −15, −1 stability in the transition — and the second Israel is finally counted (+10 legitimacy).',
+        effects: guard('ev_i_mahapach:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Menachem Begin', title: 'Prime Minister', gov: 3, infl: 4, mar: 3, age: 63 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 25);
+          ctx.helpers.factionShift(ctx, 'ISR', 'coalition', -15);
+          ctx.helpers.adjust(ctx, 'ISR', { stability: -1, legitimacy: 10 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'The Mahapach: Menachem Begin ends twenty-nine years of Labor rule; the development towns are finally counted.');
+        }),
+      },
+      {
+        label: 'A cabinet of rivals',
+        tooltip: 'Begin takes office but Dayan crosses the aisle to Foreign Affairs: the Revisionists only +10, the Coalition +5, +1 stability — continuity purchased inside the upheaval.',
+        effects: guard('ev_i_mahapach:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.setRuler(ctx, 'ISR', { name: 'Menachem Begin', title: 'Prime Minister', gov: 3, infl: 4, mar: 3, age: 63 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.helpers.factionShift(ctx, 'ISR', 'coalition', 5);
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'Begin wins and reaches across the aisle for Dayan: the upheaval arrives wearing the old guard\'s foreign minister.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_sadat_jerusalem',
+    title: 'Sadat in Jerusalem',
+    worldLabel: 'The Egyptian president flies to Jerusalem',
+    desc: 'He says it in parliament almost as an aside — that he would go to the ends '
+      + 'of the earth for peace, even to the Knesset itself — and nine days later the '
+      + 'presidential aircraft of Egypt is descending toward a runway where the army '
+      + 'band has been rehearsing an anthem it never expected to play. The man who '
+      + 'crossed the Canal in \'73 stands before the Knesset and says: no more war, '
+      + 'no more bloodshed. Nobody in the chamber has notes for this.',
+    forTag: 'both',
+    date: { y: 1977, m: 11 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Receive him as history',
+        tooltip: 'Egypt and Israel: +60 opinion of each other, +10 legitimacy each, Israel +1 stability. The road to Camp David opens.',
+        effects: guard('ev_i_sadat:0', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || findWar(ctx.game, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'November 1977 passes without its miracle: the flight to Jerusalem belongs to a history whose fronts were quieter.');
+            return;
+          }
+          const t = ctx.game.tags[e];
+          if (t && t.ruler && t.ruler.name.indexOf('Sadat') < 0) {
+            ctx.helpers.setRuler(ctx, e, { name: 'Anwar Sadat', title: 'President', gov: 3, infl: 4, mar: 3, age: 58 });
+          }
+          setOpinionDelta(ctx.game, e, 'ISR', 60);
+          setOpinionDelta(ctx.game, 'ISR', e, 60);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: 1 });
+          ctx.helpers.adjust(ctx, e, { legitimacy: 10 });
+          ctx.game.flags.sadatVisit = true;
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Sadat stands before the Knesset: "no more war, no more bloodshed." The impossible becomes an itinerary.');
+        }),
+      },
+      {
+        label: 'Receive him — and count the divisions anyway',
+        tooltip: 'Opinions +30 only, Israel +10 martial points — the hand is shaken and the guard is kept; the road to the treaty stays open, but narrower.',
+        effects: guard('ev_i_sadat:1', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || findWar(ctx.game, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'November 1977 passes without its miracle: the flight to Jerusalem belongs to a history whose fronts were quieter.');
+            return;
+          }
+          const t = ctx.game.tags[e];
+          if (t && t.ruler && t.ruler.name.indexOf('Sadat') < 0) {
+            ctx.helpers.setRuler(ctx, e, { name: 'Anwar Sadat', title: 'President', gov: 3, infl: 4, mar: 3, age: 58 });
+          }
+          setOpinionDelta(ctx.game, e, 'ISR', 30);
+          setOpinionDelta(ctx.game, 'ISR', e, 30);
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10 });
+          ctx.game.flags.sadatVisit = true;
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Sadat speaks at the Knesset and is answered with courtesy and caution in equal measure; the door opens a hand\'s width.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_camp_david',
+    title: 'Thirteen Days at the Cabin',
+    worldLabel: 'The Camp David negotiations',
+    desc: 'Thirteen days in the Maryland woods, and by the last of them the two '
+      + 'delegations can no longer be put in the same cabin: Carter carries drafts '
+      + 'between them like a court runner. Begin will not write "Jerusalem"; Sadat '
+      + 'will not cross out "sovereignty"; twenty-three drafts die named and '
+      + 'numbered. On the thirteenth day there are two frameworks — Sinai for '
+      + 'peace, and an autonomy for the Palestinians vague enough for every party '
+      + 'to read as victory. It is the closest thing to peace the region has ever '
+      + 'initialed.',
+    forTag: 'both',
+    date: { y: 1978, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sign the frameworks',
+        tooltip: 'Egypt and Israel: +40 opinion of each other, +10 legitimacy each. The treaty itself comes next spring — Sinai for peace.',
+        effects: guard('ev_i_camp_david:0', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !ctx.game.flags.sadatVisit || findWar(ctx.game, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'September 1978: the cabin in the Maryland woods stands empty; the guests history booked for it never came.');
+            return;
+          }
+          setOpinionDelta(ctx.game, e, 'ISR', 40);
+          setOpinionDelta(ctx.game, 'ISR', e, 40);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10 });
+          ctx.helpers.adjust(ctx, e, { legitimacy: 10 });
+          ctx.game.flags.campDavid = true;
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Camp David: thirteen days, twenty-three dead drafts, and two frameworks initialed — Sinai for peace, and an autonomy everyone reads differently.');
+        }),
+      },
+      {
+        label: 'Balk at the autonomy clause',
+        tooltip: 'No frameworks: opinions −20, Israel +5 legitimacy at home and the Revisionists +5 — the settlements are not mortgaged, and neither is the peace.',
+        effects: guard('ev_i_camp_david:1', (ctx) => {
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !ctx.game.flags.sadatVisit || findWar(ctx.game, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'September 1978: the cabin in the Maryland woods stands empty; the guests history booked for it never came.');
+            return;
+          }
+          setOpinionDelta(ctx.game, e, 'ISR', -20);
+          setOpinionDelta(ctx.game, 'ISR', e, -20);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 5);
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The thirteenth day at Camp David ends with handshakes and no signatures; the drafts go home in separate briefcases.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_treaty_washington',
+    title: 'The Treaty on the Lawn',
+    worldLabel: 'The Egypt–Israel peace treaty',
+    desc: 'On the White House lawn, thirty-one years after five armies crossed the '
+      + 'borders of a one-day-old state, an Arab republic signs peace with Israel: '
+      + 'Sinai returned to the last grain of sand, embassies exchanged, the first '
+      + 'recognition. The Arab League expels Egypt within the week and moves its '
+      + 'headquarters out of Cairo; the crowds that carried Sadat after the Crossing '
+      + 'are silent now. He knows the price and signs anyway. He has three years '
+      + 'to live.',
+    forTag: 'both',
+    date: { y: 1979, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sinai for peace — sign',
+        tooltip: 'Israel returns every Sinai province it holds; both states gain a 20-year peace (no opportunistic wars), −2 war exhaustion, Egypt +15 and Israel +10 legitimacy. The Arab League expels Egypt (−60 opinion from every Arab capital).',
+        effects: guard('ev_i_treaty:0', (ctx) => {
+          const g = ctx.game;
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !g.flags.campDavid || findWar(g, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'March 1979 passes without a lawn, a table, or a treaty; the first peace waits for another history.');
+            return;
+          }
+          for (const n of ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Paran', 'Dizahab']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) ctx.helpers.changeOwner(ctx, n, e);
+          }
+          for (const t of ['ISR', e]) {
+            ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
+            ctx.helpers.addTagModifier(ctx, t, {
+              id: 'treaty_of_washington', name: 'The Treaty of Washington', months: 240,
+              effects: { noOpportunisticWars: true },
+            });
+          }
+          ctx.helpers.adjust(ctx, e, { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10 });
+          setOpinionDelta(g, e, 'ISR', 100);
+          setOpinionDelta(g, 'ISR', e, 100);
+          const s = syrTag(ctx);
+          for (const t of ['SAU', 'IRQ', 'JOR', 'LEB', s]) {
+            if (t && t !== e && alive(ctx, t)) setOpinionDelta(g, t, e, -60);
+          }
+          ctx.helpers.chronicle(ctx, 'peace', 'The Egypt–Israel treaty is signed on the White House lawn: Sinai for peace, the first recognition. The League expels Egypt; Sadat has three years to live.');
+        }),
+      },
+      {
+        label: 'Peace — but the Sinai in stages, and slowly',
+        tooltip: 'Only western Sinai returns now; the peace holds at 10 years, opinions +40, Egypt −10 legitimacy (half a treaty buys half a triumph). No expulsion from the League — and less of a peace.',
+        effects: guard('ev_i_treaty:1', (ctx) => {
+          const g = ctx.game;
+          const e = egyTag(ctx);
+          if (!alive(ctx, 'ISR') || !e || !g.flags.campDavid || findWar(g, 'ISR', e)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'March 1979 passes without a lawn, a table, or a treaty; the first peace waits for another history.');
+            return;
+          }
+          for (const n of ['Pelusium', 'Arsinoe']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) ctx.helpers.changeOwner(ctx, n, e);
+          }
+          for (const t of ['ISR', e]) {
+            ctx.helpers.adjust(ctx, t, { warExhaustion: -1 });
+            ctx.helpers.addTagModifier(ctx, t, {
+              id: 'treaty_of_washington', name: 'The Treaty, In Installments', months: 120,
+              effects: { noOpportunisticWars: true },
+            });
+          }
+          ctx.helpers.adjust(ctx, e, { legitimacy: -10 });
+          setOpinionDelta(g, e, 'ISR', 40);
+          setOpinionDelta(g, 'ISR', e, 40);
+          ctx.helpers.chronicle(ctx, 'peace', 'A treaty of installments: the canal bank changes hands, the rest of Sinai waits on schedules — a peace, but one signed in pencil.');
+        }),
+      },
+    ],
   },
 ];

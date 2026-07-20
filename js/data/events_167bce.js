@@ -1795,4 +1795,1443 @@ export const EVENTS_167 = [
       },
     ],
   },
+
+  // ═══ The post-independence decades: Simon, Hyrcanus, Aristobulus (1 Macc
+  // 13–16; Josephus, Ant. XIII; Wars I). The campaign keeps running after the
+  // verdict fires (helpers.endGame), and so does the chronicle. ═════════════
+
+  // ── 27 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_bronze_tablets',
+    title: 'The Tablets on Mount Zion',
+    desc: 'In the third year of Simon the great high priest, the priests and the people '
+      + 'and the rulers of the nation met in a great assembly and set down what the house '
+      + 'of Mattathias had done, and what it should be. They wrote it on tables of brass '
+      + 'and fixed them upon pillars on Mount Zion: that Simon should be their leader and '
+      + 'high priest for ever, until there should arise a faithful prophet; that he should '
+      + 'be obeyed of all, and all contracts written in his name; that he should be '
+      + 'clothed in purple and wear gold; and that it should not be lawful for any of the '
+      + 'people or the priests to gather an assembly without him, or to be clothed in '
+      + 'purple, or wear a buckle of gold. A dynasty has been written into law by the men '
+      + 'it will rule — with one clause left open, like a door, for heaven.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_bronze_tablets', (ctx) =>
+      dateGE(ctx, -140, 9) && alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Fix the tablets upon pillars',
+        tooltip: 'The charter of the house: +15 legitimacy, +1 stability; "The Tablets of Brass" (+0.1 legitimacy a month, permanent).',
+        effects: guard('ev_bronze_tablets:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 15, stability: 1 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'tablets_of_brass', name: 'The Tablets of Brass', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.setFlag(ctx, 'greatAssembly', true);
+        }),
+      },
+      {
+        label: 'Read the prophet-clause aloud first',
+        tooltip: 'The scrupulous hear that the house holds its offices on loan from heaven: +10 legitimacy, +15 governance, +10 influence.',
+        effects: guard('ev_bronze_tablets:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10, gov: 15, infl: 10 });
+          h.setFlag(ctx, 'greatAssembly', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 28 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_numenius_returns',
+    title: 'Numenius Returns from Rome',
+    desc: 'Numenius son of Antiochus has come home from Rome, and the great shield of '
+      + 'gold — a thousand minas’ weight — hangs no longer in Simon’s treasury but in the '
+      + 'Capitol. He brings letters: the consul Lucius to king Ptolemy, to Demetrius, to '
+      + 'Attalus, to Ariarathes and Arsaces, and to Sparta, Rhodes, and the cities — that '
+      + 'the Jews are the friends of the Roman people, that no man make war upon them, '
+      + 'and that whoever flees Judea with a price on his head be delivered up to Simon '
+      + 'the high priest. It is only ink and bronze, and Rome is far away. But every '
+      + 'chancery from Alexandria to Ecbatana now holds a copy, and files it where '
+      + 'kingdoms file the things they dare not lose.',
+    forTag: 'HAS',
+    date: { y: -139, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Read the letters in every court',
+        tooltip: '+20 influence, +5 legitimacy; Rome warms to the friends it has chosen.',
+        effects: guard('ev_numenius_returns:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { infl: 20, legitimacy: 5 });
+          setOpinion(ctx, 'ROM', 'HAS', 80);
+          setOpinion(ctx, 'HAS', 'ROM', 60);
+          h.setFlag(ctx, 'numeniusReturned', true);
+        }),
+      },
+      {
+        label: 'Send envoys on to Sparta and the isles',
+        tooltip: '−30 treasury, +10 influence, +10 legitimacy — the friendship is renewed with every city the letters name.',
+        effects: guard('ev_numenius_returns:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { treasury: -30, infl: 10, legitimacy: 10 });
+          setOpinion(ctx, 'ROM', 'HAS', 80);
+          setOpinion(ctx, 'GRC', 'HAS', 40);
+          h.setFlag(ctx, 'numeniusReturned', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 29 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_sidetes_rises',
+    title: 'Antiochus Sidetes Comes for the Diadem',
+    desc: 'A last son of the dynasty has come in from the islands: Antiochus, brother of '
+      + 'captive Demetrius, called Sidetes for the city that raised him — young, sober, '
+      + 'and in earnest, which the kingdom has not seen in a king for thirty years. He '
+      + 'has landed against Tryphon the usurper, and the soldiers come over to him by '
+      + 'companies. To Simon in Jerusalem he writes with the whole treasury of royal '
+      + 'courtesy: the high priesthood confirmed, the exemptions confirmed, and leave to '
+      + 'coin money for his own country with his own stamp — everything, in short, that '
+      + 'costs a pretender nothing. What such letters are worth after the victory, the '
+      + 'victory will show.',
+    forTag: 'both',
+    date: { y: -138, m: 4 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Court the high priest of the Jews',
+        tooltip: 'Sidetes (3/3/4) takes the throne with 8,000 men at Antioch; Judaea is confirmed in everything — "Leave to Coin Money" (+10% income, 24 months).',
+        effects: guard('ev_sidetes_rises:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'SEL')) {
+            h.setRuler(ctx, 'SEL', { name: 'Antiochus VII Sidetes', title: 'Basileus', gov: 3, infl: 3, mar: 4, age: 20 });
+            h.setHeir(ctx, 'SEL', null);
+            h.adjust(ctx, 'SEL', { legitimacy: 15 });
+            const at = firstControlled(ctx, 'SEL', ['Antioch', 'Seleucia Pieria', 'Damascus']);
+            if (at) {
+              h.spawnArmy(ctx, 'SEL', at, {
+                inf: 8, name: 'Army of Sidetes',
+                general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+              });
+            }
+            setOpinion(ctx, 'SEL', 'HAS', 40);
+          }
+          if (alive(ctx, 'HAS')) {
+            h.addTagModifier(ctx, 'HAS', {
+              id: 'leave_to_coin_money', name: 'Leave to Coin Money', months: 24,
+              effects: { incomeMult: 1.1 },
+            });
+            h.adjust(ctx, 'HAS', { legitimacy: 5 });
+          }
+          h.setFlag(ctx, 'sidetesKing', true);
+        }),
+      },
+      {
+        label: 'The dynasty first; the Jew after',
+        tooltip: 'Sidetes (3/3/4) takes the throne with 9,000 men at Antioch, −40 treasury — and no letters go south.',
+        effects: guard('ev_sidetes_rises:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'SEL')) {
+            h.setRuler(ctx, 'SEL', { name: 'Antiochus VII Sidetes', title: 'Basileus', gov: 3, infl: 3, mar: 4, age: 20 });
+            h.setHeir(ctx, 'SEL', null);
+            h.adjust(ctx, 'SEL', { legitimacy: 15, treasury: -40 });
+            const at = firstControlled(ctx, 'SEL', ['Antioch', 'Seleucia Pieria', 'Damascus']);
+            if (at) {
+              h.spawnArmy(ctx, 'SEL', at, {
+                inf: 9, name: 'Army of Sidetes',
+                general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'sidetesKing', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 30 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_tryphon_ends',
+    title: 'The Usurper Runs Out of Sea',
+    desc: 'Tryphon — who murdered Jonathan at Ptolemais, murdered the child king he '
+      + 'pretended to serve, and wore a diadem no assembly ever voted him — has been '
+      + 'shut up in Dora by land and sea. He slipped out by ship to Orthosia while the '
+      + 'engines battered the wall, and ran along his shrinking coast to Apamea, where '
+      + 'he began; and there it ended. The chroniclers do not agree whether he died by '
+      + 'the sword or by his own hand, and no one has thought it worth settling. The '
+      + 'kingdom has one king again — young, victorious, and no longer in need of the '
+      + 'friends the war made him.',
+    forTag: 'SEL',
+    date: { y: -138, m: 10 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Hunt him from Dora to Apamea',
+        tooltip: 'No second usurper learns the trade: Seleucids +15 legitimacy, +1 stability, −30 treasury.',
+        effects: guard('ev_tryphon_ends:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL')) return;
+          h.adjust(ctx, 'SEL', { legitimacy: 15, stability: 1, treasury: -30 });
+          h.setFlag(ctx, 'tryphonDead', true);
+        }),
+      },
+      {
+        label: 'Let the coast finish him; muster the kingdom',
+        tooltip: 'The garrisons come over whole: Seleucids +10 legitimacy, +1 stability; "The Kingdom Reunited" (+10% reinforcements, 24 months).',
+        effects: guard('ev_tryphon_ends:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL')) return;
+          h.adjust(ctx, 'SEL', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'SEL', {
+            id: 'kingdom_reunited', name: 'The Kingdom Reunited', months: 24,
+            effects: { reinforceMult: 1.1 },
+          });
+          h.setFlag(ctx, 'tryphonDead', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 31 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_athenobius',
+    title: 'Athenobius Names the Price',
+    desc: 'The king who wrote so warmly from the islands writes differently from a '
+      + 'throne. Athenobius, one of the king’s Friends, has come up to Jerusalem and '
+      + 'recited the demand: Joppa, Gazara, and the citadel of Jerusalem, taken by force '
+      + 'from the kingdom — return them, or pay a thousand talents of silver. He was '
+      + 'shown the glory of Simon’s house, the gold and silver plate and the great '
+      + 'attendance, and heard the old man’s answer: "We have neither taken other men’s '
+      + 'land, nor hold that which appertaineth to others, but the inheritance of our '
+      + 'fathers, which our enemies had wrongfully in possession a certain time. For '
+      + 'Joppa and Gazara, which did great harm unto our people — for them we will give '
+      + 'a hundred talents." Athenobius answered him not a word, but returned in a rage '
+      + 'to the king.',
+    forTag: 'HAS',
+    date: { y: -138, m: 12 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A hundred talents, and not a stone',
+        tooltip: 'The offer goes with the envoy: −50 treasury, +10 legitimacy. The king will not take it — but the nations hear who offered peace.',
+        effects: guard('ev_athenobius:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { treasury: -50, legitimacy: 10 });
+          setOpinion(ctx, 'SEL', 'HAS', -160);
+          h.setFlag(ctx, 'sidetesBreach', true);
+        }),
+      },
+      {
+        label: 'Not a talent: it is the inheritance of our fathers',
+        tooltip: '+15 legitimacy; Antioch’s rage is complete — the raids will come.',
+        effects: guard('ev_athenobius:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { legitimacy: 15 });
+          setOpinion(ctx, 'SEL', 'HAS', -200);
+          h.setFlag(ctx, 'sidetesBreach', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 32 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_kendebaios',
+    title: 'Kendebaios at Jamnia',
+    desc: 'The king has gone north after Tryphon’s remnants and left the coast to '
+      + 'Kendebaios, captain of the seaboard, with orders that require no interpreting: '
+      + 'build Kedron in the plain, hold the roads, and make war upon the people of '
+      + 'Judea. His horsemen ride up the ascents by day and burn by night, and take men '
+      + 'captive out of the villages of the low country. Simon is old, and grown grey in '
+      + 'the harness; and he called his two eldest sons and said: "I and my brethren '
+      + 'have fought the wars of Israel from our youth; but I am old. Be ye instead of '
+      + 'me and my brother, and go forth and fight for our nation, and the help of '
+      + 'heaven be with you."',
+    forTag: 'SEL',
+    date: { y: -137, m: 6 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Build Kedron and bar the plain',
+        tooltip: 'Kendebaios (2/2/2) musters 5,000 at Jamnia and fortifies it (+1 fort level); the old war reopens.',
+        effects: guard('ev_kendebaios:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL')) return;
+          const at = firstControlled(ctx, 'SEL', ['Jamnia', 'Azotus', 'Ascalon', 'Damascus']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 4, cav: 1, name: 'Host of Kendebaios',
+              general: { name: 'Kendebaios', fire: 2, shock: 2, maneuver: 2 },
+            });
+          }
+          if (h.controls(ctx, 'SEL', 'Jamnia')) {
+            const per = (ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.fortGarrisonPerLevel) || 1000;
+            const p = ctx.prov('Jamnia');
+            if (p && (p.fort || 0) < 3) {
+              p.fort = (p.fort || 0) + 1;
+              if (typeof p.maxGarrison === 'number') {
+                p.maxGarrison += per;
+                p.garrison = Math.min((p.garrison || 0) + per, p.maxGarrison);
+              }
+            }
+          }
+          if (alive(ctx, 'HAS') && !findWar(ctx.game, 'HAS', 'SEL')) {
+            h.declareWar(ctx, 'SEL', 'HAS', 'The War of Antiochus Sidetes');
+          }
+          try {
+            if (ctx.game.tags.SEL && ctx.game.tags.SEL.aiState) {
+              ctx.game.tags.SEL.aiState.target = 'Lydda';
+            }
+          } catch (e) { warnOnce('kendebaios:aiState', e); }
+          h.setFlag(ctx, 'kendebaiosMarched', true);
+          h.notify(ctx, {
+            title: 'Kendebaios at Jamnia', type: 'war', provName: 'Jamnia',
+            text: 'The captain of the seaboard fortifies Kedron and raids the ascents of Judea.',
+          });
+        }),
+      },
+      {
+        label: 'Raid the ascents before the walls are dry',
+        tooltip: 'Kendebaios (2/2/2) musters 5,000 at Jamnia and burns the low country: +1 unrest and −10% tax in Judaea’s border towns for 12 months.',
+        effects: guard('ev_kendebaios:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL')) return;
+          const at = firstControlled(ctx, 'SEL', ['Jamnia', 'Azotus', 'Ascalon', 'Damascus']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 4, cav: 1, name: 'Host of Kendebaios',
+              general: { name: 'Kendebaios', fire: 2, shock: 2, maneuver: 2 },
+            });
+          }
+          for (const name of ['Lydda', 'Emmaus']) {
+            if (!ctx.helpers.controls(ctx, 'HAS', name)) continue;
+            h.addProvinceModifier(ctx, name, {
+              id: 'kendebaios_raids', name: 'The Horsemen of Kendebaios', months: 12,
+              effects: { unrest: 1, taxMult: 0.9 },
+            });
+          }
+          if (alive(ctx, 'HAS') && !findWar(ctx.game, 'HAS', 'SEL')) {
+            h.declareWar(ctx, 'SEL', 'HAS', 'The War of Antiochus Sidetes');
+          }
+          h.setFlag(ctx, 'kendebaiosMarched', true);
+          h.notify(ctx, {
+            title: 'Kendebaios at Jamnia', type: 'war', provName: 'Jamnia',
+            text: 'The captain of the seaboard raids the villages of the low country.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 33 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_kedron',
+    title: 'The Young Men at Kedron',
+    desc: 'Judas and John, the sons of Simon, took twenty thousand men and horsemen — '
+      + 'the first horsemen Israel has fielded in this long war — and lodged at Modein, '
+      + 'where their grandfather pulled the altar down. In the morning a brook lay '
+      + 'between the armies, and the men feared to cross; so John crossed first, and the '
+      + 'people after him. Kendebaios’ host broke and ran for the towers of Kedron and '
+      + 'the fields of Azotus, and John smote them until the evening. Judas was wounded '
+      + 'in the arm; John pursued. The old men in Jerusalem, hearing it, said what old '
+      + 'men say: that the sons are become as the fathers — and for once the old men '
+      + 'were right.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_kedron', (ctx) => {
+      const h = ctx.helpers;
+      if (!h.getFlag(ctx, 'kendebaiosMarched')) return false;
+      if (!alive(ctx, 'HAS')) return false;
+      if (!dateGE(ctx, -137, 9)) return false;
+      if (!findWar(ctx.game, 'HAS', 'SEL')) return false;
+      const ka = armyByGeneral(ctx, 'SEL', 'Kendebaios');
+      if (!ka) return true; // his host was destroyed in the field
+      if (ka.retreating) return true;
+      // Calendar fallback: by spring 136 the sons have marched, if Israel can.
+      return dateGE(ctx, -136, 4) && totalMen(ctx, 'HAS') >= 2000;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'John crosses the brook first',
+        tooltip: 'Kendebaios is broken: +15 military points, +10 legitimacy, +1,000 manpower, +10 warscore; John Hyrcanus (3/3/4) takes a command. The kingdom’s war-weariness grows.',
+        effects: guard('ev_kedron:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { mar: 15, legitimacy: 10, manpower: 1000 });
+          h.adjust(ctx, 'SEL', { warExhaustion: 1 });
+          addWarscore(ctx, 'HAS', 10);
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const a = biggestArmy(ctx, 'HAS', true);
+            if (a) a.general = { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 };
+          }
+          h.setFlag(ctx, 'kedronWon', true);
+          h.notify(ctx, {
+            title: 'Victory at Kedron', type: 'good', provName: 'Lydda',
+            text: 'The sons of Simon break the host of Kendebaios in the plain.',
+          });
+        }),
+      },
+      {
+        label: 'Pursue to the towers of Azotus',
+        tooltip: 'The towers burn: +15 military points, +30 treasury, −500 manpower, +15 warscore; John Hyrcanus (3/3/4) takes a command. The kingdom’s war-weariness grows.',
+        effects: guard('ev_kedron:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { mar: 15, treasury: 30, manpower: -500 });
+          h.adjust(ctx, 'SEL', { warExhaustion: 1 });
+          addWarscore(ctx, 'HAS', 15);
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const a = biggestArmy(ctx, 'HAS', true);
+            if (a) a.general = { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 };
+          }
+          h.setFlag(ctx, 'kedronWon', true);
+          h.notify(ctx, {
+            title: 'Victory at Kedron', type: 'good', provName: 'Lydda',
+            text: 'The pursuit runs to Azotus, and the towers of Kedron burn behind it.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 34 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_death_of_simon',
+    title: 'Murder at the Fortress of Dok',
+    desc: 'Simon went down in the eleventh month to visit the cities of the country, and '
+      + 'came to Jericho with his sons Mattathias and Judas — and Ptolemy son of Abubus, '
+      + 'his own son-in-law, captain of the plain of Jericho, received them into the '
+      + 'little fortress called Dok that he had built above the springs, and made them a '
+      + 'great banquet. When Simon and his sons had drunk well, Ptolemy and his men rose '
+      + 'up, and took their weapons, and slew the old man and both his sons and certain '
+      + 'of his servants. So died the last of the five brothers of Modein — not in the '
+      + 'passes, not before the phalanx, but at his own kinsman’s table. Ptolemy’s '
+      + 'assassins are already riding for Gazara, where John is; and Ptolemy has written '
+      + 'to the king to send him forces, promising to deliver him the country.',
+    forTag: 'HAS',
+    date: { y: -135, m: 2 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Ride for Jerusalem before the murderer',
+        tooltip: 'John kills the assassins sent for him and takes the city first: John Hyrcanus (4/3/4) rules; −1 stability, −10 legitimacy, then +10 legitimacy as Jerusalem holds for the son of Simon.',
+        effects: guard('ev_death_of_simon:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.killGeneral(ctx, 'HAS', 'Simon Thassi');
+          h.adjust(ctx, 'HAS', { stability: -1 });
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const a = biggestArmy(ctx, 'HAS', true);
+            if (a) {
+              a.general = { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 };
+            } else {
+              const at = firstControlled(ctx, 'HAS', ['Jerusalem', 'Emmaus', 'Lydda']);
+              if (at) {
+                h.spawnArmy(ctx, 'HAS', at, {
+                  inf: 2, name: 'Army of Hyrcanus',
+                  general: { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 },
+                });
+              }
+            }
+          }
+          h.setRuler(ctx, 'HAS', { name: 'John Hyrcanus', title: 'High Priest', gov: 4, infl: 3, mar: 4, age: 30 });
+          h.setHeir(ctx, 'HAS', { name: 'Aristobulus', gov: 2, infl: 2, mar: 3, age: 18 });
+          if (h.controls(ctx, 'HAS', 'Jerusalem')) {
+            h.adjust(ctx, 'HAS', { legitimacy: 10 });
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'city_holds_for_john', name: 'The City Holds for John', months: 12,
+              effects: { unrest: -1 },
+            });
+          }
+          h.setFlag(ctx, 'simonMurdered', true);
+          h.notify(ctx, {
+            title: 'Simon Is Murdered at Dok', type: 'bad', provName: 'Jericho',
+            text: 'The last brother of Modein dies at his kinsman’s table. John Hyrcanus reaches Jerusalem first.',
+          });
+        }),
+      },
+      {
+        label: 'Besiege Ptolemy in Dok',
+        tooltip: 'Vengeance before the crown: John Hyrcanus (4/3/4) rules; −1 stability, −5 legitimacy, −30 treasury, +10 military points; Jericho suffers the siege (+1 unrest, 12 months) — and the sabbatical year lets Ptolemy slip away.',
+        effects: guard('ev_death_of_simon:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.killGeneral(ctx, 'HAS', 'Simon Thassi');
+          h.adjust(ctx, 'HAS', { stability: -1, legitimacy: -5, treasury: -30, mar: 10 });
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const a = biggestArmy(ctx, 'HAS', true);
+            if (a) {
+              a.general = { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 };
+            } else {
+              const at = firstControlled(ctx, 'HAS', ['Jerusalem', 'Emmaus', 'Lydda']);
+              if (at) {
+                h.spawnArmy(ctx, 'HAS', at, {
+                  inf: 2, name: 'Army of Hyrcanus',
+                  general: { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 },
+                });
+              }
+            }
+          }
+          h.setRuler(ctx, 'HAS', { name: 'John Hyrcanus', title: 'High Priest', gov: 4, infl: 3, mar: 4, age: 30 });
+          h.setHeir(ctx, 'HAS', { name: 'Aristobulus', gov: 2, infl: 2, mar: 3, age: 18 });
+          if (h.controls(ctx, 'HAS', 'Jericho')) {
+            h.addProvinceModifier(ctx, 'Jericho', {
+              id: 'siege_of_dok', name: 'The Siege of Dok', months: 12,
+              effects: { unrest: 1 },
+            });
+          }
+          h.setFlag(ctx, 'simonMurdered', true);
+          h.notify(ctx, {
+            title: 'Simon Is Murdered at Dok', type: 'bad', provName: 'Jericho',
+            text: 'The last brother of Modein dies at his kinsman’s table. John besieges the murderer above the springs.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 35 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_sidetes_siege',
+    title: 'Sidetes Before Jerusalem',
+    desc: 'The king has come south himself, in the first year of the new high priest, '
+      + 'with the whole strength of a kingdom that for once is not fighting itself. He '
+      + 'wasted the country, shut Hyrcanus up in Jerusalem, and drew a double ditch '
+      + 'about the city with a hundred towers of wood upon it. Within the walls the '
+      + 'grain fails, and the useless mouths are put outside the gates and wander '
+      + 'between the armies, dying in the ditch, until Hyrcanus takes them in again for '
+      + 'pity. Yet this Antiochus is not that Antiochus: when the feast of Tabernacles '
+      + 'came he granted a truce of seven days, and sent in bulls with gilded horns and '
+      + 'cups of gold and silver for the sacrifices — and the city, that had braced for '
+      + 'an Epiphanes, began to call him Antiochus the Pious.',
+    forTag: 'both',
+    date: { y: -134, m: 5 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'A hundred towers about the city',
+        tooltip: 'The king (3/3/4) invests Jerusalem with 14,000 men; famine in the city (+2 unrest, −20% tax, 12 months); Seleucid siege engines (+1 siege, 12 months).',
+        effects: guard('ev_sidetes_siege:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL') || !alive(ctx, 'HAS')) return;
+          if (!findWar(ctx.game, 'HAS', 'SEL')) {
+            h.declareWar(ctx, 'SEL', 'HAS', 'The War of Antiochus Sidetes');
+          }
+          const at = firstControlled(ctx, 'SEL', ['Sebaste', 'Jamnia', 'Damascus', 'Antioch']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 12, cav: 2, name: 'The King’s Own',
+              general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+            });
+          }
+          if (h.controls(ctx, 'HAS', 'Jerusalem')) {
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'famine_in_the_city', name: 'Famine in the City', months: 12,
+              effects: { unrest: 2, taxMult: 0.8 },
+            });
+          }
+          h.addTagModifier(ctx, 'SEL', {
+            id: 'towers_of_sidetes', name: 'The Hundred Towers', months: 12,
+            effects: { siegeBonus: 1 },
+          });
+          try {
+            if (ctx.game.tags.SEL && ctx.game.tags.SEL.aiState) {
+              ctx.game.tags.SEL.aiState.target = 'Jerusalem';
+            }
+          } catch (e) { warnOnce('sidetes_siege:aiState', e); }
+          h.setFlag(ctx, 'sidetesBesieges', true);
+          h.notify(ctx, {
+            title: 'Sidetes Before Jerusalem', type: 'war', provName: 'Jerusalem',
+            text: 'The king draws a double ditch about the city, with a hundred towers of wood upon it.',
+          });
+        }),
+      },
+      {
+        label: 'Let hunger and the feast do the work',
+        tooltip: 'The king (3/3/4) invests Jerusalem with 14,000 men and sends in the Tabernacles sacrifices: famine in the city (+2 unrest, −20% tax, 12 months); Seleucids +10 legitimacy, Judaea +5 legitimacy — "the Pious" spares the altar.',
+        effects: guard('ev_sidetes_siege:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'SEL') || !alive(ctx, 'HAS')) return;
+          if (!findWar(ctx.game, 'HAS', 'SEL')) {
+            h.declareWar(ctx, 'SEL', 'HAS', 'The War of Antiochus Sidetes');
+          }
+          const at = firstControlled(ctx, 'SEL', ['Sebaste', 'Jamnia', 'Damascus', 'Antioch']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 12, cav: 2, name: 'The King’s Own',
+              general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+            });
+          }
+          if (h.controls(ctx, 'HAS', 'Jerusalem')) {
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'famine_in_the_city', name: 'Famine in the City', months: 12,
+              effects: { unrest: 2, taxMult: 0.8 },
+            });
+          }
+          h.adjust(ctx, 'SEL', { legitimacy: 10 });
+          h.adjust(ctx, 'HAS', { legitimacy: 5 });
+          h.setFlag(ctx, 'sidetesBesieges', true);
+          h.notify(ctx, {
+            title: 'Sidetes Before Jerusalem', type: 'war', provName: 'Jerusalem',
+            text: 'The king invests the city — and sends bulls with gilded horns for the feast within it.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 36 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_jerusalem_terms',
+    title: 'The Honorable Terms',
+    desc: 'The terms are written, and they astonish both camps by their decency. The '
+      + 'king’s hard men — the ones who remember Epiphanes, and urge him nightly to '
+      + 'root the nation out — are refused: there will be no garrison in Jerusalem, no '
+      + 'altar to any god but Israel’s, no touching of the Law. Hyrcanus gives '
+      + 'hostages, among them his own brother; the battlements of the wall are thrown '
+      + 'down; and tribute is set for Joppa and the towns held outside Judea proper. '
+      + 'Five hundred talents of silver must be found at once — and Hyrcanus knows '
+      + 'where silver sleeps: the sepulchre of David, untouched these eight hundred '
+      + 'years, holds more than any living treasury in the land.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_jerusalem_terms', (ctx) => {
+      const h = ctx.helpers;
+      if (!h.getFlag(ctx, 'sidetesBesieges')) return false;
+      if (!alive(ctx, 'HAS') || !alive(ctx, 'SEL')) return false;
+      if (!findWar(ctx.game, 'HAS', 'SEL')) return false;
+      return dateGE(ctx, -133, 6);
+    }),
+    aiOption: (ctx) => {
+      try { return (ctx.game.tags.HAS.treasury || 0) < 120 ? 1 : 0; } catch (e) { return 0; }
+    },
+    options: [
+      {
+        label: 'Pay from the treasury, and spare the tomb',
+        tooltip: 'Peace with the kingdom (occupations revert): −100 treasury, −5 legitimacy (the hostages), +1 stability; Jerusalem loses 1 fort level; "Tribute for Joppa" (−10% income until the kingdom breaks).',
+        effects: guard('ev_jerusalem_terms:0', (ctx) => {
+          const h = ctx.helpers;
+          h.endWar(ctx, 'HAS', 'SEL', null);
+          h.adjust(ctx, 'HAS', { treasury: -100, legitimacy: -5, stability: 1 });
+          const per = (ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.fortGarrisonPerLevel) || 1000;
+          const p = ctx.prov('Jerusalem');
+          if (p && (p.fort || 0) > 0) {
+            p.fort -= 1;
+            if (typeof p.maxGarrison === 'number') {
+              p.maxGarrison = Math.max(0, p.maxGarrison - per);
+              p.garrison = Math.min(p.garrison || 0, p.maxGarrison);
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'tribute_of_joppa', name: 'Tribute for Joppa', months: -1,
+            effects: { incomeMult: 0.9 },
+          });
+          h.removeModifier(ctx, 'Jerusalem', 'famine_in_the_city');
+          h.setFlag(ctx, 'jerusalemTerms', true);
+          h.notify(ctx, {
+            title: 'The Honorable Terms', type: 'info', provName: 'Jerusalem',
+            text: 'No garrison, no idolatry — but hostages, tribute, and the battlements thrown down.',
+          });
+        }),
+      },
+      {
+        label: 'Open the sepulchre of David',
+        tooltip: 'Peace with the kingdom (occupations revert): +50 treasury remains after the tribute, −15 legitimacy (the pious murmur at the opened tomb), +1 stability; Jerusalem loses 1 fort level; "Tribute for Joppa" (−10% income until the kingdom breaks).',
+        effects: guard('ev_jerusalem_terms:1', (ctx) => {
+          const h = ctx.helpers;
+          h.endWar(ctx, 'HAS', 'SEL', null);
+          h.adjust(ctx, 'HAS', { treasury: 50, legitimacy: -15, stability: 1 });
+          const per = (ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.fortGarrisonPerLevel) || 1000;
+          const p = ctx.prov('Jerusalem');
+          if (p && (p.fort || 0) > 0) {
+            p.fort -= 1;
+            if (typeof p.maxGarrison === 'number') {
+              p.maxGarrison = Math.max(0, p.maxGarrison - per);
+              p.garrison = Math.min(p.garrison || 0, p.maxGarrison);
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'tribute_of_joppa', name: 'Tribute for Joppa', months: -1,
+            effects: { incomeMult: 0.9 },
+          });
+          h.removeModifier(ctx, 'Jerusalem', 'famine_in_the_city');
+          h.setFlag(ctx, 'jerusalemTerms', true);
+          h.setFlag(ctx, 'davidsTombOpened', true);
+          h.notify(ctx, {
+            title: 'The Honorable Terms', type: 'info', provName: 'Jerusalem',
+            text: 'The tribute is paid in silver eight hundred years asleep. The pious count the cost differently.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 37 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_hyrcanus_east',
+    title: 'The Vassal Rides East',
+    desc: 'Antiochus has turned at last to the wound that matters: the east, where the '
+      + 'Arsacid sits in the palaces of Media and the tribute of half the world rides '
+      + 'away on horseback. The muster is the greatest since Ipsus, they say — and in '
+      + 'its ranks, under the terms of the peace, march the Jews, with Hyrcanus the '
+      + 'high priest at their head. The chroniclers of Israel will remember one thing '
+      + 'above all: when the feast of Shavuot fell after a Sabbath, the whole army of '
+      + 'Asia stood in camp two days, because the king would not make the Jews march. '
+      + 'Kings have bought loyalty with cities and failed; this one bought it with two '
+      + 'days of patience.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_hyrcanus_east', (ctx) => {
+      const h = ctx.helpers;
+      if (!h.getFlag(ctx, 'jerusalemTerms')) return false;
+      if (!alive(ctx, 'HAS') || !alive(ctx, 'SEL')) return false;
+      return dateGE(ctx, -130, 4);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Ride with the king, and keep the feast',
+        tooltip: 'The Grand Army of the East musters (Sidetes +18,000 men at Antioch, war with Parthia); Judaea sends its contingent: −1,000 manpower, +15 military points, +10 influence; "The King Keeps Shavuot" (+5% morale, 12 months).',
+        effects: guard('ev_hyrcanus_east:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'PAR') && !findWar(ctx.game, 'SEL', 'PAR')) {
+            h.declareWar(ctx, 'SEL', 'PAR', 'The Anabasis of Antiochus Sidetes');
+          }
+          const at = firstControlled(ctx, 'SEL', ['Antioch', 'Damascus', 'Zeugma']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 14, cav: 4, name: 'Grand Army of the East',
+              general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+            });
+          }
+          h.adjust(ctx, 'HAS', { manpower: -1000, mar: 15, infl: 10 });
+          setOpinion(ctx, 'SEL', 'HAS', 60);
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'king_keeps_shavuot', name: 'The King Keeps Shavuot', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          h.setFlag(ctx, 'hyrcanusEast', true);
+        }),
+      },
+      {
+        label: 'Send the tribute’s men and stay in Jerusalem',
+        tooltip: 'The Grand Army of the East musters (Sidetes +18,000 men at Antioch, war with Parthia); Judaea sends less and keeps its priest: −500 manpower, +10 governance.',
+        effects: guard('ev_hyrcanus_east:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'PAR') && !findWar(ctx.game, 'SEL', 'PAR')) {
+            h.declareWar(ctx, 'SEL', 'PAR', 'The Anabasis of Antiochus Sidetes');
+          }
+          const at = firstControlled(ctx, 'SEL', ['Antioch', 'Damascus', 'Zeugma']);
+          if (at) {
+            h.spawnArmy(ctx, 'SEL', at, {
+              inf: 14, cav: 4, name: 'Grand Army of the East',
+              general: { name: 'Antiochus VII Sidetes', fire: 3, shock: 3, maneuver: 4 },
+            });
+          }
+          h.adjust(ctx, 'HAS', { manpower: -500, gov: 10 });
+          setOpinion(ctx, 'SEL', 'HAS', 20);
+          h.setFlag(ctx, 'hyrcanusEast', false);
+        }),
+      },
+    ],
+  },
+
+  // ── 38 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_sidetes_falls',
+    title: 'The Ambush in Media',
+    desc: 'It went well for a year — three battles won, Babylonia recovered, the Arsacid '
+      + 'suing for terms — and then the army wintered dispersed in the towns of Media, '
+      + 'eating the country bare, and the country rose on an appointed day. The king '
+      + 'ran to the nearest fighting with the handful around him, was cut off in a '
+      + 'valley, and died there; whether by a Parthian arrow or his own sword, the '
+      + 'accounts do not agree. He was the last. The kingdom of the house of Seleucus '
+      + 'will quarrel on for decades yet, but it will never again cross the Euphrates '
+      + 'in strength; and every chancery from Rome to Jerusalem, reading the dispatch, '
+      + 'strikes the same line from its ledgers — the one where the kingdom of the '
+      + 'Greeks was still counted among the powers of the earth.',
+    forTag: 'both',
+    date: { y: -129, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The kingdom never again crosses the Euphrates',
+        tooltip: 'Sidetes dies in Media: Seleucids −1 stability, −15 legitimacy, "The Kingdom Draws In" (−10% reinforcements, permanent); Parthia +100 treasury, +10 legitimacy and keeps what it holds; Judaea’s tribute lapses (+10 legitimacy).',
+        effects: guard('ev_sidetes_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'SEL')) {
+            h.killGeneral(ctx, 'SEL', 'Antiochus VII Sidetes');
+            h.setRuler(ctx, 'SEL', { name: 'Demetrius II Nicator', title: 'Basileus', gov: 2, infl: 2, mar: 2, age: 31 });
+            h.setHeir(ctx, 'SEL', null);
+            h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -15 });
+            h.addTagModifier(ctx, 'SEL', {
+              id: 'kingdom_draws_in', name: 'The Kingdom Draws In', months: -1,
+              effects: { reinforceMult: 0.9 },
+            });
+          }
+          if (alive(ctx, 'PAR')) {
+            h.adjust(ctx, 'PAR', { treasury: 100, legitimacy: 10 });
+            const w = findWar(ctx.game, 'SEL', 'PAR');
+            if (w) {
+              const key = (w.attackers || []).indexOf('PAR') >= 0 ? 'att' : 'def';
+              h.endWar(ctx, 'PAR', 'SEL', key);
+            }
+          }
+          if (alive(ctx, 'HAS')) {
+            h.removeModifier(ctx, 'HAS', 'tribute_of_joppa');
+            h.adjust(ctx, 'HAS', { legitimacy: 10 });
+            if (h.getFlag(ctx, 'hyrcanusEast')) {
+              // Josephus: Hyrcanus was home before the winter dispersal.
+              h.adjust(ctx, 'HAS', { legitimacy: 5 });
+            }
+          }
+          h.setFlag(ctx, 'sidetesFallen', true);
+          h.notify(ctx, {
+            title: 'Antiochus Sidetes Is Dead', type: 'info', provName: 'Ecbatana',
+            text: 'The last soldier-king of the Greeks dies in a Median valley. The tribute of Judea lapses with him.',
+          });
+        }),
+      },
+      {
+        label: 'The Parthian sends the body home in silver',
+        tooltip: 'As above, but the coffin of silver steadies the succession: Seleucids −1 stability, −10 legitimacy, −40 treasury for the funeral; Parthia +100 treasury, +10 legitimacy; Judaea’s tribute lapses (+10 legitimacy).',
+        effects: guard('ev_sidetes_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'SEL')) {
+            h.killGeneral(ctx, 'SEL', 'Antiochus VII Sidetes');
+            h.setRuler(ctx, 'SEL', { name: 'Demetrius II Nicator', title: 'Basileus', gov: 2, infl: 2, mar: 2, age: 31 });
+            h.setHeir(ctx, 'SEL', null);
+            h.adjust(ctx, 'SEL', { stability: -1, legitimacy: -10, treasury: -40 });
+            h.addTagModifier(ctx, 'SEL', {
+              id: 'kingdom_draws_in', name: 'The Kingdom Draws In', months: -1,
+              effects: { reinforceMult: 0.9 },
+            });
+          }
+          if (alive(ctx, 'PAR')) {
+            h.adjust(ctx, 'PAR', { treasury: 100, legitimacy: 10 });
+            const w = findWar(ctx.game, 'SEL', 'PAR');
+            if (w) {
+              const key = (w.attackers || []).indexOf('PAR') >= 0 ? 'att' : 'def';
+              h.endWar(ctx, 'PAR', 'SEL', key);
+            }
+          }
+          if (alive(ctx, 'HAS')) {
+            h.removeModifier(ctx, 'HAS', 'tribute_of_joppa');
+            h.adjust(ctx, 'HAS', { legitimacy: 10 });
+          }
+          h.setFlag(ctx, 'sidetesFallen', true);
+          h.notify(ctx, {
+            title: 'Antiochus Sidetes Is Dead', type: 'info', provName: 'Ecbatana',
+            text: 'The Arsacid returns the king in a coffin of silver — a courtesy, and a receipt.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 39 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_yehohanan_coinage',
+    title: 'Yehohanan the High Priest',
+    desc: 'The dispatch from Media has been read aloud on the Temple mount, and Hyrcanus '
+      + 'has drawn the conclusion a statesman draws: there is no longer anyone to pay '
+      + 'tribute to. The mint strikes small bronze, and the legend is its own '
+      + 'declaration — no king’s head, no god’s face, but a wreath and the plain words: '
+      + '"Yehohanan the High Priest and the Council of the Jews." Not a king; a priest '
+      + 'and a council, on money that no kingdom licenses. The men who weigh coins in '
+      + 'Gaza and Damascus understand the legend perfectly.',
+    forTag: 'HAS',
+    date: { y: -128, m: 2 },
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strike our own bronze',
+        tooltip: '+10 legitimacy; "The Mint of Yehohanan" (+10% income, permanent).',
+        effects: guard('ev_yehohanan_coinage:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'mint_of_yehohanan', name: 'The Mint of Yehohanan', months: -1,
+            effects: { incomeMult: 1.1 },
+          });
+          h.setFlag(ctx, 'hyrcanusCoinage', true);
+        }),
+      },
+      {
+        label: 'Rebuild the battlements first',
+        tooltip: '−40 treasury, +5 legitimacy; Jerusalem regains +1 fort level — the wall Sidetes threw down stands again.',
+        effects: guard('ev_yehohanan_coinage:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { treasury: -40, legitimacy: 5 });
+          const per = (ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.fortGarrisonPerLevel) || 1000;
+          const p = ctx.prov('Jerusalem');
+          if (p && p.controller === 'HAS' && (p.fort || 0) < 3) {
+            p.fort = (p.fort || 0) + 1;
+            if (typeof p.maxGarrison === 'number') {
+              p.maxGarrison += per;
+              p.garrison = Math.min((p.garrison || 0) + per, p.maxGarrison);
+            }
+          }
+          h.setFlag(ctx, 'hyrcanusCoinage', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 40 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_medaba_campaign',
+    title: 'Beyond the Jordan: Medaba',
+    desc: 'The first campaign of the freedom is aimed east, at Medaba on the king’s '
+      + 'highway beyond the Jordan, where the caravan tolls of half Arabia pass a '
+      + 'single gate. The siege will take six months, the engineers say, and sieges '
+      + 'cost what wars of movement never do. Hyrcanus has silver — the tomb’s, or the '
+      + 'treasury’s — and a thought no ruler of Israel has had before him: silver can '
+      + 'carry a spear. The pious will note, in time, that the high priest keeps '
+      + 'foreign soldiers. The high priest will note that he keeps them paid.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_medaba_campaign', (ctx) =>
+      dateGE(ctx, -128, 8) && alive(ctx, 'HAS') && totalMen(ctx, 'HAS') >= 3000
+      && !ctx.helpers.controls(ctx, 'HAS', 'Medaba')),
+    aiOption: (ctx) => {
+      try { return (ctx.game.tags.HAS.treasury || 0) >= 100 ? 0 : 1; } catch (e) { return 1; }
+    },
+    options: [
+      {
+        label: 'Hire mercenaries — the first of Israel’s rulers to do it',
+        tooltip: '−60 treasury, −5 legitimacy; an army musters for the Jordan under Hyrcanus if he lacks one; "Hired Spears" (+15% reinforcements, 24 months).',
+        effects: guard('ev_medaba_campaign:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { treasury: -60, legitimacy: -5 });
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Jericho', 'Jerusalem', 'Emmaus']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, cav: 1, name: 'Army of Hyrcanus',
+                general: { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'hired_spears', name: 'Hired Spears', months: 24,
+            effects: { reinforceMult: 1.15 },
+          });
+          try {
+            if (ctx.game.tags.HAS && ctx.game.tags.HAS.aiState) {
+              ctx.game.tags.HAS.aiState.target = 'Medaba';
+            }
+          } catch (e) { warnOnce('medaba:aiState', e); }
+          h.setFlag(ctx, 'medabaCampaign', true);
+        }),
+      },
+      {
+        label: 'The levies of Judah suffice',
+        tooltip: '+1,500 manpower as the hill villages muster; an army forms for the Jordan under Hyrcanus if he lacks one; "The Levies of Judah" (+5% morale, 12 months).',
+        effects: guard('ev_medaba_campaign:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { manpower: 1500 });
+          if (!armyByGeneral(ctx, 'HAS', 'John Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Jericho', 'Jerusalem', 'Emmaus']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, cav: 1, name: 'Army of Hyrcanus',
+                general: { name: 'John Hyrcanus', fire: 3, shock: 3, maneuver: 4 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'levies_of_judah', name: 'The Levies of Judah', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          try {
+            if (ctx.game.tags.HAS && ctx.game.tags.HAS.aiState) {
+              ctx.game.tags.HAS.aiState.target = 'Medaba';
+            }
+          } catch (e) { warnOnce('medaba:aiState2', e); }
+          h.setFlag(ctx, 'medabaCampaign', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 41 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_gerizim',
+    title: 'The Temple on Gerizim',
+    desc: 'Shechem is taken, and above it stands the question two centuries old: the '
+      + 'temple on Mount Gerizim, built when Sanballat’s people were shut out of the '
+      + 'Second Temple, serving the same Law with a different mountain. To the men of '
+      + 'the Gophna hills there is one sanctuary, and its name is not Gerizim; to the '
+      + 'Samaritans, Gerizim is the mountain Moses meant, and Jerusalem the usurper. '
+      + 'Hyrcanus’ engineers wait on the slope with their orders unwritten. Whatever '
+      + 'is decided here will be remembered longer than any border drawn this century — '
+      + 'a thing both peoples, for once, agree on.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_gerizim', (ctx) =>
+      dateGE(ctx, -127, 1) && alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Neapolis')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Cast down the temple on Gerizim',
+        tooltip: 'One Law, one Temple: +10 legitimacy; Shechem passes to the faith of Jerusalem — and seethes (+2 unrest, 36 months).',
+        effects: guard('ev_gerizim:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10 });
+          const p = ctx.prov('Neapolis');
+          if (p) p.religion = 'judaism';
+          h.addProvinceModifier(ctx, 'Neapolis', {
+            id: 'gerizim_cast_down', name: 'Gerizim Cast Down', months: 36,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'gerizimRazed', true);
+          h.notify(ctx, {
+            title: 'Gerizim Cast Down', type: 'info', provName: 'Neapolis',
+            text: 'The rival sanctuary is razed. The Samaritans will keep the day as a grief for two thousand years.',
+          });
+        }),
+      },
+      {
+        label: 'Leave the mountain its altar; take the tribute',
+        tooltip: 'The schism endures, taxed: +10 governance; Shechem pays double ("Tribute of Gerizim": +15% tax, permanent) and stays quiet (−1 unrest, 36 months).',
+        effects: guard('ev_gerizim:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          h.addProvinceModifier(ctx, 'Neapolis', {
+            id: 'tribute_of_gerizim', name: 'Tribute of Gerizim', months: -1,
+            effects: { taxMult: 1.15 },
+          });
+          h.addProvinceModifier(ctx, 'Neapolis', {
+            id: 'gerizim_spared', name: 'Gerizim Spared', months: 36,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'gerizimSpared', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 42 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_idumea_policy',
+    title: 'Idumea Kneels',
+    desc: 'Adora and Marisa have opened their gates, and with them all Idumea — the old '
+      + 'south country of Esau, pressed against Judah since the exile. Hyrcanus has '
+      + 'done what no conqueror of the age does: he has offered the conquered not '
+      + 'tribute but kinship. Let them be circumcised and live by the laws of the '
+      + 'Jews, and they may keep their land and be counted Israel; or let them go. '
+      + 'They stayed, nearly all of them — Josephus will write that from that time '
+      + 'forth they were none other than Jews. The chroniclers who tell it add a dry '
+      + 'note in the margin: out of this same Idumea, in the fullness of time, will '
+      + 'come a family with a talent for thrones — and the crown of the house that '
+      + 'converted them.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_idumea_policy', (ctx) =>
+      dateGE(ctx, -126, 1) && alive(ctx, 'HAS')
+      && ctx.helpers.controls(ctx, 'HAS', 'Hebron') && ctx.helpers.controls(ctx, 'HAS', 'Adora')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Under the Law, or out of the land',
+        tooltip: 'Idumea becomes Israel: +1,500 manpower, +10 legitimacy; "The Idumean Levies" (+10% manpower, 24 months); Hebron and Adora chafe under the new Law (+1 unrest, 36 months).',
+        effects: guard('ev_idumea_policy:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { manpower: 1500, legitimacy: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'idumean_levies', name: 'The Idumean Levies', months: 24,
+            effects: { manpowerMult: 1.1 },
+          });
+          for (const name of ['Hebron', 'Adora']) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'idumea_under_the_law', name: 'Idumea Under the Law', months: 36,
+              effects: { unrest: 1 },
+            });
+          }
+          h.setFlag(ctx, 'idumeaConverted', true);
+          h.notify(ctx, {
+            title: 'Idumea Kneels', type: 'good', provName: 'Adora',
+            text: 'The Idumeans take the covenant and keep their land. Time will show what they make of it.',
+          });
+        }),
+      },
+      {
+        label: 'Tributaries, not brethren',
+        tooltip: 'The south pays and keeps its gods: +10 governance; Hebron and Adora pay double ("Idumean Tribute": +20% tax, permanent) — and send no sons to the muster.',
+        effects: guard('ev_idumea_policy:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          for (const name of ['Hebron', 'Adora']) {
+            h.addProvinceModifier(ctx, name, {
+              id: 'idumean_tribute', name: 'Idumean Tribute', months: -1,
+              effects: { taxMult: 1.2 },
+            });
+          }
+          h.setFlag(ctx, 'idumeaTributary', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 43 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_pharisee_breach',
+    title: 'Let the Crown Suffice Thee',
+    desc: 'At the high priest’s own table, at a feast for the sages, Hyrcanus asked the '
+      + 'Pharisees to tell him plainly if they saw him depart from the right way — and '
+      + 'one Eleazar took him at his word: "Since thou desirest the truth: give up the '
+      + 'high priesthood, and let the crown of rule suffice thee." The old slander '
+      + 'stood behind the words — that his mother had been a captive in the days of '
+      + 'Epiphanes, and the priesthood therefore never lawfully his. The table went '
+      + 'silent. Jonathan the Sadducee, at the king’s elbow, murmured that Eleazar '
+      + 'spoke the mind of all the schools; the schools swear he spoke for himself '
+      + 'alone. On the sentence given to one sharp-tongued sage now turns the whole '
+      + 'question of who interprets the Law in Israel — the schools of the people, or '
+      + 'the priests and the great houses.',
+    forTag: 'HAS',
+    date: { y: -114, m: 2 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Go over to the Sadducees',
+        tooltip: 'The great houses take the courts: −10 legitimacy; "The Sadducee Court" (+8% income, +1 unrest everywhere, permanent). The Hasideans’ heirs will not forgive it.',
+        effects: guard('ev_pharisee_breach:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { legitimacy: -10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'sadducee_court', name: 'The Sadducee Court', months: -1,
+            effects: { incomeMult: 1.08, unrestAll: 1 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', -20);
+          h.factionShift(ctx, 'HAS', 'hellenizers', 10);
+          h.setFlag(ctx, 'sadduceeBreach', true);
+        }),
+      },
+      {
+        label: 'One sage’s insolence is not the schools’ sin',
+        tooltip: 'Eleazar is punished; the Pharisees keep the courts: +10 legitimacy; "The Schools Stand With Us" (−1 unrest everywhere, −5% income, permanent).',
+        effects: guard('ev_pharisee_breach:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.adjust(ctx, 'HAS', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'schools_stand_with_us', name: 'The Schools Stand With Us', months: -1,
+            effects: { unrestAll: -1, incomeMult: 0.95 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', 15);
+          h.setFlag(ctx, 'phariseesKept', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 44 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_samaria_falls',
+    title: 'The Year-Long Siege of Samaria',
+    desc: 'A full year the sons of Hyrcanus — Antigonus and Aristobulus — have lain '
+      + 'about Samaria, walling it in with a double wall of fourscore furlongs, beating '
+      + 'off the relief columns that came up from the coast with Egyptian mercenaries. '
+      + 'And on the day of the last battle, Hyrcanus, offering incense alone in the '
+      + 'Temple, heard a voice out of the sanctuary saying that his sons had that very '
+      + 'hour conquered — and it was so, to the hour, as the runners confirmed two days '
+      + 'after. The city is taken and the question is what a city is for. Hyrcanus’ '
+      + 'answer will be quoted with a shudder for a century: he effaced it, digging '
+      + 'trenches and turning the mountain streams through the foundations, until no '
+      + 'man could say a city had stood there.',
+    forTag: 'HAS',
+    major: true,
+    trigger: safeTrigger('ev_samaria_falls', (ctx) => {
+      if (!alive(ctx, 'HAS')) return false;
+      if (!dateGE(ctx, -108, 4)) return false;
+      if (ctx.helpers.controls(ctx, 'HAS', 'Sebaste')) return true;
+      // Calendar fallback: by 107 the campaign marches if Israel can field it.
+      return dateGE(ctx, -107, 6) && totalMen(ctx, 'HAS') >= 5000;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Efface it — turn the streams through the ruin',
+        tooltip: '+15 legitimacy, +15 military points; "A Voice in the Sanctuary" (+5% morale, 12 months); Samaria is razed (−40% tax, −2 unrest, permanent). The Greeks of the coast will not forget.',
+        effects: guard('ev_samaria_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 15, mar: 15 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'voice_in_the_sanctuary', name: 'A Voice in the Sanctuary', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          if (h.controls(ctx, 'HAS', 'Sebaste')) {
+            h.addProvinceModifier(ctx, 'Sebaste', {
+              id: 'samaria_razed', name: 'Samaria Razed', months: -1,
+              effects: { taxMult: 0.6, unrest: -2 },
+            });
+          } else if (!armyByGeneral(ctx, 'HAS', 'Aristobulus son of Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Neapolis', 'Jerusalem', 'Emmaus', 'Lydda']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, name: 'The Young Men',
+                general: { name: 'Aristobulus son of Hyrcanus', fire: 2, shock: 3, maneuver: 3 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'samariaRazed', true);
+          h.notify(ctx, {
+            title: 'Samaria Falls', type: 'good', provName: 'Sebaste',
+            text: 'The young men have conquered — the voice in the sanctuary said so before the runners came.',
+          });
+        }),
+      },
+      {
+        label: 'Spare the city; garrison the hill',
+        tooltip: '+10 legitimacy, +10 governance; "A Voice in the Sanctuary" (+5% morale, 12 months); Samaria is held and taxed (+10% tax, +1 unrest, 36 months).',
+        effects: guard('ev_samaria_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 10, gov: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'voice_in_the_sanctuary', name: 'A Voice in the Sanctuary', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          if (h.controls(ctx, 'HAS', 'Sebaste')) {
+            h.addProvinceModifier(ctx, 'Sebaste', {
+              id: 'samaria_garrisoned', name: 'Samaria Garrisoned', months: 36,
+              effects: { taxMult: 1.1, unrest: 1 },
+            });
+          } else if (!armyByGeneral(ctx, 'HAS', 'Aristobulus son of Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Neapolis', 'Jerusalem', 'Emmaus', 'Lydda']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, name: 'The Young Men',
+                general: { name: 'Aristobulus son of Hyrcanus', fire: 2, shock: 3, maneuver: 3 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'samariaSpared', true);
+          h.notify(ctx, {
+            title: 'Samaria Falls', type: 'good', provName: 'Sebaste',
+            text: 'The young men have conquered, and the city is spared to pay for its own garrison.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 45 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_hyrcanus_dies',
+    title: 'The Three Privileges',
+    desc: 'John Hyrcanus is dead, full of years, in the thirty-first year of his rule — '
+      + 'and even the chroniclers who quarrel over his sons do not quarrel over him. He '
+      + 'was accounted by God worthy, Josephus writes, of the three greatest '
+      + 'privileges: the rule of the nation, the dignity of the high priesthood, and '
+      + 'prophecy. He doubled the land, freed it, and died in his bed — a sentence no '
+      + 'other man of his century can carry. His testament left the government to his '
+      + 'wife; his eldest son Aristobulus has other views. The mother is in prison '
+      + 'before the month is out, and the brothers with her, save Antigonus whom he '
+      + 'loves — and on the head of Aristobulus sits a thing no son of Israel has worn '
+      + 'since the carrying away to Babylon: the diadem, and the name of KING.',
+    forTag: 'HAS',
+    date: { y: -104, m: 1 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The diadem — the first king since the exile',
+        tooltip: 'Aristobulus I (2/2/3) takes crown and priesthood both: −1 stability (the mother and brothers in chains), +10 military points; "The Diadem" (+5% income, permanent). Heir: Alexander Jannaeus.',
+        effects: guard('ev_hyrcanus_dies:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.killGeneral(ctx, 'HAS', 'John Hyrcanus');
+          h.setRuler(ctx, 'HAS', { name: 'Aristobulus I', title: 'Basileus and High Priest', gov: 2, infl: 2, mar: 3, age: 40 });
+          h.setHeir(ctx, 'HAS', { name: 'Alexander Jannaeus', gov: 2, infl: 2, mar: 4, age: 22 });
+          h.adjust(ctx, 'HAS', { stability: -1, mar: 10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_diadem', name: 'The Diadem', months: -1,
+            effects: { incomeMult: 1.05 },
+          });
+          h.setFlag(ctx, 'hyrcanusDead', true);
+          h.setFlag(ctx, 'aristobulusKing', true);
+          h.notify(ctx, {
+            title: 'A King in Israel', type: 'info', provName: 'Jerusalem',
+            text: 'Aristobulus takes the diadem — the first since the exile. His mother learns of it in prison.',
+          });
+        }),
+      },
+      {
+        label: 'High priest, as his fathers were',
+        tooltip: 'Aristobulus I (2/2/3) rules without the diadem, and the testament is honored in part: +10 legitimacy, +10 governance, no stability loss. Heir: Alexander Jannaeus.',
+        effects: guard('ev_hyrcanus_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS')) return;
+          h.killGeneral(ctx, 'HAS', 'John Hyrcanus');
+          h.setRuler(ctx, 'HAS', { name: 'Aristobulus I', title: 'High Priest', gov: 2, infl: 2, mar: 3, age: 40 });
+          h.setHeir(ctx, 'HAS', { name: 'Alexander Jannaeus', gov: 2, infl: 2, mar: 4, age: 22 });
+          h.adjust(ctx, 'HAS', { legitimacy: 10, gov: 10 });
+          h.setFlag(ctx, 'hyrcanusDead', true);
+          h.notify(ctx, {
+            title: 'Hyrcanus Is Dead', type: 'info', provName: 'Jerusalem',
+            text: 'The high priesthood passes to Aristobulus. The diadem, for now, stays in its box.',
+          });
+        }),
+      },
+    ],
+  },
+
+  // ── 46 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_galilee_iturea',
+    title: 'Galilee and the Itureans',
+    desc: 'The new reign opens northward. Aristobulus and his brother Antigonus have '
+      + 'taken the war into Galilee and against the Itureans of the high country about '
+      + 'Panion — hill tribes half-Hellenized and wholly armed — and a great part of '
+      + 'their land is added to Judea. The policy is his father’s in Idumea, applied '
+      + 'with less patience: the inhabitants may remain if they will be circumcised '
+      + 'and live according to the laws of the Jews. Even the Greek historians pause '
+      + 'over him here: Timagenes calls him a kindly man, who did the Jews much '
+      + 'service, and gained them a portion of the nation of the Itureans. Galilee, '
+      + 'thick with villages and quick to anger, is being stitched to Jerusalem — a '
+      + 'seam that will hold through every war to come.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_galilee_iturea', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'hyrcanusDead') && alive(ctx, 'HAS') && dateGE(ctx, -104, 6)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Under the Law, as Idumea came',
+        tooltip: 'An army musters for the north under Antigonus (2/3/2); +1,000 manpower; "Brethren of Galilee" (+10% manpower, 24 months); −5 legitimacy among the scrupulous, who mislike conversion at spear-point.',
+        effects: guard('ev_galilee_iturea:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { manpower: 1000, legitimacy: -5 });
+          if (!armyByGeneral(ctx, 'HAS', 'Antigonus son of Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Sebaste', 'Neapolis', 'Jerusalem', 'Emmaus']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, cav: 1, name: 'Army of Galilee',
+                general: { name: 'Antigonus son of Hyrcanus', fire: 2, shock: 3, maneuver: 2 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'brethren_of_galilee', name: 'Brethren of Galilee', months: 24,
+            effects: { manpowerMult: 1.1 },
+          });
+          try {
+            if (ctx.game.tags.HAS && ctx.game.tags.HAS.aiState) {
+              ctx.game.tags.HAS.aiState.target = 'Sepphoris';
+            }
+          } catch (e) { warnOnce('galilee:aiState', e); }
+          h.setFlag(ctx, 'galileeCampaign', true);
+        }),
+      },
+      {
+        label: 'Let the hills keep their gods and pay',
+        tooltip: 'An army musters for the north under Antigonus (2/3/2); +10 governance; "Tribute of the North" (+8% income, 24 months) — and no new brethren.',
+        effects: guard('ev_galilee_iturea:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { gov: 10 });
+          if (!armyByGeneral(ctx, 'HAS', 'Antigonus son of Hyrcanus')) {
+            const at = firstControlled(ctx, 'HAS', ['Sebaste', 'Neapolis', 'Jerusalem', 'Emmaus']);
+            if (at) {
+              h.spawnArmy(ctx, 'HAS', at, {
+                inf: 5, cav: 1, name: 'Army of Galilee',
+                general: { name: 'Antigonus son of Hyrcanus', fire: 2, shock: 3, maneuver: 2 },
+              });
+            }
+          }
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'tribute_of_the_north', name: 'Tribute of the North', months: 24,
+            effects: { incomeMult: 1.08 },
+          });
+          try {
+            if (ctx.game.tags.HAS && ctx.game.tags.HAS.aiState) {
+              ctx.game.tags.HAS.aiState.target = 'Sepphoris';
+            }
+          } catch (e) { warnOnce('galilee:aiState2', e); }
+          h.setFlag(ctx, 'galileeCampaign', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 47 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_aristobulus_dies',
+    title: 'The Queen Opens the Prisons',
+    desc: 'The reign lasted one year, and ended the way reigns built on imprisoned '
+      + 'brothers end. The courtiers persuaded the sick king that Antigonus — the one '
+      + 'brother he loved, home from Galilee in his armor — was coming for the crown; '
+      + 'the guards in the dark passage under the tower did the rest. When the king '
+      + 'learned what his suspicion had bought, the disease took him quickly; the '
+      + 'chroniclers say he vomited blood, and the servant carrying the basin stumbled '
+      + 'on the very spot where Antigonus bled. His widow Salome Alexandra wasted no '
+      + 'hour on grief: she opened the prisons, brought out the brothers, and set the '
+      + 'diadem on the eldest, Alexander called Jannaeus — a soldier of twenty-three '
+      + 'whom his father could never abide. The house of Mattathias now has kings, '
+      + 'and the habits of kings; whether it keeps the other inheritance is a '
+      + 'question for the new century.',
+    forTag: 'HAS',
+    date: { y: -103, m: 11 },
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Salome opens the prisons',
+        tooltip: 'Alexander Jannaeus (2/2/4) is crowned: +10 legitimacy, +1 stability — the succession is settled in a day.',
+        effects: guard('ev_aristobulus_dies:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS') || !h.getFlag(ctx, 'hyrcanusDead')) return;
+          h.killGeneral(ctx, 'HAS', 'Antigonus son of Hyrcanus');
+          h.killGeneral(ctx, 'HAS', 'Aristobulus son of Hyrcanus');
+          h.setRuler(ctx, 'HAS', { name: 'Alexander Jannaeus', title: 'Basileus and High Priest', gov: 2, infl: 2, mar: 4, age: 23 });
+          h.setHeir(ctx, 'HAS', null);
+          h.adjust(ctx, 'HAS', { legitimacy: 10, stability: 1 });
+          h.setFlag(ctx, 'jannaeusKing', true);
+          h.notify(ctx, {
+            title: 'Alexander Jannaeus', type: 'info', provName: 'Jerusalem',
+            text: 'The widow frees the brothers and crowns the eldest. A soldier-king takes the house into the new century.',
+          });
+        }),
+      },
+      {
+        label: 'A donative to steady the city first',
+        tooltip: 'Alexander Jannaeus (2/2/4) is crowned with silver in the streets: −20 treasury, +5 legitimacy; "The City Steadied" (−1 unrest everywhere, 12 months).',
+        effects: guard('ev_aristobulus_dies:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'HAS') || !h.getFlag(ctx, 'hyrcanusDead')) return;
+          h.killGeneral(ctx, 'HAS', 'Antigonus son of Hyrcanus');
+          h.killGeneral(ctx, 'HAS', 'Aristobulus son of Hyrcanus');
+          h.setRuler(ctx, 'HAS', { name: 'Alexander Jannaeus', title: 'Basileus and High Priest', gov: 2, infl: 2, mar: 4, age: 23 });
+          h.setHeir(ctx, 'HAS', null);
+          h.adjust(ctx, 'HAS', { treasury: -20, legitimacy: 5 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'city_steadied', name: 'The City Steadied', months: 12,
+            effects: { unrestAll: -1 },
+          });
+          h.setFlag(ctx, 'jannaeusKing', true);
+          h.notify(ctx, {
+            title: 'Alexander Jannaeus', type: 'info', provName: 'Jerusalem',
+            text: 'The widow frees the brothers, crowns the eldest, and pays the city to cheer.',
+          });
+        }),
+      },
+    ],
+  },
 ];

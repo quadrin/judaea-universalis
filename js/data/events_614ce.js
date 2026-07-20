@@ -1092,4 +1092,1236 @@ export const EVENTS_614 = [
       },
     ],
   },
+
+  // ══ THE WORLD AFTER THE CONQUESTS, 653–692 ═══════════════════════════════
+  // The chronicle keeps counting after every verdict. Dated cards fire on the
+  // calendar even in a diverged world; each one checks who is actually alive
+  // and who actually holds the cities before it moves a single talent.
+  // Sources: al-Tabari on the fitnas; Theophanes on the sea war; the Geniza's
+  // memory of the seventy families; the building inscription in the Dome.
+
+  // ── 11 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_uthman_codex',
+    title: 'The Standard Codices',
+    worldLabel: 'Uthman sends one Qur\'an to every garrison city',
+    desc: 'In Medina the third successor — Umar died under an assassin\'s knife at '
+      + 'prayer; Uthman rules now, old and open-handed to his kinsmen — orders one '
+      + 'text of the revelation copied fair and sent to every garrison city, and the '
+      + 'variant leaves burned. The misr system hardens around the codices: soldiers '
+      + 'on the registers, stipends from the conquered land, an empire administered '
+      + 'from tent-cities that have begun, awkwardly, to become capitals.',
+    forTag: 'both',
+    date: { y: 653, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'One reading for one empire',
+        tooltip: 'The Caliphate: Uthman enthroned, +10 legitimacy, +1 stability, and "The Standard Codices" (+0.1 legitimacy a month, −15% administration) for 10 years. The garrison cities of Iraq it holds: +1 unrest for 24 months — Kufa liked its own reading.',
+        effects: guard('ev_p_uthman_codex:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Uthman ibn Affan', title: 'Commander of the Faithful', gov: 3, infl: 3, mar: 2, age: 74 });
+          h.adjust(ctx, 'RSH', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'standard_codices', name: 'The Standard Codices', months: 120,
+            effects: { legitimacyAdd: 0.1, adminMult: 0.85 },
+          });
+          for (const n of ['Babylon', 'Uruk', 'Nehardea']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'variant_readers', name: 'The Variant Readers', months: 24, effects: { unrest: 1 },
+              });
+            }
+          }
+          h.chronicle(ctx, 'era', 'Uthman\'s codices go out to the garrison cities, and the variant leaves burn; the conquests acquire a single book.');
+        }),
+      },
+      {
+        label: 'Let every misr keep its reading',
+        tooltip: 'The Caliphate: Uthman enthroned, +5 legitimacy, +20 influence points; no unrest in Iraq — and no single text either.',
+        effects: guard('ev_p_uthman_codex:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Uthman ibn Affan', title: 'Commander of the Faithful', gov: 3, infl: 3, mar: 2, age: 74 });
+          h.adjust(ctx, 'RSH', { legitimacy: 5, infl: 20 });
+          h.chronicle(ctx, 'era', 'Uthman rules from Medina; the garrison cities keep their own readings, and the reciters of Kufa and Damascus begin a long argument.');
+        }),
+      },
+    ],
+  },
+
+  // ── 12 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_first_fleet',
+    title: 'The Governor Builds a Fleet',
+    worldLabel: 'Mu\'awiya launches the first Arab fleet; Cyprus is raided',
+    desc: 'Mu\'awiya, governor of Syria, has spent fifteen years looking at the sea '
+      + 'that the desert armies cannot cross, and has now hired the men who can: '
+      + 'Syrian shipwrights, Coptic crews, Roman deserters who know which way the '
+      + 'currents run off Cyprus. The Caliph in Medina distrusts water. The governor '
+      + 'in Damascus launches anyway, and Constantia learns what the new flag looks '
+      + 'like from its own harbor.',
+    forTag: 'both',
+    date: { y: 654, m: 6 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The sea learns Arabic',
+        tooltip: 'The Caliphate: 6 ships at its nearest held port. Cyprus (Constantia), if it is not the Caliphate\'s: raided — +2 unrest and −15% tax for 24 months; its Byzantine owner loses 5 legitimacy.',
+        effects: guard('ev_p_first_fleet:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          const port = ['Laodicea', 'Tyre', 'Sidon', 'Berytus', 'Ptolemais', 'Caesarea Maritima', 'Alexandria']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (port) h.spawnFleet(ctx, 'RSH', port, 6, { name: 'The Fleet of Mu\'awiya' });
+          if (!h.controls(ctx, 'RSH', 'Salamis')) {
+            h.addProvinceModifier(ctx, 'Salamis', {
+              id: 'cyprus_raided', name: 'The Island Raided', months: 24,
+              effects: { unrest: 2, taxMult: 0.85 },
+            });
+            const p = ctx.prov('Salamis');
+            if (p && p.owner === 'BYZ') h.adjust(ctx, 'BYZ', { legitimacy: -5 });
+          }
+          h.chronicle(ctx, 'war', 'The first Arab fleet stands out from the Syrian coast; Cyprus is raided, and the sea stops being a wall.');
+        }),
+      },
+      {
+        label: 'Raid, but keep no station',
+        tooltip: 'The Caliphate: 4 ships and +60 talents of plunder — the treasure comes home, the sea-lanes do not. Cyprus suffers the same raid.',
+        effects: guard('ev_p_first_fleet:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          const port = ['Laodicea', 'Tyre', 'Sidon', 'Berytus', 'Ptolemais', 'Caesarea Maritima', 'Alexandria']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (port) h.spawnFleet(ctx, 'RSH', port, 4, { name: 'The Fleet of Mu\'awiya' });
+          h.adjust(ctx, 'RSH', { treasury: 60 });
+          if (!h.controls(ctx, 'RSH', 'Salamis')) {
+            h.addProvinceModifier(ctx, 'Salamis', {
+              id: 'cyprus_raided', name: 'The Island Raided', months: 24,
+              effects: { unrest: 2, taxMult: 0.85 },
+            });
+          }
+          h.chronicle(ctx, 'war', 'Arab ships raid Cyprus and sail home heavy; the governor of Syria has proved his point and banked it.');
+        }),
+      },
+    ],
+  },
+
+  // ── 13 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_masts',
+    title: 'The Battle of the Masts',
+    worldLabel: 'The fleets meet off Lycia — the Battle of the Masts',
+    desc: 'Off the Lycian coast the two fleets lash their hulls together and fight it '
+      + 'out as infantry, deck to deck, until the water — Theophanes says — ran red '
+      + 'to the shore. The sea was Rome\'s last uncontested element; after Phoenix '
+      + 'it is contested. If no Arab fleet exists in this world, the chroniclers '
+      + 'record instead a summer of Roman squadrons burning empty Syrian slipways.',
+    forTag: 'both',
+    date: { y: 655, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Deck to deck',
+        tooltip: 'If the Caliphate has ships: Byzantium\'s fleets are halved, −1 stability, −5 legitimacy; the Caliphate +25 martial points (and +10 war score if they are at war). If it has none: Byzantium +15 martial points instead.',
+        effects: guard('ev_p_masts:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          let rshShips = 0;
+          for (const f of Object.values(ctx.game.fleets || {})) {
+            if (f && f.tag === 'RSH') rshShips += f.ships || 0;
+          }
+          if (alive(ctx, 'RSH') && rshShips > 0) {
+            for (const f of Object.values(ctx.game.fleets || {})) {
+              if (f && f.tag === 'BYZ' && f.ships > 1) f.ships = Math.max(1, Math.floor(f.ships / 2));
+            }
+            h.adjust(ctx, 'BYZ', { stability: -1, legitimacy: -5 });
+            h.adjust(ctx, 'RSH', { mar: 25 });
+            addWarscore(ctx, findWar(ctx.game, 'RSH', 'BYZ'), 'RSH', 10);
+            h.chronicle(ctx, 'war', 'The Battle of the Masts: the fleets grapple off Lycia and the Roman line breaks; the sea is uncontested no more.');
+          } else {
+            h.adjust(ctx, 'BYZ', { mar: 15 });
+            h.chronicle(ctx, 'war', 'Roman squadrons sweep the Syrian coast and find no enemy fleet worth the name; the sea, this year, stays Roman.');
+          }
+        }),
+      },
+      {
+        label: 'The Emperor escapes in another man\'s cloak',
+        tooltip: 'The same battle — but the sovereign\'s flight is seen: Byzantium\'s fleets halved, −12 legitimacy, stability spared; the Caliphate +25 martial points (and +10 war score at war).',
+        effects: guard('ev_p_masts:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          let rshShips = 0;
+          for (const f of Object.values(ctx.game.fleets || {})) {
+            if (f && f.tag === 'RSH') rshShips += f.ships || 0;
+          }
+          if (alive(ctx, 'RSH') && rshShips > 0) {
+            for (const f of Object.values(ctx.game.fleets || {})) {
+              if (f && f.tag === 'BYZ' && f.ships > 1) f.ships = Math.max(1, Math.floor(f.ships / 2));
+            }
+            h.adjust(ctx, 'BYZ', { legitimacy: -12 });
+            h.adjust(ctx, 'RSH', { mar: 25 });
+            addWarscore(ctx, findWar(ctx.game, 'RSH', 'BYZ'), 'RSH', 10);
+            h.chronicle(ctx, 'war', 'The Battle of the Masts: the fleet is lost and the sovereign leaves the flagship in a common soldier\'s cloak — the sailors remember both.');
+          } else {
+            h.adjust(ctx, 'BYZ', { mar: 15 });
+            h.chronicle(ctx, 'war', 'Roman squadrons sweep the Syrian coast unopposed; there is no fleet to flee from.');
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 14 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_uthman_slain',
+    title: 'The Caliph at His Doorway',
+    worldLabel: 'Uthman is murdered; the First Fitna opens',
+    desc: 'Mutineers from the garrisons of Egypt and Iraq camp in Medina for weeks with '
+      + 'their grievances — stipends, governors, cousins promoted over believers — and '
+      + 'on a June day they climb the wall of the Caliph\'s house and kill the old man '
+      + 'over his open Qur\'an. Ali accepts the oath in a city that smells of the '
+      + 'crime. The empire of the conquests, having run out of enemies it is willing '
+      + 'to name, turns inward.',
+    forTag: 'both',
+    date: { y: 656, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The empire turns inward',
+        tooltip: 'The Caliphate: Ali enthroned; −2 stability, −15 legitimacy, and "The First Fitna" (−10% morale, −10% income) for 60 months.',
+        effects: guard('ev_p_uthman_slain:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Ali ibn Abi Talib', title: 'Commander of the Faithful', gov: 3, infl: 3, mar: 4, age: 55 });
+          h.adjust(ctx, 'RSH', { stability: -2, legitimacy: -15 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'first_fitna', name: 'The First Fitna', months: 60,
+            effects: { moraleMult: 0.9, incomeMult: 0.9 },
+          });
+          h.setFlag(ctx, 'firstFitna', true);
+          h.chronicle(ctx, 'era', 'Uthman is killed at his own doorway in Medina; Ali takes the oath, Damascus withholds it, and the First Fitna opens.');
+        }),
+      },
+      {
+        label: 'Buy the garrisons quiet',
+        tooltip: 'The Caliphate: Ali enthroned; −120 talents in stipend arrears paid at once — −1 stability, −15 legitimacy, and the same "First Fitna" modifier. Silver slows a civil war; it has never yet stopped one.',
+        effects: guard('ev_p_uthman_slain:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Ali ibn Abi Talib', title: 'Commander of the Faithful', gov: 3, infl: 3, mar: 4, age: 55 });
+          h.adjust(ctx, 'RSH', { treasury: -120, stability: -1, legitimacy: -15 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'first_fitna', name: 'The First Fitna', months: 60,
+            effects: { moraleMult: 0.9, incomeMult: 0.9 },
+          });
+          h.setFlag(ctx, 'firstFitna', true);
+          h.chronicle(ctx, 'era', 'Uthman is killed at his doorway; Ali pays the garrisons their arrears and takes an oath that Damascus still refuses.');
+        }),
+      },
+    ],
+  },
+
+  // ── 15 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_camel_siffin',
+    title: 'The Camel and the Lances',
+    worldLabel: 'Muslim fights Muslim: the Camel, then Siffin',
+    desc: 'At Basra the Prophet\'s widow directs a battle from her camel-litter until '
+      + 'the litter bristles with arrows like a hedgehog and the beast is hamstrung '
+      + 'under her. Months later, on the Euphrates at Siffin, Ali\'s Iraqis are '
+      + 'grinding through Mu\'awiya\'s Syrians when the Syrian ranks raise leaves of '
+      + 'the Qur\'an on their lance-points: let the Book judge between us. The armies '
+      + 'stop. The arbitration begins. And the men who wanted neither caliph walk '
+      + 'out of the camp declaring that judgment belongs to God alone.',
+    forTag: 'both',
+    date: { y: 657, m: 7 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Raise the leaves on the lances',
+        tooltip: 'The Caliphate: −6,000 manpower, −5 legitimacy; the Kharijites walk out — "Judgment Belongs to God Alone" (+1 unrest everywhere) for 48 months.',
+        effects: guard('ev_p_camel_siffin:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { manpower: -6000, legitimacy: -5 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'kharijite_secession', name: '"Judgment Belongs to God Alone"', months: 48,
+            effects: { unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'kharijites', true);
+          h.chronicle(ctx, 'war', 'The Camel, then Siffin: the Qur\'an goes up on the lances, the arbitration begins, and the Kharijites walk out of both camps.');
+        }),
+      },
+      {
+        label: 'Fight Siffin to the finish',
+        tooltip: 'The Caliphate: −10,000 manpower, −10 legitimacy — no arbitration, no walkout, and a generation of Syrian and Iraqi widows on the same pension rolls.',
+        effects: guard('ev_p_camel_siffin:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { manpower: -10000, legitimacy: -10 });
+          h.chronicle(ctx, 'war', 'The Camel, then Siffin fought to the end: the Book stays in its satchels and the river carries the cost downstream.');
+        }),
+      },
+    ],
+  },
+
+  // ── 16 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_nahrawan',
+    title: 'Nahrawan',
+    desc: 'The men who walked out at Siffin have made a camp on the Nahrawan canal and '
+      + 'a doctrine out of the walkout: every believer who accepted the arbitration is '
+      + 'an apostate, and apostates may be killed on the road. Ali, who wanted to march '
+      + 'on Damascus, marches on his own former soldiers instead — and wins the kind '
+      + 'of victory over the pious that the pious never stop avenging.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_nahrawan', (ctx) =>
+      dateGE(ctx, 658, 7) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'kharijites')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Cut them down at the canal',
+        tooltip: 'The Caliphate: +10 martial points, −2,000 manpower, −5 legitimacy — the field is won and the grudge is planted.',
+        effects: guard('ev_p_nahrawan:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { mar: 10, manpower: -2000, legitimacy: -5 });
+          h.chronicle(ctx, 'war', 'Nahrawan: the Kharijite camp is destroyed on its canal; the survivors scatter, and begin to sharpen shorter blades.');
+        }),
+      },
+      {
+        label: 'Offer amnesty at the water\'s edge',
+        tooltip: 'The Caliphate: −1,000 manpower, +5 legitimacy; the secession endures — "Judgment Belongs to God Alone" extended to 60 months.',
+        effects: guard('ev_p_nahrawan:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { manpower: -1000, legitimacy: 5 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'kharijite_secession', name: '"Judgment Belongs to God Alone"', months: 60,
+            effects: { unrestAll: 1 },
+          });
+          h.chronicle(ctx, 'war', 'Amnesty at Nahrawan: most of the seceders take it and go home; the rest keep the doctrine and the roads stay dangerous.');
+        }),
+      },
+    ],
+  },
+
+  // ── 17 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_ali_falls',
+    title: 'The Poisoned Blade at Kufa',
+    worldLabel: 'Ali is struck down; Mu\'awiya takes the oath',
+    desc: 'A Kharijite waits in the mosque at Kufa through the dawn prayer and opens '
+      + 'Ali\'s skull with a poisoned sword. With him dies the last caliph Medina will '
+      + 'ever give the empire. Mu\'awiya — who has governed Syria for twenty years and '
+      + 'commanded its treasury, its army and its bishops like a man playing an '
+      + 'instrument he built himself — receives the oath, the tradition says, at '
+      + 'Jerusalem, and prays at Golgotha and Gethsemane so the whole city can watch. '
+      + 'The capital is Damascus now. Medina keeps the tombs.',
+    forTag: 'both',
+    date: { y: 661, m: 1 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'An empire ruled from Damascus',
+        tooltip: 'The Caliphate becomes the Umayyad Caliphate: Mu\'awiya enthroned, +2 stability, +10 legitimacy, the Fitna modifier ends. If it holds Jerusalem: +15 influence points and the city −1 unrest for 24 months.',
+        effects: guard('ev_p_ali_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 3, age: 59 });
+          r.name = 'Umayyad Caliphate';
+          h.removeModifier(ctx, 'RSH', 'first_fitna');
+          h.adjust(ctx, 'RSH', { stability: 2, legitimacy: 10 });
+          h.setFlag(ctx, 'muawiyaCaliph', true);
+          if (h.controls(ctx, 'RSH', 'Jerusalem')) {
+            h.adjust(ctx, 'RSH', { infl: 15 });
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'oath_at_jerusalem', name: 'The Oath at Jerusalem', months: 24, effects: { unrest: -1 },
+            });
+            h.chronicle(ctx, 'era', 'Ali dies at prayer in Kufa; Mu\'awiya takes the oath at Jerusalem and prays at Golgotha with the holy city for a stage.');
+          } else {
+            h.chronicle(ctx, 'era', 'Ali dies at prayer in Kufa; Mu\'awiya takes the oath at Damascus, and the caliphate becomes a Syrian state.');
+          }
+        }),
+      },
+      {
+        label: 'Keep Medina\'s stipends flowing',
+        tooltip: 'The same succession, softened south: −120 talents to the old families of Medina; +1 stability, +15 legitimacy. The pious are not reconciled, merely paid.',
+        effects: guard('ev_p_ali_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya ibn Abi Sufyan', title: 'Commander of the Faithful', gov: 5, infl: 5, mar: 3, age: 59 });
+          r.name = 'Umayyad Caliphate';
+          h.removeModifier(ctx, 'RSH', 'first_fitna');
+          h.adjust(ctx, 'RSH', { treasury: -120, stability: 1, legitimacy: 15 });
+          h.setFlag(ctx, 'muawiyaCaliph', true);
+          h.chronicle(ctx, 'era', 'Ali dies at prayer in Kufa; Mu\'awiya rules from Damascus and pensions Medina into a dignified quiet.');
+        }),
+      },
+    ],
+  },
+
+  // ── 18 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_seventy_families',
+    title: 'Seventy Families from Tiberias',
+    desc: 'The Umayyad peace, for the Jews of the land, is a ledger: the dhimma, the '
+      + 'poll-tax, and in exchange a quiet that Heraclius never offered. Now the '
+      + 'governor grants what five centuries of emperors refused — seventy families '
+      + 'from Tiberias may settle in Jerusalem, in the quarter south of the bare '
+      + 'Mount. Centuries on, letters in a Cairo storeroom will still remember the '
+      + 'negotiation and the names.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_seventy_families', (ctx) =>
+      dateGE(ctx, 662, 4) && alive(ctx, 'RSH')
+      && !!ctx.helpers.getFlag(ctx, 'muawiyaCaliph')
+      && ctx.helpers.controls(ctx, 'RSH', 'Jerusalem')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Take the houses by the Mount',
+        tooltip: '500 Jews move from Tiberias to Jerusalem; Jerusalem gains "The Returned Community" (+5% production, permanent). If the Return still stands as a polity: +5 legitimacy and the Priests of the Mount +5 approval.',
+        effects: guard('ev_p_seventy_families:0', (ctx) => {
+          const h = ctx.helpers;
+          h.addPopulation(ctx, 'Tiberias', { r: 'judaism', c: 'galilean', n: -500 });
+          h.addPopulation(ctx, 'Jerusalem', { r: 'judaism', c: 'galilean', n: 500 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'returned_community', name: 'The Returned Community', months: -1,
+            effects: { prodMult: 1.05 },
+          });
+          if (alive(ctx, 'JUD')) {
+            h.adjust(ctx, 'JUD', { legitimacy: 5 });
+            h.factionShift(ctx, 'JUD', 'priests', 5);
+          }
+          h.chronicle(ctx, 'era', 'Seventy families from Tiberias settle in Jerusalem by the caliph\'s leave — the first Jewish quarter in the city since the emperors banned even mourning visits.');
+        }),
+      },
+      {
+        label: 'Stay by the lake, send the poets',
+        tooltip: 'No one moves; Tiberias remains the community\'s head. If the Return stands: +15 influence points — the academies keep their weight, and Jerusalem stays a pilgrimage, not an address.',
+        effects: guard('ev_p_seventy_families:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'JUD')) h.adjust(ctx, 'JUD', { infl: 15 });
+          h.chronicle(ctx, 'era', 'The governor\'s offer is weighed in Tiberias and declined with thanks; the poets go up to Jerusalem for the festivals and come home to the lake.');
+        }),
+      },
+    ],
+  },
+
+  // ── 19 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_constans_west',
+    title: 'The Emperor Abandons the City',
+    worldLabel: 'Constans II moves the court west, to Rome and Syracuse',
+    desc: 'Constans II — grandson of Heraclius, and an emperor who had his own brother '
+      + 'ordained and then executed — can no longer sleep in Constantinople, where the '
+      + 'crowds call him Cain in the Hippodrome. He takes the court west: twelve days '
+      + 'in Rome, the first emperor there in two centuries, long enough to strip the '
+      + 'gilded bronze from the Pantheon\'s roof; then Syracuse, where he plans to '
+      + 'move the empire\'s center and the empire declines to follow.',
+    forTag: 'both',
+    date: { y: 663, m: 7 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Strip the Pantheon\'s roof',
+        tooltip: 'Byzantium: Constans II enthroned; +120 talents of bronze, −10 legitimacy. Rome it holds: +2 unrest for 36 months. Constantinople: "The City Without Its Emperor" (+1 unrest) for 60 months.',
+        effects: guard('ev_p_constans_west:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          h.setRuler(ctx, 'BYZ', { name: 'Constans II', title: 'Basileus', gov: 2, infl: 1, mar: 3, age: 32 });
+          h.adjust(ctx, 'BYZ', { treasury: 120, legitimacy: -10 });
+          if (h.controls(ctx, 'BYZ', 'Roma')) {
+            h.addProvinceModifier(ctx, 'Roma', {
+              id: 'bronze_stripped', name: 'The Bronze Stripped', months: 36, effects: { unrest: 2 },
+            });
+          }
+          if (h.controls(ctx, 'BYZ', 'Byzantion')) {
+            h.addProvinceModifier(ctx, 'Byzantion', {
+              id: 'city_abandoned', name: 'The City Without Its Emperor', months: 60, effects: { unrest: 1 },
+            });
+          }
+          h.chronicle(ctx, 'era', 'Constans II abandons Constantinople for the west: twelve days in Rome, the Pantheon\'s roof in his baggage, and a new court at Syracuse.');
+        }),
+      },
+      {
+        label: 'Leave Rome its bronze',
+        tooltip: 'Byzantium: Constans II enthroned; −5 legitimacy only — the Pope keeps his roof, the court still goes to Syracuse, and Constantinople still gets the +1 unrest for 60 months.',
+        effects: guard('ev_p_constans_west:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          h.setRuler(ctx, 'BYZ', { name: 'Constans II', title: 'Basileus', gov: 2, infl: 1, mar: 3, age: 32 });
+          h.adjust(ctx, 'BYZ', { legitimacy: -5 });
+          if (h.controls(ctx, 'BYZ', 'Byzantion')) {
+            h.addProvinceModifier(ctx, 'Byzantion', {
+              id: 'city_abandoned', name: 'The City Without Its Emperor', months: 60, effects: { unrest: 1 },
+            });
+          }
+          h.chronicle(ctx, 'era', 'Constans II moves the court west to Syracuse; Rome keeps its bronze and the Queen of Cities keeps her grievance.');
+        }),
+      },
+    ],
+  },
+
+  // ── 20 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_sufyani_order',
+    title: 'The Sufyani Order',
+    worldLabel: 'Damascus keeps the old administrators at their desks',
+    desc: 'Mu\'awiya\'s empire runs on other people\'s clerks: the chancery of Damascus '
+      + 'is Greek, headed by the Christian Sarjun son of Mansur, whose family kept the '
+      + 'ledgers for Heraclius and whose grandson will write hymns the Church still '
+      + 'sings. The coins are Byzantine dies with the crosses filed off. Every summer '
+      + 'the cavalry rides into Anatolia and comes back with plunder and captives, '
+      + 'regular as harvest.',
+    forTag: 'both',
+    date: { y: 664, m: 5 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Keep the old desks',
+        tooltip: 'The Caliphate: +20 governance points, "The Old Desks Kept" (+8% income, −15% administration) for 10 years. Byzantine Cappadocia (Caesarea Mazaca, Tyana, Ancyra): "The Yearly Raids" (+1 unrest) for 60 months.',
+        effects: guard('ev_p_sufyani_order:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { gov: 20 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'sufyani_order', name: 'The Old Desks Kept', months: 120,
+            effects: { incomeMult: 1.08, adminMult: 0.85 },
+          });
+          if (alive(ctx, 'BYZ')) {
+            for (const n of ['Caesarea Mazaca', 'Tyana', 'Ancyra']) {
+              if (h.controls(ctx, 'BYZ', n)) {
+                h.addProvinceModifier(ctx, n, {
+                  id: 'yearly_raids', name: 'The Yearly Raids', months: 60, effects: { unrest: 1 },
+                });
+              }
+            }
+          }
+          h.chronicle(ctx, 'era', 'The Sufyani order: Sarjun\'s Greek chancery, coins with the crosses filed off, and the cavalry into Anatolia every summer, regular as harvest.');
+        }),
+      },
+      {
+        label: 'Arabize the chancery at once',
+        tooltip: 'The Caliphate: +10 legitimacy, but "The Chancery Stumbles" (−8% income) for 36 months — the new clerks learn double-entry the expensive way. The raids ride regardless.',
+        effects: guard('ev_p_sufyani_order:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'chancery_stumbles', name: 'The Chancery Stumbles', months: 36,
+            effects: { incomeMult: 0.92 },
+          });
+          if (alive(ctx, 'BYZ')) {
+            for (const n of ['Caesarea Mazaca', 'Tyana', 'Ancyra']) {
+              if (h.controls(ctx, 'BYZ', n)) {
+                h.addProvinceModifier(ctx, n, {
+                  id: 'yearly_raids', name: 'The Yearly Raids', months: 60, effects: { unrest: 1 },
+                });
+              }
+            }
+          }
+          h.chronicle(ctx, 'era', 'Damascus dismisses the Greek chancery a generation early; the ledgers suffer in a new alphabet while the summer raids ride on schedule.');
+        }),
+      },
+    ],
+  },
+
+  // ── 21 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_soap_dish',
+    title: 'A Soap Dish in Syracuse',
+    worldLabel: 'Constans II is murdered in his bath; Constantine IV succeeds',
+    desc: 'In the baths of Syracuse a chamberlain named Andreas waits until the '
+      + 'Emperor\'s head is lathered, brains him with the soap dish, and walks out. So '
+      + 'ends the reign that killed a brother, deposed a pope and abandoned the '
+      + 'Bosporus. His son Constantine, seventeen and already harder than the father, '
+      + 'sails from Constantinople to collect the crown and the corpse.',
+    forTag: 'both',
+    date: { y: 668, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The fleet sails home to the Bosporus',
+        tooltip: 'Byzantium: Constantine IV enthroned (Justinian, an infant heir, in the cradle); −1 stability, +5 legitimacy, and "The City Without Its Emperor" lifted from Constantinople.',
+        effects: guard('ev_p_soap_dish:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          h.setRuler(ctx, 'BYZ', { name: 'Constantine IV', title: 'Basileus', gov: 3, infl: 3, mar: 4, age: 17 });
+          h.setHeir(ctx, 'BYZ', { name: 'Justinian', gov: 3, infl: 2, mar: 3, age: 0 });
+          h.adjust(ctx, 'BYZ', { stability: -1, legitimacy: 5 });
+          h.removeModifier(ctx, 'Byzantion', 'city_abandoned');
+          h.chronicle(ctx, 'ruler', 'Constans II is murdered in his bath at Syracuse with a soap dish; Constantine IV brings the court home to Constantinople.');
+        }),
+      },
+      {
+        label: 'Punish Sicily first',
+        tooltip: 'Byzantium: the same succession; +80 talents of confiscations from the conspirators, −5 legitimacy, and Syracuse +2 unrest for 24 months. The modifier on Constantinople lifts all the same.',
+        effects: guard('ev_p_soap_dish:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ')) return;
+          h.setRuler(ctx, 'BYZ', { name: 'Constantine IV', title: 'Basileus', gov: 3, infl: 3, mar: 4, age: 17 });
+          h.setHeir(ctx, 'BYZ', { name: 'Justinian', gov: 3, infl: 2, mar: 3, age: 0 });
+          h.adjust(ctx, 'BYZ', { treasury: 80, stability: -1, legitimacy: -5 });
+          if (h.controls(ctx, 'BYZ', 'Syracusae')) {
+            h.addProvinceModifier(ctx, 'Syracusae', {
+              id: 'usurper_purged', name: 'The Usurper Purged', months: 24, effects: { unrest: 2 },
+            });
+          }
+          h.removeModifier(ctx, 'Byzantion', 'city_abandoned');
+          h.chronicle(ctx, 'ruler', 'Constans II dies under a soap dish; his son scours Syracuse for conspirators before sailing the court home.');
+        }),
+      },
+    ],
+  },
+
+  // ── 22 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_cyzicus',
+    title: 'The Fleet Winters at Cyzicus',
+    worldLabel: 'The long assault on Constantinople begins',
+    desc: 'Mu\'awiya commits the empire\'s whole weight to the one prize that would end '
+      + 'the war of the faiths in a sentence. The Arab fleet takes the peninsula of '
+      + 'Cyzicus, across the Marmara from the City, and winters there — and returns, '
+      + 'and winters again, year upon year, probing the sea walls each sailing season. '
+      + 'Whoever holds Constantinople is now besieged by a calendar as much as by a '
+      + 'fleet.',
+    forTag: 'both',
+    date: { y: 670, m: 4 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Year upon year',
+        tooltip: 'If Byzantium holds Constantinople and the Caliphate can reach it: war between them (if not already), 8 Caliphate ships, "Winter Harbors at Cyzicus" (+8% reinforcement, 96 months), and Constantinople +1 unrest for 96 months.',
+        effects: guard('ev_p_cyzicus:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH') || !alive(ctx, 'BYZ')) return;
+          if (!h.controls(ctx, 'BYZ', 'Byzantion')) {
+            h.chronicle(ctx, 'war', 'The great expedition against Constantinople is mustered — and finds the City no longer Roman; the fleets look for a different war.');
+            return;
+          }
+          const base = ['Antioch', 'Tarsus', 'Laodicea', 'Damascus', 'Alexandria', 'Emesa']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (!base) {
+            h.chronicle(ctx, 'war', 'Damascus plans the great expedition against the City, but holds no Syrian base to launch it from; the plan stays on parchment.');
+            return;
+          }
+          if (!warBetween(ctx, 'RSH', 'BYZ')) h.declareWar(ctx, 'RSH', 'BYZ', 'The War for the City');
+          const port = ['Laodicea', 'Tyre', 'Sidon', 'Berytus', 'Ptolemais', 'Caesarea Maritima', 'Alexandria']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (port) h.spawnFleet(ctx, 'RSH', port, 8, { name: 'The Fleet of the Long Assault' });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'winter_at_cyzicus', name: 'Winter Harbors at Cyzicus', months: 96,
+            effects: { reinforceMult: 1.08 },
+          });
+          h.addProvinceModifier(ctx, 'Byzantion', {
+            id: 'long_assault', name: 'The Long Assault', months: 96, effects: { unrest: 1 },
+          });
+          h.chronicle(ctx, 'war', 'The Arab fleet takes Cyzicus and winters across the water from the City; the siege becomes a calendar.');
+        }),
+      },
+      {
+        label: 'One great storm instead',
+        tooltip: 'The same conditions, spent faster: −150 talents, 10 ships, "The Great Storm" (+1 siege ability, +8% reinforcement) for 48 months only. All or nothing before the treasury objects.',
+        effects: guard('ev_p_cyzicus:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH') || !alive(ctx, 'BYZ')) return;
+          if (!h.controls(ctx, 'BYZ', 'Byzantion')) {
+            h.chronicle(ctx, 'war', 'The great expedition against Constantinople is mustered — and finds the City no longer Roman; the fleets look for a different war.');
+            return;
+          }
+          const base = ['Antioch', 'Tarsus', 'Laodicea', 'Damascus', 'Alexandria', 'Emesa']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (!base) {
+            h.chronicle(ctx, 'war', 'Damascus plans the great expedition against the City, but holds no Syrian base to launch it from; the plan stays on parchment.');
+            return;
+          }
+          if (!warBetween(ctx, 'RSH', 'BYZ')) h.declareWar(ctx, 'RSH', 'BYZ', 'The War for the City');
+          const port = ['Laodicea', 'Tyre', 'Sidon', 'Berytus', 'Ptolemais', 'Caesarea Maritima', 'Alexandria']
+            .find((n) => h.controls(ctx, 'RSH', n));
+          if (port) h.spawnFleet(ctx, 'RSH', port, 10, { name: 'The Fleet of the Long Assault' });
+          h.adjust(ctx, 'RSH', { treasury: -150 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'winter_at_cyzicus', name: 'The Great Storm', months: 48,
+            effects: { siegeBonus: 1, reinforceMult: 1.08 },
+          });
+          h.addProvinceModifier(ctx, 'Byzantion', {
+            id: 'long_assault', name: 'The Long Assault', months: 48, effects: { unrest: 1 },
+          });
+          h.chronicle(ctx, 'war', 'Damascus stakes a treasury on one great assault against the City rather than ten patient ones.');
+        }),
+      },
+    ],
+  },
+
+  // ── 23 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_mardaites',
+    title: 'The Mardaites Come Down the Mountain',
+    desc: 'While the caliphate\'s fleets point at Constantinople, its own coast begins '
+      + 'to bleed: the Mardaites — Christian highlanders of the Lebanon and Amanus, '
+      + 'paid in Roman gold and joined by every runaway slave and deserter between '
+      + 'the mountains and the sea — raid down to the coast roads behind the lines. '
+      + 'Damascus discovers what Rome has known for centuries: a mountain is a '
+      + 'frontier that never signs anything.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_mardaites', (ctx) =>
+      dateGE(ctx, 672, 6) && alive(ctx, 'BYZ') && alive(ctx, 'RSH')
+      && ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis']
+        .some((n) => ctx.helpers.controls(ctx, 'RSH', n))),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pay the mountain men',
+        tooltip: 'Byzantium: −60 talents, +15 influence points. The Caliphate\'s Phoenician coast: "Mardaite Raids" (+2 unrest, −10% tax) for 48 months.',
+        effects: guard('ev_p_mardaites:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'BYZ', { treasury: -60, infl: 15 });
+          for (const n of ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'mardaite_raids', name: 'Mardaite Raids', months: 48,
+                effects: { unrest: 2, taxMult: 0.9 },
+              });
+            }
+          }
+          h.chronicle(ctx, 'war', 'Roman gold goes up the Lebanon and Mardaite raids come down it; the caliphate\'s coast bleeds behind its own lines.');
+        }),
+      },
+      {
+        label: 'Let them raid unpaid',
+        tooltip: 'No talents spent; the raids run on plunder alone — the same coastal modifier, but for 24 months. Enthusiasm without wages has a shorter season.',
+        effects: guard('ev_p_mardaites:1', (ctx) => {
+          const h = ctx.helpers;
+          for (const n of ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'mardaite_raids', name: 'Mardaite Raids', months: 24,
+                effects: { unrest: 2, taxMult: 0.9 },
+              });
+            }
+          }
+          h.chronicle(ctx, 'war', 'The Mardaites raid the caliphate\'s coast for plunder alone; without Roman wages the mountain\'s enthusiasm has a season.');
+        }),
+      },
+    ],
+  },
+
+  // ── 24 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_greek_fire',
+    title: 'The Fire on the Water',
+    worldLabel: 'Kallinikos\' siphons burn the fleet before Constantinople',
+    desc: 'A Syrian refugee architect named Kallinikos has given the City a weapon its '
+      + 'enemies will spend eight centuries failing to copy: a siphon that throws '
+      + 'burning liquid that water feeds rather than quenches. Off the sea walls the '
+      + 'dromons close with the wintering fleet and set the water itself alight; '
+      + 'sailors who dive from their burning decks surface in a burning sea.',
+    forTag: 'both',
+    date: { y: 678, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The sea burns',
+        tooltip: 'If Byzantium holds Constantinople: the Caliphate\'s fleets are halved, +2 war exhaustion; Byzantium +10 legitimacy, +1 stability, "The Siphons of Kallinikos" (+5% morale, permanent) — and +10 war score if at war.',
+        effects: guard('ev_p_greek_fire:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ') || !h.controls(ctx, 'BYZ', 'Byzantion')) return;
+          h.adjust(ctx, 'BYZ', { legitimacy: 10, stability: 1 });
+          h.addTagModifier(ctx, 'BYZ', {
+            id: 'kallinikos_siphons', name: 'The Siphons of Kallinikos', months: -1,
+            effects: { moraleMult: 1.05 },
+          });
+          if (alive(ctx, 'RSH')) {
+            for (const f of Object.values(ctx.game.fleets || {})) {
+              if (f && f.tag === 'RSH' && f.ships > 1) f.ships = Math.max(1, Math.floor(f.ships / 2));
+            }
+            h.adjust(ctx, 'RSH', { warExhaustion: 2 });
+            addWarscore(ctx, findWar(ctx.game, 'RSH', 'BYZ'), 'BYZ', 10);
+          }
+          h.chronicle(ctx, 'war', 'Greek fire: Kallinikos\' siphons burn the besieging fleet on the water before Constantinople, and the sea itself takes the Roman side.');
+        }),
+      },
+      {
+        label: 'Guard the secret jealously',
+        tooltip: 'The same burning — Byzantium takes +10 legitimacy and +20 influence points instead of the stability, and the formula becomes a state secret worth embassies.',
+        effects: guard('ev_p_greek_fire:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'BYZ') || !h.controls(ctx, 'BYZ', 'Byzantion')) return;
+          h.adjust(ctx, 'BYZ', { legitimacy: 10, infl: 20 });
+          h.addTagModifier(ctx, 'BYZ', {
+            id: 'kallinikos_siphons', name: 'The Siphons of Kallinikos', months: -1,
+            effects: { moraleMult: 1.05 },
+          });
+          if (alive(ctx, 'RSH')) {
+            for (const f of Object.values(ctx.game.fleets || {})) {
+              if (f && f.tag === 'RSH' && f.ships > 1) f.ships = Math.max(1, Math.floor(f.ships / 2));
+            }
+            h.adjust(ctx, 'RSH', { warExhaustion: 2 });
+            addWarscore(ctx, findWar(ctx.game, 'RSH', 'BYZ'), 'BYZ', 10);
+          }
+          h.chronicle(ctx, 'war', 'Greek fire burns the fleet before the City; the formula goes into the palace vaults, and foreign envoys begin asking very polite questions.');
+        }),
+      },
+    ],
+  },
+
+  // ── 25 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_thirty_years',
+    title: 'The Thirty Years\' Peace',
+    worldLabel: 'The caliph pays tribute to the emperor — the tide stops',
+    desc: 'The arithmetic of the long assault has finally been done in Damascus, and it '
+      + 'does not favor continuing. The caliph\'s envoys come to Constantinople with '
+      + 'terms no one under forty believed possible: thirty years of peace, and '
+      + 'tribute paid by the caliph to the emperor — gold, horses, and captives, '
+      + 'yearly. For the first time since the columns came out of Arabia, the tide '
+      + 'visibly stops.',
+    forTag: 'both',
+    date: { y: 679, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The tide visibly stops',
+        tooltip: 'If both stand and the City is Roman: the war ends (white peace); the Caliphate pays 150 talents and "Tribute Paid to Rome" (−5% income, 120 months); Byzantium gains the 150, +15 legitimacy and "The Caliph\'s Tribute" (+5% income, 120 months).',
+        effects: guard('ev_p_thirty_years:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH') || !alive(ctx, 'BYZ')) return;
+          if (!h.controls(ctx, 'BYZ', 'Byzantion')) {
+            h.chronicle(ctx, 'diplomacy', 'There is no peace of the thirty years in this world; the City that would have collected the tribute is not Rome\'s to bargain with.');
+            return;
+          }
+          h.endWar(ctx, 'RSH', 'BYZ', null);
+          h.adjust(ctx, 'RSH', { treasury: -150, legitimacy: -10 });
+          h.adjust(ctx, 'BYZ', { treasury: 150, legitimacy: 15 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'tribute_to_rome', name: 'Tribute Paid to Rome', months: 120, effects: { incomeMult: 0.95 },
+          });
+          h.addTagModifier(ctx, 'BYZ', {
+            id: 'caliphs_tribute', name: 'The Caliph\'s Tribute', months: 120, effects: { incomeMult: 1.05 },
+          });
+          const byz = ctx.game.tags.BYZ, rsh = ctx.game.tags.RSH;
+          if (byz && byz.opinion) byz.opinion.RSH = -50;
+          if (rsh && rsh.opinion) rsh.opinion.BYZ = -50;
+          h.chronicle(ctx, 'peace', 'The Thirty Years\' Peace: tribute paid by the caliph to the emperor, yearly — the conquest tide visibly stops for the first time.');
+        }),
+      },
+      {
+        label: 'Refuse the tribute clause',
+        tooltip: 'Pride over arithmetic: no peace is signed. The Caliphate keeps its 150 talents and gains +5 legitimacy; the war — if there is one — grinds on with both fleets already spent.',
+        effects: guard('ev_p_thirty_years:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { legitimacy: 5 });
+          h.chronicle(ctx, 'diplomacy', 'Damascus reads the tribute clause aloud once and burns the draft; the war continues on pride\'s account.');
+        }),
+      },
+    ],
+  },
+
+  // ── 26 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_yazid',
+    title: 'The Oath for Yazid',
+    worldLabel: 'Mu\'awiya dies; his son inherits the caliphate',
+    desc: 'Mu\'awiya dies in his bed at Damascus — alone among the first five rulers of '
+      + 'the conquests to manage it — having spent his last years collecting oaths for '
+      + 'his son Yazid: a hunting, verse-writing prince who will inherit the empire '
+      + 'the way one inherits an orchard. It is succession by blood, kingship by any '
+      + 'other name, and the pious of Medina and Kufa say the word aloud and never '
+      + 'forgive it.',
+    forTag: 'both',
+    date: { y: 680, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Kingship enters Islam',
+        tooltip: 'The Caliphate: Yazid enthroned; −10 legitimacy, −1 stability. The oath was collected in advance; the resentment collects itself.',
+        effects: guard('ev_p_yazid:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Yazid ibn Mu\'awiya', title: 'Commander of the Faithful', gov: 2, infl: 2, mar: 3, age: 34 });
+          h.adjust(ctx, 'RSH', { legitimacy: -10, stability: -1 });
+          h.chronicle(ctx, 'ruler', 'Mu\'awiya dies at Damascus with the oath for his son already sworn; kingship enters Islam, and the pious keep the receipt.');
+        }),
+      },
+      {
+        label: 'Summon the notables to swear again',
+        tooltip: 'The Caliphate: Yazid enthroned; −100 talents in robes and gifts for a second, public oath — −5 legitimacy, −1 stability. Two refusals are recorded: Husayn ibn Ali, and Ibn al-Zubayr.',
+        effects: guard('ev_p_yazid:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Yazid ibn Mu\'awiya', title: 'Commander of the Faithful', gov: 2, infl: 2, mar: 3, age: 34 });
+          h.adjust(ctx, 'RSH', { treasury: -100, legitimacy: -5, stability: -1 });
+          h.chronicle(ctx, 'ruler', 'Yazid buys a second oath in public robes; two names decline the invitation, and both will cost more than the robes did.');
+        }),
+      },
+    ],
+  },
+
+  // ── 27 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_karbala',
+    title: 'Karbala',
+    worldLabel: 'Husayn ibn Ali dies at Karbala',
+    desc: 'Husayn, the Prophet\'s grandson, rides for Kufa with his family and a '
+      + 'handful of companions to answer letters begging him to come and lead. The '
+      + 'letters\' authors stay home. On the plain of Karbala the governor\'s cavalry '
+      + 'pens the little caravan away from the Euphrates for eight days, and on the '
+      + 'tenth of Muharram kills Husayn and seventy-two others, thirsty, within sound '
+      + 'of the water. Damascus has won the field. What it has lost will take '
+      + 'centuries to count.',
+    forTag: 'both',
+    date: { y: 680, m: 10 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Pen them from the river',
+        tooltip: 'The Caliphate: −15 legitimacy; "The Blood of Karbala" (+0.5 unrest everywhere, permanent), and its cities of lower Iraq mourn (+2 unrest for 60 months).',
+        effects: guard('ev_p_karbala:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { legitimacy: -15 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'blood_of_karbala', name: 'The Blood of Karbala', months: -1,
+            effects: { unrestAll: 0.5 },
+          });
+          for (const n of ['Babylon', 'Nehardea', 'Uruk', 'Seleucia-Ctesiphon']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'mourning_of_kufa', name: 'The Mourning of Kufa', months: 60, effects: { unrest: 2 },
+              });
+            }
+          }
+          h.chronicle(ctx, 'era', 'Karbala: Husayn and seventy-two companions die thirsty within sound of the Euphrates; the tenth of Muharram acquires its meaning.');
+        }),
+      },
+      {
+        label: 'Send the survivors to Damascus in chains',
+        tooltip: 'The Caliphate: −10 legitimacy and −20 influence points — the women of the house preach the dead man\'s case in the caliph\'s own audience hall, and the story leaves the city faster than the chains did.',
+        effects: guard('ev_p_karbala:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.adjust(ctx, 'RSH', { legitimacy: -10, infl: -20 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'blood_of_karbala', name: 'The Blood of Karbala', months: -1,
+            effects: { unrestAll: 0.5 },
+          });
+          h.chronicle(ctx, 'era', 'Karbala, then the procession of chained survivors to Damascus — where Zaynab bint Ali turns the caliph\'s audience hall into the first majlis of mourning.');
+        }),
+      },
+    ],
+  },
+
+  // ── 28 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_second_fitna',
+    title: 'The Second Fitna',
+    worldLabel: 'Ibn al-Zubayr claims the caliphate; Syria sickens',
+    desc: 'Yazid is dead at thirty-seven, his son follows him in weeks, and the empire '
+      + 'has two caliphs: a Zubayrid in Mecca, acclaimed from Iraq to Egypt, whose '
+      + 'sanctuary has already burned once under a besieger\'s stones — and whatever '
+      + 'the Umayyad house can salvage from a Syria that plague and famine are '
+      + 'working through like a second army.',
+    forTag: 'both',
+    date: { y: 683, m: 7 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Hold Syria, lose the rest',
+        tooltip: 'The Caliphate: a caretaker in Damascus; −2 stability, −10 legitimacy, "The Second Fitna" (−8% morale, −10% income) for 96 months; its Syrian cities take "Plague and Famine" (+2 unrest, −15% tax) for 36 months.',
+        effects: guard('ev_p_second_fitna:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya II', title: 'Commander of the Faithful', gov: 1, infl: 1, mar: 1, age: 22 });
+          h.adjust(ctx, 'RSH', { stability: -2, legitimacy: -10 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'second_fitna', name: 'The Second Fitna', months: 96,
+            effects: { moraleMult: 0.92, incomeMult: 0.9 },
+          });
+          for (const n of ['Damascus', 'Emesa', 'Chalcis', 'Beroea']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'plague_in_syria', name: 'Plague and Famine', months: 36,
+                effects: { unrest: 2, taxMult: 0.85 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'secondFitna', true);
+          h.chronicle(ctx, 'era', 'The Second Fitna: Ibn al-Zubayr is caliph in Mecca, the Kaaba bears siege-scorch, and plague works through Syria like a second army.');
+        }),
+      },
+      {
+        label: 'Treat with Mecca for a season',
+        tooltip: 'The Caliphate: −20 legitimacy, −1 stability — half the empire prays for Ibn al-Zubayr by name while Damascus pretends not to hear. Syria takes the same plague; the Fitna modifier still lands.',
+        effects: guard('ev_p_second_fitna:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Mu\'awiya II', title: 'Commander of the Faithful', gov: 1, infl: 1, mar: 1, age: 22 });
+          h.adjust(ctx, 'RSH', { stability: -1, legitimacy: -20 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'second_fitna', name: 'The Second Fitna', months: 96,
+            effects: { moraleMult: 0.92, incomeMult: 0.9 },
+          });
+          for (const n of ['Damascus', 'Emesa', 'Chalcis', 'Beroea']) {
+            if (h.controls(ctx, 'RSH', n)) {
+              h.addProvinceModifier(ctx, n, {
+                id: 'plague_in_syria', name: 'Plague and Famine', months: 36,
+                effects: { unrest: 2, taxMult: 0.85 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'secondFitna', true);
+          h.chronicle(ctx, 'era', 'The Second Fitna: Damascus buys a truce with Mecca it does not intend to keep, while half the empire prays for Ibn al-Zubayr by name.');
+        }),
+      },
+    ],
+  },
+
+  // ── 29 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_marj_rahit',
+    title: 'Marj Rahit',
+    desc: 'On the meadow north of Damascus the Umayyad cause, reduced to Syria and an '
+      + 'old man\'s nerve, fights the Qaysi tribes who declared for Mecca — and wins. '
+      + 'Marwan, of the house\'s other branch, takes the oath that evening. The dynasty '
+      + 'holds Syria by the sword-edge; the blood feud between Qays and Kalb that '
+      + 'begins on this meadow will outlive everyone who can remember why.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_p_marj_rahit', (ctx) =>
+      dateGE(ctx, 684, 8) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'secondFitna')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The sword-edge holds',
+        tooltip: 'The Caliphate: Marwan enthroned, Abd al-Malik heir; +10 martial points, +5 legitimacy, −2,000 manpower; Damascus +1 unrest for 24 months (the feud begins).',
+        effects: guard('ev_p_marj_rahit:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Marwan ibn al-Hakam', title: 'Commander of the Faithful', gov: 3, infl: 4, mar: 2, age: 61 });
+          h.setHeir(ctx, 'RSH', { name: 'Abd al-Malik', gov: 5, infl: 4, mar: 3, age: 38 });
+          h.adjust(ctx, 'RSH', { mar: 10, legitimacy: 5, manpower: -2000 });
+          if (h.controls(ctx, 'RSH', 'Damascus')) {
+            h.addProvinceModifier(ctx, 'Damascus', {
+              id: 'qays_kalb_feud', name: 'The Qays–Kalb Feud', months: 24, effects: { unrest: 1 },
+            });
+          }
+          h.chronicle(ctx, 'war', 'Marj Rahit: the Umayyads hold Syria by the sword-edge, Marwan takes the oath, and the Qays–Kalb feud opens its long account.');
+        }),
+      },
+      {
+        label: 'Reconcile the Qays after the field',
+        tooltip: 'The Caliphate: the same succession; −100 talents in blood-money paid at once, −1,500 manpower — no feud modifier. Cheaper than a century of it.',
+        effects: guard('ev_p_marj_rahit:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Marwan ibn al-Hakam', title: 'Commander of the Faithful', gov: 3, infl: 4, mar: 2, age: 61 });
+          h.setHeir(ctx, 'RSH', { name: 'Abd al-Malik', gov: 5, infl: 4, mar: 3, age: 38 });
+          h.adjust(ctx, 'RSH', { treasury: -100, mar: 10, legitimacy: 5, manpower: -1500 });
+          h.chronicle(ctx, 'war', 'Marj Rahit, then blood-money for the Qaysi dead before the funerals end; the meadow is paid for while it is still trampled.');
+        }),
+      },
+    ],
+  },
+
+  // ── 30 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_abd_al_malik',
+    title: 'The Caliph\'s Creed for the Caliph\'s Face',
+    worldLabel: 'Abd al-Malik rebuilds the state',
+    desc: 'Marwan\'s son inherits a half-empire and rebuilds it as a state: the chancery '
+      + 'ordered into Arabic from Egypt to Iraq, the tax rolls audited, and the coinage '
+      + 'struck anew — no emperor\'s portrait, no filed crosses, no image at all, only '
+      + 'the creed in fine Kufic circles. Where every currency on earth carries a '
+      + 'sovereign\'s face, the caliph\'s carries the caliph\'s God.',
+    forTag: 'both',
+    date: { y: 685, m: 4 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Arabic in the ledgers, the creed on the coin',
+        tooltip: 'The Caliphate: Abd al-Malik enthroned; +25 governance points, +10 legitimacy, and "The Marwanid State" (+10% income, −20% administration, permanent).',
+        effects: guard('ev_p_abd_al_malik:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Abd al-Malik', title: 'Commander of the Faithful', gov: 5, infl: 4, mar: 3, age: 39 });
+          h.setHeir(ctx, 'RSH', { name: 'al-Walid', gov: 3, infl: 3, mar: 3, age: 11 });
+          h.adjust(ctx, 'RSH', { gov: 25, legitimacy: 10 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'marwanid_state', name: 'The Marwanid State', months: -1,
+            effects: { incomeMult: 1.1, adminMult: 0.8 },
+          });
+          h.chronicle(ctx, 'era', 'Abd al-Malik rebuilds the state: Arabic in the chancery, audited rolls, and coins that carry the caliph\'s creed where every other realm carries a face.');
+        }),
+      },
+      {
+        label: 'Keep Sarjun\'s Greek a while yet',
+        tooltip: 'The Caliphate: the same accession; +25 governance points, +5 legitimacy, +1 stability, and a gentler "Marwanid State" (+5% income, −10% administration, permanent) — reform at the speed the clerks can survive.',
+        effects: guard('ev_p_abd_al_malik:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.setRuler(ctx, 'RSH', { name: 'Abd al-Malik', title: 'Commander of the Faithful', gov: 5, infl: 4, mar: 3, age: 39 });
+          h.setHeir(ctx, 'RSH', { name: 'al-Walid', gov: 3, infl: 3, mar: 3, age: 11 });
+          h.adjust(ctx, 'RSH', { gov: 25, legitimacy: 5, stability: 1 });
+          h.addTagModifier(ctx, 'RSH', {
+            id: 'marwanid_state', name: 'The Marwanid State', months: -1,
+            effects: { incomeMult: 1.05, adminMult: 0.9 },
+          });
+          h.chronicle(ctx, 'era', 'Abd al-Malik rebuilds the state at the speed the clerks can survive; Sarjun\'s Greek retires with a pension instead of a purge.');
+        }),
+      },
+    ],
+  },
+
+  // ── 31 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_dome_rock',
+    title: 'The Dome of the Rock',
+    worldLabel: 'A gold dome rises on the Temple platform',
+    desc: 'On the platform where two Houses stood and burned, Byzantine-trained '
+      + 'craftsmen raise an octagon for the new faith: gold above, marble and mosaic '
+      + 'below, over the bare rock where Abraham bound his son. Its inscriptions '
+      + 'argue with the churches in their own medium — God has no son, say the '
+      + 'tesserae, in letters of gold. In Tiberias and in the small returned quarter '
+      + 'the liturgical poets look up at the mountain of the House bearing a house '
+      + 'again, and write — some in grief, some in awe, the honest ones in both.',
+    forTag: 'both',
+    date: { y: 691, m: 9 },
+    world: true,
+    major: true,
+    aiOption: (ctx) => {
+      try { return ctx.helpers.controls(ctx, 'JUD', 'Jerusalem') ? 1 : 0; } catch (e) { return 0; }
+    },
+    options: [
+      {
+        label: 'Gold above the rock of the binding',
+        tooltip: 'If the Caliphate holds Jerusalem: −200 talents, +15 legitimacy, +20 influence points; the Dome stands on the platform (wonder, if the Mount is bare) and Jerusalem gains "+10% tax, −0.5 unrest" permanently. The Return, if it lives: the poets\' grief — −5 legitimacy, +10 influence points.',
+        effects: guard('ev_p_dome_rock:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'RSH') && h.controls(ctx, 'RSH', 'Jerusalem')) {
+            h.adjust(ctx, 'RSH', { treasury: -200, legitimacy: 15, infl: 20 });
+            const p = ctx.prov('Jerusalem');
+            if (p && !p.wonder) p.wonder = 'dome';
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'dome_of_the_rock', name: 'The Dome of the Rock', months: -1,
+              effects: { taxMult: 1.1, unrest: -0.5 },
+            });
+            if (alive(ctx, 'JUD')) h.adjust(ctx, 'JUD', { legitimacy: -5, infl: 10 });
+            h.chronicle(ctx, 'era', 'The Dome of the Rock rises on the Temple platform, gold-crowned, its mosaics arguing with the churches; the mountain of the House bears a house again — not the poets\' own.');
+          } else if (alive(ctx, 'JUD') && h.controls(ctx, 'JUD', 'Jerusalem')) {
+            h.adjust(ctx, 'JUD', { legitimacy: 10 });
+            h.chronicle(ctx, 'era', 'The year the chronicles promised a gold dome over the rock, the platform belongs to the Return; whatever rises on the Mount will rise in Hebrew.');
+          } else {
+            h.chronicle(ctx, 'era', 'The year of the great dome passes without one; the bare rock on the platform waits for whichever power can afford an octagon.');
+          }
+        }),
+      },
+      {
+        label: 'The poets answer in verse',
+        tooltip: 'The same world takes its course — but the Return, if it lives, turns grief to liturgy: "Grief and Awe" (+0.1 legitimacy a month) for 60 months instead of the legitimacy loss.',
+        effects: guard('ev_p_dome_rock:1', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'RSH') && h.controls(ctx, 'RSH', 'Jerusalem')) {
+            h.adjust(ctx, 'RSH', { treasury: -200, legitimacy: 15, infl: 20 });
+            const p = ctx.prov('Jerusalem');
+            if (p && !p.wonder) p.wonder = 'dome';
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'dome_of_the_rock', name: 'The Dome of the Rock', months: -1,
+              effects: { taxMult: 1.1, unrest: -0.5 },
+            });
+            if (alive(ctx, 'JUD')) {
+              h.addTagModifier(ctx, 'JUD', {
+                id: 'grief_and_awe', name: 'Grief and Awe', months: 60,
+                effects: { legitimacyAdd: 0.1 },
+              });
+            }
+            h.chronicle(ctx, 'era', 'The Dome rises gold over the rock of the binding, and the piyyutim answer it — grief set in the same meters as awe, sung by the lake and under the platform\'s shadow.');
+          } else if (alive(ctx, 'JUD') && h.controls(ctx, 'JUD', 'Jerusalem')) {
+            h.adjust(ctx, 'JUD', { legitimacy: 10 });
+            h.chronicle(ctx, 'era', 'The year the chronicles promised a gold dome over the rock, the platform belongs to the Return; the poets write of the house that never had to be mourned.');
+          } else {
+            h.chronicle(ctx, 'era', 'The year of the great dome passes without one; the bare rock on the platform waits for whichever power can afford an octagon.');
+          }
+        }),
+      },
+    ],
+  },
+
+  // ── 32 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_p_zubayr_falls',
+    title: 'The Stones of al-Hajjaj',
+    worldLabel: 'Ibn al-Zubayr falls at Mecca; the civil war ends',
+    desc: 'Al-Hajjaj — schoolmaster turned commander, the most efficient instrument the '
+      + 'Marwanid house will ever own — besieges Mecca for months, his catapults '
+      + 'working through prayer times, until Ibn al-Zubayr, past seventy and out of '
+      + 'everything but manner, takes his mother\'s counsel, puts on perfume, and dies '
+      + 'fighting at the sanctuary door. The Second Fitna is over. What remains is not '
+      + 'the community of Medina grown large; it is an empire, and it knows it.',
+    forTag: 'both',
+    date: { y: 692, m: 11 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The catapults do not pause for the sanctuary',
+        tooltip: 'The Caliphate: +2 stability, +10 legitimacy, +10 martial points; "The Second Fitna" modifier ends. The imperial caliphate begins.',
+        effects: guard('ev_p_zubayr_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.removeModifier(ctx, 'RSH', 'second_fitna');
+          h.setFlag(ctx, 'secondFitna', false);
+          h.adjust(ctx, 'RSH', { stability: 2, legitimacy: 10, mar: 10 });
+          h.chronicle(ctx, 'era', 'Ibn al-Zubayr dies at the sanctuary door under al-Hajjaj\'s stones; the civil war ends, and the imperial caliphate begins.');
+        }),
+      },
+      {
+        label: 'Starve the city instead',
+        tooltip: 'The Caliphate: −100 talents for the longer siege; +1 stability, +15 legitimacy — the sanctuary is taken unbombarded, and the chroniclers note it.',
+        effects: guard('ev_p_zubayr_falls:1', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'RSH')) return;
+          h.removeModifier(ctx, 'RSH', 'second_fitna');
+          h.setFlag(ctx, 'secondFitna', false);
+          h.adjust(ctx, 'RSH', { treasury: -100, stability: 1, legitimacy: 15 });
+          h.chronicle(ctx, 'era', 'Mecca is starved rather than stoned; Ibn al-Zubayr falls at the sanctuary door all the same, and the civil war closes its books.');
+        }),
+      },
+    ],
+  },
 ];
