@@ -79,6 +79,26 @@ export const BOOKMARK_132 = {
   activeProvinces: ['Beit Shemesh'],
   provinceNames: { 'Beit Shemesh': 'Betar' },
 
+  // Two pens wait on the schoolhouse (SPEC §66): the name a state writes on
+  // a province it truly holds — integration at 1, or its own people settled.
+  // In April 132 Aelia Capitolina is a decree and a construction site, so the
+  // era map still says Jerusalem; only a Rome that finishes digesting the
+  // province gets to relabel it — which is THE erasure this bookmark is
+  // about — and the moment the Nasi takes the city, the signposts revert.
+  // The Hebrew pen writes the names the Bar Kokhba deeds actually use.
+  integratedNames: {
+    ROM: {
+      'Jerusalem': 'Aelia Capitolina',
+      'Sepphoris': 'Diocaesarea', // Hadrian's rename of the Galilean capital
+    },
+    JUD: {
+      'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an',
+      'Sepphoris': 'Tzippori', 'Azotus': 'Ashdod',
+      'Ascalon': 'Ashkelon', 'Joppa': 'Yafo',
+      'Lydda': 'Lod', 'Dora': 'Dor',
+    },
+  },
+
   activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX'],
 
   // Political layer for 132 CE over map_data's 66 CE defaults. Nabataea has
