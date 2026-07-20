@@ -267,6 +267,72 @@ function octoberOutbreak(ctx, preempt) {
   }
 }
 
+// ── Divergent 1948: the victory strands ─────────────────────────────────────
+// When the independence war ends somewhere other than the armistice lines,
+// the dated 1960s–70s arc mostly degrades to chronicle lines. These helpers
+// read the actual map so alternate decades can fire instead. None of the
+// gates below are true in the armistice-lines world: at Rhodes-on-the-lines
+// Israel holds neither the hill country, nor the Gaza strip, nor two cells
+// of Sinai or the Golan — and it holds far more than eight provinces,
+// Tel Aviv and west Jerusalem among them.
+const HILL_COUNTRY = ['Neapolis', 'Hebron', 'Jenin', 'Ramallah', 'Bethlehem', 'Jericho', 'Tulkarm', 'Qalqilya'];
+const SINAI_CELLS = ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab'];
+const GOLAN_CELLS = ['Caesarea Philippi', 'Batanea', 'Gamala'];
+const GAZA_STRIP = ['Gaza', 'Khan Yunis', 'Rafah'];
+function ownerOf(ctx, provName) {
+  try {
+    const p = typeof ctx.prov === 'function' ? ctx.prov(provName) : null;
+    return (p && p.owner) || null;
+  } catch (e) { warnOnce('ownerOf', e); return null; }
+}
+function provCount(ctx, tag) {
+  let n = 0;
+  for (const p of ctx.game.provinces || []) {
+    if (p && !p.impassable && p.owner === tag) n++;
+  }
+  return n;
+}
+function controlsCount(ctx, tag, names) {
+  let n = 0;
+  for (const nm of names) if (ctx.helpers.controls(ctx, tag, nm)) n++;
+  return n;
+}
+// A standing truce (the sim's post-war cooldown) blocks declareWar; the
+// war-starting strand events wait it out rather than firing a war that
+// silently fails to exist.
+function truceHolds(ctx, a, b) {
+  try {
+    const g = ctx.game;
+    const t = g.truces && g.truces[a < b ? a + '|' + b : b + '|' + a];
+    if (!t) return false;
+    return g.date.y < t.y || (g.date.y === t.y && g.date.m < t.m);
+  } catch (e) { warnOnce('truceHolds', e); return false; }
+}
+// Every 1948 front has gone quiet — armistice, separate peace, or a victor.
+function fortyEightSettled(ctx) {
+  for (const t of ['EGY', 'JOR', 'SYR', 'LEB', 'IRQ']) {
+    if (alive(ctx, t) && findWar(ctx.game, 'ISR', t)) return false;
+  }
+  return true;
+}
+// Strand A: Israel ended 1948 holding far more than the armistice lines —
+// the hill country, the whole Gaza strip, real Sinai, or the Golan.
+function greaterVictory48(ctx) {
+  if (!alive(ctx, 'ISR') || !fortyEightSettled(ctx)) return false;
+  return controlsCount(ctx, 'ISR', HILL_COUNTRY) >= 3
+    || controlsCount(ctx, 'ISR', SINAI_CELLS) >= 2
+    || controlsCount(ctx, 'ISR', GOLAN_CELLS) >= 2
+    || controlsCount(ctx, 'ISR', GAZA_STRIP) >= 3;
+}
+// Strand B: Israel survived 1948, diminished — under eight provinces, or
+// shorn of Tel Aviv or west Jerusalem.
+function reducedState48(ctx) {
+  if (!alive(ctx, 'ISR')) return false;
+  return provCount(ctx, 'ISR') < 8
+    || !ctx.helpers.controls(ctx, 'ISR', 'Joppa')
+    || !ctx.helpers.controls(ctx, 'ISR', 'Jerusalem');
+}
+
 export const EVENTS_1948 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
@@ -1174,6 +1240,694 @@ export const EVENTS_1948 = [
             });
           }
           ctx.helpers.chronicle(ctx, 'war', 'The Egyptian–Czechoslovak agreement turns the armed armistice into a regional arms race.');
+        }),
+      },
+    ],
+  },
+
+  // ── STRAND A — THE GREATER VICTORY ────────────────────────────────────────
+  // Fires only when the independence war ends with Israel holding far more
+  // than the armistice lines (greaterVictory48). The anchor event sets
+  // flags.greaterVictory48; the rest of the strand hangs off the flag.
+  {
+    id: 'ev_i_lines_ourselves',
+    title: 'The Lines We Drew Ourselves',
+    maxYear: 1953,
+    desc: 'There is no Green Line. The war ended where the brigades stopped, and the '
+      + 'brigades stopped well past every map the diplomats prepared: defensible '
+      + 'ridges, depth before the sea, the hill country under the flag. Also under '
+      + 'the flag: half a million Arabs who did not leave and are not leaving, '
+      + 'awake this morning in a state that never expected to govern them. The '
+      + 'question the ministries wanted twenty years to think about has arrived '
+      + 'with the milk. Citizens, or subjects of an administration — there is no '
+      + 'third register, and both answers cost.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_lines_ourselves', (ctx) =>
+      dateGE(ctx, 1949, 3) && greaterVictory48(ctx) && !reducedState48(ctx)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Citizenship — one law inside whatever the lines are',
+        tooltip: 'Israel: +10 legitimacy, −1 stability (the Knesset fight of 1966, held in 1949); held hill-country and Gaza provinces −1 unrest for 60 months.',
+        effects: guard('ev_i_lines_ourselves:0', (ctx) => {
+          ctx.game.flags.greaterVictory48 = true;
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, stability: -1 });
+          for (const n of HILL_COUNTRY.concat(GAZA_STRIP)) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'lines_ourselves', name: 'Citizens of the Enlarged State', months: 60, effects: { unrest: -1 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'No Green Line: the 1948 war ends on lines Israel drew itself, and the new state offers citizenship to everyone inside them.');
+        }),
+      },
+      {
+        label: 'A military administration — for now, says everyone',
+        tooltip: 'Israel: +20 government points, −10 legitimacy; held hill-country and Gaza provinces +1 unrest permanently. Order first; the question is filed, not answered.',
+        effects: guard('ev_i_lines_ourselves:1', (ctx) => {
+          ctx.game.flags.greaterVictory48 = true;
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 20, legitimacy: -10 });
+          for (const n of HILL_COUNTRY.concat(GAZA_STRIP)) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'lines_ourselves', name: 'The Administration', months: -1, effects: { unrest: 1 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'No Green Line: Israel ends 1948 holding the hills — and governs them through military governors, provisionally, indefinitely.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_tripartite_teeth',
+    title: 'The Embargo with Teeth',
+    maxYear: 1958,
+    desc: 'London, Paris and Washington issue their declaration on Middle East arms — '
+      + 'and this time it is aimed at one address. A state that redrew the map by '
+      + 'force will not be helped to keep it: export licenses die in committee, '
+      + 'spare parts sit on docks, and the attachés who used to return calls stop '
+      + 'returning them. The powers do not demand withdrawal aloud. They simply '
+      + 'price it.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_tripartite_teeth', (ctx) =>
+      dateGE(ctx, 1950, 5) && !!ctx.game.flags.greaterVictory48 && alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Build it ourselves, then',
+        tooltip: 'Israel: −100 talents into workshops and license-breaking, −10% reinforcement for 36 months while the embargo bites — but +20 martial points as the arms industry is born early.',
+        effects: guard('ev_i_tripartite_teeth:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -100, mar: 20 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'tripartite_teeth', name: 'The Embargo with Teeth', months: 36, effects: { reinforceMult: 0.9 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The tripartite embargo closes the arsenals to the state that moved the borders; the workshops of Tel Aviv start making what the docks will not deliver.');
+        }),
+      },
+      {
+        label: 'Concede a conference to keep a pipeline',
+        tooltip: 'Israel: +15 influence points, +5 legitimacy; the embargo eases (−5% reinforcement, 24 months) — and the borders are now officially "on the agenda", which is a place borders go to be argued with.',
+        effects: guard('ev_i_tripartite_teeth:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 15, legitimacy: 5 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'tripartite_teeth', name: 'The Embargo, Eased', months: 24, effects: { reinforceMult: 0.95 },
+          });
+          if (alive(ctx, 'UK')) setOpinionDelta(ctx.game, 'UK', 'ISR', 15);
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Israel trades a seat at a borders conference for a thinner embargo; the map is kept, and permanently discussed.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_partition_ritual',
+    title: 'The September Ritual',
+    maxYear: 1962,
+    desc: 'Every autumn the General Assembly performs the same liturgy: a resolution '
+      + 'recalling the partition frontiers of 1947, a majority for it, a lecture '
+      + 'about the inadmissibility of conquest, and no second paragraph about '
+      + 'enforcement, because there are no volunteers. Every autumn the delegation '
+      + 'votes no and flies home. The resolutions bind nothing but the record — '
+      + 'and the record, year by year, is becoming the world\'s map of what Israel '
+      + 'is holding.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_partition_ritual', (ctx) =>
+      dateGE(ctx, 1951, 9) && !!ctx.game.flags.greaterVictory48 && alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Vote no, table the map we hold',
+        tooltip: 'Israel: +5 legitimacy at home, −10 influence points abroad; London and Rome −10 opinion — the record accumulates against the lines, and the lines stay.',
+        effects: guard('ev_i_partition_ritual:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5, infl: -10 });
+          for (const t of ['UK', 'ITA']) {
+            if (alive(ctx, t)) setOpinionDelta(ctx.game, t, 'ISR', -10);
+          }
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The annual partition-borders resolution passes and is rejected; the September ritual settles into the calendar.');
+        }),
+      },
+      {
+        label: 'Offer compensation instead of territory',
+        tooltip: 'Israel: −150 talents into a compensation fund, +15 influence points — the ritual softens; the money is real and the borders are not touched.',
+        effects: guard('ev_i_partition_ritual:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -150, infl: 15 });
+          for (const t of ['UK', 'ITA']) {
+            if (alive(ctx, t)) setOpinionDelta(ctx.game, t, 'ISR', 10);
+          }
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'Israel answers the partition ritual with a funded compensation offer: cash on the table, and not one dunam.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_wall_1949',
+    title: 'The Wall, Reachable',
+    maxYear: 1958,
+    desc: 'For the first time since the Quarter burned, a Jew can walk to the Western '
+      + 'Wall without a visa from a hostile kingdom — because there is no hostile '
+      + 'kingdom between the New City and the Old. The pilgrims come by the '
+      + 'shipload, and so do the notes verbales: the Vatican wants the holy places '
+      + 'internationalized, the UN wants its corpus separatum, and every consulate '
+      + 'in the city still refuses, on principle, to say which country it is '
+      + 'standing in.',
+    forTag: 'ISR',
+    major: true,
+    trigger: safeTrigger('ev_i_wall_1949', (ctx) =>
+      dateGE(ctx, 1949, 6) && !!ctx.game.flags.greaterVictory48
+      && ctx.helpers.controls(ctx, 'ISR', 'Jerusalem')
+      && controlsCount(ctx, 'ISR', ['Bethlehem', 'Ramallah', 'Jericho']) >= 1),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Open city — every faith, every gate',
+        tooltip: 'Jerusalem: +15% production permanently (the pilgrimage economy) and −1 unrest for 36 months. Israel: +10 legitimacy, −10 influence points — the internationalization file stays open, argued in committee forever.',
+        effects: guard('ev_i_wall_1949:0', (ctx) => {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'pilgrim_roads', name: 'The Pilgrim Roads', months: -1, effects: { prodMult: 1.15 },
+          });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'open_city', name: 'The Open City', months: 36, effects: { unrest: -1 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10, infl: -10 });
+          ctx.helpers.chronicle(ctx, 'era', 'Jerusalem whole from 1949: the Wall reachable, the churches open, and the corpus separatum reduced to a filing cabinet.');
+        }),
+      },
+      {
+        label: 'Sovereign city, guarded gates',
+        tooltip: 'Israel: +10 government points; Jerusalem +5% production permanently but +1 unrest for 24 months, and −10 legitimacy — access by permit persuades no chancellery of anything.',
+        effects: guard('ev_i_wall_1949:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 10, legitimacy: -10 });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'pilgrim_roads', name: 'The Pilgrim Roads, Metered', months: -1, effects: { prodMult: 1.05 },
+          });
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'open_city', name: 'The Guarded Gates', months: 24, effects: { unrest: 1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The Old City is sovereign and rationed: pilgrims by permit, holy places by schedule, and the internationalization lobby handed its best argument.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_return_full_scale',
+    title: 'The Ledger of Return',
+    maxYear: 1955,
+    desc: 'The camps across the frontiers hold the people who left the land Israel '
+      + 'now holds all of, and there is no second sovereignty to address them to: '
+      + 'whoever comes back, comes back into Israel. The cabinet has the file '
+      + 'nobody wanted at full scale a decade early — every number in it is a '
+      + 'family, every family is a claim, and both choices are defensible and '
+      + 'neither is clean. The ministers age visibly across the table.',
+    forTag: 'ISR',
+    major: true,
+    trigger: safeTrigger('ev_i_return_full_scale', (ctx) =>
+      dateGE(ctx, 1949, 9) && !!ctx.game.flags.greaterVictory48 && alive(ctx, 'ISR')),
+    aiOption: 1,
+    options: [
+      {
+        label: 'A metered return — quotas, ledgers, oaths',
+        tooltip: 'Israel: −200 talents, −1 stability, +15 legitimacy; returned families resettle Lydda and Ramallah (+40,000 each where held), and held hill-country provinces −1 unrest for 36 months.',
+        effects: guard('ev_i_return_full_scale:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -200, stability: -1, legitimacy: 15 });
+          if (typeof ctx.helpers.addPopulation === 'function') {
+            for (const n of ['Lydda', 'Ramallah']) {
+              if (ctx.helpers.controls(ctx, 'ISR', n)) {
+                ctx.helpers.addPopulation(ctx, n, { r: 'islam', c: 'arab_modern', n: 40000 });
+              }
+            }
+          }
+          for (const n of HILL_COUNTRY) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'ledger_of_return', name: 'The Metered Return', months: 36, effects: { unrest: -1 },
+              });
+            }
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The ledger of return opens: quotas, oaths and resettlement funds bring a portion of the camps home under Israeli law.');
+        }),
+      },
+      {
+        label: 'The files stay shut',
+        tooltip: 'Israel: +1 stability, −15 legitimacy; held hill-country provinces +1 unrest for 48 months and London −15 opinion — the camps become permanent, and so does the question.',
+        effects: guard('ev_i_return_full_scale:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1, legitimacy: -15 });
+          for (const n of HILL_COUNTRY) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) {
+              ctx.helpers.addProvinceModifier(ctx, n, {
+                id: 'ledger_of_return', name: 'The Shut Files', months: 48, effects: { unrest: 1 },
+              });
+            }
+          }
+          if (alive(ctx, 'UK')) setOpinionDelta(ctx.game, 'UK', 'ISR', -15);
+          ctx.helpers.chronicle(ctx, 'era', 'The return files stay shut: the camps across the frontier harden from canvas to concrete, and the claim compounds annually.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_rhodes_plus',
+    title: 'Rhodes, With Chairs This Time',
+    maxYear: 1958,
+    desc: 'A defeated enemy treats sooner than a humiliated one, and Amman has run '
+      + 'the numbers: the army broken, the bank lost, the subsidy from London '
+      + 'buying less every year. The feelers arrive through the same night-visit '
+      + 'channels as in \'48 — but this time the agenda is not an armistice, it is '
+      + 'a settlement: recognition, borders, perhaps even a signature in daylight. '
+      + 'The price of getting it is giving some of the map back. The price of '
+      + 'refusing is keeping everything, and the war it comes with.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_rhodes_plus', (ctx) =>
+      dateGE(ctx, 1950, 7) && !!ctx.game.flags.greaterVictory48
+      && alive(ctx, 'ISR') && atPeace(ctx, 'ISR') && alive(ctx, 'JOR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Trade the valley towns for a signature in daylight',
+        tooltip: 'Jenin and Jericho return to Jordan where Israel holds them; Amman and Jerusalem +60 opinion of each other and a 10-year peace (no opportunistic wars). Israel: +15 influence points; the Revisionists −15.',
+        effects: guard('ev_i_rhodes_plus:0', (ctx) => {
+          const g = ctx.game;
+          for (const n of ['Jenin', 'Jericho']) {
+            if (ctx.helpers.controls(ctx, 'ISR', n)) ctx.helpers.changeOwner(ctx, n, 'JOR');
+          }
+          setOpinionDelta(g, 'JOR', 'ISR', 60);
+          setOpinionDelta(g, 'ISR', 'JOR', 60);
+          for (const t of ['ISR', 'JOR']) {
+            ctx.helpers.addTagModifier(ctx, t, {
+              id: 'rhodes_plus', name: 'The Daylight Settlement', months: 120,
+              effects: { noOpportunisticWars: true },
+            });
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { infl: 15 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', -15);
+          g.flags.earlyPeace48 = true;
+          ctx.helpers.chronicle(ctx, 'peace', 'Rhodes-plus: a defeated Jordan signs a settlement in daylight — recognition and quiet, bought with the valley towns.');
+        }),
+      },
+      {
+        label: 'The map is closed',
+        tooltip: 'Nothing returns: Israel +5 legitimacy at home, the Revisionists +10 — and Amman −20 opinion; the settlement that was possible goes back in the drawer.',
+        effects: guard('ev_i_rhodes_plus:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          setOpinionDelta(ctx.game, 'JOR', 'ISR', -20);
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The feelers from Amman are answered politely and refused completely: the map is closed, and so is the drawer with the treaty in it.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_west_bank_war',
+    title: 'The War for the Lost Bank',
+    maxYear: 1966,
+    desc: 'The kingdom across the river is smaller than its grief. Half of Amman is '
+      + 'refugees from the bank the Legion lost, the mosque sermons name the hills '
+      + 'one by one, and the young officers have decided the old men signed away '
+      + 'what the army could take back. The border posts report battalions '
+      + 'rehearsing river crossings in daylight — rehearsals are cheaper than wars, '
+      + 'but they are also how wars rehearse.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_west_bank_war', (ctx) =>
+      dateGE(ctx, 1953, 1) && !!ctx.game.flags.greaterVictory48
+      && !ctx.game.flags.earlyPeace48 && alive(ctx, 'ISR') && alive(ctx, 'JOR')
+      && hostileToward(ctx, 'JOR', 'ISR', -80)
+      && controlsCount(ctx, 'ISR', HILL_COUNTRY) >= 3
+      && !findWar(ctx.game, 'ISR', 'JOR') && fortyEightSettled(ctx)
+      && !truceHolds(ctx, 'ISR', 'JOR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let them break themselves on the hills',
+        tooltip: 'Jordan declares war for the West Bank, crossing at +8% morale for 6 months ("The Return March") with fresh brigades — Israel stands on ground it chose and fortified.',
+        effects: guard('ev_i_west_bank_war:0', (ctx) => {
+          if (!ctx.helpers.declareWar(ctx, 'JOR', 'ISR', 'The War for the West Bank')) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The river crossings are rehearsed and the order never comes; the war for the bank stays a sermon.');
+            return;
+          }
+          ctx.helpers.addTagModifier(ctx, 'JOR', {
+            id: 'return_march', name: 'The Return March', months: 6, effects: { moraleMult: 1.08 },
+          });
+          spawnAt(ctx, 'JOR', ['Philadelphia', 'Gerasa', 'Medaba'], {
+            inf: 4, cav: 2, name: 'The Army of Return',
+            general: { name: 'Ali Abu Nuwar', fire: 2, shock: 3, maneuver: 2 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'The second Jordanian war opens: the Legion crosses for the bank it lost, into hills that have been waiting for it.');
+        }),
+      },
+      {
+        label: 'Spoil it at the crossings',
+        tooltip: 'Israel strikes the marshalling yards first: +10 martial points, +5 war score at the outset — but −10 legitimacy as the wire services report who moved first.',
+        effects: guard('ev_i_west_bank_war:1', (ctx) => {
+          if (!ctx.helpers.declareWar(ctx, 'ISR', 'JOR', 'The War for the West Bank')) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The spoiling attack is planned to the hour and shelved: the truce clock has not run out, and nobody wants to be the one who broke it.');
+            return;
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10, legitimacy: -10 });
+          warEventScore(ctx, 'ISR', 'JOR', 'ISR', 5);
+          spawnAt(ctx, 'ISR', ['Jericho', 'Ramallah', 'Jerusalem'], {
+            inf: 3, cav: 2, name: 'Jordan Valley Command',
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'Israel spoils the return offensive at its marshalling yards; the war for the West Bank opens with the river crossings burning.');
+        }),
+      },
+    ],
+  },
+
+  // ── STRAND B — THE STATE THAT FELL OR NEARLY FELL ─────────────────────────
+  // Fires only when 1948 ends with Israel reduced (reducedState48) or dead.
+  // The anchor sets flags.tenMileState; the dead-state events fire on
+  // !alive(ISR) — the sim keeps the world turning after the player's
+  // elimination ("continue observing"), so they narrate to the survivors.
+  {
+    id: 'ev_i_ten_mile_state',
+    title: 'The Ten-Mile State',
+    maxYear: 1955,
+    desc: 'The war is over and the state is a corridor: what the armies could hold, '
+      + 'not what the declaration named. The coastal road is in mortar range of '
+      + 'somebody for most of its length, the capital works out of requisitioned '
+      + 'hotels, and the ministries share typewriters. Foreign desks give the '
+      + 'country five years, then correct themselves downward. Nobody unpacks. '
+      + 'The question is not absorption or development — the question is whether '
+      + 'the state is a fact or an episode.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_ten_mile_state', (ctx) =>
+      dateGE(ctx, 1949, 3) && reducedState48(ctx) && !greaterVictory48(ctx)
+      && fortyEightSettled(ctx)),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Dig in — the state is the line',
+        tooltip: 'Israel: +2,000 manpower, +1 stability, −100 talents; siege economy: −10% income but +10% manpower for 36 months. The country arms itself into existence.',
+        effects: guard('ev_i_ten_mile_state:0', (ctx) => {
+          ctx.game.flags.tenMileState = true;
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000, stability: 1, treasury: -100 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'siege_economy', name: 'The Siege Economy', months: 36,
+            effects: { incomeMult: 0.9, manpowerMult: 1.1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The ten-mile state digs in: rationing, rifles, and a budget that is mostly cement and ammunition.');
+        }),
+      },
+      {
+        label: 'Let the ships take the weary',
+        tooltip: 'Emigration is not stopped: Israel −2,000 manpower, −10 legitimacy, −5% income for 24 months — but −1 unrest everywhere for 24 months; fewer mouths, quieter streets, smaller state.',
+        effects: guard('ev_i_ten_mile_state:1', (ctx) => {
+          ctx.game.flags.tenMileState = true;
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -2000, legitimacy: -10 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'siege_economy', name: 'The Thinning', months: 24,
+            effects: { incomeMult: 0.95, unrestAll: -1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The ships leave fuller than they arrive: the reduced state lets its weary go, and grows quieter and smaller at once.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_siege_gates',
+    title: 'Ships at a Narrow Door',
+    maxYear: 1960,
+    desc: 'The gates were the whole point, and the gates are still open — into a '
+      + 'state with no room. The transit camps stand in mortar range of the '
+      + 'frontier; the newcomers are issued a tent, a cot and a sector. Closing '
+      + 'the door would betray the reason there is a door. Keeping it open packs '
+      + 'more lives into a target. The Zionist arithmetic was never supposed to '
+      + 'run in a corridor.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_siege_gates', (ctx) =>
+      dateGE(ctx, 1950, 1) && !!ctx.game.flags.tenMileState && alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Land them anyway',
+        tooltip: 'Israel: +1,500 manpower and +50,000 people to the held coast — but Tel Aviv +1 unrest for 24 months (the tent camps) and −5% income for 24 months.',
+        effects: guard('ev_i_siege_gates:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 1500 });
+          if (typeof ctx.helpers.addPopulation === 'function') {
+            if (ctx.helpers.controls(ctx, 'ISR', 'Joppa')) ctx.helpers.addPopulation(ctx, 'Joppa', { r: 'judaism', c: 'israeli', n: 30000 });
+            if (ctx.helpers.controls(ctx, 'ISR', 'Dora')) ctx.helpers.addPopulation(ctx, 'Dora', { r: 'judaism', c: 'israeli', n: 20000 });
+          }
+          if (ctx.helpers.controls(ctx, 'ISR', 'Joppa')) {
+            ctx.helpers.addProvinceModifier(ctx, 'Joppa', {
+              id: 'tent_camps', name: 'The Tent Camps', months: 24, effects: { unrest: 1 },
+            });
+          }
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'absorption_strain', name: 'Absorption Under Siege', months: 24, effects: { incomeMult: 0.95 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The gates stay open into the corridor: tents to the horizon, and every new arrival issued a sector along with the cot.');
+        }),
+      },
+      {
+        label: 'Hold the ships at Cyprus — for now',
+        tooltip: 'Israel: +1 stability and no new strain — but −15 legitimacy: a Jewish state metering Jewish immigration is an argument against itself, and everyone makes it.',
+        effects: guard('ev_i_siege_gates:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1, legitimacy: -15 });
+          ctx.helpers.chronicle(ctx, 'era', 'The ships wait at Cyprus while the corridor state catches its breath; the camps there fill with people the state exists to receive.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_second_round',
+    title: 'The Second Round',
+    maxYear: 1962,
+    desc: 'The communiqués from the last war called it a first round, and the '
+      + 'capitals meant it. Now the attachés count what is left of the reduced '
+      + 'state — a corridor, a conscript army, an economy on coupons — and the '
+      + 'general staffs move the same plans back to the top drawer with better '
+      + 'artillery attached. The radios promise the sea. The sea is eight '
+      + 'miles from the front line.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_second_round', (ctx) => {
+      const e = egyTag(ctx);
+      return dateGE(ctx, 1951, 1) && !!ctx.game.flags.tenMileState
+        && alive(ctx, 'ISR') && !!e && hostileToward(ctx, e, 'ISR', -60)
+        && !findWar(ctx.game, 'ISR', e) && fortyEightSettled(ctx)
+        && !truceHolds(ctx, 'ISR', e);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Stand to — the state is the trench',
+        tooltip: 'The coalition attacks at +8% morale for 6 months ("Blood in the Water"); every hostile neighbor joins. Israel: +1,500 manpower in the last call-up, −1 stability.',
+        effects: guard('ev_i_second_round:0', (ctx) => {
+          const g = ctx.game;
+          const e = egyTag(ctx), s = syrTag(ctx);
+          if (!e) return;
+          if (!ctx.helpers.declareWar(ctx, e, 'ISR', 'The Second Round')) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The second round is announced on the radios and postponed in the staff rooms; the truce clock is still running.');
+            return;
+          }
+          g.flags.secondRound48 = true;
+          const joiners = [e];
+          if (alive(ctx, 'JOR') && hostileToward(ctx, 'JOR', 'ISR', -60) && !findWar(g, 'ISR', 'JOR')) {
+            ctx.helpers.declareWar(ctx, 'JOR', 'ISR', 'The Second Round');
+            joiners.push('JOR');
+          }
+          if (s && s !== e && hostileToward(ctx, s, 'ISR', -60) && !findWar(g, 'ISR', s)) {
+            ctx.helpers.declareWar(ctx, s, 'ISR', 'The Second Round');
+            joiners.push(s);
+          }
+          for (const t of joiners) {
+            ctx.helpers.addTagModifier(ctx, t, {
+              id: 'blood_in_water', name: 'Blood in the Water', months: 6, effects: { moraleMult: 1.08 },
+            });
+          }
+          spawnAt(ctx, e, ['Gaza', 'Rafah', 'Pelusium', 'Memphis'], {
+            inf: 5, cav: 2, name: 'The Army of the Second Round',
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: 1500, stability: -1 });
+          ctx.helpers.chronicle(ctx, 'war', 'The second round opens: the coalition comes back for the corridor state, and the last call-up empties the schools.');
+        }),
+      },
+      {
+        label: 'Preempt with everything left',
+        tooltip: 'Israel declares first: +15 martial points and +5 war score — but −10 legitimacy; a reduced state that strikes first collects sympathy from no one.',
+        effects: guard('ev_i_second_round:1', (ctx) => {
+          const g = ctx.game;
+          const e = egyTag(ctx);
+          if (!e) return;
+          if (!ctx.helpers.declareWar(ctx, 'ISR', e, 'The Second Round')) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The preemption is argued, priced, and put back in the safe; the truce clock is still running.');
+            return;
+          }
+          g.flags.secondRound48 = true;
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 15, legitimacy: -10 });
+          warEventScore(ctx, 'ISR', e, 'ISR', 5);
+          ctx.helpers.chronicle(ctx, 'war', 'The corridor state does not wait to be finished: the second round opens on Israeli initiative, and on Israeli credit.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_clawback',
+    title: 'The Claw-Back',
+    maxYear: 1964,
+    desc: 'The front has held longer than the plans on either side assumed, and '
+      + 'something has shifted in the arithmetic: the attackers are at the end of '
+      + 'their supply lines and the defenders are at the beginning of theirs. The '
+      + 'staff maps that spent two years shrinking have room in the margins again. '
+      + 'A state that was an episode is behaving like a fact.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_clawback', (ctx) => {
+      const e = egyTag(ctx);
+      return !!ctx.game.flags.secondRound48 && alive(ctx, 'ISR')
+        && (ctx.helpers.controls(ctx, 'ISR', 'Joppa') || ctx.helpers.controls(ctx, 'ISR', 'Jerusalem'))
+        && !!e && !!findWar(ctx.game, 'ISR', e);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The counterstroke',
+        tooltip: 'Israel: +8 war score on every live front, +10 martial points — for −1,500 manpower and +1 war exhaustion. The episode starts taking territory back.',
+        effects: guard('ev_i_clawback:0', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) {
+            if (t && findWar(ctx.game, 'ISR', t)) warEventScore(ctx, 'ISR', t, 'ISR', 8);
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10, manpower: -1500, warExhaustion: 1 });
+          ctx.helpers.chronicle(ctx, 'war', 'The claw-back: the corridor state counterattacks out of its corridor, and the maps start growing again.');
+        }),
+      },
+      {
+        label: 'Hold the line, count their shells',
+        tooltip: 'Israel: +3 war score per live front and +5% discipline for 12 months ("The Thin Line") — for −500 manpower. Patience as strategy; the enemy pays for every mile it sits on.',
+        effects: guard('ev_i_clawback:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) {
+            if (t && findWar(ctx.game, 'ISR', t)) warEventScore(ctx, 'ISR', t, 'ISR', 3);
+          }
+          ctx.helpers.adjust(ctx, 'ISR', { manpower: -500 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'thin_line', name: 'The Thin Line', months: 12, effects: { disciplineMult: 1.05 },
+          });
+          ctx.helpers.chronicle(ctx, 'war', 'The thin line holds and bills the besiegers monthly; attrition, for once, is running the other way.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_second_exodus',
+    title: 'The Sea Road Out',
+    desc: 'The state that was declared in a museum has ceased to exist, and what '
+      + 'remains of its people is on the water: fishing boats to Cyprus, freighters '
+      + 'to Marseilles, anything with an engine standing off the beaches after '
+      + 'dark. The victors hold the cities and discover that the prize was the '
+      + 'people who built them, and the people are leaving. At the UN the '
+      + 'trusteeship drafts circulate; in the chancelleries the word "temporary" '
+      + 'does its usual work. The second exodus is orderly, documented, and '
+      + 'watched by everyone who said this could not happen.',
+    forTag: 'both',
+    major: true,
+    trigger: safeTrigger('ev_i_second_exodus', (ctx) =>
+      dateGE(ctx, 1948, 8) && !alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The boats go west',
+        tooltip: 'The coast empties: Tel Aviv −15% production permanently for its holder; occupiers of Tel Aviv and Jerusalem +10 legitimacy but +1 unrest there for 60 months; London and Rome −30 opinion of the conquerors.',
+        effects: guard('ev_i_second_exodus:0', (ctx) => {
+          const g = ctx.game;
+          g.flags.israelFallen = true;
+          g.flags.israelFallenY = g.date.y;
+          g.flags.israelFallenM = g.date.m;
+          const holders = new Set();
+          for (const n of ['Joppa', 'Jerusalem']) {
+            const holder = ownerOf(ctx, n);
+            if (!holder || holder === 'WASTE' || holder === 'REB' || !alive(ctx, holder)) continue;
+            holders.add(holder);
+            ctx.helpers.addProvinceModifier(ctx, n, {
+              id: 'second_exodus', name: 'The Emptied City', months: 60, effects: { unrest: 1 },
+            });
+          }
+          for (const holder of holders) {
+            ctx.helpers.adjust(ctx, holder, { legitimacy: 10 });
+            for (const t of ['UK', 'ITA']) {
+              if (alive(ctx, t)) setOpinionDelta(g, t, holder, -30);
+            }
+          }
+          const coast = ownerOf(ctx, 'Joppa');
+          if (coast && coast !== 'WASTE') {
+            ctx.helpers.addProvinceModifier(ctx, 'Joppa', {
+              id: 'emptied_coast', name: 'The Emptied Coast', months: -1, effects: { prodMult: 0.85 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'The second exodus: the state is extinguished and its people take the sea road out; the victors inherit cities that empty as they enter them.');
+        }),
+      },
+      {
+        label: 'A trusteeship on paper',
+        tooltip: 'The UN debates administering the territory it once partitioned: surviving Egypt and Jordan +15 influence points each, and Jerusalem +1 unrest for 36 months while the drafts circulate over the facts.',
+        effects: guard('ev_i_second_exodus:1', (ctx) => {
+          const g = ctx.game;
+          g.flags.israelFallen = true;
+          g.flags.israelFallenY = g.date.y;
+          g.flags.israelFallenM = g.date.m;
+          const e = egyTag(ctx);
+          for (const t of [e, 'JOR']) {
+            if (t && alive(ctx, t)) ctx.helpers.adjust(ctx, t, { infl: 15 });
+          }
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'trusteeship_debated', name: 'The Trusteeship Debated', months: 36, effects: { unrest: 1 },
+          });
+          ctx.helpers.chronicle(ctx, 'era', 'The state is extinguished and the UN debates a trusteeship for the land it partitioned; the drafts are elegant and the occupation is not.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_diaspora_verdict',
+    title: 'The Verdict of the Diaspora',
+    desc: 'A year on, the accounting. In New York and London and Buenos Aires the '
+      + 'communities that wired money and sent sons render their verdict in the '
+      + 'only currencies left — memory, archives, and the slow redirection of every '
+      + 'institution that pointed at Jerusalem. The victors, meanwhile, have '
+      + 'discovered the oldest rule of coalitions: nothing divides like a prize. '
+      + 'Cairo and Amman each hold half a country and all of a grudge.',
+    forTag: 'both',
+    trigger: safeTrigger('ev_i_diaspora_verdict', (ctx) => {
+      const g = ctx.game;
+      return !!g.flags.israelFallen && !alive(ctx, 'ISR')
+        && Number.isFinite(g.flags.israelFallenY)
+        && dateGE(ctx, g.flags.israelFallenY + 1, g.flags.israelFallenM || 1);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The spoils divide the victors',
+        tooltip: 'Cairo and Amman −40 opinion of each other, Damascus and Amman −20; the partition of the prize begins its own cold war.',
+        effects: guard('ev_i_diaspora_verdict:0', (ctx) => {
+          const g = ctx.game;
+          const e = egyTag(ctx), s = syrTag(ctx);
+          if (e && alive(ctx, 'JOR')) {
+            setOpinionDelta(g, e, 'JOR', -40);
+            setOpinionDelta(g, 'JOR', e, -40);
+          }
+          if (s && s !== e && alive(ctx, 'JOR')) {
+            setOpinionDelta(g, s, 'JOR', -20);
+            setOpinionDelta(g, 'JOR', s, -20);
+          }
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The diaspora renders its verdict and the victors render theirs — on each other: the partition of the prize opens its own cold war.');
+        }),
+      },
+      {
+        label: 'A condominium of the League',
+        tooltip: 'The victors administer jointly: surviving Egypt, Jordan and Syria +10 influence points each — and Jerusalem +1 unrest for 24 months under a committee with three chairmen.',
+        effects: guard('ev_i_diaspora_verdict:1', (ctx) => {
+          const e = egyTag(ctx), s = syrTag(ctx);
+          for (const t of [e, 'JOR', s]) {
+            if (t && alive(ctx, t)) ctx.helpers.adjust(ctx, t, { infl: 10 });
+          }
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'league_condominium', name: 'The Condominium', months: 24, effects: { unrest: 1 },
+          });
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The League proclaims a condominium over the conquered land: three flags, three garrisons, and one committee that cannot agree on the stationery.');
         }),
       },
     ],
