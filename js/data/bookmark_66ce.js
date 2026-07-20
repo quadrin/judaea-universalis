@@ -103,6 +103,31 @@ export const BOOKMARK_66 = {
   // Era name (SPEC §25): Flavia Neapolis is founded only in 72 CE.
   provinceNames: { 'Neapolis': 'Shechem' },
 
+  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
+  // writes on a province it has made its own (integration at 1, or its own
+  // culture on the land). Rome's is the Flavian pen — what the dynasty
+  // actually wrote on this ground after 70; Judaea's is the Hebrew pen of
+  // the victory timeline, set to the Greek coast once the coast is truly
+  // absorbed. Towns Judaea holds from the start (Joppa, the hill country)
+  // keep the era register — the pen is for conquests, not for home.
+  integratedNames: {
+    ROM: {
+      // Flavia Neapolis, founded 72/73 CE on the ground below Gerizim: the
+      // era map says Shechem until Rome makes the canon name true.
+      'Neapolis': 'Neapolis',
+      'Joppa': 'Flavia Ioppe',    // the refounded harbor, as its coins style it
+      'Sepphoris': 'Eirenopolis', // the mint's own boast — City of Peace
+    },
+    JUD: {
+      'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an',
+      'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon', 'Dora': 'Dor',
+      'Sebaste': 'Shomron', 'Jamnia': 'Yavneh', 'Sepphoris': 'Tzippori',
+    },
+    // (No AGR pen: Agrippa's 'Neronias' for Caesarea Philippi would rename
+    // his own start-owned capital the moment the AI integrates it — and the
+    // name died with Nero's memory anyway.)
+  },
+
   blurb: 'The procurator Gessius Florus has taken seventeen talents from the Temple treasury, '
     + 'and Jerusalem has answered with stones, then with steel. In the Temple, the captain '
     + 'Eleazar moves to refuse every offering from a foreign hand; in Antioch the governor of '
