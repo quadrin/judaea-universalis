@@ -97,6 +97,8 @@ export const BOOKMARK_132 = {
       'Ascalon': 'Ashkelon', 'Joppa': 'Yafo',
       'Lydda': 'Lod', 'Dora': 'Dor',
     },
+    // A proclaimed Kingdom of Israel keeps Judaea's Hebrew pen (alias table).
+    MLI: 'JUD',
   },
 
   activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX'],

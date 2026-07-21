@@ -1190,7 +1190,13 @@ export function resolveDisplayName(ctx, p) {
   const eraTable = (bm && bm.provinceNames) || {};
   const era = Object.prototype.hasOwnProperty.call(eraTable, p.canon) ? eraTable[p.canon] : p.canon;
   const t = ctx.game.tags && ctx.game.tags[p.owner];
-  const table = bm && bm.integratedNames && bm.integratedNames[p.owner];
+  // A formed nation writes with its predecessor's pen: an `integratedNames`
+  // entry may be a string naming another tag whose table it shares, so the
+  // Kingdom of Israel keeps Judaea's Hebrew renames after the proclamation.
+  const tables = (bm && bm.integratedNames) || {};
+  let table = tables[p.owner];
+  for (let hop = 0; typeof table === 'string' && hop < 4; hop++) table = tables[table];
+  if (typeof table === 'string') table = null;
   const renamed = table && table[p.canon];
   const theirs = !!t && (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture));
   const next = (renamed && theirs) ? renamed : era;
@@ -1488,6 +1494,7 @@ export function switchTagCore(ctx, from, to) {
   nt.tag = to;
   nt.name = def.name || to;
   nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
+  delete nt.flag; // a variant banner dies with the old identity — the new tag flies its own
   // The new crown brings its constitution (SPEC §25): a proclaimed republic
   // votes, a proclaimed kingdom crowns.
   const gov = (ctx.DEFINES.GOV_OF || {})[to];

@@ -135,6 +135,10 @@ export const BOOKMARK_67 = {
       'Scythopolis': 'Beit She\'an', 'Pella': 'Pehal', 'Gadara': 'Gader',
       'Philadelphia': 'Rabbat Ammon',
     },
+    // The restored kingdom and the proclaimed Israel keep writing the same
+    // Hebrew whichever brother's house they grew from (alias tables).
+    HAS: 'HYR',
+    MLI: 'HYR',
   },
 
   blurb: 'Queen Salome Alexandra is dead, and her sons cannot both be king. Hyrcanus the '

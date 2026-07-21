@@ -116,6 +116,12 @@ export const BOOKMARK_40 = {
     },
     // The Roman pen has one name it longs to file correctly.
     ROM: { 'Jerusalem': 'Hierosolyma' },
+    // Formed crowns keep their founders' pens (alias tables): a restored
+    // Hasmonean kingdom or proclaimed Israel writes Antigonus' Hebrew, and
+    // Herod's Kingdom of Judaea keeps signing the builder's re-foundations.
+    HAS: 'ATG',
+    MLI: 'ATG',
+    JUD: 'HER',
   },
 
   blurb: 'The Parthians have crossed the Euphrates and nothing stood. Syria is overrun, '

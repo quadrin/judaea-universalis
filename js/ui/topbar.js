@@ -21,8 +21,10 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
   function build() {
     const tag = ctx.game.playerTag;
     const def = (DEFINES.TAGS && DEFINES.TAGS[tag]) || {};
+    const live = ctx.game.tags && ctx.game.tags[tag];
+    const dispName = (live && live.name) || def.name || tag;
     el.innerHTML = `
-      <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(def.name || tag)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28)}<span class="tb-flag-tag">${esc(tag)}</span></button>
+      <button class="tb-flag" data-ref="flagBtn" data-tt="${esc(dispName)} — the realm panel" aria-label="Open the realm panel">${flagChip(tag, DEFINES, 28, false, ctx.game)}<span class="tb-flag-tag">${esc(tag)}</span></button>
       <div class="tb-break" aria-hidden="true"></div>
       <div class="tb-item" data-ref="treasuryWrap">
         <span class="tb-ico">${icon('coins')}</span><span class="tb-v" data-ref="treasury">0</span>

@@ -274,13 +274,15 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
 
     setText(refs.name, p.name || ('Province ' + provId));
 
-    // Owner / occupation
+    // Owner / occupation (live names & banners: a rebranded realm shows here)
+    const ownerLive = g.tags && g.tags[p.owner];
     const ownerDef = TAGS[p.owner] || {};
-    setHtml(refs.ownerChip, flagChip(p.owner, DEFINES, 20, true));
-    setText(refs.ownerName, ownerDef.name || p.owner || 'Unowned');
+    setHtml(refs.ownerChip, flagChip(p.owner, DEFINES, 20, true, g));
+    setText(refs.ownerName, (ownerLive && ownerLive.name) || ownerDef.name || p.owner || 'Unowned');
     if (p.controller && p.controller !== p.owner) {
+      const cLive = g.tags && g.tags[p.controller];
       const cDef = TAGS[p.controller] || {};
-      setHtml(refs.occupied, icon('flag', 'icon-sm') + ' Occupied by ' + esc(cDef.name || p.controller));
+      setHtml(refs.occupied, icon('flag', 'icon-sm') + ' Occupied by ' + esc((cLive && cLive.name) || cDef.name || p.controller));
       refs.occupied.classList.remove('hidden');
     } else {
       refs.occupied.classList.add('hidden');
@@ -664,7 +666,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     refs.diploBlock.classList.toggle('hidden', !d);
     if (!d) return;
 
-    setHtml(refs.dipChip, flagChip(d.tag, DEFINES, 20, true));
+    setHtml(refs.dipChip, flagChip(d.tag, DEFINES, 20, true, g));
     setText(refs.dipName, d.name || d.tag);
 
     const op = Math.round(d.opinionOfUs || 0);

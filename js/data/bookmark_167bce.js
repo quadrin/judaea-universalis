@@ -115,6 +115,8 @@ export const BOOKMARK_167 = {
     // The Seleucid pen has one name it longs to write: Epiphanes re-founded
     // the city of David as Antiochia-in-Judaea, gymnasium and all.
     SEL: { 'Jerusalem': 'Antiochia' },
+    // A proclaimed Kingdom of Israel keeps the Hasmonean pen (alias table).
+    MLI: 'HAS',
   },
 
   // The map wears its era's shape (SPEC §47): the desert fortresses are not

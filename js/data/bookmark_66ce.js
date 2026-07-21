@@ -126,6 +126,8 @@ export const BOOKMARK_66 = {
     // (No AGR pen: Agrippa's 'Neronias' for Caesarea Philippi would rename
     // his own start-owned capital the moment the AI integrates it — and the
     // name died with Nero's memory anyway.)
+    // A proclaimed Kingdom of Israel keeps Judaea's Hebrew pen (alias table).
+    MLI: 'JUD',
   },
 
   blurb: 'The procurator Gessius Florus has taken seventeen talents from the Temple treasury, '

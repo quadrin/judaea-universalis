@@ -150,6 +150,8 @@ export const BOOKMARK_614 = {
       'Sepphoris': 'Tzippori', 'Azotus': 'Ashdod', 'Ascalon': 'Ashkelon',
       'Joppa': 'Yafo', 'Neapolis': 'Shechem',
     },
+    // A proclaimed Kingdom of Israel keeps Judaea's Hebrew pen (alias table).
+    MLI: 'JUD',
     // No Byzantine pen: the era's names above are already the Empire's.
   },
 

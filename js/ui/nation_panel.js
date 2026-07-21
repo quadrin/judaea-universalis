@@ -230,12 +230,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const TAGS = DEFINES.TAGS || {};
     const def = TAGS[tag] || {};
 
-    setHtml(refs.flag, flagChip(tag, DEFINES, 22));
+    setHtml(refs.flag, flagChip(tag, DEFINES, 22, false, g));
     setText(refs.name, (t.name || tag) + (t.alive === false ? ' †' : ''));
     // Foreign dress: the note, and our own flag as the way home.
     refs.foreignNote.classList.toggle('hidden', self);
     refs.homeChip.classList.toggle('hidden', self);
-    if (!self) setHtml(refs.homeChip, flagChip(g.playerTag, DEFINES, 18, true));
+    if (!self) setHtml(refs.homeChip, flagChip(g.playerTag, DEFINES, 18, true, g));
 
     // Ruler & skills (skills 0-6; monthly gain is base +2 per pool)
     const r = t.ruler || {};
@@ -500,7 +500,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // peace dove stays sheathed. Every chip is a link to that court.
   function refreshDiplomacy(g, t, who, self) {
     const TAGS = DEFINES.TAGS || {};
-    const chip = (tag) => flagChip(tag, DEFINES, 15, true);
+    const chip = (tag) => flagChip(tag, DEFINES, 15, true, g);
     const nameOf = (tag) => esc((g.tags[tag] && g.tags[tag].name) || (TAGS[tag] && TAGS[tag].name) || tag);
     let html = '';
 
