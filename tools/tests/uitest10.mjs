@@ -42,7 +42,11 @@ async function boot(page, cardText, nationIdx = 0) {
   });
   ok(/#0038b8/.test(flagSvg), 'the blue is the flag blue (#0038b8)');
   ok((flagSvg.match(/rect/g) || []).length >= 3, 'white field + two stripes rendered');
-  ok((flagSvg.match(/<path/g) || []).length >= 2, 'the two triangles of the star');
+  // The Star of David is one hexagram path since SPEC §68 — two interlocked
+  // triangles as two closed subpaths on a single center.
+  const starD = (flagSvg.match(/<path[^>]*d="(M[^"]*)"/) || [])[1] || '';
+  ok((starD.match(/M/g) || []).length >= 2 && (starD.match(/Z/g) || []).length >= 2,
+    'the two triangles of the star (two closed subpaths in the hexagram path)');
   const shot = await page.locator('.tb-flag').screenshot({ path: OUT + 'v23-isr-flag.png' });
   ok(!!shot, 'flag chip captured');
   ok(errors.length === 0, 'no page errors: ' + JSON.stringify(errors.slice(0, 2)));
