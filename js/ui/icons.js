@@ -292,16 +292,17 @@ export const FLAGS = {
     `<path d="M13.5 3.5c1 0 1.8.4 2.3 1.1-.7.6-1.5.8-2.4.6Z" ${ACC}/>` +
     `<circle cx="11.5" cy="4.2" r="0.4" fill="${FO}" stroke="none"/>` +
     `<path d="M10.6 11.7C9 10.9 7.6 9.7 6.5 8.2M13.4 11.7c1.6-.8 3-2 4.1-3.5" ${DET}/>`,
-  // Judaea: the ritual chalice of the Year One shekels, pearled gold rim.
+  // Judaea: the seven-branched menorah of the Temple — parchment branches
+  // over the blue field, seven gold lamps level along the top, the splayed
+  // tripod foot of the lampstand. Distinct from Antigonus' coin die (ATG:
+  // gold branches, stepped foot), so the two menorah banners never blur
+  // when Herod's Judaea and the last Hasmonean share a map.
   JUD:
-    `<circle cx="8.2" cy="5.3" r="0.8" ${ACC}/>` +
-    `<circle cx="12" cy="4.8" r="0.8" ${ACC}/>` +
-    `<circle cx="15.8" cy="5.3" r="0.8" ${ACC}/>` +
-    `<rect x="5.9" y="6.8" width="12.2" height="1.8" rx="0.9" ${ACC}/>` +
-    `<path d="M6.6 8.6h10.8c-.4 3.7-2.2 5.7-5.4 6.2-3.2-.5-5-2.5-5.4-6.2Z" ${SIL}/>` +
-    `<path d="M11.1 14.8h1.8v2.2h-1.8Z" ${SIL}/>` +
-    `<path d="M8.4 19.8c.6-1.9 1.8-2.8 3.6-2.8s3 .9 3.6 2.8Z" ${SIL}/>` +
-    `<path d="M8.8 10.1c.4 1.9 1.5 3.1 3.2 3.6" ${DET}/>`,
+    `<path d="${MENORAH}" fill="none" stroke="${FO}" stroke-width="2.7" stroke-linecap="round"/>` +
+    `<path d="${MENORAH}" fill="none" stroke="${FP}" stroke-width="1.5" stroke-linecap="round"/>` +
+    MENORAH_LAMPS +
+    `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FO}" stroke-width="2.5" stroke-linecap="round"/>` +
+    `<path d="M12 16.9v1M12 17.9 9.3 20M12 17.9 14.7 20M12 17.9V20" fill="none" stroke="${FP}" stroke-width="1.3" stroke-linecap="round"/>`,
   // Hasmoneans: crossed double cornucopiae of the prutot, pomegranate between.
   HAS:
     `<path d="M11.6 19.6C8 18.5 5.9 16 5.5 12.4c-.2-2 .4-3.8 1.8-5.4l2.2 1.9c-.9 1.2-1.2 2.6-.9 4.2.4 2.5 1.6 4.4 3.6 5.7Z" ${SIL}/>` +

@@ -9,6 +9,7 @@ import { createProvincePanel } from './province_panel.js';
 import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
+import { createWiki } from './wiki.js';
 import { icon, flagChip } from './icons.js';
 import { genName } from '../data/tech.js';
 
@@ -132,6 +133,10 @@ export function initUI(staticCtx) {
     setSelectedProv(0); // the two left panels share the same berth
     nationPanel.open();
   }
+  // The Compendium (SPEC §71): the title screen's library — it reads the
+  // data modules directly, and only the start screen opens it. In play the
+  // chrome stays the campaign's own (ledger, chronicle, help).
+  const wiki = createWiki({ DEFINES, getCtx: () => state.ctx });
   const topbar = createTopbar(els.topbar, {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
@@ -246,7 +251,20 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
+      release: [], // nations the enemy is forced to set free (SPEC §69)
       enemy: info.separate ? info.enemyLeader : undefined, // separate peace (SPEC §67)
+    };
+    // The map reads the whole shape of the peace: demandable provinces pulse,
+    // demanded ones burn solid — and the lands of a nation being set free burn
+    // solid too while its box is ticked.
+    const releaseProvIds = (tags) => (info.releasable || [])
+      .filter((r) => tags.indexOf(r.tag) >= 0)
+      .reduce((acc, r) => acc.concat(r.provIds), []);
+    const paintDeal = () => {
+      const freed = releaseProvIds(deal.release);
+      setPeaceHighlight(
+        info.provinces.map((p) => p.id).concat(freed),
+        deal.provinces.concat(freed));
     };
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     // A coalition can be talked out of the war one court at a time: chips
@@ -307,6 +325,15 @@ export function initUI(staticCtx) {
           <span class="peace-prov-name">Make them a client kingdom</span>
           <span class="peace-prov-cost">${info.subjugateCost}</span>
         </label>
+        ${(info.releasable || []).length ? `<div class="peace-sec">Force them to release nations</div>
+        ${info.releasable.map((r) =>
+    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc('Restore ' + r.name + ' as a free nation: ' + (r.provNames || []).join(', ')
+      + ' (' + r.dev + ' development) leave ' + (info.enemyName || 'the enemy') + '\'s realm and the fallen banner rises again — independent, sheltered by a five-year truce.\nCosts '
+      + r.cost + ' war score. Liberation earns no infamy.')}">
+          <input type="checkbox" data-release="${esc(r.tag)}">
+          <span class="peace-prov-name">Set ${esc(r.name)} free <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev</span></span>
+          <span class="peace-prov-cost">${r.cost}</span>
+        </label>`).join('')}` : ''}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <button class="btn peace-send" data-ref="send"></button>
@@ -327,14 +354,21 @@ export function initUI(staticCtx) {
       try { ev = actions.evaluatePeace(warId, deal); } catch (e) { warnOnce('evaluatePeace', e); }
       if (!ev) { closePeaceDialog(); return; }
       goldV.textContent = String(deal.gold);
-      // Subjugation replaces province demands: a client keeps its lands.
+      // Subjugation replaces province demands and releases: a client keeps
+      // its lands whole.
       peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
         box.disabled = deal.subjugate;
         if (deal.subjugate) box.checked = false;
         box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
       });
-      if (deal.subjugate) deal.provinces = [];
-      const white = !deal.provinces.length && deal.gold <= 0 && !deal.humiliate && !deal.subjugate && !deal.reparations;
+      peaceEl.querySelectorAll('[data-release]').forEach((box) => {
+        box.disabled = deal.subjugate;
+        if (deal.subjugate) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+      });
+      if (deal.subjugate) { deal.provinces = []; deal.release = []; }
+      const white = !deal.provinces.length && !deal.release.length && deal.gold <= 0
+        && !deal.humiliate && !deal.subjugate && !deal.reparations;
       totalEl.textContent = white
         ? 'A white peace: every occupation reverts, nothing changes hands.'
         : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
@@ -344,8 +378,8 @@ export function initUI(staticCtx) {
       sendBtn.textContent = white ? 'Offer white peace' : 'Send the terms';
       sendBtn.classList.toggle('disabled', !ev.acceptable || info.envoyMonthsLeft > 0);
       // The chosen demands burn solid gold on the map; the rest of the table
-      // keeps its pulse.
-      setPeaceHighlight(info.provinces.map((p) => p.id), deal.provinces.slice());
+      // keeps its pulse — and freed nations' lands burn gold while ticked.
+      paintDeal();
     }
 
     peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
@@ -365,6 +399,15 @@ export function initUI(staticCtx) {
     });
     humiliateBox.addEventListener('change', () => { deal.humiliate = humiliateBox.checked; update(); });
     reparationsBox.addEventListener('change', () => { deal.reparations = reparationsBox.checked; update(); });
+    peaceEl.querySelectorAll('[data-release]').forEach((box) => {
+      box.addEventListener('change', () => {
+        const tag = box.dataset.release;
+        const at = deal.release.indexOf(tag);
+        if (box.checked && at < 0) deal.release.push(tag);
+        else if (!box.checked && at >= 0) deal.release.splice(at, 1);
+        update();
+      });
+    });
     if (subjugateBox) {
       subjugateBox.addEventListener('change', () => { deal.subjugate = subjugateBox.checked; update(); });
     }
@@ -408,7 +451,7 @@ export function initUI(staticCtx) {
       if (box) box.checked = at < 0;
       update();
     };
-    setPeaceHighlight(info.provinces.map((p) => p.id), deal.provinces.slice());
+    paintDeal();
     update();
   }
 
@@ -1141,13 +1184,15 @@ export function initUI(staticCtx) {
   // ------------------------------------------------------------------ API --
   function showStartScreen(bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
     els.start.classList.remove('hidden');
-    buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag) => {
+    // Pass the pick options through whole — dropping the third argument here
+    // once silently disarmed the Veteran dial (opts carries {difficulty}).
+    buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag, opts) => {
       els.start.classList.add('hidden');
-      onPick(bookmark, tag);
+      onPick(bookmark, tag, opts);
     }, continueInfo ? {
       label: continueInfo.label,
       onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },
-    } : null, saveTools || null, onMultiplayer || null);
+    } : null, saveTools || null, onMultiplayer || null, () => wiki.open());
   }
 
   function bindGame(ctx, actions) {
@@ -1155,6 +1200,7 @@ export function initUI(staticCtx) {
     state.bound = true;
     state.ctx = ctx;
     state.actions = actions;
+    wiki.close(); // the library stays on the title screen — the campaign begins without it
 
     topbar.bind(ctx, actions);
     panel.bind(ctx, actions);

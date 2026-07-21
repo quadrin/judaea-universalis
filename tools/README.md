@@ -184,3 +184,14 @@ PNT and ITA emblems added). uitest3, 8, 10, 16, 17, 19, 20 and uitest5's
 multiplayer section fail identically on the pre-v5.3 tree in this
 environment (modal-timing/lobby timeouts under software GL) — pre-existing,
 not regressions; they need their own pass.
+
+The SPEC §69–71 batch re-ran the full battery: the v5.4 set above fails
+unchanged, and two more suites were verified to fail IDENTICALLY on the
+pre-change base tree in this environment (a worktree at the parent
+commit, same server, same Chromium): uitest21 (the objectives pin and
+the printed-consequences assertion — the same modal-timing class) and
+uitest28 (the bombsight sortie's `cd=0` — the click lands but the raid
+does not fly under software GL; the sim path is covered green by
+smoke33 and smoke39's order-strike section). Every other suite passes,
+including uitest22 (the peace table, now with the release section),
+uitest23, and the new uitest29.

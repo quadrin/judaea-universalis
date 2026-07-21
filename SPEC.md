@@ -2777,9 +2777,13 @@ follow the state through its revolutions.
   `starPath` builds proper N-point stars (the five-, seven- and
   eight-pointed stars of the modern flags), `hexagram` builds the Star of
   David from two interlocked equilateral triangles on one center (ISR,
-  and the crowned gold star of MLI), and `MENORAH` draws Antigonus' coin
-  emblem as a true seven-branched lampstand — nested semicircular arms,
-  seven lamps level on top, stepped foot. The Ptolemaic eagle is a gold
+  and the crowned gold star of MLI), and `MENORAH` draws a true
+  seven-branched lampstand — nested semicircular arms, seven lamps level
+  on top — shared by two banners that never blur: Antigonus' coin die
+  (ATG: gold branches, stepped foot) and, since the §69–71 batch, Judaea's
+  own standard (JUD: parchment branches, splayed tripod foot — the Temple
+  lampstand, replacing the Year One chalice, which lives on in the
+  coinage events' prose). The Ptolemaic eagle is a gold
   raptor (no more parchment-bellied penguin), Hyrcanus flies the palm
   branch of the high-priestly coins, the Rashidun Caliphate has a liwa
   standard of its own, and the dead duplicate FLAGS keys (NAB/ARM/HYR/ARI
@@ -2810,3 +2814,124 @@ follow the state through its revolutions.
   (name, flag, chip, and the base flag restored on a later switchTag),
   the Iraqi revolution rebrand, and FLAGS coverage for every tag on
   every bookmark's map.
+
+## 69. Force them to release nations — the peace table restores the fallen
+
+A war won hard enough can now dismember the enemy the other way: not by
+taking their land, but by giving it BACK to the courts they swallowed.
+
+- **The term** (`releasableNations`/`eraOwnerOf`, military.js; `PEACE.releaseCostPerDev`
+  0.5, `releaseCostMin` 10): a fallen court (tag in `game.tags`, `alive: false`,
+  not a war participant) whose ERA-START lands the enemy currently owns can be
+  restored as an independent state at the full congress table. Era-start
+  ownership is recomputed live from the bookmark's `owners` table over the
+  base map (latent parents honored) — static data, so no save schema is
+  touched. The enemy always keeps the province bearing its own capital name
+  (release dismembers an empire; it may not behead it), and a separate peace
+  (SPEC §67) refuses releases the way it refuses subjugation.
+- **Pricing**: each restoration costs `max(10, dev × 0.5)` war score, priced
+  on the provinces it would actually receive — anything the same deal cedes to
+  US is struck from the release first, and an emptied release drops out.
+  Released development counts toward the one-treaty dev cap alongside
+  cessions (dismemberment is dismemberment), and subjugation supersedes both.
+- **The restoration** (`executePeaceDeal`): the freed provinces change owner
+  and controller to the restored tag at ordinary autonomy (its own people come
+  home, not a conquest — no `recent_conquest`, integration zeroed, conversion
+  voided). The court revives independent: no overlord, war exhaustion 0,
+  floors of 0 stability / 40 legitimacy / 25 talents / 2,000 manpower, a
+  2/2/2 Council of the Restoration if it lost its ruler, a 2-regiment Army of
+  the Restoration at its richest seat, and a five-year truce against its old
+  master. It loves its liberator (+100 opinion, +50 back) and despises its
+  jailer (−100) — and the old master records a conquest GRUDGE (SPEC §67) for
+  every released province, so reconquest wars are a live threat. Liberation
+  earns NO infamy: the world does not fear a conqueror who hands land back.
+- **The AI**: accepts releases like any priced term (`evaluatePeaceDeal` is
+  score-arithmetic) but never builds them into its own ultimatums or
+  auto-settlements — the all-AI harness histories are untouched.
+- **UI** (the peace dialog): a "Force them to release nations" section lists
+  each restorable court with its province count, development and price; a
+  ticked release burns the whole patrimony solid gold on the map beside the
+  demanded provinces, and clicking the row flies the camera there.
+- **Regression contract**: `smoke47.mjs` — releasable detection (dead yes,
+  living no, WASTE/REB never), the capital carve-out, dev pricing, the
+  war-score gate, cession-trumps-release, the full restoration (owner flips,
+  independence, truce, opinions, grudge, the mustered host, the chronicle),
+  and the separate-peace refusal. `uitest29.mjs` drives the section end to
+  end in a real browser.
+
+## 70. A foreign court's decision is not ours to make — decider notices
+
+The `forTag: 'both'` pattern showed every player the same card — and let a
+Judaean player choose how Rome celebrates its triumph. Now an event may
+declare WHOSE choice it is.
+
+- **The metadata** (`event.decider: 'TAG'`): the court whose government makes
+  the choice between the options. ~129 events across the seven chains carry
+  it (Rome's decrees and triumphs, the Nasi's ordinations, the Return's
+  submission, Israel's truces, Antigonus' court, the Seleucid regency…).
+  Genuinely two-sided beats (symmetric exactions, succession panics) stay
+  undeclared and keep the open choice.
+- **The notice** (`fireEvent`/`resolveEventOption`, events.js): when the
+  player is NOT the decider (and the decider tag still exists — a formable
+  that rewrote the tag falls back to the full choice), the pending entry pins
+  the decider's own historical course (`aiOption`, function or index) at fire
+  time. The modal shows ONE acknowledging button — the chosen course's label —
+  under a line naming the deciding court; whatever index the UI reports,
+  resolution applies the pinned course. The deciding player keeps the full
+  choice; AI-audience events are untouched; pinned notices ride the save and
+  the multiplayer relay (main.js collapses the options before they travel, so
+  guests see the host's exact card).
+- **The contract holds**: data keeps every option and every `aiOption` pin, so
+  smoke39's structural sweeps and the all-AI harness walk exactly the old
+  history. (smoke39's aiOption sweep now accepts the function form the engine
+  always supported.)
+- **Regression contract**: `smoke48.mjs` — the notice pins the course, a
+  hostile UI index cannot steal it, the decider keeps its choice, the erased-
+  decider fallback, function aiOption, the save round-trip, and — for all
+  seven chains — every declared decider names a court of its era roster and
+  pins its historical course. `uitest29.mjs` renders the single-button card.
+
+## 71. The Compendium — the game's own wiki
+
+Everything the chronicler knows, generated from the live data modules so it
+can never drift from the game it describes. The title screen's 📖 Compendium
+button alone opens it — the library is where you choose a war, not where you
+fight one.
+
+- **The registry** (`js/data/compendium.js`): the canonical `ERAS` list —
+  every bookmark paired with its event chain (shared generic pool appended,
+  exactly as the engine plays it) — now the single source of truth; main.js
+  boots from it and the wiki reads it.
+- **The codex** (`js/ui/wiki.js`, `#wiki-modal`; styles `.wiki-*`): a
+  navigable parchment modal (home ⌂ / back ‹ / breadcrumb stack) openable
+  with no game bound (title screen) or in play. Pages:
+  - **Home** — the seven chapters (scripted/dated counts, playable chips),
+    the Nations, the Formable Crowns, Omens & Incidents.
+  - **Chapter** — year, blurb, the playable standards (ruler, guidance:
+    signature system, opening moves, the danger clock; the win/loss
+    contract), the powers beyond the map, and links into its timeline and
+    event list.
+  - **Timeline** — every dated event in calendar order under year headings
+    (world-history rows marked), then the condition-fired events with their
+    chance gates.
+  - **Event** — full text, badges (world/major/recurring/decider), fire
+    conditions (date, trigger, chance, cooldown, era window, requiresWar),
+    audience, and EVERY option with its printed consequences — the
+    historical course marked wherever an index aiOption pins it.
+  - **Nations** — every court of every era (first-appearance order,
+    formable-only crowns badged); each nation's page: faith, culture,
+    capital, temperament (personalities), national character (ideas, in
+    ±%), its chapters (with ruler and playable standard), and its crowns.
+  - **Formables** — from/to chips, era availability, requirement checklist,
+    founding bonus. **Omens & Incidents** — the shared pool, antique/
+    modern/timeless.
+- **Chrome**: the 📖 Compendium button beside Multiplayer on the title
+  screen — the only door. In play the topbar keeps its campaign chrome
+  (no book button, no `W` binding), and `bindGame` closes any open codex
+  so a campaign never starts under it. In passing, the start screen's
+  pick wrapper now forwards its third argument — the Veteran dial actually
+  reaches `initGame` again (it had been silently dropped).
+- **Regression contract**: `uitest29.mjs` — title-screen open, the seven
+  chapters, chapter → timeline → event drill-down with printed consequences,
+  back/home navigation, nations and formables pages, the in-play negatives
+  (no topbar button, `W` inert), and zero page errors.

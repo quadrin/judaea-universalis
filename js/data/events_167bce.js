@@ -581,6 +581,7 @@ export const EVENTS_167 = [
       + 'south by way of Damascus. The war for the hill country now has a second front '
       + 'no one in it can see: whatever happens in Persis happens here too.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -165, m: 1 },
     major: true,
     aiOption: 0,
@@ -696,6 +697,7 @@ export const EVENTS_167 = [
       + 'pressing on, and turned back to Antioch to hire mercenaries and come again with '
       + 'more. It is not a peace. It is a season.',
     forTag: 'both',
+    decider: 'HAS',
     date: { y: -164, m: 3 },
     major: true,
     aiOption: 0,
@@ -752,6 +754,7 @@ export const EVENTS_167 = [
       + 'the reproach of the nations was taken away. Eight days they kept the dedication, '
       + 'and ordained that it be kept in its season, from year to year.',
     forTag: 'both',
+    decider: 'HAS',
     major: true,
     trigger: safeTrigger('ev_rededication', (ctx) =>
       alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Jerusalem')),
@@ -872,6 +875,7 @@ export const EVENTS_167 = [
       + 'ring to one regent, and the child himself in the keeping of another — which is '
       + 'to say, he leaves a war.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -164, m: 11 },
     major: true,
     aiOption: 0,
@@ -948,6 +952,7 @@ export const EVENTS_167 = [
       + 'the fear. The regency quarrel is set aside; the road runs south around the '
       + 'hills, by way of Idumea.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -162, m: 2 },
     major: true,
     aiOption: 0,
@@ -1001,6 +1006,7 @@ export const EVENTS_167 = [
       + 'host; but every man in both armies had seen what one man did, who gave himself '
       + 'to deliver his people and to win an everlasting name.',
     forTag: 'both',
+    decider: 'HAS',
     major: true,
     trigger: safeTrigger('ev_beth_zechariah', (ctx) => {
       if (!dateGE(ctx, -162, 3)) return false;
@@ -1065,6 +1071,7 @@ export const EVENTS_167 = [
       + 'kingdom — and among his first letters was a commission for Bacchides, governor '
       + 'of the country beyond the river: take an army south, and settle Judea.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -162, m: 10 },
     major: true,
     aiOption: 0,
@@ -1647,6 +1654,7 @@ export const EVENTS_167 = [
       + 'because a great enemy was destroyed out of Israel. The last Seleucid soldier '
       + 'has left Jerusalem.',
     forTag: 'both',
+    decider: 'HAS',
     major: true,
     trigger: safeTrigger('ev_akra_falls', (ctx) =>
       dateGE(ctx, -141, 3) && alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Jerusalem')),
@@ -1754,6 +1762,7 @@ export const EVENTS_167 = [
       + 'rest all his days; and they sat every man under his vine and his fig tree, and '
       + 'there was none to make them afraid.',
     forTag: 'both',
+    decider: 'HAS',
     major: true,
     trigger: safeTrigger('ev_independence', () => false),
     aiOption: 0,
@@ -1934,6 +1943,7 @@ export const EVENTS_167 = [
       + 'costs a pretender nothing. What such letters are worth after the victory, the '
       + 'victory will show.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -138, m: 4 },
     major: true,
     aiOption: 0,
@@ -2348,6 +2358,7 @@ export const EVENTS_167 = [
       + 'cups of gold and silver for the sacrifices — and the city, that had braced for '
       + 'an Epiphanes, began to call him Antiochus the Pious.',
     forTag: 'both',
+    decider: 'SEL',
     date: { y: -134, m: 5 },
     major: true,
     aiOption: 0,

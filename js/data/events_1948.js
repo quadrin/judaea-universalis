@@ -344,6 +344,7 @@ export const EVENTS_1948 = [
       + 'Israel." Eleven minutes later, Washington recognizes it. By morning, five '
       + 'armies are across the borders.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 5 },
     major: true,
     aiOption: 0,
@@ -377,6 +378,7 @@ export const EVENTS_1948 = [
       + 'dead in the street where it read its declaration — and understands, in one '
       + 'morning, that this war has a third dimension and it owns none of it.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 5 },
     aiOption: 0,
     options: [
@@ -413,6 +415,7 @@ export const EVENTS_1948 = [
       + 'The Legion\'s officers keep their prisoners alive and their looters on a leash '
       + '— it is, everyone notes, the most professionally conducted tragedy of the war.',
     forTag: 'both',
+    decider: 'JOR',
     date: { y: 1948, m: 6 },
     major: true,
     aiOption: 0,
@@ -451,6 +454,7 @@ export const EVENTS_1948 = [
       + 'column stops digging in the dunes and never truly moves north again: the '
       + 'ugliest fighter ever built has just bought a state.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 6 },
     major: true,
     aiOption: 0,
@@ -492,6 +496,7 @@ export const EVENTS_1948 = [
       + 'Czech rifles, the Messerschmitts in crates, the artillery bought from three '
       + 'continents — they all land now.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 6 },
     major: true,
     aiOption: 0,
@@ -567,6 +572,7 @@ export const EVENTS_1948 = [
       + 'a goat track through the hills, bulldozed by night into a road the Legion\'s '
       + 'guns cannot reach. The convoys roll; the city eats.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_burma', (ctx) =>
       dateGE(ctx, 1948, 7) && !ctx.helpers.controls(ctx, 'ISR', 'Emmaus')
       && ctx.helpers.controls(ctx, 'ISR', 'Jerusalem')),
@@ -637,6 +643,7 @@ export const EVENTS_1948 = [
       + 'fighting the Arab commands believed impossible. The improvised state has '
       + 'become the largest army in the theater.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 7 },
     aiOption: 0,
     options: [
@@ -710,6 +717,7 @@ export const EVENTS_1948 = [
       + 'unemployable in peacetime — signing on for a war that finally wants exactly '
       + 'what they know.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 8 },
     aiOption: 0,
     options: [
@@ -755,6 +763,7 @@ export const EVENTS_1948 = [
       + 'sanctions. Both sides sign; both sides plan. The war will now be decided in '
       + 'whatever week somebody chooses to break the quiet.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 8 },
     aiOption: 0,
     options: [
@@ -819,6 +828,7 @@ export const EVENTS_1948 = [
       + 'the Israelis, which will shortly prove to be the most expensive hilltop of '
       + 'his career: the northern command has been waiting for a reason.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1948, m: 9 },
     aiOption: 0,
     options: [
@@ -856,6 +866,7 @@ export const EVENTS_1948 = [
       + 'deny it to Abdullah. The Arab war effort now has two objectives, and they '
       + 'are each other.',
     forTag: 'both',
+    decider: 'EGY',
     date: { y: 1948, m: 10 },
     aiOption: 0,
     options: [
@@ -896,6 +907,7 @@ export const EVENTS_1948 = [
       + 'cut the Egyptian line at three points. An Egyptian brigade digs in at Faluja '
       + 'and will not surrender — among its staff officers, a major named Nasser.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_yoav', (ctx) =>
       dateGE(ctx, 1948, 10) && !!findWar(ctx.game, 'EGY', 'ISR')),
     major: true,
@@ -943,6 +955,7 @@ export const EVENTS_1948 = [
       + 'threatens to invoke its treaty with Cairo. The war has one ending now, and '
       + 'everyone can read it. The wires to Rhodes begin to hum.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_hiram', (ctx) =>
       dateGE(ctx, 1948, 12) && !!findWar(ctx.game, 'EGY', 'ISR')),
     major: true,
@@ -1017,6 +1030,7 @@ export const EVENTS_1948 = [
       + 'this war. Among the staff officers keeping it alive is a young major named '
       + 'Gamal Abdel Nasser, taking detailed notes on whose fault all this is.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_faluja', (ctx) =>
       dateGE(ctx, 1948, 12)
       && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_i_yoav)),
@@ -1056,6 +1070,7 @@ export const EVENTS_1948 = [
       + 'Palestine. Cairo calls it treason, Damascus calls it annexation, and the '
       + 'King calls it the will of the people, which for once is at least partly true.',
     forTag: 'both',
+    decider: 'JOR',
     date: { y: 1948, m: 12 },
     aiOption: 0,
     options: [
@@ -1094,6 +1109,7 @@ export const EVENTS_1948 = [
       + 'else the war decides, the polity that fought it will be argued over in '
       + 'committee, forever, by everyone. This too is a victory condition.',
     forTag: 'both',
+    decider: 'ISR',
     date: { y: 1949, m: 1 },
     aiOption: 0,
     options: [
@@ -1127,6 +1143,7 @@ export const EVENTS_1948 = [
       + 'become the lines on the atlas — armistice, not peace, as every signature is '
       + 'careful to say. It will have to do. It does, for a generation.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_armistice', (ctx) =>
       dateGE(ctx, 1949, 2) && !!findWar(ctx.game, 'EGY', 'ISR')),
     major: true,
@@ -1262,6 +1279,7 @@ export const EVENTS_1948 = [
       + 'with the milk. Citizens, or subjects of an administration — there is no '
       + 'third register, and both answers cost.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_lines_ourselves', (ctx) =>
       dateGE(ctx, 1949, 3) && greaterVictory48(ctx) && !reducedState48(ctx)),
@@ -1498,6 +1516,7 @@ export const EVENTS_1948 = [
       + 'The price of getting it is giving some of the map back. The price of '
       + 'refusing is keeping everything, and the war it comes with.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_rhodes_plus', (ctx) =>
       dateGE(ctx, 1950, 7) && !!ctx.game.flags.greaterVictory48
@@ -1549,6 +1568,7 @@ export const EVENTS_1948 = [
       + 'rehearsing river crossings in daylight — rehearsals are cheaper than wars, '
       + 'but they are also how wars rehearse.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_west_bank_war', (ctx) =>
       dateGE(ctx, 1953, 1) && !!ctx.game.flags.greaterVictory48
@@ -1613,6 +1633,7 @@ export const EVENTS_1948 = [
       + 'The question is not absorption or development — the question is whether '
       + 'the state is a fact or an episode.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_ten_mile_state', (ctx) =>
       dateGE(ctx, 1949, 3) && reducedState48(ctx) && !greaterVictory48(ctx)
@@ -1703,6 +1724,7 @@ export const EVENTS_1948 = [
       + 'artillery attached. The radios promise the sea. The sea is eight '
       + 'miles from the front line.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_second_round', (ctx) => {
       const e = egyTag(ctx);
@@ -2331,6 +2353,7 @@ export const EVENTS_1948 = [
       + 'longer gun answers that. The tank gunners of the northern command are '
       + 'becoming, shot by shot, the best in the world at hitting bulldozers.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_water_war', (ctx) =>
       dateGE(ctx, 1965, 3) && !!ctx.game.flags.headwaterDiversion
       && alive(ctx, 'ISR') && !!syrTag(ctx)),
@@ -2428,6 +2451,7 @@ export const EVENTS_1948 = [
       + 'itself. Every capital reads the same forecast now, and none of them orders '
       + 'umbrellas.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_slide_to_war', (ctx) =>
       dateGE(ctx, 1966, 11) && alive(ctx, 'ISR')
       && (alive(ctx, 'JOR') || !!syrTag(ctx))),
@@ -2583,6 +2607,7 @@ export const EVENTS_1948 = [
       + 'the Quarter emptied, the paratroopers hang a flag where the Legion took it '
       + 'down.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_har_habayit', (ctx) =>
       !!ctx.game.flags.sixDayWar && !!ctx.game.flags.jorHeldJerusalem
@@ -2627,6 +2652,7 @@ export const EVENTS_1948 = [
       + 'and will not stop being there when the parades end. The victory is total. '
       + 'What it is *for* — that argument now begins, and does not end.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_lines_of_june', (ctx) => {
       if (!ctx.game.flags.sixDayWar || !dateGE(ctx, 1967, 9) || !alive(ctx, 'ISR')) return false;
@@ -2740,6 +2766,7 @@ export const EVENTS_1948 = [
       + 'everyone knows, no one says — flying Egyptian skies. It is the longest war '
       + 'the state will fight, and the only one measured entirely in patience.',
     forTag: 'both',
+    decider: 'ISR',
     trigger: safeTrigger('ev_i_attrition', (ctx) => {
       const e = egyTag(ctx);
       return dateGE(ctx, 1969, 3) && alive(ctx, 'ISR') && !!e
@@ -2976,6 +3003,7 @@ export const EVENTS_1948 = [
       + 'batteries rolled up from behind, and the Third Army encircled at kilometer '
       + '101 of the Cairo road when the powers order the music stopped.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_deversoir', (ctx) => {
       if (!ctx.game.flags.yomKippurWar || !dateGE(ctx, 1973, 11) || !alive(ctx, 'ISR')) return false;
@@ -3025,6 +3053,7 @@ export const EVENTS_1948 = [
       + 'are born on the pavement outside the Prime Minister\'s office, and they do '
       + 'not go home.',
     forTag: 'both',
+    decider: 'ISR',
     major: true,
     trigger: safeTrigger('ev_i_agranat', (ctx) =>
       dateGE(ctx, 1974, 2) && !!ctx.game.flags.yomKippurWar && alive(ctx, 'ISR')),

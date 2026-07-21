@@ -125,6 +125,7 @@ export const EVENTS_132 = [
       + 'soldier\'s torch, but by decree, with ceremony. In the hill villages, men who have '
       + 'spent ten years quietly digging armories look at one another and say: now.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 132, m: 4 },
     major: true,
     aiOption: 0,
@@ -158,6 +159,7 @@ export const EVENTS_132 = [
       + 'mutilation. The synagogues read the decree aloud in silence. There is no argument '
       + 'to be had with it — which is precisely why every man knows what comes instead.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 132, m: 6 },
     major: true,
     aiOption: 0,
@@ -259,6 +261,7 @@ export const EVENTS_132 = [
       + 'and its towns have made their peace with the world as it is. The war will be won '
       + 'or lost in Judea proper.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 132, m: 9 },
     aiOption: 0,
     options: [
@@ -290,6 +293,7 @@ export const EVENTS_132 = [
       + 'Rome admits what it will not say. In the hideouts they know the ravines where it '
       + 'happened, and they name them to each other like psalms.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_legion_lost', (ctx) =>
       alive(ctx, 'JUD') && warscoreOf(ctx, 'JUD') >= 12 && !dateGE(ctx, 134, 6)),
@@ -333,6 +337,7 @@ export const EVENTS_132 = [
       + 'and detachments converge on the coast from every army between the Rhine and '
       + 'Egypt. Rome has decided to take the little war seriously.',
     forTag: 'both',
+    decider: 'ROM',
     date: { y: 133, m: 6 },
     major: true,
     aiOption: 0,
@@ -458,6 +463,7 @@ export const EVENTS_132 = [
       + 'year. Roman staff officers redo their arithmetic: every cohort sent to Judea is a '
       + 'cohort not watching Parthia, and Parthia has noticed.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_parthian_shadow', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'parthianSympathy') && warscoreOf(ctx, 'JUD') >= 20 && alive(ctx, 'PAR')),
@@ -518,6 +524,7 @@ export const EVENTS_132 = [
       + 'given the chance to love with all my soul. The Romans meant it for terror. It will '
       + 'not work as terror.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_akiva', (ctx) =>
       alive(ctx, 'JUD') && dateGE(ctx, 134, 6) && warscoreOf(ctx, 'ROM') >= 10),
@@ -766,6 +773,7 @@ export const EVENTS_132 = [
       + 'name itself. A country can survive its dead. Whether it can survive its renaming '
       + 'is a longer experiment.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_syria_palaestina', (ctx) =>
       dateGE(ctx, 136, 1) && romanAftermath(ctx)),
@@ -814,6 +822,7 @@ export const EVENTS_132 = [
       + 'cannot find. The generation will remember these years by a single word: '
       + 'the destruction, the shemad.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_shemad', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 136, 4) && romanAftermath(ctx)),
@@ -855,6 +864,7 @@ export const EVENTS_132 = [
       + 'cannot be sold at Hebron goes to Gaza; what cannot be sold at Gaza goes to '
       + 'Egypt in the grain ships, and the sea takes its share.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev2_slave_markets', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed')
       && ctx.helpers.controls(ctx, 'ROM', 'Hebron') && dateGE(ctx, 136, 6)),
@@ -896,6 +906,7 @@ export const EVENTS_132 = [
       + 'deaths and make of them a liturgy; the empire counts them as executions, '
       + 'and files the paperwork.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_ten_martyrs', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 137, 3) && romanAftermath(ctx)),
@@ -935,6 +946,7 @@ export const EVENTS_132 = [
       + 'place, and the report says the body took so many spears it resembled a sieve. '
       + 'The five got clear. The ordination survives.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_judah_ben_bava', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 138, 3) && romanAftermath(ctx)),
@@ -980,6 +992,7 @@ export const EVENTS_132 = [
       + 'for denunciations that no longer pay, and slowly, like a fever breaking, '
       + 'they starve.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_antoninus_rescript', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 139, 3) && alive(ctx, 'ROM')),
@@ -1022,6 +1035,7 @@ export const EVENTS_132 = [
       + 'the engineers left standing. For a fee. Jerome will write it down without '
       + 'blinking: they must pay to mourn the ruin of their own city.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev2_day_of_weeping', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 138, 8) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1061,6 +1075,7 @@ export const EVENTS_132 = [
       + 'patriarch without a state, which may be the durable kind. Judaea proper lies '
       + 'broken and quiet; Galilee, which did not rise, becomes the Jewish country.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_usha_sanhedrin', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemadEased') && dateGE(ctx, 140, 6) && romanAftermath(ctx)),
@@ -1107,6 +1122,7 @@ export const EVENTS_132 = [
       + 'the cave: I did not bring you out to destroy My world. The second emergence '
       + 'was gentler. It is the parable of the whole generation.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev2_carob_cave', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 145, 1)),
     aiOption: 1,
@@ -1148,6 +1164,7 @@ export const EVENTS_132 = [
       + 'sell their scroll-crowns to do it. The traders, who keep no theology, note '
       + 'only that the price of a Jewish slave has quietly doubled.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev2_redeem_captives', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'slaveMarkets') && dateGE(ctx, 146, 1) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1186,6 +1203,7 @@ export const EVENTS_132 = [
       + 'proper stays broken, its terraces sliding into the wadis for want of hands; '
       + 'Galilee, almost apologetically, becomes the whole country.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev2_galilee_schools', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 147, 1)),
     aiOption: 0,
@@ -1233,6 +1251,7 @@ export const EVENTS_132 = [
       + 'have no portion in the God of Israel. Babylon reads the letters twice, '
       + 'and yields.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev2_calendar_war', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 148, 6)),
     aiOption: 0,
@@ -1277,6 +1296,7 @@ export const EVENTS_132 = [
       + 'sages talk the villages down before the governor\'s cavalry can ride them down. '
       + 'Mostly.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev2_stirrings_152', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 152, 6) && romanAftermath(ctx)),
@@ -1318,6 +1338,7 @@ export const EVENTS_132 = [
       + 'rides on. Meir keeps the Torah and lets the rider go: the generation\'s whole '
       + 'method, in one image.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev2_meir_aher', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 154, 1)),
     aiOption: 0,
@@ -1584,6 +1605,7 @@ export const EVENTS_132 = [
       + 'hope cost, answer with the oaths: not to storm the wall, not to force the '
       + 'end. The young men watch the columns pass and count them anyway.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev2_armies_on_roads', (ctx) =>
       dateGE(ctx, 162, 3) && alive(ctx, 'ROM') && alive(ctx, 'PAR') && atWar(ctx.game, 'ROM', 'PAR')),
     aiOption: 0,
@@ -1675,6 +1697,7 @@ export const EVENTS_132 = [
       + 'Mishnah, and hand the people a country made of sentences. The war was lost. '
       + 'The book will win.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_yehuda_hanasi', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 165, 6)),
@@ -1962,6 +1985,7 @@ export const EVENTS_132 = [
       + 'the maps say what they said; the tax rolls of Judaea simply stop, and no clerk '
       + 'is instructed to explain why.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev2_antonine_reckoning', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 142, 1) && alive(ctx, 'ROM')),

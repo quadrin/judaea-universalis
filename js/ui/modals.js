@@ -34,15 +34,20 @@ export function createEventModal(el) {
     for (const pe of pend) {
       if (!pe || !isPlayerFor(pe.forTag) || has(pe.instanceId)) continue;
       const ev = (ctx.events || []).find((e) => e && e.id === pe.eventId);
-      if (ev) queue.push({ instanceId: pe.instanceId, event: ev });
+      if (ev) {
+        queue.push({
+          instanceId: pe.instanceId, event: ev,
+          notice: !!pe.notice, optIdx: pe.optIdx, decider: pe.decider,
+        });
+      }
     }
   }
 
   function onBusEvent(payload) {
     if (!ctx || !payload) return;
-    const { instanceId, event, forTag } = payload;
+    const { instanceId, event, forTag, notice, optIdx, decider } = payload;
     if (!isPlayerFor(forTag) || has(instanceId)) return;
-    queue.push({ instanceId, event: event || {} });
+    queue.push({ instanceId, event: event || {}, notice: !!notice, optIdx, decider });
     maybeShow();
   }
 
@@ -55,10 +60,23 @@ export function createEventModal(el) {
 
   function render() {
     const ev = current.event || {};
-    const options = Array.isArray(ev.options) && ev.options.length ? ev.options : [{ label: 'So be it.' }];
+    let options = Array.isArray(ev.options) && ev.options.length ? ev.options : [{ label: 'So be it.' }];
+    let baseIdx = 0;
+    // A foreign court's decision (SPEC §70): the card is a notice — the
+    // decider's own course is already fixed, and the single button
+    // acknowledges it rather than choosing for a realm that is not ours.
+    let deciderLine = '';
+    if (current.notice) {
+      baseIdx = Number.isFinite(current.optIdx)
+        ? Math.max(0, Math.min(options.length - 1, current.optIdx)) : 0;
+      options = [options[baseIdx]];
+      const t = ctx && ctx.game.tags && ctx.game.tags[current.decider];
+      const name = (t && t.name) || current.decider || 'another court';
+      deciderLine = `<div class="ev-decider">The decision belongs to ${esc(name)} — we may only take note.</div>`;
+    }
     const opts = options.map((o, i) => {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
-      return `<button class="btn ev-opt" data-idx="${i}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
+      return `<button class="btn ev-opt" data-idx="${baseIdx + i}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
         + `</button>`;
     }).join('');
@@ -69,6 +87,7 @@ export function createEventModal(el) {
         ${ev.world ? '<div class="ev-world">World history</div>' : ''}
         <h2 class="ev-title">${esc(ev.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(ev.desc || '')}</div>
+        ${deciderLine}
         <div class="ev-opts">${opts}</div>
       </div>`;
     el.querySelector('.ev-opts').addEventListener('click', (e) => {
@@ -115,6 +134,7 @@ export function createEventModal(el) {
         ${p.world ? '<div class="ev-world">World history</div>' : ''}
         <h2 class="ev-title">${esc(p.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(p.desc || '')}</div>
+        ${p.deciderName ? `<div class="ev-decider">The decision belongs to ${esc(p.deciderName)} — we may only take note.</div>` : ''}
         <div class="ev-opts">${opts}</div>
         <div class="ev-host-note">The host speaks for the realm…</div>
       </div>`;

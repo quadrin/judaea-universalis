@@ -3,21 +3,7 @@
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
 import { buildProvinceMapping } from './js/data/map_profile.js';
-import { EVENTS_66 } from './js/data/events_66ce.js';
-import { BOOKMARK_66 } from './js/data/bookmark_66ce.js';
-import { EVENTS_167 } from './js/data/events_167bce.js';
-import { BOOKMARK_167 } from './js/data/bookmark_167bce.js';
-import { EVENTS_132 } from './js/data/events_132ce.js';
-import { BOOKMARK_132 } from './js/data/bookmark_132ce.js';
-import { EVENTS_67 } from './js/data/events_67bce.js';
-import { BOOKMARK_67 } from './js/data/bookmark_67bce.js';
-import { EVENTS_40 } from './js/data/events_40bce.js';
-import { BOOKMARK_40 } from './js/data/bookmark_40bce.js';
-import { EVENTS_614 } from './js/data/events_614ce.js';
-import { BOOKMARK_614 } from './js/data/bookmark_614ce.js';
-import { EVENTS_1948 } from './js/data/events_1948.js';
-import { BOOKMARK_1948 } from './js/data/bookmark_1948.js';
-import { GENERIC_EVENTS } from './js/data/events_generic.js';
+import { ERAS } from './js/data/compendium.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
 import { createCamera } from './js/map/camera.js';
@@ -90,17 +76,10 @@ async function boot() {
     .forEach((ev) => bus.on(ev, () => { colorsDirty = true; }));
 
   // ------------------------------------------------------------- save/load --
-  const BOOKMARKS = [
-    // Chronological order — this is also the title-screen card order. Every
-    // bookmark gets the shared generic pool appended to its scripted chain.
-    { bookmark: BOOKMARK_167, events: EVENTS_167.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_40, events: EVENTS_40.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_614, events: EVENTS_614.concat(GENERIC_EVENTS) },
-    { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(GENERIC_EVENTS) },
-  ];
+  // The era registry lives in js/data/compendium.js (SPEC §71) so the wiki
+  // reads the exact chains the engine plays. Chronological order — this is
+  // also the title-screen card order.
+  const BOOKMARKS = ERAS;
   const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
   const saveKey = (id) => 'ju_save_' + id;
   const fmtYr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
@@ -198,10 +177,21 @@ async function boot() {
         remapGuestChairs(mp.guests, p.from, p.to);
       });
       // Event cards: guests see the card read-only; effects are functions and
-      // never cross the wire — only the display fields do.
+      // never cross the wire — only the display fields do. A foreign-decider
+      // notice (SPEC §70) is collapsed to its fixed course before it travels,
+      // so guests see exactly the single-button card the host sees.
       bus.on('event', (p) => {
         if (!p || !p.event) return;
         const ev = p.event;
+        let options = (Array.isArray(ev.options) ? ev.options : [])
+          .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip }));
+        let deciderName = null;
+        if (p.notice && options.length) {
+          const idx = Math.max(0, Math.min(options.length - 1, p.optIdx | 0));
+          options = [options[idx]];
+          const t = ctx && ctx.game.tags[p.decider];
+          deciderName = (t && t.name) || p.decider || null;
+        }
         toGuests({
           t: 'event',
           p: {
@@ -209,8 +199,8 @@ async function boot() {
             title: ev.title,
             desc: ev.desc,
             world: ev.world === true,
-            options: (Array.isArray(ev.options) ? ev.options : [])
-              .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip })),
+            deciderName,
+            options,
           },
         });
       });

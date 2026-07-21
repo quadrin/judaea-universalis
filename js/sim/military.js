@@ -2180,6 +2180,8 @@ export const PEACE = {
   subjugateBase: 25,     // warscore to make the enemy leader a client kingdom...
   subjugatePerDev: 0.25, // ...plus this per point of their total development
   subjugateMax: 100,
+  releaseCostPerDev: 0.5, // warscore per point of development set free as a restored nation
+  releaseCostMin: 10,     // floor per released nation
   tributeShare: 0.15,    // of a client's income, paid to the overlord (economy.js)
   whiteEnemyWsAtMost: 5, // enemy accepts a white peace at/below this net score
   warWearyWE: 15,        // war exhaustion at which a not-quite-winning enemy takes white peace
@@ -2240,6 +2242,61 @@ function provDemandCost(ctx, p, byTag) {
   const provGroup = R[p.religion] ? R[p.religion].group : null;
   if (myGroup && provGroup && myGroup !== provGroup) cost *= BAL(ctx, 'peaceAlienMult', 1.25);
   return Math.max(PEACE.provCostMin, Math.round(cost));
+}
+// The owner a province had when the era opened — static data, recomputable
+// from the bookmark's owners table over the base map (so no save schema is
+// touched). This is what "whose nation was this land" means at the peace
+// table: the fallen court it can be restored to.
+export function eraOwnerOf(ctx, p) {
+  if (!p) return null;
+  const src = ctx.MAP_DATA && Array.isArray(ctx.MAP_DATA.provinces) ? ctx.MAP_DATA.provinces[p.id - 1] : null;
+  if (!src) return null;
+  const table = ctx.bookmark && ctx.bookmark.owners;
+  if (table) {
+    if (Object.prototype.hasOwnProperty.call(table, src.name)) return table[src.name];
+    if (src.latentParent && Object.prototype.hasOwnProperty.call(table, src.latentParent)) {
+      return table[src.latentParent];
+    }
+  }
+  return src.owner || 'WASTE';
+}
+// Force them to release nations (EU4-style): the fallen courts whose era-start
+// lands the enemy now owns, each restorable as an independent state at the
+// table. Only dead tags qualify (a living court's lost land is a cession, not
+// a release), war participants are skipped, and a crown always keeps its own
+// capital — release dismembers an empire, it may not behead it.
+export function releasableNations(ctx, war, byTag, enemyTag) {
+  const g = ctx.game;
+  const out = [];
+  if (!war || !enemyTag) return out;
+  const capital = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[enemyTag] ? ctx.DEFINES.TAGS[enemyTag].capital : null;
+  const participants = war.attackers.concat(war.defenders);
+  const byNation = {};
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== enemyTag) continue;
+    if (capital && (p.canon || p.name) === capital) continue;
+    const born = eraOwnerOf(ctx, p);
+    if (!born || born === enemyTag || born === byTag || born === 'WASTE' || born === 'REB') continue;
+    const t = g.tags[born];
+    if (!t || t.alive) continue;
+    if (participants.indexOf(born) >= 0) continue;
+    (byNation[born] = byNation[born] || []).push(i);
+  }
+  for (const tag of Object.keys(byNation)) {
+    const ids = byNation[tag];
+    const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
+    out.push({
+      tag,
+      name: (g.tags[tag] && g.tags[tag].name) || tag,
+      provIds: ids,
+      provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
+      dev,
+      cost: Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev)),
+    });
+  }
+  out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  return out;
 }
 // Everything the peace dialog needs: our score, the enemy leader, which
 // provinces are on the table (enemy-owned, our-side-occupied) and their costs
@@ -2317,6 +2374,11 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     reparationsAmount: PEACE.reparationsAmount,
     reparationsMonths: PEACE.reparationsMonths,
     canSubjugate, whyNotSubjugate, subjugateCost,
+    // Nations the enemy can be forced to set free (SPEC §69). A separate
+    // peace cannot redraw another crown's map — releases wait for the full
+    // congress, like subjugation.
+    releasable: separate ? [] : releasableNations(ctx, war, byTag, enemyLeader),
+    releaseCostPerDev: PEACE.releaseCostPerDev,
     cb: war.cb || null,
     noNegotiation: !!war.noNegotiation,
   };
@@ -2352,9 +2414,11 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
   }
   return { ids: chosen.map((r) => r.id), cost: priceProvincePackage(ctx, chosen) };
 }
-// deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool }.
-// Subjugation supersedes province demands (a client keeps its lands). Returns
-// the warscore price, whether the enemy takes it, and a one-line reason.
+// deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool,
+//          release: [tags] }.
+// Subjugation supersedes province demands and releases (a client keeps its
+// lands whole). Returns the warscore price, whether the enemy takes it, and a
+// one-line reason.
 export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const d = deal || {};
   const info = peaceDealInfo(ctx, war, byTag, d.enemy); // d.enemy: separate peace (SPEC §67)
@@ -2371,13 +2435,31 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   } else {
     cost += info.subjugateCost;
   }
+  // Set nations free (SPEC §69): each requested restoration is re-priced on
+  // the provinces it would actually receive — anything the deal also cedes to
+  // us is struck from the release first, and an emptied release drops out.
+  const releaseRows = [];
+  if (!subjugate) {
+    const cededIds = new Set(chosen.map((r) => r.id));
+    const asked = Array.isArray(d.release) ? d.release : [];
+    for (const tag of asked) {
+      const row = (info.releasable || []).find((r) => r.tag === tag);
+      if (!row || releaseRows.some((r) => r.tag === tag)) continue;
+      const ids = row.provIds.filter((id) => !cededIds.has(id));
+      if (!ids.length) continue;
+      const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
+      const rowCost = Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev));
+      releaseRows.push({ tag, name: row.name, provIds: ids, dev, cost: rowCost });
+      cost += rowCost;
+    }
+  }
   const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
   const humiliate = !!d.humiliate;
   if (humiliate) cost += PEACE.humiliateCost;
   const reparations = !!d.reparations;
   if (reparations) cost += PEACE.reparationsCost;
-  const white = !chosen.length && gold <= 0 && !humiliate && !subjugate && !reparations;
+  const white = !chosen.length && !releaseRows.length && gold <= 0 && !humiliate && !subjugate && !reparations;
   const enemyWs = -info.myWs;
   let acceptable, reason;
   if (white) {
@@ -2395,7 +2477,10 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
         ? 'The war is young and their blood is up — they will not go home for nothing yet.'
         : 'They believe they are winning, and will not settle for nothing.';
   } else {
-    const chosenDev = chosen.reduce((s, r) => s + num(r.dev), 0);
+    // Cessions and releases both strip land from the losing side; the treaty
+    // dev cap prices dismemberment as one budget.
+    const chosenDev = chosen.reduce((s, r) => s + num(r.dev), 0)
+      + releaseRows.reduce((s, r) => s + num(r.dev), 0);
     const capDev = peaceDevCap(ctx, info);
     if (chosenDev > capDev) {
       acceptable = false;
@@ -2407,7 +2492,11 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
         : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
     }
   }
-  return { cost, acceptable, reason, gold, humiliate, subjugate, reparations, provinces: chosen.map((c) => c.id) };
+  return {
+    cost, acceptable, reason, gold, humiliate, subjugate, reparations,
+    provinces: chosen.map((c) => c.id),
+    release: releaseRows.map((r) => r.tag), releaseRows,
+  };
 }
 // Applies an (already accepted) deal, then winds the war down: status quo for
 // the rest, truces, atWarWith rebuild, stranded armies march home.
@@ -2584,6 +2673,50 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
       const q = ctx.byId(pid);
       return sum + (q ? devTotal(q) : 0);
     }, 0));
+  }
+  // Set nations free (SPEC §69): the enemy disgorges the fallen courts whose
+  // lands it swallowed. The restored nation rises independent — no overlord,
+  // a five-year truce sheltering it from its old master, a grudge burning in
+  // the old master's court, and love for its liberator. Liberation carries no
+  // infamy: the world does not fear a conqueror who hands land BACK.
+  for (const row of ev.releaseRows || []) {
+    const t = g.tags[row.tag];
+    if (!t || !info.enemyLeader) continue;
+    const freed = [];
+    let seat = null;
+    for (const id of row.provIds) {
+      const p = ctx.byId(id);
+      if (!p || p.owner !== info.enemyLeader) continue;
+      p.integration = 0; // a change of sovereign starts the ledger over (SPEC §66)
+      p.integrating = null;
+      recordGrudge(ctx, info.enemyLeader, row.tag, id); // the lost lands are remembered
+      changeOwnerCore(ctx, p, row.tag);
+      changeControllerCore(ctx, p, row.tag);
+      p.autonomy = Math.min(num(p.autonomy, 0.25), 0.25); // its own people come home, not a conquest
+      p.conversion = null;
+      p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+      freed.push(p.name);
+      if (!seat || devTotal(p) > devTotal(seat)) seat = p;
+    }
+    if (!freed.length) continue;
+    t.alive = true;
+    t.overlord = null;
+    t.warExhaustion = 0;
+    t.stability = Math.max(num(t.stability), 0);
+    t.legitimacy = clamp(Math.max(num(t.legitimacy), 40), 0, 100);
+    t.treasury = Math.max(num(t.treasury), 25);
+    t.manpower = Math.max(num(t.manpower), 2000);
+    if (!t.ruler) t.ruler = { name: 'Council of the Restoration', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 };
+    addOpinion(ctx, row.tag, byTag, 100);
+    addOpinion(ctx, byTag, row.tag, 50);
+    addOpinion(ctx, row.tag, info.enemyLeader, -100);
+    setTruce(ctx, row.tag, info.enemyLeader, war.name);
+    // A small host musters at the restored seat so the newborn is not naked.
+    if (seat) spawnArmy(ctx, row.tag, seat.name, { inf: 2, name: 'Army of the Restoration' });
+    chronicle(ctx, 'peace', 'The banners of ' + (t.name || row.tag) + ' rise again: '
+      + (g.tags[info.enemyLeader] ? g.tags[info.enemyLeader].name : info.enemyLeader)
+      + ' releases ' + freed.join(', ') + ' at the peace table.');
+    terms.push('releases ' + (t.name || row.tag) + ' as a free nation (' + freed.join(', ') + ')');
   }
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];

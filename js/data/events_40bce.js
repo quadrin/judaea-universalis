@@ -149,6 +149,7 @@ export const EVENTS_40 = [
       + 'serve at the altar again. On the walls of Masada, a small garrison watches the '
       + 'dust of the king\'s riders and waits for Herod\'s signal fires.',
     forTag: 'both',
+    decider: 'ATG',
     date: { y: -40, m: 7 },
     major: true,
     aiOption: 0,
@@ -183,6 +184,7 @@ export const EVENTS_40 = [
       + 'PARTHICUS IMPERATOR: conqueror of Parthia, by Parthia\'s leave. Rome\'s East is '
       + 'a rumor this year, and every throne in Syria knows it.',
     forTag: 'both',
+    decider: 'PAR',
     date: { y: -40, m: 9 },
     aiOption: 0,
     options: [
@@ -216,6 +218,7 @@ export const EVENTS_40 = [
       + 'The garrison takes it as a verdict from heaven; the besiegers, watching the '
       + 'gutters run on a desert fortress, privately agree.',
     forTag: 'both',
+    decider: 'ATG',
     date: { y: -40, m: 12 },
     aiOption: 0,
     options: [
@@ -280,6 +283,7 @@ export const EVENTS_40 = [
       + 'for a Jewish crown, and nobody present finds it strange. The decree is paper. '
       + 'Ventidius\' legions will make it iron.',
     forTag: 'both',
+    decider: 'HER',
     trigger: safeTrigger('ev5_senate', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'herodSailed')
       && (ctx.game.date.y > -39 || (ctx.game.date.y === -39 && ctx.game.date.m >= 1))
@@ -360,6 +364,7 @@ export const EVENTS_40 = [
       + 'old clients of his father, men who can read a Senate decree and a weather vane '
       + 'alike. He takes Joppa to open the coast, and the road to Masada with it.',
     forTag: 'both',
+    decider: 'HER',
     trigger: safeTrigger('ev5_joppa', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'herodKing')
       && (ctx.game.date.y > -39 || (ctx.game.date.y === -39 && ctx.game.date.m >= 4))
@@ -396,6 +401,7 @@ export const EVENTS_40 = [
       + 'high ground kill cataphracts. The tide that flooded Asia last year has met '
       + 'its first wall.',
     forTag: 'both',
+    decider: 'ROM',
     date: { y: -39, m: 6 },
     aiOption: 0,
     options: [
@@ -588,6 +594,7 @@ export const EVENTS_40 = [
       + 'falls he sends Sosius south with two legions and unambiguous orders: make the '
       + 'paper king a king in fact.',
     forTag: 'both',
+    decider: 'HER',
     trigger: safeTrigger('ev5_samosata', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'herodKing')
       && (ctx.game.date.y > -38 || (ctx.game.date.y === -38 && ctx.game.date.m >= 10))
@@ -664,6 +671,7 @@ export const EVENTS_40 = [
       + 'The head is brought to Antigonus, who — the age being what it is — has it '
       + 'struck about with a rod. Wars between kings are wars between families.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -38, m: 11 },
     trigger: safeTrigger('ev5_joseph', (ctx) => alive(ctx, 'HER') && alive(ctx, 'ATG')),
     aiOption: 0,
@@ -698,6 +706,7 @@ export const EVENTS_40 = [
       + 'their brother Joseph. The road to Jerusalem has no more armies on it, only '
       + 'winter and the walls.',
     forTag: 'both',
+    decider: 'HER',
     trigger: safeTrigger('ev5_pappus', (ctx) =>
       !!(ctx.game.firedEvents && ctx.game.firedEvents.ev5_joseph)
       && (ctx.game.date.y > -37 || (ctx.game.date.y === -37 && ctx.game.date.m >= 1))
@@ -776,6 +785,7 @@ export const EVENTS_40 = [
       + 'fallow and granaries run on memory. Armies do not observe shmita. In Jerusalem '
       + 'the storehouses are counted twice a week, and the countryside eats seed corn.',
     forTag: 'both',
+    decider: 'ATG',
     date: { y: -37, m: 3 },
     aiOption: 0,
     options: [
@@ -1062,6 +1072,7 @@ export const EVENTS_40 = [
       + 'time, Rome puts a crowned king under the axe. In Jerusalem, Herod counts '
       + 'which of the Sanhedrin voted against him.',
     forTag: 'both',
+    decider: 'HER',
     // fired by checkVictory / never by date
     trigger: safeTrigger('ev5_antigonus_end', () => false),
     major: true,
@@ -1134,6 +1145,7 @@ export const EVENTS_40 = [
       + 'rises a temple to Roma and the emperor. Loyal, Greek, and garrisoned: a city '
       + 'the king can retreat to if Jerusalem ever remembers what it thinks of him.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -27, m: 10 },
     major: true,
     aiOption: 0,
@@ -1391,6 +1403,7 @@ export const EVENTS_40 = [
       + 'walks Herod through Syria at his side, and gives him Panion, the grotto '
       + 'country under Hermon where the Jordan rises.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -20, m: 4 },
     aiOption: 0,
     options: [
@@ -1672,6 +1685,7 @@ export const EVENTS_40 = [
       + 'visible far offshore. Herod dedicates it with games and proposes to repeat '
       + 'them every fifth year, forever, which is how a king says the word forever.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -10, m: 9 },
     major: true,
     aiOption: 0,
@@ -1916,6 +1930,7 @@ export const EVENTS_40 = [
       + 'The funeral procession is a mile of purple and gold. The mourning, by most '
       + 'accounts, is shorter.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -4, m: 3 },
     major: true,
     aiOption: 0,
@@ -1962,6 +1977,7 @@ export const EVENTS_40 = [
       + 'from Syria with the legions, Sepphoris burns, and two thousand men die on '
       + 'crosses before Jerusalem\'s walls.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: -4, m: 7 },
     major: true,
     aiOption: 0,
@@ -2031,6 +2047,7 @@ export const EVENTS_40 = [
       + 'between feasts. Rome will appoint the high priests now, and unmake them at '
       + 'pleasure.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: 6, m: 6 },
     major: true,
     aiOption: 0,
@@ -2088,6 +2105,7 @@ export const EVENTS_40 = [
       + 'new — a fourth philosophy beside the three old schools — and its harvest is '
       + 'sixty years off.',
     forTag: 'both',
+    decider: 'HER',
     date: { y: 6, m: 10 },
     major: true,
     aiOption: 0,
@@ -2145,6 +2163,7 @@ export const EVENTS_40 = [
       + 'what the crowd in the Temple court calls him: the son of the house that '
       + 'would not die.',
     forTag: 'both',
+    decider: 'ATG',
     trigger: safeTrigger('ev5_atg_crowned', (ctx) =>
       hasmoneanWorld(ctx) && after(ctx, -37, 1)),
     major: true,
@@ -2327,6 +2346,7 @@ export const EVENTS_40 = [
       + 'in Latin, a survey party. However the dispatches phrase it, the eagles '
       + 'are coming south, and this time there is no Idumean to hold their coats.',
     forTag: 'both',
+    decider: 'ATG',
     trigger: safeTrigger('ev5_atg_rome_returns', (ctx) =>
       hasmoneanHolds(ctx) && alive(ctx, 'ROM') && countOwned(ctx, 'ROM') >= 12
       && !warBetween(ctx.game, 'ROM', 'ATG') && after(ctx, -35, 4)),
@@ -2498,6 +2518,7 @@ export const EVENTS_40 = [
       + 'ledger, for Jerusalem. The last Hasmonean has outlasted the attention '
       + 'span of the Republic — which is, on the evidence, how dynasties survive.',
     forTag: 'both',
+    decider: 'ATG',
     trigger: safeTrigger('ev5_atg_republic_looks_away', (ctx) =>
       hasmoneanHolds(ctx) && after(ctx, -32, 1)
       && !warBetween(ctx.game, 'ROM', 'ATG')

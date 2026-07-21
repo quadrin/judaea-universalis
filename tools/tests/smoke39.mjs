@@ -186,7 +186,11 @@ console.log('== every player-facing scripted event offers a real choice (v6.1) =
     const oneOpt = evs.filter((e) => e && !e.world && (!e.options || e.options.length < 2));
     ok(oneOpt.length === 0, era + ': no single-option player events'
       + (oneOpt.length ? ' — ' + oneOpt.map((e) => e.id).join(', ') : ''));
-    const noAi = evs.filter((e) => e && e.options && e.options.length > 1 && !Number.isFinite(e.aiOption));
+    // The engine accepts a pinned index OR a deterministic chooser function
+    // (fireEvent: `typeof ev.aiOption === 'function'`) — both keep harness
+    // runs historical.
+    const noAi = evs.filter((e) => e && e.options && e.options.length > 1
+      && !Number.isFinite(e.aiOption) && typeof e.aiOption !== 'function');
     ok(noAi.length === 0, era + ': every multi-option event pins aiOption'
       + (noAi.length ? ' — ' + noAi.map((e) => e.id).join(', ') : ''));
   }
