@@ -23,6 +23,9 @@ const ok = (cond, msg) => { if (cond) console.log('  PASS', msg); else { failure
 
 const browser = await chromium.launch({ executablePath: process.env.JU_CHROMIUM || '/opt/pw-browsers/chromium', args: ['--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// The full battery loads this machine hard under software GL; generous
+// action timeouts keep the sweep honest instead of flaky.
+page.setDefaultTimeout(45000);
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -99,8 +102,17 @@ console.log('== every page of the codex renders (no fallback to Home) ==');
 // A page that throws falls back to the front page (warnOnce guard); walking
 // the whole tree and checking titles proves every era, timeline, event shape
 // and nation page renders.
-await page.locator('#wiki-modal [data-ref="home"]').click();
-await page.waitForTimeout(100);
+// The ⌂/‹ buttons are disabled on the front page — guard every navigation
+// click or the sweep hangs on a no-op.
+const goHome = async () => {
+  const b = page.locator('#wiki-modal [data-ref="home"]');
+  if (await b.isEnabled()) { await b.click(); await page.waitForTimeout(80); }
+};
+const goBack = async () => {
+  const b = page.locator('#wiki-modal [data-ref="back"]');
+  if (await b.isEnabled()) { await b.click(); await page.waitForTimeout(60); }
+};
+await goHome();
 const chapterCount = await page.evaluate(() => {
   const rows = document.querySelectorAll('#wiki-modal [data-go^="era:"]');
   return rows.length;
@@ -108,8 +120,7 @@ const chapterCount = await page.evaluate(() => {
 ok(chapterCount === 7, 'seven chapter rows on the front page');
 let sweepFails = 0;
 for (let i = 0; i < chapterCount; i++) {
-  await page.locator('#wiki-modal [data-ref="home"]').click();
-  await page.waitForTimeout(80);
+  await goHome();
   await page.locator('#wiki-modal [data-go^="era:"]').nth(i).click();
   await page.waitForTimeout(80);
   const eraTitle = await page.locator('#wiki-modal .wiki-title').textContent();
@@ -127,12 +138,10 @@ for (let i = 0; i < chapterCount; i++) {
     if (/The Compendium/.test(await page.locator('#wiki-modal .wiki-title').textContent())) {
       sweepFails++; console.error('    first event fell home for', eraTitle);
     }
-    await page.locator('#wiki-modal [data-ref="back"]').click();
-    await page.waitForTimeout(60);
+    await goBack();
   }
   // the full event list + its last event (different shapes live at the ends)
-  await page.locator('#wiki-modal [data-ref="back"]').click();
-  await page.waitForTimeout(60);
+  await goBack();
   await page.locator('#wiki-modal [data-go^="events:"]').click();
   await page.waitForTimeout(80);
   const listRows = await page.locator('#wiki-modal [data-go^="event:"]').count();
@@ -146,24 +155,21 @@ for (let i = 0; i < chapterCount; i++) {
 }
 ok(sweepFails === 0, 'all 7 chapters, timelines and event pages render (' + sweepFails + ' fell home)');
 // every nation page
-await page.locator('#wiki-modal [data-ref="home"]').click();
-await page.waitForTimeout(80);
+await goHome();
 await page.locator('#wiki-modal .wiki-card-row', { hasText: 'The Nations' }).click();
 await page.waitForTimeout(100);
 const nationCount = await page.locator('#wiki-modal [data-go^="nation:"]').count();
 let nationFails = 0;
 for (let i = 0; i < nationCount; i++) {
-  await page.locator('#wiki-modal [data-ref="back"]').click().catch(() => {});
-  await page.waitForTimeout(40);
   if (!/The Nations/.test(await page.locator('#wiki-modal .wiki-title').textContent())) {
-    await page.locator('#wiki-modal [data-ref="home"]').click();
-    await page.waitForTimeout(60);
+    await goHome();
     await page.locator('#wiki-modal .wiki-card-row', { hasText: 'The Nations' }).click();
     await page.waitForTimeout(60);
   }
   await page.locator('#wiki-modal [data-go^="nation:"]').nth(i).click();
   await page.waitForTimeout(50);
   if (/The Compendium|The Nations/.test(await page.locator('#wiki-modal .wiki-title').textContent())) nationFails++;
+  await goBack();
 }
 ok(nationFails === 0, 'all ' + nationCount + ' nation pages render (' + nationFails + ' fell back)');
 await page.locator('#wiki-modal .peace-cancel').click();
