@@ -395,8 +395,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     // Siege
     refs.siegeBlock.classList.toggle('hidden', !p.siege);
     if (p.siege) {
+      const byLive = g.tags && g.tags[p.siege.by];
       const byDef = TAGS[p.siege.by] || {};
-      setHtml(refs.siegeLabel, icon('swords', 'icon-sm') + ' Under siege by ' + esc(byDef.name || p.siege.by || '?'));
+      setHtml(refs.siegeLabel, icon('swords', 'icon-sm') + ' Under siege by ' + esc((byLive && byLive.name) || byDef.name || p.siege.by || '?'));
       const sp = Math.max(0, Math.min(100, p.siege.progress || 0));
       setText(refs.siegePct, Math.round(sp) + '%');
       refs.siegeFill.style.width = sp + '%';

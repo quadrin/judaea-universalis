@@ -475,6 +475,7 @@ export const simHelpers = {
       if (flag !== undefined) t.flag = flag || null;
       if (Array.isArray(color) && color.length >= 3) t.color = color.slice(0, 3);
       ctx.bus.emit('tagSwitched', { from: tag, to: tag });
+      ctx.bus.emit('provinceOwner', {}); // repaint the political layer for a new color
       return true;
     } catch (e) { warnOnce('rebrandTag', 'rebrandTag failed', e); return false; }
   },

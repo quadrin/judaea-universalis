@@ -572,7 +572,11 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null) {
   const c = live && Array.isArray(live.color) && live.color.length >= 3 ? live.color
     : Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
   const s = Math.max(12, Math.round(Number(size) || 20));
-  const body = (live && live.flag && FLAGS[live.flag]) || FLAGS[t];
+  // Own-key lookups only: tag and t.flag ride saves, and a hand-edited file
+  // must fall back to the base emblem (or the text chip), never surface a
+  // prototype-chain member as the SVG body.
+  const own = (k) => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(FLAGS, k) ? FLAGS[k] : null);
+  const body = (live && own(live.flag)) || own(t);
   const dispName = (live && live.name) || def.name || t;
   const inner = body
     ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`

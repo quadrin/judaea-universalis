@@ -69,4 +69,4 @@ if (failures) {
   console.error('\nsmoke44: ' + failures + ' failure(s)');
   process.exit(1);
 }
-console.log('\nsmoke44: all pens write real names on real provinces.');
+console.log('\nsmoke44: all pens write real names on real provinces. ALL PASS');
