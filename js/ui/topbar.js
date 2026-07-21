@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onWikiClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -51,7 +51,6 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
       <div class="tb-spacer"></div>
       <div class="tb-date" data-ref="date"></div>
       <div class="tb-speed">
-        <button class="tb-save" data-ref="wiki" data-tt="The Compendium — chapters, events, nations, crowns (W)">${icon('book')}</button>
         <button class="tb-save" data-ref="chron" data-tt="The chronicle — the world&#39;s recorded history (C)">${icon('lamp')}</button>
         <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
@@ -74,9 +73,6 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     });
     refs.chron.addEventListener('click', () => {
       if (onChronicleClick) { try { onChronicleClick(); } catch (e) { warnOnce('chronClick', e); } }
-    });
-    refs.wiki.addEventListener('click', () => {
-      if (onWikiClick) { try { onWikiClick(); } catch (e) { warnOnce('wikiClick', e); } }
     });
     refs.pause.addEventListener('click', () => {
       try { actions.togglePause(); } catch (e) { warnOnce('togglePause', e); }

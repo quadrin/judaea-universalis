@@ -52,12 +52,13 @@ python3 -m http.server 8613 --directory .
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
   course simply happens. Play the deciding nation and the full choice is yours.
-- **The Compendium** (W, the topbar book, or 📖 on the title screen): the game's own
-  wiki, generated live from the data — every chapter with its timeline and every event's
-  printed consequences, the playable standards with their guidance and win/loss
-  contracts, every nation of every era (temperament, national character, rulers,
-  crowns), the formable nations with requirement checklists, and the shared pool of
-  omens. It can never go stale, because it reads the same modules the engine plays.
+- **The Compendium** (📖 on the title screen): the game's own wiki, generated live from
+  the data — every chapter with its timeline and every event's printed consequences,
+  the playable standards with their guidance and win/loss contracts, every nation of
+  every era (temperament, national character, rulers, crowns), the formable nations
+  with requirement checklists, and the shared pool of omens. It can never go stale,
+  because it reads the same modules the engine plays — and it lives on the title
+  screen alone, where campaigns are chosen rather than fought.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
 - A war overview (score broken into battles / occupation / events, who holds what), a

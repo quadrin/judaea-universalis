@@ -176,20 +176,21 @@ await page.locator('#wiki-modal .peace-cancel').click();
 ok(await page.evaluate(() => document.getElementById('wiki-modal').classList.contains('hidden')),
   'Close shuts the codex');
 
-console.log('== into the game: W toggles, the notice card, the release table ==');
+console.log('== into the game: the library stays on the title screen ==');
 await pickBookmark(page, 'Great Revolt');
 await page.waitForSelector('.nation-card');
 await page.locator('.nation-card', { hasText: 'Judaea' }).first().click();
 await page.waitForFunction(() => !!window._ctx, null, { timeout: 60000 });
 await page.waitForTimeout(600);
 
+ok(await page.locator('#topbar [data-ref="wiki"]').count() === 0,
+  'the topbar carries no Compendium button');
 await page.keyboard.press('w');
-await page.waitForSelector('#wiki-modal:not(.hidden)');
-ok(true, 'W opens the Compendium in play');
-await page.keyboard.press('Escape');
-await page.waitForTimeout(120);
-ok(await page.evaluate(() => document.getElementById('wiki-modal').classList.contains('hidden')),
-  'Escape closes it');
+await page.waitForTimeout(250);
+ok(await page.evaluate(() => {
+  const el = document.getElementById('wiki-modal');
+  return !el || el.classList.contains('hidden');
+}), 'W does not open the codex in play');
 
 // A foreign court's decision arrives as a notice: fire Vespasian's dispatch
 // (decider ROM) through the live bus exactly as the engine would.

@@ -2894,8 +2894,9 @@ declare WHOSE choice it is.
 ## 71. The Compendium — the game's own wiki
 
 Everything the chronicler knows, generated from the live data modules so it
-can never drift from the game it describes. `W` in play, the topbar book, or
-the title screen's 📖 Compendium button.
+can never drift from the game it describes. The title screen's 📖 Compendium
+button alone opens it — the library is where you choose a war, not where you
+fight one.
 
 - **The registry** (`js/data/compendium.js`): the canonical `ERAS` list —
   every bookmark paired with its event chain (shared generic pool appended,
@@ -2924,11 +2925,13 @@ the title screen's 📖 Compendium button.
   - **Formables** — from/to chips, era availability, requirement checklist,
     founding bonus. **Omens & Incidents** — the shared pool, antique/
     modern/timeless.
-- **Chrome**: topbar book button + `W` toggle + Escape in the close chain;
-  title-screen button beside Multiplayer. In passing, the start screen's
+- **Chrome**: the 📖 Compendium button beside Multiplayer on the title
+  screen — the only door. In play the topbar keeps its campaign chrome
+  (no book button, no `W` binding), and `bindGame` closes any open codex
+  so a campaign never starts under it. In passing, the start screen's
   pick wrapper now forwards its third argument — the Veteran dial actually
   reaches `initGame` again (it had been silently dropped).
 - **Regression contract**: `uitest29.mjs` — title-screen open, the seven
   chapters, chapter → timeline → event drill-down with printed consequences,
-  back/home navigation, nations and formables pages, W/Escape in play, and
-  zero page errors.
+  back/home navigation, nations and formables pages, the in-play negatives
+  (no topbar button, `W` inert), and zero page errors.

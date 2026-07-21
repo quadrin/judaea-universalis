@@ -1,9 +1,10 @@
-// js/ui/wiki.js — the Compendium (SPEC §71): an in-game wiki generated from
-// the live data modules, so it can never drift from the game it describes.
+// js/ui/wiki.js — the Compendium (SPEC §71): the game's wiki, generated from
+// the live data modules so it can never drift from the game it describes.
 // Pages: home → chapters (overview / timeline / every event with its printed
 // consequences) → the nations → the formable crowns → the shared event pool.
-// Openable from the title screen (no game yet) and in play (W, or the topbar
-// book); reads through getCtx() when a campaign is live, data modules always.
+// The title screen alone opens it (📖 Compendium); in play the campaign's own
+// chrome has the floor. getCtx() is consulted when a game happens to exist,
+// the data modules always.
 import { esc, rgb, fmtYear, titleCase, warnOnce } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
 import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';

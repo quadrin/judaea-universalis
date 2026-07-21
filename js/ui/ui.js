@@ -133,16 +133,15 @@ export function initUI(staticCtx) {
     setSelectedProv(0); // the two left panels share the same berth
     nationPanel.open();
   }
-  // The Compendium (SPEC §71): openable before a game exists (title screen)
-  // and in play — it reads the data modules directly and the live game when
-  // there is one.
+  // The Compendium (SPEC §71): the title screen's library — it reads the
+  // data modules directly, and only the start screen opens it. In play the
+  // chrome stays the campaign's own (ledger, chronicle, help).
   const wiki = createWiki({ DEFINES, getCtx: () => state.ctx });
   const topbar = createTopbar(els.topbar, {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
     onLedgerClick: () => toggleLedger(),
     onChronicleClick: () => toggleChronicle(),
-    onWikiClick: () => wiki.toggle(),
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
@@ -1046,7 +1045,6 @@ export function initUI(staticCtx) {
       topbar.refresh();
     } else if (e.key === 'Escape') {
       if (helpOpen()) { closeHelp(); return; }
-      if (wiki.isOpen()) { wiki.close(); return; }
       if (inspectEl && !inspectEl.classList.contains('hidden')) { closeUnitInspector(); return; }
       if (battleWindowOpen()) { closeBattleWindow(); return; }
       if (peaceDialogOpen()) { closePeaceDialog(); return; }
@@ -1066,8 +1064,6 @@ export function initUI(staticCtx) {
       toggleChronicle();
     } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
       toggleHelp();
-    } else if (e.key === 'w' || e.key === 'W') {
-      wiki.toggle();
     }
   });
 
@@ -1089,7 +1085,7 @@ export function initUI(staticCtx) {
             <div>
               <div class="peace-sec">Keys</div>
               <div class="help-row"><b>Space</b> pause · <b>1–5</b> speed</div>
-              <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle · <b>W</b> compendium</div>
+              <div class="help-row"><b>N</b> realm panel · <b>L</b> ledger · <b>C</b> chronicle</div>
               <div class="help-row"><b>H</b> this help · <b>Esc</b> close / deselect</div>
               <div class="help-row"><b>Click</b> select a province, army, fleet, or air wing · <b>Shift-click</b> group armies</div>
               <div class="help-row"><b>Right-click</b> move the selected unit (air wings rebase between airfields)</div>
@@ -1204,6 +1200,7 @@ export function initUI(staticCtx) {
     state.bound = true;
     state.ctx = ctx;
     state.actions = actions;
+    wiki.close(); // the library stays on the title screen — the campaign begins without it
 
     topbar.bind(ctx, actions);
     panel.bind(ctx, actions);
