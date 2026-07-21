@@ -2777,9 +2777,13 @@ follow the state through its revolutions.
   `starPath` builds proper N-point stars (the five-, seven- and
   eight-pointed stars of the modern flags), `hexagram` builds the Star of
   David from two interlocked equilateral triangles on one center (ISR,
-  and the crowned gold star of MLI), and `MENORAH` draws Antigonus' coin
-  emblem as a true seven-branched lampstand — nested semicircular arms,
-  seven lamps level on top, stepped foot. The Ptolemaic eagle is a gold
+  and the crowned gold star of MLI), and `MENORAH` draws a true
+  seven-branched lampstand — nested semicircular arms, seven lamps level
+  on top — shared by two banners that never blur: Antigonus' coin die
+  (ATG: gold branches, stepped foot) and, since the §69–71 batch, Judaea's
+  own standard (JUD: parchment branches, splayed tripod foot — the Temple
+  lampstand, replacing the Year One chalice, which lives on in the
+  coinage events' prose). The Ptolemaic eagle is a gold
   raptor (no more parchment-bellied penguin), Hyrcanus flies the palm
   branch of the high-priestly coins, the Rashidun Caliphate has a liwa
   standard of its own, and the dead duplicate FLAGS keys (NAB/ARM/HYR/ARI
