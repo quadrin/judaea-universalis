@@ -354,9 +354,16 @@ export const BOOKMARK_1948 = {
       'Beersheba': 'Be\'er Sheva', 'Oboda': 'Nitzana',
       'Kiryat Gat': 'Kiryat Gat', 'Beit Shemesh': 'Beit Shemesh',
       'Eilat': 'Eilat',
+      // Beyond the armistice lines the pen reaches for the Bible's own map:
+      // an Israel that absorbs the hill country writes the names the books
+      // of Kings remember, not the ones the Ottoman surveys left behind.
+      'Neapolis': 'Shechem', 'Sebaste': 'Shomron', 'Hebron': 'Hevron',
+      'Jericho': 'Yeriho', 'Ptolemais': 'Akko',
     },
     // The Hashemite pen has one name it longs to write.
     JOR: { 'Jerusalem': 'Al-Quds' },
+    // A UAR proclaimed over the Jordan writes the same Arabic (alias table).
+    UAR: 'JOR',
   },
 
   // Population of 1948 (SPEC §24): the modern cities dwarf their ancient

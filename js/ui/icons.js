@@ -243,6 +243,42 @@ const SIL = `fill="${FP}" ${S} stroke-width="0.9"`;   // parchment shape
 const ACC = `fill="${FG}" ${S} stroke-width="0.8"`;   // gold shape
 const DET = `fill="none" ${S} stroke-width="0.7"`;    // interior detail line
 
+// --- emblem geometry ----------------------------------------------------------
+// Proper N-point stars and the interlocked triangles of a hexagram beat
+// hand-plotted approximations at chip size. Angles start at 12 o'clock so
+// every star stands point-up.
+function starPath(cx, cy, points, R, r) {
+  const out = [];
+  for (let i = 0; i < points * 2; i++) {
+    const rad = i % 2 === 0 ? R : r;
+    const a = -Math.PI / 2 + (Math.PI * i) / points;
+    out.push((cx + rad * Math.cos(a)).toFixed(2) + ' ' + (cy + rad * Math.sin(a)).toFixed(2));
+  }
+  return 'M' + out.join('L') + 'Z';
+}
+const star5 = (cx, cy, R, fill) => `<path d="${starPath(cx, cy, 5, R, R * 0.38)}" fill="${fill}" stroke="none"/>`;
+const star7 = (cx, cy, R, fill) => `<path d="${starPath(cx, cy, 7, R, R * 0.55)}" fill="${fill}" stroke="none"/>`;
+// One equilateral triangle of the Star of David; `down` flips it. The two
+// triangles share a center — stroke them dark-under-gold (or flat blue for
+// Israel) and the hexagram reads clean at 22px.
+function triPath(cx, cy, R, down) {
+  const p = [];
+  for (let i = 0; i < 3; i++) {
+    const a = (down ? Math.PI / 2 : -Math.PI / 2) + (i * 2 * Math.PI) / 3;
+    p.push((cx + R * Math.cos(a)).toFixed(2) + ' ' + (cy + R * Math.sin(a)).toFixed(2));
+  }
+  return 'M' + p.join('L') + 'Z';
+}
+const hexagram = (cx, cy, R, ink, w) =>
+  `<path d="${triPath(cx, cy, R, false)}${triPath(cx, cy, R, true)}" fill="none" stroke="${ink}" stroke-width="${w}" stroke-linejoin="miter"/>`;
+// The seven-branched menorah: three semicircular arms nested each side of
+// the shaft, every branch rising to the same lamp line (shared by ATG).
+const MENORAH =
+  [6.5, 4.5, 2.5].map((r) => `M${12 - r} 6.4A${r} ${r} 0 0 0 ${12 + r} 6.4`).join('')
+  + 'M12 6.4V16.9';
+const MENORAH_LAMPS = [-6.5, -4.5, -2.5, 0, 2.5, 4.5, 6.5]
+  .map((dx) => `<circle cx="${12 + dx}" cy="5.2" r="0.8" ${ACC}/>`).join('');
+
 export const FLAGS = {
   // Rome: the legionary aquila — feathered wings raised beside the head,
   // hooked gold beak, tail fanned over the gold perch bar.
@@ -282,68 +318,37 @@ export const FLAGS = {
     `<path d="M11.1 6.7h1.8v11h-1.8Z" ${SIL}/>` +
     `<rect x="7.3" y="8.6" width="9.4" height="1.7" rx="0.85" ${ACC}/>` +
     `<path d="M12 20.1c-3.1-.3-5.4-1.9-6.8-4.8l2.6-1c1 2 2.4 3.1 4.2 3.5 1.8-.4 3.2-1.5 4.2-3.5l2.6 1c-1.4 2.9-3.7 4.5-6.8 4.8Z" ${SIL}/>`,
-  // Ptolemies: the eagle standing on a thunderbolt (tetradrachm reverse) —
-  // hooked beak, deep chest, gold wing folded across the back to the tail.
+  // Ptolemies: the eagle on the thunderbolt (tetradrachm reverse) — gold
+  // raptor hunched over the bolt, beak hooking down, the wing sweeping up
+  // behind the shoulders.
   PTO:
     `<path d="M3.9 19.2 7.6 17.8 6.8 19.2h10.4l-.8-1.4 3.7 1.4-3.7 1.4.8-1.4H6.8l.8 1.4Z" ${ACC}/>` +
-    `<path d="M8.7 5.3c.1-1.1 1-1.9 2.2-1.9 1.2 0 2.1.8 2.2 1.9l.1.5c2.1 1.5 3.2 3.7 3.4 6.6.1 1.8-.2 3.5-1 5.1l-1.6-1.2.4 1.7h-4.1c-1-1.8-1.4-3.7-1.3-5.9.1-1.5.4-2.8.9-4.1-.7-.5-1.1-1.4-1.2-2.7Z" ${SIL}/>` +
-    `<path d="M8.9 4.6c-1.1 0-2 .5-2.6 1.3.8.6 1.7.8 2.7.5l-.3 1 1.1-.7Z" ${ACC}/>` +
-    `<path d="M12.1 7.3c2 .9 3.4 2.5 4.3 4.8.5 1.4.7 2.7.5 4-1.6-.6-2.9-1.7-3.8-3.3-.8-1.6-1.2-3.4-1-5.5Z" ${ACC}/>` +
-    `<path d="M10.7 17.5v1.2M12.7 17.5v1.2" ${DET}/>` +
-    `<circle cx="10.2" cy="5" r="0.45" fill="${FO}" stroke="none"/>`,
+    `<path d="M12.6 7.3c2.3.2 4 1.3 5 3.3.8 1.6 1 3.4.6 5.5-1.3-.7-2.3-1.6-3-2.7l-.5 2.4-1.9-1.3Z" ${SIL}/>` +
+    `<path d="M11.5 4.3c1 0 1.8.7 1.8 1.7 0 .5-.2.9-.5 1.3.9 1.3 1.4 3.1 1.3 5.3-.1 2.1-.6 3.9-1.6 5.2h-1.9c-1.1-1.7-1.6-3.8-1.4-6.1.1-1.4.5-2.7 1.1-3.9-.4-.3-.6-.8-.6-1.3 0-1 .8-1.7 1.8-1.7Z" ${ACC}/>` +
+    `<path d="M9.9 5c-.9-.2-1.7.1-2.3.8.7.6 1.5.7 2.3.5l-.5 1.2 1.3-.9Z" ${ACC}/>` +
+    `<circle cx="11.2" cy="5.6" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<path d="M10.9 17.8v1.2M13.1 17.8v1.2" ${DET}/>`,
   // Parthia: the strung recurve bow and arrow of the Arsacid drachms.
   PAR:
     `<path d="M15.2 3.4c-5 1.9-7.5 4.8-7.5 8.6s2.5 6.7 7.5 8.6c.7.3 1.2.7 1.6 1.3l1.2-.9c-.5-.8-1.2-1.4-2.1-1.8-4.3-1.7-6.4-4.1-6.4-7.2s2.1-5.5 6.4-7.2c.9-.4 1.6-1 2.1-1.8L16.8 2.1c-.4.6-.9 1-1.6 1.3Z" ${SIL}/>` +
     `<path d="M17.4 3.2v17.6" ${DET}/>` +
     `<path d="M7.9 11.4h9v1.2h-9Z" ${ACC}/>` +
     `<path d="M3.7 12l4.6-1.9v3.8Z" ${ACC}/>`,
-  // Nabataea: the caravan camel of Petra, gold ground line.
-  NAB:
-    `<path d="M5.9 7.9c0-1.1.8-1.9 1.9-1.9 1 0 1.7.6 1.9 1.6.2 1.1.2 2.2 0 3.3l-.2 1.1c.7-.5 1.5-.9 2.4-1.1.6-1.6 1.7-2.4 3.2-2.4s2.6.8 3.2 2.3c.5 1.3.4 2.6-.3 3.9-.2.4-.5.8-.9 1.1l.1 3.6h-1.4l-.2-3h-2.6l-.1 3h-1.4l-.1-3.2c-.7-.2-1.3-.6-1.7-1.1l.1 4.3H8.4l-.2-5.6c-.4-.9-.5-1.9-.3-3l.1-.8c-1.2-.1-2.1-1-2.1-2.1Z" ${SIL}/>` +
-    `<path d="M4.4 19.7h15.2" fill="none" stroke="${FG}" stroke-width="1.3" stroke-linecap="round"/>` +
-    `<circle cx="7.4" cy="7.2" r="0.45" fill="${FO}" stroke="none"/>` +
-    `<path d="M12.9 11c.4-.9 1.2-1.4 2.3-1.4" ${DET}/>`,
-  // Armenia: the Artaxiad eagle, wings spread wide beneath the gold star.
-  ARM:
-    `<path d="M12 2.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z" ${ACC}/>` +
-    `<path d="M11.4 12.2c-2.6.5-5.1 0-7.5-1.6.1 3.3 1.9 5.4 5.4 6.5.9-1.1 1.6-2.7 2.1-4.9Z" ${SIL}/>` +
-    `<path d="M12.6 12.2c2.6.5 5.1 0 7.5-1.6-.1 3.3-1.9 5.4-5.4 6.5-.9-1.1-1.6-2.7-2.1-4.9Z" ${SIL}/>` +
-    `<path d="M12 10.6c1.3 1 1.9 2.5 1.9 4.4 0 1.7-.6 3.3-1.9 4.7-1.3-1.4-1.9-3-1.9-4.7 0-1.9.6-3.4 1.9-4.4Z" ${SIL}/>` +
-    `<circle cx="12" cy="9.7" r="1.35" ${SIL}/>` +
-    `<path d="M9.4 15.4c-1.4-.2-2.6-.7-3.7-1.6M14.6 15.4c1.4-.2 2.6-.7 3.7-1.6" ${DET}/>`,
-
-  // Hyrcanus' Judaea: the palm branch of the high-priestly coins — paired
-  // fronds on a straight stem over a gold base.
-  HYR:
-    `<path d="M11.2 19.6V8h1.6v11.6Z" ${SIL}/>` +
-    `<path d="M11.6 8.4C9.7 7.6 8.8 6.2 8.8 4.1c2.1.6 3.2 2 3.2 4.3Z" ${SIL}/>` +
-    `<path d="M12.4 8.4c1.9-.8 2.8-2.2 2.8-4.3-2.1.6-3.2 2-3.2 4.3Z" ${SIL}/>` +
-    `<path d="M11.6 11.6c-2.5-.5-4-1.7-4.7-3.7 2.6.1 4.2 1.4 4.7 3.7Z" ${SIL}/>` +
-    `<path d="M12.4 11.6c2.5-.5 4-1.7 4.7-3.7-2.6.1-4.2 1.4-4.7 3.7Z" ${SIL}/>` +
-    `<path d="M11.6 14.8c-2.9-.4-4.7-1.5-5.5-3.4 2.9 0 4.7 1.2 5.5 3.4Z" ${SIL}/>` +
-    `<path d="M12.4 14.8c2.9-.4 4.7-1.5 5.5-3.4-2.9 0-4.7 1.2-5.5 3.4Z" ${SIL}/>` +
-    `<rect x="8.4" y="19" width="7.2" height="1.9" rx="0.9" ${ACC}/>`,
-  // Aristobulus' Judaea: the diadem beneath the star of the royal coinage.
-  ARI:
-    `<path d="M12 2.9l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" ${ACC}/>` +
-    `<path d="M4.4 15.2c2.3-2.6 4.8-3.9 7.6-3.9s5.3 1.3 7.6 3.9l-1.1 1.8c-2-2.3-4.1-3.5-6.5-3.5s-4.5 1.2-6.5 3.5Z" ${ACC}/>` +
-    `<circle cx="12" cy="12.9" r="1.7" ${SIL}/>` +
-    `<path d="M5.2 16.2c-.8 1.6-.9 3.4-.3 5.3l1.5-.7c-.5-1.5-.4-2.9.2-4.2Z" ${SIL}/>` +
-    `<path d="M18.8 16.2c.8 1.6.9 3.4.3 5.3l-1.5-.7c.5-1.5.4-2.9-.2-4.2Z" ${SIL}/>`,
-
   // Herod's Judaea: the anchor of the Herodian coinage.
   HER:
     `<path d="M12 4.2c.9 0 1.6.7 1.6 1.6S12.9 7.4 12 7.4s-1.6-.7-1.6-1.6.7-1.6 1.6-1.6Zm0 1a.6.6 0 100 1.2.6.6 0 000-1.2Z" ${ACC}/>` +
     `<path d="M11.3 7.4h1.4v10h-1.4Z" ${SIL}/>` +
     `<path d="M8.2 9.4h7.6v1.4H8.2Z" ${SIL}/>` +
     `<path d="M12 20.4c-3-.9-4.9-2.7-5.7-5.4l1.7-.5c.6 2 2 3.4 4 4.1 2-.7 3.4-2.1 4-4.1l1.7.5c-.8 2.7-2.7 4.5-5.7 5.4Z" ${SIL}/>`,
-  // Antigonus' Judaea: the seven-branched lampstand of his last coins.
+  // Antigonus' Judaea: the seven-branched menorah of his last coins — drawn
+  // whole this time: three round arms nested each side of the shaft, seven
+  // lamps level along the top, the stepped foot of the coin dies beneath.
   ATG:
-    `<path d="M11.3 6h1.4v10.4h-1.4Z" ${ACC}/>` +
-    `<path d="M6 8.4c0 3 .9 4.9 2.7 5.9l.7-1.2C8 12.3 7.4 10.8 7.4 8.4Zm3 0c0 2.2.5 3.6 1.6 4.5l.7-1.2c-.7-.6-1-1.7-1-3.3Z" ${SIL}/>` +
-    `<path d="M18 8.4c0 3-.9 4.9-2.7 5.9l-.7-1.2c1.4-.8 2-2.3 2-4.7Zm-3 0c0 2.2-.5 3.6-1.6 4.5l-.7-1.2c.7-.6 1-1.7 1-3.3Z" ${SIL}/>` +
-    `<path d="M9 16.4h6v1.4H9Z" ${SIL}/>` +
-    `<path d="M8 18.6h8v1.6H8Z" ${ACC}/>`,
+    `<path d="${MENORAH}" fill="none" stroke="${FO}" stroke-width="2.6" stroke-linecap="round"/>` +
+    `<path d="${MENORAH}" fill="none" stroke="${FG}" stroke-width="1.35" stroke-linecap="round"/>` +
+    MENORAH_LAMPS +
+    `<path d="M9.6 16.9h4.8v1.4H9.6Z" ${SIL}/>` +
+    `<path d="M8 18.3h8v1.7H8Z" ${ACC}/>`,
 
   // Agrippa II: the royal diadem — gold band, parchment gem and hanging ties.
   AGR:
@@ -374,8 +379,7 @@ export const FLAGS = {
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="3.4" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
     `<rect x="0.6" y="18.1" width="22.8" height="2.5" fill="#0038b8" stroke="none"/>` +
-    `<path d="M12 7.3 16.05 14.35H7.95Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>` +
-    `<path d="M12 16.7 7.95 9.65h8.1Z" fill="none" stroke="#0038b8" stroke-width="1.25" stroke-linejoin="miter"/>`,
+    hexagram(12, 12, 4.7, '#0038b8', 1.25),
   // Nabataea: the crow-stepped facade of Petra's tombs, an urn above.
   NAB:
     `<path d="M4 18.6h16v1.8H4Z" ${ACC}/>` +
@@ -386,13 +390,17 @@ export const FLAGS = {
     `<path d="M3.6 19 9 9.6l2.6 4.4L14.6 8l5.8 11Z" ${SIL}/>` +
     `<path d="M9 9.6 7.4 12.4h3.2Z M14.6 8l-1.8 3.4h3.6Z" ${ACC}/>` +
     `<path d="M12 2.8l.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.6.9.3-1.9-1.4-1.3 1.9-.3Z" ${ACC}/>`,
-  // Hyrcanus: the high priest's breastplate — twelve stones in gold setting.
+  // Hyrcanus: the palm branch of the high-priestly coins — paired fronds
+  // on a straight stem over a gold base.
   HYR:
-    `<rect x="7" y="5.5" width="10" height="13" rx="1.6" ${SIL}/>` +
-    `<path d="M9 3.8h6v2.2H9Z" ${ACC}/>` +
-    ['8.9,8.3', '12,8.3', '15.1,8.3', '8.9,11.3', '12,11.3', '15.1,11.3',
-      '8.9,14.3', '12,14.3', '15.1,14.3', '8.9,17', '12,17', '15.1,17']
-      .map((p) => { const [cx, cy] = p.split(','); return `<circle cx="${cx}" cy="${cy}" r="1" ${ACC}/>`; }).join(''),
+    `<path d="M11.2 19.2V8h1.6v11.2Z" ${SIL}/>` +
+    `<path d="M11.6 8.4C9.7 7.6 8.8 6.2 8.8 4.1c2.1.6 3.2 2 3.2 4.3Z" ${SIL}/>` +
+    `<path d="M12.4 8.4c1.9-.8 2.8-2.2 2.8-4.3-2.1.6-3.2 2-3.2 4.3Z" ${SIL}/>` +
+    `<path d="M11.6 11.6c-2.5-.5-4-1.7-4.7-3.7 2.6.1 4.2 1.4 4.7 3.7Z" ${SIL}/>` +
+    `<path d="M12.4 11.6c2.5-.5 4-1.7 4.7-3.7-2.6.1-4.2 1.4-4.7 3.7Z" ${SIL}/>` +
+    `<path d="M11.6 14.8c-2.9-.4-4.7-1.5-5.5-3.4 2.9 0 4.7 1.2 5.5 3.4Z" ${SIL}/>` +
+    `<path d="M12.4 14.8c2.9-.4 4.7-1.5 5.5-3.4-2.9 0-4.7 1.2-5.5 3.4Z" ${SIL}/>` +
+    `<rect x="8.4" y="19" width="7.2" height="1.9" rx="0.9" ${ACC}/>`,
   // Aristobulus: the usurper's diadem over a bared sword.
   ARI:
     `<path d="M5.4 9.8c2.1-2 4.3-3 6.6-3s4.5 1 6.6 3l-.9 1.6c-1.8-1.8-3.7-2.7-5.7-2.7s-3.9.9-5.7 2.7Z" ${ACC}/>` +
@@ -435,43 +443,43 @@ export const FLAGS = {
   EGY:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1a6a3c" stroke="none"/>` +
     `<path d="M10.5 5.4a7.4 7.4 0 100 13.2 8.3 8.3 0 010-13.2Z" fill="#f2f4f4" stroke="none"/>` +
-    ['15.5,8.2', '17.3,12', '15.5,15.8'].map((p) => {
-      const [cx, cy] = p.split(',').map(Number);
-      return `<path d="M${cx} ${cy - 1.6}l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#f2f4f4" stroke="none"/>`;
-    }).join(''),
+    star5(15.6, 8.4, 1.8, '#f2f4f4') +
+    star5(17.4, 12, 1.8, '#f2f4f4') +
+    star5(15.6, 15.6, 1.8, '#f2f4f4'),
   // Transjordan: the Hashemite tricolor, red chevron, seven-pointed star.
   JOR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
     `<path d="M0.6 0.6 13.4 12 0.6 23.4Z" fill="#b5342c" stroke="none"/>` +
-    `<path d="M5.6 12l.5-1.5.9 1.3 1.5-.5-.7 1.4 1.3.8-1.5.4.1 1.6-1.2-1-1.2 1 .1-1.6-1.5-.4 1.3-.8-.7-1.4Z" fill="#f2f4f4" stroke="none"/>`,
+    star7(5.4, 12, 2.3, '#f2f4f4'),
   // Syria 1948: green-white-black, three red stars.
   SYR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
-    ['6.5', '12', '17.5'].map((cx) =>
-      `<path d="M${cx} 10.2l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#b5342c" stroke="none"/>`).join(''),
-  // Lebanon: red-white-red and the cedar.
+    star5(6.4, 12, 1.7, '#b5342c') +
+    star5(12, 12, 1.7, '#b5342c') +
+    star5(17.6, 12, 1.7, '#b5342c'),
+  // Lebanon: red-white-red and the cedar — three tiers of boughs on a trunk.
   LEB:
     `<rect x="0.6" y="0.6" width="22.8" height="5.6" fill="#b5342c" stroke="none"/>` +
     `<rect x="0.6" y="6.2" width="22.8" height="11.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="17.8" width="22.8" height="5.6" fill="#b5342c" stroke="none"/>` +
-    `<path d="M12 7.2l3.4 3h-2l2.6 2.4h-1.8l2.2 2.2H13v1.6h-2v-1.6H7.6l2.2-2.2H8l2.6-2.4h-2Z" fill="#2c7a3f" stroke="none"/>`,
+    `<path d="M12 6.4l3.1 3.2h-1.7l2.5 2.6h-1.9l2.6 2.7h-4v2h-1.2v-2h-4l2.6-2.7H8.1l2.5-2.6H8.9Z" fill="#2c7a3f" stroke="none"/>`,
   // Iraq 1948: black-white-green, red trapezoid, two seven-pointed stars.
   IRQ:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1a6a3c" stroke="none"/>` +
     `<path d="M0.6 0.6h6.8L11 12 7.4 23.4H0.6Z" fill="#b5342c" stroke="none"/>` +
-    `<circle cx="4.6" cy="8.4" r="1.4" fill="#f2f4f4" stroke="none"/>` +
-    `<circle cx="4.6" cy="15.6" r="1.4" fill="#f2f4f4" stroke="none"/>`,
+    star7(4.6, 8.4, 1.8, '#f2f4f4') +
+    star7(4.6, 15.6, 1.8, '#f2f4f4'),
   // Turkey: the red flag, white crescent and star.
   TUR:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#c8102e" stroke="none"/>` +
     `<path d="M11.5 4.9a7.2 7.2 0 100 14.2 8 8 0 010-14.2Z" fill="#f2f4f4" stroke="none"/>` +
-    `<path d="M15.6 9.5l.7 1.6 1.7.2-1.3 1.2.3 1.7-1.4-.9-1.5.9.4-1.7-1.3-1.2 1.7-.2Z" fill="#f2f4f4" stroke="none"/>`,
+    star5(16.1, 12, 2.2, '#f2f4f4'),
   // Saudi Arabia: green, the sword beneath the creed (a calligraphy band).
   SAU:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1a6a3c" stroke="none"/>` +
@@ -497,18 +505,49 @@ export const FLAGS = {
     `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#1a7a44" stroke="none"/>` +
     `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>`,
-  // Kingdom of Israel (formable): the star of David crowned in gold.
+  // Kingdom of Israel (formable): the Star of David whole and centered —
+  // two interlocked equilateral triangles on one heart, gold over the deep
+  // blue field, the crown of David above.
   MLI:
-    `<path d="M12 4.6 15.9 11.4H8.1Z" fill="none" ${S} stroke="${FG}" stroke-width="1.5"/>` +
-    `<path d="M12 16 8.1 9.2h7.8Z" fill="none" ${S} stroke="${FP}" stroke-width="1.5"/>` +
-    `<path d="M6.8 17.4l1.3 1.6 1.9-1.6 2 1.6 2-1.6 1.9 1.6 1.3-1.6v3H6.8Z" ${ACC}/>`,
+    `<path d="M6.7 8.4 7.6 4.6l2.5 2.1L12 3.2l1.9 3.5 2.5-2.1.9 3.8Z" ${ACC}/>` +
+    `<rect x="6.4" y="8.4" width="11.2" height="1.6" rx="0.8" ${ACC}/>` +
+    hexagram(12, 15.9, 5.1, FO, 2.5) +
+    hexagram(12, 15.9, 5.1, FG, 1.3),
   // United Arab Republic (formable): the two-star pan-Arab tricolor.
   UAR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
     `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
-    ['8.5', '15.5'].map((cx) =>
-      `<path d="M${cx} 10.2l.5 1.1 1.2.1-.9.8.2 1.2-1-.6-1 .6.2-1.2-.9-.8 1.2-.1Z" fill="#2c7a3f" stroke="none"/>`).join(''),
+    star5(8.4, 12, 1.9, '#2c7a3f') +
+    star5(15.6, 12, 1.9, '#2c7a3f'),
+  // Rashidun Caliphate: the liwa of the conquest — the standard on its
+  // lance, the creed running across the cloth in the scribes' hand.
+  RSH:
+    `<path d="M6.3 1.9 7.5 4.4H5.1Z" ${ACC}/>` +
+    `<rect x="5.5" y="4.4" width="1.6" height="16.4" rx="0.8" ${ACC}/>` +
+    `<path d="M7.1 5.6h11.8l-2.2 3.7 2.2 3.7H7.1Z" ${SIL}/>` +
+    `<path d="M8.6 8c.7-.9 1.3.4 2 .1s.8-1 1.6-.6 1 .7 1.8.3 1-.9 1.7-.3" ${DET}/>` +
+    `<path d="M8.6 10.6c.7-.9 1.3.4 2 .1s.8-1 1.6-.6 1 .7 1.8.3" ${DET}/>`,
+  // Egypt after the Free Officers (event rebrand, 1952): the Arab
+  // Liberation tricolor, the gold eagle of the revolution at its heart.
+  EGY_REP:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    `<circle cx="12" cy="9.1" r="0.9" fill="#d9a520" stroke="none"/>` +
+    `<path d="M12.7 8.7l1.2.5-1.2.5Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M12 9.9c.9.4 1.4 1.2 1.4 2.2 0 .7-.2 1.4-.5 2.1h-1.8c-.3-.7-.5-1.4-.5-2.1 0-1 .5-1.8 1.4-2.2Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M10.6 10.6c-1.6-.4-2.9-.1-4 .9.6 1 1.5 1.6 2.7 1.8l-.5 1 1.8-.5Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M13.4 10.6c1.6-.4 2.9-.1 4 .9-.6 1-1.5 1.6-2.7 1.8l.5 1-1.8-.5Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M10.4 14.6h3.2l-.4 1H10.8Z" fill="#d9a520" stroke="none"/>`,
+  // Iraq after the July revolution (event rebrand, 1958): Qasim's upright
+  // tricolor, the red star of the republic on a gold boss.
+  IRQ_REP:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#141414" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#1a6a3c" stroke="none"/>` +
+    `<path d="${starPath(12, 12, 8, 4.8, 2.4)}" fill="#b5342c" stroke="none"/>` +
+    `<circle cx="12" cy="12" r="1.5" fill="#d9a520" stroke="none"/>`,
 };
 
 function escText(s) {
@@ -523,20 +562,26 @@ function escText(s) {
 // no emblem exists. `size` is the chip's edge in px. With `link` the chip
 // becomes a click target: a document-level handler (ui.js) opens that
 // nation's realm panel wherever such a chip is clicked.
-export function flagChip(tag, DEFINES, size = 20, link = false) {
+// Pass the live `game` to honor a realm's runtime identity: a revolution may
+// rebrand a state in place (t.flag names a FLAGS variant, t.name/t.color the
+// new style) — the Free Officers' republic flies EGY_REP over the same tag.
+export function flagChip(tag, DEFINES, size = 20, link = false, game = null) {
   const t = String(tag || '');
   const def = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[t]) || {};
-  const c = Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
+  const live = (game && game.tags && game.tags[t]) || null;
+  const c = live && Array.isArray(live.color) && live.color.length >= 3 ? live.color
+    : Array.isArray(def.color) && def.color.length >= 3 ? def.color : [110, 100, 82];
   const s = Math.max(12, Math.round(Number(size) || 20));
-  const body = FLAGS[t];
+  const body = (live && live.flag && FLAGS[live.flag]) || FLAGS[t];
+  const dispName = (live && live.name) || def.name || t;
   const inner = body
     ? `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`
     : `<span class="fchip-abbr">${escText(t || '—')}</span>`;
   const linked = link && t && t !== 'REB' && t !== 'WASTE';
   const linkAttrs = linked
-    ? ` data-open-tag="${escText(t)}" role="button" data-tt="${escText((def.name || t) + ' — see their court')}"`
+    ? ` data-open-tag="${escText(t)}" role="button" data-tt="${escText(dispName + ' — see their court')}"`
     : '';
-  return `<span class="fchip${linked ? ' fchip-link' : ''}" style="background-color:rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0});width:${s}px;height:${s}px" aria-label="${escText(def.name || t)}"${linkAttrs}>${inner}</span>`;
+  return `<span class="fchip${linked ? ' fchip-link' : ''}" style="background-color:rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0});width:${s}px;height:${s}px" aria-label="${escText(dispName)}"${linkAttrs}>${inner}</span>`;
 }
 
 // Build one icon: 24x24, inherits currentColor, sized via CSS (.icon + modifier).

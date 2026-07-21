@@ -2767,3 +2767,46 @@ record the taken province on the loser: `tag.grudges[taker] =
   neither heals the pair nor prunes a live grudge, the sword path
   records too, returning the land prunes the grudge and reopens normal
   healing, and the book survives a save round-trip.
+
+## 68. The banner follows the state — flag artwork, rebrands, and the inherited pen
+
+The flag chips are the game's heraldry; they must read true at 15px and
+follow the state through its revolutions.
+
+- **Artwork** (icons.js): emblem geometry is computed, not hand-plotted —
+  `starPath` builds proper N-point stars (the five-, seven- and
+  eight-pointed stars of the modern flags), `hexagram` builds the Star of
+  David from two interlocked equilateral triangles on one center (ISR,
+  and the crowned gold star of MLI), and `MENORAH` draws Antigonus' coin
+  emblem as a true seven-branched lampstand — nested semicircular arms,
+  seven lamps level on top, stepped foot. The Ptolemaic eagle is a gold
+  raptor (no more parchment-bellied penguin), Hyrcanus flies the palm
+  branch of the high-priestly coins, the Rashidun Caliphate has a liwa
+  standard of its own, and the dead duplicate FLAGS keys (NAB/ARM/HYR/ARI
+  were each defined twice; only the second ever rendered) are gone.
+- **In-place rebrands** (`ctx.helpers.rebrandTag`): a revolution that
+  keeps the tag can still change the state's name, banner and color.
+  `tag.flag` names a FLAGS variant that `flagChip` prefers while set
+  (pass the live `game` — every in-game call site does); `tag.name` and
+  `tag.color` already win over DEFINES in the label and political
+  layers. The helper emits `tagSwitched` so the chrome rebuilds at once,
+  and the fields ride the save like any tag state. The Free Officers
+  turn Egypt into the Republic of Egypt under the Arab Liberation
+  tricolor (`EGY_REP`, the gold eagle); the July revolution raises
+  Qasim's tricolor in Baghdad (`IRQ_REP`, the red star on gold).
+  `switchTagCore` deletes any variant on a real tag switch — the new
+  identity flies its own flag (a UAR formed from a rebranded Egypt does
+  not inherit the eagle).
+- **The inherited pen** (`resolveDisplayName`, military.js): an
+  `integratedNames` entry may be a string naming another tag whose table
+  it shares, so a formed nation keeps its predecessor's renames — MLI
+  aliases the Hebrew pen in every bookmark that can form it, HAS/JUD
+  alias their founders' in 67/40 BCE, and a UAR over the Jordan writes
+  the Hashemite Arabic. Israel's 1948 pen also reaches for the Bible's
+  own map beyond the armistice lines: Shechem (not Nablus), Shomron,
+  Hevron, Yeriho, Akko.
+- **Regression contract**: `smoke46.mjs` — the 1948 Shechem rename, the
+  alias pen surviving a formable switch, the Free Officers rebrand
+  (name, flag, chip, and the base flag restored on a later switchTag),
+  the Iraqi revolution rebrand, and FLAGS coverage for every tag on
+  every bookmark's map.

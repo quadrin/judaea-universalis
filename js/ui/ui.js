@@ -486,7 +486,7 @@ export function initUI(staticCtx) {
     warEl.querySelector('.modal-scrim').addEventListener('click', closeWarOverview);
   }
   function flagChipHtml(tag, link) {
-    try { return flagChip(tag, DEFINES, 15, !!link); } catch (e) { return ''; }
+    try { return flagChip(tag, DEFINES, 15, !!link, state.ctx && state.ctx.game); } catch (e) { return ''; }
   }
 
   // Any linked flag chip, anywhere (ledger, war overview, battle window,

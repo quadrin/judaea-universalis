@@ -462,6 +462,22 @@ export const simHelpers = {
       return true;
     } catch (e) { warnOnce('switchTag', 'switchTag failed', e); return false; }
   },
+  // An in-place rebrand: a revolution keeps the tag but the state changes its
+  // name, its banner (flag names a FLAGS variant, null restores the tag's
+  // own), or its map color — the kingdom overthrown becomes the republic
+  // under the same three letters. Chrome rebuilds as for a formable so the
+  // new identity shows everywhere at once.
+  rebrandTag(ctx, tag, { name, flag, color } = {}) {
+    try {
+      const t = ctx.game.tags[tag];
+      if (!t) return false;
+      if (name) t.name = String(name);
+      if (flag !== undefined) t.flag = flag || null;
+      if (Array.isArray(color) && color.length >= 3) t.color = color.slice(0, 3);
+      ctx.bus.emit('tagSwitched', { from: tag, to: tag });
+      return true;
+    } catch (e) { warnOnce('rebrandTag', 'rebrandTag failed', e); return false; }
+  },
   getFlag(ctx, key) {
     return ctx.game.flags[key];
   },

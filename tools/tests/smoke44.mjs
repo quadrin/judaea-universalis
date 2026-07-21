@@ -1,11 +1,15 @@
-// Headless regression — the victors' pens across every era (SPEC §66).
+// Headless regression — the victors' pens across every era (SPEC §66, §68).
 // integratedNames went from a 1948-only table to a per-bookmark one; this
 // guards the data contract for all of them: every pen belongs to a tag that
 // exists in its bookmark, every entry keys a real canonical province, and
 // every entry actually changes the label (a rename that reproduces the era
-// name would be dead weight the resolver can never surface).
+// name would be dead weight the resolver can never surface). A pen may also
+// be a string alias (SPEC §68) — a formed nation writing with its
+// predecessor's pen — which must resolve to a real table in the same book
+// and belong to a tag DEFINES knows.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
+const { DEFINES } = await import(R + '/js/data/defines.js');
 
 const BOOKS = [
   ['bookmark_167bce.js', 'BOOKMARK_167'],
@@ -35,6 +39,18 @@ for (const [file, key] of BOOKS) {
   const tags = new Set(bm.activeTags || []);
   const era = bm.provinceNames || {};
   for (const [tag, table] of Object.entries(pens)) {
+    if (typeof table === 'string') {
+      // An inherited pen: the alias must belong to a defined tag (formables
+      // and event identities are not active at start) and resolve, within
+      // the resolver's hop budget, to a real table in this same book.
+      ok(!!DEFINES.TAGS[tag], tag + ' (alias pen) is a tag DEFINES knows');
+      let target = table;
+      let hops = 0;
+      while (typeof target === 'string' && hops++ < 4) target = pens[target];
+      ok(target && typeof target === 'object' && Object.keys(target).length > 0,
+        tag + ' alias resolves to a real pen (' + table + ')');
+      continue;
+    }
     ok(tags.has(tag), tag + ' is an active tag of ' + bm.id);
     ok(table && typeof table === 'object' && Object.keys(table).length > 0,
       tag + ' pen is a non-empty table');

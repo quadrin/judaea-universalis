@@ -1957,6 +1957,9 @@ export const EVENTS_1948 = [
         egy.electionIn = 48;
         egy.heir = null;
         egy.regency = false;
+        // The kingdom's green crescent comes down with the king: the state is
+        // the Republic of Egypt now, under the Arab Liberation tricolor.
+        ctx.helpers.rebrandTag(ctx, 'EGY', { name: 'Republic of Egypt', flag: 'EGY_REP' });
         ctx.helpers.setRuler(ctx, 'EGY', { name: 'Muhammad Naguib', title: 'President', gov: 3, infl: 3, mar: 3, age: 51 });
         ctx.helpers.adjust(ctx, 'EGY', { stability: -1, legitimacy: -20, manpower: 5000, mar: 35 });
         ctx.helpers.addTagModifier(ctx, 'EGY', {
@@ -2114,6 +2117,9 @@ export const EVENTS_1948 = [
         irq.govType = 'republic';
         irq.heir = null;
         irq.regency = false;
+        // The Hashemite colors come down in Baghdad: the Republic of Iraq
+        // raises Qasim's tricolor with the red star of the revolution.
+        ctx.helpers.rebrandTag(ctx, 'IRQ', { name: 'Republic of Iraq', flag: 'IRQ_REP' });
         ctx.helpers.setRuler(ctx, 'IRQ', { name: 'Abd al-Karim Qasim', title: 'Prime Minister', gov: 3, infl: 3, mar: 4, age: 43 });
         for (const partner of ['UK', 'TUR', 'IRN']) {
           const p = ctx.game.tags[partner];
