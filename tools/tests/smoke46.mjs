@@ -110,6 +110,12 @@ console.log('== the Free Officers rebrand Egypt in place ==');
   ok(chip.includes('Republic of Egypt'), 'the chip labels the realm by its living name');
   const plain = flagChip('EGY', DEFINES, 20, false, null);
   ok(plain.includes(FLAGS.EGY.slice(0, 40)), 'without live state the tag still shows its base flag');
+  // A hand-edited save cannot smuggle a prototype-chain member in as art.
+  egy.flag = 'constructor';
+  const hostile = flagChip('EGY', DEFINES, 20, false, g);
+  ok(hostile.includes(FLAGS.EGY.slice(0, 40)) && !hostile.includes('native code'),
+    'a corrupted flag key falls back to the base emblem, not Object.prototype');
+  egy.flag = 'EGY_REP';
   // The saved campaign keeps the rebrand.
   const revived = reviveGame(JSON.parse(JSON.stringify(g)));
   ok(revived && revived.tags.EGY.flag === 'EGY_REP' && revived.tags.EGY.name === 'Republic of Egypt',

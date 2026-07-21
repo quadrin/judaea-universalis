@@ -732,7 +732,13 @@ export function initSound(bus, getGame) {
   on('saveRequest', 'save', () => { sfx.quillScratch(); });
   on('pause', 'tick', () => { sfx.woodTick(); });
   on('speed', 'tick', () => { sfx.woodTick(); });
-  on('tagSwitched', 'fanfare', () => { sfx.fanfareWin(); }); // a new banner rises (SPEC §25)
+  // A new banner rises (SPEC §25) — but an in-place rebrand (from === to,
+  // SPEC §68) is a foreign coup unless the banner is our own: the Free
+  // Officers deposing Farouk is world news, not the player's fanfare.
+  on('tagSwitched', 'fanfare', (p) => {
+    if (p && p.from === p.to && p.to !== playerTag()) return;
+    sfx.fanfareWin();
+  });
 
   // Bombing raids (SPEC §30): heard when our wings fly or our ground is hit.
   on('airRaid', 'raid', (p) => {

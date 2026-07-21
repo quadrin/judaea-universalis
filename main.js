@@ -223,6 +223,9 @@ async function boot() {
     const g = ctx.game;
     const prev = { d: g.date.d, m: g.date.m, y: g.date.y };
     const prevTag = g.playerTag;
+    const prevSeat = g.tags && g.tags[prevTag]
+      ? { name: g.tags[prevTag].name, flag: g.tags[prevTag].flag, color: String(g.tags[prevTag].color) }
+      : null;
     const keepUi = g.ui;
     for (const k of Object.keys(g)) delete g[k];
     Object.assign(g, snapGame);
@@ -234,6 +237,15 @@ async function boot() {
     mp.myTag = g.playerTag;
     colorsDirty = true;
     if (prevTag !== g.playerTag) bus.emit('tagSwitched', { from: prevTag, to: g.playerTag });
+    else if (prevSeat) {
+      // An in-place rebrand of our own seat (SPEC §68) arrives only via
+      // snapshot — the topbar rebuilds its banner solely on tagSwitched, so
+      // re-emit when the identity changed under the same three letters.
+      const now = g.tags && g.tags[g.playerTag];
+      if (now && (now.name !== prevSeat.name || now.flag !== prevSeat.flag || String(now.color) !== prevSeat.color)) {
+        bus.emit('tagSwitched', { from: g.playerTag, to: g.playerTag });
+      }
+    }
     if (prev.d !== g.date.d || prev.m !== g.date.m || prev.y !== g.date.y) {
       bus.emit('day', { date: { ...g.date } });
       if (prev.m !== g.date.m || prev.y !== g.date.y) bus.emit('month', { date: { ...g.date } });
