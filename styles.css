@@ -746,6 +746,15 @@ button {
 .ev-opts { display: flex; flex-direction: column; gap: 8px; }
 .ev-opt { width: 100%; text-align: center; }
 .ev-opt-label { display: block; }
+/* A foreign court's decision arrives as a notice (SPEC §70): one button, and
+   this line explains whose choice it was. */
+.ev-decider {
+  margin: -6px 0 12px;
+  font-size: 12px;
+  font-style: italic;
+  color: #7a5a30;
+  text-align: center;
+}
 
 @keyframes card-in {
   from { opacity: 0; transform: scale(0.955) translateY(8px); }
@@ -2520,4 +2529,114 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   #outliner-pill { top: calc(76px + env(safe-area-inset-top)); }
   #toast-container { top: calc(76px + env(safe-area-inset-top)); }
   #outliner.open { top: calc(122px + env(safe-area-inset-top)); }
+}
+
+/* ------------------------------------------------- the Compendium (SPEC §71) */
+/* The in-game wiki: a wide parchment codex over the map, navigable page by
+   page — chapters, timelines, events with their consequences, nations, crowns. */
+/* Above the start screen (200) so the codex opens from the title too;
+   below the multiplayer lobby (230). */
+#wiki-modal { position: absolute; inset: 0; z-index: 220; pointer-events: auto; }
+#wiki-modal.hidden { display: none; }
+.wiki-card { width: min(860px, calc(100vw - 24px)); display: flex; flex-direction: column; }
+.wiki-head { display: flex; align-items: center; gap: 8px; }
+.wiki-title { flex: 1; margin: 0; display: flex; align-items: center; gap: 8px; }
+.wiki-nav { padding: 2px 10px; font-size: 15px; line-height: 1.4; }
+.wiki-nav[disabled] { opacity: 0.35; pointer-events: none; }
+.wiki-sub { font-size: 13px; line-height: 1.5; color: var(--ink-soft); margin: 4px 0 2px; }
+.wiki-rule { text-align: center; margin: 2px 0 4px; color: #8a6d1a; }
+.wiki-rule svg { height: 20px; width: auto; }
+.wiki-body { overflow-y: auto; flex: 1; min-height: 120px; padding-right: 4px; }
+.wiki-sec {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 12px 0 4px;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.35);
+  padding-bottom: 2px;
+}
+.wiki-dim { font-size: 11.5px; color: var(--ink-soft); opacity: 0.9; font-variant: normal; letter-spacing: 0; }
+.wiki-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.25);
+}
+.wiki-link { cursor: pointer; }
+.wiki-link:hover { background: rgba(201, 162, 39, 0.08); }
+.wiki-row-year {
+  flex: none;
+  width: 74px;
+  text-align: right;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+  color: #8a6d1a;
+}
+.wiki-row-main { flex: 1; min-width: 0; }
+.wiki-row-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.wiki-row-go { flex: none; color: #8a6d1a; font-size: 16px; }
+.wiki-world-row .wiki-row-year { color: #315f73; }
+.wiki-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border: 1px solid rgba(138, 109, 26, 0.5);
+  border-radius: 9px;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
+  color: #8a6d1a;
+  vertical-align: 1px;
+}
+.wiki-badge-world { border-color: rgba(64, 116, 139, 0.55); color: #315f73; }
+.wiki-badge-decider { border-color: rgba(122, 90, 48, 0.6); color: #7a5a30; }
+.wiki-badges { margin-bottom: 6px; }
+.wiki-desc { font-size: 13.5px; line-height: 1.55; text-align: justify; white-space: pre-line; margin-bottom: 10px; }
+.wiki-kv { display: flex; gap: 10px; padding: 3px 0; font-size: 12.5px; line-height: 1.5; }
+.wiki-k { flex: none; width: 128px; text-align: right; color: var(--ink-soft); font-variant: small-caps; letter-spacing: 0.04em; }
+.wiki-v { flex: 1; min-width: 0; }
+.wiki-opt { margin: 6px 0 10px; }
+.wiki-opt-label { font-size: 13.5px; font-weight: 600; }
+.wiki-opt-tip { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); margin: 2px 0 0 20px; }
+.wiki-hist {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid rgba(138, 109, 26, 0.5);
+  border-radius: 9px;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
+  color: #8a6d1a;
+  font-weight: 400;
+}
+.wiki-standards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wiki-standard {
+  border: 1px solid rgba(138, 109, 26, 0.35);
+  border-radius: 4px;
+  padding: 8px 10px;
+  background: rgba(232, 220, 192, 0.35);
+}
+.wiki-standard-head { display: flex; align-items: center; gap: 7px; font-size: 14px; margin-bottom: 4px; cursor: pointer; }
+.wiki-diff { margin-left: auto; font-size: 11px; font-variant: small-caps; letter-spacing: 0.06em; color: var(--ink-soft); }
+.wiki-blurb { font-size: 12.5px; line-height: 1.5; margin-bottom: 6px; }
+.wiki-moves { margin: 2px 0 6px 20px; padding: 0; font-size: 12.5px; line-height: 1.5; }
+.wiki-objectives { font-size: 12.5px; line-height: 1.5; margin: 4px 0; }
+.wiki-objectives .pos { color: #2c6e31; }
+.wiki-objectives .neg { color: var(--red-deep); }
+.wiki-ideas { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0; }
+.wiki-idea {
+  padding: 2px 8px;
+  border: 1px solid rgba(138, 109, 26, 0.4);
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: var(--ink);
+  background: rgba(201, 162, 39, 0.08);
+}
+@media (max-width: 640px) {
+  .wiki-standards { grid-template-columns: 1fr; }
+  .wiki-k { width: 92px; }
 }

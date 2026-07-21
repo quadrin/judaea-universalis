@@ -4,7 +4,7 @@ import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 
-export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
+export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer, onWiki) {
   if (!root) return;
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
@@ -34,9 +34,10 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       </div></div>`).join('');
     const dots = list.map((b, i) =>
       `<button class="ss-dot" data-dot="${i}" aria-label="${esc(b.name)}" data-tt="${esc(b.name)}"></button>`).join('');
-    const tools = (saveTools || onMultiplayer) ? `
+    const tools = (saveTools || onMultiplayer || onWiki) ? `
       <div class="ss-savetools">
         ${onMultiplayer ? '<button class="ss-back ss-tool ss-mp" data-ref="mp">⚔ Multiplayer</button>' : ''}
+        ${onWiki ? '<button class="ss-back ss-tool" data-ref="wiki">📖 Compendium</button>' : ''}
         ${continueInfo && saveTools && saveTools.onExport ? '<button class="ss-back ss-tool" data-ref="export">Export save</button>' : ''}
         ${saveTools && saveTools.onImport ? '<button class="ss-back ss-tool" data-ref="import">Import save</button>' : ''}
       </div>` : '';
@@ -116,6 +117,8 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
     }
     const mpBtn = root.querySelector('[data-ref="mp"]');
     if (mpBtn && onMultiplayer) mpBtn.addEventListener('click', onMultiplayer);
+    const wikiBtn = root.querySelector('[data-ref="wiki"]');
+    if (wikiBtn && onWiki) wikiBtn.addEventListener('click', onWiki);
     const impBtn = root.querySelector('[data-ref="import"]');
     if (impBtn && saveTools && saveTools.onImport) {
       impBtn.addEventListener('click', () => {

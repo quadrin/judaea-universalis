@@ -116,9 +116,29 @@ export function fireEvent(ctx, ev) {
   const playerSees = audience === player;
   if (playerSees) {
     const instanceId = g.nextEventInstance++;
-    g.pendingEvents.push({ instanceId, eventId: ev.id, forTag: audience });
+    const pe = { instanceId, eventId: ev.id, forTag: audience };
+    // A foreign court's decision is not ours to make (SPEC §70): when the
+    // event declares a `decider` and the player is not that court, the card
+    // arrives as a NOTICE — the decider's own (historical, aiOption) course
+    // is fixed now and stored on the pending entry, and the modal shows one
+    // acknowledging button instead of a choice. If the decider tag has left
+    // the world (a formable rewrote it), the choice falls back to the player —
+    // whoever inherited that throne is the closest thing it has to a court.
+    if (ev.decider && ev.decider !== player && g.tags[ev.decider]) {
+      let idx = 0;
+      try {
+        idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
+      } catch (e) { warnOnce('decider:' + ev.id, 'aiOption threw for', ev.id, e); }
+      pe.notice = true;
+      pe.optIdx = Math.max(0, Math.min(ev.options.length - 1, idx));
+      pe.decider = ev.decider;
+    }
+    g.pendingEvents.push(pe);
     if (!g.paused) { g.paused = true; ctx.bus.emit('pause', true); }
-    ctx.bus.emit('event', { instanceId, event: ev, forTag: audience });
+    ctx.bus.emit('event', {
+      instanceId, event: ev, forTag: audience,
+      notice: !!pe.notice, optIdx: pe.optIdx, decider: pe.decider,
+    });
     return;
   }
   // AI resolves silently
@@ -184,6 +204,10 @@ export function resolveEventOption(ctx, instanceId, idx) {
   g.pendingEvents.splice(i, 1);
   const ev = findEventById(ctx, pe.eventId);
   if (ev) {
+    // A notice card (foreign decider, SPEC §70) applies the course fixed at
+    // fire time no matter which button the UI reports — acknowledging is not
+    // choosing.
+    if (pe.notice) idx = Number.isFinite(pe.optIdx) ? pe.optIdx : 0;
     const opt = ev.options[idx] || ev.options[0];
     try {
       // A battle card may already have been queued behind another modal when

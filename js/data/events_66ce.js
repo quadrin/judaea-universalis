@@ -203,6 +203,7 @@ export const EVENTS_66 = [
       + 'Alexandria the legions are loosed upon the Delta quarter. Syria has become a country '
       + 'of neighbors killing neighbors, and every column of smoke recruits for one side or the other.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 66, m: 8 },
     major: true,
     aiOption: 0,
@@ -471,6 +472,7 @@ export const EVENTS_66 = [
       + 'cohorts of auxiliaries, and the kings\' contingents: sixty thousand men under arms. '
       + 'The reduction of Judaea begins.',
     forTag: 'both',
+    decider: 'ROM',
     date: { y: 67, m: 2 },
     major: true,
     aiOption: 0,
@@ -816,6 +818,7 @@ export const EVENTS_66 = [
       + 'sun rather than be searched again. Josephus, calling up from below the ramparts in '
       + 'Aramaic to offer terms, is answered with arrows, and with laughter, which is worse.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_famine_in_jerusalem', (ctx) => {
       const p = ctx.prov('Jerusalem');
@@ -871,6 +874,7 @@ export const EVENTS_66 = [
       + 'plain called Yavneh, a scholar carried out of the siege in a coffin has begun to '
       + 'teach. The sages begin again.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_temple_burns', (ctx) => {
       // Any occupier on Rome's side of the war burns as surely as Rome itself —
@@ -945,6 +949,7 @@ export const EVENTS_66 = [
       + 'Legion has begun its wall and its ramp, patient as geometry. Eleazar tells his '
       + 'people that God has granted them one favor still in their power: to die well, and free.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_masada_epilogue', (ctx) => {
       const h = ctx.helpers;
@@ -999,6 +1004,7 @@ export const EVENTS_66 = [
       + 'quantities that feed armies. Rome remembers Carrhae the way a body remembers a '
       + 'wound. Every eastern legate now writes his dispatches with one eye over his shoulder.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_parthian_posture', (ctx) => {
       const h = ctx.helpers;
@@ -1106,6 +1112,7 @@ export const EVENTS_66 = [
       + 'ramparts of Jerusalem, who have held since the day the sacrifices ceased, learn '
       + 'that the price of Rome\'s peace was never lower than the cost of Rome\'s war.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_negotiated_peace', () => false),
     aiOption: 0,
@@ -1205,6 +1212,7 @@ export const EVENTS_66 = [
       + 'coins styling it Eirenopolis — City of Peace. Galilee\'s shield now has a hole in '
       + 'its center the size of its richest city.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     chance: 0.6,
     trigger: safeTrigger('ev_sepphoris_opens_gates', (ctx) => {
@@ -1306,6 +1314,7 @@ export const EVENTS_66 = [
       + 'was stained and the shores stank for days. Six thousand of the survivors were sent '
       + 'to dig Nero\'s canal at Corinth; thirty thousand more went under the auctioneer\'s spear.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_tarichaea_lake', (ctx) =>
       dateGE(ctx, 67, 1) && ctx.helpers.controls(ctx, 'ROM', 'Tarichaea')),
@@ -1407,6 +1416,7 @@ export const EVENTS_66 = [
       + 'the emptied plateau the Tenth Legion Fretensis pitches its camp among the stones '
       + 'it broke.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_city_razed', (ctx) => {
       const h = ctx.helpers;
@@ -1518,6 +1528,7 @@ export const EVENTS_66 = [
       + 'the sacrifices, and the feasting. A relief of the lampstand will stand in carved '
       + 'stone over the Sacred Way when everyone in this crowd is dust.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_flavian_triumph', (ctx) => {
       const h = ctx.helpers;
@@ -1566,6 +1577,7 @@ export const EVENTS_66 = [
       + 'Galilee selling his oil will take the coin, because there is no other coin, and '
       + 'carry the picture of his own defeat home in his purse. That is the point of it.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev_judaea_capta', (ctx) =>
       dateGE(ctx, 71, 8) && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
     aiOption: 0,
@@ -1626,6 +1638,7 @@ export const EVENTS_66 = [
       + 'idol. Of all the instruments of the defeat, the accountants\' is the one that '
       + 'reaches every single household.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_fiscus_judaicus', (ctx) => {
       const h = ctx.helpers;
@@ -1693,6 +1706,7 @@ export const EVENTS_66 = [
       + 'hundred discharged veterans, settled on confiscated ground, their pensions paid '
       + 'in other men\'s vineyards.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_imperial_estate', (ctx) => {
       const h = ctx.helpers;
       return dateGE(ctx, 72, 3) && alive(ctx, 'ROM')
@@ -1747,6 +1761,7 @@ export const EVENTS_66 = [
       + 'the Jordan thickets until the river, Josephus says, could be crossed on the dead. '
       + 'One rock now remains.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_machaerus_taken', (ctx) => {
       const h = ctx.helpers;
       return dateGE(ctx, 72, 1) && !!h.getFlag(ctx, 'templeBurned')
@@ -1791,6 +1806,7 @@ export const EVENTS_66 = [
       + 'to show it was not hunger, and silence. Two women and five children, hidden in '
       + 'the cisterns, lived to say how it was done.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_masada_falls', (ctx) => {
       const h = ctx.helpers;
@@ -1852,6 +1868,7 @@ export const EVENTS_66 = [
       + 'Antiochus built in Egypt two centuries ago. Its lamps are put out by an inventory '
       + 'clerk. Nowhere in the world does a Jewish altar now burn.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_leontopolis_closed', (ctx) => {
       const h = ctx.helpers;
       return dateGE(ctx, 73, 6) && alive(ctx, 'ROM')
@@ -1901,6 +1918,7 @@ export const EVENTS_66 = [
       + 'city walk past the precinct without turning their heads, which is its own kind '
       + 'of looking.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_temple_of_peace', (ctx) =>
       dateGE(ctx, 75, 1) && alive(ctx, 'ROM') && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
     aiOption: 0,
@@ -1941,6 +1959,7 @@ export const EVENTS_66 = [
       + 'neither flatter Rome nor spare his own people, and the strange thing — the thing '
       + 'that will keep the book alive for twenty centuries — is how close he comes.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev_josephus_history', (ctx) => {
       const h = ctx.helpers;
       return dateGE(ctx, 77, 1) && alive(ctx, 'ROM')
@@ -1981,6 +2000,7 @@ export const EVENTS_66 = [
       + 'Everyone in the city knows how this must end except, perhaps, the two people '
       + 'concerned.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_berenice_in_rome', (ctx) =>
       dateGE(ctx, 75, 3) && alive(ctx, 'AGR') && alive(ctx, 'ROM')
         && !!ctx.helpers.getFlag(ctx, 'vespasianEmperor')),
@@ -2110,6 +2130,7 @@ export const EVENTS_66 = [
       + 'it with a hundred days of games; the crowd that watches has already half-forgotten '
       + 'where the money came from, which is what monuments are for.',
     forTag: 'both',
+    decider: 'ROM',
     trigger: safeTrigger('ev_colosseum_opens', (ctx) =>
       dateGE(ctx, 80, 6) && alive(ctx, 'ROM') && !!ctx.helpers.getFlag(ctx, 'flavianTriumph')),
     aiOption: 0,
@@ -2198,6 +2219,7 @@ export const EVENTS_66 = [
       + 'taxable, deniable, dangerous condition — a thing the delatores can smell on '
       + 'a man\'s dinner or his idle Sabbaths.',
     forTag: 'both',
+    decider: 'ROM',
     major: true,
     trigger: safeTrigger('ev_fiscus_tightens', (ctx) =>
       dateGE(ctx, 85, 1) && alive(ctx, 'ROM')
@@ -2295,6 +2317,7 @@ export const EVENTS_66 = [
       + 'in Rome now knows it. The senators check their dinner guests. The informers check '
       + 'the senators.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_flavius_clemens', (ctx) =>
       dateGE(ctx, 95, 1) && alive(ctx, 'ROM')
@@ -2695,6 +2718,7 @@ export const EVENTS_66 = [
       + 'letters. The instruments signed at the peace are not torn up. They are merely '
       + 'starved.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_flavian_grudge', (ctx) =>
       dateGE(ctx, 72, 6) && judaeaFree(ctx) && alive(ctx, 'ROM')
@@ -2912,6 +2936,7 @@ export const EVENTS_66 = [
       + 'in two wars, and set it beside what Judaea has ever cost as a neighbor. The '
       + 'couriers go out. Twice, it turns out, is an answer.',
     forTag: 'both',
+    decider: 'JUD',
     major: true,
     trigger: safeTrigger('ev_eagles_go_home', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'secondExpedition')

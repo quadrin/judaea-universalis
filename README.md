@@ -42,6 +42,22 @@ python3 -m http.server 8613 --directory .
   subjugation into a tribute-paying client kingdom — priced against your war score; losing
   AIs sue for peace, AI-vs-AI wars settle themselves, and five-year truces follow every
   treaty. Fabricate claims and declare war from a foreign province's diplomacy block.
+- Win hard enough and the treaty can force the enemy to **release nations**: any fallen
+  court whose lands they swallowed can be restored as an independent state — priced by
+  development against your war score, its whole patrimony burning gold on the map while
+  its box is ticked. The restored nation rises truce-sheltered and loving its liberator;
+  the old master keeps its capital, remembers the loss, and plots reconquest. Liberation
+  earns no infamy.
+- A foreign court's decision is not yours to make: events that dramatize another realm's
+  choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
+  everyone else as a single-button notice naming the deciding court — the historical
+  course simply happens. Play the deciding nation and the full choice is yours.
+- **The Compendium** (W, the topbar book, or 📖 on the title screen): the game's own
+  wiki, generated live from the data — every chapter with its timeline and every event's
+  printed consequences, the playable standards with their guidance and win/loss
+  contracts, every nation of every era (temperament, national character, rulers,
+  crowns), the formable nations with requirement checklists, and the shared pool of
+  omens. It can never go stale, because it reads the same modules the engine plays.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
 - A war overview (score broken into battles / occupation / events, who holds what), a
@@ -179,7 +195,8 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The whole 41-suite verification battery ships in `tools/tests/`.
+  marching. The full verification battery — 48 headless sim suites and 29
+  Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
   Peace changes the event timeline too: later canonical battle phases retire

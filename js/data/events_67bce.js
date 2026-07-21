@@ -573,6 +573,7 @@ export const EVENTS_67 = [
       + 'confirmed; Aristobulus is invited, in the manner of an arrest warrant, to '
       + 'stand down his fortresses. The legions make the finding enforceable.',
     forTag: 'both',
+    decider: 'ARI',
     major: true,
     trigger: safeTrigger('ev4_arbitration', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'submittedHYR') && !!ctx.helpers.getFlag(ctx, 'submittedARI')
@@ -1042,6 +1043,7 @@ export const EVENTS_67 = [
       + 'Idumean, citizen of Rome, free of tribute, procurator of Judaea — the servant '
       + 'now holds a Roman title the master cannot revoke.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -47, m: 7 },
     major: true,
     aiOption: 0,
@@ -1361,6 +1363,7 @@ export const EVENTS_67 = [
       + 'are named tetrarchs of the Jews. A second delegation, a thousand strong, tries '
       + 'again at Tyre; his soldiers meet it on the shore, and not gently.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -41, m: 10 },
     major: true,
     aiOption: 0,
@@ -1507,6 +1510,7 @@ export const EVENTS_67 = [
       + 'road south, beating back pursuit at every defile, toward the rock of Masada and '
       + 'the long way to Petra.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -40, m: 8 },
     major: true,
     aiOption: 0,
@@ -1557,6 +1561,7 @@ export const EVENTS_67 = [
       + 'and not one city in his kingdom actually his. The Senate has given him a title. '
       + 'The sword must give him everything else.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -40, m: 12 },
     major: true,
     aiOption: 0,
@@ -1923,6 +1928,7 @@ export const EVENTS_67 = [
       + 'aftershocks stop, reasoning that a flattened country cannot form a line of '
       + 'battle. The army, camped in the open, is untouched.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -31, m: 4 },
     major: true,
     aiOption: 0,
@@ -2050,6 +2056,7 @@ export const EVENTS_67 = [
       + 'Octavian, who valued exactly one quality in kings, picked up the diadem and '
       + 'handed it back — with Jericho, and more besides.',
     forTag: 'both',
+    decider: 'HYR',
     date: { y: -30, m: 5 },
     major: true,
     aiOption: 0,

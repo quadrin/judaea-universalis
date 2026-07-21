@@ -140,6 +140,7 @@ export const EVENTS_614 = [
       + 'Cross is carried east as a trophy of the fire temples; the Jewish fighters who '
       + 'stormed the breach are given — for now — the governance of Jerusalem.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev_p_jerusalem', (ctx) =>
       dateGE(ctx, 614, 6)
       && (ctx.game.playerTag !== 'BYZ'
@@ -185,6 +186,7 @@ export const EVENTS_614 = [
       + 'marches with them himself. He is buying, with his own silver, the thing his '
       + 'grandfathers only prayed for — a Jewish army on the road to Jerusalem.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 614, m: 8 },
     aiOption: 0,
     options: [
@@ -257,6 +259,7 @@ export const EVENTS_614 = [
       + 'gains a hostage worth more than a province; Constantinople gains a grievance '
       + 'worth more than an army.',
     forTag: 'both',
+    decider: 'SAS',
     date: { y: 614, m: 9 },
     aiOption: 0,
     options: [
@@ -397,6 +400,7 @@ export const EVENTS_614 = [
       + 'its old allies and found the allies lighter. Nehemiah is summoned to hear the '
       + 'decision — summoned, notably, without his guard.',
     forTag: 'both',
+    decider: 'JUD',
     date: { y: 617, m: 6 },
     major: true,
     aiOption: 0,
@@ -449,6 +453,7 @@ export const EVENTS_614 = [
       + 'the walls. With Egypt gone, the grain dole of Constantinople ends after six '
       + 'centuries — the bread of empire is now barley, rationed, and prayed over.',
     forTag: 'both',
+    decider: 'BYZ',
     trigger: safeTrigger('ev_p_egypt', (ctx) =>
       dateGE(ctx, 619, 3)
       && !!findWar(ctx.game, 'SAS', 'BYZ')
@@ -593,6 +598,7 @@ export const EVENTS_614 = [
       + 'who fight for plunder and keep their bargains. Rome has bought allies before; '
       + 'it has rarely needed them this badly or paid this personally.',
     forTag: 'both',
+    decider: 'BYZ',
     trigger: safeTrigger('ev_p_turks', (ctx) =>
       dateGE(ctx, 626, 10) && !!findWar(ctx.game, 'SAS', 'BYZ')),
     aiOption: 0,
@@ -636,6 +642,7 @@ export const EVENTS_614 = [
       + 'sits down where it stands, and Persia\'s best sword stays in its sheath '
       + 'for the rest of the war.',
     forTag: 'both',
+    decider: 'BYZ',
     trigger: safeTrigger('ev_p_intercepted', (ctx) =>
       dateGE(ctx, 627, 6) && !!findWar(ctx.game, 'SAS', 'BYZ')),
     major: true,
@@ -740,6 +747,7 @@ export const EVENTS_614 = [
       + 'regicides. In four centuries the House of Sasan has survived Rome, the '
       + 'Huns and its own satraps; it will not survive its own peace.',
     forTag: 'both',
+    decider: 'SAS',
     trigger: safeTrigger('ev_p_plague', (ctx) =>
       dateGE(ctx, 628, 10)
       && !!(ctx.game.firedEvents && ctx.game.firedEvents.ev_p_khosrow_falls)),
@@ -1394,6 +1402,7 @@ export const EVENTS_614 = [
       + 'on Damascus, marches on his own former soldiers instead — and wins the kind '
       + 'of victory over the pious that the pious never stop avenging.',
     forTag: 'both',
+    decider: 'RSH',
     trigger: safeTrigger('ev_p_nahrawan', (ctx) =>
       dateGE(ctx, 658, 7) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'kharijites')),
     aiOption: 0,
@@ -1495,6 +1504,7 @@ export const EVENTS_614 = [
       + 'Mount. Centuries on, letters in a Cairo storeroom will still remember the '
       + 'negotiation and the names.',
     forTag: 'both',
+    decider: 'JUD',
     trigger: safeTrigger('ev_p_seventy_families', (ctx) =>
       dateGE(ctx, 662, 4) && alive(ctx, 'RSH')
       && !!ctx.helpers.getFlag(ctx, 'muawiyaCaliph')
@@ -1795,6 +1805,7 @@ export const EVENTS_614 = [
       + 'Damascus discovers what Rome has known for centuries: a mountain is a '
       + 'frontier that never signs anything.',
     forTag: 'both',
+    decider: 'BYZ',
     trigger: safeTrigger('ev_p_mardaites', (ctx) =>
       dateGE(ctx, 672, 6) && alive(ctx, 'BYZ') && alive(ctx, 'RSH')
       && ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis']
@@ -2128,6 +2139,7 @@ export const EVENTS_614 = [
       + 'holds Syria by the sword-edge; the blood feud between Qays and Kalb that '
       + 'begins on this meadow will outlive everyone who can remember why.',
     forTag: 'both',
+    decider: 'RSH',
     trigger: safeTrigger('ev_p_marj_rahit', (ctx) =>
       dateGE(ctx, 684, 8) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'secondFitna')),
     aiOption: 0,
