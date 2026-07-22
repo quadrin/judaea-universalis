@@ -45,12 +45,45 @@ function returnStands(ctx) {
   return alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
 }
 
+// Northernmost RSH-owned oasis first: the campaign armies must muster at the
+// desert's edge, in reach of Iraq and the Levant — not a thousand miles back
+// in Yathrib where the old order (Yathrib first) parked every column it
+// raised. Dumatha borders Uruk, Bostra and Petra; that is where a war with
+// the settled lands actually begins.
 function stagingProvince(ctx) {
-  for (const name of ['Yathrib', 'Khaybar', 'Tayma', 'Hegra', 'Dumatha']) {
+  for (const name of ['Dumatha', 'Hegra', 'Tayma', 'Khaybar', 'Yathrib']) {
     const p = ctx.prov(name);
     if (p && p.owner === 'RSH') return name;
   }
   return 'Hegra';
+}
+
+// The Ridda wars settle the peninsula (632–633): the northern oases that
+// Ghassan's riders held for the empires — Hegra, Tayma, Dumatha — pass to
+// Medina, and with them the desert road north. Without this the Caliphate
+// owns only Yathrib and Khaybar, every exit is a neutral Ghassanid oasis or
+// impassable waste, canEnter refuses all of it, and the "invasion" spends
+// the whole war parked at Medina (the reported bug). Idempotent, so the
+// campaign events may call it again to heal saves that awakened before the
+// fix. Human-held land is never script-taken — the player's wars are their
+// own to fight.
+function riddaSettlesTheNorth(ctx) {
+  const g = ctx.game;
+  const humans = Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [g.playerTag];
+  let taken = false;
+  for (const name of ['Hegra', 'Tayma', 'Dumatha']) {
+    const p = ctx.prov(name);
+    if (!p || p.owner !== 'GHA') continue;
+    if (humans.indexOf(p.owner) >= 0 || humans.indexOf(p.controller) >= 0) continue;
+    ctx.helpers.changeOwner(ctx, name, 'RSH');
+    p.religion = 'islam';
+    taken = true;
+  }
+  if (taken) {
+    ctx.helpers.chronicle(ctx, 'era',
+      'The Ridda wars reach the northern oases: Hegra, Tayma and Dumatha stand with Medina, and the desert road to the settled lands lies open.');
+  }
+  return taken;
 }
 
 function awakenCaliphate(ctx) {
@@ -67,6 +100,15 @@ function awakenCaliphate(ctx) {
     id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 48,
     effects: { moraleMult: 1.1, reinforceMult: 1.1 },
   });
+  // The conquest pays for the conquerors: ghanima and the diwan stipends
+  // carry a field army far beyond what five oasis towns could ever fund —
+  // without this the event-mustered hosts melt to debt desertion before
+  // they reach the settled lands. Runs through the conquest generation
+  // (to ~651, the Sasanian horizon).
+  h.addTagModifier(ctx, 'RSH', {
+    id: 'diwan_of_the_conquests', name: 'The Diwan of the Conquests', months: 240,
+    effects: { maintMult: 0.5, incomeMult: 1.25 },
+  });
   // v5.0: the movement's true home is on the map. Yathrib — Medina — has
   // belonged to the dormant tag since the start; the awakening makes it the
   // City of the Prophet. (Khaybar keeps its Jewish farmers until the sword
@@ -82,6 +124,9 @@ function awakenCaliphate(ctx) {
       tayma.religion = 'islam';
     }
   }
+  // Open the road before mustering: the field army stands at the northern
+  // frontier the Ridda just won, not locked behind it.
+  riddaSettlesTheNorth(ctx);
   h.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
     inf: 5, cav: 5, name: 'Army of the Ridda',
     general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
@@ -728,8 +773,14 @@ export const EVENTS_614 = [
           });
           ctx.helpers.endWar(ctx, 'SAS', 'BYZ', null);
           ctx.helpers.adjust(ctx, 'SAS', { stability: -1, legitimacy: -20 });
+          // Ten monarchs in four years: the court that murders its kings
+          // cannot also pay, rally and reinforce its field armies. The
+          // disarray must outlast the funeral — it is the hollowed Persia the
+          // Arab columns historically found in the 630s; a 24-month pause
+          // left the empire fully rearmed before the Iraq campaign began.
           ctx.helpers.addTagModifier(ctx, 'SAS', {
-            id: 'house_eats_itself', name: 'The House Eats Itself', months: 24, effects: { aiPassive: true },
+            id: 'house_eats_itself', name: 'The House Eats Itself', months: 60,
+            effects: { aiPassive: true, moraleMult: 0.85, reinforceMult: 0.75 },
           });
           ctx.helpers.chronicle(ctx, 'peace', 'Khosrow is murdered by his own son; the last great war of antiquity ends where it began.');
         }),
@@ -758,6 +809,11 @@ export const EVENTS_614 = [
         tooltip: 'Persia: −2 stability, −10 legitimacy. The last great war of antiquity has no victor east of the Euphrates.',
         effects: guard('ev_p_plague:0', (ctx) => {
           ctx.helpers.adjust(ctx, 'SAS', { stability: -2, legitimacy: -10 });
+          // The plague and the purges empty the muster rolls: half the
+          // recruitable men of the empire are dead, fled, or answering to a
+          // pretender instead of Ctesiphon.
+          const sas = ctx.game.tags.SAS;
+          if (sas) sas.manpower = Math.round(Math.max(0, sas.manpower || 0) * 0.5);
           ctx.helpers.chronicle(ctx, 'ruler', 'Kavad II dies of the plague named for him; an infant rules the House of Sasan.');
         }),
       },
@@ -766,6 +822,10 @@ export const EVENTS_614 = [
         tooltip: 'Persia: −100 talents in donatives to the court; −1 stability, −10 legitimacy. The infant king is bought a quieter cradle.',
         effects: guard('ev_p_plague:1', (ctx) => {
           ctx.helpers.adjust(ctx, 'SAS', { treasury: -100, stability: -1, legitimacy: -10 });
+          // Silver steadies the court, not the countryside: the plague still
+          // empties the muster rolls.
+          const sas = ctx.game.tags.SAS;
+          if (sas) sas.manpower = Math.round(Math.max(0, sas.manpower || 0) * 0.5);
           ctx.helpers.chronicle(ctx, 'ruler', 'Kavad II dies of the plague named for him; donatives from the treasury keep the court, for now, around an infant king.');
         }),
       },
@@ -887,8 +947,12 @@ export const EVENTS_614 = [
       tooltip: 'The Caliphate declares war on the live holder of lower Iraq and fields a second army. No province is transferred by script.',
       effects: guard('ev_p_iraq_raids:0', (ctx) => {
         if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        else riddaSettlesTheNorth(ctx); // heal campaigns awakened before the road opened
         const target = ownerOf(ctx, ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], 'SAS');
-        if (target && !warBetween(ctx, 'RSH', target)) ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of Iraq');
+        if (target && !warBetween(ctx, 'RSH', target)) {
+          const war = ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of Iraq');
+          if (war) war.settleMonths = 84; // a generational campaign, not a three-year raid
+        }
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
           inf: 6, cav: 4, name: 'Army of al-Muthanna',
           general: { name: 'al-Muthanna ibn Haritha', fire: 2, shock: 4, maneuver: 4 },
@@ -915,8 +979,22 @@ export const EVENTS_614 = [
       tooltip: 'The Caliphate declares war on the current Levantine power—preferentially Byzantium if it still holds the region—and reinforces from Arabia.',
       effects: guard('ev_p_levant_campaign:0', (ctx) => {
         if (!alive(ctx, 'RSH')) awakenCaliphate(ctx);
+        else riddaSettlesTheNorth(ctx); // heal campaigns awakened before the road opened
         const target = ownerOf(ctx, ['Damascus', 'Bostra', 'Jerusalem', 'Emesa'], 'BYZ');
-        if (target && !warBetween(ctx, 'RSH', target)) ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of the Levant');
+        if (target && !warBetween(ctx, 'RSH', target)) {
+          const war = ctx.helpers.declareWar(ctx, 'RSH', target, 'The Conquest of the Levant');
+          if (war) war.settleMonths = 84; // Yarmouk and the fall of Syria take years, not one truce cycle
+        }
+        // The Ghassanid screen (Mu'tah's memory): if Ghassan still bars the
+        // road at Bostra or Dumatha and no other war has already swept it in,
+        // the columns must fight through it — a neutral client sitting on the
+        // only gate out of Arabia would otherwise stop the entire campaign
+        // without a battle.
+        if (alive(ctx, 'GHA') && target !== 'GHA' && !warBetween(ctx, 'RSH', 'GHA')
+            && ['Bostra', 'Dumatha'].some((n) => { const p = ctx.prov(n); return p && p.owner === 'GHA'; })) {
+          const war = ctx.helpers.declareWar(ctx, 'RSH', 'GHA', 'The Conquest of the Levant');
+          if (war) war.settleMonths = 84;
+        }
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
           inf: 8, cav: 4, name: 'Army of Syria',
           general: { name: 'Abu Ubayda ibn al-Jarrah', fire: 3, shock: 3, maneuver: 4 },

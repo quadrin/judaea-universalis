@@ -214,6 +214,22 @@ await page.waitForTimeout(200);
 ok(await page.evaluate(() => document.getElementById('event-modal').classList.contains('hidden')),
   'acknowledging closes the card');
 
+// Before any nation has fallen, the release section still stands on the
+// table with its empty-state explainer — the mechanic must be discoverable
+// even when there is nothing to free (the reported "I don't see the release
+// nation functionality").
+await page.keyboard.press('n');
+await page.waitForSelector('#nation-panel:not(.hidden)');
+await page.locator('#nation-panel .np-dove').first().click();
+await page.waitForSelector('#peace-modal:not(.hidden)');
+const earlyPeaceText = await page.locator('#peace-modal').textContent();
+ok(/Force them to release nations/.test(earlyPeaceText),
+  'the release section is visible before any court has fallen');
+ok(/no lands of a fallen nation/i.test(earlyPeaceText),
+  'the empty state explains why nothing can be freed yet');
+await page.locator('#peace-modal .peace-cancel').click();
+await page.waitForTimeout(150);
+
 // The release table: Nabataea has fallen to Rome; at +90 the treaty frees it.
 await page.evaluate(() => {
   const ctx = window._ctx;

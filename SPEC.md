@@ -2935,3 +2935,64 @@ fight one.
   chapters, chapter → timeline → event drill-down with printed consequences,
   back/home navigation, nations and formables pages, the in-play negatives
   (no topbar button, `W` inert), and zero page errors.
+
+## 72. The invasions that must actually arrive — the Ridda road and Pompey's patience
+
+Two report-driven repairs (v8.6). "The Islamic invasions and the Roman
+conquests don't trigger": both were real, and both were gates, not clocks.
+
+- **The desert road** (`events_614ce.js`): the Rashidun awakening now runs
+  `riddaSettlesTheNorth` — Hegra, Tayma and Dumatha, Ghassan's Arabian
+  outposts, pass to Medina at the succession (the historical Ridda sweep,
+  632–633), with the player's owned or controlled oases always exempt. Before
+  this the Caliphate owned only Yathrib and Khaybar; every exit was neutral
+  Ghassanid land or impassable waste, `canEnter` refused all of it, and the
+  campaign armies spent the whole war parked at Medina while "The Conquest of
+  Iraq" timed out at zero war score. `stagingProvince` now prefers the
+  northernmost owned oasis (Dumatha first), so the mustered hosts stand at
+  the frontier in reach of Uruk, Bostra and Petra. The campaign events call
+  the Ridda sweep again (idempotent) to heal saves that awakened before the
+  fix.
+- **The Ghassanid screen**: if Ghassan still bars the road at Bostra or
+  Dumatha when the Levant campaign opens and no war has already swept it in,
+  the columns open one (Mu'tah's memory) — a neutral client on the only gate
+  out of Arabia can no longer stop the conquest without a battle.
+- **A generational horizon** (`ai.js` `monthlyWarDiplomacy`): AI-vs-AI wars
+  may carry `war.settleMonths` — the two Conquest wars set 84 months — so the
+  scripted struggle for the Near East no longer white-peaces on the default
+  36-month clock while history still expects Yarmouk, Qadisiyyah and the fall
+  of Ctesiphon. A decisive score (±50) still settles any war early.
+- **The hollowed house**: Khosrow's fall extends "The House Eats Itself" to
+  60 months with real teeth (morale ×0.85, reinforcement ×0.75, aiPassive),
+  and the Plague of Sheroe halves the Sasanian muster rolls — the empire the
+  Arab columns meet is the one the sources describe, not a fully rearmed
+  Persia. The awakening also grants "The Diwan of the Conquests" (240 months,
+  maintenance ×0.5, income ×1.25): ghanima pays the field army five oasis
+  towns never could, so the event-mustered hosts stop melting to debt
+  desertion before reaching the settled lands. Victories must still be
+  fought — nothing here transfers a settled province by script.
+- **Pompey's patience** (`events_67bce.js`): the political spine of the Roman
+  settlement — both Three Embassies cards, both "Pompey Requires an Answer"
+  ultimata, the arbitration, and The Roman in the Sanctuary — no longer
+  declares `requiresWar`. Those gates listed the brothers' war beside Rome's
+  own; a player who signed an early peace with their brother put `ARI|HYR` in
+  `_settledWars`, and the engine then retired the entire chain unfired — Rome
+  never demanded, never subjugated, never conquered. The ultimata are
+  politics, not battle phases: they now come at peace or at war (each
+  bilateral card still requires its court alive; the embassies require both,
+  since the scene is the rivalry itself; the arbitration's own trigger still
+  demands the live dispute). Genuine battle phases of the brothers' war
+  (Aretas' price, Honi, the paschal beasts) keep their gates — a treaty still
+  retires those.
+- **Release nations, visible** (`ui.js`): the peace table always shows the
+  "Force them to release nations" section — with the release rows when a
+  fallen court qualifies, and otherwise with an empty-state line explaining
+  what would qualify (or, in a separate peace, that releases wait for the
+  full congress). The mechanic (SPEC §69) was invisible in every war where
+  nothing qualified, which read as "the feature doesn't exist."
+- **Regression contract**: `smoke49.mjs` — the Ridda transfer and the
+  frontier muster, a marchable path from Dumatha onto the rivers, the
+  84-month horizons, the Ghassanid screen, the player-oasis exemption, the
+  deepened Sasanian collapse, and the Pompey chain surviving an early
+  brothers' peace through to Rome's war. `uitest29.mjs` additionally drives
+  the release section's empty state before any court has fallen.

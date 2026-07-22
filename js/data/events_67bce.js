@@ -421,7 +421,11 @@ export const EVENTS_67 = [
   {
     id: 'ev4_embassy_hyr',
     title: 'Three Embassies at Damascus',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar: this is politics, not a battle phase. Pompey receives
+    // the East whether or not the brothers are still shooting at each other —
+    // a signed truce between them must not cancel Rome's arrival (the old
+    // gate let an early peace strike the whole Roman settlement from the
+    // timeline). The rival-embassies scene does need both courts standing.
     desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
       + 'come three embassies at once: your brother\'s, with a golden vine said to be worth '
       + 'five hundred talents; yours, with Antipater\'s arithmetic of legitimacy; and a '
@@ -429,7 +433,7 @@ export const EVENTS_67 = [
       + 'listens to all three with the same face.',
     forTag: 'HYR',
     trigger: safeTrigger('ev4_embassy_hyr', (ctx) =>
-      !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'HYR')),
+      !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'HYR') && alive(ctx, 'ARI')),
     aiOption: 0,
     options: [
       {
@@ -456,7 +460,8 @@ export const EVENTS_67 = [
   {
     id: 'ev4_embassy_ari',
     title: 'Three Embassies at Damascus',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar — see ev4_embassy_hyr: Rome's audience does not wait on
+    // the brothers' war still running.
     desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
       + 'come three embassies at once: yours, with a golden vine worth five hundred '
       + 'talents; your brother\'s, with Antipater\'s patient arithmetic; and a third, from '
@@ -464,7 +469,7 @@ export const EVENTS_67 = [
       + 'all three with the same face.',
     forTag: 'ARI',
     trigger: safeTrigger('ev4_embassy_ari', (ctx) =>
-      !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'ARI')),
+      !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'ARI') && alive(ctx, 'HYR')),
     aiOption: 0,
     options: [
       {
@@ -493,7 +498,10 @@ export const EVENTS_67 = [
   {
     id: 'ev4_pompey_demands_hyr',
     title: 'Pompey Requires an Answer',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar: the proconsul's ultimatum is the hinge of the Roman
+    // conquest, and history sent it regardless of whether the brothers had
+    // patched up their quarrel. Gating it on their war meant a player who
+    // signed an early peace erased Rome from the chapter entirely.
     desc: 'The proconsul\'s letter is courteous the way a drawn blade is bright. Rome '
       + 'takes note of the disorders in Judaea; Rome desires the country quiet; the '
       + 'high priest will present himself, place his cause in Rome\'s hands, and open his '
@@ -529,7 +537,8 @@ export const EVENTS_67 = [
   {
     id: 'ev4_pompey_demands_ari',
     title: 'Pompey Requires an Answer',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar — see ev4_pompey_demands_hyr: the ultimatum comes at
+    // peace or at war.
     desc: 'The proconsul\'s letter is courteous the way a drawn blade is bright. Rome '
       + 'takes note of the disorders in Judaea; Rome desires the country quiet; the king '
       + 'will present himself, place his cause in Rome\'s hands, and open his fortresses '
@@ -567,7 +576,10 @@ export const EVENTS_67 = [
   {
     id: 'ev4_arbitration',
     title: 'Pompey Chooses the Elder',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar: the trigger below already demands the live brothers'
+    // war (there is nothing to arbitrate once they have settled it), and the
+    // old gate would otherwise mark the card fired-and-skipped the moment
+    // their treaty was signed.
     desc: 'Both brothers knelt, so the Roman judged: the elder is the lawful heir, the '
       + 'younger the abler man — and Rome has no shortage of able men. Hyrcanus is '
       + 'confirmed; Aristobulus is invited, in the manner of an arrest warrant, to '
@@ -607,7 +619,9 @@ export const EVENTS_67 = [
   {
     id: 'ev4_holy_of_holies',
     title: 'The Roman in the Sanctuary',
-    requiresWar: [['HYR', 'ARI'], ['ROM', 'HYR'], ['ROM', 'ARI']],
+    // No requiresWar: the trigger is the fact itself — Rome standing in
+    // Jerusalem — however and in whichever war the city fell. The old gate
+    // could retire the scene before the legions ever reached the walls.
     desc: 'On the day the Temple fell to him, Pompey did what no living Jew had done: he '
       + 'walked through the Veil into the Holy of Holies, and found — nothing. No statue, '
       + 'no relic, no treasure hoard; an empty room, and the presence that empty rooms '
