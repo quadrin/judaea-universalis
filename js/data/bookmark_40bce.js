@@ -132,6 +132,9 @@ export const BOOKMARK_40 = {
     + 'vacuum more than it loves any king.',
 
   activeTags: ['HER', 'ATG', 'ROM', 'PAR', 'NAB', 'PTO', 'ARM', 'OSR', 'ADI', 'CHX'],
+  // Standing rivalries (SPEC §73): the Parthian flood IS the chapter — the
+  // two empires stay each other's natural war.
+  rivalries: [['ROM', 'PAR']],
 
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.

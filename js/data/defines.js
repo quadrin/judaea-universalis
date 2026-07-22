@@ -516,6 +516,13 @@ export const DEFINES = {
     peaceMaxDevShare: 0.4,   // no single treaty strips more than this share of the loser's dev
     weMoraleFloor: 0.4,      // morale recovery never drops below this fraction...
     weMoraleAt: 40,          // ...which it reaches as war exhaustion approaches this
+    // Standing rivalries (SPEC §73): pairs the bookmark names as the era's
+    // natural enemies. Their mutual opinion drifts toward the cold baseline
+    // instead of neutral, so the opportunistic-war gate (opinion < -50)
+    // never rusts shut between them and the great powers keep fighting
+    // their own wars.
+    rivalOpinion: -60,       // the baseline rival opinions cool toward
+    rivalRatioMult: 0.85,    // rivals need 15% less overmatch to strike
   },
 
   // Veteran difficulty (start-screen choice): every AI court fights and earns

@@ -2597,6 +2597,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 .wiki-badges { margin-bottom: 6px; }
 .wiki-desc { font-size: 13.5px; line-height: 1.55; text-align: justify; white-space: pre-line; margin-bottom: 10px; }
 .wiki-kv { display: flex; gap: 10px; padding: 3px 0; font-size: 12.5px; line-height: 1.5; }
+.wiki-rivalry { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 13px; }
 .wiki-k { flex: none; width: 128px; text-align: right; color: var(--ink-soft); font-variant: small-caps; letter-spacing: 0.04em; }
 .wiki-v { flex: 1; min-width: 0; }
 .wiki-opt { margin: 6px 0 10px; }

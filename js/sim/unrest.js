@@ -3,7 +3,7 @@
 
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
-  liveGrudge, grudgeCeiling,
+  liveGrudge, grudgeCeiling, areRivals,
 } from './military.js';
 import { popTension, popTotal } from './population.js';
 
@@ -252,7 +252,13 @@ export function monthlyOpinionDrift(ctx) {
       if (other === tag) continue;
       if (infamous.indexOf(other) >= 0 && num(t.opinion[other]) < 0) continue; // grudges against conquerors don't fade yet
       if (grudged.indexOf(other) >= 0) continue; // occupied patrimony does not warm toward neutral
-      const target = (t.allies || []).indexOf(other) >= 0 ? 60 : 0;
+      // Old hatreds cool to the old climate (SPEC §73): allies warm to +60,
+      // the era's standing rivals settle at the cold baseline, everyone else
+      // mellows to neutral. An alliance, if the players ever forge one across
+      // a rivalry, outranks the old enmity.
+      const allied = (t.allies || []).indexOf(other) >= 0;
+      const target = allied ? 60
+        : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
       const v = Math.round(num(t.opinion[other]));
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
     }

@@ -137,6 +137,9 @@ export const BOOKMARK_66 = {
 
   // Tags of other eras (SEL, PTO, HAS, HYR, ARI) never enter this game.
   activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX'],
+  // Standing rivalries (SPEC §73): Corbulo's Armenian war just closed; the
+  // Euphrates rivalry only pauses.
+  rivalries: [['ROM', 'PAR']],
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {

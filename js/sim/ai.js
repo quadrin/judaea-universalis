@@ -9,7 +9,7 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, executePeaceDeal, monthsBetween, buildAiPeaceProvinces,
   coalitionAgainst, forceLimitOf, vassalsOf,
-  declareWar, truceActive, opinionOf, casusBelli, addOpinion,
+  declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn,
@@ -455,7 +455,10 @@ function aiConsiderWar(ctx, tag) {
   if (!t || t.overlord) return; // clients follow their overlord to war, never lead
   if (hasTagEffect(ctx, tag, 'noOpportunisticWars')) return;
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return;
-  if (num(t.warExhaustion) > 5 || num(t.stability) < 1) return;
+  // Wars of opportunity want a settled court (stability >= 1); a war on the
+  // era's standing rival (SPEC §73) is the one adventure a merely-unshaken
+  // court (>= 0) will still ride out for.
+  if (num(t.warExhaustion) > 5 || num(t.stability) < 0) return;
   if (num(t.aggression) > 40) return; // the world is watching: digest first
   const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
   const myMen = strength(tag);
@@ -479,12 +482,17 @@ function aiConsiderWar(ctx, tag) {
     if (truceActive(ctx, tag, tgt)) continue;
     if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
     if (opinionOf(ctx, tag, tgt) > -50) continue;
+    const rival = areRivals(ctx, tag, tgt);
+    if (!rival && num(t.stability) < 1) continue; // only the old enmity moves an unsettled court
     const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
     const enemyMen = strength(tgt);
     const ratio = enemyMen > 0 ? myMen / enemyMen : 99;
     const pers = personality(ctx, tag);
-    // A ponderous empire moves only for a sure thing; a firebrand jumps early.
-    const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1));
+    // A ponderous empire moves only for a sure thing; a firebrand jumps early
+    // — and against the era's standing rival the bar drops a notch: these are
+    // the wars both courts have been drilling for.
+    const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1))
+      * (rival ? num(B(ctx, 'rivalRatioMult', 0.85)) : 1);
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
     if (!ctx.rng.chance(0.08 * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);

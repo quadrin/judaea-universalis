@@ -1966,6 +1966,21 @@ export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
   return t && t.opinion ? clamp(Math.round(num(t.opinion[of])), -200, 200) : 0;
 }
+// Standing rivalries (SPEC §73): the bookmark may name pairs of courts whose
+// enmity is the era's weather — Rome and Parthia, the Syrian Wars, the jihad
+// state and the empires. Rivals cool toward BALANCE.rivalOpinion instead of
+// neutral (monthlyOpinionDrift) and the AI strikes them a little more
+// readily (aiConsiderWar) — recomputed live from the bookmark, so no save
+// schema is touched.
+export function areRivals(ctx, a, b) {
+  const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : null;
+  if (!list || a === b) return false;
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length !== 2) continue;
+    if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return true;
+  }
+  return false;
+}
 // The lost lands are remembered (SPEC §67). When a court loses provinces in
 // war — at the peace table or by the sword — it records the taker in
 // `tag.grudges[taker] = { provs: [ids], y, m }`. While the taker still owns

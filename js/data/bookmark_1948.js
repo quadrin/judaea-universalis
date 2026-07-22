@@ -206,6 +206,10 @@ export const BOOKMARK_1948 = {
     + 'long as it can defend itself.',
 
   activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC', 'ITA'],
+  // Standing rivalries (SPEC §73): no peace, only armistice lines — and the
+  // Arab cold war between Cairo and the Hashemite bloc (non-adjacent, so it
+  // chills opinions without opening a land war).
+  rivalries: [['ISR', 'EGY'], ['ISR', 'SYR'], ['EGY', 'IRQ']],
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among
