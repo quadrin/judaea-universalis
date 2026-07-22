@@ -3081,3 +3081,51 @@ white-peaced) the entire war over the leader's head.
   (both the terms and the white variants), leader tables unchanged
   (congress + separate chips), stripped leader-grade terms, and the
   losing-junior refusal.
+
+## 75. The yoke settles the quarrel — vassal-aware canon, and unions that hold
+
+Three sibling reports: a junior's peace handing it land its ally conquered
+(fixed by §74's own-holdings rule), canon Roman events forcing a crown to
+war with its own client, and vassal integration unraveling from ordinary
+opinion drift.
+
+- **The bond refuses the sword** (`declareWar`): a crown and its client
+  cannot go to war while the bond stands — the guard returns null and warns
+  once. The independence rising (`vassalIndependence`) remains the one legal
+  road: it severs the bond FIRST and then declares. Without this, a scripted
+  event could set Aristobulus at war with a vassal Hyrcanus while tribute
+  still flowed between them.
+- **Dated chapters declare the world they require** (`event.when`,
+  events.js): a dated event may carry a `when(ctx)` predicate; if its month
+  arrives in a world that no longer fits — a court vassalized instead of
+  rival, a dynasty already settled — it retires silently, exactly like a
+  dated battle phase whose war was already settled (SPEC §37).
+- **The 67 BCE canon respects a settled house** (`underOneRoof`,
+  `hyrFreeOfAri`): when either brother holds the other as a client, the
+  Parthian flood no longer installs Antigonus by script, declares no
+  fraternal war, and does not invade a Hyrcanid court that answers to its
+  brother rather than Rome (the Syrian front against Rome still opens); the
+  night flight, Herod's crown (`ev4_king_without_kingdom`) and the caves of
+  Arbela retire (`when: hyrFreeOfAri` — the Herodian strand presumes a free
+  Hyrcanid court); Sosius' expedition retires entirely
+  (`when: !underOneRoof`) — a settled house gives him no war to fight, and
+  `ev4_city_stormed` stays self-gated behind his flag. With both courts
+  free, every one of these fires exactly as before.
+- **Unions that hold** (`monthlyIncorporation`, `VASSALS
+  .incorporateKeepOpinion` 60): starting the union still takes near-devotion
+  (80); KEEPING it now takes only that the court not turn against us. The
+  old check reused the start threshold, so ordinary −1/month drift unraveled
+  every union mid-weave and the influence was lost to simple neglect — the
+  reported bug. And while the union is being woven, the weavers tend the
+  court (`monthlyOpinionDrift`): the client's opinion of the weaving
+  overlord drifts TOWARD the union threshold instead of down to
+  indifference. Real ruptures — insults, grudges, infamy slides below the
+  keep line, or any war — still break it, and the influence is still lost.
+- **Regression contract**: `smoke52.mjs` — the bond guard (both directions,
+  and the severed rising still declaring), the flood with a settled house
+  (Rome front opens; no coup, no fraternal war, no invasion of the client),
+  the dated retirements (no cards, no Herod, no Sosius, no legions — and the
+  free-house control still firing on schedule), and the union surviving a
+  natural dip, drifting back up mid-weave, and still breaking on true
+  disaffection. `smoke40`'s vassal-loop contract updated to the keep
+  threshold.

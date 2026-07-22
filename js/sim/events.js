@@ -170,6 +170,15 @@ export function checkDateEvents(ctx) {
       // A dated battlefield chapter is a deadline, not a command to undo a
       // treaty. Once its month arrives without the required war, retire it.
       if (!requiredWarActive(ctx, ev)) { skipEvent(ctx, ev); continue; }
+      // A dated chapter may also declare the WORLD it requires (`when`,
+      // SPEC §75): if its month arrives in a different world — a court
+      // vassalized instead of rival, a dynasty already settled — it retires
+      // silently rather than forcing the old rails onto the new map.
+      if (typeof ev.when === 'function') {
+        let fits = false;
+        try { fits = !!ev.when(ctx); } catch (e) { warnOnce('when:' + ev.id, 'when() threw for', ev.id, e); }
+        if (!fits) { skipEvent(ctx, ev); continue; }
+      }
       fireEvent(ctx, ev);
     } catch (e) { warnOnce('date:' + (ev && ev.id), 'date event check failed', e); }
   }

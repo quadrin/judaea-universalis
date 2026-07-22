@@ -77,6 +77,25 @@ function freeOfRome(ctx, tag) {
     && (t.atWarWith || []).indexOf('ROM') === -1);
 }
 
+// The fraternal question can be settled by the yoke instead of the sword
+// (SPEC §75): when either brother holds the other as a client kingdom, the
+// house stands under one roof, and the dynastic canon — Antigonus' bid, the
+// night flight, Herod's crown, Sosius' expedition — must not script the
+// brothers back to war or rewrite a client court's rulers. Only an organic
+// independence rising may reopen the quarrel.
+function underOneRoof(ctx) {
+  const h = ctx.game.tags && ctx.game.tags.HYR;
+  const a = ctx.game.tags && ctx.game.tags.ARI;
+  return !!((h && h.overlord === 'ARI') || (a && a.overlord === 'HYR'));
+}
+// Hyrcanus' court is its own (or Rome's) — not a client of its brother's
+// line. The Herodian strand (the night flight, the king without a kingdom,
+// the caves of Arbela) presumes exactly this.
+function hyrFreeOfAri(ctx) {
+  const h = ctx.game.tags && ctx.game.tags.HYR;
+  return !h || h.overlord !== 'ARI';
+}
+
 function bumpOpinion(g, of, toward, delta) {
   const t = g.tags && g.tags[of];
   if (!t) return;
@@ -1453,8 +1472,11 @@ export const EVENTS_67 = [
             return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
           });
           if (alive(ctx, 'ROM') && !atWar('PAR', 'ROM')) h.declareWar(ctx, 'PAR', 'ROM', 'The Parthian Invasion of Syria');
-          if (alive(ctx, 'HYR') && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
-          if (alive(ctx, 'ARI')) {
+          // A Hyrcanid court under its brother's roof is not Rome's client
+          // to invade, and a client Aristobulid house gets no Parthian-
+          // installed king (SPEC §75).
+          if (alive(ctx, 'HYR') && hyrFreeOfAri(ctx) && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'ARI') && !underOneRoof(ctx)) {
             h.setRuler(ctx, 'ARI', { name: 'Antigonus II Mattathias', title: 'King and High Priest', gov: 2, infl: 3, mar: 3, age: 38 });
             h.adjust(ctx, 'ARI', { legitimacy: 10 });
             if (g.tags.ARI && g.tags.ARI.opinion) g.tags.ARI.opinion.PAR = 100;
@@ -1497,8 +1519,11 @@ export const EVENTS_67 = [
             return all.indexOf(a) >= 0 && all.indexOf(b) >= 0;
           });
           if (alive(ctx, 'ROM') && !atWar('PAR', 'ROM')) h.declareWar(ctx, 'PAR', 'ROM', 'The Parthian Invasion of Syria');
-          if (alive(ctx, 'HYR') && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
-          if (alive(ctx, 'ARI')) {
+          // A Hyrcanid court under its brother's roof is not Rome's client
+          // to invade, and a client Aristobulid house gets no Parthian-
+          // installed king (SPEC §75).
+          if (alive(ctx, 'HYR') && hyrFreeOfAri(ctx) && !atWar('PAR', 'HYR')) h.declareWar(ctx, 'PAR', 'HYR', 'The Parthian Invasion of Syria');
+          if (alive(ctx, 'ARI') && !underOneRoof(ctx)) {
             h.setRuler(ctx, 'ARI', { name: 'Antigonus II Mattathias', title: 'King and High Priest', gov: 2, infl: 3, mar: 3, age: 38 });
             h.adjust(ctx, 'ARI', { legitimacy: 10 });
             if (g.tags.ARI && g.tags.ARI.opinion) g.tags.ARI.opinion.PAR = 100;
@@ -1526,6 +1551,7 @@ export const EVENTS_67 = [
     forTag: 'both',
     decider: 'HYR',
     date: { y: -40, m: 8 },
+    when: hyrFreeOfAri, // the Herodian strand presumes a free Hyrcanid court (SPEC §75)
     major: true,
     aiOption: 0,
     options: [
@@ -1577,6 +1603,7 @@ export const EVENTS_67 = [
     forTag: 'both',
     decider: 'HYR',
     date: { y: -40, m: 12 },
+    when: hyrFreeOfAri, // the Herodian strand presumes a free Hyrcanid court (SPEC §75)
     major: true,
     aiOption: 0,
     options: [
@@ -1643,6 +1670,7 @@ export const EVENTS_67 = [
       + 'of quiet things.',
     forTag: 'HYR',
     date: { y: -38, m: 3 },
+    when: hyrFreeOfAri, // the Herodian strand presumes a free Hyrcanid court (SPEC §75)
     major: true,
     aiOption: 0,
     options: [
@@ -1705,6 +1733,7 @@ export const EVENTS_67 = [
       + 'veterans reckon, studying the stone. The men on the walls reckon in psalms.',
     forTag: 'both',
     date: { y: -37, m: 4 },
+    when: (ctx) => !underOneRoof(ctx), // a settled house gives Sosius no war to fight (SPEC §75)
     major: true,
     aiOption: 0,
     options: [

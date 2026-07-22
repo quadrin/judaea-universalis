@@ -255,10 +255,16 @@ export function monthlyOpinionDrift(ctx) {
       // Old hatreds cool to the old climate (SPEC §73): allies warm to +60,
       // the era's standing rivals settle at the cold baseline, everyone else
       // mellows to neutral. An alliance, if the players ever forge one across
-      // a rivalry, outranks the old enmity.
+      // a rivalry, outranks the old enmity. And while an overlord is weaving
+      // this court into the realm (SPEC §75), the weavers tend it: the pair
+      // drifts toward the union's own threshold instead of cooling to
+      // indifference mid-incorporation.
+      const V = ctx.DEFINES.VASSALS || {};
+      const weaving = t.incorporating && t.incorporating.by === other;
       const allied = (t.allies || []).indexOf(other) >= 0;
       const target = allied ? 60
-        : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
+        : weaving ? num(V.incorporateOpinion, 80)
+          : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
       const v = Math.round(num(t.opinion[other]));
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
     }

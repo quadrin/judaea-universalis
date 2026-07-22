@@ -1795,7 +1795,13 @@ export function monthlyIncorporation(ctx) {
       tell('The union unravels', 'War interrupts the weaving of ' + (them.name || k) + ' into the realm — the work (and the influence spent) is lost.', 'bad');
       continue;
     }
-    if (opinionOf(ctx, k, lordTag) < num(V.incorporateOpinion, 80)) {
+    // Starting the union takes near-devotion (incorporateOpinion); KEEPING it
+    // takes only that the court not turn against us (incorporateKeepOpinion).
+    // The old check reused the start threshold, so ordinary monthly cooling
+    // unraveled every union mid-weave and the influence was lost to simple
+    // drift — the reported bug. Real ruptures (insults, grudges, infamy)
+    // still cut below the keep line and break it.
+    if (opinionOf(ctx, k, lordTag) < num(V.incorporateKeepOpinion, 60)) {
       them.incorporating = null;
       tell('The union unravels', (them.name || k) + '\'s devotion has cooled below what the union demands — the work (and the influence spent) is lost.', 'bad');
       continue;
@@ -1830,6 +1836,15 @@ export function declareWar(ctx, atk, def, name, cb) {
   const A = g.tags[atk], D = g.tags[def];
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
   if (truceActive(ctx, atk, def)) return null; // the ink on the treaty is still wet
+  // A crown and its client do not go to war while the bond stands (SPEC §75):
+  // the yoke is the settlement of that quarrel. The one legal road is the
+  // independence rising (vassalIndependence), which severs the bond FIRST and
+  // then declares. Without this guard a scripted event could set an overlord
+  // at war with its own vassal while tribute still flowed between them.
+  if (A.overlord === def || D.overlord === atk) {
+    warnOnce('dw-bond:' + atk + ':' + def, 'declareWar refused: overlord and client', atk, def);
+    return null;
+  }
   const existing = warBetween(ctx, atk, def);
   if (existing) return existing;
   const attackers = [atk];
