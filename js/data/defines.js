@@ -535,6 +535,7 @@ export const DEFINES = {
   // table) puts the yoke back on.
   VASSALS: {
     incorporateOpinion: 80,      // a client is absorbed only by a court it nearly loves
+    incorporateKeepOpinion: 60,  // ...but once begun, only real disaffection (below this) unravels the weaving
     incorporateBase: 75,         // influence points to begin the union...
     incorporatePerDev: 2.5,      // ...plus per point of the client's development
     incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...

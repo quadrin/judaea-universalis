@@ -83,9 +83,14 @@ console.log('== the union unravels when affection cools or war comes ==');
   agr.opinion.JUD = 90;
   const res = mil.incorporateCore(ctx, 'JUD', 'AGR');
   ok(res.ok, 'the union begins');
-  agr.opinion.JUD = 60; // their court cools mid-weave
+  // SPEC §75: ordinary monthly cooling below the START threshold no longer
+  // unravels the work — only real disaffection (the keep threshold) does.
+  agr.opinion.JUD = 70; // a natural dip mid-weave
   mil.monthlyIncorporation(ctx);
-  ok(!agr.incorporating && agr.alive, 'cooled affection unravels the work — the client stands');
+  ok(!!agr.incorporating, 'a natural dip below the start threshold does not unravel the weaving');
+  agr.opinion.JUD = 55; // true disaffection — insult, grudge, infamy
+  mil.monthlyIncorporation(ctx);
+  ok(!agr.incorporating && agr.alive, 'true disaffection unravels the work — the client stands');
   ok(game.tags.JUD.points.infl === 999 - res.cost, 'and the influence spent is simply lost');
   // War voids it too.
   agr.opinion.JUD = 90;
