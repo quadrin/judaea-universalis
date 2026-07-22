@@ -2201,6 +2201,7 @@ export const PEACE = {
   whiteEnemyWsAtMost: 5, // enemy accepts a white peace at/below this net score
   warWearyWE: 15,        // war exhaustion at which a not-quite-winning enemy takes white peace
   freshWarMonths: 12,    // a war younger than this refuses white peace unless the enemy is losing
+  withdrawWhiteGrace: 15, // extra tolerance for a JUNIOR's white withdrawal — the enemy is glad to shed a coalition member
 };
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
@@ -2325,7 +2326,18 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
   const theirSide = enemySideOf(war, byTag);
   const aliveEnemies = theirSide.filter((t) => g.tags[t] && g.tags[t].alive);
-  const separate = !!enemyTag && aliveEnemies.indexOf(enemyTag) >= 0 && aliveEnemies.length >= 2;
+  // The junior partner's table (SPEC §74): a court that was CALLED into this
+  // war does not hold the coalition's pen. Its table is a WITHDRAWAL — it
+  // settles only its own front (what its own men hold may be demanded;
+  // everything else between it and the enemy reverts) and leaves, while the
+  // leader's war goes on untouched. The congress, the separate peaces, the
+  // subjugations and the releases belong to the side's leader alone —
+  // previously a junior's "separate peace" struck the enemy out of the
+  // ALLY's war, truced the ally to it, and reverted the ally's occupations
+  // (the reported bug).
+  const sideLeader = mySide.find((t) => g.tags[t] && g.tags[t].alive) || byTag;
+  const exit = byTag !== sideLeader;
+  const separate = !exit && !!enemyTag && aliveEnemies.indexOf(enemyTag) >= 0 && aliveEnemies.length >= 2;
   const enemyLeader = separate ? enemyTag : (aliveEnemies[0] || null);
   const et = enemyLeader ? g.tags[enemyLeader] : null;
   const me = g.tags[byTag];
@@ -2339,7 +2351,9 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     if (p.owner === enemyLeader) enemyLeaderDev += devTotal(p);
     if (separate ? p.owner !== enemyLeader : theirSide.indexOf(p.owner) < 0) continue;
     theirSideDev += devTotal(p);
-    if (mySide.indexOf(p.controller) < 0) continue; // must be occupied by our side
+    // A withdrawing junior may only demand what its OWN men hold — the
+    // ally's occupations are not its to spend.
+    if (exit ? p.controller !== byTag : mySide.indexOf(p.controller) < 0) continue;
     let cost = provDemandCost(ctx, p, byTag);
     let discount = '';
     if (hasClaim(ctx, byTag, i)) {
@@ -2357,7 +2371,8 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   // realms already sworn to someone, and priced by the realm's weight.
   let canSubjugate = false;
   let whyNotSubjugate = '';
-  if (separate) whyNotSubjugate = 'A separate peace cannot break a crown — subjugation waits for the full congress.';
+  if (exit) whyNotSubjugate = 'This war is not ours to settle — only its leader can break a crown at the table.';
+  else if (separate) whyNotSubjugate = 'A separate peace cannot break a crown — subjugation waits for the full congress.';
   else if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
   else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';
   else canSubjugate = true;
@@ -2369,9 +2384,14 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
       ? separateWarscore(ctx, war, byTag, enemyLeader)
       : Math.round(num(war.warscore && war.warscore[byTag])),
     separate,
+    // The junior partner's withdrawal table (SPEC §74).
+    exit,
+    sideLeader,
+    leaderName: (g.tags[sideLeader] && g.tags[sideLeader].name) || sideLeader,
     // Every court a separate word could be had with (shown when the enemy
-    // is a coalition; empty when there is only one court to talk to).
-    separateTargets: aliveEnemies.length >= 2
+    // is a coalition; empty when there is only one court to talk to — and
+    // never offered to a junior, whose pen signs only its own withdrawal).
+    separateTargets: !exit && aliveEnemies.length >= 2
       ? aliveEnemies.map((t) => ({
         tag: t, name: (g.tags[t] && g.tags[t].name) || t,
         ws: separateWarscore(ctx, war, byTag, t),
@@ -2391,8 +2411,8 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     canSubjugate, whyNotSubjugate, subjugateCost,
     // Nations the enemy can be forced to set free (SPEC §69). A separate
     // peace cannot redraw another crown's map — releases wait for the full
-    // congress, like subjugation.
-    releasable: separate ? [] : releasableNations(ctx, war, byTag, enemyLeader),
+    // congress, like subjugation — and a withdrawing junior frees no one.
+    releasable: (separate || exit) ? [] : releasableNations(ctx, war, byTag, enemyLeader),
     releaseCostPerDev: PEACE.releaseCostPerDev,
     cb: war.cb || null,
     noNegotiation: !!war.noNegotiation,
@@ -2470,9 +2490,11 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   }
   const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
-  const humiliate = !!d.humiliate;
+  // Humiliation and reparations are the congress's instruments, not a
+  // withdrawing junior's (SPEC §74) — like subjugation and releases above.
+  const humiliate = !!d.humiliate && !info.exit;
   if (humiliate) cost += PEACE.humiliateCost;
-  const reparations = !!d.reparations;
+  const reparations = !!d.reparations && !info.exit;
   if (reparations) cost += PEACE.reparationsCost;
   const white = !chosen.length && !releaseRows.length && gold <= 0 && !humiliate && !subjugate && !reparations;
   const enemyWs = -info.myWs;
@@ -2481,16 +2503,21 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
     // A fresh grudge does not go home for nothing: in a war's first year the
     // enemy signs a white peace only if actually losing or war-weary — no
     // more declaring a war, shrugging, and shaking hands a month later.
+    // A junior's white WITHDRAWAL is easier to buy (SPEC §74): the enemy is
+    // glad to see a coalition member fold its tents and go home.
+    const grace = info.exit ? PEACE.withdrawWhiteGrace : 0;
     const monthsIn = monthsBetween(war.started || ctx.game.date, ctx.game.date);
     const freshGrudge = monthsIn < PEACE.freshWarMonths && enemyWs > -10;
-    const wouldSettle = enemyWs <= PEACE.whiteEnemyWsAtMost;
-    const warWeary = info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15;
+    const wouldSettle = enemyWs <= PEACE.whiteEnemyWsAtMost + grace;
+    const warWeary = info.enemyWarExhaustion >= PEACE.warWearyWE && enemyWs <= 15 + grace;
     acceptable = (wouldSettle && !freshGrudge) || warWeary;
     reason = acceptable
-      ? 'They are ready to lay down arms.'
+      ? (info.exit ? 'They will let us fold our tents and go.' : 'They are ready to lay down arms.')
       : wouldSettle
         ? 'The war is young and their blood is up — they will not go home for nothing yet.'
-        : 'They believe they are winning, and will not settle for nothing.';
+        : (info.exit
+          ? 'They are winning against our whole coalition, and will not let us simply walk away.'
+          : 'They believe they are winning, and will not settle for nothing.');
   } else {
     // Cessions and releases both strip land from the losing side; the treaty
     // dev cap prices dismemberment as one budget.
@@ -2596,6 +2623,43 @@ export function releaseFromWar(ctx, war, leaverTag, byTag) {
   rebuildAtWarWith(ctx);
   for (const t of mySide) setTruce(ctx, leaverTag, t, war.name);
   marchStrandedHome(ctx, [leaverTag].concat(mySide));
+  ctx.bus.emit('war', { id: war.id, name: war.name, left: leaverTag });
+}
+
+// The junior partner's withdrawal (SPEC §74): a court that was called into
+// the war settles its own front and goes home — the mirror image of
+// releaseFromWar, seen from inside the coalition. Status quo strictly
+// between the leaver (and its own clients in this war) and the ENEMY side;
+// the leader's fronts, occupations and diplomatic standing are untouched —
+// no truce binds the ally, no enemy is struck from the ally's war. The
+// caller applies the leaver's cessions first.
+export function withdrawFromWar(ctx, war, leaverTag) {
+  const g = ctx.game;
+  const mySide = war.attackers.indexOf(leaverTag) >= 0 ? war.attackers : war.defenders;
+  const theirSide = enemySideOf(war, leaverTag);
+  // A withdrawing overlord takes its clients home with it — they were only
+  // ever there under its banner.
+  const leavers = [leaverTag].concat(
+    vassalsOf(ctx, leaverTag).filter((v) => mySide.indexOf(v) >= 0));
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    if (leavers.indexOf(p.owner) >= 0 && theirSide.indexOf(p.controller) >= 0
+        && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    } else if (leavers.indexOf(p.controller) >= 0 && theirSide.indexOf(p.owner) >= 0
+        && g.tags[p.owner] && g.tags[p.owner].alive) {
+      changeControllerCore(ctx, p, p.owner);
+    }
+  }
+  for (const leaver of leavers) {
+    const at = mySide.indexOf(leaver);
+    if (at >= 0) mySide.splice(at, 1);
+    if (war.warscore) delete war.warscore[leaver];
+    for (const t of theirSide) if (g.tags[t]) setTruce(ctx, leaver, t, war.name);
+  }
+  rebuildAtWarWith(ctx);
+  marchStrandedHome(ctx, leavers.concat(theirSide));
   ctx.bus.emit('war', { id: war.id, name: war.name, left: leaverTag });
 }
 
@@ -2773,6 +2837,26 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     terms.push('is humiliated before the nations');
   }
   const participants = war.attackers.concat(war.defenders);
+  if (info.exit) {
+    // The junior partner withdraws (SPEC §74): its cessions are already
+    // applied above; now it settles its own front and leaves. The leader's
+    // war continues on every front, occupations and all.
+    withdrawFromWar(ctx, war, byTag);
+    const summary = terms.length
+      ? (g.tags[byTag] ? g.tags[byTag].name : byTag) + ' ' + terms.map((t) => 'the enemy ' + t).join('; ')
+        + ' — and withdraws from the war.'
+      : (g.tags[byTag] ? g.tags[byTag].name : byTag) + ' withdraws from the war; occupations on its front revert.';
+    chronicle(ctx, 'peace', 'A withdrawal: ' + summary + ' '
+      + (info.leaderName || 'The coalition') + ' fights on.');
+    if (participants.indexOf(g.playerTag) >= 0 || byTag === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'We leave the war',
+        text: summary + ' A five-year truce binds us to the enemy. ' + (info.leaderName || 'Our ally') + '\'s war goes on without us.',
+        type: byTag === g.playerTag ? 'good' : 'info',
+      });
+    }
+    return;
+  }
   if (info.separate) {
     // One court leaves the table; the war goes on without them. Status quo
     // and truces are theirs alone — every other front keeps its occupations.

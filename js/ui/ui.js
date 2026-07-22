@@ -289,18 +289,25 @@ export function initUI(staticCtx) {
     peaceEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card">
-        <h2 class="peace-title">${info.separate
-    ? 'A separate peace with ' + esc(info.enemyName || 'the enemy')
-    : 'Terms for ' + esc(info.warName || 'the war')}</h2>
+        <h2 class="peace-title">${info.exit
+    ? 'Withdraw from ' + esc(info.warName || 'the war')
+    : info.separate
+      ? 'A separate peace with ' + esc(info.enemyName || 'the enemy')
+      : 'Terms for ' + esc(info.warName || 'the war')}</h2>
         ${targetChips}
-        <div class="peace-hint">${info.separate
-    ? esc((info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
-    : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
+        <div class="peace-hint">${info.exit
+    ? esc('We were called into this war — it is ' + (info.leaderName || 'our ally') + '\'s to finish. We settle only our own front: what our own men hold may be demanded, everything else between us and the enemy reverts, and the coalition fights on without us. '
+      + (info.leaderName || 'Our ally') + '\'s occupations, fronts and standing are untouched.')
+    : info.separate
+      ? esc((info.enemyName || 'They') + ' would leave the war alone — the rest of the coalition fights on, and every other front keeps its lines.')
+      : 'The map is yours while you negotiate: click a gold province to demand it, click again to strike it from the terms.'}</div>
         <div class="peace-ws">${info.separate ? 'Separate war score' : 'War score'} against ${esc(info.enemyName || 'the enemy')}: <b class="${wsCls}">${signed(info.myWs)}%</b></div>
         ${info.envoyMonthsLeft > 0 ? `<div class="peace-envoy">${icon('alert', 'icon-sm')} The enemy will not receive our envoys for ${info.envoyMonthsLeft} more month${info.envoyMonthsLeft === 1 ? '' : 's'}.</div>` : ''}
-        <div class="peace-sec">Demand provinces</div>
+        <div class="peace-sec">${info.exit ? 'Keep what our men hold' : 'Demand provinces'}</div>
         ${info.provinces.length ? `<div class="peace-provs">${provRows}</div>`
-    : '<div class="peace-dim peace-none">Occupy enemy land to put it on the table.</div>'}
+    : `<div class="peace-dim peace-none">${info.exit
+      ? 'Our own men hold no enemy land — a withdrawal now reverts every occupation on our front.'
+      : 'Occupy enemy land to put it on the table.'}</div>`}
         <div class="peace-sec">Demand payment <span class="peace-dim">(${info.goldCostPer100} war score per 100 talents)</span></div>
         <div class="peace-gold">
           <button class="btn peace-step" data-gold="-1" aria-label="Less gold">−</button>
@@ -308,7 +315,7 @@ export function initUI(staticCtx) {
           <button class="btn peace-step" data-gold="1" aria-label="More gold">+</button>
           <span class="peace-dim">of ${info.maxGold} talents</span>
         </div>
-        <label class="peace-prov" data-tt="Force a public submission: +10 legitimacy and +25 of every monarch point for us; they lose legitimacy and stability.\nCosts ${info.humiliateCost} war score">
+        ${info.exit ? '' : `<label class="peace-prov" data-tt="Force a public submission: +10 legitimacy and +25 of every monarch point for us; they lose legitimacy and stability.\nCosts ${info.humiliateCost} war score">
           <input type="checkbox" data-ref="humiliate">
           <span class="peace-prov-name">Humiliate them before the nations</span>
           <span class="peace-prov-cost">${info.humiliateCost}</span>
@@ -336,7 +343,7 @@ export function initUI(staticCtx) {
         </label>`).join('')
     : `<div class="peace-dim peace-none">${info.separate
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
-      : 'They hold no lands of a fallen nation. Only a court swallowed whole — dead, its era-start lands inside their realm — can be set free here.'}</div>`}
+      : 'They hold no lands of a fallen nation. Only a court swallowed whole — dead, its era-start lands inside their realm — can be set free here.'}</div>`}`}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <button class="btn peace-send" data-ref="send"></button>
@@ -373,12 +380,16 @@ export function initUI(staticCtx) {
       const white = !deal.provinces.length && !deal.release.length && deal.gold <= 0
         && !deal.humiliate && !deal.subjugate && !deal.reparations;
       totalEl.textContent = white
-        ? 'A white peace: every occupation reverts, nothing changes hands.'
+        ? (info.exit
+          ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
+          : 'A white peace: every occupation reverts, nothing changes hands.')
         : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
       verdictEl.classList.toggle('pos', !!ev.acceptable);
       verdictEl.classList.toggle('neg', !ev.acceptable);
-      sendBtn.textContent = white ? 'Offer white peace' : 'Send the terms';
+      sendBtn.textContent = info.exit
+        ? (white ? 'Withdraw from the war' : 'Withdraw on these terms')
+        : white ? 'Offer white peace' : 'Send the terms';
       sendBtn.classList.toggle('disabled', !ev.acceptable || info.envoyMonthsLeft > 0);
       // The chosen demands burn solid gold on the map; the rest of the table
       // keeps its pulse — and freed nations' lands burn gold while ticked.
@@ -400,8 +411,10 @@ export function initUI(staticCtx) {
         update();
       });
     });
-    humiliateBox.addEventListener('change', () => { deal.humiliate = humiliateBox.checked; update(); });
-    reparationsBox.addEventListener('change', () => { deal.reparations = reparationsBox.checked; update(); });
+    // The withdrawal table (SPEC §74) carries no humiliation or reparations
+    // rows at all — guard the wiring.
+    if (humiliateBox) humiliateBox.addEventListener('change', () => { deal.humiliate = humiliateBox.checked; update(); });
+    if (reparationsBox) reparationsBox.addEventListener('change', () => { deal.reparations = reparationsBox.checked; update(); });
     peaceEl.querySelectorAll('[data-release]').forEach((box) => {
       box.addEventListener('change', () => {
         const tag = box.dataset.release;

@@ -3038,3 +3038,46 @@ player.
   the stability-0 non-rival negative, and the 614 seeds landing without
   waking the dormant Caliphate. All-AI autorun anomaly flags are unchanged
   from the documented accepted set across all seven eras.
+
+## 74. The junior partner's peace — a withdrawal, not the coalition's pen
+
+"When we peace with a war we got pulled into, our conquered provinces of the
+enemy flip to [the enemy] — and our ally still has to win their war."
+Reproduced, and it was worse than reported: a court CALLED into a war got the
+same peace table as the war's leader. A junior's "separate peace" with an
+enemy member struck that enemy out of the ALLY's war, five-year-truced the
+ally to it, and reverted the ally's occupations — while leaving the junior
+still at war with the rest. A junior's full-congress deal settled (or
+white-peaced) the entire war over the leader's head.
+
+- **The withdrawal table** (`peaceDealInfo.exit`): when `byTag` is not its
+  side's leader (first living member), the table becomes a withdrawal. Only
+  provinces the junior's OWN men hold are demandable (the ally's occupations
+  are not theirs to spend), priced by the ordinary war score; gold may be
+  demanded; subjugation, releases, humiliation, reparations and the
+  separate-peace chips are the congress's instruments and vanish
+  (`evaluatePeaceDeal` also strips them from any submitted deal). A white
+  withdrawal is easier to buy (`PEACE.withdrawWhiteGrace` 15): the enemy is
+  glad to shed a coalition member — but a junior losing badly still cannot
+  simply walk.
+- **The execution** (`withdrawFromWar`, the mirror of `releaseFromWar` seen
+  from inside the coalition): cessions apply first, then status quo strictly
+  between the leaver (and its own clients in the war) and the ENEMY side;
+  the leaver and its clients drop out; truces bind the LEAVER to each enemy
+  — never the ally. The leader's fronts, occupations, war and diplomatic
+  standing are untouched, and the war continues without the junior.
+- **The AI is structurally unaffected**: every AI negotiation path
+  (`sendUltimatum`, the auto-settle in `monthlyWarDiplomacy`) already
+  negotiates as a side leader, so `exit` never triggers for it. A war whose
+  humans have all withdrawn becomes pure-AI and settles on the ordinary
+  clock.
+- **UI**: the junior's dialog is titled "Withdraw from …", explains that the
+  war is the leader's to finish and the coalition fights on, retitles the
+  province section "Keep what our men hold", and drops the leader-grade
+  rows. The send button reads "Withdraw from the war" / "Withdraw on these
+  terms".
+- **Regression contract**: `smoke51.mjs` — the junior's table shape, keeping
+  a demanded province on exit, the ally's war/occupations/truces untouched
+  (both the terms and the white variants), leader tables unchanged
+  (congress + separate chips), stripped leader-grade terms, and the
+  losing-junior refusal.
