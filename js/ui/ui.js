@@ -325,15 +325,18 @@ export function initUI(staticCtx) {
           <span class="peace-prov-name">Make them a client kingdom</span>
           <span class="peace-prov-cost">${info.subjugateCost}</span>
         </label>
-        ${(info.releasable || []).length ? `<div class="peace-sec">Force them to release nations</div>
-        ${info.releasable.map((r) =>
+        <div class="peace-sec">Force them to release nations</div>
+        ${(info.releasable || []).length ? info.releasable.map((r) =>
     `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc('Restore ' + r.name + ' as a free nation: ' + (r.provNames || []).join(', ')
       + ' (' + r.dev + ' development) leave ' + (info.enemyName || 'the enemy') + '\'s realm and the fallen banner rises again — independent, sheltered by a five-year truce.\nCosts '
       + r.cost + ' war score. Liberation earns no infamy.')}">
           <input type="checkbox" data-release="${esc(r.tag)}">
           <span class="peace-prov-name">Set ${esc(r.name)} free <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev</span></span>
           <span class="peace-prov-cost">${r.cost}</span>
-        </label>`).join('')}` : ''}
+        </label>`).join('')
+    : `<div class="peace-dim peace-none">${info.separate
+      ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
+      : 'They hold no lands of a fallen nation. Only a court swallowed whole — dead, its era-start lands inside their realm — can be set free here.'}</div>`}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <button class="btn peace-send" data-ref="send"></button>

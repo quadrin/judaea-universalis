@@ -751,7 +751,13 @@ function monthlyWarDiplomacy(ctx) {
       if (!attLead || !defLead) continue;
       const wsAtt = num(w.warscore && w.warscore[attLead]);
       const months = monthsBetween(w.started, g.date);
-      if (Math.abs(wsAtt) < 50 && months < 36) continue;
+      // A war may carry its own settlement horizon (w.settleMonths): the
+      // scripted conquest campaigns (the Rashidun wars for Iraq and the
+      // Levant) are generational struggles that must not white-peace out on
+      // the default three-year clock while history still expects Yarmouk,
+      // Qadisiyyah and the fall of Ctesiphon. A decisive score still settles
+      // any war early.
+      if (Math.abs(wsAtt) < 50 && months < num(w.settleMonths, 36)) continue;
       const winner = wsAtt >= 0 ? attLead : defLead;
       const info = peaceDealInfo(ctx, w, winner);
       const deal = { provinces: [], gold: 0, humiliate: false, reparations: false };
