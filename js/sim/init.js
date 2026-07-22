@@ -268,6 +268,25 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
       if (bookmark && typeof bookmark.setup === 'function') bookmark.setup(ctx);
     } catch (e) { console.warn('[sim/init] bookmark.setup failed:', e); }
   }
+  // Standing rivalries (SPEC §73): pairs the era names as natural enemies.
+  // Any pair the bookmark's setup left un-authored is seeded at the cold
+  // baseline so the enmity is live from the first month — authored opinions
+  // always win, and drift (monthlyOpinionDrift) holds rivals near the
+  // baseline forever after. Runs on every bind (fresh games AND saves from
+  // before the rivalry existed), touching only unset entries.
+  try {
+    const rivalries = bookmark && Array.isArray(bookmark.rivalries) ? bookmark.rivalries : [];
+    const base = num(DEFINES.BALANCE && DEFINES.BALANCE.rivalOpinion, -60);
+    for (const pair of rivalries) {
+      if (!Array.isArray(pair) || pair.length !== 2) continue;
+      for (const [a, b] of [[pair[0], pair[1]], [pair[1], pair[0]]]) {
+        const t = game.tags[a];
+        if (!t || !game.tags[b]) continue;
+        if (!t.opinion || typeof t.opinion !== 'object') t.opinion = {};
+        if (t.opinion[b] === undefined) t.opinion[b] = base;
+      }
+    }
+  } catch (e) { console.warn('[sim/init] rivalry seeding failed:', e); }
   // Rulers: historical courts come from the bookmark; anything else (and tags
   // in pre-ruler saves) gets a plain ruling council. Skill pips 0-6 feed the
   // monthly monarch-point gain (tick.js) and the nation panel. Bookmark ruler

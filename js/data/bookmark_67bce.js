@@ -150,6 +150,10 @@ export const BOOKMARK_67 = {
 
   // v5.4: PNT joins — Mithridates VI, restored at Zela, awaiting Pompey.
   activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR', 'OSR', 'ADI', 'CHX', 'PNT'],
+  // Standing rivalries (SPEC §73): Rome and Parthia begin the century of
+  // wars over the Euphrates line, and Tigranes' Armenia contests the same
+  // marches with the Arsacids.
+  rivalries: [['ROM', 'PAR'], ['ARM', 'PAR']],
 
   // Political layer for 67 BCE over map_data's 66 CE defaults. The Hasmonean
   // kingdom of Jannaeus is split between the brothers; Syria is the Seleucid

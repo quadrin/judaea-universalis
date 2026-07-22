@@ -190,6 +190,11 @@ export function createWiki({ DEFINES, getCtx }) {
     }).join('');
     const powers = (POWERS[b.id] || []).map((p) =>
       `<div class="wiki-kv"><span class="wiki-k">${esc(p.name)}</span><span class="wiki-v">${esc(p.blurb || '')}</span></div>`).join('');
+    // Standing rivalries (SPEC §73): the era's weather, straight from the data.
+    const rivalries = (Array.isArray(b.rivalries) ? b.rivalries : [])
+      .filter((pair) => Array.isArray(pair) && pair.length === 2)
+      .map(([a, c]) => `<div class="wiki-rivalry">${chip(a, 18)} <b>${esc(tagName(a))}</b>
+        <span class="wiki-dim">·</span> ${chip(c, 18)} <b>${esc(tagName(c))}</b></div>`).join('');
     return {
       title: b.name,
       sub: fmtYear(b.startDate.y) + ' — ' + (b.blurb || ''),
@@ -208,6 +213,9 @@ export function createWiki({ DEFINES, getCtx }) {
         </div>
         <div class="wiki-sec">The playable standards</div>
         <div class="wiki-standards">${standards}</div>
+        ${rivalries ? `<div class="wiki-sec">Standing rivalries</div>
+        <div class="wiki-dim">Old hatreds that never cool to neutral — the AI treats war between these courts as the era's weather.</div>
+        ${rivalries}` : ''}
         ${powers ? `<div class="wiki-sec">The powers beyond the map</div>${powers}` : ''}`,
     };
   }

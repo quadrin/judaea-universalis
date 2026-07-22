@@ -136,6 +136,10 @@ export const BOOKMARK_167 = {
   // (Popillius' circle in the sand is diplomacy, not conquest), and Pontus
   // keeps its Black Sea coast.
   activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC', 'ROM', 'PNT'],
+  // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
+  // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
+  // Mithridates' Parthia is already probing the Seleucid east.
+  rivalries: [['SEL', 'PTO'], ['SEL', 'PAR'], ['ROM', 'SEL']],
 
   // Political layer for 167 BCE, applied by initGame over map_data's 66 CE defaults.
   // Covers every province owned by ROM/JUD/AGR (tags absent from this bookmark),

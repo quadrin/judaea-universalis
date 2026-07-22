@@ -174,6 +174,12 @@ export const BOOKMARK_614 = {
   },
 
   activeTags: ['BYZ', 'SAS', 'JUD', 'GHA', 'RSH'],
+  // Standing rivalries (SPEC §73): once the jihad state wakes it is the
+  // standing enemy of both empires — the truces of the 640s do not soften
+  // Medina toward Constantinople or Ctesiphon, so the conquest resumes when
+  // the ink dries. (BYZ–SAS is deliberately absent: their great war is fully
+  // evented 614–628 and history's exhausted peace should hold afterward.)
+  rivalries: [['RSH', 'BYZ'], ['RSH', 'SAS']],
 
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
   wonderTweaks: { Jerusalem: null },

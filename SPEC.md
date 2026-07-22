@@ -2996,3 +2996,45 @@ conquests don't trigger": both were real, and both were gates, not clocks.
   deepened Sasanian collapse, and the Pompey chain surviving an early
   brothers' peace through to Rome's war. `uitest29.mjs` additionally drives
   the release section's empty state before any court has fallen.
+
+## 73. Standing rivalries — the AIs go to war with one another
+
+"The AIs should still go to war with one another too; like Rome against the
+Seleucids." They couldn't, structurally: `monthlyOpinionDrift` pulled every
+pair toward neutral (or +60 for allies), so even bookmark-authored hatreds
+(SEL–PTO −80, SEL–PAR −50/−60) mellowed past the opportunistic-war gate
+(opinion < −50) within two or three game years — after the opening insults,
+organic AI-vs-AI war became impossible and the world went quiet around the
+player.
+
+- **The data** (`bookmark.rivalries`, each era): pairs of courts whose enmity
+  is the era's weather. 167: SEL–PTO, SEL–PAR, ROM–SEL. 67: ROM–PAR,
+  ARM–PAR. 40/66/132: ROM–PAR. 614: RSH–BYZ, RSH–SAS (deliberately NOT
+  BYZ–SAS — their great war is fully evented and history's exhausted peace
+  should hold after 628). 1948: ISR–EGY, ISR–SYR, EGY–IRQ (the Arab cold
+  war; non-adjacent pairs chill opinions without opening a land war, since
+  opportunistic wars still require adjacency).
+- **The climate** (`areRivals`, military.js; `BALANCE.rivalOpinion` −60):
+  drift now cools rivals toward the baseline from both directions — a warmed
+  rival pair slides back down, an event-chilled one recovers only to the
+  baseline, never to neutral. An alliance, if one is ever forged across a
+  rivalry, outranks it (+60 still wins). Recomputed live from the bookmark;
+  no save schema change.
+- **The seed** (makeCtx): rivalry pairs the bookmark's setup left un-authored
+  are seeded at the baseline on bind — fresh games and old saves alike —
+  so the enmity is live from the first month. Authored opinions always win.
+- **The strike** (`aiConsiderWar`; `BALANCE.rivalRatioMult` 0.85): rivals
+  need 15% less overmatch, and a rival war is the one adventure a court at
+  stability 0 will still ride out for (non-rival adventures still demand a
+  settled court at stability ≥ 1 — that gate is now enforced per-target).
+  Everything else stands: adjacency, truces, the −50 opinion gate, infamy,
+  war exhaustion, the monthly dice. Peace remains the norm; the difference
+  is that the era's great enmities no longer rust shut.
+- **The Compendium**: each chapter page lists its standing rivalries under
+  the playable standards, straight from the data.
+- **Regression contract**: `smoke50.mjs` — seeding (authored values
+  untouched), two-sided drift toward the baseline, a real declaration
+  through `runMonthlyAI` when a rival weakens (the Syrian Wars resume),
+  the stability-0 non-rival negative, and the 614 seeds landing without
+  waking the dormant Caliphate. All-AI autorun anomaly flags are unchanged
+  from the documented accepted set across all seven eras.
