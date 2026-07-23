@@ -1,6 +1,6 @@
-// UI verification — SPEC §34: the Factions block sits in the realm panel with
-// approval bars and a working appeasement lever, and stays hidden for foreign
-// courts (their politics are offstage).
+// UI verification — SPEC §34/§81: the Estates block sits in the realm panel
+// with approval bars, visible current effects and a working appeasement lever,
+// and stays hidden for foreign courts (their politics are offstage).
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
@@ -25,18 +25,23 @@ await page.locator('.nation-card').first().click(); // HAS
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(400);
 
-console.log('== the court sits in the realm panel ==');
+console.log('== the estates sit in the realm panel ==');
 await page.locator('.tb-flag').click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
+const heading = await page.locator('#nation-panel [data-ref="factionsBlock"] .pp-build-title').textContent();
+ok(heading.trim() === 'Estates', 'the realm panel calls the institution Estates');
 const facRows = await page.locator('.np-faction').count();
-ok(facRows === 3, 'three factions at the Hasmonean court: ' + facRows);
+ok(facRows === 3, 'three estates at the Hasmonean court: ' + facRows);
 const names = await page.locator('.np-fac-name').allTextContents();
 ok(names.some((n) => /Hasideans/.test(n)) && names.some((n) => /Hellenizers/.test(n)),
   'the era\'s parties by name: ' + names.join(' · '));
 const bars = await page.locator('.np-fac-fill').count();
-ok(bars === 3, 'every faction carries its approval bar');
+ok(bars === 3, 'every estate carries its approval bar');
+const effects = await page.locator('.np-fac-effect').allTextContents();
+ok(effects.length === 3 && effects.every((s) => /No estate effect/.test(s)),
+  'every estate states its current consequence');
 const state = await page.locator('.np-fac-state').first().textContent();
-ok(/content · 50/.test(state), 'factions open content at 50: "' + state.trim() + '"');
+ok(/content · 50/.test(state), 'estates open content at 50: "' + state.trim() + '"');
 
 console.log('== the appeasement lever works ==');
 await page.evaluate(() => { window._ctx.game.tags.HAS.points.gov = 200; });
@@ -51,7 +56,9 @@ await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
 await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(200);
 const after = await page.locator('.np-fac-state').first().textContent();
-ok(/content · 60/.test(after), 'courting the Hasideans: 50 → 60 ("' + after.trim() + '")');
+ok(/loyal · 60/.test(after), 'courting crosses the loyal threshold: 50 → 60 ("' + after.trim() + '")');
+const active = await page.locator('.np-fac-effect').first().textContent();
+ok(/Half of benefit/.test(active), 'the newly loyal estate exposes its half-strength benefit');
 const gov = await page.evaluate(() => window._ctx.game.tags.HAS.points.gov);
 ok(gov === 160, 'the price was 40 governance points (200 → ' + gov + ')');
 await page.evaluate(() => { window._ctx.game.paused = false; });
@@ -59,11 +66,11 @@ await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
 await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(200);
 const again = await page.locator('.np-fac-state').first().textContent();
-ok(/content · 60/.test(again), 'the lever cools down — no double-courting (' + again.trim() + ')');
+ok(/loyal · 60/.test(again), 'the lever cools down — no double-courting (' + again.trim() + ')');
 
 console.log('== foreign courts keep their politics offstage ==');
 // every flag is a door (SPEC §28): click the enemy's chip in our own
-// diplomacy block and their court opens read-only — with no Factions block.
+// diplomacy block and their court opens read-only — with no Estates block.
 const foreignChip = page.locator('#nation-panel .fchip-link[data-open-tag="SEL"]').first();
 ok(await foreignChip.count() >= 1, 'the Seleucid chip is a door');
 await foreignChip.click();
@@ -74,7 +81,7 @@ const foreignHidden = await page.evaluate(() => {
   const block = document.querySelector('#nation-panel [data-ref="factionsBlock"]');
   return block ? block.classList.contains('hidden') : null;
 });
-ok(foreignHidden === true, 'the Factions block hides for a foreign court');
+ok(foreignHidden === true, 'the Estates block hides for a foreign court');
 
 console.log('== no console errors ==');
 ok(errors.length === 0, errors.length ? 'errors: ' + errors.slice(0, 3).join(' | ') : 'the console stays clean');

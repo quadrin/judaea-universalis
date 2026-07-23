@@ -1436,10 +1436,11 @@ foreign court **read-only**.
   faction's own `drift(ctx, t)` closure, clamped to ±1.5 — and answers events
   through `helpers.factionShift(ctx, tag, id, delta)` (a quiet no-op for AI
   realms, unknown ids and eras without factions, so content calls it
-  unconditionally). A devoted faction (65+) grants its `boon`, a hostile one
-  (35−) exacts its `bane` — both plain tag modifiers (`faction_<id>_boon/_bane`,
-  months: 2, refreshed each court session, self-expiring). A faction left at
-  40 or under sends a **demand card** every two years (dyn_faction_* — the
+  unconditionally). The current warmth ladder and effect scaling are defined
+  in SPEC §81. Effects remain plain tag modifiers
+  (`faction_<id>_boon/_bane`, months: 2, refreshed each court session,
+  self-expiring). An estate left at 35 or under sends a **demand card** every
+  two years (dyn_faction_* — the
   ultimatum machinery, SPEC §33): grant it (pay `demand.grant.cost` — points
   clamp at zero, treasury may go into debt — +12 approval) or refuse (−8).
   The **appeasement lever** (action `appeaseFaction`, realm-panel button)
@@ -1460,11 +1461,11 @@ foreign court **read-only**.
   1948. Scripted events move them: the Altalena and Bernadotte affair swing
   the Revisionists, the Forty-Five breaks or wins the Sanhedrin, the piyyutim
   choose between the Priests and the Exilarch.
-- **The Factions block** (nation_panel `refreshFactions`, styles `np-fac-*`):
-  name, state word and approval (devoted green / content / hostile red), an
-  approval bar, tooltips carrying the boon and bane, and the appeasement
-  lever with its cost and cooldown in the tooltip. Self-only — a foreign
-  court's politics stay offstage.
+- **The Estates block** (nation_panel `refreshFactions`, styles `np-fac-*`):
+  name, state word and approval, an approval bar, explicit current consequence,
+  tooltips carrying the whole warmth ladder, and the appeasement lever with its
+  cost and cooldown in the tooltip. Self-only — a foreign court's politics
+  stay offstage.
 - **The thin eras made thick**: 40 BCE grows 10 → 22 events (the cisterns of
   Masada, Labienus Parthicus and the Cilician Gates, Antigonus' double-legend
   coins, the landing at Joppa, Silo's winter, the basket-men at the caves,
@@ -3335,3 +3336,28 @@ surviving the opening war. Both JUD→MLI and HAS→MLI now require the realm to
 
 The stricter checklist is live in the Decisions tooltip. Ownership as well as
 control matters, so a temporary occupation cannot manufacture a crown.
+
+## 81. Warm estates have a stake; cold estates have teeth
+
+The internal factions introduced in SPEC §34 now behave as graduated estates
+rather than binary switches. Approval has five visible bands:
+
+- **devoted, 80–100** — the estate's full authored benefit;
+- **loyal, 60–79** — half of that benefit;
+- **content, 41–59** — no modifier;
+- **discontent, 21–40** — half of the authored penalty;
+- **hostile, 0–20** — the full penalty.
+
+Scaling respects effect semantics. Additive values scale from zero; multiplier
+values scale from neutral `1`, so a `manpowerMult: 1.15` boon becomes `1.075`
+while loyal and the full `1.15` while devoted. The same bookmark definitions,
+monthly drift, event shifts, demand cards, yearly appeasement cooldowns, and
+save fields remain authoritative, preserving old campaigns.
+
+The nation panel now calls the institution **Estates**, colors all five bands,
+and prints the active consequence beneath each approval bar. Demands begin at
+35 approval, inside the discontent band, so a cooling estate first creates a
+measurable penalty and then escalates into politics. `smoke18.mjs` verifies all
+five bands, exact half/full arithmetic, demands, appeasement, event shifts, and
+the AI-offstage rule; `uitest19.mjs` verifies the renamed panel, consequence
+rows, threshold crossing, cooldown, and foreign-court privacy.

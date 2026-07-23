@@ -2052,8 +2052,11 @@ html, body {
 }
 .np-fac-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
 .np-fac-fill.np-fac-devoted { background: #6f8a3d; }
+.np-fac-fill.np-fac-loyal { background: #8c9c55; }
 .np-fac-fill.np-fac-content { background: #a08a4f; }
+.np-fac-fill.np-fac-discontent { background: #b56b35; }
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
+.np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
 .np-dip-sec {
   margin-top: 7px;

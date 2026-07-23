@@ -1,8 +1,8 @@
-// Headless smoke test — SPEC §34: the court factions. Every bookmark defines
-// factions for its victory-branch tags; approval drifts, boons and banes ride
-// the modifier stream, despairing factions send demand cards, the appeasement
-// lever pays and cools down, and the whole court stays offstage for AI hands
-// (the harness's anomaly set must not feel it).
+// Headless smoke test — SPEC §34/§81: the estates. Every bookmark defines
+// estates for its victory-branch tags; approval drifts, graduated boons and
+// banes ride the modifier stream, despairing estates send demand cards, the
+// appeasement lever pays and cools down, and the whole court stays offstage
+// for AI hands (the harness's anomaly set must not feel it).
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -63,25 +63,39 @@ const t = game.tags.JUD;
 const rows = actions.getFactions();
 ok(Array.isArray(rows) && rows.length === 3, 'getFactions: three parties at the JUD court');
 ok(rows.every((r) => r.approval === 50 && r.state === 'content'), 'every faction opens content at 50');
-ok(rows.every((r) => r.name && r.desc && r.boonText && r.baneText && r.appeaseLabel),
-  'rows carry names, descriptions, boon/bane texts and the lever');
+ok(rows.every((r) => r.name && r.desc && r.boonText && r.baneText && r.appeaseLabel && r.activeText),
+  'rows carry names, descriptions, boon/bane texts, current effects and the lever');
 
-console.log('== drift, boons and banes ==');
+console.log('== the five warmth bands and graduated effects ==');
 fac.monthlyFactions(ctx);
 ok(Object.keys(t.factions).length === 3, 'approval table seeded on the tick');
-t.factions.zealots = 80;
+t.factions.zealots = 70;
 fac.monthlyFactions(ctx);
-ok((t.modifiers || []).some((m) => m && m.id === 'faction_zealots_boon'), 'devoted (80): the boon modifier rides the stream');
-ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_bane'), 'no bane while devoted');
-t.factions.zealots = 20;
+let mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_boon');
+let info = actions.getFactions().find((r) => r.id === 'zealots');
+ok(info.state === 'loyal' && info.activeScale === 0.5, 'loyal (60–79): a half-strength benefit');
+ok(mod && Math.abs(mod.effects.manpowerMult - 1.075) < 0.0001,
+  'loyal multiplier scales from neutral: +15% becomes +7.5%');
+ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_bane'), 'no penalty while loyal');
+t.factions.zealots = 90;
+fac.monthlyFactions(ctx);
+mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_boon');
+info = actions.getFactions().find((r) => r.id === 'zealots');
+ok(info.state === 'devoted' && info.activeScale === 1, 'devoted (80+): a full-strength benefit');
+ok(mod && Math.abs(mod.effects.manpowerMult - 1.15) < 0.0001, 'devoted receives the full authored boon');
+t.factions.zealots = 30;
 game.pendingEvents.length = 0;
 fac.monthlyFactions(ctx);
-ok((t.modifiers || []).some((m) => m && m.id === 'faction_zealots_bane'), 'hostile (20): the bane modifier lands');
-ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_boon'), 'the boon is withdrawn');
+mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_bane');
+info = actions.getFactions().find((r) => r.id === 'zealots');
+ok(info.state === 'discontent' && info.activeScale === 0.5, 'discontent (21–40): a half-strength penalty');
+ok(mod && Math.abs(mod.effects.unrestAll - 0.625) < 0.0001,
+  'discontent additive effect is halved: +1.25 unrest becomes +0.625');
+ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_boon'), 'the boon is withdrawn while discontent');
 
 console.log('== the demand card ==');
 const demand = game.pendingEvents.find((pe) => pe && String(pe.eventId).startsWith('dyn_faction_'));
-ok(!!demand, 'a despairing faction sends its demand');
+ok(!!demand, 'an estate at 35 or less sends its demand');
 const ev = ctx.dynEvents.get(demand.eventId);
 ok(ev && ev.options.length === 2, 'the demand offers two answers: ' + (ev && ev.title));
 fac.monthlyFactions(ctx);
@@ -93,19 +107,25 @@ actions.chooseEventOption(demand.instanceId, 0);
 ok(t.points.mar < marBefore, 'granting the demand pays its cost (' + (marBefore - t.points.mar) + ' martial)');
 ok(t.factions.zealots > appBefore, 'granting raises approval to ' + Math.round(t.factions.zealots));
 // the cooldown holds even at low approval
-t.factions.zealots = 20;
+t.factions.zealots = 10;
 fac.monthlyFactions(ctx);
+mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_bane');
+info = actions.getFactions().find((r) => r.id === 'zealots');
+ok(info.state === 'hostile' && info.activeScale === 1, 'hostile (20−): a full-strength penalty');
+ok(mod && Math.abs(mod.effects.unrestAll - 1.25) < 0.0001, 'hostile receives the full authored bane');
 ok(!game.pendingEvents.some((pe) => pe && String(pe.eventId).startsWith('dyn_faction_')),
   'the demand is not repeated inside its two-year cooldown');
 
 console.log('== the appeasement lever ==');
-t.factions.zealots = 40;
+t.factions.zealots = 50;
 t.points.mar = 10;
-let info = actions.getFactions().find((r) => r.id === 'zealots');
+info = actions.getFactions().find((r) => r.id === 'zealots');
 ok(!info.canAppease && /martial/.test(info.whyNot), 'too poor to court: ' + info.whyNot);
 t.points.mar = 200;
 const res = fac.appeaseFactionCore(ctx, 'JUD', 'zealots');
-ok(res.ok && Math.round(t.factions.zealots) === 50, 'appeasement: +10 approval for the price');
+info = actions.getFactions().find((r) => r.id === 'zealots');
+ok(res.ok && Math.round(t.factions.zealots) === 60 && info.state === 'loyal',
+  'appeasement crosses the content→loyal threshold: 50 → 60');
 ok(t.points.mar === 160, 'the price was 40 martial points');
 const again = fac.appeaseFactionCore(ctx, 'JUD', 'zealots');
 ok(!again.ok && /recently/.test(again.why), 'courted too recently: the lever cools down');
