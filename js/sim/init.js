@@ -2275,7 +2275,7 @@ export function gameActions(ctx) {
       try {
         const res = appeaseFactionCore(ctx, g.playerTag, String(factionId));
         if (!res.ok) { say('The court is cold', res.why || 'They will not hear us.', 'bad'); return; }
-        say('A faction courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
+        say('An estate courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
       } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
     },
 

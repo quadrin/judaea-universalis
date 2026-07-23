@@ -75,7 +75,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-missions" data-ref="missions"></div>
       </div>
       <div class="pp-build hidden" data-ref="factionsBlock">
-        <div class="pp-build-title">Factions</div>
+        <div class="pp-build-title">Estates</div>
         <div class="np-factions" data-ref="factions"></div>
       </div>
       <div class="pp-diplo">
@@ -468,9 +468,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
   }
 
-  // The court factions (SPEC §34): approval bars, the boon or bane in force,
-  // and the appeasement lever. The player's own politics — foreign courts
-  // keep theirs offstage.
+  // Estates and court factions (SPEC §34, §81): five approval bands, the
+  // graduated effect in force, and the appeasement lever. The player's own
+  // politics — foreign courts keep theirs offstage.
   function refreshFactions(self) {
     let list = null;
     if (self && actions && typeof actions.getFactions === 'function') {
@@ -480,10 +480,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.factionsBlock.classList.toggle('hidden', !show);
     if (!show) return;
     setHtml(refs.factions, list.map((f) => {
-      const cls = f.state === 'devoted' ? 'pos' : f.state === 'hostile' ? 'neg' : '';
+      const cls = (f.state === 'devoted' || f.state === 'loyal') ? 'pos'
+        : (f.state === 'hostile' || f.state === 'discontent') ? 'neg' : '';
       const tt = f.desc
-        + (f.boonText ? '\nDevoted (65+): ' + f.boonText : '')
-        + (f.baneText ? '\nHostile (35−): ' + f.baneText : '');
+        + (f.boonText ? '\nLoyal (60–79): half benefit · Devoted (80+): ' + f.boonText : '')
+        + (f.baneText ? '\nDiscontent (21–40): half penalty · Hostile (20−): ' + f.baneText : '')
+        + '\n――――――\nCurrent: ' + (f.activeText || 'No estate effect.');
       const lever = f.appeaseLabel + ' — +' + (f.appeaseGain || 10) + ' approval';
       const btnTt = f.canAppease ? lever : (f.whyNot || '') + '\n' + lever;
       return `<div class="np-faction" data-tt="${esc(tt)}">`
@@ -491,6 +493,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<span class="np-fac-state ${cls}">${esc(f.state)} · ${f.approval}</span>`
         + `<button class="pp-build-btn np-fac-btn${f.canAppease ? '' : ' disabled'}" data-appease="${esc(f.id)}" data-tt="${esc(btnTt)}">${icon('laurel')}</button></div>`
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
+        + `<div class="np-fac-effect ${cls}">${esc(f.activeText || 'No estate effect.')}</div>`
         + `</div>`;
     }).join(''));
   }

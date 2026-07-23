@@ -1,12 +1,11 @@
-// Judaea Universalis — the court factions (SPEC §34): the realm's internal
-// parties. Each playable tag carries two or three factions defined by its
-// bookmark (content owns the politics; this engine owns the arithmetic).
-// Approval runs 0-100 and drifts monthly with the era's mood: a devoted
-// faction (65+) grants its boon, a hostile one (35 or less) exacts its bane
-// — both ride the ordinary tag-modifier stream — and a faction left at 40
-// or under sends a demand card every two years. Player-only, the same rule
-// as the ultimatums (SPEC §33): AI realms keep their politics offstage, so
-// the balance harness's anomaly set is untouched. DOM-free.
+// Judaea Universalis — the estates and court factions (SPEC §34, §81): the
+// realm's internal parties. Each playable tag carries two or three estates
+// defined by its bookmark (content owns the politics; this engine owns the
+// arithmetic). Approval runs 0-100 and drifts monthly with the era's mood.
+// Loyalty is graduated: loyal/discontent estates apply half of their authored
+// boon/bane, devoted/hostile estates apply the full effect. Both ride the
+// ordinary tag-modifier stream. Player-only, the same rule as ultimatums
+// (SPEC §33): AI realms keep their politics offstage. DOM-free.
 
 import { num, clamp } from './military.js';
 import { fireEvent } from './events.js';
@@ -19,9 +18,11 @@ function warnOnce(key, ...args) {
 }
 
 export const FACTION = {
-  boonAt: 65,
-  baneAt: 35,
-  demandAt: 40,
+  devotedAt: 80,
+  loyalAt: 60,
+  discontentAt: 40,
+  hostileAt: 20,
+  demandAt: 35,
   demandCdMonths: 24,
   appeaseCdMonths: 12,
   appeaseGain: 10,
@@ -63,8 +64,34 @@ export function ensureFactions(ctx, tag) {
 }
 
 export function factionState(approval) {
-  return approval >= FACTION.boonAt ? 'devoted'
-    : approval <= FACTION.baneAt ? 'hostile' : 'content';
+  return approval >= FACTION.devotedAt ? 'devoted'
+    : approval >= FACTION.loyalAt ? 'loyal'
+      : approval <= FACTION.hostileAt ? 'hostile'
+        : approval <= FACTION.discontentAt ? 'discontent' : 'content';
+}
+
+function effectProfile(approval) {
+  const state = factionState(approval);
+  if (state === 'devoted') return { state, kind: 'boon', scale: 1 };
+  if (state === 'loyal') return { state, kind: 'boon', scale: 0.5 };
+  if (state === 'hostile') return { state, kind: 'bane', scale: 1 };
+  if (state === 'discontent') return { state, kind: 'bane', scale: 0.5 };
+  return { state, kind: '', scale: 0 };
+}
+
+// Additive effects scale from zero; multipliers scale from their neutral 1.
+// Thus +10% manpower becomes +5% while merely loyal, and −6% morale becomes
+// −3% while discontent. Authored bookmark effects stay the single source.
+function scaledEffects(effects, scale) {
+  const out = {};
+  for (const [key, raw] of Object.entries(effects || {})) {
+    if (!Number.isFinite(raw)) {
+      if (scale >= 1) out[key] = raw;
+      continue;
+    }
+    out[key] = key.endsWith('Mult') ? 1 + (raw - 1) * scale : raw * scale;
+  }
+  return out;
 }
 
 // Move a faction's approval — scripted events, demand cards and appeasement
@@ -172,17 +199,22 @@ export function monthlyFactions(ctx) {
       }
       app = clamp(app, 0, 100);
       table[def.id] = app;
-      // Boon & bane ride the ordinary modifier stream. months: 2 — refreshed
-      // every court session, self-expiring if the court stops meeting.
+      // The warmth ladder rides the ordinary modifier stream. months: 2 —
+      // refreshed every court session, self-expiring if the court stops.
       const boonId = 'faction_' + def.id + '_boon';
       const baneId = 'faction_' + def.id + '_bane';
-      setFactionModifier(t, boonId, app >= FACTION.boonAt && def.boon ? {
-        id: boonId, name: (def.boon.name || def.name + ' Devoted'), months: 2,
-        effects: { ...(def.boon.effects || {}) },
+      const profile = effectProfile(app);
+      setFactionModifier(t, boonId, profile.kind === 'boon' && def.boon ? {
+        id: boonId,
+        name: (profile.scale < 1 ? 'Loyal: ' : '') + (def.boon.name || def.name + ' Devoted'),
+        months: 2,
+        effects: scaledEffects(def.boon.effects, profile.scale),
       } : null);
-      setFactionModifier(t, baneId, app <= FACTION.baneAt && def.bane ? {
-        id: baneId, name: (def.bane.name || def.name + ' Hostile'), months: 2,
-        effects: { ...(def.bane.effects || {}) },
+      setFactionModifier(t, baneId, profile.kind === 'bane' && def.bane ? {
+        id: baneId,
+        name: (profile.scale < 1 ? 'Discontent: ' : '') + (def.bane.name || def.name + ' Hostile'),
+        months: 2,
+        effects: scaledEffects(def.bane.effects, profile.scale),
       } : null);
       // The demand: one card per faction per two years, never two at once.
       if (app <= FACTION.demandAt && def.demand) {
@@ -247,18 +279,29 @@ export function getFactionsInfo(ctx) {
   if (!table) return null;
   return defs.filter((d) => d && d.id).map((def) => {
     const app = Math.round(num(table[def.id], 50));
+    const profile = effectProfile(app);
     const cost = (def.appease && def.appease.cost) || {};
     const whyNot = appeaseBlocker(ctx, t, def.id, cost);
+    const active = profile.kind === 'boon' ? def.boon : profile.kind === 'bane' ? def.bane : null;
+    const strength = profile.scale >= 1 ? 'full' : profile.scale > 0 ? 'half' : '';
     return {
       id: def.id,
       name: def.name || def.id,
       desc: def.desc || '',
       approval: app,
-      state: factionState(app),
+      state: profile.state,
       boonName: def.boon ? (def.boon.name || '') : '',
       boonText: def.boon ? (def.boon.text || '') : '',
       baneName: def.bane ? (def.bane.name || '') : '',
       baneText: def.bane ? (def.bane.text || '') : '',
+      activeKind: profile.kind,
+      activeScale: profile.scale,
+      activeName: active ? (active.name || '') : '',
+      activeText: active
+        ? (strength.charAt(0).toUpperCase() + strength.slice(1)
+          + (profile.scale < 1 ? ' of ' : ' ')
+          + (profile.kind === 'boon' ? 'benefit: ' : 'penalty: ') + (active.text || ''))
+        : 'No estate effect at this approval.',
       appeaseLabel: (def.appease && def.appease.label) || ('Court them (' + costText(cost) + ')'),
       appeaseGain: FACTION.appeaseGain,
       canAppease: !whyNot,

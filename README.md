@@ -245,13 +245,16 @@ python3 -m http.server 8613 --directory .
   of treaties (walkable court to court), and how they feel about you. Your
   own flag in the corner of a foreign panel, or the topbar flag, brings you
   home.
-- The realm divided: every playable crown seats two or three court factions —
+- The realm divided: every playable crown seats two or three estates and court
+  factions —
   Pharisees and Sadducees, Zealots and the peace party, Senate and legions,
   the Blues and Greens of the Hippodrome, the Coalition and the Revisionists
   of 1948 — each with an approval bar in the realm panel that drifts with the
-  era's politics. Devoted factions (65+) grant their boon, hostile ones (35−)
-  exact their bane, the despairing send demand cards you may grant or refuse,
-  and an appeasement lever pays a faction's price once a year. Scripted
+  era's politics. Loyal estates (60–79) grant half their boon and devoted
+  ones (80+) grant it in full; discontent estates (21–40) exact half their
+  bane and hostile ones (20−) exact it in full. Estates at 35 or less send
+  demand cards you may grant or refuse, and an appeasement lever pays an
+  estate's price once a year. Scripted
   history moves the court: fire on the Altalena and the Revisionists remember;
   burn the list of the Forty-Five and the Sanhedrin does. Your politics only —
   the AI's courts stay offstage.
