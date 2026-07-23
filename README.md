@@ -41,7 +41,19 @@ python3 -m http.server 8613 --directory .
   (highlighted gold on the map while you negotiate), an indemnity, humiliation, or
   subjugation into a tribute-paying client kingdom — priced against your war score; losing
   AIs sue for peace, AI-vs-AI wars settle themselves, and five-year truces follow every
-  treaty. Fabricate claims and declare war from a foreign province's diplomacy block.
+  treaty. Victorious courts now negotiate according to their character and war aim:
+  conquerors press claims, containment wars dismantle rivals, overlords restore the yoke,
+  and spare leverage buys clients, reparations, prestige or gold. Exhausted coalition
+  members initiate their own separate offers, and an overreaching player demand may return
+  as an affordable counteroffer instead of a flat refusal. Fabricating a claim from a
+  foreign province's diplomacy block costs 30 influence points up front and takes four
+  months before the claim becomes a usable casus belli.
+- Diplomatic wars now name a concrete **war goal** — conquest, a pressed claim,
+  liberation, independence, containment, a punitive coalition, or succession.
+  Holding the objective after a six-month grace period generates ticking war score
+  (up to 25); the war overview shows its controller and contribution. The peace table
+  discounts demands that fulfill the stated purpose and makes unrelated annexations
+  costlier, while historical scripted wars keep their authored score rules.
 - Win hard enough and the treaty can force the enemy to **free states**: restore a fallen
   court, return an old homeland to a still-living neutral country, or create a new cultural
   state from enemy territory even when no country there was recently conquered. Every
@@ -62,7 +74,7 @@ python3 -m http.server 8613 --directory .
   screen alone, where campaigns are chosen rather than fought.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
-- A war overview (score broken into battles / occupation / events, who holds what), a
+- A war overview (score broken into battles / occupation / war goal / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and save export/import.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID
   staircase), procedural terrain grain per province (dunes, crags, fields, reeds), sandy
@@ -197,7 +209,7 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 53 headless sim suites and 29
+  marching. The full verification battery — 56 headless sim suites and 30
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.

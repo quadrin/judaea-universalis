@@ -53,7 +53,7 @@ ok(!buildNames.some((name) => /Airfield/i.test(name)), 'the ancient building gri
 ok(buildNames.some((name) => /Shipyard/i.test(name)), 'the coastal building grid offers a shipyard');
 
 console.log('== a shipyard opens the merchant marine ==');
-await page.evaluate(() => {
+const merchantBefore = await page.evaluate(() => {
   const ctx = window._ctx;
   const p = ctx.game.provinces.find((row) => row && row.owner === ctx.game.playerTag
     && row.controller === ctx.game.playerTag && ctx.geom.coastal[row.id]);
@@ -61,13 +61,15 @@ await page.evaluate(() => {
   if (!p.buildings.includes('shipyard')) p.buildings.push('shipyard');
   ctx.game.tags[ctx.game.playerTag].treasury = 200;
   ctx.bus.emit('provinceOwner', { id: p.id });
+  return { id: p.id, ships: p.merchantShips || 0 };
 });
 await page.waitForSelector('#province-panel .pp-merchant:not(.hidden)');
 await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('#province-panel [data-ref="merchantShip"]').click();
 await page.evaluate(() => { window._ctx.game.paused = true; });
-ok(/1 \/ 5 merchant ships/.test(await page.locator('#province-panel [data-ref="merchantStatus"]').textContent()),
-  'commissioning a merchantman updates the persistent port count');
+const merchantAfter = await page.evaluate((id) => window._ctx.game.provinces[id].merchantShips || 0, merchantBefore.id);
+ok(merchantAfter === merchantBefore.ships + 1,
+  `commissioning a merchantman updates the persistent port count (${merchantBefore.ships} → ${merchantAfter})`);
 
 console.log('== selected armies can stand down ==');
 const before = await page.evaluate(() => Object.values(window._ctx.game.armies).filter((a) => a && a.tag === window._ctx.game.playerTag).length);

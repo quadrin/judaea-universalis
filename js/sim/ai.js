@@ -7,7 +7,7 @@ import {
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
-  peaceDealInfo, executePeaceDeal, monthsBetween, buildAiPeaceProvinces,
+  peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
   coalitionAgainst, forceLimitOf, vassalsOf,
   declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals,
   modernizeInfo, modernizeArmyCore, switchTagCore,
@@ -497,7 +497,7 @@ function aiConsiderWar(ctx, tag) {
     if (!ctx.rng.chance(0.08 * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
     t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
-    declareWar(ctx, tag, tgt, null, cb ? cb.type : null);
+    declareWar(ctx, tag, tgt, null, cb || 'conquest');
     return; // at most one declaration a month, per power
   }
 }
@@ -665,26 +665,426 @@ function hegemonContainment(ctx) {
   }
 }
 
+function blankAiDeal(enemyTag) {
+  const deal = {
+    provinces: [], gold: 0, humiliate: false, subjugate: false,
+    reparations: false, release: [], transferVassals: [],
+  };
+  if (enemyTag) deal.enemy = enemyTag;
+  return deal;
+}
+
+function copyAiDeal(deal) {
+  return {
+    ...deal,
+    provinces: (deal.provinces || []).slice(),
+    release: (deal.release || []).slice(),
+    transferVassals: (deal.transferVassals || []).slice(),
+  };
+}
+
+// Test one additional clause through the same validator the player's table
+// uses. A planner never gets a private discount, ignores the dismemberment
+// cap, or submits a term the scoped congress does not own.
+function legalAiCandidate(ctx, war, winner, budget, candidate, kept) {
+  const ev = evaluatePeaceDeal(ctx, war, winner, candidate);
+  if (!ev.acceptable || ev.cost > budget || (kept && !kept(ev))) return null;
+  return { deal: candidate, ev };
+}
+
+function provincePreference(a, b) {
+  const rank = (row) => row.goalAligned ? 0
+    : row.discount === 'claim' ? 1 : row.discount === 'faith' ? 2 : row.goalReason ? 4 : 3;
+  return rank(a) - rank(b)
+    || (b.dev / Math.max(1, b.cost)) - (a.dev / Math.max(1, a.cost))
+    || b.dev - a.dev
+    || a.name.localeCompare(b.name);
+}
+
+function releasePreference(a, b) {
+  const rank = (row) => row.kind === 'restore' ? 0 : row.kind === 'return' ? 1 : 2;
+  return rank(a) - rank(b)
+    || (b.dev / Math.max(1, b.cost)) - (a.dev / Math.max(1, a.cost))
+    || a.cost - b.cost
+    || a.name.localeCompare(b.name);
+}
+
+// One treaty mind for every AI peace path (SPEC §77). The court's temperament
+// determines what victory means:
+//   * a claimant or firebrand takes land;
+//   * a wary/ponderous power dismantles rivals and containment targets;
+//   * an overlord wins an independence war by restoring the yoke;
+//   * spare score buys prestige, reparations and an indemnity.
+// Every attempted addition is re-priced live, so mixed clauses share the
+// ordinary war-score and development budgets.
+export function buildAiPeaceDeal(ctx, war, winner, enemyTag, opts) {
+  const info = peaceDealInfo(ctx, war, winner, enemyTag);
+  const options = opts || {};
+  const budget = Math.max(0, Math.min(num(info.myWs), num(options.budget, info.myWs)));
+  let deal = blankAiDeal(enemyTag);
+  if (budget <= 0) return deal;
+
+  const pers = personality(ctx, winner);
+  const rival = !!info.enemyLeader && areRivals(ctx, winner, info.enemyLeader);
+  const cb = war.cb || '';
+  const dismantle = !info.separate && !info.exit && (
+    cb === 'containment' || cb === 'coalition'
+    || (rival && (!!pers.ponderous || num(pers.caution, 1) >= num(pers.aggression, 1)))
+  );
+
+  const accept = (candidate, kept) => {
+    const tested = legalAiCandidate(ctx, war, winner, budget, candidate, kept);
+    if (!tested) return false;
+    deal = tested.deal;
+    return true;
+  };
+  const addProvince = (row) => {
+    const candidate = copyAiDeal(deal);
+    candidate.provinces.push(row.id);
+    return accept(candidate, (ev) => ev.provinces.includes(row.id));
+  };
+  const addRelease = (row) => {
+    const candidate = copyAiDeal(deal);
+    candidate.release.push(row.tag);
+    return accept(candidate, (ev) => ev.release.includes(row.tag));
+  };
+  const addTransfer = (row) => {
+    const candidate = copyAiDeal(deal);
+    candidate.transferVassals.push(row.tag);
+    return accept(candidate, (ev) => ev.transferVassals.includes(row.tag));
+  };
+
+  // An independence war has a political objective more exact than annexation.
+  // Very aggressive courts also prefer a manageable client to many restive
+  // provinces, but only when the yoke is cheap enough to be a plausible prize.
+  const onDefendingSide = war.defenders.indexOf(winner) >= 0;
+  const restoreYoke = cb === 'independence' && onDefendingSide && info.canSubjugate;
+  const pressSuccession = cb === 'succession' && !onDefendingSide && info.canSubjugate;
+  const seekSmallClient = !info.separate && !info.exit && info.canSubjugate
+    && cb !== 'independence' && cb !== 'containment' && cb !== 'coalition'
+    && cb !== 'holy' && cb !== 'liberation'
+    && num(pers.aggression, 1) >= 1.25 && info.subjugateCost <= 60
+    && budget >= info.subjugateCost + 10;
+  if (restoreYoke || pressSuccession || seekSmallClient) {
+    const candidate = copyAiDeal(deal);
+    candidate.subjugate = true;
+    accept(candidate, (ev) => ev.subjugate);
+  }
+
+  if (!deal.subjugate) {
+    const provinces = (info.provinces || []).slice().sort(provincePreference);
+    const releases = (info.releasable || []).slice().sort(releasePreference);
+    const transfers = (info.transferableVassals || []).slice()
+      .sort((a, b) => (b.dev / Math.max(1, b.cost)) - (a.dev / Math.max(1, a.cost))
+        || a.cost - b.cost || a.name.localeCompare(b.name));
+
+    if (dismantle) {
+      // Restoration is legitimate statecraft; newly invented partition states
+      // are reserved for explicit containment/coalition wars.
+      const eligible = releases.filter((row) => row.kind !== 'create'
+        || cb === 'containment' || cb === 'coalition');
+      let freed = 0;
+      for (const row of eligible) {
+        if (addRelease(row) && ++freed >= (cb === 'containment' || cb === 'coalition' ? 2 : 1)) break;
+      }
+      if (transfers.length) addTransfer(transfers[0]);
+      // A wary victor still presses clear claims and welcomes co-religionists;
+      // it does not automatically swallow every alien occupation.
+      const preferred = provinces.filter((row) => row.discount === 'claim' || row.discount === 'faith');
+      for (const row of preferred) addProvince(row);
+    } else {
+      // A conqueror first takes the land its soldiers actually hold.
+      for (const row of provinces) addProvince(row);
+      if (transfers.length) addTransfer(transfers[0]);
+      // With no cession available, an old court's restoration is a useful
+      // lesser victory. Ordinary wars do not manufacture arbitrary new states.
+      if (!deal.provinces.length && !deal.transferVassals.length) {
+        const historic = releases.find((row) => row.kind !== 'create');
+        if (historic) addRelease(historic);
+      }
+    }
+  }
+
+  // Cautious courts demand reliable income; bellicose courts demand public
+  // submission. Rivals are humiliated whenever the remaining score permits.
+  const tryReparations = () => {
+    if (deal.reparations) return;
+    const candidate = copyAiDeal(deal);
+    candidate.reparations = true;
+    accept(candidate, (ev) => ev.reparations);
+  };
+  const tryHumiliation = () => {
+    if (deal.humiliate) return;
+    const candidate = copyAiDeal(deal);
+    candidate.humiliate = true;
+    accept(candidate, (ev) => ev.humiliate);
+  };
+  if (num(pers.caution, 1) >= num(pers.aggression, 1)) tryReparations();
+  if (rival || num(pers.aggression, 1) > 1.1) tryHumiliation();
+  if (!deal.reparations) tryReparations();
+
+  // Fill the last affordable part of the score with a rounded indemnity.
+  if (info.maxGold >= info.goldStep) {
+    const current = evaluatePeaceDeal(ctx, war, winner, deal);
+    const spare = Math.max(0, budget - current.cost);
+    let gold = Math.min(info.maxGold,
+      Math.floor((spare * 100 / Math.max(1, info.goldCostPer100)) / info.goldStep) * info.goldStep);
+    while (gold >= info.goldStep) {
+      const candidate = copyAiDeal(deal);
+      candidate.gold = gold;
+      if (accept(candidate, (ev) => ev.gold > 0)) break;
+      gold -= info.goldStep;
+    }
+  }
+  return deal;
+}
+
+export function describeAiPeaceDeal(ctx, war, winner, deal) {
+  const info = peaceDealInfo(ctx, war, winner, deal && deal.enemy);
+  const ev = evaluatePeaceDeal(ctx, war, winner, deal);
+  const clauses = [];
+  if (ev.subjugate) clauses.push('submission as a client kingdom');
+  if (ev.provinces.length) {
+    clauses.push('the cession of ' + ev.provinces.map((id) => {
+      const p = ctx.byId(id);
+      return (p && p.name) || ('#' + id);
+    }).join(', '));
+  }
+  for (const row of ev.releaseRows || []) {
+    if (row.kind === 'return') clauses.push(row.name + '’s old lands returned');
+    else if (row.kind === 'create') clauses.push('recognition of ' + row.name);
+    else clauses.push('the restoration of ' + row.name);
+  }
+  for (const row of ev.transferRows || []) clauses.push('the fealty of ' + row.name);
+  if (ev.reparations) clauses.push('two years of reparations');
+  if (ev.humiliate) clauses.push('a public humiliation');
+  if (ev.gold > 0) clauses.push(ev.gold + ' talents');
+  return {
+    info, ev,
+    text: clauses.length ? clauses.join('; ') : 'a return to the old borders',
+  };
+}
+
+// A rejected maximal demand can produce a real counteroffer rather than a
+// red toast. The loser only pares back clauses the player actually proposed,
+// preferring money and prestige costs to permanent losses of sovereignty.
+export function buildAiCounteroffer(ctx, war, byTag, submitted) {
+  const asked = submitted || {};
+  const info = peaceDealInfo(ctx, war, byTag, asked.enemy);
+  const budget = Math.max(0, num(info.myWs));
+  if (budget <= 0) return null;
+  let deal = blankAiDeal(asked.enemy);
+  const accept = (candidate, kept) => {
+    const tested = legalAiCandidate(ctx, war, byTag, budget, candidate, kept);
+    if (!tested) return false;
+    deal = tested.deal;
+    return true;
+  };
+
+  // Gold is the least politically damaging concession, so a solvent loser
+  // offers as much of the requested indemnity as the victor's score supports.
+  let gold = Math.min(info.maxGold, Math.max(0, num(asked.gold)));
+  gold = Math.floor(gold / info.goldStep) * info.goldStep;
+  while (gold >= info.goldStep) {
+    const candidate = copyAiDeal(deal);
+    candidate.gold = gold;
+    if (accept(candidate, (ev) => ev.gold > 0)) break;
+    gold -= info.goldStep;
+  }
+  if (asked.reparations) {
+    const candidate = copyAiDeal(deal);
+    candidate.reparations = true;
+    accept(candidate, (ev) => ev.reparations);
+  }
+  if (asked.humiliate) {
+    const candidate = copyAiDeal(deal);
+    candidate.humiliate = true;
+    accept(candidate, (ev) => ev.humiliate);
+  }
+
+  const provinceRows = (info.provinces || []).filter((row) => (asked.provinces || []).includes(row.id))
+    .sort((a, b) => a.cost - b.cost || a.dev - b.dev || a.name.localeCompare(b.name));
+  for (const row of provinceRows) {
+    const candidate = copyAiDeal(deal);
+    candidate.provinces.push(row.id);
+    accept(candidate, (ev) => ev.provinces.includes(row.id));
+  }
+  const releaseRows = (info.releasable || []).filter((row) => (asked.release || []).includes(row.tag))
+    .sort((a, b) => a.cost - b.cost || a.dev - b.dev || a.name.localeCompare(b.name));
+  for (const row of releaseRows) {
+    const candidate = copyAiDeal(deal);
+    candidate.release.push(row.tag);
+    accept(candidate, (ev) => ev.release.includes(row.tag));
+  }
+  const transferRows = (info.transferableVassals || [])
+    .filter((row) => (asked.transferVassals || []).includes(row.tag))
+    .sort((a, b) => a.cost - b.cost || a.dev - b.dev || a.name.localeCompare(b.name));
+  for (const row of transferRows) {
+    const candidate = copyAiDeal(deal);
+    candidate.transferVassals.push(row.tag);
+    accept(candidate, (ev) => ev.transferVassals.includes(row.tag));
+  }
+  if (asked.subjugate) {
+    const candidate = copyAiDeal(deal);
+    candidate.subjugate = true;
+    accept(candidate, (ev) => ev.subjugate);
+  }
+
+  const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
+  return ev.acceptable && ev.cost > 0 ? deal : null;
+}
+
+export function sendAiCounteroffer(ctx, war, byTag, submitted) {
+  if (!ctx.dynEvents || !war) return false;
+  const deal = buildAiCounteroffer(ctx, war, byTag, submitted);
+  if (!deal) return false;
+  const summary = describeAiPeaceDeal(ctx, war, byTag, deal);
+  const enemy = summary.info.enemyName || 'The enemy';
+  const g = ctx.game;
+  g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
+  const ev = {
+    id: 'dyn_peace_counter_' + g.flags._dynEvN,
+    title: 'Counteroffer from ' + enemy,
+    desc: 'Their envoys refuse the full demand, but do not leave the hall. They offer '
+      + summary.text + ' instead. This is the most our present position can compel.',
+    forTag: g.playerTag,
+    major: true,
+    aiOption: 1,
+    options: [
+      {
+        label: 'Accept the counteroffer',
+        tooltip: 'The treaty is signed for ' + summary.text + '.',
+        effects: () => {
+          const live = g.wars.find((w) => w && w.id === war.id);
+          if (!live) return;
+          const priced = evaluatePeaceDeal(ctx, live, byTag, deal);
+          if (priced.acceptable) executePeaceDeal(ctx, live, byTag, deal);
+          else ctx.bus.emit('notify', {
+            title: 'The offer has lapsed',
+            text: 'The front changed before the seals were set. The envoys withdraw.',
+            type: 'bad',
+          });
+        },
+      },
+      {
+        label: 'Refuse — our full terms stand',
+        tooltip: 'The war continues. Their court will not receive another mission for six months.',
+        effects: () => {},
+      },
+    ],
+  };
+  ctx.dynEvents.set(ev.id, ev);
+  fireEvent(ctx, ev);
+  return true;
+}
+
+function separatePeaceThreshold(ctx, tag) {
+  return clamp(Math.round(45 / Math.max(0.6, num(personality(ctx, tag).caution, 1))), 20, 60);
+}
+
+// A coalition member whose own fields are lost may knock at the victor's door
+// without waiting for the player to discover the separate-peace chip.
+function sendSeparatePeaceOffer(ctx, war, player) {
+  const g = ctx.game;
+  const congress = peaceDealInfo(ctx, war, player);
+  if (congress.exit || congress.separateTargets.length < 2 || !ctx.dynEvents) return false;
+  const rows = congress.separateTargets.slice().sort((a, b) => b.ws - a.ws);
+  for (const row of rows) {
+    const t = g.tags[row.tag];
+    if (!t || !t.alive || !t.ai) continue;
+    const weary = num(t.warExhaustion);
+    if (row.ws < separatePeaceThreshold(ctx, row.tag) && !(weary >= 15 && row.ws >= 0)) continue;
+    const last = war._separateOfferCd && war._separateOfferCd[row.tag];
+    if (last && monthsBetween(last, g.date) < 8) continue;
+    const deal = buildAiPeaceDeal(ctx, war, player, row.tag);
+    const summary = describeAiPeaceDeal(ctx, war, player, deal);
+    if (!summary.ev.acceptable) continue;
+    if (!war._separateOfferCd) war._separateOfferCd = {};
+    war._separateOfferCd[row.tag] = { ...g.date };
+    g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
+    const ev = {
+      id: 'dyn_separate_peace_' + g.flags._dynEvN,
+      title: (t.name || row.tag) + ' seeks a separate peace',
+      desc: 'Its allies may fight on, but this court has had enough. Its envoy offers '
+        + summary.text + ' and a five-year truce in exchange for leaving ' + war.name + '.',
+      forTag: player,
+      major: true,
+      aiOption: 1,
+      options: [
+        {
+          label: 'Let them leave the war',
+          tooltip: 'Accept ' + summary.text + '; the rest of the coalition fights on.',
+          effects: () => {
+            const live = g.wars.find((w) => w && w.id === war.id);
+            if (!live) return;
+            const priced = evaluatePeaceDeal(ctx, live, player, deal);
+            if (priced.acceptable) executePeaceDeal(ctx, live, player, deal);
+            else ctx.bus.emit('notify', {
+              title: 'The corridor closes',
+              text: 'The battlefield changed before the separate treaty could be sealed.',
+              type: 'bad',
+            });
+          },
+        },
+        {
+          label: 'No — they answer with their allies',
+          tooltip: 'The war continues against the whole coalition.',
+          effects: () => {},
+        },
+      ],
+    };
+    ctx.dynEvents.set(ev.id, ev);
+    fireEvent(ctx, ev);
+    return true;
+  }
+  return false;
+}
+
+// In wars without a human belligerent, coalition members use the same
+// bilateral ledger and treaty planner. One corridor may close per month.
+function settleAiSeparatePeace(ctx, war) {
+  const g = ctx.game;
+  const leaders = [
+    war.attackers.find((t) => g.tags[t] && g.tags[t].alive),
+    war.defenders.find((t) => g.tags[t] && g.tags[t].alive),
+  ].filter(Boolean);
+  for (const winner of leaders) {
+    const info = peaceDealInfo(ctx, war, winner);
+    if (info.exit || info.separateTargets.length < 2) continue;
+    const targets = info.separateTargets.slice().sort((a, b) => b.ws - a.ws);
+    for (const row of targets) {
+      const t = g.tags[row.tag];
+      if (!t || !t.alive || !t.ai) continue;
+      if (row.ws < separatePeaceThreshold(ctx, row.tag)
+          && !(num(t.warExhaustion) >= 15 && row.ws >= 0)) continue;
+      const last = war._aiSeparateCd && war._aiSeparateCd[row.tag];
+      if (last && monthsBetween(last, g.date) < 8) continue;
+      if (!war._aiSeparateCd) war._aiSeparateCd = {};
+      war._aiSeparateCd[row.tag] = { ...g.date };
+      const deal = buildAiPeaceDeal(ctx, war, winner, row.tag);
+      const ev = evaluatePeaceDeal(ctx, war, winner, deal);
+      if (!ev.acceptable) continue;
+      executePeaceDeal(ctx, war, winner, deal);
+      return true;
+    }
+  }
+  return false;
+}
+
 // Peace feelers (monthly). A losing AI leader sues the player for peace — a
 // nudge to open the dove dialog and dictate terms. Wars between two AI powers
 // resolve themselves once one side clearly prevails or both sides tire.
-// A winning enemy dictates (SPEC §33): a dynamic event card carrying their
-// demands — the provinces of ours they hold, budgeted by their score, plus
-// reparations when they dominate. Accept and the deal executes as if we had
-// signed it at the table; refuse and the war goes on.
+// A winning enemy dictates (SPEC §33/§77): a dynamic event card carrying a
+// personality-aware, fully priced package. Accept and the deal executes as if
+// we had signed it at the table; refuse and the war goes on.
 function sendUltimatum(ctx, w, leader, ws) {
   const g = ctx.game;
   if (!ctx.dynEvents) return;
   const lt = g.tags[leader];
-  const info = peaceDealInfo(ctx, w, leader);
-  const deal = { provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: ws >= 60 };
-  deal.provinces = buildAiPeaceProvinces(ctx, info, ws).ids;
-  const names = deal.provinces.map((id) => {
-    const p = ctx.byId(id);
-    return (p && p.name) || ('#' + id);
-  });
-  const demandTxt = (names.length ? 'the cession of ' + names.join(', ') : 'our submission')
-    + (deal.reparations ? ', and reparations' : '');
+  const deal = buildAiPeaceDeal(ctx, w, leader);
+  const priced = describeAiPeaceDeal(ctx, w, leader, deal);
+  if (!priced.ev.acceptable) return;
+  const demandTxt = priced.text;
   g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
   const ev = {
     id: 'dyn_ultimatum_' + g.flags._dynEvN,
@@ -744,6 +1144,9 @@ function monthlyWarDiplomacy(ctx) {
         sendUltimatum(ctx, w, leader, ws);
         continue;
       }
+      // The enemy leader may still believe in the coalition while one of its
+      // members has lost its own war. That member now comes to us directly.
+      if (sendSeparatePeaceOffer(ctx, w, player)) continue;
       const sueAt = 15 / Math.max(0.5, num(personality(ctx, leader).caution, 1));
       if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= sueAt)) continue;
       if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;
@@ -754,6 +1157,9 @@ function monthlyWarDiplomacy(ctx) {
         type: 'good',
       });
     } else {
+      // Before the two leaders settle the whole war, let an exhausted member
+      // leave through its own bilateral corridor.
+      if (settleAiSeparatePeace(ctx, w)) continue;
       const attLead = w.attackers.find((t) => g.tags[t] && g.tags[t].alive);
       const defLead = w.defenders.find((t) => g.tags[t] && g.tags[t].alive);
       if (!attLead || !defLead) continue;
@@ -767,16 +1173,7 @@ function monthlyWarDiplomacy(ctx) {
       // any war early.
       if (Math.abs(wsAtt) < 50 && months < num(w.settleMonths, 36)) continue;
       const winner = wsAtt >= 0 ? attLead : defLead;
-      const info = peaceDealInfo(ctx, w, winner);
-      const deal = { provinces: [], gold: 0, humiliate: false, reparations: false };
-      const pack = buildAiPeaceProvinces(ctx, info, info.myWs);
-      deal.provinces = pack.ids;
-      let budget = info.myWs - pack.cost;
-      // What the sword can't hold, the treaty can bleed: leftover score buys reparations.
-      if (budget >= (info.reparationsCost || 15)) {
-        deal.reparations = true;
-        budget -= (info.reparationsCost || 15);
-      }
+      const deal = buildAiPeaceDeal(ctx, w, winner);
       executePeaceDeal(ctx, w, winner, deal);
     }
   }

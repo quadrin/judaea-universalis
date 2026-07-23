@@ -11,8 +11,8 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
-  casusBelli, hasClaim,
-  sideComponents, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
+  casusBelli, claimFabricationInfo, startClaimFabrication,
+  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
@@ -38,6 +38,7 @@ import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
+import { sendAiCounteroffer } from './ai.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -196,7 +197,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
         || (DEFINES.GOV_OF || {})[key] || 'monarchy',
       electionIn: 48, // months to the next vote (republics only)
-      claims: [], overlord: null,
+      claims: [], claimFabrications: [], overlord: null,
       heir: null, regency: false, missionIdx: 0,
       aiState: {},
     };
@@ -425,8 +426,8 @@ export const simHelpers = {
     if (Number.isFinite(d.infl)) t.points.infl = clamp(num(t.points.infl) + d.infl, 0, 999);
     if (Number.isFinite(d.mar)) t.points.mar = clamp(num(t.points.mar) + d.mar, 0, 999);
   },
-  declareWar(ctx, atk, def, name) {
-    return declareWar(ctx, atk, def, name);
+  declareWar(ctx, atk, def, name, cb) {
+    return declareWar(ctx, atk, def, name, cb);
   },
   // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
   // ends the war between a and b by the sword — winnersKey 'att'/'def' or
@@ -1579,7 +1580,9 @@ export function gameActions(ctx) {
           executePeaceDeal(ctx, war, me, deal);
         } else {
           setDiploCd(ctx, cdKey, 6);
-          say('Terms refused', ev.reason + ' Six months until they will listen again.', 'bad');
+          if (!sendAiCounteroffer(ctx, war, me, deal)) {
+            say('Terms refused', ev.reason + ' Six months until they will listen again.', 'bad');
+          }
         }
       } catch (e) { warnOnce('peace', 'offerPeaceDeal failed', e); }
     },
@@ -1599,6 +1602,14 @@ export function gameActions(ctx) {
         const theirKey = onAtt ? 'def' : 'att';
         const mine = sideComponents(ctx, war, myKey);
         const theirs = sideComponents(ctx, war, theirKey);
+        const rawGoal = warGoalInfo(ctx, war);
+        const goal = rawGoal ? {
+          ...rawGoal,
+          score: onAtt ? rawGoal.score : -rawGoal.score,
+          holder: !rawGoal.holderKey
+            ? 'contested'
+            : rawGoal.holderKey === myKey ? 'ours' : 'theirs',
+        } : null;
         const mySide = onAtt ? war.attackers : war.defenders;
         const theirSide = onAtt ? war.defenders : war.attackers;
         const sideRow = (tag) => ({
@@ -1629,9 +1640,10 @@ export function gameActions(ctx) {
           breakdown: {
             battles: Math.round(mine.battles - theirs.battles),
             occupation: Math.round(mine.occupation - theirs.occupation),
+            goal: Math.round(mine.goal - theirs.goal),
             events: Math.round(mine.events - theirs.events),
           },
-          weHold, theyHold,
+          goal, weHold, theyHold,
           noNegotiation: !!war.noNegotiation,
           envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
         };
@@ -2065,49 +2077,26 @@ export function gameActions(ctx) {
           mine.stability = clamp(num(mine.stability) - 1, -3, 3);
         }
         addOpinion(ctx, tag, g.playerTag, -100);
-        declareWar(ctx, g.playerTag, tag, null, cb ? cb.type : null);
+        // A war without a legal pretext is still a conquest with a declared
+        // strategic objective; it simply pays the full stability cost.
+        declareWar(ctx, g.playerTag, tag, null, cb || 'conquest');
       } catch (e) { warnOnce('declareWarOn', 'declareWarOn failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------
     getClaimInfo(provId) {
       try {
-        const p = ctx.byId(provId);
-        const mine = g.tags[g.playerTag];
-        if (!p || p.impassable || !mine) return null;
-        if (p.owner === g.playerTag || !g.tags[p.owner] || p.owner === 'REB') return null;
-        if (hasClaim(ctx, g.playerTag, provId)) return { hasClaim: true, canFabricate: false, whyNot: 'We already hold a claim here.' };
-        let whyNot = '';
-        const cdKey = 'claim:' + p.owner;
-        if (diploCdActive(ctx, cdKey)) {
-          whyNot = 'Our forgers need time (' + diploCdMonthsLeft(ctx, cdKey) + ' months before another claim on ' + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + ').';
-        } else if (num(mine.points.infl) < 30) {
-          whyNot = 'Not enough influence points (30 required).';
-        }
-        return { hasClaim: false, canFabricate: !whyNot, whyNot };
+        return claimFabricationInfo(ctx, g.playerTag, provId);
       } catch (e) { warnOnce('claimInfo', 'getClaimInfo failed', e); return null; }
     },
     fabricateClaim(provId) {
       try {
         const p = ctx.byId(provId);
-        const mine = g.tags[g.playerTag];
-        if (!p || p.impassable || !mine) return;
-        if (p.owner === g.playerTag || !g.tags[p.owner] || p.owner === 'REB') return;
-        if (hasClaim(ctx, g.playerTag, provId)) { say('Claim', 'We already hold a claim on ' + p.name + '.', 'info'); return; }
-        const cdKey = 'claim:' + p.owner;
-        if (diploCdActive(ctx, cdKey)) {
-          say('Claim', 'Our forgers need ' + diploCdMonthsLeft(ctx, cdKey) + ' more months before another claim on '
-            + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + '.', 'bad');
-          return;
-        }
-        if (num(mine.points.infl) < 30) { say('Claim', 'Not enough influence points (30 required).', 'bad'); return; }
-        mine.points.infl = num(mine.points.infl) - 30;
-        if (!Array.isArray(mine.claims)) mine.claims = [];
-        mine.claims.push(provId | 0);
-        addOpinion(ctx, p.owner, g.playerTag, -20);
-        setDiploCd(ctx, cdKey, 12);
-        say('A claim is fabricated', 'Genealogies, old treaties, convenient testimony: we now hold a claim on '
-          + p.name + '. A war for it costs no stability, and taking it at the peace table costs less.', 'good');
+        if (!p) return;
+        const res = startClaimFabrication(ctx, g.playerTag, provId);
+        if (!res.ok) { say('Claim', res.why, 'bad'); return; }
+        say('Fabrication begun', res.cost + ' influence points set our agents to work on '
+          + res.name + '. The claim will become usable in ' + res.months + ' months.', 'info');
       } catch (e) { warnOnce('fabricateClaim', 'fabricateClaim failed', e); }
     },
 
@@ -2527,7 +2516,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
         || (DEFINES.GOV_OF || {})[key] || 'monarchy',
       electionIn: 48,
-      claims: [], overlord: null,
+      claims: [], claimFabrications: [], overlord: null,
       heir: null, regency: false, missionIdx: 0,
       aiState: {},
     };
@@ -2602,6 +2591,7 @@ export function reviveGame(saved) {
     if (!Number.isFinite(t.loans)) t.loans = 0;
     // v1.5 realm fields (rulers themselves are re-crowned in makeCtx)
     if (!Array.isArray(t.claims)) t.claims = [];
+    if (!Array.isArray(t.claimFabrications)) t.claimFabrications = [];
     if (t.overlord === undefined) t.overlord = null;
     if (t.heir === undefined) t.heir = null;
     if (t.regency === undefined) t.regency = false;

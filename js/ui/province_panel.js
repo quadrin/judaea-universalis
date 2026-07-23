@@ -775,11 +775,17 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
     }
     refs.dipClaim.classList.toggle('hidden', !ci);
     if (ci) {
-      setText(refs.dipClaim, ci.hasClaim ? 'Claim Held' : 'Fabricate Claim');
-      const terms = 'Fabricate a claim on this province — 30 influence points\nA war for a claim costs no stability, and the province is 30% cheaper at the peace table. Their opinion of us falls by 20.';
+      setText(refs.dipClaim, ci.hasClaim ? 'Claim Held'
+        : ci.fabricating ? `Fabricating… ${ci.monthsLeft}m` : 'Fabricate Claim');
+      const terms = `Fabricate a claim on this province — ${ci.cost} influence points now, ${ci.months} months of work\n`
+        + 'The claim is not usable until the papers are ready. Once complete, a war for it costs no stability and the province receives favored terms at the peace table. Their opinion of us falls by 20.';
       if (ci.hasClaim) {
         refs.dipClaim.classList.add('disabled');
-        refs.dipClaim.dataset.tt = 'We hold a claim here: a war for it costs no stability, and it is 30% cheaper to demand in a peace.';
+        refs.dipClaim.dataset.tt = 'We hold a claim here: a war for it costs no stability, and it receives favored terms at the peace table.';
+      } else if (ci.fabricating) {
+        refs.dipClaim.classList.add('disabled');
+        refs.dipClaim.dataset.tt = `Our agents are forging the case — ${ci.monthsLeft} month${ci.monthsLeft === 1 ? '' : 's'} remain. `
+          + `${ci.cost} influence points were spent when the operation began; the claim is not yet a casus belli.`;
       } else {
         setDipBtn(refs.dipClaim, ci.canFabricate, ci.whyNot, terms);
       }

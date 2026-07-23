@@ -38,9 +38,13 @@ console.log('== the contract stays pinned during play ==');
 ok((await page.locator('#outliner .ol-campaign').count()) === 1, 'the outliner pins the campaign contract');
 ok((await page.locator('#outliner .ol-clock:not(.ol-world-clock)').count()) === 1, 'the next local danger clock remains visible');
 ok((await page.locator('#outliner .ol-world-clock').count()) === 1, 'the next independent world development has its own clock');
-ok((await page.locator('#outliner .ol-goal').count()) >= 3, 'the win and loss conditions remain visible');
+await page.locator('#outliner .ol-war').first().click();
+await page.waitForSelector('#war-modal:not(.hidden)');
+ok((await page.locator('#war-modal .wo-objective').count()) >= 2,
+  'the win and loss conditions remain visible in the war’s chapter contract');
+await page.locator('#war-modal .peace-cancel').click();
 
-console.log('== event consequences are readable without hovering ==');
+console.log('== event consequences travel with every choice ==');
 await page.evaluate(() => {
   const ctx = window._ctx;
   const ev = (ctx.events || []).find((row) => row && row.options
@@ -49,8 +53,8 @@ await page.evaluate(() => {
   if (ev) ctx.helpers.fireEvent(ctx, ev.id);
 });
 await page.waitForSelector('#event-modal:not(.hidden)', { timeout: 5000 });
-const effects = await page.locator('#event-modal .ev-effect').count();
-ok(effects >= 1, 'choice effects are printed directly beneath their labels');
+const effects = await page.locator('#event-modal .ev-opt[data-tt]').count();
+ok(effects >= 1, 'choice effects remain attached to their labels as readable tooltips');
 await page.screenshot({ path: OUT + 'v34-event-effects.png' });
 
 console.log('== no page errors ==');

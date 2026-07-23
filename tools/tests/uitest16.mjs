@@ -64,6 +64,7 @@ async function boot(page, cardText) {
   ok(true, 'the airfield block appears');
   ok(await page.evaluate(() => document.querySelector('[data-ref="recruitWing"]')?.parentElement?.classList.contains('pp-recruit')),
     'air wings recruit beside infantry and cavalry');
+  const initialWingIds = await page.evaluate(() => Object.values(window._ctx.game.airwings).map((w) => w.id));
   await page.evaluate(() => { window._ctx.game.paused = false; });
   await page.locator('[data-ref="recruitWing"]').click();
   await page.evaluate(() => { window._ctx.game.paused = true; });
@@ -73,8 +74,11 @@ async function boot(page, cardText) {
   });
   await page.waitForTimeout(200);
   let wings = await page.evaluate(() => Object.values(window._ctx.game.airwings));
-  ok(wings.length === 1 && /Squadron/.test(wings[0].name), 'a wing is raised: ' + (wings[0] && wings[0].name));
-  ok((await page.locator('.pp-air-wing').count()) === 1, 'the wing row renders');
+  const raised = wings.find((w) => !initialWingIds.includes(w.id));
+  ok(wings.length === initialWingIds.length + 1 && raised && /Squadron/.test(raised.name),
+    'a wing is raised beside the bookmark’s starting squadrons: ' + (raised && raised.name));
+  ok((await page.locator('.pp-air-wing').count()) === wings.filter((w) => w.prov === raised.prov).length,
+    'every wing based at the selected field renders');
   // a second field opens a rebase path
   await page.evaluate(() => {
     const ctx = window._ctx;
@@ -84,15 +88,16 @@ async function boot(page, cardText) {
     ctx.bus.emit('mapclick', { provId: ctx.prov('Jerusalem').id, armyId: null });
   });
   await page.waitForTimeout(250);
-  const moveBtn = page.locator('.pp-air-move').first();
-  ok((await page.locator('.pp-air-move').count()) >= 1, 'a rebase button appears');
-  const before = wings[0].prov;
+  const moveBtn = page.locator(`.pp-air-move[data-wing="${raised.id}"]`).first();
+  ok((await moveBtn.count()) === 1, 'a rebase button appears for the newly raised wing');
+  const before = raised.prov;
   await page.evaluate(() => { window._ctx.game.paused = false; });
   await moveBtn.click();
   await page.evaluate(() => { window._ctx.game.paused = true; });
   await page.waitForTimeout(250);
   wings = await page.evaluate(() => Object.values(window._ctx.game.airwings));
-  ok(wings[0].prov !== before, 'the wing flew to its new field (prov ' + before + ' → ' + wings[0].prov + ')');
+  const moved = wings.find((w) => w.id === raised.id);
+  ok(moved.prov !== before, 'the wing flew to its new field (prov ' + before + ' → ' + moved.prov + ')');
 
   console.log('== the land wears its works ==');
   await page.evaluate(() => {

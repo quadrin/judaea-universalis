@@ -100,9 +100,17 @@ const tgt = await page.evaluate((r) => {
 }, raid);
 await page.screenshot({ path: OUT + 'v55-bombsight.png' }); // range ring + reticle visible
 // Click the enemy banner itself: planes onto enemy units — the armyId path
-// resolves to the host's province and the raid flies.
+// resolves to the host's province and schedules the sortie for the next day.
 await page.mouse.click(tgt.sx, tgt.sy);
-await page.waitForTimeout(400);
+const ordered = await page.evaluate((r) => window._ctx.game.airwings[r.wid].pendingRaid === r.target, raid);
+ok(ordered, 'the map click puts the target under the wing’s bombsight');
+await page.evaluate(async () => {
+  const { tickDay } = await import('/js/sim/tick.js');
+  window._ctx.game.paused = false;
+  tickDay(window._ctx);
+  window._ctx.game.paused = true;
+});
+await page.waitForTimeout(250);
 const after = await page.evaluate((r) => ({
   cd: window._ctx.game.airwings[r.wid] ? window._ctx.game.airwings[r.wid].raidCd : -1,
   stillSelected: window._ctx.game.ui.selectedWing === r.wid,

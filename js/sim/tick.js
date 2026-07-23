@@ -3,7 +3,7 @@
 import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
-  sweepAirfields, flyPendingRaids, monthlyIncorporation,
+  sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -94,6 +94,7 @@ function monthlyBlock(ctx) {
   safe('holySites', () => monthlyHolySites(ctx));
   safe('missions', () => checkMissions(ctx));
   safe('factions', () => monthlyFactions(ctx)); // the court convenes (SPEC §34)
+  safe('claims', () => monthlyClaimFabrications(ctx)); // paid diplomatic operations mature into usable CBs
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
