@@ -3321,3 +3321,17 @@ pretext for war.
   incomplete monthly ticks, save/revive at one month remaining, completion
   through the real tick loop, and the own-province lapse. `uitest2.mjs`
   drives the pending and completed labels in the live province panel.
+
+## 80. A crown must have a kingdom — Israel formation balance
+
+The Kingdom of Israel is an endgame consolidation, not a cosmetic reward for
+surviving the opening war. Both JUD→MLI and HAS→MLI now require the realm to:
+
+- own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and
+  Adora — Judaea, Samaria, Galilee, and Idumaea;
+- own and control at least 25 provinces, of which at least 12 follow Judaism;
+- owe fealty to no overlord, be at peace, hold stability 2, and hold
+  legitimacy 85.
+
+The stricter checklist is live in the Decisions tooltip. Ownership as well as
+control matters, so a temporary occupation cannot manufacture a crown.

@@ -104,6 +104,42 @@ const decs = actions.getDecisions();
 const mli = decs.find((d) => d.key === 'form_mli_jud');
 ok(!!mli, 'Proclaim the Kingdom of Israel appears for Judaea');
 ok(!mli.canEnact, 'and is properly gated: ' + mli.whyNot);
+ok(/twenty-five provinces/.test(mli.desc) && /Twelve provinces follow Judaism/.test(mli.desc)
+  && /Stability 2/.test(mli.desc) && /Legitimacy 85/.test(mli.desc),
+  'the crown names its harder territorial, religious, stability, and legitimacy gates');
+
+console.log('== Israel needs a consolidated independent kingdom ==');
+jud.overlord = null;
+jud.stability = 2;
+jud.legitimacy = 85;
+let madeJewish = 0;
+let madeOwned = 0;
+for (let i = 1; i < game.provinces.length && madeOwned < 25; i++) {
+  const p = game.provinces[i];
+  if (!p || p.impassable) continue;
+  p.owner = 'JUD';
+  p.controller = 'JUD';
+  madeOwned++;
+  if (madeJewish < 12) { p.religion = 'judaism'; madeJewish++; }
+}
+for (const name of ['Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 'Adora']) {
+  const p = ctx.prov(name);
+  p.owner = 'JUD';
+  p.controller = 'JUD';
+  p.religion = 'judaism';
+}
+let readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
+ok(readyIsrael.canEnact,
+  '25 provinces, the heartland, Jewish communities, stability, legitimacy, independence, and peace unlock the crown');
+jud.overlord = 'ROM';
+readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
+ok(!readyIsrael.canEnact && /✗ Owe fealty to no one/.test(readyIsrael.desc),
+  'a client cannot proclaim Israel under an overlord');
+jud.overlord = null;
+ctx.prov('Adora').controller = 'NAB';
+readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
+ok(!readyIsrael.canEnact && /✗ Own and control Jerusalem/.test(readyIsrael.desc),
+  'a missing heartland province blocks the proclamation');
 
 // ---- 1948 rig: era names, dev overlay, UAR ------------------------------------
 console.log('== the map speaks 1948 ==');
