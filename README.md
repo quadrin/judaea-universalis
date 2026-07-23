@@ -136,7 +136,9 @@ python3 -m http.server 8613 --directory .
   Hasmonean Judaea; break Antigonus as Herod and proclaim the Kingdom of Judaea —
   the whole realm (map color, armies, wars, treaties, your own throne) takes the
   new banner, with a requirement checklist in the Decisions panel and a permanent
-  founding bonus. Endgame crowns too: the Kingdom of Israel for any victorious
+  founding bonus. Endgame crowns too: the Kingdom of Israel for a fully
+  independent, stable Jewish realm that consolidates the historic heartland,
+  not merely any victorious revolt,
   Jewish arc, the United Arab Republic through a victorious Arab campaign or
   the 1958 Egyptian-Syrian union, and the Roman Empire restored for a Heraclius
   who takes Ctesiphon.

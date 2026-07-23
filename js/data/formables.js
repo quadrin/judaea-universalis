@@ -24,6 +24,28 @@ function atPeace(ctx, tag) {
   return !(t.atWarWith || []).some((e) => ctx.game.tags[e] && ctx.game.tags[e].alive);
 }
 
+function independent(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return !!t && !t.overlord;
+}
+
+function ownsAndControls(ctx, tag, names) {
+  return names.every((name) => {
+    const p = ctx.prov(name);
+    return !!p && p.owner === tag && p.controller === tag;
+  });
+}
+
+function ownedControlledCount(ctx, tag, religion) {
+  return ctx.game.provinces.filter((p) => p && !p.impassable
+    && p.owner === tag && p.controller === tag
+    && (!religion || p.religion === religion)).length;
+}
+
+const ISRAEL_HEARTLAND = [
+  'Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 'Adora',
+];
+
 export const FORMABLES = [
   {
     id: 'form_has_hyr',
@@ -123,9 +145,15 @@ export const FORMABLES = [
       + 'claimed in the only court that matters: the field.',
     bookmarks: ['66ce', '132ce', '614ce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold fifteen provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 15 },
-      { label: 'Legitimacy 70', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 70 },
+      {
+        label: 'Own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and Adora',
+        check: (ctx, tag) => ownsAndControls(ctx, tag, ISRAEL_HEARTLAND),
+      },
+      { label: 'Own and control twenty-five provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 25 },
+      { label: 'Twelve provinces follow Judaism', check: (ctx, tag) => ownedControlledCount(ctx, tag, 'judaism') >= 12 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+      { label: 'Stability 2', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 2 },
+      { label: 'Legitimacy 85', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 85 },
       { label: 'At peace', check: (ctx, tag) => atPeace(ctx, tag) },
     ],
     bonus: {
@@ -145,9 +173,15 @@ export const FORMABLES = [
       + 'one crown in Jerusalem.',
     bookmarks: ['167bce', '67bce', '40bce'],
     requires: [
-      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
-      { label: 'Hold fifteen provinces', check: (ctx, tag) => ctx.helpers.countControlled(ctx, tag, {}) >= 15 },
-      { label: 'Legitimacy 70', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 70 },
+      {
+        label: 'Own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and Adora',
+        check: (ctx, tag) => ownsAndControls(ctx, tag, ISRAEL_HEARTLAND),
+      },
+      { label: 'Own and control twenty-five provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 25 },
+      { label: 'Twelve provinces follow Judaism', check: (ctx, tag) => ownedControlledCount(ctx, tag, 'judaism') >= 12 },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+      { label: 'Stability 2', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 2 },
+      { label: 'Legitimacy 85', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 85 },
       { label: 'At peace', check: (ctx, tag) => atPeace(ctx, tag) },
     ],
     bonus: {
