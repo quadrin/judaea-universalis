@@ -3361,3 +3361,136 @@ measurable penalty and then escalates into politics. `smoke18.mjs` verifies all
 five bands, exact half/full arithmetic, demands, appeasement, event shifts, and
 the AI-offstage rule; `uitest19.mjs` verifies the renamed panel, consequence
 rows, threshold crossing, cooldown, and foreign-court privacy.
+
+## 82. The army eats, or it breaks — supply lines and the invasions that cross the water
+
+Two halves of one contract: every army must trace its bread, and an AI that
+cannot march to its enemy plans a real amphibious operation instead of
+shrugging. Ports, corridors, fleets and encirclements all become strategy.
+
+**Supply lines** (`js/sim/supply.js`, `monthlySupply` before the month's
+reinforcement). An army is IN SUPPLY when a chain of provinces controlled by
+its own side — its realm, its co-belligerents, or its occupation troops —
+connects it to:
+
+- **controlled home territory** (owner and controller both its own), or
+- **an unblockaded friendly port**, provided the side keeps at least one
+  warship afloat and an open harbor in home territory holds the far end of
+  the lane. The army's own square is part of the chain even in enemy hands
+  (the host stands there), but it only counts as a PORT once actually held —
+  a landing force besieging the beach town starves until the gates open, and
+  a hostile squadron riding off the harbor cuts the lane even while the army
+  still controls its landing province.
+
+Out of supply (`army.oosMonths` counts the months):
+
+- **no reinforcements** (`monthlyReinforce` skips the army entirely);
+- **morale mends at a quarter pace** (`moraleRecoveryMult 0.25`), and after
+  `weakenAtMonths` (3) the host is breaking — morale capped at half its
+  maximum;
+- **mounting attrition**: +`attritionBase` (2%) the first month, +1%/month
+  further to +8%, on top of terrain and hostile-land attrition (ceiling 15);
+  the organized-siege-camp attrition cap applies only to a camp that is
+  itself supplied — a cut-off besieger melts like any other host.
+
+Rebels are exempt (banditry IS their supply), as are armies aboard fleets and
+the armies of a nation with no land at all — the 167 BCE guerrilla loss
+condition stays the bookmark's own. The trace is a UI contract too:
+selecting an army draws its route on the map (grain-gold dashes home, a
+dotted sea lane from embarkation port to home harbor, a red cut at the break
+point), the outliner badges cut-off armies with ✂ and the tooltip names the
+penalties, and the unit inspector prints the line's state for any army a
+commander's glasses can see. `getSupplyStatus` serves the traced route, the
+break province, the reason (`corridor`/`blockade`/`noFleet`/`noHomePort`),
+and the penalty text.
+
+**AI naval invasions** (`js/sim/invasion.js`, `aiNavalOperation` from
+`runTagAI`; one operation per court in `tag.aiState.navalOp`, save-safe). A
+warring AI whose enemy has no province reachable overland (`canEnter` refuses
+the neutral ground between them — the case that wants ships):
+
+1. **chooses a beachhead** on the enemy coast: ports first, low
+   fortifications, weak defenders, no hostile squadron at the anchorage, a
+   short crossing;
+2. **musters** its largest free army (≥ `minMen` 4,000) at a staging port and
+   gathers every idle squadron there, merging them into one armada
+   (`mergeFleetsCore`);
+3. **builds the missing hulls** — never conjures them: real 6-month yard
+   queues, real talents, up to `maxShipsBuilding` keels at once, shortest
+   queues first, and `pickRecruitProv` now recruits AWAY from a yard with a
+   hull building so the FIFO province queue cannot bury a keel behind months
+   of infantry. A realm with harbors but no yard digs the shipyard first;
+4. **sails escorted**: a hostile fleet stronger than the armada ×
+   `escortRatio` postpones the crossing (and raises the yard order to match);
+   one that appears mid-crossing, or waits off the beach, turns the armada
+   for home. The expedition is bounded (`maxShips` 8): a mustering army that
+   outgrew its hulls splits at the quay and the force that FITS sails, the
+   surplus standing as garrison and second wave;
+5. **lands and fights** for the beachhead through the ordinary battle and
+   siege machinery — the player sees "Invasion!" when the shore is theirs;
+6. **reinforces**: `aiSealift` ferries idle armies that cannot march to the
+   overseas front onto the nearest friendly coast beside it.
+
+A stalled operation is abandoned after `patienceMonths` (30) — but hulls
+sliding down the ways ARE progress and rewind the clock. Scripted lulls
+(`aiPassive`) freeze the muster without leaking the armada; a peace mid-
+crossing recalls the fleet and puts the troops ashore at home. In 167 BCE
+this machinery is what finally ships Rome east: neutral Hellas bars the
+road, so the Senate lays keels for thirty months and lands on the Seleucid
+coast the honest way.
+
+**Regression contract**: `smoke57.mjs` — the home trace, the named corridor
+break, all three penalties measured against a supplied twin, the breaking-
+point morale cap, the rebel exemption, save/revive, the sea lane's three
+states (noFleet / port / blockade with the army still controlling its
+province), and the full Roman invasion: recognition, staging port, low-fort
+beachhead, keels laid at real yards, no fleet before the queues deliver, the
+legion genuinely aboard, the landing waiting thirty-two months for the
+shipbuilding, and the captured beachhead tracing supply home across the sea.
+
+## 83. The second act — sandbox chapters after the verdict
+
+Winning a bookmark closes the historical chapter without closing the campaign
+(SPEC §32). Now the campaign answers with a SECOND ACT (`js/sim/chapters.js`,
+`monthlyChapters` after the victory check; ledger on `game.chapters`, plain
+data, save-safe): a few months after a WON verdict the game generates a
+**chapter** — three world-aware objectives drawn from the sandbox families
+(regional hegemony, holy sites, trade dominance, dynastic survival,
+federation, imperial defense), always one territorial, one internal, one
+diplomatic or economic, each sized to the realm as it actually stands:
+
+- **territorial**: control and keep the era's sanctuaries for a year
+  (`holyPlaces` — Jerusalem and Gerizim in the ancient chapters); take and
+  hold a share of the region's real capitals (`capitals`, nearest first,
+  more of them each chapter); humble the strongest rival by holding its
+  capital or outliving its banners (`rivalCapital`); or simply extend the
+  realm's writ (`provCount`, current + 3 + 2 per chapter);
+- **internal**: every estate at 60+ approval held for months together
+  (`estates`, when the era has estates); weather a two-front coalition with
+  the capital in hand (`survive`); stability +2 with legitimacy 70+ held
+  (`stability`); or raise the land itself (`devGain`);
+- **diplomatic/economic**: merchant hulls afloat and an income target held
+  (`trade`, coastal realms); loyal client kingdoms kept a year (`clients`);
+  or warm alliances kept a year (`allies`).
+
+Objectives are typed parameters, never functions, so a mid-chapter save
+revives whole. Progress is honest: hold-type objectives count consecutive
+months (`holdMonths`/`needMonths`), counters read the live world every month,
+and every objective prints its progress in the realm panel ("The Chapters")
+and rides the outliner beside the campaign clocks. Completing all three
+seals the chapter: a **permanent but restrained reward** (one of five
+modifiers — +5% income, +5% manpower, +3% morale, +10% reinforcement, or
+accruing legitimacy — cycling by chapter), +1 stability, +25 to every pool, a
+chronicle entry, and after `betweenMonths` a HARDER successor chapter
+generated against the world as it now stands (used kinds are not repeated
+while fresh ones remain). An objective that lapses (`deadlineMonths` 96) is
+**replaced in place** with a small legitimacy setback — the sandbox's
+failures create setbacks and new asks, never a second game-over screen. The
+whole system is the human player's: an AI-driven chair (autoruns, observer
+campaigns) never opens it, the same offstage rule as the estates.
+
+**Regression contract**: `smoke58.mjs` — nothing before the verdict, the
+grace, the three slots, the named seal, the year-long keeping of the holy
+places completing chapter 1, the permanent modifier, the harder successor
+asking something new, mid-chapter save/revive, the lapse-and-replace with
+its legitimacy cost and no game over, and the AI-offstage rule.

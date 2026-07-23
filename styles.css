@@ -585,6 +585,15 @@ button {
 .ol-sub.pos { color: #8fbf7a; }
 .ol-sub.neg { color: #e06a5a; }
 
+/* supply lines (SPEC §82): a cut-off army reads cut off at a glance */
+.ol-row.ol-oos { border-color: rgba(215, 90, 70, 0.45); }
+.ol-row.ol-oos .ol-men { color: #e06a5a; }
+.ol-oos-badge { color: #e06a5a; font-weight: bold; }
+
+/* the sandbox chapter card (SPEC §83) rides under the campaign clocks */
+.ol-chapter { border-color: rgba(111, 168, 190, 0.4); }
+.ol-chapter .ol-clock { color: #9bc6d5; margin-top: 0; }
+
 .morale {
   width: 34px;
   height: 6px;
@@ -2030,6 +2039,30 @@ html, body {
 .np-m-current .np-m-name { color: var(--ink); }
 .np-m-current .np-m-mark { color: var(--red-deep); }
 .np-m-locked { opacity: 0.5; }
+
+/* the chapters (SPEC §83): the sandbox second act's live contract */
+.np-chapter { display: flex; flex-direction: column; }
+.np-ch-head { padding: 3px 2px 5px; color: var(--ink); }
+.np-ch-prog {
+  flex: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.np-ch-reward {
+  padding: 5px 2px 2px;
+  font-size: 12px;
+  font-style: italic;
+  color: #8a6d1a;
+}
+.np-ch-done {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  color: var(--ink-soft);
+}
+.np-ch-done .icon-row { color: #8a6d1a; }
 
 /* factions (SPEC §34): approval bars and the appeasement lever */
 .np-factions { display: flex; flex-direction: column; }

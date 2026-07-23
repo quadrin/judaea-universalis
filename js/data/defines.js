@@ -525,6 +525,47 @@ export const DEFINES = {
     rivalRatioMult: 0.85,    // rivals need 15% less overmatch to strike
   },
 
+  // Supply lines (SPEC §82). An army traces monthly to controlled home
+  // territory through a chain of friendly/occupied provinces, or across the
+  // sea from an unblockaded friendly port while the side keeps a warship
+  // afloat and an open home harbor. Out of supply: no reinforcements, slow
+  // morale, mounting attrition, and a breaking host after weakenAtMonths.
+  SUPPLY: {
+    moraleRecoveryMult: 0.25, // out-of-supply armies mend at a quarter pace
+    attritionBase: 2,         // extra attrition %/month the month the line is cut...
+    attritionPerMonth: 1,     // ...growing by this per further month cut off...
+    attritionRampCap: 6,      // ...to at most base + cap
+    weakenAtMonths: 3,        // months isolated before the host starts to break
+    weakMoraleCap: 0.5,       // morale ceiling (× max morale) once breaking
+  },
+
+  // AI naval invasions (SPEC §82). A warring AI that cannot reach its enemy
+  // overland plans a real amphibious operation: pick a beachhead, gather an
+  // army and hulls at a friendly port (building — never conjuring — the
+  // missing ships), sail escorted, land, and hold. Every gate below is a
+  // reason to postpone rather than teleport.
+  INVASION: {
+    minMen: 4000,        // smallest force worth shipping
+    maxShips: 8,         // the armada the AI aims for — a bounded expedition, not the whole levy
+    escortRatio: 1.15,   // a hostile fleet this much stronger forces a postponement
+    defenderEdge: 1.25,  // landing force must outweigh the beach's defenders × this
+    maxShipsBuilding: 3, // hulls the operation lays down at once across the realm
+    patienceMonths: 30,  // a stalled operation is abandoned after this long
+    shipReserve: 80,     // talents kept back beyond each hull's price
+  },
+
+  // Sandbox chapters (SPEC §83). Winning the bookmark opens a generated
+  // second act: chapters of three world-aware objectives (one territorial,
+  // one internal, one diplomatic/economic), each rewarded with a permanent
+  // but restrained modifier and succeeded by a harder chapter. Failure sets
+  // back and replaces; it never ends the campaign.
+  CHAPTERS: {
+    graceMonths: 2,        // months after the verdict before the first chapter opens
+    betweenMonths: 6,      // breathing space between chapters
+    deadlineMonths: 96,    // an objective has eight years before it is replaced
+    failLegitimacy: -10,   // the restrained setback a lapsed objective costs
+  },
+
   // Veteran difficulty (start-screen choice): every AI court fights and earns
   // like a hardened power. Applied inside resolveTagMult — never to humans.
   HARD_AI: { disciplineMult: 1.05, incomeMult: 1.25, manpowerMult: 1.25 },

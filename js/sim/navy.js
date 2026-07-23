@@ -529,6 +529,41 @@ export function disembarkCore(ctx, fleet) {
   return n;
 }
 
+// Two idle squadrons of one flag riding the same anchor become one command
+// (SPEC §82: an invasion built at three yards must sail as a single armada).
+// Cargo and the better admiral follow the hulls; the older pattern names the
+// merged fleet's broadside (a mixed line fights at its weakest rig).
+export function mergeFleetsCore(ctx, fromFleet, intoFleet) {
+  const g = ctx.game;
+  if (!fromFleet || !intoFleet || fromFleet.id === intoFleet.id) return false;
+  if (fromFleet.tag !== intoFleet.tag || fromFleet.prov !== intoFleet.prov) return false;
+  if ((fromFleet.path && fromFleet.path.length) || (intoFleet.path && intoFleet.path.length)) return false;
+  intoFleet.ships = num(intoFleet.ships) + num(fromFleet.ships);
+  intoFleet.gen = Math.min(num(intoFleet.gen, 0), num(fromFleet.gen, 0));
+  if (!intoFleet.admiral && fromFleet.admiral) intoFleet.admiral = fromFleet.admiral;
+  for (const a of Object.values(g.armies)) {
+    if (a && a.aboard === fromFleet.id) a.aboard = intoFleet.id;
+  }
+  delete g.fleets[fromFleet.id];
+  return true;
+}
+
+// The weight of broadside a tag (with its side) or its enemies keep afloat —
+// the invasion planner's go/no-go arithmetic (SPEC §82).
+export function navalStrengthOf(ctx, tag, opts) {
+  let s = 0;
+  const hostile = !!(opts && opts.hostile);
+  const at = opts && Number.isFinite(opts.at) ? opts.at : null;
+  for (const f of Object.values(ctx.game.fleets || {})) {
+    if (!f || f.ships <= 0) continue;
+    if (at !== null && f.prov !== at) continue;
+    const mine = f.tag === tag || sameSide(ctx, tag, f.tag);
+    if (hostile ? !isHostile(ctx, tag, f.tag) : !mine) continue;
+    s += f.ships * fleetPowerOf(ctx, f);
+  }
+  return s;
+}
+
 // Daily: fleets sail, cargo follows, rival squadrons fight where they meet.
 export function fleetsDaily(ctx) {
   const g = ctx.game;

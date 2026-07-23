@@ -14,6 +14,8 @@ import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyPowers } from './powers.js';
+import { monthlySupply } from './supply.js';
+import { monthlyChapters } from './chapters.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -82,6 +84,7 @@ function monthlyBlock(ctx) {
   safe('economy', () => runMonthlyEconomy(ctx));
   safe('subsidies', () => monthlySubsidies(ctx)); // after economy: this month's flow was paid, now count it down
   safe('manpower', () => monthlyManpower(ctx));
+  safe('supply', () => monthlySupply(ctx)); // every army traces its line BEFORE the month's bread is handed out (SPEC §82)
   safe('reinforce', () => monthlyReinforce(ctx));
   safe('morale', () => monthlyMoraleRecovery(ctx));
   safe('attrition', () => monthlyAttrition(ctx));
@@ -108,6 +111,7 @@ function monthlyBlock(ctx) {
       if (ctx.bookmark && typeof ctx.bookmark.checkVictory === 'function') ctx.bookmark.checkVictory(ctx);
     });
   }
+  safe('chapters', () => monthlyChapters(ctx)); // the second act after the verdict (SPEC §83)
   safe('points', () => monthlyMonarchPoints(ctx));
 }
 

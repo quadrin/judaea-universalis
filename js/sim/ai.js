@@ -15,6 +15,7 @@ import {
   tagGen, mechanicOn,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
+import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, genUpkeepMult } from '../data/tech.js';
@@ -61,19 +62,27 @@ function stackStrengthAt(ctx, provId, predicate) {
 }
 function pickRecruitProv(ctx, tag, hints) {
   const g = ctx.game;
+  // The muster hall yields to the slipway (SPEC §82): a province queue is
+  // FIFO, so drilling recruits where a hull is building would bury the ship
+  // behind months of infantry. Recruit somewhere else while the yard works.
+  const shipBuilding = (p) => (p.unitQueue || []).some((o) => o && o.tag === tag && o.type === 'ship');
   const names = (hints && hints.rally) || [];
   for (const n of names) {
     const p = ctx.prov(n);
-    if (p && p.controller === tag && !armiesInProv(ctx, p.id).some((a) => isHostile(ctx, tag, a.tag))) return p.id;
+    if (p && p.controller === tag && !shipBuilding(p)
+        && !armiesInProv(ctx, p.id).some((a) => isHostile(ctx, tag, a.tag))) return p.id;
   }
   const capName = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
   const cap = capName ? ctx.prov(capName) : null;
-  if (cap && cap.owner === tag && cap.controller === tag) return cap.id;
+  if (cap && cap.owner === tag && cap.controller === tag && !shipBuilding(cap)) return cap.id;
+  let fallback = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
-    if (p && !p.impassable && p.owner === tag && p.controller === tag) return p.id;
+    if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+    if (!shipBuilding(p)) return i;
+    if (!fallback) fallback = i; // a one-port realm still recruits, behind its hulls
   }
-  return 0;
+  return fallback;
 }
 function aiRecruit(ctx, tag, hints, fraction) {
   const t = ctx.game.tags[tag];
@@ -418,13 +427,20 @@ function runTagAI(ctx, tag) {
     && g.flags && g.flags.postwarRearmament;
   aiRecruit(ctx, tag, hints, enemies.length || rearmingAtPeace ? 1 : 0.5);
   aiShedUnaffordable(ctx, tag);
+  // The sea has its own clock (SPEC §82): an armada mid-crossing keeps
+  // sailing even after a peace or under a scripted lull — passivity plans
+  // nothing NEW, and peace turns the fleets for home inside the module.
+  try { aiNavalOperation(ctx, tag, hasAiPassive(ctx, tag)); } catch (e) { warnOnce('naval:' + tag, 'naval operation failed for', tag, e); }
   if (!enemies.length) return; // non-warring AI holds its garrisons and waits
   // Storming an already-invested fortress is siege prosecution, not a new
   // offensive — it runs even under aiPassive so scripted lulls don't freeze
   // half-finished sieges forever.
   aiAssaults(ctx, tag);
   if (hasAiPassive(ctx, tag)) return; // armies hold, no new offensives
-  const armies = armiesOf(ctx, tag).filter((a) => a.men > 0 && !a.inBattle && !a.retreating);
+  // Armies reserved for a naval operation, and cargo already aboard, belong
+  // to the sea — the land AI neither gathers nor marches them (SPEC §82).
+  const armies = armiesOf(ctx, tag).filter((a) => a.men > 0 && !a.inBattle && !a.retreating
+    && !a.aboard && !reservedForNavalOp(t, a.id));
   if (!armies.length) return;
   let main = armies[0];
   for (const a of armies) if (a.men > main.men) main = a;

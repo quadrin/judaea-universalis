@@ -2,6 +2,8 @@
 // Cleared and redrawn every frame; positions come from geom.centroids via camera.mapToScreen,
 // so everything lands on the same screen points as the GL map underneath.
 
+import { traceSupply } from '../sim/supply.js';
+
 const CHIP_W = 46;
 const CHIP_H = 20;
 const MORALE_H = 3;
@@ -964,6 +966,106 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.globalAlpha = 1;
   }
 
+  // ---- supply route (SPEC §82) ---------------------------------------------
+  // Selecting one of your armies draws its traced supply line: a grain-gold
+  // dashed road back to controlled home territory (or to the embarkation
+  // port, then a dotted sea lane to the home harbor). A broken line is drawn
+  // to the break and marked with a red cut — the map answers "why is this
+  // army starving" at a glance. The trace is a sim read (supply.js) fed with
+  // a mini-ctx; cached per army/day so the per-frame cost is a polyline.
+  let supplyCache = { key: '', res: null };
+  function supplyTraceFor(game, armyId) {
+    const a = game.armies && game.armies[armyId];
+    if (!a) return null;
+    const d = game.date || {};
+    const key = armyId + ':' + a.prov + ':' + d.y + '-' + d.m + '-' + d.d + ':' + (a.oosMonths | 0);
+    if (supplyCache.key === key) return supplyCache.res;
+    let res = null;
+    try {
+      res = traceSupply({
+        game, geom, DEFINES,
+        byId: (id) => (game.provinces && game.provinces[id]) || null,
+      }, a);
+    } catch (e) { warnOnce('supplyTrace', 'supply trace failed', e); }
+    supplyCache = { key, res };
+    return res;
+  }
+  function drawSupplyRoute(game, camera) {
+    const ui = game.ui || {};
+    const armyId = ui.selectedArmy != null ? ui.selectedArmy
+      : (Array.isArray(ui.selectedArmies) && ui.selectedArmies.length ? ui.selectedArmies[0] : null);
+    if (armyId == null) return;
+    const a = game.armies && game.armies[armyId];
+    if (!a || a.tag !== game.playerTag || a.aboard) return;
+    const res = supplyTraceFor(game, armyId);
+    if (!res || res.via === 'exempt' || !Array.isArray(res.route) || res.route.length < 1) return;
+    const pts = res.route.map((id) => {
+      const c = geom.centroids[id];
+      return c ? camera.mapToScreen(c.x, c.y) : null;
+    }).filter(Boolean);
+    if (pts.length < 1) return;
+    const breakIdx = res.breakAt ? res.route.indexOf(res.breakAt) : -1;
+    const drawLeg = (from, to, color, width, dash) => {
+      if (to <= from) return;
+      x2.strokeStyle = color;
+      x2.lineWidth = width;
+      x2.lineJoin = 'round';
+      x2.lineCap = 'round';
+      x2.setLineDash(dash);
+      x2.beginPath();
+      x2.moveTo(pts[from][0], pts[from][1]);
+      for (let i = from + 1; i <= to; i++) x2.lineTo(pts[i][0], pts[i][1]);
+      x2.stroke();
+      x2.setLineDash([]);
+    };
+    if (res.ok) {
+      drawLeg(0, pts.length - 1, 'rgba(202,178,90,0.85)', 3.5, [8, 5]);
+      // the sea lane: embark port → home harbor, a fainter dotted reach
+      if (res.via === 'port' && res.homePort) {
+        const p0 = geom.offshore && geom.offshore[res.route[res.route.length - 1]];
+        const p1 = geom.offshore && geom.offshore[res.homePort];
+        if (p0 && p1) {
+          const [ax, ay] = camera.mapToScreen(p0.x, p0.y);
+          const [bx, by] = camera.mapToScreen(p1.x, p1.y);
+          x2.strokeStyle = 'rgba(150,190,205,0.8)';
+          x2.lineWidth = 2.5;
+          x2.setLineDash([2, 6]);
+          x2.beginPath();
+          x2.moveTo(ax, ay);
+          x2.lineTo(bx, by);
+          x2.stroke();
+          x2.setLineDash([]);
+        }
+      }
+      // the wagon at the source: a small grain-gold disc
+      const last = pts[pts.length - 1];
+      x2.fillStyle = 'rgba(202,178,90,0.9)';
+      x2.beginPath();
+      x2.arc(last[0], last[1], 4, 0, Math.PI * 2);
+      x2.fill();
+      return;
+    }
+    // broken: the good stretch to the break, the dead stretch beyond it,
+    // and the cut itself in red
+    const upTo = breakIdx > 0 ? breakIdx : pts.length - 1;
+    drawLeg(0, upTo, 'rgba(190,70,55,0.85)', 3.5, [8, 5]);
+    if (breakIdx >= 0 && breakIdx < pts.length - 1) {
+      drawLeg(breakIdx, pts.length - 1, 'rgba(120,110,95,0.45)', 2.5, [3, 7]);
+    }
+    const bp = breakIdx >= 0 ? pts[breakIdx] : pts[pts.length - 1];
+    if (bp) {
+      x2.strokeStyle = 'rgba(215,60,45,0.95)';
+      x2.lineWidth = 3.5;
+      x2.lineCap = 'round';
+      x2.beginPath();
+      x2.moveTo(bp[0] - 7, bp[1] - 7);
+      x2.lineTo(bp[0] + 7, bp[1] + 7);
+      x2.moveTo(bp[0] + 7, bp[1] - 7);
+      x2.lineTo(bp[0] - 7, bp[1] + 7);
+      x2.stroke();
+    }
+  }
+
   function draw(game, camera, timeMs, dayFrac) {
     try {
       const { cw, ch, dpr } = syncSize();
@@ -981,6 +1083,9 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       for (const a of Object.values(game.armies || {})) {
         if (a && a.path && a.path.length) drawArrow(game, camera, a);
       }
+
+      // the selected army's supply line (SPEC §82), under the unit markers
+      drawSupplyRoute(game, camera);
 
       // sieges + wonders + structures per province
       const provs = game.provinces || [];

@@ -70,6 +70,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <button class="pp-build-btn" data-act="repayLoan" data-ref="actRepay">${icon('repay')}<span>Repay Loan</span></button>
         <button class="pp-build-btn hidden" data-act="requestParthianAid" data-ref="actParthia" data-tt="Send envoys to the King of Kings: 50 influence points for a chance at silver, volunteers, and Parthian sympathy">${icon('dove')}<span>Envoys to Parthia</span></button>
       </div>
+      <div class="pp-build hidden" data-ref="chapterBlock">
+        <div class="pp-build-title">The Chapters</div>
+        <div class="np-chapter" data-ref="chapter"></div>
+      </div>
       <div class="pp-build" data-ref="missionsBlock">
         <div class="pp-build-title">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
@@ -354,8 +358,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
     refs.decisionsBlock.classList.toggle('hidden', !self);
+    if (!self) refs.chapterBlock.classList.add('hidden');
     if (self) {
       refreshActions(t, g);
+      refreshChapter();
       refreshMissions();
       refreshDecisions();
     }
@@ -452,6 +458,41 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (showParthia) {
       refs.actParthia.classList.toggle('disabled', ((t.points && t.points.infl) || 0) < 50);
     }
+  }
+
+  // The sandbox chapters (SPEC §83): the generated second act after the
+  // bookmark's verdict — three live objectives, their progress, the seal that
+  // completing them earns. Hidden until a won campaign opens the system.
+  function refreshChapter() {
+    let ch = null;
+    if (actions && typeof actions.getChapter === 'function') {
+      try { ch = actions.getChapter(); } catch (e) { warnOnce('np-getChapter', e); }
+    }
+    const show = !!(ch && (ch.active || ch.seq > 0 || ch.nextIn > 0));
+    refs.chapterBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    let html = '';
+    if (ch.active) {
+      const a = ch.active;
+      html += `<div class="np-ch-head" data-tt="${esc(a.epigraph + '\nComplete all three objectives to seal the chapter.')}">`
+        + `${icon('scroll', 'icon-row')} <b>Chapter ${a.n} — ${esc(a.title)}</b></div>`;
+      for (const o of a.objectives) {
+        const held = o.needMonths > 1 ? ` · held ${o.holdMonths}/${o.needMonths} mo` : '';
+        const prog = o.done ? 'done' : `${o.have}/${o.need}${held}`;
+        const tt = o.desc + (o.done ? '\nAchieved.' : `\nProgress: ${prog}\nLapses in ${o.monthsLeft} months (a lapsed objective is replaced, never fatal).`);
+        html += `<div class="np-mission np-m-${o.done ? 'done' : 'current'}" data-tt="${esc(tt)}">`
+          + `<span class="np-m-mark">${o.done ? icon('laurel', 'icon-row') : icon('quill', 'icon-row')}</span>`
+          + `<span class="np-m-name">${esc(o.name)}</span>`
+          + `<span class="np-ch-prog">${esc(o.done ? '✓' : prog)}</span></div>`;
+      }
+      html += `<div class="np-ch-reward" data-tt="${esc(a.reward.desc)}">Seal: ${esc(a.reward.name)}</div>`;
+    } else if (ch.nextIn > 0) {
+      html += `<div class="np-dip-none">The next chapter opens in ${ch.nextIn} month${ch.nextIn === 1 ? '' : 's'}.</div>`;
+    }
+    if (ch.history && ch.history.length) {
+      html += ch.history.map((h) => `<div class="np-ch-done">${icon('laurel', 'icon-row')} Chapter ${h.n} — ${esc(h.title)} · complete</div>`).join('');
+    }
+    setHtml(refs.chapter, html || '<div class="np-dip-none">No chapter yet.</div>');
   }
 
   function refreshMissions() {

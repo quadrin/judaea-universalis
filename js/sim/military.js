@@ -1242,6 +1242,7 @@ export function monthlyReinforce(ctx) {
       a.regiments.cav = Math.max(0, a.regiments.cav - Math.max(0, drop));
       if (regCount(a) < 1) a.regiments.inf = 1;
     }
+    if (num(a.oosMonths) > 0) continue; // no line home, no recruits (SPEC §82)
     const t = g.tags[a.tag];
     if (!t) continue;
     const target = regCount(a) * regSize;
@@ -1268,13 +1269,21 @@ export function monthlyMoraleRecovery(ctx) {
   // field host instead of resetting it every month.
   const floor = BAL(ctx, 'weMoraleFloor', 0.4);
   const weAt = Math.max(1, BAL(ctx, 'weMoraleAt', 40));
+  const SUP = ctx.DEFINES.SUPPLY || {};
   for (const id of Object.keys(g.armies)) {
     const a = g.armies[id];
     if (!a) continue;
     a.maxMorale = maxMoraleOf(ctx, a.tag);
     const t = g.tags[a.tag];
-    const weMult = Math.max(floor, 1 - num(t && t.warExhaustion) / weAt);
+    let weMult = Math.max(floor, 1 - num(t && t.warExhaustion) / weAt);
+    // Out of supply (SPEC §82): hungry men rally at a crawl, and a host
+    // isolated past the breaking point cannot hold above half its spirit.
+    const oos = num(a.oosMonths) > 0;
+    if (oos) weMult *= num(SUP.moraleRecoveryMult, 0.25);
     if (!a.inBattle) a.morale = Math.min(a.maxMorale, num(a.morale) + rec * weMult);
+    if (num(a.oosMonths) >= num(SUP.weakenAtMonths, 3)) {
+      a.morale = Math.min(num(a.morale), a.maxMorale * num(SUP.weakMoraleCap, 0.5));
+    }
     a.morale = clamp(num(a.morale), 0, a.maxMorale);
   }
 }
@@ -1301,8 +1310,17 @@ export function monthlyAttrition(ctx) {
     if (granary) attr -= 1;
     attr = clamp(attr, 0, 12);
     // Supply lines: an organized siege camp caps attrition (Rome fed Masada's
-    // besiegers by road and ramp; so do we).
-    if (p.siege && (p.siege.by === a.tag || sameSide(ctx, a.tag, p.siege.by))) attr = Math.min(attr, 5);
+    // besiegers by road and ramp; so do we) — but only while the road and
+    // ramp themselves are supplied (SPEC §82): a cut-off camp starves like
+    // any other host, and the longer the isolation the faster it melts.
+    const SUP = ctx.DEFINES.SUPPLY || {};
+    const oosMonths = num(a.oosMonths) | 0;
+    if (oosMonths <= 0 && p.siege && (p.siege.by === a.tag || sameSide(ctx, a.tag, p.siege.by))) attr = Math.min(attr, 5);
+    if (oosMonths > 0) {
+      attr += num(SUP.attritionBase, 2)
+        + Math.min(num(SUP.attritionRampCap, 6), (oosMonths - 1) * num(SUP.attritionPerMonth, 1));
+      attr = clamp(attr, 0, 15);
+    }
     if (a.tag === 'REB' && a.men < 100) { removeArmy(ctx, a.id); continue; } // starving bands scatter
     if (attr <= 0) continue;
     const loss = Math.floor(a.men * attr / 100);

@@ -181,6 +181,21 @@ export function createOutliner(el, {
       }
     }
 
+    // The sandbox chapter (SPEC §83): the second act's live contract rides
+    // beside the armies once the bookmark's verdict is won.
+    if (actions && typeof actions.getChapter === 'function') {
+      let ch = null;
+      try { ch = actions.getChapter(); } catch (e) { warnOnce('olChapter', e); }
+      if (ch && ch.active) {
+        const done = ch.active.objectives.filter((o) => o.done).length;
+        const tt = ch.active.objectives.map((o) => (o.done ? '✓ ' : '· ') + o.name).join('\n')
+          + '\nSeal: ' + ch.active.reward.name + '\nDetails in the realm panel (N).';
+        html += `<div class="ol-campaign ol-chapter" data-tt="${esc(tt)}">
+          <div class="ol-clock">${icon('scroll', 'icon-row')} <b>Chapter ${ch.active.n} — ${esc(ch.active.title)}</b> ${done}/${ch.active.objectives.length}</div>
+        </div>`;
+      }
+    }
+
     // Armies
     const armies = Object.values(g.armies || {}).filter((a) => a && a.tag === player);
     html += `<div class="ol-sec">Armies <span class="ol-count">${armies.length}</span></div>`;
@@ -192,11 +207,17 @@ export function createOutliner(el, {
       const regs = a.regiments || {};
       const gtr = a.general && Array.isArray(a.general.traits) && a.general.traits.length ? ', ' + a.general.traits.join(', ') : '';
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire || 0}/${a.general.shock || 0}/${a.general.maneuver || 0}${gtr})` : '';
-      const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '');
+      // Supply (SPEC §82): a cut line is printed where the army is read, and
+      // selecting the army draws the traced route (and its break) on the map.
+      const oos = (a.oosMonths | 0) > 0;
+      const supplyTxt = oos
+        ? `\n✂ OUT OF SUPPLY ${a.oosMonths | 0} month${(a.oosMonths | 0) > 1 ? 's' : ''} — no reinforcements, slow rally, mounting attrition.\nSelect the army to see where the line is cut.`
+        : (a.supplyVia === 'port' ? '\n⚓ Supplied by sea' : '');
+      const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '') + supplyTxt;
       const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${regs.inf || 0} infantry, ${regs.cav || 0} cavalry\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `
-        <div class="ol-row ol-army${sel ? ' sel' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
-          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
+        <div class="ol-row ol-army${sel ? ' sel' : ''}${oos ? ' ol-oos' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
+          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
           ${sel ? armyActionsHtml(a) : ''}

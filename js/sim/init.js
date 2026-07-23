@@ -39,6 +39,8 @@ import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
 import { sendAiCounteroffer } from './ai.js';
+import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
+import { chapterView } from './chapters.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -1195,6 +1197,13 @@ export function gameActions(ctx) {
             } : null,
             inBattle: !!a.inBattle, retreating: !!a.retreating,
             isOwn: a.tag === g.playerTag,
+            // supply (SPEC §82): visible through any commander's glasses —
+            // a starving host looks starved
+            oosMonths: num(a.oosMonths) | 0,
+            supplyText: num(a.oosMonths) > 0
+              ? 'Out of supply ' + (num(a.oosMonths) | 0) + ' month' + (num(a.oosMonths) > 1 ? 's' : '')
+                + ' — ' + supplyPenaltyText(ctx, a)
+              : (a.supplyVia === 'port' ? 'Supplied by sea' : 'In supply'),
           });
         }
         if (sel && sel.fleetId != null && g.fleets && g.fleets[sel.fleetId]) {
@@ -1694,6 +1703,22 @@ export function gameActions(ctx) {
           merchantActive: merchant.reduce((sum, row) => sum + (row.active ? row.count : 0), 0),
         };
       } catch (e) { warnOnce('getNavy', 'getNavy failed', e); return { fleets: [] }; }
+    },
+    // ---- supply lines (SPEC §82): the traced route, live, for any army ------
+    getSupplyStatus(armyId) {
+      try {
+        const a = g.armies[armyId];
+        if (!a) return null;
+        const res = traceSupply(ctx, a);
+        const oos = num(a.oosMonths) | 0;
+        return {
+          armyId: a.id, ok: res.ok, via: res.via, months: oos,
+          route: res.route.slice(), breakAt: res.breakAt, homePort: res.homePort,
+          reason: res.reason, reasonText: supplyReasonText(ctx, res),
+          penaltyText: oos > 0 ? supplyPenaltyText(ctx, a) : '',
+          exempt: supplyExempt(ctx, a),
+        };
+      } catch (e) { warnOnce('supplyStatus', 'getSupplyStatus failed', e); return null; }
     },
     modernizeFleet(fleetId) {
       try {
@@ -2295,6 +2320,11 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
+    // ---- sandbox chapters (SPEC §83): the second act after the verdict ------
+    getChapter() {
+      try { return chapterView(ctx); } catch (e) { warnOnce('getChapter', 'getChapter failed', e); return null; }
+    },
+
     // ---- national decisions (nation panel) ----------------------------------
     getDecisions() {
       try {
@@ -2615,9 +2645,20 @@ export function reviveGame(saved) {
   // Pre-tech saves: armies take their nation's current pattern (SPEC §22).
   for (const id of Object.keys(saved.armies || {})) {
     const a = saved.armies[id];
+    if (a && !Number.isFinite(a.oosMonths)) a.oosMonths = 0; // pre-supply saves (SPEC §82)
     if (!a || Number.isFinite(a.gen)) continue;
     const t = saved.tags[a.tag];
     a.gen = unlockedGen(num(t && t.tech && t.tech.mar, 0));
+  }
+  // Pre-invasion saves: the AI needs its scratch state (SPEC §82); pre-chapter
+  // saves keep their ledgers whole (SPEC §83).
+  for (const k of Object.keys(saved.tags)) {
+    const t = saved.tags[k];
+    if (t && (!t.aiState || typeof t.aiState !== 'object')) t.aiState = {};
+  }
+  if (saved.chapters && typeof saved.chapters === 'object') {
+    if (!Array.isArray(saved.chapters.history)) saved.chapters.history = [];
+    if (!Array.isArray(saved.chapters.usedKinds)) saved.chapters.usedKinds = [];
   }
   saved.paused = true; // always resume paused
   return saved;

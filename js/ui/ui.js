@@ -660,13 +660,17 @@ export function initUI(staticCtx) {
       const gen = a.general
         ? `${icon('helmet', 'icon-sm')} ${esc(a.general.name)} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})`
         : '<span class="peace-dim">no general</span>';
+      // supply (SPEC §82): the line's state, printed where the army is read
+      const sup = a.supplyText
+        ? `<br>${a.oosMonths > 0 ? `<span class="neg">✂ ${esc(a.supplyText)}</span>` : `<span class="peace-dim">${esc(a.supplyText)}</span>`}`
+        : '';
       rows.push(`
         <div class="bw-army insp-army">
           <span class="bw-aname">${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
           <span class="bw-men">${fmtMen(a.men)}</span>
           ${moraleBar(a.morale, a.maxMorale)}
         </div>
-        <div class="insp-sub">${esc(comp)}${esc(st)}<br>${gen} · morale ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}</div>`);
+        <div class="insp-sub">${esc(comp)}${esc(st)}<br>${gen} · morale ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${sup}</div>`);
     }
     if (info.fleet) {
       rows.push(`

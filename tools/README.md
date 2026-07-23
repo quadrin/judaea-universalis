@@ -174,6 +174,18 @@ and goes with the seeds. Accepted as of v6.3: 167 PAR BLEEDING ·
 DEBT-SPIRAL,BLEEDING · 614 JUD/GHA BLEEDING and JUD SNOWBALL (all come
 and go) · 1948 none.
 
+The SPEC §82–83 batch (supply lines, AI naval invasions, sandbox
+chapters) re-ran the full 8-year harness: the anomaly set came back a
+strict subset of the accepted families (167 PAR · 67 SEL DEAD + ARI ·
+40 HER + ATG · 66 AGR · 132 JUD BLEEDING · 614 none · 1948 none). The
+supply contract exempts rebels and landless nations by design, so no
+all-AI trajectory starved; chapters are human-only and invisible to
+autoruns; and AI-vs-AI wars in the harness stay overland, so the
+invasion planner idles there (its coverage lives in smoke57's Roman
+expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
+chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
+break, and The Chapters panel in a real browser.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could
