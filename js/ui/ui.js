@@ -251,7 +251,8 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
-      release: [], // nations the enemy is forced to set free (SPEC §69)
+      release: [], // restored, returned, or newly created states (SPEC §69/§76)
+      transferVassals: [], // enemy clients whose fealty passes to us (SPEC §76)
       enemy: info.separate ? info.enemyLeader : undefined, // separate peace (SPEC §67)
     };
     // The map reads the whole shape of the peace: demandable provinces pulse,
@@ -260,11 +261,15 @@ export function initUI(staticCtx) {
     const releaseProvIds = (tags) => (info.releasable || [])
       .filter((r) => tags.indexOf(r.tag) >= 0)
       .reduce((acc, r) => acc.concat(r.provIds), []);
+    const transferProvIds = (tags) => (info.transferableVassals || [])
+      .filter((r) => tags.indexOf(r.tag) >= 0)
+      .reduce((acc, r) => acc.concat(r.provIds || []), []);
     const paintDeal = () => {
       const freed = releaseProvIds(deal.release);
+      const transferred = transferProvIds(deal.transferVassals);
       setPeaceHighlight(
-        info.provinces.map((p) => p.id).concat(freed),
-        deal.provinces.concat(freed));
+        info.provinces.map((p) => p.id).concat(freed, transferred),
+        deal.provinces.concat(freed, transferred));
     };
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     // A coalition can be talked out of the war one court at a time: chips
@@ -334,16 +339,44 @@ export function initUI(staticCtx) {
         </label>
         <div class="peace-sec">Force them to release nations</div>
         ${(info.releasable || []).length ? info.releasable.map((r) =>
-    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc('Restore ' + r.name + ' as a free nation: ' + (r.provNames || []).join(', ')
-      + ' (' + r.dev + ' development) leave ' + (info.enemyName || 'the enemy') + '\'s realm and the fallen banner rises again — independent, sheltered by a five-year truce.\nCosts '
-      + r.cost + ' war score. Liberation earns no infamy.')}">
+    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
+      (r.kind === 'return'
+        ? 'Return the old homeland to the living court of ' + r.name
+        : r.kind === 'create'
+          ? 'Create ' + r.name + ' as a new cultural state'
+          : 'Restore ' + r.name + ' as a free nation')
+      + ': ' + (r.provNames || []).join(', ') + ' (' + r.dev + ' development) leave '
+      + (info.enemyName || 'the enemy') + '\'s realm.'
+      + (r.kind === 'return'
+        ? ' The recipient keeps its existing government and treaties.'
+        : ' The state rises independent and sheltered by a five-year truce.')
+      + '\nCosts ' + r.cost + ' war score. Liberation earns no infamy.')}">
           <input type="checkbox" data-release="${esc(r.tag)}">
-          <span class="peace-prov-name">Set ${esc(r.name)} free <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev</span></span>
+          <span class="peace-prov-name">${r.kind === 'return'
+    ? 'Return lands to ' + esc(r.name)
+    : r.kind === 'create'
+      ? 'Create ' + esc(r.name)
+      : 'Restore ' + esc(r.name)}
+            <span class="peace-dim">${(r.provIds || []).length} province${(r.provIds || []).length === 1 ? '' : 's'} · ${r.dev} dev</span></span>
           <span class="peace-prov-cost">${r.cost}</span>
         </label>`).join('')
     : `<div class="peace-dim peace-none">${info.separate
       ? 'A separate peace cannot redraw another crown\'s map — releases wait for the full congress table.'
-      : 'They hold no lands of a fallen nation. Only a court swallowed whole — dead, its era-start lands inside their realm — can be set free here.'}</div>`}`}
+      : 'No viable homeland can be separated from their capital. Historical courts, living claimants, and new cultural states are all considered here.'}</div>`}
+        <div class="peace-sec">Take over their client kingdoms</div>
+        ${(info.transferableVassals || []).length ? info.transferableVassals.map((r) =>
+    `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
+      'Transfer ' + r.name + ' from ' + r.fromName + ' to our protection. The client keeps its ruler, army and every province; its tribute and war duty pass to us.\nCosts '
+      + r.cost + ' war score.')}">
+          <input type="checkbox" data-transfer-vassal="${esc(r.tag)}">
+          <span class="peace-prov-name">Transfer ${esc(r.name)} to us
+            <span class="peace-dim">${r.dev} dev · from ${esc(r.fromName)}</span></span>
+          <span class="peace-prov-cost">${r.cost}</span>
+        </label>`).join('')
+    : `<div class="peace-dim peace-none">${info.separate
+      ? 'A separate peace cannot transfer another sovereign’s clients.'
+      : 'They have no direct client kingdom that can be transferred.'}</div>`}
+        `}
         <div class="peace-total" data-ref="total"></div>
         <div class="peace-verdict" data-ref="verdict"></div>
         <button class="btn peace-send" data-ref="send"></button>
@@ -376,8 +409,13 @@ export function initUI(staticCtx) {
         if (deal.subjugate) box.checked = false;
         box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
       });
-      if (deal.subjugate) { deal.provinces = []; deal.release = []; }
-      const white = !deal.provinces.length && !deal.release.length && deal.gold <= 0
+      peaceEl.querySelectorAll('[data-transfer-vassal]').forEach((box) => {
+        box.disabled = deal.subjugate;
+        if (deal.subjugate) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+      });
+      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; }
+      const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length && deal.gold <= 0
         && !deal.humiliate && !deal.subjugate && !deal.reparations;
       totalEl.textContent = white
         ? (info.exit
@@ -421,6 +459,15 @@ export function initUI(staticCtx) {
         const at = deal.release.indexOf(tag);
         if (box.checked && at < 0) deal.release.push(tag);
         else if (!box.checked && at >= 0) deal.release.splice(at, 1);
+        update();
+      });
+    });
+    peaceEl.querySelectorAll('[data-transfer-vassal]').forEach((box) => {
+      box.addEventListener('change', () => {
+        const tag = box.dataset.transferVassal;
+        const at = deal.transferVassals.indexOf(tag);
+        if (box.checked && at < 0) deal.transferVassals.push(tag);
+        else if (!box.checked && at >= 0) deal.transferVassals.splice(at, 1);
         update();
       });
     });

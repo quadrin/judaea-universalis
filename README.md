@@ -42,12 +42,13 @@ python3 -m http.server 8613 --directory .
   subjugation into a tribute-paying client kingdom — priced against your war score; losing
   AIs sue for peace, AI-vs-AI wars settle themselves, and five-year truces follow every
   treaty. Fabricate claims and declare war from a foreign province's diplomacy block.
-- Win hard enough and the treaty can force the enemy to **release nations**: any fallen
-  court whose lands they swallowed can be restored as an independent state — priced by
-  development against your war score, its whole patrimony burning gold on the map while
-  its box is ticked. The restored nation rises truce-sheltered and loving its liberator;
+- Win hard enough and the treaty can force the enemy to **free states**: restore a fallen
+  court, return an old homeland to a still-living neutral country, or create a new cultural
+  state from enemy territory even when no country there was recently conquered. Every
+  package is priced by development against war score and the one-treaty dismemberment cap;
   the old master keeps its capital, remembers the loss, and plots reconquest. Liberation
-  earns no infamy.
+  earns no infamy. The same congress can transfer one of the enemy's direct client kingdoms
+  to you intact — its land, ruler and army survive while its tribute and war duty change hands.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
@@ -196,7 +197,7 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 48 headless sim suites and 29
+  marching. The full verification battery — 53 headless sim suites and 29
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.

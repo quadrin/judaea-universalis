@@ -3129,3 +3129,61 @@ opinion drift.
   natural dip, drifting back up mid-weave, and still breaking on true
   disaffection. `smoke40`'s vassal-loop contract updated to the keep
   threshold.
+
+## 76. Free states and transferred clients — the congress can redraw sovereignty
+
+The original release term knew only one story: a tag existed when the
+bookmark opened, was swallowed whole, and could later be restored. That made
+the row disappear in most ordinary wars and could not express either a new
+state or the transfer of an enemy's client kingdom.
+
+- **Three roads to freedom** (`releasableNations`):
+  1. `restore` — the §69 case: a dead historical court receives the era-start
+     homeland the enemy holds;
+  2. `return` — a living non-belligerent receives its old homeland back. The
+     territory need not be occupied, recently conquered, or taken in the
+     present war; the recipient keeps its current ruler, army, government and
+     diplomatic bonds;
+  3. `create` — enemy-owned non-capital land without a surviving historical
+     claimant is grouped by culture + faith into a new cultural state. Its
+     deterministic `Fxxx` tag is derived from bookmark and identity and is
+     also stored as `releaseIdentity`, so a save/reload or later treaty finds
+     the same state instead of inventing a duplicate. The live court carries
+     its own name, color, capital, era technology, government, treasury,
+     manpower and defensive host; ordinary systems need no static tag entry.
+  Historical claims take precedence over cultural creation, so release rows
+  never overlap. The enemy capital remains excluded. War participants cannot
+  receive land through the release corridor; their fate belongs to the war
+  itself.
+- **One dismemberment budget** (`evaluatePeaceDeal`): cessions, returned or
+  created states, and transferred clients all count their development against
+  `peaceDevCap`; each release is priced at max(10, 0.5 × development).
+  Cessions still win any overlap. Liberation earns no infamy, while the old
+  master records the ordinary conquest grudge and receives a five-year truce
+  against a revived or new court.
+- **Transfer their clients** (`transferableVassals`,
+  `PEACE.transferVassalBase` 15, `transferVassalPerDev` 0.25, max 80): every
+  living direct client of an enemy-side sovereign appears at the full
+  congress. The term changes only `overlord`: the client keeps all provinces,
+  armies, ruler and institutions; unfinished incorporation by the old lord is
+  voided; outside alliances are cleared; the old lord is truce-bound and the
+  new lord-client pair is not. A forced transfer sours the client (−25 toward
+  the new lord), the former lord (−50 toward the victor), and carries modest
+  infamy because it is conquest by proxy.
+- **Mutual exclusions and authority**: subjugating the enemy leader
+  supersedes cessions, releases and client transfers — the whole political
+  house is preserved under one yoke. New states and client transfers belong
+  only to the full congress: separate-peace and junior-withdrawal tables
+  expose neither.
+- **UI**: the release section distinguishes "Restore", "Return lands to" and
+  "Create"; each tooltip explains whether the court is revived, preserved, or
+  made new. A second section lists transferable clients, their old overlord,
+  development and price. Ticked state and client territory burns gold on the
+  map beside direct cessions.
+- **Regression contract**: `smoke53.mjs` — return of an unoccupied province
+  to a living neutral court without rebooting its government; deterministic
+  new-state creation with land, court, technology, host, truce and zero
+  infamy; transfer of Agrippa from Rome to Judaea with land/court/army intact
+  and correct truce direction; the separate-congress and subjugation
+  exclusions. The original §69 restoration contract remains in
+  `smoke47.mjs`.
