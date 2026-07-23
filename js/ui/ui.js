@@ -286,9 +286,9 @@ export function initUI(staticCtx) {
       : '';
     const discountTxt = { claim: ' · our claim (30% off)', faith: ' · our faith (20% off)' };
     const provRows = info.provinces.map((p) =>
-      `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${discountTxt[p.discount] || ''}\nDemanding it costs ${p.cost} war score">
+      `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${discountTxt[p.discount] || ''}${p.goalReason ? '\nWar goal: ' + esc(p.goalReason) + (p.goalAligned ? ' (favored terms)' : ' (costlier terms)') : ''}\nDemanding it costs ${p.cost} war score">
         <input type="checkbox" data-prov="${p.id}">
-        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${p.discount ? ' · ' + (p.discount === 'claim' ? 'claimed' : 'our faith') : ''}</span></span>
+        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${p.discount ? ' · ' + (p.discount === 'claim' ? 'claimed' : 'our faith') : ''}${p.goalReason ? ' · ' + (p.goalAligned ? 'war goal' : 'outside goal') : ''}</span></span>
         <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
     peaceEl.innerHTML = `
@@ -331,7 +331,9 @@ export function initUI(staticCtx) {
           <span class="peace-prov-cost">${info.reparationsCost || 15}</span>
         </label>
         <label class="peace-prov${info.canSubjugate ? '' : ' peace-off'}" data-tt="${info.canSubjugate
-    ? esc('Make ' + (info.enemyName || 'them') + ' a client kingdom: they keep their lands but pay us 15% of their income and follow us to war.\nReplaces province demands. Costs ' + info.subjugateCost + ' war score')
+    ? esc('Make ' + (info.enemyName || 'them') + ' a client kingdom: they keep their lands but pay us 15% of their income and follow us to war.\nReplaces province demands.'
+      + (info.subjugateGoalAligned ? '\nThis fulfills the ' + (info.subjugateGoalReason || 'war goal') + ' and receives favored terms.' : '')
+      + '\nCosts ' + info.subjugateCost + ' war score')
     : esc(info.whyNotSubjugate || 'They cannot be subjugated.')}">
           <input type="checkbox" data-ref="subjugate" ${info.canSubjugate ? '' : 'disabled'}>
           <span class="peace-prov-name">Make them a client kingdom</span>
@@ -350,6 +352,7 @@ export function initUI(staticCtx) {
       + (r.kind === 'return'
         ? ' The recipient keeps its existing government and treaties.'
         : ' The state rises independent and sheltered by a five-year truce.')
+      + (r.goalAligned ? ' This fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : '')
       + '\nCosts ' + r.cost + ' war score. Liberation earns no infamy.')}">
           <input type="checkbox" data-release="${esc(r.tag)}">
           <span class="peace-prov-name">${r.kind === 'return'
@@ -367,7 +370,7 @@ export function initUI(staticCtx) {
         ${(info.transferableVassals || []).length ? info.transferableVassals.map((r) =>
     `<label class="peace-prov" data-center="${(r.provIds || [])[0] || 0}" data-tt="${esc(
       'Transfer ' + r.name + ' from ' + r.fromName + ' to our protection. The client keeps its ruler, army and every province; its tribute and war duty pass to us.\nCosts '
-      + r.cost + ' war score.')}">
+      + r.cost + ' war score.' + (r.goalAligned ? ' This fulfills the ' + (r.goalReason || 'war goal') + ' and receives favored terms.' : ''))}">
           <input type="checkbox" data-transfer-vassal="${esc(r.tag)}">
           <span class="peace-prov-name">Transfer ${esc(r.name)} to us
             <span class="peace-dim">${r.dev} dev · from ${esc(r.fromName)}</span></span>
@@ -561,11 +564,17 @@ export function initUI(staticCtx) {
       `<div class="pp-row" data-tt="${esc(tt)}"><span class="pp-k">${esc(label)}</span><span class="pp-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${signed(v)}</span></div>`;
     const wsCls = info.myWs > 0 ? 'pos' : info.myWs < 0 ? 'neg' : '';
     const barPct = Math.round(((info.myWs + 100) / 200) * 100);
+    const goalHtml = info.goal ? `
+        <div class="peace-sec">War goal: ${esc(info.goal.label)}</div>
+        <div class="wo-hold">${esc(info.goal.description)}</div>
+        <div class="peace-dim wo-meta">Objective: ${esc((info.goal.targetNames || []).join(', '))}
+          · ${info.goal.holder === 'ours' ? 'our side holds it' : info.goal.holder === 'theirs' ? 'the enemy holds it' : 'control is contested'}
+          · ticking score ${signed(info.goal.score)} / ${info.goal.scoreCap}</div>` : '';
     warEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card wo-card">
         <h2 class="peace-title">${esc(info.warName || 'War')}</h2>
-        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'holy' ? 'a holy war' : info.cb === 'coalition' ? 'a punitive league' : info.cb === 'containment' ? 'a war of containment' : info.cb === 'independence' ? 'a war of independence' : info.cb) : ''}${info.noNegotiation ? ' · a fight to the death — but envoys may still be sent' : ''}</div>
+        <div class="peace-dim wo-meta">${info.months} month${info.months === 1 ? '' : 's'} of war${info.cb ? ' · casus belli: ' + esc(info.cb === 'claim' ? 'a pressed claim' : info.cb === 'conquest' ? 'a war of conquest' : info.cb === 'holy' || info.cb === 'liberation' ? 'a war of liberation' : info.cb === 'coalition' ? 'a punitive league' : info.cb === 'containment' ? 'a war of containment' : info.cb === 'independence' ? 'a war of independence' : info.cb === 'succession' ? 'a succession war' : info.cb) : ''}${info.noNegotiation ? ' · a fight to the death — but envoys may still be sent' : ''}</div>
         <div class="wo-sides">
           <div class="wo-side">${sideHtml(info.mySide)}</div>
           <div class="wo-vs">against</div>
@@ -575,7 +584,9 @@ export function initUI(staticCtx) {
         <div class="bar wo-bar"><div class="bar-fill" style="width:${barPct}%"></div></div>
         ${bdRow('From battles', bd.battles, 'Field victories, net of theirs (each side caps at 40)')}
         ${bdRow('From occupation', bd.occupation, 'Enemy development under our control, net of theirs (each side caps at 60)')}
+        ${info.goal ? bdRow('From war goal', bd.goal, 'Holding the declared objective after its six-month grace period (caps at 25)') : ''}
         ${bd.events ? bdRow('From events', bd.events, 'Scripted swings of history') : ''}
+        ${goalHtml}
         <div class="peace-sec">We hold</div>
         <div class="wo-hold">${holdHtml(info.weHold, 'None of their land')}</div>
         <div class="peace-sec">They hold</div>

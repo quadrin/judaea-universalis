@@ -225,8 +225,9 @@ await page.waitForSelector('#peace-modal:not(.hidden)');
 const earlyPeaceText = await page.locator('#peace-modal').textContent();
 ok(/Force them to release nations/.test(earlyPeaceText),
   'the release section is visible before any court has fallen');
-ok(/no lands of a fallen nation/i.test(earlyPeaceText),
-  'the empty state explains why nothing can be freed yet');
+const earlyReleaseRows = await page.locator('#peace-modal [data-release]').count();
+ok(earlyReleaseRows > 0 || /no viable homeland can be separated/i.test(earlyPeaceText),
+  'the table either offers a historical/cultural state or explains why none can be freed');
 await page.locator('#peace-modal .peace-cancel').click();
 await page.waitForTimeout(150);
 
@@ -251,7 +252,7 @@ await page.locator('#nation-panel .np-dove').first().click();
 await page.waitForSelector('#peace-modal:not(.hidden)');
 const peaceText = await page.locator('#peace-modal').textContent();
 ok(/Force them to release nations/.test(peaceText), 'the release section stands on the table');
-ok(/Set Nabataea free/.test(peaceText), 'fallen Nabataea is offered for restoration');
+ok(/Restore Nabataea/.test(peaceText), 'fallen Nabataea is offered for restoration');
 await page.locator('#peace-modal [data-release="NAB"]').check();
 await page.waitForTimeout(150);
 const verdict = await page.locator('#peace-modal [data-ref="verdict"]').textContent();

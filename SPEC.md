@@ -3187,3 +3187,137 @@ state or the transfer of an enemy's client kingdom.
   and correct truce direction; the separate-congress and subjugation
   exclusions. The original §69 restoration contract remains in
   `smoke47.mjs`.
+
+## 77. The other court has terms — AI statecraft at the peace table
+
+The peace system had grown broader than the mind using it. An AI victor still
+knew one treaty: take every occupied province the score could buy, then add
+reparations. It never restored a court, transferred a client, reimposed the
+yoke after an independence war, initiated a separate peace, or answered an
+overreaching demand with anything but silence.
+
+- **One treaty planner** (`buildAiPeaceDeal`, ai.js): ultimatums, autonomous
+  AI wars and separate corridors now use the same personality-aware builder.
+  Every attempted clause is passed back through `evaluatePeaceDeal`; the AI
+  pays the player's escalating province price and shares the same war-score
+  and development caps. Claims and co-religionist land lead ordinary
+  conquests. Containment and coalition wars prefer restoration, new buffer
+  states and transferred clients. Winning an independence war restores the
+  client bond when the score can bear it. Rivals and aggressive courts value
+  humiliation; cautious courts prefer reparations; rounded indemnities spend
+  only the leverage left after political terms.
+- **Ultimatums have content**: `sendUltimatum` describes the live evaluated
+  package — cessions, releases, recognition, client fealty, reparations,
+  humiliation and gold — rather than promising generic "submission." The
+  accepting option reuses the captured legal deal; refusal still leaves the
+  war and its eight-month demand clock intact.
+- **Coalition members seek their own door** (`sendSeparatePeaceOffer`,
+  `settleAiSeparatePeace`): the bilateral score from §67 is now agency, not
+  merely a player UI. A member whose own fields are lost, or whose war
+  exhaustion has broken its court, offers a scoped treaty and five-year truce.
+  Human victors receive a two-choice event and must consent; all-AI wars sign
+  one such exit per monthly pass. The rest of the coalition, its occupations
+  and its war survive exactly as §67 requires.
+- **A refusal can become a negotiation** (`buildAiCounteroffer`,
+  `sendAiCounteroffer`): when a player's non-white demand exceeds the score,
+  the defending court pares back only clauses actually requested. It prefers
+  treasury and prestige concessions to permanent losses, then offers the
+  cheapest legal territorial clauses that fit. The resulting two-choice card
+  signs only after re-validating the live front; if the war changes before the
+  seals are set, the offer lapses instead of executing stale terms. The usual
+  six-month envoy cooldown begins when the original demand is refused.
+- **Regression contract**: `smoke54.mjs` — containment produces a legal
+  release package, a victor with no sensible cession takes an enemy client,
+  occupied Lebanon initiates a separate offer to a human and leaves alone on
+  acceptance, the same corridor settles autonomously in an all-AI war, and an
+  excessive multi-province demand returns as an affordable one-province
+  counteroffer whose acceptance ends the war.
+
+## 78. Fight for what was declared — war goals and ticking score
+
+Wars had reasons in their names and penalties at declaration, but the
+battlefield and treaty table did not remember those reasons. A claimant could
+ignore the claimed province, a liberator could annex an unrelated frontier,
+and a defender gained nothing from holding the place the aggressor said the
+war was about.
+
+- **A persisted objective** (`war.goal`, `makeWarGoal`): ordinary diplomatic
+  wars now store a typed, save-safe contract alongside the compact `war.cb`.
+  Supported purposes are `claim`, `conquest`, `holy`/`liberation`,
+  `independence`, `containment`, `coalition`, and `succession`. Claims remember
+  the exact fabricated province; liberation targets the defender's land of the
+  attacker's faith; independence centers on the rebel homeland; the remaining
+  political wars target the relevant capital. Old saves reconstruct a missing
+  goal from their CB. Scripted wars with no explicit CB deliberately receive
+  no inferred goal, preserving every authored campaign arc.
+- **Ticking war score** (`advanceWarGoal`, `warGoalInfo`): after a six-month
+  grace period, the side controlling a majority of the objective's development
+  earns one point per month, up to ±25 from the attacker's perspective.
+  Control can reverse and work the accumulated score back the other way.
+  `sideComponents` carries the positive half into the proper side's gross
+  score; the ordinary final ±100 clamp remains. The tick records its last game
+  month, so repeated score refreshes cannot double-pay it and a revived old
+  save is not charged retroactively for years under a controller it never
+  recorded.
+- **The stated purpose governs the peace** (`goalProvinceAdjustment`,
+  `goalReleaseAdjustment`, `goalTransferAdjustment`,
+  `goalSubjugateAdjustment`): the declared conquest province and
+  co-religionist liberation targets receive favored cession prices; land
+  outside a territorial goal is costlier. Containment and coalition wars make
+  release and client-transfer clauses cheaper while making direct annexation
+  dearer. A victorious former overlord receives favored terms to restore the
+  yoke after an independence rising; a succession claimant receives the same
+  preference for submission. The adjusted rows feed the one shared
+  `peaceDealInfo`/`evaluatePeaceDeal` path, so UI previews, player offers,
+  counteroffers, and autonomous AI treaties all pay the same prices.
+- **The AI obeys the political direction** (`buildAiPeaceDeal`): goal-aligned
+  provinces sort before unrelated occupations. An independence rebel can no
+  longer subjugate the former overlord; only the defending old lord seeks to
+  restore that bond. Succession victors prefer the discounted crown, while
+  containment, coalition, holy and independence wars cannot fall through to
+  the generic "small client" appetite.
+- **Visible contract** (`getWarInfo`, war overview and peace dialog): the war
+  card names the objective, its target provinces, current controller, accrued
+  ticking score and the separate "From war goal" contribution. Peace rows mark
+  favored war-goal terms and demands outside the mandate in both their inline
+  labels and tooltips.
+- **Regression contract**: `smoke55.mjs` proves exact claim targeting,
+  grace-period and reversible ticking, war-overview exposure, favored target
+  pricing and the unrelated-land premium, independence settlement direction,
+  succession submission, and the no-goal boundary for scripted wars.
+  `uitest30.mjs` stages a live pressed claim and drives the objective from the
+  outliner through the war overview into its goal-marked peace row.
+
+## 79. A claim is an operation, not a button
+
+Fabricating a claim used to spend 30 influence and grant the permanent
+diplomatic fact in the same click. The price existed, but the papers had no
+time, no exposure, and no interval in which the player still lacked a legal
+pretext for war.
+
+- **Paid when begun** (`CLAIM_FABRICATION`, `startClaimFabrication`): the
+  operation costs 30 influence immediately, applies the existing −20 opinion
+  hit to the target court, starts the existing twelve-month per-country
+  cooldown, and writes `{provId, against, monthsLeft}` to the acting nation’s
+  `claimFabrications` array. Repeated clicks cannot spend twice or create a
+  duplicate operation.
+- **Four months before it speaks** (`monthlyClaimFabrications`, tick.js): one
+  month is removed during each ordinary monthly block. Until the fourth tick,
+  `hasClaim` remains false, `casusBelli` cannot use the papers, and declaring
+  war still pays the no-CB cost (unless some other pretext exists). Completion
+  moves the province into the ordinary `claims` array and notifies the player.
+  If the province has become the fabricator’s own land before completion, the
+  spent operation lapses instead of creating a claim on oneself.
+- **Save-safe progress** (`initGame`, `reviveGame`): every court starts with an
+  empty operation list; older saves receive one during revival, while an
+  in-progress operation survives serialization with its exact remaining
+  months.
+- **UI** (province diplomacy block): the button prints the up-front influence
+  price and four-month duration before commitment, then becomes
+  `Fabricating… Xm` with a tooltip explaining that the claim is not yet a
+  casus belli. Only completion changes it to `Claim Held`.
+- **Regression contract**: `smoke56.mjs` covers up-front cost, the absence of
+  an early CB, opinion and cooldown effects, duplicate-click safety, three
+  incomplete monthly ticks, save/revive at one month remaining, completion
+  through the real tick loop, and the own-province lapse. `uitest2.mjs`
+  drives the pending and completed labels in the live province panel.

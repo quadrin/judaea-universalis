@@ -1536,6 +1536,11 @@ export function switchTagCore(ctx, from, to) {
       w.warscore[to] = w.warscore[from];
       delete w.warscore[from];
     }
+    if (w.goal) {
+      if (w.goal.attacker === from) w.goal.attacker = to;
+      if (w.goal.defender === from) w.goal.defender = to;
+      if (w.goal.targetTag === from) w.goal.targetTag = to;
+    }
   }
   for (const k of Object.keys(g.tags)) {
     const t = g.tags[k];
@@ -1831,9 +1836,189 @@ export function coalitionAgainst(ctx, expander) {
   return out;
 }
 
+// ---------------------------------------------------------------- war goals
+// Ordinary diplomatic wars carry one concrete objective. The goal is plain
+// save data on the war: old saves can reconstruct it from `war.cb`, while
+// scripted wars with no CB remain untouched. Holding the objective after a
+// short grace period earns ticking score, so a war can be won by pursuing its
+// stated purpose instead of carpet-occupying every last province.
+const WAR_GOALS = {
+  claim: { cap: 25, rate: 1, grace: 6 },
+  conquest: { cap: 25, rate: 1, grace: 6 },
+  holy: { cap: 25, rate: 1, grace: 6 },
+  liberation: { cap: 25, rate: 1, grace: 6 },
+  independence: { cap: 25, rate: 1, grace: 6 },
+  containment: { cap: 25, rate: 1, grace: 6 },
+  coalition: { cap: 25, rate: 1, grace: 6 },
+  succession: { cap: 25, rate: 1, grace: 6 },
+};
+
+function capitalProvince(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const def = (ctx.DEFINES.TAGS || {})[tag] || {};
+  const name = (t && t.dynamicCapital) || def.capital;
+  const named = name && ctx.prov ? ctx.prov(name) : null;
+  if (named && !named.impassable && named.owner === tag) return named;
+  let best = null;
+  for (let i = 1; i < ctx.game.provinces.length; i++) {
+    const p = ctx.game.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    if (!best || devTotal(p) > devTotal(best)) best = p;
+  }
+  return best;
+}
+
+function warGoalProvinceIds(ctx, atk, def, type, src) {
+  const g = ctx.game;
+  const explicit = [];
+  if (src && typeof src === 'object') {
+    if (Number.isFinite(src.provId)) explicit.push(src.provId | 0);
+    for (const id of src.targetProvIds || src.provIds || []) explicit.push(id | 0);
+  }
+  const valid = [...new Set(explicit)].filter((id) => {
+    const p = ctx.byId(id);
+    return p && !p.impassable;
+  });
+  if (valid.length) return valid;
+
+  if (type === 'claim') {
+    const claims = [];
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (p && !p.impassable && p.owner === def && hasClaim(ctx, atk, i)) claims.push(p);
+    }
+    claims.sort((a, b) => devTotal(b) - devTotal(a) || a.id - b.id);
+    if (claims.length) return [claims[0].id];
+  }
+  if (type === 'holy' || type === 'liberation') {
+    const faith = g.tags[atk] && g.tags[atk].religion;
+    const ids = [];
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (p && !p.impassable && p.owner === def && faith && p.religion === faith) ids.push(i);
+    }
+    if (ids.length) return ids;
+  }
+  const targetTag = type === 'independence' ? atk : def;
+  const capital = capitalProvince(ctx, targetTag);
+  return capital ? [capital.id] : [];
+}
+
+function makeWarGoal(ctx, atk, def, cb) {
+  const type = typeof cb === 'string' ? cb : cb && cb.type;
+  const spec = WAR_GOALS[type];
+  if (!spec) return null;
+  const targetProvIds = warGoalProvinceIds(ctx, atk, def, type, cb);
+  if (!targetProvIds.length) return null;
+  const names = targetProvIds.map((id) => {
+    const p = ctx.byId(id);
+    return p && p.name;
+  }).filter(Boolean);
+  const target = names.length > 2
+    ? names.slice(0, 2).join(', ') + ' and ' + (names.length - 2) + ' more'
+    : names.join(' and ');
+  const A = ctx.game.tags[atk], D = ctx.game.tags[def];
+  const attackerName = (A && A.name) || atk;
+  const defenderName = (D && D.name) || def;
+  let label = 'Hold ' + target;
+  let description = 'Control the war objective to gain ticking war score.';
+  if (type === 'claim') {
+    label = 'Seize ' + target;
+    description = attackerName + ' must occupy the land named in its claim.';
+  } else if (type === 'conquest') {
+    label = 'Conquer ' + target;
+    description = attackerName + ' must take the strategic heart of ' + defenderName + '.';
+  } else if (type === 'holy' || type === 'liberation') {
+    label = 'Liberate the faithful';
+    description = attackerName + ' must control a majority of the targeted co-religionist land.';
+  } else if (type === 'independence') {
+    label = 'Defend independence at ' + target;
+    description = 'The rebels gain score while their homeland remains free; the former overlord gains it by occupation.';
+  } else if (type === 'containment') {
+    label = 'Break the hegemon at ' + target;
+    description = attackerName + ' must seize the seat of ' + defenderName + '’s power.';
+  } else if (type === 'coalition') {
+    label = 'Punish the aggressor at ' + target;
+    description = 'The punitive league must seize the aggressor’s political center.';
+  } else if (type === 'succession') {
+    label = 'Claim the crown at ' + target;
+    description = attackerName + ' must occupy the rival seat of succession.';
+  }
+  return {
+    type, label, description, attacker: atk, defender: def,
+    targetProvIds, targetTag: type === 'independence' ? atk : def,
+    scoreCap: spec.cap, rate: spec.rate, graceMonths: spec.grace,
+  };
+}
+
+function ensureWarGoal(ctx, war) {
+  if (!war) return null;
+  if (war.goal && WAR_GOALS[war.goal.type]) return war.goal;
+  if (!war.cb || !WAR_GOALS[war.cb]) return null;
+  const atk = war.attackers && war.attackers[0];
+  const def = war.defenders && war.defenders[0];
+  if (!atk || !def) return null;
+  war.goal = makeWarGoal(ctx, atk, def, war.cb);
+  if (war.goal && !war._goalTick) war._goalTick = { ...ctx.game.date };
+  if (!Number.isFinite(war._goalScore)) war._goalScore = 0;
+  return war.goal;
+}
+
+function warGoalHolder(ctx, war, goal) {
+  let total = 0, att = 0, def = 0;
+  for (const id of goal.targetProvIds || []) {
+    const p = ctx.byId(id);
+    if (!p || p.impassable) continue;
+    const weight = Math.max(1, devTotal(p));
+    total += weight;
+    if (war.attackers.indexOf(p.controller) >= 0) att += weight;
+    else if (war.defenders.indexOf(p.controller) >= 0) def += weight;
+  }
+  if (!(total > 0)) return null;
+  if (att > total / 2) return 'att';
+  if (def > total / 2) return 'def';
+  return null;
+}
+
+export function warGoalInfo(ctx, war) {
+  const goal = ensureWarGoal(ctx, war);
+  if (!goal) return null;
+  const holderKey = warGoalHolder(ctx, war, goal);
+  return {
+    ...goal,
+    targetNames: (goal.targetProvIds || []).map((id) => {
+      const p = ctx.byId(id);
+      return p && p.name;
+    }).filter(Boolean),
+    holderKey,
+    score: Math.round(num(war._goalScore)),
+    months: Math.max(0, monthsBetween(war.started, ctx.game.date)),
+  };
+}
+
+function advanceWarGoal(ctx, war) {
+  const goal = ensureWarGoal(ctx, war);
+  if (!goal) return;
+  if (!war._goalTick) {
+    war._goalTick = { ...ctx.game.date };
+    return;
+  }
+  const before = Math.max(0, monthsBetween(war.started, war._goalTick) - num(goal.graceMonths, 6));
+  const after = Math.max(0, monthsBetween(war.started, ctx.game.date) - num(goal.graceMonths, 6));
+  const elapsed = Math.max(0, after - before);
+  war._goalTick = { ...ctx.game.date };
+  if (!elapsed) return;
+  const holder = warGoalHolder(ctx, war, goal);
+  if (!holder) return;
+  const delta = elapsed * num(goal.rate, 1) * (holder === 'att' ? 1 : -1);
+  war._goalScore = clamp(num(war._goalScore) + delta,
+    -num(goal.scoreCap, 25), num(goal.scoreCap, 25));
+}
+
 export function declareWar(ctx, atk, def, name, cb) {
   const g = ctx.game;
   const A = g.tags[atk], D = g.tags[def];
+  const cbType = typeof cb === 'string' ? cb : cb && cb.type;
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
   if (truceActive(ctx, atk, def)) return null; // the ink on the treaty is still wet
   // A crown and its client do not go to war while the bond stands (SPEC §75):
@@ -1870,7 +2055,7 @@ export function declareWar(ctx, atk, def, name, cb) {
   // A punitive league (SPEC §21 extended): when the coalition itself declares
   // the war, every member without a standing truce marches on the attacker's
   // side — the world's answer to a conqueror, not one rival's.
-  if (cb === 'coalition') {
+  if (cbType === 'coalition') {
     const league = coalitionAgainst(ctx, def).filter((m) => !truceActive(ctx, m, def));
     for (const m of league) join(attackers, m);
     if (league.length) {
@@ -1921,7 +2106,10 @@ export function declareWar(ctx, atk, def, name, cb) {
     id: 'war' + (g.wars.length + 1),
     name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
     attackers, defenders, warscore: {}, started: { ...g.date }, _bs: { att: 0, def: 0 },
-    cb: cb || null,
+    cb: cbType || null,
+    goal: makeWarGoal(ctx, atk, def, cb),
+    _goalScore: 0,
+    _goalTick: { ...g.date },
   };
   g.wars.push(war);
   for (const a of attackers) {
@@ -2092,24 +2280,150 @@ export function sharedWarEnemy(ctx, a, b) {
   return false;
 }
 // ---------------------------------------------------------------- claims & casus belli
+export const CLAIM_FABRICATION = {
+  cost: 30,
+  months: 4,
+  opinionHit: -20,
+  cooldownMonths: 12,
+};
+
 export function hasClaim(ctx, tag, provId) {
   const t = ctx.game.tags[tag];
   return !!(t && Array.isArray(t.claims) && t.claims.indexOf(provId | 0) >= 0);
 }
+
+export function claimFabricationInfo(ctx, tag, provId) {
+  const g = ctx.game;
+  const p = ctx.byId(provId);
+  const t = g.tags[tag];
+  if (!p || p.impassable || !t || p.owner === tag || !g.tags[p.owner] || p.owner === 'REB') return null;
+  if (!Array.isArray(t.claimFabrications)) t.claimFabrications = [];
+  const pending = t.claimFabrications.find((row) => row && row.provId === (provId | 0));
+  const out = {
+    hasClaim: hasClaim(ctx, tag, provId),
+    fabricating: !!pending,
+    monthsLeft: pending ? Math.max(0, pending.monthsLeft | 0) : 0,
+    cost: CLAIM_FABRICATION.cost,
+    months: CLAIM_FABRICATION.months,
+    canFabricate: false,
+    whyNot: '',
+  };
+  if (out.hasClaim) out.whyNot = 'We already hold a claim here.';
+  else if (pending) {
+    out.whyNot = 'Our agents are forging the case (' + out.monthsLeft + ' month'
+      + (out.monthsLeft === 1 ? '' : 's') + ' remaining).';
+  } else {
+    const cdKey = 'claim:' + p.owner;
+    if (diploCdActive(ctx, cdKey)) {
+      out.whyNot = 'Our forgers need time (' + diploCdMonthsLeft(ctx, cdKey)
+        + ' months before another claim on ' + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + ').';
+    } else if (num(t.points && t.points.infl) < CLAIM_FABRICATION.cost) {
+      out.whyNot = 'Not enough influence points (' + CLAIM_FABRICATION.cost + ' required).';
+    }
+  }
+  out.canFabricate = !out.whyNot;
+  return out;
+}
+
+export function startClaimFabrication(ctx, tag, provId) {
+  const info = claimFabricationInfo(ctx, tag, provId);
+  if (!info || !info.canFabricate) return { ok: false, why: info ? info.whyNot : 'No claim can be made here.' };
+  const g = ctx.game;
+  const p = ctx.byId(provId);
+  const t = g.tags[tag];
+  t.points.infl = num(t.points.infl) - CLAIM_FABRICATION.cost;
+  t.claimFabrications.push({
+    provId: provId | 0,
+    against: p.owner,
+    monthsLeft: CLAIM_FABRICATION.months,
+  });
+  addOpinion(ctx, p.owner, tag, CLAIM_FABRICATION.opinionHit);
+  setDiploCd(ctx, 'claim:' + p.owner, CLAIM_FABRICATION.cooldownMonths);
+  return {
+    ok: true,
+    name: p.name,
+    owner: p.owner,
+    cost: CLAIM_FABRICATION.cost,
+    months: CLAIM_FABRICATION.months,
+  };
+}
+
+// Forged rights take time to become diplomatic fact. The influence is spent
+// up front; completion adds the ordinary claim consumed by war and peace
+// systems. If the province becomes ours before the papers are ready, the
+// operation quietly lapses — there is nothing left to claim.
+export function monthlyClaimFabrications(ctx) {
+  const g = ctx.game;
+  for (const tag of Object.keys(g.tags)) {
+    const t = g.tags[tag];
+    if (!t) continue;
+    if (!t.alive) {
+      t.claimFabrications = [];
+      continue;
+    }
+    if (!Array.isArray(t.claimFabrications) || !t.claimFabrications.length) continue;
+    const keep = [];
+    for (const row of t.claimFabrications) {
+      if (!row || !(row.provId > 0)) continue;
+      row.monthsLeft = Math.max(0, num(row.monthsLeft, CLAIM_FABRICATION.months) - 1);
+      if (row.monthsLeft > 0) {
+        keep.push(row);
+        continue;
+      }
+      const p = ctx.byId(row.provId);
+      const valid = p && !p.impassable && p.owner !== tag && p.owner !== 'REB' && g.tags[p.owner];
+      if (valid && !hasClaim(ctx, tag, row.provId)) {
+        if (!Array.isArray(t.claims)) t.claims = [];
+        t.claims.push(row.provId | 0);
+        if (tag === g.playerTag) {
+          ctx.bus.emit('notify', {
+            title: 'The claim is ready',
+            text: 'The genealogies and treaties are assembled: we now hold a claim on ' + p.name
+              + '. A war for it costs no stability, and it receives favored terms at the peace table.',
+            type: 'good',
+          });
+        }
+        ctx.bus.emit('claim', { tag, provId: row.provId | 0 });
+      } else if (tag === g.playerTag) {
+        ctx.bus.emit('notify', {
+          title: 'The claim lapses',
+          text: p && p.owner === tag
+            ? p.name + ' came into our hands before the papers were finished.'
+            : 'The political case our agents were building no longer has a valid target.',
+          type: 'info',
+        });
+      }
+    }
+    t.claimFabrications = keep;
+  }
+}
+
 // Best available casus belli of atk against def: a fabricated claim on their
 // land beats a holy war for co-religionist provinces under their rule.
 export function casusBelli(ctx, atk, def) {
   const g = ctx.game;
   const A = g.tags[atk];
   if (!A) return null;
-  let holy = false;
+  const claims = [];
+  const holy = [];
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.owner !== def) continue;
-    if (hasClaim(ctx, atk, i)) return { type: 'claim', label: 'Pressing our claim' };
-    if (A.religion && p.religion === A.religion) holy = true;
+    if (hasClaim(ctx, atk, i)) claims.push(p);
+    if (A.religion && p.religion === A.religion) holy.push(i);
   }
-  return holy ? { type: 'holy', label: 'Liberating the faithful' } : null;
+  claims.sort((a, b) => devTotal(b) - devTotal(a) || a.id - b.id);
+  if (claims.length) {
+    return {
+      type: 'claim',
+      label: 'Pressing our claim on ' + claims[0].name,
+      provId: claims[0].id,
+      targetProvIds: [claims[0].id],
+    };
+  }
+  return holy.length
+    ? { type: 'holy', label: 'Liberating the faithful', targetProvIds: holy }
+    : null;
 }
 
 // ---------------------------------------------------------------- royal marriage (SPEC §62)
@@ -2201,6 +2515,11 @@ export const PEACE = {
   provCostMin: 4,        // floor per province
   claimDiscount: 0.7,    // claimed provinces cost 30% less
   faithDiscount: 0.8,    // co-religionist provinces cost 20% less
+  goalProvinceDiscount: 0.65, // the declared territorial objective is cheaper
+  goalLiberationDiscount: 0.7, // releases/clients central to a political war
+  goalUnrelatedMult: 1.25, // unrelated annexations exceed the war's mandate
+  goalDismantleCessionMult: 1.35, // containment prefers dismantling to conquest
+  goalSubjugateDiscount: 0.65, // restored yokes and succession claims
   goldCostPer100: 10,    // warscore per 100 talents demanded
   goldStep: 25,          // UI stepper granularity
   humiliateCost: 15,
@@ -2276,6 +2595,74 @@ function provDemandCost(ctx, p, byTag) {
   const provGroup = R[p.religion] ? R[p.religion].group : null;
   if (myGroup && provGroup && myGroup !== provGroup) cost *= BAL(ctx, 'peaceAlienMult', 1.25);
   return Math.max(PEACE.provCostMin, Math.round(cost));
+}
+
+function goalSideIsAttacker(war, byTag) {
+  return !!(war && war.attackers && war.attackers.indexOf(byTag) >= 0);
+}
+
+function goalProvinceAdjustment(ctx, war, byTag, provId) {
+  const goal = ensureWarGoal(ctx, war);
+  if (!goal) return { mult: 1, aligned: false, reason: '' };
+  const attacker = goalSideIsAttacker(war, byTag);
+  const targeted = (goal.targetProvIds || []).indexOf(provId | 0) >= 0;
+  if (attacker && (goal.type === 'claim' || goal.type === 'conquest')) {
+    return targeted
+      ? { mult: PEACE.goalProvinceDiscount, aligned: true, reason: 'war goal' }
+      : { mult: PEACE.goalUnrelatedMult, aligned: false, reason: 'outside the war goal' };
+  }
+  if (attacker && (goal.type === 'holy' || goal.type === 'liberation')) {
+    return targeted
+      ? { mult: PEACE.goalLiberationDiscount, aligned: true, reason: 'liberation objective' }
+      : { mult: PEACE.goalUnrelatedMult, aligned: false, reason: 'outside the liberation' };
+  }
+  if (attacker && (goal.type === 'containment' || goal.type === 'coalition')) {
+    return { mult: PEACE.goalDismantleCessionMult, aligned: false, reason: 'containment favors dismantling' };
+  }
+  if (attacker && goal.type === 'succession') {
+    return targeted
+      ? { mult: PEACE.goalLiberationDiscount, aligned: true, reason: 'seat of succession' }
+      : { mult: PEACE.goalUnrelatedMult, aligned: false, reason: 'outside the succession claim' };
+  }
+  if (goal.type === 'independence' || !attacker) {
+    return { mult: PEACE.goalUnrelatedMult, aligned: false, reason: 'outside the defensive mandate' };
+  }
+  return { mult: 1, aligned: false, reason: '' };
+}
+
+function goalReleaseAdjustment(ctx, war, byTag, provIds) {
+  const goal = ensureWarGoal(ctx, war);
+  if (!goal || !goalSideIsAttacker(war, byTag)) return { mult: 1, aligned: false, reason: '' };
+  if (goal.type === 'containment' || goal.type === 'coalition') {
+    return { mult: PEACE.goalLiberationDiscount, aligned: true, reason: 'dismantling objective' };
+  }
+  if (goal.type === 'holy' || goal.type === 'liberation') {
+    const targets = new Set(goal.targetProvIds || []);
+    if ((provIds || []).some((id) => targets.has(id))) {
+      return { mult: PEACE.goalLiberationDiscount, aligned: true, reason: 'liberation objective' };
+    }
+  }
+  return { mult: 1, aligned: false, reason: '' };
+}
+
+function goalTransferAdjustment(ctx, war, byTag) {
+  const goal = ensureWarGoal(ctx, war);
+  if (goal && goalSideIsAttacker(war, byTag)
+      && (goal.type === 'containment' || goal.type === 'coalition')) {
+    return { mult: PEACE.goalLiberationDiscount, aligned: true, reason: 'containment objective' };
+  }
+  return { mult: 1, aligned: false, reason: '' };
+}
+
+function goalSubjugateAdjustment(ctx, war, byTag) {
+  const goal = ensureWarGoal(ctx, war);
+  if (!goal) return { mult: 1, aligned: false, reason: '' };
+  const attacker = goalSideIsAttacker(war, byTag);
+  if ((goal.type === 'independence' && !attacker)
+      || (goal.type === 'succession' && attacker)) {
+    return { mult: PEACE.goalSubjugateDiscount, aligned: true, reason: goal.type + ' objective' };
+  }
+  return { mult: 1, aligned: false, reason: '' };
 }
 // The owner a province had when the era opened — static data, recomputable
 // from the bookmark's owners table over the base map (so no save schema is
@@ -2527,7 +2914,14 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
       cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.faithDiscount));
       discount = 'faith';
     }
-    provinces.push({ id: i, name: p.name, dev: devTotal(p), owner: p.owner, cost, discount });
+    const goalAdj = exit
+      ? { mult: 1, aligned: false, reason: '' }
+      : goalProvinceAdjustment(ctx, war, byTag, i);
+    cost = Math.max(PEACE.provCostMin, Math.round(cost * goalAdj.mult));
+    provinces.push({
+      id: i, name: p.name, dev: devTotal(p), owner: p.owner, cost, discount,
+      goalAligned: goalAdj.aligned, goalReason: goalAdj.reason, goalMult: goalAdj.mult,
+    });
   }
   provinces.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
   const rawMax = et ? Math.max(0, num(et.treasury)) * 0.6 + 100 : 0;
@@ -2540,8 +2934,31 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   else if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
   else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';
   else canSubjugate = true;
-  const subjugateCost = clamp(Math.round(PEACE.subjugateBase + enemyLeaderDev * PEACE.subjugatePerDev),
+  const subjugateAdj = exit
+    ? { mult: 1, aligned: false, reason: '' }
+    : goalSubjugateAdjustment(ctx, war, byTag);
+  const subjugateBaseCost = clamp(Math.round(PEACE.subjugateBase + enemyLeaderDev * PEACE.subjugatePerDev),
     PEACE.subjugateBase, PEACE.subjugateMax);
+  const subjugateCost = Math.max(PEACE.provCostMin,
+    Math.round(subjugateBaseCost * subjugateAdj.mult));
+  const releasable = (separate || exit) ? [] : releasableNations(ctx, war, byTag, enemyLeader)
+    .map((row) => {
+      const adj = goalReleaseAdjustment(ctx, war, byTag, row.provIds);
+      return {
+        ...row,
+        cost: Math.max(PEACE.provCostMin, Math.round(row.cost * adj.mult)),
+        goalAligned: adj.aligned, goalReason: adj.reason, goalMult: adj.mult,
+      };
+    });
+  const transferable = (separate || exit) ? [] : transferableVassals(ctx, war, byTag)
+    .map((row) => {
+      const adj = goalTransferAdjustment(ctx, war, byTag);
+      return {
+        ...row,
+        cost: Math.max(PEACE.provCostMin, Math.round(row.cost * adj.mult)),
+        goalAligned: adj.aligned, goalReason: adj.reason, goalMult: adj.mult,
+      };
+    });
   return {
     warId: war.id, warName: war.name,
     myWs: separate
@@ -2573,18 +2990,21 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     reparationsAmount: PEACE.reparationsAmount,
     reparationsMonths: PEACE.reparationsMonths,
     canSubjugate, whyNotSubjugate, subjugateCost,
+    subjugateGoalAligned: subjugateAdj.aligned,
+    subjugateGoalReason: subjugateAdj.reason,
     // Nations the enemy can be forced to set free (SPEC §69/§76). A separate
     // peace cannot redraw another crown's map — releases wait for the full
     // congress, like subjugation — and a withdrawing junior frees no one.
-    releasable: (separate || exit) ? [] : releasableNations(ctx, war, byTag, enemyLeader),
+    releasable,
     releaseCostPerDev: PEACE.releaseCostPerDev,
     // Direct clients on the enemy side may be transferred only at the full
     // congress. A separate court cannot trade another sovereign's bond, and a
     // junior ally cannot rewrite the coalition's hierarchy.
-    transferableVassals: (separate || exit) ? [] : transferableVassals(ctx, war, byTag),
+    transferableVassals: transferable,
     transferVassalBase: PEACE.transferVassalBase,
     transferVassalPerDev: PEACE.transferVassalPerDev,
     cb: war.cb || null,
+    goal: warGoalInfo(ctx, war),
     noNegotiation: !!war.noNegotiation,
   };
 }
@@ -2653,8 +3073,13 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       const ids = row.provIds.filter((id) => !cededIds.has(id));
       if (!ids.length) continue;
       const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
-      const rowCost = Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev));
-      releaseRows.push({ ...row, provIds: ids, dev, cost: rowCost });
+      const baseCost = Math.max(PEACE.releaseCostMin, Math.round(dev * PEACE.releaseCostPerDev));
+      const adj = goalReleaseAdjustment(ctx, war, byTag, ids);
+      const rowCost = Math.max(PEACE.provCostMin, Math.round(baseCost * adj.mult));
+      releaseRows.push({
+        ...row, provIds: ids, dev, cost: rowCost,
+        goalAligned: adj.aligned, goalReason: adj.reason, goalMult: adj.mult,
+      });
       cost += rowCost;
     }
   }
@@ -2944,7 +3369,7 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
       || (ctx.DEFINES.GOV_OF || {})[row.tag]
       || (ctx.game.date.y >= 1800 ? 'republic' : 'monarchy'),
     electionIn: 48,
-    claims: [], overlord: null,
+    claims: [], claimFabrications: [], overlord: null,
     heir: null, regency: false, missionIdx: 0,
     aiState: {},
     ruler: { name: 'Council of the New State', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
@@ -3222,7 +3647,9 @@ export function sideComponents(ctx, w, key) {
   const occupation = enemyDev > 0 ? Math.min(60, (occupiedDev / enemyDev) * 60) : 0;
   const battles = w._bs ? Math.min(40, num(w._bs[key])) : 0;
   const events = w.eventScore ? num(w.eventScore[key]) : 0; // scripted swings (Beth Horon, the Temple) persist here
-  return { battles, occupation, events, occupiedDev, enemyDev, gross: battles + occupation + events };
+  const signedGoal = ensureWarGoal(ctx, w) ? num(w._goalScore) : 0;
+  const goal = key === 'att' ? Math.max(0, signedGoal) : Math.max(0, -signedGoal);
+  return { battles, occupation, goal, events, occupiedDev, enemyDev, gross: battles + occupation + goal + events };
 }
 function sideGross(ctx, w, key) {
   return sideComponents(ctx, w, key).gross;
@@ -3237,6 +3664,7 @@ export function updateWarscores(ctx) {
       endWarBySword(ctx, w, aliveAtt ? 'att' : aliveDef ? 'def' : null);
       continue;
     }
+    advanceWarGoal(ctx, w);
     const att = sideGross(ctx, w, 'att');
     const def = sideGross(ctx, w, 'def');
     for (const t of w.attackers) w.warscore[t] = Math.round(clamp(att - def, -100, 100));

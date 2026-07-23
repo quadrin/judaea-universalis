@@ -104,8 +104,18 @@ const t1 = g1.tags.JUD;
 t1.points.infl = 100;
 const dura = c1.provId('Dura-Europos'); // PAR-owned
 a1.fabricateClaim(dura);
-ok(t1.claims.includes(dura) && t1.points.infl === 70, 'claim fabricated (infl 100->70)');
-const dip = a1.getDiplomacy('PAR');
+ok(!t1.claims.includes(dura) && t1.points.infl === 70,
+  'fabrication spends influence immediately but does not grant the claim');
+ok(a1.getClaimInfo(dura).fabricating && a1.getClaimInfo(dura).monthsLeft === 4,
+  'the province reports four months of fabrication remaining');
+let dip = a1.getDiplomacy('PAR');
+ok(!dip.cb || dip.cb.type !== 'claim', 'the unfinished papers are not yet a claim CB');
+for (let i = 0; i < 3; i++) mil.monthlyClaimFabrications(c1);
+ok(!t1.claims.includes(dura) && a1.getClaimInfo(dura).monthsLeft === 1,
+  'the claim remains unavailable through the third month');
+mil.monthlyClaimFabrications(c1);
+ok(t1.claims.includes(dura), 'the fourth month completes the claim');
+dip = a1.getDiplomacy('PAR');
 ok(dip.cb && dip.cb.type === 'claim', 'CB vs PAR is a claim');
 const dipNab = a1.getDiplomacy('NAB');
 ok(!dipNab.cb, 'no CB vs NAB (no claim, no co-religionists): ' + JSON.stringify(dipNab.cb));
@@ -192,7 +202,7 @@ console.log('== opportunistic AI war (deterministic seed) ==');
   }
   ok(declared, 'NAB declares an opportunistic war on a weakened, hated JUD');
   const w = g2.wars.find((x) => x.attackers.includes('NAB'));
-  ok(w && (w.cb === null || w.cb === 'holy' || w.cb === 'claim'), 'AI war carries a cb field: ' + (w && String(w.cb)));
+  ok(w && (w.cb === 'conquest' || w.cb === 'holy' || w.cb === 'claim'), 'AI war carries a cb field: ' + (w && String(w.cb)));
 }
 
 console.log('== generic events fire (repeatable, cooldown) ==');

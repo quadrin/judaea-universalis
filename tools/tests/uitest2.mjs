@@ -74,8 +74,19 @@ await page.evaluate(() => {
   window._ctx.game.paused = true;
 });
 await page.waitForTimeout(200);
-const claimTxt = (await page.locator('[data-ref="dipClaim"]').textContent()) || '';
-ok(/Claim Held/.test(claimTxt), 'claim registered in UI: ' + claimTxt);
+let claimTxt = (await page.locator('[data-ref="dipClaim"]').textContent()) || '';
+ok(/Fabricating… 4m/.test(claimTxt), 'the paid operation shows its initial delay: ' + claimTxt);
+ok(await page.evaluate(() => window._ctx.game.tags.JUD.points.infl === 70
+  && !window._ctx.game.tags.JUD.claims.includes(window._ctx.prov('Petra').id)),
+  '30 influence is spent before the claim becomes usable');
+await page.evaluate(async () => {
+  const { monthlyClaimFabrications } = await import('/js/sim/military.js');
+  for (let i = 0; i < 4; i++) monthlyClaimFabrications(window._ctx);
+  window._ctx.bus.emit('day', { date: { ...window._ctx.game.date } });
+});
+await page.waitForTimeout(150);
+claimTxt = (await page.locator('[data-ref="dipClaim"]').textContent()) || '';
+ok(/Claim Held/.test(claimTxt), 'the finished operation becomes a claim in the UI: ' + claimTxt);
 
 // Own province: integration block
 await page.evaluate(() => {
