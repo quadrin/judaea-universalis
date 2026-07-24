@@ -85,7 +85,13 @@ function kingdomKindTaken(ctx) {
 }
 
 function judaeaFree(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.JUD;
   return alive(ctx, 'JUD')
+    // Sovereign, not merely standing (SPEC §91). A Judaea that took the yoke
+    // at a peace table holds Jerusalem and is somebody's tributary — which is
+    // the chronicle repeated, not the world that outran it. The Second
+    // Kingdom's cards would otherwise congratulate a client on its independence.
+    && !(t && t.overlord)
     && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
     && !findJudRomWar(ctx.game);
 }

@@ -69,7 +69,12 @@ function returnKindTaken(ctx) {
 }
 
 function returnStands(ctx) {
-  return alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
+  const t = ctx.game.tags && ctx.game.tags.JUD;
+  // Sovereign, not merely standing (SPEC §91). The Return under a Persian or
+  // a Rashidun collar is exactly the thing history produced; the strand is
+  // for the world where it was not.
+  return alive(ctx, 'JUD') && !(t && t.overlord)
+    && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
 }
 
 // The gate of the whole conquest strand (SPEC §75): the campaign cards, the
