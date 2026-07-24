@@ -2568,6 +2568,9 @@ export const EVENTS_66 = [
   {
     id: 'ev_crown_or_council',
     title: 'A Crown or a Council',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'There was no second kingdom to crown or seat. The question was answered '
+      + 'by Titus, in 70, with fire.',
     desc: 'The war cry was "No King but God" — and now the state must have a shape, '
       + 'because the tribute, the courts and the frontier all wait on a signature. '
       + 'Simon bar Giora\'s name is shouted from the walls his freed men held; the sword '

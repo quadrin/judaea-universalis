@@ -1738,6 +1738,10 @@ export const EVENTS_132 = [
   {
     id: 'ev2_era_of_redemption',
     title: 'The Years of the Redemption',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'The war coins climbed from \'Year One of the Redemption of Israel\' to '
+      + '\'Year Two\' — and then retreated to the safer legend, \'For the Freedom of '
+      + 'Jerusalem.\' The treasurers were honest men.',
     desc: 'The war coins climbed from "Year One of the Redemption of Israel" to "Year Two," '
       + 'and then — the treasurers being honest men — retreated to the safer legend, "For '
       + 'the Freedom of Jerusalem": freedom is a fact, redemption is a verdict. Now the '
@@ -1823,6 +1827,10 @@ export const EVENTS_132 = [
   {
     id: 'ev2_third_house',
     title: 'Until a Prophet Should Come',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'The altar was never raised. Bar Kokhba\'s coins show the Temple facade '
+      + 'because the building itself never came back, and the stones stayed where '
+      + 'they were.',
     desc: 'The Mount is cleared, the plans are drawn, and the whole question is authority. '
       + 'The war coins named "Eleazar the Priest" — but which line is the true line, after '
       + 'sixty years of no altar and three generations of disputed genealogies? The old '

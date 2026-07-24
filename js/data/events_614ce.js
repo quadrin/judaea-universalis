@@ -2701,6 +2701,10 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_v_charter',
     title: 'The Charter of the Return',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'There was no charter. Persia took Jerusalem back from the Jews within '
+      + 'three years and handed it to the Christians; the Return lasted long '
+      + 'enough to be remembered and not long enough to be written down.',
     desc: 'Persia weighed selling the Return and found it too expensive to sell; the '
       + 'eighth year finds Jewish courts still sitting in Jerusalem, and a war-camp '
       + 'must finally say what it is. The genealogists trace Nehemiah ben Hushiel\'s '

@@ -2095,6 +2095,10 @@ export const EVENTS_40 = [
   {
     id: 'ev5_census',
     title: 'The Census of Quirinius',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'The assessment of 6 CE proceeded. It produced Judas the Galilean, the '
+      + 'Fourth Philosophy, and sixty years later the men who burned the debt '
+      + 'archive in Jerusalem.',
     worldLabel: 'The census of Quirinius; the fourth philosophy is born',
     desc: 'Quirinius, legate of Syria, orders what every new province gets: a census, '
       + 'so that Rome may know what it owns. Property is declared, valued, registered '

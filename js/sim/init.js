@@ -44,6 +44,7 @@ import { sendAiCounteroffer } from './ai.js';
 import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
 import { chapterView } from './chapters.js';
 import { axisOf, pushDoctrine, doctrineView, doctrineEpithet } from './doctrine.js';
+import { divergenceView, divergenceSummary } from './divergence.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -2387,6 +2388,10 @@ export function gameActions(ctx) {
     getDoctrine() {
       try { return doctrineView(ctx); } catch (e) { warnOnce('getDoctrine', 'getDoctrine failed', e); return null; }
     },
+    // ---- the road not taken (chronicle, SPEC §89) ---------------------------
+    getDivergence() {
+      try { return divergenceView(ctx); } catch (e) { warnOnce('getDivergence', 'getDivergence failed', e); return null; }
+    },
 
     // ---- national decisions (nation panel) ----------------------------------
     getDecisions() {
@@ -2642,6 +2647,8 @@ export function reviveGame(saved) {
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
   if (!saved.rivals) saved.rivals = {}; // pre-rivalry saves (SPEC §86): nobody named yet
+  if (!Array.isArray(saved.divergences)) saved.divergences = []; // pre-ledger saves (SPEC §89)
+  if (!Array.isArray(saved.retiredChapters)) saved.retiredChapters = [];
   if (!saved.doctrine) saved.doctrine = {}; // pre-doctrine saves (SPEC §85): flags carry the rest
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];

@@ -902,18 +902,13 @@ export function initUI(staticCtx) {
   const CHRON_ICONS = {
     era: 'lamp', war: 'swords', peace: 'dove', ruler: 'laurel',
     coalition: 'alert', fall: 'shieldCrack', verdict: 'scales',
+    divergence: 'quill', chapter: 'scroll',
   };
-  function openChronicle() {
-    const actions = state.actions;
-    if (!actions || typeof actions.getChronicle !== 'function') return;
+  let chronTab = 'record'; // 'record' | 'road'
+  // The record as it stands, newest first under year headings.
+  function chronicleRows(actions, months) {
     let entries = [];
     try { entries = actions.getChronicle() || []; } catch (e) { warnOnce('getChronicle', e); }
-    if (!chronEl) {
-      chronEl = document.createElement('div');
-      chronEl.id = 'chronicle-modal';
-      document.getElementById('ui-root').appendChild(chronEl);
-    }
-    const months = (state.ctx && state.ctx.DEFINES && state.ctx.DEFINES.MONTH_NAMES) || [];
     const yr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
     let rows = '';
     let lastY = null;
@@ -926,17 +921,92 @@ export function initUI(staticCtx) {
         + `<span class="chron-m">${esc(String(months[((en.m | 0) - 1 + 12) % 12] || ''))}</span>`
         + `<span class="chron-text">${esc(en.text)}</span></div>`;
     }
-    if (!rows) rows = '<div class="chron-empty">The page is still blank — history is waiting to be made.</div>';
+    return rows || '<div class="chron-empty">The page is still blank — history is waiting to be made.</div>';
+  }
+
+  // The road not taken (SPEC §89): the campaign set against the record it was
+  // given. Every turning where this age chose otherwise, every chapter of the
+  // script that never got written, the worlds those choices opened, and the
+  // character of the realm that walked it.
+  function roadRows(actions, months) {
+    let d = null;
+    try { d = actions.getDivergence ? actions.getDivergence() : null; } catch (e) { warnOnce('getDivergence', e); }
+    if (!d) return '<div class="chron-empty">The chronicler has nothing to compare yet.</div>';
+    const yr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
+    const when = (en) => esc(String(months[((en.m | 0) - 1 + 12) % 12] || '')) + ' ' + esc(yr(en.y));
+    let html = '';
+
+    if (d.epithet) {
+      html += `<div class="road-head"><b>The realm that walked it:</b> ${esc(d.epithet)}</div>`;
+    }
+    if (d.axes && d.axes.length) {
+      html += '<div class="road-axes">' + d.axes.map((a) => {
+        const cls = a.band === 'mid' ? '' : (a.score > 0 ? 'pos' : 'neg');
+        return `<span class="road-axis ${cls}" data-tt="${esc(a.blurb)}">`
+          + `${esc(a.name)} — <b>${esc(a.label)}</b></span>`;
+      }).join('') + '</div>';
+    }
+
+    if (d.strands.length) {
+      html += '<div class="chron-year">The worlds history never wrote</div>';
+      html += d.strands.map((st) => `<div class="road-strand">`
+        + `<div class="road-strand-name">${icon('lamp', 'icon-row')} ${esc(st.name)} `
+        + `<span class="road-era">${esc(st.era)}</span></div>`
+        + `<div class="road-strand-blurb">${esc(st.blurb)}</div></div>`).join('');
+    }
+
+    if (d.entries.length) {
+      html += '<div class="chron-year">Where this age chose otherwise</div>';
+      html += d.entries.map((en) => `<div class="road-turn">`
+        + `<div class="road-when">${when(en)} · ${esc(en.title)}</div>`
+        + `<div class="road-pair">`
+        + `<span class="road-was"><i>The record:</i> ${esc(en.historical || en.histLabel || '—')}</span>`
+        + `<span class="road-is"><i>This age:</i> ${esc(en.chose || '—')}</span>`
+        + `</div></div>`).join('');
+    }
+
+    if (d.retired.length) {
+      html += '<div class="chron-year">Chapters that never came</div>';
+      html += d.retired.map((r) => `<div class="road-retired">`
+        + `<span class="road-when">${when(r)}</span> `
+        + `<span class="road-retired-name">${esc(r.title)}</span> — ${esc(r.why)}`
+        + `</div>`).join('');
+    }
+
+    if (!d.strands.length && !d.entries.length && !d.retired.length) {
+      html += '<div class="chron-empty">So far this age has followed the record it was given. '
+        + 'Every choice the chronicles also made leaves this page blank.</div>';
+    }
+    return html;
+  }
+
+  function openChronicle() {
+    const actions = state.actions;
+    if (!actions || typeof actions.getChronicle !== 'function') return;
+    if (!chronEl) {
+      chronEl = document.createElement('div');
+      chronEl.id = 'chronicle-modal';
+      document.getElementById('ui-root').appendChild(chronEl);
+    }
+    const months = (state.ctx && state.ctx.DEFINES && state.ctx.DEFINES.MONTH_NAMES) || [];
+    const body = chronTab === 'road' ? roadRows(actions, months) : chronicleRows(actions, months);
     chronEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card ledger-card chron-card">
         <h2 class="peace-title">The Chronicle</h2>
-        <div class="chron-wrap">${rows}</div>
+        <div class="chron-tabs">
+          <button class="chron-tab${chronTab === 'record' ? ' on' : ''}" data-tab="record">The Record</button>
+          <button class="chron-tab${chronTab === 'road' ? ' on' : ''}" data-tab="road">The Road Not Taken</button>
+        </div>
+        <div class="chron-wrap">${body}</div>
         <button class="btn peace-cancel">Close</button>
       </div>`;
     chronEl.classList.remove('hidden');
     chronEl.querySelector('.peace-cancel').addEventListener('click', closeChronicle);
     chronEl.querySelector('.modal-scrim').addEventListener('click', closeChronicle);
+    chronEl.querySelectorAll('[data-tab]').forEach((b) => {
+      b.addEventListener('click', () => { chronTab = b.dataset.tab; openChronicle(); });
+    });
   }
 
   // ------------------------------------------------------------ selection --
