@@ -564,7 +564,7 @@ export const BOOKMARK_614 = {
     SAS: { rally: ['Damascus', 'Seleucia-Ctesiphon'], targetRegiments: 45 },
     JUD: { rally: ['Tiberias'], targetRegiments: 12 },
     GHA: { rally: ['Bostra'], targetRegiments: 6 },
-    RSH: { rally: ['Hegra', 'Dumatha'], targetRegiments: 32 },
+    RSH: { rally: ['Hegra', 'Dumatha'], targetRegiments: 42 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

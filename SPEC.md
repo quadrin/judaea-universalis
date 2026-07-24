@@ -3494,3 +3494,74 @@ grace, the three slots, the named seal, the year-long keeping of the holy
 places completing chapter 1, the permanent modifier, the harder successor
 asking something new, mid-chapter save/revive, the lapse-and-replace with
 its legitimacy cost and no game over, and the AI-offstage rule.
+
+## 84. The client's war and the client's prize — and a conquest that actually rises
+
+Four sibling reports from the 614 chair. "A lot of the Rise of Islam events
+show up even when they aren't declaring war" — the conquest strand's dated
+world cards fired on the calendar into any world, narrating campaigns a
+yoked or extinguished Caliphate was not fighting. "They got turned into a
+vassal by the Sasanians lol" — the desert tag's tiny development priced the
+subjugation clause around 30 war score, an intact empire took it, and the
+entire era switched itself off. "If my vassal conquers land, the peace deal
+should be able to cede it to my vassal" — every cession went to the
+pen-holder. And "when a country declares war on my vassal, it should have me
+negotiate the peace, not withdraw" — the attacked client was listed first on
+its side, so §74's leader rule handed the OVERLORD the junior's withdrawal
+table for a war fought over its own client's land.
+
+- **The overlord holds the pen** (`sideLeaderOf`, military.js): a war side's
+  leader is its first living member promoted through any overlord standing
+  on the same side (bounded for client chains). `peaceDealInfo` uses it for
+  BOTH sides — the lord of an attacked client gets the full congress and the
+  client gets the junior's table, and attacking someone's client means
+  negotiating with (subjugating, humiliating, indemnifying) the protecting
+  crown. Every AI path (`sendUltimatum`, sue-for-peace, auto-settle,
+  AI separate peaces) leads with the same promotion.
+- **Directed spoils** (`peaceDealInfo.cessionRecipients`,
+  `deal.provinceTo`): the leader's table lists its own direct clients
+  marching in this war; each demanded province may name one as recipient —
+  same war-score price, owner/controller/grudge/claim-satisfaction land on
+  the actual taker, +10 opinion from the gifted client, and the pen-holder
+  keeps the treaty's whole infamy (no laundering conquest through a client).
+  Recipients are re-validated live in `evaluatePeaceDeal`; AI counteroffers
+  preserve them for whatever provinces survive the pare-back. The dialog
+  grows a per-row "to us / to <client>" picker; naming a recipient implies
+  demanding the province.
+- **The conquest strand is gated on the living world** (`when` on the dated
+  614 cards, §75's own mechanism): the awakening cards need a tag that can
+  still rise (`caliphateCanRise` — dormant yes, yoked no); the campaign
+  cards also need a target the declaration can actually land on (live owner
+  of the rivers/the Levant, no client bond, no wet-ink truce); the pressure,
+  fleet, fitna and Dome cards need a FREE caliphate (`freeCaliphate`) plus
+  their own stage (the City still Roman for the sea war, the Second Fitna
+  flag for al-Hajjaj's stones, someone actually holding Jerusalem for the
+  Dome). In a diverged world they retire silently instead of popping.
+- **The conquest that actually threatens**: the awakening now grants 30,000
+  manpower, "The Armies of the Ridda" for the first decade (+15% morale,
+  +8% discipline, +15% reinforcement), and the diwan's misr system
+  (`manpowerMult` 2 for the conquest generation) — the peninsula's tribes
+  migrate into the muster rolls that five oasis towns could never feed.
+  Campaign spawns grow to their historical weight (Khalid's mobile guard
+  answers the Yarmouk concentration), the AI's target force rises to 42
+  regiments, and while the conquests run a mauled field force at war is
+  refilled by "The Tribes Answer the Call" (repeatable, drawn from the
+  real manpower pool, silent for every court but Medina's own player).
+- **No Dominion but God's** (`noSubjugation` modifier flag, read by
+  `peaceDealInfo` via `tagModifierFlag`): for the conquest generation the
+  Caliphate cannot be broken to a client kingdom at any peace table — the
+  clause is refused outright, for AI and human victors alike (destroy it or
+  take its land instead; after ~651 the clause returns). For campaigns
+  already carrying the yoke, "No Yoke but God's" (`ev_p_yoke_broken`)
+  severs an AI-imposed bond in a quiet month — mutual −150 opinion, a
+  remustered army, the truce held but the tribute dead. A HUMAN overlord's
+  prize is never script-broken: the player's wars are their own to win and
+  keep.
+
+**Regression contract**: `smoke59.mjs` — the promoted defender/enemy
+leaders, the client's junior table, directed spoils end-to-end (validation,
+ownership, grudge-on-taker, infamy-on-penholder, opinion, truce), the
+refused subjugation clause and its post-fervor return, the yoke-breaking
+rising (AI yes, human no), the tribal levies' gate and draw, the yoked
+world's cards retiring silently with no phantom war, and the live rails
+still firing the real war with its generational settlement horizon.
