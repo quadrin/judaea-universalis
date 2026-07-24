@@ -3565,3 +3565,253 @@ refused subjugation clause and its post-fervor return, the yoke-breaking
 rising (AI yes, human no), the tribal levies' gate and draw, the yoked
 world's cards retiring silently with no phantom war, and the live rails
 still firing the real war with its generational settlement horizon.
+
+## 85. The realm has a character — the doctrine axes
+
+The game already remembered what the player chose. A hundred and
+sixty-five narrative flags were being set by event options across seven
+eras, and a hundred and two of them were never read by anything — not by
+a trigger, not by the sim, not by the UI. Worse, the content had already
+been written in opposed pairs (`gerizimRazed`/`gerizimSpared`,
+`lawIsAWall`/`lawIsAGate`, `alignedRome`/`alignedParthia`,
+`altarRaised`/`altarDeferred`), so the moral architecture of every
+alternate timeline was sitting in the data with no consumer.
+
+`js/sim/doctrine.js` is the consumer. Four tensions of the age, each
+running −10..+10:
+
+| axis | the question | poles |
+|---|---|---|
+| `zeal` | The Wall and the Gate | Zealous ←→ Accommodating |
+| `alignment` | The Two Horizons | Westward ←→ Eastward |
+| `authority` | The Crown and the Council | Crowned ←→ Conciliar |
+| `conquest` | The Sword and the Purse | Martial ←→ Mercantile |
+
+- **Two sources, summed**: `FLAG_AXES` maps the flags the existing content
+  already sets (the retrofit), and `helpers.doctrine(ctx, axis, delta)`
+  persists explicit pushes on `game.doctrine` for new content that has no
+  flag in the table. Flag-derived scores are computed fresh on every read,
+  so no save is migrated and an absent `game.doctrine` is simply an
+  undecided realm.
+- **Only choice-discriminating flags are mapped.** Ninety of the game's
+  flags are set by *every* option of their event — they record that a
+  thing happened, not what was chosen — and a doctrine built on those
+  would measure the calendar rather than the player. Those belong to the
+  §89 ledger instead.
+- **Bands**: ±2 is a commitment, ±6 a conviction, and the middle band is
+  genuinely middling (a realm that has not committed reads as *Undecided*,
+  not as balanced-by-design). `lean(ctx, id, sign, strong)` is the gate
+  the rest of the sim uses; `axisOf` the raw read.
+- **The realm panel** grows *The Character of the Realm*: four needles
+  between named poles, each tooltip listing the decisions that put it
+  there. The player's own court only — a foreign realm's convictions are
+  its business, like its estates (§34).
+
+Consumed by §86 (an affinity may be gated on the realm's horizon), §87
+(a zealous realm faces more risings for the altar, a crowned one more
+pretenders), §88 (the second act's objectives), §89 (the page's header)
+and §90 (which world the victory strand opens into).
+
+**Regression contract**: `smoke60.mjs` — opposed choices cancel exactly, a
+false flag is unset rather than its opposite, non-discriminating flags stay
+out, multi-axis flags land on every axis they name, scores clamp, an
+unknown axis is refused rather than invented, and a save round-trip keeps
+both halves.
+
+## 86. Historical friends — a wound left alone closes
+
+§67 made a grudge permanent for as long as the taker held the land. That
+is true of a wound and false of a memory. Persia armed the Return, took
+Jerusalem with Jewish troops, handed the city over — and took it back
+three years later and gave it to the Christians. Win it back by the sword
+and Ctesiphon should hate you for it, and then, if you do not go on
+choosing Ctesiphon for an enemy, come back to you: the two courts need
+each other against Constantinople far more than they need the grievance.
+
+- **Maturity** (`thawProgress`, military.js): every month the two courts
+  are neither at war nor rivals, the grudge entry's `thaw` counter
+  advances. The ceiling rises with it — `thawReachPlain` (half the way)
+  for strangers, `thawReachAffinity` (nearly all of it) for pairs a
+  bookmark names historical friends. A realm high on the `conquest` axis
+  matures at `thawMartialPenalty` speed: the same quiet buys a realm that
+  lives by the sword less.
+- **Reconciled** (`reconciled`): affinity plus `thawAllyAt` maturity takes
+  the ceiling off entirely and drops the pair back into ordinary opinion
+  drift. The land is still ours and the book still records it — a fresh
+  seizure reopens the whole wound — but the grievance has stopped being
+  the thing that governs the relationship, and an alliance is on the table
+  again *without giving the land back*. This is the one exception to §67's
+  flat refusal.
+- **What stops it**: a fresh seizure (`recordGrudge` winds `thaw` to zero),
+  a war between them, or a rivalry named by either court (which simply
+  holds the clock still, so unsaying it resumes from where it stopped).
+- **`bookmark.affinities`**, per era, some gated on doctrine:
+  `['JUD', 'SAS', { axis: 'alignment', sign: -1 }]` — the Return keeps
+  Persia's friendship by facing east and loses it by swinging west. Rome's
+  client stays Rome's client (40 BCE), Aretas is the brothers' friend
+  either way (67 BCE), Amman's secret wire survives 1948.
+- **Declared rivalries** make "we choose not to rival them" an actual
+  choice. `game.rivals[tag]` holds up to `rivalMax` named enemies; naming
+  one costs `rivalDeclareInfl` and pays `rivalMarPerMonth` martial points
+  and `rivalClaimMult` on claims against them, against their regard
+  collapsing to the cold baseline, no alliance, and no thaw. Unsaying it
+  costs more than saying it and leaves a cooldown. `areRivals` reads the
+  declared book on top of the era's own `rivalries` (§73), so a named
+  rivalry is a rivalry everywhere the bookmark's own pairs are; the age's
+  standing pairs are not the player's to declare or to unsay.
+- **The player sees the clock**: the diplomacy status line reads "They
+  remember 2 lost provinces · mending 44%", and the tooltip says plainly
+  whether the wound is closing and what would hold it open.
+
+**Regression contract**: `smoke61.mjs` — the wound opens exactly as §67
+left it, quiet years close a friend's and an alliance follows, strangers
+stop halfway and still refuse, a named rivalry freezes the clock without
+resetting it, a fresh seizure reopens everything, war holds it open, a
+martial realm heals slower, a doctrine-gated affinity lapses with the
+doctrine, and an older save with no rival book and no thaw stamp behaves
+exactly as §67 left it until the quiet months accrue.
+
+## 87. A province rises for a reason — five kinds of rising
+
+Unrest had exactly one outlet: a threshold crossed and men appearing with
+no name for their grievance. But the reasons were already in the game's
+state. `js/sim/revolt.js` reads them and raises a band with a cause
+attached. Five kinds, tried in order of specificity:
+
+1. **separatist** — the §67 grudge book already records which court lost
+   this exact province, so a separatist rising is that memory finding a
+   body (`dispossessedOf`). It marches under the old flag where that flag
+   is hostile and in reach, and raises the colors itself where it is not.
+   Larger and steadier than an ordinary band.
+2. **national** — the old rule, kept exactly, and promoted above the
+   grievances below it: a province does not raise its own banner when its
+   co-religionists' army is over the next hill.
+3. **pretender** — a crown below `pretenderLegitimacy`, or one held by a
+   regent, breeds a named claimant (republics settle this with ballots).
+   `game.pretenders[tag]` tracks the live claim; `monthlyPretenders`
+   bleeds `pretenderDrain` legitimacy a month while it stands, restores
+   `pretenderBeatenLegitimacy` when the host is destroyed, and crowns the
+   claimant in the player's place if it holds the capital for
+   `pretenderHoldMonths` — old ruler deposed, heir cleared, legitimacy
+   reset to `pretenderCrownedLegitimacy`, −1 stability, the bands sent
+   home and the capital answering the new crown.
+4. **religious** — a heterodox province with nobody marching to its aid
+   rises for its altar.
+5. **peasant** — the floor. The biggest hosts and the most brittle
+   (morale ×0.7).
+
+The doctrine axes bend the odds without deciding them: a zealous realm
+faces more risings for the altar, a crowned realm more pretenders. Risings
+in the player's own realm send a demands card once per kind (`dyn_rising_*`,
+the §33 ultimatum machinery) — buy the province back from itself, marry the
+claim into the house, seal a writ of toleration — and the answers push the
+axes in turn. The eight-band throttle, the thirty-month cooldown and §40's
+border-defection rule are untouched, and the province keeps a `revoltType`
+stamp the panel reads.
+
+**Regression contract**: `smoke62.mjs` — all five kinds and their order, a
+fallen house raising no separatists, the usurpation end-to-end, the broken
+host, the throttle, the doctrine tilt, and the save. `smoke25.mjs` (the
+border rule) passes unchanged.
+
+## 88. The second act knows which realm won it
+
+§83's generated chapters asked every winner the same four questions, which
+made the second act a checklist. §85 knows what kind of realm took the
+bookmark, so `chapters.js` offers seven doctrine objectives — each once,
+before the generic ladder resumes:
+
+- **The Purified Land** / **The Peace of the Communities** (`zeal`) — bring
+  the land under one altar, or keep every province of another faith below
+  3 unrest. Emptying the realm of them is explicitly not how the second is
+  passed.
+- **The Undoubted Crown** / **The Chamber Sits** (`authority`) — legitimacy
+  90+, an heir seated and no claimant in the field (§87); or unbroken
+  months at peace with every court at +1 stability.
+- **The Sword's Own Measure** / **The Ledgers of the Age** (`conquest`) —
+  ground that was not ours when the chapter opened (snapshotted in
+  `params.baseline`), or an income target held through a year with no war
+  anywhere.
+- **The Mended Quarrel** — bring a court whose land we hold all the way to
+  reconciliation (§86). The hardest diplomatic objective in the game and
+  the only one that cannot be bought: waiting is the mechanism, not naming
+  them an enemy is the price, and the panel shows the wound's maturity as
+  its progress.
+- **The Covenant of the King of Kings** / **The Friendship of the West**
+  (`alignment`) — a warm alliance with a court on the chosen side, read off
+  the era's own geography (capital centroids) rather than a tag list.
+
+The reward pool doubles to ten so a long sandbox stops repeating at chapter
+six, and the epigraph names the realm the chapter is being asked of. An
+undecided realm still gets exactly the ladder §83 gave it.
+
+**Regression contract**: `smoke63.mjs` — the undecided ladder first, then
+each gate, each evaluator's real failure mode, and ten chapters with ten
+different seals.
+
+## 89. The Road Not Taken — the campaign beside its record
+
+The game generated an alternate history every time it was played and never
+showed it to anyone. `js/sim/divergence.js` keeps the ledger, and it needs
+no new authoring to do it: every scripted event already carries the
+historical course, because `aiOption` is what the AI does when it holds
+this decision and the §70 decider notices are built on exactly that promise
+("the historical course simply happens").
+
+- **A turning** is a spine event resolved with any option other than its
+  `aiOption`. Both halves are already on the card, and the entry keeps
+  what the chronicles say, what this age did instead, and when. Only
+  `major` events and ones an author explicitly annotates get in — texture
+  stays out — and a §70 notice is never counted as a choice this realm
+  made, because acknowledging is not choosing.
+- **`historical:`** is optional prose an author may attach saying what the
+  record actually looked like; twelve pivotal turnings across six eras
+  carry one. Without it the ledger prints the option labels.
+- **A chapter that never came**: a dated event retired by §75's `when`
+  gate or by a settled war is logged with its reason — a page of the
+  script that never got written.
+- **The strands**: two dozen flags the content already gates on are named,
+  so the page can say which world the campaign is actually in rather than
+  only the turnings that got it there.
+- **The Chronicle (C)** grows a second page — *The Record* and *The Road
+  Not Taken* — the latter headed by the §85 axes and the realm's epithet.
+
+**Regression contract**: `smoke64.mjs` — both halves recorded, agreement
+recording nothing, an authored line outranking the label, texture excluded,
+a notice excluded, one entry per event, the retired chapter, the live
+strands, ordering, and an older save starting an empty ledger rather than
+inventing a history it did not have.
+
+## 90. What kind of kingdom, what kind of return
+
+The alt-history strands established that Judaea survived. They never asked
+what Judaea *became*, so every winning campaign in an era arrived at the
+same state with the same modifiers. §85 knows the difference, so the strand
+now asks — three mutually exclusive identity cards per era, each with a
+permanent modifier, a strand flag registered on the §89 page, its own
+`historical:` line, and a push on the axes that chose it.
+
+- **66 CE**: *The Kingdom of the Altar* (zealous and crowned — a sacral
+  monarchy, harder army, angrier minorities, Rome filing it under
+  unfinished business); *The Commonwealth of the Chamber* (conciliar —
+  quieter country, softer army, no single death that changes anything);
+  *Worth More Standing* (mercantile or accommodating — expensive to invade
+  and profitable to leave alone, and Rome warms to it).
+- **614 CE**: *The Western Wall of the East* (facing east — Ctesiphon's
+  Levantine flank, with the manpower and the Byzantine hatred that come
+  with it); *A Kingdom Apart* (zealous — neither empire's road runs
+  through it, and the standing army is a real line in the budget); *The
+  Kingdom Everyone Prefers Intact* (mercantile — safe roads, honest coin,
+  three empires that have all done the arithmetic).
+
+**Exclusivity is settled at trigger time, not effect time.** All three are
+evaluated in the same monthly pass and the flag their effects set does not
+exist until one is answered, so the guard reads `firedEvents`, which
+`fireEvent` stamps the moment a card fires. First sibling to match closes
+the door on the others in the same loop.
+
+**Regression contract**: `smoke65.mjs` — the cards exist with their record
+attached, an undecided winner is offered none, character alone is not
+enough (the state must stand), each identity's modifier does what it says,
+exactly one card is offered to a realm that qualifies for several, and no
+strand on the §89 page is keyed on a flag nothing writes.
