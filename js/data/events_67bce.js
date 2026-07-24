@@ -70,6 +70,15 @@ function unifiedUnder(ctx, tag) {
   return !r || r.alive === false || r.overlord === tag;
 }
 
+// Sovereign AND seated (SPEC §91). freeOfRome answers the collar question;
+// this answers the one the strand actually cares about — that the crown
+// drawing these cards still holds the city they are all about. A Hasmonean
+// who has been driven out of Jerusalem is not the world that refused Pompey,
+// whatever the diplomatic paperwork says.
+function seatedHasmonean(ctx, tag) {
+  return freeOfRome(ctx, tag) && ctx.helpers.controls(ctx, tag, 'Jerusalem');
+}
+
 // Alive, no Roman collar, and no Roman war still burning.
 function freeOfRome(ctx, tag) {
   const t = ctx.game.tags && ctx.game.tags[tag];
@@ -2283,7 +2292,7 @@ export const EVENTS_67 = [
     trigger: safeTrigger('ev4_v_parthian_embassy', (ctx) => {
       const me = playerHasmonean(ctx);
       return !!me && !!ctx.helpers.getFlag(ctx, 'eagleRefused')
-        && dateGE(ctx, -61, 1) && alive(ctx, 'PAR') && freeOfRome(ctx, me);
+        && dateGE(ctx, -61, 1) && alive(ctx, 'PAR') && seatedHasmonean(ctx, me);
     }),
     aiOption: 1,
     options: [
@@ -2510,7 +2519,7 @@ export const EVENTS_67 = [
     trigger: safeTrigger('ev4_v_pharsalus_wager', (ctx) => {
       const me = playerHasmonean(ctx);
       const h = ctx.helpers;
-      return !!me && dateGE(ctx, -47, 3) && alive(ctx, 'ROM') && freeOfRome(ctx, me)
+      return !!me && dateGE(ctx, -47, 3) && alive(ctx, 'ROM') && seatedHasmonean(ctx, me)
         && (!!h.getFlag(ctx, 'jvBackedCaesar') || !!h.getFlag(ctx, 'jvBackedPompey'));
     }),
     aiOption: 0,
@@ -2571,7 +2580,7 @@ export const EVENTS_67 = [
     trigger: safeTrigger('ev4_v_caravan_tribute', (ctx) => {
       const me = playerHasmonean(ctx);
       const h = ctx.helpers;
-      return !!me && alive(ctx, me) && !ctx.game.tags[me].overlord
+      return !!me && seatedHasmonean(ctx, me)
         && (h.controls(ctx, me, 'Damascus') || h.controls(ctx, me, 'Petra'))
         && h.controls(ctx, me, 'Gaza');
     }),
@@ -2684,7 +2693,7 @@ export const EVENTS_67 = [
       const me = playerHasmonean(ctx);
       const h = ctx.helpers;
       return !!me && !!h.getFlag(ctx, 'actiumFought') && alive(ctx, 'ROM')
-        && freeOfRome(ctx, me)
+        && seatedHasmonean(ctx, me)
         && (!!h.getFlag(ctx, 'jvBackedOctavian') || !!h.getFlag(ctx, 'jvBackedAntony'));
     }),
     aiOption: 0,

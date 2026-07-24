@@ -108,7 +108,11 @@ function romanAftermath(ctx) {
 
 // The other world: the Nasi's state stands in Jerusalem and the war is over.
 function judaeaStands(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.JUD;
   return alive(ctx, 'JUD')
+    // Sovereign, not merely standing (SPEC §91): a Nasi who pays Rome tribute
+    // has not founded the state these cards describe.
+    && !(t && t.overlord)
     && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
     && !findJudRomWar(ctx.game);
 }

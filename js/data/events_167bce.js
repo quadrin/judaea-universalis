@@ -187,6 +187,17 @@ const EASTERN_PROVINCES = ['Ecbatana', 'Susa', 'Seleucia-Ctesiphon', 'Babylon', 
 const BABYLONIAN_PROVINCES = ['Babylon', 'Seleucia-Ctesiphon', 'Nehardea', 'Charax'];
 // The greater-victory strand's geography: the lands beyond every border the
 // chronicles record. History never put a Hasmonean garrison in any of these.
+// The greater victory's own gate (SPEC §91). The strand below is for the
+// world that OUTRAN 1 Maccabees, and its triggers used to ask only whether
+// Judaea was still alive — so a Hasmonean state that had lost Jerusalem, or
+// bent the knee to Antioch, still drew cards announcing that it had conquered
+// Syria. Sovereign, seated in its own capital, and at nobody's stirrup.
+function greaterVictory(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.HAS;
+  return alive(ctx, 'HAS') && !(t && t.overlord)
+    && ctx.helpers.controls(ctx, 'HAS', 'Jerusalem');
+}
+
 const COELE_SYRIA = ['Damascus', 'Tyre', 'Sidon', 'Berytus', 'Chalcis'];
 const GREEK_CITIES = ['Gaza', 'Ascalon', 'Azotus', 'Jamnia', 'Ptolemais', 'Dora',
   'Scythopolis', 'Gadara', 'Pella', 'Gerasa', 'Philadelphia'];
@@ -3310,7 +3321,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_hammer_beyond_hills', (ctx) =>
-      alive(ctx, 'HAS') && controlsAny(ctx, 'HAS', COELE_SYRIA)),
+      greaterVictory(ctx) && controlsAny(ctx, 'HAS', COELE_SYRIA)),
     aiOption: 0,
     options: [
       {
@@ -3362,7 +3373,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_damascus_of_david', (ctx) =>
-      alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Damascus')),
+      greaterVictory(ctx) && ctx.helpers.controls(ctx, 'HAS', 'Damascus')),
     aiOption: 0,
     options: [
       {
@@ -3416,7 +3427,7 @@ export const EVENTS_167 = [
       + 'of the sea, or become a power on it.',
     forTag: 'HAS',
     trigger: safeTrigger('ev_gates_of_the_sea', (ctx) =>
-      alive(ctx, 'HAS') && ctx.helpers.controls(ctx, 'HAS', 'Tyre')
+      greaterVictory(ctx) && ctx.helpers.controls(ctx, 'HAS', 'Tyre')
       && ctx.helpers.controls(ctx, 'HAS', 'Sidon')),
     aiOption: 0,
     options: [
@@ -3464,7 +3475,7 @@ export const EVENTS_167 = [
       + 'Dagon’s old towns, and make the sea road a road of Israel.',
     forTag: 'HAS',
     trigger: safeTrigger('ev_border_of_philistines', (ctx) =>
-      alive(ctx, 'HAS')
+      greaterVictory(ctx)
       && countControlledOf(ctx, 'HAS', PHILISTINE_COAST) >= PHILISTINE_COAST.length),
     aiOption: 0,
     options: [
@@ -3512,7 +3523,7 @@ export const EVENTS_167 = [
       + 'commanders wait to know what a Greek city is for.',
     forTag: 'HAS',
     trigger: safeTrigger('ev_cities_of_the_nations', (ctx) =>
-      alive(ctx, 'HAS') && countControlledOf(ctx, 'HAS', GREEK_CITIES) >= 4),
+      greaterVictory(ctx) && countControlledOf(ctx, 'HAS', GREEK_CITIES) >= 4),
     aiOption: 0,
     options: [
       {
@@ -3567,7 +3578,8 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_yoke_reversed', (ctx) =>
-      alive(ctx, 'HAS') && alive(ctx, 'SEL') && hasWarscore(ctx) >= 75),
+      greaterVictory(ctx) && alive(ctx, 'SEL') && hasWarscore(ctx) >= 75
+      && controlsAny(ctx, 'HAS', COELE_SYRIA)),
     aiOption: 0,
     options: [
       {
@@ -3620,7 +3632,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_diadem_in_dust', (ctx) =>
-      alive(ctx, 'HAS')
+      greaterVictory(ctx)
       && (!alive(ctx, 'SEL') || ctx.helpers.controls(ctx, 'HAS', 'Antioch'))),
     aiOption: 0,
     options: [
@@ -3677,7 +3689,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     chance: 0.35,
     trigger: safeTrigger('ev_hasidean_admonition', (ctx) =>
-      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'diademInDust')),
+      greaterVictory(ctx) && !!ctx.helpers.getFlag(ctx, 'diademInDust')),
     aiOption: 0,
     options: [
       {
@@ -3733,7 +3745,7 @@ export const EVENTS_167 = [
     chance: 0.5,
     trigger: safeTrigger('ev_embassies_of_powers', (ctx) => {
       const h = ctx.helpers;
-      if (!alive(ctx, 'HAS')) return false;
+      if (!greaterVictory(ctx)) return false;
       if (!alive(ctx, 'ROM') && !alive(ctx, 'PAR')) return false;
       return !!h.getFlag(ctx, 'diademInDust') || !!h.getFlag(ctx, 'yokeReversed')
         || (!!h.getFlag(ctx, 'hammerBeyondHills') && h.countControlled(ctx, 'HAS', {}) >= 12);
@@ -3804,7 +3816,7 @@ export const EVENTS_167 = [
     major: true,
     trigger: safeTrigger('ev_law_of_the_nations', (ctx) => {
       const h = ctx.helpers;
-      if (!alive(ctx, 'HAS') || !h.controls(ctx, 'HAS', 'Jerusalem')) return false;
+      if (!greaterVictory(ctx)) return false;
       const all = h.countControlled(ctx, 'HAS', {});
       if (all < 15) return false;
       // More of the nations than of the covenant: the ahistorical condition.

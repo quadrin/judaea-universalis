@@ -77,6 +77,9 @@ function hasmoneanWorld(ctx) {
   if (!alive(ctx, 'ATG')) return false;
   if (crownWar(g)) return false; // the War for the Crown still runs
   if (!ctx.helpers.controls(ctx, 'ATG', 'Jerusalem')) return false;
+  // Sovereign, not merely crowned (SPEC §91): a Hasmonean who wears the
+  // diadem as somebody's client is the arrangement Rome would have preferred.
+  if (g.tags.ATG && g.tags.ATG.overlord) return false;
   const her = g.tags.HER;
   const herBroken = !her || her.alive === false || her.overlord === 'ATG'
     || countOwned(ctx, 'HER') === 0;
@@ -86,8 +89,10 @@ function hasmoneanWorld(ctx) {
 // Later chapters of the strand ride on the coronation flag but re-check the
 // ground each month: the moment Jerusalem is lost, the pen stops writing.
 function hasmoneanHolds(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.ATG;
   return !!ctx.helpers.getFlag(ctx, 'hasmoneanHolds')
-    && alive(ctx, 'ATG') && ctx.helpers.controls(ctx, 'ATG', 'Jerusalem');
+    && alive(ctx, 'ATG') && !(t && t.overlord)      // SPEC §91
+    && ctx.helpers.controls(ctx, 'ATG', 'Jerusalem');
 }
 
 // The mirror: Herod wins BIGGER than history — the crown war settled, the
@@ -97,6 +102,7 @@ function greaterHerod(ctx) {
   const g = ctx.game;
   if (!alive(ctx, 'HER')) return false;
   if (crownWar(g)) return false;
+  if (g.tags.HER && g.tags.HER.overlord) return false; // SPEC §91
   if (!ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) return false;
   const atg = g.tags.ATG;
   const atgGone = !atg || atg.alive === false || atg.overlord === 'HER';
