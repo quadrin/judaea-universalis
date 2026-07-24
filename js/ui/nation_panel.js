@@ -74,6 +74,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
+      <div class="pp-build hidden" data-ref="doctrineBlock">
+        <div class="pp-build-title">The Character of the Realm</div>
+        <div class="np-doctrine" data-ref="doctrine"></div>
+      </div>
       <div class="pp-build" data-ref="missionsBlock">
         <div class="pp-build-title">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
@@ -359,9 +363,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.missionsBlock.classList.toggle('hidden', !self);
     refs.decisionsBlock.classList.toggle('hidden', !self);
     if (!self) refs.chapterBlock.classList.add('hidden');
+    if (!self) refs.doctrineBlock.classList.add('hidden');
     if (self) {
       refreshActions(t, g);
       refreshChapter();
+      refreshDoctrine();
       refreshMissions();
       refreshDecisions();
     }
@@ -507,6 +513,38 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       return `<div class="np-mission np-m-${m.status}" data-tt="${esc(tt)}">`
         + `<span class="np-m-mark">${mark}</span><span class="np-m-name">${esc(m.name)}</span></div>`;
     }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
+  }
+
+  // The doctrine axes (SPEC §85): four tensions of the age, each a slider
+  // whose needle sits where the campaign's own decisions put it, with those
+  // decisions listed in the tooltip. The realm's own character — a foreign
+  // court's convictions are its business, like its estates.
+  function refreshDoctrine() {
+    let d = null;
+    if (actions && typeof actions.getDoctrine === 'function') {
+      try { d = actions.getDoctrine(); } catch (e) { warnOnce('np-getDoctrine', e); }
+    }
+    const show = !!(d && Array.isArray(d.axes) && d.axes.length);
+    refs.doctrineBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    const max = d.max || 10;
+    setHtml(refs.doctrine, d.axes.map((a) => {
+      // The needle: 0 sits dead center, ±max at the ends.
+      const pct = Math.round(50 + (a.score / max) * 50);
+      const cls = a.band === 'mid' ? 'mid' : (a.score > 0 ? 'hi' : 'lo');
+      const marks = a.marks.length
+        ? a.marks.map((m) => '· ' + m.text).join('\n')
+        : 'Nothing has yet pushed the realm either way.';
+      const tt = a.question + '\n' + a.blurb + '\n――――――\n' + marks;
+      return `<div class="np-dox" data-tt="${esc(tt)}">`
+        + `<div class="np-dox-top"><span class="np-dox-name">${esc(a.name)}</span>`
+        + `<span class="np-dox-label np-dox-${cls}">${esc(a.label)}</span></div>`
+        + `<div class="np-dox-bar">`
+        + `<span class="np-dox-pole">${esc(a.lo)}</span>`
+        + `<span class="np-dox-track"><i class="np-dox-needle np-dox-n-${cls}" style="left:${pct}%"></i></span>`
+        + `<span class="np-dox-pole">${esc(a.hi)}</span>`
+        + `</div></div>`;
+    }).join(''));
   }
 
   // Estates and court factions (SPEC §34, §81): five approval bands, the

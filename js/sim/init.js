@@ -41,6 +41,7 @@ import { buildProvinceMapping } from '../data/map_profile.js';
 import { sendAiCounteroffer } from './ai.js';
 import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from './supply.js';
 import { chapterView } from './chapters.js';
+import { axisOf, pushDoctrine, doctrineView, doctrineEpithet } from './doctrine.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -509,6 +510,16 @@ export const simHelpers = {
   // ids are quiet no-ops — so content may call it unconditionally.
   factionShift(ctx, tag, factionId, delta) {
     return shiftFaction(ctx, tag, factionId, delta);
+  },
+  // The doctrine axes (SPEC §85). `axis` reads the realm's character on one
+  // of the four tensions (-10..+10) so a trigger can ask what KIND of realm
+  // this is, not merely how much of the map it holds; `doctrine` is the
+  // explicit push for content that has no flag in the retrofit table.
+  axis(ctx, id) {
+    return axisOf(ctx, id);
+  },
+  doctrine(ctx, id, delta) {
+    return pushDoctrine(ctx, id, delta);
   },
   notify(ctx, { title, text, type, provName } = {}) {
     ctx.bus.emit('notify', { title: title || '', text: text || '', type: type || 'info', provName });
@@ -2323,6 +2334,10 @@ export function gameActions(ctx) {
     // ---- sandbox chapters (SPEC §83): the second act after the verdict ------
     getChapter() {
       try { return chapterView(ctx); } catch (e) { warnOnce('getChapter', 'getChapter failed', e); return null; }
+    },
+    // ---- the doctrine axes (realm panel, SPEC §85) --------------------------
+    getDoctrine() {
+      try { return doctrineView(ctx); } catch (e) { warnOnce('getDoctrine', 'getDoctrine failed', e); return null; }
     },
 
     // ---- national decisions (nation panel) ----------------------------------

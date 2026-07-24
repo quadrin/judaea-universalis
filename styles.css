@@ -2091,6 +2091,63 @@ html, body {
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
 .np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
+/* the doctrine axes (SPEC §85): a needle between two named poles */
+.np-doctrine { display: flex; flex-direction: column; }
+.np-dox {
+  padding: 5px 2px 7px;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.25);
+}
+.np-dox:last-child { border-bottom: none; }
+.np-dox-top { display: flex; align-items: baseline; gap: 7px; }
+.np-dox-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-dox-label {
+  font-size: 12px;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.np-dox-label.np-dox-hi { color: #6f8a3d; }
+.np-dox-label.np-dox-lo { color: #7d6a9c; }
+.np-dox-bar { margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+.np-dox-pole {
+  flex: none;
+  font-size: 10px;
+  color: var(--ink-soft);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.np-dox-track {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(85, 69, 46, 0.18);
+  border: 1px solid rgba(85, 69, 46, 0.25);
+}
+/* the center post: the answer the realm has not given */
+.np-dox-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: rgba(85, 69, 46, 0.4);
+}
+.np-dox-needle {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(40, 32, 20, 0.55);
+  background: var(--ink-soft, #8a7a5c);
+  transition: left 0.35s ease;
+}
+.np-dox-needle.np-dox-n-hi { background: #6f8a3d; }
+.np-dox-needle.np-dox-n-lo { background: #7d6a9c; }
+
 .np-dip-sec {
   margin-top: 7px;
   font-variant: small-caps;
