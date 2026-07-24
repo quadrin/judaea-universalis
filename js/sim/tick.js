@@ -17,6 +17,7 @@ import { monthlyRecruitment } from './recruitment.js';
 import { monthlyPowers } from './powers.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
+import { monthlyPretenders } from './revolt.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -100,6 +101,7 @@ function monthlyBlock(ctx) {
   safe('garrisons', () => monthlyGarrisons(ctx));
   safe('navy', () => monthlyNavy(ctx));
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
+  safe('pretenders', () => monthlyPretenders(ctx)); // a claim in the field bleeds the throne (SPEC §87)
   safe('succession', () => monthlySuccession(ctx));
   safe('integration', () => monthlyIntegration(ctx));
   safe('incorporation', () => monthlyIncorporation(ctx)); // unions weave, or unravel (SPEC §61)

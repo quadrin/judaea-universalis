@@ -549,6 +549,19 @@ export const DEFINES = {
     thawMartialPenalty: 0.5,  // a wholly martial realm matures at half speed
   },
 
+  // What kind of rising this is (SPEC §87). A province rises for a reason,
+  // and the reasons are already in the game's state: who used to own the land,
+  // whose god it keeps, whether the throne is believed in, how tired it is.
+  REVOLT: {
+    pretenderLegitimacy: 40,  // below this (or under a regency) claims appear
+    pretenderChance: 0.35,    // ...and this often, when a weak throne's province rises
+    pretenderDrain: 0.5,      // legitimacy a month while a claimant is in the field
+    pretenderBeatenLegitimacy: 15, // ...and the answer when the host is broken
+    pretenderHoldMonths: 6,   // a claimant holding the capital this long is crowned
+    pretenderCrownedLegitimacy: 55, // the usurper starts here, not at the old crown's number
+    religiousChance: 0.5,     // a heterodox province rises for the altar this often
+  },
+
   // Supply lines (SPEC §82). An army traces monthly to controlled home
   // territory through a chain of friendly/occupied provinces, or across the
   // sea from an unblockaded friendly port while the side keeps a warship

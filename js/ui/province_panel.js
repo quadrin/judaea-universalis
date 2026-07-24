@@ -12,6 +12,35 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let actions = null;
   let provId = 0;
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
+// What the last rising here was about (SPEC §87). The sim stamps the province
+// with the kind; this is only how it reads.
+const RISING_LABELS = {
+  separatist: {
+    label: 'Separatist rising',
+    tt: 'This land was taken in war from a court that still stands, and it has risen once to '
+      + 'go back to them. Return the land, or integrate the province until it forgets.',
+  },
+  pretender: {
+    label: 'Pretender\'s host',
+    tt: 'The last rising here was not about this province: a rival claim to the throne raised '
+      + 'the countryside. Legitimacy is the cure.',
+  },
+  religious: {
+    label: 'Religious rising',
+    tt: 'The province keeps a faith the realm does not, and rose for its altar. Convert it, '
+      + 'tolerate it, or garrison it.',
+  },
+  national: {
+    label: 'National rising',
+    tt: 'Co-religionists across the border are at war with us, and this province has gone over '
+      + 'to them once already.',
+  },
+  peasant: {
+    label: 'Peasant revolt',
+    tt: 'No flag and no altar — war exhaustion, occupation and overextension. The largest '
+      + 'hosts and the most brittle.',
+  },
+};
   const refs = {};
 
   function setText(node, s) {
@@ -86,7 +115,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
       <div class="pp-block hidden" data-ref="revoltBlock">
-        <div class="pp-bar-label"><span>${icon('flag', 'icon-sm')} Revolt brewing</span><span data-ref="revoltPct"></span></div>
+        <div class="pp-bar-label"><span>${icon('flag', 'icon-sm')} <span data-ref="revoltLabel">Revolt brewing</span></span><span data-ref="revoltPct"></span></div>
         <div class="bar bar-revolt"><div class="bar-fill" data-ref="revoltFill"></div></div>
       </div>
       <div class="pp-block hidden" data-ref="fortBlock">
@@ -380,6 +409,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const pct = Math.min(100, (rp / fireAt) * 100);
       setText(refs.revoltPct, Math.round(pct) + '%');
       refs.revoltFill.style.width = pct + '%';
+      // A province rises for a reason (SPEC §87): once it has risen once, the
+      // stamp says which reason, so the next rising is not a surprise.
+      const kind = RISING_LABELS[p.revoltType];
+      setText(refs.revoltLabel, kind ? kind.label + ' brewing' : 'Revolt brewing');
+      refs.revoltBlock.dataset.tt = kind ? kind.tt
+        : 'Unrest above the threshold fills this bar; when it fills, the province rises.';
     }
 
     // Fort & garrison
