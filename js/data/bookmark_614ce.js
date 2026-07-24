@@ -180,6 +180,20 @@ export const BOOKMARK_614 = {
   // the ink dries. (BYZ–SAS is deliberately absent: their great war is fully
   // evented 614–628 and history's exhausted peace should hold afterward.)
   rivalries: [['RSH', 'BYZ'], ['RSH', 'SAS']],
+  // Historical friends (SPEC §86): Persia armed the Return, took Jerusalem
+  // with Jewish troops, handed the city over — and then took it back three
+  // years later and handed it to the Christians. That is a quarrel between
+  // friends, not between enemies. A Return that wins Jerusalem back by the
+  // sword will be hated for it, and then, if it does not go on choosing
+  // Ctesiphon for an enemy, forgiven for it: the two courts need each other
+  // against Constantinople far more than they need the grievance. The bond
+  // holds only while the realm keeps facing east — swing west and Persia is
+  // simply another empire that lost a city. Ghassan is Byzantium's own
+  // client by the same rule.
+  affinities: [
+    ['JUD', 'SAS', { axis: 'alignment', sign: -1 }],
+    ['BYZ', 'GHA'],
+  ],
 
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
   wonderTweaks: { Jerusalem: null },

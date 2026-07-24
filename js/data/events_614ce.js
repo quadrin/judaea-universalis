@@ -41,6 +41,33 @@ function warBetween(ctx, a, b) {
 // stands as a polity AND still holds Jerusalem. Historically false from 617
 // on — Persia trades the city away in ev_p_betrayal and Heraclius takes it
 // back — so none of the alternate-decades events ever fire on the real rails.
+// Set a court's regard for another outright (the strand cards below name the
+// number history would have produced). Local, so this package stays
+// zero-import like its siblings.
+function setOpinion(ctx, a, b, val) {
+  try {
+    const ta = ctx.game.tags && ctx.game.tags[a];
+    if (!ta) return;
+    if (!ta.opinion || typeof ta.opinion !== 'object') ta.opinion = {};
+    ta.opinion[b] = Math.max(-200, Math.min(200, val));
+  } catch (e) { warnOnce('setOpinion', e); }
+}
+
+// The identity cards below (SPEC §90) are mutually exclusive, and the choice
+// has to be settled at TRIGGER time: all three are evaluated in the same
+// monthly pass, and the flag their effects set does not exist until one is
+// answered. fireEvent stamps firedEvents the moment a card fires, so the
+// first sibling to match closes the door on the others in the same loop.
+const RETURNKINDTAKEN_IDS = [
+  'ev_p_v_east_march',
+  'ev_p_v_third_power',
+  'ev_p_v_indispensable',
+];
+function returnKindTaken(ctx) {
+  const fired = ctx.game.firedEvents || {};
+  return RETURNKINDTAKEN_IDS.some((id) => !!fired[id]);
+}
+
 function returnStands(ctx) {
   return alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
 }
@@ -2701,6 +2728,10 @@ export const EVENTS_614 = [
   {
     id: 'ev_p_v_charter',
     title: 'The Charter of the Return',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'There was no charter. Persia took Jerusalem back from the Jews within '
+      + 'three years and handed it to the Christians; the Return lasted long '
+      + 'enough to be remembered and not long enough to be written down.',
     desc: 'Persia weighed selling the Return and found it too expensive to sell; the '
       + 'eighth year finds Jewish courts still sitting in Jerusalem, and a war-camp '
       + 'must finally say what it is. The genealogists trace Nehemiah ben Hushiel\'s '
@@ -3145,6 +3176,210 @@ export const EVENTS_614 = [
             effects: { unrest: -0.5 },
           });
           h.chronicle(ctx, 'era', 'By the breach Shahrbaraz opened, masons cut the tally into the repaired stone: the kings who came against this city, and the dates on which the city outlived them.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ WHAT KIND OF RETURN (SPEC §90) ═══════════════════════════════════════
+  // The victory strand established that the Return stood. It never asked what
+  // it stood AS. These three cards read the doctrine axes (SPEC §85) and name
+  // the world the campaign will actually live in — Ctesiphon's western wall,
+  // a kingdom that refuses both empires, or the one polity in the Levant that
+  // everybody finds it cheaper to deal with than to conquer. Mutually
+  // exclusive: the first whose character fits fires, the rest read the
+  // `returnKind` flag and retire.
+  {
+    id: 'ev_p_v_east_march',
+    title: 'The Western Wall of the East',
+    worldLabel: 'The Return becomes the east\'s western march',
+    historical: 'Persia took Jerusalem back from the Jews within three years and gave it to '
+      + 'the Christians. The alliance that made the Return was abandoned by the empire that '
+      + 'made it, which is why there was nothing left to be anyone\'s march.',
+    desc: 'The old bargain is being written down at last, and both sides have an interest in '
+      + 'the ink. Whoever sits at Ctesiphon needs a Levantine flank that will not open to a '
+      + 'Roman fleet, and Jerusalem needs a hinterland that does not have to be fought for. '
+      + 'The terms are unglamorous and enormous: the passes are watched, the caravans are '
+      + 'protected, the eastern academies and the western ones acknowledge one another\'s '
+      + 'rulings, and in exchange this kingdom is never again alone against an emperor. The '
+      + 'priests of the Mount ask, reasonably, what happens when the east wants something '
+      + 'the Mount does not wish to give.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_east_march', (ctx) => {
+      const h = ctx.helpers;
+      const east = alive(ctx, 'SAS') || alive(ctx, 'RSH');
+      return dateGE(ctx, 650, 1) && returnStands(ctx) && !h.getFlag(ctx, 'returnKind') && !returnKindTaken(ctx)
+        && east && h.axis(ctx, 'alignment') <= -3;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Watch the passes; the east watches the sea',
+        tooltip: 'The march: +15 legitimacy, +1 stability, +150 talents in subsidy; the Exilarch\'s House +20 approval; "The Western March" (+10% manpower, +5% morale, permanent). Byzantium\'s opinion collapses to −150.',
+        effects: guard('ev_p_v_east_march:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'march');
+          h.setFlag(ctx, 'westernMarchOfTheEast', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1, treasury: 150 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 20);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'western_march', name: 'The Western March', months: -1,
+            effects: { manpowerMult: 1.1, moraleMult: 1.05 },
+          });
+          if (alive(ctx, 'BYZ')) setOpinion(ctx, 'BYZ', 'JUD', -150);
+          h.doctrine(ctx, 'alignment', -2);
+          h.chronicle(ctx, 'era', 'The Return is written down as the east\'s western wall: the passes watched from Jerusalem, the sea watched from Ctesiphon, and neither court alone against an emperor again.');
+        }),
+      },
+      {
+        label: 'A friendship, not a garrison — and no clause about the Mount',
+        tooltip: 'The same alignment, the sovereignty guarded: +10 legitimacy, +80 talents; the Priests of the Mount +15 approval; "The Eastern Friendship" (+5% manpower, +5% income, permanent). Byzantium\'s opinion to −100 only.',
+        effects: guard('ev_p_v_east_march:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'march');
+          h.setFlag(ctx, 'westernMarchOfTheEast', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 10, treasury: 80 });
+          h.factionShift(ctx, 'JUD', 'priests', 15);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'western_march', name: 'The Eastern Friendship', months: -1,
+            effects: { manpowerMult: 1.05, incomeMult: 1.05 },
+          });
+          if (alive(ctx, 'BYZ')) setOpinion(ctx, 'BYZ', 'JUD', -100);
+          h.doctrine(ctx, 'alignment', -1);
+          h.chronicle(ctx, 'era', 'The Return keeps the east for a friend and the Mount for itself: a treaty with no clause about the sanctuary, which is the only clause anyone in Jerusalem cared about.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_p_v_third_power',
+    title: 'A Kingdom Apart',
+    worldLabel: 'The Return refuses both empires',
+    historical: 'No third power emerged in the seventh-century Levant. The two empires '
+      + 'exhausted each other and a third thing came out of Arabia to take what was left — '
+      + 'but it was not this one.',
+    desc: 'The proposal on the table is the one nobody in three hundred years has been able '
+      + 'to make stick: that this kingdom belongs to neither side, campaigns for neither '
+      + 'side, and is therefore worth more to both than either could get by owning it. It '
+      + 'requires a standing army the treasury will feel, borders held against friends as '
+      + 'firmly as against enemies, and a court willing to be lectured by every ambassador '
+      + 'who arrives. It also requires the thing this realm has spent a generation proving '
+      + 'it has: that when it says it will hold a line, the line holds.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_third_power', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 650, 1) && returnStands(ctx) && !h.getFlag(ctx, 'returnKind') && !returnKindTaken(ctx)
+        && h.axis(ctx, 'zeal') >= 3
+        && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 4;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Neither empire\'s road runs through us',
+        tooltip: 'The third power: +20 legitimacy, +1 stability; the Fighters +20 and the Priests +15 approval; "A Kingdom Apart" (+10% morale, +0.15 legitimacy a month, −8% income — the army is not free, permanent). Every great power\'s opinion −30.',
+        effects: guard('ev_p_v_third_power:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'apart');
+          h.setFlag(ctx, 'kingdomApart', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1 });
+          h.factionShift(ctx, 'JUD', 'fighters', 20);
+          h.factionShift(ctx, 'JUD', 'priests', 15);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'kingdom_apart', name: 'A Kingdom Apart', months: -1,
+            effects: { moraleMult: 1.1, legitimacyAdd: 0.15, incomeMult: 0.92 },
+          });
+          for (const k of ['BYZ', 'SAS', 'RSH']) {
+            if (alive(ctx, k)) setOpinion(ctx, k, 'JUD', -30);
+          }
+          h.doctrine(ctx, 'zeal', 2);
+          h.chronicle(ctx, 'era', 'The Return declares itself a kingdom apart: neither empire\'s road runs through it, and the standing army that makes the sentence true is paid for out of everything else.');
+        }),
+      },
+      {
+        label: 'Apart, and let the caravans buy the spears',
+        tooltip: 'The same refusal, financed: +15 legitimacy; the Fighters +10 approval; "A Kingdom Apart" without the income penalty (+7% morale, +0.1 legitimacy a month, permanent), but the great powers\' opinion −45 — a neutral that grows rich is more irritating than one that grows poor.',
+        effects: guard('ev_p_v_third_power:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'apart');
+          h.setFlag(ctx, 'kingdomApart', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 15 });
+          h.factionShift(ctx, 'JUD', 'fighters', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'kingdom_apart', name: 'A Kingdom Apart', months: -1,
+            effects: { moraleMult: 1.07, legitimacyAdd: 0.1 },
+          });
+          for (const k of ['BYZ', 'SAS', 'RSH']) {
+            if (alive(ctx, k)) setOpinion(ctx, k, 'JUD', -45);
+          }
+          h.doctrine(ctx, 'zeal', 1);
+          h.doctrine(ctx, 'conquest', -1);
+          h.chronicle(ctx, 'era', 'The Return stands apart and sends the bill to the caravans: a neutrality paid for by the roads it refuses to let anyone else close.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_p_v_indispensable',
+    title: 'The Kingdom Everyone Prefers Intact',
+    worldLabel: 'The Return becomes indispensable to all sides',
+    historical: 'The Levant of the 630s was worth conquering and was duly conquered, twice '
+      + 'in a decade. Nobody found it cheaper to deal with than to take.',
+    desc: 'It is not a policy so much as an accumulation of small competences that nobody '
+      + 'else in the Levant currently offers. The roads are safe. The coinage is honest. The '
+      + 'courts give judgments that foreign merchants will actually accept, and the '
+      + 'physicians and translators of this kingdom are quietly employed in three capitals. '
+      + 'Any of the empires could take this place in a season. All of them have worked out, '
+      + 'independently, that the season after that they would have to run it — and that the '
+      + 'thing they want from it stops existing the moment they do.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_p_v_indispensable', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 652, 1) && returnStands(ctx) && !h.getFlag(ctx, 'returnKind') && !returnKindTaken(ctx)
+        && (h.axis(ctx, 'conquest') <= -2 || h.axis(ctx, 'zeal') <= -2);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sell the competence, and keep the sanctuary out of the contract',
+        tooltip: 'The indispensable kingdom: +20% income, +10% trade; the Exilarch\'s House +15 approval; "Everyone Prefers It Intact" (+18% income, −0.75 unrest, −8% morale, permanent). Every surviving great power\'s opinion +40.',
+        effects: guard('ev_p_v_indispensable:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'indispensable');
+          h.setFlag(ctx, 'everyonePrefersItIntact', true);
+          h.factionShift(ctx, 'JUD', 'exilarch', 15);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'prefers_intact', name: 'Everyone Prefers It Intact', months: -1,
+            effects: { incomeMult: 1.18, tradeMult: 1.1, unrestAll: -0.75, moraleMult: 0.92 },
+          });
+          for (const k of ['BYZ', 'SAS', 'RSH']) {
+            if (alive(ctx, k)) setOpinion(ctx, k, 'JUD', 40);
+          }
+          h.doctrine(ctx, 'conquest', -2);
+          h.chronicle(ctx, 'era', 'The Return makes itself indispensable: safe roads, honest coin, judgments foreigners accept — and three empires that have all done the arithmetic and all reached the same answer.');
+        }),
+      },
+      {
+        label: 'Useful, and never so useful that we forget to garrison',
+        tooltip: 'The same, hedged: "Everyone Prefers It Intact" without the morale cost (+10% income, −0.4 unrest, permanent); +10 legitimacy; the great powers\' opinion +20 rather than +40.',
+        effects: guard('ev_p_v_indispensable:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'returnKind', 'indispensable');
+          h.setFlag(ctx, 'everyonePrefersItIntact', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'prefers_intact', name: 'Everyone Prefers It Intact', months: -1,
+            effects: { incomeMult: 1.1, unrestAll: -0.4 },
+          });
+          for (const k of ['BYZ', 'SAS', 'RSH']) {
+            if (alive(ctx, k)) setOpinion(ctx, k, 'JUD', 20);
+          }
+          h.doctrine(ctx, 'conquest', -1);
+          h.chronicle(ctx, 'era', 'The Return is useful to everyone and garrisoned anyway: the one lesson of the seventh century that this court declines to unlearn.');
         }),
       },
     ],

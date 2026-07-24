@@ -105,6 +105,13 @@ export const BOOKMARK_132 = {
   // Standing rivalries (SPEC §73): Trajan's Parthian war is a decade old and
   // Hadrian's peace is a truce of exhaustion, not friendship.
   rivalries: [['ROM', 'PAR']],
+  // Historical friends (SPEC §86): the same eastern hearing the Nasi's state
+  // could still get — Parthian silver was offered, and Adiabene remembered
+  // its converted kings.
+  affinities: [
+    ['JUD', 'PAR', { axis: 'alignment', sign: -1 }],
+    ['JUD', 'ADI'],
+  ],
 
   // Political layer for 132 CE over map_data's 66 CE defaults. Nabataea has
   // been Provincia Arabia since 106; Agrippa's kingdom is long absorbed; the

@@ -2443,6 +2443,10 @@ export const EVENTS_67 = [
   {
     id: 'ev4_v_caesar_or_pompey',
     title: 'The Sovereign\'s Choice',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'Hyrcanus and Antipater went to Caesar with three thousand men and the '
+      + 'keys to the coast road, and were paid in charters that outlived every '
+      + 'one of them.',
     desc: 'Rome has split down the middle, and for once nobody is asking Judaea to '
       + 'kneel — both halves are too busy asking it to help. Caesar\'s agent wants '
       + 'grain shipped to Greece and a loan at interest; Pompey\'s wants the old '

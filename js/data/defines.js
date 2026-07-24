@@ -523,6 +523,43 @@ export const DEFINES = {
     // their own wars.
     rivalOpinion: -60,       // the baseline rival opinions cool toward
     rivalRatioMult: 0.85,    // rivals need 15% less overmatch to strike
+    // Declared rivalries (SPEC §86): the player may name up to `rivalMax`
+    // courts as rivals. A named rival is worth something — cheaper claims
+    // against them, a monthly martial dividend from a court kept on a war
+    // footing — and costs something: their opinion sinks to the cold
+    // baseline, no alliance, and no grudge between you will ever thaw.
+    rivalMax: 2,
+    rivalDeclareInfl: 20,    // influence to name a rival...
+    rivalRenounceInfl: 40,   // ...and the harder coin to unsay it
+    rivalMarPerMonth: 1,     // martial points a month per declared rival
+    rivalClaimMult: 0.5,     // claims against a declared rival cost half
+    rivalCooldownMonths: 24, // a court renounced cannot be re-named at once
+    // Reconciliation (SPEC §86): a grudge is a wound, and a wound that is
+    // left alone closes. Every month the two courts are neither at war nor
+    // rivals and no fresh land has been taken, the grudge matures and its
+    // ceiling softens toward a target. Without an affinity the wound only
+    // half-closes — the land is still theirs and everyone knows it. Where
+    // the bookmark names the pair HISTORICAL FRIENDS, it closes nearly all
+    // the way, and an alliance becomes possible again.
+    thawMonths: 120,          // ten years of quiet to reach full maturity
+    thawReachPlain: 0.5,      // strangers: the ceiling rises halfway
+    thawReachAffinity: 0.9,   // historical friends: nearly all the way back
+    thawAllyAt: 0.75,         // the maturity at which friends may ally again
+    thawHeal: 1,              // monthly warming once the ceiling is above us
+    thawMartialPenalty: 0.5,  // a wholly martial realm matures at half speed
+  },
+
+  // What kind of rising this is (SPEC §87). A province rises for a reason,
+  // and the reasons are already in the game's state: who used to own the land,
+  // whose god it keeps, whether the throne is believed in, how tired it is.
+  REVOLT: {
+    pretenderLegitimacy: 40,  // below this (or under a regency) claims appear
+    pretenderChance: 0.35,    // ...and this often, when a weak throne's province rises
+    pretenderDrain: 0.5,      // legitimacy a month while a claimant is in the field
+    pretenderBeatenLegitimacy: 15, // ...and the answer when the host is broken
+    pretenderHoldMonths: 6,   // a claimant holding the capital this long is crowned
+    pretenderCrownedLegitimacy: 55, // the usurper starts here, not at the old crown's number
+    religiousChance: 0.5,     // a heterodox province rises for the altar this often
   },
 
   // Supply lines (SPEC §82). An army traces monthly to controlled home

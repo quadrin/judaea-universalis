@@ -69,6 +69,21 @@ function judWarscore(ctx) {
 // The victory-timeline gate (mirror of the templeBurned gate below): a living
 // Judaea, sovereign in Jerusalem, with the Roman war over. In the history
 // where the legions won, this is never true and the strand never fires.
+// The identity cards below (SPEC §90) are mutually exclusive, and the choice
+// has to be settled at TRIGGER time: all three are evaluated in the same
+// monthly pass, and the flag their effects set does not exist until one is
+// answered. fireEvent stamps firedEvents the moment a card fires, so the
+// first sibling to match closes the door on the others in the same loop.
+const KINGDOMKINDTAKEN_IDS = [
+  'ev_kind_priest_king',
+  'ev_kind_commonwealth',
+  'ev_kind_useful_kingdom',
+];
+function kingdomKindTaken(ctx) {
+  const fired = ctx.game.firedEvents || {};
+  return KINGDOMKINDTAKEN_IDS.some((id) => !!fired[id]);
+}
+
 function judaeaFree(ctx) {
   return alive(ctx, 'JUD')
     && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
@@ -2568,6 +2583,9 @@ export const EVENTS_66 = [
   {
     id: 'ev_crown_or_council',
     title: 'A Crown or a Council',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'There was no second kingdom to crown or seat. The question was answered '
+      + 'by Titus, in 70, with fire.',
     desc: 'The war cry was "No King but God" — and now the state must have a shape, '
       + 'because the tribute, the courts and the frontier all wait on a signature. '
       + 'Simon bar Giora\'s name is shouted from the walls his freed men held; the sword '
@@ -3110,6 +3128,206 @@ export const EVENTS_66 = [
             id: 'guarded_kingdom', name: 'The Guarded Kingdom', months: -1,
             effects: { manpowerMult: 1.05, incomeMult: 0.97 },
           });
+        }),
+      },
+    ],
+  },
+
+  // ═══ WHAT KIND OF KINGDOM (SPEC §90) ══════════════════════════════════════
+  // The Second Kingdom strand asked whether Judaea survived. It never asked
+  // what Judaea BECAME, so every victorious campaign arrived at the same
+  // state with the same modifiers. The doctrine axes (SPEC §85) know: a realm
+  // that spent four years choosing the altar, the crown, the Chamber or the
+  // treaty is not the same realm as one that chose the others. These three
+  // cards are mutually exclusive — the first whose character fits fires, the
+  // rest read the `kingdomKind` flag and retire — and each one names the
+  // world the campaign is actually going to live in.
+  {
+    id: 'ev_kind_priest_king',
+    title: 'The Kingdom of the Altar',
+    worldLabel: 'The Second Kingdom becomes a sacral monarchy',
+    historical: 'There was no second kingdom to become anything. In the world the '
+      + 'chronicles record, the question of what the victorious state should look like '
+      + 'was closed in August of 70 by a fire.',
+    desc: 'The war was fought for the House and won for the House, and the men who won it '
+      + 'have no intention of pretending otherwise. The coinage is sacral, the calendar is '
+      + 'the Temple\'s, the courts sit by the priestly rota, and the crown that emerged from '
+      + 'four years of fighting wears the ephod as naturally as it wears the diadem. The '
+      + 'ambassadors of three empires have noticed that they are being received, politely, '
+      + 'in a building that thinks it outranks them. The peace party, what remains of it, '
+      + 'points out that this is precisely the posture that brought the legions the first '
+      + 'time. Nobody is listening to the peace party.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_kind_priest_king', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 78, 1) && judaeaFree(ctx) && !!h.getFlag(ctx, 'secondKingdom')
+        && !h.getFlag(ctx, 'kingdomKind') && !kingdomKindTaken(ctx)
+        && h.axis(ctx, 'zeal') >= 3 && h.axis(ctx, 'authority') >= 2;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Diadem and ephod, and let the empires read it how they like',
+        tooltip: 'The sacral monarchy: +15 legitimacy, +1 stability; the Priesthood +20 and the Zealots +10 approval; "The Kingdom of the Altar" (+8% morale, +0.15 legitimacy a month, +1 unrest in provinces of another faith, permanent). Rome\'s opinion −40.',
+        effects: guard('ev_kind_priest_king:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'altar');
+          h.setFlag(ctx, 'kingdomOfTheAltar', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 });
+          h.factionShift(ctx, 'JUD', 'priesthood', 20);
+          h.factionShift(ctx, 'JUD', 'zealots', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'kingdom_of_altar', name: 'The Kingdom of the Altar', months: -1,
+            effects: { moraleMult: 1.08, legitimacyAdd: 0.15, unrestAll: 0.5 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -140);
+          h.doctrine(ctx, 'zeal', 2);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: a sacral monarchy that dates by the Temple and receives empires as a courtesy. Rome files it under unfinished business.');
+        }),
+      },
+      {
+        label: 'A king who serves the House, not a House that serves the king',
+        tooltip: 'The same kingdom, the priests ahead of the crown: +10 legitimacy; the Priesthood +25 approval, the crown\'s own reach reduced (−10 governance points a year is not modelled; instead +0.1 legitimacy a month and +5% income from the pilgrim trade). Rome\'s opinion −100 rather than −140.',
+        effects: guard('ev_kind_priest_king:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'altar');
+          h.setFlag(ctx, 'kingdomOfTheAltar', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          h.factionShift(ctx, 'JUD', 'priesthood', 25);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'kingdom_of_altar', name: 'The Kingdom of the Altar', months: -1,
+            effects: { legitimacyAdd: 0.1, incomeMult: 1.05 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -100);
+          h.doctrine(ctx, 'zeal', 1);
+          h.doctrine(ctx, 'authority', -1);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: the House first and the crown its servant — the pilgrims come, and the treasury learns to like it.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_kind_commonwealth',
+    title: 'The Commonwealth of the Chamber',
+    worldLabel: 'The Second Kingdom becomes a council republic',
+    historical: 'The Chamber of Hewn Stone did not survive the Temple. What survived was '
+      + 'Yavneh — a school with no state attached, which is a very different thing from a '
+      + 'state run by a school.',
+    desc: 'It has taken eight years and it has been settled without a single execution, '
+      + 'which the older men consider the most remarkable fact of the age. Sovereignty sits '
+      + 'in the Chamber. The commander of the armies reports to it, the treasury answers to '
+      + 'it, and the men who were generals in the war now argue about drainage rights and '
+      + 'appear to enjoy it. Foreign chanceries find the arrangement maddening: there is no '
+      + 'one to bribe, no one to marry, and no single death that would change anything. The '
+      + 'Parthian ambassador has written home that this is either the most stable polity in '
+      + 'the East or a very slow way of losing a war, and that he cannot yet tell which.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_kind_commonwealth', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 78, 1) && judaeaFree(ctx) && !!h.getFlag(ctx, 'secondKingdom')
+        && !h.getFlag(ctx, 'kingdomKind') && !kingdomKindTaken(ctx)
+        && h.axis(ctx, 'authority') <= -2;
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Write it down, and bind the next generation to it',
+        tooltip: 'The commonwealth: +1 stability; the Peace Party +20 and the Priesthood +10 approval; "The Commonwealth of the Chamber" (−0.75 unrest everywhere, +8% income, −3% morale, permanent). Legitimacy no longer depends on a life.',
+        effects: guard('ev_kind_commonwealth:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'chamber');
+          h.setFlag(ctx, 'commonwealthOfTheChamber', true);
+          h.adjust(ctx, 'JUD', { stability: 1, legitimacy: 10 });
+          h.factionShift(ctx, 'JUD', 'notables', 20);
+          h.factionShift(ctx, 'JUD', 'priesthood', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'commonwealth_chamber', name: 'The Commonwealth of the Chamber', months: -1,
+            effects: { unrestAll: -0.75, incomeMult: 1.08, moraleMult: 0.97 },
+          });
+          h.doctrine(ctx, 'authority', -2);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape, and it is not a kingdom: sovereignty is written into the Chamber, and no single death can change the state.');
+        }),
+      },
+      {
+        label: 'A council with a captain — the war taught us that much',
+        tooltip: 'The Chamber sovereign, one commander answerable to it: +10 legitimacy; the Peace Party +10 approval; "The Chamber and the Captain" (−0.5 unrest everywhere, +5% income, permanent) — the morale penalty is bought off.',
+        effects: guard('ev_kind_commonwealth:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'chamber');
+          h.setFlag(ctx, 'commonwealthOfTheChamber', true);
+          h.adjust(ctx, 'JUD', { legitimacy: 10 });
+          h.factionShift(ctx, 'JUD', 'notables', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'commonwealth_chamber', name: 'The Chamber and the Captain', months: -1,
+            effects: { unrestAll: -0.5, incomeMult: 1.05 },
+          });
+          h.doctrine(ctx, 'authority', -1);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: the Chamber sovereign and one captain answerable to it — the war\'s lesson kept without the war\'s master.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_kind_useful_kingdom',
+    title: 'The Kingdom Worth More Standing',
+    worldLabel: 'The Second Kingdom becomes an indispensable neighbor',
+    historical: 'Rome did not need Judaea for anything it could not take. The arithmetic '
+      + 'that makes a small state indispensable requires the large one to be busy elsewhere, '
+      + 'and in 70 it was not.',
+    desc: 'The strategy was never stated aloud and it has worked perfectly. Judaea has made '
+      + 'itself expensive to invade and profitable to leave alone: the caravan tolls are '
+      + 'reasonable, the grain moves, the harbors are open to every flag, and three separate '
+      + 'imperial treasuries have quietly discovered that they earn more from this border '
+      + 'than they would from this province. The zealots call it a second occupation with '
+      + 'better manners. The merchants call it eighty years of peace. Both are describing '
+      + 'the same ledger.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_kind_useful_kingdom', (ctx) => {
+      const h = ctx.helpers;
+      return dateGE(ctx, 78, 1) && judaeaFree(ctx) && !!h.getFlag(ctx, 'secondKingdom')
+        && !h.getFlag(ctx, 'kingdomKind') && !kingdomKindTaken(ctx)
+        && (h.axis(ctx, 'zeal') <= -2 || h.axis(ctx, 'conquest') <= -2);
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Open every harbor and price the roads to be used',
+        tooltip: 'The indispensable kingdom: +15% income, +10% trade; the Peace Party +20 approval, the Zealots −15; "Worth More Standing" (+15% income, −0.5 unrest, −5% morale, permanent). Rome\'s opinion improves to −20.',
+        effects: guard('ev_kind_useful_kingdom:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'useful');
+          h.setFlag(ctx, 'worthMoreStanding', true);
+          h.factionShift(ctx, 'JUD', 'notables', 20);
+          h.factionShift(ctx, 'JUD', 'zealots', -15);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'worth_more_standing', name: 'Worth More Standing', months: -1,
+            effects: { incomeMult: 1.15, tradeMult: 1.1, unrestAll: -0.5, moraleMult: 0.95 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -20);
+          h.doctrine(ctx, 'conquest', -2);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: a state that has made itself expensive to invade and profitable to leave alone. Three treasuries have done the arithmetic and agree.');
+        }),
+      },
+      {
+        label: 'Prosperous, and armed enough that nobody tests the arithmetic',
+        tooltip: 'The same, hedged: +8% income; "Worth More Standing" without the morale cost (+8% income, −0.25 unrest, permanent) and the army keeps its edge. Rome\'s opinion improves only to −60.',
+        effects: guard('ev_kind_useful_kingdom:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setFlag(ctx, 'kingdomKind', 'useful');
+          h.setFlag(ctx, 'worthMoreStanding', true);
+          h.factionShift(ctx, 'JUD', 'notables', 10);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'worth_more_standing', name: 'Worth More Standing', months: -1,
+            effects: { incomeMult: 1.08, unrestAll: -0.25 },
+          });
+          setOpinion(ctx, 'ROM', 'JUD', -60);
+          h.doctrine(ctx, 'conquest', -1);
+          h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: rich, open, and armed exactly enough that no one troubles to check the arithmetic.');
         }),
       },
     ],

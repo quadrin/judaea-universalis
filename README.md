@@ -211,7 +211,7 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 56 headless sim suites and 30
+  marching. The full verification battery — 65 headless sim suites and 31
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
@@ -273,6 +273,52 @@ python3 -m http.server 8613 --directory .
   to the left with no dimming scrim, and the map itself negotiates — click
   a gold-pulsing occupied province to demand it (it burns solid gold in the
   deal), click again to strike it from the terms.
+- **The realm has a character.** The game was already remembering what you
+  chose — 165 narrative flags across seven eras — and reading almost none of
+  it back. Four doctrine axes now do: the Wall and the Gate (zealous ←→
+  accommodating), the Two Horizons (westward ←→ eastward), the Crown and the
+  Council, the Sword and the Purse. They're computed from the choices you
+  already made — raze Gerizim or spare it, the Law as a wall or a gate, Rome's
+  friendship or the King of Kings' covenant — and shown as four needles in the
+  realm panel, each tooltip listing the decisions that put them there. Only
+  choices count: the flags every option of an event sets record that a thing
+  happened, not what you picked, and they stay out.
+- **Historical friends put quarrels down.** A grudge over taken land used to be
+  permanent while you held it. Now it matures: every month the two courts are
+  neither at war nor rivals, the wound closes a little — halfway for strangers,
+  nearly all the way for pairs the era names historical friends, and once
+  mended they will ally with you again *without* the land going back. Take
+  Jerusalem back from Persia in 614 and Ctesiphon will hate you for it, and
+  then, if you keep facing east and never name them an enemy, forgive you.
+  Swing west and the old friendship lapses with the horizon it depended on. So
+  "we choose not to rival them" is a real move: you can name up to two rivals
+  for cheap claims and a martial dividend, and the price is that no wound
+  between you will ever close.
+- **A province rises for a reason.** Five kinds of rising instead of one:
+  separatists under the old flag (read straight off the grudge book — the game
+  already knew who lost that province), a named pretender who bleeds your
+  legitimacy monthly and takes your throne if they hold the capital six months,
+  religious risings for the altar, national risings that go over to a
+  co-religionist neighbor, and peasants — the biggest hosts and the most
+  brittle. Each can send a demands card: buy the province back from itself,
+  marry the claim into the house, seal a writ of toleration.
+- **The Road Not Taken** (Chronicle → second tab): your campaign set beside
+  the record it was given. Every turning where this age chose otherwise — what
+  the chronicles say, what you did — every scripted chapter that never got
+  written because the world had changed, and the alternate worlds those choices
+  opened, from the Eagle Refused to the Lines We Drew Ourselves. It needed no
+  new authoring: every event already carried the historical course in the
+  option its AI takes.
+- **What kind of kingdom.** Winning a bookmark used to produce one state with
+  one set of modifiers. Now the victory strand asks what you became: 66 CE's
+  Second Kingdom becomes the Kingdom of the Altar, the Commonwealth of the
+  Chamber, or a state Worth More Standing; the 614 Return becomes the east's
+  western wall, a kingdom apart from both empires, or the one polity everybody
+  finds it cheaper to deal with than to conquer. And the sandbox chapters that
+  follow are addressed to that realm — a zealous crown is set to purifying the
+  land, a conciliar one to governing rather than winning, and any realm sitting
+  on land it took in war can be asked for the hardest objective in the game:
+  mend that quarrel without giving the land back.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

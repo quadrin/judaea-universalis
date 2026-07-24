@@ -2817,6 +2817,9 @@ export const EVENTS_167 = [
   {
     id: 'ev_gerizim',
     title: 'The Temple on Gerizim',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'John Hyrcanus destroyed the temple on Mount Gerizim around 111 BCE. The '
+      + 'Samaritans never rebuilt it, and never forgot it.',
     desc: 'Shechem is taken, and above it stands the question two centuries old: the '
       + 'temple on Mount Gerizim, built when Sanballat’s people were shut out of the '
       + 'Second Temple, serving the same Law with a different mountain. To the men of '
@@ -2874,6 +2877,9 @@ export const EVENTS_167 = [
   {
     id: 'ev_idumea_policy',
     title: 'Idumea Kneels',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'Hyrcanus gave Idumea the Law or the road. They took the Law — and a '
+      + 'century later an Idumean house held the throne in Jerusalem.',
     desc: 'Adora and Marisa have opened their gates, and with them all Idumea — the old '
       + 'south country of Esau, pressed against Judah since the exile. Hyrcanus has '
       + 'done what no conqueror of the age does: he has offered the conquered not '
@@ -2936,6 +2942,10 @@ export const EVENTS_167 = [
   {
     id: 'ev_pharisee_breach',
     title: 'Let the Crown Suffice Thee',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'Hyrcanus broke with the Pharisees over one sage\'s insolence and went '
+      + 'over to the Sadducees. The schools remembered it for three generations, '
+      + 'and his son Jannaeus paid the bill in a civil war.',
     desc: 'At the high priest’s own table, at a feast for the sages, Hyrcanus asked the '
       + 'Pharisees to tell him plainly if they saw him depart from the right way — and '
       + 'one Eleazar took him at his word: "Since thou desirest the truth: give up the '
@@ -3595,6 +3605,9 @@ export const EVENTS_167 = [
   {
     id: 'ev_diadem_in_dust',
     title: 'The Diadem in the Dust',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'No Hasmonean ever wore the Seleucid diadem. The empire was left to '
+      + 'devour itself while Judaea took what it could hold and went home.',
     desc: 'It is finished, and no one in the world quite believes it, least of all the '
       + 'men who did it. The kingdom of the house of Seleucus — the fourth of the '
       + 'beasts, the iron that broke the whole earth, the dynasty that burned the '
@@ -3702,6 +3715,10 @@ export const EVENTS_167 = [
   {
     id: 'ev_embassies_of_powers',
     title: 'The Embassies of the Great Powers',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'Rome was the treaty the Maccabees kept renewing — bronze tablets on '
+      + 'Mount Zion, honored in the archive and worth nothing in the field. '
+      + 'Parthia was never courted.',
     desc: 'They arrive in the same season, which is not a coincidence: a legate of the '
       + 'Senate with the grave courtesy Rome spends on powers it has decided to take '
       + 'seriously, and an envoy of the Arsacid with gifts of horses and the long '
@@ -3766,6 +3783,11 @@ export const EVENTS_167 = [
   {
     id: 'ev_law_of_the_nations',
     title: 'What Does the Law Say of the Nations?',
+    // The road not taken (SPEC §89): what the record actually says.
+    historical: 'The Hasmonean state answered with the wall. Hyrcanus and his sons '
+      + 'converted what they conquered; the Law became the frontier of a kingdom '
+      + 'rather than a door into one, and the Greek cities of the coast learned '
+      + 'it province by province.',
     desc: 'The question has outgrown the study house. Israel rules multitudes now who '
       + 'have never kept a Sabbath — Aram and Philistia, the cities of the Greeks, '
       + 'the tribes of the high country — more of the nations than of the covenant, '

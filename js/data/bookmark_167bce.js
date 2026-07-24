@@ -140,6 +140,16 @@ export const BOOKMARK_167 = {
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
   // Mithridates' Parthia is already probing the Seleucid east.
   rivalries: [['SEL', 'PTO'], ['SEL', 'PAR'], ['ROM', 'SEL']],
+  // Historical friends (SPEC §86): pairs whose bond can outlive a quarrel,
+  // so a grudge between them matures back toward warmth instead of setting
+  // hard. The Roman treaty of 161 is the era's one real friendship, and it
+  // holds only while the realm keeps facing west; Ptolemaic Egypt sheltered
+  // the house of Onias and stayed the Hasmoneans' quiet patron throughout.
+  affinities: [
+    ['HAS', 'ROM', { axis: 'alignment', sign: 1 }],
+    ['HAS', 'PTO'],
+    ['HAS', 'PAR', { axis: 'alignment', sign: -1 }],
+  ],
 
   // Political layer for 167 BCE, applied by initGame over map_data's 66 CE defaults.
   // Covers every province owned by ROM/JUD/AGR (tags absent from this bookmark),

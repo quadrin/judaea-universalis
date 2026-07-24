@@ -3,9 +3,11 @@
 
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
-  liveGrudge, grudgeCeiling, areRivals,
+  liveGrudge, grudgeCeiling, areRivals, thawQuiet, reconciled,
 } from './military.js';
+import { axisOf } from './doctrine.js';
 import { popTension, popTotal } from './population.js';
+import { raiseRising } from './revolt.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -140,40 +142,12 @@ export function explainUnrest(ctx, provId) {
   }
 }
 
+// A province rises for a reason (SPEC §87): revolt.js reads the live world —
+// the §67 grudge book, the province's altar, the throne's legitimacy — and
+// raises a band with a cause attached. `canRevoltJoin` stays here because it
+// is the border rule this module has always owned.
 function fireRevolt(ctx, p) {
-  const g = ctx.game;
-  const size = Math.max(1, Math.round(num(p.dev && p.dev.mp) * B(ctx, 'rebelSizePerDev', 0.4)));
-  // A local rising may join a neighboring co-religionist power fighting its
-  // ruler (JUD in 66 CE, HAS in 167 BCE). Remote diaspora revolts remain REB;
-  // the ancient Judaean heartland is the exception when the rising is landless.
-  let rebelTag = 'REB';
-  for (const key of Object.keys(g.tags)) {
-    const t = g.tags[key];
-    if (t && t.alive && key !== 'REB' && key !== p.owner &&
-        t.religion === p.religion && isHostile(ctx, key, p.owner) &&
-        canRevoltJoin(ctx, p, key)) {
-      rebelTag = key;
-      break;
-    }
-  }
-  // Throttle the tide: at most 8 rebel bands under arms at once, and a province
-  // that has risen cannot rise again for 30 months.
-  if (rebelTag === 'REB') {
-    let rebCount = 0;
-    for (const id of Object.keys(g.armies)) { const a = g.armies[id]; if (a && a.tag === 'REB' && a.men > 0) rebCount++; }
-    if (rebCount >= 8) { p.revoltProgress = 0; p.revoltCooldownMonths = 6; return; }
-  }
-  const name = rebelTag !== 'REB' ? 'Zealots of ' + p.name : 'Rebels of ' + p.name;
-  spawnArmy(ctx, rebelTag, p.name, { inf: size, name });
-  if (num(p.garrison) <= 0) changeControllerCore(ctx, p, rebelTag);
-  p.revoltProgress = 0;
-  p.revoltCooldownMonths = 30;
-  p.unrest = Math.max(0, num(p.unrest) - 4); // steam vented
-  ctx.bus.emit('notify', {
-    title: 'Revolt in ' + p.name,
-    text: (rebelTag !== 'REB' ? 'The province rises for ' + ((g.tags[rebelTag] && g.tags[rebelTag].name) || rebelTag) + ' — ' : 'Rebels take up arms — ') + size + ',000 men in the streets.',
-    type: 'war', provName: p.name,
-  });
+  raiseRising(ctx, p, canRevoltJoin);
 }
 
 export function monthlyUnrest(ctx) {
@@ -233,12 +207,33 @@ export function monthlyOpinionDrift(ctx) {
     if (t.grudges) {
       for (const taker of Object.keys(t.grudges)) {
         if (!liveGrudge(ctx, tag, taker)) { delete t.grudges[taker]; continue; }
+        const gr = t.grudges[taker];
+        // Reconciliation (SPEC §86): a month in which the two courts are
+        // neither at war nor rivals is a month the wound closes. A realm
+        // that lives by the sword is trusted back more slowly — the same
+        // quiet buys it less. Anything louder than quiet simply stops the
+        // clock; only a fresh seizure (recordGrudge) winds it back to zero.
+        if (thawQuiet(ctx, tag, taker)) {
+          const martial = clamp(axisOf(ctx, 'conquest') / 10, 0, 1);
+          const rate = 1 - martial * (1 - num(BALd.thawMartialPenalty, 0.5));
+          gr.thaw = num(gr.thaw) + rate;
+        }
+        // A mended friendship stops being governed by the grievance: the book
+        // still records it (a fresh seizure reopens everything), but the pair
+        // rejoins the ordinary drift below and warms toward neutral — or
+        // toward an alliance, if they sign one — like any other two courts.
+        if (reconciled(ctx, tag, taker)) continue;
         grudged.push(taker);
         const cap = grudgeCeiling(ctx, tag, taker);
         if (!t.opinion) t.opinion = {};
         const v = Math.round(num(t.opinion[taker]));
         if (v > cap) {
           t.opinion[taker] = clamp(Math.max(cap, v - num(BALd.grudgeBite, 4)), -200, 200);
+        } else if (v < cap) {
+          // The ceiling has risen above where the court actually sits: the
+          // years have made room, and the opinion now warms into it. Without
+          // this the thaw would only ever be permission, never a change.
+          t.opinion[taker] = clamp(Math.min(cap, v + num(BALd.thawHeal, 1)), -200, 200);
         }
       }
       if (!Object.keys(t.grudges).length) delete t.grudges;

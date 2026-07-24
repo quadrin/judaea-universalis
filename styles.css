@@ -2091,6 +2091,63 @@ html, body {
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
 .np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
+/* the doctrine axes (SPEC §85): a needle between two named poles */
+.np-doctrine { display: flex; flex-direction: column; }
+.np-dox {
+  padding: 5px 2px 7px;
+  border-bottom: 1px dotted rgba(85, 69, 46, 0.25);
+}
+.np-dox:last-child { border-bottom: none; }
+.np-dox-top { display: flex; align-items: baseline; gap: 7px; }
+.np-dox-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-dox-label {
+  font-size: 12px;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.np-dox-label.np-dox-hi { color: #6f8a3d; }
+.np-dox-label.np-dox-lo { color: #7d6a9c; }
+.np-dox-bar { margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+.np-dox-pole {
+  flex: none;
+  font-size: 10px;
+  color: var(--ink-soft);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.np-dox-track {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(85, 69, 46, 0.18);
+  border: 1px solid rgba(85, 69, 46, 0.25);
+}
+/* the center post: the answer the realm has not given */
+.np-dox-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: rgba(85, 69, 46, 0.4);
+}
+.np-dox-needle {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(40, 32, 20, 0.55);
+  background: var(--ink-soft, #8a7a5c);
+  transition: left 0.35s ease;
+}
+.np-dox-needle.np-dox-n-hi { background: #6f8a3d; }
+.np-dox-needle.np-dox-n-lo { background: #7d6a9c; }
+
 .np-dip-sec {
   margin-top: 7px;
   font-variant: small-caps;
@@ -2541,6 +2598,64 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .chron-text { flex: 1; }
 .chron-empty { color: var(--ink-soft); font-style: italic; padding: 18px 6px; }
+
+/* the road not taken (SPEC §89): the campaign beside the record it was given */
+.chron-tabs { display: flex; gap: 6px; margin: 0 0 8px; }
+.chron-tab {
+  flex: 1;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 13px;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  background: rgba(85, 69, 46, 0.08);
+  border: 1px solid rgba(85, 69, 46, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.chron-tab:hover { background: rgba(85, 69, 46, 0.16); }
+.chron-tab.on {
+  color: var(--ink, #2a2118);
+  background: rgba(85, 69, 46, 0.22);
+  border-color: rgba(85, 69, 46, 0.55);
+  font-weight: 600;
+}
+.road-head { padding: 4px 2px 8px; }
+.road-axes { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 8px; }
+.road-axis {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  background: rgba(85, 69, 46, 0.1);
+  border: 1px solid rgba(85, 69, 46, 0.25);
+}
+.road-axis.pos { color: #5c7333; border-color: rgba(111, 138, 61, 0.5); }
+.road-axis.neg { color: #6a5a86; border-color: rgba(125, 106, 156, 0.5); }
+.road-strand { padding: 6px 2px; border-bottom: 1px dotted rgba(85, 69, 46, 0.25); }
+.road-strand:last-child { border-bottom: none; }
+.road-strand-name { font-weight: 600; }
+.road-era {
+  font-size: 11px;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+.road-strand-blurb { margin-top: 2px; font-size: 12px; line-height: 1.35; color: var(--ink-soft); }
+.road-turn { padding: 6px 2px; border-bottom: 1px dotted rgba(85, 69, 46, 0.25); }
+.road-turn:last-child { border-bottom: none; }
+.road-when {
+  font-size: 11px;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+}
+.road-pair { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; font-size: 12px; line-height: 1.35; }
+.road-was { color: var(--ink-soft); }
+.road-is { color: var(--ink, #2a2118); font-weight: 600; }
+.road-retired { padding: 4px 2px; font-size: 12px; color: var(--ink-soft); line-height: 1.35; }
+.road-retired-name { color: var(--ink, #2a2118); font-weight: 600; }
 
 /* start screen: save tools under the Continue button */
 .ss-savetools { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }

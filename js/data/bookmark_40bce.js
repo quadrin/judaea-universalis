@@ -135,6 +135,15 @@ export const BOOKMARK_40 = {
   // Standing rivalries (SPEC §73): the Parthian flood IS the chapter — the
   // two empires stay each other's natural war.
   rivalries: [['ROM', 'PAR']],
+  // Historical friends (SPEC §86): Herod IS Rome's client — the friendship
+  // survives Actium, a change of patron, and a good deal of land changing
+  // hands. Antigonus is the Parthians' man by the same logic, and Nabataea
+  // is everyone's neighbor and nobody's permanent enemy.
+  affinities: [
+    ['HER', 'ROM', { axis: 'alignment', sign: 1 }],
+    ['ATG', 'PAR', { axis: 'alignment', sign: -1 }],
+    ['HER', 'NAB'], ['ATG', 'NAB'],
+  ],
 
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.

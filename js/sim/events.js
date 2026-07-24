@@ -1,6 +1,8 @@
 // Judaea Universalis — event engine (SPEC §6.5). Event objects come from the
 // content package via ctx.events; effects run through ctx.helpers. DOM-free.
 
+import { noteEventChoice, noteRetired } from './divergence.js';
+
 const _warned = new Set();
 function warnOnce(key, ...args) {
   if (_warned.has(key)) return;
@@ -47,8 +49,10 @@ function requiredWarSettled(ctx, ev) {
   const book = ctx.game.flags && ctx.game.flags._settledWars;
   return !!book && requiredWarPairs(ev).some(([a, b]) => !!book[warPairKey(a, b)]);
 }
-function skipEvent(ctx, ev) {
+function skipEvent(ctx, ev, why) {
   if (ev && ev.id && ev.once !== false) ctx.game.firedEvents[ev.id] = true;
+  // A page of the record that never got written (SPEC §89).
+  try { noteRetired(ctx, ev, why); } catch (e) { warnOnce('retire:' + (ev && ev.id), e); }
 }
 
 // The next dated development that belongs to world history rather than the
@@ -100,7 +104,7 @@ export function fireEvent(ctx, ev) {
   const g = ctx.game;
   if (!ev || !ev.id) return;
   if (!requiredWarActive(ctx, ev)) {
-    if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev);
+    if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev, 'the war it belonged to was already settled');
     return;
   }
   if (ev.once !== false) g.firedEvents[ev.id] = true;
@@ -169,7 +173,7 @@ export function checkDateEvents(ctx) {
       if (monthIndex(ev.date.y, ev.date.m) > now) continue;
       // A dated battlefield chapter is a deadline, not a command to undo a
       // treaty. Once its month arrives without the required war, retire it.
-      if (!requiredWarActive(ctx, ev)) { skipEvent(ctx, ev); continue; }
+      if (!requiredWarActive(ctx, ev)) { skipEvent(ctx, ev, 'the war it belonged to was already settled'); continue; }
       // A dated chapter may also declare the WORLD it requires (`when`,
       // SPEC §75): if its month arrives in a different world — a court
       // vassalized instead of rival, a dynasty already settled — it retires
@@ -177,7 +181,7 @@ export function checkDateEvents(ctx) {
       if (typeof ev.when === 'function') {
         let fits = false;
         try { fits = !!ev.when(ctx); } catch (e) { warnOnce('when:' + ev.id, 'when() threw for', ev.id, e); }
-        if (!fits) { skipEvent(ctx, ev); continue; }
+        if (!fits) { skipEvent(ctx, ev, 'the world it needed no longer exists'); continue; }
       }
       fireEvent(ctx, ev);
     } catch (e) { warnOnce('date:' + (ev && ev.id), 'date event check failed', e); }
@@ -192,7 +196,7 @@ export function checkTriggeredEvents(ctx) {
       if (!requiredWarActive(ctx, ev)) {
         // Triggered battle phases may wait for the front to develop, but a
         // recorded settlement permanently cancels the stale canonical phase.
-        if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev);
+        if (requiredWarSettled(ctx, ev)) skipEvent(ctx, ev, 'the war it belonged to was already settled');
         continue;
       }
       let ok = false;
@@ -224,6 +228,14 @@ export function resolveEventOption(ctx, instanceId, idx) {
       // the concluded campaign through its option effects.
       if (requiredWarActive(ctx, ev) && opt && typeof opt.effects === 'function') opt.effects(ctx);
     } catch (e) { warnOnce('rfx:' + pe.eventId, 'event effects threw for', pe.eventId, e); }
+    // The road not taken (SPEC §89): a spine event resolved with anything
+    // other than its historical course is a departure from the record, and
+    // both halves of it are already on the card. A notice (§70) is not a
+    // choice, so it never counts as one.
+    if (!pe.notice) {
+      try { noteEventChoice(ctx, ev, ev.options[idx] ? idx : 0); }
+      catch (e) { warnOnce('div:' + pe.eventId, 'divergence note failed', e); }
+    }
   } else {
     warnOnce('miss:' + pe.eventId, 'resolveEventOption: unknown event', pe.eventId);
   }

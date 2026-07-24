@@ -12,6 +12,35 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let actions = null;
   let provId = 0;
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
+// What the last rising here was about (SPEC §87). The sim stamps the province
+// with the kind; this is only how it reads.
+const RISING_LABELS = {
+  separatist: {
+    label: 'Separatist rising',
+    tt: 'This land was taken in war from a court that still stands, and it has risen once to '
+      + 'go back to them. Return the land, or integrate the province until it forgets.',
+  },
+  pretender: {
+    label: 'Pretender\'s host',
+    tt: 'The last rising here was not about this province: a rival claim to the throne raised '
+      + 'the countryside. Legitimacy is the cure.',
+  },
+  religious: {
+    label: 'Religious rising',
+    tt: 'The province keeps a faith the realm does not, and rose for its altar. Convert it, '
+      + 'tolerate it, or garrison it.',
+  },
+  national: {
+    label: 'National rising',
+    tt: 'Co-religionists across the border are at war with us, and this province has gone over '
+      + 'to them once already.',
+  },
+  peasant: {
+    label: 'Peasant revolt',
+    tt: 'No flag and no altar — war exhaustion, occupation and overextension. The largest '
+      + 'hosts and the most brittle.',
+  },
+};
   const refs = {};
 
   function setText(node, s) {
@@ -86,7 +115,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         <span class="pp-k">Unrest</span><span class="pp-v" data-ref="unrest"></span>
       </div>
       <div class="pp-block hidden" data-ref="revoltBlock">
-        <div class="pp-bar-label"><span>${icon('flag', 'icon-sm')} Revolt brewing</span><span data-ref="revoltPct"></span></div>
+        <div class="pp-bar-label"><span>${icon('flag', 'icon-sm')} <span data-ref="revoltLabel">Revolt brewing</span></span><span data-ref="revoltPct"></span></div>
         <div class="bar bar-revolt"><div class="bar-fill" data-ref="revoltFill"></div></div>
       </div>
       <div class="pp-block hidden" data-ref="fortBlock">
@@ -135,6 +164,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
           <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
+          <button class="pp-dip" data-dip="rival" data-ref="dipRival">Name as Rival</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
         </div>
       </div>`;
@@ -156,6 +186,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
         war: 'declareWarOn', incorporate: 'incorporateVassal', marry: 'royalMarriage',
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
+        rival: b.classList.contains('pp-dip-on') ? 'renounceRival' : 'declareRival',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
@@ -378,6 +409,12 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       const pct = Math.min(100, (rp / fireAt) * 100);
       setText(refs.revoltPct, Math.round(pct) + '%');
       refs.revoltFill.style.width = pct + '%';
+      // A province rises for a reason (SPEC §87): once it has risen once, the
+      // stamp says which reason, so the next rising is not a surprise.
+      const kind = RISING_LABELS[p.revoltType];
+      setText(refs.revoltLabel, kind ? kind.label + ' brewing' : 'Revolt brewing');
+      refs.revoltBlock.dataset.tt = kind ? kind.tt
+        : 'Unrest above the threshold fills this bar; when it fills, the province rises.';
     }
 
     // Fort & garrison
@@ -689,12 +726,30 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       status = `Client of ${d.theirOverlordName || d.theirOverlord}`;
     }
     // SPEC §67: an open wound outranks pleasantries on the status line.
+    // SPEC §86: and a wound that is closing says so — the same land, read as
+    // a clock rather than a verdict.
     if (d.grudge && !d.atWarWithUs) {
+      const r = d.reconcile;
+      const closing = r && r.quiet && r.pct > 0;
       status = (status === '—' ? '' : status + ' · ')
-        + `They remember ${d.grudge.count} lost province${d.grudge.count > 1 ? 's' : ''}`;
-      cls = 'neg';
-      refs.dipStatus.dataset.tt = `We hold land they lost to us in war (${d.grudge.names}). `
-        + `Their opinion of us is capped at ${d.grudge.ceiling} until the land is theirs again.`;
+        + (r && r.done
+          ? 'The old quarrel is mended'
+          : `They remember ${d.grudge.count} lost province${d.grudge.count > 1 ? 's' : ''}`
+            + (closing ? ` · mending ${r.pct}%` : ''));
+      cls = r && r.done ? 'pos' : 'neg';
+      let tt = `We hold land they lost to us in war (${d.grudge.names}). `
+        + `Their opinion of us is capped at ${d.grudge.ceiling}`
+        + (r && r.pct > 0 ? ` (from ${r.rawCeiling}, ${r.pct}% mended)` : '') + '.';
+      if (r) {
+        tt += r.friends
+          ? '\nOur houses were friends before the quarrel: given quiet years, this can close almost'
+            + ' entirely — and an alliance becomes possible again without giving the land back.'
+          : '\nWe were never friends. Quiet years can only half-close this one.';
+        tt += r.quiet
+          ? '\nThe wound is closing: neither court has named the other an enemy, and no sword is drawn.'
+          : '\nThe wound is NOT closing — a war between us, or a rivalry named by either court, holds it open.';
+      }
+      refs.dipStatus.dataset.tt = tt;
     } else if (refs.dipStatus.dataset) {
       delete refs.dipStatus.dataset.tt;
     }
@@ -756,6 +811,22 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
       setDipBtn(refs.dipSubsidize, d.canSubsidize, d.whyNotSubsidize,
         'Subsidize their court: 10 talents a month for a year → +20 opinion.'
         + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : ''));
+    }
+    // Declared rivalries (SPEC §86): the same button names an enemy or unsays
+    // it. Hidden where the age already decided — a standing rivalry belongs
+    // to the era's weather, not to our heralds.
+    const rv = d.rival;
+    refs.dipRival.classList.toggle('hidden', !rv || rv.eraRival);
+    if (rv && !rv.eraRival) {
+      refs.dipRival.classList.toggle('pp-dip-on', !!rv.isRival);
+      setText(refs.dipRival, rv.isRival ? 'Set Aside the Quarrel' : 'Name as Rival');
+      setDipBtn(refs.dipRival, rv.can, rv.why, rv.isRival
+        ? `Unsay it: ${rv.renounceCost} influence. Their regard begins to recover, any wound between `
+          + `us starts closing again — and we lose the martial dividend and the cheap claims.`
+        : `Name them the enemy of this realm: ${rv.declareCost} influence (${rv.count}/${rv.max} named).\n`
+          + `+1 martial point a month, claims against them at half price.\n`
+          + `Their opinion sinks to the cold baseline, no alliance — and no grudge between us will `
+          + `close for as long as it stands.`);
     }
     // Incorporation (SPEC §61): only shown for our own client kingdoms.
     refs.dipIncorporate.classList.toggle('hidden', !d.incorporate);

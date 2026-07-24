@@ -154,6 +154,17 @@ export const BOOKMARK_67 = {
   // wars over the Euphrates line, and Tigranes' Armenia contests the same
   // marches with the Arsacids.
   rivalries: [['ROM', 'PAR'], ['ARM', 'PAR']],
+  // Historical friends (SPEC §86): Aretas marched for Hyrcanus and went home
+  // again — Nabataea is the brothers' natural friend either way. Rome's
+  // friendship is real for whichever brother courts it, and the Arsacid
+  // alternative only exists for a court that turns east.
+  affinities: [
+    ['HYR', 'NAB'], ['ARI', 'NAB'],
+    ['HYR', 'ROM', { axis: 'alignment', sign: 1 }],
+    ['ARI', 'ROM', { axis: 'alignment', sign: 1 }],
+    ['HYR', 'PAR', { axis: 'alignment', sign: -1 }],
+    ['ARI', 'PAR', { axis: 'alignment', sign: -1 }],
+  ],
 
   // Political layer for 67 BCE over map_data's 66 CE defaults. The Hasmonean
   // kingdom of Jannaeus is split between the brothers; Syria is the Seleucid

@@ -6,6 +6,9 @@ import {
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
+// doctrine.js is deliberately self-contained (no military.js import), so this
+// stays one-way: an affinity may be gated on the realm's character (SPEC §86).
+import { axisOf } from './doctrine.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -2220,13 +2223,196 @@ export function opinionOf(ctx, whose, of) {
 // readily (aiConsiderWar) — recomputed live from the bookmark, so no save
 // schema is touched.
 export function areRivals(ctx, a, b) {
+  if (a === b) return false;
   const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : null;
-  if (!list || a === b) return false;
+  if (list) {
+    for (const pair of list) {
+      if (!Array.isArray(pair) || pair.length !== 2) continue;
+      if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return true;
+    }
+  }
+  // Declared rivalries (SPEC §86) sit on top of the era's weather: a court
+  // the player has NAMED a rival is a rival in every place the bookmark's
+  // own pairs are — drift, the AI's appetite, and the thaw that never comes.
+  return declaredRival(ctx, a, b) || declaredRival(ctx, b, a);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Declared rivalries and reconciliation (SPEC §86).
+//
+// §67 made a grudge permanent for as long as the taker held the land, which
+// is true of a wound and false of a memory. Courts that were natural friends
+// before the quarrel — Persia and the Return, Rome and a client it made —
+// do come back together, and the thing that decides whether they do is not
+// the map. It is whether either of them keeps choosing the other as an
+// enemy. So: a grudge left alone MATURES. Its ceiling rises month by month
+// toward a target, halfway for strangers and nearly all the way for the pairs
+// a bookmark names historical friends. War between them, a fresh seizure, or
+// a declared rivalry stops it — the first two by resetting the clock, the
+// last simply by holding it still for as long as the rivalry stands.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// The courts `tag` has named as rivals. Player-declared today; the shape is
+// per-tag so an AI court can be given the same pen without a schema change.
+export function declaredRivals(ctx, tag) {
+  const r = ctx.game && ctx.game.rivals;
+  const list = r && r[tag];
+  return Array.isArray(list) ? list.slice() : [];
+}
+export function declaredRival(ctx, tag, of) {
+  const r = ctx.game && ctx.game.rivals;
+  const list = r && r[tag];
+  return Array.isArray(list) && list.indexOf(of) >= 0;
+}
+
+// Historical friends: pairs the bookmark declares as courts with a bond that
+// outlives a quarrel. An entry may carry a doctrine condition —
+// `['JUD', 'SAS', { axis: 'alignment', sign: -1 }]` — in which case the
+// affinity only holds while the realm's character still leans that way. The
+// Return keeps Persia's friendship by facing east; swing west and the old
+// bond lapses, and with it the thaw that was riding on it.
+export function affinityPair(ctx, a, b) {
+  const list = ctx.bookmark && Array.isArray(ctx.bookmark.affinities) ? ctx.bookmark.affinities : null;
+  if (!list || a === b) return null;
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length < 2) continue;
+    if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return pair;
+  }
+  return null;
+}
+export function haveAffinity(ctx, a, b) {
+  const pair = affinityPair(ctx, a, b);
+  if (!pair) return false;
+  const cond = pair[2];
+  if (!cond || !cond.axis) return true;
+  try {
+    const s = axisOf(ctx, cond.axis);
+    return num(cond.sign, 1) >= 0 ? s >= num(cond.need, 2) : s <= -num(cond.need, 2);
+  } catch (e) { warnOnce('affinity', 'affinity condition failed', e); return false; }
+}
+
+// How far a grudge has matured, 0..1. Quiet months are counted on the grudge
+// entry itself (`thaw`), so a save carries it without a migration: an older
+// book simply starts its clock at zero.
+export function thawProgress(ctx, victim, taker) {
+  const t = ctx.game.tags[victim];
+  const gr = t && t.grudges && t.grudges[taker];
+  if (!gr) return 0;
+  const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  const months = Math.max(1, num(B_.thawMonths, 120));
+  const reach = haveAffinity(ctx, victim, taker)
+    ? num(B_.thawReachAffinity, 0.9) : num(B_.thawReachPlain, 0.5);
+  return clamp(num(gr.thaw) / months, 0, 1) * reach;
+}
+
+// The two courts are quiet: no war between them, and neither has named the
+// other a rival. This — not the map — is what lets a wound close.
+export function thawQuiet(ctx, victim, taker) {
+  const g = ctx.game;
+  const t = g.tags[victim], o = g.tags[taker];
+  if (!t || !o || !t.alive || !o.alive) return false;
+  if ((t.atWarWith || []).indexOf(taker) >= 0 || (o.atWarWith || []).indexOf(victim) >= 0) return false;
+  return !areRivals(ctx, victim, taker);
+}
+
+// A fully reconciled pair — the wound has closed as far as it is going to,
+// and where an affinity carried it, an alliance is on the table again.
+// Naming a rival, and unsaying it. The cost of unsaying is deliberately the
+// higher of the two: a court may change its mind about an enemy, but the
+// chanceries remember that it once did.
+export function rivalDeclareInfo(ctx, tag, of) {
+  const g = ctx.game;
+  const t = g.tags[tag], o = g.tags[of];
+  const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  const out = {
+    isRival: declaredRival(ctx, tag, of),
+    eraRival: false,
+    count: declaredRivals(ctx, tag).filter((k) => g.tags[k] && g.tags[k].alive).length,
+    max: Math.max(1, num(B_.rivalMax, 2) | 0),
+    declareCost: num(B_.rivalDeclareInfl, 20),
+    renounceCost: num(B_.rivalRenounceInfl, 40),
+    can: false, why: '',
+  };
+  if (!t || !o || !o.alive || tag === of) return null;
+  // The era's own weather is not the player's to declare or to unsay.
+  const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : [];
   for (const pair of list) {
     if (!Array.isArray(pair) || pair.length !== 2) continue;
-    if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return true;
+    if ((pair[0] === tag && pair[1] === of) || (pair[0] === of && pair[1] === tag)) out.eraRival = true;
   }
-  return false;
+  if (out.isRival) {
+    if (num(t.points && t.points.infl) < out.renounceCost) {
+      out.why = 'Setting a quarrel aside costs ' + out.renounceCost + ' influence — we have not got it.';
+    }
+  } else if (out.eraRival) {
+    out.why = 'The age already has them for an enemy; no herald of ours made it so.';
+  } else if (o.overlord === tag || t.overlord === of) {
+    out.why = 'The bond of fealty is not a rivalry.';
+  } else if ((t.allies || []).indexOf(of) >= 0) {
+    out.why = 'They are our sworn allies. Break the alliance first.';
+  } else if (out.count >= out.max) {
+    out.why = 'A realm can afford ' + out.max + ' named enemies. We already have them.';
+  } else if (diploCdActive(ctx, tag + '>' + of + ':rival')) {
+    out.why = 'We only just set this quarrel aside ('
+      + diploCdMonthsLeft(ctx, tag + '>' + of + ':rival') + ' months).';
+  } else if (num(t.points && t.points.infl) < out.declareCost) {
+    out.why = 'Naming an enemy costs ' + out.declareCost + ' influence — we have not got it.';
+  }
+  out.can = !out.why;
+  return out;
+}
+export function declareRivalCore(ctx, tag, of) {
+  const info = rivalDeclareInfo(ctx, tag, of);
+  if (!info || info.isRival || !info.can) {
+    return { ok: false, why: info ? info.why : 'There is no such court.' };
+  }
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!g.rivals || typeof g.rivals !== 'object') g.rivals = {};
+  if (!Array.isArray(g.rivals[tag])) g.rivals[tag] = [];
+  g.rivals[tag].push(of);
+  t.points.infl = num(t.points.infl) - info.declareCost;
+  // Naming an enemy is heard. Their regard collapses to the cold baseline,
+  // and every grudge between the pair stops maturing while it stands.
+  const cold = num((ctx.DEFINES.BALANCE || {}).rivalOpinion, -60);
+  const them = g.tags[of];
+  if (them) {
+    if (!them.opinion) them.opinion = {};
+    them.opinion[tag] = Math.min(Math.round(num(them.opinion[tag])), cold);
+  }
+  return { ok: true, name: (them && them.name) || of, cost: info.declareCost };
+}
+export function renounceRivalCore(ctx, tag, of) {
+  const info = rivalDeclareInfo(ctx, tag, of);
+  if (!info || !info.isRival || !info.can) {
+    return { ok: false, why: info ? info.why : 'There is no such court.' };
+  }
+  const g = ctx.game;
+  const t = g.tags[tag];
+  g.rivals[tag] = (g.rivals[tag] || []).filter((k) => k !== of);
+  if (!g.rivals[tag].length) delete g.rivals[tag];
+  t.points.infl = num(t.points.infl) - info.renounceCost;
+  setDiploCd(ctx, tag + '>' + of + ':rival', num((ctx.DEFINES.BALANCE || {}).rivalCooldownMonths, 24));
+  return { ok: true, name: (g.tags[of] && g.tags[of].name) || of, cost: info.renounceCost };
+}
+
+// A claim against a named enemy is cheaper to forge: the case half writes
+// itself when the court has been saying it aloud for years.
+export function claimCostFor(ctx, tag, against) {
+  const base = CLAIM_FABRICATION.cost;
+  if (!against || !declaredRival(ctx, tag, against)) return base;
+  const mult = num((ctx.DEFINES.BALANCE || {}).rivalClaimMult, 0.5);
+  return Math.max(1, Math.round(base * mult));
+}
+
+export function reconciled(ctx, victim, taker) {
+  const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  const months = Math.max(1, num(B_.thawMonths, 120));
+  const t = ctx.game.tags[victim];
+  const gr = t && t.grudges && t.grudges[taker];
+  if (!gr) return false;
+  return haveAffinity(ctx, victim, taker)
+    && clamp(num(gr.thaw) / months, 0, 1) >= num(B_.thawAllyAt, 0.75);
 }
 // The lost lands are remembered (SPEC §67). When a court loses provinces in
 // war — at the peace table or by the sword — it records the taker in
@@ -2241,9 +2427,12 @@ export function recordGrudge(ctx, victim, taker, provId) {
   const t = g.tags[victim];
   if (!t || !taker || victim === taker || !(provId | 0)) return;
   if (!t.grudges) t.grudges = {};
-  const gr = t.grudges[taker] || (t.grudges[taker] = { provs: [], y: g.date.y, m: g.date.m });
+  const gr = t.grudges[taker] || (t.grudges[taker] = { provs: [], y: g.date.y, m: g.date.m, thaw: 0 });
   if (gr.provs.indexOf(provId | 0) < 0) gr.provs.push(provId | 0);
   gr.y = g.date.y; gr.m = g.date.m;
+  // A fresh seizure is a fresh wound: whatever the years had healed, this
+  // reopens (SPEC §86). Reconciliation starts again from the new taking.
+  gr.thaw = 0;
   // The wound is fresh: the victim's opinion drops straight to the ceiling.
   if (!t.opinion) t.opinion = {};
   const cap = grudgeCeiling(ctx, victim, taker);
@@ -2263,15 +2452,29 @@ export function liveGrudge(ctx, victim, taker) {
   });
   return held.length ? held : null;
 }
-// The warmest the victim can be made to feel about the taker while the taker
-// sits on the land: -(base + perProv × provinces held), floored at -max.
-// +200 (no ceiling) when no grudge is live.
-export function grudgeCeiling(ctx, victim, taker) {
+// The raw ceiling a fresh grudge imposes, before any years of quiet:
+// -(base + perProv × provinces held), floored at -max.
+export function grudgeCeilingRaw(ctx, victim, taker) {
   const held = liveGrudge(ctx, victim, taker);
   if (!held) return 200;
   const B = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
   return -Math.min(num(B.grudgeCeilingMax, 180),
     num(B.grudgeCeilingBase, 100) + num(B.grudgeCeilingPerProv, 10) * (held.length - 1));
+}
+// The warmest the victim can be made to feel about the taker while the taker
+// sits on the land. The raw ceiling, RISEN by however far the grudge has
+// matured (SPEC §86) — halfway for strangers, nearly the whole way for
+// historical friends who kept out of each other's way. +200 (no ceiling)
+// when no grudge is live.
+export function grudgeCeiling(ctx, victim, taker) {
+  const raw = grudgeCeilingRaw(ctx, victim, taker);
+  if (raw === 200) return 200;
+  // Fully mended between historical friends: the ceiling comes off entirely.
+  // The land is still ours and the book still records it — a fresh seizure
+  // reopens the whole wound — but the grievance has stopped being the thing
+  // that governs the relationship, which is the entire point of §86.
+  if (reconciled(ctx, victim, taker)) return 200;
+  return Math.round(raw * (1 - thawProgress(ctx, victim, taker)));
 }
 export function addOpinion(ctx, whose, of, delta) {
   const t = ctx.game.tags[whose];
@@ -2347,8 +2550,9 @@ export function claimFabricationInfo(ctx, tag, provId) {
     hasClaim: hasClaim(ctx, tag, provId),
     fabricating: !!pending,
     monthsLeft: pending ? Math.max(0, pending.monthsLeft | 0) : 0,
-    cost: CLAIM_FABRICATION.cost,
+    cost: claimCostFor(ctx, tag, p.owner),
     months: CLAIM_FABRICATION.months,
+    rivalDiscount: claimCostFor(ctx, tag, p.owner) < CLAIM_FABRICATION.cost,
     canFabricate: false,
     whyNot: '',
   };
@@ -2361,8 +2565,8 @@ export function claimFabricationInfo(ctx, tag, provId) {
     if (diploCdActive(ctx, cdKey)) {
       out.whyNot = 'Our forgers need time (' + diploCdMonthsLeft(ctx, cdKey)
         + ' months before another claim on ' + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + ').';
-    } else if (num(t.points && t.points.infl) < CLAIM_FABRICATION.cost) {
-      out.whyNot = 'Not enough influence points (' + CLAIM_FABRICATION.cost + ' required).';
+    } else if (num(t.points && t.points.infl) < out.cost) {
+      out.whyNot = 'Not enough influence points (' + out.cost + ' required).';
     }
   }
   out.canFabricate = !out.whyNot;
@@ -2375,7 +2579,7 @@ export function startClaimFabrication(ctx, tag, provId) {
   const g = ctx.game;
   const p = ctx.byId(provId);
   const t = g.tags[tag];
-  t.points.infl = num(t.points.infl) - CLAIM_FABRICATION.cost;
+  t.points.infl = num(t.points.infl) - info.cost;
   t.claimFabrications.push({
     provId: provId | 0,
     against: p.owner,
@@ -2387,8 +2591,9 @@ export function startClaimFabrication(ctx, tag, provId) {
     ok: true,
     name: p.name,
     owner: p.owner,
-    cost: CLAIM_FABRICATION.cost,
+    cost: claimCostFor(ctx, tag, p.owner),
     months: CLAIM_FABRICATION.months,
+    rivalDiscount: claimCostFor(ctx, tag, p.owner) < CLAIM_FABRICATION.cost,
   };
 }
 
