@@ -251,6 +251,7 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
+      provinceTo: {}, // directed spoils: demanded province -> our client in this war
       release: [], // restored, returned, or newly created states (SPEC §69/§76)
       transferVassals: [], // enemy clients whose fealty passes to us (SPEC §76)
       enemy: info.separate ? info.enemyLeader : undefined, // separate peace (SPEC §67)
@@ -285,10 +286,21 @@ export function initUI(staticCtx) {
         </div>`
       : '';
     const discountTxt = { claim: ' · our claim (30% off)', faith: ' · our faith (20% off)' };
+    // Directed spoils (SPEC §61 extension): with our own clients in this war,
+    // each demanded province can be ceded straight to one of them.
+    const recips = info.cessionRecipients || [];
+    const toPicker = (p) => (recips.length
+      ? `<select class="peace-to" data-prov-to="${p.id}"
+          data-tt="Who receives ${esc(p.name)} in the treaty: our crown, or one of our clients marching in this war. Same war-score price either way.">
+          <option value="">to us</option>
+          ${recips.map((r) => `<option value="${esc(r.tag)}">to ${esc(r.name)}</option>`).join('')}
+        </select>`
+      : '');
     const provRows = info.provinces.map((p) =>
       `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${discountTxt[p.discount] || ''}${p.goalReason ? '\nWar goal: ' + esc(p.goalReason) + (p.goalAligned ? ' (favored terms)' : ' (costlier terms)') : ''}\nDemanding it costs ${p.cost} war score">
         <input type="checkbox" data-prov="${p.id}">
         <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${p.discount ? ' · ' + (p.discount === 'claim' ? 'claimed' : 'our faith') : ''}${p.goalReason ? ' · ' + (p.goalAligned ? 'war goal' : 'outside goal') : ''}</span></span>
+        ${toPicker(p)}
         <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
     peaceEl.innerHTML = `
@@ -407,6 +419,10 @@ export function initUI(staticCtx) {
         if (deal.subjugate) box.checked = false;
         box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
       });
+      peaceEl.querySelectorAll('[data-prov-to]').forEach((sel) => {
+        sel.disabled = deal.subjugate;
+        if (deal.subjugate) sel.value = '';
+      });
       peaceEl.querySelectorAll('[data-release]').forEach((box) => {
         box.disabled = deal.subjugate;
         if (deal.subjugate) box.checked = false;
@@ -417,7 +433,7 @@ export function initUI(staticCtx) {
         if (deal.subjugate) box.checked = false;
         box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
       });
-      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; }
+      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; }
       const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length && deal.gold <= 0
         && !deal.humiliate && !deal.subjugate && !deal.reparations;
       totalEl.textContent = white
@@ -442,7 +458,28 @@ export function initUI(staticCtx) {
         const id = Number(box.dataset.prov);
         const at = deal.provinces.indexOf(id);
         if (box.checked && at < 0) deal.provinces.push(id);
-        else if (!box.checked && at >= 0) deal.provinces.splice(at, 1);
+        else if (!box.checked && at >= 0) {
+          deal.provinces.splice(at, 1);
+          // A struck demand takes its directed recipient off the table too.
+          delete deal.provinceTo[id];
+          const sel = peaceEl.querySelector('[data-prov-to="' + id + '"]');
+          if (sel) sel.value = '';
+        }
+        update();
+      });
+    });
+    peaceEl.querySelectorAll('[data-prov-to]').forEach((sel) => {
+      sel.addEventListener('click', (e) => e.stopPropagation());
+      sel.addEventListener('change', () => {
+        const id = Number(sel.dataset.provTo);
+        if (sel.value) deal.provinceTo[id] = sel.value;
+        else delete deal.provinceTo[id];
+        // Naming a recipient implies demanding the province.
+        if (sel.value && deal.provinces.indexOf(id) < 0) {
+          deal.provinces.push(id);
+          const box = peaceEl.querySelector('[data-prov="' + id + '"]');
+          if (box) box.checked = true;
+        }
         update();
       });
     });
@@ -511,8 +548,12 @@ export function initUI(staticCtx) {
     peaceProvToggle = (pid) => {
       if (deal.subjugate || !demandable.has(pid)) return;
       const at = deal.provinces.indexOf(pid);
-      if (at >= 0) deal.provinces.splice(at, 1);
-      else deal.provinces.push(pid);
+      if (at >= 0) {
+        deal.provinces.splice(at, 1);
+        delete deal.provinceTo[pid];
+        const sel = peaceEl.querySelector('[data-prov-to="' + pid + '"]');
+        if (sel) sel.value = '';
+      } else deal.provinces.push(pid);
       const box = peaceEl.querySelector('[data-prov="' + pid + '"]');
       if (box) box.checked = at < 0;
       update();

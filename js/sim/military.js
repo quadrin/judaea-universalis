@@ -1691,6 +1691,32 @@ export function vassalsOf(ctx, lord) {
   }
   return out;
 }
+// A boolean effect carried by any of the tag's live modifiers (script-set
+// flags like noSubjugation ride the ordinary modifier pipe; numeric effects
+// go through resolveTagMult and never see these).
+export function tagModifierFlag(ctx, tag, key) {
+  const t = ctx.game.tags[tag];
+  if (!t || !Array.isArray(t.modifiers)) return false;
+  return t.modifiers.some((m) => m && m.effects && !!m.effects[key]);
+}
+// The court that holds a war side's pen (SPEC §61/§74). Nominally the side's
+// first living member — but a client crown never outranks its own overlord at
+// the table: a war declared ON a vassal lists the vassal first and the lord
+// second, and without this promotion the lord was handed the junior's
+// withdrawal table for a war fought over its own client's land (the reported
+// bug). The loop is bounded in case of a client-of-client chain.
+export function sideLeaderOf(ctx, war, side) {
+  const g = ctx.game;
+  let lead = (side || []).find((t) => g.tags[t] && g.tags[t].alive) || null;
+  for (let hops = 0; lead && hops < 4; hops++) {
+    const lordTag = g.tags[lead] && g.tags[lead].overlord;
+    if (!lordTag || side.indexOf(lordTag) < 0) break;
+    const lord = g.tags[lordTag];
+    if (!lord || !lord.alive) break;
+    lead = lordTag;
+  }
+  return lead;
+}
 
 // ---------------------------------------------------------------- the vassal loop (SPEC §61)
 // A client that has come to nearly LOVE its overlord (opinion >= 80) can be
@@ -2903,11 +2929,13 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   // subjugations, releases and client transfers belong to the side's leader alone —
   // previously a junior's "separate peace" struck the enemy out of the
   // ALLY's war, truced the ally to it, and reverted the ally's occupations
-  // (the reported bug).
-  const sideLeader = mySide.find((t) => g.tags[t] && g.tags[t].alive) || byTag;
+  // (the reported bug). The leader is overlord-promoted (sideLeaderOf): a war
+  // declared on a client is the protecting crown's to settle, on either side
+  // of the table.
+  const sideLeader = sideLeaderOf(ctx, war, mySide) || byTag;
   const exit = byTag !== sideLeader;
   const separate = !exit && !!enemyTag && aliveEnemies.indexOf(enemyTag) >= 0 && aliveEnemies.length >= 2;
-  const enemyLeader = separate ? enemyTag : (aliveEnemies[0] || null);
+  const enemyLeader = separate ? enemyTag : (sideLeaderOf(ctx, war, theirSide) || aliveEnemies[0] || null);
   const et = enemyLeader ? g.tags[enemyLeader] : null;
   const me = g.tags[byTag];
   const myRel = me ? me.religion : null;
@@ -2951,7 +2979,12 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   else if (separate) whyNotSubjugate = 'A separate peace cannot break a crown — subjugation waits for the full congress.';
   else if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
   else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';
-  else canSubjugate = true;
+  else if (tagModifierFlag(ctx, enemyLeader, 'noSubjugation')) {
+    // A court in the grip of its founding fervor (the conquest-era Caliphate)
+    // dies before it kneels: no treaty clause puts a yoke on it while the
+    // flag-bearing modifier lasts.
+    whyNotSubjugate = 'That court would sooner be destroyed than kneel — no yoke can be written into this treaty.';
+  } else canSubjugate = true;
   const subjugateAdj = exit
     ? { mult: 1, aligned: false, reason: '' }
     : goalSubjugateAdjustment(ctx, war, byTag);
@@ -2977,6 +3010,14 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
         goalAligned: adj.aligned, goalReason: adj.reason, goalMult: adj.mult,
       };
     });
+  // Directed spoils (SPEC §61 extension): the leader's table may cede any
+  // demanded province to one of its own direct clients marching in this war —
+  // the client that stormed the walls can be given the town — instead of the
+  // crown itself. Same war-score price; the pen-holder still carries the
+  // treaty's infamy. A withdrawing junior directs nothing.
+  const cessionRecipients = exit ? [] : vassalsOf(ctx, byTag)
+    .filter((v) => mySide.indexOf(v) >= 0)
+    .map((v) => ({ tag: v, name: (g.tags[v] && g.tags[v].name) || v }));
   return {
     warId: war.id, warName: war.name,
     myWs: separate
@@ -3021,6 +3062,8 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     transferableVassals: transferable,
     transferVassalBase: PEACE.transferVassalBase,
     transferVassalPerDev: PEACE.transferVassalPerDev,
+    // Own clients in this war that demanded provinces may be ceded to.
+    cessionRecipients,
     cb: war.cb || null,
     goal: warGoalInfo(ctx, war),
     noNegotiation: !!war.noNegotiation,
@@ -3077,6 +3120,18 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
     cost += priceProvincePackage(ctx, chosen);
   } else {
     cost += info.subjugateCost;
+  }
+  // Directed spoils: each demanded province may name one of the peacemaker's
+  // own clients in this war as its recipient. Recipients are re-validated
+  // against the live table, so a stale or hand-edited deal cannot gift land
+  // to a court outside it. Same price either way.
+  const provinceTo = {};
+  if (!subjugate && d.provinceTo && typeof d.provinceTo === 'object') {
+    const legal = new Set((info.cessionRecipients || []).map((r) => r.tag));
+    for (const row of chosen) {
+      const to = d.provinceTo[row.id];
+      if (to && to !== byTag && legal.has(to)) provinceTo[row.id] = to;
+    }
   }
   // Set nations free (SPEC §69): each requested restoration is re-priced on
   // the provinces it would actually receive — anything the deal also cedes to
@@ -3167,6 +3222,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   return {
     cost, acceptable, reason, gold, humiliate, subjugate, reparations,
     provinces: chosen.map((c) => c.id),
+    provinceTo,
     release: releaseRows.map((r) => r.tag), releaseRows,
     transferVassals: transferRows.map((r) => r.tag), transferRows,
   };
@@ -3418,32 +3474,48 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
   const ev = evaluatePeaceDeal(ctx, war, byTag, deal);
   const me = g.tags[byTag];
   const terms = [];
-  // Cession first: demanded provinces change owner to the peacemaker. New land
-  // arrives restive — high autonomy and a generation of resentment; integration
-  // (Establish Rule / Convert the Faith) is how it becomes truly yours.
+  // Cession first: demanded provinces change owner to the peacemaker — or, as
+  // directed spoils (ev.provinceTo), to one of the peacemaker's own clients in
+  // this war. New land arrives restive — high autonomy and a generation of
+  // resentment; integration (Establish Rule / Convert the Faith) is how it
+  // becomes truly yours.
   const cededNames = [];
+  const cededToClient = {}; // recipient tag -> province names, for the treaty line
   for (const id of ev.provinces) {
     const p = ctx.byId(id);
     if (!p) continue;
-    cededNames.push(p.name);
+    const named = ev.provinceTo && ev.provinceTo[id];
+    const recip = named && g.tags[named] && g.tags[named].alive ? named : byTag;
     // A new state starts over with the communities (SPEC §66): integration
     // is with a sovereign, not with the soil — cleared BEFORE the owner
     // change so the incoming owner cannot inherit a rename it never earned.
     p.integration = 0;
     p.integrating = null;
-    recordGrudge(ctx, p.owner, byTag, id); // the lost lands are remembered (SPEC §67)
-    changeOwnerCore(ctx, p, byTag);
-    changeControllerCore(ctx, p, byTag);
+    recordGrudge(ctx, p.owner, recip, id); // the lost lands are remembered (SPEC §67)
+    changeOwnerCore(ctx, p, recip);
+    changeControllerCore(ctx, p, recip);
     p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
     p.conversion = null;
     p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
     p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
-    if (me && Array.isArray(me.claims)) me.claims = me.claims.filter((c) => c !== id); // claim satisfied
+    const rt = g.tags[recip];
+    if (rt && Array.isArray(rt.claims)) rt.claims = rt.claims.filter((c) => c !== id); // claim satisfied
+    if (recip === byTag) cededNames.push(p.name);
+    else {
+      (cededToClient[recip] = cededToClient[recip] || []).push(p.name);
+      // A town handed to the client that stormed it is remembered at court.
+      addOpinion(ctx, recip, byTag, 10);
+    }
   }
-  if (cededNames.length) {
-    terms.push('cedes ' + cededNames.join(', '));
+  if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
+  for (const tag of Object.keys(cededToClient)) {
+    terms.push('cedes ' + cededToClient[tag].join(', ') + ' to '
+      + ((g.tags[tag] && g.tags[tag].name) || tag));
+  }
+  if (ev.provinces.length) {
     // Conquest is remembered: infamy proportional to what was taken (decays
-    // monthly — see monthlyOpinionDrift; slower while the taker is still at war).
+    // monthly — see monthlyOpinionDrift; slower while the taker is still at
+    // war). Spoils directed to a client are still the pen-holder's odium.
     if (me) me.aggression = num(me.aggression) + infamyForDev(ctx, ev.provinces.reduce((sum, pid) => {
       const q = ctx.byId(pid);
       return sum + (q ? devTotal(q) : 0);

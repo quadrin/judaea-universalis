@@ -8,7 +8,7 @@ import {
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
-  coalitionAgainst, forceLimitOf, vassalsOf,
+  coalitionAgainst, forceLimitOf, vassalsOf, sideLeaderOf,
   declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
@@ -863,7 +863,10 @@ export function describeAiPeaceDeal(ctx, war, winner, deal) {
   if (ev.provinces.length) {
     clauses.push('the cession of ' + ev.provinces.map((id) => {
       const p = ctx.byId(id);
-      return (p && p.name) || ('#' + id);
+      const name = (p && p.name) || ('#' + id);
+      const to = ev.provinceTo && ev.provinceTo[id];
+      const tt = to && ctx.game.tags[to];
+      return to ? name + ' (to ' + ((tt && tt.name) || to) + ')' : name;
     }).join(', '));
   }
   for (const row of ev.releaseRows || []) {
@@ -890,6 +893,10 @@ export function buildAiCounteroffer(ctx, war, byTag, submitted) {
   const budget = Math.max(0, num(info.myWs));
   if (budget <= 0) return null;
   let deal = blankAiDeal(asked.enemy);
+  // Directed spoils survive the pare-back: whatever demanded provinces make
+  // it into the counteroffer keep the client the player named for them
+  // (evaluatePeaceDeal re-validates recipients live).
+  if (asked.provinceTo && typeof asked.provinceTo === 'object') deal.provinceTo = { ...asked.provinceTo };
   const accept = (candidate, kept) => {
     const tested = legalAiCandidate(ctx, war, byTag, budget, candidate, kept);
     if (!tested) return false;
@@ -1061,8 +1068,8 @@ function sendSeparatePeaceOffer(ctx, war, player) {
 function settleAiSeparatePeace(ctx, war) {
   const g = ctx.game;
   const leaders = [
-    war.attackers.find((t) => g.tags[t] && g.tags[t].alive),
-    war.defenders.find((t) => g.tags[t] && g.tags[t].alive),
+    sideLeaderOf(ctx, war, war.attackers),
+    sideLeaderOf(ctx, war, war.defenders),
   ].filter(Boolean);
   for (const winner of leaders) {
     const info = peaceDealInfo(ctx, war, winner);
@@ -1146,7 +1153,7 @@ function monthlyWarDiplomacy(ctx) {
     if (humanIn && !playerIn) continue; // a guest's war: no auto-deal, their own cards come via MP
     if (playerIn) {
       const theirSide = w.attackers.indexOf(player) >= 0 ? w.defenders : w.attackers;
-      const leader = theirSide.find((t) => g.tags[t] && g.tags[t].alive);
+      const leader = sideLeaderOf(ctx, w, theirSide);
       if (!leader) continue;
       const lt = g.tags[leader];
       const ws = num(w.warscore && w.warscore[leader]);
@@ -1176,8 +1183,8 @@ function monthlyWarDiplomacy(ctx) {
       // Before the two leaders settle the whole war, let an exhausted member
       // leave through its own bilateral corridor.
       if (settleAiSeparatePeace(ctx, w)) continue;
-      const attLead = w.attackers.find((t) => g.tags[t] && g.tags[t].alive);
-      const defLead = w.defenders.find((t) => g.tags[t] && g.tags[t].alive);
+      const attLead = sideLeaderOf(ctx, w, w.attackers);
+      const defLead = sideLeaderOf(ctx, w, w.defenders);
       if (!attLead || !defLead) continue;
       const wsAtt = num(w.warscore && w.warscore[attLead]);
       const months = monthsBetween(w.started, g.date);

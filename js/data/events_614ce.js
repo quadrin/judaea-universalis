@@ -45,6 +45,40 @@ function returnStands(ctx) {
   return alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem');
 }
 
+// The gate of the whole conquest strand (SPEC §75): the campaign cards, the
+// fitnas and the fleets presume a Caliphate that is actually free to
+// campaign — on the map, alive, and sworn to no one. In a diverged world (the
+// tag broken to another crown's yoke, or extinguished) the strand's dated
+// cards used to keep firing on the calendar and narrate wars nobody was
+// declaring; now they retire silently instead.
+function freeCaliphate(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.RSH;
+  return !!(t && t.alive !== false && !t.overlord);
+}
+// The awakening cards (the Hijra through the first campaigns) need only a
+// tag that can still rise: dormant is fine — awakening it is their whole job —
+// but a court already under another crown's yoke cannot be scripted free.
+function caliphateCanRise(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.RSH;
+  return !!(t && !t.overlord);
+}
+// A standing truce with the named target blocks a scripted declaration
+// (declareWar refuses wet ink), so a campaign card must not fire into one.
+// Key format mirrors military.js truceKey.
+function truceBlocks(ctx, a, b) {
+  const g = ctx.game;
+  const t = g.truces && g.truces[a < b ? a + '|' + b : b + '|' + a];
+  if (!t) return false;
+  return g.date.y < t.y || (g.date.y === t.y && g.date.m < t.m);
+}
+// Would the campaign card actually open (or find) a war with this target?
+function campaignWarPossible(ctx, target) {
+  if (!target) return false;
+  const t = ctx.game.tags[target];
+  if (t && t.overlord === 'RSH') return false; // a crown and its client do not go to war
+  return warBetween(ctx, 'RSH', target) || !truceBlocks(ctx, 'RSH', target);
+}
+
 // Northernmost RSH-owned oasis first: the campaign armies must muster at the
 // desert's edge, in reach of Iraq and the Levant — not a thousand miles back
 // in Yathrib where the old order (Yathrib first) parked every column it
@@ -95,19 +129,34 @@ function awakenCaliphate(ctx) {
   h.setRuler(ctx, 'RSH', {
     name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 59,
   });
-  h.adjust(ctx, 'RSH', { treasury: 240, manpower: 18000, stability: 2, legitimacy: 75, mar: 40 });
+  h.adjust(ctx, 'RSH', { treasury: 320, manpower: 30000, stability: 2, legitimacy: 75, mar: 60 });
+  // The armies that broke the Ridda are the finest light force on earth:
+  // higher morale, tighter discipline, and replacements that actually arrive.
+  // Runs through the whole first conquest decade — the historical edge that
+  // beat both empires was not a four-year enthusiasm.
   h.addTagModifier(ctx, 'RSH', {
-    id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 48,
-    effects: { moraleMult: 1.1, reinforceMult: 1.1 },
+    id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 120,
+    effects: { moraleMult: 1.15, disciplineMult: 1.08, reinforceMult: 1.15 },
   });
   // The conquest pays for the conquerors: ghanima and the diwan stipends
   // carry a field army far beyond what five oasis towns could ever fund —
   // without this the event-mustered hosts melt to debt desertion before
-  // they reach the settled lands. Runs through the conquest generation
-  // (to ~651, the Sasanian horizon).
+  // they reach the settled lands. The manpower multiplier is the misr system:
+  // the peninsula's tribes migrate into the garrison camps, so the muster
+  // rolls run far past what the home oases' development could ever feed.
+  // Runs through the conquest generation (to ~651, the Sasanian horizon).
   h.addTagModifier(ctx, 'RSH', {
     id: 'diwan_of_the_conquests', name: 'The Diwan of the Conquests', months: 240,
-    effects: { maintMult: 0.5, incomeMult: 1.25 },
+    effects: { maintMult: 0.5, incomeMult: 1.25, manpowerMult: 2 },
+  });
+  // The community that survived the Ridda does not kneel again — for the
+  // conquest generation the Caliphate cannot be broken to a client kingdom
+  // at any peace table (peaceDealInfo reads the flag). This is the answer to
+  // campaigns where an intact empire yoked Medina with a 30-point treaty
+  // clause and the entire conquest era silently switched itself off.
+  h.addTagModifier(ctx, 'RSH', {
+    id: 'no_dominion_but_gods', name: 'No Dominion but God\'s', months: 240,
+    effects: { noSubjugation: true },
   });
   // v5.0: the movement's true home is on the map. Yathrib — Medina — has
   // belonged to the dormant tag since the start; the awakening makes it the
@@ -128,10 +177,28 @@ function awakenCaliphate(ctx) {
   // frontier the Ridda just won, not locked behind it.
   riddaSettlesTheNorth(ctx);
   h.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-    inf: 5, cav: 5, name: 'Army of the Ridda',
+    inf: 6, cav: 6, name: 'Army of the Ridda',
     general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
   });
   return true;
+}
+
+// Total men under a tag's banners — the reinforcement wave reads it.
+function totalMenOf(ctx, tag) {
+  let men = 0;
+  for (const a of Object.values(ctx.game.armies || {})) {
+    if (a && a.tag === tag) men += a.men || 0;
+  }
+  return men;
+}
+
+function atWarWithLiveEnemy(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t) return false;
+  return (t.atWarWith || []).some((e) => {
+    const et = ctx.game.tags[e];
+    return et && et.alive !== false;
+  });
 }
 
 function ownerOf(ctx, names, preferred) {
@@ -874,6 +941,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 622, m: 9 },
     world: true,
+    when: caliphateCanRise, // the strand retires if the tag is yoked or gone (SPEC §75)
     major: true,
     aiOption: 0,
     options: [{
@@ -896,6 +964,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 630, m: 1 },
     world: true,
+    when: caliphateCanRise,
     major: true,
     aiOption: 0,
     options: [{
@@ -918,6 +987,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 632, m: 6 },
     world: true,
+    when: caliphateCanRise,
     major: true,
     aiOption: 0,
     options: [{
@@ -940,6 +1010,10 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 633, m: 4 },
     world: true,
+    // The card is a WAR: it fires only when its declaration can actually
+    // land — a live target on the rivers, no yoke on Medina, no wet ink.
+    when: (ctx) => caliphateCanRise(ctx)
+      && campaignWarPossible(ctx, ownerOf(ctx, ['Charax', 'Uruk', 'Babylon', 'Seleucia-Ctesiphon'], 'SAS')),
     major: true,
     aiOption: 0,
     options: [{
@@ -954,7 +1028,7 @@ export const EVENTS_614 = [
           if (war) war.settleMonths = 84; // a generational campaign, not a three-year raid
         }
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-          inf: 6, cav: 4, name: 'Army of al-Muthanna',
+          inf: 8, cav: 5, name: 'Army of al-Muthanna',
           general: { name: 'al-Muthanna ibn Haritha', fire: 2, shock: 4, maneuver: 4 },
         });
         ctx.helpers.chronicle(ctx, 'war', 'Arab columns move into Iraq against whoever holds the rivers; the desert edge becomes a front.');
@@ -972,6 +1046,14 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 634, m: 4 },
     world: true,
+    // Fires only when the columns have someone to fight: a live Levantine
+    // power (or the Ghassanid screen on the road), and a Medina free to march.
+    when: (ctx) => {
+      if (!caliphateCanRise(ctx)) return false;
+      if (campaignWarPossible(ctx, ownerOf(ctx, ['Damascus', 'Bostra', 'Jerusalem', 'Emesa'], 'BYZ'))) return true;
+      return alive(ctx, 'GHA') && campaignWarPossible(ctx, 'GHA')
+        && ['Bostra', 'Dumatha'].some((n) => { const p = ctx.prov(n); return p && p.owner === 'GHA'; });
+    },
     major: true,
     aiOption: 0,
     options: [{
@@ -996,7 +1078,7 @@ export const EVENTS_614 = [
           if (war) war.settleMonths = 84;
         }
         ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
-          inf: 8, cav: 4, name: 'Army of Syria',
+          inf: 10, cav: 5, name: 'Army of Syria',
           general: { name: 'Abu Ubayda ibn al-Jarrah', fire: 3, shock: 3, maneuver: 4 },
         });
         ctx.helpers.chronicle(ctx, 'war', 'The Rashidun armies enter the Levant against the power that now holds Syria.');
@@ -1034,6 +1116,12 @@ export const EVENTS_614 = [
             inf: 8, cav: 2, name: 'Army of Vahan',
             general: { name: 'Vahan', fire: 3, shock: 3, maneuver: 2 },
           });
+          // Khalid's famous ride from the Iraqi front: the mobile guard that
+          // actually won the Yarmouk answers the concentration in kind.
+          ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+            inf: 3, cav: 5, name: 'Khalid\'s Mobile Guard',
+            general: { name: 'Khalid ibn al-Walid', fire: 2, shock: 5, maneuver: 5 },
+          });
         } else {
           ctx.helpers.addTagModifier(ctx, 'RSH', {
             id: 'unopposed_levant', name: 'No Imperial Field Army', months: 12,
@@ -1055,6 +1143,14 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 637, m: 6 },
     world: true,
+    // Only a live campaign reaches the capital: the Caliphate free, and
+    // either already at the walls or at war with whoever holds them.
+    when: (ctx) => {
+      if (!freeCaliphate(ctx)) return false;
+      if (ctx.helpers.controls(ctx, 'RSH', 'Seleucia-Ctesiphon')) return true;
+      const p = ctx.prov('Seleucia-Ctesiphon');
+      return !!(p && p.owner && p.owner !== 'RSH' && warBetween(ctx, 'RSH', p.owner));
+    },
     major: true,
     aiOption: 0,
     options: [{
@@ -1085,6 +1181,14 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 638, m: 2 },
     world: true,
+    // The demand arrives only with the armies: the Caliphate free, and
+    // either in the city already or at war with its actual ruler.
+    when: (ctx) => {
+      if (!freeCaliphate(ctx)) return false;
+      if (ctx.helpers.controls(ctx, 'RSH', 'Jerusalem')) return true;
+      const p = ctx.prov('Jerusalem');
+      return !!(p && p.owner && p.owner !== 'RSH' && warBetween(ctx, 'RSH', p.owner));
+    },
     major: true,
     aiOption: 0,
     options: [{
@@ -1105,6 +1209,131 @@ export const EVENTS_614 = [
     }],
   },
   {
+    // The conquests' real engine was not one army but the well that refilled
+    // them: every column lost in Iraq or Syria was answered by fresh tribal
+    // levies out of the peninsula. While the conquest generation runs and the
+    // Caliphate is at war, a mauled field force is rebuilt from the muster
+    // rolls — silently for every court but Medina's own player. This is the
+    // "they should be a lot more threatening" dial: the Caliphate keeps
+    // coming, the way it historically did, instead of dying of its first
+    // lost battle.
+    id: 'ev_p_tribal_levies',
+    title: 'The Tribes Answer the Call',
+    desc: 'The columns are thin and the stipend rolls are long: riders go south '
+      + 'through the oases reading the summons in every camp, and the camps answer — '
+      + 'Tamim, Tayy, Azd, men who fought Medina in the Ridda now racing their cousins '
+      + 'to the frontier for a place on the diwan before the next city falls.',
+    forTag: 'RSH',
+    once: false,
+    cooldownMonths: 14,
+    minYear: 633,
+    maxYear: 651,
+    trigger: safeTrigger('ev_p_tribal_levies', (ctx) =>
+      freeCaliphate(ctx)
+      && atWarWithLiveEnemy(ctx, 'RSH')
+      && totalMenOf(ctx, 'RSH') < 12000
+      && (ctx.game.tags.RSH.manpower || 0) >= 5000),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Read the summons in every camp',
+        tooltip: 'The Caliphate: −5,000 manpower from the pool; a fresh host of 7 regiments musters at the desert\'s edge.',
+        effects: guard('ev_p_tribal_levies:0', (ctx) => {
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 5000));
+          ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+            inf: 4, cav: 3, name: 'Levies of the Summons',
+          });
+          ctx.helpers.chronicle(ctx, 'war',
+            'The tribes answer the call: fresh levies out of the peninsula remount the conquest\'s thinned columns.');
+        }),
+      },
+      {
+        label: 'Call only the proven tribes',
+        tooltip: 'The Caliphate: −3,000 manpower; a smaller host of 4 veteran regiments — and the pool keeps its depth for the next campaign.',
+        effects: guard('ev_p_tribal_levies:1', (ctx) => {
+          const r = ctx.game.tags.RSH;
+          if (!r || r.alive === false) return;
+          r.manpower = Math.max(0, Math.round((r.manpower || 0) - 3000));
+          ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+            inf: 2, cav: 2, name: 'Levies of the Summons',
+          });
+          ctx.helpers.chronicle(ctx, 'war',
+            'Medina calls only the tribes it trusts: a smaller, harder column rides for the frontier.');
+        }),
+      },
+    ],
+  },
+  {
+    // The heal for the reported campaign where an intact empire yoked the
+    // Caliphate with a cheap subjugation clause and the whole era switched
+    // itself off: an AI-imposed yoke does not hold the community that
+    // survived the Ridda. A HUMAN overlord's prize is never script-broken —
+    // the player's wars are their own to win and keep. Repeatable, so a
+    // second yoke meets a second rising; new no-yoke campaigns rarely see it
+    // at all (the No Dominion but God's modifier refuses the clause outright).
+    id: 'ev_p_yoke_broken',
+    title: 'No Yoke but God\'s',
+    worldLabel: 'The Caliphate casts off its imposed yoke',
+    desc: 'The treaty is read out in the camps, and the camps answer it with one '
+      + 'word: ridda — apostasy. The community that broke the tribes for renouncing '
+      + 'Medina\'s covenant does not now pay another crown\'s tribute. The stipend '
+      + 'rolls reopen, the columns remuster at the desert\'s edge, and the yoke is '
+      + 'returned to its sender unworn.',
+    forTag: 'both',
+    decider: 'RSH',
+    world: true, // a world-history dispatch: one acknowledging card, the course fixed
+    once: false,
+    cooldownMonths: 36,
+    minYear: 633,
+    trigger: safeTrigger('ev_p_yoke_broken', (ctx) => {
+      const g = ctx.game;
+      const r = g.tags.RSH;
+      if (!r || r.alive === false || !r.overlord) return false;
+      const lord = g.tags[r.overlord];
+      if (!lord || lord.alive === false) return false;
+      // A human overlord keeps what their own war won.
+      const humans = Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [g.playerTag];
+      if (humans.indexOf(r.overlord) >= 0) return false;
+      // The rising waits for a quiet month, like every independence rising.
+      return !atWarWithLiveEnemy(ctx, 'RSH');
+    }),
+    major: true,
+    aiOption: 0,
+    options: [{
+      label: 'The yoke is returned unworn',
+      tooltip: 'The Caliphate severs the client bond, +1 stability, +15 legitimacy, +6,000 manpower; the armies of the Ridda remuster at the desert\'s edge. Its old overlord gains a bitter enemy.',
+      effects: guard('ev_p_yoke_broken:0', (ctx) => {
+        const g = ctx.game;
+        const r = g.tags.RSH;
+        if (!r || r.alive === false || !r.overlord) return;
+        const lordTag = r.overlord;
+        r.overlord = null;
+        r.incorporating = null;
+        if (!r.opinion) r.opinion = {};
+        r.opinion[lordTag] = -150;
+        const lord = g.tags[lordTag];
+        if (lord) {
+          if (!lord.opinion) lord.opinion = {};
+          lord.opinion.RSH = -150;
+        }
+        ctx.helpers.adjust(ctx, 'RSH', { stability: 1, legitimacy: 15, manpower: 6000 });
+        ctx.helpers.addTagModifier(ctx, 'RSH', {
+          id: 'armies_of_the_ridda', name: 'The Armies of the Ridda', months: 60,
+          effects: { moraleMult: 1.15, disciplineMult: 1.08, reinforceMult: 1.15 },
+        });
+        ctx.helpers.spawnArmy(ctx, 'RSH', stagingProvince(ctx), {
+          inf: 6, cav: 5, name: 'Army of the Rising',
+          general: { name: 'Sa\'d ibn Abi Waqqas', fire: 2, shock: 4, maneuver: 4 },
+        });
+        ctx.helpers.chronicle(ctx, 'era',
+          'No yoke but God\'s: the Caliphate repudiates the client bond of ' + ((lord && lord.name) || lordTag)
+          + ' and remusters at the desert\'s edge; the truce holds, the tribute does not.');
+      }),
+    }],
+  },
+  {
     id: 'ev_p_sasanian_horizon',
     title: 'The Last King of the House of Sasan',
     worldLabel: 'The Sasanian succession reaches its historical horizon',
@@ -1114,6 +1343,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 651, m: 6 },
     world: true,
+    when: (ctx) => alive(ctx, 'SAS'), // no dynasty, no horizon to defy
     major: true,
     aiOption: 0,
     options: [{
@@ -1208,6 +1438,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 653, m: 9 },
     world: true,
+    when: freeCaliphate, // the imperial chronicle belongs to a sovereign caliphate
     major: true,
     aiOption: 0,
     options: [
@@ -1261,6 +1492,11 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 654, m: 6 },
     world: true,
+    // A governor with no coast builds no fleet: the card needs a sovereign
+    // caliphate actually holding a Levantine or Egyptian harbor.
+    when: (ctx) => freeCaliphate(ctx)
+      && ['Laodicea', 'Tyre', 'Sidon', 'Berytus', 'Ptolemais', 'Caesarea Maritima', 'Alexandria']
+        .some((n) => ctx.helpers.controls(ctx, 'RSH', n)),
     aiOption: 0,
     options: [
       {
@@ -1318,6 +1554,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 655, m: 8 },
     world: true,
+    when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ'), // two navies, or no battle worth a card
     major: true,
     aiOption: 0,
     options: [
@@ -1386,6 +1623,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 656, m: 6 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -1439,6 +1677,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 657, m: 7 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -1482,7 +1721,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     decider: 'RSH',
     trigger: safeTrigger('ev_p_nahrawan', (ctx) =>
-      dateGE(ctx, 658, 7) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'kharijites')),
+      dateGE(ctx, 658, 7) && freeCaliphate(ctx) && !!ctx.helpers.getFlag(ctx, 'kharijites')),
     aiOption: 0,
     options: [
       {
@@ -1527,6 +1766,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 661, m: 1 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -1584,7 +1824,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     decider: 'JUD',
     trigger: safeTrigger('ev_p_seventy_families', (ctx) =>
-      dateGE(ctx, 662, 4) && alive(ctx, 'RSH')
+      dateGE(ctx, 662, 4) && freeCaliphate(ctx)
       && !!ctx.helpers.getFlag(ctx, 'muawiyaCaliph')
       && ctx.helpers.controls(ctx, 'RSH', 'Jerusalem')),
     aiOption: 0,
@@ -1633,6 +1873,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 663, m: 7 },
     world: true,
+    when: (ctx) => alive(ctx, 'BYZ'),
     major: true,
     aiOption: 0,
     options: [
@@ -1690,6 +1931,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 664, m: 5 },
     world: true,
+    when: freeCaliphate,
     aiOption: 0,
     options: [
       {
@@ -1754,6 +1996,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 668, m: 9 },
     world: true,
+    when: (ctx) => alive(ctx, 'BYZ'),
     major: true,
     aiOption: 0,
     options: [
@@ -1805,6 +2048,13 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 670, m: 4 },
     world: true,
+    // The great expedition needs everything at once: a sovereign caliphate,
+    // a Roman City to besiege, and a Syrian base to launch from. In any
+    // other world the card retires instead of narrating a plan on parchment.
+    when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ')
+      && ctx.helpers.controls(ctx, 'BYZ', 'Byzantion')
+      && ['Antioch', 'Tarsus', 'Laodicea', 'Damascus', 'Alexandria', 'Emesa']
+        .some((n) => ctx.helpers.controls(ctx, 'RSH', n)),
     major: true,
     aiOption: 0,
     options: [
@@ -1885,7 +2135,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     decider: 'BYZ',
     trigger: safeTrigger('ev_p_mardaites', (ctx) =>
-      dateGE(ctx, 672, 6) && alive(ctx, 'BYZ') && alive(ctx, 'RSH')
+      dateGE(ctx, 672, 6) && alive(ctx, 'BYZ') && freeCaliphate(ctx)
       && ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis']
         .some((n) => ctx.helpers.controls(ctx, 'RSH', n))),
     aiOption: 0,
@@ -1939,6 +2189,8 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 678, m: 6 },
     world: true,
+    when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ')
+      && ctx.helpers.controls(ctx, 'BYZ', 'Byzantion'), // a City to defend, a fleet to burn
     major: true,
     aiOption: 0,
     options: [
@@ -2001,6 +2253,8 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 679, m: 3 },
     world: true,
+    when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ')
+      && ctx.helpers.controls(ctx, 'BYZ', 'Byzantion'),
     major: true,
     aiOption: 0,
     options: [
@@ -2056,6 +2310,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 680, m: 5 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -2099,6 +2354,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 680, m: 10 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -2153,6 +2409,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 683, m: 7 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -2219,7 +2476,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     decider: 'RSH',
     trigger: safeTrigger('ev_p_marj_rahit', (ctx) =>
-      dateGE(ctx, 684, 8) && alive(ctx, 'RSH') && !!ctx.helpers.getFlag(ctx, 'secondFitna')),
+      dateGE(ctx, 684, 8) && freeCaliphate(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna')),
     aiOption: 0,
     options: [
       {
@@ -2267,6 +2524,7 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 685, m: 4 },
     world: true,
+    when: freeCaliphate,
     major: true,
     aiOption: 0,
     options: [
@@ -2320,6 +2578,10 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 691, m: 9 },
     world: true,
+    // The card knows two worlds — a caliphal dome, or a Hebrew platform. In a
+    // world where NEITHER power holds the city there is nothing to show.
+    when: (ctx) => (freeCaliphate(ctx) && ctx.helpers.controls(ctx, 'RSH', 'Jerusalem'))
+      || (alive(ctx, 'JUD') && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')),
     major: true,
     aiOption: (ctx) => {
       try { return ctx.helpers.controls(ctx, 'JUD', 'Jerusalem') ? 1 : 0; } catch (e) { return 0; }
@@ -2393,6 +2655,8 @@ export const EVENTS_614 = [
     forTag: 'both',
     date: { y: 692, m: 11 },
     world: true,
+    // No Second Fitna, no siege of Mecca to end it.
+    when: (ctx) => freeCaliphate(ctx) && !!ctx.helpers.getFlag(ctx, 'secondFitna'),
     major: true,
     aiOption: 0,
     options: [
