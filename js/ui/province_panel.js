@@ -162,6 +162,7 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
           <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
+          <button class="pp-dip" data-dip="protect" data-ref="dipProtect">Offer Our Protection</button>
           <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip" data-dip="rival" data-ref="dipRival">Name as Rival</button>
@@ -187,6 +188,7 @@ const RISING_LABELS = {
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
         rival: b.classList.contains('pp-dip-on') ? 'renounceRival' : 'declareRival',
+        protect: 'offerClientship',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
@@ -827,6 +829,29 @@ const RISING_LABELS = {
           + `+1 martial point a month, claims against them at half price.\n`
           + `Their opinion sinks to the cold baseline, no alliance — and no grudge between us will `
           + `close for as long as it stands.`);
+    }
+    // The offered collar (SPEC §92): shown only where it could ever apply —
+    // a sworn ally who is not already somebody's client. The tooltip says in
+    // advance whether they will say yes, because this is a decade-long
+    // mistake to make blind.
+    const co = d.clientOffer;
+    const offerable = !!co && !d.ourClient && !d.ourOverlord && !d.theirOverlord && !d.atWarWithUs;
+    refs.dipProtect.classList.toggle('hidden', !offerable);
+    if (offerable) {
+      const terms = `Offer them our protection: ${co.cost} influence.\n`
+        + `They become a client kingdom — their court, army and laws stand; their tribute `
+        + `(15% of their income) and their wars become ours. Costs NO infamy: nobody is conquered.\n`
+        + `Requires a sworn ally at most half our size (they are ${co.theirDev} development `
+        + `to our ${co.myDev}) whose opinion of us is ${co.need}+ (theirs: ${co.opinion}).\n`
+        + (co.can
+          ? (co.willAccept
+            ? '▸ They will accept.'
+              + (co.threatened ? ' A war they cannot win alone has made the case for us.' : '')
+            : '▸ They will refuse — devotion alone is not enough unless they are much smaller '
+              + 'than us, or in a war they cannot win. Asking anyway costs the influence and '
+              + 'their goodwill.')
+          : '');
+      setDipBtn(refs.dipProtect, co.can, co.why, terms);
     }
     // Incorporation (SPEC §61): only shown for our own client kingdoms.
     refs.dipIncorporate.classList.toggle('hidden', !d.incorporate);

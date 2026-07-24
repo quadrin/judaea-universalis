@@ -211,7 +211,7 @@ python3 -m http.server 8613 --directory .
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 65 headless sim suites and 31
+  marching. The full verification battery — 67 headless sim suites and 31
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
@@ -319,6 +319,14 @@ python3 -m http.server 8613 --directory .
   land, a conciliar one to governing rather than winning, and any realm sitting
   on land it took in war can be asked for the hardest objective in the game:
   mend that quarrel without giving the land back.
+- **Offer your protection.** A client kingdom used to require a war — the peace
+  table's knee-bending clause, or taking someone else's vassal off them. Now a
+  sworn ally who is at most half your size and genuinely devoted to you can
+  simply be asked to come under your wing: their court, army and laws stand,
+  their tribute and their wars become yours, and because nobody was conquered
+  it costs no infamy at all. They say yes on devotion alone if they adore you,
+  and at a lower bar if they're much smaller or fighting a war they can't win.
+  Ask and be refused, and they won't hear it again for five years.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

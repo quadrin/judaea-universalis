@@ -12,6 +12,7 @@ import {
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
+  clientOfferInfo, offerClientshipCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
   sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
@@ -744,6 +745,7 @@ export function gameActions(ctx) {
         ceiling: grudgeCap,
       } : null;
       const rival = rivalDeclareInfo(ctx, me, tag);
+      const clientOffer = clientOfferInfo(ctx, me, tag);
       let whyNotImprove = '';
       if (grudgeWall) whyNotImprove = grudgeWall;
       else if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
@@ -817,6 +819,9 @@ export function gameActions(ctx) {
         grudge: grudgeHeld ? { count: grudgeHeld.length, names: grudgeLabel, ceiling: grudgeCap } : null,
         reconcile,
         rival,
+        // The offered collar (SPEC §92): a weaker sworn ally may be asked to
+        // come under our protection without a war being fought over it.
+        clientOffer,
         ourGrudge: (() => {
           const held = liveGrudge(ctx, me, tag);
           return held ? { count: held.length, ceiling: grudgeCeiling(ctx, me, tag) } : null;
@@ -2166,6 +2171,27 @@ export function gameActions(ctx) {
           + 'our enemy (' + res.cost + ' influence). Time may now do what envoys could not.', 'good');
         chronicleCore(ctx, 'diplomacy', 'This realm sets aside its quarrel with ' + res.name + '.');
       } catch (e) { warnOnce('renounceRival', 'renounceRival failed', e); }
+    },
+
+    // ---- the offered collar (SPEC §92) --------------------------------------
+    offerClientship(tag) {
+      try {
+        const res = offerClientshipCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Protection', res.why, 'bad'); return; }
+        if (!res.accepted) {
+          say('The offer is declined', res.name + ' thanks us for our concern and keeps its '
+            + 'own crown. They will not hear the question again for years, and they think '
+            + 'rather less of us for asking.', 'bad');
+          chronicleCore(ctx, 'diplomacy', res.name + ' declines an offer of protection and keeps its own crown.');
+          return;
+        }
+        say('A crown comes under our protection', res.name + ' accepts the collar: their court, '
+          + 'their army and their laws stand, and their tribute and their wars are ours. '
+          + 'No one was conquered, so no one abroad counts it against us.', 'good');
+        chronicleCore(ctx, 'diplomacy', res.name + ' comes under the protection of '
+          + ((g.tags[g.playerTag] && g.tags[g.playerTag].name) || g.playerTag)
+          + ' as a client kingdom — asked for, not fought for.');
+      } catch (e) { warnOnce('offerClientship', 'offerClientship failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------

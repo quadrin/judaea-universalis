@@ -2199,6 +2199,19 @@ export function declareWar(ctx, atk, def, name, cb) {
 // Costs, gains and cooldowns for the player-facing diplomacy actions (init.js
 // gameActions) and the AI reciprocity pass (ai.js). Frozen action contract.
 export const DIPLO = {
+  // The offered collar (SPEC §92): a small friendly neighbor may be asked to
+  // come under our protection as a client kingdom, without a war. It is the
+  // one path to a vassal that costs no infamy — nobody was conquered — and
+  // it is deliberately hard to reach: they must be our sworn ally, markedly
+  // weaker, and devoted to us.
+  clientOfferInfl: 100,      // influence to send the offer
+  clientOfferDevShare: 0.5,  // their development must be at most this much of ours
+  clientOfferMinOpinion: 120, // ...and they must think at least this well of us
+  clientOfferAcceptOpinion: 150, // adoration alone is enough at this much
+  clientOfferSmallShare: 0.25, // a state this much smaller than us hears the logic
+  clientOfferRefuseOpinion: -30, // the sting of being asked and saying no
+  clientOfferCdMonths: 60,   // ...and how long before they will hear it again
+  clientOfferAcceptOpinionHit: -15, // even a yes costs a little pride
   improveCost: 25, improveGain: 15, improveCdMonths: 4,
   giftCost: 75, giftGain: 20, giftCdMonths: 6,
   allyMinOpinion: 60, allyAcceptOpinion: 110, allyRefuseOpinion: -5, allyCdMonths: 6,
@@ -2789,6 +2802,115 @@ export const PEACE = {
   freshWarMonths: 12,    // a war younger than this refuses white peace unless the enemy is losing
   withdrawWhiteGrace: 15, // extra tolerance for a JUNIOR's white withdrawal — the enemy is glad to shed a coalition member
 };
+// ─────────────────────────────────────────────────────────────────────────────
+// The offered collar (SPEC §92): clientship without a war.
+//
+// Every road to a client kingdom ran through a battlefield — the peace table's
+// subjugation clause, or §76's transfer of somebody else's vassal. But a small
+// state beside a large friendly one has always had a third option, and it is
+// the one most of the real client kingdoms of this map actually took: ask for
+// the protection before the alternative arrives. So a court that is our sworn
+// ally, markedly weaker than us, and devoted to us may be offered the collar.
+//
+// It costs no infamy, because nobody was conquered. It costs influence, a
+// little of their pride, and — if they refuse — a decade of goodwill.
+// ─────────────────────────────────────────────────────────────────────────────
+export function devOfTag(ctx, tag) {
+  const g = ctx.game;
+  let d = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === tag) d += devTotal(p);
+  }
+  return d;
+}
+// Is this court in trouble it cannot get out of alone? A state at war with
+// somebody markedly bigger hears an offer of protection very differently.
+function isThreatened(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!t) return false;
+  const mine = devOfTag(ctx, tag);
+  for (const e of t.atWarWith || []) {
+    const et = g.tags[e];
+    if (!et || !et.alive) continue;
+    if (devOfTag(ctx, e) > mine * 1.5) return true;
+  }
+  return false;
+}
+export function clientOfferInfo(ctx, me, them) {
+  const g = ctx.game;
+  const mine = g.tags[me], theirs = g.tags[them];
+  if (!mine || !theirs || me === them || !theirs.alive) return null;
+  const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  const myDev = devOfTag(ctx, me);
+  const theirDev = devOfTag(ctx, them);
+  const opinion = opinionOf(ctx, them, me);
+  const allied = (mine.allies || []).indexOf(them) >= 0
+    || (theirs.allies || []).indexOf(me) >= 0;
+  const share = myDev > 0 ? theirDev / myDev : 99;
+  const out = {
+    cost: DIPLO.clientOfferInfl,
+    opinion,
+    need: DIPLO.clientOfferMinOpinion,
+    myDev: Math.round(myDev),
+    theirDev: Math.round(theirDev),
+    maxShare: DIPLO.clientOfferDevShare,
+    share: Math.round(share * 100) / 100,
+    threatened: isThreatened(ctx, them),
+    can: false,
+    why: '',
+  };
+  if (theirs.overlord === me) out.why = 'They are already our client kingdom.';
+  else if (theirs.overlord) {
+    out.why = 'They already answer to '
+      + ((g.tags[theirs.overlord] && g.tags[theirs.overlord].name) || theirs.overlord) + '.';
+  } else if (mine.overlord) out.why = 'A client kingdom does not keep client kingdoms of its own.';
+  else if ((mine.atWarWith || []).indexOf(them) >= 0) out.why = 'We are at war with them.';
+  else if (!allied) out.why = 'Only a sworn ally would hear such an offer.';
+  else if (share > DIPLO.clientOfferDevShare) {
+    out.why = 'They are too great to be anyone\'s client (' + out.theirDev
+      + ' development against our ' + out.myDev + '; we need to be twice their size).';
+  } else if (opinion < DIPLO.clientOfferMinOpinion) {
+    out.why = 'They do not love us nearly enough (' + opinion + ' of '
+      + DIPLO.clientOfferMinOpinion + ' needed to even ask).';
+  } else if (diploCdActive(ctx, me + '>' + them + ':client')) {
+    out.why = 'We asked once and were refused ('
+      + diploCdMonthsLeft(ctx, me + '>' + them + ':client') + ' months before they will hear it again).';
+  } else if (num(mine.points && mine.points.infl) < DIPLO.clientOfferInfl) {
+    out.why = 'Not enough influence (' + DIPLO.clientOfferInfl + ' required).';
+  }
+  out.can = !out.why;
+  // What they will say, shown before it is asked — this is a decade-long
+  // mistake to make blind.
+  out.willAccept = out.can && (opinion >= DIPLO.clientOfferAcceptOpinion
+    || out.threatened
+    || share <= DIPLO.clientOfferSmallShare);
+  return out;
+}
+export function offerClientshipCore(ctx, me, them) {
+  const info = clientOfferInfo(ctx, me, them);
+  if (!info || !info.can) return { ok: false, why: info ? info.why : 'There is no such court.' };
+  const g = ctx.game;
+  const mine = g.tags[me], theirs = g.tags[them];
+  mine.points.infl = num(mine.points.infl) - info.cost;
+  const name = theirs.name || them;
+  if (!info.willAccept) {
+    addOpinion(ctx, them, me, DIPLO.clientOfferRefuseOpinion);
+    setDiploCd(ctx, me + '>' + them + ':client', DIPLO.clientOfferCdMonths);
+    return { ok: true, accepted: false, name };
+  }
+  // The bond replaces every other: a client keeps no outside alliances, and
+  // the alliance that made this possible becomes the fealty itself.
+  for (const al of (theirs.allies || []).slice()) breakAllianceCore(ctx, them, al);
+  theirs.overlord = me;
+  theirs.incorporating = null;
+  addOpinion(ctx, them, me, DIPLO.clientOfferAcceptOpinionHit);
+  // No infamy. Nobody was conquered — this is the distinction the whole
+  // mechanism exists to draw.
+  return { ok: true, accepted: true, name, dev: info.theirDev };
+}
+
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }

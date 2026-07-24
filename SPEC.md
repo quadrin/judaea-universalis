@@ -3815,3 +3815,86 @@ attached, an undecided winner is offered none, character alone is not
 enough (the state must stand), each identity's modifier does what it says,
 exactly one card is offered to a realm that qualifies for several, and no
 strand on the §89 page is keyed on a flag nothing writes.
+
+## 91. No strand card in a world it does not fit
+
+The alternate-timeline strands (§7.8–8.5, §90) are the worlds that outran the
+record, and every one of them gated on the same two questions: is the realm
+alive, and does it hold the capital. None of them asked whether it was still
+SOVEREIGN. 67 BCE's `freeOfRome` had it right from the start (`!t.overlord`);
+the other five eras simply never implemented it, and the result was a court
+that had bent the knee at a peace table drawing cards congratulating it on
+its independence.
+
+Three defects, one shape:
+
+- **No sovereignty check.** `judaeaFree` (66 CE), `judaeaStands` (132 CE),
+  `returnStands` (614), `hasmoneanWorld`/`hasmoneanHolds`/`greaterHerod`
+  (40 BCE) all now require the strand's realm to answer to nobody. A client
+  kingdom sitting in its own capital is the chronicle repeated, not the world
+  that outran it — which is precisely what the Second Kingdom, the Standing
+  State, the Return and the Hasmonean Restoration are each about.
+- **No world check at all.** The 167 BCE greater-victory strand gated only on
+  `alive(HAS)`, so a Hasmonean state that had lost Jerusalem still drew cards
+  announcing it had conquered Syria. New shared gate `greaterVictory` —
+  alive, no overlord, seated in Jerusalem — on all ten cards. The worst of
+  them, `ev_yoke_reversed`, asked for a war score of 75 and nothing else:
+  Antioch sued for terms to a court whose capital it was occupying. It now
+  wants the capital, the sovereignty, and actual ground in Coele-Syria.
+- **No capital check.** Four 67 BCE cards (the Parthian embassy, the
+  Pharsalus wager, the caravan tribute, the Actium choice) asked only
+  `freeOfRome`, so a Hasmonean driven out of Jerusalem still drew the
+  sovereign's cards. New `seatedHasmonean` = `freeOfRome` + holds the city.
+
+Note that `controls()` reads the CONTROLLER, not the owner: a Maccabean
+Jerusalem still legally owned by Antioch is correctly seated, which is the
+whole of 164 BCE. A card firing in a true world and being read after the
+world changed is not this bug and is not prevented.
+
+**Regression contract**: `smoke66.mjs`, deliberately data-driven — it reads
+each strand's region out of the package source, builds the most permissive
+world the strand could ask for, proves the strand fires there, then puts a
+collar on the realm and proves NOTHING fires, and repeats it with the capital
+lost. A card added to a strand tomorrow is covered without anyone remembering
+to add a case.
+
+## 92. The offered collar — clientship without a war
+
+Every road to a client kingdom ran through a battlefield: the peace table's
+subjugation clause (§16), or §76's transfer of somebody else's vassal. But a
+small state beside a large friendly one has always had a third option, and it
+is the one most of the real client kingdoms of this map actually took — ask
+for the protection before the alternative arrives.
+
+`Offer Our Protection` (province panel diplomacy, `offerClientship`) is that
+road. The gate is deliberately narrow:
+
+- a **sworn ally** — no other relationship earns the hearing;
+- at most `clientOfferDevShare` (half) of our development;
+- whose opinion of us is `clientOfferMinOpinion` (120) or better;
+- neither of us their overlord already, and we are not somebody's client
+  ourselves — a client does not go collecting clients;
+- `clientOfferInfl` (100) influence to send it.
+
+**Whether they say yes** is shown before it is asked, because this is a
+decade-long mistake to make blind. They accept at `clientOfferAcceptOpinion`
+(150) on devotion alone, or at the lower bar if they are much smaller than us
+(`clientOfferSmallShare`) or **threatened** — at war with a power half again
+their size, which is the calculus that produced most historical clientage.
+
+**On acceptance** the bond replaces every other: their outside alliances
+break, the alliance that made it possible becomes the fealty, they pay the
+ordinary `tributeShare` and their wars are ours, and their court, army and
+laws all stand. It costs **no infamy** — nobody was conquered, and that
+distinction is the entire reason the mechanism exists. It costs a little of
+their pride (`clientOfferAcceptOpinionHit`).
+
+**On refusal** the influence is spent anyway, their regard drops by
+`clientOfferRefuseOpinion`, and they will not hear the question again for
+`clientOfferCdMonths` (five years).
+
+**Regression contract**: `smoke67.mjs` — the gate in each of its clauses, the
+too-great court, the already-spoken-for court, devotion alone being
+insufficient, a losing war turning a refusal into an acceptance, the bond
+replacing outside alliances, the absence of infamy, the refusal's cooldown,
+and the save.
