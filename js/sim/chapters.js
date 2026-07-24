@@ -15,9 +15,10 @@
 // Everything stored on game.chapters is plain data (objectives carry typed
 // params, never functions), so saves resume mid-chapter.
 
-import { num, clamp, devTotal } from './military.js';
+import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress } from './military.js';
 import { factionDefs } from './factions.js';
 import { isCoastal, merchantShipsOf } from './navy.js';
+import { lean, axisOf, doctrineEpithet } from './doctrine.js';
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -123,7 +124,75 @@ function obj(slot, kind, name, desc, params, need, needMonths, deadline) {
   };
 }
 
+// ------------------------------------------------------- the realm's own arc
+// A generated chapter that asks every realm the same four questions is a
+// checklist. The doctrine axes (SPEC §85) already know what KIND of realm
+// won this bookmark, so the second act asks it about itself: a zealous crown
+// is set to purifying the land, an accommodating one to keeping the
+// communities quiet, a court that faces east to keeping the covenant it
+// chose. Each doctrine objective is offered once (usedKinds), then the
+// generic ladder resumes — the arc bends toward the campaign without ever
+// running out of chapters.
+function fresh(ctx, kind) {
+  return usedKinds(ctx).indexOf(kind) < 0;
+}
+function faithProvinces(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const out = [];
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.controller !== tag) continue;
+    if (t && p.religion === t.religion) out.push(i);
+  }
+  return out;
+}
+function foreignFaithProvinces(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const out = [];
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    if (t && p.religion && p.religion !== t.religion) out.push(i);
+  }
+  return out;
+}
+// Courts that hold a grudge against us — the wounds §86 says can be closed.
+function woundedCourts(ctx, tag) {
+  const g = ctx.game;
+  const out = [];
+  for (const k of Object.keys(g.tags)) {
+    const e = g.tags[k];
+    if (!e || !e.alive || k === tag || k === 'REB') continue;
+    if (liveGrudge(ctx, k, tag)) out.push(k);
+  }
+  return out;
+}
+
 function makeTerritorial(ctx, tag, seq, deadline) {
+  // Zealous: the land itself must answer to one altar.
+  if (lean(ctx, 'zeal', 1) && fresh(ctx, 'purified')) {
+    const have = faithProvinces(ctx, tag).length;
+    const need = have + 2 + seq;
+    return obj('territorial', 'purified',
+      'The Purified Land',
+      'Bring the land under one altar: hold ' + need + ' provinces that keep the realm\'s own faith.',
+      {}, need, 3, deadline);
+  }
+  // Martial: measured in ground that was not ours when the chapter opened.
+  if (lean(ctx, 'conquest', 1) && fresh(ctx, 'swordMeasure')) {
+    const need = 3 + seq;
+    const baseline = [];
+    for (let i = 1; i < ctx.game.provinces.length; i++) {
+      const p = ctx.game.provinces[i];
+      if (p && !p.impassable && p.controller === tag) baseline.push(i);
+    }
+    return obj('territorial', 'swordMeasure',
+      'The Sword\'s Own Measure',
+      'Take ' + need + ' provinces that are not ours today, and hold them half a year.',
+      { baseline }, need, 6, deadline);
+  }
   const holy = holyProvinces(ctx);
   const usedHoly = usedKinds(ctx).indexOf('holyPlaces') >= 0;
   if (holy.length && !usedHoly) {
@@ -164,6 +233,32 @@ function makeTerritorial(ctx, tag, seq, deadline) {
 }
 
 function makeInternal(ctx, tag, seq, deadline) {
+  // Accommodating: the proof is not conversion but quiet — every province
+  // that keeps another god, kept calm.
+  if (lean(ctx, 'zeal', -1) && fresh(ctx, 'communities') && foreignFaithProvinces(ctx, tag).length) {
+    return obj('internal', 'communities',
+      'The Peace of the Communities',
+      'Keep every province of another faith below 3 unrest for ' + (8 + 2 * seq) + ' months together.',
+      { max: 3 }, 1, 8 + 2 * seq, deadline);
+  }
+  // Crowned: one head, undoubted — full legitimacy, an heir seated, and no
+  // claimant anywhere in the field (SPEC §87).
+  if (lean(ctx, 'authority', 1) && fresh(ctx, 'undoubted')) {
+    return obj('internal', 'undoubted',
+      'The Undoubted Crown',
+      'Leave no question about the throne: legitimacy 90+, an heir seated, and no pretender '
+        + 'in the field, for ' + (8 + 2 * seq) + ' months.',
+      { legit: 90 }, 1, 8 + 2 * seq, deadline);
+  }
+  // Conciliar: a realm that seats its sovereignty in a chamber proves itself
+  // by governing, not by winning — years of peace with the country steady.
+  if (lean(ctx, 'authority', -1) && fresh(ctx, 'chamber')) {
+    return obj('internal', 'chamber',
+      'The Chamber Sits',
+      'Govern rather than fight: ' + (12 + 3 * seq) + ' unbroken months at peace with every '
+        + 'court, stability at +1 or better.',
+      { stab: 1 }, 1, 12 + 3 * seq, deadline);
+  }
   if (factionDefs(ctx, tag)) {
     return obj('internal', 'estates',
       'A House United',
@@ -192,6 +287,37 @@ function makeInternal(ctx, tag, seq, deadline) {
 function makeDiplomatic(ctx, tag, seq, deadline) {
   const g = ctx.game;
   const t = g.tags[tag];
+  // The mended quarrel (SPEC §86): a court whose land we hold, brought all
+  // the way back. This is the hardest diplomatic objective in the game and
+  // the only one that cannot be bought — it can only be waited out, and only
+  // if the realm stops choosing that court for an enemy.
+  const wounded = woundedCourts(ctx, tag);
+  if (wounded.length && fresh(ctx, 'mended')) {
+    const names = wounded.map((k) => (g.tags[k] && g.tags[k].name) || k).slice(0, 3).join(', ');
+    return obj('diplomatic', 'mended',
+      'The Mended Quarrel',
+      'Close an old wound without giving the land back: bring one court that lost provinces to '
+        + 'us (' + names + ') all the way to reconciliation.',
+      { list: wounded.slice() }, 1, 1, deadline);
+  }
+  // The horizon the realm chose, kept: a warm alliance with a court on that
+  // side of the world, held a year.
+  if (fresh(ctx, 'covenant') && (lean(ctx, 'alignment', 1) || lean(ctx, 'alignment', -1))) {
+    const east = axisOf(ctx, 'alignment') < 0;
+    return obj('diplomatic', 'covenant',
+      east ? 'The Covenant of the King of Kings' : 'The Friendship of the West',
+      'Keep the horizon we chose: hold a warm alliance (their opinion of us 50+) with a court of '
+        + (east ? 'the east' : 'the west') + ' for a year together.',
+      { east, minOpinion: 50 }, 1, 12, deadline);
+  }
+  // Mercantile: the ledgers, kept in peace — the purse's own proof.
+  if (lean(ctx, 'conquest', -1) && fresh(ctx, 'ledgers')) {
+    const income = Math.max(Math.round(num(t.income) * 1.3), Math.round(num(t.income)) + 8);
+    return obj('diplomatic', 'ledgers',
+      'The Ledgers of the Age',
+      'Prove the purse: ' + income + ' talents a month with no war anywhere, held a year.',
+      { income }, 1, 12, deadline);
+  }
   const hasCoast = coastalControlled(ctx, tag) > 0;
   const hasClients = Object.values(g.tags).some((e) => e && e.alive && e.overlord === tag);
   if (hasCoast && seq % 2 === 0) {
@@ -222,13 +348,22 @@ const TITLES = {
   capitals: ['The Circle of Thrones', 'The Neighbors Bow', 'The Wide Dominion'],
   rivalCapital: ['The Strongest Bows', 'The Contest of Ages', 'The Last Rival'],
   provCount: ['The Broad Land', 'From Strength to Strength', 'The Long Border'],
+  purified: ['The One Altar', 'The Land Made Clean', 'A Kingdom Apart'],
+  swordMeasure: ['The Sword\'s Own Measure', 'What the Spear Wins', 'The Marching Border'],
 };
+// The seal of a chapter. Ten of them, and the sequence walks the list rather
+// than cycling five — a long sandbox stopped repeating itself at chapter six.
 const REWARDS = [
   { name: 'The Weights and Measures', desc: 'The realm\'s scales are trusted in every market: +5% income, forever.', effects: { incomeMult: 1.05 } },
   { name: 'The Rolls of the Willing', desc: 'The villages remember the victories: +5% manpower, forever.', effects: { manpowerMult: 1.05 } },
   { name: 'The Old Standards', desc: 'The banners carry their story into every line: +3% morale, forever.', effects: { moraleMult: 1.03 } },
   { name: 'The King\'s Roads', desc: 'The roads that fed the wars now feed the ranks: +10% reinforcement, forever.', effects: { reinforceMult: 1.1 } },
   { name: 'The Great Seal', desc: 'The dynasty\'s word outlives its bearers: legitimacy accrues monthly, forever.', effects: { legitimacyAdd: 0.1 } },
+  { name: 'The Quiet Provinces', desc: 'The assessors are met with complaints rather than stones: −0.5 unrest everywhere, forever.', effects: { unrestAll: -0.5 } },
+  { name: 'The Granaries of the Age', desc: 'Full stores behind every march: +8% income and +3% manpower, forever.', effects: { incomeMult: 1.08, manpowerMult: 1.03 } },
+  { name: 'The Drillfields', desc: 'A generation raised to the standard: +5% morale, forever.', effects: { moraleMult: 1.05 } },
+  { name: 'The Long Memory', desc: 'What this court promises, it is believed to mean: legitimacy accrues faster, forever.', effects: { legitimacyAdd: 0.2 } },
+  { name: 'The Made Peace', desc: 'A court that knows how a war is ended keeps its armies cheaper: −8% maintenance, forever.', effects: { maintMult: 0.92 } },
 ];
 
 function usedKinds(ctx) {
@@ -250,10 +385,17 @@ function generateChapter(ctx, tag) {
   const lead = objectives[0].kind;
   const titles = TITLES[lead] || TITLES.provCount;
   const title = titles[seq % titles.length];
+  // Ten seals now, so a realm sees ten chapters before one repeats.
   const reward = REWARDS[seq % REWARDS.length];
+  // The epigraph names the realm the chapter is actually being asked of
+  // (SPEC §85) — a second act addressed to this campaign, not to any winner.
+  const epithet = doctrineEpithet(ctx);
   ch.active = {
     n, title,
-    epigraph: 'The chronicle turns a page: what the war won, the age must keep.',
+    epigraph: epithet
+      ? 'The chronicle turns a page. What the war won, the age must keep — and it will be kept '
+        + 'by the realm this war made: ' + epithet.toLowerCase() + '.'
+      : 'The chronicle turns a page: what the war won, the age must keep.',
     started: { y: g.date.y, m: g.date.m },
     objectives,
     reward: { id: 'chapter_reward_' + n, name: reward.name, desc: reward.desc, effects: { ...reward.effects } },
@@ -300,6 +442,68 @@ function evalObjective(ctx, tag, o) {
     case 'provCount': {
       const have = controlledCount(ctx, tag);
       return { have, met: have >= o.need };
+    }
+    // ---- the doctrine objectives (SPEC §85, §88) ---------------------------
+    case 'purified': {
+      const have = faithProvinces(ctx, tag).length;
+      return { have, met: have >= o.need };
+    }
+    case 'swordMeasure': {
+      const was = new Set(P.baseline || []);
+      let have = 0;
+      for (let i = 1; i < g.provinces.length; i++) {
+        const p = g.provinces[i];
+        if (p && !p.impassable && p.controller === tag && !was.has(i)) have++;
+      }
+      return { have, met: have >= o.need };
+    }
+    case 'communities': {
+      const list = foreignFaithProvinces(ctx, tag);
+      // No province of another faith left is not a pass — the objective was
+      // to keep them, not to be rid of them.
+      if (!list.length) return { have: 0, met: false };
+      const worst = list.reduce((m, id) => Math.max(m, num(ctx.byId(id).unrest)), 0);
+      return { have: Math.round(worst * 10) / 10, met: worst < num(P.max, 3) };
+    }
+    case 'undoubted': {
+      const claim = g.pretenders && g.pretenders[tag];
+      const met = num(t.legitimacy) >= num(P.legit, 90) && !!t.heir && !claim && !t.regency;
+      return { have: Math.round(num(t.legitimacy)), met };
+    }
+    case 'chamber': {
+      const atWar = livingEnemies(ctx, tag).length > 0;
+      const met = !atWar && num(t.stability) >= num(P.stab, 1);
+      return { have: met ? 1 : 0, met };
+    }
+    case 'mended': {
+      const have = (P.list || []).filter((k) => reconciled(ctx, k, tag)).length;
+      // Progress on this one is the closest wound's maturity, so the panel
+      // shows a clock rather than a stubborn zero.
+      const best = (P.list || []).reduce((m, k) => Math.max(m, thawProgress(ctx, k, tag)), 0);
+      return { have: have || Math.round(best * 100) / 100, met: have >= o.need };
+    }
+    case 'covenant': {
+      const east = !!P.east;
+      const have = ((t && t.allies) || []).filter((k) => {
+        const e = g.tags[k];
+        if (!e || !e.alive) return false;
+        if (num(e.opinion && e.opinion[tag]) < num(P.minOpinion, 50)) return false;
+        // "East" and "west" are read off the era's own geography: a court is
+        // eastern if its capital sits east of ours, western if west. No tag
+        // list to keep in sync with seven bookmarks.
+        const mine = capitalId(ctx, tag);
+        const theirs = capitalId(ctx, k);
+        const c0 = mine && ctx.geom.centroids ? ctx.geom.centroids[mine] : null;
+        const c1 = theirs && ctx.geom.centroids ? ctx.geom.centroids[theirs] : null;
+        if (!c0 || !c1) return false;
+        return east ? c1.x > c0.x : c1.x < c0.x;
+      }).length;
+      return { have, met: have >= o.need };
+    }
+    case 'ledgers': {
+      const atWar = livingEnemies(ctx, tag).length > 0;
+      const met = !atWar && num(t.income) >= num(P.income, 0);
+      return { have: Math.round(num(t.income)), met };
     }
     case 'estates': {
       const defs = factionDefs(ctx, tag) || [];
