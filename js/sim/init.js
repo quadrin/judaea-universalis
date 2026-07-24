@@ -7,7 +7,9 @@ import {
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
-  liveGrudge, grudgeCeiling,
+  liveGrudge, grudgeCeiling, grudgeCeilingRaw,
+  thawProgress, thawQuiet, reconciled, haveAffinity,
+  declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
@@ -729,6 +731,18 @@ export function gameActions(ctx) {
         ? 'They will not hear us while we hold ' + grudgeLabel
           + ' — the lost lands are remembered (opinion capped at ' + grudgeCap + ').'
         : '';
+      // Reconciliation (SPEC §86): the same wound, read as a clock. `pct` is
+      // how far it has closed; `quiet` says whether it is closing at all;
+      // `friends` says how far it can go.
+      const reconcile = grudgeHeld ? {
+        pct: Math.round(thawProgress(ctx, tag, me) * 100),
+        quiet: thawQuiet(ctx, tag, me),
+        friends: haveAffinity(ctx, tag, me),
+        done: reconciled(ctx, tag, me),
+        rawCeiling: grudgeCeilingRaw(ctx, tag, me),
+        ceiling: grudgeCap,
+      } : null;
+      const rival = rivalDeclareInfo(ctx, me, tag);
       let whyNotImprove = '';
       if (grudgeWall) whyNotImprove = grudgeWall;
       else if (diploCdActive(ctx, dipKey(tag, 'improve'))) {
@@ -748,7 +762,16 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
       else if (ourOverlord) whyNotAlly = 'They are our overlord.';
-      else if (grudgeHeld) whyNotAlly = 'No alliance while we hold ' + grudgeLabel + ' — the lost lands are remembered.';
+      // §67 refused an alliance outright while a grudge lived. §86 keeps that
+      // refusal — unless the pair are historical friends who have spent the
+      // years quietly enough for the wound to close. Then the land is still
+      // ours, and they will still sign.
+      else if (grudgeHeld && !(reconcile && reconcile.done)) {
+        whyNotAlly = reconcile && reconcile.friends
+          ? 'The old friendship is mending, but it is not mended (' + reconcile.pct
+            + '% — we still hold ' + grudgeLabel + ').'
+          : 'No alliance while we hold ' + grudgeLabel + ' — the lost lands are remembered.';
+      }
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
       const cb = casusBelli(ctx, me, tag);
@@ -791,6 +814,8 @@ export function gameActions(ctx) {
         // SPEC §67: their grudge against us (land of theirs we hold), and ours
         // against them — for the panel's status line and action tooltips.
         grudge: grudgeHeld ? { count: grudgeHeld.length, names: grudgeLabel, ceiling: grudgeCap } : null,
+        reconcile,
+        rival,
         ourGrudge: (() => {
           const held = liveGrudge(ctx, me, tag);
           return held ? { count: held.length, ceiling: grudgeCeiling(ctx, me, tag) } : null;
@@ -2119,6 +2144,29 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('declareWarOn', 'declareWarOn failed', e); }
     },
 
+    // ---- declared rivalries (SPEC §86) --------------------------------------
+    // Choosing an enemy is a real move with a real price, and choosing NOT to
+    // is what lets an old quarrel die. Both directions are the player's.
+    declareRival(tag) {
+      try {
+        const res = declareRivalCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Rivalry', res.why, 'bad'); return; }
+        say('A rival named', 'The heralds proclaim ' + res.name + ' the enemy of this realm ('
+          + res.cost + ' influence). Our captains sharpen against them — and no wound between '
+          + 'us will close while it stands.', 'war');
+        chronicleCore(ctx, 'diplomacy', 'This realm names ' + res.name + ' its rival.');
+      } catch (e) { warnOnce('declareRival', 'declareRival failed', e); }
+    },
+    renounceRival(tag) {
+      try {
+        const res = renounceRivalCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Rivalry', res.why, 'bad'); return; }
+        say('A quarrel set aside', 'The heralds unsay it: ' + res.name + ' is no longer named '
+          + 'our enemy (' + res.cost + ' influence). Time may now do what envoys could not.', 'good');
+        chronicleCore(ctx, 'diplomacy', 'This realm sets aside its quarrel with ' + res.name + '.');
+      } catch (e) { warnOnce('renounceRival', 'renounceRival failed', e); }
+    },
+
     // ---- claims --------------------------------------------------------------
     getClaimInfo(provId) {
       try {
@@ -2593,6 +2641,8 @@ export function reviveGame(saved) {
   if (saved.difficulty !== 'hard') saved.difficulty = 'normal'; // pre-difficulty saves
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
   if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
+  if (!saved.rivals) saved.rivals = {}; // pre-rivalry saves (SPEC §86): nobody named yet
+  if (!saved.doctrine) saved.doctrine = {}; // pre-doctrine saves (SPEC §85): flags carry the rest
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
   // Runtime-synthesized events don't survive a reload — drop stale pendings.

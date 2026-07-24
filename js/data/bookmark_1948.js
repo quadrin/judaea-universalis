@@ -210,6 +210,14 @@ export const BOOKMARK_1948 = {
   // Arab cold war between Cairo and the Hashemite bloc (non-adjacent, so it
   // chills opinions without opening a land war).
   rivalries: [['ISR', 'EGY'], ['ISR', 'SYR'], ['EGY', 'IRQ']],
+  // Historical friends (SPEC §86): the secret wire to Amman was real, it ran
+  // through the whole war, and it is the one Arab capital that signed
+  // anything like a private understanding. Lebanon fought least and quit
+  // first. Neither friendship survives being named an enemy.
+  affinities: [
+    ['ISR', 'JOR'],
+    ['ISR', 'LEB'],
+  ],
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among

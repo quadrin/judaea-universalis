@@ -4,6 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
   sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
+  declaredRivals, num,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -69,6 +70,14 @@ function monthlyMonarchPoints(ctx) {
       t.points.gov = Math.min(999, t.points.gov + 3 + ctx.rng.int(3));
       t.points.infl = Math.min(999, t.points.infl + 3 + ctx.rng.int(3));
       t.points.mar = Math.min(999, t.points.mar + 3 + ctx.rng.int(3));
+    }
+    // Declared rivalries (SPEC §86): a court kept on a war footing against a
+    // named enemy learns something for it. This is what the player buys by
+    // choosing an enemy — and what they give up by choosing to reconcile.
+    const rivals = declaredRivals(ctx, tag).filter((k) => g.tags[k] && g.tags[k].alive);
+    if (rivals.length) {
+      const per = num((ctx.DEFINES.BALANCE || {}).rivalMarPerMonth, 1);
+      t.points.mar = Math.min(999, t.points.mar + per * rivals.length);
     }
   }
 }

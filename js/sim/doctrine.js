@@ -27,7 +27,11 @@
 // rather than the player. Those flags belong to the divergence ledger
 // (SPEC §88), not here.
 
-import { clamp, num } from './military.js';
+// Self-contained on purpose: military.js reads the axes (SPEC §86 gates an
+// affinity on the realm's horizon), so this module must not read military.js
+// back. Two three-line primitives are a cheaper price than an import cycle.
+function num(v, d = 0) { return Number.isFinite(v) ? v : d; }
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 const _warned = new Set();
 function warnOnce(key, ...args) {

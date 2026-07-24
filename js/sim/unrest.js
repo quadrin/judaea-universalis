@@ -3,8 +3,9 @@
 
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
-  liveGrudge, grudgeCeiling, areRivals,
+  liveGrudge, grudgeCeiling, areRivals, thawQuiet, reconciled,
 } from './military.js';
+import { axisOf } from './doctrine.js';
 import { popTension, popTotal } from './population.js';
 
 const _warned = new Set();
@@ -233,12 +234,33 @@ export function monthlyOpinionDrift(ctx) {
     if (t.grudges) {
       for (const taker of Object.keys(t.grudges)) {
         if (!liveGrudge(ctx, tag, taker)) { delete t.grudges[taker]; continue; }
+        const gr = t.grudges[taker];
+        // Reconciliation (SPEC §86): a month in which the two courts are
+        // neither at war nor rivals is a month the wound closes. A realm
+        // that lives by the sword is trusted back more slowly — the same
+        // quiet buys it less. Anything louder than quiet simply stops the
+        // clock; only a fresh seizure (recordGrudge) winds it back to zero.
+        if (thawQuiet(ctx, tag, taker)) {
+          const martial = clamp(axisOf(ctx, 'conquest') / 10, 0, 1);
+          const rate = 1 - martial * (1 - num(BALd.thawMartialPenalty, 0.5));
+          gr.thaw = num(gr.thaw) + rate;
+        }
+        // A mended friendship stops being governed by the grievance: the book
+        // still records it (a fresh seizure reopens everything), but the pair
+        // rejoins the ordinary drift below and warms toward neutral — or
+        // toward an alliance, if they sign one — like any other two courts.
+        if (reconciled(ctx, tag, taker)) continue;
         grudged.push(taker);
         const cap = grudgeCeiling(ctx, tag, taker);
         if (!t.opinion) t.opinion = {};
         const v = Math.round(num(t.opinion[taker]));
         if (v > cap) {
           t.opinion[taker] = clamp(Math.max(cap, v - num(BALd.grudgeBite, 4)), -200, 200);
+        } else if (v < cap) {
+          // The ceiling has risen above where the court actually sits: the
+          // years have made room, and the opinion now warms into it. Without
+          // this the thaw would only ever be permission, never a change.
+          t.opinion[taker] = clamp(Math.min(cap, v + num(BALd.thawHeal, 1)), -200, 200);
         }
       }
       if (!Object.keys(t.grudges).length) delete t.grudges;

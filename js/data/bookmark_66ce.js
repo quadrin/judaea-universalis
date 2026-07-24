@@ -140,6 +140,14 @@ export const BOOKMARK_66 = {
   // Standing rivalries (SPEC §73): Corbulo's Armenian war just closed; the
   // Euphrates rivalry only pauses.
   rivalries: [['ROM', 'PAR']],
+  // Historical friends (SPEC §86): the great Jewish communities of Babylonia
+  // sat inside Parthia, and every Judaean court that looked east found a
+  // hearing there — Adiabene's royal house had converted a generation before
+  // and sent its princes to fight in the revolt.
+  affinities: [
+    ['JUD', 'PAR', { axis: 'alignment', sign: -1 }],
+    ['JUD', 'ADI'],
+  ],
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
