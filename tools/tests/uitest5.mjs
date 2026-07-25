@@ -55,10 +55,13 @@ await host.selectOption('[data-ref="bm"]', '3');
 await host.locator('[data-ref="invite"]').click();
 await host.waitForFunction(() => {
   const ta = document.querySelector('[data-ref="invcode"]');
-  return ta && ta.value.startsWith('JU1.');
+  return ta && /^JU[12]\./.test(ta.value);
 }, null, { timeout: 15000 });
 const invite = await host.locator('[data-ref="invcode"]').inputValue();
-ok(invite.length > 100, 'invite code minted (' + invite.length + ' chars)');
+// Packed since §93: the whole session description compressed to its
+// irreducible fields. A code people have to paste has to be pasteable.
+ok(invite.startsWith('JU2.'), 'invite code is the packed form');
+ok(invite.length < 260, 'and is short enough to hand over (' + invite.length + ' chars)');
 
 console.log('== guest answers ==');
 const ctxG = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -70,10 +73,11 @@ await guest.fill('[data-ref="invite"]', invite);
 await guest.locator('[data-ref="answer"]').click();
 await guest.waitForFunction(() => {
   const ta = document.querySelector('[data-ref="reply"]');
-  return ta && ta.value.startsWith('JU1.');
+  return ta && /^JU[12]\./.test(ta.value);
 }, null, { timeout: 15000 });
 const reply = await guest.locator('[data-ref="reply"]').inputValue();
-ok(reply.length > 100, 'reply code produced (' + reply.length + ' chars)');
+ok(reply.startsWith('JU2.'), 'reply code is packed too');
+ok(reply.length < 260, 'and just as short (' + reply.length + ' chars)');
 
 console.log('== host accepts; guest joins the shared throne ==');
 await host.fill('[data-ref="reply"]', reply);

@@ -4,6 +4,8 @@
 // (chat, email, a shouted phone screen). One RTCPeerConnection + one ordered
 // DataChannel per guest; JSON messages, chunked so full-game snapshots fit.
 
+import { packSdp, unpackSdp, isPacked } from './sdp.js';
+
 const CODE_PREFIX = 'JU1.';
 const CHUNK = 48 * 1024;          // DataChannel-safe message size
 const GATHER_TIMEOUT_MS = 3500;   // don't wait forever for STUN when offline
@@ -15,12 +17,24 @@ function warnOnce(key, ...msg) {
   console.warn('[net/rtc]', ...msg);
 }
 
-// base64 with unicode safety
-function enc(obj) {
-  return CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+// A hand-carried code is packed down to its irreducible fields when the
+// session has the shape sdp.js knows (one data channel, which is every session
+// this game opens) — roughly 830 characters becomes roughly 150. Anything
+// unexpected falls back to the literal base64 form rather than risk a code
+// that will not connect. Both forms are always accepted on input, so a player
+// on an older build can still be joined.
+function enc(desc) {
+  const packed = packSdp(desc);
+  if (packed) return packed;
+  return CODE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(desc))));
 }
 function dec(code) {
   const s = String(code || '').trim();
+  if (isPacked(s)) {
+    const desc = unpackSdp(s);
+    if (!desc) throw new Error('That code is damaged — ask for a fresh one.');
+    return desc;
+  }
   if (!s.startsWith(CODE_PREFIX)) throw new Error('That is not a Judaea Universalis code.');
   return JSON.parse(decodeURIComponent(escape(atob(s.slice(CODE_PREFIX.length)))));
 }

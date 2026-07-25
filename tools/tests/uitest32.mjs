@@ -240,9 +240,11 @@ await offline.locator('[data-ref="host"]').click();
 await offline.locator('[data-ref="invite"]').click();
 await offline.waitForFunction(() => {
   const ta = document.querySelector('[data-ref="invcode"]');
-  return ta && ta.value.startsWith('JU1.');
+  return ta && /^JU2\./.test(ta.value);
 }, null, { timeout: 60000 });
-ok(true, 'multiplayer falls back to the hand-carried code, exactly as before');
+const offCode = await offline.locator('[data-ref="invcode"]').inputValue();
+ok(true, 'multiplayer falls back to the hand-carried code');
+ok(offCode.length < 260, 'which is packed, not the old wall of base64 (' + offCode.length + ' chars)');
 ok(offErrors.length === 0, 'and no page errors: ' + JSON.stringify(offErrors.slice(0, 2)));
 await ctxO.close();
 

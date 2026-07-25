@@ -3971,6 +3971,27 @@ with an empty value clears both. An operator who edits `DEFAULT_ENDPOINT` sees
 no prompt at all — the question exists only for endpoints the player did not
 choose.
 
+**The hand-carried code is packed** (`js/net/sdp.js`). With no cloud, a code
+still has to carry the whole session description — but almost none of it needs
+to travel. Both ends are this game opening one ordered data channel, so the
+boilerplate is known on both sides; what cannot be guessed is the ICE ufrag
+(~4), the ICE password (~24), the DTLS fingerprint (32 bytes, irreducible) and
+the candidates (~20 each). A code is those fields behind a `JU2.` prefix, and
+the far side rebuilds a complete SDP around them, using `9` / `0.0.0.0` — the
+standard placeholders for a session whose addresses come from candidates.
+
+**832 characters became 105** on a LAN offer, ~150 with a reflexive candidate.
+That is roughly the floor: a hash does not compress, and going below it means
+not sending the connection details at all — which is exactly what a
+six-character room code does, by keeping them on a server instead.
+
+`packSdp` returns null for anything it cannot faithfully rebuild — no
+fingerprint, no candidates, audio or video, more than one m-section — and `enc`
+falls back to the literal `JU1.` form rather than mint a code that will not
+connect. `dec` accepts both forms forever, so a player on an older build can
+still be joined. A damaged code is refused whole (`unpackSdp` catches; an early
+version let `atob` throw out of the lobby instead).
+
 **The invite link.** "Copy a link instead" beside the code yields
 `…/?cloud=<endpoint>&join=<CODE>`; main.js hands `join` to `lobby.openJoin()`,
 which opens the join screen with the code already in and the handshake already
