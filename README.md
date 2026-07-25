@@ -125,7 +125,9 @@ static site, the zero dependencies, or the missing build step changes.
   WebRTC link by typing a six-character invite code like `KFR-2M9` (⚔ Multiplayer on the
   title screen) — there is nothing to send back. With no cloud configured it falls back to
   the original hand-carried codes, so the game still plays with nothing behind it.
-  Everyone rules the host's nation together — any player can move the armies,
+  You can host a **new** campaign or **continue a saved one** — pick it off the shelf in
+  the lobby and your friends join the war already in progress, on the saved date with the
+  saved armies. Everyone rules the host's nation together — any player can move the armies,
   spend the treasury, and steer the clock. Story event cards appear on every screen;
   the host makes the choice, and every toast the realm receives reaches all players.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,

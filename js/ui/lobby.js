@@ -27,7 +27,7 @@ const BUILD = 'v1.9.0';
 const POLL_MS = 1500;       // how often the host asks the room for an answer
 const POLL_GIVE_UP_MS = 900000; // the room's own lifetime; stop asking after it
 
-export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
+export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, saveTools }) {
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   let el = null;
   // host state
@@ -35,6 +35,14 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   let pendingPeer = null;    // invite created, waiting for the guest
   let hostBookmark = 0;
   let hostTag = '';
+  // A campaign in progress can be opened to friends: pick it off the shelf and
+  // the world the guests receive is the saved one, mid-war and all. The save
+  // dictates both the chapter and the throne, so those selects step aside.
+  let hostMode = 'new';      // 'new' | 'save'
+  let hostSaveRows = null;   // cached shelf listing for the picker
+  let hostSaveId = '';
+  let hostSave = null;       // resolved {game, entry}
+  let hostSaveError = '';
   let inviteCode = '';       // short room code, cloud flow
   let manualCode = '';       // long JU1. blob, hand-carried flow
   let pollTimer = null;
@@ -133,15 +141,24 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
   }
 
   // ------------------------------------------------------------------ host --
+  // Continuing a save? The save is the campaign — its chapter, its throne, its
+  // date. Otherwise the two selects decide.
+  const hostEntry = () => (hostSave ? hostSave.entry : bookmarks[hostBookmark]);
+  const usingSave = () => hostMode === 'save' && !!hostSave;
+
   function hostLobbyPayload() {
-    const b = bookmarks[hostBookmark].bookmark;
+    const b = hostEntry().bookmark;
+    const live = usingSave() && hostSave.game.tags && hostSave.game.tags[hostTag];
     return {
       t: 'lobby',
       v: MP_PROTO,
       bookmarkId: b.id,
       bookmarkName: b.name,
+      // A campaign in progress is not at its chapter's start date, and the
+      // realm may have been renamed since — say where the guests are landing.
+      resumed: usingSave() ? (hostSave.meta && hostSave.meta.dateLabel) || '' : '',
       tag: hostTag, // everyone shares the host's throne
-      nationName: (TAGS[hostTag] && TAGS[hostTag].name) || hostTag,
+      nationName: (live && live.name) || (TAGS[hostTag] && TAGS[hostTag].name) || hostTag,
       players: [{ who: 'Host', tag: hostTag }]
         .concat(hostPeers.map((g, i) => ({ who: 'Guest ' + (i + 1), tag: hostTag }))),
     };
@@ -179,29 +196,57 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
       ${canInvite ? '<button class="mp-adv" data-ref="manual">The cloud is down, or we are on the same LAN — use hand-carried codes</button>' : ''}`;
   }
 
+  // The chapter/nation pair, or the chosen save standing in for both.
+  function campaignHtml() {
+    if (hostMode !== 'save') {
+      const playable = (bookmarks[hostBookmark].bookmark.playableTags || []).map((p) => p.tag);
+      const bmOpts = bookmarks.map((e, i) =>
+        `<option value="${i}"${i === hostBookmark ? ' selected' : ''}>${esc(e.bookmark.name)}</option>`).join('');
+      const tagOpts = playable.map((t) =>
+        `<option value="${esc(t)}"${t === hostTag ? ' selected' : ''}>${esc((TAGS[t] && TAGS[t].name) || t)}</option>`).join('');
+      return `
+        <div class="mp-row"><label>Chapter</label><select data-ref="bm">${bmOpts}</select></div>
+        <div class="mp-row"><label>The nation</label><select data-ref="tag">${tagOpts}</select></div>
+        <div class="mp-hint">Everyone who joins rules this nation with you.</div>`;
+    }
+    if (hostSaveRows === null) return '<div class="mp-hint">Reading the shelf…</div>';
+    if (!hostSaveRows.length) {
+      return `<div class="mp-hint">There are no saved campaigns yet. Play one and save it —
+        the quill in the topbar — and it will be here to open up to your friends.</div>`;
+    }
+    const opts = hostSaveRows.map((s) => `<option value="${esc(s.id)}"${s.id === hostSaveId ? ' selected' : ''}>`
+      + `${esc(s.nationName || s.tag)} — ${esc(s.dateLabel)} · ${esc(s.chapterName)}</option>`).join('');
+    return `
+      <div class="mp-row"><label>The save</label><select data-ref="save">${opts}</select></div>
+      ${hostSaveError ? `<div class="mp-status">${esc(hostSaveError)}</div>` : ''}
+      ${hostSave ? `<div class="mp-hint">Your friends join this campaign exactly where it stands —
+        ${esc((hostSave.meta && hostSave.meta.dateLabel) || '')} — and rule it beside you.</div>`
+      : '<div class="mp-hint">Opening the save…</div>'}`;
+  }
+
   function renderHost() {
-    const entry = bookmarks[hostBookmark];
-    const playable = (entry.bookmark.playableTags || []).map((p) => p.tag);
-    if (!playable.includes(hostTag)) hostTag = playable[0] || '';
-    const bmOpts = bookmarks.map((e, i) =>
-      `<option value="${i}"${i === hostBookmark ? ' selected' : ''}>${esc(e.bookmark.name)}</option>`).join('');
-    const tagOpts = playable.map((t) =>
-      `<option value="${esc(t)}"${t === hostTag ? ' selected' : ''}>${esc((TAGS[t] && TAGS[t].name) || t)}</option>`).join('');
+    if (hostMode === 'save' && hostSaveRows === null) loadShelf();
+    if (hostMode !== 'save') {
+      const playable = (bookmarks[hostBookmark].bookmark.playableTags || []).map((p) => p.tag);
+      if (!playable.includes(hostTag)) hostTag = playable[0] || '';
+    }
     const players = hostLobbyPayload().players.map((p) => `
       <div class="mp-player">${flagChip(p.tag, DEFINES, 16)}
         <b>${esc(p.who)}</b> — ${esc((TAGS[p.tag] && TAGS[p.tag].name) || p.tag)}</div>`).join('');
     const canInvite = hostPeers.length < MAX_GUESTS && !pendingPeer;
     ensureEl().innerHTML = shellHtml(`
       <div class="peace-sec">The campaign</div>
-      <div class="mp-row"><label>Chapter</label><select data-ref="bm">${bmOpts}</select></div>
-      <div class="mp-row"><label>The nation</label><select data-ref="tag">${tagOpts}</select></div>
-      <div class="mp-hint">Everyone who joins rules this nation with you.</div>
+      ${saveTools ? `<div class="mp-modes">
+        <button class="mp-mode${hostMode === 'new' ? ' on' : ''}" data-hostmode="new">Start a new one</button>
+        <button class="mp-mode${hostMode === 'save' ? ' on' : ''}" data-hostmode="save">Continue a save</button>
+      </div>` : ''}
+      ${campaignHtml()}
       <div class="peace-sec">Players</div>
       ${players}
       <div class="peace-sec">Invite</div>
       ${inviteHtml(canInvite)}
       <div class="mp-status" data-ref="status"></div>
-      <button class="btn peace-send" data-ref="begin"${hostPeers.some((g) => g.open) ? '' : ' disabled'}>
+      <button class="btn peace-send" data-ref="begin"${hostPeers.some((g) => g.open) && !(hostMode === 'save' && !hostSave) ? '' : ' disabled'}>
         ${icon('spears', 'icon-sm')} Begin the campaign</button>
       <button class="btn peace-cancel" data-ref="close">Cancel</button>`);
     el.classList.remove('hidden');
@@ -212,15 +257,32 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     if (manualTa && manualCode) manualTa.value = manualCode;
 
     const status = (s) => { const d = el.querySelector('[data-ref="status"]'); if (d) d.textContent = s; };
-    el.querySelector('[data-ref="bm"]').addEventListener('change', (e) => {
-      hostBookmark = Number(e.target.value) || 0;
-      hostBroadcastLobby();
+    el.querySelectorAll('[data-hostmode]').forEach((b) => b.addEventListener('click', () => {
+      const next = b.dataset.hostmode;
+      if (next === hostMode) return;
+      hostMode = next;
+      // Leaving the save behind restores the picked chapter's own throne.
+      if (hostMode === 'new') { hostSave = null; hostSaveError = ''; }
       renderHost();
-    });
-    el.querySelector('[data-ref="tag"]').addEventListener('change', (e) => {
-      hostTag = String(e.target.value);
       hostBroadcastLobby();
-    });
+    }));
+    const bmSel = el.querySelector('[data-ref="bm"]');
+    if (bmSel) {
+      bmSel.addEventListener('change', (e) => {
+        hostBookmark = Number(e.target.value) || 0;
+        hostBroadcastLobby();
+        renderHost();
+      });
+    }
+    const tagSel = el.querySelector('[data-ref="tag"]');
+    if (tagSel) {
+      tagSel.addEventListener('change', (e) => {
+        hostTag = String(e.target.value);
+        hostBroadcastLobby();
+      });
+    }
+    const saveSel = el.querySelector('[data-ref="save"]');
+    if (saveSel) saveSel.addEventListener('change', (e) => pickSave(String(e.target.value)));
     const manualBtn = el.querySelector('[data-ref="manual"]');
     if (manualBtn) {
       manualBtn.addEventListener('click', () => { manualMode = true; renderHost(); });
@@ -246,12 +308,53 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
     el.querySelector('[data-ref="begin"]').addEventListener('click', () => {
       const ready = hostPeers.filter((g) => g.open);
       if (!ready.length) return;
+      if (hostMode === 'save' && !hostSave) { status('Pick a saved campaign first.'); return; }
       for (const g of ready) g.tag = hostTag; // one realm, shared by all
       started = true;
       stopPolling();
       el.classList.add('hidden');
-      onHostStart(bookmarks[hostBookmark], hostTag, ready);
+      onHostStart(hostEntry(), hostTag, ready, usingSave() ? hostSave : null);
     });
+  }
+
+  // Reading the shelf and opening a save both happen off the render path: the
+  // lobby draws immediately and fills in when the answer lands.
+  async function loadShelf() {
+    hostSaveRows = [];
+    try {
+      hostSaveRows = await saveTools.list();
+    } catch (e) {
+      warnOnce('mpshelf', e);
+      hostSaveError = 'The shelf could not be read.';
+    }
+    if (hostMode !== 'save') return;
+    if (hostSaveRows.length && !hostSaveId) { await pickSave(hostSaveRows[0].id); return; }
+    renderHost();
+  }
+
+  async function pickSave(id) {
+    hostSaveId = id;
+    hostSave = null;
+    hostSaveError = '';
+    renderHost();
+    let resolved = null;
+    try {
+      resolved = await saveTools.resolve(id);
+    } catch (e) {
+      warnOnce('mpresolve', e);
+    }
+    if (hostSaveId !== id) return; // the player moved on while we were reading
+    if (!resolved) {
+      hostSaveError = 'That save could not be opened.';
+      renderHost();
+      return;
+    }
+    hostSave = resolved;
+    // The save owns the throne: whoever the campaign was being played as is
+    // who everyone rules together.
+    hostTag = resolved.game.playerTag;
+    renderHost();
+    hostBroadcastLobby();
   }
 
   // A one-click version of the same invite. The endpoint rides along so a
@@ -499,6 +602,8 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart }) {
       <div class="peace-sec">${esc(guestLobby.bookmarkName)}</div>
       <div class="mp-player">${flagChip(guestLobby.tag, DEFINES, 18)}
         <b>${esc(guestLobby.nationName)}</b> — you will rule it together with the host.</div>
+      ${guestLobby.resumed ? `<div class="mp-hint">A campaign already under way — you are joining it
+        as it stands, in ${esc(guestLobby.resumed)}.</div>` : ''}
       <div class="mp-hint">Waiting for the host to begin…</div>`;
   }
 

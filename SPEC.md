@@ -4006,6 +4006,17 @@ reach the room — and it is safe precisely because of the split above.
     that triggered it: KV's list is eventually consistent and may not show it
     yet. **Saves written before this section still load** — see the migration
     above.
+  - **Hosting a save.** The lobby's campaign step offers "Start a new one" or
+    "Continue a save": pick one off the shelf and the chapter and nation selects
+    step aside, because the save decides both. `onHostStart` receives the
+    resolved `{game, entry, meta}` and `startMultiplayerHost` ships that world
+    to the guests instead of a fresh `initGame` — they join mid-war, on the
+    saved date, with the saved armies. The human seats are re-established
+    **after** the load, since `reviveGame` deliberately collapses a save back to
+    a solo campaign (§18). The lobby payload carries `resumed`, so the guest is
+    told they are joining a campaign already under way and where it has reached.
+    The lobby reads the shelf through hoisted closures rather than the
+    `saveTools` object, which is not built until the title screen goes up.
   - **Deleting** is on every row: a two-tap control ("Delete" -> "Delete for
     good?", disarming itself after four seconds) rather than a bare ✕ with a
     tooltip, because a tooltip never appears on a phone and a campaign is not
@@ -4044,6 +4055,10 @@ cloud and loaded back from the title screen and from mid-campaign, a second
 device that knows only the player code, and the no-cloud fallback rendering the
 old flow unchanged. Both suites run the REAL worker over an in-memory KV
 (`tools/tests/ju-cloud-mock.mjs`) — no Cloudflare account, no network.
+`uitest34.mjs` — a campaign played, marked, saved, then hosted: the picker
+standing in for both selects, the guest told it is already under way, and both
+sides landing in the SAVED world (same date, same treasury mark, same armies)
+rather than a fresh chapter — then still live, with orders crossing the link.
 `uitest5.mjs` continues to drive the hand-carried path.
 
 Note for whoever runs the battery: `uitest32.mjs` holds two browser contexts up

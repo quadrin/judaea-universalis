@@ -332,13 +332,18 @@ async function boot() {
     }
   }
 
-  function startMultiplayerHost(entry, hostTag, guests) {
+  // `resumed` is a campaign lifted off the shelf ({game, entry}): the guests
+  // receive that world instead of a fresh one and join it mid-flight. Note
+  // that reviveGame deliberately collapses a save back to a solo campaign, so
+  // the human seats below are re-established after it, not before.
+  function startMultiplayerHost(entry, hostTag, guests, resumed) {
     const activeProvinceMap = applyMapProfile(entry.bookmark);
-    const game = initGame({
+    const game = resumed ? resumed.game : initGame({
       DEFINES, MAP_DATA, geom, bookmark: entry.bookmark, events: entry.events,
       playerTag: hostTag, rngSeed: (Date.now() % 2147483647) || 1,
       provinceMap: activeProvinceMap,
     });
+    if (resumed) game.playerTag = hostTag;
     game.humanTags = [hostTag].concat(guests.map((g) => g.tag))
       .filter((t, i, a) => a.indexOf(t) === i);
     for (const t of game.humanTags) if (game.tags[t]) game.tags[t].ai = false;
@@ -350,8 +355,9 @@ async function boot() {
       g.peer.send({ t: 'start', bookmarkId: entry.bookmark.id, yourTag: g.tag, game: json });
     }
     bus.emit('notify', {
-      title: 'The campaign begins',
-      text: guests.length + (guests.length === 1 ? ' player has' : ' players have') + ' joined your world.',
+      title: resumed ? 'The campaign continues' : 'The campaign begins',
+      text: guests.length + (guests.length === 1 ? ' player has' : ' players have')
+        + ' joined your world' + (resumed ? ', as it stands' : '') + '.',
       type: 'good',
     });
   }
@@ -396,6 +402,16 @@ async function boot() {
     bookmarks: BOOKMARKS,
     onHostStart: startMultiplayerHost,
     onGuestStart: startMultiplayerGuest,
+    // Hosting from a save (SPEC §93). These close over hoisted declarations
+    // below rather than the `saveTools` object, which is not built until the
+    // title screen goes up — long after the lobby is constructed.
+    saveTools: {
+      list: () => listSaves(),
+      async resolve(id) {
+        const r = await resolveSave(id);
+        return r ? { game: r.game, entry: r.entry, meta: saveMeta(r.game, id, r.savedAt) } : null;
+      },
+    },
   });
   // ------------------------------------------------------------- writing --
   // The local shelf is the campaign's home and always gets the write. A cloud,
