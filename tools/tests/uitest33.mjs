@@ -129,10 +129,36 @@ console.log('== deleting ==');
 await page.locator('#topbar [data-ref="loadsave"]').click();
 await page.waitForSelector('#saves-panel .sv-row', { timeout: 60000 });
 const was = await page.locator('.sv-row').count();
-await page.locator('.sv-row .sv-del').first().click();
-await page.locator('.sv-row .sv-del').first().click(); // the "Sure?" confirm
+const doomedId = await page.locator('.sv-row').first().getAttribute('data-id');
+const delBtn = page.locator('.sv-row .sv-del').first();
+ok((await delBtn.textContent()).trim() === 'Delete',
+  'the delete control says what it is, not just an ✕ with a tooltip');
+
+// One tap only arms it — a mis-tap on a phone must not cost a campaign.
+await delBtn.click();
+ok(/Delete for good/.test(await delBtn.textContent()), 'the first tap asks rather than deletes');
+ok(await page.locator('.sv-row').count() === was, 'and nothing is gone yet');
+
+await delBtn.click();
 await page.waitForFunction((n) => document.querySelectorAll('.sv-row').length === n - 1, was, { timeout: 60000 });
-ok(true, 'a save can be struck from the shelf (' + was + ' -> ' + (was - 1) + ')');
+ok(true, 'the second tap strikes it from the shelf (' + was + ' -> ' + (was - 1) + ')');
+
+const left = await page.evaluate(async () => {
+  const db = await new Promise((res) => { const r = indexedDB.open('judaea-universalis'); r.onsuccess = () => res(r.result); });
+  const rows = await new Promise((res) => { const r = db.transaction('saves').objectStore('saves').getAll(); r.onsuccess = () => res(r.result); });
+  return rows.map((r) => r.id);
+});
+ok(!left.includes(doomedId), 'the body is really gone from the database, not just the row');
+ok(left.length === was - 1, 'and nothing else was taken with it (' + left.length + ' left)');
+
+// Arming and then walking away must disarm rather than stay hot.
+const nextBtn = page.locator('.sv-row .sv-del').first();
+await nextBtn.click();
+await page.waitForFunction(() => {
+  const b = document.querySelector('.sv-row .sv-del');
+  return b && b.textContent.trim() === 'Delete';
+}, null, { timeout: 60000 });
+ok(await page.locator('.sv-row').count() === was - 1, 'an armed delete disarms itself if left alone');
 
 console.log('== a save written by the old localStorage build still loads ==');
 await land();

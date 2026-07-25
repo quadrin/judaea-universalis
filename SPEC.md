@@ -4006,6 +4006,11 @@ reach the room — and it is safe precisely because of the split above.
     that triggered it: KV's list is eventually consistent and may not show it
     yet. **Saves written before this section still load** — see the migration
     above.
+  - **Deleting** is on every row: a two-tap control ("Delete" -> "Delete for
+    good?", disarming itself after four seconds) rather than a bare ✕ with a
+    tooltip, because a tooltip never appears on a phone and a campaign is not
+    something to lose to a mis-tap. It removes the body from this device AND
+    from the cloud copy, if there is one.
   - **Local first, cloud extra.** The device always gets the write, and the
     toast reports what actually happened ("Kept on this device", "Kept on this
     device and in the cloud", "…the cloud copy did not go through") rather than

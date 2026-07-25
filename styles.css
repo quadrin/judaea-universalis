@@ -2475,7 +2475,8 @@ html, body {
 .sv-del {
   flex: 0 0 auto;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 4px 10px;
+  white-space: nowrap;
   color: var(--red-deep);
   border-color: rgba(124, 31, 31, 0.4);
 }

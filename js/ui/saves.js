@@ -51,7 +51,9 @@ export function createSavesPanel({ DEFINES, saveTools }) {
           <span class="sv-sub">${esc(s.chapterName)} ${kind} ${where}</span>
         </span>
         <button class="btn sv-load" data-load="${esc(s.id)}">Load</button>
-        <button class="btn sv-del" data-del="${esc(s.id)}" data-tt="Delete this save" aria-label="Delete this save">✕</button>
+        <button class="btn sv-del" data-del="${esc(s.id)}"
+          data-tt="Delete this campaign — from this device, and from your cloud copy if you have one"
+          aria-label="Delete this campaign">Delete</button>
       </div>`;
   }
 
@@ -260,26 +262,34 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     busy = false;
   }
 
+  // Two taps, not a confirm dialog: the first arms the button and says what
+  // will happen, the second does it, and walking away disarms it on its own.
+  // A campaign is not something to lose to a mis-tap on a phone.
   async function doDelete(id, btn) {
     if (btn.dataset.sure !== '1') {
       btn.dataset.sure = '1';
-      btn.textContent = 'Sure?';
+      btn.textContent = 'Delete for good?';
       btn.classList.add('sv-sure');
       setTimeout(() => {
         if (!btn.isConnected) return;
         delete btn.dataset.sure;
-        btn.textContent = '✕';
+        btn.textContent = 'Delete';
         btn.classList.remove('sv-sure');
-      }, 3000);
+      }, 4000);
       return;
     }
     busy = true;
+    btn.textContent = 'Deleting…';
     try {
       await saveTools.remove(id);
       await refreshList();
+      status('Campaign deleted.');
     } catch (e) {
       warnOnce('savedel', e);
-      status('Could not delete that save: ' + (e.message || e), true);
+      status('Could not delete that campaign: ' + (e.message || e), true);
+      btn.textContent = 'Delete';
+      btn.classList.remove('sv-sure');
+      delete btn.dataset.sure;
     }
     busy = false;
   }

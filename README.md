@@ -23,8 +23,9 @@ python3 -m http.server 8613 --directory .
 
 Saved campaigns go into your browser's own database (IndexedDB) and are listed
 in **▤ Saved campaigns** on the title screen, or behind the amphora in the
-topbar while you play. Click one to load it. There is nothing to configure and
-nothing to download — the old export/import-a-file buttons are gone.
+topbar while you play. Click one to load it, or Delete to remove it (two taps,
+so a mis-tap costs nothing). There is nothing to configure and nothing to
+download — the old export/import-a-file buttons are gone.
 
 Two things worth knowing: clearing this site's data in your browser settings
 removes them (the game asks the browser to mark them as worth keeping, which
