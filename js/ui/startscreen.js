@@ -38,8 +38,7 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
       <div class="ss-savetools">
         ${onMultiplayer ? '<button class="ss-back ss-tool ss-mp" data-ref="mp">⚔ Multiplayer</button>' : ''}
         ${onWiki ? '<button class="ss-back ss-tool" data-ref="wiki">📖 Compendium</button>' : ''}
-        ${continueInfo && saveTools && saveTools.onExport ? '<button class="ss-back ss-tool" data-ref="export">Export save</button>' : ''}
-        ${saveTools && saveTools.onImport ? '<button class="ss-back ss-tool" data-ref="import">Import save</button>' : ''}
+        ${saveTools && saveTools.open ? '<button class="ss-back ss-tool" data-ref="saves">▤ Saved campaigns</button>' : ''}
       </div>` : '';
     root.innerHTML = shell(`
       <div class="ss-sub">Choose a bookmark</div>
@@ -100,45 +99,17 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
         continueInfo.onContinue();
       });
     }
-    // Save tools: export downloads the newest save as a file; import reads one
-    // back (localStorage is fragile, especially on phones).
-    const expBtn = root.querySelector('[data-ref="export"]');
-    if (expBtn && saveTools && saveTools.onExport) {
-      expBtn.addEventListener('click', () => {
-        const out = saveTools.onExport(); // {filename, json} | null
-        if (!out) return;
-        const blob = new Blob([out.json], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = out.filename || 'judaea-save.json';
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      });
+    // Saves are a shelf, not a file: the panel lists every campaign this
+    // player has (cloud first, this device second) and loads any of them.
+    // Nothing is downloaded and nothing is uploaded by hand.
+    const savesBtn = root.querySelector('[data-ref="saves"]');
+    if (savesBtn && saveTools && saveTools.open) {
+      savesBtn.addEventListener('click', () => saveTools.open());
     }
     const mpBtn = root.querySelector('[data-ref="mp"]');
     if (mpBtn && onMultiplayer) mpBtn.addEventListener('click', onMultiplayer);
     const wikiBtn = root.querySelector('[data-ref="wiki"]');
     if (wikiBtn && onWiki) wikiBtn.addEventListener('click', onWiki);
-    const impBtn = root.querySelector('[data-ref="import"]');
-    if (impBtn && saveTools && saveTools.onImport) {
-      impBtn.addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json,application/json';
-        input.addEventListener('change', () => {
-          const f = input.files && input.files[0];
-          if (!f) return;
-          const reader = new FileReader();
-          reader.onload = () => {
-            const ok = saveTools.onImport(String(reader.result || ''));
-            impBtn.textContent = ok ? 'Save imported ✓' : 'Not a valid save file';
-            if (ok) setTimeout(() => window.location.reload(), 500);
-          };
-          reader.readAsText(f);
-        });
-        input.click();
-      });
-    }
   }
 
   function renderNations(bookmark) {

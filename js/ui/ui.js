@@ -10,6 +10,7 @@ import { createNationPanel } from './nation_panel.js';
 import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { createWiki } from './wiki.js';
+import { createSavesPanel } from './saves.js';
 import { icon, flagChip } from './icons.js';
 import { genName } from '../data/tech.js';
 
@@ -137,11 +138,15 @@ export function initUI(staticCtx) {
   // data modules directly, and only the start screen opens it. In play the
   // chrome stays the campaign's own (ledger, chronicle, help).
   const wiki = createWiki({ DEFINES, getCtx: () => state.ctx });
+  // The shelf (SPEC §93): built once, opened from the title screen and from
+  // the scroll beside the topbar quill. main.js hands us the tools it needs.
+  let savesPanel = null;
   const topbar = createTopbar(els.topbar, {
     DEFINES,
     onFlagClick: () => toggleNationPanel(),
     onLedgerClick: () => toggleLedger(),
     onChronicleClick: () => toggleChronicle(),
+    onSavesClick: () => { if (savesPanel) savesPanel.open(); },
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
@@ -1373,6 +1378,11 @@ export function initUI(staticCtx) {
   // ------------------------------------------------------------------ API --
   function showStartScreen(bookmarks, onPick, continueInfo, saveTools, onMultiplayer) {
     els.start.classList.remove('hidden');
+    if (saveTools && !savesPanel) savesPanel = createSavesPanel({ DEFINES, saveTools });
+    const tools = saveTools ? {
+      cloudOn: saveTools.cloudOn,
+      open: () => { if (savesPanel) savesPanel.open(); },
+    } : null;
     // Pass the pick options through whole — dropping the third argument here
     // once silently disarmed the Veteran dial (opts carries {difficulty}).
     buildStartScreen(els.start, DEFINES, bookmarks, (bookmark, tag, opts) => {
@@ -1381,7 +1391,7 @@ export function initUI(staticCtx) {
     }, continueInfo ? {
       label: continueInfo.label,
       onContinue: () => { els.start.classList.add('hidden'); continueInfo.onContinue(); },
-    } : null, saveTools || null, onMultiplayer || null, () => wiki.open());
+    } : null, tools, onMultiplayer || null, () => wiki.open());
   }
 
   function bindGame(ctx, actions) {
@@ -1390,6 +1400,7 @@ export function initUI(staticCtx) {
     state.ctx = ctx;
     state.actions = actions;
     wiki.close(); // the library stays on the title screen — the campaign begins without it
+    if (savesPanel) savesPanel.close();
 
     topbar.bind(ctx, actions);
     panel.bind(ctx, actions);

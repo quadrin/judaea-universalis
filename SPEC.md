@@ -930,7 +930,10 @@ renderer.render → overlay.draw → labels.update.
   - **Transport** (`js/net/rtc.js`): one `RTCPeerConnection` + one ordered DataChannel per
     guest. Manual signaling: the host mints an *invite code* (base64 SDP, `JU1.` prefix),
     the guest pastes it and mints a *reply code*, the host accepts it — codes travel over
-    any channel the players like. Google STUN for NAT traversal (pure config, no code
+    any channel the players like. **Superseded as the default by §93**: those codes now
+    ride through a cloud room and the player types six characters instead. The transport
+    below is unchanged, and this hand-carried flow remains the fallback whenever no cloud
+    is configured or reachable. Google STUN for NAT traversal (pure config, no code
     dependency); ICE gathering is capped at 3.5s so offline/LAN still works. JSON
     messages; anything big is chunked at 48KB and reassembled (`{_c,i,n,s}` envelopes).
     `setHandlers()` lets the lobby hand a live peer to main.js for the game phase.
@@ -3898,3 +3901,123 @@ too-great court, the already-spoken-for court, devotion alone being
 insufficient, a losing war turning a refusal into an acceptance, the bond
 replacing outside alliances, the absence of infamy, the refusal's cooldown,
 and the save.
+
+## 93. The shelf and the six-character invite — one small cloud, two old problems
+
+Two things in this game asked the player to move a wall of text by hand, and
+both are gone. They were the same problem wearing different clothes: a static
+site has nowhere to put a small piece of state for a moment, so it made the
+player carry it. Now there is somewhere to put it.
+
+**The shelf** (`server/worker.js`, ~180 lines over one Cloudflare KV namespace)
+is the only server this game has ever had, and it is optional. It stores two
+kinds of thing and understands neither:
+
+    room:<CODE>       one WebRTC offer, and its answer once posted. TTL 15 min.
+    save:<who>:<id>   one campaign body; its display metadata rides in KV's
+                      metadata slot, so the saves list is a single list() call.
+
+`<who>` is `SHA-256(player key)` truncated to 32 hex characters. **The player
+key is never written to the shelf** — it arrives in `X-JU-Key`, is hashed, and
+is discarded. Possession of the key is the entire authorization model: no
+accounts, no email, no password, nothing to reset, nothing to administer.
+`smoke68.mjs` drives the real worker over an in-memory KV and holds that wall:
+a second key sees an empty shelf, a truncated key is refused outright, and the
+raw key appears nowhere in the store.
+
+**The client** (`js/net/cloud.js`) is plain `fetch` at seven routes — nothing
+in it is Cloudflare-specific. The endpoint comes from `DEFAULT_ENDPOINT`, from
+`localStorage`, or from a `?cloud=<url>` link. **With no endpoint the module
+reports "off" and every caller falls back to what the game did before** —
+hand-carried invite codes, device-local saves. An unconfigured deploy plays
+exactly as it always did; that is a contract, and `uitest32.mjs`'s last clause
+is the one that proves it.
+
+**Trust is split by what the endpoint is asked to carry**, because the two uses
+are not comparable:
+
+| | carries | trusted from a link? |
+| --- | --- | --- |
+| rooms | an SDP offer and its answer, dead in 15 minutes | yes |
+| saves | the campaign, under the player key in a header | **no** |
+
+An endpoint that arrived in a `?cloud=` link is used for ROOMS ONLY, held in
+`sessionStorage`, until the player accepts it in the saves panel — which is an
+explicit button next to a plain statement of what accepting means. Without that
+split, a crafted invite link would silently redirect somebody's saves *and their
+player key* to a stranger's server, which is a far worse bargain than the
+convenience is worth. `cloudEndpoint()` is the trusted one (accepted, or baked
+into `DEFAULT_ENDPOINT`); `roomEndpoint()` also accepts the link's. `?cloud=`
+with an empty value clears both. An operator who edits `DEFAULT_ENDPOINT` sees
+no prompt at all — the question exists only for endpoints the player did not
+choose.
+
+**The invite link.** "Copy a link instead" beside the code yields
+`…/?cloud=<endpoint>&join=<CODE>`; main.js hands `join` to `lobby.openJoin()`,
+which opens the join screen with the code already in and the handshake already
+running. Carrying the endpoint is what lets a friend who has configured nothing
+reach the room — and it is safe precisely because of the split above.
+
+- **The invite code is six characters.** The host parks its offer in a room and
+  is shown `KFR-2M9`; the guest types it, fetches the offer, and posts its
+  answer to the same room; the host collects that by polling (1.5s) and the
+  channel opens. **There is no reply code** — the round trip that used to run
+  back through a chat window now runs through the room. The alphabet drops I,
+  L, O, 0 and 1, and input is uppercased and stripped, so a code survives being
+  read aloud. A room takes one answer and refuses the second (409): an invite
+  is for one guest, and the host mints another for the next.
+  - The old flow is not deleted, it is demoted. `manualMode` renders the
+    original offer/reply textareas, and the lobby enters it three ways: no
+    cloud configured, a cloud that failed to take the offer (once, then for the
+    rest of the session), or the player asking for it — which is the LAN and
+    air-gapped case, and still works with nothing behind the game at all.
+
+- **Saves are a shelf, not a downloads folder.** Export-to-file and
+  import-from-file are gone; `▤/☁ Saved campaigns` on the title screen and the
+  scroll beside the topbar quill open the same panel (`js/ui/saves.js`), which
+  lists every campaign with its nation, date, chapter, kind and where it lives,
+  and loads any of them in one click. Loading from the title screen starts the
+  world directly; loading from inside a running campaign routes through
+  `sessionStorage` and a reload, because this chrome binds its game once
+  (`bindGame` is deliberately one-shot) and the save is already on both shelves,
+  so nothing is lost crossing it.
+  - **Ids**: `auto-<chapter>` (the January autosave, overwritten each year) and
+    `manual-<chapter>-<stamp>` (the quill, a new row per press). The local
+    mirror keeps `ju_save_<chapter>` for the auto slot — **saves written before
+    this section still load** — and `ju_save_m_<id>` for the rest, capped at 12
+    on the device and 24 in the cloud, oldest pruned. A prune never takes the
+    write that triggered it: KV's list is eventually consistent and may not show
+    it yet.
+  - **Both shelves, always.** Every save is written locally *and* pushed to the
+    cloud; the manual save reports which landed ("Kept in the cloud" /
+    "The cloud did not answer — kept on this device") rather than claiming
+    success it did not have. The list is the union, keyed by id, and a local
+    mirror written *after* its cloud copy (offline play) keeps its own newer
+    date. Loading prefers the local body when it is there and seeds the mirror
+    from the cloud when it is not.
+  - **Continue** now considers both shelves. The cloud list is started at boot
+    and awaited against a 5s budget just before the title screen — by which time
+    the renderer and geometry work has already burned most of it — so a campaign
+    continued on the phone is the one the laptop offers, and a dead network
+    costs a moment rather than the title screen.
+
+- **The player code** is the account: twenty characters, minted on first run,
+  shown (masked) in the saves panel with Copy, and typed into a second device to
+  bring the shelf across. It is a password in every sense that matters and the
+  panel says so.
+
+**Regression contract**: `smoke68.mjs` — the worker itself, headless: room mint
+/ fetch / answer-once / expiry, the shelf's write-list-read-delete, ordering,
+the prune, and the separation between two players. `uitest32.mjs` — two real
+browsers joining over an invite link with no blob on screen, code normalization
+(` kfr-2m9 ` looks up, `nope` is named as malformed), **the link-provided
+endpoint being refused the saves until accepted**, a campaign written to the
+cloud and loaded back from the title screen and from mid-campaign, a second
+device that knows only the player code, and the no-cloud fallback rendering the
+old flow unchanged. Both suites run the REAL worker over an in-memory KV
+(`tools/tests/ju-cloud-mock.mjs`) — no Cloudflare account, no network.
+`uitest5.mjs` continues to drive the hand-carried path.
+
+Note for whoever runs the battery: `uitest32.mjs` holds two browser contexts up
+at once and its waits are set to 60s for that reason — the structural waits are
+generous on purpose, not hiding a slow path.

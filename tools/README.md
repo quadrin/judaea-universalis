@@ -207,3 +207,23 @@ does not fly under software GL; the sim path is covered green by
 smoke33 and smoke39's order-strike section). Every other suite passes,
 including uitest22 (the peace table, now with the release section),
 uitest23, and the new uitest29.
+
+## ju-cloud-mock.mjs — the cloud shelf, on localhost
+
+    node tools/tests/ju-cloud-mock.mjs [port]          # standalone
+    import { startCloudMock } from './ju-cloud-mock.mjs'  # from a suite
+
+Serves `server/worker.js` — the real deployed code, not a reimplementation —
+over an in-memory stand-in for Cloudflare KV. Node 22 already provides
+`Request`/`Response`/`crypto.subtle`, which is the whole of the Workers runtime
+the worker touches, so the routing, the `SHA-256(player key)` namespacing, the
+prune and the room lifecycle all run exactly as they do in production.
+
+`startCloudMock(port)` resolves to `{url, kv, stop}`; `kv._store` is the raw
+Map, which is how `smoke68.mjs` expires a room early and how `uitest32.mjs`
+proves the player code never reaches the store.
+
+Two suites use it: `smoke68.mjs` (headless, the worker's own contract) and
+`uitest32.mjs` (two browsers joining by six-character code, then a campaign
+written to the cloud, loaded back, and picked up on a second "device"). Neither
+needs a Cloudflare account, and neither talks to the network.

@@ -19,6 +19,11 @@ import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
 import { createLobby } from './js/ui/lobby.js';
 import { remapGuestChairs, resolveSnapshotChair, restoreHostChair } from './js/net/mp_state.js';
+import {
+  isCloudOn, cloudEndpoint, cloudHealth, untrustedEndpoint, trustLinkEndpoint,
+  playerKey, setPlayerKey, prettyKey, normalizeKey,
+  cloudListSaves, cloudGetSave, cloudPutSave, cloudDeleteSave,
+} from './js/net/cloud.js';
 
 async function boot() {
   const issues = validateMapData();
@@ -81,8 +86,145 @@ async function boot() {
   // also the title-screen card order.
   const BOOKMARKS = ERAS;
   const byId = (id) => BOOKMARKS.find((e) => e.bookmark.id === id) || BOOKMARKS[0];
-  const saveKey = (id) => 'ju_save_' + id;
+  const hasBookmark = (id) => BOOKMARKS.some((e) => e.bookmark.id === id);
   const fmtYr = (y) => (y < 0 ? (-y) + ' BCE' : y + ' CE');
+
+  // Saves are a shelf, not a downloads folder (SPEC §93). Every campaign has
+  // an id: `auto-<chapter>` (the January autosave, overwritten each year) or
+  // `manual-<chapter>-<stamp>` (the quill, one row per press). The shelf lives
+  // in the cloud when a cloud is configured; localStorage is kept as an
+  // offline mirror so a lost connection never costs a campaign — and so the
+  // game still plays with no cloud at all.
+  const AUTO_PREFIX = 'ju_save_';        // legacy layout: saves written before §93
+  const MANUAL_PREFIX = 'ju_save_m_';
+  const INDEX_KEY = 'ju_save_index';     // id -> meta, so listing never parses a world
+  const MAX_LOCAL_MANUAL = 12;
+  const CLOUD_LIST_BUDGET_MS = 5000;     // the title screen never waits longer
+
+  const autoId = (bookmarkId) => 'auto-' + bookmarkId;
+  const isManualId = (id) => String(id).startsWith('manual-');
+  function localKey(id) {
+    const s = String(id);
+    if (isManualId(s)) return MANUAL_PREFIX + s;
+    return AUTO_PREFIX + s.replace(/^auto-/, '');
+  }
+
+  function saveMeta(game, id, savedAt) {
+    const tag = game.playerTag;
+    const live = (game.tags && game.tags[tag]) || {};
+    const def = (DEFINES.TAGS && DEFINES.TAGS[tag]) || {};
+    const entry = byId(game.bookmarkId);
+    const d = game.date || { m: 1, y: 0 };
+    return {
+      id,
+      v: SAVE_VERSION,
+      savedAt: savedAt || Date.now(),
+      bookmarkId: game.bookmarkId,
+      chapterName: entry.bookmark.name,
+      tag,
+      nationName: live.name || def.name || tag,
+      dateLabel: (DEFINES.MONTH_NAMES[d.m - 1] || d.m) + ' ' + fmtYr(d.y),
+      kind: isManualId(id) ? 'manual' : 'auto',
+    };
+  }
+
+  // ------------------------------------------------------------ local shelf --
+  function localRead(id) {
+    try {
+      const raw = localStorage.getItem(localKey(id));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game) return null;
+      if (!hasBookmark(parsed.game.bookmarkId)) return null;
+      return parsed;
+    } catch (e) { return null; } // corrupt save: it simply is not there
+  }
+
+  // `json` is the already-serialized payload: a late-campaign world is
+  // megabytes, and the caller stringifies it exactly once for both shelves.
+  function localWrite(id, json, meta) {
+    try {
+      localStorage.setItem(localKey(id), json);
+      indexWrite(id, meta);
+      return true;
+    } catch (e) {
+      // Quota, private mode, a phone reclaiming storage — the cloud copy is
+      // the one that matters, so this is a warning and not a failure.
+      console.warn('[save] local mirror refused the write', e);
+      return false;
+    }
+  }
+
+  // The index is what the saves panel and the Continue button read. Without it
+  // every list would JSON.parse every stored world — seconds of jank on a
+  // phone, for data that is a dozen short strings.
+  function indexRead() {
+    try {
+      const raw = localStorage.getItem(INDEX_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (e) { return {}; }
+  }
+  function indexPut(next) {
+    try { localStorage.setItem(INDEX_KEY, JSON.stringify(next)); } catch (e) { /* quota */ }
+  }
+  function indexWrite(id, meta) {
+    const idx = indexRead();
+    idx[id] = meta;
+    indexPut(idx);
+  }
+
+  function localIds() {
+    const out = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || k === INDEX_KEY || !k.startsWith(AUTO_PREFIX)) continue;
+        if (k.startsWith(MANUAL_PREFIX)) out.push(k.slice(MANUAL_PREFIX.length));
+        else out.push(autoId(k.slice(AUTO_PREFIX.length)));
+      }
+    } catch (e) { /* no storage at all */ }
+    return out;
+  }
+
+  // Key enumeration is the truth about what exists; the index is the truth
+  // about what each one is. A body with no index entry (a save from before
+  // §93, or one written by an older build) is parsed once and indexed, so it
+  // costs that only the first time it is listed.
+  function localList() {
+    const idx = indexRead();
+    const rows = [];
+    let repaired = false;
+    for (const id of localIds()) {
+      let meta = idx[id];
+      if (!meta) {
+        const parsed = localRead(id);
+        if (!parsed) continue;
+        meta = saveMeta(parsed.game, id, parsed.savedAt);
+        idx[id] = meta;
+        repaired = true;
+      }
+      rows.push({ ...meta, id, source: 'local' });
+    }
+    // Bodies deleted behind the index's back must not linger as phantom rows.
+    for (const id of Object.keys(idx)) {
+      if (!rows.some((r) => r.id === id)) { delete idx[id]; repaired = true; }
+    }
+    if (repaired) indexPut(idx);
+    return rows;
+  }
+
+  function pruneLocalManual() {
+    const manual = localList().filter((r) => r.kind === 'manual')
+      .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+    if (manual.length <= MAX_LOCAL_MANUAL) return;
+    const idx = indexRead();
+    for (const row of manual.slice(MAX_LOCAL_MANUAL)) {
+      try { localStorage.removeItem(localKey(row.id)); } catch (e) { /* already gone */ }
+      delete idx[row.id];
+    }
+    indexPut(idx);
+  }
 
   let activeEntry = BOOKMARKS[0];
   function startGame(game, entry, wrapActions) {
@@ -307,64 +449,198 @@ async function boot() {
     onHostStart: startMultiplayerHost,
     onGuestStart: startMultiplayerGuest,
   });
-  function doSave(silent) {
-    if (!ctx) return;
-    try {
-      localStorage.setItem(saveKey(ctx.game.bookmarkId),
-        JSON.stringify({ v: SAVE_VERSION, savedAt: Date.now(), game: ctx.game }));
-      if (!silent) {
-        const d = ctx.game.date;
-        bus.emit('notify', { title: 'Chronicle written', text: 'Campaign saved — ' + (DEFINES.MONTH_NAMES[d.m - 1] || d.m) + ' ' + fmtYr(d.y) + '.', type: 'info' });
+  // ------------------------------------------------------------- writing --
+  // Every save goes to both shelves: the cloud copy is the one that follows
+  // you between devices, the local mirror is the one that survives the cloud
+  // being down. A manual save (the quill) opens a new row; the yearly
+  // autosave overwrites the chapter's single auto row.
+  async function doSave(silent) {
+    if (!ctx) return null;
+    const now = Date.now();
+    const id = silent ? autoId(ctx.game.bookmarkId)
+      : 'manual-' + ctx.game.bookmarkId + '-' + now;
+    const meta = saveMeta(ctx.game, id, now);
+    // One serialization for both shelves: the world is stringified once, so
+    // the two copies are byte-identical and a big save is not paid for twice.
+    const json = JSON.stringify({ v: SAVE_VERSION, savedAt: now, game: ctx.game });
+    localWrite(id, json, meta);
+    if (!silent) pruneLocalManual();
+    let cloudOk = false;
+    if (isCloudOn()) {
+      try {
+        await cloudPutSave(id, meta, json);
+        cloudOk = true;
+      } catch (e) {
+        console.warn('[save] the cloud refused the write', e);
       }
-    } catch (e) { console.warn('[save]', e); }
-  }
-  function readNewestSave() {
-    let best = null;
-    for (const entry of BOOKMARKS) {
-      try {
-        const raw = localStorage.getItem(saveKey(entry.bookmark.id));
-        if (!raw) continue;
-        const parsed = JSON.parse(raw);
-        if (!parsed || parsed.v !== SAVE_VERSION) continue;
-        const game = reviveGame(parsed.game);
-        if (!game) continue;
-        if (!best || (parsed.savedAt || 0) > best.savedAt) best = { savedAt: parsed.savedAt || 0, game, entry };
-      } catch (e) { /* corrupt save: ignore */ }
     }
-    return best;
+    if (!silent) {
+      const where = isCloudOn()
+        ? (cloudOk ? 'Kept in the cloud' : 'The cloud did not answer — kept on this device')
+        : 'Kept on this device';
+      bus.emit('notify', {
+        title: 'Chronicle written',
+        text: 'Campaign saved — ' + meta.dateLabel + '. ' + where + '.',
+        type: cloudOk || !isCloudOn() ? 'info' : 'bad',
+      });
+    }
+    return meta;
   }
-  bus.on('saveRequest', () => doSave(false));
-  bus.on('month', ({ date }) => { if (date && date.m === 1) doSave(true); }); // yearly autosave
+  bus.on('saveRequest', () => { doSave(false).catch((e) => console.warn('[save]', e)); });
+  // Yearly autosave. Fire-and-forget: a slow shelf must never stall the tick.
+  bus.on('month', ({ date }) => {
+    if (date && date.m === 1) doSave(true).catch((e) => console.warn('[autosave]', e));
+  });
 
-  const saved = readNewestSave();
-  const savedTag = saved && DEFINES.TAGS[saved.game.playerTag];
-  // Save tools (start screen): localStorage is fragile — especially on
-  // phones — so the newest save can leave as a file and come back as one.
-  const saveTools = {
-    onExport() {
-      // export the newest save verbatim
-      const best = readNewestSave();
-      if (!best) return null;
-      const raw = localStorage.getItem(saveKey(best.game.bookmarkId));
-      if (!raw) return null;
-      const d = best.game.date;
-      return {
-        filename: 'judaea-save-' + best.game.bookmarkId + '-' + best.game.playerTag + '-y' + Math.abs(d.y) + (d.y < 0 ? 'bce' : 'ce') + '.json',
-        json: raw,
-      };
-    },
-    onImport(text) {
+  // ------------------------------------------------------------- reading --
+  // The saves list is the union of both shelves. When an id is on both, the
+  // cloud row wins the display (it is the copy that travels) — the bodies are
+  // the same save, so loading still prefers whichever is nearer.
+  async function listSaves() {
+    const rows = new Map();
+    for (const row of localList()) rows.set(row.id, row);
+    if (isCloudOn()) {
+      let cloud = [];
       try {
-        const parsed = JSON.parse(text);
-        if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game) return false;
-        const game = reviveGame(parsed.game);
-        if (!game || !byId(game.bookmarkId)) return false;
-        localStorage.setItem(saveKey(game.bookmarkId),
-          JSON.stringify({ v: SAVE_VERSION, savedAt: Date.now(), game: parsed.game }));
-        return true; // the start screen reloads the page to pick it up
-      } catch (e) { console.warn('[import]', e); return false; }
-    },
+        cloud = await cloudListSaves();
+      } catch (e) {
+        console.warn('[saves] could not read the cloud shelf', e);
+      }
+      for (const meta of cloud) {
+        if (!meta || !meta.id) continue;
+        const prev = rows.get(meta.id);
+        // A local mirror written after the cloud copy (offline play) still
+        // shows its own, newer date.
+        if (prev && (prev.savedAt || 0) > (meta.savedAt || 0)) continue;
+        rows.set(meta.id, { ...meta, source: 'cloud' });
+      }
+    }
+    return [...rows.values()].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+  }
+
+  // Resolve one id to a revived game. Local first (instant, and it is the same
+  // bytes); the cloud is the fallback for a save made on another device.
+  async function resolveSave(id) {
+    let parsed = localRead(id);
+    if (!parsed && isCloudOn()) {
+      const remote = await cloudGetSave(id);
+      if (remote && remote.v === SAVE_VERSION && remote.game && hasBookmark(remote.game.bookmarkId)) {
+        parsed = remote;
+        // Seed the mirror so the next load is instant and offline-safe.
+        localWrite(id, JSON.stringify(remote), saveMeta(remote.game, id, remote.savedAt));
+      }
+    }
+    if (!parsed) return null;
+    const game = reviveGame(parsed.game);
+    if (!game || !hasBookmark(game.bookmarkId)) return null;
+    return { game, entry: byId(game.bookmarkId), savedAt: parsed.savedAt || 0 };
+  }
+
+  // The title screen's Continue button. Local is read synchronously; the cloud
+  // list is raced against a short budget so a dead network costs a moment, not
+  // the title screen. A newer campaign on another device wins.
+  const cloudListPromise = isCloudOn()
+    ? cloudListSaves().catch((e) => { console.warn('[saves] cloud list failed', e); return []; })
+    : Promise.resolve([]);
+
+  async function newestSave() {
+    let localBest = null;
+    for (const row of localList()) {
+      if (!localBest || (row.savedAt || 0) > (localBest.savedAt || 0)) localBest = row;
+    }
+    let best = localBest;
+    if (isCloudOn()) {
+      const cloud = await Promise.race([
+        cloudListPromise,
+        new Promise((res) => setTimeout(() => res([]), CLOUD_LIST_BUDGET_MS)),
+      ]);
+      for (const meta of cloud || []) {
+        if (!meta || !meta.id || meta.v !== SAVE_VERSION) continue;
+        if (!best || (meta.savedAt || 0) > (best.savedAt || 0)) best = { ...meta, source: 'cloud' };
+      }
+    }
+    if (!best) return null;
+    // Reading a cloud-only body is a second round trip and can be megabytes.
+    // It gets the same budget as the list: past it, Continue offers the newest
+    // campaign this device already holds rather than making the player wait.
+    // The shelf still lists the newer one, and loading it there has no clock.
+    try {
+      const bounded = best.source === 'cloud' && !localRead(best.id)
+        ? await Promise.race([
+          resolveSave(best.id),
+          new Promise((res) => setTimeout(() => res(null), CLOUD_LIST_BUDGET_MS)),
+        ])
+        : await resolveSave(best.id);
+      if (bounded) return bounded;
+    } catch (e) {
+      console.warn('[saves] could not open the newest save', e);
+    }
+    if (localBest && localBest.id !== best.id) {
+      try { return await resolveSave(localBest.id); } catch (e) { /* nothing to continue */ }
+    }
+    return null;
+  }
+
+  // ------------------------------------------------------------- loading --
+  const PENDING_LOAD = 'ju_pending_load';
+  function loadIntoGame(loaded) {
+    document.getElementById('start-screen').classList.add('hidden');
+    startGame(loaded.game, loaded.entry);
+  }
+
+  async function loadSave(id) {
+    const loaded = await resolveSave(id);
+    if (!loaded) return false;
+    if (ctx) {
+      // A campaign is already bound to the UI (and possibly to a live
+      // multiplayer peer). Rebinding in place is not a thing this chrome
+      // supports, so the load goes through a reload — the save is already
+      // on both shelves, so nothing is lost crossing it.
+      try { sessionStorage.setItem(PENDING_LOAD, id); } catch (e) { /* fall through */ }
+      window.location.reload();
+      return true;
+    }
+    loadIntoGame(loaded);
+    return true;
+  }
+
+  async function removeSave(id) {
+    try { localStorage.removeItem(localKey(id)); } catch (e) { /* already gone */ }
+    const idx = indexRead();
+    if (idx[id]) { delete idx[id]; indexPut(idx); }
+    if (isCloudOn()) await cloudDeleteSave(id);
+    return true;
+  }
+
+  const saveTools = {
+    cloudOn: () => isCloudOn(),
+    endpoint: () => cloudEndpoint(),
+    status: () => cloudHealth(),
+    // An endpoint a link offered but this player has not accepted for saves.
+    offered: () => untrustedEndpoint(),
+    acceptOffered: () => trustLinkEndpoint(),
+    playerCode: () => prettyKey(playerKey()),
+    setPlayerCode: (code) => (normalizeKey(code) ? !!setPlayerKey(code) : false),
+    list: listSaves,
+    load: loadSave,
+    remove: removeSave,
   };
+
+  // A load requested from inside a running campaign comes back around here.
+  let pendingLoad = null;
+  try {
+    pendingLoad = sessionStorage.getItem(PENDING_LOAD);
+    if (pendingLoad) sessionStorage.removeItem(PENDING_LOAD);
+  } catch (e) { pendingLoad = null; }
+  let resumed = null;
+  if (pendingLoad) {
+    try { resumed = await resolveSave(pendingLoad); } catch (e) { console.warn('[load]', e); }
+  }
+
+  // The saves panel is built by initUI from these tools, so it must be handed
+  // over even when a pending load means the title screen is never seen.
+  const saved = resumed ? null : await newestSave();
+  const savedTag = saved && DEFINES.TAGS[saved.game.playerTag];
   ui.showStartScreen(BOOKMARKS.map((e) => e.bookmark), (bookmark, playerTag, opts) => {
     const entry = byId(bookmark.id);
     const activeProvinceMap = applyMapProfile(entry.bookmark);
@@ -379,6 +655,17 @@ async function boot() {
       + (DEFINES.MONTH_NAMES[saved.game.date.m - 1] || saved.game.date.m) + ' ' + fmtYr(saved.game.date.y),
     onContinue: () => startGame(saved.game, saved.entry),
   } : null, saveTools, () => lobby.open());
+  // A load asked for from inside a running campaign: the reload lands here and
+  // goes straight into the world, past the title screen it just drew.
+  if (resumed) loadIntoGame(resumed);
+  else {
+    // …or the player followed a `?join=CODE` invite link (SPEC §93): open the
+    // lobby already joining, so the whole handshake is one click for them.
+    try {
+      const joinCode = new URLSearchParams(window.location.search).get('join');
+      if (joinCode) lobby.openJoin(joinCode);
+    } catch (e) { /* no URL to read */ }
+  }
 
   camera.onClick((mapX, mapY, sx, sy, mods) => {
     if (!ctx) return;

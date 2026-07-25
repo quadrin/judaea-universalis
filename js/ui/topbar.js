@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -54,6 +54,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
         <button class="tb-save" data-ref="chron" data-tt="The chronicle — the world&#39;s recorded history (C)">${icon('lamp')}</button>
         <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
+        <button class="tb-save" data-ref="loadsave" data-tt="Saved campaigns — load one">${icon('amphora')}</button>
         <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">${icon('play')}</button>
         <span class="tb-pips" data-ref="pips"></span>
       </div>`;
@@ -94,6 +95,9 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     });
     refs.save.addEventListener('click', () => {
       try { ctx.bus.emit('saveRequest', {}); } catch (e) { warnOnce('save', e); }
+    });
+    refs.loadsave.addEventListener('click', () => {
+      if (onSavesClick) { try { onSavesClick(); } catch (e) { warnOnce('savesClick', e); } }
     });
     refs.borrow.addEventListener('click', () => {
       if (refs.borrow.classList.contains('disabled')) return;

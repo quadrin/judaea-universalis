@@ -19,6 +19,26 @@ python3 -m http.server 8613 --directory .
 # open http://localhost:8613
 ```
 
+## The cloud (optional)
+
+Cloud saves and six-character invite codes are backed by one small key-value
+service — a ~180-line Cloudflare Worker in [`server/`](server/README.md), which
+is the only server this game has. Deploy it once and point the game at it:
+
+```sh
+cd server && npx wrangler kv namespace create JU   # paste the id into wrangler.toml
+npx wrangler deploy
+```
+
+Then set `DEFAULT_ENDPOINT` in `js/net/cloud.js`. You can also pass
+`?cloud=https://ju-cloud.<you>.workers.dev` in the URL, but an endpoint that
+arrives that way is used for the multiplayer handshake only until you accept it
+in the Saves panel — a shared link should not be able to redirect your saves.
+
+**Without it the game plays exactly as it did before**: saves stay in this
+browser, and multiplayer falls back to hand-carried invite/reply codes. Nothing
+about the static site, the zero dependencies, or the missing build step changes.
+
 ## What's in the slice
 
 - Province map from Greece and Cyrenaica to Persepolis, from Ionia to the Hejaz
@@ -30,7 +50,10 @@ python3 -m http.server 8613 --directory .
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
-- Save/load (yearly autosave + Continue button) and monarch-point sinks (develop provinces,
+- Cloud saves: a shelf of campaigns (yearly autosave + a row per press of the quill),
+  listed with nation, date and chapter, loadable in one click from the title screen or
+  mid-campaign. Nothing is downloaded or uploaded by hand; a twenty-character player code
+  carries the shelf to a second device. Monarch-point sinks too (develop provinces,
   buy stability, call reserves).
 - A realm panel behind the topbar flag: your ruler and their skills (which drive monthly
   monarch points), religion/culture/capital, stability, legitimacy, war exhaustion, economy,
@@ -83,9 +106,11 @@ python3 -m http.server 8613 --directory .
   instead of teleporting, battles rock and spark, sieges smoke — and clicking a battle (on
   the map or in the outliner) opens a live battle window with the day's dice, both hosts
   army by army, morale and the running butcher's bill.
-- Co-op multiplayer with no server: the host's browser runs the world and friends join
-  over a direct WebRTC link by swapping invite/reply codes (⚔ Multiplayer on the title
-  screen). Everyone rules the host's nation together — any player can move the armies,
+- Co-op multiplayer: the host's browser runs the world and friends join over a direct
+  WebRTC link by typing a six-character invite code like `KFR-2M9` (⚔ Multiplayer on the
+  title screen) — there is nothing to send back. With no cloud configured it falls back to
+  the original hand-carried codes, so the game still plays with nothing behind it.
+  Everyone rules the host's nation together — any player can move the armies,
   spend the treasury, and steer the clock. Story event cards appear on every screen;
   the host makes the choice, and every toast the realm receives reaches all players.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,

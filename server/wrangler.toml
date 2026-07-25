@@ -1,0 +1,10 @@
+name = "ju-cloud"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# One KV namespace holds both invite rooms and campaign saves.
+# Create it with:  npx wrangler kv namespace create JU
+# then paste the id it prints below.
+[[kv_namespaces]]
+binding = "JU"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
