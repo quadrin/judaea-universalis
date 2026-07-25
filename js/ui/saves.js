@@ -3,9 +3,11 @@
 // the quill's neighbour in the topbar, so "load a save" no longer means
 // "the newest one, and only the newest one".
 //
-// Saves live in the cloud when a cloud is configured and on this device
-// otherwise; the list says which, per row, and never asks the player to
-// download or upload a file.
+// Campaigns live in this browser's own database: free, nothing to set up, and
+// never a file to download or hunt for again. If a cloud is configured they
+// are copied there too and follow the player between devices — the per-row
+// badge says which, and the foot of the panel says where they are and how
+// safe they are there.
 import { esc, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
@@ -37,8 +39,9 @@ export function createSavesPanel({ DEFINES, saveTools }) {
   function rowHtml(s) {
     const tagDef = (DEFINES.TAGS && DEFINES.TAGS[s.tag]) || {};
     const where = s.source === 'cloud'
-      ? '<span class="sv-where sv-cloud" data-tt="Kept in the cloud — it follows your player code to any device">☁ cloud</span>'
-      : '<span class="sv-where sv-local" data-tt="Kept in this browser only — clearing site data loses it">▢ this device</span>';
+      ? '<span class="sv-where sv-cloud" data-tt="Saved on another device and found through your cloud copy — loading it brings it here">☁ elsewhere</span>'
+      : '<span class="sv-where sv-local" data-tt="Saved in this browser — loads with no network and no downloads">▢ here</span>'
+        + (s.alsoCloud ? '<span class="sv-where sv-cloud" data-tt="A copy is in your cloud too, so it reaches your other devices">☁ copied</span>' : '');
     const kind = s.kind === 'auto' ? '<span class="sv-kind">autosave</span>' : '';
     return `
       <div class="sv-row" data-id="${esc(s.id)}">
@@ -178,22 +181,44 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     d.classList.toggle('bad', !!bad);
   }
 
+  const mb = (n) => (n >= 1024 * 1024 * 1024
+    ? (n / 1024 / 1024 / 1024).toFixed(1) + ' GB'
+    : Math.round(n / 1024 / 1024) + ' MB');
+
+  // The foot of the panel. Saving in this browser is the whole feature and is
+  // stated as such — a cloud, if one is set up, is an extra line underneath,
+  // never a prerequisite the player is missing.
   async function refreshCloudLine() {
     const line = el && el.querySelector('[data-ref="cloudline"]');
     if (!line) return;
+    let store = null;
+    try { store = await saveTools.storage(); } catch (e) { warnOnce('storage', e); }
+
+    const room = store && store.quota
+      ? ` About ${esc(mb(store.quota - (store.usage || 0)))} free — room for hundreds of campaigns.`
+      : '';
+    const kept = store && store.persisted
+      ? 'Your browser has marked these as worth keeping, so they survive a storage clear-out.'
+      : 'Clearing this site\'s data in your browser settings would remove them.';
+    const where = store && store.fallback
+      ? 'Saved in this browser. (This browser would not open its database, so the game is using '
+        + 'the smaller fallback store — a very long campaign may not fit.)'
+      : 'Saved in this browser, in its own database.';
+    let html = `<span class="sv-ok">▢ ${esc(where)}</span> <span class="sv-off">${esc(kept)}${room}</span>`;
+
     if (!saveTools.cloudOn()) {
-      line.innerHTML = `<span class="sv-off">No cloud is configured for this copy — saves stay in this
-        browser. See server/README.md to stand one up, or open the game once with
-        <code>?cloud=&lt;your endpoint&gt;</code>.</span>`;
+      html += `<span class="sv-off"> Nothing to set up, and nothing to download.
+        A cloud copy that follows you between devices is optional — see server/README.md.</span>`;
+      line.innerHTML = html;
       return;
     }
-    line.textContent = 'Checking the cloud…';
+    line.innerHTML = html + '<span class="sv-off"> Checking the cloud copy…</span>';
     let health = { ok: false };
     try { health = await saveTools.status(); } catch (e) { warnOnce('cloudstatus', e); }
-    line.innerHTML = health.ok
-      ? `<span class="sv-ok">☁ Connected — ${esc(saveTools.endpoint())}</span>`
-      : `<span class="sv-off">☁ The cloud is not answering (${esc(health.error || 'no reply')}). Saves are
-         being kept in this browser until it returns.</span>`;
+    line.innerHTML = html + (health.ok
+      ? `<span class="sv-ok"> ☁ Also copied to ${esc(saveTools.endpoint())}</span>`
+      : `<span class="sv-off"> ☁ The cloud copy is not reachable (${esc(health.error || 'no reply')}).
+         Your campaigns are safe here regardless.</span>`);
   }
 
   async function refreshList() {
@@ -209,7 +234,8 @@ export function createSavesPanel({ DEFINES, saveTools }) {
     if (!list) return;
     if (!saves.length) {
       list.innerHTML = '<div class="sv-empty">No saved campaigns yet. The game writes one every '
-        + 'January, and the quill in the topbar writes one whenever you ask.</div>';
+        + 'January, and the quill in the topbar writes one whenever you ask. They appear here, '
+        + 'and load with a click.</div>';
       status('');
       return;
     }

@@ -227,3 +227,9 @@ Two suites use it: `smoke68.mjs` (headless, the worker's own contract) and
 `uitest32.mjs` (two browsers joining by six-character code, then a campaign
 written to the cloud, loaded back, and picked up on a second "device"). Neither
 needs a Cloudflare account, and neither talks to the network.
+
+`uitest33.mjs` is the one to run when touching saves at all: it drives the
+DEFAULT experience — a bare `http://…/` with no query string, no cloud, no
+configuration — through save, reload, load, many campaigns across chapters,
+delete, and the migration of a legacy localStorage save into IndexedDB. It
+needs only the game server; it does not use the cloud mock.

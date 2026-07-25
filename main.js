@@ -24,6 +24,10 @@ import {
   playerKey, setPlayerKey, prettyKey, normalizeKey,
   cloudListSaves, cloudGetSave, cloudPutSave, cloudDeleteSave,
 } from './js/net/cloud.js';
+import {
+  shelfPut, shelfGet, shelfList, shelfDelete, shelfIsFallback,
+  requestPersistence, storageEstimate,
+} from './js/core/shelf.js';
 
 async function boot() {
   const issues = validateMapData();
@@ -91,23 +95,16 @@ async function boot() {
 
   // Saves are a shelf, not a downloads folder (SPEC §93). Every campaign has
   // an id: `auto-<chapter>` (the January autosave, overwritten each year) or
-  // `manual-<chapter>-<stamp>` (the quill, one row per press). The shelf lives
-  // in the cloud when a cloud is configured; localStorage is kept as an
-  // offline mirror so a lost connection never costs a campaign — and so the
-  // game still plays with no cloud at all.
-  const AUTO_PREFIX = 'ju_save_';        // legacy layout: saves written before §93
-  const MANUAL_PREFIX = 'ju_save_m_';
-  const INDEX_KEY = 'ju_save_index';     // id -> meta, so listing never parses a world
-  const MAX_LOCAL_MANUAL = 12;
+  // `manual-<chapter>-<stamp>` (the quill, one row per press). The shelf is the
+  // browser's own database (js/core/shelf.js) — free, nothing to configure, and
+  // roomy enough that a save is never refused. A cloud, if one is configured,
+  // is an EXTRA copy on top that follows the player between devices; it is not
+  // required, and nothing here waits on it.
+  const MAX_LOCAL_MANUAL = 30;           // ~100KB each against a ~1GB budget
   const CLOUD_LIST_BUDGET_MS = 5000;     // the title screen never waits longer
 
   const autoId = (bookmarkId) => 'auto-' + bookmarkId;
   const isManualId = (id) => String(id).startsWith('manual-');
-  function localKey(id) {
-    const s = String(id);
-    if (isManualId(s)) return MANUAL_PREFIX + s;
-    return AUTO_PREFIX + s.replace(/^auto-/, '');
-  }
 
   function saveMeta(game, id, savedAt) {
     const tag = game.playerTag;
@@ -129,101 +126,52 @@ async function boot() {
   }
 
   // ------------------------------------------------------------ local shelf --
-  function localRead(id) {
+  // js/core/shelf.js owns the storage itself (IndexedDB, with a localStorage
+  // fallback and a one-time migration of saves the old build left there).
+  // These wrappers add only what the game knows: what a valid payload is, and
+  // how to describe one.
+  async function localRead(id) {
+    const rec = await shelfGet(id);
+    if (!rec || !rec.json) return null;
     try {
-      const raw = localStorage.getItem(localKey(id));
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(rec.json);
       if (!parsed || parsed.v !== SAVE_VERSION || !parsed.game) return null;
       if (!hasBookmark(parsed.game.bookmarkId)) return null;
       return parsed;
     } catch (e) { return null; } // corrupt save: it simply is not there
   }
 
-  // `json` is the already-serialized payload: a late-campaign world is
-  // megabytes, and the caller stringifies it exactly once for both shelves.
-  function localWrite(id, json, meta) {
-    try {
-      localStorage.setItem(localKey(id), json);
-      indexWrite(id, meta);
-      return true;
-    } catch (e) {
-      // Quota, private mode, a phone reclaiming storage — the cloud copy is
-      // the one that matters, so this is a warning and not a failure.
-      console.warn('[save] local mirror refused the write', e);
-      return false;
-    }
+  // `json` is the already-serialized payload: the caller stringifies the world
+  // exactly once and hands the same string to every shelf that wants it.
+  async function localWrite(id, json, meta) {
+    const ok = await shelfPut(id, meta, json);
+    if (!ok) console.warn('[save] the local shelf refused the write');
+    return ok;
   }
 
-  // The index is what the saves panel and the Continue button read. Without it
-  // every list would JSON.parse every stored world — seconds of jank on a
-  // phone, for data that is a dozen short strings.
-  function indexRead() {
-    try {
-      const raw = localStorage.getItem(INDEX_KEY);
-      const parsed = raw ? JSON.parse(raw) : null;
-      return (parsed && typeof parsed === 'object') ? parsed : {};
-    } catch (e) { return {}; }
-  }
-  function indexPut(next) {
-    try { localStorage.setItem(INDEX_KEY, JSON.stringify(next)); } catch (e) { /* quota */ }
-  }
-  function indexWrite(id, meta) {
-    const idx = indexRead();
-    idx[id] = meta;
-    indexPut(idx);
-  }
-
-  function localIds() {
-    const out = [];
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (!k || k === INDEX_KEY || !k.startsWith(AUTO_PREFIX)) continue;
-        if (k.startsWith(MANUAL_PREFIX)) out.push(k.slice(MANUAL_PREFIX.length));
-        else out.push(autoId(k.slice(AUTO_PREFIX.length)));
-      }
-    } catch (e) { /* no storage at all */ }
-    return out;
-  }
-
-  // Key enumeration is the truth about what exists; the index is the truth
-  // about what each one is. A body with no index entry (a save from before
-  // §93, or one written by an older build) is parsed once and indexed, so it
-  // costs that only the first time it is listed.
-  function localList() {
-    const idx = indexRead();
+  // Rows carry their metadata beside the body, so listing never parses a
+  // world. A row written by a build that predates the metadata (or migrated
+  // from the old layout without an index entry) is parsed once and repaired.
+  async function localList() {
     const rows = [];
-    let repaired = false;
-    for (const id of localIds()) {
-      let meta = idx[id];
-      if (!meta) {
-        const parsed = localRead(id);
+    for (const rec of await shelfList()) {
+      let meta = rec.meta;
+      if (!meta || !meta.savedAt) {
+        const parsed = await localRead(rec.id);
         if (!parsed) continue;
-        meta = saveMeta(parsed.game, id, parsed.savedAt);
-        idx[id] = meta;
-        repaired = true;
+        meta = saveMeta(parsed.game, rec.id, parsed.savedAt);
+        await shelfPut(rec.id, meta, JSON.stringify(parsed));
       }
-      rows.push({ ...meta, id, source: 'local' });
+      rows.push({ ...meta, id: rec.id, source: 'local' });
     }
-    // Bodies deleted behind the index's back must not linger as phantom rows.
-    for (const id of Object.keys(idx)) {
-      if (!rows.some((r) => r.id === id)) { delete idx[id]; repaired = true; }
-    }
-    if (repaired) indexPut(idx);
     return rows;
   }
 
-  function pruneLocalManual() {
-    const manual = localList().filter((r) => r.kind === 'manual')
+  async function pruneLocalManual() {
+    const manual = (await localList()).filter((r) => r.kind === 'manual')
       .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
     if (manual.length <= MAX_LOCAL_MANUAL) return;
-    const idx = indexRead();
-    for (const row of manual.slice(MAX_LOCAL_MANUAL)) {
-      try { localStorage.removeItem(localKey(row.id)); } catch (e) { /* already gone */ }
-      delete idx[row.id];
-    }
-    indexPut(idx);
+    for (const row of manual.slice(MAX_LOCAL_MANUAL)) await shelfDelete(row.id);
   }
 
   let activeEntry = BOOKMARKS[0];
@@ -450,38 +398,44 @@ async function boot() {
     onGuestStart: startMultiplayerGuest,
   });
   // ------------------------------------------------------------- writing --
-  // Every save goes to both shelves: the cloud copy is the one that follows
-  // you between devices, the local mirror is the one that survives the cloud
-  // being down. A manual save (the quill) opens a new row; the yearly
-  // autosave overwrites the chapter's single auto row.
+  // The local shelf is the campaign's home and always gets the write. A cloud,
+  // if one is configured, gets an extra copy so the campaign follows the
+  // player between devices — but it is never what the save depends on. A
+  // manual save (the quill) opens a new row; the yearly autosave overwrites
+  // the chapter's single auto row.
+  let askedToPersist = false;
   async function doSave(silent) {
     if (!ctx) return null;
     const now = Date.now();
     const id = silent ? autoId(ctx.game.bookmarkId)
       : 'manual-' + ctx.game.bookmarkId + '-' + now;
     const meta = saveMeta(ctx.game, id, now);
-    // One serialization for both shelves: the world is stringified once, so
-    // the two copies are byte-identical and a big save is not paid for twice.
+    // One serialization for every shelf: the world is stringified once, so the
+    // copies are byte-identical and a big save is not paid for twice.
     const json = JSON.stringify({ v: SAVE_VERSION, savedAt: now, game: ctx.game });
-    localWrite(id, json, meta);
-    if (!silent) pruneLocalManual();
+    const localOk = await localWrite(id, json, meta);
+    if (!silent) await pruneLocalManual();
+    // The first save is the honest moment to ask the browser not to evict us.
+    if (!askedToPersist) { askedToPersist = true; requestPersistence(); }
     let cloudOk = false;
     if (isCloudOn()) {
       try {
         await cloudPutSave(id, meta, json);
         cloudOk = true;
       } catch (e) {
-        console.warn('[save] the cloud refused the write', e);
+        console.warn('[save] the cloud refused the extra copy', e);
       }
     }
     if (!silent) {
-      const where = isCloudOn()
-        ? (cloudOk ? 'Kept in the cloud' : 'The cloud did not answer — kept on this device')
-        : 'Kept on this device';
+      let where;
+      if (!localOk) where = 'This browser would not store it';
+      else if (cloudOk) where = 'Kept on this device and in the cloud';
+      else if (isCloudOn()) where = 'Kept on this device — the cloud copy did not go through';
+      else where = 'Kept on this device';
       bus.emit('notify', {
-        title: 'Chronicle written',
+        title: localOk ? 'Chronicle written' : 'The chronicle would not take',
         text: 'Campaign saved — ' + meta.dateLabel + '. ' + where + '.',
-        type: cloudOk || !isCloudOn() ? 'info' : 'bad',
+        type: localOk ? 'info' : 'bad',
       });
     }
     return meta;
@@ -493,12 +447,12 @@ async function boot() {
   });
 
   // ------------------------------------------------------------- reading --
-  // The saves list is the union of both shelves. When an id is on both, the
-  // cloud row wins the display (it is the copy that travels) — the bodies are
-  // the same save, so loading still prefers whichever is nearer.
+  // The saves list is this device's shelf, plus anything a configured cloud
+  // knows about that is not here yet. When an id is on both, the newer of the
+  // two dates wins the row — the bodies are the same save either way.
   async function listSaves() {
     const rows = new Map();
-    for (const row of localList()) rows.set(row.id, row);
+    for (const row of await localList()) rows.set(row.id, row);
     if (isCloudOn()) {
       let cloud = [];
       try {
@@ -508,26 +462,27 @@ async function boot() {
       }
       for (const meta of cloud) {
         if (!meta || !meta.id) continue;
-        const prev = rows.get(meta.id);
-        // A local mirror written after the cloud copy (offline play) still
-        // shows its own, newer date.
-        if (prev && (prev.savedAt || 0) > (meta.savedAt || 0)) continue;
+        const here = rows.get(meta.id);
+        // A campaign that is on this device stays labelled as being on this
+        // device — the cloud copy is an extra, not a relocation. Only a save
+        // this browser has never seen is listed as living elsewhere.
+        if (here) { here.alsoCloud = true; continue; }
         rows.set(meta.id, { ...meta, source: 'cloud' });
       }
     }
     return [...rows.values()].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   }
 
-  // Resolve one id to a revived game. Local first (instant, and it is the same
-  // bytes); the cloud is the fallback for a save made on another device.
+  // Resolve one id to a revived game. This device first — it is the same bytes
+  // and needs no network. The cloud is the fallback for a save made elsewhere.
   async function resolveSave(id) {
-    let parsed = localRead(id);
+    let parsed = await localRead(id);
     if (!parsed && isCloudOn()) {
       const remote = await cloudGetSave(id);
       if (remote && remote.v === SAVE_VERSION && remote.game && hasBookmark(remote.game.bookmarkId)) {
         parsed = remote;
-        // Seed the mirror so the next load is instant and offline-safe.
-        localWrite(id, JSON.stringify(remote), saveMeta(remote.game, id, remote.savedAt));
+        // Bring it home, so the next load needs nothing but this browser.
+        await localWrite(id, JSON.stringify(remote), saveMeta(remote.game, id, remote.savedAt));
       }
     }
     if (!parsed) return null;
@@ -536,16 +491,17 @@ async function boot() {
     return { game, entry: byId(game.bookmarkId), savedAt: parsed.savedAt || 0 };
   }
 
-  // The title screen's Continue button. Local is read synchronously; the cloud
-  // list is raced against a short budget so a dead network costs a moment, not
-  // the title screen. A newer campaign on another device wins.
+  // The title screen's Continue button. This device's shelf answers on its
+  // own; a configured cloud is raced against a short budget, so a dead network
+  // costs a moment rather than the title screen, and a newer campaign left on
+  // another device wins when it arrives in time.
   const cloudListPromise = isCloudOn()
     ? cloudListSaves().catch((e) => { console.warn('[saves] cloud list failed', e); return []; })
     : Promise.resolve([]);
 
   async function newestSave() {
     let localBest = null;
-    for (const row of localList()) {
+    for (const row of await localList()) {
       if (!localBest || (row.savedAt || 0) > (localBest.savedAt || 0)) localBest = row;
     }
     let best = localBest;
@@ -565,7 +521,7 @@ async function boot() {
     // campaign this device already holds rather than making the player wait.
     // The shelf still lists the newer one, and loading it there has no clock.
     try {
-      const bounded = best.source === 'cloud' && !localRead(best.id)
+      const bounded = best.source === 'cloud' && !(await localRead(best.id))
         ? await Promise.race([
           resolveSave(best.id),
           new Promise((res) => setTimeout(() => res(null), CLOUD_LIST_BUDGET_MS)),
@@ -595,7 +551,7 @@ async function boot() {
       // A campaign is already bound to the UI (and possibly to a live
       // multiplayer peer). Rebinding in place is not a thing this chrome
       // supports, so the load goes through a reload — the save is already
-      // on both shelves, so nothing is lost crossing it.
+      // on the shelf, so nothing is lost crossing it.
       try { sessionStorage.setItem(PENDING_LOAD, id); } catch (e) { /* fall through */ }
       window.location.reload();
       return true;
@@ -605,10 +561,10 @@ async function boot() {
   }
 
   async function removeSave(id) {
-    try { localStorage.removeItem(localKey(id)); } catch (e) { /* already gone */ }
-    const idx = indexRead();
-    if (idx[id]) { delete idx[id]; indexPut(idx); }
-    if (isCloudOn()) await cloudDeleteSave(id);
+    await shelfDelete(id);
+    if (isCloudOn()) {
+      try { await cloudDeleteSave(id); } catch (e) { console.warn('[saves] cloud delete failed', e); }
+    }
     return true;
   }
 
@@ -616,6 +572,16 @@ async function boot() {
     cloudOn: () => isCloudOn(),
     endpoint: () => cloudEndpoint(),
     status: () => cloudHealth(),
+    // Where the campaigns actually are, for the line at the foot of the panel.
+    async storage() {
+      const est = await storageEstimate();
+      let persisted = null;
+      try {
+        persisted = navigator.storage && navigator.storage.persisted
+          ? await navigator.storage.persisted() : null;
+      } catch (e) { persisted = null; }
+      return { persisted, fallback: shelfIsFallback(), usage: est && est.usage, quota: est && est.quota };
+    },
     // An endpoint a link offered but this player has not accepted for saves.
     offered: () => untrustedEndpoint(),
     acceptOffered: () => trustLinkEndpoint(),

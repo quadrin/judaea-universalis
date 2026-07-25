@@ -164,7 +164,7 @@ await solo.locator('#topbar [data-ref="save"]').click();
 await solo.waitForFunction(() => /Chronicle written/.test(document.getElementById('toast-container').textContent),
   null, { timeout: 60000 });
 const toast = await solo.locator('#toast-container').textContent();
-ok(/Kept in the cloud/.test(toast), 'the game says where it put the campaign: ' + toast.replace(/\s+/g, ' ').trim().slice(0, 90));
+ok(/Kept on this device and in the cloud/.test(toast), 'the game says where it put the campaign: ' + toast.replace(/\s+/g, ' ').trim().slice(0, 90));
 
 const shelf = [...cloud.kv._store.keys()].filter((k) => k.startsWith('save:'));
 ok(shelf.length === 1, 'exactly one campaign reached the cloud');
@@ -178,8 +178,11 @@ await solo.locator('[data-ref="saves"]').click();
 await solo.waitForSelector('#saves-panel .sv-row', { timeout: 60000 });
 ok(await solo.locator('.sv-row').count() === 1, 'the shelf shows the campaign');
 ok(/Judaea/.test(await solo.locator('.sv-row .sv-name').textContent()), 'named by nation and date');
-ok(await solo.locator('.sv-row .sv-cloud').count() === 1, 'and marked as living in the cloud');
-ok(/Connected/.test(await solo.locator('.sv-cloudline').textContent()), 'the panel reports the cloud is answering');
+ok(await solo.locator('.sv-row .sv-local').count() === 1,
+  'the row is marked as living on this device, where it actually is');
+ok(await solo.locator('.sv-row .sv-cloud').count() === 1, 'with the cloud copy noted beside it');
+ok(/Also copied to/.test(await solo.locator('.sv-cloudline').textContent()),
+  'and the panel reports the cloud copy is reachable');
 ok(await solo.locator('[data-ref="key"]').count() === 1, 'the player code is on offer for a second device');
 await solo.screenshot({ path: OUT + 'v19-shelf.png' });
 
@@ -227,8 +230,9 @@ await offline.reload({ waitUntil: 'networkidle' });
 await offline.waitForSelector('.bm-card', { timeout: 60000 });
 await offline.locator('[data-ref="saves"]').click();
 await offline.waitForSelector('#saves-panel', { timeout: 60000 });
-ok(/No cloud is configured/.test(await offline.locator('.sv-cloudline').textContent()),
-  'the shelf says plainly that there is no cloud');
+const offFoot = await offline.locator('.sv-cloudline').textContent();
+ok(/Saved in this browser/.test(offFoot) && /Nothing to set up/.test(offFoot),
+  'the shelf presents local storage as complete, not as a missing cloud');
 ok(await offline.locator('[data-ref="key"]').count() === 0, 'and offers no player code to carry');
 await offline.locator('#saves-panel [data-ref="close"]').click();
 await offline.locator('[data-ref="mp"]').click();

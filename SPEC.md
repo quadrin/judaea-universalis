@@ -795,7 +795,8 @@ renderer.render → overlay.draw → labels.update.
   toggles the realm panel, `L` the ledger; the player's ruler deaths arrive as event
   cards (runtime `ctx.dynEvents` registry — never saved, stale `dyn_*` pendings dropped
   on revive); export/import save as a JSON file from the start screen
-  (`showStartScreen(..., saveTools)`); the AI now integrates its conquests (establish
+  (`showStartScreen(..., saveTools)`) — **retired by §93**, which replaced both
+  buttons with a shelf that needs no files at all; the AI now integrates its conquests (establish
   rule / convert, `ai.js aiIntegration`) and drills when flush at war. 66 CE gained
   `activeTags` so other eras' tags never ghost into it.
 - **Holy sites & wonders** (`realm.js monthlyHolySites`): a holy site controlled by its
@@ -3909,9 +3910,27 @@ both are gone. They were the same problem wearing different clothes: a static
 site has nowhere to put a small piece of state for a moment, so it made the
 player carry it. Now there is somewhere to put it.
 
-**The shelf** (`server/worker.js`, ~180 lines over one Cloudflare KV namespace)
-is the only server this game has ever had, and it is optional. It stores two
-kinds of thing and understands neither:
+**The shelf is the browser's own database** (`js/core/shelf.js`). No account, no
+endpoint, no setup, and above all no file to download and hunt for later:
+campaigns go into IndexedDB and load from the panel with a click. localStorage
+was the obvious place and is the wrong one — it caps near 5MB per origin and
+counts UTF-16, so a ~104KB save costs ~208KB of that budget and a dozen
+campaigns throw `QuotaExceededError`, which is the single failure that loses
+somebody's game. IndexedDB on the same browser reports ~1GB. Anything the old
+build left in localStorage is migrated across the first time the shelf is read,
+and the original is deleted **only after** the copy has committed — an early
+version of that migration mistook "no such record" for "already there" and
+deleted the source without writing the destination, which `uitest33.mjs` caught.
+On the first save the game calls `navigator.storage.persist()`, so the origin is
+not evicted under storage pressure; the panel says which of the two states it
+got. If IndexedDB cannot be opened at all, the same API falls back to
+localStorage and the panel says the store is the smaller one.
+
+**A cloud is optional and additive** (`server/worker.js`, ~180 lines over one
+Cloudflare KV namespace) — the only server this game has ever had. Configure one and every save is
+copied there as well, so campaigns follow the player between devices; configure
+nothing and the game is complete. It stores two kinds of thing and understands
+neither:
 
     room:<CODE>       one WebRTC offer, and its answer once posted. TTL 15 min.
     save:<who>:<id>   one campaign body; its display metadata rides in KV's
@@ -3982,31 +4001,35 @@ reach the room — and it is safe precisely because of the split above.
   (`bindGame` is deliberately one-shot) and the save is already on both shelves,
   so nothing is lost crossing it.
   - **Ids**: `auto-<chapter>` (the January autosave, overwritten each year) and
-    `manual-<chapter>-<stamp>` (the quill, a new row per press). The local
-    mirror keeps `ju_save_<chapter>` for the auto slot — **saves written before
-    this section still load** — and `ju_save_m_<id>` for the rest, capped at 12
-    on the device and 24 in the cloud, oldest pruned. A prune never takes the
-    write that triggered it: KV's list is eventually consistent and may not show
-    it yet.
-  - **Both shelves, always.** Every save is written locally *and* pushed to the
-    cloud; the manual save reports which landed ("Kept in the cloud" /
-    "The cloud did not answer — kept on this device") rather than claiming
-    success it did not have. The list is the union, keyed by id, and a local
-    mirror written *after* its cloud copy (offline play) keeps its own newer
-    date. Loading prefers the local body when it is there and seeds the mirror
-    from the cloud when it is not.
-  - **Continue** now considers both shelves. The cloud list is started at boot
-    and awaited against a 5s budget just before the title screen — by which time
-    the renderer and geometry work has already burned most of it — so a campaign
-    continued on the phone is the one the laptop offers, and a dead network
-    costs a moment rather than the title screen.
+    `manual-<chapter>-<stamp>` (the quill, a new row per press). Capped at 30 on
+    the device and 24 in the cloud, oldest pruned. A prune never takes the write
+    that triggered it: KV's list is eventually consistent and may not show it
+    yet. **Saves written before this section still load** — see the migration
+    above.
+  - **Local first, cloud extra.** The device always gets the write, and the
+    toast reports what actually happened ("Kept on this device", "Kept on this
+    device and in the cloud", "…the cloud copy did not go through") rather than
+    claiming success it did not have. A campaign that is here is *labelled* as
+    here, with the cloud copy noted beside it; only a save this browser has
+    never seen is listed as living elsewhere, and loading it brings it home.
+  - **Continue** reads this device's shelf on its own. If a cloud is configured
+    its list is started at boot and awaited against a 5s budget just before the
+    title screen — by which time the renderer and geometry work has already
+    burned most of it — so a campaign continued on the phone is the one the
+    laptop offers, and a dead network costs a moment rather than the title
+    screen. Past the budget, Continue offers the newest campaign already here.
 
 - **The player code** is the account: twenty characters, minted on first run,
   shown (masked) in the saves panel with Copy, and typed into a second device to
   bring the shelf across. It is a password in every sense that matters and the
   panel says so.
 
-**Regression contract**: `smoke68.mjs` — the worker itself, headless: room mint
+**Regression contract**: `uitest33.mjs` — **the default experience, with
+nothing configured at all**: a bare URL, an empty shelf that asks for no setup,
+a save that goes into IndexedDB and not localStorage, the tab closing and coming
+back, loading with a click, many campaigns across several chapters, deleting,
+and a legacy localStorage save being migrated and still playing. `smoke68.mjs` —
+the worker itself, headless: room mint
 / fetch / answer-once / expiry, the shelf's write-list-read-delete, ordering,
 the prune, and the separation between two players. `uitest32.mjs` — two real
 browsers joining over an invite link with no blob on screen, code normalization

@@ -19,11 +19,24 @@ python3 -m http.server 8613 --directory .
 # open http://localhost:8613
 ```
 
+## Saves
+
+Saved campaigns go into your browser's own database (IndexedDB) and are listed
+in **▤ Saved campaigns** on the title screen, or behind the amphora in the
+topbar while you play. Click one to load it. There is nothing to configure and
+nothing to download — the old export/import-a-file buttons are gone.
+
+Two things worth knowing: clearing this site's data in your browser settings
+removes them (the game asks the browser to mark them as worth keeping, which
+Chrome grants silently and Firefox prompts for), and they are per-browser. If
+you want them to follow you between devices, set up the optional cloud below.
+
 ## The cloud (optional)
 
-Cloud saves and six-character invite codes are backed by one small key-value
-service — a ~180-line Cloudflare Worker in [`server/`](server/README.md), which
-is the only server this game has. Deploy it once and point the game at it:
+Six-character invite codes and save-syncing between devices are backed by one
+small key-value service — a ~180-line Cloudflare Worker in
+[`server/`](server/README.md), the only server this game has. **Saves work
+without it.** Deploy it once and point the game at it:
 
 ```sh
 cd server && npx wrangler kv namespace create JU   # paste the id into wrangler.toml
@@ -35,9 +48,9 @@ Then set `DEFAULT_ENDPOINT` in `js/net/cloud.js`. You can also pass
 arrives that way is used for the multiplayer handshake only until you accept it
 in the Saves panel — a shared link should not be able to redirect your saves.
 
-**Without it the game plays exactly as it did before**: saves stay in this
-browser, and multiplayer falls back to hand-carried invite/reply codes. Nothing
-about the static site, the zero dependencies, or the missing build step changes.
+**Without it nothing is broken**: saves live in your browser as described above,
+and multiplayer falls back to hand-carried invite/reply codes. Nothing about the
+static site, the zero dependencies, or the missing build step changes.
 
 ## What's in the slice
 
@@ -50,10 +63,11 @@ about the static site, the zero dependencies, or the missing build step changes.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
-- Cloud saves: a shelf of campaigns (yearly autosave + a row per press of the quill),
-  listed with nation, date and chapter, loadable in one click from the title screen or
-  mid-campaign. Nothing is downloaded or uploaded by hand; a twenty-character player code
-  carries the shelf to a second device. Monarch-point sinks too (develop provinces,
+- A shelf of saved campaigns (yearly autosave + a row per press of the quill), listed
+  with nation, date and chapter, loadable in one click from the title screen or
+  mid-campaign. They live in your browser's own database — nothing to set up, nothing to
+  download, and no file to hunt for when you want to play again. Optionally copied to a
+  cloud so they follow you between devices. Monarch-point sinks too (develop provinces,
   buy stability, call reserves).
 - A realm panel behind the topbar flag: your ruler and their skills (which drive monthly
   monarch points), religion/culture/capital, stability, legitimacy, war exhaustion, economy,
@@ -98,7 +112,7 @@ about the static site, the zero dependencies, or the missing build step changes.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
 - A war overview (score broken into battles / occupation / war goal / events, who holds what), a
-  sortable ledger of nations (L), a diplomatic map mode, and save export/import.
+  sortable ledger of nations (L), a diplomatic map mode, and the saved-campaign shelf.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID
   staircase), procedural terrain grain per province (dunes, crags, fields, reeds), sandy
   beaches and a breathing coastal foam line.

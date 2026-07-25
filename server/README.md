@@ -9,11 +9,13 @@ as pure static files:
   back a six-character code (`KFR-2M9`); the guest fetches the offer and posts
   its answer to the same room. No three-kilobyte blob crosses a chat window,
   and there is no reply code to send back.
-- **Cloud saves.** Campaigns live on the shelf instead of a downloads folder,
-  and follow you between devices via your player code.
+- **Saves that follow you between devices.** Campaigns are always stored in the
+  browser's own database (`js/core/shelf.js`) — that part needs no server at
+  all. A cloud adds a second copy, reachable from any device that knows your
+  player code.
 
-Everything degrades: with no endpoint configured the game falls back to the
-old manual invite codes and device-local saves, exactly as it played before.
+Everything degrades: with no endpoint configured, saves work exactly as
+described above and multiplayer falls back to the old manual invite codes.
 
 ## Deploy
 
