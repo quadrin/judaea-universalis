@@ -4,7 +4,8 @@ const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA, validateMapData } = await import(R + '/js/data/map_data.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
-const { initGame, reviveGame } = await import(R + '/js/sim/init.js');
+const { initGame, reviveGame, reconcileGameProvinces } = await import(R + '/js/sim/init.js');
+const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { computeMapmodeColors } = await import(R + '/js/map/mapmodes.js');
 
 let failures = 0;
@@ -40,12 +41,14 @@ ok(byCanon(game, 'Philadelphia').habitation === 'town',
 // v4.3 (SPEC §44): by 1948 the desert interiors are administered territory —
 // sovereign, passable frontier land (smoke29 covers the opening in depth).
 const syrian = byCanon(game, 'Syrian Desert');
-ok(syrian.owner === 'SYR' && syrian.habitation === 'frontier'
+ok(syrian.owner === 'SYR' && syrian.terrain === 'desert' && syrian.habitation === 'frontier'
     && !syrian.impassable && syrian.settleable,
-  'the 1948 Syrian Desert is sovereign, open frontier land');
+  'the 1948 Syrian Desert is inhabited desert, not wasteland');
 ok(byCanon(game, 'Sinai Interior').owner === 'EGY'
-    && byCanon(game, 'Arabian Desert').owner === 'SAU',
-  'the 1948 Sinai and Arabian deserts likewise sit inside sovereign borders');
+    && byCanon(game, 'Sinai Interior').terrain === 'desert'
+    && byCanon(game, 'Arabian Desert').owner === 'SAU'
+    && byCanon(game, 'Arabian Desert').terrain === 'desert',
+  'the 1948 Sinai and Arabian deserts shed the ancient wasteland terrain class');
 
 console.log('== old saves migrate ==');
 const legacy = JSON.parse(JSON.stringify(game));
@@ -64,6 +67,18 @@ const reRevived = reviveGame(revived);
 ok(byCanon(reRevived, 'Syrian Desert').habitation === 'uninhabited'
     && byCanon(reRevived, 'Syrian Desert').settleable,
   'an old wasteland save reconstructs empty, settleable land');
+const oldCampaign = JSON.parse(JSON.stringify(game));
+const oldSinai = byCanon(oldCampaign, 'Sinai Interior');
+oldSinai.terrain = 'wasteland';
+oldSinai.habitation = 'uninhabited';
+oldSinai.impassable = true;
+reconcileGameProvinces({
+  game: oldCampaign, DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_1948,
+  provinceMap: buildProvinceMapping(MAP_DATA, BOOKMARK_1948),
+});
+ok(oldSinai.terrain === 'desert' && oldSinai.habitation === 'frontier'
+    && !oldSinai.impassable,
+  'loading an old 1948 save removes the obsolete Sinai wasteland state');
 
 console.log('== sovereignty survives empty land ==');
 // The hatch marks emptiness, not ownership: flip one cell back to uninhabited

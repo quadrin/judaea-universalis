@@ -476,6 +476,16 @@ export const BOOKMARK_1948 = {
     'Arabian Desert': 'frontier',
     'Syrian Desert': 'frontier',
   },
+  // "Wasteland" is an ancient administrative absence, not a twentieth-century
+  // terrain class. These remain harsh desert, but the province panel and
+  // terrain map must no longer describe inhabited sovereign land as waste.
+  terrains: {
+    'Sinai Interior': 'desert',
+    'Eastern Desert': 'desert',
+    'Libyan Desert': 'desert',
+    'Arabian Desert': 'desert',
+    'Syrian Desert': 'desert',
+  },
   impassable: {
     'Sinai Interior': false,
     'Eastern Desert': false,

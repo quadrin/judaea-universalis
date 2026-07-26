@@ -418,6 +418,7 @@ function makeStub(MAP_DATA) {
       if (!mapping || mapping.length < N + 1) return;
       provinceMap.set(mapping.subarray(0, N + 1));
     },
+    setProvinceTerrains: noop,
     setProvinceColors: noop,
     setMapmodeParams: noop,
     setSelected: noop,
@@ -679,15 +680,16 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     drylands: 6, steppe: 7, marsh: 8, wasteland: 0,
   };
   const terrTex = lookupTexture(gl.R8);
-  {
+  function uploadProvinceTerrains(states) {
     const t0 = new Uint8Array(lookW);
     for (let id = 1; id <= N; id++) {
-      const pr = provinces[id - 1] || {};
+      const pr = (states && states[id]) || provinces[id - 1] || {};
       t0[id] = TERRAIN_CLASS[pr.terrain] || 0;
     }
     gl.bindTexture(gl.TEXTURE_2D, terrTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, lookW, 1, 0, gl.RED, gl.UNSIGNED_BYTE, t0);
   }
+  uploadProvinceTerrains(null);
 
   function uploadLookups(primary, secondary, flags) {
     gl.bindTexture(gl.TEXTURE_2D, lookATex);
@@ -784,6 +786,14 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
         uploadProvinceMap(mapping);
       } catch (e) {
         warnOnce('province-map-throw', 'setProvinceMapping failed', e);
+      }
+    },
+
+    setProvinceTerrains(states) {
+      try {
+        uploadProvinceTerrains(states);
+      } catch (e) {
+        warnOnce('province-terrain-throw', 'setProvinceTerrains failed', e);
       }
     },
 

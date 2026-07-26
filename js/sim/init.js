@@ -104,7 +104,8 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
     // A bookmark may re-good a province (SPEC §52): the wells of the ancient
     // caravan country pump oil in 1948.
-    terrain: s.terrain, good: bookmarkField(bookmark, 'goods', s) || s.good,
+    terrain: bookmarkField(bookmark, 'terrains', s) || s.terrain,
+    good: bookmarkField(bookmark, 'goods', s) || s.good,
     religion: bookmarkField(bookmark, 'religions', s) || s.religion,
     culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
     dev,
@@ -2582,6 +2583,9 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
         : (typeof impassableOverride === 'boolean' ? impassableOverride : !!source.impassable);
       const habOverride = bookmarkField(bookmark, 'habitation', source);
       if (habOverride && p.habitation === 'uninhabited') p.habitation = habOverride;
+      // Terrain is era geography, not campaign state. A 1948 save made before
+      // the modern overlay must shed the ancient "Wasteland" classification.
+      p.terrain = bookmarkField(bookmark, 'terrains', source) || source.terrain || p.terrain;
       // Goods are era data too (SPEC §52) — nothing mutates them in play. The
       // 1948 overlay pumps oil where the base map ran caravans, and a save
       // from before the overlay must not spend the whole campaign without a
