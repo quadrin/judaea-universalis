@@ -432,6 +432,122 @@ function smoothstepJs(lo, hi, x) {
   return t * t * (3 - 2 * t);
 }
 
+// A weighted Voronoi cell can occasionally jump a narrow sea and claim a
+// second coastline.  That is especially visible around the two gulfs: Taba,
+// Eilat and the Sinai interior used to grow detached pieces in Arabia.  For
+// provinces explicitly marked contiguous by the atlas, keep the component
+// containing the seed and flood the detached pixels from the surrounding
+// legitimate provinces.  The repair is data-driven because island provinces
+// are intentionally allowed to have more than one land component.
+export function repairDisconnectedProvinceRaster(idArray, MAP_DATA) {
+  const W = MAP_DATA.MAP_W | 0;
+  const H = MAP_DATA.MAP_H | 0;
+  const provinces = MAP_DATA.provinces || [];
+  const names = Array.isArray(MAP_DATA.contiguousProvinces)
+    ? MAP_DATA.contiguousProvinces : [];
+  if (!idArray || idArray.length < W * H || !names.length) return 0;
+
+  const idByName = new Map(provinces.map((p, i) => [p.name, i + 1]));
+  const detached = new Uint8Array(W * H);
+  let detachedCount = 0;
+
+  for (const name of names) {
+    const target = idByName.get(name);
+    const seed = provinces[target - 1];
+    if (!target || !seed) continue;
+    const [sx0, sy0] = MAP_DATA.project(seed.lon, seed.lat);
+    const sx = Math.max(0, Math.min(W - 1, Math.floor(sx0)));
+    const sy = Math.max(0, Math.min(H - 1, Math.floor(sy0)));
+    const seedPx = sy * W + sx;
+    const seen = new Uint8Array(W * H);
+    const comps = [];
+
+    for (let start = 0; start < idArray.length; start++) {
+      if (seen[start] || idArray[start] !== target) continue;
+      const pixels = [];
+      const queue = [start];
+      seen[start] = 1;
+      let containsSeed = false;
+      for (let q = 0; q < queue.length; q++) {
+        const at = queue[q];
+        pixels.push(at);
+        if (at === seedPx) containsSeed = true;
+        const x = at % W;
+        const y = (at / W) | 0;
+        const visit = (next) => {
+          if (!seen[next] && idArray[next] === target) {
+            seen[next] = 1;
+            queue.push(next);
+          }
+        };
+        if (x > 0) visit(at - 1);
+        if (x + 1 < W) visit(at + 1);
+        if (y > 0) visit(at - W);
+        if (y + 1 < H) visit(at + W);
+      }
+      comps.push({ pixels, containsSeed });
+    }
+    if (comps.length < 2) continue;
+    let keep = comps.find((c) => c.containsSeed);
+    if (!keep) keep = comps.reduce((a, b) => (a.pixels.length >= b.pixels.length ? a : b));
+    for (const comp of comps) {
+      if (comp === keep) continue;
+      for (const px of comp.pixels) {
+        if (!detached[px]) {
+          detached[px] = 1;
+          detachedCount++;
+        }
+      }
+    }
+  }
+  if (!detachedCount) return 0;
+
+  // Multi-source flood fill: every legitimate land neighbor advances into
+  // the detached union.  Treating all marked cells as one mask prevents a bad
+  // Sinai fragment merely being relabeled as a bad Taba fragment.
+  const queue = new Int32Array(detachedCount);
+  let head = 0, tail = 0;
+  for (let at = 0; at < detached.length; at++) {
+    if (!detached[at]) continue;
+    const x = at % W;
+    const y = (at / W) | 0;
+    const neighbors = [];
+    if (x > 0) neighbors.push(at - 1);
+    if (x + 1 < W) neighbors.push(at + 1);
+    if (y > 0) neighbors.push(at - W);
+    if (y + 1 < H) neighbors.push(at + W);
+    let replacement = 0;
+    for (const next of neighbors) {
+      if (!detached[next] && idArray[next]) {
+        replacement = idArray[next];
+        break;
+      }
+    }
+    if (replacement) {
+      idArray[at] = replacement;
+      detached[at] = 0;
+      queue[tail++] = at;
+    }
+  }
+  while (head < tail) {
+    const at = queue[head++];
+    const x = at % W;
+    const y = (at / W) | 0;
+    const neighbors = [];
+    if (x > 0) neighbors.push(at - 1);
+    if (x + 1 < W) neighbors.push(at + 1);
+    if (y > 0) neighbors.push(at - W);
+    if (y + 1 < H) neighbors.push(at + W);
+    for (const next of neighbors) {
+      if (!detached[next]) continue;
+      idArray[next] = idArray[at];
+      detached[next] = 0;
+      queue[tail++] = next;
+    }
+  }
+  return detachedCount;
+}
+
 // ---- entry --------------------------------------------------------------------------------
 
 export async function initRenderer(canvas, MAP_DATA, DEFINES) {
@@ -599,6 +715,16 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     for (let i = 0, n = W * H; i < n; i++) {
       const v = buf[i * 4] + buf[i * 4 + 1] * 256;
       idArray[i] = v > N ? 0 : v;
+    }
+    const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA);
+    if (repaired) {
+      for (let i = 0, n = W * H; i < n; i++) {
+        const v = idArray[i];
+        buf[i * 4] = v & 255;
+        buf[i * 4 + 1] = (v >> 8) & 255;
+      }
+      gl.bindTexture(gl.TEXTURE_2D, idTex);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     }
   }
 

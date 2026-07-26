@@ -2229,6 +2229,20 @@ export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
   return t && t.opinion ? clamp(Math.round(num(t.opinion[of])), -200, 200) : 0;
 }
+function rivalryKey(a, b) {
+  return a < b ? a + '|' + b : b + '|' + a;
+}
+function eraRivalryActive(ctx, a, b) {
+  const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : null;
+  if (!list) return false;
+  const retired = ctx.game && ctx.game.retiredRivalries;
+  if (retired && retired[rivalryKey(a, b)]) return false;
+  for (const pair of list) {
+    if (!Array.isArray(pair) || pair.length !== 2) continue;
+    if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return true;
+  }
+  return false;
+}
 // Standing rivalries (SPEC §73): the bookmark may name pairs of courts whose
 // enmity is the era's weather — Rome and Parthia, the Syrian Wars, the jihad
 // state and the empires. Rivals cool toward BALANCE.rivalOpinion instead of
@@ -2237,13 +2251,7 @@ export function opinionOf(ctx, whose, of) {
 // schema is touched.
 export function areRivals(ctx, a, b) {
   if (a === b) return false;
-  const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : null;
-  if (list) {
-    for (const pair of list) {
-      if (!Array.isArray(pair) || pair.length !== 2) continue;
-      if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return true;
-    }
-  }
+  if (eraRivalryActive(ctx, a, b)) return true;
   // Declared rivalries (SPEC §86) sit on top of the era's weather: a court
   // the player has NAMED a rival is a rival in every place the bookmark's
   // own pairs are — drift, the AI's appetite, and the thaw that never comes.
@@ -2348,11 +2356,7 @@ export function rivalDeclareInfo(ctx, tag, of) {
   };
   if (!t || !o || !o.alive || tag === of) return null;
   // The era's own weather is not the player's to declare or to unsay.
-  const list = ctx.bookmark && Array.isArray(ctx.bookmark.rivalries) ? ctx.bookmark.rivalries : [];
-  for (const pair of list) {
-    if (!Array.isArray(pair) || pair.length !== 2) continue;
-    if ((pair[0] === tag && pair[1] === of) || (pair[0] === of && pair[1] === tag)) out.eraRival = true;
-  }
+  out.eraRival = eraRivalryActive(ctx, tag, of);
   if (out.isRival) {
     if (num(t.points && t.points.infl) < out.renounceCost) {
       out.why = 'Setting a quarrel aside costs ' + out.renounceCost + ' influence — we have not got it.';
@@ -2373,6 +2377,26 @@ export function rivalDeclareInfo(ctx, tag, of) {
   }
   out.can = !out.why;
   return out;
+}
+
+// A scripted peace can end one of the bookmark's inherited rivalries.  This
+// is stronger than the ordinary player action: it retires the era pair,
+// clears any declared rivalry on both sides, and settles both grudge ledgers.
+// A court may still name the other as a new rival later.
+export function reconcileRivalryCore(ctx, a, b) {
+  const g = ctx.game;
+  if (!g.tags[a] || !g.tags[b] || a === b) return false;
+  if (!g.retiredRivalries || typeof g.retiredRivalries !== 'object') g.retiredRivalries = {};
+  g.retiredRivalries[rivalryKey(a, b)] = true;
+  if (g.rivals && typeof g.rivals === 'object') {
+    if (Array.isArray(g.rivals[a])) g.rivals[a] = g.rivals[a].filter((tag) => tag !== b);
+    if (Array.isArray(g.rivals[b])) g.rivals[b] = g.rivals[b].filter((tag) => tag !== a);
+    if (Array.isArray(g.rivals[a]) && !g.rivals[a].length) delete g.rivals[a];
+    if (Array.isArray(g.rivals[b]) && !g.rivals[b].length) delete g.rivals[b];
+  }
+  if (g.tags[a].grudges) delete g.tags[a].grudges[b];
+  if (g.tags[b].grudges) delete g.tags[b].grudges[a];
+  return true;
 }
 export function declareRivalCore(ctx, tag, of) {
   const info = rivalDeclareInfo(ctx, tag, of);

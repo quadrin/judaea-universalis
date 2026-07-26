@@ -50,9 +50,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
         <div class="pp-row"><span class="pp-k">${icon('temple', 'icon-k')}Capital</span><span class="pp-v" data-ref="capital"></span></div>
         <div class="pp-row" data-ref="govRow"><span class="pp-k">${icon('scales', 'icon-k')}Government</span><span class="pp-v" data-ref="govType"></span></div>
-        <div class="pp-row" data-ref="provRow" data-tt="Provinces owned · total development"><span class="pp-k">${icon('bricks', 'icon-k')}Realm</span><span class="pp-v" data-ref="realm"></span></div>
+        <div class="pp-row" data-ref="provRow" data-tt="Provinces owned · total development"><span class="pp-k">${icon('bricks', 'icon-k')}<span data-ref="realmLabel">Realm</span></span><span class="pp-v" data-ref="realm"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}Legitimacy</span><span class="pp-v" data-ref="legitimacy"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}<span data-ref="legitimacyLabel">Legitimacy</span></span><span class="pp-v" data-ref="legitimacy"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
         <div class="pp-row hidden" data-ref="infamyRow" data-tt="Conquest is remembered: courts abroad turn against you (opinion falls monthly), and at 30+ the fearful league into a defensive coalition. Decays one point a month.">
           <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
@@ -60,7 +60,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}Manpower</span><span class="pp-v" data-ref="manpower"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
       </div>
       <div class="np-acts" data-ref="acts">
@@ -71,19 +71,19 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <button class="pp-build-btn hidden" data-act="requestParthianAid" data-ref="actParthia" data-tt="Send envoys to the King of Kings: 50 influence points for a chance at silver, volunteers, and Parthian sympathy">${icon('dove')}<span>Envoys to Parthia</span></button>
       </div>
       <div class="pp-build hidden" data-ref="chapterBlock">
-        <div class="pp-build-title">The Chapters</div>
+        <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
       <div class="pp-build hidden" data-ref="doctrineBlock">
-        <div class="pp-build-title">The Character of the Realm</div>
+        <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
         <div class="np-doctrine" data-ref="doctrine"></div>
       </div>
       <div class="pp-build" data-ref="missionsBlock">
-        <div class="pp-build-title">Missions</div>
+        <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
       </div>
       <div class="pp-build hidden" data-ref="factionsBlock">
-        <div class="pp-build-title">Estates</div>
+        <div class="pp-build-title" data-ref="factionsTitle">Estates</div>
         <div class="np-factions" data-ref="factions"></div>
       </div>
       <div class="pp-diplo">
@@ -91,7 +91,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div data-ref="diploBody"></div>
       </div>
       <div class="pp-build hidden" data-ref="powersBlock">
-        <div class="pp-build-title">The Powers Beyond the Map</div>
+        <div class="pp-build-title" data-ref="powersTitle">The Powers Beyond the Map</div>
         <div class="np-powers" data-ref="powers"></div>
       </div>
       <div class="pp-build" data-ref="decisionsBlock">
@@ -99,7 +99,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-decisions" data-ref="decisions"></div>
       </div>
       <div class="pp-build" data-ref="courtBlock">
-        <div class="pp-build-title">The Court</div>
+        <div class="pp-build-title" data-ref="courtTitle">The Court</div>
         <div class="np-court" data-ref="court"></div>
       </div>
       <div class="pp-build">
@@ -237,6 +237,16 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!t) { close(); return; }
     const TAGS = DEFINES.TAGS || {};
     const def = TAGS[tag] || {};
+    const terms = (ctx.bookmark && ctx.bookmark.uiTerms) || {};
+    setText(refs.realmLabel, terms.realm || 'Realm');
+    setText(refs.legitimacyLabel, terms.legitimacy || 'Legitimacy');
+    setText(refs.manpowerLabel, terms.manpower || 'Manpower');
+    setText(refs.chaptersTitle, terms.chapters || 'The Chapters');
+    setText(refs.characterTitle, terms.character || 'The Character of the Realm');
+    setText(refs.missionsTitle, terms.missions || 'Missions');
+    setText(refs.factionsTitle, terms.factions || 'Estates');
+    setText(refs.powersTitle, terms.powers || 'The Powers Beyond the Map');
+    setText(refs.courtTitle, terms.court || 'The Court');
 
     setHtml(refs.flag, flagChip(tag, DEFINES, 22, false, g));
     setText(refs.name, (t.name || tag) + (t.alive === false ? ' †' : ''));
@@ -264,7 +274,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           : (minor ? ' — <span class="np-dim2">a minor; their succession would mean a regency</span>' : '')));
       refs.heirRow.classList.remove('hidden');
     } else {
-      setHtml(refs.heirRow, '<span class="np-lost">No designated heir</span> — a sudden death would shake the realm.');
+      if (t.govType === 'republic') {
+        const months = Math.max(0, Math.round(t.electionIn || 0));
+        setHtml(refs.heirRow, `Constitutional succession — the next election is in <b>${months} month${months === 1 ? '' : 's'}</b>.`);
+      } else {
+        setHtml(refs.heirRow, '<span class="np-lost">No designated heir</span> — a sudden death would shake the realm.');
+      }
       refs.heirRow.classList.remove('hidden');
     }
 
@@ -288,7 +303,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (capName) {
       const cap = ctx.prov ? ctx.prov(capName) : null;
       const held = cap && cap.controller === tag;
-      setHtml(refs.capital, esc(capName) + (held ? '' : ' <span class="np-lost">(lost)</span>'));
+      setHtml(refs.capital, esc((cap && cap.name) || capName) + (held ? '' : ' <span class="np-lost">(lost)</span>'));
     } else {
       setText(refs.capital, '—');
     }
@@ -477,11 +492,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const show = !!(ch && (ch.active || ch.seq > 0 || ch.nextIn > 0));
     refs.chapterBlock.classList.toggle('hidden', !show);
     if (!show) return;
+    const terms = (ctx.bookmark && ctx.bookmark.uiTerms) || {};
+    const chapter = terms.chapter || 'Chapter';
+    const legacy = terms.chapter ? 'Legacy' : 'Seal';
     let html = '';
     if (ch.active) {
       const a = ch.active;
       html += `<div class="np-ch-head" data-tt="${esc(a.epigraph + '\nComplete all three objectives to seal the chapter.')}">`
-        + `${icon('scroll', 'icon-row')} <b>Chapter ${a.n} — ${esc(a.title)}</b></div>`;
+        + `${icon('scroll', 'icon-row')} <b>${esc(chapter)} ${a.n} — ${esc(a.title)}</b></div>`;
       for (const o of a.objectives) {
         const held = o.needMonths > 1 ? ` · held ${o.holdMonths}/${o.needMonths} mo` : '';
         const prog = o.done ? 'done' : `${o.have}/${o.need}${held}`;
@@ -491,12 +509,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           + `<span class="np-m-name">${esc(o.name)}</span>`
           + `<span class="np-ch-prog">${esc(o.done ? '✓' : prog)}</span></div>`;
       }
-      html += `<div class="np-ch-reward" data-tt="${esc(a.reward.desc)}">Seal: ${esc(a.reward.name)}</div>`;
+      html += `<div class="np-ch-reward" data-tt="${esc(a.reward.desc)}">${legacy}: ${esc(a.reward.name)}</div>`;
     } else if (ch.nextIn > 0) {
-      html += `<div class="np-dip-none">The next chapter opens in ${ch.nextIn} month${ch.nextIn === 1 ? '' : 's'}.</div>`;
+      html += `<div class="np-dip-none">The next ${esc(chapter.toLowerCase())} opens in ${ch.nextIn} month${ch.nextIn === 1 ? '' : 's'}.</div>`;
     }
     if (ch.history && ch.history.length) {
-      html += ch.history.map((h) => `<div class="np-ch-done">${icon('laurel', 'icon-row')} Chapter ${h.n} — ${esc(h.title)} · complete</div>`).join('');
+      html += ch.history.map((h) => `<div class="np-ch-done">${icon('laurel', 'icon-row')} ${esc(chapter)} ${h.n} — ${esc(h.title)} · complete</div>`).join('');
     }
     setHtml(refs.chapter, html || '<div class="np-dip-none">No chapter yet.</div>');
   }
@@ -506,6 +524,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (actions && typeof actions.getMissions === 'function') {
       try { list = actions.getMissions() || []; } catch (e) { warnOnce('np-getMissions', e); }
     }
+    refs.missionsBlock.classList.toggle('hidden', !list.length);
     setHtml(refs.missions, list.length ? list.map((m) => {
       const tt = m.desc + (m.rewardText ? '\nReward: ' + m.rewardText : '');
       const mark = m.status === 'done' ? icon('laurel', 'icon-row')
