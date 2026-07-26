@@ -185,6 +185,7 @@ async function boot() {
       game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark,
       events: entry.events, provinceMap: activeProvinceMap,
     });
+    renderer.setProvinceTerrains(game.provinces);
     actions = gameActions(ctx);
     if (wrapActions) actions = wrapActions(actions);
     ui.bindGame(ctx, actions);
