@@ -448,17 +448,17 @@ export const EVENTS_67 = [
   // ── 8 ─────────────────────────────────────────────────────────────────────
   {
     id: 'ev4_embassy_hyr',
-    title: 'Three Embassies at Damascus',
+    title: 'The Elder Brother’s Embassy',
     // No requiresWar: this is politics, not a battle phase. Pompey receives
     // the East whether or not the brothers are still shooting at each other —
     // a signed truce between them must not cancel Rome's arrival (the old
     // gate let an early peace strike the whole Roman settlement from the
     // timeline). The rival-embassies scene does need both courts standing.
-    desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
-      + 'come three embassies at once: your brother\'s, with a golden vine said to be worth '
-      + 'five hundred talents; yours, with Antipater\'s arithmetic of legitimacy; and a '
-      + 'third, from the people, asking Rome to rid them of kings altogether. The Roman '
-      + 'listens to all three with the same face.',
+    desc: 'Scaurus, then Pompey himself, receive the East in audience. Your brother’s '
+      + 'envoys arrive with a golden vine said to be worth five hundred talents; yours '
+      + 'bring Antipater’s patient arithmetic of birthright and legitimacy. The Roman '
+      + 'listens to both causes with the same face, and waits to learn what each claimant '
+      + 'believes his favor is worth.',
     forTag: 'HYR',
     trigger: safeTrigger('ev4_embassy_hyr', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'HYR') && alive(ctx, 'ARI')),
@@ -487,14 +487,13 @@ export const EVENTS_67 = [
   },
   {
     id: 'ev4_embassy_ari',
-    title: 'Three Embassies at Damascus',
+    title: 'The Younger Brother’s Embassy',
     // No requiresWar — see ev4_embassy_hyr: Rome's audience does not wait on
     // the brothers' war still running.
-    desc: 'Scaurus, then Pompey himself, receive the East in audience — and from Judaea '
-      + 'come three embassies at once: yours, with a golden vine worth five hundred '
-      + 'talents; your brother\'s, with Antipater\'s patient arithmetic; and a third, from '
-      + 'the people, asking Rome to rid them of kings altogether. The Roman listens to '
-      + 'all three with the same face.',
+    desc: 'Scaurus, then Pompey himself, receive the East in audience. Your envoys arrive '
+      + 'with a golden vine worth five hundred talents; your brother’s bring Antipater’s '
+      + 'patient arithmetic of birthright and legitimacy. The Roman listens to both causes '
+      + 'with the same face, and waits to learn what each claimant believes his favor is worth.',
     forTag: 'ARI',
     trigger: safeTrigger('ev4_embassy_ari', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'ARI') && alive(ctx, 'HYR')),
@@ -517,6 +516,60 @@ export const EVENTS_67 = [
         tooltip: '+5 legitimacy — and the Roman notices the tone.',
         effects: guard('ev4_embassy_ari:1', (ctx) => {
           ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 5 });
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev4_the_third_embassy',
+    title: 'The Nation Asks for Neither',
+    desc: 'After the brothers have made their claims, a third delegation asks to be heard. '
+      + 'They speak not for Hyrcanus or Aristobulus but for the nation, and they accuse '
+      + 'both priestly sons of turning an ancestral government into kingship. Their plea '
+      + 'to Pompey is astonishing and plain: depose both brothers, abolish the monarchy, '
+      + 'and let Judaea again be governed under its priests. Your own subjects have asked '
+      + 'a Roman to end the dynasty whose crown you are fighting to possess.',
+    forTag: 'both',
+    trigger: safeTrigger('ev4_the_third_embassy', (ctx) =>
+      !!ctx.helpers.getFlag(ctx, 'pompeyCame') && alive(ctx, 'HYR') && alive(ctx, 'ARI')
+      && !!playerHasmonean(ctx)),
+    major: true,
+    aiOption: 0,
+    historical: 'Josephus records a national delegation at Pompey’s hearing that opposed '
+      + 'both brothers and asked to restore government under the priests rather than a king. '
+      + 'Diodorus preserves a parallel anti-monarchical account of the ancestral constitution.',
+    options: [
+      {
+        label: 'Let them speak',
+        tooltip: '+10 legitimacy; Pharisees +20 approval, Sadducees −10; Rome’s opinion of us +20; conciliar authority +3.',
+        effects: guard('ev4_the_third_embassy:0', (ctx) => {
+          const h = ctx.helpers;
+          const tag = playerHasmonean(ctx);
+          if (!tag) return;
+          h.adjust(ctx, tag, { legitimacy: 10 });
+          h.factionShift(ctx, tag, 'pharisees', 20);
+          h.factionShift(ctx, tag, 'sadducees', -10);
+          h.doctrine(ctx, 'authority', -3);
+          bumpOpinion(ctx.game, 'ROM', tag, 20);
+          h.setFlag(ctx, 'thirdEmbassy', true);
+        }),
+      },
+      {
+        label: 'Arrest them at the gate',
+        tooltip: '−10 legitimacy; "The Silenced Embassy" (+1 unrest everywhere, 24 months); Pharisees −20 approval; crowned authority +2.',
+        effects: guard('ev4_the_third_embassy:1', (ctx) => {
+          const h = ctx.helpers;
+          const tag = playerHasmonean(ctx);
+          if (!tag) return;
+          h.adjust(ctx, tag, { legitimacy: -10 });
+          h.addTagModifier(ctx, tag, {
+            id: 'the_silenced_embassy', name: 'The Silenced Embassy', months: 24,
+            effects: { unrestAll: 1 },
+          });
+          h.factionShift(ctx, tag, 'pharisees', -20);
+          h.doctrine(ctx, 'authority', 2);
+          h.setFlag(ctx, 'thirdEmbassySilenced', true);
         }),
       },
     ],
