@@ -91,7 +91,8 @@ ok(modern.rows.find((r) => r.name === 'Safed').owner === 'ISR'
     && modern.rows.find((r) => r.name === 'Ramallah').owner === 'JOR'
     && modern.rows.find((r) => r.name === 'Rafah').owner === 'EGY',
   'modern political ownership reaches Israel, the West Bank, and Gaza');
-ok(modern.jish === 'Jish' && modern.safed === 'Safed', 'Safed is no longer an alias for ancient Gischala');
+ok(modern.jish === 'Jish' && modern.safed === 'Tzfat',
+  'the separate Safed cell takes Hebrew Tzfat without reviving the old Gischala alias');
 ok(modern.frontier, 'later-founded cells remain frontier land in May 1948');
 await page.mouse.click(modern.click.x, modern.click.y);
 await page.waitForSelector('#province-panel:not(.hidden)');
