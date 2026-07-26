@@ -17,6 +17,8 @@ const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const { runMonthlyAI } = await import(R + '/js/sim/ai.js');
 const { queuedUnitsOf } = await import(R + '/js/sim/recruitment.js');
+const { areRivals } = await import(R + '/js/sim/military.js');
+const { repairDisconnectedProvinceRaster } = await import(R + '/js/map/renderer.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -118,9 +120,17 @@ console.log('== the armed armistice builds defensive commitments ==');
 {
   const { game, ctx } = boot(BOOKMARK_1948, EVENTS_1948, 'ISR');
   const armistice = EVENTS_1948.find((e) => e.id === 'ev_i_armistice');
+  for (const name of ['Ascalon', 'Paran', 'Gaza', 'Sinai Interior', 'Neapolis', 'Gamala']) {
+    ctx.prov(name).controller = 'ISR';
+  }
   armistice.options[0].effects(ctx);
   ok(!game.wars.some((w) => (w.attackers || []).includes('ISR') || (w.defenders || []).includes('ISR')),
     'Rhodes ends the coalition war');
+  ok(ctx.prov('Ascalon').owner === 'ISR' && ctx.prov('Paran').owner === 'ISR',
+    'Rhodes confirms occupied southern-plain and Arabah cells inside the 1949 lines');
+  ok(ctx.prov('Gaza').owner === 'EGY' && ctx.prov('Sinai Interior').owner === 'EGY'
+      && ctx.prov('Neapolis').owner === 'JOR' && ctx.prov('Gamala').owner === 'SYR',
+    'Rhodes returns occupied Gaza, Sinai, West Bank and Golan cells beyond the 1949 lines');
   ok(['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU'].every((t) =>
     game.tags[t].modifiers.some((m) => m.id === 'armistice_restraint' && m.effects.noOpportunisticWars)),
   'the five-year armed armistice suppresses ahistorical random wars');
@@ -148,6 +158,75 @@ console.log('== the armed armistice builds defensive commitments ==');
     'the 1955 agreement adds Egyptian formations and raises regional ceilings');
   ok(game.tags.ISR.modifiers.some((m) => m.id === 'arms_race_response'),
     'Israel receives a matching rearmament response');
+}
+
+console.log('== Sinai for peace returns Sinai, not the Arabah, and reconciles Egypt ==');
+{
+  const { game, ctx } = boot(BOOKMARK_1948, EVENTS_1948, 'ISR');
+  EVENTS_1948.find((e) => e.id === 'ev_i_armistice').options[0].effects(ctx);
+  game.flags.campDavid = true;
+  for (const name of ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab', 'Paran']) {
+    const p = ctx.prov(name);
+    p.owner = 'ISR';
+    p.controller = 'ISR';
+  }
+  game.tags.EGY.grudges = { ISR: { provinces: [ctx.provId('Sinai Interior')], thaw: 0 } };
+  game.tags.ISR.grudges = { EGY: { provinces: [ctx.provId('Rhinocolura')], thaw: 0 } };
+  ok(areRivals(ctx, 'ISR', 'EGY'), 'Egypt and Israel begin as era rivals');
+  EVENTS_1948.find((e) => e.id === 'ev_i_treaty_washington').options[0].effects(ctx);
+  ok(['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab']
+    .every((name) => ctx.prov(name).owner === 'EGY'), 'the treaty returns every Sinai cell to Egypt');
+  ok(ctx.prov('Paran').owner === 'ISR', 'the treaty does not return Paran to Egypt');
+  ok(!areRivals(ctx, 'ISR', 'EGY')
+      && !game.tags.EGY.grudges.ISR && !game.tags.ISR.grudges.EGY,
+  'the treaty retires the inherited rivalry and clears bilateral land grudges');
+  ok(game.tags.EGY.opinion.ISR >= 80 && game.tags.ISR.opinion.EGY >= 80,
+    'the treaty establishes warm bilateral relations instead of merely adding to hostility');
+  ok(['ISR', 'EGY'].every((tag) => game.tags[tag].modifiers
+    .some((m) => m.id === 'treaty_of_washington' && m.months === -1)),
+  'the peace restraint is permanent');
+}
+
+console.log('== the 1948 campaign panel grows into modern state language ==');
+{
+  const { game, ctx, actions } = boot(BOOKMARK_1948, EVENTS_1948, 'ISR');
+  game.date = { y: 1988, m: 1, d: 1 };
+  game.result = 'win';
+  game.tags.ISR.advisors.gov = { name: 'Moshe Carmel', skill: 3, wage: 6 };
+  ok(actions.getMissions().length === 0, 'wartime missions retire after the campaign verdict');
+  ok(actions.getDecisions().some((d) => d.name === 'Run National Exercises'),
+    'national decisions use modern state language');
+  ok(actions.getDoctrine().axes.some((a) => a.name === 'Executive and Parliament'),
+    'doctrine axes use modern constitutional language');
+  const court = actions.getCourt();
+  ok(!court.gov.seated && court.gov.candidates.every((c) => c.name !== 'Moshe Carmel'),
+    '1948 advisers retire from the 1980s cabinet pool');
+  EVENTS_1948.find((e) => e.id === 'ev_i_begin_resigns').options[0].effects(ctx);
+  EVENTS_1948.find((e) => e.id === 'ev_i_national_unity').options[0].effects(ctx);
+  EVENTS_1948.find((e) => e.id === 'ev_i_rotation_completed').options[0].effects(ctx);
+  ok(game.tags.ISR.ruler.name === 'Yitzhak Shamir' && game.tags.ISR.ruler.age === 72,
+    'the 1986 rotation leaves the January 1988 panel under Yitzhak Shamir');
+}
+
+console.log('== detached mainland raster fragments are repaired ==');
+{
+  const tinyMap = {
+    MAP_W: 7, MAP_H: 3,
+    provinces: [
+      { name: 'A', lon: 0, lat: 0 },
+      { name: 'B', lon: 3, lat: 0 },
+    ],
+    contiguousProvinces: ['A'],
+    project: () => [0, 0],
+  };
+  const ids = new Uint16Array([
+    1, 1, 0, 2, 2, 2, 2,
+    1, 1, 0, 2, 1, 1, 2,
+    1, 1, 0, 2, 2, 2, 2,
+  ]);
+  ok(repairDisconnectedProvinceRaster(ids, tinyMap) === 2
+      && ids[11] === 2 && ids[12] === 2,
+  'a target cell keeps its seed component and hands a detached fragment to its surrounding province');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

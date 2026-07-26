@@ -698,6 +698,9 @@ const HEIGHT_PRIMITIVES = [
 
 export const MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project,
+  // These mainland cells must contain their seed in a single land component.
+  // The renderer repairs any weighted-Voronoi spill across the gulfs.
+  contiguousProvinces: ['Sinai Interior', 'Dizahab', 'Eilat'],
   provinces: PROVINCES,
   coast: { land: [MAINLAND, CYPRUS, BALKANS, CRETE, RHODES, ITALY, SICILY], lakes: LAKES },
   rivers: RIVERS,

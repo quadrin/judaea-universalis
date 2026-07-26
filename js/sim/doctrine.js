@@ -293,7 +293,9 @@ export function doctrineView(ctx) {
       }
     }
     let decided = 0;
-    const axes = AXES.map((def) => {
+    const copy = (ctx.bookmark && ctx.bookmark.doctrineAxes) || {};
+    const axes = AXES.map((baseDef) => {
+      const def = { ...baseDef, ...(copy[baseDef.id] || {}) };
       const score = num(scores[def.id]);
       const band = axisBand(score);
       if (band !== 'mid') decided++;

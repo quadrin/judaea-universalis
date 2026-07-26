@@ -1,5 +1,5 @@
 // Judaea Universalis — event chain: The War of Independence, the armed
-// armistice, and the wars and peace that follow, 1948–79.
+// armistice, and the wars and peace that follow, 1948–86.
 // Content package. Zero imports; all effects run through ctx.helpers at runtime.
 // Historical spine: the declaration and invasion (14-15 May), the First and
 // Second Truces, the Altalena, the Czech arms, the Bernadotte affair, the
@@ -27,6 +27,11 @@ function safeTrigger(key, fn) {
 function dateGE(ctx, y, m) {
   const d = ctx.game.date;
   return d.y > y || (d.y === y && d.m >= m);
+}
+
+function ageAt(ctx, birthYear, birthMonth) {
+  const d = ctx.game.date;
+  return Math.max(0, d.y - birthYear - (d.m < birthMonth ? 1 : 0));
 }
 
 function findWar(game, a, b) {
@@ -113,6 +118,15 @@ function setOpinionDelta(game, a, b, delta) {
     if (!ta.opinion || typeof ta.opinion !== 'object') ta.opinion = {};
     ta.opinion[b] = Math.max(-200, Math.min(200, (ta.opinion[b] || 0) + delta));
   } catch (e) { warnOnce('setOpinionDelta', e); }
+}
+
+function setOpinionAtLeast(game, a, b, floor) {
+  try {
+    const ta = game.tags && game.tags[a];
+    if (!ta) return;
+    if (!ta.opinion || typeof ta.opinion !== 'object') ta.opinion = {};
+    ta.opinion[b] = Math.max(floor, Math.min(200, ta.opinion[b] || 0));
+  } catch (e) { warnOnce('setOpinionAtLeast', e); }
 }
 
 // A UN truce: every belligerent's AI stands down for a month.
@@ -279,6 +293,15 @@ const HILL_COUNTRY = ['Neapolis', 'Hebron', 'Jenin', 'Ramallah', 'Bethlehem', 'J
 const SINAI_CELLS = ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab'];
 const GOLAN_CELLS = ['Caesarea Philippi', 'Batanea', 'Gamala'];
 const GAZA_STRIP = ['Gaza', 'Khan Yunis', 'Rafah'];
+// Provinces outside Israel's 15-May holdings that abstract territory inside
+// the 1949 armistice lines. Rhodes may confirm these gains, but not any other
+// place an Israeli formation happens to occupy when the decision is pressed.
+const ARMISTICE_1949_ISR_GAINS = new Set([
+  'Gischala', 'Sepphoris', 'Jotapata',
+  'Lydda', 'Beit Shemesh',
+  'Ascalon', 'Azotus', 'Kiryat Gat',
+  'Beersheba', 'Arad', 'Oboda', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+]);
 function ownerOf(ctx, provName) {
   try {
     const p = typeof ctx.prov === 'function' ? ctx.prov(provName) : null;
@@ -1151,9 +1174,12 @@ export const EVENTS_1948 = [
     options: [
       {
         label: 'The lines become the map',
-        tooltip: 'The war ends where the armies stand (armistice on present lines). Every court: −2 war exhaustion.',
+        tooltip: 'The war ends on the classical 1949 armistice lines. Israel keeps occupied Galilee, Lod, the southern plain and Negev/Arabah cells inside those lines; occupied Gaza, Sinai, the West Bank, Golan and foreign territory return to their prior owners. Every court: −2 war exhaustion.',
         effects: guard('ev_i_armistice:0', (ctx) => {
-          ctx.helpers.endWar(ctx, 'EGY', 'ISR', 'def');
+          ctx.helpers.endWar(ctx, 'EGY', 'ISR', 'def', {
+            keep: (p) => p.controller === 'ISR'
+              && ARMISTICE_1949_ISR_GAINS.has(p.canon || p.name),
+          });
           for (const t of ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
             if (!ctx.game.tags[t]) continue;
             ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
@@ -1164,7 +1190,7 @@ export const EVENTS_1948 = [
               effects: { noOpportunisticWars: true },
             });
           }
-          ctx.helpers.chronicle(ctx, 'peace', 'The Rhodes armistices: the lines where the armies stand become the lines on the atlas.');
+          ctx.helpers.chronicle(ctx, 'peace', 'The Rhodes armistices: the classical 1949 lines become the lines on the atlas; expeditionary occupations beyond them are handed back.');
         }),
       },
       {
@@ -3396,7 +3422,7 @@ export const EVENTS_1948 = [
     options: [
       {
         label: 'Sinai for peace — sign',
-        tooltip: 'Israel returns every Sinai province it holds; both states gain a 20-year peace (no opportunistic wars), −2 war exhaustion, Egypt +15 and Israel +10 legitimacy. The Arab League expels Egypt (−60 opinion from every Arab capital).',
+        tooltip: 'Israel returns every Sinai province it holds; the inherited rivalry and bilateral land grudges end, relations rise to at least +80, and both states gain a permanent peace restraint (no opportunistic wars). Both lose 2 war exhaustion; Egypt gains 15 and Israel 10 legitimacy. The Arab League expels Egypt (−60 opinion from every Arab capital).',
         effects: guard('ev_i_treaty:0', (ctx) => {
           const g = ctx.game;
           const e = egyTag(ctx);
@@ -3404,20 +3430,21 @@ export const EVENTS_1948 = [
             ctx.helpers.chronicle(ctx, 'diplomacy', 'March 1979 passes without a lawn, a table, or a treaty; the first peace waits for another history.');
             return;
           }
-          for (const n of ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Paran', 'Dizahab']) {
+          for (const n of SINAI_CELLS) {
             if (ctx.helpers.controls(ctx, 'ISR', n)) ctx.helpers.changeOwner(ctx, n, e);
           }
           for (const t of ['ISR', e]) {
             ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
             ctx.helpers.addTagModifier(ctx, t, {
-              id: 'treaty_of_washington', name: 'The Treaty of Washington', months: 240,
+              id: 'treaty_of_washington', name: 'The Treaty of Washington', months: -1,
               effects: { noOpportunisticWars: true },
             });
           }
           ctx.helpers.adjust(ctx, e, { legitimacy: 15 });
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10 });
-          setOpinionDelta(g, e, 'ISR', 100);
-          setOpinionDelta(g, 'ISR', e, 100);
+          ctx.helpers.reconcileRivalry(ctx, 'ISR', e);
+          setOpinionAtLeast(g, e, 'ISR', 80);
+          setOpinionAtLeast(g, 'ISR', e, 80);
           const s = syrTag(ctx);
           for (const t of ['SAU', 'IRQ', 'JOR', 'LEB', s]) {
             if (t && t !== e && alive(ctx, t)) setOpinionDelta(g, t, e, -60);
@@ -3449,6 +3476,127 @@ export const EVENTS_1948 = [
           setOpinionDelta(g, e, 'ISR', 40);
           setOpinionDelta(g, 'ISR', e, 40);
           ctx.helpers.chronicle(ctx, 'peace', 'A treaty of installments: the canal bank changes hands, the rest of Sinai waits on schedules — a peace, but one signed in pencil.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_begin_resigns',
+    title: 'I Cannot Go On Any Longer',
+    worldLabel: 'Begin resigns',
+    desc: 'After the Lebanon war, the death of Aliza Begin and months of mounting '
+      + 'withdrawal, Menachem Begin tells his cabinet that he can no longer continue. '
+      + 'The resignation is spare and final. Likud chooses the foreign minister, '
+      + 'Yitzhak Shamir, to form the next government.',
+    forTag: 'both',
+    decider: 'ISR',
+    date: { y: 1983, m: 10 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    trigger: safeTrigger('ev_i_begin_resigns', (ctx) => alive(ctx, 'ISR')),
+    options: [
+      {
+        label: 'Shamir forms the government',
+        tooltip: 'Yitzhak Shamir becomes Prime Minister; +5 public mandate and the modern succession record continues.',
+        effects: guard('ev_i_begin_resigns:0', (ctx) => {
+          ctx.helpers.setRuler(ctx, 'ISR', {
+            name: 'Yitzhak Shamir', title: 'Prime Minister',
+            gov: 3, infl: 4, mar: 3, age: ageAt(ctx, 1915, 10),
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5 });
+          ctx.game.flags.shamirGovernment = true;
+          ctx.helpers.chronicle(ctx, 'ruler', 'Menachem Begin resigns; Yitzhak Shamir forms Israel’s twentieth government.');
+        }),
+      },
+      {
+        label: 'Ask Begin to remain through the crisis',
+        tooltip: 'Begin stays: +10 coalition approval, but −5 public mandate and the later rotation government will not be automatic.',
+        effects: guard('ev_i_begin_resigns:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'coalition', 10);
+          ctx.game.flags.beginStayed = true;
+          ctx.helpers.chronicle(ctx, 'ruler', 'The cabinet persuades Menachem Begin to remain through the crisis; the expected succession does not come.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_national_unity',
+    title: 'The Rotation Government',
+    worldLabel: 'Israel’s national unity government',
+    desc: 'The election leaves neither alignment able to govern alone. Labor and Likud '
+      + 'write an unprecedented rotation into the coalition agreement: Shimon Peres '
+      + 'will serve first, Yitzhak Shamir second, with the premiership changing hands '
+      + 'at midterm rather than at the ballot box.',
+    forTag: 'both',
+    decider: 'ISR',
+    date: { y: 1984, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    trigger: safeTrigger('ev_i_national_unity', (ctx) => alive(ctx, 'ISR')),
+    options: [
+      {
+        label: 'Sign the rotation agreement',
+        tooltip: 'Shimon Peres becomes Prime Minister; +1 stability and +10 public mandate. The premiership rotates to Shamir in October 1986.',
+        effects: guard('ev_i_national_unity:0', (ctx) => {
+          ctx.helpers.setRuler(ctx, 'ISR', {
+            name: 'Shimon Peres', title: 'Prime Minister',
+            gov: 4, infl: 5, mar: 2, age: ageAt(ctx, 1923, 8),
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1, legitimacy: 10 });
+          ctx.game.flags.unityRotation = true;
+          ctx.helpers.chronicle(ctx, 'ruler', 'The national unity government takes office under Shimon Peres, with a written rotation to Yitzhak Shamir.');
+        }),
+      },
+      {
+        label: 'Force a narrow government',
+        tooltip: 'No rotation: −1 stability, +10 Revisionist approval. The current Prime Minister remains.',
+        effects: guard('ev_i_national_unity:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 10);
+          ctx.game.flags.unityRotation = false;
+          ctx.helpers.chronicle(ctx, 'ruler', 'The rotation agreement fails; a narrow government survives a divided Knesset.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_rotation_completed',
+    title: 'The Rotation Is Honored',
+    worldLabel: 'Shamir returns as Prime Minister',
+    desc: 'The date written into the unity agreement arrives. Against the expectations '
+      + 'of nearly everyone who thought the arrangement would collapse first, Shimon '
+      + 'Peres resigns and Yitzhak Shamir returns to the premiership.',
+    forTag: 'both',
+    decider: 'ISR',
+    date: { y: 1986, m: 10 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    trigger: safeTrigger('ev_i_rotation_completed', (ctx) =>
+      alive(ctx, 'ISR') && !!ctx.game.flags.unityRotation),
+    options: [
+      {
+        label: 'Honor the agreement',
+        tooltip: 'Yitzhak Shamir becomes Prime Minister; +10 public mandate.',
+        effects: guard('ev_i_rotation_completed:0', (ctx) => {
+          ctx.helpers.setRuler(ctx, 'ISR', {
+            name: 'Yitzhak Shamir', title: 'Prime Minister',
+            gov: 3, infl: 4, mar: 3, age: ageAt(ctx, 1915, 10),
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 10 });
+          ctx.helpers.chronicle(ctx, 'ruler', 'The rotation is honored: Yitzhak Shamir returns as Prime Minister in October 1986.');
+        }),
+      },
+      {
+        label: 'Keep Peres in office',
+        tooltip: 'Break the rotation: −1 stability and −15 Revisionist approval; Shimon Peres remains Prime Minister.',
+        effects: guard('ev_i_rotation_completed:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { stability: -1 });
+          ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', -15);
+          ctx.helpers.chronicle(ctx, 'ruler', 'The rotation agreement breaks at the transfer date; Shimon Peres remains in office.');
         }),
       },
     ],

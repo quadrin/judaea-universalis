@@ -194,6 +194,123 @@ RELIGIONS['Hyrcania'] = 'islam'; CULTURES['Hyrcania'] = 'persian';
 export const BOOKMARK_1948 = {
   id: '1948ce',
   name: 'The War of Independence',
+  // The shared simulation speaks in deliberately ancient terms by default.
+  // This bookmark keeps the mechanics and replaces only their public dress.
+  uiTerms: {
+    realm: 'State',
+    legitimacy: 'Public mandate',
+    manpower: 'Reserves',
+    chapters: 'National Programmes',
+    chapter: 'Programme',
+    character: 'National Character',
+    missions: 'War Objectives',
+    factions: 'Political Blocs',
+    powers: 'Great Powers',
+    court: 'Cabinet & General Staff',
+  },
+  doctrineAxes: {
+    zeal: {
+      name: 'Identity and Pluralism',
+      question: 'Is national identity guarded by uniformity, or strengthened by pluralism?',
+      hi: 'National', lo: 'Pluralist',
+      hiBlurb: 'The state puts national cohesion first in education, settlement and public life.',
+      loBlurb: 'The state treats civic accommodation and minority rights as sources of resilience.',
+    },
+    alignment: {
+      name: 'Strategic Alignment',
+      question: 'Does the state anchor its security in the Western alliance or preserve room to maneuver?',
+      hi: 'Western', lo: 'Non-Aligned',
+      hiBlurb: 'Defense and diplomacy are anchored in the Western alliance.',
+      loBlurb: 'The state keeps strategic distance and bargains across rival blocs.',
+    },
+    authority: {
+      name: 'Executive and Parliament',
+      question: 'Does national power collect in the executive or remain with parliament and coalition?',
+      hi: 'Executive', lo: 'Parliamentary',
+      hiBlurb: 'The executive is trusted to act decisively in crisis.',
+      loBlurb: 'Coalition, parliament and cabinet keep authority dispersed and accountable.',
+    },
+    conquest: {
+      name: 'Security and Prosperity',
+      question: 'Does policy put territorial security or commercial prosperity first?',
+      hi: 'Security-first', lo: 'Commercial',
+      hiBlurb: 'Strategic depth and military readiness take precedence.',
+      loBlurb: 'Trade, investment and negotiated access are treated as the durable source of strength.',
+    },
+  },
+  chapterText: {
+    titles: {
+      'The Second Kingdom': 'The Secure Republic',
+      'The Guarded Sanctuary': 'The Defended State',
+      'The Crown and the Altar': 'The National Compact',
+    },
+    objectives: {
+      holyPlaces: 'National Heritage',
+      communities: 'Civic Peace',
+      trade: 'Maritime Power',
+      undoubted: 'Constitutional Continuity',
+      chamber: 'Government That Governs',
+      estates: 'A Durable Coalition',
+      stability: 'The Long Peace',
+      devGain: 'National Development',
+      allies: 'The Diplomatic Network',
+      clients: 'Regional Partnerships',
+      covenant: 'Strategic Partnership',
+      ledgers: 'The Modern Economy',
+      mended: 'Reconciliation',
+    },
+    rewards: {
+      'The Weights and Measures': 'National Standards',
+      'The Rolls of the Willing': 'The Reserve Register',
+      'The Old Standards': 'Service Tradition',
+      'The King\'s Roads': 'National Infrastructure',
+      'The Great Seal': 'Institutional Trust',
+    },
+  },
+  decisionText: {
+    grand_festival: {
+      name: 'Fund National Celebrations', costText: '100 funds',
+      desc: 'Concerts, ceremonies and local celebrations lift public morale: −2 unrest across the state for a year, +5 public mandate.',
+      result: 'National celebrations lift public morale: −2 unrest everywhere for a year, +5 public mandate.',
+    },
+    great_rites: {
+      name: 'Launch a Public Campaign', costText: '50 governance points',
+      desc: 'A coordinated public-information campaign builds confidence: +10 public mandate, −1 unrest for a year.',
+      result: 'The public campaign builds confidence: +10 public mandate, −1 unrest for a year.',
+    },
+    trade_expedition: {
+      name: 'Fund Export Promotion', costText: '150 funds',
+      desc: 'Trade missions and export credit open new markets: +20% income for two years.',
+      result: 'The export programme opens new markets: +20% income for two years.',
+    },
+    drill_army: {
+      name: 'Run National Exercises', costText: '50 martial points',
+      desc: 'Large-scale command-post and field exercises: +5% discipline for 18 months.',
+      result: 'The national exercises harden command and logistics: +5% discipline for 18 months.',
+    },
+    resettle_land: {
+      name: 'Fund Regional Development', costText: '100 funds · peacetime only',
+      desc: 'Housing, roads and employment bring people to underdeveloped regions: +3,000 reserves now, +10% reserves for a year. Peacetime only.',
+      result: 'Regional development expands the reserve base: +3,000 reserves, +10% reserves for a year.',
+    },
+  },
+  advisorEras: [
+    {
+      from: 1948,
+      names: ['Moshe Carmel', 'Mickey Marcus', 'Yigal Allon', 'Moshe Dayan',
+        'Golda Meir', 'Abba Eban', 'Pinhas Rosen', 'Levi Eshkol'],
+    },
+    {
+      from: 1965,
+      names: ['Golda Meir', 'Abba Eban', 'Moshe Dayan', 'Yigal Allon',
+        'Pinhas Sapir', 'Yitzhak Rabin', 'Shimon Peres', 'Chaim Bar-Lev'],
+    },
+    {
+      from: 1980,
+      names: ['Shimon Peres', 'Yitzhak Rabin', 'Moshe Nissim', 'Ezer Weizman',
+        'David Levy', 'Moshe Arens', 'Dan Shomron', 'Ehud Barak'],
+    },
+  ],
   startDate: { y: 1948, m: 5, d: 15 },
   // Technology of the age (SPEC §22): rifle brigades and armored corps.
   techBase: 19,

@@ -9,7 +9,7 @@ import {
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw,
   thawProgress, thawQuiet, reconciled, haveAffinity,
-  declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore,
+  declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   clientOfferInfo, offerClientshipCore,
@@ -158,6 +158,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     merchantVoyages: [], // civilian hulls at sea between harbors (SPEC §58)
     nextRecruitId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
+    rivals: {}, retiredRivalries: {},
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
@@ -288,6 +289,8 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     const base = num(DEFINES.BALANCE && DEFINES.BALANCE.rivalOpinion, -60);
     for (const pair of rivalries) {
       if (!Array.isArray(pair) || pair.length !== 2) continue;
+      const pairKey = pair[0] < pair[1] ? pair[0] + '|' + pair[1] : pair[1] + '|' + pair[0];
+      if (game.retiredRivalries && game.retiredRivalries[pairKey]) continue;
       for (const [a, b] of [[pair[0], pair[1]], [pair[1], pair[0]]]) {
         const t = game.tags[a];
         if (!t || !game.tags[b]) continue;
@@ -449,6 +452,9 @@ export const simHelpers = {
       return true;
     }
     return false;
+  },
+  reconcileRivalry(ctx, a, b) {
+    return reconcileRivalryCore(ctx, a, b);
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
@@ -1909,9 +1915,24 @@ export function gameActions(ctx) {
         if (!t) return null;
         if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
         if (!t.courtCand) t.courtCand = {};
-    if (!Number.isFinite(t.aggression)) t.aggression = 0;
+        if (!Number.isFinite(t.aggression)) t.aggression = 0;
         const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
-        const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        let pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        const eras = ctx.bookmark && Array.isArray(ctx.bookmark.advisorEras)
+          ? ctx.bookmark.advisorEras.filter((row) => row && row.from <= g.date.y)
+            .sort((a, b) => b.from - a.from) : [];
+        const era = eras[0];
+        if (era && Array.isArray(era.names) && era.names.length) {
+          pool = era.names;
+          if (t.advisorEra !== era.from) {
+            for (const k of ['gov', 'infl', 'mar']) {
+              const seated = t.advisors[k];
+              if (seated && pool.indexOf(seated.name) < 0) t.advisors[k] = null;
+            }
+            t.courtCand = {};
+            t.advisorEra = era.from;
+          }
+        }
         const out = {};
         for (const k of ['gov', 'infl', 'mar']) {
           if (!t.advisors[k] && (!Array.isArray(t.courtCand[k]) || !t.courtCand[k].length)) {
@@ -2394,6 +2415,7 @@ export function gameActions(ctx) {
     // ---- missions (nation panel) ---------------------------------------------
     getMissions() {
       try {
+        if (g.result) return [];
         const list = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[g.playerTag];
         const t = g.tags[g.playerTag];
         if (!Array.isArray(list) || !t) return [];
@@ -2427,6 +2449,9 @@ export function gameActions(ctx) {
         if (!t) return [];
         const list = Object.keys(DECISIONS).map((key) => {
           const d = DECISIONS[key];
+          const authored = ctx.bookmark && ctx.bookmark.decisionText
+            && ctx.bookmark.decisionText[key];
+          const copy = authored || {};
           const cdKey = 'decision:' + key;
           let whyNot = '';
           if (diploCdActive(ctx, cdKey)) {
@@ -2435,7 +2460,8 @@ export function gameActions(ctx) {
             whyNot = d.can(g, t) || '';
           }
           return {
-            key, name: d.name, icon: d.icon, desc: d.desc, costText: d.costText,
+            key, name: copy.name || d.name, icon: d.icon,
+            desc: copy.desc || d.desc, costText: copy.costText || d.costText,
             cooldownMonths: d.cdMonths, canEnact: !whyNot, whyNot,
           };
         });
@@ -2480,16 +2506,19 @@ export function gameActions(ctx) {
         const t = g.tags[g.playerTag];
         const d = DECISIONS[key];
         if (!t || !d) return;
+        const copy = (ctx.bookmark && ctx.bookmark.decisionText
+          && ctx.bookmark.decisionText[key]) || {};
+        const displayName = copy.name || d.name;
         const cdKey = 'decision:' + key;
         if (diploCdActive(ctx, cdKey)) {
-          say(d.name, 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.', 'bad');
+          say(displayName, 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.', 'bad');
           return;
         }
         const why = d.can(g, t);
-        if (why) { say(d.name, why, 'bad'); return; }
+        if (why) { say(displayName, why, 'bad'); return; }
         const result = d.run(ctx, t);
         setDiploCd(ctx, cdKey, d.cdMonths);
-        say(d.name, result || 'It is done.', 'good');
+        say(displayName, copy.result || result || 'It is done.', 'good');
       } catch (e) { warnOnce('enactDecision', 'enactDecision failed', e); }
     },
   };
@@ -2700,6 +2729,8 @@ export function reviveGame(saved) {
     if (f.admiral === undefined) f.admiral = null;
   }
   if (!saved.wars) saved.wars = [];
+  if (!saved.rivals || typeof saved.rivals !== 'object') saved.rivals = {};
+  if (!saved.retiredRivalries || typeof saved.retiredRivalries !== 'object') saved.retiredRivalries = {};
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null };

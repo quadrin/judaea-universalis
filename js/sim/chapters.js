@@ -653,13 +653,20 @@ export function chapterView(ctx) {
   const g = ctx.game;
   const ch = g.chapters;
   if (!ch) return null;
+  const copy = (ctx.bookmark && ctx.bookmark.chapterText) || {};
+  const titles = copy.titles || {};
+  const objectives = copy.objectives || {};
+  const rewards = copy.rewards || {};
   const active = ch.active ? {
     n: ch.active.n,
-    title: ch.active.title,
+    title: titles[ch.active.title] || ch.active.title,
     epigraph: ch.active.epigraph || '',
-    reward: { name: ch.active.reward.name, desc: ch.active.reward.desc },
+    reward: {
+      name: rewards[ch.active.reward.name] || ch.active.reward.name,
+      desc: ch.active.reward.desc,
+    },
     objectives: ch.active.objectives.map((o) => ({
-      slot: o.slot, name: o.name, desc: o.desc, done: !!o.done,
+      slot: o.slot, name: objectives[o.kind] || o.name, desc: o.desc, done: !!o.done,
       have: num(o.have, 0), need: o.need,
       holdMonths: o.holdMonths | 0, needMonths: o.needMonths | 0,
       monthsLeft: Math.max(0, num(o.monthsLeft, 0) | 0),
@@ -669,6 +676,6 @@ export function chapterView(ctx) {
     seq: ch.seq,
     active,
     nextIn: !ch.active && Number.isFinite(ch.graceLeft) ? Math.max(0, ch.graceLeft) : 0,
-    history: (ch.history || []).map((h) => ({ ...h })),
+    history: (ch.history || []).map((h) => ({ ...h, title: titles[h.title] || h.title })),
   };
 }
