@@ -225,6 +225,15 @@ smoke33 and smoke39's order-strike section). Every other suite passes,
 including uitest22 (the peace table, now with the release section),
 uitest23, and the new uitest29.
 
+The SPEC §95–97 batch added `uitest35.mjs` (the 1948 diplomacy panel: Offer
+Alliance refused in the bookmark's own words, Recognize offered beside it and
+waiting on the coalition war, the letters signed by clicking, the button
+flipping to Withdraw Recognition, Declare War greying out with it, and the
+modern Greek chip in the ledger) and re-ran the suites its changes touch —
+uitest2, 11, 13, 22, 25, 31, 33 and 35 all pass. The long tail documented
+above (uitest3, 5, 8, 10, 16, 17, 19, 20, 21, 28) still fails identically on
+the pre-batch tree in this environment and was not re-run in full.
+
 ## ju-cloud-mock.mjs — the cloud shelf, on localhost
 
     node tools/tests/ju-cloud-mock.mjs [port]          # standalone
