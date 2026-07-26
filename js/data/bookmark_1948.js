@@ -100,6 +100,96 @@ const MODERN_PROVINCES = [
   'Khan Yunis', 'Rafah',
 ];
 
+// Geographic containers for the 1948 province raster. The permanent map is a
+// deliberately organic ancient Voronoi diagram; this profile clips its modern
+// cells to recognizable twentieth-century boundaries. Large regions come
+// first, then Gaza and the West Bank override them as enclaves.
+const MODERN_MAP_REGIONS = [
+  {
+    name: 'Sinai',
+    polygon: [
+      [32.05, 31.35], [34.238, 31.322], [34.525, 30.80], [34.700, 30.45],
+      [34.890, 29.95], [34.904, 29.493], [34.55, 28.00], [33.15, 27.45],
+      [32.00, 29.55],
+    ],
+    provinces: ['Pelusium', 'Rhinocolura', 'Sinai Interior', 'Eastern Desert', 'Myos Hormos'],
+  },
+  {
+    name: 'Israel and Palestine',
+    polygon: [
+      [35.10, 33.09], [35.04, 32.80], [34.93, 32.50], [34.84, 32.20],
+      [34.76, 31.90], [34.60, 31.62], [34.238, 31.322], [34.525, 30.80],
+      [34.700, 30.45], [34.890, 29.95], [34.904, 29.493], [35.003, 29.55],
+      [35.18, 29.80], [35.27, 30.15], [35.40, 30.65], [35.47, 31.00],
+      [35.50, 31.77], [35.55, 32.10], [35.56, 32.40], [35.56, 32.72],
+      [35.64, 32.82], [35.62, 33.25], [35.55, 33.17], [35.42, 33.07],
+      [35.22, 33.06],
+    ],
+    provinces: [
+      'Nahariya', 'Ptolemais', 'Dora', 'Hadera', 'Caesarea Maritima', 'Netanya',
+      'Herzliya', 'Joppa', 'Kfar Saba', 'Antipatris', 'Rishon LeZion', 'Rehovot',
+      'Jamnia', 'Azotus', 'Ascalon', 'Kiryat Gat', 'Beersheba', 'Oboda', 'Arad',
+      'Engaddi', 'Masada', 'Beit Shemesh', 'Jerusalem', 'Bethlehem', 'Hebron',
+      'Adora', 'Modi\'in Hills', 'Emmaus', 'Lydda', 'Qalqilya', 'Tulkarm',
+      'Ramallah', 'Sebaste', 'Neapolis', 'Jenin', 'Afula', 'Scythopolis',
+      'Tiberias', 'Tarichaea', 'Sepphoris', 'Jotapata', 'Safed', 'Gischala',
+      'Gaza', 'Khan Yunis', 'Rafah',
+    ],
+  },
+  {
+    name: 'Jordan',
+    polygon: [
+      [35.003, 29.55], [35.18, 29.80], [35.27, 30.15], [35.40, 30.65],
+      [35.47, 31.00], [35.50, 31.77], [35.55, 32.10], [35.56, 32.40],
+      [35.56, 32.72], [35.64, 32.82], [36.10, 33.05], [37.25, 32.70],
+      [37.30, 29.00], [35.20, 28.95],
+    ],
+    provinces: [
+      'Aila', 'Petra', 'Machaerus', 'Medaba', 'Philadelphia', 'Gadora',
+      'Gerasa', 'Pella', 'Gadara',
+    ],
+  },
+  {
+    name: 'Lebanon',
+    polygon: [
+      [35.10, 33.09], [35.25, 33.30], [35.48, 33.75], [35.65, 34.20],
+      [35.92, 34.65], [35.97, 34.82], [36.55, 34.70], [36.65, 34.20],
+      [36.15, 33.40], [35.62, 33.25], [35.55, 33.17], [35.42, 33.07],
+      [35.22, 33.06],
+    ],
+    provinces: ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Gischala'],
+  },
+  {
+    name: 'Golan and Hauran',
+    polygon: [
+      [35.62, 33.25], [35.64, 32.82], [35.56, 32.72], [36.05, 32.45],
+      [36.65, 32.35], [36.80, 33.35], [36.15, 33.55],
+    ],
+    provinces: ['Caesarea Philippi', 'Batanea', 'Gamala', 'Bostra', 'Damascus'],
+  },
+  {
+    name: 'West Bank',
+    polygon: [
+      [35.56, 32.48], [35.35, 32.51], [35.17, 32.39], [35.02, 32.32],
+      [34.97, 32.15], [35.06, 32.04], [35.04, 31.92], [34.99, 31.82],
+      [35.03, 31.65], [35.10, 31.52], [35.21, 31.35], [35.38, 31.40],
+      [35.45, 31.49], [35.50, 31.70], [35.55, 31.80], [35.57, 32.10],
+    ],
+    provinces: [
+      'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah', 'Sebaste', 'Neapolis',
+      'Jericho', 'Bethlehem', 'Hebron', 'Adora',
+    ],
+  },
+  {
+    name: 'Gaza Strip',
+    polygon: [
+      [34.57, 31.60], [34.47, 31.48], [34.238, 31.322], [34.27, 31.22],
+      [34.39, 31.30], [34.50, 31.44], [34.58, 31.57],
+    ],
+    provinces: ['Gaza', 'Khan Yunis', 'Rafah'],
+  },
+];
+
 const OWNERS = {};
 for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
 for (const n of JOR_LANDS) OWNERS[n] = 'JOR';
@@ -145,6 +235,7 @@ export const BOOKMARK_1948 = {
 
   activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK'],
   activeProvinces: MODERN_PROVINCES,
+  mapRegions: MODERN_MAP_REGIONS,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among
   // the new cells. Fresh campaigns already start at mapProfileVersion 1.
@@ -265,14 +356,26 @@ export const BOOKMARK_1948 = {
     'Rafah': { tax: 1, prod: 1, mp: 1 },
   },
 
-  // Several familiar modern Israeli cities did not yet exist in May 1948.
-  // Their land is sovereign and playable, but starts as frontier rather than
-  // being back-filled with the population it gains later.
+  // Empty ancient-scale desert is not a hole in a twentieth-century state.
+  // It is low-development frontier land: inhabited, traversable and sovereign.
+  terrains: {
+    'Syrian Desert': 'desert', 'Arabian Desert': 'desert',
+    'Sinai Interior': 'desert', 'Eastern Desert': 'desert', 'Libyan Desert': 'desert',
+  },
+  impassable: {
+    'Syrian Desert': false, 'Arabian Desert': false,
+    'Sinai Interior': false, 'Eastern Desert': false, 'Libyan Desert': false,
+  },
   habitation: {
     'Modi\'in Hills': 'frontier',
     'Beit Shemesh': 'frontier',
     'Kiryat Gat': 'frontier',
     'Arad': 'frontier',
+    'Syrian Desert': 'frontier',
+    'Arabian Desert': 'frontier',
+    'Sinai Interior': 'frontier',
+    'Eastern Desert': 'frontier',
+    'Libyan Desert': 'frontier',
   },
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.

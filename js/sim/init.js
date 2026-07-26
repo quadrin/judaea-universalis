@@ -88,7 +88,7 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
 
   return {
     id, name: eraName || s.name || ('Province ' + id), canon: s.name || ('Province ' + id), x, y,
-    terrain: s.terrain, good: s.good,
+    terrain: bookmarkField(bookmark, 'terrains', s) || s.terrain, good: s.good,
     religion: bookmarkField(bookmark, 'religions', s) || s.religion,
     culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
     dev,
@@ -2026,6 +2026,13 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       if (c && Number.isFinite(c.x) && Number.isFinite(c.y)) { p.x = c.x; p.y = c.y; }
       p.canon = source.name || p.canon || p.name;
       p.name = bookmarkField(bookmark, 'provinceNames', source, false) || source.name || p.name;
+      p.terrain = bookmarkField(bookmark, 'terrains', source) || source.terrain || p.terrain;
+      const impassableOverride = bookmarkField(bookmark, 'impassable', source);
+      if (typeof impassableOverride === 'boolean') p.impassable = impassableOverride;
+      const habitationOverride = bookmarkField(bookmark, 'habitation', source);
+      if (habitationOverride && (!p.habitation || p.habitation === 'uninhabited')) {
+        p.habitation = habitationOverride;
+      }
       const previousDev = upgrading && migration && migration.previousDev
         && migration.previousDev[source.name];
       if (previousDev) {

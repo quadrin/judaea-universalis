@@ -5,7 +5,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
-const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
+const { buildProvinceMapping, buildProvinceRaster } = await import(R + '/js/data/map_profile.js');
 const { computeGeometry } = await import(R + '/js/map/geometry.js');
 const { initGame, makeCtx, reconcileGameProvinces } = await import(R + '/js/sim/init.js');
 
@@ -55,6 +55,44 @@ ok(tinyModernGeom.areas[1] === 1 && tinyModernGeom.areas[2] === 2
     && tinyModernGeom.neighbors[1].has(2),
   'activated cell gains its own area and movement adjacency');
 
+const maskedMap = {
+  MAP_W: 4, MAP_H: 2,
+  provinces: [
+    { name: 'West', lon: 0.5, lat: 0.5, weight: 1 },
+    { name: 'East', lon: 3.5, lat: 0.5, weight: 1 },
+  ],
+  project: (lon, lat) => [lon, lat],
+};
+const maskedBase = new Uint16Array([1, 1, 1, 1, 0, 1, 1, 1]);
+const masked = buildProvinceRaster(maskedMap, maskedBase, {
+  mapRegions: [{
+    name: 'east border', polygon: [[2, 0], [4, 0], [4, 2], [2, 2]], provinces: ['East'],
+  }],
+}, new Uint16Array([0, 1, 2]));
+ok(masked[2] === 2 && masked[3] === 2 && masked[6] === 2 && masked[7] === 2,
+  'profile polygon reshapes the actual province-ID raster');
+ok(masked[4] === 0, 'profile polygon preserves the base land/sea mask');
+
+const filledLand = new Uint16Array(MAP_DATA.MAP_W * MAP_DATA.MAP_H);
+filledLand.fill(idOf('Sinai Interior'));
+const modernRaster = buildProvinceRaster(MAP_DATA, filledLand, BOOKMARK_1948, modernMap);
+const canonAt = (lon, lat) => {
+  const [x, y] = MAP_DATA.project(lon, lat);
+  const id = modernRaster[Math.floor(y) * MAP_DATA.MAP_W + Math.floor(x)];
+  return MAP_DATA.provinces[id - 1] && MAP_DATA.provinces[id - 1].name;
+};
+const westOfEgyptLine = canonAt(34.40, 30.70);
+const eastOfEgyptLine = canonAt(34.62, 30.70);
+ok(['Rhinocolura', 'Sinai Interior'].includes(westOfEgyptLine)
+    && !['Rhinocolura', 'Sinai Interior'].includes(eastOfEgyptLine),
+  '1948 raster follows the Rafah–Taba boundary instead of the ancient Sinai blob');
+ok(['Gaza', 'Khan Yunis', 'Rafah'].includes(canonAt(34.34, 31.40))
+    && ['Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah', 'Sebaste', 'Neapolis',
+      'Jericho', 'Bethlehem', 'Hebron', 'Adora'].includes(canonAt(35.15, 32.05))
+    && !['Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah', 'Sebaste', 'Neapolis',
+      'Jericho', 'Bethlehem', 'Hebron', 'Adora'].includes(canonAt(34.90, 32.05)),
+  'Gaza and West Bank masks do not swallow adjacent Israeli geography');
+
 console.log('== campaign provinces ==');
 const ancient = initGame({
   DEFINES, MAP_DATA, geom: fakeGeom, bookmark: BOOKMARK_66, events: [],
@@ -77,8 +115,8 @@ for (const p of modern.provinces) {
   if (!p || p.impassable) continue;
   devByOwner[p.owner] = (devByOwner[p.owner] || 0) + p.dev.tax + p.dev.prod + p.dev.mp;
 }
-ok(devByOwner.ISR === 202 && devByOwner.JOR === 162 && devByOwner.EGY === 174,
-  'subdivision redistributes development instead of duplicating regional wealth');
+ok(devByOwner.ISR === 202 && devByOwner.JOR === 162 && devByOwner.EGY === 183,
+  'subdivision redistributes development and inhabited desert remains low-development land');
 const ctx = makeCtx({
   game: modern, DEFINES, MAP_DATA, geom: fakeGeom, bus: null,
   bookmark: BOOKMARK_1948, events: [], provinceMap: modernMap,
@@ -103,6 +141,17 @@ ok(legacy.tags.ISR.treasury === 321, 'campaign state survives province reconcili
 ok(legacy.provinces[idOf('Joppa')].dev.tax === 13
     && legacy.provinces[idOf('Joppa')].dev.prod === 7,
   'save migration preserves player-added development above the redistributed baseline');
+const legacySinai = legacy.provinces[idOf('Sinai Interior')];
+legacySinai.terrain = 'wasteland';
+legacySinai.habitation = 'uninhabited';
+legacySinai.impassable = true;
+reconcileGameProvinces({
+  game: legacy, DEFINES, MAP_DATA, geom: fakeGeom,
+  bookmark: BOOKMARK_1948, provinceMap: modernMap,
+});
+ok(legacySinai.terrain === 'desert' && legacySinai.habitation === 'frontier'
+    && !legacySinai.impassable,
+  'old 1948 saves shed the obsolete wasteland state on load');
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

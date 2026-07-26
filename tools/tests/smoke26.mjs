@@ -38,12 +38,14 @@ ok(byCanon(game, 'Joppa').habitation === 'urban',
 ok(byCanon(game, 'Philadelphia').habitation === 'town',
   'modern Amman infers a town tier without changing the permanent map cell');
 const syrian = byCanon(game, 'Syrian Desert');
-ok(syrian.owner === 'SYR' && syrian.habitation === 'uninhabited'
-    && syrian.impassable && syrian.settleable,
-  'the 1948 Syrian Desert is sovereign land while staying empty, blocked, and settleable');
+ok(syrian.owner === 'SYR' && syrian.terrain === 'desert' && syrian.habitation === 'frontier'
+    && !syrian.impassable && syrian.settleable,
+  'the 1948 Syrian Desert is inhabited, traversable frontier inside Syria');
 ok(byCanon(game, 'Sinai Interior').owner === 'EGY'
-    && byCanon(game, 'Arabian Desert').owner === 'SAU',
-  'the 1948 Sinai and Arabian deserts likewise sit inside sovereign borders');
+    && byCanon(game, 'Sinai Interior').habitation === 'frontier'
+    && byCanon(game, 'Arabian Desert').owner === 'SAU'
+    && byCanon(game, 'Arabian Desert').habitation === 'frontier',
+  'the 1948 Sinai and Arabian deserts are inhabited land inside sovereign borders');
 
 console.log('== old saves migrate ==');
 const legacy = JSON.parse(JSON.stringify(game));
@@ -63,12 +65,12 @@ ok(byCanon(reRevived, 'Syrian Desert').habitation === 'uninhabited'
     && byCanon(reRevived, 'Syrian Desert').settleable,
   'an old wasteland save reconstructs empty, settleable land');
 
-console.log('== sovereignty survives empty land ==');
+console.log('== sovereignty includes frontier land ==');
 const colors = computeMapmodeColors({ game, DEFINES }, 'political');
 ok(rgb(colors.primary, syrian.id).join(',') === game.tags.SYR.color.join(','),
-  'sovereign-owned empty land uses its real political color');
-ok((colors.flags[syrian.id] & 2) === 2,
-  'the same land keeps an uninhabited cross-hatch independent of its owner');
+  'sovereign frontier uses its real political color');
+ok((colors.flags[syrian.id] & 2) === 0,
+  'inhabited modern frontier has no wasteland cross-hatch');
 const arabian = byCanon(game, 'Arabian Desert');
 arabian.owner = 'WASTE';
 const unownedColors = computeMapmodeColors({ game, DEFINES }, 'political');

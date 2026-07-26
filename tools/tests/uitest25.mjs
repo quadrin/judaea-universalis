@@ -73,12 +73,27 @@ const modern = await page.evaluate(() => {
   const [sx, sy] = window._camera.mapToScreen(best % ctx.MAP_DATA.MAP_W,
     Math.floor(best / ctx.MAP_DATA.MAP_W));
   const rect = document.getElementById('map-container').getBoundingClientRect();
+  const canonAt = (lon, lat) => {
+    const [x, y] = ctx.MAP_DATA.project(lon, lat);
+    const p = ctx.game.provinces[renderer.provIdAt(x, y)];
+    return p && p.canon;
+  };
+  const modernDeserts = [
+    'Syrian Desert', 'Arabian Desert', 'Sinai Interior', 'Eastern Desert', 'Libyan Desert',
+  ].map((name) => ctx.game.provinces[ids.get(name)]);
   return {
     rows,
     jish: ctx.game.provinces[ids.get('Gischala')].name,
     safed: ctx.game.provinces[ids.get('Safed')].name,
     frontier: ['Modi\'in Hills', 'Beit Shemesh', 'Kiryat Gat', 'Arad']
       .every((n) => ctx.game.provinces[ids.get(n)].habitation === 'frontier'),
+    inhabitedDeserts: modernDeserts.every((p) => p && p.terrain === 'desert'
+      && p.habitation === 'frontier' && !p.impassable && p.owner !== 'WASTE'),
+    samples: {
+      sinaiWest: canonAt(34.40, 30.70), negevEast: canonAt(34.62, 30.70),
+      gaza: canonAt(34.34, 31.40), westBank: canonAt(35.15, 32.05),
+      coastalIsrael: canonAt(34.90, 32.05), jordan: canonAt(35.75, 31.70),
+    },
     click: { x: rect.left + sx, y: rect.top + sy },
   };
 });
@@ -90,6 +105,19 @@ ok(modern.rows.find((r) => r.name === 'Safed').owner === 'ISR'
   'modern political ownership reaches Israel, the West Bank, and Gaza');
 ok(modern.jish === 'Jish' && modern.safed === 'Safed', 'Safed is no longer an alias for ancient Gischala');
 ok(modern.frontier, 'later-founded cells remain frontier land in May 1948');
+ok(modern.inhabitedDeserts,
+  '1948 has no wasteland holes: every ancient desert cell is inhabited sovereign frontier');
+ok(['Rhinocolura', 'Sinai Interior'].includes(modern.samples.sinaiWest)
+    && !['Rhinocolura', 'Sinai Interior'].includes(modern.samples.negevEast),
+  'the clickable Egypt boundary follows the Rafah–Taba line instead of a Voronoi blob');
+ok(['Gaza', 'Khan Yunis', 'Rafah'].includes(modern.samples.gaza)
+    && ['Ramallah', 'Sebaste', 'Neapolis', 'Jericho', 'Bethlehem', 'Hebron', 'Adora',
+      'Jenin', 'Tulkarm', 'Qalqilya'].includes(modern.samples.westBank)
+    && !['Ramallah', 'Sebaste', 'Neapolis', 'Jericho', 'Bethlehem', 'Hebron', 'Adora',
+      'Jenin', 'Tulkarm', 'Qalqilya'].includes(modern.samples.coastalIsrael)
+    && ['Aila', 'Petra', 'Machaerus', 'Medaba', 'Philadelphia', 'Gadora',
+      'Gerasa', 'Pella', 'Gadara'].includes(modern.samples.jordan),
+  'Gaza, the West Bank, coastal Israel, and Jordan resolve inside geographic masks');
 await page.mouse.click(modern.click.x, modern.click.y);
 await page.waitForSelector('#province-panel:not(.hidden)');
 ok((await page.locator('#province-panel h2').textContent()) === 'Netanya',

@@ -2,7 +2,7 @@
 // every cross-module API (see SPEC.md §10). Modules must load unmodified under it.
 import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
-import { buildProvinceMapping } from './js/data/map_profile.js';
+import { buildProvinceMapping, buildProvinceRaster } from './js/data/map_profile.js';
 import { EVENTS_66 } from './js/data/events_66ce.js';
 import { BOOKMARK_66 } from './js/data/bookmark_66ce.js';
 import { EVENTS_167 } from './js/data/events_167bce.js';
@@ -46,15 +46,20 @@ async function boot() {
   const container = document.getElementById('map-container');
 
   const renderer = await initRenderer(canvas, MAP_DATA, DEFINES);
+  const baseProvinceRaster = renderer.idArray.slice();
   let provinceMap = buildProvinceMapping(MAP_DATA, null);
   renderer.setProvinceMapping(provinceMap);
   const geom = computeGeometry(renderer.idArray, MAP_DATA, provinceMap);
   let mapProfileKey = '';
   function applyMapProfile(bookmark) {
     const active = (bookmark && bookmark.activeProvinces) || [];
-    const nextKey = active.slice().sort().join('|');
+    const nextKey = ((bookmark && bookmark.id) || 'base') + ':' + active.slice().sort().join('|');
     if (nextKey === mapProfileKey) return provinceMap;
     provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
+    const profileRaster = buildProvinceRaster(
+      MAP_DATA, baseProvinceRaster, bookmark, provinceMap,
+    );
+    renderer.setProvinceRaster(profileRaster);
     renderer.setProvinceMapping(provinceMap);
     Object.assign(geom, computeGeometry(renderer.idArray, MAP_DATA, provinceMap));
     mapProfileKey = nextKey;
@@ -115,6 +120,7 @@ async function boot() {
       game, DEFINES, MAP_DATA, geom, bus, bookmark: entry.bookmark,
       events: entry.events, provinceMap: activeProvinceMap,
     });
+    renderer.setProvinceTerrains(game.provinces);
     actions = gameActions(ctx);
     if (wrapActions) actions = wrapActions(actions);
     ui.bindGame(ctx, actions);
