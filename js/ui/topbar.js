@@ -2,7 +2,7 @@
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 
-export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick }) {
+export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick }) {
   let ctx = null;
   let actions = null;
   const refs = {};
@@ -55,6 +55,7 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
         <button class="tb-save" data-ref="ledger" data-tt="The ledger of nations (L)">${icon('scroll')}</button>
         <button class="tb-save" data-ref="save" data-tt="Save the campaign">${icon('quill')}</button>
         <button class="tb-save" data-ref="loadsave" data-tt="Saved campaigns — load one">${icon('amphora')}</button>
+        <button class="tb-more" data-ref="more" data-tt="The campaign's tools — chronicle, ledger, saves, sound" aria-label="Open the tools menu">${icon('menu')}</button>
         <button class="tb-pause" data-ref="pause" data-tt="Pause / resume (Space)">${icon('play')}</button>
         <span class="tb-pips" data-ref="pips"></span>
       </div>`;
@@ -98,6 +99,11 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     });
     refs.loadsave.addEventListener('click', () => {
       if (onSavesClick) { try { onSavesClick(); } catch (e) { warnOnce('savesClick', e); } }
+    });
+    // The phone's way in (SPEC §103): the topbar cannot hold nine buttons on a
+    // 390px screen, so one button opens the lot as a sheet of real tap targets.
+    refs.more.addEventListener('click', () => {
+      if (onToolsClick) { try { onToolsClick(); } catch (e) { warnOnce('toolsClick', e); } }
     });
     refs.borrow.addEventListener('click', () => {
       if (refs.borrow.classList.contains('disabled')) return;

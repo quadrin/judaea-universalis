@@ -147,6 +147,7 @@ export function initUI(staticCtx) {
     onLedgerClick: () => toggleLedger(),
     onChronicleClick: () => toggleChronicle(),
     onSavesClick: () => { if (savesPanel) savesPanel.open(); },
+    onToolsClick: () => toggleTools(),
   });
   const panel = createProvincePanel(els.panel, { DEFINES, onClose: () => setSelectedProv(0) });
   const nationPanel = createNationPanel(els.nation, {
@@ -1238,6 +1239,7 @@ export function initUI(staticCtx) {
       try { state.actions.setSpeed(Number(e.key)); } catch (err) { warnOnce('setSpeed', err); }
       topbar.refresh();
     } else if (e.key === 'Escape') {
+      if (toolsOpen()) { closeTools(); return; }
       if (helpOpen()) { closeHelp(); return; }
       if (inspectEl && !inspectEl.classList.contains('hidden')) { closeUnitInspector(); return; }
       if (battleWindowOpen()) { closeBattleWindow(); return; }
@@ -1260,6 +1262,89 @@ export function initUI(staticCtx) {
       toggleHelp();
     }
   });
+
+  // ------------------------------------------------------ the tools sheet --
+  // A phone's topbar has room for the flag, the money, the clock and the play
+  // button — and that is the whole bar. Everything else the campaign needs
+  // (the chronicle, the ledger, the quill, the shelf of saved campaigns, the
+  // primer, the sound) used to live in buttons this screen hides and hotkeys
+  // this screen does not have, which meant a phone could not save its own
+  // game. One button opens them all as a sheet of forty-eight-pixel targets.
+  let toolsEl = null;
+  function toolsOpen() { return !!toolsEl && !toolsEl.classList.contains('hidden'); }
+  function closeTools() { if (toolsEl) toolsEl.classList.add('hidden'); }
+  function toolTile(act, label, ico, hint) {
+    return `<button class="tools-tile" data-tool="${act}">`
+      + `<span class="tools-ico">${icon(ico)}</span>`
+      + `<span class="tools-label">${esc(label)}</span>`
+      + (hint ? `<span class="tools-hint">${esc(hint)}</span>` : '')
+      + '</button>';
+  }
+  function soundState() {
+    const s = window._sound;
+    let music = true, sound = true;
+    try {
+      if (s && s.music && typeof s.music.state === 'function') music = !!s.music.state().on;
+      sound = localStorage.getItem('ju_muted') !== '1';
+    } catch (e) { /* defaults are fine */ }
+    return { music, sound };
+  }
+  function renderTools() {
+    if (!toolsEl) return;
+    const st = soundState();
+    const body = toolsEl.querySelector('[data-ref="toolsBody"]');
+    if (!body) return;
+    body.innerHTML = toolTile('chron', 'Chronicle', 'lamp', 'The world\'s record')
+      + toolTile('ledger', 'Ledger', 'scroll', 'Every nation, ranked')
+      + toolTile('help', 'How to play', 'laurel', 'The primer')
+      + toolTile('save', 'Save', 'quill', 'Write this moment down')
+      + toolTile('loadsave', 'Campaigns', 'amphora', 'Load a saved game')
+      + toolTile('music', st.music ? 'Music on' : 'Music off', 'note', 'The score')
+      + toolTile('sound', st.sound ? 'Sound on' : 'Sound off', 'speaker', 'Effects');
+    body.querySelectorAll('.tools-tile').forEach((b) => {
+      b.classList.toggle('off',
+        (b.dataset.tool === 'music' && !st.music) || (b.dataset.tool === 'sound' && !st.sound));
+    });
+  }
+  function toggleTools() {
+    if (toolsOpen()) { closeTools(); return; }
+    if (!toolsEl) {
+      toolsEl = document.createElement('div');
+      toolsEl.id = 'tools-sheet';
+      toolsEl.innerHTML = `
+        <div class="modal-scrim"></div>
+        <div class="tools-card">
+          <div class="tools-head"><span>The Campaign</span>
+            <button class="pp-close" data-ref="toolsClose" aria-label="Close">✕</button></div>
+          <div class="tools-grid" data-ref="toolsBody"></div>
+        </div>`;
+      document.getElementById('ui-root').appendChild(toolsEl);
+      toolsEl.querySelector('.modal-scrim').addEventListener('click', closeTools);
+      toolsEl.querySelector('[data-ref="toolsClose"]').addEventListener('click', closeTools);
+      toolsEl.addEventListener('click', (e) => {
+        const b = e.target instanceof Element ? e.target.closest('[data-tool]') : null;
+        if (!b) return;
+        const act = b.dataset.tool;
+        try {
+          if (act === 'chron') { closeTools(); toggleChronicle(); }
+          else if (act === 'ledger') { closeTools(); toggleLedger(); }
+          else if (act === 'help') { closeTools(); toggleHelp(); }
+          else if (act === 'save') { closeTools(); state.ctx.bus.emit('saveRequest', {}); }
+          else if (act === 'loadsave') { closeTools(); if (savesPanel) savesPanel.open(); }
+          else if (act === 'music') {
+            if (window._sound && window._sound.music) window._sound.music.toggle();
+            renderTools();
+          } else if (act === 'sound') {
+            const on = soundState().sound;
+            if (window._sound) { if (on) window._sound.mute(); else window._sound.unmute(); }
+            renderTools();
+          }
+        } catch (err) { warnOnce('tools:' + act, err); }
+      });
+    }
+    renderTools();
+    toolsEl.classList.remove('hidden');
+  }
 
   // ------------------------------------------------------------- help (H) --
   // The one-page primer (SPEC §33): hotkeys and how the pieces fit together.

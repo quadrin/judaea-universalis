@@ -434,6 +434,15 @@ static site, the zero dependencies, or the missing build step changes.
   convening, the age keeps stating its objectives — and the crown brings its
   own payoff (coin, men, ministries and a modifier that says what this kingdom
   is FOR) plus a fresh mission chain addressed to the new identity.
+- **Playable on a phone, properly.** The handheld pass: one tools button in the
+  topbar opens a sheet with the chronicle, the ledger, the primer, the quill
+  and your saved campaigns — a phone could not previously save its own game,
+  because those buttons are hidden at 390px and there is no keyboard to press
+  C, L or H. The floating sound toggles moved into that sheet instead of
+  sitting on top of the mapmode grid and every panel; the buttons you actually
+  play with are thumb-sized; long values stack instead of running through their
+  labels; the title screen's era card fits the screen; and in landscape the
+  panels become a full-height side panel so the map keeps half the screen.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad
