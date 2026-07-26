@@ -3298,6 +3298,230 @@ export const EVENTS_167 = [
     ],
   },
 
+  // ── 48 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_etrogim',
+    title: 'The Citrons at the Altar',
+    desc: 'At the Feast of Tabernacles the king stands at the altar as high priest, and '
+      + 'the quarrel over the rite becomes a quarrel over the kingdom. The worshippers '
+      + 'raise the citrons in their hands and pelt Alexander Jannaeus before the Temple; '
+      + 'they call him unfit for the office he has joined to the crown. His foreign '
+      + 'guards wait beyond the court. One order will turn a ritual dispute into a civil '
+      + 'war; one retreat will tell the city that even a king can be driven from the altar.',
+    forTag: 'HAS',
+    // Josephus supplies the sequence but not a secure year. This game date is
+    // the conventional mid-90s placement, not a claim to day-level precision.
+    date: { y: -94, m: 7 },
+    when: safeTrigger('ev_etrogim:when', (ctx) =>
+      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'jannaeusKing')),
+    major: true,
+    aiOption: 0,
+    historical: 'Josephus places the citron riot early in Jannaeus’s civil conflict and says '
+      + 'that the king’s response killed about six thousand people. The exact year is reconstructed, '
+      + 'so the campaign uses an approximate mid-90s BCE date.',
+    options: [
+      {
+        label: 'Let the mercenaries clear the court',
+        tooltip: '−20 legitimacy; "Slaughter at the Feast" (+2 unrest everywhere, 36 months); Hasideans −30 approval, captains +15; the civil-war chain begins.',
+        effects: guard('ev_etrogim:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -20 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'slaughter_at_the_feast', name: 'Slaughter at the Feast', months: 36,
+            effects: { unrestAll: 2 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', -30);
+          h.factionShift(ctx, 'HAS', 'warparty', 15);
+          h.doctrine(ctx, 'authority', 2);
+          h.setFlag(ctx, 'etrogimSpilled', true);
+        }),
+      },
+      {
+        label: 'Withdraw, and finish the rite alone',
+        tooltip: '−10 legitimacy; "The Uneasy Temple" (+1 unrest everywhere, 12 months); Hasideans +10 approval, captains −10; the civil war is averted.',
+        effects: guard('ev_etrogim:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -10 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_uneasy_temple', name: 'The Uneasy Temple', months: 12,
+            effects: { unrestAll: 1 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', 10);
+          h.factionShift(ctx, 'HAS', 'warparty', -10);
+          h.doctrine(ctx, 'authority', -1);
+          h.setFlag(ctx, 'etrogimReconciled', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 49 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_demetrius_invited',
+    title: 'The Rebels Send for a King',
+    desc: 'The war has lasted six years, and the king’s enemies have done the thing no '
+      + 'Judaean faction expected to do again: they have invited a Seleucid king into '
+      + 'the country. Demetrius III marches to Shechem, joins the rebels, and defeats '
+      + 'Jannaeus’s army. Then the sight of a Syrian host on Judaean ground changes the '
+      + 'argument. Six thousand men leave Demetrius and return to the king they had tried '
+      + 'to depose. Demetrius, suddenly unsure whose war he is fighting, prepares to go home.',
+    forTag: 'both',
+    decider: 'HAS',
+    trigger: safeTrigger('ev_demetrius_invited', (ctx) =>
+      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'etrogimSpilled')
+      && dateGE(ctx, -88, 1)),
+    major: true,
+    aiOption: 0,
+    historical: 'The rebels invited Demetrius III, who defeated Jannaeus near Shechem. '
+      + 'Josephus then records six thousand Jews returning to Jannaeus, after which Demetrius withdrew.',
+    options: [
+      {
+        label: 'They will remember whose ground this is',
+        tooltip: 'The Six Thousand muster for Jannaeus (6 infantry); +15 legitimacy; Hasideans −10 approval. Demetrius withdraws and the executions follow.',
+        effects: guard('ev_demetrius_invited:0', (ctx) => {
+          const h = ctx.helpers;
+          const at = firstControlled(ctx, 'HAS', ['Neapolis', 'Sebaste', 'Jerusalem', 'Emmaus']);
+          if (at) h.spawnArmy(ctx, 'HAS', at, { inf: 6, name: 'The Six Thousand' });
+          h.adjust(ctx, 'HAS', { legitimacy: 15 });
+          h.factionShift(ctx, 'HAS', 'hasideans', -10);
+          h.setFlag(ctx, 'defectorsReturned', true);
+        }),
+      },
+      {
+        label: 'Fight it as a foreign war',
+        tooltip: '"War of King and Rebels" (−15% morale for 12 months, +2 unrest everywhere for 24 months); the Six Thousand do not return and the executions are averted.',
+        effects: guard('ev_demetrius_invited:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'war_of_king_and_rebels', name: 'War of King and Rebels', months: 12,
+            effects: { moraleMult: 0.85 },
+          });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'rebellion_survives_demetrius', name: 'The Rebellion Survives', months: 24,
+            effects: { unrestAll: 2 },
+          });
+          h.setFlag(ctx, 'demetriusForeignWar', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 50 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_eight_hundred',
+    title: 'The Feast at the Crosses',
+    desc: 'The strongest rebels have been taken at Bethome and brought to Jerusalem. '
+      + 'Eight hundred prisoners wait for sentence while the court prepares a banquet '
+      + 'within sight of the place of execution. The king can end the war by making an '
+      + 'example no city will forget: the prisoners on crosses, their families killed '
+      + 'before them, and the royal feast continuing beneath the spectacle. Or he can '
+      + 'stop before vengeance becomes the permanent constitution of the kingdom.',
+    forTag: 'HAS',
+    trigger: safeTrigger('ev_eight_hundred', (ctx) =>
+      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'defectorsReturned')
+      && dateGE(ctx, -88, 6)),
+    major: true,
+    aiOption: 0,
+    historical: 'Josephus says Jannaeus crucified about eight hundred prisoners in Jerusalem '
+      + 'and had their wives and children killed before them while he feasted. The identification '
+      + 'of the “Lion of Wrath” in the Nahum Pesher with Jannaeus is widespread but not certain.',
+    options: [
+      {
+        label: 'Let the city watch',
+        tooltip: '−25 legitimacy, −8,000 manpower; "The Lion of Wrath" (+1 unrest everywhere, +10% discipline, permanent); Hasideans −40 approval, captains +20; crowned authority +3.',
+        effects: guard('ev_eight_hundred:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -25, manpower: -8000 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_lion_of_wrath', name: 'The Lion of Wrath', months: -1,
+            effects: { unrestAll: 1, disciplineMult: 1.1 },
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', -40);
+          h.factionShift(ctx, 'HAS', 'warparty', 20);
+          h.doctrine(ctx, 'authority', 3);
+          h.setFlag(ctx, 'lionOfWrath', true);
+        }),
+      },
+      {
+        label: 'Enough',
+        tooltip: '−10 legitimacy, +1 stability, −4,000 manpower; Hasideans +10 approval, captains −5; conciliar authority +1.',
+        effects: guard('ev_eight_hundred:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: -10, stability: 1, manpower: -4000 });
+          h.factionShift(ctx, 'HAS', 'hasideans', 10);
+          h.factionShift(ctx, 'HAS', 'warparty', -5);
+          h.doctrine(ctx, 'authority', -1);
+          h.setFlag(ctx, 'mercyAtBethome', true);
+        }),
+      },
+    ],
+  },
+
+  // ── 51 ────────────────────────────────────────────────────────────────────
+  {
+    id: 'ev_deathbed_advice',
+    title: 'Make Your Peace with Them',
+    desc: 'Alexander Jannaeus is dying in camp beyond the Jordan, and Salome Alexandra '
+      + 'asks what kingdom he means to leave her. His answer reverses the policy of his '
+      + 'reign: conceal his death until the fortress falls, carry his body to Jerusalem, '
+      + 'and place it in the hands of the Pharisees. Let them refuse him burial if they '
+      + 'wish; promise to govern with them, and they will reconcile the nation to the '
+      + 'queen. Salome can found her rule on that peace — or inherit the king’s enemies '
+      + 'along with his army.',
+    forTag: 'HAS',
+    date: { y: -76, m: 1 },
+    when: safeTrigger('ev_deathbed_advice:when', (ctx) =>
+      alive(ctx, 'HAS') && !!ctx.helpers.getFlag(ctx, 'jannaeusKing')),
+    major: true,
+    aiOption: 0,
+    historical: 'Josephus’s Antiquities gives Jannaeus a deathbed speech advising Salome '
+      + 'Alexandra to entrust his body and political authority to the Pharisees. His earlier '
+      + 'Jewish War is much terser and does not preserve this speech.',
+    options: [
+      {
+        label: 'Give them the body',
+        tooltip: 'Salome Alexandra (4/5/2) becomes queen; heir: Hyrcanus II. Hasideans +40 approval, captains −25; "The Queen’s Peace" (−1 unrest everywhere, −5% income, permanent); conciliar authority +3.',
+        effects: guard('ev_deathbed_advice:0', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'HAS', {
+            name: 'Salome Alexandra', title: 'Queen', gov: 4, infl: 5, mar: 2, age: 60,
+          });
+          h.setHeir(ctx, 'HAS', {
+            name: 'Hyrcanus II', gov: 1, infl: 2, mar: 1, age: 37,
+          });
+          h.factionShift(ctx, 'HAS', 'hasideans', 40);
+          h.factionShift(ctx, 'HAS', 'warparty', -25);
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_queens_peace', name: 'The Queen’s Peace', months: -1,
+            effects: { unrestAll: -1, incomeMult: 0.95 },
+          });
+          h.doctrine(ctx, 'authority', -3);
+          h.setFlag(ctx, 'queensPeace', true);
+        }),
+      },
+      {
+        label: 'Rule as he ruled',
+        tooltip: 'Salome Alexandra (4/5/2) becomes queen; heir: Hyrcanus II. Captains +20 approval; "The Unreconciled Court" (+1 unrest everywhere, permanent); crowned authority +2.',
+        effects: guard('ev_deathbed_advice:1', (ctx) => {
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'HAS', {
+            name: 'Salome Alexandra', title: 'Queen', gov: 4, infl: 5, mar: 2, age: 60,
+          });
+          h.setHeir(ctx, 'HAS', {
+            name: 'Hyrcanus II', gov: 1, infl: 2, mar: 1, age: 37,
+          });
+          h.factionShift(ctx, 'HAS', 'warparty', 20);
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_unreconciled_court', name: 'The Unreconciled Court', months: -1,
+            effects: { unrestAll: 1 },
+          });
+          h.doctrine(ctx, 'authority', 2);
+          h.setFlag(ctx, 'queenRulesAsJannaeus', true);
+        }),
+      },
+    ],
+  },
+
   // ═══ The greater victory: the world the chronicles never reached. The
   // historical spine above IS the win — survival, the lamps, the tablets of
   // brass. These events fire only in campaigns that outran the chronicle:

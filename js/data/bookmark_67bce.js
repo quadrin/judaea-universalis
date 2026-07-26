@@ -286,6 +286,7 @@ export const BOOKMARK_67 = {
     HYR: [
       {
         id: 'pharisees', name: 'The Pharisees',
+        start: 70,
         desc: 'The sages and their followings: they crowned your grandmother\'s peace and they prefer the elder line — yours.',
         drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.5 : -0.4; },
         boon: { name: 'The Sages Preach the Elder Line', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
@@ -298,6 +299,23 @@ export const BOOKMARK_67 = {
             + 'synagogue in the land preaches your right — hedge, and they start weighing your brother.',
           grant: { label: 'The seats are theirs', cost: { gov: 50 } },
           refuse: { label: 'A king above the schools', tooltip: 'The weighing begins.' },
+        },
+      },
+      {
+        id: 'sadducees', name: 'The Sadducees',
+        start: 30,
+        desc: 'The great priestly houses backed your brother, but they still sit in your court: estates, Temple offices, and loyalties that can be bought back.',
+        drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.3 : -0.4; },
+        boon: { name: 'The Great Houses Reopen Their Purses', text: '+6% income', effects: { incomeMult: 1.06 } },
+        bane: { name: 'The Great Houses Question the Elder', text: '−0.15 legitimacy a month', effects: { legitimacyAdd: -0.15 } },
+        appease: { label: 'Confirm their Temple estates (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Sadducees Bring Their Deeds',
+          text: 'The great houses chose the younger brother, but not every deed and office followed '
+            + 'him out of Jerusalem. They offer the elder line a bargain: confirm their estates '
+            + 'and the Temple aristocracy can discover that legitimacy has more than one reading.',
+          grant: { label: 'Confirm the deeds', cost: { gov: 50 } },
+          refuse: { label: 'They backed the usurper', tooltip: 'Their remaining purses close.' },
         },
       },
       {
@@ -341,6 +359,7 @@ export const BOOKMARK_67 = {
     ARI: [
       {
         id: 'sadducees', name: 'The Sadducees',
+        start: 75,
         desc: 'The great priestly houses your father favored: rich, proud, and yours as long as you are winning.',
         drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.4 : -0.4; },
         boon: { name: 'The Great Houses Open Their Purses', text: '+8% income', effects: { incomeMult: 1.08 } },
@@ -353,6 +372,23 @@ export const BOOKMARK_67 = {
             + '— yours, and soon, while your seal still means something.',
           grant: { label: 'Seal the deeds', cost: { gov: 50 } },
           refuse: { label: 'After the war', tooltip: 'The purses close to a slit.' },
+        },
+      },
+      {
+        id: 'pharisees', name: 'The Pharisees',
+        start: 25,
+        desc: 'The sages favored your mother’s peace and your brother’s elder claim. They remain in every town you mean to rule, whether invited to court or not.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.3 : -0.5; },
+        boon: { name: 'The Sages Accept the Younger Line', text: '+0.2 legitimacy a month', effects: { legitimacyAdd: 0.2 } },
+        bane: { name: 'The Synagogues Denounce the Seizure', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        appease: { label: 'Hear the sages (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Pharisees Ask for the Council',
+          text: 'Your mother gave the sages the council; your captains gave you the fortresses. '
+            + 'The Pharisees ask whether the younger son means to govern every village from a '
+            + 'garrison, or whether the schools will keep a voice under the new crown.',
+          grant: { label: 'The council keeps its voice', cost: { gov: 50 } },
+          refuse: { label: 'The fortresses have spoken', tooltip: 'The schools answer in every town.' },
         },
       },
       {
