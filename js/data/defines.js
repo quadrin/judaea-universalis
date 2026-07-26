@@ -82,6 +82,9 @@ export const DEFINES = {
     OSR: { aggression: 0.5, caution: 1.5 },
     ADI: { aggression: 0.8, caution: 1.1 },
     CHX: { aggression: 0.3, caution: 1.6 },
+    CMG: { aggression: 0.5, caution: 1.4 },
+    CYZ: { aggression: 1.3, caution: 0.8 },
+    ITU: { aggression: 0.8, caution: 1.1 },
     // -- v5.4: the wider frame's ancient north --
     // Pontus appears twice, both times spent: Pharnaces after the treaty of
     // 179, Mithridates after Lucullus. A wary kingdom, not a conqueror.
@@ -141,6 +144,7 @@ export const DEFINES = {
     PTO: 'monarchy', PAR: 'monarchy', NAB: 'monarchy', ARM: 'monarchy',
     AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
     ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
+    CMG: 'monarchy', CYZ: 'monarchy', ITU: 'theocracy',
     BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal', RSH: 'theocracy',
     PNT: 'monarchy',
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
@@ -282,6 +286,21 @@ export const DEFINES = {
       name: 'Characene', color: [92, 152, 172], religion: 'hellenism', culture: 'arab', capital: 'Charax',
       description: 'Merchant kings at the head of the Gulf, growing rich on everything that floats.',
       ideas: { incomeMult: 1.15 },
+    },
+    CMG: {
+      name: 'Commagene', color: [176, 92, 58], religion: 'hellenism', culture: 'aramean', capital: 'Samosata',
+      description: 'The kingdom above the Euphrates crossings: Iranian, Hellenic, and difficult for any empire to recover.',
+      ideas: { hillDefBonus: 1, incomeMult: 1.05 },
+    },
+    CYZ: {
+      name: 'Cyzicene Syria', color: [142, 94, 168], religion: 'hellenism', culture: 'greek', capital: 'Damascus',
+      description: 'The southern Seleucid crown of Antiochus Cyzicenus — one dynasty, two kings, and a war without an arbiter.',
+      ideas: { moraleMult: 1.05, reinforceMult: 0.95 },
+    },
+    ITU: {
+      name: 'Ituraea', color: [112, 132, 68], religion: 'hellenism', culture: 'aramean', capital: 'Chalcis',
+      description: 'The mountain tetrarchy of Chalcis: priest-kings, archers, and tolls on every road through Lebanon.',
+      ideas: { hillDefBonus: 1, manpowerMult: 1.05 },
     },
     HER: {
       name: "Herod's Judaea", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
