@@ -6,7 +6,7 @@
 // and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
-import { unlockedGen, genName, doctrinesFor } from '../data/tech.js';
+import { unlockedGen, cappedGen, genName, doctrinesFor } from '../data/tech.js';
 import { forceLimitOf, regCount } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 
@@ -81,6 +81,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build" data-ref="missionsBlock">
         <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="crisesBlock">
+        <div class="pp-build-title" data-ref="crisesTitle">What Is Brewing</div>
+        <div class="np-factions" data-ref="crises"></div>
       </div>
       <div class="pp-build hidden" data-ref="factionsBlock">
         <div class="pp-build-title" data-ref="factionsTitle">Estates</div>
@@ -386,6 +390,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       refreshMissions();
       refreshDecisions();
     }
+    refreshCrises(self);
     refreshFactions(self);
     refreshDiplomacy(g, t, tag, self);
     refreshPowers(self);
@@ -569,6 +574,32 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // Estates and court factions (SPEC §34, §81): five approval bands, the
   // graduated effect in force, and the appeasement lever. The player's own
   // politics — foreign courts keep theirs offstage.
+  // What is brewing (SPEC §98): every crisis with heat on the clock, its stage,
+  // and what that stage is doing to the realm. The bar is the heat; the line
+  // under it is the bite.
+  function refreshCrises(self) {
+    let list = null;
+    if (self && actions && typeof actions.getCrises === 'function') {
+      try { list = actions.getCrises(); } catch (e) { warnOnce('np-getCrises', e); }
+    }
+    const show = Array.isArray(list) && list.length > 0;
+    refs.crisesBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    setHtml(refs.crises, list.map((c) => {
+      const cls = c.stage >= 3 ? 'neg' : c.stage >= 1 ? 'neg' : '';
+      const bite = c.bite || '';
+      const tt = c.stageName + (bite ? ' — ' + bite : ' — the cause is building; nothing has broken yet.')
+        + (c.desc ? '\n' + c.desc : '')
+        + '\nHeat ' + c.heat + '/100. It falls again on its own once the cause is fixed.';
+      return `<div class="np-faction" data-tt="${esc(tt)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(c.name)}</span>`
+        + `<span class="np-fac-state ${cls}">${esc(c.stageName)} · ${c.heat}</span></div>`
+        + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${c.stage >= 2 ? 'hostile' : 'discontent'}" style="width:${Math.max(2, Math.min(100, c.heat))}%"></div></div>`
+        + `<div class="np-fac-effect ${cls}">${esc(bite || 'Brewing — no effect yet.')}</div>`
+        + `</div>`;
+    }).join(''));
+  }
+
   function refreshFactions(self) {
     let list = null;
     if (self && actions && typeof actions.getFactions === 'function') {
@@ -744,7 +775,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const names = { gov: 'Government', infl: 'Influence', mar: 'Military' };
       const rows = ['gov', 'infl', 'mar'].map((k) =>
         `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b><span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
-      const gi = unlockedGen(th.mar | 0);
+      const gi = cappedGen(th.mar | 0, ctx && ctx.bookmark);
       const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
       refs.tech.innerHTML = rows
         + `<div class="np-tech-unit" data-tt="${esc('The pattern their armies are raised to.'
@@ -767,7 +798,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         </div>`;
     }).join('');
     const u = info.unit;
-    const selfGen = unlockedGen(((t.tech && t.tech.mar) | 0));
+    const selfGen = cappedGen((t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const selfDoct = doctrinesFor(selfGen).map((d) => `${d.name} — ${d.desc}`).join('\n');
     const unitLine = u ? `<div class="np-tech-unit" data-tt="${esc('The pattern our armies are raised to. '
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')

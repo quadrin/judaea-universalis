@@ -12,6 +12,25 @@
 
 export const TECH_MAX = 24;
 
+// The ladder ends where the age does (SPEC §99). TECH_MAX is the ladder's
+// length; a bookmark's `techCeiling` is how much of it that century can
+// actually climb. Racing ahead of the age is meant to be expensive, not a road
+// to rifle brigades at Masada: the Maccabees cannot reach the pattern of 1860
+// no matter how many martial points they bank, and Heraclius' world stops at
+// the thematic regulars. Bookmarks without a ceiling keep the whole ladder.
+export function techCeiling(bookmark) {
+  const v = bookmark && Number.isFinite(bookmark.techCeiling) ? bookmark.techCeiling | 0 : TECH_MAX;
+  return Math.max(1, Math.min(TECH_MAX, v));
+}
+// The pattern of soldier a realm may field: its military level, held to the
+// age's ceiling. Every raise, modernization and UI label reads this, so a save
+// (or a scripted gift) that pushed the level past the ceiling still fields the
+// era's soldiers.
+export function cappedGen(marLevel, bookmark) {
+  return unlockedGen(Math.min(num0(marLevel), techCeiling(bookmark)));
+}
+function num0(v) { return Number.isFinite(v) ? v | 0 : 0; }
+
 export const TECH_CATEGORIES = {
   gov: {
     name: 'Government', point: 'gov',

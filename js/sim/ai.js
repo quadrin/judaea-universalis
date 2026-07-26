@@ -9,7 +9,7 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
   coalitionAgainst, forceLimitOf, vassalsOf, sideLeaderOf,
-  declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals, recognized,
+  declareWar, truceActive, opinionOf, casusBelli, successionClaim, addOpinion, areRivals, recognized,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn,
@@ -18,7 +18,7 @@ import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, genUpkeepMult } from '../data/tech.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, techCeiling, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
 import { popTotal, popTension } from './population.js';
@@ -498,9 +498,13 @@ function aiConsiderWar(ctx, tag) {
     if (truceActive(ctx, tag, tgt)) continue;
     if (recognized(ctx, tag, tgt)) continue; // a recognized peace is not raided (SPEC §96)
     if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
-    if (opinionOf(ctx, tag, tgt) > -50) continue;
+    // A disputed throne is its own invitation (SPEC §98): a court that holds a
+    // succession claim rides for it whatever it thinks of the neighbors —
+    // wars of succession were fought between houses that liked each other.
+    const succession = successionClaim(ctx, tag, tgt);
+    if (!succession && opinionOf(ctx, tag, tgt) > -50) continue;
     const rival = areRivals(ctx, tag, tgt);
-    if (!rival && num(t.stability) < 1) continue; // only the old enmity moves an unsettled court
+    if (!succession && !rival && num(t.stability) < 1) continue; // only the old enmity moves an unsettled court
     const busyElsewhere = (e.atWarWith || []).some((x) => g.tags[x] && g.tags[x].alive);
     const enemyMen = strength(tgt);
     const ratio = enemyMen > 0 ? myMen / enemyMen : 99;
@@ -509,9 +513,10 @@ function aiConsiderWar(ctx, tag) {
     // — and against the era's standing rival the bar drops a notch: these are
     // the wars both courts have been drilling for.
     const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1))
-      * (rival ? num(B(ctx, 'rivalRatioMult', 0.85)) : 1);
+      * (rival ? num(B(ctx, 'rivalRatioMult', 0.85)) : 1)
+      * (succession ? 0.85 : 1); // a claim is worth a slightly thinner margin
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
-    if (!ctx.rng.chance(0.08 * num(pers.aggression, 1))) continue;
+    if (!ctx.rng.chance((succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
     t.stability = clamp(num(t.stability) - (cb ? (cb.type === 'claim' ? 0 : 1) : 2), -3, 3);
     declareWar(ctx, tag, tgt, null, cb || 'conquest');
@@ -1237,7 +1242,8 @@ function aiTech(ctx, tag) {
   for (const key of Object.keys(TECH_CATEGORIES)) {
     const level = num(t.tech[key]) | 0;
     const next = level + 1;
-    if (next > TECH_MAX || next > eraBase + 1) continue; // never ahead of the age
+    // Never ahead of the age — and never past what the age itself knew (§99).
+    if (next > TECH_MAX || next > eraBase + 1 || next > techCeiling(bm)) continue;
     const cost = Math.round(techCost(next) * aheadMult(next, eraBase));
     if (num(t.points[TECH_CATEGORIES[key].point]) < cost + 100) continue;
     if (!best || cost < best.cost) best = { key, next, cost };
@@ -1270,10 +1276,19 @@ function aiFormNation(ctx, tag) {
     const b = f.bonus || {};
     if (Number.isFinite(b.legitimacy)) nt.legitimacy = clamp(num(nt.legitimacy) + b.legitimacy, 0, 100);
     if (Number.isFinite(b.stability)) nt.stability = clamp(num(nt.stability) + b.stability, -3, 3);
-    if (b.modifier) {
-      nt.modifiers = (nt.modifiers || []).filter((m) => m && m.id !== b.modifier.id);
-      nt.modifiers.push(JSON.parse(JSON.stringify(b.modifier)));
+    for (const mod of [b.modifier, b.modifier2]) {
+      if (!mod) continue;
+      nt.modifiers = (nt.modifiers || []).filter((m) => m && m.id !== mod.id);
+      nt.modifiers.push(JSON.parse(JSON.stringify(mod)));
     }
+    if (b.grant) {
+      if (Number.isFinite(b.grant.treasury)) nt.treasury = num(nt.treasury) + b.grant.treasury;
+      if (Number.isFinite(b.grant.manpower)) nt.manpower = Math.max(0, num(nt.manpower) + b.grant.manpower);
+      for (const k of ['gov', 'infl', 'mar']) {
+        if (Number.isFinite(b.grant[k])) nt.points[k] = clamp(num(nt.points[k]) + b.grant[k], 0, 999);
+      }
+    }
+    if (Array.isArray(f.missions) && f.missions.length) nt.missionIdx = 0;
     ctx.bus.emit('tagSwitched', { from: tag, to: f.to });
     ctx.bus.emit('provinceOwner', {});
     ctx.bus.emit('notify', {

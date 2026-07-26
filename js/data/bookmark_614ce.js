@@ -116,6 +116,9 @@ export const BOOKMARK_614 = {
   startDate: { y: 614, m: 5, d: 1 },
   // Technology of the age (SPEC §22): thematic regulars and armored lancers.
   techBase: 10,
+  // How far up the ladder this age can climb (SPEC §99). Heraclius' world reaches the thematic regulars and stops there — the
+  // gunpowder patterns belong to ages this bookmark never sees (SPEC §99).
+  techCeiling: 13,
   techTweaks: { SAS: { mar: 1 }, BYZ: { gov: 1 } },
   popMult: 0.8, // the late-antique world, thinner than 1948 but denser than the Hasmoneans' (SPEC §56)
 

@@ -2,7 +2,7 @@
 // DOM-free module. Recruitment is a zero-dependency sim leaf, so importing its
 // queue helpers keeps the military graph cycle-free.
 import {
-  unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
+  unlockedGen, cappedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
 import { JEWISH_INTEGRATED_NAMES } from '../data/integrated_names.js';
@@ -111,9 +111,27 @@ export function disciplineOf(ctx, tag) {
 export function armyPowerOf(ctx, army) {
   return resolveTagMult(ctx, army.tag, 'milPowerMult') * genMult(num(army.gen, 0));
 }
+// The pattern a realm may raise: its military level, held to the era's
+// ceiling (SPEC §99) — no rifle brigades before the age that had them.
+// The tags this realm has been, newest first — itself, then whatever it was
+// before it took a greater crown (SPEC §102).
+export function tagLineage(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const line = t && Array.isArray(t.lineage) ? t.lineage : [];
+  return [tag].concat(line);
+}
+// The first entry of a bookmark table that answers to this realm or to any
+// identity it used to hold.
+export function contentForTag(ctx, table, tag) {
+  if (!table) return null;
+  for (const k of tagLineage(ctx, tag)) {
+    if (Object.prototype.hasOwnProperty.call(table, k) && table[k]) return table[k];
+  }
+  return null;
+}
 export function tagGen(ctx, tag) {
   const t = ctx.game.tags[tag];
-  return unlockedGen(num(t && t.tech && t.tech.mar, 0));
+  return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
 }
 export function maxMoraleOf(ctx, tag) {
   const t = ctx.game.tags[tag];
@@ -1538,6 +1556,12 @@ export function switchTagCore(ctx, from, to) {
   if (!old || !def || g.tags[to]) return false; // the target banner must be free
   const nt = JSON.parse(JSON.stringify(old));
   nt.tag = to;
+  // The crown is new; the country is not (SPEC §102). A formed nation
+  // remembers the tags it was, so the era's content addressed to its
+  // predecessor — the estates that convene, the objectives the age sets, the
+  // pen it writes with — keeps answering to it.
+  nt.lineage = [from].concat(Array.isArray(old.lineage) ? old.lineage : []).slice(0, 6);
+  nt.formedFrom = from;
   nt.name = def.name || to;
   nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
   delete nt.flag; // a variant banner dies with the old identity — the new tag flies its own
@@ -1822,9 +1846,20 @@ function finishIncorporation(ctx, tag, vassalTag) {
     p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'incorporated');
     p.modifiers.push({ id: 'incorporated', name: 'Incorporated', months: 12, effects: { unrest: 1 } });
   }
-  // Their treasury comes to the union; their standing army goes home to the
-  // rolls (half returns as our manpower — no free doomstack).
-  me.treasury = num(me.treasury) + Math.max(0, num(them.treasury));
+  // A share of their treasury comes to the union — not the chest itself
+  // (SPEC §101). Most of what a client crown held was already owed, spent, or
+  // sitting in the cellars of men who are not moving to our capital; taking
+  // 100% of it was the "annex a poor client, get rich" exploit. Their standing
+  // army goes home to the rolls (half returns as our manpower — no free
+  // doomstack).
+  const coffers = Math.max(0, num(them.treasury));
+  const theirIncome = Math.max(0, num(them.income));
+  const inherited = Math.min(
+    coffers * clamp(B(ctx, 'inheritTreasuryShare', 0.25), 0, 1),
+    theirIncome * Math.max(0, B(ctx, 'inheritTreasuryCapMonths', 12)) + 25,
+  );
+  me.treasury = num(me.treasury) + inherited;
+  them.treasury = 0;
   let men = 0;
   for (const a of armiesOf(ctx, vassalTag)) { men += num(a.men); removeArmy(ctx, a.id); }
   me.manpower = num(me.manpower) + Math.round(men * 0.5);
@@ -1842,7 +1877,8 @@ function finishIncorporation(ctx, tag, vassalTag) {
   // The world counts absorption — at half a conquest's rate.
   me.aggression = num(me.aggression) + Math.round(dev * num(V.incorporateInfamyPerDev, 0.25));
   chronicle(ctx, 'fall', (them.name || vassalTag) + ' is incorporated into ' + (me.name || tag)
-    + ' — the client crown is retired with honors, and its lands answer to one throne.');
+    + ' — the client crown is retired with honors, its lands answer to one throne, and '
+    + Math.round(inherited) + ' talents of its treasury reach our capital.');
   ctx.bus.emit('provinceOwner', {});
   return { ok: true, dev, name: them.name || vassalTag };
 }
@@ -1895,6 +1931,12 @@ export function monthlyIncorporation(ctx) {
 export function coalitionAgainst(ctx, expander) {
   const g = ctx.game;
   const t = g.tags[expander];
+  // Not every age answers a conqueror with a league (SPEC §100). The modern
+  // bookmark's Western powers do not march on the Levant over a border war —
+  // they cut trade, embargo, and blockade instead, which is the pressure the
+  // era actually applied. A bookmark turns the league off with
+  // `mechanics.coalitions: false`.
+  if (!mechanicOn(ctx, 'coalitions')) return [];
   if (!t || num(t.aggression) < 30) return [];
   const out = [];
   for (const k of Object.keys(g.tags)) {
@@ -2862,10 +2904,36 @@ export function monthlyClaimFabrications(ctx) {
 
 // Best available casus belli of atk against def: a fabricated claim on their
 // land beats a holy war for co-religionist provinces under their rule.
+// A throne in dispute is an invitation (SPEC §98): while a court's succession
+// crisis stands at its second stage or worse, the houses bound to it by
+// marriage — and any neighbor with a plausible cousin — hold a legal argument
+// for war, and the war's prize is the yoke rather than a province.
+export function successionClaim(ctx, atk, def) {
+  const g = ctx.game;
+  const A = g.tags[atk], D = g.tags[def];
+  if (!A || !D || !D.alive || A.overlord === def || D.overlord === atk) return null;
+  if (!mechanicOn(ctx, 'succession')) return null;
+  const row = D.crises && D.crises.succession;
+  if (!row || num(row.stage) < 2) return null;
+  // A house bound to theirs by marriage has the claim from the moment the
+  // question is open. Everyone else needs the thing to be past arguing —
+  // an armed pretender in the field, which is an invitation anyone can read.
+  const married = marriedTo(ctx, atk, def);
+  if (!married && !(num(row.stage) >= 3 && g.pretenders && g.pretenders[def])) return null;
+  return {
+    type: 'succession',
+    label: married
+      ? 'Our house has a claim on their throne'
+      : 'A rival claim we are pleased to support',
+    targetTag: def,
+  };
+}
 export function casusBelli(ctx, atk, def) {
   const g = ctx.game;
   const A = g.tags[atk];
   if (!A) return null;
+  const succession = successionClaim(ctx, atk, def);
+  if (succession) return succession;
   const claims = [];
   const holy = [];
   for (let i = 1; i < g.provinces.length; i++) {

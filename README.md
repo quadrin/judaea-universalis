@@ -400,6 +400,40 @@ static site, the zero dependencies, or the missing build step changes.
   living in the town. The road to it is the campaign's own — the absorption
   of the great immigration into the frontier towns, or the choice to keep the
   newcomers on the coast and leave the map's names as the war left them.
+- **Crises that brew.** Nothing in this game falls over in a month any more.
+  A king who ages without naming an heir sets the court whispering; if he then
+  dies heirless the question is open, the houses married into yours discover a
+  sudden interest in your constitution, and — if nobody settles it — a
+  pretender raises the old banner in the provinces and every marriage contract
+  becomes a casus belli. The same clock runs under the books: late pay, then
+  creditors at the door and your advisers walking out, then bankruptcy, which
+  repudiates the debts, empties the chest and sends a quarter of the army
+  home. Each era adds its own: 1948 has The Closed Sea (what a blockade does
+  to a state that imports its war), 66 CE has The Factions in the City. The
+  realm panel shows what is brewing, how hot it is, and exactly what it is
+  costing you.
+- **The pressure short of war.** In 1948 the Western powers do not raise
+  punitive leagues — that is not what they did. A court that dislikes you
+  closes its markets, and each closed market takes another bite out of your
+  trade. A court that detests you AND has hulls at sea can blockade your
+  coast: every port you hold earns half of everything — customs, markets,
+  shipyards, the routes through the harbor — and the treasury starts falling
+  toward the crisis clock. Both are public, both are reversible, and the Arab
+  League's boycott of Israel is exactly this, played by the AI.
+- **No rifle brigades at Masada.** Every age now declares how far up the
+  technology ladder it can climb: the ancient bookmarks stop at professional
+  legions, 614 at thematic regulars, and only 1948 reaches rifle brigades and
+  armored corps. Banking martial points no longer buys you a century.
+- **A poor country stays poor.** A treasury holds about eighteen months of its
+  own income; anything far past that drains away into palaces, walls and
+  salaries. So minors no longer bank thousands for decades — and absorbing a
+  client brings a quarter of its coffers, capped at a year of its income,
+  instead of the whole chest.
+- **The crown is new; the country is not.** Proclaiming a kingdom used to empty
+  half your panel. Now a formed nation remembers what it was: the estates keep
+  convening, the age keeps stating its objectives — and the crown brings its
+  own payoff (coin, men, ministries and a modifier that says what this kingdom
+  is FOR) plus a fresh mission chain addressed to the new identity.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

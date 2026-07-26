@@ -484,6 +484,22 @@ export const DEFINES = {
     // empire's books honest. Small realms (under the allowance) pay nothing.
     adminFreeDev: 40,                  // development a court governs for free
     adminPerDev: 0.03,                 // talents/month per owned dev point beyond it
+    // What a treasury can actually hold (SPEC §101). Pre-modern states did not
+    // bank; a crown's reserve is roughly what its own economy justifies, and
+    // everything past that goes into palaces, walls, salaries, and the pockets
+    // of the men who count it. Without this, an untouched minor quietly banks
+    // thousands for decades and hands the lot to whoever annexes it — the
+    // reported "annex a poor client, get rich" exploit. The cap scales with
+    // income, so a rich realm may still save for a campaign; only hoards far
+    // beyond the country's means bleed.
+    hoardCapMonths: 18,                // months of gross income a court may hold…
+    hoardCapFloor: 150,                // …never less than this, so paupers can still save
+    hoardDecayPerMonth: 0.06,          // share of the EXCESS that drains each month
+    // What a conquering or absorbing crown actually inherits: the treasury of
+    // a state is not a chest that travels. A share comes to the new capital;
+    // the rest was already spent, owed, or is in somebody's cellar.
+    inheritTreasuryShare: 0.25,        // share of a client's coffers on incorporation…
+    inheritTreasuryCapMonths: 12,      // …capped at this many months of its own income
     moraleBase: 3.0,                   // base max morale before multipliers
     moraleRecoveryPerMonth: 0.6,       // morale regained per month out of battle
     taxPerDevPerYear: 1.0,             // talents/year per point of tax dev

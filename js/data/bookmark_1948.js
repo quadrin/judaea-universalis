@@ -314,6 +314,9 @@ export const BOOKMARK_1948 = {
   startDate: { y: 1948, m: 5, d: 15 },
   // Technology of the age (SPEC §22): rifle brigades and armored corps.
   techBase: 19,
+  // How far up the ladder this age can climb (SPEC §99). The one bookmark whose century really does field rifle brigades and
+  // armored corps: the ladder runs to its end here (SPEC §99).
+  techCeiling: 24,
   techTweaks: { JOR: { mar: 1 }, UK: { mar: 1 }, ISR: { infl: 1 } },
 
   blurb: 'At midnight the Mandate ended; at four in the afternoon, in the Tel Aviv '
@@ -346,6 +349,12 @@ export const BOOKMARK_1948 = {
   // covers the formables on both sides (the Kingdom of Israel; the UAR).
   diplomacy: {
     recognition: true,
+    // The pressure this age actually applied (SPEC §100). Western capitals did
+    // not raise leagues against Middle Eastern states over border wars; they
+    // closed markets, suspended credit and, when they meant it, put destroyers
+    // across the approaches. Every court here can close its markets; only a
+    // court with hulls at sea can close a coast.
+    embargo: true,
     noAlliance: [
       {
         between: ['ISR', 'MLI'],
@@ -387,7 +396,13 @@ export const BOOKMARK_1948 = {
   // The tools of the age (SPEC §52): no modern state runs missionary
   // conversion of districts — integration in 1948 is schools, land and
   // votes, not priests. Everything unnamed stays on.
-  mechanics: { conversion: false, royalMarriage: false }, // modern states neither convert provinces nor wed each other
+  // Modern states neither convert provinces nor wed each other; they also do
+  // not raise punitive leagues (SPEC §100 — the embargo is this age's answer),
+  // and their constitutions have successors rather than heirs, so the dynastic
+  // succession crisis (SPEC §98) never opens here.
+  mechanics: {
+    conversion: false, royalMarriage: false, coalitions: false, succession: false,
+  },
 
   // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,
   // Abadan and Khuzestan behind Susa, the al-Hasa fields behind Gerrha —
@@ -646,6 +661,79 @@ export const BOOKMARK_1948 = {
     'Phasis': false,
     'Caucasian Albania': false,
   },
+
+  // The era's own way of coming apart (SPEC §98). A modern state does not run
+  // on its own soil: it runs on fuel it imports, spare parts it buys, and
+  // customs revenue from harbors somebody else's navy can close. Israel in
+  // 1948 bought its rifles abroad and had two months of foreign currency; the
+  // Arab states' war machines were fed through the same ports and the same
+  // suppliers. The Closed Sea is what a blockade does to any of them.
+  crises: [
+    {
+      id: 'closed_sea',
+      name: 'The Closed Sea',
+      applies(ctx, tag) {
+        const t = ctx.game.tags[tag];
+        return !!(t && t.alive && tag !== 'REB');
+      },
+      pressure(ctx, tag) {
+        try {
+          const list = (ctx.game.embargoes && Object.keys(ctx.game.embargoes)) || [];
+          let letters = 0, blockade = false;
+          for (const key of list) {
+            const at = key.indexOf('>');
+            if (at < 0 || key.slice(at + 1) !== tag) continue;
+            const from = ctx.game.tags[key.slice(0, at)];
+            if (!from || !from.alive) continue;
+            letters++;
+            if (ctx.game.embargoes[key] && ctx.game.embargoes[key].blockade) blockade = true;
+          }
+          if (!letters) return { delta: -10, cap: 100 };
+          // Closed markets alone are an expensive nuisance: they brew to the
+          // suppliers' regrets and stop there. What empties a modern state is
+          // a coast somebody else's navy has closed.
+          const delta = Math.min(6, letters * 2) + (blockade ? 8 : 0);
+          return { delta, cap: blockade ? 100 : 45 };
+        } catch (e) { return -10; }
+      },
+      stages: [
+        {
+          at: 34,
+          name: 'The Suppliers Regret',
+          label: 'Find other suppliers',
+          desc: 'The letters are polite and the effect is not: licenses take months '
+            + 'instead of days, the credit lines are "under review", and the parts '
+            + 'that keep an air force flying are suddenly export-controlled. '
+            + 'Everything the state buys now costs more and arrives later.',
+          effects: { incomeMult: 0.94, reinforceMult: 0.92 },
+        },
+        {
+          at: 67,
+          name: 'The Harbors Go Quiet',
+          label: 'Ration what lands',
+          desc: 'The quays are full of cargo nobody will insure. Customs receipts '
+            + 'collapse, the fuel is rationed by the week, and the transport pool is '
+            + 'cannibalized for parts. A state that imports its war is discovering '
+            + 'what that sentence means.',
+          effects: { incomeMult: 0.85, reinforceMult: 0.85, moraleMult: 0.95, unrestAll: 0.75 },
+        },
+        {
+          at: 100,
+          name: 'A State on Two Months of Reserves',
+          label: 'Then we buy time with anything we have',
+          desc: 'The foreign currency is measured in weeks, the fuel in days of '
+            + 'operations, and the armorers are rebuilding captured rifles because '
+            + 'nothing new is coming. The war can continue exactly as long as the '
+            + 'reserves do, and everyone in the cabinet now knows the number.',
+          effects: {
+            incomeMult: 0.7, reinforceMult: 0.75, moraleMult: 0.9,
+            manpowerMult: 0.9, unrestAll: 1.5,
+          },
+        },
+      ],
+      resolvedText: 'the markets reopen and the harbors go back to work',
+    },
+  ],
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {

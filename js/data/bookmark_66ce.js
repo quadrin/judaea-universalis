@@ -79,6 +79,8 @@ export const BOOKMARK_66 = {
   // Technology of the age (SPEC §22): imperial Rome musters Professional
   // Legions; Judaea's host is drilled but a pattern behind.
   techBase: 5,
+  // How far up the ladder this age can climb (SPEC §99). The Flavian century stops at the professional legion (SPEC §99).
+  techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   // Who actually lives here (SPEC §56): the mixed cities whose riots lit the
@@ -150,6 +152,66 @@ export const BOOKMARK_66 = {
   ],
 
   // What the era asks of you (SPEC §33) — shown in the realm panel.
+  // The era's own way of coming apart (SPEC §98). The Great Revolt was not
+  // lost to Rome alone: three factions held three quarters of Jerusalem, burned
+  // each other's granaries in the year before the siege, and fought street
+  // battles inside a city under blockade. The Factions in the City brews
+  // whenever a Judaea at war lets its own house go unquiet.
+  crises: [
+    {
+      id: 'factions_in_the_city',
+      name: 'The Factions in the City',
+      applies(ctx, tag) {
+        const t = ctx.game.tags[tag];
+        return !!(t && t.alive && t.religion === 'judaism' && ctx.helpers.controls(ctx, tag, 'Jerusalem'));
+      },
+      pressure(ctx, tag) {
+        const t = ctx.game.tags[tag];
+        const p = ctx.prov('Jerusalem');
+        const atWar = (t.atWarWith || []).some((e) => ctx.game.tags[e] && ctx.game.tags[e].alive);
+        let heat = 0;
+        if (atWar) heat += 2;
+        if (p && (p.unrest || 0) >= 3) heat += 3;
+        if ((t.stability || 0) < 0) heat += 3;
+        if ((t.warExhaustion || 0) > 6) heat += 2;
+        if (!atWar && (t.stability || 0) >= 1) heat -= 8;
+        return heat;
+      },
+      stages: [
+        {
+          at: 34,
+          name: 'Three Courts in One City',
+          label: 'Let them keep their quarters, for now',
+          desc: 'The moderates hold the upper city, the zealots the Temple mount, '
+            + 'the Galileans everything between, and each of them posts its own '
+            + 'guards on its own streets. Orders leave the council and arrive as '
+            + 'suggestions.',
+          effects: { unrestAll: 0.75, incomeMult: 0.95 },
+        },
+        {
+          at: 67,
+          name: 'The Granaries Burn',
+          label: 'Nothing to be done but count what is left',
+          desc: 'In a city that will be besieged, one faction burns another\'s '
+            + 'stores to force it to fight. Years of grain go up in an afternoon. '
+            + 'Whatever the walls could have withstood, the storehouses now cannot.',
+          effects: { unrestAll: 1.5, incomeMult: 0.85, reinforceMult: 0.85 },
+        },
+        {
+          at: 100,
+          name: 'War Inside the Walls',
+          label: 'Then the city fights itself first',
+          desc: 'The factions fight each other through the streets while the '
+            + 'legions build their ramps outside. Whoever wins this will inherit a '
+            + 'garrison that has already fought its hardest battle — against '
+            + 'itself.',
+          effects: { unrestAll: 2.5, incomeMult: 0.75, moraleMult: 0.9, manpowerMult: 0.85 },
+        },
+      ],
+      resolvedText: 'the city speaks with one voice again',
+    },
+  ],
+
   objectives: {
     JUD: [
       'Win: bleed Rome to +50 war score — the emperor will sue for peace (accept, or wager the House on the next season).',

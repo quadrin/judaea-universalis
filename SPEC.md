@@ -4241,3 +4241,148 @@ campaign that diverged does not have the old rails forced back onto it.
   changing hands, the 1982 war and its Syrian front, the Iraqi army after
   the hundred hours, the uprising modifiers lifting at Oslo) and the modern
   Greek banner.
+
+## 98. Crises that brew — the succession, the books, and the era's own
+
+A state does not fall over in a month. It runs a deficit for two years and
+then cannot pay the garrison; a king ages without naming an heir and the
+court spends a decade deciding what happens next. `js/sim/crisis.js` is the
+slow clock under those sentences.
+
+- **Heat and stages**: every crisis carries HEAT (0–100) on the tag
+  (`t.crises[id] = {heat, stage}` — plain save data), rising while its cause
+  holds and falling while it does not. Stages bite at 34 / 67 / 100, each
+  owning exactly one tag modifier (`crisis_<id>`) that is replaced on a stage
+  change and removed when the crisis ends, so nothing leaks into a save.
+  Stages fall with hysteresis (12 heat), so a realm that fixes its books
+  climbs out instead of flickering. The player gets a card at each new stage
+  (dynamic event, cooldown 24 months); other courts' crises are world news.
+- **A plateau, not a countdown**: `pressure()` may return `{delta, cap}`. A
+  living king with no son yet is a RISK — it brews to the whispers and stops
+  (cap 45). What pushes past it is an event: a regency, a pretender in the
+  field, belief collapsing, or the heirless death itself, which `rulerDies`
+  raises to 70 outright (`raiseCrisisTo`). The same shape gates 1948's Closed
+  Sea: closed markets alone plateau; a naval blockade takes it all the way.
+- **The succession** (every age with heirs; 1948 turns it off with
+  `mechanics.succession: false`): whispers → two claims, one throne → the
+  succession war, which raises an actual pretender host through the §87
+  rising machinery. While it stands at stage 2+, a house bound by ROYAL
+  MARRIAGE holds a `succession` casus belli (`successionClaim`) — the war
+  goal that already existed and that the AI presses toward subjugation
+  (`pressSuccession`, ai.js). A court with no marriage needs the thing to be
+  past arguing: stage 3, with a pretender in the field.
+- **The books** (every age with money): the pay is late → the creditors call
+  (unpaid advisers walk out) → bankruptcy, which repudiates the debts, empties
+  the chest, costs 2 stability and 20 legitimacy, and sends a quarter of the
+  army home. Then it cools: bankruptcy is a moment, not a permanent state.
+- **The era's own**: a bookmark may declare `crises: [...]` in the same shape.
+  1948 has **The Closed Sea** (what a blockade does to a state that imports
+  its war) and 66 CE has **The Factions in the City** (three courts in one
+  Jerusalem, the granaries burned, war inside the walls).
+- **Regression contract**: `smoke73.mjs` — the plateau, the heirless death,
+  the stages and their modifiers, the pretender the third stage raises, the
+  claims it hands to married houses, the full bankruptcy sequence and its
+  cooling, and both era crises.
+
+## 99. The ladder ends where the age does
+
+Racing ahead of the age was meant to be expensive, not a road to rifle
+brigades at Masada. `TECH_MAX` is the ladder's length; `bookmark.techCeiling`
+is how much of it a century can climb.
+
+- 167/67/40 BCE and 66/132 CE stop at 9 — professional legions.
+  614 CE stops at 13 — thematic regulars, the last pattern that age knew.
+  1948 runs to the top, because it is the age that really had them.
+- `cappedGen` (tech.js) holds any military level to the ceiling, so `tagGen`,
+  `navalGen`, recruitment, modernization and every UI label field the era's
+  pattern even if a save or a scripted gift pushed the level higher. The
+  player's ladder refuses the purchase in the age's own words, and no
+  unreachable "next pattern" is dangled in the panel; `aiTech` never buys past
+  it either.
+
+## 99b. The Eastern Desert is Egypt's, and only Egypt's
+
+The atlas cell named for Egypt's Eastern Desert was drawn with a weight that
+let it jump both gulfs: it held the ground between the Nile and the Red Sea,
+the southern half of the Sinai peninsula, and a wedge of north-west Arabia
+around the Tabuk approaches — one province bordering Aila and Hegra at once.
+
+- The seed is lighter (1.8 → 1.2) and carries a `provinceRasterRegions`
+  envelope (SPEC §95's machinery) that follows the Nile's east bank, the head
+  of the Gulf of Suez and the Red Sea shore. Everything it used to hold beyond
+  that goes back to the land it belongs to: the peninsula's tip to Sinai
+  Interior (which now reaches Ras Muhammad at 27.7° N), the Arabian side to
+  the Hejaz cells, and the western fringe to Libyan Desert and Thebes.
+- `tools/geom-snapshot.json` was regenerated from the browser raster
+  (`tools/tests/dump-geometry.mjs`) — the adjacency really changed: Eastern
+  Desert's neighbors are now Libyan Desert, Myos Hormos and Thebes, and
+  nothing else.
+
+## 100. The pressure short of war — embargo and blockade
+
+Western capitals did not raise leagues against Middle Eastern states over
+border wars. They closed markets, suspended credit, and — when they meant it —
+put destroyers across the approaches.
+
+- **No league where the era had none**: `coalitionAgainst` is gated by
+  `mechanics.coalitions`, which 1948 sets false. The punitive league, the
+  hegemon containment and the defensive coalition all fall silent there.
+- **Embargo** (`js/sim/embargo.js`, era-gated by `diplomacy.embargo`): a court
+  closes its markets to another. The first embargo takes a quarter of the
+  target's trade income and each further court a tenth more, floored at 30%.
+  It is public (−40 opinion), reversible (+20), and rides `game.embargoes`.
+- **Blockade**: an embargoing court WITH HULLS AT SEA can close a coast. Every
+  coastal province the target holds earns half its ordinary revenue — customs,
+  market turnover, shipyard hulls and the routes through the harbor alike —
+  and what is left of its trade is cut again. This is the instrument that
+  empties a treasury, and it feeds 1948's Closed Sea crisis (§98).
+- **The AI reaches for what it has**: in an age without leagues a court that
+  detests a neighbor (opinion ≤ −80) signs a letter instead of a declaration,
+  runs at most two at once, never embargoes a state it is already at war with
+  (the war IS the embargo), and lifts them when relations warm. Blockades
+  need the bottom of the opinion scale and a fleet.
+- **Regression contract**: `smoke73.mjs` and `uitest35.mjs`.
+
+## 101. What a treasury can hold, and what an heir inherits
+
+Two related exploits: an untouched minor banked thousands for decades, and
+whoever absorbed it took the lot.
+
+- **The hoard ceiling**: a court may hold `hoardCapMonths` (18) of its own
+  gross income, never less than `hoardCapFloor` (150). Six percent of the
+  EXCESS drains every month into palaces, walls, salaries and the pockets of
+  the men who count it — so a treasury settles where the drain meets the
+  surplus instead of climbing forever. Rich realms can still save for a
+  campaign; poor ones cannot pretend to be rich. The ledger names the line
+  ("The court consumes").
+- **The inherited share**: incorporating a client brings
+  `inheritTreasuryShare` (25%) of its coffers, capped at a year of that
+  client's own income — the rest was already owed, spent, or is in somebody's
+  cellar. The chronicle says how much reached the capital.
+- **Regression contract**: `smoke73.mjs` — the floor, the drain, the settling
+  point, and the capped inheritance.
+
+## 102. The crown is new; the country is not
+
+Forming a nation used to hand out the same +10% income and quietly empty the
+panel: the estates vanished, the objectives went blank, and the mission chain
+stopped, because every one of those tables is keyed by tag.
+
+- **Lineage** (`switchTagCore`): a formed nation records what it was
+  (`t.lineage`, `t.formedFrom`). `contentForTag` walks that chain, so the
+  estates keep convening, the era keeps stating its objectives, and anything
+  else addressed to the predecessor keeps answering.
+- **Its own programme**: a formable may carry `missions: [...]` written against
+  the NEW tag; `missionsFor` prefers the bookmark's own table and falls back to
+  the crown's. The Kingdom of Israel gets four (settle the crown, muster the
+  kingdom, the land of the twelve, build rather than hold) and the restored
+  Hasmonean crown three; forming resets the chain to its first line.
+- **Its own payoff**: each crown now pays differently — coin, men and
+  ministries (`bonus.grant`) plus a second permanent modifier that says what
+  that kingdom is FOR. The Kingdom of Israel's Law Is the Charter (manpower,
+  belief, discipline), the Hasmonean Priestly Crown (order and belief),
+  Herod's Builder King (trade and belief, no levies), the UAR's One Republic,
+  Two Capitals, and Rome's The Name Restored.
+- **Regression contract**: `smoke73.mjs` — the estates surviving the
+  proclamation, the objectives still answering, the new mission chain in the
+  panel from its first line, and the crowns paying differently.

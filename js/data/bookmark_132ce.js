@@ -56,6 +56,8 @@ export const BOOKMARK_132 = {
   startDate: { y: 132, m: 4, d: 1 },
   // Technology of the age (SPEC §22): Hadrian's legions at their zenith.
   techBase: 5,
+  // How far up the ladder this age can climb (SPEC §99). Hadrian's century stops at the professional legion (SPEC §99).
+  techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
 
   blurb: 'Sixty years after the Temple burned, Hadrian has ploughed the sacred hill for a '

@@ -104,6 +104,26 @@ moves labels, not ledgers. Accepted as of §97:
 167 PAR BLEEDING · 67 ROM SNOWBALL + SEL DEAD · 40 none · 66 none ·
 132 JUD BLEEDING · 614 GHA BLEEDING (comes and goes) · 1948 none.
 
+The SPEC §98–§102 batch (crises, the era's tech ceiling, embargo and
+blockade, the hoard ceiling, formable payoffs) re-ran the harness after
+regenerating the snapshot for the redrawn Egyptian Eastern Desert. The set
+stays inside the accepted families, with two notes: 132's all-AI Bar Kokhba
+rising comes back SNOWBALL rather than DEBT-SPIRAL (the same "the AI cannot
+play Turbo's reduction" class documented for 115 CE, and self-limiting), and
+the ancient sets drift by a flag or two because the crisis clock perturbs the
+seeded stream — a four-seed sample of 66 CE and 132 CE showed no deaths and no
+snowballs at all. Accepted as of §102: 167 PAR BLEEDING · 67 ROM SNOWBALL +
+SEL DEAD · 40 HER (and/or ATG) BLEEDING · 66 JUD (and/or PAR/AGR) BLEEDING ·
+132 JUD SNOWBALL or DEBT-SPIRAL,BLEEDING · 614 none · 1948 none.
+
+The 1948 line is worth its own sentence: the embargo AI is deliberately
+narrow (opinion ≤ −80, at most two letters per court, never against a state it
+is already at war with, lifted when relations warm). An earlier, looser tuning
+had every capital embargoing every other, every state pinned at the Closed
+Sea's third stage, and the whole bookmark bleeding — the flags came back
+`1948 EGY BLEEDING · SYR BLEEDING`. If that pair reappears, look at the
+embargo book first (`game.embargoes`), not at the armies.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
@@ -198,8 +218,9 @@ autoruns; and AI-vs-AI wars in the harness stay overland, so the
 invasion planner idles there (its coverage lives in smoke57's Roman
 expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
-break, and The Chapters panel in a real browser. `smoke72.mjs` owns the
-SPEC §95–97 batch (the pen's second half and its absorption road,
+break, and The Chapters panel in a real browser. `smoke73.mjs` owns the SPEC §98–102 batch (crises, the tech
+ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
+`smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
 

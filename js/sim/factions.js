@@ -7,7 +7,7 @@
 // ordinary tag-modifier stream. Player-only, the same rule as ultimatums
 // (SPEC §33): AI realms keep their politics offstage. DOM-free.
 
-import { num, clamp } from './military.js';
+import { num, clamp, contentForTag } from './military.js';
 import { fireEvent } from './events.js';
 
 const _warned = new Set();
@@ -32,10 +32,13 @@ export const FACTION = {
 
 function monthIndex(d) { return d.y * 12 + (d.m - 1); }
 
-// The era's faction definitions for a tag (bookmark content), or null.
+// The era's faction definitions for a tag (bookmark content), or null. A
+// formed nation keeps its predecessor's court (SPEC §102): the Kingdom of
+// Israel still has the zealots and the notables it had as Judaea, because they
+// are the same men.
 export function factionDefs(ctx, tag) {
   const all = ctx.bookmark && ctx.bookmark.factions;
-  const list = all && all[tag];
+  const list = contentForTag(ctx, all, tag);
   return Array.isArray(list) && list.length ? list : null;
 }
 

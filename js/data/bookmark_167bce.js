@@ -82,6 +82,9 @@ export const BOOKMARK_167 = {
   // edge is already scripted into armies and events — a tech edge on top
   // crushes the designed underdog arc flat.
   techBase: 3,
+  // How far up the ladder this age can climb (SPEC §99). The Maccabees' world ends at the professional legion: no thematic armies,
+  // no muskets, no rifles, however many martial points a long campaign banks.
+  techCeiling: 9,
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
 

@@ -42,6 +42,123 @@ function ownedControlledCount(ctx, tag, religion) {
     && (!religion || p.religion === religion)).length;
 }
 
+// ---- what a crown is worth, and what it then asks of you (SPEC §102) --------
+// A formed nation used to hand out the same +10% income and +5% morale
+// whatever it was. These are the specific payoffs of specific crowns — coin,
+// men, ministries, and a second permanent modifier that says what this
+// particular kingdom is FOR — plus a chain of missions addressed to the new
+// identity, so proclaiming a kingdom fills the panel instead of emptying it.
+function holds(ctx, tag, name) { return ctx.helpers.controls(ctx, tag, name); }
+function ownedCount(ctx, tag, religion) {
+  return ctx.game.provinces.filter((p) => p && !p.impassable
+    && p.owner === tag && p.controller === tag
+    && (!religion || p.religion === religion)).length;
+}
+function menOf(ctx, tag) {
+  try { return ctx.helpers.armiesOf(ctx, tag).reduce((s, a) => s + ((a && a.men) || 0), 0); }
+  catch (e) { return 0; }
+}
+function devOf(ctx, tag) {
+  let dev = 0;
+  for (const p of ctx.game.provinces) {
+    if (!p || p.impassable || p.owner !== tag) continue;
+    dev += (p.dev ? (p.dev.tax || 0) + (p.dev.prod || 0) + (p.dev.mp || 0) : 0);
+  }
+  return dev;
+}
+
+// The Kingdom of Israel's own chain: what a kingdom does once it is one.
+const MLI_MISSIONS = [
+  {
+    id: 'mli_the_crowning', name: 'The Crown Set Down',
+    desc: 'Settle the realm under the new crown: stability 2 and a court that is not '
+      + 'at war with itself (no pretender in the field).',
+    rewardText: '"The Crown Settled": +10% income and −0.5 unrest everywhere for 60 months.',
+    check: (ctx) => (ctx.game.tags.MLI && (ctx.game.tags.MLI.stability || 0) >= 2)
+      && !(ctx.game.pretenders && ctx.game.pretenders.MLI),
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'MLI', {
+      id: 'crown_settled', name: 'The Crown Settled', months: 60,
+      effects: { incomeMult: 1.1, unrestAll: -0.5 },
+    }),
+  },
+  {
+    id: 'mli_the_muster', name: 'The Muster of Israel',
+    desc: 'Put thirty thousand men under the kingdom\'s own banner.',
+    rewardText: '+40 martial points and "The King\'s Own": +8% discipline for 60 months.',
+    check: (ctx) => menOf(ctx, 'MLI') >= 30000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { mar: 40 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'kings_own', name: "The King's Own", months: 60, effects: { disciplineMult: 1.08 },
+      });
+    },
+  },
+  {
+    id: 'mli_the_land', name: 'The Land of the Twelve',
+    desc: 'Thirty provinces under the crown, twenty of them keeping the Law.',
+    rewardText: '+150 talents and "The Kingdom Whole": +12% manpower, permanent.',
+    check: (ctx) => ownedCount(ctx, 'MLI') >= 30 && ownedCount(ctx, 'MLI', 'judaism') >= 20,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 150 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'kingdom_whole', name: 'The Kingdom Whole', months: -1, effects: { manpowerMult: 1.12 },
+      });
+    },
+  },
+  {
+    id: 'mli_the_house', name: 'The House of the Name',
+    desc: 'Build the realm rather than merely holding it: 260 points of development '
+      + 'under the crown.',
+    rewardText: '"The Builders": +8% income and +0.2 public belief a month, permanent.',
+    check: (ctx) => devOf(ctx, 'MLI') >= 260,
+    reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'MLI', {
+      id: 'the_builders', name: 'The Builders', months: -1,
+      effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
+    }),
+  },
+];
+
+// Hasmonean Judaea restored: the priest-kings' own programme.
+const HAS_MISSIONS = [
+  {
+    id: 'has_one_throne', name: 'One Throne, One Temple',
+    desc: 'End the dynastic quarrel: legitimacy 70 and Jerusalem in our hands.',
+    rewardText: '+30 governance points and "The Priest-King": −0.5 unrest everywhere for 48 months.',
+    check: (ctx) => (ctx.game.tags.HAS && (ctx.game.tags.HAS.legitimacy || 0) >= 70)
+      && holds(ctx, 'HAS', 'Jerusalem'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HAS', { gov: 30 });
+      ctx.helpers.addTagModifier(ctx, 'HAS', {
+        id: 'priest_king', name: 'The Priest-King', months: 48, effects: { unrestAll: -0.5 },
+      });
+    },
+  },
+  {
+    id: 'has_the_coast', name: 'The Kingdom Reaches the Sea',
+    desc: 'Hold Joppa: a kingdom with no harbor is a kingdom that pays somebody else\'s customs.',
+    rewardText: '+120 talents and "The Customs of Joppa": +10% trade, permanent.',
+    check: (ctx) => holds(ctx, 'HAS', 'Joppa'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HAS', { treasury: 120 });
+      ctx.helpers.addTagModifier(ctx, 'HAS', {
+        id: 'customs_of_joppa', name: 'The Customs of Joppa', months: -1, effects: { tradeMult: 1.1 },
+      });
+    },
+  },
+  {
+    id: 'has_yannai', name: "Yannai's Borders",
+    desc: 'Twenty provinces under the Hasmonean crown, the borders of the greatest of the line.',
+    rewardText: '+4,000 manpower and "The Old Borders": +8% morale, permanent.',
+    check: (ctx) => ownedCount(ctx, 'HAS') >= 20,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'HAS', { manpower: 4000 });
+      ctx.helpers.addTagModifier(ctx, 'HAS', {
+        id: 'old_borders', name: 'The Old Borders', months: -1, effects: { moraleMult: 1.08 },
+      });
+    },
+  },
+];
+
 const ISRAEL_HEARTLAND = [
   'Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 'Adora',
 ];
@@ -63,11 +180,18 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 25, stability: 1,
+      // The dynasty's own treasury and levies come out of hiding with it.
+      grant: { treasury: 150, manpower: 4000, gov: 40, mar: 25 },
       modifier: {
         id: 'kingdom_restored', name: 'The Kingdom Restored', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05 },
       },
+      modifier2: {
+        id: 'priestly_crown', name: 'The Priestly Crown', months: -1,
+        effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+      },
     },
+    missions: HAS_MISSIONS,
   },
   {
     id: 'form_has_ari',
@@ -84,11 +208,18 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 25, stability: 1,
+      // The dynasty's own treasury and levies come out of hiding with it.
+      grant: { treasury: 150, manpower: 4000, gov: 40, mar: 25 },
       modifier: {
         id: 'kingdom_restored', name: 'The Kingdom Restored', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05 },
       },
+      modifier2: {
+        id: 'priestly_crown', name: 'The Priestly Crown', months: -1,
+        effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+      },
     },
+    missions: HAS_MISSIONS,
   },
   {
     id: 'form_has_atg',
@@ -107,11 +238,18 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 30, stability: 1,
+      // The dynasty's own treasury and levies come out of hiding with it.
+      grant: { treasury: 150, manpower: 4000, gov: 40, mar: 25 },
       modifier: {
         id: 'kingdom_restored', name: 'The Kingdom Restored', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05 },
       },
+      modifier2: {
+        id: 'priestly_crown', name: 'The Priestly Crown', months: -1,
+        effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+      },
     },
+    missions: HAS_MISSIONS,
   },
   {
     id: 'form_jud_her',
@@ -129,9 +267,15 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 25, stability: 1,
+      // The builder-king's programme is money and mortar, not manpower.
+      grant: { treasury: 250, gov: 50, infl: 40 },
       modifier: {
         id: 'herods_peace', name: "Herod's Peace", months: -1,
         effects: { incomeMult: 1.15 },
+      },
+      modifier2: {
+        id: 'the_builder_king', name: 'The Builder King', months: -1,
+        effects: { tradeMult: 1.12, legitimacyAdd: 0.1 },
       },
     },
   },
@@ -158,11 +302,19 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 30, stability: 2,
+      // The endgame crown pays like one: a full treasury, the levies of a
+      // kingdom, and the ministries of a state that has stopped improvising.
+      grant: { treasury: 300, manpower: 8000, gov: 60, infl: 60, mar: 60 },
       modifier: {
         id: 'crown_of_david', name: 'The Crown of David', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
       },
+      modifier2: {
+        id: 'the_law_is_the_charter', name: 'The Law Is the Charter', months: -1,
+        effects: { manpowerMult: 1.1, legitimacyAdd: 0.25, disciplineMult: 1.05 },
+      },
     },
+    missions: MLI_MISSIONS,
   },
   {
     id: 'form_mli_has',
@@ -186,11 +338,19 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 30, stability: 2,
+      // The endgame crown pays like one: a full treasury, the levies of a
+      // kingdom, and the ministries of a state that has stopped improvising.
+      grant: { treasury: 300, manpower: 8000, gov: 60, infl: 60, mar: 60 },
       modifier: {
         id: 'crown_of_david', name: 'The Crown of David', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
       },
+      modifier2: {
+        id: 'the_law_is_the_charter', name: 'The Law Is the Charter', months: -1,
+        effects: { manpowerMult: 1.1, legitimacyAdd: 0.25, disciplineMult: 1.05 },
+      },
     },
+    missions: MLI_MISSIONS,
   },
   // ---- 1948: the united Arab crown, if Israel is strangled -------------------
   {
@@ -209,9 +369,14 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 25, stability: 1,
+      grant: { treasury: 200, manpower: 10000, gov: 40, infl: 40, mar: 40 },
       modifier: {
         id: 'arab_unity', name: 'The Hour of Unity', months: -1,
         effects: { manpowerMult: 1.1, incomeMult: 1.05 },
+      },
+      modifier2: {
+        id: 'one_republic', name: 'One Republic, Two Capitals', months: -1,
+        effects: { disciplineMult: 1.05, unrestAll: 0.25 },
       },
     },
   },
@@ -230,9 +395,14 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 25, stability: 1,
+      grant: { treasury: 200, manpower: 10000, gov: 40, infl: 40, mar: 40 },
       modifier: {
         id: 'arab_unity', name: 'The Hour of Unity', months: -1,
         effects: { manpowerMult: 1.1, incomeMult: 1.05 },
+      },
+      modifier2: {
+        id: 'one_republic', name: 'One Republic, Two Capitals', months: -1,
+        effects: { disciplineMult: 1.05, unrestAll: 0.25 },
       },
     },
   },
@@ -253,9 +423,14 @@ export const FORMABLES = [
     ],
     bonus: {
       legitimacy: 30, stability: 1,
+      grant: { treasury: 400, manpower: 12000, gov: 60, infl: 60, mar: 60 },
       modifier: {
         id: 'renovatio_imperii', name: 'Renovatio Imperii', months: -1,
         effects: { disciplineMult: 1.05, legitimacyAdd: 0.2 },
+      },
+      modifier2: {
+        id: 'the_name_restored', name: 'The Name Restored', months: -1,
+        effects: { incomeMult: 1.08, moraleMult: 1.05 },
       },
     },
   },

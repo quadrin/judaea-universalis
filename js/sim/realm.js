@@ -3,7 +3,9 @@
 // sites & wonders. DOM-free.
 
 import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName } from './military.js';
+import { FORMABLES } from '../data/formables.js';
 import { fireEvent } from './events.js';
+import { raiseCrisisTo } from './crisis.js';
 import { shiftPopToReligion } from './population.js';
 
 const _warned = new Set();
@@ -118,7 +120,11 @@ export function rulerDies(ctx, tag, causeText) {
     t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: nr.age };
     t.legitimacy = clamp(num(t.legitimacy) - 25, 0, 100);
     t.stability = clamp(num(t.stability) - 1, -3, 3);
-    text = `${old.name} ${causeText || 'has died'} with no designated heir. ${nr.name} takes the ${title.toLowerCase()} amid whispers and drawn knives. (−25 legitimacy, −1 stability)`;
+    // A death with no named heir does not simmer — it lands (SPEC §98). The
+    // succession crisis opens at the second stage: rival claims, and foreign
+    // courts with marriage contracts suddenly interested in our constitution.
+    try { raiseCrisisTo(ctx, tag, 'succession', 70); } catch (e) { warnOnce('crisis', 'stoke failed', e); }
+    text = `${old.name} ${causeText || 'has died'} with no designated heir. ${nr.name} takes the ${title.toLowerCase()} amid whispers and drawn knives — and the question of the succession is open. (−25 legitimacy, −1 stability)`;
   }
   chronicle(ctx, 'ruler', (t.name || tag) + ': ' + text);
   // The player's own succession pauses the game with a proper card; other
@@ -347,13 +353,34 @@ export function monthlyHolySites(ctx) {
 // bookmark.missions = { TAG: [ {id, name, desc, rewardText, icon?, check(ctx), reward(ctx)} ] }
 // Linear chains; t.missionIdx points at the current mission. Checked monthly
 // for every tag with a chain (the AI earns its rewards too — symmetric odds).
+// The chain of missions a realm is working through (SPEC §102). The era's own
+// table answers first; a nation that took a greater crown reads the chain that
+// crown carries instead — the Kingdom of Israel is not asked to finish
+// Judaea's war objectives, it is asked to do the things a kingdom does.
+export function missionsFor(ctx, tag) {
+  const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
+  if (Array.isArray(own) && own.length) return own;
+  for (const f of FORMABLES) {
+    if (!f || f.to !== tag || !Array.isArray(f.missions) || !f.missions.length) continue;
+    if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
+    return f.missions;
+  }
+  return null;
+}
+
 export function checkMissions(ctx) {
   const g = ctx.game;
   const all = ctx.bookmark && ctx.bookmark.missions;
-  if (!all) return;
-  for (const tag of Object.keys(all)) {
+  // Every living tag with a mission chain of its own — the bookmark's tables
+  // plus any formed crown carrying its own (SPEC §102).
+  const tags = new Set(Object.keys(all || {}));
+  for (const k of Object.keys(g.tags)) {
+    if (g.tags[k] && g.tags[k].alive && missionsFor(ctx, k)) tags.add(k);
+  }
+  if (!tags.size) return;
+  for (const tag of tags) {
     const t = g.tags[tag];
-    const list = all[tag];
+    const list = missionsFor(ctx, tag);
     if (!t || !t.alive || !Array.isArray(list)) continue;
     try {
       let idx = Math.max(0, num(t.missionIdx, 0) | 0);

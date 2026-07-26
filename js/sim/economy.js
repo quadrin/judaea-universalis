@@ -3,7 +3,8 @@
 
 import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
-import { blockadedBy, MERCHANT_SHIP_INCOME } from './navy.js';
+import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
+import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
 import { powerFlows } from './powers.js';
@@ -91,6 +92,9 @@ function ownIncome(ctx, tag) {
   const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0 };
   const taxPerDev = B(ctx, 'taxPerDevPerYear', 1.0);
   const prodMult = B(ctx, 'prodMult', 0.6);
+  // A blockade of the state closes every harbor at once; a fleet on station
+  // closes the one it sits off (checked per province below).
+  const blockade = blockadeIncomeMult(ctx, tag);
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
@@ -99,9 +103,14 @@ function ownIncome(ctx, tag) {
     // already denies an occupier the benefit (owner === controller here).
     const market = hasBuilding(p, 'market') ? 1.2 : 1;
     const autonomy = clamp(num(p.autonomy, 0.25), 0, 0.9);
-    out.tax += num(p.dev && p.dev.tax) * (1 - autonomy) * (taxPerDev / 12) * provMult(p, 'taxMult') * market;
+    // A closed harbor earns a fraction of everything (SPEC §100): the customs
+    // house, the market's turnover and the workshops that shipped through it
+    // all sit on the same quay. A hostile squadron riding off the port does it
+    // ship by ship; a declared blockade does it to every port at once.
+    const port = isCoastal(ctx, i) && (blockade < 1 || blockadedBy(ctx, i)) ? blockade : 1;
+    out.tax += num(p.dev && p.dev.tax) * (1 - autonomy) * (taxPerDev / 12) * provMult(p, 'taxMult') * market * port;
     const shipyard = hasBuilding(p, 'shipyard') ? 1.15 : 1;
-    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * (prodMult / 12) * provMult(p, 'prodMult') * market * shipyard;
+    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * (prodMult / 12) * provMult(p, 'prodMult') * market * shipyard * port;
   }
   out.mult = resolveTagMult(ctx, tag, 'incomeMult');
   out.base = out.tax + out.prod;
@@ -135,8 +144,10 @@ export function tradeIncome(ctx, tag) {
     if (!hasBuilding(p, 'shipyard') || blockadedBy(ctx, i)) continue;
     sum += ships * MERCHANT_SHIP_INCOME;
   }
-  // Influence tech widens the caravans' margins (tradeMult, SPEC §22).
+  // Influence tech widens the caravans' margins (tradeMult, SPEC §22); closed
+  // markets narrow them (SPEC §100).
   sum *= resolveTagMult(ctx, tag, 'tradeMult');
+  sum *= embargoTradeMult(ctx, tag);
   return Math.round(sum * 100) / 100;
 }
 
@@ -241,6 +252,26 @@ export function monthlySubsidies(ctx) {
   g.subsidies = keep;
 }
 
+// What this court can plausibly hold (SPEC §101): months of its own gross
+// income, never below the floor. A treasury is a war chest, not a bank.
+export function hoardCap(ctx, tag) {
+  const bd = incomeBreakdown(ctx, tag);
+  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.powerIn || 0));
+  return Math.max(B(ctx, 'hoardCapFloor', 150), gross * B(ctx, 'hoardCapMonths', 18));
+}
+// The month's bleed off a hoard past the cap — reported so the ledger can
+// name it rather than leaving the player to wonder where the silver went.
+export function hoardBleed(ctx, tag, breakdown) {
+  const t = ctx.game.tags[tag];
+  if (!t) return 0;
+  const bd = breakdown || incomeBreakdown(ctx, tag);
+  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.powerIn || 0));
+  const cap = Math.max(B(ctx, 'hoardCapFloor', 150), gross * B(ctx, 'hoardCapMonths', 18));
+  const excess = num(t.treasury) - cap;
+  if (!(excess > 0)) return 0;
+  return excess * clamp(B(ctx, 'hoardDecayPerMonth', 0.06), 0, 1);
+}
+
 export function runMonthlyEconomy(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -251,6 +282,9 @@ export function runMonthlyEconomy(ctx) {
       t.income = Math.round((bd.income + bd.tributeIn + (bd.powerIn || 0)) * 100) / 100;
       t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
+      // The court consumes what the country cannot justify holding (SPEC §101).
+      const bleed = hoardBleed(ctx, tag, bd);
+      if (bleed > 0) t.treasury = num(t.treasury) - bleed;
       if (!Number.isFinite(t.treasury)) t.treasury = 0;
     } catch (e) { warnOnce('eco:' + tag, 'economy failed for', tag, e); }
   }
@@ -308,7 +342,9 @@ export function explainIncome(ctx, tag) {
     if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
     if (bd.admin > 0) rows.push({ label: 'Administration', value: r2(-bd.admin) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });
-    rows.push({ label: 'Monthly balance', value: r2(bd.net) });
+    const bleed = hoardBleed(ctx, tag, bd);
+    if (bleed > 0.005) rows.push({ label: 'The court consumes (reserve past its means)', value: r2(-bleed) });
+    rows.push({ label: 'Monthly balance', value: r2(bd.net - bleed) });
     return rows;
   } catch (e) {
     warnOnce('explainIncome', 'explainIncome failed', e);
