@@ -4386,3 +4386,46 @@ stopped, because every one of those tables is keyed by tag.
 - **Regression contract**: `smoke73.mjs` — the estates surviving the
   proclamation, the objectives still answering, the new mission chain in the
   panel from its first line, and the crowns paying differently.
+
+## 103. The phone campaign
+
+Every batch since v6 added chrome — crises, recognition, embargo, chapters,
+doctrine — and all of it was designed at 1440px. On a 390px phone the topbar
+sheds its four tool buttons by design (`max-width: 430px`), and a phone has no
+keyboard, so the chronicle, the ledger, the primer, the quill and the shelf of
+saved campaigns had no way in at all: **a handheld campaign could not save
+itself.** This section is the handheld pass.
+
+- **The tools sheet** (`.tb-more` → `#tools-sheet`): one button in the topbar,
+  shown wherever the tool buttons are hidden OR the floating sound buttons are
+  (every coarse pointer under 900px), opens a grid of 44px+ tiles —
+  Chronicle · Ledger · How to play · Save · Campaigns · Music · Sound. Each
+  tile calls exactly the handler its desktop button calls, so there is one
+  behavior and two doors. Escape closes it before anything else.
+- **The sound toggles stop covering the game**: `#ju-sound-btn` and
+  `#ju-music-btn` are fixed at z-9999, which put them on top of the mapmode
+  grid (grown to three rows since the trade and diplomatic modes) and on top of
+  the first row of every bottom sheet. On handhelds they stand down and the
+  sheet carries both toggles instead; the mapmode grid gets its corner back.
+- **Thumb-sized where it counts**: the coarse-pointer pass already gave small
+  controls invisible 40px pads. The buttons a campaign is actually played with
+  — `.pp-dip`, `.pp-build-btn`, `.np-fac-btn`, the peace table's own controls —
+  have visible bounds in two-column grids, where an oversized pad would overlap
+  its neighbour, so they get real height (40px / 36px) instead.
+- **Rows that stack**: a long value (three communities in one province, "22
+  provinces · 183 dev") used to wrap back under its own label. On a sheet the
+  label and value stack.
+- **Landscape is a side panel, not a sheet**: at 844×390 a bottom sheet left a
+  strip of map. Under `(pointer: coarse) and (orientation: landscape)` the
+  province and realm panels stand full-height on the left at ≤58% width, and
+  the mapmode grid and group toggle move to the right, clear of each other.
+- **The title screen fits**: `.bm-card` was a fixed 310px inside a carousel
+  viewport of `100vw − 128px`, so every phone read the era blurb with its right
+  edge sliced off. The card is fluid now, and the map's own controls hide while
+  the title screen is up instead of showing through it on tall screens.
+- **Regression contract**: `uitest36.mjs` — a real 390×844 touch context that
+  checks the title card fits, the tools button appears where the tool buttons
+  do not, every shed tool is on the sheet, the ledger opens from it, the quill
+  writes a campaign to the shelf and the shelf opens again, diplomacy buttons
+  are thumb-sized, a long value stacks, nothing spills sideways, and landscape
+  really becomes a side panel.

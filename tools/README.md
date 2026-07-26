@@ -218,7 +218,9 @@ autoruns; and AI-vs-AI wars in the harness stay overland, so the
 invasion planner idles there (its coverage lives in smoke57's Roman
 expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
-break, and The Chapters panel in a real browser. `smoke73.mjs` owns the SPEC §98–102 batch (crises, the tech
+break, and The Chapters panel in a real browser. `uitest36.mjs` owns the phone pass (SPEC §103) and is the one to run when
+touching chrome: it boots a real 390×844 touch context, and its landscape
+section resizes to 844×390 in the same run. `smoke73.mjs` owns the SPEC §98–102 batch (crises, the tech
 ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the

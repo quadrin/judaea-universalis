@@ -217,6 +217,24 @@ export const ICONS = {
     '<path d="M19 17V5a2 2 0 0 0-2-2H4"/>' +
     '<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
   // Oil lamp (defeat): bowl with spout flame, loop handle, small foot
+  // The tools sheet's own mark: three ruled lines over a closed book edge —
+  // a menu that still belongs to a parchment game.
+  menu:
+    '<path d="M4.5 7h15"/>' +
+    '<path d="M4.5 12h15"/>' +
+    '<path d="M4.5 17h9.5"/>' +
+    '<path d="M17.2 15.6l1.6 1.6-1.6 1.6"/>',
+  // The score: a beamed pair of notes (the tools sheet's music toggle).
+  note:
+    '<path d="M9 17.5V6.2l9-1.8v11.3"/>' +
+    '<path d="M9 9.4l9-1.8"/>' +
+    '<ellipse cx="7" cy="17.8" rx="2.4" ry="1.9"/>' +
+    '<ellipse cx="16" cy="15.8" rx="2.4" ry="1.9"/>',
+  // Effects: a speaker with two waves.
+  speaker:
+    '<path d="M4.5 9.5h3.2L12 6v12l-4.3-3.5H4.5Z"/>' +
+    '<path d="M15.2 9.2a4 4 0 0 1 0 5.6"/>' +
+    '<path d="M17.6 6.8a7.4 7.4 0 0 1 0 10.4"/>',
   lamp:
     '<path d="M4.6 13.3h12.8c-.5 3.2-2.6 4.8-6.4 4.8s-5.9-1.6-6.4-4.8Z"/>' +
     '<path d="M17.4 13.3c1.7-.4 2.6-1.2 2.6-2.3 0-.7-.4-1.2-1.2-1.3"/>' +

@@ -856,6 +856,14 @@ button {
   background:
     radial-gradient(ellipse at 50% 38%, rgba(20, 16, 10, 0.42) 0%, rgba(14, 11, 7, 0.88) 72%, rgba(10, 8, 5, 0.96) 100%);
 }
+/* The title screen is a full-viewport scrim, but the map chrome underneath it
+   is fixed and higher-contrast than the art; on a tall phone (where the panel
+   art stops short of the fold) the mapmode grid and the outliner pill showed
+   through. While the campaign has not started, the map's controls stand down. */
+#ui-root:has(> #start-screen:not(.hidden)) #mapmode-bar,
+#ui-root:has(> #start-screen:not(.hidden)) #group-toggle,
+#ui-root:has(> #start-screen:not(.hidden)) #outliner-pill { display: none; }
+
 #start-screen .loading {
   margin: auto;
   font-variant: small-caps;
@@ -1126,6 +1134,58 @@ button {
 }
 .tb-save:hover { border-color: var(--gold); filter: brightness(1.2); }
 
+/* The tools button (SPEC §103): desktops have the four buttons and the
+   hotkeys, so it hides there and appears only where they do not fit. */
+.tb-more {
+  display: none;
+  width: 34px; height: 26px;
+  color: var(--parch);
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-light));
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+}
+.tb-more .icon { width: 15px; height: 15px; }
+.tb-more:hover { border-color: var(--gold); filter: brightness(1.2); }
+
+/* ---- the tools sheet: the phone's way into the campaign's own tools ---- */
+/* #ui-root is pointer-events:none and its children opt back in; the sheet is
+   a modal, so it sits with the other modals (help is 10000) and takes taps. */
+#tools-sheet { position: fixed; inset: 0; z-index: 10000; pointer-events: auto; }
+#tools-sheet.hidden { display: none; }
+#tools-sheet .modal-scrim { z-index: 0; }
+.tools-card {
+  position: absolute;
+  z-index: 1;
+  left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, var(--wood-light), var(--wood));
+  border-top: 2px solid var(--gold-dim);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.72);
+  padding: 10px 12px 14px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+.tools-head {
+  display: flex; align-items: center; justify-content: space-between;
+  color: var(--gold-bright);
+  font-variant: small-caps; letter-spacing: 0.08em;
+  font-size: 15px; padding: 2px 2px 10px;
+}
+.tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tools-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; min-height: 76px; padding: 8px 4px;
+  color: var(--parch);
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-light));
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  text-align: center;
+}
+.tools-tile:hover, .tools-tile:active { border-color: var(--gold); filter: brightness(1.15); }
+.tools-tile.off { opacity: 0.55; }
+.tools-ico .icon { width: 22px; height: 22px; }
+.tools-label { font-size: 13px; line-height: 1.15; }
+.tools-hint { font-size: 10.5px; line-height: 1.15; color: var(--ink-soft); }
+
 /* outliner peace dove */
 .ol-peace {
   font-size: 12px;
@@ -1254,7 +1314,11 @@ button {
 }
 
 .bm-card {
-  width: 310px;
+  /* The carousel viewport narrows with the screen (100vw − 128px on phones);
+     a fixed 310px card was clipped by it, cutting the blurb off mid-sentence
+     on every handheld (SPEC §103). */
+  width: min(310px, 100%);
+  box-sizing: border-box;
   padding: 18px 20px 14px;
   text-align: left;
   cursor: pointer;
@@ -1775,8 +1839,8 @@ html, body {
     right: 0;
     bottom: 0;
     width: 100%;
-    max-height: 45vh;
-    max-height: 45dvh;
+    max-height: 52vh;
+    max-height: 52dvh;
     z-index: 40;
     border-radius: 12px 12px 0 0;
     border-left: none;
@@ -1786,9 +1850,14 @@ html, body {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
     box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.7);
   }
-  #nation-panel { max-height: 62vh; max-height: 62dvh; } /* denser panel gets more room */
+  #nation-panel { max-height: 70vh; max-height: 70dvh; } /* denser panel gets more room */
   #province-panel::before, #province-panel::after,
   #nation-panel::before, #nation-panel::after { content: none; } /* no corner accents on sheets */
+  /* a long value (three communities, "22 provinces · 183 dev") used to wrap
+     back under its own label; on a sheet the row stacks instead */
+  #province-panel .pp-row, #nation-panel .pp-row { flex-wrap: wrap; row-gap: 1px; }
+  #province-panel .pp-row .pp-v, #nation-panel .pp-row .pp-v { text-align: right; }
+  #province-panel .pp-row .pp-k, #nation-panel .pp-row .pp-k { flex: 1 0 42%; }
   #province-panel .pp-head, #nation-panel .pp-head { position: relative; padding-top: 13px; }
   #province-panel .pp-head::after, #nation-panel .pp-head::after { /* grab handle: swipe down here to close */
     content: '';
@@ -1828,11 +1897,20 @@ html, body {
     gap: 4px;
   }
 
-  /* sound button (style tag from sound.js loads after this sheet, so win on
-     specificity): tuck into the safe area under the mapmode grid */
-  #ui-root #ju-sound-btn {
-    left: 10px;
-    left: calc(10px + env(safe-area-inset-left));
+  /* The tools sheet is the only home the sound toggles have on a handheld, so
+     the button that opens it appears here too — not only on the narrowest
+     phones, where the topbar also sheds its four tool buttons (SPEC §103). */
+  .tb-more { display: inline-flex; align-items: center; justify-content: center; }
+
+  /* Sound: the floating pair (style tag from sound.js loads after this sheet,
+     so win on specificity) is drawn at z-9999 and therefore over the mapmode
+     grid and over every bottom sheet — on a phone it covered a mapmode button
+     and the first row of whatever panel was open. The tools sheet carries
+     both toggles here (SPEC §103), so the floaters stand down. */
+  #ui-root #ju-sound-btn, #ui-root #ju-music-btn { display: none; }
+
+  /* the mapmode grid can have the corner back */
+  #mapmode-bar {
     bottom: 10px;
     bottom: calc(10px + env(safe-area-inset-bottom));
   }
@@ -1883,6 +1961,9 @@ html, body {
 @media (max-width: 430px) {
   #topbar { gap: 6px; font-size: 12.5px; }
   .tb-save, .tb-buy { display: none; }
+  /* …and hand the shed buttons to the tools sheet (SPEC §103), so a phone can
+     still open the chronicle, the ledger, the primer and its own saves. */
+  .tb-more { display: inline-flex; align-items: center; justify-content: center; }
   .tb-flag-tag { display: none; } /* the flag chip alone carries the tag */
   .tb-speed { gap: 5px; }
   .tb-date { font-size: 11px; }
@@ -1913,6 +1994,16 @@ html, body {
   .ol-row { padding: 8px 6px; }
   .pp-row { padding: 6px 0; }
   .btn { padding: 10px 14px; }
+
+  /* The buttons a campaign is actually played with — diplomacy, the panels'
+     actions, the estates' levers — are wide enough for a thumb but were only
+     27px tall, which is a coin toss on a phone. Give them real height rather
+     than an invisible pad: these have visible bounds, and a pad that big would
+     overlap its neighbour in a two-column grid (SPEC §103). */
+  .pp-dip, .pp-build-btn, .np-fac-btn, .tools-tile { min-height: 40px; }
+  .pp-dip { padding: 8px 10px; }
+  /* the negotiating table's own controls, on the same footing */
+  #peace-modal .peace-card button, #peace-modal .peace-card label { min-height: 36px; }
 
   /* tooltips: hover is meaningless — ui.js shows them on a 350ms
      press-and-hold instead (adds .tt-touch); hide every hover-driven one */
@@ -2844,6 +2935,37 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   #outliner-pill { top: calc(76px + env(safe-area-inset-top)); }
   #toast-container { top: calc(76px + env(safe-area-inset-top)); }
   #outliner.open { top: calc(122px + env(safe-area-inset-top)); }
+}
+
+/* --- handheld landscape: the sheet becomes a side panel ------------------ */
+/* A bottom sheet on a 390px-tall screen leaves a strip of map. Landscape has
+   width to spare instead, so the panels stand on the left and the map keeps
+   its right half whole (SPEC §103). */
+@media (pointer: coarse) and (max-width: 900px) and (orientation: landscape) {
+  #province-panel, #nation-panel {
+    top: calc(46px + env(safe-area-inset-top));
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: min(58%, 420px);
+    max-height: none;
+    border-radius: 0 12px 0 0;
+    border-left: none;
+    border-right: 1px solid var(--gold-dim);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+  }
+  /* the handle reads as a grab bar for a sheet; a side panel has its ✕ */
+  #province-panel .pp-head::after, #nation-panel .pp-head::after { content: none; }
+  /* the map's own controls move clear of the panel */
+  #mapmode-bar { left: auto; right: 10px; right: calc(10px + env(safe-area-inset-right)); }
+  /* the grid is three 44px buttons wide (140px + its own inset): stand clear */
+  #group-toggle {
+    bottom: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    right: 170px;
+    right: calc(170px + env(safe-area-inset-right));
+  }
 }
 
 /* ------------------------------------------------- the Compendium (SPEC §71) */
