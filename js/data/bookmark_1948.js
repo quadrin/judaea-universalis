@@ -479,6 +479,10 @@ export const BOOKMARK_1948 = {
   // land changes hands — the labels keep the 15-May originals above.
   integratedNames: {
     ISR: {
+      // These modern cells reuse ancient canonical keys, but the 1948
+      // province represents the modern city/metro. Keep the era label instead
+      // of falling through to shared Yafo, Afek, or Dor.
+      'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
       'Lydda': 'Lod', 'Ascalon': 'Ashkelon', 'Azotus': 'Ashdod',
       'Beersheba': 'Be\'er Sheva', 'Oboda': 'Nitzana',
       'Kiryat Gat': 'Kiryat Gat', 'Beit Shemesh': 'Beit Shemesh',

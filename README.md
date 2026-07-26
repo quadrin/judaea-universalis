@@ -75,6 +75,10 @@ static site, the zero dependencies, or the missing build step changes.
   manpower & armies, allies/wars/truces — plus the central levers (reserves, stability, loans)
   and five national decisions (festival, rites, trade expeditions, drills, resettlement)
   for peacetime play.
+- Province names follow integration, not occupation. Every Jewish state in every
+  bookmark inherits a shared pen of more than sixty Hebrew and historic Jewish names,
+  from Yerushalayim and Tzor to Mahoza, Shushan, Saloniki and Kushta; bookmark-specific
+  choices such as Herod's foundations and 1948 Israel's Nitzana override it.
 - EU4-style peace negotiation for non-scripted wars: build a deal from occupied provinces
   (highlighted gold on the map while you negotiate), an indemnity, humiliation, or
   subjugation into a tribute-paying client kingdom — priced against your war score; losing

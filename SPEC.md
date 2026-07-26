@@ -2679,8 +2679,8 @@ provinces carry their original names until they are properly integrated.
   Beit Shemesh), Umm Rashrash (not Eilat). Israel's `integratedNames`
   supplies the Hebrew names it wrote after the war; the Hashemite pen
   gets its one longing — a fully integrated Jordanian Jerusalem is
-  written Al-Quds. Symmetric, data-driven, and empty for the ancient
-  bookmarks (zero behavior change there).
+  written Al-Quds. Symmetric and data-driven; later bookmark pens extend
+  the same rule into the ancient chapters.
 - **Save fidelity**: reconciliation re-resolves names after refreshing
   era data — earned renames survive a load, unearned ones cannot sneak
   in — and an annexed waste (SPEC §64) is no longer re-walled by the
@@ -4085,3 +4085,45 @@ rather than a fresh chapter — then still live, with orders crossing the link.
 Note for whoever runs the battery: `uitest32.mjs` holds two browser contexts up
 at once and its waits are set to 60s for that reason — the structural waits are
 generous on purpose, not hiding a slow path.
+
+## 94. One Jewish map across all seven bookmarks
+
+The bookmark pens in §66 grew one town at a time and repeated the same dozen
+Hebrew names in seven files. They also stopped at the old core: a Hasmonean
+Damascus, Adiabene in Egypt, or Israel in Babylonia could integrate the land
+without ever putting its own names on the map. The EU4 promise is larger than
+that — a culture carries a map with it.
+
+- **One inherited pen** (`js/data/integrated_names.js`):
+  `JEWISH_INTEGRATED_NAMES` carries more than sixty attested Hebrew names and
+  established Jewish exonyms. It covers the dense Judaean and Galilean map,
+  but deliberately keeps going: Tzor, Tzidon, Geval, Arvad, Damesek and Aram
+  Tzova in Syria; Sin, Beit Honio, Nof, No-Amon and Seveneh in Egypt; Netzivin,
+  Mahoza, Bavel, Meshan, Ahmeta, Shushan, Ginzak, Yahudiya, Ashur and Erech in
+  the east; Saloniki and Kushta on the diaspora's Mediterranean road.
+- **Religion, not a tag whitelist** (`resolveDisplayName`, military.js): any
+  living tag whose current state religion is Judaism inherits that pen. That
+  includes every Judaean identity, modern Israel, the Kingdom of Israel
+  formable, and Adiabene; a future Jewish bookmark or a realm that changes
+  religion needs no new code and no copied table.
+- **Local history still wins**: a bookmark's `integratedNames[tag]` is checked
+  first. Herod therefore writes his actual foundations, and 1948 Israel writes
+  Nitzana rather than the shared ancient Avdat. Modern cells that reuse ancient
+  canonical keys also keep Tel Aviv-Jaffa, Petah Tikva and Haifa rather than
+  collapsing back to Yafo, Afek and Dor. The shared table is a fallback, not a
+  flattening of the seven eras.
+- **Ownership is still insufficient**: every name waits on exactly the §66
+  threshold — full integration or a completed settlement into the owner's
+  culture — and reverts to the bookmark's era name on a change of hands.
+- **The list is curated, not generated**: no automatic translation or
+  transliteration routine invents names for unattested places. The source spine
+  is the Hebrew Bible (Joshua 12–13, Ezekiel 27 and 30, Ezra 6), the Academy of
+  the Hebrew Language's place-name/transliteration guidance, Encyclopaedia
+  Iranica for Jewish Babylonia, Oxford's account of the Temple of Onias, and
+  National Library of Israel collection notes for Kushta and Saloniki.
+- **Regression contract** (`smoke44.mjs`): all shared keys are real canonical
+  provinces, the table stays above sixty entries and reaches all five outside
+  regions, every bookmark inherits Damesek through an active Jewish state,
+  1948's Nitzana beats shared Avdat while its three modern metro overrides
+  survive, an unintegrated conquest stays in the era's language, settlement
+  earns the name, and a non-Jewish state does not.

@@ -5,6 +5,7 @@ import {
   unlockedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
+import { JEWISH_INTEGRATED_NAMES } from '../data/integrated_names.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
@@ -1182,11 +1183,13 @@ export function changeControllerCore(ctx, p, tag) {
   ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
 }
 // The maps speak the owner's tongue only once the land is truly theirs
-// (SPEC §66): a bookmark's `integratedNames[tag]` gives the name a tag
-// writes on a province — but it applies only after the province is properly
-// integrated (integration at 1) or peopled by the owner's own culture
-// (a completed settlement, SPEC §64). Until then — and again the moment it
-// changes hands — the province carries the era's original name.
+// (SPEC §66, §94): a bookmark's `integratedNames[tag]` gives the name a tag
+// writes on a province. Jewish states also inherit the shared Jewish pen,
+// unless the bookmark's local table overrides it. Either pen applies only
+// after the province is properly integrated (integration at 1) or peopled by
+// the owner's own culture (a completed settlement, SPEC §64). Until then —
+// and again the moment it changes hands — the province carries the era's
+// original name.
 export function resolveDisplayName(ctx, p) {
   if (!p || !p.canon) return p && p.name;
   const bm = ctx.bookmark;
@@ -1200,7 +1203,12 @@ export function resolveDisplayName(ctx, p) {
   let table = tables[p.owner];
   for (let hop = 0; typeof table === 'string' && hop < 4; hop++) table = tables[table];
   if (typeof table === 'string') table = null;
-  const renamed = table && table[p.canon];
+  // Local pens carry period-specific judgment (Herod's foundations, 1948
+  // Nitzana) and therefore win. Religion supplies the cross-bookmark fallback:
+  // Adiabene and any future/formable Jewish realm receive it without another
+  // copied table or a hard-coded tag list.
+  const shared = t && t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES : null;
+  const renamed = (table && table[p.canon]) || (shared && shared[p.canon]);
   const theirs = !!t && (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture));
   const next = (renamed && theirs) ? renamed : era;
   if (p.name !== next) {

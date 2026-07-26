@@ -1,15 +1,12 @@
-// Headless regression — the victors' pens across every era (SPEC §66, §68).
-// integratedNames went from a 1948-only table to a per-bookmark one; this
-// guards the data contract for all of them: every pen belongs to a tag that
-// exists in its bookmark, every entry keys a real canonical province, and
-// every entry actually changes the label (a rename that reproduces the era
-// name would be dead weight the resolver can never surface). A pen may also
-// be a string alias (SPEC §68) — a formed nation writing with its
-// predecessor's pen — which must resolve to a real table in the same book
-// and belong to a tag DEFINES knows.
+// Headless regression — the victors' pens across every era (SPEC §66, §68,
+// §94). Bookmark pens carry local, period-specific choices; Jewish states
+// also inherit one shared table, so Adiabene, formables, and future bookmarks
+// do not need copies of the same sixty names. This guards both data contracts.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { DEFINES } = await import(R + '/js/data/defines.js');
+const { JEWISH_INTEGRATED_NAMES } = await import(R + '/js/data/integrated_names.js');
+const { resolveDisplayName } = await import(R + '/js/sim/military.js');
 
 const BOOKS = [
   ['bookmark_167bce.js', 'BOOKMARK_167'],
@@ -28,6 +25,26 @@ const ok = (cond, msg) => {
 };
 
 const canon = new Set(MAP_DATA.provinces.map((p) => p.name));
+
+console.log('== the shared Jewish pen ==');
+{
+  const entries = Object.entries(JEWISH_INTEGRATED_NAMES);
+  ok(entries.length >= 60, 'covers at least sixty canonical provinces');
+  for (const [prov, name] of entries) {
+    ok(canon.has(prov), 'shared pen keys a real canonical province: ' + prov);
+    ok(typeof name === 'string' && name.length > 0,
+      'shared pen writes a non-empty name on ' + prov);
+    ok(name !== prov, 'shared pen changes the canonical label of ' + prov);
+  }
+  const beyondIsrael = [
+    'Tyre', 'Sidon', 'Byblos', 'Aradus', 'Damascus', 'Beroea', 'Palmyra',
+    'Alexandria', 'Pelusium', 'Leontopolis', 'Memphis', 'Thebes', 'Syene',
+    'Nisibis', 'Seleucia-Ctesiphon', 'Babylon', 'Charax', 'Ecbatana', 'Susa',
+    'Gazaca', 'Gabae', 'Assur', 'Uruk', 'Thessalonica', 'Byzantion',
+  ];
+  ok(beyondIsrael.every((prov) => JEWISH_INTEGRATED_NAMES[prov]),
+    'the pen reaches Syria, Egypt, Mesopotamia, Persia, and the Mediterranean diaspora');
+}
 
 for (const [file, key] of BOOKS) {
   const bm = (await import(R + '/js/data/' + file))[key];
@@ -59,10 +76,104 @@ for (const [file, key] of BOOKS) {
       ok(typeof name === 'string' && name.length > 0,
         tag + ' writes a non-empty name on ' + prov);
       const shown = Object.prototype.hasOwnProperty.call(era, prov) ? era[prov] : prov;
-      ok(name !== shown, tag + ' actually changes the label of ' + prov
-        + ' (era shows "' + shown + '")');
+      // A Jewish bookmark may intentionally repeat its era label to block an
+      // older shared name where the same canonical cell now represents a
+      // different modern city (Joppa's cell is Tel Aviv-Jaffa, not just Yafo).
+      const tagDef = DEFINES.TAGS[tag];
+      const blocksShared = tagDef && tagDef.religion === 'judaism'
+        && JEWISH_INTEGRATED_NAMES[prov]
+        && name === shown
+        && name !== JEWISH_INTEGRATED_NAMES[prov];
+      ok(name !== shown || blocksShared, tag + ' changes the label or deliberately blocks'
+        + ' an older shared name on ' + prov + ' (era shows "' + shown + '")');
     }
   }
+
+  // Every era has at least one active Jewish state. The same integrated
+  // Damascus must therefore become Damesek without a copied bookmark entry.
+  const jewishTag = (bm.activeTags || []).find((tag) => {
+    const d = DEFINES.TAGS[tag];
+    return d && d.religion === 'judaism';
+  });
+  ok(!!jewishTag, bm.id + ' has an active Jewish state for the shared pen');
+  if (jewishTag) {
+    const era = Object.prototype.hasOwnProperty.call(bm.provinceNames || {}, 'Damascus')
+      ? bm.provinceNames.Damascus : 'Damascus';
+    const d = DEFINES.TAGS[jewishTag];
+    const p = {
+      id: 1, canon: 'Damascus', name: era, owner: jewishTag,
+      integration: 1, culture: 'aramean',
+    };
+    resolveDisplayName({
+      bookmark: bm,
+      game: {
+        playerTag: '__none__',
+        tags: { [jewishTag]: { religion: d.religion, culture: d.culture } },
+      },
+      bus: { emit() {} },
+    }, p);
+    ok(p.name === 'Damesek',
+      bm.id + ' inherits Damesek through its Jewish state (' + jewishTag + ')');
+  }
+}
+
+console.log('== precedence and eligibility ==');
+{
+  const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
+  const ctx = {
+    bookmark: BOOKMARK_1948,
+    game: {
+      playerTag: '__none__',
+      tags: {
+        ISR: { religion: 'judaism', culture: 'israeli' },
+        EGY: { religion: 'islam', culture: 'arab_modern' },
+      },
+    },
+    bus: { emit() {} },
+  };
+  const oboda = {
+    id: 1, canon: 'Oboda', name: 'al-Auja', owner: 'ISR',
+    integration: 1, culture: 'arab_modern',
+  };
+  resolveDisplayName(ctx, oboda);
+  ok(oboda.name === 'Nitzana',
+    'the 1948 local pen overrides the shared Avdat');
+
+  for (const [canonName, eraName] of [
+    ['Joppa', 'Tel Aviv-Jaffa'], ['Antipatris', 'Petah Tikva'], ['Dora', 'Haifa'],
+  ]) {
+    const modern = {
+      id: 1, canon: canonName, name: eraName, owner: 'ISR',
+      integration: 1, culture: 'israeli',
+    };
+    resolveDisplayName(ctx, modern);
+    ok(modern.name === eraName,
+      eraName + ' is not replaced by the older shared site name');
+  }
+
+  const unintegrated = {
+    id: 2, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
+    integration: 0.9, culture: 'arab_modern',
+  };
+  resolveDisplayName(ctx, unintegrated);
+  ok(unintegrated.name === 'Damascus',
+    'the shared pen still waits for integration or settlement');
+
+  const settled = {
+    id: 3, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
+    integration: 0, culture: 'israeli',
+  };
+  resolveDisplayName(ctx, settled);
+  ok(settled.name === 'Damesek',
+    'a province peopled by the owner earns the shared name without integration');
+
+  const egyptian = {
+    id: 4, canon: 'Damascus', name: 'Damascus', owner: 'EGY',
+    integration: 1, culture: 'arab_modern',
+  };
+  resolveDisplayName(ctx, egyptian);
+  ok(egyptian.name === 'Damascus',
+    'a non-Jewish state does not inherit the Jewish pen');
 }
 
 if (failures) {
