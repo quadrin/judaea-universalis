@@ -1,7 +1,7 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
-import { unlockedGen, genName, navalGenName } from '../data/tech.js';
+import { unlockedGen, cappedGen, genName, navalGenName } from '../data/tech.js';
 import { communityLabel } from '../sim/population.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
@@ -160,6 +160,8 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
           <button class="pp-dip" data-dip="marry" data-ref="dipMarry">Royal Marriage</button>
           <button class="pp-dip" data-dip="recognize" data-ref="dipRecognize">Recognize</button>
+          <button class="pp-dip" data-dip="embargo" data-ref="dipEmbargo">Close Our Markets</button>
+          <button class="pp-dip" data-dip="unembargo" data-ref="dipUnembargo">Reopen Markets</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
           <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
@@ -190,6 +192,8 @@ const RISING_LABELS = {
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
         rival: b.classList.contains('pp-dip-on') ? 'renounceRival' : 'declareRival',
         recognize: b.classList.contains('pp-dip-on') ? 'renounceRecognition' : 'recognizeState',
+        embargo: 'embargoState',
+        unembargo: 'liftEmbargo',
         protect: 'offerClientship',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
@@ -463,7 +467,7 @@ const RISING_LABELS = {
     if (coastal && myPort && hasShipyard) {
       // Hulls speak the age too (SPEC §31): Penteconters through Destroyers.
       const t = g.tags[g.playerTag];
-      const shipPattern = navalGenName(unlockedGen(((t && t.tech && t.tech.mar) | 0)));
+      const shipPattern = navalGenName(cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark));
       const months = (base.unitRecruitMonths && base.unitRecruitMonths.ship) || 6;
       refs.buildShip.textContent = `Lay down ${shipPattern} — 30t · ${months}m`;
       refs.buildShip.dataset.tt = `Lay down a hull of ${shipPattern}: 30 talents and ${months} months in this province's unit queue. Upkeep is 0.5 a month after launch; carries 1,000 men. Ships gather into the fleet riding off this port; older fleets can be re-rigged from the outliner.`;
@@ -803,6 +807,35 @@ const RISING_LABELS = {
           + (r.endsWar ? '\nThe war between us ends where the lines stand.' : ''));
       }
     }
+    // Embargo and blockade (SPEC §100): hidden in the ages that do not use it.
+    // One button escalates (close the markets, then close the coast); the
+    // second appears only while something of ours is standing against them.
+    const em = d.embargo;
+    refs.dipEmbargo.classList.toggle('hidden', !em || !em.offered);
+    refs.dipUnembargo.classList.toggle('hidden', !em || !em.active);
+    if (em && em.offered) {
+      if (!em.active) {
+        setText(refs.dipEmbargo, 'Close Our Markets');
+        setDipBtn(refs.dipEmbargo, true, '',
+          'Close our markets to them: their trade income falls by 30% while it stands, '
+          + 'and their court\'s opinion of us falls 40. Reversible at any time.');
+      } else if (!em.blockade) {
+        setText(refs.dipEmbargo, 'Blockade Their Coast');
+        setDipBtn(refs.dipEmbargo, em.canBlockade, em.whyBlockade,
+          'Send the fleet: every port they hold earns a third of its ordinary revenue — '
+          + 'customs, markets and shipyards alike — and their trade is halved again on top '
+          + 'of the embargo. It takes hulls at sea, and it is remembered.');
+      } else {
+        setText(refs.dipEmbargo, 'Blockaded');
+        refs.dipEmbargo.classList.add('disabled');
+        refs.dipEmbargo.dataset.tt = 'Our squadrons are across their approaches: their harbors '
+          + 'earn a third of what they should, and their trade is halved again.';
+      }
+      if (em.active) {
+        refs.dipUnembargo.classList.remove('disabled');
+        refs.dipUnembargo.dataset.tt = 'Lift the ban (and the blockade with it): +20 opinion.';
+      }
+    }
     // No alliance, nothing to break: hide rather than explain.
     refs.dipBreak.classList.toggle('hidden', !d.canBreak);
     if (d.canBreak) {
@@ -931,7 +964,7 @@ const RISING_LABELS = {
     // The button speaks the age (SPEC §29): a 1948 barracks raises Rifle
     // Brigades and Armored Corps, not "infantry" and "cavalry".
     const t = g.tags && g.tags[g.playerTag];
-    const gen = unlockedGen((t && t.tech && t.tech.mar) | 0);
+    const gen = cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
     const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
     const months = (base.unitRecruitMonths && base.unitRecruitMonths[type]) || (type === 'cav' ? 3 : 2);

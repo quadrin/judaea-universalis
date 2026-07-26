@@ -484,7 +484,13 @@ const PROVINCES = [
     { impassable: true }),
   P('Sinai Interior', 34.05, 29.85, 1.80, 'WASTE', 'wasteland', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { impassable: true }),
-  P('Eastern Desert', 32.80, 27.50, 1.80, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
+  // Egypt's Eastern Desert is the ground between the Nile and the Red Sea —
+  // NOT the Sinai peninsula and not north-west Arabia. Its old weight let the
+  // cell jump both gulfs and swallow the peninsula's tip and the Tabuk
+  // approaches; the envelope below (provinceRasterRegions) holds it to its own
+  // side of the water, and the lighter weight keeps it from fighting Thebes
+  // and Myos Hormos for the coast.
+  P('Eastern Desert', 32.80, 27.20, 1.20, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { impassable: true }),
   P('Libyan Desert', 29.80, 28.50, 2.00, 'WASTE', 'wasteland', 'salt', 'egyptian', 'egyptian', 1, 1, 1, 0,
     { impassable: true }),
@@ -706,6 +712,14 @@ export const MAP_DATA = {
   // weighted cell leaking into mainland Egypt or Arabia. This envelope follows
   // the Mediterranean coast, the 1906 Rafah–Taba line, and both gulf shores.
   provinceRasterRegions: {
+    // Egypt's Eastern Desert: the Nile's east bank to the Red Sea shore, north
+    // to the head of the Gulf of Suez and south toward the Berenice road. The
+    // ring stays west of both gulfs, so the peninsula belongs to Sinai and the
+    // Tabuk side of the Gulf of Aqaba belongs to Arabia.
+    'Eastern Desert': [
+      [31.25, 30.15], [32.55, 30.00], [34.20, 27.70],
+      [35.05, 24.60], [32.80, 24.10], [31.20, 26.90],
+    ],
     'Sinai Interior': [
       [32.53, 31.08], [34.28, 31.36], [34.99, 29.55],
       [34.25, 27.70], [32.52, 29.94],

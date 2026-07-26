@@ -7,7 +7,7 @@ import {
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
-  liveGrudge, grudgeCeiling, grudgeCeilingRaw,
+  liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
@@ -23,7 +23,7 @@ import {
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, genName } from '../data/tech.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
@@ -34,7 +34,9 @@ import {
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
-import { rulerDies } from './realm.js';
+import { rulerDies, missionsFor } from './realm.js';
+import { crisisReport } from './crisis.js';
+import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
@@ -161,6 +163,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     rivals: {}, retiredRivalries: {},
     recognitions: {}, // states that have recognized one another (SPEC §96)
+    embargoes: {},    // closed markets and blockades (SPEC §100)
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
@@ -723,7 +726,9 @@ export function gameActions(ctx) {
         ? 'Win: the verdict is ours. The Chronicle (C) records it; the campaign sails on.'
         : 'Lose: the verdict went against us. The Chronicle (C) records it; the campaign sails on.'];
     }
-    const list = ctx.bookmark && ctx.bookmark.objectives && ctx.bookmark.objectives[g.playerTag];
+    // A formed nation keeps the age's objectives (SPEC §102) — proclaiming a
+    // kingdom does not empty the panel that says what the era asks of you.
+    const list = contentForTag(ctx, ctx.bookmark && ctx.bookmark.objectives, g.playerTag);
     return Array.isArray(list) && list.length ? list.slice() : null;
   };
 
@@ -836,6 +841,19 @@ export function gameActions(ctx) {
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
       }
+      // Embargo and blockade (SPEC §100): the pressure short of war, in the
+      // ages that use it.
+      let embargo = null;
+      try {
+        const ei = embargoInfo(ctx, me, tag);
+        if (ei.offered || ei.active) {
+          embargo = {
+            offered: ei.offered, active: ei.active, blockade: ei.blockade,
+            canBlockade: ei.canBlockade, why: ei.why, whyBlockade: ei.whyBlockade,
+            againstUs: embargoesOn(ctx, me).some((e) => e.from === tag),
+          };
+        }
+      } catch (e) { embargo = null; }
       // Recognition (SPEC §96): only surfaced in the ages that exchange it.
       let recognition = null;
       try {
@@ -891,6 +909,7 @@ export function gameActions(ctx) {
         } : null,
         marriage,
         recognition,
+        embargo,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -958,11 +977,14 @@ export function gameActions(ctx) {
     const base = num(ctx.bookmark && ctx.bookmark.techBase, 3) | 0;
     const months = monthsBetween((ctx.bookmark && ctx.bookmark.startDate) || g.date, g.date);
     const eraBase = eraBaseline(base, months);
+    // The age's own ceiling (SPEC §99): the ladder is the same in every era,
+    // but a century can only climb so far up it.
+    const ceiling = techCeiling(ctx.bookmark);
     const rows = Object.keys(TECH_CATEGORIES).map((key) => {
       const cat = TECH_CATEGORIES[key];
       const level = num(t.tech[key]) | 0;
       const next = level + 1;
-      const atMax = next > TECH_MAX;
+      const atMax = next > Math.min(TECH_MAX, ceiling);
       const mult = aheadMult(next, eraBase);
       const cost = atMax ? 0 : Math.round(techCost(next) * mult);
       const have = num(t.points[cat.point]);
@@ -971,16 +993,19 @@ export function gameActions(ctx) {
         level, cost, eraBase,
         ahead: !atMax && mult > 1,
         canBuy: !atMax && have >= cost,
-        whyNot: atMax ? 'The ladder ends here — for now.'
+        whyNot: atMax ? (ceiling < TECH_MAX
+          ? 'The age itself stops here: nothing further was known in this century.'
+          : 'The ladder ends here — for now.')
           : have < cost ? `Needs ${cost} ${cat.point === 'mar' ? 'martial' : cat.point === 'gov' ? 'government' : 'influence'} points`
             + (mult > 1 ? ' (ahead of the age: +' + Math.round((mult - 1) * 100) + '%)' : '') + '.'
             : (mult > 1 ? 'Ahead of the age: +' + Math.round((mult - 1) * 100) + '% cost.' : ''),
       };
     });
-    const gi = unlockedGen(num(t.tech.mar) | 0);
-    const nextGen = UNIT_GENS[gi + 1] || null;
+    const gi = cappedGen(num(t.tech.mar) | 0, ctx.bookmark);
+    // A pattern the age cannot reach is not "next" — it is not on the map.
+    const nextGen = (UNIT_GENS[gi + 1] && UNIT_GENS[gi + 1].at <= ceiling) ? UNIT_GENS[gi + 1] : null;
     return {
-      rows, eraBase,
+      rows, eraBase, ceiling,
       unit: {
         gen: gi, inf: genName(gi, 'inf'), cav: genName(gi, 'cav'),
         nextAt: nextGen ? nextGen.at : null,
@@ -1577,6 +1602,33 @@ export function gameActions(ctx) {
         }
       } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
     },
+    // Embargo and blockade (SPEC §100).
+    embargoState(tag) {
+      try {
+        const info = embargoInfo(ctx, g.playerTag, tag);
+        if (!info.offered) { say('Embargo', info.why || 'This age does not close its markets by decree.', 'bad'); return; }
+        if (info.active) {
+          if (!info.canBlockade) { say('Blockade', info.whyBlockade || 'Not possible.', 'bad'); return; }
+          const res = declareEmbargoCore(ctx, g.playerTag, tag, { blockade: true });
+          if (!res.ok) { say('Blockade', res.why || 'Not possible.', 'bad'); return; }
+          say('Blockade declared', 'Our squadrons close the approaches to ' + res.name
+            + ': their harbors earn a third of what they did, and their trade is halved again.', 'good');
+          return;
+        }
+        const res = declareEmbargoCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Embargo', res.why || 'Not possible.', 'bad'); return; }
+        say('Markets closed', 'Our markets are shut to ' + res.name
+          + '. Their trade suffers while it stands — and their court will not forget who signed it.', 'good');
+      } catch (e) { warnOnce('embargoState', 'embargoState failed', e); }
+    },
+    liftEmbargo(tag) {
+      try {
+        const res = liftEmbargoCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Embargo', res.why || 'There is nothing to lift.', 'bad'); return; }
+        say('Markets reopened', 'The ban on trade with ' + res.name + ' is lifted (+20 opinion).', 'info');
+      } catch (e) { warnOnce('liftEmbargo', 'liftEmbargo failed', e); }
+    },
+
     // Recognition (SPEC §96): the peace on offer where an alliance is not.
     // Their court weighs it the way it weighs an alliance — on what it thinks
     // of us — but the bar is far lower, because recognition asks for nothing
@@ -2099,7 +2151,7 @@ export function gameActions(ctx) {
         if (!t || !cat || !t.tech) return;
         const info = techInfo();
         const row = info && info.rows.find((r) => r.key === catKey);
-        if (!row || row.level >= TECH_MAX) return;
+        if (!row || row.level >= Math.min(TECH_MAX, techCeiling(ctx.bookmark))) return;
         if (!row.canBuy) { say('The age is not ready', row.whyNot || 'Not enough points.', 'bad'); return; }
         const before = tagGen(ctx, g.playerTag);
         t.points[cat.point] = num(t.points[cat.point]) - row.cost;
@@ -2489,11 +2541,16 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
     },
 
+    // ---- what is brewing (nation panel, SPEC §98) ----------------------------
+    getCrises() {
+      try { return crisisReport(ctx, g.playerTag); } catch (e) { warnOnce('getCrises', 'getCrises failed', e); return []; }
+    },
+
     // ---- missions (nation panel) ---------------------------------------------
     getMissions() {
       try {
         if (g.result) return [];
-        const list = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[g.playerTag];
+        const list = missionsFor(ctx, g.playerTag);
         const t = g.tags[g.playerTag];
         if (!Array.isArray(list) || !t) return [];
         const idx = Math.max(0, num(t.missionIdx, 0) | 0);
@@ -2575,6 +2632,13 @@ export function gameActions(ctx) {
           if (Number.isFinite(b.legitimacy)) nt.legitimacy = clamp(num(nt.legitimacy) + b.legitimacy, 0, 100);
           if (Number.isFinite(b.stability)) nt.stability = clamp(num(nt.stability) + b.stability, -3, 3);
           if (b.modifier) simHelpers.addTagModifier(ctx, f.to, b.modifier);
+          // What the crown is actually worth (SPEC §102): coin in the treasury,
+          // men on the rolls, points in the ministries, a second permanent
+          // modifier where the crown carries one — and, where the new identity
+          // has a chain of its own, a fresh set of missions to work through.
+          if (b.grant) simHelpers.adjust(ctx, f.to, b.grant);
+          if (b.modifier2) simHelpers.addTagModifier(ctx, f.to, b.modifier2);
+          if (Array.isArray(f.missions) && f.missions.length) nt.missionIdx = 0;
           ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
           ctx.bus.emit('provinceOwner', {}); // the map wears the new color
           say('A new banner', oldName + ' is no more: ' + (nt.name || f.to) + ' rises. The chronicle will remember this day.', 'good');
@@ -2809,6 +2873,7 @@ export function reviveGame(saved) {
   if (!saved.rivals || typeof saved.rivals !== 'object') saved.rivals = {};
   if (!saved.retiredRivalries || typeof saved.retiredRivalries !== 'object') saved.retiredRivalries = {};
   if (!saved.recognitions || typeof saved.recognitions !== 'object') saved.recognitions = {}; // pre-§96 saves
+  if (!saved.embargoes || typeof saved.embargoes !== 'object') saved.embargoes = {}; // pre-§100 saves
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null };

@@ -5,7 +5,7 @@
 // carries 1000 men. Armies aboard (a.aboard=true) are out of land play.
 
 import { num, clamp, isHostile, sameSide, armiesInProv, resolveTagMult, rollGeneral, hasBuilding, opinionOf, devTotal } from './military.js';
-import { unlockedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
+import { unlockedGen, cappedGen, genMult, navalGenName, MODERNIZE_COST_PER_SHIP_PER_GEN } from '../data/tech.js';
 import { queueUnitRecruitment } from './recruitment.js';
 
 const SHIP_COST = 30;        // talents to lay down a hull
@@ -455,7 +455,7 @@ export function merchantVoyagesDaily(ctx) {
 // ---- eras at sea & the men who command them (SPEC §31) ----------------------
 export function navalGen(ctx, tag) {
   const t = ctx.game.tags[tag];
-  return unlockedGen(num(t && t.tech && t.tech.mar, 0));
+  return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
 }
 export function fleetPowerOf(ctx, fleet) {
   return resolveTagMult(ctx, fleet.tag, 'navalMult') * genMult(num(fleet.gen, 0));
