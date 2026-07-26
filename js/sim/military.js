@@ -1183,13 +1183,24 @@ export function changeControllerCore(ctx, p, tag) {
   ctx.bus.emit('provinceController', { provId: p.id, from, to: tag });
 }
 // The maps speak the owner's tongue only once the land is truly theirs
-// (SPEC §66, §94): a bookmark's `integratedNames[tag]` gives the name a tag
-// writes on a province. Jewish states also inherit the shared Jewish pen,
-// unless the bookmark's local table overrides it. Either pen applies only
-// after the province is properly integrated (integration at 1) or peopled by
-// the owner's own culture (a completed settlement, SPEC §64). Until then —
-// and again the moment it changes hands — the province carries the era's
-// original name.
+// (SPEC §66, §94, §95): a bookmark's `integratedNames[tag]` gives the name a
+// tag writes on a province. Jewish states also inherit the shared Jewish pen,
+// unless the bookmark's local table overrides it. A pen applies only after the
+// province is properly integrated (integration at 1) or peopled by the owner's
+// own culture (a completed settlement, SPEC §64) — and a Jewish pen asks for
+// both at once: full integration AND a living community of the owner's own
+// faith and culture in the province (SPEC §95). Until then — and again the
+// moment it changes hands — the province carries the era's original name.
+// A community of the owner's own faith and culture actually lives here.
+// Provinces without a makeup (old saves, thin frontier cells) answer from the
+// province's own overlay, which is exactly what the makeup would say.
+function ownersCommunity(p, t) {
+  if (!t || !t.religion || !t.culture) return false;
+  if (Array.isArray(p.pop) && p.pop.length) {
+    return p.pop.some((e) => e && e.r === t.religion && e.c === t.culture && num(e.n) > 0);
+  }
+  return p.religion === t.religion && p.culture === t.culture;
+}
 export function resolveDisplayName(ctx, p) {
   if (!p || !p.canon) return p && p.name;
   const bm = ctx.bookmark;
@@ -1209,7 +1220,13 @@ export function resolveDisplayName(ctx, p) {
   // copied table or a hard-coded tag list.
   const shared = t && t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES : null;
   const renamed = (table && table[p.canon]) || (shared && shared[p.canon]);
-  const theirs = !!t && (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture));
+  // A Hebrew name on a town where no Jew lives is a claim, not a signpost:
+  // the Jewish pen (whatever table supplies the word) waits for both halves,
+  // the schoolhouse and the community. Other pens keep the older threshold.
+  const jewish = !!t && t.religion === 'judaism';
+  const theirs = !!t && (jewish
+    ? (num(p.integration) >= 1 && ownersCommunity(p, t))
+    : (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture)));
   const next = (renamed && theirs) ? renamed : era;
   if (p.name !== next) {
     const was = p.name;
@@ -2076,6 +2093,12 @@ export function declareWar(ctx, atk, def, name, cb) {
   const cbType = typeof cb === 'string' ? cb : cb && cb.type;
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
   if (truceActive(ctx, atk, def)) return null; // the ink on the treaty is still wet
+  // A recognized state is a state you are at peace with (SPEC §96): the
+  // recognition must be renounced in the open before the guns can be aimed.
+  if (recognized(ctx, atk, def)) {
+    warnOnce('dw-recog:' + atk + ':' + def, 'declareWar refused: the two states recognize each other', atk, def);
+    return null;
+  }
   // A crown and its client do not go to war while the bond stands (SPEC §75):
   // the yoke is the settlement of that quarrel. The one legal road is the
   // independence rising (vassalIndependence), which severs the bond FIRST and
@@ -2089,8 +2112,17 @@ export function declareWar(ctx, atk, def, name, cb) {
   if (existing) return existing;
   const attackers = [atk];
   const defenders = [def];
-  const join = (side, tag) => {
-    if (g.tags[tag] && g.tags[tag].alive && attackers.indexOf(tag) < 0 && defenders.indexOf(tag) < 0) side.push(tag);
+  // A recognized peace is not a promise you can be dragged out of (SPEC §96):
+  // a court that has recognized the enemy principal stays out of this war
+  // rather than joining it as somebody's ally, league member or guarantor. The
+  // bond of fealty is the one thing that still overrides it — a client is
+  // marched by its overlord, and that quarrel belongs to §75, not here.
+  const join = (side, tag, bound) => {
+    if (!g.tags[tag] || !g.tags[tag].alive) return;
+    if (attackers.indexOf(tag) >= 0 || defenders.indexOf(tag) >= 0) return;
+    const foe = side === attackers ? def : atk;
+    if (!bound && recognized(ctx, tag, foe)) return;
+    side.push(tag);
   };
   // A client's loyalty is not a formality (SPEC §61): a court that thinks
   // ill of its overlord (below loyalOpinion) stays home from the overlord's
@@ -2106,7 +2138,7 @@ export function declareWar(ctx, atk, def, name, cb) {
   for (const al of A.allies || []) {
     if (al !== def && (D.allies || []).indexOf(al) < 0) join(attackers, al);
   }
-  for (const v of vassalsOf(ctx, atk)) if (loyal(v, atk)) join(attackers, v);
+  for (const v of vassalsOf(ctx, atk)) if (loyal(v, atk)) join(attackers, v, true);
   // A punitive league (SPEC §21 extended): when the coalition itself declares
   // the war, every member without a standing truce marches on the attacker's
   // side — the world's answer to a conqueror, not one rival's.
@@ -2121,11 +2153,11 @@ export function declareWar(ctx, atk, def, name, cb) {
   // Attacking a client kingdom is attacking its overlord — the whole house answers.
   const lord = D.overlord && g.tags[D.overlord] && g.tags[D.overlord].alive ? D.overlord : null;
   if (lord) {
-    join(defenders, lord);
-    for (const v of vassalsOf(ctx, lord)) if (v === def || loyal(v, lord)) join(defenders, v);
+    join(defenders, lord, true);
+    for (const v of vassalsOf(ctx, lord)) if (v === def || loyal(v, lord)) join(defenders, v, true);
   }
   for (const al of D.allies || []) join(defenders, al);
-  for (const v of vassalsOf(ctx, def)) if (loyal(v, def)) join(defenders, v);
+  for (const v of vassalsOf(ctx, def)) if (loyal(v, def)) join(defenders, v, true);
   // The coalition answers: realms leagued against an infamous conqueror
   // defend anyone he attacks (anti-snowball, SPEC §21).
   // Guarantors honor their word (SPEC §24): any court that guaranteed the
@@ -2224,6 +2256,17 @@ export const DIPLO = {
   giftCost: 75, giftGain: 20, giftCdMonths: 6,
   allyMinOpinion: 60, allyAcceptOpinion: 110, allyRefuseOpinion: -5, allyCdMonths: 6,
   breakOpinion: -50,
+  // Recognition (SPEC §96): the peace available where an alliance is not.
+  // Cheaper in goodwill than an alliance and far dearer in politics — it is
+  // signed across a grudge, not on top of a friendship.
+  recognizeCost: 100,            // influence points to draft and sell it at home
+  recognizeMinOpinion: -40,      // they must at least receive the letters
+  recognizeAcceptOpinion: 10,    // ...and think this well of us to sign
+  recognizeRefuseOpinion: -5,    // the sting of being asked and saying no
+  recognizeCdMonths: 24,         // ...and how long before they will hear it again
+  recognizeOpinionFloor: 40,     // signing lifts both courts to at least this
+  recognizeBreakOpinion: -100,   // tearing it up is not forgotten
+  recognizeBreakLegitimacy: -15, // ...and the country notices at home too
   // Royal marriage (SPEC §62): dynasties bind, and children follow. Both
   // courts must be monarchies; the mechanic is era-gated off for 1948.
   marryCost: 25,          // influence points to arrange the match
@@ -2406,6 +2449,131 @@ export function reconcileRivalryCore(ctx, a, b) {
   if (g.tags[b].grudges) delete g.tags[b].grudges[a];
   return true;
 }
+// ── Recognition, and the alliance that will never be signed (SPEC §96) ──────
+// Some enmities do not end in an alliance. In the modern bookmark no Arab
+// capital will put its name under a military pact with Israel — and the thing
+// that actually happened instead was recognition: an exchange of letters that
+// converts an armistice into a peace. Recognition is mutual, permanent while
+// it stands, and pair-specific: it does not oblige either state to fight for
+// the other, and it does not make them friends. It only makes them at peace.
+export function recognitionKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+export function recognized(ctx, a, b) {
+  const g = ctx && ctx.game;
+  return !!(g && g.recognitions && g.recognitions[recognitionKey(a, b)]);
+}
+// The bookmark's own bar: `diplomacy.noAlliance` is a list of blocs whose
+// members may never ally ACROSS the bloc line ({ between, and, why }).
+export function allianceBarred(ctx, a, b) {
+  const rules = ctx && ctx.bookmark && ctx.bookmark.diplomacy
+    && Array.isArray(ctx.bookmark.diplomacy.noAlliance)
+    ? ctx.bookmark.diplomacy.noAlliance : null;
+  if (!rules || a === b) return '';
+  for (const rule of rules) {
+    if (!rule || !Array.isArray(rule.between) || !Array.isArray(rule.and)) continue;
+    const across = (x, y) => rule.between.indexOf(x) >= 0 && rule.and.indexOf(y) >= 0;
+    if (across(a, b) || across(b, a)) return rule.why || 'No alliance is possible between these states.';
+  }
+  return '';
+}
+// The cooldown key uses the same '<me>><them>:<kind>' shape as the panel's.
+export function recognizeCd(me, them) { return me + '>' + them + ':recognize'; }
+function recognitionOn(ctx) {
+  const d = ctx && ctx.bookmark && ctx.bookmark.diplomacy;
+  return !!(d && d.recognition);
+}
+// The one war recognition may itself close: a strictly bilateral one. A wider
+// coalition war has other courts at the table and must be settled there first.
+function bilateralWarBetween(ctx, a, b) {
+  const w = warBetween(ctx, a, b);
+  if (!w) return null;
+  const live = w.attackers.concat(w.defenders)
+    .filter((t) => ctx.game.tags[t] && ctx.game.tags[t].alive);
+  return live.length === 2 ? w : null;
+}
+export function recognitionInfo(ctx, me, other) {
+  const g = ctx.game;
+  const them = g.tags[other], mine = g.tags[me];
+  const out = {
+    can: false, why: '', cost: DIPLO.recognizeCost,
+    recognized: recognized(ctx, me, other),
+    offered: recognitionOn(ctx),
+    name: (them && them.name) || other,
+    endsWar: false,
+  };
+  if (!out.offered || !mine || !them || !them.alive || me === other) {
+    out.why = 'This age does not exchange recognitions.';
+    return out;
+  }
+  if (out.recognized) { out.why = 'We have already recognized one another.'; return out; }
+  if (mine.overlord === other || them.overlord === me) {
+    out.why = 'The bond of fealty already answers the question.';
+    return out;
+  }
+  const war = warBetween(ctx, me, other);
+  if (war && !bilateralWarBetween(ctx, me, other)) {
+    out.why = 'The wider war must be settled at its own table first.';
+    return out;
+  }
+  out.endsWar = !!war;
+  if (num(mine.points && mine.points.infl) < DIPLO.recognizeCost) {
+    out.why = 'Recognition is drafted, argued and sold at home: ' + DIPLO.recognizeCost + ' influence.';
+    return out;
+  }
+  if (opinionOf(ctx, other, me) < DIPLO.recognizeMinOpinion) {
+    out.why = 'Their court will not receive the letters (opinion '
+      + Math.round(opinionOf(ctx, other, me)) + ', needs ' + DIPLO.recognizeMinOpinion + '+).';
+    return out;
+  }
+  if (diploCdActive(ctx, recognizeCd(me, other))) {
+    out.why = 'Our last approach was refused (' + diploCdMonthsLeft(ctx, recognizeCd(me, other)) + ' months).';
+    return out;
+  }
+  out.can = true;
+  return out;
+}
+// Sign it. Both ledgers are settled: any bilateral war ends where it stands,
+// the era's rivalry is retired, and neither court's opinion of the other may
+// sit below the floor of a state it has formally recognized.
+export function recognizeCore(ctx, a, b) {
+  const g = ctx.game;
+  if (!g.tags[a] || !g.tags[b] || a === b) return { ok: false, why: 'There is no such court.' };
+  if (recognized(ctx, a, b)) return { ok: false, why: 'We have already recognized one another.' };
+  const war = bilateralWarBetween(ctx, a, b);
+  if (warBetween(ctx, a, b) && !war) {
+    return { ok: false, why: 'The wider war must be settled at its own table first.' };
+  }
+  if (war) endWarBySword(ctx, war, null); // white peace: every occupation reverts
+  if (!g.recognitions || typeof g.recognitions !== 'object') g.recognitions = {};
+  g.recognitions[recognitionKey(a, b)] = { y: g.date.y, m: g.date.m };
+  reconcileRivalryCore(ctx, a, b);
+  for (const [x, y] of [[a, b], [b, a]]) {
+    const t = g.tags[x];
+    if (!t.opinion || typeof t.opinion !== 'object') t.opinion = {};
+    t.opinion[y] = clamp(Math.max(num(t.opinion[y]), DIPLO.recognizeOpinionFloor), -200, 200);
+  }
+  chronicle(ctx, 'diplomacy', (g.tags[a].name || a) + ' and ' + (g.tags[b].name || b)
+    + ' exchange letters of recognition: the armistice between them becomes a peace.');
+  if (ctx.bus) ctx.bus.emit('diplomacy', { kind: 'recognition', a, b });
+  return { ok: true, endedWar: !!war, name: g.tags[b].name || b };
+}
+// Tearing it up is an act of state, and it is remembered.
+export function renounceRecognitionCore(ctx, a, b) {
+  const g = ctx.game;
+  if (!recognized(ctx, a, b)) return { ok: false, why: 'There is no recognition to renounce.' };
+  delete g.recognitions[recognitionKey(a, b)];
+  const them = g.tags[b];
+  if (them) {
+    if (!them.opinion || typeof them.opinion !== 'object') them.opinion = {};
+    them.opinion[a] = clamp(num(them.opinion[a]) + DIPLO.recognizeBreakOpinion, -200, 200);
+  }
+  const mine = g.tags[a];
+  if (mine) mine.legitimacy = clamp(num(mine.legitimacy) + DIPLO.recognizeBreakLegitimacy, 0, 100);
+  chronicle(ctx, 'diplomacy', (mine && mine.name ? mine.name : a) + ' withdraws its recognition of '
+    + (them && them.name ? them.name : b) + '; the peace between them is a piece of paper again.');
+  if (ctx.bus) ctx.bus.emit('diplomacy', { kind: 'recognitionEnded', a, b });
+  return { ok: true, name: (them && them.name) || b };
+}
+
 export function declareRivalCore(ctx, tag, of) {
   const info = rivalDeclareInfo(ctx, tag, of);
   if (!info || info.isRival || !info.can) {

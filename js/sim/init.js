@@ -10,6 +10,7 @@ import {
   liveGrudge, grudgeCeiling, grudgeCeilingRaw,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
+  allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
   clientOfferInfo, offerClientshipCore,
@@ -159,6 +160,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     nextRecruitId: 1,
     battles: [], wars: [], truces: {}, diploCooldowns: {},
     rivals: {}, retiredRivalries: {},
+    recognitions: {}, // states that have recognized one another (SPEC §96)
     pendingEvents: [], firedEvents: {}, flags: {},
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
@@ -389,9 +391,13 @@ export const simHelpers = {
     if (p) p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== id);
   },
   // Immigration and flight (SPEC §56): events move real people. n < 0 drains.
+  // A pen that waits on the community (SPEC §95) can turn on the same day the
+  // olim land — or off the day a settlement leaves — so re-resolve the label.
   addPopulation(ctx, provName, entry) {
     const p = ctx.prov(provName);
-    if (p) addPopulation(p, entry);
+    if (!p) return;
+    addPopulation(p, entry);
+    resolveDisplayName(ctx, p);
   },
   // Standing forces at the bookmark's opening (SPEC §58): fleets riding at
   // anchor and squadrons on their fields from day one — Israel did not
@@ -455,6 +461,21 @@ export const simHelpers = {
   },
   reconcileRivalry(ctx, a, b) {
     return reconcileRivalryCore(ctx, a, b);
+  },
+  // Recognition (SPEC §96): a scripted peace may exchange the letters itself
+  // — Sadat in the Knesset, the lawn in Washington — or tear them up again.
+  recognize(ctx, a, b) {
+    return recognizeCore(ctx, a, b);
+  },
+  renounceRecognition(ctx, a, b) {
+    return renounceRecognitionCore(ctx, a, b);
+  },
+  areRecognized(ctx, a, b) {
+    return recognized(ctx, a, b);
+  },
+  // The bookmark's standing bar on alliances (SPEC §96), for scripted pacts.
+  allianceBarred(ctx, a, b) {
+    return allianceBarred(ctx, a, b);
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
@@ -767,8 +788,12 @@ export function gameActions(ctx) {
       } else if (num(mine.treasury) < DIPLO.giftCost) {
         whyNotGift = 'Not enough treasury (' + DIPLO.giftCost + ' talents required).';
       }
+      // Some pacts are never signed (SPEC §96): the bookmark's own bar comes
+      // before every other reason, because no amount of goodwill lifts it.
+      const allyBar = allianceBarred(ctx, me, tag);
       let whyNotAlly = '';
-      if (allied) whyNotAlly = 'We are already allied.';
+      if (allyBar) whyNotAlly = allyBar;
+      else if (allied) whyNotAlly = 'We are already allied.';
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
       else if (ourOverlord) whyNotAlly = 'They are our overlord.';
@@ -787,6 +812,7 @@ export function gameActions(ctx) {
       const cb = casusBelli(ctx, me, tag);
       let whyNotWar = '';
       if (atWarWithUs) whyNotWar = 'We are already at war with them.';
+      else if (recognized(ctx, me, tag)) whyNotWar = 'We recognize them — the recognition must be renounced first.';
       else if (ourClient) whyNotWar = 'They are our client kingdom.';
       else if (ourOverlord) whyNotWar = 'They are our overlord.';
       else if (allied) whyNotWar = 'We are allied — break the alliance first.';
@@ -810,6 +836,19 @@ export function gameActions(ctx) {
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
       }
+      // Recognition (SPEC §96): only surfaced in the ages that exchange it.
+      let recognition = null;
+      try {
+        const ri = recognitionInfo(ctx, me, tag);
+        if (ri.offered || ri.recognized) {
+          recognition = {
+            can: ri.can, why: ri.why, cost: ri.cost,
+            recognized: ri.recognized, endsWar: ri.endsWar,
+            breakOpinion: DIPLO.recognizeBreakOpinion,
+            breakLegitimacy: DIPLO.recognizeBreakLegitimacy,
+          };
+        }
+      } catch (e) { recognition = null; }
       // Royal marriage (SPEC §62): only surfaced in the ages that arrange them.
       let marriage = null;
       if (mechanicOn(ctx, 'royalMarriage')) {
@@ -851,6 +890,7 @@ export function gameActions(ctx) {
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
         } : null,
         marriage,
+        recognition,
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -1508,6 +1548,8 @@ export function gameActions(ctx) {
         const d = getDip(tag);
         if (!d) return;
         if (!d.canAlly) { say('Alliance', d.whyNotAlly || 'No alliance is possible with ' + d.name + '.', 'bad'); return; }
+        const bar = allianceBarred(ctx, g.playerTag, tag);
+        if (bar) { say('Alliance', bar, 'bad'); return; }
         const me = g.playerTag;
         const mine = g.tags[me], them = g.tags[tag];
         const accept = d.opinionOfUs >= DIPLO.allyAcceptOpinion ||
@@ -1534,6 +1576,41 @@ export function gameActions(ctx) {
           say('Alliance broken', 'We renounce our alliance with ' + d.name + '. They will not soon forget it.', 'info');
         }
       } catch (e) { warnOnce('breakAlliance', 'breakAlliance failed', e); }
+    },
+    // Recognition (SPEC §96): the peace on offer where an alliance is not.
+    // Their court weighs it the way it weighs an alliance — on what it thinks
+    // of us — but the bar is far lower, because recognition asks for nothing
+    // but an end to the state of war.
+    recognizeState(tag) {
+      try {
+        const d = getDip(tag);
+        if (!d) return;
+        const info = recognitionInfo(ctx, g.playerTag, tag);
+        if (!info.can) { say('Recognition', info.why || 'No recognition is possible.', 'bad'); return; }
+        const mine = g.tags[g.playerTag];
+        mine.points.infl = num(mine.points.infl) - info.cost;
+        if (opinionOf(ctx, tag, g.playerTag) < DIPLO.recognizeAcceptOpinion) {
+          addOpinion(ctx, tag, g.playerTag, DIPLO.recognizeRefuseOpinion);
+          setDiploCd(ctx, recognizeCd(g.playerTag, tag), DIPLO.recognizeCdMonths);
+          say('Recognition refused', info.name + ' returns the letters unopened, and will hear no others for '
+            + DIPLO.recognizeCdMonths + ' months.', 'bad');
+          return;
+        }
+        const res = recognizeCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Recognition', res.why || 'The papers cannot be signed.', 'bad'); return; }
+        say('Recognition', 'We and ' + res.name + ' recognize one another'
+          + (res.endedWar ? '; the guns stop where they stand' : '')
+          + '. Neither state may take up arms against the other while the papers hold.', 'good');
+      } catch (e) { warnOnce('recognizeState', 'recognizeState failed', e); }
+    },
+    renounceRecognition(tag) {
+      try {
+        const res = renounceRecognitionCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Recognition', res.why || 'There is nothing to renounce.', 'bad'); return; }
+        say('Recognition withdrawn', 'We withdraw our recognition of ' + res.name
+          + ' (' + DIPLO.recognizeBreakOpinion + ' opinion, ' + DIPLO.recognizeBreakLegitimacy
+          + ' public mandate). The road back to war is open, and everyone saw us open it.', 'info');
+      } catch (e) { warnOnce('renounceRecognition', 'renounceRecognition failed', e); }
     },
     // Royal marriage (SPEC §62): join two crowned houses.
     royalMarriage(tag) {
@@ -2731,6 +2808,7 @@ export function reviveGame(saved) {
   if (!saved.wars) saved.wars = [];
   if (!saved.rivals || typeof saved.rivals !== 'object') saved.rivals = {};
   if (!saved.retiredRivalries || typeof saved.retiredRivalries !== 'object') saved.retiredRivalries = {};
+  if (!saved.recognitions || typeof saved.recognitions !== 'object') saved.recognitions = {}; // pre-§96 saves
   if (!Array.isArray(saved.chronicle)) saved.chronicle = []; // pre-chronicle saves
   if (!Array.isArray(saved.subsidies)) saved.subsidies = []; // pre-diplomacy-depth saves
   if (!saved.ui) saved.ui = { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null };

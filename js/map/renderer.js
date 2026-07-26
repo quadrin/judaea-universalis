@@ -432,6 +432,20 @@ function smoothstepJs(lo, hi, x) {
   return t * t * (3 - 2 * t);
 }
 
+// Point-in-polygon by ray casting; the ring is closed implicitly. The ring is
+// projected into pixel space first, so the test never has to invert (or assume
+// anything about) the atlas projection.
+function insideRing(ring, x, y) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y)
+      && x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 // A weighted Voronoi cell can occasionally jump a narrow sea and claim a
 // second coastline.  That is especially visible around the two gulfs: Taba,
 // Eilat and the Sinai interior used to grow detached pieces in Arabia.  For
@@ -439,17 +453,52 @@ function smoothstepJs(lo, hi, x) {
 // containing the seed and flood the detached pixels from the surrounding
 // legitimate provinces.  The repair is data-driven because island provinces
 // are intentionally allowed to have more than one land component.
+//
+// Component repair alone cannot hold a big, heavily weighted cell inside the
+// land it names: Sinai touches both Africa and Arabia around the heads of its
+// gulfs, so a leak into mainland Egypt is CONNECTED and therefore invisible to
+// the component pass.  `MAP_DATA.provinceRasterRegions` answers that with an
+// atlas envelope in lon/lat — every pixel a named province claims outside its
+// envelope joins the same detached mask and is handed back to its neighbors.
 export function repairDisconnectedProvinceRaster(idArray, MAP_DATA) {
   const W = MAP_DATA.MAP_W | 0;
   const H = MAP_DATA.MAP_H | 0;
   const provinces = MAP_DATA.provinces || [];
   const names = Array.isArray(MAP_DATA.contiguousProvinces)
     ? MAP_DATA.contiguousProvinces : [];
-  if (!idArray || idArray.length < W * H || !names.length) return 0;
+  const regions = (MAP_DATA.provinceRasterRegions && typeof MAP_DATA.provinceRasterRegions === 'object')
+    ? MAP_DATA.provinceRasterRegions : {};
+  const regionNames = Object.keys(regions);
+  if (!idArray || idArray.length < W * H || (!names.length && !regionNames.length)) return 0;
 
   const idByName = new Map(provinces.map((p, i) => [p.name, i + 1]));
   const detached = new Uint8Array(W * H);
+  // The province a stray pixel may NOT be handed back to: the one that just
+  // lost it. Without this a leak whose only legitimate neighbor is the leaking
+  // province simply re-floods itself.
+  const banned = new Uint16Array(W * H);
   let detachedCount = 0;
+
+  // The envelopes first: project the ring once, then test every pixel the
+  // named province claims against it. The seed's own pixel is never taken, so
+  // an envelope drawn too tight can shrink a province but never delete it.
+  for (const name of regionNames) {
+    const target = idByName.get(name);
+    const ring = regions[name];
+    const seed = provinces[target - 1];
+    if (!target || !seed || !Array.isArray(ring) || ring.length < 3) continue;
+    const pxRing = ring.map(([lon, lat]) => MAP_DATA.project(lon, lat));
+    const [sx0, sy0] = MAP_DATA.project(seed.lon, seed.lat);
+    const seedPx = Math.max(0, Math.min(H - 1, Math.floor(sy0))) * W
+      + Math.max(0, Math.min(W - 1, Math.floor(sx0)));
+    for (let at = 0; at < idArray.length; at++) {
+      if (idArray[at] !== target || at === seedPx || detached[at]) continue;
+      if (insideRing(pxRing, (at % W) + 0.5, ((at / W) | 0) + 0.5)) continue;
+      detached[at] = 1;
+      banned[at] = target;
+      detachedCount++;
+    }
+  }
 
   for (const name of names) {
     const target = idByName.get(name);
@@ -504,46 +553,51 @@ export function repairDisconnectedProvinceRaster(idArray, MAP_DATA) {
 
   // Multi-source flood fill: every legitimate land neighbor advances into
   // the detached union.  Treating all marked cells as one mask prevents a bad
-  // Sinai fragment merely being relabeled as a bad Taba fragment.
+  // Sinai fragment merely being relabeled as a bad Taba fragment, and the
+  // banned id keeps a leak from being handed straight back to the province it
+  // leaked out of.  A round that places nothing lifts the ban and finishes the
+  // job, so no pixel is ever left holding a stale id.
   const queue = new Int32Array(detachedCount);
-  let head = 0, tail = 0;
-  for (let at = 0; at < detached.length; at++) {
-    if (!detached[at]) continue;
+  const around = (at) => {
     const x = at % W;
     const y = (at / W) | 0;
-    const neighbors = [];
-    if (x > 0) neighbors.push(at - 1);
-    if (x + 1 < W) neighbors.push(at + 1);
-    if (y > 0) neighbors.push(at - W);
-    if (y + 1 < H) neighbors.push(at + W);
-    let replacement = 0;
-    for (const next of neighbors) {
-      if (!detached[next] && idArray[next]) {
+    const out = [];
+    if (x > 0) out.push(at - 1);
+    if (x + 1 < W) out.push(at + 1);
+    if (y > 0) out.push(at - W);
+    if (y + 1 < H) out.push(at + W);
+    return out;
+  };
+  for (let relaxed = 0; relaxed < 2; relaxed++) {
+    let head = 0, tail = 0;
+    for (let at = 0; at < detached.length; at++) {
+      if (!detached[at]) continue;
+      let replacement = 0;
+      for (const next of around(at)) {
+        if (detached[next] || !idArray[next]) continue;
+        if (!relaxed && idArray[next] === banned[at]) continue;
         replacement = idArray[next];
         break;
       }
+      if (replacement) {
+        idArray[at] = replacement;
+        detached[at] = 0;
+        queue[tail++] = at;
+      }
     }
-    if (replacement) {
-      idArray[at] = replacement;
-      detached[at] = 0;
-      queue[tail++] = at;
+    while (head < tail) {
+      const at = queue[head++];
+      for (const next of around(at)) {
+        if (!detached[next]) continue;
+        if (!relaxed && idArray[at] === banned[next]) continue;
+        idArray[next] = idArray[at];
+        detached[next] = 0;
+        queue[tail++] = next;
+      }
     }
-  }
-  while (head < tail) {
-    const at = queue[head++];
-    const x = at % W;
-    const y = (at / W) | 0;
-    const neighbors = [];
-    if (x > 0) neighbors.push(at - 1);
-    if (x + 1 < W) neighbors.push(at + 1);
-    if (y > 0) neighbors.push(at - W);
-    if (y + 1 < H) neighbors.push(at + W);
-    for (const next of neighbors) {
-      if (!detached[next]) continue;
-      idArray[next] = idArray[at];
-      detached[next] = 0;
-      queue[tail++] = next;
-    }
+    let left = 0;
+    for (let at = 0; at < detached.length; at++) if (detached[at]) { left = 1; break; }
+    if (!left) break; // every stray pixel found a home under the ban
   }
   return detachedCount;
 }

@@ -4127,3 +4127,117 @@ that — a culture carries a map with it.
   1948's Nitzana beats shared Avdat while its three modern metro overrides
   survive, an unintegrated conquest stays in the era's language, settlement
   earns the name, and a non-Jewish state does not.
+
+## 95. The schoolhouse AND the settlers — the Hebrew pen's second half
+
+§66 let a pen write on integration OR a settlement; §94 handed every Jewish
+state one shared table of sixty-odd names. Together they produced a claim the
+game did not mean to make: a fully integrated Arab town with no Jewish
+resident in it signed itself in Hebrew. Integration is a state's work; a name
+is a place's people.
+
+- **The rule** (`resolveDisplayName`, military.js): a JEWISH pen — the shared
+  table of §94 or a bookmark's local one, whichever supplies the word — now
+  requires BOTH halves at once: `integration` at 1 AND a living community of
+  the owner's own religion and culture in the province (`ownersCommunity`,
+  read from `p.pop`; provinces with no makeup answer from their own
+  religion/culture overlay, which is what the makeup would have said). Every
+  other pen keeps the older integration-or-culture threshold: a fully
+  integrated Jordanian Jerusalem is still written Al-Quds, and the Hashemite
+  pen owes nobody a census.
+- **The resolver runs when the answer can change**: to owner change,
+  integration and settlement, save reconciliation, the trigger list adds
+  `helpers.addPopulation` — the olim land and the signposts go up the same
+  month; an evacuation (the Sinai settlements at Washington) takes them down
+  the same month.
+- **The road is in the campaign, not the console**: `ev_i_development_towns`
+  (1950–61, "Tents, Then Tin, Then Towns") settles the mass immigration in
+  the frontier towns Israel actually holds — Bir Saba, al-Majdal, Isdud,
+  Lydda, al-Faluja, Ayn Shams, Umm Rashrash and the rest — planting the
+  community the pen has been waiting for. Its other option keeps the
+  newcomers on the coast: more money, no unrest, and a map that keeps its
+  1948 names, which is a real choice about what kind of state was built.
+- **Regression contract**: `smoke42.mjs` (integration alone is not enough,
+  the community arriving is, settlement alone is not, settled-and-integrated
+  is), `smoke44.mjs` (both halves across all seven bookmarks; a non-Jewish
+  pen still writes on integration alone), `smoke46.mjs`, and `smoke72.mjs`
+  (the absorption event as the in-campaign road).
+
+## 96. Recognition, not alliance — the peace available across an old line
+
+Some enmities never end in a pact. No Arab capital was ever going to put its
+name under a military alliance with Israel, in 1948 or after Washington in
+1979; what was signed instead was recognition — an exchange of letters that
+turns an armistice into a peace and obliges neither army to fight for the
+other. The game had only the alliance, so a warmed-up Egypt could be talked
+into a defensive pact, which is the one thing that could not happen.
+
+- **The bar** (`allianceBarred`, military.js): a bookmark may declare
+  `diplomacy.noAlliance: [{ between, and, why }]` — blocs whose members may
+  never ally ACROSS the line, in either direction, formables included (the
+  Kingdom of Israel; the UAR). The bar answers before every other reason in
+  the panel, refuses inside `offerAlliance` itself rather than only greying a
+  button, and is honored by scripted pacts through `helpers.allianceBarred`.
+- **Recognition** (`recognizeCore`): era-gated by `diplomacy.recognition`
+  (1948 only — the ancient bookmarks have no such instrument and show no
+  button). Signing costs influence and a court warm enough to receive the
+  letters; it ends a strictly BILATERAL war where it stands (a wider
+  coalition war must be settled at its own table first), retires the era
+  rivalry, and lifts both courts to the recognition floor. While it stands,
+  `declareWar` refuses in both directions — the single choke point, so the
+  player action, the AI's wars of opportunity, its coalitions and its
+  containment wars all obey it — and the AI skips a recognized neighbor
+  before it ever gets there.
+- **Renouncing it** (`renounceRecognitionCore`) is an act of state: the
+  other court's opinion collapses and the renouncer's public mandate falls.
+  It is the only road back to war, and everyone watches you take it.
+- **The treaties sign real ones**: the Treaty of Washington recognizes Egypt
+  and Israel to each other (alongside its permanent peace restraint), and
+  the Arava treaty of 1994 does the same for Jordan — the mechanic and the
+  history are the same object.
+- **Regression contract**: `smoke72.mjs` — the bar in both directions and
+  only across the line, the era gate, the letters ending a bilateral war and
+  forbidding the next one, the refusal and its two-year cooldown, the panel's
+  reasons, the renunciation's costs, and both treaties.
+
+## 97. After the armistice — the arcs the region actually had
+
+The 1948 chain ran from the declaration to the rotation agreement of 1986
+through Israel's own history. The region's other histories were missing: the
+party that took Damascus and Baghdad, the organizations that became a state
+inside two other states, and the uprisings that ended the age of wars between
+armies. These fire on the world's clock (`world: true`, with `decider` set to
+the court whose decision it is, so a player elsewhere gets a notice rather
+than someone else's choice) and gate on the world they find (`when`), so a
+campaign that diverged does not have the old rails forced back onto it.
+
+- **The republics turn**: the Ramadan revolution (1963), the eighth of March
+  in Damascus (1963), the seventeenth of July in Baghdad (1968), the
+  Corrective Movement (1970) and the hall in Baghdad (1979). Each rebrands
+  its state in place where history did (SPEC §68): `SYR_BAATH`, then
+  `SYR_FAR` — Assad's Syria under the hawk of the federation, which is also
+  how the two Ba'athist banners stay apart at chip size — and `IRQ_BAATH`.
+  The Iran–Iraq war (1980) is a real war on the map, and the debt it leaves
+  is why the army goes south in 1990.
+- **The fedayeen years**: Karameh (1968) makes the organizations a fact, the
+  Cairo Agreement (1969) licenses them in Lebanon, Black September (1970) is
+  now an actual civil war — a rebel host in the kingdom, not a modifier —
+  and Ajloun (1971) either clears it and sends the organizations north, or
+  does not, and keeps them.
+- **The Lebanese war** (1975–85): the bus at Ain al-Rummaneh, the Syrian
+  Deterrent Force taking the Beqaa and Tripoli on the map, Litani and the
+  security belt, Peace for Galilee — a declared war with real formations,
+  drawing in a Syria that holds the Beqaa — Sabra and Shatila with its
+  commission, and the withdrawal that invents the next adversary.
+- **The uprisings and the peace**: the First Intifada (1987), Jordan's
+  disengagement (1988), the Gulf War's thirty-nine warheads and the sealed
+  rooms (1991), Oslo's letters (1993), the Arava treaty (1994), the square
+  in Tel Aviv (1995), and the second uprising (2000).
+- **The banner over Athens**: 1948's Greece flies `GRC_MOD`, the modern nine
+  stripes and cross, rebranded at bookmark setup; the laurel wreath stays
+  with the leagues and cities of the ancient chapters.
+- **Regression contract**: `smoke72.mjs` — every arc's map-visible outcome
+  (rebrands and rulers, the rebel hosts spawning and clearing, the Beqaa
+  changing hands, the 1982 war and its Syrian front, the Iraqi army after
+  the hundred hours, the uprising modifiers lifting at Oslo) and the modern
+  Greek banner.

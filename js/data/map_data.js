@@ -701,6 +701,16 @@ export const MAP_DATA = {
   // These mainland cells must contain their seed in a single land component.
   // The renderer repairs any weighted-Voronoi spill across the gulfs.
   contiguousProvinces: ['Sinai Interior', 'Dizahab', 'Eilat'],
+  // The Sinai peninsula is connected to both Africa and Arabia around the
+  // heads of its gulfs, so component repair alone cannot stop a large
+  // weighted cell leaking into mainland Egypt or Arabia. This envelope follows
+  // the Mediterranean coast, the 1906 Rafah–Taba line, and both gulf shores.
+  provinceRasterRegions: {
+    'Sinai Interior': [
+      [32.53, 31.08], [34.28, 31.36], [34.99, 29.55],
+      [34.25, 27.70], [32.52, 29.94],
+    ],
+  },
   provinces: PROVINCES,
   coast: { land: [MAINLAND, CYPRUS, BALKANS, CRETE, RHODES, ITALY, SICILY], lakes: LAKES },
   rivers: RIVERS,

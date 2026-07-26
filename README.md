@@ -373,6 +373,33 @@ static site, the zero dependencies, or the missing build step changes.
   it costs no infamy at all. They say yes on devotion alone if they adore you,
   and at a lower bar if they're much smaller or fighting a war they can't win.
   Ask and be refused, and they won't hear it again for five years.
+- **Recognition, not alliance.** In 1948 no Arab capital will sign a military
+  pact with Israel — not at the start, not after a warm decade, not after the
+  treaty on the lawn. What is on offer instead is the thing that actually got
+  signed: recognition. An exchange of letters ends the state of war between
+  two courts, retires the era's rivalry, and forbids either from declaring war
+  on the other while it stands — and obliges neither army to fight for the
+  other. Tearing it up is possible and public: their opinion collapses,
+  your own country marks you down for it, and only then is the road back to
+  war open. Camp David's treaty and the Arava treaty of 1994 sign real ones.
+- **The region's other histories.** The chain after the armistice used to be
+  Israel's alone. Now the Ba'ath takes Damascus and Baghdad (and each state
+  rebrands in place, down to Assad's Syria flying the hawk of the federation
+  rather than Baghdad's three stars); Karameh makes the fedayeen a fact and
+  Black September becomes an actual civil war in the kingdom, with a rebel
+  host the Legion has to beat; Lebanon's war runs from the bus at Ain
+  al-Rummaneh through the Syrian Deterrent Force taking the Beqaa, Litani,
+  the 1982 invasion with real divisions on the northern border, the camps and
+  their commission, and the withdrawal that invents the next adversary; and
+  the age of wars between armies ends in the two uprisings, the sealed rooms
+  of 1991, and the letters of 1993. Greece, meanwhile, finally flies its own
+  modern flag in 1948 instead of the ancient laurel wreath.
+- **A Hebrew name waits for people, not only for paperwork.** The victors'
+  pens (names following integration) asked for a schoolhouse or a settlement.
+  A Jewish pen now asks for both: full integration AND a Jewish community
+  living in the town. The road to it is the campaign's own — the absorption
+  of the great immigration into the frontier towns, or the choice to keep the
+  newcomers on the coast and leave the map's names as the war left them.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

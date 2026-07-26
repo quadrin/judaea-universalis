@@ -90,10 +90,10 @@ export const BOOKMARK_40 = {
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
   },
 
-  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
-  // writes on a province it truly holds — integration at 1, or peopled by its
-  // own culture. Until then, and again the moment the land changes hands, the
-  // labels keep the era originals above.
+  // The victors' pens wait on the schoolhouse (SPEC §66). A Jewish pen
+  // requires both full integration and a Jewish community of the owner's
+  // culture; non-Jewish pens retain the older integration-or-culture
+  // threshold. Until then the labels keep the era originals above.
   integratedNames: {
     // The builder's pen: Herod's historical re-foundations, written onto the
     // era names (Samaria, Straton's Tower, Aphek...) once the land is his in

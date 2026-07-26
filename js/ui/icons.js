@@ -559,6 +559,47 @@ export const FLAGS = {
     `<path d="M10.6 10.6c-1.6-.4-2.9-.1-4 .9.6 1 1.5 1.6 2.7 1.8l-.5 1 1.8-.5Z" fill="#d9a520" stroke="none"/>` +
     `<path d="M13.4 10.6c1.6-.4 2.9-.1 4 .9-.6 1-1.5 1.6-2.7 1.8l.5 1-1.8-.5Z" fill="#d9a520" stroke="none"/>` +
     `<path d="M10.4 14.6h3.2l-.4 1H10.8Z" fill="#d9a520" stroke="none"/>`,
+  // Syria after the eighth of March, 1963 (event rebrand): the Arab
+  // liberation colors turned upright — red, white, black — with the three
+  // green stars of the union that was supposed to follow.
+  SYR_BAATH:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    star5(6.4, 12, 1.7, '#1a7a44') +
+    star5(12, 12, 1.7, '#1a7a44') +
+    star5(17.6, 12, 1.7, '#1a7a44'),
+  // Syria under Assad, from the Federation of Arab Republics (1972): the same
+  // bands, the gold hawk of Quraish in the white — and unmistakable at chip
+  // size beside Baghdad's three stars, which is the point.
+  SYR_FAR:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    `<path d="M12 9.1c.8 0 1.4.6 1.4 1.4 0 .5-.2.9-.6 1.2l.4 2.9h-2.4l.4-2.9c-.4-.3-.6-.7-.6-1.2 0-.8.6-1.4 1.4-1.4Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M10.6 10.4 4.7 9.2l1.1 2.1-1.3.4 6 1.3Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M13.4 10.4l5.9-1.2-1.1 2.1 1.3.4-6 1.3Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M10.9 14.2h2.2l-.5 1.3h-1.2Z" fill="#d9a520" stroke="none"/>`,
+  // Iraq after the seventeenth of July, 1968 (event rebrand): the flag raised
+  // in 1963 and kept for a generation — the same bands, three green stars.
+  IRQ_BAATH:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    star5(6.4, 12, 2, '#1a7a44') +
+    star5(12, 12, 2, '#1a7a44') +
+    star5(17.6, 12, 2, '#1a7a44'),
+  // Greece in the modern bookmark (1948: the Kingdom of Greece, still at war
+  // with itself in the mountains): nine stripes for the nine syllables of
+  // Ελευθερία ή Θάνατος, the white cross of Orthodoxy in the canton. The
+  // laurel wreath above stays with the leagues and cities of the ancient eras.
+  GRC_MOD:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    [0, 2, 4, 6, 8].map((i) =>
+      `<rect x="0.6" y="${(0.6 + i * 2.533).toFixed(2)}" width="22.8" height="2.54" fill="#1d4e9c" stroke="none"/>`).join('') +
+    `<rect x="0.6" y="0.6" width="12.67" height="12.67" fill="#1d4e9c" stroke="none"/>` +
+    `<path d="M5.69 0.6h2.5v12.67h-2.5Z" fill="#f2f4f4" stroke="none"/>` +
+    `<path d="M0.6 5.69h12.67v2.5H0.6Z" fill="#f2f4f4" stroke="none"/>`,
   // Iraq after the July revolution (event rebrand, 1958): Qasim's upright
   // tricolor, the red star of the republic on a gold boss.
   IRQ_REP:

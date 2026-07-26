@@ -159,6 +159,7 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="gift" data-ref="dipGift">Send Gift</button>
           <button class="pp-dip" data-dip="ally" data-ref="dipAlly">Offer Alliance</button>
           <button class="pp-dip" data-dip="marry" data-ref="dipMarry">Royal Marriage</button>
+          <button class="pp-dip" data-dip="recognize" data-ref="dipRecognize">Recognize</button>
           <button class="pp-dip" data-dip="break" data-ref="dipBreak">Break Alliance</button>
           <button class="pp-dip" data-dip="guarantee" data-ref="dipGuarantee">Guarantee</button>
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
@@ -188,6 +189,7 @@ const RISING_LABELS = {
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
         rival: b.classList.contains('pp-dip-on') ? 'renounceRival' : 'declareRival',
+        recognize: b.classList.contains('pp-dip-on') ? 'renounceRecognition' : 'recognizeState',
         protect: 'offerClientship',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
@@ -778,6 +780,27 @@ const RISING_LABELS = {
           `Arrange a royal marriage: ${d.marriage.cost} influence points → +25 opinion both ways, `
           + 'and each living marriage raises the chance of an heir appearing (capped at ×3). '
           + 'War between married houses annuls the match at a heavy cost in opinion.');
+      }
+    }
+    // Recognition (SPEC §96): hidden entirely in the ages that do not use it.
+    refs.dipRecognize.classList.toggle('hidden', !d.recognition);
+    if (d.recognition) {
+      const r = d.recognition;
+      refs.dipRecognize.classList.toggle('pp-dip-on', !!r.recognized);
+      setText(refs.dipRecognize, r.recognized ? 'Withdraw Recognition' : 'Recognize');
+      if (r.recognized) {
+        refs.dipRecognize.classList.remove('disabled');
+        refs.dipRecognize.dataset.tt = 'We recognize one another: the state of war between us is over and '
+          + 'neither may declare war on the other while the papers hold. This is not an alliance — '
+          + 'neither state is bound to fight for the other.\nWithdrawing it costs '
+          + Math.abs(r.breakOpinion) + ' opinion and ' + Math.abs(r.breakLegitimacy)
+          + ' public mandate at home.';
+      } else {
+        setDipBtn(refs.dipRecognize, r.can, r.why,
+          `Exchange letters of recognition: ${r.cost} influence points. `
+          + 'The state of war ends, the old rivalry is retired, and neither state may declare war on the '
+          + 'other while it stands. It binds nobody to fight for anybody.'
+          + (r.endsWar ? '\nThe war between us ends where the lines stand.' : ''));
       }
     }
     // No alliance, nothing to break: hide rather than explain.

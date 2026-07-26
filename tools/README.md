@@ -91,6 +91,19 @@ carry adminMult 0.5 while they run. Accepted as of v5.4:
 66 none · 132 JUD DEBT-SPIRAL,BLEEDING · 614 JUD SNOWBALL,BLEEDING ·
 1948 none.
 
+The SPEC §95–97 batch (the pen's second half, recognition instead of
+alliance, and the region's own arcs) re-ran the full 8-year harness against
+the pre-batch tree in the same environment: the anomaly set came back
+IDENTICAL except for 614's GHA, which drifted back onto the come-and-go
+bleeding line documented at v5.9 (treasury still rising, 50→139 over the
+run — the ARM/PAR hovering class). Nothing in the batch reaches an all-AI
+trajectory by design: the new cards are world events on the 1963–2000 clock,
+well past an eight-year run from 1948; recognition is opt-in per bookmark and
+never signed by an AI on its own initiative; and the tightened Jewish pen
+moves labels, not ledgers. Accepted as of §97:
+167 PAR BLEEDING · 67 ROM SNOWBALL + SEL DEAD · 40 none · 66 none ·
+132 JUD BLEEDING · 614 GHA BLEEDING (comes and goes) · 1948 none.
+
 ## geom-snapshot.json
 
 Real map geometry (adjacency, centroids, coastal flags, offshore anchors)
@@ -111,8 +124,9 @@ window._ctx, and save the value of
       areas: [..._ctx.geom.areas],
     })
 
-to this file (a Playwright script that does exactly this lives in the dev
-scratchpad; any browser console works too).
+to this file. `tools/tests/dump-geometry.mjs` performs that Playwright boot,
+writes the snapshot, prints Sinai's measured bounds/neighbors, and leaves a
+Sinai screenshot in `/tmp`; any browser console works too.
 
 ## tests/
 
@@ -184,7 +198,10 @@ autoruns; and AI-vs-AI wars in the harness stay overland, so the
 invasion planner idles there (its coverage lives in smoke57's Roman
 expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
-break, and The Chapters panel in a real browser.
+break, and The Chapters panel in a real browser. `smoke72.mjs` owns the
+SPEC §95–97 batch (the pen's second half and its absorption road,
+the alliance bar and recognition, and every map-visible outcome of the
+Ba'athist, fedayeen, Lebanese and uprising arcs).
 
 ## UI battery state (v5.4 audit)
 
@@ -207,6 +224,15 @@ does not fly under software GL; the sim path is covered green by
 smoke33 and smoke39's order-strike section). Every other suite passes,
 including uitest22 (the peace table, now with the release section),
 uitest23, and the new uitest29.
+
+The SPEC §95–97 batch added `uitest35.mjs` (the 1948 diplomacy panel: Offer
+Alliance refused in the bookmark's own words, Recognize offered beside it and
+waiting on the coalition war, the letters signed by clicking, the button
+flipping to Withdraw Recognition, Declare War greying out with it, and the
+modern Greek chip in the ledger) and re-ran the suites its changes touch —
+uitest2, 11, 13, 22, 25, 31, 33 and 35 all pass. The long tail documented
+above (uitest3, 5, 8, 10, 16, 17, 19, 20, 21, 28) still fails identically on
+the pre-batch tree in this environment and was not re-run in full.
 
 ## ju-cloud-mock.mjs — the cloud shelf, on localhost
 

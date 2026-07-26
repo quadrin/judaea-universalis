@@ -103,10 +103,10 @@ export const BOOKMARK_67 = {
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
   },
 
-  // The conquerors' pens wait on integration (SPEC §66): the name a state
-  // writes on a province, applied only once it is properly integrated
-  // (integration at 1) or peopled by the owner's own culture. Until then —
-  // and again the moment the land changes hands — the era names above hold.
+  // The conquerors' pens wait on integration (SPEC §66). A Jewish pen also
+  // requires a Jewish community of the owner's culture; non-Jewish pens keep
+  // the older integration-or-culture threshold. Until then — and again the
+  // moment the land changes hands — the era names above hold.
   integratedNames: {
     // The Roman pen: what the dispatches and itineraries wrote on the
     // conquered east. Pompey's Decapolis needs no entries — the "liberated"
