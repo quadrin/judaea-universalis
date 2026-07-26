@@ -149,7 +149,10 @@ export const BOOKMARK_67 = {
     + 'something to organize.',
 
   // v5.4: PNT joins — Mithridates VI, restored at Zela, awaiting Pompey.
-  activeTags: ['HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR', 'OSR', 'ADI', 'CHX', 'PNT'],
+  activeTags: [
+    'HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR',
+    'OSR', 'ADI', 'CHX', 'CMG', 'ITU', 'PNT',
+  ],
   // Standing rivalries (SPEC §73): Rome and Parthia begin the century of
   // wars over the Euphrates line, and Tigranes' Armenia contests the same
   // marches with the Arsacids.
@@ -213,8 +216,8 @@ export const BOOKMARK_67 = {
     'Beroea': 'SEL',
     'Cyrrhus': 'SEL',
     'Zeugma': 'SEL',
-    'Samosata': 'SEL',
-    'Chalcis': 'SEL',
+    'Samosata': 'CMG',
+    'Chalcis': 'ITU',
     'Palmyra': 'SEL',
     'Tyre': 'SEL',
     'Sidon': 'SEL',
@@ -471,6 +474,8 @@ export const BOOKMARK_67 = {
       heir: { name: 'Artavasdes II', gov: 2, infl: 3, mar: 2, age: 25 },
     },
     PAR: { name: 'Phraates III', title: 'King of Kings', gov: 2, infl: 3, mar: 3, age: 45 },
+    CMG: { name: 'Antiochus I Theos', title: 'King', gov: 4, infl: 4, mar: 2, age: 31 },
+    ITU: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 58 },
     // v5.4: the old lion, restored at Zela this very year, waiting for Pompey
     PNT: { name: 'Mithridates VI Eupator', title: 'King', gov: 3, infl: 4, mar: 4, age: 68 },
   },
@@ -606,6 +611,8 @@ export const BOOKMARK_67 = {
     h.adjust(ctx, 'ARM', { treasury: 100, stability: -1, legitimacy: 30 });
     h.adjust(ctx, 'PAR', { treasury: 200, stability: 1, legitimacy: 20 });
     h.adjust(ctx, 'ROM', { treasury: 600, stability: 2, legitimacy: 60 });
+    h.adjust(ctx, 'CMG', { treasury: 80, manpower: 2500, stability: 1, legitimacy: 55 });
+    h.adjust(ctx, 'ITU', { treasury: 60, manpower: 1800, stability: 1, legitimacy: 50 });
 
     // --- Opinions. -------------------------------------------------------------
     setOpinion(g, 'HYR', 'ARI', -180); setOpinion(g, 'ARI', 'HYR', -180);
@@ -615,6 +622,8 @@ export const BOOKMARK_67 = {
     setOpinion(g, 'PAR', 'ROM', -60);  setOpinion(g, 'ROM', 'PAR', -50);
     setOpinion(g, 'ARM', 'PAR', -40);
     setOpinion(g, 'SEL', 'ROM', -30);
+    setOpinion(g, 'CMG', 'SEL', -40);  setOpinion(g, 'SEL', 'CMG', -30);
+    setOpinion(g, 'ITU', 'SEL', -50);  setOpinion(g, 'SEL', 'ITU', -40);
 
     // --- Starting modifiers. ----------------------------------------------------
     // Pompey is finishing the pirates and Mithridates: Rome's eastern legions
@@ -652,6 +661,8 @@ export const BOOKMARK_67 = {
       general: { name: 'Aretas III', fire: 2, shock: 2, maneuver: 3 },
     });
     h.spawnArmy(ctx, 'SEL', 'Antioch', { inf: 5, name: 'The Last Phalanx' });
+    h.spawnArmy(ctx, 'CMG', 'Samosata', { inf: 3, cav: 1, name: 'Host of Commagene' });
+    h.spawnArmy(ctx, 'ITU', 'Chalcis', { inf: 3, name: 'Archers of the Lebanon' });
     h.spawnArmy(ctx, 'PTO', 'Alexandria', { inf: 8, cav: 2, name: 'Army of Egypt' });
     h.spawnArmy(ctx, 'ARM', 'Tigranocerta', { inf: 5, name: 'Army of Tigranes' });
     h.spawnArmy(ctx, 'PAR', 'Seleucia-Ctesiphon', { inf: 12, cav: 6, name: 'Royal Army of Parthia' });
@@ -681,6 +692,8 @@ export const BOOKMARK_67 = {
     OSR: { rally: ['Edessa'], targetRegiments: 5 },
     ADI: { rally: ['Arbela'], targetRegiments: 7 },
     CHX: { rally: ['Charax'], targetRegiments: 4 },
+    CMG: { rally: ['Samosata'], targetRegiments: 5 },
+    ITU: { rally: ['Chalcis'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

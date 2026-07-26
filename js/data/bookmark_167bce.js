@@ -135,7 +135,12 @@ export const BOOKMARK_167 = {
   // v5.4: ROM and PNT join — Rome watches from Italy the year after Pydna
   // (Popillius' circle in the sand is diplomacy, not conquest), and Pontus
   // keeps its Black Sea coast.
-  activeTags: ['SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC', 'ROM', 'PNT'],
+  activeTags: [
+    'SEL', 'PTO', 'HAS', 'NAB', 'ARM', 'PAR', 'GRC', 'ROM', 'PNT',
+    // Dormant at the opening date; the long campaign can watch the Seleucid
+    // empire break into actual states instead of abstract debuffs.
+    'CMG', 'OSR', 'CHX', 'CYZ', 'ITU',
+  ],
   // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
   // Mithridates' Parthia is already probing the Seleucid east.
@@ -431,6 +436,12 @@ export const BOOKMARK_167 = {
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
 
+    // These courts do not exist in November 167. Keeping their tags loaded but
+    // dormant lets dated world events awaken them with their real provinces.
+    for (const tag of ['CMG', 'OSR', 'CHX', 'CYZ', 'ITU']) {
+      if (g.tags[tag]) g.tags[tag].alive = false;
+    }
+
     // --- Starting fleets (SPEC §58): the royal navies are afloat on day one. ---
     h.spawnFleet(ctx, 'SEL', 'Seleucia Pieria', 5, { name: 'The Royal Fleet' });
     h.spawnFleet(ctx, 'PTO', 'Alexandria', 5, { name: 'Fleet of Alexandria' });
@@ -563,6 +574,11 @@ export const BOOKMARK_167 = {
     // v5.4: the wider frame's crowned heads
     ROM: { name: 'The Senate and People', title: 'Res Publica', gov: 4, infl: 4, mar: 4, age: 40 },
     PNT: { name: 'Pharnaces I', title: 'King', gov: 3, infl: 2, mar: 3, age: 60 },
+    CMG: { name: 'Ptolemaeus', title: 'King', gov: 3, infl: 3, mar: 2, age: 35 },
+    OSR: { name: 'The Dynast of Orhay', title: 'King', gov: 2, infl: 2, mar: 2, age: 40 },
+    CHX: { name: 'Hyspaosines', title: 'King', gov: 3, infl: 2, mar: 3, age: 35 },
+    CYZ: { name: 'Antiochus IX Cyzicenus', title: 'Basileus', gov: 2, infl: 2, mar: 4, age: 22 },
+    ITU: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 35 },
   },
 
   // Linear mission chains (realm panel).
@@ -662,6 +678,11 @@ export const BOOKMARK_167 = {
     NAB: { rally: ['Petra'], targetRegiments: 8 },
     PAR: { rally: ['Gazaca'], targetRegiments: 6 },
     ARM: { rally: ['Tigranocerta'], targetRegiments: 5 },
+    CMG: { rally: ['Samosata'], targetRegiments: 5 },
+    OSR: { rally: ['Edessa'], targetRegiments: 4 },
+    CHX: { rally: ['Charax'], targetRegiments: 4 },
+    CYZ: { rally: ['Damascus'], targetRegiments: 10 },
+    ITU: { rally: ['Chalcis'], targetRegiments: 3 },
     REB: { rally: [], targetRegiments: 0 },
   },
 

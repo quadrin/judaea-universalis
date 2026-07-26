@@ -180,6 +180,61 @@ function countControlledOf(ctx, tag, names) {
   return n;
 }
 
+// The late Seleucid kingdom breaks on the live map, not by painting over a
+// player's conquests. A state can take only provinces still held by the crown
+// from which it historically emerged.
+function breakawayLand(ctx, names, allowedOwners) {
+  const allowed = new Set(allowedOwners);
+  const out = [];
+  try {
+    for (const name of names) {
+      const p = ctx.prov(name);
+      if (p && allowed.has(p.owner)) out.push(name);
+    }
+  } catch (e) { warnOnce('breakawayLand', e); }
+  return out;
+}
+
+function canBreakAway(ctx, names, allowedOwners) {
+  return breakawayLand(ctx, names, allowedOwners).length > 0;
+}
+
+function awakenState(ctx, {
+  tag, provinces, allowedOwners, ruler, treasury = 60, manpower = 2000,
+  army = { inf: 3 }, armyName, chronicle,
+}) {
+  try {
+    const h = ctx.helpers;
+    const t = ctx.game.tags && ctx.game.tags[tag];
+    const land = breakawayLand(ctx, provinces, allowedOwners);
+    if (!t || !land.length) return false;
+    t.alive = true;
+    t.overlord = null;
+    for (const name of land) h.changeOwner(ctx, name, tag);
+    if (ruler) h.setRuler(ctx, tag, ruler);
+    h.adjust(ctx, tag, { treasury, manpower, stability: 1, legitimacy: 55 });
+    h.spawnArmy(ctx, tag, land[0], {
+      ...army, name: armyName || ('Host of ' + (t.name || tag)),
+    });
+    if (chronicle) h.chronicle(ctx, 'era', chronicle);
+    return true;
+  } catch (e) { warnOnce('awakenState:' + tag, e); return false; }
+}
+
+function suppressBreakaway(ctx, names, id, label, costs) {
+  try {
+    const h = ctx.helpers;
+    h.adjust(ctx, 'SEL', costs);
+    for (const name of names) {
+      const p = ctx.prov(name);
+      if (!p || p.owner !== 'SEL') continue;
+      h.addProvinceModifier(ctx, name, {
+        id, name: label, months: 36, effects: { unrest: 2, taxMult: 0.9 },
+      });
+    }
+  } catch (e) { warnOnce('suppressBreakaway:' + id, e); }
+}
+
 const JUDEAN_HILLS = ['Jerusalem', 'Emmaus', 'Hebron', 'Adora', 'Sebaste', 'Neapolis'];
 const SOUTHERN_APPROACH = ['Hebron', 'Adora', 'Engaddi', 'Jerusalem', 'Emmaus'];
 const EASTERN_PROVINCES = ['Ecbatana', 'Susa', 'Seleucia-Ctesiphon', 'Babylon', 'Nehardea',
@@ -204,6 +259,307 @@ const GREEK_CITIES = ['Gaza', 'Ascalon', 'Azotus', 'Jamnia', 'Ptolemais', 'Dora'
 const PHILISTINE_COAST = ['Joppa', 'Azotus', 'Ascalon', 'Gaza'];
 
 export const EVENTS_167 = [
+
+  // ── The empire becomes kingdoms ───────────────────────────────────────────
+  // These are world events rather than chapters of the Judaean war. Historical
+  // AI creates the breakaways; a human Seleucid court may spend dearly to hold
+  // some margins, while the dynastic partition always produces a second crown.
+  {
+    id: 'ev_commagene_breaks_away',
+    title: 'The Kingdom Above the Euphrates',
+    desc: 'At Samosata, Ptolemaeus has stopped dating decrees by the Seleucid king. '
+      + 'The Euphrates crossings, the mountain roads, and the northern approaches to '
+      + 'Melitene now answer to a court of their own. Antioch has too many regents and '
+      + 'too few reliable armies to make every distant governor remember obedience.',
+    historical: 'Ptolemaeus used the Seleucid succession crisis to establish the kingdom '
+      + 'of Commagene in 163/162 BCE and occupied strongpoints toward Melitene.',
+    forTag: 'both',
+    decider: 'SEL',
+    date: { y: -163, m: 10 },
+    when: safeTrigger('ev_commagene_breaks_away:when', (ctx) =>
+      canBreakAway(ctx, ['Samosata', 'Melitene'], ['SEL'])),
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let the mountain kingdom go',
+        tooltip: 'Commagene becomes an independent realm at Samosata and in any still-Seleucid approaches to Melitene, with its own ruler and army.',
+        effects: guard('ev_commagene_breaks_away:0', (ctx) => {
+          awakenState(ctx, {
+            tag: 'CMG',
+            provinces: ['Samosata', 'Melitene'],
+            allowedOwners: ['SEL'],
+            ruler: { name: 'Ptolemaeus', title: 'King', gov: 3, infl: 3, mar: 2, age: 39 },
+            treasury: 80, manpower: 2500,
+            army: { inf: 3, cav: 1 },
+            armyName: 'Host of Commagene',
+            chronicle: 'Ptolemaeus makes Samosata the seat of an independent Commagene. The Seleucid map loses another mountain edge.',
+          });
+          ctx.helpers.adjust(ctx, 'SEL', { legitimacy: -5 });
+          ctx.helpers.setFlag(ctx, 'commageneIndependent', true);
+        }),
+      },
+      {
+        label: 'Send gold and men up the Euphrates',
+        tooltip: 'Commagene remains under Antioch: −80 treasury, −2,000 manpower, −1 stability; Samosata and Melitene suffer Military Occupation (−10% tax, +2 unrest, 36 months).',
+        effects: guard('ev_commagene_breaks_away:1', (ctx) => {
+          suppressBreakaway(ctx, ['Samosata', 'Melitene'],
+            'commagene_occupation', 'Military Occupation of Commagene',
+            { treasury: -80, manpower: -2000, stability: -1 });
+          ctx.helpers.setFlag(ctx, 'commageneSuppressed', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_osrhoene_breaks_away',
+    title: 'Orhay Chooses a King',
+    desc: 'Edessa — Orhay in the speech of its countryside — no longer waits for a '
+      + 'governor from Antioch. The dynast of the city has taken the royal title, and '
+      + 'Carrhae follows the court that can actually keep the roads open. A kingdom has '
+      + 'formed in the seam between Syria, Armenia, and the horsemen of the east.',
+    historical: 'The local kingdom of Edessa, conventionally called Osrhoene, emerged '
+      + 'around 132 BCE as Seleucid authority in upper Mesopotamia receded.',
+    forTag: 'both',
+    decider: 'SEL',
+    date: { y: -132, m: 1 },
+    when: safeTrigger('ev_osrhoene_breaks_away:when', (ctx) =>
+      canBreakAway(ctx, ['Edessa', 'Carrhae'], ['SEL'])),
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The cities will govern themselves',
+        tooltip: 'Osrhoene becomes independent in Edessa and Carrhae, provided those cities are still Seleucid, and raises a local army.',
+        effects: guard('ev_osrhoene_breaks_away:0', (ctx) => {
+          awakenState(ctx, {
+            tag: 'OSR',
+            provinces: ['Edessa', 'Carrhae'],
+            allowedOwners: ['SEL'],
+            ruler: { name: 'The Dynast of Orhay', title: 'King', gov: 2, infl: 3, mar: 2, age: 42 },
+            treasury: 70, manpower: 2200,
+            army: { inf: 3, cav: 1 },
+            armyName: 'Guard of Orhay',
+            chronicle: 'Edessa and Carrhae cease to wait on Antioch. The kingdom of Osrhoene takes shape between the great powers.',
+          });
+          ctx.helpers.adjust(ctx, 'SEL', { legitimacy: -5 });
+          ctx.helpers.setFlag(ctx, 'osrhoeneIndependent', true);
+        }),
+      },
+      {
+        label: 'Restore the satrapal garrisons',
+        tooltip: 'Osrhoene is prevented: −100 treasury, −2,500 manpower, −1 stability; Edessa and Carrhae suffer Satrapal Garrisons (−10% tax, +2 unrest, 36 months).',
+        effects: guard('ev_osrhoene_breaks_away:1', (ctx) => {
+          suppressBreakaway(ctx, ['Edessa', 'Carrhae'],
+            'osrhoene_garrisons', 'The Satrapal Garrisons',
+            { treasury: -100, manpower: -2500, stability: -1 });
+          ctx.helpers.setFlag(ctx, 'osrhoeneSuppressed', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_characene_breaks_away',
+    title: 'A King at the Head of the Gulf',
+    desc: 'Hyspaosines, governor of the tidal country where the Tigris and Euphrates '
+      + 'meet the sea, now calls himself king. Charax controls the river mouths; the '
+      + 'merchants of Gerrha prefer a nearby court to a collapsing chancery hundreds '
+      + 'of leagues upriver. The empire has lost not only land, but the tollgate through '
+      + 'which the wealth of the Gulf enters Mesopotamia.',
+    historical: 'Characene formed under Hyspaosines during the collapse of Seleucid rule '
+      + 'in the lower riverlands; Babylonian records first style him king in 127 BCE.',
+    forTag: 'both',
+    decider: 'SEL',
+    date: { y: -127, m: 1 },
+    when: safeTrigger('ev_characene_breaks_away:when', (ctx) =>
+      canBreakAway(ctx, ['Charax', 'Gerrha'], ['SEL'])),
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The Gulf has its king',
+        tooltip: 'Characene becomes independent in Charax and any still-Seleucid Gulf sphere represented by Gerrha, with Hyspaosines and a river army.',
+        effects: guard('ev_characene_breaks_away:0', (ctx) => {
+          awakenState(ctx, {
+            tag: 'CHX',
+            provinces: ['Charax', 'Gerrha'],
+            allowedOwners: ['SEL'],
+            ruler: { name: 'Hyspaosines', title: 'King', gov: 3, infl: 3, mar: 3, age: 45 },
+            treasury: 100, manpower: 2500,
+            army: { inf: 3, cav: 1 },
+            armyName: 'Army of the River Mouths',
+            chronicle: 'Hyspaosines is styled king at Charax. The Gulf customs now fill a Characenean treasury.',
+          });
+          ctx.helpers.adjust(ctx, 'SEL', { legitimacy: -5 });
+          ctx.helpers.setFlag(ctx, 'characeneIndependent', true);
+        }),
+      },
+      {
+        label: 'Keep the customs houses royal',
+        tooltip: 'Characene is prevented: −100 treasury, −3,000 manpower, −1 stability; Charax and Gerrha suffer Royal Customs Garrisons (−10% tax, +2 unrest, 36 months).',
+        effects: guard('ev_characene_breaks_away:1', (ctx) => {
+          suppressBreakaway(ctx, ['Charax', 'Gerrha'],
+            'gulf_customs_garrisons', 'Royal Customs Garrisons',
+            { treasury: -100, manpower: -3000, stability: -1 });
+          ctx.helpers.setFlag(ctx, 'characeneSuppressed', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_antiochus_cyzicenus',
+    title: 'One Dynasty, Two Kings',
+    desc: 'Antiochus called Cyzicenus has returned to Syria to claim his father’s crown. '
+      + 'His half-brother Grypus already wears it. Damascus and the southern cities have '
+      + 'accepted the challenger, while Antioch holds to the elder king; both strike the '
+      + 'same anchors on their coins and call the other a usurper. There are now two '
+      + 'Seleucid kingdoms, and neither can afford to leave the other alive.',
+    historical: 'Antiochus IX Cyzicenus fought his half-brother Antiochus VIII Grypus, '
+      + 'establishing a rival southern kingdom and prolonging the Seleucid civil war.',
+    forTag: 'both',
+    decider: 'SEL',
+    date: { y: -113, m: 6 },
+    when: safeTrigger('ev_antiochus_cyzicenus:when', (ctx) =>
+      canBreakAway(ctx, ['Damascus', 'Chalcis', 'Emesa', 'Palmyra'], ['SEL'])),
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'There can be only one king',
+        tooltip: 'Cyzicene Syria forms from the still-Seleucid southern cities. Antiochus IX and Antiochus VIII immediately go to war; both crowns are weakened for 48 months, while Judaea has No Hand from the North (+10% income, +1 siege, 36 months).',
+        effects: guard('ev_antiochus_cyzicenus:0', (ctx) => {
+          const born = awakenState(ctx, {
+            tag: 'CYZ',
+            provinces: ['Damascus', 'Chalcis', 'Emesa', 'Palmyra'],
+            allowedOwners: ['SEL'],
+            ruler: { name: 'Antiochus IX Cyzicenus', title: 'Basileus', gov: 2, infl: 2, mar: 4, age: 30 },
+            treasury: 100, manpower: 5000,
+            army: { inf: 6, cav: 1 },
+            armyName: 'Army of Antiochus Cyzicenus',
+            chronicle: 'The house of Seleucus divides into two crowned realms. Antioch and Damascus prepare to settle the pedigree by war.',
+          });
+          if (!born) return;
+          const h = ctx.helpers;
+          h.setRuler(ctx, 'SEL', {
+            name: 'Antiochus VIII Grypus', title: 'Basileus', gov: 2, infl: 2, mar: 3, age: 28,
+          });
+          setOpinion(ctx, 'SEL', 'CYZ', -180);
+          setOpinion(ctx, 'CYZ', 'SEL', -180);
+          h.addTagModifier(ctx, 'SEL', {
+            id: 'war_of_the_half_brothers', name: 'War of the Half-Brothers', months: 48,
+            effects: { incomeMult: 0.9, reinforceMult: 0.9 },
+          });
+          h.addTagModifier(ctx, 'CYZ', {
+            id: 'war_of_the_half_brothers', name: 'War of the Half-Brothers', months: 48,
+            effects: { incomeMult: 0.9, reinforceMult: 0.9 },
+          });
+          if (alive(ctx, 'HAS')) {
+            h.addTagModifier(ctx, 'HAS', {
+              id: 'no_hand_from_the_north', name: 'No Hand from the North', months: 36,
+              effects: { incomeMult: 1.1, siegeBonus: 1 },
+            });
+          }
+          if (!findWar(ctx.game, 'CYZ', 'SEL')) {
+            h.declareWar(ctx, 'CYZ', 'SEL', 'The War of the Half-Brothers');
+          }
+          h.setFlag(ctx, 'seleucidCrownsDivided', true);
+        }),
+      },
+      {
+        label: 'Recognize the southern crown',
+        tooltip: 'Cyzicene Syria still forms as a Seleucid client, avoiding the immediate war; Seleucids −100 treasury and −10 legitimacy.',
+        effects: guard('ev_antiochus_cyzicenus:1', (ctx) => {
+          const born = awakenState(ctx, {
+            tag: 'CYZ',
+            provinces: ['Damascus', 'Chalcis', 'Emesa', 'Palmyra'],
+            allowedOwners: ['SEL'],
+            ruler: { name: 'Antiochus IX Cyzicenus', title: 'Basileus', gov: 2, infl: 2, mar: 4, age: 30 },
+            treasury: 80, manpower: 4000,
+            army: { inf: 5, cav: 1 },
+            armyName: 'Army of the Southern Crown',
+            chronicle: 'Antioch recognizes a second Seleucid crown in the south. Peace is purchased by partition.',
+          });
+          if (!born) return;
+          const h = ctx.helpers;
+          ctx.game.tags.CYZ.overlord = 'SEL';
+          h.adjust(ctx, 'SEL', { treasury: -100, legitimacy: -10 });
+          setOpinion(ctx, 'SEL', 'CYZ', 40);
+          setOpinion(ctx, 'CYZ', 'SEL', 60);
+          h.setFlag(ctx, 'cyziceneSettlement', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_ituraean_tetrarchy',
+    title: 'The Priest-Kings of Chalcis',
+    desc: 'The passes through Lebanon now answer to Ptolemy son of Mennaeus, tetrarch '
+      + 'and high priest at Chalcis. His archers hold the mountain roads; his court '
+      + 'collects their tolls. What remains of Seleucid Syria may call him a subject, '
+      + 'but no royal order crosses the range without first becoming a negotiation.',
+    historical: 'The Ituraean principality was centered in the Beqa valley and Chalcis. '
+      + 'Ptolemy son of Mennaeus ruled there as tetrarch and high priest from about 85 BCE.',
+    forTag: 'both',
+    decider: 'SEL',
+    date: { y: -85, m: 1 },
+    when: safeTrigger('ev_ituraean_tetrarchy:when', (ctx) =>
+      canBreakAway(ctx, ['Chalcis'], ['SEL', 'CYZ'])),
+    world: true,
+    major: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The mountains choose their own priest-king',
+        tooltip: 'Ituraea becomes an independent one-province mountain state at Chalcis, with Ptolemy son of Mennaeus and a force of archers.',
+        effects: guard('ev_ituraean_tetrarchy:0', (ctx) => {
+          const old = ctx.prov('Chalcis') && ctx.prov('Chalcis').owner;
+          const born = awakenState(ctx, {
+            tag: 'ITU',
+            provinces: ['Chalcis'],
+            allowedOwners: ['SEL', 'CYZ'],
+            ruler: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 40 },
+            treasury: 70, manpower: 1800,
+            army: { inf: 3 },
+            armyName: 'Archers of the Lebanon',
+            chronicle: 'Chalcis and its mountain roads become the Ituraean tetrarchy of Ptolemy son of Mennaeus.',
+          });
+          if (born && old && ctx.game.tags[old]) ctx.helpers.adjust(ctx, old, { legitimacy: -5 });
+          ctx.helpers.setFlag(ctx, 'ituraeaIndependent', true);
+        }),
+      },
+      {
+        label: 'Confirm him as tetrarch under the crown',
+        tooltip: 'Ituraea still forms, but as a client of the current Seleucid crown; its overlord pays −50 treasury and receives +5 legitimacy.',
+        effects: guard('ev_ituraean_tetrarchy:1', (ctx) => {
+          const old = ctx.prov('Chalcis') && ctx.prov('Chalcis').owner;
+          const born = awakenState(ctx, {
+            tag: 'ITU',
+            provinces: ['Chalcis'],
+            allowedOwners: ['SEL', 'CYZ'],
+            ruler: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 40 },
+            treasury: 50, manpower: 1500,
+            army: { inf: 3 },
+            armyName: 'Archers of the Lebanon',
+            chronicle: 'Ptolemy is confirmed at Chalcis. The Ituraean tetrarchy is born owing service to a Seleucid crown.',
+          });
+          if (!born || !old || !ctx.game.tags[old]) return;
+          ctx.game.tags.ITU.overlord = old;
+          ctx.helpers.adjust(ctx, old, { treasury: -50, legitimacy: 5 });
+          setOpinion(ctx, 'ITU', old, 70);
+          setOpinion(ctx, old, 'ITU', 50);
+          ctx.helpers.setFlag(ctx, 'ituraeaClient', true);
+        }),
+      },
+    ],
+  },
 
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {

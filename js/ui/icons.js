@@ -423,6 +423,24 @@ export const FLAGS = {
     `<path d="M11.2 5.2h1.4v9h-1.4Z" ${ACC}/>` +
     `<path d="M12.6 5.6c2.6.6 4.2 2 4.8 4.2l-4.8.4Z" ${SIL}/>` +
     `<path d="M4.2 19.6c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.2.9 2.4 1 3.6.3" ${DET}/>`,
+  // Commagene: the star above the sacred mountain of the royal sanctuary.
+  CMG:
+    `<path d="M3.8 19.4 9.2 10l2.6 4.2 2.8-6 5.6 11.2Z" ${SIL}/>` +
+    `<path d="M12 2.7l.9 1.9 2.1.3-1.5 1.5.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3Z" ${ACC}/>` +
+    `<path d="M5.2 19.4h13.6" ${DET}/>`,
+  // Cyzicene Syria: the Seleucid anchor divided by the rival diadem.
+  CYZ:
+    `<circle cx="12" cy="5" r="1.5" fill="none" stroke="${FG}" stroke-width="1.5"/>` +
+    `<path d="M11.2 6.8h1.6v10.4h-1.6Z" ${SIL}/>` +
+    `<path d="M6.8 10h10.4v1.7H6.8Z" ${ACC}/>` +
+    `<path d="M12 20c-3-.4-5.2-2-6.4-4.7l2.2-.9c.9 1.8 2.3 2.9 4.2 3.3 1.9-.4 3.3-1.5 4.2-3.3l2.2.9C17.2 18 15 19.6 12 20Z" ${SIL}/>` +
+    `<path d="M4.8 7.5c2-1.5 4.4-2.3 7.2-2.3s5.2.8 7.2 2.3" ${DET}/>`,
+  // Ituraea: the recurved bow of the mountain archers.
+  ITU:
+    `<path d="M16.8 3.8c-4.8 1.8-7.2 4.5-7.2 8.2s2.4 6.4 7.2 8.2" ${SIL}/>` +
+    `<path d="M16.8 3.8 16.8 20.2" ${DET}/>` +
+    `<path d="M5 11.4h11.8v1.2H5Z" ${ACC}/>` +
+    `<path d="M3.2 12 6.7 10.3v3.4Z" ${ACC}/>`,
   // Ghassanids: the cross of the phylarchs over a lance pennon.
   GHA:
     `<path d="M11.1 4h1.8v9h-1.8Z" ${ACC}/>` +
