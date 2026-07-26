@@ -229,5 +229,55 @@ console.log('== detached mainland raster fragments are repaired ==');
   'a target cell keeps its seed component and hands a detached fragment to its surrounding province');
 }
 
+console.log('== an atlas envelope holds a connected leak inside its peninsula ==');
+{
+  // Sinai's problem in miniature: cell A's claim runs unbroken into the land
+  // to its east, so the component pass sees one legal blob. The envelope (in
+  // lon/lat, projected through the atlas) is what stops it.
+  const tinyMap = {
+    MAP_W: 6, MAP_H: 3,
+    provinces: [
+      { name: 'A', lon: 1, lat: 1 },
+      { name: 'B', lon: 4, lat: 1 },
+    ],
+    contiguousProvinces: ['A'],
+    // one degree per pixel, north-up: the envelope covers columns 0..2
+    project: (lon, lat) => [lon, 2 - lat],
+    provinceRasterRegions: { A: [[0, 2], [3, 2], [3, -1], [0, -1]] },
+  };
+  const ids = new Uint16Array([
+    1, 1, 1, 1, 2, 2,
+    1, 1, 1, 1, 2, 2,
+    1, 1, 1, 1, 2, 2,
+  ]);
+  const moved = repairDisconnectedProvinceRaster(ids, tinyMap);
+  ok(moved === 3 && ids[3] === 2 && ids[9] === 2 && ids[15] === 2,
+    'the pixels outside the envelope go back to the neighbor that surrounds them');
+  ok(ids[0] === 1 && ids[6] === 1 && ids[12] === 1,
+    'everything inside the envelope is left exactly as the raster drew it');
+}
+
+console.log('== the atlas envelope covers the real Sinai seed and its coast ==');
+{
+  const { MAP_DATA } = await import(R + '/js/data/map_data.js');
+  const ring = (MAP_DATA.provinceRasterRegions || {})['Sinai Interior'];
+  ok(Array.isArray(ring) && ring.length >= 4, 'Sinai Interior carries an envelope');
+  const inside = (lon, lat) => {
+    let hit = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((yi > lat) !== (yj > lat)
+        && lon < ((xj - xi) * (lat - yi)) / ((yj - yi) || 1e-12) + xi) hit = !hit;
+    }
+    return hit;
+  };
+  const seed = MAP_DATA.provinces.find((p) => p.name === 'Sinai Interior');
+  ok(!!seed && inside(seed.lon, seed.lat), 'the seed sits inside its own envelope');
+  ok(inside(33.6, 30.2) && inside(34.0, 29.0),
+    'central Sinai and the southern peninsula are inside');
+  ok(!inside(31.2, 30.0) && !inside(35.9, 29.6) && !inside(34.5, 31.5),
+    'the Delta, the Arabian shore of the Gulf of Aqaba, and Gaza are outside');
+}
+
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

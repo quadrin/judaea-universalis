@@ -335,6 +335,26 @@ export const BOOKMARK_1948 = {
     ['ISR', 'JOR'],
     ['ISR', 'LEB'],
   ],
+  // What this age's diplomacy can and cannot do (SPEC §96). No Arab capital
+  // will sign a military alliance with Israel — not in 1948, not after
+  // Washington in 1979, not in any branch this campaign can reach; the
+  // treaties that were signed were recognitions, not pacts, and an Egyptian
+  // division was never going to fight for Israel. So the alliance is barred
+  // outright and recognition is the road that stays open: it converts the
+  // armistice into a peace, retires the rivalry, and binds neither state to
+  // the other's wars. The bar runs across the line in both directions and
+  // covers the formables on both sides (the Kingdom of Israel; the UAR).
+  diplomacy: {
+    recognition: true,
+    noAlliance: [
+      {
+        between: ['ISR', 'MLI'],
+        and: ['EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'UAR'],
+        why: 'No Arab state will put its name under a military alliance with Israel. '
+          + 'Recognition is as far as this age goes — and it is further than most of it got.',
+      },
+    ],
+  },
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among
@@ -423,6 +443,7 @@ export const BOOKMARK_1948 = {
   // victors' names wait in `integratedNames` below (SPEC §66).
   provinceNames: {
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
+    'Safed': 'Tzfat',
     'Ptolemais': 'Acre', 'Caesarea Maritima': 'Caesarea', 'Jamnia': 'Yavne',
     'Emmaus': 'Latrun',
     // Jotapata wears Sakhnin: kibbutz Yodfat is a 1960 foundation, and in
@@ -472,11 +493,10 @@ export const BOOKMARK_1948 = {
     'Hyrcania': 'Mazandaran',
   },
 
-  // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
-  // writes on a conquered province, applied only once the province is
-  // properly integrated (integration at 1) or peopled by the owner's own
-  // culture (a completed settlement). Until then — and again the moment the
-  // land changes hands — the labels keep the 15-May originals above.
+  // The victors' pens wait on both the schoolhouse and the settlers (SPEC
+  // §66): Jewish names require full integration AND a Jewish community of the
+  // owner's culture. Until then — and again the moment the land changes hands
+  // — the labels keep the 15-May originals above.
   integratedNames: {
     ISR: {
       // These modern cells reuse ancient canonical keys, but the 1948
@@ -782,6 +802,12 @@ export const BOOKMARK_1948 = {
     const h = ctx.helpers;
     if (g.flags && g.flags._bookmarkSetupRan) return;
     if (g.flags) g.flags._bookmarkSetupRan = true;
+
+    // --- The banner of the age (SPEC §68): the shared GRC emblem is the
+    // laurel wreath of the ancient leagues, which is not what flew over
+    // Athens in 1948. This era's Greece is the kingdom, under the nine
+    // stripes and the cross.
+    h.rebrandTag(ctx, 'GRC', { name: 'Kingdom of Greece', flag: 'GRC_MOD' });
 
     // --- Starting establishments (SPEC §58): the fleets and squadrons that
     // already exist at midnight — Israel's corvettes and first fighters included.

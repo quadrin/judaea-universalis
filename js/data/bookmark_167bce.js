@@ -100,11 +100,10 @@ export const BOOKMARK_167 = {
   },
 
   // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
-  // writes on a conquered province, applied only once the land is truly its
-  // own — owned, and either integrated or peopled by the owner's culture.
-  // The Hebrew pen writes the old names back over the Greek foundations of
-  // the kings; until then, and again the moment the land changes hands, the
-  // labels keep the era names above.
+  // writes on a conquered province. The Hebrew pen requires both full
+  // integration and a Jewish community of the owner's culture; other pens
+  // retain the older integration-or-culture threshold. Until then, and again
+  // the moment the land changes hands, the labels keep the era names above.
   integratedNames: {
     HAS: {
       'Ptolemais': 'Akko', 'Scythopolis': 'Beit She\'an', 'Sebaste': 'Shomron',

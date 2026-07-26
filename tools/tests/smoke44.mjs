@@ -100,9 +100,15 @@ for (const [file, key] of BOOKS) {
     const era = Object.prototype.hasOwnProperty.call(bm.provinceNames || {}, 'Damascus')
       ? bm.provinceNames.Damascus : 'Damascus';
     const d = DEFINES.TAGS[jewishTag];
+    // Both halves (SPEC §95): the schoolhouse (integration) and a community
+    // of the state's own faith and culture living in the province.
     const p = {
       id: 1, canon: 'Damascus', name: era, owner: jewishTag,
       integration: 1, culture: 'aramean',
+      pop: [
+        { r: 'paganism', c: 'aramean', n: 9000 },
+        { r: d.religion, c: d.culture, n: 3000 },
+      ],
     };
     resolveDisplayName({
       bookmark: bm,
@@ -131,9 +137,10 @@ console.log('== precedence and eligibility ==');
     },
     bus: { emit() {} },
   };
+  const olim = (n) => [{ r: 'islam', c: 'arab_modern', n: 20000 }, { r: 'judaism', c: 'israeli', n }];
   const oboda = {
     id: 1, canon: 'Oboda', name: 'al-Auja', owner: 'ISR',
-    integration: 1, culture: 'arab_modern',
+    integration: 1, culture: 'arab_modern', pop: olim(4000),
   };
   resolveDisplayName(ctx, oboda);
   ok(oboda.name === 'Nitzana',
@@ -144,7 +151,7 @@ console.log('== precedence and eligibility ==');
   ]) {
     const modern = {
       id: 1, canon: canonName, name: eraName, owner: 'ISR',
-      integration: 1, culture: 'israeli',
+      integration: 1, culture: 'israeli', pop: olim(50000),
     };
     resolveDisplayName(ctx, modern);
     ok(modern.name === eraName,
@@ -153,19 +160,49 @@ console.log('== precedence and eligibility ==');
 
   const unintegrated = {
     id: 2, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
-    integration: 0.9, culture: 'arab_modern',
+    integration: 0.9, culture: 'arab_modern', pop: olim(4000),
   };
   resolveDisplayName(ctx, unintegrated);
   ok(unintegrated.name === 'Damascus',
-    'the shared pen still waits for integration or settlement');
+    'the shared pen still waits for the schoolhouse');
 
+  // SPEC §95: the settlers alone are no longer enough for a Hebrew name —
+  // a town of Israelis that the state has not integrated keeps its old label.
   const settled = {
     id: 3, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
-    integration: 0, culture: 'israeli',
+    integration: 0, culture: 'israeli', pop: olim(60000),
   };
   resolveDisplayName(ctx, settled);
-  ok(settled.name === 'Damesek',
-    'a province peopled by the owner earns the shared name without integration');
+  ok(settled.name === 'Damascus',
+    'settlers without integration do not yet write the shared name');
+
+  const noCommunity = {
+    id: 5, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
+    integration: 1, culture: 'arab_modern',
+    pop: [{ r: 'islam', c: 'arab_modern', n: 40000 }],
+  };
+  resolveDisplayName(ctx, noCommunity);
+  ok(noCommunity.name === 'Damascus',
+    'integration without a single Jewish resident does not write a Hebrew name');
+
+  const both = {
+    id: 6, canon: 'Damascus', name: 'Damascus', owner: 'ISR',
+    integration: 1, culture: 'arab_modern', pop: olim(4000),
+  };
+  resolveDisplayName(ctx, both);
+  ok(both.name === 'Damesek',
+    'the schoolhouse and the community together earn the shared name');
+
+  // The Hashemite pen is not a Jewish pen: it keeps the older threshold.
+  const quds = {
+    id: 7, canon: 'Jerusalem', name: 'Jerusalem', owner: 'JOR',
+    integration: 1, culture: 'arab_modern',
+    pop: [{ r: 'islam', c: 'arab_modern', n: 40000 }],
+  };
+  ctx.game.tags.JOR = { religion: 'islam', culture: 'arab_modern' };
+  resolveDisplayName(ctx, quds);
+  ok(quds.name === 'Al-Quds',
+    'a non-Jewish pen still writes on integration alone');
 
   const egyptian = {
     id: 4, canon: 'Damascus', name: 'Damascus', owner: 'EGY',

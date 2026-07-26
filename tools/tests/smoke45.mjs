@@ -95,7 +95,20 @@ console.log('== the player sees the wall ==');
   ok(d.grudge && d.grudge.count === 2, 'the panel reports the two remembered provinces');
   ok(!d.canImprove && /lost lands/.test(d.whyNotImprove), 'Improve Relations refuses, and says why');
   ok(!d.canGift && /lost lands/.test(d.whyNotGift), 'Send Gift refuses, and says why');
-  ok(!d.canAlly && /lost lands/.test(d.whyNotAlly), 'no alliance while the grudge is live');
+  // SPEC §96: in this bookmark an Israeli–Arab pact is barred outright, and
+  // that answer comes before the grudge's. The grudge wall itself is checked
+  // below on a pair the bar does not touch.
+  ok(!d.canAlly && /No Arab state/.test(d.whyNotAlly),
+    'no alliance across the 1948 line at all — the standing bar answers first');
+  const uk = acts.getDiplomacy('UK');
+  g.tags.UK.opinion = { ISR: 200 };
+  const held = liveGrudge(ctx, 'EGY', 'ISR');
+  ok(!!uk && !!held, 'a pair outside the bar is available for the grudge check');
+  // Give Britain the same wound: land of its own held by Israel.
+  g.tags.UK.grudges = { ISR: { provs: (held || []).slice(), y: g.date.y, m: g.date.m, thaw: 0 } };
+  const uk2 = acts.getDiplomacy('UK');
+  ok(!uk2.canAlly && /lost lands/.test(uk2.whyNotAlly),
+    'no alliance while the grudge is live');
 }
 
 console.log('== the book survives a save ==');

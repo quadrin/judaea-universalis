@@ -1,10 +1,11 @@
-// Headless regression — v6.8 (SPEC §66): the maps speak the owner's tongue
-// only once the land is truly theirs. Conquered provinces keep their 15-May
-// originals (Bir Saba, al-Majdal, al-Faluja, Umm Rashrash…) until the owner
-// integrates them (integration at 1) or peoples them with its own culture
-// (a completed settlement); a change of hands reverts the label, conquest
-// resets integration, and saves neither lose earned renames nor re-wall an
-// annexed waste.
+// Headless regression — v6.8 (SPEC §66, §95): the maps speak the owner's
+// tongue only once the land is truly theirs. Conquered provinces keep their
+// 15-May originals (Bir Saba, al-Majdal, al-Faluja, Umm Rashrash…) until the
+// owner integrates them (integration at 1) or peoples them with its own
+// culture (a completed settlement) — and a Hebrew name asks for both at once,
+// the schoolhouse AND a Jewish community living there. A change of hands
+// reverts the label, conquest resets integration, and saves neither lose
+// earned renames nor re-wall an annexed waste.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -66,14 +67,21 @@ const beersheba = prov('Beersheba');
     'Israeli-held Bir Saba keeps its name — the flag is not the schoolhouse');
 }
 
-console.log('== integration earns the new name ==');
+console.log('== the schoolhouse alone is not enough for a Hebrew name (SPEC §95) ==');
 {
   for (let i = 0; i < 3; i++) {
     beersheba.integrating = { by: 'ISR', monthsLeft: 1 };
     monthlyIntegration(ctx);
   }
-  ok(beersheba.integration >= 1 && beersheba.name === 'Be\'er Sheva',
-    'three integration programs later, the signposts read Be\'er Sheva');
+  ok(beersheba.integration >= 1 && beersheba.name === 'Bir Saba',
+    'fully integrated but with no Jewish resident, the town is still Bir Saba');
+}
+
+console.log('== the schoolhouse and the community together earn it ==');
+{
+  ctx.helpers.addPopulation(ctx, 'Bir Saba', { r: 'judaism', c: 'israeli', n: 6000 });
+  ok(beersheba.name === 'Be\'er Sheva',
+    'the olim arrive in an integrated town and the signposts read Be\'er Sheva');
 }
 
 console.log('== a change of hands reverts the label ==');
@@ -90,7 +98,7 @@ console.log('== a change of hands reverts the label ==');
     'won back by the sword, the province arrives unintegrated and keeps its original name');
 }
 
-console.log('== settlement earns it too — the settlers name their town ==');
+console.log('== settlement brings the settlers; the schoolhouse still follows ==');
 {
   const kg = prov('Kiryat Gat');
   kg.owner = 'ISR'; kg.controller = 'ISR';
@@ -98,8 +106,14 @@ console.log('== settlement earns it too — the settlers name their town ==');
   const res = settlementStart(ctx, 'ISR', idOf('Kiryat Gat'));
   ok(res.ok && kg.name === 'al-Faluja', 'the project begins in al-Faluja');
   for (let i = 0; i < 7; i++) monthlySettlement(ctx);
-  ok(kg.culture === 'israeli' && kg.name === 'Kiryat Gat',
-    'peopled by its settlers, al-Faluja becomes Kiryat Gat');
+  ok(kg.culture === 'israeli' && kg.name === 'al-Faluja',
+    'peopled by its settlers but unintegrated, the town is still al-Faluja');
+  for (let i = 0; i < 3; i++) {
+    kg.integrating = { by: 'ISR', monthsLeft: 1 };
+    monthlyIntegration(ctx);
+  }
+  ok(kg.name === 'Kiryat Gat',
+    'settled and integrated, al-Faluja becomes Kiryat Gat');
 }
 
 console.log('== the Hashemite pen, symmetric ==');

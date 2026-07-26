@@ -9,7 +9,7 @@ import {
   breakAllianceCore, assaultInfo, doAssault,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal, monthsBetween,
   coalitionAgainst, forceLimitOf, vassalsOf, sideLeaderOf,
-  declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals,
+  declareWar, truceActive, opinionOf, casusBelli, addOpinion, areRivals, recognized,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
   tagGen, mechanicOn,
@@ -496,6 +496,7 @@ function aiConsiderWar(ctx, tag) {
     const e = g.tags[tgt];
     if (!e || !e.alive) continue;
     if (truceActive(ctx, tag, tgt)) continue;
+    if (recognized(ctx, tag, tgt)) continue; // a recognized peace is not raided (SPEC §96)
     if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
     if (opinionOf(ctx, tag, tgt) > -50) continue;
     const rival = areRivals(ctx, tag, tgt);
@@ -598,6 +599,7 @@ function coalitionPunitiveWars(ctx) {
       const m = g.tags[k];
       if (!m || !m.alive || m.overlord) return false;
       if (truceActive(ctx, k, target)) return false;
+      if (recognized(ctx, k, target)) return false; // a recognized peace holds (SPEC §96)
       if ((m.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) return false; // busy courts sit out
       return true;
     });
@@ -673,6 +675,7 @@ function hegemonContainment(ctx) {
     const o = g.tags[k];
     if ((o.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
     if (truceActive(ctx, k, player)) continue;
+    if (recognized(ctx, k, player)) continue; // ...including against the hegemon
     if (num(o.stability) < 0 || num(o.warExhaustion) > 8) continue;
     if (strength(k) < strength(player) * 0.7) continue; // not suicidal, merely resolved
     if (!ctx.rng.chance(num(bal.containChance, 0.06) * num(personality(ctx, k).aggression, 1))) continue;

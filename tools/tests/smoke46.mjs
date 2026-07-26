@@ -47,8 +47,14 @@ const provByCanon = (g, canon) => {
 };
 
 // Three completed Integrate programs: the province is fully the owner's.
+// A Jewish pen wants both halves (SPEC §95): the schoolhouse and a community
+// of the state's own faith and culture. Plant the community, then integrate.
 function integrateFully(ctx, g, p, tag) {
   if (p.owner !== tag) { changeOwnerCore(ctx, p, tag); p.controller = tag; }
+  const t = g.tags[tag];
+  if (t && t.religion === 'judaism') {
+    ctx.helpers.addPopulation(ctx, p.name, { r: t.religion, c: t.culture, n: 4000 });
+  }
   for (let round = 0; round < 3; round++) {
     p.integrating = { by: tag, monthsLeft: 1 };
     monthlyIntegration(ctx);
