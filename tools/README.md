@@ -415,3 +415,9 @@ sharpest assertion is that `KNOWN_GAPS` equals the set of roads with no ending,
 so finishing a road means deleting its gap entry in the same commit. Note the
 marker check reads the content packages as TEXT: the effect wrapper hides
 `setFlag` from `String()`, so a runtime check would silently pass.
+
+SPEC §120 adds `events_40bce_alternates.js` and two cards to
+`events_1948_region.js`, closing the gaps smoke83 had been failing. If you add a
+content package, add it to smoke83's SOURCES map in the same commit — the marker
+check reads files by name and will report a live road as dead otherwise, which
+is exactly what happened when this batch landed.

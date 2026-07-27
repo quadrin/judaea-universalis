@@ -1234,4 +1234,137 @@ export const EVENTS_1948_REGION = [
       },
     ],
   },
+
+  // ═══ THE UNION THAT DID NOT COME APART (SPEC §120) ═══════════════════════
+  //
+  // `ev_i_secession` offers two roads and the path tree only recorded one. The
+  // second — Cairo lands the paratroops and this time they do not surrender —
+  // sets `unionHeldByForce` and then had nowhere to go: the United Arab
+  // Republic survived on the map and the chapter went on addressing a Syria
+  // that, on this road, is a province of it. A fork with an unfinished branch
+  // is the §119 failure mode exactly, and this is that branch finished.
+  //
+  // What a surviving union actually changes is not military. It is that the
+  // most-populous Arab state and the most ideologically committed one are the
+  // same government, which means the arguments that were conducted between
+  // Cairo and Damascus for forty years are now conducted inside one cabinet,
+  // with no border to lose them across and no second capital to defect to.
+
+  {
+    id: 'ev_i_union_endures',
+    title: 'One Cabinet, Two Countries',
+    worldLabel: 'The United Arab Republic is still a state',
+    desc: 'The union held, and the decade since has been spent discovering what that '
+      + 'costs. Damascus is governed from Cairo by men who do not speak its Arabic and '
+      + 'have replaced its officer corps twice; the Syrian bourgeoisie, whose land was '
+      + 'nationalised by a decree drafted in another country, has moved its money to '
+      + 'Beirut and its sons to Paris. But the thing works. There is one army, one '
+      + 'foreign ministry, one voice on the radio that the whole Arab world listens to '
+      + 'without the irritation of hearing it contradicted from a second capital the '
+      + 'following week — and when the crisis comes, as it is plainly coming, there '
+      + 'will be no question of coordinating two general staffs, because there is only '
+      + 'the one.',
+    forTag: 'both',
+    decider: (ctx) => (alive(ctx, 'UAR') ? 'UAR' : (syrOwn(ctx) || 'EGY')),
+    date: { y: 1966, m: 4 },
+    world: true,
+    major: true,
+    when: safeTrigger('ev_i_union_endures:when', (ctx) =>
+      !!ctx.game.flags.unionHeldByForce && !alive(ctx, 'SAR')
+      && (alive(ctx, 'UAR') || !!syrOwn(ctx))),
+    aiOption: 0,
+    historical: 'The union lasted three and a half years. Every Arab coalition after 1961 had to be assembled out of governments that had already fallen out with each other.',
+    options: [
+      {
+        label: 'One army, one staff, one plan',
+        tooltip: 'The union is consolidated as a single military establishment: +12,000 manpower, +8% morale permanently, +1 stability, and "One General Staff" (no coalition penalty — the two fronts are one command). The Syrian provinces keep their occupation unrest; a union held by force is still held by force, and the cabinet knows it.',
+        effects: guard('ev_i_union_endures:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = alive(ctx, 'UAR') ? 'UAR' : syrOwn(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { manpower: 12000, stability: 1, legitimacy: 8 });
+          h.addTagModifier(ctx, me, {
+            id: 'one_general_staff', name: 'One General Staff', months: -1,
+            effects: { moraleMult: 1.08 },
+          });
+          ctx.game.flags.unionEndures = true;
+          h.chronicle(ctx, 'era', 'The United Arab Republic consolidates into a single military establishment: one army, one staff, and no second capital to lose an argument in.');
+        }),
+      },
+      {
+        label: 'Give Damascus its own ministries and hope that is enough',
+        tooltip: 'Devolution rather than consolidation: the Syrian provinces lose 1.5 unrest permanently and the union gains +10% income as the Damascene money comes home from Beirut — but no unified command (−4% morale), and the arrangement is now a federation that both halves describe differently. The quieter answer, and the one that keeps the union recognisable to the people inside it.',
+        effects: guard('ev_i_union_endures:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = alive(ctx, 'UAR') ? 'UAR' : syrOwn(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { legitimacy: 12 });
+          h.addTagModifier(ctx, me, {
+            id: 'the_federation', name: 'A Federation, Described Two Ways', months: -1,
+            effects: { incomeMult: 1.1, moraleMult: 0.96 },
+          });
+          unrestAcross(ctx, me, SYRIA_CORE, {
+            id: 'damascene_ministries', name: 'Ministries in Damascus', months: -1,
+            effects: { unrest: -1.5 },
+          });
+          ctx.game.flags.unionEndures = true;
+          ctx.game.flags.unionDevolved = true;
+          h.chronicle(ctx, 'era', 'Damascus gets its own ministries and its money comes home from Beirut; the union survives as a federation that each half describes differently to its own people.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_i_what_the_union_was',
+    title: 'What the Union Was',
+    worldLabel: 'The century closes on a state that should not have lasted',
+    desc: 'It has outlasted the man who made it, the ideology he made it out of, and '
+      + 'every prediction filed about it in 1961 — including, in the archives of three '
+      + 'foreign ministries, some very confident ones. What it did not outlast is the '
+      + 'argument about what it is. To Cairo it is the natural condition of a people '
+      + 'the map divided by accident and the union corrected. To a great many people '
+      + 'in Aleppo it is the longest occupation in modern Arab history, conducted by '
+      + 'men who arrive speaking a dialect they have to slow down for. Both of those '
+      + 'have been true the whole time, which is the ordinary condition of large '
+      + 'states and not a scandal peculiar to this one. The century ends with the '
+      + 'question open, the state intact, and both halves of it certain the other '
+      + 'half got the better of the arrangement.',
+    forTag: 'both',
+    decider: (ctx) => (alive(ctx, 'UAR') ? 'UAR' : (syrOwn(ctx) || 'EGY')),
+    date: { y: 2000, m: 2 },
+    world: true,
+    major: true,
+    when: safeTrigger('ev_i_what_the_union_was:when', (ctx) =>
+      !!ctx.game.flags.unionEndures && !alive(ctx, 'SAR')),
+    aiOption: 0,
+    historical: 'There was no union to have the argument about. Syria and Egypt spent the rest of the century as separate states that agreed about very little.',
+    options: [
+      {
+        label: 'Enter it in the record and leave the question open',
+        tooltip: 'The chapter closes on the union: +20 legitimacy, +1 stability, and "The State That Should Not Have Lasted" permanently (+10% income). A union that devolved carries it quietly (−1 unrest everywhere); one held by a single staff to the end carries the occupation with it (+0.5 unrest in the Syrian provinces) — each answer keeping what it earned.',
+        effects: guard('ev_i_what_the_union_was:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = alive(ctx, 'UAR') ? 'UAR' : syrOwn(ctx);
+          if (!me) return;
+          const devolved = !!ctx.game.flags.unionDevolved;
+          h.adjust(ctx, me, { legitimacy: 20, stability: 1 });
+          h.addTagModifier(ctx, me, {
+            id: 'should_not_have_lasted', name: 'The State That Should Not Have Lasted',
+            months: -1, effects: { incomeMult: 1.1, unrestAll: devolved ? -1 : 0 },
+          });
+          if (!devolved) {
+            unrestAcross(ctx, me, SYRIA_CORE, {
+              id: 'the_longest_occupation', name: 'The Longest Occupation', months: -1,
+              effects: { unrest: 0.5 },
+            });
+          }
+          ctx.game.flags.unionOutlasted = true;
+          h.chronicle(ctx, 'era', devolved
+            ? 'The century closes on a United Arab Republic that devolved rather than garrisoned, and is argued about rather than resented.'
+            : 'The century closes on a United Arab Republic still held by one general staff — the natural condition of a divided people to one half of it, and the longest occupation in modern Arab history to the other.');
+        }),
+      },
+    ],
+  },
 ];

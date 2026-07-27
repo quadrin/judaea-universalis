@@ -141,10 +141,19 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
           Object.freeze({
             id: 'hasmonean', name: 'Mattathias, High Priest',
-            marker: 'hasmoneanHolds', entry: 'ev5_atg_crowned', terminal: null,
-            note: 'The last Hasmonean holds the throne against Rome. GAP: no terminal — the '
-              + 'road runs out before the chapter does, and ev5_her_leash suggests a further '
-              + 'branch that was never given an ending either.',
+            marker: 'hasmoneanHolds', entry: 'ev5_atg_crowned',
+            terminal: 'ev5_a_not_a_province',
+            note: 'The last Hasmonean holds the throne against Rome. SPEC §120 carries it from '
+              + 'Actium to 6 CE — the year it does NOT become a province, because Rome annexed '
+              + 'thrones it found embarrassing rather than thrones it found inconvenient.',
+          }),
+          Object.freeze({
+            id: 'greater_herod', name: 'Too Large to Be a Favour',
+            marker: 'largerThanTheFavour', entry: 'ev5_h_too_large_to_be_a_favour',
+            terminal: 'ev5_h_no_prefect_for_this_one',
+            note: 'SPEC §120. A Herod who took Damascus or Petra has outgrown the word client. '
+              + 'ev5_provincia used to depose him on the historical schedule regardless; it now '
+              + 'stands aside, and this road gets its own 6 CE.',
           }),
         ],
       }),
@@ -296,8 +305,16 @@ export const CHAPTER_PATHS = Object.freeze([
             marker: null, tagMarker: 'SAR', entry: 'ev_i_secession', terminal: null,
             note: 'September 1961: Syria walks out under a new tag. This road is proved by a '
               + 'STATE rather than a flag — nothing is written down, the Syrian Arab Republic '
-              + 'simply exists afterwards. GAP: no declared terminal; the road merges back into '
-              + 'the chapter\'s common spine rather than ending.',
+              + 'simply exists afterwards. It has no terminal because it IS the chapter\'s '
+              + 'main line from 1961 on: everything after it is written for a separate Syria.',
+          }),
+          Object.freeze({
+            id: 'union_holds', name: 'One Cabinet, Two Countries',
+            marker: 'unionHeldByForce', entry: 'ev_i_secession',
+            terminal: 'ev_i_what_the_union_was',
+            note: 'SPEC §120. The paratroops land at Latakia and this time they do not '
+              + 'surrender. The road existed as an option and went nowhere; it now runs to '
+              + 'a 2000 that asks what the union was.',
           }),
         ],
       }),
@@ -312,15 +329,10 @@ export const CHAPTER_PATHS = Object.freeze([
 // build enforces rather than a comment nobody rereads.
 export const KNOWN_GAPS = Object.freeze([
   Object.freeze({
-    chapter: '40bce', fork: 'who_wears_the_crown', road: 'hasmonean',
-    why: 'A surviving Antigonus has no ending, and ev5_her_leash — the Herod who outgrows his '
-      + 'leash — reads as a further road that was never given one either. The 40 chapter runs '
-      + 'to 6 CE and this road stops well before it.',
-  }),
-  Object.freeze({
     chapter: '1948ce', fork: 'the_union', road: 'secession',
-    why: 'Not a true gap so much as a fork with one road: the union coming apart has no '
-      + 'counterpart card for a union that HOLDS, so there is nothing for it to be exclusive '
-      + 'with and nothing for it to end against.',
+    why: 'Not an unfinished road but the chapter\'s main line: after September 1961 every '
+      + 'later card is written for a separate Syria, so the secession has no ending of its own '
+      + 'to reach — it simply becomes the spine. Its counterpart, the union held by force, is '
+      + 'the one that needed a terminal and now has one (SPEC §120).',
   }),
 ]);

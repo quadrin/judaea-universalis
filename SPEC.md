@@ -5418,3 +5418,82 @@ forget to declare it, and the suite fails.
 - **Renderer**: `node tools/paths.mjs [chapter] [--gaps]`. It prints and does not
   validate; a renderer that also validated would be trusted for the wrong reason.
 - **Regression contract**: `smoke83.mjs`.
+
+## 120. The roads that stopped early
+
+The path tree of §119 declared two gaps and the suite has been failing them ever
+since, which is what a to-do list the build enforces is for. Both are closed
+here, and closing them turned up a third thing nobody had declared at all.
+
+**40 BCE had two unfinished roads, not one.** The chapter runs to 6 CE, where
+`ev5_provincia` deposes Archelaus and makes Judaea a province, and the
+historical Herodian road runs all the way there. The Hasmonean road — a player
+who beat both Herod and Rome to keep the last Hasmonean on the throne — stopped
+at −32, leaving thirty-eight silent years across Actium and the whole Augustan
+settlement. And `ev5_her_leash` and `ev5_her_incense`, which fire at −26 and −25
+for a Herod who has outgrown his leash into Damascus or Petra, turned out to be
+a *third* road that also stopped — and worse than stopped, because
+`ev5_provincia` was a bare dated card with no guard, so a kingdom running to
+Damascus was handed to a prefect from Caesarea on exactly the schedule of one
+that never left the hills.
+
+Both endings turn on the same historical point, which is the interesting thing
+about the chapter: **Rome in this period annexed thrones it found embarrassing,
+not thrones it found inconvenient.** Judaea became a province because Archelaus
+was bad at the job and his own notables petitioned to be rid of him, not because
+Rome wanted the ground. Commagene, Cappadocia, Emesa and Nabataea all continued
+for decades on exactly that basis, and the difference was almost never military.
+
+- **The Patron at the Bottom of the Sea** (−31). Actium leaves a king seated by
+  Parthian cavalry with no Roman friend at all. Go to Rhodes and make Herod's
+  argument without Herod — a king who kept faith with one Roman will keep it
+  with another — or send nobody, keep the eastern alliance, and go on a list
+  that the young man in Italy is in no hurry to act on.
+- **The Settlement of the East** (−20). Augustus files every throne between the
+  Taurus and the desert, and the question the clerks ask is boring and decisive:
+  what is the yield, who complains, how often. Answer with audited books and be
+  administratively invisible, or answer that a kingdom is not a province with a
+  king on it — dignity is real and it is not free.
+- **The Year It Did Not Become a Province** (6 CE) closes it. No prefect, no
+  census, no fourth philosophy, and the reason is not strength: it is that
+  nobody came to Rome about this one.
+- **Too Large to Be a Favour** (−20) and **No Prefect for This One** (6 CE) do
+  the same for the greater Herod. Garrison the desert road at your own expense
+  and let Antioch do the arithmetic on what that saves, or mint your own coin
+  and sign your letters as an equal — the one thing the old arrangement never
+  permitted was saying out loud that it had changed.
+
+**And two guards that were missing.** `ev5_provincia` now fires only on the road
+it is about; stated positively, because the negative form announced the
+annexation of Judaea in a year when a Hasmonean king was sitting in Jerusalem
+and the effects then silently did nothing. `ev5_census` hangs off
+`judaeaProvincia` rather than off the calendar, because the census is what a
+prefect does on arriving and there is no Quirinius without a Coponius.
+
+**1948's union fork had two roads and the tree recorded one.**
+`ev_i_secession` already offered "Cairo lands the paratroops at Latakia" — the
+union held by force — and that road then went nowhere while the chapter carried
+on addressing a Syria which, on it, is a province of Egypt. **One Cabinet, Two
+Countries** (1966) and **What the Union Was** (2000) finish it. What a surviving
+union changes is not military: it is that the most populous Arab state and the
+most ideologically committed one are the same government, so the arguments
+conducted between Cairo and Damascus for forty years are now conducted inside
+one cabinet, with no border to lose them across and no second capital to defect
+to. Consolidate into one general staff, or give Damascus its own ministries and
+watch the money come home from Beirut.
+
+**A rule the terminals taught.** Both new endings first re-ran the predicate
+that had opened their road, and both were silently deleted by it: `when` retires
+rather than waits, so a kingdom that lost Petra in 12 BCE lost its 6 CE as well.
+The §119 rule applies to terminals too — **the first road entered is the road**.
+A terminal tests the marker and that the court still exists, not the geography
+of twenty-six years earlier.
+
+The remaining declared gap is the Syrian secession, and it is not an unfinished
+road: after September 1961 every later card in the chapter is written for a
+separate Syria, so it has no ending of its own to reach because it has become
+the spine.
+
+- **Regression contract**: `smoke83.mjs`, whose gap list now names one road
+  instead of two, and which caught `events_40bce_alternates.js` missing from its
+  own source map the moment the file was added.

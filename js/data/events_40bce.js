@@ -2056,6 +2056,34 @@ export const EVENTS_40 = [
     decider: 'HER',
     date: { y: 6, m: 6 },
     major: true,
+    // SPEC §120. Rome annexed thrones it found embarrassing, not thrones it
+    // found inconvenient: Archelaus went because his own notables petitioned to
+    // be rid of him and the country was small enough that nobody in Italy could
+    // think of a reason to keep it. Neither is true of a Herod who has outgrown
+    // his leash into Damascus or Petra, and this card used to depose him anyway
+    // on the same schedule — the greater-Herod road had no ending of its own and
+    // was simply swallowed by the historical one. `ev5_h_no_prefect_for_this_one`
+    // is that road's 6 CE; this is the card standing aside for it.
+    // Stated positively, because the negative form fired this card over roads it
+    // has nothing to say to: it announced the annexation of Judaea in a year
+    // when a Hasmonean king was sitting in Jerusalem and the effects then
+    // silently did nothing. The deposition of Archelaus needs an Archelaus.
+    when: (ctx) => {
+      try {
+        const g = ctx.game;
+        const t = g.tags && g.tags.HER;
+        if (!t || t.alive === false || t.overlord) return false;
+        if (!ctx.helpers.controls(ctx, 'HER', 'Jerusalem')) return false;
+        // A rival still holding a crown means this is not that history at all.
+        const atg = g.tags.ATG;
+        if (atg && atg.alive !== false && atg.overlord !== 'HER') return false;
+        // And a kingdom that outgrew the arrangement gets its own 6 CE
+        // (SPEC §120, ev5_h_no_prefect_for_this_one).
+        const larger = ctx.helpers.controls(ctx, 'HER', 'Damascus')
+          || ctx.helpers.controls(ctx, 'HER', 'Petra');
+        return !larger;
+      } catch (e) { return true; }
+    },
     aiOption: 0,
     options: [
       {
@@ -2076,6 +2104,10 @@ export const EVENTS_40 = [
             id: 'provincia_iudaea', name: 'Provincia Iudaea', months: 120,
             effects: { unrestAll: -0.5 },
           });
+          // SPEC §120: the census that follows is what a prefect DOES on
+          // arriving, so it hangs off the annexation actually happening rather
+          // than off the calendar.
+          ctx.helpers.setFlag(ctx, 'judaeaProvincia', true);
           ctx.helpers.chronicle(ctx, 'era', 'Archelaus is deposed to Vienne in Gaul; Judaea becomes a Roman province under a prefect of the equestrian order.');
         }),
       },
@@ -2118,6 +2150,13 @@ export const EVENTS_40 = [
     decider: 'HER',
     date: { y: 6, m: 10 },
     major: true,
+    // The census is what a PREFECT does on arriving; no annexation, no
+    // Quirinius. SPEC §120 — the same road check as ev5_provincia, which this
+    // card is downstream of.
+    when: (ctx) => {
+      try { return !!ctx.helpers.getFlag(ctx, 'judaeaProvincia'); }
+      catch (e) { return true; }
+    },
     aiOption: 0,
     options: [
       {
