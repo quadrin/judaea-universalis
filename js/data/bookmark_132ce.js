@@ -54,6 +54,10 @@ export const BOOKMARK_132 = {
   id: '132ce',
   name: 'The Bar Kokhba Revolt',
   startDate: { y: 132, m: 4, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — Bar Kokhba and the three centuries the chapter follows it through.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: 430,
   // Technology of the age (SPEC §22): Hadrian's legions at their zenith.
   techBase: 5,
   // How far up the ladder this age can climb (SPEC §99). Hadrian's century stops at the professional legion (SPEC §99).

@@ -28,7 +28,7 @@ const ok = (cond, msg) => {
 // event ARRAYS, not paths, so this is the one place the mapping is written
 // twice — and the suite fails loudly if a file named here disappears.
 const SOURCES = {
-  '167bce': ['events_167bce.js', 'events_167bce_kings.js', 'events_167bce_world.js'],
+  '167bce': ['events_167bce.js', 'events_167bce_kings.js', 'events_167bce_world.js', 'events_167bce_after.js'],
   '67bce': ['events_67bce.js'],
   '40bce': ['events_40bce.js', 'events_40bce_alternates.js'],
   '66ce': ['events_66ce.js'],

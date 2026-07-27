@@ -312,6 +312,10 @@ export const BOOKMARK_1948 = {
     },
   ],
   startDate: { y: 1948, m: 5, d: 15 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the War of Independence and the century after it.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: 2005,
   // Technology of the age (SPEC §22): rifle brigades and armored corps.
   techBase: 19,
   // How far up the ladder this age can climb (SPEC §99). The one bookmark whose century really does field rifle brigades and

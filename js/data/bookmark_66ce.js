@@ -76,6 +76,10 @@ export const BOOKMARK_66 = {
   id: '66ce',
   name: 'The Great Revolt',
   startDate: { y: 66, m: 6, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the Great Revolt and the generation that fought it.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: 100,
   // Technology of the age (SPEC §22): imperial Rome musters Professional
   // Legions; Judaea's host is drilled but a pattern behind.
   techBase: 5,

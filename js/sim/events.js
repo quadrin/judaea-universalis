@@ -87,6 +87,24 @@ function canFire(ctx, ev) {
   // incidents never haunt the Hasmoneans. Events without bounds are timeless.
   if (Number.isFinite(ev.minYear) && g.date.y < ev.minYear) return false;
   if (Number.isFinite(ev.maxYear) && g.date.y > ev.maxYear) return false;
+  // SPEC §121 — the generation horizon. A chapter may declare the year after
+  // which its own undated cards stop belonging to anybody. Without it, a
+  // triggered card with no window is timeless in the literal sense: a 167 game
+  // played forward was seen firing `ev_rededication`, `ev_akra_falls` and
+  // `ev_bronze_tablets` — the rededication of the Temple, the fall of the Akra
+  // and the tablets on Mount Zion — in 49 BCE, a hundred and eighteen years
+  // after the revolt they belong to, because their conditions were finally
+  // satisfied by some later war. Thirty-two of the 167 chain's forty-four
+  // triggered cards carry no window at all, so windowing them one at a time was
+  // thirty-two judgement calls; this is the one that covers them.
+  //
+  // Dated cards are exempt: a date IS a window. So is any card that declares
+  // its own maxYear, which is how a chapter says "this one legitimately runs
+  // late" — the 132 chapter's fourth-century arcs do exactly that.
+  if (!ev.date && !Number.isFinite(ev.maxYear)) {
+    const horizon = ctx.bookmark && ctx.bookmark.generationHorizon;
+    if (Number.isFinite(horizon) && g.date.y > horizon) return false;
+  }
   if (ev.once !== false && g.firedEvents[ev.id]) return false;
   // Repeatable events honor a per-event cooldown (stored as the first month
   // index at which they may fire again).

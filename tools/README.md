@@ -421,3 +421,9 @@ SPEC §120 adds `events_40bce_alternates.js` and two cards to
 content package, add it to smoke83's SOURCES map in the same commit — the marker
 check reads files by name and will report a live road as dead otherwise, which
 is exactly what happened when this batch landed.
+
+SPEC §121 adds `smoke84.mjs` (the generation horizon and the 167 continuation).
+Its last section plays 175 AI years, so it sits with smoke78/80/81 among the
+slow suites. If you add a chapter, give its bookmark a `generationHorizon` in
+the same commit — smoke84 asserts every one of them has it, because a chapter
+without one lets its revolt cards fire a century later.

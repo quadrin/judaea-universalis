@@ -71,6 +71,10 @@ export const BOOKMARK_40 = {
   id: '40bce',
   name: "Herod's Rise",
   startDate: { y: -40, m: 7, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the Parthian interlude and the reign it decided.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: 10,
   // Technology of the age (SPEC §22): the legions and the cataphract East.
   techBase: 4,
   // How far up the ladder this age can climb (SPEC §99). Herod's century stops at the professional legion (SPEC §99).

@@ -78,6 +78,10 @@ export const BOOKMARK_167 = {
   id: '167bce',
   name: 'The Maccabean Revolt',
   startDate: { y: -167, m: 11, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the Maccabean and Hasmonean generations, closed by Pompey's settlement of the East.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: -60,
   // Technology of the age (SPEC §22). Everyone starts level: the Seleucid
   // edge is already scripted into armies and events — a tech edge on top
   // crushes the designed underdog arc flat.

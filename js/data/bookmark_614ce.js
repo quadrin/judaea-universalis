@@ -114,6 +114,10 @@ export const BOOKMARK_614 = {
   id: '614ce',
   name: 'The Persian Gambit',
   startDate: { y: 614, m: 5, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the Persian conquest and the century it opened.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: 700,
   // Technology of the age (SPEC §22): thematic regulars and armored lancers.
   techBase: 10,
   // How far up the ladder this age can climb (SPEC §99). Heraclius' world reaches the thematic regulars and stops there — the

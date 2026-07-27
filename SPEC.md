@@ -5497,3 +5497,76 @@ the spine.
 - **Regression contract**: `smoke83.mjs`, whose gap list now names one road
   instead of two, and which caught `events_40bce_alternates.js` missing from its
   own source map the moment the file was added.
+
+## 121. A chapter that does not stop at its own edge
+
+Asked as a question: what happens if you play 167 all the way forward to what
+ought to be Herod's time? Traced, the answer was nothing, twice over.
+
+**The chain stops and the clock does not.** The last card in the 167 chain is
+`ev_w_pompey_organizes` in −64, and no bookmark declares an end date, so a
+campaign played on from there simply ticks. The probe drew sixty-eight silent
+years covering Caesar, the Ides, Antony and Cleopatra, the Parthian sweep of 40,
+the entire reign of Herod, Actium and the Augustan settlement of the East.
+
+**And what did fire in that span was wrong.** `ev_rededication`,
+`ev_akra_falls` and `ev_bronze_tablets` — the rededication of the Temple, the
+fall of the Akra, the tablets on Mount Zion — went off in **49 BCE**, a hundred
+and eighteen years after the revolt they belong to, because some later war
+finally satisfied their conditions. Thirty-two of the chain's forty-four
+triggered cards carry no era window at all, so windowing them individually was
+thirty-two judgement calls.
+
+### The generation horizon
+
+One field instead. A bookmark may declare `generationHorizon`: the year after
+which its own **undated** trigger cards stop belonging to anybody. `canFire`
+refuses them past it. Two exemptions are deliberate — a dated card *is* windowed
+by its date, and a card that declares its own `maxYear` is a chapter saying "this
+one legitimately runs late", which is exactly what 132's fourth-century arcs do.
+All seven chapters now declare one.
+
+### The continuation
+
+The obvious repair would have been to hand a 167 game the 67 and 40 chains,
+which already contain that history in detail — and it is wrong. Those chapters
+are written for a world their own bookmarks create: HYR and ARI quarrelling over
+a throne, ATG seated by Parthian cavalry, HER bidding for it in Rome. In a 167
+continuation none of those courts exist. HAS is still the Jewish state *because
+it never lost*, which is the entire premise of having played that far, and
+handing it the war of the brothers would be handing it somebody else's chapter.
+
+`events_167bce_after.js` is the same history asked of a different state, and the
+difference is the point. A Hasmonean Judaea intact in 63 BCE holds something no
+other court in the East has: a treaty with Rome cut in 161 by Judah Maccabee and
+renewed by every ruler since — older than the province of Asia, older than Roman
+Syria, older than the careers of every man now arguing about the frontier.
+
+- **The Oldest Treaty in the East** (−63). Pompey's commission expects a king
+  explaining he was always Rome's friend, produced at the moment it becomes
+  useful; it gets a bronze tablet and a century of renewals. Stand on it and pay
+  what friendship costs, or submit it and add nothing — and leave a commission
+  that cannot close a file, which Rome is extremely good at reopening.
+- **The Governor Who Needed Money** (−53). Crassus takes the Temple treasure and
+  dies at Carrhae fourteen months later. Take the road east while there is no
+  road west, or refill the chamber from your own revenue and enter the theft as
+  a debt — the most useful thing about an outrage being that nobody has to be
+  reminded of it.
+- **The Year Parthia Came** (−40). The year that in the other history put a
+  Hasmonean on the throne with Parthian help. There is already a Hasmonean on
+  the throne, so what arrives is not a crown but a frontier. Anchor the Arsacid
+  march and take the war that answer has always cost — Ventidius, within two
+  years — or send the envoys away with gifts and make sure Antioch is told.
+- **A Hundred Years of Friendship** (−20). Augustus reads the accounts summary
+  first and the treaty afterwards, out of curiosity.
+- **The Year of the Other History** (6 CE). The year Judaea became a province,
+  passing without a prefect: the clerks in Antioch open the file, find nothing
+  that needs doing, and close it. That is the whole event, and it is the point.
+
+The 167 chapter's `lastYear` in the path tree moves from −64 to 6, and its
+Parthian question becomes a two-road fork like any other.
+
+- **Regression contract**: `smoke84.mjs`, which asserts every chapter declares a
+  horizon, that the three late-firing cards have no window of their own so the
+  horizon is what stops them, and which plays 175 years to confirm all five
+  continuation cards fire and no revolt card fires past −60.

@@ -83,6 +83,10 @@ export const BOOKMARK_67 = {
   id: '67bce',
   name: 'The Judaean Civil War',
   startDate: { y: -67, m: 4, d: 1 },
+  // SPEC §121: the year after which this chapter's own undated trigger
+  // cards stop belonging to anybody — the war of the brothers and the house that came out of it.
+  // A card that legitimately runs later says so with its own maxYear.
+  generationHorizon: -25,
   // Technology of the age (SPEC §22): Pompey's Rome fields the Marian legion,
   // two patterns ahead of the quarreling Levant.
   techBase: 4,

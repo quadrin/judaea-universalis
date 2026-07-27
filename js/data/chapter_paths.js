@@ -44,7 +44,10 @@ export const CHAPTER_PATHS = Object.freeze([
   Object.freeze({
     id: '167bce',
     title: 'The Maccabean Revolt',
-    lastYear: -64,
+    // SPEC §121 pushed this out from −64. The chapter used to stop at Pompey
+    // and leave a surviving Hasmonean state sixty-eight silent years; it now
+    // runs to the year the NEXT chapter's history ended without it.
+    lastYear: 6,
     forks: [
       Object.freeze({
         id: 'the_lysias_expedition',
@@ -63,6 +66,27 @@ export const CHAPTER_PATHS = Object.freeze([
             note: 'A Judaea at peace by −162 never sees the expedition. The engine RETIRES the card '
               + 'with that reason and shows the player the page — this road is a recorded absence, '
               + 'which is why it has no marker and needs no cards.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_line_continues',
+        question: 'A Hasmonean Judaea reaches the year Parthia sweeps Syria. Which empire?',
+        roads: [
+          Object.freeze({
+            id: 'western_march', name: 'The Western March',
+            marker: 'westernMarch', entry: 'ev_w_the_year_parthia_came',
+            terminal: 'ev_w_the_year_of_the_other_history',
+            note: 'SPEC §121. Judaea anchors the Arsacid frontier and takes the war with Rome '
+              + 'that answer has always cost. The largest bet in the chapter, with a documented '
+              + 'outcome — Ventidius, within two years.',
+          }),
+          Object.freeze({
+            id: 'declined_the_march', name: 'Declined in Writing',
+            marker: 'declinedTheMarch', entry: 'ev_w_the_year_parthia_came',
+            terminal: 'ev_w_the_year_of_the_other_history',
+            note: 'SPEC §121. The envoys go away with gifts and Antioch is told they did. The '
+              + 'useful thing was never which empire you choose but being seen to have chosen.',
           }),
         ],
       }),
