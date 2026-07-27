@@ -5308,3 +5308,67 @@ because of where they were. A coalition member called into somebody else's war
 should be able to decline it, or to settle out of it early, and until it can,
 the 1948 chapter will keep producing regional land grabs that no participant
 ever wanted.
+
+## 116. A demand has to be somewhere
+
+Reported from play: in a 1948 campaign Iraq annexed parts of Egypt and Turkey
+took parts of Lebanon, and a traced run reproduced worse — Egypt owning
+Hyrcania, Gabae and Susa in central Iran, and Jordan owning Hatra and Charax.
+
+Uti possidetis says a winner keeps what it holds at the bell. It does not say a
+winner keeps what it holds on the other side of somebody else's country. §109
+gave released states a land border on the grounds that a state has to be
+somewhere; an annexation is the same claim from the other direction and never
+got the same rule.
+
+The first thing the trace corrected was where to put it. `endWarBySword` is not
+the path the AI settles through — the peace table is `peaceDealInfo`, which
+builds its demandable list from occupation alone, with no geography test at
+all. The rule now lives in both: `demandReach` filters the table, `annexable`
+filters a settlement by the sword. A demand must be land-reachable from the
+claimant's own country, counting the other demands as stepping stones, so a
+claim may run outward from the border through a corridor but may not begin on
+the far side of a country nobody is taking.
+
+**The valve, which is not a fudge.** The first draft broke six suites, because
+a geometry can be REAL — edges exist, `geomHasEdges` is true — and still be
+meaningless: the older harnesses build a line of beads where province `i`
+borders `i±1`. Rather than try to detect a fake map, the rule refuses only the
+outcome that is certainly wrong — a victorious army holding enemy ground and a
+table with nothing on it. If the filter would strike out every demand it has
+learned nothing about that world and stands aside. Where the map is real there
+is always something adjacent to ask for, so it still bites exactly where it was
+written to.
+
+**And an authored border is not the engine's to second-guess.** A scripted
+settlement that supplies its own `keep` predicate has already drawn the line by
+hand — Rhodes says precisely which cells sit inside the 1949 armistice — so
+`endWarBySword` applies the rule only when no `keep` is given.
+
+What is left in the trace is a different class of thing. Iraq annexing Susa and
+Egypt reaching Hebron are adjacent, which is a question about appetite rather
+than about geography.
+
+## 117. The length of the line
+
+The same report's other half: an Israel that can invade deep into Iraq, Saudi
+Arabia and Egypt on foot.
+
+`traceSupply` floods the chain to depth 64 — larger than the map — so supply is
+a yes/no fact and distance is structurally free. A host is as well fed at the
+Gulf as at home, and desert attrition of 4%/month is not enough to matter
+against a corridor the army lays as it advances.
+
+A hard cutoff would be wrong: it would strand scripted armies and turn a
+logistics question into a teleport ban. So the line still reaches at any length
+— it just costs more the longer it is. `monthlySupply` records
+`army.supplyReach` (the route home, in provinces), and the attrition pass adds
+`reachAttrition` for every province past `reachComfort`, capped at `reachCap`.
+Seven provinces is the comfortable haul; past that the wagons strain, and the
+forage is being taken off land that has already been foraged.
+
+A deep invasion is therefore still possible and no longer free, which is the
+honest answer: armies did march to the Gulf, and they arrived smaller.
+
+- **Regression contract**: the existing supply suites, plus the 1948 trace,
+  which no longer ends with any non-adjacent annexation.
