@@ -14,6 +14,11 @@
 // - National Library of Israel community archives (Kushta/Istanbul, Saloniki,
 //   Izmir, Adrianople/Edirne, Tripoli, and the Italian communities).
 // - Academy of the Hebrew Language place-name and transliteration guidance.
+//
+// Transliteration here is unpointed ASCII throughout (Gush Halav, not Gush
+// Ḥalav; Hims, not Ḥims). That is the file's existing practice and the thing a
+// signpost at chip size can actually be read as; the underlying forms are the
+// same.
 export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   // Judaea, Galilee, Philistia, and the coast.
   'Jerusalem': 'Yerushalayim',
@@ -43,6 +48,12 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Bethlehem': 'Beit Lehem',
   'Beersheba': 'Be\'er Sheva',
   'Oboda': 'Avdat',
+  'Masada': 'Metzada',
+  'Tarichaea': 'Migdal',
+  'Rafah': 'Rafiah',
+  'Jenin': 'Ein Ganim',
+  'Ramallah': 'Ramah',
+  'Rhinocolura': 'Nahal Mitzrayim',
 
   // The Jordan valley, Transjordan, and northern Arabia.
   'Pella': 'Pehal',
@@ -56,6 +67,11 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Medaba': 'Medva',
   'Tayma': 'Tema',
   'Zoara': 'Tzoar',
+  'Petra': 'Rekem',
+  'Bostra': 'Botzrah',
+  'Caesarea Philippi': 'Panias',
+  'Yathrib': 'Yatrib',
+  'Khaybar': 'Heivar',
 
   // Phoenicia and Syria: Biblical forms plus Aleppo's Jewish communal name.
   'Tyre': 'Tzor',
@@ -68,6 +84,11 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Antioch': 'Antiokhiya',
   'Samosata': 'Shimshat',
   'Tarsus': 'Tarsos',
+  'Berytus': 'Berotai',
+  'Tripolis': 'Trablus',
+  'Emesa': 'Hims',
+  'Laodicea': 'Ludkia',
+  'Apamea': 'Afamia',
 
   // Egypt: names in the Hebrew Bible and Egyptian Jewish memory.
   'Alexandria': 'Alexandria of Egypt',
@@ -113,6 +134,7 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Rhegium': 'Reggio',
   'Panormus': 'Palermo',
   'Syracusae': 'Siracusa',
+  'Roma': 'Romi',
   'Dyrrhachium': 'Durazzo',
   'Thessalonica': 'Saloniki',
   'Hadrianopolis': 'Adrianople',
@@ -129,4 +151,39 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Halicarnassus': 'Bodrum',
   'Phasis': 'Poti',
   'Hyrcania': 'Gorgan',
+});
+
+// A crown's own pen, shared across bookmarks (SPEC §110). The religion table
+// above answers for every Jewish state alike, which is right for Judaea,
+// Adiabene and the rest — and wrong for the one crown whose whole claim is
+// that it is NOT another Judaea. `MLI`, the proclaimed Kingdom of Israel,
+// aliases to the era's Jewish tag in all six bookmarks, so taking the greatest
+// title in the game changed precisely nothing on the map.
+//
+// So it gets a register of its own: not city names but the TRIBAL ALLOTMENTS
+// of Joshua 13–19. A proclaimed Israel does not rename Sepphoris to Tzippori,
+// which is only a municipality with better spelling — it writes Nahalat
+// Zevulun across it, and the map stops being a list of towns and becomes the
+// territorial frame the books describe. This is the ancient-era version of the
+// instinct the 1948 table already states, that an Israel which takes the hill
+// country "writes the names the books of Kings remember".
+//
+// Keyed by tag, so a future formable can have a pen without another copied
+// table. A bookmark's own `integratedNames` entry still describes the era; this
+// layer wins where it names a province and stands aside where it does not.
+export const TAG_INTEGRATED_NAMES = Object.freeze({
+  MLI: Object.freeze({
+    'Sebaste': 'Har Ephraim',
+    'Scythopolis': 'Nahalat Yissakhar',
+    'Gamala': 'Golan',
+    'Batanea': 'Bashan',
+    'Caesarea Philippi': 'Dan',
+    'Ptolemais': 'Nahalat Asher',
+    'Sepphoris': 'Nahalat Zevulun',
+    'Joppa': 'Nahalat Dan',
+    'Gadara': 'Gil\'ad',
+    'Philadelphia': 'Nahalat Gad',
+    'Medaba': 'Nahalat Re\'uven',
+    'Hebron': 'Nahalat Yehudah',
+  }),
 });

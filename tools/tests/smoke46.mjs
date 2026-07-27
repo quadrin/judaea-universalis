@@ -96,9 +96,19 @@ console.log('== the pen survives the proclamation (alias tables) ==');
   integrateFully(ctx, g, shechem, 'JUD');
   ok(shechem.name === 'Shechem', '614: Judaea integrates Neapolis and writes Shechem');
   ok(switchTagCore(ctx, 'JUD', 'MLI'), 'Judaea proclaims the Kingdom of Israel');
+  // SPEC §110: the proclaimed kingdom now has a pen of its OWN, and it
+  // outranks the alias table it used to borrow. Joppa is one of the twelve
+  // provinces it names, so it writes the allotment rather than the town.
   const joppa = provByCanon(g, 'Joppa');
   integrateFully(ctx, g, joppa, 'MLI');
-  ok(joppa.name === 'Yafo', 'the formed kingdom still writes with the Hebrew pen: Joppa becomes Yafo (got "' + joppa.name + '")');
+  ok(joppa.name === 'Nahalat Dan',
+    'the formed kingdom writes its own register: Joppa becomes Nahalat Dan (got "' + joppa.name + '")');
+  // ...and where its own table is silent it still inherits the Hebrew pen,
+  // which is what this section was always really checking.
+  const jericho = provByCanon(g, 'Jericho');
+  integrateFully(ctx, g, jericho, 'MLI');
+  ok(jericho.name === 'Yeriho',
+    'and keeps the shared Hebrew pen everywhere it does not (got "' + jericho.name + '")');
 }
 
 console.log('== the Free Officers rebrand Egypt in place ==');

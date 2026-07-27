@@ -4839,3 +4839,125 @@ country, and `smoke77` pins the 1961 Syrian secession as one contiguous piece.
 That check catches an author, not a bug.
 
 - **Regression contract**: `smoke77.mjs`.
+
+## 110. The pen widens, and the crown gets one of its own
+
+The integrated-names table (§95) was audited against the list of provinces a
+Jewish state can plausibly hold, and seventy-three of them had no Hebrew entry.
+Most of those absences are correct — the file is a deliberately conservative
+pen, not a Hebrew-name generator, and a town with no attestation stays under
+the name the era gives it. Seventeen were not. They are now in:
+
+- **The Judaean gaps the file simply missed**: Masada → Metzada, Tarichaea →
+  Migdal, Jenin → Ein Ganim, Ramallah → Ramah, Rafah → Rafiah.
+- **The southern and desert frontier**: Rhinocolura → Nahal Mitzrayim, Petra →
+  Rekem, Bostra → Botzrah, Caesarea Philippi → Panias.
+- **Arabia**: Yathrib → Yatrib, Khaybar → Heivar — the two towns of the Hijaz
+  with real Jewish settlement behind the name.
+- **The Syrian and Phoenician coast**: Berytus → Berotai, Tripolis → Trablus,
+  Emesa → Hims, Laodicea → Ludkia, Apamea → Afamia.
+- **Roma → Romi**, which is what the rabbinic sources call it, and which a
+  Jewish state that ever holds the city has earned the right to write.
+
+Five candidates were deliberately refused: Khan Yunis, Qalqilya, Tulkarm,
+Gadora and Hatra have no defensible Hebrew name, and inventing one would break
+the rule the file exists to enforce. `smoke78` asserts their absence, so the
+refusal is a contract rather than an oversight.
+
+Transliteration is unpointed ASCII throughout — Gush Halav, not Gush Ḥalav;
+Hims, not Ḥims. That was already the file's practice and it is now stated at
+the top of it and asserted in the suite, because a table half in ASCII and half
+in combining diacritics sorts and greps as two tables.
+
+**A crown pen.** `TAG_INTEGRATED_NAMES` is a second, higher-precedence layer
+keyed by tag. It exists for the Kingdom of Israel (`MLI`), which is not merely
+a Jewish state but a specific claim: that the twelve tribes are restored. A
+state making that claim does not sign Sebaste "Shomron"; it signs it
+**Har Ephraim**, and Scythopolis **Nahalat Yissakhar**, and Joppa
+**Nahalat Dan**. Twelve provinces carry the allotment names. Where the crown
+table is silent the shared Hebrew pen still applies — Jericho is Yeriho to the
+Kingdom of Israel as to anyone else — so the crown pen is an overlay, not a
+replacement. Resolution order in `resolveDisplayName` is: crown pen, then the
+bookmark's own `integratedNames`, then the shared Jewish table.
+
+**The condition, relaxed.** `ownersCommunity` used to require the province to
+hold a community of the crown's *exact* culture. That is wrong for the same
+reason a nation is not a village: the Herodian kingdom's court culture is
+idumean and Adiabene's is assyrian, so between them those two Jewish states
+could satisfy the condition on three provinces on the entire map and never
+wrote a Hebrew signpost anywhere. The test is now the culture **group**
+(`sameKind`), so a judean congregation satisfies an idumean crown and a
+Babylonian one satisfies Adiabene. It is a relaxation, not an abolition: a
+hellenized Jewish community of the same faith but a different group still does
+not, which `smoke78` pins in both directions.
+
+- **Regression contract**: `smoke78.mjs` (the §110 sections) and `smoke46.mjs`,
+  whose MLI assertion now expects the allotment name.
+
+## 111. A century in which only Judaea happened
+
+Two bugs, reported from one playthrough. A 167 game in which Judaea did very
+well kept Judah Maccabee in the seat from age 26 to age 56 and then handed the
+realm to John Hyrcanus, his great-nephew, skipping two brothers. And Rome —
+in the century of Carthage, the Gracchi, Marius, Sulla and Mithridates — sat on
+eleven provinces in Italy from the first month to the last.
+
+**Both had the same shape of cause.** The chapter's history was written as
+Judaea's history and nothing else's. `ev_elasa` deliberately declines to march
+a dominant Judah to his death (a kingdom that has overshadowed the rising is
+not killed by the calendar — correct), but nothing else was ever going to bury
+him, while `ev_death_of_simon` is a bare date card that installs Hyrcanus over
+whoever happens to be ruling. So the divergence killed the succession without
+replacing it. And the chain contained, verifiably, **zero** `world: true`
+cards: outside Judaea the century was empty by construction.
+
+`events_167bce_world.js` is the fix, in two halves.
+
+**The house is mortal.** `ev_w_generation_passes` is a repeatable card driven
+by a sequence table giving each of the three ruling brothers the year by which
+he is overdue if the wars have spared him — Judah −152, Jonathan −140, Simon
+−128. A man still in the seat past his year is not immortal; he is a man the
+script forgot to bury. The card seats the next brother with the correct heir
+named, sets the flag the rest of the chain reads, and does not fire again on
+the man it just installed. It is a *backstop*: where the scripted deaths do
+fire, they fire first and this never triggers. Both options seat the same
+successor, because the order of the house is not negotiable in the sources —
+the choice is how it is done. Succession by right of blood is free and
+immediate and offends the priesthood; confirmation by the great assembly at
+Jerusalem (as the assembly of 140 confirmed Simon, on bronze tablets on Mount
+Zion) costs 40 talents and a year of slack in the field and buys legitimacy,
+stability and the Hasideans.
+
+**The world outside.** Seven `world: true` notices now span −146 to −64:
+Carthage and Corinth burned in one year; the expulsion of the Jews from Rome in
+139; **Mithridates I of Parthia entering Seleucia** in 141; the Attalid will in
+133; the Asiatic Vespers in 88; Tigranes taking Antioch in 83; and Pompey
+organizing the East in 64 — which is the exact position the 67 BCE chapter
+opens from. Plus `ev_w_senate_asks`, a choice card that fires only when Judaea
+holds fourteen provinces or more: the Senate noticing that its small friendly
+kingdom has become a power is the Roman half of a divergent game.
+
+**The empire is eaten in two bites, and they do not overlap.** The first draft
+of the Tigranes card handed Armenia every remaining Seleucid province, which
+produced a 56-province Armenian empire that never existed — a balance anomaly
+manufactured by the very file meant to fix one. The century actually had two
+distinct dismemberments and the chain now carries both, by explicit province
+list rather than a latitude cut: everything east of the Euphrates goes to
+Parthia in 141 and never comes back; Syria, Phoenicia, Cilicia and Commagene go
+to Tigranes in 83 and come off him, to Rome, in 64. Commagene and the
+Cappadocian marches stay client kingdoms; Rome stops at the Euphrates as the
+Pompey–Phraates settlement said; a Seleucid rump survives in the south rather
+than the map going blank. `transfer()` never takes a province off a living
+court that is not one of the two dying ones, so a world card rearranges the
+empires history rearranged and does not confiscate the player's conquests.
+
+Over 105 all-AI years the chapter now reads as a century: Rome 11 → 27,
+Parthia 2 → 18, Armenia 4 → 28 → 5, the Seleucid empire 74 → 29. The autorun
+harness flags Rome and Parthia as snowballing, which is the correct reading of
+a heuristic that measures growth: over a hundred years those two are supposed
+to grow, and before this file neither did at all.
+
+- **Regression contract**: `smoke78.mjs` (the §111 sections), which reproduces
+  the reported succession by seating an overdue Judah, runs a hundred AI years
+  end to end and asserts the order Judah → Jonathan → Simon → Hyrcanus, and
+  pins the dismemberment arc bite by bite.

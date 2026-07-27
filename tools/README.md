@@ -362,3 +362,18 @@ geometry, and deliberately so: the older peace-table suites (`smoke47`,
 invisible. If you touch the release machinery, run smoke77 — and note that a
 release changing size is not automatically a regression: it may be the
 contiguity rule declining to hand over a pocket on the other side of the map.
+
+SPEC §110–§111 add `smoke78.mjs`. It covers two unrelated pieces of work that
+landed together, and the second half of it is slow on purpose: the last section
+runs a hundred all-AI years of the 167 chapter to prove the Maccabean
+succession does not skip brothers when the player diverges. Expect it to take
+appreciably longer than any other suite.
+
+Two things worth knowing before you read a failure in it. First, the pen
+sections assert *absences* as well as presences — Khan Yunis, Qalqilya,
+Tulkarm, Gadora and Hatra must have NO Hebrew entry, so adding one to the table
+is a test failure by design rather than by accident. Second, `node
+tools/autorun.mjs 105 167bce` now reports ROM and PAR as SNOWBALL. That is not
+a regression to chase: the harness measures growth, and Rome and Parthia
+growing over the second century BCE is the thing §111 exists to make happen.
+The 8-year set is unchanged.

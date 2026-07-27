@@ -5,7 +5,7 @@ import {
   unlockedGen, cappedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
-import { JEWISH_INTEGRATED_NAMES } from '../data/integrated_names.js';
+import { JEWISH_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
@@ -1212,12 +1212,29 @@ export function changeControllerCore(ctx, p, tag) {
 // A community of the owner's own faith and culture actually lives here.
 // Provinces without a makeup (old saves, thin frontier cells) answer from the
 // province's own overlay, which is exactly what the makeup would say.
-function ownersCommunity(p, t) {
+// The culture half asks for the owner's KIND of people, not its exact
+// province-level culture (SPEC §110). A Judean crown in Sepphoris is not
+// looking at strangers: Galileans and Judeans are one people in every sense
+// this test is trying to capture, and demanding the literal culture key meant
+// a Jewish pen could almost never write outside its own home province — and
+// meant the Kingdom of Israel's tribal allotments, which are mostly Galilean
+// and Transjordanian ground, would have been dead on arrival. The faith half
+// is unchanged and still exact.
+function sameKind(DEFINES, a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const CUL = (DEFINES && DEFINES.CULTURES) || {};
+  const ga = CUL[a] && CUL[a].group;
+  const gb = CUL[b] && CUL[b].group;
+  return !!ga && ga === gb;
+}
+function ownersCommunity(ctx, p, t) {
   if (!t || !t.religion || !t.culture) return false;
+  const D = ctx && ctx.DEFINES;
   if (Array.isArray(p.pop) && p.pop.length) {
-    return p.pop.some((e) => e && e.r === t.religion && e.c === t.culture && num(e.n) > 0);
+    return p.pop.some((e) => e && e.r === t.religion && sameKind(D, e.c, t.culture) && num(e.n) > 0);
   }
-  return p.religion === t.religion && p.culture === t.culture;
+  return p.religion === t.religion && sameKind(D, p.culture, t.culture);
 }
 export function resolveDisplayName(ctx, p) {
   if (!p || !p.canon) return p && p.name;
@@ -1237,13 +1254,20 @@ export function resolveDisplayName(ctx, p) {
   // Adiabene and any future/formable Jewish realm receive it without another
   // copied table or a hard-coded tag list.
   const shared = t && t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES : null;
-  const renamed = (table && table[p.canon]) || (shared && shared[p.canon]);
+  // A crown's own pen (SPEC §110) outranks both: the era table describes the
+  // age, the religion table describes the faith, and this describes THIS
+  // crown — the thing the player just proclaimed. It names few provinces and
+  // stands aside everywhere else, so the other two still do all the work.
+  const crownPen = t && TAG_INTEGRATED_NAMES[p.owner];
+  const renamed = (crownPen && crownPen[p.canon])
+    || (table && table[p.canon])
+    || (shared && shared[p.canon]);
   // A Hebrew name on a town where no Jew lives is a claim, not a signpost:
   // the Jewish pen (whatever table supplies the word) waits for both halves,
   // the schoolhouse and the community. Other pens keep the older threshold.
   const jewish = !!t && t.religion === 'judaism';
   const theirs = !!t && (jewish
-    ? (num(p.integration) >= 1 && ownersCommunity(p, t))
+    ? (num(p.integration) >= 1 && ownersCommunity(ctx, p, t))
     : (num(p.integration) >= 1 || (!!t.culture && p.culture === t.culture)));
   const next = (renamed && theirs) ? renamed : era;
   if (p.name !== next) {
