@@ -3512,6 +3512,92 @@ function culturalStateTag(ctx, identity, reserved) {
   return 'FREE';
 }
 
+// A state has to be somewhere (SPEC §109). Both release paths below group the
+// enemy's provinces by an ABSTRACTION — the nation that was born owning them,
+// or the culture and faith that live in them — and neither abstraction knows
+// anything about geography. Against a Seleucid empire that grouping offered a
+// single "Greek State" of twenty-two provinces in five disconnected pieces:
+// nine in Anatolia, five in the Decapolis, three on the Philistine coast,
+// three on the Syrian coast and two in Samaria. That is not a country. It is a
+// census category with a flag.
+//
+// So a release is resolved to ONE piece of connected land before it is
+// offered. Adjacency is the land graph the armies walk: an island pocket is
+// its own piece and usually loses to a mainland one, which is correct — a
+// state released across a sea it cannot march is the same bug wearing a boat.
+// Is the adjacency graph telling us anything? A bare headless harness builds
+// `neighbors` as an array of EMPTY sets, which is indistinguishable from a map
+// where every province is an island — and would silently fragment every
+// release into single provinces. A graph with no edges at all cannot answer
+// the contiguity question, so it is not asked.
+function geomHasEdges(ctx) {
+  const nb = ctx.geom && ctx.geom.neighbors;
+  if (!nb) return false;
+  if (ctx._geomEdges === undefined) {
+    let any = false;
+    for (let i = 1; i < nb.length; i++) {
+      const s = nb[i];
+      if (s && (s.size || (Array.isArray(s) && s.length))) { any = true; break; }
+    }
+    ctx._geomEdges = any;
+  }
+  return ctx._geomEdges;
+}
+function landComponents(ctx, ids) {
+  const nb = ctx.geom && ctx.geom.neighbors;
+  if (!nb || !geomHasEdges(ctx)) return [ids.slice()];
+  const pool = new Set(ids);
+  const seen = new Set();
+  const out = [];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    const stack = [id];
+    const comp = [];
+    seen.add(id);
+    while (stack.length) {
+      const cur = stack.pop();
+      comp.push(cur);
+      for (const n of (nb[cur] || [])) {
+        if (pool.has(n) && !seen.has(n)) { seen.add(n); stack.push(n); }
+      }
+    }
+    out.push(comp);
+  }
+  return out;
+}
+function componentDev(ctx, comp) {
+  return comp.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
+}
+// Which piece the treaty actually hands over. A state that already exists and
+// holds land grows along its OWN border — the piece touching or containing it —
+// so a second treaty enlarges a country instead of scattering it. A state
+// being created or restored from nothing takes its largest piece, and is
+// seated in it.
+function contiguousRelease(ctx, tag, ids) {
+  const comps = landComponents(ctx, ids);
+  if (comps.length <= 1) return ids.slice();
+  const g = ctx.game;
+  const t = tag ? g.tags[tag] : null;
+  if (t && t.alive) {
+    const own = new Set();
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (p && !p.impassable && p.owner === tag) own.add(i);
+    }
+    if (own.size) {
+      const nb = ctx.geom && ctx.geom.neighbors;
+      const touching = comps.filter((c) => c.some((id) => own.has(id)
+        || (nb && [...(nb[id] || [])].some((n) => own.has(n)))));
+      if (touching.length) {
+        touching.sort((a, b) => componentDev(ctx, b) - componentDev(ctx, a));
+        return touching[0].slice();
+      }
+    }
+  }
+  comps.sort((a, b) => componentDev(ctx, b) - componentDev(ctx, a) || b.length - a.length);
+  return comps[0].slice();
+}
+
 function releaseRow(ctx, tag, ids, kind, extra) {
   const g = ctx.game;
   const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
@@ -3566,7 +3652,10 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
     assigned.add(i);
   }
   for (const tag of Object.keys(byNation)) {
-    const ids = byNation[tag];
+    // One piece of connected land, not every scrap of an old homeland the
+    // enemy happens to be sitting on (SPEC §109).
+    const ids = contiguousRelease(ctx, tag, byNation[tag]);
+    if (!ids.length) continue;
     const t = g.tags[tag];
     out.push(releaseRow(ctx, tag, ids, t && t.alive ? 'return' : 'restore'));
   }
@@ -3585,7 +3674,19 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
   }
   const reserved = new Set(Object.keys(g.tags || {}));
   for (const identity of Object.keys(byIdentity)) {
-    const ids = byIdentity[identity];
+    // Same rule, and it matters far more here: culture and faith say nothing
+    // whatever about geography, so this grouping is where the twenty-two
+    // province, five-piece "Greek State" came from (SPEC §109).
+    // If a state of this identity already exists on the map, the treaty
+    // enlarges IT along its own border; otherwise the largest piece is taken
+    // and seated. Looked up by identity rather than by the generated tag,
+    // which can collide and would otherwise steer the choice by an unrelated
+    // court's holdings.
+    let standing = null;
+    for (const k of Object.keys(g.tags)) {
+      if (g.tags[k] && g.tags[k].releaseIdentity === identity) { standing = k; break; }
+    }
+    const ids = contiguousRelease(ctx, standing, byIdentity[identity]);
     if (!ids.length) continue;
     let seat = ctx.byId(ids[0]);
     for (const id of ids) {

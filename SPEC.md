@@ -4789,3 +4789,53 @@ this month.
 - **Regression contract**: `smoke76.mjs` (the §108 section), which reproduces
   the reported case directly: mid-war, occupying every great city and owning
   none of them, five cards fired before and none fire now.
+
+## 109. A released state has to be somewhere
+
+Both release paths at the peace table group the enemy's provinces by an
+ABSTRACTION — the nation that was born owning them (`eraOwnerOf`), or the
+culture and faith that live in them — and neither abstraction knows anything
+about geography. Against the Seleucid empire that produced, in one row, a
+"Greek State" of twenty-two provinces in five disconnected pieces: nine in
+Anatolia, five in the Decapolis, three on the Philistine coast, three on the
+Syrian coast and two in Samaria. That is not a country. It is a census
+category with a flag. Four of thirteen rows on that table were broken the
+same way.
+
+A release is now resolved to one piece of connected land before it is offered:
+
+- `landComponents` partitions a group over the land adjacency the armies walk.
+  An island pocket is its own piece and usually loses to a mainland one, which
+  is right — a state released across a sea it cannot march is the same bug
+  wearing a boat.
+- `contiguousRelease` picks which piece. A state that already exists and holds
+  land is enlarged by a piece **touching what it already has**, so a second
+  treaty grows a country instead of scattering it; among several touching
+  pieces the most valuable wins. A state being created or restored from
+  nothing takes its largest piece and is seated inside it. The living-state
+  lookup goes by `releaseIdentity` rather than by the generated tag, which can
+  collide.
+- Provinces outside the chosen piece simply stay with the enemy. The row lists
+  exactly what it contains, so the table is not lying about the deal.
+
+The same thirteen rows now read as countries: an Aramean state around
+Damascus, the Phoenician coast from Dora to Aradus, a Judean state, Greek
+Anatolia, Galilee, the Persian heartland.
+
+### The degenerate graph
+
+A bare headless harness builds `neighbors` as an array of empty sets, which is
+indistinguishable from a map where every province is an island — and would
+have fragmented every release into single provinces (it did: `smoke47` failed
+nine assertions the first time). A graph with no edges at all cannot answer
+the contiguity question, so `geomHasEdges` declines to ask it. `smoke77`
+covers this explicitly, and runs everything else against the real snapshot,
+because the bug is invisible on the empty graph the older peace-table suites
+build.
+
+`secedeTagCore` takes an authored province list rather than deriving one, so
+the engine cannot fix it — but the authored list must still describe a
+country, and `smoke77` pins the 1961 Syrian secession as one contiguous piece.
+That check catches an author, not a bug.
+
+- **Regression contract**: `smoke77.mjs`.

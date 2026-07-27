@@ -354,3 +354,11 @@ unchanged and `node tools/autorun.mjs 105 167bce` still reports no anomalies
 and no stderr. If a Hasmonean card ever seems not to fire, check whether it is
 asking `holds` (the inheritance taken) or `controls` (the army is here now);
 both are correct, for different cards.
+
+SPEC §109 adds `smoke77.mjs` (released states are one piece of connected land).
+It is the first suite that boots from the geometry SNAPSHOT rather than a stub
+geometry, and deliberately so: the older peace-table suites (`smoke47`,
+`smoke53`) build `neighbors` as empty sets, on which every contiguity bug is
+invisible. If you touch the release machinery, run smoke77 — and note that a
+release changing size is not automatically a regression: it may be the
+contiguity rule declining to hand over a pocket on the other side of the map.
