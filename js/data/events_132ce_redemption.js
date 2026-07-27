@@ -474,6 +474,19 @@ export const EVENTS_132_REDEMPTION = [
           account.push(flag(ctx, 'pilgrimToll')
             ? 'it opened the city and taxed the pilgrims'
             : (flag(ctx, 'mountClosed') ? 'it shut the Mount and let the empire work around it' : ''));
+          // What the house decided it was (SPEC §128). Of everything on this
+          // list it is the only entry that is about the state rather than
+          // about a year, so it is read last and it is read differently.
+          const house = flag(ctx, 'kosibaNasiConstitution')
+            ? 'and through all of it the man on the seat was a magistrate under a prophet\'s constitution, and said so'
+            : flag(ctx, 'kosibaTwoHouses')
+              ? 'and through all of it there were two hereditary houses and neither could govern without the other'
+              : flag(ctx, 'kosibaMarriedDavid')
+                ? 'and through all of it the seat was held by the line of Jehoiachin, by marriage, three generations back'
+                : flag(ctx, 'kosibaCrowned')
+                  ? 'and through all of it there was a crown on a head with no title to one, which everybody knew and nobody could change'
+                  : '';
+          if (house) account.push(house);
           const said = account.filter(Boolean).join('; ');
           h.setFlag(ctx, 'threeHundredYears', true);
           h.chronicle(ctx, 'era', 'The kingdom is three hundred years old'

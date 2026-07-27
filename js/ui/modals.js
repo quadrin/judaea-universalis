@@ -38,6 +38,7 @@ export function createEventModal(el) {
         queue.push({
           instanceId: pe.instanceId, event: ev,
           notice: !!pe.notice, optIdx: pe.optIdx, decider: pe.decider,
+          allowed: pe.allowed,
         });
       }
     }
@@ -45,9 +46,9 @@ export function createEventModal(el) {
 
   function onBusEvent(payload) {
     if (!ctx || !payload) return;
-    const { instanceId, event, forTag, notice, optIdx, decider } = payload;
+    const { instanceId, event, forTag, notice, optIdx, decider, allowed } = payload;
     if (!isPlayerFor(forTag) || has(instanceId)) return;
-    queue.push({ instanceId, event: event || {}, notice: !!notice, optIdx, decider });
+    queue.push({ instanceId, event: event || {}, notice: !!notice, optIdx, decider, allowed });
     maybeShow();
   }
 
@@ -74,9 +75,21 @@ export function createEventModal(el) {
       const name = (t && t.name) || current.decider || 'another court';
       deciderLine = `<div class="ev-decider">The decision belongs to ${esc(name)} — we may only take note.</div>`;
     }
+    // The answers this world offers (SPEC §128). The mask was fixed when the
+    // card fired, so an option cannot close while the player reads. Indices
+    // stay the originals — the button carries the real index, not its
+    // position in a filtered list, because that index is what resolves.
+    let idxOf = (i) => baseIdx + i;
+    if (!current.notice && Array.isArray(current.allowed) && current.allowed.length) {
+      const mask = current.allowed.filter((i) => options[i]);
+      if (mask.length) {
+        idxOf = (i) => mask[i];
+        options = mask.map((i) => options[i]);
+      }
+    }
     const opts = options.map((o, i) => {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
-      return `<button class="btn ev-opt" data-idx="${baseIdx + i}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
+      return `<button class="btn ev-opt" data-idx="${idxOf(i)}"${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
         + `</button>`;
     }).join('');

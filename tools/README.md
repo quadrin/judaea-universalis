@@ -474,3 +474,23 @@ it declares a window — smoke73 asserts `factionDefs(MLI) === factionDefs(JUD)`
 to prove a formed crown keeps the same court, and an unconditional `filter()`
 breaks it while changing nothing observable. Cards may keep naming a departed
 faction: `shiftFaction` routes through `succeeds` to whoever holds the seat.
+
+SPEC §128 adds `smoke87.mjs`, `events_132ce_kosiba.js`, and one engine
+capability worth knowing about before you write a card: an event option may
+declare `when(ctx)`, and the option is then not shown at all rather than shown
+and refused. The mask is computed once at fire time and stored on the pending
+entry, so it rides the save and cannot shift while a modal is open.
+
+The part to be careful with is indices. Everything downstream — the modal, the
+multiplayer mirror, `resolveEventOption` — works in ORIGINAL option indices and
+renders a subset; the button carries the real index, not its position in the
+filtered list. If you touch that path, smoke87's "survives the round trip"
+section is the one that catches an off-by-one, and the symptom it prevents is a
+player clicking one constitution and the state adopting another.
+
+Two smaller notes. A card with neither `trigger` nor `date` is never scheduled
+and is fired by another card's effects (`helpers.fireEvent`) — smoke85 exempts
+those from the window rule rather than failing them. And smoke39's rule that
+every non-`world` player-facing card offers at least two answers applies to
+these too: a card that is conceptually a single beat still needs a real second
+answer, not a `world: true` flag to duck the check.

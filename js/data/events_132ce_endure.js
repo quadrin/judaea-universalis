@@ -210,6 +210,14 @@ export const EVENTS_132_ENDURE = [
     maxYear: 400,
     trigger: safeTrigger('ev_e_the_king_and_the_nasi', (ctx) => {
       if (endurance(ctx) < 1 || flag(ctx, 'chairAnswered')) return false;
+      // A house that wrote its constitution down does not discover in 300
+      // that the constitutional question is open (SPEC §128). Both of the
+      // written answers — the prince under Ezekiel, and the two hereditary
+      // houses — settle precisely what this card says nobody has settled, and
+      // firing it afterwards would have the chapter contradict its own
+      // campaign. The crown and the marriage leave it genuinely open, which is
+      // the point of them, and they still get asked.
+      if (flag(ctx, 'kosibaNasiConstitution') || flag(ctx, 'kosibaTwoHouses')) return false;
       // A strong governor forces the question; a weak one has it forced on him.
       return rulerAt(ctx, 'JUD', 'gov', 5) || !rulerAt(ctx, 'JUD', 'infl', 3);
     }),
@@ -273,6 +281,21 @@ export const EVENTS_132_ENDURE = [
           h.chronicle(ctx, 'era', flag(ctx, 'mishnahWritten')
             ? 'Three hundred years after Betar the state stands and so does the book it did not need. One of them will turn out to have been the more durable and there is no way to know which from here.'
             : 'Three hundred years after Betar the state stands, and the law is still in the mouths of living men, because there has always been a court in Jerusalem to ask.');
+          // In the year Rome abolished the Patriarchate, what this state has
+          // instead of one (SPEC §128). The rescript ended the only Jewish
+          // office any government recognised; the whole force of the card is
+          // that here there is something to abolish and nobody with standing
+          // to abolish it — so the chronicle names it.
+          const seat = flag(ctx, 'kosibaNasiConstitution')
+            ? 'The office the rescript would have ended is held, in this history, under a written constitution out of Ezekiel, by a man who has never claimed to be more than a magistrate.'
+            : flag(ctx, 'kosibaTwoHouses')
+              ? 'The office the rescript would have ended is one of two here, prince and priest, and neither of them is in anybody\'s gift but its own house\'s.'
+              : flag(ctx, 'kosibaMarriedDavid')
+                ? 'The office the rescript would have ended is held by the line of Jehoiachin, which is the one pedigree no emperor has ever been able to argue with.'
+                : flag(ctx, 'kosibaCrowned')
+                  ? 'The office the rescript would have ended is a crown, and the argument against it is three hundred years old and entirely domestic.'
+                  : '';
+          if (seat) h.chronicle(ctx, 'ruler', seat);
           h.setFlag(ctx, 'redemptionEndured', true);
         }),
       },

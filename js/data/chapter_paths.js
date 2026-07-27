@@ -505,6 +505,71 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_accession',
+        question: 'The founder left no rule of succession. What is the house of Kosiba?',
+        requires: 'redemptionEra',
+        roads: [
+          Object.freeze({
+            id: 'kosiba_crown', name: 'The Crown of Beit Kosiba',
+            marker: 'kosibaCrowned', entry: 'ev_bk_the_accession',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. The diadem in one generation where the Hasmoneans took three, '
+              + 'from a worse starting position: this house cannot even claim Joarib.',
+          }),
+          Object.freeze({
+            id: 'kosiba_david', name: 'The Davidic Marriage',
+            marker: 'kosibaMarriedDavid', entry: 'ev_bk_the_accession',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. Herod\'s move: marry the pedigree you do not have. Needs the east '
+              + 'open, costs a generation, and hands the Exilarchate a permanent claim.',
+          }),
+          Object.freeze({
+            id: 'kosiba_two_houses', name: 'Two Houses',
+            marker: 'kosibaTwoHouses', entry: 'ev_bk_the_accession',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. Shimon and Eleazar made hereditary, as the coins implied — the '
+              + 'Hasmonean collapse run in reverse, which nobody has tried.',
+          }),
+          Object.freeze({
+            id: 'kosiba_nasi', name: 'The Prince of Ezekiel',
+            marker: 'kosibaNasiConstitution', entry: 'ev_bk_the_accession',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. A hereditary office engineered not to be a monarchy (Ezek. 44–46), '
+              + 'which walks around the Davidic objection because Ezekiel\'s prince was never '
+              + 'David\'s heir — and which forbids the land leases the founder lived on.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_grass_on_akivas_cheeks',
+        question: 'Victory inverted the record. What becomes of a century of the academies\' own recorded doubt?',
+        requires: 'beitKosibaSettled',
+        roads: [
+          Object.freeze({
+            id: 'doubt_suppressed', name: 'Collect the Copies',
+            marker: 'doubtSuppressed', entry: 'ev_bk_grass_on_akivas_cheeks',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. A clean founding, bought by teaching the one institution this '
+              + 'civilisation keeps everything in that its records are negotiable.',
+          }),
+          Object.freeze({
+            id: 'doubt_preserved', name: 'Shelve It With Everything Else',
+            marker: 'doubtPreserved', entry: 'ev_bk_grass_on_akivas_cheeks',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. An honest tradition, and a book every rival for three hundred '
+              + 'years can quote from.',
+          }),
+          Object.freeze({
+            id: 'doubt_canonized', name: 'The Canonised Doubt',
+            marker: 'doubtCanonized', entry: 'ev_bk_grass_on_akivas_cheeks',
+            terminal: 'ev_bk_bar_kokhba_or_bar_koziba',
+            note: 'SPEC §128. The dissent read out at the founding every year, on the grounds '
+              + 'that a redeemer who cannot be criticised is an idol. Costs legitimacy '
+              + 'permanently and buys the one thing no other answer does.',
+          }),
+        ],
+      }),
     ],
   }),
 

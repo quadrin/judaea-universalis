@@ -117,6 +117,37 @@ function canFire(ctx, ev) {
   return true;
 }
 
+// The answers a card offers in THIS world (SPEC §128). Returns the original
+// indices of the options whose `when(ctx)` holds — every index when no option
+// declares one, which is every card the game shipped before this.
+export function allowedOptions(ctx, ev) {
+  const opts = (ev && ev.options) || [];
+  let gated = false;
+  for (const o of opts) if (o && typeof o.when === 'function') { gated = true; break; }
+  if (!gated) return null;
+  const out = [];
+  for (let i = 0; i < opts.length; i++) {
+    const o = opts[i];
+    if (!o) continue;
+    if (typeof o.when !== 'function') { out.push(i); continue; }
+    let open = false;
+    try { open = !!o.when(ctx); } catch (e) { warnOnce('optwhen:' + ev.id + ':' + i, 'option when() threw', e); }
+    if (open) out.push(i);
+  }
+  // A card nobody can answer would hold the pause open forever.
+  if (!out.length) { warnOnce('optnone:' + ev.id, 'every option closed for', ev.id); return null; }
+  return out.length === opts.length ? null : out;
+}
+
+// Snap an index onto the mask: the AI's pick, a notice's fixed course and a
+// player's click all go through here, so none of them can take a road the
+// world does not offer.
+function maskIdx(allowed, idx, count) {
+  const i = Math.max(0, Math.min(count - 1, idx | 0));
+  if (!allowed || !allowed.length) return i;
+  return allowed.indexOf(i) >= 0 ? i : allowed[0];
+}
+
 // Fire an event now (popup for the player, silent auto-pick for the AI).
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
@@ -136,6 +167,20 @@ export function fireEvent(ctx, ev) {
   const player = g.playerTag;
   const audience = (ev.forTag === 'both' || ev.forTag === 'player') ? player : ev.forTag;
   const playerSees = audience === player;
+  // Which answers this world actually offers (SPEC §128). An option may
+  // declare `when(ctx)`, and a card whose answers depend on the state is a
+  // different card from one that lists every answer and prices the impossible
+  // ones out: the accession of a house with no Davidic marriage available
+  // should not show marrying into David greyed out, it should not show it. The
+  // mask is computed ONCE, here, at the moment the card fires — an option that
+  // was open when the question was asked stays open while the player thinks
+  // about it, which is the same rule `decider` already follows.
+  //
+  // Indices are the originals throughout. The modal renders a subset and keeps
+  // the numbering, resolveEventOption refuses anything outside the mask, and a
+  // card whose every option is closed falls back to offering all of them,
+  // because an unanswerable card would hang the pause.
+  const allowed = allowedOptions(ctx, ev);
   if (playerSees) {
     const instanceId = g.nextEventInstance++;
     const pe = { instanceId, eventId: ev.id, forTag: audience };
@@ -161,14 +206,16 @@ export function fireEvent(ctx, ev) {
         idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
       } catch (e) { warnOnce('decider:' + ev.id, 'aiOption threw for', ev.id, e); }
       pe.notice = true;
-      pe.optIdx = Math.max(0, Math.min(ev.options.length - 1, idx));
+      pe.optIdx = maskIdx(allowed, idx, ev.options.length);
       pe.decider = decider;
     }
+    if (allowed) pe.allowed = allowed.slice();
     g.pendingEvents.push(pe);
     if (!g.paused) { g.paused = true; ctx.bus.emit('pause', true); }
     ctx.bus.emit('event', {
       instanceId, event: ev, forTag: audience,
       notice: !!pe.notice, optIdx: pe.optIdx, decider: pe.decider,
+      allowed: pe.allowed,
     });
     return;
   }
@@ -177,7 +224,7 @@ export function fireEvent(ctx, ev) {
   try {
     idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
   } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
-  const opt = ev.options[idx] || ev.options[0];
+  const opt = ev.options[maskIdx(allowed, idx, ev.options.length)] || ev.options[0];
   try {
     if (opt && typeof opt.effects === 'function') opt.effects(ctx);
   } catch (e) { warnOnce('fx:' + ev.id, 'event effects threw for', ev.id, e); }
@@ -248,6 +295,7 @@ export function resolveEventOption(ctx, instanceId, idx) {
     // fire time no matter which button the UI reports — acknowledging is not
     // choosing.
     if (pe.notice) idx = Number.isFinite(pe.optIdx) ? pe.optIdx : 0;
+    idx = maskIdx(pe.allowed, idx, ev.options.length);
     const opt = ev.options[idx] || ev.options[0];
     try {
       // A battle card may already have been queued behind another modal when

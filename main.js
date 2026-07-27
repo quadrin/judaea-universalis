@@ -277,6 +277,13 @@ async function boot() {
         let options = (Array.isArray(ev.options) ? ev.options : [])
           .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip }));
         let deciderName = null;
+        // The guest mirrors the host's card, so it mirrors the host's mask
+        // too (SPEC §128) — a spectator watching an accession should see the
+        // three roads that were open, not the four that exist.
+        if (Array.isArray(p.allowed) && p.allowed.length && !p.notice) {
+          const mask = p.allowed.filter((i) => options[i]);
+          if (mask.length) options = mask.map((i) => options[i]);
+        }
         if (p.notice && options.length) {
           const idx = Math.max(0, Math.min(options.length - 1, p.optIdx | 0));
           options = [options[idx]];

@@ -65,6 +65,7 @@ const RUNGS = [
   { era: '132ce', file: 'events_132ce_house.js', ex: 'EVENTS_132_HOUSE', bm: 'bookmark_132ce.js', tag: 'JUD' },
   { era: '614ce', file: 'events_614ce_power.js', ex: 'EVENTS_614_POWER', bm: 'bookmark_614ce.js', tag: 'JUD' },
   { era: '614ce', file: 'events_614ce_david.js', ex: 'EVENTS_614_DAVID', bm: 'bookmark_614ce.js', tag: 'JUD' },
+  { era: '132ce', file: 'events_132ce_kosiba.js', ex: 'EVENTS_132_KOSIBA', bm: 'bookmark_132ce.js', tag: 'JUD' },
 ];
 
 for (const p of PACKAGES.concat(RUNGS)) {
@@ -154,6 +155,15 @@ console.log('== every new card declares the years it belongs to (SPEC §121) =='
   for (const p of ALL) {
     const horizon = p.bookmark.generationHorizon;
     for (const c of p.cards) {
+      // A card with neither trigger nor date is not scheduled at all — it is
+      // fired by another card's effects (SPEC §128, the accession following
+      // the question). The scheduler never sees it, so a window would say
+      // nothing; what matters instead is that it really is unreachable by the
+      // scheduler, because a half-scheduled card would fire on its own.
+      if (typeof c.trigger !== 'function' && !c.date) {
+        ok(true, p.era + ': ' + c.id + ' is fired by another card, so it needs no window');
+        continue;
+      }
       const windowed = !!c.date || Number.isFinite(c.maxYear);
       ok(windowed, p.era + ': ' + c.id + ' is dated or bounded, so the horizon cannot retire it');
       if (!c.date) {
@@ -164,8 +174,9 @@ console.log('== every new card declares the years it belongs to (SPEC §121) =='
         ok(Number.isFinite(c.minYear), '  and declares a floor as well as a ceiling');
       }
     }
-    ok(p.cards.some((c) => Number.isFinite(c.maxYear) && c.maxYear > horizon)
-      || p.cards.every((c) => c.date || c.maxYear <= horizon),
+    const scheduled = p.cards.filter((c) => typeof c.trigger === 'function' || c.date);
+    ok(scheduled.some((c) => Number.isFinite(c.maxYear) && c.maxYear > horizon)
+      || scheduled.every((c) => c.date || c.maxYear <= horizon),
       p.era + ': the package is consistent with the ' + horizon + ' horizon');
   }
 }

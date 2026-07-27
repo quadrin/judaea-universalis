@@ -6060,3 +6060,159 @@ improves while the crown holds the priesthood and a solvent treasury.
   departed party lands on its heir, an unknown id still lands nowhere, the
   panel renders what is actually seated, and the chapter with no windows is
   bit-for-bit unaffected.
+
+## 128. Beit Kosiba, and an answer a world can withhold
+
+The redemption road wins a war and inherits a problem the war was not about.
+Shimon ben Kosiba left no rule of succession. What survives of him is a
+signature — *Shimon ben Kosiba, Nasi Yisrael* — on leases of state land at Ein
+Gedi, on letters promising to put his own commanders in irons, on requisitions
+for the Four Species and a great deal about wheat. Twenty years of a man who
+wrote about everything, and not one word about an heir. In the history that
+happened the omission cost nothing, because there was no after. Here there is,
+and it was the chapter's largest unexamined liability: a state founded on one
+man's authority, with no rule for transferring it, arriving at the year that
+man dies.
+
+Four cards, and the rest of the chapter reads off what they decided.
+
+### The engine first: an option a world can close
+
+Every card in this game offered all of its answers. That is right almost
+everywhere and wrong for an accession. A house cannot marry into the line of
+Jehoiachin if it cannot reach Babylonia, and showing that option greyed out is
+a **different card** from not showing it: one says you failed to arrange this,
+the other says it was never on the table.
+
+So an option may now declare `when(ctx)`. The mask is computed once, at the
+moment the card fires — an answer that was open when the question was asked
+stays open while the player thinks, which is the rule `decider` already
+follows. Indices stay the originals the whole way: the pending entry carries
+the mask, the modal renders a subset and puts the real index on the button, the
+multiplayer mirror masks the same way, and `resolveEventOption` refuses
+anything outside it. An off-by-one between what is rendered and what resolves
+would silently adopt the wrong constitution, so the round trip is the thing the
+suite actually tests. A card whose every option closes falls back to offering
+all of them, because an unanswerable card holds the pause open forever.
+
+### I. The Prince Is Mortal
+
+Fires when the founder dies, or reaches an age where the council cannot pretend
+he will not — roughly 150–178. It does not fork the constitution. It puts the
+question on the table and lays out the four documents that are actually in the
+archive: the Hasmonean settlement, a marriage contract, the two-named coinage,
+and a scroll of Ezekiel open at the forty-fourth chapter.
+
+What it *does* decide is who is standing in the room, because the house does
+not choose in the abstract — it chooses under pressure from whoever is
+strongest on the day. Put the question formally and the schools and the country
+are strong enough to force answers a soldier would not offer. Decline to raise
+it while the old man lives and the captains settle it in the antechamber before
+dawn, which is faster, quieter, and narrows the constitution to whatever a
+soldier can see the point of.
+
+### II. The Accession
+
+Fired by the card above rather than scheduled — a succession is not a month.
+Which answers appear depends on the state, which is the point.
+
+- **The crown.** Always available. The Hasmoneans waited sixty years of de
+  facto rule before Aristobulus put on the diadem; this house can do it in one
+  generation and skip the pretence, from a worse starting position, because the
+  Hasmoneans could at least claim Joarib. The sages will say so in every
+  generation, in writing, and the writing is what survives.
+- **The marriage.** Needs the east reachable, because the line is kept in
+  Babylonia and somebody has to go and get it. Herod's move exactly: marry the
+  pedigree you do not have. The payoff is not the marriage, it is the grandson,
+  so it is a generation of nothing followed by a claim nobody can argue with —
+  and whoever holds the Exilarchate now holds a permanent claim on this
+  succession. Herod's version ended with him killing his wife and later her
+  sons.
+- **The two houses.** Needs a priesthood organised enough to be made
+  hereditary. Shimon and Eleazar, as the coins implied, on both sides — the
+  arrangement the Hasmoneans collapsed into one office and paid for a century,
+  run in reverse, which nobody has tried.
+- **The prince of Ezekiel.** Needs the sages. Take the founder's own title and
+  give it a constitution: chapters 44 to 46, a nasi who brings his offerings
+  like anyone else, holds no priestly office, and — 46:16–18 — may leave his
+  inheritance to his sons but may not take the people's land. A hereditary
+  office deliberately engineered not to be a monarchy, which walks around the
+  Davidic objection entirely, because Ezekiel's prince was never supposed to be
+  David's heir.
+
+  And it has a barb. The founder leased the land of Israel in his own name, as
+  Nasi, and the leases are in the next room, and the rents are a material part
+  of what the state runs on. That is arguably the precise thing 46:18 forbids.
+  So the option fires a second card nobody enjoys: regularise the founder's
+  practice as a special case — a gloss on the constitution in its first year,
+  named after the man it is about — or stop, and tell the treasury to find the
+  money elsewhere at −15% income forever. A constitution that cost something in
+  its first year is a constitution people believe in.
+
+### III. The Grass on Akiva's Cheeks
+
+180–225, once the state is boring. A victory inverts the entire memory. Akiva
+stops being the sage who erred and becomes the one who saw; Yohanan ben Torta,
+who told him grass would grow from his cheeks before the son of David came, is
+no longer sober judgement but a man who was wrong in public and got it written
+down. A young sage has collected every recorded doubt into one volume — the
+finger-cutting test, the objection that the founder was making Israel
+blemished, the death of Eleazar of Modi'in on a suspicion nobody substantiated
+— and brought it to court himself, unasked.
+
+Suppress it and the founding is clean, at a price the crown does not pay: the
+academies have learned that their records are negotiable, and they are the
+institution this civilisation keeps everything in. Preserve it and the
+tradition is honest and every rival for three hundred years has a Jewish book
+to quote from. Or canonise the doubt — read the objections at the founding
+festival every year, beside the account of the victory, on the grounds that a
+redeemer who cannot be criticised is an idol. It costs legitimacy permanently
+and cannot be undone, and it buys the one thing no other answer does.
+
+### IV. Bar Kokhba or Bar Koziba
+
+The pun was always there and it is one letter: son of a star, son of a lie. It
+was Rome's joke first and then the sages', and for a century it has been
+nobody's, because the man won. It fires on the first serious defeat after the
+founding generation is dead, in any century — a broken frontier, a column
+somewhere it should not be, and a preacher in the Galilee using the other
+spelling in public to crowds and not being arrested nearly fast enough, because
+the men who would have to arrest him are waiting to hear the answer.
+
+This is where the constitution earns out. A crowned house has nothing but force
+and confirms the joke by using it. A married-in house points at the pedigree,
+which is slow and real. Two houses put a priest up to say the offerings are
+still going up, and the state loses a frontier without losing its founding. The
+prince of Ezekiel has the best answer available and the most humiliating: he
+was never the redemption, he was a magistrate under a constitution, and
+magistrates lose battles. It is the most abject sentence the state has ever
+published and it ends the matter in a season. A house that never settled the
+question at all has nothing to say, and the other spelling spreads through a
+year in which nobody in authority contradicts it.
+
+The second answer is silence, and it is a bet on the constitution rather than a
+use of it: a founding that can be stated in one sentence survives being
+ignored, and one that cannot discovers that the only sentence in circulation is
+the preacher's.
+
+### What the rest of the chapter does with it
+
+The 425 redemption terminal already read the campaign back as a list — the
+loyalty question of 212, the certificate, the coast, the canon, the Mount. The
+constitution joins that list and is read last, because it is the only entry
+about the state rather than about a year. The endure terminal, which falls in
+the year Rome abolished the Patriarchate, now names what this history has
+instead of an office to abolish. And *The Crown and the Chair* stands down
+entirely under either written answer: a house that wrote its constitution in
+the 150s does not discover in 300 that the constitutional question is open, and
+firing that card afterwards would have the chapter contradict its own campaign.
+
+The tree gains two forks and seven roads, 60 to 67.
+
+- **Regression contract**: `smoke87.mjs` — the mask closes and opens on the
+  state, survives the round trip to resolution by original index, cannot be
+  defeated by asking for a closed index, and never touches an ungated card;
+  the question opens on age or on a vacant seat and fires the accession the
+  same morning; only the Ezekiel road raises the leases; the defeat card waits
+  for a defeat and answers in five different ways; and the terminals read all
+  four constitutions back.
