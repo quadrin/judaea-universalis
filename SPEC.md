@@ -5854,3 +5854,209 @@ declared gap.
   mark distinct from its siblings (the terminals read those marks back), each
   entry card firing on the road and on neither an early year nor a lost
   campaign, and the withdrawal measured against the map instead of its tooltip.
+
+## 126. What a state does with what it took
+
+§125 gave five chapters the rung above their best road and stopped there, at
+the question winning creates. This is the layer under that: what the state
+actually *does* between winning and being asked about it. Four packages, and
+one of them is not a chapter's at all.
+
+**The House, and the window it was built in** (`events_132ce_house.js`,
+137–210 CE). Two things the redemption road was missing. The first is an
+expansion ladder — 167 has eleven rungs from the Gophna hills to Antioch and
+132 has none, so a Judaea that beat Julius Severus has an army, a frontier and
+nothing to do with either. But the ladder cannot be the Hasmonean one, because
+the situation is inverted: Judah expanded into a vacuum, and Bar Kokhba would
+be expanding against an empire at the height of its power that has temporarily
+lost a war. Hadrian recalled Severus from Britain and spent three and a half
+years and enough men that he dropped the customary "I and the army are well"
+from his address to the Senate. An empire that pays that much to lose comes
+back, so every rung on this ladder is also a clock and the cards say so.
+
+The second is the House. The chapter already raises an altar on the cleared
+Mount, which is the Ezra move and correct as far as it goes — Ezra set up the
+altar and resumed the offerings in the seventh month before the foundation was
+laid at all (Ezra 3:2–6). A sanctuary is a different order of undertaking and
+brings three problems the altar does not. **Purity**: anyone who has touched a
+corpse is unclean and the only remedy is the water of the red heifer (Num. 19);
+Mishnah Parah 3:5 counts the heifers ever prepared and reaches nine, the last
+three generations ago, its ashes gone with the sanctuary. A priest may approach
+an open-air altar in a state the Heikhal will not tolerate — so the altar could
+be raised on a Nasi's ruling and the House cannot. **Scale**: Herod's House was
+a Hellenistic monument and everyone knew what it was for; Zerubbabel's made the
+old men who had seen the first one weep. Building small is a judgement on
+Herod, and building large is agreeing with him. **The priesthood**: the
+revolt's own coinage names Eleazar the Priest beside Simon, a constitutional
+arrangement nobody wrote down, and who appoints the High Priest of a restored
+House is the question that broke the Hasmoneans, arriving two hundred years
+early.
+
+**The window both empires left open** (`events_614ce_power.js`, 628–690 CE).
+§125 treated this state as a buffer that cannot expand, and that was a design
+choice rather than a fact — wrong for one specific decade, and it is the most
+important decade in the chapter. The war of 602–628 ended without a winner:
+Khosrow II murdered by his own nobility, a dozen Persian rulers in four years
+including two queens, the currency collapsed and the Nahrawan flooded;
+Heraclius won and was bankrupt, plague-struck and a generation of manpower
+short. Neither empire could field an army in Syria in 634, which is the whole
+reason the Arab conquest moved at the speed it did — not that the Rashidun were
+unstoppable but that the ground in front of them was empty. A Jewish state
+holding Jerusalem in 630 with an army in being is standing in that same empty
+ground, and the game should let it act on that.
+
+The prize is not Damascus. It is **Babylonia** — the largest Jewish population
+in the world, there a thousand years, richer and more numerous than the one in
+Palestine, and with its own government in the Exilarch and the academies. There
+has been no single Jewish authority over both centres since the First Temple. A
+state that takes Mesopotamia from a collapsing Persia does not gain a province;
+it gains, or collides with, the other half of its own people, and the
+Exilarch's claim is at least as good as Jerusalem's. The precedent is real: Mar
+Zutra II is said to have held an independent Jewish state around Mahoza for
+some seven years about 495–502, before Kavad crucified him on the bridge at
+Ctesiphon.
+
+**The line of Jehoiachin** (`events_614ce_david.js`, 640–690 CE). Every Jewish
+state in this game has ruled without the one qualification the tradition
+actually specifies. The Hasmoneans were of the house of Joarib and the crown
+they took in 104 was the standing grievance against them for a century. Bar
+Kokhba's title on his own coins is Nasi, not king; Akiva read him out of
+Numbers 24 as the star, which is a messianic argument and not a genealogical
+one, and Yohanan ben Torta's reply about grass growing from Akiva's cheeks is
+in the record because somebody thought the distinction mattered. The Exilarch
+is the exception — the Resh Galuta claimed direct male descent from Jehoiachin,
+released from a Babylonian prison in 561 and given a seat above the other kings
+in the last verses of Kings, and the line is written down in Seder Olam Zutta
+and in Sherira Gaon and was recognised by the Sasanian state. So a kingdom that
+unites both centres reaches a situation that has not existed since 586 BCE: a
+throne, and a man with the pedigree for it, in the same polity. If a son of
+David is crowned in Jerusalem with the offerings going up, then either the days
+have come or they have not — and if they have not, the kingdom must explain
+that every morning for as long as it lasts.
+
+**Annexation** (`events_annexation.js`), which belongs to no chapter. The
+engine already annexes: `p.integration` climbs in three steps of 0.34 under a
+program and at 1.0 the owner writes its own name on the map. What it does
+silently is the only part anyone would remember — a Jewish state absorbing a
+town that is not Jewish has to decide what the people in it now are, and the
+engine emitted a notification saying the province was 34% integrated. That
+decision is not invented for this game. It was made twice and both times by a
+Hasmonean: Hyrcanus took Idumea and gave its people circumcision or the road
+(Ant. XIII.257–8), and Aristobulus did the same to the Itureans a generation
+later. It is the only large-scale forced conversion in Jewish history and it is
+the direct cause of the most consequential fact of the next two centuries,
+which is that the man who ruled Judaea from 37 to 4 BCE was the grandson of a
+converted Idumean. The policy worked, in the sense that Idumea became Jewish
+and stayed Jewish through the destruction. It also produced Herod. Both are the
+same fact and the package refuses to separate them: one card sets a standing
+policy the first time it matters, and two later cards collect on it.
+
+The pool is keyed on the player rather than on a chapter, so the registry says
+where it plays — every antique chapter, never 1948 — and the cards say when.
+
+### The engine gained one lever and lost seven dead ones
+
+`integrateMult`. Integration now answers to a realm-wide multiplier the way
+conversion already did, one line in `realm.js` mirroring the one above it. A
+standing policy on the conquered is exactly a claim about how fast a province
+stops being foreign, and the only lever content had was `convertMult`, which
+changes the religion and not the allegiance. They are different questions and
+the Hasmoneans answered them separately.
+
+And a correction to §125, found by making `smoke85`'s key check derive its
+vocabulary from the engine instead of from a list somebody typed:
+
+- **`aiPassive` is a real key.** §125 reported it as one no part of the sim
+  reads. `sim/ai.js` reads it, as a boolean. What shipped was `aiPassive: 0` —
+  the key spelled right and the value spelled falsy. The Frontier of the Levy
+  now declares it `true`, which is what a crown that has drawn its border where
+  its own farmers will stand is telling the world.
+- **`taxMult` is province-scope.** It is read by `provMult()` in
+  `sim/economy.js`, which walks a *province's* modifiers and is never handed a
+  tag's. Seven tag modifiers across §125 and §126 declared it — the Antioch
+  seat, the two courts, the hired shields, the settled line, the crown's
+  appointment, the road, one authority — and every one was a cost or a reward a
+  tooltip had already promised the player. They are folded into `incomeMult`,
+  the lever that exists at tag scope, and the tooltips now say what the numbers
+  do. Two of them changed meaning honestly in the process: Two Courts is a net
+  −5% rather than +8% gross and −12% net, because that is what one multiplier
+  can say, and it is the truer statement anyway — the second capital earns less
+  than the duplicated government costs.
+
+The check that found them is the interesting part. A hand-written whitelist is
+the same bug one level up, and it had already produced a false negative on
+`aiPassive`; the suite now reads `resolveTagMult`/`resolveTagAdd` call sites out
+of the sim and knows which keys are province-only, so a key can be wrong by
+being misspelled, by not existing, or by being applied at the wrong scope, and
+all three fail.
+
+- **Regression contract**: `smoke85.mjs`, extended — the same structural
+  sections now cover eight packages, plus a section for the shared pool
+  (registered in six chapters, absent from 1948, windowed shut before it
+  regardless) and the scope check above.
+
+## 127. A court is not a fixed cast
+
+Reported, and correct: the Pharisee/Sadducee split is a live court mechanic in
+the 67 BCE chapter and invisible in 167.
+
+It was not entirely absent. The 167 chain has `ev_pharisee_breach` in −114 —
+Hyrcanus asked to lay down the priesthood, the sage Eleazar's insolence, the
+king going over to the Sadducees — and it has Salome's deathbed and her
+restoration of the schools in the royal century package. What it did not have
+was a **party**. The court panel showed the Hasideans, the Hellenizers and the
+Brothers' Captains, in −167 and identically in 6 CE, because `factionDefs` read
+a flat per-bookmark table with no time in it. So the most consequential court
+event in the chapter moved no faction, the panel offered no way to court either
+party, and the breach was a chronicle entry with a modifier attached.
+
+That was defensible while the chapter stopped at Pompey. §121 and §125 carried
+it to 6 CE, and the years they added are precisely the years of the quarrel:
+Hyrcanus' breach, Jannaeus' war on his own subjects — the six thousand pelted
+with citrons at the festival, the eight hundred crosses — and Salome's nine
+years of Pharisee government. The chapter played all of it with the Hasideans
+still on the panel, a party attested fighting for the Law in the 160s (1 Macc
+2:42, 7:13) and gone from the record within a generation.
+
+**The mechanic.** A faction def may declare `fromYear` and `untilYear`, exactly
+as an event declares its era window, and `factionDefs` filters by the calendar.
+The Hasideans and the Hellenizers hold their seats until −140; the Pharisees
+and the Sadducees take them from −140, which is about when Josephus first names
+the schools (Ant. XIII.171). The Brothers' Captains declare no window and sit
+through both. A chapter that declares no windows at all is untouched, and gets
+its list back by identity so nothing allocates per month and a formed crown
+still keeps the same men (§102).
+
+Two rules make it a succession rather than a reshuffle:
+
+- **`succeeds`.** A new party seeds at its predecessor's standing rather than
+  at neutral. The Pharisees are not a constituency this court has never met;
+  as far as the crown's relationship with the pious goes they are the same men
+  under a name the record starts using around 140. Reseeding them at 50 would
+  hand a king who spent thirty years courting the Hasideans a clean slate he
+  did not earn, and give one who spent thirty years affronting them an amnesty.
+- **The heir rule.** `shiftFaction` resolves a departed id through the
+  succession chain to whoever now holds the seat. Thirteen cards of the 167
+  chain name the Hasideans and can fire after the 140s — the eight hundred
+  crosses, the deathbed, the admonition, the Law of the Nations — and every one
+  of them means *the pious party*. Without this they would shift a faction that
+  is no longer seated and do nothing whatever, which is the same silence this
+  section is about. An id that never existed still fails soft.
+
+The cards that know which century they are in say so directly: the breach now
+moves both parties in opposite directions (Sadducees +30 / Pharisees −35, or
+Pharisees +25 / Sadducees −15), and §125's empire package, all of whose cards
+fire between −130 and −6, no longer promises Hasidean favour in 120 BCE.
+
+The two new defs are written for the century they sit in rather than copied
+from 67 BCE. The Pharisees' demand is the one Hyrcanus actually refused — let
+the crown suffice thee — and their drift improves if the offices were ever
+divided. The Sadducees' is the counter-demand, that the Temple be governed from
+the Temple under the written Law and nothing added to it, and their drift
+improves while the crown holds the priesthood and a solvent treasury.
+
+- **Regression contract**: `smoke86.mjs` — the seats change hands on the year
+  they should and not a year early, standing carries across, a card naming a
+  departed party lands on its heir, an unknown id still lands nowhere, the
+  panel renders what is actually seated, and the chapter with no windows is
+  bit-for-bit unaffected.

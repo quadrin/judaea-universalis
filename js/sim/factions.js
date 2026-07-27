@@ -39,7 +39,34 @@ function monthIndex(d) { return d.y * 12 + (d.m - 1); }
 export function factionDefs(ctx, tag) {
   const all = ctx.bookmark && ctx.bookmark.factions;
   const list = contentForTag(ctx, all, tag);
-  return Array.isArray(list) && list.length ? list : null;
+  if (!Array.isArray(list) || !list.length) return null;
+  // A court is not a fixed cast (SPEC §127). A faction def may declare the
+  // years it exists — `fromYear`, `untilYear` — and the parties in the room
+  // change while the chapter runs, which for a chapter that runs 173 years is
+  // the difference between a court and a photograph. The 167 chapter opens
+  // with the Hasideans, who are attested fighting for the Law in the 160s and
+  // gone from the record by the 140s, and it now runs to 6 CE through the
+  // whole quarrel between the two parties that replaced them. Without this
+  // the player was still appeasing the Hasideans in 40 BCE.
+  //
+  // A def with no window is timeless, exactly like an event with no era
+  // window; the filter costs one pass and only chapters that ask for it pay.
+  //
+  // The list is returned BY IDENTITY when no def in it declares a window, so
+  // a court that never changes hands allocates nothing per month and stays
+  // `===` to itself across a proclamation — which is how §102 checks that a
+  // formed crown kept the same men.
+  const y = ctx.game && ctx.game.date ? ctx.game.date.y : null;
+  if (y === null) return list;
+  let windowed = false;
+  for (const d of list) {
+    if (d && (Number.isFinite(d.fromYear) || Number.isFinite(d.untilYear))) { windowed = true; break; }
+  }
+  if (!windowed) return list;
+  const live = list.filter((d) => d
+    && (!Number.isFinite(d.fromYear) || y >= d.fromYear)
+    && (!Number.isFinite(d.untilYear) || y < d.untilYear));
+  return live.length ? live : null;
 }
 
 // Factions convene only in the player's own court, and only under a human
@@ -60,7 +87,16 @@ export function ensureFactions(ctx, tag) {
   if (!t.factions || typeof t.factions !== 'object') t.factions = {};
   for (const d of defs) {
     if (d && d.id && !Number.isFinite(t.factions[d.id])) {
-      t.factions[d.id] = clamp(num(d.start, 50), 0, 100);
+      // A party that succeeds another inherits where it stood (SPEC §127).
+      // The Pharisees are not a new constituency introduced to a court that
+      // has never met them; they are, as far as this crown's relationship
+      // with the pious is concerned, the same men under a name the record
+      // starts using around 140. Reseeding them at neutral would hand a king
+      // who spent thirty years courting the Hasideans a clean slate he did
+      // not earn, and one who spent thirty years affronting them an amnesty.
+      const from = d.succeeds && Number.isFinite(t.factions[d.succeeds])
+        ? t.factions[d.succeeds] : null;
+      t.factions[d.id] = clamp(from === null ? num(d.start, 50) : from, 0, 100);
     }
   }
   return t.factions;
@@ -102,12 +138,38 @@ function scaledEffects(effects, scale) {
 export function shiftFaction(ctx, tag, fid, delta) {
   try {
     const defs = activeDefs(ctx, tag);
-    if (!defs || !defs.some((d) => d && d.id === fid)) return false;
+    if (!defs) return false;
+    const id = seatedHeir(ctx, tag, defs, fid);
+    if (!id) return false;
     const table = ensureFactions(ctx, tag);
     if (!table) return false;
-    table[fid] = clamp(num(table[fid], 50) + num(delta, 0), 0, 100);
+    table[id] = clamp(num(table[id], 50) + num(delta, 0), 0, 100);
     return true;
   } catch (e) { warnOnce('shift:' + fid, 'shiftFaction failed', e); return false; }
+}
+
+// The seat, not the name (SPEC §127). A card written for the Hasideans that
+// fires in 90 BCE means the pious party, and the pious party is by then called
+// the Pharisees. Without this, thirteen cards of the 167 chain that name the
+// Hasideans — the eight hundred crosses, Salome's deathbed, the admonition,
+// the Law of the Nations — would shift a faction no longer seated and do
+// nothing at all, which is exactly the silence this whole section is about.
+// A card is free to name the successor directly, and the empire package does;
+// this is for the older cards, which are correct on both sides of the change
+// and should not have to know which side they landed on.
+function seatedHeir(ctx, tag, defs, fid) {
+  if (defs.some((d) => d && d.id === fid)) return fid;
+  const all = contentForTag(ctx, ctx.bookmark && ctx.bookmark.factions, tag);
+  if (!Array.isArray(all)) return null;
+  const byId = new Map(all.map((d) => [d && d.id, d]));
+  for (const live of defs) {
+    let step = live;
+    for (let hop = 0; step && hop < 8; hop++) {
+      if (step.succeeds === fid) return live.id;
+      step = byId.get(step.succeeds);
+    }
+  }
+  return null;
 }
 
 // Replace-or-remove one faction modifier on the tag's ordinary stream.

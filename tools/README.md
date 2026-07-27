@@ -455,3 +455,22 @@ and sim/unrest actually look up, and the withdrawal option against the map. It
 also holds the two structural rules — every card windowed so §121's horizon
 cannot retire it, and every answer to a card leaving a mark distinct from its
 siblings, since the terminal reads those marks back.
+
+SPEC §126 adds four content packages and extends `smoke85.mjs` to cover them.
+Two notes worth carrying forward. First, `events_annexation.js` is the first
+content package that belongs to no chapter — it is keyed on the player tag like
+the omen pool, so the registry decides which chapters play it and the cards'
+`maxYear` decides when; smoke85 checks both halves, because either alone is a
+bug. Second, smoke85's modifier-key check no longer reads from a list somebody
+typed. It reads `resolveTagMult`/`resolveTagAdd` call sites out of `js/sim/`
+and knows that `taxMult` and `unrest` are province-scope, so a key that is
+misspelled, absent, or applied at the wrong scope all fail the same way. The
+typed list had already produced one false negative and hidden seven dead keys.
+
+SPEC §127 adds `smoke86.mjs` (the court that changes hands) and gives faction
+defs `fromYear` / `untilYear` / `succeeds`. If you add a windowed faction to a
+bookmark, note that `factionDefs` returns the list BY IDENTITY when no def in
+it declares a window — smoke73 asserts `factionDefs(MLI) === factionDefs(JUD)`
+to prove a formed crown keeps the same court, and an unconditional `filter()`
+breaks it while changing nothing observable. Cards may keep naming a departed
+faction: `shiftFaction` routes through `succeeds` to whoever holds the seat.

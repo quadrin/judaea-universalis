@@ -3370,7 +3370,7 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Go over to the Sadducees',
-        tooltip: 'The great houses take the courts: −10 legitimacy; "The Sadducee Court" (+8% income, +1 unrest everywhere, permanent). The Hasideans’ heirs will not forgive it.',
+        tooltip: 'The great houses take the courts: −10 legitimacy; "The Sadducee Court" (+8% income, +1 unrest everywhere, permanent). Sadducees +30, Pharisees −35 — and the schools remember it for three generations.',
         effects: guard('ev_pharisee_breach:0', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'HAS')) return;
@@ -3379,14 +3379,17 @@ export const EVENTS_167 = [
             id: 'sadducee_court', name: 'The Sadducee Court', months: -1,
             effects: { incomeMult: 1.08, unrestAll: 1 },
           });
-          h.factionShift(ctx, 'HAS', 'hasideans', -20);
-          h.factionShift(ctx, 'HAS', 'hellenizers', 10);
+          // The card that names the two parties now moves them (SPEC §127).
+          // Until the court learned to change hands this shifted the
+          // Hasideans, in 114 BCE, thirty years after they leave the record.
+          h.factionShift(ctx, 'HAS', 'pharisees', -35);
+          h.factionShift(ctx, 'HAS', 'sadducees', 30);
           h.setFlag(ctx, 'sadduceeBreach', true);
         }),
       },
       {
         label: 'One sage’s insolence is not the schools’ sin',
-        tooltip: 'Eleazar is punished; the Pharisees keep the courts: +10 legitimacy; "The Schools Stand With Us" (−1 unrest everywhere, −5% income, permanent).',
+        tooltip: 'Eleazar is punished; the Pharisees keep the courts: +10 legitimacy; "The Schools Stand With Us" (−1 unrest everywhere, −5% income, permanent). Pharisees +25, Sadducees −15.',
         effects: guard('ev_pharisee_breach:1', (ctx) => {
           const h = ctx.helpers;
           if (!alive(ctx, 'HAS')) return;
@@ -3395,7 +3398,8 @@ export const EVENTS_167 = [
             id: 'schools_stand_with_us', name: 'The Schools Stand With Us', months: -1,
             effects: { unrestAll: -1, incomeMult: 0.95 },
           });
-          h.factionShift(ctx, 'HAS', 'hasideans', 15);
+          h.factionShift(ctx, 'HAS', 'pharisees', 25);
+          h.factionShift(ctx, 'HAS', 'sadducees', -15);
           h.setFlag(ctx, 'phariseesKept', true);
         }),
       },

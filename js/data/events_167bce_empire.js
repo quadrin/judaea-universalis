@@ -156,7 +156,7 @@ export const EVENTS_167_EMPIRE = [
     options: [
       {
         label: 'Let the style be King of Israel and of the Nations Subject to Him',
-        tooltip: 'The formula the clerks were waiting for: one crown over two kinds of subject, and the difference written into the title rather than argued about. +10 legitimacy, +2 stability, "The Style of the Nations" (+10% income, +1 unrest everywhere, 60 months). +2 authority, +2 conquest. The Hasideans read the second half of the title and do not care for it (−20).',
+        tooltip: 'The formula the clerks were waiting for: one crown over two kinds of subject, and the difference written into the title rather than argued about. +10 legitimacy, +2 stability, "The Style of the Nations" (+10% income, +1 unrest everywhere, 60 months). +2 authority, +2 conquest. The Pharisees read the second half of the title and do not care for it (−20); the great houses, who will be collecting the tribute, do (+15).',
         effects: guard('ev_x_the_successor_state:0', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
@@ -165,8 +165,8 @@ export const EVENTS_167_EMPIRE = [
             id: 'style_of_the_nations', name: 'The Style of the Nations', months: 60,
             effects: { incomeMult: 1.10, unrestAll: 1 },
           });
-          h.factionShift(ctx, me, 'hasideans', -20);
-          h.factionShift(ctx, me, 'hellenizers', 15);
+          h.factionShift(ctx, me, 'pharisees', -20);
+          h.factionShift(ctx, me, 'sadducees', 15);
           h.doctrine(ctx, 'authority', 2);
           h.doctrine(ctx, 'conquest', 2);
           h.setFlag(ctx, 'seleucidSuccessor', true);
@@ -176,13 +176,13 @@ export const EVENTS_167_EMPIRE = [
       },
       {
         label: 'King and High Priest, as before — the rest is administered, not reigned over',
-        tooltip: 'The old style kept, and Syria held as an occupation rather than a realm: nothing is conceded in the title and nothing is solved by it either. +5 legitimacy, +25 Hasidean favour, and the conquered provinces are governed by men with no standing to govern them (+2 unrest in every non-Jewish province, permanent until answered). +2 zeal.',
+        tooltip: 'The old style kept, and Syria held as an occupation rather than a realm: nothing is conceded in the title and nothing is solved by it either. +5 legitimacy, +25 Pharisee favour, and the conquered provinces are governed by men with no standing to govern them (+2 unrest in every non-Jewish province, permanent until answered). +2 zeal.',
         effects: guard('ev_x_the_successor_state:1', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.adjust(ctx, me, { legitimacy: 5 });
-          h.factionShift(ctx, me, 'hasideans', 25);
-          h.factionShift(ctx, me, 'hellenizers', -15);
+          h.factionShift(ctx, me, 'pharisees', 25);
+          h.factionShift(ctx, me, 'sadducees', -15);
           h.doctrine(ctx, 'zeal', 2);
           h.addTagModifier(ctx, me, {
             id: 'an_occupation_not_a_realm', name: 'An Occupation, Not a Realm', months: 240,
@@ -223,12 +223,12 @@ export const EVENTS_167_EMPIRE = [
     options: [
       {
         label: 'Jerusalem. The king sleeps where the Temple is',
-        tooltip: 'The capital stays, and the empire is governed at the speed of a courier from the hills. +12 legitimacy, +30 Hasidean favour, +2 zeal, −1 authority. "The Slow Capital": −10% income and +1 unrest in every province beyond the Jordan and the coast (120 months).',
+        tooltip: 'The capital stays, and the empire is governed at the speed of a courier from the hills. +12 legitimacy, +30 Pharisee favour, +2 zeal, −1 authority. "The Slow Capital": −10% income and +1 unrest in every province beyond the Jordan and the coast (120 months).',
         effects: guard('ev_x_where_the_king_sits:0', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.adjust(ctx, me, { legitimacy: 12 });
-          h.factionShift(ctx, me, 'hasideans', 30);
+          h.factionShift(ctx, me, 'pharisees', 30);
           h.doctrine(ctx, 'zeal', 2);
           h.doctrine(ctx, 'authority', -1);
           h.addTagModifier(ctx, me, {
@@ -242,17 +242,17 @@ export const EVENTS_167_EMPIRE = [
       },
       {
         label: 'Antioch. The empire is governed from where the empire is',
-        tooltip: 'The seat moves. +3 stability, +15% income, +2 authority, +2 alignment westward, and the machinery finally fits the realm — but the Temple has a king who is not there. −15 legitimacy, −40 Hasidean favour, and the priesthood question is now urgent rather than theoretical.',
+        tooltip: 'The seat moves. +3 stability, +15% income, +2 authority, +2 alignment westward, and the machinery finally fits the realm — but the Temple has a king who is not there. −15 legitimacy, −40 Pharisee favour, and the priesthood question is now urgent rather than theoretical.',
         effects: guard('ev_x_where_the_king_sits:1', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.adjust(ctx, me, { stability: 3, legitimacy: -15 });
           h.addTagModifier(ctx, me, {
             id: 'the_seat_at_antioch', name: 'The Seat at Antioch', months: 240,
-            effects: { incomeMult: 1.15, taxMult: 1.10 },
+            effects: { incomeMult: 1.15 },
           });
-          h.factionShift(ctx, me, 'hasideans', -40);
-          h.factionShift(ctx, me, 'hellenizers', 25);
+          h.factionShift(ctx, me, 'pharisees', -40);
+          h.factionShift(ctx, me, 'sadducees', 25);
           h.doctrine(ctx, 'authority', 2);
           h.doctrine(ctx, 'alignment', 2);
           h.setFlag(ctx, 'seatDecided', true);
@@ -262,16 +262,16 @@ export const EVENTS_167_EMPIRE = [
       },
       {
         label: 'Both. The court winters at Antioch and comes up for the festivals',
-        tooltip: 'The compromise everyone can live with and nobody defends: two chanceries, two households, three pilgrimages a year moved at state expense. +8% income, no legitimacy loss, +1 authority — and a standing cost of 25 talents a month in duplicated government (−12% treasury growth, 180 months).',
+        tooltip: 'The compromise everyone can live with and nobody defends: two chanceries, two households, three pilgrimages a year moved at state expense. no legitimacy loss and +1 authority — and two of everything. The second capital earns less than the duplicated government costs: net −5% income for 180 months, which is the cheapest way to not decide.',
         effects: guard('ev_x_where_the_king_sits:2', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.addTagModifier(ctx, me, {
             id: 'two_courts', name: 'Two Courts', months: 180,
-            effects: { incomeMult: 1.08, taxMult: 0.88 },
+            effects: { incomeMult: 0.95 },
           });
-          h.factionShift(ctx, me, 'hasideans', -5);
-          h.factionShift(ctx, me, 'hellenizers', 5);
+          h.factionShift(ctx, me, 'pharisees', -5);
+          h.factionShift(ctx, me, 'sadducees', 5);
           h.doctrine(ctx, 'authority', 1);
           h.setFlag(ctx, 'seatDecided', true);
           h.setFlag(ctx, 'twoCourts', true);
@@ -306,15 +306,15 @@ export const EVENTS_167_EMPIRE = [
     options: [
       {
         label: 'Hire the Pisidians and the Cilicians',
-        tooltip: 'As Jannaeus did. +25% manpower and +5% discipline (240 months) and the frontier holds — but the crown now has an army with no stake in the country. 40 talents a month. If the realm ever turns on itself these men will follow the paymaster: +2 unrest everywhere, −20 Hasidean favour, +2 conquest.',
+        tooltip: 'As Jannaeus did. +25% manpower and +5% discipline (240 months) and the frontier holds — but the crown now has an army with no stake in the country, and it is paid: −10% income for as long as it serves. If the realm ever turns on itself these men will follow the paymaster: +2 unrest everywhere, −20 Pharisee favour, +2 conquest.',
         effects: guard('ev_x_army_judaea_cannot_raise:0', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.addTagModifier(ctx, me, {
             id: 'the_hired_shields', name: 'The Hired Shields', months: 240,
-            effects: { manpowerMult: 1.25, disciplineMult: 1.05, taxMult: 0.90, unrestAll: 2 },
+            effects: { manpowerMult: 1.25, disciplineMult: 1.05, incomeMult: 0.90, unrestAll: 2 },
           });
-          h.factionShift(ctx, me, 'hasideans', -20);
+          h.factionShift(ctx, me, 'pharisees', -20);
           h.factionShift(ctx, me, 'warparty', 20);
           h.doctrine(ctx, 'conquest', 2);
           h.setFlag(ctx, 'manpowerAnswered', true);
@@ -332,8 +332,8 @@ export const EVENTS_167_EMPIRE = [
             id: 'the_nations_under_arms', name: 'The Nations Under Arms', months: 240,
             effects: { manpowerMult: 1.20, reinforceMult: 1.10, unrestAll: 1 },
           });
-          h.factionShift(ctx, me, 'hellenizers', 20);
-          h.factionShift(ctx, me, 'hasideans', -10);
+          h.factionShift(ctx, me, 'sadducees', 20);
+          h.factionShift(ctx, me, 'pharisees', -10);
           h.doctrine(ctx, 'zeal', -2);
           h.setFlag(ctx, 'manpowerAnswered', true);
           h.setFlag(ctx, 'nationsUnderArms', true);
@@ -342,16 +342,22 @@ export const EVENTS_167_EMPIRE = [
       },
       {
         label: 'Hold only what the levy can hold',
-        tooltip: 'The honest answer, and the expensive one: the frontier is drawn where Judaean farmers will actually stand. No new manpower and no mercenary bill, +20 Hasidean favour, +2 zeal, +5 legitimacy — and the outer provinces are ungarrisoned. +3 unrest in every non-Jewish province and a standing invitation to any neighbour who can count (180 months).',
+        tooltip: 'The honest answer, and the expensive one: the frontier is drawn where Judaean farmers will actually stand. No new manpower and no mercenary bill, +20 Pharisee favour, +2 zeal, +5 legitimacy — and the outer provinces are ungarrisoned. +3 unrest in every non-Jewish province and a standing invitation to any neighbour who can count (180 months).',
         effects: guard('ev_x_army_judaea_cannot_raise:2', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.adjust(ctx, me, { legitimacy: 5 });
           h.addTagModifier(ctx, me, {
             id: 'the_frontier_of_the_levy', name: 'The Frontier of the Levy', months: 180,
-            effects: { unrestAll: 3 },
+            // `aiPassive` is a real key and a BOOLEAN — sim/ai.js tests it for
+            // truthiness. It shipped as `0`, which is the key spelled right
+            // and the value spelled falsy, so the modifier stored a number
+            // nothing acted on. A crown that has drawn its frontier where its
+            // own farmers will stand has stopped expanding, and this is how
+            // the engine is told so.
+            effects: { unrestAll: 3, aiPassive: true },
           });
-          h.factionShift(ctx, me, 'hasideans', 20);
+          h.factionShift(ctx, me, 'pharisees', 20);
           h.doctrine(ctx, 'zeal', 2);
           h.doctrine(ctx, 'conquest', -2);
           h.setFlag(ctx, 'manpowerAnswered', true);
@@ -388,12 +394,12 @@ export const EVENTS_167_EMPIRE = [
     options: [
       {
         label: 'Separate the offices: a High Priest in Jerusalem, a king in the field',
-        tooltip: 'The thing Hyrcanus refused, conceded a century later by a king who cannot physically do both. +3 stability, +35 Hasidean favour, −2 authority, and the sanctuary is served properly for the first time in a decade. The priesthood is now an office the crown does not hold and cannot simply fill: a rival centre of legitimacy exists (+1 unrest in Judaea proper, permanent).',
+        tooltip: 'The thing Hyrcanus refused, conceded a century later by a king who cannot physically do both. +3 stability, +35 Pharisee favour, −2 authority, and the sanctuary is served properly for the first time in a decade. The priesthood is now an office the crown does not hold and cannot simply fill: a rival centre of legitimacy exists (+1 unrest in Judaea proper, permanent).',
         effects: guard('ev_x_the_altar_and_the_throne:0', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
           h.adjust(ctx, me, { stability: 3 });
-          h.factionShift(ctx, me, 'hasideans', 35);
+          h.factionShift(ctx, me, 'pharisees', 35);
           h.doctrine(ctx, 'authority', -2);
           h.addProvinceModifier(ctx, 'Jerusalem', {
             id: 'a_priest_who_is_not_the_king', name: 'A Priest Who Is Not the King',
@@ -406,7 +412,7 @@ export const EVENTS_167_EMPIRE = [
       },
       {
         label: 'Hold both, and let the empire wait ten days a year',
-        tooltip: 'The king goes up for the Day of Atonement and the machinery of an empire stops while he does. +10 legitimacy, +2 zeal, +1 authority, Hasideans +20 — and the interruption is real: −8% income and −5% reinforcement, permanently, because the government of Syria has an annual hole in it that its enemies can read off a calendar.',
+        tooltip: 'The king goes up for the Day of Atonement and the machinery of an empire stops while he does. +10 legitimacy, +2 zeal, +1 authority, Pharisees +20 — and the interruption is real: −8% income and −5% reinforcement, permanently, because the government of Syria has an annual hole in it that its enemies can read off a calendar.',
         effects: guard('ev_x_the_altar_and_the_throne:1', (ctx) => {
           const h = ctx.helpers;
           const me = crown(ctx);
@@ -415,7 +421,7 @@ export const EVENTS_167_EMPIRE = [
             id: 'ten_days_a_year', name: 'Ten Days a Year', months: 240,
             effects: { incomeMult: 0.92, reinforceMult: 0.95 },
           });
-          h.factionShift(ctx, me, 'hasideans', 20);
+          h.factionShift(ctx, me, 'pharisees', 20);
           h.doctrine(ctx, 'zeal', 2);
           h.doctrine(ctx, 'authority', 1);
           h.setFlag(ctx, 'priesthoodAnswered', true);

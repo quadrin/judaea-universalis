@@ -218,11 +218,11 @@ export const EVENTS_132_ENDURE = [
     options: [
       {
         label: 'One authority. The chair answers to the crown',
-        tooltip: 'The calendar, ordination and the correspondence come under the palace. +3 stability, +2 authority, +8% tax — and the diaspora notices that the rulings now come from a government. Sages −30, and the academies of Babylonia begin quietly deciding for themselves.',
+        tooltip: 'The calendar, ordination and the correspondence come under the palace. +3 stability, +2 authority, +8% income — and the diaspora notices that the rulings now come from a government. Sages −30, and the academies of Babylonia begin quietly deciding for themselves.',
         effects: guard('ev_e_chair:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { stability: 3 });
-          h.addTagModifier(ctx, 'JUD', { id: 'one_authority', name: 'One Authority', months: 240, effects: { taxMult: 1.08 } });
+          h.addTagModifier(ctx, 'JUD', { id: 'one_authority', name: 'One Authority', months: 240, effects: { incomeMult: 1.08 } });
           h.factionShift(ctx, 'JUD', 'sages', -30);
           h.doctrine(ctx, 'authority', 2);
           h.setFlag(ctx, 'chairAnswered', true);

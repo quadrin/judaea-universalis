@@ -277,7 +277,15 @@ export function monthlyIntegration(ctx) {
     try {
       if (p.owner !== p.integrating.by) { p.integrating = null; continue; }
       if (p.controller !== p.owner) continue; // the program waits out the occupation
-      p.integrating.monthsLeft = num(p.integrating.monthsLeft, 1) - 1;
+      // Integration answers to a realm-wide multiplier the way conversion
+      // does (SPEC §126). A standing policy on the conquered — the sword, the
+      // tribute roll, the settlements, the single law — is exactly a claim
+      // about how fast a province stops being foreign, and before this the
+      // only lever content could pull was `convertMult`, which changes the
+      // religion and not the allegiance. They are different questions and the
+      // Hasmoneans answered them separately.
+      p.integrating.monthsLeft = num(p.integrating.monthsLeft, 1)
+        - resolveTagMult(ctx, p.owner, 'integrateMult');
       if (p.integrating.monthsLeft > 0) continue;
       p.integrating = null;
       p.integration = Math.min(1, num(p.integration) + 0.34);

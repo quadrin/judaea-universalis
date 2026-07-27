@@ -305,8 +305,19 @@ export const BOOKMARK_167 = {
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {
     HAS: [
+      // The court of this chapter changes hands twice (SPEC §127). The
+      // Hasideans are attested fighting for the Law in the 160s (1 Macc 2:42,
+      // 7:13) and are gone from the record within a generation; Josephus first
+      // names the three schools under Jonathan, around 145 (Ant. XIII.171).
+      // The chapter runs to 6 CE, so for the last hundred and forty years of
+      // it the parties in the room are the Pharisees and the Sadducees, and
+      // the whole royal century — Hyrcanus' breach, Jannaeus' war on his own
+      // subjects, Salome's restoration — is that quarrel. `untilYear` and
+      // `fromYear` hand the court over; `succeeds` carries the standing across
+      // so the new parties know how this crown has treated their predecessors.
       {
         id: 'hasideans', name: 'The Hasideans',
+        untilYear: -140,
         desc: 'The pious who fight for the Law, not for a crown — and will go home the day the Law is safe.',
         drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
         boon: { name: 'The Pious Bless the House', text: '+0.25 legitimacy a month', effects: { legitimacyAdd: 0.25 } },
@@ -323,6 +334,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hellenizers', name: 'The Hellenizers',
+        untilYear: -140,
         desc: 'The gymnasium party — Jason\'s people, rich, connected, and certain this rebellion ruins them.',
         drift(ctx, t) {
           const g = ctx.game;
@@ -339,6 +351,54 @@ export const BOOKMARK_167 = {
             + 'the zealous stop burning the houses of everyone who ever spoke Greek.',
           grant: { label: 'Restrain the zealous', cost: { infl: 50 } },
           refuse: { label: 'They chose their side long ago', tooltip: 'Their silver goes to Antioch.' },
+        },
+      },
+      {
+        id: 'pharisees', name: 'The Pharisees',
+        fromYear: -140, succeeds: 'hasideans',
+        desc: 'The party of the oral law and the synagogue: not priests, and popular with everyone who is not one.',
+        drift(ctx, t) {
+          // They ask two things of a Hasmonean and the crown can only be one
+          // of them: pious, and not also the High Priest. A stable realm keeps
+          // them; the office keeps costing.
+          const base = (t.stability || 0) >= 1 ? 0.4 : -0.4;
+          return (ctx.game.flags && ctx.game.flags.officesDivided) ? base + 0.3 : base;
+        },
+        boon: { name: 'The Schools Stand With Us', text: '−1 unrest everywhere', effects: { unrestAll: -1 } },
+        bane: { name: 'The Schools Withdraw', text: '−0.3 legitimacy a month', effects: { legitimacyAdd: -0.3 } },
+        appease: { label: 'Rule by their reading (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'Let the Crown Suffice Thee',
+          text: 'They put it courteously and they do not put it once. The man who rules Israel '
+            + 'should not also be the man who enters the Holy of Holies; one of the two offices '
+            + 'was given to your house and the other was taken by it. Lay down the priesthood and '
+            + 'keep the crown, and the schools will pray for the crown.',
+          grant: { label: 'The priesthood goes to another house', cost: { gov: 60 } },
+          refuse: { label: 'Both offices, as my father held them', tooltip: 'They stop asking, which is worse.' },
+        },
+      },
+      {
+        id: 'sadducees', name: 'The Sadducees',
+        fromYear: -140, succeeds: 'hellenizers',
+        desc: 'The high-priestly houses and the great estates: the written Law, the Temple revenue, and no opinions about the hereafter.',
+        drift(ctx, t) {
+          // They are the Temple's own men and they read the ledger. A solvent
+          // crown that holds the priesthood is their crown.
+          const held = !(ctx.game.flags && ctx.game.flags.officesDivided);
+          const base = (t.treasury || 0) > 0 ? 0.4 : -0.4;
+          return held ? base + 0.2 : base - 0.3;
+        },
+        boon: { name: 'The Houses Fund the Crown', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Houses Sit on Their Hands', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        appease: { label: 'Confirm their courts and their tithes (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Sadducees Ask Who Rules the Temple',
+          text: 'The great houses have no quarrel with the crown and one standing condition on '
+            + 'their support: that the Temple is governed from the Temple, by the men whose '
+            + 'fathers governed it, under the written Law and nothing added to it. The rulings of '
+            + 'the schools are not law. Say so, or say who does rule here.',
+          grant: { label: 'The written Law and no other', cost: { infl: 60 } },
+          refuse: { label: 'The schools have their place too', tooltip: 'The Temple revenue is counted more slowly this year.' },
         },
       },
       {

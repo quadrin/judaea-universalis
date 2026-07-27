@@ -145,7 +145,7 @@ export const EVENTS_614_THIRD = [
         tooltip: 'The buffer state made deliberate: +25% income and +2 stability (240 months), +30 opinion with both neighbours, +2 authority. The kingdom is now structurally dependent on the war continuing — if either power wins outright, the reason to leave it alone goes with them.',
         effects: guard('ev_t_worth:0', (ctx) => {
           const h = ctx.helpers;
-          h.addTagModifier(ctx, 'JUD', { id: 'be_the_road', name: 'Be the Road', months: 240, effects: { incomeMult: 1.25, taxMult: 1.10 } });
+          h.addTagModifier(ctx, 'JUD', { id: 'be_the_road', name: 'Be the Road', months: 240, effects: { incomeMult: 1.25 } });
           h.adjust(ctx, 'JUD', { stability: 2 });
           h.doctrine(ctx, 'authority', 2);
           h.doctrine(ctx, 'conquest', -2);

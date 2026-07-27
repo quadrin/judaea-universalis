@@ -57,7 +57,17 @@ const PACKAGES = [
     tag: 'ISR', entry: 'ev_z_the_question_that_came_back', terminal: 'ev_z_what_the_century_asked' },
 ];
 
-for (const p of PACKAGES) {
+// SPEC §126 packages. They are the same shape but they do NOT all carry a
+// dated terminal — the 132 ladder and the 614 window close on the terminals
+// their chapters already have — so they are checked by the structural
+// sections and not by the terminal one.
+const RUNGS = [
+  { era: '132ce', file: 'events_132ce_house.js', ex: 'EVENTS_132_HOUSE', bm: 'bookmark_132ce.js', tag: 'JUD' },
+  { era: '614ce', file: 'events_614ce_power.js', ex: 'EVENTS_614_POWER', bm: 'bookmark_614ce.js', tag: 'JUD' },
+  { era: '614ce', file: 'events_614ce_david.js', ex: 'EVENTS_614_DAVID', bm: 'bookmark_614ce.js', tag: 'JUD' },
+];
+
+for (const p of PACKAGES.concat(RUNGS)) {
   const mod = await import(R + '/js/data/' + p.file);
   p.cards = mod[p.ex];
   const bmod = await import(R + '/js/data/' + p.bm);
@@ -65,6 +75,8 @@ for (const p of PACKAGES) {
   p.chain = (ERAS.find((e) => e.bookmark.id === p.era) || {}).events || [];
   p.src = readFileSync(R + '/js/data/' + p.file, 'utf8');
 }
+
+const ALL = PACKAGES.concat(RUNGS);
 
 function boot(p, year) {
   const bm = p.bookmark;
@@ -103,7 +115,7 @@ function grant(ctx, tag, count, must = []) {
 
 console.log('== every package is in the chain its header names, and in no other ==');
 {
-  for (const p of PACKAGES) {
+  for (const p of ALL) {
     const inChain = p.cards.filter((c) => p.chain.indexOf(c) >= 0).length;
     ok(inChain === p.cards.length,
       p.era + ': all ' + p.cards.length + ' cards of ' + p.ex + ' are registered');
@@ -128,7 +140,7 @@ console.log('== no id collides with a card the game already shipped ==');
   // A card shared between chapters (the generic pool) is counted once per
   // chapter, so only look at the ids these packages introduce.
   const dupes = [];
-  for (const p of PACKAGES) {
+  for (const p of ALL) {
     for (const c of p.cards) {
       const others = ERAS.filter((e) => e.events.some((x) => x !== c && x && x.id === c.id));
       if (others.length) dupes.push(c.id);
@@ -139,7 +151,7 @@ console.log('== no id collides with a card the game already shipped ==');
 
 console.log('== every new card declares the years it belongs to (SPEC §121) ==');
 {
-  for (const p of PACKAGES) {
+  for (const p of ALL) {
     const horizon = p.bookmark.generationHorizon;
     for (const c of p.cards) {
       const windowed = !!c.date || Number.isFinite(c.maxYear);
@@ -173,7 +185,7 @@ console.log('== each terminal closes its chapter on the chapter\'s own last year
 
 console.log('== every faction a package shifts exists in that chapter ==');
 {
-  for (const p of PACKAGES) {
+  for (const p of ALL) {
     const known = new Set();
     for (const list of Object.values(p.bookmark.factions || {})) {
       for (const f of list) known.add(f.id);
@@ -189,12 +201,30 @@ console.log('== every faction a package shifts exists in that chapter ==');
 
 console.log('== every modifier key a package sets is one the engine reads ==');
 {
-  // The keys sim/economy, sim/military and sim/unrest actually look up. A key
-  // outside this set is a promise the tooltip makes and the engine ignores.
-  const TAG_KEYS = new Set(['incomeMult', 'taxMult', 'manpowerMult', 'moraleMult', 'moraleBase',
-    'disciplineMult', 'reinforceMult', 'unrestAll', 'legitimacyAdd', 'income', 'manpower',
-    'morale', 'discipline', 'reinforcement', 'trade', 'peasant', 'separatist', 'unrest']);
-  for (const p of PACKAGES) {
+  // The keys the engine actually looks up, READ OUT OF THE ENGINE rather than
+  // listed here. A hand-written list is the same bug one level up: this check
+  // shipped with `aiPassive` missing from it and duly reported a live key as
+  // dead, which is worse than not checking, because it argues for deleting
+  // working content. Anything the sim resolves by name is legitimate; anything
+  // else is a promise the tooltip makes and the engine ignores.
+  const TAG_KEYS = new Set(['unrest']); // the province-scope key, read as effects.unrest
+  for (const f of ['military', 'economy', 'unrest', 'ai', 'realm', 'invasion', 'navy',
+    'recruitment', 'supply', 'population', 'tick']) {
+    let src = '';
+    try { src = readFileSync(R + '/js/sim/' + f + '.js', 'utf8'); } catch (e) { continue; }
+    for (const m of src.matchAll(/resolveTag(?:Mult|Add)\(\s*ctx\s*,[^,]+,\s*'([a-zA-Z]+)'/g)) TAG_KEYS.add(m[1]);
+    for (const m of src.matchAll(/effects\.([a-zA-Z]+)/g)) TAG_KEYS.add(m[1]);
+  }
+  ok(TAG_KEYS.size > 15, 'the engine\'s modifier vocabulary was read from the sim ('
+    + TAG_KEYS.size + ' keys)');
+  // Scope is the second half of the check and the half that bites. `taxMult`
+  // is read by provMult() in sim/economy, which walks a PROVINCE's modifiers
+  // and is never handed a tag's — so `taxMult` on a tag modifier is a key that
+  // exists, spelled correctly, doing nothing. Seven of them shipped that way
+  // before this check could see scope, every one of them a cost or a reward a
+  // tooltip had already promised. `unrest` is the same shape.
+  const PROV_ONLY = new Set(['taxMult', 'unrest']);
+  for (const p of ALL) {
     const bad = [];
     for (const m of p.src.matchAll(/effects:\s*\{([^}]*)\}/g)) {
       for (const k of m[1].matchAll(/([a-zA-Z]+)\s*:/g)) {
@@ -202,13 +232,22 @@ console.log('== every modifier key a package sets is one the engine reads ==');
       }
     }
     ok(!bad.length, p.era + ': no dead modifier keys (' + ([...new Set(bad)].join(', ') || 'clean') + ')');
+
+    const misscoped = [];
+    for (const m of p.src.matchAll(/addTagModifier\(ctx,[^;]*?effects:\s*\{([^}]*)\}/g)) {
+      for (const k of m[1].matchAll(/([a-zA-Z]+)\s*:/g)) {
+        if (PROV_ONLY.has(k[1])) misscoped.push(k[1]);
+      }
+    }
+    ok(!misscoped.length, '  and none of them is a province key on a tag modifier ('
+      + ([...new Set(misscoped)].join(', ') || 'clean') + ')');
   }
 }
 
 console.log('== every option resolves clean and records that it was taken ==');
 {
   const realWarn = console.warn;
-  for (const p of PACKAGES) {
+  for (const p of ALL) {
     for (const card of p.cards) {
       const marks = [];
       for (let i = 0; i < card.options.length; i++) {
@@ -378,6 +417,44 @@ console.log('== the settled line actually moves the line ==');
       .every((n) => { const pr = alt.ctx.prov(n); return !pr || pr.owner === 'ISR'; });
     ok(kept, '  answer #' + idx + ' changes no border');
   }
+}
+
+console.log('== the annexation pool travels with every antique chapter and none other ==');
+{
+  // SPEC §126. This one is not a chapter's package — it is keyed on the player
+  // tag like the omens, so the registry decides where it plays and the cards
+  // decide when. Both halves are checked, because either alone is a bug: in
+  // 1948 without a window it would ask a modern cabinet to rule on
+  // circumcision or the road, and windowed but unregistered it would ask
+  // nobody anything.
+  const { EVENTS_ANNEX } = await import(R + '/js/data/events_annexation.js');
+  const ANTIQUE_ERAS = ['167bce', '67bce', '40bce', '66ce', '132ce', '614ce'];
+  for (const id of ANTIQUE_ERAS) {
+    const era = ERAS.find((e) => e.bookmark.id === id);
+    const has = EVENTS_ANNEX.every((c) => era && era.events.indexOf(c) >= 0);
+    ok(has, id + ' plays the annexation question');
+  }
+  const modern = ERAS.find((e) => e.bookmark.id === '1948ce');
+  ok(EVENTS_ANNEX.every((c) => modern.events.indexOf(c) < 0),
+    '1948 does not, because a modern cabinet does not rule on circumcision or the road');
+  ok(EVENTS_ANNEX.every((c) => Number.isFinite(c.maxYear) && c.maxYear < 1948),
+    '  and every card is windowed shut before 1948 regardless of the registry');
+  ok(EVENTS_ANNEX.every((c) => c.forTag === 'player'),
+    '  and every card is addressed to whoever is playing, not to a fixed crown');
+
+  // The policies claim to change how fast a conquered province stops being
+  // foreign. Integration answers to `integrateMult` (added for this), so a
+  // policy that names only `convertMult` changes the religion and not the
+  // allegiance — which is half of what all four options say they do.
+  const asrc = readFileSync(R + '/js/data/events_annexation.js', 'utf8');
+  const rsrc = readFileSync(R + '/js/sim/realm.js', 'utf8');
+  ok(/integrating\.monthsLeft[\s\S]{0,120}resolveTagMult\(ctx, p\.owner, 'integrateMult'\)/.test(rsrc),
+    'the integration tick reads a realm-wide multiplier at all');
+  const convertPolicies = (asrc.match(/convertMult/g) || []).length;
+  const integratePolicies = (asrc.match(/integrateMult/g) || []).length;
+  ok(convertPolicies === integratePolicies,
+    '  and every policy that changes conversion changes integration with it ('
+    + convertPolicies + ' vs ' + integratePolicies + ')');
 }
 
 console.log('== each card says what actually happened ==');

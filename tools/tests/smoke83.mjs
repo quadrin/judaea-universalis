@@ -34,8 +34,10 @@ const SOURCES = {
   '40bce': ['events_40bce.js', 'events_40bce_alternates.js', 'events_40bce_bridge.js'],
   '66ce': ['events_66ce.js', 'events_66ce_after.js', 'events_66ce_nation.js'],
   '132ce': ['events_132ce.js', 'events_132ce_faith.js', 'events_132ce_world.js',
-    'events_132ce_galilee.js', 'events_132ce_redemption.js', 'events_132ce_endure.js'],
-  '614ce': ['events_614ce.js', 'events_614ce_persia.js', 'events_614ce_third.js'],
+    'events_132ce_galilee.js', 'events_132ce_redemption.js', 'events_132ce_endure.js',
+    'events_132ce_house.js'],
+  '614ce': ['events_614ce.js', 'events_614ce_persia.js', 'events_614ce_third.js',
+    'events_614ce_power.js', 'events_614ce_david.js'],
   '1948ce': ['events_1948.js', 'events_1948_region.js', 'events_1948_levant.js',
     'events_1948_question.js'],
 };

@@ -477,6 +477,34 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_house_itself',
+        question: 'The altar stands on the cleared Mount. Is a sanctuary built over it, and at what scale?',
+        requires: 'redemptionEra',
+        roads: [
+          Object.freeze({
+            id: 'built_great', name: 'On Herod\'s Footings',
+            marker: 'houseBuiltGreat', entry: 'ev_h_the_house_itself',
+            terminal: 'ev_e_three_hundred_years',
+            note: 'SPEC §126. Building large is agreeing with Herod, which is a judgement the '
+              + 'revolt did not think it was going to have to make.',
+          }),
+          Object.freeze({
+            id: 'built_small', name: 'What the Country Can Pay For',
+            marker: 'houseBuiltSmall', entry: 'ev_h_the_house_itself',
+            terminal: 'ev_e_three_hundred_years',
+            note: 'SPEC §126. Zerubbabel\'s answer, and the old men who saw the first one wept '
+              + 'at it (Ezra 3:12).',
+          }),
+          Object.freeze({
+            id: 'house_declined', name: 'The Altar Is Enough',
+            marker: 'houseDeclined', entry: 'ev_h_the_house_itself',
+            terminal: 'ev_e_three_hundred_years',
+            note: 'SPEC §126. The Ezra move held deliberately: offerings resume in the open air '
+              + 'and no building is raised that a defeat could turn into rubble again.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -524,6 +552,48 @@ export const CHAPTER_PATHS = Object.freeze([
             note: 'SPEC §125. A cleared platform offends nobody: the state stays an '
               + 'administrative fact rather than a claim, and the generation that took the '
               + 'city dies without seeing it.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_window_of_628',
+        question: 'Both empires have destroyed each other and neither can field an army in Syria. Does the kingdom move?',
+        roads: [
+          Object.freeze({
+            id: 'took_the_ground', name: 'The Empty Ground',
+            marker: 'tookTheEmptyGround', entry: 'ev_w_both_empires_died',
+            terminal: 'ev_t_what_was_built_instead',
+            note: 'SPEC §126. The same vacuum the Rashidun walked into, entered first. It is the '
+              + 'only decade in the chapter when this state can expand at all.',
+          }),
+          Object.freeze({
+            id: 'depth_not_reach', name: 'Depth, Not Reach',
+            marker: 'depthNotReach', entry: 'ev_w_both_empires_died',
+            terminal: 'ev_t_what_was_built_instead',
+            note: 'SPEC §126. The window is spent on walls and stores instead of ground, on the '
+              + 'reasoning that whoever fills the vacuum will arrive either way.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_line_of_jehoiachin',
+        question: 'A throne in Jerusalem and a man with the pedigree for it, in one polity, for the first time since 586 BCE.',
+        requires: 'oneCrownBothCentres',
+        roads: [
+          Object.freeze({
+            id: 'david_crowned', name: 'The Crown of David',
+            marker: 'davidCrowned', entry: 'ev_d_the_crown_of_david',
+            terminal: 'ev_d_the_morning_after',
+            note: 'SPEC §126. A son of David is crowned with the offerings going up, and the '
+              + 'kingdom spends every morning afterwards explaining what that did and did not '
+              + 'mean.',
+          }),
+          Object.freeze({
+            id: 'david_declined', name: 'The Pedigree Honoured, the Crown Kept',
+            marker: 'davidDeclined', entry: 'ev_d_the_crown_of_david',
+            terminal: 'ev_d_the_morning_after',
+            note: 'SPEC §126. The line is acknowledged and seated and not enthroned — the '
+              + 'Hasmonean answer, given by a house that knows what it cost them.',
           }),
         ],
       }),

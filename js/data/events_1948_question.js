@@ -154,12 +154,12 @@ export const EVENTS_1948_QUESTION = [
       },
       {
         label: 'Two states: withdraw to a defensible line and trade the rest for recognition',
-        tooltip: 'Territory exchanged for settled borders. The hill country goes back to Jordan and Gaza and the Sinai to Egypt, and letters of recognition are exchanged with whoever takes them: +25 opinion with every court in the region, +3 stability, −2 unrest everywhere, and the frontier shortens to something the standing army can hold. Revisionists −45, Kibbutzim −20, and the withdrawal is irreversible whether or not the recognition holds.',
+        tooltip: 'Territory exchanged for settled borders. The hill country goes back to Jordan and Gaza and the Sinai to Egypt, and letters of recognition are exchanged with whoever takes them: +25 opinion with every court in the region, +3 stability, −2 unrest everywhere, +8% income from a frontier that no longer has to be held in depth, and the line shortens to something the standing army can hold. Revisionists −45, Kibbutzim −20, and the withdrawal is irreversible whether or not the recognition holds.',
         effects: guard('ev_z_question:1', (ctx) => {
           const h = ctx.helpers;
           const released = withdrawToTheLine(ctx);
           h.adjust(ctx, 'ISR', { stability: 3 });
-          h.addTagModifier(ctx, 'ISR', { id: 'the_settled_line', name: 'The Settled Line', months: 360, effects: { unrestAll: -2, taxMult: 1.08 } });
+          h.addTagModifier(ctx, 'ISR', { id: 'the_settled_line', name: 'The Settled Line', months: 360, effects: { unrestAll: -2, incomeMult: 1.08 } });
           h.factionShift(ctx, 'ISR', 'revisionists', -45);
           h.factionShift(ctx, 'ISR', 'kibbutzim', -20);
           h.factionShift(ctx, 'ISR', 'coalition', 20);
