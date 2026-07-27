@@ -5716,3 +5716,141 @@ to their own horizons.
 
 - **Regression contract**: `smoke83.mjs` (the tree, which now carries both
   chapters' new forks and their extended `lastYear`).
+
+## 125. The rung above the best road
+
+§118 through §124 closed the chapter **edges** — seven chapters that stopped
+before their own history did, four of them on the road a player most wants to
+reach. Every chapter now runs to its horizon. This section is the other axis,
+and it is the one the edge work kept walking past: a chapter can run all the way
+to its last year and still never ask the question that **winning** creates.
+
+The success roads all end the same way, which is the tell. The state survives,
+the chronicle says so, and nothing in the remaining decades is addressed to the
+fact that it survived. `ev_diadem_in_dust` puts a Jewish king in Antioch and the
+chain has no card that says what that is. `secondKingdom` leaves the Temple
+standing in a world where four Jews in five live under other kings, and nothing
+asks what the crown owes them. `redemptionEra` runs to 425 through the two
+centuries in which both neighbours acquire official truths, and the arc that
+§118 built for it never mentions either. Winning is the least examined thing in
+the game.
+
+Five packages, one per chapter with a road worth the question. Each is the rung
+**above** that road: it fires only on the road, it charges for what the road
+won, and it closes on a terminal dated to the chapter's own `lastYear`.
+
+**The empire that should not exist** (`events_167bce_empire.js`, 130 BCE–6 CE).
+The 167 chain's success ladder is eleven rungs and every one of them is a place
+— the hills, the Philistine coast, the Greek cities, Damascus, Tyre and Sidon,
+Antioch. Then it stops. A Judaea holding Antioch, Damascus and the coast is not
+a kingdom that won its war; it is the thing that replaced the Seleucid empire,
+and the chain neither says so nor charges for it. The charge is the whole
+package, and every item on the bill is one the Hasmoneans actually hit at a
+fraction of the scale. *The Kingdom That Replaced an Empire* is a chancery
+problem: the state's entire vocabulary of itself is the vocabulary of a people
+who were being crushed and stopped being crushed, and none of it has a word for
+governing Cilicians. *Where the King Sits* is the question Constantine answered
+at Byzantium four centuries later and answered the other way — Antioch has half
+a million people, a mint and the archives; Jerusalem has the Temple. *An Army
+Judaea Cannot Raise* is Jannaeus' Pisidians and Cilicians made structural rather
+than episodic: the levy is farmers who came out because the war was about them,
+and they will not garrison a Cilician pass for three years. *The Altar and the
+Throne* is Hyrcanus' refusal in a world where it cannot work — the Day of
+Atonement is a fixed date, the service requires one man in one building, there
+is no provision for a deputy, and Antioch is three hundred miles away. The
+terminal reads the realm's own gentile share back to it: a state founded to keep
+Israel from being dissolved into the nations, governing more of the nations than
+of Israel, and nobody chose it in a single year.
+
+**The nation larger than the state** (`events_66ce_nation.js`, 75–130 CE). The
+one question only a surviving Temple can ask. Every adult male of Israel sent a
+half-shekel a year to a building most of them never saw, and Rome understood
+exactly what that was — which is why, when the Temple burned, Vespasian did not
+abolish the levy but redirected it to Jupiter Capitolinus. The *fiscus Judaicus*
+is the Roman state conceding that the Temple tax was a fiscal instrument worth
+capturing. So a Judaea whose Temple still stands holds a revenue stream, a
+census and a claim of allegiance running through every major city of an empire
+it does not govern, and *The Half-Shekel of the World* asks whether taking the
+money makes the state a foreign power taxing Rome's subjects. *More of Us Are
+Elsewhere* asks the constitutional version: a state governs the people inside
+its borders, and this one has been answering lawsuits from outside them for two
+generations. Then *The Nation Moves Without the State* — the Kitos War, arriving
+as a question rather than a chapter. A hundred thousand people have moved on the
+assumption that a Jewish state existing at all meant something, and if it does
+not mean this, the council will have to say what it does mean.
+
+**Three hundred years of a state that should not exist**
+(`events_132ce_endure.js`, 150–425 CE). The worst possible three centuries in
+which to be a small state with its own god. Rome Christianises and by 380 its
+reading of Jewish scripture is law; Ardashir replaces a tolerant Arsacid house
+with a state church whose chief mobad cut an inscription at Naqsh-e Rostam
+listing the faiths he struck at, with the Jews on it by name. *Between Two
+Churches* is that position, and its third option — be neither, and pay — is the
+expensive one that keeps the question open. But the best card here is the quiet
+one. **The Talmud is a diaspora artifact.** The Mishnah was closed around 200 by
+a Patriarch with no state, no Temple and no army, and its whole method — a
+portable homeland made of argument — is a response to not having a country. A
+Judaea with a king, a Temple and a Sanhedrin in Jerusalem has much less reason
+to build one, and *The Book That Need Not Be Written* lets the player make that
+trade knowingly: winning the war may cost this civilisation its most durable
+creation. *The Crown and the Chair* is the constitutional question the
+Patriarchate creates once there is also a state, left unanswered by two men on
+good terms whose successors may not be.
+
+**The third power** (`events_614ce_third.js`, 620–692 CE). A different problem
+from the other four, because this state cannot beat either neighbour and both of
+them know it. Survival is not strength; it is being worth more intact than
+absorbed. *The Altar on the Mount* is the whole problem in miniature — the thing
+the return was for, and the single act most likely to make both empires decide
+the state cannot be left standing. *Worth More Standing* converts a geographic
+accident into a policy and makes the kingdom structurally dependent on the war
+between its neighbours continuing. The terminal is the year the Dome went up in
+the other history, and it asks what is on that platform instead.
+
+**The question that came back** (`events_1948_question.js`, 1967–2000). The same
+rung as the other four — a Jewish state larger than the institutions it was
+built out of, deciding what it is in relation to the people it now governs who
+are not of it. In 167 that card is `ev_law_of_the_nations` and it fires when the
+realm passes fifteen provinces with a gentile majority. It is the oldest live
+question in this game and the 1948 chapter is the one place where it is not
+history, so the rule here is stricter than elsewhere: the card presents the
+positions as their own advocates state them, with mechanical costs and no
+authorial verdict; the `historical:` line reports what was argued and by whom
+without adjudicating; and no option is rewarded for being correct. A player who
+wants the game to agree with them will not find it doing so. That is the same
+standard the codebase applies to Pompey and to the Temple — the difference is
+only that this one is still going on.
+
+### What the integration turned up
+
+Three defects, all of the same species: a content package cannot crash, because
+every effect is wrapped and every trigger is guarded, so everything it gets
+wrong fails **silently** instead.
+
+- `declareWar(ctx, atk, def, name, cb)` takes the war's name as a string in its
+  fourth argument. The march for the diaspora passed `{ name: '…' }`, which put
+  `[object Object] begins` in the chronicle and in the war notification. Nothing
+  threw; the war was real; only the name was gone.
+- A modifier declared `aiPassive: 0`, which is not a key sim/economy,
+  sim/military or sim/unrest ever looks up. The tooltip promised a standing
+  invitation to any neighbour who can count, and the engine stored a number
+  nothing read.
+- *Two states: withdraw to a defensible line* promised that provinces beyond the
+  line are released and delivered no territorial effect at all, which made the
+  costly option of a three-way question the free one. It now hands the hill
+  country back to Jordan and Gaza and the Sinai to Egypt through the same
+  `changeOwner` path the chapter's own Sinai withdrawal uses, and exchanges
+  letters of recognition under §96 — the engine already knows how to buy peace
+  with paper, and "trade the rest for recognition" is exactly that transaction.
+  The two answers that are not withdrawals are asserted to move no border.
+
+The tree gains five forks and twelve roads, 41 to 53, still with exactly one
+declared gap.
+
+- **Regression contract**: `smoke85.mjs`. It checks the class above rather than
+  the exceptions: every faction id against the chapter's own bookmark, every
+  modifier key against the set the sim actually reads, every card windowed so
+  §121's horizon cannot retire it before its band opens, every answer leaving a
+  mark distinct from its siblings (the terminals read those marks back), each
+  entry card firing on the road and on neither an early year nor a lost
+  campaign, and the withdrawal measured against the map instead of its tooltip.

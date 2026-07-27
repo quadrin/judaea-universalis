@@ -438,3 +438,20 @@ the last two chapter edges. Note the design rule they establish: thematic
 overlap between two chapters' packages is fine, because a campaign only ever
 plays one chain. What is never fine is a chapter that stops before its own
 history does.
+
+SPEC §125 adds `smoke85.mjs` and five content packages — `events_167bce_empire.js`,
+`events_66ce_nation.js`, `events_132ce_endure.js`, `events_614ce_third.js`,
+`events_1948_question.js` — the rung above each chapter's best road. All five are
+in smoke83's SOURCES map, per the rule §120 established above.
+
+What smoke85 is for is the failure mode a content package actually fails by,
+which is never a crash. The guards see to that: every effect is wrapped, so a
+faction id that does not exist in the chapter shifts nothing, a modifier key the
+engine never reads does nothing, and a tooltip promising that territory changes
+hands sits above effects that hand over nothing — and all three pass a suite that
+only checks for exceptions. So smoke85 checks the promise: faction ids against
+the bookmark's own list, modifier keys against the set sim/economy, sim/military
+and sim/unrest actually look up, and the withdrawal option against the map. It
+also holds the two structural rules — every card windowed so §121's horizon
+cannot retire it, and every answer to a card leaving a mark distinct from its
+siblings, since the terminal reads those marks back.

@@ -116,6 +116,35 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'where_the_king_sits',
+        question: 'A Jewish king holds Antioch. Where does the empire keep its capital?',
+        requires: 'seleucidSuccessor',
+        roads: [
+          Object.freeze({
+            id: 'seat_jerusalem', name: 'The Slow Capital',
+            marker: 'seatJerusalem', entry: 'ev_x_where_the_king_sits',
+            terminal: 'ev_x_what_the_empire_was_for',
+            note: 'SPEC §125. The court refuses the Orontes and governs an empire at the speed '
+              + 'of a courier out of the hills, because the alternative is a Temple whose king '
+              + 'is three hundred miles away.',
+          }),
+          Object.freeze({
+            id: 'seat_antioch', name: 'The Seat at Antioch',
+            marker: 'seatAntioch', entry: 'ev_x_where_the_king_sits',
+            terminal: 'ev_x_what_the_empire_was_for',
+            note: 'SPEC §125. The machinery finally fits the realm, and the office the state was '
+              + 'founded on no longer fits the man holding it.',
+          }),
+          Object.freeze({
+            id: 'two_courts', name: 'Two Courts',
+            marker: 'twoCourts', entry: 'ev_x_where_the_king_sits',
+            terminal: 'ev_x_what_the_empire_was_for',
+            note: 'SPEC §125. Winters on the Orontes, festivals in Jerusalem, two chanceries and '
+              + 'a duplicated government called temporary for sixty years.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -372,6 +401,27 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'a_state_or_a_nation',
+        question: 'Four Jews in five live under other kings. Does the crown speak for them?',
+        requires: 'secondKingdom',
+        roads: [
+          Object.freeze({
+            id: 'speaker_for_the_nation', name: 'Speaker for the Nation',
+            marker: 'speakerForTheNation', entry: 'ev_n_the_greater_nation',
+            terminal: 'ev_n_what_the_house_was_for',
+            note: 'SPEC §125. Jerusalem claims to answer for Jews who are subjects of other '
+              + 'kings. No ancient state has made the claim and no law covers it.',
+          }),
+          Object.freeze({
+            id: 'state_not_nation', name: 'A Country, Not a People',
+            marker: 'stateNotNation', entry: 'ev_n_the_greater_nation',
+            terminal: 'ev_n_what_the_house_was_for',
+            note: 'SPEC §125. Sovereignty stops at the frontier — and Babylonia, asked nothing '
+              + 'and owed nothing, begins deciding for itself.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -406,6 +456,27 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_book_or_the_court',
+        question: 'The Patriarch wants the oral law written down. A state that has a court to ask does not need one.',
+        requires: 'redemptionEra',
+        roads: [
+          Object.freeze({
+            id: 'mishnah_written', name: 'The Written Law',
+            marker: 'mishnahWritten', entry: 'ev_e_the_book_not_written',
+            terminal: 'ev_e_three_hundred_years',
+            note: 'SPEC §125. The Mishnah is compiled by a civilisation that does not need it, '
+              + 'which is the only condition under which it can be compiled cheaply.',
+          }),
+          Object.freeze({
+            id: 'law_stays_oral', name: 'In the Mouths of the Living',
+            marker: 'lawStaysOral', entry: 'ev_e_the_book_not_written',
+            terminal: 'ev_e_three_hundred_years',
+            note: 'SPEC §125. Declined on the strongest grounds available — there is a state, so '
+              + 'there is no need — and nothing portable survives if the state ever stops.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -432,6 +503,27 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'rashidun', name: 'The Conquest Century',
             marker: 'arabiaConsolidated', entry: 'ev_p_rashidun', terminal: 'ev_p_dome_rock',
             note: 'The historical road, ending on the Mount in 691.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'what_stands_on_the_mount',
+        question: 'The platform is cleared and the genealogies exist. Is the altar rebuilt?',
+        roads: [
+          Object.freeze({
+            id: 'altar_restored', name: 'The Altar Restored',
+            marker: 'altarRestored', entry: 'ev_t_the_altar_rebuilt',
+            terminal: 'ev_t_what_was_built_instead',
+            note: 'SPEC §125. Sacrifice resumes for the first time since Titus — and both '
+              + 'neighbours acquire a standing theological reason to want the city.',
+          }),
+          Object.freeze({
+            id: 'mount_kept_empty', name: 'Swept, and Left as It Is',
+            marker: 'mountKeptEmpty', entry: 'ev_t_the_altar_rebuilt',
+            terminal: 'ev_t_what_was_built_instead',
+            note: 'SPEC §125. A cleared platform offends nobody: the state stays an '
+              + 'administrative fact rather than a claim, and the generation that took the '
+              + 'city dies without seeing it.',
           }),
         ],
       }),
@@ -480,6 +572,34 @@ export const CHAPTER_PATHS = Object.freeze([
             note: 'SPEC §120. The paratroops land at Latakia and this time they do not '
               + 'surrender. The road existed as an option and went nowhere; it now runs to '
               + 'a 2000 that asks what the union was.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_oldest_question',
+        question: 'The state administers a large population that holds no citizenship in it. What is the arrangement?',
+        roads: [
+          Object.freeze({
+            id: 'one_citizenship', name: 'One State, One Citizenship',
+            marker: 'oneCitizenship', entry: 'ev_z_the_question_that_came_back',
+            terminal: 'ev_z_what_the_century_asked',
+            note: 'SPEC §125. Annexation with the franchise attached. The occupation costs stop '
+              + 'and the electorate is not the one the founders drew up.',
+          }),
+          Object.freeze({
+            id: 'the_settled_line', name: 'Two States, One Border',
+            marker: 'theSettledLine', entry: 'ev_z_the_question_that_came_back',
+            terminal: 'ev_z_what_the_century_asked',
+            note: 'SPEC §125. The hill country and Gaza change hands and the letters of '
+              + 'recognition are exchanged; the withdrawal is irreversible whether or not the '
+              + 'recognition holds.',
+          }),
+          Object.freeze({
+            id: 'settled_later', name: 'To Be Settled Later',
+            marker: 'settledLater', entry: 'ev_z_the_question_that_came_back',
+            terminal: 'ev_z_what_the_century_asked',
+            note: 'SPEC §125. The arrangements continue and are not called permanent. Every '
+              + 'other answer stays open and every one of them gets more expensive.',
           }),
         ],
       }),
