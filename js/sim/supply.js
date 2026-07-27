@@ -236,6 +236,7 @@ export function monthlySupply(ctx) {
     if (supplyExempt(ctx, a)) {
       a.oosMonths = 0;
       a.supplyVia = 'exempt';
+      a.supplyReach = 0;
       continue;
     }
     const res = traceSupply(ctx, a);
@@ -250,10 +251,20 @@ export function monthlySupply(ctx) {
       }
       a.oosMonths = 0;
       a.supplyVia = res.via;
+      // SPEC §117. In-supply is not a yes/no fact about a wagon; it is a
+      // question of how far the wagon has come. The chain flood runs to depth
+      // 64 — larger than the map — so before this a host could walk from Tel
+      // Aviv to the Gulf and be as well fed at the end as at the start, which
+      // is what makes a 1948 Israel able to invade Iraq and Saudi Arabia on
+      // foot. The line still holds at any length; it just costs more the
+      // longer it is, and the reach is recorded so the attrition pass and the
+      // UI read the same number.
+      a.supplyReach = Math.max(0, (res.route || []).length - 1);
       continue;
     }
     a.oosMonths = (a.oosMonths | 0) + 1;
     a.supplyVia = null;
+    a.supplyReach = 0;
     if (a.tag === g.playerTag) {
       if (a.oosMonths === 1) {
         ctx.bus.emit('notify', {

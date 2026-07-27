@@ -81,6 +81,25 @@ function firstOwnedProv(g, tag) {
   }
   return null;
 }
+// SPEC §116: a demand has to be somewhere. This suite's subject is DIRECTED
+// SPOILS — that the town goes to the client who stormed it — and which town
+// that is has never mattered to a single assertion here. It does matter to the
+// peace table, which will not sell a winner a province its side's own country
+// cannot reach, so the prize is picked on the frontier rather than by array
+// index.
+function frontierProv(ctx, g, tag, side) {
+  const nb = ctx.geom && ctx.geom.neighbors;
+  const ours = new Set(side);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    for (const n of (nb && nb[i]) || []) {
+      const q = g.provinces[n];
+      if (q && !q.impassable && ours.has(q.owner)) return p;
+    }
+  }
+  return firstOwnedProv(g, tag);
+}
 
 console.log('== the overlord holds the pen when its client is attacked ==');
 {
@@ -108,9 +127,25 @@ console.log('== the overlord holds the pen when its client is attacked ==');
     'from the attacker\'s seat the enemy congress is the overlord too');
 
   console.log('== directed spoils: the town goes to the client that stormed it ==');
-  const prize = firstOwnedProv(g, 'SAS');
+  const prize = frontierProv(ctx, g, 'SAS', ['JUD', 'RSH']);
   ok(!!prize, 'Persia owns land to put on the table (' + (prize && prize.name) + ')');
   prize.controller = 'RSH'; // the client stormed the walls
+  // ...and it stormed them from somewhere. In 614 the client house holds no
+  // ground of its own beside Persia, so plant it: a client that took a town has
+  // a country the town can be attached to, which is what SPEC §116 asks of any
+  // demand. Without this the table is right to refuse the prize and the six
+  // assertions below would be testing the contiguity rule instead of directed
+  // spoils.
+  {
+    const nb = ctx.geom && ctx.geom.neighbors;
+    let seated = false;
+    for (const n of (nb && nb[prize.id]) || []) {
+      const q = g.provinces[n];
+      if (!q || q.impassable || q.owner === 'SAS') continue;
+      q.owner = 'RSH'; q.controller = 'RSH'; seated = true; break;
+    }
+    ok(seated, 'the client holds ground beside it to have stormed it from');
+  }
   war.warscore.JUD = 80;
   const info = peaceDealInfo(ctx, war, 'JUD');
   ok((info.cessionRecipients || []).some((x) => x.tag === 'RSH'),

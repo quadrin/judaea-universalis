@@ -398,3 +398,12 @@ chapter and a card that opens on two of them is a regression even though it
 will look like extra content. Its last section plays 299 years and is the
 slowest thing in the battery; the sections before it are direct predicate
 checks and are instant.
+
+SPEC §116–§117 add `smoke82.mjs`. It is the only suite that deliberately boots
+BOTH geometries — the real snapshot for the contiguity assertions and the older
+suites' synthetic bead chain for the restraint — because the first draft of the
+peace-table rule passed on the real map and broke six suites on the fake one.
+If you tighten `geomIsMapLike` or remove the `keep`-predicate exemption, this is
+where it will show up. Note also that §117 changes attrition for every army with
+a long line, so a balance shift in the 105-year runs after touching supply is
+expected rather than alarming.

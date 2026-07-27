@@ -5224,3 +5224,87 @@ settlement with Sidetes, and there is more than one way to reach one.
 
 - **Regression contract**: the 167 audit no longer reports `ev_jerusalem_terms`
   or `ev_hyrcanus_east` among the cards a victorious Judaea loses.
+
+## 116. A demand has to be somewhere
+
+Reported from a played game: Iraq annexing parts of Egypt, Turkey parts of
+Lebanon. Tracing 1948 to 2002 reproduced worse — Egypt ending the century
+owning **Hyrcania, Gabae and Susa in central Iran**, and Jordan owning Hatra and
+Charax.
+
+The cause is one missing question. `peaceDealInfo` built its demandable list
+from occupation alone: it asked who *controlled* a province and never asked
+where it was. So an army that had walked somewhere through a coalition war —
+and the alliance graph makes coalition wars large — could put whatever it was
+standing in on the table. §109 gave released states a land border on the grounds
+that a state has to be somewhere; an annexation is the same claim from the other
+direction and never got the same rule.
+
+The rule: a demand must be land-reachable from the claimant's own country,
+counting the other demands as stepping stones. A corridor is a country's arm, so
+an advance may run outward through a chain of demanded provinces — otherwise
+nothing beyond the first rank could ever be taken — but it may not *begin* on
+the far side of a country nobody is taking. `endWarBySword` gets the same rule
+under `annexable`, since uti possidetis has the same hole.
+
+**The restraint is the hard part, and it is load-bearing.** Two exemptions:
+
+- **A geometry can be real and still be meaningless.** The older suites build a
+  line of beads where province `i` borders `i±1`. Those edges exist, so
+  `geomHasEdges` — which §109 added for the opposite problem, an adjacency graph
+  with *no* edges — cannot tell them from a map. The first draft of this rule
+  applied to them and broke six suites. The fix is not to detect a fake map but
+  to ask a better question: `geomIsMapLike` requires an average degree of 3,
+  because a real province borders four to six others and a bead borders two.
+  Nothing real lands near the threshold, so it needs no tuning. An earlier
+  attempt — "stand aside if the rule would strike out every demand" — is
+  recorded here as rejected: it was blunt enough to hand over central Iran in
+  the very case the rule exists for, whenever that case was all a winner held.
+- **An authored border is not second-guessed.** A scripted settlement that
+  supplies its own `keep` predicate has drawn the line by hand — Rhodes says
+  exactly which cells sit inside the 1949 lines — and the engine does not
+  overrule the author.
+
+After the rule, the traced campaign has nothing non-adjacent anywhere. What
+remains (Iraq taking Susa, Egypt reaching Hebron, Syria taking Tripoli) is
+land-adjacent and a question of appetite rather than of geography — see the
+note at the end of §117.
+
+## 117. The length of the line costs something
+
+The same game, second complaint: Israel invading deep into Iraq, Saudi Arabia
+and Egypt on foot. It is not a bug in any single rule; it is the absence of one.
+`traceSupply` floods the adjacency graph to depth 64 — larger than the map — so
+a host was as well fed at the Gulf as at home. Supply was a yes/no fact about a
+wagon and never a question of how far the wagon had come, and desert attrition
+of 4%/month is not by itself an argument against anything.
+
+The fix is deliberately **not** a hard cutoff. A radius that fails at N
+provinces would strand scripted armies mid-campaign and turn a balance question
+into a correctness bug. Instead the line still holds at any length and simply
+costs more the longer it is: `monthlySupply` records `supplyReach` (the route
+length home) on every army, and past `reachComfort` the attrition pass adds
+`reachAttrition` per further province, to a cap. Terrain compounds it, so the
+crossing of a desert to reach somewhere far is charged twice, which is correct.
+
+A host fourteen provinces out over ground it controls the whole way now loses
+roughly six times what the same host loses at home. The march remains possible —
+it should be; armies did march — and it is now something a campaign has to
+afford rather than something it gets for nothing.
+
+- **Regression contract**: `smoke82.mjs`, which pins both rules and, at least as
+  importantly, both of §116's exemptions. It boots the real map for the
+  geography and the bead chain for the restraint, because a suite that only ever
+  saw one of them would not have caught the first draft.
+
+### Still open
+
+One absurdity survives both fixes, and it is neither geography nor logistics.
+The Suez card declares `UK vs EGY`, and the alliance graph drags the Baghdad
+Pact — Iraq, Turkey, Iran — into a two-year land war against Egypt, Jordan,
+Syria, Lebanon and Saudi Arabia. Everything after that is downstream: the
+absurd-looking annexations were absurd *because* of who was at war, not only
+because of where they were. A coalition member called into somebody else's war
+should be able to decline it, or to settle out of it early, and until it can,
+the 1948 chapter will keep producing regional land grabs that no participant
+ever wanted.

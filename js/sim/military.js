@@ -1390,6 +1390,15 @@ export function monthlyAttrition(ctx) {
       attr += num(SUP.attritionBase, 2)
         + Math.min(num(SUP.attritionRampCap, 6), (oosMonths - 1) * num(SUP.attritionPerMonth, 1));
       attr = clamp(attr, 0, 15);
+    } else {
+      // SPEC §117: the line holds, but it is long. Every province past the
+      // comfortable reach is another day's haul for the wagons and another
+      // day's forage taken off land that has already been foraged.
+      const over = num(a.supplyReach) - num(SUP.reachComfort, 7);
+      if (over > 0) {
+        attr += Math.min(num(SUP.reachCap, 7), over * num(SUP.reachAttrition, 0.7));
+        attr = clamp(attr, 0, 15);
+      }
     }
     if (a.tag === 'REB' && a.men < 100) { removeArmy(ctx, a.id); continue; } // starving bands scatter
     if (attr <= 0) continue;
@@ -3554,6 +3563,32 @@ function culturalStateTag(ctx, identity, reserved) {
 // where every province is an island — and would silently fragment every
 // release into single provinces. A graph with no edges at all cannot answer
 // the contiguity question, so it is not asked.
+// SPEC §116. Edges are not a map. The older suites build a geometry where
+// province i borders i±1 — a line of beads whose edges are perfectly real and
+// mean nothing about where anything is. `geomHasEdges` cannot tell that from a
+// map, so anything reasoning about GEOGRAPHY (rather than merely about
+// connectedness) has to ask a second question: does this graph have the shape
+// of a map? A real province borders four to six others; a bead borders two. The
+// threshold sits between them and needs no tuning, because nothing real lands
+// near it.
+function geomIsMapLike(ctx) {
+  const nb = ctx.geom && ctx.geom.neighbors;
+  if (!nb || !geomHasEdges(ctx)) return false;
+  if (ctx._geomMapLike === undefined) {
+    let cells = 0;
+    let edges = 0;
+    for (let i = 1; i < nb.length; i++) {
+      const s = nb[i];
+      const n = s ? (s.size !== undefined ? s.size : s.length) : 0;
+      if (!n) continue;
+      cells++;
+      edges += n;
+    }
+    ctx._geomMapLike = cells > 0 && (edges / cells) >= 3;
+  }
+  return ctx._geomMapLike;
+}
+
 function geomHasEdges(ctx) {
   const nb = ctx.geom && ctx.geom.neighbors;
   if (!nb) return false;
@@ -3786,6 +3821,52 @@ export function transferableVassals(ctx, war, byTag) {
 // coalition member: only their provinces, their gold, their exhaustion — and
 // the bilateral separateWarscore instead of the side ledger. Valid only
 // while at least one other enemy remains to carry the war on.
+// SPEC §116. Which of a set of candidate provinces the claimant's own country
+// can actually reach by land, counting the candidates themselves as stepping
+// stones — so a demand may run outward from the border through a corridor of
+// other demands, but may not begin on the far side of a country nobody is
+// taking. Returns null when the rule does not apply: no adjacency data (the
+// bare harnesses, where an empty graph is an absence of information and not an
+// archipelago — the lesson smoke77 exists to keep), or a claimant with no land
+// of its own to reach from, which is a released or landless court that §109
+// already governs.
+function demandReach(ctx, byTag, candidateIds, side, recipients) {
+  if (!geomIsMapLike(ctx) || !candidateIds || !candidateIds.length) return null;
+  const g = ctx.game;
+  const nb = ctx.geom.neighbors;
+  const claims = new Set(candidateIds);
+  // Whose country counts as "here". Not one court's — a war is fought by a
+  // side, the corridor is held by the side, and a leader may demand a province
+  // to hand to a client whose own border it touches rather than his. Seeding
+  // from the claimant alone was the first draft's real error: it read the map
+  // correctly and the war wrongly.
+  const seeds = new Set([byTag]);
+  for (const t of (Array.isArray(side) ? side : [])) if (t) seeds.add(t);
+  for (const t of (Array.isArray(recipients) ? recipients : [])) if (t) seeds.add(t);
+  for (const [k, t] of Object.entries(g.tags || {})) {
+    if (t && t.alive !== false && t.overlord && seeds.has(t.overlord)) seeds.add(k);
+  }
+  const own = [];
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && seeds.has(p.owner)) own.push(i);
+  }
+  if (!own.length) return null;
+  const keep = new Set();
+  const seen = new Set(own);
+  const stack = own.slice();
+  while (stack.length) {
+    const cur = stack.pop();
+    for (const n of (nb[cur] || [])) {
+      if (seen.has(n) || !claims.has(n)) continue;
+      seen.add(n);
+      keep.add(n);
+      stack.push(n);
+    }
+  }
+  return keep;
+}
+
 export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   const g = ctx.game;
   const mySide = war.attackers.indexOf(byTag) >= 0 ? war.attackers : war.defenders;
@@ -3840,6 +3921,24 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     });
   }
   provinces.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  // SPEC §116: a demand has to be somewhere. Occupation is not the whole of a
+  // claim — the land also has to touch the country claiming it, counting the
+  // other demands as they connect. Without this the table would sell whatever
+  // an army happened to be standing in when the bell rang, which is how a
+  // traced 1948 campaign ended with Egypt owning Hyrcania and Gabae in central
+  // Iran and Jordan owning Hatra and Charax.
+  {
+    const recipients = [];
+    for (const [k, t] of Object.entries(g.tags || {})) {
+      if (t && t.alive !== false && t.overlord === byTag) recipients.push(k);
+    }
+    const reach = demandReach(ctx, byTag, provinces.map((r) => r.id), mySide, recipients);
+    if (reach) {
+      for (let k = provinces.length - 1; k >= 0; k--) {
+        if (!reach.has(provinces[k].id)) provinces.splice(k, 1);
+      }
+    }
+  }
   const rawMax = et ? Math.max(0, num(et.treasury)) * 0.6 + 100 : 0;
   // Subjugation: the enemy leader becomes a client kingdom. Impossible for
   // realms already sworn to someone, and priced by the realm's weight.
@@ -4225,6 +4324,67 @@ export function withdrawFromWar(ctx, war, leaverTag) {
 // everything else reverts. null: white peace, all occupations revert. Used when
 // one side is annihilated and when a chapter's verdict closes the book.
 // opts.keep (SPEC §31): a predicate deciding which occupied provinces the
+// SPEC §116. Uti possidetis says a winner keeps what it holds at the bell. It
+// does not say a winner keeps what it holds on the other side of somebody
+// else's country. §109 gave released states a land border on the grounds that a
+// state has to be somewhere; an annexation is the same claim from the other
+// direction and never got the same rule, so a traced 1948 campaign ended with
+// Egypt owning Hyrcania, Gabae and Susa in central Iran, and Jordan owning
+// Hatra and Charax — provinces their armies had walked to through a coalition
+// war and simply happened to be standing in.
+//
+// The rule: a winner may annex only what its own territory can reach by land,
+// counting the annexations themselves as they connect. A pocket that touches
+// nothing the winner owns goes back to its owner at the table, the way a
+// bargaining chip does. It is a rule about the map, not about the fighting: the
+// province was still conquered, and it is still handed back.
+//
+// Deliberate exemptions. A winner with no land at all cannot seed a component
+// and is not made to give up its only gains — that is a released or landless
+// court, and §109 already governs where it gets seated. And where the geometry
+// has no edges at all (the bare harnesses), the rule is skipped rather than
+// applied to an absence of information: an empty adjacency graph is not an
+// archipelago, which is the lesson smoke77 exists to keep.
+function annexable(ctx, war, winners, losers) {
+  const g = ctx.game;
+  const keepable = new Set();
+  if (!geomIsMapLike(ctx)) return null; // no map to reason about: no rule
+  const nb = ctx.geom.neighbors;
+  const side = new Set(winners);
+  for (const [k, t] of Object.entries(g.tags || {})) {
+    if (t && t.alive !== false && t.overlord && side.has(t.overlord)) side.add(k);
+  }
+  for (const w of winners) {
+    if (!g.tags[w] || g.tags[w].alive === false) continue;
+    // What this winner's SIDE already owns, and what this winner stands to take.
+    const own = [];
+    const claims = new Set();
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable) continue;
+      if (side.has(p.owner)) own.push(i);
+      else if (p.controller === w && losers.indexOf(p.owner) >= 0) claims.add(i);
+    }
+    if (!claims.size) continue;
+    if (!own.length) { for (const id of claims) keepable.add(id); continue; }
+    // Grow outward from the winner's own soil, through the claims only.
+    const stack = own.slice();
+    const seen = new Set(own);
+    const mine = new Set();
+    while (stack.length) {
+      const cur = stack.pop();
+      for (const n of (nb[cur] || [])) {
+        if (seen.has(n) || !claims.has(n)) continue;
+        seen.add(n);
+        mine.add(n);
+        stack.push(n);
+      }
+    }
+    for (const id of mine) keepable.add(id);
+  }
+  return keepable;
+}
+
 // winners actually annex; everything else returns to its owner. Scripted
 // concessions use it — "Judea keeps its hills" must not mean all of Syria.
 export function endWarBySword(ctx, war, winnersKey, opts) {
@@ -4233,12 +4393,25 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
   const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
   const participants = war.attackers.concat(war.defenders);
   const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
+  // SPEC §116: what the winners' own soil can actually reach. `null` means the
+  // rule does not apply here (no adjacency data), not that nothing is keepable.
+  // A scripted settlement that supplies its own `keep` predicate has already
+  // drawn the border by hand — Rhodes says exactly which cells sit inside the
+  // 1949 lines — and an authored border is not the engine's to second-guess.
+  const reach = keep ? null : annexable(ctx, war, winners, losers);
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.controller === p.owner) continue;
     if (participants.indexOf(p.owner) < 0 || participants.indexOf(p.controller) < 0) continue;
     if (keep && !keep(p) && g.tags[p.owner] && g.tags[p.owner].alive) {
       changeControllerCore(ctx, p, p.owner); // handed back at the table
+      continue;
+    }
+    // A conquest the winner's own country cannot reach by land is a bargaining
+    // chip, and bargaining chips go back across the table.
+    if (reach && !reach.has(i) && g.tags[p.owner] && g.tags[p.owner].alive
+      && winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
+      changeControllerCore(ctx, p, p.owner);
       continue;
     }
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {

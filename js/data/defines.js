@@ -642,6 +642,13 @@ export const DEFINES = {
     attritionRampCap: 6,      // ...to at most base + cap
     weakenAtMonths: 3,        // months isolated before the host starts to break
     weakMoraleCap: 0.5,       // morale ceiling (× max morale) once breaking
+    // SPEC §117 — the length of the line costs something. The chain itself
+    // still reaches (an army far from home is supplied, not stranded), but a
+    // host operating this many provinces past its own country bleeds for every
+    // further one, which is what stops a campaign walking to the Gulf.
+    reachComfort: 7,          // provinces from a home source before the wagons strain
+    reachAttrition: 0.7,      // extra attrition %/month per province beyond that...
+    reachCap: 7,              // ...to at most this much
   },
 
   // AI naval invasions (SPEC §82). A warring AI that cannot reach its enemy
