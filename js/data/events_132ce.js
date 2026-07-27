@@ -3,6 +3,15 @@
 // Source spine: Cassius Dio LXIX.12-14; Eusebius, HE IV.6; the Murabbaʿat and
 // Naḥal Ḥever letters; rabbinic tradition (Akiva, Betar). Dates map to the real
 // chronology (30-day game months).
+//
+// Every triggered card here carries an era window (SPEC §104). It used to be
+// safe not to: the bookmark's own clock stopped at the Antonine plague, so a
+// card waiting on `judaeaStands` could only ever be answered by the generation
+// it was written for. The world spine now runs to 425, and a campaign that
+// reaches the fourth century must not be handed Akiva's arrest or the letters
+// to Babylon because the world finally satisfied a predicate a hundred and
+// fifty years late. `minYear`/`maxYear` are checked in `canFire` for both
+// kinds of event and are the cheapest gate the engine has.
 
 const _warned = new Set();
 function warnOnce(key, e) {
@@ -299,6 +308,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 132,
+    maxYear: 136,
     trigger: safeTrigger('ev2_legion_lost', (ctx) =>
       alive(ctx, 'JUD') && warscoreOf(ctx, 'JUD') >= 12 && !dateGE(ctx, 134, 6)),
     aiOption: 0,
@@ -394,6 +405,8 @@ export const EVENTS_132 = [
       + 'cave by cave — slower than glory, and surer. Dio will write it plainly: he could '
       + 'crush them by hunger, since he dared not come to close quarters.',
     forTag: 'ROM',
+    minYear: 133,
+    maxYear: 141,
     trigger: safeTrigger('ev2_severus_method', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'severusArrived') && dateGE(ctx, 134, 1)),
     aiOption: 0,
@@ -469,6 +482,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 132,
+    maxYear: 137,
     trigger: safeTrigger('ev2_parthian_shadow', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'parthianSympathy') && warscoreOf(ctx, 'JUD') >= 20 && alive(ctx, 'PAR')),
     aiOption: 0,
@@ -530,6 +545,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 134,
+    maxYear: 139,
     trigger: safeTrigger('ev2_akiva', (ctx) =>
       alive(ctx, 'JUD') && dateGE(ctx, 134, 6) && warscoreOf(ctx, 'ROM') >= 10),
     aiOption: 0,
@@ -568,6 +585,8 @@ export const EVENTS_132 = [
       + 'their bridles. Inside, tonight, they still hold.',
     forTag: 'JUD',
     major: true,
+    minYear: 134,
+    maxYear: 141,
     trigger: safeTrigger('ev2_betar', (ctx) => {
       if (!alive(ctx, 'JUD')) return false;
       const provs = ctx.helpers.countControlled(ctx, 'JUD', {});
@@ -779,6 +798,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 136,
+    maxYear: 146,
     trigger: safeTrigger('ev2_syria_palaestina', (ctx) =>
       dateGE(ctx, 136, 1) && romanAftermath(ctx)),
     aiOption: 0,
@@ -828,6 +849,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 136,
+    maxYear: 149,
     trigger: safeTrigger('ev2_shemad', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 136, 4) && romanAftermath(ctx)),
     aiOption: 0,
@@ -869,6 +892,8 @@ export const EVENTS_132 = [
       + 'Egypt in the grain ships, and the sea takes its share.',
     forTag: 'both',
     decider: 'ROM',
+    minYear: 136,
+    maxYear: 146,
     trigger: safeTrigger('ev2_slave_markets', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed')
       && ctx.helpers.controls(ctx, 'ROM', 'Hebron') && dateGE(ctx, 136, 6)),
@@ -912,6 +937,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 137,
+    maxYear: 151,
     trigger: safeTrigger('ev2_ten_martyrs', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 137, 3) && romanAftermath(ctx)),
     aiOption: 0,
@@ -952,6 +979,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 138,
+    maxYear: 151,
     trigger: safeTrigger('ev2_judah_ben_bava', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 138, 3) && romanAftermath(ctx)),
     aiOption: 0,
@@ -998,6 +1027,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 139,
+    maxYear: 166,
     trigger: safeTrigger('ev2_antoninus_rescript', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemad') && dateGE(ctx, 139, 3) && alive(ctx, 'ROM')),
     aiOption: 0,
@@ -1040,6 +1071,8 @@ export const EVENTS_132 = [
       + 'blinking: they must pay to mourn the ruin of their own city.',
     forTag: 'both',
     decider: 'ROM',
+    minYear: 138,
+    maxYear: 161,
     trigger: safeTrigger('ev2_day_of_weeping', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 138, 8) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1081,6 +1114,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 140,
+    maxYear: 176,
     trigger: safeTrigger('ev2_usha_sanhedrin', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'shemadEased') && dateGE(ctx, 140, 6) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1127,6 +1162,8 @@ export const EVENTS_132 = [
       + 'was gentler. It is the parable of the whole generation.',
     forTag: 'both',
     decider: 'JUD',
+    minYear: 145,
+    maxYear: 176,
     trigger: safeTrigger('ev2_carob_cave', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 145, 1)),
     aiOption: 1,
@@ -1169,6 +1206,8 @@ export const EVENTS_132 = [
       + 'only that the price of a Jewish slave has quietly doubled.',
     forTag: 'both',
     decider: 'ROM',
+    minYear: 146,
+    maxYear: 176,
     trigger: safeTrigger('ev2_redeem_captives', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'slaveMarkets') && dateGE(ctx, 146, 1) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1208,6 +1247,8 @@ export const EVENTS_132 = [
       + 'Galilee, almost apologetically, becomes the whole country.',
     forTag: 'both',
     decider: 'ROM',
+    minYear: 147,
+    maxYear: 181,
     trigger: safeTrigger('ev2_galilee_schools', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 147, 1)),
     aiOption: 0,
@@ -1256,19 +1297,25 @@ export const EVENTS_132 = [
       + 'and yields.',
     forTag: 'both',
     decider: 'JUD',
+    minYear: 148,
+    maxYear: 186,
     trigger: safeTrigger('ev2_calendar_war', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 148, 6)),
     aiOption: 0,
     options: [
       {
         label: 'The Land keeps the calendar',
-        tooltip: 'One people, one reckoning: Sepphoris −1 unrest for 36 months ("One Calendar").',
+        tooltip: 'One people, one reckoning: Sepphoris −1 unrest for 36 months ("One Calendar"), and the Land keeps the authority to fix the festivals — which the god-fearers, and later the churches of Asia, will both have to reckon with (SPEC §104).',
         effects: guard('ev2_calendar_war:0', (ctx) => {
           const h = ctx.helpers;
           h.addProvinceModifier(ctx, 'Sepphoris', {
             id: 'one_calendar', name: 'One Calendar', months: 36,
             effects: { unrest: -1 },
           });
+          // Who fixes the festivals is a question with a second half two
+          // generations out: the Asian churches keep Easter by this reckoning
+          // until Nicaea legislates it away (ev2_quartodeciman, ev2_nicaea).
+          h.setFlag(ctx, 'calendarHeld', true);
           h.chronicle(ctx, 'era', 'Babylon yields to the letters from Usha: the Land, however broken, keeps the calendar of the whole people.');
         }),
       },
@@ -1302,6 +1349,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'ROM',
     major: true,
+    minYear: 152,
+    maxYear: 176,
     trigger: safeTrigger('ev2_stirrings_152', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'palaestinaRenamed') && dateGE(ctx, 152, 6) && romanAftermath(ctx)),
     aiOption: 0,
@@ -1343,6 +1392,8 @@ export const EVENTS_132 = [
       + 'method, in one image.',
     forTag: 'both',
     decider: 'JUD',
+    minYear: 154,
+    maxYear: 186,
     trigger: safeTrigger('ev2_meir_aher', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 154, 1)),
     aiOption: 0,
@@ -1386,6 +1437,8 @@ export const EVENTS_132 = [
       + 'community cannot bear.',
     forTag: 'JUD',
     major: true,
+    minYear: 141,
+    maxYear: 176,
     trigger: safeTrigger('ev2_nasi_succession', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 141, 1)),
     aiOption: 0,
@@ -1427,6 +1480,8 @@ export const EVENTS_132 = [
       + 'learning to survive without the city, must now learn the harder thing: to '
       + 'govern with it.',
     forTag: 'JUD',
+    minYear: 143,
+    maxYear: 176,
     trigger: safeTrigger('ev2_scribes_return', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 143, 1)),
     aiOption: 0,
@@ -1472,6 +1527,8 @@ export const EVENTS_132 = [
       + 'Jerusalem is what to build with a peace that is only an emperor\'s '
       + 'temperament, and dies when he does.',
     forTag: 'JUD',
+    minYear: 150,
+    maxYear: 176,
     trigger: safeTrigger('ev2_antonine_detente', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 150, 1) && alive(ctx, 'ROM')),
     aiOption: 1,
@@ -1610,6 +1667,8 @@ export const EVENTS_132 = [
       + 'end. The young men watch the columns pass and count them anyway.',
     forTag: 'both',
     decider: 'JUD',
+    minYear: 162,
+    maxYear: 171,
     trigger: safeTrigger('ev2_armies_on_roads', (ctx) =>
       dateGE(ctx, 162, 3) && alive(ctx, 'ROM') && alive(ctx, 'PAR') && atWar(ctx.game, 'ROM', 'PAR')),
     aiOption: 0,
@@ -1703,6 +1762,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 165,
+    maxYear: 201,
     trigger: safeTrigger('ev2_yehuda_hanasi', (ctx) =>
       !!ctx.helpers.getFlag(ctx, 'ushaSanhedrin') && dateGE(ctx, 165, 6)),
     aiOption: 0,
@@ -1755,6 +1816,8 @@ export const EVENTS_132 = [
       + 'has promised only what it can enforce.',
     forTag: 'JUD',
     major: true,
+    minYear: 137,
+    maxYear: 166,
     trigger: safeTrigger('ev2_era_of_redemption', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 137, 1)),
     aiOption: 1,
@@ -1796,6 +1859,8 @@ export const EVENTS_132 = [
       + 'the letters have threats. A state can be run by either. It cannot forever be run '
       + 'by both.',
     forTag: 'JUD',
+    minYear: 137,
+    maxYear: 166,
     trigger: safeTrigger('ev2_fetters', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 137, 6)),
     aiOption: 1,
@@ -1844,6 +1909,8 @@ export const EVENTS_132 = [
       + 'people who fought four years for the House the coins promised.',
     forTag: 'JUD',
     major: true,
+    minYear: 138,
+    maxYear: 171,
     trigger: safeTrigger('ev2_third_house', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 138, 6)),
     aiOption: 1,
@@ -1888,6 +1955,8 @@ export const EVENTS_132 = [
       + 'strangers in it, subject to the law of the stranger within the gates — or a camp, '
       + 'from which the uncircumcised are eventually struck like a bad entry?',
     forTag: 'JUD',
+    minYear: 139,
+    maxYear: 171,
     trigger: safeTrigger('ev2_gerizim', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 139, 6)),
     aiOption: 0,
@@ -1944,6 +2013,8 @@ export const EVENTS_132 = [
       + 'regrets. The north, for its part, observes that somebody kept the terraces and '
       + 'the dye-works intact, and that the kingdom will eat from them either way.',
     forTag: 'JUD',
+    minYear: 140,
+    maxYear: 171,
     trigger: safeTrigger('ev2_galilee_returns', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 140, 1) && ctx.helpers.controls(ctx, 'JUD', 'Sepphoris')),
     aiOption: 0,
@@ -1999,6 +2070,8 @@ export const EVENTS_132 = [
     forTag: 'both',
     decider: 'JUD',
     major: true,
+    minYear: 142,
+    maxYear: 176,
     trigger: safeTrigger('ev2_antonine_reckoning', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 142, 1) && alive(ctx, 'ROM')),
     aiOption: 1,
@@ -2050,6 +2123,8 @@ export const EVENTS_132 = [
       + 'camp would be worth a war. The council weighs the gift, which is real, against '
       + 'the friendship, which is a position on someone else\'s map.',
     forTag: 'JUD',
+    minYear: 144,
+    maxYear: 176,
     trigger: safeTrigger('ev2_parthian_gift', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 144, 1) && alive(ctx, 'PAR')),
     aiOption: 1,
@@ -2088,6 +2163,8 @@ export const EVENTS_132 = [
       + 'a lamp that goes out in Nehardea. Their letters ask, politely, whether the Land '
       + 'means to gather the exiles or merely to empty the exile.',
     forTag: 'JUD',
+    minYear: 146,
+    maxYear: 181,
     trigger: safeTrigger('ev2_ascents', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 146, 1)),
     aiOption: 0,
@@ -2131,6 +2208,8 @@ export const EVENTS_132 = [
       + 'or the Law, which made the war worth it and can.',
     forTag: 'JUD',
     major: true,
+    minYear: 163,
+    maxYear: 196,
     trigger: safeTrigger('ev2_second_generation', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 163, 1)),
     aiOption: 1,
@@ -2180,6 +2259,8 @@ export const EVENTS_132 = [
       + 'to the tents of the sick, in order, by rota, as though burial were a form '
       + 'of the daily offering. Perhaps it is.',
     forTag: 'JUD',
+    minYear: 166,
+    maxYear: 196,
     trigger: safeTrigger('ev2_ninth_day', (ctx) =>
       judaeaStands(ctx) && dateGE(ctx, 166, 6)),
     aiOption: 0,

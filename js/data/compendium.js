@@ -13,8 +13,11 @@ import { BOOKMARK_66 } from './bookmark_66ce.js';
 import { EVENTS_66 } from './events_66ce.js';
 import { BOOKMARK_132 } from './bookmark_132ce.js';
 import { EVENTS_132 } from './events_132ce.js';
+import { EVENTS_132_FAITH } from './events_132ce_faith.js';
+import { EVENTS_132_WORLD } from './events_132ce_world.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
+import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
 import { BOOKMARK_1948 } from './bookmark_1948.js';
 import { EVENTS_1948 } from './events_1948.js';
 import { GENERIC_EVENTS } from './events_generic.js';
@@ -24,8 +27,13 @@ export const ERAS = [
   { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
   { bookmark: BOOKMARK_40, events: EVENTS_40.concat(GENERIC_EVENTS) },
   { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },
-  { bookmark: BOOKMARK_132, events: EVENTS_132.concat(GENERIC_EVENTS) },
-  { bookmark: BOOKMARK_614, events: EVENTS_614.concat(GENERIC_EVENTS) },
+  // 132's chain is three packages (SPEC §104): the revolt itself, the
+  // Christian thread that runs beside it, and the world spine to 425. They
+  // are concatenated HERE rather than inside events_132ce.js so that every
+  // content package keeps the zero-import property its header promises, and
+  // so the registry stays the one place the pairing is written down.
+  { bookmark: BOOKMARK_132, events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_614, events: EVENTS_614.concat(EVENTS_614_PERSIA, GENERIC_EVENTS) },
   { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(GENERIC_EVENTS) },
 ];
 

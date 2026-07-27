@@ -1,0 +1,908 @@
+// Judaea Universalis — the world spine, 175–425 CE (SPEC §104). Content
+// package. Zero imports; all effects run through ctx.helpers at runtime.
+// Concatenated onto EVENTS_132 by the era registry.
+//
+// The 132 bookmark's clock used to stop at the Antonine plague in 166: four
+// world events, and after that a campaign that survived ran on triggers keyed
+// to Judaea's own state in front of a world that had stopped happening. This
+// file is the two and a half centuries the bookmark was missing — the ones in
+// which the Roman East is actually decided.
+//
+// The rule for what belongs here: it must happen whichever way the revolt
+// went. Avidius Cassius declares himself emperor whether or not there is a
+// Nasi in Jerusalem; Ardashir overthrows the Arsacids regardless; the plague,
+// the persecutions, the councils and the laws arrive on their own schedule.
+// Where a card genuinely does depend on the outcome it carries a `when` gate
+// and retires into the divergence ledger rather than narrating the wrong world
+// (SPEC §75, §89).
+//
+// Most of these are `decider`-gated notices (SPEC §70): the player watches
+// them. The exceptions are the two civil-war cards, where an eastern court —
+// Roman province or sovereign Judaea alike — really does have to choose a
+// side, and the two where Judaea is the subject.
+//
+// Source spine: the Historia Augusta with the usual caution; Cassius Dio
+// LXXII–LXXX; Herodian; Eusebius, HE VI–X and the Life of Constantine;
+// Lactantius, On the Deaths of the Persecutors; the Res Gestae Divi Saporis;
+// Ammianus XXIII.1 on the Temple; the Theodosian Code.
+
+const _warned = new Set();
+function warnOnce(key, e) {
+  if (_warned.has(key)) return;
+  _warned.add(key);
+  console.warn('[events_132ce_world] ' + key, e || '');
+}
+
+function guard(key, fn) {
+  return function (ctx) {
+    try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
+  };
+}
+
+function alive(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  return !!(t && t.alive !== false);
+}
+
+function findJudRomWar(game) {
+  for (const w of (game && game.wars) || []) {
+    if (!w) continue;
+    const all = (w.attackers || []).concat(w.defenders || []);
+    if (all.indexOf('JUD') !== -1 && all.indexOf('ROM') !== -1) return w;
+  }
+  return null;
+}
+
+function romanAftermath(ctx) {
+  return alive(ctx, 'ROM')
+    && ctx.helpers.controls(ctx, 'ROM', 'Jerusalem')
+    && ctx.helpers.countControlled(ctx, 'JUD', {}) === 0;
+}
+function judaeaStands(ctx) {
+  const t = ctx.game.tags && ctx.game.tags.JUD;
+  return alive(ctx, 'JUD')
+    && !(t && t.overlord)
+    && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+    && !findJudRomWar(ctx.game);
+}
+
+// The eastern cities the world spine keeps reaching for.
+const EAST = ['Antioch', 'Alexandria', 'Caesarea Maritima', 'Tyre', 'Damascus', 'Emesa'];
+
+function stirCities(ctx, names, id, name, months, effects) {
+  for (const n of names) {
+    ctx.helpers.addProvinceModifier(ctx, n, { id, name, months, effects });
+  }
+}
+
+// The two civil-war cards below give an eastern court a real choice, so they
+// need a considered `aiOption` — which in this engine is doing two jobs at
+// once (SPEC §70, §89): it is the course an AI holder takes, AND it is the
+// course the divergence ledger treats as the record. Those must be the same
+// value, and the record is not in doubt: the East declared for Avidius
+// Cassius within days and for Pescennius Niger within weeks, and paid for
+// both. So both cards sit at option 0, and a player who waits for the second
+// courier is the one departing from history — which is exactly the shape the
+// ledger should show.
+
+export const EVENTS_132_WORLD = [
+
+  // ── W1 · 175 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_avidius_cassius',
+    title: 'The Governor of Syria Is Acclaimed',
+    worldLabel: 'Avidius Cassius is proclaimed emperor in the East',
+    desc: 'A rumour reaches Alexandria that Marcus Aurelius is dead on the Danube, and '
+      + 'Avidius Cassius — the general who burned Seleucia, governor of Syria with a '
+      + 'commission over the whole East — is acclaimed emperor by his legions. Egypt '
+      + 'declares for him within days. Then the rumour turns out to be false, and the '
+      + 'East is left holding a usurper for three months and six days, which is exactly '
+      + 'long enough for every city, temple and phylarch between the Nile and the '
+      + 'Euphrates to have committed itself in writing. He is killed by his own '
+      + 'centurion. Marcus burns the correspondence unread, publicly, which is either '
+      + 'the most magnanimous act of the century or the most efficient.',
+    forTag: 'both',
+    major: true,
+    date: { y: 175, m: 5 },
+    world: true,
+    aiOption: 0,
+    historical: 'The East declared for Cassius; he was murdered in the third month, and Marcus burned the letters unread.',
+    options: [
+      {
+        label: 'Send to Alexandria; the East has its own emperor',
+        tooltip: '+120 talents and +15 martial points from a grateful usurper — and a letter with your seal on it in a bundle you must hope somebody burns: −10 legitimacy and "The Letters Were Kept" (−5% income for 60 months).',
+        effects: guard('ev2_avidius_cassius:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: 120, mar: 15, legitimacy: -10 });
+          h.addTagModifier(ctx, me, {
+            id: 'letters_were_kept', name: 'The Letters Were Kept', months: 60,
+            effects: { incomeMult: 0.95 },
+          });
+          h.setFlag(ctx, 'backedCassius', true);
+          h.chronicle(ctx, 'era', 'The East declares for Avidius Cassius; the letters are written, and not all of them are burned.');
+        }),
+      },
+      {
+        label: 'Wait for the second courier',
+        tooltip: 'The oldest eastern policy there is: +5 legitimacy and no correspondence to explain. Antioch and Alexandria +1 unrest for 12 months while the question is open.',
+        effects: guard('ev2_avidius_cassius:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, ctx.game.playerTag, { legitimacy: 5 });
+          stirCities(ctx, ['Antioch', 'Alexandria'], 'the_open_question', 'The Question Is Open', 12, { unrest: 1 });
+          h.chronicle(ctx, 'era', 'Avidius Cassius is acclaimed and killed within the season; the prudent waited for the second courier.');
+        }),
+      },
+    ],
+  },
+
+  // ── W2 · 193 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_pescennius_niger',
+    title: 'The Year of the Five Emperors',
+    worldLabel: 'Syria proclaims Niger; the empire is auctioned',
+    desc: 'The Praetorians kill Pertinax and sell the empire at auction in their camp — '
+      + 'the winning bid is twenty-five thousand sesterces a man — and within weeks three '
+      + 'armies have decided that they can bid too. Syria proclaims Pescennius Niger, '
+      + 'Britain proclaims Albinus, Pannonia proclaims Septimius Severus, and Severus is '
+      + 'the one who is closest to Rome and moves fastest. The East will spend two years '
+      + 'finding out what that costs: Niger dies fleeing to the Euphrates, Byzantium is '
+      + 'starved out and levelled, Antioch loses its status to Laodicea, and the cities '
+      + 'that guessed right on the first ballot are made rich.',
+    forTag: 'both',
+    major: true,
+    date: { y: 193, m: 4 },
+    world: true,
+    aiOption: 0,
+    historical: 'Syria declared for Niger and paid for it; Severus won, demoted Antioch and rewarded the cities that had backed him.',
+    options: [
+      {
+        label: 'Declare for Niger — the East votes for the East',
+        tooltip: '+150 talents and +2,000 manpower now; when Severus wins, "Severus Remembers" (−10% income, +1 unrest in the eastern cities, 96 months) and −10 legitimacy.',
+        effects: guard('ev2_pescennius_niger:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: 150, manpower: 2000, legitimacy: -10 });
+          h.addTagModifier(ctx, me, {
+            id: 'severus_remembers', name: 'Severus Remembers', months: 96,
+            effects: { incomeMult: 0.90 },
+          });
+          stirCities(ctx, ['Antioch', 'Laodicea'], 'severus_remembers_p', 'Severus Remembers', 96, { unrest: 1 });
+          h.setFlag(ctx, 'backedNiger', true);
+          h.chronicle(ctx, 'era', 'The East declares for Pescennius Niger; Severus wins, and Antioch is demoted to a village of Laodicea.');
+        }),
+      },
+      {
+        label: 'Declare for the man with the nearest legions',
+        tooltip: 'Cynical and correct: +8 legitimacy, +80 talents from the settlement, "The Right Ballot" (+5% income for 96 months).',
+        effects: guard('ev2_pescennius_niger:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: 80, legitimacy: 8 });
+          h.addTagModifier(ctx, me, {
+            id: 'right_ballot', name: 'The Right Ballot', months: 96,
+            effects: { incomeMult: 1.05 },
+          });
+          h.chronicle(ctx, 'era', 'Severus takes the purple; the cities that guessed right on the first ballot are made rich.');
+        }),
+      },
+    ],
+  },
+
+  // ── W3 · 197 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_severus_ctesiphon',
+    title: 'Ctesiphon Sacked Again',
+    worldLabel: 'Severus sacks Ctesiphon and annexes Mesopotamia',
+    desc: 'Having settled the civil war, Severus takes the army east and does to Ctesiphon '
+      + 'what Trajan did and what Avidius Cassius did: takes it, empties it, kills the men '
+      + 'and sells a hundred thousand of the rest. Then he does the thing his predecessors '
+      + 'did not, and keeps the ground — a new province of Mesopotamia with two legions in '
+      + 'it, garrisoned forward at Nisibis and Singara. The Euphrates stops being the '
+      + 'border and starts being a river the border has crossed. Every war of the next four '
+      + 'centuries is fought over the ground he just annexed.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 197, m: 12 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The frontier moves to the Tigris',
+        tooltip: 'Rome +250 talents of plunder and +1 stability; Parthia −10 legitimacy, −6,000 manpower, and Nisibis and Singara +2 unrest for 60 months ("The Forward Garrisons").',
+        effects: guard('ev2_severus_ctesiphon:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 250, stability: 1 });
+          if (alive(ctx, 'PAR')) h.adjust(ctx, 'PAR', { legitimacy: -10, manpower: -6000 });
+          stirCities(ctx, ['Nisibis', 'Singara'], 'forward_garrisons', 'The Forward Garrisons', 60, { unrest: 2 });
+          h.chronicle(ctx, 'era', 'Severus sacks Ctesiphon and keeps the ground: Mesopotamia becomes a province with two legions in it.');
+        }),
+      },
+    ],
+  },
+
+  // ── W4 · 212 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_antoniniana',
+    title: 'Everyone Is a Roman Now',
+    worldLabel: 'The Constitutio Antoniniana: citizenship for all',
+    desc: 'Caracalla grants Roman citizenship to every free inhabitant of the empire. Dio '
+      + 'says it was for the inheritance tax, which he had just doubled and which only '
+      + 'citizens paid, and Dio is probably right and it does not matter. What it does is '
+      + 'end the category the whole provincial order was built on. There are no longer '
+      + 'peregrines with local law and local courts; there is one law, everywhere, '
+      + 'administered by governors who now have jurisdiction over everybody in the '
+      + 'province. For the Jews it changes the meaning of the fiscus Judaicus from a '
+      + 'tribute paid by a conquered nation to a tax levied on a religion — the first '
+      + 'time in Roman practice that those are different things.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 212, m: 1 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'One law, and the inheritance tax with it',
+        tooltip: 'Rome +8% income permanently ("The Universal Citizenship") and +5 legitimacy; every province Rome owns loses 0.5 unrest for 60 months — and the fiscus Judaicus is now a levy on a faith rather than tribute from a nation.',
+        effects: guard('ev2_antoniniana:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: 5 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'universal_citizenship', name: 'The Universal Citizenship', months: -1,
+              effects: { incomeMult: 1.08 },
+            });
+          }
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== 'ROM') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'civitas_romana', name: 'Civitas Romana', months: 60,
+              effects: { unrest: -0.5 },
+            });
+          }
+          h.setFlag(ctx, 'universalCitizenship', true);
+          h.chronicle(ctx, 'era', 'Caracalla makes every free provincial a Roman citizen; the category the provincial order was built on ceases to exist.');
+        }),
+      },
+    ],
+  },
+
+  // ── W5 · 224 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_ardashir',
+    title: 'The King of Kings Is Dead',
+    worldLabel: 'Ardashir overthrows the Arsacids; Persia is reborn',
+    desc: 'A vassal king from Fars named Ardashir, son of Papak, kills Artabanus on the '
+      + 'plain of Hormozdgan and takes the crown of a five-hundred-year-old dynasty. What '
+      + 'replaces it is not another Parthia. The Arsacids were the first among feudal '
+      + 'equals, tolerant to the point of indifference, and it was that indifference that '
+      + 'once let a King of Kings offer silver to a Jewish prince in revolt against Rome. '
+      + 'The house of Sasan builds a centralized empire with a state clergy, an official '
+      + 'scripture, and a fire kept for the king in every province — and it wants Rome\'s '
+      + 'eastern provinces back on the grounds that Cyrus held them. The comfortable '
+      + 'eastern balance ends this month, and everything that lives in the gap between '
+      + 'the two empires had better find a patron.',
+    forTag: 'both',
+    major: true,
+    date: { y: 224, m: 4 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The house of Sasan takes the crown',
+        tooltip: 'Parthia becomes the Sasanian Empire — a centralized state with a state church. Any inherited friendship between Judaea and the Arsacid court lapses with the dynasty that made it; the new King of Kings starts +12 martial and −20 opinion of Rome.',
+        effects: guard('ev2_ardashir:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'PAR')) {
+            h.rebrandTag(ctx, 'PAR', { name: 'Sasanian Empire', flag: 'SAS' });
+            h.setRuler(ctx, 'PAR', { name: 'Ardashir I', title: 'King of Kings', gov: 4, infl: 3, mar: 4, age: 44 });
+            h.adjust(ctx, 'PAR', { mar: 12, legitimacy: 10, stability: 1 });
+            h.addTagModifier(ctx, 'PAR', {
+              id: 'house_of_sasan', name: 'The House of Sasan', months: -1,
+              effects: { disciplineMult: 1.06, incomeMult: 1.05 },
+            });
+            // The bond that made Parthia interesting to a Jewish state was
+            // Arsacid, and it dies with the Arsacids (SPEC §104).
+            h.retireAffinity(ctx, 'JUD', 'PAR');
+            const par = g.tags.PAR;
+            if (par) {
+              if (!par.opinion) par.opinion = {};
+              par.opinion.ROM = Math.max(-200, (par.opinion.ROM || 0) - 20);
+              par.opinion.JUD = Math.min(200, Math.max(-200, (par.opinion.JUD || 0) - 40));
+            }
+          }
+          h.setFlag(ctx, 'sasanianRise', true);
+          h.chronicle(ctx, 'era', 'Ardashir kills Artabanus and takes the crown: the Arsacid balance is over, and the empire that replaces it has a state church.');
+        }),
+      },
+    ],
+  },
+
+  // ── W6 · 240 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_third_century_crisis',
+    title: 'The Century of Iron and Rust',
+    worldLabel: 'The empire enters the crisis of the third century',
+    desc: 'From here to Diocletian the throne changes hands upward of twenty times and '
+      + 'almost never peacefully; the silver in the denarius falls from a half to about a '
+      + 'fortieth; the Rhine and the Danube open; Gaul and the East each secede under '
+      + 'their own emperors for a decade. No single event announces this — it is a change '
+      + 'in the weather. Cities that have not had walls since Augustus start building them, '
+      + 'in a hurry, out of their own tombstones and theatres, which is how we know what '
+      + 'the third century thought its odds were.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 240, m: 1 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The walls go up out of the theatres',
+        tooltip: 'Rome: −12% income and −1 stability for 480 months ("The Crisis of the Third Century") — the debased coin, the open frontiers and the emperors who last a season. It lifts when Diocletian restores the coinage.',
+        effects: guard('ev2_third_century_crisis:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) {
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'third_century_crisis', name: 'The Crisis of the Third Century', months: 480,
+              effects: { incomeMult: 0.88, manpowerMult: 0.9 },
+            });
+            h.adjust(ctx, 'ROM', { stability: -1 });
+          }
+          h.setFlag(ctx, 'thirdCenturyCrisis', true);
+          h.chronicle(ctx, 'era', 'The century of iron and rust: debased silver, open frontiers, and cities building walls out of their own theatres.');
+        }),
+      },
+    ],
+  },
+
+  // ── W7 · 250 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_decian_persecution',
+    title: 'The Certificate of Sacrifice',
+    worldLabel: 'Decius orders universal sacrifice; the libelli are issued',
+    desc: 'Decius orders every inhabitant of the empire to sacrifice to the gods, before a '
+      + 'commission, and to receive a certificate saying they have. It is not aimed at '
+      + 'anyone; it is aimed at everyone, which is what makes it new. Forty-odd of the '
+      + 'certificates survive from Egypt, and they are the dullest documents imaginable — '
+      + 'I have always sacrificed, I have sacrificed in your presence, please certify. The '
+      + 'Jews are exempt as a licensed nation whose refusal to sacrifice is ancestral and '
+      + 'therefore respectable. The Christians are not a nation and have no ancestors, and '
+      + 'for them the certificate is apostasy. Most of them get one. The ones who do not '
+      + 'become the reason the ones who did are still arguing about it fifty years later.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 250, m: 1 },
+    world: true,
+    aiOption: 0,
+    historical: 'The edict was enforced empire-wide; the Jews were exempt as a licit nation and the Christians were not.',
+    options: [
+      {
+        label: 'Everyone sacrifices, and takes a certificate',
+        tooltip: 'Rome +180 talents from the commissions and +1 stability; the great cities +2 unrest for 36 months ("The Commissions Sit"). The Jewish communities are exempt as a licensed nation — which is the one privilege of the licence, and the reason it was worth accepting the rescript.',
+        effects: guard('ev2_decian_persecution:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 180, stability: 1 });
+          stirCities(ctx, EAST.concat(['Roma', 'Corinth', 'Smyrna']), 'commissions_sit', 'The Commissions Sit', 36, { unrest: 2 });
+          h.setFlag(ctx, 'decianEdict', true);
+          h.chronicle(ctx, 'era', 'Decius orders universal sacrifice and issues certificates; the Jews are exempt as a licit nation, and the Christians are not.');
+        }),
+      },
+    ],
+  },
+
+  // ── W8 · 260 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_valerian_taken',
+    title: 'An Emperor, Alive',
+    worldLabel: 'Shapur takes Valerian alive at Edessa',
+    desc: 'Shapur has the whole thing carved on a cliff at Naqsh-e Rustam in three '
+      + 'languages, and then carved again as a relief: a mounted King of Kings, and a '
+      + 'Roman emperor kneeling, and the king\'s hand on his wrist. Valerian came to '
+      + 'relieve Edessa with seventy thousand men and came to a parley and did not come '
+      + 'back. There is no precedent. Emperors have been killed by their own troops, by '
+      + 'their own guard, by Germans in a swamp — no emperor has ever been a prisoner. '
+      + 'The East does the arithmetic that same season: whatever else Rome is, it is no '
+      + 'longer the thing that cannot be beaten.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 260, m: 6 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The king\'s hand is on his wrist',
+        tooltip: 'Rome −20 legitimacy, −1 stability, −15,000 manpower and "The Emperor Kneeling" (−8% morale for 120 months); Persia +15 legitimacy and +200 talents of ransom that is never paid because there is no ransom.',
+        effects: guard('ev2_valerian_taken:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) {
+            h.adjust(ctx, 'ROM', { legitimacy: -20, stability: -1, manpower: -15000 });
+            h.addTagModifier(ctx, 'ROM', {
+              id: 'emperor_kneeling', name: 'The Emperor Kneeling', months: 120,
+              effects: { moraleMult: 0.92 },
+            });
+          }
+          if (alive(ctx, 'PAR')) h.adjust(ctx, 'PAR', { legitimacy: 15, treasury: 200 });
+          h.setFlag(ctx, 'valerianTaken', true);
+          h.chronicle(ctx, 'era', 'Shapur takes Valerian alive at Edessa and has it carved on a cliff; no emperor has ever been a prisoner.');
+        }),
+      },
+    ],
+  },
+
+  // ── W9 · 267 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_palmyra_rises',
+    title: 'The Caravan City Takes the East',
+    worldLabel: 'Zenobia takes Syria, Egypt and the Levant',
+    desc: 'With Valerian in Persia and Gallienus holding the Danube, the East is defended '
+      + 'by a caravan city and its own cavalry. Odaenathus of Palmyra beats Shapur back '
+      + 'across the Euphrates twice and is given, in effect, the whole eastern command; '
+      + 'then he is murdered, and his widow decides that what her husband held for Rome '
+      + 'she will hold for her son. Zenobia takes Syria, then Arabia, then Egypt, mints '
+      + 'her own coin, keeps a court of philosophers, and is reported — by writers with '
+      + 'reasons of their own — to be notably well disposed toward the Jews of Alexandria '
+      + 'and Egypt. For five years the Levant is governed from the desert, by a woman, and '
+      + 'not from Rome at all.',
+    forTag: 'both',
+    major: true,
+    date: { y: 269, m: 6 },
+    world: true,
+    aiOption: 0,
+    historical: 'The eastern cities went over to Palmyra; Aurelian took it all back in eighteen months and levelled the city.',
+    options: [
+      {
+        label: 'Send to Palmyra — the East can hold the East',
+        tooltip: '+100 talents and +2,500 manpower from the Palmyrene settlement, and Jewish communities under Palmyrene rule breathe: −1 unrest for 48 months in the eastern cities. When Aurelian comes back, "Aurelian\'s Reckoning": −12% income for 72 months and −8 legitimacy.',
+        effects: guard('ev2_palmyra_rises:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: 100, manpower: 2500, legitimacy: -8 });
+          stirCities(ctx, EAST, 'zenobias_peace', 'Zenobia\'s Peace', 48, { unrest: -1 });
+          h.addTagModifier(ctx, me, {
+            id: 'aurelians_reckoning', name: 'Aurelian\'s Reckoning', months: 72,
+            effects: { incomeMult: 0.88 },
+          });
+          h.setFlag(ctx, 'backedPalmyra', true);
+          h.chronicle(ctx, 'era', 'The eastern cities go over to Palmyra; for five years the Levant is governed from the desert.');
+        }),
+      },
+      {
+        label: 'Rome will come back; Rome always comes back',
+        tooltip: 'Five years of Palmyrene taxation with none of the Palmyrene favour: −60 talents and the eastern cities +1 unrest for 48 months — and when Aurelian levels the city, the loyal are remembered: +10 legitimacy.',
+        effects: guard('ev2_palmyra_rises:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: -60, legitimacy: 10 });
+          stirCities(ctx, EAST, 'palmyrene_levy', 'The Palmyrene Levy', 48, { unrest: 1 });
+          h.chronicle(ctx, 'era', 'Palmyra takes the East and Aurelian takes it back; the cities that waited are remembered kindly.');
+        }),
+      },
+    ],
+  },
+
+  // ── W10 · 273 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_aurelian_palmyra',
+    title: 'Aurelian Levels Palmyra',
+    worldLabel: 'Aurelian destroys Palmyra and restores the East',
+    desc: 'Eighteen months, two battles and a siege: Zenobia is taken on the road to the '
+      + 'Euphrates and walks in a triumph in gold chains, and when the city revolts a '
+      + 'second time Aurelian comes back and finishes it. What is left is a garrison, a '
+      + 'temple and a field of columns. The caravan road that made Palmyra rich for three '
+      + 'hundred years moves permanently south and east, and the desert route through '
+      + 'Syria never carries that much silk again. Aurelian is titled Restitutor Orbis and '
+      + 'is murdered two years later by his own secretary over a forged list.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 273, m: 8 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Restitutor Orbis',
+        tooltip: 'Rome +12 legitimacy and +1 stability; Palmyra −8 development and +3 unrest for 120 months ("A Field of Columns"), and the desert silk road never recovers.',
+        effects: guard('ev2_aurelian_palmyra:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { legitimacy: 12, stability: 1 });
+          const p = ctx.prov && ctx.prov('Palmyra');
+          if (p && p.dev) {
+            p.dev.tax = Math.max(1, (p.dev.tax || 1) - 3);
+            p.dev.prod = Math.max(1, (p.dev.prod || 1) - 4);
+            p.dev.mp = Math.max(1, (p.dev.mp || 1) - 1);
+          }
+          h.addProvinceModifier(ctx, 'Palmyra', {
+            id: 'field_of_columns', name: 'A Field of Columns', months: 120,
+            effects: { unrest: 3, taxMult: 0.5 },
+          });
+          h.chronicle(ctx, 'era', 'Aurelian levels Palmyra; the silk road moves south and the desert route never carries that much again.');
+        }),
+      },
+    ],
+  },
+
+  // ── W11 · 301 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_armenia_converts',
+    title: 'The First Christian Kingdom',
+    worldLabel: 'Armenia becomes the first Christian state',
+    desc: 'Gregory the Illuminator is let out of the pit at Artaxata after thirteen years '
+      + 'and baptizes Tiridates, and Armenia becomes — a full decade before Constantine '
+      + 'sees anything at the Milvian Bridge — the first kingdom on earth to make this '
+      + 'religion the religion of the state. It is not a philosophical event. Armenia sits '
+      + 'between two empires that have spent four centuries partitioning it, one of which '
+      + 'has just acquired a state clergy and a fire on every altar. Choosing a faith that '
+      + 'is neither the fire nor the imperial cult is a foreign policy, and it commits the '
+      + 'kingdom to the western empire for the next three hundred years.',
+    forTag: 'both',
+    decider: 'ARM',
+    major: true,
+    date: { y: 301, m: 3 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The king is baptized in the Araxes',
+        tooltip: 'Armenia adopts Christianity as its state faith: +12 legitimacy, +1 stability, and a permanent −20 opinion of the Persian court. The Armenian provinces begin converting.',
+        effects: guard('ev2_armenia_converts:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const arm = g.tags && g.tags.ARM;
+          if (arm && arm.alive !== false) {
+            arm.religion = 'christianity';
+            h.adjust(ctx, 'ARM', { legitimacy: 12, stability: 1 });
+            if (!arm.opinion) arm.opinion = {};
+            arm.opinion.PAR = Math.max(-200, (arm.opinion.PAR || 0) - 20);
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.owner !== 'ARM' || !Array.isArray(p.pop) || !p.pop.length) continue;
+              let total = 0;
+              for (const e of p.pop) total += (e && e.n > 0) ? e.n : 0;
+              const n = Math.round(total * 0.2);
+              if (n > 0) h.addPopulation(ctx, p.name, { r: 'christianity', c: p.culture, n });
+            }
+          }
+          h.setFlag(ctx, 'armeniaChristian', true);
+          h.chronicle(ctx, 'era', 'Tiridates is baptized: Armenia is the first kingdom on earth to make Christianity the religion of the state.');
+        }),
+      },
+    ],
+  },
+
+  // ── W12 · 303 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_great_persecution',
+    title: 'The Scriptures Are Called In',
+    worldLabel: 'Diocletian orders the Great Persecution',
+    desc: 'On the feast of the Terminalia the soldiers pull down the church at Nicomedia, '
+      + 'in sight of the palace, and the edicts follow in four instalments over two years: '
+      + 'churches demolished, scriptures surrendered and burned, clergy arrested, and '
+      + 'finally everyone in the empire to sacrifice on pain of death. It is the most '
+      + 'systematic thing the Roman state has ever attempted against a religion and it is '
+      + 'run by the most competent administration the empire has had in a century. In the '
+      + 'West it is enforced for two years; in the East for ten. It fails so completely '
+      + 'that the last persecuting emperor issues, from his deathbed, an edict asking the '
+      + 'Christians to pray for him.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 303, m: 2 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Demolish the churches; burn the books',
+        tooltip: 'Rome +120 talents of confiscation and +5 legitimacy with the old cults — and every great city +3 unrest for 96 months ("The Edicts of the Terminalia"). Jewish communities are again exempt: they are a licensed nation and this is not aimed at them.',
+        effects: guard('ev2_great_persecution:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 120, legitimacy: 5 });
+          stirCities(ctx, EAST.concat(['Roma', 'Smyrna', 'Corinth', 'Nicaea']), 'edicts_terminalia', 'The Edicts of the Terminalia', 96, { unrest: 3 });
+          h.setFlag(ctx, 'greatPersecution', true);
+          h.chronicle(ctx, 'era', 'Diocletian orders the churches demolished and the scriptures burned; in the East the edicts are enforced for ten years.');
+        }),
+      },
+    ],
+  },
+
+  // ── W13 · 311 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_galerius_edict',
+    title: 'Let Them Pray for Us',
+    worldLabel: 'Galerius ends the persecution from his deathbed',
+    desc: 'Galerius, who pushed the persecution hardest and is now dying of something the '
+      + 'sources describe with relish and at length, issues an edict from Serdica that is '
+      + 'remarkable mostly for its tone. We wished to correct everything according to the '
+      + 'ancient laws; very many persisted; they were left with neither their own gods nor '
+      + 'ours; therefore, by our indulgence, let them be Christians again and rebuild their '
+      + 'meeting places — and let them pray to their god for our safety. It is not '
+      + 'toleration on principle. It is an administration writing off a policy that did '
+      + 'not work, and asking the survivors for their prayers.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 311, m: 4 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'By our indulgence, let them be Christians again',
+        tooltip: 'The persecution modifiers lift eight years early: "The Edicts of the Terminalia" is removed from every city, Rome −40 talents in restitutions.',
+        effects: guard('ev2_galerius_edict:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p) continue;
+            h.removeModifier(ctx, p.name, 'edicts_terminalia');
+          }
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: -40 });
+          h.setFlag(ctx, 'galeriusEdict', true);
+          h.chronicle(ctx, 'era', 'Galerius, dying, ends the persecution and asks the Christians to pray for him.');
+        }),
+      },
+    ],
+  },
+
+  // ── W14 · 313 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_milan',
+    title: 'The Agreement at Milan',
+    worldLabel: 'Constantine and Licinius grant liberty of religion',
+    desc: 'Constantine takes Rome at the Milvian Bridge under a sign nobody who was there '
+      + 'describes the same way twice, and the following winter he and Licinius agree at '
+      + 'Milan that everyone in the empire may follow whatever religion they choose, and '
+      + 'that the Christians specifically are to have their confiscated buildings back — '
+      + 'at state expense, from whoever bought them, immediately. Read as a document of '
+      + 'toleration it is generous and slightly vague. Read as a property settlement it is '
+      + 'precise, expensive, and the moment the imperial treasury starts paying for a '
+      + 'church. Everything after this follows from the second reading.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 313, m: 2 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The buildings are restored, at state expense',
+        tooltip: 'Rome −150 talents of restitution and +8 legitimacy; the great cities −2 unrest for 60 months ("Liberty of Religion"). The state has begun paying for one of the religions it tolerates.',
+        effects: guard('ev2_milan:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: -150, legitimacy: 8 });
+          stirCities(ctx, EAST.concat(['Roma', 'Smyrna', 'Corinth', 'Nicaea']), 'liberty_of_religion', 'Liberty of Religion', 60, { unrest: -2 });
+          h.setFlag(ctx, 'edictOfMilan', true);
+          h.chronicle(ctx, 'era', 'Constantine and Licinius agree at Milan: liberty of religion, and the confiscated churches restored at state expense.');
+        }),
+      },
+    ],
+  },
+
+  // ── W15 · 325 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_nicaea',
+    title: 'The Council and the Calendar',
+    worldLabel: 'Nicaea severs Easter from the Jewish reckoning',
+    desc: 'Three hundred bishops at imperial expense in a lakeside palace, and the creed '
+      + 'is what everyone remembers. The clause that changes more lives is the one about '
+      + 'the date. Constantine writes to the churches that were not there, and his '
+      + 'argument is not astronomical: it is unbecoming that in the celebration of this '
+      + 'most holy feast we should follow the practice of the Jews, who have soiled their '
+      + 'hands with a heinous crime — let us have nothing in common with that most hostile '
+      + 'people. From this year the church computes its own Easter. The last administrative '
+      + 'thread by which a Christian year hung on a rabbinic court in Galilee is cut on '
+      + 'purpose, and the reason given in writing is contempt.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 325, m: 6 },
+    world: true,
+    aiOption: 0,
+    historical: 'The council fixed Easter independently of the Jewish reckoning, and said in writing why.',
+    options: [
+      {
+        label: 'Nothing in common with that most hostile people',
+        tooltip: 'The Christian calendar is severed from the Jewish one: the "One Calendar" quiet ends, the quartodeciman dependence is void, and a Judaea that had been keeping the reckoning for both loses it — −8 legitimacy and the Sanhedrin\'s foreign audience.',
+        effects: guard('ev2_nicaea:0', (ctx) => {
+          const h = ctx.helpers;
+          h.removeModifier(ctx, 'Sepphoris', 'one_calendar');
+          h.removeModifier(ctx, 'JUD', 'reckoning_of_the_land');
+          h.setFlag(ctx, 'nicaeaCalendar', true);
+          h.setFlag(ctx, 'calendarHeld', false);
+          if (alive(ctx, 'JUD')) h.adjust(ctx, 'JUD', { legitimacy: -8 });
+          h.chronicle(ctx, 'era', 'Nicaea computes its own Easter and says why in writing: the last administrative thread between the two calendars is cut.');
+        }),
+      },
+    ],
+  },
+
+  // ── W16 · 351 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_gallus_revolt',
+    title: 'The Rising Against Gallus',
+    worldLabel: 'Revolt at Sepphoris against the Caesar Gallus',
+    desc: 'A small thing that the sources cannot agree about: at Diocaesarea — Sepphoris, '
+      + 'renamed — a man named Patricius is raised up, a Roman garrison is disarmed in the '
+      + 'night, and for a season the Galilee is out of the government\'s hands. Ursicinus '
+      + 'is sent, and the towns of the lake are burned, and the whole thing occupies a '
+      + 'sentence and a half in Ammianus. It is the last time for fifteen hundred years '
+      + 'that a Jewish population in the Galilee takes a Roman garrison\'s weapons off it, '
+      + 'and it is remembered chiefly because of what the burned towns cost the schools '
+      + 'that were in them.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 351, m: 5 },
+    when: (ctx) => romanAftermath(ctx),
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Ursicinus burns the towns of the lake',
+        tooltip: 'Sepphoris, Tiberias and Tarichaea: −2 development each and +3 unrest for 72 months ("Ursicinus Came Through"). Rome +30 talents of confiscation.',
+        effects: guard('ev2_gallus_revolt:0', (ctx) => {
+          const h = ctx.helpers;
+          for (const name of ['Sepphoris', 'Tiberias', 'Tarichaea']) {
+            const p = ctx.prov && ctx.prov(name);
+            if (p && p.dev) {
+              p.dev.tax = Math.max(1, (p.dev.tax || 1) - 1);
+              p.dev.prod = Math.max(1, (p.dev.prod || 1) - 1);
+            }
+            h.addProvinceModifier(ctx, name, {
+              id: 'ursicinus_came_through', name: 'Ursicinus Came Through', months: 72,
+              effects: { unrest: 3, taxMult: 0.8 },
+            });
+          }
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 30 });
+          h.chronicle(ctx, 'era', 'The rising at Diocaesarea is put down and the towns of the lake are burned; Ammianus gives it a sentence and a half.');
+        }),
+      },
+    ],
+  },
+
+  // ── W17 · 363 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_julian_temple',
+    title: 'The Emperor Orders the House Rebuilt',
+    worldLabel: 'Julian orders the Temple in Jerusalem rebuilt',
+    desc: 'Julian, who has spent his reign trying to put the old gods back and has worked '
+      + 'out that the most effective argument against the Galileans is a functioning '
+      + 'Jewish sacrifice on the hill their scriptures say will stay in ruins forever, '
+      + 'writes to the communities: I shall rebuild the holy city of Jerusalem at my own '
+      + 'expense, and dwell there with you, and give glory to the Most High God. Alypius '
+      + 'of Antioch is given the commission and the treasury. The foundations are cleared '
+      + 'and the work begins. Then — this is Ammianus, a pagan officer with no motive to '
+      + 'invent it — fireballs burst from the foundations, the workmen are driven off, and '
+      + 'the project stops. The Galilee earthquake is that year. Julian is dead in Persia '
+      + 'within months, and no emperor ever asks the question again.',
+    forTag: 'both',
+    major: true,
+    date: { y: 363, m: 5 },
+    world: true,
+    aiOption: 0,
+    historical: 'The work began, was stopped by fire in the foundations after the earthquake, and died with Julian in Persia that summer.',
+    options: [
+      {
+        label: 'Clear the foundations',
+        tooltip: 'A Judaea that stands: +20 legitimacy and +150 talents from the imperial commission. Under Rome: Jerusalem −2 unrest for 24 months, and every Jewish province +1 stability worth of hope — until the fire in the foundations, four months later.',
+        effects: guard('ev2_julian_temple:0', (ctx) => {
+          const h = ctx.helpers;
+          if (judaeaStands(ctx)) {
+            h.adjust(ctx, 'JUD', { legitimacy: 20, treasury: 150 });
+          } else {
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'the_commission', name: 'The Emperor\'s Commission', months: 24,
+              effects: { unrest: -2 },
+            });
+          }
+          h.setFlag(ctx, 'julianTemple', true);
+          h.chronicle(ctx, 'era', 'Julian orders the Temple rebuilt at imperial expense; Alypius of Antioch clears the foundations.');
+        }),
+      },
+      {
+        label: 'Take the money and build nothing yet',
+        tooltip: 'The elders remember that the last three emperors to promise something also promised something: +200 talents, no legitimacy, and no ruined foundations to explain when the emperor dies in Persia in June.',
+        effects: guard('ev2_julian_temple:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = alive(ctx, 'JUD') ? 'JUD' : ctx.game.playerTag;
+          h.adjust(ctx, me, { treasury: 200 });
+          h.setFlag(ctx, 'julianDeclined', true);
+          h.chronicle(ctx, 'era', 'The commission is taken and the ground is not broken; Julian dies in Persia in June.');
+        }),
+      },
+    ],
+  },
+
+  // ── W18 · 380 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_cunctos_populos',
+    title: 'Cunctos Populos',
+    worldLabel: 'Theodosius makes Nicene Christianity compulsory',
+    desc: 'It is one paragraph, addressed to the people of Constantinople, and it inverts '
+      + 'the legal order of the empire: it is our will that all the peoples we rule shall '
+      + 'practise the religion which the divine Peter transmitted to the Romans; we command '
+      + 'that they take the name of Catholic Christians; the rest we adjudge demented and '
+      + 'insane, to bear the infamy of heretical dogmas, and to be smitten first by divine '
+      + 'vengeance and then by our own. Nothing in the previous four hundred years reads '
+      + 'like this. The tolerated faith is now the compulsory one, and the interesting '
+      + 'question for everyone else on the map stops being whether they are licensed and '
+      + 'starts being what they are licensed for.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 380, m: 2 },
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The rest we adjudge demented and insane',
+        tooltip: 'Rome takes Christianity as its state religion: +10 legitimacy, and every province Rome owns that follows another faith +2 unrest permanently ("Cunctos Populos") until it converts. Judaism keeps a licence — narrower every decade, and still the only one anyone else has.',
+        effects: guard('ev2_cunctos_populos:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const rom = g.tags && g.tags.ROM;
+          if (rom && rom.alive !== false) {
+            rom.religion = 'christianity';
+            h.adjust(ctx, 'ROM', { legitimacy: 10 });
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.owner !== 'ROM' || p.religion === 'christianity') continue;
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'cunctos_populos', name: 'Cunctos Populos', months: -1,
+                effects: { unrest: 2 },
+              });
+            }
+          }
+          h.setFlag(ctx, 'cunctosPopulos', true);
+          h.chronicle(ctx, 'era', 'Theodosius makes Nicene Christianity the religion of the empire and the rest a crime; the legal order of four centuries is inverted.');
+        }),
+      },
+    ],
+  },
+
+  // ── W19 · 425 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev2_patriarchate_ends',
+    title: 'The Office Is Not Filled',
+    worldLabel: 'The Jewish patriarchate is abolished',
+    desc: 'Gamaliel VI is stripped of his honorary prefecture for building a synagogue '
+      + 'without permission and for hearing cases between Jews and Christians, and when he '
+      + 'dies without a son the government simply does not fill the office. The apostolē — '
+      + 'the tax the communities of the whole diaspora had sent to the patriarch since '
+      + 'before anyone can remember — is redirected to the imperial treasury by name. '
+      + 'Three hundred years of continuous Jewish self-government in the land ends not '
+      + 'with an edict of destruction but with an administrative decision not to appoint '
+      + 'a successor. This is the card that does not happen if the Nasi\'s state survived; '
+      + 'in that world the chronicle simply has nothing to record here.',
+    forTag: 'both',
+    decider: 'ROM',
+    major: true,
+    date: { y: 425, m: 5 },
+    when: (ctx) => romanAftermath(ctx),
+    world: true,
+    aiOption: 0,
+    options: [
+      {
+        label: 'The apostolē goes to the sacred treasury',
+        tooltip: 'Rome +250 talents and the office lapses; every Jewish province +2 unrest for 120 months ("No One to Appeal To"), and the last institution of Jewish self-government in the land is gone.',
+        effects: guard('ev2_patriarchate_ends:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'ROM')) h.adjust(ctx, 'ROM', { treasury: 250 });
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.religion !== 'judaism') continue;
+            h.addProvinceModifier(ctx, p.name, {
+              id: 'no_one_to_appeal_to', name: 'No One to Appeal To', months: 120,
+              effects: { unrest: 2 },
+            });
+          }
+          h.setFlag(ctx, 'patriarchateEnded', true);
+          h.chronicle(ctx, 'era', 'Gamaliel VI dies and the patriarchate is not filled; the diaspora tax is redirected to the imperial treasury by name.');
+        }),
+      },
+    ],
+  },
+];

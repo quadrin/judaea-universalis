@@ -409,6 +409,150 @@ export const BOOKMARK_132 = {
     ],
   },
 
+  // Who actually lives here (SPEC §56, §104). The hill country is homogeneous
+  // and needs no table; the cities of the diaspora are the reason this
+  // bookmark has a religious mechanic at all. Two things are being seeded.
+  //
+  // First, the synagogue communities of the Greek east — thinner than they
+  // were in 66 CE, because the Diaspora Revolt of 115–117 went through
+  // Alexandria, Cyrene and Cyprus like a scythe (Jews are barred from Cyprus
+  // outright after it, which is why Salamis has none).
+  //
+  // Second, the theosebeis: the gentiles who kept the sabbath, the food laws
+  // and the ethics without accepting circumcision. They are attested on the
+  // benches at Aphrodisias and in Josephus's aside that in every city there
+  // were Greeks who had adopted Jewish observance — and they are the pool
+  // both missions recruited from, which is the whole of §104's second half.
+  // (The evidence is genuinely contested; they are a mechanic here, not a
+  // claim about how many there were.)
+  pops: {
+    'Antioch': [
+      { r: 'hellenism', c: 'greek', share: 0.60 },
+      { r: 'judaism', c: 'judean', share: 0.22 },
+      { r: 'godfearers', c: 'greek', share: 0.08 },
+      { r: 'roman_cult', c: 'roman', share: 0.10 },
+    ],
+    'Alexandria': [
+      { r: 'hellenism', c: 'greek', share: 0.52 },
+      { r: 'egyptian', c: 'egyptian', share: 0.30 },
+      { r: 'judaism', c: 'judean', share: 0.07 }, // what 115–117 left
+      { r: 'godfearers', c: 'greek', share: 0.05 },
+      { r: 'roman_cult', c: 'roman', share: 0.06 },
+    ],
+    'Caesarea Maritima': [
+      { r: 'hellenism', c: 'greek', share: 0.55 },
+      { r: 'judaism', c: 'judean', share: 0.28 },
+      { r: 'godfearers', c: 'greek', share: 0.07 },
+      { r: 'roman_cult', c: 'roman', share: 0.10 },
+    ],
+    'Scythopolis': [
+      { r: 'hellenism', c: 'greek', share: 0.62 },
+      { r: 'judaism', c: 'galilean', share: 0.30 },
+      { r: 'godfearers', c: 'greek', share: 0.08 },
+    ],
+    'Ptolemais': [
+      { r: 'hellenism', c: 'phoenician', share: 0.72 },
+      { r: 'judaism', c: 'galilean', share: 0.20 },
+      { r: 'godfearers', c: 'phoenician', share: 0.08 },
+    ],
+    'Damascus': [
+      { r: 'hellenism', c: 'aramean', share: 0.72 },
+      { r: 'judaism', c: 'judean', share: 0.20 },
+      { r: 'godfearers', c: 'aramean', share: 0.08 },
+    ],
+    'Pella': [
+      { r: 'hellenism', c: 'greek', share: 0.70 },
+      { r: 'judaism', c: 'judean', share: 0.20 },
+      { r: 'godfearers', c: 'greek', share: 0.10 },
+    ],
+    'Smyrna': [
+      { r: 'hellenism', c: 'greek', share: 0.78 },
+      { r: 'judaism', c: 'judean', share: 0.14 },
+      { r: 'godfearers', c: 'greek', share: 0.08 },
+    ],
+    'Corinth': [
+      { r: 'hellenism', c: 'greek', share: 0.84 },
+      { r: 'judaism', c: 'judean', share: 0.09 },
+      { r: 'godfearers', c: 'greek', share: 0.07 },
+    ],
+    'Thessalonica': [
+      { r: 'hellenism', c: 'greek', share: 0.86 },
+      { r: 'judaism', c: 'judean', share: 0.08 },
+      { r: 'godfearers', c: 'greek', share: 0.06 },
+    ],
+    'Roma': [
+      { r: 'roman_cult', c: 'roman', share: 0.80 },
+      { r: 'hellenism', c: 'greek', share: 0.11 },
+      { r: 'judaism', c: 'judean', share: 0.06 },
+      { r: 'godfearers', c: 'roman', share: 0.03 },
+    ],
+    'Cyrene': [
+      { r: 'hellenism', c: 'greek', share: 0.92 },
+      { r: 'judaism', c: 'judean', share: 0.03 }, // Cyrenaican Jewry, after 115
+      { r: 'godfearers', c: 'greek', share: 0.05 },
+    ],
+    'Salamis': [
+      { r: 'hellenism', c: 'greek', share: 0.94 },
+      { r: 'godfearers', c: 'greek', share: 0.06 }, // no Jews: the island is closed to them
+    ],
+    'Berytus': [
+      { r: 'hellenism', c: 'phoenician', share: 0.86 },
+      { r: 'judaism', c: 'judean', share: 0.07 },
+      { r: 'godfearers', c: 'phoenician', share: 0.07 },
+    ],
+  },
+
+  // What spreads with no state behind it (SPEC §104). The engine owns the
+  // arithmetic; this table owns the politics. The curve is the age's own
+  // pull — near zero when Bar Kokhba's coins are struck, steepest through
+  // the third century, all but complete by Theodosius — and the resistance
+  // entries are why a Jewish Galilee and a Samaritan Gerizim are still on
+  // the map when the Greek cities around them have turned.
+  faithDrift: {
+    christianity: {
+      from: ['hellenism', 'roman_cult', 'nabataean', 'egyptian'],
+      resistedBy: { judaism: 0.35, samaritanism: 0.50 },
+      seeds: ['Antioch', 'Alexandria', 'Roma', 'Corinth', 'Smyrna', 'Pella'],
+      seedShare: 0.012,
+      curve: (y) => 1 / (1 + Math.exp(-(y - 275) / 38)),
+      vigor: 0.0016,
+      spreadsAlong: 'trade',
+      monthlyCap: 0.004,
+    },
+  },
+
+  // The pool both missions fished in (SPEC §104). Christianity's pull is the
+  // age's; Judaism's is a legal question before it is a theological one — and
+  // the Rescript of Antoninus is where the law answers it. A realm that
+  // accepts the rescript's terms buys quiet and gives up the mission field
+  // permanently; there is no card later that gives it back.
+  godfearers: {
+    pool: 'godfearers',
+    monthlyCap: 0.0009,
+    weigh(ctx) {
+      const g = ctx.game;
+      const f = g.flags || {};
+      const jud = g.tags && g.tags.JUD;
+      let christian = 1 / (1 + Math.exp(-(g.date.y - 275) / 38));
+      // A religion with an answer for persecution recruits during one.
+      if (f.shemad && !f.shemadEased) christian += 0.15;
+      if (f.plagueCharity) christian += 0.20;
+      let jewish = f.missionBarred ? 0 : 0.55;
+      if (jewish > 0) {
+        // A state that stands is a reason to join the people that has one.
+        if (jud && jud.alive !== false && !jud.overlord) jewish += 0.25;
+        if (f.ushaSanhedrin) jewish += 0.15;   // an address to be admitted by
+        if (f.calendarHeld) jewish += 0.10;    // and a calendar to keep
+        if (f.proselytesDefended) jewish += 0.15;
+        if (f.shemad && !f.shemadEased) jewish += 0.05; // the cohesion of a hunted people
+      }
+      return {
+        judaism: Math.max(0, Math.min(1, jewish)),
+        christianity: Math.max(0, Math.min(1, christian)),
+      };
+    },
+  },
+
   // Pre-existing works (SPEC §58): the imperial infrastructure of 132 CE.
   buildings: {
     'Alexandria': ['shipyard', 'granary', 'market'],

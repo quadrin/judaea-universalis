@@ -220,7 +220,12 @@ expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
 break, and The Chapters panel in a real browser. `uitest36.mjs` owns the phone pass (SPEC §103) and is the one to run when
 touching chrome: it boots a real 390×844 touch context, and its landscape
-section resizes to 844×390 in the same run. `smoke73.mjs` owns the SPEC §98–102 batch (crises, the tech
+section resizes to 844×390 in the same run. `smoke74.mjs` owns the SPEC §104 religion batch (the
+ambient faith drift and its resistance clause, the god-fearer pool and the
+permanence of the barred mission, the era windows on the 132 chain, the world
+spine to 425 and the `when`-gated cards that retire out of it, the affinity a
+change of dynasty annuls, and the Sasanian foreign-patron rule and its schism).
+`smoke73.mjs` owns the SPEC §98–102 batch (crises, the tech
 ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
@@ -282,3 +287,17 @@ DEFAULT experience — a bare `http://…/` with no query string, no cloud, no
 configuration — through save, reload, load, many campaigns across chapters,
 delete, and the migration of a legacy localStorage save into IndexedDB. It
 needs only the game server; it does not use the cloud mock.
+
+The SPEC §104 religion batch (ambient faith drift, the god-fearer pool, the
+world spine to 425, and the Sasanian coercion axis) re-ran the full 8-year
+harness: the anomaly set came back a strict subset of the accepted families —
+167 PAR BLEEDING · 67 ROM SNOWBALL + SEL DEAD · 40 HER BLEEDING · 66 JUD
+BLEEDING · 132 JUD SNOWBALL · 614 none · 1948 none. Nothing in the batch can
+reach an eight-year trajectory by design: the drift's curve is near zero before
+the third century, the world spine's first card is in 175, and the god-fearer
+pool moves shares rather than ledgers. Two longer runs were made instead, and
+both completed clean with no warnings on stderr: `node tools/autorun.mjs 295
+132ce` (to 427 CE — the whole spine, 71 wars, no anomaly beyond the documented
+132 JUD SNOWBALL) and `node tools/autorun.mjs 60 614ce` (to 674 CE, no
+anomalies). Those two are the runs to repeat when touching the drift table, the
+faith pass or the spine, because an eight-year harness cannot see any of them.

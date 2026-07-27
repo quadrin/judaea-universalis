@@ -10,6 +10,7 @@ import {
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
+  retireAffinityCore,
   allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
@@ -464,6 +465,10 @@ export const simHelpers = {
   },
   reconcileRivalry(ctx, a, b) {
     return reconcileRivalryCore(ctx, a, b);
+  },
+  // ...and the friendship a change of dynasty annuls (SPEC §104).
+  retireAffinity(ctx, a, b) {
+    return retireAffinityCore(ctx, a, b);
   },
   // Recognition (SPEC §96): a scripted peace may exchange the letters itself
   // — Sadat in the Knesset, the lawn in Washington — or tear them up again.

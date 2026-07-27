@@ -2840,6 +2840,8 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .chron-text { flex: 1; }
 .chron-empty { color: var(--ink-soft); font-style: italic; padding: 18px 6px; }
+/* the framing line over a long retirement list (SPEC §104) */
+.chron-note { color: var(--ink-soft); font-style: italic; font-size: 12px; margin: -2px 0 8px; }
 
 /* the road not taken (SPEC §89): the campaign beside the record it was given */
 .chron-tabs { display: flex; gap: 6px; margin: 0 0 8px; }

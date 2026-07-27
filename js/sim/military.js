@@ -2388,6 +2388,13 @@ export function declaredRival(ctx, tag, of) {
 export function affinityPair(ctx, a, b) {
   const list = ctx.bookmark && Array.isArray(ctx.bookmark.affinities) ? ctx.bookmark.affinities : null;
   if (!list || a === b) return null;
+  // A bond an event has since annulled (SPEC §104). Parthia was the court
+  // that offered Bar Kokhba silver; the empire Ardashir builds on top of it
+  // is a centralized state with a state church and no use for the old
+  // Arsacid hospitality. The book mirrors `retiredRivalries` — plain data on
+  // the game, so a save carries it and an older one simply has none.
+  const retired = ctx.game && ctx.game.retiredAffinities;
+  if (retired && retired[rivalryKey(a, b)]) return null;
   for (const pair of list) {
     if (!Array.isArray(pair) || pair.length < 2) continue;
     if ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a)) return pair;
@@ -2489,6 +2496,17 @@ export function reconcileRivalryCore(ctx, a, b) {
   }
   if (g.tags[a].grudges) delete g.tags[a].grudges[b];
   if (g.tags[b].grudges) delete g.tags[b].grudges[a];
+  return true;
+}
+
+// The other half of the same power (SPEC §104): an event may annul one of the
+// bookmark's inherited FRIENDSHIPS. A dynasty is overthrown and the state
+// that replaces it does not owe the old state's friends anything.
+export function retireAffinityCore(ctx, a, b) {
+  const g = ctx.game;
+  if (!g.tags[a] || !g.tags[b] || a === b) return false;
+  if (!g.retiredAffinities || typeof g.retiredAffinities !== 'object') g.retiredAffinities = {};
+  g.retiredAffinities[rivalryKey(a, b)] = true;
   return true;
 }
 // ── Recognition, and the alliance that will never be signed (SPEC §96) ──────

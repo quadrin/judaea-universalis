@@ -203,6 +203,54 @@ export const BOOKMARK_614 = {
   owners: OWNERS,
   religions: RELIGIONS,
 
+  // Whose church is it, really (SPEC §104). The Sasanian state did not
+  // persecute belief — it had a Christian physician, a Christian queen and a
+  // Christian half of its capital. It persecuted defection from the fire, and
+  // it suspected a congregation whose co-religionists ruled the enemy empire.
+  // One rule states both halves of the historical asymmetry: the Christians
+  // of Mesopotamia carry a suspicion the Jews of Babylonia never did, because
+  // there is no Jewish emperor for anyone to suspect them of preferring. The
+  // synod at Ctesiphon (`ev_p_not_romes_church`) clears it permanently, which
+  // is exactly why the synod was held.
+  foreignPatron: {
+    christianity: {
+      patron: 'BYZ',
+      unrest: 1.6,
+      minShare: 0.2,
+      name: 'The Enemy\'s Church',
+      freedFlag: 'churchOfTheEastFree',
+    },
+  },
+
+  // The gradient, not the sword (SPEC §104). Islam does not begin drifting
+  // until the conquest has settled into an assessment — the flag that
+  // `ev_p_jizya_gradient` sets — and then it moves at the speed a tax moves a
+  // household, over centuries, taking the fire temples fastest (their
+  // establishment fell with the state that endowed it) and the Jewish and
+  // Samaritan communities slowest.
+  faithDrift: {
+    islam: {
+      from: ['zoroastrianism', 'nabataean'],
+      resistedBy: { christianity: 0.45, judaism: 0.72, samaritanism: 0.72 },
+      seeds: ['Yathrib', 'Khaybar', 'Tayma', 'Hegra', 'Dumatha'],
+      // Islam did not walk from town to town the way the churches did: it
+      // arrived with a government, in garrison cities founded for the
+      // purpose, and spread outward from those. Every province the Caliphate
+      // rules is a seed.
+      seedOwner: 'RSH',
+      seedShare: 0.15, // the garrison and its households, not the province
+      vigor: 0.0011,
+      spreadsAlong: 'trade',
+      monthlyCap: 0.004,
+      curve: (y, ctx) => {
+        const f = (ctx && ctx.game && ctx.game.flags) || {};
+        if (!f.jizyaAssessed && !f.conversionPressed) return 0;
+        const base = 1 / (1 + Math.exp(-(y - 800) / 60));
+        return f.conversionPressed ? Math.min(1, base * 2 + 0.15) : base;
+      },
+    },
+  },
+
   // What the era asks of you (SPEC §33) — shown in the realm panel.
   objectives: {
     JUD: [

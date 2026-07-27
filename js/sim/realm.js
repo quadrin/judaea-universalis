@@ -2,11 +2,12 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName } from './military.js';
+import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
 import { FORMABLES } from '../data/formables.js';
+import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
 import { raiseCrisisTo } from './crisis.js';
-import { shiftPopToReligion } from './population.js';
+import { shiftPopToReligion, driftPopToReligion, shareOf, popTotal } from './population.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -291,6 +292,291 @@ export function monthlyIntegration(ctx) {
         });
       }
     } catch (e) { warnOnce('integ:' + i, 'integration tick failed for province', i, e); }
+  }
+}
+
+// ---------------------------------------------------------------- faith drift
+// A faith that no state is sponsoring (SPEC §104). Every conversion path the
+// game had before this one ran through a treasury: `convertProvince` spends
+// influence to bring a province the state ALREADY OWNS to the faith the state
+// ALREADY HOLDS. Nothing modelled a religion crossing a border on its own —
+// which is the only way the largest religious change of the period actually
+// happened.
+//
+// The bookmark owns the politics and the engine owns the arithmetic:
+//
+//   faithDrift: {
+//     christianity: {
+//       from: ['hellenism', 'roman_cult'],   // drawn on freely
+//       resistedBy: { judaism: 0.35 },       // drawn on at (1 − value), and
+//                                            //   only where the faith is
+//                                            //   already the local weather
+//       core: 0.06,                          // the remnant that never goes
+//       seeds: ['Antioch', 'Alexandria'],    // where it is already present
+//       seedOwner: 'RSH',                    // ...and wherever this crown rules
+//       seedShare: 0.012,                    // the congregation a seed keeps
+//       curve: (year, ctx) => 0..1,          // how strong the age's pull is
+//       vigor: 0.0009,                       // the logistic growth constant
+//       spreadsAlong: 'trade',               // sea lanes count as neighbours
+//       monthlyCap: 0.004,                   // the rail: share moved / month
+//     },
+//   }
+//
+// Three properties are deliberate. It is NOT reversible: `convertProvince`
+// can reclaim a province's state faith, and the drift resumes the following
+// month. It moves people (`p.pop` shares) and never writes `p.religion`
+// directly — the majority community names the province, as it always has. And
+// it is gated by `mechanics.faithDrift`, so an age with no missionary religion
+// on the map is untouched.
+
+// The strongest congregation within reach: an adjacent province, or — where
+// the table says the faith travelled by trade — any other stop on a route
+// this province sits on. Christianity was an urban, sea-lane religion before
+// it was a rural one; Alexandria is nearer to Antioch than the Negev is.
+function faithReach(ctx, p, religion, cfg) {
+  const g = ctx.game;
+  let best = 0;
+  const nb = ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[p.id];
+  if (nb) {
+    for (const id of nb) {
+      const q = g.provinces[id];
+      if (!q || q.impassable) continue;
+      const s = shareOf(q, religion);
+      if (s > best) best = s;
+    }
+  }
+  if (cfg.spreadsAlong === 'trade') {
+    for (const route of TRADE_ROUTES) {
+      if (!route || !Array.isArray(route.stops)) continue;
+      if (route.stops.indexOf(p.canon || p.name) < 0 && route.stops.indexOf(p.name) < 0) continue;
+      for (const stop of route.stops) {
+        const q = ctx.prov(stop);
+        if (!q || q === p || q.impassable) continue;
+        const s = shareOf(q, religion) * 0.75; // a lane is thinner than a border
+        if (s > best) best = s;
+      }
+    }
+  }
+  return best;
+}
+
+// One faith's month across the whole map.
+function driftOneFaith(ctx, religion, cfg) {
+  const g = ctx.game;
+  // The age's own pull. `curve` gets the year and the context: a faith whose
+  // spread was switched on by a conquest and priced by a tax needs to read
+  // the flags that conquest set (SPEC §104, the jizya gradient).
+  const strength = clamp(num(typeof cfg.curve === 'function' ? cfg.curve(g.date.y, ctx) : cfg.curve, 0), 0, 1);
+  if (strength <= 0) return;
+  const vigor = num(cfg.vigor, 0.0009);
+  const cap = num(cfg.monthlyCap, 0.004);
+  const seedShare = num(cfg.seedShare, 0.012);
+  // The irreducible remnant of a resisting community, as a share of the
+  // province: below this the drift stops drawing on it entirely.
+  const core = num(cfg.core, 0.06);
+  const seeds = Array.isArray(cfg.seeds) ? cfg.seeds : [];
+  // The draw weights, resolved once: a source in `from` converts freely, a
+  // source in `resistedBy` at what its resistance leaves.
+  const weights = {};
+  for (const r of (Array.isArray(cfg.from) ? cfg.from : [])) weights[r] = 1;
+  const resisted = cfg.resistedBy || {};
+  for (const r of Object.keys(resisted)) weights[r] = clamp(1 - num(resisted[r], 0), 0, 1);
+  const resistedWeights = {};
+  for (const r of Object.keys(resisted)) resistedWeights[r] = weights[r];
+  const freeWeights = {};
+  for (const r of Object.keys(weights)) if (!(r in resisted)) freeWeights[r] = weights[r];
+  const hasFree = !!Object.keys(freeWeights).length;
+  const hasResisted = !!Object.keys(resistedWeights).length;
+  // Where a faith arrives it arrives among the gentiles first — a seed and a
+  // road only ever draw on the freely-converting sources.
+  const arrivalWeights = hasFree ? freeWeights : weights;
+
+  // A faith arriving somewhere takes its first adherents from whoever
+  // converts freely — and where nobody in the province does (a wholly Jewish
+  // or Samaritan town, a Christian city under a new crown) it takes them,
+  // more slowly, from the communities that resist. It is the last kind of
+  // place a religion reaches, not a place it can never reach: Aelia ends the
+  // Roman period with a bishop, and Emesa ends the Umayyad one with a mosque.
+  const arrive = (p, fraction) => {
+    if (fraction <= 0) return 0;
+    const moved = driftPopToReligion(p, religion, arrivalWeights, fraction);
+    if (moved || !hasResisted) return moved;
+    return driftPopToReligion(p, religion, resistedWeights, fraction * 0.5);
+  };
+
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || !Array.isArray(p.pop) || !p.pop.length) continue;
+    try {
+      let local = shareOf(p, religion);
+      // A seed city is where the faith already had a congregation when the
+      // bookmark opens; it gets one the first month the age's pull is real.
+      // `seedOwner` is the other way a religion arrives somewhere — not by
+      // preaching but by governing it: the garrison towns of a conquest are
+      // the faith's own from the day the standards go up, which is the whole
+      // difference between how Christianity spread and how Islam did.
+      const seeded = seeds.indexOf(p.canon || p.name) >= 0
+        || (cfg.seedOwner && p.owner === cfg.seedOwner);
+      if (local <= 0 && seeded && popTotal(p) > 0) {
+        arrive(p, seedShare);
+        local = shareOf(p, religion);
+      }
+      if (local <= 0) {
+        // Arrival is not growth. A faith does not seep into a province a
+        // hundredth of a soul at a time; a congregation is founded there,
+        // once there is a real one near enough to send anybody — and then it
+        // grows like every other congregation. Below that the province is
+        // simply outside the mission's reach this month.
+        const reach = faithReach(ctx, p, religion, cfg);
+        if (reach < 0.05) continue;
+        arrive(p, seedShare * strength);
+        continue;
+      }
+      const reach = faithReach(ctx, p, religion, cfg);
+      // Logistic: a faith grows where it already has carriers and headroom,
+      // and the roads keep feeding it from wherever it is stronger.
+      const rate = Math.min(cap, vigor * strength * (3 * local + reach) * (1 - local));
+      if (rate <= 0) continue;
+      if (hasFree) driftPopToReligion(p, religion, freeWeights, rate);
+      // A community that resists converts late and slowly: not when the
+      // preachers arrive, but once the faith is the weather outside — and
+      // even then at what its own cohesion leaves. This is the clause that
+      // keeps a Jewish Galilee Jewish for centuries while the Greek cities
+      // around it turn.
+      //
+      // How hard it presses depends on whether it has the state. A faith
+      // spreading on its own credit only reaches a resisting community once
+      // it is overwhelmingly the majority around it, and even then barely —
+      // three hundred years of Christian preaching did not empty the Galilee.
+      // A faith that IS the owner's establishment — Theodosius after 380, a
+      // caliphal governor with an assessment roll — presses on everything
+      // that is left the moment it runs out of easy ground, which is the
+      // difference between an argument and a tax.
+      if (hasResisted) {
+        const owner = g.tags[p.owner];
+        const sponsored = !!(owner && owner.alive !== false && owner.religion === religion);
+        let openPool = 0;
+        for (const r of Object.keys(freeWeights)) openPool += shareOf(p, r);
+        const dominance = sponsored
+          ? Math.pow(local / Math.max(local + openPool, 1e-6), 2)
+          : Math.min(1, local * local * 4);
+        if (dominance > 0.01) {
+          // ...and a community has a core that does not go. Every faith on
+          // this map outlasted the empire that pressed it; none of them were
+          // ever converted to the last household, and a mechanic that lets
+          // one vanish is telling a lie about all of them.
+          const w = {};
+          for (const r of Object.keys(resistedWeights)) {
+            if (shareOf(p, r) > core) w[r] = resistedWeights[r];
+          }
+          if (Object.keys(w).length) driftPopToReligion(p, religion, w, rate * dominance);
+        }
+      }
+    } catch (e) { warnOnce('drift:' + i, 'faith drift failed for province', i, e); }
+  }
+}
+
+// The god-fearers (SPEC §104): the pool, drawn on monthly by whoever is
+// entitled to it. The bookmark's `godfearers.weigh(ctx)` returns each
+// claimant's pull, 0..1 — that is where the politics lives (a barred mission
+// returns zero, forever). The engine only decides how much of the pool a
+// given pull actually moves, and scales it by the claimant's presence on the
+// ground: nobody recruits in a city where they have no synagogue and no
+// church.
+function driftGodfearers(ctx, cfg) {
+  const g = ctx.game;
+  const pool = cfg.pool || 'godfearers';
+  let weights = null;
+  try { weights = typeof cfg.weigh === 'function' ? cfg.weigh(ctx) : cfg.weigh; }
+  catch (e) { warnOnce('godfearers:weigh', 'godfearer weights threw', e); return; }
+  if (!weights || typeof weights !== 'object') return;
+  const claimants = Object.keys(weights).filter((r) => num(weights[r]) > 0);
+  if (!claimants.length) return;
+  const cap = num(cfg.monthlyCap, 0.006);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || !Array.isArray(p.pop) || !p.pop.length) continue;
+    try {
+      if (shareOf(p, pool) <= 0) continue;
+      for (const r of claimants) {
+        const presence = Math.min(1, shareOf(p, r) * 4);
+        if (presence <= 0) continue;
+        const rate = clamp(cap * clamp(num(weights[r]), 0, 1) * presence, 0, 1);
+        if (rate <= 0) continue;
+        driftPopToReligion(p, r, { [pool]: 1 }, rate);
+      }
+    } catch (e) { warnOnce('gf:' + i, 'god-fearer draw failed for province', i, e); }
+  }
+}
+
+// A congregation whose co-religionists rule the enemy (SPEC §104). The
+// Sasanian state did not persecute belief; it persecuted defection from the
+// fire and disloyalty to the crown — and a Christian in Ctesiphon was
+// suspected because the Christian emperor was in Constantinople, while a Jew,
+// having no foreign patron at all, generally was not. One rule states both
+// facts, and a schism clears it: the Church of the East declared itself
+// independent of Antioch precisely so the charge would stop being available.
+//
+//   foreignPatron: { christianity: { patron: 'BYZ', unrest: 1.6, minShare: 0.2,
+//                                    freedFlag: 'churchOfTheEastFree',
+//                                    name: 'The Enemy\'s Church' } }
+function monthlyForeignPatronPass(ctx) {
+  const g = ctx.game;
+  const table = ctx.bookmark && ctx.bookmark.foreignPatron;
+  if (!table) return;
+  for (const religion of Object.keys(table)) {
+    const cfg = table[religion] || {};
+    const id = cfg.id || ('foreign_patron_' + religion);
+    const freed = cfg.freedFlag && g.flags && !!g.flags[cfg.freedFlag];
+    const patron = g.tags[cfg.patron];
+    const minShare = num(cfg.minShare, 0.2);
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable) continue;
+      try {
+        const owner = g.tags[p.owner];
+        let suspect = false;
+        if (!freed && owner && owner.alive && patron && patron.alive
+          && owner.religion !== religion && p.owner !== cfg.patron) {
+          const hostile = (owner.atWarWith || []).indexOf(cfg.patron) >= 0
+            || declaredRivals(ctx, p.owner).indexOf(cfg.patron) >= 0;
+          suspect = !!hostile && shareOf(p, religion) >= minShare;
+        }
+        const has = (p.modifiers || []).some((m) => m && m.id === id);
+        if (suspect && !has) {
+          p.modifiers = p.modifiers || [];
+          p.modifiers.push({
+            id, name: cfg.name || 'The Enemy\'s Church', months: -1,
+            effects: { unrest: num(cfg.unrest, 1.5) },
+          });
+        } else if (!suspect && has) {
+          p.modifiers = (p.modifiers || []).filter((m) => !m || m.id !== id);
+        }
+      } catch (e) { warnOnce('patron:' + i, 'foreign-patron pass failed for province', i, e); }
+    }
+  }
+}
+
+// The monthly pass. Two tables, one gate each; a bookmark that declares
+// neither pays nothing.
+export function monthlyFaithDrift(ctx) {
+  if (!mechanicOn(ctx, 'faithDrift')) return;
+  const bm = ctx.bookmark;
+  if (!bm) return;
+  const table = bm.faithDrift;
+  if (table) {
+    for (const religion of Object.keys(table)) {
+      try { driftOneFaith(ctx, religion, table[religion] || {}); }
+      catch (e) { warnOnce('drift:' + religion, 'faith drift failed for', religion, e); }
+    }
+  }
+  if (bm.godfearers) {
+    try { driftGodfearers(ctx, bm.godfearers); }
+    catch (e) { warnOnce('godfearers', 'god-fearer pass failed', e); }
+  }
+  if (mechanicOn(ctx, 'foreignPatron')) {
+    try { monthlyForeignPatronPass(ctx); }
+    catch (e) { warnOnce('patron', 'foreign-patron pass failed', e); }
   }
 }
 

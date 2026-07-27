@@ -188,6 +188,13 @@ export const DEFINES = {
     egyptian:       { name: 'Egyptian Cults',        color: [72, 152, 130], group: 'pagan' },
     christianity:   { name: 'Christianity',          color: [172, 68, 100], group: 'christian' },
     islam:          { name: 'Islam',                 color: [52, 138, 86],  group: 'islamic' },
+    // The theosebeis (SPEC §104): gentiles who kept the sabbath, the food
+    // laws and the ethics of the synagogue without accepting circumcision.
+    // Not a religion with a priesthood — a standing between two of them, and
+    // the recruiting ground both the Jewish and the Christian mission drew
+    // on. Grouped with the pagan cults, because that is what a census, a
+    // governor and an owner's state church all counted them as.
+    godfearers:     { name: 'God-fearers',           color: [150, 132, 120], group: 'pagan' },
   },
 
   // Cultures: groups israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian

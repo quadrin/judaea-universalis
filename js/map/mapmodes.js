@@ -10,6 +10,7 @@
 //               every mapmode and after conquests, without extra API surface.
 
 import { tradeIndex } from '../data/trade.js';
+import { largestMinorityFaith } from '../sim/population.js';
 const GRAY = [128, 128, 128];
 const DEV_LOW = [216, 210, 176];   // #d8d2b0
 const DEV_HIGH = [30, 122, 46];    // #1e7a2e
@@ -193,6 +194,16 @@ export function computeMapmodeColors(ctx, mode) {
         const r = DEFINES.RELIGIONS && DEFINES.RELIGIONS[p.religion];
         if (r && r.color) cA = r.color;
         else warnOnce('rel:' + p.religion, `unknown religion "${p.religion}" on ${p.name}`);
+        // A faith that is spreading without a state behind it (SPEC §104)
+        // moves shares for decades before it moves a label. The mode stripes
+        // the largest minority community once it is a fifth of the province,
+        // so the drift is visible while it is still happening — and so the
+        // last Jewish quarter of a Christianized city stays on the map.
+        const minor = largestMinorityFaith(p);
+        if (minor && minor.share >= 0.2) {
+          const mr = DEFINES.RELIGIONS && DEFINES.RELIGIONS[minor.r];
+          if (mr && mr.color) { cB = mr.color; fl |= 1; }
+        }
         break;
       }
       case 'culture': {

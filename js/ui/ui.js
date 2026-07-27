@@ -972,7 +972,15 @@ export function initUI(staticCtx) {
     }
 
     if (d.retired.length) {
+      // A long campaign retires a lot of pages (SPEC §104): the world spine
+      // runs to 425 and much of it is written for the world in which Rome
+      // won. A list of them is not a list of failures — in a surviving
+      // Judaea it is the opposite — so the page says so before the reader
+      // decides for themselves.
       html += '<div class="chron-year">Chapters that never came</div>';
+      html += '<div class="chron-note">Pages the record kept that this age did not need. '
+        + 'A long list here is not a list of losses — it is the measure of how far '
+        + 'the world has moved off the rails it was given.</div>';
       html += d.retired.map((r) => `<div class="road-retired">`
         + `<span class="road-when">${when(r)}</span> `
         + `<span class="road-retired-name">${esc(r.title)}</span> — ${esc(r.why)}`

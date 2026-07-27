@@ -4429,3 +4429,134 @@ itself.** This section is the handheld pass.
   writes a campaign to the shelf and the shelf opens again, diplomacy buttons
   are thumb-sized, a long value stacks, nothing spills sideways, and landscape
   really becomes a side panel.
+
+## 104. What spreads without a state behind it
+
+Two bookmarks had a hole in them of the same shape. The 132 CE chapter — whose
+conventional dates are the ones historians reach for when asked when Judaism and
+Christianity became two religions — contained the string `christianity` exactly
+zero times, while its world clock stopped in 166 and left every campaign that
+survived running on triggers keyed to Judaea's own state in front of a world
+that had stopped happening. The 614 CE chapter rendered religion entirely as
+politics (who holds Jerusalem, who gets the Cross, whose churches burn) in an
+age whose two great powers each had a state church. And the engine underneath
+both had exactly one conversion path: a state spending influence to convert a
+province it already owned, to the faith it already held. Nothing modelled a
+religion crossing a border on its own, which is the only way the largest
+religious change of the period actually happened.
+
+### The drift (`monthlyFaithDrift`, `sim/realm.js`)
+
+- **A declarative table, per bookmark.** Content owns the politics, the engine
+  owns the arithmetic: `faithDrift: { christianity: { from, resistedBy, core,
+  seeds, seedOwner, seedShare, curve, vigor, spreadsAlong, monthlyCap } }`.
+  `curve(year, ctx)` is the age's own pull — near zero when Bar Kokhba's coins
+  are struck, steepest through the third century, all but complete by
+  Theodosius. Gated by `mechanics.faithDrift`; a bookmark with no table pays
+  nothing.
+- **It moves people, never map paint.** Every write goes through
+  `driftPopToReligion` on `p.pop` shares, and `p.religion` changes only when the
+  largest community changes — so a province is converting for two centuries
+  before it is converted, and the last Jewish quarter of a Christianized city
+  stays on the map because it is a real community and not a label.
+- **Arrival is not growth.** A faith does not seep in a hundredth of a soul at a
+  time: a congregation is founded — at a `seeds` city, anywhere a `seedOwner`
+  crown rules, or wherever there is a real congregation within reach — and then
+  grows logistically like every other congregation. `spreadsAlong: 'trade'`
+  makes a shared route count as adjacency, which is how an urban, sea-lane
+  religion reached Alexandria before it reached the Negev.
+- **Resistance is the whole point.** `from` communities convert freely;
+  `resistedBy` communities convert at what their cohesion leaves, and only once
+  the faith is the weather outside — measured against what is *left* to convert
+  freely, not against the province. How hard it presses depends on whether it
+  has the state: a faith spreading on its own credit barely touches a resisting
+  community (three hundred years of preaching did not empty the Galilee), while
+  a faith that IS the owner's establishment — Theodosius after 380, a caliphal
+  governor with an assessment roll — presses everything left the moment it runs
+  out of easy ground. That is the difference between an argument and a tax.
+- **`core` is the remnant that never goes.** Every faith on this map outlasted
+  the empire that pressed it; a mechanic that lets one vanish to the last
+  household is telling a lie about all of them.
+- **It is not reversible.** `convertProvince` can still reclaim a province's
+  state faith outright, and the drift resumes the following month. A player can
+  change where a religion goes, and how fast, and never whether.
+- **Calibration**: seeded at ~1% in 132, the Greek east passes 2% around 250,
+  8% around 300, a third by 350 and two thirds by 400, with the Galilee, Gerizim
+  and Babylonia still their own — near enough to the demographic estimates, and
+  the resistance clause is what makes the shape rather than the totals.
+
+### The god-fearers
+
+The *theosebeis* — gentiles who kept the sabbath and the ethics without
+accepting circumcision — are a third share inside `p.pop`
+(`godfearers`, seeded in the synagogue cities of the Greek east), drawn on
+monthly by both claimants. `bookmark.godfearers.weigh(ctx)` returns each
+mission's pull; the engine scales it by that mission's presence on the ground
+and moves the pool. Judaism's pull rises with a standing Judaean state, a
+Sanhedrin with an address, a calendar the Land still fixes, and a proselyte
+statute the state defended — and it is **zero, permanently**, once the mission
+is barred.
+
+This turns `ev2_antoninus_rescript` from a relief card into the hinge of the
+chapter. Read the rescript twice: Jews may circumcise *their own sons* — and
+whoever circumcises a man not of that nation suffers the penalty of the
+castrator. `ev2_proselyte_ban` is that second clause. Accepting it buys real
+quiet and closes the mission field forever; refusing keeps the field under a
+capital statute. Nothing later reopens it, because nothing later did.
+
+### The suspicion a foreign patron buys
+
+`foreignPatron: { christianity: { patron: 'BYZ', freedFlag } }` (614) states
+both halves of the Sasanian asymmetry with one rule: a large congregation whose
+co-religionists rule a power its own crown is fighting carries unrest, and one
+whose co-religionists rule nowhere does not. It explains Shapur II's
+persecutions and it explains why Persian Jews, having no emperor over the
+border, were generally safer than Persian Christians — and `ev_p_not_romes_church`
+clears it permanently by schism, which is precisely why the synod was held.
+
+### The content
+
+- **The Christian thread** (`events_132ce_faith.js`, eight cards): Bar Kosiba
+  putting the oath to men who will not curse a rival messiah; the fifteen
+  circumcised bishops of Jerusalem and the gentile sixteenth; the proselyte
+  clause; Marcion expelled and the Hebrew scriptures kept, so the two go on
+  disputing the same inheritance; Trypho; the fourteenth day, which is the
+  churches of Asia taking their year from a court in Galilee; who stayed with
+  the sick in the plague; and Melito preaching the deicide charge in the city
+  with the largest synagogue in the empire.
+- **The world spine** (`events_132ce_world.js`, nineteen cards, 175–425): the
+  two civil wars an eastern court must choose sides in, Ardashir, the universal
+  citizenship, the crisis, Decius's certificates, Valerian kneeling, Palmyra and
+  Aurelian, Armenia converting a decade before Constantine, the Great
+  Persecution through Milan, Nicaea's calendar clause, Julian's foundations, and
+  *Cunctos populos*. The rule for admission is that it happens whichever way the
+  revolt went; the two that do not (`ev2_gallus_revolt`, `ev2_patriarchate_ends`)
+  carry `when` gates and retire into the ledger instead.
+- **Persia** (`events_614ce_persia.js`, five cards): the apostate marzban, the
+  catholicate left vacant rather than martyred, the synod that cuts the middle
+  term out of the charge, the broken oath at Tiberias and the baptism decree,
+  and the jizya as a gradient rather than a sword — which hands `islam` to the
+  same drift engine with `seedOwner: 'RSH'`, because Islam arrived with a
+  government and Christianity did not.
+
+### Housekeeping the spine required
+
+- **Era windows**: all thirty-four triggered cards in the 132 chain now carry
+  `minYear`/`maxYear`. They did not need them while the clock stopped at 166; a
+  campaign that reaches the fourth century must not be handed Akiva's arrest
+  because the world finally satisfied a predicate a hundred and fifty years late.
+- **`retireAffinityCore`**: an event may now annul one of a bookmark's inherited
+  friendships, mirroring `retiredRivalries`. Ardashir uses it — the bond that
+  offered Bar Kokhba silver was Arsacid, and it dies with the Arsacids.
+- **The religion mapmode stripes the largest minority** at 20% or more, so the
+  drift is legible while it is still happening rather than only when a province
+  flips.
+- **The divergence page says what a long retirement list means** before the
+  reader decides for themselves: in a surviving Judaea those pages are the
+  measure of the divergence, not a tally of losses.
+- **Two decisions on the open questions.** There is no `endDate` in the engine
+  and the spine needs none — the last world card is the horizon in practice. And
+  132's `techCeiling` stays at 9: a fourth-century campaign still fielding the
+  professional legion is very nearly right, and a Bar Kokhba campaign that could
+  rush its way to armored lancers would not be.
+- **Regression contract**: `smoke74.mjs`.

@@ -8,7 +8,7 @@ import {
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
-import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites } from './realm.js';
+import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites, monthlyFaithDrift } from './realm.js';
 import { monthlyFactions } from './factions.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
@@ -110,6 +110,7 @@ function monthlyBlock(ctx) {
   safe('integration', () => monthlyIntegration(ctx));
   safe('incorporation', () => monthlyIncorporation(ctx)); // unions weave, or unravel (SPEC §61)
   safe('holySites', () => monthlyHolySites(ctx));
+  safe('faithDrift', () => monthlyFaithDrift(ctx)); // what spreads without a state behind it (SPEC §104)
   safe('missions', () => checkMissions(ctx));
   safe('factions', () => monthlyFactions(ctx)); // the court convenes (SPEC §34)
   safe('claims', () => monthlyClaimFabrications(ctx)); // paid diplomatic operations mature into usable CBs

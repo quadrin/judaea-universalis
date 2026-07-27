@@ -133,6 +133,16 @@ function stagingProvince(ctx) {
 // campaign events may call it again to heal saves that awakened before the
 // fix. Human-held land is never script-taken — the player's wars are their
 // own to fight.
+// A province the sword has just settled changes faith in its PEOPLE, not
+// only in its label (SPEC §56, §104): `p.religion` is derived from the
+// largest community, so writing it alone leaves a town that reverts to its
+// old faith the next time anything normalizes the makeup.
+function makeMuslim(p) {
+  if (!p) return;
+  p.religion = 'islam';
+  if (Array.isArray(p.pop)) for (const e of p.pop) { if (e) e.r = 'islam'; }
+}
+
 function riddaSettlesTheNorth(ctx) {
   const g = ctx.game;
   const humans = Array.isArray(g.humanTags) && g.humanTags.length ? g.humanTags : [g.playerTag];
@@ -142,7 +152,7 @@ function riddaSettlesTheNorth(ctx) {
     if (!p || p.owner !== 'GHA') continue;
     if (humans.indexOf(p.owner) >= 0 || humans.indexOf(p.controller) >= 0) continue;
     ctx.helpers.changeOwner(ctx, name, 'RSH');
-    p.religion = 'islam';
+    makeMuslim(p);
     taken = true;
   }
   if (taken) {
@@ -197,12 +207,12 @@ function awakenCaliphate(ctx) {
   // smaller map, where Yathrib does not exist.
   const yathrib = ctx.prov('Yathrib');
   if (yathrib && yathrib.owner === 'RSH') {
-    yathrib.religion = 'islam';
+    makeMuslim(yathrib);
   } else {
     const tayma = ctx.prov('Tayma');
     if (tayma && tayma.owner !== ctx.game.playerTag && tayma.controller !== ctx.game.playerTag) {
       h.changeOwner(ctx, 'Tayma', 'RSH');
-      tayma.religion = 'islam';
+      makeMuslim(tayma);
     }
   }
   // Open the road before mustering: the field army stands at the northern

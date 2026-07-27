@@ -60,6 +60,66 @@ export function popTotal(p) {
   return s;
 }
 
+// What fraction of a province follows a given faith, 0..1. The one reader
+// every faith-drift trigger needs (SPEC §104): a province is not converted
+// when its majority flips, it is converting the whole time before that, and
+// content wants to gate on the share rather than on the label.
+export function shareOf(p, religion) {
+  const total = popTotal(p);
+  if (!total) return 0;
+  let s = 0;
+  for (const e of p.pop) if (e && e.r === religion) s += num(e.n);
+  return s / total;
+}
+
+// The largest community that is NOT the province's majority faith, as
+// {r, share} — what the religion mapmode stripes and what a drift audit reads.
+export function largestMinorityFaith(p) {
+  const total = popTotal(p);
+  if (!total || !Array.isArray(p.pop) || !p.pop.length) return null;
+  const byFaith = new Map();
+  for (const e of p.pop) {
+    if (!e || !(e.n > 0)) continue;
+    byFaith.set(e.r, num(byFaith.get(e.r)) + num(e.n));
+  }
+  const major = p.pop[0].r;
+  let best = null;
+  for (const [r, n] of byFaith) {
+    if (r === major) continue;
+    if (!best || n > best.n) best = { r, n };
+  }
+  return best ? { r: best.r, share: best.n / total } : null;
+}
+
+// Ambient conversion (SPEC §104): move `fraction` of each NAMED source
+// community into `religion`, keeping its culture. Unlike shiftPopToReligion
+// — the state's missionaries, which draw on every foreign community alike —
+// this draws only where the drift table says a faith actually recruited, and
+// at that source's own rate. `weights` maps a source religion to its share of
+// the full rate (1 = freely, 0.65 = a community that resists).
+// Returns the total headcount moved.
+export function driftPopToReligion(p, religion, weights, fraction) {
+  if (!Array.isArray(p.pop) || !p.pop.length) return 0;
+  const f = clamp(num(fraction, 0), 0, 1);
+  if (f <= 0) return 0;
+  const moved = [];
+  let total = 0;
+  for (const e of p.pop) {
+    if (e.r === religion) continue;
+    const w = clamp(num(weights[e.r], 0), 0, 1);
+    if (w <= 0) continue;
+    const n = Math.round(e.n * f * w);
+    if (n <= 0) continue;
+    e.n -= n;
+    total += n;
+    moved.push({ r: religion, c: e.c, n });
+  }
+  if (!moved.length) return 0;
+  p.pop.push(...moved);
+  normalizePop(p);
+  return total;
+}
+
 // The communal-tension shares against a state religion/culture, 0..1 each.
 // Integration is NOT applied here — the caller scales by (1 - integration).
 export function popTension(ctx, p, owner) {
@@ -123,6 +183,10 @@ const DEMONYMS = {
   judaism: 'Jews', samaritanism: 'Samaritans', hellenism: 'Greeks',
   roman_cult: 'Romans', nabataean: 'Nabataeans', zoroastrianism: 'Zoroastrians',
   egyptian: 'Egyptians', christianity: 'Christians', islam: 'Muslims',
+  // The gentiles who kept the sabbath and the ethics without taking
+  // circumcision (SPEC §104). They are not a faith with a temple; they are
+  // the pool both missions fished in, and they read as people, not as a key.
+  godfearers: 'God-fearers',
 };
 export function communityLabel(DEFINES, r, c) {
   const base = DEMONYMS[r] || ((DEFINES.RELIGIONS || {})[r] ? DEFINES.RELIGIONS[r].name : r);
