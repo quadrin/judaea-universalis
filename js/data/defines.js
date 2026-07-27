@@ -362,6 +362,10 @@ export const DEFINES = {
       ideas: { manpowerMult: 1.15 },
     },
     JOR: {
+      // The name it opens 1948 with. A kingdom holding both banks of the river
+      // drops the preposition in April 1949 (SPEC §107, ev_i_kingdom_of_jordan)
+      // and this tag is renamed in place; one pushed back over the river keeps
+      // the mandate's name.
       name: 'Transjordan', color: [128, 72, 40], religion: 'islam', culture: 'arab_modern', capital: 'Philadelphia',
       description: 'The Arab Legion: small, British-drilled, and the only army in this war that has read its own manuals.',
       ideas: { disciplineMult: 1.12 },

@@ -483,7 +483,9 @@ export const FLAGS = {
     star5(15.6, 8.4, 1.8, '#f2f4f4') +
     star5(17.4, 12, 1.8, '#f2f4f4') +
     star5(15.6, 15.6, 1.8, '#f2f4f4'),
-  // Transjordan: the Hashemite tricolor, red chevron, seven-pointed star.
+  // Transjordan — and Jordan (SPEC §107): the Hashemite tricolor, red chevron,
+  // seven-pointed star. The kingdom changes its NAME in April 1949 and not its
+  // banner; this flag has been the same since 1928 and serves both.
   JOR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
     `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +

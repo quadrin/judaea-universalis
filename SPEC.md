@@ -4715,3 +4715,39 @@ and two here would have opened a civil war with no army in it. Both files now
 carry `spawnRebels`, which asks only whether there is passable ground.
 
 - **Regression contract**: `smoke76.mjs`.
+
+## 107. The preposition
+
+"Transjordan" is not a name, it is a direction: the land ACROSS the Jordan, as
+seen by draftsmen standing in Jerusalem. The chapter opened with the tag named
+Transjordan and it stayed Transjordan forever — through the annexation of the
+West Bank, Black September, the disengagement of 1988 and the treaty at Wadi
+Araba, all of which the chain already narrates using the word "Jordan" in their
+own prose. Only the state's name never moved.
+
+`ev_i_kingdom_of_jordan` (April 1949) renames the tag in place. What makes it
+worth a section rather than a one-line edit is that the rename is a **map fact,
+not a calendar fact**: Amman dropped the preposition because the kingdom now
+stood on both banks, and a Legion pushed back over the river has no reason to
+stop being the country across it. So the card is `date` + `when`, gated on
+Jordan holding at least three of the West Bank cells, and its opposite number —
+`ev_i_still_transjordan` — carries the complementary gate. Exactly one fires;
+the other retires into the divergence ledger, which is where a player who took
+the hill country will find the page the kingdom never got.
+
+The banner does not change: the Hashemite tricolour has been the same since
+1928 and serves both names.
+
+### Two test-coverage gaps this turned up
+
+- **`smoke39` read the era files, not the registry** — the same gap the balance
+  harness had in §105. Its invariant (nothing the player is asked to answer may
+  offer one answer) was therefore silently not applied to any concatenated
+  package. Pointed at `compendium.ERAS`, it immediately caught `ev2_trypho`
+  from §104, which was a one-option card the player was being asked to decide.
+  Both are fixed; the sweep across all seven chapters is now clean.
+- The general lesson, twice over: **a test or tool that names era files by hand
+  stops seeing content the moment a chapter becomes more than one package.**
+  Anything walking the chains should read `compendium.ERAS`.
+
+- **Regression contract**: `smoke75.mjs` (the §107 section).

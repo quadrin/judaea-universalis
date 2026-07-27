@@ -296,6 +296,7 @@ export const EVENTS_132_FAITH = [
   {
     id: 'ev2_trypho',
     title: 'The Dialogue at Ephesus',
+    worldLabel: 'Justin writes the Dialogue with Trypho',
     desc: 'Justin sets it, as a literary matter, in the days just after the war — a '
       + 'philosopher in a cloak meets a learned Jewish refugee walking the colonnade, and '
       + 'they talk for two days. It is a set piece and Trypho gets the lines Justin wants '
@@ -307,6 +308,7 @@ export const EVENTS_132_FAITH = [
       + 'eighteen centuries. They part politely. Neither concedes anything at all.',
     forTag: 'both',
     decider: 'ROM',
+    world: true,
     minYear: 150,
     maxYear: 168,
     trigger: safeTrigger('ev2_trypho', (ctx) =>

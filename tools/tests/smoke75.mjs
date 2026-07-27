@@ -12,7 +12,7 @@ const { ERAS } = await import(R + '/js/data/compendium.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { secedeTagCore } = await import(R + '/js/sim/military.js');
-const { fireEvent, resolveEventOption } = await import(R + '/js/sim/events.js');
+const { fireEvent, resolveEventOption, checkDateEvents } = await import(R + '/js/sim/events.js');
 const { FLAGS } = await import(R + '/js/ui/icons.js');
 
 let failures = 0;
@@ -354,6 +354,68 @@ console.log('== §105: a runtime decider still renders as a notice ==');
   resolveEventOption(ctx, pe.instanceId, 1); // acknowledging is not choosing
   ok(game.tags.SAR.legitimacy < legit,
     'and acknowledging applies the pinned historical course, not the button pressed');
+}
+
+console.log('== §107: Transjordan becomes Jordan, when the map says so ==');
+{
+  const A = byId('ev_i_kingdom_of_jordan');
+  const B = byId('ev_i_still_transjordan');
+  ok(!!A && !!B, 'both halves of the rename are on the calendar');
+  ok(A.date.y === 1949 && A.date.m === 4 && B.date.y === 1949 && B.date.m === 4,
+    'and both sit on the historical month, April 1949');
+  ok(!!A.when && !!B.when && !A.trigger && !B.trigger,
+    'each is date + when — the idiom for "on this date, but only in this world"');
+
+  const fresh = boot('ISR');
+  ok(fresh.game.tags.JOR.name === 'Transjordan',
+    'the kingdom opens 1948 under the name the mandate gave it');
+
+  // The world where the Legion held the hills.
+  const held = boot('ISR');
+  pacify(held.game);
+  held.game.date.y = 1949; held.game.date.m = 4;
+  ok(A.when(held.ctx) && !B.when(held.ctx),
+    'holding both banks fits the rename and retires its opposite');
+  pick(held.ctx, A, 0);
+  ok(held.game.tags.JOR.name === 'Jordan' && !!held.game.flags.kingdomOfJordan,
+    'and the tag is renamed in place — Jordan, not a new state');
+  ok((held.game.tags.JOR.modifiers || []).some((m) => m.id === 'the_two_banks'),
+    'with the more populous half of itself attached');
+
+  // The world where it was pushed back over the river.
+  const lost = boot('ISR');
+  pacify(lost.game);
+  lost.game.date.y = 1949; lost.game.date.m = 4;
+  for (const n of ['Neapolis', 'Sebaste', 'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah',
+    'Bethlehem', 'Hebron', 'Adora', 'Jericho', 'Jerusalem', 'Beit Shemesh',
+    "Modi'in Hills", 'Emmaus', 'Lydda']) {
+    const p = lost.ctx.prov(n);
+    if (p) { p.owner = 'ISR'; p.controller = 'ISR'; }
+  }
+  ok(!A.when(lost.ctx) && B.when(lost.ctx),
+    'a kingdom back on the east bank fits the other card instead');
+  checkDateEvents(lost.ctx);
+  ok(!!lost.game.firedEvents.ev_i_kingdom_of_jordan
+    && !lost.game.pendingEvents.some((pe) => pe.eventId === 'ev_i_kingdom_of_jordan'),
+    'so the rename retires rather than firing');
+  ok((lost.game.retiredChapters || []).some((r) => r.id === 'ev_i_kingdom_of_jordan'),
+    'and the ledger keeps the page the country never got');
+  while (lost.game.pendingEvents.length) {
+    const pe = lost.game.pendingEvents[0];
+    const ev = byId(pe.eventId);
+    try { lost.actions.chooseEventOption(pe.instanceId, (ev && ev.aiOption) || 0); }
+    catch (e) { lost.game.pendingEvents.shift(); }
+  }
+  ok(lost.game.tags.JOR.name === 'Transjordan' && !!lost.game.flags.stillTransjordan,
+    'the kingdom keeps the mandate\'s name, which was always a direction');
+
+  // The prose either side of the rename already matches the name.
+  const early = EV.filter((e) => e && e.date && e.date.y <= 1948
+    && /Transjordan/.test(JSON.stringify(e.options || [])));
+  const late = EV.filter((e) => e && e.date && e.date.y >= 1968
+    && /Transjordan:/.test(JSON.stringify(e.options || [])));
+  ok(early.length > 0 && late.length === 0,
+    'cards before the rename say Transjordan and cards after it do not');
 }
 
 console.log(failures ? `smoke75: ${failures} FAIL` : 'smoke75: ALL PASS');

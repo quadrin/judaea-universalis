@@ -180,9 +180,15 @@ console.log('== every player-facing scripted event offers a real choice (v6.1) =
   // World-history dispatches may stay single-option notices; anything the
   // player is asked to answer must offer at least two answers, and any
   // multi-option event must pin aiOption so harness runs stay historical.
-  for (const era of ['167bce', '67bce', '40bce', '66ce', '132ce', '614ce', '1948']) {
-    const mod = await import(R + '/js/data/events_' + era + '.js');
-    const evs = Object.values(mod).find(Array.isArray) || [];
+  // Read the era REGISTRY, not the era files: a chapter's chain is several
+  // packages concatenated in compendium.js (SPEC §104–§106), and checking the
+  // base file alone silently exempts every one of them from this invariant.
+  const { ERAS } = await import(R + '/js/data/compendium.js');
+  const { GENERIC_EVENTS } = await import(R + '/js/data/events_generic.js');
+  const genericIds = new Set(GENERIC_EVENTS.map((e) => e && e.id));
+  for (const entry of ERAS) {
+    const era = entry.bookmark.id;
+    const evs = entry.events.filter((e) => e && !genericIds.has(e.id));
     const oneOpt = evs.filter((e) => e && !e.world && (!e.options || e.options.length < 2));
     ok(oneOpt.length === 0, era + ': no single-option player events'
       + (oneOpt.length ? ' — ' + oneOpt.map((e) => e.id).join(', ') : ''));

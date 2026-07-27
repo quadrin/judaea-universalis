@@ -336,3 +336,12 @@ reaches 62 BCE, fires all ten cards on their historical dates (Asophon −102,
 Gaza −96, Obodas −93, the queen's reign −76 to −67), ends with Hyrcanus II on
 the throne and the brothers' war open, and reports NO anomalies and no stderr.
 That is the run to repeat when touching the Hasmonean chain.
+
+SPEC §107 (Transjordan becomes Jordan in April 1949, gated on the kingdom
+actually holding both banks) extends `smoke75.mjs` rather than adding a suite.
+It also repaired `smoke39.mjs`, which read the era event FILES by name and so
+never applied its "no single-option player events" invariant to any package
+concatenated in `compendium.js` — the same class of gap as the autorun fix in
+§105. Pointed at the registry it caught a real violation in §104 content. If
+you write a tool or a suite that walks the event chains, read `compendium.ERAS`;
+naming `events_<era>.js` by hand now misses most of three chapters.

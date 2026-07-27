@@ -167,6 +167,24 @@ function syrOwn(ctx) {
   if (alive(ctx, 'SYR')) return 'SYR';
   return null;
 }
+// The hill country west of the river (SPEC §107). Whether a kingdom whose
+// name means "across the Jordan" stops calling itself that depends on one
+// question and only one: is it standing on both banks? These are the cells
+// the Arab Legion actually held in 1949 — the Samarian and Judaean hills, the
+// Jerusalem corridor's eastern half, and the Old City.
+const WEST_BANK = [
+  'Neapolis', 'Sebaste', 'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah',
+  'Bethlehem', 'Hebron', 'Adora', 'Jericho', 'Jerusalem', 'Beit Shemesh',
+  'Modi\'in Hills', 'Emmaus', 'Lydda',
+];
+function westBankHeld(ctx, tag) {
+  let n = 0;
+  for (const name of WEST_BANK) {
+    if (ctx.helpers.controls(ctx, tag, name)) n++;
+  }
+  return n;
+}
+
 // Opinion check in the ev_i_suez idiom: an unrecorded opinion between these
 // courts is old hatred, not indifference.
 function hostileToward(ctx, a, b, threshold) {
@@ -1241,6 +1259,118 @@ export const EVENTS_1948 = [
           setOpinionDelta(g, 'EGY', 'JOR', -10);
           setOpinionDelta(g, 'SYR', 'JOR', -10);
           ctx.helpers.chronicle(ctx, 'era', 'The Jericho Conference crowns Abdullah quietly — the notables paid, the League merely irritated.');
+        }),
+      },
+    ],
+  },
+
+  // ── 9d.2 ──────────────────────────────────────────────────────────────────
+  // The kingdom changes its name (SPEC §107). "Transjordan" is a description
+  // written from the other side of the river — the land ACROSS the Jordan,
+  // as the mandate's draftsmen in Jerusalem saw it. Once the Legion is
+  // holding Nablus and Hebron and the Old City, the name describes half the
+  // country, and on the 26th of April 1949 Amman drops the preposition. The
+  // rename is therefore not a calendar fact but a MAP fact, and it is gated
+  // on one: a kingdom that has been pushed back over the river keeps the name
+  // the mandate gave it, and the divergence gets its own page.
+  {
+    id: 'ev_i_kingdom_of_jordan',
+    title: 'The Preposition Is Dropped',
+    worldLabel: 'Transjordan becomes the Hashemite Kingdom of Jordan',
+    desc: 'The name was always a direction. Trans-Jordan: the country on the far side '
+      + 'of the river, which is only the far side if you are standing in Jerusalem, '
+      + 'and the men who drew it were. For twenty-eight years it described a desert '
+      + 'emirate with one railway and a subsidy, and now it describes half of what '
+      + 'the King actually rules — the Legion is in Nablus and Hebron and the walls '
+      + 'of the Old City, the Jericho notables have proclaimed him, and the armistice '
+      + 'signed at Rhodes three weeks ago wrote the line where his soldiers were '
+      + 'standing. So the parliament in Amman strikes the preposition out and the '
+      + 'kingdom becomes, simply, Jordan: a name that claims both banks by refusing '
+      + 'to say which one it is on. The formal act of union comes a year later and '
+      + 'exactly two governments in the world recognize it. Everyone uses the name '
+      + 'regardless, which is how names work.',
+    forTag: 'both',
+    decider: 'JOR',
+    date: { y: 1949, m: 4 },
+    world: true,
+    major: true,
+    when: safeTrigger('ev_i_kingdom_of_jordan:when', (ctx) =>
+      alive(ctx, 'JOR') && westBankHeld(ctx, 'JOR') >= 3),
+    aiOption: 0,
+    historical: 'The kingdom was renamed on 26 April 1949; the West Bank was formally annexed a year later.',
+    options: [
+      {
+        label: 'One kingdom, and no preposition',
+        tooltip: 'Transjordan becomes the Hashemite Kingdom of Jordan: +10 legitimacy, +1 stability and "The Two Banks" permanently (+8% income, +10% manpower — the kingdom has just acquired the more populous half of itself). Cairo and Damascus cool a further 15 toward Amman; the League will spend four years arguing about a name.',
+        effects: guard('ev_i_kingdom_of_jordan:0', (ctx) => {
+          const g = ctx.game;
+          ctx.helpers.rebrandTag(ctx, 'JOR', { name: 'Jordan' });
+          ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 10, stability: 1 });
+          ctx.helpers.addTagModifier(ctx, 'JOR', {
+            id: 'the_two_banks', name: 'The Two Banks', months: -1,
+            effects: { incomeMult: 1.08, manpowerMult: 1.1 },
+          });
+          setOpinionDelta(g, 'EGY', 'JOR', -15);
+          setOpinionDelta(g, 'SYR', 'JOR', -15);
+          g.flags.kingdomOfJordan = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Amman strikes the preposition out: the Hashemite Kingdom of Transjordan becomes the Hashemite Kingdom of Jordan, a name that claims both banks by refusing to say which one it is on.');
+        }),
+      },
+      {
+        label: 'Keep the mandate\'s name and annex nothing',
+        tooltip: 'The King holds the ground and declines the title: Jordan keeps the name Transjordan, +60 talents and +15 governance points of British goodwill, and Cairo and Damascus cool only 5 — but no "Two Banks" (the west bank is administered, not incorporated, and pays like an occupation rather than a province).',
+        effects: guard('ev_i_kingdom_of_jordan:1', (ctx) => {
+          const g = ctx.game;
+          ctx.helpers.adjust(ctx, 'JOR', { treasury: 60, gov: 15 });
+          ctx.helpers.addTagModifier(ctx, 'JOR', {
+            id: 'administered_not_annexed', name: 'Administered, Not Annexed', months: -1,
+            effects: { incomeMult: 0.96, unrestAll: 0.5 },
+          });
+          setOpinionDelta(g, 'EGY', 'JOR', -5);
+          setOpinionDelta(g, 'SYR', 'JOR', -5);
+          g.flags.nameKept = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Amman keeps the mandate\'s name and administers the west bank without incorporating it; the League is mollified and the hill country is not.');
+        }),
+      },
+    ],
+  },
+
+  // ── 9d.3 ──────────────────────────────────────────────────────────────────
+  // The other world: the Legion was pushed back over the river, so there is
+  // no second bank and no reason to stop being the country across the first
+  // one. This card is the divergence's own page — it fires exactly when the
+  // one above retires.
+  {
+    id: 'ev_i_still_transjordan',
+    title: 'Still the Far Side of the River',
+    worldLabel: 'Transjordan keeps its name',
+    desc: 'The parliament in Amman had a bill drafted. It is not moved. There is no '
+      + 'point in a kingdom on both banks announcing itself when the Legion is back '
+      + 'on the east one and the hill country is somebody else\'s armistice line, and '
+      + 'the King — who wanted Jerusalem more than he wanted Palestine and has now '
+      + 'been told he may have neither — spends the spring writing to London about a '
+      + 'subsidy. Transjordan keeps the name the mandate gave it, which was always a '
+      + 'direction rather than a country, and goes on being the thing the direction '
+      + 'points away from.',
+    forTag: 'both',
+    decider: 'JOR',
+    date: { y: 1949, m: 4 },
+    world: true,
+    when: safeTrigger('ev_i_still_transjordan:when', (ctx) =>
+      alive(ctx, 'JOR') && westBankHeld(ctx, 'JOR') < 3),
+    aiOption: 0,
+    options: [
+      {
+        label: 'The bill is not moved',
+        tooltip: 'Transjordan keeps its name and its subsidy: +80 talents and +10 governance points from London, −10 legitimacy, and "The Kingdom That Stayed Small" (−5% manpower) — a desert emirate with one railway, which is what it was in 1921 and what the war has left it.',
+        effects: guard('ev_i_still_transjordan:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JOR', { treasury: 80, gov: 10, legitimacy: -10 });
+          ctx.helpers.addTagModifier(ctx, 'JOR', {
+            id: 'kingdom_that_stayed_small', name: 'The Kingdom That Stayed Small', months: -1,
+            effects: { manpowerMult: 0.95 },
+          });
+          ctx.game.flags.stillTransjordan = true;
+          ctx.helpers.chronicle(ctx, 'era', 'With the Legion back on the east bank there is no second bank to announce: Transjordan keeps the name the mandate gave it.');
         }),
       },
     ],
