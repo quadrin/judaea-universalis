@@ -164,5 +164,42 @@ console.log('== §121: played forward, the silence is gone ==');
     + (late.join(', ') || 'none') + ')');
 }
 
+console.log('== §122: the 66 chapter continues on BOTH its roads, separately ==');
+{
+  const { EVENTS_66_AFTER } = await import(R + '/js/data/events_66ce_after.js');
+  const EV66 = (ERAS.find((e) => e.bookmark.id === '66ce') || {}).events || [];
+  const ids = new Set(EV66.map((e) => e && e.id));
+  ok(EVENTS_66_AFTER.every((e) => ids.has(e.id)),
+    'the continuation is wired into the 66 chain (' + EVENTS_66_AFTER.length + ' cards)');
+  const fallen = EVENTS_66_AFTER.filter((e) => /^ev_a_/.test(e.id));
+  const stood = EVENTS_66_AFTER.filter((e) => /^ev_b_/.test(e.id));
+  ok(fallen.length >= 3 && stood.length >= 3,
+    'and it is two arcs, not one: ' + fallen.length + ' for the fallen House, '
+    + stood.length + ' for the standing one');
+  ok(EVENTS_66_AFTER.every((e) => e.world === true && !!e.when),
+    'every card is a guarded world notice');
+  const yrs = EVENTS_66_AFTER.map((e) => e.date && e.date.y).filter(Number.isFinite);
+  ok(Math.max(...yrs) >= 130,
+    'reaching ' + Math.max(...yrs) + ' — the year Aelia was founded in the other history');
+
+  // The point the user asked for: the continuations BRANCH. Each road forks at
+  // Trajan's war, and the forks are not the same fork.
+  const burning = EVENTS_66_AFTER.find((e) => e.id === 'ev_a_the_east_is_burning');
+  const flank = EVENTS_66_AFTER.find((e) => e.id === 'ev_b_the_flank_of_the_war');
+  ok(burning && burning.options.length >= 2,
+    'the fallen road forks on whether the land rises with the diaspora ('
+    + (burning ? burning.options.length : 0) + ' answers)');
+  ok(flank && flank.options.length >= 3,
+    'and the standing road forks three ways on the flank of Trajan\'s war ('
+    + (flank ? flank.options.length : 0) + ' answers)');
+
+  // Mutual exclusion, structurally: the two arcs read opposite markers.
+  const src = readFileSync(R + '/js/data/events_66ce_after.js', 'utf8');
+  ok(/function houseFell[\s\S]*?templeBurned[\s\S]*?!flag\(ctx, 'secondKingdom'\)/.test(src),
+    'the fallen arc refuses a campaign that also stood');
+  ok(/function houseStood[\s\S]*?secondKingdom[\s\S]*?!flag\(ctx, 'templeBurned'\)/.test(src),
+    'and the standing arc refuses one that also fell');
+}
+
 console.log(failures ? `smoke84: ${failures} FAIL` : 'smoke84: ALL PASS');
 process.exit(failures ? 1 : 0);

@@ -427,3 +427,8 @@ Its last section plays 175 AI years, so it sits with smoke78/80/81 among the
 slow suites. If you add a chapter, give its bookmark a `generationHorizon` in
 the same commit — smoke84 asserts every one of them has it, because a chapter
 without one lets its revolt cards fire a century later.
+
+SPEC §122 extends `smoke84.mjs` to the 66 CE continuation. The assertion worth
+knowing about is that the two arcs must REFUSE each other — `ev_a_*` for the
+fallen House, `ev_b_*` for the standing one — so a card that starts firing on
+both roads shows up here rather than as extra content in a playthrough.

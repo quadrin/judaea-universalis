@@ -187,7 +187,10 @@ export const CHAPTER_PATHS = Object.freeze([
   Object.freeze({
     id: '66ce',
     title: 'The Great Revolt',
-    lastYear: 96,
+    // SPEC §122 pushed this out from 96. Both roads used to stop at Domitian's
+    // death; both now run to 130, the year Aelia was founded in the history
+    // that produced Bar Kokhba.
+    lastYear: 130,
     forks: [
       Object.freeze({
         id: 'how_the_revolt_ends',
@@ -195,15 +198,67 @@ export const CHAPTER_PATHS = Object.freeze([
         roads: [
           Object.freeze({
             id: 'house_falls', name: 'The Ninth of Av',
-            marker: 'templeBurned', entry: 'ev_temple_burns', terminal: 'ev_yavneh_academy',
-            note: 'Rome storms the city; the sages begin again at Yavneh.',
+            marker: 'templeBurned', entry: 'ev_temple_burns',
+            terminal: 'ev_a_a_city_with_another_name',
+            note: 'Rome storms the city; the sages begin again at Yavneh, and SPEC §122 carries '
+              + 'the road on to the surveyors laying out Aelia in 130.',
           }),
           Object.freeze({
             id: 'second_kingdom', name: 'The House That Stood',
             marker: 'secondKingdom', entry: 'ev_house_that_stood',
-            terminal: 'ev_children_of_the_war',
+            terminal: 'ev_b_no_aelia',
             note: 'Twelve cards that were written and, until SPEC §112 gave risings an ending, '
-              + 'had never once been reachable in play.',
+              + 'had never once been reachable in play — and SPEC §122 carries them on to a 130 '
+              + 'in which there is no ruin to found a colony on.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_east_rises_without_a_state',
+        question: 'Cyrene is burning and the letters reach Yavneh. Does the land rise?',
+        requires: 'templeBurned',
+        roads: [
+          Object.freeze({
+            id: 'joined_the_rising', name: 'The Hour Has Come',
+            marker: 'joinedTheRising', entry: 'ev_a_the_east_is_burning',
+            terminal: 'ev_a_a_city_with_another_name',
+            note: 'SPEC §122. Judaea rises with the diaspora while Trajan is across the Tigris, '
+              + 'and the schools that opposed it are broken by it.',
+          }),
+          Object.freeze({
+            id: 'refused_the_rising', name: 'The Hour Has Not Come',
+            marker: 'refusedTheRising', entry: 'ev_a_the_east_is_burning',
+            terminal: 'ev_a_a_city_with_another_name',
+            note: 'SPEC §122. The academy forbids it in writing. The land is spared what Cyrene '
+              + 'is not, and the communities that burned know who answered them and how.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_flank_of_trajans_war',
+        question: 'Trajan is at the Gulf and the East has risen behind him. A kingdom sits on the road home.',
+        requires: 'secondKingdom',
+        roads: [
+          Object.freeze({
+            id: 'road_held_open', name: 'The Road Held Open',
+            marker: 'roadHeldOpen', entry: 'ev_b_the_flank_of_the_war',
+            terminal: 'ev_b_no_aelia',
+            note: 'SPEC §122. The army comes home through a Jewish kingdom, and the communities '
+              + 'that rose know exactly who did not come.',
+          }),
+          Object.freeze({
+            id: 'road_shut', name: 'The Road Is Shut',
+            marker: 'roadShut', entry: 'ev_b_the_flank_of_the_war',
+            terminal: 'ev_b_no_aelia',
+            note: 'SPEC §122. Neutrality with teeth: a neutral on your retreat route is a threat '
+              + 'by geometry whatever it intends.',
+          }),
+          Object.freeze({
+            id: 'rose_with_the_east', name: 'With the Whole East',
+            marker: 'roseWithTheEast', entry: 'ev_b_the_flank_of_the_war',
+            terminal: 'ev_b_no_aelia',
+            note: 'SPEC §122. The kingdom rises with the emperor on the wrong side of it, and '
+              + 'the army that took Ctesiphon has to come home through a hostile country.',
           }),
         ],
       }),

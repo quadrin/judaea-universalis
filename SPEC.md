@@ -5570,3 +5570,62 @@ Parthian question becomes a two-road fork like any other.
   horizon, that the three late-firing cards have no window of their own so the
   horizon is what stops them, and which plays 175 years to confirm all five
   continuation cards fire and no revolt card fires past −60.
+
+## 122. Both roads out of the Great Revolt keep going
+
+The 66 chapter's last card is `ev_domitian_dies` in 96, and then the same
+silence §121 found at the edge of 167. What makes this edge worse is that 66 has
+**two roads**, and both arrive at 96 with unfinished business — so a single
+continuation would have been wrong twice over.
+
+The road where the House fell ends at Yavneh, with a nation that has just
+discovered it can survive without a Temple and does not yet know for how long.
+The road where the House stood — which SPEC §112 made reachable at all — ends
+with a sovereign Jewish kingdom holding a Roman frontier and a Parthian border,
+thirty years before the largest war Rome ever fought on it.
+
+Both run into the same three decades, and those decades contain the event that
+decides everything after them: **Trajan's Parthian war of 114–117 and the rising
+that broke it.** The diaspora revolt was retired as a playable chapter in v5.1
+(SPEC §50) for good reasons — it barely touched Judaea proper and wore a frame
+it never fit. It fits perfectly here, because here it is not the chapter. It is
+the question each road has to answer, from opposite ends of the same war.
+
+**The fallen road** answers it as a subject people whose surviving authority is
+a school. *A School, and a Century to Fill* (100) asks what Yavneh decides the
+nation is FOR now that the answer is no longer "to hold the country": the Law,
+which can be carried — or a debt kept in the curriculum, every tractate on
+sacrifice taught as law in abeyance, which keeps the nation mobilisable and is
+precisely what Rome will eventually notice. Then *The East Is Burning* (116):
+Cyrene is being depopulated, Salamis is destroyed, and the letters are arriving
+at an academy that has spent thirty years teaching that the nation survives by
+not doing this. Rise, and be quoted for a thousand years by people who did not
+have to decide — or forbid it in writing and be hated for it by the communities
+that burned. *A City With Another Name* (130) closes on the surveyors, and a
+nation that kept the debt **and** refused the rising is the most dangerous
+combination the board can produce.
+
+**The standing road** answers it as a state on the invasion route. *The Soldier
+Emperor* (98) brings staff officers asking friendly questions about roads,
+granaries and fords: build them and be inside Rome's war planning, which is
+protection and a commitment nobody asked you to sign — or answer politely and
+build nothing, because a kingdom off the supply route is also off the retreat
+route. Then *The Flank of the War* (116), the three-way fork the chapter was
+always missing: hold the corridor open and let the army come home through a
+Jewish kingdom; shut it and sit on it, since a neutral on your retreat route is
+a threat by geometry whatever it intends; or rise with the whole East while the
+emperor is at the Persian Gulf. *No City of Another Name* (130) closes it — the
+imperial party is received, shown the sights, given a very good dinner, and the
+only Roman mark on Jerusalem this century is an improved aqueduct.
+
+The two arcs refuse each other structurally: `houseFell` requires
+`templeBurned && !secondKingdom`, `houseStood` the reverse. Neither re-tests
+live geography, per §119 — a road entered in 70 CE is still the road a player is
+on in 115 whatever the map has done since.
+
+The chapter's `lastYear` moves from 96 to 130 and it gains two forks, one per
+road, which is the shape the remaining chapter edges want too.
+
+- **Regression contract**: `smoke84.mjs` (the §122 section), which asserts the
+  continuation is two arcs rather than one, that each forks, and that the arcs
+  refuse each other.
