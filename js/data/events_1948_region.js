@@ -80,6 +80,19 @@ function spawnAt(ctx, tag, provNames, opts) {
   return null;
 }
 
+// A rebel host stands wherever there is ground: REB controls nothing, so a
+// spawn helper that tests control silently spawns nothing at all.
+function spawnRebels(ctx, provNames, opts) {
+  if (!alive(ctx, 'REB')) return null;
+  for (const n of provNames) {
+    const p = ctx.prov(n);
+    if (!p || p.impassable) continue;
+    const id = ctx.helpers.spawnArmy(ctx, 'REB', n, opts);
+    if (id) return n;
+  }
+  return null;
+}
+
 function unrestAcross(ctx, tag, names, mod) {
   let touched = 0;
   for (const n of names) {
@@ -726,7 +739,7 @@ export const EVENTS_1948_REGION = [
           unrestAcross(ctx, sy, SYRIA_CORE, {
             id: 'the_rising', name: 'The Rising', months: 240, effects: { unrest: 3 },
           });
-          spawnAt(ctx, 'REB', ['Apamea', 'Beroea', 'Emesa'], {
+          spawnRebels(ctx, ['Apamea', 'Beroea', 'Emesa'], {
             inf: 6, name: 'The Fighting Vanguard',
             general: { name: 'Adnan Uqla', fire: 2, shock: 3, maneuver: 2 },
           });

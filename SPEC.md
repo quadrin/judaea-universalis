@@ -4646,3 +4646,72 @@ carrying and retires the rounds that belonged to the zone.
   back to the live board and cache the hit.
 
 - **Regression contract**: `smoke75.mjs`.
+
+## 106. The royal century
+
+The Maccabean chapter carries the revolt magnificently and then thins out
+exactly where the state it made becomes a kingdom. It had Hyrcanus dying full
+of years, Aristobulus taking the diadem, Salome opening the prisons and
+crowning Jannaeus — and then, for a twenty-seven-year reign, three cards: the
+citrons at the altar, the Seleucid king the rebels invited, and the eight
+hundred crosses. The wars were missing entirely. And Salome Alexandra — the
+only woman ever to rule this kingdom, the only Hasmonean to die in bed with the
+country at peace — was crowned by the deathbed card and then had nothing happen
+in her nine years at all. Four hundred years of dynasty ended in a flag.
+
+`events_167bce_kings.js` is that century, ten cards from 103 to 67 BCE.
+
+### The wars of Alexander Jannaeus
+
+- **Asophon** (−103): the new king besieges Ptolemais, Ptolemais sends to
+  Cyprus, and Ptolemy Lathyrus destroys the Judaean army on the Jordan. Eight
+  years after it started calling itself a kingdom, Judaea has no army.
+- **Ananias** (−102): Cleopatra III comes north to a country lying open, and a
+  Jewish general in Egyptian service tells her that annexing Judaea would cost
+  her Alexandria. She listens. The refusal branch is the world where she does
+  not — and Egypt buys a province at the price the general named.
+- **Gaza** (−96): a year's siege, a gate opened by treachery, and the choice
+  between levelling the city (the record) and keeping the terminus of the
+  incense road. The largest Jewish state between Solomon and 1948, and an army
+  that has learned to do this at Gaza is one a king can be tempted to use at
+  home.
+- **Obodas** (−93): the ravines, the camels driven into the defile, and a king
+  who reaches Jerusalem alone — which turns a quarrel about a festival into six
+  years of civil war between Jews.
+
+### The queen
+
+- **A queen cannot offer the sacrifice** (−76): the crown and the high
+  priesthood — the fusion the whole Hasmonean idea rests on — come apart
+  because a woman cannot stand at the altar. It is meant as an administrative
+  convenience and it is the end of the dynasty's constitutional premise.
+- **Simeon ben Shetach** (−75): the Pharisees back in the Chamber, a house of
+  study in every town — and the reckoning against the men who advised the
+  crosses, which is precisely where her younger son gets his party. The pardon
+  branch is the one card in the chain that materially changes 67 BCE.
+- **The queen's establishment** (−74): she doubles the army, garrisons the
+  fortresses, pays the neighbouring princes, and then fights nobody for nine
+  years. Peace bought with a standing army is still bought.
+- **Tigranes at Ptolemais** (−69): the largest army the kingdom has ever had
+  pointed at it, turned back by presents and by Lucullus taking Tigranocerta a
+  thousand miles away. The first time Judaea's fate is decided by a Roman
+  general who has never heard of it.
+- **Twenty-two fortresses** (−68) and **the last reign that ended in bed**
+  (−67): Aristobulus leaves the city at night, the queen dies at seventy-three,
+  and the brothers meet at Jericho — which is the exact state the 67 BCE
+  chapter opens in, with a pretender host in the field and Hyrcanus II on the
+  throne. The council branch averts the war and hands Pompey one state instead
+  of two, which is not the same as handing him a problem.
+
+Every card resolves the crown at runtime, so a campaign that formed a greater
+kingdom still gets its royal century, and one with nobody in Jerusalem retires
+it rather than narrating a king who is not there.
+
+### One bug the batch turned up
+
+`spawnAt` picks the first province a tag CONTROLS — which is correct for a
+state and silently useless for rebels, who control nothing. Two cards in §105
+and two here would have opened a civil war with no army in it. Both files now
+carry `spawnRebels`, which asks only whether there is passable ground.
+
+- **Regression contract**: `smoke76.mjs`.

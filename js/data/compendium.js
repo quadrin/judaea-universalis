@@ -5,6 +5,7 @@
 // it, so the two can never drift. Zero DOM; data-only imports.
 import { BOOKMARK_167 } from './bookmark_167bce.js';
 import { EVENTS_167 } from './events_167bce.js';
+import { EVENTS_167_KINGS } from './events_167bce_kings.js';
 import { BOOKMARK_67 } from './bookmark_67bce.js';
 import { EVENTS_67 } from './events_67bce.js';
 import { BOOKMARK_40 } from './bookmark_40bce.js';
@@ -24,7 +25,9 @@ import { EVENTS_1948_REGION } from './events_1948_region.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 
 export const ERAS = [
-  { bookmark: BOOKMARK_167, events: EVENTS_167.concat(GENERIC_EVENTS) },
+  // The Maccabean chapter carries the royal century beside it (SPEC §106):
+  // the wars of Alexander Jannaeus and the nine years of Salome Alexandra.
+  { bookmark: BOOKMARK_167, events: EVENTS_167.concat(EVENTS_167_KINGS, GENERIC_EVENTS) },
   { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
   { bookmark: BOOKMARK_40, events: EVENTS_40.concat(GENERIC_EVENTS) },
   { bookmark: BOOKMARK_66, events: EVENTS_66.concat(GENERIC_EVENTS) },

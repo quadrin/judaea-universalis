@@ -220,7 +220,9 @@ expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
 break, and The Chapters panel in a real browser. `uitest36.mjs` owns the phone pass (SPEC §103) and is the one to run when
 touching chrome: it boots a real 390×844 touch context, and its landscape
-section resizes to 844×390 in the same run. `smoke75.mjs` owns the SPEC §105 batch (the secession primitive and the
+section resizes to 844×390 in the same run. `smoke76.mjs` owns the SPEC §106 royal century (the wars of Alexander Jannaeus,
+the nine years of Salome Alexandra, and the hand-off into the 67 BCE chapter).
+`smoke75.mjs` owns the SPEC §105 batch (the secession primitive and the
 UAR breaking into Egypt and Syria, the SAR tag and its own breakup, the Suez
 crisis, Eli Cohen, the Iranian revolution, and the northern border from the
 Beqaa to the Blue Line). `smoke74.mjs` owns the SPEC §104 religion batch (the
@@ -324,3 +326,13 @@ century. That is the world spine doing its job (Ardashir, the crisis, Palmyra)
 rather than a regression: those kingdoms did not survive the third century
 either. It is far outside the eight-year contract and is recorded here so the
 next person does not go looking for a bug.
+
+The SPEC §106 royal century re-ran the 8-year harness with no change to the
+anomaly set (167 PAR + HAS BLEEDING · 67 ROM SNOWBALL + SEL DEAD · 40 HER
+BLEEDING · 66 none · 132 JUD SNOWBALL · 614 GHA BLEEDING · 1948 none), which is
+expected: the new cards begin in 103 BCE, sixty-four years past an eight-year
+run. The run that exercises them is `node tools/autorun.mjs 105 167bce` — it
+reaches 62 BCE, fires all ten cards on their historical dates (Asophon −102,
+Gaza −96, Obodas −93, the queen's reign −76 to −67), ends with Hyrcanus II on
+the throne and the brothers' war open, and reports NO anomalies and no stderr.
+That is the run to repeat when touching the Hasmonean chain.
