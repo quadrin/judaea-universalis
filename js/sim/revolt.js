@@ -420,6 +420,89 @@ export function monthlyPretenders(ctx) {
   }
 }
 
+// ------------------------------------------------------------- the burn-out
+// SPEC §112. A rising had exactly one way to end: be beaten in the field. That
+// is fine for a pretender — his host is the whole argument, and `monthlyPretenders`
+// above settles him either way — but a peasant or religious band that takes a
+// town and is simply left alone had no ending at all. It sat there.
+//
+// That is not a cosmetic stall. Income and manpower (economy.js) and every
+// recruitment order (recruitment.js) require a province to be owned AND
+// controlled, so a realm whose provinces are all rebel-held earns nothing,
+// grows nothing, and can raise nothing — it cannot build the army it would need
+// to take its own country back. It is a terminal state with no exit, and it
+// reads to the player as the chapter going quiet: the 66 CE Judaea that has
+// beaten Rome off, owns sixteen provinces, controls none of them, and can
+// therefore never satisfy a single card that asks whether it holds Jerusalem.
+//
+// So: a band that holds a province with nobody contesting it burns out. Men
+// melt away once the grievance that raised them is spent, and faster the longer
+// they have been sitting; when the last of them is gone the province answers to
+// its owner again. `rebelBurnoutMonths` is the grace period before it starts,
+// `rebelHoldMaxMonths` the hard ceiling no rising may pass. Neither number can
+// make a rising harmless — a band that is winning is reinforced by the unrest
+// that raised it, and a realm that has genuinely lost its country still has to
+// wait years — but neither can a rising outlast the state any more.
+export function monthlyRisings(ctx) {
+  const g = ctx.game;
+  const grace = R(ctx, 'rebelBurnoutMonths', 24);
+  const ceiling = R(ctx, 'rebelHoldMaxMonths', 72);
+  const calm = R(ctx, 'rebelBurnoutUnrest', 4);
+  const rate = R(ctx, 'rebelBurnoutRate', 0.12);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable) continue;
+    const owner = g.tags[p.owner];
+    // Only a rising against a living owner burns out. Ownerless land and a
+    // dead court are somebody else's problem.
+    if (p.controller !== 'REB' || p.owner === 'REB' || !owner || owner.alive === false) {
+      if (p.rebelHeldMonths) p.rebelHeldMonths = 0;
+      continue;
+    }
+    p.rebelHeldMonths = num(p.rebelHeldMonths) + 1;
+    // A pretender's host is settled by its own clock, not this one.
+    if (p.revoltType === 'pretender' && g.pretenders && g.pretenders[p.owner]) continue;
+    const held = num(p.rebelHeldMonths);
+    const over = held >= ceiling;
+    // Still angry and still inside the grace period: the band holds.
+    if (!over && (held < grace || num(p.unrest) > calm)) continue;
+    let men = 0;
+    let last = null;
+    for (const id of Object.keys(g.armies)) {
+      const a = g.armies[id];
+      if (!a || a.tag !== 'REB' || a.prov !== i) continue;
+      // A band in a battle is being answered the old way; leave it to the field
+      // — but only up to the ceiling. An unbounded exemption is the same
+      // immortality bug in miniature: one stale `inBattle` and the province is
+      // held for good. A host that has sat on a town for six years is not in a
+      // battle in any sense the word covers.
+      if (a.inBattle && !over) { men = -1; break; }
+      a.men = over ? 0 : Math.max(0, Math.round(num(a.men) * (1 - rate)));
+      if (a.men < 200) a.men = 0;
+      if (a.men <= 0) delete g.armies[id]; else { men += a.men; last = a; }
+    }
+    if (men < 0) continue;
+    if (men > 0) continue;
+    // The last of them is gone (or there was never a band here at all, only a
+    // flipped controller): the province answers to its owner again.
+    changeControllerCore(ctx, p, p.owner);
+    p.rebelHeldMonths = 0;
+    p.revoltType = null;
+    p.revoltProgress = 0;
+    p.revoltCooldownMonths = Math.max(num(p.revoltCooldownMonths), 12);
+    p.unrest = Math.max(0, num(p.unrest) - 2);
+    if (p.owner === g.playerTag) {
+      ctx.bus.emit('notify', {
+        title: 'The rising in ' + p.name + ' is spent',
+        text: 'The band that held ' + p.name + ' has melted away — men go back to the '
+          + 'harvest, and the province answers to its own again. It will be '
+          + 'a year before anything can be raised here.',
+        type: 'good', provName: p.name,
+      });
+    }
+  }
+}
+
 function crownThePretender(ctx, tag, pr, cap) {
   const g = ctx.game;
   const t = g.tags[tag];

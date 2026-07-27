@@ -377,3 +377,10 @@ tools/autorun.mjs 105 167bce` now reports ROM and PAR as SNOWBALL. That is not
 a regression to chase: the harness measures growth, and Rome and Parthia
 growing over the second century BCE is the thing §111 exists to make happen.
 The 8-year set is unchanged.
+
+SPEC §112 adds `smoke79.mjs` (a rising has to end). Its last section plays
+thirty AI years of the 66 CE chapter, so it is slower than most; the sections
+before it are pure `monthlyRisings` ticks and are instant. Note that it
+deliberately asserts what does NOT burn out as well as what does — a dead
+owner's province, a pretender's host, and a band inside its grace period all
+keep what they took, and loosening any of those is a test failure by design.

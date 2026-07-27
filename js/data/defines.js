@@ -621,6 +621,13 @@ export const DEFINES = {
     pretenderHoldMonths: 6,   // a claimant holding the capital this long is crowned
     pretenderCrownedLegitimacy: 55, // the usurper starts here, not at the old crown's number
     religiousChance: 0.5,     // a heterodox province rises for the altar this often
+    // SPEC §112 — a rising nobody answers has to end, or a realm whose
+    // provinces are all rebel-held can never earn, grow or recruit its way
+    // back into its own country.
+    rebelBurnoutMonths: 24,   // held this long, with the province calm, and the band starts melting
+    rebelBurnoutUnrest: 4,    // ...where "calm" means unrest has fallen to this or below
+    rebelBurnoutRate: 0.12,   // ...losing this share of its men a month
+    rebelHoldMaxMonths: 72,   // and no rising holds a province longer than this, angry or not
   },
 
   // Supply lines (SPEC §82). An army traces monthly to controlled home

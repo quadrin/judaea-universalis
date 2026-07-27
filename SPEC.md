@@ -4961,3 +4961,95 @@ to grow, and before this file neither did at all.
   the reported succession by seating an overdue Judah, runs a hundred AI years
   end to end and asserts the order Judah → Jonathan → Simon → Hyrcanus, and
   pins the dismemberment arc bite by bite.
+
+## 112. A rising has to end
+
+Reported as a question about missing events, and it turned out not to be a
+content problem at all. Every chapter was audited by running it twice — once as
+history plays it, once as a Judaea that has plainly won — and diffing which
+cards fire. The 66 CE chapter came back with a hole the size of the chapter:
+after the Year of the Four Emperors in 69, thirty-three years passed in which
+the only major cards were foreign emperors dying. The Ninth of Av, Masada,
+Judaea Capta and Yavneh never fired. Neither did the survival branch.
+
+**The cause was one line of state.** Jerusalem's owner was `JUD` and its
+controller was `REB`. Judaea was alive, had no overlord, and had settled its war
+with Rome — and a rebel band was sitting in the capital that nobody would ever
+remove. `judaeaFree` asks whether Judaea *controls* Jerusalem, so the Second
+Kingdom never opened; `ev_temple_burns` wants `ROM`, `AGR` or `NAB` as
+controller, so the Temple never burned. The chapter was frozen in a third state
+that neither branch describes.
+
+**And it could not recover.** Income and manpower (`economy.js`) and every
+recruitment order (`recruitment.js`, which stalls with `Enemy occupation`)
+require a province to be owned AND controlled. A realm whose provinces are all
+rebel-held earns nothing, grows nothing and can raise nothing — so it can never
+build the army it would need to take its own country back. The probe found
+Judaea owning sixteen provinces, controlling zero, with zero men under arms, and
+staying that way for the rest of the chapter. That is a terminal state with no
+exit, and it hits a player exactly as hard as the AI.
+
+The rules had exactly one way for a rising to end: be beaten in the field. That
+is complete for a pretender — `monthlyPretenders` crowns him or buries the
+question — but a peasant or religious band that took a town and was left alone
+had no ending at all.
+
+`monthlyRisings` is that ending. A band holding a province with nobody
+contesting it burns out: once the grievance that raised it is spent
+(`rebelBurnoutUnrest`) and the grace period is over (`rebelBurnoutMonths`) it
+loses `rebelBurnoutRate` of its men a month, and when the last of them is gone
+the province answers to its owner again with a year's cooldown before anything
+can rise there afresh. `rebelHoldMaxMonths` is a hard ceiling no rising passes,
+angry or not.
+
+Three refusals are as much the design as the rule:
+
+- **A dead owner gets nothing back.** Burn-out restores a province to its owner;
+  a court that no longer exists is not handed a country by the tick.
+- **A pretender is settled by his own clock**, not this one.
+- **A band in a battle is left to the field — but only up to the ceiling.** An
+  unbounded exemption is the same immortality bug in miniature: one stale
+  `inBattle` and the province is held for good. The suite pins this, because the
+  first draft had exactly that hole and four provinces stayed rebel-held forever
+  on a flag nothing was going to clear.
+
+None of this makes a rising harmless. A province that is still angry keeps what
+it took for years, the burn-out only starts after two calm years, and a realm
+that has genuinely lost its country still has to wait.
+
+**What it unlocked, with no other change and no help given to the AI.** In 66 CE
+a plain AI Judaea now recovers Jerusalem, rebuilds from zero men to thirty
+thousand, and plays the Second Kingdom arc that was written for it and had never
+once been reachable: the House That Stood, the Victors' Quarrel, the Negotiated
+Peace, Crown or Council, the Diaspora Homecoming, the Flavian Grudge, Parthia's
+offer, the Academy and the Altar, the Commonwealth of the Chamber, Domitian's
+rescript, the Eagles Going Home, the Children of the War. In 132 CE eight more
+canonical cards arrive — Syria Palaestina, the Shemad, the Ten Martyrs, Judah
+ben Bava, the Rescript of Antoninus, the proselyte ban, the Sanhedrin at Usha,
+and Yehuda ha-Nasi. The `autorun` anomaly list gets shorter, not longer: 40 BCE
+and 614 CE lose their BLEEDING flags entirely.
+
+- **Regression contract**: `smoke79.mjs`, which pins the burn-out, all three
+  refusals, the locked-out-of-its-own-country case end to end, and the 66 CE
+  chapter reaching an ending in one branch or the other.
+
+### Still open, and the shape they share
+
+The audit found the same disease elsewhere, and it is worth naming: **the
+chapters are written for two outcomes, and the simulation's commonest result is
+neither.** A rump that survives without its capital, or a victor with a rebel in
+it, falls between the branches and gets nothing.
+
+- **132 CE**: `ev2_betar` needs Judaea reduced to one or two provinces;
+  `judaeaStands` needs Jerusalem. A Judaea that survives the revolt at six
+  provinces without the city gets neither ending. `romanAftermath` — the gate on
+  the world thread, including the patriarchate ending in 425 — requires
+  `countControlled(JUD) === 0`, so a surviving rump also silences three
+  centuries of world history.
+- **1948**: nine major world cards, the whole Lebanon arc from the Cairo
+  Agreement to the Mire, are guarded `when: alive(LEB)`. An Israel that annexes
+  Lebanon erases fifty years of the region and gets nothing in its place.
+- **167 BCE**: `ev_royal_expedition` carries `requiresWar: ['HAS','SEL']`, so a
+  Judaea at peace by −162 loses the whole Lysias arc; `ev_jerusalem_terms` and
+  `ev_hyrcanus_east` both need `sidetesBesieges`, so a Judaea strong enough that
+  Antiochus VII never besieges Jerusalem loses both.
