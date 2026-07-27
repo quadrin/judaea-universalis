@@ -4560,3 +4560,89 @@ clears it permanently by schism, which is precisely why the synod was held.
   professional legion is very nearly right, and a Bar Kokhba campaign that could
   rush its way to armored lancers would not be.
 - **Regression contract**: `smoke74.mjs`.
+
+## 105. The region's own quarrels
+
+Four threads the 1948 chapter had the shape of but not the substance of, plus
+the engine operation the map had never had.
+
+### A union that comes apart (`secedeTagCore`)
+
+Every political change the game could model was a conquest, a rename
+(`switchTagCore`) or a peace-table release. None of those is what happened in
+Damascus on the 28th of September 1961, and the absence had a real cost: the
+1958 card merged Syria into the UAR and **nothing ever dissolved it**, so a
+campaign that saw the union form lost the entire Syrian arc — the Ba'ath,
+Assad, the Golan, Lebanon — because every one of those cards gated on a tag
+that no longer existed.
+
+`secedeTagCore(ctx, from, to, {provinces, share, ruler, flag, opinion})` splits
+a state: the parent survives, a named set of its provinces leaves under its own
+banner with the garrisons standing on them, a share of the treasury and the
+muster rolls, the institutional inheritance (tech, reforms) — and none of the
+parent's wars, because walking out of a union is the whole point. A secession
+with no province behind it is a proclamation and is refused.
+
+`ev_i_secession` (September 1961) breaks the union **into Egypt and Syria**:
+Syria leaves as a genuinely new tag — **SAR**, the Syrian Arab Republic, the
+name it took that week and kept for the rest of the century — and what is left
+goes back to being Egypt under the Free Officers' banner. If the union never
+formed, Syria takes the new name in place. Either way SAR exists from 1961 and
+the Syrian arc answers to it. The refusal branch holds the union by force, and
+in that world the 1963 and 1979 Syrian cards correctly retire, because the
+republic whose officers made them does not exist.
+
+- **A decider may be a function.** Damascus is SYR, then SAR, or the union, and
+  a `decider` fixed at authoring time cannot name a court whose name the
+  century decides. `fireEvent` now resolves `ev.decider(ctx)` when it is a
+  function; a string behaves exactly as before, and the wiki (which reads the
+  chain with no world to resolve against) omits the badge rather than guessing.
+- **SAR breaks apart in its turn**: `ev_i_brotherhood_uprising` (1979) and
+  `ev_i_hama` (1982), whose second option is the one where the republic of
+  officers keeps its capital and loses the country around it.
+
+### Suez as a crisis rather than a headline
+
+The chain had the nationalization and then a decade of silence. Now:
+`ev_i_sevres` (the collusion protocol, and a refusal branch that means no
+campaign at all), `ev_i_kadesh` (the drop at the Mitla and the hundred hours),
+`ev_i_port_said` (the ultimatum arriving on the schedule it was written to) and
+`ev_i_suez_ultimatum` (Eisenhower, the withdrawal, UNEF and the open Straits —
+which is also where the 1967 tripwire gets set).
+
+### Eli Cohen
+
+`ev_i_kamel_amin_thaabet` and `ev_i_marjeh_square`. Running him produces the
+Damascus file; extracting him instead keeps the officer and retires the
+hanging card for good. The eucalyptus story is in the card's prose and flagged
+as unsupported, because it is: what is documented is duller and worth more.
+
+### Tehran, and the border it reaches
+
+`ev_i_iranian_revolution` (February 1979) turns the most reliably aligned
+capital between Ankara and the Indus into the one that will still be arming
+Israel's enemies in fifty years — a theocracy, a purged officer corps, and
+opinion at −180. `ev_i_hostage_crisis` follows.
+
+The point of putting it here is the junction: **`ev_i_hezbollah` requires both
+the revolution and the 1982 occupation.** Neither alone produces it, which is
+the whole causal claim the chain was making in prose ("an adversary that did
+not exist in 1982") without ever modelling. From it: `ev_i_barracks` (1983),
+`ev_i_accountability` (1993), `ev_i_grapes_of_wrath` (1996, and Qana), and
+`ev_i_blue_line` (May 2000), which lifts every modifier the occupation was
+carrying and retires the rounds that belonged to the zone.
+
+### Two engine repairs the batch turned up
+
+- **The balance harness was running a different game.** `autorun.mjs` imported
+  each era's events module by name, so it never saw anything concatenated onto
+  a chapter in `compendium.js` — including §104's world spine and Christian
+  thread. It reads `compendium.ERAS` now, so a package is in the harness the
+  day it is registered, and the numbers describe the game people play.
+- **A pen written mid-campaign made a province unaddressable.** `ctx.prov` and
+  `ctx.provId` indexed names at boot; once Israel finished integrating
+  Jerusalem it became Yerushalayim, and content that walked the province list
+  and addressed a province by its own `p.name` silently missed. Both now fall
+  back to the live board and cache the hit.
+
+- **Regression contract**: `smoke75.mjs`.

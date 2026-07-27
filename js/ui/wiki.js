@@ -70,7 +70,10 @@ export function createWiki({ DEFINES, getCtx }) {
     } else if (ev.forTag) {
       rows.push(['Seen by', tagName(ev.forTag) + ' (other courts are toasted if major)']);
     }
-    if (ev.decider) {
+    // A card may resolve its decider at fire time (SPEC §105); the wiki reads
+    // the chain cold, with no world to resolve against, so it names the court
+    // the card is written for and leaves the runtime to pick the successor.
+    if (ev.decider && typeof ev.decider !== 'function') {
       rows.push(['The choice belongs to', tagName(ev.decider)
         + ' — any other player is only notified of their course']);
     }
@@ -91,7 +94,8 @@ export function createWiki({ DEFINES, getCtx }) {
     return (ev.world ? '<span class="wiki-badge wiki-badge-world">world history</span>' : '')
       + (ev.major ? '<span class="wiki-badge">major</span>' : '')
       + (ev.once === false ? '<span class="wiki-badge">recurring</span>' : '')
-      + (ev.decider ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '');
+      + (ev.decider && typeof ev.decider !== 'function'
+        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '');
   }
   function kv(rows) {
     return rows.map(([k, v]) => `<div class="wiki-kv"><span class="wiki-k">${esc(k)}</span><span class="wiki-v">${esc(v)}</span></div>`).join('');

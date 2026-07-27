@@ -598,6 +598,27 @@ export const FLAGS = {
     `<path d="M10.6 10.4 4.7 9.2l1.1 2.1-1.3.4 6 1.3Z" fill="#d9a520" stroke="none"/>` +
     `<path d="M13.4 10.4l5.9-1.2-1.1 2.1 1.3.4-6 1.3Z" fill="#d9a520" stroke="none"/>` +
     `<path d="M10.9 14.2h2.2l-.5 1.3h-1.2Z" fill="#d9a520" stroke="none"/>`,
+  // Syria after the secession of 1961 (SPEC §105): the independence flag of
+  // 1932 hauled back up the same morning the union ended — green over white
+  // over black, three red stars for the three districts of the mandate. It is
+  // the deliberate opposite of the union's banner, which is the point of it.
+  SAR:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#1a7a44" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    star5(6.4, 12, 1.7, '#b5342c') +
+    star5(12, 12, 1.7, '#b5342c') +
+    star5(17.6, 12, 1.7, '#b5342c'),
+  // Iran after February 1979 (SPEC §105): the same tricolour, the lion and
+  // sun struck out of the middle and the tulip-and-sword emblem in its place.
+  IRN_IR:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<path d="M12 8.6v6.8" stroke="#b5342c" stroke-width="1.5" stroke-linecap="round" fill="none"/>` +
+    `<path d="M9.4 10.4v3.2M14.6 10.4v3.2" stroke="#b5342c" stroke-width="1.2" stroke-linecap="round" fill="none"/>` +
+    `<path d="M10.2 14.6h3.6" stroke="#b5342c" stroke-width="1.2" stroke-linecap="round" fill="none"/>` +
+    `<path d="M12 7.4c.7.7 1.1 1.4 1.1 2.1H10.9c0-.7.4-1.4 1.1-2.1Z" fill="#b5342c" stroke="none"/>`,
   // Iraq after the seventeenth of July, 1968 (event rebrand): the flag raised
   // in 1963 and kept for a generation — the same bands, three green stars.
   IRQ_BAATH:

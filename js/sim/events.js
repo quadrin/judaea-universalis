@@ -128,14 +128,23 @@ export function fireEvent(ctx, ev) {
     // acknowledging button instead of a choice. If the decider tag has left
     // the world (a formable rewrote it), the choice falls back to the player —
     // whoever inherited that throne is the closest thing it has to a court.
-    if (ev.decider && ev.decider !== player && g.tags[ev.decider]) {
+    // A court whose NAME depends on how the century went (SPEC §105) may
+    // declare its decider as a function of the world: Damascus answers to the
+    // mandate republic, to the republic that left the union, or to the union
+    // itself, and the card is a notice either way. A static string still
+    // works exactly as before.
+    let decider = ev.decider;
+    if (typeof decider === 'function') {
+      try { decider = decider(ctx); } catch (e) { warnOnce('decid:' + ev.id, 'decider() threw for', ev.id, e); decider = null; }
+    }
+    if (decider && decider !== player && g.tags[decider]) {
       let idx = 0;
       try {
         idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
       } catch (e) { warnOnce('decider:' + ev.id, 'aiOption threw for', ev.id, e); }
       pe.notice = true;
       pe.optIdx = Math.max(0, Math.min(ev.options.length - 1, idx));
-      pe.decider = ev.decider;
+      pe.decider = decider;
     }
     g.pendingEvents.push(pe);
     if (!g.paused) { g.paused = true; ctx.bus.emit('pause', true); }

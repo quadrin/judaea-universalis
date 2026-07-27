@@ -10,7 +10,7 @@ import {
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
-  retireAffinityCore,
+  retireAffinityCore, secedeTagCore,
   allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
@@ -268,13 +268,30 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     helpers: simHelpers,
     prov(name) {
       const id = nameToId.get(name);
-      if (!id) { warnOnce('prov:' + name, 'unknown province name:', name); return null; }
-      return game.provinces[id] || null;
+      if (id) return game.provinces[id] || null;
+      // A pen written mid-campaign (SPEC §66) renames a province AFTER this
+      // index was built — Jerusalem becomes Yerushalayim the month Israel
+      // finishes integrating it. Content that walks the province list and
+      // then addresses a province by its own `p.name` was silently missing
+      // after that, because the new label was in no index. Fall back to the
+      // live board before giving up; the miss path is the only one that pays.
+      for (let i = 1; i < game.provinces.length; i++) {
+        const p = game.provinces[i];
+        if (p && p.name === name) { nameToId.set(name, i); return p; }
+      }
+      warnOnce('prov:' + name, 'unknown province name:', name);
+      return null;
     },
     provId(name) {
       const id = nameToId.get(name);
-      if (!id) { warnOnce('provId:' + name, 'unknown province name:', name); return 0; }
-      return id;
+      if (id) return id;
+      // Same fallback as `prov`: a label written after the index was built.
+      for (let i = 1; i < game.provinces.length; i++) {
+        const p = game.provinces[i];
+        if (p && p.name === name) { nameToId.set(name, i); return i; }
+      }
+      warnOnce('provId:' + name, 'unknown province name:', name);
+      return 0;
     },
     byId(id) { return game.provinces[id] || null; },
   };
@@ -469,6 +486,11 @@ export const simHelpers = {
   // ...and the friendship a change of dynasty annuls (SPEC §104).
   retireAffinity(ctx, a, b) {
     return retireAffinityCore(ctx, a, b);
+  },
+  // A union that comes apart (SPEC §105): the parent survives and a named set
+  // of its provinces leaves under its own banner. Returns the new tag or null.
+  secedeTag(ctx, from, to, opts) {
+    return secedeTagCore(ctx, from, to, opts);
   },
   // Recognition (SPEC §96): a scripted peace may exchange the letters itself
   // — Sadat in the Knesset, the lawn in Washington — or tear them up again.

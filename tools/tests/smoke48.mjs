@@ -139,10 +139,26 @@ console.log('== every declared decider names a court of its era ==');
     const evs = Object.values(await import(R + '/js/data/events_' + era + '.js')).find(Array.isArray) || [];
     const bm = (await import(R + '/js/data/' + bmFile + '.js'))[bmName];
     const roster = (bm.activeTags || []).concat(['REB']);
-    const bad = evs.filter((e) => e && e.decider
-      && (roster.length > 1 ? roster.indexOf(e.decider) < 0 : false));
+    // A card may resolve its decider at fire time (SPEC §105) when the court
+    // it belongs to changes NAME during the chapter — Damascus is SYR, then
+    // SAR, or the union. A function decider must still only ever name courts
+    // of this era, so it is called against every tag the chapter can produce
+    // and each answer is checked against the roster.
+    const eraTags = roster.concat(era === '1948' ? ['UAR', 'SAR'] : []);
+    const resolvedNames = (e) => {
+      if (typeof e.decider !== 'function') return [e.decider];
+      const out = new Set();
+      for (const live of eraTags) {
+        const fake = { game: { tags: { [live]: { alive: true } } } };
+        try { out.add(e.decider(fake)); } catch (err) { out.add('<threw>'); }
+      }
+      try { out.add(e.decider({ game: { tags: {} } })); } catch (err) { out.add('<threw>'); }
+      return [...out].filter(Boolean);
+    };
+    const bad = evs.filter((e) => e && e.decider && roster.length > 1
+      && resolvedNames(e).some((d) => eraTags.indexOf(d) < 0));
     ok(bad.length === 0, era + ': every decider is in the era roster'
-      + (bad.length ? ' — ' + bad.map((e) => e.id + ':' + e.decider).join(', ') : ''));
+      + (bad.length ? ' — ' + bad.map((e) => e.id + ':' + resolvedNames(e).join('/')).join(', ') : ''));
     const noAi = evs.filter((e) => e && e.decider && e.options && e.options.length > 1
       && !Number.isFinite(e.aiOption) && typeof e.aiOption !== 'function');
     ok(noAi.length === 0, era + ': every decider event pins its historical course'

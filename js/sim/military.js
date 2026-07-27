@@ -1656,6 +1656,138 @@ export function switchTagCore(ctx, from, to) {
   return true;
 }
 
+// A union that comes apart (SPEC §105). `switchTagCore` renames a state; this
+// SPLITS one — the parent survives, and a named set of its provinces leaves
+// under a banner of its own with the garrisons standing on them, a share of
+// the treasury and the muster rolls, and none of the parent's wars. It is the
+// operation the map has never had: every political change in the game so far
+// has been a conquest, a rename or a peace-table release, and none of those
+// is what happened in Damascus on the 28th of September 1961, when a brigade
+// took the radio station and a republic simply stopped being half of another
+// one.
+//
+//   opts: { provinces: [names], share: 0.35, name, flag, color, ruler,
+//           opinion: -40, stability, legitimacy }
+//
+// Returns the new tag object, or null if the split could not be made (no
+// ground to stand on, the banner already flying, no such tag defined).
+export function secedeTagCore(ctx, from, to, opts = {}) {
+  const g = ctx.game;
+  const parent = g.tags[from];
+  const def = (ctx.DEFINES.TAGS || {})[to];
+  if (!parent || parent.alive === false || !def || g.tags[to]) return null;
+
+  // The ground. A secession with no province behind it is a proclamation, and
+  // the map does not model proclamations.
+  const ids = [];
+  for (const name of (Array.isArray(opts.provinces) ? opts.provinces : [])) {
+    const p = ctx.prov(name);
+    if (p && p.owner === from && !p.impassable) ids.push(p.id);
+  }
+  if (!ids.length) return null;
+  const idSet = new Set(ids);
+  const seat = ctx.byId(ids[0]);
+
+  const share = clamp(num(opts.share, 0.35), 0, 1);
+  const tech = parent.tech || {};
+  const t = {
+    tag: to,
+    name: opts.name || def.name || to,
+    color: Array.isArray(opts.color) ? opts.color.slice()
+      : Array.isArray(def.color) ? def.color.slice() : [112, 118, 126],
+    religion: def.religion || (seat && seat.religion) || parent.religion,
+    culture: def.culture || (seat && seat.culture) || parent.culture,
+    alive: true,
+    ai: to !== g.playerTag,
+    // What leaves with it: a share of the coin and the muster rolls, and the
+    // whole of the institutional inheritance — the parent's technology and
+    // reforms were half its own to begin with.
+    treasury: Math.round(num(parent.treasury) * share),
+    income: 0, expenses: 0, loans: 0,
+    manpower: Math.round(num(parent.manpower) * share),
+    maxManpower: Math.round(num(parent.maxManpower) * share),
+    stability: clamp(num(opts.stability, 0), -3, 3),
+    legitimacy: clamp(num(opts.legitimacy, 50), 0, 100),
+    warExhaustion: 0,
+    points: { gov: 0, infl: 0, mar: 0 },
+    ideas: { ...(def.ideas || {}) },
+    reforms: { ...(parent.reforms || { mil: 0, civ: 0, rel: 0 }) },
+    tech: {
+      gov: Math.max(0, num(tech.gov, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
+      infl: Math.max(0, num(tech.infl, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
+      mar: Math.max(0, num(tech.mar, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
+    },
+    advisors: { gov: null, infl: null, mar: null },
+    aggression: 0,
+    courtCand: {},
+    modifiers: [],
+    // A seceding state inherits no wars. The union's quarrels were the
+    // union's; walking out of it is the whole point.
+    atWarWith: [], allies: [], guarantees: [], opinion: {},
+    govType: (ctx.bookmark && ctx.bookmark.govTypes && ctx.bookmark.govTypes[to])
+      || (ctx.DEFINES.GOV_OF || {})[to]
+      || parent.govType || 'republic',
+    electionIn: 48,
+    claims: [], claimFabrications: [], overlord: null,
+    heir: null, regency: false, missionIdx: 0,
+    aiState: {},
+    ruler: opts.ruler
+      ? { ...opts.ruler }
+      : { name: 'Revolutionary Command', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
+    lineage: [from].concat(Array.isArray(parent.lineage) ? parent.lineage : []).slice(0, 6),
+    formedFrom: from,
+    description: def.description || 'A state that left a union it had joined.',
+  };
+  if (typeof opts.flag === 'string') t.flag = opts.flag;
+  g.tags[to] = t;
+
+  parent.treasury = num(parent.treasury) - t.treasury;
+  parent.manpower = Math.max(0, num(parent.manpower) - t.manpower);
+  parent.maxManpower = Math.max(0, num(parent.maxManpower) - t.maxManpower);
+
+  for (const id of ids) {
+    const p = g.provinces[id];
+    if (!p) continue;
+    p.owner = to;
+    if (p.controller === from) p.controller = to;
+    if (p.siege && p.siege.by === from) p.siege.by = to;
+    if (p.conversion && p.conversion.by === from) p.conversion = null;
+    if (p.integrating && p.integrating.by === from) p.integrating = null;
+  }
+  // The garrisons go with the ground they are standing on — and only those.
+  // A division in Cairo stays Egyptian however Syrian its recruits were.
+  for (const id of Object.keys(g.armies)) {
+    const a = g.armies[id];
+    if (a && a.tag === from && idSet.has(a.prov)) a.tag = to;
+  }
+  for (const id of Object.keys(g.fleets || {})) {
+    const f = g.fleets[id];
+    if (f && f.tag === from && idSet.has(f.prov)) f.tag = to;
+  }
+  for (const id of Object.keys(g.airwings || {})) {
+    const w = g.airwings[id];
+    if (w && w.tag === from && idSet.has(w.prov)) w.tag = to;
+  }
+
+  // How the world meets it. Everyone else's regard for the parent is the
+  // starting regard for the child — it is the same country to them — and the
+  // two halves of a broken union think about each other for a long time.
+  const meet = clamp(num(opts.opinion, -40), -200, 200);
+  for (const k of Object.keys(g.tags)) {
+    const o = g.tags[k];
+    if (!o || k === to) continue;
+    if (k !== from && o.opinion && Number.isFinite(o.opinion[from])) o.opinion[to] = o.opinion[from];
+    if (k !== from) t.opinion[k] = Number.isFinite(parent.opinion && parent.opinion[k]) ? parent.opinion[k] : 0;
+  }
+  if (!parent.opinion) parent.opinion = {};
+  parent.opinion[to] = meet;
+  t.opinion[from] = meet;
+
+  chronicle(ctx, 'era', (t.name || to) + ' leaves ' + (parent.name || from)
+    + ': the union is dissolved and both halves keep their own capital.');
+  return t;
+}
+
 // ---------------------------------------------------------------- generals
 // Period name pools keyed by DEFINES.CULTURES group (a hired general speaks
 // the recruiting court's tongue). ~8 names per group.

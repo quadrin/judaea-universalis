@@ -110,6 +110,10 @@ export const DEFINES = {
     // formable crowns (SPEC §24)
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
+    // The republic that walked out of the union (SPEC §105): the most
+    // coup-prone state in the region, and the one most convinced it is owed
+    // the Golan.
+    SAR: { aggression: 1.3, caution: 0.8 },
   },
 
   // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
@@ -150,7 +154,7 @@ export const DEFINES = {
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
-    MLI: 'monarchy', UAR: 'republic',
+    MLI: 'monarchy', UAR: 'republic', SAR: 'republic',
     REB: 'tribal',
   },
 
@@ -417,6 +421,17 @@ export const DEFINES = {
       name: 'United Arab Republic', color: [26, 96, 54], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
       description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
       ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
+    },
+    // The state that walks out of that union (SPEC §105). Syria kept the
+    // name it took in 1961 for the rest of the century, through eight
+    // governments in nine years and then one for thirty: a republic whose
+    // politics are made in the officer corps, whose army is better at
+    // surviving coups than wars, and which never for one year stops
+    // regarding the Golan as a temporarily mislaid province.
+    SAR: {
+      name: 'Syrian Arab Republic', color: [70, 118, 92], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
+      description: 'Damascus after the union: a republic of officers, and the last Arab capital that will not sign.',
+      ideas: { manpowerMult: 1.08, moraleMult: 1.05, incomeMult: 0.95 },
     },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',

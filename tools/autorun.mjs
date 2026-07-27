@@ -22,15 +22,15 @@ const { buildProvinceMapping } = await import(join(R, 'js/data/map_profile.js'))
 const { tickDay } = await import(join(R, 'js/sim/tick.js'));
 const eco = await import(join(R, 'js/sim/economy.js'));
 
-const BOOKS = [
-  ['167bce', 'bookmark_167bce.js', 'BOOKMARK_167', 'events_167bce.js', 'EVENTS_167'],
-  ['67bce', 'bookmark_67bce.js', 'BOOKMARK_67', 'events_67bce.js', 'EVENTS_67'],
-  ['40bce', 'bookmark_40bce.js', 'BOOKMARK_40', 'events_40bce.js', 'EVENTS_40'],
-  ['66ce', 'bookmark_66ce.js', 'BOOKMARK_66', 'events_66ce.js', 'EVENTS_66'],
-  ['132ce', 'bookmark_132ce.js', 'BOOKMARK_132', 'events_132ce.js', 'EVENTS_132'],
-  ['614ce', 'bookmark_614ce.js', 'BOOKMARK_614', 'events_614ce.js', 'EVENTS_614'],
-  ['1948ce', 'bookmark_1948.js', 'BOOKMARK_1948', 'events_1948.js', 'EVENTS_1948'],
-];
+// The harness reads the era registry, not the era FILES (SPEC §105). It used
+// to import each bookmark's own events module by name, which quietly meant it
+// ran a chapter WITHOUT any package concatenated onto it in compendium.js —
+// the 132 CE world spine, the Christian thread, the region's own quarrels.
+// The balance numbers were therefore produced by a game the player never
+// plays. compendium.ERAS is the one place the pairing is written down; read
+// it, and a new package is in the harness the day it is registered.
+const { ERAS } = await import(join(R, 'js/data/compendium.js'));
+const BOOKS = ERAS.map((e) => [e.bookmark.id, e.bookmark, e.events]);
 
 const YEARS = Math.max(1, Number(process.argv[2]) || 8);
 const ONLY = process.argv[3] || null;
@@ -87,9 +87,7 @@ function fmt(n, w) {
 }
 
 async function runBookmark(entry, rawGeom) {
-  const [id, bmFile, bmName, evFile, evName] = entry;
-  const bookmark = (await import(join(R, 'js/data', bmFile)))[bmName];
-  const events = (await import(join(R, 'js/data', evFile)))[evName];
+  const [id, bookmark, events] = entry;
   const playable = bookmark.playableTags[0].tag;
   const provinceMap = buildProvinceMapping(MAP_DATA, bookmark);
   const geom = foldGeom(rawGeom, provinceMap);

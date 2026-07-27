@@ -220,7 +220,10 @@ expedition). `smoke57.mjs` owns supply + invasions, `smoke58.mjs` owns
 chapters, `uitest31.mjs` drives the ✂ badge, the drawn route with its
 break, and The Chapters panel in a real browser. `uitest36.mjs` owns the phone pass (SPEC §103) and is the one to run when
 touching chrome: it boots a real 390×844 touch context, and its landscape
-section resizes to 844×390 in the same run. `smoke74.mjs` owns the SPEC §104 religion batch (the
+section resizes to 844×390 in the same run. `smoke75.mjs` owns the SPEC §105 batch (the secession primitive and the
+UAR breaking into Egypt and Syria, the SAR tag and its own breakup, the Suez
+crisis, Eli Cohen, the Iranian revolution, and the northern border from the
+Beqaa to the Blue Line). `smoke74.mjs` owns the SPEC §104 religion batch (the
 ambient faith drift and its resistance clause, the god-fearer pool and the
 permanence of the barred mission, the era windows on the 132 chain, the world
 spine to 425 and the `when`-gated cards that retire out of it, the affinity a
@@ -301,3 +304,23 @@ both completed clean with no warnings on stderr: `node tools/autorun.mjs 295
 132 JUD SNOWBALL) and `node tools/autorun.mjs 60 614ce` (to 674 CE, no
 anomalies). Those two are the runs to repeat when touching the drift table, the
 faith pass or the spine, because an eight-year harness cannot see any of them.
+
+The SPEC §105 batch fixed the harness itself: `autorun.mjs` used to import each
+era's events module by name, so it ran every chapter WITHOUT any package
+concatenated onto it in `compendium.js` — which since §104 meant the 132 CE
+world spine and Christian thread were absent from the balance numbers
+entirely. It reads `compendium.ERAS` now. Re-running the 8-year harness with
+the registry actually wired in gives an anomaly set that is a strict subset of
+the accepted families: 167 PAR + HAS BLEEDING · 67 ROM SNOWBALL + SEL DEAD ·
+40 HER BLEEDING · 66 none · 132 JUD SNOWBALL · 614 GHA BLEEDING (the
+documented come-and-go line) · 1948 none.
+
+Two long runs stay the ones to repeat when touching either batch, and both are
+now genuinely loading the new content: `node tools/autorun.mjs 295 132ce`
+(to 427 CE, clean, no stderr) and `node tools/autorun.mjs 55 1948ce` (to 2003,
+no anomalies, clean). Note that the 295-year 132 run now retires the small
+Tigris client kingdoms — ADI bleeds and CHX dies somewhere in the third
+century. That is the world spine doing its job (Ardashir, the crisis, Palmyra)
+rather than a regression: those kingdoms did not survive the third century
+either. It is far outside the eight-year contract and is recorded here so the
+next person does not go looking for a bug.

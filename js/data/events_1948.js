@@ -152,8 +152,19 @@ function egyTag(ctx) {
   return null;
 }
 function syrTag(ctx) {
+  // Damascus answers to one of three names depending on how the sixties went
+  // (SPEC §105): the mandate republic, the republic that walked out of the
+  // union in 1961, or the union itself if it never came apart.
+  if (alive(ctx, 'SAR')) return 'SAR';
   if (alive(ctx, 'SYR')) return 'SYR';
   if (alive(ctx, 'UAR')) return 'UAR';
+  return null;
+}
+// Damascus as a state in its own right — the union does not count, because
+// the cards that use this are asking whether there is a Syria to ask.
+function syrOwn(ctx) {
+  if (alive(ctx, 'SAR')) return 'SAR';
+  if (alive(ctx, 'SYR')) return 'SYR';
   return null;
 }
 // Opinion check in the ev_i_suez idiom: an unrecorded opinion between these
@@ -2486,21 +2497,22 @@ export const EVENTS_1948 = [
     date: { y: 1963, m: 3 },
     world: true,
     major: true,
-    when: safeTrigger('ev_i_baath_damascus:when', (ctx) => alive(ctx, 'SYR')),
-    decider: 'SYR',
+    when: safeTrigger('ev_i_baath_damascus:when', (ctx) => !!syrOwn(ctx)),
+    decider: (ctx) => syrOwn(ctx) || syrTag(ctx) || 'SYR',
     aiOption: 0,
     options: [
       {
         label: 'Unity, freedom, socialism',
         tooltip: 'Syria becomes the Ba\'athist Syrian Arab Republic under its own banner: +20 martial points, +15 influence points, −15 legitimacy, −1 stability. The land reform and the nationalizations cost 10% of income permanently; the party\'s hold on the army adds 8% manpower.',
         effects: guard('ev_i_baath_damascus:0', (ctx) => {
-          if (!alive(ctx, 'SYR')) return;
-          ctx.helpers.rebrandTag(ctx, 'SYR', { name: 'Syrian Arab Republic', flag: 'SYR_BAATH' });
-          ctx.helpers.setRuler(ctx, 'SYR', {
+          const SY = syrOwn(ctx);
+          if (!SY) return;
+          ctx.helpers.rebrandTag(ctx, SY, { name: 'Syrian Arab Republic', flag: 'SYR_BAATH' });
+          ctx.helpers.setRuler(ctx, SY, {
             name: 'Amin al-Hafiz', title: 'President', gov: 2, infl: 2, mar: 3, age: 42,
           });
-          ctx.helpers.adjust(ctx, 'SYR', { mar: 20, infl: 15, legitimacy: -15, stability: -1 });
-          ctx.helpers.addTagModifier(ctx, 'SYR', {
+          ctx.helpers.adjust(ctx, SY, { mar: 20, infl: 15, legitimacy: -15, stability: -1 });
+          ctx.helpers.addTagModifier(ctx, SY, {
             id: 'baath_state', name: 'The Party State', months: -1,
             effects: { incomeMult: 0.9, manpowerMult: 1.08 },
           });
@@ -2512,9 +2524,10 @@ export const EVENTS_1948 = [
         label: 'The old parties hold the radio station',
         tooltip: 'Syria stays with the notable politicians: +10 governance points, +10 legitimacy, +1 stability — and a permanent Officers Watching Politicians (−5% manpower, +0.5 unrest). The barracks did not go away; they only went back inside.',
         effects: guard('ev_i_baath_damascus:1', (ctx) => {
-          if (!alive(ctx, 'SYR')) return;
-          ctx.helpers.adjust(ctx, 'SYR', { gov: 10, legitimacy: 10, stability: 1 });
-          ctx.helpers.addTagModifier(ctx, 'SYR', {
+          const SY = syrOwn(ctx);
+          if (!SY) return;
+          ctx.helpers.adjust(ctx, SY, { gov: 10, legitimacy: 10, stability: 1 });
+          ctx.helpers.addTagModifier(ctx, SY, {
             id: 'officers_watching', name: 'Officers Watching Politicians', months: -1,
             effects: { manpowerMult: 0.95, unrestAll: 0.5 },
           });
@@ -2592,23 +2605,24 @@ export const EVENTS_1948 = [
     date: { y: 1970, m: 11 },
     world: true,
     major: true,
-    when: safeTrigger('ev_i_corrective_movement:when', (ctx) => alive(ctx, 'SYR')),
-    decider: 'SYR',
+    when: safeTrigger('ev_i_corrective_movement:when', (ctx) => !!syrOwn(ctx)),
+    decider: (ctx) => syrOwn(ctx) || syrTag(ctx) || 'SYR',
     aiOption: 0,
     options: [
       {
         label: 'One address in Damascus',
         tooltip: 'Syria: Hafez al-Assad takes the presidency, +2 stability, +20 legitimacy, +25 martial points, and a permanent One Address in Damascus (+10% discipline, +8% income, +5% manpower). The state stops being a coup waiting to happen.',
         effects: guard('ev_i_corrective_movement:0', (ctx) => {
-          if (!alive(ctx, 'SYR')) return;
-          ctx.helpers.setRuler(ctx, 'SYR', {
+          const SY = syrOwn(ctx);
+          if (!SY) return;
+          ctx.helpers.setRuler(ctx, SY, {
             name: 'Hafez al-Assad', title: 'President', gov: 4, infl: 4, mar: 4, age: 40,
           });
           // The banner follows the state (SPEC §68): Assad's Syria flies the
           // hawk of the Federation of Arab Republics, not Baghdad's stars.
-          ctx.helpers.rebrandTag(ctx, 'SYR', { name: 'Syrian Arab Republic', flag: 'SYR_FAR' });
-          ctx.helpers.adjust(ctx, 'SYR', { stability: 2, legitimacy: 20, mar: 25 });
-          ctx.helpers.removeModifier(ctx, 'SYR', 'officers_watching');
+          ctx.helpers.rebrandTag(ctx, SY, { name: 'Syrian Arab Republic', flag: 'SYR_FAR' });
+          ctx.helpers.adjust(ctx, SY, { stability: 2, legitimacy: 20, mar: 25 });
+          ctx.helpers.removeModifier(ctx, SY, 'officers_watching');
           ctx.helpers.addTagModifier(ctx, 'SYR', {
             id: 'one_address', name: 'One Address in Damascus', months: -1,
             effects: { disciplineMult: 1.1, incomeMult: 1.08, manpowerMult: 1.05 },
@@ -2621,14 +2635,15 @@ export const EVENTS_1948 = [
         label: 'The congress arrests the Minister of Defence first',
         tooltip: 'The radicals win: Syria +20 martial points and +1 aggression toward every neighbor (−20 opinion of Israel and Jordan alike) — but −1 stability and a permanent Committee Rule (−8% income, +1 unrest). A state that cannot stop arguing with itself in public.',
         effects: guard('ev_i_corrective_movement:1', (ctx) => {
-          if (!alive(ctx, 'SYR')) return;
-          ctx.helpers.adjust(ctx, 'SYR', { mar: 20, stability: -1 });
-          ctx.helpers.addTagModifier(ctx, 'SYR', {
+          const SY = syrOwn(ctx);
+          if (!SY) return;
+          ctx.helpers.adjust(ctx, SY, { mar: 20, stability: -1 });
+          ctx.helpers.addTagModifier(ctx, SY, {
             id: 'committee_rule', name: 'Committee Rule', months: -1,
             effects: { incomeMult: 0.92, unrestAll: 1 },
           });
           for (const t of ['ISR', 'JOR']) {
-            if (alive(ctx, t)) setOpinionDelta(ctx.game, 'SYR', t, -20);
+            if (alive(ctx, t)) setOpinionDelta(ctx.game, SY, t, -20);
           }
           ctx.helpers.chronicle(ctx, 'ruler', 'The party congress arrests its own Minister of Defence; Syria keeps the committee, and the committee keeps quarrelling.');
         }),
@@ -4399,7 +4414,7 @@ export const EVENTS_1948 = [
     major: true,
     when: safeTrigger('ev_i_syrian_intervention:when', (ctx) =>
       !!ctx.game.flags.lebanonCivilWar && !!syrTag(ctx) && alive(ctx, 'LEB')),
-    decider: 'SYR',
+    decider: (ctx) => syrOwn(ctx) || syrTag(ctx) || 'SYR',
     aiOption: 0,
     options: [
       {
