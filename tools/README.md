@@ -432,3 +432,9 @@ SPEC §122 extends `smoke84.mjs` to the 66 CE continuation. The assertion worth
 knowing about is that the two arcs must REFUSE each other — `ev_a_*` for the
 fallen House, `ev_b_*` for the standing one — so a card that starts firing on
 both roads shows up here rather than as extra content in a playthrough.
+
+SPEC §123–§124 add `events_67bce_after.js` and `events_40bce_bridge.js`, closing
+the last two chapter edges. Note the design rule they establish: thematic
+overlap between two chapters' packages is fine, because a campaign only ever
+plays one chain. What is never fine is a chapter that stops before its own
+history does.

@@ -122,7 +122,9 @@ export const CHAPTER_PATHS = Object.freeze([
   Object.freeze({
     id: '67bce',
     title: 'The War of the Brothers',
-    lastYear: -29,
+    // SPEC §123 pushed this out from −29 to the same 6 CE hinge every chapter
+    // of this period now runs to.
+    lastYear: 6,
     forks: [
       Object.freeze({
         id: 'pompeys_arbitration',
@@ -130,19 +132,64 @@ export const CHAPTER_PATHS = Object.freeze([
         roads: [
           Object.freeze({
             id: 'hyrcanus', name: 'Pompey Chooses the Elder',
-            marker: 'submittedHYR', entry: 'ev4_embassy_hyr', terminal: 'ev4_mariamne',
+            marker: 'submittedHYR', entry: 'ev4_embassy_hyr',
+            terminal: 'ev4_c_the_year_the_petition_came',
             note: 'The historical road: Hyrcanus submits, Antipater rises, and the house ends '
               + 'with Herod\'s queen.',
           }),
           Object.freeze({
             id: 'aristobulus', name: 'The Younger Brother\'s Answer',
-            marker: 'submittedARI', entry: 'ev4_embassy_ari', terminal: 'ev4_mariamne',
+            marker: 'submittedARI', entry: 'ev4_embassy_ari',
+            terminal: 'ev4_c_the_year_the_petition_came',
             note: 'The same settlement reached through the soldier rather than the priest.',
           }),
           Object.freeze({
             id: 'sovereign', name: 'The Kingdom They Never Renamed',
-            marker: 'neverRenamed', entry: 'ev4_v_eagle_refused', terminal: 'ev4_v_never_renamed',
+            marker: 'neverRenamed', entry: 'ev4_v_eagle_refused',
+            terminal: 'ev4_c_the_year_nobody_petitioned',
             note: 'Rome is refused and the kingdom keeps its gates: the whole ev4_v_* branch.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_client_succession',
+        question: 'A throne Rome gave has to be given again. Who decides?',
+        requires: 'submittedHYR',
+        roads: [
+          Object.freeze({
+            id: 'settled_in_rome', name: 'The Settled Succession',
+            marker: 'successionSettled', entry: 'ev4_c_the_succession_a_client_cannot_have',
+            terminal: 'ev4_c_the_year_the_petition_came',
+            note: 'SPEC §123. The crown is carried to Italy and settled in public — a crown '
+              + 'taken to Rome is a crown admitted to be on loan, and it is still a crown.',
+          }),
+          Object.freeze({
+            id: 'withheld', name: 'An Unsettled House',
+            marker: 'successionWithheld', entry: 'ev4_c_the_succession_a_client_cannot_have',
+            terminal: 'ev4_c_the_year_the_petition_came',
+            note: 'SPEC §123. The will stays in Jerusalem and every notable in Judaea begins '
+              + 'quietly making arrangements of his own.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_augustan_question',
+        question: 'A court with no patron meets the settlement of the East.',
+        requires: 'neverRenamed',
+        roads: [
+          Object.freeze({
+            id: 'signed_as_a_power', name: 'Signed as a Power',
+            marker: 'signedAsAPower', entry: 'ev4_c_nothing_to_apologise_for',
+            terminal: 'ev4_c_the_year_nobody_petitioned',
+            note: 'SPEC §123. A treaty between states: no subsidy, no protection, and no clause '
+              + 'anybody can later read as a leash.',
+          }),
+          Object.freeze({
+            id: 'took_the_friendship', name: 'Friend and Ally',
+            marker: 'tookTheFriendship', entry: 'ev4_c_nothing_to_apologise_for',
+            terminal: 'ev4_c_the_year_nobody_petitioned',
+            note: 'SPEC §123. The kingdom that refused the eagle takes the subsidy and the word '
+              + 'that comes with it; the country knows the date.',
           }),
         ],
       }),
@@ -152,7 +199,9 @@ export const CHAPTER_PATHS = Object.freeze([
   Object.freeze({
     id: '40bce',
     title: 'The Parthian Interlude',
-    lastYear: 6,
+    // SPEC §124 pushed this out from 6 CE to the spring of 66 — the year the
+    // sacrifices ceased in the history the next chapter opens on.
+    lastYear: 66,
     forks: [
       Object.freeze({
         id: 'who_wears_the_crown',
@@ -160,13 +209,14 @@ export const CHAPTER_PATHS = Object.freeze([
         roads: [
           Object.freeze({
             id: 'herod', name: 'The Senate Names a King',
-            marker: 'herodKing', entry: 'ev5_senate', terminal: 'ev5_berytus',
+            marker: 'herodKing', entry: 'ev5_senate',
+            terminal: 'ev5_p_the_spring_of_sixty_six',
             note: 'The historical road, ending at Berytus with the sons.',
           }),
           Object.freeze({
             id: 'hasmonean', name: 'Mattathias, High Priest',
             marker: 'hasmoneanHolds', entry: 'ev5_atg_crowned',
-            terminal: 'ev5_a_not_a_province',
+            terminal: 'ev5_k_the_year_the_other_country_rose',
             note: 'The last Hasmonean holds the throne against Rome. SPEC §120 carries it from '
               + 'Actium to 6 CE — the year it does NOT become a province, because Rome annexed '
               + 'thrones it found embarrassing rather than thrones it found inconvenient.',
@@ -174,10 +224,46 @@ export const CHAPTER_PATHS = Object.freeze([
           Object.freeze({
             id: 'greater_herod', name: 'Too Large to Be a Favour',
             marker: 'largerThanTheFavour', entry: 'ev5_h_too_large_to_be_a_favour',
-            terminal: 'ev5_h_no_prefect_for_this_one',
+            terminal: 'ev5_k_the_year_the_other_country_rose',
             note: 'SPEC §120. A Herod who took Damascus or Petra has outgrown the word client. '
               + 'ev5_provincia used to depose him on the historical schedule regardless; it now '
               + 'stands aside, and this road gets its own 6 CE.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_statue',
+        question: 'Caligula wants his image in the Temple. What does this country have to answer with?',
+        roads: [
+          Object.freeze({
+            id: 'statue_refused', name: 'The Field at Ptolemais',
+            marker: 'statueRefused', entry: 'ev5_p_the_statue_and_the_crowd',
+            terminal: 'ev5_p_the_spring_of_sixty_six',
+            note: 'SPEC §124. A province with no instrument but the crowd: Petronius writes that '
+              + 'it would have to be depopulated first, and the emperor dies before the statue '
+              + 'goes up.',
+          }),
+          Object.freeze({
+            id: 'statue_erected', name: 'The Abomination',
+            marker: 'statueErected', entry: 'ev5_p_the_statue_and_the_crowd',
+            terminal: 'ev5_p_the_spring_of_sixty_six',
+            note: 'SPEC §124. The order is carried out, and nothing in this province for the '
+              + 'next twenty-six years is separable from that sentence.',
+          }),
+          Object.freeze({
+            id: 'order_never_given', name: 'The Order That Was Never Given',
+            marker: 'orderNeverGiven', entry: 'ev5_k_the_order_that_was_never_given',
+            terminal: 'ev5_k_the_year_the_other_country_rose',
+            note: 'SPEC §124. A kingdom has an ambassador. The statue is talked out of existence '
+              + 'at a dinner — the most expensive meal in the chapter and the cheapest war never '
+              + 'fought.',
+          }),
+          Object.freeze({
+            id: 'refused_in_advance', name: 'We Said So First',
+            marker: 'refusedInAdvance', entry: 'ev5_k_the_order_that_was_never_given',
+            terminal: 'ev5_k_the_year_the_other_country_rose',
+            note: 'SPEC §124. The kingdom refuses before it is asked, in writing, with its army '
+              + 'on the border — a thing a kingdom can do and a province cannot.',
           }),
         ],
       }),

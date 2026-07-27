@@ -10,9 +10,11 @@ import { EVENTS_167_WORLD } from './events_167bce_world.js';
 import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { BOOKMARK_67 } from './bookmark_67bce.js';
 import { EVENTS_67 } from './events_67bce.js';
+import { EVENTS_67_AFTER } from './events_67bce_after.js';
 import { BOOKMARK_40 } from './bookmark_40bce.js';
 import { EVENTS_40 } from './events_40bce.js';
 import { EVENTS_40_ALTERNATES } from './events_40bce_alternates.js';
+import { EVENTS_40_BRIDGE } from './events_40bce_bridge.js';
 import { BOOKMARK_66 } from './bookmark_66ce.js';
 import { EVENTS_66 } from './events_66ce.js';
 import { EVENTS_66_AFTER } from './events_66ce_after.js';
@@ -35,8 +37,8 @@ export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):
   // the wars of Alexander Jannaeus and the nine years of Salome Alexandra.
   { bookmark: BOOKMARK_167, events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_AFTER, GENERIC_EVENTS) },
-  { bookmark: BOOKMARK_67, events: EVENTS_67.concat(GENERIC_EVENTS) },
-  { bookmark: BOOKMARK_40, events: EVENTS_40.concat(EVENTS_40_ALTERNATES, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_67, events: EVENTS_67.concat(EVENTS_67_AFTER, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_40, events: EVENTS_40.concat(EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, GENERIC_EVENTS) },
   { bookmark: BOOKMARK_66, events: EVENTS_66.concat(EVENTS_66_AFTER, GENERIC_EVENTS) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They

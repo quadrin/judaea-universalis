@@ -29,8 +29,8 @@ const ok = (cond, msg) => {
 // twice — and the suite fails loudly if a file named here disappears.
 const SOURCES = {
   '167bce': ['events_167bce.js', 'events_167bce_kings.js', 'events_167bce_world.js', 'events_167bce_after.js'],
-  '67bce': ['events_67bce.js'],
-  '40bce': ['events_40bce.js', 'events_40bce_alternates.js'],
+  '67bce': ['events_67bce.js', 'events_67bce_after.js'],
+  '40bce': ['events_40bce.js', 'events_40bce_alternates.js', 'events_40bce_bridge.js'],
   '66ce': ['events_66ce.js', 'events_66ce_after.js'],
   '132ce': ['events_132ce.js', 'events_132ce_faith.js', 'events_132ce_world.js',
     'events_132ce_galilee.js', 'events_132ce_redemption.js'],

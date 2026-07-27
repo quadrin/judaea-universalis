@@ -5629,3 +5629,90 @@ road, which is the shape the remaining chapter edges want too.
 - **Regression contract**: `smoke84.mjs` (the §122 section), which asserts the
   continuation is two arcs rather than one, that each forks, and that the arcs
   refuse each other.
+
+## 123. The last act of the war of the brothers
+
+The 67 chapter's last cards are `ev4_mariamne` and `ev4_v_never_renamed` around
+−30, and then the edge §121 and §122 have found twice already. Thirty-five years
+to 6 CE, the year Judaea became a province in the history this chapter is a
+tributary of.
+
+It looks at first as though the 40 chapter already covers this ground, and in
+the codebase it does. **In play it does not**, and that distinction is the whole
+design: a campaign started at 67 BCE never sees a single card from the 40
+chapter, because chapters are chains attached to bookmarks and a player only
+ever has one. Thematic overlap between two packages is a filing question.
+Silence in a played campaign is a missing chapter.
+
+The chapter leaves two very different worlds behind it, and they want different
+last acts.
+
+**The submitted roads** end with Herod on the throne and his queen dead, a
+kingdom that exists because Rome decided it should. *The Succession a Client
+Cannot Have* (−10) is the question every client dynasty faces and almost none
+survives: settle it in Rome now, in public, and admit the crown is on loan — or
+keep the will at home and let every notable in the country make arrangements of
+his own. *The Year the Petition Came* (6 CE) is what that decides. The
+delegation is not rebels; it is the respectable sort, with property and Greek,
+arguing that the dynasty is expensive and arbitrary and worse at collecting
+taxes than Roman clerks would be. It is an extremely good case made in a
+language the men hearing it use for everything, and the only answer available is
+in the same language.
+
+**The sovereign road** — the kingdom that refused the eagle and kept its gates —
+arrives at the Augustan settlement in a position no other court in the East is
+in. Every throne there is explaining that it backed the wrong Roman; Jerusalem
+never backed a Roman, and has no patron to invoke, no apology to make and no
+debt on either side. *Nothing to Apologise For* (−20): treat with Rome as a
+power and sign nothing that says client, or take the friendship and the subsidy
+and the word that comes with them, which the country will go on knowing the date
+of. *The Year Nobody Petitioned* (6 CE) closes it — the petition worked in the
+other history because there was a court of appeal above the king, and here there
+is not, so the complaints go to the assembly and are heard badly by the
+complainants' own neighbours. Which is the ordinary condition of self-government
+and nobody's idea of a triumph.
+
+## 124. The sixty years to the Revolt
+
+The last edge. §120 gave all three of the 40 chapter's roads a 6 CE and then all
+three stopped there, sixty years short of the Great Revolt.
+
+Those years contain the best-documented near-miss of the period, and it is why
+this bridge was worth writing rather than merely owed. In 40 CE Caligula ordered
+his statue set up in the Temple. Petronius was given an army and told to do it,
+and spent a year not doing it — marching slowly, holding hearings, and finally
+writing to the emperor that the province would have to be depopulated first,
+because the population had come out in tens of thousands and lain down in the
+fields through the sowing season and said it would die instead. Caligula ordered
+him to commit suicide. The order and the news of Caligula's assassination
+crossed in transit.
+
+That is a story about a **province**, and it is a completely different story
+about a **kingdom** — which is exactly why three roads arriving here was worth
+having:
+
+- **The province has no instrument but the crowd.** *A Post for Men on the Way
+  Up, or Down* (26) sets the terms: the standards come out of Jerusalem after
+  five days of people offering their necks, and the province learns it can say
+  no — or the aqueduct is built with Temple money and the grievance goes into a
+  ledger nobody reads until 66. Then *The Statue and the Crowd* (40), where the
+  delay holds or it does not; and *The Spring of Sixty-Six*, which prices sixty
+  years of that ledger into the revolt the next chapter opens on.
+- **A kingdom has an army, a treasury and an ambassador.** *A King Between* (26)
+  asks whether to govern through the priesthood or around it — the second is
+  efficient, modern, and builds precisely the constituency that stopped the
+  sacrifices in the other history. *The Order That Was Never Given* (40) spends
+  the friendship: the statue is talked out of existence at a dinner by somebody
+  the emperor likes, the most expensive meal in the chapter and the cheapest war
+  never fought — or the kingdom refuses in advance, in writing, with its army on
+  the border, which a province cannot do at all. *The Year the Other Country
+  Rose* (66) closes on a kingdom where the liturgy that war began over is not in
+  the book, and the year is remembered, where it is remembered at all, for a
+  poor harvest.
+
+With this every chapter edge in the game is closed. `67bce` runs to 6 CE,
+`40bce` to 66, `66ce` to 130, `167bce` to 6, and 132, 614 and 1948 already ran
+to their own horizons.
+
+- **Regression contract**: `smoke83.mjs` (the tree, which now carries both
+  chapters' new forks and their extended `lastYear`).
