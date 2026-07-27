@@ -99,6 +99,15 @@ function spawnRebels(ctx, provNames, opts) {
   return null;
 }
 
+// Occupation is not possession (SPEC §108): a province we are standing in
+// during a war may go straight back at the peace table.
+function holds(ctx, tag, name) {
+  try {
+    const p = ctx.prov(name);
+    return !!p && !p.impassable && p.owner === tag && p.controller === tag;
+  } catch (e) { warnOnce('holds', e); return false; }
+}
+
 function stir(ctx, names, mod) {
   for (const n of names) ctx.helpers.addProvinceModifier(ctx, n, mod);
 }
@@ -297,7 +306,9 @@ export const EVENTS_167_KINGS = [
     trigger: safeTrigger('ev_k_gaza', (ctx) => {
       const me = crown(ctx);
       return !!me && flag(ctx, 'jannaeusKing') && dateGE(ctx, -96, 1)
-        && !ctx.helpers.controls(ctx, me, 'Gaza');
+        // The siege card asks whether Gaza is OURS, not whether a column is
+        // sitting outside it — and its own effect is the annexation.
+        && !holds(ctx, me, 'Gaza');
     }),
     major: true,
     aiOption: 0,

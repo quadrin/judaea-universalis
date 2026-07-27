@@ -180,6 +180,35 @@ function countControlledOf(ctx, tag, names) {
   return n;
 }
 
+// Occupation is not possession (SPEC §108). `controls` is true the moment an
+// army is standing in a province — including a province we are merely
+// occupying in a war we have not yet settled, and which uti possidetis may
+// hand straight back at the peace table. That is the right test for a
+// campaign ("settle behind our own lines", "the Akra is ours this month") and
+// exactly the wrong one for the cards that say the inheritance has been
+// TAKEN: Damascus does not open its gates to a raiding column, Tyre does not
+// clear its cargoes under the high priest's seal because a Judaean brigade is
+// camped outside it, and a fleet is not laid down in a harbor that reverts to
+// Antioch when the war ends. Those want ownership — the province is ours on
+// the map and in the treaty, and nobody is occupying it.
+function holds(ctx, tag, name) {
+  try {
+    const p = ctx.prov(name);
+    return !!p && !p.impassable && p.owner === tag && p.controller === tag;
+  } catch (e) { warnOnce('holds', e); return false; }
+}
+
+function holdsAny(ctx, tag, names) {
+  for (const n of names) if (holds(ctx, tag, n)) return true;
+  return false;
+}
+
+function countHeldOf(ctx, tag, names) {
+  let n = 0;
+  for (const name of names) if (holds(ctx, tag, name)) n++;
+  return n;
+}
+
 // The late Seleucid kingdom breaks on the live map, not by painting over a
 // player's conquests. A state can take only provinces still held by the crown
 // from which it historically emerged.
@@ -247,10 +276,15 @@ const BABYLONIAN_PROVINCES = ['Babylon', 'Seleucia-Ctesiphon', 'Nehardea', 'Char
 // Judaea was still alive — so a Hasmonean state that had lost Jerusalem, or
 // bent the knee to Antioch, still drew cards announcing that it had conquered
 // Syria. Sovereign, seated in its own capital, and at nobody's stirrup.
+// The gate of the whole greater-kingdom strand below. Jerusalem OPENS this
+// bookmark under Seleucid ownership — the Akra is a royal garrison — so a
+// control test here was satisfied the first month a Maccabean column held the
+// city, years before any treaty said so, and every card behind the gate went
+// with it. Ownership is the honest test: the war's settlement applies uti
+// possidetis, so a Judaea that has actually won the city owns it.
 function greaterVictory(ctx) {
   const t = ctx.game.tags && ctx.game.tags.HAS;
-  return alive(ctx, 'HAS') && !(t && t.overlord)
-    && ctx.helpers.controls(ctx, 'HAS', 'Jerusalem');
+  return alive(ctx, 'HAS') && !(t && t.overlord) && holds(ctx, 'HAS', 'Jerusalem');
 }
 
 const COELE_SYRIA = ['Damascus', 'Tyre', 'Sidon', 'Berytus', 'Chalcis'];
@@ -3901,7 +3935,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_hammer_beyond_hills', (ctx) =>
-      greaterVictory(ctx) && controlsAny(ctx, 'HAS', COELE_SYRIA)),
+      greaterVictory(ctx) && holdsAny(ctx, 'HAS', COELE_SYRIA)),
     aiOption: 0,
     options: [
       {
@@ -3953,7 +3987,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     major: true,
     trigger: safeTrigger('ev_damascus_of_david', (ctx) =>
-      greaterVictory(ctx) && ctx.helpers.controls(ctx, 'HAS', 'Damascus')),
+      greaterVictory(ctx) && holds(ctx, 'HAS', 'Damascus')),
     aiOption: 0,
     options: [
       {
@@ -4007,8 +4041,7 @@ export const EVENTS_167 = [
       + 'of the sea, or become a power on it.',
     forTag: 'HAS',
     trigger: safeTrigger('ev_gates_of_the_sea', (ctx) =>
-      greaterVictory(ctx) && ctx.helpers.controls(ctx, 'HAS', 'Tyre')
-      && ctx.helpers.controls(ctx, 'HAS', 'Sidon')),
+      greaterVictory(ctx) && holds(ctx, 'HAS', 'Tyre') && holds(ctx, 'HAS', 'Sidon')),
     aiOption: 0,
     options: [
       {
@@ -4056,7 +4089,7 @@ export const EVENTS_167 = [
     forTag: 'HAS',
     trigger: safeTrigger('ev_border_of_philistines', (ctx) =>
       greaterVictory(ctx)
-      && countControlledOf(ctx, 'HAS', PHILISTINE_COAST) >= PHILISTINE_COAST.length),
+      && countHeldOf(ctx, 'HAS', PHILISTINE_COAST) >= PHILISTINE_COAST.length),
     aiOption: 0,
     options: [
       {
@@ -4066,7 +4099,7 @@ export const EVENTS_167 = [
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { legitimacy: 5 });
           for (const name of PHILISTINE_COAST) {
-            if (!h.controls(ctx, 'HAS', name)) continue;
+            if (!holds(ctx, 'HAS', name)) continue;
             h.addProvinceModifier(ctx, name, {
               id: 'settled_faithful', name: 'The Faithful Come Down to the Sea', months: 36,
               effects: { unrest: -1, taxMult: 1.1 },
@@ -4103,7 +4136,7 @@ export const EVENTS_167 = [
       + 'commanders wait to know what a Greek city is for.',
     forTag: 'HAS',
     trigger: safeTrigger('ev_cities_of_the_nations', (ctx) =>
-      greaterVictory(ctx) && countControlledOf(ctx, 'HAS', GREEK_CITIES) >= 4),
+      greaterVictory(ctx) && countHeldOf(ctx, 'HAS', GREEK_CITIES) >= 4),
     aiOption: 0,
     options: [
       {
@@ -4113,7 +4146,7 @@ export const EVENTS_167 = [
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { manpower: 1500, legitimacy: 5 });
           for (const name of GREEK_CITIES) {
-            if (!h.controls(ctx, 'HAS', name)) continue;
+            if (!holds(ctx, 'HAS', name)) continue;
             h.addProvinceModifier(ctx, name, {
               id: 'cities_under_the_law', name: 'The Cities Under the Law', months: 36,
               effects: { unrest: 1 },
@@ -4129,7 +4162,7 @@ export const EVENTS_167 = [
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { gov: 10 });
           for (const name of GREEK_CITIES) {
-            if (!h.controls(ctx, 'HAS', name)) continue;
+            if (!holds(ctx, 'HAS', name)) continue;
             h.addProvinceModifier(ctx, name, {
               id: 'civic_tribute', name: 'Civic Tribute', months: -1,
               effects: { taxMult: 1.1 },
@@ -4159,7 +4192,7 @@ export const EVENTS_167 = [
     major: true,
     trigger: safeTrigger('ev_yoke_reversed', (ctx) =>
       greaterVictory(ctx) && alive(ctx, 'SEL') && hasWarscore(ctx) >= 75
-      && controlsAny(ctx, 'HAS', COELE_SYRIA)),
+      && holdsAny(ctx, 'HAS', COELE_SYRIA)),
     aiOption: 0,
     options: [
       {
@@ -4213,7 +4246,7 @@ export const EVENTS_167 = [
     major: true,
     trigger: safeTrigger('ev_diadem_in_dust', (ctx) =>
       greaterVictory(ctx)
-      && (!alive(ctx, 'SEL') || ctx.helpers.controls(ctx, 'HAS', 'Antioch'))),
+      && (!alive(ctx, 'SEL') || holds(ctx, 'HAS', 'Antioch'))),
     aiOption: 0,
     options: [
       {

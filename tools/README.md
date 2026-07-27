@@ -345,3 +345,12 @@ concatenated in `compendium.js` — the same class of gap as the autorun fix in
 §105. Pointed at the registry it caught a real violation in §104 content. If
 you write a tool or a suite that walks the event chains, read `compendium.ERAS`;
 naming `events_<era>.js` by hand now misses most of three chapters.
+
+SPEC §108 (occupation is not possession) changed WHEN the Maccabean
+greater-kingdom strand opens, not whether: `holds` requires ownership as well
+as control, so the strand opens at the settlement — where uti possidetis makes
+the conquest real — rather than at the first occupation. The 8-year set is
+unchanged and `node tools/autorun.mjs 105 167bce` still reports no anomalies
+and no stderr. If a Hasmonean card ever seems not to fire, check whether it is
+asking `holds` (the inheritance taken) or `controls` (the army is here now);
+both are correct, for different cards.

@@ -4751,3 +4751,41 @@ The banner does not change: the Hashemite tricolour has been the same since
   Anything walking the chains should read `compendium.ERAS`.
 
 - **Regression contract**: `smoke75.mjs` (the §107 section).
+
+## 108. Occupation is not possession
+
+`ctx.helpers.controls(tag, province)` is true the moment an army is standing
+there. That is the right test for a campaign — settle behind our own lines,
+the Akra is ours this month, the front has reached the lake — and it is the
+wrong test for a card that says an inheritance has been TAKEN.
+
+The whole greater-kingdom strand of the Maccabean chapter was built on it.
+"Damascus, Which David Took" fired because a column was outside the walls;
+"The Gates of the Sea" laid down a permanent fleet at Tyre and granted harbor
+dues in a harbor that uti possidetis would hand back to Antioch the moment the
+war was settled; the Philistine coast and the cities of the nations were
+claimed by marching through them. Worse, the strand's own gate had it too:
+Jerusalem OPENS this bookmark under Seleucid ownership — the Akra is a royal
+garrison — so `greaterVictory` was satisfied the first month a Maccabean force
+held the city, years before any treaty said so, and every card behind the gate
+came with it.
+
+`holds(ctx, tag, name)` is the honest predicate: the province is ours on the
+map **and** nobody is occupying it. The strand now runs on it — `holds`,
+`holdsAny`, `countHeldOf` — including its gate, and the per-province loops
+inside its effects agree with the triggers that admitted them. The royal
+century's Gaza card asks the same question, since its own effect is the
+annexation.
+
+Nothing is lost by this: the war's settlement applies uti possidetis, so a
+Judaea that has actually won the city owns it. The strand opens at the peace
+instead of at the first patrol, which is when those cities actually opened
+their gates.
+
+The revolt-era checks that really do mean control keep it — a card about
+where the army is standing this month should ask where the army is standing
+this month.
+
+- **Regression contract**: `smoke76.mjs` (the §108 section), which reproduces
+  the reported case directly: mid-war, occupying every great city and owning
+  none of them, five cards fired before and none fire now.

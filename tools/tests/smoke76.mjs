@@ -254,5 +254,87 @@ console.log('== §106: the century survives a diverged map ==');
     'and with no crown in Jerusalem at all, the century retires instead of narrating');
 }
 
+console.log('== §108: occupation is not possession ==');
+{
+  // The reported bug: "Damascus, Which David Took" and "The Gates of the Sea"
+  // fired while those cities were merely OCCUPIED in an unsettled war, and
+  // uti possidetis could hand them straight back at the peace table.
+  const STRAND = ['ev_hammer_beyond_hills', 'ev_damascus_of_david', 'ev_gates_of_the_sea',
+    'ev_border_of_philistines', 'ev_cities_of_the_nations', 'ev_yoke_reversed',
+    'ev_diadem_in_dust'];
+  for (const id of STRAND) ok(!!byId(id), 'the greater-kingdom strand carries ' + id);
+
+  const occupy = (ctx, names, tag) => {
+    for (const n of names) {
+      const p = ctx.prov(n);
+      if (p) { p.controller = tag; }        // an army stands there; the deed has not moved
+    }
+  };
+  const annex = (ctx, names, tag) => {
+    for (const n of names) {
+      const p = ctx.prov(n);
+      if (p) { p.owner = tag; p.controller = tag; }
+    }
+  };
+
+  // Jerusalem itself: the bookmark opens with it OWNED BY THE SELEUCIDS, so
+  // the strand's own gate used to open the moment a column held the city.
+  {
+    const { ctx } = boot();
+    ok(ctx.prov('Jerusalem').owner === 'SEL',
+      'Jerusalem opens the chapter under Seleucid ownership — the Akra is a royal garrison');
+    occupy(ctx, ['Jerusalem'], 'HAS');
+    occupy(ctx, ['Damascus', 'Tyre', 'Sidon'], 'HAS');
+    for (const id of ['ev_damascus_of_david', 'ev_gates_of_the_sea', 'ev_hammer_beyond_hills']) {
+      ok(!byId(id).trigger(ctx), id + ' does not fire on an occupation');
+    }
+  }
+  // ...and the same map, settled.
+  {
+    const { ctx } = boot();
+    annex(ctx, ['Jerusalem', 'Damascus', 'Tyre', 'Sidon'], 'HAS');
+    for (const id of ['ev_damascus_of_david', 'ev_gates_of_the_sea', 'ev_hammer_beyond_hills']) {
+      ok(byId(id).trigger(ctx), id + ' fires once the cities are actually ours');
+    }
+  }
+  // Owned but occupied by somebody else is not possession either.
+  {
+    const { ctx } = boot();
+    annex(ctx, ['Jerusalem', 'Damascus'], 'HAS');
+    ctx.prov('Damascus').controller = 'SEL'; // the deed is ours; the city is not
+    ok(!byId('ev_damascus_of_david').trigger(ctx),
+      'nor does it fire on a province we own and an enemy is sitting in');
+  }
+  // The counted strands move together.
+  {
+    const { ctx } = boot();
+    annex(ctx, ['Jerusalem'], 'HAS');
+    occupy(ctx, ['Joppa', 'Azotus', 'Ascalon', 'Gaza'], 'HAS');
+    ok(!byId('ev_border_of_philistines').trigger(ctx),
+      'the Philistine coast is not claimed by occupying it');
+    annex(ctx, ['Joppa', 'Azotus', 'Ascalon', 'Gaza'], 'HAS');
+    ok(byId('ev_border_of_philistines').trigger(ctx), '...and is once it is annexed');
+  }
+  // The royal century's own siege card asks the same question.
+  {
+    const { ctx, game } = asJannaeus(boot());
+    game.date.y = -96;
+    const gaza = byId('ev_k_gaza');
+    ok(gaza.trigger(ctx), 'Gaza is not ours, so the siege card offers itself');
+    occupy(ctx, ['Gaza'], 'HAS');
+    ok(gaza.trigger(ctx),
+      'occupying Gaza does not count as having taken it — the card still stands');
+    annex(ctx, ['Gaza'], 'HAS');
+    ok(!gaza.trigger(ctx), 'owning it retires the card');
+  }
+  // A campaign check that legitimately means "our army is here" is untouched.
+  {
+    const { ctx } = boot();
+    occupy(ctx, ['Emmaus'], 'HAS');
+    ok(ctx.helpers.controls(ctx, 'HAS', 'Emmaus'),
+      'and the revolt-era checks that really do mean control still mean it');
+  }
+}
+
 console.log(failures ? `smoke76: ${failures} FAIL` : 'smoke76: ALL PASS');
 process.exit(failures ? 1 : 0);
