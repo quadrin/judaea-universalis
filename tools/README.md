@@ -391,3 +391,10 @@ headless suites, beside smoke78. What it is really guarding is mutual
 exclusion: the historical northern arc and the alternate one must never both
 run in the same campaign, and a card that starts firing on both roads will show
 up here as an intruder rather than as a missing event.
+
+SPEC §114 adds `smoke81.mjs` (the kingdom that kept the Galilee). Like smoke80
+its real subject is mutual exclusion — there are now THREE outcomes in the 132
+chapter and a card that opens on two of them is a regression even though it
+will look like extra content. Its last section plays 299 years and is the
+slowest thing in the battery; the sections before it are direct predicate
+checks and are instant.

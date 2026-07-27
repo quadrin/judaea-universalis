@@ -5111,3 +5111,72 @@ it was written for.
   asserts 9/9 historical cards with zero alternates when Lebanon lives, 6/6
   alternates with zero historical when it does not, and that one province in the
   north buys nothing.
+
+## 114. The kingdom that kept the Galilee
+
+The second of §112's three holes. The 132 chapter tests for two outcomes with
+two predicates, and they do not meet in the middle:
+
+- `judaeaStands` — alive, no overlord, **controls Jerusalem**, no war with Rome.
+  Gates the victory branch: the Era of Redemption, the Third House, the Second
+  Generation, the succession of the Nasi, the Antonine reckoning.
+- `romanAftermath` — Rome alive, Rome holds Jerusalem, and Judaea **controls
+  nothing at all**. Gates the defeat branch: the fifteenth bishop, the rising
+  against Gallus, the patriarchate lapsing in 425.
+
+The commonest result of actually playing the chapter is neither. A revolt beaten
+out of the city but not out of the hills leaves a sovereign Jewish state of half
+a dozen Galilean provinces with a Roman Aelia twenty-five miles away — the
+victory gate fails on the city, the defeat gate fails on the state. A traced
+campaign ran from 132 to 431 in exactly that position: alive, no overlord, six
+provinces, war settled, and not one card in three centuries with anything to say
+about the Jewish–Roman question. The world spine ran past it beautifully — the
+Decian edict, Milan, Nicaea, Julian's Temple, Cunctos Populos — and none of it
+was addressed to the Jewish state sitting in the middle of the map.
+
+`events_132ce_galilee.js` is that third outcome, gated on `judaeaEndures`:
+sovereign, not holding Jerusalem, not at war for it, and holding at least two
+provinces of its own. It is also the most interesting of the three roads,
+because it is the one furthest from what happened.
+
+- **The Kingdom in the Hills** (140) ends the revolt without a Betar and without
+  a triumph. Sign the frontier agreement the governor will sign — a state that
+  trades has to know where it ends — or sign nothing, and keep the claim to the
+  city in the open at the price of a border where something can always start
+  again.
+- **The Prince and the Patriarch** (163) asks the question the office never got
+  to be asked. Where there is no state the Nasi *is* the Jewish polity; where
+  there is one, he is either the ruler or a rival to him. Fuse the offices as
+  the Hasmoneans fused crown and altar, or keep two chairs and pay for it in the
+  time a state with two heads spends deciding which one is speaking.
+- **A Law Code for a Country That Has One** (200). The redaction happens either
+  way; what differs is what it is *for*. Edit the Mishnah as enforceable law and
+  the courts sit on it within a year — and the diaspora academies quietly begin
+  keeping their own. Edit it whole, sacrificial orders and all, and it stays the
+  nation's rather than the government's, which is what made it portable.
+- **The Mountain and the Toll** (250) is the choice a treasury creates. Buy every
+  Jew's permit into Aelia and make the ninth of Av a national act performed by a
+  state, or forbid the purchase and leave the mountain unvisited by your own
+  people for generations. The sages record the refusal and the wound in the same
+  sentence.
+- **A Neighbour, Not a Minority** (390). The Christian empire has an apparatus
+  ready for the Jewish question — synagogue law, a theology of the fallen
+  Temple, a settled practice of legislating for people who cannot answer back in
+  any language it has to hear. None of it works on a state with ambassadors and
+  a frontier. Treat with it as a power, and every Jewish community inside the
+  empire acquires a foreign patron, which changes what can safely be done to
+  them; or legislate as though it were not there, and discover that the sentence
+  has no legal subject.
+- **What the Office Was For** (425) is the answer to `ev2_patriarchate_ends`.
+  Theodosius II could decline to fill a chair held at his pleasure. He cannot
+  vacate one in a country he does not govern, and the year passes in the Galilee
+  without anybody noticing it was supposed to be the end of something.
+
+The three roads are mutually exclusive by construction and the suite checks it
+in both directions: retaking Jerusalem leaves this branch at once and enters the
+victory one, losing everything enters the defeat one, and a war still running
+means no settlement has been chosen at all.
+
+- **Regression contract**: `smoke81.mjs`, which pins the three-way exclusion
+  province by province and plays 299 years to assert the chapter finishes on
+  exactly one road.

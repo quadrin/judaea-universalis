@@ -17,6 +17,7 @@ import { BOOKMARK_132 } from './bookmark_132ce.js';
 import { EVENTS_132 } from './events_132ce.js';
 import { EVENTS_132_FAITH } from './events_132ce_faith.js';
 import { EVENTS_132_WORLD } from './events_132ce_world.js';
+import { EVENTS_132_GALILEE } from './events_132ce_galilee.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
 import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
@@ -38,7 +39,7 @@ export const ERAS = [
   // are concatenated HERE rather than inside events_132ce.js so that every
   // content package keeps the zero-import property its header promises, and
   // so the registry stays the one place the pairing is written down.
-  { bookmark: BOOKMARK_132, events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_132, events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_GALILEE, GENERIC_EVENTS) },
   { bookmark: BOOKMARK_614, events: EVENTS_614.concat(EVENTS_614_PERSIA, GENERIC_EVENTS) },
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli

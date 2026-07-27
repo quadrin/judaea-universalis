@@ -177,10 +177,18 @@ console.log('== §104: the era windows ==');
   // The chain's own cards stop when their generation does. (The shared
   // modern pool that rides every bookmark carries minYear 1900 and is not
   // this chain's business.)
+  // SPEC §114's third outcome (`ev2_g_*`) is deliberately NOT a
+  // revolt-generation arc: it is the three centuries of a Jewish state that
+  // survived in the Galilee, and its cards run from 140 to 425 on purpose. The
+  // rule keeps its teeth for everything it was written for.
   const late = scripted.filter((e) => typeof e.trigger === 'function'
+    && !/^ev2_g_/.test(e.id)
     && Number.isFinite(e.maxYear) && e.maxYear > 260);
   ok(!late.length, 'no revolt-generation card can be answered in the fourth century ('
     + (late.map((e) => e.id).join(', ') || 'none') + ')');
+  const third = scripted.filter((e) => /^ev2_g_/.test(e.id));
+  ok(third.length >= 6, 'and the third outcome is a separate arc of '
+    + third.length + ' cards with its own windows');
 }
 
 console.log('== §104: the world keeps happening ==');
