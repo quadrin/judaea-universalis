@@ -5053,3 +5053,61 @@ it, falls between the branches and gets nothing.
   Judaea at peace by −162 loses the whole Lysias arc; `ev_jerusalem_terms` and
   `ev_hyrcanus_east` both need `sidetesBesieges`, so a Judaea strong enough that
   Antiochus VII never besieges Jerusalem loses both.
+
+## 113. The Levant without a Lebanon
+
+The first of the three holes §112 named, closed. The 1948 chapter's whole
+northern arc — nine major world cards, the Cairo Agreement of 1969 through the
+Mire — is guarded `when: alive(LEB)`. The guard itself is right: a state that
+does not exist cannot have its confessional settlement collapse. But `when`
+retires a card rather than holding it, so an Israel (or a Syria) that took
+Beirut before 1969 deleted fifty years of the region's history and got nothing
+whatever in its place. No militias, no Guard in the Beqaa, no eighteen years in
+the south. Silence, in the loudest corner of the map.
+
+`events_1948_levant.js` is the third outcome. Its premise is that none of the
+forces the Lebanon arc is about actually need Lebanon to exist:
+
+- **The fedayeen went to Lebanon in 1970 because Lebanon was the one state too
+  weak to refuse them.** With no such state they go somewhere that can refuse
+  them, and refusing them is a decision with a price — seal the frontier and
+  they become Damascus's problem and yours is a permanent garrison bill, or let
+  them into the camps under your own administration and be inside the problem
+  rather than beyond it.
+- **Mount Lebanon's confessional arithmetic does not dissolve on annexation.**
+  It becomes the annexer's arithmetic: rule through the militias that already
+  exist, which is cheap and contracts a debt that comes due in somebody else's
+  massacre, or administer nine provinces directly and argue about the cost at
+  home every year. The second answer is the expensive one and it is the one that
+  works, which is the whole content of the choice.
+- **The Revolutionary Guard came for the Shia of the south**, and under a direct
+  occupation that community's grievance is not mediated by a Lebanese state at
+  all. The Guard's argument gets easier to make, not harder, and the resistance
+  it builds is aimed at the occupier from the first day rather than at a
+  government down the road. The occupation produces the adversary faster than
+  the history that did not happen would have.
+- **The truck still goes through the wire.** `ev_i_barracks` is explicitly about
+  the multinational force that came to guarantee a peace between Lebanese
+  factions, so its guard now also refuses the annexed road; `ev_l_the_lesson`
+  is that road's version, aimed at an occupation headquarters on the coast, as
+  Tyre was in November 1983. Same building coming down, same absence of an
+  address to retaliate against.
+- **And it ends the way occupations end.** The Long North offers the two real
+  answers — hold the line because withdrawal teaches the wrong lesson, and pay
+  for it monthly forever; or pull back to a frontier fewer men can hold, take
+  the legitimacy hit, and let the Party of God claim the credit. The century
+  then closes on the northern question with the settlement each answer earned:
+  quieter for the state that administered, still in debt for the state that
+  farmed it out, and unanswered for the one that never chose.
+
+The arc requires a real occupation, not a border adjustment: `occupier()` wants
+four of the nine provinces before it will call anyone the possessor of a
+country, and a living Lebanon closes the whole branch however much ground is
+held. The two arcs are mutually exclusive by construction, which matters more
+than either of them — a branch that fired in both would be worse than the hole
+it was written for.
+
+- **Regression contract**: `smoke80.mjs`, which plays the chapter out twice and
+  asserts 9/9 historical cards with zero alternates when Lebanon lives, 6/6
+  alternates with zero historical when it does not, and that one province in the
+  north buys nothing.

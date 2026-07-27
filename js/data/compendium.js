@@ -23,6 +23,7 @@ import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
 import { BOOKMARK_1948 } from './bookmark_1948.js';
 import { EVENTS_1948 } from './events_1948.js';
 import { EVENTS_1948_REGION } from './events_1948_region.js';
+import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 
 export const ERAS = [
@@ -42,7 +43,7 @@ export const ERAS = [
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli
   // Cohen, Tehran in 1979, and the northern border it produced.
-  { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(EVENTS_1948_REGION, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(EVENTS_1948_REGION, EVENTS_1948_LEVANT, GENERIC_EVENTS) },
 ];
 
 // The shared pool by itself (the wiki's "omens and incidents" page tells it

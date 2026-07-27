@@ -384,3 +384,10 @@ before it are pure `monthlyRisings` ticks and are instant. Note that it
 deliberately asserts what does NOT burn out as well as what does — a dead
 owner's province, a pretender's host, and a band inside its grace period all
 keep what they took, and loosening any of those is a test failure by design.
+
+SPEC §113 adds `smoke80.mjs` (the Levant without a Lebanon). It plays the whole
+1948 chapter twice — fifty-four years each — so it is one of the two slowest
+headless suites, beside smoke78. What it is really guarding is mutual
+exclusion: the historical northern arc and the alternate one must never both
+run in the same campaign, and a card that starts firing on both roads will show
+up here as an intruder rather than as a missing event.

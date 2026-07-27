@@ -994,7 +994,12 @@ export const EVENTS_1948_REGION = [
     major: true,
     minYear: 1983,
     maxYear: 1990,
-    when: safeTrigger('ev_i_barracks:when', (ctx) => !!ctx.game.flags.hezbollah),
+    // The multinational force is the whole subject of this card, and it came to
+    // Lebanon to guarantee a peace between Lebanese factions. Where there is no
+    // Lebanon there is no such peace and no such force — SPEC §113 gives that
+    // road its own truck, aimed at the occupier's headquarters instead.
+    when: safeTrigger('ev_i_barracks:when', (ctx) =>
+      !!ctx.game.flags.hezbollah && !ctx.game.flags.hezbollahUnderOccupation),
     decider: 'ISR',
     aiOption: 0,
     options: [
