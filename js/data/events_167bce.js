@@ -2939,7 +2939,12 @@ export const EVENTS_167 = [
     major: true,
     trigger: safeTrigger('ev_hyrcanus_east', (ctx) => {
       const h = ctx.helpers;
-      if (!h.getFlag(ctx, 'jerusalemTerms')) return false;
+      // SPEC §115: the anabasis follows a settlement with Sidetes, and there is
+      // more than one way to reach one. `jerusalemTerms` is the settlement that
+      // ends a siege; `sidetesAccord` is the settlement a Judaea already at
+      // peace with him reaches by letter instead. Either makes Hyrcanus the
+      // king's man for the eastern campaign, which is all this card needs.
+      if (!h.getFlag(ctx, 'jerusalemTerms') && !h.getFlag(ctx, 'sidetesAccord')) return false;
       if (!alive(ctx, 'HAS') || !alive(ctx, 'SEL')) return false;
       return dateGE(ctx, -130, 4);
     }),

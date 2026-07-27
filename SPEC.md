@@ -5180,3 +5180,47 @@ means no settlement has been chosen at all.
 - **Regression contract**: `smoke81.mjs`, which pins the three-way exclusion
   province by province and plays 299 years to assert the chapter finishes on
   exactly one road.
+
+## 115. The third road through Sidetes
+
+The last of §112's holes, and the smallest — two cards, but two of the chapter's
+best. `ev_jerusalem_terms`, the Honorable Terms, requires `findWar(HAS, SEL)`:
+an **active** war, at −133 or later. That is right for the road it was written
+for, where the king is outside the walls and the terms are what ends the siege.
+It is silently wrong for a Judaea that beat the Seleucids to a peace years
+earlier: there is no war to find, so the card waits inside its trigger forever,
+and `ev_hyrcanus_east` chains off a flag it therefore never sets.
+
+Worth separating from the Lysias arc, which looks like the same bug and is not.
+`ev_royal_expedition` carries `requiresWar: ['HAS','SEL']`, and the engine
+handles that case properly: when the war has been settled the card is retired
+with the recorded reason *"the war it belonged to was already settled"* and the
+player is shown that page in the ledger. Verified in a traced campaign — it
+lands there at −162 with Beth-Zechariah beside it. That is a divergence the
+game tells you about. The Sidetes case records nothing at all, because a trigger
+that never fires was never retired.
+
+Note also what is *not* the cause. `sidetesBesieges` is set on both roads:
+`ev_sidetes_siege` is a plain dated card with no guard, so it always fires. The
+block is one line further down, and only that line.
+
+`ev_w_sidetes_summons` is the third road. Sidetes' purpose does not change
+because there is a treaty — he came to put the Seleucid house back together and
+Judaea is the piece that got away. What changes is the instrument: a king who
+cannot besiege a state he is at peace with sends a letter instead, and the
+letter asks for exactly what the siege would have asked for — the arrears, the
+tribute for Joppa and Gazara, a garrison in the citadel or its money value,
+and a closing line about the army of the East mustering at Antioch this spring.
+
+Pay it, and Judaea arrives at the position the Honorable Terms produced without
+a siege ever happening: treaty intact, walls up, a tribute on the ledger, and
+Rome fifteen points cooler toward a friend that pays Antioch. Refuse it in
+Simon's words — the cities were taken from enemies, not borrowed — and the
+treaty breaks, the army turns south, and the whole original arc becomes
+reachable again on the road it was written for.
+
+`ev_hyrcanus_east` now accepts either settlement. The anabasis follows a
+settlement with Sidetes, and there is more than one way to reach one.
+
+- **Regression contract**: the 167 audit no longer reports `ev_jerusalem_terms`
+  or `ev_hyrcanus_east` among the cards a victorious Judaea loses.

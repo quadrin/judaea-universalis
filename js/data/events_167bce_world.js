@@ -76,6 +76,15 @@ function stir(ctx, names, mod) {
   for (const n of names) ctx.helpers.addProvinceModifier(ctx, n, mod);
 }
 
+function warBetween(ctx, a, b) {
+  for (const w of (ctx.game && ctx.game.wars) || []) {
+    if (!w) continue;
+    const all = (w.attackers || []).concat(w.defenders || []);
+    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return true;
+  }
+  return false;
+}
+
 function setOpinion(ctx, a, b, val) {
   const t = ctx.game.tags && ctx.game.tags[a];
   if (!t) return;
@@ -664,6 +673,102 @@ export const EVENTS_167_WORLD = [
           }
           h.setFlag(ctx, 'pompeyEast', true);
           h.chronicle(ctx, 'era', 'Pompey makes Syria a province and files the whole eastern Mediterranean into a settlement that will outlast the Republic that made it.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE THIRD ROAD THROUGH SIDETES (SPEC §115) ══════════════════════════
+  //
+  // `ev_jerusalem_terms` — the Honorable Terms, the hinge of the whole Sidetes
+  // arc — requires `findWar(HAS, SEL)`: an ACTIVE war, at −133 or later. That is
+  // right for the road the card was written for, where the king is outside the
+  // walls and the terms are what ends the siege. It is silently wrong for a
+  // Judaea that beat the Seleucids to a peace years earlier: there is no war to
+  // find, so the card waits inside its trigger forever and never fires, and
+  // `ev_hyrcanus_east` chains off a flag it therefore never sets. Two major
+  // cards vanish, and unlike the Lysias arc — which retires with the recorded
+  // reason "the war it belonged to was already settled" and shows the player
+  // that page of the ledger — nothing is recorded at all, because a trigger
+  // that never fires was never retired.
+  //
+  // Sidetes' purpose does not change because there is a treaty. He came to put
+  // the Seleucid house back together, and Judaea is the piece of it that got
+  // away. What changes is the instrument: a king who cannot besiege a state he
+  // is at peace with sends a demand instead, and the demand is the same demand.
+
+  {
+    id: 'ev_w_sidetes_summons',
+    title: 'The King Who Cannot Besiege You',
+    desc: 'Antiochus Sidetes has spent five years putting the pieces of his house back '
+      + 'on the board, and he has been counting them, and one of them is missing. There '
+      + 'is a treaty — signed by a predecessor of his in circumstances the present king '
+      + 'considers to have been duress, which is the word every court uses for an '
+      + 'agreement it wishes it had not made — and so there is no siege. There is a '
+      + 'letter instead. It is very correct and very long and it asks for exactly what '
+      + 'a siege would have asked for: the arrears since the treaty, the tribute for '
+      + 'Joppa and Gazara which are Greek cities held by a Jewish king, and a garrison '
+      + 'in the citadel, or their money value, which the letter is careful to say the '
+      + 'king would find equally acceptable. The last line observes that the army of '
+      + 'the East is mustering at Antioch this spring in any case.',
+    forTag: 'HAS',
+    major: true,
+    minYear: -133,
+    maxYear: -128,
+    trigger: safeTrigger('ev_w_sidetes_summons', (ctx) => {
+      const h = ctx.helpers;
+      const me = crown(ctx);
+      if (!me || !alive(ctx, 'SEL')) return false;
+      if (!h.getFlag(ctx, 'sidetesBesieges')) return false;
+      // Only the road the existing arc cannot take: no war to end, and the
+      // terms therefore never offered.
+      if (h.getFlag(ctx, 'jerusalemTerms') || h.getFlag(ctx, 'sidetesAccord')) return false;
+      if (warBetween(ctx, me, 'SEL')) return false;
+      return dateGE(ctx, -133, 6);
+    }),
+    aiOption: 0,
+    historical: 'The king came in person and invested the city; the Honorable Terms were what ended the siege. A Judaea already at peace with him gets the letter instead of the towers.',
+    options: [
+      {
+        label: 'Pay the arrears and keep the treaty',
+        tooltip: 'The money value of everything the letter asks for, and no garrison: −120 treasury, −5 legitimacy (the arrears are read out in the assembly), +1 stability, and Rome cools 15 toward a friend that pays Antioch. The treaty holds, the walls stay up, and the king rides east counting Judaea among his own — which is exactly the position the Honorable Terms produced, arrived at without a siege.',
+        effects: guard('ev_w_sidetes_summons:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = crown(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { treasury: -120, legitimacy: -5, stability: 1 });
+          h.addTagModifier(ctx, me, {
+            id: 'tribute_for_joppa', name: 'Tribute for Joppa', months: -1,
+            effects: { incomeMult: 0.9 },
+          });
+          if (alive(ctx, 'SEL')) {
+            h.adjust(ctx, 'SEL', { treasury: 120, legitimacy: 8 });
+            setOpinion(ctx, 'SEL', me, 40);
+          }
+          if (alive(ctx, 'ROM')) setOpinion(ctx, 'ROM', me, -15);
+          h.setFlag(ctx, 'sidetesAccord', true);
+          h.chronicle(ctx, 'era', 'There is no siege of Jerusalem: the king sends a letter and the king is paid, and Judaea keeps its treaty, its walls and a tribute for Joppa.');
+        }),
+      },
+      {
+        label: 'Answer that the cities were taken from enemies, not borrowed',
+        tooltip: 'The reply Simon gave the last king who asked, sent to a king with an army mustering: the treaty is broken and Sidetes marches — war with the Seleucid kingdom, +20 legitimacy, +2 zeal, +8% morale for 24 months. The Honorable Terms become reachable again, on the road they were written for, and so does everything after them.',
+        effects: guard('ev_w_sidetes_summons:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = crown(ctx);
+          if (!me) return;
+          h.adjust(ctx, me, { legitimacy: 20 });
+          h.addTagModifier(ctx, me, {
+            id: 'not_borrowed', name: 'Taken From Enemies, Not Borrowed', months: 24,
+            effects: { moraleMult: 1.08 },
+          });
+          h.doctrine(ctx, 'zeal', 2);
+          if (alive(ctx, 'SEL') && !warBetween(ctx, me, 'SEL')) {
+            try { h.endWar(ctx, me, 'SEL', null); } catch (e) { /* no truce to clear */ }
+            h.declareWar(ctx, 'SEL', me, 'The Recovery of the Cities');
+          }
+          h.setFlag(ctx, 'sidetesRefused', true);
+          h.chronicle(ctx, 'era', 'Judaea answers the king as Simon answered his brother — the cities were taken from enemies, not borrowed — and the army of the East turns south instead.');
         }),
       },
     ],
