@@ -407,3 +407,11 @@ If you tighten `geomIsMapLike` or remove the `keep`-predicate exemption, this is
 where it will show up. Note also that §117 changes attrition for every army with
 a long line, so a balance shift in the 105-year runs after touching supply is
 expected rather than alarming.
+
+SPEC §118–§119 add `smoke83.mjs` (the branching path tree) and `tools/paths.mjs`
+(the renderer). smoke83 is fast — it is static analysis, not simulation — and it
+is the suite to run after touching ANY branch predicate or terminal card. Its
+sharpest assertion is that `KNOWN_GAPS` equals the set of roads with no ending,
+so finishing a road means deleting its gap entry in the same commit. Note the
+marker check reads the content packages as TEXT: the effect wrapper hides
+`setFlag` from `String()`, so a runtime check would silently pass.

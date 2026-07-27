@@ -101,6 +101,12 @@ function judaeaEndures(ctx) {
   if (!alive(ctx, 'JUD') || (t && t.overlord)) return false;
   if (findJudRomWar(ctx.game)) return false;
   if (ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')) return false;
+  // SPEC §119: the first road entered is the road. The three predicates read
+  // live state, and live state moves — a Judaea that took the city, opened the
+  // redemption, then lost it again would otherwise pick up this arc halfway
+  // through and play two chapters at once. The marker flag is what makes a road
+  // a road rather than a description of this month.
+  if (flag(ctx, 'redemptionEra') || flag(ctx, 'freedomEra')) return false;
   return controlledCount(ctx, 'JUD') >= 2;
 }
 

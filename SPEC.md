@@ -5309,66 +5309,112 @@ should be able to decline it, or to settle out of it early, and until it can,
 the 1948 chapter will keep producing regional land grabs that no participant
 ever wanted.
 
-## 116. A demand has to be somewhere
+## 118. The best road was the emptiest
 
-Reported from play: in a 1948 campaign Iraq annexed parts of Egypt and Turkey
-took parts of Lebanon, and a traced run reproduced worse — Egypt owning
-Hyrcania, Gabae and Susa in central Iran, and Jordan owning Hatra and Charax.
+Found by building the path tree of §119 rather than by playing: the 132 chapter
+has three roads, and the last card on its best one — `ev2_second_generation` —
+is at **163 CE**, in a chapter that runs to 425. A Judaea that actually wins Bar
+Kokhba, holds Jerusalem and restores the state the revolt was fought for got two
+hundred and sixty-two years of silence, while the defeat road ran to
+`ev2_patriarchate_ends` in 425 and the Galilee road of §114 ran to 425 beside
+it. The outcome a player most wants to reach was the one that stopped first,
+which is close to the worst possible arrangement of authorial effort.
 
-Uti possidetis says a winner keeps what it holds at the bell. It does not say a
-winner keeps what it holds on the other side of somebody else's country. §109
-gave released states a land border on the grounds that a state has to be
-somewhere; an annexation is the same claim from the other direction and never
-got the same rule.
+`events_132ce_redemption.js` is that road's third and fourth centuries. The
+material is the richest counterfactual in the game, because what changes is not
+a battle: it is that the Roman Empire becomes Christian while a sovereign Jewish
+state is standing in Jerusalem with the Temple Mount in its hands. Every piece
+of fourth-century legislation about Jews assumes a people inside the empire who
+cannot answer back in any language it has to hear, and none of it has a subject
+here.
 
-The first thing the trace corrected was where to put it. `endWarBySword` is not
-the path the AI settles through — the peace table is `peaceDealInfo`, which
-builds its demandable list from occupation alone, with no geography test at
-all. The rule now lives in both: `demandReach` filters the table, `annexable`
-filters a settlement by the sword. A demand must be land-reachable from the
-claimant's own country, counting the other demands as stepping stones, so a
-claim may run outward from the border through a corridor but may not begin on
-the far side of a country nobody is taking.
+- **Citizens of Somewhere Else** (212). Caracalla makes every free man a Roman
+  citizen and, without anyone in the chancery noticing, draws a line a Jewish
+  state is on the far side of. Renounce any claim on Jews who are Rome's
+  subjects — safer for them, and further away — or claim them, which is what a
+  state is for and what an empire cannot tolerate.
+- **The Certificate** (250). The Decian sacrifice is a loyalty audit of
+  everyone at once, and the Jewish exemption rests entirely on an argument from
+  antiquity that has never been tested against a Jewish army on the Euphrates
+  flank. Buy the exemption and get it written down for the first time in three
+  centuries, or let the argument stand on its own feet and record the towns
+  where the magistrates did not agree.
+- **The Emperor in a Cage** (260). Shapur takes Valerian alive and the Roman
+  East has no field army between Antioch and the desert. The generals bring a
+  map and the sages bring the Three Oaths. Take the coast — the Palmyrene
+  answer, and it is worth remembering what happened to Palmyra — or hold, and be
+  the one government in the East still answering its correspondence.
+- **A Canon Aimed at a Government** (325). Nicaea fixes Easter away from the
+  Jewish reckoning, and the emperor puts the reason in writing. Here that
+  calendar is not a custom: it is published annually by a government, over a
+  seal, by courier, to six countries. The council has not corrected an error, it
+  has declined to receive a foreign state's mail.
+- **The Religion of the State Next Door** (380). Cunctos Populos legislates a
+  faith whose founding events are, twenty-five miles away, municipal records in
+  somebody else's archive. Open the city to Christian pilgrimage and tax it at
+  the gate — the most profitable decision the kingdom ever takes and the one it
+  argues about longest — or shut the Mount and let the empire arrive at the
+  question from other directions.
+- **Three Hundred Years** (425). The year the patriarchate would have lapsed,
+  passing unnoticed in a kingdom older than the revolt that made it. The
+  chronicle reads back every choice the road made. The miracle has become an
+  administration, which is the only thing a miracle can turn into if it is going
+  to last.
 
-**The valve, which is not a fudge.** The first draft broke six suites, because
-a geometry can be REAL — edges exist, `geomHasEdges` is true — and still be
-meaningless: the older harnesses build a line of beads where province `i`
-borders `i±1`. Rather than try to detect a fake map, the rule refuses only the
-outcome that is certainly wrong — a victorious army holding enemy ground and a
-table with nothing on it. If the filter would strike out every demand it has
-learned nothing about that world and stands aside. Where the map is real there
-is always something adjacent to ask for, so it still bites exactly where it was
-written to.
+**And the roads now lock.** The trace that proved this package also exposed the
+thing the tree exists to catch: a Judaea that lost Jerusalem, took the Galilee
+road, and later retook the city played two chapters at once, because all three
+predicates read live state and live state moves. The rule is now explicit in
+both files — **the first road entered is the road**. `judaeaEndures` stands down
+once `redemptionEra` is set; `redeemed` stands down once `galileeKingdom` is.
+The marker flag is what makes a road a road rather than a description of this
+month.
 
-**And an authored border is not the engine's to second-guess.** A scripted
-settlement that supplies its own `keep` predicate has already drawn the line by
-hand — Rhodes says precisely which cells sit inside the 1949 armistice — so
-`endWarBySword` applies the rule only when no `keep` is given.
+## 119. The branching path tree
 
-What is left in the trace is a different class of thing. Iraq annexing Susa and
-Egypt reaching Hebron are adjacent, which is a question about appetite rather
-than about geography.
+Seven chapters, twelve forks, twenty-four roads, and until now no document said
+so. The structure existed only as predicates scattered through the content
+packages — `judaeaStands`, `romanAftermath`, `judaeaEndures`, `noLebanon`,
+`judaeaFree` — each re-derived from live state at the point of use, with nothing
+anywhere recording how many roads a chapter had or whether they all went
+somewhere.
 
-## 117. The length of the line
+`js/data/chapter_paths.js` records it, and deliberately does **not** reimplement
+the predicates: two sources of truth for the same question drift within a month.
+What it stores is the evidence — the flag each road sets when taken (or the tag
+it seats, for the 1961 secession, which is proved by a state existing rather
+than by anything written down), the card that opens it, and the card that closes
+it.
 
-The same report's other half: an Israel that can invade deep into Iraq, Saudi
-Arabia and Egypt on foot.
+`smoke83.mjs` checks the map against the ground: every named card exists in the
+chain, every marker is a flag some live card actually writes, no two roads in a
+fork answer to the same flag, no terminal falls outside its chapter, and the
+declared gap list matches the real gaps exactly.
 
-`traceSupply` floods the chain to depth 64 — larger than the map — so supply is
-a yes/no fact and distance is structurally free. A host is as well fed at the
-Gulf as at home, and desert attrition of 4%/month is not enough to matter
-against a corridor the army lays as it advances.
+Two details are load-bearing. The marker check is **static** — it reads the
+content packages as text, because every effect body is wrapped in `guard(key,
+fn)` and `String(option.effects)` returns the wrapper rather than the `setFlag`
+inside it; a runtime check would pass on markers nothing sets. And it accepts
+both idioms in the codebase, the helper and a direct write to `g.flags`, because
+the first draft knew only the helper and declared a live road dead.
 
-A hard cutoff would be wrong: it would strand scripted armies and turn a
-logistics question into a teleport ban. So the line still reaches at any length
-— it just costs more the longer it is. `monthlySupply` records
-`army.supplyReach` (the route home, in provinces), and the attrition pass adds
-`reachAttrition` for every province past `reachComfort`, capped at `reachCap`.
-Seven provinces is the comfortable haul; past that the wagons strain, and the
-forage is being taken off land that has already been foraged.
+Writing the tree found four things before any of it ran:
 
-A deep invasion is therefore still possible and no longer free, which is the
-honest answer: armies did march to the Gulf, and they arrived smaller.
+1. **132's redemption road ended at 163** in a chapter that runs to 425 — closed
+   by §118.
+2. **`uarBrokeUp` does not exist.** I had recorded a flag for the Syrian
+   secession that nothing sets; the road is marked by the `SAR` tag instead.
+3. **40 BCE's Hasmonean road has no ending.** A surviving Antigonus stops well
+   before the chapter does, and `ev5_her_leash` reads as a further road nobody
+   finished either.
+4. **1948's union fork has one road.** The union coming apart has no counterpart
+   for a union that holds, so there is nothing for it to be exclusive with.
 
-- **Regression contract**: the existing supply suites, plus the 1948 trace,
-  which no longer ends with any non-adjacent annexation.
+3 and 4 are in `KNOWN_GAPS`, which the suite asserts is exactly the set of
+roads without terminals — a to-do list the build enforces rather than a comment
+nobody rereads. Close one and forget to remove it, or add an unfinished road and
+forget to declare it, and the suite fails.
+
+- **Renderer**: `node tools/paths.mjs [chapter] [--gaps]`. It prints and does not
+  validate; a renderer that also validated would be trusted for the wrong reason.
+- **Regression contract**: `smoke83.mjs`.
