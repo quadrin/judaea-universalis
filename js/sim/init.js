@@ -38,7 +38,7 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
-import { shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
+import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption } from './events.js';
 import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
@@ -572,6 +572,40 @@ export const simHelpers = {
   // ids are quiet no-ops — so content may call it unconditionally.
   factionShift(ctx, tag, factionId, delta) {
     return shiftFaction(ctx, tag, factionId, delta);
+  },
+  // …and read one (SPEC §130). `faction` is the raw standing or null where no
+  // court sits; `factionAtLeast` is the form nearly every gate wants, and it
+  // is false rather than throwing when there is no court to ask.
+  faction(ctx, tag, factionId) {
+    return factionApproval(ctx, tag, factionId);
+  },
+  factionAtLeast(ctx, tag, factionId, min) {
+    const v = factionApproval(ctx, tag, factionId);
+    return Number.isFinite(v) && v >= num(min, 0);
+  },
+  // The settlement a chapter adopted, stored once under its own name (SPEC
+  // §130). Booleans were fine while two or three later cards read a decision;
+  // they are the wrong shape for one that has to steer sixty years of content
+  // including content nobody has written yet. This is write-once on purpose —
+  // a constitution that can be silently replaced is not a constitution, and a
+  // second call is a bug worth hearing about rather than a feature.
+  setConstitution(ctx, era, value) {
+    const g = ctx.game;
+    if (!g.constitutions || typeof g.constitutions !== 'object') g.constitutions = {};
+    const key = String(era || '');
+    const val = String(value || '');
+    if (!key || !val) return false;
+    if (g.constitutions[key] && g.constitutions[key] !== val) {
+      warnOnce('constitution:' + key, 'a second constitution for', key,
+        '(' + g.constitutions[key] + ' -> ' + val + ') was refused');
+      return false;
+    }
+    g.constitutions[key] = val;
+    return true;
+  },
+  constitutionOf(ctx, era) {
+    const c = ctx.game.constitutions;
+    return (c && c[String(era || '')]) || '';
   },
   // The doctrine axes (SPEC §85). `axis` reads the realm's character on one
   // of the four tensions (-10..+10) so a trigger can ask what KIND of realm

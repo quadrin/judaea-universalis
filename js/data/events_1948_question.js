@@ -59,11 +59,42 @@ function otherShare(ctx) {
   return (all - h.countControlled(ctx, 'ISR', { religion: 'judaism' })) / all;
 }
 
-// The ground beyond the armistice lines, in the cells the chapter already
-// names for it (events_1948.js draws the same three sets for the Sinai
-// withdrawal), repeated here rather than imported so this package keeps the
-// zero-import property its header promises.
-const HILL_COUNTRY = ['Neapolis', 'Hebron', 'Jenin', 'Ramallah', 'Bethlehem', 'Jericho', 'Tulkarm', 'Qalqilya'];
+// The 1949 armistice line, in the cells the chapter already draws it with
+// (SPEC §131). Repeated rather than imported, per the zero-import header —
+// but repeated from `events_1948.js`, which is where this line is defined,
+// instead of assembled from memory the way §125 did it.
+//
+// §125 shipped an ad-hoc list and it was wrong twice over.
+//
+// It handed back eight hill towns and left out the JERUSALEM CORRIDOR — Lydda,
+// Emmaus, Beit Shemesh, Modi'in Hills — which produced exactly the shape a map
+// should never show: an Israeli Jerusalem as an island in a Jordanian West
+// Bank. The corridor is the whole reason Jerusalem was holdable at all, and
+// two of those cells (Lydda, Beit Shemesh) are in the chapter's own list of
+// territory INSIDE the armistice line.
+//
+// And it ignored the southern half of the line entirely. Beersheba, Arad,
+// Dimona, Oboda, Mitzpe Ramon, Paran and Eilat all start in Egyptian or
+// Jordanian hands on 15 May and are all inside the 1949 line — Umm Rashrash
+// was taken in Operation Uvda in March 1949 and is the reason the state has a
+// Red Sea coast at all. A withdrawal defined without them is not a withdrawal
+// to the armistice line; it is a withdrawal to somebody's vague memory of it.
+//
+// So the line is now defined by the two sets the chapter already keeps, and
+// the giveback is what falls outside them.
+const WEST_BANK = [
+  'Neapolis', 'Sebaste', 'Jenin', 'Tulkarm', 'Qalqilya', 'Ramallah',
+  'Bethlehem', 'Hebron', 'Adora', 'Jericho', 'Jerusalem', 'Beit Shemesh',
+  'Modi\'in Hills', 'Emmaus', 'Lydda',
+];
+// Outside Israel's 15-May holdings and inside the 1949 line: the corridor,
+// the lower Galilee, the southern coast and the whole Negev down to the gulf.
+const INSIDE_THE_LINE = [
+  'Gischala', 'Sepphoris', 'Jotapata',
+  'Lydda', 'Beit Shemesh', 'Emmaus', 'Modi\'in Hills',
+  'Ascalon', 'Azotus', 'Kiryat Gat',
+  'Beersheba', 'Arad', 'Oboda', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
+];
 const GAZA_STRIP = ['Gaza', 'Khan Yunis', 'Rafah'];
 const SINAI_CELLS = ['Rhinocolura', 'Pelusium', 'Sinai Interior', 'Kadesh Barnea', 'Dizahab'];
 
@@ -83,16 +114,23 @@ function regionalOpinion(ctx, delta) {
   }
 }
 
-// Hand back what the state holds beyond the line, to whoever administered it
-// before 1967 — and only that. The Golan is not on the list: the card's
-// argument is a frontier the standing army can hold, and that is the piece
-// the general staff has never said it could give up. Returns what moved.
+// Hand back what the state holds OUTSIDE the line, to whoever administered it
+// before — and only that. What it holds inside the line it keeps, which is the
+// half §125 forgot: the corridor stays, and so does the Negev to Eilat.
+//
+// Jerusalem is the one cell the map cannot honestly resolve. The armistice
+// divided the city — Israel west, Jordan the Old City — and there is one
+// province here. It stays with the state that holds it, the corridor stays
+// with it so that it is not an island, and the card says in as many words that
+// the city is the piece the settlement did not settle.
 function withdrawToTheLine(ctx) {
   const h = ctx.helpers;
+  const keep = new Set(INSIDE_THE_LINE);
   let n = 0;
   const give = (names, to) => {
     if (!alive(ctx, to)) return;
     for (const name of names) {
+      if (keep.has(name) || name === 'Jerusalem') continue;
       let p = null;
       try { p = ctx.prov(name); } catch (e) { warnOnce('withdraw:' + name, e); continue; }
       if (!p || p.impassable || p.owner !== 'ISR') continue;
@@ -100,9 +138,21 @@ function withdrawToTheLine(ctx) {
       n++;
     }
   };
-  give(HILL_COUNTRY, 'JOR');
+  give(WEST_BANK, 'JOR');
   give(GAZA_STRIP, 'EGY');
   give(SINAI_CELLS, 'EGY');
+  return n;
+}
+
+// What the state holds inside the line and is therefore keeping. Reported so
+// the chronicle can say the southern half of the border out loud instead of
+// leaving the player to infer it from the map.
+function keptInsideTheLine(ctx) {
+  let n = 0;
+  for (const name of INSIDE_THE_LINE) {
+    try { const p = ctx.prov(name); if (p && !p.impassable && p.owner === 'ISR') n++; }
+    catch (e) { warnOnce('kept:' + name, e); }
+  }
   return n;
 }
 
@@ -154,7 +204,7 @@ export const EVENTS_1948_QUESTION = [
       },
       {
         label: 'Two states: withdraw to a defensible line and trade the rest for recognition',
-        tooltip: 'Territory exchanged for settled borders. The hill country goes back to Jordan and Gaza and the Sinai to Egypt, and letters of recognition are exchanged with whoever takes them: +25 opinion with every court in the region, +3 stability, −2 unrest everywhere, +8% income from a frontier that no longer has to be held in depth, and the line shortens to something the standing army can hold. Revisionists −45, Kibbutzim −20, and the withdrawal is irreversible whether or not the recognition holds.',
+        tooltip: 'The 1949 line, made permanent. Outside it goes back: the Samarian and Judaean hills to Jordan, Gaza and whatever is held beyond it to Egypt. Inside it stays — the Jerusalem corridor, the southern coast, and the whole Negev down to Eilat, which is not a concession anybody is being asked to make. Letters of recognition are exchanged with whoever takes the ground: +25 opinion with every court in the region, +3 stability, −2 unrest everywhere, +8% income from a frontier that no longer has to be held in depth. Revisionists −45, Kibbutzim −20. Jerusalem is the piece this does not settle, and everyone signing knows it.',
         effects: guard('ev_z_question:1', (ctx) => {
           const h = ctx.helpers;
           const released = withdrawToTheLine(ctx);
@@ -174,9 +224,11 @@ export const EVENTS_1948_QUESTION = [
           }
           h.setFlag(ctx, 'questionAnswered', true);
           h.setFlag(ctx, 'theSettledLine', true);
+          const kept = keptInsideTheLine(ctx);
           h.chronicle(ctx, 'era', released
-            ? 'The government trades territory for recognised borders: ' + released + ' districts change hands and the letters are exchanged. The line is drawn where the army says it can be held and where the cabinet says it can be defended in public.'
+            ? 'The government trades territory for recognised borders: ' + released + ' districts beyond the line change hands and the letters are exchanged. ' + kept + ' inside it do not, the corridor and the Negev among them, and the maps printed that winter run unbroken from the corridor to the gulf.'
             : 'The government settles its borders where they already run. There is nothing beyond the line to give back, and the letters are exchanged on that basis.');
+          h.chronicle(ctx, 'ruler', 'The communiqué has one paragraph that took longer than all the others and says nothing: the status of Jerusalem is reserved for a later negotiation. There is no later negotiation scheduled and both delegations sign anyway.');
         }),
       },
       {

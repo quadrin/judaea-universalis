@@ -66,6 +66,17 @@ function rulerAt(ctx, key, min) {
   return !!r && Number(r[key] || 0) >= min;
 }
 
+// The settlement the chapter adopted, where the chapter has one (SPEC §130).
+// This pool is shared by six chapters and most of them never answer the
+// question; where one has, it decides which answers about the conquered are
+// even sayable.
+function settlementOf(ctx) {
+  try {
+    const c = ctx.game.constitutions || {};
+    return c[String(ctx.game.bookmarkId || '')] || '';
+  } catch (e) { return ''; }
+}
+
 export const EVENTS_ANNEX = [
 
   {
@@ -111,6 +122,13 @@ export const EVENTS_ANNEX = [
       },
       {
         label: 'Tribute and their own law. They are subjects, not converts',
+        when: (ctx) => {
+          // A government founded on cancelling debt cannot open a tribute roll
+          // on somebody else, and a government that refuses the census cannot
+          // assess one. Both answers are closed by their own first principle.
+          try { const s = settlementOf(ctx); return s !== 'jubilee' && s !== 'noRuler'; }
+          catch (e) { return true; }
+        },
         tooltip: 'The lightest hand and the cheapest: conquered towns keep their gods, their courts and their customs and pay for the privilege. +15% income from the tribute, +2 stability, −1 zeal — and integration runs at half speed forever, so the realm accumulates provinces that are inside it without being of it.',
         effects: (ctx) => {
           try {
@@ -140,13 +158,18 @@ export const EVENTS_ANNEX = [
       },
       {
         label: 'One law for the citizen and the stranger among you',
-        tooltip: 'The verse read at its widest: the conquered are subjects of the same law with the same standing, converted or not. +3 stability, −2 unrest everywhere (permanent), +12 legitimacy, −2 zeal — and no mechanism at all for keeping the realm Jewish as it grows. The question of what this state is for is now permanently open.',
+        tooltip: 'The verse read at its widest: the conquered are subjects of the same law with the same standing, converted or not. +3 stability, −2 unrest everywhere (permanent), +12 legitimacy, −2 zeal — and no mechanism at all for keeping the realm Jewish as it grows. The question of what this state is for is now permanently open. A state that enforced the Jubilee is not choosing generously here; it is applying the chapter of Leviticus it already lives under, and the stranger in the land is in that chapter too.',
         effects: (ctx) => {
           try {
             const h = ctx.helpers; const me = ctx.game.playerTag;
             h.addTagModifier(ctx, me, { id: 'one_law_for_the_stranger', name: 'One Law for the Stranger', months: -1, effects: { unrestAll: -2, incomeMult: 1.05 } });
             h.adjust(ctx, me, { stability: 3, legitimacy: 12 });
             h.doctrine(ctx, 'zeal', -2);
+            // Consistency is cheap for a state already committed to it.
+            if (settlementOf(ctx) === 'jubilee') {
+              h.adjust(ctx, me, { legitimacy: 10 });
+              h.chronicle(ctx, 'ruler', 'The ruling cites the chapter the state is already living under, which saves the drafters a week and the argument entirely.');
+            }
             h.setFlag(ctx, 'annexPolicySet', true);
             h.setFlag(ctx, 'annexOneLaw', true);
             h.chronicle(ctx, 'era', 'One law is proclaimed for the citizen and the stranger. The lawyers note that the verse says exactly this and that nobody has ever tried to run a country on it.');

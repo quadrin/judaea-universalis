@@ -136,6 +136,18 @@ function joinTheRising(ctx) {
   return true;
 }
 
+// What the war produced (SPEC §130). Read by name from the store rather than
+// from a scatter of booleans, because these two cards were written for a
+// temple-state and become incoherent under a government that has just
+// cancelled the debts of the men who fund it.
+function settlement(ctx) {
+  try { return ctx.helpers.constitutionOf(ctx, '66ce'); } catch (e) { return ''; }
+}
+function radical(ctx) {
+  const s = settlement(ctx);
+  return s === 'jubilee' || s === 'noRuler';
+}
+
 // 0 a surviving state, 1 a consolidated one, 2 a regional power.
 function reach(ctx) {
   if (!standing(ctx)) return 0;
@@ -171,10 +183,15 @@ export const EVENTS_66_NATION = [
     options: [
       {
         label: 'It is the Temple\'s, and the Temple is ours',
-        tooltip: '+20% income and +2 stability (180 months); the treasury of a small kingdom is now funded by a nation. Rome reads a foreign power taxing its own subjects and does not care for it: −40 Roman opinion, +1 alignment eastward.',
+        tooltip: 'The claim pressed in full: +20% income and +2 stability (180 months), and the treasury of a small kingdom is funded by a nation. Rome reads a foreign power taxing its own subjects and does not care for it: −40 Roman opinion, +1 alignment eastward. A government that cancelled its own debts collects considerably less of it, because the men who forward the money abroad are the men it ruined.',
         effects: guard('ev_n_half_shekel:0', (ctx) => {
           const h = ctx.helpers;
-          h.addTagModifier(ctx, 'JUD', { id: 'the_shekel_of_the_nations', name: 'The Half-Shekel of the World', months: 180, effects: { incomeMult: 1.20 } });
+          // A state that enforced the Jubilee, or that recognises no sovereign
+          // at all, is asking the wealthiest Jews in two empires to fund the
+          // government that expropriated their correspondents (SPEC §130).
+          const grudging = radical(ctx);
+          h.addTagModifier(ctx, 'JUD', { id: 'the_shekel_of_the_nations', name: grudging ? 'The Half-Shekel, Grudgingly' : 'The Half-Shekel of the World', months: 180, effects: { incomeMult: grudging ? 1.06 : 1.20 } });
+          if (grudging) h.chronicle(ctx, 'ruler', 'The levy is claimed in full and arrives in part. Alexandria remits what it cannot be seen to withhold and not one drachma more, and the covering letters are models of the form.');
           h.adjust(ctx, 'JUD', { stability: 2 });
           h.factionShift(ctx, 'JUD', 'priesthood', 20);
           h.doctrine(ctx, 'alignment', 1);
@@ -182,6 +199,21 @@ export const EVENTS_66_NATION = [
           h.setFlag(ctx, 'shekelAnswered', true);
           h.setFlag(ctx, 'shekelClaimed', true);
           h.chronicle(ctx, 'era', 'The Temple treasury opens its books and finds it is funded by men who live in two empires and are subjects of neither of its councils.');
+        }),
+      },
+      {
+        label: 'The half-shekel is a head tax, and we do not number the people',
+        when: (ctx) => { try { return radical(ctx); } catch (e) { return false; } },
+        tooltip: 'Only a state that already refuses the census can say this. Exodus 30 makes the half-shekel a ransom for a man\'s life against being numbered, and a government founded on the illegitimacy of counting people will not take a tax that counts them. No income at all from abroad, −1 stability — and +25 legitimacy and +2 zeal for the one act in this chapter that costs the state money and gains it nothing but consistency.',
+        effects: guard('ev_n_half_shekel:3', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 25, stability: -1 });
+          h.factionShift(ctx, 'JUD', 'zealots', 30);
+          h.factionShift(ctx, 'JUD', 'priesthood', -25);
+          h.doctrine(ctx, 'zeal', 2);
+          h.setFlag(ctx, 'shekelAnswered', true);
+          h.setFlag(ctx, 'shekelRefusedAsCensus', true);
+          h.chronicle(ctx, 'era', 'The council rules that the half-shekel is a ransom against being numbered and that this state does not number anybody, and declines the largest revenue any Jewish government has ever had a claim on. The minute is four lines long.');
         }),
       },
       {
@@ -298,6 +330,18 @@ export const EVENTS_66_NATION = [
           }
           h.setFlag(ctx, 'risingAnswered', true);
           h.setFlag(ctx, 'marchedForTheDiaspora', true);
+          // Who is marching matters as much as that they are (SPEC §130). A
+          // temple-state marching for Alexandria is a kingdom coming to the
+          // aid of its co-religionists. A government that freed the slaves and
+          // burned the ledgers marching for Alexandria is something the Greek-
+          // speaking merchants of Alexandria have their own opinion about.
+          if (radical(ctx)) {
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'a_different_appeal', name: 'A Different Appeal', months: 96,
+              effects: { manpowerMult: 1.15, incomeMult: 0.90 },
+            });
+            h.chronicle(ctx, 'ruler', 'The proclamation that goes out to the communities is not the one the council drafted first. It promises the poor of Alexandria rather more than it promises the archons of Alexandria, and both halves of that city read it carefully.');
+          }
           h.chronicle(ctx, 'era', 'The kingdom marches for communities it does not govern, into a war it did not call and does not command. Whatever happens next, the question of what a Jewish state was for has been answered in the only way that counts.');
         }),
       },

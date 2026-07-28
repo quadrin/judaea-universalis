@@ -6279,3 +6279,160 @@ war fought fifteen years before it opens.
   joining produces two allied belligerents rather than one; the spawner is
   idempotent across the six places that call it; and no Roman ground means no
   rising rather than a phantom one.
+
+## 130. The second government
+
+Winning the Great Revolt ended the chapter's story. It should start one.
+
+Victory in 70 would have settled nothing, and the war itself is the proof. The
+priestly aristocracy under Ananus ben Ananus formed a provisional government in
+66; in the winter of 67–68 the Zealots and their Idumean allies came through
+the gates in the snow, killed him, and left him unburied. Two governments in
+eighteen months, in sequence rather than in competition, and the second was
+still there when Titus arrived. A Judaea that WINS has those same three parties
+inside the same walls with the one thing they all agreed about — Rome — taken
+away from them.
+
+So the chapter gains a second fork, after the one that asks what kind of state
+this is. That one is about character. This one is about the constitution, and
+every answer is something somebody in Jerusalem actually did or actually argued
+for between 66 and 70:
+
+- **The temple-state.** High Priest, Sanhedrin, the constitution Judaea had
+  under Persia and the Ptolemies and most of the Hasmonean century. The only
+  one of the four with a working precedent, which is the argument for it — and
+  it hands the country back to the four priestly houses that Pesachim 57a
+  curses by name, in a baraita remembered because everybody agreed with it.
+- **The lottery.** The Zealots did this in 67 and drew Phanni ben Samuel of
+  Aphtia, a stonecutter, who had to be taught the duties. Josephus calls it the
+  abrogation of the Law. Read the other way it is a principle with a text
+  behind it: the office belongs to God's choice and not to four families'
+  arithmetic. It ends hereditary priestly power in an afternoon.
+- **The Jubilee.** Simon bar Giora proclaimed liberty for slaves; the Sicarii
+  burned the debt archives in 66, which Josephus says was the point of taking
+  the Record Office at all. Both are Leviticus 25, a law that had fallen out of
+  use precisely because it is unusable. A state that enforces it obeys the
+  Torah and destroys its own credit system in the same act, and the men who
+  lose by it are the men who funded the war.
+- **No ruler but God.** Judas the Galilean's doctrine, held for sixty years and
+  never once implemented, because implementing it means having no state to
+  implement it with. Not a religious monarchy — the refusal of monarchy, and
+  its own people enforced it: when Menahem came into the Temple in royal dress,
+  Eleazar ben Ananias' men killed him for it.
+
+**Which are offered is produced by the room, not picked from a menu.** The
+temple-state is always available, because an exhausted elite reaches for the
+last arrangement that worked. The lottery needs the Zealots. The Jubilee needs
+the Zealots *and* the Peace Party broken, because it is their ledgers that
+burn. No ruler but God needs the Zealots overwhelming and nobody else left
+standing to institute anything, which is the honest gate: it is not a policy a
+government adopts, it is what is left when there is no government to adopt one.
+
+### One value, not a scatter of booleans
+
+A decision that steers sixty years of content — including content nobody has
+written — cannot live as four flags. The settlement is stored once, by name,
+under `constitutions['66ce']`, and the store is **write-once**: a constitution
+that can be silently replaced is not a constitution, and a second write is
+refused and reported rather than applied. The 132 chapter's accession moved
+onto the same store in the same batch, reading `constitutions['132ce']` and
+falling back to its flags for campaigns saved before it existed.
+
+The road markers stay written literally at each call site, because smoke83
+reads content packages as **text** to prove every road on the path tree is
+still set by a live card, and a marker written through a helper is invisible to
+it. That is a real constraint and it is the second time it has bitten.
+
+### One small engine change
+
+`helpers.faction(ctx, tag, id)` and `helpers.factionAtLeast(...)`. Content
+could always MOVE a faction and never ask where one stood, which meant no card
+could be gated on the court that would have to live with it. The read returns
+null where no court sits — factions convene only in the player's own court —
+rather than a misleading 50, and it resolves a departed party through
+`succeeds` exactly as `shiftFaction` does.
+
+### Reconciling what was already written
+
+Four cards assumed a temple-state and became incoherent under the radical
+settlements:
+
+- **The half-shekel.** A government that cancelled the debts of the men who
+  forward the money collects a great deal less of it: the levy still arrives
+  and the modifier drops from +20% to +6%, with a chronicle line about
+  Alexandria remitting what it cannot be seen to withhold. And a state founded
+  on the illegitimacy of the census gains a fourth answer nobody else can give
+  — Exodus 30 makes the half-shekel a ransom against being numbered, so it
+  refuses the largest revenue any Jewish government ever had a claim on, and
+  gains nothing but consistency.
+- **The Kitos War.** A revolutionary government marching for Alexandria is
+  making a different appeal from a temple-state's, and the proclamation that
+  goes out is not the one the council drafted first — more manpower, less
+  money, and both halves of that city reading it carefully.
+- **Agrippa II.** He survives a Jewish victory with a dynastic claim, a
+  treasury, and the right to appoint the High Priest, and each settlement
+  implies a different answer. The temple-state has an office to fit him into
+  and buys the claim out. The lottery cannot: his one prerogative was the
+  appointment and there is no longer any appointment to make, which is the
+  politest letter anyone ever used to abolish an office. The Jubilee looks at a
+  Herodian estate and sees land under the law. A state with no ruler but God
+  has no category for a king, including the category of exile.
+- **The annexation pool.** A government founded on cancelling debt cannot open
+  a tribute roll on somebody else, and one that refuses the census cannot
+  assess one; both are closed by their own first principle. And *one law for
+  the citizen and the stranger* stops being the generous answer under the
+  Jubilee and becomes the obvious one, because it is the same chapter of
+  Leviticus the state already lives under.
+
+The tree gains a fork and four roads, 67 to 71.
+
+- **Regression contract**: `smoke89.mjs` (the §130 sections) — the read agrees
+  with the push and returns null where no court sits; each of the four gates
+  opens and closes on the right court; the store is write-once and reports a
+  refusal; and every reconciled card branches on the settlement rather than
+  assuming one.
+
+## 131. The line was wrong
+
+Reported: the armistice line in the 1948 withdrawal option is wrong, Mitzpe
+Ramon and Eilat are missing, and the West Bank looks strange around Jerusalem.
+All three, and the third is a consequence of the first two.
+
+§125 assembled its own list of what lay beyond the line instead of using the
+one the chapter already keeps. `events_1948.js` defines `WEST_BANK` — fifteen
+cells, "the cells the Arab Legion actually held in 1949" — and
+`ARMISTICE_1949_ISR_GAINS`, the territory outside Israel's 15-May holdings that
+is inside the 1949 line. §125 used neither.
+
+**It forgot the Jerusalem corridor.** It handed back eight hill towns and left
+Lydda, Emmaus, Beit Shemesh and the Modi'in Hills out of the reckoning
+entirely — and two of those are in the chapter's own list of territory *inside*
+the line. The result on the map is the thing the report describes: an Israeli
+Jerusalem sitting as an island in a Jordanian West Bank, which is not what the
+armistice produced and not a shape any border has ever had. The corridor is the
+whole reason the city was holdable.
+
+**And it ignored the Negev.** Beersheba, Arad, Oboda, Dimona, Mitzpe Ramon,
+Paran and Eilat all begin the chapter in Egyptian or Jordanian hands and are
+all inside the 1949 line. Umm Rashrash was taken in Operation Uvda in March
+1949 and is the reason the state has a Red Sea coast at all. A withdrawal
+defined without any of them is not a withdrawal to the armistice line; it is a
+withdrawal to a vague memory of one.
+
+The option now gives back what falls outside the line — the Samarian and
+Judaean hills to Jordan, Gaza and anything held beyond it to Egypt — and keeps
+what falls inside it, corridor and Negev together, and the chronicle counts
+both so the southern half of the border is said out loud instead of inferred
+from the map.
+
+**Jerusalem** is the one cell the map cannot honestly resolve. The armistice
+divided the city and there is a single province here. It stays with the state
+that holds it and the corridor stays with it, and the card says in as many
+words what the communiqué said: the status of Jerusalem is reserved for a later
+negotiation, there is no later negotiation scheduled, and both delegations sign
+anyway.
+
+- **Regression contract**: `smoke89.mjs` (the §131 section) — everything beyond
+  the line changes hands, nothing inside it does, Umm Rashrash is still held
+  under the name the province actually carries, the capital is not left an
+  island, and no district is handed to a state that has ceased to exist.

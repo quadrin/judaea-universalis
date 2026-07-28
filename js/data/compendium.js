@@ -20,6 +20,7 @@ import { BOOKMARK_66 } from './bookmark_66ce.js';
 import { EVENTS_66 } from './events_66ce.js';
 import { EVENTS_66_AFTER } from './events_66ce_after.js';
 import { EVENTS_66_NATION } from './events_66ce_nation.js';
+import { EVENTS_66_SETTLEMENT } from './events_66ce_settlement.js';
 import { BOOKMARK_132 } from './bookmark_132ce.js';
 import { EVENTS_132 } from './events_132ce.js';
 import { EVENTS_132_FAITH } from './events_132ce_faith.js';
@@ -58,7 +59,7 @@ export const ERAS = [
   { bookmark: BOOKMARK_167, events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_AFTER, EVENTS_167_EMPIRE, ANTIQUE) },
   { bookmark: BOOKMARK_67, events: EVENTS_67.concat(EVENTS_67_AFTER, ANTIQUE) },
   { bookmark: BOOKMARK_40, events: EVENTS_40.concat(EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, ANTIQUE) },
-  { bookmark: BOOKMARK_66, events: EVENTS_66.concat(EVENTS_66_AFTER, EVENTS_66_NATION, ANTIQUE) },
+  { bookmark: BOOKMARK_66, events: EVENTS_66.concat(EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, ANTIQUE) },
   // 132's chain is three packages (SPEC §104): the revolt itself, the
   // Christian thread that runs beside it, and the world spine to 425. They
   // are concatenated HERE rather than inside events_132ce.js so that every

@@ -422,6 +422,44 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_second_government',
+        question: 'The war is over and the emergency with it. Does the priestly settlement survive peace?',
+        requires: 'secondKingdom',
+        roads: [
+          Object.freeze({
+            id: 'temple_state', name: 'The Temple-State',
+            marker: 'settlementTempleState', entry: 'ev_s_the_second_government',
+            terminal: 'ev_s_the_argument_at_sixty',
+            note: 'SPEC §130. The ancient constitution restored — the only one of the four with '
+              + 'a working precedent, and it hands the country back to the four houses that '
+              + 'Pesachim 57a curses by name.',
+          }),
+          Object.freeze({
+            id: 'the_lottery', name: 'The Lot',
+            marker: 'settlementLottery', entry: 'ev_s_the_second_government',
+            terminal: 'ev_s_the_argument_at_sixty',
+            note: 'SPEC §130. What the Zealots actually did in 67, kept: the High Priesthood by '
+              + 'lot, and hereditary priestly power ends in an afternoon.',
+          }),
+          Object.freeze({
+            id: 'the_jubilee', name: 'The Jubilee Enforced',
+            marker: 'settlementJubilee', entry: 'ev_s_the_second_government',
+            terminal: 'ev_s_the_argument_at_sixty',
+            note: 'SPEC §130. Leviticus 25 applied — the Sicarii burned the debt archives in 66 '
+              + 'and Simon bar Giora proclaimed liberty. Obeying the Torah and destroying the '
+              + 'credit system are the same act.',
+          }),
+          Object.freeze({
+            id: 'no_ruler_but_god', name: 'No Ruler But God',
+            marker: 'settlementNoRuler', entry: 'ev_s_the_second_government',
+            terminal: 'ev_s_the_argument_at_sixty',
+            note: 'SPEC §130. Judas the Galilean\'s doctrine, held sixty years and never once '
+              + 'implemented, because implementing it means having no state to implement it '
+              + 'with. Menahem came in royal dress and his own side killed him.',
+          }),
+        ],
+      }),
     ],
   }),
 

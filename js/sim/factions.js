@@ -172,6 +172,29 @@ function seatedHeir(ctx, tag, defs, fid) {
   return null;
 }
 
+// Read a faction's standing (SPEC §130). Content could always MOVE a faction
+// and never ask where one stood, which meant a card could not be gated on the
+// court that would have to live with it — and the four constitutions of 66 are
+// exactly that gate: which settlement the room can produce depends on who is
+// strong in it when the war ends.
+//
+// Returns 0–100, or null when no court sits here at all: factions convene only
+// in the player's own court and only under a human hand, so an AI realm and an
+// era without factions both read null rather than a misleading 50. A departed
+// faction resolves through `succeeds` exactly as `shiftFaction` does, so a card
+// may ask after the Hasideans in 90 BCE and get the Pharisees' answer.
+export function factionApproval(ctx, tag, fid) {
+  try {
+    const defs = activeDefs(ctx, tag);
+    if (!defs) return null;
+    const id = seatedHeir(ctx, tag, defs, fid);
+    if (!id) return null;
+    const table = ensureFactions(ctx, tag);
+    if (!table) return null;
+    return clamp(num(table[id], 50), 0, 100);
+  } catch (e) { warnOnce('read:' + fid, 'factionApproval failed', e); return null; }
+}
+
 // Replace-or-remove one faction modifier on the tag's ordinary stream.
 function setFactionModifier(t, id, mod) {
   t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== id);

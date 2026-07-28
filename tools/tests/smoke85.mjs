@@ -402,17 +402,23 @@ console.log('== the settled line actually moves the line ==');
   const { game, ctx } = boot(p, 1975);
   // Israel holds the ground beyond the armistice lines, and the two states
   // that administered it before are alive to take it back.
-  grant(ctx, 'ISR', 24, ['Jerusalem', 'Hebron', 'Jericho', 'Ramallah', 'Gaza', 'Rafah']);
+  grant(ctx, 'ISR', 40, ['Jerusalem', 'Hebron', 'Jericho', 'Ramallah', 'Gaza', 'Rafah',
+    'Lydda', 'Emmaus', 'Beit Shemesh', 'Eilat', 'Mitzpe Ramon', 'Beersheba', 'Dimona']);
   for (const tag of ['JOR', 'EGY']) if (game.tags[tag]) game.tags[tag].alive = true;
-  const held = ['Hebron', 'Jericho', 'Ramallah', 'Gaza', 'Rafah'].filter((n) => {
-    const pr = ctx.prov(n); return pr && pr.owner === 'ISR';
-  });
+  const beyond = ['Hebron', 'Jericho', 'Ramallah', 'Gaza', 'Rafah'];
+  const inside = ['Lydda', 'Emmaus', 'Beit Shemesh', 'Eilat', 'Mitzpe Ramon', 'Beersheba', 'Dimona'];
+  const held = beyond.filter((n) => { const pr = ctx.prov(n); return pr && pr.owner === 'ISR'; });
   ok(held.length >= 4, 'the state holds the ground the card is about (' + held.length + ' districts)');
   card.options[1].effects(ctx);
   const stillHeld = held.filter((n) => { const pr = ctx.prov(n); return pr && pr.owner === 'ISR'; });
-  ok(!stillHeld.length, '  and the withdrawal hands all of it back ('
+  ok(!stillHeld.length, '  and the withdrawal hands back everything beyond the line ('
     + (stillHeld.join(', ') || 'nothing kept') + ')');
-  ok(ctx.prov('Jerusalem').owner === 'ISR', '  without giving away the capital');
+  // SPEC §131: and NOTHING inside it. The corridor is why Jerusalem is not an
+  // island, and the Negev to Eilat was never anybody's idea of a concession.
+  const lost = inside.filter((n) => { const pr = ctx.prov(n); return pr && pr.owner !== 'ISR'; });
+  ok(!lost.length, '  and keeps the corridor and the Negev to Eilat ('
+    + (lost.join(', ') || 'all kept') + ')');
+  ok(ctx.prov('Jerusalem').owner === 'ISR', '  and does not hand over the one cell it cannot divide');
   const recognised = ['JOR', 'EGY'].filter((t) => game.tags[t] && ctx.helpers.areRecognized(ctx, 'ISR', t));
   ok(recognised.length > 0, '  and buys the recognition it was traded for ('
     + (recognised.join(', ') || 'none') + ')');

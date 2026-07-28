@@ -130,9 +130,7 @@ function founderOld(ctx) {
 // that need no party behind them — which is right: the gated roads are the
 // ones somebody in the room has to be strong enough to force.
 function factionAt(ctx, id, min) {
-  const t = ctx.game.tags && ctx.game.tags.JUD;
-  const table = t && t.factions;
-  return !!table && Number(table[id] || 0) >= min;
+  return ctx.helpers.factionAtLeast(ctx, 'JUD', id, min);
 }
 
 // The line of Jehoiachin is kept in Babylonia, which is in another empire.
@@ -163,13 +161,29 @@ function seriousDefeat(ctx) {
   return lost >= 2;
 }
 
-// Which constitution the house took, for the cards that read it back.
+// Which constitution the house took. Stored once by name under
+// `constitutions['132ce']` (SPEC §130) and read from there; the four booleans
+// are kept beside it because the path tree and the older terminals read flags,
+// and a road marker that stopped being written would delete a road.
+const ERA = '132ce';
 function constitution(ctx) {
+  const stored = ctx.helpers.constitutionOf(ctx, ERA);
+  if (stored) return stored;
+  // A campaign saved before the store existed still knows what it chose.
   if (flag(ctx, 'kosibaNasiConstitution')) return 'nasi';
   if (flag(ctx, 'kosibaTwoHouses')) return 'twoHouses';
   if (flag(ctx, 'kosibaMarriedDavid')) return 'david';
   if (flag(ctx, 'kosibaCrowned')) return 'crown';
   return null;
+}
+// The store (SPEC §130). The road MARKER is written literally at each call
+// site and not from in here: smoke83 reads content packages as text to prove
+// every road on the path tree is still set by a live card, and a marker
+// written through a helper is invisible to it.
+function adopt(ctx, name) {
+  const h = ctx.helpers;
+  h.setConstitution(ctx, ERA, name);
+  h.setFlag(ctx, 'beitKosibaSettled', true);
 }
 
 export const EVENTS_132_KOSIBA = [
@@ -275,7 +289,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'sages', -40);
           h.factionShift(ctx, 'JUD', 'captains', 30);
           h.doctrine(ctx, 'authority', 3);
-          h.setFlag(ctx, 'beitKosibaSettled', true);
+          adopt(ctx, 'crown');
           h.setFlag(ctx, 'kosibaCrowned', true);
           h.chronicle(ctx, 'era', 'The house of Kosiba takes the diadem. It is done in one generation where the Hasmoneans took three, and the objection is the same objection, made earlier and by better lawyers.');
         }),
@@ -294,7 +308,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'sages', 20);
           h.factionShift(ctx, 'JUD', 'captains', -15);
           h.doctrine(ctx, 'authority', 1);
-          h.setFlag(ctx, 'beitKosibaSettled', true);
+          adopt(ctx, 'david');
           h.setFlag(ctx, 'kosibaMarriedDavid', true);
           h.chronicle(ctx, 'era', 'The house sends east for a bride of the line of Jehoiachin. The contract is read out in Jerusalem and the point of it will not be born for twenty years.');
         }),
@@ -315,7 +329,7 @@ export const EVENTS_132_KOSIBA = [
             effects: { incomeMult: 0.92, legitimacyAdd: 0.15, unrestAll: -1 },
           });
           h.factionShift(ctx, 'JUD', 'sages', 25);
-          h.setFlag(ctx, 'beitKosibaSettled', true);
+          adopt(ctx, 'twoHouses');
           h.setFlag(ctx, 'kosibaTwoHouses', true);
           h.chronicle(ctx, 'era', 'Prince and priest are both made hereditary, as the coinage always implied. The Hasmoneans spent a century merging these two offices; this state has just spent a morning separating them.');
         }),
@@ -334,7 +348,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'sages', 40);
           h.factionShift(ctx, 'JUD', 'captains', -20);
           h.doctrine(ctx, 'authority', -2);
-          h.setFlag(ctx, 'beitKosibaSettled', true);
+          adopt(ctx, 'nasi');
           h.setFlag(ctx, 'kosibaNasiConstitution', true);
           h.chronicle(ctx, 'era', 'The house keeps the founder\'s title and accepts the prophet\'s terms for it. It is the first Jewish constitution since the elders, and it was written by somebody who never expected it to be used.');
           // The barb: the founder's own leases are arguably the thing 46:18

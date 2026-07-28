@@ -505,3 +505,24 @@ and `events_66ce_nation.js`) because both are zero-import by contract. It is
 idempotent — six option effects call it and only the first raises anything —
 and smoke88 pins that, because a second rising would mean a second war and a
 second army stack on the same ground.
+
+SPEC §130 adds `smoke89.mjs`, `events_66ce_settlement.js`, and two engine
+pieces worth knowing: `helpers.faction` / `helpers.factionAtLeast` (read a
+court, which content could not do before) and `helpers.setConstitution` /
+`constitutionOf` (a write-once per-chapter store under `game.constitutions`,
+which rides the save because `doSave` stringifies the whole game object).
+
+Two traps. First, `allowedOptions` returns NULL to mean "every option is
+open" — a test that writes `allowedOptions(...) || []` reads that as "none are
+open" and will fail in the confusing direction. Use the full index list as the
+fallback. Second, road markers must stay as literal `setFlag` calls at each
+call site even when a helper writes everything else about the decision:
+smoke83's anti-drift check reads packages as text, and a marker written inside
+a helper makes a live road look dead. This is now the second batch that has
+hit it.
+
+SPEC §131 fixes the 1948 withdrawal, and the lesson is narrower than the bug:
+`events_1948.js` already owns the definition of the armistice line in two
+lists, and §125 assembled a third from memory. If a chapter has already drawn a
+border, copy that border — the zero-import rule means duplicating the list, not
+inventing one.
