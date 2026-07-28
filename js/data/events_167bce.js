@@ -2216,7 +2216,7 @@ export const EVENTS_167 = [
             && ((x.attackers || []).indexOf('HAS') >= 0 || (x.defenders || []).indexOf('HAS') >= 0)
             && ((x.attackers || []).indexOf('SEL') >= 0 || (x.defenders || []).indexOf('SEL') >= 0));
           const key = w && (w.attackers || []).indexOf('HAS') >= 0 ? 'att' : 'def';
-          h.endWar(ctx, 'HAS', 'SEL', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'HAS', 'SEL', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.endGame(ctx, {
             result: 'win',
             title: 'Terms from Antioch',

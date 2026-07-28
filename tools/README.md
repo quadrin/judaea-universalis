@@ -526,3 +526,22 @@ SPEC §131 fixes the 1948 withdrawal, and the lesson is narrower than the bug:
 lists, and §125 assembled a third from memory. If a chapter has already drawn a
 border, copy that border — the zero-import rule means duplicating the list, not
 inventing one.
+
+SPEC §132 adds `uitest37.mjs`. Two things to know if you touch the realm panel.
+The panel refreshes on the `day` signal, so ANY section that assigns
+`innerHTML` unconditionally will eat clicks at speed — always go through
+`setHtml`, which skips the write when the markup is unchanged. And the panel
+defers refreshes while a pointer is held inside it; the catch-up is queued with
+`setTimeout` rather than run from `pointerup`, because `pointerup` fires before
+`click` and a rebuild there recreates the bug one step later.
+
+Writing UI tests for this class: pausing the game around the click — which
+every older test does — hides the bug completely. Reproduce the mechanism
+instead: hold the button down, `bus.emit('day')`, release. And scroll first,
+because `page.mouse` does not auto-scroll the way `locator.click()` does and
+these buttons sit below the fold.
+
+SPEC §133 adds `DEFINES.DIASPORA` and `helpers.isDiaspora`. If you write a card
+that awards territory by religion, exclude them — Leontopolis, Arbela,
+Nehardea and Khaybar are Jewish and were never Judaean, and the engine's
+contiguity guard is skipped whenever a card supplies its own `keep` predicate.

@@ -6436,3 +6436,91 @@ anyway.
   the line changes hands, nothing inside it does, Umm Rashrash is still held
   under the name the province actually carries, the capital is not left an
   island, and no district is handed to a state that has ceased to exist.
+
+## 132. One click is one click
+
+Reported: the realm panel's buttons need pressing two or three times — hiring a
+court, upgrading the military.
+
+Not the handlers. Those are delegated once on the panel root and never rebound,
+which is the right shape and was never the problem. The problem is that
+`refresh()` runs on the `day` signal — every simulated day, forty milliseconds
+apart at the fastest speed — and several sections rewrote their own
+`innerHTML` **unconditionally**, whether anything had changed or not. A click
+is only delivered when mousedown and mouseup land on the same element, so a
+rebuild between the two detaches the button and the browser dispatches no click
+at all. Press again and you are simply rolling the dice a second time.
+
+The panel already had `setHtml`, which skips the write when the markup is
+identical, and most sections used it. Five did not: the court, the technology
+ladders, the reform trees, the great powers, and the foreign-court views of the
+first two. The court and the ladders are exactly the two the report named.
+
+So every section writes through `setHtml` now, and in the steady state the
+panel touches no DOM at all between ticks.
+
+That alone would leave a smaller version of the same race — monarch points
+accrue, a `disabled` class flips, and the section legitimately rebuilds under
+the finger. So the panel also **defers refreshes while a pointer is down inside
+it**: the day still ticks, the sim is untouched, and the panel catches up the
+moment the button is released. The catch-up is queued behind the click rather
+than run from `pointerup`, because `pointerup` is dispatched *before* `click`
+and rebuilding there would be the same bug moved one step later.
+
+### Why no test caught it
+
+Every existing UI test around these buttons pauses the game for the instant of
+the click — `paused = false`, click, `paused = true` — which is precisely the
+condition under which the bug cannot happen.
+
+`uitest37.mjs` reproduces the mechanism instead of the timing: it holds the
+button down, emits the real `day` signal the clock sends, and releases. Against
+the code as it was, the technology press and the advisor press are both
+swallowed (5 → 5, 0 → 0) and the decision press survives — which matches the
+report exactly, because the decisions section was already writing through
+`setHtml`.
+
+One harness note worth keeping: the panel scrolls and these buttons sit well
+below the fold, so raw `page.mouse` coordinates land outside the viewport and
+nothing is pressed at all. `locator.click()` scrolls; `page.mouse` does not.
+
+## 133. Two rules that excluded the game's own subject
+
+Two reports, unrelated to each other and to §132, both of the same shape: a
+rule written for the general case that happens to exclude every Jewish state.
+
+**Royal marriages.** `royalMarriageInfo` required `govType === 'monarchy'` on
+both sides. `JUD`, `HAS` and `HYR` are all typed `theocracy`, so no Jewish
+state in any chapter could ever arrange a match with anybody — the mechanic was
+unreachable for the entire subject of the game. It is also wrong for the
+period: Herod married Mariamne the Hasmonean precisely to buy the pedigree he
+lacked, Berenice married Polemo of Cilicia, Drusilla married Azizus of Emesa,
+and the Hasmonean and Nabataean houses dealt in daughters for a century.
+
+What the mechanic needs is a ruling **house**, not the word monarchy. A
+republic elects and a tribal confederation acclaims, so neither has one; a
+theocracy has a named head and, in this period, a dynasty behind him. Both are
+allowed now and the other two still are not. The heir bonus is untouched and
+still only reaches houses that have heirs, so a theocracy marries for the
+alliance and not for the cradle — which is the honest arrangement and the one
+the sources describe.
+
+**Leontopolis.** Seven peace cards award the winner every province it holds
+that is Jewish by religion — `keep: (p) => p.religion === 'judaism'`. Four
+provinces on this map are Jewish by religion and were never part of the land:
+Leontopolis, Onias' temple settlement in the Heliopolite nome, which was a
+Ptolemaic military colony that Vespasian closed in 73; Arbela in Adiabene,
+whose royal house converted under Izates; Nehardea in Babylonia; and Khaybar in
+the Hijaz. A peace treaty handing Judaea a district of Egypt because there is a
+synagogue in it is not a border, and the engine's own contiguity check —
+which §116 added for exactly this class of absurdity — is deliberately skipped
+whenever a card supplies its own `keep`.
+
+`DEFINES.DIASPORA` names the four and `helpers.isDiaspora` reads it, and all
+seven predicates now exclude them. This is about **territory only**: the cards
+that mourn the Temple in every Jewish province are right to include all four,
+and still do.
+
+- **Regression contract**: `uitest37.mjs` for §132; `smoke40.mjs` (extended)
+  for the marriage rule, which now also asserts that a theocracy may marry, two
+  of them may marry each other, and a tribal confederation still may not.

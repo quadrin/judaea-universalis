@@ -3162,7 +3162,27 @@ export function royalMarriageInfo(ctx, tag, other) {
   if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
   if (!mechanicOn(ctx, 'royalMarriage')) { out.why = 'This age does not arrange its marriages between states.'; return out; }
   if (out.married) { out.why = 'Our houses are already joined.'; return out; }
-  if (me.govType !== 'monarchy' || them.govType !== 'monarchy') { out.why = 'Only two crowned houses can be joined.'; return out; }
+  // A HOUSE, not a crown (SPEC §133). This read `monarchy` on both sides,
+  // which quietly shut every Jewish state in the game out of the mechanic
+  // for good: JUD, HAS and HYR are all typed `theocracy`, so the Hasmoneans,
+  // Hyrcanus and Bar Kokhba could never arrange a match with anybody, in any
+  // chapter. That is the wrong answer in a game about them, and it is the
+  // wrong answer historically — Herod married Mariamne the Hasmonean to buy
+  // exactly the pedigree he lacked, Berenice married Polemo of Cilicia,
+  // Drusilla married Azizus of Emesa, and the Hasmonean and Nabataean houses
+  // dealt in daughters for a century.
+  //
+  // What the mechanic actually needs is a ruling house on both sides. A
+  // republic elects and a tribal confederation acclaims, so neither has one;
+  // a theocracy has a named head and, in this period, a dynasty behind him.
+  // The heir bonus (realm.js) still only reaches houses that HAVE heirs, so a
+  // theocracy marries for the alliance and the warmth and not for the cradle,
+  // which is the honest arrangement.
+  const dynastic = (gt) => gt === 'monarchy' || gt === 'theocracy';
+  if (!dynastic(me.govType) || !dynastic(them.govType)) {
+    out.why = 'A match joins two houses, and one of these courts has none to join.';
+    return out;
+  }
   if (isHostile(ctx, tag, other)) { out.why = 'We are at war with them.'; return out; }
   if (opinionOf(ctx, other, tag) < DIPLO.marryMinOpinion) {
     out.why = 'Their court is too cool for a match (opinion ' + Math.round(opinionOf(ctx, other, tag)) + ', needs ' + DIPLO.marryMinOpinion + '+).';

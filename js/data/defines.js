@@ -226,6 +226,19 @@ export const DEFINES = {
     turkish:    { name: 'Turkish',       color: [200, 84, 72],   group: 'turkish' },
   },
 
+  // Jewish by religion, never part of the land (SPEC §133). These are
+  // diaspora communities that happen to sit on the map: Onias' temple
+  // settlement in the Heliopolite nome, the royal house of Adiabene that
+  // converted under Izates, the academies of Babylonia, and the oasis of the
+  // Hijaz. A peace that awards Judaea "every Jewish province it holds" must
+  // not hand it any of them — Leontopolis was a Ptolemaic military colony that
+  // Vespasian closed in 73 and was never Judaean territory in any century this
+  // game covers.
+  //
+  // This is about TERRITORY only. A card that mourns the Temple in every
+  // Jewish province is right to include all four, and does.
+  DIASPORA: ['Leontopolis', 'Arbela', 'Nehardea', 'Khaybar'],
+
   TAGS: {
     ROM: {
       // v5.4: Roma is on the map, but the capital stays the eastern command —

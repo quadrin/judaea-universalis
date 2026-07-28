@@ -707,7 +707,7 @@ export const EVENTS_132 = [
             && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
             && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
           const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
-          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.endGame(ctx, {
             result: 'win',
             title: 'Rome Lets Go',
@@ -755,7 +755,7 @@ export const EVENTS_132 = [
             && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
           const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
           h.fireEvent(ctx, 'ev2_redemption_peace');
-          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.endGame(ctx, {
             result: 'win',
             title: 'The Redemption of Israel',

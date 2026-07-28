@@ -208,7 +208,24 @@ console.log('== royal marriage: beds, cradles, and the age that has them (SPEC �
   nab.opinion.JUD = 30;
   nab.govType = 'republic';
   info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
-  ok(!info.can && /crowned/.test(info.why), 'only two crowned houses can be joined');
+  ok(!info.can && /no house|none to join/i.test(info.why),
+    'a republic has no house to join: ' + info.why);
+  // SPEC §133. This used to demand `monarchy` on BOTH sides, which shut every
+  // Jewish state in the game out of the mechanic permanently — JUD, HAS and
+  // HYR are all typed `theocracy`, so the Hasmoneans, Hyrcanus and Bar Kokhba
+  // could never arrange a match with anybody in any chapter.
+  nab.govType = 'monarchy';
+  me.govType = 'theocracy';
+  info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
+  ok(info.can, 'a theocracy has a ruling house and may marry: ' + (info.why || 'allowed'));
+  nab.govType = 'theocracy';
+  info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
+  ok(info.can, '  and so may two of them');
+  nab.govType = 'tribal';
+  info = mil.royalMarriageInfo(ctx, 'JUD', 'NAB');
+  ok(!info.can, '  while a tribal confederation still cannot');
+  nab.govType = 'monarchy';
+  me.govType = 'monarchy';
   nab.govType = 'monarchy';
   const baseChance = heirChance(ctx, 'JUD');
   const res = mil.royalMarriageCore(ctx, 'JUD', 'NAB');

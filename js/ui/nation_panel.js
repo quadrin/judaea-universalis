@@ -231,8 +231,46 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   function isOpen() { return !el.classList.contains('hidden'); }
   function viewing() { return viewTag; }
 
+  // Do not rebuild the panel out from under a finger (SPEC §132).
+  //
+  // `refresh()` runs on every simulated DAY — forty milliseconds apart at the
+  // fastest speed — and several sections rewrite their own innerHTML. A click
+  // is only delivered if mousedown and mouseup land on the same element, so a
+  // rebuild between the two silently eats the click and the button appears to
+  // need pressing two or three times. Hiring an advisor and buying a technology
+  // were the worst of them because those sections rebuilt unconditionally.
+  //
+  // While a pointer is down inside the panel the refresh is deferred rather
+  // than skipped: the day still ticks, the sim is untouched, and the moment the
+  // button is released the panel catches up in one pass.
+  let pointerHeld = false;
+  let refreshMissed = false;
+  let catchUp = 0;
+  el.addEventListener('pointerdown', () => { pointerHeld = true; });
+  const release = () => {
+    if (!pointerHeld) return;
+    pointerHeld = false;
+    if (!refreshMissed || catchUp) return;
+    // AFTER the click, not before it. `pointerup` is dispatched ahead of
+    // `click`, so a rebuild done here would detach the very node the click is
+    // about to be delivered to — the same bug moved one step later. The
+    // timeout puts the catch-up behind the click in the queue; in practice
+    // the click handler's own refresh usually gets there first and this one
+    // finds nothing left to do.
+    catchUp = setTimeout(() => {
+      catchUp = 0;
+      if (refreshMissed) refresh();
+    }, 0);
+  };
+  // Bound to the window rather than the panel: a press that slides off the
+  // button before release must still let the panel start updating again.
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
+
   function refresh() {
     if (!ctx || !isOpen()) return;
+    if (pointerHeld) { refreshMissed = true; return; }
+    refreshMissed = false;
     const g = ctx.game;
     if (viewTag && !(g.tags && g.tags[viewTag])) viewTag = null;
     const tag = viewTag || g.playerTag;
@@ -409,7 +447,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     refs.powersBlock.classList.toggle('hidden', !list.length);
     if (!list.length) return;
-    refs.powers.innerHTML = list.map((p) => {
+    setHtml(refs.powers, list.map((p) => {
       const courtTT = p.blurb + '\n――――――\nSend an envoy: ' + p.court.cost + ' influence points → +'
         + p.court.gain + ' standing' + (p.court.rivalName ? ' (chills ' + p.court.rivalName + ')' : '')
         + (p.court.whyNot ? '\n' + p.court.whyNot : '');
@@ -448,7 +486,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         </div>
         ${asks ? `<div class="np-power-asks">${asks}</div>` : ''}
       </div>`;
-    }).join('');
+    }).join(''));
   }
 
   function setAct(btn, can, tt) {
@@ -739,10 +777,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const adv = t.advisors || {};
       const any = ['gov', 'infl', 'mar'].some((k) => adv[k]);
       refs.courtBlock.classList.toggle('hidden', !any);
-      refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
+      setHtml(refs.court, ['gov', 'infl', 'mar'].map((k) => {
         const a = adv[k];
         return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: ${a ? `<b>${esc(a.name)}</b> (+${a.skill}/mo)` : '<i>empty seat</i>'}</span></div>`;
-      }).join('');
+      }).join(''));
       return;
     }
     refs.courtBlock.classList.remove('hidden');
@@ -750,8 +788,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (actions && typeof actions.getCourt === 'function') {
       try { court = actions.getCourt(); } catch (e) { warnOnce('np-getCourt', e); }
     }
-    if (!court) { refs.court.innerHTML = ''; return; }
-    refs.court.innerHTML = ['gov', 'infl', 'mar'].map((k) => {
+    if (!court) { setHtml(refs.court, ''); return; }
+    setHtml(refs.court, ['gov', 'infl', 'mar'].map((k) => {
       const seat = court[k];
       if (seat.seated) {
         const a = seat.seated;
@@ -762,7 +800,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         `<button class="pp-build-btn np-adv-btn" data-hire-adv="${k}" data-cand="${i}"
           data-tt="Hire for ${c.cost} talents; wage ${c.wage} talents a month; +${c.skill} ${esc(label[k].toLowerCase())} points monthly.">${esc(c.name)} (${c.skill})</button>`).join('');
       return `<div class="np-adv"><span class="np-adv-name">${esc(label[k])}: <i>empty seat</i></span>${cands}</div>`;
-    }).join('');
+    }).join(''));
   }
 
   // Technology ladders (SPEC §22): level, next price (with the ahead-of-age
@@ -777,16 +815,16 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b><span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
       const gi = cappedGen(th.mar | 0, ctx && ctx.bookmark);
       const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
-      refs.tech.innerHTML = rows
+      setHtml(refs.tech, rows
         + `<div class="np-tech-unit" data-tt="${esc('The pattern their armies are raised to.'
-          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`;
+          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`);
       return;
     }
     let info = null;
     if (actions && typeof actions.getTech === 'function') {
       try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
     }
-    if (!info) { refs.tech.innerHTML = ''; return; }
+    if (!info) { setHtml(refs.tech, ''); return; }
     const rows = info.rows.map((r) => {
       const tt = `${r.desc}\nThe age expects level ${r.eraBase}.` + (r.whyNot ? '\n' + r.whyNot : '');
       return `
@@ -804,7 +842,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
       + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
       + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
-    refs.tech.innerHTML = rows + unitLine;
+    setHtml(refs.tech, rows + unitLine);
   }
 
   // Three reform trees: tier pips, the next reform's name and price, one
@@ -814,22 +852,22 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!refs.reforms) return;
     if (!self) {
       const owned = t.reforms || {};
-      refs.reforms.innerHTML = Object.keys(IDEA_TREES).map((key) => {
+      setHtml(refs.reforms, Object.keys(IDEA_TREES).map((key) => {
         const tree = IDEA_TREES[key];
         const have = owned[key] | 0;
         const pips = tree.tiers.map((ti, i) =>
           `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
         return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-      }).join('');
+      }).join(''));
       return;
     }
     let trees = null;
     if (actions && typeof actions.getIdeas === 'function') {
       try { trees = actions.getIdeas(); } catch (e) { warnOnce('np-getIdeas', e); }
     }
-    if (!trees) { refs.reforms.innerHTML = ''; return; }
+    if (!trees) { setHtml(refs.reforms, ''); return; }
     const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
-    refs.reforms.innerHTML = trees.map((tr) => {
+    setHtml(refs.reforms, trees.map((tr) => {
       const pips = tr.tiers.map((ti) =>
         `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
       const next = tr.tiers[tr.owned];
@@ -843,7 +881,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
             ${next ? `${esc(next.name)} <span class="np-reform-cost">${tr.cost} ${esc(tr.point)}</span>` : 'Complete'}
           </button>
         </div>`;
-    }).join('');
+    }).join(''));
   }
 
   function refreshDecisions() {

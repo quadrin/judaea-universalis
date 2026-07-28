@@ -1396,7 +1396,7 @@ export const EVENTS_66 = [
             && (x.attackers.concat(x.defenders)).indexOf('JUD') >= 0
             && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
           const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
-          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.endGame(ctx, {
             result: 'win',
             title: 'Rome Sues for Peace',
@@ -2976,7 +2976,7 @@ export const EVENTS_66 = [
           const g = ctx.game;
           const w = findJudRomWar(g);
           const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
-          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1 });
           h.adjust(ctx, 'ROM', { legitimacy: -10, warExhaustion: 2 });
           h.removeModifier(ctx, 'JUD', 'ports_close');
@@ -2991,7 +2991,7 @@ export const EVENTS_66 = [
           const g = ctx.game;
           const w = findJudRomWar(g);
           const key = w && (w.attackers || []).indexOf('JUD') >= 0 ? 'att' : 'def';
-          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, 'JUD', 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 1, treasury: 60 });
           h.adjust(ctx, 'ROM', { legitimacy: -10, warExhaustion: 2, treasury: -60 });
           h.removeModifier(ctx, 'JUD', 'ports_close');

@@ -986,7 +986,7 @@ export const EVENTS_67 = [
             && (x.attackers.concat(x.defenders)).indexOf(me) >= 0
             && (x.attackers.concat(x.defenders)).indexOf('ROM') >= 0);
           const key = w && (w.attackers || []).indexOf(me) >= 0 ? 'att' : 'def';
-          h.endWar(ctx, me, 'ROM', key, { keep: (p) => p.religion === 'judaism' });
+          h.endWar(ctx, me, 'ROM', key, { keep: (p) => p.religion === 'judaism' && !h.isDiaspora(ctx, p) });
           h.endGame(ctx, {
             result: 'win',
             title: 'Rome Recoils',

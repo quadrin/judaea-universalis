@@ -696,6 +696,17 @@ export const simHelpers = {
     const p = ctx.prov(provName);
     return !!p && p.controller === tag;
   },
+  // Is this cell a diaspora community rather than part of the land (SPEC
+  // §133)? Takes a province or a name, so a `keep` predicate can ask directly.
+  isDiaspora(ctx, prov) {
+    try {
+      const list = (ctx.DEFINES && ctx.DEFINES.DIASPORA) || [];
+      if (!list.length) return false;
+      const p = typeof prov === 'string' ? ctx.prov(prov) : prov;
+      if (!p) return false;
+      return list.indexOf(p.canon || p.name) >= 0;
+    } catch (e) { warnOnce('isDiaspora', e); return false; }
+  },
   countControlled(ctx, tag, opts) {
     const g = ctx.game;
     let n = 0;
