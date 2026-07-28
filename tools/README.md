@@ -604,3 +604,27 @@ while either bespoke arc runs (`ownArcRuns`). If you add a chapter where MLI is
 formable, it must also play the shared package or the formable is dead content
 there; `smoke93.mjs` asserts that pairing directly, which is the §135 lesson
 applied forward.
+
+### The unpause that was a race
+
+Fifteen browser suites wrapped a click in `game.paused = false` … click …
+`game.paused = true`. That is a leftover from the blanket pause queue the engine
+used to keep: no action is gated on `g.paused` any more (it is only set by
+`endGame`, toggled by `togglePause`, and read for display), so the unpause bought
+nothing — and it cost a great deal. Between the unpause and the click the clock
+runs, a scripted card fires, `fireEvent` pauses the game and opens the event
+modal, and the modal's scrim intercepts the click. Playwright then retries for
+thirty seconds and the suite dies with
+
+    <div class="modal-scrim"></div> from <div id="event-modal">…</div>
+    intercepts pointer events
+
+which reads like a UI bug and is not one. Eleven suites failed this way, all of
+them intermittently, because whether a card fires in that window depends on the
+date the test happens to reach.
+
+So: **do not unpause to make a click land.** Clicks land while paused. The four
+places that still unpause do it deliberately, to let time pass (`speed = 5`
+followed by a `waitForTimeout`), and the three in-`evaluate` toggles are
+synchronous — no clock runs inside a single `page.evaluate`, so neither shape can
+race.

@@ -149,9 +149,7 @@ const hostId = await page.evaluate(() => {
 await page.locator('.ol-row.ol-army', { hasText: 'Host of Jerusalem' }).click(); // real selection path
 await page.waitForTimeout(200);
 ok(await page.locator(`[data-mergeall="${hostId}"]`).isVisible(), 'merge-all button on selected army');
-await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator(`[data-mergeall="${hostId}"]`).click();
-await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(200);
 const merged = await page.evaluate((id) => {
   const g = window._ctx.game;
