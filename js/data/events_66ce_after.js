@@ -44,6 +44,16 @@ function warnOnce(key, e) {
   console.warn('[events_66ce_after] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -57,7 +67,7 @@ function safeTrigger(key, fn) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
 }
 

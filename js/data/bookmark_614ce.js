@@ -13,11 +13,34 @@ function warnOnce(key, e) {
   console.warn('[bookmark_614ce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findWar(game, a, b) {
+  const x = warTag(game, a);
+  const y = warTag(game, b);
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+    if (all.indexOf(x) !== -1 && all.indexOf(y) !== -1) return w;
   }
   return null;
 }
@@ -643,12 +666,12 @@ export const BOOKMARK_614 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return;
 
-      const judTag = g.tags && g.tags.JUD;
+      const judTag = g.tags && g.tags[who(ctx, 'JUD')];
       const judAlive = !!(judTag && judTag.alive !== false);
       const judProvs = judAlive ? h.countControlled(ctx, 'JUD', {}) : 0;
       const jerusalemJud = judAlive && h.controls(ctx, 'JUD', 'Jerusalem');
 
-      if (g.playerTag === 'JUD') {
+      if (g.playerTag === who(ctx, 'JUD')) {
         // The dream: Jerusalem AND the coast, a real state, before the wheel turns.
         if (jerusalemJud && h.controls(ctx, 'JUD', 'Caesarea Maritima') && judProvs >= 8) {
           h.endGame(ctx, {
@@ -686,7 +709,7 @@ export const BOOKMARK_614 = {
           });
           return;
         }
-      } else if (g.playerTag === 'BYZ') {
+      } else if (g.playerTag === who(ctx, 'BYZ')) {
         const w = findWar(g, 'SAS', 'BYZ');
         const byzScore = w && typeof w.warscore.BYZ === 'number' ? w.warscore.BYZ : 0;
         // Mid-war concession (SPEC §32): Khosrow's court sues at +35 — an

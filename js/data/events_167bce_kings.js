@@ -34,6 +34,16 @@ function warnOnce(key, e) {
   console.warn('[events_167bce_kings] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -53,7 +63,7 @@ function dateGE(ctx, y, m) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
 }
 
@@ -61,11 +71,24 @@ function flag(ctx, key) {
   return !!(ctx.game.flags && ctx.game.flags[key]);
 }
 
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findWar(game, a, b) {
+  const x = warTag(game, a);
+  const y = warTag(game, b);
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+    if (all.indexOf(x) !== -1 && all.indexOf(y) !== -1) return w;
   }
   return null;
 }
@@ -103,8 +126,9 @@ function spawnRebels(ctx, provNames, opts) {
 // during a war may go straight back at the peace table.
 function holds(ctx, tag, name) {
   try {
+    const held = who(ctx, tag);
     const p = ctx.prov(name);
-    return !!p && !p.impassable && p.owner === tag && p.controller === tag;
+    return !!p && !p.impassable && p.owner === held && p.controller === held;
   } catch (e) { warnOnce('holds', e); return false; }
 }
 
@@ -114,9 +138,14 @@ function stir(ctx, names, mod) {
 
 // The kingdom, whatever it is calling itself: a long campaign may have formed
 // a greater crown, and these cards belong to whoever is sitting in Jerusalem.
+// The tag whichever of these courts is still standing wears NOW (SPEC §135):
+// `alive` answers under the old name, but the provinces, armies and wars are
+// filed under the new one, so the letters this returns have to be the live ones.
 function crown(ctx) {
-  if (alive(ctx, 'HAS')) return 'HAS';
-  if (alive(ctx, 'MLI')) return 'MLI';
+  for (const t of ['HAS', 'MLI']) {
+    const held = who(ctx, t);
+    if (alive(ctx, held)) return held;
+  }
   return null;
 }
 

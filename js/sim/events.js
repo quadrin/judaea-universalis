@@ -2,6 +2,7 @@
 // content package via ctx.events; effects run through ctx.helpers. DOM-free.
 
 import { noteEventChoice, noteRetired } from './divergence.js';
+import { livingTag } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -165,7 +166,13 @@ export function fireEvent(ctx, ev) {
     }
   }
   const player = g.playerTag;
-  const audience = (ev.forTag === 'both' || ev.forTag === 'player') ? player : ev.forTag;
+  // A card is addressed to a court, not to three letters (SPEC §135). A realm
+  // that has taken a greater crown is still the court the chapter was written
+  // for — the Hasmonean kingdom restored out of Hyrcanus is who `forTag: 'HYR'`
+  // means — so the audience is resolved through the forwarding address before
+  // it is compared to the chair the player is sitting in.
+  const audience = (ev.forTag === 'both' || ev.forTag === 'player')
+    ? player : livingTag(ctx, ev.forTag);
   const playerSees = audience === player;
   // Which answers this world actually offers (SPEC §128). An option may
   // declare `when(ctx)`, and a card whose answers depend on the state is a
@@ -200,6 +207,7 @@ export function fireEvent(ctx, ev) {
     if (typeof decider === 'function') {
       try { decider = decider(ctx); } catch (e) { warnOnce('decid:' + ev.id, 'decider() threw for', ev.id, e); decider = null; }
     }
+    if (decider) decider = livingTag(ctx, decider);
     if (decider && decider !== player && g.tags[decider]) {
       let idx = 0;
       try {

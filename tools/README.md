@@ -552,3 +552,26 @@ queue a card, don't — the duplicate had drifted three features behind the
 original (the §128 option mask, the §70 decider notice, and the
 war-already-settled retirement) and the drift was invisible because the card it
 broke was the only one in the game fired that way.
+
+SPEC §135 adds `livingTag` (sim/military.js) and `game.tagAliases`. Rule for
+content: **never compare a tag with `===` and a literal.** A realm can proclaim
+a greater crown at any point in the century, `switchTagCore` rewrites the whole
+state to the new three letters, and every predicate holding the old ones goes
+quiet — the 167 chain lost twenty-two cards to this, the 66 chain eighteen, and
+the 67 chapter's entire Roman-civil-war branch was unreachable by construction.
+Route the tag through `who(ctx, tag)` (the local wrapper each package keeps over
+`ctx.helpers.livingTag`) before it is compared to a province owner, a war side,
+`playerTag`, or a `game.tags` key. `simHelpers` already does this for every
+entry that takes a tag, so a card that reaches the world through `h.adjust`,
+`h.controls`, `h.countControlled` and friends is safe without doing anything.
+
+One exception, and it is in the file headers: the 1948 packages keep a raw
+`alive` on purpose. That chapter's whole subject is which banner Cairo and
+Damascus are flying, so forwarding would make `alive('UAR')` true after the
+union has come apart. It resolves its cast by name instead (`egyTag`, `syrTag`,
+`syrOwn`, SPEC §105) and always did.
+
+`smoke90.mjs` is the guard, and its last section is the one that matters: it
+plays 167 BCE to 6 CE twice from one seed, once taking the Kingdom of Israel and
+once not, and asserts the crowned run does not lose a strand. If you add a
+chapter gate keyed on a tag, that test is where its absence will show up.

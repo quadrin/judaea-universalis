@@ -6576,3 +6576,99 @@ it.
   a card fired through the helper and through the card before it; the grandson
   fires on the Davidic road and on no other; and a collected pedigree answers
   the name better than a shelved one.
+
+## 135. The reward for winning was the chapter going quiet
+
+Reported: a lot of the scripted content in the earlier bookmarks shows up but
+does not trigger — the Roman civil wars, Judaea conquering new places.
+
+Both examples are the same defect, and the defect is that **a greater crown
+changes the realm's three letters and nothing in the content knows.**
+
+`switchTagCore` is complete about state: provinces, armies, fleets, wars,
+warscores, opinions, truces, subsidies, the player's own chair, all rewritten
+from the old tag to the new one, and `lineage` recorded so the survivor can say
+what it used to be. What it cannot rewrite is the *content*, because the content
+is written against literal strings. `greaterVictory` asks whether **HAS** owns
+Jerusalem. `playerHasmonean` returns a tag only if the player is **HYR** or
+**ARI**. `judaeaFree`, `standing`, `redeemed`, `returnStands`, `thirdPower`,
+`hasmoneanHolds` all ask after a fixed set of letters, `findJudRomWar` matches
+war sides by them, and `forTag`/`decider` are compared to `playerTag` with `===`.
+
+So every one of those predicates answers **no** the moment the player takes the
+crown — and the crown is what a chapter played well leads to. Restore Hasmonean
+Judaea is the point of winning the brothers' war. Proclaim the Kingdom of Israel
+wants twenty-five provinces, which is the same conquest the greater-victory
+strand is *about*. The two things the player is rewarded for doing are the two
+things that switch the rest of the chapter off, and nothing says so: the cards
+stay listed in the Compendium, where a player can read the ones they will never
+be shown.
+
+Measured against the live chains — same seed, same conquests, crowned run
+against uncrowned:
+
+| chapter | crown | cards lost |
+|---|---|---|
+| 167 BCE | HAS → MLI | **22** — the whole royal century (Asophon, Obodas, Gaza, Medaba, Samaria, the twenty-two fortresses, Salome, Simeon ben Shetach), the Akra, the bronze tablets, Gerizim, the Idumea policy, Sidetes' summons, Hyrcanus in the east |
+| 66 CE | JUD → MLI | **18** — the entire Second Kingdom road including `ev_house_that_stood`, which opens it |
+| 132 CE | JUD → MLI | **13** — including `ev2_era_of_redemption`, the entry to the best outcome in the game |
+| 614 CE | JUD → MLI | **7** — the third-power arc |
+| 40 BCE | HER → JUD | 2 |
+| 67 BCE | HYR → HAS | 1 measured, and the whole sovereign road unreachable by construction |
+
+That last row is the reported one. The `ev4_v_*` branch — the eagle refused,
+the choice between Caesar and Pompey, the wager at Pharsalus, Antony or
+Octavian, Actium, the kingdom they never renamed — is six cards about the Roman
+civil wars, gated behind `playerHasmonean`, which returns `null` for a restored
+HAS. A player who wins the 67 chapter the way the chapter asks can never see
+any of them.
+
+**The forwarding address.** `lineage` reads the relation from the survivor's
+side, which is the right shape for a bookmark table and the wrong shape for a
+trigger: a trigger is holding the *old* name and needs to know who wears it. So
+`switchTagCore` now also writes `game.tagAliases`, and `livingTag(ctx, tag)`
+resolves in one hop. Chains collapse as they form (HYR → HAS → MLI leaves both
+pointing at MLI), a banner revived by later content clears its own entry because
+a tag that exists answers for itself, and a court that merely *died* is not
+forwarded anywhere — content must still see it dead.
+
+Three layers use it:
+
+- **The engine.** `fireEvent` resolves `forTag` and `decider` before comparing
+  them to the player. A card is addressed to a court, not to three letters.
+- **The helpers.** Every `simHelpers` entry that names a court — `adjust`,
+  `controls`, `countControlled`, `addTagModifier`, `spawnArmy`, `spawnFleet`,
+  `declareWar`, `endWar`, `setRuler`, `faction`… — resolves its tag argument.
+- **The content's own predicates.** A package imports nothing, so it reaches the
+  lookup through `ctx.helpers.livingTag` behind a local `who(ctx, tag)`, and its
+  `alive`, `holds`, `crown`, `provsOf`, `ruler`, `rulerAt`, `findWar` and the
+  chapter gates above all go through it. `who` tolerates a ctx with no helpers,
+  because the suites read content cold.
+
+The province strings need no work: `switchTagCore` already migrated them, which
+is exactly why resolving the *argument* is sufficient.
+
+**1948 is the exception, deliberately.** Everywhere else a rename is the same
+court under new letters, so `alive('HAS')` should mean "is the Hasmonean state
+still a going concern" and answer yes when it is called Israel. In the modern
+chapter the rename IS the subject: Cairo becomes the United Arab Republic and
+back again, Damascus walks out of the union as the Syrian Arab Republic, and a
+dozen cards turn on which of those banners is flying this decade — `syrOwn`
+excludes the union on purpose. So the 1948 packages keep a raw `alive`, and go
+on resolving their cast name by name through `egyTag` / `syrTag` / `syrOwn`,
+which is the workaround §105 already built there and the reason this chapter
+was the only one that lost nothing to the defect. The engine-level and
+helper-level resolution still apply to it, because those receive a tag and
+return a court rather than answering a question about a name.
+
+After the fix the same measurement gives 1 / 0 / 0 / 0 / 0 / 0, the single
+remainder being one card of seeded drift (`ev_k_gaza`, whose trigger asks
+whether Gaza is already ours). Two chapters gain content that was unreachable
+before. The eight-year balance harness is byte-identical to the pre-change run.
+
+- **Regression contract**: `smoke90.mjs` — the address itself (chains,
+  revivals, a dead tag that is not forwarded); a card addressed to the old name
+  reaching the new court, as a card and as a decider notice; the helpers
+  following the crown; the strand gates of 167, 67 and 66 answering the same
+  under either banner; and the end-to-end claim, which plays 167 to 6 CE twice
+  from one seed and asserts the royal century survives the proclamation.

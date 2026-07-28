@@ -58,6 +58,13 @@ function safeTrigger(key, fn) {
   };
 }
 
+// The 1948 chapter is the exception to SPEC §135, deliberately. Everywhere else
+// a renamed realm is the same court under new letters and `alive` should follow
+// the forwarding address. Here the rename IS the subject: Cairo becomes the
+// United Arab Republic and back again, Damascus walks out of the union as the
+// Syrian Arab Republic, and a dozen cards turn on which of those banners is
+// flying this decade. So this one asks the raw question, and the chapter's own
+// cast resolvers (egyTag / syrTag / syrOwn) go on answering it name by name.
 function alive(ctx, tag) {
   const t = ctx.game.tags && ctx.game.tags[tag];
   return !!(t && t.alive !== false);

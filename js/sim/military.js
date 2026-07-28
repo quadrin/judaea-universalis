@@ -129,6 +129,28 @@ export function contentForTag(ctx, table, tag) {
   }
   return null;
 }
+// The court a vanished set of three letters answers to now (SPEC §135).
+// `lineage` reads the relation from the survivor's side and is the right shape
+// for a bookmark table; a trigger has the opposite problem. It is holding the
+// name the chapter was WRITTEN with — 'HAS', 'HYR', 'JUD' — and needs to know
+// who wears it, every month, for every card in the chain.
+//
+// This is that lookup, and it is the difference between a chapter that keeps
+// running after the player takes a greater crown and one that stops dead. The
+// 167 chain lost twenty-two cards to it — the whole royal century, Jannaeus'
+// conquests, the Akra, the bronze tablets — because proclaiming the Kingdom of
+// Israel is the reward for exactly the conquests those cards are about, and
+// every one of them asked after a tag that the proclamation had just deleted.
+//
+// A living tag always answers for itself: a banner that has been revived by
+// later content is itself, not its own successor.
+export function livingTag(ctx, tag) {
+  const g = ctx && ctx.game;
+  if (!g || !tag || !g.tags) return tag;
+  if (g.tags[tag]) return tag;
+  const to = g.tagAliases && g.tagAliases[tag];
+  return to && g.tags[to] ? to : tag;
+}
 export function tagGen(ctx, tag) {
   const t = ctx.game.tags[tag];
   return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
@@ -1608,6 +1630,18 @@ export function switchTagCore(ctx, from, to) {
   }
   g.tags[to] = nt;
   delete g.tags[from];
+  // The forwarding address (SPEC §135). `lineage` above lets the survivor say
+  // what it used to be; this lets the chapter's cards find it under the name
+  // they were written with. Chains are collapsed as they form — a HYR that
+  // became HAS and then MLI forwards straight to MLI, so the lookup never
+  // walks — and a banner revived by later content clears its own entry,
+  // because a tag that exists answers for itself.
+  if (!g.tagAliases || typeof g.tagAliases !== 'object') g.tagAliases = {};
+  g.tagAliases[from] = to;
+  for (const k of Object.keys(g.tagAliases)) {
+    if (g.tagAliases[k] === from) g.tagAliases[k] = to;
+  }
+  delete g.tagAliases[to];
 
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];

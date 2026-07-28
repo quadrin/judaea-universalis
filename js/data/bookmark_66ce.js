@@ -9,12 +9,33 @@ function warnOnce(key, e) {
   console.warn('[bookmark_66ce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findJudRomWar(game) {
   const wars = (game && game.wars) || [];
   for (const w of wars) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('JUD') !== -1 && all.indexOf('ROM') !== -1) return w;
+    if (all.indexOf(warTag(game, 'JUD')) !== -1 && all.indexOf(warTag(game, 'ROM')) !== -1) return w;
   }
   return null;
 }
@@ -23,7 +44,7 @@ function judWarscore(ctx) {
   try {
     const w = findJudRomWar(ctx.game);
     if (!w || !w.warscore || typeof w.warscore !== 'object') return 0;
-    const v = w.warscore.JUD;
+    const v = w.warscore[warTag(ctx.game, 'JUD')];
     return typeof v === 'number' ? v : 0;
   } catch (e) { warnOnce('judWarscore', e); return 0; }
 }
@@ -628,13 +649,13 @@ export const BOOKMARK_66 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return; // result stays set after "continue observing"
 
-      const judTag = g.tags && g.tags.JUD;
+      const judTag = g.tags && g.tags[who(ctx, 'JUD')];
       const judAlive = !!(judTag && judTag.alive !== false);
       const judProvs = judAlive ? h.countControlled(ctx, 'JUD', {}) : 0;
       const jerusalemHeld = judAlive && h.controls(ctx, 'JUD', 'Jerusalem');
       const ws = judWarscore(ctx);
 
-      if (g.playerTag === 'JUD') {
+      if (g.playerTag === who(ctx, 'JUD')) {
         // Early concession (SPEC §32): Rome OFFERS peace at +50 — an event
         // card the player may accept or refuse. Offered once.
         if (ws >= 50 && !h.getFlag(ctx, 'romeTermsOffered')) {

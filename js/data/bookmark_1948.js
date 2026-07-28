@@ -12,11 +12,34 @@ function warnOnce(key, e) {
   console.warn('[bookmark_1948] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findWar(game, a, b) {
+  const x = warTag(game, a);
+  const y = warTag(game, b);
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+    if (all.indexOf(x) !== -1 && all.indexOf(y) !== -1) return w;
   }
   return null;
 }
@@ -1106,7 +1129,8 @@ export const BOOKMARK_1948 = {
         id: 'jr_solvent', name: 'A Kingdom Solvent',
         desc: 'End 1948 with a positive treasury — the Legion is paid in sterling.',
         rewardText: '+50 talents (London approves).',
-        check: (ctx) => dateGE(ctx.game.date, 1949, 1) && (ctx.game.tags.JOR.treasury || 0) > 0,
+        check: (ctx) => dateGE(ctx.game.date, 1949, 1)
+          && ((ctx.game.tags[who(ctx, 'JOR')] || {}).treasury || 0) > 0,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { treasury: 50 }),
       },
       {
@@ -1141,12 +1165,12 @@ export const BOOKMARK_1948 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return;
 
-      const isrTag = g.tags && g.tags.ISR;
+      const isrTag = g.tags && g.tags[who(ctx, 'ISR')];
       const isrAlive = !!(isrTag && isrTag.alive !== false);
       const isrProvs = isrAlive ? h.countControlled(ctx, 'ISR', {}) : 0;
       const warOver = !findWar(g, 'EGY', 'ISR');
 
-      if (g.playerTag === 'ISR') {
+      if (g.playerTag === who(ctx, 'ISR')) {
         if (warOver && dateGE(g.date, 1949, 1) && isrProvs >= 26
             && h.controls(ctx, 'ISR', 'Jerusalem') && h.controls(ctx, 'ISR', 'Eilat')) {
           h.endGame(ctx, {
@@ -1182,7 +1206,7 @@ export const BOOKMARK_1948 = {
           });
           return;
         }
-      } else if (g.playerTag === 'JOR') {
+      } else if (g.playerTag === who(ctx, 'JOR')) {
         if (dateGE(g.date, 1949, 2) && h.controls(ctx, 'JOR', 'Jerusalem')
             && ['Neapolis', 'Hebron', 'Jericho'].every((n) => h.controls(ctx, 'JOR', n))) {
           h.endGame(ctx, {
@@ -1206,7 +1230,7 @@ export const BOOKMARK_1948 = {
           });
           return;
         }
-        if (!g.tags.JOR.alive || !h.controls(ctx, 'JOR', 'Philadelphia')) {
+        if (!g.tags[who(ctx, 'JOR')].alive || !h.controls(ctx, 'JOR', 'Philadelphia')) {
           h.endGame(ctx, {
             result: 'loss',
             title: 'The Throne Undone',

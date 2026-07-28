@@ -11,6 +11,16 @@ function warnOnce(key, e) {
   console.warn('[events_67bce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -29,8 +39,19 @@ function dateGE(ctx, y, m) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
 }
 
 function findBrothersWar(game) {
@@ -38,7 +59,7 @@ function findBrothersWar(game) {
   for (const w of wars) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('HYR') !== -1 && all.indexOf('ARI') !== -1) return w;
+    if (all.indexOf(warTag(game, 'HYR')) !== -1 && all.indexOf(warTag(game, 'ARI')) !== -1) return w;
   }
   return null;
 }
@@ -47,9 +68,30 @@ function findBrothersWar(game) {
 // (fires only in worlds that beat the parchment; never in historical ones).
 
 // The player's Hasmonean tag, or null when playing someone else.
+//
+// The chapter's own reward is a trap here (SPEC §135). "Restore Hasmonean
+// Judaea" is what winning the brothers' war is FOR, and it retires HYR (or
+// ARI) and raises HAS — so a test on the two letters the bookmark shipped with
+// answered `null` for the one player who had done the thing the strand is
+// about, and the whole sovereign road went with it: the eagle refused, the
+// choice between Caesar and Pompey, the wager at Pharsalus, Antony or
+// Octavian, Actium, the kingdom they never renamed. Six cards about the Roman
+// civil wars, listed in the Compendium, unreachable by the player most likely
+// to be reading them. The restored crown IS this court; its lineage says so.
 function playerHasmonean(ctx) {
   const me = ctx.game.playerTag;
-  return (me === 'HYR' || me === 'ARI') ? me : null;
+  if (me === 'HYR' || me === 'ARI') return me;
+  const t = ctx.game.tags && ctx.game.tags[me];
+  const line = (t && Array.isArray(t.lineage)) ? t.lineage : [];
+  return (line.indexOf('HYR') >= 0 || line.indexOf('ARI') >= 0) ? me : null;
+}
+
+// Which brother a Hasmonean court is NOT — read off the lineage, so a crown
+// that has been renamed still knows who it beat.
+function rivalBrother(ctx, tag) {
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  const line = [tag].concat((t && Array.isArray(t.lineage)) ? t.lineage : []);
+  return line.indexOf('HYR') >= 0 ? 'ARI' : 'HYR';
 }
 
 // True while any province of the faith answers to Rome.
@@ -65,7 +107,7 @@ function romHoldsJudaea(ctx) {
 
 // The brothers' war actually WON: the rival line dead, annexed, or bent to clienthood.
 function unifiedUnder(ctx, tag) {
-  const rival = tag === 'HYR' ? 'ARI' : 'HYR';
+  const rival = who(ctx, rivalBrother(ctx, tag));
   const r = ctx.game.tags && ctx.game.tags[rival];
   return !r || r.alive === false || r.overlord === tag;
 }
@@ -81,7 +123,7 @@ function seatedHasmonean(ctx, tag) {
 
 // Alive, no Roman collar, and no Roman war still burning.
 function freeOfRome(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false && !t.overlord
     && (t.atWarWith || []).indexOf('ROM') === -1);
 }
@@ -93,16 +135,19 @@ function freeOfRome(ctx, tag) {
 // brothers back to war or rewrite a client court's rulers. Only an organic
 // independence rising may reopen the quarrel.
 function underOneRoof(ctx) {
-  const h = ctx.game.tags && ctx.game.tags.HYR;
-  const a = ctx.game.tags && ctx.game.tags.ARI;
-  return !!((h && h.overlord === 'ARI') || (a && a.overlord === 'HYR'));
+  const g = ctx.game;
+  const hyr = who(ctx, 'HYR');
+  const ari = who(ctx, 'ARI');
+  const h = g.tags && g.tags[hyr];
+  const a = g.tags && g.tags[ari];
+  return !!((h && h.overlord === ari) || (a && a.overlord === hyr));
 }
 // Hyrcanus' court is its own (or Rome's) — not a client of its brother's
 // line. The Herodian strand (the night flight, the king without a kingdom,
 // the caves of Arbela) presumes exactly this.
 function hyrFreeOfAri(ctx) {
-  const h = ctx.game.tags && ctx.game.tags.HYR;
-  return !h || h.overlord !== 'ARI';
+  const h = ctx.game.tags && ctx.game.tags[who(ctx, 'HYR')];
+  return !h || h.overlord !== who(ctx, 'ARI');
 }
 
 function bumpOpinion(g, of, toward, delta) {

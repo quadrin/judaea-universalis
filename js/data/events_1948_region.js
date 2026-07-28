@@ -53,16 +53,36 @@ function safeTrigger(key, fn) {
   };
 }
 
+// The 1948 chapter is the exception to SPEC §135, deliberately. Everywhere else
+// a renamed realm is the same court under new letters and `alive` should follow
+// the forwarding address. Here the rename IS the subject: Cairo becomes the
+// United Arab Republic and back again, Damascus walks out of the union as the
+// Syrian Arab Republic, and a dozen cards turn on which of those banners is
+// flying this decade. So this one asks the raw question, and the chapter's own
+// cast resolvers (egyTag / syrTag / syrOwn) go on answering it name by name.
 function alive(ctx, tag) {
   const t = ctx.game.tags && ctx.game.tags[tag];
   return !!(t && t.alive !== false);
 }
 
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findWar(game, a, b) {
+  const x = warTag(game, a);
+  const y = warTag(game, b);
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf(a) !== -1 && all.indexOf(b) !== -1) return w;
+    if (all.indexOf(x) !== -1 && all.indexOf(y) !== -1) return w;
   }
   return null;
 }
