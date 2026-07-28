@@ -278,7 +278,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const t = g.tags && g.tags[tag];
     if (!t) { close(); return; }
     const TAGS = DEFINES.TAGS || {};
-    const def = TAGS[tag] || {};
+    // The era's reading of the court, not the tag's (SPEC §139) — the seat
+    // shown under a chapter's own name has to be the seat that chapter's
+    // court actually sits in.
+    const def = (ctx.tagDef ? ctx.tagDef(tag) : TAGS[tag]) || {};
     const terms = (ctx.bookmark && ctx.bookmark.uiTerms) || {};
     setText(refs.realmLabel, terms.realm || 'Realm');
     setText(refs.legitimacyLabel, terms.legitimacy || 'Legitimacy');

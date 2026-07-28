@@ -151,6 +151,27 @@ export function livingTag(ctx, tag) {
   const to = g.tagAliases && g.tagAliases[tag];
   return to && g.tags[to] ? to : tag;
 }
+// What the era calls a court, and where it sits (SPEC §139). Three letters
+// outlive their century; the state under them does not. JUD is Judaea in every
+// chapter that opens before Hadrian and it is GALILEE in 529, because by then
+// the courts, the academy and the patriarch's successors are at Tiberias and
+// Judaea proper is a Christian province the Jews may enter one day a year.
+//
+// A chapter says so with `tagTweaks`, and this is the only place that reads it.
+// It is a LENS and never a write. DEFINES is a plain mutable object imported
+// once and shared by the whole page — nothing would stop a chapter writing
+// through it, and nothing would catch it either: the rename would follow the
+// player onto the start screen, into the compendium, and into the next
+// campaign begun without a reload. Reading is therefore the discipline. The
+// lens costs one object spread on a hit and nothing at all when a chapter
+// declares no tweaks, which is seven chapters out of eight.
+export function tagDef(ctx, tag) {
+  const base = (ctx && ctx.DEFINES && ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag]) || null;
+  const table = ctx && ctx.bookmark && ctx.bookmark.tagTweaks;
+  const tweak = table && Object.prototype.hasOwnProperty.call(table, tag) ? table[tag] : null;
+  if (!tweak) return base || {};
+  return { ...(base || {}), ...tweak };
+}
 export function tagGen(ctx, tag) {
   const t = ctx.game.tags[tag];
   return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
@@ -2198,7 +2219,7 @@ const WAR_GOALS = {
 
 function capitalProvince(ctx, tag) {
   const t = ctx.game.tags[tag];
-  const def = (ctx.DEFINES.TAGS || {})[tag] || {};
+  const def = tagDef(ctx, tag);
   const name = (t && t.dynamicCapital) || def.capital;
   const named = name && ctx.prov ? ctx.prov(name) : null;
   if (named && !named.impassable && named.owner === tag) return named;
@@ -3832,7 +3853,7 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
   const out = [];
   if (!war || !enemyTag) return out;
   const enemy = g.tags[enemyTag];
-  const enemyDef = (ctx.DEFINES.TAGS || {})[enemyTag] || {};
+  const enemyDef = tagDef(ctx, enemyTag);
   const capital = enemyDef.capital || (enemy && enemy.dynamicCapital) || null;
   const participants = war.attackers.concat(war.defenders);
   const byNation = {};

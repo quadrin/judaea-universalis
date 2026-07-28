@@ -3,10 +3,10 @@
 import { esc, rgb, rgba, fmtYear } from './format.js';
 import { icon, divider, flagChip } from './icons.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
+import { tagDef } from '../sim/military.js';
 
 export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo, saveTools, onMultiplayer, onWiki) {
   if (!root) return;
-  const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const list = Array.isArray(bookmarks) ? bookmarks : [bookmarks];
 
   function shell(inner) {
@@ -115,7 +115,9 @@ export function buildStartScreen(root, DEFINES, bookmarks, onPick, continueInfo,
   function renderNations(bookmark) {
     const playable = (bookmark && bookmark.playableTags) || [];
     const cards = playable.map((p) => {
-      const def = TAGS[p.tag] || {};
+      // The chapter's own name for the court, where it has one (SPEC §139):
+      // the roster must offer the standard the campaign will actually fly.
+      const def = tagDef({ DEFINES, bookmark }, p.tag);
       const diff = String(p.difficulty || '');
       const guide = campaignGuidance(bookmark.id, p.tag, bookmark.startDate);
       const objectives = bookmark.objectives && Array.isArray(bookmark.objectives[p.tag])

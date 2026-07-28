@@ -26,7 +26,7 @@
 // `revoltType` stamp and reads as `peasant` in the UI.
 
 import {
-  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf,
+  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf, tagDef,
 } from './military.js';
 import { axisOf } from './doctrine.js';
 import { rollCourtier } from './realm.js';
@@ -409,7 +409,7 @@ export function monthlyPretenders(ctx) {
       // A throne with a rival in the field bleeds belief every month.
       t.legitimacy = clamp(num(t.legitimacy) - R(ctx, 'pretenderDrain', 0.5), 0, 100);
       // The capital is the whole argument.
-      const capName = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
+      const capName = tagDef(ctx, tag).capital || null;
       const cap = capName ? ctx.byId(ctx.provId(capName)) : null;
       if (!cap || cap.controller !== 'REB') { pr.heldMonths = 0; continue; }
       pr.heldMonths = num(pr.heldMonths) + 1;

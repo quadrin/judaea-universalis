@@ -12,7 +12,7 @@ import {
   declareWar, truceActive, opinionOf, casusBelli, successionClaim, addOpinion, areRivals, recognized,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
-  tagGen, mechanicOn,
+  tagGen, mechanicOn, tagDef,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
@@ -72,7 +72,7 @@ function pickRecruitProv(ctx, tag, hints) {
     if (p && p.controller === tag && !shipBuilding(p)
         && !armiesInProv(ctx, p.id).some((a) => isHostile(ctx, tag, a.tag))) return p.id;
   }
-  const capName = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
+  const capName = tagDef(ctx, tag).capital || null;
   const cap = capName ? ctx.prov(capName) : null;
   if (cap && cap.owner === tag && cap.controller === tag && !shipBuilding(cap)) return cap.id;
   let fallback = 0;
@@ -1307,7 +1307,7 @@ function aiDevelop(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t) return;
-  const capital = (ctx.DEFINES.TAGS[tag] || {}).capital;
+  const capital = tagDef(ctx, tag).capital;
   for (const kind of Object.keys(DEV_KINDS)) {
     const pool = DEV_KINDS[kind];
     if (num(t.points[pool]) < 500) continue; // tech and reforms eat first
@@ -1330,7 +1330,7 @@ function aiAirPower(ctx, tag) {
   const t = g.tags[tag];
   if (!t || num(t.tech && t.tech.mar) < 19) return;
   const AIR = ctx.DEFINES.AIR || {};
-  const capName = (ctx.DEFINES.TAGS[tag] || {}).capital;
+  const capName = tagDef(ctx, tag).capital;
   const cap = capName && ctx.prov ? ctx.prov(capName) : null;
   if (!cap || cap.owner !== tag || cap.controller !== tag) return;
   if (!hasAirfield(cap)) {

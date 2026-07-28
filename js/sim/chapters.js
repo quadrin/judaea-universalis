@@ -15,7 +15,7 @@
 // Everything stored on game.chapters is plain data (objectives carry typed
 // params, never functions), so saves resume mid-chapter.
 
-import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress } from './military.js';
+import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress, tagDef } from './military.js';
 import { factionDefs } from './factions.js';
 import { isCoastal, merchantShipsOf } from './navy.js';
 import { lean, axisOf, doctrineEpithet } from './doctrine.js';
@@ -70,7 +70,7 @@ function holyProvinces(ctx) {
   return out;
 }
 function capitalId(ctx, tag) {
-  const name = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
+  const name = tagDef(ctx, tag).capital || null;
   return name ? ctx.provId(name) : 0;
 }
 function foreignCapitalsByDistance(ctx, tag) {

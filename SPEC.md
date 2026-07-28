@@ -6928,3 +6928,93 @@ checklist tooltip leads with the thing that is not arithmetic.
   Ezekiel foreclosing it and the Hasmonean answer merely postponing it; and both
   bespoke arcs raising the shared flag while the shared cards stand down.
   `smoke12.mjs` carries the updated unlock.
+
+## 139. Three letters outlive their century
+
+Reported: rename the Jewish state in the 529 chapter to Galilee, "since it's not
+Judea."
+
+It isn't. `JUD` holds Tiberias, Sepphoris, Tarichaea and Gischala — four towns
+around a lake, none of them within sixty miles of Jerusalem — and the chapter
+was still labelling that court **Judaea**, because the tag's static definition
+in `defines.js` says so and nothing had ever needed to disagree.
+
+By 529 *Judaea* is a Roman provincial label with no Jewish polity behind it.
+Hadrian struck the name off after 135; the hill country is Christian Palaestina
+Prima; Jews enter the city one day a year to mourn on the ninth of Ab. What is
+left of the nation is in the north, and had been for four hundred years: the
+Sanhedrin to Usha, Sepphoris and then Tiberias, the patriarchate with it until
+Theodosius II let the office lapse around 425, and the Palestinian Talmud closed
+in exactly these four towns a century before this chapter opens. Its ruler in
+the chapter is already Mar Zutra, **Head of the Academy** — not a king, and not
+in Jerusalem. Only the label was still lying.
+
+Calling that court Judaea is the same class of error as calling the Keepers
+Jews, which is the error this whole chapter exists to refuse (§136).
+
+### The lens, not the write
+
+A tag is three letters that persist across chapters. What the people under them
+call themselves does not. The fix is a per-chapter lens:
+
+```js
+tagTweaks: {
+  JUD: { name: 'Galilee', capital: 'Tiberias', description: '…' },
+},
+```
+
+`tagDef(ctx, tag)` in `military.js` is the only reader, and it **never writes**.
+That is the load-bearing part. `DEFINES` is one object imported once by
+`main.js` and shared by the start screen, the compendium, the save shelf and
+every campaign begun without a page reload — a chapter that renamed the tag in
+place would rename it everywhere, including for the next chapter the player
+started. The lens costs one object spread on a hit and nothing at all for the
+seven chapters that declare no tweaks.
+
+The name lands in `game.tags[key].name` at `initGame`, which is enough for every
+display surface, because the UI already resolves names live-first — `flagChip`,
+the topbar, the province panel, the outliner, the wiki's `tagName`, the lobby
+and the save shelf all read `live.name || def.name`. The start screen and the
+tag-backfill in `reconcileGameProvinces` take the lens directly, since neither
+has a live tag to read.
+
+### Healing a save without a flag
+
+`reviveGame` re-applies the era name, but only where the court's name still
+equals its **static** name. That comparison is the whole migration: a save
+written before the chapter declared the tweak carries the static name and is
+exactly the case worth healing, while a crown proclaimed in play (§135) or a
+revolution that called `rebrandTag` wrote its own name over the top and must
+keep it. A stored flag would have had to stay in step with both; the comparison
+cannot fall out of step with anything.
+
+### The seat was wrong too, and not only on the label
+
+The lens carries a capital because the label was the smaller half. `JUD`'s
+static capital is Jerusalem, which in 529 is the Empire's — so the nation panel
+read *Capital: Jerusalem (lost)* for a state that had never held it, and six
+consumers were reading a seat this chapter's court does not sit in:
+`yearlyGrowth`'s capital bonus (never paid), `aiDevelop` and `aiAirPower`
+(anchored on somebody else's city), `vantage` and the AI's shipyard search
+(rallying nowhere), `capitalId` for chapter distance scoring, the pretender's
+prize in `revolt.js` (a `JUD` pretender could never be crowned, because the
+crowning wants the capital and the capital was Byzantine), and
+`releasableNations`, which protects a crown's own capital from the peace table.
+All eight now read `tagDef`.
+
+`dynamicCapital` — the seat a state released at the peace table is given — is
+untouched and keeps its existing precedence at both call sites.
+
+### The prose that was already right
+
+Almost none of the chapter's player-facing text names this court, so almost
+none of it changed. What the sweep had to protect was the other three senses of
+the word: *the Judaean desert* where Sabas' monasteries are (a real place, and
+it belongs to the Byzantine church faction), *the Jewish text* of Deuteronomy
+27:4 that reads Ebal where the Samaritan reads Gerizim (a people's scripture),
+and the declared fork named **The Jews** (a people, not a state — the 556 rising
+at Caesarea). None of those is Galilee and none of them moved.
+
+`smoke94.mjs` holds the line: Galilee in 529 with its seat at Tiberias, Judaea
+in every other chapter that seats `JUD`, `DEFINES` unmutated after booting the
+529 chapter, and a stale save healed on load while a rebranded court is not.
