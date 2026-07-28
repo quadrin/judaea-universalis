@@ -300,6 +300,65 @@ console.log('== silence is a bet on the constitution, not a use of it ==');
     '  and a house whose founding is an assertion does not (' + cb + ' → ' + crown.game.tags.JUD.legitimacy + ')');
 }
 
+console.log('== the marriage keeps its promise (SPEC §134) ==');
+{
+  // Two defects, both mine. The mask was never computed for a card fired by
+  // another card, so the Davidic road was offered to a house with no road to
+  // Babylonia; and the road, once taken, led nowhere — the grandson the option
+  // is explicitly FOR did not exist.
+  const acc = CARD('ev_bk_the_accession');
+  const shut = world(160, { factions: { sages: 20 }, east: false });
+  fireEvent(shut.ctx, acc);
+  const pe = shut.game.pendingEvents.find((p) => p.eventId === acc.id);
+  ok(Array.isArray(pe.allowed) && pe.allowed.indexOf(1) < 0,
+    'a house that cannot reach Babylonia is not offered the marriage');
+
+  // …and the same through the helper, which is how the card really fires.
+  const chain = world(155, { factions: { sages: 20 }, east: false,
+    ruler: { name: 'Yehudah ben Shimon', title: 'Nasi', gov: 4, infl: 3, mar: 3, age: 44 } });
+  checkTriggeredEvents(chain.ctx);
+  const open = chain.game.pendingEvents.find((p) => p.eventId === 'ev_bk_the_prince_is_mortal');
+  resolveEventOption(chain.ctx, open.instanceId, 0);
+  const acc2 = chain.game.pendingEvents.find((p) => p.eventId === 'ev_bk_the_accession');
+  ok(Array.isArray(acc2.allowed) && acc2.allowed.indexOf(1) < 0,
+    '  including when it is fired by the card before it, which is the only way it fires');
+
+  // The payoff exists and only on the road that promised it.
+  const grandson = CARD('ev_bk_the_grandson');
+  ok(!!grandson, 'the grandson the marriage was arranged for has a card');
+  for (const [kind, expect] of [['david', true], ['crown', false], ['nasi', false], ['twoHouses', false]]) {
+    const w = world(200, {
+      flags: { beitKosibaSettled: true },
+      ruler: { name: 'Successor', title: 'Nasi', gov: 3, infl: 3, mar: 3, age: 50 },
+    });
+    w.ctx.helpers.setConstitution(w.ctx, '132ce', kind);
+    ok(!!grandson.trigger(w.ctx) === expect,
+      '  ' + kind + (expect ? ' collects on it' : ' is never asked about a grandson'));
+  }
+
+  // And it changes what the house can say when the name comes back.
+  const koziba = CARD('ev_bk_bar_kokhba_or_bar_koziba');
+  function defeated(flags) {
+    const d = world(240, { flags: Object.assign({ beitKosibaSettled: true }, flags) });
+    d.ctx.helpers.setConstitution(d.ctx, '132ce', 'david');
+    let broke = 0;
+    for (let i = 1; i < d.game.provinces.length && broke < 3; i++) {
+      const p = d.game.provinces[i];
+      if (!p || p.impassable || p.owner !== 'JUD' || p.name === 'Jerusalem') continue;
+      p.controller = 'ROM'; broke++;
+    }
+    checkTriggeredEvents(d.ctx);
+    const pe2 = d.game.pendingEvents.find((p) => p.eventId === koziba.id);
+    resolveEventOption(d.ctx, pe2.instanceId, 1);
+    return d.game.tags.JUD.legitimacy;
+  }
+  const collected = defeated({ davidicSuccession: true });
+  const shelved = defeated({ pedigreeAsOrnament: true });
+  ok(collected > shelved,
+    'a pedigree the house collected on answers better than one left in a chest ('
+    + Math.round(collected) + ' vs ' + Math.round(shelved) + ')');
+}
+
 console.log('== the rest of the chapter reads off what they decided ==');
 {
   // The point of the whole package: four cards in the 150s that the terminals

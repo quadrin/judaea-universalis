@@ -39,7 +39,7 @@ import { rulerDies, missionsFor } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
-import { nextWorldEvent, resolveEventOption } from './events.js';
+import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
 import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
@@ -521,17 +521,20 @@ export const simHelpers = {
       for (const e of list) { if (e && e.id === eventId) { ev = e; break; } }
       if (!ev) { warnOnce('fireEvent:' + eventId, 'unknown event id', eventId); return false; }
       if (g.firedEvents && g.firedEvents[eventId]) return false;
-      if (g.firedEvents) g.firedEvents[eventId] = true;
-      const instanceId = g.nextEventInstance++;
-      g.pendingEvents.push({ instanceId, eventId, forTag: ev.forTag });
-      const playerFacing = ev.forTag === 'player' || ev.forTag === 'both' || ev.forTag === g.playerTag;
-      if (playerFacing) {
-        g.paused = true;
-        if (ctx.bus) {
-          ctx.bus.emit('event', { instanceId, event: ev, forTag: ev.forTag });
-          ctx.bus.emit('pause', true);
-        }
-      }
+      // Hand it to the real one (SPEC §134). This used to queue the card
+      // itself, with its own copy of the pause-and-emit dance, and that copy
+      // knew nothing about the option mask §128 added — so a card fired by
+      // another card had every one of its `when` gates ignored and offered
+      // roads the world had closed. The accession of Beit Kosiba is fired
+      // exactly this way, which is how a house with no road to Babylonia was
+      // still being offered a Davidic marriage.
+      //
+      // Delegating also picks up the decider notice (§70), the war-already-
+      // settled retirement, and the silent AI resolution, none of which the
+      // duplicate had.
+      // The bookkeeping is fireEventCore's, including the repeat counter a
+      // `once: false` card keeps; setting it here as well would corrupt that.
+      fireEventCore(ctx, ev);
       return true;
     } catch (e) { warnOnce('fireEvent', 'fireEvent failed', e); return false; }
   },

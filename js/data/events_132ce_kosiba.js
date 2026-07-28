@@ -405,6 +405,102 @@ export const EVENTS_132_KOSIBA = [
     ],
   },
 
+  // ── II(b). What the marriage was actually for ───────────────────────────
+  //
+  // The accession said it plainly: the payoff is not the marriage, it is the
+  // grandson. Without this card that was a promise the road never kept — the
+  // option set a flag, added a modifier, and got a line in a chronicle three
+  // centuries later, and the Exilarchate's "standing claim on this succession"
+  // existed nowhere but in the tooltip (SPEC §134).
+
+  {
+    id: 'ev_bk_the_grandson',
+    title: 'The Grandson of Jehoiachin',
+    desc: 'The boy the marriage was for is thirty-one and has been running the '
+      + 'treasury\'s eastern correspondence for six years, which everyone agrees he does '
+      + 'well and nobody thinks is the point. His mother was of the line of Jehoiachin '
+      + 'and the genealogy has been copied four times since she came, each copy attested '
+      + 'by men from Nehardea who did not travel eight hundred miles to watch it be '
+      + 'filed. There is a delegation in the city now. They are courteous, they ask for '
+      + 'nothing in writing, and they have mentioned twice in passing that the line of '
+      + 'David has waited six hundred years and can be patient a little longer, which is '
+      + 'the most threatening sentence anyone has said in this building in a decade. '
+      + 'Somebody has also left a copy of Josephus open at the fifteenth book, where '
+      + 'Herod does the arithmetic on his wife and reaches the answer he reaches.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 176,
+    maxYear: 245,
+    trigger: safeTrigger('ev_bk_the_grandson', (ctx) => {
+      if (!redeemed(ctx) || flag(ctx, 'grandsonAnswered')) return false;
+      if (constitution(ctx) !== 'david') return false;
+      return founderGone(ctx);
+    }),
+    aiOption: 1,
+    historical: 'Herod married Mariamne the Hasmonean for the pedigree he lacked, executed her in 29 BCE and her two sons by him in 7 BCE. The Exilarchs of Babylonia went on claiming descent from Jehoiachin for another eight hundred years.',
+    options: [
+      {
+        label: 'Let the succession pass to him. The house has the pedigree now',
+        tooltip: 'What the marriage was arranged for, collected: +35 legitimacy and +0.3 a month permanently, and no rival can ever again say this house has no title to what it holds. The price is the one the Babylonians came to name — the Exilarchate has a recognised interest in the succession of Israel from this year, and will send a delegation to every one of them. Sages +25, −1 authority.',
+        effects: guard('ev_bk_grandson:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 35, stability: 1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_line_of_jehoiachin', name: 'The Line of Jehoiachin', months: -1,
+            effects: { legitimacyAdd: 0.3, unrestAll: -1 },
+          });
+          h.factionShift(ctx, 'JUD', 'sages', 25);
+          h.doctrine(ctx, 'authority', -1);
+          h.setFlag(ctx, 'grandsonAnswered', true);
+          h.setFlag(ctx, 'davidicSuccession', true);
+          h.setFlag(ctx, 'exilarchateHasAClaim', true);
+          h.chronicle(ctx, 'era', 'The succession passes to the son of the Babylonian marriage, and the house of Kosiba becomes, in law and in the genealogies, the house of David. The delegation from Nehardea stays for the ceremony and leaves with a copy of the record.');
+        }),
+      },
+      {
+        label: 'He is a good treasury official. The crown stays where it is',
+        tooltip: 'The pedigree kept as an ornament rather than a title: no legitimacy gained, +2 stability from a succession nobody has to argue about, and the eastern communities draw the obvious conclusion about what their daughter was for. −25 opinion with Parthia, Sages −20, and the genealogy goes back in the chest.',
+        effects: guard('ev_bk_grandson:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { stability: 2 });
+          h.factionShift(ctx, 'JUD', 'sages', -20);
+          for (const tag of ['PAR', 'SAS']) {
+            if (!alive(ctx, tag)) continue;
+            const t = ctx.game.tags[tag];
+            if (t) { t.opinion = t.opinion || {}; t.opinion.JUD = Math.max(-200, Number(t.opinion.JUD || 0) - 25); }
+          }
+          h.setFlag(ctx, 'grandsonAnswered', true);
+          h.setFlag(ctx, 'pedigreeAsOrnament', true);
+          h.chronicle(ctx, 'ruler', 'The crown stays in the senior line and the grandson keeps the eastern correspondence, which he continues to do well. Nehardea sends no delegation to the next accession.');
+        }),
+      },
+      {
+        // Herod's answer, and it needs a court with nobody left to object.
+        label: 'Herod\'s arithmetic',
+        when: safeWhen('grandson:herod', (ctx) => !factionAt(ctx, 'sages', 45)),
+        tooltip: 'The book was left open at the fifteenth chapter for a reason and the reason is that it worked: Herod died in his bed, on his throne, thirty-three years a king. The claimants are removed and the claim with them. +2 authority, no succession dispute in this or any following reign — and −40 legitimacy, Sages −50, +3 unrest everywhere permanently, and a house that has now done to its own the thing the Hasmoneans were destroyed for.',
+        effects: guard('ev_bk_grandson:2', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: -40, stability: -1 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'herods_arithmetic', name: 'Herod\'s Arithmetic', months: -1,
+            effects: { unrestAll: 3, legitimacyAdd: -0.1 },
+          });
+          h.factionShift(ctx, 'JUD', 'sages', -50);
+          h.doctrine(ctx, 'authority', 2);
+          for (const tag of ['PAR', 'SAS']) {
+            if (!alive(ctx, tag)) continue;
+            const t = ctx.game.tags[tag];
+            if (t) { t.opinion = t.opinion || {}; t.opinion.JUD = Math.max(-200, Number(t.opinion.JUD || 0) - 70); }
+          }
+          h.setFlag(ctx, 'grandsonAnswered', true);
+          h.setFlag(ctx, 'herodsArithmetic', true);
+          h.chronicle(ctx, 'era', 'The claimants are removed, quietly and completely, and the question of the succession does not arise again in this reign. The delegation from Nehardea is not received, and the copies of the genealogy that were made in Babylonia are in Babylonia.');
+        }),
+      },
+    ],
+  },
+
   // ── III. The memory ─────────────────────────────────────────────────────
 
   {
@@ -553,13 +649,20 @@ export const EVENTS_132_KOSIBA = [
             h.setFlag(ctx, 'kozibaByForce', true);
             h.chronicle(ctx, 'era', 'The preacher is taken up in the night and the crowds are dispersed by the garrison, and the spelling goes on spreading, because a state that can only answer a joke with soldiers has confirmed the joke.');
           } else if (kind === 'david') {
-            h.adjust(ctx, 'JUD', { legitimacy: -5, stability: 1 });
+            // Whether the pedigree is an ANSWER depends on whether the house
+            // ever collected on it (SPEC §134). A crown that took the Davidic
+            // succession can point at the man on the seat; one that left the
+            // genealogy in a chest is pointing at a document.
+            const collected = flag(ctx, 'davidicSuccession');
+            h.adjust(ctx, 'JUD', { legitimacy: collected ? 5 : -15, stability: collected ? 2 : 0 });
             h.addTagModifier(ctx, 'JUD', {
-              id: 'the_pedigree_answers', name: 'The Pedigree Answers', months: 120,
-              effects: { unrestAll: 1 },
+              id: 'the_pedigree_answers', name: collected ? 'The Pedigree Answers' : 'A Genealogy in a Chest',
+              months: 120, effects: { unrestAll: collected ? -1 : 2 },
             });
             h.setFlag(ctx, 'kozibaByPedigree', true);
-            h.chronicle(ctx, 'era', 'The house answers with a genealogy, which is a slow answer and a real one: the man on the seat is of the line of Jehoiachin whatever anybody calls his great-grandfather.');
+            h.chronicle(ctx, 'era', collected
+              ? 'The house answers with a genealogy, which is a slow answer and a real one: the man on the seat is of the line of Jehoiachin whatever anybody calls his great-grandfather.'
+              : 'The house answers with a genealogy belonging to a cousin it declined to crown, which the preacher in the Galilee has already read and has questions about.');
           } else if (kind === 'twoHouses') {
             h.adjust(ctx, 'JUD', { legitimacy: -8, stability: 2 });
             h.addTagModifier(ctx, 'JUD', {

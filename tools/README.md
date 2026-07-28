@@ -545,3 +545,10 @@ SPEC §133 adds `DEFINES.DIASPORA` and `helpers.isDiaspora`. If you write a card
 that awards territory by religion, exclude them — Leontopolis, Arbela,
 Nehardea and Khaybar are Jewish and were never Judaean, and the engine's
 contiguity guard is skipped whenever a card supplies its own `keep` predicate.
+
+SPEC §134: `helpers.fireEvent` now delegates to `sim/events.js`'s `fireEvent`
+rather than reimplementing it. If you find yourself adding a second way to
+queue a card, don't — the duplicate had drifted three features behind the
+original (the §128 option mask, the §70 decider notice, and the
+war-already-settled retirement) and the drift was invisible because the card it
+broke was the only one in the game fired that way.

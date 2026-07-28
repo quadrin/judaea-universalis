@@ -6524,3 +6524,55 @@ and still do.
 - **Regression contract**: `uitest37.mjs` for §132; `smoke40.mjs` (extended)
   for the marriage rule, which now also asserts that a theocracy may marry, two
   of them may marry each other, and a tribal confederation still may not.
+
+## 134. A card fired by a card had no gates
+
+Reported: the Davidic marriage did not trigger for Bar Kokhba. Two defects
+behind it, both introduced by §128, and the first is the opposite of what the
+report describes — which is how it stayed hidden.
+
+**The mask never reached the accession.** §128 gave options a `when(ctx)` gate
+and computed the mask in `fireEvent`. There are *two* functions by that name:
+the engine's, in `sim/events.js`, and a second copy inside `simHelpers` that
+content calls to fire one card from another. The helper queued its own pending
+entry with its own copy of the pause-and-emit dance and knew nothing about the
+mask — so `ev_bk_the_accession`, which is fired only that way because a
+succession is not a month, had **every one of its gates ignored**. A house with
+a hostile Parthia and no road to Babylonia was still shown the marriage; a
+court with no sages was still shown the prince of Ezekiel. The helper now
+delegates to the real thing, which also hands it the decider notice (§70), the
+war-already-settled retirement, and the silent AI resolution — none of which
+the duplicate had. Two implementations of one verb, and the second was three
+features behind.
+
+**And the road went nowhere.** The option says in as many words that the payoff
+is not the marriage but the grandson, and that whoever holds the Exilarchate
+holds a standing claim on the succession from that day. Neither existed. Taking
+it set a flag, added a legitimacy trickle, and earned a line in a chronicle
+three centuries later; there was no grandson, no Exilarchate, and no claim. It
+was the only one of the four constitutions whose stated mechanism was
+unimplemented, which is a fair reading of "did not trigger" whichever half the
+report meant.
+
+*The Grandson of Jehoiachin* is that card. The boy is thirty-one and runs the
+treasury's eastern correspondence, the genealogy has been copied four times by
+men who did not travel eight hundred miles to watch it filed, and there is a
+delegation in the city being extremely courteous. Three answers: let the
+succession pass to him and take the pedigree at the price the Babylonians came
+to name — a recognised Exilarchate interest in every accession afterwards; keep
+the crown where it is and let the pedigree be an ornament, which tells the
+eastern communities exactly what their daughter was for; or Herod's arithmetic,
+open only to a court with no sages left to object, which removes the claimants
+and the claim together and does to its own house the thing the Hasmoneans were
+destroyed for.
+
+And *Bar Kokhba or Bar Koziba* now reads which of those happened. A house that
+collected on the pedigree answers the pun by pointing at the man on the seat; a
+house that left the genealogy in a chest is pointing at a document belonging to
+a cousin it declined to crown, and the preacher in the Galilee has already read
+it.
+
+- **Regression contract**: `smoke87.mjs` (the §134 section) — the mask reaches
+  a card fired through the helper and through the card before it; the grandson
+  fires on the Davidic road and on no other; and a collected pedigree answers
+  the name better than a shelved one.
