@@ -59,6 +59,83 @@ function standing(ctx) {
   return !(t && t.overlord) && holds(ctx, 'JUD', 'Jerusalem') && flag(ctx, 'secondKingdom');
 }
 
+// ── The rising is a state, and it is not this one (SPEC §129) ─────────────
+//
+// This card asks whether the kingdom marches for communities it does not
+// govern. It cannot ask that honestly if the communities are a modifier: the
+// diaspora rising secedes from Rome under its own tag, on both answers, and
+// what the crown decides is whether to join somebody else's war. Repeated
+// rather than imported, per this package's zero-import header.
+const RISING_ROMAN = ['Cyrene', 'Marmarica', 'Alexandria', 'Leontopolis', 'Oxyrhynchus',
+  'Salamis', 'Paphos'];
+const RISING_OCCUPIED = ['Nehardea', 'Babylon', 'Seleucia-Ctesiphon'];
+
+function ownedBy(ctx, name, tag) {
+  try { const p = ctx.prov(name); return !!p && !p.impassable && p.owner === tag; }
+  catch (e) { warnOnce('ownedBy', e); return false; }
+}
+function atWar(ctx, a, b) {
+  return (ctx.game.wars || []).some((w) => w
+    && (((w.attackers || []).indexOf(a) >= 0 && (w.defenders || []).indexOf(b) >= 0)
+      || ((w.attackers || []).indexOf(b) >= 0 && (w.defenders || []).indexOf(a) >= 0)));
+}
+function opinionTo(ctx, a, b, v) {
+  const t = ctx.game.tags && ctx.game.tags[a];
+  if (!t) return;
+  t.opinion = t.opinion || {};
+  t.opinion[b] = Math.max(-200, Math.min(200, v));
+}
+
+function raiseTheRising(ctx) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  if (g.tags && g.tags.LUK) return 'LUK';
+  if (!alive(ctx, 'ROM')) return null;
+  const ground = RISING_ROMAN.filter((n) => ownedBy(ctx, n, 'ROM'));
+  if (!ground.length) return null;
+  let born = null;
+  try {
+    born = h.secedeTag(ctx, 'ROM', 'LUK', {
+      provinces: ground, capital: ground[0], share: 0.04,
+      stability: -1, legitimacy: 55, opinion: -180,
+      ruler: { name: 'Lukuas', title: 'King', gov: 1, infl: 3, mar: 4, age: 46 },
+    });
+  } catch (e) { warnOnce('rising:secede', e); }
+  if (!born) return null;
+  for (const n of RISING_OCCUPIED) {
+    if (ownedBy(ctx, n, 'ROM')) {
+      try { h.changeOwner(ctx, n, 'LUK'); } catch (e) { warnOnce('rising:' + n, e); }
+    }
+  }
+  try {
+    if (!atWar(ctx, 'LUK', 'ROM')) h.declareWar(ctx, 'LUK', 'ROM', 'The Rising of the East');
+  } catch (e) { warnOnce('rising:war', e); }
+  h.setFlag(ctx, 'theRisingLives', true);
+  h.chronicle(ctx, 'war', 'The Jewish communities of Cyrene rise, appoint a king the Roman sources will name twice and differently, and are joined within the season by Cyprus and by Egypt. No part of it is being directed from Jerusalem.');
+  return 'LUK';
+}
+
+function joinTheRising(ctx) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  if (!g.tags || !g.tags.LUK || !alive(ctx, 'JUD')) return false;
+  try {
+    if (alive(ctx, 'ROM') && !atWar(ctx, 'JUD', 'ROM')) {
+      h.declareWar(ctx, 'JUD', 'ROM', 'The War of the Nations');
+    }
+  } catch (e) { warnOnce('join:war', e); }
+  opinionTo(ctx, 'LUK', 'JUD', 120);
+  opinionTo(ctx, 'JUD', 'LUK', 120);
+  for (const [a, b] of [['JUD', 'LUK'], ['LUK', 'JUD']]) {
+    const t = g.tags[a];
+    if (!t) continue;
+    t.allies = Array.isArray(t.allies) ? t.allies : [];
+    if (t.allies.indexOf(b) < 0) t.allies.push(b);
+  }
+  h.setFlag(ctx, 'joinedTheirRising', true);
+  return true;
+}
+
 // 0 a surviving state, 1 a consolidated one, 2 a regional power.
 function reach(ctx) {
   if (!standing(ctx)) return 0;
@@ -209,16 +286,19 @@ export const EVENTS_66_NATION = [
         tooltip: 'A martial answer, and one that needs a soldier on the throne. War with Rome, +3 war exhaustion, and the diaspora rises with a state behind it for the first time: +30% manpower and +10% morale for 48 months, +3 conquest, +2 zeal, Zealots +40.',
         effects: guard('ev_n_east_burning:0', (ctx) => {
           const h = ctx.helpers;
+          raiseTheRising(ctx);
           h.addTagModifier(ctx, 'JUD', { id: 'the_nation_in_arms', name: 'The Nation in Arms', months: 48, effects: { manpowerMult: 1.30, moraleMult: 1.10 } });
           h.adjust(ctx, 'JUD', { warExhaustion: 3 });
           h.factionShift(ctx, 'JUD', 'zealots', 40);
           h.factionShift(ctx, 'JUD', 'notables', -30);
           h.doctrine(ctx, 'conquest', 3);
           h.doctrine(ctx, 'zeal', 2);
-          if (alive(ctx, 'ROM')) h.declareWar(ctx, 'JUD', 'ROM', 'The War of the Nations');
+          if (!joinTheRising(ctx) && alive(ctx, 'ROM') && !atWar(ctx, 'JUD', 'ROM')) {
+            h.declareWar(ctx, 'JUD', 'ROM', 'The War of the Nations');
+          }
           h.setFlag(ctx, 'risingAnswered', true);
           h.setFlag(ctx, 'marchedForTheDiaspora', true);
-          h.chronicle(ctx, 'era', 'The kingdom marches for communities it does not govern. Whatever happens next, the question of what a Jewish state was for has been answered in the only way that counts.');
+          h.chronicle(ctx, 'era', 'The kingdom marches for communities it does not govern, into a war it did not call and does not command. Whatever happens next, the question of what a Jewish state was for has been answered in the only way that counts.');
         }),
       },
       {
@@ -226,6 +306,8 @@ export const EVENTS_66_NATION = [
         tooltip: 'The kingdom survives and the diaspora is destroyed without it. +2 stability, +40 Roman opinion, treaty intact — and a permanent mark on the crown that no legitimacy bonus will remove: −12 legitimacy, Zealots −40, and Alexandria and Cyrene are gone.',
         effects: guard('ev_n_east_burning:1', (ctx) => {
           const h = ctx.helpers;
+          // It rises without the kingdom, which is what happened.
+          raiseTheRising(ctx);
           h.adjust(ctx, 'JUD', { stability: 2, legitimacy: -12 });
           h.factionShift(ctx, 'JUD', 'zealots', -40);
           h.factionShift(ctx, 'JUD', 'notables', 30);

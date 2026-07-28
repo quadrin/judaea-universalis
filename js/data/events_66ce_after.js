@@ -107,6 +107,96 @@ function stir(ctx, tag, names, mod) {
   return touched;
 }
 
+// ── The rising is a state, and it is not Judaea (SPEC §129) ───────────────
+//
+// The whole historical force of 115–117 is that it happened WITHOUT Judaea.
+// Cyrene, Cyprus, Egypt and Roman-held Mesopotamia rose; the communities that
+// rose were Greek-speaking, had never been governed from Jerusalem, and
+// answered to nobody there. Modelling it as a Judaean war — which is what
+// these cards did, with the diaspora reduced to an unrest modifier on somebody
+// else's provinces — got the causation exactly backwards and quietly made the
+// Kitos War something the player's own state did.
+//
+// So it secedes from Rome as its own tag, with its own colour on the map and
+// its own war, on every road and whatever Judaea decides. Judaea's answer is
+// then the question the period actually posed: not whether to rise, but
+// whether to join somebody else's rising.
+//
+// The ground. Cyrenaica, Egypt and Cyprus are the Roman half and always rise.
+// Mesopotamia rose against Trajan's occupying army, so those cells join only
+// if Rome is standing on them — if Parthia still holds Babylonia there is no
+// occupation there to rise against.
+const RISING_ROMAN = ['Cyrene', 'Marmarica', 'Alexandria', 'Leontopolis', 'Oxyrhynchus',
+  'Salamis', 'Paphos'];
+const RISING_OCCUPIED = ['Nehardea', 'Babylon', 'Seleucia-Ctesiphon'];
+
+function ownedBy(ctx, name, tag) {
+  const p = ctx.prov && ctx.prov(name);
+  return !!p && !p.impassable && p.owner === tag;
+}
+
+// Raise it. Returns the tag if it took the field, null if there was no Roman
+// ground for it to rise on — a world where Rome never held Cyrenaica does not
+// get a Cyrenean rising, and the cards say so rather than pretending.
+function raiseTheRising(ctx) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  if (g.tags && g.tags.LUK) return 'LUK';
+  if (!alive(ctx, 'ROM')) return null;
+  const ground = RISING_ROMAN.filter((n) => ownedBy(ctx, n, 'ROM'));
+  if (!ground.length) return null;
+  let born = null;
+  try {
+    born = h.secedeTag(ctx, 'ROM', 'LUK', {
+      provinces: ground,
+      capital: ground[0],
+      share: 0.04,          // a rising inherits almost nothing of an empire
+      stability: -1,
+      legitimacy: 55,
+      opinion: -180,
+      ruler: { name: 'Lukuas', title: 'King', gov: 1, infl: 3, mar: 4, age: 46 },
+    });
+  } catch (e) { warnOnce('rising:secede', e); }
+  if (!born) return null;
+  // Mesopotamia rises against the occupation, not against Parthia.
+  for (const n of RISING_OCCUPIED) {
+    if (ownedBy(ctx, n, 'ROM')) {
+      try { h.changeOwner(ctx, n, 'LUK'); } catch (e) { warnOnce('rising:' + n, e); }
+    }
+  }
+  // A seceding state inherits no wars (military.js), which is right for a
+  // union coming apart and wrong for a rising: this one exists in order to be
+  // at war and has nothing to negotiate with.
+  try {
+    if (!warBetween(ctx, 'LUK', 'ROM')) h.declareWar(ctx, 'LUK', 'ROM', 'The Rising of the East');
+  } catch (e) { warnOnce('rising:war', e); }
+  h.setFlag(ctx, 'theRisingLives', true);
+  h.chronicle(ctx, 'war', 'The Jewish communities of Cyrene rise, appoint a king the Roman sources will name twice and differently, and are joined within the season by Cyprus and by Egypt. It is the largest Jewish war since Titus and no part of it is being directed from Jerusalem.');
+  return 'LUK';
+}
+
+// Judaea comes in beside it — not as the rising, as its ally.
+function joinTheRising(ctx) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  if (!g.tags || !g.tags.LUK || !alive(ctx, 'JUD')) return false;
+  try {
+    if (alive(ctx, 'ROM') && !warBetween(ctx, 'JUD', 'ROM')) {
+      h.declareWar(ctx, 'JUD', 'ROM', 'The Rising of the East');
+    }
+  } catch (e) { warnOnce('join:war', e); }
+  setOpinion(ctx, 'LUK', 'JUD', 120);
+  setOpinion(ctx, 'JUD', 'LUK', 120);
+  for (const [a, b] of [['JUD', 'LUK'], ['LUK', 'JUD']]) {
+    const t = g.tags[a];
+    if (!t) continue;
+    t.allies = Array.isArray(t.allies) ? t.allies : [];
+    if (t.allies.indexOf(b) < 0) t.allies.push(b);
+  }
+  h.setFlag(ctx, 'joinedTheirRising', true);
+  return true;
+}
+
 export const EVENTS_66_AFTER = [
 
   // ═══ THE ROAD WHERE THE HOUSE FELL ═══════════════════════════════════════
@@ -212,6 +302,9 @@ export const EVENTS_66_AFTER = [
         tooltip: 'Judaea joins the rising: war with Rome, +14,000 manpower, +3 zeal and "The Hour Has Come" (+12% morale for 60 months) — and the diaspora fights with a homeland behind it for the first time since Titus. Rome answers with the army that has just taken Ctesiphon. Whatever happens, the schools that opposed this are broken by it (−30 Sages approval, permanent).',
         effects: guard('ev_a_the_east_is_burning:0', (ctx) => {
           const h = ctx.helpers;
+          // The rising is already a state by the time the letters arrive; the
+          // academy is answering it, not starting it (SPEC §129).
+          raiseTheRising(ctx);
           const me = alive(ctx, 'JUD') ? 'JUD' : null;
           if (me) {
             h.adjust(ctx, me, { manpower: 14000, legitimacy: 15 });
@@ -221,7 +314,9 @@ export const EVENTS_66_AFTER = [
             });
             h.doctrine(ctx, 'zeal', 3);
             try { h.factionShift(ctx, me, 'sages', -30); } catch (e) {}
-            if (alive(ctx, 'ROM') && !warBetween(ctx, me, 'ROM')) {
+            if (!joinTheRising(ctx) && alive(ctx, 'ROM') && !warBetween(ctx, me, 'ROM')) {
+              // No rising to join — Rome holds none of the ground it would
+              // have risen on — so the land rises by itself, as it always did.
               h.declareWar(ctx, me, 'ROM', 'The Rising of the East');
             }
           }
@@ -229,7 +324,7 @@ export const EVENTS_66_AFTER = [
             id: 'the_east_burns', name: 'The East Burns', months: 96, effects: { unrest: 3 },
           });
           h.setFlag(ctx, 'joinedTheRising', true);
-          h.chronicle(ctx, 'war', 'Judaea rises with the diaspora while Trajan is across the Tigris; for the first time since Titus the communities of the East fight with a homeland behind them.');
+          h.chronicle(ctx, 'war', 'Judaea marches to join a war somebody else began; for the first time since Titus the communities of the East are fighting with a homeland beside them, and it is not commanding them.');
         }),
       },
       {
@@ -237,6 +332,8 @@ export const EVENTS_66_AFTER = [
         tooltip: 'The academy forbids it in writing and the letters go out that week. The land is spared what Cyrene is not: +2 stability, Rome\'s opinion +50, and "The Land Was Spared" permanently (−1 unrest in Jewish provinces, +12% income) — but the diaspora burns without it (+3 unrest in Cyrene, Cyprus, Egypt and Babylonia for 96 months), the Sages take −20 approval from a community that will remember, and the centre of Jewish life shifts to the land and to Babylonia for good.',
         effects: guard('ev_a_the_east_is_burning:1', (ctx) => {
           const h = ctx.helpers;
+          // It rises anyway. That is the entire point of the card.
+          raiseTheRising(ctx);
           const me = alive(ctx, 'JUD') ? 'JUD' : null;
           if (me) {
             h.adjust(ctx, me, { stability: 2 });
@@ -394,6 +491,7 @@ export const EVENTS_66_AFTER = [
         tooltip: 'Judaea keeps the corridor while the East burns on both sides of it: −8,000 manpower and −250 treasury policing it, but Rome\'s opinion to +90, "The Road Held Open" permanently (+15% income, +1 stability), and a debt the empire has to acknowledge in public. The diaspora communities that rose are not helped, and they know exactly who did not help them (+2 unrest in Jewish provinces abroad, permanent).',
         effects: guard('ev_b_the_flank_of_the_war:0', (ctx) => {
           const h = ctx.helpers;
+          raiseTheRising(ctx);
           h.adjust(ctx, 'JUD', { manpower: -8000, treasury: -250, stability: 1, legitimacy: 10 });
           h.addTagModifier(ctx, 'JUD', {
             id: 'the_road_held_open', name: 'The Road Held Open', months: -1,
@@ -413,6 +511,7 @@ export const EVENTS_66_AFTER = [
         tooltip: 'Neutrality with teeth: the corridor is shut to both sides and the kingdom sits on it. +20 legitimacy, +2 authority, +10,000 manpower mobilised on the border — and both empires cool 40, because a neutral on your retreat route is a threat by geometry whatever it intends. No war, and no friends, and the strongest bargaining position anyone in this chapter has ever held.',
         effects: guard('ev_b_the_flank_of_the_war:1', (ctx) => {
           const h = ctx.helpers;
+          raiseTheRising(ctx);
           h.adjust(ctx, 'JUD', { legitimacy: 20, manpower: 10000 });
           h.addTagModifier(ctx, 'JUD', {
             id: 'the_road_is_shut', name: 'The Road Is Shut', months: -1,
@@ -430,6 +529,7 @@ export const EVENTS_66_AFTER = [
         tooltip: 'The kingdom joins the rising with the emperor on the wrong side of it: war with Rome, +16,000 manpower, +3 zeal, "With the Whole East" (+15% morale for 72 months) and Parthia\'s opinion to +80. Trajan\'s army has to come back through a hostile kingdom. This is the largest thing any Jewish state does in the chapter and it is being decided by men who can all remember Titus.',
         effects: guard('ev_b_the_flank_of_the_war:2', (ctx) => {
           const h = ctx.helpers;
+          raiseTheRising(ctx);
           h.adjust(ctx, 'JUD', { manpower: 16000, legitimacy: 20 });
           h.addTagModifier(ctx, 'JUD', {
             id: 'with_the_whole_east', name: 'With the Whole East', months: 72,
@@ -437,11 +537,9 @@ export const EVENTS_66_AFTER = [
           });
           h.doctrine(ctx, 'zeal', 3);
           if (alive(ctx, 'PAR')) setOpinion(ctx, 'PAR', 'JUD', 80);
-          if (alive(ctx, 'ROM')) {
-            setOpinion(ctx, 'ROM', 'JUD', -150);
-            if (!warBetween(ctx, 'JUD', 'ROM')) {
-              h.declareWar(ctx, 'JUD', 'ROM', 'The Rising of the Whole East');
-            }
+          if (alive(ctx, 'ROM')) setOpinion(ctx, 'ROM', 'JUD', -150);
+          if (!joinTheRising(ctx) && alive(ctx, 'ROM') && !warBetween(ctx, 'JUD', 'ROM')) {
+            h.declareWar(ctx, 'JUD', 'ROM', 'The Rising of the Whole East');
           }
           stir(ctx, null, DIASPORA_FIRE, {
             id: 'the_whole_east', name: 'The Whole East', months: 96, effects: { unrest: 3 },

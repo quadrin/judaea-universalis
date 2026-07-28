@@ -114,6 +114,10 @@ export const DEFINES = {
     // coup-prone state in the region, and the one most convinced it is owed
     // the Golan.
     SAR: { aggression: 1.3, caution: 0.8 },
+    // A rising with no rear area, no treasury and nothing to negotiate with
+    // (SPEC §129). It attacks because standing still is the one thing it
+    // cannot afford.
+    LUK: { aggression: 1.8, caution: 0.3 },
   },
 
   // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
@@ -154,7 +158,7 @@ export const DEFINES = {
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
-    MLI: 'monarchy', UAR: 'republic', SAR: 'republic',
+    MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     REB: 'tribal',
   },
 
@@ -436,6 +440,23 @@ export const DEFINES = {
       name: 'Syrian Arab Republic', color: [70, 118, 92], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
       description: 'Damascus after the union: a republic of officers, and the last Arab capital that will not sign.',
       ideas: { manpowerMult: 1.08, moraleMult: 1.05, incomeMult: 0.95 },
+    },
+    // The diaspora rising of 115–117 (SPEC §129). It is a SEPARATE STATE and
+    // not Judaea, because that is the whole historical point of it: Cyrene,
+    // Cyprus, Egypt and Roman-held Mesopotamia rose while Judaea did not, and
+    // the communities that rose were Greek-speaking, had never been governed
+    // from Jerusalem, and answered to nobody there. Eusebius (HE IV.2.4) says
+    // the Jews of Cyrene "appointed as their king one Lukuas"; Dio calls the
+    // leader Andreas. That royal style is the only statehood the rising ever
+    // claimed and it is enough to put it on the map under its own colour.
+    //
+    // Judaism and Greek: the pairing IS the argument. A player who joins this
+    // war is allying with a foreign power that happens to share his religion,
+    // which is exactly the relationship the period was trying to work out.
+    LUK: {
+      name: 'The Host of Lukuas', color: [150, 92, 138], religion: 'judaism', culture: 'greek', capital: 'Cyrene',
+      description: 'The rising of the Greek-speaking diaspora, under a king the Roman sources name twice and differently.',
+      ideas: { moraleMult: 1.15, manpowerMult: 1.1, incomeMult: 0.8 },
     },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',

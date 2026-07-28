@@ -6216,3 +6216,66 @@ The tree gains two forks and seven roads, 60 to 67.
   same morning; only the Ezekiel road raises the leases; the defeat card waits
   for a defeat and answers in five different ways; and the terminals read all
   four constitutions back.
+
+## 129. The rising is not Judaea
+
+Reported, and it was true of every road: the diaspora revolt of 115–117 was
+modelled as something the player's own state did.
+
+Three cards across two packages offered to rise with the diaspora, and what
+that meant mechanically was that **Judaea declares war on Rome** while Cyrene,
+Cyprus, Egypt and Babylonia received a `+3 unrest` province modifier for
+ninety-six months. The communities that actually rose were never a belligerent.
+They were weather on somebody else's provinces, and the only army in the field
+under a Jewish flag was the player's.
+
+That is backwards, and it is backwards about the one thing this war is famous
+for. The Kitos War happened **without Judaea**. It began in Cyrenaica among
+Greek-speaking communities that had never been governed from Jerusalem and
+answered to nobody there; Eusebius says the Jews of Cyrene appointed a king of
+their own, whom he names Lukuas and Dio names Andreas. Judaea proper stayed
+quiet, which is why it still had a population to lose in 132. The question the
+period actually put to a Jewish state was never *whether to rise*. It was
+whether to join somebody else's rising — and a game that renders the rising as
+the player's own war cannot ask it.
+
+**The rising is now a state.** `LUK`, the Host of Lukuas, secedes from Rome
+with its own colour, its own king and its own war, on every road and whatever
+Judaea decides. It is Jewish and Greek-speaking, and that pairing is the
+argument: a player who joins this war is allying with a foreign power that
+happens to share his religion, which is exactly the relationship the second
+century was trying to work out and could not.
+
+The ground is the ground it took. Cyrenaica, Egypt and Cyprus are the Roman
+half and always rise. Mesopotamia rose against Trajan's *occupying army*, so
+those cells join only if Rome is standing on them — a Parthian Babylonia has no
+occupation to rise against, and the card does not pretend otherwise. A world in
+which Rome holds no Cyrenaica gets no Cyrenean rising at all, and the cards
+fall back to the old behaviour rather than inventing a state out of nothing.
+
+**Judaea's answer is an alliance, not an identity.** Where a card used to have
+the crown declare its own war, it now joins the rising's: both are at war with
+Rome, neither with the other, allies on both sides of the ledger, and the
+rising thinks well of the kingdom that came. Refusing leaves the kingdom at
+peace and the rising in the field, which is the historical shape and the more
+uncomfortable one — the flags that later cards read (`joinedTheRising`,
+`refusedTheRising`, `roadHeldOpen`, `roadShut`, `roseWithTheEast`) are
+unchanged, so everything downstream still prices the decision the same way.
+
+Worth noting what did *not* need changing: the prose. Every one of these
+options already said *joins the rising*, and the tooltips already described a
+diaspora fighting with a homeland beside it. The cards had been describing the
+right war for two batches; only the mechanics were describing a different one.
+
+The 132 chapter is untouched, and correctly so — it treats the revolt as
+already-happened backstory, thinning the synagogue communities of the Greek
+east and barring Jews from Cyprus, which is exactly what it should do with a
+war fought fifteen years before it opens.
+
+- **Regression contract**: `smoke88.mjs` — the tag exists and is neither
+  Judaea's name nor its colour; the rising raises on all five answers across
+  both roads including the two where Judaea refuses; it takes Cyrenaica, Egypt
+  and Cyprus and leaves Jerusalem alone; Babylonia joins only under occupation;
+  joining produces two allied belligerents rather than one; the spawner is
+  idempotent across the six places that call it; and no Roman ground means no
+  rising rather than a phantom one.

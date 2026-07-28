@@ -494,3 +494,14 @@ those from the window rule rather than failing them. And smoke39's rule that
 every non-`world` player-facing card offers at least two answers applies to
 these too: a card that is conceptually a single beat still needs a real second
 answer, not a `world: true` flag to duck the check.
+
+SPEC §129 adds `smoke88.mjs` and the `LUK` tag — the diaspora rising of
+115–117, which is spawned at runtime by content rather than declared in a
+bookmark's `activeTags`, exactly as `SAR` is in 1948. If you are looking for
+why it is not in the 66 bookmark, that is why.
+
+The spawner lives in two content packages in duplicate (`events_66ce_after.js`
+and `events_66ce_nation.js`) because both are zero-import by contract. It is
+idempotent — six option effects call it and only the first raises anything —
+and smoke88 pins that, because a second rising would mean a second war and a
+second army stack on the same ground.
