@@ -31,18 +31,24 @@ await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: 20000 });
 
 const cards = await page.locator('.bm-card').count();
-ok(cards === 7, 'seven bookmark cards: ' + cards);
+ok(cards === 8, 'eight bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
 ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
 ok(await page.locator('[data-ref="import"]').isVisible(), 'Import save button on start screen');
 ok(!(await page.locator('[data-ref="export"]').count()), 'no Export button without a save');
 
+// The house rule this encodes: every chapter is played from an ISRAELITE side.
+// It used to read "Jewish-only" and it meant the same thing until SPEC §136
+// added the Keepers, whose player keeps a different Torah and is still not the
+// empire — Byzantium has a court, factions and a victory branch in that chapter
+// and is deliberately not on offer.
 const expectedRosters = [
   ['HAS'],
   ['HYR', 'ARI'],
   ['HER', 'ATG'],
   ['JUD'],
   ['JUD'],
+  ['SAM'],
   ['JUD'],
   ['ISR'],
 ];
@@ -52,7 +58,7 @@ for (let i = 0; i < expectedRosters.length; i++) {
   await page.waitForSelector('.nation-card');
   const tags = await page.locator('.nation-card').evaluateAll((els) => els.map((el) => el.dataset.tag));
   ok(JSON.stringify(tags) === JSON.stringify(expectedRosters[i]),
-    `bookmark ${i + 1} has the Jewish-only roster: ${tags.join(',')}`);
+    `bookmark ${i + 1} has the Israelite-only roster: ${tags.join(',')}`);
   await page.locator('.ss-back').first().click();
   await page.waitForSelector('.bm-card.current');
 }

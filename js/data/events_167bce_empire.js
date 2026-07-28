@@ -47,6 +47,16 @@ function warnOnce(key, e) {
   console.warn('[events_167bce_empire] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -60,7 +70,7 @@ function safeTrigger(key, fn) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
 }
 
@@ -71,16 +81,22 @@ function flag(ctx, key) {
 // The Jewish crown, whatever it is calling itself this decade. Matches the
 // helper in events_167bce_world.js on purpose — a formed Israel is still the
 // state that took Antioch.
+// The tag whichever of these courts is still standing wears NOW (SPEC §135):
+// `alive` answers under the old name, but the provinces, armies and wars are
+// filed under the new one, so the letters this returns have to be the live ones.
 function crown(ctx) {
-  if (alive(ctx, 'HAS')) return 'HAS';
-  if (alive(ctx, 'MLI')) return 'MLI';
+  for (const t of ['HAS', 'MLI']) {
+    const held = who(ctx, t);
+    if (alive(ctx, held)) return held;
+  }
   return null;
 }
 
 function holds(ctx, tag, name) {
   try {
+    const held = who(ctx, tag);
     const p = ctx.prov(name);
-    return !!p && !p.impassable && p.owner === tag && p.controller === tag;
+    return !!p && !p.impassable && p.owner === held && p.controller === held;
   } catch (e) { warnOnce('holds', e); return false; }
 }
 

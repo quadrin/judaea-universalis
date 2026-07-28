@@ -10,6 +10,16 @@ function warnOnce(key, e) {
   console.warn('[events_167bce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -29,7 +39,7 @@ function dateGE(ctx, y, m) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
 }
 
@@ -80,20 +90,33 @@ function firstControlled(ctx, tag, preferred) {
   return null;
 }
 
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findHasSelWar(game) {
   const wars = (game && game.wars) || [];
   for (const w of wars) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('HAS') !== -1 && all.indexOf('SEL') !== -1) return w;
+    if (all.indexOf(warTag(game, 'HAS')) !== -1 && all.indexOf(warTag(game, 'SEL')) !== -1) return w;
   }
   return null;
 }
 
 function findWar(game, a, b) {
+  const x = warTag(game, a);
+  const y = warTag(game, b);
   for (const w of (game && game.wars) || []) {
     const all = w ? (w.attackers || []).concat(w.defenders || []) : [];
-    if (all.indexOf(a) >= 0 && all.indexOf(b) >= 0) return w;
+    if (all.indexOf(x) >= 0 && all.indexOf(y) >= 0) return w;
   }
   return null;
 }
@@ -160,7 +183,7 @@ function hasWarscore(ctx) {
   try {
     const w = findHasSelWar(ctx.game);
     if (!w || !w.warscore || typeof w.warscore !== 'object') return 0;
-    const v = w.warscore.HAS;
+    const v = w.warscore[warTag(ctx.game, 'HAS')];
     return typeof v === 'number' ? v : 0;
   } catch (e) { warnOnce('hasWarscore', e); return 0; }
 }
@@ -193,8 +216,9 @@ function countControlledOf(ctx, tag, names) {
 // the map and in the treaty, and nobody is occupying it.
 function holds(ctx, tag, name) {
   try {
+    const held = who(ctx, tag);
     const p = ctx.prov(name);
-    return !!p && !p.impassable && p.owner === tag && p.controller === tag;
+    return !!p && !p.impassable && p.owner === held && p.controller === held;
   } catch (e) { warnOnce('holds', e); return false; }
 }
 
@@ -283,8 +307,12 @@ const BABYLONIAN_PROVINCES = ['Babylon', 'Seleucia-Ctesiphon', 'Nehardea', 'Char
 // with it. Ownership is the honest test: the war's settlement applies uti
 // possidetis, so a Judaea that has actually won the city owns it.
 function greaterVictory(ctx) {
-  const t = ctx.game.tags && ctx.game.tags.HAS;
-  return alive(ctx, 'HAS') && !(t && t.overlord) && holds(ctx, 'HAS', 'Jerusalem');
+  // …and the crown may no longer be called HAS (SPEC §135): proclaiming the
+  // Kingdom of Israel is what this strand is the reward for, and it retires
+  // the three letters every card behind this gate asks after.
+  const has = who(ctx, 'HAS');
+  const t = ctx.game.tags && ctx.game.tags[has];
+  return alive(ctx, has) && !(t && t.overlord) && holds(ctx, has, 'Jerusalem');
 }
 
 const COELE_SYRIA = ['Damascus', 'Tyre', 'Sidon', 'Berytus', 'Chalcis'];

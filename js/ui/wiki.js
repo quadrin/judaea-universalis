@@ -144,7 +144,7 @@ export function createWiki({ DEFINES, getCtx }) {
       title: 'The Compendium',
       sub: 'Everything the chronicler knows: the chapters and their timelines, every event and its consequences, the nations, and the crowns that can be formed.',
       body: `
-        <div class="wiki-sec">The seven chapters</div>
+        <div class="wiki-sec">The chapters</div>
         ${chapters}
         <div class="wiki-sec">The world entire</div>
         <div class="wiki-card-row wiki-link" data-go="nations:">

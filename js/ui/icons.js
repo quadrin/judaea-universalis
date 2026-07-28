@@ -459,6 +459,15 @@ export const FLAGS = {
     `<path d="M16.8 3.8 16.8 20.2" ${DET}/>` +
     `<path d="M5 11.4h11.8v1.2H5Z" ${ACC}/>` +
     `<path d="M3.2 12 6.7 10.3v3.4Z" ${ACC}/>`,
+  // Samaria: Mount Gerizim under the altar fire. Their Torah's tenth
+  // commandment is the command to build the altar on this mountain, and their
+  // Deuteronomy 27:4 reads Gerizim where the Jewish text reads Ebal — so the
+  // banner is the whole argument: one hill, one altar, and no Jerusalem.
+  SAM:
+    `<path d="M2.6 19.4 9 8.6l3.4 5.6L15.1 10l6.3 9.4Z" ${SIL}/>` +
+    `<path d="M6.4 19.4 9 15.1l1.6 2.6" ${DET}/>` +
+    `<path d="M9.4 6.4h5.2v1.5H9.4Z" ${ACC}/>` +
+    `<path d="M12 2.4c1 1.1 1.5 2.1 1.5 3 0 .6-.3 1.1-.8 1.4.1-.9-.2-1.6-.9-2.2-.5.7-.8 1.4-.8 2.2-.5-.3-.8-.8-.8-1.4 0-.9.6-1.9 1.8-3Z" ${ACC}/>`,
   // Ghassanids: the cross of the phylarchs over a lance pennon.
   GHA:
     `<path d="M11.1 4h1.8v9h-1.8Z" ${ACC}/>` +

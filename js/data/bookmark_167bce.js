@@ -10,12 +10,33 @@ function warnOnce(key, e) {
   console.warn('[bookmark_167bce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findHasSelWar(game) {
   const wars = (game && game.wars) || [];
   for (const w of wars) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('HAS') !== -1 && all.indexOf('SEL') !== -1) return w;
+    if (all.indexOf(warTag(game, 'HAS')) !== -1 && all.indexOf(warTag(game, 'SEL')) !== -1) return w;
   }
   return null;
 }
@@ -24,7 +45,7 @@ function hasWarscore(ctx) {
   try {
     const w = findHasSelWar(ctx.game);
     if (!w || !w.warscore || typeof w.warscore !== 'object') return 0;
-    const v = w.warscore.HAS;
+    const v = w.warscore[warTag(ctx.game, 'HAS')];
     return typeof v === 'number' ? v : 0;
   } catch (e) { warnOnce('hasWarscore', e); return 0; }
 }
@@ -760,7 +781,7 @@ export const BOOKMARK_167 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return;
 
-      const hasTag = g.tags && g.tags.HAS;
+      const hasTag = g.tags && g.tags[who(ctx, 'HAS')];
       const hasAlive = !!(hasTag && hasTag.alive !== false);
       const hasProvs = hasAlive ? h.countControlled(ctx, 'HAS', {}) : 0;
       const jerusalemHeld = hasAlive && h.controls(ctx, 'HAS', 'Jerusalem');
@@ -769,7 +790,7 @@ export const BOOKMARK_167 = {
       }
       const ws = hasWarscore(ctx);
 
-      if (g.playerTag === 'HAS') {
+      if (g.playerTag === who(ctx, 'HAS')) {
         // Early concession: at 50% war score Antioch OFFERS terms (SPEC §31) —
         // an event card the player may accept (win; keeps only the provinces
         // of the faith) or refuse (the war goes on). Offered once.

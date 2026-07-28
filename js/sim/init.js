@@ -7,7 +7,7 @@ import {
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
-  liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag,
+  liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore,
@@ -166,6 +166,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     recognitions: {}, // states that have recognized one another (SPEC §96)
     embargoes: {},    // closed markets and blockades (SPEC §100)
     pendingEvents: [], firedEvents: {}, flags: {},
+    tagAliases: {}, // three letters a greater crown retired → who wears them now (SPEC §135)
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
     powers: {}, // standings with the powers beyond the map (SPEC §55)
@@ -367,23 +368,35 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
 }
 
 // ------------------------------------------------------------------ simHelpers (§6.4, frozen)
+// Every helper that names a court takes the name the CHAPTER knows it by and
+// resolves it to whoever wears those letters now (SPEC §135). A content
+// package is written once, against the tags its era shipped with; the player
+// may proclaim a greater crown at any point in the century that follows, and
+// the chapter is not supposed to stop when they do. `L` is that one line.
+const L = livingTag;
 export const simHelpers = {
+  // The forwarding address itself, for the predicates content owns: a package
+  // may not import the sim, so a chain that keeps its own `alive`/`holds`
+  // reaches the lookup through here.
+  livingTag(ctx, tag) { return L(ctx, tag); },
   spawnArmy(ctx, tag, provName, opts) {
-    return spawnArmy(ctx, tag, provName, opts);
+    return spawnArmy(ctx, L(ctx, tag), provName, opts);
   },
   removeArmy(ctx, armyId) {
     removeArmy(ctx, armyId);
   },
   changeOwner(ctx, provName, tag, opts) {
     const p = ctx.prov(provName);
-    if (!p || !ctx.game.tags[tag]) return;
-    changeOwnerCore(ctx, p, tag);
-    if (!opts || opts.alsoController !== false) changeControllerCore(ctx, p, tag);
+    const to = L(ctx, tag);
+    if (!p || !ctx.game.tags[to]) return;
+    changeOwnerCore(ctx, p, to);
+    if (!opts || opts.alsoController !== false) changeControllerCore(ctx, p, to);
   },
   changeController(ctx, provName, tag) {
     const p = ctx.prov(provName);
-    if (!p || !(ctx.game.tags[tag] || tag === 'REB')) return;
-    changeControllerCore(ctx, p, tag);
+    const to = L(ctx, tag);
+    if (!p || !(ctx.game.tags[to] || to === 'REB')) return;
+    changeControllerCore(ctx, p, to);
   },
   addProvinceModifier(ctx, provName, mod) {
     const p = ctx.prov(provName);
@@ -396,7 +409,7 @@ export const simHelpers = {
     });
   },
   addTagModifier(ctx, tag, mod) {
-    const t = ctx.game.tags[tag];
+    const t = ctx.game.tags[L(ctx, tag)];
     if (!t || !mod || !mod.id) return;
     t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== mod.id);
     t.modifiers.push({
@@ -406,7 +419,7 @@ export const simHelpers = {
     });
   },
   removeModifier(ctx, scope, id) {
-    const t = ctx.game.tags[scope];
+    const t = ctx.game.tags[L(ctx, scope)];
     if (t) { t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== id); return; }
     const p = ctx.prov(scope);
     if (p) p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== id);
@@ -426,6 +439,7 @@ export const simHelpers = {
   spawnFleet(ctx, tag, provName, ships, opts = {}) {
     const g = ctx.game;
     const p = ctx.prov(provName);
+    tag = L(ctx, tag);
     if (!p || !g.tags[tag] || !(ships > 0)) return null;
     if (!g.fleets) g.fleets = {};
     if (!Number.isFinite(g.nextFleetId)) g.nextFleetId = 1;
@@ -442,6 +456,7 @@ export const simHelpers = {
   spawnAirWing(ctx, tag, provName, opts = {}) {
     const g = ctx.game;
     const p = ctx.prov(provName);
+    tag = L(ctx, tag);
     if (!p || !g.tags[tag]) return null;
     if (!hasAirfield(p)) return null; // seed the airfield building first
     if (!g.airwings) g.airwings = {};
@@ -453,7 +468,7 @@ export const simHelpers = {
     return wing;
   },
   adjust(ctx, tag, d) {
-    const t = ctx.game.tags[tag];
+    const t = ctx.game.tags[L(ctx, tag)];
     if (!t || !d) return;
     if (Number.isFinite(d.treasury)) t.treasury = num(t.treasury) + d.treasury;
     if (Number.isFinite(d.manpower)) t.manpower = clamp(num(t.manpower) + d.manpower, 0, Math.max(num(t.maxManpower), num(t.manpower) + d.manpower));
@@ -465,13 +480,14 @@ export const simHelpers = {
     if (Number.isFinite(d.mar)) t.points.mar = clamp(num(t.points.mar) + d.mar, 0, 999);
   },
   declareWar(ctx, atk, def, name, cb) {
-    return declareWar(ctx, atk, def, name, cb);
+    return declareWar(ctx, L(ctx, atk), L(ctx, def), name, cb);
   },
   // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
   // ends the war between a and b by the sword — winnersKey 'att'/'def' or
   // null/undefined for a white peace where every occupation reverts.
   endWar(ctx, a, b, winnersKey, opts) {
     const g = ctx.game;
+    a = L(ctx, a); b = L(ctx, b);
     for (const w of (g.wars || []).slice()) {
       const all = (w.attackers || []).concat(w.defenders || []);
       if (all.indexOf(a) < 0 || all.indexOf(b) < 0) continue;
@@ -481,31 +497,31 @@ export const simHelpers = {
     return false;
   },
   reconcileRivalry(ctx, a, b) {
-    return reconcileRivalryCore(ctx, a, b);
+    return reconcileRivalryCore(ctx, L(ctx, a), L(ctx, b));
   },
   // ...and the friendship a change of dynasty annuls (SPEC §104).
   retireAffinity(ctx, a, b) {
-    return retireAffinityCore(ctx, a, b);
+    return retireAffinityCore(ctx, L(ctx, a), L(ctx, b));
   },
   // A union that comes apart (SPEC §105): the parent survives and a named set
   // of its provinces leaves under its own banner. Returns the new tag or null.
   secedeTag(ctx, from, to, opts) {
-    return secedeTagCore(ctx, from, to, opts);
+    return secedeTagCore(ctx, L(ctx, from), to, opts);
   },
   // Recognition (SPEC §96): a scripted peace may exchange the letters itself
   // — Sadat in the Knesset, the lawn in Washington — or tear them up again.
   recognize(ctx, a, b) {
-    return recognizeCore(ctx, a, b);
+    return recognizeCore(ctx, L(ctx, a), L(ctx, b));
   },
   renounceRecognition(ctx, a, b) {
-    return renounceRecognitionCore(ctx, a, b);
+    return renounceRecognitionCore(ctx, L(ctx, a), L(ctx, b));
   },
   areRecognized(ctx, a, b) {
-    return recognized(ctx, a, b);
+    return recognized(ctx, L(ctx, a), L(ctx, b));
   },
   // The bookmark's standing bar on alliances (SPEC §96), for scripted pacts.
   allianceBarred(ctx, a, b) {
-    return allianceBarred(ctx, a, b);
+    return allianceBarred(ctx, L(ctx, a), L(ctx, b));
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
@@ -557,6 +573,7 @@ export const simHelpers = {
   // new identity shows everywhere at once.
   rebrandTag(ctx, tag, { name, flag, color } = {}) {
     try {
+      tag = L(ctx, tag);
       const t = ctx.game.tags[tag];
       if (!t) return false;
       if (name) t.name = String(name);
@@ -574,16 +591,16 @@ export const simHelpers = {
   // soft everywhere it can — AI realms, eras without factions and unknown
   // ids are quiet no-ops — so content may call it unconditionally.
   factionShift(ctx, tag, factionId, delta) {
-    return shiftFaction(ctx, tag, factionId, delta);
+    return shiftFaction(ctx, L(ctx, tag), factionId, delta);
   },
   // …and read one (SPEC §130). `faction` is the raw standing or null where no
   // court sits; `factionAtLeast` is the form nearly every gate wants, and it
   // is false rather than throwing when there is no court to ask.
   faction(ctx, tag, factionId) {
-    return factionApproval(ctx, tag, factionId);
+    return factionApproval(ctx, L(ctx, tag), factionId);
   },
   factionAtLeast(ctx, tag, factionId, min) {
-    const v = factionApproval(ctx, tag, factionId);
+    const v = factionApproval(ctx, L(ctx, tag), factionId);
     return Number.isFinite(v) && v >= num(min, 0);
   },
   // The settlement a chapter adopted, stored once under its own name (SPEC
@@ -658,14 +675,14 @@ export const simHelpers = {
     }
   },
   killGeneral(ctx, tag, generalName) {
-    for (const a of armiesOf(ctx, tag)) {
+    for (const a of armiesOf(ctx, L(ctx, tag))) {
       if (a.general && a.general.name === generalName) a.general = null;
     }
   },
   // Scripted courts (content package): install a ruler / heir outright, or run
   // a death through the ordinary succession machinery (heir, regency, usurper).
   setRuler(ctx, tag, r) {
-    const t = ctx.game.tags[tag];
+    const t = ctx.game.tags[L(ctx, tag)];
     if (!t || !r) return;
     t.ruler = {
       name: String(r.name || 'Ruler'),
@@ -679,7 +696,7 @@ export const simHelpers = {
     t.regencyTitle = null;
   },
   setHeir(ctx, tag, h) {
-    const t = ctx.game.tags[tag];
+    const t = ctx.game.tags[L(ctx, tag)];
     if (!t) return;
     t.heir = h ? {
       name: String(h.name || 'Heir'),
@@ -690,14 +707,14 @@ export const simHelpers = {
     } : null;
   },
   rulerDies(ctx, tag, causeText) {
-    rulerDies(ctx, tag, causeText);
+    rulerDies(ctx, L(ctx, tag), causeText);
   },
   armiesOf(ctx, tag) {
-    return armiesOf(ctx, tag);
+    return armiesOf(ctx, L(ctx, tag));
   },
   controls(ctx, tag, provName) {
     const p = ctx.prov(provName);
-    return !!p && p.controller === tag;
+    return !!p && p.controller === L(ctx, tag);
   },
   // Is this cell a diaspora community rather than part of the land (SPEC
   // §133)? Takes a province or a name, so a `keep` predicate can ask directly.
@@ -712,6 +729,7 @@ export const simHelpers = {
   },
   countControlled(ctx, tag, opts) {
     const g = ctx.game;
+    tag = L(ctx, tag);
     let n = 0;
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
@@ -981,6 +999,7 @@ export function gameActions(ctx) {
         incorporate: inc ? {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
+          suspended: !!inc.suspended,
         } : null,
         marriage,
         recognition,
@@ -2925,6 +2944,20 @@ export function reviveGame(saved) {
   if (!Array.isArray(saved.divergences)) saved.divergences = []; // pre-ledger saves (SPEC §89)
   if (!Array.isArray(saved.retiredChapters)) saved.retiredChapters = [];
   if (!saved.doctrine) saved.doctrine = {}; // pre-doctrine saves (SPEC §85): flags carry the rest
+  // Pre-§135 saves carry no forwarding table — but every formed tag already
+  // records its `lineage`, so the table can be rebuilt from it exactly. A
+  // campaign that proclaimed a greater crown before this existed therefore
+  // gets the rest of its chapter back on load rather than on a new game.
+  if (!saved.tagAliases || typeof saved.tagAliases !== 'object') {
+    saved.tagAliases = {};
+    for (const k of Object.keys(saved.tags)) {
+      const t = saved.tags[k];
+      const line = t && Array.isArray(t.lineage) ? t.lineage : [];
+      for (const old of line) {
+        if (!saved.tags[old]) saved.tagAliases[old] = k;
+      }
+    }
+  }
   if (!saved.flags) saved.flags = {};
   if (!saved.pendingEvents) saved.pendingEvents = [];
   // Runtime-synthesized events don't survive a reload — drop stale pendings.

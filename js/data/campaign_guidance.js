@@ -139,6 +139,35 @@ export const CAMPAIGN_GUIDANCE = {
       ],
     },
   },
+  '529ce': {
+    SAM: {
+      system: 'Four hills, a statute, and a mountain you cannot hold',
+      opening: [
+        'Take Sebaste before the field force concentrates — it is five miles away and it is the empire\u2019s eye in the hill country.',
+        'Decide about the mountain early; the summit is the theology and it is a garrison you will not get back.',
+        'Caesarea is the whole province and the whole problem: without the port the empire lands whatever it likes.',
+      ],
+      clocks: [
+        { y: 529, m: 5, label: 'The crown is offered at Neapolis' },
+        { y: 529, m: 7, label: 'The churches burn, with or without your leave' },
+        { y: 530, m: 4, label: 'Al-Harith\u2019s riders come up the Jezreel road' },
+        { y: 560, m: 1, label: 'The generation that rose is gone; the count begins' },
+      ],
+    },
+    BYZ: {
+      system: 'A police problem with a war behind it',
+      opening: [
+        'Concentrate at Caesarea and hold Sebaste — the rising has no port and no cavalry.',
+        'Use the phylarch: al-Harith\u2019s horse is what actually ends this, and it is already paid for.',
+        'Do not spend the Army of the East here. The Persian truce is not going to hold.',
+      ],
+      clocks: [
+        { y: 529, m: 5, label: 'A king is crowned in the hills' },
+        { y: 530, m: 4, label: 'The phylarch takes the field' },
+        { y: 532, m: 1, label: 'Samaria must be quiet, or the assessment is a fiction' },
+      ],
+    },
+  },
   '614ce': {
     JUD: {
       system: 'Persian favor versus Jewish autonomy',

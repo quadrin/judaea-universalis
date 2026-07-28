@@ -6576,3 +6576,355 @@ it.
   a card fired through the helper and through the card before it; the grandson
   fires on the Davidic road and on no other; and a collected pedigree answers
   the name better than a shelved one.
+
+## 135. The reward for winning was the chapter going quiet
+
+Reported: a lot of the scripted content in the earlier bookmarks shows up but
+does not trigger — the Roman civil wars, Judaea conquering new places.
+
+Both examples are the same defect, and the defect is that **a greater crown
+changes the realm's three letters and nothing in the content knows.**
+
+`switchTagCore` is complete about state: provinces, armies, fleets, wars,
+warscores, opinions, truces, subsidies, the player's own chair, all rewritten
+from the old tag to the new one, and `lineage` recorded so the survivor can say
+what it used to be. What it cannot rewrite is the *content*, because the content
+is written against literal strings. `greaterVictory` asks whether **HAS** owns
+Jerusalem. `playerHasmonean` returns a tag only if the player is **HYR** or
+**ARI**. `judaeaFree`, `standing`, `redeemed`, `returnStands`, `thirdPower`,
+`hasmoneanHolds` all ask after a fixed set of letters, `findJudRomWar` matches
+war sides by them, and `forTag`/`decider` are compared to `playerTag` with `===`.
+
+So every one of those predicates answers **no** the moment the player takes the
+crown — and the crown is what a chapter played well leads to. Restore Hasmonean
+Judaea is the point of winning the brothers' war. Proclaim the Kingdom of Israel
+wants twenty-five provinces, which is the same conquest the greater-victory
+strand is *about*. The two things the player is rewarded for doing are the two
+things that switch the rest of the chapter off, and nothing says so: the cards
+stay listed in the Compendium, where a player can read the ones they will never
+be shown.
+
+Measured against the live chains — same seed, same conquests, crowned run
+against uncrowned:
+
+| chapter | crown | cards lost |
+|---|---|---|
+| 167 BCE | HAS → MLI | **22** — the whole royal century (Asophon, Obodas, Gaza, Medaba, Samaria, the twenty-two fortresses, Salome, Simeon ben Shetach), the Akra, the bronze tablets, Gerizim, the Idumea policy, Sidetes' summons, Hyrcanus in the east |
+| 66 CE | JUD → MLI | **18** — the entire Second Kingdom road including `ev_house_that_stood`, which opens it |
+| 132 CE | JUD → MLI | **13** — including `ev2_era_of_redemption`, the entry to the best outcome in the game |
+| 614 CE | JUD → MLI | **7** — the third-power arc |
+| 40 BCE | HER → JUD | 2 |
+| 67 BCE | HYR → HAS | 1 measured, and the whole sovereign road unreachable by construction |
+
+That last row is the reported one. The `ev4_v_*` branch — the eagle refused,
+the choice between Caesar and Pompey, the wager at Pharsalus, Antony or
+Octavian, Actium, the kingdom they never renamed — is six cards about the Roman
+civil wars, gated behind `playerHasmonean`, which returns `null` for a restored
+HAS. A player who wins the 67 chapter the way the chapter asks can never see
+any of them.
+
+**The forwarding address.** `lineage` reads the relation from the survivor's
+side, which is the right shape for a bookmark table and the wrong shape for a
+trigger: a trigger is holding the *old* name and needs to know who wears it. So
+`switchTagCore` now also writes `game.tagAliases`, and `livingTag(ctx, tag)`
+resolves in one hop. Chains collapse as they form (HYR → HAS → MLI leaves both
+pointing at MLI), a banner revived by later content clears its own entry because
+a tag that exists answers for itself, and a court that merely *died* is not
+forwarded anywhere — content must still see it dead.
+
+Three layers use it:
+
+- **The engine.** `fireEvent` resolves `forTag` and `decider` before comparing
+  them to the player. A card is addressed to a court, not to three letters.
+- **The helpers.** Every `simHelpers` entry that names a court — `adjust`,
+  `controls`, `countControlled`, `addTagModifier`, `spawnArmy`, `spawnFleet`,
+  `declareWar`, `endWar`, `setRuler`, `faction`… — resolves its tag argument.
+- **The content's own predicates.** A package imports nothing, so it reaches the
+  lookup through `ctx.helpers.livingTag` behind a local `who(ctx, tag)`, and its
+  `alive`, `holds`, `crown`, `provsOf`, `ruler`, `rulerAt`, `findWar` and the
+  chapter gates above all go through it. `who` tolerates a ctx with no helpers,
+  because the suites read content cold.
+
+The province strings need no work: `switchTagCore` already migrated them, which
+is exactly why resolving the *argument* is sufficient.
+
+**1948 is the exception, deliberately.** Everywhere else a rename is the same
+court under new letters, so `alive('HAS')` should mean "is the Hasmonean state
+still a going concern" and answer yes when it is called Israel. In the modern
+chapter the rename IS the subject: Cairo becomes the United Arab Republic and
+back again, Damascus walks out of the union as the Syrian Arab Republic, and a
+dozen cards turn on which of those banners is flying this decade — `syrOwn`
+excludes the union on purpose. So the 1948 packages keep a raw `alive`, and go
+on resolving their cast name by name through `egyTag` / `syrTag` / `syrOwn`,
+which is the workaround §105 already built there and the reason this chapter
+was the only one that lost nothing to the defect. The engine-level and
+helper-level resolution still apply to it, because those receive a tag and
+return a court rather than answering a question about a name.
+
+After the fix the same measurement gives 1 / 0 / 0 / 0 / 0 / 0, the single
+remainder being one card of seeded drift (`ev_k_gaza`, whose trigger asks
+whether Gaza is already ours). Two chapters gain content that was unreachable
+before. The eight-year balance harness is byte-identical to the pre-change run.
+
+- **Regression contract**: `smoke90.mjs` — the address itself (chains,
+  revivals, a dead tag that is not forwarded); a card addressed to the old name
+  reaching the new court, as a card and as a decider notice; the helpers
+  following the crown; the strand gates of 167, 67 and 66 answering the same
+  under either banner; and the end-to-end claim, which plays 167 to 6 CE twice
+  from one seed and asserts the royal century survives the proclamation.
+
+## 136. The Keepers, 529 CE — the chapter whose player is not Jewish
+
+Every bookmark in this game is a Jewish state. This one is a rival Israelite
+tradition that regards Jerusalem as a usurpation, and building it is worth doing
+precisely because it inverts assumptions the other seven chapters share without
+ever having had to say them out loud.
+
+**What was already in the tree.** More than the design assumed. `samaritanism`
+is a live religion in the judaic group and `samaritan` a live culture in the
+israelite group; four provinces on the map already carry both — Neapolis, Jenin,
+Tulkarm, Qalqilya, a tight cluster in the central hill country. And **Gerizim is
+already a holy site**: `map_data.js` puts `holy: 'gerizim'` on Neapolis and
+`realm.js` keys `HOLY_FAITH = { temple_mount: 'judaism', gerizim: 'samaritanism' }`,
+so `monthlyHolySites` already pays a same-faith *controller* and already docks
+every realm of that faith while the mountain is in the wrong hands. The mountain
+is a live mechanic before a single card fires, and the empire starts holding it.
+
+**The start position.** Four hill provinces, landlocked, no port. Two of the four
+are latent cells of **Sebaste** — Herod's Greek foundation five miles from
+Neapolis, still a Christian garrison town in 529 — so the bookmark must declare
+`activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya']` or the community's own
+farmland is folded into the thing watching it. Caesarea Maritima, twenty miles
+west, is the provincial capital, the seat of the dux, the port, and historically
+the Samaritan quarter where both the 484 and 556 risings actually began. On three
+sides: Jewish provinces. The Jews are a live tag, not a faction, because the
+chapter's hardest fork needs them able to refuse.
+
+**529 rather than 484.** Justa's rising under Zeno is the alternative; 529 is
+the better start because it is the last real chance and because Justinian makes
+a more legible antagonist than Zeno. Horizon 529 → 614, where the next chapter
+opens — and the Samaritans who were still there in 614 sided with Persia.
+
+**The chapter opens with a law.** No other chapter does. Justinian did not
+besiege Samaria; he legislated it out of the right to inherit, to testify and to
+hold what it held (`Cod. Iust.` I.v.12, 17, 21), ordered the synagogues down, and
+then sent soldiers to enforce a statute. So `the_statutes` is a permanent opening
+modifier on the player, and the war ends without repealing it. That is the enemy:
+**the war continues by statute after it ends by sword.**
+
+The opening chain, 529–531, ships five cards:
+
+- **The Law Arrives Before the Soldiers** — the rescript, read in Caesarea.
+- **The Games at Neapolis** — Julianus ben Sabar crowned, races held, the
+  Christian charioteer Nicias executed for winning. It is petty, which is what
+  makes it the point of no return: a king demonstrates he is a king by killing a
+  sportsman. Three answers, one of which refuses the diadem on the grounds that
+  the Torah it keeps has no king in it — and buys the one thing a rising without
+  a king has, which is nobody to send to Constantinople in a box.
+- **The Bishop's Fingers** — the churches burn and the bishop of Neapolis is
+  mutilated. The player may restrain it, **and restraint does not help**: the
+  option moves Byzantium's opinion by exactly zero, because the response was
+  ordered before the first roof went. It buys quiet villages and a clean
+  conscience, and the card says so.
+- **The Mountain** — Zeno's Church of St Mary Theotokos on the summit, garrisoned,
+  with the community barred from the top of its own mountain. Clearing it is the
+  whole theology and a garrison on a bare rock with one road up it. This is the
+  same decision the 132 chapter makes about Moriah, on a mountain that makes it a
+  fraud. **Per §119 the two chapters do not know about each other**; each is its
+  own world and the contradiction stands unarbitrated, which is how the bookmarks
+  already treat each other's outcomes.
+- **The Phylarch** — Theodorus with al-Harith ibn Jabalah's Ghassanids, which is
+  where it ended in the history that happened. `GHA` is an antagonist here rather
+  than the background client it is in 614. The third answer sends an embassy to
+  al-Harith himself, a Christian Arab king paid late by Constantinople: it does
+  not buy an ally, it buys a season.
+
+**The empire is not playable**, and that is the house rule rather than an
+omission: every chapter is played from an Israelite side. 614 keeps a full
+Byzantine court — factions, objectives, a victory branch — and never offers the
+chair, and this chapter does the same. What §136 changes is that the Israelite
+side is no longer necessarily the Jewish one. `uitest3` used to call that
+invariant the "Jewish-only roster"; it now says Israelite, and means the same
+thing it always did.
+
+**The victory contract is the thing no other chapter has to write.** In 132,
+losing means the state ends and the people continue. Here it is closer to the
+reverse. So the survival win counts **provinces of the Keepers' Torah wherever
+their banner flies** — four still on the map in 614 wins, whoever owns them, and
+a community that has lost its state entirely can still clear the bar. The loss is
+the mirror: no province of that Torah anywhere, however much ground is held.
+Procopius says a hundred thousand dead and Malalas says twenty; the direction is
+the same either way, and there are roughly eight hundred Samaritans alive today.
+
+**Factions**, three of them documented institutions rather than inventions: the
+Eleazarite High Priesthood (which will bless a rising and will not anoint a
+king), the Council of Seven (three priests and four laymen — the constitutional
+party, dated variously to the third or fourth century, and the chapter takes no
+position on the date), the Crowned Party, and the Quietists — who are not a
+strawman, because the community's own chronicles are ambivalent about the men who
+led the risings and Arsenius, who converted and became a favourite at Justinian's
+court, is what that position looks like when it wins.
+
+**The pen is its own.** `JEWISH_INTEGRATED_NAMES` is the wrong pen here and that
+is most of the point; `SAM` writes Shechem, Shomron, Ein Ganim. The shared antique
+pool is registered like any other chapter's, and the annexation cards stay shut on
+their own `jewishCrown` gate rather than misfiring — the honest answer until
+somebody writes the Samaritan version of that question.
+
+This pass ships the foundation and the opening chain. The four forks the design
+calls for — the mountain, the Jews (556: the joint rising at Caesarea and the
+governor Stephanus killed in his own praetorium), Ctesiphon (Samaritans urging
+Kavad to invade after 531), and the Taheb (the restorer of Deut. 18:18, which is
+a far more dangerous state than a king) — are charted on the §119 tree with two
+forks live and every road declared in `KNOWN_GAPS`, because their terminals belong
+to the 531–614 tail: Sergius of Caesarea easing the disabilities in 551, the joint
+rising of 556, and the last revolt under Justin II in 572/3.
+
+- **Regression contract**: `smoke91.mjs` — the chapter is registered and sorted
+  into the carousel; four hill provinces, with the two that are latent cells of
+  Sebaste actually activated; Gerizim keyed to samaritanism while the Mount stays
+  keyed to Judaism; the statute in force at month one; the five opening cards
+  reaching a player, with restraint at the bishop's card buying no goodwill; the
+  survival win counting people rather than provinces at both ends; and the
+  annexation pool staying shut for a crown that is not Jewish.
+
+## 137. Two dials, neither of them a block
+
+Reported: hostile countries invade just as you are almost integrating a vassal —
+not something to prevent, but it should be dialled back. And: countries with less
+development, low stability or other troubles should not hold a grievance against
+you forever behind a negative favourability cap, because they are too scared to
+declare war anyway.
+
+Both are real, and both turn out to be mechanics working exactly as written and
+producing something nobody chose.
+
+### 137a. The union and the war
+
+`incorporateInfo` will only START a union from a court at peace. `aiConsiderWar`
+hunts a stable, unengaged neighbour with a strength ratio in its favour. Those are
+the same court. So the twenty to forty months a weaving takes — `incorporateMonthsBase`
+plus half a month per point of the client's development — were also exactly the
+months an opportunistic AI is looking for, and `monthlyIncorporation` answered a
+declaration by setting `incorporating = null` and keeping the influence.
+
+The mechanic's own precondition was the window it was most likely to be destroyed
+in, and the destruction was total: thirty months of work and several hundred
+influence, to a war the player did not start and could not have avoided by playing
+better, because avoiding it means not being at peace.
+
+**War now suspends the weaving.** The clock stops, `suspended` goes on the entry,
+the months already run are kept, and the clock starts again at peace. The panel
+button reads *Held by war… 30m* instead of counting down at nothing.
+
+This does not prevent the invasion and does not make it cheap. The union advances
+not at all for the length of the war — against a long one that is worse than the
+old rule felt, because the player watches it sit there. And the devotion gate now
+runs BEFORE the suspension rather than after it, so a client whose opinion falls
+below `incorporateKeepOpinion` during the fighting still breaks the union: a war
+that costs you your client's affection still costs you the union. What it no longer
+does is delete the work for the fact of the war alone.
+
+### 137b. Deference
+
+§67 caps what goodwill can buy while the taker sits on the land. §86 lets the wound
+close over ten quiet years, halfway for strangers and nearly all the way for
+historical friends. Neither knows anything about the two courts' relative size.
+
+So a four-province neighbour with a permanent grievance against a power six times
+its weight sat at a −50 ceiling forever: it would never declare, never accept a
+gift past the cap, and never stop. That is not what small states do. They
+accommodate — and the ones with troubles at home accommodate fastest, because a
+grievance is a policy and a policy has to be paid for.
+
+`deference(ctx, victim, taker)` measures the gap in **developed weight** — the same
+sum the force limit is built on — and returns how much of the *remaining* reach the
+gap is worth:
+
+- at or above `deferDevRatio` (0.6) of the taker's weight: **zero**, and nothing
+  changes. That is every rivalry the chapters are actually about — Judaea and Rome,
+  the brothers, the two empires.
+- below it, rising to `deferMax` (0.85) at `deferFloorRatio` (0.15) or less.
+- plus `deferStabilityBonus` per point of stability below zero. Only instability
+  counts: a steady small realm may nurse its grievance as long as it likes.
+
+`thawProgress` then reaches `base + (1 − base) × deference` instead of `base`, so a
+wide enough gap can lift the ceiling off entirely, and an equal court still stops at
+half.
+
+**The clock is untouched, and that is the point.** A state that has just lost land
+is furious whatever its size: a fresh grudge still caps at −100 or worse, and no
+amount of goodwill buys past it. What changed is the persistence, not the fury.
+
+- **Regression contract**: `smoke92.mjs` — the union surviving an invasion with its
+  clock stopped and resuming at peace, and still ending for a broken bond or a
+  client whose devotion breaks mid-war; deference exactly zero between equals,
+  lifting the ceiling for a minnow, lifting it further for an unsteady one, and
+  doing nothing at all to a wound that is still fresh. `smoke40.mjs` carries the
+  updated wartime rule.
+
+## 138. The crown of Israel costs a dynasty
+
+Reported: the Kingdom of Israel should only be formable with a Davidic
+descendant on the throne — and that should be an option in every chapter where
+you play Judaea.
+
+The formable asked for twenty-five provinces, six named cities, twelve Jewish
+provinces, independence, stability 2, legitimacy 85 and peace. All of it is
+arithmetic. Any sufficiently large Jewish state could tick it, which made the
+greater crown a reward for conquest — and MLI is not a conquest. It is the
+**united monarchy**, and the united monarchy is David's.
+
+It is also the one objection this game's own history will not stop making. The
+Hasmoneans were priests of the course of Joarib and not of Judah, and their
+kingship was attacked on that ground for a century — Josephus, *Ant.*
+XIII.288–298, has the Pharisee Eleazar tell John Hyrcanus to be content with the
+high priesthood, and the quarrel that produced runs through the civil war of 67
+to Pompey's arbitration. Herod, who had no descent at all, married Mariamne the
+Hasmonean for a pedigree and then killed her and her sons, because a borrowed
+title is a standing rival. The Exilarchs of Babylonia claimed descent from
+Jehoiachin for eight hundred years and were the one Jewish authority nobody
+argued with about legitimacy. Bar Kokhba was Nasi and never King. Both revolts'
+coins say *Freedom* and *Redemption* and no man's name.
+
+**`events_house_of_david.js`** is a shared package, keyed on the player's own
+religion like the annexation question, and it joins the antique pool — so it
+plays in all six chapters that can proclaim MLI and stays shut for the Keepers,
+who reject the claim outright and have no king in their Torah.
+
+Two cards, because a wedding is not a pedigree:
+
+- **The House That Is Not David's**, asked once of a sovereign crown seated in
+  Jerusalem with ten provinces. Four answers, all of which the period produced.
+  *Send to Babylonia* — Herod's move made deliberately, gated (§128) on a road
+  east, because the line is kept at Nehardea; it buys a generation of nothing
+  and then a title nobody can argue with. *Search the archives* — the cheap road
+  every dynasty in history has taken; it says a Davidide is seated without
+  seating one, and the schools file their objection in writing, where it keeps.
+  *A prince, not a king* — Ezekiel 44–46, which walks around the objection
+  because Ezekiel's prince was never David's heir, and **forecloses the crown of
+  Israel permanently and in writing**. And *the house stands on what it won* —
+  the Hasmonean non-answer, which deliberately does not set `davidicAnswered`:
+  it postpones the question rather than settling it, and a later reign may take
+  it up.
+- **The Son of the Marriage**, a generation (22 years) later. Seating him raises
+  `davidicThrone` and hands the Exilarchate a recognised interest in every
+  succession afterwards. Passing him over is Herod's actual answer minus the
+  murders, and leaves the crown out of reach.
+
+**Two chapters already ask this better and keep asking it.** The accession of
+Beit Kosiba (§128) and the crown of David (§126) have their own courts and their
+own consequences; both now raise the same `davidicThrone`, and the shared cards
+stand down while either arc runs, so no court is asked the question twice.
+
+The formable requirement is deliberately listed **first**, so the decision's
+checklist tooltip leads with the thing that is not arithmetic.
+
+- **Regression contract**: `smoke93.mjs` — the gate refusing a crown that meets
+  every other requirement and granting it the moment a Davidide is seated; the
+  package reaching all six chapters that can form MLI and shutting itself for a
+  crown that keeps a different Torah; the arc end to end, including the eastern
+  gate on the marriage and the generation between the wedding and the son;
+  Ezekiel foreclosing it and the Hasmonean answer merely postponing it; and both
+  bespoke arcs raising the shared flag while the shared cards stand down.
+  `smoke12.mjs` carries the updated unlock.

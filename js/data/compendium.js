@@ -30,6 +30,8 @@ import { EVENTS_132_REDEMPTION } from './events_132ce_redemption.js';
 import { EVENTS_132_ENDURE } from './events_132ce_endure.js';
 import { EVENTS_132_HOUSE } from './events_132ce_house.js';
 import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
+import { BOOKMARK_529 } from './bookmark_529ce.js';
+import { EVENTS_529 } from './events_529ce.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
 import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
@@ -43,6 +45,7 @@ import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 import { EVENTS_ANNEX } from './events_annexation.js';
+import { EVENTS_DAVID } from './events_house_of_david.js';
 
 // The shared pool every ANTIQUE chapter plays (SPEC §126). The omens and the
 // annexation question travel together: both are keyed on the player rather
@@ -51,7 +54,12 @@ import { EVENTS_ANNEX } from './events_annexation.js';
 // omens alone, because a modern state does not rule on circumcision or the
 // road. The `maxYear: 1799` on every annexation card is the belt to this
 // braces: the registry says where the pool goes, and the cards say when.
-const ANTIQUE = EVENTS_ANNEX.concat(GENERIC_EVENTS);
+// The house of David travels with them (SPEC §138): the crown of Israel is
+// the united monarchy and the united monarchy is David's, so every chapter
+// that can proclaim it must also offer a road to the title. Keyed on the
+// player's own religion like the annexation question, so it stays shut for
+// the Keepers, who reject the claim outright and have no king in their Torah.
+const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, GENERIC_EVENTS);
 
 export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):
@@ -66,6 +74,14 @@ export const ERAS = [
   // content package keeps the zero-import property its header promises, and
   // so the registry stays the one place the pairing is written down.
   { bookmark: BOOKMARK_132, events: EVENTS_132.concat(EVENTS_132_FAITH, EVENTS_132_WORLD, EVENTS_132_GALILEE, EVENTS_132_REDEMPTION, EVENTS_132_ENDURE, EVENTS_132_HOUSE, EVENTS_132_KOSIBA, ANTIQUE) },
+  // The Keepers (SPEC §136): the one chapter whose player is not Jewish. It
+  // plays the shared antique pool like its neighbours — the omens belong to
+  // anybody, and a Samaritan state large enough to conquer faces the same
+  // question about the conquered that a Jewish one does. `jewishCrown` in the
+  // annexation package gates itself on the crown's own religion, so the cards
+  // simply stay shut for a court that keeps a different Torah, which is the
+  // honest answer until somebody writes the Samaritan version of them.
+  { bookmark: BOOKMARK_529, events: EVENTS_529.concat(ANTIQUE) },
   { bookmark: BOOKMARK_614, events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, ANTIQUE) },
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli

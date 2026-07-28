@@ -10,6 +10,16 @@ function warnOnce(key, e) {
   console.warn('[events_40bce] ' + key, e || '');
 }
 
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
 function guard(key, fn) {
   return function (ctx) {
     try { fn(ctx); } catch (e) { warnOnce('effects:' + key, e); }
@@ -23,15 +33,26 @@ function safeTrigger(key, fn) {
 }
 
 function alive(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return !!(t && t.alive !== false);
+}
+
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
 }
 
 function crownWar(game) {
   for (const w of (game && game.wars) || []) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('ATG') !== -1 && all.indexOf('HER') !== -1) return w;
+    if (all.indexOf(warTag(game, 'ATG')) !== -1 && all.indexOf(warTag(game, 'HER')) !== -1) return w;
   }
   return null;
 }

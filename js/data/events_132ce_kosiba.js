@@ -95,13 +95,26 @@ function guard(k, fn) { return function (ctx) { try { fn(ctx); } catch (e) { war
 function safeTrigger(k, fn) { return function (ctx) { try { return !!fn(ctx); } catch (e) { warnOnce('trigger:' + k, e); return false; } }; }
 function safeWhen(k, fn) { return function (ctx) { try { return !!fn(ctx); } catch (e) { warnOnce('when:' + k, e); return false; } }; }
 
-function alive(ctx, tag) { const t = ctx.game.tags && ctx.game.tags[tag]; return !!(t && t.alive !== false); }
+function alive(ctx, tag) { const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)]; return !!(t && t.alive !== false); }
 function flag(ctx, k) { return !!(ctx.game.flags && ctx.game.flags[k]); }
 function holds(ctx, tag, name) {
-  try { const p = ctx.prov(name); return !!p && !p.impassable && p.owner === tag && p.controller === tag; }
-  catch (e) { warnOnce('holds', e); return false; }
+  try {
+    const held = who(ctx, tag);
+    const p = ctx.prov(name);
+    return !!p && !p.impassable && p.owner === held && p.controller === held;
+  } catch (e) { warnOnce('holds', e); return false; }
 }
-function ruler(ctx) { const t = ctx.game.tags && ctx.game.tags.JUD; return (t && t.ruler) || null; }
+
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+function ruler(ctx) { const t = ctx.game.tags && ctx.game.tags[who(ctx, 'JUD')]; return (t && t.ruler) || null; }
 
 // The redemption held: sovereign, in Jerusalem, on the road §118 opened. The
 // same predicate the endure package states, restated locally because this
@@ -453,6 +466,9 @@ export const EVENTS_132_KOSIBA = [
           h.doctrine(ctx, 'authority', -1);
           h.setFlag(ctx, 'grandsonAnswered', true);
           h.setFlag(ctx, 'davidicSuccession', true);
+          // The shared title (SPEC §138): this chapter asks the question in its
+          // own voice, and its answer is the same answer.
+          h.setFlag(ctx, 'davidicThrone', true);
           h.setFlag(ctx, 'exilarchateHasAClaim', true);
           h.chronicle(ctx, 'era', 'The succession passes to the son of the Babylonian marriage, and the house of Kosiba becomes, in law and in the genealogies, the house of David. The delegation from Nehardea stays for the ceremony and leaves with a copy of the record.');
         }),

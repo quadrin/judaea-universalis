@@ -163,6 +163,15 @@ const ISRAEL_HEARTLAND = [
   'Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 'Adora',
 ];
 
+// A son of David on the throne (SPEC §138). The Kingdom of Israel is the united
+// monarchy and the united monarchy is David's, so the greater crown costs a
+// dynasty rather than a war — the shared house-of-David arc, the accession of
+// Beit Kosiba in 132, or the crown of David in 614, whichever a chapter offers.
+// Every one of them raises the same flag.
+function davidicThrone(ctx) {
+  return !!(ctx.game.flags && ctx.game.flags.davidicThrone);
+}
+
 export const FORMABLES = [
   {
     id: 'form_has_hyr',
@@ -285,10 +294,15 @@ export const FORMABLES = [
     from: 'JUD', to: 'MLI',
     name: 'Proclaim the Kingdom of Israel',
     desc: 'Not a revolt that survived, not a client on sufferance — a kingdom, with '
-      + 'Jerusalem for its seat and the Law for its charter. The crown of David, '
-      + 'claimed in the only court that matters: the field.',
+      + 'Jerusalem for its seat and the Law for its charter. The crown of David — '
+      + 'and the sceptre does not depart from Judah, so it is claimed in two courts: '
+      + 'the field, and the genealogies.',
     bookmarks: ['66ce', '132ce', '614ce'],
     requires: [
+      {
+        label: 'A son of David on the throne',
+        check: (ctx) => davidicThrone(ctx),
+      },
       {
         label: 'Own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and Adora',
         check: (ctx, tag) => ownsAndControls(ctx, tag, ISRAEL_HEARTLAND),
@@ -325,6 +339,10 @@ export const FORMABLES = [
       + 'one crown in Jerusalem.',
     bookmarks: ['167bce', '67bce', '40bce'],
     requires: [
+      {
+        label: 'A son of David on the throne',
+        check: (ctx) => davidicThrone(ctx),
+      },
       {
         label: 'Own and control Jerusalem, Hebron, Neapolis, Sepphoris, Tiberias, and Adora',
         check: (ctx, tag) => ownsAndControls(ctx, tag, ISRAEL_HEARTLAND),

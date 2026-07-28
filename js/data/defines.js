@@ -90,6 +90,11 @@ export const DEFINES = {
     // 179, Mithridates after Lucullus. A wary kingdom, not a conqueror.
     PNT: { aggression: 0.7, caution: 1.3 },
     // -- 614 CE --
+    // -- 529 CE --
+    // A four-province rising that has to choose its moment: it strikes hard
+    // when it strikes, and it cannot afford to be anywhere carelessly.
+    SAM: { aggression: 1.15, caution: 1.35 },
+    // -- 614 CE --
     BYZ: { aggression: 0.9, caution: 1.1, ponderous: true },
     SAS: { aggression: 1.3, caution: 0.8, ponderous: true },
     GHA: { aggression: 0.6, caution: 1.3 },
@@ -153,6 +158,7 @@ export const DEFINES = {
     AGR: 'monarchy', HYR: 'theocracy', ARI: 'monarchy', HER: 'monarchy',
     ATG: 'monarchy', OSR: 'monarchy', ADI: 'monarchy', CHX: 'monarchy',
     CMG: 'monarchy', CYZ: 'monarchy', ITU: 'theocracy',
+    SAM: 'theocracy', // the High Priesthood is the office; a king is the thing in dispute
     BYZ: 'monarchy', SAS: 'monarchy', GHA: 'tribal', RSH: 'theocracy',
     PNT: 'monarchy',
     ISR: 'republic', EGY: 'monarchy', JOR: 'monarchy', SYR: 'republic',
@@ -347,6 +353,14 @@ export const DEFINES = {
       ideas: { moraleMult: 1.05, navalMult: 1.05 },
     },
     // ---- 614 CE: the last great war of antiquity ----
+    SAM: {
+      name: 'Samaria', color: [92, 150, 196], religion: 'samaritanism', culture: 'samaritan', capital: 'Neapolis',
+      description: 'The Shamerim — the keepers: an Israelite people with its own Torah, its own priesthood '
+        + 'and its own mountain, four hill provinces deep inside a Christian empire.',
+      // What four provinces of hill country actually give you: ground you know
+      // and men who do not have far to go. Nothing else.
+      ideas: { hillDefBonus: 1, manpowerMult: 1.08, disciplineMult: 0.96 },
+    },
     BYZ: {
       name: 'Byzantium', color: [110, 48, 130], religion: 'christianity', culture: 'greek', capital: 'Antioch',
       description: 'Rome that did not fall: the themes, the walls, and God\'s own empire — bleeding from every border.',
@@ -639,6 +653,14 @@ export const DEFINES = {
     thawMonths: 120,          // ten years of quiet to reach full maturity
     thawReachPlain: 0.5,      // strangers: the ceiling rises halfway
     thawReachAffinity: 0.9,   // historical friends: nearly all the way back
+    // Deference (SPEC §137): a grievance is a policy, and a court that cannot
+    // afford one stops paying for it. A victim much lighter than the taker
+    // carries its thaw further than the reach above — all the way off, when
+    // the gap is wide enough and the little court has troubles of its own.
+    deferDevRatio: 0.6,       // at or above 6/10 of the taker's weight: no deference at all
+    deferFloorRatio: 0.15,    // at or below 15%: the full deference the gap can buy
+    deferMax: 0.85,           // how much of the remaining reach a weight gap can carry
+    deferStabilityBonus: 0.1, // ...per point of stability BELOW zero, on top of it
     thawAllyAt: 0.75,         // the maturity at which friends may ally again
     thawHeal: 1,              // monthly warming once the ceiling is above us
     thawMartialPenalty: 0.5,  // a wholly martial realm matures at half speed

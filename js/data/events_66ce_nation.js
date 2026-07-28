@@ -34,16 +34,29 @@ function warnOnce(k, e) { if (_warned.has(k)) return; _warned.add(k); console.wa
 function guard(k, fn) { return function (ctx) { try { fn(ctx); } catch (e) { warnOnce('effects:' + k, e); } }; }
 function safeTrigger(k, fn) { return function (ctx) { try { return !!fn(ctx); } catch (e) { warnOnce('trigger:' + k, e); return false; } }; }
 
-function alive(ctx, tag) { const t = ctx.game.tags && ctx.game.tags[tag]; return !!(t && t.alive !== false); }
+function alive(ctx, tag) { const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)]; return !!(t && t.alive !== false); }
 function flag(ctx, k) { return !!(ctx.game.flags && ctx.game.flags[k]); }
 function holds(ctx, tag, name) {
-  try { const p = ctx.prov(name); return !!p && !p.impassable && p.owner === tag && p.controller === tag; }
-  catch (e) { warnOnce('holds', e); return false; }
+  try {
+    const held = who(ctx, tag);
+    const p = ctx.prov(name);
+    return !!p && !p.impassable && p.owner === held && p.controller === held;
+  } catch (e) { warnOnce('holds', e); return false; }
+}
+
+// The letters this court answers to NOW (SPEC §135). A realm that has taken a
+// greater crown files its provinces, armies and wars under the new tag, while
+// this chapter was written against the old one; the sim keeps the forwarding
+// address and hands it back through ctx.helpers. Defensive about `helpers`
+// because the content packages are also read cold, with no game to resolve
+// against.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
 }
 
 // The ruler, and the three numbers nothing has ever asked about.
 function ruler(ctx, tag) {
-  const t = ctx.game.tags && ctx.game.tags[tag];
+  const t = ctx.game.tags && ctx.game.tags[who(ctx, tag)];
   return (t && t.ruler) || null;
 }
 function rulerAt(ctx, tag, key, min) {
@@ -55,7 +68,7 @@ function rulerAt(ctx, tag, key, min) {
 // restated locally so this package imports nothing.
 function standing(ctx) {
   if (!alive(ctx, 'JUD')) return false;
-  const t = ctx.game.tags.JUD;
+  const t = ctx.game.tags[who(ctx, 'JUD')];
   return !(t && t.overlord) && holds(ctx, 'JUD', 'Jerusalem') && flag(ctx, 'secondKingdom');
 }
 

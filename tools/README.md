@@ -552,3 +552,55 @@ queue a card, don't — the duplicate had drifted three features behind the
 original (the §128 option mask, the §70 decider notice, and the
 war-already-settled retirement) and the drift was invisible because the card it
 broke was the only one in the game fired that way.
+
+SPEC §135 adds `livingTag` (sim/military.js) and `game.tagAliases`. Rule for
+content: **never compare a tag with `===` and a literal.** A realm can proclaim
+a greater crown at any point in the century, `switchTagCore` rewrites the whole
+state to the new three letters, and every predicate holding the old ones goes
+quiet — the 167 chain lost twenty-two cards to this, the 66 chain eighteen, and
+the 67 chapter's entire Roman-civil-war branch was unreachable by construction.
+Route the tag through `who(ctx, tag)` (the local wrapper each package keeps over
+`ctx.helpers.livingTag`) before it is compared to a province owner, a war side,
+`playerTag`, or a `game.tags` key. `simHelpers` already does this for every
+entry that takes a tag, so a card that reaches the world through `h.adjust`,
+`h.controls`, `h.countControlled` and friends is safe without doing anything.
+
+One exception, and it is in the file headers: the 1948 packages keep a raw
+`alive` on purpose. That chapter's whole subject is which banner Cairo and
+Damascus are flying, so forwarding would make `alive('UAR')` true after the
+union has come apart. It resolves its cast by name instead (`egyTag`, `syrTag`,
+`syrOwn`, SPEC §105) and always did.
+
+`smoke90.mjs` is the guard, and its last section is the one that matters: it
+plays 167 BCE to 6 CE twice from one seed, once taking the Kingdom of Israel and
+once not, and asserts the crowned run does not lose a strand. If you add a
+chapter gate keyed on a tag, that test is where its absence will show up.
+
+SPEC §136 adds an eighth chapter (`bookmark_529ce.js`, `events_529ce.js`) and the
+`SAM` tag. Two things to know if you touch it. The four hill provinces are only
+four because the bookmark declares `activeProvinces` — Jenin is a latent cell of
+Neapolis and Tulkarm and Qalqilya are latent cells of SEBASTE, so dropping that
+line silently hands the community's farmland to the Christian garrison town five
+miles away and the chapter still boots. And the victory contract counts
+`religion === 'samaritanism'` provinces rather than owned ones on purpose: this is
+the one chapter where the player's people can outlive the player's state, and a
+`countControlled` shortcut would quietly turn the survival win back into a border
+win. `smoke91.mjs` guards both.
+
+SPEC §137 changes two long-standing behaviours, and both are the kind that a later
+"cleanup" would revert without noticing. `monthlyIncorporation` no longer voids a
+union when war comes — it sets `incorporating.suspended` and stops the clock — and
+the devotion gate deliberately runs BEFORE the war branch so a client who turns
+mid-war still breaks it. And `thawProgress` now reaches further than
+`thawReachPlain` when the victim is much lighter than the taker (`deference`), which
+is why a small neighbour's grudge ceiling can come off entirely while an equal's
+still stops at half. `smoke92.mjs` guards both; `smoke40.mjs` carries the wartime
+rule for the vassal loop.
+
+SPEC §138 gates the Kingdom of Israel on `game.flags.davidicThrone`. Three roads
+raise it — the shared `events_house_of_david.js` arc, 132's grandson of the
+Davidic marriage, and 614's crown of David — and the shared cards stand down
+while either bespoke arc runs (`ownArcRuns`). If you add a chapter where MLI is
+formable, it must also play the shared package or the formable is dead content
+there; `smoke93.mjs` asserts that pairing directly, which is the §135 lesson
+applied forward.

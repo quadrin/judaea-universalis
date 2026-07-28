@@ -612,6 +612,72 @@ export const CHAPTER_PATHS = Object.freeze([
   }),
 
   Object.freeze({
+    id: '529ce',
+    title: 'The Keepers',
+    // SPEC §136. The chapter ships its opening chain first — 529–531, the
+    // statute to the phylarch — and the four forks the design calls for land
+    // behind it. Two of them are here already because the opening chain
+    // itself asks them: what kind of state this is, and what the mountain is
+    // for. The Jews, Ctesiphon and the Taheb are declared gaps below, which
+    // is what KNOWN_GAPS is for.
+    lastYear: 614,
+    forks: [
+      Object.freeze({
+        id: 'what_kind_of_rising',
+        question: 'A people that has never had a king is offered one. Does it take him?',
+        roads: [
+          Object.freeze({
+            id: 'crowned_and_the_charioteer', name: 'A King in Israel',
+            marker: 'niciasKilled', entry: 'ev529_the_games_at_neapolis',
+            terminal: null,
+            note: 'SPEC §136. The diadem, the races, and the charioteer executed for winning. '
+              + 'The historical road, and the point of no return: a court that kills a sportsman '
+              + 'in front of four thousand witnesses has told the empire what it claims to be.',
+          }),
+          Object.freeze({
+            id: 'crowned_and_the_palm', name: 'Let Him Take the Palm',
+            marker: 'niciasSpared', entry: 'ev529_the_games_at_neapolis',
+            terminal: null,
+            note: 'SPEC §136. The crown without the sentence. A rising that can still be '
+              + 'negotiated with — and a king the men who crowned him have watched flinch.',
+          }),
+          Object.freeze({
+            id: 'no_king', name: 'The Torah Has No King in It',
+            marker: 'crownRefused', entry: 'ev529_the_games_at_neapolis',
+            terminal: null,
+            note: 'SPEC §136. The priesthood\'s answer and the older one. It costs the rising '
+              + 'the thing a crown buys and gains it the thing a crown costs: there is nobody '
+              + 'for the empire to send to Constantinople in a box.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_mountain',
+        question: 'There is a church on the summit and a commandment to build the altar there.',
+        roads: [
+          Object.freeze({
+            id: 'altar_rebuilt', name: 'The Altar on the Mountain',
+            marker: 'gerizimCleared', entry: 'ev529_gerizim',
+            terminal: null,
+            note: 'SPEC §136. The theology, taken. It is also a garrison on a bare rock with '
+              + 'one road up it, which is why the captains asked the crown to say out loud what '
+              + 'it was buying. The 132 chapter has this identical decision on a different '
+              + 'mountain, and the two claims annihilate each other.',
+          }),
+          Object.freeze({
+            id: 'villages_first', name: 'The Villages First',
+            marker: 'gerizimLeft', entry: 'ev529_gerizim',
+            terminal: null,
+            note: 'SPEC §136. The summit left to its garrison and the men kept where the '
+              + 'fighting is. A rising that will not take the mountain has to explain, every '
+              + 'year, what it is for.',
+          }),
+        ],
+      }),
+    ],
+  }),
+
+  Object.freeze({
     id: '614ce',
     title: 'The Persian Conquest',
     lastYear: 692,
@@ -786,6 +852,42 @@ export const CHAPTER_PATHS = Object.freeze([
 // let a new road go unfinished, and the suite fails. It is a to-do list the
 // build enforces rather than a comment nobody rereads.
 export const KNOWN_GAPS = Object.freeze([
+  Object.freeze({
+    chapter: '529ce', fork: 'what_kind_of_rising', road: 'crowned_and_the_charioteer',
+    why: 'SPEC §136 ships the Keepers\' opening chain — the statute, the games, the bishop, '
+      + 'the mountain, the phylarch — and the 531–614 tail behind it. Every road of the opening '
+      + 'fork therefore ends at a card that has not been written yet rather than at one that is '
+      + 'missing: the chapter runs to 614 and its last dated beats (Sergius in 551, the joint '
+      + 'rising at Caesarea in 556, the last revolt under Justin II in 572) are the terminals '
+      + 'these three roads are waiting for.',
+  }),
+  Object.freeze({
+    chapter: '529ce', fork: 'what_kind_of_rising', road: 'crowned_and_the_palm',
+    why: 'The same gap as its sibling above: the crown-without-the-sentence road reaches the '
+      + 'phylarch and then wants the 551 and 556 cards to close on, and those belong to the '
+      + 'long tail rather than to the opening chain this pass ships.',
+  }),
+  Object.freeze({
+    chapter: '529ce', fork: 'what_kind_of_rising', road: 'no_king',
+    why: 'The road with no king on it is the one most likely to need its own terminal rather '
+      + 'than a shared one — a community that refused the diadem reaches 556 with a different '
+      + 'thing to decide about a joint rising than one that crowned a man and buried him. It is '
+      + 'declared open until the tail is written rather than pointed at a card meant for a '
+      + 'different world.',
+  }),
+  Object.freeze({
+    chapter: '529ce', fork: 'the_mountain', road: 'altar_rebuilt',
+    why: 'The altar road ends where the mountain is answered for the last time, and in this '
+      + 'chapter that is Justinian rebuilding and walling the church after the rising is broken '
+      + '(Procopius, Buildings V.vii) — a card of the 531–614 tail. Shipping a terminal inside '
+      + 'the opening chain would close the road two decades early and misdescribe it.',
+  }),
+  Object.freeze({
+    chapter: '529ce', fork: 'the_mountain', road: 'villages_first',
+    why: 'Its counterpart, and open for the same reason: the road that declines the summit is '
+      + 'answered by whether there is still a community in the villages in 614, which is the '
+      + 'chapter\'s survival verdict rather than any card in the opening chain.',
+  }),
   Object.freeze({
     chapter: '1948ce', fork: 'the_union', road: 'secession',
     why: 'Not an unfinished road but the chapter\'s main line: after September 1961 every '

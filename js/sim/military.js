@@ -129,6 +129,28 @@ export function contentForTag(ctx, table, tag) {
   }
   return null;
 }
+// The court a vanished set of three letters answers to now (SPEC §135).
+// `lineage` reads the relation from the survivor's side and is the right shape
+// for a bookmark table; a trigger has the opposite problem. It is holding the
+// name the chapter was WRITTEN with — 'HAS', 'HYR', 'JUD' — and needs to know
+// who wears it, every month, for every card in the chain.
+//
+// This is that lookup, and it is the difference between a chapter that keeps
+// running after the player takes a greater crown and one that stops dead. The
+// 167 chain lost twenty-two cards to it — the whole royal century, Jannaeus'
+// conquests, the Akra, the bronze tablets — because proclaiming the Kingdom of
+// Israel is the reward for exactly the conquests those cards are about, and
+// every one of them asked after a tag that the proclamation had just deleted.
+//
+// A living tag always answers for itself: a banner that has been revived by
+// later content is itself, not its own successor.
+export function livingTag(ctx, tag) {
+  const g = ctx && ctx.game;
+  if (!g || !tag || !g.tags) return tag;
+  if (g.tags[tag]) return tag;
+  const to = g.tagAliases && g.tagAliases[tag];
+  return to && g.tags[to] ? to : tag;
+}
 export function tagGen(ctx, tag) {
   const t = ctx.game.tags[tag];
   return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
@@ -1608,6 +1630,18 @@ export function switchTagCore(ctx, from, to) {
   }
   g.tags[to] = nt;
   delete g.tags[from];
+  // The forwarding address (SPEC §135). `lineage` above lets the survivor say
+  // what it used to be; this lets the chapter's cards find it under the name
+  // they were written with. Chains are collapsed as they form — a HYR that
+  // became HAS and then MLI forwards straight to MLI, so the lookup never
+  // walks — and a banner revived by later content clears its own entry,
+  // because a tag that exists answers for itself.
+  if (!g.tagAliases || typeof g.tagAliases !== 'object') g.tagAliases = {};
+  g.tagAliases[from] = to;
+  for (const k of Object.keys(g.tagAliases)) {
+    if (g.tagAliases[k] === from) g.tagAliases[k] = to;
+  }
+  delete g.tagAliases[to];
 
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
@@ -1962,7 +1996,12 @@ export function incorporateInfo(ctx, tag, vassalTag) {
   out.opinion = Math.round(opinionOf(ctx, vassalTag, tag));
   if (them.incorporating && them.incorporating.by === tag) {
     out.inProgress = them.incorporating.monthsLeft | 0;
-    out.why = 'The union is already being woven — ' + out.inProgress + ' month' + (out.inProgress === 1 ? '' : 's') + ' remain.';
+    out.suspended = !!them.incorporating.suspended;
+    out.why = out.suspended
+      ? 'The weaving is halted by the war — the ' + out.inProgress + ' month'
+        + (out.inProgress === 1 ? '' : 's') + ' still to run are held where they are, and '
+        + 'the clock starts again at peace.'
+      : 'The union is already being woven — ' + out.inProgress + ' month' + (out.inProgress === 1 ? '' : 's') + ' remain.';
     return out;
   }
   const meAtWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
@@ -2068,11 +2107,6 @@ export function monthlyIncorporation(ctx) {
       them.incorporating = null;
       continue;
     }
-    if (meAtWar || themAtWar) {
-      them.incorporating = null;
-      tell('The union unravels', 'War interrupts the weaving of ' + (them.name || k) + ' into the realm — the work (and the influence spent) is lost.', 'bad');
-      continue;
-    }
     // Starting the union takes near-devotion (incorporateOpinion); KEEPING it
     // takes only that the court not turn against us (incorporateKeepOpinion).
     // The old check reused the start threshold, so ordinary monthly cooling
@@ -2083,6 +2117,36 @@ export function monthlyIncorporation(ctx) {
       them.incorporating = null;
       tell('The union unravels', (them.name || k) + '\'s devotion has cooled below what the union demands — the work (and the influence spent) is lost.', 'bad');
       continue;
+    }
+    // War SUSPENDS the weaving; it does not undo it (SPEC §137). It used to
+    // void the union outright and burn the influence with it, and because
+    // `incorporateInfo` only lets a union start from a settled court at
+    // peace, the months of a weaving were exactly the months an opportunistic
+    // AI looks for — a stable, unengaged neighbour is what `aiConsiderWar`
+    // hunts. So the one window the mechanic requires was also the window it
+    // was most likely to be destroyed in, and thirty months and several
+    // hundred influence went with a war the player did not start.
+    //
+    // The invasion is not prevented and it is not cheap: the clock stops for
+    // the whole war, and a client whose devotion cools below the keep line
+    // while the fighting runs still breaks the union below. What it no longer
+    // does is delete the work.
+    if (meAtWar || themAtWar) {
+      if (!c.suspended) {
+        c.suspended = true;
+        tell('The union waits',
+          'War halts the weaving of ' + (them.name || k) + ' into the realm. The '
+          + (num(c.monthsLeft, 0) | 0) + ' month' + ((c.monthsLeft | 0) === 1 ? '' : 's')
+          + ' still to run are held where they are, and the work already done is kept — '
+          + 'the clock starts again when the fighting stops.', 'bad');
+      }
+      continue;
+    }
+    if (c.suspended) {
+      c.suspended = false;
+      tell('The weaving resumes',
+        'The peace holds, and the union with ' + (them.name || k) + ' takes up where it '
+        + 'left off — ' + (num(c.monthsLeft, 0) | 0) + ' months remain.', 'good');
     }
     c.monthsLeft = num(c.monthsLeft, 1) - 1;
     if (c.monthsLeft > 0) continue;
@@ -2577,17 +2641,72 @@ export function haveAffinity(ctx, a, b) {
   } catch (e) { warnOnce('affinity', 'affinity condition failed', e); return false; }
 }
 
+// The developed weight of a realm: the same sum the force limit is built on,
+// and the honest measure of whether one court is in a position to hold a
+// grievance against another.
+export function realmWeight(ctx, tag) {
+  const g = ctx.game;
+  let dev = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === tag) dev += devTotal(p);
+  }
+  return dev;
+}
+
+// Deference (SPEC §137), 0..1. A grievance is a policy, and a court that
+// cannot afford one stops paying for it.
+//
+// §67 caps what goodwill can buy while the taker sits on the land, and §86
+// lets the wound close halfway over ten quiet years. Between them a small,
+// shaky neighbour could hold a permanent −50 against a power six times its
+// weight — a court in no position to do anything about it, refusing to be
+// bought, forever. That is not what small states do. They accommodate, and
+// the ones with troubles at home accommodate fastest.
+//
+// This measures the gap in developed weight and the victim's own stability,
+// and returns how much of the REMAINING reach the gap is worth. It changes
+// nothing between equals: at 6/10 of the taker's weight or better it is zero,
+// which is every rivalry the chapters are actually about.
+export function deference(ctx, victim, taker) {
+  const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
+  const theirs = realmWeight(ctx, taker);
+  if (theirs <= 0) return 0;
+  const ratio = realmWeight(ctx, victim) / theirs;
+  const top = num(B_.deferDevRatio, 0.6);
+  const floor = num(B_.deferFloorRatio, 0.15);
+  let d = 0;
+  if (ratio < top) d = clamp((top - ratio) / Math.max(0.01, top - floor), 0, 1);
+  d *= num(B_.deferMax, 0.85);
+  // A court that cannot keep its own house quiet has no appetite for a
+  // quarrel it is losing anyway. Only instability counts — a steady small
+  // realm may nurse its grievance as long as it likes.
+  const t = ctx.game.tags[victim];
+  const unsteady = Math.max(0, -num(t && t.stability));
+  if (d > 0) d = clamp(d + unsteady * num(B_.deferStabilityBonus, 0.1), 0, 1);
+  return d;
+}
+
 // How far a grudge has matured, 0..1. Quiet months are counted on the grudge
 // entry itself (`thaw`), so a save carries it without a migration: an older
 // book simply starts its clock at zero.
+//
+// The reach is how far the ceiling can rise at full maturity — halfway for
+// strangers, nearly all the way for historical friends, and further still
+// for a court too light to sustain the grievance (SPEC §137). Deference
+// carries what is LEFT of the reach, so it can lift the ceiling off entirely
+// where the gap is wide, and does nothing at all between equals. The clock
+// is untouched: a state that has just lost land is furious whatever its size,
+// and it is the persistence rather than the fury that was wrong.
 export function thawProgress(ctx, victim, taker) {
   const t = ctx.game.tags[victim];
   const gr = t && t.grudges && t.grudges[taker];
   if (!gr) return 0;
   const B_ = (ctx.DEFINES && ctx.DEFINES.BALANCE) || {};
   const months = Math.max(1, num(B_.thawMonths, 120));
-  const reach = haveAffinity(ctx, victim, taker)
+  const base = haveAffinity(ctx, victim, taker)
     ? num(B_.thawReachAffinity, 0.9) : num(B_.thawReachPlain, 0.5);
+  const reach = clamp(base + (1 - base) * deference(ctx, victim, taker), 0, 1);
   return clamp(num(gr.thaw) / months, 0, 1) * reach;
 }
 

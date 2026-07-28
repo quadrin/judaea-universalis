@@ -92,13 +92,21 @@ console.log('== the union unravels when affection cools or war comes ==');
   mil.monthlyIncorporation(ctx);
   ok(!agr.incorporating && agr.alive, 'true disaffection unravels the work — the client stands');
   ok(game.tags.JUD.points.infl === 999 - res.cost, 'and the influence spent is simply lost');
-  // War voids it too.
+  // War HOLDS it rather than voiding it (SPEC §137). A union may only start
+  // from a settled court at peace, which is precisely the state an
+  // opportunistic AI hunts — so voiding the work made the mechanic's own
+  // window the window it was most likely to be destroyed in. The clock stops
+  // and the months already run are kept; smoke92 owns the rest of the rule.
   agr.opinion.JUD = 90;
   const res2 = mil.incorporateCore(ctx, 'JUD', 'AGR');
   ok(res2.ok, 'the union begins again');
+  const held = agr.incorporating.monthsLeft;
   mil.declareWar(ctx, 'NAB', 'JUD', 'Test War');
   mil.monthlyIncorporation(ctx);
-  ok(!agr.incorporating && agr.alive, 'war interrupts the weaving');
+  ok(!!agr.incorporating && agr.incorporating.suspended && agr.alive,
+    'war holds the weaving where it stands rather than unravelling it');
+  ok(agr.incorporating.monthsLeft === held,
+    '  with the clock stopped, not spent (' + agr.incorporating.monthsLeft + ')');
 }
 
 console.log('== a wartime or unwilling union is refused ==');

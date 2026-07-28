@@ -14,12 +14,23 @@ function warnOnce(key, e) {
   console.warn('[bookmark_67bce] ' + key, e || '');
 }
 
+// A war is filed under the names its belligerents wear NOW (SPEC §135), and a
+// content package asks after them by the names its chapter shipped with. The
+// forwarding address lives on the game state, so this reads it without needing
+// a ctx it was never given.
+function warTag(game, t) {
+  if (!game || !t) return t;
+  if (game.tags && game.tags[t]) return t;
+  const to = game.tagAliases && game.tagAliases[t];
+  return (to && game.tags && game.tags[to]) ? to : t;
+}
+
 function findBrothersWar(game) {
   const wars = (game && game.wars) || [];
   for (const w of wars) {
     if (!w) continue;
     const all = (w.attackers || []).concat(w.defenders || []);
-    if (all.indexOf('HYR') !== -1 && all.indexOf('ARI') !== -1) return w;
+    if (all.indexOf(warTag(game, 'HYR')) !== -1 && all.indexOf(warTag(game, 'ARI')) !== -1) return w;
   }
   return null;
 }
