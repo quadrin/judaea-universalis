@@ -33,8 +33,8 @@ await page.waitForSelector('.bm-card', { timeout: 20000 });
 // Seven bookmark cards, chronological (the Kitos card retired in v5.1 —
 // this suite's stale nth(7) went with it, fixed in v5.4).
 const cards = await page.locator('.bm-card').count();
-ok(cards === 7, 'seven bookmark cards on the start screen: ' + cards);
-const lastCard = (await page.locator('.bm-card').nth(6).textContent()) || '';
+ok(cards === 8, 'eight bookmark cards on the start screen: ' + cards);
+const lastCard = (await page.locator('.bm-card').nth(cards - 1).textContent()) || '';
 ok(/Independence/.test(lastCard), 'last card is the War of Independence: ' + lastCard.slice(0, 60));
 
 // Boot 66 CE as JUD

@@ -575,3 +575,15 @@ union has come apart. It resolves its cast by name instead (`egyTag`, `syrTag`,
 plays 167 BCE to 6 CE twice from one seed, once taking the Kingdom of Israel and
 once not, and asserts the crowned run does not lose a strand. If you add a
 chapter gate keyed on a tag, that test is where its absence will show up.
+
+SPEC §136 adds an eighth chapter (`bookmark_529ce.js`, `events_529ce.js`) and the
+`SAM` tag. Two things to know if you touch it. The four hill provinces are only
+four because the bookmark declares `activeProvinces` — Jenin is a latent cell of
+Neapolis and Tulkarm and Qalqilya are latent cells of SEBASTE, so dropping that
+line silently hands the community's farmland to the Christian garrison town five
+miles away and the chapter still boots. And the victory contract counts
+`religion === 'samaritanism'` provinces rather than owned ones on purpose: this is
+the one chapter where the player's people can outlive the player's state, and a
+`countControlled` shortcut would quietly turn the survival win back into a border
+win. `smoke91.mjs` guards both.
+

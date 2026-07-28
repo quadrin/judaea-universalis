@@ -18,13 +18,17 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
-async function bootBookmark(dot) {
+// Pick the chapter by NAME rather than by carousel position: the chapter list
+// grows (SPEC §136 added an eighth, inserted chronologically), and an index
+// silently lands on a different bookmark the day one is inserted. The dots
+// carry the bookmark's name in aria-label, which is stable.
+async function bootBookmark(name) {
   await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForSelector('.bm-card');
   await page.mouse.click(20, 20); // unlock audio
-  await page.locator(`.ss-dot[data-dot="${dot}"]`).click();
+  await page.locator(`.ss-dot[aria-label="${name}"]`).click();
   await page.locator('.bm-card.current').click();
   await page.waitForSelector('.nation-card');
   await page.locator('.nation-card').first().click();
@@ -32,7 +36,7 @@ async function bootBookmark(dot) {
 }
 
 console.log('== the lyre age ==');
-await bootBookmark(0); // 167 BCE
+await bootBookmark('The Maccabean Revolt'); // 167 BCE
 await page.waitForFunction(() => window._sound.music.state().style === 'lyre', null, { timeout: 5000 });
 let st = await page.evaluate(() => window._sound.music.state());
 ok(st.style === 'lyre', '167 BCE plays the kinnor: ' + st.style);
@@ -41,7 +45,7 @@ await page.waitForFunction((n) => window._sound.music.state().notes > n, lyreBas
 ok(true, 'the lyre schedules notes');
 
 console.log('== the klezmer age ==');
-await bootBookmark(4); // 132 CE
+await bootBookmark('The Bar Kokhba Revolt'); // 132 CE
 await page.waitForFunction(() => window._sound.music.state().style === 'klezmer', null, { timeout: 5000 });
 st = await page.evaluate(() => window._sound.music.state());
 ok(st.style === 'klezmer', '132 CE plays klezmer: ' + st.style);
@@ -50,7 +54,7 @@ await page.waitForFunction((n) => window._sound.music.state().notes > n, klezBas
 ok(true, 'the clarinet and oom-pah schedule notes');
 
 console.log('== the hora age ==');
-await bootBookmark(6); // 1948
+await bootBookmark('The War of Independence'); // 1948
 await page.waitForFunction(() => window._sound.music.state().style === 'hora', null, { timeout: 5000 });
 st = await page.evaluate(() => window._sound.music.state());
 ok(st.style === 'hora', '1948 dances the hora: ' + st.style);

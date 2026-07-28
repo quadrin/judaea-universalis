@@ -19,9 +19,13 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
-async function startBookmark(dot) {
+// Pick the chapter by NAME rather than by carousel position: the chapter list
+// grows (SPEC §136 added an eighth, inserted chronologically), and an index
+// silently lands on a different bookmark the day one is inserted. The dots
+// carry the bookmark's name in aria-label, which is stable.
+async function startBookmark(name) {
   await page.waitForSelector('.bm-card');
-  await page.locator(`.ss-dot[data-dot="${dot}"]`).click();
+  await page.locator(`.ss-dot[aria-label="${name}"]`).click();
   await page.locator('.bm-card.current').click();
   await page.waitForSelector('.nation-card');
   await page.locator('.nation-card').first().click();
@@ -34,7 +38,7 @@ await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 
 console.log('== 1948 modern profile ==');
-await startBookmark(6);
+await startBookmark('The War of Independence');
 const modern = await page.evaluate(() => {
   const names = [
     'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
@@ -101,7 +105,7 @@ ok((await page.locator('#province-panel h2').textContent()) === 'Netanya',
 
 console.log('== ancient collapsed profile ==');
 await page.reload({ waitUntil: 'networkidle' });
-await startBookmark(3);
+await startBookmark('The Great Revolt');
 const ancient = await page.evaluate(() => {
   const ctx = window._ctx;
   const renderer = window._renderer;

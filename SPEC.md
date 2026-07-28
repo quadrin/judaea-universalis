@@ -6672,3 +6672,119 @@ before. The eight-year balance harness is byte-identical to the pre-change run.
   following the crown; the strand gates of 167, 67 and 66 answering the same
   under either banner; and the end-to-end claim, which plays 167 to 6 CE twice
   from one seed and asserts the royal century survives the proclamation.
+
+## 136. The Keepers, 529 CE — the chapter whose player is not Jewish
+
+Every bookmark in this game is a Jewish state. This one is a rival Israelite
+tradition that regards Jerusalem as a usurpation, and building it is worth doing
+precisely because it inverts assumptions the other seven chapters share without
+ever having had to say them out loud.
+
+**What was already in the tree.** More than the design assumed. `samaritanism`
+is a live religion in the judaic group and `samaritan` a live culture in the
+israelite group; four provinces on the map already carry both — Neapolis, Jenin,
+Tulkarm, Qalqilya, a tight cluster in the central hill country. And **Gerizim is
+already a holy site**: `map_data.js` puts `holy: 'gerizim'` on Neapolis and
+`realm.js` keys `HOLY_FAITH = { temple_mount: 'judaism', gerizim: 'samaritanism' }`,
+so `monthlyHolySites` already pays a same-faith *controller* and already docks
+every realm of that faith while the mountain is in the wrong hands. The mountain
+is a live mechanic before a single card fires, and the empire starts holding it.
+
+**The start position.** Four hill provinces, landlocked, no port. Two of the four
+are latent cells of **Sebaste** — Herod's Greek foundation five miles from
+Neapolis, still a Christian garrison town in 529 — so the bookmark must declare
+`activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya']` or the community's own
+farmland is folded into the thing watching it. Caesarea Maritima, twenty miles
+west, is the provincial capital, the seat of the dux, the port, and historically
+the Samaritan quarter where both the 484 and 556 risings actually began. On three
+sides: Jewish provinces. The Jews are a live tag, not a faction, because the
+chapter's hardest fork needs them able to refuse.
+
+**529 rather than 484.** Justa's rising under Zeno is the alternative; 529 is
+the better start because it is the last real chance and because Justinian makes
+a more legible antagonist than Zeno. Horizon 529 → 614, where the next chapter
+opens — and the Samaritans who were still there in 614 sided with Persia.
+
+**The chapter opens with a law.** No other chapter does. Justinian did not
+besiege Samaria; he legislated it out of the right to inherit, to testify and to
+hold what it held (`Cod. Iust.` I.v.12, 17, 21), ordered the synagogues down, and
+then sent soldiers to enforce a statute. So `the_statutes` is a permanent opening
+modifier on the player, and the war ends without repealing it. That is the enemy:
+**the war continues by statute after it ends by sword.**
+
+The opening chain, 529–531, ships five cards:
+
+- **The Law Arrives Before the Soldiers** — the rescript, read in Caesarea.
+- **The Games at Neapolis** — Julianus ben Sabar crowned, races held, the
+  Christian charioteer Nicias executed for winning. It is petty, which is what
+  makes it the point of no return: a king demonstrates he is a king by killing a
+  sportsman. Three answers, one of which refuses the diadem on the grounds that
+  the Torah it keeps has no king in it — and buys the one thing a rising without
+  a king has, which is nobody to send to Constantinople in a box.
+- **The Bishop's Fingers** — the churches burn and the bishop of Neapolis is
+  mutilated. The player may restrain it, **and restraint does not help**: the
+  option moves Byzantium's opinion by exactly zero, because the response was
+  ordered before the first roof went. It buys quiet villages and a clean
+  conscience, and the card says so.
+- **The Mountain** — Zeno's Church of St Mary Theotokos on the summit, garrisoned,
+  with the community barred from the top of its own mountain. Clearing it is the
+  whole theology and a garrison on a bare rock with one road up it. This is the
+  same decision the 132 chapter makes about Moriah, on a mountain that makes it a
+  fraud. **Per §119 the two chapters do not know about each other**; each is its
+  own world and the contradiction stands unarbitrated, which is how the bookmarks
+  already treat each other's outcomes.
+- **The Phylarch** — Theodorus with al-Harith ibn Jabalah's Ghassanids, which is
+  where it ended in the history that happened. `GHA` is an antagonist here rather
+  than the background client it is in 614. The third answer sends an embassy to
+  al-Harith himself, a Christian Arab king paid late by Constantinople: it does
+  not buy an ally, it buys a season.
+
+**The empire is not playable**, and that is the house rule rather than an
+omission: every chapter is played from an Israelite side. 614 keeps a full
+Byzantine court — factions, objectives, a victory branch — and never offers the
+chair, and this chapter does the same. What §136 changes is that the Israelite
+side is no longer necessarily the Jewish one. `uitest3` used to call that
+invariant the "Jewish-only roster"; it now says Israelite, and means the same
+thing it always did.
+
+**The victory contract is the thing no other chapter has to write.** In 132,
+losing means the state ends and the people continue. Here it is closer to the
+reverse. So the survival win counts **provinces of the Keepers' Torah wherever
+their banner flies** — four still on the map in 614 wins, whoever owns them, and
+a community that has lost its state entirely can still clear the bar. The loss is
+the mirror: no province of that Torah anywhere, however much ground is held.
+Procopius says a hundred thousand dead and Malalas says twenty; the direction is
+the same either way, and there are roughly eight hundred Samaritans alive today.
+
+**Factions**, three of them documented institutions rather than inventions: the
+Eleazarite High Priesthood (which will bless a rising and will not anoint a
+king), the Council of Seven (three priests and four laymen — the constitutional
+party, dated variously to the third or fourth century, and the chapter takes no
+position on the date), the Crowned Party, and the Quietists — who are not a
+strawman, because the community's own chronicles are ambivalent about the men who
+led the risings and Arsenius, who converted and became a favourite at Justinian's
+court, is what that position looks like when it wins.
+
+**The pen is its own.** `JEWISH_INTEGRATED_NAMES` is the wrong pen here and that
+is most of the point; `SAM` writes Shechem, Shomron, Ein Ganim. The shared antique
+pool is registered like any other chapter's, and the annexation cards stay shut on
+their own `jewishCrown` gate rather than misfiring — the honest answer until
+somebody writes the Samaritan version of that question.
+
+This pass ships the foundation and the opening chain. The four forks the design
+calls for — the mountain, the Jews (556: the joint rising at Caesarea and the
+governor Stephanus killed in his own praetorium), Ctesiphon (Samaritans urging
+Kavad to invade after 531), and the Taheb (the restorer of Deut. 18:18, which is
+a far more dangerous state than a king) — are charted on the §119 tree with two
+forks live and every road declared in `KNOWN_GAPS`, because their terminals belong
+to the 531–614 tail: Sergius of Caesarea easing the disabilities in 551, the joint
+rising of 556, and the last revolt under Justin II in 572/3.
+
+- **Regression contract**: `smoke91.mjs` — the chapter is registered and sorted
+  into the carousel; four hill provinces, with the two that are latent cells of
+  Sebaste actually activated; Gerizim keyed to samaritanism while the Mount stays
+  keyed to Judaism; the statute in force at month one; the five opening cards
+  reaching a player, with restraint at the bishop's card buying no goodwill; the
+  survival win counting people rather than provinces at both ends; and the
+  annexation pool staying shut for a crown that is not Jewish.
+

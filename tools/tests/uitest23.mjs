@@ -23,7 +23,15 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card');
-await page.locator('.ss-dot[data-dot="6"]').click();
+// Walk the carousel by NAME rather than by index: the chapter list grows
+// (SPEC §136 added an eighth), and a hardcoded dot silently lands on a
+// different bookmark the day one is inserted.
+for (let i = 0; i < 12; i++) {
+  const txt = (await page.locator('.bm-card.current').textContent()) || '';
+  if (txt.includes('Independence')) break;
+  await page.locator('.ss-next').click();
+  await page.waitForTimeout(420);
+}
 await page.locator('.bm-card.current').click();
 await page.waitForSelector('.nation-card');
 await page.locator('.nation-card').first().click();

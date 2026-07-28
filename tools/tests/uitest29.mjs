@@ -40,8 +40,9 @@ await page.locator('[data-ref="wiki"]').click();
 await page.waitForSelector('#wiki-modal:not(.hidden)');
 ok(true, 'the title-screen Compendium button opens the codex');
 const homeText = await page.locator('#wiki-modal .wiki-body').textContent();
-ok(/The Maccabean Revolt/.test(homeText) && /The War of Independence/.test(homeText),
-  'all seven chapters are on the front page');
+ok(/The Maccabean Revolt/.test(homeText) && /The Keepers/.test(homeText)
+  && /The War of Independence/.test(homeText),
+'every chapter is on the front page, first to last');
 ok(/The Nations/.test(homeText) && /The Formable Crowns/.test(homeText),
   'the nations and the formable crowns are linked');
 await page.screenshot({ path: OUT + 'wiki-home.png' });
@@ -117,7 +118,7 @@ const chapterCount = await page.evaluate(() => {
   const rows = document.querySelectorAll('#wiki-modal [data-go^="era:"]');
   return rows.length;
 });
-ok(chapterCount === 7, 'seven chapter rows on the front page');
+ok(chapterCount === 8, 'eight chapter rows on the front page: ' + chapterCount);
 let sweepFails = 0;
 for (let i = 0; i < chapterCount; i++) {
   await goHome();
