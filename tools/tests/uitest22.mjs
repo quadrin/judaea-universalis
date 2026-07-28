@@ -27,14 +27,26 @@ await page.locator('.nation-card').first().click(); // 167 BCE as HAS
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(400);
 
-// fabricate a negotiable war with two occupied provinces on the table
+// Fabricate a negotiable war with two occupied provinces on the table.
+//
+// The provinces have to be REACHABLE. This used to occupy Petra and Bostra in
+// a war with Nabataea, and SPEC §116 — a demand has to be somewhere — quietly
+// emptied the table: in 167 BCE the Hasmoneans hold three cells in the Judaean
+// hills and their only neighbour on the whole map is the Seleucid king, so
+// nothing Nabataean is land-reachable and the panel correctly offered no rows.
+// The revolt's own war, with two Seleucid towns next door, is the fixture the
+// rule allows.
 await page.evaluate(() => {
   const ctx = window._ctx;
-  ctx.helpers.declareWar(ctx, 'HAS', 'NAB', 'Test War');
-  const war = ctx.game.wars.find((w) => w.name === 'Test War');
+  const war = ctx.game.wars.find((w) => {
+    const all = (w.attackers || []).concat(w.defenders || []);
+    return all.indexOf('HAS') >= 0 && all.indexOf('SEL') >= 0;
+  });
+  war.name = 'Test War';
+  war.noNegotiation = false; // the revolt is a fight to the death; this test is not
   war.warscore.HAS = 40;
-  war.warscore.NAB = -40;
-  for (const name of ['Petra', 'Bostra']) ctx.prov(name).controller = 'HAS';
+  war.warscore.SEL = -40;
+  for (const name of ['Jamnia', 'Azotus']) ctx.prov(name).controller = 'HAS';
   ctx.bus.emit('war', {});
 });
 await page.keyboard.press('n');
@@ -56,9 +68,9 @@ ok(!(await page.locator('#province-panel:not(.hidden), #nation-panel:not(.hidden
   'the peace table clears the ordinary panel berth');
 
 console.log('== the map negotiates ==');
-const petraId = await page.evaluate(() => window._ctx.prov('Petra').id);
+const petraId = await page.evaluate(() => window._ctx.prov('Jamnia').id);
 const petraPoint = await page.evaluate(() => {
-  const p = window._ctx.prov('Petra');
+  const p = window._ctx.prov('Jamnia');
   const [x, y] = window._camera.mapToScreen(p.x, p.y);
   return { x, y };
 });
@@ -71,7 +83,7 @@ await page.mouse.click(petraPoint.x, petraPoint.y);
 await page.waitForTimeout(150);
 let checked = await page.locator(`#peace-modal [data-prov="${petraId}"]`).isChecked();
 let sel = await page.evaluate(() => (window._ctx.game.ui.peaceSelected || []).slice());
-ok(checked, 'clicking Petra on the map writes it into the terms (checkbox follows)');
+ok(checked, 'clicking the occupied town on the map writes it into the terms (checkbox follows)');
 ok(sel.length === 1 && sel[0] === petraId, 'the chosen demand burns solid gold: peaceSelected=' + JSON.stringify(sel));
 const total = await page.locator('#peace-modal [data-ref="total"]').textContent();
 ok(/Demands cost \d+ war score/.test(total), 'the cost line updates: ' + total.trim());

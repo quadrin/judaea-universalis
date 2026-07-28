@@ -39,7 +39,21 @@ const staged = await page.evaluate(() => {
   const ctx = window._ctx;
   const g = ctx.game;
   const war = g.wars.find((w) => w.attackers.includes('JUD') && w.defenders.includes('ROM'));
-  const target = g.provinces.filter((p) => p && !p.impassable && p.owner === 'ROM')
+  // The objective has to be REACHABLE. This used to take the richest Roman
+  // province anywhere on the map, and since the frame grew to Italy and the
+  // Balkans that is Rome itself — which SPEC §116 (a demand has to be
+  // somewhere) correctly refuses to put on a Judaean peace table, so the
+  // marked row never rendered. Richest Roman province ON OUR BORDER instead,
+  // which is what a claim is.
+  const mine = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === 'JUD') mine.add(i);
+  }
+  const nextDoor = new Set();
+  for (const i of mine) for (const q of (ctx.geom.neighbors[i] || [])) nextDoor.add(q);
+  const target = [...nextDoor].map((i) => g.provinces[i])
+    .filter((p) => p && !p.impassable && p.owner === 'ROM')
     .sort((a, b) => (b.dev.tax + b.dev.prod + b.dev.mp) - (a.dev.tax + a.dev.prod + a.dev.mp))[0];
   g.tags.JUD.claims = Array.from(new Set([...(g.tags.JUD.claims || []), target.id]));
   war.cb = 'claim';

@@ -604,3 +604,58 @@ while either bespoke arc runs (`ownArcRuns`). If you add a chapter where MLI is
 formable, it must also play the shared package or the formable is dead content
 there; `smoke93.mjs` asserts that pairing directly, which is the §135 lesson
 applied forward.
+
+### The unpause that was a race
+
+Fifteen browser suites wrapped a click in `game.paused = false` … click …
+`game.paused = true`. That is a leftover from the blanket pause queue the engine
+used to keep: no action is gated on `g.paused` any more (it is only set by
+`endGame`, toggled by `togglePause`, and read for display), so the unpause bought
+nothing — and it cost a great deal. Between the unpause and the click the clock
+runs, a scripted card fires, `fireEvent` pauses the game and opens the event
+modal, and the modal's scrim intercepts the click. Playwright then retries for
+thirty seconds and the suite dies with
+
+    <div class="modal-scrim"></div> from <div id="event-modal">…</div>
+    intercepts pointer events
+
+which reads like a UI bug and is not one. Eleven suites failed this way, all of
+them intermittently, because whether a card fires in that window depends on the
+date the test happens to reach.
+
+So: **do not unpause to make a click land.** Clicks land while paused. The four
+places that still unpause do it deliberately, to let time pass (`speed = 5`
+followed by a `waitForTimeout`), and the three in-`evaluate` toggles are
+synchronous — no clock runs inside a single `page.evaluate`, so neither shape can
+race.
+
+### The other five, and what they were really testing
+
+Once the unpause race was gone, five suites were left red, and none of them was
+failing at a bug. Three had been quietly invalidated by rules the engine grew:
+
+- **§116, a demand has to be somewhere.** `uitest2` occupied Dura-Europos, Hatra
+  and Singara in a war with Parthia; `uitest22` occupied Petra and Bostra in a
+  war with Nabataea from a 167 BCE start whose only neighbour on the map is the
+  Seleucid king; `uitest30` picked the richest Roman province anywhere, which
+  since the frame grew to Italy is Rome. None of the three is land-reachable
+  from Judaea, so the peace table correctly offered no rows and the suites hung
+  on checkboxes that could never exist. All three now demand from a neighbour.
+  **If you write a peace-table fixture, occupy something that borders you.**
+- **§93, a shelf instead of a downloads folder.** `uitest3` was still asking for
+  `[data-ref="import"]` and `[data-ref="export"]`, which have not existed since
+  the save UI moved to the shelf. It now asserts the shelf — and asks
+  `shelfList()` rather than the saves *modal*, because the modal merges the
+  local shelf with the cloud and reports a read error when there is no worker to
+  reach, which would make the assertion a test of this machine's network.
+- **A relay test that could not see its own card.** `uitest5` emitted a
+  synthetic event on the host and then waited for the guest's modal to be
+  *hidden*. Any real scripted card arriving behind it left the modal open and the
+  suite died — on "Menahem at the Gates", which tells you nothing. It now freezes
+  the host's clock and waits on its own card by title at both ends.
+
+Two lessons worth keeping. Assert on **your own fixture**, not on a container
+being empty — a shared modal holds other people's cards. And when a test waits on
+storage, wait for the **write to land**: `doSave` is async and a reload issued
+straight after `saveRequest` aborts it, which a fixed `waitForTimeout(300)` lost
+intermittently and invisibly.

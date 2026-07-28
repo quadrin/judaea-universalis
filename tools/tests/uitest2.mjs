@@ -99,14 +99,21 @@ ok(await page.locator('[data-ref="integBlock"]').isVisible(), 'Integration block
 ok(await page.locator('[data-ref="integRule"]').isVisible(), 'Establish Rule button present');
 await page.screenshot({ path: OUT + 'v15-province.png' });
 
-// Peace dialog: subjugate row, exclusive with provinces
+// Peace dialog: subjugate row, exclusive with provinces.
+//
+// The enemy has to be a NEIGHBOUR. This block used to occupy Dura-Europos,
+// Hatra and Singara in a war with Parthia, and SPEC §116 — a demand has to be
+// somewhere — quietly emptied the demandable list: those three are in
+// Mesopotamia and are not land-reachable from Judaea, so the panel correctly
+// offered no province rows and the suite hung on a checkbox that could never
+// exist. Nabataea borders us, which is the whole point of the rule.
 await page.evaluate(() => {
   const ctx = window._ctx;
-  ctx.helpers.declareWar(ctx, 'JUD', 'PAR', 'Test War with Parthia');
-  const war = ctx.game.wars.find((w) => w.name === 'Test War with Parthia');
+  ctx.helpers.declareWar(ctx, 'JUD', 'NAB', 'Test War with Nabataea');
+  const war = ctx.game.wars.find((w) => w.name === 'Test War with Nabataea');
   window._testWarId = war.id;
-  war.warscore.JUD = 80; war.warscore.PAR = -80;
-  for (const name of ['Dura-Europos', 'Hatra', 'Singara']) {
+  war.warscore.JUD = 80; war.warscore.NAB = -80;
+  for (const name of ['Medaba', 'Petra', 'Oboda']) {
     const p = ctx.prov(name);
     if (p) p.controller = 'JUD';
   }
@@ -127,12 +134,10 @@ ok(provDisabled, 'subjugation disables & clears province demands');
 const verdict = (await page.locator('[data-ref="verdict"]').textContent()) || '';
 ok(/accept/i.test(verdict), 'subjugation deal acceptable at ws 80: ' + verdict.trim());
 await page.screenshot({ path: OUT + 'v15-peace.png' });
-await page.evaluate(() => { window._ctx.game.paused = false; });
 await page.locator('[data-ref="send"]').click();
-await page.evaluate(() => { window._ctx.game.paused = true; });
 await page.waitForTimeout(300);
-const vres = await page.evaluate(() => window._ctx.game.tags.PAR.overlord);
-ok(vres === 'JUD', 'Parthia subjugated in-browser: overlord=' + vres);
+const vres = await page.evaluate(() => window._ctx.game.tags.NAB.overlord);
+ok(vres === 'JUD', 'Nabataea subjugated in-browser: overlord=' + vres);
 
 ok(errors.length === 0, 'no page errors (66 CE): ' + JSON.stringify(errors.slice(0, 3)));
 await page.close();

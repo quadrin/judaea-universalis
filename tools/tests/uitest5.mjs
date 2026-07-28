@@ -177,21 +177,33 @@ for (let i = 0; i < 8; i++) {
 }
 await guest.waitForFunction(() => document.getElementById('event-modal').classList.contains('hidden'), null, { timeout: 10000 });
 ok(true, "resolving the real opening events on the host cleared the guest's mirrored cards");
+// Freeze the host's clock first: a real scripted card arriving between the
+// emission and the resolution below would sit in front of ours in the guest's
+// queue, and the old assertions — "some remote card is showing", "the modal is
+// hidden" — could not tell the two apart. This suite is about the relay, so it
+// waits on ITS OWN card by name at both ends.
 await host.evaluate(() => {
+  window._ctx.game.paused = true;
   window._ctx.bus.emit('event', {
     instanceId: 9901, forTag: 'JUD',
     event: { id: 'test_omen', title: 'A Test Omen', desc: 'The auguries are checked by machine.',
       options: [{ label: 'Heed them' }, { label: 'Ignore them' }] },
   });
 });
-await guest.waitForSelector('#event-modal:not(.hidden) .ev-remote', { timeout: 10000 });
+const omenShowing = () => {
+  const el = document.getElementById('event-modal');
+  if (el.classList.contains('hidden') || !el.querySelector('.ev-remote')) return false;
+  const t = el.querySelector('.ev-title');
+  return !!t && /A Test Omen/.test(t.textContent);
+};
+await guest.waitForFunction(omenShowing, null, { timeout: 10000 });
 ok(true, "the host's event card appears on the guest");
 ok(await guest.locator('#event-modal .ev-opt[disabled]').count() === 2, 'both options are disabled for the guest');
 const note = await guest.locator('#event-modal .ev-host-note').textContent();
 ok(/host speaks/.test(note), 'the card says the host decides');
 await guest.screenshot({ path: OUT + 'v19-guest-event.png' });
 await host.evaluate(() => { window._ctx.bus.emit('eventResolved', { instanceId: 9901 }); });
-await guest.waitForFunction(() => document.getElementById('event-modal').classList.contains('hidden'), null, { timeout: 8000 });
+await guest.waitForFunction((fn) => !new Function('return ' + fn)()(), omenShowing.toString(), { timeout: 8000 });
 ok(true, "the host's resolution closes the guest card");
 await host.locator('#event-modal .ev-opt').first().click(); // clear the host's own copy
 
