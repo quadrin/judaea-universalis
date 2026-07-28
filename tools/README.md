@@ -628,3 +628,34 @@ places that still unpause do it deliberately, to let time pass (`speed = 5`
 followed by a `waitForTimeout`), and the three in-`evaluate` toggles are
 synchronous — no clock runs inside a single `page.evaluate`, so neither shape can
 race.
+
+### The other five, and what they were really testing
+
+Once the unpause race was gone, five suites were left red, and none of them was
+failing at a bug. Three had been quietly invalidated by rules the engine grew:
+
+- **§116, a demand has to be somewhere.** `uitest2` occupied Dura-Europos, Hatra
+  and Singara in a war with Parthia; `uitest22` occupied Petra and Bostra in a
+  war with Nabataea from a 167 BCE start whose only neighbour on the map is the
+  Seleucid king; `uitest30` picked the richest Roman province anywhere, which
+  since the frame grew to Italy is Rome. None of the three is land-reachable
+  from Judaea, so the peace table correctly offered no rows and the suites hung
+  on checkboxes that could never exist. All three now demand from a neighbour.
+  **If you write a peace-table fixture, occupy something that borders you.**
+- **§93, a shelf instead of a downloads folder.** `uitest3` was still asking for
+  `[data-ref="import"]` and `[data-ref="export"]`, which have not existed since
+  the save UI moved to the shelf. It now asserts the shelf — and asks
+  `shelfList()` rather than the saves *modal*, because the modal merges the
+  local shelf with the cloud and reports a read error when there is no worker to
+  reach, which would make the assertion a test of this machine's network.
+- **A relay test that could not see its own card.** `uitest5` emitted a
+  synthetic event on the host and then waited for the guest's modal to be
+  *hidden*. Any real scripted card arriving behind it left the modal open and the
+  suite died — on "Menahem at the Gates", which tells you nothing. It now freezes
+  the host's clock and waits on its own card by title at both ends.
+
+Two lessons worth keeping. Assert on **your own fixture**, not on a container
+being empty — a shared modal holds other people's cards. And when a test waits on
+storage, wait for the **write to land**: `doSave` is async and a reload issued
+straight after `saveRequest` aborts it, which a fixed `waitForTimeout(300)` lost
+intermittently and invisibly.

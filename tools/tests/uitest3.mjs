@@ -34,8 +34,13 @@ const cards = await page.locator('.bm-card').count();
 ok(cards === 8, 'eight bookmark cards: ' + cards);
 const c2 = (await page.locator('.bm-card').nth(1).textContent()) || '';
 ok(/Civil War/.test(c2) && /67 BCE/.test(c2), 'second card is the 67 BCE civil war');
-ok(await page.locator('[data-ref="import"]').isVisible(), 'Import save button on start screen');
-ok(!(await page.locator('[data-ref="export"]').count()), 'no Export button without a save');
+// SPEC §93 replaced the export/import file buttons with the shelf — "six
+// characters to join, and a shelf instead of a downloads folder" — and this
+// suite went on asking for buttons no longer in the codebase, which is why it
+// has been red ever since. The shelf is the contract now.
+ok(await page.locator('[data-ref="saves"]').isVisible(), 'the saved-campaign shelf is on the start screen');
+ok(!(await page.locator('[data-ref="export"], [data-ref="import"]').count()),
+  'and the downloads-folder buttons are gone, not merely hidden');
 
 // The house rule this encodes: every chapter is played from an ISRAELITE side.
 // It used to read "Jewish-only" and it meant the same thing until SPEC §136
@@ -169,16 +174,35 @@ ok(/Death of/.test(evTitle), 'succession shows as an event card: ' + evTitle);
 await page.locator('.ev-opt').first().click();
 await page.waitForTimeout(200);
 
-// save, then check export button appears on a fresh start screen
+// Save, then check the campaign is on the shelf after a reload. The old
+// version of this block clicked an Export button and waited for a browser
+// download; §93 retired both, so it waited thirty seconds for an event that
+// could never fire.
 await page.evaluate(() => window._ctx.bus.emit('saveRequest', {}));
-await page.waitForTimeout(300);
+// Wait for the write to LAND before reloading. `doSave` is async — the shelf
+// opens IndexedDB and may migrate a legacy row on the way — so a reload issued
+// straight after the request can abort it, which is a race the old fixed
+// `waitForTimeout(300)` lost quietly and intermittently.
+await page.waitForFunction(async () => {
+  const m = await import('/js/core/shelf.js');
+  return (await m.shelfList()).length > 0;
+}, null, { timeout: 15000 });
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForSelector('.bm-card', { timeout: 20000 });
-ok(await page.locator('[data-ref="export"]').isVisible(), 'Export button appears once a save exists');
-const dl = page.waitForEvent('download');
-await page.locator('[data-ref="export"]').click();
-const download = await dl;
-ok(/judaea-save-66ce-JUD/.test(download.suggestedFilename()), 'export downloads: ' + download.suggestedFilename());
+ok(await page.locator('.ss-continue').isVisible(),
+  'a saved campaign offers Continue on the start screen');
+// The shelf itself, asked directly. The saves MODAL merges the local shelf
+// with the cloud and reports a read error when there is no cloud to reach, so
+// asserting on its rows would be asserting that this machine can talk to a
+// deployed worker. The storage contract is the thing under test.
+const shelved = await page.evaluate(async () => {
+  const m = await import('/js/core/shelf.js');
+  return (await m.shelfList()).map((r) => r.id);
+});
+ok(shelved.length > 0, 'the campaign is on the shelf: ' + JSON.stringify(shelved));
+await page.locator('[data-ref="saves"]').click();
+await page.waitForSelector('.sv-list', { timeout: 8000 });
+ok(true, 'and the shelf opens');
 
 ok(errors.length === 0, 'no page errors (66 CE): ' + JSON.stringify(errors.slice(0, 3)));
 await page.close();
