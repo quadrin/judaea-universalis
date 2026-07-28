@@ -109,6 +109,22 @@ function judaeaEndures(ctx) {
   if (flag(ctx, 'redemptionEra') || flag(ctx, 'freedomEra')) return false;
   return controlledCount(ctx, 'JUD') >= 2;
 }
+// Once the road is entered, its marker is the road (SPEC §119) and the live
+// predicate is only asked whether it has ENDED. The difference matters because
+// these are dated cards with a one-month window: `controlledCount >= 2` is a
+// fair entry test and a terrible continuation test, since a rising that holds
+// two Galilean towns in the month a card is due retires that card forever. A
+// riot is not the end of a kingdom; losing the state, being vassalized, or
+// taking Jerusalem — which is the OTHER road — is.
+function onGalileeRoad(ctx) {
+  if (!flag(ctx, 'galileeKingdom')) return false;
+  const t = ctx.game.tags && ctx.game.tags.JUD;
+  if (!alive(ctx, 'JUD') || (t && t.overlord)) return false;
+  if (findJudRomWar(ctx.game)) return false;
+  const jer = ctx.prov('Jerusalem');
+  if (jer && jer.owner === 'JUD') return false;
+  return !flag(ctx, 'redemptionEra') && !flag(ctx, 'freedomEra');
+}
 
 // The Galilean heartland such a state actually holds. Jotapata and Gamala are
 // deliberately absent: both were destroyed in the first war and the 132
@@ -380,7 +396,7 @@ export const EVENTS_132_GALILEE = [
     world: true,
     major: true,
     when: safeTrigger('ev2_g_neighbour_not_a_minority:when', (ctx) =>
-      judaeaEndures(ctx) && flag(ctx, 'galileeKingdom') && alive(ctx, 'ROM')),
+      onGalileeRoad(ctx) && alive(ctx, 'ROM')),
     aiOption: 0,
     historical: 'There was no state to negotiate with, so the codes legislated, and the sentence had a subject.',
     options: [
@@ -449,7 +465,7 @@ export const EVENTS_132_GALILEE = [
     world: true,
     major: true,
     when: safeTrigger('ev2_g_what_the_office_was_for:when', (ctx) =>
-      judaeaEndures(ctx) && flag(ctx, 'galileeKingdom')),
+      onGalileeRoad(ctx)),
     aiOption: 0,
     historical: 'Theodosius II let the patriarchate lapse on Gamaliel VI\'s death and took its tax; the nation carried on without a head for fifteen hundred years.',
     options: [

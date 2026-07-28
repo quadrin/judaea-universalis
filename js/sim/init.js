@@ -24,7 +24,7 @@ import {
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName } from '../data/tech.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, nextRungCost, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
@@ -33,7 +33,7 @@ import {
   tradeRunDestinations, sendTradeRunCore,
 } from './navy.js';
 import { navalGenName } from '../data/tech.js';
-import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
+import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, devCeilingFor, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor } from './realm.js';
 import { crisisReport } from './crisis.js';
@@ -113,6 +113,12 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     religion: bookmarkField(bookmark, 'religions', s) || s.religion,
     culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
     dev,
+    // How far this town can ever grow (SPEC §135). Stamped from what the
+    // scenario says it already is, so the map keeps its shape: Alexandria and
+    // a hill village both have a roof, and they are not the same roof. A flat
+    // world ceiling capped the runaway but flattened the economic geography
+    // with it — after four centuries every province on the map sat at 45.
+    devMax: devCeilingFor({ DEFINES }, num(dev.tax) + num(dev.prod) + num(dev.mp)),
     owner,
     controller: owner,
     habitation,
@@ -1061,7 +1067,7 @@ export function gameActions(ctx) {
       const next = level + 1;
       const atMax = next > Math.min(TECH_MAX, ceiling);
       const mult = aheadMult(next, eraBase);
-      const cost = atMax ? 0 : Math.round(techCost(next) * mult);
+      const cost = nextRungCost(ctx.bookmark, t.tech, key, months);
       const have = num(t.points[cat.point]);
       return {
         key, name: cat.name, desc: cat.desc, point: cat.point,

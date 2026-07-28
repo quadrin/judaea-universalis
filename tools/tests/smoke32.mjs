@@ -177,9 +177,17 @@ console.log('== administration scales with the realm ==');
     if (p.owner === 'OSR') osrDev += devTotal(p);
   }
   const romAdmin = adminExpense(a.ctx, 'ROM');
-  ok(romDev > DEFINES.BASE.adminFreeDev
-      && near(romAdmin, (romDev - DEFINES.BASE.adminFreeDev) * DEFINES.BASE.adminPerDev, 0.01),
-    `Rome pays administration on ${romDev} dev (${romAdmin.toFixed(2)}/month)`);
+  // The bill is banded (SPEC §135): the plain rate to `adminWideDev`, the
+  // empire rate past it. Rome is well past it, so this checks the second band.
+  const E = DEFINES.BASE;
+  const billed = Math.max(0, romDev - E.adminFreeDev);
+  const near_ = Math.min(billed, Math.max(0, E.adminWideDev - E.adminFreeDev));
+  const banded = near_ * E.adminPerDev + (billed - near_) * E.adminPerDevWide;
+  ok(romDev > E.adminWideDev && near(romAdmin, banded, 0.01),
+    `Rome pays administration on ${romDev} dev at the empire rate (${romAdmin.toFixed(2)}/month)`);
+  ok(romAdmin > billed * E.adminPerDev * 1.5,
+    'which is well past what the old flat rate would have charged '
+    + `(${(billed * E.adminPerDev).toFixed(2)}/month)`);
   ok(osrDev < DEFINES.BASE.adminFreeDev && adminExpense(a.ctx, 'OSR') === 0,
     'a realm under the free allowance pays nothing');
   const bd = incomeBreakdown(a.ctx, 'ROM');

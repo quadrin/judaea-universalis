@@ -104,9 +104,14 @@ function lineContinues(ctx) {
   return ctx.helpers.controls(ctx, me, 'Jerusalem') && provsOf(ctx, me) >= 2;
 }
 // A client is still the line — it is just a line that answers to somebody.
+// And a riot is not the end of a dynasty: these are dated cards with a
+// one-month window, so testing the CONTROLLER meant a rebel band camped in the
+// capital that particular May silently deleted Augustus' settlement from the
+// campaign. What ends the line is somebody else owning Jerusalem.
 function lineSurvives(ctx) {
   const me = crown(ctx);
-  return !!me && ctx.helpers.controls(ctx, me, 'Jerusalem');
+  const jer = ctx.prov('Jerusalem');
+  return !!me && !!jer && (jer.owner === me || jer.controller === me);
 }
 
 const COAST = ['Joppa', 'Jamnia', 'Azotus', 'Ascalon', 'Gaza', 'Dora',

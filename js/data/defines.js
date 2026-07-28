@@ -544,6 +544,23 @@ export const DEFINES = {
     // empire's books honest. Small realms (under the allowance) pay nothing.
     adminFreeDev: 40,                  // development a court governs for free
     adminPerDev: 0.03,                 // talents/month per owned dev point beyond it
+    adminWideDev: 350,                 // …past this much governed development a realm is an empire…
+    adminPerDevWide: 0.075,            // …and every further point bills at the empire rate (SPEC §135)
+    // The roof on a town (SPEC §135). Development drives tax, production,
+    // manpower, force limit and the administration bill alike, and January's
+    // free +1 used to have no end: a map left alone for seven centuries
+    // inflated eightfold, and bought development pushed Rome from 27 to 83.
+    // Each province is stamped at init with its own roof, from what the
+    // scenario already says it is, so the map keeps its hierarchy. Growth runs
+    // at full pace to devSoftShare of that, then tapers to nothing.
+    devCeilingFloor: 12,               // a town's roof = this…
+    devCeilingPerStart: 1.7,           // …plus this much of what it starts as…
+    devCeilingMin: 24,                 // …and never below this, so frontier land has somewhere to go
+    devSoftShare: 0.6,                 // the share of the roof a town reaches at full pace
+    // Fallback roof for land with no stamp — a save from before §135, or
+    // ground the engine made mid-game: one ceiling for the whole age.
+    devCeilingBase: 18,
+    devCeilingPerTech: 3,
     // What a treasury can actually hold (SPEC §101). Pre-modern states did not
     // bank; a crown's reserve is roughly what its own economy justifies, and
     // everything past that goes into palaces, walls, salaries, and the pockets
@@ -603,6 +620,16 @@ export const DEFINES = {
     containWarShare: 0.32,   // ...and at which containment wars become possible
     containOpinionDrift: 2,  // monthly opinion slide toward hostility while oversized
     containChance: 0.06,     // monthly containment-war roll per watching great power
+    containHeirs: 3,         // …and with every ponderous power dead, this many biggest survivors watch instead
+    // What a court may bank (SPEC §135). Monarch points are the fund for the
+    // next rung of a ladder, not a vault: past half again its price the excess
+    // drains monthly, and a court that has climbed its age's ladder to the top
+    // has nothing to save for and falls back to the floor. Without this the
+    // three numbers pin at 999 for the last centuries of a long campaign and
+    // no scripted grant of points can mean anything.
+    pointCapFloor: 150,      // the least a court may hold whatever it has learned
+    pointCapSaveMult: 1.5,   // …or half again the price of the next rung, whichever is more
+    pointBleedPerMonth: 0.1, // share of the EXCESS that goes on ceremony each month
     forceLimitBase: 8,       // regiments any court keeps in the field for free...
     forceLimitPerDev: 0.15,  // ...plus this per point of owned development
     overLimitMult: 3,        // the overlimit fraction of the army pays this × maintenance

@@ -20,7 +20,7 @@ import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, techCeiling, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
-import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
+import { LOAN_SIZE, developCore, developInfo, DEV_KINDS, pointCap } from './economy.js';
 import { popTotal, popTension } from './population.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
 
@@ -653,15 +653,37 @@ function hegemonContainment(ctx) {
     return;
   }
   const P = ctx.DEFINES.PERSONALITIES || {};
-  const watchers = [];
+  const eligible = [];
   for (const k of Object.keys(g.tags)) {
     if (k === player || k === 'REB') continue;
     const o = g.tags[k];
     if (!o || !o.alive || !o.ai) continue;
-    if (!(P[k] && P[k].ponderous)) continue;
     if (o.overlord === player || pt.overlord === k) continue;
     if ((pt.allies || []).indexOf(k) >= 0) continue;
-    watchers.push(k);
+    eligible.push(k);
+  }
+  let watchers = eligible.filter((k) => P[k] && P[k].ponderous);
+  // The scripted powers do not last forever. A campaign carried three or four
+  // centuries past its chapter buries Rome and Parthia, and the one mechanism
+  // written against exactly this situation then switched itself off — the
+  // hegemon spent the rest of the game unwatched. Somebody always minds a
+  // neighbour who owns a third of the world: with no ponderous court left, the
+  // largest surviving independents inherit the role (SPEC §135).
+  if (!watchers.length) {
+    const devOf = (k) => {
+      let d = 0;
+      for (let i = 1; i < g.provinces.length; i++) {
+        const q = g.provinces[i];
+        if (q && !q.impassable && q.owner === k) d += devTotal(q);
+      }
+      return d;
+    };
+    watchers = eligible
+      .map((k) => ({ k, d: devOf(k) }))
+      .filter((r) => r.d > 0)
+      .sort((a, b) => b.d - a.d || a.k.localeCompare(b.k))
+      .slice(0, Math.max(1, num(bal.containHeirs, 3)))
+      .map((r) => r.k);
   }
   if (!watchers.length) return;
   if (!g.flags.containmentWatch) {
@@ -1301,8 +1323,11 @@ function aiFormNation(ctx, tag) {
   return false;
 }
 
-// Points that would otherwise hit the 999 cap go into the land (SPEC §24):
-// with a fat pool the AI develops its best integrated province, capital first.
+// Points that would otherwise drain away go into the land (SPEC §24): with a
+// pool at the cap the AI develops its best integrated province, capital first.
+// The threshold reads the cap rather than a flat 500 (SPEC §135) — once pools
+// bleed past what a court is saving for, a fixed 500 was simply unreachable,
+// and the one sink that turns surplus ink into something real would have shut.
 function aiDevelop(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
@@ -1310,7 +1335,7 @@ function aiDevelop(ctx, tag) {
   const capital = (ctx.DEFINES.TAGS[tag] || {}).capital;
   for (const kind of Object.keys(DEV_KINDS)) {
     const pool = DEV_KINDS[kind];
-    if (num(t.points[pool]) < 500) continue; // tech and reforms eat first
+    if (num(t.points[pool]) < pointCap(ctx, tag, pool)) continue; // tech and reforms eat first
     let best = null, bestScore = -1;
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];

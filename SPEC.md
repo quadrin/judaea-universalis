@@ -6576,3 +6576,123 @@ it.
   a card fired through the helper and through the card before it; the grandson
   fires on the Davidic road and on no other; and a collected pedigree answers
   the name better than a shelved one.
+
+---
+
+## §135 — The long afternoon
+
+The report was one line, over a screenshot: *man this shit too easy*. The
+screenshot is the Kingdom of Israel in May of 541 CE — a campaign begun in the
+167 BCE chapter and carried seven hundred years — with 41,108 talents at
++1,116 a month, 1,292,000 men in reserve against 83,000 in the field, and
+**G 999 / I 808 / M 999**.
+
+Every number on that screen is downstream of one thing the engine did quietly,
+every January, for seven centuries.
+
+### What was actually happening
+
+`yearlyGrowth` rolled a flat 5–19% chance of +1 development on every peaceful
+province, forever, with no ceiling of any kind. The AI then spent banked
+monarch points on `developCore` on top of that — which turned out to be the
+*larger* of the two sources: an all-AI 167 BCE world walked Rome from 27
+development to 83 with points alone.
+
+Measured, on an untouched map with everyone on AI:
+
+| year | median province | world development |
+|---|---|---|
+| −167 | 10 | 1,459 |
+| 47 | 29 | 4,572 |
+| 260 | 51 | 8,021 |
+| 544 | 82 | 12,264 *(still climbing)* |
+
+Tax, production, manpower, force limit and the administration bill are all
+linear in development, so all four inflated eightfold with them. A six-province
+Judaea that fought nobody and did nothing for three centuries still tripled its
+income and quadrupled its force limit. The player's screenshot is that curve
+with conquest on top of it.
+
+Three smaller things compounded it. **Monarch points had nowhere to go**: the
+tech ladder is capped by the age (`techCeiling` 9 for the antique chapters,
+reached inside a century) and nothing else on offer costs more than sixty, so
+the pools filled to the 999 clamp and stayed there for four hundred years — the
+counters stopped being resources and no scripted grant of points could mean
+anything against them. **Governing scaled linearly**: `adminPerDev` billed a
+hegemon's five-thousandth point of development at exactly the rate it billed
+its fiftieth. And **containment switched itself off**: `hegemonContainment`, the
+mechanism written for precisely "beat the scripted enemy, then snowball
+unopposed", only recruits `ponderous` great powers, and a campaign carried three
+centuries past its chapter has buried every one of them.
+
+### Four answers
+
+**A town has a roof, and it is its own roof.** Every province is stamped at
+init with `devMax`, from what the scenario already says it is:
+`devCeilingFloor + devCeilingPerStart × startDev`, never below `devCeilingMin`.
+Growth runs at full pace to `devSoftShare` of that and then tapers linearly to
+nothing, so a great city slows over a generation instead of hitting a wall in
+one January. Bought development answers to the same roof — capping the plough
+and leaving the ledger open would have made the ceiling decorative, since the
+ledger was the bigger source. Land with no stamp (a save from before this, or
+ground the engine made mid-game) falls back to one ceiling for the whole age,
+from its `techCeiling`.
+
+A flat world ceiling was tried first and rejected: it capped the runaway and
+flattened the economic geography with it — after four centuries every province
+on the map sat at exactly 45, Alexandria and a Negev hamlet alike. The stamp
+keeps the hierarchy: Alexandria's roof is 60, Modi'in's is 24.
+
+**A pool is the fund for the next rung, not a vault.** `pointCap` is half again
+the price of the next rung of that ladder, priced against the age exactly as
+the realm panel quotes it; a court racing ahead is saving for something dear
+and may bank accordingly, and a court that has climbed its age's ladder to the
+top has nothing to save for and falls to `pointCapFloor`. The excess drains a
+tenth a month — the same shape as the treasury's hoard bleed, and named in the
+same way, in the topbar tooltip. The AI's `aiDevelop` threshold now reads the
+cap instead of a flat 500, so surplus ink still goes into the land rather than
+simply evaporating.
+
+**The twentieth province costs more to hold than the fifth.** The
+administration bill is banded: past `adminWideDev` of governed development,
+every further point bills at `adminPerDevWide`. A kingdom's clerks scale with
+the kingdom; an empire's do not.
+
+**Somebody is always watching.** With no ponderous power left alive,
+containment falls to the largest surviving independents (`containHeirs`).
+
+### What it costs a hegemon
+
+The same 700-year run, a tag handed 45% of the settled world at the start:
+
+| | before | after |
+|---|---|---|
+| owned development | 5,253 | 1,967 |
+| force limit | 796 | 303 |
+| manpower | 641,719 | 254,213 |
+| treasury | 23,528 | 9,363 |
+| monarch points | 985 / 999 / 968 | 209 / 200 / 191 |
+| administration, as a share of gross | 19% | 36% |
+
+The world converges instead of climbing: 1,459 → ~4,150 over seven centuries,
+essentially complete by year 200, with the map's hierarchy intact.
+
+### One thing found on the way
+
+`lineSurvives`, the guard on the four §121 continuation cards in the 167 BCE
+chapter, tested the *controller* of Jerusalem. These are dated cards with a
+one-month window, so a rebel band camped in the capital that particular May
+silently deleted Augustus' settlement from the campaign — which is exactly what
+happened to `smoke84` once the balance change shifted the RNG stream. A riot is
+not the end of a dynasty; what ends the line is somebody else owning Jerusalem.
+
+- **Regression contract**: `smoke90.mjs` — every province is stamped and the
+  roofs differ; the saturation curve is 1 below the soft line, monotone across
+  it and 0 at the roof; five hundred Januaries move a town below its roof and
+  do not move one at it; 999 banked points cannot buy past it; five centuries
+  of an untouched world grow it under fourfold and converge; the cap always
+  covers the next rung and falls to the floor when the ladder is climbed; the
+  drain takes the excess and settles on the cap rather than through it; a
+  250-year play-forward leaves no court pinned at 999; the banded bill charges
+  an empire a steeper average than the plain rate; and a human hegemon with
+  every great power in the ground is still watched and still resented.

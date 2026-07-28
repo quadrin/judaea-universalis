@@ -1,6 +1,7 @@
 // js/ui/topbar.js — top resource/date/speed bar (SPEC §8.2).
 import { esc, fmtMoney, fmtMen, fmtDate, signed, ttLines, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
+import { pointCap } from '../sim/economy.js';
 
 export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChronicleClick, onSavesClick, onToolsClick }) {
   let ctx = null;
@@ -172,11 +173,26 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     // Legitimacy
     setText(refs.legitimacy, String(Math.round(t.legitimacy || 0)));
 
-    // Monarch points
+    // Monarch points. The tooltip names the cap and the drain (SPEC §135) —
+    // silver that vanishes from the treasury is explained in the ledger, and
+    // ink that vanishes from a pool has to be explained somewhere too.
     const pts = t.points || {};
-    setText(refs.gov, String(Math.floor(pts.gov || 0)));
-    setText(refs.infl, String(Math.floor(pts.infl || 0)));
-    setText(refs.mar, String(Math.floor(pts.mar || 0)));
+    const POOL = { gov: 'Government', infl: 'Influence', mar: 'Martial' };
+    for (const k of ['gov', 'infl', 'mar']) {
+      setText(refs[k], String(Math.floor(pts[k] || 0)));
+      let cap = null;
+      try { cap = pointCap(ctx, tag, k); } catch (e) { warnOnce('pointCap', e); }
+      const node = refs[k].parentNode;
+      if (node && Number.isFinite(cap)) {
+        node.dataset.tt = [
+          POOL[k] + ' points',
+          'The court holds ' + cap + ' against what it is saving for.',
+          Math.floor(pts[k] || 0) > cap
+            ? 'Above that, a tenth of the excess goes on ceremony each month.'
+            : '',
+        ].filter(Boolean).join('\n');
+      }
+    }
     refs.buyStab.classList.toggle('afford', (pts.gov || 0) >= 75 && (t.stability || 0) < 3);
     refs.buyMp.classList.toggle('afford', (pts.mar || 0) >= 50 && (t.manpower || 0) < (t.maxManpower || 0));
 

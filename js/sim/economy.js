@@ -1,12 +1,12 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName, monthsBetween } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
 import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { TRADE_ROUTES } from '../data/trade.js';
-import { genUpkeepMult } from '../data/tech.js';
+import { genUpkeepMult, techCeiling, nextRungCost } from '../data/tech.js';
 import { powerFlows } from './powers.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
@@ -71,6 +71,12 @@ export function fuelExpense(ctx, tag) {
 // occupation becomes a debt ratchet). `adminMult` is the era-tuning lever,
 // same class as maintMult: Parthian favor or senatorial credit can carry a
 // client king's clerks through a scripted war.
+// The bill is banded (SPEC §135): a kingdom's clerks scale with the kingdom,
+// but an empire's do not — distance, languages, garrisoned governors and the
+// men sent to watch the men. Past `adminWideDev` every further point of
+// development bills at the higher rate, so the twentieth province costs more
+// to hold than the fifth did and a hegemony is a standing expense rather than
+// a free multiplier.
 export function adminExpense(ctx, tag) {
   const g = ctx.game;
   const perDev = B(ctx, 'adminPerDev', 0);
@@ -81,7 +87,11 @@ export function adminExpense(ctx, tag) {
     if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
     dev += devTotal(p);
   }
-  return Math.max(0, dev - B(ctx, 'adminFreeDev', 0)) * perDev
+  const billed = Math.max(0, dev - B(ctx, 'adminFreeDev', 0));
+  const wide = Math.max(0, B(ctx, 'adminWideDev', Infinity) - B(ctx, 'adminFreeDev', 0));
+  const near = Math.min(billed, wide);
+  const far = billed - near;
+  return (near * perDev + far * B(ctx, 'adminPerDevWide', perDev))
     * resolveTagMult(ctx, tag, 'adminMult');
 }
 
@@ -272,6 +282,40 @@ export function hoardBleed(ctx, tag, breakdown) {
   return excess * clamp(B(ctx, 'hoardDecayPerMonth', 0.06), 0, 1);
 }
 
+// What a court cannot spend, it does not keep (SPEC §135) — the same argument
+// as the hoard bleed above, applied to the other three counters. A pool is the
+// fund for the next rung of a ladder, not a vault. The three numbers used to
+// run to 999/999/999 and sit there for the last four centuries of a long
+// campaign, because the age's tech ceiling closes the only large sink and
+// nothing else on offer costs more than sixty: by then the counters meant
+// nothing and no scripted grant of points could matter. So a pool is capped at
+// what the court is plausibly saving for — half again the price of the next
+// rung — and the excess drains monthly. A court racing ahead of its age is
+// saving for something dear and may bank accordingly; a court that has climbed
+// its age's ladder to the top has nothing to save for and falls to the floor.
+export function pointCap(ctx, tag, key) {
+  const t = ctx.game.tags[tag];
+  const bal = ctx.DEFINES.BALANCE || {};
+  const floor = num(bal.pointCapFloor, 150);
+  if (!t) return floor;
+  const months = monthsBetween((ctx.bookmark && ctx.bookmark.startDate) || ctx.game.date, ctx.game.date);
+  const rung = nextRungCost(ctx.bookmark, t.tech, key, months);
+  if (!(rung > 0)) return floor; // the ladder is climbed out
+  return Math.max(floor, Math.round(rung * num(bal.pointCapSaveMult, 1.5)));
+}
+export function bleedPoints(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const rate = clamp(num((ctx.DEFINES.BALANCE || {}).pointBleedPerMonth, 0.1), 0, 1);
+  if (!t || !t.points || !(rate > 0)) return;
+  for (const key of ['gov', 'infl', 'mar']) {
+    const cap = pointCap(ctx, tag, key);
+    const excess = num(t.points[key]) - cap;
+    // Floor, not round: rounding half-up leaves a fixed point a few above the
+    // cap, where the month's bite is small enough to round straight back.
+    if (excess > 0) t.points[key] = Math.max(cap, Math.floor(num(t.points[key]) - excess * rate));
+  }
+}
+
 export function runMonthlyEconomy(ctx) {
   const g = ctx.game;
   for (const tag of Object.keys(g.tags)) {
@@ -353,9 +397,47 @@ export function explainIncome(ctx, tag) {
 }
 
 // ---------------------------------------------------------------- development (SPEC §24)
+// The age's roof on a town (SPEC §135). Development is the number every other
+// number reads — tax, production, manpower, force limit and the administration
+// bill are all linear in it — and `yearlyGrowth` used to hand out +1 forever at
+// a flat chance. Over the spans this game actually runs (a 167 BCE campaign
+// will happily reach 541 CE) that inflated the whole map eightfold: the median
+// province went from 10 development to 82 with nobody doing anything, and with
+// it every treasury, every reserve and every force limit. An age carries what
+// it can carry. This is the same contract as `techCeiling` one storey up, and
+// like it, a bookmark may state its own.
+// A town's own roof, from what the scenario says it already is. Stamped onto
+// every province at init (`p.devMax`) so the map keeps its hierarchy: a great
+// city has room to become greater, a hill village does not become Alexandria.
+export function devCeilingFor(ctx, startDev) {
+  return Math.max(Math.round(B(ctx, 'devCeilingMin', 24)),
+    Math.round(B(ctx, 'devCeilingFloor', 12) + B(ctx, 'devCeilingPerStart', 1.7) * Math.max(0, startDev)));
+}
+export function devCeilingOf(ctx, p) {
+  if (p && Number.isFinite(p.devMax)) return Math.max(1, p.devMax);
+  // No stamp: a save from before §135, or land the engine made mid-game. Fall
+  // back to one roof for the whole age, from its tech ceiling.
+  const bm = ctx && ctx.bookmark;
+  if (bm && Number.isFinite(bm.devCeiling)) return Math.max(1, bm.devCeiling | 0);
+  return Math.max(1, Math.round(B(ctx, 'devCeilingBase', 18)
+    + B(ctx, 'devCeilingPerTech', 3) * techCeiling(bm)));
+}
+// How much of that roof a town climbs at full speed. Past the soft line growth
+// tapers to nothing rather than stopping dead, so a great city slows over a
+// long generation instead of hitting a wall in one January.
+export function growthSaturation(ctx, p) {
+  const dev = devTotal(p);
+  const ceil = devCeilingOf(ctx, p);
+  const soft = ceil * clamp(B(ctx, 'devSoftShare', 0.6), 0, 0.99);
+  if (dev <= soft) return 1;
+  if (dev >= ceil) return 0;
+  return (ceil - dev) / (ceil - soft);
+}
+
 // Towns grow. Each January every settled, peaceful, integrated province rolls
 // for +1 development — markets and granaries help, capitals bloom, war and
-// unrest freeze everything. Government tech raises the whole curve (growthMult).
+// unrest freeze everything. Government tech raises the whole curve (growthMult),
+// and the age's ceiling flattens it out at the top.
 export function yearlyGrowth(ctx) {
   const g = ctx.game;
   const capitals = {};
@@ -377,6 +459,8 @@ export function yearlyGrowth(ctx) {
     chance += (0.9 - clamp(num(p.autonomy, 0.25), 0, 0.9)) * 0.05; // integrated land grows
     if (t.atWarWith && t.atWarWith.length) chance *= 0.5; // wartime economy
     chance *= resolveTagMult(ctx, p.owner, 'growthMult');
+    chance *= growthSaturation(ctx, p); // the town's own roof (SPEC §135)
+    if (!(chance > 0)) continue;
     if (!(ctx.rng.next() < chance)) continue;
     const roll = ctx.rng.next();
     const kind = roll < 0.4 ? 'tax' : roll < 0.75 ? 'prod' : 'mp';
@@ -408,6 +492,11 @@ export function developInfo(ctx, tag, provId, kind) {
   let why = '';
   if (p.habitation === 'uninhabited') why = 'The region needs a settlement project first.';
   else if (p.impassable) why = 'The land is currently impassable.';
+  // The roof binds the ledger as well as the plough (SPEC §135). Bought
+  // development was the larger of the two sources by far — the AI alone walked
+  // Rome from 27 to 83 with banked points — so capping January's free growth
+  // and leaving this open would have left the ceiling decorative.
+  else if (devTotal(p) >= devCeilingOf(ctx, p)) why = 'This town has grown as far as it can: ' + devCeilingOf(ctx, p) + ' development is all the place will carry.';
   else if (p.owner !== tag) why = 'Not our province.';
   else if (p.controller !== tag) why = 'Occupied — drive the enemy out first.';
   else if (p.siege) why = 'Under siege.';

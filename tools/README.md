@@ -552,3 +552,27 @@ queue a card, don't — the duplicate had drifted three features behind the
 original (the §128 option mask, the §70 decider notice, and the
 war-already-settled retirement) and the drift was invisible because the card it
 broke was the only one in the game fired that way.
+
+SPEC §135 adds `smoke90.mjs` and the `devMax` stamp. Two things to know if you
+touch the economy.
+
+Development is the number every other number reads — tax, production, manpower,
+force limit, the administration bill — so anything that adds development is a
+balance lever whether or not it looks like one. There are exactly two sources
+now, and both answer to `p.devMax`: `yearlyGrowth` (January's free roll, scaled
+by `growthSaturation`) and `developCore` (bought with points, refused at the
+roof by `developInfo`). Bought development is the larger of the two; the AI's
+`aiDevelop` runs it whenever a pool sits at its cap. If you add a third source,
+give it the roof too, or the ceiling silently stops meaning anything.
+
+Balance claims about this game need spans, not seasons. Almost nothing here
+misbehaves inside a chapter's own horizon; the runaway that produced §135 needed
+three hundred years to become visible and seven hundred to become absurd, and
+`autorun 8` cannot see it at all. `smoke90` measures a 500-year all-AI world for
+exactly that reason, and it is the slowest suite in the set by a wide margin.
+
+And: any change to the sim perturbs the RNG stream, so a play-forward test can
+fail for reasons that have nothing to do with what you changed. §135 tripped
+`smoke84` this way — and the underlying fragility was real, so the fix belonged
+in the card's guard rather than in the test's seed. Check which it is before
+reaching for either.

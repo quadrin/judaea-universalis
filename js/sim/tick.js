@@ -6,7 +6,7 @@ import {
   sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
   declaredRivals, num,
 } from './military.js';
-import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
+import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies, bleedPoints } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites, monthlyFaithDrift } from './realm.js';
 import { monthlyFactions } from './factions.js';
@@ -82,6 +82,7 @@ function monthlyMonarchPoints(ctx) {
       const per = num((ctx.DEFINES.BALANCE || {}).rivalMarPerMonth, 1);
       t.points.mar = Math.min(999, t.points.mar + per * rivals.length);
     }
+    bleedPoints(ctx, tag); // ...and what the month's ink has no use for (SPEC §135)
   }
 }
 

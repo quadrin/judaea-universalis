@@ -63,6 +63,19 @@ export function aheadMult(level, eraBase) {
   return 1 + 0.5 * ahead;
 }
 
+// What the NEXT rung of one ladder costs this court, priced against the age —
+// the same arithmetic the realm panel quotes. Zero when the age's ceiling has
+// been reached and there is nothing left on that ladder to buy. Two callers
+// read it: the panel, and the pool cap (SPEC §135), which needs to know what a
+// court is plausibly saving for before it calls the rest ceremony.
+export function nextRungCost(bookmark, tech, key, monthsElapsed) {
+  const ceiling = Math.min(TECH_MAX, techCeiling(bookmark));
+  const next = num0(tech && tech[key]) + 1;
+  if (next > ceiling) return 0;
+  const base = bookmark && Number.isFinite(bookmark.techBase) ? bookmark.techBase | 0 : 3;
+  return Math.round(techCost(next) * aheadMult(next, eraBaseline(base, monthsElapsed)));
+}
+
 // One effects map for a tag's tech levels. Keys ending in 'Mult' multiply,
 // everything else adds — same contract as the reform trees.
 export function computeTechEffects(tech) {
