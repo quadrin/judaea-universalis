@@ -576,3 +576,15 @@ fail for reasons that have nothing to do with what you changed. §135 tripped
 `smoke84` this way — and the underlying fragility was real, so the fix belonged
 in the card's guard rather than in the test's seed. Check which it is before
 reaching for either.
+
+Browser-suite state, measured against `4faefcf` (the commit before §135) in this
+container: eleven of the 37 Playwright suites fail identically on both trees —
+uitest2, 3, 5, 8, 10, 16, 17, 19, 20 and 22 die on 30-second `locator.click` /
+`locator.check` timeouts, and uitest30 fails its war-goal-marker assertion.
+Reproducing them one at a time changes nothing, so they are not load artifacts.
+They are also not §135's: the way to tell is a second worktree at the previous
+commit served on port 8613 (the URL is hardcoded in every suite, so swap what
+the port serves rather than the port). Note the whole suite needs more than the
+50-minute wall clock a single run gets here, and `run-ui.sh` reports a bare
+"Node.js v22.22.2" as a suite's result line when it crashes rather than fails —
+re-run that file directly to see the actual error.
