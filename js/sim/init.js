@@ -999,6 +999,7 @@ export function gameActions(ctx) {
         incorporate: inc ? {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
+          suspended: !!inc.suspended,
         } : null,
         marriage,
         recognition,

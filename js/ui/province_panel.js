@@ -913,7 +913,11 @@ const RISING_LABELS = {
     refs.dipIncorporate.classList.toggle('hidden', !d.incorporate);
     if (d.incorporate) {
       const inc = d.incorporate;
-      setText(refs.dipIncorporate, inc.inProgress > 0 ? `Incorporating… ${inc.inProgress}m` : 'Incorporate');
+      // A suspended weaving is not a stalled one — the war holds the clock
+      // and the button says so rather than counting down at nothing (SPEC §137).
+      setText(refs.dipIncorporate, inc.inProgress > 0
+        ? (inc.suspended ? `Held by war… ${inc.inProgress}m` : `Incorporating… ${inc.inProgress}m`)
+        : 'Incorporate');
       setDipBtn(refs.dipIncorporate, inc.can, inc.why,
         `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
         + `(${inc.dev} development).\nTheir court must be nearly devoted — opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed — and both at peace the whole way: `

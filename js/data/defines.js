@@ -653,6 +653,14 @@ export const DEFINES = {
     thawMonths: 120,          // ten years of quiet to reach full maturity
     thawReachPlain: 0.5,      // strangers: the ceiling rises halfway
     thawReachAffinity: 0.9,   // historical friends: nearly all the way back
+    // Deference (SPEC §137): a grievance is a policy, and a court that cannot
+    // afford one stops paying for it. A victim much lighter than the taker
+    // carries its thaw further than the reach above — all the way off, when
+    // the gap is wide enough and the little court has troubles of its own.
+    deferDevRatio: 0.6,       // at or above 6/10 of the taker's weight: no deference at all
+    deferFloorRatio: 0.15,    // at or below 15%: the full deference the gap can buy
+    deferMax: 0.85,           // how much of the remaining reach a weight gap can carry
+    deferStabilityBonus: 0.1, // ...per point of stability BELOW zero, on top of it
     thawAllyAt: 0.75,         // the maturity at which friends may ally again
     thawHeal: 1,              // monthly warming once the ceiling is above us
     thawMartialPenalty: 0.5,  // a wholly martial realm matures at half speed

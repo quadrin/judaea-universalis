@@ -6788,3 +6788,77 @@ rising of 556, and the last revolt under Justin II in 572/3.
   survival win counting people rather than provinces at both ends; and the
   annexation pool staying shut for a crown that is not Jewish.
 
+## 137. Two dials, neither of them a block
+
+Reported: hostile countries invade just as you are almost integrating a vassal —
+not something to prevent, but it should be dialled back. And: countries with less
+development, low stability or other troubles should not hold a grievance against
+you forever behind a negative favourability cap, because they are too scared to
+declare war anyway.
+
+Both are real, and both turn out to be mechanics working exactly as written and
+producing something nobody chose.
+
+### 137a. The union and the war
+
+`incorporateInfo` will only START a union from a court at peace. `aiConsiderWar`
+hunts a stable, unengaged neighbour with a strength ratio in its favour. Those are
+the same court. So the twenty to forty months a weaving takes — `incorporateMonthsBase`
+plus half a month per point of the client's development — were also exactly the
+months an opportunistic AI is looking for, and `monthlyIncorporation` answered a
+declaration by setting `incorporating = null` and keeping the influence.
+
+The mechanic's own precondition was the window it was most likely to be destroyed
+in, and the destruction was total: thirty months of work and several hundred
+influence, to a war the player did not start and could not have avoided by playing
+better, because avoiding it means not being at peace.
+
+**War now suspends the weaving.** The clock stops, `suspended` goes on the entry,
+the months already run are kept, and the clock starts again at peace. The panel
+button reads *Held by war… 30m* instead of counting down at nothing.
+
+This does not prevent the invasion and does not make it cheap. The union advances
+not at all for the length of the war — against a long one that is worse than the
+old rule felt, because the player watches it sit there. And the devotion gate now
+runs BEFORE the suspension rather than after it, so a client whose opinion falls
+below `incorporateKeepOpinion` during the fighting still breaks the union: a war
+that costs you your client's affection still costs you the union. What it no longer
+does is delete the work for the fact of the war alone.
+
+### 137b. Deference
+
+§67 caps what goodwill can buy while the taker sits on the land. §86 lets the wound
+close over ten quiet years, halfway for strangers and nearly all the way for
+historical friends. Neither knows anything about the two courts' relative size.
+
+So a four-province neighbour with a permanent grievance against a power six times
+its weight sat at a −50 ceiling forever: it would never declare, never accept a
+gift past the cap, and never stop. That is not what small states do. They
+accommodate — and the ones with troubles at home accommodate fastest, because a
+grievance is a policy and a policy has to be paid for.
+
+`deference(ctx, victim, taker)` measures the gap in **developed weight** — the same
+sum the force limit is built on — and returns how much of the *remaining* reach the
+gap is worth:
+
+- at or above `deferDevRatio` (0.6) of the taker's weight: **zero**, and nothing
+  changes. That is every rivalry the chapters are actually about — Judaea and Rome,
+  the brothers, the two empires.
+- below it, rising to `deferMax` (0.85) at `deferFloorRatio` (0.15) or less.
+- plus `deferStabilityBonus` per point of stability below zero. Only instability
+  counts: a steady small realm may nurse its grievance as long as it likes.
+
+`thawProgress` then reaches `base + (1 − base) × deference` instead of `base`, so a
+wide enough gap can lift the ceiling off entirely, and an equal court still stops at
+half.
+
+**The clock is untouched, and that is the point.** A state that has just lost land
+is furious whatever its size: a fresh grudge still caps at −100 or worse, and no
+amount of goodwill buys past it. What changed is the persistence, not the fury.
+
+- **Regression contract**: `smoke92.mjs` — the union surviving an invasion with its
+  clock stopped and resuming at peace, and still ending for a broken bond or a
+  client whose devotion breaks mid-war; deference exactly zero between equals,
+  lifting the ceiling for a minnow, lifting it further for an unsteady one, and
+  doing nothing at all to a wound that is still fresh. `smoke40.mjs` carries the
+  updated wartime rule.

@@ -587,3 +587,12 @@ the one chapter where the player's people can outlive the player's state, and a
 `countControlled` shortcut would quietly turn the survival win back into a border
 win. `smoke91.mjs` guards both.
 
+SPEC §137 changes two long-standing behaviours, and both are the kind that a later
+"cleanup" would revert without noticing. `monthlyIncorporation` no longer voids a
+union when war comes — it sets `incorporating.suspended` and stops the clock — and
+the devotion gate deliberately runs BEFORE the war branch so a client who turns
+mid-war still breaks it. And `thawProgress` now reaches further than
+`thawReachPlain` when the victim is much lighter than the taker (`deference`), which
+is why a small neighbour's grudge ceiling can come off entirely while an equal's
+still stops at half. `smoke92.mjs` guards both; `smoke40.mjs` carries the wartime
+rule for the vassal loop.
