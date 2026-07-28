@@ -596,3 +596,11 @@ mid-war still breaks it. And `thawProgress` now reaches further than
 is why a small neighbour's grudge ceiling can come off entirely while an equal's
 still stops at half. `smoke92.mjs` guards both; `smoke40.mjs` carries the wartime
 rule for the vassal loop.
+
+SPEC §138 gates the Kingdom of Israel on `game.flags.davidicThrone`. Three roads
+raise it — the shared `events_house_of_david.js` arc, 132's grandson of the
+Davidic marriage, and 614's crown of David — and the shared cards stand down
+while either bespoke arc runs (`ownArcRuns`). If you add a chapter where MLI is
+formable, it must also play the shared package or the formable is dead content
+there; `smoke93.mjs` asserts that pairing directly, which is the §135 lesson
+applied forward.

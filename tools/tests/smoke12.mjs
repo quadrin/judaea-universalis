@@ -128,9 +128,17 @@ for (const name of ['Jerusalem', 'Hebron', 'Neapolis', 'Sepphoris', 'Tiberias', 
   p.controller = 'JUD';
   p.religion = 'judaism';
 }
+// SPEC §138: the checklist alone is no longer enough. The united monarchy is
+// David's, so the crown wants a son of David on the throne as well — and a
+// state that has met every territorial and civil gate is still refused it.
 let readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
+ok(!readyIsrael.canEnact && /son of David/.test(readyIsrael.desc),
+  'the whole checklist met, and the crown still asks for a son of David');
+game.flags.davidicThrone = true;
+readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
 ok(readyIsrael.canEnact,
-  '25 provinces, the heartland, Jewish communities, stability, legitimacy, independence, and peace unlock the crown');
+  '25 provinces, the heartland, Jewish communities, stability, legitimacy, independence, '
+  + 'peace AND the line of David unlock the crown');
 jud.overlord = 'ROM';
 readyIsrael = actions.getDecisions().find((d) => d.key === 'form_mli_jud');
 ok(!readyIsrael.canEnact && /✗ Owe fealty to no one/.test(readyIsrael.desc),

@@ -6862,3 +6862,69 @@ amount of goodwill buys past it. What changed is the persistence, not the fury.
   lifting the ceiling for a minnow, lifting it further for an unsteady one, and
   doing nothing at all to a wound that is still fresh. `smoke40.mjs` carries the
   updated wartime rule.
+
+## 138. The crown of Israel costs a dynasty
+
+Reported: the Kingdom of Israel should only be formable with a Davidic
+descendant on the throne — and that should be an option in every chapter where
+you play Judaea.
+
+The formable asked for twenty-five provinces, six named cities, twelve Jewish
+provinces, independence, stability 2, legitimacy 85 and peace. All of it is
+arithmetic. Any sufficiently large Jewish state could tick it, which made the
+greater crown a reward for conquest — and MLI is not a conquest. It is the
+**united monarchy**, and the united monarchy is David's.
+
+It is also the one objection this game's own history will not stop making. The
+Hasmoneans were priests of the course of Joarib and not of Judah, and their
+kingship was attacked on that ground for a century — Josephus, *Ant.*
+XIII.288–298, has the Pharisee Eleazar tell John Hyrcanus to be content with the
+high priesthood, and the quarrel that produced runs through the civil war of 67
+to Pompey's arbitration. Herod, who had no descent at all, married Mariamne the
+Hasmonean for a pedigree and then killed her and her sons, because a borrowed
+title is a standing rival. The Exilarchs of Babylonia claimed descent from
+Jehoiachin for eight hundred years and were the one Jewish authority nobody
+argued with about legitimacy. Bar Kokhba was Nasi and never King. Both revolts'
+coins say *Freedom* and *Redemption* and no man's name.
+
+**`events_house_of_david.js`** is a shared package, keyed on the player's own
+religion like the annexation question, and it joins the antique pool — so it
+plays in all six chapters that can proclaim MLI and stays shut for the Keepers,
+who reject the claim outright and have no king in their Torah.
+
+Two cards, because a wedding is not a pedigree:
+
+- **The House That Is Not David's**, asked once of a sovereign crown seated in
+  Jerusalem with ten provinces. Four answers, all of which the period produced.
+  *Send to Babylonia* — Herod's move made deliberately, gated (§128) on a road
+  east, because the line is kept at Nehardea; it buys a generation of nothing
+  and then a title nobody can argue with. *Search the archives* — the cheap road
+  every dynasty in history has taken; it says a Davidide is seated without
+  seating one, and the schools file their objection in writing, where it keeps.
+  *A prince, not a king* — Ezekiel 44–46, which walks around the objection
+  because Ezekiel's prince was never David's heir, and **forecloses the crown of
+  Israel permanently and in writing**. And *the house stands on what it won* —
+  the Hasmonean non-answer, which deliberately does not set `davidicAnswered`:
+  it postpones the question rather than settling it, and a later reign may take
+  it up.
+- **The Son of the Marriage**, a generation (22 years) later. Seating him raises
+  `davidicThrone` and hands the Exilarchate a recognised interest in every
+  succession afterwards. Passing him over is Herod's actual answer minus the
+  murders, and leaves the crown out of reach.
+
+**Two chapters already ask this better and keep asking it.** The accession of
+Beit Kosiba (§128) and the crown of David (§126) have their own courts and their
+own consequences; both now raise the same `davidicThrone`, and the shared cards
+stand down while either arc runs, so no court is asked the question twice.
+
+The formable requirement is deliberately listed **first**, so the decision's
+checklist tooltip leads with the thing that is not arithmetic.
+
+- **Regression contract**: `smoke93.mjs` — the gate refusing a crown that meets
+  every other requirement and granting it the moment a Davidide is seated; the
+  package reaching all six chapters that can form MLI and shutting itself for a
+  crown that keeps a different Torah; the arc end to end, including the eastern
+  gate on the marriage and the generation between the wedding and the son;
+  Ezekiel foreclosing it and the Hasmonean answer merely postponing it; and both
+  bespoke arcs raising the shared flag while the shared cards stand down.
+  `smoke12.mjs` carries the updated unlock.

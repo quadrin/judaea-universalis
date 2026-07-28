@@ -45,6 +45,7 @@ import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 import { EVENTS_ANNEX } from './events_annexation.js';
+import { EVENTS_DAVID } from './events_house_of_david.js';
 
 // The shared pool every ANTIQUE chapter plays (SPEC §126). The omens and the
 // annexation question travel together: both are keyed on the player rather
@@ -53,7 +54,12 @@ import { EVENTS_ANNEX } from './events_annexation.js';
 // omens alone, because a modern state does not rule on circumcision or the
 // road. The `maxYear: 1799` on every annexation card is the belt to this
 // braces: the registry says where the pool goes, and the cards say when.
-const ANTIQUE = EVENTS_ANNEX.concat(GENERIC_EVENTS);
+// The house of David travels with them (SPEC §138): the crown of Israel is
+// the united monarchy and the united monarchy is David's, so every chapter
+// that can proclaim it must also offer a road to the title. Keyed on the
+// player's own religion like the annexation question, so it stays shut for
+// the Keepers, who reject the claim outright and have no king in their Torah.
+const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, GENERIC_EVENTS);
 
 export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):

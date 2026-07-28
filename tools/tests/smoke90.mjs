@@ -308,6 +308,11 @@ console.log('== end to end: the crown costs the chapter nothing ==');
         }
         w.game.tags[w.game.playerTag].stability = 3;
         w.game.tags[w.game.playerTag].legitimacy = 100;
+        // SPEC §138 gates the crown of Israel on a son of David. This suite is
+        // about what taking a crown COSTS a chapter, not about how a court
+        // qualifies for one, so the qualification is granted outright — §138's
+        // own suite owns the dynastic arc.
+        w.game.flags.davidicThrone = true;
       }
       let guard = 0;
       while (w.game.pendingEvents.length && guard++ < 50) {

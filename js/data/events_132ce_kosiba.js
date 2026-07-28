@@ -466,6 +466,9 @@ export const EVENTS_132_KOSIBA = [
           h.doctrine(ctx, 'authority', -1);
           h.setFlag(ctx, 'grandsonAnswered', true);
           h.setFlag(ctx, 'davidicSuccession', true);
+          // The shared title (SPEC §138): this chapter asks the question in its
+          // own voice, and its answer is the same answer.
+          h.setFlag(ctx, 'davidicThrone', true);
           h.setFlag(ctx, 'exilarchateHasAClaim', true);
           h.chronicle(ctx, 'era', 'The succession passes to the son of the Babylonian marriage, and the house of Kosiba becomes, in law and in the genealogies, the house of David. The delegation from Nehardea stays for the ceremony and leaves with a copy of the record.');
         }),

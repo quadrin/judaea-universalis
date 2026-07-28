@@ -182,6 +182,8 @@ export const EVENTS_614_DAVID = [
           h.doctrine(ctx, 'authority', 2);
           h.setFlag(ctx, 'davidAnswered', true);
           h.setFlag(ctx, 'davidCrowned', true);
+          // The shared title (SPEC §138).
+          h.setFlag(ctx, 'davidicThrone', true);
           h.chronicle(ctx, 'era', 'A son of David is crowned in Jerusalem for the first time since Zedekiah. The kingdom begins dating its documents from the restoration and discovers within a year what it has promised.');
         }),
       },
