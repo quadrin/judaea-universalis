@@ -7,7 +7,7 @@ import {
   declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
-  liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag,
+  liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore,
@@ -191,7 +191,10 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
   for (const key of Object.keys(tagDefs)) {
     if (key === 'WASTE') continue;
     if (active && key !== 'REB' && active.indexOf(key) < 0) continue;
-    const d = tagDefs[key] || {};
+    // The era's lens over the static definition (SPEC §139): a chapter may
+    // rename a court it inherits, because three letters outlive their century
+    // and the state under them does not.
+    const d = tagDef({ DEFINES, bookmark }, key);
     game.tags[key] = {
       tag: key,
       name: d.name || key,
@@ -295,6 +298,10 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
       return 0;
     },
     byId(id) { return game.provinces[id] || null; },
+    // The era's reading of a court's static definition (SPEC §139). The sim
+    // imports `tagDef` directly; the panels have a ctx and no business
+    // importing the sim, so it rides here too.
+    tagDef(tag) { return tagDef(ctx, tag); },
   };
   if (!game.flags._setupDone) {
     game.flags._setupDone = true;
@@ -361,6 +368,16 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
           || (DEFINES.GOV_OF || {})[key] || 'monarchy';
       }
       if (!Number.isFinite(t.electionIn)) t.electionIn = 48;
+      // A chapter's own name for a court (SPEC §139) heals on load, but only
+      // where nothing has renamed the court since. A save written before the
+      // chapter declared the tweak still carries the static name, and that is
+      // exactly the case worth healing; a crown proclaimed in play, or a
+      // revolution that rebranded itself, wrote its own name over the top and
+      // must keep it. Comparing against the STATIC name is what tells the two
+      // apart without a flag to get out of step.
+      const era = tagDef({ DEFINES, bookmark }, key);
+      const stat = ((DEFINES.TAGS || {})[key] || {}).name;
+      if (era.name && (!t.name || t.name === stat)) t.name = era.name;
       applyReformsToTag(DEFINES, t, key);
     }
   } catch (e) { console.warn('[sim/init] modifier rebuild failed:', e); }
@@ -2886,7 +2903,8 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
   if (!game.tags || typeof game.tags !== 'object') game.tags = {};
   for (const key of wantedTags) {
     if (game.tags[key] || !tagDefs[key]) continue;
-    const d = tagDefs[key];
+    // Backfilled exactly as initGame would have, era lens included (SPEC §139).
+    const d = tagDef({ DEFINES, bookmark }, key);
     const t = {
       tag: key,
       name: d.name || key,

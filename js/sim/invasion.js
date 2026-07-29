@@ -23,7 +23,7 @@
 import {
   num, clamp, armiesOf, armiesInProv, regCount, isHostile, sameSide, canEnter,
   issueMove, findPath, bfsDistances, hasBuilding, devTotal, disciplineOf,
-  engageIfNeeded, splitArmyCore,
+  engageIfNeeded, splitArmyCore, tagDef,
 } from './military.js';
 import {
   isCoastal, seaHopDays, buildShipCore, issueFleetMove, embarkCore,
@@ -76,7 +76,7 @@ function vantage(ctx, tag) {
     if (!a.aboard && a.men > 0 && (!main || a.men > main.men)) main = a;
   }
   if (main) return main.prov;
-  const capName = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
+  const capName = tagDef(ctx, tag).capital || null;
   const cap = capName ? ctx.prov(capName) : null;
   return cap && cap.owner === tag ? cap.id : 0;
 }

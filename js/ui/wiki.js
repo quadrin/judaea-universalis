@@ -363,9 +363,14 @@ export function createWiki({ DEFINES, getCtx }) {
       const b = e.bookmark;
       const p = (b.playableTags || []).find((q) => q.tag === tag);
       const ruler = b.rulers && b.rulers[tag];
+      // This page is the tag's, and a tag outlives its names. Where a chapter
+      // calls the court something else (SPEC §139) the row says so, because
+      // "Judaea, 529" is a sentence the game itself does not believe.
+      const era = (b.tagTweaks && b.tagTweaks[tag] && b.tagTweaks[tag].name) || '';
       return `<div class="wiki-card-row wiki-link" data-go="era:${esc(b.id)}">
         <div class="wiki-row-year">${esc(fmtYear(b.startDate.y))}</div>
         <div class="wiki-row-main"><div class="wiki-row-title">${esc(b.name)}
+          ${era && era !== (def.name || tag) ? `<span class="wiki-badge">as ${esc(era)}</span>` : ''}
           ${p ? `<span class="wiki-badge">playable · ${esc(p.difficulty || '')}</span>` : ''}</div>
           <div class="wiki-dim">${ruler ? 'Under ' + esc(ruler.name) + (ruler.title ? ', ' + esc(ruler.title) : '') : 'A court of the era'}${p && p.blurb ? ' — ' + esc(p.blurb) : ''}</div></div>
         <div class="wiki-row-go">›</div>

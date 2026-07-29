@@ -108,6 +108,15 @@ const SAM_LANDS = ['Neapolis', 'Jenin', 'Tulkarm', 'Qalqilya'];
 // Caesarea and killed the governor Stephanus in his praetorium; a chapter that
 // wants to ask whether the schism matters more than the empire has to let the
 // other side answer, and a modifier cannot answer.
+//
+// Four towns and not one of them is in Judaea, which is the whole point: this
+// is GALILEE (SPEC §139), and the chapter renames the tag to say so. Judaea
+// proper — Jerusalem, Hebron, Lydda, the hill country the other seven chapters
+// are fought over — is a Christian province in 529 that Jews may enter one day
+// a year to mourn. What is left of the nation is around a lake sixty miles
+// north: the patriarchate is a century lapsed, the academy at Tiberias is what
+// governs, and the Palestinian Talmud was closed at Tiberias with Sepphoris
+// beside it — two of these four towns, which is two more than Judaea has.
 const JUD_LANDS = ['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala'];
 
 // Everything else in the diocese of the East is Justinian's, and so is
@@ -229,6 +238,35 @@ export const BOOKMARK_529 = {
     },
     MLI: 'JUD',
     // No Byzantine pen: the era's names above are already the Empire's.
+  },
+
+  // What the era calls its courts (SPEC §139). Three letters outlive their
+  // century; the state under them does not.
+  //
+  // JUD is Judaea in the seven chapters that turn on Jerusalem. It is not
+  // Judaea here. By 529 the name is a Roman provincial label with no Jewish
+  // polity behind it — Hadrian struck it off in 135, the hill country is
+  // Christian Palaestina Prima, and Jews enter the city one day a year to
+  // mourn on the ninth of Ab. The nation moved north and stayed there: the
+  // Sanhedrin to Sepphoris and then Tiberias, the patriarchate with it until
+  // Theodosius II let the office lapse around 425, and the Palestinian Talmud
+  // was closed at Tiberias with Sepphoris beside it, a century before this
+  // chapter opens. The Jewish state on this map is GALILEE, its seat is
+  // Tiberias, and calling it Judaea would be the same error as calling the
+  // Keepers Jews.
+  //
+  // The seat matters mechanically as well as on the label: the growth bonus,
+  // the AI's development and rally logic, the pretender's prize and the peace
+  // table's protected crown all read a capital, and Jerusalem in this chapter
+  // belongs to the Empire.
+  tagTweaks: {
+    JUD: {
+      name: 'Galilee',
+      capital: 'Tiberias',
+      description: 'What is left of the nation, around a lake sixty miles north of the '
+        + 'city it may not live in: the academy at Tiberias, the town that closed the '
+        + 'Talmud, and a patriarchate the emperor let lapse.',
+    },
   },
 
   blurb: 'Justinian has ruled two years and has already legislated the Keepers out of the '

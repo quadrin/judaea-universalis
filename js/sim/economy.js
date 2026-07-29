@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
 import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
@@ -360,7 +360,9 @@ export function yearlyGrowth(ctx) {
   const g = ctx.game;
   const capitals = {};
   for (const k of Object.keys(ctx.DEFINES.TAGS || {})) {
-    const c = ctx.DEFINES.TAGS[k] && ctx.DEFINES.TAGS[k].capital;
+    // The era's seat, not the tag's (SPEC §139): the Jewish court of 529 grows
+    // Tiberias, and Jerusalem in that chapter is somebody else's capital.
+    const c = tagDef(ctx, k).capital;
     if (c) capitals[c] = k;
   }
   for (let i = 1; i < g.provinces.length; i++) {

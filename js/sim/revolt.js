@@ -26,7 +26,7 @@
 // `revoltType` stamp and reads as `peasant` in the UI.
 
 import {
-  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf,
+  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf, tagDef,
 } from './military.js';
 import { axisOf } from './doctrine.js';
 import { rollCourtier } from './realm.js';
@@ -374,6 +374,24 @@ export function raiseRising(ctx, p, canJoin) {
   return true;
 }
 
+// The ground a succession crisis is decided on (SPEC §140): the crown's own
+// seat for this era, and only if the crown owns it.
+//
+// The clock used to ask who HELD the capital and never who owned it, while
+// `crownThePretender` hands that province to the crown outright — so a court
+// whose seat is somebody else's city could be handed a foreign province by
+// its own succession crisis, with no war, no siege and no notice to the owner.
+// A court seated in a city it does not own has no ground on which to answer a
+// claim, and this is the one place that says so. `monthlyRisings` asks the
+// same question before it exempts a pretender's band from burning out, because
+// an exemption granted on the promise of a verdict that can never arrive holds
+// the province for ever.
+function claimSeat(ctx, tag) {
+  const name = tagDef(ctx, tag).capital || null;
+  const cap = name ? ctx.byId(ctx.provId(name)) : null;
+  return cap && cap.owner === tag ? cap : null;
+}
+
 // ------------------------------------------------------------- the pretender
 // Monthly. A pretender's host that takes and keeps the capital replaces the
 // ruler with its claimant; one that is destroyed answers the question of
@@ -408,9 +426,9 @@ export function monthlyPretenders(ctx) {
       }
       // A throne with a rival in the field bleeds belief every month.
       t.legitimacy = clamp(num(t.legitimacy) - R(ctx, 'pretenderDrain', 0.5), 0, 100);
-      // The capital is the whole argument.
-      const capName = ctx.DEFINES.TAGS && ctx.DEFINES.TAGS[tag] ? ctx.DEFINES.TAGS[tag].capital : null;
-      const cap = capName ? ctx.byId(ctx.provId(capName)) : null;
+      // The capital is the whole argument — and it has to be THIS crown's
+      // capital (SPEC §140).
+      const cap = claimSeat(ctx, tag);
       if (!cap || cap.controller !== 'REB') { pr.heldMonths = 0; continue; }
       pr.heldMonths = num(pr.heldMonths) + 1;
       if (pr.heldMonths < R(ctx, 'pretenderHoldMonths', 6)) continue;
@@ -460,8 +478,15 @@ export function monthlyRisings(ctx) {
       continue;
     }
     p.rebelHeldMonths = num(p.rebelHeldMonths) + 1;
-    // A pretender's host is settled by its own clock, not this one.
-    if (p.revoltType === 'pretender' && g.pretenders && g.pretenders[p.owner]) continue;
+    // A pretender's host is settled by its own clock, not this one — but only
+    // while that clock can actually reach a verdict (SPEC §140). The exemption
+    // was written on the promise that `monthlyPretenders` settles the claim
+    // either way, and for a crown that does not own its own seat there is no
+    // seat to settle it in: the claim stays open, the band never burns out,
+    // and the province is held for ever at nought legitimacy. Where no verdict
+    // is possible the ordinary burn-out is the only ending there is.
+    if (p.revoltType === 'pretender' && g.pretenders && g.pretenders[p.owner]
+        && claimSeat(ctx, p.owner)) continue;
     const held = num(p.rebelHeldMonths);
     const over = held >= ceiling;
     // Still angry and still inside the grace period: the band holds.
