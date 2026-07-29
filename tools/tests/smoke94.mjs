@@ -196,6 +196,51 @@ console.log('== a stale save heals; a court that renamed itself does not ==');
 }
 
 // ---------------------------------------------------------------------------
+console.log('== a pretender is crowned in his own crown\'s seat or nowhere ==');
+{
+  // Moving JUD's seat onto a province the court actually owns exposed a guard
+  // that was never there: `monthlyPretenders` asked who HELD the capital and
+  // never who OWNED it, and `crownThePretender` hands the seat to the crown
+  // outright. A court whose nominal capital is somebody else's city could be
+  // handed a foreign province by its own succession crisis.
+  const { monthlyPretenders } = await import(R + '/js/sim/revolt.js');
+  const CLAIMANT = 'A man with a claim';
+  // The claim only ticks while one of the claimant's bands is still in the
+  // field, so the fixture has to put one there.
+  function pretenderWorld(seatOwner) {
+    const w = boot('529ce', 'SAM');
+    const seat = w.ctx.prov('Tiberias');
+    seat.owner = seatOwner;
+    seat.controller = 'REB';
+    w.game.pretenders = { JUD: { claimant: CLAIMANT, heldMonths: 0 } };
+    w.game.armies['pretender-1'] = {
+      id: 'pretender-1', tag: 'REB', prov: seat.id, men: 3000,
+      rising: 'pretender', claimant: CLAIMANT, inf: 3, cav: 0, morale: 3, maxMorale: 3,
+    };
+    return { w, seat };
+  }
+  // 1. The seat is the PLAYER's. The crown that names it its capital must not
+  //    be handed it by its own succession crisis.
+  {
+    const { w, seat } = pretenderWorld('SAM');
+    for (let i = 0; i < 12; i++) monthlyPretenders(w.ctx);
+    ok(seat.owner === 'SAM',
+      'the player still owns Tiberias after Galilee\'s succession crisis');
+    ok(seat.controller !== 'JUD',
+      '  and it was never handed to a court that does not own it');
+    ok(!!w.game.pretenders.JUD,
+      '  the claim is not resolved either — it simply cannot be settled there');
+  }
+  // 2. The legitimate case still fires: the crown's OWN seat, in rebel hands.
+  {
+    const { w, seat } = pretenderWorld('JUD');
+    for (let i = 0; i < 12; i++) monthlyPretenders(w.ctx);
+    ok(seat.controller === 'JUD' && !w.game.pretenders.JUD,
+      'but a pretender holding the crown\'s own seat is still crowned there');
+  }
+}
+
+// ---------------------------------------------------------------------------
 console.log('== the other three senses of the word survive the sweep ==');
 {
   const bookmarkSrc = await import('node:fs').then((fs) =>

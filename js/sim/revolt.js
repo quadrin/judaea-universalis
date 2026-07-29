@@ -408,10 +408,18 @@ export function monthlyPretenders(ctx) {
       }
       // A throne with a rival in the field bleeds belief every month.
       t.legitimacy = clamp(num(t.legitimacy) - R(ctx, 'pretenderDrain', 0.5), 0, 100);
-      // The capital is the whole argument.
+      // The capital is the whole argument — and it has to be THIS crown's
+      // capital. The clock only ever checked who held the seat, never who
+      // owned it, and `crownThePretender` then hands the seat to the crown
+      // outright. A court whose nominal capital is somebody else's city
+      // (SPEC §139: JUD sits at Tiberias in 529, at Jerusalem everywhere
+      // else, and the era it is not in is always somebody else's) could
+      // therefore be handed a foreign province by its own succession crisis
+      // — no war, no siege, and no notice to the owner. A pretender's claim
+      // is settled in the seat the crown actually holds or not at all.
       const capName = tagDef(ctx, tag).capital || null;
       const cap = capName ? ctx.byId(ctx.provId(capName)) : null;
-      if (!cap || cap.controller !== 'REB') { pr.heldMonths = 0; continue; }
+      if (!cap || cap.owner !== tag || cap.controller !== 'REB') { pr.heldMonths = 0; continue; }
       pr.heldMonths = num(pr.heldMonths) + 1;
       if (pr.heldMonths < R(ctx, 'pretenderHoldMonths', 6)) continue;
       crownThePretender(ctx, tag, pr, cap);
