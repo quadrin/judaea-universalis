@@ -46,6 +46,7 @@ const flatGeom = {
   areas: new Int32Array(N + 1), bbox: [], coastal: [], offshore: [],
 };
 const eraOf = (id) => ERAS.find((e) => e.bookmark.id === id) || null;
+const num = (v) => (Number.isFinite(v) ? v : 0);
 
 function boot(id, tag) {
   const era = eraOf(id);
@@ -237,6 +238,51 @@ console.log('== a pretender is crowned in his own crown\'s seat or nowhere ==');
     for (let i = 0; i < 12; i++) monthlyPretenders(w.ctx);
     ok(seat.controller === 'JUD' && !w.game.pretenders.JUD,
       'but a pretender holding the crown\'s own seat is still crowned there');
+  }
+  // 3. …and a claim that CANNOT be settled must still end. `monthlyRisings`
+  //    exempts a pretender's band from burning out on the promise that the
+  //    clock above settles it either way; a crown that does not own its seat
+  //    never reaches a verdict, so without a matching guard the band would
+  //    sit on the province for ever at nought legitimacy. This is the case
+  //    the owner guard created, and it is worse in the chapters where JUD is
+  //    PLAYABLE and seated in a city Rome or the Empire holds.
+  {
+    const { monthlyRisings } = await import(R + '/js/sim/revolt.js');
+    const ceiling = 72;
+    for (const id of ['132ce', '614ce']) {
+      const w = boot(id, 'JUD');
+      const g = w.game;
+      // JUD's seat in these chapters is Jerusalem, which it does not own.
+      const seatName = tagDef(w.ctx, 'JUD').capital;
+      const seatProv = w.ctx.prov(seatName);
+      ok(seatProv && seatProv.owner !== 'JUD',
+        id + ': the crown\'s seat (' + seatName + ') is not its own — no verdict is reachable');
+      // Raise the claim in a province it DOES own.
+      let mine = null;
+      for (let i = 1; i < g.provinces.length; i++) {
+        const p = g.provinces[i];
+        if (p && !p.impassable && p.owner === 'JUD') { mine = p; break; }
+      }
+      mine.controller = 'REB';
+      mine.revoltType = 'pretender';
+      mine.rebelHeldMonths = 0;
+      mine.unrest = 0;
+      g.pretenders = { JUD: { claimant: CLAIMANT, heldMonths: 0 } };
+      g.armies['stuck-1'] = {
+        id: 'stuck-1', tag: 'REB', prov: mine.id, men: 3000,
+        rising: 'pretender', claimant: CLAIMANT, inf: 3, cav: 0, morale: 3, maxMorale: 3,
+      };
+      let months = 0;
+      for (; months < 240 && mine.controller === 'REB'; months++) {
+        monthlyPretenders(w.ctx);
+        monthlyRisings(w.ctx);
+      }
+      ok(mine.controller !== 'REB',
+        '  the rising ends rather than holding the province for ever'
+        + ' (freed after ' + months + ' months)');
+      ok(months <= ceiling,
+        '  and it ends inside the ' + ceiling + '-month ceiling');
+    }
   }
 }
 

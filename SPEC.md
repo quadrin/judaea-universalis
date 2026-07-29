@@ -6945,9 +6945,18 @@ Prima; Jews enter the city one day a year to mourn on the ninth of Ab. What is
 left of the nation is in the north, and had been for four hundred years: the
 Sanhedrin to Usha, Sepphoris and then Tiberias, the patriarchate with it until
 Theodosius II let the office lapse around 425, and the Palestinian Talmud closed
-in exactly these four towns a century before this chapter opens. Its ruler in
-the chapter is already Mar Zutra, **Head of the Academy** — not a king, and not
-in Jerusalem. Only the label was still lying.
+at Tiberias with Sepphoris beside it, a century before this chapter opens. Its
+ruler in the chapter is already Mar Zutra, **Head of the Academy** — not a king,
+and not in Jerusalem. Only the label was still lying.
+
+(Two hedges the first draft of this section did not make. The redaction is
+placed at Tiberias, with Sepphoris beside it and Nezikin attributed to Caesarea
+— a city this same map gives the Empire — so *these four towns* was one town too
+many in each direction and is not claimed. And the patriarchate *lapsed*: CTh
+16.8.22 of 415 strips Gamaliel VI's rank and 16.8.29 of 429 legislates "after
+the cessation of the patriarchs", which is a decline and a non-appointment
+rather than a documented act of abolition, and the scholarship divides on which
+it was.)
 
 Calling that court Judaea is the same class of error as calling the Keepers
 Jews, which is the error this whole chapter exists to refuse (§136).
@@ -6997,10 +7006,10 @@ consumers were reading a seat this chapter's court does not sit in:
 `yearlyGrowth`'s capital bonus (never paid), `aiDevelop` and `aiAirPower`
 (anchored on somebody else's city), `vantage` and the AI's shipyard search
 (rallying nowhere), `capitalId` for chapter distance scoring, the pretender's
-prize in `revolt.js` (a `JUD` pretender could never be crowned, because the
-crowning wants the capital and the capital was Byzantine), and
-`releasableNations`, which protects a crown's own capital from the peace table.
-All eight now read `tagDef`.
+prize in `revolt.js` (which wanted the capital and never asked who owned it —
+see §140, which is the bug that fell out of this one), and `releasableNations`,
+which protects a crown's own capital from the peace table. All eight now read
+`tagDef`.
 
 `dynamicCapital` — the seat a state released at the peace table is given — is
 untouched and keeps its existing precedence at both call sites.
@@ -7018,3 +7027,58 @@ at Caesarea). None of those is Galilee and none of them moved.
 `smoke94.mjs` holds the line: Galilee in 529 with its seat at Tiberias, Judaea
 in every other chapter that seats `JUD`, `DEFINES` unmutated after booting the
 529 chapter, and a stale save healed on load while a rebranded court is not.
+
+## 140. A claim is answered in the seat the crown owns, or it is not answered
+
+This fell out of §139 and is older than it.
+
+`monthlyPretenders` resolved the crown's capital and then asked one question
+about it — *is it held by rebels?* It never asked who **owned** it. And
+`crownThePretender` ends with `changeControllerCore(ctx, cap, tag)`: the seat
+answers to the new crown, because the chronicle line it prints says "it is now
+their crown". That sentence is only true of a capital that was theirs.
+
+So a court whose nominal capital is somebody else's city could be handed a
+foreign province by its own succession crisis — no war, no siege, no notice to
+the owner. Which courts? Every court that does not sit in its own capital, and
+the game is full of them: `JUD` in 132 and 614 is seated at a Jerusalem that
+Rome and the Empire hold, `HYR` at a Hebron that Herod's line holds, `SEL` and
+`ROM` both at Antioch. §139 did not create this. What §139 did was move the
+target: before it, a `JUD` pretender in 529 was crowned in **Byzantine
+Jerusalem**, so the theft aimed at the Empire; after it, the seat is Tiberias,
+which the Samaritan player will normally have taken first.
+
+The guard is the one the model always assumed:
+
+```js
+function claimSeat(ctx, tag) {
+  const name = tagDef(ctx, tag).capital || null;
+  const cap = name ? ctx.byId(ctx.provId(name)) : null;
+  return cap && cap.owner === tag ? cap : null;
+}
+```
+
+### The half that the guard broke
+
+Adding it was not enough, and the review is what caught this. `monthlyRisings`
+exempts a pretender's band from the ordinary burn-out for as long as the claim
+is open (§112), on a premise it states outright: *a pretender's host is settled
+by its own clock, not this one.* The owner guard makes that premise **false**
+for exactly the courts it protects — a crown with no seat of its own reaches no
+verdict, so the claim never closes, so the exemption never lifts, so the band
+sits on the province for ever at nought legitimacy.
+
+Measured before the second fix: `JUD` in 132 and 614 — both **playable** — held
+a rebel province for the full 240-month horizon against a 72-month ceiling. A
+player would have had no exit but destroying a host the burn-out was written to
+dissolve.
+
+So the exemption asks the same question the clock does. Where no verdict is
+reachable, the ordinary burn-out is the only ending there is, and it arrives at
+45 months rather than never.
+
+The lesson is the general one about guards: a rule that stops something from
+happening has to be checked against every rule that was *waiting* for it to
+happen. `smoke94.mjs` pins both halves — the theft refused, the legitimate
+crowning still fired, and the unsettleable claim ending inside the ceiling in
+both chapters where the player can be the court it happens to.

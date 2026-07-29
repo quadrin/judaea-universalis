@@ -114,8 +114,9 @@ const SAM_LANDS = ['Neapolis', 'Jenin', 'Tulkarm', 'Qalqilya'];
 // proper — Jerusalem, Hebron, Lydda, the hill country the other seven chapters
 // are fought over — is a Christian province in 529 that Jews may enter one day
 // a year to mourn. What is left of the nation is around a lake sixty miles
-// north: the patriarchate is a generation abolished, the academy at Tiberias
-// is what governs, and the Palestinian Talmud was closed in these four towns.
+// north: the patriarchate is a century lapsed, the academy at Tiberias is what
+// governs, and the Palestinian Talmud was closed at Tiberias with Sepphoris
+// beside it — two of these four towns, which is two more than Judaea has.
 const JUD_LANDS = ['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala'];
 
 // Everything else in the diocese of the East is Justinian's, and so is
@@ -249,9 +250,10 @@ export const BOOKMARK_529 = {
   // mourn on the ninth of Ab. The nation moved north and stayed there: the
   // Sanhedrin to Sepphoris and then Tiberias, the patriarchate with it until
   // Theodosius II let the office lapse around 425, and the Palestinian Talmud
-  // was closed in these four towns a century before this chapter opens. The
-  // Jewish state on this map is GALILEE, its seat is Tiberias, and calling it
-  // Judaea would be the same error as calling the Keepers Jews.
+  // was closed at Tiberias with Sepphoris beside it, a century before this
+  // chapter opens. The Jewish state on this map is GALILEE, its seat is
+  // Tiberias, and calling it Judaea would be the same error as calling the
+  // Keepers Jews.
   //
   // The seat matters mechanically as well as on the label: the growth bonus,
   // the AI's development and rally logic, the pretender's prize and the peace
@@ -262,8 +264,8 @@ export const BOOKMARK_529 = {
       name: 'Galilee',
       capital: 'Tiberias',
       description: 'What is left of the nation, around a lake sixty miles north of the '
-        + 'city it may not live in: the academy at Tiberias, the towns that closed the '
-        + 'Talmud, and a patriarchate the emperor let die.',
+        + 'city it may not live in: the academy at Tiberias, the town that closed the '
+        + 'Talmud, and a patriarchate the emperor let lapse.',
     },
   },
 
