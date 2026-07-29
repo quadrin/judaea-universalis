@@ -32,6 +32,7 @@ import { EVENTS_132_HOUSE } from './events_132ce_house.js';
 import { EVENTS_132_KOSIBA } from './events_132ce_kosiba.js';
 import { BOOKMARK_529 } from './bookmark_529ce.js';
 import { EVENTS_529 } from './events_529ce.js';
+import { EVENTS_529_ROADS } from './events_529ce_roads.js';
 import { BOOKMARK_614 } from './bookmark_614ce.js';
 import { EVENTS_614 } from './events_614ce.js';
 import { EVENTS_614_PERSIA } from './events_614ce_persia.js';
@@ -81,7 +82,10 @@ export const ERAS = [
   // annexation package gates itself on the crown's own religion, so the cards
   // simply stay shut for a court that keeps a different Torah, which is the
   // honest answer until somebody writes the Samaritan version of them.
-  { bookmark: BOOKMARK_529, events: EVENTS_529.concat(ANTIQUE) },
+  // The roads package (SPEC §151) is the 531–614 tail: the terminals the
+  // opening chain's five roads were declared open for, plus the three forks
+  // §136 charted and left empty — Ctesiphon, the Jews, and the Taheb.
+  { bookmark: BOOKMARK_529, events: EVENTS_529.concat(EVENTS_529_ROADS, ANTIQUE) },
   { bookmark: BOOKMARK_614, events: EVENTS_614.concat(EVENTS_614_PERSIA, EVENTS_614_THIRD, EVENTS_614_POWER, EVENTS_614_DAVID, ANTIQUE) },
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli

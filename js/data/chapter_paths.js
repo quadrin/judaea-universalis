@@ -614,12 +614,12 @@ export const CHAPTER_PATHS = Object.freeze([
   Object.freeze({
     id: '529ce',
     title: 'The Keepers',
-    // SPEC §136. The chapter ships its opening chain first — 529–531, the
-    // statute to the phylarch — and the four forks the design calls for land
-    // behind it. Two of them are here already because the opening chain
-    // itself asks them: what kind of state this is, and what the mountain is
-    // for. The Jews, Ctesiphon and the Taheb are declared gaps below, which
-    // is what KNOWN_GAPS is for.
+    // SPEC §136 shipped the opening chain — 529–531, the statute to the
+    // phylarch — with two forks live and every road of both declared open,
+    // because their terminals belonged to a tail nobody had written. SPEC §151
+    // is that tail: the 531–614 cards the gap list was waiting for, and the
+    // two forks §136 charted and left empty. The chapter now has no declared
+    // gaps, which is the first time it has been able to say so.
     lastYear: 614,
     forks: [
       Object.freeze({
@@ -629,25 +629,31 @@ export const CHAPTER_PATHS = Object.freeze([
           Object.freeze({
             id: 'crowned_and_the_charioteer', name: 'A King in Israel',
             marker: 'niciasKilled', entry: 'ev529_the_games_at_neapolis',
-            terminal: null,
+            terminal: 'ev529_the_last_rising',
             note: 'SPEC §136. The diadem, the races, and the charioteer executed for winning. '
               + 'The historical road, and the point of no return: a court that kills a sportsman '
-              + 'in front of four thousand witnesses has told the empire what it claims to be.',
+              + 'in front of four thousand witnesses has told the empire what it claims to be. '
+              + 'It runs to the fourth rising in ninety years, which is the last one the '
+              + 'sources on either side bother to record.',
           }),
           Object.freeze({
             id: 'crowned_and_the_palm', name: 'Let Him Take the Palm',
             marker: 'niciasSpared', entry: 'ev529_the_games_at_neapolis',
-            terminal: null,
+            terminal: 'ev529_sergius_of_caesarea',
             note: 'SPEC §136. The crown without the sentence. A rising that can still be '
-              + 'negotiated with — and a king the men who crowned him have watched flinch.',
+              + 'negotiated with — and a king the men who crowned him have watched flinch. '
+              + 'It ends where being negotiable finally pays: the 551 easing, obtained by a '
+              + 'Christian bishop on the grounds that the persecution had become inefficient.',
           }),
           Object.freeze({
             id: 'no_king', name: 'The Torah Has No King in It',
             marker: 'crownRefused', entry: 'ev529_the_games_at_neapolis',
-            terminal: null,
+            terminal: 'ev529_the_office_they_never_filled',
             note: 'SPEC §136. The priesthood\'s answer and the older one. It costs the rising '
               + 'the thing a crown buys and gains it the thing a crown costs: there is nobody '
-              + 'for the empire to send to Constantinople in a box.',
+              + 'for the empire to send to Constantinople in a box. Its terminal is its own '
+              + 'and not a shared one, because forty-four years later the sons of the men who '
+              + 'wanted a crown have an argument nobody could have made in 529.',
           }),
         ],
       }),
@@ -658,19 +664,114 @@ export const CHAPTER_PATHS = Object.freeze([
           Object.freeze({
             id: 'altar_rebuilt', name: 'The Altar on the Mountain',
             marker: 'gerizimCleared', entry: 'ev529_gerizim',
-            terminal: null,
+            terminal: 'ev529_the_wall_on_the_summit',
             note: 'SPEC §136. The theology, taken. It is also a garrison on a bare rock with '
               + 'one road up it, which is why the captains asked the crown to say out loud what '
               + 'it was buying. The 132 chapter has this identical decision on a different '
-              + 'mountain, and the two claims annihilate each other.',
+              + 'mountain, and the two claims annihilate each other. It ends where the mountain '
+              + 'is answered for the last time — Procopius\' wall, built by whoever holds the '
+              + 'rock in 536.',
           }),
           Object.freeze({
             id: 'villages_first', name: 'The Villages First',
             marker: 'gerizimLeft', entry: 'ev529_gerizim',
-            terminal: null,
+            terminal: 'ev529_what_the_villages_kept',
             note: 'SPEC §136. The summit left to its garrison and the men kept where the '
               + 'fighting is. A rising that will not take the mountain has to explain, every '
-              + 'year, what it is for.',
+              + 'year, what it is for — and it is answered in 614 by whether there is still a '
+              + 'community in those villages when the Persians come up the coast road.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'ctesiphon',
+        question: 'The rising is broken and the refugees have reached the Persian court. '
+          + 'What do they offer?',
+        roads: [
+          Object.freeze({
+            id: 'the_promise', name: 'Fifty Thousand Men',
+            marker: 'ctesiphonPromised', entry: 'ev529_the_letter_to_ctesiphon',
+            terminal: 'ev529_the_year_the_peace_broke',
+            note: 'SPEC §151. The offer Malalas records, made in the community\'s own names. '
+              + 'It buys a friendly file in one chancery and a hostile one in the other, and '
+              + 'the invasion it asks for arrives in 540, three hundred miles north, for '
+              + 'entirely Persian reasons.',
+          }),
+          Object.freeze({
+            id: 'the_men_not_the_letter', name: 'Send the Men, Not the Letter',
+            marker: 'sentTheYoungMen', entry: 'ev529_the_letter_to_ctesiphon',
+            terminal: 'ev529_the_year_the_peace_broke',
+            note: 'SPEC §151. Service in the east without a signature anywhere. The remittances '
+              + 'come home for thirty years and the muster rolls do not.',
+          }),
+          Object.freeze({
+            id: 'no_pretext', name: 'A People That Is a Pretext',
+            marker: 'ctesiphonRefused', entry: 'ev529_the_letter_to_ctesiphon',
+            terminal: 'ev529_the_year_the_peace_broke',
+            note: 'SPEC §151. The delegation disowned in writing, in a letter meant to be read '
+              + 'by the dux. It buys nothing and removes the one charge the statute did not '
+              + 'already contain.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_two_houses',
+        question: 'Caesarea is in the street in 556 and so are the Jews of the same city. '
+          + 'Is this one rising or two?',
+        roads: [
+          Object.freeze({
+            id: 'rose_together', name: 'Both Houses, or Neither',
+            marker: 'roseWithTheJews', entry: 'ev529_the_praetorium_at_caesarea',
+            terminal: 'ev529_the_last_rising',
+            note: 'SPEC §151. The one thing in four hundred years the two Israelite communities '
+              + 'did together, and the chapter\'s hardest fork: the schism is not settled, it is '
+              + 'simply not mentioned for a week. The Eleazarite line has no liturgy for it.',
+          }),
+          Object.freeze({
+            id: 'rose_alone', name: 'The Quarter Rises Alone',
+            marker: 'roseAlone', entry: 'ev529_the_praetorium_at_caesarea',
+            terminal: 'ev529_the_last_rising',
+            note: 'SPEC §151. The rising is ours and so is the punishment. The distinction '
+              + 'between the two quarters is entirely lost on the troops sent to restore order.',
+          }),
+          Object.freeze({
+            id: 'quarter_shut', name: 'A Riot With a Governor\'s Body in It',
+            marker: 'quarterKeptShut', entry: 'ev529_the_praetorium_at_caesarea',
+            terminal: 'ev529_what_the_villages_kept',
+            note: 'SPEC §151. The quarter held indoors and the dux told so in writing. It is '
+              + 'the road that buys the most years and costs the most to say out loud, and it '
+              + 'is answered by the count in 614 rather than by anything in 556.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_taheb',
+        question: 'The restorer of Deuteronomy 18:18 has a claimant in the villages. '
+          + 'Is the age the age?',
+        roads: [
+          Object.freeze({
+            id: 'taheb_proclaimed', name: 'The Fanuta Is Over',
+            marker: 'tahebProclaimed', entry: 'ev529_the_taheb',
+            terminal: 'ev529_what_the_villages_kept',
+            note: 'SPEC §151. A state that answers to a prophecy rather than to a council, '
+              + 'which is a more dangerous thing than a king and is understood as such by '
+              + 'everybody including the High Priest, who is present and does not put his hand '
+              + 'on him.',
+          }),
+          Object.freeze({
+            id: 'taheb_awaited', name: 'The Office Kept Open',
+            marker: 'tahebAwaited', entry: 'ev529_the_taheb',
+            terminal: 'ev529_what_the_villages_kept',
+            note: 'SPEC §151. The priesthood\'s oldest function, which is to decline to certify. '
+              + 'An expectation nobody has spent is an expectation still available in 614.',
+          }),
+          Object.freeze({
+            id: 'taheb_is_the_people', name: 'The Keeping Is the Restoration',
+            marker: 'tahebIsThePeople', entry: 'ev529_the_taheb',
+            terminal: 'ev529_what_the_villages_kept',
+            note: 'SPEC §151. The Council of Seven\'s answer: a people still here in the morning '
+              + 'has done the thing the prophecy describes. It is not popular and it is not '
+              + 'overturned, and it is the same claim the chapter\'s victory condition makes.',
           }),
         ],
       }),
@@ -851,43 +952,11 @@ export const CHAPTER_PATHS = Object.freeze([
 // matches reality exactly: close one of these and forget to remove it here, or
 // let a new road go unfinished, and the suite fails. It is a to-do list the
 // build enforces rather than a comment nobody rereads.
+// The Keepers' five roads were the standing entry here from SPEC §136 until
+// §151 wrote the 531–614 tail they were waiting for. What closed them is
+// recorded in the chapter above rather than here, which is the only state a
+// to-do list is allowed to end in.
 export const KNOWN_GAPS = Object.freeze([
-  Object.freeze({
-    chapter: '529ce', fork: 'what_kind_of_rising', road: 'crowned_and_the_charioteer',
-    why: 'SPEC §136 ships the Keepers\' opening chain — the statute, the games, the bishop, '
-      + 'the mountain, the phylarch — and the 531–614 tail behind it. Every road of the opening '
-      + 'fork therefore ends at a card that has not been written yet rather than at one that is '
-      + 'missing: the chapter runs to 614 and its last dated beats (Sergius in 551, the joint '
-      + 'rising at Caesarea in 556, the last revolt under Justin II in 572) are the terminals '
-      + 'these three roads are waiting for.',
-  }),
-  Object.freeze({
-    chapter: '529ce', fork: 'what_kind_of_rising', road: 'crowned_and_the_palm',
-    why: 'The same gap as its sibling above: the crown-without-the-sentence road reaches the '
-      + 'phylarch and then wants the 551 and 556 cards to close on, and those belong to the '
-      + 'long tail rather than to the opening chain this pass ships.',
-  }),
-  Object.freeze({
-    chapter: '529ce', fork: 'what_kind_of_rising', road: 'no_king',
-    why: 'The road with no king on it is the one most likely to need its own terminal rather '
-      + 'than a shared one — a community that refused the diadem reaches 556 with a different '
-      + 'thing to decide about a joint rising than one that crowned a man and buried him. It is '
-      + 'declared open until the tail is written rather than pointed at a card meant for a '
-      + 'different world.',
-  }),
-  Object.freeze({
-    chapter: '529ce', fork: 'the_mountain', road: 'altar_rebuilt',
-    why: 'The altar road ends where the mountain is answered for the last time, and in this '
-      + 'chapter that is Justinian rebuilding and walling the church after the rising is broken '
-      + '(Procopius, Buildings V.vii) — a card of the 531–614 tail. Shipping a terminal inside '
-      + 'the opening chain would close the road two decades early and misdescribe it.',
-  }),
-  Object.freeze({
-    chapter: '529ce', fork: 'the_mountain', road: 'villages_first',
-    why: 'Its counterpart, and open for the same reason: the road that declines the summit is '
-      + 'answered by whether there is still a community in the villages in 614, which is the '
-      + 'chapter\'s survival verdict rather than any card in the opening chain.',
-  }),
   Object.freeze({
     chapter: '1948ce', fork: 'the_union', road: 'secession',
     why: 'Not an unfinished road but the chapter\'s main line: after September 1961 every '

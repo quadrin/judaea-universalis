@@ -7682,3 +7682,94 @@ The two reports arrived together and were two different bugs behind one
 appearance, which is worth recording: the sim was right about who held the
 ground and wrong about who was camped on it, and the map could not tell the
 player which of those it was drawing.
+
+## 151. The Keepers' roads: a chapter that stopped in its second year
+
+§136 shipped the eighth chapter and charted it honestly, which is why the
+problem was visible from the day it landed: five roads, every one of them
+declared open in `KNOWN_GAPS`, on a chapter that runs from 529 to 614. The
+opening chain ends with the phylarch in 531. After that the Keepers had
+eighty-three years of nothing — no card, no decision, no terminal — while the
+tree said, in writing, that this was known and deliberate.
+
+`node tools/paths.mjs --gaps` printed five of the six entries in the whole game
+under one chapter's name. That is what the gap list is for; it is also what it
+is for that the list should eventually be empty.
+
+**The tail is not a campaign, because the war is over.** This is the shape the
+chapter forced. Justinian did not settle Samaria in 531 — he broke a rising and
+left the statute standing, and the thing §136 is about is that *the war
+continues by statute after it ends by sword*. So the 531–614 package is a series
+of decisions taken by a people getting smaller, on the dates the sources supply:
+
+- **531 — the letter to Ctesiphon.** Malalas has the refugees at Kavad's court
+  offering fifty thousand men for a Persian invasion of Palaestina. Kavad died
+  that September and the Eternal Peace followed; nothing came of it except that
+  Constantinople remembered. Three roads: the promise under the elders' own
+  names, service in the east with nothing signed anywhere, and the delegation
+  disowned in a letter written to be read by the dux.
+- **536 — the wall on the summit.** Procopius (*Buildings* V.vii) writes the
+  emperor rebuilding the church on Gerizim and running a wall round it as
+  praise. Whoever holds the rock pays for masonry that grows nothing, and the
+  side that stops paying has conceded the mountain. This is the altar road's
+  terminal and it was named as such in the gap it closes.
+- **540 — the year the peace broke.** Khusrau comes down the Euphrates and
+  burns Antioch. It is the invasion the refugees asked for, nine years late,
+  three hundred miles north, for entirely Persian reasons, and it does not come
+  south. That is the whole lesson of asking, and it is the Ctesiphon fork's
+  terminal.
+- **551 — Sergius of Caesarea.** Novel 129: the disabilities eased after a
+  Christian bishop of the city where the rescript was read argued that the
+  persecution had become inefficient. **This one had to be a mechanic.** The
+  statute is the chapter's enemy and it is a live modifier, so the card removes
+  `the_statutes` and replaces it with `the_statutes_eased`; refusing the relief
+  leaves it byte-identical. A card that said the law was eased and moved nothing
+  would be the chapter lying about its own subject.
+- **556 — the praetorium at Caesarea.** The Samaritans and Jews of the city rose
+  together and killed the proconsul Stephanus in his own hall. Four centuries of
+  schism, two Torahs that do not agree at Deuteronomy 27:4, and one afternoon in
+  which the elders decide whether this is their rising, somebody else's riot, or
+  the first thing the two houses of Israel have ever done together. This is the
+  fork §136 called *the Jews*, and it is the chapter's hardest.
+- **572 — the last rising**, under Justin II, answered by another constitution
+  rather than a settlement. There is no fifth rising in any chronicle on either
+  side, and not because the grievance was settled.
+- **614 — what the villages kept.** The Persians on the coast road, and a
+  chapter that has been asking since 529 what is left to meet them.
+
+**The Taheb has no date, because that is what it is.** The restorer of
+Deut. 18:18 ends the Fanuta — the age of the turning-away that began when Eli
+carried the ark to Shiloh — and brings the hidden vessels out of the mountain,
+and nothing any empire has legislated survives contact with that. It is a more
+dangerous state than a king and everybody in the card knows it, including the
+High Priest, who is present at the proclamation and does not put his hand on the
+man. The community has been here: Josephus has a claimant taking a crowd up
+Gerizim under Pilate to show them the vessels, and Pilate met them on the slope
+with cavalry. Three roads — proclaimed, the office kept open, and the Council of
+Seven's ruling that a people still here in the morning has already done what the
+prophecy describes, which is the same claim the chapter's victory condition
+makes.
+
+**The road with no king on it got its own terminal, as its gap demanded.** The
+declared gap for `no_king` said a shared ending would misdescribe it, and that
+holds: forty-four years on, the constitution that comes down from the capital
+names the people and cannot name the head, and the sons of the men who wanted a
+crown in 529 point out that a thing which cannot be beheaded also cannot be
+recognised, treated with or given terms. It may still take one, late, which is
+how that road ends.
+
+The chapter now charts **five forks and fourteen roads, none of them open**, and
+`KNOWN_GAPS` is down to the single 1948 entry that is not a gap at all.
+
+- **Regression contract**: `smoke100.mjs` — the gap list is empty and every one
+  of the fourteen roads ends at a card the chain plays; the 551 easing really
+  replaces the statute and the refusal really does not; each fork is reachable
+  in the world it was written for and no other (Ctesiphon after 531 and not
+  during the war, the Taheb only once the phylarch is answered, the empty office
+  only for a community that declined the diadem); the 614 card obeys the
+  chapter's own contract by counting people, so it fires for a community with
+  one province of its Torah and no state and retires when there is nobody left;
+  and eighty-five years are walked month by month without a guarded failure.
+  `smoke83.mjs` reads the new file for markers, `smoke85.mjs` holds it to the
+  package contract, and `smoke94.mjs` now asserts the chapter declares nothing
+  open rather than asserting it declares five.

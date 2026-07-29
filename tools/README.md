@@ -587,6 +587,18 @@ the one chapter where the player's people can outlive the player's state, and a
 `countControlled` shortcut would quietly turn the survival win back into a border
 win. `smoke91.mjs` guards both.
 
+SPEC §151 adds that chapter's 531–614 tail (`events_529ce_roads.js`) and closes
+the five roads §136 declared open, so `KNOWN_GAPS` no longer names the Keepers at
+all. Two things to know. The tail's cards gate on **people, not ground** — every
+trigger asks `afterTheRising`, which wants a live tag and at least one province
+of that Torah anywhere, because a chapter whose victory condition counts people
+cannot gate its own second half on holding a capital. And the 551 easing is a
+modifier swap rather than a paragraph: it removes `the_statutes` and adds
+`the_statutes_eased`, which is the only card in the game that repeals part of a
+chapter's opening condition. `smoke100.mjs` owns both, and also owns the claim
+that the chapter charts fourteen roads with no gaps; if you add a road there,
+that suite's count is the thing that will tell you.
+
 SPEC §137 changes two long-standing behaviours, and both are the kind that a later
 "cleanup" would revert without noticing. `monthlyIncorporation` no longer voids a
 union when war comes — it sets `incorporating.suspended` and stops the clock — and
