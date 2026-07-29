@@ -590,9 +590,24 @@ export const BOOKMARK_1948 = {
   // Left as they are, because the real answer is not on this map: Saudi
   // Arabia is governed from Riyadh and Iran from Tehran, neither of which
   // the frame reaches, and Britain from London. Their static seats stay.
+  // …and who its courts are made of (SPEC §143). A court draws its rulers,
+  // heirs, election candidates and generals from a pool keyed on its culture
+  // group, and a culture group has no century in it — so four of the twelve
+  // courts here were still staffed from antiquity. A death in Rome seated
+  // Marcus Ulpius, a death in Athens seated Antigonos, Britain drew Hellenistic
+  // names because its culture is `greek` for want of a better fit, and Iran was
+  // governed by Parthian kings. Israel, the Arab states and Turkey already had
+  // 1948 pools; these four never got one.
+  //
+  // It is declared here rather than by changing the cultures because GRC plays
+  // in two chapters twenty-one centuries apart, and Nikanor is right in one of
+  // them.
   tagTweaks: {
     TUR: { capital: 'Ancyra' },   // Ankara, capital since 1923
-    GRC: { capital: 'Athens' },
+    GRC: { capital: 'Athens', names: 'greek_modern' },
+    ITA: { names: 'italian' },
+    UK: { names: 'british' },
+    IRN: { names: 'iranian_modern' },
   },
 
   // The victors' pens wait on both the schoolhouse and the settlers (SPEC

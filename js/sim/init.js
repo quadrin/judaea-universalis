@@ -17,7 +17,7 @@ import {
   clientOfferInfo, offerClientshipCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
-  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
+  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, courtNamePool, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
@@ -751,6 +751,28 @@ export const simHelpers = {
     for (let i = 1; i < g.provinces.length; i++) {
       const p = g.provinces[i];
       if (!p || p.impassable || p.controller !== tag) continue;
+      if (opts && opts.religion && p.religion !== opts.religion) continue;
+      n++;
+    }
+    return n;
+  },
+  // The realm, as opposed to the ground the armies happen to be standing on
+  // (SPEC §146). `countControlled` answers "where are my flags this month",
+  // which is the right question for a siege and the wrong one for every card
+  // that says *rules*, *reigns over* or *is a power*: an army sitting in three
+  // Anatolian provinces it will hand back at the peace table made the Law of
+  // the Nations fire on a realm that had annexed none of them.
+  //
+  // Ownership is also the quantity that survives the peace: an occupied
+  // province is still yours, so a realm does not shrink in the eyes of its own
+  // chroniclers because somebody is standing in it.
+  countOwned(ctx, tag, opts) {
+    const g = ctx.game;
+    tag = L(ctx, tag);
+    let n = 0;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag) continue;
       if (opts && opts.religion && p.religion !== opts.religion) continue;
       n++;
     }
@@ -2156,8 +2178,9 @@ export function gameActions(ctx) {
         if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
         if (!t.courtCand) t.courtCand = {};
         if (!Number.isFinite(t.aggression)) t.aggression = 0;
-        const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
-        let pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        // The chapter's pool if it names one (SPEC §143); `advisorEras` below
+        // still wins where a chapter dates its court by decade.
+        let pool = courtNamePool(ctx, g.playerTag);
         const eras = ctx.bookmark && Array.isArray(ctx.bookmark.advisorEras)
           ? ctx.bookmark.advisorEras.filter((row) => row && row.from <= g.date.y)
             .sort((a, b) => b.from - a.from) : [];

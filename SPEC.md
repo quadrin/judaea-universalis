@@ -7221,3 +7221,290 @@ satisfied — so only the mechanic can be doing the refusing — checks that the
 core refuses with the panel and that a forced deal creates nobody, checks the
 objective gate, and checks that the other seven chapters still keep their
 clients.
+
+## 143. A culture group has no century in it
+
+Reported: if a ruler dies in 1948 in Italy or somewhere else, their successor
+sounds like they have an ancient name.
+
+They did. `rollCourtier` — the function that seats a successor when a ruler
+dies, picks the two candidates a republic votes between, and fills an heir —
+chose its pool with one line:
+
+```js
+const cul = ctx.DEFINES.CULTURES[t.culture];
+const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+```
+
+A culture group has no century in it. So in the chapter that runs from 1948 to
+1956, four of the twelve courts were staffed from antiquity:
+
+| | culture → group | who succeeded |
+|---|---|---|
+| **Italy** | `roman` → `latin` | Marcus Ulpius, Quintus Petillius, Aulus Larcius |
+| **Greece** | `greek` → `hellenic` | Nikanor, Apollonios, Antigonos |
+| **Britain** | `greek` → `hellenic` | *the same Hellenistic pool* |
+| **Iran** | `persian` → `iranian` | Vologases, Pacorus, Artabanus — Parthian kings |
+
+Israel, the Arab states and Turkey were fine: the chapter's author had written
+`israeli`, `arab_modern` and `turkish` pools of real 1948 commanders. The four
+background powers never got one, and nothing complained, because a name is not
+an assertion the tests knew how to check.
+
+The same line appears in `rollGeneral`, so it was not only successions — every
+Italian army raised in 1948 was commanded by a Flavian legate.
+
+### Per chapter, not per culture
+
+The obvious fix is to give Italy a modern culture, and for Italy it would work,
+because ITA plays in exactly one chapter. **GRC does not.** Greece is on the
+map in 167 BCE and again in 1948, twenty-one centuries apart, under the same
+three letters — and Nikanor is *right* in one of them. Whatever names that tag,
+it has to be the chapter.
+
+So it rides the lens §139 already built. `tagDef` merges arbitrary keys, so the
+chapter says `names` beside `capital` and one resolver reads it:
+
+```js
+tagTweaks: {
+  GRC: { capital: 'Athens', names: 'greek_modern' },
+  ITA: { names: 'italian' },
+  UK:  { names: 'british' },
+  IRN: { names: 'iranian_modern' },
+}
+```
+
+`courtNamePool(ctx, tag)` replaces the duplicated idiom at all three sites —
+`rollCourtier`, `rollGeneral`, and the advisor fallback in `getCourt`, where a
+chapter's dated `advisorEras` still wins because it is the more specific thing.
+
+The four new pools hold men who actually held these commands in the years the
+chapter runs, which is the standard the three existing modern pools already set:
+Messe, Marras, Trezzani and Cadorna; Papagos, Tsakalotos, Ventiris and Ghikas;
+Montgomery, Slim, Crocker and Dempsey, with MacMillan, Barker, Cunningham and
+Stockwell out of Palestine Command; Razmara, Zahedi, Arfa and Amir-Ahmadi.
+
+One thing deliberately not done. These pools are soldiers, and the game draws
+rulers from the same list, so an Italian succession seats Marshal Messe rather
+than a De Gasperi. That conflation is the existing convention — Israel's pool is
+Yadin and Sadeh and it names Israel's rulers too — and splitting rulers from
+generals is a change to every chapter, not to this one.
+
+`smoke94.mjs` asserts that no 1948 court draws from any of the eight ancient
+pools, that the successor and the general a court actually produces both come
+from its own, that GRC in 167 BCE is still Hellenistic and the Hasmoneans still
+Hasmonean, and that a chapter naming no pool — 529 — is left entirely on its
+culture groups.
+
+## 144. A war has a life before it has an exit
+
+Reported: the Seleucids just declared war on me, only to immediately offer a
+white peace.
+
+They did, and it reproduces in one month.
+
+`monthlyWarDiplomacy` gave a losing AI leader two roads to sue the player:
+
+```js
+const sueAt = 15 / caution;
+if (ws > -40 && !(ws <= -10 && warExhaustion >= sueAt)) continue;
+```
+
+A **rout** — warscore at −40 or worse — or **weariness**, at −10 with exhaustion
+past a caution-scaled bar. The rout road is fine. The weariness road had no
+clock on it at all, and that is the bug, because `warExhaustion` is a **standing
+quantity and not this war's ledger**. A power that arrived already tired from
+somewhere else satisfied the exhaustion half on the day war was declared, and
+needed only a single lost skirmish to satisfy the other half. At −12 the terms
+such a court will accept are nothing whatever, so what the player sees is a
+declaration of war followed by an offer of white peace.
+
+The Seleucids are the sharpest case in the game and not a coincidence. The
+opportunistic-war gate does check weariness — `aiConsiderWar` refuses to declare
+above `warExhaustion > 5` — but the Seleucid wars of 167 are **scripted**, and a
+scripted `declareWar` bypasses that gate entirely. So SEL could enter a war it
+had no business starting, at 18 weariness, and sue the following month.
+
+### The asymmetry is the fix
+
+A court being **routed** may sue the month the rout happens; that is what a rout
+means. A court that is merely **tired** must have actually fought this war:
+
+```js
+const routed = ws <= -40;
+const weary  = ws <= -10 && warExhaustion >= sueAt && runFor >= grace;
+if (!routed && !weary) continue;
+```
+
+`BALANCE.warSueGraceMonths` is twelve — a year of campaigning before "we are
+tired of this" is a sentence a court has earned. It sits beside the existing
+36-month AI-vs-AI settlement horizon (`w.settleMonths`), which is a different
+clock for a different question and is untouched.
+
+The same asymmetry goes on the separate-peace road, which needed it more: that
+one's weariness clause fires at `row.ws >= 0`, a standing start, so a coalition
+member who arrived tired could offer to buy its way out of a war nobody had
+fought yet, for nothing.
+
+### What this deliberately does not do
+
+It does not stop a weary court from *declaring*. Scripted wars are the chapter's
+to write, and 167 wants the Seleucids to come whatever state they are in — the
+whole shape of that chapter is an empire overcommitted in three directions. What
+it stops is the empire arriving and immediately asking to leave. If a scripted
+war should not be fought at all, that is a decision for the card that writes it,
+not for the peace clerk.
+
+`smoke95.mjs` reproduces the report exactly — weariness 18, one lost skirmish,
+their own declaration — and asserts silence for eleven months and a feeler in
+the twelfth; that a routed court still sues in month one, tired or not; that a
+fresh court losing narrowly never sues at all; and that the grace is a define
+rather than a literal.
+
+## 145. The number on the chrome is not the number the treasury moves
+
+Reported: occasionally, with a positive talent flow, my income still goes down.
+
+Not occasionally. Exactly, and by a lot. A Hasmonean court sitting on 8,000
+talents reads **+0.4 a month** on the topbar while the treasury falls by **470**.
+
+The topbar and the realm panel both rendered `t.income - t.expenses`. That pair
+is the **operating ledger** — taxes and trade against upkeep, administration,
+interest and tribute — and it was never the whole purse. Two other flows move
+the treasury and appear in neither half:
+
+- **The court's own consumption** (§101). A reserve past eighteen months of
+  gross income drains six per cent of the excess every month. That is the
+  mechanic doing exactly what it was written to do; it simply was not on the
+  chrome.
+- **Subsidies and reparations**, in and out. They are in `bd.net` and in neither
+  `t.income` nor `t.expenses`, so they push the other way — the treasury rising
+  faster than the headline claims.
+
+`explainIncome` was honest the whole time. It lists *The court consumes (reserve
+past its means)* and totals a **Monthly balance** of `bd.net - bleed`, which is
+the true figure. But the breakdown is behind a click, and the number the player
+actually reads was the ledger.
+
+### Measured, not re-derived
+
+```js
+const opened = num(t.treasury);
+…
+t.netFlow = Math.round((num(t.treasury) - opened) * 100) / 100;
+```
+
+`netFlow` is the difference the treasury saw between the start and end of the
+month. It cannot disagree with itself, and it needs no maintenance when a future
+flow is added — anything that moves the purse is in it by construction, which is
+the property the old subtraction lacked.
+
+### Why not simply fold the bleed into `expenses`
+
+Because two callers read that pair as a solvency test. `crisis.js` raises fiscal
+heat on `income < expenses`, and `ai.js` sheds a regiment a month on the same
+comparison. A court draining a hoard is not insolvent — it is **rich**, and the
+drain is the consequence of being rich. Folding the bleed in would have told
+both systems the opposite of the truth and started disbanding armies in the
+treasuries that least needed it. So the operating ledger stays exactly as it
+was, and only the display changes.
+
+Both panels also gained an **Other flows** line, so the tooltip explains the gap
+rather than leaving the player to find the breakdown; and both fall back to the
+old subtraction for the one month a pre-§145 save has no measurement yet.
+
+`smoke96.mjs` pins the reported case at four treasury levels, asserts that a
+court consuming a vast hoard still reads as solvent to the crisis and AI checks,
+that the headline and the breakdown now agree, that four ordinary realms under
+the cap see no phantom discrepancy, and that an old save loads without one.
+
+## 146. Ruling and standing on are different verbs
+
+Reported, with a screenshot: **What Does the Law Say of the Nations?** fired on a
+Hasmonean state in December 153 BCE that had annexed none of the land the card
+is about. The outliner in the same picture shows why — two sieges in progress,
+Pisidia and Attalia at 30%, and five detachments of the Levy of Emmaus spread
+across Anatolia. The occupied cells were enough.
+
+```js
+const all = countControlled(ctx, 'HAS', {});
+if (all < 15) return false;
+return all - countControlled(ctx, 'HAS', { religion: 'judaism' }) >= all / 2;
+```
+
+`countControlled` answers *where are my flags this month*, and there was no
+helper that answered anything else. So a card whose first sentence is **"Israel
+rules multitudes now who have never kept a Sabbath"** was asking where the army
+was standing. A province under siege pays the besieger no tax, keeps no Sabbath
+for him, and goes home at the peace table.
+
+`countOwned` is the missing counterpart — and the strongest evidence that it was
+missing is that **two content packages had already written it by hand**.
+`events_40bce.js` and `events_614ce.js` each carry a private, byte-identical
+`countOwned(ctx, tag)` because the frozen contract offered no way to ask. It is
+on the contract now, with the religion filter and the §135 forwarding the
+hand-rolled copies lack.
+
+### The split, which is the whole of the work
+
+The first pass swept every realm-size count in the game and it was wrong. Two
+different questions were wearing the same helper, and only one of them was
+misusing it:
+
+**Composition — what the realm IS.** These now count owned:
+
+- `ev_law_of_the_nations`, the reported card
+- `gentileShare()` in the 167 empire chain and the same function in the shared
+  annexation pool — *how much of the realm is not of the covenant*
+- `otherShare()` in 1948, whose own comment said it was "the same measure
+  `ev_law_of_the_nations` takes in 130 BCE", and which was wrong the same way
+- the annexation question's ten-province gate, which sits in the same condition
+  as `gentileShare`
+- **the embassies of the powers**, because a chancery sends an ambassador to a
+  state and not to an army standing in somebody else's country
+
+**Reach — how far the arm extends.** These keep counting held, and the revert is
+as deliberate as the change:
+
+- `imperial()` in 167, whose own comment turns on *a Jewish king **sitting** in
+  Antioch*
+- `reach()` in 66 and 1948, `power()` and `standing()` in 614, `endurance()` and
+  `grasp()` in 132 — the comments read *a Levantine power*, *a regional power*,
+  *the hills, the country, the province and its coast*
+- `seatedCrown()` in the House of David pool, whose Jerusalem half is **already**
+  `controls` — counting the other half by ownership would have shut the dynastic
+  question against 614's Jewish state for most of the Persian war, which is
+  precisely the reign it exists to ask about
+
+A rising that has taken Damascus by force **is** a regional power, whatever the
+treaty says. That is not the error the report describes. The error is claiming a
+realm *rules* people it is merely camped among.
+
+Three families were never in question and keep control: a rising is crushed when
+somebody else is standing on it (the `=== 0` checks in 132, the `=== 1` in 66);
+the formables say *Hold twelve provinces* on the label and mean it; and
+`countControlledOf` in the 167 package, whose name only looks similar — it walks
+named cities through `controls`, which is right for *are we standing in Antioch*.
+
+The distinction to carry forward: **holding** is a fact about this month and
+reverses when the siege lifts; **owning** is a fact about the realm and survives
+the peace. An occupied province is still yours, and a realm does not shrink in
+the eyes of its own chroniclers because somebody is camped in it.
+
+### Cost
+
+Measured rather than assumed, and the narrowing is why it is small. With the
+first, wider sweep, 614's Jewish state lost a third of its development in half
+the sampled seeds and the Hasmoneans picked up a BLEEDING flag. With the split
+above, seven of eight chapters are byte-identical to an untouched tree, 614 is
+identical across four independent seeds, and only 40 BCE moves: across six seeds
+Herod's provinces are flat (8.0 → 8.2) and his development unchanged, with a
+modest drift down in treasuries and no anomaly flag appearing anywhere.
+
+`smoke97.mjs` reproduces the screenshot — a four-province Hasmonean realm
+standing on twenty-six gentile cells it has not annexed — and asserts the card
+stays shut; then annexes that same land and asserts it fires, so the question is
+still real. It holds the fixture's Jerusalem in both halves, because the card
+also sits behind `greaterVictory` and the negative would otherwise pass for the
+wrong reason. It pins each function on the correct side of the split by name,
+and it pins the two hand-rolled copies as the evidence they are.

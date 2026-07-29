@@ -632,6 +632,11 @@ export const DEFINES = {
     // their own wars.
     rivalOpinion: -60,       // the baseline rival opinions cool toward
     rivalRatioMult: 0.85,    // rivals need 15% less overmatch to strike
+    // How long a war must have run before the court that is merely TIRED of it
+    // may ask the player to let it out (SPEC §144). A court being routed still
+    // sues at once; this is only the weariness road, and weariness carried in
+    // from the last war is not a reason to abandon this one in its first month.
+    warSueGraceMonths: 12,
     // Declared rivalries (SPEC §86): the player may name up to `rivalMax`
     // courts as rivals. A named rival is worth something — cheaper claims
     // against them, a monthly martial dividend from a court kept on a war

@@ -1024,7 +1024,15 @@ function sendSeparatePeaceOffer(ctx, war, player) {
     const t = g.tags[row.tag];
     if (!t || !t.alive || !t.ai) continue;
     const weary = num(t.warExhaustion);
-    if (row.ws < separatePeaceThreshold(ctx, row.tag) && !(weary >= 15 && row.ws >= 0)) continue;
+    // Same two roads, same asymmetry (SPEC §144). A member whose own fields
+    // are genuinely lost (ws past its threshold) knocks whenever that happens.
+    // The weariness clause fires at ws >= 0 — i.e. at a standing start — so
+    // without a grace period a coalition member who arrived tired offers to
+    // buy its way out of a war nobody has fought yet, for nothing.
+    const graceMet = monthsBetween(war.started, g.date)
+      >= num(B(ctx, 'warSueGraceMonths', 12));
+    const beaten = row.ws >= separatePeaceThreshold(ctx, row.tag);
+    if (!beaten && !(weary >= 15 && row.ws >= 0 && graceMet)) continue;
     const last = war._separateOfferCd && war._separateOfferCd[row.tag];
     if (last && monthsBetween(last, g.date) < 8) continue;
     const deal = buildAiPeaceDeal(ctx, war, player, row.tag);
@@ -1179,7 +1187,20 @@ function monthlyWarDiplomacy(ctx) {
       // members has lost its own war. That member now comes to us directly.
       if (sendSeparatePeaceOffer(ctx, w, player)) continue;
       const sueAt = 15 / Math.max(0.5, num(personality(ctx, leader).caution, 1));
-      if (ws > -40 && !(ws <= -10 && num(lt.warExhaustion) >= sueAt)) continue;
+      // Two roads out, and only one of them is open on day one (SPEC §144).
+      // A court being ROUTED (ws <= -40) may sue whenever the rout happens.
+      // A court that is merely TIRED may not, until this war has actually run
+      // — because `warExhaustion` is a standing quantity, not this war's
+      // ledger, so a power that entered already weary from somewhere else
+      // could declare a war and ask to be let out of it the following month.
+      // The Seleucids did exactly that: their wars in 167 are scripted, which
+      // bypasses the exhaustion gate on `aiConsiderWar`, so they arrived at 18
+      // weariness, lost one skirmish, and sued.
+      const grace = num(B(ctx, 'warSueGraceMonths', 12));
+      const runFor = monthsBetween(w.started, g.date);
+      const routed = ws <= -40;
+      const weary = ws <= -10 && num(lt.warExhaustion) >= sueAt && runFor >= grace;
+      if (!routed && !weary) continue;
       if (w._sueCd && monthsBetween(w._sueCd, g.date) < 6) continue;
       w._sueCd = { ...g.date };
       ctx.bus.emit('notify', {

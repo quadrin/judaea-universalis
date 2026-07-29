@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
@@ -30,9 +30,9 @@ function weightedIndex(rng, weights) {
 // A random member of the court: named for the tag's culture group, skills 0-6
 // weighted toward 1-3 (great rulers are rare).
 export function rollCourtier(ctx, tag) {
-  const t = ctx.game.tags[tag];
-  const cul = t && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
-  const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+  // The chapter's own pool where it names one (SPEC §143) — this is the
+  // function that seats a successor when a ruler dies.
+  const pool = courtNamePool(ctx, tag);
   const skill = () => weightedIndex(ctx.rng, [2, 5, 6, 4, 2, 1, 0.5]);
   return { name: ctx.rng.pick(pool), gov: skill(), infl: skill(), mar: skill(), age: 30 + ctx.rng.int(21) };
 }
