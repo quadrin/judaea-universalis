@@ -305,7 +305,8 @@ export const EVENTS_DAVID = [
           + 'holds. It is also the requirement for proclaiming the Kingdom of Israel, which is '
           + 'the united monarchy and therefore David\'s. The price is the one the Babylonians '
           + 'came to name: a recognised Exilarchate interest in every succession after this '
-          + 'one. −1 authority.',
+          + 'one. −1 authority — and the succession stands open until the new king names an '
+          + 'heir of his own, because the one the house had was the line he displaced.',
         effects: (ctx) => {
           try {
             const h = ctx.helpers;
@@ -321,6 +322,13 @@ export const EVENTS_DAVID = [
               name: h.courtName(ctx, me), title: old.title,
               gov: 4, infl: 5, mar: 1, age: 26,
             });
+            // And the designated heir goes with the man he was designated for
+            // (SPEC §155). He is the senior line — the man this choice has just
+            // passed over — and leaving him standing hands the crown back to
+            // him in one reign, which would undo the whole arc silently and
+            // leave `davidicThrone` describing a house that had stopped being
+            // David's. The new king designates his own, the ordinary way.
+            h.setHeir(ctx, me, null);
             h.adjust(ctx, me, { legitimacy: 35, stability: 1 });
             h.addTagModifier(ctx, me, {
               id: 'the_line_of_jehoiachin', name: 'The Line of Jehoiachin', months: -1,

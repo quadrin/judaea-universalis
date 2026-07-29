@@ -173,6 +173,11 @@ export const EVENTS_614_DAVID = [
             gov: Math.max(3, Number(old.gov || 3)), infl: 6,
             mar: Math.max(2, Number(old.mar || 2) - 1), age: 44,
           });
+          // The reigning house's heir does not inherit from the Exilarch who
+          // replaced him (SPEC §155). This card always seated its Davidide
+          // correctly and still handed the throne back to the house that had
+          // just given it up, one death later.
+          h.setHeir(ctx, 'JUD', null);
           h.adjust(ctx, 'JUD', { legitimacy: 40, stability: 4 });
           h.addTagModifier(ctx, 'JUD', { id: 'the_house_restored', name: 'The House of David Restored', months: -1, effects: { legitimacyAdd: 0.4, incomeMult: 1.20, unrestAll: 3 } });
           h.factionShift(ctx, 'JUD', 'exilarch', 50);

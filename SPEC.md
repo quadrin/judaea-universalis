@@ -7884,3 +7884,51 @@ the man the crown passes to is named the way any other successor is.
   regency, named out of the chapter's pool; the 132 card does the same; 614 still
   crowns David ben Zakkai; and passing him over leaves the reigning king exactly
   where he was, so the fix cannot be "always change the ruler".
+
+## 155. The line he displaced stayed his heir
+
+Asked, on the back of §154: does the Davidic king have heirs?
+
+He had one, and it was the wrong man. `setRuler` replaces the ruler and leaves
+`t.heir` alone, which is right for every other scripted accession in the game
+and wrong for this one: the heir standing when the Davidide is seated is the
+**senior line** — the man this very choice passed over — so the crown went back
+to him at the next death, and `davidicThrone` went on describing a house that
+had stopped being David's. One generation, and the arc that costs a marriage, a
+generation of waiting and thirty-five legitimacy is undone silently, with the
+formable requirement still ticked.
+
+That is Herod's problem, which is the thing the whole package is about: a
+borrowed title is a standing rival, and Herod's answer to it was to kill the
+people holding it. The engine's answer was to hand them the throne.
+
+All three seating cards now clear the designated heir, and the new king names
+his own the ordinary way. 614's `ev_d_the_crown_of_david` had this defect too —
+it always seated its Exilarch correctly and still handed the crown back one
+death later. The tooltips say so, because an open succession is a real cost: a
+king who dies before designating an heir is the −25 legitimacy path.
+
+**What is still open, and is a design question rather than a defect.** Two
+promises in this arc are not modelled, and both are one layer below what §154
+and this section fix:
+
+- `exilarchateHasAClaim` is set by three cards and **read by nobody**. The
+  tooltip promises "a recognised Exilarchate interest in every succession after
+  this one, and will send a delegation to every one of them". Nothing happens at
+  the next succession.
+- `davidicThrone` is permanent. It is raised when a son of David is seated and
+  never falls, so a house whose Davidic king died childless still satisfies "A
+  son of David on the throne" a century later. Making it fall would mean
+  tracking a dynasty, which the engine does not model — rulers are names and
+  three skills — so this is a real design choice and not a one-line fix.
+
+Also worth recording: the shared house-of-David package is **charted in no
+road**. `chapter_paths.js` gives 614's crown two roads and 132's marriage one;
+the shared cards, which are the road to the crown of Israel in the other four
+chapters, appear nowhere in the tree. `--gaps` is silent about it because gaps
+list roads that do not end, and an uncharted arc has no road to end.
+
+- **Regression contract**: `smoke101.mjs` — seating him clears the heir, his
+  death does not return the crown to the line he displaced, and 614's card
+  behaves the same; while the answers that seat nobody (the commissioned
+  genealogy) disturb no succession at all.

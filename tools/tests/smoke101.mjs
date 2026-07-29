@@ -1,5 +1,5 @@
-// Headless regression — SPEC §153, §154. Two reports about the greater crown,
-// both of the same shape: a card that says a thing happens, and nothing happens.
+// Headless regression — SPEC §153, §154, §155. Reports about the greater crown,
+// all of the same shape: a card that says a thing happens, and nothing happens.
 //
 // §154. THE SON IS NOT SEATED. The house-of-David arc collects on the marriage
 // a generation later with an option labelled "Seat him", whose chronicle line
@@ -18,6 +18,13 @@
 // the crown mid-revolt lost Brothers of the Diaspora, Cleanse Samaria and The
 // Freedom of Zion unfinished and unpaid, and lost the completed ones off the
 // panel with them. This is the §135 lesson on a surface §135 did not reach.
+//
+// §155. THE LINE HE DISPLACED STAYED HIS HEIR. Seating a Davidide left the
+// reigning house's designated heir standing — the senior line, the man the
+// choice had just passed over — so the crown went back to him at the next
+// death while `davidicThrone` went on describing a house that had stopped
+// being David's. Herod's problem exactly, forgotten in one generation. 614's
+// card seated its Exilarch correctly and had this defect too.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
@@ -26,7 +33,7 @@ const { FORMABLES } = await import(R + '/js/data/formables.js');
 const { EVENTS_DAVID } = await import(R + '/js/data/events_house_of_david.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
-const { missionsFor, checkMissions } = await import(R + '/js/sim/realm.js');
+const { missionsFor, checkMissions, rulerDies } = await import(R + '/js/sim/realm.js');
 const { gameActions } = await import(R + '/js/sim/init.js');
 
 let failures = 0;
@@ -151,6 +158,50 @@ console.log('== §154: "Seat him" seats him ==');
   crown.options[0].effects(w.ctx);
   ok(w.game.tags.JUD.ruler.name !== before.name && /David/.test(w.game.tags.JUD.ruler.name),
     '  David ben Zakkai takes the throne (' + w.game.tags.JUD.ruler.name + ')');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== §155: and the line he displaced does not stay his heir ==');
+{
+  // Seating him is the whole arc's payoff. Leaving the reigning house's
+  // designated heir standing hands the crown straight back to the man this
+  // choice passed over, one death later — with `davidicThrone` still describing
+  // a house that had stopped being David's. That is Herod's problem exactly,
+  // and the engine used to forget it in a single generation.
+  const w = greatCrown('167bce', 'HAS', -120);
+  const t = w.game.tags.HAS;
+  t.heir = { name: 'The Senior Line', gov: 3, infl: 3, mar: 3, age: 30 };
+  HOUSE.options.find((o) => /Send to Babylonia/.test(o.label)).effects(w.ctx);
+  w.game.date = { y: -96, m: 6, d: 1 };
+  SON.options.find((o) => /Seat him/.test(o.label)).effects(w.ctx);
+  const seated = t.ruler.name;
+  ok(t.heir === null, 'seating him clears the heir the house had before him');
+  rulerDies(w.ctx, 'HAS', 'has died');
+  ok(t.ruler.name !== 'The Senior Line',
+    '  so his death does not hand the crown back to the line he displaced ('
+    + seated + ' → ' + t.ruler.name + ')');
+}
+{
+  // The other three cards of the first question do not touch the succession at
+  // all — only seating a man may move it.
+  const w = greatCrown('66ce', 'JUD', 90);
+  w.game.tags.JUD.heir = { name: 'The Senior Line', gov: 3, infl: 3, mar: 3, age: 30 };
+  HOUSE.options.find((o) => /Search the archives/.test(o.label)).effects(w.ctx);
+  ok(w.game.tags.JUD.heir && w.game.tags.JUD.heir.name === 'The Senior Line',
+    'a commissioned genealogy seats nobody and disturbs no succession');
+}
+{
+  // 614 seated its Davidide correctly and still handed the throne back.
+  const era = ERAS.find((e) => e.bookmark.id === '614ce');
+  const crown = era.events.find((e) => e && e.id === 'ev_d_the_crown_of_david');
+  const w = greatCrown('614ce', 'JUD', 660);
+  w.game.tags.JUD.heir = { name: 'The Senior Line', gov: 3, infl: 3, mar: 3, age: 30 };
+  crown.options[0].effects(w.ctx);
+  ok(w.game.tags.JUD.heir === null,
+    'the Exilarch does not inherit the reigning house\'s heir either');
+  rulerDies(w.ctx, 'JUD', 'has died');
+  ok(w.game.tags.JUD.ruler.name !== 'The Senior Line',
+    '  and the house that gave up the crown does not get it back at the next death');
 }
 
 // ---------------------------------------------------------------------------
