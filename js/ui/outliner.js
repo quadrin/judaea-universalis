@@ -10,6 +10,41 @@ export function createOutliner(el, {
   let body = null;
   let lastHtml = '';
 
+  // One click is one click, here too (SPEC §132, §152).
+  //
+  // The realm panel was taught this and the outliner was not, and the outliner
+  // is the worse offender: its rows carry live numbers — warscore, siege
+  // percentage, a marching army's progress — so the markup genuinely differs
+  // on most days and `refresh()` rewrites the whole body. A click is only
+  // delivered when mousedown and mouseup land on the same element, so a
+  // rebuild between the two detaches the button and the browser dispatches no
+  // click at all. The dove on a war row is the one a player notices, because
+  // warscore moves every day a siege ticks.
+  //
+  // While a pointer is down inside the outliner the refresh is deferred, not
+  // skipped: the day still ticks, the sim is untouched, and the moment the
+  // button is released the outliner catches up in one pass.
+  let pointerHeld = false;
+  let refreshMissed = false;
+  let catchUp = 0;
+  el.addEventListener('pointerdown', () => { pointerHeld = true; });
+  const release = () => {
+    if (!pointerHeld) return;
+    pointerHeld = false;
+    if (!refreshMissed || catchUp) return;
+    // AFTER the click, not before it. `pointerup` is dispatched ahead of
+    // `click`, so a rebuild done here would detach the very node the click is
+    // about to be delivered to — the same bug moved one step later.
+    catchUp = setTimeout(() => {
+      catchUp = 0;
+      if (refreshMissed) refresh();
+    }, 0);
+  };
+  // Bound to the window rather than the outliner: a press that slides off the
+  // button before release must still let the rows start updating again.
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
+
   function bind(c, a) {
     ctx = c;
     actions = a || null;
@@ -359,11 +394,18 @@ export function createOutliner(el, {
     return html;
   }
 
-  function refresh(force) {
+  // `force` is still accepted — every caller passes it after an action — but it
+  // no longer forces the DOM write. Nothing outside this module touches the
+  // body, so identical markup means the rows on screen are already right, and
+  // rewriting them would only be another chance to eat a click. A forced
+  // refresh after a real action changes the markup and lands as it always did.
+  function refresh() {
     if (!ctx || !body) return;
+    if (pointerHeld) { refreshMissed = true; return; }
+    refreshMissed = false;
     let html;
     try { html = buildHtml(); } catch (e) { warnOnce('outliner', e); return; }
-    if (!force && html === lastHtml) return;
+    if (html === lastHtml) return;
     lastHtml = html;
     body.innerHTML = html;
   }

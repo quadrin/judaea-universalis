@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, contentForTag, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
@@ -647,19 +647,35 @@ export function monthlyHolySites(ctx) {
 // bookmark.missions = { TAG: [ {id, name, desc, rewardText, icon?, check(ctx), reward(ctx)} ] }
 // Linear chains; t.missionIdx points at the current mission. Checked monthly
 // for every tag with a chain (the AI earns its rewards too — symmetric odds).
-// The chain of missions a realm is working through (SPEC §102). The era's own
-// table answers first; a nation that took a greater crown reads the chain that
-// crown carries instead — the Kingdom of Israel is not asked to finish
-// Judaea's war objectives, it is asked to do the things a kingdom does.
+// The chain of missions a realm is working through (SPEC §102, §153). The era's
+// own table answers first; a nation that took a greater crown adds the chain
+// that crown carries to the end of the one it was already working through.
+//
+// The crown's chain used to REPLACE it, which is the same mistake §135 found in
+// the event triggers and fixed there: proclaiming the Kingdom of Israel is the
+// reward for exactly the campaign the chapter's missions are about, so the
+// proclamation deleted the war it was won with. A player who took the crown
+// halfway through the Great Revolt lost Brothers of the Diaspora, Cleanse
+// Samaria and The Freedom of Zion unfinished and unpaid — and lost the ones
+// already completed off the panel with them, because the list the panel reads
+// is the list that records what is done. They are the same men, the same war
+// and the same map; the crown does not end that business, it inherits it.
+//
+// So the inherited chain runs first and the kingdom's own work follows it, and
+// `missionIdx` is left exactly where it stood (neither the player's road to a
+// crown nor the AI's resets it any more).
 export function missionsFor(ctx, tag) {
-  const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
+  const table = ctx.bookmark && ctx.bookmark.missions;
+  const own = table && table[tag];
   if (Array.isArray(own) && own.length) return own;
+  const inherited = contentForTag(ctx, table, tag);
   for (const f of FORMABLES) {
     if (!f || f.to !== tag || !Array.isArray(f.missions) || !f.missions.length) continue;
     if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
-    return f.missions;
+    return Array.isArray(inherited) && inherited.length
+      ? inherited.concat(f.missions) : f.missions;
   }
-  return null;
+  return (Array.isArray(inherited) && inherited.length) ? inherited : null;
 }
 
 export function checkMissions(ctx) {

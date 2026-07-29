@@ -712,6 +712,17 @@ export const simHelpers = {
     t.regency = false;
     t.regencyTitle = null;
   },
+  // A name from the chapter's own court pool (SPEC §143), for content that has
+  // to seat a man the card never named. The shared cards run in every Jewish
+  // chapter and cannot hard-code a name that is right in all of them; this is
+  // the same pool a succession draws from, so the man the crown passes to is
+  // named the way any other successor would be.
+  courtName(ctx, tag) {
+    try {
+      const pool = courtNamePool(ctx, L(ctx, tag));
+      return (Array.isArray(pool) && pool.length) ? String(ctx.rng.pick(pool)) : 'The Heir';
+    } catch (e) { warnOnce('courtName', 'courtName failed', e); return 'The Heir'; }
+  },
   setHeir(ctx, tag, h) {
     const t = ctx.game.tags[L(ctx, tag)];
     if (!t) return;
@@ -2783,7 +2794,9 @@ export function gameActions(ctx) {
           // has a chain of its own, a fresh set of missions to work through.
           if (b.grant) simHelpers.adjust(ctx, f.to, b.grant);
           if (b.modifier2) simHelpers.addTagModifier(ctx, f.to, b.modifier2);
-          if (Array.isArray(f.missions) && f.missions.length) nt.missionIdx = 0;
+          // `missionIdx` is NOT reset (SPEC §153): the crown's own chain now
+          // runs after the one this realm was already working through, so the
+          // index still points at the mission the campaign is on.
           ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
           ctx.bus.emit('provinceOwner', {}); // the map wears the new color
           say('A new banner', oldName + ' is no more: ' + (nt.name || f.to) + ' rises. The chronicle will remember this day.', 'good');

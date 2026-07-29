@@ -1309,7 +1309,8 @@ function aiFormNation(ctx, tag) {
         if (Number.isFinite(b.grant[k])) nt.points[k] = clamp(num(nt.points[k]) + b.grant[k], 0, 999);
       }
     }
-    if (Array.isArray(f.missions) && f.missions.length) nt.missionIdx = 0;
+    // The chapter's chain carries across the proclamation (SPEC §153), so the
+    // index stays where it stood — same rule for the AI as for the player.
     ctx.bus.emit('tagSwitched', { from: tag, to: f.to });
     ctx.bus.emit('provinceOwner', {});
     ctx.bus.emit('notify', {

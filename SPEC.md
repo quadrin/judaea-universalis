@@ -7773,3 +7773,114 @@ The chapter now charts **five forks and fourteen roads, none of them open**, and
   `smoke83.mjs` reads the new file for markers, `smoke85.mjs` holds it to the
   package contract, and `smoke94.mjs` now asserts the chapter declares nothing
   open rather than asserting it declares five.
+
+## 152. One click is one click, in the outliner too
+
+Reported: the negotiate-peace button sometimes cannot be pressed at all.
+
+§132 diagnosed this exact failure in the realm panel and fixed it there: a
+click is only delivered when mousedown and mouseup land on the same element, so
+a `refresh()` between the two detaches the button and the browser dispatches no
+click. The outliner was never taught the lesson, and it is the worse offender
+of the two.
+
+The realm panel's sections mostly rewrote identical markup, which is a waste and
+a race but only occasionally either. The outliner's rows carry **live numbers** —
+warscore, siege percentage, a marching army's progress — so `html !== lastHtml`
+on most days and the body genuinely is rebuilt. The dove on a war row is the
+button a player notices, because a war row's warscore moves every day a siege
+ticks: the more the war is worth negotiating about, the more often the button
+disappears from under the finger.
+
+Two changes, both §132's:
+
+- **Identical markup no longer writes.** `refresh(force)` still recomputes, but
+  the DOM write is skipped when the markup is byte-identical — including when
+  forced. Nothing outside the module touches the body, so identical markup means
+  the rows on screen are already right and a rewrite is only another chance to
+  eat a click. Every caller still passes `force` after an action, and a real
+  action changes the markup, so those refreshes land exactly as before.
+- **A pointer held inside the outliner defers the refresh.** The day still
+  ticks, the sim is untouched, and the outliner catches up in one pass on
+  release. The catch-up is queued behind the click rather than run from
+  `pointerup`, which is dispatched *before* `click` — rebuilding there is the
+  same bug moved one step later. The release listener is on the window, so a
+  press that slides off the button before release still lets the rows resume.
+
+This fixes every button in the outliner, not only the dove: split, hire a
+general, stand down, modernize, and the fleet and wing controls sat behind the
+same race.
+
+- **Regression contract**: `uitest38.mjs` — the war row's dove is pressed once
+  with the warscore genuinely moving under the finger and the real `day` signal
+  emitted three times mid-press, and the negotiating table opens. Against the
+  code as it was, it does not. It also asserts the other half: three quiet days
+  leave the same dove node in place, and a change made after the press still
+  reaches the rows.
+
+## 153. A greater crown inherits the chapter's business
+
+Reported: proclaiming the Kingdom of Israel from Judaea or Hasmonean Judaea
+empties the missions panel of everything that was on it.
+
+It did, by design, and the design was wrong. `missionsFor` returned the formed
+crown's own chain **instead of** the one the realm was working through, and both
+proclamation paths — the player's decision and the AI's — reset `missionIdx` to
+zero. The comment defending it said the Kingdom of Israel is not asked to finish
+Judaea's war objectives but to do the things a kingdom does.
+
+That is the same mistake §135 found in the event triggers and fixed there.
+Proclaiming Israel is the reward for exactly the campaign the chapter's missions
+are about, so the proclamation deleted the war it was won with. A player who
+took the crown mid-revolt lost Brothers of the Diaspora, Cleanse Samaria and The
+Freedom of Zion unfinished and unpaid — and lost the ones already completed off
+the panel with them, because the list the panel reads is the list that records
+what is done. They are the same men, the same war and the same map; §102 already
+says so about the estates, and the estates were already inherited.
+
+So the inherited chain runs first and the crown's own chain follows it, and
+`missionIdx` is left where it stood. The kingdom still gets new work; it simply
+does not get it by having the chapter's work deleted. The chapter's checks keep
+running under the new banner because they were already written to (§135): the
+66 CE chain resolves `JUD` through the forwarding address, so Caesarea taken by
+the Kingdom of Israel completes the mission Judaea was set.
+
+- **Regression contract**: `smoke101.mjs` — the crown keeps all six of the
+  revolt's missions and adds its own four after them, nothing is duplicated,
+  three already earned are still earned across the proclamation, and a mission
+  written for Judaea is completed by the Kingdom of Israel. Rome still reads its
+  own chain and a tag the chapter gave none still has none.
+
+## 154. The card said seat him and nobody was seated
+
+Reported: accepting the Davidic heir does not replace the ruler.
+
+It did not. `ev_hd_the_son_of_the_marriage` — the card the whole house-of-David
+arc exists to reach — has an option labelled **"Seat him"**, a tooltip that
+calls it *what the marriage was arranged for, collected*, and a chronicle line
+reading *the son of the Babylonian marriage is seated*. It set four flags, paid
+thirty-five legitimacy and a permanent modifier, and left the same man on the
+ruler card. The 132 chapter's own version, `ev_bk_the_grandson` — "Let the
+succession pass to him", *the succession passes to the son of the Babylonian
+marriage* — did the same thing. 614's `ev_d_the_crown_of_david` always seated
+its Davidide by name, which is the shape the other two were supposed to have.
+
+Both now seat him, with the man the card describes: twenty-six in the shared
+card and thirty-one in 132, strong in government and influence and no soldier at
+all, because both cards spend their second paragraph on a young man who has been
+running the chancery's eastern correspondence and has never held a command. He
+keeps the crown's own title and rules in his own name. The tooltips say all of
+this, including the martial cost, which is real and was not disclosed while the
+option quietly did nothing.
+
+**Naming a man the card never named.** The shared package runs in six chapters
+spanning eight hundred years and cannot hard-code a name that is right in all of
+them, and it may not import the sim. So `helpers.courtName` returns a name from
+the chapter's own court pool (§143) — the same pool a succession draws from, so
+the man the crown passes to is named the way any other successor is.
+
+- **Regression contract**: `smoke101.mjs` — seating him changes the ruler, to a
+  man of the described age and skills, wearing the same title, ruling without a
+  regency, named out of the chapter's pool; the 132 card does the same; 614 still
+  crowns David ben Zakkai; and passing him over leaves the reigning king exactly
+  where he was, so the fix cannot be "always change the ruler".

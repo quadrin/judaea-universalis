@@ -298,16 +298,29 @@ export const EVENTS_DAVID = [
     options: [
       {
         label: 'Seat him. The house of David returns to the throne it left',
-        tooltip: 'What the marriage was arranged for, collected: +35 legitimacy and +0.3 a month '
-          + 'permanently, −1 unrest everywhere, and no rival can ever again say this house has no '
-          + 'title to what it holds. It is also the requirement for proclaiming the Kingdom of '
-          + 'Israel, which is the united monarchy and therefore David\'s. The price is the one the '
-          + 'Babylonians came to name: a recognised Exilarchate interest in every succession after '
-          + 'this one. −1 authority.',
+        tooltip: 'What the marriage was arranged for, collected: he takes the throne at '
+          + 'twenty-six — a chancery man, strong in government and influence and no soldier at '
+          + 'all — and with him +35 legitimacy and +0.3 a month permanently, −1 unrest '
+          + 'everywhere, and no rival can ever again say this house has no title to what it '
+          + 'holds. It is also the requirement for proclaiming the Kingdom of Israel, which is '
+          + 'the united monarchy and therefore David\'s. The price is the one the Babylonians '
+          + 'came to name: a recognised Exilarchate interest in every succession after this '
+          + 'one. −1 authority.',
         effects: (ctx) => {
           try {
             const h = ctx.helpers;
             const me = ctx.game.playerTag;
+            // Seat him — which the card says twice and, until SPEC §154, never
+            // did: the flags were set, the legitimacy was paid, and the man on
+            // the ruler card was the same man as before. He is the point of the
+            // whole arc, so he takes the throne, keeps the crown's own title,
+            // and is what the card describes him as: eight years in the
+            // chancery, the eastern correspondence, and no campaign at all.
+            const old = (ctx.game.tags[me] && ctx.game.tags[me].ruler) || {};
+            h.setRuler(ctx, me, {
+              name: h.courtName(ctx, me), title: old.title,
+              gov: 4, infl: 5, mar: 1, age: 26,
+            });
             h.adjust(ctx, me, { legitimacy: 35, stability: 1 });
             h.addTagModifier(ctx, me, {
               id: 'the_line_of_jehoiachin', name: 'The Line of Jehoiachin', months: -1,
