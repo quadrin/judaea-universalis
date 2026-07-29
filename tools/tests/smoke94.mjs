@@ -299,9 +299,17 @@ console.log('== the other three senses of the word survive the sweep ==');
     'the Jewish text of Deuteronomy 27:4 is a people\'s scripture, not a state');
   const paths = await import(R + '/js/data/chapter_paths.js');
   const gaps529 = paths.KNOWN_GAPS.filter((g) => g.chapter === '529ce');
-  ok(gaps529.length === 5, 'the chapter still declares its five open roads');
-  ok(gaps529.some((g) => /Caesarea in 556/.test(g.why)),
-    '  and the joint rising of 556 is still the terminal they wait for');
+  // SPEC §151 wrote the tail those five roads were waiting for, so the chapter
+  // declares nothing open. The assertion is kept pointed at the same place: it
+  // now says the gap list emptied because the cards exist, not because somebody
+  // deleted the entries.
+  ok(gaps529.length === 0, 'the chapter declares no open roads (SPEC §151)');
+  const ch529 = paths.CHAPTER_PATHS.find((c) => c.id === '529ce');
+  const roads529 = ch529.forks.flatMap((f) => f.roads);
+  ok(roads529.length === 14 && roads529.every((r) => !!r.terminal),
+    '  because all fourteen of its roads end somewhere');
+  ok(roads529.some((r) => r.entry === 'ev529_the_praetorium_at_caesarea'),
+    '  and the joint rising of 556 is a card the chapter plays rather than a terminal it awaits');
 }
 
 // ---------------------------------------------------------------------------

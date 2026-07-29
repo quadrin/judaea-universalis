@@ -151,7 +151,16 @@ export const CAMPAIGN_GUIDANCE = {
         { y: 529, m: 5, label: 'The crown is offered at Neapolis' },
         { y: 529, m: 7, label: 'The churches burn, with or without your leave' },
         { y: 530, m: 4, label: 'Al-Harith\u2019s riders come up the Jezreel road' },
+        // The 531\u2013614 tail (SPEC \u00a7151). The war ends in the second year and the
+        // chapter runs another eighty-three, so the outliner has to keep saying
+        // what the next thing is.
+        { y: 531, m: 2, label: 'The refugees reach Ctesiphon with an offer' },
+        { y: 540, m: 6, label: 'Khusrau breaks the peace \u2014 and stays in the north' },
+        { y: 551, m: 9, label: 'A bishop of Caesarea argues the disabilities down' },
+        { y: 556, m: 7, label: 'Caesarea rises, and the Jews of the city rise with it' },
         { y: 560, m: 1, label: 'The generation that rose is gone; the count begins' },
+        { y: 572, m: 5, label: 'The last rising the chronicles record' },
+        { y: 614, m: 3, label: 'The Persians on the coast road; the count is taken' },
       ],
     },
     BYZ: {

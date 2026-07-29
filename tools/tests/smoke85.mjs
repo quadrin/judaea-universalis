@@ -57,15 +57,17 @@ const PACKAGES = [
     tag: 'ISR', entry: 'ev_z_the_question_that_came_back', terminal: 'ev_z_what_the_century_asked' },
 ];
 
-// SPEC §126 packages. They are the same shape but they do NOT all carry a
-// dated terminal — the 132 ladder and the 614 window close on the terminals
-// their chapters already have — so they are checked by the structural
-// sections and not by the terminal one.
+// The packages that are the same shape but do NOT carry a single dated
+// terminal of their own — the 132 ladder and the 614 window close on the
+// terminals their chapters already have, and the Keepers' tail (SPEC §151)
+// closes fourteen roads on five different cards — so they are checked by the
+// structural sections and not by the terminal one.
 const RUNGS = [
   { era: '132ce', file: 'events_132ce_house.js', ex: 'EVENTS_132_HOUSE', bm: 'bookmark_132ce.js', tag: 'JUD' },
   { era: '614ce', file: 'events_614ce_power.js', ex: 'EVENTS_614_POWER', bm: 'bookmark_614ce.js', tag: 'JUD' },
   { era: '614ce', file: 'events_614ce_david.js', ex: 'EVENTS_614_DAVID', bm: 'bookmark_614ce.js', tag: 'JUD' },
   { era: '132ce', file: 'events_132ce_kosiba.js', ex: 'EVENTS_132_KOSIBA', bm: 'bookmark_132ce.js', tag: 'JUD' },
+  { era: '529ce', file: 'events_529ce_roads.js', ex: 'EVENTS_529_ROADS', bm: 'bookmark_529ce.js', tag: 'SAM' },
 ];
 
 for (const p of PACKAGES.concat(RUNGS)) {
