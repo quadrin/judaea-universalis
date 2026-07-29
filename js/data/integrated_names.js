@@ -153,6 +153,130 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Hyrcania': 'Gorgan',
 });
 
+// The Keepers' pen (SPEC §147). The layer above answers for every JEWISH state
+// alike; the Samaritans had nothing but the nine names their own chapter wrote
+// down, so a Samaritan realm that took the coast integrated Caesarea and the
+// signpost went on reading Caesarea.
+//
+// It is a separate register and not a copy, because the difference between the
+// two pens is the whole argument of the 529 chapter (§136). The editorial rule
+// here is: **where the Torah names a place, this pen writes the Torah's name.**
+// The Samaritan canon is the Pentateuch and nothing else — no Joshua, no Kings,
+// no Ezekiel, none of the books the Jewish table above draws half its entries
+// from — and where the Torah is silent the pen falls back on Samaritan Aramaic,
+// the language of the Defter and the chronicles.
+//
+// That rule does most of the work by itself, and it lands hardest on one city.
+// The Torah never says *Jerusalem*. It says **Shalem**, once, of Melchizedek's
+// town (Gen. 14:18), and thereafter only "the place which the LORD shall
+// choose" — which this people reads, and has always read, as Gerizim. So the
+// Keepers' pen does not write Yerushalayim. It writes the one name its own
+// scripture gives, and declines the argument.
+//
+// Three more places where the two canons diverge and the pen follows the Torah:
+// Hebron is **Kiryat Arba** (Gen. 23:2, "Kiryat Arba, that is Hevron"),
+// Bethlehem is **Efrat** (Gen. 35:19, "Ephrath, which is Bethlehem"), and
+// Ramallah's hill is **Luza** (Gen. 28:19, "Luz was the name of the city at
+// first"). Each is the older half of a gloss the Torah itself supplies.
+//
+// Honesty about what this is: Shalem, Kiryat Arba, Efrat and Luza are Torah
+// names applied by editorial choice, not attestations of Samaritan daily
+// speech — the community's own later sources say Jerusalem like everyone else.
+// The rule is a claim about what this pen is FOR, in the same spirit as the
+// note above that the Jewish table's Mediterranean entries are communal
+// exonyms rather than Biblical coinages.
+//
+// Sources: the Samaritan Pentateuch for the Torah forms; Samaritan Aramaic for
+// Qisri, Pahel, Garshu and the rest; Abu'l-Fath's Kitab al-Tarikh for the later
+// toponyms of the hill country, which is a fourteenth-century chronicle and
+// late for a sixth-century chapter — flagged rather than leaned on.
+// Transliteration is unpointed ASCII, as above.
+export const SAMARITAN_INTEGRATED_NAMES = Object.freeze({
+  // The mountain and the hill country: the four provinces and their approaches.
+  'Neapolis': 'Shechem',
+  'Sebaste': 'Shomron',
+  'Jenin': 'Ein Ganim',
+  'Tulkarm': 'Tur Karma',
+  'Qalqilya': 'Qalqilya',
+  'Antipatris': 'Migdal Afeq',
+  'Afula': 'Ophel',
+  'Ramallah': 'Luza',
+
+  // Palaestina Prima: the coast, the Shephelah, and the city they do not call
+  // by the name the other pen calls it.
+  'Jerusalem': 'Shalem',
+  'Jericho': 'Yeriho',
+  'Emmaus': 'Ammaus',
+  'Lydda': 'Lod',
+  'Joppa': 'Yafo',
+  'Jamnia': 'Yavne',
+  'Azotus': 'Ashdod',
+  'Ascalon': 'Ashqelon',
+  'Gaza': 'Azza',
+  'Hebron': 'Kiryat Arba',
+  'Adora': 'Adorayim',
+  'Bethlehem': 'Efrat',
+  'Beit Shemesh': 'Beit Shemesh',
+  'Engaddi': 'Ein Gedi',
+  'Masada': 'Metzada',
+  'Beersheba': 'Be\'er Sheva',
+  'Caesarea Maritima': 'Qisri',
+  'Dora': 'Dor',
+
+  // Palaestina Secunda: the lake, the Galilee, and the Golan.
+  'Scythopolis': 'Beit She\'an',
+  'Ptolemais': 'Akko',
+  'Sepphoris': 'Tzippori',
+  'Jotapata': 'Yodfat',
+  'Tiberias': 'Tveria',
+  'Tarichaea': 'Migdal',
+  'Gischala': 'Gush Halav',
+  'Safed': 'Tzfat',
+  'Caesarea Philippi': 'Dan',
+  'Batanea': 'Bashan',
+  'Gamala': 'Golan',
+  'Gadara': 'Gadar',
+  'Pella': 'Pahel',
+
+  // Palaestina Tertia, the Negev road and Arabia.
+  'Petra': 'Reqem',
+  'Oboda': 'Avdat',
+  'Aila': 'Elat',
+  'Zoara': 'Tzoar',
+  'Medaba': 'Medva',
+  'Philadelphia': 'Rabbat Ammon',
+  'Gerasa': 'Garshu',
+  'Bostra': 'Botzra',
+  'Machaerus': 'Mekhvar',
+  'Gadora': 'Gedor',
+  'Rhinocolura': 'Nahal Mitzrayim',
+  'Dumatha': 'Dumah',
+  'Tayma': 'Tema',
+  'Kadesh Barnea': 'Kadesh Barnea',
+
+  // Phoenice and Syria.
+  'Tyre': 'Tzor',
+  'Sidon': 'Tzidon',
+  'Byblos': 'Geval',
+  'Berytus': 'Berot',
+  'Aradus': 'Arvad',
+  'Tripolis': 'Trablus',
+  'Damascus': 'Damesek',
+  'Emesa': 'Hims',
+  'Palmyra': 'Tadmor',
+  'Beroea': 'Halab',
+  'Antioch': 'Antiokhia',
+  'Chalcis': 'Halkis',
+
+  // Egypt, where the community kept synagogues from the Ptolemies onward and
+  // argued its case before them (Josephus, Ant. XIII.74-79). Mof rather than
+  // the Jewish table's Nof: both are attested, and Mof is the older spelling.
+  'Pelusium': 'Sin',
+  'Memphis': 'Mof',
+  'Thebes': 'No Amon',
+  'Alexandria': 'Aleksandria',
+});
+
 // A crown's own pen, shared across bookmarks (SPEC §110). The religion table
 // above answers for every Jewish state alike, which is right for Judaea,
 // Adiabene and the rest — and wrong for the one crown whose whole claim is

@@ -7508,3 +7508,116 @@ still real. It holds the fixture's Jerusalem in both halves, because the card
 also sits behind `greaterVictory` and the negative would otherwise pass for the
 wrong reason. It pins each function on the correct side of the split by name,
 and it pins the two hand-rolled copies as the evidence they are.
+
+## 147. The Keepers get a pen of their own
+
+Requested: Samaritan names for the provinces the Samaritan state integrates.
+
+`resolveDisplayName` has three layers — a crown's own pen (§110), the chapter's
+`integratedNames` table, and a **shared layer keyed on the owner's religion**.
+The shared layer existed only for `judaism`. So every Jewish realm in every
+chapter could write its own signposts across a hundred and forty provinces,
+while the Samaritans had the nine names their own chapter had written by hand: a
+Keeper state that took the coast integrated Caesarea and the signpost went on
+reading Caesarea.
+
+`SAMARITAN_INTEGRATED_NAMES` is that layer, on the same footing and keyed the
+same way — on the faith rather than the tag, so a Samaritan state in any chapter,
+or formed in one, is answered without another copied table.
+
+### Not a copy, because the difference is the argument
+
+It would have been half an hour's work to clone the Jewish table. That would
+have been wrong, because the distance between the two pens is what the 529
+chapter is *about* (§136).
+
+The editorial rule: **where the Torah names a place, this pen writes the Torah's
+name.** The Samaritan canon is the Pentateuch and nothing else — no Joshua, no
+Kings, no Ezekiel, none of the books the Jewish table draws half its entries
+from. Where the Torah is silent the pen falls back on Samaritan Aramaic, the
+language of the Defter and the chronicles.
+
+That rule does most of the work by itself, and it lands hardest on one city. The
+Torah never says *Jerusalem*. It says **Shalem**, once, of Melchizedek's town
+(Gen. 14:18), and thereafter only "the place which the LORD shall choose" —
+which this people reads, and has always read, as Gerizim. So the Keepers' pen
+does not write Yerushalayim. It writes the one name its own scripture gives, and
+declines the argument.
+
+Three more divergences follow the same rule, each the older half of a gloss the
+Torah itself supplies: Hebron is **Kiryat Arba** (Gen. 23:2, "Kiryat Arba, that
+is Hevron"), Bethlehem is **Efrat** (Gen. 35:19, "Ephrath, which is Bethlehem"),
+and Ramallah's hill is **Luza** (Gen. 28:19, "Luz was the name of the city at
+first"). Egypt's Memphis is **Mof** rather than the Jewish table's Nof — both
+attested, Mof the older spelling.
+
+**Honesty about what this is.** Shalem, Kiryat Arba, Efrat and Luza are Torah
+names applied by editorial choice, not attestations of Samaritan daily speech;
+the community's own later sources say Jerusalem like everyone else. The rule is
+a claim about what this pen is *for*, in the same spirit as the existing note
+that the Jewish table's Mediterranean entries are communal exonyms rather than
+Biblical coinages. Abu'l-Fath's *Kitab al-Tarikh* supplies some hill-country
+toponyms and is a fourteenth-century chronicle — late for a sixth-century
+chapter, and flagged rather than leaned on.
+
+### What was deliberately not changed
+
+The Jewish pen waits for **both halves** — full integration *and* a community of
+the owner's own kind — on the reasoning that a Hebrew name on a town where no
+Jew lives is a claim rather than a signpost. Every other pen keeps the older,
+looser threshold. The same argument plainly applies to the Keepers, and more
+sharply, since being few is their whole situation. It is not applied here: the
+chapter already ships nine Samaritan names under the looser rule, tightening it
+would change shipped behaviour, and the request was for names on integrated
+conquests. Recorded as a question rather than answered by a side effect.
+
+`smoke98.mjs` takes twelve provinces across the map and reads the signpost off
+each, asserts the four divergences against the Jewish pen in both directions,
+checks the chapter's own table still outranks the shared one, checks a Jewish
+realm is untouched — including that it still waits for a community before
+writing Akko on a Christian town — and validates every key against the canonical
+province list.
+
+## 148. A house is not a house in its first summer
+
+Reported, with a screenshot: **The House That Is Not David's** arrived on
+1 August 166 BCE. Eleven months into the Maccabean revolt. Eighteen hundred men
+in the field, four talents in the purse, a battle running at Lydda on its fifth
+day, and the outliner still calling it *Insurgency in the Hills*.
+
+The card opens:
+
+> The question has been asked in the street for a generation and it has now been
+> asked in the chamber, which is different. **The realm is large, the crown is
+> secure, the succession is orderly** — and the man who wears it is not of Judah.
+
+None of that was true, and the gate never checked any of it. Its own comment
+claimed the last clause — *"past the point where it is plainly a rising rather
+than a kingdom"* — and then tested only sovereignty, Jerusalem, and ten
+provinces. A rising that overruns ten provinces in its first summer satisfies
+that exactly, which is what the Maccabees had done.
+
+So the gate now asks for each thing the card says out loud. A generation
+(twenty years) since the chapter opened; no regency, because that is the
+opposite of an orderly succession; stability at least 1 and legitimacy at least
+50, because that is what *secure* means.
+
+The generation is the load-bearing one, and it needed a new helper to ask:
+`chapterYears(ctx)`. A content package may not import the sim and cannot see
+`ctx.bookmark`, so a **shared** package — one that plays in every chapter and
+knows none of them — had no way to tell a dynasty from a rising. That is the
+same shape of gap as §146's missing `countOwned`: the contract could not express
+the question, so the card asked a different one.
+
+Twenty years fits inside every chapter that can reach this card with room to
+spare — 167 runs 107 years, 67 runs 42, 40 runs 50, 66 runs 34, 614 runs 86 —
+and it puts the question where the history put it. The revolt opens in 167;
+Simon wins independence in 142 and Aristobulus takes the diadem in 104. The
+quarrel over whether the house of Joarib may wear it belongs to that century,
+not to its first campaign season. With the chapter opening in month 11, the
+question now becomes askable in month 11 of 147 BCE.
+
+`smoke93.mjs` walks the boundary — nineteen years, nineteen years and eleven
+months, twenty years exactly — reproduces the reported August 166 case against a
+crown that meets every other test, and checks that a regency, an unsettled realm
+and a disbelieved crown each shut it again.

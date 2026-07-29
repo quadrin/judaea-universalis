@@ -50,17 +50,46 @@ function ownArcRuns(ctx) {
     || flag(ctx, 'oneCrownBothCentres');     // 614: the line of Jehoiachin
 }
 
-// A crown big enough for the question to bite: sovereign, seated in Jerusalem,
-// and past the point where it is plainly a rising rather than a kingdom.
+// A generation, which is what the card claims for itself in its own first line
+// (SPEC §148).
+const GENERATION_YEARS = 20;
+
+// A crown big enough — AND OLD ENOUGH — for the question to bite: sovereign,
+// seated in Jerusalem, past the point where it is plainly a rising rather than
+// a kingdom.
+//
+// That last clause was the comment's promise and nothing tested it, so the card
+// arrived on the Maccabees on 1 August 166 BCE: eleven months into the revolt,
+// 1,800 men in the field, a battle running at Lydda, four talents in the purse
+// — and a card whose first paragraph reads *the realm is large, the crown is
+// secure, the succession is orderly*, and whose first six words are *the
+// question has been asked for a generation*. A rising that has overrun ten
+// provinces in its first summer satisfies none of that.
+//
+// So the gate now asks for each of the things the card says out loud. The
+// generation is the load-bearing one: twenty years fits inside every chapter
+// that can reach this card with room to spare — 167 runs 107 years, 66 runs 34,
+// 614 runs 86 — and it puts the question where the history put it. The
+// Maccabean revolt opens in 167; Simon wins independence in 142 and Aristobulus
+// takes the diadem in 104. The quarrel about whether the house of Joarib may
+// wear it belongs to that century, not to its first campaign season.
 function seatedCrown(ctx) {
   const t = T(ctx);
   if (!t || t.overlord) return false;
   const h = ctx.helpers;
-  // Reach, not composition (SPEC §146): the Jerusalem half of this test is
-  // already `controls`, and a crown that has taken the city and ten provinces
-  // has arrived whether or not a treaty has caught up. Counting owned here
-  // would have shut the dynastic question against 614's Jewish state for most
-  // of the Persian war, which is exactly the reign it is meant to ask about.
+  // "…has been asked in the street for a generation."
+  if (h.chapterYears(ctx) < GENERATION_YEARS) return false;
+  // "…the succession is orderly." A regency is the opposite of that.
+  if (t.regency) return false;
+  // "…the crown is secure." A throne at nought legitimacy in an unsettled
+  // realm is not being asked polite questions about its pedigree.
+  if (Number(t.stability || 0) < 1 || Number(t.legitimacy || 0) < 50) return false;
+  // "…the realm is large." Reach, not composition (SPEC §146): the Jerusalem
+  // half of this test is already `controls`, and after twenty years a crown
+  // that holds the city and ten provinces has arrived whether or not every
+  // treaty has caught up. Counting owned here would have shut the question
+  // against 614's Jewish state for most of the Persian war, which is exactly
+  // the reign it exists to ask about.
   return h.controls(ctx, ctx.game.playerTag, 'Jerusalem')
     && h.countControlled(ctx, ctx.game.playerTag, {}) >= 10;
 }

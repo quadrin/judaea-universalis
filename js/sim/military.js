@@ -5,7 +5,7 @@ import {
   unlockedGen, cappedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
-import { JEWISH_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
+import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
@@ -1296,7 +1296,15 @@ export function resolveDisplayName(ctx, p) {
   // Nitzana) and therefore win. Religion supplies the cross-bookmark fallback:
   // Adiabene and any future/formable Jewish realm receive it without another
   // copied table or a hard-coded tag list.
-  const shared = t && t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES : null;
+  // …and the Keepers have a pen of their own (SPEC §147), on the same footing
+  // and for the same reason: a realm should be able to write its own signposts
+  // on the land it has integrated without its chapter listing every province
+  // by hand. Keyed on the faith rather than the tag, so a Samaritan state in
+  // any chapter — or formed in one — is answered without another copied table.
+  const shared = !t ? null
+    : t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES
+      : t.religion === 'samaritanism' ? SAMARITAN_INTEGRATED_NAMES
+        : null;
   // A crown's own pen (SPEC §110) outranks both: the era table describes the
   // age, the religion table describes the faith, and this describes THIS
   // crown — the thing the player just proclaimed. It names few provinces and

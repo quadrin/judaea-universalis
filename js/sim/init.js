@@ -778,6 +778,17 @@ export const simHelpers = {
     }
     return n;
   },
+  // How long this chapter has run, in years (SPEC §148). A content package may
+  // not import the sim and cannot see `ctx.bookmark`, so a SHARED package —
+  // one that plays in every chapter and knows none of them — had no way to
+  // tell a dynasty from a rising in its first summer. Fractional, because a
+  // card that wants "a generation" should not care which month it is.
+  chapterYears(ctx) {
+    const s = ctx && ctx.bookmark && ctx.bookmark.startDate;
+    const d = ctx && ctx.game && ctx.game.date;
+    if (!s || !d) return 0;
+    return (num(d.y) - num(s.y)) + (num(d.m, 1) - num(s.m, 1)) / 12;
+  },
 };
 
 // ------------------------------------------------------------------ national decisions
