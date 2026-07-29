@@ -128,10 +128,21 @@ export function createTopbar(el, { DEFINES, onFlagClick, onLedgerClick, onChroni
     // Treasury + monthly net
     setText(refs.treasury, fmtMoney(t.treasury));
     refs.treasury.classList.toggle('neg', (t.treasury || 0) < 0);
-    const net = (t.income || 0) - (t.expenses || 0);
+    // What the treasury actually did last month (SPEC §145), not the operating
+    // ledger's subtraction — the two differ whenever the court is consuming a
+    // reserve past its means (§101) or a subsidy is flowing either way, and it
+    // was the ledger that used to be on the chrome. Pre-§145 saves have no
+    // measurement yet and fall back to it for one month.
+    const ledger = (t.income || 0) - (t.expenses || 0);
+    const net = Number.isFinite(t.netFlow) ? t.netFlow : ledger;
     setText(refs.income, (net >= 0 ? '+' : '−') + Math.abs(net).toFixed(1));
     refs.income.classList.toggle('neg', net < 0);
     let tt = `Treasury: ${fmtMoney(t.treasury)} talents\nIncome: +${(t.income || 0).toFixed(1)} / month\nExpenses: −${(t.expenses || 0).toFixed(1)} / month`;
+    if (Math.abs(net - ledger) > 0.05) {
+      tt += `\nOther flows: ${net - ledger >= 0 ? '+' : '−'}${Math.abs(net - ledger).toFixed(1)} / month`
+        + `\n(the court's own consumption, subsidies and reparations — click for the full account)`;
+    }
+    tt += `\nThe treasury moves ${net >= 0 ? '+' : '−'}${Math.abs(net).toFixed(1)} a month`;
 
     // Loans (v1.3): borrow / repay beside the treasury, count in its tooltip.
     // Renders nothing unless the sim provides getLoans.

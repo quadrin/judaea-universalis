@@ -279,6 +279,7 @@ export function runMonthlyEconomy(ctx) {
       const t = g.tags[tag];
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
+      const opened = num(t.treasury);
       t.income = Math.round((bd.income + bd.tributeIn + (bd.powerIn || 0)) * 100) / 100;
       t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
@@ -286,6 +287,16 @@ export function runMonthlyEconomy(ctx) {
       const bleed = hoardBleed(ctx, tag, bd);
       if (bleed > 0) t.treasury = num(t.treasury) - bleed;
       if (!Number.isFinite(t.treasury)) t.treasury = 0;
+      // What the purse ACTUALLY did this month (SPEC §145), measured rather
+      // than re-derived. `income` and `expenses` are the operating ledger and
+      // must stay that way — `crisis.js` and the AI both read `income <
+      // expenses` to mean "this realm cannot pay its bills", which a court
+      // spending down a hoard emphatically can. But the panels were showing
+      // that ledger as though it were the balance, so a realm past its reserve
+      // cap read a cheerful +0.4 a month while the treasury fell by hundreds.
+      // Subsidies in and out were missing from it too, in the other direction.
+      // This field is the difference the treasury saw, so it cannot disagree.
+      t.netFlow = Math.round((num(t.treasury) - opened) * 100) / 100;
     } catch (e) { warnOnce('eco:' + tag, 'economy failed for', tag, e); }
   }
 }

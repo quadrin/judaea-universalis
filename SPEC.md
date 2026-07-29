@@ -7360,3 +7360,60 @@ their own declaration — and asserts silence for eleven months and a feeler in
 the twelfth; that a routed court still sues in month one, tired or not; that a
 fresh court losing narrowly never sues at all; and that the grace is a define
 rather than a literal.
+
+## 145. The number on the chrome is not the number the treasury moves
+
+Reported: occasionally, with a positive talent flow, my income still goes down.
+
+Not occasionally. Exactly, and by a lot. A Hasmonean court sitting on 8,000
+talents reads **+0.4 a month** on the topbar while the treasury falls by **470**.
+
+The topbar and the realm panel both rendered `t.income - t.expenses`. That pair
+is the **operating ledger** — taxes and trade against upkeep, administration,
+interest and tribute — and it was never the whole purse. Two other flows move
+the treasury and appear in neither half:
+
+- **The court's own consumption** (§101). A reserve past eighteen months of
+  gross income drains six per cent of the excess every month. That is the
+  mechanic doing exactly what it was written to do; it simply was not on the
+  chrome.
+- **Subsidies and reparations**, in and out. They are in `bd.net` and in neither
+  `t.income` nor `t.expenses`, so they push the other way — the treasury rising
+  faster than the headline claims.
+
+`explainIncome` was honest the whole time. It lists *The court consumes (reserve
+past its means)* and totals a **Monthly balance** of `bd.net - bleed`, which is
+the true figure. But the breakdown is behind a click, and the number the player
+actually reads was the ledger.
+
+### Measured, not re-derived
+
+```js
+const opened = num(t.treasury);
+…
+t.netFlow = Math.round((num(t.treasury) - opened) * 100) / 100;
+```
+
+`netFlow` is the difference the treasury saw between the start and end of the
+month. It cannot disagree with itself, and it needs no maintenance when a future
+flow is added — anything that moves the purse is in it by construction, which is
+the property the old subtraction lacked.
+
+### Why not simply fold the bleed into `expenses`
+
+Because two callers read that pair as a solvency test. `crisis.js` raises fiscal
+heat on `income < expenses`, and `ai.js` sheds a regiment a month on the same
+comparison. A court draining a hoard is not insolvent — it is **rich**, and the
+drain is the consequence of being rich. Folding the bleed in would have told
+both systems the opposite of the truth and started disbanding armies in the
+treasuries that least needed it. So the operating ledger stays exactly as it
+was, and only the display changes.
+
+Both panels also gained an **Other flows** line, so the tooltip explains the gap
+rather than leaving the player to find the breakdown; and both fall back to the
+old subtraction for the one month a pre-§145 save has no measurement yet.
+
+`smoke96.mjs` pins the reported case at four treasury levels, asserts that a
+court consuming a vast hoard still reads as solvent to the crisis and AI checks,
+that the headline and the breakdown now agree, that four ordinary realms under
+the cap see no phantom discrepancy, and that an old save loads without one.

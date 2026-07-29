@@ -369,9 +369,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.warExh, (t.warExhaustion || 0).toFixed(1) + ' / 20');
 
     // Economy & military
-    const net = (t.income || 0) - (t.expenses || 0);
+    // The measured movement, not the ledger's subtraction (SPEC §145).
+    const ledger = (t.income || 0) - (t.expenses || 0);
+    const net = Number.isFinite(t.netFlow) ? t.netFlow : ledger;
     setHtml(refs.treasury, `${fmtMoney(t.treasury)} <span class="${net < 0 ? 'neg' : 'pos'}">(${net >= 0 ? '+' : '−'}${Math.abs(net).toFixed(1)}/mo)</span>`);
-    refs.treasuryRow.dataset.tt = `Income: +${(t.income || 0).toFixed(1)} / month\nExpenses: −${(t.expenses || 0).toFixed(1)} / month`;
+    refs.treasuryRow.dataset.tt = `Income: +${(t.income || 0).toFixed(1)} / month\nExpenses: −${(t.expenses || 0).toFixed(1)} / month`
+      + (Math.abs(net - ledger) > 0.05
+        ? `\nOther flows: ${net - ledger >= 0 ? '+' : '−'}${Math.abs(net - ledger).toFixed(1)} / month`
+          + `\n(court consumption, subsidies, reparations)` : '')
+      + `\nThe treasury moves ${net >= 0 ? '+' : '−'}${Math.abs(net).toFixed(1)} a month`;
     setText(refs.loans, String(Math.max(0, Math.round(t.loans || 0))));
     setText(refs.manpower, fmtMen(t.manpower) + ' / ' + fmtMen(t.maxManpower));
     let armyN = 0, men = 0, regs = 0;
