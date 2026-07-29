@@ -7621,3 +7621,64 @@ question now becomes askable in month 11 of 147 BCE.
 months, twenty years exactly — reproduces the reported August 166 case against a
 crown that meets every other test, and checks that a regency, an unsettled realm
 and a disbelieved crown each shut it again.
+
+## 149. A client cannot take the field against its own lord
+
+Reported: why do coalitions get waged *with* a country I just vassalized?
+
+Because §75 was enforced in one direction only. `declareWar` refuses to **open**
+a war between an overlord and its client — it has always done that, and says so
+in its own comment: *the yoke is the settlement of that quarrel.* But a war is a
+persistent list of belligerents, and the bond can be made **afterwards**: by the
+peace table's subjugation clause, by a scripted overlord, by content, or by the
+AI restoring a client whose independence declaration failed. Nothing ever went
+back and looked at the wars already running.
+
+So a court could be your client on Tuesday and marching against you in a league
+on Wednesday, with tribute flowing the other way the whole time.
+
+`enforceVassalPeace` runs monthly, off `updateTagLife`, and makes the rule an
+**invariant** rather than a check at one door. Where a client stands on the far
+side of a war from its lord it leaves the war — not the war being cancelled,
+because everyone else's quarrel is their own. Its own clients go with it, having
+only ever been there under its banner; occupations between it and its lord's
+side revert; and a side emptied by the bond dissolves the war for want of an
+enemy.
+
+Reproduced and pinned in `smoke99.mjs`: the league forms with three members, one
+becomes our client, the war continues without it and with the other two. A
+client fighting *beside* its lord — the ordinary case — is untouched.
+
+## 150. A siege does not outlive the war that raised it
+
+Reported in the same breath: why is the Seleucid Empire still occupying my
+territory when I peaced out with them?
+
+Occupation reverted. It always did — every path was checked: the full congress,
+the separate peace, the junior partner's withdrawal, and the war ended by the
+sword all call `changeControllerCore(p, p.owner)` on the fronts they settle, and
+armies are given a road home. That was not what the player was looking at.
+
+**A siege in progress is not occupation, and nothing lifted it.** The camp
+stayed on the province after the war that raised it had ended: the outliner went
+on listing *Pisidia 30%*, and the map went on striping the cell, because the
+political layer stripes on
+
+```js
+p.controller !== p.owner || p.siege
+```
+
+To the player that is indistinguishable from an enemy still sitting on their
+land — and in the only sense the screen could show, the enemy was.
+
+`liftSiegesBetween(ctx, a, b)` clears every siege whose besieger is on one of
+two named sides and whose province is held by the other, and it is called from
+all four exits: `dissolveWar` (so the congress and the sword both get it),
+`releaseFromWar`, `withdrawFromWar`, and §149's bond sweep. Scoped rather than
+global, so a separate peace lifts the leaver's camps and leaves standing the
+siege of a court that is still fighting.
+
+The two reports arrived together and were two different bugs behind one
+appearance, which is worth recording: the sim was right about who held the
+ground and wrong about who was camped on it, and the map could not tell the
+player which of those it was drawing.
