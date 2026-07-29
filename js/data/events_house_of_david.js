@@ -56,6 +56,11 @@ function seatedCrown(ctx) {
   const t = T(ctx);
   if (!t || t.overlord) return false;
   const h = ctx.helpers;
+  // Reach, not composition (SPEC §146): the Jerusalem half of this test is
+  // already `controls`, and a crown that has taken the city and ten provinces
+  // has arrived whether or not a treaty has caught up. Counting owned here
+  // would have shut the dynastic question against 614's Jewish state for most
+  // of the Persian war, which is exactly the reign it is meant to ask about.
   return h.controls(ctx, ctx.game.playerTag, 'Jerusalem')
     && h.countControlled(ctx, ctx.game.playerTag, {}) >= 10;
 }

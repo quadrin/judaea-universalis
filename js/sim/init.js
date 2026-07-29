@@ -756,6 +756,28 @@ export const simHelpers = {
     }
     return n;
   },
+  // The realm, as opposed to the ground the armies happen to be standing on
+  // (SPEC §146). `countControlled` answers "where are my flags this month",
+  // which is the right question for a siege and the wrong one for every card
+  // that says *rules*, *reigns over* or *is a power*: an army sitting in three
+  // Anatolian provinces it will hand back at the peace table made the Law of
+  // the Nations fire on a realm that had annexed none of them.
+  //
+  // Ownership is also the quantity that survives the peace: an occupied
+  // province is still yours, so a realm does not shrink in the eyes of its own
+  // chroniclers because somebody is standing in it.
+  countOwned(ctx, tag, opts) {
+    const g = ctx.game;
+    tag = L(ctx, tag);
+    let n = 0;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== tag) continue;
+      if (opts && opts.religion && p.religion !== opts.religion) continue;
+      n++;
+    }
+    return n;
+  },
 };
 
 // ------------------------------------------------------------------ national decisions

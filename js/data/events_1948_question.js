@@ -71,9 +71,9 @@ function reach(ctx) {
 }
 function otherShare(ctx) {
   const h = ctx.helpers;
-  const all = h.countControlled(ctx, 'ISR', {});
+  const all = h.countOwned(ctx, 'ISR', {});
   if (!all) return 0;
-  return (all - h.countControlled(ctx, 'ISR', { religion: 'judaism' })) / all;
+  return (all - h.countOwned(ctx, 'ISR', { religion: 'judaism' })) / all;
 }
 
 // The 1949 armistice line, in the cells the chapter already draws it with

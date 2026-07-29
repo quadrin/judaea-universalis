@@ -55,9 +55,9 @@ function undigested(ctx) {
 function gentileShare(ctx) {
   const h = ctx.helpers;
   const me = ctx.game.playerTag;
-  const all = h.countControlled(ctx, me, {});
+  const all = h.countOwned(ctx, me, {});
   if (!all) return 0;
-  return (all - h.countControlled(ctx, me, { religion: 'judaism' })) / all;
+  return (all - h.countOwned(ctx, me, { religion: 'judaism' })) / all;
 }
 
 function rulerAt(ctx, key, min) {
@@ -199,7 +199,7 @@ export const EVENTS_ANNEX = [
     trigger: (ctx) => {
       try {
         if (!jewishCrown(ctx) || !flag(ctx, 'annexConvert') || flag(ctx, 'grandsonAnswered')) return false;
-        return gentileShare(ctx) < 0.55 && ctx.helpers.countControlled(ctx, ctx.game.playerTag, {}) >= 10;
+        return gentileShare(ctx) < 0.55 && ctx.helpers.countOwned(ctx, ctx.game.playerTag, {}) >= 10;
       } catch (e) { return false; }
     },
     aiOption: 0,

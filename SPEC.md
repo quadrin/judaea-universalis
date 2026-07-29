@@ -7417,3 +7417,94 @@ old subtraction for the one month a pre-§145 save has no measurement yet.
 court consuming a vast hoard still reads as solvent to the crisis and AI checks,
 that the headline and the breakdown now agree, that four ordinary realms under
 the cap see no phantom discrepancy, and that an old save loads without one.
+
+## 146. Ruling and standing on are different verbs
+
+Reported, with a screenshot: **What Does the Law Say of the Nations?** fired on a
+Hasmonean state in December 153 BCE that had annexed none of the land the card
+is about. The outliner in the same picture shows why — two sieges in progress,
+Pisidia and Attalia at 30%, and five detachments of the Levy of Emmaus spread
+across Anatolia. The occupied cells were enough.
+
+```js
+const all = countControlled(ctx, 'HAS', {});
+if (all < 15) return false;
+return all - countControlled(ctx, 'HAS', { religion: 'judaism' }) >= all / 2;
+```
+
+`countControlled` answers *where are my flags this month*, and there was no
+helper that answered anything else. So a card whose first sentence is **"Israel
+rules multitudes now who have never kept a Sabbath"** was asking where the army
+was standing. A province under siege pays the besieger no tax, keeps no Sabbath
+for him, and goes home at the peace table.
+
+`countOwned` is the missing counterpart — and the strongest evidence that it was
+missing is that **two content packages had already written it by hand**.
+`events_40bce.js` and `events_614ce.js` each carry a private, byte-identical
+`countOwned(ctx, tag)` because the frozen contract offered no way to ask. It is
+on the contract now, with the religion filter and the §135 forwarding the
+hand-rolled copies lack.
+
+### The split, which is the whole of the work
+
+The first pass swept every realm-size count in the game and it was wrong. Two
+different questions were wearing the same helper, and only one of them was
+misusing it:
+
+**Composition — what the realm IS.** These now count owned:
+
+- `ev_law_of_the_nations`, the reported card
+- `gentileShare()` in the 167 empire chain and the same function in the shared
+  annexation pool — *how much of the realm is not of the covenant*
+- `otherShare()` in 1948, whose own comment said it was "the same measure
+  `ev_law_of_the_nations` takes in 130 BCE", and which was wrong the same way
+- the annexation question's ten-province gate, which sits in the same condition
+  as `gentileShare`
+- **the embassies of the powers**, because a chancery sends an ambassador to a
+  state and not to an army standing in somebody else's country
+
+**Reach — how far the arm extends.** These keep counting held, and the revert is
+as deliberate as the change:
+
+- `imperial()` in 167, whose own comment turns on *a Jewish king **sitting** in
+  Antioch*
+- `reach()` in 66 and 1948, `power()` and `standing()` in 614, `endurance()` and
+  `grasp()` in 132 — the comments read *a Levantine power*, *a regional power*,
+  *the hills, the country, the province and its coast*
+- `seatedCrown()` in the House of David pool, whose Jerusalem half is **already**
+  `controls` — counting the other half by ownership would have shut the dynastic
+  question against 614's Jewish state for most of the Persian war, which is
+  precisely the reign it exists to ask about
+
+A rising that has taken Damascus by force **is** a regional power, whatever the
+treaty says. That is not the error the report describes. The error is claiming a
+realm *rules* people it is merely camped among.
+
+Three families were never in question and keep control: a rising is crushed when
+somebody else is standing on it (the `=== 0` checks in 132, the `=== 1` in 66);
+the formables say *Hold twelve provinces* on the label and mean it; and
+`countControlledOf` in the 167 package, whose name only looks similar — it walks
+named cities through `controls`, which is right for *are we standing in Antioch*.
+
+The distinction to carry forward: **holding** is a fact about this month and
+reverses when the siege lifts; **owning** is a fact about the realm and survives
+the peace. An occupied province is still yours, and a realm does not shrink in
+the eyes of its own chroniclers because somebody is camped in it.
+
+### Cost
+
+Measured rather than assumed, and the narrowing is why it is small. With the
+first, wider sweep, 614's Jewish state lost a third of its development in half
+the sampled seeds and the Hasmoneans picked up a BLEEDING flag. With the split
+above, seven of eight chapters are byte-identical to an untouched tree, 614 is
+identical across four independent seeds, and only 40 BCE moves: across six seeds
+Herod's provinces are flat (8.0 → 8.2) and his development unchanged, with a
+modest drift down in treasuries and no anomaly flag appearing anywhere.
+
+`smoke97.mjs` reproduces the screenshot — a four-province Hasmonean realm
+standing on twenty-six gentile cells it has not annexed — and asserts the card
+stays shut; then annexes that same land and asserts it fires, so the question is
+still real. It holds the fixture's Jerusalem in both halves, because the card
+also sits behind `greaterVictory` and the negative would otherwise pass for the
+wrong reason. It pins each function on the correct side of the split by name,
+and it pins the two hand-rolled copies as the evidence they are.

@@ -134,9 +134,9 @@ function gentileShare(ctx) {
   const me = crown(ctx);
   if (!me) return 0;
   const h = ctx.helpers;
-  const all = h.countControlled(ctx, me, {});
+  const all = h.countOwned(ctx, me, {});
   if (!all) return 0;
-  return (all - h.countControlled(ctx, me, { religion: 'judaism' })) / all;
+  return (all - h.countOwned(ctx, me, { religion: 'judaism' })) / all;
 }
 
 export const EVENTS_167_EMPIRE = [

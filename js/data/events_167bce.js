@@ -4397,8 +4397,10 @@ export const EVENTS_167 = [
       const h = ctx.helpers;
       if (!greaterVictory(ctx)) return false;
       if (!alive(ctx, 'ROM') && !alive(ctx, 'PAR')) return false;
+      // Twelve provinces RULED (SPEC §146). Chanceries send embassies to a
+      // state, not to an army standing in somebody else's country.
       return !!h.getFlag(ctx, 'diademInDust') || !!h.getFlag(ctx, 'yokeReversed')
-        || (!!h.getFlag(ctx, 'hammerBeyondHills') && h.countControlled(ctx, 'HAS', {}) >= 12);
+        || (!!h.getFlag(ctx, 'hammerBeyondHills') && h.countOwned(ctx, 'HAS', {}) >= 12);
     }),
     aiOption: 0,
     options: [
@@ -4467,10 +4469,16 @@ export const EVENTS_167 = [
     trigger: safeTrigger('ev_law_of_the_nations', (ctx) => {
       const h = ctx.helpers;
       if (!greaterVictory(ctx)) return false;
-      const all = h.countControlled(ctx, 'HAS', {});
+      // What the realm RULES, not what its armies are standing on (SPEC §146).
+      // This card says "Israel rules multitudes now who have never kept a
+      // Sabbath", and a province under siege is not ruled by the besieger: it
+      // pays him no tax, keeps no Sabbath for him, and goes back at the peace.
+      // Counting control fired the whole question on a Hasmonean state that
+      // had annexed nothing — three occupied cells in Anatolia were enough.
+      const all = h.countOwned(ctx, 'HAS', {});
       if (all < 15) return false;
       // More of the nations than of the covenant: the ahistorical condition.
-      return all - h.countControlled(ctx, 'HAS', { religion: 'judaism' }) >= all / 2;
+      return all - h.countOwned(ctx, 'HAS', { religion: 'judaism' }) >= all / 2;
     }),
     aiOption: 0,
     options: [
