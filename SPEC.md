@@ -7295,3 +7295,68 @@ pools, that the successor and the general a court actually produces both come
 from its own, that GRC in 167 BCE is still Hellenistic and the Hasmoneans still
 Hasmonean, and that a chapter naming no pool — 529 — is left entirely on its
 culture groups.
+
+## 144. A war has a life before it has an exit
+
+Reported: the Seleucids just declared war on me, only to immediately offer a
+white peace.
+
+They did, and it reproduces in one month.
+
+`monthlyWarDiplomacy` gave a losing AI leader two roads to sue the player:
+
+```js
+const sueAt = 15 / caution;
+if (ws > -40 && !(ws <= -10 && warExhaustion >= sueAt)) continue;
+```
+
+A **rout** — warscore at −40 or worse — or **weariness**, at −10 with exhaustion
+past a caution-scaled bar. The rout road is fine. The weariness road had no
+clock on it at all, and that is the bug, because `warExhaustion` is a **standing
+quantity and not this war's ledger**. A power that arrived already tired from
+somewhere else satisfied the exhaustion half on the day war was declared, and
+needed only a single lost skirmish to satisfy the other half. At −12 the terms
+such a court will accept are nothing whatever, so what the player sees is a
+declaration of war followed by an offer of white peace.
+
+The Seleucids are the sharpest case in the game and not a coincidence. The
+opportunistic-war gate does check weariness — `aiConsiderWar` refuses to declare
+above `warExhaustion > 5` — but the Seleucid wars of 167 are **scripted**, and a
+scripted `declareWar` bypasses that gate entirely. So SEL could enter a war it
+had no business starting, at 18 weariness, and sue the following month.
+
+### The asymmetry is the fix
+
+A court being **routed** may sue the month the rout happens; that is what a rout
+means. A court that is merely **tired** must have actually fought this war:
+
+```js
+const routed = ws <= -40;
+const weary  = ws <= -10 && warExhaustion >= sueAt && runFor >= grace;
+if (!routed && !weary) continue;
+```
+
+`BALANCE.warSueGraceMonths` is twelve — a year of campaigning before "we are
+tired of this" is a sentence a court has earned. It sits beside the existing
+36-month AI-vs-AI settlement horizon (`w.settleMonths`), which is a different
+clock for a different question and is untouched.
+
+The same asymmetry goes on the separate-peace road, which needed it more: that
+one's weariness clause fires at `row.ws >= 0`, a standing start, so a coalition
+member who arrived tired could offer to buy its way out of a war nobody had
+fought yet, for nothing.
+
+### What this deliberately does not do
+
+It does not stop a weary court from *declaring*. Scripted wars are the chapter's
+to write, and 167 wants the Seleucids to come whatever state they are in — the
+whole shape of that chapter is an empire overcommitted in three directions. What
+it stops is the empire arriving and immediately asking to leave. If a scripted
+war should not be fought at all, that is a decision for the card that writes it,
+not for the peace clerk.
+
+`smoke95.mjs` reproduces the report exactly — weariness 18, one lost skirmish,
+their own declaration — and asserts silence for eleven months and a feeler in
+the twelfth; that a routed court still sues in month one, tired or not; that a
+fresh court losing narrowly never sues at all; and that the grace is a define
+rather than a literal.
