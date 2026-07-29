@@ -35,6 +35,8 @@ const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
 const { missionsFor, checkMissions, rulerDies } = await import(R + '/js/sim/realm.js');
 const { gameActions } = await import(R + '/js/sim/init.js');
+const { allowedOptions } = await import(R + '/js/sim/events.js');
+const { CHAPTER_PATHS } = await import(R + '/js/data/chapter_paths.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -97,6 +99,10 @@ function greatCrown(eraId, tag, y) {
 const card = (id) => EVENTS_DAVID.find((e) => e && e.id === id) || null;
 const SON = card('ev_hd_the_son_of_the_marriage');
 const HOUSE = card('ev_hd_the_house_that_is_not_davids');
+const ACC = card('ev_hd_the_accession');
+const answer = (w, re) => HOUSE.options.find((o) => re.test(o.label)).effects(w.ctx);
+// An accession: a different name on the seat from the one that answered.
+const accede = (w, tag) => { w.game.tags[tag].ruler = { ...w.game.tags[tag].ruler, name: 'The Next King' }; };
 
 // ---------------------------------------------------------------------------
 console.log('== §154: "Seat him" seats him ==');
@@ -258,6 +264,98 @@ console.log('== §153: a greater crown inherits the chapter\'s business ==');
   const rom = missionsFor(w.ctx, 'ROM');
   ok(Array.isArray(rom) && rom.length, 'Rome still reads its own chain (' + rom.length + ')');
   ok(missionsFor(w.ctx, 'PAR') === null, 'and a tag the chapter gave none has none');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== §156: every road ends at the accession that reads it back ==');
+{
+  ok(!!ACC, 'the arc has a closing card at last');
+  const w = greatCrown('167bce', 'HAS', -120);
+  answer(w, /Search the archives/);
+  ok(ACC.trigger(w.ctx) === false, 'which does not fire in the reign that gave the answer');
+  accede(w, 'HAS');
+  ok(ACC.trigger(w.ctx) === true, 'and does fire at the next accession');
+  const allowed = allowedOptions(w.ctx, ACC);
+  ok(!allowed || allowed.indexOf(2) < 0,
+    "  Ezekiel's investiture is not offered to a house that forged a genealogy");
+  ACC.options[0].effects(w.ctx);
+  ok(!!w.game.flags.davidicQuotedBack, '  and answering it closes the road');
+  ok(ACC.trigger(w.ctx) === false, '  once, and not at every accession thereafter');
+}
+{
+  // The marriage road does not end here — it ends at the son, and the accession
+  // waits for him. This is the tree's claim, tested.
+  const w = greatCrown('167bce', 'HAS', -120);
+  answer(w, /Send to Babylonia/);
+  accede(w, 'HAS');
+  ok(ACC.trigger(w.ctx) === false,
+    'a marriage with the son still unasked does not reach the accession card');
+  w.game.date = { y: -96, m: 6, d: 1 };
+  ok(SON.trigger(w.ctx) === true, '  the son is asked first, which is that road’s terminal');
+  SON.options.find((o) => /Seat him/.test(o.label)).effects(w.ctx);
+  ok(ACC.trigger(w.ctx) === false, '  and the Davidide’s own reign is not an accession');
+  accede(w, 'HAS');
+  ok(ACC.trigger(w.ctx) === true, '  the accession after him is');
+}
+{
+  // The promise the marriage tooltip made and nothing kept (SPEC §155):
+  // `exilarchateHasAClaim` is now read, and both answers to it bite.
+  const w = greatCrown('167bce', 'HAS', -120);
+  answer(w, /Send to Babylonia/);
+  w.game.date = { y: -96, m: 6, d: 1 };
+  SON.options.find((o) => /Seat him/.test(o.label)).effects(w.ctx);
+  accede(w, 'HAS');
+  ok(!!w.game.flags.exilarchateHasAClaim, 'the Exilarchate holds a recognised interest');
+  const before = w.game.tags.HAS.legitimacy;
+  ACC.options[1].effects(w.ctx); // this house confirms its own
+  ok(w.game.tags.HAS.legitimacy < before,
+    '  and repudiating it at the accession costs the crown ('
+    + Math.round(before) + ' → ' + Math.round(w.game.tags.HAS.legitimacy) + ')');
+  ok(w.game.flags.exilarchateHasAClaim === false,
+    '  the claim is struck out and does not come back');
+}
+{
+  // Ezekiel's prince: the one accession that owes Babylonia nothing.
+  const w = greatCrown('66ce', 'JUD', 90);
+  answer(w, /A prince, not a king/);
+  accede(w, 'JUD');
+  ok(ACC.trigger(w.ctx) === true, 'the prince of Ezekiel reaches the accession too');
+  const allowed = allowedOptions(w.ctx, ACC);
+  ok(!allowed || allowed.indexOf(2) >= 0, '  and only he is offered the investiture out of the law');
+  ACC.options[2].effects(w.ctx);
+  ok(!!w.game.flags.davidicOfficeInvested && !w.game.flags.exilarchateHasAClaim,
+    '  which owes Babylonia nothing, now or ever');
+}
+{
+  // Deferring is not answering, so the question returns instead — which is what
+  // that road's terminal says, and why it points at its own entry.
+  const w = greatCrown('66ce', 'JUD', 90);
+  answer(w, /house stands on what it won/);
+  ok(!!w.game.flags.davidicDeferred, 'deferring sets its own marker');
+  ok(!w.game.flags.davidicAnswered, '  and deliberately does not answer the question');
+  accede(w, 'JUD');
+  ok(ACC.trigger(w.ctx) === false, '  so no accession reads anything back');
+  ok(HOUSE.trigger(w.ctx) === true, '  the chamber simply asks again, which is the road');
+}
+{
+  // The tree's claim about itself: charted in the four chapters that play the
+  // arc live, and in none of the ones that answer the question their own way.
+  const live = ['167bce', '67bce', '40bce', '66ce'];
+  for (const id of live) {
+    const ch = CHAPTER_PATHS.find((c) => c.id === id);
+    const forks = ch.forks.filter((f) => /davids|son_of_the_marriage/.test(f.id));
+    ok(forks.length === 2, id + ' charts both forks of the house of David');
+  }
+  for (const id of ['132ce', '614ce', '529ce']) {
+    const ch = CHAPTER_PATHS.find((c) => c.id === id);
+    ok(!ch.forks.some((f) => /davids|son_of_the_marriage/.test(f.id)),
+      id + ' does not, because it answers the question its own way or not at all');
+  }
+  const roads = CHAPTER_PATHS.filter((c) => live.includes(c.id))
+    .flatMap((c) => c.forks.filter((f) => /davids|son_of_the_marriage/.test(f.id)))
+    .flatMap((f) => f.roads);
+  ok(roads.length === 24, 'twenty-four new roads in all (' + roads.length + ')');
+  ok(roads.every((r) => r.terminal), '  and every one of them ends somewhere');
 }
 
 console.log(failures ? `smoke101: ${failures} FAILURES` : 'smoke101: ALL PASS');

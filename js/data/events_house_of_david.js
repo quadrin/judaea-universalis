@@ -100,6 +100,43 @@ function rulerAt(ctx, key, min) {
   return !!r && Number(r[key] || 0) >= min;
 }
 
+// The man who was on the seat when the question was answered (SPEC §156). The
+// first card's last line is a promise — *whatever is said this week will be
+// quoted at every accession this house ever has* — and a promise is where a
+// road ends. Recording the name is how the closing card knows an accession has
+// happened: the engine has no succession signal a content package can read, but
+// it has a ruler with a name, and a different name means a different king.
+function markAnswered(ctx) {
+  try {
+    const t = T(ctx);
+    const h = ctx.helpers;
+    h.setFlag(ctx, 'davidicAnswered', true);
+    h.setFlag(ctx, 'davidicAnswerRuler', (t && t.ruler && t.ruler.name) || '');
+    h.setFlag(ctx, 'davidicAnswerYear', ctx.game.date.y);
+  } catch (e) { /* content guard */ }
+}
+function eastOpinion(ctx, delta) {
+  try {
+    const g = ctx.game;
+    const me = g.playerTag;
+    for (const k of ['PAR', 'SAS', 'ADI']) {
+      const t = g.tags[k];
+      if (!t || !t.alive) continue;
+      if (!t.opinion || typeof t.opinion !== 'object') t.opinion = {};
+      t.opinion[me] = Math.max(-200, Math.min(200, (t.opinion[me] || 0) + delta));
+    }
+  } catch (e) { /* content guard */ }
+}
+// The parties of the law, under whichever name the chapter's court gives them.
+// `factionShift` resolves the seat and no-ops on a court that has none.
+function lawParties(ctx, delta) {
+  try {
+    for (const p of ['sages', 'pharisees', 'hasideans', 'priesthood']) {
+      ctx.helpers.factionShift(ctx, ctx.game.playerTag, p, delta);
+    }
+  } catch (e) { /* content guard */ }
+}
+
 // The east open enough to fetch a bride from Babylonia: the line is kept there
 // and has been since the exile, so the marriage needs a road to Nehardea.
 function eastOpen(ctx) {
@@ -172,7 +209,7 @@ export const EVENTS_DAVID = [
               if (!t.opinion || typeof t.opinion !== 'object') t.opinion = {};
               t.opinion[me] = Math.min(200, (t.opinion[me] || 0) + 30);
             }
-            h.setFlag(ctx, 'davidicAnswered', true);
+            markAnswered(ctx);
             h.setFlag(ctx, 'davidicMarriage', true);
             h.setFlag(ctx, 'davidicMarriageYear', g.date.y);
             h.setFlag(ctx, 'exilarchateHasAClaim', true);
@@ -203,7 +240,7 @@ export const EVENTS_DAVID = [
             for (const party of ['sages', 'pharisees', 'hasideans', 'priesthood']) {
               h.factionShift(ctx, me, party, -25);
             }
-            h.setFlag(ctx, 'davidicAnswered', true);
+            markAnswered(ctx);
             h.setFlag(ctx, 'davidicForged', true);
             h.chronicle(ctx, 'era', 'The genealogists are commissioned and return, in due course, '
               + 'with the answer they were commissioned to return. The schools read it carefully '
@@ -232,7 +269,7 @@ export const EVENTS_DAVID = [
             for (const party of ['sages', 'pharisees', 'hasideans', 'priesthood']) {
               h.factionShift(ctx, me, party, 30);
             }
-            h.setFlag(ctx, 'davidicAnswered', true);
+            markAnswered(ctx);
             h.setFlag(ctx, 'davidicRenounced', true);
             h.chronicle(ctx, 'era', 'The crown takes the office of Ezekiel\'s prince and writes '
               + 'the limits of it into the law itself. It is the only answer of the four that '
@@ -339,6 +376,7 @@ export const EVENTS_DAVID = [
               h.factionShift(ctx, me, party, 25);
             }
             h.setFlag(ctx, 'davidicSonAnswered', true);
+            markAnswered(ctx); // he is the reign the answer produced; the next one reads it back
             h.setFlag(ctx, 'davidicThrone', true);
             h.setFlag(ctx, 'exilarchateHasAClaim', true);
             h.chronicle(ctx, 'era', 'The son of the Babylonian marriage is seated, and the house '
@@ -370,10 +408,166 @@ export const EVENTS_DAVID = [
               h.factionShift(ctx, me, party, -20);
             }
             h.setFlag(ctx, 'davidicSonAnswered', true);
+            markAnswered(ctx);
             h.setFlag(ctx, 'davidicSonPassedOver', true);
             h.chronicle(ctx, 'ruler', 'The son of the Babylonian marriage is confirmed in the '
               + 'chancery and passed over for the succession. Nehardea is informed by letter and '
               + 'replies, at length, about something else.');
+          } catch (e) { /* content guard */ }
+        },
+      },
+    ],
+  },
+
+  // ── III. Where all four answers end ────────────────────────────────────────
+  //
+  // SPEC §156. The arc had no terminal and was therefore charted on no road:
+  // four answers, a generation of consequences, and then nothing, in the four
+  // chapters where this package is the only road to the crown of Israel.
+  //
+  // The ending was already written into the first card's last line — *whatever
+  // is said this week will be quoted at every accession this house ever has* —
+  // and into the tooltip of the marriage, which promises the Exilarchate "a
+  // recognised interest in every succession after this one". Neither was
+  // implemented; `exilarchateHasAClaim` was set by three cards and read by
+  // none. This card is both promises kept, and it is where every road ends,
+  // because the accession is the hour the archive is opened.
+  //
+  // The deferred road does not come here, and should not: it never set
+  // `davidicAnswered`, so the question simply returns. Its terminal is its own
+  // entry, which is the only honest thing to call it.
+  {
+    id: 'ev_hd_the_accession',
+    title: 'The Accession, and What Was Read Out',
+    desc: 'A king is dead and a king is being made, and somewhere in the third hour of '
+      + 'it — after the anointing, before the acclamation — a clerk reads out the documents '
+      + 'on which this house rests its right to the throne. It is not a ceremony anybody '
+      + 'designed. It is simply what has to happen, because the men in the hall are being '
+      + 'asked to accept something and they would like to hear the grounds.\n\n'
+      + 'The answer the chamber gave a generation ago is in that archive with everything '
+      + 'else, and this is the hour it was always going to be for. Nobody said so at the '
+      + 'time. Everybody understood it.\n\n'
+      + 'And the one authority in the Jewish world that nobody argues with about legitimacy '
+      + 'is eight hundred miles east, at Nehardea, holds the descent from Jehoiachin in '
+      + 'writing, has held it since the exile, and is not in this hall unless it was sent '
+      + 'for. Riders take six weeks. The council would like a decision rather sooner than '
+      + 'that.',
+    forTag: 'player',
+    major: true,
+    maxYear: 1799,
+    trigger: (ctx) => {
+      try {
+        if (!jewishCrown(ctx) || ownArcRuns(ctx)) return false;
+        if (flag(ctx, 'davidicQuotedBack') || !flag(ctx, 'davidicAnswered')) return false;
+        // A marriage is not an answer until the son has been dealt with — the
+        // road that road is on ends at the son's card, not here.
+        if (flag(ctx, 'davidicMarriage') && !flag(ctx, 'davidicSonAnswered')) return false;
+        const t = T(ctx);
+        if (!t || t.overlord || t.regency) return false;
+        // An accession, which is the whole occasion: a different name on the seat
+        // from the one that answered the question.
+        const was = (ctx.game.flags || {}).davidicAnswerRuler;
+        return !!t.ruler && !!was && t.ruler.name !== was;
+      } catch (e) { return false; }
+    },
+    aiOption: 1,
+    historical: 'The Exilarchs of Babylonia installed and deposed heads of the academies for '
+      + 'eight centuries, and the office outlasted the Sasanian empire that recognised it and '
+      + 'the caliphate that recognised it after. No western Jewish state ever had to decide '
+      + 'what to do about them, because after 70 there was no western Jewish state.',
+    options: [
+      {
+        label: 'Send to Nehardea. Let the accession be attested from the east',
+        tooltip: 'The title confirmed by the one house nobody argues with — and confirmed is a '
+          + 'verb with an actor in it. +20 legitimacy (+30 where the Exilarchate already holds a '
+          + 'recognised interest, because the delegation is in the hall expecting to be asked), '
+          + '+30 opinion with the eastern courts, the party of the law +20, and a permanent '
+          + '−0.5 unrest with +0.15 legitimacy a month. The price is what it has always been: '
+          + '−1 authority, and an interest in this succession and every one after it that the '
+          + 'crown has now conceded in front of witnesses.',
+        effects: (ctx) => {
+          try {
+            const h = ctx.helpers;
+            const me = ctx.game.playerTag;
+            const held = flag(ctx, 'exilarchateHasAClaim');
+            h.adjust(ctx, me, { legitimacy: held ? 30 : 20, stability: 1 });
+            h.addTagModifier(ctx, me, {
+              id: 'the_attested_succession', name: 'The Attested Succession', months: -1,
+              effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+            });
+            eastOpinion(ctx, 30);
+            lawParties(ctx, 20);
+            h.doctrine(ctx, 'authority', -1);
+            h.setFlag(ctx, 'exilarchateHasAClaim', true);
+            h.setFlag(ctx, 'davidicQuotedBack', true);
+            h.setFlag(ctx, 'davidicAttested', true);
+            h.chronicle(ctx, 'ruler', 'The accession is attested from Nehardea. The delegation is '
+              + 'seated where it can be seen, the descent is read out in full before the '
+              + 'acclamation, and the crown has agreed in public that this is a thing which is '
+              + 'granted rather than a thing which is held.');
+          } catch (e) { /* content guard */ }
+        },
+      },
+      {
+        label: 'This house confirms its own, as it has since the day it took the crown',
+        tooltip: 'The archive read out by the crown\'s own clerks and nobody sent for. +2 '
+          + 'stability and +2 authority for a succession that owes no one an explanation — and '
+          + 'the cost scales with what was conceded before: −8 legitimacy and −20 with the '
+          + 'eastern courts on its own, or −25 legitimacy and −60 east where a recognised '
+          + 'Exilarchate interest is being repudiated in the hour it was due to be honoured. '
+          + 'The party of the law −20. The claim is struck out and does not come back.',
+        effects: (ctx) => {
+          try {
+            const h = ctx.helpers;
+            const me = ctx.game.playerTag;
+            const held = flag(ctx, 'exilarchateHasAClaim');
+            h.adjust(ctx, me, { legitimacy: held ? -25 : -8, stability: 2 });
+            eastOpinion(ctx, held ? -60 : -20);
+            lawParties(ctx, -20);
+            h.doctrine(ctx, 'authority', 2);
+            if (held) {
+              h.addTagModifier(ctx, me, {
+                id: 'the_claim_struck_out', name: 'The Claim Struck Out', months: -1,
+                effects: { unrestAll: 0.5, legitimacyAdd: -0.1 },
+              });
+            }
+            h.setFlag(ctx, 'exilarchateHasAClaim', false);
+            h.setFlag(ctx, 'davidicQuotedBack', true);
+            h.setFlag(ctx, 'davidicSelfConfirmed', true);
+            h.chronicle(ctx, 'ruler', 'The accession is confirmed by the house itself and nobody '
+              + 'is sent for. The reading takes eleven minutes. Whether it was believed is not '
+              + 'the sort of thing the record keeps, but the east is told afterwards rather '
+              + 'than asked beforehand, and notices.');
+          } catch (e) { /* content guard */ }
+        },
+      },
+      {
+        label: 'Read Ezekiel. The office is invested by the law and needs no man\'s word',
+        when: (ctx) => {
+          try { return flag(ctx, 'davidicRenounced'); } catch (e) { return false; }
+        },
+        tooltip: 'Only open to a house that took the prince\'s office rather than a crown: the '
+          + 'constitution names no confirmer because it does not need one, and an accession '
+          + 'under it is an administrative act. +3 stability, +12 legitimacy, the party of the '
+          + 'law +25, −1 unrest permanently — and nothing owed to Babylonia, now or ever, '
+          + 'because nothing was ever borrowed. It is the cheapest accession available and it '
+          + 'is only available to the house that gave up the crown of Israel to get it.',
+        effects: (ctx) => {
+          try {
+            const h = ctx.helpers;
+            const me = ctx.game.playerTag;
+            h.adjust(ctx, me, { legitimacy: 12, stability: 3 });
+            h.addTagModifier(ctx, me, {
+              id: 'the_office_invests_itself', name: 'The Office Invests Itself', months: -1,
+              effects: { unrestAll: -1, incomeMult: 1.04 },
+            });
+            lawParties(ctx, 25);
+            h.setFlag(ctx, 'davidicQuotedBack', true);
+            h.setFlag(ctx, 'davidicOfficeInvested', true);
+            h.chronicle(ctx, 'ruler', 'The prince is invested out of Ezekiel, by the reading of '
+              + 'the chapters that describe the office, and the ceremony contains no moment at '
+              + 'which anybody is asked to agree. The house that gave up a crown for this '
+              + 'discovers what it bought.');
           } catch (e) { /* content guard */ }
         },
       },

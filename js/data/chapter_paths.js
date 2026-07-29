@@ -145,6 +145,79 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      // SPEC §156. The shared house-of-David arc (§138), which is this chapter's
+      // only road to the crown of Israel. Charted here in each of the four
+      // chapters that play it live — 132 and 614 ask the question in their own
+      // voice and shut this package down, and the Keepers keep a different Torah.
+      Object.freeze({
+        id: 'the_house_that_is_not_davids',
+        question: 'The sceptre shall not depart from Judah. What does a house that is not of Judah say about that?',
+        roads: [
+          Object.freeze({
+            id: 'davidic_marriage', name: 'Send to Babylonia',
+            marker: 'davidicMarriage', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_son_of_the_marriage',
+            note: 'SPEC §138. Herod\'s move made deliberately rather than in a panic: marry the '
+              + 'exilarchic line, which has kept the descent from Jehoiachin in writing since '
+              + 'the exile. The payoff is not the wedding, so this road ends where it collects '
+              + '— the son, a generation on, and the fork he opens.',
+          }),
+          Object.freeze({
+            id: 'davidic_forged', name: 'The Commissioned Genealogy',
+            marker: 'davidicForged', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. The road every dynasty in history has taken: pay the genealogists '
+              + 'and be told what they were paid to find. It does not seat a Davidide, it says '
+              + 'one is seated — and the schools file the objection in writing, where it keeps '
+              + 'until the accession that has to read the thing out.',
+          }),
+          Object.freeze({
+            id: 'davidic_nasi', name: 'The Prince of Ezekiel',
+            marker: 'davidicRenounced', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Ezekiel 44–46: a nasi who brings his offerings like any man and '
+              + 'may not take the people\'s land. It walks around the objection instead of '
+              + 'answering it, and forecloses the crown of Israel deliberately and in writing — '
+              + 'and buys the one accession that owes Babylonia nothing.',
+          }),
+          Object.freeze({
+            id: 'davidic_deferred', name: 'Let Them Go On Objecting',
+            marker: 'davidicDeferred', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_house_that_is_not_davids',
+            note: 'SPEC §138, §156. The Hasmonean answer, which is no answer: nothing is '
+              + 'conceded and nothing is spent, and the question is postponed rather than '
+              + 'settled. This road ends at its own entry BY DESIGN — the option deliberately '
+              + 'does not set `davidicAnswered`, so a later reign is asked again. A road that '
+              + 'returns to its question is not an unfinished road; it is what deferring is.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_son_of_the_marriage',
+        question: 'A generation later the pedigree walks into the chamber with a man attached. Is he seated?',
+        requires: 'davidicMarriage',
+        roads: [
+          Object.freeze({
+            id: 'davidic_throne', name: 'The House of David Returns to the Throne',
+            marker: 'davidicThrone', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138, §154, §155. He is seated — which the card said twice and did not '
+              + 'do until §154 — and the line he displaced stops being his heir. It is the '
+              + 'requirement for proclaiming the Kingdom of Israel, and the price is a '
+              + 'recognised Exilarchate interest in every succession after this one, which the '
+              + 'next accession is where the crown finds out it meant.',
+          }),
+          Object.freeze({
+            id: 'davidic_son_shelved', name: 'He Does the Eastern Correspondence Very Well',
+            marker: 'davidicSonPassedOver', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Herod\'s actual answer, minus the murders: the pedigree kept as an '
+              + 'ornament and the succession kept in the senior line. The crown of Israel stays '
+              + 'out of reach, and the east draws the obvious conclusion about what their '
+              + 'daughter was for.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -222,6 +295,79 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      // SPEC §156. The shared house-of-David arc (§138), which is this chapter's
+      // only road to the crown of Israel. Charted here in each of the four
+      // chapters that play it live — 132 and 614 ask the question in their own
+      // voice and shut this package down, and the Keepers keep a different Torah.
+      Object.freeze({
+        id: 'the_house_that_is_not_davids',
+        question: 'The sceptre shall not depart from Judah. What does a house that is not of Judah say about that?',
+        roads: [
+          Object.freeze({
+            id: 'davidic_marriage', name: 'Send to Babylonia',
+            marker: 'davidicMarriage', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_son_of_the_marriage',
+            note: 'SPEC §138. Herod\'s move made deliberately rather than in a panic: marry the '
+              + 'exilarchic line, which has kept the descent from Jehoiachin in writing since '
+              + 'the exile. The payoff is not the wedding, so this road ends where it collects '
+              + '— the son, a generation on, and the fork he opens.',
+          }),
+          Object.freeze({
+            id: 'davidic_forged', name: 'The Commissioned Genealogy',
+            marker: 'davidicForged', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. The road every dynasty in history has taken: pay the genealogists '
+              + 'and be told what they were paid to find. It does not seat a Davidide, it says '
+              + 'one is seated — and the schools file the objection in writing, where it keeps '
+              + 'until the accession that has to read the thing out.',
+          }),
+          Object.freeze({
+            id: 'davidic_nasi', name: 'The Prince of Ezekiel',
+            marker: 'davidicRenounced', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Ezekiel 44–46: a nasi who brings his offerings like any man and '
+              + 'may not take the people\'s land. It walks around the objection instead of '
+              + 'answering it, and forecloses the crown of Israel deliberately and in writing — '
+              + 'and buys the one accession that owes Babylonia nothing.',
+          }),
+          Object.freeze({
+            id: 'davidic_deferred', name: 'Let Them Go On Objecting',
+            marker: 'davidicDeferred', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_house_that_is_not_davids',
+            note: 'SPEC §138, §156. The Hasmonean answer, which is no answer: nothing is '
+              + 'conceded and nothing is spent, and the question is postponed rather than '
+              + 'settled. This road ends at its own entry BY DESIGN — the option deliberately '
+              + 'does not set `davidicAnswered`, so a later reign is asked again. A road that '
+              + 'returns to its question is not an unfinished road; it is what deferring is.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_son_of_the_marriage',
+        question: 'A generation later the pedigree walks into the chamber with a man attached. Is he seated?',
+        requires: 'davidicMarriage',
+        roads: [
+          Object.freeze({
+            id: 'davidic_throne', name: 'The House of David Returns to the Throne',
+            marker: 'davidicThrone', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138, §154, §155. He is seated — which the card said twice and did not '
+              + 'do until §154 — and the line he displaced stops being his heir. It is the '
+              + 'requirement for proclaiming the Kingdom of Israel, and the price is a '
+              + 'recognised Exilarchate interest in every succession after this one, which the '
+              + 'next accession is where the crown finds out it meant.',
+          }),
+          Object.freeze({
+            id: 'davidic_son_shelved', name: 'He Does the Eastern Correspondence Very Well',
+            marker: 'davidicSonPassedOver', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Herod\'s actual answer, minus the murders: the pedigree kept as an '
+              + 'ornament and the succession kept in the senior line. The crown of Israel stays '
+              + 'out of reach, and the east draws the obvious conclusion about what their '
+              + 'daughter was for.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -293,6 +439,79 @@ export const CHAPTER_PATHS = Object.freeze([
             terminal: 'ev5_k_the_year_the_other_country_rose',
             note: 'SPEC §124. The kingdom refuses before it is asked, in writing, with its army '
               + 'on the border — a thing a kingdom can do and a province cannot.',
+          }),
+        ],
+      }),
+      // SPEC §156. The shared house-of-David arc (§138), which is this chapter's
+      // only road to the crown of Israel. Charted here in each of the four
+      // chapters that play it live — 132 and 614 ask the question in their own
+      // voice and shut this package down, and the Keepers keep a different Torah.
+      Object.freeze({
+        id: 'the_house_that_is_not_davids',
+        question: 'The sceptre shall not depart from Judah. What does a house that is not of Judah say about that?',
+        roads: [
+          Object.freeze({
+            id: 'davidic_marriage', name: 'Send to Babylonia',
+            marker: 'davidicMarriage', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_son_of_the_marriage',
+            note: 'SPEC §138. Herod\'s move made deliberately rather than in a panic: marry the '
+              + 'exilarchic line, which has kept the descent from Jehoiachin in writing since '
+              + 'the exile. The payoff is not the wedding, so this road ends where it collects '
+              + '— the son, a generation on, and the fork he opens.',
+          }),
+          Object.freeze({
+            id: 'davidic_forged', name: 'The Commissioned Genealogy',
+            marker: 'davidicForged', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. The road every dynasty in history has taken: pay the genealogists '
+              + 'and be told what they were paid to find. It does not seat a Davidide, it says '
+              + 'one is seated — and the schools file the objection in writing, where it keeps '
+              + 'until the accession that has to read the thing out.',
+          }),
+          Object.freeze({
+            id: 'davidic_nasi', name: 'The Prince of Ezekiel',
+            marker: 'davidicRenounced', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Ezekiel 44–46: a nasi who brings his offerings like any man and '
+              + 'may not take the people\'s land. It walks around the objection instead of '
+              + 'answering it, and forecloses the crown of Israel deliberately and in writing — '
+              + 'and buys the one accession that owes Babylonia nothing.',
+          }),
+          Object.freeze({
+            id: 'davidic_deferred', name: 'Let Them Go On Objecting',
+            marker: 'davidicDeferred', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_house_that_is_not_davids',
+            note: 'SPEC §138, §156. The Hasmonean answer, which is no answer: nothing is '
+              + 'conceded and nothing is spent, and the question is postponed rather than '
+              + 'settled. This road ends at its own entry BY DESIGN — the option deliberately '
+              + 'does not set `davidicAnswered`, so a later reign is asked again. A road that '
+              + 'returns to its question is not an unfinished road; it is what deferring is.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_son_of_the_marriage',
+        question: 'A generation later the pedigree walks into the chamber with a man attached. Is he seated?',
+        requires: 'davidicMarriage',
+        roads: [
+          Object.freeze({
+            id: 'davidic_throne', name: 'The House of David Returns to the Throne',
+            marker: 'davidicThrone', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138, §154, §155. He is seated — which the card said twice and did not '
+              + 'do until §154 — and the line he displaced stops being his heir. It is the '
+              + 'requirement for proclaiming the Kingdom of Israel, and the price is a '
+              + 'recognised Exilarchate interest in every succession after this one, which the '
+              + 'next accession is where the crown finds out it meant.',
+          }),
+          Object.freeze({
+            id: 'davidic_son_shelved', name: 'He Does the Eastern Correspondence Very Well',
+            marker: 'davidicSonPassedOver', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Herod\'s actual answer, minus the murders: the pedigree kept as an '
+              + 'ornament and the succession kept in the senior line. The crown of Israel stays '
+              + 'out of reach, and the east draws the obvious conclusion about what their '
+              + 'daughter was for.',
           }),
         ],
       }),
@@ -457,6 +676,79 @@ export const CHAPTER_PATHS = Object.freeze([
             note: 'SPEC §130. Judas the Galilean\'s doctrine, held sixty years and never once '
               + 'implemented, because implementing it means having no state to implement it '
               + 'with. Menahem came in royal dress and his own side killed him.',
+          }),
+        ],
+      }),
+      // SPEC §156. The shared house-of-David arc (§138), which is this chapter's
+      // only road to the crown of Israel. Charted here in each of the four
+      // chapters that play it live — 132 and 614 ask the question in their own
+      // voice and shut this package down, and the Keepers keep a different Torah.
+      Object.freeze({
+        id: 'the_house_that_is_not_davids',
+        question: 'The sceptre shall not depart from Judah. What does a house that is not of Judah say about that?',
+        roads: [
+          Object.freeze({
+            id: 'davidic_marriage', name: 'Send to Babylonia',
+            marker: 'davidicMarriage', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_son_of_the_marriage',
+            note: 'SPEC §138. Herod\'s move made deliberately rather than in a panic: marry the '
+              + 'exilarchic line, which has kept the descent from Jehoiachin in writing since '
+              + 'the exile. The payoff is not the wedding, so this road ends where it collects '
+              + '— the son, a generation on, and the fork he opens.',
+          }),
+          Object.freeze({
+            id: 'davidic_forged', name: 'The Commissioned Genealogy',
+            marker: 'davidicForged', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. The road every dynasty in history has taken: pay the genealogists '
+              + 'and be told what they were paid to find. It does not seat a Davidide, it says '
+              + 'one is seated — and the schools file the objection in writing, where it keeps '
+              + 'until the accession that has to read the thing out.',
+          }),
+          Object.freeze({
+            id: 'davidic_nasi', name: 'The Prince of Ezekiel',
+            marker: 'davidicRenounced', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Ezekiel 44–46: a nasi who brings his offerings like any man and '
+              + 'may not take the people\'s land. It walks around the objection instead of '
+              + 'answering it, and forecloses the crown of Israel deliberately and in writing — '
+              + 'and buys the one accession that owes Babylonia nothing.',
+          }),
+          Object.freeze({
+            id: 'davidic_deferred', name: 'Let Them Go On Objecting',
+            marker: 'davidicDeferred', entry: 'ev_hd_the_house_that_is_not_davids',
+            terminal: 'ev_hd_the_house_that_is_not_davids',
+            note: 'SPEC §138, §156. The Hasmonean answer, which is no answer: nothing is '
+              + 'conceded and nothing is spent, and the question is postponed rather than '
+              + 'settled. This road ends at its own entry BY DESIGN — the option deliberately '
+              + 'does not set `davidicAnswered`, so a later reign is asked again. A road that '
+              + 'returns to its question is not an unfinished road; it is what deferring is.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_son_of_the_marriage',
+        question: 'A generation later the pedigree walks into the chamber with a man attached. Is he seated?',
+        requires: 'davidicMarriage',
+        roads: [
+          Object.freeze({
+            id: 'davidic_throne', name: 'The House of David Returns to the Throne',
+            marker: 'davidicThrone', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138, §154, §155. He is seated — which the card said twice and did not '
+              + 'do until §154 — and the line he displaced stops being his heir. It is the '
+              + 'requirement for proclaiming the Kingdom of Israel, and the price is a '
+              + 'recognised Exilarchate interest in every succession after this one, which the '
+              + 'next accession is where the crown finds out it meant.',
+          }),
+          Object.freeze({
+            id: 'davidic_son_shelved', name: 'He Does the Eastern Correspondence Very Well',
+            marker: 'davidicSonPassedOver', entry: 'ev_hd_the_son_of_the_marriage',
+            terminal: 'ev_hd_the_accession',
+            note: 'SPEC §138. Herod\'s actual answer, minus the murders: the pedigree kept as an '
+              + 'ornament and the succession kept in the senior line. The crown of Israel stays '
+              + 'out of reach, and the east draws the obvious conclusion about what their '
+              + 'daughter was for.',
           }),
         ],
       }),

@@ -27,13 +27,18 @@ const ok = (cond, msg) => {
 // Which files carry each chapter's cards. The registry pairs bookmarks with
 // event ARRAYS, not paths, so this is the one place the mapping is written
 // twice — and the suite fails loudly if a file named here disappears.
+// `events_house_of_david.js` is the shared antique package (SPEC §138, §156):
+// it ships in every antique chapter's pool and is charted as a fork in the four
+// where it runs live — 132 and 614 ask the question in their own voice and shut
+// it down, so their roads are their own cards and it is not listed for them.
 const SOURCES = {
   '167bce': ['events_167bce.js', 'events_167bce_kings.js', 'events_167bce_world.js',
-    'events_167bce_after.js', 'events_167bce_empire.js'],
-  '67bce': ['events_67bce.js', 'events_67bce_after.js'],
-  '40bce': ['events_40bce.js', 'events_40bce_alternates.js', 'events_40bce_bridge.js'],
+    'events_167bce_after.js', 'events_167bce_empire.js', 'events_house_of_david.js'],
+  '67bce': ['events_67bce.js', 'events_67bce_after.js', 'events_house_of_david.js'],
+  '40bce': ['events_40bce.js', 'events_40bce_alternates.js', 'events_40bce_bridge.js',
+    'events_house_of_david.js'],
   '66ce': ['events_66ce.js', 'events_66ce_after.js', 'events_66ce_nation.js',
-    'events_66ce_settlement.js'],
+    'events_66ce_settlement.js', 'events_house_of_david.js'],
   '132ce': ['events_132ce.js', 'events_132ce_faith.js', 'events_132ce_world.js',
     'events_132ce_galilee.js', 'events_132ce_redemption.js', 'events_132ce_endure.js',
     'events_132ce_house.js', 'events_132ce_kosiba.js'],

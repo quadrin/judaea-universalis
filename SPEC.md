@@ -7932,3 +7932,72 @@ list roads that do not end, and an uncharted arc has no road to end.
   death does not return the crown to the line he displaced, and 614's card
   behaves the same; while the answers that seat nobody (the commissioned
   genealogy) disturb no succession at all.
+
+## 156. The road the crown of Israel is actually reached by
+
+Asked for: a road for the Davidic throne.
+
+§138 made the crown of Israel cost a dynasty rather than a war, and put the
+question in a shared package — `events_house_of_david.js` — that plays in every
+antique chapter. In four of them (167, 67, 40, 66) it is the **only** road to
+the greater crown; 132 and 614 ask the question in their own voice and shut the
+package down, and the Keepers keep a different Torah and are never asked.
+
+It was charted nowhere. `chapter_paths.js` gave 614's crown two roads and 132's
+marriage one, and the shared arc — four answers, six roads, the requirement for
+the endgame formable — appeared in no tree at all. `--gaps` was silent because
+gaps list roads that do not *end*, and an uncharted arc has no road to end. It
+is the §119 blind spot: the tree checks that every road it names is real, and
+cannot check for a road nobody named.
+
+**The arc had no ending, which is why it could not be charted honestly.** Two
+cards, four answers, and then nothing — chart that as it stood and the gap list
+goes from one accepted entry to twenty-five. So the ending was written first,
+the way §118 wrote the redemption road's tail and §151 wrote the Keepers'.
+
+**`ev_hd_the_accession` — the hour the archive is opened.** The ending was
+already in the first card's own last line: *whatever is said this week will be
+quoted at every accession this house ever has*. That is a promise about a
+specific future hour, and the hour is where the roads end. A king dies, a king
+is made, and between the anointing and the acclamation a clerk reads out the
+documents this house rests its right on — whichever documents the chamber chose
+to put in the archive a generation earlier.
+
+It also keeps the **other** unkept promise §155 recorded. The marriage tooltip
+sells "a recognised Exilarchate interest in every succession after this one",
+and `exilarchateHasAClaim` was set by three cards and read by none. It is read
+here: send to Nehardea and the descent is read out in full before the
+acclamation, at the price of conceding in public that the crown is granted
+rather than held; or confirm the house by its own clerks, which costs eight
+legitimacy from a house that owes nothing and twenty-five from one repudiating
+a recognised claim in the hour it fell due. A house that took Ezekiel's office
+gets a third answer nobody else can have: the constitution names no confirmer
+because it does not need one, which is the cheapest accession in the game and
+is only available to the house that gave up the crown of Israel to get it.
+
+Detecting an accession from a content package took one line of bookkeeping:
+there is no succession signal a package may read, but there is a ruler with a
+name, so each answer records the name of the man who gave it and the card fires
+when the name changes. Seating the Davidide re-stamps it with *his* name, so the
+accession that reads the answer back is the one after him rather than his own.
+
+**The deferred road ends at its own entry, and that is not a gap.** Deferring
+deliberately does not set `davidicAnswered` — the option's comment has said so
+since §138 — so no accession reads anything back and the chamber simply asks
+again. A road that returns to its question is what deferring *is*, and calling
+it unfinished would be the tree misdescribing the one road whose whole content
+is that nothing was decided.
+
+Twenty-four roads added across four chapters, every one of them with an ending,
+and the gap list unchanged at the single accepted 1948 entry.
+
+- **Regression contract**: `smoke101.mjs` — the card does not fire in the reign
+  that answered, fires at the next accession, fires once; the marriage road
+  waits for the son and the Davidide's own reign is not an accession; the
+  Exilarchate's claim is really read, and repudiating it really costs; Ezekiel's
+  investiture is offered to that road and no other; the deferred road reaches no
+  accession and re-opens its own question instead; and the four live chapters
+  chart both forks while 132, 614 and 529 chart neither. `smoke83.mjs` holds the
+  new roads to the §119 contract — every marker written by a live card, every
+  named card played by the chapter, no two roads in a fork on one flag — and its
+  `SOURCES` table now lists the shared package for those four chapters.
