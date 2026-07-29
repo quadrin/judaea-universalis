@@ -5,7 +5,7 @@ import {
   unlockedGen, cappedGen, genMult, MODERNIZE_COST_PER_REG_PER_GEN,
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
-import { JEWISH_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
+import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
@@ -1296,7 +1296,15 @@ export function resolveDisplayName(ctx, p) {
   // Nitzana) and therefore win. Religion supplies the cross-bookmark fallback:
   // Adiabene and any future/formable Jewish realm receive it without another
   // copied table or a hard-coded tag list.
-  const shared = t && t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES : null;
+  // …and the Keepers have a pen of their own (SPEC §147), on the same footing
+  // and for the same reason: a realm should be able to write its own signposts
+  // on the land it has integrated without its chapter listing every province
+  // by hand. Keyed on the faith rather than the tag, so a Samaritan state in
+  // any chapter — or formed in one — is answered without another copied table.
+  const shared = !t ? null
+    : t.religion === 'judaism' ? JEWISH_INTEGRATED_NAMES
+      : t.religion === 'samaritanism' ? SAMARITAN_INTEGRATED_NAMES
+        : null;
   // A crown's own pen (SPEC §110) outranks both: the era table describes the
   // age, the religion table describes the faith, and this describes THIS
   // crown — the thing the player just proclaimed. It names few provinces and
@@ -1489,6 +1497,62 @@ export function updateTagLife(ctx) {
   for (const k of Object.keys(g.tags)) {
     const t = g.tags[k];
     if (t && t.overlord && (!g.tags[t.overlord] || !g.tags[t.overlord].alive)) t.overlord = null;
+  }
+  enforceVassalPeace(ctx);
+}
+
+// A crown and its client do not go to war while the bond stands (SPEC §149).
+//
+// `declareWar` has always refused to OPEN such a war, and that is the only
+// place the rule was enforced — so it held in one direction and not the other.
+// A war is a persistent list of belligerents; the bond can be made afterwards,
+// by the peace table's subjugation clause, by a scripted overlord, or by an AI
+// restoring a client whose independence declaration failed. Nothing went back
+// and looked at the wars already running, so a court could be your client on
+// Tuesday and marching against you in a coalition on Wednesday, tribute still
+// flowing the other way.
+//
+// The yoke IS the settlement of that quarrel, which is what the declareWar
+// guard says in its own comment. So the client leaves the war rather than the
+// war being cancelled: everyone else on both sides fights on, and if the client
+// was the last court on its side the war dissolves for want of an enemy.
+export function enforceVassalPeace(ctx) {
+  const g = ctx.game;
+  if (!Array.isArray(g.wars) || !g.wars.length) return;
+  for (const war of g.wars.slice()) {
+    if (!war) continue;
+    for (const side of [war.attackers, war.defenders]) {
+      const foes = side === war.attackers ? war.defenders : war.attackers;
+      for (const tag of side.slice()) {
+        const t = g.tags[tag];
+        const lord = t && t.overlord;
+        if (!lord || foes.indexOf(lord) < 0) continue;
+        // Its own clients came in under its banner and go home with it.
+        const party = [tag].concat(vassalsOf(ctx, tag).filter((v) => side.indexOf(v) >= 0));
+        for (const leaver of party) {
+          const at = side.indexOf(leaver);
+          if (at >= 0) side.splice(at, 1);
+          if (war.warscore) delete war.warscore[leaver];
+          // Status quo on the fronts between the client and its lord's side.
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.controller === p.owner) continue;
+            const held = (p.owner === leaver && foes.indexOf(p.controller) >= 0)
+              || (p.controller === leaver && foes.indexOf(p.owner) >= 0);
+            if (held && g.tags[p.owner] && g.tags[p.owner].alive) changeControllerCore(ctx, p, p.owner);
+          }
+          chronicle(ctx, 'peace', (g.tags[leaver] ? g.tags[leaver].name : leaver)
+            + ' cannot take the field against ' + (g.tags[lord] ? g.tags[lord].name : lord)
+            + ', to whom it now bends the knee, and leaves ' + (war.name || 'the war') + '.');
+        }
+        liftSiegesBetween(ctx, party, foes);
+        rebuildAtWarWith(ctx);
+        marchStrandedHome(ctx, party.concat(foes));
+        ctx.bus.emit('war', { id: war.id, name: war.name, left: tag });
+      }
+    }
+    // A side emptied by the bond has no war left to fight.
+    if (!war.attackers.length || !war.defenders.length) dissolveWar(ctx, war);
   }
 }
 
@@ -4443,9 +4507,34 @@ function marchStrandedHome(ctx, tags) {
     if (path && path.length) { a.path = path; a.moveDaysLeft = 0; a.retreating = true; a.inBattle = false; }
   }
 }
+// A siege is an act of war and does not outlive one (SPEC §150).
+//
+// Occupation reverts at every peace table — that was always right. A siege in
+// PROGRESS was not occupation and nothing lifted it, so the besieging camp
+// stayed on the province after the war that raised it had ended: the outliner
+// went on listing "Pisidia 30%", and the map went on striping the cell, because
+// the political layer stripes on `p.controller !== p.owner || p.siege`. To the
+// player that is indistinguishable from an enemy still sitting on their land —
+// and the enemy was, in the only sense the screen could show.
+function liftSiegesBetween(ctx, a, b) {
+  const g = ctx.game;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || !p.siege) continue;
+    const by = p.siege.by;
+    const held = p.controller;
+    const between = (a.indexOf(by) >= 0 && b.indexOf(held) >= 0)
+      || (b.indexOf(by) >= 0 && a.indexOf(held) >= 0);
+    if (!between) continue;
+    p.siege = null;
+    clearFamine(ctx, p);
+    ctx.bus.emit('siegeEnd', { provId: p.id, by });
+  }
+}
 export function dissolveWar(ctx, war) {
   const g = ctx.game;
   const participants = war.attackers.concat(war.defenders);
+  liftSiegesBetween(ctx, war.attackers, war.defenders);
   const wi = g.wars.indexOf(war);
   if (wi >= 0) g.wars.splice(wi, 1);
   rebuildAtWarWith(ctx);
@@ -4474,6 +4563,7 @@ export function releaseFromWar(ctx, war, leaverTag, byTag) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
+  liftSiegesBetween(ctx, [leaverTag], mySide);
   const at = theirSide.indexOf(leaverTag);
   if (at >= 0) theirSide.splice(at, 1);
   if (war.warscore) delete war.warscore[leaverTag];
@@ -4509,6 +4599,7 @@ export function withdrawFromWar(ctx, war, leaverTag) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
+  liftSiegesBetween(ctx, leavers, theirSide);
   for (const leaver of leavers) {
     const at = mySide.indexOf(leaver);
     if (at >= 0) mySide.splice(at, 1);

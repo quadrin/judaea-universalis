@@ -107,7 +107,7 @@ function mliRows(w, tag) {
 // ---------------------------------------------------------------------------
 console.log('== the requirement is real ==');
 {
-  const w = greatCrown('66ce', 'JUD', 80);
+  const w = greatCrown('66ce', 'JUD', 90);
   const rows = mliRows(w, 'JUD');
   ok(!!rows, 'the Kingdom of Israel is a formable of this chapter');
   const david = rows.find((r) => /son of David/.test(r.label));
@@ -164,6 +164,58 @@ console.log('== the question reaches every chapter that can proclaim the crown =
 }
 
 // ---------------------------------------------------------------------------
+console.log('== …and not until the house has been a house (SPEC §148) ==');
+{
+  // Reported: this card arrived on the Maccabees on 1 August 166 BCE — eleven
+  // months into the revolt, 1,800 men in the field, a battle running at Lydda —
+  // opening with "the realm is large, the crown is secure, the succession is
+  // orderly" and "the question has been asked for a generation". A rising that
+  // overruns ten provinces in its first summer met the old gate exactly.
+  const w = greatCrown('167bce', 'HAS', -166);
+  w.game.date = { y: -166, m: 8, d: 1 };
+  ok(w.ctx.helpers.chapterYears(w.ctx) < 1,
+    'August 166 BCE is under a year into the chapter ('
+    + w.ctx.helpers.chapterYears(w.ctx).toFixed(2) + ')');
+  ok(HOUSE.trigger(w.ctx) === false,
+    'and a crown that meets every OTHER test is still not asked in its first year');
+
+  // The boundary, walked. The chapter opens in month 11, so twenty years lands
+  // in month 11 of 147 BCE — which is also roughly where the history puts the
+  // question: Simon wins independence in 142, Aristobulus takes the diadem 104.
+  w.game.date = { y: -148, m: 11, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === false, 'nineteen years in: still not asked');
+  w.game.date = { y: -147, m: 10, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === false, '  nor at nineteen years and eleven months');
+  w.game.date = { y: -147, m: 11, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === true, 'at twenty years exactly, the chamber asks');
+
+  // The other two sentences the card makes, now tested rather than assumed.
+  const t = w.game.tags.HAS;
+  t.regency = true;
+  ok(HOUSE.trigger(w.ctx) === false,
+    'a realm under a regency is not told its succession is orderly');
+  t.regency = false;
+  t.stability = -1;
+  ok(HOUSE.trigger(w.ctx) === false, 'nor an unsettled one that its crown is secure');
+  t.stability = 3;
+  t.legitimacy = 20;
+  ok(HOUSE.trigger(w.ctx) === false, '  nor one the country does not believe in');
+  t.legitimacy = 100;
+  ok(HOUSE.trigger(w.ctx) === true, 'and it returns when the realm is itself again');
+}
+{
+  // The generation fits inside every chapter that can reach the card. The
+  // tightest is 66 CE, which runs 34 years against a 20-year gate.
+  const need = 20;
+  for (const id of ['167bce', '67bce', '40bce', '66ce', '614ce']) {
+    const era = ERAS.find((e) => e.bookmark.id === id);
+    const span = (era.bookmark.generationHorizon || 0) - era.bookmark.startDate.y;
+    ok(span > need,
+      id + ' runs ' + span + ' years, so a ' + need + '-year gate leaves room');
+  }
+}
+
+// ---------------------------------------------------------------------------
 console.log('== the arc: a marriage, a generation, a son, a crown ==');
 {
   const w = greatCrown('167bce', 'HAS', -120);
@@ -215,7 +267,7 @@ console.log('== the arc: a marriage, a generation, a son, a crown ==');
 // ---------------------------------------------------------------------------
 console.log('== the answers that close the door, and the one that does not ==');
 {
-  const w = greatCrown('66ce', 'JUD', 80);
+  const w = greatCrown('66ce', 'JUD', 90);
   const ezek = HOUSE.options.findIndex((o) => /A prince, not a king/.test(o.label));
   HOUSE.options[ezek].effects(w.ctx);
   ok(!!w.game.flags.davidicRenounced && !!w.game.flags.davidicAnswered,
@@ -225,7 +277,7 @@ console.log('== the answers that close the door, and the one that does not ==');
     '  and it forecloses the crown of Israel, which is what the card says it does');
 }
 {
-  const w = greatCrown('66ce', 'JUD', 80);
+  const w = greatCrown('66ce', 'JUD', 90);
   const defer = HOUSE.options.findIndex((o) => /stands on what it won/.test(o.label));
   HOUSE.options[defer].effects(w.ctx);
   ok(!!w.game.flags.davidicDeferred, 'the Hasmonean non-answer is recorded');
@@ -233,7 +285,7 @@ console.log('== the answers that close the door, and the one that does not ==');
     '  and it postpones rather than settles: a later reign may take it up');
 }
 {
-  const w = greatCrown('66ce', 'JUD', 80);
+  const w = greatCrown('66ce', 'JUD', 90);
   const forge = HOUSE.options.findIndex((o) => /Search the archives/.test(o.label));
   HOUSE.options[forge].effects(w.ctx);
   ok(!!w.game.flags.davidicForged, 'the commissioned genealogy is an answer');
