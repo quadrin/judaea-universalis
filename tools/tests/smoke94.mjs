@@ -468,6 +468,51 @@ console.log('== 1948 makes no client kingdoms, by any of the three roads (SPEC �
 }
 
 // ---------------------------------------------------------------------------
+console.log('== nobody is succeeded by an ancient in 1948 (SPEC §143) ==');
+{
+  const MIL = await import(R + '/js/sim/military.js');
+  const { rollCourtier } = await import(R + '/js/sim/realm.js');
+  const G = MIL.GENERAL_NAMES;
+  // The pools that belong to antiquity. If a 1948 court draws from one of
+  // these, somebody's successor is going to be called Quintus Petillius.
+  const ANCIENT = ['israelite', 'hellenic', 'latin', 'iranian', 'arab', 'syrian', 'egyptian', 'armenian'];
+  const ancientPools = new Set(ANCIENT.map((k) => G[k]));
+
+  const w = boot('1948ce', 'ISR');
+  for (const t of w.bookmark.activeTags) {
+    const pool = MIL.courtNamePool(w.ctx, t);
+    ok(!ancientPools.has(pool), t + ' draws its court from its own century (' + pool[0] + '…)');
+    // …and the names it actually produces are from that pool, through the two
+    // functions that seat people: the successor and the general.
+    const heir = rollCourtier(w.ctx, t).name;
+    const gen = MIL.rollGeneral(w.ctx, t).name;
+    ok(pool.indexOf(heir) >= 0 && pool.indexOf(gen) >= 0,
+      '  a successor (' + heir + ') and a general (' + gen + ') both come from it');
+  }
+  // The four that had no modern pool at all, named.
+  const EXPECT = { ITA: 'italian', GRC: 'greek_modern', UK: 'british', IRN: 'iranian_modern' };
+  for (const [tag, key] of Object.entries(EXPECT)) {
+    ok(MIL.courtNamePool(w.ctx, tag) === G[key], tag + ' is staffed from the ' + key + ' pool');
+  }
+
+  // The reason this is per-CHAPTER and not per-culture: GRC plays in two
+  // chapters twenty-one centuries apart, and Nikanor is right in one of them.
+  const w167 = boot('167bce', 'HAS');
+  ok(MIL.courtNamePool(w167.ctx, 'GRC') === G.hellenic,
+    'the same tag in 167 BCE is still Hellenistic — Nikanor, Apollonios, Philon');
+  ok(MIL.courtNamePool(w167.ctx, 'HAS') === G.israelite,
+    '  and the Hasmoneans are still Hasmonean');
+
+  // A chapter that names no pool is untouched: the culture group still decides.
+  const w529 = boot('529ce', 'SAM');
+  for (const t of w529.bookmark.activeTags) {
+    const cul = DEFINES.CULTURES[(DEFINES.TAGS[t] || {}).culture] || {};
+    ok(MIL.courtNamePool(w529.ctx, t) === (G[cul.group] || G.hellenic),
+      '529 leaves ' + t + ' on its culture group (' + cul.group + ')');
+  }
+}
+
+// ---------------------------------------------------------------------------
 console.log('== the compendium can tell the reader which name it flew ==');
 {
   // The nation page is the TAG's and a tag outlives its names, so the era row

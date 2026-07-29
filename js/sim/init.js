@@ -17,7 +17,7 @@ import {
   clientOfferInfo, offerClientshipCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
-  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, engageIfNeeded,
+  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, courtNamePool, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
@@ -2156,8 +2156,9 @@ export function gameActions(ctx) {
         if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
         if (!t.courtCand) t.courtCand = {};
         if (!Number.isFinite(t.aggression)) t.aggression = 0;
-        const cul = ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
-        let pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+        // The chapter's pool if it names one (SPEC §143); `advisorEras` below
+        // still wins where a chapter dates its court by decade.
+        let pool = courtNamePool(ctx, g.playerTag);
         const eras = ctx.bookmark && Array.isArray(ctx.bookmark.advisorEras)
           ? ctx.bookmark.advisorEras.filter((row) => row && row.from <= g.date.y)
             .sort((a, b) => b.from - a.from) : [];

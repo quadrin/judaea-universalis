@@ -7221,3 +7221,77 @@ satisfied — so only the mechanic can be doing the refusing — checks that the
 core refuses with the panel and that a forced deal creates nobody, checks the
 objective gate, and checks that the other seven chapters still keep their
 clients.
+
+## 143. A culture group has no century in it
+
+Reported: if a ruler dies in 1948 in Italy or somewhere else, their successor
+sounds like they have an ancient name.
+
+They did. `rollCourtier` — the function that seats a successor when a ruler
+dies, picks the two candidates a republic votes between, and fills an heir —
+chose its pool with one line:
+
+```js
+const cul = ctx.DEFINES.CULTURES[t.culture];
+const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+```
+
+A culture group has no century in it. So in the chapter that runs from 1948 to
+1956, four of the twelve courts were staffed from antiquity:
+
+| | culture → group | who succeeded |
+|---|---|---|
+| **Italy** | `roman` → `latin` | Marcus Ulpius, Quintus Petillius, Aulus Larcius |
+| **Greece** | `greek` → `hellenic` | Nikanor, Apollonios, Antigonos |
+| **Britain** | `greek` → `hellenic` | *the same Hellenistic pool* |
+| **Iran** | `persian` → `iranian` | Vologases, Pacorus, Artabanus — Parthian kings |
+
+Israel, the Arab states and Turkey were fine: the chapter's author had written
+`israeli`, `arab_modern` and `turkish` pools of real 1948 commanders. The four
+background powers never got one, and nothing complained, because a name is not
+an assertion the tests knew how to check.
+
+The same line appears in `rollGeneral`, so it was not only successions — every
+Italian army raised in 1948 was commanded by a Flavian legate.
+
+### Per chapter, not per culture
+
+The obvious fix is to give Italy a modern culture, and for Italy it would work,
+because ITA plays in exactly one chapter. **GRC does not.** Greece is on the
+map in 167 BCE and again in 1948, twenty-one centuries apart, under the same
+three letters — and Nikanor is *right* in one of them. Whatever names that tag,
+it has to be the chapter.
+
+So it rides the lens §139 already built. `tagDef` merges arbitrary keys, so the
+chapter says `names` beside `capital` and one resolver reads it:
+
+```js
+tagTweaks: {
+  GRC: { capital: 'Athens', names: 'greek_modern' },
+  ITA: { names: 'italian' },
+  UK:  { names: 'british' },
+  IRN: { names: 'iranian_modern' },
+}
+```
+
+`courtNamePool(ctx, tag)` replaces the duplicated idiom at all three sites —
+`rollCourtier`, `rollGeneral`, and the advisor fallback in `getCourt`, where a
+chapter's dated `advisorEras` still wins because it is the more specific thing.
+
+The four new pools hold men who actually held these commands in the years the
+chapter runs, which is the standard the three existing modern pools already set:
+Messe, Marras, Trezzani and Cadorna; Papagos, Tsakalotos, Ventiris and Ghikas;
+Montgomery, Slim, Crocker and Dempsey, with MacMillan, Barker, Cunningham and
+Stockwell out of Palestine Command; Razmara, Zahedi, Arfa and Amir-Ahmadi.
+
+One thing deliberately not done. These pools are soldiers, and the game draws
+rulers from the same list, so an Italian succession seats Marshal Messe rather
+than a De Gasperi. That conflation is the existing convention — Israel's pool is
+Yadin and Sadeh and it names Israel's rulers too — and splitting rulers from
+generals is a change to every chapter, not to this one.
+
+`smoke94.mjs` asserts that no 1948 court draws from any of the eight ancient
+pools, that the successor and the general a court actually produces both come
+from its own, that GRC in 167 BCE is still Hellenistic and the Hasmoneans still
+Hasmonean, and that a chapter naming no pool — 529 — is left entirely on its
+culture groups.

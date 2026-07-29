@@ -1892,7 +1892,32 @@ export const GENERAL_NAMES = {
   israeli:   ['Yigael Yadin', 'Yitzhak Sadeh', 'Yigal Allon', 'Moshe Carmel', 'Shimon Avidan', 'David Shaltiel', 'Mickey Marcus', 'Yitzhak Rabin'],
   arab_modern: ['Abdullah el-Tell', 'Habis Majali', 'Fawzi al-Qawuqji', 'Ahmed Ali al-Mwawi', 'Taha al-Hashimi', 'Ismail Safwat', 'Muhammad Naguib', 'Sami al-Hinnawi'],
   turkish:   ['Kâzım Orbay', 'Salih Omurtak', 'Nuri Yamut', 'Abdurrahman Nafiz Gürman', 'Şükrü Kanatlı', 'Muzaffer Tuğsavul', 'İzzet Aksalur', 'Asım Tınaztepe'],
+  // …and the four courts of 1948 that had no modern pool at all (SPEC §143),
+  // so a death in Rome seated Quintus Petillius and a death in Athens seated
+  // Antigonos. Same standard as the three above: men who actually held these
+  // commands in the years the chapter runs.
+  italian:   ['Giovanni Messe', 'Efisio Marras', 'Claudio Trezzani', 'Raffaele Cadorna', 'Paolo Berardi', 'Umberto Utili', 'Taddeo Orlando', 'Giuseppe Castellano'],
+  greek_modern: ['Alexandros Papagos', 'Thrasyvoulos Tsakalotos', 'Konstantinos Ventiris', 'Solon Ghikas', 'Stylianos Kitrilakis', 'Dimitrios Giantzis', 'Georgios Grivas', 'Napoleon Zervas'],
+  british:   ['Bernard Montgomery', 'William Slim', 'John Crocker', 'Miles Dempsey', 'Gordon MacMillan', 'Evelyn Barker', 'Alan Cunningham', 'Hugh Stockwell'],
+  iranian_modern: ['Ali Razmara', 'Fazlollah Zahedi', 'Hassan Arfa', 'Ahmad Amir-Ahmadi', 'Morteza Yazdanpanah', 'Nader Batmanghelich', 'Abdollah Hedayat', 'Mohammad Daftari'],
 };
+
+// Which of those a court draws its people from (SPEC §143). The pool was keyed
+// on the culture group alone, and a culture group has no century in it: the
+// tag that is Ptolemaic Greece in 167 BCE is the Kingdom of Greece in 1948 and
+// the group says `hellenic` for both. So a ruler who died in Rome in 1949 was
+// replaced by Marcus Ulpius, and one who died in Tehran by Vologases.
+//
+// A chapter names the pool through the same lens it names the court with
+// (§139), because the answer is per-chapter and not per-culture — GRC is in
+// two chapters twenty-one centuries apart and Nikanor is right in one of them.
+export function courtNamePool(ctx, tag) {
+  const key = tagDef(ctx, tag).names;
+  if (key && GENERAL_NAMES[key]) return GENERAL_NAMES[key];
+  const t = ctx.game.tags[tag];
+  const cul = t && ctx.DEFINES && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
+  return (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+}
 function weightedIndex(rng, weights) {
   let total = 0;
   for (const w of weights) total += w;
@@ -1935,9 +1960,7 @@ function maybeGainTrait(ctx, army) {
 }
 
 export function rollGeneral(ctx, tag) {
-  const t = ctx.game.tags[tag];
-  const cul = t && ctx.DEFINES.CULTURES ? ctx.DEFINES.CULTURES[t.culture] : null;
-  const pool = (cul && GENERAL_NAMES[cul.group]) || GENERAL_NAMES.hellenic;
+  const pool = courtNamePool(ctx, tag);
   return {
     name: ctx.rng.pick(pool),
     fire: weightedIndex(ctx.rng, [2, 5, 6, 5, 2]),
