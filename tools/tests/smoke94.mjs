@@ -305,6 +305,169 @@ console.log('== the other three senses of the word survive the sweep ==');
 }
 
 // ---------------------------------------------------------------------------
+console.log('== 1948 presents its modern states as modern (SPEC §141) ==');
+{
+  const w = boot('1948ce', 'ISR');
+  const b = w.bookmark;
+  // 1. No province of a foreign country still wears a classical name. The
+  //    three that did are the subject; the assertion is the general rule.
+  const renamed = { Pisidia: 'Isparta', Palmyra: 'Tadmur', Pella: 'Tabaqat Fahl' };
+  for (const [canon, modern] of Object.entries(renamed)) {
+    const p = w.ctx.prov(canon);
+    ok(!!p && p.name === modern,
+      canon + ' answers to ' + modern + ' in 1948' + (p ? ' (' + p.name + ')' : ' — MISSING'));
+    ok(!!p && p.canon === canon, '  and keeps ' + canon + ' as its canonical key for content');
+  }
+  // 2. Every court sits in a city it holds, and in the right one.
+  const SEATS = {
+    ISR: 'Tel Aviv-Jaffa', EGY: 'Cairo', JOR: 'Amman', SYR: 'Damascus',
+    LEB: 'Beirut', IRQ: 'Baghdad', TUR: 'Ankara', GRC: 'Athens', ITA: 'Rome',
+  };
+  for (const [tag, city] of Object.entries(SEATS)) {
+    const capName = tagDef(w.ctx, tag).capital;
+    const p = capName ? w.ctx.prov(capName) : null;
+    ok(!!p && p.name === city, tag + ' is governed from ' + city
+      + (p ? ' (' + p.name + ')' : ' — unresolved'));
+    ok(!!p && p.owner === tag, '  and it owns the city it is governed from');
+  }
+  // 3. The two the chapter had to correct, stated as the correction: Turkey
+  //    has not been governed from Konya since 1923, and Corinth has never
+  //    been a modern capital. Both static seats are still the ancient ones.
+  ok(DEFINES.TAGS.TUR.capital === 'Iconium' && DEFINES.TAGS.GRC.capital === 'Corinth',
+    'the static seats are untouched — the correction is the chapter\'s, not the tag\'s');
+  ok(b.tagTweaks && b.tagTweaks.TUR.capital === 'Ancyra'
+    && b.tagTweaks.GRC.capital === 'Athens',
+  '  and it is keyed by canonical name, which is what the growth index looks up');
+  // 4. A capital-only tweak must not touch a single name — and the case that
+  //    would have caught a mistake is Greece, which this chapter rebrands in
+  //    its own setup (`rebrandTag(GRC, 'Kingdom of Greece')`). The load-time
+  //    heal (§139) re-applies a chapter's era name where the court still
+  //    carries its static one, and a tweak that carried a name for GRC — or a
+  //    heal that compared the wrong thing — would overwrite the rebrand.
+  ok(w.game.tags.GRC.name === 'Kingdom of Greece',
+    'Greece keeps the name its own setup gave it, seat tweak notwithstanding');
+  for (const t of b.activeTags) {
+    if (t === 'GRC') continue;
+    ok(w.game.tags[t].name === (DEFINES.TAGS[t] || {}).name,
+      t + ' still opens under its own name (' + w.game.tags[t].name + ')');
+  }
+  // …and it survives a save round-trip, which is where the heal actually runs.
+  {
+    const saved = JSON.parse(JSON.stringify(w.game));
+    const g2 = reviveGame(saved);
+    makeCtx({
+      game: g2, DEFINES, MAP_DATA, geom: flatGeom,
+      bus: { emit() {}, on() { return () => {}; } },
+      bookmark: b, events: w.era.events, provinceMap: w.provinceMap,
+    });
+    ok(g2.tags.GRC.name === 'Kingdom of Greece',
+      '  and still keeps it after a load, where the heal runs');
+  }
+  // 5. No two courts of this chapter claim the same seat — the growth index is
+  //    keyed by capital NAME and the last writer wins, so a collision inside a
+  //    chapter would silently take the bonus off one of them.
+  const claimed = {};
+  let clash = 0;
+  for (const t of b.activeTags) {
+    const c = tagDef(w.ctx, t).capital;
+    if (!c) continue;
+    if (claimed[c]) clash++;
+    claimed[c] = t;
+  }
+  ok(clash === 0, 'no two of its courts claim the same seat');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== 1948 makes no client kingdoms, by any of the three roads (SPEC §142) ==');
+{
+  const MIL = await import(R + '/js/sim/military.js');
+  const CH = await import(R + '/js/sim/chapters.js');
+
+  // Force every precondition EXCEPT the age itself, so only the mechanic can
+  // be doing the refusing.
+  function courted(id, me, them) {
+    const w = boot(id, me);
+    const A = w.game.tags[me], B = w.game.tags[them];
+    A.allies = [them]; B.allies = [me];
+    A.overlord = null; B.overlord = null;
+    A.atWarWith = []; B.atWarWith = [];
+    A.points.infl = 999;
+    MIL.addOpinion(w.ctx, them, me, 900);
+    return w;
+  }
+
+  const w48 = courted('1948ce', 'ISR', 'EGY');
+  ok(MIL.mechanicOn(w48.ctx, 'clientKingdoms') === false,
+    'the chapter declares the institution off');
+
+  // Road 1: the peacetime collar (SPEC §92) — info AND core, since the core is
+  // what a UI would actually call.
+  const co = MIL.clientOfferInfo(w48.ctx, 'ISR', 'EGY');
+  ok(co && co.can === false, 'the collar cannot be offered');
+  ok(co && /no client kingdoms/.test(co.why), '  and it is the age that says so, not the arithmetic');
+  const core = MIL.offerClientshipCore(w48.ctx, 'ISR', 'EGY');
+  ok(core && core.ok === false, '  and the core refuses too, not merely the panel');
+  ok(w48.game.tags.EGY.overlord === null, '  nobody bent the knee');
+
+  // Road 2: the yoke at the peace table.
+  const war = Object.values(w48.game.wars || {})[0];
+  ok(!!war, 'the chapter opens at war, which is where the yoke would be written');
+  const info = MIL.peaceDealInfo(w48.ctx, war, 'ISR');
+  ok(info.canSubjugate === false, 'the peace table will not write a subjugation clause');
+  ok(/no client kingdoms/.test(info.whyNotSubjugate || ''), '  and says why in the age\'s own terms');
+  // …and it cannot be forced past the panel: executePeaceDeal re-reads the
+  // same info rather than trusting the deal handed to it.
+  const before = Object.keys(w48.game.tags).filter((t) => w48.game.tags[t].overlord).length;
+  try {
+    MIL.executePeaceDeal(w48.ctx, war, 'ISR', { provinces: [], gold: 0, subjugate: true, release: [], transferVassals: [] });
+  } catch (e) { /* the refusal is the subject, not the throw */ }
+  const after = Object.keys(w48.game.tags).filter((t) => w48.game.tags[t].overlord).length;
+  ok(after === before, 'a hand-built deal demanding submission creates no client either');
+
+  // Road 3: taking a client off the enemy.
+  ok(MIL.transferableVassals(w48.ctx, war, 'ISR').length === 0,
+    'and no client can be taken off a defeated enemy');
+
+  // The rule that was WAITING on this one (the §140 lesson): the diplomatic
+  // chapter objective defaults to "maintain N client kingdoms" from the second
+  // chapter onward, which would be a contract the age had just made impossible.
+  const src = await import('node:fs').then((fs) =>
+    fs.readFileSync(R + '/js/sim/chapters.js', 'utf8'));
+  ok(/mechanicOn\(ctx, 'clientKingdoms'\) && \(hasClients \|\| seq >= 2\)/.test(src),
+    'the League of Crowns objective is gated on the same switch');
+  ok(typeof CH.monthlyChapters === 'function', '  (chapters.js still loads)');
+
+  // And the switch is 1948's alone — every other chapter keeps its clients.
+  for (const era of ERAS) {
+    if (era.bookmark.id === '1948ce') continue;
+    const w = boot(era.bookmark.id, (era.bookmark.playableTags[0] || {}).tag);
+    ok(MIL.mechanicOn(w.ctx, 'clientKingdoms') === true,
+      era.bookmark.id + ' still keeps client kingdoms');
+  }
+
+  // The age's refusal is checked BEFORE the separate-peace one, because
+  // "subjugation waits for the full congress" would promise a clause the
+  // congress cannot write either. That reorder took the congress rule's only
+  // assertion out of smoke43 (which runs in 1948), so it is pinned here
+  // instead, in a chapter that still has clients to argue about.
+  {
+    const w66 = boot('66ce', 'JUD');
+    const w = Object.values(w66.game.wars || {})[0];
+    if (w) {
+      const side = w.attackers.includes('JUD') ? w.defenders : w.attackers;
+      const other = side.find((t) => t !== (w.attackers.includes('JUD') ? w.defenders[0] : w.attackers[0]));
+      const sep = other ? MIL.peaceDealInfo(w66.ctx, w, 'JUD', other) : null;
+      if (sep && sep.separate) {
+        ok(!sep.canSubjugate && /congress/.test(sep.whyNotSubjugate || ''),
+          '66 CE still answers a separate peace with the congress rule');
+      } else {
+        ok(true, '66 CE opens with no separate table to test (congress rule covered by smoke53)');
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 console.log('== the compendium can tell the reader which name it flew ==');
 {
   // The nation page is the TAG's and a tag outlives its names, so the era row

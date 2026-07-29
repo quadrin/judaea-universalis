@@ -7082,3 +7082,142 @@ happening has to be checked against every rule that was *waiting* for it to
 happen. `smoke94.mjs` pins both halves — the theft refused, the legitimate
 crowning still fired, and the unsettleable claim ending inside the ceiling in
 both chapters where the player can be the court it happens to.
+
+## 141. The modern chapter had three cells and two capitals that were not modern
+
+Reported: make sure the modern successors in 1948 have modern names.
+
+Mostly they did. The 1948 chapter renames more than a hundred provinces —
+Beroea to Aleppo, Emesa to Homs, Seleucia-Ctesiphon to Baghdad, Byzantion to
+Istanbul, Memphis to Cairo, down to Turkish orthography for Diyarbakır, Elazığ
+and İzmir — and every tag in it already carries a modern name. Two things had
+been missed, and the audit is worth writing down because "mostly" was doing
+real work.
+
+### Three cells still answering to antiquity
+
+Every province of every foreign country in the chapter carried its 1948 name
+except three:
+
+- **Pisidia → Isparta.** The worst of them: an ancient *region*, not a town, and
+  the only cell in Anatolia with no modern name at all while twenty-four
+  neighbours had theirs. It sits at 30.55E in the lakes, which is Isparta to
+  the decimal.
+- **Palmyra → Tadmur.** Syria's own name for it, and the one classical survival
+  among fifteen Syrian cells renamed around it.
+- **Pella → Tabaqat Fahl.** The Decapolis city; its Jordanian neighbours Jerash,
+  Irbid and Salt were all already modern.
+
+What the sweep had to *not* do is louder than what it did. Alexandria, Damascus,
+Gaza, Tarsus, Paphos, Khaybar, Tayma, Athens, Corinth, Sparta and Rhodes are the
+modern names, not merely the ancient ones. The Phoenician three — Byblos, Sidon
+and Tyre — are the English exonyms this chapter uses everywhere else it says
+Aleppo, Beirut and Nablus rather than Halab, Bayrut and Nablus' Arabic. And
+Lydda keeps the form the events of 1948 are written under. A blanket
+Arabic-or-Hebrew pass would have been *less* modern, not more.
+
+### Two courts governed from the wrong city
+
+A tag's static seat is its ancient one, and for most of this chapter that lands
+correctly anyway: Memphis is Cairo, Berytus is Beirut, Philadelphia is Amman,
+Seleucia-Ctesiphon is Baghdad, and Joppa is Tel Aviv — which is where Israel's
+government actually sat in May 1948. Two did not.
+
+**Turkey's static seat is Iconium**, and Turkey has not been governed from Konya
+in this chapter's lifetime; the capital moved to Ankara in 1923, and Ankara is
+on this map. **Greece's is Corinth**, which has never been the capital of
+anything modern; Athens is on this map too.
+
+The seat is not decoration (§139): it takes the growth bonus, anchors AI
+development and the muster search, is the ground a succession crisis is decided
+on (§140), and is the province the peace table refuses to hand over. Both were
+quietly running the wrong city. `tagTweaks` fixes it in two lines, keyed by
+**canonical** map name because that is what the growth index looks up
+(`capitals[p.canon || p.name]`).
+
+Saudi Arabia, Iran and Britain are left alone, because the right answer is not
+on this map: Riyadh, Tehran and London are all outside the frame, and inventing
+a seat is worse than an ancient one that at least resolves to a city the state
+holds.
+
+### What the audit also turned up, and did not fix
+
+`yearlyGrowth` keys its capital index by province NAME with last-write-wins, so
+a capital claimed by more than one tag pays its bonus to whichever tag is
+defined last in `defines.js` — **including tags that do not exist in the
+chapter being played**. The sharpest case is 167 BCE: the Seleucid Empire is the
+chapter's antagonist, it is seated at Antioch, and it has never once received
+its own capital's growth bonus, because `BYZ` — five centuries away and not on
+that map — owns the `Antioch` key. The same holds for Rome at Antioch, for a
+Hasmonean or Bar Kokhba Judaea at Jerusalem (MLI owns that key), for Parthia and
+Persia at Ctesiphon, for Hyrcanus at Hebron, for Syria at Damascus and Egypt at
+Memphis in 1948.
+
+This change neither causes it nor worsens it — rebuilding the index the old way
+and the new way across all eight chapters differs in exactly two entries, both
+of them a court gaining a bonus it never had. The fix is to drop the index and
+ask each province directly, but that moves growth in every chapter, so it is
+recorded here rather than taken.
+
+`smoke94.mjs` pins the three names, the seat of every court that has one on this
+map, the fact that the static definitions are untouched, that no two courts of
+the chapter claim the same seat, and — the assertion that would have caught a
+mistake — that Greece keeps the name its own setup gives it, across a save,
+because a seat tweak must not disturb a rebrand.
+
+## 142. The twentieth century does not make clients
+
+Reported: you also shouldn't be able to make client kingdoms in 1948.
+
+You could, by three roads, and all three are now shut for that chapter.
+
+The institution the peace table calls **subjugation** — a beaten crown left
+alive and sworn to the victor — belongs to the world of Herod and Agrippa. The
+twentieth century settled its wars a different way. 1948 ended in armistice
+lines signed at Rhodes, and no belligerent came out of it owing fealty to
+another; the arrangements that did look like clientage, the mandates, were
+expiring rather than being founded. Egypt held Gaza and Jordan annexed the West
+Bank, and both of those are **occupation** and **annexation**, which this table
+still does. What it will not do is write a sovereign state into somebody's
+crown.
+
+`mechanics: { clientKingdoms: false }` — the same per-chapter switch that
+already turns off conversion, royal marriage, coalitions and the dynastic
+succession crisis in this chapter. Three gates read it:
+
+- **The yoke**, in `peaceDealInfo`. The refusal is at the info layer, which is
+  what makes it hold: the AI's own peace search keys off `info.canSubjugate`,
+  and `executePeaceDeal` re-derives `!!d.subjugate && info.canSubjugate` rather
+  than trusting the deal handed to it, so a hand-built demand cannot route past
+  the panel.
+- **The collar**, in `clientOfferInfo` — SPEC §92's offer to a small friendly
+  neighbour, the one road to a vassal that costs no infamy. `offerClientshipCore`
+  returns through the same info, so the core refuses with the panel.
+- **The inheritance**, in `transferableVassals` — taking somebody else's client
+  is still acquiring one. This bars the *acquiring*, not the *having*: a chapter
+  that starts with vassals and switches the mechanic off keeps them.
+
+### The rule that was waiting on it
+
+§140's lesson, applied before it could bite: a rule that stops something from
+happening has to be checked against every rule that was waiting for it.
+
+`chapters.js` picks a diplomatic chapter objective, and from the second chapter
+onward its default is **The League of Crowns** — *maintain N loyal client
+kingdoms*. In a chapter that cannot make one, that is a contract the age has
+just made impossible, handed to the player automatically. It is now gated on the
+same switch and falls through to **The Bound Standards**, the alliance
+objective, which this age has plenty of material for.
+
+The rest of the vassal machinery needed nothing: every other consumer is a
+read-only *do we have any* that answers zero — war-joining, cession recipients,
+the embargo exemption, §61 incorporation and §137's suspension all degrade
+quietly. No 1948 mission asks for a client. The one AI path that writes an
+overlord only *restores* a bond whose independence declaration failed, and
+cannot mint a new one.
+
+`smoke94.mjs` walks all three roads with every precondition but the age itself
+satisfied — so only the mechanic can be doing the refusing — checks that the
+core refuses with the panel and that a forced deal creates nobody, checks the
+objective gate, and checks that the other seven chapters still keep their
+clients.

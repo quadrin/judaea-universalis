@@ -3472,7 +3472,12 @@ export function clientOfferInfo(ctx, me, them) {
     can: false,
     why: '',
   };
-  if (theirs.overlord === me) out.why = 'They are already our client kingdom.';
+  // Not every age keeps clients (SPEC §142). Where the chapter has switched
+  // the institution off, the offer is not merely refused — it cannot be made.
+  if (!mechanicOn(ctx, 'clientKingdoms')) {
+    out.why = 'This age has no client kingdoms. A state is sovereign or it is occupied; '
+      + 'there is nothing in between for a treaty to write down.';
+  } else if (theirs.overlord === me) out.why = 'They are already our client kingdom.';
   else if (theirs.overlord) {
     out.why = 'They already answer to '
       + ((g.tags[theirs.overlord] && g.tags[theirs.overlord].name) || theirs.overlord) + '.';
@@ -3947,6 +3952,11 @@ export function releasableNations(ctx, war, byTag, enemyTag) {
 export function transferableVassals(ctx, war, byTag) {
   const g = ctx.game;
   if (!war || !byTag) return [];
+  // Taking somebody else's client is still acquiring one (SPEC §142), so it
+  // goes when the institution does. A chapter that starts with vassals and
+  // then switches the mechanic off keeps them — this bars the acquiring, not
+  // the having.
+  if (!mechanicOn(ctx, 'clientKingdoms')) return [];
   const theirSide = enemySideOf(war, byTag);
   const out = [];
   for (const tag of Object.keys(g.tags)) {
@@ -4104,7 +4114,15 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   // realms already sworn to someone, and priced by the realm's weight.
   let canSubjugate = false;
   let whyNotSubjugate = '';
-  if (exit) whyNotSubjugate = 'This war is not ours to settle — only its leader can break a crown at the table.';
+  if (!mechanicOn(ctx, 'clientKingdoms')) {
+    // The age itself refuses the clause (SPEC §142). A twentieth-century peace
+    // can occupy a country, partition it, disarm it or garrison it, and this
+    // table can still do every one of those — what it cannot do is write a
+    // sovereign state into somebody's crown as a client kingdom, because that
+    // is not a thing the age's treaties know how to say.
+    whyNotSubjugate = 'This age has no client kingdoms. A state can be beaten, occupied and '
+      + 'stripped of land, but no treaty here makes one crown the subject of another.';
+  } else if (exit) whyNotSubjugate = 'This war is not ours to settle — only its leader can break a crown at the table.';
   else if (separate) whyNotSubjugate = 'A separate peace cannot break a crown — subjugation waits for the full congress.';
   else if (!et) whyNotSubjugate = 'There is no court left to subjugate.';
   else if (et.overlord) whyNotSubjugate = 'They already bend the knee to another.';

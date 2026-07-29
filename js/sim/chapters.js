@@ -15,7 +15,7 @@
 // Everything stored on game.chapters is plain data (objectives carry typed
 // params, never functions), so saves resume mid-chapter.
 
-import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress, tagDef } from './military.js';
+import { num, clamp, devTotal, liveGrudge, reconciled, thawProgress, tagDef, mechanicOn } from './military.js';
 import { factionDefs } from './factions.js';
 import { isCoastal, merchantShipsOf } from './navy.js';
 import { lean, axisOf, doctrineEpithet } from './doctrine.js';
@@ -329,7 +329,13 @@ function makeDiplomatic(ctx, tag, seq, deadline) {
         + income + ' talents a month, held half a year.',
       { hulls, income }, 1, 6, deadline);
   }
-  if (hasClients || seq >= 2) {
+  // …but only where the age keeps clients at all (SPEC §142). `seq >= 2` makes
+  // this the DEFAULT second diplomatic chapter, so a chapter with the
+  // institution switched off would hand the player a contract it had just made
+  // impossible to fulfil — the same shape of bug as §140, a rule left waiting
+  // on something that can no longer happen. The alliance objective below is
+  // the honest substitute and this age has plenty of alliances.
+  if (mechanicOn(ctx, 'clientKingdoms') && (hasClients || seq >= 2)) {
     const k = Math.min(3, 1 + seq);
     return obj('diplomatic', 'clients',
       'The League of Crowns',

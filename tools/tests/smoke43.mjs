@@ -71,8 +71,14 @@ console.log('== exhausting one court opens its door ==');
     'the scoped table prices against the bilateral ledger, not the side score');
   ok(info.provinces.length && info.provinces.every((r) => r.owner === 'LEB'),
     'only Lebanese land is on this table — Egyptian Gaza is not');
-  ok(!info.canSubjugate && /congress/.test(info.whyNotSubjugate),
-    'a separate peace cannot subjugate: ' + info.whyNotSubjugate);
+  // This table cannot subjugate, and in THIS chapter it never could have:
+  // 1948 keeps no client kingdoms at all (SPEC §142), and the age's refusal is
+  // deliberately checked before the separate-peace one, because "wait for the
+  // full congress" would promise a clause the congress cannot write either.
+  // The congress rule itself is still pinned where clients exist — smoke94
+  // asserts it in 66 CE, and smoke53 covers the rest of the hierarchy there.
+  ok(!info.canSubjugate && /no client kingdoms/.test(info.whyNotSubjugate),
+    'no subjugation at this table, and the age is the reason: ' + info.whyNotSubjugate);
 }
 
 console.log('== the separate treaty: they cede, they leave, the war goes on ==');

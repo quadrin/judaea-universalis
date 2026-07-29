@@ -427,8 +427,22 @@ export const BOOKMARK_1948 = {
   // not raise punitive leagues (SPEC §100 — the embargo is this age's answer),
   // and their constitutions have successors rather than heirs, so the dynastic
   // succession crisis (SPEC §98) never opens here.
+  // …and no client kingdoms (SPEC §142). This age does not make them. The
+  // institution the peace table calls subjugation — a beaten crown kept alive
+  // and sworn to the victor — belongs to the world of Herod and Agrippa, and
+  // the twentieth century settled its wars a different way. 1948 ends in
+  // armistice lines at Rhodes, not in vassalage: no belligerent came out of it
+  // owing fealty to another, and the mandates that did look like clientage
+  // were expiring, not being founded. Egypt held Gaza and Jordan annexed the
+  // West Bank as OCCUPATION and ANNEXATION, which this table still does — a
+  // state here can be beaten, occupied, partitioned and stripped of land. What
+  // it cannot be is somebody's client, because that is not a clause the age's
+  // treaties know how to write. The bar covers all three roads: the yoke at
+  // the peace table, the collar offered to a small friendly neighbour in
+  // peacetime (SPEC §92), and taking a client off a defeated enemy.
   mechanics: {
     conversion: false, royalMarriage: false, coalitions: false, succession: false,
+    clientKingdoms: false,
   },
 
   // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,
@@ -533,6 +547,52 @@ export const BOOKMARK_1948 = {
     'Byzantion': 'Istanbul', 'Nicaea': 'Bursa', 'Smyrna': 'İzmir',
     'Ancyra': 'Ankara', 'Sinope': 'Sinop', 'Trapezus': 'Trabzon',
     'Hyrcania': 'Mazandaran',
+    // The last three foreign cells still wearing a classical name (SPEC §141).
+    // Every other province of every foreign country in this chapter already
+    // carried its 1948 one; these three were missed, and they were the only
+    // three on the map where a modern state's own land answered to a name that
+    // state does not use.
+    'Pisidia': 'Isparta',           // an ancient REGION, not a town: the only
+                                    // cell in Anatolia with no modern name at
+                                    // all. It sits in the lakes at 30.55E —
+                                    // which is Isparta, to the degree.
+    'Palmyra': 'Tadmur',            // Syria's own name for it, and the one
+                                    // classical survival among fifteen Syrian
+                                    // cells that were all renamed around it.
+    'Pella': 'Tabaqat Fahl',        // the Decapolis city; Jordan's name for the
+                                    // site, and its neighbours Jerash, Irbid
+                                    // and Salt were all already modern.
+    // Deliberately left alone, because these ARE the modern names and not only
+    // the ancient ones: Alexandria, Damascus, Gaza, Tarsus, Paphos, Khaybar,
+    // Tayma, Athens, Corinth, Sparta, Rhodes, and the Phoenician three —
+    // Byblos, Sidon and Tyre — which this chapter renders as English exonyms
+    // exactly as it renders Aleppo, Beirut and Nablus. Lydda keeps the form
+    // the events of 1948 are written under.
+  },
+
+  // Where these courts actually sit in 1948 (SPEC §141). A tag's static seat
+  // is its ANCIENT one, which for most of this chapter's countries lands on
+  // the right city anyway — Memphis is Cairo, Berytus is Beirut, Philadelphia
+  // is Amman, Seleucia-Ctesiphon is Baghdad, and Joppa is Tel Aviv, which is
+  // where Israel's government actually was in May 1948. Two do not.
+  //
+  // Turkey's static seat is Iconium, and Turkey has not been governed from
+  // Konya in this chapter's lifetime: the capital moved to Ankara in 1923,
+  // and Ankara is on this map. Greece's is Corinth, which has never been the
+  // capital of anything modern; Athens is on this map too. The seat is not
+  // decoration — it takes the growth bonus, anchors AI development and the
+  // muster search, and is the province the peace table refuses to hand over
+  // — so both were quietly running the wrong city.
+  //
+  // Keyed by CANONICAL map name, because that is what the growth index looks
+  // up (`capitals[p.canon || p.name]`), not by the era label.
+  //
+  // Left as they are, because the real answer is not on this map: Saudi
+  // Arabia is governed from Riyadh and Iran from Tehran, neither of which
+  // the frame reaches, and Britain from London. Their static seats stay.
+  tagTweaks: {
+    TUR: { capital: 'Ancyra' },   // Ankara, capital since 1923
+    GRC: { capital: 'Athens' },
   },
 
   // The victors' pens wait on both the schoolhouse and the settlers (SPEC
