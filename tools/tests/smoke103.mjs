@@ -215,8 +215,33 @@ console.log('== raising a wing picks an arm, and the AI wins the air first ==');
   const r2 = mil.raiseAirWing(ctx, 'ISR', p.id, 'strike');
   ok(r2.ok && r2.queued.kind === undefined, 'and a strike wing, which carries no kind on the order');
   const aiSrc = readFileSync(R + '/js/sim/ai.js', 'utf8');
-  ok(/haveFighter \? 'strike' : 'fighter'/.test(aiSrc),
-    'the AI buys its first fighter before its first bomber');
+  ok(/if \(!myFighters\) return 'fighter';/.test(aiSrc),
+    'the AI never flies without at least one fighter');
+  ok(/return myFighters < enemyFighters \? 'fighter' : 'strike';/.test(aiSrc),
+    '  and matches the enemy\'s fighters before buying bombers, rather than out-buying them');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== the AI can reach the thresholds §154 built ==');
+{
+  // The defect this closes: §154 shipped effects gated at 3 and 4 net wings
+  // while ai.js capped every court at TWO wings nationally, capital only. With
+  // a fighter apiece every AI ring tied 1-1, both sides' bombers flew, and net
+  // came out zero — air scaled beautifully for a human and was inert between
+  // AI courts, which is also why the balance harness looked so clean.
+  const aiSrc = readFileSync(R + '/js/sim/ai.js', 'utf8');
+  ok(!/airWingsOf\(ctx, tag\)\.length \+ queuedUnitsOf\(ctx, tag, \['wing'\]\) < 2/.test(aiSrc),
+    'the flat two-wing national cap is gone');
+  ok(/function airTarget\(ctx, tag\)/.test(aiSrc) && /Math\.floor\(inc \/ 12\)/.test(aiSrc),
+    'and what a court wants scales with what it can pay for');
+  ok(Number.isFinite(DEFINES.AIR.aiWingCap) && DEFINES.AIR.aiWingCap >= DEFINES.AIR.siegeAt + 1,
+    'the ceiling (' + DEFINES.AIR.aiWingCap + ') is above the siege threshold ('
+    + DEFINES.AIR.siegeAt + '), so an AI can actually cross it');
+  ok(/function nextAirfieldSite\(ctx, tag\)/.test(aiSrc),
+    'and a court whose hangars are full lays another runway rather than stopping');
+  // Wings die with their field, so one airfield is one siege from no air force.
+  ok(/if \(hasAirfield\(p\) \|\| p\.construction \|\| p\.siege\) continue;/.test(aiSrc),
+    '  skipping fields it already has, is building, or is losing');
 }
 
 console.log(failures ? `smoke103: ${failures} FAIL` : 'smoke103: ALL PASS');

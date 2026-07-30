@@ -541,6 +541,7 @@ export const DEFINES = {
     interdictHardAt: 4,    // …and +50%
     siegeAt: 3,            // net wings: sieges at double rate, hostile camps stall
     attritionAt: 2,        // net wings: hostile hosts bleed monthly, unfought
+    aiWingCap: 8,          // most wings an AI court will want (SPEC §155)
   },
 
   // Oil spending (SPEC §52): the mechanized patterns burn fuel. Regiments of

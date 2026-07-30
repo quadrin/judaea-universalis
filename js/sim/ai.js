@@ -1344,8 +1344,62 @@ function aiDevelop(ctx, tag) {
   }
 }
 
-// Air power (SPEC §29): once the age of flight arrives, a solvent AI lays a
-// runway at its capital, then fills the hangars — one act a month.
+// How many wings this court should want (SPEC §155). The old answer was TWO,
+// nationally, forever — which was fine while air power was a boolean worth one
+// pip, and became the whole problem the moment §154 made it a quantity. A
+// scale that only a human can climb is not a scale: with two wings apiece and
+// a fighter each, every AI ring tied 1–1, both sides' bombers flew, and net
+// came out zero. §154 shipped thresholds at 3 and 4 net wings that no AI court
+// in the game could reach.
+//
+// Air scales with what a realm can actually pay for. The fuel line (SPEC §52)
+// already punishes a fleet of aircraft a treasury cannot feed, so this is a
+// want, not a guarantee — the treasury guard below still has the last word.
+function airTarget(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  const AIR = ctx.DEFINES.AIR || {};
+  const inc = num(t && t.income, 0);
+  return clamp(2 + Math.floor(inc / 12), 2, num(AIR.aiWingCap, 8));
+}
+
+// Fighters first, but only as many as the sky is being contested by. Buying a
+// third fighter against an enemy who owns one is 90 talents that will never
+// drop a bomb; buying none at all means the first court that does owns your
+// sky for free. One is the floor, matching theirs is the ceiling.
+function wantedWingKind(ctx, tag) {
+  const g = ctx.game;
+  const mine = airWingsOf(ctx, tag);
+  const myFighters = mine.filter((w) => w && w.kind === 'fighter').length;
+  if (!myFighters) return 'fighter';
+  let enemyFighters = 0;
+  for (const e of (g.tags[tag].atWarWith || [])) {
+    if (!g.tags[e] || !g.tags[e].alive) continue;
+    enemyFighters = Math.max(enemyFighters,
+      airWingsOf(ctx, e).filter((w) => w && w.kind === 'fighter').length);
+  }
+  return myFighters < enemyFighters ? 'fighter' : 'strike';
+}
+
+// The best owned province without a runway — where the next airfield goes once
+// the capital's hangars are full. An air force on one field is an air force
+// one siege away from not existing (wings die on the ground when the field
+// falls), so spreading it is survival as much as reach.
+function nextAirfieldSite(ctx, tag) {
+  const g = ctx.game;
+  let best = null; let bestDev = -1;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
+    if (hasAirfield(p) || p.construction || p.siege) continue;
+    const d = (p.dev ? num(p.dev.tax) + num(p.dev.prod) + num(p.dev.mp) : 0);
+    if (d > bestDev) { bestDev = d; best = p; }
+  }
+  return best;
+}
+
+// Air power (SPEC §29, rescaled §155): once the age of flight arrives, a
+// solvent AI lays a runway, then fills the hangars, then lays another — one
+// act a month.
 function aiAirPower(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
@@ -1361,15 +1415,32 @@ function aiAirPower(ctx, tag) {
     cap.construction = { key: 'airfield', monthsLeft: Math.max(1, num(b.months, 1)) };
     return;
   }
-  const queuedWings = queuedUnitCount(ctx, cap.id, 'wing', tag);
-  if (airWingsAt(ctx, cap.id).length + queuedWings < num(AIR.wingsPerField, 2)
-      && airWingsOf(ctx, tag).length + queuedUnitsOf(ctx, tag, ['wing']) < 2
-      && num(t.treasury) > num(AIR.wingCost, 90) + 120) {
-    // Win the air, then use it (SPEC §154). A court with no fighter buys one
-    // first — a strike wing under somebody else's fighters is 90 talents of
-    // nothing — and only then buys the aircraft that do the work.
-    const haveFighter = airWingsOf(ctx, tag).some((w) => w && w.kind === 'fighter');
-    raiseAirWing(ctx, tag, cap.id, haveFighter ? 'strike' : 'fighter');
+  const have = airWingsOf(ctx, tag).length + queuedUnitsOf(ctx, tag, ['wing']);
+  const target = airTarget(ctx, tag);
+  const perField = num(AIR.wingsPerField, 2);
+  const capFull = airWingsAt(ctx, cap.id).length + queuedUnitCount(ctx, cap.id, 'wing', tag) >= perField;
+  if (have < target && num(t.treasury) > num(AIR.wingCost, 90) + 120) {
+    // Somewhere with room: the capital first, then any other field we hold.
+    let field = capFull ? null : cap;
+    if (!field) {
+      for (let i = 1; i < g.provinces.length && !field; i++) {
+        const p = g.provinces[i];
+        if (!p || p.impassable || p.owner !== tag || p.controller !== tag || !hasAirfield(p)) continue;
+        if (airWingsAt(ctx, p.id).length + queuedUnitCount(ctx, p.id, 'wing', tag) < perField) field = p;
+      }
+    }
+    if (field) {
+      raiseAirWing(ctx, tag, field.id, wantedWingKind(ctx, tag));
+      return;
+    }
+    // Every hangar is full and we still want more: lay another runway.
+    const b = (ctx.DEFINES.BUILDINGS || {}).airfield;
+    const site = b ? nextAirfieldSite(ctx, tag) : null;
+    if (site && num(t.treasury) > num(b.cost) + 250) {
+      t.treasury = num(t.treasury) - num(b.cost);
+      site.construction = { key: 'airfield', monthsLeft: Math.max(1, num(b.months, 1)) };
+      return;
+    }
   }
   // At war, every rearmed wing flies against the richest target in reach.
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {

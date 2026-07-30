@@ -8051,3 +8051,56 @@ free-states clause exists precisely to restore fallen courts. `play()` now
 re-asserts the premise each day. Holding the counterfactual is what defines a
 counterfactual; letting a liberation quietly end it is how the question got
 lost in the first place.
+
+## 155. A scale only a human could climb
+
+§154 made air power a quantity and gave it thresholds: three net wings to
+double a siege, four to halve a column's march, two to bleed a host that nobody
+is fighting. Then `aiAirPower` capped every AI court at **two wings,
+nationally, at the capital, forever** — a number chosen when air was a boolean
+worth one pip, and never revisited.
+
+The arithmetic is worth spelling out, because it is the whole defect. Two wings
+apiece, and §154's own fighter-first rule buys the first as a fighter. So every
+AI ring tied one fighter to one fighter, which under `airNet` is *contested
+evenly: both fly*, so both sides' strike wings counted — one against one. **Net
+zero.** Air scaled beautifully for a human who builds six wings and was inert
+between AI courts, which is very close to the boolean §154 replaced.
+
+It also poisoned the evidence. §154's balance note said 1948 reported no
+anomalies, and that reads as *the tuning is sound*. What it actually meant was
+that air cancelled itself out everywhere the harness could see.
+
+**What a court wants now scales with what it can pay for**: `2 + income/12`, to
+a ceiling of `AIR.aiWingCap` (8) — above the siege threshold, so an AI can
+cross it. The fuel line (§52) already punishes an air force a treasury cannot
+feed, so this is a want and the treasury guard still has the last word.
+
+**Fighters are matched, not out-bought.** A third fighter against an enemy who
+owns one is 90 talents that will never drop a bomb; none at all means the first
+court that buys one owns your sky for free. One is the floor, theirs is the
+ceiling.
+
+**And a court whose hangars are full lays another runway.** Wings die on the
+ground when their field falls, so an air force on one field is one siege from
+not existing — spreading it is survival as much as reach.
+
+Measured over forty years of all-AI 1948: **45 wings across 51 airfields**,
+Egypt and Jordan at 2 fighters and 6 strike wings each, Turkey at 5 and 2. Net
+wings now reach four and five, so §154's thresholds are live rather than
+decorative. `autorun` across all eight bookmarks reports no anomaly outside the
+accepted set.
+
+**One consequence worth naming rather than burying**: across that run Israel
+built no wings at all. Its AI income sits near 11 a month against a 90-talent
+wing and a 210-talent guard, so the one state whose identity in this period is
+air supremacy cannot afford an air force under AI management. A human ISR
+prioritises differently and the chapter plays as intended, but the AI's
+economic weighting for 1948 is now visibly out of step with its history, and
+that is a real finding this section does not fix.
+
+- **Regression contract**: `smoke103.mjs` — the flat two-wing cap is gone, the
+  want scales with income, the ceiling sits above the siege threshold so it can
+  actually be crossed, the fighter rule matches rather than out-buys, and a
+  court with full hangars lays another field while skipping the ones it holds,
+  is building, or is losing.
