@@ -737,10 +737,23 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     setTexParams(gl.LINEAR, mips);
     return t;
   }
-  function targetTexture(filter) {
+  // Full-size render targets, in the narrowest format that carries the data
+  // (SPEC §158). Both of these were RGBA8 and neither ever used four channels:
+  // the ID pass writes `vec4(lo/255, hi/255, 0, 1)` and the main pass reads
+  // `texelFetch(uId, ip, 0).rg`, and the relief pass writes a grey and is read
+  // as `.r` in three places. So half the ID plane and three quarters of the
+  // relief plane have always been zeroes taking up video memory — 25 MB of it
+  // at today's frame, and 152 MB at the frame that reaches Britain.
+  //
+  // R8 and RG8 are both colour-renderable in GLES 3.0, so this is a format
+  // change and not a rewrite: the shaders are untouched, because a fragment
+  // may write a vec4 to a narrower target and the extra channels are simply
+  // discarded — which is exactly what was happening to the alpha already.
+  function targetTexture(filter, internal, format) {
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internal || gl.RGBA8, W, H, 0,
+      format || gl.RGBA, gl.UNSIGNED_BYTE, null);
     setTexParams(filter, false);
     return t;
   }
@@ -748,7 +761,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   const landTex = canvasTexture(buildLandCanvas(MAP_DATA), true);
   const decorTex = canvasTexture(buildDecorCanvas(MAP_DATA), true);
   const idTex = targetTexture(gl.NEAREST); // NEAREST, no mips — texelFetch in the main pass
-  const heightTex = targetTexture(gl.LINEAR);
+  const heightTex = targetTexture(gl.LINEAR, gl.R8, gl.RED);
 
   // -- generation passes -----------------------------------------------------
   const idArray = new Uint16Array(W * H);
@@ -806,6 +819,9 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   if (idOk) {
     // Buffer row 0 comes back as framebuffer row 0 == texel row v=0 == mapY 0 == NORTH
     // (see the orientation contract at the top) — so this is a straight copy, no flip.
+    // Two bytes a texel, matching the RG8 target (SPEC §158). Reading an RG8
+    // framebuffer as RGBA is GL_INVALID_OPERATION — measured, 1282 on
+    // SwiftShader — and it also halves this staging buffer from 35 MB to 18.
     const buf = new Uint8Array(W * H * 4);
     gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
     for (let i = 0, n = W * H; i < n; i++) {

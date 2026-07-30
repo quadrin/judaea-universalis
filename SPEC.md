@@ -8206,3 +8206,48 @@ the expensive irreversible part that should not be traced twice.
   Shader compilation itself is verified in a browser rather than headlessly,
   because a template-literal boundary error would emit `${MAX_HEIGHT_PRIMS}`
   into GLSL and fail only at runtime.
+
+## 158. Half the format rework, and why the other half is not here
+
+§156 costed the frame that reaches Britain at 948 MB in RGBA8 and said
+narrowing the two generated planes would take 254 MB off it. Half of that is
+now done and the other half is a measured wall rather than a plan.
+
+**Neither plane ever used four channels.** The ID pass writes
+`vec4(lo/255, hi/255, 0, 1)` and the main pass reads
+`texelFetch(uId, ip, 0).rg`. The relief pass writes a grey and is read as `.r`
+in three places. So half the ID plane and three quarters of the relief plane
+have always been zeroes occupying video memory.
+
+**The relief plane is now R8, and it is verified in a browser.** `glGetError`
+0, the page renders, 104 suites green. That is **25 MB back at today's frame
+and 152 MB at the target frame** — the single largest saving available in the
+renderer, and it costs nothing: a fragment may write a `vec4` to a narrower
+target and the extra channels are discarded, which is what was already
+happening to the alpha.
+
+**The ID plane at RG8 does not work, and this is the finding.** It raises
+`GL_INVALID_OPERATION` — 1282, measured on SwiftShader — and the map goes
+black. Isolated by bisection, both directions:
+
+```
+  ID RG8   + height R8      → 1282
+  ID RG8   + height RGBA8   → 1282
+  ID RGBA8 + height R8      → 0      ← shipped
+```
+
+The obvious suspect was the CPU readback: `gl.readPixels(..., gl.RGBA,
+UNSIGNED_BYTE, ...)` against an RG8 framebuffer. Narrowing that to `gl.RG` with
+a two-byte-per-texel buffer **did not clear it**, so the cause is upstream of
+the read — framebuffer completeness or attachment support for RG8 colour
+targets on this driver, which needs `IMPLEMENTATION_COLOR_READ_FORMAT` queried
+and the FBO status checked. That is a real investigation and it is not done.
+
+So the ledger for the target frame stands at **948 → 796 MB**, not 694. The ID
+plane's 101 MB is still there and still recoverable, and until somebody
+resolves 1282 the honest number is the larger one.
+
+- **Regression contract**: `smoke104.mjs` keeps the projection arithmetic. The
+  format change itself is verified in a browser, because a GL error is
+  invisible headlessly — which is exactly how this one would have shipped
+  silently as a black map.
