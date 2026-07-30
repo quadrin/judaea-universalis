@@ -968,7 +968,21 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       // growth past 31 tags (v5.4) can never clamp two real owners together.
       const cls = pr.owner === 'WASTE' ? 31 : Math.min(30, tagKeys.indexOf(pr.owner) + 1);
       let fl = cls << 3;
-      if (pr.impassable || pr.habitation === 'uninhabited' || pr.owner === 'WASTE') fl |= 2;
+      // The cross-hatch means "uninhabited or impassable", which is what the
+      // flag contract at the top of this file says and what a player reads it
+      // as: empty ground. It used to also fire on `owner === 'WASTE'`, and
+      // that clause was pure redundancy — every WASTE cell in the game was
+      // ALSO impassable and uninhabited, all nine of them deep desert, so it
+      // could never change the answer.
+      //
+      // SPEC §160 added 130 unowned cells that are neither, and the redundant
+      // clause started painting Carthage, Lugdunum, Londinium and the whole
+      // Roman west with the Sahara's hatch — reading as "nothing lives here"
+      // across ground carrying 1,060 development. Unowned is a fact about
+      // sovereignty; uninhabited is a fact about people. The class field below
+      // already says the first (WASTE takes slot 31, so the political mapmode
+      // still greys it as unclaimed); this bit says the second.
+      if (pr.impassable || pr.habitation === 'uninhabited') fl |= 2;
       f0[id] = fl;
     }
     uploadLookups(p0, s0, f0);
