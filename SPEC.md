@@ -8572,3 +8572,43 @@ likely proper fix is to stop the lobe at its source (`Malaca` in
 adjacency being patched afterwards) and then to find what in the crowned run
 depends on that distance. It belongs with the section that gives the west
 owners, which is the day it stops being latent.
+
+## 162. Galilee was not a kingdom in 529
+
+The Keepers opened with a Jewish state in the Galilee: `JUD` held Tiberias,
+Sepphoris, Tarichaea and Gischala outright, with no overlord, a treasury and a
+standing army called the Watch of Tiberias. There was no Jewish polity anywhere
+between Bar Kokhba and 1948, and the chapter's own comment says what the
+community actually had — "the patriarchate is a century lapsed, the academy at
+Tiberias is what governs, and the Palestinian Talmud was closed at Tiberias" —
+and then hands it four sovereign provinces anyway. The map contradicted the
+paragraph above it. The 132 CE chain is built on the same fact from the other
+side: `ev2_g_what_the_office_was_for` turns on Theodosius II letting the
+patriarchate lapse in 425.
+
+**So the towns start Byzantine and the court starts dormant.** The Galilee is
+Palaestina Secunda; the RELIGIONS overlay is untouched, so these stay Jewish
+provinces under an empire legislating against them, which is the situation. JUD
+keeps its seat in `activeTags` and owns nothing, on exactly the pattern 167 BCE
+uses for the Seleucid successors — five courts that exist and wait.
+
+**Deferred, not deleted.** The one circumstance in four centuries that could put
+a Jewish polity back on the map is already in this chapter:
+`ev529_the_praetorium_at_caesarea`, July 556, where both houses of Israel came
+out in the same street, killed the proconsul Stephanus in his own hall, and his
+widow carried the case to Constantinople. Option 0 — "Send word to the Jewish
+quarter. Both houses, or neither" — already set `roseWithTheJews` and moved
+opinion. It now also hands the four academy towns out of the Empire's hands,
+grants a treasury and raises the Watch of Tiberias. The options that leave the
+Jews out of it do not: answer alone and the chapter has one house in it.
+
+An entity that appears out of a joint revolt is a truer thing than one that was
+always simply there — and it makes the fork at Caesarea cost something.
+
+- **Regression contract**: `smoke94` inverted. It used to assert the court held
+  four provinces and that its declared seat was one it owned; it now asserts the
+  court holds NOTHING at the opening date, that all four towns are Justinian's,
+  that JUD is nonetheless seated and dormant, and that the seat names an academy
+  town rather than Jerusalem. A new section holds the formation itself: only
+  option 0 of the praetorium sets `galileeRestored` and only option 0 names the
+  four towns — the two that answer alone must not.

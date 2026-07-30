@@ -158,7 +158,25 @@ const OWNERS = {};
 for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
 for (const n of SAS_LANDS) OWNERS[n] = 'SAS';
 for (const n of GHA_LANDS) OWNERS[n] = 'GHA';
-for (const n of JUD_LANDS) OWNERS[n] = 'JUD';
+// SPEC §162: the Galilee is PALAESTINA SECUNDA in 529, not a kingdom. There
+// was no Jewish state anywhere between Bar Kokhba and 1948, and this chapter
+// was quietly asserting one — JUD held these four towns outright, with no
+// overlord, a treasury, and a standing army. What the community actually had
+// in 529 is what the comment above already says: an academy at Tiberias, a
+// closed Talmud, and a patriarchate a century lapsed. The emperor let it lapse
+// in 425 and the chain in events_132ce_galilee.js is built on exactly that.
+//
+// So the towns start Byzantine and the Jewish population stays Jewish (the
+// RELIGIONS overlay below is untouched — these are Jewish provinces under an
+// empire that legislates against them, which is the whole point).
+//
+// Galilee is not deleted, it is DEFERRED: JUD stays in activeTags as a dormant
+// court, on the same pattern 167 BCE uses for the Seleucid successors, and it
+// comes into being in July 556 when the two houses rise together at Caesarea —
+// `ev529_the_praetorium_at_caesarea`, which already models that rising and
+// already sets `roseWithTheJews`. An entity that appears out of a joint revolt
+// is a truer thing than one that was simply always there.
+for (const n of JUD_LANDS) OWNERS[n] = 'BYZ';
 for (const n of SAM_LANDS) OWNERS[n] = 'SAM';
 OWNERS['Yathrib'] = 'RSH';
 OWNERS['Khaybar'] = 'RSH';
@@ -543,7 +561,10 @@ export const BOOKMARK_529 = {
     // A hill people with olive oil and no port. The empire is rich and busy.
     h.adjust(ctx, 'SAM', { treasury: 40, manpower: 9000, stability: 1, legitimacy: 45 });
     h.adjust(ctx, 'BYZ', { treasury: 600, manpower: 30000, stability: 2, legitimacy: 65 });
-    h.adjust(ctx, 'JUD', { treasury: 60, manpower: 4000, stability: 1, legitimacy: 40 });
+    // A community, not a court (SPEC §162): no treasury and no standing army
+    // until the Caesarea rising gives it a state to keep them in. The manpower
+    // is the men the academy towns could actually put in a street in 556.
+    h.adjust(ctx, 'JUD', { manpower: 4000, stability: 1, legitimacy: 40 });
     h.adjust(ctx, 'SAS', { treasury: 400, manpower: 22000, stability: 1, legitimacy: 60 });
     h.adjust(ctx, 'GHA', { treasury: 60, manpower: 5000 });
 
@@ -599,7 +620,8 @@ export const BOOKMARK_529 = {
       general: { name: 'al-Harith ibn Jabalah', fire: 2, shock: 3, maneuver: 4 },
     });
     h.spawnArmy(ctx, 'SAS', 'Nisibis', { inf: 8, cav: 4, name: 'The Marzban\'s Host' });
-    h.spawnArmy(ctx, 'JUD', 'Tiberias', { inf: 2, name: 'The Watch of Tiberias' });
+    // No Watch of Tiberias: there is no state here to raise one (SPEC §162).
+    // The Galilee's two regiments are spawned by the rising that creates it.
 
     h.notify(ctx, {
       title: 'The Keepers',

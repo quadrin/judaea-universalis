@@ -595,6 +595,23 @@ export const EVENTS_529_ROADS = [
           } catch (e) { warnOnce('praetorium:opinion', e); }
           h.setFlag(ctx, 'caesareaAnswered', true);
           h.setFlag(ctx, 'roseWithTheJews', true);
+          // SPEC §162: THIS is where Galilee becomes a thing on the map. It
+          // does not start as a kingdom — in 529 the Galilee is Palaestina
+          // Secunda and the community has an academy, not a court. What a
+          // joint rising produces is the one circumstance in four centuries
+          // that could put a Jewish polity back on the map, so the four
+          // academy towns come out of the empire's hands here and nowhere
+          // else. If the Samaritans answer alone (options 1 and 2), Galilee
+          // stays what it was and this chapter has one house in it.
+          try {
+            for (const town of ['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala']) {
+              const p = ctx.prov(town);
+              if (p && p.owner === who(ctx, 'BYZ')) h.changeOwner(ctx, town, 'JUD');
+            }
+            h.adjust(ctx, 'JUD', { treasury: 60 });
+            h.spawnArmy(ctx, 'JUD', 'Tiberias', { inf: 2, name: 'The Watch of Tiberias' });
+            h.setFlag(ctx, 'galileeRestored', true);
+          } catch (e) { warnOnce('praetorium:galilee', e); }
           h.notify(ctx, {
             title: 'The Praetorium at Caesarea', type: 'war', provName: 'Caesarea Maritima',
             text: 'Both houses of Israel are in the same street against the same government, for '

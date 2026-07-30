@@ -77,17 +77,50 @@ console.log('== the chapter declares the rename, and declares it about the right
   ok(!!(b.tagTweaks && b.tagTweaks.JUD), '  and it is JUD that is tweaked');
   ok(b.tagTweaks.JUD.name === 'Galilee', '  the name is Galilee');
   ok(b.tagTweaks.JUD.capital === 'Tiberias', '  and the seat is Tiberias, not Jerusalem');
-  // The rename would be a lie if the court held anything in Judaea.
+  // SPEC §162: the court holds NOTHING at the opening date. There was no
+  // Jewish polity between Bar Kokhba and 1948, and this chapter used to assert
+  // one — four towns held outright, no overlord, a treasury and a standing
+  // army. What the community had in 529 is an academy at Tiberias, a closed
+  // Talmud and a patriarchate the emperor let lapse in 425.
   const owned = Object.keys(b.owners).filter((n) => b.owners[n] === 'JUD').sort();
-  ok(owned.length === 4, 'the court holds four provinces (' + owned.join(', ') + ')');
+  ok(owned.length === 0,
+    'the court holds nothing at the opening date (' + (owned.join(', ') || 'none') + ')');
   for (const n of ['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala']) {
-    ok(owned.indexOf(n) >= 0, '  ' + n + ' — and it is in Galilee');
+    ok(b.owners[n] === 'BYZ', '  ' + n + ' is Palaestina Secunda, and Justinian\'s');
   }
   for (const n of ['Jerusalem', 'Hebron', 'Lydda', 'Emmaus', 'Jericho']) {
     ok(b.owners[n] === 'BYZ', '  ' + n + ' is the Empire\'s, which is why the old name was wrong');
   }
-  ok(b.tagTweaks.JUD.capital === 'Tiberias' && b.owners.Tiberias === 'JUD',
-    'and the declared seat is a province the court actually owns');
+  // Deferred, not deleted: the court is seated and dormant, exactly as 167 BCE
+  // seats the Seleucid successors before they exist.
+  ok((b.activeTags || []).indexOf('JUD') >= 0,
+    'but the court is seated, dormant, waiting for a rising to give it a state');
+  ok(b.tagTweaks.JUD.capital === 'Tiberias',
+    'and the declared seat is the town the academy actually sat in');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== Galilee is formed by the rising of 556, and only the joint one ==');
+{
+  // The one circumstance in four centuries that could put a Jewish polity back
+  // on the map is the July 556 rising at Caesarea, where both houses of Israel
+  // were in the same street. `ev529_the_praetorium_at_caesarea` already models
+  // it; option 0 is the one that answers the Jewish quarter, and it is the only
+  // option that hands the academy towns over.
+  const { readFileSync } = await import('fs');
+  const SRC = readFileSync(R + '/js/data/events_529ce_roads.js', 'utf8');
+  const era = ERAS.find((e) => e.bookmark.id === '529ce');
+  const ev = (era.events || []).find((e) => e && e.id === 'ev529_the_praetorium_at_caesarea');
+  ok(!!ev, 'the chapter plays the praetorium at Caesarea');
+  ok(ev && ev.date && ev.date.y === 556, '  in 556, the year the two houses rose together');
+  const opt0 = SRC.slice(SRC.indexOf("ev529_praetorium:0"), SRC.indexOf("ev529_praetorium:1"));
+  ok(/galileeRestored/.test(opt0), '  answering the Jewish quarter restores Galilee');
+  for (const town of ['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala']) {
+    ok(opt0.indexOf(town) >= 0, '    ' + town + ' comes out of the Empire\'s hands');
+  }
+  const rest = SRC.slice(SRC.indexOf("ev529_praetorium:1"));
+  ok(!/galileeRestored/.test(rest),
+    '  and the options that leave the Jews out of it do not — one house, no state');
 }
 
 // ---------------------------------------------------------------------------
@@ -149,8 +182,15 @@ console.log('== the seat is the half that was not cosmetic ==');
   const w = boot('529ce', 'SAM');
   const seat = w.ctx.prov(tagDef(w.ctx, 'JUD').capital);
   ok(!!seat, 'the era seat resolves to a province on the map');
-  ok(seat.owner === 'JUD' && seat.controller === 'JUD',
-    '  and the court both owns and holds it — the old seat was neither');
+  // SPEC §162: the seat is DECLARED, not held. The academy sat at Tiberias
+  // and the town is Justinian's — which is the chapter's whole situation, and
+  // is why capitalProvince() falls back to the best province a court actually
+  // owns. What must stay true is that the seat names a real place in the
+  // Galilee rather than Jerusalem; owning it is what the rising of 556 is for.
+  ok(seat.owner === 'BYZ',
+    '  and the Empire holds it in 529 — the court is an academy, not a state');
+  ok(['Tiberias', 'Sepphoris', 'Tarichaea', 'Gischala'].indexOf(seat.canon) >= 0,
+    '  the seat is one of the four academy towns, not Jerusalem');
   const oldSeat = w.ctx.prov(STATIC_JUD_CAPITAL);
   ok(oldSeat && oldSeat.owner === 'BYZ',
     'the static seat (' + STATIC_JUD_CAPITAL + ') belongs to the Empire in this chapter');
