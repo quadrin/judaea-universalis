@@ -8018,9 +8018,9 @@ permanently slowed and every garrison sitting at home was permanently bleeding.
   bill written down as `- 90`; it now reads the prices out of DEFINES, because
   that assertion failed for a change it was never about.
 
-### KNOWN RED: `smoke80.mjs` §113
+### `smoke80.mjs` §113 — resolved: the counterfactual has to be held
 
-**This section ships with a failing suite, deliberately unresolved.** Six
+Six
 assertions about *which cards fire* in the Lebanon-annexed world now fail, and
 the cause is worth writing down because it is not in the air code.
 
@@ -8033,15 +8033,21 @@ either: Lebanon ends the run holding Nazareth, Netanya and Yavne, which a dead
 landless court can only acquire through the free-states liberation restoring a
 fallen court after an AI war goes the other way.
 
-So a **content-gating** test is a hostage to **combat balance**, and making air
-decisive changed the balance. Three honest resolutions, none of them taken here
-because the choice is a design call rather than a bug fix:
+So a **content-gating** test was a hostage to **combat balance**.
 
-1. bar restoration in that scenario, if §113 is about event gating and nothing
-   else;
-2. retune the pips down, if Lebanon reaching central Israel means +4 in every
-   phase is simply too strong — only one seed was measured;
-3. let it stand and rewrite §113 around a world where Lebanon can come back.
+**The evidence decided it.** Retuning the pips was the live alternative, and it
+was measured rather than guessed. `autorun.mjs` across every bookmark reports
+no anomaly outside the set `tools/README.md` already accepts — and 1948, the
+one chapter where aircraft exist at all, reports **none**. Then the scenario
+itself was run at four seeds: Lebanon survives at one of them and is gone at
+the other three. The arrangement was always a coin-flip on fifty-four years of
+AI war; it simply drew a lucky seed until §154 reshuffled the wars.
 
-Making it green by editing the test until it agreed was available and was not
-done.
+So the fix is on the test, and it is not the test being edited until it agrees.
+§113 asks ONE question — when Lebanon is not on the map, does the alternate arc
+run and the historical arc stay silent? It does not ask whether Israel can hold
+Lebanon annexed for fifty-four years, and it never could, because the
+free-states clause exists precisely to restore fallen courts. `play()` now
+re-asserts the premise each day. Holding the counterfactual is what defines a
+counterfactual; letting a liberation quietly end it is how the question got
+lost in the first place.

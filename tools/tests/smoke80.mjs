@@ -99,6 +99,26 @@ function play(annexLebanon, years = 54) {
   const fired = new Set();
   for (let y = 0; y < years; y++) for (let d = 0; d < 360; d++) {
     tickDay(ctx);
+    // Hold the counterfactual. §113 asks ONE question — when Lebanon is not on
+    // the map, does the alternate arc run and the historical arc stay silent?
+    // It does not ask whether Israel can keep Lebanon annexed through fifty-four
+    // years of AI war, and it never could: the free-states clause exists to
+    // restore fallen courts, and measured across four seeds it restores this
+    // one in roughly a quarter of runs. The scenario simply drew a lucky seed
+    // until SPEC §154 made air decisive and reshuffled the wars. Re-asserting
+    // the premise each day is what defines the counterfactual; letting a
+    // liberation quietly end it is how a content-gating test became a hostage
+    // to combat balance.
+    if (annexLebanon && game.tags.LEB.alive !== false) {
+      for (let i = 1; i < game.provinces.length; i++) {
+        const p = game.provinces[i];
+        if (p && !p.impassable && p.owner === 'LEB') { p.owner = 'ISR'; p.controller = 'ISR'; }
+      }
+      for (const id of Object.keys(game.armies || {})) {
+        if (game.armies[id] && game.armies[id].tag === 'LEB') delete game.armies[id];
+      }
+      game.tags.LEB.alive = false;
+    }
     let guard = 0;
     while (game.pendingEvents.length && guard++ < 50) {
       const pe = game.pendingEvents[0];
