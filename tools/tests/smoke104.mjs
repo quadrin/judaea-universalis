@@ -93,5 +93,22 @@ console.log('== and what the proposed frame would cost ==');
     + ' MB, to ' + MB(leaner).toFixed(0) + ' MB — still the real obstacle');
 }
 
+// ---------------------------------------------------------------------------
+console.log('== the relief pass has room to grow (SPEC §157) ==');
+{
+  ok(/const MAX_HEIGHT_PRIMS = (\d+);/.test(SRC), 'the primitive cap is a named constant');
+  const cap = Number(/const MAX_HEIGHT_PRIMS = (\d+);/.exec(SRC)[1]);
+  ok(cap >= 64, 'and it is ' + cap + ', not the bare 32 v5.4 filled exactly');
+  ok(!/uPrimA\[32\]/.test(SRC) && !/for \(int i = 0; i < 32; i\+\+\)/.test(SRC),
+    'no 32 is left hard-coded in the shader');
+  ok((SRC.match(/MAX_HEIGHT_PRIMS/g) || []).length >= 6,
+    '  the shader declarations, the loop and the fill all read the one constant');
+  // 224 vec4 is the GLES 3.0 floor every WebGL2 device guarantees.
+  ok(cap * 2 + 16 <= 224,
+    'the pass fits the guaranteed uniform floor (' + (cap * 2 + 16) + ' of 224 vec4)');
+  ok(/MAX_FRAGMENT_UNIFORM_VECTORS/.test(SRC),
+    'and the device is asked for its real budget anyway, per §156');
+}
+
 console.log(failures ? `smoke104: ${failures} FAIL` : 'smoke104: ALL PASS');
 process.exit(failures ? 1 : 0);

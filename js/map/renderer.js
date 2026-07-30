@@ -45,6 +45,18 @@ const CFG = {
 // IDs themselves are encoded across two 8-bit channels, so 0 remains sea while
 // future layouts can safely grow well past the old 128/255 ceilings.
 const MAX_PROVINCE_SEEDS = 512;
+// Relief primitives the heightmap pass can carry (SPEC §157). This was a bare
+// 32 written into the shader twice and the fill code three times, and v5.4
+// spent the last slot — SPEC §53 records the frame growing to Rome and the
+// Caspian and filling "the renderer's cap at exactly 32". Any further frame
+// would render its new continents as flat plates, silently: line 810 warns
+// once and drops the extras.
+//
+// 64 costs 128 vec4 of fragment uniform, against the 224 that GLES 3.0
+// guarantees every WebGL2 device — so it fits the floor rather than a hope
+// about hardware, which is the lesson of §156. `initRenderer` measures the
+// real number anyway and says so if a device cannot hold it.
+const MAX_HEIGHT_PRIMS = 64;
 
 const fN = (x) => x.toFixed(4);
 const f3 = (c) => c.map(fN).join(', ');
@@ -126,8 +138,8 @@ precision highp float;
 precision highp int;
 uniform sampler2D uLand;
 uniform vec2 uMapSize;
-uniform vec4 uPrimA[32];   // ridge/basin: ax,ay,bx,by · dome: cx,cy,0,0
-uniform vec4 uPrimB[32];   // h(pre-scaled), width px, type(0 ridge,1 dome,2 basin), 0
+uniform vec4 uPrimA[${MAX_HEIGHT_PRIMS}];   // ridge/basin: ax,ay,bx,by · dome: cx,cy,0,0
+uniform vec4 uPrimB[${MAX_HEIGHT_PRIMS}];   // h(pre-scaled), width px, type(0 ridge,1 dome,2 basin), 0
 uniform int uPrimCount;
 out vec4 outColor;
 ${GLSL_NOISE}
@@ -142,7 +154,7 @@ void main(){
   float land = texture(uLand, uv).r;
   float coarse = textureLod(uLand, uv, 5.0).r;   // smoothed mask -> coast falloff
   float h = 0.045 + 0.15 * coarse + 0.055 * land; // sea ~0.05, plains ~0.25
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < ${MAX_HEIGHT_PRIMS}; i++) {
     if (i >= uPrimCount) break;
     vec4 A = uPrimA[i];
     vec4 B = uPrimB[i];
@@ -646,6 +658,13 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   // A device that cannot hold the map we ship gets told so, once, instead of
   // failing with an unexplained black screen.
   const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) | 0;
+  // The relief pass's own ceiling (SPEC §157), measured for the same reason.
+  const maxFragVec = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) | 0;
+  if (maxFragVec && maxFragVec < MAX_HEIGHT_PRIMS * 2 + 16) {
+    console.warn('[map/renderer] this device reports MAX_FRAGMENT_UNIFORM_VECTORS '
+      + maxFragVec + '; the heightmap pass wants ' + (MAX_HEIGHT_PRIMS * 2 + 16)
+      + ' — relief may fail to compile.');
+  }
   const needTex = Math.max(W, H);
   if (needTex > maxTex) {
     console.warn('[map/renderer] this device reports MAX_TEXTURE_SIZE ' + maxTex
@@ -806,11 +825,13 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
   }
 
   // Heightmap pass: coast falloff + primitives + fbm detail.
-  const prims = (MAP_DATA.heightPrimitives || []).slice(0, 32);
-  if ((MAP_DATA.heightPrimitives || []).length > 32) warnOnce('prim-cap', 'heightPrimitives exceeds 32; extras ignored');
+  const prims = (MAP_DATA.heightPrimitives || []).slice(0, MAX_HEIGHT_PRIMS);
+  if ((MAP_DATA.heightPrimitives || []).length > MAX_HEIGHT_PRIMS) {
+    warnOnce('prim-cap', 'heightPrimitives exceeds ' + MAX_HEIGHT_PRIMS + '; extras ignored');
+  }
   const pxPerDeg = ((W / (MAP_DATA.LON1 - MAP_DATA.LON0)) + (H / (MAP_DATA.LAT1 - MAP_DATA.LAT0))) * 0.5;
-  const primA = new Float32Array(32 * 4);
-  const primB = new Float32Array(32 * 4);
+  const primA = new Float32Array(MAX_HEIGHT_PRIMS * 4);
+  const primB = new Float32Array(MAX_HEIGHT_PRIMS * 4);
   let primCount = 0;
   for (const pr of prims) {
     try {

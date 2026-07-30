@@ -8152,3 +8152,57 @@ should not be done twice.
   textures with two mipmapped; and the two bills above are **computed**, so a
   number that decides whether something ships cannot drift silently in a
   comment the way the 4096 did.
+
+## 157. The relief array was full, and the ceiling was 8192 all along
+
+Two findings, one of which retires the assumption §156 could only measure the
+absence of.
+
+**The relief pass was out of room.** `heightPrimitives` is capped by a bare
+`32` written into the fragment shader twice — `uniform vec4 uPrimA[32]`, `for
+(int i = 0; i < 32; i++)` — and into the fill code three times more. SPEC §53
+records v5.4 growing the frame to Rome and the Caspian and filling *"the
+renderer's cap at exactly 32."* It spent the last slot. `MAP_DATA` carries
+exactly 32 today.
+
+That is a silent failure waiting for the next frame. Line 810 warns **once** and
+drops the extras, so a map extended to Atlantic Europe would render the Alps,
+the Pyrenees, the Atlas, the Carpathians and the Scandinavian spine as flat
+plates, with one console line to explain it. Any conversation about expanding
+the frame that does not start here is planning cartography onto a renderer that
+will throw it away.
+
+The cap is now one named constant, `MAX_HEIGHT_PRIMS = 64`, interpolated into
+the shader and read by the fill. 64 primitives cost 128 vec4 of fragment
+uniform, 144 with the pass's other uniforms — inside the **224 that GLES 3.0
+guarantees every WebGL2 device**, so it fits the floor rather than a hope about
+hardware. `initRenderer` measures `MAX_FRAGMENT_UNIFORM_VECTORS` anyway and
+says so if a device cannot hold it, for the same reason §156 measures the
+texture ceiling.
+
+**And the texture ceiling is 8192.** §156 could add the query but not the
+answer, because nothing here runs WebGL. Compiling the widened shader in a real
+browser finally produced the number the project has been guessing at since the
+beginning:
+
+```
+  MAX_TEXTURE_SIZE            8192      (the comment assumed a 4096 floor)
+  MAX_FRAGMENT_UNIFORM_VECTORS 4096      (the GLES 3.0 floor is 224)
+  glGetError                      0      (the widened relief pass compiles)
+```
+
+Measured on **SwiftShader** — a software rasteriser, and about the most
+conservative thing that will ever run this game. The 4096 in `map_data.js` was
+not a constraint; it was a guess, and it was wrong by a factor of two on the
+weakest plausible device. The frame that reaches Britain and the Urals fits
+that ceiling at current density (§156: 7702 × 6913). What still does not fit is
+the **memory** — 948 MB in RGBA8, 694 MB with the ID plane at RG8 and relief at
+R8 — so the format rework remains the live blocker, and the coastline remains
+the expensive irreversible part that should not be traced twice.
+
+- **Regression contract**: `smoke104.mjs` — the cap is a named constant of at
+  least 64, no `32` survives in the shader, the declarations and loop and fill
+  all read the one constant, and the pass fits the guaranteed 224-vec4 floor.
+  Shader compilation itself is verified in a browser rather than headlessly,
+  because a template-literal boundary error would emit `${MAX_HEIGHT_PRIMS}`
+  into GLSL and fail only at runtime.
