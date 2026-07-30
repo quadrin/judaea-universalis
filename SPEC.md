@@ -8251,3 +8251,54 @@ resolves 1282 the honest number is the larger one.
   format change itself is verified in a browser, because a GL error is
   invisible headlessly — which is exactly how this one would have shipped
   silently as a black map.
+
+## 159. The 1282 was mine, three lines below where I was looking
+
+§158 shipped the relief plane at R8, left the ID plane at RGBA8, and recorded
+`GL_INVALID_OPERATION` as an unresolved driver question — "framebuffer
+completeness or RG8 colour-attachment support on this driver." It was neither.
+It was the repair path, and the bisection that looked so clean was pointing at
+the right texture for the wrong reason.
+
+**RG8 was never the problem.** Built standalone in a browser, an RG8 colour
+attachment is `FRAMEBUFFER_COMPLETE`, reports `IMPLEMENTATION_COLOR_READ_FORMAT`
+of `RG`, and reads back with **zero** error as RGBA, as RG, and as the
+implementation pair. Three formats, no complaint. That measurement is what
+turned the search around: if the target is fine, the error is something the
+app does to it.
+
+**`repairDisconnectedProvinceRaster` writes the raster back.** When the
+province raster has disconnected fragments, the corrected `idArray` is packed
+into the staging buffer and uploaded with `texSubImage2D`. §158 narrowed the
+`readPixels` and did not narrow the write — so the code read two bytes a texel
+and then pushed **four-byte RGBA into an RG8 texture**, which is
+`INVALID_OPERATION` exactly as specified. The error was three lines below the
+one I was reading, in the branch that only runs when the raster needs repairing,
+which is why it never looked like part of the ID pass.
+
+All three paths now agree on two bytes a texel: the target, the readback, and
+the write-back.
+
+**Verified by pixels, not by error codes.** A clean `glGetError` says nothing
+about whether the map is *right*, and the province-ID plane drives every colour
+on screen. Screenshots of the compositor output before and after are
+**byte-identical** — same SHA1, 0 of 145,633 sampled bytes differing — so the
+narrowed plane is not merely quiet, it is the same map.
+
+**The ledger closes where §156 projected it.** The frame that reaches Britain:
+
+```
+  §156 projection   948 → 694 MB
+  §158 (half)       948 → 796 MB
+  now               948 → 694 MB      ✓
+```
+
+101 MB back from the ID plane, on top of §158's 152 MB from relief, and 18 MB
+off the CPU staging buffer as a side effect. Today's frame drops from 158 MB to
+**120 MB**. Memory is no longer the blocker on extending the frame; the
+coastline is.
+
+- **Regression contract**: `smoke104.mjs` holds the arithmetic. The format
+  itself is verified in a browser and by screenshot comparison, because this
+  bug passed 104 headless suites twice — once as a black map, once as a false
+  conclusion about the driver.

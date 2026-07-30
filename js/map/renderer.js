@@ -760,7 +760,7 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
 
   const landTex = canvasTexture(buildLandCanvas(MAP_DATA), true);
   const decorTex = canvasTexture(buildDecorCanvas(MAP_DATA), true);
-  const idTex = targetTexture(gl.NEAREST); // NEAREST, no mips — texelFetch in the main pass
+  const idTex = targetTexture(gl.NEAREST, gl.RG8, gl.RG); // NEAREST, no mips — texelFetch in the main pass
   const heightTex = targetTexture(gl.LINEAR, gl.R8, gl.RED);
 
   // -- generation passes -----------------------------------------------------
@@ -822,21 +822,29 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     // Two bytes a texel, matching the RG8 target (SPEC §158). Reading an RG8
     // framebuffer as RGBA is GL_INVALID_OPERATION — measured, 1282 on
     // SwiftShader — and it also halves this staging buffer from 35 MB to 18.
-    const buf = new Uint8Array(W * H * 4);
-    gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    // Two bytes a texel, matching the RG8 target (SPEC §158). This also halves
+    // the staging buffer, from 35 MB to 18 at today's frame.
+    const buf = new Uint8Array(W * H * 2);
+    gl.readPixels(0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
     for (let i = 0, n = W * H; i < n; i++) {
-      const v = buf[i * 4] + buf[i * 4 + 1] * 256;
+      const v = buf[i * 2] + buf[i * 2 + 1] * 256;
       idArray[i] = v > N ? 0 : v;
     }
     const repaired = repairDisconnectedProvinceRaster(idArray, MAP_DATA);
     if (repaired) {
       for (let i = 0, n = W * H; i < n; i++) {
         const v = idArray[i];
-        buf[i * 4] = v & 255;
-        buf[i * 4 + 1] = (v >> 8) & 255;
+        buf[i * 2] = v & 255;
+        buf[i * 2 + 1] = (v >> 8) & 255;
       }
       gl.bindTexture(gl.TEXTURE_2D, idTex);
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+      // …and the write-back must match the target too. Uploading RGBA into an
+      // RG8 texture is GL_INVALID_OPERATION, and it is the whole of the 1282
+      // §158 recorded as unresolved: the readback was narrowed and this was
+      // not, so the error came from the repair path rather than from RG8
+      // itself. A standalone RG8 framebuffer is complete and reads back
+      // cleanly in all three formats — measured.
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RG, gl.UNSIGNED_BYTE, buf);
     }
   }
 
