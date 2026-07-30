@@ -23,8 +23,18 @@ const OUT = (process.env.JU_OUT || '/tmp') + '/';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SNAPSHOT = resolve(ROOT, 'tools', 'geom-snapshot.json');
 
+// v6.8: the waits are minutes, not seconds, and that is the frame's real cost
+// rather than a flaky selector. The ID pass is one fullscreen draw over every
+// texel against every seed — 25.0M × 307 at this frame against 8.9M × 174 at
+// the last one, about five times the work — and this dump runs it on
+// SwiftShader, a software rasteriser. Measured here: 74s to the start screen
+// and 104s to a live campaign, against 17s and 47s on the pre-§160 tree in the
+// same environment. A real GPU does this in a fraction of it; the timeout has
+// to survive the machine that does not.
+const BOOT_TIMEOUT = 300000;
+
 async function pickBookmark(page, nameFrag) {
-  await page.waitForSelector('.bm-card', { timeout: 20000 });
+  await page.waitForSelector('.bm-card', { timeout: BOOT_TIMEOUT });
   for (let i = 0; i < 8; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
@@ -47,9 +57,9 @@ await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 await pickBookmark(page, 'War of Independence'); // 1948: every latent cell active
-await page.waitForSelector('.nation-card');
+await page.waitForSelector('.nation-card', { timeout: BOOT_TIMEOUT });
 await page.locator('.nation-card').first().click();
-await page.waitForFunction(() => !!window._ctx);
+await page.waitForFunction(() => !!window._ctx, null, { timeout: BOOT_TIMEOUT });
 await page.waitForTimeout(1200);
 
 const snapshot = await page.evaluate(() => ({

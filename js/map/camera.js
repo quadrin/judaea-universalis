@@ -5,7 +5,12 @@
 
 // v5.4: the frame grew to 4046×2189 — the floor drops so a laptop viewport
 // can still frame the whole world from Rome to the Caspian.
-const MIN_ZOOM = 0.22;
+// v6.8 (SPEC §160): the frame grew to 6288×3975, so the floor drops with it,
+// by the same ratio it had before. A 1440×900 viewport needs 0.226 to fit the
+// long axis; v5.4 sat at 0.62 of its own fit-the-map zoom and this keeps that
+// margin, so "zoomed all the way out" looks the same distance past the edges
+// as it always has instead of clamping with Britain still off-screen.
+const MIN_ZOOM = 0.14;
 const MAX_ZOOM = 8;
 const CLICK_SLOP_PX = 5;
 

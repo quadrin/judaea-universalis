@@ -164,6 +164,18 @@ const MODERN_PROVINCES = [
   // v6.7: the southern borders drawn true — the Sinai side of the 1906 line
   // and Jordan's Ghor es-Safi, so the Negev triangle wears its real edges
   'Kadesh Barnea', 'Dizahab', 'Zoara',
+  // v6.8 (SPEC §160): the western frame's latent cells. Nothing in the 1948
+  // campaign happens in Britain — these are here because THIS bookmark is the
+  // full-resolution one. tools/geom-snapshot.json is dumped from 1948 exactly
+  // because every latent cell is active in it, so the snapshot carries each
+  // permanent cell's OWN geometry and headless consumers fold it per bookmark
+  // (tools/README.md). A latent cell missing from this list has no geometry of
+  // its own anywhere, in any era: it comes back with zero area and no
+  // neighbours, which is precisely how smoke31 caught these.
+  'Londinium', 'Camulodunum', 'Durovernum', 'Venta Belgarum', 'Corinium',
+  'Isca Dumnoniorum', 'Dumnonia', 'Isca Silurum', 'Cambria', 'Deva', 'Lindum',
+  'Eboracum', 'Brigantia', 'Caledonia Ultima',
+  'Hibernia Occidentalis', 'Mumu',
 ];
 
 const OWNERS = {};

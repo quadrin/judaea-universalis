@@ -1,20 +1,33 @@
-// js/data/map_data.js — Judaea Universalis: the central Mediterranean & Near East, 66 CE.
+// js/data/map_data.js — Judaea Universalis: the Roman world, 66 CE.
 // Owns MAP_DATA (SPEC §2, §4) and validateMapData(). DOM-free, zero imports.
-// Frame: lon 12–53.5°E, lat 23.5–42.5°N. Equirectangular, y=0 at north.
+// Frame: lon 11°W–53.5°E, lat 23.5–58°N. Equirectangular, y=0 at north.
 
 // v5.0: the frame grows all around — west to Cyrenaica and Greece, south to
 // the Hejaz and Upper Egypt, east to Persis and the lower Gulf.
 // v5.4: the frame grows again — west to Rome, Sicily and Tripolitania, north
 // to the Black Sea, the Bosporus, the Caucasus rim and the south Caspian.
-// Density is unchanged (~97.5 px/°lon, ~115 px/°lat); only the world got
-// bigger. 4046px stays under the common 4096 MAX_TEXTURE_SIZE floor — the
-// whole-Earth map waits on a tiled renderer (SPEC §53).
-const MAP_W = 4046;
-const MAP_H = 2189;
-const LON0 = 12.0;
+// v6.8 (SPEC §160): west to the Atlantic and north to Britain. The frame now
+// holds the whole Roman world — the Maghreb, Iberia, Gaul, the home islands,
+// the Rhine and Danube, the Pontic steppe and the Caspian's whole rim.
+//
+// Density is unchanged, again: ~97.5 px/°lon and ~115.2 px/°lat, exactly the
+// numbers v5.0 and v5.4 shipped. Only the world got bigger, so nothing sized
+// in map units — seed spacing, sprite scale, label metrics — had to move.
+//
+// The two ceilings this frame was blocked on are both measured now, not
+// assumed. MAX_TEXTURE_SIZE is 8192 on SwiftShader, the weakest thing that
+// will ever run this (SPEC §157) — 6288 fits with room to spare, where the
+// 4096 in this comment for five versions was a guess and wrong by double. And
+// the memory bill came down from 948 MB to 326 at this frame once the ID plane
+// went to RG8 and relief to R8 (SPEC §158–159). Neither of those is what makes
+// a map: the coastline below is, and it is the part that had to be traced by
+// hand.
+const MAP_W = 6288;
+const MAP_H = 3975;
+const LON0 = -11.0;
 const LON1 = 53.5;
 const LAT0 = 23.5;
-const LAT1 = 42.5;
+const LAT1 = 58.0;
 
 function project(lon, lat) {
   return [
@@ -24,12 +37,31 @@ function project(lon, lat) {
 }
 
 // ---------------------------------------------------------------------------
-// Coastline. One mainland polygon (clockwise from the Ionian coast), plus the
-// island and peninsular landmasses. Water = Mediterranean, Adriatic, Aegean,
-// Marmara, Black Sea, the Caspian corner, Gulf of Suez, Gulf of Aqaba,
-// Red Sea, and the head of the Persian Gulf (66 CE shoreline, near Charax).
-// The Bosporus, Dardanelles and Messina straits are drawn a few pixels wide
-// so the seas stay connected water; armies cross only by seaLink ferries.
+// Coastline. ONE mainland polygon, plus the island landmasses.
+//
+// v6.8: the mainland ring is now the whole of Afro-Eurasia inside the frame.
+// It used to be three rings — Anatolia+Africa, the Balkans, Italy — because
+// the old top edge at 42.5°N cut Europe apart above the Adriatic and the
+// Bosporus separated it from Asia. At 58°N none of those cuts exist: Italy
+// joins Gaul over the Ligurian shore, Gaul joins the Balkans over the Alps,
+// and Europe joins Asia across the steppe north of the Black Sea. So MAINLAND
+// absorbed BALKANS (reversed, to match its handedness) and ITALY, and the
+// Mediterranean became what it geographically is — an inlet, not an edge.
+//
+// The ring is traced with the water always on the same side, entering and
+// leaving each sea rather than jumping: Mediterranean, Adriatic, Aegean,
+// Marmara, Black Sea, the Maeotic lake (Azov), the whole Caspian, the Gulfs of
+// Suez and Aqaba, the Red Sea, the head of the Persian Gulf (66 CE, near
+// Charax), the Atlantic, the North Sea and the Baltic. Frame edges close it.
+//
+// Because it is one loop, an edit anywhere in it can make it cross itself, and
+// a crossed ring fills inside-out over the crossed lobe with no other symptom.
+// `node tools/coastcheck.mjs` is the guard: it holds simplicity, disjointness
+// and containment, and draws the mask so the result can be looked at.
+//
+// The Bosporus, Dardanelles, Messina, Dover and Bonifacio straits are drawn a
+// few pixels wide so the seas stay connected water; armies cross only by
+// seaLink ferries.
 // ---------------------------------------------------------------------------
 
 const MAINLAND = [
@@ -82,9 +114,42 @@ const MAINLAND = [
   [19.20, 30.42], [18.40, 30.30], [17.60, 30.95], [16.60, 31.20], // Syrtis Major, Macomades, Sirte
   [15.75, 31.40], [15.30, 32.00], [15.10, 32.40],                 // Misrata
   [14.30, 32.63], [13.60, 32.80], [13.19, 32.90],                 // Leptis Magna, Oea (Tripoli)
-  [12.60, 32.80], [12.00, 32.72],                                 // Sabratha, cut at the west edge
+  [12.60, 32.80], [12.08, 32.93],                                 // Sabratha, Zuwarah
+  // v6.8: the Maghreb — the Syrtis Minor, Africa Proconsularis, Numidia and
+  // the two Mauretanias, then the Atlantic shore of Africa to the west edge.
+  [11.50, 33.18], [11.11, 33.50],                                 // Ras Ajdir, Zarzis
+  [10.98, 33.83], [10.60, 33.86],                                 // Girba (Djerba) fused to its shore
+  [10.10, 33.88], [10.07, 34.30],                                 // Tacape (Gabes), head of the Syrtis Minor
+  [10.42, 34.55], [10.76, 34.74],                                 // Thaenae, Sfax
+  [10.95, 35.20], [11.06, 35.50],                                 // the Thysdrus shore, Ruspina
+  [10.83, 35.78], [10.64, 35.83],                                 // Leptis Minor, Hadrumetum
+  [10.55, 36.10], [10.62, 36.40],                                 // Neapolis, the gulf of Hammamet
+  [10.85, 36.80], [11.03, 37.08],                                 // the promontory of Mercury (Cape Bon)
+  [10.57, 36.82], [10.32, 36.86],                                 // the gulf of Carthage, Carthago
+  [10.06, 37.06], [9.87, 37.28], [9.75, 37.35],                   // Utica, Hippo Diarrhytus, Cape Blanc
+  [9.20, 37.20], [8.76, 36.96],                                   // the Numidian border, Thabraca
+  [8.20, 36.93], [7.77, 36.90],                                   // Hippo Regius
+  [7.25, 37.09], [6.91, 36.88],                                   // Cape de Garde, Rusicade
+  [6.30, 36.90], [5.77, 36.82],                                   // Chullu, Igilgili
+  [5.07, 36.75], [4.55, 36.85],                                   // Saldae, the Kabylian shore
+  [3.91, 36.92], [3.06, 36.79],                                   // Rusuccuru, Icosium
+  [2.20, 36.60], [1.30, 36.52],                                   // Caesarea Mauretaniae, Cartennae
+  [0.09, 35.93], [-0.64, 35.71], [-0.92, 35.79],                  // Arsenaria, Portus Magnus, Cape Falcon
+  [-1.38, 35.30], [-1.86, 35.10], [-2.23, 35.10],                 // Siga, Ad Fratres, the Mulucha
+  [-2.94, 35.29], [-2.97, 35.45],                                 // Rusadir, the Three Forks cape
+  [-3.93, 35.25], [-4.75, 35.20],                                 // the Rif shore
+  [-5.31, 35.89], [-5.60, 35.78],                                 // Septem, the strait's African side
+  [-5.80, 35.79], [-5.93, 35.79],                                 // Tingis, the Ampelusian cape
+  // The Atlantic shore of Mauretania Tingitana, southward
+  [-6.03, 35.47], [-6.15, 35.19],                                 // Zilis, Lixus
+  [-6.60, 34.26], [-6.84, 34.03],                                 // Thamusida, Sala
+  [-7.62, 33.60], [-8.50, 33.25],                                 // the Anfa shore, the Oum er-Rbia
+  [-9.24, 32.30], [-9.77, 31.51],                                 // the Safi cliffs, Mogador
+  [-9.88, 30.63], [-9.60, 30.42],                                 // Cape Ghir, the Sous mouth
+  [-10.18, 29.38], [-10.70, 29.00],                               // the Ifni shore, the Draa approaches
+  [-11.00, 28.70],                                                // cut at the west edge, above Cape Draa
   // Frame: west edge down, south edge east to the Red Sea shore
-  [12.00, 23.50], [35.55, 23.50],
+  [-11.00, 23.50], [35.55, 23.50],
   // Egyptian Red Sea coast, northward past Berenice
   [35.48, 23.90], [35.05, 24.55], [34.62, 25.30],
   [34.30, 26.10], [34.10, 26.40], [33.95, 26.70], [33.85, 27.25], [33.55, 27.80],
@@ -95,9 +160,16 @@ const MAINLAND = [
   [34.25, 27.73],                                                 // Ras Muhammad (Sinai tip)
   // Gulf of Aqaba west shore, northward
   [34.42, 28.05], [34.52, 28.50], [34.66, 28.95], [34.82, 29.30],
-  [34.95, 29.55],                                                 // head of the Gulf of Aqaba (Aila)
+  // v6.8: the head is drawn SQUARE, not as a point. It used to taper to a
+  // single vertex, which left the gulf ~3 px wide at 29.5° — narrow enough
+  // that whether Eilat and Aila touched salt water at all came down to which
+  // way the domain warp happened to push the border, and moving the frame
+  // moved the warp's phase and took Aqaba's shoreline away. The real head is
+  // about 5 km across with a town on either bank; draw it that way.
+  [34.88, 29.48], [34.90, 29.54],                                 // the west bank, Eilat's shore
+  [35.02, 29.54],                                                 // the head of the Gulf of Aqaba
   // Aqaba east shore, southward, then the Arabian Red Sea coast
-  [35.00, 29.32], [34.90, 28.90], [34.80, 28.45], [34.78, 28.05],
+  [35.05, 29.33], [34.90, 28.90], [34.80, 28.45], [34.78, 28.05],
   [35.15, 27.55], [35.55, 27.30], [36.10, 26.55], [36.50, 26.10], [36.90, 25.55],
   [37.20, 25.10], [37.60, 24.65], [38.05, 24.05],                 // toward Yanbu
   [38.55, 23.70], [38.80, 23.50],                                 // cut at the south edge
@@ -124,9 +196,206 @@ const MAINLAND = [
   [49.30, 37.90], [48.90, 38.40], [48.85, 38.90], [49.15, 39.40],
   [49.35, 39.85], [50.30, 40.25],                                 // the Absheron peninsula (Baku)
   [49.80, 40.60], [49.55, 41.10], [48.95, 41.55], [48.55, 42.00],
-  [48.30, 42.50],                                                 // cut at the top edge below Derbent
-  // Frame: top edge west across the Great Caucasus
-  [41.85, 42.50],
+  [48.29, 42.06],                                                 // the Caspian Gates (Derbent)
+  // v6.8: the Caspian's whole rim, now that the frame clears it. The old top
+  // edge cut it in half across the Great Caucasus; it is a closed inland sea
+  // here, open only where the east edge clips the Turkmen shore.
+  [47.85, 42.60], [47.50, 42.98],                                 // the Dagestan shore
+  [47.60, 43.60], [47.55, 43.95],                                 // the Sulak and Terek mouths
+  [47.15, 44.45], [47.35, 45.35],                                 // the Kizlyar bay, the Nogai flats
+  [47.95, 45.65], [48.60, 45.75],                                 // the Rha's (Volga) delta, western arm
+  [49.10, 46.05], [49.55, 46.40],                                 // the delta front
+  [50.30, 46.75], [51.20, 46.95],                                 // the north Caspian's flat shore
+  [51.90, 47.05],                                                 // the Rhymnus' (Ural) mouth
+  [52.60, 46.65], [53.10, 45.95],                                 // the Kaydak inlet, simplified
+  [52.20, 45.45], [51.60, 45.32],                                 // the Buzachi thumb
+  [50.28, 44.51], [50.90, 44.00],                                 // the Mangyshlak cape and its gulf
+  [51.15, 43.65], [51.75, 43.10],                                 // the Kazakh bay
+  [52.35, 42.55], [52.70, 41.85],                                 // the Kara-Bogaz bar, drawn closed
+  [52.97, 40.60], [52.97, 40.02],                                 // the Krasnovodsk shoulder
+  [53.12, 39.44], [53.30, 38.80],                                 // the Cheleken spit
+  [53.50, 38.10],                                                 // the Turkmen shore, cut at the east edge
+  // Frame: east edge north to the corner, then the top edge west across the
+  // Sarmatian plain to the Baltic. Everything below this line is land.
+  [53.50, 58.00], [24.35, 58.00],
+  // v6.8: the Baltic's east shore — the gulf of Riga, Courland, the amber
+  // coast of the Aestii, and the Suebian sea's south shore westward.
+  [24.30, 57.72], [24.38, 57.30],                                 // the Livonian shore
+  [24.10, 57.02],                                                 // the Duna's mouth
+  [23.55, 57.05], [23.10, 57.20],                                 // the gulf's south shore
+  [22.78, 57.50], [22.59, 57.76],                                 // the Courland cape (Kolka)
+  [21.55, 57.40], [21.18, 56.90],                                 // the amber coast
+  [21.01, 56.51], [21.05, 56.00],                                 // the Libavian shore
+  [21.13, 55.71], [20.95, 55.28],                                 // the Chronus' mouth, the Curonian spit
+  [20.50, 54.98], [19.95, 54.95],                                 // Sambia, the amber staple
+  [19.40, 54.60], [18.95, 54.42],                                 // the Vistula lagoon
+  [18.70, 54.38], [18.82, 54.75],                                 // the Vistula's mouth, the Hel spit
+  [18.40, 54.72], [17.55, 54.75],                                 // the bay of the Gothones
+  [16.70, 54.55], [15.57, 54.19],                                 // the Pomeranian shore
+  [14.70, 54.10], [14.25, 53.93],                                 // Usedom, the Viadua's (Oder) mouth
+  [13.75, 54.05], [13.42, 54.42],                                 // Rugen fused to the shore
+  [12.55, 54.20], [12.10, 54.18],                                 // the Mecklenburg bay
+  [11.35, 54.10], [10.90, 54.02],                                 // the bay of the Lubeck shore
+  [10.75, 54.30], [10.15, 54.42],                                 // Fehmarn fused, the Kiel bight
+  [9.95, 54.72], [9.43, 54.83],                                   // the Schlei, the Angli shore
+  // The Cimbric peninsula: up the Baltic side, round the Skaw, down the ocean
+  [9.42, 55.05], [9.50, 55.52],                                   // the Little Belt
+  [9.90, 55.85], [10.20, 56.15],                                  // the Cimbrian east coast
+  [10.55, 56.30], [10.95, 56.45],                                 // the Djursland cape
+  [10.30, 56.60], [10.30, 57.00],                                 // the Limfjord approaches
+  [10.55, 57.45], [10.62, 57.73],                                 // the Skaw — the Kattegat's north gate
+  [9.96, 57.60], [9.20, 57.15],                                   // the Jammer bay
+  [8.60, 56.70], [8.13, 56.05],                                   // the Nissum bight
+  [8.13, 55.55], [8.45, 55.47],                                   // the Cimbric ocean shore
+  [8.60, 55.05], [8.90, 54.55],                                   // the Wadden flats
+  [8.65, 54.30], [8.90, 53.90],                                   // Eiderstedt, the Albis' (Elbe) mouth
+  // The ocean shore of Germania Inferior and Gallia Belgica, westward
+  [8.50, 53.60], [8.20, 53.55],                                   // the Visurgis and Jade bays
+  [7.20, 53.60], [7.00, 53.32],                                   // the Frisian isles fused, the Amisia
+  [6.50, 53.42], [6.05, 53.42],                                   // the Frisian shore
+  [5.40, 53.20], [5.20, 52.90],                                   // the Flevo lake's gate
+  [4.60, 52.60], [4.55, 52.35],                                   // the dune coast of the Batavi
+  [4.10, 51.98], [3.85, 51.65],                                   // the Rhenus' mouth, the Scaldis isles
+  [3.55, 51.42], [3.20, 51.35],                                   // the Scaldis' mouth
+  [2.92, 51.23], [2.42, 51.06],                                   // the Menapian shore
+  [1.85, 50.95], [1.61, 50.73],                                   // Portus Itius, Gesoriacum
+  [1.55, 50.20], [0.75, 49.90],                                   // the Samara's mouth, the Caletian cliffs
+  [0.20, 49.44], [-0.25, 49.30],                                  // the Sequana's estuary, the Calvados shore
+  [-1.15, 49.35], [-1.60, 49.70],                                 // the Unelli peninsula and its cape
+  [-1.85, 49.20], [-1.50, 48.62],                                 // its west side, the bay of the Abrincatui
+  [-2.02, 48.65], [-2.75, 48.53],                                 // Aletum, the Armorican north shore
+  [-3.55, 48.68], [-4.05, 48.72],                                 // the Osismii coast
+  [-4.65, 48.45], [-4.78, 48.33],                                 // the Iroise, the Armorican point
+  [-4.55, 48.10], [-4.74, 48.04],                                 // the Brest roads, the Raz
+  [-4.35, 47.80], [-3.95, 47.80],                                 // the bay of Audierne, Penmarch
+  [-3.37, 47.72], [-3.12, 47.48],                                 // the Veneti harbours, the Quiberon bay
+  [-2.55, 47.50], [-2.20, 47.27],                                 // the Morbihan, the Liger's estuary
+  [-1.95, 46.95], [-1.80, 46.50],                                 // the Pictonian march
+  [-1.35, 46.30], [-1.15, 46.15],                                 // the Santonian shore
+  [-1.05, 45.58], [-1.20, 44.90],                                 // the Garumna's estuary
+  [-1.30, 44.20], [-1.45, 43.60],                                 // the Landes shore
+  [-1.78, 43.38], [-2.20, 43.32],                                 // Aquitania's last cape, the Vascones
+  // The Cantabrian and Gallaecian shore of Hispania, westward
+  [-3.00, 43.40], [-3.80, 43.46],                                 // Flaviobriga, Portus Victoriae
+  [-4.50, 43.42], [-5.70, 43.56],                                 // the Cantabrian coast, Gigia
+  [-6.55, 43.58], [-7.30, 43.72],                                 // the Astur shore
+  [-7.86, 43.76], [-8.30, 43.60],                                 // the Ortegal cape, the Artabrian gulf
+  [-8.42, 43.37], [-8.90, 43.32],                                 // Brigantium, the Nerian coast
+  [-9.28, 42.90], [-8.95, 42.55],                                 // the Nerian cape (Finisterre)
+  [-8.85, 42.24], [-8.72, 41.87],                                 // Vigo's ria, the Minius' mouth
+  [-8.78, 41.50], [-8.67, 41.14],                                 // the Bracaran shore, Cale
+  [-8.90, 40.60], [-8.85, 40.15],                                 // Aeminium, the Munda
+  [-9.05, 39.60], [-9.42, 39.35],                                 // the Lusitanian shore
+  [-9.50, 38.78], [-9.15, 38.70],                                 // the Rock of the Moon, Olisipo on the Tagus
+  [-8.90, 38.50], [-8.80, 38.10],                                 // the Callipus' mouth
+  [-8.85, 37.50], [-8.95, 37.05],                                 // the Cuneus shore
+  [-8.90, 36.99], [-7.90, 37.02],                                 // the Sacred Promontory, the Cuneus coast
+  [-7.40, 37.18], [-6.85, 37.00],                                 // the Anas' mouth, the Onuba shore
+  [-6.35, 36.80], [-6.28, 36.53],                                 // the Baetis' mouth, Gades
+  [-6.05, 36.18], [-5.60, 36.01],                                 // Baelo, Iulia Traducta
+  // Through the Pillars: the Mediterranean shore of Hispania, eastward
+  [-5.35, 36.13], [-4.42, 36.72],                                 // Calpe, Malaca
+  [-3.70, 36.74], [-2.92, 36.75],                                 // the Baetican shore, Abdera
+  [-2.45, 36.83], [-1.90, 36.95],                                 // Portus Magnus, the Charidemus cape
+  [-1.32, 37.55], [-0.99, 37.60],                                 // the Bastetanian coast, Carthago Nova
+  [-0.65, 38.18], [-0.48, 38.35],                                 // the Palos cape, Lucentum
+  [0.19, 38.73], [0.05, 38.95],                                   // the Dianium cape
+  [-0.32, 39.45], [-0.27, 39.68],                                 // Valentia, Saguntum
+  [0.03, 39.98], [0.40, 40.36],                                   // the Ilercavonian shore
+  [0.72, 40.62], [0.87, 40.72], [0.68, 40.80],                    // the Iberus' delta
+  [1.25, 41.12], [2.17, 41.39],                                   // Tarraco, Barcino
+  [2.80, 41.67], [3.15, 41.88], [3.32, 42.32],                    // the Laletanian shore, Emporiae, the Aphrodisium
+  // Gallia Narbonensis and the Ligurian shore
+  [3.05, 42.52], [3.05, 43.02],                                   // Ruscino, the Narbonese lagoons
+  [3.70, 43.35], [4.15, 43.55],                                   // Agatha, the Rhodanus' western arm
+  [4.85, 43.35], [5.05, 43.32],                                   // the Rhodanus delta, the Marian ditches
+  [5.37, 43.30], [5.93, 43.09],                                   // Massilia, Telo Martius
+  [6.65, 43.15], [7.12, 43.52],                                   // the Argenteus shore, Antipolis
+  [7.27, 43.70], [7.75, 43.79],                                   // Nicaea, the Ligurian corniche
+  [8.30, 44.10], [8.75, 44.40],                                   // Albingaunum, Vada Sabatia
+  [8.93, 44.41], [9.85, 44.10],                                   // Genua, Luna
+  [10.30, 43.55], [10.50, 43.00],                                 // the Pisan shore, Populonium
+  [11.10, 42.42], [11.80, 42.10],                                 // Cosa, the Etruscan coast
+  // Italy, absorbed from the old ITALY ring: the Tyrrhenian shore, the toe,
+  // the gulf of Taranto, the heel, and the Adriatic coast back north.
+  [12.25, 41.90], [12.28, 41.74],                                 // Ostia, the Tiber mouth
+  [12.80, 41.42], [13.20, 41.28], [13.60, 41.25], [14.05, 40.83], // Terracina, the gulf of Gaeta, Naples bay
+  [14.45, 40.62], [14.90, 40.40], [15.30, 40.05], [15.65, 39.55], // Sorrento, the Salerno gulf, Cilento
+  [15.95, 38.90], [15.65, 38.35],                                 // the Tyrrhenian toe
+  [15.68, 38.23], [15.75, 38.15], [16.10, 37.95],                 // Rhegium; Capo Spartivento
+  [16.60, 38.80], [17.15, 38.95], [17.20, 39.40],                 // the gulf of Squillace, Crotone
+  [16.95, 39.90], [16.60, 40.25], [17.25, 40.45], [17.95, 40.25], // the gulf of Taranto
+  [18.40, 39.80],                                                 // Cape Leuca (the heel)
+  [18.50, 40.15], [18.00, 40.65], [17.35, 40.90], [16.85, 41.13], // Otranto, Brundisium, Barium
+  [16.20, 41.35], [15.95, 41.60], [16.20, 41.75], [15.90, 41.92], // the Gargano spur
+  [15.15, 41.95], [14.70, 42.15],                                 // the Frentanian shore
+  [14.22, 42.47], [14.00, 42.65],                                 // Aternum
+  [13.85, 43.00], [13.51, 43.62],                                 // the Picene shore, Ancona
+  [13.20, 43.75], [12.57, 44.07],                                 // the Conero behind, Ariminum
+  [12.28, 44.42], [12.50, 44.85],                                 // Ravenna's lagoons, the Padus delta
+  [12.42, 45.20], [12.35, 45.43],                                 // the Venetic lagoon
+  [13.10, 45.63], [13.75, 45.65],                                 // Aquileia's shore, Tergeste
+  [13.60, 45.23], [13.85, 44.87],                                 // Parentium, Pola
+  [14.12, 45.09], [14.45, 45.33],                                 // Istria's east side, Tarsatica
+  // Dalmatia and the Illyrian coast, southeastward down the Adriatic
+  [14.90, 44.99], [15.23, 44.12],                                 // the Liburnian shore, Iader
+  [15.90, 43.72], [16.44, 43.51],                                 // Scardona, Salona
+  [17.20, 43.03], [17.60, 42.92],                                 // the Naro's mouth
+  [18.09, 42.65], [18.55, 42.42],                                 // Epidaurum, the Rhizonic gulf
+  [18.90, 42.28], [19.10, 42.09], [19.30, 41.95],                 // Butua, Olcinium, the Drilon
+  // Absorbed from the old BALKANS ring, reversed: it was traced with the water
+  // on the other hand, because it used to be its own island of a landmass.
+  [19.58, 41.80], [19.45, 41.32], [19.48, 40.95],                 // the Illyrian coast, Dyrrhachium
+  [19.40, 40.45], [19.65, 40.15],                                 // the bay of Aulon
+  [20.20, 39.70], [20.75, 39.35], [20.75, 38.95],                 // the Ionian coast, Epirus
+  [21.05, 38.35], [21.25, 38.30],                                 // the gulf of Patras
+  [21.12, 37.95], [21.30, 37.40], [21.55, 36.95],                 // the western coast, Elis
+  [21.85, 36.72], [22.15, 36.85],                                 // the Messenian gulf
+  [22.38, 36.42], [22.55, 36.72],                                 // Tainaron, the Laconian gulf
+  [23.10, 36.43], [23.05, 36.90], [22.78, 37.32],                 // Malea, the Argolic gulf
+  [23.18, 37.30], [23.15, 37.60], [23.45, 37.95],                 // the Argolid, the Saronic gulf
+  [24.04, 37.68], [24.06, 38.10],                                 // Sounion, the Marathon shore
+  [24.15, 38.48], [23.70, 38.65], [23.30, 38.85],                 // Euboea fused as a lobe
+  [22.95, 38.95], [23.05, 39.30], [22.85, 39.65], [22.60, 40.10], // the Thessalian coast
+  [22.60, 40.48], [22.85, 40.50], [23.05, 40.30],                 // the Thermaic gulf
+  [23.70, 40.05], [23.35, 40.25], [23.70, 40.55], [24.00, 40.72], // Chalkidiki, one lobe
+  [24.60, 40.78], [25.30, 40.85], [26.00, 40.72], [26.35, 40.55], // the Thracian Aegean coast
+  [26.05, 40.10], [26.20, 40.05], [26.55, 40.30], [26.80, 40.55], // the Gallipoli peninsula
+  [27.30, 40.85], [27.50, 40.95], [28.00, 40.97], [28.60, 40.97], // the Marmara north shore
+  [28.95, 41.00], [29.05, 41.05],                                 // Byzantion on the strait
+  [29.02, 41.25], [28.60, 41.35],                                 // the Bosporus mouth (Europe)
+  [28.15, 41.60], [28.05, 42.10],                                 // the Thracian Black Sea coast
+  // v6.8: the Black Sea's west shore, northward — Moesia, the Danube's delta,
+  // the Greek colonies of the liman coast.
+  [27.75, 42.35], [27.47, 42.50],                                 // Apollonia Pontica, the bay of Burgas
+  [27.72, 42.72], [27.92, 43.19],                                 // Mesambria, Odessus
+  [28.15, 43.40], [28.47, 43.38],                                 // the Tirizian cape (Kaliakra)
+  [28.58, 43.75], [28.65, 44.17],                                 // Callatis, Tomis
+  [28.85, 44.60], [29.10, 44.85],                                 // the Histrian lagoon
+  [29.67, 45.22], [29.72, 45.55],                                 // the Danuvius' delta
+  [30.20, 45.90], [30.35, 46.20],                                 // the Tyras' liman
+  [30.75, 46.48], [31.53, 46.62],                                 // the Hypanis liman
+  [31.90, 46.70], [32.55, 46.55],                                 // Olbia, the Borysthenes' liman
+  [33.10, 46.30], [33.68, 46.16],                                 // the isthmus into the Tauric Chersonese
+  // The Tauric Chersonese (Crimea), round from the isthmus
+  [33.30, 45.80], [32.55, 45.35],                                 // the Tarkhankut cape
+  [33.37, 45.19], [33.53, 44.61],                                 // Kerkinitis, Chersonesus Taurica
+  [34.16, 44.50], [34.85, 44.82],                                 // the Tauric range's shore
+  [35.38, 45.03], [36.05, 45.13],                                 // Theodosia, the Kimmerian shore
+  [36.47, 45.35],                                                 // Panticapaeum, on the Kimmerian Bosporus
+  // The Maeotic lake (the sea of Azov), round from the strait
+  [35.85, 45.55], [35.20, 45.85],                                 // the Arabat bar
+  [34.80, 46.17], [35.60, 46.55],                                 // the Maeotic north shore
+  [36.79, 46.76], [37.55, 47.10],                                 // the Sarmatian shore
+  [38.35, 47.25], [39.30, 47.12],                                 // Tanais, on the Don's delta
+  [38.90, 46.90], [38.28, 46.71],                                 // the shore of the Maeotae
+  [38.18, 46.05], [37.60, 45.55],                                 // the Achilles' bar, the Hypanis' mouth
+  [37.15, 45.30], [36.75, 45.28],                                 // Phanagoria, the strait's Asian side
+  // The Black Sea's east shore, southward: the Sindic and Colchian coast
+  [37.32, 44.89], [37.78, 44.72],                                 // Gorgippia, the Sindic harbour
+  [38.35, 44.42], [39.08, 44.10],                                 // the Cercetian shore
+  [39.73, 43.58], [40.25, 43.35],                                 // the Achaean coast
+  [41.02, 43.00], [41.55, 42.55],                                 // Dioscurias, the Colchian marsh
   // The Black Sea east coast, southward: Colchis, Batumi
   [41.60, 42.10], [41.55, 41.85],
   // The Black Sea south coast, westward: the Pontic shore
@@ -146,53 +415,134 @@ const MAINLAND = [
   [26.70, 38.85], [26.85, 38.60],                                 // toward the Smyrna gulf (closes to the entry)
 ];
 
-// v5.4: Greece grows into the whole southern Balkan peninsula — one landmass
-// from the Adriatic to the Black Sea, clipped by the top edge across the
-// interior. The Peloponnese keeps its v5.0 shape; Chalkidiki and Euboea are
-// single simplified lobes. The Dardanelles and Bosporus west shores keep a
-// few pixels of water against the Anatolian side.
-const BALKANS = [
-  // enters at the top edge on the Thracian Black Sea coast
-  [27.95, 42.50], [28.05, 42.10], [28.15, 41.60],                 // toward the gulf of Burgas
-  [28.60, 41.35], [29.02, 41.25],                                 // the Bosporus mouth (Europe)
-  [29.05, 41.05], [28.95, 41.00],                                 // Byzantion on the strait
-  [28.60, 40.97], [28.00, 40.97], [27.50, 40.95], [27.30, 40.85], // the Marmara north shore
-  [26.80, 40.55], [26.55, 40.30], [26.20, 40.05], [26.05, 40.10], // the Gallipoli peninsula
-  [26.35, 40.55], [26.00, 40.72], [25.30, 40.85], [24.60, 40.78], // the Thracian Aegean coast
-  [24.00, 40.72], [23.70, 40.55], [23.35, 40.25], [23.70, 40.05], // Chalkidiki, one lobe
-  [23.05, 40.30], [22.85, 40.50], [22.60, 40.48],                 // the Thermaic gulf (Thessalonica)
-  [22.60, 40.10], [22.85, 39.65], [23.05, 39.30], [22.95, 38.95], // the Thessalian coast
-  [23.30, 38.85], [23.70, 38.65], [24.15, 38.48],                 // Euboea fused as a lobe
-  [24.06, 38.10], [24.04, 37.68],                                 // Marathon shore, Sounion
-  [23.45, 37.95], [23.15, 37.60], [23.18, 37.30],                 // the Saronic gulf, Argolid
-  [22.78, 37.32], [23.05, 36.90], [23.10, 36.43],                 // Argolic gulf, Malea
-  [22.55, 36.72], [22.38, 36.42],                                 // the Laconian gulf, Tainaron
-  [22.15, 36.85], [21.85, 36.72],                                 // the Messenian gulf
-  [21.55, 36.95], [21.30, 37.40], [21.12, 37.95],                 // the western coast, Elis
-  [21.25, 38.30], [21.05, 38.35],                                 // the gulf of Patras
-  [20.75, 38.95], [20.75, 39.35], [20.20, 39.70],                 // the Ionian coast, Epirus
-  [19.65, 40.15], [19.40, 40.45],                                 // the bay of Vlora
-  [19.48, 40.95], [19.45, 41.32], [19.58, 41.80], [19.35, 42.10], // the Illyrian coast, Dyrrhachium
-  [19.25, 42.50],                                                 // cut at the top edge (closes across the interior)
+// v6.8: the islands. BALKANS and ITALY are gone from this list — the frame
+// that reaches Britain joins both to the mainland ring above. What is left is
+// what is genuinely an island at 58°N.
+
+// Britain, clipped by the top edge across Caithness and Sutherland. The
+// Roman-era shoreline is not the modern one in two places that matter and are
+// drawn as they were: the Wash and the Fens reach further inland, and the
+// Solent still has Vectis fused to it at this resolution. Mona, Vectis and
+// Kintyre are fused rather than cut, on the same rule as Euboea.
+const BRITAIN = [
+  [-3.60, 58.00],                                                 // cut at the top edge, the Caithness shore
+  [-3.05, 57.70], [-2.05, 57.70],                                 // the Moray firth, the Taexali shoulder
+  [-1.78, 57.50], [-2.09, 57.15],                                 // Devana, the Mounth
+  [-2.45, 56.75], [-2.85, 56.45],                                 // the Tava's firth
+  [-2.65, 56.05], [-3.10, 55.95],                                 // the Bodotria, the Votadini shore
+  [-2.15, 55.75], [-1.70, 55.30],                                 // the Tuede, the Bernician coast
+  [-1.40, 54.95], [-1.14, 54.63],                                 // the Vedra's mouth, the Tesa
+  [-0.60, 54.48], [-0.38, 54.28],                                 // the Whitby cliff, the Parisian shore
+  [-0.08, 54.12], [-0.19, 53.90],                                 // Ocelum promontory, the Holderness bight
+  [0.10, 53.60],                                                  // the Abus' mouth
+  [0.35, 53.20], [0.30, 52.92],                                   // the Lindsey shore, the Metaris
+  [0.10, 52.78], [0.60, 52.97],                                   // the fen edge, the Icenian corner
+  [1.30, 52.95], [1.75, 52.75],                                   // the north Icenian shore, the Norfolk cape
+  [1.70, 52.45], [1.30, 52.00],                                   // the Gariennus, the Trinovantian coast
+  [1.10, 51.75], [0.90, 51.85],                                   // the Idumanian estuary
+  [0.75, 51.55], [0.90, 51.45],                                   // Camulodunum's water, the Tamesis' mouth
+  [1.40, 51.38], [1.42, 51.15],                                   // the north Cantian shore, Rutupiae
+  [1.05, 50.90], [0.35, 50.82],                                   // Dubris, the Regnensian coast
+  [-0.75, 50.78], [-1.10, 50.72],                                 // Noviomagus, the Solent
+  [-1.55, 50.72], [-2.05, 50.60],                                 // Vectis fused, the Purbeck
+  [-2.45, 50.57], [-3.05, 50.70],                                 // the Durotrigan cliffs, the Isca
+  [-3.55, 50.42], [-4.15, 50.35],                                 // the Dumnonian shore, Tamara's sound
+  [-5.05, 50.05], [-5.72, 50.07],                                 // the Lizard, Belerion
+  [-5.05, 50.55], [-4.20, 51.05],                                 // the Cornish north shore, the Taw
+  [-3.40, 51.20], [-2.95, 51.40],                                 // the Sabrina's estuary, the levels
+  [-2.75, 51.55], [-3.00, 51.55],                                 // the Avona, the Silurian bank
+  [-4.20, 51.60], [-4.95, 51.72],                                 // Gower, the Demetian bay
+  [-5.25, 51.72], [-5.30, 51.88],                                 // the Octapitarum cape
+  [-4.66, 52.09], [-4.10, 52.45],                                 // the Teifi's mouth, the Cardigan bay
+  [-4.05, 52.75], [-4.70, 52.80],                                 // the Ardudwy sands, the Lleyn point
+  [-4.35, 53.13], [-4.65, 53.32],                                 // the Seiont, Mona fused
+  [-3.85, 53.35],                                                 // the Conovian shore
+  [-3.05, 53.42], [-3.05, 53.75],                                 // the Deva's mouth, the Belisama
+  [-3.05, 54.10], [-3.55, 54.20],                                 // the Setantian coast, the Duddon
+  [-3.40, 54.80], [-3.60, 54.98],                                 // the Cumbrian shore, the Ituna
+  [-4.40, 54.87], [-4.75, 54.68],                                 // the Novantian bay and its cape
+  [-5.00, 54.90], [-4.85, 55.35],                                 // the Rerigonian gulf, the Damnonian coast
+  [-4.75, 55.72], [-5.15, 55.95],                                 // the Clota's firth
+  [-5.55, 56.10], [-5.35, 56.45],                                 // Kintyre fused, the Epidian shore
+  [-5.65, 56.68], [-5.90, 57.10],                                 // Lorn, the Morvern coast
+  [-5.65, 57.55], [-5.35, 57.85],                                 // the Caledonian west shore
+  [-5.15, 58.00],                                                 // cut at the top edge, the Sutherland side
 ];
 
-// v5.4: the Italian peninsula from the Tyrrhenian shore north of Rome to the
-// Abruzzo coast, clipped by the frame's top and west edges. Sicily rides
-// across the Messina strait (kept ~0.16° of water; the ferry is a seaLink).
-const ITALY = [
-  [12.00, 42.42],                                                 // enters at the west edge (Tarquinia shore)
-  [12.25, 41.90], [12.28, 41.74],                                 // Ostia, the Tiber mouth
-  [12.80, 41.42], [13.20, 41.28], [13.60, 41.25], [14.05, 40.83], // Terracina, the gulf of Gaeta, Naples bay
-  [14.45, 40.62], [14.90, 40.40], [15.30, 40.05], [15.65, 39.55], // Sorrento, the Salerno gulf, Cilento
-  [15.95, 38.90], [15.65, 38.35],                                 // the Tyrrhenian toe
-  [15.68, 38.23], [15.75, 38.15], [16.10, 37.95],                 // Rhegium; Capo Spartivento
-  [16.60, 38.80], [17.15, 38.95], [17.20, 39.40],                 // the gulf of Squillace, Crotone
-  [16.95, 39.90], [16.60, 40.25], [17.25, 40.45], [17.95, 40.25], // the gulf of Taranto
-  [18.40, 39.80],                                                 // Cape Leuca (the heel)
-  [18.50, 40.15], [18.00, 40.65], [17.35, 40.90], [16.85, 41.13], // Otranto, Brundisium, Barium
-  [16.20, 41.35], [15.95, 41.60], [16.20, 41.75], [15.90, 41.92], // the Gargano spur
-  [15.15, 41.95], [14.70, 42.15], [14.15, 42.50],                 // the Abruzzo shore, cut at the top edge
-  [12.00, 42.50],                                                 // frame: top edge west (west edge closes to the entry)
+// Hibernia, whole — the one large island in the frame no Roman army ever
+// landed on, and the westernmost land the map holds.
+const HIBERNIA = [
+  [-6.05, 55.20], [-5.45, 54.85],                                 // the Robogdian cape, the Ards
+  [-5.55, 54.45], [-6.10, 54.05],                                 // the Strangford lough, Carlingford
+  [-6.05, 53.60], [-6.10, 53.35],                                 // the Buvinda's mouth, Eblana
+  [-6.00, 52.95], [-6.05, 52.55],                                 // the Menapian shore, the Sacred cape
+  [-6.95, 52.20], [-7.55, 52.10],                                 // the Brigantine harbours
+  [-8.15, 51.85], [-8.45, 51.62],                                 // the Iernus, the Old Head
+  [-9.45, 51.45], [-10.20, 51.75],                                // the Notium cape, the Kenmare water
+  [-10.40, 52.10], [-9.75, 52.55],                                // the Dingle point, the Senus' mouth
+  [-9.55, 53.05], [-10.15, 53.42],                                // the Ausoban bay, Connemara
+  [-9.90, 53.85], [-10.05, 54.25],                                // Clew bay, the Erris head
+  [-9.30, 54.30], [-8.60, 54.35],                                 // the Nagnatan shore
+  [-8.60, 54.65], [-8.30, 54.62],                                 // the Donegal bay
+  [-8.75, 55.10], [-7.55, 55.25],                                 // the Rosses, the Boreum cape
+  [-7.10, 55.05], [-6.60, 55.20],                                 // the Argita's lough, the Bann
+];
+
+// Sardinia and Corsica, across the strait of Bonifacio (~0.13° of water kept,
+// on the Messina rule).
+const SARDINIA = [
+  [9.20, 41.25], [9.55, 41.13],                                   // the Bonifacio side, the Gallura
+  [9.65, 40.85], [9.75, 40.55],                                   // Olbia, the eastern shore
+  [9.70, 40.05], [9.60, 39.55],                                   // the Ogliastra, the Sarrabus
+  [9.55, 39.15], [9.12, 39.20],                                   // Carales
+  [8.85, 38.90], [8.65, 39.10],                                   // the Chersonesus cape, Sulci
+  [8.40, 39.35], [8.45, 39.90],                                   // the Sulcitan coast, Tharros
+  [8.35, 40.25], [8.20, 40.55],                                   // the gulf of Oristano, Bosa
+  [8.20, 40.85], [8.30, 41.10],                                   // Turris Libisonis, the Asinara gulf
+  [8.75, 41.13],
+];
+
+const CORSICA = [
+  [9.35, 42.98], [9.45, 42.70],                                   // the Sacred cape, the eastern plain
+  [9.55, 42.15], [9.40, 41.75],                                   // Aleria, Portus Syracusanus
+  [9.28, 41.38], [8.80, 41.55],                                   // the Bonifacio strait, the Valinco gulf
+  [8.60, 41.92], [8.68, 42.35],                                   // Aiacium, the Balagne
+  [8.75, 42.60], [9.15, 42.72],                                   // Calvi, the Nebbio
+];
+
+// The Balearic isles, as one — Mallorca carries the province.
+const BALEARES = [
+  [2.37, 39.55], [2.65, 39.75], [3.15, 39.95], [3.45, 39.75],
+  [3.15, 39.35], [2.75, 39.30], [2.50, 39.42],
+];
+
+// Scandia, clipped by the top edge — in the ancient geographers an island, and
+// at this frame it genuinely is one. Norway's last 2 px below 58°N are not
+// drawn: a sliver that thin reads as a rendering fault, not as a coast.
+const SCANDIA = [
+  [11.60, 58.00],                                                 // cut at the top edge, the Bohuslan shore
+  [11.75, 57.72], [12.05, 57.35],                                 // the Gota's mouth, the Halland coast
+  [12.55, 56.70], [12.80, 56.25],                                 // the Halland shore
+  [12.85, 55.90], [12.95, 55.55],                                 // the Sound, the Scanian corner
+  [13.60, 55.38], [14.20, 55.40],                                 // the south Scanian shore, the Hano bay
+  [14.65, 56.05], [15.55, 56.10],                                 // the Blekinge coast
+  [16.30, 56.30], [16.45, 56.70],                                 // the sound behind Oland
+  [16.65, 57.30], [16.55, 57.75],                                 // the Smaland shore
+  [16.90, 58.00],                                                 // cut at the top edge, the Braviken
+];
+
+// The Danish isles as one lobe: Funen, Zealand, Lolland and Falster, with the
+// Great Belt fused and the Little Belt kept as the water that makes them
+// islands at all.
+const DANISH_ISLES = [
+  [9.80, 55.30], [10.05, 55.60],                                  // the Little Belt, north Funen
+  [10.60, 55.60], [10.75, 55.35],                                 // the Odense fjord, the Great Belt
+  [11.10, 55.55], [11.20, 55.95],                                 // Zealand's west coast, the Sejero bay
+  [11.75, 56.05], [12.35, 56.05],                                 // the Isefjord, the Sound's north gate
+  [12.62, 55.70], [12.45, 55.35],                                 // the Sound, Zealand's south shore
+  [12.15, 54.95], [11.55, 54.65],                                 // Mon, Falster
+  [11.05, 54.72], [10.75, 54.90],                                 // Lolland, the Femer belt
+  [10.30, 55.05], [9.90, 55.05],                                  // south Funen, back to the Little Belt
 ];
 
 const SICILY = [
@@ -330,6 +680,145 @@ const RIVERS = [
   {
     name: 'Axios', width: 1,
     points: [[21.75, 41.95], [22.15, 41.45], [22.55, 40.95], [22.62, 40.52]],
+  },
+  // v6.8 rivers of the western and northern frame. Named as the Romans named
+  // them where they had a name; the mouths are pinned to the coastline above,
+  // because a river that stops a pixel short of its own delta draws a gap.
+  {
+    name: 'Rhenus', width: 3,
+    points: [
+      [9.55, 46.65], [9.25, 47.10], [9.45, 47.55],                  // the Alpine headwaters, the Brigantine lake
+      [8.60, 47.60], [7.85, 47.55], [7.60, 48.00],                  // the Rhine knee at Basilia
+      [7.75, 48.58], [8.10, 49.00], [8.45, 49.50],                  // Argentorate, the Palatine reach
+      [8.27, 50.00], [7.60, 50.36], [7.10, 50.74],                  // Mogontiacum, Confluentes
+      [6.96, 50.94], [6.20, 51.60], [5.86, 51.84],                  // Colonia, the Batavian island
+      [4.90, 51.95], [4.10, 51.98],                                 // the delta, into the ocean
+    ],
+  },
+  {
+    name: 'Danuvius', width: 3,
+    points: [
+      [8.52, 47.95], [9.80, 48.55], [11.00, 48.75], [12.10, 48.75], // the Suebian springs, Regina Castra
+      [13.45, 48.57], [14.50, 48.35], [15.60, 48.25], [16.40, 48.15],
+      [16.91, 48.11], [17.75, 47.75], [18.75, 47.80], [19.05, 47.55], // Carnuntum, the Pannonian bend
+      [18.95, 46.60], [19.05, 45.85], [19.61, 45.25], [20.35, 44.90], // Aquincum's reach, the Savus' meeting
+      [21.30, 44.65], [22.30, 44.55], [22.70, 44.05],                 // the Iron Gates
+      [23.60, 43.80], [25.40, 43.62], [26.90, 44.05],                 // the Moesian bank, Durostorum
+      [27.90, 44.60], [28.85, 45.15], [29.67, 45.22],                 // the delta
+    ],
+  },
+  {
+    name: 'Savus', width: 1,
+    points: [[14.15, 46.10], [15.20, 45.85], [16.37, 45.49], [17.50, 45.20], [18.70, 45.05], [20.35, 44.90]],
+  },
+  {
+    name: 'Rhodanus', width: 2,
+    points: [
+      [6.85, 46.40], [6.15, 46.20], [5.30, 45.90], [4.83, 45.76],   // the Lemannus lake, Lugdunum
+      [4.80, 45.10], [4.75, 44.35], [4.65, 43.95], [4.85, 43.35],   // the Vienne reach, the delta
+    ],
+  },
+  {
+    name: 'Liger', width: 2,
+    points: [
+      [4.05, 44.85], [3.90, 45.75], [2.95, 46.55], [2.40, 47.08],   // the Cevennes springs, Avaricum's reach
+      [1.90, 47.90], [0.70, 47.40], [-0.55, 47.42], [-1.55, 47.28], // Cenabum, Caesarodunum, Iuliomagus
+      [-2.20, 47.27],
+    ],
+  },
+  {
+    name: 'Sequana', width: 2,
+    points: [[4.70, 47.80], [3.55, 48.30], [2.35, 48.85], [1.55, 49.10], [1.10, 49.44], [0.20, 49.44]],
+  },
+  {
+    name: 'Garumna', width: 2,
+    points: [[0.70, 42.85], [1.44, 43.60], [0.60, 44.35], [-0.57, 44.85], [-0.75, 45.20], [-1.05, 45.58]],
+  },
+  {
+    name: 'Albis', width: 2,
+    points: [
+      [15.20, 50.05], [14.42, 50.08], [13.85, 50.80], [13.10, 51.35], // the Bohemian springs, the Sudeten gate
+      [12.20, 51.85], [11.65, 52.15], [10.60, 53.05], [9.95, 53.55],
+      [8.90, 53.90],
+    ],
+  },
+  {
+    name: 'Viadua', width: 2,
+    points: [[18.30, 49.85], [17.55, 50.45], [16.90, 51.10], [15.60, 51.90], [14.60, 52.60], [14.55, 53.30], [14.25, 53.93]],
+  },
+  {
+    name: 'Vistula', width: 2,
+    points: [[19.15, 49.60], [19.95, 50.05], [20.55, 51.30], [21.05, 52.25], [19.90, 53.05], [18.95, 53.75], [18.70, 54.38]],
+  },
+  {
+    name: 'Borysthenes', width: 3,
+    points: [
+      [32.30, 55.15], [31.20, 54.20], [30.60, 53.15], [30.30, 52.15], // the Venedic springs
+      [30.90, 51.20], [30.52, 50.45], [32.10, 49.40],                 // the Pripet meeting, the Kyivan reach
+      [33.60, 48.50], [35.00, 48.45], [35.15, 47.75],                 // the rapids
+      [34.10, 47.10], [32.55, 46.60], [31.90, 46.65],                 // into the liman
+    ],
+  },
+  {
+    name: 'Tyras', width: 1,
+    points: [[24.55, 49.05], [26.20, 48.55], [27.60, 48.30], [28.85, 47.30], [29.90, 46.70], [30.35, 46.20]],
+  },
+  {
+    name: 'Tanais', width: 2,
+    points: [
+      [38.15, 54.30], [38.90, 53.35], [39.70, 52.30], [40.55, 51.35],
+      [42.40, 50.60], [43.85, 49.60], [42.10, 48.50], [40.55, 47.75], [39.30, 47.12],
+    ],
+  },
+  {
+    name: 'Rha', width: 3,
+    points: [
+      [32.55, 57.25], [34.45, 57.05], [35.90, 56.86], [37.35, 57.00], // the Valdai springs, Tver's reach
+      [38.85, 57.65], [40.95, 57.62], [43.10, 56.55], [44.00, 56.33], // the great northern bend
+      [45.65, 55.85], [47.50, 55.90], [49.10, 55.75], [49.40, 54.65], // Kazan's reach
+      [48.35, 53.50], [50.10, 53.20], [48.80, 51.80], [47.40, 50.35], // the Samara bend
+      [46.05, 49.30], [44.80, 48.70], [46.10, 47.55], [47.30, 46.85], // the Volgograd elbow
+      [48.05, 46.35], [48.60, 45.75],                                 // Astrakhan's reach, the delta
+    ],
+  },
+  {
+    name: 'Rhymnus', width: 1,
+    points: [[53.50, 51.35], [52.35, 51.20], [51.40, 51.20], [51.90, 50.10], [51.55, 49.05], [51.40, 48.00], [51.90, 47.05]],
+  },
+  {
+    name: 'Iberus', width: 2,
+    points: [[-4.05, 42.95], [-3.10, 42.60], [-2.00, 42.45], [-0.88, 41.65], [0.10, 41.15], [0.72, 40.62], [0.87, 40.72]],
+  },
+  {
+    name: 'Tagus', width: 2,
+    points: [[-1.65, 40.35], [-3.05, 40.10], [-4.02, 39.86], [-5.60, 39.60], [-7.05, 39.45], [-8.35, 39.00], [-9.15, 38.70]],
+  },
+  {
+    name: 'Baetis', width: 2,
+    points: [[-2.95, 37.95], [-3.80, 37.90], [-4.78, 37.88], [-5.55, 37.60], [-6.00, 37.38], [-6.20, 37.05], [-6.35, 36.80]],
+  },
+  {
+    name: 'Durius', width: 2,
+    points: [[-2.95, 41.85], [-4.20, 41.60], [-5.45, 41.60], [-6.55, 41.35], [-7.55, 41.20], [-8.67, 41.14]],
+  },
+  {
+    name: 'Anas', width: 1,
+    points: [[-2.90, 38.90], [-4.30, 38.95], [-5.55, 38.95], [-6.34, 38.92], [-7.00, 38.20], [-7.40, 37.18]],
+  },
+  {
+    name: 'Padus', width: 3,
+    points: [
+      [7.15, 44.70], [7.68, 45.07], [8.65, 45.10], [9.65, 45.10],
+      [10.30, 45.05], [11.00, 45.05], [11.80, 44.95], [12.50, 44.85],
+    ],
+  },
+  {
+    name: 'Tamesis', width: 1,
+    points: [[-1.70, 51.70], [-1.05, 51.60], [-0.09, 51.51], [0.45, 51.45], [0.90, 51.45]],
+  },
+  {
+    name: 'Hebrus', width: 1,
+    points: [[23.70, 42.25], [24.75, 42.14], [25.65, 41.90], [26.25, 41.55], [26.35, 41.00], [26.05, 40.72]],
   },
 ];
 
@@ -656,10 +1145,316 @@ const PROVINCES = [
     { latentParent: 'Sinai Interior' }),
   P('Zoara', 35.50, 30.90, 0.90, 'NAB', 'desert', 'salt', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Petra' }),
+
+  // --- v6.8: the western and northern frame (SPEC §160) ---------------------
+  // Appended, so no save ID shifts. These cells exist because the frame moved:
+  // without a seed in Gaul the weighted diagram hands Gaul to Sabratha, and
+  // Britain to whichever Italian cell wins the argument. Every one of them
+  // carries real terrain, goods, culture and faith.
+  //
+  // OWNERSHIP IS DELIBERATELY WASTE, and this is the seam this commit stops
+  // at. Rome held most of this ground in 66 CE, the base atlas's year — but
+  // the base owner is what every bookmark inherits unless its `owners` table
+  // says otherwise, so shipping these as ROM would hand Rome ~90 provinces in
+  // 167 BCE, 67 BCE, 40 BCE and every other chapter at once. That is not a
+  // cartography change; it is a balance change to eight tuned campaigns, and
+  // it belongs in its own section with its own harness run. Until then the
+  // west is on the map as what this game currently models it as: land, with
+  // people and produce on it, outside every state the chapters play.
+  //
+  // The gating the plan called for is the second half: one always-on cell per
+  // region, and finer cells latent beneath it, so a bookmark that wants
+  // Londinium as its own province activates it and every bookmark that does
+  // not never sees a British province at all.
+  //
+  // -- Africa: the Maghreb from the Syrtis Minor to the Atlantic ------------
+  P('Carthago', 10.20, 36.72, 0.85, 'WASTE', 'coast', 'grain', 'punic', 'phoenician', 6, 7, 4, 1,
+    { habitation: 'urban', settleable: false }),
+  P('Hadrumetum', 10.55, 35.75, 0.90, 'WASTE', 'coast', 'olive_oil', 'punic', 'phoenician', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Thysdrus', 10.70, 35.28, 1.00, 'WASTE', 'farmland', 'olive_oil', 'punic', 'phoenician', 3, 4, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Tacape', 9.95, 33.98, 1.20, 'WASTE', 'coast', 'dates', 'punic', 'mauri', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Capsa', 8.70, 34.42, 1.30, 'WASTE', 'drylands', 'dates', 'punic', 'mauri', 2, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Theveste', 8.12, 35.40, 1.10, 'WASTE', 'hills', 'olive_oil', 'punic', 'mauri', 3, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Hippo Regius', 7.65, 36.70, 0.95, 'WASTE', 'coast', 'grain', 'punic', 'phoenician', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Cirta', 6.61, 36.30, 1.15, 'WASTE', 'hills', 'grain', 'punic', 'mauri', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Saldae', 4.95, 36.55, 1.05, 'WASTE', 'coast', 'timber', 'punic', 'mauri', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Icosium', 3.06, 36.60, 1.10, 'WASTE', 'coast', 'fish', 'punic', 'mauri', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Caesarea Mauretaniae', 1.90, 36.30, 1.10, 'WASTE', 'coast', 'grain', 'punic', 'mauri', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Portus Magnus', -0.60, 35.45, 1.20, 'WASTE', 'coast', 'fish', 'punic', 'mauri', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Volubilis', -5.55, 34.07, 1.15, 'WASTE', 'hills', 'olive_oil', 'punic', 'mauri', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Tingis', -5.70, 35.55, 0.95, 'WASTE', 'coast', 'purple_dye', 'punic', 'phoenician', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Sala', -6.70, 33.95, 1.05, 'WASTE', 'coast', 'fish', 'punic', 'mauri', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Atlas', -6.20, 31.60, 1.60, 'WASTE', 'mountains', 'silver', 'punic', 'mauri', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Gaetulia', -4.50, 30.20, 1.70, 'WASTE', 'drylands', 'livestock', 'punic', 'mauri', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Western Sahara', -5.00, 25.60, 2.40, 'WASTE', 'wasteland', 'salt', 'punic', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Numidian Sahara', 4.00, 28.20, 2.40, 'WASTE', 'wasteland', 'salt', 'punic', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Garama', 12.50, 26.30, 1.80, 'WASTE', 'desert', 'dates', 'punic', 'mauri', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  // -- Hispania -------------------------------------------------------------
+  P('Gades', -6.20, 36.60, 0.85, 'WASTE', 'coast', 'purple_dye', 'punic', 'phoenician', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Corduba', -4.78, 37.88, 1.00, 'WASTE', 'farmland', 'olive_oil', 'roman_cult', 'iberian', 5, 6, 3, 0,
+    { habitation: 'urban', settleable: false }),
+  P('Hispalis', -5.95, 37.39, 0.90, 'WASTE', 'farmland', 'grain', 'punic', 'iberian', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Malaca', -4.42, 36.78, 0.85, 'WASTE', 'coast', 'fish', 'punic', 'phoenician', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Carthago Nova', -1.10, 37.68, 1.00, 'WASTE', 'coast', 'silver', 'punic', 'iberian', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Toletum', -4.02, 39.86, 1.20, 'WASTE', 'hills', 'livestock', 'druidic', 'iberian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Emerita', -6.34, 38.92, 1.15, 'WASTE', 'farmland', 'grain', 'roman_cult', 'iberian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Olisipo', -8.95, 38.78, 0.95, 'WASTE', 'coast', 'fish', 'druidic', 'iberian', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Bracara', -8.30, 41.55, 1.00, 'WASTE', 'hills', 'timber', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Asturica', -6.06, 42.46, 1.20, 'WASTE', 'mountains', 'silver', 'druidic', 'celtic', 2, 4, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Tarraco', 1.20, 41.20, 0.85, 'WASTE', 'coast', 'wine', 'roman_cult', 'iberian', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Caesaraugusta', -0.88, 41.65, 1.10, 'WASTE', 'farmland', 'grain', 'roman_cult', 'iberian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Valentia', -0.55, 39.42, 0.90, 'WASTE', 'coast', 'wine', 'punic', 'iberian', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Numantia', -2.45, 41.75, 1.10, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 2, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Salmantica', -5.66, 40.97, 1.20, 'WASTE', 'drylands', 'livestock', 'druidic', 'celtic', 2, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Barcino', 2.05, 41.55, 0.85, 'WASTE', 'coast', 'wine', 'roman_cult', 'iberian', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Emporiae', 2.95, 42.15, 0.85, 'WASTE', 'coast', 'fish', 'hellenism', 'greek', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Baleares', 2.90, 39.60, 0.80, 'WASTE', 'coast', 'olive_oil', 'punic', 'phoenician', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- Gallia, the Rhine and the Alpine provinces ---------------------------
+  P('Narbo', 2.95, 43.20, 0.90, 'WASTE', 'coast', 'wine', 'roman_cult', 'celtic', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Massilia', 5.45, 43.42, 0.80, 'WASTE', 'coast', 'wine', 'hellenism', 'greek', 4, 6, 3, 0,
+    { habitation: 'urban', settleable: false }),
+  P('Nemausus', 4.36, 43.84, 0.85, 'WASTE', 'farmland', 'wine', 'roman_cult', 'celtic', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Tolosa', 1.44, 43.60, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Burdigala', -0.58, 44.84, 1.10, 'WASTE', 'farmland', 'wine', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Lugdunum', 4.83, 45.76, 0.95, 'WASTE', 'farmland', 'wine', 'roman_cult', 'celtic', 5, 6, 4, 0,
+    { habitation: 'urban', settleable: false }),
+  P('Augustodunum', 4.30, 46.95, 1.05, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 3, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Avaricum', 2.40, 47.08, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Limonum', 0.34, 46.58, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Condate', -1.68, 48.11, 1.05, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Darioritum', -2.76, 47.72, 0.95, 'WASTE', 'coast', 'fish', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Lutetia', 2.35, 48.85, 1.00, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Rotomagus', 1.10, 49.35, 0.95, 'WASTE', 'coast', 'timber', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Samarobriva', 2.30, 49.89, 0.95, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Gesoriacum', 1.85, 50.55, 0.90, 'WASTE', 'coast', 'fish', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Durocortorum', 4.03, 49.25, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Augusta Treverorum', 6.64, 49.76, 0.95, 'WASTE', 'hills', 'wine', 'roman_cult', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Colonia Agrippina', 6.96, 50.94, 0.95, 'WASTE', 'farmland', 'grain', 'germanic_cult', 'germanic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Mogontiacum', 8.27, 50.00, 0.95, 'WASTE', 'farmland', 'wine', 'roman_cult', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Argentorate', 7.75, 48.58, 0.95, 'WASTE', 'farmland', 'timber', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Batavia', 5.60, 51.90, 1.00, 'WASTE', 'marsh', 'fish', 'germanic_cult', 'germanic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Vesontio', 6.02, 47.24, 0.95, 'WASTE', 'hills', 'salt', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Genava', 6.15, 46.20, 0.95, 'WASTE', 'hills', 'timber', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Augusta Vindelicorum', 10.90, 48.37, 1.10, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Virunum', 14.35, 46.70, 1.10, 'WASTE', 'mountains', 'silver', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- Italia beyond the old frame, and the Tyrrhenian islands --------------
+  P('Mediolanum', 9.19, 45.46, 0.90, 'WASTE', 'farmland', 'grain', 'roman_cult', 'roman', 5, 6, 4, 0,
+    { habitation: 'urban', settleable: false }),
+  P('Genua', 8.93, 44.52, 0.85, 'WASTE', 'coast', 'timber', 'roman_cult', 'roman', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Bononia', 11.35, 44.50, 0.90, 'WASTE', 'farmland', 'grain', 'roman_cult', 'roman', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Ravenna', 12.10, 44.40, 0.85, 'WASTE', 'marsh', 'fish', 'roman_cult', 'roman', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Pisae', 10.45, 43.75, 0.85, 'WASTE', 'coast', 'timber', 'roman_cult', 'roman', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Ancona', 13.35, 43.55, 0.85, 'WASTE', 'coast', 'fish', 'roman_cult', 'roman', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Aquileia', 13.20, 45.80, 0.90, 'WASTE', 'coast', 'wine', 'roman_cult', 'roman', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Aleria', 9.10, 42.20, 0.85, 'WASTE', 'hills', 'timber', 'roman_cult', 'roman', 2, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Caralis', 9.15, 39.45, 1.00, 'WASTE', 'coast', 'grain', 'punic', 'phoenician', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Turris Libisonis', 8.70, 40.70, 1.00, 'WASTE', 'hills', 'silver', 'punic', 'phoenician', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- Britannia and Hibernia -----------------------------------------------
+  // Britannia and Hibernia are the always-on cells. Everything finer here is
+  // latent beneath them, so 167 BCE has an island and not a province list.
+  P('Britannia', -1.60, 52.30, 1.60, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Londinium', -0.09, 51.51, 0.85, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false, latentParent: 'Britannia' }),
+  P('Camulodunum', 0.85, 51.85, 0.85, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false, latentParent: 'Britannia' }),
+  P('Durovernum', 1.05, 51.20, 0.80, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Venta Belgarum', -1.31, 51.02, 0.90, 'WASTE', 'farmland', 'livestock', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Corinium', -1.97, 51.72, 0.95, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Isca Dumnoniorum', -3.53, 50.72, 1.00, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 2, 2, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Dumnonia', -4.80, 50.38, 0.95, 'WASTE', 'coast', 'silver', 'druidic', 'celtic', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Isca Silurum', -2.95, 51.62, 0.95, 'WASTE', 'hills', 'silver', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Cambria', -3.75, 52.55, 1.05, 'WASTE', 'mountains', 'livestock', 'druidic', 'celtic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Deva', -2.89, 53.19, 0.95, 'WASTE', 'hills', 'salt', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Lindum', -0.54, 53.23, 1.00, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Eboracum', -1.08, 53.96, 1.00, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false, latentParent: 'Britannia' }),
+  P('Brigantia', -2.20, 54.55, 1.15, 'WASTE', 'mountains', 'livestock', 'druidic', 'celtic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Britannia' }),
+  P('Caledonia', -4.20, 56.55, 1.50, 'WASTE', 'mountains', 'livestock', 'druidic', 'celtic', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Caledonia Ultima', -4.00, 57.45, 1.30, 'WASTE', 'mountains', 'timber', 'druidic', 'celtic', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false, latentParent: 'Caledonia' }),
+  P('Hibernia', -6.70, 53.20, 1.35, 'WASTE', 'farmland', 'livestock', 'druidic', 'celtic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Hibernia Occidentalis', -9.00, 53.35, 1.30, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false, latentParent: 'Hibernia' }),
+  P('Mumu', -8.60, 52.15, 1.20, 'WASTE', 'hills', 'livestock', 'druidic', 'celtic', 1, 2, 2, 0,
+    { habitation: 'rural', settleable: false, latentParent: 'Hibernia' }),
+  // -- Germania, the Cimbric peninsula and the Suebian sea ------------------
+  P('Chatti', 9.30, 51.10, 1.20, 'WASTE', 'hills', 'timber', 'germanic_cult', 'germanic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Teutoburgium', 8.60, 52.20, 1.20, 'WASTE', 'hills', 'timber', 'germanic_cult', 'germanic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Frisia', 6.30, 53.05, 1.10, 'WASTE', 'marsh', 'fish', 'germanic_cult', 'germanic', 1, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Semnones', 12.80, 52.40, 1.35, 'WASTE', 'hills', 'timber', 'germanic_cult', 'germanic', 1, 1, 3, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Boiohaemum', 14.42, 49.85, 1.20, 'WASTE', 'hills', 'timber', 'germanic_cult', 'germanic', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Cimbria', 9.30, 56.20, 1.10, 'WASTE', 'hills', 'livestock', 'germanic_cult', 'germanic', 1, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Selandia', 11.60, 55.72, 0.95, 'WASTE', 'coast', 'fish', 'germanic_cult', 'germanic', 1, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Scandia', 13.80, 56.20, 1.20, 'WASTE', 'hills', 'timber', 'germanic_cult', 'germanic', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Gothiscandza', 18.90, 53.30, 1.30, 'WASTE', 'marsh', 'timber', 'germanic_cult', 'germanic', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Aestii', 22.60, 55.20, 1.30, 'WASTE', 'marsh', 'glass', 'germanic_cult', 'germanic', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  // -- Illyricum, the Danube, Thrace and Dacia ------------------------------
+  P('Salona', 16.60, 43.60, 0.95, 'WASTE', 'coast', 'wine', 'hellenism', 'illyrian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Delminium', 17.60, 43.75, 1.05, 'WASTE', 'mountains', 'livestock', 'thracian_cult', 'illyrian', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Siscia', 16.37, 45.49, 1.05, 'WASTE', 'farmland', 'grain', 'thracian_cult', 'illyrian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Carnuntum', 16.91, 48.11, 1.05, 'WASTE', 'farmland', 'grain', 'druidic', 'celtic', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Aquincum', 19.05, 47.40, 1.10, 'WASTE', 'farmland', 'grain', 'thracian_cult', 'illyrian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Sirmium', 19.61, 45.00, 1.00, 'WASTE', 'farmland', 'grain', 'thracian_cult', 'illyrian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Singidunum', 20.46, 44.82, 0.95, 'WASTE', 'farmland', 'grain', 'thracian_cult', 'illyrian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Naissus', 21.90, 43.32, 1.05, 'WASTE', 'hills', 'silver', 'thracian_cult', 'thracian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Serdica', 23.32, 42.70, 1.00, 'WASTE', 'hills', 'grain', 'thracian_cult', 'thracian', 2, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Philippopolis', 24.75, 42.14, 1.00, 'WASTE', 'farmland', 'wine', 'thracian_cult', 'thracian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Novae', 25.40, 43.62, 1.05, 'WASTE', 'farmland', 'grain', 'thracian_cult', 'thracian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Tomis', 28.45, 44.17, 1.00, 'WASTE', 'coast', 'grain', 'hellenism', 'greek', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Sarmizegetusa', 23.20, 45.52, 1.15, 'WASTE', 'mountains', 'silver', 'thracian_cult', 'thracian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Napoca', 23.60, 46.77, 1.15, 'WASTE', 'hills', 'silver', 'thracian_cult', 'thracian', 1, 2, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- The Pontic steppe, the Tauric Chersonese and Sarmatia ----------------
+  P('Tyras', 30.05, 46.40, 1.00, 'WASTE', 'coast', 'grain', 'hellenism', 'greek', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Olbia', 31.80, 46.95, 1.10, 'WASTE', 'steppe', 'grain', 'hellenism', 'greek', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Chersonesus', 33.75, 44.85, 0.95, 'WASTE', 'coast', 'fish', 'hellenism', 'greek', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Panticapaeum', 36.10, 45.25, 0.95, 'WASTE', 'coast', 'grain', 'hellenism', 'greek', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  // The Asian side of the Kimmerian Bosporus needs its own seed: without one
+  // Panticapaeum's cell jumped the strait and the piece it took over there was
+  // nearly three times the size of the piece holding its own seed.
+  P('Phanagoria', 37.60, 45.10, 1.00, 'WASTE', 'marsh', 'fish', 'hellenism', 'greek', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Tauria', 34.30, 45.55, 1.00, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Tanais', 39.05, 47.30, 1.10, 'WASTE', 'marsh', 'fish', 'hellenism', 'greek', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Scythia', 32.50, 48.30, 1.80, 'WASTE', 'steppe', 'grain', 'steppe_cults', 'sarmatian', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Sarmatia', 38.00, 50.20, 2.00, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Borysthenia', 29.50, 51.50, 1.80, 'WASTE', 'marsh', 'timber', 'steppe_cults', 'sarmatian', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Roxolania', 43.50, 48.50, 2.00, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Aorsia', 49.50, 47.00, 1.90, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Rha', 45.00, 54.00, 2.20, 'WASTE', 'marsh', 'timber', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Hyperborea', 35.50, 55.50, 2.20, 'WASTE', 'marsh', 'timber', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Venedia', 26.50, 53.50, 1.60, 'WASTE', 'marsh', 'timber', 'steppe_cults', 'sarmatian', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Ripaea', 51.50, 53.50, 2.00, 'WASTE', 'hills', 'timber', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Ustyurt', 52.00, 43.50, 1.80, 'WASTE', 'wasteland', 'salt', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { impassable: true }),
 ];
 
 // ---------------------------------------------------------------------------
-// Height primitives (renderer; all coords lon/lat). 32 entries (max 32 — full).
+// Height primitives (renderer; all coords lon/lat). The cap is
+// MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, which is what
+// made this frame drawable at all: v5.4 had filled the old cap of 32 exactly,
+// so an extended map would have rendered the Alps, the Pyrenees and the Atlas
+// as flat plates with one console line to explain it. smoke104 holds the two
+// numbers together; validateMapData warns against the same 64.
 // ---------------------------------------------------------------------------
 
 const HEIGHT_PRIMITIVES = [
@@ -694,8 +1489,38 @@ const HEIGHT_PRIMITIVES = [
   { type: 'dome', c: [15.00, 37.73], r: 0.35, h: 1.00 },                     // Etna
   { type: 'ridge', a: [20.20, 40.60], b: [21.90, 38.70], h: 0.85, w: 0.70 }, // the Pindus
   { type: 'ridge', a: [35.50, 40.65], b: [41.20, 40.55], h: 0.90, w: 0.75 }, // the Pontic Alps
-  { type: 'ridge', a: [40.80, 42.50], b: [48.60, 41.60], h: 1.00, w: 0.90 }, // the Great Caucasus (clipped)
+  // The Caucasus was clipped by the old 42.5° top edge and drawn along it;
+  // with the frame past it, this is the range's real line.
+  { type: 'ridge', a: [39.90, 43.45], b: [48.30, 41.35], h: 1.00, w: 0.90 }, // the Great Caucasus
   { type: 'ridge', a: [48.80, 38.40], b: [53.30, 36.15], h: 1.00, w: 0.70 }, // the Alborz above Hyrcania
+  // --- v6.8: the mountains of the western and northern frame ---------------
+  { type: 'ridge', a: [6.00, 45.20], b: [13.60, 47.10], h: 1.00, w: 1.00 },  // the Alps
+  { type: 'ridge', a: [-1.70, 43.30], b: [3.10, 42.45], h: 0.95, w: 0.45 },  // the Pyrenees
+  { type: 'ridge', a: [5.90, 46.30], b: [7.60, 47.55], h: 0.55, w: 0.30 },   // the Jura
+  { type: 'dome',  c: [2.95, 45.20], r: 1.40, h: 0.70 },                     // the Massif Central
+  { type: 'ridge', a: [6.90, 47.90], b: [7.60, 49.10], h: 0.55, w: 0.28 },   // the Vosges
+  { type: 'dome',  c: [6.20, 50.25], r: 1.00, h: 0.40 },                     // the Arduenna silva
+  { type: 'dome',  c: [-3.40, 48.30], r: 0.95, h: 0.30 },                    // the Armorican massif
+  { type: 'ridge', a: [-7.00, 43.15], b: [-3.40, 43.05], h: 0.80, w: 0.40 }, // the Cantabrian range
+  { type: 'dome',  c: [-3.60, 40.60], r: 2.20, h: 0.55 },                    // the Iberian meseta
+  { type: 'ridge', a: [-6.10, 37.05], b: [-1.80, 37.45], h: 0.80, w: 0.45 }, // the Baetic range
+  { type: 'dome',  c: [-7.55, 40.30], r: 0.65, h: 0.60 },                    // the Herminian mount
+  { type: 'ridge', a: [-8.90, 31.00], b: [-3.40, 32.60], h: 0.95, w: 0.70 }, // the High Atlas
+  { type: 'ridge', a: [-5.40, 35.20], b: [1.60, 36.30], h: 0.60, w: 0.40 },  // the Rif and the Tell
+  { type: 'ridge', a: [-0.90, 33.60], b: [6.20, 35.10], h: 0.60, w: 0.50 },  // the Saharan Atlas and the Aures
+  { type: 'ridge', a: [-5.20, 56.50], b: [-3.20, 57.60], h: 0.75, w: 0.50 }, // the Caledonian highlands
+  { type: 'ridge', a: [-2.50, 53.20], b: [-2.25, 55.00], h: 0.50, w: 0.30 }, // the Pennine spine
+  { type: 'dome',  c: [-3.75, 52.50], r: 0.60, h: 0.55 },                    // the Cambrian mountains
+  { type: 'dome',  c: [14.00, 49.75], r: 1.30, h: 0.50 },                    // the Hercynian forest of Bohemia
+  { type: 'ridge', a: [19.00, 49.35], b: [25.50, 45.45], h: 0.90, w: 0.80 }, // the Carpathians
+  { type: 'ridge', a: [14.50, 45.85], b: [20.10, 41.95], h: 0.85, w: 0.60 }, // the Dinaric range
+  { type: 'ridge', a: [22.50, 43.05], b: [27.40, 42.75], h: 0.70, w: 0.40 }, // Haemus
+  { type: 'dome',  c: [24.40, 41.60], r: 1.00, h: 0.70 },                    // Rhodope
+  { type: 'ridge', a: [33.70, 44.60], b: [35.10, 44.95], h: 0.55, w: 0.25 }, // the Tauric range of the Chersonese
+  { type: 'dome',  c: [14.60, 57.20], r: 0.90, h: 0.35 },                    // the Scandian uplands
+  { type: 'dome',  c: [52.80, 43.60], r: 1.20, h: 0.35 },                    // the Ustyurt plateau
+  { type: 'dome',  c: [45.20, 53.20], r: 2.00, h: 0.22 },                    // the Volga upland
+  { type: 'dome',  c: [34.50, 55.40], r: 2.40, h: 0.18 },                    // the Valdai rise
 ];
 
 // ---------------------------------------------------------------------------
@@ -706,7 +1531,13 @@ export const MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project,
   // These mainland cells must contain their seed in a single land component.
   // The renderer repairs any weighted-Voronoi spill across the gulfs.
-  contiguousProvinces: ['Sinai Interior', 'Dizahab', 'Eilat'],
+  // v6.8 adds the narrow-water cells the new frame created. Each of these has
+  // a strait a few pixels wide on one side, and a weighted cell will happily
+  // step over one: measured before the repair, Tingis and Gades traded pixels
+  // across the Pillars, Cimbria and Selandia across the Little Belt.
+  contiguousProvinces: ['Sinai Interior', 'Dizahab', 'Eilat',
+    'Tingis', 'Gades', 'Cimbria', 'Selandia', 'Scandia', 'Panticapaeum',
+    'Caledonia', 'Hibernia', 'Durovernum', 'Gesoriacum'],
   // The Sinai peninsula is connected to both Africa and Arabia around the
   // heads of its gulfs, so component repair alone cannot stop a large
   // weighted cell leaking into mainland Egypt or Arabia. This envelope follows
@@ -726,7 +1557,13 @@ export const MAP_DATA = {
     ],
   },
   provinces: PROVINCES,
-  coast: { land: [MAINLAND, CYPRUS, BALKANS, CRETE, RHODES, ITALY, SICILY], lakes: LAKES },
+  // MAINLAND first: `onLand` and the ID pass both scan in this order, and it
+  // is the ring that answers for most of the frame.
+  coast: {
+    land: [MAINLAND, BRITAIN, HIBERNIA, SICILY, SARDINIA, CORSICA, CYPRUS,
+      CRETE, BALEARES, SCANDIA, DANISH_ISLES, RHODES],
+    lakes: LAKES,
+  },
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
   // Land ferries/bridges only — armies may walk these. (None at present.)
@@ -735,9 +1572,17 @@ export const MAP_DATA = {
   // (embark -> sail -> disembark). Kept as data for AI hints and tooltips.
   // v5.4 adds the three famous ferries of the new frame: Otranto (the via
   // Egnatia's sea leg), Messina, and the Bosporus.
+  // v6.8 adds the crossings of the western frame: the Channel, the Irish Sea,
+  // the Pillars of Hercules, the two Tyrrhenian islands, the Balearics, the
+  // African crossing from Sicily, and the Danish belts.
   seaLinks: [
     ['Salamis', 'Seleucia Pieria'], ['Paphos', 'Ptolemais'],
     ['Brundisium', 'Dyrrhachium'], ['Rhegium', 'Syracusae'], ['Byzantion', 'Nicaea'],
+    ['Durovernum', 'Gesoriacum'], ['Deva', 'Hibernia'], ['Dumnonia', 'Darioritum'],
+    ['Tingis', 'Gades'], ['Panormus', 'Carthago'], ['Caralis', 'Carthago'],
+    ['Aleria', 'Pisae'], ['Baleares', 'Tarraco'],
+    ['Cimbria', 'Selandia'], ['Selandia', 'Scandia'],
+    ['Panticapaeum', 'Phanagoria'],
   ],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
@@ -753,9 +1598,13 @@ const TERRAIN_KEYS = ['coast', 'farmland', 'hills', 'mountains', 'desert', 'dryl
 const GOOD_KEYS = ['grain', 'wine', 'olive_oil', 'dates', 'balsam', 'incense', 'purple_dye', 'glass',
   'papyrus', 'silver', 'salt', 'spices', 'timber', 'fish', 'livestock',
   'oil']; // modern-era good: assigned only by bookmark `goods` overlays (SPEC §52)
-const RELIGION_KEYS = ['judaism', 'samaritanism', 'hellenism', 'roman_cult', 'nabataean', 'zoroastrianism', 'egyptian'];
+const RELIGION_KEYS = ['judaism', 'samaritanism', 'hellenism', 'roman_cult', 'nabataean', 'zoroastrianism', 'egyptian',
+  // v6.8: the western and northern frame (SPEC §160). Base-atlas keys only —
+  // christianity, islam and the rest still arrive through bookmark overlays.
+  'druidic', 'germanic_cult', 'punic', 'thracian_cult', 'steppe_cults'];
 const CULTURE_KEYS = ['judean', 'galilean', 'samaritan', 'idumean', 'nabataean', 'arab', 'aramean',
-  'phoenician', 'greek', 'egyptian', 'roman', 'armenian', 'persian'];
+  'phoenician', 'greek', 'egyptian', 'roman', 'armenian', 'persian',
+  'celtic', 'iberian', 'mauri', 'germanic', 'thracian', 'illyrian', 'sarmatian'];
 
 function pointInPolygon(lon, lat, poly) {
   let inside = false;
@@ -788,8 +1637,13 @@ export function validateMapData() {
     if (provs.length > 512) {
       warnings.push(`province count ${provs.length} exceeds renderer cap 512`);
     }
-    if (MAP_DATA.heightPrimitives.length > 32) {
-      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 32`);
+    // MAX_HEIGHT_PRIMS in js/map/renderer.js. This file imports nothing by
+    // design, so the number is copied rather than read — and it was left at 32
+    // when §157 raised the renderer to 64, which meant the FIRST primitive
+    // this frame added would have been reported as over a cap that no longer
+    // existed. smoke104 asserts the two agree, so the copy cannot drift again.
+    if (MAP_DATA.heightPrimitives.length > 64) {
+      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 64`);
     }
 
     const names = new Set();

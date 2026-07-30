@@ -209,6 +209,17 @@ export const DEFINES = {
     // on. Grouped with the pagan cults, because that is what a census, a
     // governor and an owner's state church all counted them as.
     godfearers:     { name: 'God-fearers',           color: [150, 132, 120], group: 'pagan' },
+    // -- the western and northern frame (SPEC §160) --
+    // The map reaches Britain now, and a base atlas that called the Britons
+    // Roman-cult in 167 BCE would be lying in the one place the player can
+    // check. These are all `pagan` by group, which is the only claim the
+    // simulation makes of them: a Roman governor's province with one of these
+    // faiths is foreign-faith ground, and behaves like one.
+    druidic:        { name: 'Druidic Rites',         color: [104, 142, 92],  group: 'pagan' },
+    germanic_cult:  { name: 'Germanic Cults',        color: [128, 138, 156], group: 'pagan' },
+    punic:          { name: 'Punic Cults',           color: [176, 108, 76],  group: 'pagan' },
+    thracian_cult:  { name: 'Thracian Cults',        color: [148, 118, 168], group: 'pagan' },
+    steppe_cults:   { name: 'Steppe Cults',          color: [166, 152, 104], group: 'pagan' },
   },
 
   // Cultures: groups israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian
@@ -226,6 +237,18 @@ export const DEFINES = {
     roman:      { name: 'Roman',      color: [184, 70, 62],   group: 'latin' },
     armenian:   { name: 'Armenian',   color: [140, 78, 122],  group: 'armenian' },
     persian:    { name: 'Persian',    color: [158, 96, 176],  group: 'iranian' },
+    // -- the western and northern frame (SPEC §160) --
+    // Each takes its own group, which is the whole of what it does: unrest.js
+    // reads culture GROUPS, and a Gaulish province under a Roman owner should
+    // read as foreign-culture ground because it was. Carthage and the African
+    // coast keep `phoenician` — the colonists' own culture, already here.
+    celtic:     { name: 'Celtic',     color: [92, 152, 116],  group: 'celtic' },
+    iberian:    { name: 'Iberian',    color: [190, 154, 74],  group: 'iberian' },
+    mauri:      { name: 'Mauri',      color: [198, 132, 88],  group: 'libyan' },
+    germanic:   { name: 'Germanic',   color: [110, 128, 160], group: 'germanic' },
+    thracian:   { name: 'Thracian',   color: [156, 108, 176], group: 'thracian' },
+    illyrian:   { name: 'Illyrian',   color: [120, 140, 188], group: 'illyrian' },
+    sarmatian:  { name: 'Sarmatian',  color: [176, 160, 100], group: 'scythian' },
     // -- far eras (SPEC §22) --
     israeli:    { name: 'Israeli',       color: [40, 110, 200],  group: 'israeli' },
     arab_modern: { name: 'Arab',         color: [96, 140, 84],   group: 'arab_modern' },

@@ -8302,3 +8302,141 @@ coastline is.
   itself is verified in a browser and by screenshot comparison, because this
   bug passed 104 headless suites twice — once as a black map, once as a false
   conclusion about the driver.
+
+## 160. The frame reaches Britain, and two things the move broke on the way
+
+§159 closed the memory ledger and said the blocker was no longer memory but the
+coastline. The coastline is traced.
+
+**The frame.** lon 11°W–53.5°E, lat 23.5–58°N, at **6288 × 3975** — the same
+density every version since v5.0 has shipped (97.5 px/°lon, 115.2 px/°lat), so
+nothing measured in map units had to move. It holds the whole Roman world: the
+Maghreb and the Atlantic shore of Africa, Iberia, Gaul, Britain and Ireland,
+the Rhine and the Danube, the Baltic, the Pontic steppe with Crimea and the
+Maeotic lake, and the Caspian entire.
+
+Not the frame §156 costed. That one was lon −25..54 / lat 0..60 — 7702 × 6913,
+694 MB, and what the extra 368 MB buys is the Urals and the far side of the
+Sahara. This one is **326 MB**, and it reaches the home islands. Both numbers
+are computed in `smoke104`, so the next person to propose a frame gets
+arithmetic instead of a memory.
+
+**One ring, where there were three.** The old top edge at 42.5°N cut Europe
+apart above the Adriatic, so the atlas carried MAINLAND, BALKANS and ITALY as
+separate landmasses. At 58°N none of those cuts exist — Italy joins Gaul over
+the Ligurian shore, Gaul joins the Balkans over the Alps, and Europe joins Asia
+across the steppe north of the Black Sea. So the three merged into one ring of
+921 vertices, BALKANS reversed to match the others' handedness, and the
+Mediterranean became what it geographically is: an inlet, not an edge.
+
+That is the part with no undo, and it needed a tool, because a coastline is the
+one thing here that cannot be read from source. **`tools/coastcheck.mjs`** holds
+what a ring must be — simple, disjoint, closed, inside the frame — and
+rasterises the mask to a PNG so it can be *looked* at without a browser, a
+server and a WebGL context. A crossed ring fills inside-out over the crossed
+lobe and has no other symptom; every province seed still lands on "land", and
+every downstream suite stays green.
+
+**And the tracing has an error bar now.** `tools/coastfit.mjs` measures every
+vertex against a real coastline (Natural Earth 10m, fetched on demand — it is a
+measurement, not a gate). Median **1.7 km**, p90 9.2 km, over 921 vertices; one
+map pixel is about 1.1 km, so the median vertex is within two pixels of the
+real coast. It paid for itself immediately: Britain came back at median 1.8 km
+with a **46.6 km** worst vertex — the Tees an inland pixel, Cardigan Bay drawn
+fifty kilometres out to sea, the Mounth a whole Aberdeenshire west of itself.
+Corrected, Britain is median 1.4 km, p90 5.5, worst 12.4.
+
+Read the outliers before believing them. The largest miss on the map is 59 km
+at the head of the Persian Gulf, and it is *correct*: that is the 66 CE
+shoreline near Charax, and the Shatt al-Arab has built about that much delta
+over it since. Where this map is deliberately ancient, a big number means the
+reference is late.
+
+### The two things the move broke
+
+Neither was in the plan, and neither is about cartography. Both are the same
+shape: **a constant that was a fraction of something that moved.**
+
+**The Red Sea and the Persian Gulf stopped being seas.** `computeGeometry`
+decided open sea by size — "any id-0 component ≥1% of the map" — and 1% of a
+map that grew 2.8× is a threshold that grew 2.8× while the seas did not. At the
+new frame the Persian Gulf (16.9 sq°) and the Red Sea with both its gulfs (11.0
+sq°) fell under it and were silently reclassified as **lakes**: no coastal flag,
+no offshore anchor, no navy and no blockade from Charax to Berenice to Eilat.
+Nothing announced it. One assertion in `smoke30` caught it, by luck, because it
+happened to name Eilat's shoreline.
+
+The rule is now the one the comment always claimed: **open sea is water that
+runs off the frame**, plus a floor in square degrees rather than in map
+fractions. Both tests are scale-free, and measured across the change they
+classify every component identically on the old frame and the new one — the
+four seas all reach an edge, the five lakes are all landlocked and all under
+1 sq°.
+
+**Aqaba lost its shoreline.** The Gulf of Aqaba's head was drawn as a point, so
+the gulf tapered to ~3 px at 29.5°N, and whether Eilat and Aila touched salt
+water at all came down to which way the domain warp pushed the border. The warp
+is a function of absolute pixel position, so moving the frame moved its phase,
+and Jordan's only port quietly became inland. The head is drawn square now,
+about 5 km across with a town on either bank, which is what it is.
+
+### What is on the new ground, and what is deliberately not
+
+133 new cells: the Maghreb from the Syrtis Minor to the Atlantic, Hispania,
+Gaul with the Rhine and the Alpine provinces, northern Italy and the Tyrrhenian
+islands, Britannia and Hibernia, Germania and the Cimbric peninsula, the Danube
+and Thrace and Dacia, the Pontic steppe and the Tauric Chersonese. 22 new
+rivers, from the Rhenus and the Danuvius to the Rha and the Baetis. 27 new
+relief primitives into the slots §157 opened — the Alps, the Pyrenees, the
+Atlas, the Caledonian highlands, the Carpathians — bringing the atlas to 59 of
+the renderer's 64. Five new base religions and seven new cultures, because a map
+that reaches Britain and calls the Britons Roman-cult in 167 BCE is lying in the
+one place a player can check.
+
+Britannia, Caledonia and Hibernia are the always-on cells; the fourteen finer
+ones are latent beneath them, so 167 BCE gets an island and not a province list.
+
+**Ownership is WASTE, and that is the seam this stops at.** Rome held most of
+this ground in 66 CE, the base atlas's year — but the base owner is what every
+bookmark inherits unless its `owners` table overrides, so shipping these as ROM
+would hand Rome ninety-odd provinces in 167 BCE, 67 BCE, 40 BCE and every other
+chapter at once. That is not a cartography change; it is a balance change to
+eight tuned campaigns, and it belongs in its own section with its own harness
+run. Until then the west is on the map as what this game currently models it as:
+land, with people and produce on it, outside every state the chapters play.
+
+### The new blocker is boot time
+
+Memory is not it, and neither is the ceiling. The ID pass is one fullscreen draw
+over every texel against every seed: 25.0M × 307 here against 8.9M × 174 before,
+about five times the work. Measured on SwiftShader — a software rasteriser, the
+most conservative thing that will ever run this — against the pre-§160 tree in
+the same environment, same server, same Chromium:
+
+```
+                        before      after
+  start screen          17.5 s      74.4 s
+  live campaign         46.5 s     103.6 s
+```
+
+A real GPU does this in a fraction of it. But that is the number to beat next,
+and the fix is a spatial structure for the seed search rather than 307 linear
+distance tests per pixel.
+
+- **Regression contract**: `smoke104` pins the DENSITY rather than the width and
+  height — pinning 4046×2189 is what made it fail on a correct frame change —
+  and holds both memory ledgers as arithmetic, plus the renderer's
+  `MAX_HEIGHT_PRIMS` against the copy `validateMapData` checks (§157 raised one
+  and left the other at 32, which the first new primitive would have tripped).
+  `smoke27` asserts that 1948 activates *every* latent cell instead of counting
+  to 31 — 1948 is the full-resolution bookmark the geometry snapshot is dumped
+  from, so a latent cell missing from it has no geometry in any era, which is
+  exactly how the British cells came back with zero area. `smoke29`'s theater is
+  a region now, not a name list that would have grown by ninety. `coastcheck`
+  runs the ring invariants; `coastfit` measures the tracing.
+- **`smoke81` was luck.** It asserted the six-card Galilee arc on seed 7 of a
+  299-year all-AI run. Adding cells moves the RNG stream, and seed 7 stopped
+  being a lucky draw — but the pre-§160 tree fires 0 of 6 on seed 11, so the
+  assertion was always a claim about the seed rather than about the road. It
+  samples three seeds now and requires a majority; 5 of 6 sampled seeds run the
+  arc end to end.

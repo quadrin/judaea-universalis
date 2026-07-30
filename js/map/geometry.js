@@ -112,29 +112,47 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
   const coastal = new Array(N + 1).fill(false);
   const offshore = new Array(N + 1).fill(null);
   if (idArray && idArray.length >= W * H) {
-    // The map is land-framed (Anatolia, Armenia, Egypt, Arabia at the corners),
-    // so the Mediterranean is an INTERIOR sea: open sea = any id-0 component
-    // big enough that it cannot be a lake (the Med is ~a third of the map;
-    // the Dead Sea and Galilee are specks).
+    // Open sea = an id-0 component that RUNS OFF THE FRAME and is bigger than
+    // any lake. A landlocked pool is a lake however large; a body the frame
+    // clips is part of the world ocean however small its visible piece.
+    //
+    // This used to be a size test alone — "≥1% of the map" — and that is a
+    // fraction of something that changes. SPEC §160 grew the frame 2.8× and
+    // the threshold grew with it while the seas did not, so at the new frame
+    // the PERSIAN GULF (16.9 sq°) and the RED SEA with both its gulfs (11.0
+    // sq°) both fell under 1% and were silently reclassified as lakes: no
+    // coastal flag, no offshore anchor, no navy, no blockade from Charax to
+    // Berenice to Eilat. One assertion in smoke30 caught it, by luck, because
+    // it happened to name Eilat's shoreline.
+    //
+    // Both tests below are scale-free. Measured across the frame change, they
+    // classify every component identically on the old frame and the new one:
+    // Mediterranean-Atlantic, Caspian, Persian Gulf and Red Sea all reach an
+    // edge; Van, Urmia, Tatta, the Dead Sea and Galilee are all landlocked and
+    // all under 1 sq°. The area floor is in square degrees rather than pixels
+    // so it survives a density change too, not just a frame change.
     const sea = new Uint8Array(W * H); // 1 = open sea
     const seen = new Uint8Array(W * H);
-    const MIN_SEA_PX = Math.max(20000, (W * H / 100) | 0); // ≥1% of the map
+    const pxPerDeg2 = (W / (MAP_DATA.LON1 - MAP_DATA.LON0)) * (H / (MAP_DATA.LAT1 - MAP_DATA.LAT0));
+    const MIN_SEA_PX = Math.max(1, Math.round(2.0 * pxPerDeg2)); // 2 sq° — above every lake on this map
     const comp = new Int32Array(W * H); // scratch: current component's pixels
     for (let start = 0; start < W * H; start++) {
       if (idArray[start] !== 0 || seen[start]) continue;
       let n = 0;
+      let offFrame = false;
       comp[n++] = start;
       seen[start] = 1;
       for (let head = 0; head < n; head++) {
         const i = comp[head];
         const x = i % W, y = (i / W) | 0;
+        if (x === 0 || y === 0 || x === W - 1 || y === H - 1) offFrame = true;
         const tryPx = (j) => { if (idArray[j] === 0 && !seen[j]) { seen[j] = 1; comp[n++] = j; } };
         if (x > 0) tryPx(i - 1);
         if (x + 1 < W) tryPx(i + 1);
         if (y > 0) tryPx(i - W);
         if (y + 1 < H) tryPx(i + W);
       }
-      if (n >= MIN_SEA_PX) for (let k = 0; k < n; k++) sea[comp[k]] = 1;
+      if (offFrame && n >= MIN_SEA_PX) for (let k = 0; k < n; k++) sea[comp[k]] = 1;
     }
     const offX = new Float64Array(N + 1);
     const offY = new Float64Array(N + 1);

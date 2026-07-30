@@ -148,6 +148,57 @@ to this file. `tools/tests/dump-geometry.mjs` performs that Playwright boot,
 writes the snapshot, prints Sinai's measured bounds/neighbors, and leaves a
 Sinai screenshot in `/tmp`; any browser console works too.
 
+"Every latent cell is active in 1948" is a real invariant, not a description —
+`smoke27` asserts it. A latent cell missing from that bookmark's
+`activeProvinces` has no geometry of its own in ANY era: it comes back with zero
+area and no neighbours, and the only symptom is a suite that reads the snapshot
+reporting something odd elsewhere. Add a `latentParent` cell, add it there.
+
+Since v6.8 (SPEC §160) the boot is minutes, not seconds — the ID pass is one
+fullscreen draw over 25.0M texels against 307 seeds, and this runs on
+SwiftShader. Measured: 74s to the start screen, 104s to a live campaign,
+against 17s and 47s on the pre-§160 tree. The timeouts in `dump-geometry.mjs`
+are sized for that, so a slow dump is the frame's cost and not a flaky
+selector.
+
+## coastcheck.mjs — the coastline's invariants, and a picture of it
+
+    node tools/coastcheck.mjs            check, and write $JU_OUT/coast.png
+    JU_SCALE=3 JU_LAND_NAMES=MAINLAND,BRITAIN,... node tools/coastcheck.mjs
+
+`validateMapData()` checks province seeds against the polygons; nothing checked
+the polygons. MAINLAND is a single closed ring of ~900 points, and one
+mis-ordered pair anywhere in it makes the canvas fill flip inside-out over the
+crossed lobe — with every province seed still landing on "land" and every
+downstream suite still green. This holds simplicity (no segment crosses another
+in the same ring), disjointness (no landmass overlaps or nests inside another),
+closure, and frame containment — then rasterises the mask to a PNG so the
+result can be LOOKED at without a browser, a server and a WebGL context.
+
+Run it after any edit to `coast.land`. It is the cheap half of the loop; the
+browser is the expensive half.
+
+## coastfit.mjs — how far the drawn coastline is from the real one
+
+    curl -o /tmp/ne10m.geojson \
+      https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_coastline.geojson
+    node tools/coastfit.mjs /tmp/ne10m.geojson
+
+The coastline is hand-traced, and hand-tracing has no error bar. This puts one
+on it: for every ring vertex, the distance to the nearest real coastline
+segment, in kilometres and in map pixels, with per-landmass medians and the
+worst offenders named. At v6.8: median 1.7 km, p90 9.2 km over 921 vertices —
+one map pixel is ~1.1 km, so the median vertex is within two pixels.
+
+Deliberately NOT in `run-smoke.sh`: it needs a data file the repo does not
+carry, and its answer is a judgement rather than a pass/fail.
+
+READ THE OUTLIERS BEFORE FIXING THEM. The largest miss on the map is ~59 km at
+the head of the Persian Gulf and it is correct — that is the 66 CE shoreline
+near Charax, and the Shatt al-Arab has built roughly that much delta over it
+since. The reference is a modern coastline; where this map is deliberately
+ancient, a large number means the reference is late.
+
 ## tests/
 
 The full verification battery, in-repo (SPEC §33). `smoke*.mjs` are
@@ -207,6 +258,21 @@ and goes with the seeds. Accepted as of v6.3: 167 PAR BLEEDING ·
 66 PAR and/or AGR BLEEDING (come and go) · 132 JUD
 DEBT-SPIRAL,BLEEDING · 614 JUD/GHA BLEEDING and JUD SNOWBALL (all come
 and go) · 1948 none.
+
+Since v6.8 (the frame reaches Britain, SPEC §160): 133 cells were added to the
+atlas, all of them WASTE — no nation gained a province, and no war changed. But
+a bigger province list moves every province-ordered RNG draw, so which member
+of the accepted families shows up on a given run moved with it. The set did not
+grow; it got smaller. Measured on the same 8-year harness, before and after:
+
+    before   167 PAR + HAS BLEEDING · 67 SEL DEAD · 40 ATG BLEEDING
+    after    67 SEL DEAD + ITU BLEEDING · 614 JUD BLEEDING
+
+`ITU` is a new name in the list and belongs to the long-documented hovering
+class: Ituraea is ONE province (dev 9→11) carrying a 3,000-man host, income
+−0.5 → −0.1 (converging on break-even, not away from it) and treasury drifting
+60→26 over eight years. Self-limiting, no spiral, the ARM/PAR/ARI/HYR family.
+614 JUD BLEEDING is already accepted as coming and going.
 
 The SPEC §82–83 batch (supply lines, AI naval invasions, sandbox
 chapters) re-ran the full 8-year harness: the anomaly set came back a

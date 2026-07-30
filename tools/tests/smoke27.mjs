@@ -33,7 +33,22 @@ const ancientMap = buildProvinceMapping(MAP_DATA, BOOKMARK_66);
 const modernMap = buildProvinceMapping(MAP_DATA, BOOKMARK_1948);
 ok(ancientMap[childId] === parentId, 'ancient Safed cell resolves to Gischala');
 ok(modernMap[childId] === childId, '1948 Safed cell resolves to itself');
-ok(BOOKMARK_1948.activeProvinces.length === 31, '1948 activates all 31 modern cells');
+// v6.8 (SPEC §160): this counted to 31, which says nothing about what it
+// means and has to be edited every time a cell is added. The real contract is
+// that 1948 is the FULL-RESOLUTION bookmark — tools/geom-snapshot.json is
+// dumped from it precisely because every latent cell is active there, so the
+// snapshot carries each permanent cell's own geometry (tools/README.md). A
+// latent cell left out of this list has no geometry of its own in any era: it
+// comes back with zero area and no neighbours everywhere. Assert THAT.
+{
+  const active = new Set(BOOKMARK_1948.activeProvinces || []);
+  const missing = MAP_DATA.provinces.filter((p) => p.latentParent && !active.has(p.name));
+  ok(missing.length === 0,
+    `1948 activates every latent cell — the full-resolution bookmark (${active.size} of them`
+    + `${missing.length ? ', MISSING ' + missing.map((p) => p.name).join(', ') : ''})`);
+  const unknown = [...active].filter((n) => !MAP_DATA.provinces.some((p) => p.name === n));
+  ok(unknown.length === 0, '  and activates nothing that is not a cell (' + (unknown.join(', ') || 'clean') + ')');
+}
 
 const tinyMap = {
   MAP_W: 3, MAP_H: 1,

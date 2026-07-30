@@ -45,10 +45,29 @@ const modern = initGame({
 // frontiers by design (SPEC §53), unlike the theater's own deserts, which the
 // v4.3 rule keeps sovereign and open. The Sahara behind the Syrtic shore is
 // base-map wasteland in every era, like the deep deserts before v4.3.
-const SEALED_1948 = new Set(['Dyrrhachium', 'Phasis', 'Caucasian Albania', 'Sahara']);
+// v6.8 adds two more of the same two kinds, both of which happen to fall
+// inside the old frame: Garama is deep-Sahara waste like the Sahara cell
+// beside it, and Philippopolis is 1948 Bulgaria — the Iron Curtain, the same
+// closed frontier as Hoxha's Albania and the Soviet Caucasus above it.
+const SEALED_1948 = new Set(['Dyrrhachium', 'Phasis', 'Caucasian Albania', 'Sahara',
+  'Garama', 'Philippopolis']);
+// v6.8 (SPEC §160): the frame now reaches the Atlantic and Britain, and the
+// v5.4 carve-out was a name list — it would have had to grow by ninety names,
+// and by another handful every time the frame moved again. What it was really
+// saying is "outside the playable theater", so say that instead, in the one
+// unit that means it: THE THEATER IS THE PRE-§160 FRAME. Everything the new
+// frame added is outside it on exactly the rule that already covered Albania,
+// Colchis and the Sahara — and the four names above still stand, because they
+// are inside the old frame and sealed for their own reasons.
+const THEATER = { lon0: 12.0, lon1: 53.5, lat0: 23.5, lat1: 42.5 };
+const inTheater = (name) => {
+  const src = MAP_DATA.provinces[idOf(name) - 1];
+  return !!src && src.lon >= THEATER.lon0 && src.lon <= THEATER.lon1
+    && src.lat >= THEATER.lat0 && src.lat <= THEATER.lat1;
+};
 let unowned = 0; let walled = 0; let empty = 0;
 for (const p of modern.provinces) {
-  if (!p || SEALED_1948.has(p.canon)) continue;
+  if (!p || SEALED_1948.has(p.canon) || !inTheater(p.canon)) continue;
   if (p.owner === 'WASTE') unowned++;
   if (p.impassable) walled++;
   if (p.habitation === 'uninhabited') empty++;
