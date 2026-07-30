@@ -633,6 +633,29 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     return makeStub(MAP_DATA);
   }
 
+  // What this device will actually hold (SPEC §156). The 4096 ceiling every
+  // frame decision in this project has been made against was never measured —
+  // it lived as prose in map_data.js ("stays under the common 4096
+  // MAX_TEXTURE_SIZE floor") and `getParameter` was never called anywhere in
+  // the codebase. So the map has been sized against an assumption, on every
+  // device, since the beginning.
+  //
+  // Report it rather than act on it. Choosing a frame is a cartography
+  // decision, and the memory audit in §156 says the interesting frame does not
+  // fit in RGBA8 anyway; what this fixes is that nobody could see the number.
+  // A device that cannot hold the map we ship gets told so, once, instead of
+  // failing with an unexplained black screen.
+  const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) | 0;
+  const needTex = Math.max(W, H);
+  if (needTex > maxTex) {
+    console.warn('[map/renderer] this device reports MAX_TEXTURE_SIZE ' + maxTex
+      + ' but the map needs ' + needTex + ' (' + W + '\u00d7' + H + '); '
+      + 'the province-ID and relief passes will fail.');
+    showErrorDiv(canvas, 'This device supports textures up to ' + maxTex + 'px, but the map needs '
+      + needTex + 'px. The map cannot render here.');
+    return makeStub(MAP_DATA);
+  }
+
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   gl.disable(gl.DEPTH_TEST);

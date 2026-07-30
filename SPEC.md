@@ -8104,3 +8104,51 @@ that is a real finding this section does not fix.
   actually be crossed, the fighter rule matches rather than out-buys, and a
   court with full hangars lays another field while skipping the ones it holds,
   is building, or is losing.
+
+## 156. The ceiling was never measured
+
+`MAX_TEXTURE_SIZE` appeared exactly once in this codebase, as prose in
+`map_data.js`: *"4046px stays under the common 4096 MAX_TEXTURE_SIZE floor."*
+`gl.getParameter` was never called anywhere in `js/` or `main.js`. Every
+framing decision the project has made was made against an assumption, on every
+device, since the beginning — and nobody could see whether the assumption was
+even true.
+
+`initRenderer` now asks. It reports the device's real ceiling, compares it
+against `max(MAP_W, MAP_H)`, and a device that genuinely cannot hold the map is
+**told so** instead of failing to an unexplained black screen.
+
+**But the ceiling was never the binding constraint, and the audit is the
+finding.** The frame worth reaching — lon −25..54, lat 0..60, which brings in
+Britain, Iberia, north Africa and the Urals — does fit an 8192 ceiling at
+today's density, at **7702 × 6913** with no coarsening at all. That part of the
+proposal is correct.
+
+What it costs is not what a single-texture estimate says. `initRenderer`
+allocates **four** textures at full map size — `landTex`, `decorTex`, `idTex`,
+`heightTex` — and the two built from canvases carry mipmaps, a third again
+each. So:
+
+```
+                        today (4046×2189)      proposed (7702×6913)
+  four RGBA8 planes          158 MB                   948 MB
+  …with ID as RG8,
+    relief as R8             120 MB                   694 MB
+```
+
+Not 76 MB today and not 302 MB after. **948 MB is inside the range already
+rejected as unshippable for 16384**, and narrowing the province-ID plane to
+RG8 (an id fits in 16 bits) and relief to R8 saves 254 MB and still leaves 694.
+
+So raising the ceiling is not the unlock; it is the cheap half. The frame
+extension needs the texture *formats* reworked first, or a density that falls
+off outside the core, and that decision belongs before the cartography rather
+than after it — the coastline tracing is the expensive, irreversible part and
+should not be done twice.
+
+- **Regression contract**: `smoke104.mjs` — the query exists and gates on the
+  real number; the frame, density and long axis are read out of `MAP_DATA`
+  rather than written down; the renderer really allocates four full-size
+  textures with two mipmapped; and the two bills above are **computed**, so a
+  number that decides whether something ships cannot drift silently in a
+  comment the way the 4096 did.
