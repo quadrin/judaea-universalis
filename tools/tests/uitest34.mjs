@@ -10,6 +10,15 @@ import { startCloudMock } from './ju-cloud-mock.mjs';
 
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
+// SPEC §160: the start screen is gated on the province raster — main.js awaits
+// initRenderer() and computeGeometry() before showStartScreen() — and that pass
+// is one fullscreen draw over every texel against every seed. At the frame that
+// reaches Britain it is 25.0M x 307, about five times the pre-§160 work, and
+// these suites run on SwiftShader. Measured: 74s to the carousel against 17s
+// before. Every wait after it is unaffected (the nation cards land ~1s later),
+// so this one constant is the whole of the change.
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
 let failures = 0;
@@ -34,7 +43,7 @@ async function boot(ctxB) {
     await new Promise((res) => { const r = indexedDB.deleteDatabase('judaea-universalis'); r.onsuccess = res; r.onerror = res; r.onblocked = res; });
   });
   await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForSelector('.bm-card', { timeout: 60000 });
+  await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
   return { page, errors };
 }
 
@@ -69,7 +78,7 @@ ok(savedState.treasury === MARK, 'the campaign carries a mark the chapter start 
 // ------------------------------------------------- open it up to a friend --
 console.log('== host that save, not a new campaign ==');
 await host.goto(GAME, { waitUntil: 'networkidle' });
-await host.waitForSelector('.bm-card', { timeout: 60000 });
+await host.waitForSelector('.bm-card', { timeout: BOOT_MS });
 await host.locator('[data-ref="mp"]').click();
 await host.waitForSelector('#mp-lobby:not(.hidden)', { timeout: 60000 });
 await host.locator('[data-ref="host"]').click();

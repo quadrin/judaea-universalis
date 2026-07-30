@@ -9,6 +9,15 @@ import { createRequire } from 'module';
 
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
+// SPEC §160: the start screen is gated on the province raster — main.js awaits
+// initRenderer() and computeGeometry() before showStartScreen() — and that pass
+// is one fullscreen draw over every texel against every seed. At the frame that
+// reaches Britain it is 25.0M x 307, about five times the pre-§160 work, and
+// these suites run on SwiftShader. Measured: 74s to the carousel against 17s
+// before. Every wait after it is unaffected (the nation cards land ~1s later),
+// so this one constant is the whole of the change.
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 const GAME = 'http://127.0.0.1:8613/';
 
@@ -27,7 +36,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
 async function land() {
   await page.goto(GAME, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.bm-card', { timeout: 60000 });
+  await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 }
 async function startCampaign(dot) {
   await page.locator('.ss-dot').nth(dot).click();

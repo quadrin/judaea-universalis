@@ -302,6 +302,19 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
 
+## UI battery state (v6.8)
+
+Since SPEC §160 every suite carries `BOOT_MS` (default 240s, override with
+`JU_BOOT_TIMEOUT`) on its `.bm-card` wait. `main.js` awaits `initRenderer()`
+and `computeGeometry()` before `showStartScreen()`, so the carousel is gated on
+the province-raster pass: 74s at this frame on SwiftShader against 17s before.
+The old 20-second wait meant all 37 suites died on that one line before
+asserting anything. Everything after it is unaffected — the nation cards land
+about a second later — so this is the only timeout that moved.
+
+Budget accordingly: a full `run-ui.sh` on software GL is over an hour, mostly
+spent booting. Run the suites your change touches.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could

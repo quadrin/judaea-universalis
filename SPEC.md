@@ -8440,3 +8440,36 @@ distance tests per pixel.
   assertion was always a claim about the seed rather than about the road. It
   samples three seeds now and requires a majority; 5 of 6 sampled seeds run the
   arc end to end.
+
+### Two the first commit missed
+
+Both found after §160 shipped, both by asking a question the suites did not.
+
+**An army could walk from Gaul to Britain.** The Channel is ~0.6° wide at
+Dover and the ferry is a `seaLink`, but the weighted diagram bridged it three
+hundred kilometres west — where Armorica and the Belgic shore face each other
+across the widest part of it, `Condate` and `Venta Belgarum` came back
+*land-adjacent* on the real raster. Bonifacio did the same between Corsica and
+Sardinia. Neither shows up in `validateMapData`, which checks seeds; neither
+shows up in `coastcheck`, which checks polygons; and neither shows up in any
+suite, because a false adjacency is a perfectly ordinary-looking edge. What
+finds it is comparing every cross-landmass edge in the raster against the
+landmass each seed actually sits on — three pairs, of which Messina was already
+known and accepted. Both new ones are severed and both have ferries.
+
+**The whole browser battery stopped being runnable.** `main.js` awaits
+`initRenderer()` and `computeGeometry()` before `showStartScreen()`, so the
+bookmark carousel is gated on the full province-raster pass — 74s here against
+17s before — and all 37 suites wait for `.bm-card` on a 20-second timeout.
+Every one of them died on that line, identically, before asserting anything.
+The wait is one named constant now (`BOOT_MS`, 42 occurrences across 36 files);
+`uitest26` passes unchanged behind it, which is what says the failures were the
+timeout and not the frame.
+
+The real fix is not a longer timeout. It is that **nothing on the start screen
+needs the raster** — the carousel is a list of bookmarks, and the geometry is
+not wanted until a campaign begins. Deferring `initRenderer` past
+`showStartScreen` would make the start screen instant and put the cost behind a
+loading state where it belongs, and it is the same work as the seed-search
+optimisation above: the boot path is now the thing to fix, and it is not
+cartography.

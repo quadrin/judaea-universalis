@@ -3,8 +3,17 @@
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp/claude-0/-home-user-judaea-universalis/14e3ad23-6546-5a93-b028-f73783a98caf/scratchpad') + '/');
 const { chromium } = require('playwright');
+// SPEC §160: the start screen is gated on the province raster — main.js awaits
+// initRenderer() and computeGeometry() before showStartScreen() — and that pass
+// is one fullscreen draw over every texel against every seed. At the frame that
+// reaches Britain it is 25.0M x 307, about five times the pre-§160 work, and
+// these suites run on SwiftShader. Measured: 74s to the carousel against 17s
+// before. Every wait after it is unaffected (the nation cards land ~1s later),
+// so this one constant is the whole of the change.
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+
 async function pickBookmark(page, nameFrag) {
-  await page.waitForSelector('.bm-card', { timeout: 20000 });
+  await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
   for (let i = 0; i < 8; i++) {
     const cur = page.locator('.bm-card.current');
     const txt = (await cur.textContent()) || '';
@@ -28,7 +37,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
-await page.waitForSelector('.bm-card', { timeout: 20000 });
+await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 
 const cards = await page.locator('.bm-card').count();
 ok(cards === 8, 'eight bookmark cards: ' + cards);
@@ -188,7 +197,7 @@ await page.waitForFunction(async () => {
   return (await m.shelfList()).length > 0;
 }, null, { timeout: 15000 });
 await page.reload({ waitUntil: 'networkidle' });
-await page.waitForSelector('.bm-card', { timeout: 20000 });
+await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
 ok(await page.locator('.ss-continue').isVisible(),
   'a saved campaign offers Continue on the start screen');
 // The shelf itself, asked directly. The saves MODAL merges the local shelf

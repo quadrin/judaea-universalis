@@ -1580,13 +1580,21 @@ export const MAP_DATA = {
     ['Brundisium', 'Dyrrhachium'], ['Rhegium', 'Syracusae'], ['Byzantion', 'Nicaea'],
     ['Durovernum', 'Gesoriacum'], ['Deva', 'Hibernia'], ['Dumnonia', 'Darioritum'],
     ['Tingis', 'Gades'], ['Panormus', 'Carthago'], ['Caralis', 'Carthago'],
-    ['Aleria', 'Pisae'], ['Baleares', 'Tarraco'],
+    ['Aleria', 'Pisae'], ['Aleria', 'Turris Libisonis'], ['Baleares', 'Tarraco'],
     ['Cimbria', 'Selandia'], ['Selandia', 'Scandia'],
     ['Panticapaeum', 'Phanagoria'],
   ],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
-  severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus']],
+  // v6.8: two more, both measured on the real raster rather than guessed at.
+  // The Channel is ~0.6° at Dover and the diagram still bridged it 300 km west,
+  // where Armorica and the Belgic shore face each other across the widest part
+  // of it: Condate and Venta Belgarum came back land-adjacent, so an army could
+  // WALK from Gaul to Britain. Bonifacio is 0.13° and joined Corsica to
+  // Sardinia the same way. Both are ferries above, and neither is a land
+  // border.
+  severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus'],
+    ['Condate', 'Venta Belgarum'], ['Aleria', 'Turris Libisonis']],
 };
 
 // ---------------------------------------------------------------------------

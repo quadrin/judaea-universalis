@@ -10,6 +10,15 @@ import { startCloudMock } from './ju-cloud-mock.mjs';
 
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
+// SPEC §160: the start screen is gated on the province raster — main.js awaits
+// initRenderer() and computeGeometry() before showStartScreen() — and that pass
+// is one fullscreen draw over every texel against every seed. At the frame that
+// reaches Britain it is 25.0M x 307, about five times the pre-§160 work, and
+// these suites run on SwiftShader. Measured: 74s to the carousel against 17s
+// before. Every wait after it is unaffected (the nation cards land ~1s later),
+// so this one constant is the whole of the change.
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
 let failures = 0;
@@ -34,7 +43,7 @@ async function boot(ctxB, { playerKey, url } = {}) {
     if (k) localStorage.setItem('ju_player_key', k);
   }, playerKey || null);
   await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForSelector('.bm-card', { timeout: 60000 });
+  await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
   return { page, errors };
 }
 
@@ -173,7 +182,7 @@ ok(!shelf[0].includes(playerKey), 'the player code itself never left the browser
 
 console.log('== and is loadable from the title screen after a reload ==');
 await solo.goto(GAME, { waitUntil: 'networkidle' });
-await solo.waitForSelector('.bm-card', { timeout: 60000 });
+await solo.waitForSelector('.bm-card', { timeout: BOOT_MS });
 await solo.locator('[data-ref="saves"]').click();
 await solo.waitForSelector('#saves-panel .sv-row', { timeout: 60000 });
 ok(await solo.locator('.sv-row').count() === 1, 'the shelf shows the campaign');
@@ -227,7 +236,7 @@ offline.on('pageerror', (e) => offErrors.push(String(e)));
 await offline.goto('http://127.0.0.1:8613/?cloud=', { waitUntil: 'networkidle' });
 await offline.evaluate(() => localStorage.clear());
 await offline.reload({ waitUntil: 'networkidle' });
-await offline.waitForSelector('.bm-card', { timeout: 60000 });
+await offline.waitForSelector('.bm-card', { timeout: BOOT_MS });
 await offline.locator('[data-ref="saves"]').click();
 await offline.waitForSelector('#saves-panel', { timeout: 60000 });
 const offFoot = await offline.locator('.sv-cloudline').textContent();
