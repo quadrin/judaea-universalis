@@ -5011,7 +5011,7 @@ export const EVENTS_1948 = [
     options: [
       {
         label: 'Cross the Shatt al-Arab',
-        tooltip: 'Iraq declares war on Iran and puts two armies on the border; both states take a permanent The Longest War (−20% income, +2 unrest for Iraq; −15% income for Iran) and Iraq borrows to fight it. The Gulf loans are the debt behind everything Baghdad does next.',
+        tooltip: 'Iraq declares war on Iran and puts two armies on the border. Iraq has the equipment and the shallow bench: +12% army power, −15% manpower, −20% income, +2 unrest. Iran has the bodies and no officers left to use them: +60% manpower, −18% army power — one full pattern generation below what its tech says, which is what an executed officer corps and unmaintained American kit actually cost. And Iraq borrows: five Gulf loans, 15 talents a month, and they do not stop when the war does.',
         effects: guard('ev_i_iran_iraq_war:0', (ctx) => {
           const g = ctx.game;
           if (!alive(ctx, 'IRQ') || !alive(ctx, 'IRN')) return;
@@ -5025,14 +5025,33 @@ export const EVENTS_1948 = [
             inf: 5, cav: 2, name: 'The Northern Front',
             general: { name: 'Corps Command', fire: 2, shock: 2, maneuver: 2 },
           });
+          // The war was a draw on the starting line and the reason is specific:
+          // Iraq had the equipment, Iran had the bodies and the terrain, and
+          // neither could convert its advantage. Iraq used to get thirteen
+          // infantry, six cavalry and a fire-3/shock-3 general against an Iran
+          // with a manpower bonus and no military penalty at all, so of course
+          // it won. These are the two halves of the real asymmetry.
+          //
+          // `milPowerMult` is the same lever `genMult` pulls — it multiplies at
+          // exactly the point unit generation does — so 0.82 is not a fudge
+          // factor, it is one rung: UNIT_GENS gen 5 is mult 2.8 and gen 4 is
+          // 2.3, and 2.3/2.8 is 0.82. Iranian regiments fight a generation
+          // below their pattern, which is the thing to model.
           ctx.helpers.addTagModifier(ctx, 'IRQ', {
             id: 'the_longest_war', name: 'The Longest War', months: -1,
-            effects: { incomeMult: 0.8, unrestAll: 2, manpowerMult: 1.1 },
+            effects: { incomeMult: 0.8, unrestAll: 2, manpowerMult: 0.85, milPowerMult: 1.12 },
           });
           ctx.helpers.addTagModifier(ctx, 'IRN', {
             id: 'the_longest_war', name: 'The Longest War', months: -1,
-            effects: { incomeMult: 0.85, manpowerMult: 1.15 },
+            effects: { incomeMult: 0.85, manpowerMult: 1.60, milPowerMult: 0.82, reinforceMult: 1.35 },
           });
+          // The debt is the causal link to Kuwait, so it has to be a number the
+          // player can watch rather than a line of prose. Loans are the
+          // engine's own visible drain: LOAN_INTEREST_PER_MONTH is 3 talents
+          // each, the realm panel prints the count, and nothing clears them but
+          // repayment. By 1990 Baghdad genuinely cannot pay.
+          const iq = g.tags.IRQ;
+          if (iq) iq.loans = Math.min(5, (Number(iq.loans) || 0) + 5);
           ctx.helpers.adjust(ctx, 'IRQ', { treasury: -200, mar: 20 });
           g.flags.iranIraqWar = true;
           ctx.helpers.chronicle(ctx, 'war', 'Baghdad tears up the river treaty and crosses the Shatt al-Arab; the fortnight becomes eight years, and the loans that pay for it will send the army south next.');
@@ -5069,27 +5088,26 @@ export const EVENTS_1948 = [
     date: { y: 1991, m: 1 },
     world: true,
     major: true,
-    when: safeTrigger('ev_i_gulf_war:when', (ctx) => alive(ctx, 'IRQ') && alive(ctx, 'ISR')),
+    when: safeTrigger('ev_i_gulf_war:when', (ctx) =>
+      alive(ctx, 'IRQ') && alive(ctx, 'ISR') && !!ctx.game.flags.coalitionWar),
     decider: 'ISR',
     aiOption: 0,
     options: [
       {
         label: 'Sealed rooms — Israel does not answer',
-        tooltip: 'Iraq is broken by the coalition: −60% income, −40% manpower permanently, −2 stability, and Basra, Kirkuk and Uruk take +2 unrest for 60 months as the risings start. Israel: −15 martial points and Tel Aviv +1.5 unrest for 24 months, but +20 legitimacy and every friendly capital warms 25 — the restraint is the asset.',
+        tooltip: 'Israel stays out and the coalition fights the war: −15 martial points and Tel Aviv +1.5 unrest for 24 months, but +20 legitimacy and every friendly capital warms 25 — the restraint is the asset. Iraq is not broken by this card. It takes −1 stability and Five Weeks of Air (−25% reinforcement, −15% army power, 12 months) and then the war is fought on the map; if the coalition is thin, Baghdad can survive it.',
         effects: guard('ev_i_gulf_war:0', (ctx) => {
           const g = ctx.game;
           if (!alive(ctx, 'IRQ')) return;
-          ctx.helpers.adjust(ctx, 'IRQ', { stability: -2, legitimacy: -20, treasury: -300 });
+          // The outcome is NOT written down here (SPEC §153). The five weeks of
+          // air are a real bombardment modifier on a war that is already
+          // running; who wins it is the sim's to say, and the aftermath cards
+          // in the Gulf package ask which way it went.
+          ctx.helpers.adjust(ctx, 'IRQ', { stability: -1 });
           ctx.helpers.addTagModifier(ctx, 'IRQ', {
-            id: 'after_the_hundred_hours', name: 'After the Hundred Hours', months: -1,
-            effects: { incomeMult: 0.4, manpowerMult: 0.6, unrestAll: 1.5 },
+            id: 'five_weeks_of_air', name: 'Five Weeks of Air', months: 12,
+            effects: { reinforceMult: 0.75, milPowerMult: 0.85 },
           });
-          unrestAcross(ctx, 'IRQ', ['Charax', 'Arbela', 'Uruk'], {
-            id: 'the_risings_of_91', name: 'The Risings of \'91', months: 60, effects: { unrest: 2 },
-          });
-          for (const a of ctx.helpers.armiesOf(ctx, 'IRQ')) {
-            if (a && a.men > 0) a.men = Math.max(200, Math.round(a.men * 0.35));
-          }
           if (alive(ctx, 'ISR')) {
             ctx.helpers.adjust(ctx, 'ISR', { mar: -15, legitimacy: 20 });
             if (ctx.helpers.controls(ctx, 'ISR', 'Joppa')) {
@@ -5107,23 +5125,20 @@ export const EVENTS_1948 = [
       },
       {
         label: 'Answer the launchers ourselves',
-        tooltip: 'The same ruin falls on Iraq, and Israel goes to war with it: +20 martial points, −1,500 manpower, +1 war exhaustion, −15 legitimacy, and the friendly capitals cool 20 — an Israeli sortie over the western desert is exactly the picture Baghdad was firing for.',
+        tooltip: 'Israel enters a war that is actually being fought, alongside a coalition that is actually present: +20 martial points, −1,500 manpower, +1 war exhaustion, −15 legitimacy, and every coalition capital cools 20 — an Israeli sortie over the western desert is exactly the picture Baghdad was firing for, and now there is a coalition to annoy. Iraq takes the same −1 stability and Five Weeks of Air; the rest is the war.',
         effects: guard('ev_i_gulf_war:1', (ctx) => {
           const g = ctx.game;
           if (!alive(ctx, 'IRQ')) return;
-          ctx.helpers.adjust(ctx, 'IRQ', { stability: -2, legitimacy: -20, treasury: -300 });
+          ctx.helpers.adjust(ctx, 'IRQ', { stability: -1 });
           ctx.helpers.addTagModifier(ctx, 'IRQ', {
-            id: 'after_the_hundred_hours', name: 'After the Hundred Hours', months: -1,
-            effects: { incomeMult: 0.4, manpowerMult: 0.6, unrestAll: 1.5 },
+            id: 'five_weeks_of_air', name: 'Five Weeks of Air', months: 12,
+            effects: { reinforceMult: 0.75, milPowerMult: 0.85 },
           });
-          for (const a of ctx.helpers.armiesOf(ctx, 'IRQ')) {
-            if (a && a.men > 0) a.men = Math.max(200, Math.round(a.men * 0.35));
-          }
           if (alive(ctx, 'ISR')) {
             clearEventTruce(ctx, 'ISR', 'IRQ');
             if (!findWar(g, 'ISR', 'IRQ')) ctx.helpers.declareWar(ctx, 'ISR', 'IRQ', 'The Western Desert');
             ctx.helpers.adjust(ctx, 'ISR', { mar: 20, manpower: -1500, warExhaustion: 1, legitimacy: -15 });
-            for (const t of ['UK', 'ITA', 'GRC', 'TUR']) {
+            for (const t of ['UK', 'ITA', 'GRC', 'TUR', 'SAU', 'EGY', 'SYR']) {
               if (alive(ctx, t)) setOpinionDelta(g, t, 'ISR', -20);
             }
           }

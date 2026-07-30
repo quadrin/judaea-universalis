@@ -7870,3 +7870,91 @@ horizon, and **this pool exists for the campaign that has passed it.**
   `autorun.mjs` reports no new anomaly class — the run's flags move within the
   set `tools/README.md` already accepts, because adding cards shifts the RNG
   draw sequence downstream.
+
+## 153. The Gulf War was a number change
+
+Reported precisely: `ev_i_gulf_war` fired on 1991-01 if Iraq and Israel were
+both alive, and **that was the whole condition**. It then applied −60% income,
+−40% manpower, and shrank every Iraqi army to 35% of its men. There was no
+coalition, no invasion and no war. The player watched a modifier land.
+
+The worst case was the one that gave the shape away: an Iraq that took the
+1980 card's second answer and **never fought Iran** — no eight years, no Gulf
+loans, no debt, and therefore no reason on earth to go and take somebody's
+oil — was flattened in 1991 anyway, because it was 1991.
+
+**The chain the calendar was standing in for.** `events_1948_gulf.js` is nine
+cards, and every link is a condition:
+
+> the eight years → the debt → the wells → the coalition → the war
+
+Break any link and the rest does not happen. Keeping the river treaty in 1980
+means August 1990 never arrives. Accepting the creditors' schedule in 1990
+disarms Iraq and there is no November. Withdrawing from the coast in the
+autumn buys sanctions and a surviving, hostile regime. Digging in produces a
+war that is **actually fought on the map**.
+
+**The debt is a number now.** `t.loans` is the engine's own visible drain —
+`LOAN_INTEREST_PER_MONTH` is 3 talents each, the realm panel prints the count,
+and nothing clears them but repayment. Crossing the Shatt al-Arab takes Iraq to
+the five-loan ceiling, and the loans **survive the 1988 cease-fire**, which is
+the entire causal link to Kuwait. It used to be a line of prose and a one-off
+−200.
+
+**The coalition is the cast this chapter has.** There is no USA tag and there
+should not be; 1948 models Washington off-map by long-standing choice. So the
+thirty-five states assemble out of the on-map powers genuinely in the
+coalition — Saudi Arabia hosting, the United Kingdom, and Egypt and Syria, who
+between them sent some fifty thousand men to fight another Arab army. The
+American weight arrives as what the map can show: an airfield on the Gulf coast
+that was not there in the summer, wings standing on it, and a second echelon in
+December.
+
+**The Iran–Iraq war is a contest.** Iraq used to get thirteen regiments and a
+fire-3/shock-3 general against an Iran holding `manpowerMult: 1.15` and **no
+military penalty whatsoever**, and then the ordinary war sim ran. Of course it
+won. The asymmetry now runs both ways: Iraq has the equipment and the shallow
+bench (`milPowerMult: 1.12`, `manpowerMult: 0.85`), Iran has the bodies and no
+officers left to use them (`manpowerMult: 1.60`, `reinforceMult: 1.35`,
+`milPowerMult: 0.82`). That last number is not a fudge — `milPowerMult`
+multiplies at exactly the point `genMult` does, and UNIT_GENS gen 4 over gen 5
+is 2.3/2.8 = 0.82. Iranian regiments fight **one full generation below their
+pattern**, which is what an executed officer corps and unmaintained American
+kit actually cost.
+
+**A ceiling on how far Baghdad can push**, because the Shia south is why it
+could not hold Iranian ground: hold two Iranian core provinces and
+`ev_g_the_shia_south` offers occupation at a real price to the rear
+(−20% reinforcement, −15% morale, +2 unrest everywhere) or a pull-back to the
+frontier that trades the war aims for the country. The eight-year clock then
+fires in 1988 — a cease-fire on the starting line if neither capital fell, and
+a **different card** if one did, which sets `gulfDecided` so the 1990s play
+from a Gulf with one power in it instead of two.
+
+**The outcome is not written down.** Nothing in the package shrinks an army;
+the regression suite greps for exactly that. The aftermath **asks** which way
+it went: `ev_g_the_risings` fires when a coalition army is standing on Iraqi
+ground (or Baghdad's exhaustion has run the string out), and
+`ev_g_the_regime_holds` fires when nobody is and Iraq still holds the coast —
+a 1990s with a hostile regional power intact and everyone's fuel bill doubled,
+because `FUEL.importMult` is already 2 for a realm holding no oil. Both were
+interesting; only one used to be possible.
+
+`ev_i_gulf_war` keeps the Scud dilemma, which was the good part, and now gates
+on `coalitionWar`. Its five weeks of air are a real bombardment modifier
+(−25% reinforcement, −15% army power, 12 months) on a war already running,
+rather than a verdict.
+
+- **Regression contract**: `smoke102.mjs` — the package is on 1948 and nowhere
+  else; no card shrinks an army by hand and the old ruin is gone from the Scud
+  card; the Scud card cannot fire on the calendar alone; each of the four ways
+  to break the chain really breaks it; withdrawal is a real third road with a
+  surviving regime; **both** 1991 outcomes are reachable and mutually
+  exclusive; the Iran–Iraq asymmetry runs both ways and the Iranian penalty is
+  one UNIT_GENS rung to two decimal places; the overreach ceiling is shut on
+  the frontier and open inside Iran; every option of every card resolves clean;
+  and thirteen years are walked month by month through the real scheduler
+  without a guarded failure. `smoke72.mjs` §97 was **updated, not deleted**:
+  its old assertion — *a hundred hours undo eight years of army* — encoded the
+  behaviour this section removes, and now asserts the new contract, that the
+  army is untouched and the bombardment is on the books.

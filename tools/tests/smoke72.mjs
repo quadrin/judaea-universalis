@@ -272,11 +272,20 @@ console.log('== §97: the uprisings, the Gulf, and the letters ==');
   ev('ev_i_iran_iraq_war').options[0].effects(ctx);
   ok(!!warBetween(ctx, 'IRQ', 'IRN') && !!game.flags.iranIraqWar,
     'Baghdad crosses the Shatt al-Arab');
+  // SPEC §153 — the hundred hours are no longer a number change. This card
+  // used to shrink every Iraqi army to 35% of its men on the calendar; the
+  // outcome now belongs to a war that is actually fought, and the aftermath
+  // cards in the Gulf package ask which way it went. What the Scud card owes
+  // the player is the bombardment and the choice, not the result.
+  game.flags.coalitionWar = true;
   const before = ctx.helpers.armiesOf(ctx, 'IRQ').reduce((s, r) => s + r.men, 0);
   ev('ev_i_gulf_war').options[0].effects(ctx);
   const after = ctx.helpers.armiesOf(ctx, 'IRQ').reduce((s, r) => s + r.men, 0);
-  ok(after < before * 0.5 && !!game.flags.gulfWar,
-    'a hundred hours undo eight years of army');
+  ok(after === before && !!game.flags.gulfWar,
+    'five weeks of air do not decide the war by fiat (army untouched: '
+    + before + ' → ' + after + ')');
+  ok((game.tags.IRQ.modifiers || []).some((m) => m.id === 'five_weeks_of_air'),
+    'but the bombardment is real and on the books');
   ok(!warBetween(ctx, 'ISR', 'IRQ'),
     'and the sealed rooms keep Israel out of the war it was fired at');
   ev('ev_i_oslo').options[0].effects(ctx);
