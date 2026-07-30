@@ -7773,3 +7773,100 @@ The chapter now charts **five forks and fourteen roads, none of them open**, and
   `smoke83.mjs` reads the new file for markers, `smoke85.mjs` holds it to the
   package contract, and `smoke94.mjs` now asserts the chapter declares nothing
   open rather than asserting it declares five.
+
+## 152. Twenty-three years of weather: the shelf a finished chapter leaves
+
+Reported as boredom, which is the hardest kind of bug to act on until you
+count it. The game ships **645 cards and 623 of them fire once.** Fifteen
+repeat; twelve of those are the generic pool; and every one of the twelve is
+something that happens **to** a realm — the rains fail, a comet is read, the
+earth moves, raiders cross the border. They are weather.
+
+That is fine while a chapter is running, because the scripted chain is the
+game and the pool is the murmur underneath it. It stops being fine the moment
+the chain runs out, and then the murmur **is** the game: a twelve-card deck
+dealt at roughly two a year to a player who has seen all twelve.
+
+The part worth stating plainly is that **playing well makes it worse.** The
+chapters end where the sources end. The kingdom does not. A player who outruns
+history reaches the empty shelf sooner than one who does not, which means the
+game's own reward for competence is the thinnest content it has.
+
+**So the fix is not more weather.** `events_statecraft.js` is twenty
+repeatable cards of the other kind — the decisions a state's own success
+produces. Nothing in it is an omen. Every card is somebody in the player's own
+service asking for a ruling that only exists because the conquests worked: the
+collectors, the garrisons, the conquered cities, the client courts, the
+veterans of a war that is over, and a priesthood that has become worth buying.
+
+**Three bands, and no dates anywhere in the file.** There is no year in which
+a realm acquires an administration; there is a size at which it must have one.
+
+- **A court and collectors** (4–19 provinces, two years in). Judges who
+  disagree about ancestral custom, a garrison nobody has paid, a tithe that
+  came in short, a second city that would like a charter, four standards of
+  weight in one market, a land register coming apart at the folds, a road that
+  can be mended or moved.
+- **Ruling people who are not yours** (10+ provinces, 3+ of another faith). A
+  shut temple whose city has petitioned properly this time, a contractor
+  bidding for a province's taxes, a client king dead with three claimants, the
+  language the chancery publishes in, a city billing you for its billets, and
+  whose likeness — if any — goes on the coin.
+- **Nobody left to fight** (18+ provinces, at peace, an army in being).
+  Historically the most dangerous band there is: veterans to settle, keep or
+  hire out; a diaspora that writes as though you were a power; a High
+  Priesthood that has become an auction; a prophet in the desert whom arresting
+  would not disperse; a muster roll where half the men have never fought; a
+  frontier that has not paid for eleven years; a household that has become a
+  hereditary administration.
+
+Band one **closes at twenty provinces**, which is the half of the banding that
+does real work: a short tithe is not an empire's problem, and a realm that has
+grown past a question should stop being asked it.
+
+**A shared package cannot name a faction.** Every chapter names its own court,
+and `factionShift` against an id the bookmark never defined is a silent no-op
+that reads as content — the exact failure class §125's suite was written to
+catch. So the file names **roles** — strict, worldly, soldiers — and carries
+one table mapping every playable court in the game to its three seats. The
+table runs deliberately ahead of `playableTags`, covering the Seleucid Friends
+of the King, the Senate and the Church as well, because a tag reachable by
+forming or switching must not draw cards whose politics do nothing. The 167
+pair are named at their **early** ids on purpose: `seatedHeir` walks
+`succeeds`, so 'hasideans' resolves to the Pharisees after 140 without this
+table having to know the room changed.
+
+**One voice at a time.** Twenty repeatable cards on generic-pool odds would be
+a queue, not a texture. Every option writes the month the pool may next speak
+into one shared key, so the whole package behaves as a single channel with a
+nine-month silence after any answer, on top of each card's own multi-year
+cooldown. Measured over a rich twenty-one-year peace in 167: **~17 statecraft
+cards, 10–11 of them distinct, beside ~30 generic** — and a different set per
+seed, which is the replay-divergence the backlog asked for.
+
+**What is deliberately absent.** Whether to force the conquered to convert is
+already asked, properly and once, as a standing policy by
+`ev_a_what_these_people_now_are` (§130). A repeatable version would let a
+player re-litigate Hyrcanus's ruling every four years, which is the opposite
+of what that card is for.
+
+Every card carries `maxYear: 1799` for the same reason the generic and
+annexation pools do, and here it is load-bearing rather than decorative: §121
+retires an undated triggered card the year its chapter passes the generation
+horizon, and **this pool exists for the campaign that has passed it.**
+
+- **Regression contract**: `smoke101.mjs` — the pool is on all seven antique
+  shelves and none of 1948; every card really repeats, is really bounded, and
+  outlives the latest antique horizon; every seat the role table names exists
+  in the bookmark it claims, for every playable court; no dead or mis-scoped
+  modifier key, with both vocabularies read out of the sim rather than listed
+  in the test; every option of every card resolves clean in every court,
+  records itself, and hushes the pool; every tooltip that mentions talents
+  moves exactly that many, checked **behaviourally**, because `guard()` means
+  the option's own source says nothing about what it does; the bands gate on
+  size rather than the calendar, including band one closing and an army with a
+  war to fight not being idle; and twenty-one years of peace through the real
+  scheduler deal at least six different cards without one guarded failure.
+  `autorun.mjs` reports no new anomaly class — the run's flags move within the
+  set `tools/README.md` already accepts, because adding cards shifts the RNG
+  draw sequence downstream.

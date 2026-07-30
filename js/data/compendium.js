@@ -47,6 +47,7 @@ import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { GENERIC_EVENTS } from './events_generic.js';
 import { EVENTS_ANNEX } from './events_annexation.js';
 import { EVENTS_DAVID } from './events_house_of_david.js';
+import { EVENTS_STATECRAFT } from './events_statecraft.js';
 
 // The shared pool every ANTIQUE chapter plays (SPEC §126). The omens and the
 // annexation question travel together: both are keyed on the player rather
@@ -60,7 +61,14 @@ import { EVENTS_DAVID } from './events_house_of_david.js';
 // that can proclaim it must also offer a road to the title. Keyed on the
 // player's own religion like the annexation question, so it stays shut for
 // the Keepers, who reject the claim outright and have no king in their Torah.
-const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, GENERIC_EVENTS);
+// Statecraft travels with them (SPEC §152): the generic pool is twelve cards
+// about weather, and once a chapter's scripted chain has run out it is the
+// whole remaining game. This pool is the other half of the murmur — the
+// decisions a state's own success produces, banded by how large the player has
+// grown rather than by year, so a campaign that outruns its sources still has
+// something to answer. Antique-only for the same reason the annexation
+// question is: tax farmers and desert prophets do not belong to 1948.
+const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, EVENTS_STATECRAFT, GENERIC_EVENTS);
 
 export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):

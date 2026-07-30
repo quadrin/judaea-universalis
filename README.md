@@ -116,6 +116,17 @@ static site, the zero dependencies, or the missing build step changes.
   screen alone, where campaigns are chosen rather than fought.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
+- **Statecraft**: twenty repeatable decisions that arrive because you rule, not because the
+  weather turned — and they open as the realm grows. A small state argues about judges who
+  disagree on ancestral custom, a garrison nobody has paid, and a second city that wants a
+  charter. A larger one rules people who are not its own: a shut temple whose city petitions
+  every year, a contractor bidding to farm a province's taxes, a client king dead with three
+  claimants, and whose likeness — if any — goes on the coin. A realm with no enemy left faces
+  the most dangerous questions it will ever face: what to do with veterans who have no war, a
+  diaspora that writes as though you were a power, a High Priesthood that has become an
+  auction, and a prophet in the desert whom arresting would not disperse. Every one has two
+  or three answers with a real price on both sides, and the whole pool speaks as one channel
+  so a campaign that has outrun its own chapter still has something to answer.
 - A war overview (score broken into battles / occupation / war goal / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and the saved-campaign shelf.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID
