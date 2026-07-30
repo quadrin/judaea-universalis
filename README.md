@@ -268,7 +268,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 67 headless sim suites and 31
+  marching. The full verification battery — 106 headless sim suites and 37
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
