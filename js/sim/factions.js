@@ -9,6 +9,7 @@
 
 import { num, clamp, contentForTag } from './military.js';
 import { fireEvent } from './events.js';
+import { influenceScale, registerSeatSource, registerApprovalSource } from './estates.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -78,6 +79,15 @@ function activeDefs(ctx, tag) {
   if (!t || !t.alive || t.ai) return null;
   return factionDefs(ctx, tag);
 }
+
+// `estates.js` needs to know which parties sit at a court to give them ground,
+// and it must not import either political engine to find out (both of them
+// call IT). So each engine hands its own seat list over on load. The player's
+// court registers first and therefore answers first, which is correct: a tag
+// the bookmark has authored estates for is that tag's real court, and the
+// generated archetypes are only for the ones it has not.
+registerSeatSource((ctx, tag) => activeDefs(ctx, tag));
+registerApprovalSource((ctx, tag, fid) => factionApproval(ctx, tag, fid));
 
 // Seed (or heal) the approval table: unknown ids start at their def's `start`.
 export function ensureFactions(ctx, tag) {
@@ -292,17 +302,23 @@ export function monthlyFactions(ctx) {
       const boonId = 'faction_' + def.id + '_boon';
       const baneId = 'faction_' + def.id + '_bane';
       const profile = effectProfile(app);
+      // …times what this party actually holds of the realm (SPEC §167). An
+      // estate whose ground you do not rule is an estate whose mood barely
+      // reaches the ledger; one that holds half your development is one you
+      // cannot ignore at any approval. This is the line that makes taking the
+      // Greek coast an act of domestic politics rather than map-painting.
+      const weight = influenceScale(ctx, tag, def.id);
       setFactionModifier(t, boonId, profile.kind === 'boon' && def.boon ? {
         id: boonId,
         name: (profile.scale < 1 ? 'Loyal: ' : '') + (def.boon.name || def.name + ' Devoted'),
         months: 2,
-        effects: scaledEffects(def.boon.effects, profile.scale),
+        effects: scaledEffects(def.boon.effects, profile.scale * weight),
       } : null);
       setFactionModifier(t, baneId, profile.kind === 'bane' && def.bane ? {
         id: baneId,
         name: (profile.scale < 1 ? 'Discontent: ' : '') + (def.bane.name || def.name + ' Hostile'),
         months: 2,
-        effects: scaledEffects(def.bane.effects, profile.scale),
+        effects: scaledEffects(def.bane.effects, profile.scale * weight),
       } : null);
       // The demand: one card per faction per two years, never two at once.
       if (app <= FACTION.demandAt && def.demand) {

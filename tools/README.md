@@ -768,3 +768,26 @@ being empty — a shared modal holds other people's cards. And when a test waits
 storage, wait for the **write to land**: `doSave` is async and a reload issued
 straight after `saveRequest` aborts it, which a fixed `waitForTimeout(300)` lost
 intermittently and invisibly.
+
+Since v6.9 (SPEC §163–§169: foreign courts, intrigue, standing, institutions,
+estate geography, ages, and the sacred systems) the seeded trajectories moved
+again, for two reasons worth separating.
+
+The first is ordinary stream drift. `courts.js` raises risings, `ages.js`
+starts unions, and `institutions.js` changes when the AI can afford its next
+tech level — so every province-ordered draw downstream lands differently, and
+the small-realm bleeders drift on and off the line exactly as ARI/HYR and
+ARM/PAR always have. Accepted as of v6.9: 167 PAR BLEEDING · 67 ROM SNOWBALL +
+SEL DEAD · 40 HER and/or ATG BLEEDING-or-DEBT-SPIRAL · 66 AGR BLEEDING (a
+two-province client, the ARM class) · 132 none · 529 JUD DEAD (by design,
+§162) + SAM DEBT-SPIRAL + GHA BLEEDING · 614 none · 1948 none.
+
+The second was not drift and is worth remembering. The first draft of §166 gave
+every institution a list of stat modifiers and handed them to every court on
+the map at seed. The harness caught it in one run — 167 BCE went from a clean
+sheet to an all-AI Hasmonean Judaea tripling its size in eight years — and a
+three-way bisect (institutions alone, courts alone, standing alone) put the
+entire change on the modifiers rather than on the tech price. **Run the bisect
+before believing a single-system explanation**: turning one system off does not
+restore the baseline when the others are still perturbing the RNG stream, which
+is exactly what made the first two attempts at that diagnosis wrong.

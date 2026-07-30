@@ -8612,3 +8612,346 @@ always simply there — and it makes the fork at Caesarea cost something.
   town rather than Jerusalem. A new section holds the formation itself: only
   option 0 of the praetorium sets `galileeRestored` and only option 0 names the
   four towns — the two that answer alone must not.
+
+## 163. Nobody else had a court
+
+`js/sim/factions.js` says it in its own header, and has since §34: "Player-only,
+the same rule as ultimatums: AI realms keep their politics offstage." One line
+enforces it — `activeDefs` returns null for every tag that is not
+`g.playerTag` — and everything downstream inherits the silence.
+`factionApproval` reads null for Antioch. `shiftFaction` is a no-op against
+Rome. `monthlyFactions` returns on its first statement for thirty-nine of the
+forty courts on the map.
+
+The consequence is not that foreign courts were simple. It is that nothing bad
+could ever happen inside one **for reasons of its own**. Bankruptcy and a dead
+king were the only two internal clocks the world had, and both were written for
+everybody. Otherwise a foreign power was a treasury, an army, an opinion score
+and an aggression multiplier, and the only thing that ever went wrong for it
+was the player.
+
+**So every court that is not the player's now convenes too, in `js/sim/courts.js`.**
+Not the same machinery: the bookmarks' estates are hand-authored, era-windowed
+constituencies with boons, banes, demand cards and an appeasement price, and
+handing that to forty tags would mean authoring three hundred estates and
+putting the player's carefully-priced modifier stream on every throne in the
+game. A foreign court is a cheaper thing on identical arithmetic — two or three
+parties by constitution (a monarchy has the King's Men, the Great Houses and
+the Soldiers; a republic has the Senate, the People and the Legions; a
+theocracy and a tribal confederation have their own), approval 0–100, the same
+four bands at the same four numbers, drifting monthly on signals the engine was
+already computing: stability, legitimacy, war exhaustion, whether the army is
+paid, land lost this year, land under somebody else's boot.
+
+What the bottom of that scale produces is not a modifier. It is an event in the
+world, on a pressure clock, escalating:
+
+- **a policy reversed** — aggression collapses, the angriest grudge warms a
+  step, and a court that was coming for somebody stops
+- **the court purged** — the ruler is removed through the ordinary §98
+  succession, so an heir inherits, a republic holds an emergency election, and
+  a court with nobody named gets the full crisis
+- **a province defects** — to a neighbour of its own faith or people, or under
+  its own banner through the §87 rising machinery
+- **a civil war** — hosts in the field against the throne
+
+Every one is chronicled and carried by a "News from abroad" toast, and the
+foreign court's own panel shows the bars that produced it. The player did not
+cause it and cannot be blamed for it, which is exactly what makes it worth
+watching for.
+
+**Two numbers this cost, both found by running it.** The first draft used
+`factions.js`'s flat ±0.3 regression toward 50. That is correct for
+hand-authored drift rules written against a flat pull — the author keeps them
+under 0.3 and steers with scripted shifts — but generated rules cannot stay
+under a cliff they cannot see, and a stable solvent realm drifts about +0.6.
+Every court on the map sat pinned at 100 within a decade. Regression is now
+proportional (`50 + drift/0.04`), which has no cliff: a good year rests a court
+at loyal, one thing wrong rests it at discontent, and only an unpaid army in a
+losing war reaches hostile.
+
+The second was worse and the balance harness caught it. With the first draft's
+thresholds the Seleucid Empire lost ten provinces in the first eight years of
+the 167 chapter and the all-AI Maccabees went from three provinces to eleven
+without declaring a single war. A chapter's opening is balanced against the
+antagonist it was authored with; a system that quietly dismantles that
+antagonist is not adding drama, it is rewriting the scenario. The clock is now
+once-a-generation rather than once-a-decade, thresholds scale with realm size
+(an empire absorbs discontent that would tear a kingdom apart), and nothing
+fires at all during the first six years of a chapter.
+
+- **Regression contract**: `smoke105` asserts courts convene at five or more
+  foreign capitals and at none of the player's; that the bars spread across
+  bands rather than saturating; that no outcome fires inside the grace period;
+  and that over ninety years the world's courts do produce the authored ladder.
+
+## 164. Half the pleasure of a rival's civil war is having caused it
+
+The diplomacy a player could do to a foreign court was a closed list: subsidise,
+guarantee, rival, league against, take as a client, or fight. Every one is a
+transaction between two rulers conducted in daylight. None of them reaches
+inside the other court.
+
+Which is a strange hole for this period, because reaching inside somebody
+else's court is most of what happened in it. The Pharisee rebels invited
+Demetrius III to invade their own country. Antipater ran Hyrcanus for twenty
+years. Both Hasmonean brothers sent money to Rome and Scaurus took four hundred
+talents from one of them. Herod bought a Senate. All of it is in this game
+already — as scripted cards, fired on dates, with the player watching. The verbs
+existed in the fiction and not in the hands.
+
+**`js/sim/intrigue.js` puts three of them in the hands**, priced in influence
+and gold and aimed at a named party at a named foreign court, which §163 has
+now given every court to aim at:
+
+- **Patronize** — raise a party. Cheap, open, deniable; their court warms to you
+  slightly. This is how you buy a friendly neighbour without a treaty.
+- **Subvert** — lower a party. This is the one that matters, because §163's
+  pressure clock counts hostile parties: a court you have been paying against
+  for a decade reverses its policy, then loses its ruler, then loses a province,
+  then comes apart. A third of the time the letters are intercepted, and then it
+  is public, expensive, and remembered.
+- **Back a claimant** — not a nudge. It opens the §98 succession crisis at the
+  stage where the houses married into theirs discover an interest in their
+  constitution, and where the throne is already weak it puts a banner in the
+  field. Caught at that, you are not a rival; you are an enemy.
+
+Two rules the whole file obeys. You cannot reach a court you have no way of
+reaching — a shared border, a war, a treaty, or the target being one of the
+powers everybody has heard of (§165). And this is the **player's** verb: the AI
+runs no operations against the player or against each other, for the same
+reason it raises no punitive coalitions (§59). An unseen system quietly
+wrecking your court is not a mechanic, it is a bug report. What the AI gets
+instead is §163 — courts that come apart honestly, whether or not anybody paid.
+
+- **Regression contract**: `smoke105` asserts subversion moves the target party
+  and then cools the channel; that patronage moves it the other way; that we
+  cannot run agents in our own court or against rebels; and that an empty purse
+  buys nobody.
+
+## 165. Am I winning
+
+There was a ledger listing every nation with its numbers, and up to two rivals a
+player could name. There was no answer anywhere to "am I winning" that did not
+require reading a table and doing the arithmetic — and, more to the point, no
+answer the **world** had. Nothing in the sim knew that Rome was the biggest
+thing on the map and Characene was not. Every court weighed every other court by
+the only number it had: how many men are in the field this month.
+
+`js/sim/standing.js` scores each living court quarterly on development (weighted
+down for land somebody else's army is standing on, per §146), income, army,
+technology and the clients that answer to it, and ranks them. The top seats are
+the powers of the age — at most eight, and **never more than half the room**,
+because a chapter with nine courts in it has no top eight, and the first draft
+cheerfully told a sixth-of-nine Judaea it was one of the powers, which is
+exactly the flattery a standing table exists to refuse.
+
+Three uses, and no more. The realm panel prints "6 of 9 · minor" so the player
+knows what kind of game they are in. `deference()` returns the extra margin a
+court wants before starting a war with someone above it, wired into the one
+place in `ai.js` that decides an opportunistic declaration as a multiplier on
+the ratio it already computes — so a border kingdom with a lucky levy stops
+treating an empire as a fair fight. And everyone has heard of the courts at the
+top table, which is what lets §164's agents work in a capital they do not
+border.
+
+It is not score. Nobody wins by being first; the bookmarks keep their own
+victory contracts and this number appears in none of them.
+
+## 166. Nothing made anyone structurally behind
+
+Technology was three ladders bought with monarch points, capped per era, priced
+by one formula over a level and a baseline. Nothing in it knew where anybody
+was. Judaea climbed the same stairs as Rome at the same conceptual rate, and the
+only reason Judaea was behind was that Judaea had fewer points.
+
+"Behind" is not a point total in this period. It is a place. The Greek way of
+running a government arose in Alexandria and Antioch and spread outward from
+them, and a kingdom in the hills was behind because of where the hills were —
+and could stop being behind by adopting something, at a price its own people
+would make it pay. A game about the second century BCE that cannot represent
+that is missing its own subject.
+
+**Thirteen institutions** (`js/data/institutions.js`) are born in a place in a
+year and spread province by province — faster inside one realm, faster into a
+rich province, faster once the world is already doing it, and along the trade
+routes, which is how the chancery actually reached Judaea rather than walking
+fifteen cells at five years a cell. A realm may **embrace** one once a third of
+its development knows it. Every institution alive in the world that a realm has
+**not** embraced adds 15% to every level of every ladder it buys, capped at 90%.
+An institution older than three centuries at the chapter's opening is furniture:
+everybody has it and nobody pays for it.
+
+**The Greek chancery is why the file exists.** The quarrel between the
+Hellenizers and the pious was flavour: an estate bar, a doctrine axis, forty
+event cards, and no mechanical teeth anywhere — a player could keep the
+Hellenizers on the floor for a century and pay nothing for it. Now refusing the
+chancery means paying more for technology for as long as you refuse, and
+embracing it moves the Hasideans, the Pharisees, the Sages and the villages
+against you in one transaction.
+
+**And the wall is the faith, not the map.** The first draft derived resistance —
+anything born outside your religious group met a slower rate — and got two
+things wrong at once. It gave 1948 Israel a wall against Industry and the
+National Idea because Christians invented them, which is not a subtle mistake;
+and a *rate* multiplier, however small, converges given a century, so the
+chancery still saturated the Judaean hill country before 167 BCE opened, which
+is the wrong history arrived at more slowly. Resistance is now **authored** —
+the polis, the chancery, Roman law, the established faith and the diwan carry
+it; coined money, gunpowder and a factory do not — and it is a **ceiling**, not
+a slope. An alien province tops out below the threshold that counts, and only
+two things carry it past: paying to school the place, or the state itself
+adopting the thing, after which its own administration propagates it.
+
+The consequence worth naming, because nobody authored it: **a Hasmonean Judaea
+that takes the Greek coast inherits the chancery**, at full strength, in the
+cities that already had it. Taking Ptolemais and Ascalon is how you stop being
+behind — and it is how the Hasmoneans stopped being behind. Jewish Joppa, on the
+same shoreline, does not carry it, because the wall was never geographic.
+
+**An institution grants no modifier.** The first draft gave each one three to
+nine permanent multiplicative buffs, handed to every court on the map at seed,
+and the harness caught it in a single run: the 167 chapter went from a clean
+sheet to an all-AI Judaea tripling its size in eight years, and the bisect put
+the whole change on the stat lines rather than on the price. What embracing buys
+is that you stop paying more for technology than the world does. That is a real,
+legible, sufficient reward — the point of the system is that being behind is
+expensive, not that being ahead is a stat line — and it means this file cannot
+quietly re-tune eight chapters that were balanced without it.
+
+## 167. A faction with no geography cannot be fought over
+
+The estates were a bar in a panel. The Pharisees stood at 62 everywhere at once;
+the Hellenizers stood at 31 in Ptolemais and at 31 in the Judaean hills, which
+is the one thing they demonstrably did not do. So the estates could be courted,
+appeased and offended, and they could never be **fought over** — and taking a
+Greek city, the most politically loaded act available in this period, was
+arithmetic about province counts.
+
+`js/sim/estates.js` gives every party a strength in every province, computed
+from what the province **is**: town or country, coast or hills or desert, its
+faith against its ruler's, a trade stop, a fort, a holy site, its development,
+the capital. The weights are authored per party in `js/data/estate_ground.js`;
+the signals are read off the province. Nothing is stored, so a town that grows
+or a faith that drifts moves the politics with it and no save format changes.
+
+Three things ride on it, and nothing else does:
+
+1. **Influence.** A party's weight at court is the development-weighted share of
+   the realm that is its ground, and `factions.js` scales each estate's boon and
+   bane by it. A party holding no ground barely reaches the ledger; one holding
+   half your development cannot be ignored at any approval. **This is the line
+   that makes conquest domestic politics**: take the Greek coast in 167 BCE and
+   the Hellenizers go from 4.8% of your realm's political ground to 33% of it,
+   whether or not they like you.
+2. **Local unrest.** A province whose dominant party is hostile has a reason to
+   riot, and the row in the unrest breakdown **names the party**, so the panel
+   says who is angry here rather than reporting a number.
+3. **A mapmode.** `estates` colours every province by whichever party of its
+   ruler's court holds that ground, shaded by how firmly — one palette per
+   *seat*, so it reads as "who runs this province" inside each realm rather than
+   pretending the Seleucid Phalanx and the Judaean Hasideans are the same thing.
+
+**Neutral at an even share, and that is a contract.** Shares sum to one across
+the seats at a court, so a party holding exactly its even share must scale
+authored effects by exactly 1.0 — otherwise this module silently re-tunes every
+boon and bane in eight bookmarks. The first draft returned 0.865 for a perfectly
+balanced court and `smoke18` failed on the next run. What §81 still guarantees,
+and what `smoke18` now checks, is the **ladder**: devoted pays exactly twice
+what loyal pays, hostile exacts exactly twice what discontent exacts, and the
+influence factor is asserted separately.
+
+## 168. Time did not change the world's character
+
+The 167 BCE chapter runs a hundred and seventy-three years, to 6 CE. Faction
+windowing (§127) already knew the people in the room change over that span. The
+**world** did not. A campaign in 160 BCE and the same campaign in 1 BCE played by
+identical rules: client kingship worked the same, annexation cost the same, the
+peace table offered the same menu. The only difference was who was alive.
+
+That is the one structural thing separating this from a game where 1444 and 1750
+feel like different centuries — and for this map it is not a matter of taste, it
+is the actual subject. The eastern Mediterranean went from a world of Hellenistic
+kingdoms, where client kingship was a durable legal status a dynasty held for two
+centuries, to a world of Roman provinces, where being a client meant being in a
+waiting room. Herod died a king. His son was deposed and the country became a
+prefecture ten years later. Nobody's stats changed; the rules did.
+
+`js/sim/ages.js` declares four ages with boundaries at the dates the rule
+changed, not the dates a textbook opens a chapter — **−63** (Pompey's settlement
+of the East, the year the region acquired a power that annexed clients as
+policy), **640** (the conquest, after which it did not for four centuries), and
+**1878** (Berlin, after which a protectorate is a stage rather than a station).
+Each age does very little, deliberately, and all of it to one thing: what
+happens to a client kingdom over time.
+
+In the **Age of Kingdoms** nothing erodes. In the **Age of Provinces** a client
+accumulates absorption pressure every month it stays a client, and when the
+pressure fills, its overlord takes it into direct rule through the ordinary §61
+union machinery, so land, court and army are handled exactly as any union
+handles them. Being large, being genuinely devoted, or fighting the lord's war
+beside it slows the clock; being small hurries it. The **Age of the Faiths**
+eases it — the caliphates and the empire ruled through tributary princes again
+— and the **Age of Nations** brings it back harder.
+
+One line in `military.js` had to change for any of this to happen: the check
+that unravels a union when the client's devotion cools now exempts unions the
+calendar started. A union woven out of devotion needs the devotion to hold; an
+annexation the age itself is performing does not, because nobody asked the
+client. If that check applied to both, the Age of Provinces could never occur —
+a client being taken into direct rule against its will is by definition a client
+whose opinion has just collapsed.
+
+**An age carries no stat modifiers.** It would have been easy to give each one a
+list of effects, and that is exactly the mistake §166 made and had to undo:
+eight chapters were balanced without this file, and an age that quietly hands
+every court +6% income has rewritten all of them. An age changes a rule.
+
+- **Regression contract**: `smoke105` asserts the four boundaries, that no age
+  carries effects, that a client in the Age of Kingdoms is not being digested
+  while one in the Age of Provinces is, that the turn of the age is chronicled,
+  and — the one that matters — that a calendar annexation survives the opinion
+  check that correctly unravels a voluntary one.
+
+## 169. The hope, the office and the ascents
+
+Three things the game kept as prose and never as arithmetic, all about the same
+institution, all cheap once §163–§167 exist to hang them on.
+
+**The expectation.** Bar Kokhba was hailed "son of a star" by Akiva, and Rabbi
+Yohanan ben Torta told him grass would grow on his cheeks first. Both are event
+cards. Neither made the realm a state *carrying a messianic expectation*, which
+is a specific and terrible condition and not a flavour text: a movement that has
+declared its king fields men it does not have and cannot survive being wrong,
+because the claim is falsifiable and everybody is watching. `js/sim/sacred.js`
+carries it as a 0–100 gauge that pays manpower and morale at the top, charges
+unrest the whole way, takes legitimacy and a point of stability out of you on
+**every setback in proportion to how high it is**, and cools if nothing arrives.
+It is the only system in this game where success is dangerous.
+
+**The office.** The High Priesthood is what the period fought over — Jason
+bought it, Menelaus outbid him, Jonathan took it out of a Seleucid civil war,
+Herod appointed and deposed at will, and by the first century it was an auction.
+It was one statecraft card. It is now an office with an occupant, seated from
+one of the parties at court, paying the crown legitimacy every month while the
+two of them agree and costing it while they do not — and standing empty is worse
+than either. Seating it moves every party in the room, because there is one
+office and everybody knows who did not get it.
+
+**The ascents.** Three festivals a year and the half-shekel from every community
+in the world is an economy, and it now appears as a line in the income
+breakdown. It pays more while the expectation is high, it very nearly stops
+while a war closes the roads, and an occupied shrine draws nobody — which is
+exactly the pressure that makes a pious realm think twice about a campaign.
+
+**The gate is a flag, not a year.** The first run of this file offered 1948
+Israel a High Priest from the Coalition. The office exists where it historically
+existed: a Samaritan realm has one unconditionally (it is the SAM standard's
+whole constitution, §136), and a Jewish realm has one while the House stands —
+before 70, or after that chapter's own chain has raised the altar again
+(`altarRaised` in 132, `altarRestored` in 614). No year test would have caught
+1948 on its own.
+
+- **Regression contract**: `smoke106` asserts the Temple gate answers correctly
+  in all eight chapters, that the expectation pays and then punishes, and that
+  the ascents fall when the roads close and stop when the shrine is occupied.

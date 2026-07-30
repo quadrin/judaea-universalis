@@ -15,6 +15,8 @@ import {
   tagGen, mechanicOn, tagDef,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
+import { deference } from './standing.js';
+import { institutionMult } from './institutions.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -512,9 +514,15 @@ function aiConsiderWar(ctx, tag) {
     // A ponderous empire moves only for a sure thing; a firebrand jumps early
     // — and against the era's standing rival the bar drops a notch: these are
     // the wars both courts have been drilling for.
+    // …and the standing of the two courts tunes the same margin (SPEC §165):
+    // a border kingdom with a lucky levy does not treat an empire as a fair
+    // fight just because this season's muster says so, and a great power does
+    // not agonise over a minor. Clamped to ±55%/−15% inside `deference`, so it
+    // can only lean on the judgement below, never replace it.
     const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1))
       * (rival ? num(B(ctx, 'rivalRatioMult', 0.85)) : 1)
-      * (succession ? 0.85 : 1); // a claim is worth a slightly thinner margin
+      * (succession ? 0.85 : 1) // a claim is worth a slightly thinner margin
+      * deference(ctx, tag, tgt);
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
     if (!ctx.rng.chance((succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
@@ -1308,13 +1316,19 @@ function aiTech(ctx, tag) {
   const bm = ctx.bookmark;
   const eraBase = eraBaseline(num(bm && bm.techBase, 3) | 0,
     monthsBetween((bm && bm.startDate) || ctx.game.date, ctx.game.date));
+  // …and a court that has not taken up what the world is doing pays the same
+  // surcharge the player pays for it (SPEC §166). Because the guard below
+  // never lets the AI buy ahead of the age, `aheadMult` is always 1 here —
+  // so this is the ONLY thing that ever makes one court's ladder dearer than
+  // another's, which is exactly the geography of backwardness it is for.
+  const instMult = institutionMult(ctx, tag);
   let best = null;
   for (const key of Object.keys(TECH_CATEGORIES)) {
     const level = num(t.tech[key]) | 0;
     const next = level + 1;
     // Never ahead of the age — and never past what the age itself knew (§99).
     if (next > TECH_MAX || next > eraBase + 1 || next > techCeiling(bm)) continue;
-    const cost = Math.round(techCost(next) * aheadMult(next, eraBase));
+    const cost = Math.round(techCost(next) * aheadMult(next, eraBase) * instMult);
     if (num(t.points[TECH_CATEGORIES[key].point]) < cost + 100) continue;
     if (!best || cost < best.cost) best = { key, next, cost };
   }

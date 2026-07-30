@@ -50,6 +50,15 @@ import { traceSupply, supplyPenaltyText, supplyReasonText, supplyExempt } from '
 import { chapterView } from './chapters.js';
 import { axisOf, pushDoctrine, doctrineView, doctrineEpithet } from './doctrine.js';
 import { divergenceView, divergenceSummary } from './divergence.js';
+import {
+  institutionMult, institutionsReport, embraceCore, embraceInfo, ensureInstitutions,
+} from './institutions.js';
+import { standingOf, standingTable } from './standing.js';
+import { getCourtInfo } from './courts.js';
+import { intrigueMenu, runIntrigue as runIntrigueCore } from './intrigue.js';
+import { ageReport, absorbReport } from './ages.js';
+import { estateReport } from './estates.js';
+import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -1125,25 +1134,36 @@ export function gameActions(ctx) {
     // The age's own ceiling (SPEC §99): the ladder is the same in every era,
     // but a century can only climb so far up it.
     const ceiling = techCeiling(ctx.bookmark);
+    // Where the realm stands (SPEC §166). Every institution alive in the world
+    // that this realm has not taken up makes every level of every ladder
+    // dearer — which is how "behind" stops being a point total and becomes a
+    // place on the map.
+    const instMult = institutionMult(ctx, g.playerTag);
+    const instPct = Math.round((instMult - 1) * 100);
     const rows = Object.keys(TECH_CATEGORIES).map((key) => {
       const cat = TECH_CATEGORIES[key];
       const level = num(t.tech[key]) | 0;
       const next = level + 1;
       const atMax = next > Math.min(TECH_MAX, ceiling);
       const mult = aheadMult(next, eraBase);
-      const cost = atMax ? 0 : Math.round(techCost(next) * mult);
+      const cost = atMax ? 0 : Math.round(techCost(next) * mult * instMult);
       const have = num(t.points[cat.point]);
+      const aheadTxt = mult > 1 ? 'ahead of the age: +' + Math.round((mult - 1) * 100) + '%' : '';
+      const instTxt = instPct > 0 ? 'behind the world: +' + instPct + '%' : '';
+      const both = [aheadTxt, instTxt].filter(Boolean).join(', ');
       return {
         key, name: cat.name, desc: cat.desc, point: cat.point,
         level, cost, eraBase,
         ahead: !atMax && mult > 1,
+        behind: !atMax && instPct > 0,
+        instPct,
         canBuy: !atMax && have >= cost,
         whyNot: atMax ? (ceiling < TECH_MAX
           ? 'The age itself stops here: nothing further was known in this century.'
           : 'The ladder ends here — for now.')
           : have < cost ? `Needs ${cost} ${cat.point === 'mar' ? 'martial' : cat.point === 'gov' ? 'government' : 'influence'} points`
-            + (mult > 1 ? ' (ahead of the age: +' + Math.round((mult - 1) * 100) + '%)' : '') + '.'
-            : (mult > 1 ? 'Ahead of the age: +' + Math.round((mult - 1) * 100) + '% cost.' : ''),
+            + (both ? ' (' + both + ')' : '') + '.'
+            : (both ? both.charAt(0).toUpperCase() + both.slice(1) + '.' : ''),
       };
     });
     const gi = cappedGen(num(t.tech.mar) | 0, ctx.bookmark);
@@ -2685,6 +2705,91 @@ export function gameActions(ctx) {
         if (!res.ok) { say('The court is cold', res.why || 'They will not hear us.', 'bad'); return; }
         say('An estate courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
       } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
+    },
+
+    // ---- the world's way of doing things (nation panel, SPEC §166) -----------
+    getInstitutions() {
+      try { ensureInstitutions(ctx); return institutionsReport(ctx, g.playerTag); }
+      catch (e) { warnOnce('institutions', 'getInstitutions failed', e); return { rows: [], mult: 1, penaltyPct: 0, behind: 0 }; }
+    },
+    embraceInstitution(id) {
+      try {
+        const probe = embraceInfo(ctx, g.playerTag, String(id));
+        const res = embraceCore(ctx, g.playerTag, String(id));
+        if (!res.ok) { say('Not yet', res.why || 'The realm is not ready for it.', 'bad'); return; }
+        say('A new way of doing things',
+          res.name + ' becomes the way this realm is governed. '
+          + (probe && probe.desc ? '' : '') + 'The estates have noticed.', 'good');
+      } catch (e) { warnOnce('embrace', 'embraceInstitution failed', e); }
+    },
+
+    // ---- the standing of the powers (ledger + nation panel, SPEC §165) -------
+    getStanding(tag) {
+      try { return standingOf(ctx, tag || g.playerTag); }
+      catch (e) { warnOnce('standing', 'getStanding failed', e); return null; }
+    },
+    getStandingTable() {
+      try { return standingTable(ctx); }
+      catch (e) { warnOnce('standingTable', 'getStandingTable failed', e); return []; }
+    },
+
+    // ---- somebody else's politics (foreign nation panel, SPEC §163/§164) ----
+    // NOT `getCourt` — that name has meant the player's hired advisers since
+    // §44, and taking it here silently shadowed them (smoke23 caught it).
+    getForeignCourt(tag) {
+      try { return getCourtInfo(ctx, String(tag)); }
+      catch (e) { warnOnce('court', 'getForeignCourt failed', e); return null; }
+    },
+    getIntrigue(tag) {
+      try { return intrigueMenu(ctx, g.playerTag, String(tag)); }
+      catch (e) { warnOnce('intrigue', 'getIntrigue failed', e); return null; }
+    },
+    runIntrigue(tag, kind, factionId) {
+      try {
+        const res = runIntrigueCore(ctx, g.playerTag, String(tag), String(kind), factionId ? String(factionId) : null);
+        if (!res.ok) { say('No channel', res.why || 'Our agents cannot reach them.', 'bad'); return res; }
+        const who = (g.tags[res.target] && g.tags[res.target].name) || res.target;
+        if (kind === 'patronize') say('Silver sent', 'Our money is with ' + res.party + ' at ' + who + '.', 'good');
+        else if (kind === 'subvert') {
+          say(res.caught ? 'Our hand is seen' : 'Money at work',
+            res.caught ? who + ' has the correspondence.' : 'The ground shifts under ' + res.party + ' at ' + who + '.',
+            res.caught ? 'bad' : 'good');
+        } else {
+          say(res.caught ? 'Our hand is seen' : 'A claimant finds a purse',
+            res.caught ? who + ' knows whose claimant it was.'
+              : 'The succession at ' + who + ' is open' + (res.raised ? ', and there is a banner in the field.' : '.'),
+            res.caught ? 'bad' : 'good');
+        }
+        return res;
+      } catch (e) { warnOnce('runIntrigue', 'runIntrigue failed', e); return { ok: false, why: 'The channel is confused.' }; }
+    },
+
+    // ---- the hope, the office and the ascents (nation panel, SPEC §169) -----
+    getSacred() {
+      try { return sacredReport(ctx); } catch (e) { warnOnce('getSacred', 'getSacred failed', e); return null; }
+    },
+    seatHighPriest(factionId) {
+      try {
+        const res = seatHighPriestCore(ctx, String(factionId));
+        if (!res.ok) { say('The chamber refuses', res.why || 'It cannot be done.', 'bad'); return; }
+        say('A High Priest is anointed', res.name + ' takes the office, from ' + res.factionName
+          + '. The parties who did not get it have noticed.', 'good');
+      } catch (e) { warnOnce('seatHighPriest', 'seatHighPriest failed', e); }
+    },
+
+    // ---- whose ground a province is (province panel, SPEC §167) -------------
+    getProvinceEstates(provId) {
+      try { return estateReport(ctx, ctx.byId(provId)); }
+      catch (e) { warnOnce('getProvinceEstates', 'getProvinceEstates failed', e); return null; }
+    },
+
+    // ---- what kind of world it is (nation panel, SPEC §168) -----------------
+    getAge() {
+      try { return ageReport(ctx); } catch (e) { warnOnce('getAge', 'getAge failed', e); return null; }
+    },
+    getAbsorption(tag) {
+      try { return absorbReport(ctx, tag || g.playerTag); }
+      catch (e) { warnOnce('getAbsorption', 'getAbsorption failed', e); return null; }
     },
 
     // ---- what is brewing (nation panel, SPEC §98) ----------------------------

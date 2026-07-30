@@ -454,6 +454,62 @@ static site, the zero dependencies, or the missing build step changes.
   play with are thumb-sized; long values stack instead of running through their
   labels; the title screen's era card fits the screen; and in landscape the
   panels become a full-height side panel so the map keeps half the screen.
+- **Nobody else had a court.** Every foreign power was a treasury, an army and an
+  opinion score, and the only bad thing that ever happened to one was you. Now
+  every court on the map convenes: two or three parties by constitution (a
+  monarchy has the King's Men, the Great Houses and the Soldiers; a republic the
+  Senate, the People and the Legions), drifting on the same rules your own
+  estates drift on — whether the army is paid, whether the war is going, what was
+  lost this year, whose boot is on which province. And when a court spends long
+  enough on the floor it does something: reverses its policy, deposes whoever is
+  on the throne, loses a province to a neighbour, or comes apart into civil war.
+  It is chronicled, it reaches you as news from abroad, and you did not cause it.
+- **You can interfere in anyone's politics.** Three operations, priced in
+  influence and gold, aimed at a named party at a named foreign court. Pay into
+  it and they warm to you. Pay against it and — because a court's own pressure
+  clock counts the parties on the floor — a decade of your money is a policy
+  reversed, then a ruler removed, then a province gone, then a civil war you
+  arranged. A third of the time the letters are read at the other end, and then
+  it is public and expensive. Or back a claimant outright and open their
+  succession. This is the period's own diplomacy: the Pharisees invited
+  Demetrius, Antipater ran Hyrcanus, Herod bought a Senate — all of it was in
+  the game as scripted cards you watched, and none of it was a verb you had.
+- **Institutions, and a geography of being behind.** Thirteen ways of running a
+  state — the polis, coined money, the standing army, the Greek chancery, Roman
+  law, the established faith, the codex, the diwan, gunpowder, industry, a
+  general staff, total mobilization, the national idea — each born in a real
+  place in a real year, spreading province by province and along the trade
+  routes. Every one alive in the world that your realm has not taken up makes
+  every level of every technology ladder dearer. Embracing costs, moves your
+  estates, and buys you nothing except that you stop paying the surcharge.
+  **And the Hellenizer quarrel finally has teeth**: the Greek chancery stops at
+  the edge of the Jewish hill country and will not cross it, so a Hasmonean
+  Judaea is structurally behind until it either schools its own provinces or
+  takes the Greek coast — which is exactly how the Hasmoneans stopped being
+  behind, and nobody had to write it as an event.
+- **The estates have ground under them.** The Pharisees used to stand at 62
+  everywhere at once. Now every party has a strength in every province, read off
+  what the province is — town or country, coast or hills, its faith against its
+  ruler's, a trade stop, a fort, a holy site. It decides how much each estate's
+  mood is actually worth at your court, it puts a named party in the unrest
+  breakdown ("the Hellenizers hold this ground, and they are furious"), and it
+  has its own mapmode. The point: **take the Greek coast and the Hellenizers go
+  from 5% of your realm's political ground to 33% of it**, whether or not they
+  like you. Conquest became an act of domestic politics.
+- **Am I winning.** A standing table ranks every court of the age by
+  development, income, army, technology and the clients that answer to it. The
+  realm panel prints where you sit. A small court now wants a wider margin
+  before it starts a war with a great one, and the powers everybody has heard of
+  are the ones your agents can reach without a shared border.
+- **The age itself changes.** Four ages, with boundaries at the years the rule
+  changed rather than the years a textbook starts a chapter: Pompey's settlement
+  in 63 BCE, the conquest in 640, Berlin in 1878. In the Age of Kingdoms a
+  client kingdom is a status a house holds for two centuries. In the Age of
+  Provinces it is a waiting room — pressure builds every month you stay one, and
+  your overlord eventually rules your land directly whether you consent or not.
+  Being large, being devoted, or fighting their war beside them slows it; being
+  small hurries it. Herod died a king and his son's country became a prefecture,
+  and now that is a rule rather than a script.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

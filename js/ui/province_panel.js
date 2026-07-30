@@ -414,6 +414,16 @@ const RISING_LABELS = {
       const rows = actions && actions.explainUnrest ? actions.explainUnrest(provId) : null;
       if (Array.isArray(rows) && rows.length) utt += '\n――――――\n' + ttLines(rows);
     } catch (e) { warnOnce('explainUnrest', e); }
+    // Whose ground this is (SPEC §167). The estates stopped being one number
+    // for the whole realm, so the province that a party is strong in can say
+    // so — and the unrest row above already names whichever of them holds it.
+    try {
+      const est = actions && actions.getProvinceEstates ? actions.getProvinceEstates(provId) : null;
+      if (Array.isArray(est) && est.length) {
+        utt += '\n――――――\nWhose ground this is:\n'
+          + est.map((r) => '  ' + r.name + ' ' + r.strength).join('\n');
+      }
+    } catch (e) { warnOnce('provinceEstates', e); }
     refs.unrestRow.dataset.tt = utt;
 
     // Revolt progress

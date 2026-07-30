@@ -8,6 +8,7 @@ import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
 import { powerFlows } from './powers.js';
+import { pilgrimageIncome } from './sacred.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
 export const LOAN_INTEREST_PER_MONTH = 3; // talents per loan per month
@@ -154,11 +155,18 @@ export function tradeIncome(ctx, tag) {
 export function incomeBreakdown(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, interest: 0, trade: 0, net: 0 };
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, interest: 0, trade: 0, pilgrims: 0, net: 0 };
   if (!t) return out;
   Object.assign(out, ownIncome(ctx, tag));
   try { out.trade = tradeIncome(ctx, tag); } catch (e) { out.trade = 0; }
   out.income += out.trade;
+  // The ascents (SPEC §169): three festivals a year and a half-shekel from
+  // every community in the world. It arrives BEFORE the tribute share is
+  // taken, because a client's overlord takes a share of everything — and it
+  // very nearly stops the month a war closes the roads, which is exactly the
+  // pressure that makes a pious realm think twice about a campaign.
+  try { out.pilgrims = pilgrimageIncome(ctx, tag); } catch (e) { out.pilgrims = 0; }
+  out.income += out.pilgrims;
   // Client tribute: a share of each vassal's own income flows to the overlord.
   if (t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) {
     out.tributeOut = out.income * TRIBUTE_SHARE;

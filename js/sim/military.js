@@ -2361,7 +2361,14 @@ export function monthlyIncorporation(ctx) {
     // unraveled every union mid-weave and the influence was lost to simple
     // drift — the reported bug. Real ruptures (insults, grudges, infamy)
     // still cut below the keep line and break it.
-    if (opinionOf(ctx, k, lordTag) < num(V.incorporateKeepOpinion, 60)) {
+    // …unless the calendar started it (SPEC §168). A union woven out of
+    // devotion needs the devotion to hold; an annexation the age itself is
+    // performing does not, because nobody asked the client. That is the whole
+    // difference between the Age of Kingdoms and the Age of Provinces, and if
+    // this check applied to both, the second one could never happen: a client
+    // being taken into direct rule against its will is by definition a client
+    // whose opinion has just collapsed.
+    if (!c.byCalendar && opinionOf(ctx, k, lordTag) < num(V.incorporateKeepOpinion, 60)) {
       them.incorporating = null;
       tell('The union unravels', (them.name || k) + '\'s devotion has cooled below what the union demands — the work (and the influence spent) is lost.', 'bad');
       continue;

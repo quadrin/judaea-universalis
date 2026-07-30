@@ -11,6 +11,7 @@ const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const fac = await import(R + '/js/sim/factions.js');
+const est = await import(R + '/js/sim/estates.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -67,6 +68,15 @@ ok(rows.every((r) => r.name && r.desc && r.boonText && r.baneText && r.appeaseLa
   'rows carry names, descriptions, boon/bane texts, current effects and the lever');
 
 console.log('== the five warmth bands and graduated effects ==');
+// SPEC §167 changed what this section can assert, and the change is deliberate.
+// An estate's authored boon/bane is now ALSO scaled by how much of the realm's
+// development sits on ground that party is strong on (`influenceScale`), so the
+// absolute numbers below depend on where JUD's provinces are, not only on the
+// approval band. What §81 still guarantees — and what is checked here — is the
+// LADDER: devoted pays exactly twice what loyal pays, hostile exacts exactly
+// twice what discontent exacts, and the boon and the bane are never both up.
+// The influence factor itself is asserted separately at the end of this file.
+const inflOf = (fid) => est.influenceScale(ctx, 'JUD', fid);
 fac.monthlyFactions(ctx);
 ok(Object.keys(t.factions).length === 3, 'approval table seeded on the tick');
 t.factions.zealots = 70;
@@ -74,23 +84,27 @@ fac.monthlyFactions(ctx);
 let mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_boon');
 let info = actions.getFactions().find((r) => r.id === 'zealots');
 ok(info.state === 'loyal' && info.activeScale === 0.5, 'loyal (60–79): a half-strength benefit');
-ok(mod && Math.abs(mod.effects.manpowerMult - 1.075) < 0.0001,
-  'loyal multiplier scales from neutral: +15% becomes +7.5%');
+ok(mod && Math.abs(mod.effects.manpowerMult - (1 + 0.15 * 0.5 * inflOf('zealots'))) < 0.0001,
+  'loyal multiplier scales from neutral: +15% becomes +7.5%, times the party\'s ground');
 ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_bane'), 'no penalty while loyal');
+const loyalBoost = mod.effects.manpowerMult - 1;
 t.factions.zealots = 90;
 fac.monthlyFactions(ctx);
 mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_boon');
 info = actions.getFactions().find((r) => r.id === 'zealots');
 ok(info.state === 'devoted' && info.activeScale === 1, 'devoted (80+): a full-strength benefit');
-ok(mod && Math.abs(mod.effects.manpowerMult - 1.15) < 0.0001, 'devoted receives the full authored boon');
+ok(mod && Math.abs(mod.effects.manpowerMult - (1 + 0.15 * inflOf('zealots'))) < 0.0001,
+  'devoted receives the full authored boon, times the party\'s ground');
+ok(Math.abs((mod.effects.manpowerMult - 1) / (loyalBoost)) - 2 < 0.0001,
+  'the §81 ladder holds: devoted pays exactly twice what loyal paid');
 t.factions.zealots = 30;
 game.pendingEvents.length = 0;
 fac.monthlyFactions(ctx);
 mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_bane');
 info = actions.getFactions().find((r) => r.id === 'zealots');
 ok(info.state === 'discontent' && info.activeScale === 0.5, 'discontent (21–40): a half-strength penalty');
-ok(mod && Math.abs(mod.effects.unrestAll - 0.625) < 0.0001,
-  'discontent additive effect is halved: +1.25 unrest becomes +0.625');
+ok(mod && Math.abs(mod.effects.unrestAll - (1.25 * 0.5 * inflOf('zealots'))) < 0.0001,
+  'discontent additive effect is halved: +1.25 unrest becomes +0.625, times the party\'s ground');
 ok(!(t.modifiers || []).some((m) => m && m.id === 'faction_zealots_boon'), 'the boon is withdrawn while discontent');
 
 console.log('== the demand card ==');
@@ -112,7 +126,8 @@ fac.monthlyFactions(ctx);
 mod = (t.modifiers || []).find((m) => m && m.id === 'faction_zealots_bane');
 info = actions.getFactions().find((r) => r.id === 'zealots');
 ok(info.state === 'hostile' && info.activeScale === 1, 'hostile (20−): a full-strength penalty');
-ok(mod && Math.abs(mod.effects.unrestAll - 1.25) < 0.0001, 'hostile receives the full authored bane');
+ok(mod && Math.abs(mod.effects.unrestAll - (1.25 * inflOf('zealots'))) < 0.0001,
+  'hostile receives the full authored bane, times the party\'s ground');
 ok(!game.pendingEvents.some((pe) => pe && String(pe.eventId).startsWith('dyn_faction_')),
   'the demand is not repeated inside its two-year cooldown');
 

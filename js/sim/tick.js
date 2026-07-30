@@ -10,6 +10,11 @@ import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlem
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
 import { monthlySuccession, monthlyIntegration, checkMissions, monthlyHolySites, monthlyFaithDrift } from './realm.js';
 import { monthlyFactions } from './factions.js';
+import { monthlyCourts } from './courts.js';
+import { monthlyStanding } from './standing.js';
+import { monthlyInstitutions } from './institutions.js';
+import { monthlyAges } from './ages.js';
+import { monthlySacred } from './sacred.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
@@ -114,6 +119,11 @@ function monthlyBlock(ctx) {
   safe('faithDrift', () => monthlyFaithDrift(ctx)); // what spreads without a state behind it (SPEC §104)
   safe('missions', () => checkMissions(ctx));
   safe('factions', () => monthlyFactions(ctx)); // the court convenes (SPEC §34)
+  safe('courts', () => monthlyCourts(ctx)); // and so does everybody else's (SPEC §163)
+  safe('standing', () => monthlyStanding(ctx)); // who is big, quarterly (SPEC §165)
+  safe('institutions', () => monthlyInstitutions(ctx)); // what arose where, and who took it up (SPEC §166)
+  safe('ages', () => monthlyAges(ctx)); // and what kind of world it is now (SPEC §168)
+  safe('sacred', () => monthlySacred(ctx)); // the hope, the office and the ascents (SPEC §169)
   safe('claims', () => monthlyClaimFabrications(ctx)); // paid diplomatic operations mature into usable CBs
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));

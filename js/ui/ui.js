@@ -23,6 +23,7 @@ const MAPMODES = [
   { id: 'culture', ico: icon('amphora'), name: 'Culture' },
   { id: 'development', ico: icon('bricks'), name: 'Development' },
   { id: 'unrest', ico: icon('flame'), name: 'Unrest' },
+  { id: 'estates', ico: icon('scales'), name: 'Estates — which party of the court holds this ground' },
 ];
 
 function buildMapmodeBar(bar, bus) {

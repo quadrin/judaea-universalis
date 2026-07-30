@@ -58,6 +58,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
         <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
         <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
+        <div class="pp-row hidden" data-ref="rankRow"><span class="pp-k">${icon('star8', 'icon-k')}Among the powers</span><span class="pp-v" data-ref="rank"></span></div>
+        <div class="pp-row hidden" data-ref="ageRow"><span class="pp-k">${icon('scroll', 'icon-k')}The age</span><span class="pp-v" data-ref="age"></span></div>
+        <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
@@ -89,6 +92,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build hidden" data-ref="factionsBlock">
         <div class="pp-build-title" data-ref="factionsTitle">Estates</div>
         <div class="np-factions" data-ref="factions"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="foreignCourtBlock">
+        <div class="pp-build-title">Their Court</div>
+        <div class="np-factions" data-ref="foreignCourt"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="sacredBlock">
+        <div class="pp-build-title">The Hope and the Office</div>
+        <div class="np-factions" data-ref="sacred"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="instBlock">
+        <div class="pp-build-title" data-ref="instTitle">The World's Way of Doing Things</div>
+        <div class="np-factions" data-ref="institutions"></div>
       </div>
       <div class="pp-diplo">
         <div class="pp-diplo-title">Diplomacy</div>
@@ -124,6 +139,27 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         if (act.classList.contains('disabled') || !actions) return;
         const fn = actions[act.dataset.act];
         if (typeof fn === 'function') { try { fn(); } catch (err) { warnOnce('np-' + act.dataset.act, err); } }
+        refresh();
+        return;
+      }
+      const pri = e.target.closest('[data-priest]');
+      if (pri) {
+        if (pri.classList.contains('disabled') || !actions || typeof actions.seatHighPriest !== 'function') return;
+        try { actions.seatHighPriest(pri.dataset.priest); } catch (err) { warnOnce('np-priest', err); }
+        refresh();
+        return;
+      }
+      const emb = e.target.closest('[data-embrace]');
+      if (emb) {
+        if (emb.classList.contains('disabled') || !actions || typeof actions.embraceInstitution !== 'function') return;
+        try { actions.embraceInstitution(emb.dataset.embrace); } catch (err) { warnOnce('np-embrace', err); }
+        refresh();
+        return;
+      }
+      const intr = e.target.closest('[data-intrigue]');
+      if (intr) {
+        if (intr.classList.contains('disabled') || !actions || typeof actions.runIntrigue !== 'function') return;
+        try { actions.runIntrigue(intr.dataset.court, intr.dataset.intrigue, intr.dataset.party || null); } catch (err) { warnOnce('np-intrigue', err); }
         refresh();
         return;
       }
@@ -393,6 +429,49 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + (regs > fl ? `\nAt ${regs} regiments the ${regs - fl} beyond the limit cost triple maintenance.` : '');
     }
 
+    // Where this court sits among the powers (SPEC §165) — shown for whoever
+    // is being viewed, since "am I winning" is a question you ask about them
+    // as well as about yourself.
+    {
+      let st = null;
+      if (actions && typeof actions.getStanding === 'function') {
+        try { st = actions.getStanding(tag); } catch (e) { warnOnce('np-getStanding', e); }
+      }
+      refs.rankRow.classList.toggle('hidden', !st);
+      if (st) {
+        setHtml(refs.rank, `<span class="${st.isPower ? 'pos' : ''}">${st.rank} of ${st.of} · ${esc(st.tier)}</span>`);
+        refs.rankRow.dataset.tt = 'Ranked by development, income, army, technology and the clients that answer to them.'
+          + '\nThe top ' + st.seats + ' courts of this chapter are its powers; the rest are minors.'
+          + '\nA court far below another hesitates longer before starting a war with it.';
+      }
+    }
+    // What kind of world it is (SPEC §168), and — if this court is somebody's
+    // client — how long that is likely to last.
+    {
+      let age = null;
+      let abs = null;
+      if (actions && typeof actions.getAge === 'function') {
+        try { age = actions.getAge(); } catch (e) { warnOnce('np-getAge', e); }
+      }
+      if (actions && typeof actions.getAbsorption === 'function') {
+        try { abs = actions.getAbsorption(tag); } catch (e) { warnOnce('np-getAbsorption', e); }
+      }
+      refs.ageRow.classList.toggle('hidden', !age || !self);
+      if (age && self) {
+        setText(refs.age, age.name);
+        refs.ageRow.dataset.tt = age.blurb
+          + (age.turnsAt ? '\nIt turns to ' + (age.nextName || 'the next age') + ' in ' + (age.turnsAt < 0 ? (-age.turnsAt) + ' BCE' : age.turnsAt + ' CE') + '.' : '');
+      }
+      const showAbs = !!(abs && abs.rate > 0);
+      refs.absorbRow.classList.toggle('hidden', !showAbs);
+      if (showAbs) {
+        setText(refs.absorb, abs.pressure + ' / ' + abs.of + (abs.monthsLeft !== null ? ' (' + abs.monthsLeft + ' mo)' : ''));
+        refs.absorbRow.dataset.tt = 'In ' + abs.age.toLowerCase() + ', a client kingdom is a waiting room: '
+          + esc(abs.overlordName) + ' is working toward ruling this land directly.'
+          + '\nBeing large, being devoted, or fighting their war beside them slows it. Ceasing to be a client stops it.';
+      }
+    }
+
     // How the two courts stand with each other — foreign view only.
     refs.opinionRow.classList.toggle('hidden', self);
     refs.standingRow.classList.toggle('hidden', self);
@@ -439,6 +518,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     refreshCrises(self);
     refreshFactions(self);
+    refreshInstitutions(self);
+    refreshSacred(self);
+    refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
     refreshPowers(self);
     refreshTech(t, self);
@@ -672,6 +754,134 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<div class="np-fac-effect ${cls}">${esc(f.activeText || 'No estate effect.')}</div>`
         + `</div>`;
     }).join(''));
+  }
+
+  // The hope, the office and the ascents (SPEC §169). Player's own realm only,
+  // and only in a chapter with a Temple standing in it.
+  function refreshSacred(self) {
+    let rep = null;
+    if (self && actions && typeof actions.getSacred === 'function') {
+      try { rep = actions.getSacred(); } catch (e) { warnOnce('np-getSacred', e); }
+    }
+    refs.sacredBlock.classList.toggle('hidden', !rep);
+    if (!rep) return;
+    const bandCls = rep.band === 'fevered' ? 'neg' : rep.band === 'quiet' ? '' : 'pos';
+    const expTt = 'A country watching for a deliverer fields men it does not have — and cannot survive being wrong.'
+      + (rep.boon ? '\nNow: ' + rep.boon : '')
+      + (rep.bane ? '\nAnd: ' + rep.bane : '')
+      + '\nIt cools if nothing arrives.';
+    let html = `<div class="np-faction" data-tt="${esc(expTt)}">`
+      + `<div class="np-fac-top"><span class="np-fac-name">The Expectation</span>`
+      + `<span class="np-fac-state ${bandCls}">${esc(rep.band)} · ${rep.expectation}</span></div>`
+      + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${rep.band === 'fevered' ? 'hostile' : rep.band === 'quiet' ? 'content' : 'loyal'}" style="width:${Math.max(2, Math.min(100, rep.expectation))}%"></div></div>`
+      + (rep.bane ? `<div class="np-fac-effect neg">${esc(rep.bane)}</div>` : '')
+      + `</div>`;
+    const pr = rep.priesthood;
+    if (pr) {
+      const seatedTt = pr.seated
+        ? 'The office is held by ' + pr.seated.name + ', of ' + (pr.candidates.find((c) => c.id === pr.seated.faction) || {}).name
+          + ', since ' + (pr.seated.since < 0 ? (-pr.seated.since) + ' BCE' : pr.seated.since + ' CE')
+          + '.\nWhile the office and the crown agree it pays legitimacy every month; while they do not, it costs it.'
+        : 'The office stands empty, and the crown loses legitimacy every month it does.\nSeat it from one of the parties at court — they gain, and the ones who did not get it lose.';
+      html += `<div class="np-faction" data-tt="${esc(seatedTt)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">The High Priesthood</span>`
+        + `<span class="np-fac-state ${pr.seated ? 'pos' : 'neg'}">${esc(pr.seated ? pr.seated.name : 'vacant')}</span></div>`
+        + `<div class="np-fac-effect">`
+        + pr.candidates.map((c) => `<button class="pp-build-btn np-fac-btn${c.isSeated ? ' disabled' : ''}" data-priest="${esc(c.id)}" data-tt="${esc('Anoint from ' + c.name + (c.isSeated ? ' — they already hold it' : ' — +10 to them, −5 to everyone else'))}">${esc(c.name)}</button>`).join(' ')
+        + `</div></div>`;
+    }
+    html += `<div class="np-faction" data-tt="${esc('Three festivals a year and the half-shekel from every community in the world. It very nearly stops while a war closes the roads, and an occupied shrine draws nobody.')}">`
+      + `<div class="np-fac-top"><span class="np-fac-name">The Ascents</span>`
+      + `<span class="np-fac-state ${rep.pilgrimage > 0 ? 'pos' : ''}">${rep.pilgrimage} a month</span></div>`
+      + (rep.pilgrimageBlocked ? `<div class="np-fac-effect neg">The war has closed the roads — the festivals bring a quarter of what they would.</div>` : '')
+      + `</div>`;
+    setHtml(refs.sacred, html);
+  }
+
+  // The world's way of doing things (SPEC §166). Every institution alive in
+  // this chapter, where it stands in this realm, and what refusing it costs.
+  // Player's own realm only: what another court has taken up is its business.
+  function refreshInstitutions(self) {
+    let rep = null;
+    if (self && actions && typeof actions.getInstitutions === 'function') {
+      try { rep = actions.getInstitutions(); } catch (e) { warnOnce('np-getInstitutions', e); }
+    }
+    const rows = rep && Array.isArray(rep.rows) ? rep.rows.filter((r) => r && r.bornAt) : [];
+    const show = rows.length > 0;
+    refs.instBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    const head = rep.penaltyPct > 0
+      ? `<div class="np-fac-effect neg">Behind the world in ${rep.behind} thing${rep.behind === 1 ? '' : 's'}: every level of every ladder costs +${rep.penaltyPct}%.</div>`
+      : `<div class="np-fac-effect pos">We keep pace with the world. No surcharge on technology.</div>`;
+    setHtml(refs.institutions, head + rows.map((r) => {
+      const cost = [];
+      if (r.cost && r.cost.gov) cost.push(r.cost.gov + ' gov');
+      if (r.cost && r.cost.infl) cost.push(r.cost.infl + ' infl');
+      if (r.cost && r.cost.mar) cost.push(r.cost.mar + ' mar');
+      if (r.cost && r.cost.treasury) cost.push(r.cost.treasury + ' talents');
+      const price = cost.join(' · ') || 'nothing';
+      const tt = r.desc + '\n――――――\nArose at ' + r.bornAt
+        + '. ' + r.share + '% of this realm knows it (' + r.need + '% needed to take it up).'
+        + '\nTaking it up costs ' + price + ' and moves the estates.'
+        + (r.can ? '' : '\n' + (r.whyNot || ''));
+      const cls = r.embraced ? 'pos' : r.share >= r.need ? '' : 'neg';
+      return `<div class="np-faction" data-tt="${esc(tt)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(r.name)}</span>`
+        + `<span class="np-fac-state ${cls}">${r.embraced ? 'ours' : r.share + '%'}</span>`
+        + (r.embraced ? ''
+          : `<button class="pp-build-btn np-fac-btn${r.can ? '' : ' disabled'}" data-embrace="${esc(r.id)}" data-tt="${esc((r.can ? 'Take it up — ' + price : (r.whyNot || '')))}">${icon('scales')}</button>`)
+        + `</div>`
+        + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${r.embraced ? 'devoted' : r.share >= r.need ? 'content' : 'discontent'}" style="width:${Math.max(2, Math.min(100, r.embraced ? 100 : r.share))}%"></div></div>`
+        + `</div>`;
+    }).join(''));
+  }
+
+  // Somebody else's politics (SPEC §163/§164): the parties at a foreign court,
+  // how close it is to coming apart, and the three things our agents can do
+  // about it. Foreign courts only — our own has its own block above.
+  function refreshForeignCourt(who, self) {
+    let court = null;
+    let menu = null;
+    if (!self && actions && typeof actions.getForeignCourt === 'function') {
+      try { court = actions.getForeignCourt(who); } catch (e) { warnOnce('np-getForeignCourt', e); }
+      try { menu = actions.getIntrigue(who); } catch (e) { warnOnce('np-getIntrigue', e); }
+    }
+    const show = !!(court && court.seats && court.seats.length);
+    refs.foreignCourtBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    const near = court.nextAt
+      ? `<div class="np-fac-effect">Discontent at their court: ${court.pressure}/${court.nextAt} toward ${esc(court.nextName)}.</div>`
+      : `<div class="np-fac-effect neg">Their court has gone as far as it can go.</div>`;
+    const quiet = court.quietFor > 0
+      ? `<div class="np-fac-effect">Settled for now — nothing more for ${court.quietFor} months.</div>` : '';
+    const bars = court.seats.map((f) => {
+      const cls = (f.state === 'devoted' || f.state === 'loyal') ? 'pos'
+        : (f.state === 'hostile' || f.state === 'discontent') ? 'neg' : '';
+      const ops = (menu && menu.ops) || [];
+      const pat = ops.find((o) => o.kind === 'patronize');
+      const sub = ops.find((o) => o.kind === 'subvert');
+      const btn = (op, glyph) => {
+        if (!op) return '';
+        const tt = op.name + ' — ' + op.infl + ' influence, ' + op.gold + ' talents'
+          + (op.detect ? '\nRisk of discovery: ' + Math.round(op.detect * 100) + '%.' : '\nNobody minds a gift.')
+          + (op.can ? '' : '\n' + (op.whyNot || ''));
+        return `<button class="pp-build-btn np-fac-btn${op.can ? '' : ' disabled'}" data-intrigue="${esc(op.kind)}" data-party="${esc(f.id)}" data-court="${esc(who)}" data-tt="${esc(tt)}">${glyph}</button>`;
+      };
+      return `<div class="np-faction" data-tt="${esc(f.desc || f.name)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(f.name)}</span>`
+        + `<span class="np-fac-state ${cls}">${esc(f.state)} · ${f.approval}</span>`
+        + btn(pat, icon('coins')) + btn(sub, icon('flame'))
+        + `</div>`
+        + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
+        + `</div>`;
+    }).join('');
+    const pre = menu && menu.ops ? menu.ops.find((o) => o.kind === 'pretender') : null;
+    const preRow = pre
+      ? `<div class="np-faction" data-tt="${esc(pre.name + ' — ' + pre.infl + ' influence, ' + pre.gold + ' talents. Risk of discovery: ' + Math.round(pre.detect * 100) + '%.' + (pre.can ? '' : '\n' + (pre.whyNot || '')))}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">Back a claimant</span>`
+        + `<button class="pp-build-btn np-fac-btn${pre.can ? '' : ' disabled'}" data-intrigue="pretender" data-court="${esc(who)}" data-tt="${esc(pre.can ? 'Open the succession' : (pre.whyNot || ''))}">${icon('star8')}</button></div></div>`
+      : '';
+    setHtml(refs.foreignCourt, near + quiet + bars + preRow);
   }
 
   // Renders the viewed nation's treaties and wars. `who` is the viewed tag;

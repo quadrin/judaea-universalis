@@ -8,6 +8,7 @@ import {
 import { axisOf } from './doctrine.js';
 import { popTension, popTotal } from './population.js';
 import { raiseRising } from './revolt.js';
+import { localEstateUnrest } from './estates.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -122,6 +123,21 @@ export function computeUnrestBreakdown(ctx, prov) {
     const over = all > 0 ? hot / all : 0;
     if (over > 0.15) rows.push({ label: 'Overextension', value: r2(over * 3) });
   }
+  // Whose ground this is, and what they currently think of the crown (SPEC
+  // §167). The parties are no longer a bar in a panel that reads the same
+  // number in Jerusalem and in Ptolemais: each province belongs to whichever
+  // of them is strong on that kind of ground, and a hostile landlord is a
+  // local reason to riot. The row NAMES the party, so the province panel can
+  // say "the Hellenizers are furious HERE" rather than reporting a number.
+  {
+    const local = localEstateUnrest(ctx, prov);
+    if (local) {
+      rows.push({
+        label: local.name + ' (' + local.approval + ') hold this ground',
+        value: r2(local.unrest),
+      });
+    }
+  }
   const nat = resolveTagAdd(ctx, prov.owner, 'unrestAll');
   if (Math.abs(nat) > 0.001) rows.push({ label: 'National unrest', value: r2(nat) });
   if (num(prov.garrison) > 0) rows.push({ label: 'Garrison', value: -1 });
@@ -146,8 +162,14 @@ export function explainUnrest(ctx, provId) {
 // the §67 grudge book, the province's altar, the throne's legitimacy — and
 // raises a band with a cause attached. `canRevoltJoin` stays here because it
 // is the border rule this module has always owned.
-function fireRevolt(ctx, p) {
-  raiseRising(ctx, p, canRevoltJoin);
+// Exported because §163's foreign courts raise risings too — a province that
+// defects from a court that has come apart is the same event as a province
+// that revolts because it is miserable, and it must be classified by the same
+// rule. `canRevoltJoin` is the border rule and it stays private here; callers
+// outside this module get the whole act or nothing, which is the only way it
+// can stay owned in one place.
+export function fireRevolt(ctx, p) {
+  return raiseRising(ctx, p, canRevoltJoin);
 }
 
 export function monthlyUnrest(ctx) {

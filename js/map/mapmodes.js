@@ -11,6 +11,7 @@
 
 import { tradeIndex } from '../data/trade.js';
 import { largestMinorityFaith } from '../sim/population.js';
+import { dominantEstate, seatsFor } from '../sim/estates.js';
 const GRAY = [128, 128, 128];
 const DEV_LOW = [216, 210, 176];   // #d8d2b0
 const DEV_HIGH = [30, 122, 46];    // #1e7a2e
@@ -18,6 +19,10 @@ const UNREST_QUIET = [151, 159, 141];
 const UNREST_YELLOW = [214, 186, 46];
 const UNREST_RED = [186, 32, 26];
 const REVOLT_SECONDARY = [212, 28, 24];
+// Estates mode (SPEC §167): one colour per SEAT at a court, not per party name.
+const ESTATE_PALETTE = [[164, 116, 56], [92, 120, 150], [132, 88, 132], [86, 140, 96], [176, 88, 72], [120, 120, 108]];
+const ESTATE_PALE = [214, 208, 188];
+const ESTATE_NONE = [150, 144, 128];
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -75,6 +80,7 @@ const MODE_PARAMS = {
   development: { relief: 0.3, flat: 0 },
   unrest: { relief: 0.3, flat: 0 },
   diplomatic: { relief: 0.35, flat: 0 },
+  estates: { relief: 0.3, flat: 0 },
 };
 
 // Diplomatic mode palette (colors relative to the player).
@@ -146,6 +152,16 @@ export function computeMapmodeColors(ctx, mode) {
     };
   }
   const myClaims = (game.tags[game.playerTag] && game.tags[game.playerTag].claims) || [];
+  // One seat-list lookup per TAG, not per province: `seatsFor` walks the
+  // registered sources and the estates mode asks it for every cell on the map.
+  const seatCache = new Map();
+  const seatsOf = (tag) => {
+    if (seatCache.has(tag)) return seatCache.get(tag);
+    let s = null;
+    try { s = seatsFor(ctx, tag); } catch (e) { warnOnce('seats:' + tag, 'seat lookup failed', e); }
+    seatCache.set(tag, s);
+    return s;
+  };
 
   for (let id = 1; id <= N; id++) {
     const p = provs[id];
@@ -241,6 +257,35 @@ export function computeMapmodeColors(ctx, mode) {
           } else if (p.controller && p.controller !== p.owner) {
             cB = dipColorOf(p.controller);
             fl |= 1;
+          }
+        }
+        break;
+      }
+      // Whose ground this is (SPEC §167): the party of its ruler's court that
+      // is strongest on this kind of land. The palette is per-COURT rather
+      // than global — a court seats two or three parties, so the first party
+      // at every court gets the first colour — which means the mode reads as
+      // "who runs this province" inside each realm and does not pretend the
+      // Seleucid Phalanx and the Judaean Hasideans are the same thing because
+      // they happen to sit in the same seat.
+      case 'estates': {
+        if (p.owner === 'WASTE' || !p.owner) {
+          cA = ESTATE_NONE;
+        } else {
+          const seats = seatsOf(p.owner);
+          const dom = seats && seats.length ? dominantEstate(ctx, p, seats) : null;
+          if (!dom) {
+            cA = ESTATE_NONE;
+          } else {
+            const i = seats.findIndex((d) => d && d.id === dom.id);
+            const base = ESTATE_PALETTE[(i < 0 ? 0 : i) % ESTATE_PALETTE.length];
+            // Strength shades it: a party that barely holds this ground reads
+            // pale, one that owns it outright reads full.
+            cA = lerp3(ESTATE_PALE, base, Math.max(0, Math.min(1, (dom.v - 25) / 55)));
+            if (p.controller && p.controller !== p.owner) {
+              cB = [120, 120, 120];
+              fl |= 1;
+            }
           }
         }
         break;

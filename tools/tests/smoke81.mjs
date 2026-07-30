@@ -34,8 +34,17 @@ const EV = (ERAS.find((e) => e.bookmark.id === '132ce') || {}).events || [];
 const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 const GAL = EVENTS_132_GALILEE.map((e) => e.id);
 // The two branches this one sits between, by their most characteristic cards.
+//
+// `ev2_fifteenth_bishop` used to be in the aftermath list and is not a marker
+// for this. It is dated January 136 and gated on `romanAftermath` AT THAT
+// DATE — it asks whether Rome held Aelia in the winter after the revolt, and
+// it is about the Christian see rather than about Judaea at all. The galilee
+// road is a fourth-century development, so a run can perfectly well have Rome
+// holding Aelia in 136 and a Jewish Galilee two centuries later, and one seed
+// (11) does exactly that once §163–§169 move the stream. Both of these two
+// markers are fourth-century and genuinely exclusive; that one never was.
 const STANDS_ARC = ['ev2_era_of_redemption', 'ev2_third_house', 'ev2_second_generation'];
-const AFTERMATH_ARC = ['ev2_patriarchate_ends', 'ev2_gallus_revolt', 'ev2_fifteenth_bishop'];
+const AFTERMATH_ARC = ['ev2_patriarchate_ends', 'ev2_gallus_revolt'];
 
 function boot(seed = 7) {
   const provinceMap = buildProvinceMapping(MAP_DATA, BOOKMARK_132);
@@ -188,6 +197,8 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
       ran: GAL.filter((id) => fired.has(id)),
       stands: STANDS_ARC.filter((id) => fired.has(id)),
       after: AFTERMATH_ARC.filter((id) => fired.has(id)),
+      afterIds: AFTERMATH_ARC.filter((id) => fired.has(id)),
+      standIds: STANDS_ARC.filter((id) => fired.has(id)),
       office: fired.has('ev2_g_what_the_office_was_for'),
       flag: !!game.flags.galileeKingdom,
     };
@@ -199,7 +210,8 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
     const roads = [r.ran.length > 0, r.stands.length > 0, r.after.length > 0].filter(Boolean).length;
     ok(roads >= 1, `seed ${r.seed} finishes on a road (galilee ${r.ran.length}, `
       + `stands ${r.stands.length}, aftermath ${r.after.length})`);
-    ok(roads === 1, `  and on exactly one of them`);
+    ok(roads === 1, `  and on exactly one of them`
+      + (roads !== 1 ? ` [galilee ${r.ran.length}, stands ${JSON.stringify(r.standIds)}, aftermath ${JSON.stringify(r.afterIds)}]` : ''));
     // A seed that took the Galilee road must have marked it, whether or not it
     // got all the way to 425 — the marker is what makes a road a road.
     if (r.ran.length) ok(r.flag, `  and records which road it took`);
@@ -210,13 +222,32 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
   ok(took.length > 0,
     `the Galilee road is reachable (${took.length}/${SEEDS.length} seeds took it)`);
   // The invariant that does NOT depend on the draw: once the road is entered
-  // the arc never collapses. Every seed that takes it plays all but at most
-  // the final gated card, and the only card a run may be missing is that one.
-  // A break anywhere earlier is a content bug and this is what would say so.
-  const collapsed = took.filter((r) => r.ran.length < GAL.length - 1);
-  ok(collapsed.length === 0,
-    `and once entered it never collapses — every run plays at least ${GAL.length - 1}/${GAL.length}`
-    + ` (${took.map((r) => `${r.seed}:${r.ran.length}`).join(' ')})`);
+  // the arc never breaks IN THE MIDDLE. State it as what it actually is rather
+  // than as a count, because a count was wrong twice.
+  //
+  // Four of the six cards carry a year WINDOW (140-200, 163-230, 200-270,
+  // 250-340) and fire whenever the road is open inside it. Two carry a fixed
+  // DATE — April 390 and May 425 — and both are gated on `judaeaEndures`,
+  // which excludes a live Judaea-Rome war on that exact month. A run at war on
+  // both dates legitimately misses both, and seed 5 does: measured after
+  // SPEC §163-§169 moved the stream it plays 4/6, and the two it lacks are
+  // exactly those two. The old assertion allowed "all but the final card",
+  // which quietly assumed only ONE of the tail cards was gated, and read a
+  // correct run as a content bug.
+  //
+  // So: every WINDOWED card must fire, and the dated tail may do as the world
+  // allows. A break anywhere in the windowed run is the content bug this is
+  // here to catch, and it would now say which card.
+  const dated = new Set(EVENTS_132_GALILEE.filter((e) => e && e.date).map((e) => e.id));
+  const windowed = GAL.filter((id) => !dated.has(id));
+  const broken = took.filter((r) => windowed.some((id) => !r.ran.includes(id)));
+  for (const b of broken) {
+    console.log('    [seed ' + b.seed + ' missing windowed: '
+      + windowed.filter((id) => !b.ran.includes(id)).join(', ') + ']');
+  }
+  ok(broken.length === 0,
+    `and once entered it never breaks in the middle — every run plays all ${windowed.length} windowed cards `
+    + `(${runs.map((r) => r.seed + ':' + r.ran.length).join(' ')})`);
   const wrongMiss = took.filter((r) => r.ran.length === GAL.length - 1
     && r.ran.includes('ev2_g_what_the_office_was_for'));
   ok(wrongMiss.length === 0,
