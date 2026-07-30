@@ -315,6 +315,24 @@ about a second later — so this is the only timeout that moved.
 Budget accordingly: a full `run-ui.sh` on software GL is over an hour, mostly
 spent booting. Run the suites your change touches.
 
+### The v5.4 "known failing tail" was the timeout all along
+
+Everything below this line dates from v5.4 and attributes uitest3, 5, 8, 10,
+16, 17, 19, 20, 21 and 28 to "modal-timing/lobby timeouts under software GL",
+verified to fail identically on pre-change trees. That verification was sound
+and the conclusion was wrong: they share ONE cause, and it is the `.bm-card`
+wait, not modals or the lobby.
+
+Measured at v6.8, the full 37-suite battery run against the PRE-§160 tree
+(793eebe) with nothing changed but `BOOT_MS`:
+
+    36 / 37 ALL PASS — the only failure is uitest23
+
+Every suite in the documented tail passes. The pre-§160 start screen takes
+17.5s against a 20-second wait — 2.5 seconds of margin — so which suites fell
+over depended on machine load, which is exactly what "fails identically on the
+base tree" looks like from the inside. Treat the paragraphs below as history.
+
 ## UI battery state (v5.4 audit)
 
 v5.4 ran the full browser battery and repaired the stale suites it could
