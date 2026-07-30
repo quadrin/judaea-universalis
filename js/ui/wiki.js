@@ -11,6 +11,7 @@ import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
 import { POWERS } from '../data/powers.js';
+import { DIASPORA } from '../data/diaspora.js';
 
 // Calendar month index with no year zero (mirror of sim/events.js — the wiki
 // may not import the sim).
@@ -194,6 +195,27 @@ export function createWiki({ DEFINES, getCtx }) {
     }).join('');
     const powers = (POWERS[b.id] || []).map((p) =>
       `<div class="wiki-kv"><span class="wiki-k">${esc(p.name)}</span><span class="wiki-v">${esc(p.blurb || '')}</span></div>`).join('');
+    // The communities of the dispersion (SPEC §172), for the chapters that can
+    // write to them: every community whose window is open at the chapter's
+    // opening date, largest first. Read straight from the same table the map
+    // reads, so the Compendium cannot drift from what the game will actually
+    // offer — which is the whole contract this page is under.
+    const y0 = (b.startDate && Number.isFinite(b.startDate.y)) ? b.startDate.y : null;
+    const yAt = (y) => (y < 0 ? y + 1 : y);
+    const jewishStandard = (b.playableTags || []).some((row) => {
+      const tag = row && (typeof row === 'string' ? row : row.tag);
+      const def = tag && DEFINES.TAGS ? DEFINES.TAGS[tag] : null;
+      return !!(def && def.religion === 'judaism');
+    });
+    const communities = (y0 === null || !jewishStandard) ? '' : DIASPORA
+      .filter((d) => (!Number.isFinite(d.from) || yAt(y0) >= yAt(d.from))
+        && (d.until === null || !Number.isFinite(d.until) || yAt(y0) < yAt(d.until)))
+      .slice()
+      .sort((a, c) => c.size - a.size)
+      .map((d) => `<div class="wiki-kv"><span class="wiki-k">${esc(d.name)}</span>`
+        + `<span class="wiki-v">${esc(d.blurb)}</span></div>`)
+      .join('');
+
     // Standing rivalries (SPEC §73): the era's weather, straight from the data.
     const rivalries = (Array.isArray(b.rivalries) ? b.rivalries : [])
       .filter((pair) => Array.isArray(pair) && pair.length === 2)
@@ -220,7 +242,10 @@ export function createWiki({ DEFINES, getCtx }) {
         ${rivalries ? `<div class="wiki-sec">Standing rivalries</div>
         <div class="wiki-dim">Old hatreds that never cool to neutral — the AI treats war between these courts as the era's weather.</div>
         ${rivalries}` : ''}
-        ${powers ? `<div class="wiki-sec">The powers beyond the map</div>${powers}` : ''}`,
+        ${powers ? `<div class="wiki-sec">The powers beyond the map</div>${powers}` : ''}
+        ${communities ? `<div class="wiki-sec">The communities of the dispersion</div>
+        <div class="wiki-dim">On the map, not beyond it. Click the province they live in to write to them — for letters, for silver, for a word with their patrons, or for their sons. Every one of them lives under somebody else's law.</div>
+        ${communities}` : ''}`,
     };
   }
 

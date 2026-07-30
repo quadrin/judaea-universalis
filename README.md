@@ -540,6 +540,18 @@ static site, the zero dependencies, or the missing build step changes.
   population doubling in under four years, with nowhere to put anyone and no
   money, which is the largest thing the state did in its first decade and was
   previously one line about schoolhouses.
+- **Write to the dispersion.** The Diaspora used to be one row in a panel with a
+  bar on it. It is twenty communities on the map now — Alexandria, Babylon,
+  Nehardea, Antioch, Cyrene, Rome, the House of Adiabene, the temple at
+  Leontopolis — and you reach them by clicking the province they live in. Ask
+  for letters (what a congregation at the centre of an empire hears before the
+  provinces do), for silver, for a word with their patrons, or for their sons.
+  What you can ask depends on how big they are, how they regard your crown, and
+  whether their empire is watching. **Every one of them is a hostage**: each
+  request can be intercepted, and when it is, the reprisal falls on them and
+  they remember whose asking caused it. Alexandria's community ends in 117 with
+  the Kitos War and Babylon's outlasts everything, so where your friends are
+  changes across a long campaign.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

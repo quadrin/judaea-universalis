@@ -6,7 +6,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
-const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
+const { BOOKMARK_614 } = await import(R + '/js/data/bookmark_614ce.js');
 const { BOOKMARK_67 } = await import(R + '/js/data/bookmark_67bce.js');
 const { POWERS } = await import(R + '/js/data/powers.js');
 const { initGame, makeCtx, gameActions, reviveGame } = await import(R + '/js/sim/init.js');
@@ -42,8 +42,14 @@ function boot(bookmark, playerTag, seed = 55) {
 console.log('== the roster of the age ==');
 ok((POWERS['1948ce'] || []).map((p) => p.id).join(',') === 'USA,USSR,CZE,FRA,UN',
   '1948 fields the five: USA, USSR, Czechoslovakia, France, the UN');
-ok((POWERS['614ce'] || []).length === 2 && (POWERS['66ce'] || [])[0].id === 'DIA',
-  '614 has the khaganates; the ancient chapters have the Diaspora');
+ok((POWERS['614ce'] || []).map((p) => p.id).join(',') === 'GOK,AVR',
+  '614 fields the two khaganates');
+// SPEC §172 moved the Diaspora off this roster and onto the map: the ancient
+// Jewish chapters now declare NO off-map power, and the panel hides itself.
+// The tag-gating contract this file used the Diaspora to test has not gone
+// anywhere — it is tested below against the khaganate, which gates the same way.
+ok(!POWERS['167bce'] && !POWERS['66ce'] && !POWERS['132ce'],
+  'and the ancient Jewish chapters field none: the dispersion is on the map now (§172)');
 {
   const { ctx } = boot(BOOKMARK_67, 'HYR');
   ok(getPowersInfo(ctx, 'HYR').length === 0, 'eras without powers show an empty roster');
@@ -102,19 +108,23 @@ console.log('== asks and their gates ==');
   ok(appeal.ok, 'the wartime UN appeal goes through');
 }
 
-console.log('== the Diaspora is for the House it loves ==');
+console.log('== a power is for the house it was offered to ==');
 {
-  const { game, ctx } = boot(BOOKMARK_66, 'ROM');
+  // The fixture used to be the Diaspora in 66 CE; §172 moved that onto the map,
+  // so the same contract is checked against the khaganate in 614, which gates
+  // its pact and its ask on `tags: ['BYZ']` exactly as the Diaspora gated on
+  // the Jewish crown.
+  const { game, ctx } = boot(BOOKMARK_614, 'JUD');
   game.powers = {};
-  const denied = askPowerCore(ctx, 'ROM', 'DIA', 'dia_silver');
+  const denied = askPowerCore(ctx, 'JUD', 'GOK', 'gok_rides');
   ok(!denied.ok && /not offered/.test(denied.why),
-    'Rome cannot pass the collection plate');
-  const info = getPowersInfo(ctx, 'ROM');
-  ok(info.length === 1 && info[0].asks.length === 0,
-    'Rome sees the Diaspora but holds no claim on its silver');
-  const judInfo = getPowersInfo(ctx, 'JUD');
-  ok(judInfo[0].asks.length === 2 && judInfo[0].standing === 55,
-    'Judaea starts beloved of the communities');
+    'the Return cannot call the khagan south — that oath was sworn to Byzantium');
+  const info = getPowersInfo(ctx, 'JUD').find((p) => p.id === 'GOK');
+  ok(info && info.asks.length === 0,
+    'it sees the khaganate and holds no claim on its horsemen');
+  const byzInfo = getPowersInfo(ctx, 'BYZ').find((p) => p.id === 'GOK');
+  ok(byzInfo && byzInfo.asks.length === 1 && byzInfo.standing === 40,
+    'while Byzantium, who paid for it, may ask');
 }
 
 console.log('== the climate reasserts itself ==');

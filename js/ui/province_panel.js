@@ -84,6 +84,10 @@ const RISING_LABELS = {
         <div class="pp-row"><span class="pp-k">Autonomy</span><span class="pp-v" data-ref="autonomy"></span></div>
         <div class="pp-row hidden" data-ref="siteRow"><span class="pp-k">Sites</span><span class="pp-v pp-gold" data-ref="site"></span></div>
       </div>
+      <div class="pp-build hidden" data-ref="diaBlock">
+        <div class="pp-build-title" data-ref="diaTitle">The Community</div>
+        <div class="np-factions" data-ref="dia"></div>
+      </div>
       <div class="pp-build hidden" data-ref="buildBlock">
         <div class="pp-build-title">Buildings</div>
         <div class="pp-built" data-ref="builtRow"></div>
@@ -199,6 +203,13 @@ const RISING_LABELS = {
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
+      refresh();
+    });
+    refs.diaBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-dia]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      if (typeof actions.askCommunity !== 'function') return;
+      try { actions.askCommunity(provId, b.dataset.dia); } catch (err) { warnOnce('dia-ask', err); }
       refresh();
     });
     refs.integBlock.addEventListener('click', (e) => {
@@ -502,6 +513,7 @@ const RISING_LABELS = {
 
     // Integration (v1.5): autonomy & conversion for owned provinces
     refreshIntegration();
+    refreshCommunity();
     // The unclaimed waste (SPEC §64): expedition, plantation, annexation
     refreshWasteland();
 
@@ -510,6 +522,49 @@ const RISING_LABELS = {
   }
 
   // Establish Rule / Convert Faith for own provinces; conversion progress row.
+  // Writing to the dispersion (SPEC §172). The community block appears on any
+  // province that HAS one and that we do not rule — Alexandria, Babylon,
+  // Nehardea, Antioch, Cyrene, Rome — and only for a Jewish crown.
+  function refreshCommunity() {
+    let c = null;
+    if (actions && typeof actions.getCommunity === 'function') {
+      try { c = actions.getCommunity(provId); } catch (e) { warnOnce('pp-getCommunity', e); }
+    }
+    refs.diaBlock.classList.toggle('hidden', !c);
+    if (!c) return;
+    setText(refs.diaTitle, c.name);
+    const band = c.standing >= 75 ? 'devoted' : c.standing >= 55 ? 'loyal'
+      : c.standing <= 25 ? 'hostile' : c.standing <= 40 ? 'discontent' : 'content';
+    const cls = c.standing >= 55 ? 'pos' : c.standing <= 40 ? 'neg' : '';
+    const whyTt = c.blurb + '\n――――――\nHow they regard this crown, and why:\n'
+      + (c.why || []).map((r) => '  ' + r.label + ' ' + (r.value >= 0 ? '+' : '') + r.value).join('\n')
+      + '\nStanding drifts toward ' + (c.target === null ? 'nothing' : c.target) + ' a little every month.'
+      + '\nThey live under ' + c.hostName + ', and every favour we ask puts them at risk from it.';
+    let html = `<div class="np-faction" data-tt="${esc(whyTt)}">`
+      + `<div class="np-fac-top"><span class="np-fac-name">${esc(c.name)}</span>`
+      + `<span class="np-fac-state ${cls}">${c.standing}${c.target !== null && c.target !== c.standing ? ' → ' + c.target : ''}</span></div>`
+      + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${band}" style="width:${Math.max(2, Math.min(100, c.standing))}%"></div></div>`
+      + `<div class="np-fac-effect">${esc('Under ' + c.hostName + '. ' + (c.atWar ? 'We are at war with their empire — no letter reaches them.' : 'Size ' + c.size + ' of 5.'))}</div>`
+      + `</div>`;
+    html += (c.asks || []).map((a) => {
+      const bits = [];
+      if (a.gain.treasury) bits.push(a.gain.treasury + ' talents');
+      if (a.gain.manpower) bits.push(a.gain.manpower + ' men');
+      if (a.gain.infl) bits.push(a.gain.infl + ' influence');
+      if (a.gain.opinion) bits.push('+' + a.gain.opinion + ' with ' + c.hostName);
+      const tt = a.desc
+        + '\n――――――\nGives ' + (bits.join(', ') || 'nothing')
+        + '.\nCosts them ' + Math.abs(a.standingCost) + ' standing'
+        + (a.infl ? ' and us ' + a.infl + ' influence' : '')
+        + '.\nNeeds ' + a.need + ' standing. Risk of the letter being read: '
+        + Math.round(a.risk * 100) + '% — and the reprisal falls on them.'
+        + (a.can ? '' : '\n' + (a.whyNot || ''));
+      return `<button class="pp-build-btn${a.can ? '' : ' disabled'}" data-dia="${esc(a.id)}" data-tt="${esc(tt)}">`
+        + `${icon('scroll')}<span>${esc(a.name)}</span></button>`;
+    }).join('');
+    setHtml(refs.dia, html);
+  }
+
   function refreshIntegration() {
     let info = null;
     if (actions && typeof actions.getIntegration === 'function') {

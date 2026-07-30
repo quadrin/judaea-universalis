@@ -9031,3 +9031,56 @@ the camps and the ration book cost you order and money; set a quota and you are
 a state that told Jews in camps to wait, on the record. Then: borrow against the
 future and rebuild the camps as towns, or hold them another year. Then: take the
 money from Germany, or refuse it. Then the bill, in 1959.
+
+## 172. The dispersion is not beyond the map
+
+The Diaspora was one row in "The Powers Beyond the Map" (§55): a standing bar
+and two asks, silver and volunteers.
+
+The powers beyond the map are beyond it because they are — a Senate in a century
+the frame does not reach, a khaganate past the Caucasus. The dispersion is not.
+Alexandria is **on the board**, and it is the second city of the world; so are
+Babylon, Nehardea, Antioch, Cyrene and Rome. Modelling them as one abstract bar
+meant the largest Jewish population on earth was a number in a panel while the
+province it lived in sat on the map owned by somebody else and told you nothing.
+
+**So each community is a place.** Twenty of them (`js/data/diaspora.js`), keyed
+on the canonical province name so one entry speaks to every chapter —
+Seleucia-Ctesiphon is Baghdad in 1948 and Memphis is Cairo, and the community is
+continuous in a way the label is not. Click the province and you can write to
+them. Four things to ask for, in rising order of what it costs them: **letters**
+(what a congregation at the centre of an empire hears first), **silver** (the
+half-shekel gathered early), **a word with their patrons**, and **their sons**.
+Yields scale with the community's size, 1 to 5.
+
+**The windows are load-bearing, not decoration.** Alexandria — a third of a city
+of half a million, the largest community in the world — is destroyed in the
+Kitos War and ends in 117; a campaign that reaches that year loses the biggest
+node on the list, and should. Leontopolis is a temple Vespasian closes in 73.
+Babylon and Nehardea go the other way and outlast everything, which is why the
+centre of the Jewish world moves east and why a 614 chapter can still write to
+them.
+
+**The communities are hostages, and that is the point.** Every one lives inside
+somebody else's empire. Every request carries a detection roll, and when it
+fails the price lands on **them** — a standing reprisal modifier on their
+province, their standing toward you falls, and their ruler's opinion of you
+falls with it. Standing itself is not a pool to drain: it recovers toward a
+target computed from what kind of crown you are (do you hold the holy places, is
+the country expecting a deliverer, is their host at war with you), minus what
+you have already asked of them. A crown that empties every community in the
+world in one decade finds none of them answering in the next.
+
+**War makes it dangerous, not impossible.** The first draft made a hostile host
+a hard block, and it killed the feature in the chapter the sources talk about
+most: 66 CE opens with Judaea at war with Rome, so every community from
+Alexandria to Rome itself went dark on the first tick. That is also the wrong
+history — Adiabene sent men to the revolt while Rome was prosecuting it, and
+money moved past hostile customs for four centuries. A war now raises the
+standing a community must have before it will take the risk and roughly doubles
+the chance the letter is read. The cheapest ask still works; the expensive ones
+have to be earned.
+
+`POWERS` for the three ancient Jewish chapters is now empty, and the panel
+section hides itself when a chapter declares no off-map power — which is
+correct, because there was never anything else in it for them.

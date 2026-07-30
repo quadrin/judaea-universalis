@@ -16,6 +16,8 @@ const { tickDay } = await import(R + '/js/sim/tick.js');
 const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const sacred = await import(R + '/js/sim/sacred.js');
 const weather = await import(R + '/js/sim/weather.js');
+const diaspora = await import(R + '/js/sim/diaspora.js');
+const { POWERS } = await import(R + '/js/data/powers.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -252,6 +254,88 @@ console.log('== §170 the eye ==');
   ok(weather.attentionThreat(ctx, tag) > 1, 'so a foreign court will move on a thinner margin');
   ok(weather.attentionThreat(ctx, tag) <= 1 + weather.WEATHER.threatAtMax, '…but never past the cap');
   ok(weather.attentionThreat(ctx, 'SEL') === 1, 'and still nobody else is measured by it');
+}
+
+console.log('== §172 the dispersion is on the map, not beyond it ==');
+{
+  // REGRESSION: the Diaspora off-map power is gone, and the three ancient
+  // Jewish chapters declare no off-map power at all.
+  ok(!POWERS['167bce'] && !POWERS['66ce'] && !POWERS['132ce'],
+    'REGRESSION: no off-map power remains in the three ancient Jewish chapters');
+  for (const k of Object.keys(POWERS)) {
+    ok(!(POWERS[k] || []).some((pw) => pw && pw.id === 'DIA'),
+      `${k}: the DIA power is gone from the panel`);
+  }
+}
+{
+  const { game, ctx, actions, tag } = boot('66ce');
+  run(ctx, 1);
+  const rows = actions.getDiaspora();
+  ok(Array.isArray(rows) && rows.length >= 10, `${rows.length} communities on the board for a Jewish crown`);
+  ok(rows.some((r) => /Alexandria/.test(r.name)), 'including Alexandria');
+  ok(rows.some((r) => /Babylon/.test(r.name)), '…and Babylon');
+  ok(rows.every((r) => game.provinces[r.provId] && game.provinces[r.provId].owner !== tag),
+    'and never one of our own provinces — these are the ones who stayed');
+
+  const alex = actions.getCommunity(ctx.provId('Alexandria'));
+  ok(!!alex && alex.size === 5, 'Alexandria is the largest of them');
+  ok(Array.isArray(alex.why) && alex.why.length > 0, 'and the panel can say WHY they regard us as they do');
+  ok(alex.asks.length === 4, 'four things may be asked of a community');
+}
+{
+  // The asks actually pay, deplete standing, and cool down.
+  const { game, ctx, actions, tag } = boot('66ce', { seed: 4 });
+  run(ctx, 1);
+  const t = game.tags[tag];
+  t.points.infl = 400;
+  const bab = ctx.provId('Babylon');
+  const before = { tr: t.treasury, standing: actions.getCommunity(bab).standing };
+  const r = actions.askCommunity(bab, 'silver');
+  ok(r.ok, 'the half-shekel can be asked for');
+  ok(t.treasury > before.tr, `and it arrives (${Math.round(before.tr)} → ${Math.round(t.treasury)} talents)`);
+  ok(actions.getCommunity(bab).standing < before.standing, 'asking costs them standing');
+  const again = actions.askCommunity(bab, 'silver');
+  ok(!again.ok && /too recently/i.test(again.why || ''), 'and the same ask cools down: ' + (again.why || ''));
+  // over-asking shows up in the reason list
+  actions.askCommunity(bab, 'letters');
+  const c = actions.getCommunity(bab);
+  ok(c.why.some((w) => /already asked/i.test(w.label)),
+    'and what we have already asked of them is on the record');
+}
+{
+  // War raises the bar; it does not close the door.
+  // REGRESSION: a hard block killed the feature in the one chapter that needs it.
+  const { game, ctx, actions, tag } = boot('66ce');
+  run(ctx, 1);
+  game.tags[tag].points.infl = 400;
+  const alexId = ctx.provId('Alexandria');
+  const c = actions.getCommunity(alexId);
+  ok(c.atWar, '66 CE opens at war with the empire Alexandria lives in');
+  const letters = c.asks.find((a) => a.id === 'letters');
+  ok(letters && letters.can,
+    'REGRESSION: the cheapest ask still reaches them through a war');
+  const sons = c.asks.find((a) => a.id === 'volunteers');
+  ok(sons && !sons.can && /standing/i.test(sons.whyNot || ''),
+    'while their sons take a standing a war has made harder to have');
+  ok(letters.risk > 0.08, 'and the wartime risk of interception is raised');
+}
+{
+  // The windows: Alexandria ends with the Kitos War, Babylon does not.
+  const { game, ctx, actions } = boot('132ce');
+  run(ctx, 1);
+  game.date.y = 150;
+  ok(!actions.getCommunity(ctx.provId('Alexandria')),
+    'Alexandria\'s community is gone after 117');
+  ok(!!actions.getCommunity(ctx.provId('Babylon')),
+    '…and Babylon\'s is not: the centre of the world moves east');
+}
+{
+  // Not a Jewish crown, not a dispersion.
+  const { actions } = boot('529ce');
+  ok(actions.getDiaspora() === null, 'a Samaritan crown has no Jewish dispersion to write to');
+  const ai = boot('66ce');
+  ai.game.tags[ai.tag].ai = true;
+  ok(ai.actions.getDiaspora() === null, 'and nothing here reaches an AI hand');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

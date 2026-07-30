@@ -791,3 +791,13 @@ entire change on the modifiers rather than on the tech price. **Run the bisect
 before believing a single-system explanation**: turning one system off does not
 restore the baseline when the others are still perturbing the RNG stream, which
 is exactly what made the first two attempts at that diagnosis wrong.
+
+
+Since v7.0 (SPEC §172) the Diaspora is no longer an off-map power. `POWERS` for
+167 BCE, 66 CE and 132 CE is now undefined rather than a one-entry roster, and
+the nation panel's "Powers Beyond the Map" section hides itself for those three
+chapters. `smoke34` and `smoke36` both used the Diaspora as their fixture for
+the powers engine's tag-gating contract — a pact or an ask offered to one house
+refuses every other — because it was the only power those chapters had. Both now
+test that contract against 614's Türk Khaganate, which gates on `tags: ['BYZ']`
+in exactly the same way. The contract did not change; only the fixture did.

@@ -230,47 +230,12 @@ export const POWERS = {
   ],
 };
 
-// The Diaspora rides with every ancient Jewish chapter: the communities of
-// Alexandria, Cyrene, Babylon and beyond — silver, swords, and sons.
-const DIASPORA = (jewishTag, romeTag) => ({
-  id: 'DIA', name: 'The Diaspora', color: [60, 100, 170],
-  blurb: 'More Jews live beyond this map than on it — in Alexandria, Babylon, '
-    + 'Cyrene, Rome itself. Their silver and their sons follow their hearts.',
-  start: { [jewishTag]: 55, [romeTag]: 20 },
-  court: { cost: { infl: 20 }, gain: 10, cd: 6 },
-  pact: {
-    name: 'One People', need: 75, tags: [jewishTag],
-    desc: 'The dispersion binds itself to the Land: a steady stream of silver and sons.',
-    monthly: { treasury: 3 },
-    effects: { manpowerMult: 1.05 },
-  },
-  trade: {
-    name: 'The Half-Shekel Flows', need: 55, tags: [jewishTag],
-    desc: 'The communities\' yearly dues, gathered and sent up with the caravans.',
-    monthly: { treasury: 2 },
-  },
-  asks: [
-    {
-      id: 'dia_silver', name: 'The communities send silver',
-      desc: 'The half-shekel of every man, gathered from every city of the dispersion.',
-      need: 45, cd: 24, tags: [jewishTag], cost: {},
-      effects: { treasury: 60 },
-    },
-    {
-      id: 'dia_volunteers', name: 'Volunteers from the communities',
-      desc: 'Young men of Alexandria and Babylon, come to fight for the Land.',
-      need: 60, cd: 36, war: true, tags: [jewishTag], cost: { infl: 10 },
-      effects: {
-        manpower: 1500,
-        modifier: {
-          id: 'power_diaspora_zeal', name: 'The Dispersion\'s Zeal', months: 12,
-          effects: { moraleMult: 1.05 },
-        },
-      },
-    },
-  ],
-});
-
-POWERS['167bce'] = [DIASPORA('HAS', 'SEL')];
-POWERS['66ce'] = [DIASPORA('JUD', 'ROM')];
-POWERS['132ce'] = [DIASPORA('JUD', 'ROM')];
+// The Diaspora used to be an off-map power here — one row, one standing bar,
+// two asks. It is not off the map (SPEC §172): Alexandria, Babylon, Nehardea,
+// Antioch, Cyrene and Rome are all cells on this board, and the communities in
+// them are now clicked rather than read. See `js/data/diaspora.js` for the
+// twenty communities and `js/sim/diaspora.js` for what may be asked of them.
+//
+// The three ancient Jewish chapters therefore declare no off-map power at all,
+// and the panel section hides itself when a chapter has none — which is
+// correct: there was never anything else in it for them.

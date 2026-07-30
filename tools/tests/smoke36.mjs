@@ -7,6 +7,7 @@ const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
+const { BOOKMARK_614 } = await import(R + '/js/data/bookmark_614ce.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { incomeBreakdown, explainIncome } = await import(R + '/js/sim/economy.js');
 const {
@@ -141,17 +142,20 @@ console.log('== a chapter verdict is not an armistice (the auto-truce fix) ==');
   ok(occupied.controller === 'ROM', 'no silent uti-possidetis: the lines stand where the armies do');
 }
 
-console.log('== the Diaspora binds only to its own ==');
+console.log('== a pact binds only the house it was offered to ==');
 {
-  const { game, ctx } = boot(BOOKMARK_66, 'ROM');
-  standingOf(ctx, 'DIA', 'ROM');
-  game.powers.DIA.s.ROM = 90;
-  const denied = signPactCore(ctx, 'ROM', 'DIA');
-  ok(!denied.ok && /not offered/.test(denied.why), 'Rome cannot sign One People');
-  game.powers.DIA.s.JUD = 80;
-  const bound = signPactCore(ctx, 'JUD', 'DIA');
-  ok(bound.ok && powerFlows(ctx, 'JUD') >= 3,
-    'Judaea binds the dispersion and the silver flows');
+  // The fixture was the Diaspora in 66 CE until §172 moved the dispersion onto
+  // the map. The contract is unchanged and is checked against the khaganate,
+  // whose pact gates on `tags: ['BYZ']` the same way.
+  const { game, ctx } = boot(BOOKMARK_614, 'JUD');
+  standingOf(ctx, 'GOK', 'JUD');
+  game.powers.GOK.s.JUD = 90;
+  const denied = signPactCore(ctx, 'JUD', 'GOK');
+  ok(!denied.ok && /not offered/.test(denied.why),
+    'the Return cannot sign the Steppe Alliance whatever the khagan thinks of it');
+  game.powers.GOK.s.BYZ = 80;
+  const bound = signPactCore(ctx, 'BYZ', 'GOK');
+  ok(bound.ok, 'Byzantium, to whom it was offered, can');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
