@@ -635,57 +635,106 @@ function hegemonContainment(ctx) {
   const bal = ctx.DEFINES.BALANCE || {};
   const player = g.playerTag;
   const pt = g.tags[player];
-  if (!pt || !pt.alive || pt.ai) return; // aimed at humans only; all-AI histories stand
-  let mine = 0, world = 0;
+  // The gate is that a HUMAN IS PLAYING, not that the human is the hegemon.
+  //
+  // §59 wrote it the second way — `pt.ai` returned early, and `mine` counted
+  // only the player's own bloc — so an AI that ran away with the world was
+  // never measured and never contained. That is not a harness concern, it is
+  // the game: a player who is Israel in 1948 watches a Ba'athist Iraq eat the
+  // whole Near East with every ponderous court in the world doing nothing,
+  // because containment was only ever looking at Israel.
+  //
+  // Keeping the check here preserves exactly what §59 was protecting:
+  // autorun makes every tag AI (`game.tags[playable].ai = true`), so no
+  // all-AI history can fire this and every accepted anomaly family stands.
+  if (!pt || !pt.alive || pt.ai) return;
+
+  // Attribute every province to its BLOC — a client's development counts for
+  // its overlord, which is how a hegemon actually grows.
+  const blocOf = (tag) => {
+    const t = g.tags[tag];
+    return (t && t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive) ? t.overlord : tag;
+  };
+  const bloc = Object.create(null);
+  let world = 0;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     const o = g.tags[p && p.owner];
-    if (!p || p.impassable || !o) continue;
+    if (!p || p.impassable || !o || !o.alive) continue;
     const d = devTotal(p);
     world += d;
-    if (p.owner === player || o.overlord === player) mine += d; // the player's bloc, clients included
+    const root = blocOf(p.owner);
+    bloc[root] = num(bloc[root]) + d;
   }
   if (!(world > 0)) return;
   if (!g.flags) g.flags = {};
-  const share = mine / world;
-  if (share < num(bal.containDevShare, 0.25)) {
+
+  // EVERY bloc over the line, not merely the biggest. The threshold is a
+  // share of the world (0.25), so more than one realm can be over it at once,
+  // and "the largest" is the wrong question: a human at 30% beside a Rome at
+  // 40% is still a hegemon-in-the-making and §59 contained it. Contain them
+  // all, strongest first, and let the one-war-a-month cap below do the rest.
+  const over = Object.keys(bloc)
+    .filter((k) => k !== 'REB' && k !== 'WASTE' && g.tags[k] && g.tags[k].alive)
+    .map((k) => ({ tag: k, share: bloc[k] / world }))
+    .filter((r) => r.share >= num(bal.containDevShare, 0.25))
+    .sort((a, b) => b.share - a.share);
+  if (!over.length) {
     delete g.flags.containmentWatch;
+    delete g.flags.containmentSeen;
     return;
   }
+  g.flags.containmentWatch = true;
+  const seen = Array.isArray(g.flags.containmentSeen) ? g.flags.containmentSeen : [];
+  g.flags.containmentSeen = seen;
+
   const P = ctx.DEFINES.PERSONALITIES || {};
-  const watchers = [];
-  for (const k of Object.keys(g.tags)) {
-    if (k === player || k === 'REB') continue;
-    const o = g.tags[k];
-    if (!o || !o.alive || !o.ai) continue;
-    if (!(P[k] && P[k].ponderous)) continue;
-    if (o.overlord === player || pt.overlord === k) continue;
-    if ((pt.allies || []).indexOf(k) >= 0) continue;
-    watchers.push(k);
+  for (const { tag: hegemon, share } of over) {
+    if (containOne(hegemon, share)) return; // one hegemon war a month, world-wide
   }
-  if (!watchers.length) return;
-  if (!g.flags.containmentWatch) {
-    g.flags.containmentWatch = true;
-    ctx.bus.emit('notify', {
-      title: 'The powers take notice',
-      text: 'Our realm now spans ' + Math.round(share * 100) + '% of the settled world. '
-        + 'In the courts of the great powers they have begun to speak of containment.',
-      type: 'bad',
-    });
-  }
-  for (const k of watchers) addOpinion(ctx, k, player, -num(bal.containOpinionDrift, 2));
-  if (share < num(bal.containWarShare, 0.32)) return;
-  const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
-  for (const k of watchers) {
-    const o = g.tags[k];
-    if ((o.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
-    if (truceActive(ctx, k, player)) continue;
-    if (recognized(ctx, k, player)) continue; // ...including against the hegemon
-    if (num(o.stability) < 0 || num(o.warExhaustion) > 8) continue;
-    if (strength(k) < strength(player) * 0.7) continue; // not suicidal, merely resolved
-    if (!ctx.rng.chance(num(bal.containChance, 0.06) * num(personality(ctx, k).aggression, 1))) continue;
-    declareWar(ctx, k, player, (o.name || k) + '’s War of Containment', 'containment');
-    return; // one hegemon war a month
+  return;
+
+  // Returns true when it has spent this month's single containment war.
+  function containOne(hegemon, share) {
+    const ht = g.tags[hegemon];
+    const watchers = [];
+    for (const k of Object.keys(g.tags)) {
+      if (k === hegemon || k === 'REB') continue;
+      const o = g.tags[k];
+      if (!o || !o.alive || !o.ai) continue;        // the human is never conscripted as a watcher
+      if (!(P[k] && P[k].ponderous)) continue;
+      if (o.overlord === hegemon || ht.overlord === k) continue;
+      if ((ht.allies || []).indexOf(k) >= 0) continue;
+      watchers.push(k);
+    }
+    if (!watchers.length) return false;
+    if (seen.indexOf(hegemon) < 0) {
+      seen.push(hegemon);
+      ctx.bus.emit('notify', {
+        title: 'The powers take notice',
+        text: hegemon === player
+          ? 'Our realm now spans ' + Math.round(share * 100) + '% of the settled world. '
+            + 'In the courts of the great powers they have begun to speak of containment.'
+          : (ht.name || hegemon) + ' now spans ' + Math.round(share * 100) + '% of the settled '
+            + 'world. In the courts of the great powers they have begun to speak of containment.',
+        type: 'bad',
+      });
+    }
+    for (const k of watchers) addOpinion(ctx, k, hegemon, -num(bal.containOpinionDrift, 2));
+    if (share < num(bal.containWarShare, 0.32)) return false;
+    const strength = (k) => armiesOf(ctx, k).reduce((s, a) => s + num(a.men), 0) + num(g.tags[k].manpower) * 0.5;
+    for (const k of watchers) {
+      const o = g.tags[k];
+      if ((o.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) continue;
+      if (truceActive(ctx, k, hegemon)) continue;
+      if (recognized(ctx, k, hegemon)) continue; // ...including against the hegemon
+      if (num(o.stability) < 0 || num(o.warExhaustion) > 8) continue;
+      if (strength(k) < strength(hegemon) * 0.7) continue; // not suicidal, merely resolved
+      if (!ctx.rng.chance(num(bal.containChance, 0.06) * num(personality(ctx, k).aggression, 1))) continue;
+      declareWar(ctx, k, hegemon, (o.name || k) + '’s War of Containment', 'containment');
+      return true;
+    }
+    return false;
   }
 }
 
