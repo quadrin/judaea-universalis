@@ -133,6 +133,7 @@ const RISING_LABELS = {
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="recruitWing"></button>
+        <button class="btn pp-recruit-btn hidden" data-ref="recruitFighter"></button>
       </div>
       <div class="pp-recruit-queue hidden" data-ref="recruitQueue"></div>
       <div class="pp-merchant hidden" data-ref="merchantBlock">
@@ -268,7 +269,13 @@ const RISING_LABELS = {
     refs.recruitWing.addEventListener('click', () => {
       if (refs.recruitWing.classList.contains('disabled')) return;
       if (!actions || typeof actions.recruitAirWing !== 'function') return;
-      try { actions.recruitAirWing(provId); } catch (err) { warnOnce('recruitAirWing', err); }
+      try { actions.recruitAirWing(provId, 'strike'); } catch (err) { warnOnce('recruitAirWing', err); }
+      refresh();
+    });
+    refs.recruitFighter.addEventListener('click', () => {
+      if (refs.recruitFighter.classList.contains('disabled')) return;
+      if (!actions || typeof actions.recruitAirWing !== 'function') return;
+      try { actions.recruitAirWing(provId, 'fighter'); } catch (err) { warnOnce('recruitFighter', err); }
       refresh();
     });
     refs.airWings.addEventListener('click', (e) => {
@@ -1014,6 +1021,7 @@ const RISING_LABELS = {
       try { info = actions.getAirInfo(provId); } catch (e) { warnOnce('getAirInfo', e); }
     }
     refs.recruitWing.classList.toggle('hidden', !info);
+    refs.recruitFighter.classList.toggle('hidden', !info);
     refs.airBlock.classList.toggle('hidden', !info);
     if (!info) return;
     const rows = info.wings.map((w) => {
@@ -1037,12 +1045,23 @@ const RISING_LABELS = {
         || (w.raidCd > 0 || (w.raids || []).length ? '' : ' <span class="peace-dim">(no other field to fly to)</span>')}</div>`;
     }).join('');
     setHtml(refs.airWings, rows || '<div class="peace-dim">The hangars stand empty.</div>');
-    setHtml(refs.recruitWing, `${icon('plane')} Raise Air Wing — ${info.cost} ${icon('coins', 'icon-xs')} · ${info.months}m`);
+    // Two arms (SPEC §154): fighters take the sky, strike wings use it.
+    setHtml(refs.recruitWing, `${icon('plane')} Raise Strike Wing — ${info.cost} ${icon('coins', 'icon-xs')} · ${info.months}m`);
     refs.recruitWing.classList.toggle('disabled', !info.canRecruit);
     refs.recruitWing.dataset.tt = info.canRecruit
-      ? `Raise a fighter squadron: ${info.cost} talents, ${info.months} months in this province's unit queue, ${info.upkeep}/month upkeep after completion. `
-        + `Covers battles within ${info.range} provinces of its field (+1 to the fire die); `
+      ? `Raise a strike squadron: ${info.cost} talents, ${info.months} months in this province's unit queue, ${info.upkeep}/month upkeep after completion. `
+        + `Strike wings do the work — within ${info.range} provinces of the field they add a pip to EVERY battle phase per two net wings (to +4), `
+        + `slow hostile columns by a quarter at 2 net and a half at 4, double our sieges and stall theirs at 3, and bleed hostile hosts monthly at 2. `
+        + `But they only fly where nobody has taken the sky: an enemy with more fighters than us grounds them. `
         + `${info.cap} wings fit on one field. Lost if the field falls.`
+      : info.whyNot;
+    setHtml(refs.recruitFighter, `${icon('plane')} Raise Fighter Wing — ${info.cost} ${icon('coins', 'icon-xs')} · ${info.months}m`);
+    refs.recruitFighter.classList.toggle('disabled', !info.canRecruit);
+    refs.recruitFighter.dataset.tt = info.canRecruit
+      ? `Raise a fighter squadron: ${info.cost} talents, ${info.months} months, ${info.upkeep}/month upkeep. `
+        + `Fighters contest the air and do nothing else — no pips, no interdiction, no bombs. `
+        + `They count only against enemy fighters, and whoever has more decides whose strike wings fly at all. `
+        + `Buying fighters and no strike aircraft denies the enemy their bonus without gaining one, which is often the cheaper war.`
       : info.whyNot;
   }
 

@@ -7958,3 +7958,90 @@ rather than a verdict.
   its old assertion — *a hundred hours undo eight years of army* — encoded the
   behaviour this section removes, and now asserts the new contract, that the
   army is untouched and the bombardment is on the books.
+
+## 154. Air power was a boolean
+
+`airCoverFor` returned true or false, and that was the whole of air power:
+
+```js
+const docA = doctrinePips(A.gen, phase, false) + (phase === 'fire' && airA ? 1 : 0);
+```
+
+One wing in range: +1 to the die, fire phase only. Twenty wings: +1 to the die,
+fire phase only. One enemy wing anywhere in the ring: cancelled to nothing. A
+wing cost 40 talents, 1 a month, and half a talent of fuel — so an entire air
+force was worth less than one doctrine level, which gives +1 in **every** phase
+and costs points once.
+
+**Air is now a signed quantity.** `airWingsInRange` counts, `airNet` returns the
+difference between two sides, and `airNetAgainst` asks the same question from
+one court's chair against everyone hostile to it. One side's pips are the
+other's absence of them.
+
+- **Pips**: `ceil(net / 2)` to a cap of 4, in **every phase**. The first net
+  wing is the pip cover was always worth; every two beyond it is another.
+- **Interdiction**: 2 net wings against a column cost it a quarter of its
+  march, 4 cost half.
+- **Sieges**: 3 net wings double the camp's rate; 3 against it stall the camp
+  to a quarter, because the besieger is the one in the open.
+- **Attrition**: 2 net wings bleed a hostile host monthly with no battle at
+  all, which is what an air force that is never fought is for.
+
+**Two arms, and the sequence between them.** Fighters contest the ring and do
+nothing else — no pips, no interdiction, no bombs. Strike wings do all the work
+and only fly where nobody has taken the sky. So an enemy who buys fighters and
+no bombers **grounds yours without gaining anything**, which is a real trade.
+Where neither side has a fighter the air is uncontested and everybody's bombers
+fly, which is the ordinary case and the one every existing save lands in: a
+wing with no `kind` is a strike wing, because that is what every wing raised
+before this was.
+
+Wings cost **90**, not 40 — more than three cavalry regiments. An air force is
+the thing a realm builds *instead of* an army, which is the actual 1948–73
+choice, and at 40 talents it was neither.
+
+**Scope is load-bearing.** Interdiction and attrition apply only on ground the
+army's own side does not hold. Unscoped they were a standing weather condition
+over the whole world: the 1948 map is small enough that two hops covers a
+country, so once every state had a wing or two, every column everywhere was
+permanently slowed and every garrison sitting at home was permanently bleeding.
+
+- **Regression contract**: `smoke103.mjs` — the count is a count and it is
+  signed; pips scale, cap, and are added in whatever phase is being resolved;
+  one enemy fighter grounds four bombers and gains nothing, two fighters take
+  the sky back, and evenly contested air lets both sides fly; a kindless wing
+  reads as strike; the boolean still answers its own question; interdiction
+  bites on a hostile destination and **not** on a march through our own
+  country; the siege and attrition terms are really wired and every threshold
+  is tunable in DEFINES; and raising a wing picks an arm while the AI buys its
+  first fighter before its first bomber. `smoke24.mjs` had the paused-orders
+  bill written down as `- 90`; it now reads the prices out of DEFINES, because
+  that assertion failed for a change it was never about.
+
+### KNOWN RED: `smoke80.mjs` §113
+
+**This section ships with a failing suite, deliberately unresolved.** Six
+assertions about *which cards fire* in the Lebanon-annexed world now fail, and
+the cause is worth writing down because it is not in the air code.
+
+The scenario kills Lebanon at t=0. But `bookmark.setup` has already enrolled
+Lebanon in the War of Independence with a host, so clearing its provinces and
+flipping `alive` left a landless belligerent still in the war — and the
+scenario only ever held because Israel happened to finish the job before 2002.
+Removing the army, the war entries and the `atWarWith` list does not fix it
+either: Lebanon ends the run holding Nazareth, Netanya and Yavne, which a dead
+landless court can only acquire through the free-states liberation restoring a
+fallen court after an AI war goes the other way.
+
+So a **content-gating** test is a hostage to **combat balance**, and making air
+decisive changed the balance. Three honest resolutions, none of them taken here
+because the choice is a design call rather than a bug fix:
+
+1. bar restoration in that scenario, if §113 is about event gating and nothing
+   else;
+2. retune the pips down, if Lebanon reaching central Israel means +4 in every
+   phase is simply too strong — only one seed was measured;
+3. let it stand and rewrite §113 around a world where Lebanon can come back.
+
+Making it green by editing the test until it agreed was available and was not
+done.

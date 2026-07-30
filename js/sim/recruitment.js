@@ -24,6 +24,9 @@ export function queueUnitRecruitment(ctx, tag, provId, type, details = {}) {
     cost: Math.max(0, num(details.cost)),
     manpower: Math.max(0, num(details.manpower)),
     gen: Math.max(0, num(details.gen) | 0),
+    // Wings only (SPEC §154): which arm the squadron is. Absent means strike,
+    // which is what every wing queued before this existed was.
+    kind: details.kind === 'fighter' ? 'fighter' : undefined,
     stalled: '',
   };
   p.unitQueue.push(order);
@@ -107,7 +110,11 @@ function completeWing(ctx, p, order) {
   if (!Number.isFinite(g.nextWingId)) g.nextWingId = 1;
   const id = g.nextWingId++;
   const nth = Object.values(g.airwings).filter((w) => w && w.tag === order.tag).length + 1;
-  const wing = { id, tag: order.tag, prov: p.id, name: 'No. ' + nth + ' Squadron' };
+  const kind = order.kind === 'fighter' ? 'fighter' : 'strike';
+  const wing = {
+    id, tag: order.tag, prov: p.id, kind,
+    name: 'No. ' + nth + (kind === 'fighter' ? ' Fighter' : ' Strike') + ' Squadron',
+  };
   g.airwings[id] = wing;
   return { ok: true, name: wing.name };
 }

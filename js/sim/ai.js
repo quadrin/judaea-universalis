@@ -1364,8 +1364,12 @@ function aiAirPower(ctx, tag) {
   const queuedWings = queuedUnitCount(ctx, cap.id, 'wing', tag);
   if (airWingsAt(ctx, cap.id).length + queuedWings < num(AIR.wingsPerField, 2)
       && airWingsOf(ctx, tag).length + queuedUnitsOf(ctx, tag, ['wing']) < 2
-      && num(t.treasury) > num(AIR.wingCost, 40) + 120) {
-    raiseAirWing(ctx, tag, cap.id);
+      && num(t.treasury) > num(AIR.wingCost, 90) + 120) {
+    // Win the air, then use it (SPEC §154). A court with no fighter buys one
+    // first — a strike wing under somebody else's fighters is 90 talents of
+    // nothing — and only then buys the aircraft that do the work.
+    const haveFighter = airWingsOf(ctx, tag).some((w) => w && w.kind === 'fighter');
+    raiseAirWing(ctx, tag, cap.id, haveFighter ? 'strike' : 'fighter');
   }
   // At war, every rearmed wing flies against the richest target in reach.
   if ((t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {

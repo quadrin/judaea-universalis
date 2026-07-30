@@ -480,7 +480,8 @@ export const simHelpers = {
     if (!Number.isFinite(g.nextWingId)) g.nextWingId = 1;
     const id = g.nextWingId++;
     const nth = Object.values(g.airwings).filter((w) => w && w.tag === tag).length + 1;
-    const wing = { id, tag, prov: p.id, name: opts.name || ('No. ' + nth + ' Squadron') };
+    const kind = opts.kind === 'fighter' ? 'fighter' : 'strike';
+    const wing = { id, tag, prov: p.id, kind, name: opts.name || ('No. ' + nth + ' Squadron') };
     g.airwings[id] = wing;
     return wing;
   },
@@ -1385,9 +1386,9 @@ export function gameActions(ctx) {
         };
       } catch (e) { warnOnce('airInfo', 'getAirInfo failed', e); return null; }
     },
-    recruitAirWing(provId) {
+    recruitAirWing(provId, kind) {
       try {
-        const res = raiseAirWing(ctx, g.playerTag, provId);
+        const res = raiseAirWing(ctx, g.playerTag, provId, kind);
         if (!res.ok) { say('Cannot raise a wing', 'The squadron is refused: ' + res.why + '.', 'bad'); return; }
         const p = ctx.byId(provId);
         say('Squadron ordered', 'Crews begin forming at ' + ((p && p.name) || 'the field') + '; the wing will be ready in '

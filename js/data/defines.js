@@ -524,12 +524,23 @@ export const DEFINES = {
   // Air power (SPEC §29): wings live at airfields, rebase freely between
   // your own, cover friendly battles within `rangeHops`, and are destroyed
   // on the ground if their field falls.
+  // Air power is a QUANTITY, not a flag (SPEC §154). Net wings in a ring buy
+  // pips in every battle phase, slow hostile columns, break or stall sieges,
+  // and bleed hostile hosts monthly without a battle. Wings cost accordingly:
+  // an air force is the thing a realm builds INSTEAD of an army, which is the
+  // actual 1948-73 choice, and at 40 talents it was neither.
   AIR: {
-    wingCost: 40,          // talents to raise one air wing (crews included)
+    wingCost: 90,          // talents to raise one air wing (crews included)
     wingUpkeep: 1,         // talents/month per wing
     wingsPerField: 2,      // hangar space per airfield
     rangeHops: 2,          // provinces of combat cover / raid reach from the base
     raidCdDays: 12,        // days to rearm between bombing raids
+    diePerWings: 2,        // net wings per pip on the die (first wing = first pip)
+    dieCap: 4,             // most pips air alone can add, in every phase
+    interdictAt: 2,        // net wings against a column: +25% march days
+    interdictHardAt: 4,    // …and +50%
+    siegeAt: 3,            // net wings: sieges at double rate, hostile camps stall
+    attritionAt: 2,        // net wings: hostile hosts bleed monthly, unfought
   },
 
   // Oil spending (SPEC §52): the mechanized patterns burn fuel. Regiments of

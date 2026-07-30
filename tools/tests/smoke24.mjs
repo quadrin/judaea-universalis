@@ -65,8 +65,13 @@ ok(port.dev.tax === start.tax + 1 && israel.points.gov === start.gov - devCost,
   'development and its point cost are visible immediately while paused');
 ok(port.unitQueue.map((row) => row.type).join(',') === 'inf,inf,ship,wing',
   'paused military purchases enter one FIFO province queue immediately');
-ok(israel.treasury === start.treasury - 90 && israel.manpower === start.manpower - 2000,
-  'money and manpower are committed immediately while paused');
+// Read the bill out of the engine rather than writing it down here: this
+// assertion was `- 90` and rotted the moment SPEC §154 repriced an air wing,
+// which is a test failing for a change it was never about.
+const SHIP_COST = 30; // js/sim/navy.js — the one price with no DEFINES entry
+const orderedCost = 2 * DEFINES.BASE.regCost.inf + SHIP_COST + DEFINES.AIR.wingCost;
+ok(israel.treasury === start.treasury - orderedCost && israel.manpower === start.manpower - 2000,
+  'money and manpower are committed immediately while paused (' + orderedCost + ' talents)');
 ok(totalRegs() === start.regs && totalShips() === start.ships && totalWings() === start.wings,
   'committed work creates no instant units');
 const preview = actions.getRecruitmentQueue(port.id);

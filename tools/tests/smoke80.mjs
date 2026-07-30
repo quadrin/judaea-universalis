@@ -73,6 +73,27 @@ function play(annexLebanon, years = 54) {
       const p = game.provinces[i];
       if (p && !p.impassable && p.owner === 'LEB') { p.owner = 'ISR'; p.controller = 'ISR'; }
     }
+    // Annexed means annexed. The bookmark's own setup has already enrolled
+    // Lebanon in the War of Independence and given it a host, so clearing the
+    // provinces and flipping `alive` left a landless belligerent still in the
+    // war with an army in the field — and this scenario only ever held
+    // because Israel happened to finish the job before 2002. That made a
+    // content-gating test a hostage to combat balance: SPEC §154 made air
+    // power decisive, the AI war went the other way, and six assertions about
+    // which EVENTS fire started failing for reasons that had nothing to do
+    // with events. Take the army and the war away too, and the premise is the
+    // thing the section is actually about.
+    for (const id of Object.keys(game.armies || {})) {
+      if (game.armies[id] && game.armies[id].tag === 'LEB') delete game.armies[id];
+    }
+    for (const w of game.wars || []) {
+      w.attackers = (w.attackers || []).filter((t) => t !== 'LEB');
+      w.defenders = (w.defenders || []).filter((t) => t !== 'LEB');
+    }
+    for (const t of Object.values(game.tags)) {
+      if (t && Array.isArray(t.atWarWith)) t.atWarWith = t.atWarWith.filter((x) => x !== 'LEB');
+    }
+    game.tags.LEB.atWarWith = [];
     game.tags.LEB.alive = false;
   }
   const fired = new Set();

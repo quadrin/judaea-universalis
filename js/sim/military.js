@@ -329,7 +329,25 @@ export function hopDays(ctx, fromId, destId, army) {
   const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
   const mc = terr ? num(terr.moveCost, 1.2) : 1.2;
   const spd = army ? genSpeed(num(army.gen, 0)) : 1;
-  return clamp(Math.round((4 + dist / 24) * mc / spd), 2, 40);
+  // Interdiction (SPEC §154): a column marching into a ring the enemy owns
+  // the sky over moves slower, because that is what happened to the Egyptian
+  // and Iraqi columns. Two net wings against it cost a quarter of its speed,
+  // four cost half.
+  //
+  // Scoped to ground the mover's side does not hold, and that scope is
+  // load-bearing rather than decorative. Unscoped, this taxed every march in
+  // the game: the 1948 map is small enough that two hops covers a country, so
+  // once every state had a wing or two, every column everywhere was
+  // permanently interdicted — including inside its own borders, in peacetime.
+  // Air interdiction is a thing done to an army going somewhere, not a
+  // standing weather condition over the world.
+  let interdict = 1;
+  if (army && army.tag && p && !sameSide(ctx, army.tag, p.controller)) {
+    const against = -airNetAgainst(ctx, destId, army.tag);
+    if (against >= AIRC(ctx, 'interdictHardAt', 4)) interdict = 1.5;
+    else if (against >= AIRC(ctx, 'interdictAt', 2)) interdict = 1.25;
+  }
+  return clamp(Math.round((4 + dist / 24) * mc * interdict / spd), 2, 40);
 }
 export function issueMove(ctx, army, targetId) {
   if (!army || army.inBattle) return false;
@@ -602,10 +620,14 @@ function battleRound(ctx, b) {
   // the defender, shock charge, volley fire, combined arms. Air wings based
   // within range add one more in the fire phase (they cancel when both
   // sides fly).
-  const airA = airCoverFor(ctx, b.prov, A.tags);
-  const airD = airCoverFor(ctx, b.prov, D.tags);
-  const docA = doctrinePips(A.gen, phase, false) + (phase === 'fire' && airA ? 1 : 0);
-  const docD = doctrinePips(D.gen, phase, true) + (phase === 'fire' && airD ? 1 : 0);
+  // SPEC §154: air is a quantity and it speaks in every phase. `net` is
+  // signed, so one side's pips are the other's absence of them — the sky over
+  // a battle belongs to somebody rather than to both or neither.
+  const net = airNet(ctx, b.prov, A.tags, D.tags);
+  const airA = airPips(ctx, net);
+  const airD = airPips(ctx, -net);
+  const docA = doctrinePips(A.gen, phase, false) + airA;
+  const docD = doctrinePips(D.gen, phase, true) + airD;
   const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0) + docA;
   const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0) + docD;
   const casOnAtk = casualtiesInflicted(D, A, rollD, rollA);
@@ -706,14 +728,92 @@ export function provsWithin(ctx, provId, range) {
   }
   return seen;
 }
-// Does any wing of `tags`' side sit within range of the province?
-export function airCoverFor(ctx, provId, tags) {
+// ── air power as a quantity (SPEC §154) ──────────────────────────────────
+//
+// `airCoverFor` used to be the whole of air power: a BOOLEAN, worth +1 to the
+// die in the fire phase only, and cancelled outright the moment one enemy wing
+// stood anywhere in the ring. One wing was +1. Twenty wings were +1. An entire
+// air force was worth less than one doctrine level, which gives +1 in EVERY
+// phase — and cost 40 talents each plus fuel for the privilege.
+//
+// Wings are now counted, split by what they are for, and contested rather than
+// cancelled:
+//
+//   FIGHTER wings contest the ring. They count against enemy fighters and do
+//   nothing else — no die bonus, no interdiction, no bombs.
+//   STRIKE wings do all the work, and only if nobody has taken the air away
+//   from them.
+//
+// So an enemy who buys fighters and no strike aircraft can deny you your bonus
+// without gaining one, which is a real trade and the shape the period actually
+// had. A wing with no `kind` is a strike wing: that is what every wing in every
+// existing save already is, and reading them as anything else would silently
+// re-arm old campaigns.
+export function airWingsInRange(ctx, provId, tags) {
+  const out = { fighters: 0, strike: 0 };
   const g = ctx.game;
   const wings = Object.values(g.airwings || {});
-  if (!wings.length || !tags || !tags.length) return false;
+  if (!wings.length || !tags || !tags.length) return out;
   const seen = provsWithin(ctx, provId, AIRC(ctx, 'rangeHops', 2));
-  return wings.some((w) => seen.has(w.prov)
-    && tags.some((t) => w.tag === t || sameSide(ctx, w.tag, t)));
+  for (const w of wings) {
+    if (!w || !seen.has(w.prov)) continue;
+    if (!tags.some((t) => w.tag === t || sameSide(ctx, w.tag, t))) continue;
+    if (w.kind === 'fighter') out.fighters++; else out.strike++;
+  }
+  return out;
+}
+
+// Net effective strike wings for `ourTags` over `foeTags` in this ring.
+// Positive means we own the sky here by that many wings; negative means they do.
+export function airNet(ctx, provId, ourTags, foeTags) {
+  const A = airWingsInRange(ctx, provId, ourTags || []);
+  const D = airWingsInRange(ctx, provId, foeTags || []);
+  let ours = 0;
+  let theirs = 0;
+  if (A.fighters === 0 && D.fighters === 0) {
+    // Nobody is contesting the air, so everybody's bombers fly. This is the
+    // ordinary case and the one old saves land in.
+    ours = A.strike; theirs = D.strike;
+  } else if (A.fighters > D.fighters) {
+    ours = A.strike; theirs = 0;
+  } else if (A.fighters < D.fighters) {
+    ours = 0; theirs = D.strike;
+  } else {
+    ours = A.strike; theirs = D.strike; // contested evenly: both fly, both bleed
+  }
+  return ours - theirs;
+}
+
+// The same question asked from one tag's chair, against everyone hostile to
+// it — what movement, sieges and attrition need, none of which is handed a
+// tidy two-sided battle to read sides off.
+export function airNetAgainst(ctx, provId, tag) {
+  const g = ctx.game;
+  const foes = [];
+  for (const k of Object.keys(g.tags || {})) {
+    if (k === tag) continue;
+    const t = g.tags[k];
+    if (t && t.alive && isHostile(ctx, tag, k)) foes.push(k);
+  }
+  if (!foes.length) return airNet(ctx, provId, [tag], []);
+  return airNet(ctx, provId, [tag], foes);
+}
+
+// Pips on the die from net wings: the first net wing is the pip air cover was
+// always worth, and every two beyond it is another, to the cap. Unlike the old
+// flag this applies in EVERY phase, because air power in this period was.
+export function airPips(ctx, net) {
+  if (!Number.isFinite(net) || net <= 0) return 0;
+  const per = Math.max(1, AIRC(ctx, 'diePerWings', 2));
+  return Math.min(AIRC(ctx, 'dieCap', 4), Math.ceil(net / per));
+}
+
+// The old boolean, kept because it is the honest answer to the question it
+// asks — is there any cover here at all — and because content and tests read
+// it that way.
+export function airCoverFor(ctx, provId, tags) {
+  const c = airWingsInRange(ctx, provId, tags);
+  return (c.fighters + c.strike) > 0;
 }
 // What a wing could bomb from its field: hostile hosts, walls we besiege,
 // hostile garrisons — everything within its range ring, biggest prize first.
@@ -857,20 +957,24 @@ export function flyPendingRaids(ctx) {
     }
   }
 }
-export function raiseAirWing(ctx, tag, provId) {
+export function raiseAirWing(ctx, tag, provId, kind) {
   const g = ctx.game;
   const t = g.tags[tag];
   const p = ctx.byId(provId);
   if (!t || !t.alive || !p) return { ok: false, why: 'invalid province or tag' };
   if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
   if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
-  const cost = AIRC(ctx, 'wingCost', 40);
+  const cost = AIRC(ctx, 'wingCost', 90);
   if (num(t.treasury) < cost) return { ok: false, why: 'not enough talents (' + cost + ' needed)' };
   if (airWingsAt(ctx, provId).length + queuedUnitCount(ctx, provId, 'wing', tag) >= AIRC(ctx, 'wingsPerField', 2)) {
     return { ok: false, why: 'the hangars are full' };
   }
   t.treasury = num(t.treasury) - cost;
-  const queued = queueUnitRecruitment(ctx, tag, provId, 'wing', { cost });
+  // Fighters contest the sky, strike wings use it (SPEC §154). Anything that
+  // is not explicitly a fighter is a strike wing, which is what every wing
+  // raised before this existed already was.
+  const wingKind = kind === 'fighter' ? 'fighter' : 'strike';
+  const queued = queueUnitRecruitment(ctx, tag, provId, 'wing', { cost, kind: wingKind });
   return queued ? { ok: true, queued } : { ok: false, why: 'the squadron could not be scheduled' };
 }
 // A named commander for a squadron (SPEC §31): fire pips sharpen the bombs
@@ -1141,7 +1245,13 @@ function siegeDay(ctx, p) {
       // engineers) adds 20% on top. Antiquity digs like it always did.
       const stackGen = besiegers.reduce((m, a) => Math.max(m, num(a.gen, 0)), 0);
       const firepower = (1 + 0.25 * Math.max(0, stackGen - 3)) * doctrineSiegeMult(stackGen);
-      s.progress += resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
+      // Air over the walls (SPEC §154): owning the sky by three net wings
+      // doubles the rate the camp digs; losing it by three stalls the camp
+      // to a crawl, because the besieger is the one in the open.
+      const airNetHere = airNetAgainst(ctx, p.id, s.by);
+      const siegeAt = AIRC(ctx, 'siegeAt', 3);
+      const airSiege = airNetHere >= siegeAt ? 2 : (airNetHere <= -siegeAt ? 0.25 : 1);
+      s.progress += airSiege * resolveTagMult(ctx, s.by, 'siegeMult') * (engineer ? 1.3 : 1) * firepower
         * (1.2 + 0.6 * s.breach + 0.03 * clamp(regs - need, 0, 20) + 0.4 * Math.max(0, bonus)) / fort;
       if (p.garrison <= 0) s.progress += 3;
     }
@@ -1429,6 +1539,20 @@ export function monthlyAttrition(ctx) {
     attr += Math.min(6, Math.max(0, (regsByProv.get(a.prov) || 0) - limit));
     if (isHostile(ctx, a.tag, p.controller)) attr += 1;
     if (granary) attr -= 1;
+    // Under hostile air (SPEC §154): a host IN THE FIELD, on ground its own
+    // side does not hold, bleeds every month whether or not anyone gives
+    // battle. That is what an air force which is never fought is for.
+    //
+    // The scope is the same lesson as interdiction above: applied to every
+    // army everywhere, this was a permanent tax on garrisons sitting at home
+    // in their own country, and it quietly rewrote fifty years of the 1948
+    // chapter. An army in its own supplied territory is not a column in the
+    // open.
+    if (isHostile(ctx, a.tag, p.controller) || !sameSide(ctx, a.tag, p.controller)) {
+      const airAgainst = -airNetAgainst(ctx, a.prov, a.tag);
+      const attrAt = AIRC(ctx, 'attritionAt', 2);
+      if (airAgainst >= attrAt) attr += Math.min(3, 1 + (airAgainst - attrAt));
+    }
     attr = clamp(attr, 0, 12);
     // Supply lines: an organized siege camp caps attrition (Rome fed Masada's
     // besiegers by road and ramp; so do we) — but only while the road and
