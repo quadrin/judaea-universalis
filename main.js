@@ -41,7 +41,21 @@ async function boot() {
   const renderer = await initRenderer(canvas, MAP_DATA, DEFINES);
   let provinceMap = buildProvinceMapping(MAP_DATA, null);
   renderer.setProvinceMapping(provinceMap);
-  const geom = computeGeometry(renderer.idArray, MAP_DATA, provinceMap);
+  // geom starts EMPTY and is filled by the first applyMapProfile, which every
+  // path into a campaign runs before anything reads it (startGame calls it on
+  // its first line). It used to be computed here as well, and that pass was
+  // dead on arrival: mapProfileKey starts '' while any bookmark keys to at
+  // least '||', so the early-return below cannot hit on the first call and the
+  // result was always recomputed and thrown away. Two full W×H passes plus an
+  // open-sea flood fill — 25.0M texels at the §160 frame — on every boot, for
+  // a value nothing had yet looked at.
+  //
+  // Safe because the object identity is what the readers captured, not its
+  // contents: overlay and labels take `geom` at construction and both bail
+  // before touching it until a game exists (overlay.js `if (!game) return`,
+  // labels.js `if (ctx && ctx.game && camera)`), and applyMapProfile fills
+  // this same object with Object.assign rather than replacing it.
+  const geom = {};
   let mapProfileKey = '';
   function applyMapProfile(bookmark) {
     const active = (bookmark && bookmark.activeProvinces) || [];
