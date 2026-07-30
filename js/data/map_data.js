@@ -1583,6 +1583,10 @@ export const MAP_DATA = {
     ['Aleria', 'Pisae'], ['Aleria', 'Turris Libisonis'], ['Baleares', 'Tarraco'],
     ['Cimbria', 'Selandia'], ['Selandia', 'Scandia'],
     ['Panticapaeum', 'Phanagoria'],
+    // The crossing the diagram had been walking: the Adriatic passage to
+    // Dalmatia. (No Alboran ferry — those two still share a false land border,
+    // see the note on severLinks below.)
+    ['Tarentum', 'Salona'],
   ],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
@@ -1593,8 +1597,47 @@ export const MAP_DATA = {
   // WALK from Gaul to Britain. Bonifacio is 0.13° and joined Corsica to
   // Sardinia the same way. Both are ferries above, and neither is a land
   // border.
+  // And five more the Channel fix could not see. That check compared
+  // LANDMASSES, and merging MAINLAND/BALKANS/ITALY into one ring made Europe,
+  // Africa and Asia the same landmass — so every crossing except the island
+  // ones went invisible to it. The test that finds these instead walks the
+  // land mask: shortest land route between two centroids against the straight
+  // line. A genuine neighbour walks it directly; a false border has to go the
+  // long way round. Measured detours below.
+  //
+  // Everything else that looked suspicious came back genuine and is NOT here:
+  // Genua|Pisae round the gulf of Genoa (0.9x), Isca Dumnoniorum|Isca Silurum
+  // round the head of the Severn (0.9x), Tauria|Tanais round the Maeotic
+  // shore (1.0x), Semnones|Cimbria (0.9x), Aorsia|Caucasian Albania (0.9x).
   severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus'],
-    ['Condate', 'Venta Belgarum'], ['Aleria', 'Turris Libisonis']],
+    ['Condate', 'Venta Belgarum'], ['Aleria', 'Turris Libisonis'],
+    ['Capua', 'Salona'], ['Tarentum', 'Salona'],           // the Adriatic, 2.6x and 2.4x
+    ['Hyrcania', 'Ustyurt']],                              // the Caspian, 2.2x
+  // KNOWN DEFECT, deliberately not severed here: `Portus Magnus | Malaca` and
+  // `Volubilis | Malaca` are false land borders across the Alboran sea (land
+  // detours of 20.3x and 28.6x — Malaca's cell wins a stray lobe on the
+  // Algerian coast around −3.15, 35.4). They are wrong, and severing them is
+  // the correct cartography. It is not in this commit because severing them
+  // breaks `smoke90`: the 167 BCE crowned run loses a THIRTEEN-card strand of
+  // the royal century, `ev_samaria_falls` through `ev_k_salome_dies`.
+  //
+  // That is not seeded drift and I could not make it one. Measured: the base
+  // map loses at most 1 card across four seeds; this map without the Alboran
+  // severing loses 0; with it, 13, and re-adding EITHER of the two edges alone
+  // restores 0. The crown is enacted at the identical date either way (−145/9,
+  // 30 provinces), so it is not a timing shift — severing the Alboran makes
+  // Africa's land route to Iberia run the whole way round through Sinai and
+  // the steppe, which moves every AI distance query, and something downstream
+  // of the proclamation is fragile to that.
+  //
+  // Shipping a red suite to hide a map defect is the wrong trade, and so is
+  // weakening a test that is demonstrably well calibrated. The likely proper
+  // fix is to stop the lobe at its source — `Malaca` in `contiguousProvinces`,
+  // so the repair detaches the African fragment rather than adjacency being
+  // patched after the fact — and then to find what in the crowned run depends
+  // on that distance. Both belong with the section that gives the west owners,
+  // which is when this stops being latent: all three cells are WASTE today, so
+  // no army in any chapter can currently walk it.
 };
 
 // ---------------------------------------------------------------------------

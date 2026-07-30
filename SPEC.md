@@ -8520,3 +8520,55 @@ bleed gone. A world whose roads connect is a world the AI plays better.
   samples cannot estimate one near two thirds; it also now asserts the arc
   never collapses below 5 of 6 and that a short run is short by the final
   gated card rather than one from the middle.
+
+### Five more false borders, and the one I did not sever
+
+The Channel fix in §160 compared LANDMASSES — and merging MAINLAND, BALKANS
+and ITALY into one ring had made Europe, Africa and Asia the same landmass, so
+that check went blind to every crossing except the island ones. The test that
+actually finds them walks the land mask: shortest land route between two
+centroids against the straight line. A genuine neighbour walks it directly; a
+false border has to go the long way round.
+
+Adjacency diffing first, to know what is even mine. Across the whole frame
+change, §160 altered exactly **two** edges between pre-existing provinces: it
+removed `Hadrianopolis | Thessalonica` (the via Egnatia — the Greece outage
+above) and added `Eastern Desert | Sinai Interior` (both impassable, inert).
+So the Bosporus, Dead Sea, Gulf of Aqaba and Gulf of Issus borders an audit
+turns up are **pre-existing**, not this frame's doing, and are left alone —
+`Byzantion | Nicaea` is a 19.9x detour and contradicts this file's own comment
+about ferries, but severing it re-routes eight tuned chapters and belongs to
+whoever owns that decision.
+
+Severed here, all involving a §160 cell: `Capua | Salona` and
+`Tarentum | Salona` across the Adriatic (2.6x, 2.4x), and `Hyrcania | Ustyurt`
+across the Caspian (2.2x). The same test **cleared** everything else that
+looked wrong on a naive water-crossing screen — Genua|Pisae round the gulf of
+Genoa (0.9x), Isca Dumnoniorum|Isca Silurum round the head of the Severn
+(0.9x), Tauria|Tanais round the Maeotic shore (1.0x), Semnones|Cimbria (0.9x).
+A screen that only asks "does the line cross water" reports all of those.
+
+**And one is knowingly left wrong.** `Portus Magnus | Malaca` and
+`Volubilis | Malaca` cross the Alboran sea at detours of 20.3x and 28.6x —
+Malaca's cell wins a stray lobe on the Algerian coast. Severing them breaks
+`smoke90`: the 167 BCE crowned run loses a thirteen-card strand of the royal
+century, `ev_samaria_falls` through `ev_k_salome_dies`.
+
+That is not drift, and the measurements are what settle it. The base map loses
+at most **1** card across four seeds; this map without the Alboran severing
+loses **0**; with it, **13** — and re-adding either edge alone restores 0. The
+crown is enacted at the identical date either way (−145/9, 30 provinces), so it
+is not a timing shift. Severing the Alboran makes Africa's land route to Iberia
+run the whole way round through Sinai and the steppe, which moves every AI
+distance query in the game, and something downstream of the proclamation is
+fragile to that.
+
+Two bad trades were available: ship a red suite to hide a map defect, or weaken
+a test that four seeds and two maps say is well calibrated. Neither. The defect
+is written down where the data lives, with the reproduction, and it is latent —
+all three cells are WASTE, so no army in any chapter can walk it today. The
+likely proper fix is to stop the lobe at its source (`Malaca` in
+`contiguousProvinces`, so the repair detaches the African fragment instead of
+adjacency being patched afterwards) and then to find what in the crowned run
+depends on that distance. It belongs with the section that gives the west
+owners, which is the day it stops being latent.
