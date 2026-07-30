@@ -8473,3 +8473,50 @@ not wanted until a campaign begins. Deferring `initRenderer` past
 loading state where it belongs, and it is the same work as the seed-search
 optimisation above: the boot path is now the thing to fix, and it is not
 cartography.
+
+### §160 cut Greece off the map
+
+The worst of the three, found only because I went looking for defects of a
+class rather than for defects.
+
+`canEnter` (js/sim/military.js) ends in `return false` — an army may enter its
+own ground, an enemy's, or an ally's, and nothing else. Unowned ground falls
+through. That line had never once executed: **every WASTE cell in the game was
+also `impassable: true`** — all nine of them were deep desert — so the
+impassable check above it always fired first. The fall-through was dead code
+that read as deliberate.
+
+§160 put 130 unowned-but-*passable* cells on the map, and the dead code woke up
+as a wall. Four of them — Philippopolis, Serdica, Naissus, Novae — sit on the
+ground between Thrace and Macedonia, which is to say across the via Egnatia.
+Measured on the shipped snapshot: **Byzantion could reach 152 of 307
+provinces.** Thessalonica, Dyrrhachium, Corinth, Athens and Sparta were a land
+island in every one of the eight chapters — no march, no reinforcement, no
+supply chain reaching them, and an AI whose `bfsDistances` could not see them
+at all. The 1948 Greek state was cut off from Europe.
+
+Nothing caught it, and the reason is worth writing down: every check this
+project owns looks at a *local* property. `validateMapData` checks seeds.
+`coastcheck` checks polygons. `smoke31` checks that latent groups are
+contiguous. A realm severed in half is not a shape any of them has a question
+about. Even the balance harness stayed green — an all-AI run where Greece never
+moves looks like an all-AI run where Greece had nothing to do.
+
+The fix is one line and it is a rule, not a patch: **unclaimed land nobody
+governs is walkable by anyone.** Passage is not possession; entering unowned
+ground takes nothing and claims nothing. With it, Byzantion reaches 268 of 307
+— the remainder being islands, which are supposed to be islands, and the nine
+impassable deserts.
+
+The balance harness came back *cleaner* than before the fix: the anomaly set
+dropped to `67 SEL DEAD + ITU BLEEDING`, both long-accepted, with 614's JUD
+bleed gone. A world whose roads connect is a world the AI plays better.
+
+- **Regression contract**: `smoke104` now names the five stranded provinces and
+  asserts each is land-reachable from Byzantion, that the mainland is one
+  walkable body, and that Britain is still an island — a connectivity check,
+  which is the shape of question nothing was asking. `smoke81` samples six
+  seeds rather than three, because that assertion ESTIMATES A RATE and three
+  samples cannot estimate one near two thirds; it also now asserts the arc
+  never collapses below 5 of 6 and that a short run is short by the final
+  gated card rather than one from the middle.

@@ -250,6 +250,22 @@ export function canEnter(ctx, tag, provId) {
   if (p.owner === tag) return true;
   if (isHostile(ctx, tag, p.owner)) return true;
   if (sameSide(ctx, tag, p.owner)) return true;
+  // Unclaimed land nobody governs is walkable by anyone. Before SPEC §160
+  // this line could not be reached: every WASTE cell in the game was also
+  // `impassable: true` — all nine of them were deep desert — so the check
+  // above caught them and the fall-through below was dead code.
+  //
+  // §160 added 130 unowned-but-passable cells across the west, and the dead
+  // code woke up as a WALL. Four of them (Philippopolis, Serdica, Naissus,
+  // Novae) sit on the ground between Thrace and Macedonia, which turned
+  // Thessalonica, Dyrrhachium, Corinth, Athens and Sparta into a land island
+  // in every chapter: no march down the via Egnatia, no supply chain reaching
+  // them, and an AI whose bfsDistances could not see them at all. Byzantion
+  // could reach 152 of 307 provinces.
+  //
+  // Passage is not possession. Entering unowned ground takes nothing and
+  // claims nothing; it is the crossing a treaty was never needed for.
+  if (p.owner === 'WASTE') return true;
   return false;
 }
 

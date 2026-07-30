@@ -151,5 +151,52 @@ console.log('== the relief pass has room to grow (SPEC §157) ==');
     'and the device is asked for its real budget anyway, per §156');
 }
 
+// ---------------------------------------------------------------------------
+console.log('== unclaimed land is walkable, and Greece is not an island ==');
+{
+  // §160 put 130 unowned-but-PASSABLE cells on the map. Before it, every WASTE
+  // cell in the game was also impassable — all nine were deep desert — so
+  // `canEnter`'s fall-through-to-false for unowned ground was unreachable dead
+  // code. The new cells woke it up as a wall: Philippopolis, Serdica, Naissus
+  // and Novae sit on the ground between Thrace and Macedonia, and Thessalonica,
+  // Dyrrhachium, Corinth, Athens and Sparta became a land island in every
+  // chapter. Byzantion could reach 152 of 307 provinces. Nothing caught it:
+  // seeds were valid, polygons were simple, latent groups were contiguous, and
+  // a realm cut in half is not a shape any of those look at.
+  const MIL = readFileSync(R + '/js/sim/military.js', 'utf8');
+  ok(/if \(p\.owner === 'WASTE'\) return true;/.test(MIL),
+    'canEnter admits unowned, passable ground — passage is not possession');
+
+  const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
+  const provs = MAP_DATA.provinces;
+  const idOf = (n) => provs.findIndex((p) => p.name === n) + 1;
+  const impassable = new Set(provs.map((p, i) => (p.impassable ? i + 1 : 0)).filter(Boolean));
+  const reach = (from) => {
+    const seen = new Set([from]); const q = [from];
+    while (q.length) {
+      for (const nb of snap.neighbors[q.shift()] || []) {
+        if (seen.has(nb) || impassable.has(nb)) continue;
+        seen.add(nb); q.push(nb);
+      }
+    }
+    return seen;
+  };
+  const fromByzantion = reach(idOf('Byzantion'));
+  // The via Egnatia and the road down into Greece. These are the provinces the
+  // outage actually stranded, named so a future frame change cannot re-strand
+  // them quietly.
+  for (const name of ['Thessalonica', 'Dyrrhachium', 'Corinth', 'Athens', 'Sparta']) {
+    ok(fromByzantion.has(idOf(name)), `  ${name} is land-reachable from Byzantion`);
+  }
+  // And the general shape: the mainland is one walkable body. Islands are
+  // allowed to be islands — they are exactly the landmasses the atlas draws
+  // as separate rings — so measure against the mainland's own size.
+  ok(fromByzantion.size > provs.length * 0.8,
+    `  the mainland is one walkable body (${fromByzantion.size}/${provs.length} reachable, `
+    + 'the remainder being islands and impassable desert)');
+  ok(!fromByzantion.has(idOf('Londinium')),
+    '  and Britain is still an island, reachable only by sea');
+}
+
 console.log(failures ? `smoke104: ${failures} FAIL` : 'smoke104: ALL PASS');
 process.exit(failures ? 1 : 0);

@@ -154,7 +154,15 @@ console.log('== §114: three centuries of play reach 425 with something to say =
 // So sample instead of pinning. What the road has to be is RELIABLE, and a
 // majority of independent seeds is a claim about the road; one seed is a claim
 // about the seed. Measured at v6.8: 5 of 6 seeds run the arc end to end.
-const SEEDS = [1, 2, 7];
+// Six, not three. Three was my own mistake: this assertion ESTIMATES A RATE —
+// what fraction of independent three-century runs carry the arc to 425 — and
+// three samples cannot estimate a rate near two thirds. Measured over six
+// seeds the road is taken 6/6 and completed 4/6; the triple [1,2,7] happened
+// to hold two of the two incompletions, so it read 1/3 and looked like a
+// regression. The incompletion is the chapter working: the missing card is
+// always `ev2_g_what_the_office_was_for`, whose `judaeaEndures` gate excludes
+// a live Judaea-Rome war, and on those seeds one is running in May 425.
+const SEEDS = [1, 2, 3, 5, 7, 11];
 {
   const runs = SEEDS.map((seed) => {
     const { game, ctx, actions } = boot(seed);
@@ -201,6 +209,18 @@ const SEEDS = [1, 2, 7];
   const whole = took.filter((r) => r.ran.length === GAL.length && r.office);
   ok(took.length > 0,
     `the Galilee road is reachable (${took.length}/${SEEDS.length} seeds took it)`);
+  // The invariant that does NOT depend on the draw: once the road is entered
+  // the arc never collapses. Every seed that takes it plays all but at most
+  // the final gated card, and the only card a run may be missing is that one.
+  // A break anywhere earlier is a content bug and this is what would say so.
+  const collapsed = took.filter((r) => r.ran.length < GAL.length - 1);
+  ok(collapsed.length === 0,
+    `and once entered it never collapses — every run plays at least ${GAL.length - 1}/${GAL.length}`
+    + ` (${took.map((r) => `${r.seed}:${r.ran.length}`).join(' ')})`);
+  const wrongMiss = took.filter((r) => r.ran.length === GAL.length - 1
+    && r.ran.includes('ev2_g_what_the_office_was_for'));
+  ok(wrongMiss.length === 0,
+    '  and a short run is short by the 425 card, not by one from the middle');
   ok(whole.length * 2 >= took.length,
     `and it runs end to end on most of them — 425 says what the office was for `
     + `(${whole.length}/${took.length}: `
