@@ -59,6 +59,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
         <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
         <div class="pp-row hidden" data-ref="rankRow"><span class="pp-k">${icon('star8', 'icon-k')}Among the powers</span><span class="pp-v" data-ref="rank"></span></div>
+        <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
+        <div class="pp-row hidden" data-ref="eyeRow"><span class="pp-k">${icon('alert', 'icon-k')}They regard us as</span><span class="pp-v" data-ref="eye"></span></div>
         <div class="pp-row hidden" data-ref="ageRow"><span class="pp-k">${icon('scroll', 'icon-k')}The age</span><span class="pp-v" data-ref="age"></span></div>
         <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
@@ -445,6 +447,35 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           + '\nA court far below another hesitates longer before starting a war with it.';
       }
     }
+    // The years, and whether the powers have noticed (SPEC §170).
+    {
+      let cl = null;
+      let at = null;
+      if (self && actions && typeof actions.getClimate === 'function') {
+        try { cl = actions.getClimate(); } catch (e) { warnOnce('np-getClimate', e); }
+      }
+      if (self && actions && typeof actions.getAttention === 'function') {
+        try { at = actions.getAttention(); } catch (e) { warnOnce('np-getAttention', e); }
+      }
+      refs.yearsRow.classList.toggle('hidden', !cl);
+      if (cl) {
+        const cls = cl.value >= 18 ? 'pos' : cl.value <= -18 ? 'neg' : '';
+        setHtml(refs.years, `<span class="${cls}">${esc(cl.band)}</span>`);
+        refs.yearsRow.dataset.tt = cl.text
+          + '\nThe rains run in cycles of about a generation, and they bend the odds on harvests and droughts in both directions.'
+          + '\nSame campaign, same years — this is a fact about the world, not about your luck.';
+      }
+      refs.eyeRow.classList.toggle('hidden', !at);
+      if (at) {
+        const cls = at.value >= 75 ? 'neg' : at.value >= 40 ? '' : 'pos';
+        setHtml(refs.eye, `<span class="${cls}">${esc(at.band)}</span>`);
+        refs.eyeRow.dataset.tt = 'What the great powers make of this realm, from what it has actually done.'
+          + (at.onPowerLand ? '\nWe hold ' + at.onPowerLand + ' province' + (at.onPowerLand === 1 ? '' : 's') + ' that a power of this age used to own.' : '')
+          + (at.threat > 0 ? '\nA foreign court will move against us on a margin ' + at.threat + '% thinner than it would otherwise want.' : '\nNobody is sizing an army against us for this.')
+          + '\nIt cools while we are quiet.';
+      }
+    }
+
     // What kind of world it is (SPEC §168), and — if this court is somebody's
     // client — how long that is likely to last.
     {

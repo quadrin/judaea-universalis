@@ -42,6 +42,7 @@ export const GENERIC_EVENTS = [
   // ── plenty & want ─────────────────────────────────────────────────────────
   {
     id: 'gen_bountiful_harvest',
+    weather: 'good', // the years bend these odds (SPEC §170)
     maxYear: 1799,
     title: 'A Bountiful Harvest',
     desc: 'The threshing floors cannot hold it all. From every district the stewards send '
@@ -68,6 +69,7 @@ export const GENERIC_EVENTS = [
   },
   {
     id: 'gen_drought',
+    weather: 'bad', // the years bend these odds (SPEC §170)
     maxYear: 1799,
     title: 'The Rains Fail',
     desc: 'The early rains did not come, and the late rains came to nothing. The wells are '
@@ -380,6 +382,7 @@ export const GENERIC_EVENTS = [
   // below carries `minYear: 1900`, so the ancient chapters never hear a radio.
   {
     id: 'gen_m_export_boom',
+    weather: 'good', // the years bend these odds (SPEC §170)
     minYear: 1900,
     title: 'A Record Season',
     desc: 'The harvest is in and the ledgers agree: the groves and fields have outdone '
@@ -407,6 +410,7 @@ export const GENERIC_EVENTS = [
   },
   {
     id: 'gen_m_drought',
+    weather: 'bad', // the years bend these odds (SPEC §170)
     minYear: 1900,
     title: 'The Reservoirs Fall',
     desc: 'Two rainy seasons have failed in a row. The reservoirs are down to mud at the '

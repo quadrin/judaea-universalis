@@ -59,6 +59,7 @@ import { intrigueMenu, runIntrigue as runIntrigueCore } from './intrigue.js';
 import { ageReport, absorbReport } from './ages.js';
 import { estateReport } from './estates.js';
 import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
+import { climateReport, attentionReport, harvestOdds } from './weather.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -610,6 +611,12 @@ export const simHelpers = {
       ctx.bus.emit('provinceOwner', {}); // repaint the political layer for a new color
       return true;
     } catch (e) { warnOnce('rebrandTag', 'rebrandTag failed', e); return false; }
+  },
+  // The years (SPEC §170): a content package may not import the sim, so the
+  // generic pool reaches the climate cycle through here. `kind` is 'good' or
+  // 'bad'; the return multiplies that event's monthly chance.
+  climate(ctx, kind) {
+    try { return harvestOdds(ctx, kind === 'bad' ? 'bad' : 'good'); } catch (e) { return 1; }
   },
   getFlag(ctx, key) {
     return ctx.game.flags[key];
@@ -2762,6 +2769,14 @@ export function gameActions(ctx) {
         }
         return res;
       } catch (e) { warnOnce('runIntrigue', 'runIntrigue failed', e); return { ok: false, why: 'The channel is confused.' }; }
+    },
+
+    // ---- the years, and the eye (nation panel, SPEC §170) -------------------
+    getClimate() {
+      try { return climateReport(ctx); } catch (e) { warnOnce('getClimate', 'getClimate failed', e); return null; }
+    },
+    getAttention() {
+      try { return attentionReport(ctx); } catch (e) { warnOnce('getAttention', 'getAttention failed', e); return null; }
     },
 
     // ---- the hope, the office and the ascents (nation panel, SPEC §169) -----

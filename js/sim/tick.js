@@ -15,6 +15,7 @@ import { monthlyStanding } from './standing.js';
 import { monthlyInstitutions } from './institutions.js';
 import { monthlyAges } from './ages.js';
 import { monthlySacred } from './sacred.js';
+import { monthlyWeather } from './weather.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
@@ -124,6 +125,7 @@ function monthlyBlock(ctx) {
   safe('institutions', () => monthlyInstitutions(ctx)); // what arose where, and who took it up (SPEC §166)
   safe('ages', () => monthlyAges(ctx)); // and what kind of world it is now (SPEC §168)
   safe('sacred', () => monthlySacred(ctx)); // the hope, the office and the ascents (SPEC §169)
+  safe('weather', () => monthlyWeather(ctx)); // the years, and whether they have noticed us (SPEC §170)
   safe('claims', () => monthlyClaimFabrications(ctx)); // paid diplomatic operations mature into usable CBs
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));

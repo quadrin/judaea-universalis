@@ -45,7 +45,7 @@
 // hands every court +6% income has rewritten all of them. An age changes a
 // RULE, not a number.
 
-import { num, clamp, chronicle, livingTag, opinionOf } from './military.js';
+import { num, chronicle, livingTag, opinionOf } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {

@@ -36,9 +36,8 @@
 // has no expectation gauge and no priesthood, because an unseen system that
 // silently reshapes a foreign court is §163's business and this is not that.
 
-import { num, clamp, chronicle, resolveTagAdd } from './military.js';
+import { num, clamp, chronicle } from './military.js';
 import { factionApproval, shiftFaction, factionDefs } from './factions.js';
-import { influenceScale } from './estates.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {

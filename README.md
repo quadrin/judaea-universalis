@@ -510,6 +510,36 @@ static site, the zero dependencies, or the missing build step changes.
   Being large, being devoted, or fighting their war beside them slows it; being
   small hurries it. Herod died a king and his son's country became a prefecture,
   and now that is a rule rather than a script.
+- **The hope, the office and the ascents.** A messianic expectation that pays
+  real manpower and morale while it runs and takes your legitimacy apart on the
+  first setback — the only system here where success is dangerous. The High
+  Priesthood as an office with an occupant, seated from one of the parties at
+  your court, paying you legitimacy while the two of you agree and costing it
+  while you do not, and worse than either while it stands empty. And the ascents
+  as a line in the ledger: three festivals a year and the half-shekel from every
+  community in the world, paying more while the country is expecting something
+  and very nearly stopping the month a war closes the roads.
+- **The years, and the eye.** Weather stopped being a coin. A climate cycle
+  wanders between drought and abundance over about a generation and bends the
+  odds on harvests and failed rains in both directions — and because it is
+  computed from the date and the campaign's seed, two players on one seed get
+  the same decade of drought. Meanwhile the great powers notice you in
+  proportion to what you have actually taken from them: hold enough of somebody
+  else's empire and foreign courts start moving against you on a thinner margin
+  than they would otherwise accept. A campaign that conquers nothing is never
+  noticed at all.
+- **Two roads the chapters did not have.** The Maccabean chapter had forty
+  cards about refusing the Greek way of doing things and none about taking it —
+  so there is now a Greek Jerusalem: petition the charter, argue about where a
+  Jew who is also a citizen stops, watch the purists walk out to camps in the
+  wilderness, and end up with the wealthiest Jewish state that ever existed and
+  the least sure what it is. It is gated on the Hellenizers being strong AND the
+  Greek chancery actually embraced, because before institutions existed this
+  branch could only have been flavour. And 1948 gets the decade it was missing:
+  the gates, the ma'abarot, the money from Germany, and the bill in 1959 — the
+  population doubling in under four years, with nowhere to put anyone and no
+  money, which is the largest thing the state did in its first decade and was
+  previously one line about schoolhouses.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

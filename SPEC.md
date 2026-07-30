@@ -8955,3 +8955,79 @@ before 70, or after that chapter's own chain has raised the altar again
 - **Regression contract**: `smoke106` asserts the Temple gate answers correctly
   in all eight chapters, that the expectation pays and then punishes, and that
   the ascents fall when the roads close and stop when the shrine is occupied.
+
+## 170. The years, and the eye
+
+Two pressures the world applies over time, neither of which existed, and both
+about the same absence: a campaign twenty years into going well felt identical
+to one two years in.
+
+**The years.** The generic pool has good harvests and failed rains and rolls
+each independently at a flat monthly chance, which makes weather a coin.
+Weather in this region is not a coin, it is a cycle, and every agrarian state in
+it knew that. A slow climate index now wanders between drought and abundance
+over roughly a generation, computed from the date and the campaign's seed — so
+it stores nothing, cannot drift across a save, and two players on one seed get
+the same decade of drought, which is what makes it a fact about the world rather
+than about your luck. An event may declare `weather: 'good' | 'bad'` and its odds
+are multiplied accordingly; at the extremes a bountiful harvest is 1.6× as
+likely and a failed rain 0.4×, and in a drought decade the reverse. The realm
+panel says what kind of years these are, which is the difference between bad
+luck and a bad decade you can plan around.
+
+**The eye.** Empires apply pressure proportional to how much of a problem you
+are. A revolt that takes two hill forts is a governor's problem; one that takes
+Jerusalem, mints coinage and beats a legion is an emperor's, and the response is
+not the same size. The game had this as authored escalation inside individual
+chains — Severus sent for from Britain, Vespasian given the East — which is
+right for the scripted war and does nothing for the campaign that has outrun its
+own chapter. `attention` is that as a system: it rises from what the player has
+actually done (land held that a top-table court used to own, infamy, a climb up
+the standing table), decays while they are quiet, and thins the margin a foreign
+court wants before it will move against them, by at most 45%.
+
+It is deliberately not a difficulty setting. `attentionThreat` returns exactly
+1 for every court that is not the player's and exactly 1 for a player who has
+taken nothing from anybody, so a quiet campaign runs on the numbers the AI used
+before this file existed. A player who takes half the east is noticed whether or
+not they wanted to be.
+
+## 171. Two roads the chapters did not have
+
+**The Greek Jerusalem (167 BCE).** The Maccabean chapter had forty cards about
+refusing the Greek way of doing things and none about taking it, which is not a
+balanced chapter — it is a chapter with one road and a lot of scenery. And it
+left the game unable to represent what the sources are most anxious about: the
+Hellenizing party had a real programme, real support in the priestly
+aristocracy and the coastal cities, and came within one Seleucid civil war of
+winning. Jason bought the High Priesthood and a charter for an
+Antioch-at-Jerusalem — a polis constitution laid over the Temple state, with a
+gymnasium under the citadel — and Menelaus outbid him three years later.
+
+Before §166 this branch could only have been flavour, because refusing the
+Hellenizers cost nothing but a modifier. Now refusing the Greek chancery is a
+standing surcharge on every technology level, and the chancery will not cross
+into the Jewish hill country by itself — so a crown that wants to stop being
+structurally behind has exactly two roads, and this is the second. The branch
+is gated on both conditions at once (the party strong at court AND the chancery
+actually embraced), because neither alone is a programme. Four cards: the
+charter, the ephebate and where a Jew who is also a citizen stops, the families
+walking out to the wilderness camps, and the settlement two generations later —
+the wealthiest Jewish state that ever existed and the least sure what it is.
+
+**The absorption (1948).** The chapter already asked whether the newcomers go to
+the frontier or stay on the coast, because §66's Hebrew pen needs a community
+living in a town before it will rename it. That is one choice with one
+consequence, and it left out the thing that dominated the decade: the population
+roughly doubled in three and a half years — some 688,000 arrivals against
+650,000 residents — with nowhere to put them and no money. The ma'abarot held
+upward of 200,000 people at their peak in 1951; rationing ran to 1959; the
+reparations agreement was signed while the Knesset's windows were being broken
+from outside; and the argument about who absorbed whom was still running at Wadi
+Salib in 1959 and has not stopped since.
+
+Four cards, capacity against cohesion, and no free answer. Open the gates and
+the camps and the ration book cost you order and money; set a quota and you are
+a state that told Jews in camps to wait, on the record. Then: borrow against the
+future and rebuild the camps as towns, or hold them another year. Then: take the
+money from Germany, or refuse it. Then the bill, in 1959.

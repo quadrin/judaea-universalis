@@ -70,6 +70,29 @@ export const CHAPTER_PATHS = Object.freeze([
         ],
       }),
       Object.freeze({
+        id: 'the_charter',
+        question: 'The Greek chancery is embraced and the Hellenizers hold the court. Does the city take a constitution?',
+        roads: [
+          Object.freeze({
+            id: 'greek_jerusalem', name: 'Antioch-at-Jerusalem',
+            marker: 'greekJerusalem', entry: 'ev_hz_antioch_at_jerusalem',
+            terminal: 'ev_hz_the_greek_jerusalem',
+            note: 'SPEC §171. The road the chapter never had: a polis constitution laid over the '
+              + 'Temple state, the ephebate question, the families walking out to the wilderness, '
+              + 'and a settlement two generations on that neither party expected.',
+          }),
+          Object.freeze({
+            id: 'charter_refused', name: 'It Was Given at Sinai',
+            marker: 'charterRefused', entry: 'ev_hz_antioch_at_jerusalem',
+            terminal: 'ev_hz_antioch_at_jerusalem',
+            note: 'The petition is refused in the one language that ends the argument, and the '
+              + 'chancery stays a tool of the crown rather than a constitution. The road is one '
+              + 'card long by design: refusing is the end of the question, and the technology '
+              + 'surcharge for refusing it (SPEC §166) is what the realm keeps paying instead.',
+          }),
+        ],
+      }),
+      Object.freeze({
         id: 'the_line_continues',
         question: 'A Hasmonean Judaea reaches the year Parthia sweeps Syria. Which empire?',
         roads: [
@@ -875,6 +898,27 @@ export const CHAPTER_PATHS = Object.freeze([
     title: 'The War of Independence',
     lastYear: 2000,
     forks: [
+      Object.freeze({
+        id: 'the_absorption',
+        question: 'The population doubles in under four years. What is it paid for with?',
+        roads: [
+          Object.freeze({
+            id: 'development_towns', name: 'The Development Towns',
+            marker: 'developmentTowns', entry: 'ev_ab_the_gates',
+            terminal: 'ev_ab_what_the_decade_made',
+            note: 'SPEC §171. The gates open, the camps are rebuilt in place as towns on borrowed '
+              + 'money, and the decade ends with the founding establishment making room.',
+          }),
+          Object.freeze({
+            id: 'the_camps_held', name: 'The Camps Hold',
+            marker: 'campsHeld', entry: 'ev_ab_the_gates',
+            terminal: 'ev_ab_what_the_decade_made',
+            note: 'Rationing tightened and the building deferred. The treasury survives and the '
+              + 'camps become a political constituency that remembers — the fault line the state '
+              + 'is still arguing about.',
+          }),
+        ],
+      }),
       Object.freeze({
         id: 'is_there_a_lebanon',
         question: 'Does a Lebanese state survive to have its settlement collapse?',

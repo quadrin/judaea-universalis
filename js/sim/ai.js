@@ -17,6 +17,7 @@ import {
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { deference } from './standing.js';
 import { institutionMult } from './institutions.js';
+import { attentionThreat } from './weather.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
@@ -522,7 +523,14 @@ function aiConsiderWar(ctx, tag) {
     const needed = (pers.ponderous ? 1.9 : 1.6) * (0.7 + 0.3 * num(pers.caution, 1))
       * (rival ? num(B(ctx, 'rivalRatioMult', 0.85)) : 1)
       * (succession ? 0.85 : 1) // a claim is worth a slightly thinner margin
-      * deference(ctx, tag, tgt);
+      * deference(ctx, tag, tgt)
+      // …and a realm the great powers have started calling a problem (SPEC
+      // §170) is one they will move against on a thinner margin than they
+      // would otherwise accept. `attentionThreat` returns exactly 1 for every
+      // court except the player's, and exactly 1 for a player who has taken
+      // nothing from anybody — so a quiet campaign runs on the numbers this
+      // line had before the file existed.
+      / attentionThreat(ctx, tgt);
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
     if (!ctx.rng.chance((succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);

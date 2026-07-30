@@ -15,6 +15,7 @@ const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { tickDay } = await import(R + '/js/sim/tick.js');
 const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const sacred = await import(R + '/js/sim/sacred.js');
+const weather = await import(R + '/js/sim/weather.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -193,6 +194,64 @@ console.log('== nothing here reaches an AI hand ==');
   ok(actions.getSacred() === null, 'no panel under an AI hand');
   ok(!sacred.raiseExpectation(ctx, 50, 'x'), 'the gauge will not move');
   ok(!sacred.seatHighPriest(ctx, 'zealots').ok, 'and no office can be seated');
+}
+
+console.log('== §170 the years ==');
+{
+  const { game, ctx, actions } = boot('167bce');
+  const seen = new Set();
+  const vals = [];
+  for (let y = 0; y < 14; y++) {
+    run(ctx, 5);
+    const c = actions.getClimate();
+    seen.add(c.band);
+    vals.push(c.value);
+  }
+  ok(seen.size >= 3, `seventy years pass through ${seen.size} kinds of weather (${[...seen].join(', ')})`);
+  ok(Math.max(...vals) > 30 && Math.min(...vals) < -30, 'and it reaches both a wet decade and a dry one');
+  ok(weather.harvestOdds(ctx, 'good') > 0 && weather.harvestOdds(ctx, 'bad') > 0, 'both odds stay positive');
+  // The two must move opposite ways: a wet year cannot make failed rains likelier.
+  const g1 = weather.harvestOdds(ctx, 'good');
+  const b1 = weather.harvestOdds(ctx, 'bad');
+  ok(Math.abs((g1 - 1) + (b1 - 1)) < 1e-9, 'good and bad odds are exact mirrors of each other');
+  // Deterministic: the same date and seed give the same year, every time.
+  const a = boot('167bce', { seed: 42 });
+  const b = boot('167bce', { seed: 42 });
+  run(a.ctx, 30); run(b.ctx, 30);
+  ok(weather.climateIndex(a.ctx) === weather.climateIndex(b.ctx),
+    'the years are a fact about the world, not a roll: same seed, same decade');
+  const other = boot('167bce', { seed: 43 });
+  run(other.ctx, 30);
+  ok(weather.climateIndex(other.ctx) !== weather.climateIndex(a.ctx), '…and a different seed is a different world');
+  // …and an event that does not declare `weather` is untouched by any of it.
+  const { GENERIC_EVENTS } = await import(R + '/js/data/events_generic.js');
+  const tagged = GENERIC_EVENTS.filter((e) => e && e.weather);
+  ok(tagged.length === 4, `exactly the four harvest cards read the cycle (${tagged.map((e) => e.id).join(', ')})`);
+  ok(tagged.every((e) => e.weather === 'good' || e.weather === 'bad'), 'and each declares a direction');
+}
+
+console.log('== §170 the eye ==');
+{
+  const { game, ctx, actions, tag } = boot('167bce');
+  run(ctx, 2);
+  const at0 = actions.getAttention();
+  ok(at0 && at0.value === 0 && at0.band === 'beneath notice', 'a realm that has taken nothing is beneath notice');
+  ok(weather.attentionThreat(ctx, tag) === 1,
+    'REGRESSION: and a quiet campaign runs on exactly the numbers the AI used before this existed');
+  ok(weather.attentionThreat(ctx, 'SEL') === 1, 'no court but the player\'s is ever measured by this');
+
+  let n = 0;
+  for (let i = 1; i < game.provinces.length; i++) {
+    const p = game.provinces[i];
+    if (p && p.owner === 'SEL' && n < 25) { p.owner = tag; p.controller = tag; n++; }
+  }
+  run(ctx, 20);
+  const at1 = actions.getAttention();
+  ok(at1.value > at0.value, `taking ${n} provinces from an empire raises the eye to ${at1.value} (${at1.band})`);
+  ok(at1.onPowerLand > 0, `and it counts the land itself (${at1.onPowerLand} provinces of a top-table court)`);
+  ok(weather.attentionThreat(ctx, tag) > 1, 'so a foreign court will move on a thinner margin');
+  ok(weather.attentionThreat(ctx, tag) <= 1 + weather.WEATHER.threatAtMax, '…but never past the cap');
+  ok(weather.attentionThreat(ctx, 'SEL') === 1, 'and still nobody else is measured by it');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

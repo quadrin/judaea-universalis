@@ -284,7 +284,19 @@ export function checkTriggeredEvents(ctx) {
       let ok = false;
       try { ok = !!ev.trigger(ctx); } catch (e) { warnOnce('trig:' + ev.id, 'trigger threw for', ev.id, e); }
       if (!ok) continue;
-      if (Number.isFinite(ev.chance) && !ctx.rng.chance(ev.chance)) continue;
+      // The years bend the odds (SPEC §170). An event may declare `weather:
+      // 'good' | 'bad'` and its monthly chance is multiplied by where the
+      // climate cycle currently sits — a wet decade makes bountiful harvests
+      // likelier and failed rains rarer, and a dry one does the reverse. An
+      // event with no `weather` key is unaffected, which is all but four of
+      // them, so this costs one property read on the hot path.
+      if (Number.isFinite(ev.chance)) {
+        let odds = ev.chance;
+        if (ev.weather && ctx.helpers && typeof ctx.helpers.climate === 'function') {
+          try { odds *= ctx.helpers.climate(ctx, ev.weather); } catch (e) { /* the years say nothing */ }
+        }
+        if (!ctx.rng.chance(odds)) continue;
+      }
       fireEvent(ctx, ev);
     } catch (e) { warnOnce('trigloop:' + (ev && ev.id), 'trigger event check failed', e); }
   }

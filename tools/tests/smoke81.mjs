@@ -248,10 +248,16 @@ const SEEDS = [1, 2, 3, 5, 7, 11];
   ok(broken.length === 0,
     `and once entered it never breaks in the middle — every run plays all ${windowed.length} windowed cards `
     + `(${runs.map((r) => r.seed + ':' + r.ran.length).join(' ')})`);
-  const wrongMiss = took.filter((r) => r.ran.length === GAL.length - 1
-    && r.ran.includes('ev2_g_what_the_office_was_for'));
+  // …and a short run is short from the TAIL. The old form of this checked one
+  // specific card, which assumed the tail was one card long; it is two (390 and
+  // 425), and a run at war with Rome on both dates misses both. What it is
+  // really asserting is that the cards a run lacks are dated ones, never
+  // windowed ones — which the check above already guarantees, so this states
+  // the same thing from the other side and names the cards when it trips.
+  const wrongMiss = took.filter((r) => GAL.some((id) => !r.ran.includes(id) && !dated.has(id)));
   ok(wrongMiss.length === 0,
-    '  and a short run is short by the 425 card, not by one from the middle');
+    '  and a short run is short from the dated tail, not from the middle'
+    + (wrongMiss.length ? ' [' + wrongMiss.map((r) => r.seed).join(',') + ']' : ''));
   ok(whole.length * 2 >= took.length,
     `and it runs end to end on most of them — 425 says what the office was for `
     + `(${whole.length}/${took.length}: `

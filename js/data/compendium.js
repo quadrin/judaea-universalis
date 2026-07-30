@@ -6,6 +6,7 @@
 import { BOOKMARK_167 } from './bookmark_167bce.js';
 import { EVENTS_167 } from './events_167bce.js';
 import { EVENTS_167_KINGS } from './events_167bce_kings.js';
+import { EVENTS_167_HELLENIZERS } from './events_167bce_hellenizers.js';
 import { EVENTS_167_WORLD } from './events_167bce_world.js';
 import { EVENTS_167_AFTER } from './events_167bce_after.js';
 import { EVENTS_167_EMPIRE } from './events_167bce_empire.js';
@@ -42,6 +43,7 @@ import { EVENTS_614_DAVID } from './events_614ce_david.js';
 import { BOOKMARK_1948 } from './bookmark_1948.js';
 import { EVENTS_1948 } from './events_1948.js';
 import { EVENTS_1948_REGION } from './events_1948_region.js';
+import { EVENTS_1948_ABSORPTION } from './events_1948_absorption.js';
 import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { EVENTS_1948_GULF } from './events_1948_gulf.js';
@@ -74,7 +76,7 @@ const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, EVENTS_STATECRAFT, GENERIC_EVE
 export const ERAS = [
   // The Maccabean chapter carries the royal century beside it (SPEC §106):
   // the wars of Alexander Jannaeus and the nine years of Salome Alexandra.
-  { bookmark: BOOKMARK_167, events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_AFTER, EVENTS_167_EMPIRE, ANTIQUE) },
+  { bookmark: BOOKMARK_167, events: EVENTS_167.concat(EVENTS_167_KINGS, EVENTS_167_WORLD, EVENTS_167_AFTER, EVENTS_167_EMPIRE, EVENTS_167_HELLENIZERS, ANTIQUE) },
   { bookmark: BOOKMARK_67, events: EVENTS_67.concat(EVENTS_67_AFTER, ANTIQUE) },
   { bookmark: BOOKMARK_40, events: EVENTS_40.concat(EVENTS_40_ALTERNATES, EVENTS_40_BRIDGE, ANTIQUE) },
   { bookmark: BOOKMARK_66, events: EVENTS_66.concat(EVENTS_66_AFTER, EVENTS_66_NATION, EVENTS_66_SETTLEMENT, ANTIQUE) },
@@ -99,7 +101,7 @@ export const ERAS = [
   // 1948's chain carries the region's own quarrels beside it (SPEC §105):
   // Suez as a crisis rather than a headline, the union coming apart, Eli
   // Cohen, Tehran in 1979, and the northern border it produced.
-  { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(EVENTS_1948_REGION, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, GENERIC_EVENTS) },
+  { bookmark: BOOKMARK_1948, events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, GENERIC_EVENTS) },
 ];
 
 // The shared pool by itself (the wiki's "omens and incidents" page tells it
