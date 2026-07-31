@@ -1092,12 +1092,31 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
+  // The land roster (SPEC §186): three arms answering each other in a
+  // triangle, scored once per phase from each side's own mix. `scale` turns
+  // the raw matchup number (js/data/units.js) into die pips; `cap` is the most
+  // a composition can ever be worth, so an all-guns host beats a line without
+  // deciding the battle before the dice are thrown.
+  ARMS_TRIANGLE: {
+    scale: 2,              // pips per unit of matchup edge (floored, so a
+                           // balanced host against a balanced host reads 0)
+    cap: 2,                // most pips the triangle itself can add in a phase
+    // The answer to armor, and it is a COUNT, not a proportion (SPEC §186).
+    // Four anti-tank regiments against four tanks is four anti-tank
+    // regiments against four tanks, whatever fraction of the army they are.
+    atPer: 2,              // engaged tanks per fire-phase pip for the guns
+    atCap: 3,              // most pips the guns can earn against armor
+  },
+
   BASE: {
     regSize: 1000,                     // men per regiment
-    regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment
+    // Talents to recruit one regiment. The shot arm sits between the foot and
+    // the horse: engines and their teams cost more than men and less than
+    // remounts (armor prices separately — ARMOR.cost above).
+    regCost: { inf: 10, cav: 25, art: 18 },
     // Every province trains/fits one queued military unit at a time. Paused
     // time never advances these clocks.
-    unitRecruitMonths: { inf: 2, cav: 3, ship: 6, wing: 4 },
+    unitRecruitMonths: { inf: 2, cav: 3, art: 3, ship: 6, wing: 4 },
     maintPerReg: 0.35,                 // talents/month upkeep per regiment (× the pattern's upkeep mult)
     // Administration (SPEC §52): governing costs money, and more realm costs
     // more. Every point of owned development beyond the free allowance bills

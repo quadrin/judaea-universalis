@@ -2,6 +2,12 @@
 // One design language everywhere: 24x24 viewBox, stroke currentColor,
 // stroke-width 1.6, round caps/joins, minimal fills. Sized via CSS classes;
 // color flows from the surrounding text color (gold/parchment palette).
+//
+// The eighteen soldiers of the land roster live in js/data/units.js instead —
+// the map's canvas needs the same path data, so it is authored where both can
+// read it. `unitIcon()` below wraps them in this file's grid.
+
+import { unitGlyphSvg } from '../data/units.js';
 
 export const ICONS = {
   // --- mapmodes -----------------------------------------------------------
@@ -1063,6 +1069,15 @@ export function flagChip(tag, DEFINES, size = 20, link = false, game = null) {
 // Build one icon: 24x24, inherits currentColor, sized via CSS (.icon + modifier).
 export function icon(name, cls = '') {
   const body = ICONS[name];
+  if (!body) return '';
+  return `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+
+// One soldier of the land roster (SPEC §186), drawn from the same path data
+// the map counters use: a Drilled Spearman on a recruit button is the exact
+// silhouette that will fly on that regiment's standard.
+export function unitIcon(gen, arm, cls = '') {
+  const body = unitGlyphSvg(gen, arm);
   if (!body) return '';
   return `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }

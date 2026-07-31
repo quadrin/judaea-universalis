@@ -10276,3 +10276,154 @@ every Jewish court those chapters seat was already on offer.
   Adiabene's and Agrippa's roads beside the principals'. `uitest3` — the
   browser start screen offers the widened Israelite-only rosters, card
   for card.
+
+## 186. Every arm has a face, a gait, and a weakness
+
+Two arms, and one of them was a costume. `cav` was a 25-talent infantryman
+that happened to be called Cataphract Horse; it moved at the same pace as
+the foot beside it, hit with the same math, made the same noise, and wore
+the same banner. §181 noticed half of this and made the 1948 mounted arm
+into armor with a price and a shock-phase quantity — but a Sherman battalion
+and a squadron of Noble Cavalry were still, mechanically, the same unit with
+different names, and neither of them had a picture. The counters said `12k`
+and nothing else. This section gives the land war a **roster**: three arms,
+six patterns each, eighteen soldiers with faces, gaits, sounds, and a
+triangle they answer each other in.
+
+### The three arms
+
+| | what it is | pace | speaks in |
+|---|---|---|---|
+| `inf` | **the foot** — the line | 1.0 | holding, and braking a charge |
+| `cav` | **the mounted** — the shock | 1.25 | the shock phase |
+| `art` | **the shot** — the missile | 0.85 | the fire phase |
+
+`art` is the new one, and it is not "artillery" — it is *the missile arm*,
+which every century on this map had: **Slinger Bands** (the shepherd's arm,
+and Judaea's own), **Archer Companies**, **Bolt Engines** (the legion's
+scorpiones), **Naphtha Crews** (the siphon, and fire that water does not put
+out), **Field Batteries**, **Gun Regiments**. The foot and horse columns
+were already written (§22's `UNIT_GENS`); the shot's names sit beside them
+in the same table, and `js/data/units.js` owns what an arm can *do*.
+
+### The triangle
+
+The phase clock already implied it. The shot speaks in the fire phase, the
+charge in the shock phase, and the foot's business is standing there while
+both happen:
+
+> the shot breaks the line · the line brakes the charge · the charge rides
+> down the shot
+
+Scored as a matchup table over each side's arm **shares**, once per phase,
+each side reading its own row — so an edge is never double-counted, and a
+host of guns and a host of horse can both be earning pips in the phase that
+belongs to them. Floored and capped (`ARMS_TRIANGLE.scale`, `.cap`): two
+ordinary balanced hosts read **zero**, because a mix has to be a real
+commitment before the dice notice it. A pure spear wall against pure horse
+is +2 in shock; three archers in ten against a formed line is +1 in fire.
+
+**One exception, and it is the whole twentieth century.** At pattern 5 the
+mounted arm is armor (§181), and armor does not lose to a braced line — a
+rifle company does not stop a Sherman by forming square, so the foot's +1.6
+against horse becomes +0.2 against tanks, and armor's own shock row replaces
+the horse's. Armor's three counters are named instead:
+
+- **the guns**, and this one is a *count*, not a share — four anti-tank
+  regiments against four tanks is four anti-tank regiments against four
+  tanks, whatever fraction of the army they are. Every `atPer` engaged
+  tanks (never more tanks than we have guns for) is a fire-phase pip, to
+  `atCap`. §181's design language, pointed the other way.
+- **the sky**, which §154 already built and this section did not touch.
+- **the ground**. `MOUNTED_TERRAIN` takes the charge away from cavalry in
+  hills, mountains, marsh and wasteland — and takes more of it from armor,
+  because a tank that cannot go around a mountain is a pillbox burning
+  fuel. It cuts §181's armor pips at the call site as well as the triangle,
+  so the whole armor advantage answers to the map it is standing on.
+
+§181's `armorPips` is untouched and still answers "who has more tanks"; the
+triangle answers "what is each side's army FOR". They are deliberately
+different halves, and the battle window prints them on separate lines.
+
+### The gait
+
+A column marches at the pace of its **slowest arm**, multiplied into §25's
+pattern speed. Pure horse outruns the same men walking by a quarter; put one
+gun battery in and the whole column gives back a sixth. Over a typical hop
+that is four days for horse, five for foot, six for a gun train. This is the
+first time in the game that what an army is made of changes where it can be
+tomorrow — and it is the reason a raiding column and a siege train are now
+different objects rather than the same object with different labels.
+
+The magnitudes are deliberately modest, and that was measured rather than
+guessed. The first draft priced the shot at 0.75, which meant that once the
+AI's establishment held its 10% of guns, nearly every stack in the world
+contained one and nearly every army everywhere marched a quarter slower —
+a global throttle on AI campaigning dressed up as a unit trait. `smoke79`
+caught it: the 66 CE thirty-year run reached its ending a beat later and
+left Jerusalem in a band's hands at the snapshot. A tradeoff a player feels
+when they attach the guns is the goal; a tax on every march in the game is
+not.
+
+### The face
+
+Eighteen silhouettes, authored once as path data on the 24×24 grid
+`icons.js` already uses, and drawn twice: `new Path2D()` on the map's canvas
+and `<path d>` in the panels. A Drilled Spearman on a recruit button is the
+exact shape that will fly on that regiment's standard.
+
+|  | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| foot | club & hide shield | **spear** & round shield | gladius & scutum | kite shield | crossed muskets | crossed rifles |
+| horse | **horse's head** | head & lance | barded cataphract | couched lance | head & sabre | **tank** |
+| shot | whirling sling | drawn bow | bolt engine | siphon & flame | cannon | gun & split trail |
+
+The standard carries the face of the arm that **leads** the host — and that
+is deliberately not "most regiments". Every real army in this game is mostly
+foot, so a plurality rule would put a spear on every standard in every
+century and the tank glyph would never once be drawn. A host that is 30%
+horse IS a cavalry host (that arm decides its battle and sets its pace); a
+host that is 35% guns is a gun line; foot leads everything else, which is
+most things, which is correct. The exact composition is always one hover
+away — outliner row, unit inspector, battle window.
+
+### The sound
+
+The move order and the battle both make the noise of the arm that leads.
+Same two primitives the rest of `sound.js` uses — a shaped noise burst is a
+footfall, a hoof, or a track link; a held low sawtooth is an engine:
+
+- **marching**: tramping feet · feet under a drum (musket age) · boots and
+  a truck somewhere off (modern) · a four-beat canter of **hooves** ·
+  **diesel and track clatter** (armor) · creaking timber and rope (engines
+  on ox-carts) · a tractor and the trail dropping on the hook (limbered guns).
+- **going in**: iron on iron · hooves into a horn and then the crash of
+  contact · slings whipping and stones on shields · the torsion ratchet and
+  release · ragged rank fire · magazine rifles and a machine gun down the
+  line · guns firing in battery · engines under a high-velocity crack.
+
+You hear your **own** side's arms — the map is full of other people's
+marching, and a battle we are not in keeps the old clash of iron.
+
+### What did not change
+
+Every antique chapter caps at pattern 3, so no cataphract, no dragoon and
+none of the seven tuned campaigns can see an anti-tank gun or a tank. The
+save format gains one key: `regiments.art`, absent on every older save and
+read as the zero it always was (`reviveGame` writes it in so a save
+round-trips whole). §181's prices, gates, pips and its whole regression
+contract are untouched.
+
+- **Regression contract**: `smoke118` — the roster is three arms deep with
+  a distinct name, glyph and cue for all eighteen patterns and no glyph
+  shared by two; the triangle scores spear-vs-horse, horse-vs-shot and
+  shot-vs-line in the right phases and reads zero for balanced hosts;
+  armor beats unsupported foot, the braced line stops being an answer to
+  it, the guns answer it by count, and broken ground cuts both the
+  triangle and §181's own pips; a column marches at its slowest arm and
+  `hopDays` agrees; recruiting, splitting, merging, reinforcing and the
+  AI muster all round-trip three arms; the lead-arm rule puts the tank on
+  a host that is a third armor and the spear on one that is not; a real
+  1948 battle carries `mixA`/`mixD` in the right phases while §181's
+  `armA`/`armD` keep their own meaning; and a pre-§186 save loads with no
+  guns rather than a crash.

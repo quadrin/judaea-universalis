@@ -862,3 +862,54 @@ loses three cards to seeded drift (`ev_sc_the_bid_for_a_province`,
 `ev_sc_quartered_on_the_city`, `ev_jerusalem_terms`) against an allowance
 of two, on both trees, byte for byte — pre-existing, not a §185
 regression, and it needs its own pass.
+
+SPEC §186 gives the land war three arms instead of two. `js/data/units.js` is
+the new source of truth — the arm table, the shot's pattern names, the matchup
+triangle, the eighteen faces as bare `d` strings, and the sound cue keys — and
+it imports only `tech.js`, so the sim, the map's canvas and the SVG icon set
+all read one table. Three things are worth knowing before touching it.
+
+**The faces are path data, not markup.** `UNIT_GLYPHS` holds one `d` string per
+pattern, all subpaths in it, because the same string is handed to `new Path2D()`
+in `overlay.js` and dropped into a `<path d>` by `icons.js`' `unitIcon()`. A
+`<circle>` or a `fill=` attribute in there breaks the canvas silently — every
+face is arcs and lines only, and `smoke118` asserts it (`/^M/`, no `<>`).
+
+**The triangle and §181's armor are different halves, on purpose.**
+`armorPips` still answers "who has more tanks" as a signed quantity and still
+lands in `b.last.armA/armD`; `armPips` answers "what is each side's army FOR"
+from the arm shares and lands in `mixA/mixD`. Nothing double-counts because
+each side scores its own row of `MATCHUPS`. The anti-armor term inside
+`armPips` is deliberately a COUNT (`antiArmorPips`), not a share: four
+anti-tank regiments against four tanks have to be worth something whatever
+fraction of the host they are, and a share-product buries them at 0.1.
+
+**The gait is the part that reaches the whole world.** A column marches at its
+slowest arm, so the moment the AI establishment holds any guns, most stacks
+everywhere contain one. The first draft priced the shot at 0.75 and that alone
+flipped `smoke79`'s thirty-year 66 CE run: a global quarter-speed tax on AI
+campaigning, wearing a unit trait's clothes. Confirmed by neutralising the
+table (all arms 1.0 → suite green), then shipped at 0.85/1.25, which keeps the
+tradeoff visible on the clock (4 days horse / 5 foot / 6 with guns) without
+throttling the world. If a later pass wants slower guns, re-measure `smoke79`
+and the harness, not just `smoke118`.
+
+The AI picks its arm by DEFICIT against a 75/15/10 establishment, not off a
+regiment-count residue. The residue version shipped first and produced 5%
+artillery in one chapter and 25% in another purely from where each realm's
+muster happened to sit modulo eight — a court whose count landed wrong fielded
+a host the triangle answers outright.
+
+The batch measured the harness on three chapters, 8 years, against the parent
+commit: 167 BCE none → none, 1948 none → none, 66 CE none → `AGR: BLEEDING`.
+Battle counts moved both ways on the stream shift (167 down 162→118, 1948 down
+53→29, 66 up 83→108), which is the signature of a reseeded RNG rather than a
+direction. Agrippa's flag is the mild kind: three provinces at start and three
+at the end, treasury UP (40→60), a brigade still standing (3.8k men against the
+base tree's 990) and an income line a talent under water because of it — the
+client keeps its army in this stream instead of shedding it at the §52 poverty
+threshold. Accepted and recorded; it is not a wound and it is not new physics.
+
+The full battery at §186: 116 of 118 headless suites ALL PASS. `smoke90` is
+the same pre-existing red documented above (unchanged, and it fails identically
+on the parent commit). `smoke118` is the new contract for this section.

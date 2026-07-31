@@ -22,7 +22,11 @@ import {
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
+  armSpeedOf,
 } from './military.js';
+// The land roster (SPEC §186): the shot arm's names, and the cue a column of
+// each pattern makes when it takes the road.
+import { ARMS, armGenName, unitMoveCue, dominantArm as dominantArmOf } from '../data/units.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
 import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost, ERA_IDEA_TIERS } from '../data/era_ideas.js';
@@ -1363,9 +1367,11 @@ export function gameActions(ctx) {
         if (!p) return null;
         const nameOf = (type, gen) => type === 'ship' ? navalGenName(num(gen, 0))
           : type === 'wing' ? 'Air Wing'
-            : genName(num(gen, 0), type) || (type === 'cav' ? 'Cavalry' : 'Infantry');
+            : armGenName(num(gen, 0), type)
+              || (type === 'cav' ? 'Cavalry' : type === 'art' ? 'Artillery' : 'Infantry');
         const rows = (Array.isArray(p.unitQueue) ? p.unitQueue : []).map((row, i) => ({
           id: row.id, type: row.type, name: nameOf(row.type, row.gen),
+          gen: num(row.gen, 0), // the pattern it is being fitted to (SPEC §186 faces)
           monthsLeft: Math.max(0, num(row.monthsLeft) | 0),
           totalMonths: Math.max(1, num(row.totalMonths, unitRecruitMonths(ctx, row.type)) | 0),
           position: i + 1, stalled: row.stalled || '',
@@ -1384,7 +1390,7 @@ export function gameActions(ctx) {
         const res = recruitRegiment(ctx, g.playerTag, provId, type);
         if (!res.ok) say('Cannot recruit', 'Recruitment failed: ' + res.why + '.', 'bad');
         else {
-          const label = genName(num(res.queued && res.queued.gen, tagGen(ctx, g.playerTag)), type);
+          const label = armGenName(num(res.queued && res.queued.gen, tagGen(ctx, g.playerTag)), type);
           say('Recruitment ordered', (label || 'A regiment') + ' will muster in '
             + num(res.queued && res.queued.totalMonths, unitRecruitMonths(ctx, type)) + ' months. Units train one at a time in each province.', 'good');
         }
@@ -1409,7 +1415,16 @@ export function gameActions(ctx) {
           say('Orders refused', overseas
             ? 'No land route to ' + p.name + ' — the sea is in the way. Build ships, embark the army, and sail.'
             : 'No route to ' + p.name + '.', 'bad');
+          return;
         }
+        // The column takes the road (SPEC §186): what you HEAR is the arm that
+        // sets its pace — hooves, tramping feet, or an engine. The cue is the
+        // dominant arm's, so a mixed host sounds like whatever most of it is.
+        const arm = dominantArmOf(a.regiments);
+        ctx.bus.emit('armyMarch', {
+          armyId: a.id, tag: a.tag, arm, gen: num(a.gen, 0),
+          cue: unitMoveCue(num(a.gen, 0), arm),
+        });
       } catch (e) { warnOnce('moveArmy', 'moveArmy failed', e); }
     },
     mergeArmies(fromId, intoId) {
@@ -1641,7 +1656,13 @@ export function gameActions(ctx) {
             name: a.name || 'Army', men: Math.round(num(a.men)),
             inf: (a.regiments && a.regiments.inf) | 0,
             cav: (a.regiments && a.regiments.cav) | 0,
+            art: (a.regiments && a.regiments.art) | 0,
+            gen,
             infName: genName(gen, 'inf'), cavName: genName(gen, 'cav'),
+            artName: armGenName(gen, 'art'),
+            // The gait (SPEC §186): what the slowest arm in this column does
+            // to its marching speed, said plainly where the army is read.
+            paceMult: armSpeedOf(a),
             morale: num(a.morale), maxMorale: Math.max(0.1, num(a.maxMorale, 3)),
             general: a.general ? {
               name: a.general.name,
@@ -3530,6 +3551,11 @@ export function reviveGame(saved) {
   for (const id of Object.keys(saved.armies || {})) {
     const a = saved.armies[id];
     if (a && !Number.isFinite(a.oosMonths)) a.oosMonths = 0; // pre-supply saves (SPEC §82)
+    // Pre-§186 saves have two arms: the shot is a key they never carried, and
+    // an army that never had guns loads with none rather than being handed
+    // some. Everything downstream reads it through num(), so this is belt and
+    // braces — but a save that round-trips should round-trip whole.
+    if (a && a.regiments && !Number.isFinite(a.regiments.art)) a.regiments.art = 0;
     if (!a || Number.isFinite(a.gen)) continue;
     const t = saved.tags[a.tag];
     a.gen = unlockedGen(num(t && t.tech && t.tech.mar, 0));

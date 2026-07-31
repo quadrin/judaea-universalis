@@ -5,8 +5,9 @@
 // renders any nation read-only — their ruler, purse, armies, diplomacy, tech
 // and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
-import { icon, flagChip } from './icons.js';
-import { unlockedGen, cappedGen, genName, doctrinesFor, techLevelName } from '../data/tech.js';
+import { icon, flagChip, unitIcon } from './icons.js';
+import { unlockedGen, cappedGen, doctrinesFor, techLevelName } from '../data/tech.js';
+import { armGenName } from '../data/units.js';
 import { forceLimitOf, regCount } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 import { eraIdeaGroupsFor } from '../data/era_ideas.js';
@@ -1234,8 +1235,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const gi = cappedGen(th.mar | 0, ctx && ctx.bookmark);
       const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
       setHtml(refs.tech, rows
-        + `<div class="np-tech-unit" data-tt="${esc('The pattern their armies are raised to.'
-          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as <b>${esc(genName(gi, 'inf'))}</b> &amp; <b>${esc(genName(gi, 'cav'))}</b></div>`);
+        + `<div class="np-tech-unit" data-tt="${esc('The patterns their armies are raised to — three arms (SPEC §186).'
+          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as `
+          + ['inf', 'cav', 'art'].map((a) =>
+            `${unitIcon(gi, a, 'icon-sm')} <b>${esc(armGenName(gi, a))}</b>`).join(', ')
+          + '</div>');
       return;
     }
     let info = null;
@@ -1276,10 +1280,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const u = info.unit;
     const selfGen = cappedGen((t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const selfDoct = doctrinesFor(selfGen).map((d) => `${d.name} — ${d.desc}`).join('\n');
-    const unitLine = u ? `<div class="np-tech-unit" data-tt="${esc('The pattern our armies are raised to. '
+    // Three arms, and what each is for (SPEC §186) — the whole triangle in
+    // the tooltip, because this is where a player decides what to buy.
+    const unitLine = u ? `<div class="np-tech-unit" data-tt="${esc('The patterns our armies are raised to. '
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
-      + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
-      + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
+      + '\n\nThe three arms answer each other: the shot breaks a formed line, the line brakes a charge, '
+      + 'and the charge rides down the shot. Armor is the exception — foot cannot stop it, and the '
+      + 'guns, the sky and broken ground are what can.'
+      + (selfDoct ? '\n\nDoctrines:\n' + selfDoct : ''))}">`
+      + 'Armies muster as '
+      + ['inf', 'cav', 'art'].map((a) =>
+        `${unitIcon(selfGen, a, 'icon-sm')} <b>${esc(armGenName(selfGen, a))}</b>`).join(', ')
+      + '</div>' : '';
     // The arms pipeline (SPEC §181): who feeds the arsenal, and how warmly.
     let armsLine = '';
     if (actions && typeof actions.getArmsStatus === 'function') {

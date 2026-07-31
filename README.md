@@ -78,6 +78,19 @@ static site, the zero dependencies, or the missing build step changes.
   Host, Faith, World — so the ruler, the four numbers you watch and the five
   levers stay put while twenty sections take turns underneath them.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
+- Three land arms with eighteen soldiers between them, and each one has a face,
+  a gait and a weakness. **The foot** holds the line, **the horse** breaks it,
+  **the shot** — slingers, archers, bolt engines, naphtha crews, cannon,
+  anti-tank guns — outranges both. They answer each other in a triangle: the
+  shot breaks a formed line, the line brakes a charge, the charge rides down
+  the shot. Every pattern flies its own emblem on the map (a spear at 167 BCE,
+  a barded cataphract under the Hasmoneans, a tank in 1948), marches at its
+  own pace — a column keeps its slowest arm's, so an ordinary hop is four days
+  for horse, five for foot and six once the guns are along — and makes its own
+  noise when you put it on the road or into the line: tramping feet, a
+  four-beat canter of hooves, diesel and track clatter. Armor is the century's
+  exception: nothing on foot stops it, and the guns, the sky and broken ground
+  are what do.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
