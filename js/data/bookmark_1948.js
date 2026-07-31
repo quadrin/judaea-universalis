@@ -243,6 +243,16 @@ export const BOOKMARK_1948 = {
     factions: 'Political Blocs',
     powers: 'Great Powers',
     court: 'Cabinet & General Staff',
+    // The realm panel's tabs (SPEC §175). A modern republic has no crown and
+    // no host, and the chapter that already says Cabinet where antiquity says
+    // Court should not then say Faith over a section about the Temple that has
+    // been gone for nineteen centuries — Faith hides itself here anyway,
+    // because no Temple stands, but the other five have to read as 1948.
+    tabCrown: 'State',
+    tabCourt: 'Cabinet',
+    tabCoin: 'Economy',
+    tabWar: 'Defence',
+    tabWorld: 'Abroad',
   },
   doctrineAxes: {
     zeal: {
@@ -1104,7 +1114,7 @@ export const BOOKMARK_1948 = {
       const w = findWar(g, 'EGY', 'ISR');
       if (w) {
         w.noNegotiation = true; // the guns talk until Rhodes (ev_i_armistice unlocks)
-        w.independenceSide = 'def'; // the new state defends its freedom (SPEC §174)
+        w.independenceSide = 'def'; // the new state defends its freedom (SPEC §175)
         const arabSide = (w.attackers || []).indexOf('EGY') !== -1 ? w.attackers : w.defenders;
         for (const t of ['JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
           if (g.tags[t] && arabSide.indexOf(t) === -1) arabSide.push(t);

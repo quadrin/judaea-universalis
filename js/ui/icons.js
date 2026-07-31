@@ -12,6 +12,22 @@ export const ICONS = {
     '<path d="M6 12.5h12"/>' +
     '<path d="M7.5 12.5v6M12 12.5v6M16.5 12.5v6"/>' +
     '<path d="M5 21h14"/>',
+  // Diaspora (SPEC §175): a sower's hand and the scattered seed. The word IS
+  // the scattering of seed, and the emblem has to read at 18px in a bar next
+  // to a temple and a mountain — so: an open palm tilted over, and six grains
+  // falling away from it in a spray. Not a menorah; the map is showing where
+  // communities LIVE, and half of them lived under crowns that would not have
+  // let them raise one.
+  diaspora:
+    '<path d="M4.2 9.4c1.1-1.9 2.7-2.6 4.8-2.1l3.1.8"/>' +
+    '<path d="M4.2 9.4 6 12.2c.8 1.2 2 1.6 3.5 1.2l2.6-.7"/>' +
+    '<path d="M12.1 8.1c1.5-.5 2.5-.1 3 1.1.5 1.3 0 2.3-1.4 2.9"/>' +
+    '<circle cx="16.9" cy="6.2" r="0.95"/>' +
+    '<circle cx="20.1" cy="9.1" r="0.95"/>' +
+    '<circle cx="16.4" cy="11.9" r="0.95"/>' +
+    '<circle cx="20.4" cy="14.6" r="0.95"/>' +
+    '<circle cx="15.6" cy="17.4" r="0.95"/>' +
+    '<circle cx="19.4" cy="19.8" r="0.95"/>',
   // Terrain: mountain ridge
   mountain:
     '<path d="M3.5 19 9 8.5l3.5 6.3"/>' +

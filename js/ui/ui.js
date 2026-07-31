@@ -24,6 +24,7 @@ const MAPMODES = [
   { id: 'development', ico: icon('bricks'), name: 'Development' },
   { id: 'unrest', ico: icon('flame'), name: 'Unrest' },
   { id: 'estates', ico: icon('scales'), name: 'Estates — which party of the court holds this ground' },
+  { id: 'diaspora', ico: icon('diaspora'), name: 'The Dispersion — where the communities are, how large, and how they regard this crown' },
 ];
 
 function buildMapmodeBar(bar, bus) {

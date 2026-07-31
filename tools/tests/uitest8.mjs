@@ -42,6 +42,10 @@ await page.waitForTimeout(600);
 console.log('== the Technology block ==');
 await page.locator('.tb-flag').click();
 await page.waitForTimeout(400);
+// SPEC §175: the technology ladders sit on the Coin tab of the realm panel,
+// which opens on Crown; a closed tab is display:none and not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="coin"]').click();
+await page.waitForTimeout(150);
 const techBtns = await page.locator('[data-tech]').count();
 ok(techBtns === 3, 'three ladders shown: ' + techBtns);
 const unitLine = (await page.locator('.np-tech-unit').textContent()) || '';
@@ -53,6 +57,8 @@ console.log('== buying a level through the panel ==');
 await page.evaluate(() => { window._ctx.game.tags.JUD.points.gov = 999; });
 await page.locator('.tb-flag').click(); await page.waitForTimeout(150);
 await page.locator('.tb-flag').click(); await page.waitForTimeout(300); // reopen to re-render
+await page.locator('#nation-panel .np-tab[data-tab-go="coin"]').click();
+await page.waitForTimeout(150);
 const govBtn = page.locator('[data-tech="gov"]');
 ok(!(await govBtn.getAttribute('class')).includes('disabled'), 'Advance button live with 999 points');
 await govBtn.click();

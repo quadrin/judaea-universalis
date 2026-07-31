@@ -36,7 +36,7 @@ import {
   num, clamp, chronicle, addOpinion, livingTag,
   setDiploCd, diploCdActive, diploCdMonthsLeft,
 } from './military.js';
-import { DIASPORA, DIASPORA_ASKS } from '../data/diaspora.js';
+import { DIASPORA, DIASPORA_ASKS, openAt } from '../data/diaspora.js';
 import { expectation } from './sacred.js';
 
 const _warned = new Set();
@@ -70,8 +70,6 @@ export const DIA = {
   caughtOpinion: -12,
 };
 
-function yearsAt(y) { return y < 0 ? y + 1 : y; }
-
 // Is this crown one the dispersion would write back to?
 function jewishCrown(ctx) {
   const g = ctx.game;
@@ -80,16 +78,16 @@ function jewishCrown(ctx) {
   return t.religion === 'judaism' ? g.playerTag : null;
 }
 
-// The community on this province in this year, or null.
+// The community on this province in this year, or null. The window test is
+// `openAt` in the data package (SPEC §175) — it used to be written out here and
+// again inside the Compendium, and the two copies had already drifted.
 export function communityDef(ctx, p) {
   if (!p) return null;
-  const y = yearsAt(num(ctx.game.date.y));
+  const y = num(ctx.game.date.y);
   const key = p.canon || p.name;
   for (const d of DIASPORA) {
     if (d.prov !== key && d.prov !== p.name) continue;
-    if (Number.isFinite(d.from) && y < yearsAt(d.from)) return null;
-    if (Number.isFinite(d.until) && d.until !== null && y >= yearsAt(d.until)) return null;
-    return d;
+    return openAt(d, y) ? d : null;
   }
   return null;
 }

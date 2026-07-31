@@ -93,7 +93,14 @@ async function openPanel() {
 // One press, with the panel told to rebuild while the button is held down.
 // `bus.emit('day')` is the very signal the running clock sends, so this is the
 // real refresh path and not a stand-in for it.
-async function pressWithRefresh(sel) {
+async function pressWithRefresh(sel, tab) {
+  // SPEC §175: the realm panel is six tabs and opens on Crown. A button whose
+  // tab is closed is display:none, so it has no bounding box and cannot be
+  // pressed at raw mouse coordinates — open its tab first.
+  if (tab) {
+    await page.locator('#nation-panel .np-tab[data-tab-go="' + tab + '"]').click();
+    await page.waitForTimeout(150);
+  }
   // The panel scrolls: these buttons sit well below the fold, and raw mouse
   // coordinates do not auto-scroll the way locator.click() does.
   await page.locator(sel).first().scrollIntoViewIfNeeded();
@@ -133,7 +140,7 @@ console.log('== buying a technology takes ONE press, refresh mid-press ==');
   const before = await page.evaluate(() => window._ctx.game.tags.JUD.tech.gov);
   const cls = (await page.locator('[data-tech="gov"]').getAttribute('class')) || '';
   ok(!cls.includes('disabled'), 'the Advance button is live');
-  ok(await pressWithRefresh('[data-tech="gov"]'), 'the panel was told to rebuild mid-press');
+  ok(await pressWithRefresh('[data-tech="gov"]', 'coin'), 'the panel was told to rebuild mid-press');
   const after = await page.evaluate(() => window._ctx.game.tags.JUD.tech.gov);
   ok(after === before + 1,
     'one press advanced the ladder exactly one level (' + before + ' \u2192 ' + after + ')');
@@ -155,7 +162,7 @@ console.log('== hiring an advisor takes ONE press, refresh mid-press ==');
   const before = await seated();
   const n = await page.locator('[data-hire-adv]').count();
   ok(n > 0, 'empty seats offer candidates (' + n + ' buttons)');
-  await pressWithRefresh('[data-hire-adv]');
+  await pressWithRefresh('[data-hire-adv]', 'court');
   const after = await seated();
   ok(after === before + 1, 'one press seated exactly one advisor (' + before + ' \u2192 ' + after + ')');
 }
@@ -172,7 +179,7 @@ console.log('== a national decision takes ONE press, refresh mid-press ==');
   ok(count > 0, 'at least one decision can be enacted (' + count + ')');
   const key = await page.locator('[data-decision]:not(.disabled)').first().getAttribute('data-decision');
   const before = await page.evaluate(() => window._ctx.game.tags.JUD.treasury);
-  await pressWithRefresh('[data-decision]:not(.disabled)');
+  await pressWithRefresh('[data-decision]:not(.disabled)', 'court');
   const after = await page.evaluate(() => window._ctx.game.tags.JUD.treasury);
   ok(after !== before, 'one press enacted "' + key + '" (treasury ' + Math.round(before) + ' \u2192 ' + Math.round(after) + ')');
 }

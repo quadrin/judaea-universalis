@@ -10,10 +10,53 @@ import { unlockedGen, cappedGen, genName, doctrinesFor } from '../data/tech.js';
 import { forceLimitOf, regCount } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
 
+// The tabs (SPEC §175).
+//
+// This panel accumulated twenty top-level sections over sixty-odd SPEC entries
+// — estates, institutions, the ages, the sacred offices, the powers beyond the
+// map, doctrines, crises, technology, reforms — and every one of them was
+// correct to add and made the panel worse. A player looking for the treasury
+// scrolled past the High Priesthood to find it.
+//
+// A tab is a `data-tab` attribute on a section wrapper and one on the panel
+// root; the CSS hides every section whose tab is not the active one
+// (styles.css, `#nation-panel[data-tab=…]`). That is deliberately NOT the
+// `.hidden` class the refresh already toggles per section, because the two
+// must not fight: a section shows when the sim says it has something to say
+// AND its tab is open, and neither has to know about the other.
+//
+// The panel is never re-templated. `refs` is harvested exactly once in build()
+// and a tab switch only flips an attribute, so nothing goes stale and no click
+// is ever detached mid-press (SPEC §132).
+//
+// `term` is the key in the chapter's `uiTerms` (SPEC §52) — 1948 says Cabinet
+// where antiquity says Court, and Defence where this says Host.
+//
+// A tab that would be empty does not appear: `tabHasContent` asks the DOM,
+// after the refresh has set every section's `hidden`, whether this tab has
+// anything left to show. Five of the six are anchored to a section that exists
+// in every chapter (Missions, Decisions, Technology, Armies, Diplomacy) and so
+// never vanish; Faith is the one that may, because the Temple does not stand
+// in most of these centuries and a tab that is empty six times out of eight is
+// worse than no tab at all.
+const TABS = [
+  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, and what this chapter asks of you.' },
+  { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
+  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, and the technologies silver buys.' },
+  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
+  { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads.' },
+  { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
+];
+const DEFAULT_TAB = 'crown';
+
 export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
   let ctx = null;
   let actions = null;
   let viewTag = null; // null = the player's own realm; a tag = a foreign court
+  // Which tab is open (SPEC §175). A closure variable and not DOM state,
+  // because every lever in this panel calls refresh() the moment it fires and
+  // anything derived from the DOM would be clobbered by the next rebuild.
+  let tab = DEFAULT_TAB;
   const refs = {};
 
   function setText(node, s) {
@@ -45,29 +88,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-pips" data-ref="rulerPips"></div>
       </div>
       <div class="np-heir" data-ref="heirRow"></div>
-      <div class="pp-grid">
-        <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('temple', 'icon-k')}Capital</span><span class="pp-v" data-ref="capital"></span></div>
-        <div class="pp-row" data-ref="govRow"><span class="pp-k">${icon('scales', 'icon-k')}Government</span><span class="pp-v" data-ref="govType"></span></div>
-        <div class="pp-row" data-ref="provRow" data-tt="Provinces owned · total development"><span class="pp-k">${icon('bricks', 'icon-k')}<span data-ref="realmLabel">Realm</span></span><span class="pp-v" data-ref="realm"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}<span data-ref="legitimacyLabel">Legitimacy</span></span><span class="pp-v" data-ref="legitimacy"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
-        <div class="pp-row hidden" data-ref="infamyRow" data-tt="Conquest is remembered: courts abroad turn against you (opinion falls monthly), and at 30+ the fearful league into a defensive coalition. Decays one point a month.">
-          <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
-        <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
-        <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
-        <div class="pp-row hidden" data-ref="rankRow"><span class="pp-k">${icon('star8', 'icon-k')}Among the powers</span><span class="pp-v" data-ref="rank"></span></div>
-        <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
-        <div class="pp-row hidden" data-ref="eyeRow"><span class="pp-k">${icon('alert', 'icon-k')}They regard us as</span><span class="pp-v" data-ref="eye"></span></div>
-        <div class="pp-row hidden" data-ref="ageRow"><span class="pp-k">${icon('scroll', 'icon-k')}The age</span><span class="pp-v" data-ref="age"></span></div>
-        <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
-        <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
-        <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
-      </div>
+      <div class="np-vitals" data-ref="vitals"></div>
       <div class="np-acts" data-ref="acts">
         <button class="pp-build-btn" data-act="callReserves" data-ref="actReserves">${icon('spears')}<span>Call Reserves</span></button>
         <button class="pp-build-btn" data-act="buyStability" data-ref="actStability">${icon('scales')}<span>Restore Order</span></button>
@@ -75,67 +96,122 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <button class="pp-build-btn" data-act="repayLoan" data-ref="actRepay">${icon('repay')}<span>Repay Loan</span></button>
         <button class="pp-build-btn hidden" data-act="requestParthianAid" data-ref="actParthia" data-tt="Send envoys to the King of Kings: 50 influence points for a chance at silver, volunteers, and Parthian sympathy">${icon('dove')}<span>Envoys to Parthia</span></button>
       </div>
-      <div class="pp-build hidden" data-ref="chapterBlock">
-        <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
-        <div class="np-chapter" data-ref="chapter"></div>
+      <div class="np-tabs" data-ref="tabs" role="tablist"></div>
+
+      <!-- ── THE CROWN ─────────────────────────────────────────────────── -->
+      <div class="pp-grid" data-tab="crown">
+        <div class="pp-row"><span class="pp-k">${icon('altar', 'icon-k')}Religion</span><span class="pp-v"><span class="dot" data-ref="religionDot"></span><span data-ref="religion"></span></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('amphora', 'icon-k')}Culture</span><span class="pp-v"><span class="dot" data-ref="cultureDot"></span><span data-ref="culture"></span></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('temple', 'icon-k')}Capital</span><span class="pp-v" data-ref="capital"></span></div>
+        <div class="pp-row" data-ref="govRow"><span class="pp-k">${icon('scales', 'icon-k')}Government</span><span class="pp-v" data-ref="govType"></span></div>
+        <div class="pp-row" data-ref="provRow" data-tt="Provinces owned · total development"><span class="pp-k">${icon('bricks', 'icon-k')}<span data-ref="realmLabel">Realm</span></span><span class="pp-v" data-ref="realm"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('scales', 'icon-k')}Stability</span><span class="pp-v" data-ref="stability"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('laurel', 'icon-k')}<span data-ref="legitimacyLabel">Legitimacy</span></span><span class="pp-v" data-ref="legitimacy"></span></div>
+        <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
+        <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
       </div>
-      <div class="pp-build hidden" data-ref="doctrineBlock">
-        <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
-        <div class="np-doctrine" data-ref="doctrine"></div>
-      </div>
-      <div class="pp-build" data-ref="missionsBlock">
+      <div class="pp-build" data-ref="missionsBlock" data-tab="crown">
         <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-missions" data-ref="missions"></div>
       </div>
-      <div class="pp-build hidden" data-ref="crisesBlock">
-        <div class="pp-build-title" data-ref="crisesTitle">What Is Brewing</div>
-        <div class="np-factions" data-ref="crises"></div>
+      <div class="pp-build hidden" data-ref="chapterBlock" data-tab="crown">
+        <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
+        <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <div class="pp-build hidden" data-ref="factionsBlock">
+      <div class="pp-build" data-tab="crown">
+        <div class="pp-build-title">Reforms</div>
+        <div class="np-reforms" data-ref="reforms"></div>
+      </div>
+
+      <!-- ── THE COURT ─────────────────────────────────────────────────── -->
+      <div class="pp-build hidden" data-ref="factionsBlock" data-tab="court">
         <div class="pp-build-title" data-ref="factionsTitle">Estates</div>
         <div class="np-factions" data-ref="factions"></div>
       </div>
-      <div class="pp-build hidden" data-ref="foreignCourtBlock">
+      <div class="pp-build hidden" data-ref="foreignCourtBlock" data-tab="court">
         <div class="pp-build-title">Their Court</div>
         <div class="np-factions" data-ref="foreignCourt"></div>
       </div>
-      <div class="pp-build hidden" data-ref="sacredBlock">
-        <div class="pp-build-title">The Hope and the Office</div>
-        <div class="np-factions" data-ref="sacred"></div>
-      </div>
-      <div class="pp-build hidden" data-ref="instBlock">
-        <div class="pp-build-title" data-ref="instTitle">The World's Way of Doing Things</div>
-        <div class="np-factions" data-ref="institutions"></div>
-      </div>
-      <div class="pp-diplo">
-        <div class="pp-diplo-title">Diplomacy</div>
-        <div data-ref="diploBody"></div>
-      </div>
-      <div class="pp-build hidden" data-ref="powersBlock">
-        <div class="pp-build-title" data-ref="powersTitle">The Powers Beyond the Map</div>
-        <div class="np-powers" data-ref="powers"></div>
-      </div>
-      <div class="pp-build" data-ref="decisionsBlock">
-        <div class="pp-build-title">Decisions</div>
-        <div class="np-decisions" data-ref="decisions"></div>
-      </div>
-      <div class="pp-build" data-ref="courtBlock">
+      <div class="pp-build" data-ref="courtBlock" data-tab="court">
         <div class="pp-build-title" data-ref="courtTitle">The Court</div>
         <div class="np-court" data-ref="court"></div>
       </div>
-      <div class="pp-build">
+      <div class="pp-build hidden" data-ref="crisesBlock" data-tab="court">
+        <div class="pp-build-title" data-ref="crisesTitle">What Is Brewing</div>
+        <div class="np-factions" data-ref="crises"></div>
+      </div>
+      <div class="pp-build" data-ref="decisionsBlock" data-tab="court">
+        <div class="pp-build-title">Decisions</div>
+        <div class="np-decisions" data-ref="decisions"></div>
+      </div>
+
+      <!-- ── THE COIN ──────────────────────────────────────────────────── -->
+      <div class="pp-grid" data-tab="coin">
+        <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
+      </div>
+      <div class="pp-build" data-tab="coin">
         <div class="pp-build-title">Technology</div>
         <div class="np-reforms" data-ref="tech"></div>
       </div>
-      <div class="pp-build">
-        <div class="pp-build-title">Reforms</div>
-        <div class="np-reforms" data-ref="reforms"></div>
+
+      <!-- ── THE HOST ──────────────────────────────────────────────────── -->
+      <div class="pp-grid" data-tab="war">
+        <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
+        <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
+      </div>
+      <div class="pp-build hidden" data-ref="doctrineBlock" data-tab="war">
+        <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
+        <div class="np-doctrine" data-ref="doctrine"></div>
+      </div>
+
+      <!-- ── THE FAITH ─────────────────────────────────────────────────── -->
+      <div class="pp-build hidden" data-ref="sacredBlock" data-tab="faith">
+        <div class="pp-build-title">The Hope and the Office</div>
+        <div class="np-factions" data-ref="sacred"></div>
+      </div>
+
+      <!-- ── THE WORLD ─────────────────────────────────────────────────── -->
+      <div class="pp-grid" data-tab="world">
+        <div class="pp-row hidden" data-ref="rankRow"><span class="pp-k">${icon('star8', 'icon-k')}Among the powers</span><span class="pp-v" data-ref="rank"></span></div>
+        <div class="pp-row hidden" data-ref="ageRow"><span class="pp-k">${icon('scroll', 'icon-k')}The age</span><span class="pp-v" data-ref="age"></span></div>
+        <div class="pp-row hidden" data-ref="infamyRow" data-tt="Conquest is remembered: courts abroad turn against you (opinion falls monthly), and at 30+ the fearful league into a defensive coalition. Decays one point a month.">
+          <span class="pp-k">${icon('alert', 'icon-k')}Infamy</span><span class="pp-v neg" data-ref="infamy"></span></div>
+        <div class="pp-row hidden" data-ref="eyeRow"><span class="pp-k">${icon('alert', 'icon-k')}They regard us as</span><span class="pp-v" data-ref="eye"></span></div>
+        <div class="pp-row hidden" data-ref="opinionRow"><span class="pp-k">${icon('dove', 'icon-k')}Opinion of us</span><span class="pp-v" data-ref="opinion"></span></div>
+        <div class="pp-row hidden" data-ref="standingRow"><span class="pp-k">${icon('scroll', 'icon-k')}Standing</span><span class="pp-v" data-ref="standing"></span></div>
+      </div>
+      <div class="pp-diplo" data-tab="world">
+        <div class="pp-diplo-title">Diplomacy</div>
+        <div data-ref="diploBody"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="powersBlock" data-tab="world">
+        <div class="pp-build-title" data-ref="powersTitle">The Powers Beyond the Map</div>
+        <div class="np-powers" data-ref="powers"></div>
+      </div>
+      <div class="pp-build hidden" data-ref="instBlock" data-tab="world">
+        <div class="pp-build-title" data-ref="instTitle">The World's Way of Doing Things</div>
+        <div class="np-factions" data-ref="institutions"></div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
+    el.dataset.tab = tab;
 
     refs.close.addEventListener('click', () => { if (onClose) onClose(); else close(); });
     el.addEventListener('click', (e) => {
       if (!(e.target instanceof Element)) return;
+      // The tab strip is matched FIRST and returns immediately (SPEC §175).
+      // The chain below falls through sixteen closest() probes and ends at the
+      // war-overview handler, so a tab button that happened to sit inside a war
+      // row's ancestry would open the war screen. It also deliberately does NOT
+      // call refresh(): a tab switch changes no game state, and the sections it
+      // reveals were rewritten by the last daily pass like every other section.
+      const tb = e.target.closest('[data-tab-go]');
+      if (tb) {
+        const id = tb.dataset.tabGo;
+        if (id && id !== tab) { tab = id; refreshTabs(); el.scrollTop = 0; }
+        return;
+      }
       const act = e.target.closest('[data-act]');
       if (act) {
         if (act.classList.contains('disabled') || !actions) return;
@@ -304,6 +380,46 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // button before release must still let the panel start updating again.
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
+
+  // Does this tab have anything to show right now? A section the sim has
+  // hidden does not count, and neither does a grid whose every row is hidden —
+  // which is the ordinary case for The World in a chapter with no standing
+  // table and no institutions, where the container is present and renders
+  // nothing. Without this a player would click a tab and get a blank panel.
+  function tabHasContent(id) {
+    const nodes = el.querySelectorAll('[data-tab="' + id + '"]');
+    for (const n of nodes) {
+      if (n.classList.contains('hidden')) continue;
+      if (n.classList.contains('pp-grid')) {
+        let any = false;
+        for (const row of n.children) if (!row.classList.contains('hidden')) { any = true; break; }
+        if (!any) continue;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Rebuild the strip. Called from refresh() (the section gating moves as the
+  // campaign does — the Temple falls, a chapter is won, a client is annexed)
+  // and from the tab click itself, which is the one path that must not run a
+  // full refresh.
+  function refreshTabs() {
+    const terms = (ctx && ctx.bookmark && ctx.bookmark.uiTerms) || {};
+    const avail = TABS.filter((t) => tabHasContent(t.id));
+    // The open tab can vanish under the player: Jerusalem falls and Faith goes
+    // with it, or a flag chip swaps the panel to a foreign court, which hides
+    // ten of the twenty sections. Fall back rather than show an empty panel.
+    if (!avail.some((t) => t.id === tab)) tab = (avail[0] || { id: DEFAULT_TAB }).id;
+    el.dataset.tab = tab;
+    setHtml(refs.tabs, avail.map((t) =>
+      `<button class="np-tab${t.id === tab ? ' active' : ''}" data-tab-go="${esc(t.id)}"`
+      + ` role="tab" aria-selected="${t.id === tab}" data-tt="${esc(t.tt)}">`
+      + `${esc(terms[t.term] || t.label)}</button>`).join(''));
+    // One tab is not a choice — a foreign court with nothing but a Diplomacy
+    // block should read as a plain panel, not as a tabbed one with no options.
+    refs.tabs.classList.toggle('hidden', avail.length < 2);
+  }
 
   function refresh() {
     if (!ctx || !isOpen()) return;
@@ -557,6 +673,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTech(t, self);
     refreshReforms(t, self);
     refreshCourt(t, self);
+
+    // The four numbers you always want, pinned above the tabs (SPEC §175).
+    // Tabs solve crowding by hiding things, which is only an improvement if
+    // the handful a player checks every few seconds never moves: how big am I,
+    // is the country calm, can I pay for this, and how many men are left.
+    setHtml(refs.vitals,
+      `<span class="np-vital" data-tt="Provinces owned · total development">`
+      + `${icon('bricks', 'icon-sm')}${provs} · ${devSum}</span>`
+      + `<span class="np-vital" data-tt="Stability">${icon('scales', 'icon-sm')}`
+      + `<span class="${stab > 0 ? 'pos' : stab < 0 ? 'neg' : ''}">${signed(stab)}</span></span>`
+      + `<span class="np-vital" data-tt="Treasury, and this month's net">`
+      + `${icon('coins', 'icon-sm')}${esc(fmtMoney(t.treasury))}`
+      + `<span class="${net < 0 ? 'neg' : 'pos'}">${net >= 0 ? '+' : '−'}${Math.abs(net).toFixed(1)}</span></span>`
+      + `<span class="np-vital" data-tt="${esc((terms.manpower || 'Manpower') + ' in the pool')}">`
+      + `${icon('spears', 'icon-sm')}${esc(fmtMen(t.manpower))}</span>`);
+
+    // Last, because it reads the `hidden` state every section above just set.
+    refreshTabs();
   }
 
   // The powers beyond the map (SPEC §55): standing, an envoy button, and the
@@ -817,8 +951,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       html += `<div class="np-faction" data-tt="${esc(seatedTt)}">`
         + `<div class="np-fac-top"><span class="np-fac-name">The High Priesthood</span>`
         + `<span class="np-fac-state ${pr.seated ? 'pos' : 'neg'}">${esc(pr.seated ? pr.seated.name : 'vacant')}</span></div>`
-        + `<div class="np-fac-effect">`
-        + pr.candidates.map((c) => `<button class="pp-build-btn np-fac-btn${c.isSeated ? ' disabled' : ''}" data-priest="${esc(c.id)}" data-tt="${esc('Anoint from ' + c.name + (c.isSeated ? ' — they already hold it' : ' — +10 to them, −5 to everyone else'))}">${esc(c.name)}</button>`).join(' ')
+        // These buttons carry PARTY NAMES, not icons (SPEC §175). They wore
+        // `np-fac-btn` — which is the 26px icon square the estates, institution
+        // and intrigue buttons want — and `pp-build-btn` under it supplies
+        // `white-space:nowrap; overflow:hidden` and centres its content, so
+        // "The Priesthood" rendered as about three letters clipped at BOTH
+        // ends. A text button is a different shape from an icon button and now
+        // says so; the four genuine icon buttons are untouched.
+        + `<div class="np-fac-effect np-seat-btns">`
+        + pr.candidates.map((c) => `<button class="pp-build-btn np-seat-btn${c.isSeated ? ' disabled' : ''}" data-priest="${esc(c.id)}" data-tt="${esc('Anoint from ' + c.name + (c.isSeated ? ' — they already hold it' : ' — +10 to them, −5 to everyone else'))}"><span>${esc(c.name)}</span></button>`).join('')
         + `</div></div>`;
     }
     html += `<div class="np-faction" data-tt="${esc('Three festivals a year and the half-shekel from every community in the world. It very nearly stops while a war closes the roads, and an occupied shrine draws nobody.')}">`

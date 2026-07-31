@@ -115,6 +115,10 @@ await page.evaluate(() => {
 });
 await page.locator('.tb-flag').click();
 await page.waitForTimeout(400);
+// SPEC §175: the Diplomacy block and its envoy doves are on the realm panel's
+// World tab, which opens on Crown; a closed tab is display:none, not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('.np-dove').first().click();
 await page.waitForTimeout(400);
 const repBox = await page.locator('#peace-modal [data-ref="reparations"]').count();

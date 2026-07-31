@@ -11,7 +11,7 @@ import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
 import { POWERS } from '../data/powers.js';
-import { DIASPORA } from '../data/diaspora.js';
+import { communitiesBetween, openAt } from '../data/diaspora.js';
 
 // Calendar month index with no year zero (mirror of sim/events.js — the wiki
 // may not import the sim).
@@ -196,24 +196,47 @@ export function createWiki({ DEFINES, getCtx }) {
     const powers = (POWERS[b.id] || []).map((p) =>
       `<div class="wiki-kv"><span class="wiki-k">${esc(p.name)}</span><span class="wiki-v">${esc(p.blurb || '')}</span></div>`).join('');
     // The communities of the dispersion (SPEC §172), for the chapters that can
-    // write to them: every community whose window is open at the chapter's
-    // opening date, largest first. Read straight from the same table the map
+    // write to them, largest first. Read straight from the same table the map
     // reads, so the Compendium cannot drift from what the game will actually
     // offer — which is the whole contract this page is under.
     const y0 = (b.startDate && Number.isFinite(b.startDate.y)) ? b.startDate.y : null;
-    const yAt = (y) => (y < 0 ? y + 1 : y);
     const jewishStandard = (b.playableTags || []).some((row) => {
       const tag = row && (typeof row === 'string' ? row : row.tag);
       const def = tag && DEFINES.TAGS ? DEFINES.TAGS[tag] : null;
       return !!(def && def.religion === 'judaism');
     });
-    const communities = (y0 === null || !jewishStandard) ? '' : DIASPORA
-      .filter((d) => (!Number.isFinite(d.from) || yAt(y0) >= yAt(d.from))
-        && (d.until === null || !Number.isFinite(d.until) || yAt(y0) < yAt(d.until)))
-      .slice()
-      .sort((a, c) => c.size - a.size)
-      .map((d) => `<div class="wiki-kv"><span class="wiki-k">${esc(d.name)}</span>`
-        + `<span class="wiki-v">${esc(d.blurb)}</span></div>`)
+    // SPEC §175: the CHAPTER's span, not its opening instant. This page tested
+    // `startDate` alone, so 167 BCE — which runs to 6 CE — listed thirteen
+    // communities and hid the seven whose windows open inside it. One of them
+    // is the House of Onias, which Onias founds seven years after the chapter
+    // begins and which the game offers from that year on: the Compendium was
+    // telling a player it was not in this game.
+    //
+    // And it now says WHERE. 'The House of Adiabene' and 'The Jews of the Twin
+    // Cities' are not province names, and a list of twenty communities with no
+    // places attached is a list you cannot act on — which mattered more once
+    // the diaspora mapmode gave a player something to look for.
+    // How far this chapter reaches. `generationHorizon` is the year its own
+    // undated cards stop belonging to anybody (SPEC §121) and is NOT the end of
+    // the chapter — 167 BCE's horizon is −60 while its continuation runs to
+    // 6 CE — so the later of the horizon and the last dated card is the span a
+    // player can actually play, and therefore the span this list is about.
+    let yEnd = Number.isFinite(b.generationHorizon) ? b.generationHorizon : y0;
+    for (const ev of scripted) {
+      if (ev && ev.date && Number.isFinite(ev.date.y) && ev.date.y > yEnd) yEnd = ev.date.y;
+    }
+    const communities = (y0 === null || !jewishStandard) ? '' : communitiesBetween(y0, yEnd)
+      .map((d) => {
+        // The chapter's own label for the cell where they live — Seleucia-
+        // Ctesiphon is Baghdad in 1948 and Memphis is Cairo, and the community
+        // is continuous in a way the label is not.
+        const where = (b.provinceNames && b.provinceNames[d.prov]) || d.prov;
+        const late = !openAt(d, y0);
+        return `<div class="wiki-kv"><span class="wiki-k">${esc(d.name)}</span>`
+          + `<span class="wiki-v"><b>${esc(where)}</b>`
+          + (late ? ` <span class="wiki-dim">(from ${esc(fmtYear(d.from))})</span>` : '')
+          + ` — ${esc(d.blurb)}</span></div>`;
+      })
       .join('');
 
     // Standing rivalries (SPEC §73): the era's weather, straight from the data.

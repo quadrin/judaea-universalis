@@ -230,6 +230,12 @@ ok(await page.evaluate(() => document.getElementById('event-modal').classList.co
 // nation functionality").
 await page.keyboard.press('n');
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The Diplomacy block — its war rows and their envoy doves — is on
+// World, and a section whose tab is closed is display:none: readable by
+// textContent, but not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel .np-dove').first().click();
 await page.waitForSelector('#peace-modal:not(.hidden)');
 const earlyPeaceText = await page.locator('#peace-modal').textContent();
@@ -258,6 +264,12 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('n');
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The Diplomacy block — its war rows and their envoy doves — is on
+// World, and a section whose tab is closed is display:none: readable by
+// textContent, but not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel .np-dove').first().click();
 await page.waitForSelector('#peace-modal:not(.hidden)');
 const peaceText = await page.locator('#peace-modal').textContent();

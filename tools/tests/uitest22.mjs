@@ -60,6 +60,12 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('n');
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The Diplomacy block — its war rows and their envoy doves — is on
+// World, and a section whose tab is closed is display:none: readable by
+// textContent, but not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel .np-dip-row', { hasText: 'Test War' }).locator('.np-dove').click();
 await page.waitForSelector('#peace-modal:not(.hidden)');
 
@@ -136,6 +142,12 @@ console.log('== the war overview keeps its scrim (scoped override) ==');
 await page.locator('#peace-modal .peace-cancel').click();
 await page.keyboard.press('n');
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The Diplomacy block — its war rows and their envoy doves — is on
+// World, and a section whose tab is closed is display:none: readable by
+// textContent, but not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel [data-war]').first().click();
 await page.waitForSelector('#war-modal:not(.hidden)');
 const woScrim = await page.evaluate(() => {

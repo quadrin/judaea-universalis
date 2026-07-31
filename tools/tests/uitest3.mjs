@@ -84,9 +84,14 @@ await page.locator('.nation-card').first().click();
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(400);
 
-// mapmode bar has 7 buttons incl. diplomatic
+// The mapmode bar. This count has been stale since trade and estates landed —
+// it asserted 8 while the bar shipped 9, and was failing on main before SPEC
+// §175 added the tenth (the dispersion). Political, diplomatic, trade, terrain,
+// religion, culture, development, unrest, estates, diaspora.
 const mm = await page.locator('.mm-btn').count();
-ok(mm === 8, 'eight mapmode buttons: ' + mm);
+ok(mm === 10, 'ten mapmode buttons: ' + mm);
+ok(await page.locator('.mm-btn[data-mode="diaspora"]').count() === 1,
+  'the dispersion has a button of its own');
 await page.locator('.mm-btn[data-mode="diplomatic"]').click();
 await page.waitForTimeout(400);
 await page.screenshot({ path: OUT + 'v16-diplomatic.png' });
@@ -112,6 +117,11 @@ await page.waitForSelector('#nation-panel:not(.hidden)');
 ok(true, 'N opens the realm panel');
 
 // war overview from the war row (The Great Revolt, noNegotiation)
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The war rows are in the Diplomacy block, on World, and a section
+// whose tab is closed is display:none — readable, but not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel [data-war]').first().click();
 await page.waitForSelector('#war-modal:not(.hidden)');
 const woText = (await page.locator('.wo-card').textContent()) || '';
@@ -136,6 +146,10 @@ await page.evaluate(() => {
 await page.keyboard.press('n');
 await page.keyboard.press('n');
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// The open tab is a closure variable and survives close/open, but the panel
+// was toggled twice above; select World again rather than assume.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator('#nation-panel [data-war]').nth(1).click();
 await page.waitForSelector('#war-modal:not(.hidden)');
 const wo2 = (await page.locator('.wo-card').textContent()) || '';
