@@ -824,3 +824,14 @@ meant. AI-only chains (Vespasian's ladder above all) carry none, which is what
 keeps the §177 ladder pin true. The suite also enforces one-medallion-per-cell
 on every player tree — the check that found the §177/§179 curriculum nodes
 stacking two-deep at 167 and 132, which is why three of those now declare rows.
+
+SPEC §184 badges the fork cards at the table. `entryFork(chapterId, eventId)`
+in `chapter_paths.js` is the single lookup behind the event window's chip, the
+Compendium's badge and row, and the multiplayer payload's pre-resolved
+`fork: { question }` — it is the §119 tree indexed by entry card, so it cannot
+drift from the chains. If you add a fork, its entry gets the badge for free;
+if you rename an entry card, `smoke83` still fails first (the card no longer
+exists) and `smoke117` holds the lookup itself: every declared entry resolves
+to its own fork, everything else — other chapters' cards, the shared pool,
+nulls — stays bare. `uitest39` deals a fork card and a plain card through
+`helpers.fireEvent` in a real browser and reads the chip off the live modal.

@@ -221,7 +221,11 @@ static site, the zero dependencies, or the missing build step changes.
   paying a bonus on arrival. They complete off the same flags the fork cards
   themselves set, and they are counted apart — "2 of 7 accomplished · 1 of 6
   roads history never took" — because a hypothetical no campaign reaches is
-  not a failure.
+  not a failure. And the fork cards themselves say so at the table: every
+  event card that opens a road of the path tree is dealt wearing a dashed
+  violet badge — "the road forks here" — whose tooltip asks the fork's own
+  question, in singleplayer, on multiplayer guests' mirrored cards, and on
+  the same card's page in the Compendium.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes
@@ -306,7 +310,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 116 headless sim suites and 38
+  marching. The full verification battery — 117 headless sim suites and 39
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
