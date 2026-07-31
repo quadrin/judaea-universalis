@@ -414,5 +414,5 @@ console.log('== the save contract ==');
   ok(all.every((a) => mil.regCount(a) > 0), '…with every host still counting its regiments');
 }
 
-console.log(failures ? `smoke118: ${failures} FAILURES` : 'smoke118: ALL PASS');
+console.log(failures ? `smoke122: ${failures} FAILURES` : 'smoke122: ALL PASS');
 process.exit(failures ? 1 : 0);
