@@ -1,4 +1,4 @@
-// Headless regression — SPEC §186: every arm has a face, a gait, and a weakness.
+// Headless regression — SPEC §191: every arm has a face, a gait, and a weakness.
 //
 // Three land arms — the foot, the mounted, the shot — six patterns each, and
 // a triangle they answer each other in: the shot breaks the line, the line
@@ -19,7 +19,7 @@
 //     not, and the cue follows the face;
 //   - a real 1948 battle carries mixA/mixD in the right phases while §181's
 //     armA/armD keep their own meaning;
-//   - reviveGame writes the missing key for a pre-§186 save.
+//   - reviveGame writes the missing key for a pre-§191 save.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
 const { DEFINES } = await import(R + '/js/data/defines.js');
@@ -406,7 +406,7 @@ console.log('== the save contract ==');
   for (const k of Object.keys(saved.armies || {})) {
     if (saved.armies[k] && saved.armies[k].regiments) { delete saved.armies[k].regiments.art; stripped++; }
   }
-  ok(stripped > 0, 'a pre-§186 save has armies with two arms');
+  ok(stripped > 0, 'a pre-§191 save has armies with two arms');
   const revived = reviveGame(saved);
   const all = Object.values((revived && revived.armies) || {});
   ok(all.length > 0 && all.every((a) => a.regiments && a.regiments.art === 0),

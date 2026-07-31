@@ -2,7 +2,7 @@
 import { esc, fmtMen, signed, warnOnce } from './format.js';
 import { icon, flagChip, unitIcon } from './icons.js';
 import { armGenName, dominantArm } from '../data/units.js';
-// The pace a column keeps (SPEC §186) — the sim's own function, so the number
+// The pace a column keeps (SPEC §191) — the sim's own function, so the number
 // the outliner prints is the number `hopDays` actually divides by.
 import { armSpeedOf } from '../sim/military.js';
 
@@ -218,7 +218,7 @@ export function createOutliner(el, {
         ? `\n✂ OUT OF SUPPLY ${a.oosMonths | 0} month${(a.oosMonths | 0) > 1 ? 's' : ''} — no reinforcements, slow rally, mounting attrition.\nSelect the army to see where the line is cut.`
         : (a.supplyVia === 'port' ? '\n⚓ Supplied by sea' : '');
       const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '') + supplyTxt;
-      // The three arms by their pattern names (SPEC §186), and the face of
+      // The three arms by their pattern names (SPEC §191), and the face of
       // whichever leads the column, in the row itself.
       const aGen = a.gen | 0;
       const comp = ['inf', 'cav', 'art'].filter((k) => (regs[k] | 0) > 0)

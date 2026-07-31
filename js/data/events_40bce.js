@@ -139,6 +139,119 @@ function nudgeOpinion(ctx, ofTag, aboutTag, delta) {
   t.opinion[aboutTag] = Math.max(-200, Math.min(200, (t.opinion[aboutTag] || 0) + delta));
 }
 
+// Whichever of the chapter's two crowns the player is wearing NOW (SPEC §135)
+// — for the decisions that come to the throne of Judaea whichever house holds
+// it, like the queen's demand for the groves of Jericho.
+function playerCrown(ctx) {
+  const g = ctx.game;
+  for (const t of ['HER', 'ATG']) {
+    const held = who(ctx, t);
+    if (g.playerTag === held && alive(ctx, t)) return held;
+  }
+  return null;
+}
+
+function flag(ctx, key) {
+  return !!(ctx.game.flags && ctx.game.flags[key]);
+}
+
+// The groves ledger closes the same way whichever option reads it (SPEC §119:
+// the road was chosen years ago; the option is how the crown carries it) —
+// shared here so both options resolve one road, not two.
+function closeGrovesLedger(ctx, me, pressed) {
+  const h = ctx.helpers;
+  if (flag(ctx, 'grovesLeased')) {
+    h.removeModifier(ctx, me, 'the_queens_rent');
+    h.adjust(ctx, me, { treasury: pressed ? 180 : 100, legitimacy: 10 });
+    nudgeOpinion(ctx, 'ROM', me, pressed ? 15 : 30);
+    h.chronicle(ctx, 'era', pressed
+      ? 'The lease dies with the lessor and the crown files for its arrears with interest, '
+        + 'itemised. The audit pays most of it, notes the itemising, and files that too.'
+      : 'The lease on the balsam groves dies with the lessor. The rent receipts, paid to '
+        + 'the month, are read out in the audit of the East and noted with approval by men '
+        + 'who reward orderliness.');
+  } else if (flag(ctx, 'grovesRefused')) {
+    h.adjust(ctx, me, { legitimacy: pressed ? 10 : 15, treasury: pressed ? 60 : 0 });
+    h.removeModifier(ctx, me, 'the_grant_defied');
+    nudgeOpinion(ctx, 'ROM', me, pressed ? 5 : 20);
+    h.chronicle(ctx, 'era', pressed
+      ? 'The refusal of the queen\'s deed is refiled as foresight, and the crown asks to be '
+        + 'compensated for the harbor troubles her displeasure bought. The claim is paid at '
+        + 'a discount, with an expression the envoys decline to describe.'
+      : 'The refusal of the queen\'s deed is refiled, by men who never liked her, as '
+        + 'foresight. The groves never left, and the crown that kept them is careful not to '
+        + 'say aloud how the wager might have read.');
+  } else {
+    if (!alive(ctx, 'PTO')) h.changeOwner(ctx, 'Jericho', me);
+    h.adjust(ctx, me, { legitimacy: -10, treasury: pressed ? 60 : 0 });
+    nudgeOpinion(ctx, 'ROM', me, pressed ? -25 : -10);
+    h.chronicle(ctx, 'era', pressed
+      ? 'Jericho comes home in the settlement of Egypt\'s estate, and the crown that sold '
+        + 'it asks the estate for damages besides. The clerk pays a token and underlines '
+        + 'the old sale price twice.'
+      : 'Jericho comes home in the settlement of Egypt\'s estate, and the clerk keeps the '
+        + 'old sale price in the file. The country takes the valley back and remembers that '
+        + 'it was sold.');
+  }
+  ctx.helpers.setFlag(ctx, 'grovesLedgerClosed', true);
+}
+
+// The verdict at Rhodes reads the same muster rolls either way; what the king
+// controls is whether he is in the room for the reading.
+function rhodesVerdict(ctx, inPerson) {
+  const h = ctx.helpers;
+  if (flag(ctx, 'foughtTheArabWar')) {
+    if (inPerson) {
+      h.adjust(ctx, 'HER', { legitimacy: 15, treasury: 100 });
+      h.addTagModifier(ctx, 'HER', {
+        id: 'confirmed_at_rhodes_40', name: 'Confirmed at Rhodes', months: -1,
+        effects: { incomeMult: 1.06 },
+      });
+      nudgeOpinion(ctx, 'ROM', 'HER', 50);
+      h.chronicle(ctx, 'era', 'The muster rolls show the king at war with the Arabs on '
+        + 'Antony\'s own orders, and at Actium nowhere. Octavian returns the diadem, adds '
+        + 'the queen\'s portion to the kingdom, and remarks that he can use a man whose '
+        + 'loyalty survives its object.');
+    } else {
+      h.adjust(ctx, 'HER', { legitimacy: 5 });
+      nudgeOpinion(ctx, 'ROM', 'HER', 20);
+      h.chronicle(ctx, 'era', 'The diadem goes to Rhodes in a box with a letter, and comes '
+        + 'back confirmed. What does not come back is the enlargement a speech might have '
+        + 'bought; the king who was not in the room is confirmed as exactly what he was.');
+    }
+  } else if (flag(ctx, 'sailedWithAntony')) {
+    if (inPerson) {
+      h.adjust(ctx, 'HER', { treasury: -200, legitimacy: -5 });
+      nudgeOpinion(ctx, 'ROM', 'HER', 20);
+      h.chronicle(ctx, 'era', 'The rolls show the kingdom\'s banner in the line at Actium, '
+        + 'on the wrong side of it. The diadem is returned across the table with an '
+        + 'indemnity attached, and the king pays it the way a man pays for a funeral: '
+        + 'promptly, and without discussing the deceased.');
+    } else {
+      h.adjust(ctx, 'HER', { treasury: -250, legitimacy: -10 });
+      nudgeOpinion(ctx, 'ROM', 'HER', -10);
+      h.chronicle(ctx, 'era', 'The kingdom that stood in the line at Actium does not come '
+        + 'to Rhodes to say so, and the indemnity is assessed in absentia at the rate '
+        + 'reserved for men who make the clerks come to them.');
+    }
+  } else {
+    if (inPerson) {
+      h.adjust(ctx, 'HER', { legitimacy: 5 });
+      nudgeOpinion(ctx, 'ROM', 'HER', 10);
+      h.chronicle(ctx, 'era', 'The rolls show the kingdom absent from everything, '
+        + 'documentedly starving. Octavian confirms the crown and files the famine '
+        + 'plea under excuses, adequate — a category he maintains, and consults.');
+    } else {
+      h.adjust(ctx, 'HER', { legitimacy: -5 });
+      nudgeOpinion(ctx, 'ROM', 'HER', -5);
+      h.chronicle(ctx, 'era', 'A king who missed the war now misses the settlement of the '
+        + 'war, and the file acquires a second entry in the same hand. The crown is '
+        + 'confirmed, in the tone of a receipt.');
+    }
+  }
+  h.setFlag(ctx, 'rhodesVerdict', true);
+}
+
 function floorOpinion(ctx, ofTag, aboutTag, floor) {
   const t = ctx.game.tags[ofTag];
   if (!t) return;
@@ -2510,9 +2623,13 @@ export const EVENTS_40 = [
       + 'elder of the house, brought home in honor, would say the dynasty is whole '
       + '— or would put two Hasmoneans in one city, which has never once gone well.',
     forTag: 'ATG',
+    major: true,
     trigger: safeTrigger('ev5_atg_hyrcanus', (ctx) =>
       hasmoneanHolds(ctx) && after(ctx, -35, 1)),
     aiOption: 1,
+    historical: 'Herod brought Hyrcanus home with every honor, seated him first at table — '
+      + 'and strangled him after Actium, when a spare king became a risk the settlement '
+      + 'could not price. The homecoming and the use made of it were separate decisions.',
     options: [
       {
         label: 'Bring him home with honor',
@@ -2526,6 +2643,7 @@ export const EVENTS_40 = [
               effects: { unrest: 0.5 },
             });
           }
+          ctx.helpers.setFlag(ctx, 'hyrcanusHome', true);
           ctx.helpers.chronicle(ctx, 'era', 'Hyrcanus comes home from Babylon in honor: the dynasty is whole again, and every malcontent learns the old man\'s address.');
         }),
       },
@@ -2534,6 +2652,7 @@ export const EVENTS_40 = [
         tooltip: 'A pension eastward instead of a homecoming: −20 talents, +10 governance points. The diaspora notes the coldness: −5 influence points.',
         effects: guard('ev5_atg_hyrcanus:1', (ctx) => {
           ctx.helpers.adjust(ctx, 'ATG', { treasury: -20, gov: 10, infl: -5 });
+          ctx.helpers.setFlag(ctx, 'hyrcanusPensioned', true);
         }),
       },
     ],
@@ -2706,6 +2825,404 @@ export const EVENTS_40 = [
             id: 'incense_flood', name: 'The Incense Road Diverted', months: 24,
             effects: { incomeMult: 1.08 },
           });
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE QUEEN'S PORTION AND THE MUSTERS OF ACTIUM (SPEC §119) ════════════
+  // Two forks the chapter always had the ground for and never charted. The
+  // first is the Donations: Antony gives Cleopatra the balsam groves of
+  // Jericho — the most profitable acres on earth — and the crown that rules
+  // Judaea must decide what its own best land is worth admitting about.
+  // Josephus, AJ XV.88–96; Plutarch, Antonius 36. The second is the winter of
+  // 32: Antony musters the East against Octavian and every client is asked
+  // where his army will stand. In the history that happened, Cleopatra had
+  // Herod sent against Malichus of Nabataea instead — she wanted both her
+  // neighbours bled — and the diversion saved his crown, because the king who
+  // missed Actium had nothing to apologise for at Rhodes. AJ XV.108–160;
+  // the Rhodes scene is AJ XV.187–196.
+
+  {
+    id: 'ev5_x_the_queens_portion',
+    title: 'The Queen\'s Portion',
+    desc: 'The grant is read aloud at Alexandria among many others — kings\' titles for '
+      + 'the queen\'s children, provinces rearranged like table settings — and one line of '
+      + 'it lands in Jericho: the balsam groves, the most profitable acres on earth, are '
+      + 'assigned to the queen of Egypt. The survey her agents took three years ago turns '
+      + 'out to have been a deed in waiting.\n\n'
+      + 'The stewards explain the arithmetic to anyone who will sit still. The groves are '
+      + 'not land, they are a monopoly: balsam grows nowhere else in the world, the resin '
+      + 'is weighed against silver, and the crown that loses them keeps a river valley and '
+      + 'loses a treasury. The queen has not sent soldiers. She has sent a rent collector, '
+      + 'which is worse, because a crown can fight soldiers.',
+    forTag: 'player',
+    major: true,
+    minYear: -35,
+    maxYear: -31,
+    trigger: safeTrigger('ev5_x_queens_portion', (ctx) => {
+      const me = playerCrown(ctx);
+      return !!me && after(ctx, -35, 9) && alive(ctx, 'PTO') && alive(ctx, 'ROM')
+        && ctx.helpers.controls(ctx, me, 'Jericho')
+        && !ctx.helpers.getFlag(ctx, 'grovesAnswered');
+    }),
+    aiOption: 0,
+    historical: 'Herod leased his own groves back from Cleopatra at two hundred talents a '
+      + 'year, and collected the Nabataean king\'s rent for her as well. The lease died '
+      + 'with the queen, and Octavian returned the groves with interest.',
+    options: [
+      {
+        label: 'Lease our own groves back, and pay the rent on time',
+        tooltip: 'The historical answer, and the cheapest war never fought: "The Queen\'s Rent" '
+          + '(−8% income) until the lease dies with the lessor. Egypt\'s opinion +40, the '
+          + 'triumvir\'s +20 — a client who pays without being garrisoned is a client nobody '
+          + 'audits. −10 legitimacy: the country watches its king pay rent on his own land.',
+        effects: guard('ev5_x_queens_portion:0', (ctx) => {
+          const me = playerCrown(ctx);
+          if (!me) return;
+          const h = ctx.helpers;
+          h.adjust(ctx, me, { legitimacy: -10 });
+          h.addTagModifier(ctx, me, {
+            id: 'the_queens_rent', name: 'The Queen\'s Rent', months: -1,
+            effects: { incomeMult: 0.92 },
+          });
+          nudgeOpinion(ctx, 'PTO', me, 40);
+          nudgeOpinion(ctx, 'ROM', me, 20);
+          h.setFlag(ctx, 'grovesAnswered', true);
+          h.setFlag(ctx, 'grovesLeased', true);
+          h.chronicle(ctx, 'diplomacy', 'The crown leases the balsam groves back from the queen '
+            + 'of Egypt and pays the rent to the obol. The stewards keep two ledgers: what it '
+            + 'costs, and what it would have cost.');
+        }),
+      },
+      {
+        label: 'Refuse the survey. The groves were not Antony\'s to give',
+        tooltip: 'The deed is returned unread: +15 legitimacy, +1 authority. Egypt\'s opinion '
+          + '−60 and the triumvir\'s −40, and "The Grant Defied" for 72 months (−5% income) as '
+          + 'Egyptian harbormasters discover paperwork problems with every cargo consigned to '
+          + 'this crown. The queen does not forget, and she dines with the man who commands '
+          + 'the East.',
+        effects: guard('ev5_x_queens_portion:1', (ctx) => {
+          const me = playerCrown(ctx);
+          if (!me) return;
+          const h = ctx.helpers;
+          h.adjust(ctx, me, { legitimacy: 15 });
+          h.addTagModifier(ctx, me, {
+            id: 'the_grant_defied', name: 'The Grant Defied', months: 72,
+            effects: { incomeMult: 0.95 },
+          });
+          nudgeOpinion(ctx, 'PTO', me, -60);
+          nudgeOpinion(ctx, 'ROM', me, -40);
+          h.doctrine(ctx, 'authority', 1);
+          h.setFlag(ctx, 'grovesAnswered', true);
+          h.setFlag(ctx, 'grovesRefused', true);
+          h.chronicle(ctx, 'diplomacy', 'The queen\'s deed to the balsam groves is returned '
+            + 'unread. In Alexandria the insult is entered in the ledger where the queen keeps '
+            + 'such things, which is the ledger that outlives dinners.');
+        }),
+      },
+      {
+        label: 'Cede Jericho outright, and be paid for the clean title',
+        tooltip: 'The valley goes to Egypt whole and the crown is compensated for grace: '
+          + 'Jericho changes hands, +150 talents, Egypt\'s opinion +70, the triumvir\'s +30 — '
+          + 'and −20 legitimacy, because the country has a word for kings who sell land with '
+          + 'the Jordan in it, and the word is not "pragmatic".',
+        effects: guard('ev5_x_queens_portion:2', (ctx) => {
+          const me = playerCrown(ctx);
+          if (!me) return;
+          const h = ctx.helpers;
+          h.adjust(ctx, me, { treasury: 150, legitimacy: -20 });
+          if (alive(ctx, 'PTO')) h.changeOwner(ctx, 'Jericho', who(ctx, 'PTO'));
+          nudgeOpinion(ctx, 'PTO', me, 70);
+          nudgeOpinion(ctx, 'ROM', me, 30);
+          h.setFlag(ctx, 'grovesAnswered', true);
+          h.setFlag(ctx, 'grovesCeded', true);
+          h.chronicle(ctx, 'diplomacy', 'Jericho and its groves are ceded to the queen of Egypt '
+            + 'for a price, paid in full. The balsam is weighed against silver in Alexandria '
+            + 'now, and the crown counts what it was paid and does not display it.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev5_x_the_grovekeepers_ledger',
+    title: 'The Grovekeeper\'s Ledger',
+    worldLabel: 'The queen is gone, and the balsam accounts are reopened',
+    desc: 'The estate of a dead monarch is the fastest reading in the world. Egypt\'s '
+      + 'possessions pass to the victor of the civil war, and among them, filed between a '
+      + 'fleet and a grain schedule, is the queen\'s portion of Judaea: the balsam '
+      + 'monopoly, the lease payments, the survey. The clerk who reads the file has '
+      + 'never smelled balsam. He wants to know one thing, which is what the standing '
+      + 'arrangement was and whether it was honoured — because the new master of the '
+      + 'world is settling the East by a single rule, which is that he rewards whatever '
+      + 'was orderly and punishes whatever was not.',
+    forTag: 'player',
+    major: true,
+    minYear: -30,
+    maxYear: -25,
+    trigger: safeTrigger('ev5_x_grovekeepers_ledger', (ctx) => {
+      const me = playerCrown(ctx);
+      return !!me && after(ctx, -30, 9) && !alive(ctx, 'PTO')
+        && (flag(ctx, 'grovesLeased') || flag(ctx, 'grovesRefused') || flag(ctx, 'grovesCeded'))
+        && !ctx.helpers.getFlag(ctx, 'grovesLedgerClosed');
+    }),
+    aiOption: 0,
+    historical: 'Octavian gave Herod back the groves Cleopatra had taken, and added Gaza, '
+      + 'Gadara and Hippos — the paid rent had been noticed, and orderliness was the whole '
+      + 'of the audit.',
+    options: [
+      {
+        label: 'Close the ledger as it stands',
+        tooltip: 'Leased: the rent stops, the groves come home, +100 talents of arrears and '
+          + '+10 legitimacy, Rome +30. Refused: the defiance is filed as foresight — +15 '
+          + 'legitimacy, Rome +20. Ceded: Jericho comes back to the crown, but the clerk '
+          + 'keeps the sale price in the file — −10 legitimacy and Rome asks after the silver.',
+        effects: guard('ev5_x_grovekeepers_ledger:0', (ctx) => {
+          const me = playerCrown(ctx);
+          if (!me) return;
+          closeGrovesLedger(ctx, me, false);
+        }),
+      },
+      {
+        label: 'Press the estate for everything it owes',
+        tooltip: 'The crown files claims against a dead queen\'s estate — arrears, damages, '
+          + 'the harbor troubles, all itemised: −20 influence points, and the audit pays more '
+          + 'silver on every road (leased +180, refused +60, ceded +60) but likes the crown '
+          + 'less for the itemising — Rome\'s bonus roughly halves, and a crown that sold the '
+          + 'valley and now asks for damages too is remembered for it.',
+        effects: guard('ev5_x_grovekeepers_ledger:1', (ctx) => {
+          const me = playerCrown(ctx);
+          if (!me) return;
+          ctx.helpers.adjust(ctx, me, { infl: -20 });
+          closeGrovesLedger(ctx, me, true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev5_x_the_musters_of_actium',
+    title: 'The Musters of Actium',
+    desc: 'The letters go out from Ephesus to every crowned head the triumvir has made '
+      + 'or kept: the war with the young Caesar is coming, and the East will be counted. '
+      + 'Ships, men, silver, and above all presence — the client kings are to stand in '
+      + 'the line at Actium where the world can see whose East it is.\n\n'
+      + 'Then a second letter arrives, perfumed, and unpicks the first. The queen of '
+      + 'Egypt has persuaded Antony that this kingdom\'s army would serve the cause '
+      + 'better against Malichus of Nabataea, who is behind on the payments he owes '
+      + 'her. The council reads both letters twice. Somebody observes that the queen '
+      + 'has arranged for her two nearest neighbours to bleed each other while the '
+      + 'world is decided elsewhere, and that the observation changes nothing: a king '
+      + 'must now choose which letter to obey, and every choice is a wager on who '
+      + 'will be reading the muster rolls when it is over.',
+    forTag: 'HER',
+    major: true,
+    minYear: -32,
+    maxYear: -31,
+    trigger: safeTrigger('ev5_x_musters_of_actium', (ctx) => {
+      const g = ctx.game;
+      return flag(ctx, 'herodKing') && alive(ctx, 'HER') && alive(ctx, 'ROM')
+        && !crownWar(g) && after(ctx, -32, 10)
+        && !ctx.helpers.getFlag(ctx, 'mustersAnswered');
+    }),
+    aiOption: 0,
+    historical: 'Cleopatra had Herod sent against the Arabs, and the diversion saved his '
+      + 'reign: the king who was not at Actium had backed nobody, and made the case at '
+      + 'Rhodes that a man loyal to one patron would be loyal to the next.',
+    options: [
+      {
+        label: 'March on Petra, as the second letter bids',
+        tooltip: 'The Arab war instead of the Roman one: war with Nabataea, "The Arab '
+          + 'Commission" (+6% morale, 24 months), the triumvir\'s opinion +20 — and the '
+          + 'army is pointedly elsewhere while the world is decided, which no one will be '
+          + 'able to hold against you whoever wins.',
+        effects: guard('ev5_x_musters:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'NAB') && !warBetween(ctx.game, who(ctx, 'HER'), who(ctx, 'NAB'))) {
+            h.declareWar(ctx, 'HER', 'NAB', 'The War of the Water Rights');
+          }
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_arab_commission', name: 'The Arab Commission', months: 24,
+            effects: { moraleMult: 1.06 },
+          });
+          nudgeOpinion(ctx, 'ROM', 'HER', 20);
+          h.doctrine(ctx, 'conquest', 1);
+          h.setFlag(ctx, 'mustersAnswered', true);
+          h.setFlag(ctx, 'foughtTheArabWar', true);
+          h.chronicle(ctx, 'war', 'The king marches against Malichus as the queen arranged, '
+            + 'and is at war in the desert while the world is decided at sea. The accident '
+            + 'will look like wisdom for the rest of his life.');
+        }),
+      },
+      {
+        label: 'Sail with the fleet to Antony',
+        tooltip: 'The first letter obeyed to the hull: −120 talents and the picked men go '
+          + 'aboard ("The King\'s Thousand": −10% manpower, 24 months). Egypt\'s opinion +40 '
+          + '— and the kingdom\'s banner will be in the line at Actium, on whichever side of '
+          + 'history that line turns out to be.',
+        effects: guard('ev5_x_musters:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HER', { treasury: -120 });
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_kings_thousand', name: 'The King\'s Thousand', months: 24,
+            effects: { manpowerMult: 0.9 },
+          });
+          nudgeOpinion(ctx, 'PTO', 'HER', 40);
+          h.setFlag(ctx, 'mustersAnswered', true);
+          h.setFlag(ctx, 'sailedWithAntony', true);
+          h.chronicle(ctx, 'war', 'The king\'s squadron joins the muster at Ephesus and his '
+            + 'picked thousand sail west with Antony. The banner of Judaea will be visible '
+            + 'in the line at Actium, which is the point, and the risk.');
+        }),
+      },
+      {
+        label: 'Plead the famine, and keep the levies home',
+        tooltip: 'Neither letter: −80 talents in gifts to the quartermasters who agree the '
+          + 'granaries are empty, and "The Harvest Brought In" (+5% income, 24 months) as '
+          + 'the levies bring in the crop instead. Egypt −20 — the queen is not fooled, '
+          + 'merely out-bribed for a season.',
+        effects: guard('ev5_x_musters:2', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HER', { treasury: -80 });
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_harvest_brought_in', name: 'The Harvest Brought In', months: 24,
+            effects: { incomeMult: 1.05 },
+          });
+          nudgeOpinion(ctx, 'PTO', 'HER', -20);
+          h.setFlag(ctx, 'mustersAnswered', true);
+          h.setFlag(ctx, 'keptTheArmyHome', true);
+          h.chronicle(ctx, 'era', 'The kingdom pleads the famine and keeps its levies in the '
+            + 'fields. The excuse is documented, paid for, and disbelieved by everybody who '
+            + 'accepts it.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev5_x_the_verdict_of_rhodes',
+    title: 'The Verdict of Rhodes',
+    worldLabel: 'The master of the world receives the client kings',
+    desc: 'The interviews at Rhodes are short, and the kings queue for them. Octavian '
+      + 'sits with the muster rolls of the war he has just won, and every crowned head '
+      + 'of the East comes in turn to learn what its choices cost. He is not cruel about '
+      + 'it. He is worse: he is thorough. The rolls say who sent ships, who sent men, '
+      + 'who sent excuses, and the new master of the world reads them like a landlord '
+      + 'reading rent books, because that is what they now are.\n\n'
+      + 'The king of Judaea\'s interview is the one the others wait to hear about. He '
+      + 'has come without his diadem — carried it in, set it on the table, and made the '
+      + 'only argument available: judge not whose friend I was, but what kind of friend '
+      + 'I am.',
+    forTag: 'HER',
+    major: true,
+    minYear: -30,
+    maxYear: -28,
+    trigger: safeTrigger('ev5_x_verdict_of_rhodes', (ctx) => {
+      return alive(ctx, 'HER') && alive(ctx, 'ROM') && after(ctx, -30, 3)
+        && (flag(ctx, 'foughtTheArabWar') || flag(ctx, 'sailedWithAntony') || flag(ctx, 'keptTheArmyHome'))
+        && !ctx.helpers.getFlag(ctx, 'rhodesVerdict');
+    }),
+    aiOption: 0,
+    historical: 'Octavian returned the diadem, confirmed the kingdom, and over the next '
+      + 'years enlarged it with everything Cleopatra had taken and more. The client who '
+      + 'missed Actium made the best account of himself of any king in the queue.',
+    options: [
+      {
+        label: 'Go to Rhodes, and set the diadem on the table',
+        tooltip: 'The argument made in person. The Arab war: confirmed and enlarged — +15 '
+          + 'legitimacy, +100 talents, Rome +50, "Confirmed at Rhodes" (+6% income, '
+          + 'permanent). Sailed with Antony: the diadem is returned at a price — −200 '
+          + 'talents, −5 legitimacy, Rome +20. Kept the army home: confirmed, with a note '
+          + 'in the file — +5 legitimacy, Rome +10.',
+        effects: guard('ev5_x_verdict_of_rhodes:0', (ctx) => {
+          rhodesVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'Send the diadem ahead, and wait at home',
+        tooltip: 'The verdict by courier, unargued. The Arab war: confirmed but not '
+          + 'enlarged — +5 legitimacy, Rome +20, and no speech to be remembered by. Sailed '
+          + 'with Antony: assessed in absentia at the absent rate — −250 talents, −10 '
+          + 'legitimacy, Rome −10. Kept the army home: a second absence in the same file — '
+          + '−5 legitimacy, Rome −5.',
+        effects: guard('ev5_x_verdict_of_rhodes:1', (ctx) => {
+          rhodesVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE OLD MAN IN BABYLON: THE ROAD CLOSES (SPEC §119) ═════════════════
+  // The terminal of the Hyrcanus fork on the Hasmonean road. In the history
+  // that happened, Herod lured the old man home from Babylon and found a
+  // pretext to strangle him after Actium, when a living alternative king —
+  // even a mutilated one, even a mild one — was a risk the new settlement
+  // could not price. AJ XV.161–182. On the road where the house held, the
+  // question is gentler and still not simple: what a dynasty owes the elder
+  // it could not use.
+  {
+    id: 'ev5_atg_the_last_of_the_elders',
+    title: 'The Last of the Elders',
+    desc: 'Word comes up from the river country that Hyrcanus is dying — slowly, '
+      + 'comfortably, of age, which no Hasmonean man has managed in three generations. '
+      + 'The couriers bring the question the court has been postponing for a decade: '
+      + 'where does the old man\'s story end, and who is standing in the frame when it '
+      + 'does?\n\n'
+      + 'He was high priest for forty years and king for none of them that mattered; '
+      + 'his brother\'s son took his ears so the altar could never take him back. What '
+      + 'is left is the last man alive who remembers the house before its wars, and two '
+      + 'communities — the one around him in Babylon, the one at home that has begun '
+      + 'telling his story as a parable — each of which believes it is owed the ending.',
+    forTag: 'ATG',
+    major: true,
+    trigger: safeTrigger('ev5_atg_last_of_elders', (ctx) =>
+      hasmoneanHolds(ctx) && after(ctx, -30, 1)
+      && (flag(ctx, 'hyrcanusHome') || flag(ctx, 'hyrcanusPensioned'))
+      && !ctx.helpers.getFlag(ctx, 'eldersRoadClosed')),
+    aiOption: 0,
+    historical: 'Herod had Hyrcanus strangled at seventy-one, on a charge nobody believed, '
+      + 'in the year the settlement of Actium made a spare king intolerable. The Babylonian '
+      + 'community that had sheltered him kept its own account of it.',
+    options: [
+      {
+        label: 'The house buries its elder as what he was',
+        tooltip: 'A state funeral under the walls his fathers built: −60 talents, +15 '
+          + 'legitimacy, and the priesthood is content (+15). Brought home in his lifetime, '
+          + 'he dies among his own; pensioned east, the cortege crosses the desert with an '
+          + 'honor guard and Babylonia notes both the honor and how late it came (+10 '
+          + 'influence points instead).',
+        effects: guard('ev5_atg_last_of_elders:0', (ctx) => {
+          const h = ctx.helpers;
+          if (flag(ctx, 'hyrcanusHome')) {
+            h.adjust(ctx, 'ATG', { treasury: -60, legitimacy: 15 });
+            h.factionShift(ctx, 'ATG', 'priesthood', 15);
+            h.chronicle(ctx, 'era', 'Hyrcanus dies at home, of age, with the feasts kept '
+              + 'around him — the first man of the house in three generations to manage it. '
+              + 'The dynasty buries him as high priest and the city lets the title stand.');
+          } else {
+            h.adjust(ctx, 'ATG', { treasury: -60, legitimacy: 10, infl: 10 });
+            h.chronicle(ctx, 'era', 'The cortege comes home from Babylon behind an honor '
+              + 'guard, ten years after the man himself asked to. The communities of the '
+              + 'river country line the first mile of the road and keep their own account '
+              + 'of the arithmetic.');
+          }
+          h.setFlag(ctx, 'eldersRoadClosed', true);
+        }),
+      },
+      {
+        label: 'A priest\'s grave, and no procession',
+        tooltip: 'The quiet ending: −10 talents, +10 governance points. The priesthood '
+          + 'reads the modesty as policy (−10), and the parable-tellers at home supply '
+          + 'their own last chapter, which is never the one the court would have written.',
+        effects: guard('ev5_atg_last_of_elders:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ATG', { treasury: -10, gov: 10 });
+          h.factionShift(ctx, 'ATG', 'priesthood', -10);
+          h.setFlag(ctx, 'eldersRoadClosed', true);
+          h.chronicle(ctx, 'era', 'Hyrcanus is buried quietly, by priests, with the state '
+            + 'absent. The story finishes itself in the retelling, as unattended stories '
+            + 'do, and the version that survives is not the court\'s.');
         }),
       },
     ],

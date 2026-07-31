@@ -706,7 +706,7 @@ export function initUI(staticCtx) {
         a.cav ? `${a.cav} × ${a.cavName}` : '',
         a.art ? `${a.art} × ${a.artName}` : '',
       ].filter(Boolean).join(' · ') || 'skeleton formation';
-      // The faces of the arms actually present (SPEC §186), and the gait the
+      // The faces of the arms actually present (SPEC §191), and the gait the
       // slowest of them gives the column.
       const faces = ['inf', 'cav', 'art'].filter((k) => a[k] > 0)
         .map((k) => unitIcon(a.gen || 0, k, 'icon-sm')).join('');
@@ -787,7 +787,7 @@ export function initUI(staticCtx) {
     const armyRow = (a) => {
       // Regiments speak their pattern (SPEC §29): "8 Rifle Brigades", not
       // "8 infantry" — each army remembers what it was raised as. Since
-      // SPEC §186 there are three arms to speak for, and an arm nobody
+      // SPEC §191 there are three arms to speak for, and an arm nobody
       // brought is left out rather than printed as a zero.
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
       const comp = [
@@ -811,7 +811,7 @@ export function initUI(staticCtx) {
         + (doct ? '\n' + doct : '')
         + (s.air ? '\nAir cover — a wing in range adds +1 in the fire phase.' : '')
         + (s.mix ? `\nThe arms: +${s.mix} this phase${s.mixText ? ' — ' + s.mixText : ''}.` : '');
-      // The order of battle by arm (SPEC §186), with each arm's own face: the
+      // The order of battle by arm (SPEC §191), with each arm's own face: the
       // matchup is the thing to read here, so it gets a line of its own.
       const gen = s.gen || 0;
       const arms = ['inf', 'cav', 'art']

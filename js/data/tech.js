@@ -103,7 +103,7 @@ export function computeTechEffects(tech) {
 // draws pay, an armored corps devours pay, parts and shells. Better patterns
 // hit harder AND cost more to keep standing — the maintenance line finally
 // grows with the age instead of billing 1948 like 167 BCE.
-// The `art` column is the shot arm (SPEC §186); its names live beside the
+// The `art` column is the shot arm (SPEC §191); its names live beside the
 // other two rather than in a third table, and js/data/units.js owns what the
 // arm can DO. genName(gi, 'art') answers here like the other two.
 export const UNIT_GENS = [

@@ -24,7 +24,7 @@ import {
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
   armSpeedOf,
 } from './military.js';
-// The land roster (SPEC §186): the shot arm's names, and the cue a column of
+// The land roster (SPEC §191): the shot arm's names, and the cue a column of
 // each pattern makes when it takes the road.
 import { ARMS, armGenName, unitMoveCue, dominantArm as dominantArmOf } from '../data/units.js';
 import { FORMABLES } from '../data/formables.js';
@@ -47,6 +47,7 @@ import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from '.
 import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
 import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
+import { aidInfo, requestAidCore } from './aid.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
@@ -65,6 +66,7 @@ import { intrigueMenu, runIntrigue as runIntrigueCore } from './intrigue.js';
 import { ageReport, absorbReport } from './ages.js';
 import { estateReport } from './estates.js';
 import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
+import { schoolsReport, issueRulingCore } from './schools.js';
 import { climateReport, attentionReport, harvestOdds } from './weather.js';
 import { communityInfo, diasporaReport, askCommunity as askCommunityCore } from './diaspora.js';
 
@@ -1150,6 +1152,10 @@ export function gameActions(ctx) {
       // one, and only against an arsenal court or our current supplier.
       let arms = null;
       try { arms = armsInfo(ctx, me, tag); } catch (e) { arms = null; }
+      // Financial aid (SPEC §186): only surfaced where the bookmark names
+      // donor courts, and only against a donor or the purse we already lean on.
+      let aid = null;
+      try { aid = aidInfo(ctx, me, tag); } catch (e) { aid = null; }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -1187,6 +1193,7 @@ export function gameActions(ctx) {
         recognition,
         embargo,
         arms,
+        aid,
         offmap: isOffmapTag(ctx, tag),
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
@@ -1371,7 +1378,7 @@ export function gameActions(ctx) {
               || (type === 'cav' ? 'Cavalry' : type === 'art' ? 'Artillery' : 'Infantry');
         const rows = (Array.isArray(p.unitQueue) ? p.unitQueue : []).map((row, i) => ({
           id: row.id, type: row.type, name: nameOf(row.type, row.gen),
-          gen: num(row.gen, 0), // the pattern it is being fitted to (SPEC §186 faces)
+          gen: num(row.gen, 0), // the pattern it is being fitted to (SPEC §191 faces)
           monthsLeft: Math.max(0, num(row.monthsLeft) | 0),
           totalMonths: Math.max(1, num(row.totalMonths, unitRecruitMonths(ctx, row.type)) | 0),
           position: i + 1, stalled: row.stalled || '',
@@ -1417,7 +1424,7 @@ export function gameActions(ctx) {
             : 'No route to ' + p.name + '.', 'bad');
           return;
         }
-        // The column takes the road (SPEC §186): what you HEAR is the arm that
+        // The column takes the road (SPEC §191): what you HEAR is the arm that
         // sets its pace — hooves, tramping feet, or an engine. The cue is the
         // dominant arm's, so a mixed host sounds like whatever most of it is.
         const arm = dominantArmOf(a.regiments);
@@ -1660,7 +1667,7 @@ export function gameActions(ctx) {
             gen,
             infName: genName(gen, 'inf'), cavName: genName(gen, 'cav'),
             artName: armGenName(gen, 'art'),
-            // The gait (SPEC §186): what the slowest arm in this column does
+            // The gait (SPEC §191): what the slowest arm in this column does
             // to its marching speed, said plainly where the army is read.
             paceMult: armSpeedOf(a),
             morale: num(a.morale), maxMorale: Math.max(0.1, num(a.maxMorale, 3)),
@@ -1732,6 +1739,16 @@ export function gameActions(ctx) {
         say('The arsenal opens', res.supplier + ' signs the weapons transfer agreement ('
           + res.cost + ' talents): their patterns are ours to raise.' + dropped, 'good');
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
+    },
+
+    // ---- financial aid (SPEC §186) -------------------------------------------
+    requestAid(tag) {
+      try {
+        const res = requestAidCore(ctx, g.playerTag, String(tag));
+        if (!res.ok) { say('No aid', res.why + '.', 'bad'); return; }
+        say('The purse opens', res.donorName + ' grants the aid: ' + res.amount
+          + ' talents a month for ' + res.months + ' months. Asking left a mark — their regard will want tending.', 'good');
+      } catch (e) { warnOnce('requestAid', 'requestAid failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------
@@ -2584,7 +2601,9 @@ export function gameActions(ctx) {
         // EU4 announces an unlocked idea-group slot.
         for (const gdef of eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t)) {
           if (gdef.unlock.ladder === catKey && gdef.unlock.level === t.tech[catKey]) {
-            say('An idea of the age unlocks', gdef.name + ' may now be pursued — see Reforms.', 'good');
+            // SPEC §188: the Ideas block is directly under the ladders, so the
+            // card this rung just opened is on the screen the buyer is looking at.
+            say('An idea of the age unlocks', gdef.name + ' may now be pursued — see Ideas, just below the ladders.', 'good');
           }
         }
       } catch (e) { warnOnce('buyTech', 'buyTech failed', e); }
@@ -3074,6 +3093,21 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('seatHighPriest', 'seatHighPriest failed', e); }
     },
 
+    // ---- whose reading of the Law it is (nation panel, SPEC §190) -----------
+    getSchools() {
+      try { return schoolsReport(ctx); } catch (e) { warnOnce('getSchools', 'getSchools failed', e); return null; }
+    },
+    issueRuling(rulingId, side) {
+      try {
+        const res = issueRulingCore(ctx, String(rulingId), String(side));
+        if (!res.ok) { say('The court does not sit', res.why || 'The question cannot be put.', 'bad'); return res; }
+        say('The court rules: ' + res.name,
+          res.blurb + ' ' + res.house + ' gain ' + res.swing + ' approval for it; '
+          + res.other + ' lose the same.', 'good');
+        return res;
+      } catch (e) { warnOnce('issueRuling', 'issueRuling failed', e); return { ok: false }; }
+    },
+
     // ---- whose ground a province is (province panel, SPEC §167) -------------
     getProvinceEstates(provId) {
       try { return estateReport(ctx, ctx.byId(provId)); }
@@ -3551,7 +3585,7 @@ export function reviveGame(saved) {
   for (const id of Object.keys(saved.armies || {})) {
     const a = saved.armies[id];
     if (a && !Number.isFinite(a.oosMonths)) a.oosMonths = 0; // pre-supply saves (SPEC §82)
-    // Pre-§186 saves have two arms: the shot is a key they never carried, and
+    // Pre-§191 saves have two arms: the shot is a key they never carried, and
     // an army that never had guns loads with none rather than being handed
     // some. Everything downstream reads it through num(), so this is belt and
     // braces — but a save that round-trips should round-trip whole.

@@ -15,6 +15,7 @@ import { monthlyStanding } from './standing.js';
 import { monthlyInstitutions } from './institutions.js';
 import { monthlyAges } from './ages.js';
 import { monthlySacred } from './sacred.js';
+import { monthlySchools } from './schools.js';
 import { monthlyWeather } from './weather.js';
 import { monthlyDiaspora } from './diaspora.js';
 import { checkDateEvents, checkTriggeredEvents } from './events.js';
@@ -22,6 +23,7 @@ import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyArms } from './arms.js';
+import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
@@ -126,6 +128,7 @@ function monthlyBlock(ctx) {
   safe('institutions', () => monthlyInstitutions(ctx)); // what arose where, and who took it up (SPEC §166)
   safe('ages', () => monthlyAges(ctx)); // and what kind of world it is now (SPEC §168)
   safe('sacred', () => monthlySacred(ctx)); // the hope, the office and the ascents (SPEC §169)
+  safe('schools', () => monthlySchools(ctx)); // …and whose reading of the Law it is (SPEC §190)
   safe('weather', () => monthlyWeather(ctx)); // the years, and whether they have noticed us (SPEC §170)
   safe('diaspora', () => monthlyDiaspora(ctx)); // how the communities feel about this crown (SPEC §172)
   safe('claims', () => monthlyClaimFabrications(ctx)); // paid diplomatic operations mature into usable CBs
@@ -134,6 +137,7 @@ function monthlyBlock(ctx) {
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
+  safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   safe('elimination', () => checkElimination(ctx));

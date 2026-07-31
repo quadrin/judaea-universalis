@@ -493,6 +493,14 @@ export const BOOKMARK_1948 = {
       TUR: 'USA', GRC: 'USA',
     },
   },
+  // Financial aid (SPEC §186). The other thing the great powers signed:
+  // credits. Washington's Export-Import loan reached Tel Aviv in January
+  // '49, London's subvention paid the Legion, Paris propped its mandate
+  // clients — and Prague, arsenal though it was, funded nobody: it sold.
+  // Any court here may petition a donor whose regard it has earned; the
+  // package is sized to the donor's own purse, which is the plain 1948
+  // fact that Washington outweighs every court of the age (SPEC §180).
+  financialAid: { donors: ['USA', 'SOV', 'UK', 'FRA'] },
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
   // the old coarse province baseline while redistributing that baseline among

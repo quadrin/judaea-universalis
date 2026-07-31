@@ -1061,7 +1061,7 @@ const RISING_LABELS = {
   function updateRecruit(btn, type, cost, p, g, base) {
     // The button speaks the age (SPEC §29): a 1948 barracks raises Rifle
     // Brigades and Armored Corps, not "infantry" and "cavalry" — and since
-    // SPEC §186 it wears that soldier's own face, the one that will fly on
+    // SPEC §191 it wears that soldier's own face, the one that will fly on
     // the standard when the regiment musters.
     const t = g.tags && g.tags[g.playerTag];
     const gen = cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
@@ -1095,7 +1095,7 @@ const RISING_LABELS = {
     else if (armsShut) reason = armsShut;
     else if ((t.treasury || 0) < cost) reason = `Not enough talents (${cost} needed)`;
     btn.classList.toggle('disabled', !!reason);
-    // What the arm is FOR (SPEC §186) — the matchup a player is buying, in
+    // What the arm is FOR (SPEC §191) — the matchup a player is buying, in
     // the words of the age they are buying it in.
     const pace = Math.round((ARM[type] ? ARM[type].speed : 1) * 100);
     const role = armor

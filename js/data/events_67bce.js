@@ -157,6 +157,24 @@ function bumpOpinion(g, of, toward, delta) {
   t.opinion[toward] = Math.max(-200, Math.min(200, (t.opinion[toward] || 0) + delta));
 }
 
+// Whichever brother's line holds Jerusalem — the crown the proconsuls address.
+// Defensive to the bone (SPEC §70): deciders are also called cold, with no
+// helpers and a bare roster, and must still name a tag from this era.
+function judaeanCrown(ctx) {
+  try {
+    for (const t of ['HYR', 'ARI']) {
+      const held = who(ctx, t);
+      const tt = ctx.game.tags && ctx.game.tags[held];
+      if (!tt || tt.alive === false) continue;
+      if (ctx.helpers && ctx.helpers.controls(ctx, held, 'Jerusalem')) return held;
+    }
+  } catch (e) { warnOnce('judaeanCrown', e); }
+  const hyr = who(ctx, 'HYR');
+  const th = ctx.game.tags && ctx.game.tags[hyr];
+  if (th && th.alive !== false) return hyr;
+  return who(ctx, 'ARI');
+}
+
 export const EVENTS_67 = [
   // ── 1 ─────────────────────────────────────────────────────────────────────
   {
@@ -277,10 +295,14 @@ export const EVENTS_67 = [
       },
       {
         label: 'The cities are Israel\'s',
-        tooltip: 'Refuse. Nabataea\'s opinion of us falls by 40, and the lances stay home.',
+        tooltip: 'Refuse. Nabataea\'s opinion of us falls by 40, and the lances stay home — '
+          + 'and the elder brother fights his war with what Idumea alone can raise.',
         effects: guard('ev4_aretas_price:1', (ctx) => {
           const nab = ctx.game.tags.NAB;
           if (nab && nab.opinion) nab.opinion.HYR = Math.max(-200, (nab.opinion.HYR || 0) - 40);
+          ctx.helpers.setFlag(ctx, 'moabKept', true);
+          ctx.helpers.chronicle(ctx, 'diplomacy', 'The price of Petra is refused: the cities '
+            + 'of Moab stay Israel\'s, and the war of the brothers stays a war of brothers only.');
         }),
       },
     ],
@@ -2900,6 +2922,283 @@ export const EVENTS_67 = [
           }
           h.setFlag(ctx, 'neverRenamed', true);
           h.chronicle(ctx, 'diplomacy', 'Jubilee shekels — freedom of Zion, year of the unbroken line — ring on every counter from Akko to Petra.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE PRICE OF PETRA COMES DUE (SPEC §119) ═════════════════════════════
+  // The terminal of the Aretas fork. In the history that happened, the hired
+  // lances were paid in the cities of Moab, and then Rome arrived and the
+  // deed was suddenly a Roman question: Scaurus marched on Petra in 62 and
+  // was bought off with three hundred talents that Antipater — who had
+  // brokered the original hire — negotiated. A war debt contracted between
+  // neighbours was refinanced by an empire. Josephus, AJ XIV.29–33, 80–81.
+  {
+    id: 'ev4_the_moabite_bill',
+    title: 'The Moabite Bill',
+    desc: 'Every debt in the East is being re-papered this decade, and the clerks have '
+      + 'reached the cities of Moab. The bill has two versions, and which one is on the '
+      + 'table depends on what the elder brother paid for his lances.\n\n'
+      + 'If Medaba went to Petra, the deed is now a fact with a Roman survey team '
+      + 'standing on it, and the question is whether the crown swallows its fathers\' '
+      + 'conquests twice — once in the ceding, once in the confirming — or bids to buy '
+      + 'them home while Nabataea is busy explaining itself to a proconsul. If the '
+      + 'cities were kept, then Aretas has spent the years neither forgiving nor '
+      + 'forgetting, his riders price the Peraea roads accordingly, and the caravan '
+      + 'masters have begun listing "the king\'s neighbour" among the costs of doing '
+      + 'business east of the river.',
+    forTag: 'both',
+    decider: (ctx) => who(ctx, 'HYR'),
+    date: { y: -62, m: 4 },
+    major: true,
+    when: safeTrigger('ev4_moabite_bill:when', (ctx) => {
+      const h = ctx.helpers;
+      return (!!h.getFlag(ctx, 'aretasMarches') || !!h.getFlag(ctx, 'moabKept'))
+        && alive(ctx, 'NAB') && alive(ctx, 'HYR');
+    }),
+    aiOption: 0,
+    historical: 'Scaurus marched on Petra in 62 BCE and was bought off with three hundred '
+      + 'talents, negotiated by Antipater — the man who had brokered Aretas\' hire in the '
+      + 'first place. The cities of Moab stayed where the bargain had put them.',
+    options: [
+      {
+        label: 'Buy the account closed',
+        tooltip: 'Ceded the cities: −180 talents bids Medaba home — Nabataea, mid-audit, '
+          + 'sells; Medaba returns to the crown and Nabataea\'s opinion settles at −10. Kept '
+          + 'them: −120 talents settles the old grudge at last; Nabataea +30 and the Peraea '
+          + 'roads open ("The River Crossings": +6% income, 48 months).',
+        effects: guard('ev4_moabite_bill:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = who(ctx, 'HYR');
+          if (h.getFlag(ctx, 'aretasMarches')) {
+            h.adjust(ctx, me, { treasury: -180 });
+            h.changeOwner(ctx, 'Medaba', me);
+            bumpOpinion(g, 'NAB', me, -10);
+            h.chronicle(ctx, 'diplomacy', 'Medaba is bought home from a Nabataea busy '
+              + 'explaining itself to a proconsul. The price of Petra turns out to have been '
+              + 'a lease, expensive at both ends.');
+          } else {
+            h.adjust(ctx, me, { treasury: -120 });
+            bumpOpinion(g, 'NAB', me, 30);
+            h.addTagModifier(ctx, me, {
+              id: 'the_river_crossings', name: 'The River Crossings', months: 48,
+              effects: { incomeMult: 1.06 },
+            });
+            h.chronicle(ctx, 'diplomacy', 'The old bill from Petra is settled in silver, a '
+              + 'decade late and without apology on either side. The Peraea roads reopen, and '
+              + 'the caravan masters strike "the king\'s neighbour" from their costs.');
+          }
+          h.setFlag(ctx, 'moabiteBillClosed', true);
+        }),
+      },
+      {
+        label: 'Let the account stand',
+        tooltip: 'Ceded: the deed is confirmed under Rome\'s survey — +10 governance points, '
+          + 'Nabataea +20, and the crown\'s fathers\' conquests stay sold (−5 legitimacy). '
+          + 'Kept: the grudge stays priced into the roads ("The Watched Fords": −4% income, '
+          + '48 months) and the lances stay home on both sides.',
+        effects: guard('ev4_moabite_bill:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = who(ctx, 'HYR');
+          if (h.getFlag(ctx, 'aretasMarches')) {
+            h.adjust(ctx, me, { gov: 10, legitimacy: -5 });
+            bumpOpinion(g, 'NAB', me, 20);
+            h.chronicle(ctx, 'era', 'The cession of Moab is confirmed under the Roman survey: '
+              + 'what the war of the brothers spent, the peace of the clerks files.');
+          } else {
+            h.adjust(ctx, me, { legitimacy: 5 });
+            h.addTagModifier(ctx, me, {
+              id: 'the_watched_fords', name: 'The Watched Fords', months: 48,
+              effects: { incomeMult: 0.96 },
+            });
+            h.chronicle(ctx, 'era', 'The account with Petra stays open, and both courts go on '
+              + 'paying the interest: watched fords, insured caravans, and letters of elaborate '
+              + 'courtesy twice a year.');
+          }
+          h.setFlag(ctx, 'moabiteBillClosed', true);
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE PROCONSUL'S BILL (SPEC §119) ═════════════════════════════════════
+  // Crassus, on his way to the Euphrates, empties the Temple. In the history
+  // that happened, the priest Eleazar offered him the gold beam from which
+  // the veils hung — worth ten thousand shekels — as ransom for the rest of
+  // the treasure, and took his oath on it; Crassus took the beam, and then
+  // took everything else, and marched to Carrhae with it. AJ XIV.105–109.
+  // The fork is what a client crown does when the man robbing it is also the
+  // man governing it — and the terminal is what the answer is worth after
+  // the arrows find him.
+  {
+    id: 'ev4_the_proconsuls_bill',
+    title: 'The Proconsul\'s Bill',
+    desc: 'The new governor of Syria is the richest man in the Roman world and has '
+      + 'come east to become the richest man in any world, and his war with Parthia is '
+      + 'short one thing, which is other people\'s money. He has reached Jerusalem. The '
+      + 'two thousand talents Pompey saw and did not touch are inventoried on a wax '
+      + 'tablet his freedman carries, and the freedman has been asking intelligent '
+      + 'questions about the weight of the vessels.\n\n'
+      + 'There is no garrison to fight and no appeal to make: the court of appeal is '
+      + 'the man in the treasury. The priests propose the oldest expedient in the '
+      + 'inventory — offer the beam of gold the veils hang from, worth ten thousand '
+      + 'shekels, and take his oath that the rest stays sealed. The oath of Marcus '
+      + 'Licinius Crassus, weighed against the contents of a room he is standing in.',
+    forTag: 'both',
+    decider: (ctx) => judaeanCrown(ctx),
+    date: { y: -54, m: 11 },
+    major: true,
+    when: safeTrigger('ev4_proconsuls_bill:when', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'ROM')
+        && (!!h.getFlag(ctx, 'submittedHYR') || !!h.getFlag(ctx, 'submittedARI'))
+        && (alive(ctx, 'HYR') || alive(ctx, 'ARI'));
+    }),
+    aiOption: 0,
+    historical: 'Crassus took the beam, then took everything — the two thousand talents '
+      + 'and eight thousand more in gold — and marched it to Carrhae, where the Parthians '
+      + 'killed him and, the story goes, poured molten gold into the mouth that had '
+      + 'wanted it so badly.',
+    options: [
+      {
+        label: 'The beam, and his oath for the rest',
+        tooltip: 'The priests\' expedient, tried in the open: the beam goes (−150 talents), '
+          + 'and the oath buys what oaths buy — "The Stripped Treasury" (−6% income, 36 '
+          + 'months) when the rest follows it anyway. −5 legitimacy, Rome +10: the record '
+          + 'shows the crown cooperated, which is worth exactly that much.',
+        effects: guard('ev4_proconsuls_bill:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = judaeanCrown(ctx);
+          h.adjust(ctx, me, { treasury: -150, legitimacy: -5 });
+          h.addTagModifier(ctx, me, {
+            id: 'the_stripped_treasury', name: 'The Stripped Treasury', months: 36,
+            effects: { incomeMult: 0.94 },
+          });
+          bumpOpinion(g, 'ROM', me, 10);
+          h.setFlag(ctx, 'crassusRansom', true);
+          h.chronicle(ctx, 'era', 'The beam of gold is carried out first, under its ransom '
+            + 'oath, and the rest of the treasure follows it by the same door. The oath is '
+            + 'not mentioned again by either party, there being nothing left to secure.');
+        }),
+      },
+      {
+        label: 'Open the treasury, and call it a client\'s contribution',
+        tooltip: 'If it cannot be kept, it can at least be given: −250 talents, −10 '
+          + 'legitimacy, the Priesthood −20 — and Rome +40, because the ledger of the '
+          + 'Parthian war now shows Judaea as a willing contributor, filed among friends. '
+          + 'A cold arithmetic, and arithmetic is what proconsuls read.',
+        effects: guard('ev4_proconsuls_bill:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = judaeanCrown(ctx);
+          h.adjust(ctx, me, { treasury: -250, legitimacy: -10 });
+          h.factionShift(ctx, me, 'priesthood', -20);
+          bumpOpinion(g, 'ROM', me, 40);
+          h.setFlag(ctx, 'crassusAppeased', true);
+          h.chronicle(ctx, 'era', 'The treasury is opened before it can be broken open, and '
+            + 'the gift is entered in the proconsul\'s books as the contribution of a friend. '
+            + 'The priests count what the friendship weighed, in shekels, aloud.');
+        }),
+      },
+      {
+        label: 'Seal the doors. The Law does not fund the Euphrates',
+        tooltip: 'The refusal on record: +15 legitimacy, +2 zeal, the Priesthood +20 — and '
+          + 'the doors are opened anyway, by engineers, while the court watches ("The '
+          + 'Proconsul\'s Grudge": Rome −50). What is bought is not the gold, which goes '
+          + 'east regardless. It is the record of who sealed the doors, which stays.',
+        effects: guard('ev4_proconsuls_bill:2', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = judaeanCrown(ctx);
+          h.adjust(ctx, me, { legitimacy: 15, treasury: -100 });
+          h.factionShift(ctx, me, 'priesthood', 20);
+          h.doctrine(ctx, 'zeal', 2);
+          bumpOpinion(g, 'ROM', me, -50);
+          h.setFlag(ctx, 'crassusRefused', true);
+          h.chronicle(ctx, 'era', 'The treasury doors are sealed in the proconsul\'s face and '
+            + 'opened by his engineers before the wax is cold. The gold goes east like '
+            + 'everyone else\'s; the refusal stays in the record, which was the purchase.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev4_what_carrhae_left',
+    title: 'What Carrhae Left',
+    worldLabel: 'The Parthians destroy Crassus, and Syria is suddenly a frontier',
+    desc: 'The army that emptied the treasury is gone — seven eagles taken, the richest '
+      + 'man in the world dead in the sand with, the story insists, molten gold poured '
+      + 'into the mouth that wanted it so badly. What is left of Roman Syria is Cassius '
+      + 'with the survivors, a frontier with a hole in it, and a province\'s worth of '
+      + 'requisitions to raise from whoever is nearest.\n\n'
+      + 'Jerusalem is nearest. How the quaestor\'s clerks address the crown depends '
+      + 'entirely on what the crown did when the dead man came through with his wax '
+      + 'tablet — the ledgers survived Carrhae, as ledgers do.',
+    forTag: 'both',
+    decider: (ctx) => judaeanCrown(ctx),
+    date: { y: -52, m: 6 },
+    world: true,
+    major: true,
+    when: safeTrigger('ev4_what_carrhae_left:when', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'ROM')
+        && (!!h.getFlag(ctx, 'crassusRansom') || !!h.getFlag(ctx, 'crassusAppeased')
+          || !!h.getFlag(ctx, 'crassusRefused'))
+        && (alive(ctx, 'HYR') || alive(ctx, 'ARI'));
+    }),
+    aiOption: 0,
+    historical: 'Cassius held Syria with the wreckage, and when the Parthian echo stirred '
+      + 'Judaea he broke Taricheae and sold thirty thousand into slavery. The country paid '
+      + 'for Carrhae twice: once going, once coming back.',
+    options: [
+      {
+        label: 'Read the quaestor\'s letter',
+        tooltip: 'Ransomed the beam: the hollowed treasury is requisitioned gently — +5 '
+          + 'legitimacy, the rite rebuilt by subscription ("What the Beam Bought": +0.1 '
+          + 'legitimacy a month, 48 months). Contributed: the willing payer is invoiced '
+          + 'again — −100 talents, Rome +20. Refused: the grudge survives the man — −50 '
+          + 'talents and the faith\'s provinces seethe (+1 unrest, 24 months), but +10 '
+          + 'legitimacy: the doors held, and the country knows whose hands opened them.',
+        effects: guard('ev4_what_carrhae_left:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const me = judaeanCrown(ctx);
+          if (h.getFlag(ctx, 'crassusRansom')) {
+            h.adjust(ctx, me, { legitimacy: 5 });
+            h.addTagModifier(ctx, me, {
+              id: 'what_the_beam_bought', name: 'What the Beam Bought', months: 48,
+              effects: { legitimacyAdd: 0.1 },
+            });
+            h.chronicle(ctx, 'era', 'The gold that went to Carrhae stays at Carrhae. The '
+              + 'community rebuilds the rite by subscription, weight by weight, and the '
+              + 'story of the beam and the oath is told at the rebuilding, every time.');
+          } else if (h.getFlag(ctx, 'crassusAppeased')) {
+            h.adjust(ctx, me, { treasury: -100 });
+            bumpOpinion(g, 'ROM', me, 20);
+            h.chronicle(ctx, 'era', 'The quaestor\'s clerks find last year\'s contribution in '
+              + 'the ledger and invoice the willing payer again. A client who pays without '
+              + 'being asked is asked twice.');
+          } else {
+            h.adjust(ctx, me, { treasury: -50, legitimacy: 10 });
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.religion !== 'judaism') continue;
+              h.addProvinceModifier(ctx, p.name, {
+                id: 'cassius_requisitions', name: 'The Quaestor\'s Requisitions', months: 24,
+                effects: { unrest: 1 },
+              });
+            }
+            h.chronicle(ctx, 'era', 'Cassius quarters the wreckage of the Parthian war on the '
+              + 'province that sealed its doors to it. The requisitions are methodical and '
+              + 'the country pays them looking straight ahead, holding the one thing Carrhae '
+              + 'left it: the record of who sealed the doors.');
+          }
+          h.setFlag(ctx, 'carrhaeSettled', true);
         }),
       },
     ],

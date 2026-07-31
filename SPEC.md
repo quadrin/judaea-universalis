@@ -4376,7 +4376,8 @@ stopped, because every one of those tables is keyed by tag.
   the NEW tag; `missionsFor` prefers the bookmark's own table and falls back to
   the crown's. The Kingdom of Israel gets four (settle the crown, muster the
   kingdom, the land of the twelve, build rather than hold) and the restored
-  Hasmonean crown three; forming resets the chain to its first line.
+  Hasmonean crown three; forming resets the chain to its first line. Those four
+  are now the SPINE of a per-chapter tree — see §189 for the branches.
 - **Its own payoff**: each crown now pays differently — coin, men and
   ministries (`bonus.grant`) plus a second permanent modifier that says what
   that kingdom is FOR. The Kingdom of Israel's Law Is the Charter (manpower,
@@ -10277,7 +10278,428 @@ every Jewish court those chapters seat was already on offer.
   browser start screen offers the widened Israelite-only rosters, card
   for card.
 
-## 186. Every arm has a face, a gait, and a weakness
+## 186. The purse is somebody else's too
+
+§180 retired "ask for credits" with a sentence that promised its
+replacement: subsidies cover the one direction money actually flowed. It
+was half true. The §24 subsidy is a payer's verb — `sendSubsidy`, the
+player's silver going out — and no court on the map had any way to ask for
+the thing 1948's minors actually lived on. The direction money actually
+flowed was Washington's Export-Import credits reaching Tel Aviv in January
+'49, London's subvention paying the Arab Legion, Paris propping the
+ex-mandate clients — and the game's Israel, income 40 a month and a war on
+every border, could court Truman's regard and then do nothing with it but
+sign for airplanes.
+
+**The donor courts** (`bookmark.financialAid.donors`, declared by 1948
+alone): USA, SOV, UK, FRA. The arsenal list minus Prague, and the
+subtraction is the point — Czechoslovakia sold arms for hard currency and
+funded nobody, so the two lists are declared apart and `smoke118` holds
+them apart. Any other court of the age may **petition** a donor from the
+donor's own panel (the §180/§181 pattern: the verb rides the court you are
+asking, opened from the ledger). Five rules, each priced:
+
+- **The bar is their regard.** Like the §181 signature, you are asking to
+  be given to, so it is the donor's opinion of you (≥ 55) that opens the
+  purse. Israel opens at 40 with Washington, Moscow and Paris and −30 with
+  London: nobody grants on day one, one courting round reaches the
+  American bar, and the British purse costs two years of mended fences —
+  which is roughly what de jure recognition cost.
+- **The package is sized to the donor's own purse.** A quarter of the
+  donor's monthly books (income, tribute, and the §180 stipend), floored
+  at 5 and capped at 25, frozen into the row at grant time. Washington's
+  stipend prices its package at 15 a month for a year; the European
+  fragments — thin by §173's levy design — floor out at 5. The plain 1948
+  fact that the United States outweighs every court of the age (§180) is
+  therefore not a rule here; it is arithmetic. And the purse must be real:
+  a donor grants only from net its books actually clear or a war chest
+  that covers the whole package, so a warm Kremlin with an empty chest
+  refuses until it has saved something to give.
+- **A grant is a §24 subsidy row** wearing an `aid` marker — the ledger
+  lines, both panels' treaty rows, the monthly countdown, the deep-debt
+  default and the revive path all come free, and the money balances by
+  construction. The mission costs 20 influence; nothing else is new state.
+- **A voted credit clears.** Unlike the §181 pipeline, a granted package
+  runs its term whatever the regard does afterward — no drift anchor, no
+  liveness floor. It dies early only to the loud ruptures: war between
+  the two courts, or the donor signing a §100 embargo (the same signature
+  that cuts the arms). What asking costs instead is standing: −5 regard
+  per petition, one purse at a time, and each donor hears one petition
+  per 30 months — so standing aid needs standing courtship, which is
+  "if they like us enough" as a living condition rather than a checkbox.
+- **The AI plays it.** A court under 30 talents petitions the friendliest
+  donor that will grant, paying the same influence at the same bar — so
+  the Anglo-Jordanian subvention emerges from the seeded opening book
+  instead of being scripted, and the player's chair is never petitioned
+  for. Donor AI is passive: a purse, not a policy; §100's embargo AI is
+  the policy here exactly as it is for the arsenal.
+
+The Compendium's chapter page lists the donor courts beside the arms
+market, read from the same declaration the sim plays. The tooltip on the
+petition button prints the donor's regard against the bar, the package it
+would vote, and every price — the mark, the window, the single purse —
+before the player commits the influence.
+
+- **Regression contract**: `smoke118` — the donor list is the bookmark's
+  own (Prague sells, never funds); the regard bar, influence fee, real-books
+  test, single-purse rule and petition window each refuse with their reason;
+  a grant writes the marked §24 row, moves the influence, marks the regard
+  and agrees in both ledgers; a package survives cooling (no anchor) and
+  dies to war or embargo with notice; the term runs out as aid, not as a
+  subsidy; the AI petitions when poor (and never for the player) while the
+  friendless get nothing; the ancient chapters see none of it; and a live
+  package rides a save through `reviveGame` intact.
+
+## 187. The thin trees made thick — forks, bills, and the expansion the age actually paid
+
+The §119 census, re-run: the Great Revolt had six forks, Bar Kokhba and the
+Keepers five each — and Herod's Rise had two. The war of the brothers had
+three, and the Persian Gambit four. The mission trees told the same story
+from the other end: nine nodes at 67 and 40 BCE against eleven at 66 and
+twelve at 614, and not one conquest branch anywhere in the lighter chapters
+beyond the objectives themselves. The chapters with the least content were
+the ones asking the fewest questions, which is backwards: a chapter the
+player finishes fastest is exactly the one that needs more reasons to keep
+playing it.
+
+Three kinds of fix, in increasing order of new prose:
+
+**The tree had been lying by omission.** Four decision cards already asked
+one question, once, with mutually exclusive marker flags — and were never
+charted. `ev4_v_caesar_or_pompey` and `ev4_v_antony_or_octavian` are the
+sovereign kingdom's two Roman civil wars, each with a settling terminal
+(`ev4_v_pharsalus_wager`, `ev4_v_actium_sovereign`) already in the chain;
+`ev_w_the_other_half` (the Exilarchate under Jerusalem, or two houses one
+people) and `ev_w_the_treaty_state` (the baqt pattern, or no category at
+all) set their markers and then the chapter carried on as if nothing had
+been decided. All four are now forks of the tree; the 614 pair got the
+terminals they never had — a generation later the calendar question tests
+what the union of the centres is made of, and the first fitna re-opens
+every rate the caliphate ever set. One §120 lesson held throughout: the
+terminals read markers and living courts, never the geography that opened
+the road.
+
+**Two decisions decided without recording.** `ev4_aretas_price` set
+`aretasMarches` when the elder brother paid in the cities of Moab and
+nothing at all when he refused; `ev5_atg_hyrcanus` disposed of the last
+elder of the Hasmonean house without writing either disposition down. Both
+now mark both roads (`moabKept`; `hyrcanusHome`/`hyrcanusPensioned`), and
+both got terminals with the bill attached: Scaurus' expedition re-papers
+the Moabite deed under a Roman survey in 62, and the old man's story ends
+in the frame the crown chose for it.
+
+**Where the ground was bare, new forks.** Herod's Rise grew three. The
+Queen's Portion is the Donations of Alexandria landing on Jericho —
+Josephus' lease-back at two hundred talents a year as the historical road,
+the deed returned unread and the valley sold outright as the two the
+chronicles don't have — closed by the Grovekeeper's Ledger when the
+victor's clerks read a dead queen's estate. The Musters of Actium is the
+winter of 32: the queen has arranged for the king's army to bleed Nabataea
+while the world is decided at sea, and the two letters on the council
+table are a fork — the Arab war that historically saved the reign, the
+fleet joined at Ephesus, or the levies kept home behind a documented
+famine — priced at Rhodes, where Octavian reads muster rolls like rent
+books whether or not the king comes in person. The Proconsul's Bill puts
+Crassus in the Temple treasury on his way to Carrhae: the beam and the
+broken oath, the treasury opened as a client's contribution, or the doors
+sealed for the record, each answered two years later by what Carrhae
+leaves — Cassius' clerks, reading last year's ledger. And the Persian
+Gambit grew the fork the 529 chapter has been waiting for from the other
+chair: The Other Israel. A Jewish state that governs Neapolis inherits
+Justinian's statutes against the Keepers of Gerizim — the schedule of
+demolitions, the disabilities, the garrisoned church on the summit — and
+is the first Israelite polity in history positioned to repeal them, or to
+keep them running under a new seal. What Gerizim answers when the south's
+riders come asking is decided in that council chamber, years earlier.
+
+**The expansion the age actually paid.** Thirteen conquest branches across
+the five lighter trees, every target the era's own: Herod takes the
+Decapolis cities Augustus historically signed over and the Trachonitis
+command he was given to police; Antigonus retakes Jannaeus' coast and
+reaches for Damascus; the brothers of 67 contest the twelve cities of
+Moab, the sea gates, the Iturean principalities and the city between
+empires; the Return of 614 climbs the Ladder of Tyre, holds the King's
+Highway from the middle for once, and takes the granary of the world with
+the largest Jewish city on earth inside it; the Keepers of 529 break out
+of the hill country into the seat of Palaestina Secunda and shut the coast
+road north of the port. Every one is a `controls()` check over provinces
+the tag does not start with; none completes at boot.
+
+Every new fork stands in the §183 spare columns as a hypothetical — the
+trees now carry forty-five roads-not-taken across the eight chapters, up
+from thirty — and the §183 rules were load-bearing three times over.
+Historical-road forks complete only off the record (the groves fork pays
+on refusal or sale, never on the lease). Prerequisites exist only where
+the marker provably implies the parent (the old man's fork requires the
+Hasmonean hold that its entry tests; the civil-war wagers require nothing,
+because `freeOfRome` is checkable without the eagle flag ever being set).
+And declaring seats found the same §177 wart §183 found: the derived
+layout was drawing `a5_hired_veterans` on top of `a5_masada` and
+`a4_kings_art` on top of `a4_one_crown` — in the second-playable trees,
+where the collision test never looks. Both now declare their rows.
+
+The suite caught two more things before any of it ran, which is what it is
+for: smoke39 refused three single-option verdict cards (v6.1: anything the
+player answers offers at least two answers — so the ledger can be pressed
+for damages, the diadem can be sent to Rhodes in a box, and the crown can
+ride to Gerizim before the south does), and smoke48 threw both Crassus
+deciders out for dying when called cold — `judaeanCrown()` now resolves
+the addressed brother defensively, with no helpers in hand and a bare
+roster.
+
+- **Regression contract**: `smoke83` — the tree now branches 115 ways, all
+  ten new forks' markers written by live cards, both promoted entries and
+  all six new terminals present in their chapters, no new gaps. `smoke116`
+  — forty-five hypotheticals, every new one seated in the spare columns
+  and none completing at boot; the 40, 67 and 614 world-builds set the new
+  markers (before the first pass at 40, because a dead Antigonus is paid
+  nothing) and every road still pays. The §177/§183 pins moved with the
+  feature where they had to: `smoke3` (fifteen at 67), while `smoke16`'s
+  raw index into the 132/614 tables still lands on the Third House
+  untouched, because every insertion in those tables came after it.
+
+## 188. The ideas belong to the ladders that sell them
+
+§175 sorted twenty sections into six tabs by what each section IS, and the
+reform trees read as constitutional — the crown's own business — so they went
+onto Crown beside faith, tongue and capital. Then §179 gave that same block its
+second half: the chapter's Ideas of the Age, every group locked behind a NAMED
+RUNG of a technology ladder, each locked card saying so in words — *Unlocked at
+The Third Wall (8)*. The rung it names is printed on Coin. So the screen that
+told you what you could not buy yet and the screen that told you how close you
+were to being able to were two different screens, and a purchase meant Crown →
+Coin → Crown. EU4 never had that problem, because the ladders and the ideas
+they open are one window.
+
+### The move
+
+The ideas block — all of it, the three universal reform trees AND the age's own
+groups — is one `data-tab="coin"` section templated immediately below
+Technology. The tab filter only hides sections; it never reorders them, so
+template order is render order: each ladder prints its level, its rung name and
+its progress bar, and directly underneath sits the group whose lock card names
+that rung. The block is titled **Ideas** rather than Reforms — it has sold both
+halves since §179, and the panel's own vocabulary has read `data-idea`,
+`getIdeas`, `IDEA_TREES` since §20 — and the Coin tab's tooltip owns what the
+tab now holds ("…the technologies silver buys — and the ideas those ladders
+sell").
+
+**It lands in all eight bookmarks because there is nothing per-bookmark to
+land.** The panel is one template harvested once in `build()` (§175's
+load-bearing rule), so a chapter has exactly one say over the strip: what it
+CALLS a tab, through `uiTerms` — 1948 carries the block under Economy, and
+every other chapter under Coin. And the reason one screen is the right screen
+holds in every chapter rather than in the one it was noticed in: every
+universal tree and all fifty-four era-idea slots across the eight chapters
+price and unlock off gov/infl/mar, the three ladders printed above them —
+§179's `unlock.ladder === point` invariant is what makes that a fact about the
+data and not a coincidence of the current tables.
+
+### What did not move
+
+Crown keeps the realm's own facts — faith, tongue, capital, government,
+stability, legitimacy, the years, the chapters — and keeps them *unhidden*,
+which is what lets it survive being one section lighter: `tabHasContent` counts
+a `pp-grid` only while a row of it shows, and those rows are unconditional. The
+buy paths are untouched: the same `data-idea` / `data-eraidea` probes, in the
+same delegated chain, behind the same tab probe that still runs first. A
+foreign court's read-only pips travel with the block and render from
+`t.reforms` / `t.eraIdeas` exactly as before, one tab over.
+
+- **Regression contract**: `smoke119` — the `np-reforms` host resolves to the
+  Technology block's tab and is templated below it, Crown carries it no longer,
+  the block reads Ideas and the tab tooltip says so, every declared tab still
+  owns a section, Crown keeps an unhidden anchor, all three buy paths keep
+  their probes with the tab probe still first, and — for every playable side of
+  all eight chapters — every era group and every universal tree unlocks and
+  prices off one of the three printed ladders. `uitest38` measures it in the
+  browser, where a bounding box is the only honest answer: hidden on Crown,
+  visible on Coin beside the ladders, its box BELOW theirs, the three tree
+  buttons and the Ideas of the Age strip both present. `smoke109`'s tab
+  contract (every section names a declared tab, no tab is dead, the shell is
+  never re-templated) is unchanged and still passes, and `uitest8` / `uitest37`
+  hold the Coin tab's buy path to one press as before.
+
+## 189. The crown speaks in the age it was crowned in
+
+§102 gave the Kingdom of Israel a programme of its own so that proclaiming
+the greater crown would fill the mission panel instead of emptying it. It
+gave it *one* programme: the same four missions — settle the crown, muster
+the kingdom, the land of the twelve, build rather than merely hold — in all
+six chapters the crown is formable in. Every playable side of every chapter
+has had a tree since §177, a curriculum since §179 and roads not taken
+since §183; the endgame crown of the whole game had a four-rung ladder that
+could not tell 167 BCE from 614 CE. This pass gives it the ages.
+
+**One table, six readings.** A mission may now declare
+`chapters: ['66ce', …]`, and `chapterChain(list, bookmarkId)` — memoized per
+table per chapter, because the monthly pass and the panel both ask and both
+want the same array — hands each chapter the missions that name it plus
+every mission that names none. `missionsFor` runs a crown's chain through
+it. Nothing else in the shape moves: `bookmark.missions` still answers
+first, a chain that declares no chapters is handed back untouched (the
+Hasmonean crown's three), and the record is still `missionsDone` plus a
+`missionIdx` prefix.
+
+**The spine keeps the ladder's order.** The four are now a tree — the
+crowning is the root, the muster and the land hang off it, the building
+programme off the land — with prerequisites that are a subset of the old
+ladder's implicit ones, so an old save's `missionIdx` still means what it
+meant. They hold columns 0-1; every chapter's branch takes columns 2-3, so
+no chapter's tree collides with itself.
+
+**And each chapter adds three, addressed to the crown by its own age**:
+167 BCE finishes the Seleucid throne, takes Simon's harbours (Joppa,
+Azotus, Gaza — "an entrance to the isles of the sea"), and keeps the
+Republic that answered Judas' embassy on bronze; 67 BCE holds the five
+Greek cities of the Jordan that Pompey's settlement filed under Syria,
+brings the desert king who had to be paid in the cities of Moab to heel,
+and asks Babylonia — larger than Judaea and inside somebody else's empire —
+to answer; 40 BCE keeps the balsam of
+Jericho that Cleopatra took by asking Antony for it, builds the harbour at
+Straton's Tower the country has never had, and binds Parthia in writing
+with the Twin Cities standing behind it; 66 CE takes the procurators'
+seaboard, absorbs the last Herodian's tetrarchy, and endows a House that
+has not burned; 132 CE unmakes Aelia between the sea and the Jordan,
+raises the Third House the Redemption coinage kept promising, and makes
+Rome fight east as well; 614 CE raises the altar on a Mount swept empty
+since Titus, reaches the Exilarchate — the Davidic pedigree nobody
+disputes, sitting in another empire since 586 BCE — and watches the
+southern road while both empires spend their last armies on each other.
+
+**Two things this fixes beyond flavour.** The Third House was the capstone
+of the 132 and 614 chains and lived in `bookmark.missions.JUD`, so taking
+the greater crown quietly cost a player the one mission the chapter is
+about; the crown now carries its own, and a House the chapter's own side
+already raised is endowed rather than billed a second time. And no branch
+mission is payable by the act of proclamation — the two that were (the
+cities of the Jordan, already Aristobulus' in 67; Parthia's +80 opinion of
+the king its own cavalry seated in 40) were rewritten until they ask for
+something a campaign has to go and do. §187 arrived while this was being
+written and thickened the chapters' own trees; where the crown's branch met
+one of the new conquest missions on the same ground — Damascus, which the
+chapters' own sides now claim at both 67 and 40 — the crown gave way and
+asked for something else (Nabataea brought to heel, which is the same
+chapter's other unpaid bill).
+
+- **Regression contract**: `smoke120` — the static shape (spine plus three
+  per chapter, no branch crossing a chapter line, the kit on every mission,
+  seats in the branch columns, prerequisites resolving inside their own
+  chapter's chain, the spine's order still a subset of the ladder's), the
+  engine (each chapter handed its own seven, the same array twice, an
+  unchaptered chain untouched, no chain invented for a tag without one),
+  and the live end: nothing on a branch completes on the day of the
+  crowning in any of the six, and every one of the eighteen pays when the
+  world its desc promises is built by hand — including the House rising on
+  a bare Mount for 300 talents and the standing House that costs nothing.
+  `smoke73` — §102's contract, unchanged: the crown still carries a chain
+  and the panel still shows it from its first line.
+
+## 190. The quarrel of the two schools
+
+§34 gave every court party an approval bar and a lever to raise it, and that
+is the right engine for five estates who want five different things. It is
+the wrong one for these two. The Pharisees and the Sadducees did not want
+different things from a Hasmonean crown — they wanted the *same* thing, which
+was to be the reading of the Law that the crown administered, and there is
+exactly one of those. Two independent bars cannot express a zero-sum
+quarrel: a player could carry both houses at 75 for the whole hundred and
+forty years the 167 chapter runs them and never learn that the historical
+crown could not, because every ruling it made cost it one of its two
+constituencies. The two most consequential parties in the period were the two
+the game had least to say about.
+
+**THE READING.** A −10..+10 axis, the realm's standing answer to the whole
+quarrel, built only from rulings the crown has actually given. The poles are
+deliberately not mirror images, because the trade the Hasmoneans were making
+was not symmetrical: the schools' Law buys the *country* (−1.2 unrest, +10%
+manpower, +5% morale) and charges the treasury 6% for it; the houses' Law
+buys the *treasury and the throne* (+14% income, +0.25 legitimacy a month)
+and charges the country a point of unrest and 8% of its manpower. Neither
+pole buys both, and a crown that has ruled on nothing reads *unruled* rather
+than balanced. It rides the ordinary modifier stream, scaled by how far out
+the realm actually is, exactly as a half-loyal estate's boon is.
+
+**THE RULINGS.** Six recorded disputes (`js/data/schools.js`), each with the
+side the schools took and the side the priestly houses took: the morrow after
+the sabbath (Menahot 65a — the date of Pentecost), the water at the altar's
+foot (Sukkah 4:9, and the citrons Jannaeus was pelted with), the Book of
+Decrees (Bava Kamma 83b, the eye or the price of the eye), the Chamber of
+Hewn Stone (who sits on the benches), the resurrection and the angel (Ant.
+XVIII.14–16), and the ashes of the heifer (Parah 3:7, where the sages
+defiled the priest on purpose to prove the point). Each is given once, for
+points, permanently: it grants a named modifier that carries no month count,
+and the *stored side* — not the modifier — is the record, so the reading is
+recomputed from what the crown ruled rather than accumulated. The two that
+are about a rite are not offered where no House stands, on §169's own Temple
+test. And the price is fixed by the engine, not the entry: **every** ruling
+gives one house ten approval and takes ten from the other, because an entry
+authored soft enough to be free would make the whole axis a shopping list.
+A standing reading then goes on pulling, half a point a month against §34's
+regression to the middle — which is the historical trap, the one where the
+longer Hyrcanus governed as a Sadducee the less the Pharisees would take from
+him, and the fix was never available at the price he wanted.
+
+**THE CHAMBER.** What the two houses come to *together*, which is the read
+two independent bars structurally could not produce. Concord (both at 60+)
+pays legitimacy, quiet and a discount on governing. A one-sided breach — one
+house on the floor while the other holds the crown — costs whatever that
+house was carrying: the schools' breach is unrest and manpower and a sage in
+every town explaining what kind of king this is; the houses' breach is 15% of
+income, 10% of reinforcement, and a Temple strongroom with a very slow door.
+And the schism, both houses hostile at once, is worse than either breach on
+every axis, because before this the arithmetic said the opposite — two
+hostile bars used to average out.
+
+**THE OFFICE.** §169 seats a High Priest from a party at court. Where that
+party is one of the schools, the office is now measured against the reading:
+a priest who keeps the Law the crown has ruled for pays legitimacy, and one
+performing rites the crown has ruled against costs it. The houses' Law with
+nobody in the office at all costs extra on top of the ordinary vacancy —
+their whole case is that the Temple governs, and there is nobody in the
+Temple to govern. The candidate list also stops being everyone in the room:
+`priestly: false` is content's veto, and it takes the Brothers' Captains and
+the House of Antipater off a list they should never have been on. The zealots
+of 66 keep theirs, because they seated Phanni ben Samuel by lot and that is
+the point of them.
+
+**THE BREACH CARD.** Two years of a house held on the floor deals its card,
+once a decade, under the same one-dynamic-card-at-a-time guard the estate
+demands use. Citrons at the Water-Gate offers the historical answer (let the
+guard clear the court: −2 stability, −10 legitimacy, the schools to the
+floor) beside the two that were also available. The Chamber Declines to Count
+is the mirror: confirm the houses in the Temple's revenue, put the crown's own
+clerks on the ledgers, or leave it unanswered. Both are forks, not
+punishments.
+
+**WHERE IT APPEARS.** Wherever both houses sit at the player's own court,
+which is 67 BCE for both brothers and — because §127 hands the 167 chapter's
+court over on 140 BCE — the Maccabean chapter from the year Josephus first
+names the three schools onward, without anything anywhere having to know that
+was the intention. Six chapters never see it. The `pilgrimMult` key is new and
+general: the water-drawing ruling, the ashes of the heifer and a breach with
+the priestly houses all reach §169's ascents through it, so a doctrinal
+quarrel lands on a number the player watches every month.
+
+- **Regression contract**: `smoke121` — the gate (silent in six chapters and
+  in 167 until the houses arrive); a ruling costs the losing house exactly
+  what it pays the winner, carries no month count, and cannot be given twice;
+  the one blocker answers the panel and the click path identically; the rite
+  disputes close when the House does; both poles pay and charge in opposite
+  currencies; all four chamber states, with the schism worse than either
+  breach; the ascents move on a ruling and on a breach; the office pays and
+  costs by alignment; the captains and the Idumeans are off the altar; both
+  breach cards deal and resolve; a lukewarm court deals nothing in five years;
+  nothing reaches an AI hand; and every authored entry is a real fork —
+  documented, priced, opposed on both sides. `uitest40` plays 167 BCE in a
+  real browser: the block is hidden while the Hasideans hold the pious seat,
+  the captains are off the priesthood's ballot, the block appears with both
+  houses named and the needle reading *Unruled* once the court has changed
+  hands, and one click on a side of a dispute moves the live game — the
+  record, both approvals, the modifier, the settled row and the needle —
+  with no page errors.
+
+## 191. Every arm has a face, a gait, and a weakness
 
 Two arms, and one of them was a costume. `cav` was a 25-talent infantryman
 that happened to be called Cataphract Horse; it moved at the same pace as
@@ -10414,7 +10836,7 @@ read as the zero it always was (`reviveGame` writes it in so a save
 round-trips whole). §181's prices, gates, pips and its whole regression
 contract are untouched.
 
-- **Regression contract**: `smoke118` — the roster is three arms deep with
+- **Regression contract**: `smoke122` — the roster is three arms deep with
   a distinct name, glyph and cue for all eighteen patterns and no glyph
   shared by two; the triangle scores spear-vs-horse, horse-vs-shot and
   shot-vs-line in the right phases and reads zero for balanced hosts;
@@ -10426,7 +10848,7 @@ contract are untouched.
   a host that is a third armor and the spear on one that is not; a real
   1948 battle carries `mixA`/`mixD` in the right phases while §181's
   `armA`/`armD` keep their own meaning; the march order emits the leading
-  arm's cue once, and 1948's armor pulls out on an engine; and a pre-§186
+  arm's cue once, and 1948's armor pulls out on an engine; and a pre-§191
   save loads with no guns rather than a crash. `smoke103` (§154) needed its
   source-text pin widened: it spelled out the whole `docA` sum, so adding a
   fourth term to that line read as a regression. It now ends at `airA` — the

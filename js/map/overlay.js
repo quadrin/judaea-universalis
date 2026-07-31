@@ -3,11 +3,11 @@
 // so everything lands on the same screen points as the GL map underneath.
 
 import { traceSupply } from '../sim/supply.js';
-// The land roster (SPEC §186): every banner wears the face of the arm that
+// The land roster (SPEC §191): every banner wears the face of the arm that
 // leads it, at the pattern it was raised to.
 import { dominantArm, unitGlyphKey, unitGlyphPath } from '../data/units.js';
 
-// Wider since SPEC §186: the standard now carries a soldier's face as well as
+// Wider since SPEC §191: the standard now carries a soldier's face as well as
 // a strength, and both have to be legible at strategic zoom.
 const CHIP_W = 56;
 const CHIP_H = 20;
@@ -43,7 +43,7 @@ const STAR8_PATH = new Path2D(
   'M6 0L2.31 0.96L4.24 4.24L0.96 2.31L0 6L-0.96 2.31L-4.24 4.24L-2.31 0.96' +
   'L-6 0L-2.31 -0.96L-4.24 -4.24L-0.96 -2.31L0 -6L0.96 -2.31L4.24 -4.24L2.31 -0.96Z'
 );
-// The eighteen soldiers (SPEC §186), compiled once and kept: the roster's own
+// The eighteen soldiers (SPEC §191), compiled once and kept: the roster's own
 // 24×24 path data, handed straight to Path2D. Built lazily so a glyph a
 // campaign never fields is never constructed.
 const unitPathCache = new Map();
@@ -972,7 +972,7 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
       : (textFrom + x + ch.w - notch) * 0.5;
     x2.fillText(fmtMen(ch.men), textX, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
     x2.shadowBlur = 0;
-    // The soldier's face (SPEC §186): the arm that leads this stack, at the
+    // The soldier's face (SPEC §191): the arm that leads this stack, at the
     // pattern it was raised to. A spear at 167 BCE, a cataphract under the
     // Hasmoneans, a tank in 1948 — the counter says what the host IS, not
     // merely how many men are in it.

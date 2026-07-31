@@ -6,7 +6,7 @@ import {
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
 import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
-// The land roster (SPEC §186): three arms, their faces, their gaits, and the
+// The land roster (SPEC §191): three arms, their faces, their gaits, and the
 // triangle they answer each other in. Pure data + pure functions.
 import {
   ARMS, ARM, armShares, armEdge, armEdgeText, dominantArm, unitBattleCue,
@@ -302,11 +302,11 @@ export function armiesInProv(ctx, provId) {
 }
 export function regCount(a) {
   if (!a || !a.regiments) return 0;
-  // Three arms since SPEC §186; a pre-§186 army has no `art` key and num()
+  // Three arms since SPEC §191; a pre-§191 army has no `art` key and num()
   // reads it as the zero it always was.
   return num(a.regiments.inf) + num(a.regiments.cav) + num(a.regiments.art);
 }
-// A column marches at the pace of its slowest arm (SPEC §186): horse alone
+// A column marches at the pace of its slowest arm (SPEC §191): horse alone
 // outruns foot, and one gun train sets the pace of everything it travels with.
 export function armSpeedOf(army) {
   const r = army && army.regiments;
@@ -442,7 +442,7 @@ export function hopDays(ctx, fromId, destId, army) {
   const p = ctx.byId(destId);
   const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
   const mc = terr ? num(terr.moveCost, 1.2) : 1.2;
-  // Pattern × arm (SPEC §25 × §186): the age sets the pace, the slowest arm
+  // Pattern × arm (SPEC §25 × §191): the age sets the pace, the slowest arm
   // in the column keeps it. A pure horse raid outruns the same men walking by
   // a quarter; put one gun battery in and the whole column gives back a sixth.
   const spd = army ? genSpeed(num(army.gen, 0)) * armSpeedOf(army) : 1;
@@ -486,7 +486,7 @@ export function spawnArmy(ctx, tag, provName, opts) {
   if (!g.tags[tag]) { warnOnce('spawnt:' + tag, 'spawnArmy: unknown tag', tag); return 0; }
   let inf = Math.max(0, Math.round(num(o.inf, 0)));
   const cav = Math.max(0, Math.round(num(o.cav, 0)));
-  const art = Math.max(0, Math.round(num(o.art, 0))); // SPEC §186; absent in every older caller
+  const art = Math.max(0, Math.round(num(o.art, 0))); // SPEC §191; absent in every older caller
   if (inf + cav + art <= 0) inf = 1;
   const regSize = B(ctx, 'regSize', 1000);
   const id = g.nextArmyId++;
@@ -574,7 +574,7 @@ function startBattle(ctx, provId, atkArmies, defArmies) {
   for (const a of atkArmies) a.inBattle = true;
   for (const a of defArmies) a.inBattle = true;
   g.battles.push(b);
-  // What the field SOUNDS like (SPEC §186): the arms that lead the two hosts,
+  // What the field SOUNDS like (SPEC §191): the arms that lead the two hosts,
   // so a cavalry charge into a gun line is not the same noise as two spear
   // walls meeting. Summed across each side, because the sound of a battle is
   // the sound of everybody in it.
@@ -673,7 +673,7 @@ function sideStats(ctx, armies, phase) {
   let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0, armor = 0;
   const minArmorGen = num((ctx.DEFINES.ARMOR || {}).minGen, 5);
   const tags = new Set();
-  // The side's whole order of battle by arm (SPEC §186), counted in regiments
+  // The side's whole order of battle by arm (SPEC §191), counted in regiments
   // across every stack on the field — a mix, not a per-army thing, because the
   // guns of one army cover the line of the one beside it.
   const regs = { inf: 0, cav: 0, art: 0 };
@@ -786,14 +786,14 @@ function battleRound(ctx, b) {
   // to the sky, shock to the tanks. One subtraction, so one side's pips are
   // the other's absence of them, exactly as the air term above.
   const armorNet = A.armor - D.armor;
-  // The ground answers armor too (SPEC §186). §181's quantity term is the
+  // The ground answers armor too (SPEC §191). §181's quantity term is the
   // tanks; a mountain is where the tanks cannot go around, so the pips it
   // earns are cut by the same table that takes the charge away from horse.
   const rough = MOUNTED_TERRAIN[(p && p.terrain) || ''] || null;
   const roughArmor = (n) => (rough ? Math.floor(n * rough.armor) : n);
   const armA = phase === 'shock' ? roughArmor(armorPips(ctx, armorNet)) : 0;
   const armD = phase === 'shock' ? roughArmor(armorPips(ctx, -armorNet)) : 0;
-  // SPEC §186: what each side's MIX is worth against the other's, this phase.
+  // SPEC §191: what each side's MIX is worth against the other's, this phase.
   // Unlike air and armor this is not a signed quantity — both sides read their
   // own row of the table, so a host of guns and a host of horse can each be
   // earning pips in the phase that belongs to them.
@@ -992,7 +992,7 @@ export function armorPips(ctx, net) {
   return Math.min(num(AR.pipCap, 3), Math.ceil(net / per));
 }
 
-// Composition pips (SPEC §186): what MY arms are worth against THEIRS in this
+// Composition pips (SPEC §191): what MY arms are worth against THEIRS in this
 // phase, on the ground we are standing on. Rounded down, never negative, and
 // capped — a mix is an edge, not a verdict. §181's armorPips answers the
 // question "who has more tanks"; this one answers "what is each side's army
@@ -1010,7 +1010,7 @@ export function armPips(ctx, phase, mine, theirs, terrain) {
   return triangle + antiArmorPips(ctx, phase, mine, theirs);
 }
 
-// The guns against the tanks (SPEC §186): a count, not a share. Every `atPer`
+// The guns against the tanks (SPEC §191): a count, not a share. Every `atPer`
 // tanks that our anti-tank guns can actually engage — never more than we have
 // guns for — is a fire-phase pip. This is the third of armor's three counters,
 // beside §154's sky and the ground itself.
@@ -1320,7 +1320,7 @@ export function battleInfo(ctx, provId) {
       morale: men > 0 ? mw / men : 0,
       pips: { fire: pipF, shock: pipS },
       gen,
-      // The order of battle by arm (SPEC §186), and the stats the triangle
+      // The order of battle by arm (SPEC §191), and the stats the triangle
       // reads. `stats` is the same shape sideStats returns, so the window can
       // score the matchup for the phase it is showing.
       regs: { ...regs },
@@ -1713,7 +1713,7 @@ export function monthlyReinforce(ctx) {
     const effective = Math.max(1, Math.ceil(a.men / regSize));
     if (regCount(a) > effective + 2) {
       let drop = regCount(a) - (effective + 1);
-      // Struck proportionally across the three arms (SPEC §186): an army that
+      // Struck proportionally across the three arms (SPEC §191): an army that
       // has lost half its men has lost half of each of them. The shares are
       // taken against the original total, so a second pass — foot first —
       // clears whatever rounding left standing.
@@ -2013,7 +2013,7 @@ export function splitArmyCore(ctx, army) {
   const R = regCount(army);
   if (R < 2) return 0;
   const newRegs = Math.floor(R / 2);
-  // The detachment takes half of each arm (SPEC §186), largest-remainder so
+  // The detachment takes half of each arm (SPEC §191), largest-remainder so
   // the three shares sum to exactly newRegs and neither half ever goes
   // negative — a two-regiment army of one gun and one horse splits into one
   // of each, not into two of something.

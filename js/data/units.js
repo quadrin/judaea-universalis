@@ -1,4 +1,4 @@
-// js/data/units.js — the land roster (SPEC §186). DOM-free data + pure helpers.
+// js/data/units.js — the land roster (SPEC §191). DOM-free data + pure helpers.
 //
 // Three arms, six patterns each, eighteen soldiers with names. Before this the
 // game had two arms and one of them was a costume: `cav` was a 25-talent
@@ -57,7 +57,7 @@ export const ARM = {
 };
 
 // The shot arm's patterns, one per UNIT_GENS row. The foot and horse columns
-// live in UNIT_GENS itself (SPEC §22 wrote them); this is the column §186
+// live in UNIT_GENS itself (SPEC §22 wrote them); this is the column §191
 // adds, kept beside the arm it belongs to rather than bolted onto the pattern
 // table two modules away.
 export const ART_GENS = [

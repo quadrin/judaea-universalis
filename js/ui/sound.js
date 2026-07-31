@@ -296,7 +296,7 @@ export function initSound(bus, getGame) {
       }
     },
 
-    // ---------------------------------------------- the arms speak (SPEC §186)
+    // ---------------------------------------------- the arms speak (SPEC §191)
     // What an order to march sounds like, by the arm that sets the column's
     // pace. Every one is the same two primitives the rest of this file uses —
     // a shaped noise burst is a footfall, a hoof, or a track link; a low
@@ -788,7 +788,7 @@ export function initSound(bus, getGame) {
     win: () => sfx.fanfareWin(),
     loss: () => sfx.lamentLoss(),
     save: () => sfx.quillScratch(),
-    // The arms, by cue key (SPEC §186) — the roster names these, sound.js
+    // The arms, by cue key (SPEC §191) — the roster names these, sound.js
     // owns what they are made of, and the two meet on this table.
     march: () => sfx.march(),
     marchDrum: () => sfx.marchDrum(),
@@ -846,7 +846,7 @@ export function initSound(bus, getGame) {
             if (a && a.tag) tags.add(a.tag);
           }
           battleTags.set(p.prov, tags);
-          // Which side is OURS decides which cue we hear (SPEC §186): you
+          // Which side is OURS decides which cue we hear (SPEC §191): you
           // hear your own arms go in. A battle we are not in keeps the old
           // clash of iron, whatever is fighting in it.
           const me = playerTag();
@@ -866,7 +866,7 @@ export function initSound(bus, getGame) {
     else sfx.battleStart();
   });
 
-  // A column takes the road (SPEC §186): you hear the arm that sets its pace.
+  // A column takes the road (SPEC §191): you hear the arm that sets its pace.
   // Own armies only — the map is full of other people's marching.
   on('armyMarch', 'march', (p) => {
     const me = playerTag();

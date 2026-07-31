@@ -167,7 +167,7 @@ function aiRecruit(ctx, tag, hints, fraction) {
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
   cur += queuedUnitsOf(ctx, tag, ['inf', 'cav', 'art']);
-  // The establishment it is aiming at (SPEC §186): three quarters foot, and
+  // The establishment it is aiming at (SPEC §191): three quarters foot, and
   // the rest split between the horse and the shot. The AI raises whichever
   // arm it is furthest below rather than counting regiments off a residue —
   // a court whose muster happened to land on the wrong number would otherwise
@@ -237,7 +237,7 @@ function aiShedUnaffordable(ctx, tag) {
     armies.sort((a, b) => a.men - b.men);
     const a = armies[0];
     if (!a) break;
-    // Paid off in order of what costs most to keep standing (SPEC §186):
+    // Paid off in order of what costs most to keep standing (SPEC §191):
     // the horse first, then the guns, and the foot last of all.
     const regs = a.regiments || {};
     if ((regs.cav | 0) > 0) regs.cav--;

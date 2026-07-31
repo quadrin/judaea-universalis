@@ -1092,7 +1092,24 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
-  // The land roster (SPEC §186): three arms answering each other in a
+  // Financial aid (SPEC §186): where a bookmark names its donor courts, any
+  // other court may petition one for aid — granted at the donor's regard,
+  // sized to the donor's own purse, and flowing down the §24 subsidy pipe.
+  // A granted package runs its term (a voted credit clears); only war or a
+  // §100 embargo between the two courts stops the checks early.
+  AID: {
+    need: 55,              // donor's opinion of the petitioner required to grant
+    infl: 20,              // influence points the mission costs to send
+    months: 12,            // how long a granted package flows
+    incomeShare: 0.25,     // package size: this share of the donor's monthly books…
+    amountFloor: 5,        // …never less than this, so a shallow purse still means something…
+    amountCap: 25,         // …and never more: even Washington votes line items
+    askOpinion: -5,        // being asked for money leaves a mark
+    cdMonths: 30,          // each donor hears one petition inside this window
+    aiFloor: 30,           // an AI court petitions when its treasury runs under this
+  },
+
+  // The land roster (SPEC §191): three arms answering each other in a
   // triangle, scored once per phase from each side's own mix. `scale` turns
   // the raw matchup number (js/data/units.js) into die pips; `cap` is the most
   // a composition can ever be worth, so an all-guns host beats a line without
@@ -1101,7 +1118,7 @@ export const DEFINES = {
     scale: 2,              // pips per unit of matchup edge (floored, so a
                            // balanced host against a balanced host reads 0)
     cap: 2,                // most pips the triangle itself can add in a phase
-    // The answer to armor, and it is a COUNT, not a proportion (SPEC §186).
+    // The answer to armor, and it is a COUNT, not a proportion (SPEC §191).
     // Four anti-tank regiments against four tanks is four anti-tank
     // regiments against four tanks, whatever fraction of the army they are.
     atPer: 2,              // engaged tanks per fire-phase pip for the guns

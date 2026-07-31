@@ -599,6 +599,32 @@ export const BOOKMARK_40 = {
         check: (ctx) => eraTiers(ctx.game.tags.HER) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 25, legitimacy: 15 }),
       },
+      // The expansion the settlement of the East actually paid this king
+      // (SPEC §187): the Decapolis grants and the bandit country command.
+      {
+        id: 'h5_greek_cities', name: 'The Cities of the Decapolis',
+        icon: 'amphora', col: 0, row: 3, requires: ['h5_city'],
+        desc: 'Take Gadara, Scythopolis and Pella — the Greek cities Augustus signed over '
+          + 'to the king history\'s Herod, taken here by the king\'s own hand.',
+        rewardText: '+120 talents of Greek customs, +15 influence points.',
+        check: (ctx) => ['Gadara', 'Scythopolis', 'Pella']
+          .every((n) => ctx.helpers.controls(ctx, 'HER', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { treasury: 120, infl: 15 }),
+      },
+      {
+        id: 'h5_hauran', name: 'The Trachonitis Command',
+        icon: 'horseshoe', col: 2, row: 3, requires: ['h5_galilee'],
+        desc: 'Take Batanea and Panion — the caravan-raiding country Augustus gave Herod '
+          + 'to police, held at your own expense so Antioch does the arithmetic on what '
+          + 'that saves.',
+        rewardText: '"The Desert Watch": +8% manpower, permanently.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HER', 'Batanea')
+          && ctx.helpers.controls(ctx, 'HER', 'Caesarea Philippi'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_desert_watch', name: 'The Desert Watch', months: -1,
+          effects: { manpowerMult: 1.08 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_greater_herod', name: 'Too Large to Be a Favour', hypothetical: true,
@@ -628,6 +654,28 @@ export const BOOKMARK_40 = {
         rewardText: '+15 legitimacy, +1 stability.',
         check: (ctx) => anyFlag(ctx, 'orderNeverGiven', 'refusedInAdvance'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { legitimacy: 15, stability: 1 }),
+      },
+      {
+        id: 'hy_queens_portion', name: 'The Queen\'s Portion', hypothetical: true,
+        fork: '40bce/the_queens_portion',
+        icon: 'amphora', col: 3, row: 2,
+        desc: 'Hold Jericho as the crown when the Donations name its groves among the queen '
+          + 'of Egypt\'s revenues — and answer with something other than the rent history '
+          + 'paid: the deed returned unread, or the valley sold whole at your own price.',
+        rewardText: '+15 influence points, +50 talents.',
+        check: (ctx) => anyFlag(ctx, 'grovesRefused', 'grovesCeded'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 15, treasury: 50 }),
+      },
+      {
+        id: 'hy_where_the_king_stood', name: 'Where the King Stood', hypothetical: true,
+        fork: '40bce/where_the_king_stood',
+        icon: 'ship', col: 3, row: 3,
+        desc: 'Wear the Senate\'s crown when Antony musters the East against Octavian, and '
+          + 'refuse the queen\'s diversion that history\'s Herod obeyed: the banner in the '
+          + 'line at Actium, or the levies kept home behind a documented famine.',
+        rewardText: '+20 martial points.',
+        check: (ctx) => anyFlag(ctx, 'sailedWithAntony', 'keptTheArmyHome'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { mar: 20 }),
       },
     ],
     ATG: [
@@ -677,8 +725,10 @@ export const BOOKMARK_40 = {
       // The age's curriculum (SPEC §179): the last Hasmonean fights with the
       // age's hired steel and crowns the dynasty's own ideas.
       {
+        // Declared seat (SPEC §183): the derived row collided with The Rock
+        // Must Fall — two children of Into Idumea in one column.
         id: 'a5_hired_veterans', name: 'The Veterans\' Price',
-        icon: 'helmet', col: 0, requires: ['a5_idumea'],
+        icon: 'helmet', col: 1, row: 1, requires: ['a5_idumea'],
         desc: 'Silver buys the age\'s soldiers: reach Military 6 — The Hired Veterans.',
         rewardText: '"The Companies Retained": +15% reinforcement speed for 24 months.',
         check: (ctx) => (((ctx.game.tags.ATG || {}).tech || {}).mar | 0) >= 6,
@@ -693,6 +743,27 @@ export const BOOKMARK_40 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ATG) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { gov: 25, legitimacy: 10 }),
+      },
+      // The map of the grandfathers (SPEC §187): Jannaeus held the coast and
+      // the Damascus road, and a restored house is measured against his map.
+      {
+        id: 'a5_coast', name: 'The Coast of Jannaeus',
+        icon: 'ship', col: 0, row: 3, requires: ['a5_masada'],
+        desc: 'Take Gaza, Ascalon and Azotus from the pretender — the ports your '
+          + 'grandfather held, and the customs silver his wars ran on.',
+        rewardText: '+100 talents of customs silver.',
+        check: (ctx) => ['Gaza', 'Ascalon', 'Azotus']
+          .every((n) => ctx.helpers.controls(ctx, 'ATG', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { treasury: 100 }),
+      },
+      {
+        id: 'a5_damascus', name: 'The Ghost of Coele-Syria',
+        icon: 'flag', col: 2, row: 3, requires: ['a5_hasmonean_charter'],
+        desc: 'Take Damascus — the city that once offered itself to your house against '
+          + 'the Itureans, held now by whichever empire is passing through.',
+        rewardText: '+25 martial points, +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ATG', 'Damascus'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { mar: 25, legitimacy: 10 }),
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
@@ -716,6 +787,28 @@ export const BOOKMARK_40 = {
         rewardText: '+15 legitimacy, +1 stability.',
         check: (ctx) => anyFlag(ctx, 'orderNeverGiven', 'refusedInAdvance'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15, stability: 1 }),
+      },
+      {
+        id: 'hy_queens_portion', name: 'The Queen\'s Portion', hypothetical: true,
+        fork: '40bce/the_queens_portion',
+        icon: 'amphora', col: 3, row: 2,
+        desc: 'Hold Jericho as the crown when the Donations name its groves among the queen '
+          + 'of Egypt\'s revenues — and answer with something other than the rent history '
+          + 'paid: the deed returned unread, or the valley sold whole at your own price.',
+        rewardText: '+15 influence points, +50 talents.',
+        check: (ctx) => anyFlag(ctx, 'grovesRefused', 'grovesCeded'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { infl: 15, treasury: 50 }),
+      },
+      {
+        id: 'hy_old_man_in_babylon', name: 'The Old Man in Babylon', hypothetical: true,
+        fork: '40bce/the_old_man_in_babylon',
+        icon: 'diaspora', col: 3, row: 3, requires: ['hy_hasmonean_holds'],
+        desc: 'Keep the Hasmonean crown past the year the war settles, and the question '
+          + 'history answered with a strangling cord comes to a standing house instead: '
+          + 'what a dynasty owes the mutilated elder living on among the Jews of Babylon.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'hyrcanusHome', 'hyrcanusPensioned'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15 }),
       },
     ],
     // The Tigris kingdom's tree (SPEC §185): ride the tide, bank the tolls,

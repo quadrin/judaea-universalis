@@ -1073,7 +1073,7 @@ export function icon(name, cls = '') {
   return `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }
 
-// One soldier of the land roster (SPEC §186), drawn from the same path data
+// One soldier of the land roster (SPEC §191), drawn from the same path data
 // the map counters use: a Drilled Spearman on a recruit button is the exact
 // silhouette that will fly on that regiment's standard.
 export function unitIcon(gen, arm, cls = '') {

@@ -863,7 +863,22 @@ loses three cards to seeded drift (`ev_sc_the_bid_for_a_province`,
 of two, on both trees, byte for byte — pre-existing, not a §185
 regression, and it needs its own pass.
 
-SPEC §186 gives the land war three arms instead of two. `js/data/units.js` is
+SPEC §186 gives 1948 its donor courts (`bookmark.financialAid.donors` — the
+arsenal list minus Prague, which sold and never funded): any other court may
+petition one for financial aid at the donor's regard bar, and a grant is an
+ordinary §24 subsidy row wearing an `aid` marker, sized to the donor's own
+books. `smoke118.mjs` owns the contract — the gates and their reasons, the
+grant's double-entry, the no-anchor/no-liveness-floor contrast with §181's
+pipeline, the war/embargo ruptures, the AI's own petitions, and the save
+round-trip. In the 8-year all-AI harness the mechanic surfaces exactly once:
+Lebanon dips under the poverty floor, petitions the one donor whose seeded
+regard clears the bar, and ends the run ~60 talents richer with one more
+regiment, while Paris pays it from net its books actually clear (FRA
+treasury 234→232). Every other row is byte-identical to the pre-§186 tree —
+Israel reaches no donor's bar without a player courting it, which is the
+design — and the accepted family stays `1948 none`.
+
+SPEC §191 gives the land war three arms instead of two. `js/data/units.js` is
 the new source of truth — the arm table, the shot's pattern names, the matchup
 triangle, the eighteen faces as bare `d` strings, and the sound cue keys — and
 it imports only `tech.js`, so the sim, the map's canvas and the SVG icon set
@@ -873,7 +888,7 @@ all read one table. Three things are worth knowing before touching it.
 pattern, all subpaths in it, because the same string is handed to `new Path2D()`
 in `overlay.js` and dropped into a `<path d>` by `icons.js`' `unitIcon()`. A
 `<circle>` or a `fill=` attribute in there breaks the canvas silently — every
-face is arcs and lines only, and `smoke118` asserts it (`/^M/`, no `<>`).
+face is arcs and lines only, and `smoke122` asserts it (`/^M/`, no `<>`).
 
 **The triangle and §181's armor are different halves, on purpose.**
 `armorPips` still answers "who has more tanks" as a signed quantity and still
@@ -892,7 +907,7 @@ campaigning, wearing a unit trait's clothes. Confirmed by neutralising the
 table (all arms 1.0 → suite green), then shipped at 0.85/1.25, which keeps the
 tradeoff visible on the clock (4 days horse / 5 foot / 6 with guns) without
 throttling the world. If a later pass wants slower guns, re-measure `smoke79`
-and the harness, not just `smoke118`.
+and the harness, not just `smoke122`.
 
 The AI picks its arm by DEFICIT against a 75/15/10 establishment, not off a
 regiment-count residue. The residue version shipped first and produced 5%
@@ -912,17 +927,17 @@ threshold. Accepted and recorded; it is not a wound and it is not new physics.
 
 One inherited pin needed widening. `smoke103` (§154) asserted the whole text
 of `const docA = doctrinePips(A.gen, phase, false) + airA + armA;` — §181 had
-already had to update it once when it added `armA`, and §186 adding `mixA` made
+already had to update it once when it added `armA`, and §191 adding `mixA` made
 it read as a regression a third time. It now pins up to `airA` and stops: the
 claim that suite exists for is that air rides the roll unconditionally, not how
 many neighbours the term has. Verified the narrowed pin still bites by making
 `airA` phase-conditional again — it fails, which is the whole point of it.
 
-The full battery at §186: 118 headless suites ALL PASS, including `smoke90`,
+The full battery at §191: 118 headless suites ALL PASS, including `smoke90`,
 whose 167 crown-cost drift documented above happens to land inside its
 allowance on this stream (it is stream-sensitive, not fixed — treat the note
-above as still open). `smoke118` is the new contract for this section, and a
-browser pass over the three §186 surfaces — the map counters with a rifle, a
+above as still open). `smoke122` is the new contract for this section, and a
+browser pass over the three §191 surfaces — the map counters with a rifle, a
 tank and a gun flying at once; the province panel's three recruit buttons named
 Rifle Brigades / Armored Corps / Gun Regiments, each with its own face; and a
 live battle window showing 10 rifles + 4 guns against 5 rifles + 5 tanks with a
