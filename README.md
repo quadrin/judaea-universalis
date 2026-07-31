@@ -2,13 +2,16 @@
 
 **▶ Play it now: https://quadrin.github.io/judaea-universalis/**
 
-An EU4-style grand-strategy game set in the ancient Near East. Seven bookmarks:
-**The Maccabean Revolt, 167 BCE** (Hasmonean Judaea or the Seleucid Empire),
-**The Judaean Civil War, 67 BCE** (Hyrcanus or Aristobulus, with Pompey inbound),
-**Herod's Rise, 40 BCE** (Herod or Antigonus, with Parthia in Syria),
-**The Great Revolt, 66 CE** (Judaea or Rome), **The Bar Kokhba Revolt, 132 CE**
-(Judaea or Rome), **The Persian Gambit, 614 CE** (the Return or Byzantium),
-and **The War of Independence, 1948** (Israel or Jordan).
+An EU4-style grand-strategy game set in the ancient Near East. Eight bookmarks,
+every one played from an Israelite side:
+**The Maccabean Revolt, 167 BCE** (Hasmonean Judaea),
+**The Judaean Civil War, 67 BCE** (Hyrcanus, Aristobulus, or Adiabene),
+**Herod's Rise, 40 BCE** (Herod, Antigonus, or Adiabene),
+**The Great Revolt, 66 CE** (Judaea, Agrippa II's kingdom, or Adiabene),
+**The Bar Kokhba Revolt, 132 CE** (Judaea or Adiabene),
+**The Keepers, 529 CE** (Samaria under Justinian),
+**The Persian Gambit, 614 CE** (the Return),
+and **The War of Independence, 1948** (Israel).
 
 Zero dependencies, no build step: browser ES modules + WebGL2.
 
@@ -178,6 +181,17 @@ static site, the zero dependencies, or the missing build step changes.
   and the great powers are ponderous, slow to anger but relentless once roused),
   armies sized to what treasuries can actually pay, and a wider east — Osrhoene,
   Adiabene and Characene as Parthian client kingdoms astride the new Gulf Road.
+- **Every seated Jewish court is a chair.** The rosters offer every Jewish
+  nation a chapter puts on the map, not only the rebels: Adiabene — the house
+  beyond the Tigris whose kings took the God of Israel — is playable in
+  67 BCE, 40 BCE, 66 CE and 132 CE, and Agrippa II's kingdom fights its
+  impossible war as a playable standard in 66 CE. Each carries its own court
+  of estates (Arbela's Fire Priests give way to the Proselyte House as the
+  dynasty converts; Agrippa seats the Pious, the Stewards and the Babylonian
+  Horse), its own mission tree with roads not taken, its own ideas of the
+  age, first-moves guidance, and a dated client's contract — be seated at
+  Arbela, or Caesarea Philippi, when the age reads its verdict, and freer or
+  richer for the bonuses.
 - Conquest has a price: infamy that sours every court, defensive coalitions that
   league against a rampaging conqueror, and overextension unrest when too much of
   the realm is freshly seized land.

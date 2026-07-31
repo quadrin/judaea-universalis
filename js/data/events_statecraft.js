@@ -180,15 +180,23 @@ const SEATS = {
   '167bce:SEL': { strict: 'court', worldly: 'cities', soldiers: 'phalanx' },
   '67bce:HYR': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'antipater' },
   '67bce:ARI': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'captains' },
+  // Adiabene's strict seat changes faith with the house (SPEC §184): the
+  // fire priests guard the ancestral thing before the conversion, the
+  // proselyte court after it — same role, different altar.
+  '67bce:ADI': { strict: 'magi', worldly: 'caravans', soldiers: 'riders' },
   '40bce:HER': { strict: 'sanhedrin', worldly: 'kin', soldiers: 'swords' },
   // Antigonus has no party of accommodation — his whole claim is that he is
   // the one who did not accommodate — so the street stands in for the
   // pressure that wants bread and quiet whatever it costs.
   '40bce:ATG': { strict: 'priesthood', worldly: 'street', soldiers: 'parthians' },
+  '40bce:ADI': { strict: 'magi', worldly: 'caravans', soldiers: 'riders' },
   '66ce:JUD': { strict: 'zealots', worldly: 'notables', soldiers: 'zealots' },
   '66ce:ROM': { strict: 'senate', worldly: 'people', soldiers: 'legions' },
+  '66ce:AGR': { strict: 'pious', worldly: 'stewards', soldiers: 'babylonians' },
+  '66ce:ADI': { strict: 'proselytes', worldly: 'caravans', soldiers: 'riders' },
   '132ce:JUD': { strict: 'sages', worldly: 'captains', soldiers: 'captains' },
   '132ce:ROM': { strict: 'senate', worldly: 'people', soldiers: 'legions' },
+  '132ce:ADI': { strict: 'proselytes', worldly: 'caravans', soldiers: 'riders' },
   '529ce:SAM': { strict: 'priesthood', worldly: 'council', soldiers: 'crowned' },
   '529ce:BYZ': { strict: 'church', worldly: 'landowners', soldiers: 'army' },
   '614ce:JUD': { strict: 'priests', worldly: 'exilarch', soldiers: 'fighters' },

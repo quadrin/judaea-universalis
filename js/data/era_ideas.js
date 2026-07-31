@@ -593,6 +593,84 @@ export const ERA_IDEA_GROUPS = {
       { name: 'The Quiet Understandings', desc: 'What is agreed across the river need not be signed: +0.1 legitimacy a month.', effects: { legitimacyAdd: 0.1 } },
     ],
   },
+
+  // ---- the client courts (SPEC §184) --------------------------------------
+  // Adiabene's arts, taught across the four chapters it can be played in.
+  // The governing art changes faith with the house — the old kingdom before
+  // the conversion, the proselyte crown after it; the road and the horse
+  // are the same road and the same horse for two hundred years.
+  house_between_rivers: {
+    name: 'The House Between the Rivers', icon: 'bricks', point: 'gov',
+    unlock: { ladder: 'gov', level: 4 },
+    desc: 'A small kingdom on a great road: assessors at the fords, granaries at Arbela, and a court every empire finds useful.',
+    tiers: [
+      { name: 'The Assessors at the Fords', desc: 'Every crossing weighed and receipted: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Granaries of Arbela', desc: 'A house that can feed a bad year rules a loyal one: +10% manpower.', effects: { manpowerMult: 1.1 } },
+      { name: 'The Useful Court', desc: 'Small, solvent, and never worth conquering: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+    ],
+  },
+  proselyte_crown: {
+    name: 'The Proselyte Crown', icon: 'lamp', point: 'gov',
+    unlock: { ladder: 'gov', level: 5 },
+    desc: 'The house took the God of Israel and kept the throne: a court that prays toward Jerusalem and governs between the empires.',
+    tiers: [
+      { name: 'The Covenant of the House', desc: 'A crown with a faith is a crown with a reason: +0.15 legitimacy a month.', effects: { legitimacyAdd: 0.15 } },
+      { name: 'The Queen\'s Charity', desc: 'Helena\'s grain ships taught the west the house\'s name: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Palace in Jerusalem', desc: 'The house builds where it prays, and is believed: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+    ],
+  },
+  gulf_road_custom: {
+    name: 'The Custom of the Gulf Road', icon: 'coins', point: 'infl',
+    unlock: { ladder: 'infl', level: 6 },
+    desc: 'Silk, spice and silver cross the Tigris at the house\'s fords — the northern tolls of the road the whole East rides.',
+    tiers: [
+      { name: 'The Northern Tolls', desc: 'The frontier of customs is wherever the house\'s scales stand: +10% trade.', effects: { tradeMult: 1.1 } },
+      { name: 'The Caravanserais', desc: 'Beds, water and warehouses, all at a price: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Letters of Credit', desc: 'Nehardea\'s silver moves by the house\'s word alone: +10% trade.', effects: { tradeMult: 1.1 } },
+    ],
+  },
+  riders_of_arbela: {
+    name: 'The Riders of Arbela', icon: 'horseshoe', point: 'mar',
+    unlock: { ladder: 'mar', level: 7 },
+    desc: 'The armored horse of the Tigris bank: the arm that makes a small client worth keeping, drilled the Parthian way.',
+    tiers: [
+      { name: 'The Landed Squadrons', desc: 'Every estate owes a lance and a remount: +10% manpower.', effects: { manpowerMult: 1.1 } },
+      { name: 'The Median Studs', desc: 'Horses bred to carry armor and keep coming: +5% discipline.', effects: { disciplineMult: 1.05 } },
+      { name: 'The Charge Pressed Home', desc: 'The lance decides what the bow prepared: +5% army strength.', effects: { milPowerMult: 1.05 } },
+    ],
+  },
+
+  // 66 CE, the last Herodian's side: the arts of surviving as a client.
+  herodian_purse: {
+    name: 'The Herodian Purse', icon: 'coins', point: 'gov',
+    unlock: { ladder: 'gov', level: 5 },
+    desc: 'Estates, tolls and grain contracts: the family business of ruling profitably on Rome\'s behalf.',
+    tiers: [
+      { name: 'The Royal Estates', desc: 'Batanea\'s grain and the Huleh\'s pastures, stewarded to the shekel: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Toll of the North Road', desc: 'Damascus to the coast pays the king\'s gate: +10% trade.', effects: { tradeMult: 1.1 } },
+      { name: 'The Grain Contracts', desc: 'Rome\'s quartermasters buy where the king sells: +8% income.', effects: { incomeMult: 1.08 } },
+    ],
+  },
+  kings_advocacy: {
+    name: 'The King\'s Advocacy', icon: 'scroll', point: 'infl',
+    unlock: { ladder: 'infl', level: 6 },
+    desc: 'The speech in the Xystus, the letters to the legate, Berenice barefoot before the procurator: a kingdom argued into existence daily.',
+    tiers: [
+      { name: 'The Speech Remembered', desc: 'The king who warned the city is the king Rome believes: +0.15 legitimacy a month.', effects: { legitimacyAdd: 0.15 } },
+      { name: 'The Letters to the Legate', desc: 'A client heard in Antioch is a client kept: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+      { name: 'The Table of Kings', desc: 'Dinners where provinces are re-drawn: +8% income.', effects: { incomeMult: 1.08 } },
+    ],
+  },
+  babylonian_horse: {
+    name: 'The Babylonian Horse', icon: 'horseshoe', point: 'mar',
+    unlock: { ladder: 'mar', level: 7 },
+    desc: 'Zamaris\' colony in Batanea: Jewish lancers settled to hold the road, three generations deep and proud of it.',
+    tiers: [
+      { name: 'The Colony\'s Muster', desc: 'Every farm owes a rider and knows it: +10% manpower.', effects: { manpowerMult: 1.1 } },
+      { name: 'Philip\'s Drill', desc: 'Ben Jacimus works the squadrons like a legate: +5% discipline.', effects: { disciplineMult: 1.05 } },
+      { name: 'The Road Held', desc: 'The lancers\' whole purpose, achieved daily: +1 to hill-country defense.', effects: { hillDefBonus: 1 } },
+    ],
+  },
 };
 
 // Which groups each chapter teaches WHOM, in panel order (locked cards keep
@@ -614,19 +692,24 @@ export const ERA_IDEAS_BY_BOOKMARK = {
   '67bce': {
     HYR: ['hasmonean_court', 'schools_of_jerusalem', 'hired_lances', 'roman_shadow'],
     ARI: ['hasmonean_court', 'schools_of_jerusalem', 'hired_lances', 'roman_shadow'],
+    ADI: ['house_between_rivers', 'gulf_road_custom', 'riders_of_arbela'],
     default: ['hasmonean_court', 'schools_of_jerusalem', 'hired_lances', 'roman_shadow'],
   },
   '40bce': {
     HER: ['antipaters_web', 'friends_of_the_triumvirs', 'builders_eye', 'a_kings_army'],
     ATG: ['anointed_house', 'king_of_kings_friendship', 'zealous_city'],
+    ADI: ['house_between_rivers', 'gulf_road_custom', 'riders_of_arbela'],
   },
   '66ce': {
     JUD: ['fourth_philosophy', 'treasury_of_the_house', 'walls_of_jerusalem', 'nation_in_arms'],
     ROM: ['grain_of_egypt', 'client_kings_managed', 'flavian_method'],
+    AGR: ['herodian_purse', 'kings_advocacy', 'babylonian_horse'],
+    ADI: ['proselyte_crown', 'gulf_road_custom', 'riders_of_arbela'],
   },
   '132ce': {
     JUD: ['method_of_the_caves', 'prince_of_israel', 'sages_sanction', 'redemption_mint'],
     ROM: ['hadrians_peace', 'provincia_restituta', 'expedita_army'],
+    ADI: ['proselyte_crown', 'gulf_road_custom', 'riders_of_arbela'],
   },
   '529ce': {
     SAM: ['mountain_of_blessing', 'villages_of_the_hills', 'keepers_law', 'baba_rabbas_inheritance'],

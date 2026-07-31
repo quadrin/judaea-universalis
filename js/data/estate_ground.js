@@ -68,6 +68,17 @@ export const ESTATE_GROUND = {
   kibbutzim: { base: 24, rural: 34, faith: 14, dev: -12, city: -18 },
   coalition: { base: 30, city: 22, dev: 18, capital: 14, rural: 6 },
   revisionists: { base: 26, city: 26, coast: 18, dev: 12, fort: 10, rural: -10 },
+  // ---- the client courts (SPEC §184) --------------------------------------
+  // Agrippa's kingdom: the pious countryside, the stewarded estates, and the
+  // military colony; Adiabene: the converted capital, the road, the horse —
+  // and, before the conversion, the fire altars of the countryside.
+  pious: { base: 28, rural: 28, faith: 22, holy: 10, city: -10, trade: -8 },
+  stewards: { base: 28, city: 24, dev: 20, trade: 18, capital: 14, rural: -12 },
+  babylonians: { base: 26, rural: 20, fort: 22, faith: 14, hills: 10, city: -8 },
+  proselytes: { base: 26, capital: 26, faith: 22, city: 14, holy: 10, desert: -8 },
+  magi: { base: 26, rural: 24, hills: 18, alien: 14, capital: 10, trade: -10 },
+  caravans: { base: 26, trade: 30, city: 20, dev: 14, desert: 10, rural: -14 },
+  riders: { base: 26, rural: 22, fort: 18, hills: 14, dev: 8, city: -10 },
 
   // ---- the empires and the neighbours -------------------------------------
   senate: { base: 28, capital: 28, city: 22, dev: 20, rural: -14 },

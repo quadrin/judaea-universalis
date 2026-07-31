@@ -56,6 +56,18 @@ export const CAMPAIGN_GUIDANCE = {
         { y: -64, m: 5, label: 'Pompey settles Syria and turns south' },
       ],
     },
+    ADI: {
+      system: 'A client astride the road',
+      opening: [
+        'Keep the caravans moving — the fords pay for everything the house will ever do.',
+        'Muster the riders early; Armenia’s wreck leaves the upper Tigris to whoever holds it.',
+        'Serve the King of Kings visibly and cheaply — his regard is the wall the house lives behind.',
+      ],
+      clocks: [
+        { y: -64, m: 5, label: 'Pompey settles Syria — the customs frontier grows a Roman side' },
+        { y: -60, m: 1, label: 'The reckoning: the house judged on what it held' },
+      ],
+    },
   },
   '40bce': {
     HER: {
@@ -82,6 +94,18 @@ export const CAMPAIGN_GUIDANCE = {
         { y: -40, m: 10, label: 'Herod seeks a Roman crown' },
         { y: -38, m: 6, label: 'The Parthian shield breaks at Gindarus' },
         { y: -37, m: 3, label: 'The sabbatical year tests Jerusalem' },
+      ],
+    },
+    ADI: {
+      system: 'Riding the high tide',
+      opening: [
+        'Muster the riders while Pacorus is winning — lances buy favor cheap at high tide.',
+        'Bank the widened road’s tolls before the tide turns; treasure survives ebbs that favor does not.',
+        'Plan for Gindarus: keep the host home and the fords guarded when Rome pushes back.',
+      ],
+      clocks: [
+        { y: -38, m: 6, label: 'Rome breaks the Parthian field army at Gindarus' },
+        { y: -36, m: 1, label: 'The reckoning: the house judged on what it held' },
       ],
     },
   },
@@ -112,6 +136,32 @@ export const CAMPAIGN_GUIDANCE = {
         { y: 68, m: 6, label: 'Nero’s death pulls attention west' },
       ],
     },
+    AGR: {
+      system: 'A client king in a war against his own people',
+      opening: [
+        'Hold the home provinces — Gamala will test the king’s peace before Rome tests anything.',
+        'March the Babylonian horse with Rome’s columns; the kingdom’s worth is proved in the field.',
+        'Keep the lake in view: Tiberias and Tarichaea are the emperor’s grant, and the war can make it true.',
+      ],
+      clocks: [
+        { y: 66, m: 10, label: 'Cestius marches — the king’s auxiliaries are expected' },
+        { y: 67, m: 2, label: 'Vespasian arrives with the imperial field army' },
+        { y: 71, m: 1, label: 'The verdict: still a king, or a curiosity in Rome' },
+      ],
+    },
+    ADI: {
+      system: 'The covenant and the yoke',
+      opening: [
+        'Fill the granaries first — the house’s power in the west has always been grain and silver.',
+        'Stand with Jerusalem as far as Ctesiphon’s patience runs; the princes are already riding.',
+        'Guard the fords and the tolls: whatever burns in the west, the road must pay.',
+      ],
+      clocks: [
+        { y: 66, m: 11, label: 'Beth Horon — the princes of the house are in the field' },
+        { y: 68, m: 6, label: 'Nero dies and both empires watch each other' },
+        { y: 71, m: 1, label: 'The verdict: the house judged on what it held' },
+      ],
+    },
   },
   '132ce': {
     JUD: {
@@ -136,6 +186,18 @@ export const CAMPAIGN_GUIDANCE = {
       clocks: [
         { y: 132, m: 7, label: 'Rufus chooses the provincial response' },
         { y: 133, m: 6, label: 'Severus brings the method of reduction' },
+      ],
+    },
+    ADI: {
+      system: 'The restored house and the burning west',
+      opening: [
+        'Rebuild first — Trajan’s war is sixteen years old and the warehouses still remember it.',
+        'Answer the Nasi’s letters carefully: silver travels quieter than sons.',
+        'Give no emperor a reason to cross the Euphrates; the King of Kings will not save you twice.',
+      ],
+      clocks: [
+        { y: 133, m: 6, label: 'Severus arrives — the west’s war turns methodical' },
+        { y: 136, m: 1, label: 'The verdict: the house judged on what it held' },
       ],
     },
   },

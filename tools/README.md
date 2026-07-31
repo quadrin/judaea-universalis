@@ -824,3 +824,21 @@ meant. AI-only chains (Vespasian's ladder above all) carry none, which is what
 keeps the §177 ladder pin true. The suite also enforces one-medallion-per-cell
 on every player tree — the check that found the §177/§179 curriculum nodes
 stacking two-deep at 167 and 132, which is why three of those now declare rows.
+
+SPEC §184 makes every seated Jewish court a playable standard — `ADI` in
+67 BCE, 40 BCE, 66 CE and 132 CE, `AGR` in 66 CE — and the roster pins moved
+with it: `smoke23` and `uitest3` now expect
+`HAS / HYR,ARI,ADI / HER,ATG,ADI / JUD,AGR,ADI / JUD,ADI / SAM / JUD / ISR`,
+`smoke101` covers the five new statecraft seat rows, `smoke112` the three new
+curricula (seven new idea groups), and `smoke116`'s completability worlds pay
+Adiabene's and Agrippa's roads beside the principals'. The batch re-measured
+the harness on the four touched chapters, 8 years, and found the v6.9
+accepted-anomaly line above had already drifted on the base tree: 132 ran
+`JUD: SNOWBALL` at the parent commit with the doc still saying "132 none".
+Post-§184 the four chapters read: 67 `SEL: DEAD` (accepted, and ROM's
+snowball happens not to fire this stream) · 40 none · 66 none (AGR's
+accepted bleed closes — the client now starts with the opinions and the
+small treasury the chapter always implied) · 132 `JUD: BLEEDING` (the
+RNG-stream shift flips the base tree's SNOWBALL to the historical
+direction; all-AI Bar Kokhba losing ground is the record, not a wound).
+No new anomaly class appears on any of the four.
