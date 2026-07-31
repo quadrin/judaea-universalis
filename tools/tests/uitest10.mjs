@@ -98,6 +98,11 @@ async function boot(page, cardText, nationIdx = 0) {
   // reopen the panel to re-render
   await page.locator('.tb-flag').click(); await page.waitForTimeout(200);
   await page.locator('.tb-flag').click(); await page.waitForTimeout(400);
+  // SPEC §175: the realm panel is six tabs and opens on Crown; the Decisions
+  // block (formable crowns among them) is on Court, and a section whose tab
+  // is closed is display:none — countable and readable, but not clickable.
+  await page.locator('#nation-panel .np-tab[data-tab-go="court"]').click();
+  await page.waitForTimeout(150);
   const formBtn = page.locator('[data-decision^="form_"]');
   ok(!(await formBtn.getAttribute('class')).includes('disabled'), 'the crown is within reach');
   await formBtn.click();

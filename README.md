@@ -68,7 +68,12 @@ static site, the zero dependencies, or the missing build step changes.
   electing, dying, fighting its own wars — and every western province carries a
   levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine legions stay on the
   Rhine instead of doubling the army it brings to Judaea.
-- Mapmodes: political, terrain, religion, culture, development, unrest.
+- Mapmodes: political, diplomatic, trade, terrain, religion, culture,
+  development, unrest, estates, and the dispersion — where the Jewish
+  communities of the diaspora are, how large, and how they regard your crown.
+- The realm panel is six tabs behind a pinned header — Crown, Court, Coin,
+  Host, Faith, World — so the ruler, the four numbers you watch and the five
+  levers stay put while twenty sections take turns underneath them.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
@@ -277,7 +282,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 107 headless sim suites and 37
+  marching. The full verification battery — 109 headless sim suites and 38
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.

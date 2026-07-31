@@ -3080,3 +3080,65 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   .wiki-standards { grid-template-columns: 1fr; }
   .wiki-k { width: 92px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The realm panel's tabs, and the seat buttons that were clipped (SPEC §175)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* The four numbers that never move. Tabs improve a crowded panel by hiding
+   things, which only helps if the handful a player checks every few seconds
+   stays put: how big am I, is the country calm, can I pay for this, how many
+   men are left. Pinned above the strip, outside every tab. */
+.np-vitals { display: flex; flex-wrap: wrap; gap: 11px; margin: 7px 12px 0; }
+.np-vital { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.np-vital .icon { width: 13px; height: 13px; flex: none; opacity: 0.72; }
+.np-vital .pos, .np-vital .neg { margin-left: 3px; font-weight: 700; }
+
+/* The strip. A sibling BELOW .pp-head and never inside it — on touch the head
+   is the swipe-down close target (the phone sheet), and a row of buttons in it
+   would swallow the gesture. */
+.np-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 9px 12px 0; padding-bottom: 8px; border-bottom: 1px solid rgba(85, 69, 46, 0.35); }
+.np-tab {
+  flex: 1 1 auto;
+  min-width: 54px;
+  padding: 5px 7px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  background: rgba(120, 90, 40, 0.07);
+  border: 1px solid rgba(85, 69, 46, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.np-tab:hover { color: var(--ink); border-color: rgba(138, 109, 26, 0.55); }
+.np-tab.active {
+  color: #4a3a14;
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.3), rgba(201, 162, 39, 0.12));
+  border-color: rgba(138, 109, 26, 0.7);
+}
+
+/* The filter. Deliberately an attribute rule and not the `.hidden` class the
+   refresh already toggles per section: a section shows when the sim says it
+   has something to say AND its tab is open, and neither has to know about the
+   other. Both resolve to `display:none !important`, so whichever says hide
+   wins, which is the behaviour wanted in every combination. */
+#nation-panel[data-tab='crown'] [data-tab]:not([data-tab='crown']),
+#nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
+#nation-panel[data-tab='coin'] [data-tab]:not([data-tab='coin']),
+#nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
+#nation-panel[data-tab='faith'] [data-tab]:not([data-tab='faith']),
+#nation-panel[data-tab='world'] [data-tab]:not([data-tab='world']) { display: none !important; }
+
+/* The High Priesthood's candidates (SPEC §175). `.np-fac-btn` is a 26px icon
+   square and four call sites genuinely want that; this is the fifth, whose
+   labels are party names — 'The Priesthood', 'The Great Houses' — so it gets
+   its own shape rather than a width override that would reflow the other four.
+   `.pp-build-btn span { text-overflow: ellipsis }` (line ~1691) is why the
+   label is now wrapped in a span: a name too long for a narrow panel trails
+   off rather than being cut mid-letter. */
+.np-seat-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.np-seat-btn { flex: 0 1 auto; width: auto; max-width: 100%; padding: 3px 9px; font-size: 11.5px; }

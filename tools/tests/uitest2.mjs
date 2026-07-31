@@ -131,6 +131,10 @@ await page.evaluate(() => {
 await page.locator('.tb-flag').click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
 const testWarId = await page.evaluate(() => window._testWarId);
+// SPEC §175: the Diplomacy block is on the realm panel's World tab, and the
+// panel opens on Crown; a closed tab is display:none and not clickable.
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 await page.locator(`#nation-panel [data-peace="${testWarId}"]`).click();
 await page.waitForSelector('#peace-modal:not(.hidden)');
 ok(await page.locator('[data-ref="subjugate"]').count() === 1, 'subjugate row present');

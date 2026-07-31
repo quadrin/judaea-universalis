@@ -233,3 +233,67 @@ export const DIASPORA_ASKS = [
     risk: 0.08,
   },
 ];
+
+// ---------------------------------------------------------------------------
+// The window, in one place (SPEC §175).
+//
+// This predicate existed twice — once in js/sim/diaspora.js as `communityDef`
+// and once inline in the Compendium (js/ui/wiki.js) — and the two had already
+// drifted: the Compendium tested only the chapter's OPENING year, so 167 BCE
+// listed thirteen communities and silently omitted the seven whose windows
+// open inside it, Leontopolis among them. A player looking at the era page was
+// told the House of Onias was not in this game. It is; Onias founds it seven
+// years in.
+//
+// So the window is a function now, exported from the data it belongs to, and
+// the sim, the map and the Compendium all call it. `yearsAt` converts BCE
+// years to astronomical ones on both sides of every comparison, because -160
+// is one year, not minus-one-hundred-and-sixty of them.
+export function yearsAt(y) { return y < 0 ? y + 1 : y; }
+
+/** Is this community present in `year`? */
+export function openAt(d, year) {
+  if (!d) return false;
+  const y = yearsAt(year);
+  if (Number.isFinite(d.from) && y < yearsAt(d.from)) return false;
+  if (Number.isFinite(d.until) && d.until !== null && y >= yearsAt(d.until)) return false;
+  return true;
+}
+
+/** Has this community's window CLOSED by `year` — as against never opening? */
+export function shutBy(d, year) {
+  if (!d || !Number.isFinite(d.until) || d.until === null) return false;
+  return yearsAt(year) >= yearsAt(d.until);
+}
+
+/** The entry keyed on a canonical province name, or null. */
+export function communityOf(provName) {
+  if (!provName) return null;
+  for (const d of DIASPORA) if (d.prov === provName) return d;
+  return null;
+}
+
+/** Every community present in `year`, largest first. */
+export function communitiesAt(year) {
+  return DIASPORA.filter((d) => openAt(d, year)).slice().sort((a, b) => b.size - a.size);
+}
+
+/**
+ * Every community a chapter running from `y0` to `y1` will ever be able to
+ * write to, largest first. This is what an era page wants: a chapter is a span
+ * of years and not an instant, and a list built from the opening date alone is
+ * a list of the communities you happen to start with.
+ */
+export function communitiesBetween(y0, y1) {
+  const last = Number.isFinite(y1) ? y1 : y0;
+  return DIASPORA
+    .filter((d) => {
+      // Present at some point inside [y0, y1]: its window opens on or before
+      // the chapter ends, and closes on or after the chapter begins.
+      const from = Number.isFinite(d.from) ? yearsAt(d.from) : -Infinity;
+      const until = (Number.isFinite(d.until) && d.until !== null) ? yearsAt(d.until) : Infinity;
+      return from <= yearsAt(last) && until > yearsAt(y0);
+    })
+    .slice()
+    .sort((a, b) => b.size - a.size);
+}

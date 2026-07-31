@@ -12,6 +12,7 @@
 import { tradeIndex } from '../data/trade.js';
 import { largestMinorityFaith } from '../sim/population.js';
 import { dominantEstate, seatsFor } from '../sim/estates.js';
+import { communityOf, openAt, shutBy } from '../data/diaspora.js';
 const GRAY = [128, 128, 128];
 const DEV_LOW = [216, 210, 176];   // #d8d2b0
 const DEV_HIGH = [30, 122, 46];    // #1e7a2e
@@ -23,6 +24,16 @@ const REVOLT_SECONDARY = [212, 28, 24];
 const ESTATE_PALETTE = [[164, 116, 56], [92, 120, 150], [132, 88, 132], [86, 140, 96], [176, 88, 72], [120, 120, 108]];
 const ESTATE_PALE = [214, 208, 188];
 const ESTATE_NONE = [150, 144, 128];
+// Diaspora mode (SPEC §175). The ramp runs from the cold end — a community
+// that has been asked too much of, or never courted — to the warm one, so a
+// glance says who would answer a letter. Size decides how far off the
+// parchment a community is pushed, which is why Alexandria at five reads
+// heavier than Corinth at one even when both are lukewarm.
+const DIA_PALE = [222, 214, 190];   // the rest of the world
+const DIA_COLD = [92, 118, 156];
+const DIA_WARM = [212, 168, 56];
+const DIA_SHUT = [138, 128, 112];   // a window that has closed
+const DIA_OURS = [236, 226, 196];   // the community is inside our own borders
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -81,6 +92,7 @@ const MODE_PARAMS = {
   unrest: { relief: 0.3, flat: 0 },
   diplomatic: { relief: 0.35, flat: 0 },
   estates: { relief: 0.3, flat: 0 },
+  diaspora: { relief: 0.3, flat: 0 },
 };
 
 // Diplomatic mode palette (colors relative to the player).
@@ -155,6 +167,20 @@ export function computeMapmodeColors(ctx, mode) {
   const myClaims = (game.tags[game.playerTag] && game.tags[game.playerTag].claims) || [];
   // One seat-list lookup per TAG, not per province: `seatsFor` walks the
   // registered sources and the estates mode asks it for every cell on the map.
+  // Diaspora mode reads only the content package and the province's own saved
+  // record — no ctx.helpers, no sim call — so it is safe on the bare
+  // {game, DEFINES} context two suites build. One Map lookup per cell rather
+  // than a linear scan of twenty entries, because this runs on every sim day.
+  const year = (game.date && Number.isFinite(game.date.y)) ? game.date.y : 0;
+  const diaCache = mode === 'diaspora' ? new Map() : null;
+  const diaOf = (p) => {
+    if (!diaCache) return null;
+    const key = p.canon || p.name;
+    if (diaCache.has(key)) return diaCache.get(key);
+    const d = communityOf(key) || communityOf(p.name);
+    diaCache.set(key, d);
+    return d;
+  };
   const seatCache = new Map();
   const seatsOf = (tag) => {
     if (seatCache.has(tag)) return seatCache.get(tag);
@@ -260,6 +286,42 @@ export function computeMapmodeColors(ctx, mode) {
             fl |= 1;
           }
         }
+        break;
+      }
+      // The dispersion (SPEC §175). Twenty communities from Cyrene to Ecbatana
+      // and, before this mode existed, the only way to find one was to click
+      // the exact province it lived in — so the largest Jewish population on
+      // earth was a panel block you had to already know about. Now the map
+      // says where they are, how big, and how they regard this crown.
+      case 'diaspora': {
+        const d = diaOf(p);
+        if (!d) { cA = DIA_PALE; break; }
+        if (shutBy(d, year)) {
+          // What has been lost is drawn as lost. A campaign that reaches 117
+          // watches Alexandria, Memphis, Cyrene, Berenice and Cyprus go out in
+          // one war, and the map should carry that rather than quietly
+          // forgetting they were ever there.
+          cA = DIA_SHUT;
+          fl |= 2;
+          break;
+        }
+        if (!openAt(d, year)) { cA = DIA_PALE; break; }
+        // `p.dia.standing` is the live figure once the sim has seeded it; the
+        // entry's own `start` is what it was before anybody wrote to them, and
+        // is the honest answer for a crown the dispersion has no dealings with.
+        const st = (p.dia && Number.isFinite(p.dia.standing)) ? p.dia.standing : d.start;
+        const warmth = Math.max(0, Math.min(1, st / 100));
+        // 1 → 0.44, 5 → 1.0. The top of the ramp must LAND on 1 rather than
+        // overshoot it: at 0.4 + 0.15·size, sizes 4 and 5 both clamped to full
+        // and Alexandria — the largest community on earth — read exactly like
+        // Antioch.
+        const weight = 0.3 + 0.14 * Math.max(1, Math.min(5, d.size | 0));
+        cA = lerp3(DIA_PALE, lerp3(DIA_COLD, DIA_WARM, warmth), weight);
+        // Ours now: the sim drops a community the moment its province becomes
+        // the player's, which on the map would simply be a cell that stopped
+        // existing. Stripe it instead — they are still there, they are just
+        // not somebody else's hostages any more.
+        if (p.owner === game.playerTag) { cB = DIA_OURS; fl |= 1; }
         break;
       }
       // Whose ground this is (SPEC §167): the party of its ruler's court that

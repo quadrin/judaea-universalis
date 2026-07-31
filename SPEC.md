@@ -9300,4 +9300,162 @@ The rule now: **a people that frees itself has conquered nobody.**
   it always meant to model. The eight-era harness was measured against the
   unchanged base on the same seeds and produced the identical anomaly set,
   line for line — the all-AI campaigns do not feel this section, because
-  the courts it exempts were never the ones the anomaly flags watch.
+  the courts it exempts were never the ones the anomaly flags watch.`node tools/autorun.mjs 8 <chapter>`, before and after, on the four chapters
+where Rome is a power:
+
+- **66 CE** — anomaly flags identical.
+- **67 BCE** — `ROM: SNOWBALL` *disappears*. Rome starts large, so it stops
+  growing 1.6× inside eight years. `ARI: BLEEDING` appears, which is the
+  documented brothers'-stalemate class (tools/README.md).
+- **40 BCE** — `HER: BLEEDING | ATG: DEBT-SPIRAL` becomes `ATG: BLEEDING`.
+- **132 CE** — `JUD: SNOWBALL` appears at two seeds of four.
+
+The last one was worth chasing rather than shrugging at, and the answer is
+executable. Re-run 132 CE with the western map in place and **every levy set to
+zero** — Rome's income, manpower, force limit and establishment then identical
+to the pre-§173 baseline — and the all-AI Return still runs 8→17 provinces at
+seed 4242. The swing is not Rome getting stronger. It is that nine more courts
+consume the seeded RNG stream differently, and the all-AI Bar Kokhba run sits on
+a boundary this project already documents as drifting version to version.
+
+- **Regression contract**: `smoke107` asserts that no chapter leaves passable
+  ground ownerless (the three cells 1948 seals deliberately excepted), that
+  `west.js` names no eastern province outside the ten Italian and Tripolitanian
+  cells the late chapters have to reassign, that the base atlas still ships the
+  west as WASTE, that every western court reaches `activeTags` and a real seat
+  in `game.tags` rather than painting scenery, that none of them falls back to
+  the engine's default twenty-regiment establishment, that `west.js` never sets
+  ROM's or BYZ's, that 529 opens with Ravenna Gothic and Carthage Vandal, that
+  the levy defaults to 1, is clamped to a share, sits only on Roman or Byzantine
+  ground, survives a pre-§173 save, and does not follow a conqueror who takes
+  the province off the command that pays for it — plus the three-column
+  arithmetic above.
+
+## 175. The panel you cannot read, and the map you cannot see
+
+Two complaints about the same thing, which is that this game had grown faster
+than its windows onto itself.
+
+**The realm panel had twenty top-level sections.** Every one of them was correct
+to add — estates, institutions, the ages, the sacred offices, the powers beyond
+the map, doctrines, crises, technology, reforms — and every one of them made the
+panel worse. A player looking for the treasury scrolled past the High
+Priesthood to find it. And one row of it was visibly broken: the three buttons
+that anoint a High Priest read `Hasid…`, `…eller…`, `…ners'`.
+
+**And the dispersion was invisible.** §172 put twenty communities on the board
+from Cyrene to Ecbatana and gave each one a panel block — reachable only by
+clicking the exact province it lives in. Twenty cells out of three hundred and
+seven, with nothing to tell you which. The largest Jewish population on earth
+was a thing you had to already know about.
+
+### The tabs
+
+Six: **Crown, Court, Coin, Host, Faith, World**. Above them and outside all of
+them, pinned: the ruler and their skills, the heir, the four numbers you check
+every few seconds — provinces·development, stability, treasury, manpower — and
+the five levers. Tabs improve a crowded panel by hiding things, which is only an
+improvement if what you look at constantly never moves.
+
+Three things about the implementation are load-bearing:
+
+- **The panel is never re-templated.** `refs` is harvested exactly once in
+  `build()` and every later update patches those nodes. A tab switch that
+  rewrote `innerHTML` — which is how the Chronicle modal does its tabs — would
+  detach every ref and the panel would stop updating for the rest of the
+  campaign without saying so. A switch flips one attribute.
+- **The filter is an attribute, not the `.hidden` class.** Each section already
+  toggles `.hidden` from the sim (the Temple falls, a chapter is won, a client
+  is annexed). If tabs used the same class the two would fight and sections
+  would reappear on the next tick. `#nation-panel[data-tab='court']` hides
+  everything whose `data-tab` is not `court`; both resolve to
+  `display:none !important`, so whichever says hide wins — which is right in
+  every combination.
+- **The tab probe is first in the click chain and does not refresh.** That chain
+  falls through sixteen `closest()` probes and ends at the war overview, so a
+  tab button inside a war row's ancestry would have opened the war screen. And
+  a switch changes no game state: the sections it reveals were rewritten by the
+  last daily pass like every other section.
+
+**A tab that would be empty does not appear.** Six of the twenty sections are
+absent in most chapters — the Powers exist in two of eight, the Chapters only
+after a won campaign, the sacred offices only where a Temple stands. Every tab
+but Faith is anchored to a section present in every chapter; Faith is allowed to
+vanish, because the Temple does not stand in most of these centuries. When the
+open tab disappears under the player — Jerusalem falls, or a flag chip swaps the
+panel to a foreign court and hides ten sections — the strip falls back rather
+than showing a blank panel.
+
+### An icon button and a text button are different shapes
+
+`.np-fac-btn` is a 26px square. Four call sites want exactly that: the estates'
+appeasement laurel, the institution's scales, the intrigue coins and flame, the
+pretender's star. The fifth put party names in it — *The Temple Priesthood*,
+*The Peace Party* — and `.pp-build-btn` underneath supplies
+`white-space: nowrap; overflow: hidden` and centres its content, so the label
+was clipped at **both** ends. `The Zealots` became `ealo`.
+
+The fix is a separate class and not a width override, because widening the
+shared one would reflow the four lists that want the square. Measured in the
+browser rather than asserted: the three buttons are 75, 95 and 127px, and
+`scrollWidth === clientWidth` on all three.
+
+### The dispersion, as a mapmode
+
+Tenth in the bar. It colours the communities by **how they regard this crown**,
+cold slate through to warm gold, with **size** deciding how far off the
+parchment each is pushed — so Alexandria at five reads heavier than Corinth at
+one even when both are lukewarm, and the ramp lands exactly on full at five
+rather than clamping four and five to the same shade. Everything else is pale.
+
+A community whose window has **shut** is hatched rather than forgotten: a
+campaign that reaches 117 watches Alexandria, Memphis, Cyrene, Berenice and
+Cyprus go out in one war, and the map should carry that. A community inside the
+player's own borders is striped — the sim drops it the moment its province
+becomes yours, which on the map would otherwise be a cell that quietly stopped
+existing.
+
+It reads only the content package and the province's own saved record — no
+`ctx.helpers`, no sim call — because two suites build `computeMapmodeColors` a
+bare `{ game, DEFINES }` context, and because `standingTarget` is O(provinces)
+per call and this runs on every simulated day. There is no new rendering
+behaviour: the flags byte is full (three effect bits and a 5-bit owner class,
+`31 << 3 | 7 = 255` exactly), so this is fill, stripe and hatch, which is all it
+needs.
+
+### Three things that were quietly wrong
+
+- **The Compendium's era page hid seven communities.** It filtered by the
+  chapter's opening *instant*, so 167 BCE — which runs to 6 CE — listed the
+  thirteen you start with and omitted the seven whose windows open inside it.
+  One of them is the House of Onias at Leontopolis, which Onias founds seven
+  years in and which the game offers from that year on. **This is what a player
+  meant by "Leontopolis is diaspora too": the data was right and the page was
+  lying about it.** The window is now one exported predicate in
+  `js/data/diaspora.js` that the sim, the map and the Compendium all call — it
+  had been written out twice and the copies had already drifted — and the page
+  measures a chapter by its horizon *and* its last dated card, because
+  `generationHorizon` is where a chapter's undated cards expire and not where
+  the chapter ends. The page also prints the province now: *The House of
+  Adiabene* is not a place you can find on a map.
+- **The province panel contradicted its own rule.** It said "We are at war with
+  their empire — no letter reaches them," which is the rule §172 says it
+  *removed*, and which the sim does not implement: a war raises the standing an
+  ask needs and roughly doubles its risk, and `smoke106` asserts the cheapest
+  ask still gets through. In 66 CE — the chapter the feature exists for, which
+  opens at war with Rome — every community under Rome told the player the
+  feature was switched off while the live buttons sat underneath it.
+- **`uitest3` asserted eight mapmode buttons and there were nine.** Stale since
+  trade and estates landed, and failing on main. It asserts ten now.
+
+- **Regression contract**: `smoke109` asserts every section belongs to a
+  declared tab, every tab owns at least one section, the stylesheet carries a
+  filter rule for every tab (without one, that tab hides nothing and the panel
+  shows all twenty sections at once), that nothing after `build()` rewrites the
+  shell, that the seat buttons no longer wear the icon class while the four
+  icon buttons still do, that the era window exists in exactly one place and
+  that 167 BCE reaches twenty communities over its span against thirteen on its
+  opening date, that the war copy is gone, and that the mapmode is registered
+  in `MODE_PARAMS`, is safe on a bare context, separates all five community
+  sizes monotonically, and hatches Alexandria in 132 CE but not Babylon.
+  `uitest38` measures the rest in a browser, where layout actually happens.

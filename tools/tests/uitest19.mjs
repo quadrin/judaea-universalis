@@ -37,19 +37,32 @@ await page.waitForTimeout(400);
 console.log('== the estates sit in the realm panel ==');
 await page.locator('.tb-flag').click();
 await page.waitForSelector('#nation-panel:not(.hidden)');
+// SPEC §175: the realm panel is six tabs behind a pinned header and opens on
+// Crown. The estates live on Court, and a section whose tab is closed is
+// display:none — readable by textContent, but not clickable. The tab is a
+// closure variable that survives close/open, so this one click holds for the
+// rest of the suite until it deliberately moves.
+await page.locator('#nation-panel .np-tab[data-tab-go="court"]').click();
+await page.waitForTimeout(150);
 const heading = await page.locator('#nation-panel [data-ref="factionsBlock"] .pp-build-title').textContent();
 ok(heading.trim() === 'Estates', 'the realm panel calls the institution Estates');
-const facRows = await page.locator('.np-faction').count();
+// Scoped to the Estates block. `.np-faction` and its children are a shared
+// shape — the sacred offices (SPEC §169) and the institutions (§166) render
+// with the same classes — so the bare global selectors these three assertions
+// used had been counting eight rows and failing since those sections landed.
+// This suite is about the estates; it now says so.
+const estatesBlock = '#nation-panel [data-ref="factionsBlock"] ';
+const facRows = await page.locator(estatesBlock + '.np-faction').count();
 ok(facRows === 3, 'three estates at the Hasmonean court: ' + facRows);
-const names = await page.locator('.np-fac-name').allTextContents();
+const names = await page.locator(estatesBlock + '.np-fac-name').allTextContents();
 ok(names.some((n) => /Hasideans/.test(n)) && names.some((n) => /Hellenizers/.test(n)),
   'the era\'s parties by name: ' + names.join(' · '));
-const bars = await page.locator('.np-fac-fill').count();
+const bars = await page.locator(estatesBlock + '.np-fac-fill').count();
 ok(bars === 3, 'every estate carries its approval bar');
-const effects = await page.locator('.np-fac-effect').allTextContents();
+const effects = await page.locator(estatesBlock + '.np-fac-effect').allTextContents();
 ok(effects.length === 3 && effects.every((s) => /No estate effect/.test(s)),
   'every estate states its current consequence');
-const state = await page.locator('.np-fac-state').first().textContent();
+const state = await page.locator(estatesBlock + '.np-fac-state').first().textContent();
 ok(/content · 50/.test(state), 'estates open content at 50: "' + state.trim() + '"');
 
 console.log('== the appeasement lever works ==');
@@ -62,20 +75,23 @@ const hasBtn = await page.locator('.np-fac-btn[data-appease="hasideans"]').count
 ok(hasBtn === 1, 'the lever renders for the Hasideans');
 await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
 await page.waitForTimeout(200);
-const after = await page.locator('.np-fac-state').first().textContent();
+const after = await page.locator(estatesBlock + '.np-fac-state').first().textContent();
 ok(/loyal · 60/.test(after), 'courting crosses the loyal threshold: 50 → 60 ("' + after.trim() + '")');
-const active = await page.locator('.np-fac-effect').first().textContent();
+const active = await page.locator(estatesBlock + '.np-fac-effect').first().textContent();
 ok(/Half of benefit/.test(active), 'the newly loyal estate exposes its half-strength benefit');
 const gov = await page.evaluate(() => window._ctx.game.tags.HAS.points.gov);
 ok(gov === 160, 'the price was 40 governance points (200 → ' + gov + ')');
 await page.locator('.np-fac-btn[data-appease="hasideans"]').click();
 await page.waitForTimeout(200);
-const again = await page.locator('.np-fac-state').first().textContent();
+const again = await page.locator(estatesBlock + '.np-fac-state').first().textContent();
 ok(/loyal · 60/.test(again), 'the lever cools down — no double-courting (' + again.trim() + ')');
 
 console.log('== foreign courts keep their politics offstage ==');
 // every flag is a door (SPEC §28): click the enemy's chip in our own
 // diplomacy block and their court opens read-only — with no Estates block.
+// The diplomacy block is on the World tab (SPEC §175).
+await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+await page.waitForTimeout(150);
 const foreignChip = page.locator('#nation-panel .fchip-link[data-open-tag="SEL"]').first();
 ok(await foreignChip.count() >= 1, 'the Seleucid chip is a door');
 await foreignChip.click();

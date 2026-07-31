@@ -81,6 +81,9 @@ const firstDipTag = await page.evaluate(() => {
 });
 ok(!!firstDipTag, 'diplomacy rows carry linked chips: ' + firstDipTag);
 if (firstDipTag) {
+  // SPEC §175: the diplomacy rows are on the World tab of the realm panel.
+  await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+  await page.waitForTimeout(150);
   await page.locator('#nation-panel .pp-diplo .fchip-link').first().click();
   await page.waitForTimeout(250);
   const now = await page.evaluate(() => window._ctx.game.tags[

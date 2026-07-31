@@ -553,7 +553,16 @@ const RISING_LABELS = {
       + `<div class="np-fac-top"><span class="np-fac-name">${esc(c.name)}</span>`
       + `<span class="np-fac-state ${cls}">${c.standing}${c.target !== null && c.target !== c.standing ? ' → ' + c.target : ''}</span></div>`
       + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${band}" style="width:${Math.max(2, Math.min(100, c.standing))}%"></div></div>`
-      + `<div class="np-fac-effect">${esc('Under ' + c.hostName + '. ' + (c.atWar ? 'We are at war with their empire — no letter reaches them.' : 'Size ' + c.size + ' of 5.'))}</div>`
+      // SPEC §175: this used to read "We are at war with their empire — no
+      // letter reaches them," which is the rule §172 says it REMOVED and which
+      // the sim does not implement: a war raises the standing an ask needs by
+      // `warNeed` and roughly doubles its risk, and smoke106 asserts the
+      // cheapest ask still gets through. In 66 CE — the chapter this whole
+      // feature exists for, which opens at war with Rome — every community
+      // under Rome told the player the feature was switched off while the live
+      // buttons sat underneath it.
+      + `<div class="np-fac-effect">${esc('Under ' + c.hostName + '. Size ' + c.size + ' of 5.'
+        + (c.atWar ? ' We are at war with their empire: they will want to be surer of us, and the risk to them is doubled.' : ''))}</div>`
       + `</div>`;
     html += (c.asks || []).map((a) => {
       const bits = [];
