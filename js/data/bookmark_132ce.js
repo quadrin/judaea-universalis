@@ -615,7 +615,10 @@ export const BOOKMARK_132 = {
     h.declareWar(ctx, 'JUD', 'ROM', 'The Bar Kokhba Revolt');
     try {
       const war = findJudRomWar(g);
-      if (war) war.noNegotiation = true;
+      if (war) {
+        war.noNegotiation = true;
+        war.independenceSide = 'att'; // winning free is not conquest (SPEC §174)
+      }
     } catch (e) { warnOnce('setup:war', e); }
 
     // --- Treasuries, manpower, stability, legitimacy. -------------------------

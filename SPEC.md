@@ -9241,3 +9241,63 @@ per §160: passage is not possession.
   chapter's final spring — on the new RNG stream a §87 rising held Jerusalem
   the one June the terminal card checks, which made a 63,000-tick assertion
   into a claim about a seed.
+
+## 174. Winning free is not conquest
+
+Reported: win the Maccabean Revolt and the world leagues against you for it.
+The chain was mechanical. Every settlement priced its cessions in infamy
+(`infamyForDev`, dev/2 per §59's retuning), Hasmonea's victory kept a
+heartland of fifteen-odd hill towns, and the sum crossed the coalition
+threshold in one stroke — so the courts that had just watched a people throw
+off its own yoke read the liberation as a rampage, soured monthly under the
+§21 opinion pressure, and `coalitionAgainst` leagued them into "The Coalition
+against Judaea" before Simon's brass tablets were up on Mount Zion. The same
+arc waited for every rising: the Great Revolt, Bar Kokhba, the Keepers, and
+any AI client that won its §61 independence war and took its own hinterland
+at the table.
+
+The rule now: **a people that frees itself has conquered nobody.**
+
+- **The freedom marker** (`war.independenceSide`, military.js): 'att', 'def'
+  or null — which side of this war fights for its own freedom. `declareWar`
+  stamps 'att' whenever the CB is `independence` (the §61 rising declares,
+  so the rising is the attacker); the five scripted risings set it by hand in
+  their bookmarks — the Maccabean Revolt, the Great Revolt, the Bar Kokhba
+  Revolt and the Rising of the Keepers on the attack, 1948's War of
+  Independence on the defense (Egypt declares; the new state defends). Plain
+  save data; `independenceSideOf(war)` reconstructs old saves from `war.cb`.
+- **The land freedom stands on** (`liberatedSoil`, military.js): a province
+  of the taker's own faith outside the §133 diaspora — exactly the line the
+  authored concessions have always drawn with their `keep` predicates
+  ("Judea keeps its hills" was never all of Syria). Both settlement doors
+  honor it: `endWarBySword` (the scripted armistices and the sword) and
+  `executePeaceDeal` (the one treaty mind, §77) charge no infamy when the
+  winning side is the war's freedom side AND the ceded province is that
+  soil.
+- **The exemption is the homeland, not the war.** Alien land taken in the
+  same settlement still prices as conquest — a rising that reaches 75%
+  domination and swallows Antioch has left liberation behind, and the §21
+  anti-snowball league still answers it. Subjugation, client transfers and
+  humiliation keep their prices too (re-yoking a rebel at the table remains
+  the overlord's odium, per §59's retuning): only the freed homeland is
+  free.
+- **Nothing else moved.** The coalition wiring is untouched — the gate was
+  always the infamy, and the freed simply no longer carry any for their own
+  soil. The 1948 chapter keeps its §100 `mechanics.coalitions: false`
+  besides; the marker there guards the opinion-pressure side of the ledger.
+
+- **Regression contract**: `smoke108` — the Maccabean settlement (marker
+  present, hills kept, zero infamy, no league — and the control: the same
+  hostile courts at infamy 35 still march, proving the gate is the infamy,
+  not the wiring); the homeland/alien split to exact arithmetic in one
+  authored total settlement; the generic independence CB at the peace table
+  (same-faith town free, alien town priced) with the CB auto-stamp; all five
+  scripted markers across their bookmarks; and the old-save reconstruction
+  shims. One older suite had its premise told about this section rather than
+  its claim changed: `smoke8` dictates a fat three-province peace through
+  the Great Revolt's plumbing to test PLAIN conquest infamy, so it now
+  strips the revolt's freedom marker first — the ordinary war of expansion
+  it always meant to model. The eight-era harness was measured against the
+  unchanged base on the same seeds and produced the identical anomaly set,
+  line for line — the all-AI campaigns do not feel this section, because
+  the courts it exempts were never the ones the anomaly flags watch.

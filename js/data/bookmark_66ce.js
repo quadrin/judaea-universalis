@@ -415,6 +415,7 @@ export const BOOKMARK_66 = {
         // This war resolves only through the event chain and checkVictory —
         // the generic peace table would short-circuit the designed arc.
         war.noNegotiation = true;
+        war.independenceSide = 'att'; // winning free is not conquest (SPEC §174)
         const romSide = (war.attackers || []).indexOf('ROM') !== -1 ? war.attackers : war.defenders;
         if (Array.isArray(romSide) && romSide.indexOf('AGR') === -1) romSide.push('AGR');
         if (war.warscore && typeof war.warscore === 'object' && war.warscore.AGR === undefined) {

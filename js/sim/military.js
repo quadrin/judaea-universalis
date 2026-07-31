@@ -2774,6 +2774,10 @@ export function declareWar(ctx, atk, def, name, cb) {
     name: name || ((A.name || atk) + '–' + (D.name || def) + ' War'),
     attackers, defenders, warscore: {}, started: { ...g.date }, _bs: { att: 0, def: 0 },
     cb: cbType || null,
+    // Which side, if either, fights for its own freedom (SPEC §174). The
+    // rising client declares, so the independence CB marks the attackers;
+    // scripted revolts set the field by hand. Plain save data.
+    independenceSide: cbType === 'independence' ? 'att' : null,
     goal: makeWarGoal(ctx, atk, def, cb),
     _goalScore: 0,
     _goalTick: { ...g.date },
@@ -3860,6 +3864,23 @@ export function BAL(ctx, key, fallback) {
 function infamyForDev(ctx, dev) {
   return Math.round(Math.max(0, dev) * BAL(ctx, 'infamyPerDev', 0.5));
 }
+// The side of `war` that fought for its own freedom, if any (SPEC §174):
+// 'att'/'def' or null. Stamped by declareWar for the independence CB and by
+// hand on the scripted revolts; old saves reconstruct it from `war.cb`.
+export function independenceSideOf(war) {
+  if (!war) return null;
+  if (war.independenceSide === 'att' || war.independenceSide === 'def') return war.independenceSide;
+  return war.cb === 'independence' ? 'att' : null;
+}
+// The land freedom stands on (SPEC §174): a province of the taker's own
+// faith outside the diaspora — the same line the authored concessions draw
+// with their `keep` predicates. Within a war of independence the rising side
+// pays no infamy for this soil; anything beyond it still prices as conquest.
+function liberatedSoil(ctx, p, takerTag) {
+  const t = ctx.game.tags[takerTag];
+  if (!t || !p || !p.religion || p.religion !== t.religion) return false;
+  return ((ctx.DEFINES && ctx.DEFINES.DIASPORA) || []).indexOf(p.canon || p.name) < 0;
+}
 function provDemandCost(ctx, p, byTag) {
   let cost = devTotal(p) * PEACE.provCostPerDev;
   // Alien land is dearer at the table: a province of another religious group
@@ -4892,6 +4913,11 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
   // drawn the border by hand — Rhodes says exactly which cells sit inside the
   // 1949 lines — and an authored border is not the engine's to second-guess.
   const reach = keep ? null : annexable(ctx, war, winners, losers);
+  // Winning free is not conquest (SPEC §174): when the settlement's winners
+  // are the side that fought for its independence, the homeland they keep is
+  // a liberation, and no coalition leagues against a people for throwing off
+  // its own yoke. Land beyond that homeland still prices as conquest.
+  const freeborn = !!winnersKey && independenceSideOf(war) === winnersKey;
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.controller === p.owner) continue;
@@ -4909,7 +4935,9 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     }
     if (winners.indexOf(p.controller) >= 0 && losers.indexOf(p.owner) >= 0) {
       const conqueror = g.tags[p.controller];
-      if (conqueror) conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
+      if (conqueror && !(freeborn && liberatedSoil(ctx, p, p.controller))) {
+        conqueror.aggression = num(conqueror.aggression) + infamyForDev(ctx, devTotal(p));
+      }
       p.integration = 0; // integration is with a sovereign, not the soil (SPEC §66)
       p.integrating = null; // cleared before the owner change: no inherited rename
       recordGrudge(ctx, p.owner, p.controller, i); // the lost lands are remembered (SPEC §67)
@@ -5052,9 +5080,15 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // Conquest is remembered: infamy proportional to what was taken (decays
     // monthly — see monthlyOpinionDrift; slower while the taker is still at
     // war). Spoils directed to a client are still the pen-holder's odium.
+    // Winning free is not conquest (SPEC §174): the side that fought for its
+    // own independence pays nothing for the homeland it keeps. Alien land,
+    // subjugation, transfers and humiliation keep their price — only the
+    // land freedom stands on is free.
+    const freeborn = independenceSideOf(war) === (war.attackers.indexOf(byTag) >= 0 ? 'att' : 'def');
     if (me) me.aggression = num(me.aggression) + infamyForDev(ctx, ev.provinces.reduce((sum, pid) => {
       const q = ctx.byId(pid);
-      return sum + (q ? devTotal(q) : 0);
+      if (!q || (freeborn && liberatedSoil(ctx, q, byTag))) return sum;
+      return sum + devTotal(q);
     }, 0));
   }
   // Free states (SPEC §69/§76): restore dead courts, return old homelands to

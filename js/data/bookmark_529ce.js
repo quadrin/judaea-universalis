@@ -568,6 +568,7 @@ export const BOOKMARK_529 = {
     try {
       const w = findWar(g, 'SAM', 'BYZ');
       if (w) {
+        w.independenceSide = 'att'; // winning free is not conquest (SPEC §174)
         const byzSide = (w.attackers || []).indexOf('BYZ') !== -1 ? w.attackers : w.defenders;
         if (byzSide.indexOf('GHA') === -1) byzSide.push('GHA');
         if (w.warscore && w.warscore.SAM === undefined) w.warscore.SAM = 0;
