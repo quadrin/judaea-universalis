@@ -33,6 +33,10 @@ const t = game.tags.JUD;
 console.log('== infamy from conquest ==');
 // JUD dominates its war and dictates a fat peace: three Roman provinces.
 const war = game.wars[0];
+// The Great Revolt carries the §174 freedom marker — a rising that keeps its
+// own homeland settles without infamy. This suite tests PLAIN conquest, so
+// read the war as an ordinary war of expansion.
+war.independenceSide = null;
 const takes = [];
 for (let i = 1; i < game.provinces.length && takes.length < 3; i++) {
   const p = game.provinces[i];

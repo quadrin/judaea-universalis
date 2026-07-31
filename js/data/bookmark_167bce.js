@@ -555,7 +555,10 @@ export const BOOKMARK_167 = {
     h.declareWar(ctx, 'HAS', 'SEL', 'The Maccabean Revolt');
     try {
       const war = findHasSelWar(g);
-      if (war) war.noNegotiation = true;
+      if (war) {
+        war.noNegotiation = true;
+        war.independenceSide = 'att'; // winning free is not conquest (SPEC §174)
+      }
     } catch (e) { warnOnce('setup:war', e); }
 
     // --- Treasuries, manpower, stability (deltas via helpers.adjust). ---

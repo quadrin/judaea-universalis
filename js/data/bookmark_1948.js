@@ -1104,6 +1104,7 @@ export const BOOKMARK_1948 = {
       const w = findWar(g, 'EGY', 'ISR');
       if (w) {
         w.noNegotiation = true; // the guns talk until Rhodes (ev_i_armistice unlocks)
+        w.independenceSide = 'def'; // the new state defends its freedom (SPEC §174)
         const arabSide = (w.attackers || []).indexOf('EGY') !== -1 ? w.attackers : w.defenders;
         for (const t of ['JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
           if (g.tags[t] && arabSide.indexOf(t) === -1) arabSide.push(t);
