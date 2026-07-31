@@ -341,6 +341,7 @@ export const BOOKMARK_132 = {
     JUD: [
       {
         id: 'j2_host', name: 'The Prince\'s Host',
+        icon: 'spears', col: 1,
         desc: 'Field fifteen thousand men — the hideouts and armories were dug for this.',
         rewardText: '"The Nasi\'s Levies": +10% manpower for 24 months.',
         check: (ctx) => totalMen(ctx, 'JUD') >= 15000,
@@ -350,6 +351,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'j2_maul', name: 'Maul the Legions',
+        icon: 'swords', col: 0, requires: ['j2_host'],
         desc: 'Reach +10 war score against Rome.',
         rewardText: '+25 martial points.',
         check: (ctx) => judWarscore(ctx) >= 10,
@@ -357,6 +359,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'j2_aelia', name: 'Aelia Undone',
+        icon: 'temple', col: 2, requires: ['j2_host'],
         desc: 'Take Jerusalem from the colony builders.',
         rewardText: '+20 legitimacy, +25 governance points — the coins are struck in the city itself.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem'),
@@ -364,6 +367,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'j2_galilee', name: 'Galilee Rises',
+        icon: 'mountain', col: 2, requires: ['j2_aelia'],
         desc: 'Carry the revolt north: take Sepphoris and Tiberias.',
         rewardText: 'The north sends its sons: +2,000 manpower.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Sepphoris') && ctx.helpers.controls(ctx, 'JUD', 'Tiberias'),
@@ -371,6 +375,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'j2_redemption', name: 'The Redemption of Israel',
+        icon: 'coins', col: 0, requires: ['j2_maul'],
         desc: 'Reach +25 war score — make Rome count the cost aloud.',
         rewardText: '"Redemption Coinage": +15% income permanently, +15 legitimacy.',
         check: (ctx) => judWarscore(ctx) >= 25,
@@ -385,6 +390,7 @@ export const BOOKMARK_132 = {
         // SPEC §32: the bare Mount can bear a House again. Bar Kokhba's
         // coins showed the Temple facade — this is what they promised.
         id: 'j2_third_temple', name: 'Raise the Third House',
+        icon: 'shrine', col: 1, requires: ['j2_aelia', 'j2_redemption'],
         desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — the House the coins promised.',
         rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
@@ -400,6 +406,7 @@ export const BOOKMARK_132 = {
     ROM: [
       {
         id: 'r2_contain', name: 'Contain the Rising',
+        icon: 'shield', col: 1,
         desc: 'Stop the bleeding: reach +10 war score against the rebels.',
         rewardText: '+25 martial points.',
         check: (ctx) => {
@@ -410,6 +417,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'r2_shephelah', name: 'Clear the Shephelah',
+        icon: 'flame', col: 0, requires: ['r2_contain'],
         desc: 'Take Emmaus and Lydda; the coast road must run without escort.',
         rewardText: 'Confiscations: +100 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Emmaus') && ctx.helpers.controls(ctx, 'ROM', 'Lydda'),
@@ -417,6 +425,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'r2_hills', name: 'Into the Hills',
+        icon: 'mountain', col: 0, requires: ['r2_shephelah'],
         desc: 'Take Hebron and Adora, the rising\'s southern anchor.',
         rewardText: '"The Severan Method": +1 siege bonus for 24 months.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Hebron') && ctx.helpers.controls(ctx, 'ROM', 'Adora'),
@@ -426,6 +435,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'r2_muster', name: 'The Empire Answers',
+        icon: 'helmet', col: 2, requires: ['r2_contain'],
         desc: 'Field forty thousand men in the East.',
         rewardText: '"Detachments of Every Army": +5% discipline for 12 months.',
         check: (ctx) => totalMen(ctx, 'ROM') >= 40000,
@@ -435,6 +445,7 @@ export const BOOKMARK_132 = {
       },
       {
         id: 'r2_rift', name: 'Seal the Rift',
+        icon: 'tower', col: 2, requires: ['r2_hills', 'r2_muster'],
         desc: 'Take Jericho, Engaddi and Gadora; nothing must cross the Jordan or reach the caves.',
         rewardText: '+1 stability.',
         check: (ctx) => ['Jericho', 'Engaddi', 'Gadora'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),

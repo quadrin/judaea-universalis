@@ -590,6 +590,7 @@ export const BOOKMARK_614 = {
     JUD: [
       {
         id: 'p_jerusalem', name: 'The City of the Great King',
+        icon: 'temple', col: 1,
         desc: 'Stand in Jerusalem — control the Holy City.',
         rewardText: '+20 legitimacy, +25 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem'),
@@ -597,6 +598,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'p_host', name: 'The Watchmen on the Walls',
+        icon: 'spears', col: 0, requires: ['p_jerusalem'],
         desc: 'Field ten thousand men — the Return must be able to defend itself.',
         rewardText: '"The Remnant Armed": +10% manpower for 24 months.',
         check: (ctx) => totalMen(ctx, 'JUD') >= 10000,
@@ -606,6 +608,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'p_coast', name: 'A Window on the Sea',
+        icon: 'ship', col: 2, requires: ['p_jerusalem'],
         desc: 'Take Caesarea Maritima — a state without a port is a state on sufferance.',
         rewardText: '+75 talents (the customs house).',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
@@ -613,6 +616,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'p_hills', name: 'The Heartland Whole',
+        icon: 'mountain', col: 1, requires: ['p_jerusalem'],
         desc: 'Control Jerusalem, Hebron, Jericho and Emmaus together.',
         rewardText: '+15 legitimacy, +25 governance points.',
         check: (ctx) => ['Jerusalem', 'Hebron', 'Jericho', 'Emmaus'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
@@ -620,6 +624,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'p_worth_more_unsold', name: 'Worth More Unsold',
+        icon: 'lamp', col: 1, requires: ['p_host', 'p_hills'],
         desc: 'Still stand — alive, five provinces — in 620, after Persia has weighed selling you.',
         rewardText: '+1 stability, +20 legitimacy.',
         check: (ctx) => dateGE(ctx.game.date, 620, 1) && ctx.helpers.countControlled(ctx, 'JUD', {}) >= 5,
@@ -629,6 +634,7 @@ export const BOOKMARK_614 = {
         // SPEC §32: Nehemiah ben Hushiel's dream — five centuries after the
         // fire, the sacrifices resume on the Mount.
         id: 'p_third_temple', name: 'Raise the Third House',
+        icon: 'shrine', col: 1, requires: ['p_worth_more_unsold'],
         desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — begin the sacrifices again.',
         rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
@@ -644,6 +650,7 @@ export const BOOKMARK_614 = {
     BYZ: [
       {
         id: 'b_line', name: 'Hold the Line',
+        icon: 'shield', col: 1,
         desc: 'Keep the Anatolian shield: control Iconium, Attalia and Seleucia Trachea.',
         rewardText: '+25 martial points.',
         check: (ctx) => ['Iconium', 'Attalia', 'Seleucia Trachea'].every((n) => ctx.helpers.controls(ctx, 'BYZ', n)),
@@ -651,6 +658,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'b_egypt', name: 'The Granary Held',
+        icon: 'grain', col: 0, requires: ['b_line'],
         desc: 'Still hold Alexandria in 617 — the Empire eats Egyptian bread.',
         rewardText: '+25 government points.',
         check: (ctx) => dateGE(ctx.game.date, 617, 1) && ctx.helpers.controls(ctx, 'BYZ', 'Alexandria'),
@@ -658,6 +666,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'b_fleet', name: 'The Sea Is Roman',
+        icon: 'ship', col: 2, requires: ['b_line'],
         desc: 'Keep a fleet of six ships — the Empire\'s last undisputed possession.',
         rewardText: '"Master of the Sea": +10% income for 24 months.',
         check: (ctx) => {
@@ -671,6 +680,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'b_counter', name: 'The Great Counteroffensive',
+        icon: 'swords', col: 2, requires: ['b_fleet'],
         desc: 'Carry the war home: control Amida or Tigranocerta.',
         rewardText: '+25 of every point — the Empire believes again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Amida') || ctx.helpers.controls(ctx, 'BYZ', 'Tigranocerta'),
@@ -678,6 +688,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'b_cross', name: 'The True Cross',
+        icon: 'star8', col: 1, requires: ['b_counter'],
         desc: 'Hold Jerusalem again — whatever it takes, however long.',
         rewardText: '+25 legitimacy, +1 stability.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(ctx.game.date, 616, 1),

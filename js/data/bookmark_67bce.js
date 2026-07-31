@@ -522,6 +522,7 @@ export const BOOKMARK_67 = {
     HYR: [
       {
         id: 'h4_levy', name: 'Idumea Answers',
+        icon: 'spears', col: 1,
         desc: 'Keep nine thousand men in the field — Antipater\'s country will provide.',
         rewardText: '+1,500 manpower.',
         check: (ctx) => totalMen(ctx, 'HYR') >= 9000,
@@ -529,6 +530,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'h4_aretas', name: 'The Price of Petra',
+        icon: 'dove', col: 0, requires: ['h4_levy'],
         desc: 'Bring Aretas into the war (his price is the twelve cities), or raise Nabataea\'s opinion of us to +100.',
         rewardText: 'Nabataean lances: +25 martial points.',
         check: (ctx) => !!ctx.helpers.getFlag(ctx, 'aretasMarches')
@@ -537,6 +539,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'h4_city', name: 'The City of David',
+        icon: 'temple', col: 1, requires: ['h4_aretas'],
         desc: 'Take Jerusalem from your brother.',
         rewardText: '+20 legitimacy — the high priesthood, restored in fact.',
         check: (ctx) => ctx.helpers.controls(ctx, 'HYR', 'Jerusalem'),
@@ -544,6 +547,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'h4_one_crown', name: 'One Crown',
+        icon: 'star8', col: 1, requires: ['h4_city'],
         desc: 'End the division: your brother\'s realm extinguished, or bent to you as a client.',
         rewardText: '+1 stability, +15 legitimacy.',
         check: (ctx) => {
@@ -554,6 +558,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'h4_web', name: 'Antipater\'s Web',
+        icon: 'coins', col: 2, requires: ['h4_levy'],
         desc: 'Fill the treasury to 400 talents — customs houses, tolls, and quiet arrangements.',
         rewardText: '+25 governance and +25 influence points.',
         check: (ctx) => (ctx.game.tags.HYR.treasury || 0) >= 400,
@@ -563,6 +568,7 @@ export const BOOKMARK_67 = {
     ARI: [
       {
         id: 'a4_army', name: 'The King\'s Army',
+        icon: 'helmet', col: 1,
         desc: 'Keep eleven thousand men in the field.',
         rewardText: '+1,500 manpower.',
         check: (ctx) => totalMen(ctx, 'ARI') >= 11000,
@@ -570,6 +576,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'a4_break', name: 'Break the Elder',
+        icon: 'swords', col: 0, requires: ['a4_army'],
         desc: 'Reach +15 war score against your brother.',
         rewardText: '+25 martial points.',
         check: (ctx) => warscoreVs(ctx, 'ARI', 'HYR') >= 15,
@@ -577,6 +584,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'a4_idumea', name: 'Into Idumea',
+        icon: 'mountain', col: 2, requires: ['a4_army'],
         desc: 'Take Hebron and Adora — cut the web at the spider.',
         rewardText: 'Antipater\'s estates: +100 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ARI', 'Hebron') && ctx.helpers.controls(ctx, 'ARI', 'Adora'),
@@ -584,6 +592,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'a4_one_crown', name: 'One Crown',
+        icon: 'star8', col: 0, requires: ['a4_break'],
         desc: 'End the division: your brother\'s realm extinguished, or bent to you as a client.',
         rewardText: '+1 stability, +15 legitimacy.',
         check: (ctx) => {
@@ -594,6 +603,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'a4_treasury', name: 'The Temple Treasury',
+        icon: 'coins', col: 2, requires: ['a4_idumea'],
         desc: 'Fill the treasury to 400 talents.',
         rewardText: '+25 governance and +25 martial points.',
         check: (ctx) => (ctx.game.tags.ARI.treasury || 0) >= 400,

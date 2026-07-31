@@ -9560,3 +9560,106 @@ reach, because the dispersion hears that the ships were made to wait).
   and gone by 1953, Iran standing until 1979, the era page listing Babylon
   but not Salonica), and both answers of the new card — including that it
   will not fire once Baghdad is not Iraq's.
+
+## 177. The chains grow branches, and the ladders own their price
+
+Two of the realm panel's oldest fixtures still wore their v2 dress. The
+missions were a flat text list — §102 built real chains with real rewards and
+the panel printed them like a shopping receipt — and the Technology block was
+three rows of "Advance to 6" with a number you could not see coming. Both
+systems had grown honest depth (branching objectives in everything the
+chapters ask, the era baseline, the ahead-of-age markup, the §166 surcharge,
+the pattern generations) and neither window showed it. EU4 solved both
+displays a decade ago: the mission TREE, and the technology screen that
+tells you what the level costs, why, and what it unlocks. This section is
+that parity pass.
+
+### Two shapes, one table
+
+`bookmark.missions[TAG]` keeps its shape; a mission MAY now declare
+`requires: [ids]` (and `col`, `row`, `icon` for the panel). A chain where no
+mission declares anything is the old LADDER — each mission implicitly
+requires its predecessor, completes strictly in order, and renders as one
+column. A chain where any mission does is a TREE: a mission unlocks when
+every prerequisite is done, a mission with none is a root, and parallel
+branches advance independently — a stalled siege no longer holds the
+building program hostage, which is the entire point of drawing these as
+trees.
+
+The record moved: `t.missionsDone` is the list of completed ids in table
+order, and `t.missionIdx` is maintained as the longest completed PREFIX of
+the table — NOT the count. On a ladder that is exactly the old cursor, so
+every save and every test that reads or writes it keeps its meaning; and
+because the seed rule runs the other way too (the first `missionIdx`
+missions are always treated as done), a ladder-era save — or a test that
+forces a chain forward by hand — still means what it always meant. The
+monthly pass keeps its three-step guard, but as three completion WAVES
+judged against each wave's opening state: parallel branches may land in the
+same wave, a cascade straight to the capstone stays impossible, and the AI
+earns its branches on the same terms as the player (§102's symmetry,
+untouched).
+
+**The retrofit rule for the shipped chains: never stricter.** Every branched
+mission's `requires` is a subset of its old ladder predecessors, so any
+state a campaign could reach before, it can still reach — the branches only
+loosen. Twelve chains branched (both sides of 167, 132, 67, 40, 529, 614,
+1948, and Israel's 1948 fan-out south/north/road); Rome's 66 CE chain
+stayed a ladder ON PURPOSE, because Vespasian's method WAS a sequence —
+coast, Galilee, the ring, the city, the desert forts — and a tree would be
+a lie about it. The formables' chains stay ladders too and render fine as
+single columns.
+
+### The tree on the panel
+
+Missions moved out of Crown into their own tab (the §175 gating applies: the
+tab steps aside at a foreign court, after the verdict, and in a chapter
+whose tag has no chain). The renderer is one CSS grid of medallions —
+`icon` in a parchment roundel, name under it, a green check on the
+accomplished, gold ring on the workable, dusk on the locked — with the
+connectors drawn by an SVG stretched over the grid whose viewBox is in GRID
+UNITS (one cell = 1×1, `preserveAspectRatio="none"`), so a line lands
+wherever its cells do without measuring a single pixel;
+`vector-effect: non-scaling-stroke` keeps the strokes from smearing under
+the non-uniform scale, and the rows are fixed-height for exactly this
+reason. `getMissions` hands the panel finished layout — declared columns
+clamped to EU4's five, rows derived one below the deepest parent — and
+resolves `requires` to names so a locked tooltip can say what comes first.
+
+### The ladders own their price
+
+`techInfo` now carries what the EU4 dress needs, all of it computed from
+the tables that own the formulas rather than re-invented in the panel: the
+points on hand and the monthly gain (the tick's own arithmetic — base 2,
+ruler skill, advisor capped at 3 and silent while the treasury is ruined,
+the §86 rivalry drill for martial), the months to affordability, what each
+ladder ALREADY pays (from `computeTechEffects`, so the panel can never
+drift from the sim), and the military ladder's milestones — every pattern
+generation with the doctrine it learns and a `beyond` flag where the §99
+ceiling puts it past every century of the chapter.
+
+The Coin tab wears it accordingly: the §166 surcharge as a red banner
+across the top (EU4's institutions penalty bar), then one card per ladder —
+level badge, era chip that goes red-on-red when racing history, the
+already-paying line, a progress bar filling toward the price with the ETA
+in its tooltip, the same buy button on the same `data-tech` click path —
+and under Military the milestone strip, lit/waiting/struck-through. And
+since the Coin tab claims to be "the purse and the ledger", it finally
+carries the ledger: `explainIncome`'s labeled lines (taxes, production,
+trade, tribute, maintenance, interest, the §145 court consumption), the
+same rows the topbar tooltip reads, as a table with the monthly balance
+ruled off at the bottom. Foreign courts keep the old modest read — levels,
+pattern, no buttons, no purse.
+
+- **Regression contract**: `smoke111` pins the tree view (six 66 CE nodes,
+  root-only start, cols `1,0,1,2,1,0`, rows derived one below the deepest
+  parent, requires resolved to ids and names), branch independence (the
+  Parthian mission completes while Samaria waits, `missionIdx` stays at the
+  done prefix and `missionsDone` keeps table order), the ladder contract
+  (Rome's chain is no tree; a forced `missionIdx` seeds the first N done
+  with exactly the next rung workable), the save round-trip (done lists
+  ride saves; a ladder-era save with only the cursor seeds correctly), and
+  the dressed `techInfo` (have/gain/eta on every row, the surcharge at top
+  level, five milestones with JUD's mar-5 reaching exactly the level-4
+  pattern, beyond-flags respecting the ceiling, the gain matching the
+  tick). `uitest2` counts the six medallions on the tree; `uitest8` and
+  `uitest37` hold the Coin tab's buy path to one press, unchanged.

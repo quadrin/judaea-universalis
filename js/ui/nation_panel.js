@@ -34,13 +34,15 @@ import { IDEA_TREES } from '../data/ideas.js';
 //
 // A tab that would be empty does not appear: `tabHasContent` asks the DOM,
 // after the refresh has set every section's `hidden`, whether this tab has
-// anything left to show. Five of the six are anchored to a section that exists
-// in every chapter (Missions, Decisions, Technology, Armies, Diplomacy) and so
-// never vanish; Faith is the one that may, because the Temple does not stand
-// in most of these centuries and a tab that is empty six times out of eight is
-// worse than no tab at all.
+// anything left to show. Most are anchored to a section that exists in every
+// chapter (Decisions, Technology, Armies, Diplomacy) and so never vanish;
+// Faith may, because the Temple does not stand in most of these centuries and
+// a tab that is empty six times out of eight is worse than no tab at all, and
+// Missions (SPEC §177) holds the mission tree and steps aside at a foreign
+// court, after the verdict, and in a chapter whose tag has no chain.
 const TABS = [
   { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, and what this chapter asks of you.' },
+  { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, and the technologies silver buys.' },
   { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
@@ -110,10 +112,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
         <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
       </div>
-      <div class="pp-build" data-ref="missionsBlock" data-tab="crown">
-        <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
-        <div class="np-missions" data-ref="missions"></div>
-      </div>
       <div class="pp-build hidden" data-ref="chapterBlock" data-tab="crown">
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
@@ -121,6 +119,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build" data-tab="crown">
         <div class="pp-build-title">Reforms</div>
         <div class="np-reforms" data-ref="reforms"></div>
+      </div>
+
+      <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
+      <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
+        <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
+        <div class="np-mtree-host" data-ref="missions"></div>
       </div>
 
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
@@ -150,9 +154,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
       </div>
+      <div class="pp-build hidden" data-ref="ledgerBlock" data-tab="coin">
+        <div class="pp-build-title">The Ledger</div>
+        <div class="np-ledger" data-ref="ledger"></div>
+      </div>
       <div class="pp-build" data-tab="coin">
         <div class="pp-build-title">Technology</div>
-        <div class="np-reforms" data-ref="tech"></div>
+        <div class="np-techs" data-ref="tech"></div>
       </div>
 
       <!-- ── THE HOST ──────────────────────────────────────────────────── -->
@@ -671,6 +679,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshDiplomacy(g, t, tag, self);
     refreshPowers(self);
     refreshTech(t, self);
+    refreshLedger(self);
     refreshReforms(t, self);
     refreshCourt(t, self);
 
@@ -818,19 +827,62 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.chapter, html || '<div class="np-dip-none">No chapter yet.</div>');
   }
 
+  // The mission tree (SPEC §177), drawn the way EU4 draws its own: a grid of
+  // medallions, connectors falling from prerequisite to dependent, a check on
+  // the accomplished, light on the workable, dusk on the locked. The sim
+  // hands over finished layout (col/row/requires) for tree and ladder chains
+  // alike, so one renderer draws both — a ladder is a tree one column wide.
+  //
+  // The connectors are an SVG stretched over the grid with its viewBox in
+  // GRID UNITS (one cell = 1×1, preserveAspectRatio="none"), so a line lands
+  // wherever its cells do without measuring a pixel; vector-effect keeps the
+  // strokes from smearing under the non-uniform scale. Rows are fixed-height
+  // (grid-auto-rows) for exactly this reason — fractional y must mean the
+  // same thing in every row.
   function refreshMissions() {
     let list = [];
     if (actions && typeof actions.getMissions === 'function') {
       try { list = actions.getMissions() || []; } catch (e) { warnOnce('np-getMissions', e); }
     }
     refs.missionsBlock.classList.toggle('hidden', !list.length);
-    setHtml(refs.missions, list.length ? list.map((m) => {
-      const tt = m.desc + (m.rewardText ? '\nReward: ' + m.rewardText : '');
-      const mark = m.status === 'done' ? icon('laurel', 'icon-row')
-        : m.status === 'current' ? icon('quill', 'icon-row') : '';
-      return `<div class="np-mission np-m-${m.status}" data-tt="${esc(tt)}">`
-        + `<span class="np-m-mark">${mark}</span><span class="np-m-name">${esc(m.name)}</span></div>`;
-    }).join('') : '<div class="np-dip-none">No missions for this realm</div>');
+    if (!list.length) { setHtml(refs.missions, ''); return; }
+    let cols = 1;
+    let rows = 1;
+    const byId = new Map();
+    for (const m of list) {
+      cols = Math.max(cols, (m.col | 0) + 1);
+      rows = Math.max(rows, (m.row | 0) + 1);
+      byId.set(m.id, m);
+    }
+    let lines = '';
+    for (const m of list) {
+      for (const rid of (m.requires || [])) {
+        const p = byId.get(rid);
+        if (!p) continue;
+        const cls = m.status === 'done' ? 'np-ml-done' : m.status === 'current' ? 'np-ml-open' : 'np-ml-dim';
+        lines += `<line class="${cls}" x1="${(p.col | 0) + 0.5}" y1="${(p.row | 0) + 0.62}"`
+          + ` x2="${(m.col | 0) + 0.5}" y2="${(m.row | 0) + 0.1}"/>`;
+      }
+    }
+    const svg = `<svg class="np-mt-lines" viewBox="0 0 ${cols} ${rows}" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>`;
+    const doneN = list.filter((m) => m.status === 'done').length;
+    const cells = list.map((m) => {
+      const state = m.status === 'done' ? 'Accomplished.'
+        : m.status === 'current' ? 'The realm may work at this now.'
+          : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
+            ? m.requiresNames.join(', ') : 'the missions before it') + '.';
+      const tt = m.name + '\n' + (m.desc || '')
+        + (m.rewardText ? '\nReward: ' + m.rewardText : '')
+        + '\n――――――\n' + state;
+      const arrow = (m.requires || []).length ? '<i class="np-mn-arrow"></i>' : '';
+      return `<div class="np-mn np-mn-${m.status}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}">`
+        + arrow
+        + `<span class="np-mn-medal">${icon(m.icon || 'scroll')}${m.status === 'done' ? '<i class="np-mn-tick">✓</i>' : ''}</span>`
+        + `<span class="np-mn-name">${esc(m.name)}</span></div>`;
+    }).join('');
+    setHtml(refs.missions,
+      `<div class="np-mt-sum">${doneN} of ${list.length} accomplished</div>`
+      + `<div class="np-mtree" style="--mt-cols:${cols}">${svg}${cells}</div>`);
   }
 
   // The doctrine axes (SPEC §85): four tensions of the age, each a slider
@@ -1194,9 +1246,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // Technology ladders (SPEC §22): level, next price (with the ahead-of-age
-  // markup), and the pattern of soldier the military ladder has unlocked.
+  // Technology (SPEC §22), worn like EU4's technology screen (SPEC §177):
+  // the institutions surcharge as a banner across the top, then one card per
+  // ladder — the level in a badge, what the ladder has already paid, a
+  // progress bar filling toward the next level's price with the months to
+  // affordability in its tooltip, the ahead-of-age markup in red — and under
+  // the military card a milestone strip of the pattern generations with the
+  // doctrine each one learns, struck through where the age itself ends.
   // Foreign courts show their levels and pattern, with no buy buttons.
+  const TECH_ICONS = { gov: 'scales', infl: 'scroll', mar: 'swords' };
   function refreshTech(t, self) {
     if (!refs.tech) return;
     if (!self) {
@@ -1216,15 +1274,32 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
     }
     if (!info) { setHtml(refs.tech, ''); return; }
-    const rows = info.rows.map((r) => {
-      const tt = `${r.desc}\nThe age expects level ${r.eraBase}.` + (r.whyNot ? '\n' + r.whyNot : '');
-      return `
-        <div class="np-reform">
-          <div class="np-reform-head"><b>${esc(r.name)}</b><span class="np-tech-lvl">${r.level}</span></div>
-          <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(tt)}">
-            Advance to ${r.level + 1}${r.ahead ? ' ⚠' : ''} <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>
-          </button>
-        </div>`;
+    let html = '';
+    if (info.instPct > 0) {
+      html += `<div class="np-tech-pen" data-tt="${esc('Institutions the world has taken up and this realm has not (SPEC §166).'
+        + '\nEvery level of every ladder costs +' + info.instPct + '% until they are embraced — see The World tab.')}">`
+        + `${icon('alert', 'icon-row')}<span>Institutions penalty</span><b>+${info.instPct}%</b></div>`;
+    }
+    html += info.rows.map((r) => {
+      const capped = !(r.cost > 0);
+      const fill = capped ? 100 : Math.max(0, Math.min(100, Math.round(100 * r.have / Math.max(1, r.cost))));
+      const head = `${r.desc}\nAlready paying: ${r.nowText || '—'}\nThe age expects level ${r.eraBase}.`;
+      const barTT = capped ? (r.whyNot || '')
+        : `${r.have} of the ${r.cost} ${r.point} points banked`
+          + (r.etaMonths > 0 ? ` — at +${r.gain} a month, affordable in ${r.etaMonths} month${r.etaMonths === 1 ? '' : 's'}.` : '.');
+      const era = r.level < r.eraBase
+        ? `<span class="np-tech-era np-te-behind" data-tt="${esc('The age expects level ' + r.eraBase + '; the realm is at ' + r.level + '.')}">age ${r.eraBase}</span>`
+        : r.ahead
+          ? `<span class="np-tech-era np-te-ahead" data-tt="${esc('Racing history: buying level ' + (r.level + 1) + ' before the age expects it costs +' + r.aheadPct + '%.')}">+${r.aheadPct}%</span>`
+          : `<span class="np-tech-era" data-tt="${esc('Keeping pace: the age expects level ' + r.eraBase + '.')}">age ${r.eraBase}</span>`;
+      return `<div class="np-techrow">
+        <div class="np-tech-head" data-tt="${esc(head)}">${icon(TECH_ICONS[r.key] || 'scroll', 'icon-k')}<b>${esc(r.name)}</b>${era}<span class="np-tech-lvl">${r.level}</span></div>
+        <div class="np-tech-bar" data-tt="${esc(barTT)}"><i class="np-tech-fill${capped ? ' np-tf-cap' : ''}" style="width:${fill}%"></i><span class="np-tech-bar-num">${capped ? '—' : r.have + ' / ' + r.cost}</span></div>
+        <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(head + (r.whyNot ? '\n' + r.whyNot : ''))}">
+          ${capped ? 'The ladder ends here' : `Advance to ${r.level + 1}${r.ahead ? ' ⚠' : ''}`}${capped ? '' : ` <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>`}
+        </button>
+        ${r.key === 'mar' ? milestoneStrip(info) : ''}
+      </div>`;
     }).join('');
     const u = info.unit;
     const selfGen = cappedGen((t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
@@ -1233,7 +1308,42 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
       + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
       + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
-    setHtml(refs.tech, rows + unitLine);
+    setHtml(refs.tech, html + unitLine);
+  }
+
+  // The military ladder's unlock milestones: each pattern generation as a
+  // chip — lit when reached, plain while it waits, struck through where the
+  // chapter's ceiling puts it beyond every century of this age.
+  function milestoneStrip(info) {
+    if (!Array.isArray(info.milestones) || !info.milestones.length) return '';
+    return `<div class="np-tech-miles">` + info.milestones.map((ms) => {
+      const cls = ms.reached ? ' np-ms-on' : ms.beyond ? ' np-ms-never' : '';
+      const tt = `Military ${ms.at} — ${ms.inf} & ${ms.cav}`
+        + (ms.doctrine ? `\nDoctrine: ${ms.doctrine} — ${ms.doctrineDesc}` : '')
+        + (ms.beyond ? '\nBeyond this age: no century of this chapter reaches it.'
+          : ms.reached ? '\nOurs.' : '');
+      return `<span class="np-ms${cls}" data-tt="${esc(tt)}">${icon('helmet', 'icon-sm')}${ms.at}</span>`;
+    }).join('') + `</div>`;
+  }
+
+  // The ledger (SPEC §177): the month's talents line by line, the way EU4's
+  // economy screen owns up to where the money went. Player's realm only —
+  // a foreign purse shows its totals up top and nothing more.
+  function refreshLedger(self) {
+    if (!refs.ledgerBlock) return;
+    let rows = null;
+    if (self && actions && typeof actions.explainIncome === 'function') {
+      try { rows = actions.explainIncome(ctx.game.playerTag); } catch (e) { warnOnce('np-ledger', e); }
+    }
+    const show = Array.isArray(rows) && rows.length > 0;
+    refs.ledgerBlock.classList.toggle('hidden', !show);
+    if (!show) return;
+    setHtml(refs.ledger, rows.map((r, i) => {
+      const v = Number(r.value) || 0;
+      return `<div class="np-led-row${i === rows.length - 1 ? ' np-led-total' : ''}">`
+        + `<span class="np-led-k">${esc(r.label)}</span>`
+        + `<span class="np-led-v ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}</span></div>`;
+    }).join(''));
   }
 
   // Three reform trees: tier pips, the next reform's name and price, one

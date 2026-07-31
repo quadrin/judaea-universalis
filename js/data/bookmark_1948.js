@@ -249,6 +249,7 @@ export const BOOKMARK_1948 = {
     // been gone for nineteen centuries — Faith hides itself here anyway,
     // because no Temple stands, but the other five have to read as 1948.
     tabCrown: 'State',
+    tabMissions: 'Objectives',
     tabCourt: 'Cabinet',
     tabCoin: 'Economy',
     tabWar: 'Defence',
@@ -1265,6 +1266,7 @@ export const BOOKMARK_1948 = {
     ISR: [
       {
         id: 'i_plain', name: 'Hold the Plain',
+        icon: 'walls', col: 1,
         desc: 'Keep the coastal spine: Joppa, Caesarea Maritima and Ptolemais.',
         rewardText: '+25 martial points.',
         check: (ctx) => ['Joppa', 'Caesarea Maritima', 'Ptolemais'].every((n) => ctx.helpers.controls(ctx, 'ISR', n)),
@@ -1272,6 +1274,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'i_jerusalem_road', name: 'The Road to Jerusalem',
+        icon: 'bricks', col: 1, requires: ['i_plain'],
         desc: 'Open the corridor: take Emmaus — Latrun — or build past it.',
         rewardText: '"The Burma Road": Jerusalem −2 unrest for 24 months.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Emmaus'),
@@ -1281,6 +1284,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'i_galilee', name: 'Galilee Whole',
+        icon: 'mountain', col: 0, requires: ['i_plain'],
         desc: 'Take Sepphoris and Gischala — Operations Dekel and Hiram.',
         rewardText: '+2,000 manpower (the northern villages mobilize).',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Sepphoris') && ctx.helpers.controls(ctx, 'ISR', 'Gischala'),
@@ -1288,6 +1292,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'i_yoav', name: 'Open the South',
+        icon: 'swords', col: 2, requires: ['i_plain'],
         desc: 'Break the Egyptian line: take Ascalon.',
         rewardText: '+25 martial points, +10 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Ascalon'),
@@ -1295,6 +1300,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'i_eilat', name: 'The Ink Flag',
+        icon: 'flag', col: 2, requires: ['i_yoav'],
         desc: 'Reach the Red Sea: take Aila — Eilat — and the state has two seas.',
         rewardText: '+15 legitimacy, +50 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Aila'),
@@ -1304,6 +1310,7 @@ export const BOOKMARK_1948 = {
     JOR: [
       {
         id: 'jr_latrun', name: 'Latrun Holds',
+        icon: 'tower', col: 1,
         desc: 'Keep Emmaus — the police fort commands the road, and the Legion holds forts.',
         rewardText: '+25 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Emmaus') && dateGE(ctx.game.date, 1948, 8),
@@ -1311,6 +1318,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'jr_oldcity', name: 'The Old City',
+        icon: 'temple', col: 0, requires: ['jr_latrun'],
         desc: 'Take Jerusalem — the King must pray where his father could not.',
         rewardText: '+20 legitimacy, +25 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Jerusalem'),
@@ -1318,6 +1326,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'jr_westbank', name: 'The Hill Country',
+        icon: 'mountain', col: 1, requires: ['jr_latrun'],
         desc: 'Hold the West Bank whole: Neapolis, Hebron and Jericho.',
         rewardText: '+1 stability.',
         check: (ctx) => ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n)),
@@ -1325,6 +1334,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'jr_solvent', name: 'A Kingdom Solvent',
+        icon: 'coins', col: 2,
         desc: 'End 1948 with a positive treasury — the Legion is paid in sterling.',
         rewardText: '+50 talents (London approves).',
         check: (ctx) => dateGE(ctx.game.date, 1949, 1)
@@ -1333,6 +1343,7 @@ export const BOOKMARK_1948 = {
       },
       {
         id: 'jr_armistice', name: 'Something to Show',
+        icon: 'scroll', col: 1, requires: ['jr_westbank'],
         desc: 'Reach 1949 holding Jerusalem or the whole hill country.',
         rewardText: '+25 legitimacy — the only Arab crown the war made heavier.',
         check: (ctx) => dateGE(ctx.game.date, 1949, 2)

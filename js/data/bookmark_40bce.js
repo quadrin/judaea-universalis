@@ -426,6 +426,7 @@ export const BOOKMARK_40 = {
     HER: [
       {
         id: 'h5_rome', name: 'The Voyage to Rome',
+        icon: 'ship', col: 1,
         desc: 'Kneel before the Senate and rise a king (the flight to Rome, by event).',
         rewardText: '+25 influence points.',
         check: (ctx) => !!ctx.helpers.getFlag(ctx, 'herodKing'),
@@ -433,6 +434,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'h5_coast', name: 'The Coast Road',
+        icon: 'market', col: 0, requires: ['h5_rome'],
         desc: 'Control Joppa and Lydda — the road to the city runs by the sea.',
         rewardText: '+100 talents of customs silver.',
         check: (ctx) => ctx.helpers.controls(ctx, 'HER', 'Joppa') && ctx.helpers.controls(ctx, 'HER', 'Lydda'),
@@ -440,6 +442,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'h5_galilee', name: 'Galilee Pacified',
+        icon: 'mountain', col: 2, requires: ['h5_rome'],
         desc: 'Control Sepphoris and Jotapata — the bandit country broken.',
         rewardText: '+1,500 manpower.',
         check: (ctx) => ctx.helpers.controls(ctx, 'HER', 'Sepphoris') && ctx.helpers.controls(ctx, 'HER', 'Jotapata'),
@@ -447,6 +450,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'h5_city', name: 'The City of David',
+        icon: 'temple', col: 1, requires: ['h5_coast', 'h5_galilee'],
         desc: 'Take Jerusalem.',
         rewardText: '+20 legitimacy — a crown made true.',
         check: (ctx) => ctx.helpers.controls(ctx, 'HER', 'Jerusalem'),
@@ -454,6 +458,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'h5_one_king', name: 'One King',
+        icon: 'star8', col: 1, requires: ['h5_city'],
         desc: 'The last Hasmonean extinguished or bent to clienthood.',
         rewardText: '+1 stability, +15 legitimacy.',
         check: (ctx) => {
@@ -466,6 +471,7 @@ export const BOOKMARK_40 = {
     ATG: [
       {
         id: 'a5_army', name: 'The King\'s Muster',
+        icon: 'spears', col: 1,
         desc: 'Keep ten thousand men under arms.',
         rewardText: '+1,500 manpower.',
         check: (ctx) => totalMen(ctx, 'ATG') >= 10000,
@@ -473,6 +479,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'a5_idumea', name: 'Into Idumea',
+        icon: 'mountain', col: 0, requires: ['a5_army'],
         desc: 'Take Hebron and Adora — strangle the pretender in his cradle-country.',
         rewardText: '+25 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ATG', 'Hebron') && ctx.helpers.controls(ctx, 'ATG', 'Adora'),
@@ -480,6 +487,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'a5_anointed', name: 'The Anointed King',
+        icon: 'altar', col: 2, requires: ['a5_army'],
         desc: 'Raise legitimacy to 60 — high priest and king, and seen to be both.',
         rewardText: '+25 influence points.',
         check: (ctx) => (ctx.game.tags.ATG.legitimacy || 0) >= 60,
@@ -487,6 +495,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'a5_masada', name: 'The Rock Must Fall',
+        icon: 'tower', col: 0, requires: ['a5_idumea'],
         desc: 'Take Masada, where the Idumean left his family.',
         rewardText: '+15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ATG', 'Masada'),
@@ -494,6 +503,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'a5_one_crown', name: 'The Last Hasmonean',
+        icon: 'star8', col: 1, requires: ['a5_masada', 'a5_anointed'],
         desc: 'The pretender extinguished or bent to clienthood.',
         rewardText: '+1 stability, +15 legitimacy.',
         check: (ctx) => {

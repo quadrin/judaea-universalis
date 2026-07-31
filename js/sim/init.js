@@ -24,7 +24,7 @@ import {
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName } from '../data/tech.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
@@ -35,7 +35,7 @@ import {
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
-import { rulerDies, missionsFor } from './realm.js';
+import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
@@ -1162,7 +1162,10 @@ export function gameActions(ctx) {
     return out;
   };
 
-  // The player's tech ladder, priced against the age (SPEC §22).
+  // The player's tech ladder, priced against the age (SPEC §22) and dressed
+  // for the panel (SPEC §177): points on hand, the monthly gain, the months
+  // to affordability, what the ladders have already paid, and the military
+  // ladder's unlock milestones.
   const techInfo = () => {
     const t = g.tags[g.playerTag];
     if (!t || !t.tech) return null;
@@ -1178,6 +1181,28 @@ export function gameActions(ctx) {
     // place on the map.
     const instMult = institutionMult(ctx, g.playerTag);
     const instPct = Math.round((instMult - 1) * 100);
+    // What the crown banks a month, per pool — the tick's own arithmetic:
+    // base 2, the ruler's skill, the advisor (capped at 3, silent while the
+    // treasury is ruined), and the rivalry drill for martial (SPEC §86).
+    const r = t.ruler || {};
+    const rivalN = declaredRivals(ctx, g.playerTag).filter((k) => g.tags[k] && g.tags[k].alive).length;
+    const gainOf = (k) => {
+      const skill = Math.max(0, Math.min(6, Number.isFinite(r[k]) ? r[k] : 2));
+      const a = t.advisors && t.advisors[k];
+      const adv = (a && num(t.treasury) > -200) ? Math.max(0, Math.min(3, num(a.skill, 1))) : 0;
+      const rival = (k === 'mar' && rivalN) ? num((ctx.DEFINES.BALANCE || {}).rivalMarPerMonth, 1) * rivalN : 0;
+      return 2 + skill + adv + rival;
+    };
+    // What the ladders have already paid, per ladder, from the one table that
+    // owns the formulas — the panel must never invent its own percentages.
+    const fx = computeTechEffects(t.tech);
+    const pct = (m) => Math.round((m - 1) * 100);
+    const nowText = {
+      gov: `+${pct(fx.incomeMult)}% income · ${fx.unrestAll.toFixed(2)} unrest · +${pct(fx.growthMult)}% growth`,
+      infl: `+${pct(fx.tradeMult)}% trade · +${pct(fx.navalMult)}% fleet strength`,
+      mar: `+${pct(fx.milPowerMult)}% army strength · +${pct(fx.manpowerMult)}% manpower`
+        + (fx.siegeBonus ? ` · +${fx.siegeBonus} siege` : ''),
+    };
     const rows = Object.keys(TECH_CATEGORIES).map((key) => {
       const cat = TECH_CATEGORIES[key];
       const level = num(t.tech[key]) | 0;
@@ -1186,12 +1211,18 @@ export function gameActions(ctx) {
       const mult = aheadMult(next, eraBase);
       const cost = atMax ? 0 : Math.round(techCost(next) * mult * instMult);
       const have = num(t.points[cat.point]);
+      const gain = gainOf(cat.point);
       const aheadTxt = mult > 1 ? 'ahead of the age: +' + Math.round((mult - 1) * 100) + '%' : '';
       const instTxt = instPct > 0 ? 'behind the world: +' + instPct + '%' : '';
       const both = [aheadTxt, instTxt].filter(Boolean).join(', ');
       return {
         key, name: cat.name, desc: cat.desc, point: cat.point,
         level, cost, eraBase,
+        have: Math.max(0, Math.round(have)),
+        gain,
+        etaMonths: (!atMax && have < cost && gain > 0) ? Math.ceil((cost - have) / gain) : 0,
+        aheadPct: !atMax && mult > 1 ? Math.round((mult - 1) * 100) : 0,
+        nowText: nowText[key],
         ahead: !atMax && mult > 1,
         behind: !atMax && instPct > 0,
         instPct,
@@ -1204,11 +1235,25 @@ export function gameActions(ctx) {
             : (both ? both.charAt(0).toUpperCase() + both.slice(1) + '.' : ''),
       };
     });
-    const gi = cappedGen(num(t.tech.mar) | 0, ctx.bookmark);
+    const marLevel = num(t.tech.mar) | 0;
+    const gi = cappedGen(marLevel, ctx.bookmark);
     // A pattern the age cannot reach is not "next" — it is not on the map.
     const nextGen = (UNIT_GENS[gi + 1] && UNIT_GENS[gi + 1].at <= ceiling) ? UNIT_GENS[gi + 1] : null;
+    // The military ladder's milestone strip (SPEC §177): every pattern
+    // generation past the first, the doctrine it learns, and whether this
+    // century can reach it at all.
+    const milestones = UNIT_GENS.map((u, i) => ({ u, i })).filter((x) => x.u.at > 0).map(({ u, i }) => {
+      const doct = DOCTRINES.find((d) => d.at === i) || null;
+      return {
+        at: u.at, inf: u.inf, cav: u.cav,
+        doctrine: doct ? doct.name : '',
+        doctrineDesc: doct ? doct.desc : '',
+        reached: marLevel >= u.at,
+        beyond: u.at > ceiling,
+      };
+    });
     return {
-      rows, eraBase, ceiling,
+      rows, eraBase, ceiling, instPct, milestones,
       unit: {
         gen: gi, inf: genName(gi, 'inf'), cav: genName(gi, 'cav'),
         nextAt: nextGen ? nextGen.at : null,
@@ -2870,20 +2915,58 @@ export function gameActions(ctx) {
       try { return crisisReport(ctx, g.playerTag); } catch (e) { warnOnce('getCrises', 'getCrises failed', e); return []; }
     },
 
-    // ---- missions (nation panel) ---------------------------------------------
+    // ---- missions (nation panel, SPEC §177) ----------------------------------
+    // The tree the panel draws: every mission with its id, grid seat and
+    // prerequisites resolved to names. A ladder comes back as one column of
+    // rows with implicit parent links, so the same renderer draws both.
     getMissions() {
       try {
         if (g.result) return [];
         const list = missionsFor(ctx, g.playerTag);
         const t = g.tags[g.playerTag];
         if (!Array.isArray(list) || !t) return [];
-        const idx = Math.max(0, num(t.missionIdx, 0) | 0);
-        return list.map((m, i) => ({
-          name: m.name || m.id,
-          desc: m.desc || '',
-          rewardText: m.rewardText || '',
-          status: i < idx ? 'done' : i === idx ? 'current' : 'locked',
-        }));
+        const tree = isMissionTree(list);
+        const done = missionDoneSet(t, list);
+        const ids = list.map((m, i) => missionId(m, i));
+        const nameOf = {};
+        list.forEach((m, i) => { nameOf[ids[i]] = m.name || ids[i]; });
+        // Grid seats: a declared col sticks (clamped to five, EU4's width); a
+        // declared row sticks; an undeclared row lands one below the deepest
+        // parent. A ladder is column zero, one row per mission.
+        const col = [];
+        const row = [];
+        list.forEach((m, i) => {
+          col[i] = tree ? Math.max(0, Math.min(4, num(m.col, 0) | 0)) : 0;
+          let r = Number.isFinite(m.row) ? Math.max(0, m.row | 0) : null;
+          if (r === null) {
+            if (tree && Array.isArray(m.requires) && m.requires.length) {
+              r = 0;
+              for (const rid of m.requires) {
+                const pi = ids.indexOf(String(rid));
+                if (pi >= 0 && pi < i && Number.isFinite(row[pi])) r = Math.max(r, row[pi] + 1);
+              }
+            } else r = tree ? 0 : i;
+          }
+          row[i] = r;
+        });
+        return list.map((m, i) => {
+          const id = ids[i];
+          const requires = tree
+            ? (Array.isArray(m.requires) ? m.requires.map(String).filter((rid) => rid !== id && ids.indexOf(rid) >= 0) : [])
+            : (i > 0 ? [ids[i - 1]] : []);
+          return {
+            id,
+            name: m.name || id,
+            desc: m.desc || '',
+            rewardText: m.rewardText || '',
+            icon: m.icon || '',
+            col: col[i], row: row[i],
+            requires,
+            requiresNames: requires.map((rid) => nameOf[rid]).filter(Boolean),
+            status: done.has(id) ? 'done'
+              : missionUnlocked(list, i, done, tree) ? 'current' : 'locked',
+          };
+        });
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
@@ -2962,7 +3045,7 @@ export function gameActions(ctx) {
           // has a chain of its own, a fresh set of missions to work through.
           if (b.grant) simHelpers.adjust(ctx, f.to, b.grant);
           if (b.modifier2) simHelpers.addTagModifier(ctx, f.to, b.modifier2);
-          if (Array.isArray(f.missions) && f.missions.length) nt.missionIdx = 0;
+          if (Array.isArray(f.missions) && f.missions.length) { nt.missionIdx = 0; nt.missionsDone = []; }
           ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
           ctx.bus.emit('provinceOwner', {}); // the map wears the new color
           say('A new banner', oldName + ' is no more: ' + (nt.name || f.to) + ' rises. The chronicle will remember this day.', 'good');
@@ -3241,6 +3324,9 @@ export function reviveGame(saved) {
     if (t.heir === undefined) t.heir = null;
     if (t.regency === undefined) t.regency = false;
     if (!Number.isFinite(t.missionIdx)) t.missionIdx = 0;
+    // Ladder-era saves carry no done list; missionDoneSet seeds it from
+    // missionIdx. Anything that is not an array is dropped, not trusted.
+    if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };

@@ -545,8 +545,13 @@ export const BOOKMARK_66 = {
   // Linear mission chains (realm panel). check/reward run through ctx.helpers.
   missions: {
     JUD: [
+      // The tree (SPEC §177): one root, then the war score, the coast and
+      // the Parthian east as branches that advance on their own. Rome's
+      // chain below stays a ladder on purpose — Vespasian's method WAS a
+      // sequence, and a tree would be a lie about it.
       {
         id: 'jm_arm_the_nation', name: 'Arm the Nation',
+        icon: 'spears', col: 1,
         desc: 'Put twenty thousand men under arms — the revolt must become an army.',
         rewardText: '"Levies of Zion": +10% manpower for 24 months.',
         check: (ctx) => totalMen(ctx, 'JUD') >= 20000,
@@ -556,6 +561,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_throw_back', name: 'Throw Back the Governor',
+        icon: 'swords', col: 0, requires: ['jm_arm_the_nation'],
         desc: 'Bloody the legions: reach +10 war score against Rome.',
         rewardText: '+25 martial points.',
         check: (ctx) => judWarscore(ctx) >= 10,
@@ -563,6 +569,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_coastal_road', name: 'The Coastal Road',
+        icon: 'ship', col: 1, requires: ['jm_arm_the_nation'],
         desc: 'Take Caesarea Maritima, seat of the procurators and gate of the sea.',
         rewardText: 'The procurator\'s treasury: +100 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
@@ -570,6 +577,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_diaspora', name: 'Brothers of the Diaspora',
+        icon: 'diaspora', col: 2, requires: ['jm_arm_the_nation'],
         desc: 'Win the East: gain Parthian sympathy, or raise their opinion of us to +80.',
         rewardText: 'Silver and volunteers: +100 talents, +2,000 manpower.',
         check: (ctx) => !!ctx.helpers.getFlag(ctx, 'parthianSympathy')
@@ -578,6 +586,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_samaria', name: 'Cleanse Samaria',
+        icon: 'mountain', col: 1, requires: ['jm_coastal_road'],
         desc: 'Take Shechem and Sebaste, and hold the spine of the hill country.',
         rewardText: '+10 legitimacy, +25 governance points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Neapolis') && ctx.helpers.controls(ctx, 'JUD', 'Sebaste'),
@@ -585,6 +594,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'jm_freedom_of_zion', name: 'The Freedom of Zion',
+        icon: 'laurel', col: 0, requires: ['jm_throw_back'],
         desc: 'Reach +25 war score against Rome — make the revolt a fact of empire.',
         rewardText: '"Year One" coinage: +15% income permanently, +15 legitimacy.',
         check: (ctx) => judWarscore(ctx) >= 25,
@@ -599,6 +609,7 @@ export const BOOKMARK_66 = {
     ROM: [
       {
         id: 'rm_secure_coast', name: 'Secure the Coast',
+        icon: 'ship',
         desc: 'Hold Caesarea Maritima and Ptolemais, and take Joppa: the sea must be Roman.',
         rewardText: '+25 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Caesarea Maritima')
@@ -608,6 +619,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'rm_reduce_galilee', name: 'Reduce Galilee',
+        icon: 'flame',
         desc: 'Take all five fortified towns of Galilee — Vespasian\'s method: the countryside first.',
         rewardText: '"Methodical Reduction": +1 siege bonus for 24 months.',
         check: (ctx) => ['Sepphoris', 'Jotapata', 'Tiberias', 'Tarichaea', 'Gischala']
@@ -618,6 +630,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'rm_ring_closes', name: 'The Ring Closes',
+        icon: 'tower',
         desc: 'Take Emmaus, Jericho and Lydda; no supply or sally must reach Jerusalem.',
         rewardText: 'Plunder of the approaches: +100 talents.',
         check: (ctx) => ['Emmaus', 'Jericho', 'Lydda'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
@@ -625,6 +638,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'rm_jerusalem', name: 'Jerusalem Must Fall',
+        icon: 'temple',
         desc: 'Take the city itself.',
         rewardText: '+15 legitimacy, +25 of every monarch point: a triumph in all but name.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Jerusalem'),
@@ -632,6 +646,7 @@ export const BOOKMARK_66 = {
       },
       {
         id: 'rm_desert_forts', name: 'No Stone Upon Stone',
+        icon: 'walls',
         desc: 'Reduce the last desert fortresses: Masada, Machaerus, Engaddi.',
         rewardText: '+1 stability — the East is quiet.',
         check: (ctx) => ['Masada', 'Machaerus', 'Engaddi'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),

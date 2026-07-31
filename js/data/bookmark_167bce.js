@@ -698,8 +698,12 @@ export const BOOKMARK_167 = {
   // Linear mission chains (realm panel).
   missions: {
     HAS: [
+      // The tree (SPEC §177): the rising's root, then the war of the passes
+      // and the war for the city as parallel branches — a stalled siege no
+      // longer holds the ambush war hostage, nor the other way around.
       {
         id: 'hm_hills', name: 'The Hills Are Ours',
+        icon: 'mountain', col: 1,
         desc: 'Put eight thousand men under arms in the Gophna country.',
         rewardText: 'The villages send their sons: +1,500 manpower.',
         check: (ctx) => totalMen(ctx, 'HAS') >= 8000,
@@ -707,6 +711,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hm_ascents', name: 'Masters of the Ascents',
+        icon: 'spears', col: 0, requires: ['hm_hills'],
         desc: 'Bleed the king\'s columns in the passes: reach +10 war score against the Seleucids.',
         rewardText: '+25 martial points.',
         check: (ctx) => hasWarscore(ctx) >= 10,
@@ -714,6 +719,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hm_city', name: 'The Road to the City',
+        icon: 'temple', col: 2, requires: ['hm_hills'],
         desc: 'Take Jerusalem and the Temple mount.',
         rewardText: '+20 legitimacy, +25 governance points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'HAS', 'Jerusalem'),
@@ -721,6 +727,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hm_heartland', name: 'Heirs of David',
+        icon: 'grain', col: 2, requires: ['hm_city'],
         desc: 'Hold six provinces of the faith.',
         rewardText: '+1 stability.',
         check: (ctx) => ctx.helpers.countControlled(ctx, 'HAS', { religion: 'judaism' }) >= 6,
@@ -728,6 +735,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hm_freedom', name: 'The Yoke Is Broken',
+        icon: 'laurel', col: 0, requires: ['hm_ascents'],
         desc: 'Reach +25 war score — make the kingdom of the Greeks let go.',
         rewardText: 'Our own shekels: +15% income permanently, +10 legitimacy.',
         check: (ctx) => hasWarscore(ctx) >= 25,
@@ -740,8 +748,12 @@ export const BOOKMARK_167 = {
       },
     ],
     SEL: [
+      // The king's tree (SPEC §177): the war in Judaea down one side, the
+      // kingdom's own housekeeping down the other, converging on the army
+      // only a solvent, orderly empire can pay for.
       {
         id: 'sm_order', name: 'One Law for All',
+        icon: 'swords', col: 0,
         desc: 'Break the rising\'s momentum: reach +10 war score against the Hasmoneans.',
         rewardText: '+25 martial points.',
         check: (ctx) => {
@@ -752,6 +764,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'sm_gophna', name: 'Burn Out the Nest',
+        icon: 'flame', col: 0, requires: ['sm_order'],
         desc: 'Take Emmaus and Lydda, the rebellion\'s hill-country base.',
         rewardText: 'Plunder and confiscations: +100 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'SEL', 'Emmaus') && ctx.helpers.controls(ctx, 'SEL', 'Lydda'),
@@ -759,6 +772,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'sm_kings_peace', name: 'The King\'s Peace',
+        icon: 'scales', col: 2,
         desc: 'Restore order across the satrapies: reach +2 stability.',
         rewardText: '+25 governance points.',
         check: (ctx) => (ctx.game.tags.SEL.stability || 0) >= 2,
@@ -766,6 +780,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'sm_mint', name: 'The Royal Mint',
+        icon: 'coins', col: 2, requires: ['sm_kings_peace'],
         desc: 'Fill the treasury to 400 talents.',
         rewardText: '"Royal Mint": +10% income for 24 months.',
         check: (ctx) => (ctx.game.tags.SEL.treasury || 0) >= 400,
@@ -775,6 +790,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'sm_grand_army', name: 'The Grand Army',
+        icon: 'helmet', col: 1, requires: ['sm_gophna', 'sm_mint'],
         desc: 'Field thirty thousand men.',
         rewardText: '"Phalanx Drill": +5% discipline for 12 months.',
         check: (ctx) => totalMen(ctx, 'SEL') >= 30000,

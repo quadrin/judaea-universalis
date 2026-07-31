@@ -683,6 +683,7 @@ export const BOOKMARK_529 = {
     SAM: [
       {
         id: 's_sebaste', name: 'The Knife in the Middle',
+        icon: 'flame', col: 0,
         desc: 'Take Sebaste — Herod\'s Greek foundation, five miles from Neapolis, garrisoned.',
         rewardText: '+15 legitimacy, +20 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'SAM', 'Sebaste'),
@@ -690,6 +691,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 's_host', name: 'The Men of the Hills',
+        icon: 'spears', col: 2,
         desc: 'Field eight thousand men — a rising that cannot hold a line is a riot.',
         rewardText: '"The Villages Muster": +10% manpower for 24 months.',
         check: (ctx) => totalMen(ctx, 'SAM') >= 8000,
@@ -700,6 +702,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 's_caesarea', name: 'The Provincial Capital',
+        icon: 'ship', col: 1, requires: ['s_sebaste', 's_host'],
         desc: 'Take Caesarea Maritima — the seat of the dux, the port, and the quarter '
           + 'where both risings actually began.',
         rewardText: '+120 talents and the customs house.',
@@ -708,6 +711,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 's_endure', name: 'A People, Not an Episode',
+        icon: 'lamp', col: 1, requires: ['s_caesarea'],
         desc: 'Reach 560 with six provinces of the Keepers\' Torah still on the map.',
         rewardText: '"The Keepers Keep": +0.3 legitimacy a month, permanently.',
         check: (ctx) => dateGE(ctx.game.date, 560, 1) && keeperProvinces(ctx) >= 6,
@@ -720,6 +724,7 @@ export const BOOKMARK_529 = {
     BYZ: [
       {
         id: 'b_neapolis', name: 'The Town Below the Mountain',
+        icon: 'shield', col: 0,
         desc: 'Hold Neapolis — the rising has a capital and it is five miles from your garrison.',
         rewardText: '+15 legitimacy, +20 governance points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Neapolis'),
@@ -727,6 +732,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 'b_quiet', name: 'A Quiet Province',
+        icon: 'scales', col: 0, requires: ['b_neapolis'],
         desc: 'Hold every one of the four hill provinces at once.',
         rewardText: '+150 talents — the assessment resumes.',
         check: (ctx) => ['Neapolis', 'Jenin', 'Tulkarm', 'Qalqilya']
@@ -735,6 +741,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 'b_east', name: 'The War That Matters',
+        icon: 'flag', col: 2,
         desc: 'Keep Antioch, Edessa and Amida while Samaria is settled — the Persian truce '
           + 'was never going to hold.',
         rewardText: '"The East Held": +5% discipline for 36 months.',

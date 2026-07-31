@@ -644,13 +644,31 @@ export function monthlyHolySites(ctx) {
 }
 
 // ---------------------------------------------------------------- missions
-// bookmark.missions = { TAG: [ {id, name, desc, rewardText, icon?, check(ctx), reward(ctx)} ] }
-// Linear chains; t.missionIdx points at the current mission. Checked monthly
-// for every tag with a chain (the AI earns its rewards too — symmetric odds).
-// The chain of missions a realm is working through (SPEC §102). The era's own
-// table answers first; a nation that took a greater crown reads the chain that
-// crown carries instead — the Kingdom of Israel is not asked to finish
-// Judaea's war objectives, it is asked to do the things a kingdom does.
+// bookmark.missions = { TAG: [ {id, name, desc, rewardText, icon?, col?, row?,
+//   requires?: [ids], check(ctx), reward(ctx)} ] }
+// The chain of missions a realm is working through (SPEC §102), checked
+// monthly for every tag with a chain (the AI earns its rewards too —
+// symmetric odds). The era's own table answers first; a nation that took a
+// greater crown reads the chain that crown carries instead — the Kingdom of
+// Israel is not asked to finish Judaea's war objectives, it is asked to do
+// the things a kingdom does.
+//
+// Two shapes share one table (SPEC §177). A chain where no mission names a
+// prerequisite is the old LADDER: each mission implicitly requires the one
+// before it, and they complete strictly in order. A chain where any mission
+// declares `requires` (or claims a grid `col`) is a TREE: a mission unlocks
+// when every prerequisite is done, a mission with none is a root, and
+// parallel branches advance independently — a stalled war no longer holds
+// the building program hostage, which is the entire reason EU4 draws these
+// as trees. `col`/`row`/`icon` are layout, owned by the panel; the sim reads
+// only `requires`.
+//
+// The record is `t.missionsDone`, the ids completed, in table order.
+// `t.missionIdx` stays maintained as the longest completed PREFIX of the
+// table: on a ladder that is exactly the old cursor (every save and test
+// that reads or writes it keeps its meaning), and a hand-moved missionIdx —
+// an old save, a test forcing a chain forward — is honored by seeding the
+// first missionIdx missions as done, which is what it always meant.
 export function missionsFor(ctx, tag) {
   const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
   if (Array.isArray(own) && own.length) return own;
@@ -660,6 +678,58 @@ export function missionsFor(ctx, tag) {
     return f.missions;
   }
   return null;
+}
+
+export function missionId(m, i) {
+  return (m && m.id) ? String(m.id) : 'm' + i;
+}
+
+// Tree or ladder? Any explicit prerequisite (or a claimed column) makes it a tree.
+export function isMissionTree(list) {
+  return Array.isArray(list) && list.some((m) => m
+    && ((Array.isArray(m.requires) && m.requires.length) || Number.isFinite(m.col)));
+}
+
+// The set of completed mission ids for a tag. `missionsDone` is the record;
+// the first `missionIdx` missions in table order are ALSO done — that is the
+// invariant the ladder era wrote into every save, and unioning it in is what
+// lets an old save (or a test that sets missionIdx by hand) keep working.
+// Safe in both directions because writeMissionState keeps missionIdx at the
+// longest done prefix, never the raw count.
+export function missionDoneSet(t, list) {
+  const done = new Set();
+  if (Array.isArray(t && t.missionsDone)) {
+    for (const id of t.missionsDone) done.add(String(id));
+  }
+  const idx = Math.max(0, num(t && t.missionIdx, 0) | 0);
+  for (let i = 0; i < Math.min(idx, list.length); i++) done.add(missionId(list[i], i));
+  return done;
+}
+
+// May mission `i` be worked on? Explicit prerequisites answer first; in a
+// tree a mission without any is a root; on a ladder it needs its predecessor.
+export function missionUnlocked(list, i, done, tree) {
+  const m = list[i];
+  if (m && Array.isArray(m.requires) && m.requires.length) {
+    for (const id of m.requires) if (!done.has(String(id))) return false;
+    return true;
+  }
+  if (tree) return true;
+  return i === 0 || done.has(missionId(list[i - 1], i - 1));
+}
+
+// Write the done set back: `missionsDone` in table order (ids from other
+// chains — a crown formed mid-campaign — are dropped with the chain that
+// owned them), `missionIdx` as the longest completed prefix.
+function writeMissionState(t, list, done) {
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    if (done.has(missionId(list[i], i))) out.push(missionId(list[i], i));
+  }
+  t.missionsDone = out;
+  let prefix = 0;
+  while (prefix < list.length && done.has(missionId(list[prefix], prefix))) prefix++;
+  t.missionIdx = prefix;
 }
 
 export function checkMissions(ctx) {
@@ -677,26 +747,42 @@ export function checkMissions(ctx) {
     const list = missionsFor(ctx, tag);
     if (!t || !t.alive || !Array.isArray(list)) continue;
     try {
-      let idx = Math.max(0, num(t.missionIdx, 0) | 0);
-      let guard = 0;
-      while (idx < list.length && guard++ < 3) {
-        const m = list[idx];
-        if (!m || typeof m.check !== 'function') break;
-        let ok = false;
-        try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + m.id, 'mission check threw', m.id, e); }
-        if (!ok) break;
-        try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + m.id, 'mission reward threw', m.id, e); }
-        idx++;
-        t.missionIdx = idx;
-        if (tag === g.playerTag) {
-          ctx.bus.emit('notify', {
-            title: 'Mission complete — ' + (m.name || m.id),
-            text: m.rewardText || 'The realm advances.',
-            type: 'good',
-          });
+      const tree = isMissionTree(list);
+      const done = missionDoneSet(t, list);
+      // Up to three completion WAVES a month — the ladder's old guard, kept:
+      // finishing a mission can unlock children a realm already qualifies
+      // for, and they should not wait a month per generation, but a cascade
+      // straight to the capstone stays impossible. Unlocks are judged
+      // against the wave's OPENING state (a completion only feeds the next
+      // wave), so depth is genuinely capped at three; parallel branches may
+      // each complete in the same wave — that is the point of branches.
+      let waves = 0;
+      let moved = true;
+      while (moved && waves++ < 3) {
+        moved = false;
+        const opened = new Set(done);
+        for (let i = 0; i < list.length; i++) {
+          const m = list[i];
+          if (!m || typeof m.check !== 'function') continue;
+          const id = missionId(m, i);
+          if (done.has(id)) continue;
+          if (!missionUnlocked(list, i, opened, tree)) continue;
+          let ok = false;
+          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+          if (!ok) continue;
+          try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
+          done.add(id);
+          moved = true;
+          if (tag === g.playerTag) {
+            ctx.bus.emit('notify', {
+              title: 'Mission complete — ' + (m.name || id),
+              text: m.rewardText || 'The realm advances.',
+              type: 'good',
+            });
+          }
         }
       }
-      t.missionIdx = idx;
+      writeMissionState(t, list, done);
     } catch (e) { warnOnce('missions:' + tag, 'missions failed for', tag, e); }
   }
 }

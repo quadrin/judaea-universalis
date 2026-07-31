@@ -2113,8 +2113,8 @@ html, body {
 }
 .np-acts [data-act="requestParthianAid"] { grid-column: 1 / -1; }
 
-/* missions: laurel = done, quill = current, dim = locked */
-.np-missions { display: flex; flex-direction: column; }
+/* objective rows (the chapters still wear these): laurel = done, quill =
+   current, dim = locked */
 .np-mission {
   display: flex;
   align-items: center;
@@ -2130,6 +2130,104 @@ html, body {
 .np-m-current .np-m-name { color: var(--ink); }
 .np-m-current .np-m-mark { color: var(--red-deep); }
 .np-m-locked { opacity: 0.5; }
+
+/* The mission tree (SPEC §177): EU4's grid of medallions. Rows are a fixed
+   height because the connector SVG addresses cells in grid units through a
+   stretched viewBox — a fractional y has to mean the same thing in every
+   row, or the lines land beside their missions. */
+.np-mt-sum { font-size: 11.5px; font-style: italic; color: var(--ink-soft); padding: 0 2px 6px; }
+.np-mtree {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--mt-cols, 1), minmax(0, 1fr));
+  grid-auto-rows: 96px;
+}
+.np-mt-lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.np-mt-lines line { vector-effect: non-scaling-stroke; stroke-width: 2px; }
+.np-mt-lines .np-ml-done { stroke: #8a6d1a; }
+.np-mt-lines .np-ml-open { stroke: var(--gold); }
+.np-mt-lines .np-ml-dim { stroke: rgba(85, 69, 46, 0.4); stroke-dasharray: 3 3; }
+.np-mn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+  min-width: 0;
+}
+.np-mn-arrow {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid rgba(85, 69, 46, 0.55);
+}
+.np-mn-current .np-mn-arrow { border-top-color: var(--gold); }
+.np-mn-done .np-mn-arrow { border-top-color: #8a6d1a; }
+.np-mn-medal {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(85, 69, 46, 0.55);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(242, 233, 210, 0.95), rgba(214, 198, 162, 0.95)),
+    var(--parch-dark);
+  box-shadow: inset 0 0 0 2px rgba(232, 220, 192, 0.6), 0 1px 2px rgba(20, 16, 11, 0.35);
+  color: var(--ink-soft);
+}
+.np-mn-medal .icon { width: 24px; height: 24px; }
+.np-mn-name {
+  margin-top: 4px;
+  padding: 0 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  max-width: min(100%, 84px);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ink-soft);
+  /* a parchment veil, so a connector running to the row below ducks behind
+     the words instead of striking them through */
+  background: rgba(232, 220, 192, 0.85);
+  border-radius: 3px;
+}
+.np-mn-current .np-mn-medal {
+  border-color: var(--gold);
+  color: var(--red-deep);
+  box-shadow: inset 0 0 0 2px rgba(230, 197, 84, 0.55), 0 0 7px rgba(201, 162, 39, 0.5);
+}
+.np-mn-current .np-mn-name { color: var(--ink); }
+.np-mn-done .np-mn-medal { border-color: #8a6d1a; color: #8a6d1a; }
+.np-mn-locked { opacity: 0.55; }
+.np-mn-locked .np-mn-medal { filter: grayscale(0.5); }
+.np-mn-tick {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #6f8a3d;
+  color: var(--parch-hi);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(43, 32, 21, 0.4);
+}
 
 /* the chapters (SPEC §83): the sandbox second act's live contract */
 .np-chapter { display: flex; flex-direction: column; }
@@ -2780,7 +2878,9 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   font-weight: 700;
 }
 
-/* technology (v2.2): ladder levels + the current pattern of soldier */
+/* technology (v2.2, redressed SPEC §177): the EU4 wear — the institutions
+   penalty banner, one card per ladder with a progress bar filling toward the
+   next level's price, the era chip, and the military milestone strip */
 .np-tech-lvl {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
@@ -2796,6 +2896,93 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   padding: 4px 2px 0;
   font-style: italic;
 }
+.np-techs { display: flex; flex-direction: column; }
+.np-tech-pen {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--parch-hi);
+  background: linear-gradient(180deg, rgba(168, 50, 50, 0.92), rgba(124, 31, 31, 0.92));
+  border: 1px solid rgba(124, 31, 31, 0.8);
+  border-radius: 4px;
+}
+.np-tech-pen b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.np-techrow { padding: 6px 0 8px; border-bottom: 1px dotted rgba(85, 69, 46, 0.25); }
+.np-techrow:last-of-type { border-bottom: none; }
+.np-tech-head { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-bottom: 3px; }
+.np-tech-head b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-tech-era {
+  font-size: 10.5px;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  border: 1px solid rgba(85, 69, 46, 0.35);
+  border-radius: 8px;
+  padding: 0 7px;
+  white-space: nowrap;
+}
+.np-te-behind { color: var(--red-deep); border-color: rgba(124, 31, 31, 0.5); }
+.np-te-ahead { color: var(--parch-hi); background: var(--red); border-color: var(--red-deep); font-weight: 700; }
+.np-tech-bar {
+  position: relative;
+  height: 13px;
+  margin: 2px 0 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(85, 69, 46, 0.18);
+  border: 1px solid rgba(85, 69, 46, 0.3);
+}
+.np-tech-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  background: linear-gradient(180deg, #8c9c55, #6f8a3d);
+  transition: width 0.3s ease;
+}
+.np-tf-cap { background: rgba(138, 109, 26, 0.5); }
+.np-tech-bar-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 3px rgba(242, 233, 210, 0.7);
+}
+.np-tech-miles { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.np-ms {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(85, 69, 46, 0.4);
+  border-radius: 9px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.np-ms-on {
+  color: #4a3a14;
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.35), rgba(201, 162, 39, 0.14));
+  border-color: rgba(138, 109, 26, 0.7);
+}
+.np-ms-never { opacity: 0.45; text-decoration: line-through; }
+
+/* the ledger (SPEC §177): EU4's economy lines, in talents a month */
+.np-ledger { font-size: 12.5px; }
+.np-led-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px; }
+.np-led-k { color: var(--ink-soft); }
+.np-led-v { font-variant-numeric: tabular-nums; }
+.np-led-total { margin-top: 3px; padding-top: 4px; border-top: 1px solid rgba(85, 69, 46, 0.4); font-weight: 700; }
+.np-led-total .np-led-k { color: var(--ink); }
 
 /* the chronicle (v2.1): the world's recorded history, newest first */
 #chronicle-modal { position: absolute; inset: 0; z-index: 110; pointer-events: auto; }
@@ -3127,6 +3314,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    other. Both resolve to `display:none !important`, so whichever says hide
    wins, which is the behaviour wanted in every combination. */
 #nation-panel[data-tab='crown'] [data-tab]:not([data-tab='crown']),
+#nation-panel[data-tab='missions'] [data-tab]:not([data-tab='missions']),
 #nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
 #nation-panel[data-tab='coin'] [data-tab]:not([data-tab='coin']),
 #nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
