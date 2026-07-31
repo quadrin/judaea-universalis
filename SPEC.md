@@ -9241,3 +9241,32 @@ per §160: passage is not possession.
   chapter's final spring — on the new RNG stream a §87 rising held Jerusalem
   the one June the terminal card checks, which made a 63,000-tick assertion
   into a claim about a seed.
+
+### The label was the first thing the filled map showed wrong
+
+The first screenshot of the 1948 west had BRITAIN floating in the Tyrrhenian
+sea and FRANCE in the western Mediterranean. Not §173's data — the nation
+label's anchor was one area-weighted centroid over every owned province
+(labels.js, unchanged since §5.6), and the midpoint of an empire is mostly
+water. The old map never showed it because the old map had no realm whose
+parts faced each other across a sea this wide; 1948 Britain owns the home
+islands, Cyprus and Libya, and the average of those is a point off Sardinia.
+
+The anchor is now the realm's principal landmass: components by land
+adjacency among the realm's own provinces, chosen by DEVELOPMENT rather than
+pixels — a realm is principally where its people are, and by area alone the
+Marmarican desert out-labels the home islands and the Sahara out-labels the
+Seine. The capital's component takes the name only against a near-tie (60%
+of the principal's rolls): Denmark is named at Copenhagen over the
+slightly-heavier Jutland, and Britain is NOT named at its static seat on
+Cyprus, which holds a quarter of the realm's development and is exactly the
+case a share-of-the-total threshold got wrong on the first try. Font size
+stays keyed to the whole realm and the anchor is the area centroid within
+the chosen landmass, so a realm of one landmass — most of them, in most
+eras — renders exactly as before.
+
+- **Regression contract**: `smoke108` places the real label pass headlessly
+  over four eras and pins the bug class, not the layout: every nation label
+  within 700 px of its own land (the Tyrrhenian miss measured ~1,600), plus
+  the three 1948 anchors by name — Britain on the island, France on the
+  métropole, Denmark at its capital.

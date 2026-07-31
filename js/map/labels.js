@@ -86,29 +86,98 @@ export function createLabels(el, MAP_DATA, geom) {
             place(used++, p.name, sx, sy, Math.min(22, raw), color, 'prov');
           }
         } else {
-          // nation names: owner-weighted centroid over owned provinces
-          const agg = new Map();
+          // Nation names, anchored on the realm's PRINCIPAL LANDMASS (SPEC
+          // §173). The anchor used to be one area-weighted centroid over
+          // every owned province, and the midpoint of an empire is mostly
+          // water: 1948 Britain owns the home islands, Cyprus and Libya, and
+          // BRITAIN floated in the Tyrrhenian sea between them; FRANCE
+          // (métropole plus the Maghreb and the Fezzan) sat in the western
+          // Mediterranean. Group each realm's provinces into connected
+          // components by land adjacency; the principal one is chosen by
+          // DEVELOPMENT, not by pixels — a realm is principally where its
+          // people are, and by area alone the Marmarican desert out-labels
+          // the home islands and the Sahara out-labels the Seine. The
+          // capital's component takes precedence when it holds any real
+          // share of the realm (a court is named where it is ruled from),
+          // but Britain's static seat is Salamis on Cyprus, and a sliver
+          // must not carry the name. Font size stays keyed to the WHOLE
+          // realm and the anchor is the area centroid WITHIN the chosen
+          // landmass, so a realm of one landmass (most of them, in most
+          // eras) renders exactly as before.
+          const ownProvs = new Map(); // tag -> [id]
           for (let id = 1; id <= N; id++) {
             const p = provs[id];
             if (!p || p.impassable) continue;
             const tag = p.owner;
             if (!tag || tag === 'WASTE') continue;
-            const a = geom.areas[id];
-            if (!a) continue;
-            const c = geom.centroids[id];
-            let g = agg.get(tag);
-            if (!g) { g = { a: 0, x: 0, y: 0 }; agg.set(tag, g); }
-            g.a += a;
-            g.x += c.x * a;
-            g.y += c.y * a;
+            if (!geom.areas[id] || !geom.centroids[id]) continue;
+            let list = ownProvs.get(tag);
+            if (!list) { list = []; ownProvs.set(tag, list); }
+            list.push(id);
           }
           const TAGS = (ctx.DEFINES && ctx.DEFINES.TAGS) || {};
-          for (const [tag, g] of agg) {
+          // The seat's landmass takes the name only against a NEAR-TIE: it
+          // must carry this share of the principal component's development.
+          // Denmark is named at Copenhagen over the slightly-larger Jutland;
+          // Britain is still named on the island and not at its static seat
+          // on Cyprus, which holds a quarter of the realm's rolls and is
+          // exactly the case a from-the-total threshold got wrong.
+          const CAPITAL_TIE = 0.6;
+          const devOf = (p) => (p && p.dev
+            ? (p.dev.tax || 0) + (p.dev.prod || 0) + (p.dev.mp || 0) : 0);
+          const compOf = new Int32Array(N + 1); // scratch: 0 = unvisited this tag
+          for (const [tag, list] of ownProvs) {
             const info = ctx.game.tags[tag] || TAGS[tag];
             const name = (info && info.name) || tag;
-            const raw = Math.sqrt(g.a) * zoom * TAG_SIZE_K;
+            let total = 0;
+            for (const id of list) total += geom.areas[id];
+            const raw = Math.sqrt(total) * zoom * TAG_SIZE_K;
             if (raw < TAG_MIN_PX) continue;
-            const [sx, sy] = camera.mapToScreen(g.x / g.a, g.y / g.a);
+            // Flood the realm's own provinces into components.
+            for (const id of list) compOf[id] = 0;
+            const comps = [];
+            for (const seed of list) {
+              if (compOf[seed]) continue;
+              const comp = { a: 0, d: 0, x: 0, y: 0 };
+              comps.push(comp);
+              const mark = comps.length;
+              const stack = [seed];
+              compOf[seed] = mark;
+              while (stack.length) {
+                const id = stack.pop();
+                const a = geom.areas[id];
+                const c = geom.centroids[id];
+                comp.a += a;
+                comp.d += devOf(provs[id]);
+                comp.x += c.x * a;
+                comp.y += c.y * a;
+                const nbs = geom.neighbors && geom.neighbors[id];
+                if (!nbs) continue;
+                for (const nb of nbs) {
+                  if (compOf[nb] || !provs[nb] || provs[nb].owner !== tag) continue;
+                  if (provs[nb].impassable || !geom.areas[nb] || !geom.centroids[nb]) continue;
+                  compOf[nb] = mark;
+                  stack.push(nb);
+                }
+              }
+            }
+            let best = comps[0];
+            for (const comp of comps) {
+              if (comp.d > best.d || (comp.d === best.d && comp.a > best.a)) best = comp;
+            }
+            try {
+              const capName = (ctx.game.tags[tag] && ctx.game.tags[tag].dynamicCapital)
+                || (ctx.tagDef ? ctx.tagDef(tag).capital : (TAGS[tag] || {}).capital);
+              const capId = capName && ctx.provId ? ctx.provId(capName) : 0;
+              // The seat must be the realm's OWN province: compOf is scratch
+              // across tags, and a foreign capital (Britain's Salamis under
+              // siege, a court in exile) must not read another realm's marks.
+              const capOurs = capId && provs[capId] && provs[capId].owner === tag;
+              const seat = capOurs && compOf[capId] ? comps[compOf[capId] - 1] : null;
+              if (seat && seat.d >= best.d * CAPITAL_TIE) best = seat;
+            } catch (e) { warnOnce('cap:' + tag, 'capital anchor failed for', tag, e); }
+            if (!best || !best.a) continue;
+            const [sx, sy] = camera.mapToScreen(best.x / best.a, best.y / best.a);
             if (sx < -260 || sy < -80 || sx > vw + 260 || sy > vh + 80) continue;
             const col = info && info.color
               ? `rgba(${Math.round(info.color[0] * 0.42)},${Math.round(info.color[1] * 0.42)},${Math.round(info.color[2] * 0.42)},0.95)`
