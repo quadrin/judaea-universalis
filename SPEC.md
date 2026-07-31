@@ -4376,7 +4376,8 @@ stopped, because every one of those tables is keyed by tag.
   the NEW tag; `missionsFor` prefers the bookmark's own table and falls back to
   the crown's. The Kingdom of Israel gets four (settle the crown, muster the
   kingdom, the land of the twelve, build rather than hold) and the restored
-  Hasmonean crown three; forming resets the chain to its first line.
+  Hasmonean crown three; forming resets the chain to its first line. Those four
+  are now the SPINE of a per-chapter tree — see §189 for the branches.
 - **Its own payoff**: each crown now pays differently — coin, men and
   ministries (`bonus.grant`) plus a second permanent modifier that says what
   that kingdom is FOR. The Kingdom of Israel's Law Is the Charter (manpower,
@@ -10518,3 +10519,78 @@ foreign court's read-only pips travel with the block and render from
   contract (every section names a declared tab, no tab is dead, the shell is
   never re-templated) is unchanged and still passes, and `uitest8` / `uitest37`
   hold the Coin tab's buy path to one press as before.
+
+## 189. The crown speaks in the age it was crowned in
+
+§102 gave the Kingdom of Israel a programme of its own so that proclaiming
+the greater crown would fill the mission panel instead of emptying it. It
+gave it *one* programme: the same four missions — settle the crown, muster
+the kingdom, the land of the twelve, build rather than merely hold — in all
+six chapters the crown is formable in. Every playable side of every chapter
+has had a tree since §177, a curriculum since §179 and roads not taken
+since §183; the endgame crown of the whole game had a four-rung ladder that
+could not tell 167 BCE from 614 CE. This pass gives it the ages.
+
+**One table, six readings.** A mission may now declare
+`chapters: ['66ce', …]`, and `chapterChain(list, bookmarkId)` — memoized per
+table per chapter, because the monthly pass and the panel both ask and both
+want the same array — hands each chapter the missions that name it plus
+every mission that names none. `missionsFor` runs a crown's chain through
+it. Nothing else in the shape moves: `bookmark.missions` still answers
+first, a chain that declares no chapters is handed back untouched (the
+Hasmonean crown's three), and the record is still `missionsDone` plus a
+`missionIdx` prefix.
+
+**The spine keeps the ladder's order.** The four are now a tree — the
+crowning is the root, the muster and the land hang off it, the building
+programme off the land — with prerequisites that are a subset of the old
+ladder's implicit ones, so an old save's `missionIdx` still means what it
+meant. They hold columns 0-1; every chapter's branch takes columns 2-3, so
+no chapter's tree collides with itself.
+
+**And each chapter adds three, addressed to the crown by its own age**:
+167 BCE finishes the Seleucid throne, takes Simon's harbours (Joppa,
+Azotus, Gaza — "an entrance to the isles of the sea"), and keeps the
+Republic that answered Judas' embassy on bronze; 67 BCE holds the five
+Greek cities of the Jordan that Pompey's settlement filed under Syria,
+brings the desert king who had to be paid in the cities of Moab to heel,
+and asks Babylonia — larger than Judaea and inside somebody else's empire —
+to answer; 40 BCE keeps the balsam of
+Jericho that Cleopatra took by asking Antony for it, builds the harbour at
+Straton's Tower the country has never had, and binds Parthia in writing
+with the Twin Cities standing behind it; 66 CE takes the procurators'
+seaboard, absorbs the last Herodian's tetrarchy, and endows a House that
+has not burned; 132 CE unmakes Aelia between the sea and the Jordan,
+raises the Third House the Redemption coinage kept promising, and makes
+Rome fight east as well; 614 CE raises the altar on a Mount swept empty
+since Titus, reaches the Exilarchate — the Davidic pedigree nobody
+disputes, sitting in another empire since 586 BCE — and watches the
+southern road while both empires spend their last armies on each other.
+
+**Two things this fixes beyond flavour.** The Third House was the capstone
+of the 132 and 614 chains and lived in `bookmark.missions.JUD`, so taking
+the greater crown quietly cost a player the one mission the chapter is
+about; the crown now carries its own, and a House the chapter's own side
+already raised is endowed rather than billed a second time. And no branch
+mission is payable by the act of proclamation — the two that were (the
+cities of the Jordan, already Aristobulus' in 67; Parthia's +80 opinion of
+the king its own cavalry seated in 40) were rewritten until they ask for
+something a campaign has to go and do. §187 arrived while this was being
+written and thickened the chapters' own trees; where the crown's branch met
+one of the new conquest missions on the same ground — Damascus, which the
+chapters' own sides now claim at both 67 and 40 — the crown gave way and
+asked for something else (Nabataea brought to heel, which is the same
+chapter's other unpaid bill).
+
+- **Regression contract**: `smoke120` — the static shape (spine plus three
+  per chapter, no branch crossing a chapter line, the kit on every mission,
+  seats in the branch columns, prerequisites resolving inside their own
+  chapter's chain, the spine's order still a subset of the ladder's), the
+  engine (each chapter handed its own seven, the same array twice, an
+  unchaptered chain untouched, no chain invented for a tag without one),
+  and the live end: nothing on a branch completes on the day of the
+  crowning in any of the six, and every one of the eighteen pays when the
+  world its desc promises is built by hand — including the House rising on
+  a bare Mount for 300 talents and the standing House that costs nothing.
+  `smoke73` — §102's contract, unchanged: the crown still carries a chain
+  and the panel still shows it from its first line.

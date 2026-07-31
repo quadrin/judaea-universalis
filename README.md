@@ -543,6 +543,21 @@ static site, the zero dependencies, or the missing build step changes.
   convening, the age keeps stating its objectives — and the crown brings its
   own payoff (coin, men, ministries and a modifier that says what this kingdom
   is FOR) plus a fresh mission chain addressed to the new identity.
+- **The crown speaks in the age it was crowned in.** The Kingdom of Israel can
+  be proclaimed in six of the eight chapters, and it used to read the same four
+  missions in all of them. Those four are still the spine — settle the crown,
+  muster the kingdom, hold the land of the twelve, build rather than merely
+  hold — but each chapter now hangs three of its own off the crowning: finish
+  the Seleucid throne and take Simon's harbours in 167 BCE; hold the Greek
+  cities of the Jordan, bring Petra under the crown and get an answer out of
+  Babylonia in 67; keep the balsam groves Cleopatra took and build the harbour
+  Herod would have built in 40; take the procurators' coast, absorb the last
+  Herodian's tetrarchy and endow a House that never burned in 66; unmake Aelia
+  between the sea and the Jordan and raise the Third House in 132; raise the
+  altar on the swept Mount, reach the Exilarchate and watch the southern road
+  in 614. Eighteen in all — and because the Third House is now one of them,
+  taking the greater crown no longer costs you the mission the chapter is
+  about.
 - **Playable on a phone, properly.** The handheld pass: one tools button in the
   topbar opens a sheet with the chronicle, the ledger, the primer, the quill
   and your saved campaigns — a phone could not previously save its own game,
