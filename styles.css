@@ -2976,7 +2976,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .np-ms-never { opacity: 0.45; text-decoration: line-through; }
 
-/* the rung's own name (SPEC §178): the era's vocabulary under the ladder head */
+/* the rung's own name (SPEC §179): the era's vocabulary under the ladder head */
 .np-tech-rung {
   font-size: 11px;
   font-style: italic;
@@ -2988,7 +2988,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .np-reform-head .np-tech-rung { flex: 1; text-align: right; margin: 0 4px 0 auto; }
 
-/* the ideas of the age (SPEC §178): the EU4 idea-group cards — a locked
+/* the ideas of the age (SPEC §179): the EU4 idea-group cards — a locked
    group is a dark slab naming the rung that opens it, an open one sells its
    tiers like a reform tree */
 .np-era-title {

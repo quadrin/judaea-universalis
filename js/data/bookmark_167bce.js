@@ -56,7 +56,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -119,7 +119,7 @@ export const BOOKMARK_167 = {
   // How far up the ladder this age can climb (SPEC §99). The Maccabees' world ends at the professional legion: no thematic armies,
   // no muskets, no rifles, however many martial points a long campaign banks.
   techCeiling: 9,
-  // The rungs' own names (SPEC §178): the arts of the Maccabean age, from the
+  // The rungs' own names (SPEC §179): the arts of the Maccabean age, from the
   // village elders to the royal phalanx. The era-idea cards read these —
   // "Unlocked at The Greek Art of War (7)" — and the ladder cards wear them.
   techNames: {
@@ -775,7 +775,7 @@ export const BOOKMARK_167 = {
           ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 10 });
         },
       },
-      // The age's curriculum (SPEC §178): two branches for what the rising
+      // The age's curriculum (SPEC §179): two branches for what the rising
       // must LEARN — the enemy's siegecraft, and the ideas that make a state.
       {
         id: 'hm_learn_from_kings', name: 'Learn From the Kings',
@@ -847,7 +847,7 @@ export const BOOKMARK_167 = {
           id: 'phalanx_drill', name: 'Phalanx Drill', months: 12, effects: { disciplineMult: 1.05 },
         }),
       },
-      // The age's curriculum (SPEC §178): the kingdom's own housekeeping
+      // The age's curriculum (SPEC §179): the kingdom's own housekeeping
       // grows two more rooms — the siege park, and the King's program.
       {
         id: 'sm_royal_foundries', name: 'The Royal Foundries',

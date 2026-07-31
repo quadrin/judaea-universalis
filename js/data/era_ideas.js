@@ -1,4 +1,4 @@
-// js/data/era_ideas.js — the ideas of the age (SPEC §178). DOM-free data +
+// js/data/era_ideas.js — the ideas of the age (SPEC §179). DOM-free data +
 // pure helpers, the institutions.js pattern: one module owns the whole table.
 //
 // EU4 unlocks idea GROUPS at named technology levels; this is that, per

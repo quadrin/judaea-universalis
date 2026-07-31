@@ -54,7 +54,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -115,7 +115,7 @@ export const BOOKMARK_67 = {
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
-  // The rungs' own names (SPEC §178): the arts of the late Hasmonean world,
+  // The rungs' own names (SPEC §179): the arts of the late Hasmonean world,
   // where every court is learning the Roman grammar whether it wants to or not.
   techNames: {
     gov: {
@@ -592,7 +592,7 @@ export const BOOKMARK_67 = {
         check: (ctx) => (ctx.game.tags.HYR.treasury || 0) >= 400,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, infl: 25 }),
       },
-      // The age's curriculum (SPEC §178): what the elder brother's cause must
+      // The age's curriculum (SPEC §179): what the elder brother's cause must
       // learn — hired steel, and the arts of a court worth restoring.
       {
         id: 'h4_hired_steel', name: 'Hired Steel',
@@ -657,7 +657,7 @@ export const BOOKMARK_67 = {
         check: (ctx) => (ctx.game.tags.ARI.treasury || 0) >= 400,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { gov: 25, mar: 25 }),
       },
-      // The age's curriculum (SPEC §178): the able brother fights like the
+      // The age's curriculum (SPEC §179): the able brother fights like the
       // age and crowns himself with its ideas.
       {
         id: 'a4_kings_art', name: 'The King\'s Art of War',

@@ -44,7 +44,7 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  ok(v.length === 8, 'eight nodes (six objectives + the §178 curriculum): ' + v.length);
+  ok(v.length === 8, 'eight nodes (six objectives + the §179 curriculum): ' + v.length);
   ok(v[0].status === 'current' && v.slice(1).every((m) => m.status === 'locked'),
     'only the root is workable at start: ' + v.map((m) => m.status).join(','));
   ok(v[0].requires.length === 0 && v[1].requires.join(',') === 'jm_arm_the_nation',

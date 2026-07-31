@@ -51,7 +51,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -160,7 +160,7 @@ export const BOOKMARK_614 = {
   // gunpowder patterns belong to ages this bookmark never sees (SPEC §99).
   techCeiling: 13,
   techTweaks: { SAS: { mar: 1 }, BYZ: { gov: 1 } },
-  // The rungs' own names (SPEC §178): the arts of the last war of antiquity —
+  // The rungs' own names (SPEC §179): the arts of the last war of antiquity —
   // a Return governed from the academies, financed from Babylonia, and
   // fortified against the day Persia changes its mind.
   techNames: {
@@ -672,7 +672,7 @@ export const BOOKMARK_614 = {
           if (p) p.wonder = 'temple';
         },
       },
-      // The age's curriculum (SPEC §178), appended AFTER the capstone so the
+      // The age's curriculum (SPEC §179), appended AFTER the capstone so the
       // Third House keeps its table seat (smoke16 forces the chain by index).
       {
         id: 'p_walls_manned', name: 'A City That Can Refuse',
@@ -740,7 +740,7 @@ export const BOOKMARK_614 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(ctx.game.date, 616, 1),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 25, stability: 1 }),
       },
-      // The age's curriculum (SPEC §178): the reform that financed survival,
+      // The age's curriculum (SPEC §179): the reform that financed survival,
       // and the army it drilled for 622.
       {
         id: 'b_reform', name: 'The Empire Reorganized',

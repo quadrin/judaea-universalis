@@ -1306,10 +1306,10 @@ function monthlyWarDiplomacy(ctx) {
 
 // With a healthy surplus the AI enacts the next reform tier — one per month,
 // keeping a buffer so it can still develop, drill and convert. The era ideas
-// (SPEC §178) queue behind the universal trees on the same one-a-month
+// (SPEC §179) queue behind the universal trees on the same one-a-month
 // cadence: a court flush enough to think buys what its ladders have opened,
 // paying the same institutions surcharge the player pays. Exported for the
-// §178 regression suite.
+// §179 regression suite.
 export function aiReforms(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t) return;

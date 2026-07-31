@@ -1,9 +1,9 @@
-// Headless smoke test §178: the rungs have names, and the ladders unlock the
+// Headless smoke test §179: the rungs have names, and the ladders unlock the
 // age's own ideas. Pins the data contract (every bookmark's groups are
 // reachable, priced in the ladder that opens them, and speak only effects the
 // sim consumes), the unlock gate (no rung, no sale), the purchase path
 // (points down, tier up, effects folded into t.ideas), the institutions
-// surcharge, the AI's symmetric buying, the save round-trip, and the §178
+// surcharge, the AI's symmetric buying, the save round-trip, and the §179
 // curriculum missions completing off tech and era-idea state.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
@@ -184,11 +184,11 @@ console.log('== the save round-trip ==');
   const revived = reviveGame(raw);
   ok(revived.tags.JUD.eraIdeas.fourth_philosophy === 1, 'tiers ride the save');
   ok((revived.tags.ROM.eraIdeas && eraIdeaTiersOwned(revived.tags.ROM)) === 2, 'the AI\'s too');
-  // A pre-§178 save has no eraIdeas at all — it joins with none, not with undefined.
+  // A pre-§179 save has no eraIdeas at all — it joins with none, not with undefined.
   delete raw.tags.JUD.eraIdeas;
   const revived2 = reviveGame(JSON.parse(JSON.stringify(raw)));
   ok(revived2.tags.JUD.eraIdeas && typeof revived2.tags.JUD.eraIdeas === 'object'
-    && eraIdeaTiersOwned(revived2.tags.JUD) === 0, 'a pre-§178 save joins the age with none');
+    && eraIdeaTiersOwned(revived2.tags.JUD) === 0, 'a pre-§179 save joins the age with none');
   // The effects fold is pure and total: a key the registry no longer knows is skipped.
   const fx = computeEraIdeaEffects({ fourth_philosophy: 2, ghost_group: 3 });
   ok((fx.moraleMult || 1) > 1 && (fx.unrestAll || 0) < 0 && Object.keys(fx).length === 2,

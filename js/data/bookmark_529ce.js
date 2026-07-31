@@ -70,7 +70,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -231,7 +231,7 @@ export const BOOKMARK_529 = {
   techBase: 9,
   techCeiling: 13,
   techTweaks: { BYZ: { gov: 1, mar: 1 } },
-  // The rungs' own names (SPEC §178): the arts of Justinian's provinces and
+  // The rungs' own names (SPEC §179): the arts of Justinian's provinces and
   // of the people that means to leave them.
   techNames: {
     gov: {
@@ -745,7 +745,7 @@ export const BOOKMARK_529 = {
           effects: { legitimacyAdd: 0.3 },
         }),
       },
-      // The age's curriculum (SPEC §178): a rising that means to outlive its
+      // The age's curriculum (SPEC §179): a rising that means to outlive its
       // first summer arms itself from the dux's arsenals and writes a book
       // of its own.
       {
@@ -798,7 +798,7 @@ export const BOOKMARK_529 = {
           effects: { disciplineMult: 1.05 },
         }),
       },
-      // The age's curriculum (SPEC §178): the spring of 529 publishes the
+      // The age's curriculum (SPEC §179): the spring of 529 publishes the
       // Codex — the empire's answer to every rising is more law, better paid.
       {
         id: 'b_codex', name: 'The Codex Published',

@@ -9664,7 +9664,7 @@ pattern, no buttons, no purse.
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
 
-## 178. The rungs have names, and the ladders sell ideas
+## 179. The rungs have names, and the ladders sell ideas
 
 §177 dressed the ladders in EU4's numbers; this section gives them EU4's
 words. Two things were still generic across seven centuries: a technology
@@ -9718,7 +9718,7 @@ STARTING levels (the EU4 screen's shape — first slot open, the rest waiting
 on rungs) and every effects key is one the sim consumes. A formed crown
 walks its `lineage` before the default, so the Kingdom of Israel reads
 Judaea's curriculum, not the empire's; a civil-war splinter inherits the
-parent's tiers, a released state starts with none; pre-§178 saves join with
+parent's tiers, a released state starts with none; pre-§179 saves join with
 `eraIdeas = {}`.
 
 Actions `getEraIdeas`/`buyEraIdea` mirror the reform pair; `buyTech`
@@ -9753,7 +9753,7 @@ means what it meant.
   morale folded into `t.ideas`, 60/90/120 with the surcharge reported), the
   curriculum missions (waiting on mar 7 / three tiers, completing on them),
   the AI (buys from ROME'S list, only what its ladders opened, one a month),
-  and the save round-trip (tiers ride, pre-§178 saves join with none,
+  and the save round-trip (tiers ride, pre-§179 saves join with none,
   unknown registry keys fold to nothing). The chains' moved pins moved with
   them: smoke2 (66/132 JUD read 8), smoke3 (HYR reads 7), smoke111 (eight
   nodes, cols 1,0,1,2,1,0,3,2, rows 0,1,1,1,2,2,2,2 — the appended branches

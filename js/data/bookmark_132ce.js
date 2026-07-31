@@ -58,7 +58,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -93,7 +93,7 @@ export const BOOKMARK_132 = {
   // How far up the ladder this age can climb (SPEC §99). Hadrian's century stops at the professional legion (SPEC §99).
   techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
-  // The rungs' own names (SPEC §178): the arts of the hidden state — the
+  // The rungs' own names (SPEC §179): the arts of the hidden state — the
   // cave systems dug before the first blow, the Nasi's leases, the
   // overstruck mint.
   techNames: {
@@ -428,7 +428,7 @@ export const BOOKMARK_132 = {
           if (p) p.wonder = 'temple';
         },
       },
-      // The age's curriculum (SPEC §178), appended AFTER the capstone so the
+      // The age's curriculum (SPEC §179), appended AFTER the capstone so the
       // Third House keeps its table seat (smoke16 forces the chain by index):
       // two more branches off the war and the north.
       {
@@ -498,7 +498,7 @@ export const BOOKMARK_132 = {
         check: (ctx) => ['Jericho', 'Engaddi', 'Gadora'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
       },
-      // The age's curriculum (SPEC §178): Severus' war of engineering, and
+      // The age's curriculum (SPEC §179): Severus' war of engineering, and
       // the province Hadrian means to have afterward.
       {
         id: 'r2_engineers_war', name: 'The Engineers\' War',

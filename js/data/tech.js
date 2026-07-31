@@ -46,7 +46,7 @@ export const TECH_CATEGORIES = {
   },
 };
 
-// The rung's name in the era's own vocabulary (SPEC §178). A bookmark names
+// The rung's name in the era's own vocabulary (SPEC §179). A bookmark names
 // the levels its window can actually see — `techNames[ladder][level]` — and
 // everything outside the window falls back to the plain number, so a foreign
 // panel or a hand-edited save never reads undefined. The names are what the

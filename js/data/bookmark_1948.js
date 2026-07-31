@@ -50,7 +50,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -378,7 +378,7 @@ export const BOOKMARK_1948 = {
   // armored corps: the ladder runs to its end here (SPEC §99).
   techCeiling: 24,
   techTweaks: { JOR: { mar: 1 }, UK: { mar: 1 }, ISR: { infl: 1 } },
-  // The rungs' own names (SPEC §178): the arts of the state born mid-war —
+  // The rungs' own names (SPEC §179): the arts of the state born mid-war —
   // mandate departments becoming ministries, purchasing missions becoming a
   // foreign service, militias becoming a general staff.
   techNames: {
@@ -1335,7 +1335,7 @@ export const BOOKMARK_1948 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Aila'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, treasury: 50 }),
       },
-      // The age's curriculum (SPEC §178): the army the militias must become,
+      // The age's curriculum (SPEC §179): the army the militias must become,
       // and the state the institutions already are.
       {
         id: 'i_one_army', name: 'One Army, One Command',
@@ -1400,7 +1400,7 @@ export const BOOKMARK_1948 = {
             || ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n))),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 25 }),
       },
-      // The age's curriculum (SPEC §178): the Legion's professional edge,
+      // The age's curriculum (SPEC §179): the Legion's professional edge,
       // and the statecraft of the kingdom that means to keep what it holds.
       {
         id: 'jr_conscript_kingdom', name: 'The National Service',

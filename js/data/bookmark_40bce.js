@@ -33,7 +33,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing.
 function eraTiers(t) {
   const o = (t && t.eraIdeas) || {};
@@ -91,7 +91,7 @@ export const BOOKMARK_40 = {
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
-  // The rungs' own names (SPEC §178): the arts of Herod's rise — a client's
+  // The rungs' own names (SPEC §179): the arts of Herod's rise — a client's
   // education, from the toparch's rolls to the Augustan order.
   techNames: {
     gov: {
@@ -495,7 +495,7 @@ export const BOOKMARK_40 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { stability: 1, legitimacy: 15 }),
       },
-      // The age's curriculum (SPEC §178): the works and the court that made
+      // The age's curriculum (SPEC §179): the works and the court that made
       // the commoner unremovable.
       {
         id: 'h5_builders_program', name: 'The Builder\'s Program',
@@ -560,7 +560,7 @@ export const BOOKMARK_40 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { stability: 1, legitimacy: 15 }),
       },
-      // The age's curriculum (SPEC §178): the last Hasmonean fights with the
+      // The age's curriculum (SPEC §179): the last Hasmonean fights with the
       // age's hired steel and crowns the dynasty's own ideas.
       {
         id: 'a5_hired_veterans', name: 'The Veterans\' Price',

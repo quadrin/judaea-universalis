@@ -1373,7 +1373,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
         return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
       }).join('');
-      // Their ideas of the age (SPEC §178), read straight off t.eraIdeas —
+      // Their ideas of the age (SPEC §179), read straight off t.eraIdeas —
       // pips only, no lock cards: a foreign ladder is their business.
       const groups = eraIdeaGroupsFor(ctx && ctx.bookmark, t.tag, t);
       const taken = groups.filter((gd) => ((t.eraIdeas || {})[gd.key] | 0) > 0);
@@ -1409,7 +1409,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           </button>
         </div>`;
     }).join('');
-    // The ideas of the age (SPEC §178): the chapter's own groups, each behind
+    // The ideas of the age (SPEC §179): the chapter's own groups, each behind
     // a named rung of its ladder. A locked group is the EU4 card — a dark
     // slab that says what opens it — and an open one sells its tiers like
     // any reform tree.
@@ -1418,7 +1418,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       try { eras = actions.getEraIdeas(); } catch (e) { warnOnce('np-getEraIdeas', e); }
     }
     if (Array.isArray(eras) && eras.length) {
-      html += `<div class="np-era-title" data-tt="${esc('The ideas of this age (SPEC §178): four arts the chapter itself argued about, '
+      html += `<div class="np-era-title" data-tt="${esc('The ideas of this age (SPEC §179): four arts the chapter itself argued about, '
         + 'each unlocked by a rung of the matching technology ladder and bought tier by tier with its point.')}">Ideas of the Age</div>`;
       html += eras.map((er) => {
         if (!er.unlocked) {

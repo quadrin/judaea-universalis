@@ -1220,7 +1220,7 @@ export function gameActions(ctx) {
       return {
         key, name: cat.name, desc: cat.desc, point: cat.point,
         level, cost, eraBase,
-        // The rung's own names (SPEC §178): where the ladder stands, and the
+        // The rung's own names (SPEC §179): where the ladder stands, and the
         // rung being bought, in the era's vocabulary.
         levelName: techLevelName(ctx.bookmark, key, level),
         nextName: atMax ? '' : techLevelName(ctx.bookmark, key, next),
@@ -2395,7 +2395,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('buyIdea', 'buyIdea failed', e); }
     },
 
-    // ---- the ideas of the age (SPEC §178) ----------------------------------------
+    // ---- the ideas of the age (SPEC §179) ----------------------------------------
     // The chapter's four era idea groups, each behind a named rung of its own
     // ladder — the panel's locked cards read `unlockText`, the EU4 screen's
     // "Unlocked at Renaissance Thought (7)". Costs pay the institutions
@@ -2488,7 +2488,7 @@ export function gameActions(ctx) {
           say('A new pattern of soldier', genName(after, 'inf') + ' and ' + genName(after, 'cav')
             + ' may now be raised — armies at the old pattern can be modernized for gold.', 'good');
         }
-        // The rung may open an idea of the age (SPEC §178) — say so, the way
+        // The rung may open an idea of the age (SPEC §179) — say so, the way
         // EU4 announces an unlocked idea-group slot.
         for (const gdef of eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t)) {
           if (gdef.unlock.ladder === catKey && gdef.unlock.level === t.tech[catKey]) {
@@ -3412,7 +3412,7 @@ export function reviveGame(saved) {
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
-    if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§178 saves
+    if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};

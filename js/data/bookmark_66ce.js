@@ -55,7 +55,7 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
-// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
 // content packages import nothing, and the registry validated every key at
 // purchase time.
 function eraTiers(t) {
@@ -117,7 +117,7 @@ export const BOOKMARK_66 = {
   // How far up the ladder this age can climb (SPEC §99). The Flavian century stops at the professional legion (SPEC §99).
   techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
-  // The rungs' own names (SPEC §178): the arts of the Revolt's generation,
+  // The rungs' own names (SPEC §179): the arts of the Revolt's generation,
   // from the procurator's books Florus kept to the legion's equal Josephus
   // tried to drill into Galilee.
   techNames: {
@@ -632,7 +632,7 @@ export const BOOKMARK_66 = {
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
         },
       },
-      // The age's curriculum (SPEC §178): the ladders and the era ideas are
+      // The age's curriculum (SPEC §179): the ladders and the era ideas are
       // now objectives in their own right — two branches for the state the
       // revolt must become.
       {
@@ -700,7 +700,7 @@ export const BOOKMARK_66 = {
         check: (ctx) => ['Masada', 'Machaerus', 'Engaddi'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
       },
-      // The age's curriculum (SPEC §178), appended WITHOUT requires so the
+      // The age's curriculum (SPEC §179), appended WITHOUT requires so the
       // chain stays the ladder §177 pinned — Vespasian's method was a
       // sequence, and so is what follows it: first supply, then the
       // settlement of the East.
