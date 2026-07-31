@@ -10159,3 +10159,75 @@ it, and is what will hear the next one.
   `…,4,4,4`, declared rows sticking), `smoke2`/`smoke112` (eleven at 66
   and 132), `smoke3` (nine at 67), `uitest2` (eleven medallions in the
   browser).
+
+## 184. The purse is somebody else's too
+
+§180 retired "ask for credits" with a sentence that promised its
+replacement: subsidies cover the one direction money actually flowed. It
+was half true. The §24 subsidy is a payer's verb — `sendSubsidy`, the
+player's silver going out — and no court on the map had any way to ask for
+the thing 1948's minors actually lived on. The direction money actually
+flowed was Washington's Export-Import credits reaching Tel Aviv in January
+'49, London's subvention paying the Arab Legion, Paris propping the
+ex-mandate clients — and the game's Israel, income 40 a month and a war on
+every border, could court Truman's regard and then do nothing with it but
+sign for airplanes.
+
+**The donor courts** (`bookmark.financialAid.donors`, declared by 1948
+alone): USA, SOV, UK, FRA. The arsenal list minus Prague, and the
+subtraction is the point — Czechoslovakia sold arms for hard currency and
+funded nobody, so the two lists are declared apart and `smoke117` holds
+them apart. Any other court of the age may **petition** a donor from the
+donor's own panel (the §180/§181 pattern: the verb rides the court you are
+asking, opened from the ledger). Five rules, each priced:
+
+- **The bar is their regard.** Like the §181 signature, you are asking to
+  be given to, so it is the donor's opinion of you (≥ 55) that opens the
+  purse. Israel opens at 40 with Washington, Moscow and Paris and −30 with
+  London: nobody grants on day one, one courting round reaches the
+  American bar, and the British purse costs two years of mended fences —
+  which is roughly what de jure recognition cost.
+- **The package is sized to the donor's own purse.** A quarter of the
+  donor's monthly books (income, tribute, and the §180 stipend), floored
+  at 5 and capped at 25, frozen into the row at grant time. Washington's
+  stipend prices its package at 15 a month for a year; the European
+  fragments — thin by §173's levy design — floor out at 5. The plain 1948
+  fact that the United States outweighs every court of the age (§180) is
+  therefore not a rule here; it is arithmetic. And the purse must be real:
+  a donor grants only from net its books actually clear or a war chest
+  that covers the whole package, so a warm Kremlin with an empty chest
+  refuses until it has saved something to give.
+- **A grant is a §24 subsidy row** wearing an `aid` marker — the ledger
+  lines, both panels' treaty rows, the monthly countdown, the deep-debt
+  default and the revive path all come free, and the money balances by
+  construction. The mission costs 20 influence; nothing else is new state.
+- **A voted credit clears.** Unlike the §181 pipeline, a granted package
+  runs its term whatever the regard does afterward — no drift anchor, no
+  liveness floor. It dies early only to the loud ruptures: war between
+  the two courts, or the donor signing a §100 embargo (the same signature
+  that cuts the arms). What asking costs instead is standing: −5 regard
+  per petition, one purse at a time, and each donor hears one petition
+  per 30 months — so standing aid needs standing courtship, which is
+  "if they like us enough" as a living condition rather than a checkbox.
+- **The AI plays it.** A court under 30 talents petitions the friendliest
+  donor that will grant, paying the same influence at the same bar — so
+  the Anglo-Jordanian subvention emerges from the seeded opening book
+  instead of being scripted, and the player's chair is never petitioned
+  for. Donor AI is passive: a purse, not a policy; §100's embargo AI is
+  the policy here exactly as it is for the arsenal.
+
+The Compendium's chapter page lists the donor courts beside the arms
+market, read from the same declaration the sim plays. The tooltip on the
+petition button prints the donor's regard against the bar, the package it
+would vote, and every price — the mark, the window, the single purse —
+before the player commits the influence.
+
+- **Regression contract**: `smoke117` — the donor list is the bookmark's
+  own (Prague sells, never funds); the regard bar, influence fee, real-books
+  test, single-purse rule and petition window each refuse with their reason;
+  a grant writes the marked §24 row, moves the influence, marks the regard
+  and agrees in both ledgers; a package survives cooling (no anchor) and
+  dies to war or embargo with notice; the term runs out as aid, not as a
+  subsidy; the AI petitions when poor (and never for the player) while the
+  friendless get nothing; the ancient chapters see none of it; and a live
+  package rides a save through `reviveGame` intact.

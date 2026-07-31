@@ -22,6 +22,7 @@ import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
 import { monthlyArms } from './arms.js';
+import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
@@ -134,6 +135,7 @@ function monthlyBlock(ctx) {
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
+  safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §184)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   safe('elimination', () => checkElimination(ctx));

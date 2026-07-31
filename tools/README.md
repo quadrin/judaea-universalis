@@ -824,3 +824,18 @@ meant. AI-only chains (Vespasian's ladder above all) carry none, which is what
 keeps the §177 ladder pin true. The suite also enforces one-medallion-per-cell
 on every player tree — the check that found the §177/§179 curriculum nodes
 stacking two-deep at 167 and 132, which is why three of those now declare rows.
+
+SPEC §184 gives 1948 its donor courts (`bookmark.financialAid.donors` — the
+arsenal list minus Prague, which sold and never funded): any other court may
+petition one for financial aid at the donor's regard bar, and a grant is an
+ordinary §24 subsidy row wearing an `aid` marker, sized to the donor's own
+books. `smoke117.mjs` owns the contract — the gates and their reasons, the
+grant's double-entry, the no-anchor/no-liveness-floor contrast with §181's
+pipeline, the war/embargo ruptures, the AI's own petitions, and the save
+round-trip. In the 8-year all-AI harness the mechanic surfaces exactly once:
+Lebanon dips under the poverty floor, petitions the one donor whose seeded
+regard clears the bar, and ends the run ~60 talents richer with one more
+regiment, while Paris pays it from net its books actually clear (FRA
+treasury 234→232). Every other row is byte-identical to the pre-§184 tree —
+Israel reaches no donor's bar without a player courting it, which is the
+design — and the accepted family stays `1948 none`.
