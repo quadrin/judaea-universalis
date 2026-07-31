@@ -6,9 +6,10 @@
 // and reforms, plus how they feel about us — with every lever hidden.
 import { esc, rgb, fmtMoney, fmtMen, fmtYear, signed, warnOnce, titleCase } from './format.js';
 import { icon, flagChip } from './icons.js';
-import { unlockedGen, cappedGen, genName, doctrinesFor } from '../data/tech.js';
+import { unlockedGen, cappedGen, genName, doctrinesFor, techLevelName } from '../data/tech.js';
 import { forceLimitOf, regCount } from '../sim/military.js';
 import { IDEA_TREES } from '../data/ideas.js';
+import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 
 // The tabs (SPEC §175).
 //
@@ -273,6 +274,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (idea) {
         if (idea.classList.contains('disabled') || !actions || typeof actions.buyIdea !== 'function') return;
         try { actions.buyIdea(idea.dataset.idea); } catch (err) { warnOnce('np-idea', err); }
+        refresh();
+        return;
+      }
+      const eraIdea = e.target.closest('[data-eraidea]');
+      if (eraIdea) {
+        if (eraIdea.classList.contains('disabled') || !actions || typeof actions.buyEraIdea !== 'function') return;
+        try { actions.buyEraIdea(eraIdea.dataset.eraidea); } catch (err) { warnOnce('np-eraidea', err); }
         refresh();
         return;
       }
@@ -1210,7 +1218,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       const th = t.tech || {};
       const names = { gov: 'Government', infl: 'Influence', mar: 'Military' };
       const rows = ['gov', 'infl', 'mar'].map((k) =>
-        `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b><span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
+        `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b>`
+        + `<span class="np-tech-rung">${esc(techLevelName(ctx && ctx.bookmark, k, th[k] | 0))}</span>`
+        + `<span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
       const gi = cappedGen(th.mar | 0, ctx && ctx.bookmark);
       const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
       setHtml(refs.tech, rows
@@ -1232,7 +1242,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     html += info.rows.map((r) => {
       const capped = !(r.cost > 0);
       const fill = capped ? 100 : Math.max(0, Math.min(100, Math.round(100 * r.have / Math.max(1, r.cost))));
-      const head = `${r.desc}\nAlready paying: ${r.nowText || '—'}\nThe age expects level ${r.eraBase}.`;
+      const head = `${r.desc}\nThis rung: ${r.levelName || 'Level ' + r.level}.`
+        + (r.nextName ? `\nThe next: ${r.nextName}.` : '')
+        + `\nAlready paying: ${r.nowText || '—'}\nThe age expects level ${r.eraBase}.`;
       const barTT = capped ? (r.whyNot || '')
         : `${r.have} of the ${r.cost} ${r.point} points banked`
           + (r.etaMonths > 0 ? ` — at +${r.gain} a month, affordable in ${r.etaMonths} month${r.etaMonths === 1 ? '' : 's'}.` : '.');
@@ -1243,9 +1255,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           : `<span class="np-tech-era" data-tt="${esc('Keeping pace: the age expects level ' + r.eraBase + '.')}">age ${r.eraBase}</span>`;
       return `<div class="np-techrow">
         <div class="np-tech-head" data-tt="${esc(head)}">${icon(TECH_ICONS[r.key] || 'scroll', 'icon-k')}<b>${esc(r.name)}</b>${era}<span class="np-tech-lvl">${r.level}</span></div>
+        <div class="np-tech-rung" data-tt="${esc(head)}">${esc(r.levelName || '')}</div>
         <div class="np-tech-bar" data-tt="${esc(barTT)}"><i class="np-tech-fill${capped ? ' np-tf-cap' : ''}" style="width:${fill}%"></i><span class="np-tech-bar-num">${capped ? '—' : r.have + ' / ' + r.cost}</span></div>
         <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(head + (r.whyNot ? '\n' + r.whyNot : ''))}">
-          ${capped ? 'The ladder ends here' : `Advance to ${r.level + 1}${r.ahead ? ' ⚠' : ''}`}${capped ? '' : ` <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>`}
+          ${capped ? 'The ladder ends here' : `Advance to ${r.level + 1}${r.nextName ? ' — ' + esc(r.nextName) : ''}${r.ahead ? ' ⚠' : ''}`}${capped ? '' : ` <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>`}
         </button>
         ${r.key === 'mar' ? milestoneStrip(info) : ''}
       </div>`;
@@ -1318,13 +1331,26 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!refs.reforms) return;
     if (!self) {
       const owned = t.reforms || {};
-      setHtml(refs.reforms, Object.keys(IDEA_TREES).map((key) => {
+      let html = Object.keys(IDEA_TREES).map((key) => {
         const tree = IDEA_TREES[key];
         const have = owned[key] | 0;
         const pips = tree.tiers.map((ti, i) =>
           `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
         return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-      }).join(''));
+      }).join('');
+      // Their ideas of the age (SPEC §179), read straight off t.eraIdeas —
+      // pips only, no lock cards: a foreign ladder is their business.
+      const groups = eraIdeaGroupsFor(ctx && ctx.bookmark, t.tag, t);
+      const taken = groups.filter((gd) => ((t.eraIdeas || {})[gd.key] | 0) > 0);
+      if (taken.length) {
+        html += `<div class="np-era-title">Ideas of the Age</div>` + taken.map((gd) => {
+          const n = Math.max(0, Math.min(gd.tiers.length, (t.eraIdeas || {})[gd.key] | 0));
+          const pips = gd.tiers.map((ti, i) =>
+            `<span class="np-pip${i < n ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+          return `<div class="np-reform"><div class="np-reform-head">${icon(gd.icon || 'lamp', 'icon-k')}<b>${esc(gd.name)}</b><span class="np-pips">${pips}</span></div></div>`;
+        }).join('');
+      }
+      setHtml(refs.reforms, html);
       return;
     }
     let trees = null;
@@ -1333,7 +1359,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     if (!trees) { setHtml(refs.reforms, ''); return; }
     const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
-    setHtml(refs.reforms, trees.map((tr) => {
+    let html = trees.map((tr) => {
       const pips = tr.tiers.map((ti) =>
         `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
       const next = tr.tiers[tr.owned];
@@ -1347,7 +1373,41 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
             ${next ? `${esc(next.name)} <span class="np-reform-cost">${tr.cost} ${esc(tr.point)}</span>` : 'Complete'}
           </button>
         </div>`;
-    }).join(''));
+    }).join('');
+    // The ideas of the age (SPEC §179): the chapter's own groups, each behind
+    // a named rung of its ladder. A locked group is the EU4 card — a dark
+    // slab that says what opens it — and an open one sells its tiers like
+    // any reform tree.
+    let eras = null;
+    if (actions && typeof actions.getEraIdeas === 'function') {
+      try { eras = actions.getEraIdeas(); } catch (e) { warnOnce('np-getEraIdeas', e); }
+    }
+    if (Array.isArray(eras) && eras.length) {
+      html += `<div class="np-era-title" data-tt="${esc('The ideas of this age (SPEC §179): four arts the chapter itself argued about, '
+        + 'each unlocked by a rung of the matching technology ladder and bought tier by tier with its point.')}">Ideas of the Age</div>`;
+      html += eras.map((er) => {
+        if (!er.unlocked) {
+          return `<div class="np-reform np-era-locked" data-tt="${esc(er.name + ' — ' + er.desc + '\n' + er.unlockDetail)}">
+            <div class="np-era-lock-name">${icon(er.icon || 'lamp', 'icon-k')}${esc(er.name)}</div>
+            <div class="np-era-lock-at">${esc(er.unlockText)}</div>
+          </div>`;
+        }
+        const pips = er.tiers.map((ti) =>
+          `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+        const next = er.tiers[er.owned];
+        const tt = next
+          ? `${er.desc}\n${next.name} — ${next.desc}\nCosts ${er.cost} ${ptName[er.point] || er.point} points.${er.canBuy ? '' : '\n' + er.whyNot}`
+          : `${er.desc}\n${er.whyNot}`;
+        return `
+        <div class="np-reform">
+          <div class="np-reform-head">${icon(er.icon || 'lamp', 'icon-k')}<b>${esc(er.name)}</b><span class="np-pips">${pips}</span></div>
+          <button class="pp-build-btn np-reform-btn${er.canBuy ? '' : ' disabled'}" data-eraidea="${esc(er.key)}" data-tt="${esc(tt)}">
+            ${next ? `${esc(next.name)} <span class="np-reform-cost">${er.cost} ${esc(er.point)}</span>` : 'Complete'}
+          </button>
+        </div>`;
+      }).join('');
+    }
+    setHtml(refs.reforms, html);
   }
 
   function refreshDecisions() {

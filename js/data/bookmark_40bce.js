@@ -33,6 +33,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -82,6 +91,25 @@ export const BOOKMARK_40 = {
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
+  // The rungs' own names (SPEC §179): the arts of Herod's rise — a client's
+  // education, from the toparch's rolls to the Augustan order.
+  techNames: {
+    gov: {
+      3: 'The Toparch\'s Rolls', 4: 'The Customs Registers', 5: 'The Client\'s Tribute',
+      6: 'The Builder\'s Survey', 7: 'The Royal Foundations', 8: 'The Harbor Works',
+      9: 'The Augustan Order',
+    },
+    infl: {
+      3: 'The Family Letters', 4: 'The Web of Favors', 5: 'The Gifts Remembered',
+      6: 'The Triumvir\'s Friendship', 7: 'The Senate\'s Decree', 8: 'The Court of Kings',
+      9: 'The Imperial Household',
+    },
+    mar: {
+      3: 'The Hill Bands', 4: 'The Idumean Riders', 5: 'The Galilee Campaigns',
+      6: 'The Hired Veterans', 7: 'The King\'s Regiments', 8: 'The Roman Drill',
+      9: 'The Legate\'s Art',
+    },
+  },
 
   // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
   provinceNames: {
@@ -467,6 +495,26 @@ export const BOOKMARK_40 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { stability: 1, legitimacy: 15 }),
       },
+      // The age's curriculum (SPEC §179): the works and the court that made
+      // the commoner unremovable.
+      {
+        id: 'h5_builders_program', name: 'The Builder\'s Program',
+        icon: 'bricks', col: 0, requires: ['h5_coast'],
+        desc: 'Survey what a king will build: reach Government 6 — The Builder\'s Survey.',
+        rewardText: '"The Foundations Laid": +10% town growth, permanently.',
+        check: (ctx) => (((ctx.game.tags.HER || {}).tech || {}).gov | 0) >= 6,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'foundations_laid', name: 'The Foundations Laid', months: -1, effects: { growthMult: 1.1 },
+        }),
+      },
+      {
+        id: 'h5_court_of_a_king', name: 'The Court of a King',
+        icon: 'laurel', col: 2, requires: ['h5_galilee'],
+        desc: 'Take up three ideas of the age — a decree made him king; only statecraft keeps him one.',
+        rewardText: '+25 influence points, +15 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.HER) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 25, legitimacy: 15 }),
+      },
     ],
     ATG: [
       {
@@ -511,6 +559,26 @@ export const BOOKMARK_40 = {
           return !r || !r.alive || r.overlord === 'ATG';
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { stability: 1, legitimacy: 15 }),
+      },
+      // The age's curriculum (SPEC §179): the last Hasmonean fights with the
+      // age's hired steel and crowns the dynasty's own ideas.
+      {
+        id: 'a5_hired_veterans', name: 'The Veterans\' Price',
+        icon: 'helmet', col: 0, requires: ['a5_idumea'],
+        desc: 'Silver buys the age\'s soldiers: reach Military 6 — The Hired Veterans.',
+        rewardText: '"The Companies Retained": +15% reinforcement speed for 24 months.',
+        check: (ctx) => (((ctx.game.tags.ATG || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'companies_retained', name: 'The Companies Retained', months: 24, effects: { reinforceMult: 1.15 },
+        }),
+      },
+      {
+        id: 'a5_hasmonean_charter', name: 'The Hasmonean Charter',
+        icon: 'scroll', col: 2, requires: ['a5_anointed'],
+        desc: 'Take up three ideas of the age — the blood claims the crown; the ideas must keep it.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.ATG) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { gov: 25, legitimacy: 10 }),
       },
     ],
   },

@@ -9664,6 +9664,184 @@ pattern, no buttons, no purse.
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
 
+## 178. The road to the crown was longer than the game
+
+Reported: the Kingdom of Israel regressed — the Davidic king does not ascend.
+Four defects, one system, and the first is an arithmetic error this spec
+itself made in §148.
+
+### The arc did not fit the chapter
+
+§148 gated "The House That Is Not David's" on twenty years of chapter, and
+justified the number by measuring the chapters: "twenty years fits inside
+every chapter that can reach this card with room to spare — the tightest is
+66 with 34." It had measured ONE CARD OF A TWO-CARD ARC. The marriage's
+whole payoff is the son, twenty-two years later, and a crown is worth
+proclaiming only while the chapter is alive to see it: 20 + 22 is 42, so in
+the Great Revolt's 34-year chapter the son could arrive no earlier than
+108 CE — eight years past the horizon, into a world whose every other card
+had retired — and in 67 BCE (span 42) he landed on the horizon year itself,
+reachable only by a campaign that missed nothing for four decades. The road
+to the game's endgame crown was, in its two shortest chapters, longer than
+the game.
+
+The gate now bends to the chapter (`generationGate`): twenty years where
+the chapter has room for the whole arc — gate + `SON_YEARS` (22, fixed by
+the card's own text: he is twenty-six, in the chancery since eighteen) +
+`PROCLAMATION_YEARS` (5) — and where it does not, the largest gate that
+still lets the son arrive with a reign to spare, floored at four so the
+§148 first-summer bug can never return. 167 (107 years), 40 BCE (50),
+132 (298) and 614 (86) keep their twenty; 67 BCE asks at fifteen; 66 CE
+asks at seven — two years after the negotiated peace of 71, which is
+exactly when a client kingdom that survived its own war gets asked what it
+is. The helper is `chapterSpan` (init.js), the companion to §148's
+`chapterYears` and for the same reason: a shared package cannot see the
+bookmark, so the contract has to carry the question.
+
+### Seating him did not seat him
+
+"Seat him. The house of David returns to the throne it left" raised
+`davidicThrone` and left the old king on the panel — the ascension the
+chronicle recorded had not happened anywhere the sim could see. The option
+now crowns the son through `setRuler`: Zerubbabel, for the last son of
+Jehoiachin's line to govern in Jerusalem, aged and statted from the card's
+own biography (twenty-six, eight years in the chancery, the eastern
+correspondence done very well, no field command ever — 3/4/1), under the
+sitting title. The old house's designated heir goes with the old house.
+132's grandson card is the same defect with a different verb: "let the
+succession PASS to him" now seats Yehoyakhin bar Kosiba as HEIR (4/3/1,
+thirty-one, a treasury man), and the ordinary succession machinery crowns
+him when the present reign ends. 614 was always right — David ben Zakkai
+takes the throne by `setRuler` — and is untouched.
+
+### The postponed question never returned
+
+The fourth answer's tooltip says the objection stays live; its comment says
+a later reign may take it up; §138's design says deferral is a
+postponement, not a settlement. Once-semantics made all three false — the
+card retired at first firing whatever was answered. It is `once: false` now
+on a 180-month cooldown: every road that settles the question shuts it by
+flag (`davidicAnswered`), so only the Hasmonean non-answer reopens it, a
+reign later. The §89 ledger already dedupes by event id, so a re-asked
+question cannot double-write the divergence record.
+
+### The proclaimed king was not styled by his crown
+
+Proclaiming the Kingdom of Israel — the formable whose first requirement is
+a son of David on the throne — left the proclaimer titled whatever he was
+titled before. `bonus.rulerTitle` now exists on the formables table, and
+the formation path applies it unless the sitting title already names the
+crown: the 614 coronation's "King of Israel, of the House of David"
+outranks the formable's plain "King of Israel" and must not be shortened
+by it.
+
+- **Regression contract**: `smoke93` grows a fourth act — the 66 CE gate at
+  its boundary (not asked at six years and eleven months, asked at seven),
+  67 BCE at fifteen, the 167 cap unchanged at twenty; the seated son on the
+  throne by name with the heir cleared; the grandson as heir and crowned by
+  `rulerDies` through the ordinary machinery; the deferred question
+  re-queued by `checkTriggeredEvents` after its cooldown and not before;
+  and the proclamation retitle, including the guard that leaves 614's
+  fuller style standing.
+
+## 179. The rungs have names, and the ladders sell ideas
+
+§177 dressed the ladders in EU4's numbers; this section gives them EU4's
+words. Two things were still generic across seven centuries: a technology
+level was "Level 6" whether the buyer was Judah Maccabee or Ben-Gurion, and
+the reform trees were the same three lines in every chapter — the one screen
+EU4 built its whole identity on (idea groups unlocking at named technology
+levels, "Unlocked at Renaissance Thought (7)") had no counterpart. Now every
+bookmark names its rungs, and every bookmark sells ideas of its own age,
+gated behind those rungs — technology development unlocks a curriculum
+catered to the chapter, and the mission trees assign it.
+
+### The rungs (`bookmark.techNames`)
+
+Every bookmark names each ladder's levels across its reachable window
+(roughly base−1..ceiling; `techLevelName` in tech.js falls back to
+"Level N" outside it, so foreign panels and hand-edited saves never read
+undefined). The names are the era's own state arts — 167 BCE climbs the
+military ladder from The Shepherd Slingers to The Royal Phalanx through The
+Greek Art of War (7), which is both a rung and the name of the idea group it
+opens; 1948's government ladder runs The Mandate Departments → The
+Provisional Government → The Planned Decade. Chapters with two very
+different playable sides keep their shared rungs side-neutral (529's gov 12
+is The Codex of Laws — published the very month the Keepers rise — not
+somebody's districts). `techInfo` rows carry `levelName`/`nextName`, the
+Coin tab prints the rung under each ladder head and on the buy button, the
+buy toast names the rung it just bought, and a foreign court's read-only
+rows wear their rung names too.
+
+### The ideas of the age (`js/data/era_ideas.js`, `t.eraIdeas`)
+
+One module owns the whole table, the institutions.js pattern. Per bookmark,
+per SIDE: the rising and the empire each get their own curriculum
+(`ERA_IDEAS_BY_BOOKMARK[id][TAG]`, with an optional `default` for courts the
+chapter wrote none for — the Hellenistic world defaults to the king's arts,
+the brothers' war to the one set both brothers are, and the asymmetric
+chapters to none). The Zeal of Phinehas, The Law Restored, The Cleansed
+House and The Greek Art of War face The Royal Cities, The King's Friends and
+The Seleucid Phalanx; the Fourth Philosophy faces the Flavian Method; the
+Keepers' Torah faces the Codex; the People in Arms faces the Arab Legion —
+fifty-one groups across eight chapters, three tiers each, priced 60/90/120
+of the group's point with the §166 institutions surcharge on top (EU4
+penalizes ideas for missing institutions too, and "behind the world pays
+more to think" is the whole §166 thesis).
+
+The contract, machine-checked: group keys are globally unique (effects
+resolve from the flat registry because `applyReformsToTag` has a tag but no
+bookmark); `unlock.ladder === point` — the ladder that opens a group is the
+ladder that pays for it, one mental model; every unlock sits inside the
+chapter's base..ceiling window; every playable side has ≥1 group open at its
+STARTING levels (the EU4 screen's shape — first slot open, the rest waiting
+on rungs) and every effects key is one the sim consumes. A formed crown
+walks its `lineage` before the default, so the Kingdom of Israel reads
+Judaea's curriculum, not the empire's; a civil-war splinter inherits the
+parent's tiers, a released state starts with none; pre-§179 saves join with
+`eraIdeas = {}`.
+
+Actions `getEraIdeas`/`buyEraIdea` mirror the reform pair; `buyTech`
+announces any group the new rung just opened, EU4's unlocked-slot toast.
+The AI queues the era groups behind the universal trees on the same
+one-tier-a-month, 150-point-buffer cadence — symmetric with the player,
+surcharge included. On the panel, the Reforms block grows an "Ideas of the
+Age" strip: a locked group is the EU4 card — a dark slab naming its rung,
+"Unlocked at The Third Wall (8)" — an open one sells tiers like a reform
+tree, and a foreign court shows pips for the groups it has actually taken
+up, no lock cards, no buttons.
+
+### The chains assign the curriculum
+
+Every playable side of every chapter gains two missions (thirty-two across
+the eight bookmarks): reach a named rung ("reach Military 7 — The Roman
+Manner"), and take up three era-idea tiers — each wired into the existing
+tree with `requires` (never stricter: new branches only), each with an
+era-priced reward. Rome's 66 CE chain stays a LADDER on purpose (§177's
+point, kept: the two new rungs — An Army That Eats, Iudaea Capta — append
+requires-less, the sequence's postscript), and the 132/614 Third House
+capstones keep their table seats because the curriculum appends AFTER them —
+smoke16 forces those chains by index, and an old save's `missionIdx` still
+means what it meant.
+
+- **Regression contract**: `smoke112` pins the data table (every listed
+  group exists, none orphaned, unlocks inside the window and priced in the
+  opening ladder, three tiers each, effect keys within the consumed set,
+  every unlock rung era-named, every playable side one-group-open at start),
+  the gate (a locked group refuses purchase; the locked card reads exactly
+  "Unlocked at The Third Wall (8)"), the purchase (points down, tier up,
+  morale folded into `t.ideas`, 60/90/120 with the surcharge reported), the
+  curriculum missions (waiting on mar 7 / three tiers, completing on them),
+  the AI (buys from ROME'S list, only what its ladders opened, one a month),
+  and the save round-trip (tiers ride, pre-§179 saves join with none,
+  unknown registry keys fold to nothing). The chains' moved pins moved with
+  them: smoke2 (66/132 JUD read 8), smoke3 (HYR reads 7), smoke111 (eight
+  nodes, cols 1,0,1,2,1,0,3,2, rows 0,1,1,1,2,2,2,2 — the appended branches
+  derive rows below parents that sit EARLIER in the table, which is why
+  appending is the safe grow direction), uitest2 (eight medallions). The
+  all-AI harness's seeded trajectories drift as they always do when the AI
+  gets a new monthly purchase; the accepted-bleeders list in tools/README
+  governs.
 ## 180. The world is not beyond the map
 
 §55 built "The Powers Beyond the Map": standing bars in a panel section, an

@@ -55,6 +55,16 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing, and the registry validated every key at
+// purchase time.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -107,6 +117,23 @@ export const BOOKMARK_66 = {
   // How far up the ladder this age can climb (SPEC §99). The Flavian century stops at the professional legion (SPEC §99).
   techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
+  // The rungs' own names (SPEC §179): the arts of the Revolt's generation,
+  // from the procurator's books Florus kept to the legion's equal Josephus
+  // tried to drill into Galilee.
+  techNames: {
+    gov: {
+      4: 'The Procurator\'s Books', 5: 'The Temple Administration', 6: 'The Korban Treasury',
+      7: 'The Provisioned City', 8: 'The Third Wall', 9: 'The Flavian Order',
+    },
+    infl: {
+      4: 'The Synagogue Letters', 5: 'The Festival Crowds', 6: 'The Diaspora\'s Silver',
+      7: 'The Eastern Embassies', 8: 'The Coined Message', 9: 'The Historian\'s Pen',
+    },
+    mar: {
+      4: 'The City Militias', 5: 'The Zealots\' Fire', 6: 'The Drilled Companies',
+      7: 'The Roman Manner', 8: 'The Armies Massed', 9: 'The Legion\'s Equal',
+    },
+  },
 
   // Who actually lives here (SPEC §56): the mixed cities whose riots lit the
   // Revolt — Caesarea's Greek-Jewish knife's edge (BJ 2.266), Scythopolis,
@@ -605,6 +632,27 @@ export const BOOKMARK_66 = {
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
         },
       },
+      // The age's curriculum (SPEC §179): the ladders and the era ideas are
+      // now objectives in their own right — two branches for the state the
+      // revolt must become.
+      {
+        id: 'jm_roman_manner', name: 'The Roman Manner',
+        icon: 'helmet', col: 3, requires: ['jm_coastal_road'],
+        desc: 'Learn the enemy\'s art: reach Military 7 — The Roman Manner — as Josephus drilled Galilee.',
+        rewardText: '"Drilled in the Roman Manner": +5% discipline for 24 months.',
+        check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'roman_manner_drill', name: 'Drilled in the Roman Manner', months: 24, effects: { disciplineMult: 1.05 },
+        }),
+      },
+      {
+        id: 'jm_mind_of_the_nation', name: 'The Mind of the Nation',
+        icon: 'lamp', col: 2, requires: ['jm_diaspora'],
+        desc: 'Take up three ideas of the age — a revolt that thinks is a state.',
+        rewardText: '+25 governance points, +15 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 15 }),
+      },
     ],
     ROM: [
       {
@@ -651,6 +699,33 @@ export const BOOKMARK_66 = {
         rewardText: '+1 stability — the East is quiet.',
         check: (ctx) => ['Masada', 'Machaerus', 'Engaddi'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
+      },
+      // The age's curriculum (SPEC §179), appended WITHOUT requires so the
+      // chain stays the ladder §177 pinned — Vespasian's method was a
+      // sequence, and so is what follows it: first supply, then the
+      // settlement of the East.
+      {
+        id: 'rm_army_that_eats', name: 'An Army That Eats',
+        icon: 'grain',
+        desc: 'The method runs on corn: reach Government 7 — The Provisioned City.',
+        rewardText: '"The Corn of Egypt": +10% manpower for 24 months.',
+        check: (ctx) => (((ctx.game.tags.ROM || {}).tech || {}).gov | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'corn_of_egypt', name: 'The Corn of Egypt', months: 24, effects: { manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'rm_iudaea_capta', name: 'Iudaea Capta',
+        icon: 'coins',
+        desc: 'Strike the victory into the world\'s hand: take up three ideas of the age.',
+        rewardText: '"Iudaea Capta" coinage: +10% income permanently, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.ROM) >= 3,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ROM', {
+            id: 'iudaea_capta_coinage', name: 'Iudaea Capta Coinage', months: -1, effects: { incomeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ROM', { legitimacy: 10 });
+        },
       },
     ],
   },

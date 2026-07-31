@@ -56,6 +56,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -110,6 +119,26 @@ export const BOOKMARK_167 = {
   // How far up the ladder this age can climb (SPEC §99). The Maccabees' world ends at the professional legion: no thematic armies,
   // no muskets, no rifles, however many martial points a long campaign banks.
   techCeiling: 9,
+  // The rungs' own names (SPEC §179): the arts of the Maccabean age, from the
+  // village elders to the royal phalanx. The era-idea cards read these —
+  // "Unlocked at The Greek Art of War (7)" — and the ladder cards wear them.
+  techNames: {
+    gov: {
+      2: 'The Village Elders', 3: 'The Ancestral Law', 4: 'The Seleucid Assessment',
+      5: 'The Temple Ledgers', 6: 'The High Priest\'s Chancery', 7: 'The Courts in the Gates',
+      8: 'The Council of the Nation', 9: 'The Royal Archive',
+    },
+    infl: {
+      2: 'The Wayside Shrines', 3: 'The Festival Letters', 4: 'The Scribes of the Law',
+      5: 'The Embassy to Rome', 6: 'The Coastal Factors', 7: 'The Diaspora Post',
+      8: 'The Treaty Scrolls', 9: 'The Alliance of Peoples',
+    },
+    mar: {
+      2: 'The Shepherd Slingers', 3: 'The Bands of the Hills', 4: 'The Mustered Line',
+      5: 'The Siege Train', 6: 'The Standing Companies', 7: 'The Greek Art of War',
+      8: 'The Hammer\'s Discipline', 9: 'The Royal Phalanx',
+    },
+  },
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
 
@@ -746,6 +775,26 @@ export const BOOKMARK_167 = {
           ctx.helpers.adjust(ctx, 'HAS', { legitimacy: 10 });
         },
       },
+      // The age's curriculum (SPEC §179): two branches for what the rising
+      // must LEARN — the enemy's siegecraft, and the ideas that make a state.
+      {
+        id: 'hm_learn_from_kings', name: 'Learn From the Kings',
+        icon: 'helmet', col: 0, requires: ['hm_ascents'],
+        desc: 'Master the age\'s war-craft: reach Military 5 — The Siege Train.',
+        rewardText: '"Engines Taken": +15% siege progress for 24 months.',
+        check: (ctx) => (((ctx.game.tags.HAS || {}).tech || {}).mar | 0) >= 5,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'engines_taken', name: 'Engines Taken', months: 24, effects: { siegeMult: 1.15 },
+        }),
+      },
+      {
+        id: 'hm_covenant_renewed', name: 'The Covenant Renewed',
+        icon: 'scroll', col: 2, requires: ['hm_city'],
+        desc: 'Take up three ideas of the age — the rising must become a state that thinks.',
+        rewardText: '+25 influence points, +15 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.HAS) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { infl: 25, legitimacy: 15 }),
+      },
     ],
     SEL: [
       // The king's tree (SPEC §177): the war in Judaea down one side, the
@@ -797,6 +846,26 @@ export const BOOKMARK_167 = {
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SEL', {
           id: 'phalanx_drill', name: 'Phalanx Drill', months: 12, effects: { disciplineMult: 1.05 },
         }),
+      },
+      // The age's curriculum (SPEC §179): the kingdom's own housekeeping
+      // grows two more rooms — the siege park, and the King's program.
+      {
+        id: 'sm_royal_foundries', name: 'The Royal Foundries',
+        icon: 'flame', col: 0, requires: ['sm_order'],
+        desc: 'Rebuild the siege park of the kings: reach Military 5 — The Siege Train.',
+        rewardText: '"The Siege Park": +15% siege progress for 24 months.',
+        check: (ctx) => (((ctx.game.tags.SEL || {}).tech || {}).mar | 0) >= 5,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SEL', {
+          id: 'siege_park', name: 'The Siege Park', months: 24, effects: { siegeMult: 1.15 },
+        }),
+      },
+      {
+        id: 'sm_epiphany', name: 'The Epiphany of the King',
+        icon: 'star8', col: 2, requires: ['sm_mint'],
+        desc: 'Take up three ideas of the age — the kingdom must be seen to think as well as tax.',
+        rewardText: '+25 influence points, +15 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.SEL) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SEL', { infl: 25, legitimacy: 15 }),
       },
     ],
   },

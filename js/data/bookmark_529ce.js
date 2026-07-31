@@ -70,6 +70,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -222,6 +231,22 @@ export const BOOKMARK_529 = {
   techBase: 9,
   techCeiling: 13,
   techTweaks: { BYZ: { gov: 1, mar: 1 } },
+  // The rungs' own names (SPEC §179): the arts of Justinian's provinces and
+  // of the people that means to leave them.
+  techNames: {
+    gov: {
+      8: 'The Diocesan Rolls', 9: 'The Village Assessment', 10: 'The Priests\' Districts',
+      11: 'The Courts of the Law', 12: 'The Codex of Laws', 13: 'The Kingdom\'s Book',
+    },
+    infl: {
+      8: 'The Pilgrim Roads', 9: 'The Provincial Assemblies', 10: 'The Synagogue Word',
+      11: 'The Coastal Merchants', 12: 'The Foreign Ears', 13: 'The Two Empires Read',
+    },
+    mar: {
+      8: 'The Village Watch', 9: 'The Terrace Walls', 10: 'The Hill Musters',
+      11: 'The Captured Arsenals', 12: 'The Drilled Bands', 13: 'The Thematic Pattern',
+    },
+  },
   popMult: 0.8,
 
   // The map speaks its era (SPEC §25).
@@ -720,6 +745,27 @@ export const BOOKMARK_529 = {
           effects: { legitimacyAdd: 0.3 },
         }),
       },
+      // The age's curriculum (SPEC §179): a rising that means to outlive its
+      // first summer arms itself from the dux's arsenals and writes a book
+      // of its own.
+      {
+        id: 's_captured_arsenals', name: 'The Captured Arsenals',
+        icon: 'swords', col: 0, requires: ['s_sebaste'],
+        desc: 'Arm the villages with the garrisons\' own steel: reach Military 11 — The Captured Arsenals.',
+        rewardText: '"Arms of the Garrisons": +5% army strength for 24 months.',
+        check: (ctx) => (((ctx.game.tags.SAM || {}).tech || {}).mar | 0) >= 11,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'arms_of_garrisons', name: 'Arms of the Garrisons', months: 24, effects: { milPowerMult: 1.05 },
+        }),
+      },
+      {
+        id: 's_kingdoms_book', name: 'The Kingdom\'s Book',
+        icon: 'scroll', col: 2, requires: ['s_host'],
+        desc: 'Take up three ideas of the age — five books and one mountain must become a state.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.SAM) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { gov: 25, legitimacy: 10 }),
+      },
     ],
     BYZ: [
       {
@@ -751,6 +797,26 @@ export const BOOKMARK_529 = {
           id: 'the_east_held', name: 'The East Held', months: 36,
           effects: { disciplineMult: 1.05 },
         }),
+      },
+      // The age's curriculum (SPEC §179): the spring of 529 publishes the
+      // Codex — the empire's answer to every rising is more law, better paid.
+      {
+        id: 'b_codex', name: 'The Codex Published',
+        icon: 'scroll', col: 0, requires: ['b_neapolis'],
+        desc: 'One law for the whole world: reach Government 12 — The Codex of Laws.',
+        rewardText: '"The Codex": −0.5 unrest everywhere for 36 months.',
+        check: (ctx) => (((ctx.game.tags.BYZ || {}).tech || {}).gov | 0) >= 12,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'BYZ', {
+          id: 'the_codex', name: 'The Codex', months: 36, effects: { unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'b_emperors_arts', name: 'The Emperor\'s Arts',
+        icon: 'scales', col: 2, requires: ['b_east'],
+        desc: 'Take up three ideas of the age — Justinian\'s empire governs with every instrument at once.',
+        rewardText: '+25 influence points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.BYZ) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { infl: 25, legitimacy: 10 }),
       },
     ],
   },

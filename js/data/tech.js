@@ -46,6 +46,19 @@ export const TECH_CATEGORIES = {
   },
 };
 
+// The rung's name in the era's own vocabulary (SPEC §179). A bookmark names
+// the levels its window can actually see — `techNames[ladder][level]` — and
+// everything outside the window falls back to the plain number, so a foreign
+// panel or a hand-edited save never reads undefined. The names are what the
+// era-idea unlock cards print: "Unlocked at The Greek Art of War (7)", not
+// "mar 7".
+export function techLevelName(bookmark, ladder, level) {
+  const lv = Math.max(0, level | 0);
+  const names = bookmark && bookmark.techNames && bookmark.techNames[ladder];
+  const n = names && names[lv];
+  return typeof n === 'string' && n ? n : 'Level ' + lv;
+}
+
 // Cost in monarch points to BUY `level` (the level you end up at, 1-based).
 export function techCost(level) {
   return 250 + 15 * Math.max(1, level | 0);

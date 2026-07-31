@@ -2118,6 +2118,7 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
     points: { gov: 0, infl: 0, mar: 0 },
     ideas: { ...(def.ideas || {}) },
     reforms: { ...(parent.reforms || { mil: 0, civ: 0, rel: 0 }) },
+    eraIdeas: { ...(parent.eraIdeas || {}) },
     tech: {
       gov: Math.max(0, num(tech.gov, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
       infl: Math.max(0, num(tech.infl, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
@@ -5097,6 +5098,7 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     points: { gov: 0, infl: 0, mar: 0 },
     ideas: { ...(def.ideas || {}) },
     reforms: { mil: 0, civ: 0, rel: 0 },
+    eraIdeas: {}, // a state born new has taken up none of the age's ideas
     tech: {
       gov: Math.max(0, num(tech.gov, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
       infl: Math.max(0, num(tech.infl, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),

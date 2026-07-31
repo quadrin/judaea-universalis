@@ -58,6 +58,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -84,6 +93,23 @@ export const BOOKMARK_132 = {
   // How far up the ladder this age can climb (SPEC §99). Hadrian's century stops at the professional legion (SPEC §99).
   techCeiling: 9,
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
+  // The rungs' own names (SPEC §179): the arts of the hidden state — the
+  // cave systems dug before the first blow, the Nasi's leases, the
+  // overstruck mint.
+  techNames: {
+    gov: {
+      4: 'The Colonial Assessment', 5: 'The Hidden Stores', 6: 'The Nasi\'s Leases',
+      7: 'The Camp Rations', 8: 'The Redemption Mint', 9: 'The Restored Land',
+    },
+    infl: {
+      4: 'The Village Networks', 5: 'The Letter Carriers', 6: 'The Schools in Hiding',
+      7: 'The Sages\' Blessing', 8: 'The Diaspora\'s Watch', 9: 'The Star\'s Proclamation',
+    },
+    mar: {
+      4: 'The Quarried Arms', 5: 'The Cave Systems', 6: 'The Prince\'s Companies',
+      7: 'The Ambush Doctrine', 8: 'The Fortified Villages', 9: 'The Last Standard',
+    },
+  },
 
   blurb: 'Sixty years after the Temple burned, Hadrian has ploughed the sacred hill for a '
     + 'colony named Aelia Capitolina, with a temple of Jupiter where the House once stood. '
@@ -402,6 +428,27 @@ export const BOOKMARK_132 = {
           if (p) p.wonder = 'temple';
         },
       },
+      // The age's curriculum (SPEC §179), appended AFTER the capstone so the
+      // Third House keeps its table seat (smoke16 forces the chain by index):
+      // two more branches off the war and the north.
+      {
+        id: 'j2_ambush_doctrine', name: 'The Ambush Doctrine',
+        icon: 'mountain', col: 0, requires: ['j2_maul'],
+        desc: 'Make the method a doctrine: reach Military 7 — The Ambush Doctrine.',
+        rewardText: '"The Roads Are Ours": +1 to hill-country defense for 24 months.',
+        check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'roads_are_ours', name: 'The Roads Are Ours', months: 24, effects: { hillDefBonus: 1 },
+        }),
+      },
+      {
+        id: 'j2_state_in_hiding', name: 'The State in Hiding',
+        icon: 'lamp', col: 2, requires: ['j2_galilee'],
+        desc: 'Take up three ideas of the age — the letters from the wadi are a government\'s.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
     ],
     ROM: [
       {
@@ -450,6 +497,26 @@ export const BOOKMARK_132 = {
         rewardText: '+1 stability.',
         check: (ctx) => ['Jericho', 'Engaddi', 'Gadora'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
+      },
+      // The age's curriculum (SPEC §179): Severus' war of engineering, and
+      // the province Hadrian means to have afterward.
+      {
+        id: 'r2_engineers_war', name: 'The Engineers\' War',
+        icon: 'walls', col: 0, requires: ['r2_shephelah'],
+        desc: 'Fight the hills with the manual: reach Military 8 — The Fortified Villages.',
+        rewardText: '"The Method Perfected": +15% siege progress for 24 months.',
+        check: (ctx) => (((ctx.game.tags.ROM || {}).tech || {}).mar | 0) >= 8,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
+          id: 'method_perfected', name: 'The Method Perfected', months: 24, effects: { siegeMult: 1.15 },
+        }),
+      },
+      {
+        id: 'r2_syria_palaestina', name: 'Syria Palaestina',
+        icon: 'scroll', col: 2, requires: ['r2_muster'],
+        desc: 'Take up three ideas of the age — the province must be governed into a different name.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.ROM) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { gov: 25, legitimacy: 10 }),
       },
     ],
   },

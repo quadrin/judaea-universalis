@@ -454,9 +454,24 @@ export const EVENTS_132_KOSIBA = [
     options: [
       {
         label: 'Let the succession pass to him. The house has the pedigree now',
-        tooltip: 'What the marriage was arranged for, collected: +35 legitimacy and +0.3 a month permanently, and no rival can ever again say this house has no title to what it holds. The price is the one the Babylonians came to name — the Exilarchate has a recognised interest in the succession of Israel from this year, and will send a delegation to every one of them. Sages +25, −1 authority.',
+        tooltip: 'What the marriage was arranged for, collected: the grandson stands first in '
+          + 'the succession from today — a treasury man, thirty-one, who will be crowned when '
+          + 'the present reign ends — with +35 legitimacy and +0.3 a month permanently, and no '
+          + 'rival can ever again say this house has no title to what it holds. The price is the '
+          + 'one the Babylonians came to name — the Exilarchate has a recognised interest in the '
+          + 'succession of Israel from this year, and will send a delegation to every one of '
+          + 'them. Sages +25, −1 authority.',
         effects: guard('ev_bk_grandson:0', (ctx) => {
           const h = ctx.helpers;
+          // The succession PASSES to him (SPEC §178): the card's verb is not
+          // "crowned", so he is seated as heir, and the ordinary machinery
+          // crowns him when the present reign ends. He takes the name of the
+          // ancestor the whole arrangement was for. The stats are the card's
+          // biography — six years running the treasury's eastern
+          // correspondence, and nobody thinks the ledgers are the point.
+          h.setHeir(ctx, 'JUD', {
+            name: 'Yehoyakhin bar Kosiba', gov: 4, infl: 3, mar: 1, age: 31,
+          });
           h.adjust(ctx, 'JUD', { legitimacy: 35, stability: 1 });
           h.addTagModifier(ctx, 'JUD', {
             id: 'the_line_of_jehoiachin', name: 'The Line of Jehoiachin', months: -1,

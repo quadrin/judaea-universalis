@@ -51,6 +51,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §179), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -151,6 +160,23 @@ export const BOOKMARK_614 = {
   // gunpowder patterns belong to ages this bookmark never sees (SPEC §99).
   techCeiling: 13,
   techTweaks: { SAS: { mar: 1 }, BYZ: { gov: 1 } },
+  // The rungs' own names (SPEC §179): the arts of the last war of antiquity —
+  // a Return governed from the academies, financed from Babylonia, and
+  // fortified against the day Persia changes its mind.
+  techNames: {
+    gov: {
+      9: 'The Prefect\'s Remnant', 10: 'The Community Rolls', 11: 'The Rule of the Learned',
+      12: 'The Standing Chancery', 13: 'The Restored Polity',
+    },
+    infl: {
+      9: 'The Synagogue Post', 10: 'The Exilarch\'s Purse', 11: 'The Ctesiphon Embassy',
+      12: 'The Two Courts Played', 13: 'The World\'s Correspondence',
+    },
+    mar: {
+      9: 'The City Wards', 10: 'The Returned Levies', 11: 'The Persian Pattern',
+      12: 'The Refortified City', 13: 'The Thematic Regulars',
+    },
+  },
   popMult: 0.8, // the late-antique world, thinner than 1948 but denser than the Hasmoneans' (SPEC §56)
 
   // The map speaks its era (SPEC §25): Byzantine and Sasanian names.
@@ -646,6 +672,26 @@ export const BOOKMARK_614 = {
           if (p) p.wonder = 'temple';
         },
       },
+      // The age's curriculum (SPEC §179), appended AFTER the capstone so the
+      // Third House keeps its table seat (smoke16 forces the chain by index).
+      {
+        id: 'p_walls_manned', name: 'A City That Can Refuse',
+        icon: 'walls', col: 0, requires: ['p_host'],
+        desc: 'Whatever Persia decides, be expensive: reach Military 12 — The Refortified City.',
+        rewardText: '"The Breaches Closed": +1 to hill-country defense for 36 months.',
+        check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 12,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'breaches_closed', name: 'The Breaches Closed', months: 36, effects: { hillDefBonus: 1 },
+        }),
+      },
+      {
+        id: 'p_rule_of_law', name: 'The Academies Govern',
+        icon: 'scroll', col: 2, requires: ['p_coast'],
+        desc: 'Take up three ideas of the age — four centuries of law must now run a state.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
     ],
     BYZ: [
       {
@@ -693,6 +739,26 @@ export const BOOKMARK_614 = {
         rewardText: '+25 legitimacy, +1 stability.',
         check: (ctx) => ctx.helpers.controls(ctx, 'BYZ', 'Jerusalem') && dateGE(ctx.game.date, 616, 1),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { legitimacy: 25, stability: 1 }),
+      },
+      // The age's curriculum (SPEC §179): the reform that financed survival,
+      // and the army it drilled for 622.
+      {
+        id: 'b_reform', name: 'The Empire Reorganized',
+        icon: 'scales', col: 0, requires: ['b_line'],
+        desc: 'Half the coinage, all of it paid to soldiers: reach Government 11 — The Rule of the Learned.',
+        rewardText: '"The Reform": +8% income for 36 months.',
+        check: (ctx) => (((ctx.game.tags.BYZ || {}).tech || {}).gov | 0) >= 11,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'BYZ', {
+          id: 'heraclian_purse', name: 'The Reform', months: 36, effects: { incomeMult: 1.08 },
+        }),
+      },
+      {
+        id: 'b_army_of_622', name: 'The Army of 622',
+        icon: 'helmet', col: 2, requires: ['b_fleet'],
+        desc: 'Take up three ideas of the age — the counteroffensive is trained before it is fought.',
+        rewardText: '+25 martial points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.BYZ) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { mar: 25, legitimacy: 10 }),
       },
     ],
   },
