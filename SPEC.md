@@ -10160,7 +10160,124 @@ it, and is what will hear the next one.
   and 132), `smoke3` (nine at 67), `uitest2` (eleven medallions in the
   browser).
 
-## 184. The thin trees made thick — forks, bills, and the expansion the age actually paid
+## 184. The fork card wears its badge
+
+§183 put the roads not taken in the mission tree, where a player plans.
+This section puts the same knowledge on the table, where a player decides:
+every event card that OPENS a road of the §119 path tree — every `entry`
+the tree declares, ninety-one road-entries across some seventy distinct
+cards — now wears a badge as it is dealt. A dashed violet chip above the
+title, the same spectral dress as the tree's hypothetical medallions,
+reading "the road forks here"; its tooltip asks the fork's own question
+("Does the House fall, or does the Second Kingdom begin?") and points at
+the Chronicle's Road Not Taken page, where the roads it opens are already
+charted. A turning of the age should feel like one while it is being
+turned, not only in the ledger afterwards.
+
+One lookup serves every surface. `entryFork(chapterId, eventId)` lives in
+`chapter_paths.js` beside the tree it is built from — lazy, frozen, and
+impossible to disagree with §119, because it IS §119 indexed by card. The
+event window asks it directly; the Compendium asks it for the events list
+and the event page (which also gains a "The road forks" row printing the
+question); and the multiplayer host resolves it before the card travels,
+sending guests `fork: { question }` in the `{t:'event'}` payload — a guest
+has no chapter context of its own, so the badge crosses the wire already
+answered, like the §70 decider line and the §128 option mask before it.
+Foreign-decider notices keep the badge: the road forks for the age whether
+or not the choice is ours.
+
+- **Regression contract**: `smoke117` — every road entry the tree declares
+  resolves to its own fork with a question to ask; a canonical non-fork
+  card, an unknown id, a null chapter, the shared pool, and another
+  chapter's cards all stay bare; the records come back frozen. `uitest39`
+  deals `ev_house_that_stood` through the sim's own `fireEvent` in a real
+  browser and reads the chip off the live modal — exactly one badge, the
+  right label, the fork's question in the tooltip — then deals
+  `ev_vespasian_arrives` and checks it stays bare, with no page errors.
+
+## 185. Every seated Jewish court is a chair
+
+The house rule stands exactly as §136 restated it — every chapter is
+played from an Israelite side, and the empire is never offered — but the
+rosters had quietly narrowed inside it. The game *seated* more Jewish
+courts than it offered: Adiabene, the kingdom beyond the Tigris whose
+royal house took the God of Israel, sat on four chapters' maps as an
+AI client of Parthia; Agrippa II, the last Herodian, fought the whole
+Great Revolt on Rome's side of the war with a court nobody could hold.
+A player who wanted the convert kingdom or the client king was told, in
+effect, that only rebels are Jews. This pass widens the offer to **every
+seated Jewish court of every bookmark**: `ADI` is playable in 67 BCE,
+40 BCE, 66 CE and 132 CE, and `AGR` in 66 CE — five new standards,
+each with the full kit the existing ten carry.
+
+**What a chair requires** (the checklist §33/§34/§179/§183 accumulated,
+now paid five more times): a `playableTags` row with difficulty and
+blurb; `objectives` with Win and Lose lines; a `checkVictory` branch —
+the client contracts are dated reckonings (60 BCE, 36 BCE, 71 CE,
+136 CE: alive, seated at the capital, judged freer or richer for
+bonuses) with elimination and a lost-capital collapse as the losses; an
+authored court of three estates; a statecraft `SEATS` row; `ESTATE_GROUND`
+entries for the seven new party ids; a mission tree whose two curriculum
+branches assign the era's named rung and its ideas (§179) and whose tail
+carries §183 hypotheticals; a `CAMPAIGN_GUIDANCE` entry (three first
+moves, a live pressure clock); an era-ideas curriculum with one group
+open at the side's starting rungs; a seated ruler with an heir; and a
+starting army, treasury and opinions in `setup`.
+
+**The court changes faith with the house.** Adiabene's conversion is
+c. 30 CE, and the game's single `TAGS` religion cannot say so — but the
+*court* can, and does: in 67 and 40 BCE the strict seat is the **Fire
+Priests of Arbela**, guarding the ancestral altars against the palace's
+westward drift, and in 66 and 132 CE it is the **Proselyte House**,
+guarding the covenant the kings took. Same role, different altar — the
+`SEATS` table names `magi` early and `proselytes` late, and the shared
+statecraft pool never knows the room changed. The Caravan Lords and the
+Riders of Arbela hold the worldly and soldier seats across all four
+chapters, because the road and the horse outlast every conversion.
+Agrippa's three are the era's own documented tensions: the Pious of the
+Land (Jewish subjects watching their king besiege Jerusalem), the
+Stewards of the House (Berenice's estates and the grain contracts), and
+the Babylonian Horse (Zamaris' military colony under Philip ben
+Jacimus — the soldiers ARE a faction, which is the whole Batanea story).
+
+**The trees ride the chapters' own forks.** No new fork was charted:
+Adiabene's hypotheticals read the markers the §119 tree already sets
+from the east bank — the west they never renamed (67), the crown the
+east could live with (40), the grain ships to the House that stood and
+Trajan's road home past Arbela (66), the mint that reads Redemption
+(132) — and Agrippa's read the Second Kingdom as the arrival of a
+*second* Jewish crown beside his own, then wait on `what_kind_of_kingdom`
+to hear an answer he has spent a reign already giving. The curricula
+follow the same economy: four Adiabene groups (the House Between the
+Rivers before the conversion, the Proselyte Crown after it, the Custom
+of the Gulf Road and the Riders of Arbela throughout) and three
+Herodian ones (the Herodian Purse, the King's Advocacy, the Babylonian
+Horse), with unlock rungs chosen so the gov group is open at each
+chapter's base and the road and the horse wait on the era's named
+infl 6 / mar 7 rungs.
+
+**What is deliberately absent.** 529's `JUD` — "Galilee", the academy
+at Tiberias — stays off the roster: §162 made it a landless community
+*deferred by design* until the 556 rising, and a chair with no country
+for twenty-seven years would be a lie about what a campaign is. The
+formable and event-spawned crowns (`MLI`, `LUK`) stay off for the same
+reason they always were: a start screen offers what exists at the start.
+And 167 BCE, 614 CE and 1948 gain nothing because they hide nothing —
+every Jewish court those chapters seat was already on offer.
+
+- **Regression contract**: `smoke23` — the rosters read
+  `HAS / HYR,ARI,ADI / HER,ATG,ADI / JUD,AGR,ADI / JUD,ADI / JUD / ISR`,
+  every standard is Jewish, and every one answers with three first moves
+  and a live clock. `smoke101` — the seat table covers the five new
+  courts and names only ids their bookmarks define. `smoke112` — every
+  new side's curriculum exists, unlocks inside its chapter's window, and
+  opens one group at start. `smoke116` — the new sides carry roads not
+  taken, none completes at boot, and the completability worlds now pay
+  Adiabene's and Agrippa's roads beside the principals'. `uitest3` — the
+  browser start screen offers the widened Israelite-only rosters, card
+  for card.
+
+## 186. The thin trees made thick — forks, bills, and the expansion the age actually paid
 
 The §119 census, re-run: the Great Revolt had six forks, Bar Kokhba and the
 Keepers five each — and Herod's Rise had two. The war of the brothers had

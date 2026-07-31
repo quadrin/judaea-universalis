@@ -44,7 +44,9 @@ await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
 
 console.log('== the Compendium opens from the title screen ==');
-await page.waitForSelector('[data-ref="wiki"]', { timeout: 20000 });
+// The button lands with the title screen, behind the §160 raster pass — the
+// same ~74s SwiftShader boot every suite waits BOOT_MS for, not 20 seconds.
+await page.waitForSelector('[data-ref="wiki"]', { timeout: BOOT_MS });
 await page.locator('[data-ref="wiki"]').click();
 await page.waitForSelector('#wiki-modal:not(.hidden)');
 ok(true, 'the title-screen Compendium button opens the codex');

@@ -166,7 +166,8 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 67 BCE — the ev4_v_* strand pays both brothers' chains off one world,
-  // and the §184 forks (Moab, Crassus, the two Roman civil wars) by marker.
+  // the §186 forks (Moab, Crassus, the two Roman civil wars) by marker, and
+  // the Tigris client's road pays off the same unrenamed west (§185).
   const { game, ctx } = booted.get('67bce');
   Object.assign(game.flags, {
     eagleRefused: true, neverRenamed: true,
@@ -174,14 +175,14 @@ function expectAllDone(g, bookmark, tags, label) {
   });
   realm.checkMissions(ctx);
   realm.checkMissions(ctx);
-  expectAllDone(game, era('67bce').bookmark, ['HYR', 'ARI'], '67bce');
+  expectAllDone(game, era('67bce').bookmark, ['HYR', 'ARI', 'ADI'], '67bce');
   ok((game.tags.HYR.modifiers || []).some((m) => m.id === 'hy_unrenamed_crown')
     && (game.tags.ARI.modifiers || []).some((m) => m.id === 'hy_unrenamed_crown'),
     '67bce: the unrenamed crown settles on whichever brother kept it');
 }
 
 { // 40 BCE — first the kingdom's statue answer and the Hasmonean hold (with
-  // the §184 markers: the groves refused, the fleet sailed, the old man home
+  // the §186 markers: the groves refused, the fleet sailed, the old man home
   // — set before the first pass, because ATG must be paid while it lives),
   // then a second world in which Herod outgrew the favour.
   const { game, ctx } = booted.get('40bce');
@@ -195,22 +196,24 @@ function expectAllDone(g, bookmark, tags, label) {
   game.tags.ATG.alive = false;
   grant(ctx, 'HER', ['Jerusalem', 'Damascus']);
   realm.checkMissions(ctx);
-  expectAllDone(game, era('40bce').bookmark, ['HER', 'ATG'], '40bce');
+  expectAllDone(game, era('40bce').bookmark, ['HER', 'ATG', 'ADI'], '40bce');
 }
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
-  // through the wave rule in a single monthly pass.
+  // through the wave rule in a single monthly pass — and the client courts'
+  // roads (§185) pay off the same standing House.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, { secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true });
   realm.checkMissions(ctx);
-  expectAllDone(game, era('66ce').bookmark, ['JUD'], '66ce');
+  expectAllDone(game, era('66ce').bookmark, ['JUD', 'AGR', 'ADI'], '66ce');
 }
 
-{ // 132 CE — redemption, the accession, and the recorded doubt, three deep.
+{ // 132 CE — redemption, the accession, and the recorded doubt, three deep;
+  // the restored house's mint (§185) reads the same redemption.
   const { game, ctx } = booted.get('132ce');
   Object.assign(game.flags, { redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true });
   realm.checkMissions(ctx);
-  expectAllDone(game, era('132ce').bookmark, ['JUD'], '132ce');
+  expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }
 
 { // 529 CE — the mountain, the letter, and the Taheb.
@@ -220,7 +223,7 @@ function expectAllDone(g, bookmark, tags, label) {
   expectAllDone(game, era('529ce').bookmark, ['SAM'], '529ce');
 }
 
-{ // 614 CE — the century, its three dependents, and the §184 forks: the
+{ // 614 CE — the century, its three dependents, and the §186 forks: the
   // Exilarchate, the caliph's categories, and the other Israel.
   const { game, ctx } = booted.get('614ce');
   Object.assign(game.flags, {

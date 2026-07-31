@@ -700,7 +700,7 @@ export const BOOKMARK_614 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
       },
-      // The empty ground made specific (SPEC §184): where a kingdom actually
+      // The empty ground made specific (SPEC §186): where a kingdom actually
       // marches when neither empire can field an army — the Phoenician coast,
       // the King's Highway, and the granary the Persians showed the way to.
       {

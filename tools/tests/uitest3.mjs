@@ -55,13 +55,16 @@ ok(!(await page.locator('[data-ref="export"], [data-ref="import"]').count()),
 // It used to read "Jewish-only" and it meant the same thing until SPEC §136
 // added the Keepers, whose player keeps a different Torah and is still not the
 // empire — Byzantium has a court, factions and a victory branch in that chapter
-// and is deliberately not on offer.
+// and is deliberately not on offer. SPEC §185 widened the rosters to every
+// SEATED Jewish court: Adiabene in the four chapters where the house is on
+// the map, and Agrippa's kingdom in 66. (529's Galilee stays off the roster —
+// it is a landless community, deferred by design until the 556 rising.)
 const expectedRosters = [
   ['HAS'],
-  ['HYR', 'ARI'],
-  ['HER', 'ATG'],
-  ['JUD'],
-  ['JUD'],
+  ['HYR', 'ARI', 'ADI'],
+  ['HER', 'ATG', 'ADI'],
+  ['JUD', 'AGR', 'ADI'],
+  ['JUD', 'ADI'],
   ['SAM'],
   ['JUD'],
   ['ISR'],
@@ -242,9 +245,9 @@ await page.close();
   await pickBookmark(p2, 'Judaean Civil War'); // 67 BCE
   await p2.waitForSelector('.nation-card');
   const nCards = await p2.locator('.nation-card').count();
-  ok(nCards === 2, '67 BCE offers two playable factions: ' + nCards);
+  ok(nCards === 3, '67 BCE offers three playable courts: ' + nCards);
   const bannerTags = await p2.locator('.nc-shield-tag').allTextContents();
-  ok(bannerTags.join(',') === 'HYR,ARI', 'HYR and ARI cards: ' + bannerTags.join(','));
+  ok(bannerTags.join(',') === 'HYR,ARI,ADI', 'HYR, ARI and ADI cards: ' + bannerTags.join(','));
   await p2.locator('.nation-card').first().click(); // HYR
   await p2.waitForFunction(() => !!window._ctx);
   await p2.waitForTimeout(600);

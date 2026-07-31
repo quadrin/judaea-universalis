@@ -1,6 +1,22 @@
 // js/ui/modals.js — event modal queue + game-over modal (SPEC §8.2, §6.5).
 import { esc, warnOnce } from './format.js';
 import { icon, divider } from './icons.js';
+import { entryFork } from '../data/chapter_paths.js';
+
+// A fork card wears its badge as it is dealt (SPEC §184): if this event is an
+// entry of the §119 path tree, the chip above the title says the road forks
+// here, and the tooltip asks the fork's own question. Read off the tree
+// itself, so the badge can never disagree with the chains.
+function forkBadgeHtml(chapterId, eventId) {
+  try {
+    const fk = entryFork(chapterId, eventId);
+    if (!fk) return '';
+    const tt = fk.question + '\n――――――\nA turning of the age: '
+      + fk.roads + (fk.roads === 1 ? ' road opens' : ' roads part') + ' here. '
+      + 'Where each one leads is charted in the Chronicle — The Road Not Taken.';
+    return `<div class="ev-fork" data-tt="${esc(tt)}">${icon('split', 'icon-xs')} The road forks here</div>`;
+  } catch (e) { warnOnce('forkBadge', e); return ''; }
+}
 
 // ---------------------------------------------------------------- events ---
 export function createEventModal(el) {
@@ -93,11 +109,13 @@ export function createEventModal(el) {
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
         + `</button>`;
     }).join('');
+    const chapterId = (ctx && ctx.bookmark && ctx.bookmark.id) || (ctx && ctx.game && ctx.game.bookmarkId) || '';
     el.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card">
         <div class="ev-orn">${divider('ev-divider')}</div>
         ${ev.world ? '<div class="ev-world">World history</div>' : ''}
+        ${forkBadgeHtml(chapterId, ev.id)}
         <h2 class="ev-title">${esc(ev.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(ev.desc || '')}</div>
         ${deciderLine}
@@ -140,11 +158,16 @@ export function createEventModal(el) {
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
         + `</button>`;
     }).join('');
+    // The host resolved the fork badge before sending (SPEC §184) — a guest
+    // has no chapter context of its own, only the question the host passed.
+    const remoteFork = p.fork && p.fork.question
+      ? `<div class="ev-fork" data-tt="${esc(p.fork.question)}">${icon('split', 'icon-xs')} The road forks here</div>` : '';
     el.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card ev-remote">
         <div class="ev-orn">${divider('ev-divider')}</div>
         ${p.world ? '<div class="ev-world">World history</div>' : ''}
+        ${remoteFork}
         <h2 class="ev-title">${esc(p.title || 'A Dispatch Arrives')}</h2>
         <div class="ev-desc">${esc(p.desc || '')}</div>
         ${p.deciderName ? `<div class="ev-decider">The decision belongs to ${esc(p.deciderName)} — we may only take note.</div>` : ''}

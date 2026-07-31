@@ -254,7 +254,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_lances_hired', name: 'The Lances of Aretas',
             marker: 'aretasMarches', entry: 'ev4_aretas_price',
             terminal: 'ev4_the_moabite_bill',
-            note: 'SPEC §184. The historical road: Medaba ceded, eight thousand horse hired, '
+            note: 'SPEC §186. The historical road: Medaba ceded, eight thousand horse hired, '
               + 'and a decade later the deed is a fact with a Roman survey team standing on '
               + 'it. What the war of the brothers spent, the peace of the clerks files.',
           }),
@@ -262,7 +262,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_cities_kept', name: 'The Cities Are Israel\'s',
             marker: 'moabKept', entry: 'ev4_aretas_price',
             terminal: 'ev4_the_moabite_bill',
-            note: 'SPEC §184. The price refused: the elder fights with what Idumea alone can '
+            note: 'SPEC §186. The price refused: the elder fights with what Idumea alone can '
               + 'raise, and Aretas spends the years neither forgiving nor forgetting. The '
               + 'grudge is priced into the Peraea roads until somebody pays it out.',
           }),
@@ -277,7 +277,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_ransom_of_the_veil', name: 'The Beam and the Oath',
             marker: 'crassusRansom', entry: 'ev4_the_proconsuls_bill',
             terminal: 'ev4_what_carrhae_left',
-            note: 'SPEC §184. The historical road: Eleazar\'s beam of gold, the oath taken on '
+            note: 'SPEC §186. The historical road: Eleazar\'s beam of gold, the oath taken on '
               + 'it, and the rest of the treasure out the same door. After Carrhae the '
               + 'community rebuilds the rite by subscription, telling the story every time.',
           }),
@@ -285,7 +285,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_open_treasury', name: 'A Client\'s Contribution',
             marker: 'crassusAppeased', entry: 'ev4_the_proconsuls_bill',
             terminal: 'ev4_what_carrhae_left',
-            note: 'SPEC §184. If it cannot be kept it can at least be given: the gift is '
+            note: 'SPEC §186. If it cannot be kept it can at least be given: the gift is '
               + 'entered in the proconsul\'s books among friends — and the willing payer is '
               + 'invoiced again by the men Carrhae leaves behind.',
           }),
@@ -293,7 +293,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_shut_doors', name: 'The Doors Sealed',
             marker: 'crassusRefused', entry: 'ev4_the_proconsuls_bill',
             terminal: 'ev4_what_carrhae_left',
-            note: 'SPEC §184. The refusal on record: the gold goes east regardless, by '
+            note: 'SPEC §186. The refusal on record: the gold goes east regardless, by '
               + 'engineers, and what is bought is the record of who sealed the doors — '
               + 'which Cassius\' requisitions test at length.',
           }),
@@ -309,14 +309,14 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'backed_caesar', name: 'Grain and Gold for Caesar',
             marker: 'jvBackedCaesar', entry: 'ev4_v_caesar_or_pompey',
             terminal: 'ev4_v_pharsalus_wager',
-            note: 'SPEC §184. The wager on the new man, settled at Pharsalus: amicitia between '
+            note: 'SPEC §186. The wager on the new man, settled at Pharsalus: amicitia between '
               + 'sovereigns if he wins, and grain sailing west by treaty rather than tribute.',
           }),
           Object.freeze({
             id: 'backed_pompey', name: 'The Old Settlement Honored',
             marker: 'jvBackedPompey', entry: 'ev4_v_caesar_or_pompey',
             terminal: 'ev4_v_pharsalus_wager',
-            note: 'SPEC §184. Treaties kept are legitimacy banked — and a kingdom that backed '
+            note: 'SPEC §186. Treaties kept are legitimacy banked — and a kingdom that backed '
               + 'the corpse buys its pardon at the victor\'s rate, invoiced to a kingdom, not '
               + 'a province.',
           }),
@@ -332,7 +332,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'backed_octavian', name: 'The Cold Young Man',
             marker: 'jvBackedOctavian', entry: 'ev4_v_antony_or_octavian',
             terminal: 'ev4_v_actium_sovereign',
-            note: 'SPEC §184. Grain and pilots for the west: after Actium, Octavian signs with '
+            note: 'SPEC §186. Grain and pilots for the west: after Actium, Octavian signs with '
               + 'the one eastern crown he never gave — a treaty read in Jerusalem as '
               + 'vindication.',
           }),
@@ -340,7 +340,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'backed_antony', name: 'The East Holds Together',
             marker: 'jvBackedAntony', entry: 'ev4_v_antony_or_octavian',
             terminal: 'ev4_v_actium_sovereign',
-            note: 'SPEC §184. The near Roman backed and the wager lost: the indemnity is paid '
+            note: 'SPEC §186. The near Roman backed and the wager lost: the indemnity is paid '
               + 'in full and on time, by a kingdom, to a treasury, with no diadem changing '
               + 'hands.',
           }),
@@ -429,7 +429,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'paid_in_rent', name: 'The Queen\'s Rent',
             marker: 'grovesLeased', entry: 'ev5_x_the_queens_portion',
             terminal: 'ev5_x_the_grovekeepers_ledger',
-            note: 'SPEC §184. The historical road: Herod leased his own groves back at two '
+            note: 'SPEC §186. The historical road: Herod leased his own groves back at two '
               + 'hundred talents a year and paid to the obol. The rent receipts are read out '
               + 'in the audit of the East after Actium, with approval.',
           }),
@@ -437,7 +437,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'refused_the_survey', name: 'Not Antony\'s to Give',
             marker: 'grovesRefused', entry: 'ev5_x_the_queens_portion',
             terminal: 'ev5_x_the_grovekeepers_ledger',
-            note: 'SPEC §184. The deed returned unread, and the insult entered in the ledger '
+            note: 'SPEC §186. The deed returned unread, and the insult entered in the ledger '
               + 'where the queen keeps such things. If the crown outlives her, the defiance '
               + 'is refiled as foresight by men who never liked her.',
           }),
@@ -445,7 +445,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'ceded_outright', name: 'The Valley Sold',
             marker: 'grovesCeded', entry: 'ev5_x_the_queens_portion',
             terminal: 'ev5_x_the_grovekeepers_ledger',
-            note: 'SPEC §184. Jericho ceded whole for a price paid in full. The valley comes '
+            note: 'SPEC §186. Jericho ceded whole for a price paid in full. The valley comes '
               + 'home in the settlement of Egypt\'s estate, and the clerk keeps the old sale '
               + 'price in the file.',
           }),
@@ -461,7 +461,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_arab_war', name: 'The War of the Water Rights',
             marker: 'foughtTheArabWar', entry: 'ev5_x_the_musters_of_actium',
             terminal: 'ev5_x_the_verdict_of_rhodes',
-            note: 'SPEC §184. The historical road, and the luckiest diversion of the reign: '
+            note: 'SPEC §186. The historical road, and the luckiest diversion of the reign: '
               + 'sent against Malichus by the queen\'s design, the king misses Actium, backs '
               + 'nobody, and is confirmed and enlarged at Rhodes.',
           }),
@@ -469,7 +469,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'sailed_with_antony', name: 'The Banner in the Line',
             marker: 'sailedWithAntony', entry: 'ev5_x_the_musters_of_actium',
             terminal: 'ev5_x_the_verdict_of_rhodes',
-            note: 'SPEC §184. The first letter obeyed to the hull: the kingdom\'s banner in '
+            note: 'SPEC §186. The first letter obeyed to the hull: the kingdom\'s banner in '
               + 'the line at Actium, on the losing side of it, and the diadem returned at '
               + 'Rhodes with an indemnity attached.',
           }),
@@ -477,7 +477,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'kept_the_army_home', name: 'The Documented Famine',
             marker: 'keptTheArmyHome', entry: 'ev5_x_the_musters_of_actium',
             terminal: 'ev5_x_the_verdict_of_rhodes',
-            note: 'SPEC §184. Neither letter: the levies bring in the harvest and the excuse '
+            note: 'SPEC §186. Neither letter: the levies bring in the harvest and the excuse '
               + 'is paid for, documented, and disbelieved by everybody who accepts it. '
               + 'Confirmed at Rhodes, with a note in the file.',
           }),
@@ -493,7 +493,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'brought_home', name: 'Two Hasmoneans in One City',
             marker: 'hyrcanusHome', entry: 'ev5_atg_hyrcanus',
             terminal: 'ev5_atg_the_last_of_the_elders',
-            note: 'SPEC §184. The old man comes home in honor and every malcontent learns '
+            note: 'SPEC §186. The old man comes home in honor and every malcontent learns '
               + 'his address. He dies at home, of age — the first man of the house in three '
               + 'generations to manage it.',
           }),
@@ -501,7 +501,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'pensioned_east', name: 'Babylon Keeps Its Treasure',
             marker: 'hyrcanusPensioned', entry: 'ev5_atg_hyrcanus',
             terminal: 'ev5_atg_the_last_of_the_elders',
-            note: 'SPEC §184. A pension eastward instead of a homecoming. The communities of '
+            note: 'SPEC §186. A pension eastward instead of a homecoming. The communities of '
               + 'the river country line the cortege road a decade later and keep their own '
               + 'account of the arithmetic.',
           }),
@@ -1087,7 +1087,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'one_crown', name: 'Both Centres Under Jerusalem',
             marker: 'oneCrownBothCentres', entry: 'ev_w_the_other_half',
             terminal: 'ev_w_what_the_centres_became',
-            note: 'SPEC §184. The Exilarch comes under the king, and the academies of the '
+            note: 'SPEC §186. The Exilarch comes under the king, and the academies of the '
               + 'east are subject to a court they have never answered to. A generation on, '
               + 'the calendar question tests what the union is made of.',
           }),
@@ -1095,7 +1095,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'two_houses', name: 'Two Houses, One People',
             marker: 'twoHousesOnePeople', entry: 'ev_w_the_other_half',
             terminal: 'ev_w_what_the_centres_became',
-            note: 'SPEC §184. A federation rather than a conquest: the document is signed by '
+            note: 'SPEC §186. A federation rather than a conquest: the document is signed by '
               + 'both houses and is careful never to say which is senior — which is exactly '
               + 'the clause the festival dates eventually land on.',
           }),
@@ -1110,7 +1110,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_treaty', name: 'The Nubian Precedent',
             marker: 'theTreatyState', entry: 'ev_w_the_treaty_state',
             terminal: 'ev_w_the_rate_is_renegotiated',
-            note: 'SPEC §184. Sovereignty bought annually, on the pattern the baqt held for '
+            note: 'SPEC §186. Sovereignty bought annually, on the pattern the baqt held for '
               + 'six centuries — and re-argued at the distracted rate the first time the '
               + 'caliphate falls into its own war of succession.',
           }),
@@ -1118,7 +1118,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'no_category', name: 'In No Category',
             marker: 'refusedTheCategory', entry: 'ev_w_the_treaty_state',
             terminal: 'ev_w_the_rate_is_renegotiated',
-            note: 'SPEC §184. Neither submission nor treaty: a frontier with the fastest-'
+            note: 'SPEC §186. Neither submission nor treaty: a frontier with the fastest-'
               + 'expanding power in the world and no document governing it — until the '
               + 'fitna makes a late treaty signable from strength, or the question reopens '
               + 'at the restored caliphate\'s own rate.',
@@ -1134,7 +1134,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_two_torahs', name: 'The Mountain Returned',
             marker: 'twoTorahsPeace', entry: 'ev_t_the_other_israel',
             terminal: 'ev_t_what_gerizim_answered',
-            note: 'SPEC §184. The statutes struck, the garrison off the summit, and the '
+            note: 'SPEC §186. The statutes struck, the garrison off the summit, and the '
               + 'schism returned to an argument between kin about a verse. When the south '
               + 'sends riders to the mountain, the hill country answers as one country.',
           }),
@@ -1142,7 +1142,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_statutes_inherited', name: 'Only the Seal Changes',
             marker: 'oldQuarrelKept', entry: 'ev_t_the_other_israel',
             terminal: 'ev_t_what_gerizim_answered',
-            note: 'SPEC §184. The empire\'s apparatus kept under a new seal. The Keepers add '
+            note: 'SPEC §186. The empire\'s apparatus kept under a new seal. The Keepers add '
               + 'a name to the list their chronicles keep — and negotiate their own terms '
               + 'with the conquest, separately, as they have with every power since Assyria.',
           }),
@@ -1278,6 +1278,33 @@ export const CHAPTER_PATHS = Object.freeze([
   }),
 
 ]);
+
+// The cards that open a road (SPEC §184). Every road's `entry` above, indexed
+// so the event window, the multiplayer mirror and the Compendium can badge a
+// fork card the moment it is dealt — the badge is read off the tree itself,
+// so it can never disagree with §119 or drift from the chains. Lazy, built
+// once; an entry shared by several roads of one fork resolves to that fork.
+let _entryIndex = null;
+export function entryFork(chapterId, eventId) {
+  if (!chapterId || !eventId) return null;
+  if (!_entryIndex) {
+    _entryIndex = new Map();
+    for (const ch of CHAPTER_PATHS) {
+      for (const fk of ch.forks) {
+        for (const rd of fk.roads) {
+          if (!rd.entry) continue;
+          const key = ch.id + '/' + rd.entry;
+          if (!_entryIndex.has(key)) {
+            _entryIndex.set(key, Object.freeze({
+              chapter: ch.id, fork: fk.id, question: fk.question, roads: fk.roads.length,
+            }));
+          }
+        }
+      }
+    }
+  }
+  return _entryIndex.get(String(chapterId) + '/' + String(eventId)) || null;
+}
 
 // Roads that knowingly have no ending yet, with why. A test asserts this list
 // matches reality exactly: close one of these and forget to remove it here, or
