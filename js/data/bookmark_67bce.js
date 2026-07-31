@@ -695,7 +695,7 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.HYR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, legitimacy: 10 }),
       },
-      // The map of the grandfathers (SPEC §186): Jannaeus' east bank and the
+      // The map of the grandfathers (SPEC §187): Jannaeus' east bank and the
       // Damascus road — the expansion a restored elder is measured against.
       {
         id: 'h4_moab', name: 'The Twelve Cities of Moab',
@@ -857,7 +857,7 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.ARI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 25, legitimacy: 10 }),
       },
-      // The map of the grandfathers (SPEC §186): the coast and the northern
+      // The map of the grandfathers (SPEC §187): the coast and the northern
       // road — the able brother\'s war does not stop at the hill country.
       {
         id: 'a4_coast', name: 'The Sea Gates',

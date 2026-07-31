@@ -166,7 +166,7 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 67 BCE — the ev4_v_* strand pays both brothers' chains off one world,
-  // the §186 forks (Moab, Crassus, the two Roman civil wars) by marker, and
+  // the §187 forks (Moab, Crassus, the two Roman civil wars) by marker, and
   // the Tigris client's road pays off the same unrenamed west (§185).
   const { game, ctx } = booted.get('67bce');
   Object.assign(game.flags, {
@@ -182,7 +182,7 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 40 BCE — first the kingdom's statue answer and the Hasmonean hold (with
-  // the §186 markers: the groves refused, the fleet sailed, the old man home
+  // the §187 markers: the groves refused, the fleet sailed, the old man home
   // — set before the first pass, because ATG must be paid while it lives),
   // then a second world in which Herod outgrew the favour.
   const { game, ctx } = booted.get('40bce');
@@ -223,7 +223,7 @@ function expectAllDone(g, bookmark, tags, label) {
   expectAllDone(game, era('529ce').bookmark, ['SAM'], '529ce');
 }
 
-{ // 614 CE — the century, its three dependents, and the §186 forks: the
+{ // 614 CE — the century, its three dependents, and the §187 forks: the
   // Exilarchate, the caliph's categories, and the other Israel.
   const { game, ctx } = booted.get('614ce');
   Object.assign(game.flags, {

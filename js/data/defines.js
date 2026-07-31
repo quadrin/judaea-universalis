@@ -1092,6 +1092,23 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
+  // Financial aid (SPEC §186): where a bookmark names its donor courts, any
+  // other court may petition one for aid — granted at the donor's regard,
+  // sized to the donor's own purse, and flowing down the §24 subsidy pipe.
+  // A granted package runs its term (a voted credit clears); only war or a
+  // §100 embargo between the two courts stops the checks early.
+  AID: {
+    need: 55,              // donor's opinion of the petitioner required to grant
+    infl: 20,              // influence points the mission costs to send
+    months: 12,            // how long a granted package flows
+    incomeShare: 0.25,     // package size: this share of the donor's monthly books…
+    amountFloor: 5,        // …never less than this, so a shallow purse still means something…
+    amountCap: 25,         // …and never more: even Washington votes line items
+    askOpinion: -5,        // being asked for money leaves a mark
+    cdMonths: 30,          // each donor hears one petition inside this window
+    aiFloor: 30,           // an AI court petitions when its treasury runs under this
+  },
+
   BASE: {
     regSize: 1000,                     // men per regiment
     regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment

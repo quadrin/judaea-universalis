@@ -774,7 +774,7 @@ export const BOOKMARK_529 = {
         check: (ctx) => eraTiers(ctx.game.tags.SAM) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { gov: 25, legitimacy: 10 }),
       },
-      // Past the hill country (SPEC §186): what a rising that survives its
+      // Past the hill country (SPEC §187): what a rising that survives its
       // first empire actually marches on — the seat of Palaestina Secunda,
       // and the coast road north of the port.
       {

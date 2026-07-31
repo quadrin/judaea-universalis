@@ -43,6 +43,7 @@ import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from '.
 import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
 import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
+import { aidInfo, requestAidCore } from './aid.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
@@ -1146,6 +1147,10 @@ export function gameActions(ctx) {
       // one, and only against an arsenal court or our current supplier.
       let arms = null;
       try { arms = armsInfo(ctx, me, tag); } catch (e) { arms = null; }
+      // Financial aid (SPEC §186): only surfaced where the bookmark names
+      // donor courts, and only against a donor or the purse we already lean on.
+      let aid = null;
+      try { aid = aidInfo(ctx, me, tag); } catch (e) { aid = null; }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -1183,6 +1188,7 @@ export function gameActions(ctx) {
         recognition,
         embargo,
         arms,
+        aid,
         offmap: isOffmapTag(ctx, tag),
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
@@ -1711,6 +1717,16 @@ export function gameActions(ctx) {
         say('The arsenal opens', res.supplier + ' signs the weapons transfer agreement ('
           + res.cost + ' talents): their patterns are ours to raise.' + dropped, 'good');
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
+    },
+
+    // ---- financial aid (SPEC §186) -------------------------------------------
+    requestAid(tag) {
+      try {
+        const res = requestAidCore(ctx, g.playerTag, String(tag));
+        if (!res.ok) { say('No aid', res.why + '.', 'bad'); return; }
+        say('The purse opens', res.donorName + ' grants the aid: ' + res.amount
+          + ' talents a month for ' + res.months + ' months. Asking left a mark — their regard will want tending.', 'good');
+      } catch (e) { warnOnce('requestAid', 'requestAid failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------

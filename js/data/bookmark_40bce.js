@@ -600,7 +600,7 @@ export const BOOKMARK_40 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 25, legitimacy: 15 }),
       },
       // The expansion the settlement of the East actually paid this king
-      // (SPEC §186): the Decapolis grants and the bandit country command.
+      // (SPEC §187): the Decapolis grants and the bandit country command.
       {
         id: 'h5_greek_cities', name: 'The Cities of the Decapolis',
         icon: 'amphora', col: 0, row: 3, requires: ['h5_city'],
@@ -744,7 +744,7 @@ export const BOOKMARK_40 = {
         check: (ctx) => eraTiers(ctx.game.tags.ATG) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { gov: 25, legitimacy: 10 }),
       },
-      // The map of the grandfathers (SPEC §186): Jannaeus held the coast and
+      // The map of the grandfathers (SPEC §187): Jannaeus held the coast and
       // the Damascus road, and a restored house is measured against his map.
       {
         id: 'a5_coast', name: 'The Coast of Jannaeus',

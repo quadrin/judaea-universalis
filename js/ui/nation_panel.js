@@ -298,12 +298,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The working verbs on a foreign court's own panel (SPEC §180/§181):
-      // envoys, gifts, and the weapons transfer agreement.
+      // The working verbs on a foreign court's own panel (SPEC §180/§181/§186):
+      // envoys, gifts, the weapons transfer agreement, and the aid petition.
       const npDip = e.target.closest('[data-np-dip]');
       if (npDip && viewTag) {
         if (!npDip.classList.contains('disabled') && actions) {
-          const fn = { improve: 'improveRelations', gift: 'sendGift', arms: 'signArmsDeal' }[npDip.dataset.npDip];
+          const fn = { improve: 'improveRelations', gift: 'sendGift', arms: 'signArmsDeal', aid: 'requestAid' }[npDip.dataset.npDip];
           try { if (fn && typeof actions[fn] === 'function') actions[fn](viewTag); }
           catch (err) { warnOnce('np-dip-' + npDip.dataset.npDip, err); }
         }
@@ -1080,6 +1080,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
               + (a.whyNot ? '\n' + a.whyNot + '.' : ''));
           }
         }
+        // Financial aid (SPEC §186): petition a donor court's purse, or watch
+        // the package we already won run its term.
+        if (d.aid && (d.aid.offered || d.aid.flowing)) {
+          const ai = d.aid;
+          if (ai.flowing) {
+            row += btn('', '★ Their Aid Flows', false,
+              'The package stands: ' + ai.amount + ' talents a month, ' + ai.monthsLeft
+              + ' months to run. A voted credit clears whatever their regard does — only war or an embargo between us stops the checks.', true);
+          } else {
+            row += btn('aid', 'Request Financial Aid', ai.can,
+              'Petition their treasury: ' + ai.amount + ' talents a month for ' + ai.months
+              + ' months, sized to their own purse.'
+              + '\n――――――\nTheir regard for us: ' + ai.theirRegard + ' (need ' + ai.need + ') · the mission costs ' + ai.infl + ' influence.'
+              + '\nAsking leaves a mark (' + ai.askOpinion + ' regard) — one purse at a time, one petition per donor every ' + ai.cdMonths + ' months.'
+              + (ai.whyNot ? '\n' + ai.whyNot + '.' : ''));
+          }
+        }
         html += `<div class="np-dip-sec">Envoys</div><div class="pp-diplo-btns np-dip-verbs">${row}</div>`;
       }
     }
@@ -1127,7 +1144,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       for (const s of flows) {
         const out = s.from === who;
         const other = out ? s.to : s.from;
-        html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
+        html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : s.aid ? 'Foreign aid' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
           + `${chip(other)}<span class="np-dip-name">${nameOf(other)}</span>`
           + `<span class="np-dip-ws ${out ? 'neg' : 'pos'}">${out ? '−' : '+'}${s.amount}/mo · ${s.monthsLeft}m</span></div>`;
       }

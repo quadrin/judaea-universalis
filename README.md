@@ -513,6 +513,19 @@ static site, the zero dependencies, or the missing build step changes.
   courtable, embargo-capable, intrigue-able, unconquerable. And at the end of
   the French road, if you hold the deep Negev, something can rise at Dimona
   that the budget calls a textile factory.
+- **The purse is somebody else's too.** The other thing the great powers
+  signed was credits: in 1948 any court may petition Washington, Moscow,
+  London or Paris for financial aid from the donor's own panel — granted at
+  the donor's regard for you, sized to the donor's own purse (the American
+  package is the deep one, which is the plain 1948 fact), and paid monthly
+  for a year down the ordinary subsidy pipe. Asking leaves a mark, each
+  donor hears one petition every thirty months, and a granted package runs
+  its term whatever the friendship does after — only war or an embargo
+  stops the checks. The AI petitions too, when it is poor: the British
+  subvention that paid the Arab Legion emerges from the seeded book instead
+  of being scripted. Israel's own road is the historical one — court Truman
+  past the bar and the Export-Import credits of January '49 arrive on
+  schedule, or mend two years of fences with London for a smaller purse.
 - **No rifle brigades at Masada.** Every age now declares how far up the
   technology ladder it can climb: the ancient bookmarks stop at professional
   legions, 614 at thematic regulars, and only 1948 reaches rifle brigades and
