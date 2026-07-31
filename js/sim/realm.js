@@ -669,13 +669,37 @@ export function monthlyHolySites(ctx) {
 // that reads or writes it keeps its meaning), and a hand-moved missionIdx —
 // an old save, a test forcing a chain forward — is honored by seeding the
 // first missionIdx missions as done, which is what it always meant.
+//
+// A crown's own chain may also speak per chapter (SPEC §188): a mission that
+// declares `chapters: ['66ce', …]` is offered only in those, one that declares
+// none is offered wherever the crown is formable. The Kingdom of Israel is
+// formable in six chapters and the ages do not ask the same things of it, so
+// its table carries one spine and six branches and each chapter reads the
+// spine plus its own. Filtered chains are memoized per table per chapter: the
+// monthly pass and the panel both call this, and both want the same array.
+const chapterChains = new WeakMap();
+export function chapterChain(list, bookmarkId) {
+  if (!Array.isArray(list)) return list;
+  if (!list.some((m) => m && Array.isArray(m.chapters))) return list;
+  let byChapter = chapterChains.get(list);
+  if (!byChapter) { byChapter = new Map(); chapterChains.set(list, byChapter); }
+  const key = String(bookmarkId || '');
+  let out = byChapter.get(key);
+  if (!out) {
+    out = list.filter((m) => m && (!Array.isArray(m.chapters) || m.chapters.indexOf(key) >= 0));
+    byChapter.set(key, out);
+  }
+  return out;
+}
+
 export function missionsFor(ctx, tag) {
   const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
   if (Array.isArray(own) && own.length) return own;
   for (const f of FORMABLES) {
     if (!f || f.to !== tag || !Array.isArray(f.missions) || !f.missions.length) continue;
     if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
-    return f.missions;
+    const list = chapterChain(f.missions, ctx.bookmark && ctx.bookmark.id);
+    if (Array.isArray(list) && list.length) return list;
   }
   return null;
 }
