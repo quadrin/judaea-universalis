@@ -103,13 +103,16 @@ export function computeTechEffects(tech) {
 // draws pay, an armored corps devours pay, parts and shells. Better patterns
 // hit harder AND cost more to keep standing — the maintenance line finally
 // grows with the age instead of billing 1948 like 167 BCE.
+// The `art` column is the shot arm (SPEC §191); its names live beside the
+// other two rather than in a third table, and js/data/units.js owns what the
+// arm can DO. genName(gi, 'art') answers here like the other two.
 export const UNIT_GENS = [
-  { at: 0,  inf: 'Tribal Levies',       cav: 'Raider Horse',      mult: 1.0,  upkeep: 1.0 },
-  { at: 4,  inf: 'Drilled Spearmen',    cav: 'Noble Cavalry',     mult: 1.25, upkeep: 1.1 },
-  { at: 6,  inf: 'Professional Legions', cav: 'Cataphract Horse', mult: 1.55, upkeep: 1.25 },
-  { at: 10, inf: 'Thematic Regulars',   cav: 'Armored Lancers',   mult: 1.9,  upkeep: 1.5 },
-  { at: 14, inf: 'Musket Battalions',   cav: 'Dragoon Squadrons', mult: 2.3,  upkeep: 1.9 },
-  { at: 19, inf: 'Rifle Brigades',      cav: 'Armored Corps',     mult: 2.8,  upkeep: 2.4 },
+  { at: 0,  inf: 'Tribal Levies',       cav: 'Raider Horse',      art: 'Slinger Bands',      mult: 1.0,  upkeep: 1.0 },
+  { at: 4,  inf: 'Drilled Spearmen',    cav: 'Noble Cavalry',     art: 'Archer Companies',   mult: 1.25, upkeep: 1.1 },
+  { at: 6,  inf: 'Professional Legions', cav: 'Cataphract Horse', art: 'Bolt Engines',       mult: 1.55, upkeep: 1.25 },
+  { at: 10, inf: 'Thematic Regulars',   cav: 'Armored Lancers',   art: 'Naphtha Crews',      mult: 1.9,  upkeep: 1.5 },
+  { at: 14, inf: 'Musket Battalions',   cav: 'Dragoon Squadrons', art: 'Field Batteries',    mult: 2.3,  upkeep: 1.9 },
+  { at: 19, inf: 'Rifle Brigades',      cav: 'Armored Corps',     art: 'Gun Regiments',      mult: 2.8,  upkeep: 2.4 },
 ];
 
 // Hulls age like soldiers (SPEC §31): same thresholds, same power curve.

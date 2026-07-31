@@ -826,7 +826,7 @@ export const BOOKMARK_66 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 15 }),
       },
-      // The war carried outward (SPEC §188): the cities that killed their
+      // The war carried outward (SPEC §192): the cities that killed their
       // Jews, and the client kingdom whose towns came over one by one.
       {
         id: 'jm_decapolis', name: 'Answer the Cities',

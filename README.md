@@ -78,6 +78,19 @@ static site, the zero dependencies, or the missing build step changes.
   Host, Faith, World — so the ruler, the four numbers you watch and the five
   levers stay put while twenty sections take turns underneath them.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
+- Three land arms with eighteen soldiers between them, and each one has a face,
+  a gait and a weakness. **The foot** holds the line, **the horse** breaks it,
+  **the shot** — slingers, archers, bolt engines, naphtha crews, cannon,
+  anti-tank guns — outranges both. They answer each other in a triangle: the
+  shot breaks a formed line, the line brakes a charge, the charge rides down
+  the shot. Every pattern flies its own emblem on the map (a spear at 167 BCE,
+  a barded cataphract under the Hasmoneans, a tank in 1948), marches at its
+  own pace — a column keeps its slowest arm's, so an ordinary hop is four days
+  for horse, five for foot and six once the guns are along — and makes its own
+  noise when you put it on the road or into the line: tramping feet, a
+  four-beat canter of hooves, diesel and track clatter. Armor is the century's
+  exception: nothing on foot stops it, and the guns, the sky and broken ground
+  are what do.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
@@ -223,7 +236,10 @@ static site, the zero dependencies, or the missing build step changes.
   People in Arms faces the Arab Legion — fifty-one groups across the eight
   chapters, three tiers each, bought with the ladder's own point, with locked
   cards that tell you exactly which rung opens them ("Unlocked at The Third
-  Wall (8)"). The AI buys its side's curriculum on the same terms, and every
+  Wall (8)") — and they are read where they are bought: the Ideas block sits
+  directly under the Technology block on the same tab of the realm panel, in
+  every chapter, so the card naming a rung and the ladder climbing toward it
+  are one screen. The AI buys its side's curriculum on the same terms, and every
   playable side's mission tree grew two branches that assign it: master the
   era's named art, and take up its ideas.
 - **The mission tree shows the roads not taken.** Every playable side's tree
@@ -550,6 +566,21 @@ static site, the zero dependencies, or the missing build step changes.
   convening, the age keeps stating its objectives — and the crown brings its
   own payoff (coin, men, ministries and a modifier that says what this kingdom
   is FOR) plus a fresh mission chain addressed to the new identity.
+- **The crown speaks in the age it was crowned in.** The Kingdom of Israel can
+  be proclaimed in six of the eight chapters, and it used to read the same four
+  missions in all of them. Those four are still the spine — settle the crown,
+  muster the kingdom, hold the land of the twelve, build rather than merely
+  hold — but each chapter now hangs three of its own off the crowning: finish
+  the Seleucid throne and take Simon's harbours in 167 BCE; hold the Greek
+  cities of the Jordan, bring Petra under the crown and get an answer out of
+  Babylonia in 67; keep the balsam groves Cleopatra took and build the harbour
+  Herod would have built in 40; take the procurators' coast, absorb the last
+  Herodian's tetrarchy and endow a House that never burned in 66; unmake Aelia
+  between the sea and the Jordan and raise the Third House in 132; raise the
+  altar on the swept Mount, reach the Exilarchate and watch the southern road
+  in 614. Eighteen in all — and because the Third House is now one of them,
+  taking the greater crown no longer costs you the mission the chapter is
+  about.
 - **Playable on a phone, properly.** The handheld pass: one tools button in the
   topbar opens a sheet with the chronicle, the ledger, the primer, the quill
   and your saved campaigns — a phone could not previously save its own game,

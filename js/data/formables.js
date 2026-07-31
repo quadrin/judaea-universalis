@@ -67,10 +67,78 @@ function devOf(ctx, tag) {
   return dev;
 }
 
-// The Kingdom of Israel's own chain: what a kingdom does once it is one.
-const MLI_MISSIONS = [
+// ---- what a chapter's own missions ask after (SPEC §189) --------------------
+// Province names are the canon keys the map ships with; a chapter that renames
+// one for its era (Straton's Tower, Shechem) renames the LABEL, so the checks
+// go on saying Caesarea Maritima and the prose says what the age said.
+function holdsAll(ctx, tag, names) { return names.every((n) => holds(ctx, tag, n)); }
+function treasuryOf(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return (t && t.treasury) || 0;
+}
+function stabilityOf(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  return (t && t.stability) || 0;
+}
+// a's opinion OF b — the table lives on the holder of the opinion.
+function opinionOf(ctx, a, b) {
+  const t = ctx.game.tags[a];
+  return (t && t.opinion && t.opinion[b]) || 0;
+}
+function atWarBetween(ctx, a, b) {
+  const t = ctx.game.tags[a];
+  return !!t && (t.atWarWith || []).indexOf(b) >= 0;
+}
+function atPeaceBetween(ctx, a, b) {
+  return !atWarBetween(ctx, a, b) && !atWarBetween(ctx, b, a);
+}
+function allied(ctx, a, b) {
+  const ta = ctx.game.tags[a];
+  const tb = ctx.game.tags[b];
+  return !!((ta && (ta.allies || []).indexOf(b) >= 0)
+    || (tb && (tb.allies || []).indexOf(a) >= 0));
+}
+// Where a diaspora community's standing sits (SPEC §172); an untouched one has
+// not been seeded yet, and reads as nothing rather than as its opening value.
+function standingAt(ctx, name) {
+  const p = ctx.prov && ctx.prov(name);
+  return (p && p.dia && Number.isFinite(p.dia.standing)) ? p.dia.standing : 0;
+}
+function templeStands(ctx) {
+  if (ctx.game.flags && ctx.game.flags.templeBurned) return false;
+  const p = ctx.prov && ctx.prov('Jerusalem');
+  return !!p && p.wonder === 'temple';
+}
+// SPEC §32's House, paid for by the crown rather than by the chapter's own
+// side. A Mount that is already built on is endowed, not billed twice.
+function raiseTheThirdHouse(ctx) {
+  const p = ctx.prov && ctx.prov('Jerusalem');
+  if (!p || p.wonder !== 'temple') {
+    ctx.helpers.adjust(ctx, 'MLI', { treasury: -300 });
+    if (p) p.wonder = 'temple';
+  }
+  ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 20, gov: 25 });
+}
+
+// ---- the Kingdom of Israel's own programme (SPEC §189) ----------------------
+// The crown is formable in six chapters, and until now it read the same four
+// missions in all of them: settle the crown, muster the kingdom, hold the
+// land, build rather than merely hold. Those four are what a kingdom does
+// whenever it is proclaimed and they stay the SPINE of every chapter's tree.
+// What they could not say is which age the proclamation happened in — and the
+// ages ask sharply different things. A crown raised out of the Maccabean
+// rising has a Seleucid throne to finish and a Republic to keep sweet; the
+// same crown in 132 has a Roman colony to unmake and a bare Mount; in 614 it
+// has Babylonia's Exilarch on one side and the empty desert road on the other.
+//
+// So each chapter adds a BRANCH of three, hanging off the crowning. A mission
+// that declares `chapters` is offered only there (`chapterChain`, realm.js);
+// one that declares none is offered in all six. Seats: the spine holds cols
+// 0-1, every branch takes cols 2-3, so no chapter's tree collides.
+const MLI_SPINE = [
   {
     id: 'mli_the_crowning', name: 'The Crown Set Down',
+    icon: 'star8', col: 1, row: 0,
     desc: 'Settle the realm under the new crown: stability 2 and a court that is not '
       + 'at war with itself (no pretender in the field).',
     rewardText: '"The Crown Settled": +10% income and −0.5 unrest everywhere for 60 months.',
@@ -83,6 +151,7 @@ const MLI_MISSIONS = [
   },
   {
     id: 'mli_the_muster', name: 'The Muster of Israel',
+    icon: 'spears', col: 0, row: 1, requires: ['mli_the_crowning'],
     desc: 'Put thirty thousand men under the kingdom\'s own banner.',
     rewardText: '+40 martial points and "The King\'s Own": +8% discipline for 60 months.',
     check: (ctx) => menOf(ctx, 'MLI') >= 30000,
@@ -95,6 +164,7 @@ const MLI_MISSIONS = [
   },
   {
     id: 'mli_the_land', name: 'The Land of the Twelve',
+    icon: 'grain', col: 1, row: 1, requires: ['mli_the_crowning'],
     desc: 'Thirty provinces under the crown, twenty of them keeping the Law.',
     rewardText: '+150 talents and "The Kingdom Whole": +12% manpower, permanent.',
     check: (ctx) => ownedCount(ctx, 'MLI') >= 30 && ownedCount(ctx, 'MLI', 'judaism') >= 20,
@@ -107,6 +177,7 @@ const MLI_MISSIONS = [
   },
   {
     id: 'mli_the_house', name: 'The House of the Name',
+    icon: 'bricks', col: 1, row: 2, requires: ['mli_the_land'],
     desc: 'Build the realm rather than merely holding it: 260 points of development '
       + 'under the crown.',
     rewardText: '"The Builders": +8% income and +0.2 public belief a month, permanent.',
@@ -116,6 +187,352 @@ const MLI_MISSIONS = [
       effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
     }),
   },
+];
+
+// ---- 167 BCE: the rising that became a kingdom ------------------------------
+// The Maccabean chapter's own three. 1 Macc 13:41 dates the freedom: "the yoke
+// of the gentiles was taken away from Israel, and the people began to write in
+// their instruments and contracts, In the first year of Simon"; 14:5 has the
+// harbour ("he took Joppa for a haven, and made an entrance to the isles of
+// the sea"); and 8:17-32 has the embassy to a Republic that had beaten Antiochus'
+// father and would put the answer on bronze.
+const MLI_167 = [
+  {
+    id: 'mli_167_yoke', name: 'The Yoke Taken Away',
+    icon: 'laurel', col: 2, row: 1, chapters: ['167bce'], requires: ['mli_the_crowning'],
+    desc: 'Finish the throne that decreed the persecution: the Seleucid kingdom dead, '
+      + 'bent to us as a client, or a rump of three — with Jerusalem in our hands. Then '
+      + 'the contracts may be dated by our own years and not by theirs.',
+    rewardText: '+20 legitimacy and "The Yoke Taken Away": −0.5 unrest everywhere and '
+      + '+0.2 public belief a month, permanent.',
+    check: (ctx) => broken(ctx, 'SEL') && holds(ctx, 'MLI', 'Jerusalem'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 20 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'yoke_taken_away', name: 'The Yoke Taken Away', months: -1,
+        effects: { unrestAll: -0.5, legitimacyAdd: 0.2 },
+      });
+    },
+  },
+  {
+    id: 'mli_167_isles', name: 'An Entrance to the Isles of the Sea',
+    icon: 'ship', col: 2, row: 2, chapters: ['167bce'], requires: ['mli_167_yoke'],
+    desc: 'Take the harbours — Joppa, Azotus and Gaza. A hill kingdom that has to buy '
+      + 'its iron through somebody else\'s customs house is a hill kingdom on sufferance.',
+    rewardText: '+150 talents and "The Harbours of the Kingdom": +12% trade, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Joppa', 'Azotus', 'Gaza']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 150 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'harbours_of_the_kingdom', name: 'The Harbours of the Kingdom', months: -1,
+        effects: { tradeMult: 1.12 },
+      });
+    },
+  },
+  {
+    id: 'mli_167_bronze', name: 'The Tablets of Bronze',
+    icon: 'scroll', col: 3, row: 2, chapters: ['167bce'], requires: ['mli_167_yoke'],
+    desc: 'Keep the Republic on our side of the ledger: at peace with Rome, and its '
+      + 'Senate thinking well of us — opinion +40. Judas sent an embassy to it in 161, '
+      + 'and the answer came back cut into bronze and hung up in Jerusalem.',
+    rewardText: '+40 influence points and "The Friendship of the Republic": +10% income '
+      + 'for 120 months.',
+    check: (ctx) => {
+      const rom = ctx.game.tags.ROM;
+      if (!rom || rom.alive === false) return false;
+      return atPeaceBetween(ctx, 'MLI', 'ROM') && opinionOf(ctx, 'ROM', 'MLI') >= 40;
+    },
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { infl: 40 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'friendship_of_the_republic', name: 'The Friendship of the Republic',
+        months: 120, effects: { incomeMult: 1.1 },
+      });
+    },
+  },
+];
+
+// ---- 67 BCE: the kingdom Pompey would have cut down -------------------------
+// The settlement of 63 took the Greek cities of the Jordan out of the
+// Hasmonean state and gave them to the new province of Syria; a crown that
+// holds them is the state Rome never got to redraw. The other two asks are the
+// chapter's own creditors: Aretas, who had to be paid in the twelve cities of
+// Moab to march for a Hasmonean, and the communities beyond the Euphrates,
+// older and larger than Judaea itself.
+const MLI_67 = [
+  {
+    id: 'mli_67_cities', name: 'The Cities of the Jordan',
+    icon: 'tower', col: 2, row: 1, chapters: ['67bce'], requires: ['mli_the_crowning'],
+    desc: 'Hold Scythopolis, Pella, Gadara, Gerasa and Philadelphia — the Greek cities of '
+      + 'the Jordan that Pompey\'s settlement tore out of this state and filed under the '
+      + 'province of Syria.',
+    rewardText: '+120 talents and "The Cities Kept": +10% trade and +5% income, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI',
+      ['Scythopolis', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 120 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_cities_kept', name: 'The Cities Kept', months: -1,
+        effects: { tradeMult: 1.1, incomeMult: 1.05 },
+      });
+    },
+  },
+  {
+    id: 'mli_67_academies', name: 'Babylonia Answers',
+    icon: 'lamp', col: 2, row: 2, chapters: ['67bce'], requires: ['mli_67_cities'],
+    desc: 'Win Babylonia: the Jews of Babylon standing with us at 70, or the city itself '
+      + 'under the crown. There are more Jews beyond the Euphrates than in Judaea, and '
+      + 'every one of them lives inside somebody else\'s empire.',
+    rewardText: '+3,000 manpower and +40 influence points.',
+    check: (ctx) => standingAt(ctx, 'Babylon') >= 70 || holds(ctx, 'MLI', 'Babylon'),
+    reward: (ctx) => ctx.helpers.adjust(ctx, 'MLI', { manpower: 3000, infl: 40 }),
+  },
+  {
+    id: 'mli_67_petra', name: 'Petra Under the Crown',
+    icon: 'market', col: 3, row: 2, chapters: ['67bce'], requires: ['mli_67_cities'],
+    desc: 'Bring the desert king to heel: Petra and Bostra under the crown, or Nabataea '
+      + 'owing us fealty. Aretas was paid in the twelve cities of Moab to march for a '
+      + 'Hasmonean; a kingdom does not buy its allies with its own provinces.',
+    rewardText: '+150 talents and "The Incense Road": +12% trade, permanent.',
+    check: (ctx) => {
+      const nab = ctx.game.tags.NAB;
+      if (nab && nab.overlord === 'MLI') return true;
+      return holdsAll(ctx, 'MLI', ['Petra', 'Bostra']);
+    },
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 150 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_incense_road', name: 'The Incense Road', months: -1, effects: { tradeMult: 1.12 },
+      });
+    },
+  },
+];
+
+// ---- 40 BCE: between the eagle and the archer ------------------------------
+// Cleopatra got the balsam of Jericho and the bitumen of the Dead Sea out of
+// Antony in 36 and leased them back to Herod at four hundred talents a year;
+// the Parthians who rode to Jerusalem in 40 were the one power in the world
+// that would seat a Jewish king against Rome; and the harbour at Straton's
+// Tower, sunk in open water with hydraulic concrete, was the single largest
+// thing anyone built in this country in five centuries.
+const MLI_40 = [
+  {
+    id: 'mli_40_balsam', name: 'The Groves of Jericho',
+    icon: 'grain', col: 2, row: 1, chapters: ['40bce'], requires: ['mli_the_crowning'],
+    desc: 'Hold Jericho and Engaddi — the balsam and the bitumen. Cleopatra took them out '
+      + 'of this country\'s revenue by asking Antony for them; a kingdom does not rent its '
+      + 'own groves back.',
+    rewardText: '+120 talents and "The Balsam Kept": +10% income and +8% trade, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Jericho', 'Engaddi']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 120 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_balsam_kept', name: 'The Balsam Kept', months: -1,
+        effects: { incomeMult: 1.1, tradeMult: 1.08 },
+      });
+    },
+  },
+  {
+    id: 'mli_40_harbour', name: 'A Harbour Where the Tower Stands',
+    icon: 'shipyard', col: 2, row: 2, chapters: ['40bce'], requires: ['mli_40_balsam'],
+    desc: 'Hold Straton\'s Tower and Dora with 400 talents banked, and build the harbour '
+      + 'this coast has never had: moles sunk in open water, a road up to Jerusalem, and '
+      + 'a customs house that answers to the crown.',
+    rewardText: 'The harbour is built: −250 talents; "The King\'s Harbour": +15% trade and '
+      + '+8% income, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Caesarea Maritima', 'Dora'])
+      && treasuryOf(ctx, 'MLI') >= 400,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: -250 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_kings_harbour', name: "The King's Harbour", months: -1,
+        effects: { tradeMult: 1.15, incomeMult: 1.08 },
+      });
+    },
+  },
+  {
+    id: 'mli_40_east', name: 'The Door to the East',
+    icon: 'horseshoe', col: 3, row: 2, chapters: ['40bce'], requires: ['mli_40_balsam'],
+    desc: 'Keep the eastern door open at both ends: Parthia bound to us in writing — '
+      + 'allied, or owing us fealty — and the Jews of the Twin Cities, at the King of '
+      + 'Kings\' own palace gate, standing with us at 70. Every Judaean court that loses '
+      + 'Rome goes looking east; the ones that arrived with something to offer were heard.',
+    rewardText: '+3,000 manpower and +30 martial points.',
+    check: (ctx) => {
+      const par = ctx.game.tags.PAR;
+      if (!par || par.alive === false) return false;
+      if (par.overlord !== 'MLI' && !allied(ctx, 'MLI', 'PAR')) return false;
+      return standingAt(ctx, 'Seleucia-Ctesiphon') >= 70;
+    },
+    reward: (ctx) => ctx.helpers.adjust(ctx, 'MLI', { manpower: 3000, mar: 30 }),
+  },
+];
+
+// ---- 66 CE: the House that did not burn ------------------------------------
+// The revolt began in Caesarea over whether a Jew could own a street in it,
+// and ended — in the sources — with the Temple on fire in the sixth month of
+// 70. A crown proclaimed inside that war has the procurators' seaboard to
+// take, the last Herodian's tetrarchy to absorb, and one House to keep.
+const MLI_66 = [
+  {
+    id: 'mli_66_coast', name: 'The Coast of the Kingdom',
+    icon: 'ship', col: 2, row: 1, chapters: ['66ce'], requires: ['mli_the_crowning'],
+    desc: 'Take the seaboard the procurators held: Caesarea Maritima, Ptolemais, Joppa '
+      + 'and Ascalon. The war started in the first of them, over a street.',
+    rewardText: '+150 talents and "The Ports Are Ours": +12% trade, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Caesarea Maritima', 'Ptolemais', 'Joppa', 'Ascalon']),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { treasury: 150 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_ports_are_ours', name: 'The Ports Are Ours', months: -1,
+        effects: { tradeMult: 1.12 },
+      });
+    },
+  },
+  {
+    id: 'mli_66_unburned', name: 'The House Unburned',
+    icon: 'temple', col: 2, row: 2, chapters: ['66ce'], requires: ['mli_66_coast'],
+    desc: 'Hold Jerusalem with the Temple still standing — no fire on the Mount — and '
+      + '400 talents to endow it. Josephus wrote the ash; this crown does not have to.',
+    rewardText: '+25 legitimacy and "The House Endowed": +0.25 public belief a month and '
+      + '−0.5 unrest everywhere, permanent.',
+    check: (ctx) => holds(ctx, 'MLI', 'Jerusalem') && templeStands(ctx)
+      && treasuryOf(ctx, 'MLI') >= 400,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 25 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_house_endowed', name: 'The House Endowed', months: -1,
+        effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+      });
+    },
+  },
+  {
+    id: 'mli_66_herodian', name: "The Last Herodian's Country",
+    icon: 'flag', col: 3, row: 2, chapters: ['66ce'], requires: ['mli_66_coast'],
+    desc: 'Take in the tetrarchy — Caesarea Philippi, Batanea and Tiberias — with '
+      + 'Agrippa\'s house finished as a power: dead, our client, or a rump of three. '
+      + 'The last Herodian spent the whole war on the other side of it.',
+    rewardText: '+2,500 manpower and +30 governance points.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Caesarea Philippi', 'Batanea', 'Tiberias'])
+      && broken(ctx, 'AGR'),
+    reward: (ctx) => ctx.helpers.adjust(ctx, 'MLI', { manpower: 2500, gov: 30 }),
+  },
+];
+
+// ---- 132 CE: the colony unmade ---------------------------------------------
+// Hadrian's Aelia Capitolina was a decree, a plough and a legion; the rising's
+// own coins showed the Temple facade and dated themselves by the Redemption of
+// Israel. A crown here is asked for both — and for the one thing that would
+// have made Rome fight the war two-handed, which is Vologases on the Euphrates.
+const MLI_132 = [
+  {
+    id: 'mli_132_colony', name: 'The Colony Unmade',
+    icon: 'walls', col: 2, row: 1, chapters: ['132ce'], requires: ['mli_the_crowning'],
+    desc: 'Not one Roman garrison between the sea and the Jordan: Jerusalem, Caesarea '
+      + 'Maritima, Sebaste, Emmaus and Lydda, all of them under the crown.',
+    rewardText: '+25 legitimacy and +40 governance points.',
+    check: (ctx) => holdsAll(ctx, 'MLI',
+      ['Jerusalem', 'Caesarea Maritima', 'Sebaste', 'Emmaus', 'Lydda']),
+    reward: (ctx) => ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 25, gov: 40 }),
+  },
+  {
+    // SPEC §32: the Mount this chapter starts bare can bear a House again —
+    // and it must stay reachable after the proclamation, or taking the greater
+    // crown would quietly cost a player the capstone of the chapter.
+    id: 'mli_132_third_house', name: 'Raise the Third House',
+    icon: 'shrine', col: 2, row: 2, chapters: ['132ce'], requires: ['mli_132_colony'],
+    desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady '
+      + '(stability +1), and put back what Titus took — the House the Redemption coinage '
+      + 'has been promising on every struck shekel.',
+    rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, +25 governance '
+      + 'points, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) '
+      + 'returns to Jerusalem\'s keeper. A House already standing is endowed instead, and '
+      + 'the silver stays banked.',
+    check: (ctx) => holds(ctx, 'MLI', 'Jerusalem') && treasuryOf(ctx, 'MLI') >= 500
+      && stabilityOf(ctx, 'MLI') >= 1,
+    reward: (ctx) => raiseTheThirdHouse(ctx),
+  },
+  {
+    id: 'mli_132_east', name: 'Rome Looks East',
+    icon: 'horseshoe', col: 3, row: 2, chapters: ['132ce'], requires: ['mli_132_colony'],
+    desc: 'Make the empire fight two wars: Parthia in the field against Rome, or an '
+      + 'alliance signed with the King of Kings. Trajan stood on the Gulf in 116, and '
+      + 'Vologases has not forgotten what the road home cost him.',
+    rewardText: '+2,500 manpower and "Rome Looks East": +8% morale for 60 months.',
+    check: (ctx) => atWarBetween(ctx, 'PAR', 'ROM') || allied(ctx, 'MLI', 'PAR'),
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { manpower: 2500 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'rome_looks_east', name: 'Rome Looks East', months: 60, effects: { moraleMult: 1.08 },
+      });
+    },
+  },
+];
+
+// ---- 614 CE: the century the empires spent on each other --------------------
+// Nehemiah ben Hushiel's Jerusalem lasted three years. A crown that lasts
+// longer has the Mount swept and waiting, the Exilarch of Babylonia — the one
+// Jewish authority nobody argued with, and a Davidide — sitting in another
+// empire, and a southern road that both empires are too exhausted to watch.
+const MLI_614 = [
+  {
+    id: 'mli_614_altar', name: 'The Altar on the Mount',
+    icon: 'altar', col: 2, row: 1, chapters: ['614ce'], requires: ['mli_the_crowning'],
+    desc: 'Hold Jerusalem with 500 talents and a steady realm (stability +1), and raise '
+      + 'the House again five centuries after Titus — on a platform that has been swept '
+      + 'and empty since the day the city was taken.',
+    rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, +25 governance '
+      + 'points, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) '
+      + 'returns to Jerusalem\'s keeper. A House already standing is endowed instead, and '
+      + 'the silver stays banked.',
+    check: (ctx) => holds(ctx, 'MLI', 'Jerusalem') && treasuryOf(ctx, 'MLI') >= 500
+      && stabilityOf(ctx, 'MLI') >= 1,
+    reward: (ctx) => raiseTheThirdHouse(ctx),
+  },
+  {
+    id: 'mli_614_exilarch', name: 'The Exilarch Comes Home',
+    icon: 'star4', col: 2, row: 2, chapters: ['614ce'], requires: ['mli_614_altar'],
+    desc: 'Reach the Exilarchate: Nehardea and Babylon under the crown, or the academy at '
+      + 'Nehardea standing with us at 75. Since 586 BCE the pedigree nobody disputes has '
+      + 'sat in another empire; a Davidic throne in Jerusalem is a question addressed to it.',
+    rewardText: '+25 legitimacy, +40 influence points and "The Two Houses Joined": '
+      + '+0.2 public belief a month, permanent.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Nehardea', 'Babylon'])
+      || standingAt(ctx, 'Nehardea') >= 75,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 25, infl: 40 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'two_houses_joined', name: 'The Two Houses Joined', months: -1,
+        effects: { legitimacyAdd: 0.2 },
+      });
+    },
+  },
+  {
+    id: 'mli_614_south', name: 'The Watch on the Southern Road',
+    icon: 'shield', col: 3, row: 2, chapters: ['614ce'], requires: ['mli_614_altar'],
+    desc: 'Close the desert road before it opens: Aila, Petra and Bostra held, with twenty '
+      + 'thousand men under the banner. Both empires are spending their last armies on each '
+      + 'other, and nobody at all is watching the road up from Arabia.',
+    rewardText: '+30 martial points and "The Southern Watch": +1 to hill-country defense '
+      + 'and +5% discipline for 120 months.',
+    check: (ctx) => holdsAll(ctx, 'MLI', ['Aila', 'Petra', 'Bostra'])
+      && menOf(ctx, 'MLI') >= 20000,
+    reward: (ctx) => {
+      ctx.helpers.adjust(ctx, 'MLI', { mar: 30 });
+      ctx.helpers.addTagModifier(ctx, 'MLI', {
+        id: 'the_southern_watch', name: 'The Southern Watch', months: 120,
+        effects: { hillDefBonus: 1, disciplineMult: 1.05 },
+      });
+    },
+  },
+];
+
+// One table, six readings (SPEC §189). `chapterChain` hands each chapter the
+// spine plus its own branch; the formables below carry the whole thing, so a
+// crown proclaimed in any of the six finds a full tree waiting.
+const MLI_MISSIONS = [
+  ...MLI_SPINE,
+  ...MLI_167, ...MLI_67, ...MLI_40, ...MLI_66, ...MLI_132, ...MLI_614,
 ];
 
 // Hasmonean Judaea restored: the priest-kings' own programme.

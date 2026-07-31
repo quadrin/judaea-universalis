@@ -201,7 +201,7 @@ function expectAllDone(g, bookmark, tags, label) {
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
   // through the wave rule in a single monthly pass — the client courts'
-  // roads (§185) pay off the same standing House, and the §188 forks (the
+  // roads (§185) pay off the same standing House, and the §192 forks (the
   // royal robes, the granaries) by marker.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, {
@@ -213,7 +213,7 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 132 CE — redemption, the accession, the recorded doubt, three deep,
-  // and the §188 forks (the Nasi's letters, the letters east) by marker;
+  // and the §192 forks (the Nasi's letters, the letters east) by marker;
   // the restored house's mint (§185) reads the same redemption.
   const { game, ctx } = booted.get('132ce');
   Object.assign(game.flags, {

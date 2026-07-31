@@ -44,7 +44,7 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  ok(v.length === 15, 'fifteen nodes (six objectives + the §179 curriculum + the §188 expansion + the §183/§188 roads not taken): ' + v.length);
+  ok(v.length === 15, 'fifteen nodes (six objectives + the §179 curriculum + the §192 expansion + the §183/§192 roads not taken): ' + v.length);
   // Only the chain's own root is workable among the era's objectives; the
   // §183 hypotheticals are standing invitations, so their roots open too.
   ok(v[0].status === 'current' && v.slice(1, 10).every((m) => m.status === 'locked'),
@@ -52,7 +52,7 @@ const { game, ctx, actions } = boot('JUD', 42);
   ok(v[10].hypothetical && v[10].status === 'current'
     && v[11].status === 'locked' && v[12].status === 'locked'
     && v[13].status === 'current' && v[14].status === 'current',
-    'the hypothetical roots stand open (the §188 forks are roots too), the children wait: '
+    'the hypothetical roots stand open (the §192 forks are roots too), the children wait: '
     + v.slice(10).map((m) => m.id + '=' + m.status).join(','));
   ok(v.slice(0, 10).every((m) => !m.hypothetical) && v.slice(10).every((m) => m.hypothetical),
     'the roads not taken are flagged hypothetical, the objectives are not');

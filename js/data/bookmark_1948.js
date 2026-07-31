@@ -1426,7 +1426,7 @@ export const BOOKMARK_1948 = {
         check: (ctx) => eraTiers(ctx.game.tags.ISR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
       },
-      // Past the armistice lines (SPEC §188): the two operations the cabinet
+      // Past the armistice lines (SPEC §192): the two operations the cabinet
       // stopped — the strip cleared, and the hills Allon asked for in October.
       {
         id: 'i_gaza', name: 'The Strip',

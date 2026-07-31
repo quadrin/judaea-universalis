@@ -680,7 +680,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_king_of_the_knives', name: 'A King in Royal Robes',
             marker: 'menahemLives', entry: 'ev_menahem',
             terminal: 'ev_what_the_daggers_became',
-            note: 'SPEC §188. The road history cut short on the Ophel: the Sicarii armed and '
+            note: 'SPEC §192. The road history cut short on the Ophel: the Sicarii armed and '
               + 'their king alive, playing court on Masada — and the state must eventually '
               + 'decide what a second crown on a rock is to it.',
           }),
@@ -688,7 +688,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_pretender_struck', name: 'Struck Down on the Ophel',
             marker: 'menahemStruck', entry: 'ev_menahem',
             terminal: 'ev_what_the_daggers_became',
-            note: 'SPEC §188. The historical road: Menahem dies, Eleazar ben Yair takes the '
+            note: 'SPEC §192. The historical road: Menahem dies, Eleazar ben Yair takes the '
               + 'remnant to Masada, and the knife-men keep their own war until the reckoning '
               + 'asks what the daggers became.',
           }),
@@ -703,7 +703,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_sealed_stores', name: 'The Sealed Granaries',
             marker: 'storesSealed', entry: 'ev_the_granaries_of_the_city',
             terminal: 'ev_what_the_stores_were_worth',
-            note: 'SPEC §188. One granary authority, sealed doors, a published ledger — the '
+            note: 'SPEC §192. One granary authority, sealed doors, a published ledger — the '
               + 'road Josephus implies and nobody took. A city that can eat for three years '
               + 'is a different siege problem, and the ring outside discovers it.',
           }),
@@ -711,7 +711,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'each_feeds_its_own', name: 'The Granary Courts',
             marker: 'storesBurned', entry: 'ev_the_granaries_of_the_city',
             terminal: 'ev_what_the_stores_were_worth',
-            note: 'SPEC §188. The historical drift: every faction guards its quarter\'s '
+            note: 'SPEC §192. The historical drift: every faction guards its quarter\'s '
               + 'stores against the others until the first torch, and the famine of 70 '
               + 'is paid for in advance, by the besieged, before Titus closes the ring.',
           }),
@@ -874,7 +874,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'punishment_exacted', name: 'Iron Discipline',
             marker: 'lettersIronFist', entry: 'ev2_letters',
             terminal: 'ev2_what_the_letters_bought',
-            note: 'SPEC §188. The historical road, in the Nasi\'s own surviving words: wheat '
+            note: 'SPEC §192. The historical road, in the Nasi\'s own surviving words: wheat '
               + 'under requisition, the men of Tekoa seized, chains promised — and two '
               + 'winters later the weary districts send a delegation with the bill.',
           }),
@@ -882,7 +882,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_villages_fed', name: 'Mercy Is Also Policy',
             marker: 'lettersMercy', entry: 'ev2_letters',
             terminal: 'ev2_what_the_letters_bought',
-            note: 'SPEC §188. The letters never written: the villages fed first and the '
+            note: 'SPEC §192. The letters never written: the villages fed first and the '
               + 'chains left in the armory — until the quartermasters arrive with the other '
               + 'ledger, because mercy has a price in wheat and the wheat runs ahead of the war.',
           }),
@@ -897,7 +897,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_dispersion_called', name: 'Come, and Be Counted',
             marker: 'dispersionCalled', entry: 'ev2_the_letters_east',
             terminal: 'ev2_what_the_east_answered',
-            note: 'SPEC §188. The letters sewn into saddle linings and the volunteers at the '
+            note: 'SPEC §192. The letters sewn into saddle linings and the volunteers at the '
               + 'smugglers\' fords: the answer to 117 the land never sent, and a second '
               + 'question behind it — what the easterners are, in this army and after it.',
           }),
@@ -905,7 +905,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_land_alone', name: 'The Land\'s War Is the Land\'s',
             marker: 'theLandAlone', entry: 'ev2_the_letters_east',
             terminal: 'ev2_the_letters_east',
-            note: 'SPEC §188. The historical silence, kept on purpose, one card long by '
+            note: 'SPEC §192. The historical silence, kept on purpose, one card long by '
               + 'design: refusing is the end of the question, the east is spared the '
               + 'reprisals a failed call would buy, and the ledger of 117 stays open.',
           }),
@@ -1375,7 +1375,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_cannon', name: 'One State, One Army',
             marker: 'altalenaShelled', entry: 'ev_i_altalena',
             terminal: 'ev_i_what_one_army_meant',
-            note: 'SPEC §188. The historical road: the cannon Ben-Gurion called holy, the '
+            note: 'SPEC §192. The historical road: the cannon Ben-Gurion called holy, the '
               + 'ship burning off the beach, and the monopoly on force settled in an '
               + 'afternoon — leaving five years later the question of what to do with the '
               + 'men it was proved on.',
@@ -1384,7 +1384,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_cargo_ashore', name: 'The Negotiated Flag',
             marker: 'altalenaAshore', entry: 'ev_i_altalena',
             terminal: 'ev_i_what_one_army_meant',
-            note: 'SPEC §188. The rifles come ashore and the question of who commands is '
+            note: 'SPEC §192. The rifles come ashore and the question of who commands is '
               + 'left open on purpose — and every crisis of the decade re-asks it, because '
               + 'once, when it mattered, there were two answers.',
           }),
@@ -1399,7 +1399,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_agreement', name: 'Signed at Luxembourg',
             marker: 'shilumimSigned', entry: 'ev_i_the_shilumim',
             terminal: 'ev_i_what_the_shilumim_built',
-            note: 'SPEC §188. The historical road: 61 to 50 with the windows breaking, the '
+            note: 'SPEC §192. The historical road: 61 to 50 with the windows breaking, the '
               + 'agreement signed by men who do not shake hands, and the ports, the grid '
               + 'and the fleet of the second decade rising on the transfer goods.',
           }),
@@ -1407,7 +1407,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_refusal', name: 'There Are Things a State Does Not Invoice',
             marker: 'shilumimRefused', entry: 'ev_i_the_shilumim',
             terminal: 'ev_i_what_the_shilumim_built',
-            note: 'SPEC §188. The square\'s road: the payments refused, the austerity books '
+            note: 'SPEC §192. The square\'s road: the payments refused, the austerity books '
               + 'reprinted for another decade, and everything that stands standing '
               + 'unmortgaged — paid for in the currency principles are paid in.',
           }),

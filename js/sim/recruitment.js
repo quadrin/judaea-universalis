@@ -7,7 +7,7 @@ function num(v, d = 0) { return Number.isFinite(v) ? v : d; }
 
 export function unitRecruitMonths(ctx, type) {
   const times = ctx && ctx.DEFINES && ctx.DEFINES.BASE && ctx.DEFINES.BASE.unitRecruitMonths;
-  const fallback = { inf: 2, cav: 3, ship: 6, wing: 4 };
+  const fallback = { inf: 2, cav: 3, art: 3, ship: 6, wing: 4 };
   return Math.max(1, Math.round(num(times && times[type], fallback[type] || 2)));
 }
 
@@ -65,7 +65,7 @@ function completeLand(ctx, p, order) {
   const host = Object.values(g.armies || {}).find((a) => a && a.tag === order.tag && a.prov === p.id
     && !a.retreating && !a.inBattle && !a.aboard && num(a.gen) === num(order.gen));
   if (host) {
-    if (!host.regiments) host.regiments = { inf: 0, cav: 0 };
+    if (!host.regiments) host.regiments = { inf: 0, cav: 0, art: 0 };
     host.regiments[order.type] = num(host.regiments[order.type]) + 1;
     host.men = num(host.men) + regSize;
     return { ok: true, name: host.name || 'The local army' };
@@ -74,6 +74,7 @@ function completeLand(ctx, p, order) {
     ? ctx.helpers.spawnArmy(ctx, order.tag, p.name, {
       inf: order.type === 'inf' ? 1 : 0,
       cav: order.type === 'cav' ? 1 : 0,
+      art: order.type === 'art' ? 1 : 0,
       gen: order.gen,
       name: 'Levy of ' + p.name,
     }) : 0;
@@ -156,7 +157,7 @@ export function monthlyRecruitment(ctx) {
     order.monthsLeft = Math.max(0, num(order.monthsLeft, 1) - 1);
     if (order.monthsLeft > 0) continue;
     let result = null;
-    if (order.type === 'inf' || order.type === 'cav') result = completeLand(ctx, p, order);
+    if (order.type === 'inf' || order.type === 'cav' || order.type === 'art') result = completeLand(ctx, p, order);
     else if (order.type === 'ship') result = completeShip(ctx, p, order);
     else if (order.type === 'wing') result = completeWing(ctx, p, order);
     else result = { ok: false, why: 'unknown unit pattern' };

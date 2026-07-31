@@ -11,8 +11,8 @@ import { createOutliner } from './outliner.js';
 import { createEventModal, createGameoverModal } from './modals.js';
 import { createWiki } from './wiki.js';
 import { createSavesPanel } from './saves.js';
-import { icon, flagChip } from './icons.js';
-import { genName } from '../data/tech.js';
+import { icon, flagChip, unitIcon } from './icons.js';
+import { armGenName } from '../data/units.js';
 
 const MAPMODES = [
   { id: 'political', ico: icon('temple'), name: 'Political' },
@@ -704,7 +704,15 @@ export function initUI(staticCtx) {
       const comp = [
         a.inf ? `${a.inf} × ${a.infName}` : '',
         a.cav ? `${a.cav} × ${a.cavName}` : '',
+        a.art ? `${a.art} × ${a.artName}` : '',
       ].filter(Boolean).join(' · ') || 'skeleton formation';
+      // The faces of the arms actually present (SPEC §191), and the gait the
+      // slowest of them gives the column.
+      const faces = ['inf', 'cav', 'art'].filter((k) => a[k] > 0)
+        .map((k) => unitIcon(a.gen || 0, k, 'icon-sm')).join('');
+      const pace = a.paceMult && Math.abs(a.paceMult - 1) > 0.01
+        ? ` · marches at ${Math.round(a.paceMult * 100)}% of foot`
+        : '';
       const st = a.inBattle ? ' — in battle' : a.retreating ? ' — retreating' : '';
       const gen = a.general
         ? `${icon('helmet', 'icon-sm')} ${esc(a.general.name)} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})`
@@ -715,11 +723,11 @@ export function initUI(staticCtx) {
         : '';
       rows.push(`
         <div class="bw-army insp-army">
-          <span class="bw-aname">${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
+          <span class="bw-aname">${flagChipHtml(a.tag, true)} ${faces} ${esc(a.name)}</span>
           <span class="bw-men">${fmtMen(a.men)}</span>
           ${moraleBar(a.morale, a.maxMorale)}
         </div>
-        <div class="insp-sub">${esc(comp)}${esc(st)}<br>${gen} · morale ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${sup}</div>`);
+        <div class="insp-sub">${esc(comp)}${esc(st)}${esc(pace)}<br>${gen} · morale ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${sup}</div>`);
     }
     if (info.fleet) {
       rows.push(`
@@ -778,9 +786,15 @@ export function initUI(staticCtx) {
     };
     const armyRow = (a) => {
       // Regiments speak their pattern (SPEC §29): "8 Rifle Brigades", not
-      // "8 infantry" — each army remembers what it was raised as.
+      // "8 infantry" — each army remembers what it was raised as. Since
+      // SPEC §191 there are three arms to speak for, and an arm nobody
+      // brought is left out rather than printed as a zero.
       const gen = a.general ? `\nGeneral: ${a.general.name} (${a.general.fire}/${a.general.shock}/${a.general.maneuver})` : '';
-      const comp = `${a.inf} × ${genName(a.gen || 0, 'inf')}, ${a.cav} × ${genName(a.gen || 0, 'cav')}`;
+      const comp = [
+        a.inf ? `${a.inf} × ${armGenName(a.gen || 0, 'inf')}` : '',
+        a.cav ? `${a.cav} × ${armGenName(a.gen || 0, 'cav')}` : '',
+        a.art ? `${a.art} × ${armGenName(a.gen || 0, 'art')}` : '',
+      ].filter(Boolean).join(', ') || 'a skeleton formation';
       return `
       <div class="bw-army" data-tt="${esc(`${a.name} — ${comp}\nMorale: ${a.morale.toFixed(1)} / ${a.maxMorale.toFixed(1)}${gen}`)}">
         <span class="bw-aname">${a.general ? icon('helmet', 'icon-row') + ' ' : ''}${flagChipHtml(a.tag, true)} ${esc(a.name)}</span>
@@ -792,10 +806,23 @@ export function initUI(staticCtx) {
       const roll = info.last ? (key === 'atk' ? info.last.rollA : info.last.rollD) : null;
       const doct = (s.doctrines || []).map((d) => `${d.name} — ${d.desc}`).join('\n');
       const dieTT = (key === 'def'
-        ? 'The day’s battle die: d10 + the best general’s pips + terrain + doctrine'
-        : 'The day’s battle die: d10 + the best general’s pips + doctrine')
+        ? 'The day’s battle die: d10 + the best general’s pips + terrain + doctrine + the arms'
+        : 'The day’s battle die: d10 + the best general’s pips + doctrine + the arms')
         + (doct ? '\n' + doct : '')
-        + (s.air ? '\nAir cover — a wing in range adds +1 in the fire phase.' : '');
+        + (s.air ? '\nAir cover — a wing in range adds +1 in the fire phase.' : '')
+        + (s.mix ? `\nThe arms: +${s.mix} this phase${s.mixText ? ' — ' + s.mixText : ''}.` : '');
+      // The order of battle by arm (SPEC §191), with each arm's own face: the
+      // matchup is the thing to read here, so it gets a line of its own.
+      const gen = s.gen || 0;
+      const arms = ['inf', 'cav', 'art']
+        .filter((a) => (s.regs && s.regs[a]) > 0)
+        .map((a) => `<span class="bw-arm" data-tt="${esc(s.regs[a] + ' × ' + armGenName(gen, a))}">`
+          + `${unitIcon(gen, a, 'icon-sm')} ${s.regs[a]}</span>`)
+        .join('');
+      const mixChip = s.mix
+        ? `<span class="bw-mix" data-tt="${esc('Their mix cannot answer ours this phase'
+          + (s.mixText ? ': ' + s.mixText : '') + '.')}">+${s.mix} arms</span>`
+        : '';
       return `
       <div class="bw-side${s.isMine ? ' bw-mine' : ''}">
         <div class="bw-side-head">${key === 'atk' ? 'Attackers' : 'Defenders'}${s.air ? ' ' + icon('plane', 'icon-sm') : ''}${s.isMine ? ' <span class="bw-us">— our side</span>' : ''}</div>
@@ -803,6 +830,7 @@ export function initUI(staticCtx) {
           <span class="bw-die${roll == null ? ' bw-die-none' : ''}" data-tt="${esc(roll == null ? 'No round fought yet' : dieTT)}">${roll == null ? '—' : roll}</span>
           <span class="bw-total">${fmtMen(s.men)} men · morale ${s.morale.toFixed(1)}</span>
         </div>
+        <div class="bw-arms">${arms}${mixChip}</div>
         <div class="bw-armies">${s.armies.map(armyRow).join('')}</div>
         <div class="bw-cas" data-tt="Casualties suffered in this battle so far">Fallen: ${fmtMen(s.casualties)}</div>
       </div>`;

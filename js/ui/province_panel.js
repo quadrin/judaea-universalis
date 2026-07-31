@@ -1,7 +1,8 @@
 // js/ui/province_panel.js — province inspector (SPEC §8.2).
 import { esc, rgb, fmtInt, fmtMen, fmtYear, signed, ttLines, titleCase, warnOnce } from './format.js';
-import { icon, flagChip } from './icons.js';
-import { unlockedGen, cappedGen, genName, navalGenName } from '../data/tech.js';
+import { icon, flagChip, unitIcon } from './icons.js';
+import { unlockedGen, cappedGen, navalGenName } from '../data/tech.js';
+import { ARM, armGenName } from '../data/units.js';
 import { communityLabel } from '../sim/population.js';
 
 // Building key -> icon name (falls back to 'bricks' for unknown keys).
@@ -135,6 +136,7 @@ const RISING_LABELS = {
       <div class="pp-recruit">
         <button class="btn pp-recruit-btn" data-ref="recruitInf"></button>
         <button class="btn pp-recruit-btn" data-ref="recruitCav"></button>
+        <button class="btn pp-recruit-btn" data-ref="recruitArt"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="buildShip"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="recruitWing"></button>
         <button class="btn pp-recruit-btn hidden" data-ref="recruitFighter"></button>
@@ -258,6 +260,7 @@ const RISING_LABELS = {
     });
     refs.recruitInf.addEventListener('click', () => tryRecruit('inf', refs.recruitInf));
     refs.recruitCav.addEventListener('click', () => tryRecruit('cav', refs.recruitCav));
+    refs.recruitArt.addEventListener('click', () => tryRecruit('art', refs.recruitArt));
     refs.devBtnsRow.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-dev]') : null;
       if (!b || !actions) return;
@@ -490,9 +493,10 @@ const RISING_LABELS = {
 
     // Recruit buttons
     const base = DEFINES.BASE || {};
-    const costs = base.regCost || { inf: 10, cav: 25 };
+    const costs = base.regCost || { inf: 10, cav: 25, art: 18 };
     updateRecruit(refs.recruitInf, 'inf', costs.inf, p, g, base);
     updateRecruit(refs.recruitCav, 'cav', costs.cav, p, g, base);
+    updateRecruit(refs.recruitArt, 'art', costs.art, p, g, base);
     refreshRecruitmentQueue(g);
 
     // Warships recruit alongside the army, once a completed shipyard opens.
@@ -1056,18 +1060,22 @@ const RISING_LABELS = {
 
   function updateRecruit(btn, type, cost, p, g, base) {
     // The button speaks the age (SPEC §29): a 1948 barracks raises Rifle
-    // Brigades and Armored Corps, not "infantry" and "cavalry".
+    // Brigades and Armored Corps, not "infantry" and "cavalry" — and since
+    // SPEC §191 it wears that soldier's own face, the one that will fly on
+    // the standard when the regiment musters.
     const t = g.tags && g.tags[g.playerTag];
     const gen = cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
-    const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
-    const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
+    const label = armGenName(gen, type)
+      || (type === 'inf' ? 'Infantry' : type === 'art' ? 'Artillery' : 'Cavalry');
+    const glyph = unitIcon(gen, type);
     // Armor (SPEC §181): at pattern 5+ the mounted arm is tanks — priced and
     // fitted like them, and raised only through a live arms pipeline.
     const AR = (ctx && ctx.DEFINES && ctx.DEFINES.ARMOR) || {};
     const armor = type === 'cav' && gen >= (Number.isFinite(AR.minGen) ? AR.minGen : 5);
     if (armor) cost = Number.isFinite(AR.cost) ? AR.cost : 50;
+    const dfltMonths = type === 'inf' ? 2 : 3;
     const months = armor ? (Number.isFinite(AR.months) ? AR.months : 4)
-      : (base.unitRecruitMonths && base.unitRecruitMonths[type]) || (type === 'cav' ? 3 : 2);
+      : (base.unitRecruitMonths && base.unitRecruitMonths[type]) || dfltMonths;
     setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')} · ${months}m`);
     let armsShut = '';
     if (armor && actions && typeof actions.getArmsStatus === 'function') {
@@ -1087,9 +1095,26 @@ const RISING_LABELS = {
     else if (armsShut) reason = armsShut;
     else if ((t.treasury || 0) < cost) reason = `Not enough talents (${cost} needed)`;
     btn.classList.toggle('disabled', !!reason);
+    // What the arm is FOR (SPEC §191) — the matchup a player is buying, in
+    // the words of the age they are buying it in.
+    const pace = Math.round((ARM[type] ? ARM[type].speed : 1) * 100);
+    const role = armor
+      ? 'Armor breaks foot that has nothing to stop it, and outruns everything on open ground. '
+        + 'It is answered by guns firing over open sights, by the sky, and by broken country — '
+        + 'a tank that cannot go around a mountain is a pillbox burning fuel.'
+      : type === 'cav'
+        ? 'The shock arm: rides down artillery in the melee, and marches half again as fast as foot. '
+          + 'A braced line of spearmen stops it, and hills and marsh take its charge away.'
+        : type === 'art'
+          ? 'The shot: breaks a formed line at range, in the fire phase. '
+            + 'It cannot save itself once horse is inside it — keep foot in front of the guns.'
+          : 'The line: cheap, quick to raise, and the only arm that brakes a charge. '
+            + 'Massed shot is what breaks it.';
     btn.dataset.tt = reason
-      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents. Muster takes ${months} months; this province trains one queued unit at a time.`
-      + (armor ? ' Armor is an import: the pipeline that feeds it must stay warm.' : '');
+      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents. `
+      + `Muster takes ${months} months; this province trains one queued unit at a time.\n\n${role}\n`
+      + `Marching pace: ${pace}% of foot — a column moves at its slowest arm.`
+      + (armor ? '\nArmor is an import: the pipeline that feeds it must stay warm.' : '');
   }
 
   function refreshRecruitmentQueue(g) {
@@ -1100,9 +1125,12 @@ const RISING_LABELS = {
     const rows = info && Array.isArray(info.rows) ? info.rows : [];
     refs.recruitQueue.classList.toggle('hidden', !rows.length);
     if (!rows.length) return;
+    const qGen = cappedGen(((g.tags && g.tags[g.playerTag] && g.tags[g.playerTag].tech
+      && g.tags[g.playerTag].tech.mar) | 0), ctx && ctx.bookmark);
     setHtml(refs.recruitQueue, rows.map((row, i) => {
-      const glyph = icon(row.type === 'ship' ? 'ship' : row.type === 'wing' ? 'plane'
-        : row.type === 'cav' ? 'horseshoe' : 'shield');
+      const glyph = row.type === 'ship' ? icon('ship')
+        : row.type === 'wing' ? icon('plane')
+          : unitIcon(Number.isFinite(row.gen) ? row.gen : qGen, row.type);
       let state = '';
       if (row.stalled) state = esc(row.stalled);
       else if (info.paused) state = `${row.monthsLeft}m left · paused`;

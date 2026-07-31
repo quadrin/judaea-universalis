@@ -540,7 +540,7 @@ export const BOOKMARK_132 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
       },
-      // The war carried past the hills (SPEC §188): the revolt history kept
+      // The war carried past the hills (SPEC §192): the revolt history kept
       // landlocked and inland reaches for the sea and the legion's nest.
       {
         id: 'j2_the_coast', name: 'The Governor\'s Sea',

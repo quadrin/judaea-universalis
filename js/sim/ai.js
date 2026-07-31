@@ -166,20 +166,50 @@ function aiRecruit(ctx, tag, hints, fraction) {
   const target = Math.ceil(Math.min(desired, affordable) * (fraction || 1));
   let cur = 0;
   for (const a of armiesOf(ctx, tag)) cur += regCount(a);
-  cur += queuedUnitsOf(ctx, tag, ['inf', 'cav']);
+  cur += queuedUnitsOf(ctx, tag, ['inf', 'cav', 'art']);
+  // The establishment it is aiming at (SPEC §191): three quarters foot, and
+  // the rest split between the horse and the shot. The AI raises whichever
+  // arm it is furthest below rather than counting regiments off a residue —
+  // a court whose muster happened to land on the wrong number would otherwise
+  // field a host of one arm, which the triangle answers outright.
+  const have = { inf: 0, cav: 0, art: 0 };
+  for (const a of armiesOf(ctx, tag)) {
+    const r = (a && a.regiments) || {};
+    have.inf += num(r.inf); have.cav += num(r.cav); have.art += num(r.art);
+  }
+  have.inf += queuedUnitsOf(ctx, tag, ['inf']);
+  have.cav += queuedUnitsOf(ctx, tag, ['cav']);
+  have.art += queuedUnitsOf(ctx, tag, ['art']);
+  const MIX = { inf: 0.75, cav: 0.15, art: 0.10 };
+  // What each arm costs this court right now — armor prices apart (§181).
+  const armorNow = tagGen(ctx, tag) >= num((ctx.DEFINES.ARMOR || {}).minGen, 5);
+  const costs = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.regCost) || {};
+  const priceOf = (type) => (type === 'cav' && armorNow
+    ? num((ctx.DEFINES.ARMOR || {}).cost, 50)
+    : num(costs[type], type === 'cav' ? 25 : type === 'art' ? 18 : 10));
+  const pickArm = () => {
+    let best = 'inf', bestGap = -Infinity;
+    const total = Math.max(1, have.inf + have.cav + have.art);
+    for (const type of ['inf', 'cav', 'art']) {
+      // Armor is an import (SPEC §181): a client with no live pipeline skips
+      // the mounted arm rather than stalling the whole muster on a shut
+      // market. The foot is never gated, so the muster always has an answer.
+      if (type === 'cav' && armorNow && armsGate(ctx, tag)) continue;
+      // A treasury that cannot bear the dearer arms buys the cheap one.
+      if (num(t.treasury) < priceOf(type) * 3) continue;
+      const gap = MIX[type] - have[type] / total;
+      if (gap > bestGap) { bestGap = gap; best = type; }
+    }
+    return best;
+  };
   let guard = 0;
   while (cur < target && num(t.treasury) > 50 && num(t.manpower) >= B(ctx, 'regSize', 1000) && guard++ < 5) {
     const pid = pickRecruitProv(ctx, tag, hints);
     if (!pid) break;
-    // A cavalry arm rides with the foot: every fourth regiment raised is
-    // horse when the treasury can bear its price (2.5× an infantryman's).
-    let type = cur % 4 === 3 && num(t.treasury) > 150 ? 'cav' : 'inf';
-    // Armor is an import (SPEC §181): a client with no live pipeline raises
-    // foot instead of stalling the whole muster on a shut market.
-    if (type === 'cav' && tagGen(ctx, tag) >= num((ctx.DEFINES.ARMOR || {}).minGen, 5)
-      && armsGate(ctx, tag)) type = 'inf';
+    const type = pickArm();
     const res = recruitRegiment(ctx, tag, pid, type);
     if (!res.ok) break;
+    have[type]++;
     cur++;
   }
 }
@@ -207,8 +237,11 @@ function aiShedUnaffordable(ctx, tag) {
     armies.sort((a, b) => a.men - b.men);
     const a = armies[0];
     if (!a) break;
+    // Paid off in order of what costs most to keep standing (SPEC §191):
+    // the horse first, then the guns, and the foot last of all.
     const regs = a.regiments || {};
     if ((regs.cav | 0) > 0) regs.cav--;
+    else if ((regs.art | 0) > 0) regs.art--;
     else if ((regs.inf | 0) > 0) regs.inf--;
     a.men = Math.max(0, num(a.men) - regSize);
     t.manpower = num(t.manpower) + Math.round(regSize * 0.5); // half go home to the rolls

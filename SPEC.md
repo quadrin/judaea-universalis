@@ -4376,7 +4376,8 @@ stopped, because every one of those tables is keyed by tag.
   the NEW tag; `missionsFor` prefers the bookmark's own table and falls back to
   the crown's. The Kingdom of Israel gets four (settle the crown, muster the
   kingdom, the land of the twelve, build rather than hold) and the restored
-  Hasmonean crown three; forming resets the chain to its first line.
+  Hasmonean crown three; forming resets the chain to its first line. Those four
+  are now the SPINE of a per-chapter tree — see §189 for the branches.
 - **Its own payoff**: each crown now pays differently — coin, men and
   ministries (`bonus.grant`) plus a second permanent modifier that says what
   that kingdom is FOR. The Kingdom of Israel's Law Is the Charter (manpower,
@@ -10457,7 +10458,405 @@ roster.
   raw index into the 132/614 tables still lands on the Third House
   untouched, because every insertion in those tables came after it.
 
-## 188. The heavy chapters take their turn — the cannon, the granaries, and the letters east
+## 188. The ideas belong to the ladders that sell them
+
+§175 sorted twenty sections into six tabs by what each section IS, and the
+reform trees read as constitutional — the crown's own business — so they went
+onto Crown beside faith, tongue and capital. Then §179 gave that same block its
+second half: the chapter's Ideas of the Age, every group locked behind a NAMED
+RUNG of a technology ladder, each locked card saying so in words — *Unlocked at
+The Third Wall (8)*. The rung it names is printed on Coin. So the screen that
+told you what you could not buy yet and the screen that told you how close you
+were to being able to were two different screens, and a purchase meant Crown →
+Coin → Crown. EU4 never had that problem, because the ladders and the ideas
+they open are one window.
+
+### The move
+
+The ideas block — all of it, the three universal reform trees AND the age's own
+groups — is one `data-tab="coin"` section templated immediately below
+Technology. The tab filter only hides sections; it never reorders them, so
+template order is render order: each ladder prints its level, its rung name and
+its progress bar, and directly underneath sits the group whose lock card names
+that rung. The block is titled **Ideas** rather than Reforms — it has sold both
+halves since §179, and the panel's own vocabulary has read `data-idea`,
+`getIdeas`, `IDEA_TREES` since §20 — and the Coin tab's tooltip owns what the
+tab now holds ("…the technologies silver buys — and the ideas those ladders
+sell").
+
+**It lands in all eight bookmarks because there is nothing per-bookmark to
+land.** The panel is one template harvested once in `build()` (§175's
+load-bearing rule), so a chapter has exactly one say over the strip: what it
+CALLS a tab, through `uiTerms` — 1948 carries the block under Economy, and
+every other chapter under Coin. And the reason one screen is the right screen
+holds in every chapter rather than in the one it was noticed in: every
+universal tree and all fifty-four era-idea slots across the eight chapters
+price and unlock off gov/infl/mar, the three ladders printed above them —
+§179's `unlock.ladder === point` invariant is what makes that a fact about the
+data and not a coincidence of the current tables.
+
+### What did not move
+
+Crown keeps the realm's own facts — faith, tongue, capital, government,
+stability, legitimacy, the years, the chapters — and keeps them *unhidden*,
+which is what lets it survive being one section lighter: `tabHasContent` counts
+a `pp-grid` only while a row of it shows, and those rows are unconditional. The
+buy paths are untouched: the same `data-idea` / `data-eraidea` probes, in the
+same delegated chain, behind the same tab probe that still runs first. A
+foreign court's read-only pips travel with the block and render from
+`t.reforms` / `t.eraIdeas` exactly as before, one tab over.
+
+- **Regression contract**: `smoke119` — the `np-reforms` host resolves to the
+  Technology block's tab and is templated below it, Crown carries it no longer,
+  the block reads Ideas and the tab tooltip says so, every declared tab still
+  owns a section, Crown keeps an unhidden anchor, all three buy paths keep
+  their probes with the tab probe still first, and — for every playable side of
+  all eight chapters — every era group and every universal tree unlocks and
+  prices off one of the three printed ladders. `uitest38` measures it in the
+  browser, where a bounding box is the only honest answer: hidden on Crown,
+  visible on Coin beside the ladders, its box BELOW theirs, the three tree
+  buttons and the Ideas of the Age strip both present. `smoke109`'s tab
+  contract (every section names a declared tab, no tab is dead, the shell is
+  never re-templated) is unchanged and still passes, and `uitest8` / `uitest37`
+  hold the Coin tab's buy path to one press as before.
+
+## 189. The crown speaks in the age it was crowned in
+
+§102 gave the Kingdom of Israel a programme of its own so that proclaiming
+the greater crown would fill the mission panel instead of emptying it. It
+gave it *one* programme: the same four missions — settle the crown, muster
+the kingdom, the land of the twelve, build rather than merely hold — in all
+six chapters the crown is formable in. Every playable side of every chapter
+has had a tree since §177, a curriculum since §179 and roads not taken
+since §183; the endgame crown of the whole game had a four-rung ladder that
+could not tell 167 BCE from 614 CE. This pass gives it the ages.
+
+**One table, six readings.** A mission may now declare
+`chapters: ['66ce', …]`, and `chapterChain(list, bookmarkId)` — memoized per
+table per chapter, because the monthly pass and the panel both ask and both
+want the same array — hands each chapter the missions that name it plus
+every mission that names none. `missionsFor` runs a crown's chain through
+it. Nothing else in the shape moves: `bookmark.missions` still answers
+first, a chain that declares no chapters is handed back untouched (the
+Hasmonean crown's three), and the record is still `missionsDone` plus a
+`missionIdx` prefix.
+
+**The spine keeps the ladder's order.** The four are now a tree — the
+crowning is the root, the muster and the land hang off it, the building
+programme off the land — with prerequisites that are a subset of the old
+ladder's implicit ones, so an old save's `missionIdx` still means what it
+meant. They hold columns 0-1; every chapter's branch takes columns 2-3, so
+no chapter's tree collides with itself.
+
+**And each chapter adds three, addressed to the crown by its own age**:
+167 BCE finishes the Seleucid throne, takes Simon's harbours (Joppa,
+Azotus, Gaza — "an entrance to the isles of the sea"), and keeps the
+Republic that answered Judas' embassy on bronze; 67 BCE holds the five
+Greek cities of the Jordan that Pompey's settlement filed under Syria,
+brings the desert king who had to be paid in the cities of Moab to heel,
+and asks Babylonia — larger than Judaea and inside somebody else's empire —
+to answer; 40 BCE keeps the balsam of
+Jericho that Cleopatra took by asking Antony for it, builds the harbour at
+Straton's Tower the country has never had, and binds Parthia in writing
+with the Twin Cities standing behind it; 66 CE takes the procurators'
+seaboard, absorbs the last Herodian's tetrarchy, and endows a House that
+has not burned; 132 CE unmakes Aelia between the sea and the Jordan,
+raises the Third House the Redemption coinage kept promising, and makes
+Rome fight east as well; 614 CE raises the altar on a Mount swept empty
+since Titus, reaches the Exilarchate — the Davidic pedigree nobody
+disputes, sitting in another empire since 586 BCE — and watches the
+southern road while both empires spend their last armies on each other.
+
+**Two things this fixes beyond flavour.** The Third House was the capstone
+of the 132 and 614 chains and lived in `bookmark.missions.JUD`, so taking
+the greater crown quietly cost a player the one mission the chapter is
+about; the crown now carries its own, and a House the chapter's own side
+already raised is endowed rather than billed a second time. And no branch
+mission is payable by the act of proclamation — the two that were (the
+cities of the Jordan, already Aristobulus' in 67; Parthia's +80 opinion of
+the king its own cavalry seated in 40) were rewritten until they ask for
+something a campaign has to go and do. §187 arrived while this was being
+written and thickened the chapters' own trees; where the crown's branch met
+one of the new conquest missions on the same ground — Damascus, which the
+chapters' own sides now claim at both 67 and 40 — the crown gave way and
+asked for something else (Nabataea brought to heel, which is the same
+chapter's other unpaid bill).
+
+- **Regression contract**: `smoke120` — the static shape (spine plus three
+  per chapter, no branch crossing a chapter line, the kit on every mission,
+  seats in the branch columns, prerequisites resolving inside their own
+  chapter's chain, the spine's order still a subset of the ladder's), the
+  engine (each chapter handed its own seven, the same array twice, an
+  unchaptered chain untouched, no chain invented for a tag without one),
+  and the live end: nothing on a branch completes on the day of the
+  crowning in any of the six, and every one of the eighteen pays when the
+  world its desc promises is built by hand — including the House rising on
+  a bare Mount for 300 talents and the standing House that costs nothing.
+  `smoke73` — §102's contract, unchanged: the crown still carries a chain
+  and the panel still shows it from its first line.
+
+## 190. The quarrel of the two schools
+
+§34 gave every court party an approval bar and a lever to raise it, and that
+is the right engine for five estates who want five different things. It is
+the wrong one for these two. The Pharisees and the Sadducees did not want
+different things from a Hasmonean crown — they wanted the *same* thing, which
+was to be the reading of the Law that the crown administered, and there is
+exactly one of those. Two independent bars cannot express a zero-sum
+quarrel: a player could carry both houses at 75 for the whole hundred and
+forty years the 167 chapter runs them and never learn that the historical
+crown could not, because every ruling it made cost it one of its two
+constituencies. The two most consequential parties in the period were the two
+the game had least to say about.
+
+**THE READING.** A −10..+10 axis, the realm's standing answer to the whole
+quarrel, built only from rulings the crown has actually given. The poles are
+deliberately not mirror images, because the trade the Hasmoneans were making
+was not symmetrical: the schools' Law buys the *country* (−1.2 unrest, +10%
+manpower, +5% morale) and charges the treasury 6% for it; the houses' Law
+buys the *treasury and the throne* (+14% income, +0.25 legitimacy a month)
+and charges the country a point of unrest and 8% of its manpower. Neither
+pole buys both, and a crown that has ruled on nothing reads *unruled* rather
+than balanced. It rides the ordinary modifier stream, scaled by how far out
+the realm actually is, exactly as a half-loyal estate's boon is.
+
+**THE RULINGS.** Six recorded disputes (`js/data/schools.js`), each with the
+side the schools took and the side the priestly houses took: the morrow after
+the sabbath (Menahot 65a — the date of Pentecost), the water at the altar's
+foot (Sukkah 4:9, and the citrons Jannaeus was pelted with), the Book of
+Decrees (Bava Kamma 83b, the eye or the price of the eye), the Chamber of
+Hewn Stone (who sits on the benches), the resurrection and the angel (Ant.
+XVIII.14–16), and the ashes of the heifer (Parah 3:7, where the sages
+defiled the priest on purpose to prove the point). Each is given once, for
+points, permanently: it grants a named modifier that carries no month count,
+and the *stored side* — not the modifier — is the record, so the reading is
+recomputed from what the crown ruled rather than accumulated. The two that
+are about a rite are not offered where no House stands, on §169's own Temple
+test. And the price is fixed by the engine, not the entry: **every** ruling
+gives one house ten approval and takes ten from the other, because an entry
+authored soft enough to be free would make the whole axis a shopping list.
+A standing reading then goes on pulling, half a point a month against §34's
+regression to the middle — which is the historical trap, the one where the
+longer Hyrcanus governed as a Sadducee the less the Pharisees would take from
+him, and the fix was never available at the price he wanted.
+
+**THE CHAMBER.** What the two houses come to *together*, which is the read
+two independent bars structurally could not produce. Concord (both at 60+)
+pays legitimacy, quiet and a discount on governing. A one-sided breach — one
+house on the floor while the other holds the crown — costs whatever that
+house was carrying: the schools' breach is unrest and manpower and a sage in
+every town explaining what kind of king this is; the houses' breach is 15% of
+income, 10% of reinforcement, and a Temple strongroom with a very slow door.
+And the schism, both houses hostile at once, is worse than either breach on
+every axis, because before this the arithmetic said the opposite — two
+hostile bars used to average out.
+
+**THE OFFICE.** §169 seats a High Priest from a party at court. Where that
+party is one of the schools, the office is now measured against the reading:
+a priest who keeps the Law the crown has ruled for pays legitimacy, and one
+performing rites the crown has ruled against costs it. The houses' Law with
+nobody in the office at all costs extra on top of the ordinary vacancy —
+their whole case is that the Temple governs, and there is nobody in the
+Temple to govern. The candidate list also stops being everyone in the room:
+`priestly: false` is content's veto, and it takes the Brothers' Captains and
+the House of Antipater off a list they should never have been on. The zealots
+of 66 keep theirs, because they seated Phanni ben Samuel by lot and that is
+the point of them.
+
+**THE BREACH CARD.** Two years of a house held on the floor deals its card,
+once a decade, under the same one-dynamic-card-at-a-time guard the estate
+demands use. Citrons at the Water-Gate offers the historical answer (let the
+guard clear the court: −2 stability, −10 legitimacy, the schools to the
+floor) beside the two that were also available. The Chamber Declines to Count
+is the mirror: confirm the houses in the Temple's revenue, put the crown's own
+clerks on the ledgers, or leave it unanswered. Both are forks, not
+punishments.
+
+**WHERE IT APPEARS.** Wherever both houses sit at the player's own court,
+which is 67 BCE for both brothers and — because §127 hands the 167 chapter's
+court over on 140 BCE — the Maccabean chapter from the year Josephus first
+names the three schools onward, without anything anywhere having to know that
+was the intention. Six chapters never see it. The `pilgrimMult` key is new and
+general: the water-drawing ruling, the ashes of the heifer and a breach with
+the priestly houses all reach §169's ascents through it, so a doctrinal
+quarrel lands on a number the player watches every month.
+
+- **Regression contract**: `smoke121` — the gate (silent in six chapters and
+  in 167 until the houses arrive); a ruling costs the losing house exactly
+  what it pays the winner, carries no month count, and cannot be given twice;
+  the one blocker answers the panel and the click path identically; the rite
+  disputes close when the House does; both poles pay and charge in opposite
+  currencies; all four chamber states, with the schism worse than either
+  breach; the ascents move on a ruling and on a breach; the office pays and
+  costs by alignment; the captains and the Idumeans are off the altar; both
+  breach cards deal and resolve; a lukewarm court deals nothing in five years;
+  nothing reaches an AI hand; and every authored entry is a real fork —
+  documented, priced, opposed on both sides. `uitest40` plays 167 BCE in a
+  real browser: the block is hidden while the Hasideans hold the pious seat,
+  the captains are off the priesthood's ballot, the block appears with both
+  houses named and the needle reading *Unruled* once the court has changed
+  hands, and one click on a side of a dispute moves the live game — the
+  record, both approvals, the modifier, the settled row and the needle —
+  with no page errors.
+
+## 191. Every arm has a face, a gait, and a weakness
+
+Two arms, and one of them was a costume. `cav` was a 25-talent infantryman
+that happened to be called Cataphract Horse; it moved at the same pace as
+the foot beside it, hit with the same math, made the same noise, and wore
+the same banner. §181 noticed half of this and made the 1948 mounted arm
+into armor with a price and a shock-phase quantity — but a Sherman battalion
+and a squadron of Noble Cavalry were still, mechanically, the same unit with
+different names, and neither of them had a picture. The counters said `12k`
+and nothing else. This section gives the land war a **roster**: three arms,
+six patterns each, eighteen soldiers with faces, gaits, sounds, and a
+triangle they answer each other in.
+
+### The three arms
+
+| | what it is | pace | speaks in |
+|---|---|---|---|
+| `inf` | **the foot** — the line | 1.0 | holding, and braking a charge |
+| `cav` | **the mounted** — the shock | 1.25 | the shock phase |
+| `art` | **the shot** — the missile | 0.85 | the fire phase |
+
+`art` is the new one, and it is not "artillery" — it is *the missile arm*,
+which every century on this map had: **Slinger Bands** (the shepherd's arm,
+and Judaea's own), **Archer Companies**, **Bolt Engines** (the legion's
+scorpiones), **Naphtha Crews** (the siphon, and fire that water does not put
+out), **Field Batteries**, **Gun Regiments**. The foot and horse columns
+were already written (§22's `UNIT_GENS`); the shot's names sit beside them
+in the same table, and `js/data/units.js` owns what an arm can *do*.
+
+### The triangle
+
+The phase clock already implied it. The shot speaks in the fire phase, the
+charge in the shock phase, and the foot's business is standing there while
+both happen:
+
+> the shot breaks the line · the line brakes the charge · the charge rides
+> down the shot
+
+Scored as a matchup table over each side's arm **shares**, once per phase,
+each side reading its own row — so an edge is never double-counted, and a
+host of guns and a host of horse can both be earning pips in the phase that
+belongs to them. Floored and capped (`ARMS_TRIANGLE.scale`, `.cap`): two
+ordinary balanced hosts read **zero**, because a mix has to be a real
+commitment before the dice notice it. A pure spear wall against pure horse
+is +2 in shock; three archers in ten against a formed line is +1 in fire.
+
+**One exception, and it is the whole twentieth century.** At pattern 5 the
+mounted arm is armor (§181), and armor does not lose to a braced line — a
+rifle company does not stop a Sherman by forming square, so the foot's +1.6
+against horse becomes +0.2 against tanks, and armor's own shock row replaces
+the horse's. Armor's three counters are named instead:
+
+- **the guns**, and this one is a *count*, not a share — four anti-tank
+  regiments against four tanks is four anti-tank regiments against four
+  tanks, whatever fraction of the army they are. Every `atPer` engaged
+  tanks (never more tanks than we have guns for) is a fire-phase pip, to
+  `atCap`. §181's design language, pointed the other way.
+- **the sky**, which §154 already built and this section did not touch.
+- **the ground**. `MOUNTED_TERRAIN` takes the charge away from cavalry in
+  hills, mountains, marsh and wasteland — and takes more of it from armor,
+  because a tank that cannot go around a mountain is a pillbox burning
+  fuel. It cuts §181's armor pips at the call site as well as the triangle,
+  so the whole armor advantage answers to the map it is standing on.
+
+§181's `armorPips` is untouched and still answers "who has more tanks"; the
+triangle answers "what is each side's army FOR". They are deliberately
+different halves, and the battle window prints them on separate lines.
+
+### The gait
+
+A column marches at the pace of its **slowest arm**, multiplied into §25's
+pattern speed. Pure horse outruns the same men walking by a quarter; put one
+gun battery in and the whole column gives back a sixth. Over a typical hop
+that is four days for horse, five for foot, six for a gun train. This is the
+first time in the game that what an army is made of changes where it can be
+tomorrow — and it is the reason a raiding column and a siege train are now
+different objects rather than the same object with different labels.
+
+The magnitudes are deliberately modest, and that was measured rather than
+guessed. The first draft priced the shot at 0.75, which meant that once the
+AI's establishment held its 10% of guns, nearly every stack in the world
+contained one and nearly every army everywhere marched a quarter slower —
+a global throttle on AI campaigning dressed up as a unit trait. `smoke79`
+caught it: the 66 CE thirty-year run reached its ending a beat later and
+left Jerusalem in a band's hands at the snapshot. A tradeoff a player feels
+when they attach the guns is the goal; a tax on every march in the game is
+not.
+
+### The face
+
+Eighteen silhouettes, authored once as path data on the 24×24 grid
+`icons.js` already uses, and drawn twice: `new Path2D()` on the map's canvas
+and `<path d>` in the panels. A Drilled Spearman on a recruit button is the
+exact shape that will fly on that regiment's standard.
+
+|  | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| foot | club & hide shield | **spear** & round shield | gladius & scutum | kite shield | crossed muskets | crossed rifles |
+| horse | **horse's head** | head & lance | barded cataphract | couched lance | head & sabre | **tank** |
+| shot | whirling sling | drawn bow | bolt engine | siphon & flame | cannon | gun & split trail |
+
+The standard carries the face of the arm that **leads** the host — and that
+is deliberately not "most regiments". Every real army in this game is mostly
+foot, so a plurality rule would put a spear on every standard in every
+century and the tank glyph would never once be drawn. A host that is 30%
+horse IS a cavalry host (that arm decides its battle and sets its pace); a
+host that is 35% guns is a gun line; foot leads everything else, which is
+most things, which is correct. The exact composition is always one hover
+away — outliner row, unit inspector, battle window.
+
+### The sound
+
+The move order and the battle both make the noise of the arm that leads.
+Same two primitives the rest of `sound.js` uses — a shaped noise burst is a
+footfall, a hoof, or a track link; a held low sawtooth is an engine:
+
+- **marching**: tramping feet · feet under a drum (musket age) · boots and
+  a truck somewhere off (modern) · a four-beat canter of **hooves** ·
+  **diesel and track clatter** (armor) · creaking timber and rope (engines
+  on ox-carts) · a tractor and the trail dropping on the hook (limbered guns).
+- **going in**: iron on iron · hooves into a horn and then the crash of
+  contact · slings whipping and stones on shields · the torsion ratchet and
+  release · ragged rank fire · magazine rifles and a machine gun down the
+  line · guns firing in battery · engines under a high-velocity crack.
+
+You hear your **own** side's arms — the map is full of other people's
+marching, and a battle we are not in keeps the old clash of iron.
+
+### What did not change
+
+Every antique chapter caps at pattern 3, so no cataphract, no dragoon and
+none of the seven tuned campaigns can see an anti-tank gun or a tank. The
+save format gains one key: `regiments.art`, absent on every older save and
+read as the zero it always was (`reviveGame` writes it in so a save
+round-trips whole). §181's prices, gates, pips and its whole regression
+contract are untouched.
+
+- **Regression contract**: `smoke122` — the roster is three arms deep with
+  a distinct name, glyph and cue for all eighteen patterns and no glyph
+  shared by two; the triangle scores spear-vs-horse, horse-vs-shot and
+  shot-vs-line in the right phases and reads zero for balanced hosts;
+  armor beats unsupported foot, the braced line stops being an answer to
+  it, the guns answer it by count, and broken ground cuts both the
+  triangle and §181's own pips; a column marches at its slowest arm and
+  `hopDays` agrees; recruiting, splitting, merging, reinforcing and the
+  AI muster all round-trip three arms; the lead-arm rule puts the tank on
+  a host that is a third armor and the spear on one that is not; a real
+  1948 battle carries `mixA`/`mixD` in the right phases while §181's
+  `armA`/`armD` keep their own meaning; the march order emits the leading
+  arm's cue once, and 1948's armor pulls out on an engine; and a pre-§191
+  save loads with no guns rather than a crash. `smoke103` (§154) needed its
+  source-text pin widened: it spelled out the whole `docA` sum, so adding a
+  fourth term to that line read as a regression. It now ends at `airA` — the
+  claim it exists for is that air rides the roll unconditionally, not how
+  many neighbours the term has, and the narrowed pin still fails the moment
+  `airA` is made phase-conditional again.
+
+## 192. The heavy chapters take their turn — the cannon, the granaries, and the letters east
 
 §187 thickened the thin trees and left the three heaviest chapters alone,
 because five test files pinned their mission tables and the risk budget
