@@ -24,7 +24,8 @@ import {
 } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
-import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES } from '../data/tech.js';
+import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost, ERA_IDEA_TIERS } from '../data/era_ideas.js';
+import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, UNIT_GENS, unlockedGen, cappedGen, techCeiling, genName, computeTechEffects, DOCTRINES, techLevelName } from '../data/tech.js';
 import {
   isCoastal, buildShipCore, issueFleetMove, embarkCore, disembarkCore, fleetsAt, seaHopDays,
   navalGen, modernizeFleetInfo, modernizeFleetCore, hireAdmiralCore,
@@ -249,6 +250,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       points: { gov: 0, infl: 0, mar: 0 },
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
+      eraIdeas: {},
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -1218,6 +1220,10 @@ export function gameActions(ctx) {
       return {
         key, name: cat.name, desc: cat.desc, point: cat.point,
         level, cost, eraBase,
+        // The rung's own names (SPEC §178): where the ladder stands, and the
+        // rung being bought, in the era's vocabulary.
+        levelName: techLevelName(ctx.bookmark, key, level),
+        nextName: atMax ? '' : techLevelName(ctx.bookmark, key, next),
         have: Math.max(0, Math.round(have)),
         gain,
         etaMonths: (!atMax && have < cost && gain > 0) ? Math.ceil((cost - have) / gain) : 0,
@@ -2389,6 +2395,75 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('buyIdea', 'buyIdea failed', e); }
     },
 
+    // ---- the ideas of the age (SPEC §178) ----------------------------------------
+    // The chapter's four era idea groups, each behind a named rung of its own
+    // ladder — the panel's locked cards read `unlockText`, the EU4 screen's
+    // "Unlocked at Renaissance Thought (7)". Costs pay the institutions
+    // surcharge exactly as the ladders do (SPEC §166): a realm behind the
+    // world pays more to think.
+    getEraIdeas() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return null;
+        const groups = eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t);
+        if (!groups.length) return [];
+        const owned = t.eraIdeas || {};
+        const instMult = institutionMult(ctx, g.playerTag);
+        const instPct = Math.round((instMult - 1) * 100);
+        const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
+        return groups.map((gdef) => {
+          const n = Math.max(0, Math.min(gdef.tiers.length, owned[gdef.key] | 0));
+          const unlocked = eraIdeaUnlocked(t, gdef);
+          const next = unlocked && n < gdef.tiers.length ? gdef.tiers[n] : null;
+          const cost = next ? Math.round(eraIdeaCost(n) * instMult) : 0;
+          const have = num(t.points[gdef.point]);
+          const rungName = techLevelName(ctx.bookmark, gdef.unlock.ladder, gdef.unlock.level);
+          const ladderName = (TECH_CATEGORIES[gdef.unlock.ladder] || {}).name || gdef.unlock.ladder;
+          return {
+            key: gdef.key, name: gdef.name, icon: gdef.icon || 'lamp',
+            desc: gdef.desc, point: gdef.point, owned: n,
+            unlocked,
+            unlockText: 'Unlocked at ' + rungName + ' (' + gdef.unlock.level + ')',
+            unlockDetail: ladderName + ' technology ' + gdef.unlock.level + ' — ' + rungName + ' — opens this idea.',
+            tiers: gdef.tiers.map((ti, i) => ({ name: ti.name, desc: ti.desc, owned: i < n })),
+            cost, instPct,
+            canBuy: !!next && have >= cost,
+            whyNot: !unlocked ? 'The age has not taught this yet.'
+              : !next ? 'Every idea in this group is taken up.'
+                : have < cost ? 'Needs ' + cost + ' ' + (ptName[gdef.point] || gdef.point) + ' points'
+                  + (instPct > 0 ? ' (behind the world: +' + instPct + '%)' : '') + '.'
+                  : (instPct > 0 ? 'Behind the world: +' + instPct + '%.' : ''),
+          };
+        });
+      } catch (e) { warnOnce('getEraIdeas', 'getEraIdeas failed', e); return null; }
+    },
+    buyEraIdea(groupKey) {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t) return;
+        const gdef = eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t).find((x) => x.key === groupKey);
+        if (!gdef) return;
+        if (!t.eraIdeas) t.eraIdeas = {};
+        const owned = t.eraIdeas[groupKey] | 0;
+        if (owned >= gdef.tiers.length) return;
+        if (!eraIdeaUnlocked(t, gdef)) {
+          say('The age has not taught this', gdef.name + ' waits on '
+            + techLevelName(ctx.bookmark, gdef.unlock.ladder, gdef.unlock.level)
+            + ' (' + (TECH_CATEGORIES[gdef.unlock.ladder] || {}).name + ' ' + gdef.unlock.level + ').', 'bad');
+          return;
+        }
+        const cost = Math.round(eraIdeaCost(owned) * institutionMult(ctx, g.playerTag));
+        if (num(t.points[gdef.point]) < cost) {
+          say('The realm is not ready', 'This idea needs ' + cost + ' points.', 'bad');
+          return;
+        }
+        t.points[gdef.point] = num(t.points[gdef.point]) - cost;
+        t.eraIdeas[groupKey] = owned + 1;
+        applyReformsToTag(ctx.DEFINES, t, g.playerTag);
+        say('An idea of the age', gdef.tiers[owned].name + ' — ' + gdef.tiers[owned].desc, 'good');
+      } catch (e) { warnOnce('buyEraIdea', 'buyEraIdea failed', e); }
+    },
+
     // ---- technology (SPEC §22) ---------------------------------------------------
     getTech() {
       try { return techInfo(); } catch (e) { warnOnce('getTech', 'getTech failed', e); return null; }
@@ -2406,11 +2481,19 @@ export function gameActions(ctx) {
         t.points[cat.point] = num(t.points[cat.point]) - row.cost;
         t.tech[catKey] = row.level + 1;
         applyReformsToTag(ctx.DEFINES, t, g.playerTag);
-        say('Advancement', cat.name + ' rises to ' + t.tech[catKey] + '.', 'good');
+        say('Advancement', cat.name + ' rises to ' + t.tech[catKey]
+          + ' — ' + techLevelName(ctx.bookmark, catKey, t.tech[catKey]) + '.', 'good');
         const after = tagGen(ctx, g.playerTag);
         if (after > before) {
           say('A new pattern of soldier', genName(after, 'inf') + ' and ' + genName(after, 'cav')
             + ' may now be raised — armies at the old pattern can be modernized for gold.', 'good');
+        }
+        // The rung may open an idea of the age (SPEC §178) — say so, the way
+        // EU4 announces an unlocked idea-group slot.
+        for (const gdef of eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t)) {
+          if (gdef.unlock.ladder === catKey && gdef.unlock.level === t.tech[catKey]) {
+            say('An idea of the age unlocks', gdef.name + ' may now be pursued — see Reforms.', 'good');
+          }
         }
       } catch (e) { warnOnce('buyTech', 'buyTech failed', e); }
     },
@@ -3214,6 +3297,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       points: { gov: 0, infl: 0, mar: 0 },
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
+      eraIdeas: {},
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -3328,6 +3412,7 @@ export function reviveGame(saved) {
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
+    if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§178 saves
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};

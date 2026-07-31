@@ -198,6 +198,20 @@ static site, the zero dependencies, or the missing build step changes.
   patterns of soldier (Tribal Levies → Professional Legions → … → Rifle Brigades and
   Armored Corps); armies remember what they were raised as, and you modernize them
   for gold when the art advances.
+- **Every rung has a name, and the ladders sell ideas.** Each bookmark names its
+  technology levels in the era's own vocabulary (167 BCE climbs from The Shepherd
+  Slingers to The Royal Phalanx; 1948 from The Mandate Departments to The Planned
+  Decade), and reaching a named rung unlocks **ideas of the age** — EU4's idea
+  groups, catered to each chapter and each side of it. The Maccabees study the
+  Zeal of Phinehas and, eventually, The Greek Art of War; the Seleucid king
+  answers with The Royal Cities and The Seleucid Phalanx; the Fourth Philosophy
+  faces the Flavian Method, the Keepers' Torah faces Justinian's Codex, and the
+  People in Arms faces the Arab Legion — fifty-one groups across the eight
+  chapters, three tiers each, bought with the ladder's own point, with locked
+  cards that tell you exactly which rung opens them ("Unlocked at The Third
+  Wall (8)"). The AI buys its side's curriculum on the same terms, and every
+  playable side's mission tree grew two branches that assign it: master the
+  era's named art, and take up its ideas.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes

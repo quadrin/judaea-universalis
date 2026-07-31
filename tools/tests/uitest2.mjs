@@ -61,7 +61,7 @@ ok(/Eleazar ben Ananias/.test(heirTxt), 'heir line shows: ' + heirTxt.trim().sli
 const rulerTitle = (await page.locator('.np-ruler-title').textContent()) || '';
 ok(/age 53/.test(rulerTitle), 'ruler age shown: ' + rulerTitle);
 const missionRows = await page.locator('.np-mn').count();
-ok(missionRows === 6, 'six JUD missions on the tree (SPEC §177): ' + missionRows);
+ok(missionRows === 8, 'eight JUD missions on the tree (SPEC §177, grown by §178): ' + missionRows);
 const clientRows = (await page.locator('#nation-panel').textContent()) || '';
 ok(true, 'nation panel rendered');
 await page.screenshot({ path: OUT + 'v15-nation.png' });

@@ -54,6 +54,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -106,6 +115,25 @@ export const BOOKMARK_67 = {
   // Rome is a republic until the emperors (SPEC §25).
   govTypes: { ROM: 'republic' },
   techTweaks: { ROM: { mar: 2, gov: 1 }, PAR: { mar: 1 } },
+  // The rungs' own names (SPEC §178): the arts of the late Hasmonean world,
+  // where every court is learning the Roman grammar whether it wants to or not.
+  techNames: {
+    gov: {
+      3: 'The Elders\' Custom', 4: 'The King\'s Assessment', 5: 'The Fortress Registers',
+      6: 'The Sanhedrin\'s Writ', 7: 'The Royal Chancery', 8: 'The Tax Farmers\' Books',
+      9: 'The Governor\'s Census',
+    },
+    infl: {
+      3: 'The Market Criers', 4: 'The Temple Envoys', 5: 'The Schools\' Dispute',
+      6: 'The Dinner Diplomacy', 7: 'The Caravan Accords', 8: 'The Roman Grammar',
+      9: 'The Proconsul\'s Ear',
+    },
+    mar: {
+      3: 'The Town Levies', 4: 'The Royal Garrisons', 5: 'The Drilled Line',
+      6: 'The Hired Companies', 7: 'The Fortress Art', 8: 'The Legion Observed',
+      9: 'The Professional Host',
+    },
+  },
 
   // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
   provinceNames: {
@@ -564,6 +592,26 @@ export const BOOKMARK_67 = {
         check: (ctx) => (ctx.game.tags.HYR.treasury || 0) >= 400,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, infl: 25 }),
       },
+      // The age's curriculum (SPEC §178): what the elder brother's cause must
+      // learn — hired steel, and the arts of a court worth restoring.
+      {
+        id: 'h4_hired_steel', name: 'Hired Steel',
+        icon: 'helmet', col: 0, requires: ['h4_aretas'],
+        desc: 'Pay for the war the age fights: reach Military 6 — The Hired Companies.',
+        rewardText: '"The Paymaster\'s Muster": +15% reinforcement speed for 24 months.',
+        check: (ctx) => (((ctx.game.tags.HYR || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'paymasters_muster', name: 'The Paymaster\'s Muster', months: 24, effects: { reinforceMult: 1.15 },
+        }),
+      },
+      {
+        id: 'h4_school_of_rule', name: 'A School of Rule',
+        icon: 'scroll', col: 2, requires: ['h4_web'],
+        desc: 'Take up three ideas of the age — a restored high priesthood must govern, not merely reign.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.HYR) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, legitimacy: 10 }),
+      },
     ],
     ARI: [
       {
@@ -608,6 +656,26 @@ export const BOOKMARK_67 = {
         rewardText: '+25 governance and +25 martial points.',
         check: (ctx) => (ctx.game.tags.ARI.treasury || 0) >= 400,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { gov: 25, mar: 25 }),
+      },
+      // The age's curriculum (SPEC §178): the able brother fights like the
+      // age and crowns himself with its ideas.
+      {
+        id: 'a4_kings_art', name: 'The King\'s Art of War',
+        icon: 'helmet', col: 0, requires: ['a4_break'],
+        desc: 'Field the age\'s army, not a faction\'s: reach Military 6 — The Hired Companies.',
+        rewardText: '"Veterans of Every War": +5% discipline for 24 months.',
+        check: (ctx) => (((ctx.game.tags.ARI || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'veterans_every_war', name: 'Veterans of Every War', months: 24, effects: { disciplineMult: 1.05 },
+        }),
+      },
+      {
+        id: 'a4_priest_kings_charter', name: 'The Priest-King\'s Charter',
+        icon: 'altar', col: 2, requires: ['a4_treasury'],
+        desc: 'Take up three ideas of the age — the crown must out-think the elder, not merely outfight him.',
+        rewardText: '+25 influence points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.ARI) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 25, legitimacy: 10 }),
       },
     ],
   },

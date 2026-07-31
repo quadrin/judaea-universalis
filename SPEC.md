@@ -9663,3 +9663,102 @@ pattern, no buttons, no purse.
   pattern, beyond-flags respecting the ceiling, the gain matching the
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
+
+## 178. The rungs have names, and the ladders sell ideas
+
+§177 dressed the ladders in EU4's numbers; this section gives them EU4's
+words. Two things were still generic across seven centuries: a technology
+level was "Level 6" whether the buyer was Judah Maccabee or Ben-Gurion, and
+the reform trees were the same three lines in every chapter — the one screen
+EU4 built its whole identity on (idea groups unlocking at named technology
+levels, "Unlocked at Renaissance Thought (7)") had no counterpart. Now every
+bookmark names its rungs, and every bookmark sells ideas of its own age,
+gated behind those rungs — technology development unlocks a curriculum
+catered to the chapter, and the mission trees assign it.
+
+### The rungs (`bookmark.techNames`)
+
+Every bookmark names each ladder's levels across its reachable window
+(roughly base−1..ceiling; `techLevelName` in tech.js falls back to
+"Level N" outside it, so foreign panels and hand-edited saves never read
+undefined). The names are the era's own state arts — 167 BCE climbs the
+military ladder from The Shepherd Slingers to The Royal Phalanx through The
+Greek Art of War (7), which is both a rung and the name of the idea group it
+opens; 1948's government ladder runs The Mandate Departments → The
+Provisional Government → The Planned Decade. Chapters with two very
+different playable sides keep their shared rungs side-neutral (529's gov 12
+is The Codex of Laws — published the very month the Keepers rise — not
+somebody's districts). `techInfo` rows carry `levelName`/`nextName`, the
+Coin tab prints the rung under each ladder head and on the buy button, the
+buy toast names the rung it just bought, and a foreign court's read-only
+rows wear their rung names too.
+
+### The ideas of the age (`js/data/era_ideas.js`, `t.eraIdeas`)
+
+One module owns the whole table, the institutions.js pattern. Per bookmark,
+per SIDE: the rising and the empire each get their own curriculum
+(`ERA_IDEAS_BY_BOOKMARK[id][TAG]`, with an optional `default` for courts the
+chapter wrote none for — the Hellenistic world defaults to the king's arts,
+the brothers' war to the one set both brothers are, and the asymmetric
+chapters to none). The Zeal of Phinehas, The Law Restored, The Cleansed
+House and The Greek Art of War face The Royal Cities, The King's Friends and
+The Seleucid Phalanx; the Fourth Philosophy faces the Flavian Method; the
+Keepers' Torah faces the Codex; the People in Arms faces the Arab Legion —
+fifty-one groups across eight chapters, three tiers each, priced 60/90/120
+of the group's point with the §166 institutions surcharge on top (EU4
+penalizes ideas for missing institutions too, and "behind the world pays
+more to think" is the whole §166 thesis).
+
+The contract, machine-checked: group keys are globally unique (effects
+resolve from the flat registry because `applyReformsToTag` has a tag but no
+bookmark); `unlock.ladder === point` — the ladder that opens a group is the
+ladder that pays for it, one mental model; every unlock sits inside the
+chapter's base..ceiling window; every playable side has ≥1 group open at its
+STARTING levels (the EU4 screen's shape — first slot open, the rest waiting
+on rungs) and every effects key is one the sim consumes. A formed crown
+walks its `lineage` before the default, so the Kingdom of Israel reads
+Judaea's curriculum, not the empire's; a civil-war splinter inherits the
+parent's tiers, a released state starts with none; pre-§178 saves join with
+`eraIdeas = {}`.
+
+Actions `getEraIdeas`/`buyEraIdea` mirror the reform pair; `buyTech`
+announces any group the new rung just opened, EU4's unlocked-slot toast.
+The AI queues the era groups behind the universal trees on the same
+one-tier-a-month, 150-point-buffer cadence — symmetric with the player,
+surcharge included. On the panel, the Reforms block grows an "Ideas of the
+Age" strip: a locked group is the EU4 card — a dark slab naming its rung,
+"Unlocked at The Third Wall (8)" — an open one sells tiers like a reform
+tree, and a foreign court shows pips for the groups it has actually taken
+up, no lock cards, no buttons.
+
+### The chains assign the curriculum
+
+Every playable side of every chapter gains two missions (thirty-two across
+the eight bookmarks): reach a named rung ("reach Military 7 — The Roman
+Manner"), and take up three era-idea tiers — each wired into the existing
+tree with `requires` (never stricter: new branches only), each with an
+era-priced reward. Rome's 66 CE chain stays a LADDER on purpose (§177's
+point, kept: the two new rungs — An Army That Eats, Iudaea Capta — append
+requires-less, the sequence's postscript), and the 132/614 Third House
+capstones keep their table seats because the curriculum appends AFTER them —
+smoke16 forces those chains by index, and an old save's `missionIdx` still
+means what it meant.
+
+- **Regression contract**: `smoke112` pins the data table (every listed
+  group exists, none orphaned, unlocks inside the window and priced in the
+  opening ladder, three tiers each, effect keys within the consumed set,
+  every unlock rung era-named, every playable side one-group-open at start),
+  the gate (a locked group refuses purchase; the locked card reads exactly
+  "Unlocked at The Third Wall (8)"), the purchase (points down, tier up,
+  morale folded into `t.ideas`, 60/90/120 with the surcharge reported), the
+  curriculum missions (waiting on mar 7 / three tiers, completing on them),
+  the AI (buys from ROME'S list, only what its ladders opened, one a month),
+  and the save round-trip (tiers ride, pre-§178 saves join with none,
+  unknown registry keys fold to nothing). The chains' moved pins moved with
+  them: smoke2 (66/132 JUD read 8), smoke3 (HYR reads 7), smoke111 (eight
+  nodes, cols 1,0,1,2,1,0,3,2, rows 0,1,1,1,2,2,2,2 — the appended branches
+  derive rows below parents that sit EARLIER in the table, which is why
+  appending is the safe grow direction), uitest2 (eight medallions). The
+  all-AI harness's seeded trajectories drift as they always do when the AI
+  gets a new monthly purchase; the accepted-bleeders list in tools/README
+  governs.

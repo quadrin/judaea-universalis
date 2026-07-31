@@ -50,6 +50,15 @@ function totalMen(ctx, tag) {
   } catch (e) { warnOnce('totalMen', e); return 0; }
 }
 
+// Era-idea tiers a court has taken up (SPEC §178), read off the tag —
+// content packages import nothing.
+function eraTiers(t) {
+  const o = (t && t.eraIdeas) || {};
+  let n = 0;
+  for (const k of Object.keys(o)) n += Math.max(0, o[k] | 0);
+  return n;
+}
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -369,6 +378,26 @@ export const BOOKMARK_1948 = {
   // armored corps: the ladder runs to its end here (SPEC §99).
   techCeiling: 24,
   techTweaks: { JOR: { mar: 1 }, UK: { mar: 1 }, ISR: { infl: 1 } },
+  // The rungs' own names (SPEC §178): the arts of the state born mid-war —
+  // mandate departments becoming ministries, purchasing missions becoming a
+  // foreign service, militias becoming a general staff.
+  techNames: {
+    gov: {
+      18: 'The Mandate Departments', 19: 'The Administration Inherited', 20: 'The Provisional Government',
+      21: 'The Emergency Regulations', 22: 'The State Budget', 23: 'The Development Ministries',
+      24: 'The Planned Decade',
+    },
+    infl: {
+      18: 'The Wire Services', 19: 'The Delegations Abroad', 20: 'The Arms Market',
+      21: 'The Recognition Race', 22: 'The Armistice Tables', 23: 'The Foreign Ministries',
+      24: 'The World\'s Capitals',
+    },
+    mar: {
+      18: 'The Militia Inheritance', 19: 'The Mobilized Brigades', 20: 'The General Staff',
+      21: 'The Conscript Army', 22: 'The Combined Operations', 23: 'The Armored Doctrine',
+      24: 'The Air Supremacy School',
+    },
+  },
 
   blurb: 'At midnight the Mandate ended; at four in the afternoon, in the Tel Aviv '
     + 'museum, the State of Israel was declared; by morning the armies of Egypt, '
@@ -1306,6 +1335,26 @@ export const BOOKMARK_1948 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Aila'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, treasury: 50 }),
       },
+      // The age's curriculum (SPEC §178): the army the militias must become,
+      // and the state the institutions already are.
+      {
+        id: 'i_one_army', name: 'One Army, One Command',
+        icon: 'helmet', col: 0, requires: ['i_galilee'],
+        desc: 'From militias to a general staff: reach Military 20 — The General Staff.',
+        rewardText: '"The Unified Command": +5% discipline for 24 months.',
+        check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).mar | 0) >= 20,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'unified_command', name: 'The Unified Command', months: 24, effects: { disciplineMult: 1.05 },
+        }),
+      },
+      {
+        id: 'i_state_that_thinks', name: 'The State That Thinks',
+        icon: 'scales', col: 1, requires: ['i_jerusalem_road'],
+        desc: 'Take up three ideas of the age — the institutions must outlast the emergency.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.ISR) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
+      },
     ],
     JOR: [
       {
@@ -1350,6 +1399,26 @@ export const BOOKMARK_1948 = {
           && (ctx.helpers.controls(ctx, 'JOR', 'Jerusalem')
             || ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n))),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 25 }),
+      },
+      // The age's curriculum (SPEC §178): the Legion's professional edge,
+      // and the statecraft of the kingdom that means to keep what it holds.
+      {
+        id: 'jr_conscript_kingdom', name: 'The National Service',
+        icon: 'helmet', col: 0, requires: ['jr_latrun'],
+        desc: 'The Legion cannot stay small forever: reach Military 21 — The Conscript Army.',
+        rewardText: '"The Expanded Legion": +10% manpower for 24 months.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JOR')] || {}).tech || {}).mar | 0) >= 21,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JOR', {
+          id: 'expanded_legion', name: 'The Expanded Legion', months: 24, effects: { manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'jr_kingdom_of_both_banks', name: 'A Kingdom of Both Banks',
+        icon: 'star8', col: 2, requires: ['jr_solvent'],
+        desc: 'Take up three ideas of the age — annexation is paperwork; absorption is statecraft.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags[who(ctx, 'JOR')]) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { gov: 25, legitimacy: 10 }),
       },
     ],
   },

@@ -21,6 +21,7 @@ import { attentionThreat } from './weather.js';
 import { aiNavalOperation, reservedForNavalOp } from './invasion.js';
 import { fireEvent } from './events.js';
 import { IDEA_TREES, ideaCost, applyReformsToTag } from '../data/ideas.js';
+import { eraIdeaGroupsFor, eraIdeaUnlocked, eraIdeaCost } from '../data/era_ideas.js';
 import { TECH_CATEGORIES, TECH_MAX, techCost, eraBaseline, aheadMult, techCeiling, genUpkeepMult } from '../data/tech.js';
 import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
@@ -1304,8 +1305,12 @@ function monthlyWarDiplomacy(ctx) {
 }
 
 // With a healthy surplus the AI enacts the next reform tier — one per month,
-// keeping a buffer so it can still develop, drill and convert.
-function aiReforms(ctx, tag) {
+// keeping a buffer so it can still develop, drill and convert. The era ideas
+// (SPEC §178) queue behind the universal trees on the same one-a-month
+// cadence: a court flush enough to think buys what its ladders have opened,
+// paying the same institutions surcharge the player pays. Exported for the
+// §178 regression suite.
+export function aiReforms(ctx, tag) {
   const t = ctx.game.tags[tag];
   if (!t) return;
   if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 };
@@ -1319,6 +1324,19 @@ function aiReforms(ctx, tag) {
     t.reforms[key] = owned + 1;
     applyReformsToTag(ctx.DEFINES, t, tag);
     return; // one tier a month
+  }
+  if (!t.eraIdeas) t.eraIdeas = {};
+  const instMult = institutionMult(ctx, tag);
+  for (const gdef of eraIdeaGroupsFor(ctx.bookmark, tag, t)) {
+    const owned = t.eraIdeas[gdef.key] | 0;
+    if (owned >= gdef.tiers.length) continue;
+    if (!eraIdeaUnlocked(t, gdef)) continue;
+    const cost = Math.round(eraIdeaCost(owned) * instMult);
+    if (num(t.points[gdef.point]) < cost + 150) continue;
+    t.points[gdef.point] -= cost;
+    t.eraIdeas[gdef.key] = owned + 1;
+    applyReformsToTag(ctx.DEFINES, t, tag);
+    return; // still one tier a month
   }
 }
 
