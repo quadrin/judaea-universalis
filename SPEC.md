@@ -10425,5 +10425,11 @@ contract are untouched.
   AI muster all round-trip three arms; the lead-arm rule puts the tank on
   a host that is a third armor and the spear on one that is not; a real
   1948 battle carries `mixA`/`mixD` in the right phases while §181's
-  `armA`/`armD` keep their own meaning; and a pre-§186 save loads with no
-  guns rather than a crash.
+  `armA`/`armD` keep their own meaning; the march order emits the leading
+  arm's cue once, and 1948's armor pulls out on an engine; and a pre-§186
+  save loads with no guns rather than a crash. `smoke103` (§154) needed its
+  source-text pin widened: it spelled out the whole `docA` sum, so adding a
+  fourth term to that line read as a regression. It now ends at `airA` — the
+  claim it exists for is that air rides the roll unconditionally, not how
+  many neighbours the term has, and the narrowed pin still fails the moment
+  `airA` is made phase-conditional again.

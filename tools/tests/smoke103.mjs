@@ -85,9 +85,12 @@ console.log('== pips scale, cap, and land in every phase ==');
   ok(mil.airPips(ctx, 100) === DEFINES.AIR.dieCap, 'and it caps at ' + DEFINES.AIR.dieCap);
   const src = readFileSync(R + '/js/sim/military.js', 'utf8');
   ok(!/phase === 'fire' && air/.test(src), 'the fire-phase-only restriction is gone from the roll');
-  // §181 later added the armor term to the same sum — the claim held here is
-  // that airA rides the roll unconditionally, whatever else joins it.
-  ok(/const docA = doctrinePips\(A\.gen, phase, false\) \+ airA \+ armA;/.test(src),
+  // §181 added the armor term to the same sum and §186 the composition term —
+  // the claim held here is that airA rides the roll unconditionally, whatever
+  // else joins it. So the pin ends at `airA` rather than counting its
+  // neighbours: a later section adding a fourth term is not this suite's
+  // business, and pinning the whole line made it look like one twice.
+  ok(/const docA = doctrinePips\(A\.gen, phase, false\) \+ airA\b/.test(src),
     'and the pips are added in whatever phase is being resolved');
 }
 

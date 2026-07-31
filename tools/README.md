@@ -910,6 +910,20 @@ base tree's 990) and an income line a talent under water because of it — the
 client keeps its army in this stream instead of shedding it at the §52 poverty
 threshold. Accepted and recorded; it is not a wound and it is not new physics.
 
-The full battery at §186: 116 of 118 headless suites ALL PASS. `smoke90` is
-the same pre-existing red documented above (unchanged, and it fails identically
-on the parent commit). `smoke118` is the new contract for this section.
+One inherited pin needed widening. `smoke103` (§154) asserted the whole text
+of `const docA = doctrinePips(A.gen, phase, false) + airA + armA;` — §181 had
+already had to update it once when it added `armA`, and §186 adding `mixA` made
+it read as a regression a third time. It now pins up to `airA` and stops: the
+claim that suite exists for is that air rides the roll unconditionally, not how
+many neighbours the term has. Verified the narrowed pin still bites by making
+`airA` phase-conditional again — it fails, which is the whole point of it.
+
+The full battery at §186: 118 headless suites ALL PASS, including `smoke90`,
+whose 167 crown-cost drift documented above happens to land inside its
+allowance on this stream (it is stream-sensitive, not fixed — treat the note
+above as still open). `smoke118` is the new contract for this section, and a
+browser pass over the three §186 surfaces — the map counters with a rifle, a
+tank and a gun flying at once; the province panel's three recruit buttons named
+Rifle Brigades / Armored Corps / Gun Regiments, each with its own face; and a
+live battle window showing 10 rifles + 4 guns against 5 rifles + 5 tanks with a
+`+3 arms` chip on the gun line in the fire phase — passes with no page errors.
