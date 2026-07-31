@@ -837,6 +837,18 @@ export const simHelpers = {
     if (!s || !d) return 0;
     return (num(d.y) - num(s.y)) + (num(d.m, 1) - num(s.m, 1)) / 12;
   },
+  // How long this chapter RUNS, in years — start to generation horizon (SPEC
+  // §178). The companion to chapterYears, and for the same shared-package
+  // reason: a card that must complete a multi-step arc inside whatever chapter
+  // it finds itself in has to be able to ask how much room the chapter has.
+  // NaN where a bookmark declares no horizon, so a caller can tell "no
+  // answer" from "no time".
+  chapterSpan(ctx) {
+    const b = ctx && ctx.bookmark;
+    const s = b && b.startDate;
+    if (!s || !Number.isFinite(b.generationHorizon)) return NaN;
+    return num(b.generationHorizon) - num(s.y);
+  },
 };
 
 // ------------------------------------------------------------------ national decisions
@@ -3045,6 +3057,15 @@ export function gameActions(ctx) {
           // has a chain of its own, a fresh set of missions to work through.
           if (b.grant) simHelpers.adjust(ctx, f.to, b.grant);
           if (b.modifier2) simHelpers.addTagModifier(ctx, f.to, b.modifier2);
+          // A crown may restyle the ruler who proclaims it (SPEC §178) — the
+          // Kingdom of Israel makes its proclaimer King of Israel. A title
+          // that already names the crown outranks the formable's: the 614
+          // coronation styles its man "King of Israel, of the House of
+          // David", and proclaiming the kingdom must not shorten him.
+          if (b.rulerTitle && nt.ruler
+              && String(nt.ruler.title || '').indexOf(b.rulerTitle) < 0) {
+            nt.ruler.title = String(b.rulerTitle);
+          }
           if (Array.isArray(f.missions) && f.missions.length) { nt.missionIdx = 0; nt.missionsDone = []; }
           ctx.bus.emit('tagSwitched', { from: f.from, to: f.to });
           ctx.bus.emit('provinceOwner', {}); // the map wears the new color

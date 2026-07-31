@@ -712,7 +712,14 @@ Davidic marriage, and 614's crown of David — and the shared cards stand down
 while either bespoke arc runs (`ownArcRuns`). If you add a chapter where MLI is
 formable, it must also play the shared package or the formable is dead content
 there; `smoke93.mjs` asserts that pairing directly, which is the §135 lesson
-applied forward.
+applied forward. The shared arc must also FIT the chapter (SPEC §178): the
+generation gate scales off `chapterSpan` so that gate + 22 (the son) + 5 (room
+to proclaim) stays inside the horizon — a new MLI chapter wants a span of at
+least 31 years, or the crown is arithmetic-dead content even with the package
+registered. And seating the Davidide is a real succession, not a flag: the
+shared arc crowns him, 132 seats him as heir, 614 crowns its own — if you add
+a fourth road, it must put a man on the throne, not just raise
+`davidicThrone`.
 
 ### The unpause that was a race
 
