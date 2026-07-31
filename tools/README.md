@@ -933,10 +933,14 @@ claim that suite exists for is that air rides the roll unconditionally, not how
 many neighbours the term has. Verified the narrowed pin still bites by making
 `airA` phase-conditional again — it fails, which is the whole point of it.
 
-The full battery at §191: 118 headless suites ALL PASS, including `smoke90`,
+The full battery at §191, measured on the tree merged with main's
+§186-§190: **122 of 122 headless suites ALL PASS**, including `smoke90`,
 whose 167 crown-cost drift documented above happens to land inside its
 allowance on this stream (it is stream-sensitive, not fixed — treat the note
-above as still open). `smoke122` is the new contract for this section, and a
+above as still open). The roster landed while §186-§190 were being written,
+so it yields the numbering: this section is §191 and its suite is `smoke122`.
+Nothing else overlapped — the aid pipe and the schools never touch
+`regiments`, and none of main's four new suites reads a unit pattern. `smoke122` is the new contract for this section, and a
 browser pass over the three §191 surfaces — the map counters with a rifle, a
 tank and a gun flying at once; the province panel's three recruit buttons named
 Rifle Brigades / Armored Corps / Gun Regiments, each with its own face; and a
