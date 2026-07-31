@@ -10159,3 +10159,111 @@ it, and is what will hear the next one.
   `…,4,4,4`, declared rows sticking), `smoke2`/`smoke112` (eleven at 66
   and 132), `smoke3` (nine at 67), `uitest2` (eleven medallions in the
   browser).
+
+## 184. The thin trees made thick — forks, bills, and the expansion the age actually paid
+
+The §119 census, re-run: the Great Revolt had six forks, Bar Kokhba and the
+Keepers five each — and Herod's Rise had two. The war of the brothers had
+three, and the Persian Gambit four. The mission trees told the same story
+from the other end: nine nodes at 67 and 40 BCE against eleven at 66 and
+twelve at 614, and not one conquest branch anywhere in the lighter chapters
+beyond the objectives themselves. The chapters with the least content were
+the ones asking the fewest questions, which is backwards: a chapter the
+player finishes fastest is exactly the one that needs more reasons to keep
+playing it.
+
+Three kinds of fix, in increasing order of new prose:
+
+**The tree had been lying by omission.** Four decision cards already asked
+one question, once, with mutually exclusive marker flags — and were never
+charted. `ev4_v_caesar_or_pompey` and `ev4_v_antony_or_octavian` are the
+sovereign kingdom's two Roman civil wars, each with a settling terminal
+(`ev4_v_pharsalus_wager`, `ev4_v_actium_sovereign`) already in the chain;
+`ev_w_the_other_half` (the Exilarchate under Jerusalem, or two houses one
+people) and `ev_w_the_treaty_state` (the baqt pattern, or no category at
+all) set their markers and then the chapter carried on as if nothing had
+been decided. All four are now forks of the tree; the 614 pair got the
+terminals they never had — a generation later the calendar question tests
+what the union of the centres is made of, and the first fitna re-opens
+every rate the caliphate ever set. One §120 lesson held throughout: the
+terminals read markers and living courts, never the geography that opened
+the road.
+
+**Two decisions decided without recording.** `ev4_aretas_price` set
+`aretasMarches` when the elder brother paid in the cities of Moab and
+nothing at all when he refused; `ev5_atg_hyrcanus` disposed of the last
+elder of the Hasmonean house without writing either disposition down. Both
+now mark both roads (`moabKept`; `hyrcanusHome`/`hyrcanusPensioned`), and
+both got terminals with the bill attached: Scaurus' expedition re-papers
+the Moabite deed under a Roman survey in 62, and the old man's story ends
+in the frame the crown chose for it.
+
+**Where the ground was bare, new forks.** Herod's Rise grew three. The
+Queen's Portion is the Donations of Alexandria landing on Jericho —
+Josephus' lease-back at two hundred talents a year as the historical road,
+the deed returned unread and the valley sold outright as the two the
+chronicles don't have — closed by the Grovekeeper's Ledger when the
+victor's clerks read a dead queen's estate. The Musters of Actium is the
+winter of 32: the queen has arranged for the king's army to bleed Nabataea
+while the world is decided at sea, and the two letters on the council
+table are a fork — the Arab war that historically saved the reign, the
+fleet joined at Ephesus, or the levies kept home behind a documented
+famine — priced at Rhodes, where Octavian reads muster rolls like rent
+books whether or not the king comes in person. The Proconsul's Bill puts
+Crassus in the Temple treasury on his way to Carrhae: the beam and the
+broken oath, the treasury opened as a client's contribution, or the doors
+sealed for the record, each answered two years later by what Carrhae
+leaves — Cassius' clerks, reading last year's ledger. And the Persian
+Gambit grew the fork the 529 chapter has been waiting for from the other
+chair: The Other Israel. A Jewish state that governs Neapolis inherits
+Justinian's statutes against the Keepers of Gerizim — the schedule of
+demolitions, the disabilities, the garrisoned church on the summit — and
+is the first Israelite polity in history positioned to repeal them, or to
+keep them running under a new seal. What Gerizim answers when the south's
+riders come asking is decided in that council chamber, years earlier.
+
+**The expansion the age actually paid.** Thirteen conquest branches across
+the five lighter trees, every target the era's own: Herod takes the
+Decapolis cities Augustus historically signed over and the Trachonitis
+command he was given to police; Antigonus retakes Jannaeus' coast and
+reaches for Damascus; the brothers of 67 contest the twelve cities of
+Moab, the sea gates, the Iturean principalities and the city between
+empires; the Return of 614 climbs the Ladder of Tyre, holds the King's
+Highway from the middle for once, and takes the granary of the world with
+the largest Jewish city on earth inside it; the Keepers of 529 break out
+of the hill country into the seat of Palaestina Secunda and shut the coast
+road north of the port. Every one is a `controls()` check over provinces
+the tag does not start with; none completes at boot.
+
+Every new fork stands in the §183 spare columns as a hypothetical — the
+trees now carry forty-five roads-not-taken across the eight chapters, up
+from thirty — and the §183 rules were load-bearing three times over.
+Historical-road forks complete only off the record (the groves fork pays
+on refusal or sale, never on the lease). Prerequisites exist only where
+the marker provably implies the parent (the old man's fork requires the
+Hasmonean hold that its entry tests; the civil-war wagers require nothing,
+because `freeOfRome` is checkable without the eagle flag ever being set).
+And declaring seats found the same §177 wart §183 found: the derived
+layout was drawing `a5_hired_veterans` on top of `a5_masada` and
+`a4_kings_art` on top of `a4_one_crown` — in the second-playable trees,
+where the collision test never looks. Both now declare their rows.
+
+The suite caught two more things before any of it ran, which is what it is
+for: smoke39 refused three single-option verdict cards (v6.1: anything the
+player answers offers at least two answers — so the ledger can be pressed
+for damages, the diadem can be sent to Rhodes in a box, and the crown can
+ride to Gerizim before the south does), and smoke48 threw both Crassus
+deciders out for dying when called cold — `judaeanCrown()` now resolves
+the addressed brother defensively, with no helpers in hand and a bare
+roster.
+
+- **Regression contract**: `smoke83` — the tree now branches 115 ways, all
+  ten new forks' markers written by live cards, both promoted entries and
+  all six new terminals present in their chapters, no new gaps. `smoke116`
+  — forty-five hypotheticals, every new one seated in the spare columns
+  and none completing at boot; the 40, 67 and 614 world-builds set the new
+  markers (before the first pass at 40, because a dead Antigonus is paid
+  nothing) and every road still pays. The §177/§183 pins moved with the
+  feature where they had to: `smoke3` (fifteen at 67), while `smoke16`'s
+  raw index into the 132/614 tables still lands on the Third House
+  untouched, because every insertion in those tables came after it.

@@ -214,14 +214,29 @@ static site, the zero dependencies, or the missing build step changes.
   era's named art, and take up its ideas.
 - **The mission tree shows the roads not taken.** Every playable side's tree
   now carries the chapter's alternate-history forks as standing hypotheticals —
-  thirty spectral medallions across the eight chapters naming the pages history
-  never wrote (a Jewish king seated at Antioch, the coast subjugated, the eagle
-  refused, the House that stood, the Levant without a Lebanon), each desc
-  teaching exactly what state of the world makes those cards arrive, each
+  forty-five spectral medallions across the eight chapters naming the pages
+  history never wrote (a Jewish king seated at Antioch, the coast subjugated,
+  the eagle refused, the House that stood, the Levant without a Lebanon), each
+  desc teaching exactly what state of the world makes those cards arrive, each
   paying a bonus on arrival. They complete off the same flags the fork cards
   themselves set, and they are counted apart — "2 of 7 accomplished · 1 of 6
   roads history never took" — because a hypothetical no campaign reaches is
   not a failure.
+- **The thin trees made thick.** The lighter chapters caught up on forks,
+  major decisions and conquest branches: Herod's Rise grew from two forks to
+  five (Cleopatra's demand for the balsam groves of Jericho, the musters of
+  Actium with the verdict read at Rhodes, and the old man in Babylon on the
+  Hasmonean road), the war of the brothers from three to seven (the price of
+  Petra coming due under a Roman survey, Crassus at the treasury doors on his
+  way to Carrhae, and the sovereign kingdom's two Roman civil wars, now
+  charted), and the Persian Gambit from four to seven (the Exilarchate under
+  one crown or two houses, the caliph's categories renegotiated in the fitna,
+  and the Other Israel — the first Israelite state ever positioned to repeal
+  Justinian's statutes against the Keepers of Gerizim, or keep them running
+  under a new seal). Thirteen expansion missions beside them, every target the
+  era's own: the Decapolis grants, Jannaeus' coast, the twelve cities of Moab,
+  the Ladder of Tyre, the King's Highway, the granary of Egypt, and the coast
+  road out of the Samaritan hills.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes

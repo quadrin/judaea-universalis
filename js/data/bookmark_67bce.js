@@ -620,6 +620,30 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.HYR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, legitimacy: 10 }),
       },
+      // The map of the grandfathers (SPEC §184): Jannaeus' east bank and the
+      // Damascus road — the expansion a restored elder is measured against.
+      {
+        id: 'h4_moab', name: 'The Twelve Cities of Moab',
+        icon: 'mountain', col: 0, row: 3, requires: ['h4_hired_steel'],
+        desc: 'Hold Medaba, Philadelphia and Gerasa — the east bank your grandfather took '
+          + 'and your war may have promised away. What Aretas was paid in, take back.',
+        rewardText: '+15 legitimacy, +20 martial points.',
+        check: (ctx) => ['Medaba', 'Philadelphia', 'Gerasa']
+          .every((n) => ctx.helpers.controls(ctx, 'HYR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 15, mar: 20 }),
+      },
+      {
+        id: 'h4_damascus', name: 'The City Between Empires',
+        icon: 'flag', col: 2, row: 3, requires: ['h4_school_of_rule'],
+        desc: 'Take Damascus — the prize Aretas holds, Tigranes covets, and Rome will '
+          + 'file under whoever is sitting in it when the clerks arrive.',
+        rewardText: '"The Damascus Customs": +8% income for 48 months.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HYR', 'Damascus'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'the_damascus_customs', name: 'The Damascus Customs', months: 48,
+          effects: { incomeMult: 1.08 },
+        }),
+      },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
         id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
@@ -646,6 +670,50 @@ export const BOOKMARK_67 = {
           });
           ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 10 });
         },
+      },
+      {
+        id: 'hy_cities_kept', name: 'The Cities Are Israel\'s', hypothetical: true,
+        fork: '67bce/the_price_of_petra',
+        icon: 'dove', col: 3, row: 2,
+        desc: 'Refuse the price history paid: when Aretas names the twelve cities of Moab '
+          + 'as the cost of his lances, keep them — and fight the war of the brothers with '
+          + 'what Idumea alone can raise, under a neighbour\'s unforgiving eye.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'moabKept'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 15 }),
+      },
+      {
+        id: 'hy_proconsuls_bill', name: 'The Proconsul\'s Bill', hypothetical: true,
+        fork: '67bce/the_proconsuls_bill',
+        icon: 'coins', col: 3, row: 3,
+        desc: 'Be a client crown when Crassus reaches the treasury (54 BCE), and answer him '
+          + 'with something other than the beam and the broken oath: the treasury opened as '
+          + 'a contribution, or the doors sealed in his face for the record.',
+        rewardText: '+20 governance points.',
+        check: (ctx) => anyFlag(ctx, 'crassusAppeased', 'crassusRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 20 }),
+      },
+      {
+        id: 'hy_sovereigns_wager', name: 'The Sovereign\'s Wager', hypothetical: true,
+        fork: '67bce/caesar_or_pompey',
+        icon: 'scales', col: 4, row: 0,
+        desc: 'Stand free and unified when Rome splits between Caesar and Pompey (49 BCE), '
+          + 'and be courted instead of collected: back either Roman as a sovereign backs an '
+          + 'ally — by treaty, for value received — and settle the wager at Pharsalus.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'jvBackedCaesar', 'jvBackedPompey'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { infl: 20 }),
+      },
+      {
+        id: 'hy_two_romans', name: 'The Same Dice, Thrown Free', hypothetical: true,
+        fork: '67bce/antony_or_octavian',
+        icon: 'split', col: 4, row: 1,
+        desc: 'Keep the kingdom sovereign to the last division of the Roman world (33 BCE), '
+          + 'and choose between Antony and Octavian with a free hand — the wager the '
+          + 'grandfathers\' generation made, thrown again over Actium.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'jvBackedOctavian', 'jvBackedAntony'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { infl: 20 }),
       },
     ],
     ARI: [
@@ -695,8 +763,10 @@ export const BOOKMARK_67 = {
       // The age's curriculum (SPEC §179): the able brother fights like the
       // age and crowns himself with its ideas.
       {
+        // Declared seat (SPEC §183): the derived row collided with One Crown
+        // — two children of Break the Elder in one column.
         id: 'a4_kings_art', name: 'The King\'s Art of War',
-        icon: 'helmet', col: 0, requires: ['a4_break'],
+        icon: 'helmet', col: 0, row: 3, requires: ['a4_break'],
         desc: 'Field the age\'s army, not a faction\'s: reach Military 6 — The Hired Companies.',
         rewardText: '"Veterans of Every War": +5% discipline for 24 months.',
         check: (ctx) => (((ctx.game.tags.ARI || {}).tech || {}).mar | 0) >= 6,
@@ -711,6 +781,28 @@ export const BOOKMARK_67 = {
         rewardText: '+25 influence points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ARI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 25, legitimacy: 10 }),
+      },
+      // The map of the grandfathers (SPEC §184): the coast and the northern
+      // road — the able brother\'s war does not stop at the hill country.
+      {
+        id: 'a4_coast', name: 'The Sea Gates',
+        icon: 'ship', col: 1, row: 1, requires: ['a4_army'],
+        desc: 'Take Joppa, Ascalon and Gaza from the elder — the ports his Idumean '
+          + 'paymaster runs the war from, and the customs that fill his war chest.',
+        rewardText: '+100 talents of customs silver.',
+        check: (ctx) => ['Joppa', 'Ascalon', 'Gaza']
+          .every((n) => ctx.helpers.controls(ctx, 'ARI', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { treasury: 100 }),
+      },
+      {
+        id: 'a4_iturean_road', name: 'The Iturean Road',
+        icon: 'horseshoe', col: 1, row: 2, requires: ['a4_coast'],
+        desc: 'Take Panion and Chalcis — the Iturean principalities your father broke to '
+          + 'the Law\'s obedience, drifting loose since the Armenian tide went out.',
+        rewardText: '+1,500 manpower, +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ARI', 'Caesarea Philippi')
+          && ctx.helpers.controls(ctx, 'ARI', 'Chalcis'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { manpower: 1500, legitimacy: 10 }),
       },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
@@ -738,6 +830,50 @@ export const BOOKMARK_67 = {
           });
           ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 10 });
         },
+      },
+      {
+        id: 'hy_cities_kept', name: 'The Cities Are Israel\'s', hypothetical: true,
+        fork: '67bce/the_price_of_petra',
+        icon: 'dove', col: 3, row: 2,
+        desc: 'The road your brother did not take: when Aretas names the twelve cities of '
+          + 'Moab as the cost of his lances, the price is refused, the cities stay Israel\'s, '
+          + 'and the war of the brothers stays a war of brothers only.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'moabKept'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 15 }),
+      },
+      {
+        id: 'hy_proconsuls_bill', name: 'The Proconsul\'s Bill', hypothetical: true,
+        fork: '67bce/the_proconsuls_bill',
+        icon: 'coins', col: 3, row: 3,
+        desc: 'Be a client crown when Crassus reaches the treasury (54 BCE), and answer him '
+          + 'with something other than the beam and the broken oath: the treasury opened as '
+          + 'a contribution, or the doors sealed in his face for the record.',
+        rewardText: '+20 governance points.',
+        check: (ctx) => anyFlag(ctx, 'crassusAppeased', 'crassusRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { gov: 20 }),
+      },
+      {
+        id: 'hy_sovereigns_wager', name: 'The Sovereign\'s Wager', hypothetical: true,
+        fork: '67bce/caesar_or_pompey',
+        icon: 'scales', col: 4, row: 0,
+        desc: 'Stand free and unified when Rome splits between Caesar and Pompey (49 BCE), '
+          + 'and be courted instead of collected: back either Roman as a sovereign backs an '
+          + 'ally — by treaty, for value received — and settle the wager at Pharsalus.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'jvBackedCaesar', 'jvBackedPompey'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 20 }),
+      },
+      {
+        id: 'hy_two_romans', name: 'The Same Dice, Thrown Free', hypothetical: true,
+        fork: '67bce/antony_or_octavian',
+        icon: 'split', col: 4, row: 1,
+        desc: 'Keep the kingdom sovereign to the last division of the Roman world (33 BCE), '
+          + 'and choose between Antony and Octavian with a free hand — the wager the '
+          + 'grandfathers\' generation made, thrown again over Actium.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'jvBackedOctavian', 'jvBackedAntony'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 20 }),
       },
     ],
   },

@@ -774,6 +774,32 @@ export const BOOKMARK_529 = {
         check: (ctx) => eraTiers(ctx.game.tags.SAM) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { gov: 25, legitimacy: 10 }),
       },
+      // Past the hill country (SPEC §184): what a rising that survives its
+      // first empire actually marches on — the seat of Palaestina Secunda,
+      // and the coast road north of the port.
+      {
+        id: 's_second_palaestina', name: 'The Second Palaestina',
+        icon: 'swords', col: 0, row: 2, requires: ['s_captured_arsenals'],
+        desc: 'Take Scythopolis and Pella — the seat of Palaestina Secunda and its bridge '
+          + 'over the river: the province the empire governs the north from.',
+        rewardText: '+100 talents (the provincial treasury), +15 martial points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'SAM', 'Scythopolis')
+          && ctx.helpers.controls(ctx, 'SAM', 'Pella'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 's_coast_road', name: 'The Coast Between',
+        icon: 'market', col: 1, row: 3, requires: ['s_caesarea'],
+        desc: 'Take Dora and Ptolemais — the coast road north of the port, so the empire\'s '
+          + 'answer must come by sea or through the passes, and not along the shore.',
+        rewardText: '"The Shore Watched": +6% income, permanently.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'SAM', 'Dora')
+          && ctx.helpers.controls(ctx, 'SAM', 'Ptolemais'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_shore_watched', name: 'The Shore Watched', months: -1,
+          effects: { incomeMult: 1.06 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set.

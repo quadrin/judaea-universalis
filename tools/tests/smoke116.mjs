@@ -165,9 +165,13 @@ function expectAllDone(g, bookmark, tags, label) {
   ok((t.modifiers || []).some((m) => m.id === 'hy_successor_state'), '167bce: the successor state pays permanently');
 }
 
-{ // 67 BCE — the ev4_v_* strand pays both brothers' chains off one world.
+{ // 67 BCE — the ev4_v_* strand pays both brothers' chains off one world,
+  // and the §184 forks (Moab, Crassus, the two Roman civil wars) by marker.
   const { game, ctx } = booted.get('67bce');
-  Object.assign(game.flags, { eagleRefused: true, neverRenamed: true });
+  Object.assign(game.flags, {
+    eagleRefused: true, neverRenamed: true,
+    moabKept: true, crassusRefused: true, jvBackedPompey: true, jvBackedAntony: true,
+  });
   realm.checkMissions(ctx);
   realm.checkMissions(ctx);
   expectAllDone(game, era('67bce').bookmark, ['HYR', 'ARI'], '67bce');
@@ -176,10 +180,15 @@ function expectAllDone(g, bookmark, tags, label) {
     '67bce: the unrenamed crown settles on whichever brother kept it');
 }
 
-{ // 40 BCE — first the kingdom's statue answer and the Hasmonean hold, then
-  // a second world in which Herod outgrew the favour.
+{ // 40 BCE — first the kingdom's statue answer and the Hasmonean hold (with
+  // the §184 markers: the groves refused, the fleet sailed, the old man home
+  // — set before the first pass, because ATG must be paid while it lives),
+  // then a second world in which Herod outgrew the favour.
   const { game, ctx } = booted.get('40bce');
-  Object.assign(game.flags, { hasmoneanHolds: true, orderNeverGiven: true });
+  Object.assign(game.flags, {
+    hasmoneanHolds: true, orderNeverGiven: true,
+    grovesRefused: true, sailedWithAntony: true, hyrcanusHome: true,
+  });
   realm.checkMissions(ctx);
   const her = game.tags.HER;
   her.overlord = null;
@@ -211,10 +220,12 @@ function expectAllDone(g, bookmark, tags, label) {
   expectAllDone(game, era('529ce').bookmark, ['SAM'], '529ce');
 }
 
-{ // 614 CE — the century, and its three dependents.
+{ // 614 CE — the century, its three dependents, and the §184 forks: the
+  // Exilarchate, the caliph's categories, and the other Israel.
   const { game, ctx } = booted.get('614ce');
   Object.assign(game.flags, {
     charterDavidic: true, altarRestored: true, tookTheEmptyGround: true, davidCrowned: true,
+    twoHousesOnePeople: true, theTreatyState: true, twoTorahsPeace: true,
   });
   realm.checkMissions(ctx);
   expectAllDone(game, era('614ce').bookmark, ['JUD'], '614ce');

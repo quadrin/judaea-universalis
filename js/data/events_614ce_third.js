@@ -222,4 +222,207 @@ export const EVENTS_614_THIRD = [
     ],
   },
 
+  // ═══ THE OTHER ISRAEL (SPEC §119) ═════════════════════════════════════════
+  // The 529 chapter is played from Gerizim looking at an empire; this fork is
+  // the same ground looked at from the other chair. The Samaritans also rose
+  // with Persia in 614 — what was left of them after Justinian's century —
+  // and a Jewish state that comes to govern Palaestina inherits, along with
+  // the tax rolls, the whole apparatus Justinian aimed at them: the statutes
+  // on inheritance and testimony, the garrisoned church on their summit, the
+  // schedule of demolitions. No empire ever repealed any of it. The question
+  // of what a rival Israelite tradition is owed by an Israelite state has not
+  // been askable since the schism, because there has been no such state to
+  // ask. Sources: Procopius, Buildings V.vii for the walled summit; the
+  // Samaritan chronicles for what the century had already cost.
+  {
+    id: 'ev_t_the_other_israel',
+    title: 'The Other Israel',
+    desc: 'The hill country between Jerusalem and the Galilee has come under the crown, '
+      + 'and with it a people the clerks do not know how to file. The Keepers of the '
+      + 'mountain hold a Torah five books long and their own Aaronide line to serve it; '
+      + 'their Deuteronomy reads Gerizim where the crown\'s reads Ebal; and on their '
+      + 'summit stands Justinian\'s church, walled and garrisoned, on the rock where '
+      + 'their tenth commandment says to build the altar. A century of imperial law has '
+      + 'left them unable to inherit, unable to testify, and reduced from a nation to a '
+      + 'remnant — by statutes that are now, by conquest, the crown\'s own statutes.\n\n'
+      + 'The council is divided the way the schism is old. One party observes that '
+      + 'these are the people who harried the builders under Zerubbabel and answered to '
+      + 'every empire against us since. The other observes that the statutes on the '
+      + 'books were drafted against them in one century and used against us in the '
+      + 'next, and that a crown which keeps them is continuing the empire\'s work under '
+      + 'a new seal.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 617,
+    maxYear: 668,
+    trigger: safeTrigger('ev_t_other_israel', (ctx) => {
+      const t = ctx.game.tags[who(ctx, 'JUD')];
+      return alive(ctx, 'JUD') && !(t && t.overlord)
+        && holds(ctx, 'JUD', 'Jerusalem') && holds(ctx, 'JUD', 'Neapolis')
+        && !flag(ctx, 'otherIsraelAnswered');
+    }),
+    aiOption: 0,
+    historical: 'No such decision was ever taken, because no Israelite state ever governed '
+      + 'Gerizim. The statutes stayed on the books under every empire in turn, and the '
+      + 'community they were aimed at numbered a few hundred souls by the twentieth '
+      + 'century.',
+    options: [
+      {
+        label: 'Repeal the statutes, and give them back their mountain',
+        tooltip: 'The two Torahs make a civil peace: the statutes come off the books, the '
+          + 'garrison comes off the summit, and the schism stays a schism — argued, not '
+          + 'legislated. Neapolis −2 unrest permanently, +10 legitimacy, +1 stability, and '
+          + '"The Two Torahs" (+0.1 legitimacy a month): a state confident enough to be '
+          + 'disagreed with. The priests of the Mount protest the precedent (−15).',
+        effects: guard('ev_t_other_israel:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
+          h.addProvinceModifier(ctx, 'Neapolis', {
+            id: 'the_mountain_returned', name: 'The Mountain Returned', months: -1,
+            effects: { unrest: -2 },
+          });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_two_torahs', name: 'The Two Torahs', months: -1,
+            effects: { legitimacyAdd: 0.1 },
+          });
+          h.factionShift(ctx, 'JUD', 'priests', -15);
+          h.setFlag(ctx, 'otherIsraelAnswered', true);
+          h.setFlag(ctx, 'twoTorahsPeace', true);
+          h.chronicle(ctx, 'era', 'The statutes of Justinian are struck from the books and '
+            + 'the garrison marches off the summit of Gerizim. The altar goes back on the '
+            + 'rock, built by men no Israelite crown ever helped before, and the schism '
+            + 'returns to what it was before the empires priced it: an argument between '
+            + 'kin about a verse.');
+        }),
+      },
+      {
+        label: 'The statutes stand. Only the seal changes',
+        tooltip: 'The empire\'s apparatus is kept and inherited: the disabilities stay on '
+          + 'the books and the summit stays garrisoned — by the crown now. +10 governance '
+          + 'points and the priests of the Mount content (+15); Neapolis +2 unrest '
+          + 'permanently, and "The Inherited Statutes" (−0.1 legitimacy a month): a state '
+          + 'that keeps the tools it was cut with has said something about itself, in '
+          + 'writing, to everyone who can read a statute.',
+        effects: guard('ev_t_other_israel:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 10 });
+          h.addProvinceModifier(ctx, 'Neapolis', {
+            id: 'the_watched_mountain', name: 'The Watched Mountain', months: -1,
+            effects: { unrest: 2 },
+          });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_inherited_statutes', name: 'The Inherited Statutes', months: -1,
+            effects: { legitimacyAdd: -0.1 },
+          });
+          h.factionShift(ctx, 'JUD', 'priests', 15);
+          h.setFlag(ctx, 'otherIsraelAnswered', true);
+          h.setFlag(ctx, 'oldQuarrelKept', true);
+          h.chronicle(ctx, 'era', 'The statutes of Justinian stay on the books with a new '
+            + 'seal at the bottom. On the summit of Gerizim the garrison changes its '
+            + 'watchword and nothing else, and the Keepers add a name to the list their '
+            + 'chronicles keep, which has never once been shortened.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_t_what_gerizim_answered',
+    title: 'What Gerizim Answered',
+    desc: 'The new power out of the south does what every arriving power does in the '
+      + 'hill country: it sends riders to the mountain to ask who holds it and what '
+      + 'they want. The answer the riders carry back was written years ago, in the '
+      + 'council chamber where the crown decided what the other Israel was owed.\n\n'
+      + 'A people given back its mountain by this crown has something no empire ever '
+      + 'gave it and a reason to keep the arrangement that did. A people still living '
+      + 'under the old statutes has no reason at all — and the arriving power is '
+      + 'offering the same assessment terms to everyone, with no clause about Ebal '
+      + 'or Gerizim anywhere in them.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 634,
+    maxYear: 690,
+    trigger: safeTrigger('ev_t_gerizim_answered', (ctx) => {
+      if (!alive(ctx, 'JUD')) return false;
+      return (flag(ctx, 'twoTorahsPeace') || flag(ctx, 'oldQuarrelKept'))
+        && alive(ctx, 'RSH')
+        && !flag(ctx, 'gerizimAnswered614');
+    }),
+    aiOption: 0,
+    historical: 'The Samaritans surrendered Neapolis to the conquest on terms, separately '
+      + 'from everybody else, and were assessed as their own community — a remnant '
+      + 'negotiating as a nation, one more time.',
+    options: [
+      {
+        label: 'Let the mountain answer for itself',
+        tooltip: 'The two Torahs at peace: the Keepers stand with the kingdom — +2,000 '
+          + 'manpower, Neapolis −1 unrest for 120 months, +10 legitimacy: the hill country '
+          + 'holds as one country. The old quarrel kept: the Keepers negotiate their own '
+          + 'terms with the south — Neapolis +2 unrest for 60 months, −5 legitimacy, and '
+          + 'the crown learns what the empire learned, at the same address.',
+        effects: guard('ev_t_gerizim_answered:0', (ctx) => {
+          const h = ctx.helpers;
+          if (flag(ctx, 'twoTorahsPeace')) {
+            h.adjust(ctx, 'JUD', { manpower: 2000, legitimacy: 10 });
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'the_mountain_stands', name: 'The Mountain Stands With the Crown', months: 120,
+              effects: { unrest: -1 },
+            });
+            h.chronicle(ctx, 'era', 'The riders from the south are met at the foot of '
+              + 'Gerizim by men who say, accurately, that they hold their mountain under '
+              + 'the crown in Jerusalem and are content to. The hill country answers as '
+              + 'one country, which no assessor\'s schedule anticipated.');
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: -5 });
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'the_separate_terms', name: 'The Separate Terms', months: 60,
+              effects: { unrest: 2 },
+            });
+            h.chronicle(ctx, 'era', 'The Keepers negotiate their own terms with the south, '
+              + 'separately, as they have with every power since Assyria. The crown that '
+              + 'kept Justinian\'s statutes reads the mountain\'s answer and has no standing '
+              + 'to be surprised by it.');
+          }
+          h.setFlag(ctx, 'gerizimAnswered614', true);
+          h.setFlag(ctx, 'mountainAnsweredAlone', true);
+        }),
+      },
+      {
+        label: 'Ride to the mountain before the south does',
+        tooltip: 'The crown\'s own envoys go up first: −40 talents. At peace, the pact is '
+          + 'affirmed in public before the riders arrive — +2,500 manpower, +12 legitimacy, '
+          + 'Neapolis −1 unrest for 120 months. Under the old statutes, it is a late offer '
+          + 'from a crown suddenly needing friends: the Keepers hear it out, take the '
+          + 'sweetened terms under advisement, and negotiate with the south anyway — '
+          + 'Neapolis +1.5 unrest for 48 months.',
+        effects: guard('ev_t_gerizim_answered:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -40 });
+          if (flag(ctx, 'twoTorahsPeace')) {
+            h.adjust(ctx, 'JUD', { manpower: 2500, legitimacy: 12 });
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'the_mountain_stands', name: 'The Mountain Stands With the Crown', months: 120,
+              effects: { unrest: -1 },
+            });
+            h.chronicle(ctx, 'era', 'The crown\'s envoys climb Gerizim ahead of the south\'s '
+              + 'riders, and the pact of the two Torahs is affirmed on the summit where '
+              + 'anyone on the coast road can see the smoke of both altars. The hill '
+              + 'country answers as one country, in advance, in writing.');
+          } else {
+            h.addProvinceModifier(ctx, 'Neapolis', {
+              id: 'the_separate_terms', name: 'The Late Offer', months: 48,
+              effects: { unrest: 1.5 },
+            });
+            h.chronicle(ctx, 'era', 'The crown that kept Justinian\'s statutes sends envoys '
+              + 'up the mountain with sweetened terms, a season before the south\'s riders '
+              + 'make the same climb. The Keepers hear both offers with the same courtesy, '
+              + 'and take the one from the power that never legislated against them.');
+          }
+          h.setFlag(ctx, 'gerizimAnswered614', true);
+          h.setFlag(ctx, 'rodeToTheMountain', true);
+        }),
+      },
+    ],
+  },
+
 ];

@@ -259,4 +259,177 @@ export const EVENTS_614_POWER = [
     ],
   },
 
+  // ═══ THE ROADS CLOSE (SPEC §119) ══════════════════════════════════════════
+  // The Exilarchate question and the caliph's categories were forks the file
+  // asked and never answered for: each set its markers and then the chapter
+  // carried on as if nothing had been decided. These two cards are their
+  // terminals — what a generation does with each arrangement, priced by the
+  // road that produced it.
+
+  {
+    id: 'ev_w_what_the_centres_became',
+    title: 'What the Two Centres Became',
+    desc: 'A generation has grown up inside the arrangement, which is the only test '
+      + 'arrangements ever get. The couriers between Jerusalem and Mahoza ride a road '
+      + 'that has become ordinary — a thing nobody alive under the First House ever '
+      + 'saw — and the question the founding generation shouted about has gone quiet '
+      + 'without going away: where does the Law live, and who signs the calendar?\n\n'
+      + 'This year both centres\' academies have dated the festivals differently. It is '
+      + 'a small discrepancy, two days, arising from an honest dispute about witnesses. '
+      + 'It is also the whole constitutional question wearing a holiday costume, and '
+      + 'every court in the Jewish world is watching which letter gets obeyed.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 655,
+    maxYear: 690,
+    trigger: safeTrigger('ev_w_centres_became', (ctx) => {
+      if (!alive(ctx, 'JUD')) return false;
+      return (flag(ctx, 'oneCrownBothCentres') || flag(ctx, 'twoHousesOnePeople'))
+        && !flag(ctx, 'centresSettled');
+    }),
+    aiOption: 0,
+    historical: 'There was no crown to ask. The academies of Babylonia won the argument '
+      + 'over the centuries by answering more letters than anybody else, and when a '
+      + 'Palestinian academy disputed the calendar with them in 921, the east\'s ruling '
+      + 'held. Authority had followed the correspondence.',
+    options: [
+      {
+        label: 'One calendar, sealed where the crown sits',
+        tooltip: 'Under one crown: the king\'s court fixes the date and the east complies — '
+          + '+15 legitimacy, +1 stability, "One Calendar" (+0.15 legitimacy a month, '
+          + 'permanent), Exilarch\'s house −15. Under two houses: Jerusalem\'s letter '
+          + 'prevails this once, by negotiation, and the precedent is written down as '
+          + 'narrowly as both chanceries can manage — +10 legitimacy, +1 stability.',
+        effects: guard('ev_w_centres_became:0', (ctx) => {
+          const h = ctx.helpers;
+          if (flag(ctx, 'oneCrownBothCentres')) {
+            h.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'one_calendar', name: 'One Calendar', months: -1,
+              effects: { legitimacyAdd: 0.15 },
+            });
+            h.factionShift(ctx, 'JUD', 'exilarch', -15);
+            h.chronicle(ctx, 'era', 'The festival date is fixed under the king\'s seal and '
+              + 'kept on the same day from the Nile to the Tigris. The academies of the east '
+              + 'comply, and file their dissent where they file everything: permanently.');
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: 10, stability: 1 });
+            h.chronicle(ctx, 'era', 'The two houses negotiate one date for one year, in '
+              + 'language drafted not to decide anything else. The festival is kept '
+              + 'together, and the question is returned to its box, which both sides now '
+              + 'know how to open.');
+          }
+          h.setFlag(ctx, 'centresSettled', true);
+          h.setFlag(ctx, 'oneCalendarSealed', true);
+        }),
+      },
+      {
+        label: 'Let each centre keep its own reckoning',
+        tooltip: 'The discrepancy stands: the east keeps its date and the west keeps its '
+          + 'own. +10 governance points, the Exilarch\'s house +20 — and "Two Reckonings" '
+          + 'for 120 months (−0.1 legitimacy a month): a people that cannot agree what day '
+          + 'it is has told the world something, and the world was listening.',
+        effects: guard('ev_w_centres_became:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { gov: 10 });
+          h.factionShift(ctx, 'JUD', 'exilarch', 20);
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'two_reckonings', name: 'Two Reckonings', months: 120,
+            effects: { legitimacyAdd: -0.1 },
+          });
+          h.setFlag(ctx, 'centresSettled', true);
+          h.setFlag(ctx, 'twoReckoningsKept', true);
+          h.chronicle(ctx, 'era', 'The festivals are kept two days apart in the two centres, '
+            + 'each according to its own witnesses. The arrangement is called temporary in '
+            + 'both places, in the tone reserved for things that are not.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_w_the_rate_is_renegotiated',
+    title: 'The Rate Is Renegotiated',
+    desc: 'The power that set the terms has fallen into its own war of succession, and '
+      + 'every arrangement it made is suddenly a question again. The garrisons that '
+      + 'watched this frontier have marched east to fight each other; the governor who '
+      + 'signed the schedules is dead or a rebel depending on the week.\n\n'
+      + 'A treaty state discovers what its treaty is worth when the counterparty '
+      + 'cannot enforce it — or collect it. A state in no category discovers the same '
+      + 'thing about its frontier. Either way the council meets over the same map: the '
+      + 'assessment routes are unwatched for the first time in a generation, and '
+      + 'whatever is decided this year becomes the precedent the next caliph inherits.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 660,
+    maxYear: 692,
+    trigger: safeTrigger('ev_w_rate_renegotiated', (ctx) => {
+      if (!alive(ctx, 'JUD')) return false;
+      return (flag(ctx, 'theTreatyState') || flag(ctx, 'refusedTheCategory'))
+        && !flag(ctx, 'rateRenegotiated');
+    }),
+    aiOption: 0,
+    historical: 'The first and second fitnas each suspended the caliphate\'s reach for '
+      + 'years at a time, and every tributary on the map — Nubia above all — used the '
+      + 'pauses to re-argue its rate. The baqt survived every renegotiation, which is '
+      + 'why it lasted six centuries.',
+    options: [
+      {
+        label: 'Renegotiate now, and pay the smaller sum forever',
+        tooltip: 'Treaty state: the tribute is re-set at the distracted rate — the old '
+          + '"Tribute" penalty eases to −8% income, +2 stability, and the precedent binds. '
+          + 'No category: a first, minimal agreement is signed from strength — "The Late '
+          + 'Treaty" (−8% income, permanent), +1 stability, the frontier finally has a '
+          + 'document governing it.',
+        effects: guard('ev_w_rate_renegotiated:0', (ctx) => {
+          const h = ctx.helpers;
+          if (flag(ctx, 'theTreatyState')) {
+            h.removeModifier(ctx, 'JUD', 'the_tribute');
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_tribute', name: 'The Tribute, Renegotiated', months: -1,
+              effects: { incomeMult: 0.92 },
+            });
+            h.adjust(ctx, 'JUD', { stability: 2 });
+            h.chronicle(ctx, 'era', 'The tribute is re-argued while the counterparty is '
+              + 'busy with itself, and the smaller sum is written into the renewal. The '
+              + 'next caliph inherits the rate, and the precedent that set it.');
+          } else {
+            h.removeModifier(ctx, 'JUD', 'no_category');
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_late_treaty', name: 'The Late Treaty', months: -1,
+              effects: { incomeMult: 0.92 },
+            });
+            h.adjust(ctx, 'JUD', { stability: 1 });
+            h.chronicle(ctx, 'era', 'The kingdom that refused every category signs its '
+              + 'first document with the caliphate — drafted in Jerusalem, priced at the '
+              + 'distracted rate, and governing a frontier that has needed governing for '
+              + 'thirty years.');
+          }
+          h.setFlag(ctx, 'rateRenegotiated', true);
+          h.setFlag(ctx, 'rateResetEarly', true);
+        }),
+      },
+      {
+        label: 'Suspend everything, and bank the difference',
+        tooltip: 'No payment while there is nobody to pay: +200 talents banked over the '
+          + 'interregnum, +15 martial points — and no precedent, no document, and a '
+          + 'restored caliphate that reopens the whole question at its own rate ("The '
+          + 'Reopened Question": +1.5 unrest everywhere, 60 months).',
+        effects: guard('ev_w_rate_renegotiated:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: 200, mar: 15 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_reopened_question', name: 'The Reopened Question', months: 60,
+            effects: { unrestAll: 1.5 },
+          });
+          h.setFlag(ctx, 'rateRenegotiated', true);
+          h.setFlag(ctx, 'tributeSuspended', true);
+          h.chronicle(ctx, 'era', 'The payments stop and the silver stays home, there being '
+            + 'nobody in a position to collect it. The ledger is kept carefully all the '
+            + 'same, by clerks who know that interregna end and ledgers do not.');
+        }),
+      },
+    ],
+  },
+
 ];
