@@ -55,6 +55,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 function fireEventById(ctx, eventId) {
   try {
     const g = ctx.game;
@@ -515,6 +523,36 @@ export const BOOKMARK_40 = {
         check: (ctx) => eraTiers(ctx.game.tags.HER) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 25, legitimacy: 15 }),
       },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_greater_herod', name: 'Too Large to Be a Favour', hypothetical: true,
+        fork: '40bce/who_wears_the_crown',
+        icon: 'star4', col: 3, row: 0,
+        desc: 'Break Antigonus, keep Jerusalem, answer to no overlord — and then take Damascus '
+          + 'or Petra. A client that size has outgrown the word, and Rome must decide what to '
+          + 'call it instead of deciding its schedule.',
+        rewardText: '+25 influence points, +100 talents.',
+        check: (ctx) => {
+          const her = ctx.game.tags.HER;
+          const atg = ctx.game.tags.ATG;
+          const atgBroken = !atg || atg.alive === false || atg.overlord === 'HER';
+          return !!(her && her.alive !== false && !her.overlord && atgBroken
+            && ctx.helpers.controls(ctx, 'HER', 'Jerusalem')
+            && (ctx.helpers.controls(ctx, 'HER', 'Damascus') || ctx.helpers.controls(ctx, 'HER', 'Petra')));
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { infl: 25, treasury: 100 }),
+      },
+      {
+        id: 'hy_statue_kingdom', name: 'The Order Never Given', hypothetical: true,
+        fork: '40bce/the_statue',
+        icon: 'shrine', col: 3, row: 1,
+        desc: 'Come to the year of Gaius (40 CE) as a kingdom rather than a province, and the '
+          + 'statue for the Temple is talked away at a dinner — or refused in writing before '
+          + 'it is asked. A thing a kingdom can do and a province cannot.',
+        rewardText: '+15 legitimacy, +1 stability.',
+        check: (ctx) => anyFlag(ctx, 'orderNeverGiven', 'refusedInAdvance'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { legitimacy: 15, stability: 1 }),
+      },
     ],
     ATG: [
       {
@@ -579,6 +617,29 @@ export const BOOKMARK_40 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ATG) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_hasmonean_holds', name: 'Mattathias, High Priest', hypothetical: true,
+        fork: '40bce/who_wears_the_crown',
+        icon: 'laurel', col: 3, row: 0,
+        desc: 'Hold Jerusalem against the Senate\'s decree and the legions\' schedule — the '
+          + 'crown war won, the Idumean broken, no overlord over you — and the last Hasmonean '
+          + 'keeps the throne history gave to Herod.',
+        rewardText: '+20 legitimacy, +25 martial points.',
+        check: (ctx) => anyFlag(ctx, 'hasmoneanHolds'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 20, mar: 25 }),
+      },
+      {
+        id: 'hy_statue_kingdom', name: 'The Order Never Given', hypothetical: true,
+        fork: '40bce/the_statue',
+        icon: 'shrine', col: 3, row: 1,
+        desc: 'Come to the year of Gaius (40 CE) as a kingdom rather than a province, and the '
+          + 'statue for the Temple is talked away at a dinner — or refused in writing before '
+          + 'it is asked. A thing a kingdom can do and a province cannot.',
+        rewardText: '+15 legitimacy, +1 stability.',
+        check: (ctx) => anyFlag(ctx, 'orderNeverGiven', 'refusedInAdvance'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15, stability: 1 }),
       },
     ],
   },

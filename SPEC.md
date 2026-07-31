@@ -10072,3 +10072,90 @@ did not.
   deterrent and its bill; the deterrent multiplies the AI's needed ratio
   and leaves scripted declarations alone; Vanunu fires only under
   opacity; and the fork registry knows all three roads.
+
+## 183. The tree shows the roads not taken
+
+The §119 path tree charts everything a chapter can become — the Jewish king
+seated at Antioch, the eagle refused, the House that stood, the charter
+after the betrayal — and the game kept the whole map to itself. Every fork
+sat behind a trigger the player could not see: you learned that holding
+Antioch, Damascus and Apamea opens an entire empire strand by holding
+Antioch, Damascus and Apamea, which is to say most players learned it
+never. The Compendium prints the chapters and the Chronicle prints the
+roads you already walked; nothing anywhere said *these pages exist, and
+here is what state of the world writes them*.
+
+The mission tree now says it. Every playable side's chain carries a set of
+**hypotheticals** — thirty across the eight chapters — each one a fork of
+the §119 tree standing in the panel as a medallion: the name of the road,
+a desc that teaches the route ("take Joppa, Azotus, Ascalon and Gaza",
+"hold Dimona and walk the French road before 1958"), and a bonus for
+arriving. The Philistine coast, Coele-Syria and the successor state ladder
+up the 167 chain's spare columns; the brothers' chapters both carry the
+eagle refused and the kingdom never renamed; 66 carries the House that
+stood with its two dependent questions; 132 the redemption, the accession
+and the grass on Akiva's cheeks; 529 the mountain, the letter to
+Ctesiphon and the Taheb; 614 the century, the Mount, the window of 628
+and the line of Jehoiachin; 1948 the textile factory, the question that
+comes back, and the Levant without a Lebanon.
+
+### One source of truth, and what counts as done
+
+A hypothetical is an ordinary mission — `hypothetical: true`, a
+`fork: 'chapter/forkId'` annotation, and a declared `col`/`row` seat in
+the tree's spare columns — so the monthly pass, the waves, the save
+record and the AI symmetry of §102/§177 all apply unchanged. Its `check`
+reads **the markers the fork cards themselves set** (`secondKingdom`,
+`charterDavidic`, `beitKosibaSettled`…), or mirrors the exact
+precondition the fork's own trigger tests (the `imperial()` province
+arithmetic, `greaterHerod()`'s Damascus-or-Petra, the no-Lebanon arc's
+own nine-district `occupier()` count), or reads the §89 retirement ledger
+(a war settled before Lysias marches is *proved* by `ev_royal_expedition`
+standing in `retiredChapters`). Nothing re-derives a road from scratch;
+rename a flag and `smoke116` names the road no campaign can be paid for.
+
+Forks whose roads are all alternate history complete on any answer — the
+achievement is getting the question asked. Forks with a historical road
+(`how_the_revolt_ends`, `whose_century`) complete only off the record:
+the mission is the page the chronicles do not have. Prerequisites between
+hypotheticals exist only where the child's marker provably implies the
+parent's state (the accession card literally gates on `redemptionEra`),
+so the connectors never lie about what depends on what — and they point
+only at other hypotheticals, never at the era's own objectives.
+
+### The panel, and the arithmetic of hope
+
+Hypothetical medallions wear a spectral dress — dashed violet ring,
+italic name — that turns to the same laurel gold as every other
+accomplishment the month a campaign actually writes the page; the tooltip
+opens with "a road history never took." And they are counted apart: the
+summary line reads "N of M accomplished · K of H roads history never
+took", because a hypothetical no campaign reaches is not a failure and
+must not sit in the denominator of the era's objectives.
+
+The chains stay append-only: every hypothetical comes after the last real
+objective in table order, so `missionIdx`'s longest-done-prefix keeps
+meaning what every save and forcing test thinks it means, and `smoke16`'s
+raw index into the 132/614 tables still lands on the Third House. AI-only
+chains carry no hypotheticals at all — Vespasian's ladder stays the
+ladder §177 pinned.
+
+Declaring seats found a §177 wart the derived layout had been hiding:
+two children of one parent in one column derive the same row, and the
+167 and 132 trees were drawing two medallions in one cell
+(`hm_freedom`/`hm_learn_from_kings`, `hm_heartland`/`hm_covenant_renewed`,
+`j2_redemption`/`j2_ambush_doctrine`). Those curriculum nodes now declare
+their rows; the new suite's no-two-nodes-in-one-cell check is what heard
+it, and is what will hear the next one.
+
+- **Regression contract**: `smoke116` — every hypothetical names a real
+  fork of its own chapter, appends after the objectives, seats itself in
+  the spare columns, waits only on other hypotheticals, and lives only on
+  playable sides; none completes at boot in any of the eight chapters; and
+  every single one completes — rewards paid, modifiers seated — when its
+  world-state is built by hand, marker or province or retirement ledger.
+  The §177 pins moved with the feature: `smoke111` (eleven 66 CE nodes,
+  the hypothetical root open at start beside the chain's own, cols
+  `…,4,4,4`, declared rows sticking), `smoke2`/`smoke112` (eleven at 66
+  and 132), `smoke3` (nine at 67), `uitest2` (eleven medallions in the
+  browser).

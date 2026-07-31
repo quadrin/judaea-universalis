@@ -3121,6 +3121,10 @@ export function gameActions(ctx) {
             col: col[i], row: row[i],
             requires,
             requiresNames: requires.map((rid) => nameOf[rid]).filter(Boolean),
+            // The roads not taken (SPEC §183): a hypothetical is a fork of the
+            // §119 path tree standing in the mission tree, so the panel can
+            // dress it as a page history never wrote.
+            hypothetical: !!m.hypothetical,
             status: done.has(id) ? 'done'
               : missionUnlocked(list, i, done, tree) ? 'current' : 'locked',
           };

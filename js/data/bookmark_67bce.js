@@ -77,6 +77,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 function fireEventById(ctx, eventId) {
   try {
     const g = ctx.game;
@@ -612,6 +620,33 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.HYR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { gov: 25, legitimacy: 10 }),
       },
+      // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
+      {
+        id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
+        fork: '67bce/pompeys_arbitration',
+        icon: 'shield', col: 3, row: 0,
+        desc: 'When Pompey comes to organize the East (63 BCE), answer no envoy, bend no knee, '
+          + 'and still be standing free of Rome the following summer. No kingdom has ever done it.',
+        rewardText: '+10 legitimacy, +25 martial points.',
+        check: (ctx) => anyFlag(ctx, 'eagleRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 10, mar: 25 }),
+      },
+      {
+        id: 'hy_never_renamed', name: 'The Kingdom They Never Renamed', hypothetical: true,
+        fork: '67bce/pompeys_arbitration',
+        icon: 'laurel', col: 3, row: 1, requires: ['hy_eagle_refused'],
+        desc: 'Keep the gates shut for a generation: one crown over the brothers\' war, Jerusalem '
+          + 'held, free of Rome to 35 BCE — and no clerk in Italy ever files this country under '
+          + 'another name.',
+        rewardText: '"The Unrenamed Crown": −1 unrest everywhere, permanent; +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'neverRenamed'),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'hy_unrenamed_crown', name: 'The Unrenamed Crown', months: -1, effects: { unrestAll: -1 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 10 });
+        },
+      },
     ],
     ARI: [
       {
@@ -676,6 +711,33 @@ export const BOOKMARK_67 = {
         rewardText: '+25 influence points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ARI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
+      {
+        id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
+        fork: '67bce/pompeys_arbitration',
+        icon: 'shield', col: 3, row: 0,
+        desc: 'When Pompey comes to organize the East (63 BCE), answer no envoy, bend no knee, '
+          + 'and still be standing free of Rome the following summer. No kingdom has ever done it.',
+        rewardText: '+10 legitimacy, +25 martial points.',
+        check: (ctx) => anyFlag(ctx, 'eagleRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 10, mar: 25 }),
+      },
+      {
+        id: 'hy_never_renamed', name: 'The Kingdom They Never Renamed', hypothetical: true,
+        fork: '67bce/pompeys_arbitration',
+        icon: 'laurel', col: 3, row: 1, requires: ['hy_eagle_refused'],
+        desc: 'Keep the gates shut for a generation: one crown over the brothers\' war, Jerusalem '
+          + 'held, free of Rome to 35 BCE — and no clerk in Italy ever files this country under '
+          + 'another name.',
+        rewardText: '"The Unrenamed Crown": −1 unrest everywhere, permanent; +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'neverRenamed'),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'hy_unrenamed_crown', name: 'The Unrenamed Crown', months: -1, effects: { unrestAll: -1 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 10 });
+        },
       },
     ],
   },

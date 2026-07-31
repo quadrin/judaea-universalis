@@ -92,6 +92,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 // How many provinces still keep the Torah of the Keepers, wherever their
 // banner flies. This is the chapter's real scoreboard (SPEC §136): the
 // question is not how much ground the state holds but whether the people
@@ -765,6 +773,42 @@ export const BOOKMARK_529 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.SAM) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The §119 forks as standing hypotheticals; checks read the markers
+      // the fork cards themselves set.
+      {
+        id: 'hy_gerizim_answered', name: 'The Mountain Answered', hypothetical: true,
+        fork: '529ce/the_mountain',
+        icon: 'mountain', col: 3, row: 0,
+        desc: 'Settle the crown question and keep the rising standing — sovereign, seated at '
+          + 'Neapolis — and the commandment on the summit must be answered: the altar over '
+          + 'the church, or the villages first.',
+        rewardText: '+15 legitimacy, +1 stability.',
+        check: (ctx) => anyFlag(ctx, 'gerizimCleared', 'gerizimLeft'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { legitimacy: 15, stability: 1 }),
+      },
+      {
+        id: 'hy_ctesiphon_letter', name: 'The Letter to Ctesiphon', hypothetical: true,
+        fork: '529ce/ctesiphon',
+        icon: 'scroll', col: 3, row: 1,
+        desc: 'Outlive the first war (531) with the Keepers\' villages still on the map, and '
+          + 'the refugees reach the Persian court with an offer to make — fifty thousand men, '
+          + 'the men without the letter, or a disavowal meant to be read by the dux.',
+        rewardText: '+25 influence points.',
+        check: (ctx) => anyFlag(ctx, 'ctesiphonPromised', 'sentTheYoungMen', 'ctesiphonRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { infl: 25 }),
+      },
+      {
+        id: 'hy_taheb', name: 'The Taheb Question', hypothetical: true,
+        fork: '529ce/the_taheb',
+        icon: 'lamp', col: 3, row: 2,
+        desc: 'Keep a community alive past 542 with the phylarch question answered, and a '
+          + 'claimant to Deuteronomy 18:18 appears in the villages. Whether the age is the '
+          + 'age is not a question a council can table.',
+        rewardText: '+20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'tahebProclaimed', 'tahebAwaited', 'tahebIsThePeople'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { legitimacy: 20 }),
       },
     ],
     BYZ: [

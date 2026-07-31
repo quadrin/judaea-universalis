@@ -78,6 +78,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 // Manually fire an event by id (used for the ev_negotiated_peace flavor on the timed
 // JUD win). Mirrors SPEC §6.5 firing semantics: push to pendingEvents, mark fired,
 // pause + emit 'event' for the player.
@@ -652,6 +660,42 @@ export const BOOKMARK_66 = {
         rewardText: '+25 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 15 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The §119 forks, standing in the tree as hypotheticals: checks read
+      // the markers the fork cards themselves set — one source of truth.
+      {
+        id: 'hy_house_stands', name: 'The House That Stood', hypothetical: true,
+        fork: '66ce/how_the_revolt_ends',
+        icon: 'temple', col: 4, row: 0,
+        desc: 'Free Judaea of Rome — the war ended, no overlord, Jerusalem yours — and reach '
+          + 'June of 70 with the Temple unburned. Where Josephus recorded ash, a Second '
+          + 'Kingdom begins.',
+        rewardText: '+1 stability, +20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'secondKingdom'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+      },
+      {
+        id: 'hy_what_kind', name: 'What Kind of Kingdom', hypothetical: true,
+        fork: '66ce/what_kind_of_kingdom',
+        icon: 'scales', col: 4, row: 1, requires: ['hy_house_stands'],
+        desc: 'Let the doctrine axes decide what the House that stood is FOR — the Kingdom of '
+          + 'the Altar, the Commonwealth of the Chamber, or the state worth more standing. '
+          + 'The question arrives once the kingdom has lived to 78.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => anyFlag(ctx, 'kingdomOfTheAltar', 'commonwealthOfTheChamber', 'worthMoreStanding'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25 }),
+      },
+      {
+        id: 'hy_trajan_flank', name: 'The Flank of Trajan\'s War', hypothetical: true,
+        fork: '66ce/the_flank_of_trajans_war',
+        icon: 'horseshoe', col: 4, row: 2, requires: ['hy_house_stands'],
+        desc: 'Keep the Second Kingdom alive to 116, when Trajan is at the Gulf and the East '
+          + 'rises behind him — and a Jewish kingdom sits on the road home, with the whole '
+          + 'war\'s weight in its answer.',
+        rewardText: '+25 martial points, +1,500 manpower.',
+        check: (ctx) => anyFlag(ctx, 'roadHeldOpen', 'roadShut', 'roseWithTheEast'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25, manpower: 1500 }),
       },
     ],
     ROM: [

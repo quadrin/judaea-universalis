@@ -212,6 +212,16 @@ static site, the zero dependencies, or the missing build step changes.
   Wall (8)"). The AI buys its side's curriculum on the same terms, and every
   playable side's mission tree grew two branches that assign it: master the
   era's named art, and take up its ideas.
+- **The mission tree shows the roads not taken.** Every playable side's tree
+  now carries the chapter's alternate-history forks as standing hypotheticals —
+  thirty spectral medallions across the eight chapters naming the pages history
+  never wrote (a Jewish king seated at Antioch, the coast subjugated, the eagle
+  refused, the House that stood, the Levant without a Lebanon), each desc
+  teaching exactly what state of the world makes those cards arrive, each
+  paying a bonus on arrival. They complete off the same flags the fork cards
+  themselves set, and they are counted apart — "2 of 7 accomplished · 1 of 6
+  roads history never took" — because a hypothetical no campaign reaches is
+  not a failure.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes
@@ -296,7 +306,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 110 headless sim suites and 38
+  marching. The full verification battery — 116 headless sim suites and 38
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.

@@ -808,3 +808,19 @@ the powers engine's tag-gating contract — a pact or an ask offered to one hous
 refuses every other — because it was the only power those chapters had. Both now
 test that contract against 614's Türk Khaganate, which gates on `tags: ['BYZ']`
 in exactly the same way. The contract did not change; only the fixture did.
+
+SPEC §183 seats the §119 fork tree in the mission panel as standing
+hypotheticals — thirty missions across the eight chapters, flagged
+`hypothetical: true` with a `fork: 'chapter/forkId'` annotation. Two contracts
+matter when touching them. Their checks read the SAME flags the fork cards set
+(or mirror the fork's own trigger arithmetic; or read `retiredChapters` for a
+road that is a recorded absence) — never a re-derivation — so renaming a marker
+flag breaks a road silently everywhere except `smoke116.mjs`, whose
+completability pass builds each chapter's world-state by hand and fails on the
+one hypothetical that no longer pays. And the chains stay append-only: every
+hypothetical sits after the last real objective so the `missionIdx` done-prefix
+and `smoke16`'s raw index into the 132/614 tables keep meaning what they always
+meant. AI-only chains (Vespasian's ladder above all) carry none, which is what
+keeps the §177 ladder pin true. The suite also enforces one-medallion-per-cell
+on every player tree — the check that found the §177/§179 curriculum nodes
+stacking two-deep at 167 and 132, which is why three of those now declare rows.

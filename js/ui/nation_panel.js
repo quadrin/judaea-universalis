@@ -789,23 +789,33 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
     }
     const svg = `<svg class="np-mt-lines" viewBox="0 0 ${cols} ${rows}" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>`;
-    const doneN = list.filter((m) => m.status === 'done').length;
+    // The roads not taken (SPEC §183) are counted apart from the era's own
+    // objectives: a hypothetical a campaign never reaches is not a failure,
+    // so it must not sit in the denominator of "accomplished".
+    const base = list.filter((m) => !m.hypothetical);
+    const hypo = list.filter((m) => m.hypothetical);
+    const doneN = base.filter((m) => m.status === 'done').length;
+    const hypoDone = hypo.filter((m) => m.status === 'done').length;
     const cells = list.map((m) => {
       const state = m.status === 'done' ? 'Accomplished.'
         : m.status === 'current' ? 'The realm may work at this now.'
           : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
             ? m.requiresNames.join(', ') : 'the missions before it') + '.';
-      const tt = m.name + '\n' + (m.desc || '')
+      const tt = m.name
+        + (m.hypothetical ? '\nA road history never took — the cards exist if the realm can reach them.' : '')
+        + '\n' + (m.desc || '')
         + (m.rewardText ? '\nReward: ' + m.rewardText : '')
         + '\n――――――\n' + state;
       const arrow = (m.requires || []).length ? '<i class="np-mn-arrow"></i>' : '';
-      return `<div class="np-mn np-mn-${m.status}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}">`
+      return `<div class="np-mn np-mn-${m.status}${m.hypothetical ? ' np-mn-hypo' : ''}" style="grid-column:${(m.col | 0) + 1};grid-row:${(m.row | 0) + 1}" data-tt="${esc(tt)}">`
         + arrow
         + `<span class="np-mn-medal">${icon(m.icon || 'scroll')}${m.status === 'done' ? '<i class="np-mn-tick">✓</i>' : ''}</span>`
         + `<span class="np-mn-name">${esc(m.name)}</span></div>`;
     }).join('');
     setHtml(refs.missions,
-      `<div class="np-mt-sum">${doneN} of ${list.length} accomplished</div>`
+      `<div class="np-mt-sum">${doneN} of ${base.length} accomplished`
+      + (hypo.length ? ` · <span class="np-mt-hypo-sum">${hypoDone} of ${hypo.length} roads history never took</span>` : '')
+      + '</div>'
       + `<div class="np-mtree" style="--mt-cols:${cols}">${svg}${cells}</div>`);
   }
 

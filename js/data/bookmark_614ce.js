@@ -73,6 +73,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 // ---- the political map of May 614, built from region lists -----------------
 const SAS_LANDS = [
   // the Persian homeland and the Mesopotamia it never lost
@@ -691,6 +699,54 @@ export const BOOKMARK_614 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The §119 forks as standing hypotheticals; checks read the markers
+      // the fork cards themselves set. Appended after the curriculum so the
+      // Third House keeps its table seat (smoke16 forces the chain by index).
+      {
+        id: 'hy_whose_century', name: 'A Century of Our Own', hypothetical: true,
+        fork: '614ce/whose_century',
+        icon: 'split', col: 3, row: 0,
+        desc: 'Outlast the empires\' war still standing — no overlord, Jerusalem held — and the '
+          + 'Return is written down as a polity: the Davidic charter after the betrayal of 622, '
+          + 'or a kingdom apart from both thrones.',
+        rewardText: '+1 stability, +20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'charterDavidic', 'kingdomApart'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+      },
+      {
+        id: 'hy_altar_mount', name: 'What Stands on the Mount', hypothetical: true,
+        fork: '614ce/what_stands_on_the_mount',
+        icon: 'altar', col: 3, row: 1, requires: ['hy_whose_century'],
+        desc: 'Hold Jerusalem outright with six provinces under the charter, and the cleared '
+          + 'platform asks its question: the altar restored — the first sacrifice since '
+          + 'Titus — or swept, and left as it is.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'altarRestored', 'mountKeptEmpty'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_window_628', name: 'The Window of 628', hypothetical: true,
+        fork: '614ce/the_window_of_628',
+        icon: 'play', col: 3, row: 2, requires: ['hy_whose_century'],
+        desc: 'Reach 628 as a standing kingdom with a marshal worth the name, and both empires '
+          + 'have destroyed each other: the one decade this state can expand at all — ground, '
+          + 'or depth — before somebody else fills the vacuum.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => anyFlag(ctx, 'tookTheEmptyGround', 'depthNotReach'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25 }),
+      },
+      {
+        id: 'hy_crown_of_david', name: 'The Line of Jehoiachin', hypothetical: true,
+        fork: '614ce/the_line_of_jehoiachin',
+        icon: 'star8', col: 3, row: 3, requires: ['hy_whose_century'],
+        desc: 'Reach east to Nehardea and Babylon and settle the Exilarchate under Jerusalem, '
+          + 'and for the first time since 586 BCE a throne and a man with the pedigree share '
+          + 'one polity. Crowned, or honoured and kept — the age must answer.',
+        rewardText: '+20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'davidCrowned', 'davidDeclined'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20 }),
       },
     ],
     BYZ: [

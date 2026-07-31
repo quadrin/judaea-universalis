@@ -79,6 +79,25 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set — the §119 tree's own markers, one source of
+// truth. `anyFlag` answers "has any road of this fork been walked".
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
+// Owner AND controller, the way the empire ladder's own `holds` reads it —
+// a province merely occupied is not yet a province of the realm.
+function holdsProv(ctx, tag, name) {
+  try {
+    const t = who(ctx, tag);
+    const p = ctx.prov(name);
+    return !!p && !p.impassable && p.owner === t && p.controller === t;
+  } catch (e) { warnOnce('holdsProv', e); return false; }
+}
+
 // Manually fire an event by id (used for ev_independence on the timed HAS win).
 // Mirrors SPEC §6.5 firing semantics: push to pendingEvents, mark fired,
 // pause + emit 'event' for the player. Copied from bookmark_66ce.
@@ -777,9 +796,12 @@ export const BOOKMARK_167 = {
       },
       // The age's curriculum (SPEC §179): two branches for what the rising
       // must LEARN — the enemy's siegecraft, and the ideas that make a state.
+      // The curriculum rows are declared (SPEC §183 found the overlap): a
+      // second child of the same parent in the same column derives the same
+      // row, and two medallions were drawing in one cell.
       {
         id: 'hm_learn_from_kings', name: 'Learn From the Kings',
-        icon: 'helmet', col: 0, requires: ['hm_ascents'],
+        icon: 'helmet', col: 0, row: 3, requires: ['hm_ascents'],
         desc: 'Master the age\'s war-craft: reach Military 5 — The Siege Train.',
         rewardText: '"Engines Taken": +15% siege progress for 24 months.',
         check: (ctx) => (((ctx.game.tags.HAS || {}).tech || {}).mar | 0) >= 5,
@@ -789,11 +811,92 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'hm_covenant_renewed', name: 'The Covenant Renewed',
-        icon: 'scroll', col: 2, requires: ['hm_city'],
+        icon: 'scroll', col: 2, row: 3, requires: ['hm_city'],
         desc: 'Take up three ideas of the age — the rising must become a state that thinks.',
         rewardText: '+25 influence points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.HAS) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { infl: 25, legitimacy: 15 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The chapter's fork cards (SPEC §119), standing in the tree as
+      // hypotheticals: each names a page history never wrote, the desc says
+      // what state of the world makes its cards arrive, and reaching it pays.
+      // Checks read the markers the cards themselves set, or mirror the exact
+      // preconditions their triggers test — never a second source of truth.
+      {
+        id: 'hy_the_coast', name: 'The Philistine Coast', hypothetical: true,
+        fork: '167bce/where_the_king_sits',
+        icon: 'ship', col: 3, row: 0,
+        desc: 'Subjugate the coast: take Joppa, Azotus, Ascalon and Gaza from the kings. '
+          + 'A rising that holds the harbors is a power, and the empire\'s road to Egypt runs through it.',
+        rewardText: 'The sea pays the hills: +10% income for 24 months.',
+        check: (ctx) => ['Joppa', 'Azotus', 'Ascalon', 'Gaza'].every((n) => ctx.helpers.controls(ctx, 'HAS', n)),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'the_harbors_taken', name: 'The Harbors Taken', months: 24, effects: { incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'hy_coele_syria', name: 'Master of Coele-Syria', hypothetical: true,
+        fork: '167bce/where_the_king_sits',
+        icon: 'tower', col: 3, row: 1,
+        desc: 'Hold Damascus and Apamea outright, fourteen provinces under a sovereign crown '
+          + 'seated in Jerusalem. Everything south of the Orontes answers to a Maccabee.',
+        rewardText: '+25 martial points, +10 legitimacy.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'HAS')];
+          return !!(t && t.alive !== false && !t.overlord
+            && holdsProv(ctx, 'HAS', 'Jerusalem')
+            && holdsProv(ctx, 'HAS', 'Damascus') && holdsProv(ctx, 'HAS', 'Apamea')
+            && ctx.helpers.countControlled(ctx, 'HAS', {}) >= 14);
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { mar: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_successor_state', name: 'The Kingdom That Replaced an Empire', hypothetical: true,
+        fork: '167bce/where_the_king_sits',
+        icon: 'star8', col: 3, row: 2, requires: ['hy_coele_syria'],
+        desc: 'Take Antioch itself — eighteen provinces, Syria held, the diadem in the dust — '
+          + 'and the chancery must ask what to call the thing it works for, and where the king sits.',
+        rewardText: '"The Successor State": +5% income and +10% manpower, permanent.',
+        check: (ctx) => anyFlag(ctx, 'seleucidSuccessor'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'hy_successor_state', name: 'The Successor State', months: -1,
+          effects: { incomeMult: 1.05, manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'hy_greek_jerusalem', name: 'Antioch-at-Jerusalem', hypothetical: true,
+        fork: '167bce/the_charter',
+        icon: 'scroll', col: 4, row: 0,
+        desc: 'Embrace the Greek chancery, let the Hellenizers hold the court (70 or better), '
+          + 'and keep Jerusalem — and the city will petition for a constitution. However that '
+          + 'argument ends, it is one no other age dared to have.',
+        rewardText: '+25 influence points.',
+        check: (ctx) => anyFlag(ctx, 'greekJerusalem', 'charterRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { infl: 25 }),
+      },
+      {
+        id: 'hy_year_parthia_came', name: 'The Year Parthia Came', hypothetical: true,
+        fork: '167bce/the_line_continues',
+        icon: 'horseshoe', col: 4, row: 1,
+        desc: 'Keep the Hasmonean crown seated in Jerusalem to the year the King of Kings '
+          + 'sweeps Syria (40 BCE), and the envoys come asking which empire — a question '
+          + 'only a line that survived is ever asked.',
+        rewardText: '+1,500 manpower, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'westernMarch', 'declinedTheMarch'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { manpower: 1500, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_settled_early', name: 'A War Already Settled', hypothetical: true,
+        fork: '167bce/the_lysias_expedition',
+        icon: 'dove', col: 4, row: 2,
+        desc: 'Make peace with the kingdom of the Greeks before the boy king must march '
+          + '(early 162 BCE), and the royal expedition — the elephants, the siege, the '
+          + 'terms — becomes a page that never gets written.',
+        rewardText: '+25 governance points, +1 stability.',
+        check: (ctx) => Array.isArray(ctx.game.retiredChapters)
+          && ctx.game.retiredChapters.some((r) => r && r.id === 'ev_royal_expedition'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { gov: 25, stability: 1 }),
       },
     ],
     SEL: [

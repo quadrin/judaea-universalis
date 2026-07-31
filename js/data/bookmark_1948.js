@@ -72,6 +72,20 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
+// The nine provinces that were Lebanon, north to south — the same list the
+// no-Lebanon arc's own `occupier()` reads (events_1948_levant.js), mirrored
+// here so the hypothetical completes exactly when the arc would address you.
+const LEBANON_DISTRICTS = ['Tripolis', 'Byblos', 'Berytus', 'Chalcis', 'Sidon', 'Tyre',
+  'Gischala', 'Jotapata', 'Sepphoris'];
+
 // ---- the map of May 1948, in the map's ancient names ------------------------
 const ISR_LANDS = [
   // the coastal plain and the Valley, held at midnight
@@ -1403,6 +1417,60 @@ export const BOOKMARK_1948 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ISR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The §119 forks as standing hypotheticals; checks read the markers
+      // the fork cards themselves set, or mirror their triggers exactly.
+      {
+        id: 'hy_dimona', name: 'The Textile Factory', hypothetical: true,
+        fork: '1948ce/the_basement',
+        icon: 'flame', col: 3, row: 0,
+        desc: 'Hold Dimona in the deep Negev and walk the French road — Paris as your arsenal, '
+          + 'or their regard at 55 — before 1958, and something can rise there that the budget '
+          + 'calls a textile factory. What kind of fact it is answers in 1966.',
+        rewardText: '"A Certain Ambiguity": −1 unrest everywhere for 60 months.',
+        check: (ctx) => anyFlag(ctx, 'dimonaOpaque', 'dimonaDeclared', 'dimonaShelved'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'hy_certain_ambiguity', name: 'A Certain Ambiguity', months: 60, effects: { unrestAll: -1 },
+        }),
+      },
+      {
+        id: 'hy_oldest_question', name: 'The Question That Comes Back', hypothetical: true,
+        fork: '1948ce/the_oldest_question',
+        icon: 'scales', col: 3, row: 1,
+        desc: 'Rule thirteen districts where three people in ten are not of the state\'s own '
+          + 'nation (after 1968), and the oldest question returns — one citizenship, two '
+          + 'states, or to be settled later. Every answer has a price the others do not.',
+        rewardText: '+25 governance points, +10 public mandate.',
+        check: (ctx) => anyFlag(ctx, 'oneCitizenship', 'theSettledLine', 'settledLater'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_no_lebanon', name: 'The Levant Without a Lebanon', hypothetical: true,
+        fork: '1948ce/is_there_a_lebanon',
+        icon: 'shieldCrack', col: 3, row: 2,
+        desc: 'If Lebanon falls from the map and you stand in most of it — four or more of its '
+          + 'nine districts — you inherit the confessional arithmetic the Cairo Agreement was '
+          + 'written for, and the northern arc is yours to carry.',
+        rewardText: '+25 governance points — the occupier\'s ministries.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const leb = g.tags.LEB;
+          if (leb && leb.alive !== false) return false;
+          const me = who(ctx, 'ISR');
+          const count = {};
+          let best = null;
+          for (const name of LEBANON_DISTRICTS) {
+            const p = ctx.prov(name);
+            if (!p || p.impassable) continue;
+            const t = g.tags[p.owner];
+            if (!t || t.alive === false || p.owner === 'REB' || p.owner === 'WASTE') continue;
+            count[p.owner] = (count[p.owner] || 0) + 1;
+            if (!best || count[p.owner] > count[best]) best = p.owner;
+          }
+          return best === me && count[me] >= 4;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25 }),
       },
     ],
     JOR: [

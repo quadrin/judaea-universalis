@@ -80,6 +80,14 @@ function dateGE(date, y, m) {
   return date.y > y || (date.y === y && date.m >= m);
 }
 
+// The roads not taken (SPEC §183): hypothetical missions read the same flags
+// the fork cards themselves set (SPEC §119) — one source of truth.
+function anyFlag(ctx, ...keys) {
+  const f = (ctx.game && ctx.game.flags) || {};
+  for (const k of keys) if (f[k]) return true;
+  return false;
+}
+
 export const BOOKMARK_132 = {
   id: '132ce',
   name: 'The Bar Kokhba Revolt',
@@ -431,9 +439,11 @@ export const BOOKMARK_132 = {
       // The age's curriculum (SPEC §179), appended AFTER the capstone so the
       // Third House keeps its table seat (smoke16 forces the chain by index):
       // two more branches off the war and the north.
+      // Row declared (SPEC §183 found the overlap): it derived the same cell
+      // as The Redemption of Israel and the two medallions stacked.
       {
         id: 'j2_ambush_doctrine', name: 'The Ambush Doctrine',
-        icon: 'mountain', col: 0, requires: ['j2_maul'],
+        icon: 'mountain', col: 0, row: 3, requires: ['j2_maul'],
         desc: 'Make the method a doctrine: reach Military 7 — The Ambush Doctrine.',
         rewardText: '"The Roads Are Ours": +1 to hill-country defense for 24 months.',
         check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 7,
@@ -448,6 +458,43 @@ export const BOOKMARK_132 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      // The §119 forks as standing hypotheticals; checks read the markers
+      // the fork cards themselves set. Appended after the curriculum so the
+      // Third House keeps its table seat (smoke16 forces the chain by index).
+      {
+        id: 'hy_redemption_era', name: 'The Years of the Redemption', hypothetical: true,
+        fork: '132ce/how_the_revolt_ends',
+        icon: 'laurel', col: 3, row: 0,
+        desc: 'Win the war outright — Rome\'s peace signed, Jerusalem held, no overlord — and '
+          + 'stand to 137, and the documents of this state are dated by the Redemption of '
+          + 'Israel: the era history gave three years, kept.',
+        rewardText: '+1 stability, +20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'redemptionEra'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+      },
+      {
+        id: 'hy_beit_kosiba', name: 'The House of Kosiba', hypothetical: true,
+        fork: '132ce/the_accession',
+        icon: 'quill', col: 3, row: 1, requires: ['hy_redemption_era'],
+        desc: 'The founder left no rule of succession. When the prince ages or dies in a '
+          + 'redeemed Judaea, the state must say what the house of Kosiba IS — crown, Davidic '
+          + 'marriage, two houses, or Ezekiel\'s prince.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'beitKosibaSettled'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_akiva_grass', name: 'The Grass on Akiva\'s Cheeks', hypothetical: true,
+        fork: '132ce/the_grass_on_akivas_cheeks',
+        icon: 'note', col: 3, row: 2, requires: ['hy_beit_kosiba'],
+        desc: 'Victory inverted the record: a century of the academies\' own recorded doubt '
+          + 'about the redeemer must be answered — collected, shelved, or read out at the '
+          + 'founding every year.',
+        rewardText: '+25 influence points.',
+        check: (ctx) => anyFlag(ctx, 'doubtSuppressed', 'doubtPreserved', 'doubtCanonized'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 25 }),
       },
     ],
     ROM: [
