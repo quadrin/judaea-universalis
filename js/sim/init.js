@@ -61,6 +61,7 @@ import { intrigueMenu, runIntrigue as runIntrigueCore } from './intrigue.js';
 import { ageReport, absorbReport } from './ages.js';
 import { estateReport } from './estates.js';
 import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
+import { schoolsReport, issueRulingCore } from './schools.js';
 import { climateReport, attentionReport, harvestOdds } from './weather.js';
 import { communityInfo, diasporaReport, askCommunity as askCommunityCore } from './diaspora.js';
 
@@ -3051,6 +3052,21 @@ export function gameActions(ctx) {
         say('A High Priest is anointed', res.name + ' takes the office, from ' + res.factionName
           + '. The parties who did not get it have noticed.', 'good');
       } catch (e) { warnOnce('seatHighPriest', 'seatHighPriest failed', e); }
+    },
+
+    // ---- whose reading of the Law it is (nation panel, SPEC §186) -----------
+    getSchools() {
+      try { return schoolsReport(ctx); } catch (e) { warnOnce('getSchools', 'getSchools failed', e); return null; }
+    },
+    issueRuling(rulingId, side) {
+      try {
+        const res = issueRulingCore(ctx, String(rulingId), String(side));
+        if (!res.ok) { say('The court does not sit', res.why || 'The question cannot be put.', 'bad'); return res; }
+        say('The court rules: ' + res.name,
+          res.blurb + ' ' + res.house + ' gain ' + res.swing + ' approval for it; '
+          + res.other + ' lose the same.', 'good');
+        return res;
+      } catch (e) { warnOnce('issueRuling', 'issueRuling failed', e); return { ok: false }; }
     },
 
     // ---- whose ground a province is (province panel, SPEC §167) -------------

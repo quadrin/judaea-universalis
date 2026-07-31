@@ -362,8 +362,16 @@ export const BOOKMARK_67 = {
         start: 70,
         desc: 'The sages and their followings: they crowned your grandmother\'s peace and they prefer the elder line — yours.',
         drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.5 : -0.4; },
-        boon: { name: 'The Sages Preach the Elder Line', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
-        bane: { name: 'The Synagogues Turn', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        boon: {
+          name: 'The Sages Preach the Elder Line',
+          text: '+0.3 legitimacy a month, −0.6 unrest everywhere',
+          effects: { legitimacyAdd: 0.3, unrestAll: -0.6 },
+        },
+        bane: {
+          name: 'The Synagogues Turn',
+          text: '+1 unrest everywhere, −8% manpower',
+          effects: { unrestAll: 1, manpowerMult: 0.92 },
+        },
         appease: { label: 'Defer to the sages (40 governance points)', cost: { gov: 40 } },
         demand: {
           title: 'The Pharisees Ask for the Council',
@@ -379,8 +387,16 @@ export const BOOKMARK_67 = {
         start: 30,
         desc: 'The great priestly houses backed your brother, but they still sit in your court: estates, Temple offices, and loyalties that can be bought back.',
         drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.3 : -0.4; },
-        boon: { name: 'The Great Houses Reopen Their Purses', text: '+6% income', effects: { incomeMult: 1.06 } },
-        bane: { name: 'The Great Houses Question the Elder', text: '−0.15 legitimacy a month', effects: { legitimacyAdd: -0.15 } },
+        boon: {
+          name: 'The Great Houses Reopen Their Purses',
+          text: '+6% income, +8% from the ascents',
+          effects: { incomeMult: 1.06, pilgrimMult: 1.08 },
+        },
+        bane: {
+          name: 'The Great Houses Question the Elder',
+          text: '−0.15 legitimacy a month, −5% income',
+          effects: { legitimacyAdd: -0.15, incomeMult: 0.95 },
+        },
         appease: { label: 'Confirm their Temple estates (40 governance points)', cost: { gov: 40 } },
         demand: {
           title: 'The Sadducees Bring Their Deeds',
@@ -393,6 +409,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'antipater', name: 'The House of Antipater',
+        priestly: false, // an Idumean house; no reading of the Law seats them at the altar (SPEC §186)
         desc: 'The Idumean who wanted this war for you: money, spies, Nabataean in-laws, and sons worth watching.',
         drift(ctx, t) {
           const g = ctx.game;
@@ -435,8 +452,16 @@ export const BOOKMARK_67 = {
         start: 75,
         desc: 'The great priestly houses your father favored: rich, proud, and yours as long as you are winning.',
         drift(ctx, t) { return (t.treasury || 0) > 0 ? 0.4 : -0.4; },
-        boon: { name: 'The Great Houses Open Their Purses', text: '+8% income', effects: { incomeMult: 1.08 } },
-        bane: { name: 'The Great Houses Hedge', text: '−7% income', effects: { incomeMult: 0.93 } },
+        boon: {
+          name: 'The Great Houses Open Their Purses',
+          text: '+8% income, +8% from the ascents',
+          effects: { incomeMult: 1.08, pilgrimMult: 1.08 },
+        },
+        bane: {
+          name: 'The Great Houses Hedge',
+          text: '−7% income, −10% reinforcement',
+          effects: { incomeMult: 0.93, reinforceMult: 0.90 },
+        },
         appease: { label: 'Confirm the estates (40 governance points)', cost: { gov: 40 } },
         demand: {
           title: 'The Sadducees Want Their Estates',
@@ -452,8 +477,16 @@ export const BOOKMARK_67 = {
         start: 25,
         desc: 'The sages favored your mother’s peace and your brother’s elder claim. They remain in every town you mean to rule, whether invited to court or not.',
         drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.3 : -0.5; },
-        boon: { name: 'The Sages Accept the Younger Line', text: '+0.2 legitimacy a month', effects: { legitimacyAdd: 0.2 } },
-        bane: { name: 'The Synagogues Denounce the Seizure', text: '+1 unrest everywhere', effects: { unrestAll: 1 } },
+        boon: {
+          name: 'The Sages Accept the Younger Line',
+          text: '+0.2 legitimacy a month, −0.6 unrest everywhere',
+          effects: { legitimacyAdd: 0.2, unrestAll: -0.6 },
+        },
+        bane: {
+          name: 'The Synagogues Denounce the Seizure',
+          text: '+1 unrest everywhere, −8% manpower',
+          effects: { unrestAll: 1, manpowerMult: 0.92 },
+        },
         appease: { label: 'Hear the sages (40 governance points)', cost: { gov: 40 } },
         demand: {
           title: 'The Pharisees Ask for the Council',
@@ -466,6 +499,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'captains', name: 'The King\'s Captains',
+        priestly: false, // hired soldiers, half of them foreign (SPEC §186)
         desc: 'The mercenaries and garrison commanders who declared for you first — professionals, with professional appetites.',
         drift(ctx, t) {
           const g = ctx.game;

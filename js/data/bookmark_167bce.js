@@ -451,8 +451,16 @@ export const BOOKMARK_167 = {
           const base = (t.stability || 0) >= 1 ? 0.4 : -0.4;
           return (ctx.game.flags && ctx.game.flags.officesDivided) ? base + 0.3 : base;
         },
-        boon: { name: 'The Schools Stand With Us', text: '−1 unrest everywhere', effects: { unrestAll: -1 } },
-        bane: { name: 'The Schools Withdraw', text: '−0.3 legitimacy a month', effects: { legitimacyAdd: -0.3 } },
+        boon: {
+          name: 'The Schools Stand With Us',
+          text: '−1 unrest everywhere, +6% manpower',
+          effects: { unrestAll: -1, manpowerMult: 1.06 },
+        },
+        bane: {
+          name: 'The Schools Withdraw',
+          text: '−0.3 legitimacy a month, +0.75 unrest everywhere',
+          effects: { legitimacyAdd: -0.3, unrestAll: 0.75 },
+        },
         appease: { label: 'Rule by their reading (40 governance points)', cost: { gov: 40 } },
         demand: {
           title: 'Let the Crown Suffice Thee',
@@ -475,8 +483,16 @@ export const BOOKMARK_167 = {
           const base = (t.treasury || 0) > 0 ? 0.4 : -0.4;
           return held ? base + 0.2 : base - 0.3;
         },
-        boon: { name: 'The Houses Fund the Crown', text: '+8% income', effects: { incomeMult: 1.08 } },
-        bane: { name: 'The Houses Sit on Their Hands', text: '−15% reinforcement', effects: { reinforceMult: 0.85 } },
+        boon: {
+          name: 'The Houses Fund the Crown',
+          text: '+8% income, +10% from the ascents',
+          effects: { incomeMult: 1.08, pilgrimMult: 1.10 },
+        },
+        bane: {
+          name: 'The Houses Sit on Their Hands',
+          text: '−15% reinforcement, −6% income',
+          effects: { reinforceMult: 0.85, incomeMult: 0.94 },
+        },
         appease: { label: 'Confirm their courts and their tithes (40 influence points)', cost: { infl: 40 } },
         demand: {
           title: 'The Sadducees Ask Who Rules the Temple',
@@ -490,6 +506,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'warparty', name: 'The Brothers\' Captains',
+        priestly: false, // hill commanders; the office is not theirs to take (SPEC §186)
         desc: 'Judas\' commanders and the young men of the ascents: the war party, hungriest when the war stalls.',
         drift(ctx, t) {
           const g = ctx.game;

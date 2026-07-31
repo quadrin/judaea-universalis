@@ -36,7 +36,7 @@
 // has no expectation gauge and no priesthood, because an unseen system that
 // silently reshapes a foreign court is §163's business and this is not that.
 
-import { num, clamp, chronicle } from './military.js';
+import { num, clamp, chronicle, resolveTagMult } from './military.js';
 import { factionApproval, shiftFaction, factionDefs } from './factions.js';
 
 const _warned = new Set();
@@ -179,8 +179,20 @@ export function highPriest(ctx) {
   return t && t.highPriest ? t.highPriest : null;
 }
 
-// Who could be seated: every party at court, with the price of seating them —
-// the party gains, the others lose, because there is one office.
+// Who could be seated: every party at court that could actually hold an altar,
+// with the price of seating them — the party gains, the others lose, because
+// there is one office.
+//
+// `priestly: false` is content's veto (SPEC §186). The first cut of this panel
+// offered the office to every seat at court, which put the Brothers' Captains
+// and the House of Antipater on the list of candidates for the High
+// Priesthood — one a company of hill commanders, the other an Idumean family
+// no reading of the Law would let past the altar rail. A faction says so about
+// itself; everything unmarked stays a candidate, which is why the zealots of
+// 66 keep theirs (they seated Phanni ben Samuel by lot, and that is the point
+// of them).
+function priestEligible(d) { return !!(d && d.id && d.priestly !== false); }
+
 export function priesthoodInfo(ctx) {
   try {
     const seats = sacredSeats(ctx);
@@ -191,7 +203,7 @@ export function priesthoodInfo(ctx) {
     return {
       seated: held ? { name: held.name, faction: held.faction, since: held.since } : null,
       vacant: !held,
-      candidates: seats.filter((d) => d && d.id).map((d) => ({
+      candidates: seats.filter(priestEligible).map((d) => ({
         id: d.id,
         name: d.name || d.id,
         approval: factionApproval(ctx, g.playerTag, d.id),
@@ -212,6 +224,7 @@ export function seatHighPriest(ctx, factionId) {
     if (!seats) return { ok: false, why: 'There is no Temple to appoint to.' };
     const def = seats.find((d) => d && d.id === factionId);
     if (!def) return { ok: false, why: 'No such party sits at our court.' };
+    if (!priestEligible(def)) return { ok: false, why: 'No man of theirs may stand at that altar.' };
     const g = ctx.game;
     const t = g.tags[g.playerTag];
     const name = ctx.rng.pick(PRIEST_NAMES);
@@ -259,7 +272,11 @@ export function pilgrimageIncome(ctx, tag) {
       holy += (p.holy ? 1 : 0.5) * (2 + dev * 0.2);
     }
     if (holy <= 0) return 0;
-    let v = holy * SACRED.pilgrimPerHolyDev;
+    // `pilgrimMult` is the ordinary modifier stream's handle on the festivals
+    // (SPEC §186): the water-drawing ruling, the ashes of the heifer, and a
+    // breach with the priestly houses all reach the ascents through it, so the
+    // player sees a doctrinal quarrel land on a number they watch every month.
+    let v = holy * SACRED.pilgrimPerHolyDev * resolveTagMult(ctx, tag, 'pilgrimMult');
     // The whole world comes when the whole world is expecting something.
     if (tag === g.playerTag) {
       const e = expectation(ctx) / 100;

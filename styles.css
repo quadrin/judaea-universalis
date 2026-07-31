@@ -3399,3 +3399,22 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
    off rather than being cut mid-letter. */
 .np-seat-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .np-seat-btn { flex: 0 1 auto; width: auto; max-width: 100%; padding: 3px 9px; font-size: 11.5px; }
+
+/* The quarrel of the two schools (SPEC §186). The reading rides the doctrine
+   needle — it is the same kind of fact and deserves the same instrument — but
+   it sits in a run of `.np-faction` rows rather than in the doctrine block, so
+   it borrows their padding to line up with them. */
+.np-dox.np-dox-inset { padding: 5px 2px 6px; }
+
+/* The two sides of a dispute. Both are legitimate readings and neither is the
+   safe one, so neither gets the affirmative-button treatment: what the tint
+   says is only which house is being handed the ruling — the schools' green
+   against the priestly houses' violet, the same two colours the doctrine
+   labels already use for a realm's two poles. A tinted full border was
+   invisible at 11.5px on the wood gradient; a marked left edge is not. */
+.np-rule-oral { border-left: 3px solid rgba(126, 158, 66, 0.9); }
+.np-rule-written { border-left: 3px solid rgba(141, 119, 178, 0.9); }
+.np-rule-oral:not(.disabled):hover { border-left-color: #9dc154; }
+.np-rule-written:not(.disabled):hover { border-left-color: #a992d6; }
+/* …and a dispute the court has already settled reads as record, not as choice. */
+.np-faction.np-rule-done { opacity: 0.72; }

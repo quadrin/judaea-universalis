@@ -10276,3 +10276,107 @@ every Jewish court those chapters seat was already on offer.
   Adiabene's and Agrippa's roads beside the principals'. `uitest3` — the
   browser start screen offers the widened Israelite-only rosters, card
   for card.
+
+## 186. The quarrel of the two schools
+
+§34 gave every court party an approval bar and a lever to raise it, and that
+is the right engine for five estates who want five different things. It is
+the wrong one for these two. The Pharisees and the Sadducees did not want
+different things from a Hasmonean crown — they wanted the *same* thing, which
+was to be the reading of the Law that the crown administered, and there is
+exactly one of those. Two independent bars cannot express a zero-sum
+quarrel: a player could carry both houses at 75 for the whole hundred and
+forty years the 167 chapter runs them and never learn that the historical
+crown could not, because every ruling it made cost it one of its two
+constituencies. The two most consequential parties in the period were the two
+the game had least to say about.
+
+**THE READING.** A −10..+10 axis, the realm's standing answer to the whole
+quarrel, built only from rulings the crown has actually given. The poles are
+deliberately not mirror images, because the trade the Hasmoneans were making
+was not symmetrical: the schools' Law buys the *country* (−1.2 unrest, +10%
+manpower, +5% morale) and charges the treasury 6% for it; the houses' Law
+buys the *treasury and the throne* (+14% income, +0.25 legitimacy a month)
+and charges the country a point of unrest and 8% of its manpower. Neither
+pole buys both, and a crown that has ruled on nothing reads *unruled* rather
+than balanced. It rides the ordinary modifier stream, scaled by how far out
+the realm actually is, exactly as a half-loyal estate's boon is.
+
+**THE RULINGS.** Six recorded disputes (`js/data/schools.js`), each with the
+side the schools took and the side the priestly houses took: the morrow after
+the sabbath (Menahot 65a — the date of Pentecost), the water at the altar's
+foot (Sukkah 4:9, and the citrons Jannaeus was pelted with), the Book of
+Decrees (Bava Kamma 83b, the eye or the price of the eye), the Chamber of
+Hewn Stone (who sits on the benches), the resurrection and the angel (Ant.
+XVIII.14–16), and the ashes of the heifer (Parah 3:7, where the sages
+defiled the priest on purpose to prove the point). Each is given once, for
+points, permanently: it grants a named modifier that carries no month count,
+and the *stored side* — not the modifier — is the record, so the reading is
+recomputed from what the crown ruled rather than accumulated. The two that
+are about a rite are not offered where no House stands, on §169's own Temple
+test. And the price is fixed by the engine, not the entry: **every** ruling
+gives one house ten approval and takes ten from the other, because an entry
+authored soft enough to be free would make the whole axis a shopping list.
+A standing reading then goes on pulling, half a point a month against §34's
+regression to the middle — which is the historical trap, the one where the
+longer Hyrcanus governed as a Sadducee the less the Pharisees would take from
+him, and the fix was never available at the price he wanted.
+
+**THE CHAMBER.** What the two houses come to *together*, which is the read
+two independent bars structurally could not produce. Concord (both at 60+)
+pays legitimacy, quiet and a discount on governing. A one-sided breach — one
+house on the floor while the other holds the crown — costs whatever that
+house was carrying: the schools' breach is unrest and manpower and a sage in
+every town explaining what kind of king this is; the houses' breach is 15% of
+income, 10% of reinforcement, and a Temple strongroom with a very slow door.
+And the schism, both houses hostile at once, is worse than either breach on
+every axis, because before this the arithmetic said the opposite — two
+hostile bars used to average out.
+
+**THE OFFICE.** §169 seats a High Priest from a party at court. Where that
+party is one of the schools, the office is now measured against the reading:
+a priest who keeps the Law the crown has ruled for pays legitimacy, and one
+performing rites the crown has ruled against costs it. The houses' Law with
+nobody in the office at all costs extra on top of the ordinary vacancy —
+their whole case is that the Temple governs, and there is nobody in the
+Temple to govern. The candidate list also stops being everyone in the room:
+`priestly: false` is content's veto, and it takes the Brothers' Captains and
+the House of Antipater off a list they should never have been on. The zealots
+of 66 keep theirs, because they seated Phanni ben Samuel by lot and that is
+the point of them.
+
+**THE BREACH CARD.** Two years of a house held on the floor deals its card,
+once a decade, under the same one-dynamic-card-at-a-time guard the estate
+demands use. Citrons at the Water-Gate offers the historical answer (let the
+guard clear the court: −2 stability, −10 legitimacy, the schools to the
+floor) beside the two that were also available. The Chamber Declines to Count
+is the mirror: confirm the houses in the Temple's revenue, put the crown's own
+clerks on the ledgers, or leave it unanswered. Both are forks, not
+punishments.
+
+**WHERE IT APPEARS.** Wherever both houses sit at the player's own court,
+which is 67 BCE for both brothers and — because §127 hands the 167 chapter's
+court over on 140 BCE — the Maccabean chapter from the year Josephus first
+names the three schools onward, without anything anywhere having to know that
+was the intention. Six chapters never see it. The `pilgrimMult` key is new and
+general: the water-drawing ruling, the ashes of the heifer and a breach with
+the priestly houses all reach §169's ascents through it, so a doctrinal
+quarrel lands on a number the player watches every month.
+
+- **Regression contract**: `smoke118` — the gate (silent in six chapters and
+  in 167 until the houses arrive); a ruling costs the losing house exactly
+  what it pays the winner, carries no month count, and cannot be given twice;
+  the one blocker answers the panel and the click path identically; the rite
+  disputes close when the House does; both poles pay and charge in opposite
+  currencies; all four chamber states, with the schism worse than either
+  breach; the ascents move on a ruling and on a breach; the office pays and
+  costs by alignment; the captains and the Idumeans are off the altar; both
+  breach cards deal and resolve; a lukewarm court deals nothing in five years;
+  nothing reaches an AI hand; and every authored entry is a real fork —
+  documented, priced, opposed on both sides. `uitest40` plays 167 BCE in a
+  real browser: the block is hidden while the Hasideans hold the pious seat,
+  the captains are off the priesthood's ballot, the block appears with both
+  houses named and the needle reading *Unruled* once the court has changed
+  hands, and one click on a side of a dispute moves the live game — the
+  record, both approvals, the modifier, the settled row and the needle —
+  with no page errors.

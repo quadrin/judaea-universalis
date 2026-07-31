@@ -47,7 +47,7 @@ const TABS = [
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, and the technologies silver buys.' },
   { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
-  { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads.' },
+  { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
 ];
 const DEFAULT_TAB = 'crown';
@@ -180,6 +180,10 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">The Hope and the Office</div>
         <div class="np-factions" data-ref="sacred"></div>
       </div>
+      <div class="pp-build hidden" data-ref="schoolsBlock" data-tab="faith">
+        <div class="pp-build-title">The Law and Its Readers</div>
+        <div class="np-factions" data-ref="schools"></div>
+      </div>
 
       <!-- ── THE WORLD ─────────────────────────────────────────────────── -->
       <div class="pp-grid" data-tab="world">
@@ -229,6 +233,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (pri) {
         if (pri.classList.contains('disabled') || !actions || typeof actions.seatHighPriest !== 'function') return;
         try { actions.seatHighPriest(pri.dataset.priest); } catch (err) { warnOnce('np-priest', err); }
+        refresh();
+        return;
+      }
+      const rule = e.target.closest('[data-ruling]');
+      if (rule) {
+        if (rule.classList.contains('disabled') || !actions || typeof actions.issueRuling !== 'function') return;
+        try { actions.issueRuling(rule.dataset.ruling, rule.dataset.side); } catch (err) { warnOnce('np-ruling', err); }
         refresh();
         return;
       }
@@ -652,6 +663,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshFactions(self);
     refreshInstitutions(self);
     refreshSacred(self);
+    refreshSchools(self);
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
     refreshTech(t, self);
@@ -954,6 +966,102 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + (rep.pilgrimageBlocked ? `<div class="np-fac-effect neg">The war has closed the roads — the festivals bring a quarter of what they would.</div>` : '')
       + `</div>`;
     setHtml(refs.sacred, html);
+  }
+
+  // Whose reading of the Law this realm administers (SPEC §186). The needle,
+  // the two houses that are arguing over it, what the pair of them come to,
+  // whether the man at the altar keeps the Law the crown has ruled for, and
+  // every dispute still open with the price of ruling it either way. Appears
+  // only where both schools sit at our own court — which is 140 BCE onward in
+  // the Maccabean chapter and both brothers in 67.
+  function refreshSchools(self) {
+    let rep = null;
+    if (self && actions && typeof actions.getSchools === 'function') {
+      try { rep = actions.getSchools(); } catch (e) { warnOnce('np-getSchools', e); }
+    }
+    refs.schoolsBlock.classList.toggle('hidden', !rep);
+    if (!rep) return;
+
+    // ── the needle: the same instrument the doctrine axes use, because it is
+    // the same kind of fact — a realm's standing answer to a live question.
+    const r = rep.reading;
+    const pct = Math.round(50 + (r.score / (r.max || 10)) * 50);
+    const cls = r.band === 'mid' ? 'mid' : (r.score > 0 ? 'hi' : 'lo');
+    const marks = r.marks.length
+      ? r.marks.map((m) => '· ' + m.text).join('\n')
+      : 'The court has ruled on nothing yet.';
+    const rTt = 'Whose reading of the Law this realm administers.\n' + r.blurb
+      + (r.text ? '\n――――――\n' + r.name + ': ' + r.text : '')
+      + '\n――――――\n' + marks;
+    let html = `<div class="np-dox np-dox-inset" data-tt="${esc(rTt)}">`
+      + `<div class="np-dox-top"><span class="np-dox-name">The Reading</span>`
+      + `<span class="np-dox-label np-dox-${cls}">${esc(r.label)}</span></div>`
+      + `<div class="np-dox-bar">`
+      + `<span class="np-dox-pole">${esc(r.writtenPole)}</span>`
+      + `<span class="np-dox-track"><i class="np-dox-needle np-dox-n-${cls}" style="left:${pct}%"></i></span>`
+      + `<span class="np-dox-pole">${esc(r.oralPole)}</span>`
+      + `</div>`
+      + (r.text ? `<div class="np-fac-effect ${r.score > 0 ? 'pos' : 'neg'}">${esc(r.text)}</div>` : '')
+      + `</div>`;
+
+    // ── the two houses, side by side, because that is the only way to read them
+    for (const h of rep.houses) {
+      const hc = h.kind === 'boon' ? 'pos' : h.kind === 'bane' ? 'neg' : '';
+      html += `<div class="np-faction" data-tt="${esc(h.name + ' — ' + h.state + ' at ' + h.approval + '.\nCourt them, or answer their demands, from the Court tab.')}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(h.name)}</span>`
+        + `<span class="np-fac-state ${hc}">${esc(h.state)} · ${h.approval}</span></div>`
+        + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${h.state}" style="width:${Math.max(2, Math.min(100, h.approval))}%"></div></div>`
+        + `<div class="np-fac-effect ${hc}">${esc(h.effect)}</div>`
+        + `</div>`;
+    }
+
+    // ── …and what the pair of them come to together
+    const c = rep.court;
+    html += `<div class="np-faction" data-tt="${esc(c.blurb)}">`
+      + `<div class="np-fac-top"><span class="np-fac-name">The Chamber</span>`
+      + `<span class="np-fac-state ${c.good ? 'pos' : c.key ? 'neg' : ''}">${esc(c.name)}</span></div>`
+      + `<div class="np-fac-effect ${c.good ? 'pos' : c.key ? 'neg' : ''}">${esc(c.text)}</div>`
+      + `</div>`;
+    if (rep.office) {
+      html += `<div class="np-faction" data-tt="${esc(rep.office.text)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">The Priest and the Reading</span>`
+        + `<span class="np-fac-state ${rep.office.aligned === null ? '' : rep.office.aligned ? 'pos' : 'neg'}">`
+        + `${esc(rep.office.house || 'no priest')}</span></div>`
+        + `<div class="np-fac-effect ${rep.office.aligned ? 'pos' : 'neg'}">${esc(rep.office.text)}</div>`
+        + `</div>`;
+    }
+
+    // ── the disputes. A settled one prints what was ruled and stays settled;
+    // an open one carries both sides as buttons, each with its own price.
+    for (const q of rep.rulings) {
+      const side = q.given ? q[q.given] : null;
+      const base = q.question + '\n' + (q.source ? '――――――\n' + q.source : '');
+      if (side) {
+        html += `<div class="np-faction np-rule-done" data-tt="${esc(base + '\n――――――\n' + side.blurb)}">`
+          + `<div class="np-fac-top"><span class="np-fac-name">${esc(q.name)}</span>`
+          + `<span class="np-fac-state ${q.given === 'oral' ? 'pos' : 'neg'}">ruled</span></div>`
+          + `<div class="np-fac-effect">${esc(side.label)} — ${esc(side.text)}</div>`
+          + `</div>`;
+        continue;
+      }
+      const btn = (k) => {
+        const o = q[k];
+        const tt = o.label + '\n' + o.blurb + '\n――――――\n' + o.name + ': ' + o.text
+          + '\nCosts ' + (q.fullPrice || q.price) + '. '
+          + (k === 'oral' ? rep.houses[0].name : rep.houses[1].name) + ' +' + q.swing + ', '
+          + (k === 'oral' ? rep.houses[1].name : rep.houses[0].name) + ' −' + q.swing + '.'
+          + (q.can ? '' : '\n' + (q.whyNot || ''));
+        return `<button class="pp-build-btn np-seat-btn np-rule-${k}${q.can ? '' : ' disabled'}"`
+          + ` data-ruling="${esc(q.id)}" data-side="${k}" data-tt="${esc(tt)}"><span>${esc(o.label)}</span></button>`;
+      };
+      html += `<div class="np-faction" data-tt="${esc(base)}">`
+        + `<div class="np-fac-top"><span class="np-fac-name">${esc(q.name)}</span>`
+        + `<span class="np-fac-state">${esc(q.price)}</span></div>`
+        + `<div class="np-fac-effect">${esc(q.question)}</div>`
+        + `<div class="np-fac-effect np-seat-btns">${btn('written')}${btn('oral')}</div>`
+        + `</div>`;
+    }
+    setHtml(refs.schools, html);
   }
 
   // The world's way of doing things (SPEC §166). Every institution alive in
