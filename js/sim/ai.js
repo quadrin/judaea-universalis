@@ -12,7 +12,7 @@ import {
   declareWar, truceActive, opinionOf, casusBelli, successionClaim, addOpinion, areRivals, recognized,
   modernizeInfo, modernizeArmyCore, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, raidTargets, airRaidCore,
-  tagGen, mechanicOn, tagDef,
+  tagGen, mechanicOn, tagDef, resolveTagAdd, armsGate,
 } from './military.js';
 import { modernizeFleetInfo, modernizeFleetCore } from './navy.js';
 import { deference } from './standing.js';
@@ -172,7 +172,11 @@ function aiRecruit(ctx, tag, hints, fraction) {
     if (!pid) break;
     // A cavalry arm rides with the foot: every fourth regiment raised is
     // horse when the treasury can bear its price (2.5× an infantryman's).
-    const type = cur % 4 === 3 && num(t.treasury) > 150 ? 'cav' : 'inf';
+    let type = cur % 4 === 3 && num(t.treasury) > 150 ? 'cav' : 'inf';
+    // Armor is an import (SPEC §179): a client with no live pipeline raises
+    // foot instead of stalling the whole muster on a shut market.
+    if (type === 'cav' && tagGen(ctx, tag) >= num((ctx.DEFINES.ARMOR || {}).minGen, 5)
+      && armsGate(ctx, tag)) type = 'inf';
     const res = recruitRegiment(ctx, tag, pid, type);
     if (!res.ok) break;
     cur++;
@@ -532,7 +536,11 @@ function aiConsiderWar(ctx, tag) {
       // court except the player's, and exactly 1 for a player who has taken
       // nothing from anybody — so a quiet campaign runs on the numbers this
       // line had before the file existed.
-      / attentionThreat(ctx, tgt);
+      / attentionThreat(ctx, tgt)
+      // …and a state whose desert hums (SPEC §180) is one nobody starts a
+      // war of opportunity against on the old arithmetic. Zero everywhere
+      // until the one arc that sets it; scripted declarations never ask.
+      * (1 + 0.6 * resolveTagAdd(ctx, tgt, 'deterrent'));
     if (!(ratio >= needed || (busyElsewhere && ratio >= needed * 0.75))) continue;
     if (!ctx.rng.chance((succession ? 0.12 : 0.08) * num(pers.aggression, 1))) continue;
     const cb = casusBelli(ctx, tag, tgt);
@@ -1482,6 +1490,9 @@ function aiAirPower(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || num(t.tech && t.tech.mar) < 19) return;
+  // Aircraft are an import (SPEC §179): with the market shut there is no
+  // squadron to buy and no point pouring a runway for one.
+  if (armsGate(ctx, tag)) return;
   const AIR = ctx.DEFINES.AIR || {};
   const capName = tagDef(ctx, tag).capital;
   const cap = capName && ctx.prov ? ctx.prov(capName) : null;

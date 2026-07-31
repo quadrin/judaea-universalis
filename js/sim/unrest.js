@@ -3,7 +3,7 @@
 
 import {
   num, clamp, B, resolveTagAdd, isHostile, spawnArmy, changeControllerCore, buildingWorks,
-  liveGrudge, grudgeCeiling, areRivals, thawQuiet, reconciled,
+  liveGrudge, grudgeCeiling, areRivals, thawQuiet, reconciled, armsDealBook,
 } from './military.js';
 import { axisOf } from './doctrine.js';
 import { popTension, popTotal } from './population.js';
@@ -279,9 +279,17 @@ export function monthlyOpinionDrift(ctx) {
       const V = ctx.DEFINES.VASSALS || {};
       const weaving = t.incorporating && t.incorporating.by === other;
       const allied = (t.allies || []).indexOf(other) >= 0;
-      const target = allied ? 60
+      let target = allied ? 60
         : weaving ? num(V.incorporateOpinion, 80)
           : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
+      // A live arms pipeline anchors its supplier's regard (SPEC §179), the
+      // way §57's pacts once floored a standing: purchasing missions, spares
+      // contracts and attachés keep the door from swinging shut by pure
+      // neglect. Death stays available the loud ways — war, embargo, and the
+      // scripted ruptures all strike below the floor in one blow.
+      if (armsDealBook(ctx)[other] === tag) {
+        target = Math.max(target, num((ctx.DEFINES.ARMS || {}).anchor, 40));
+      }
       const v = Math.round(num(t.opinion[other]));
       t.opinion[other] = v === target ? v : clamp(v > target ? v - 1 : v + 1, -200, 200);
     }

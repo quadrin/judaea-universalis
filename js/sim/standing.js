@@ -32,7 +32,7 @@
 // WHAT IT IS NOT. It is not score. Nobody wins by being first; the bookmarks
 // keep their own victory contracts and this number appears in none of them.
 
-import { num, clamp, armiesOf } from './military.js';
+import { num, clamp, armiesOf, tagDef } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -90,6 +90,11 @@ export function standingScore(ctx, tag) {
     // are different verbs, and the score has to know the difference).
     dev += devTotal(p) * (p.controller && p.controller !== tag ? 0.35 : 1);
   }
+  // An off-map seat (SPEC §178) owns no cell; its weight is its def's own
+  // number — which is how the United States outweighs every court of 1948,
+  // and how §164's reach rule knows everyone has heard of it.
+  const om = tagDef(ctx, tag).offmap;
+  if (om) dev += num(om.dev, 0);
   for (const k of Object.keys(g.tags)) {
     const o = g.tags[k];
     if (o && o.alive && o.overlord === tag) clients++;

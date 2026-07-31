@@ -241,7 +241,6 @@ export const BOOKMARK_1948 = {
     character: 'National Character',
     missions: 'War Objectives',
     factions: 'Political Blocs',
-    powers: 'Great Powers',
     court: 'Cabinet & General Staff',
     // The realm panel's tabs (SPEC §175). A modern republic has no crown and
     // no host, and the chapter that already says Cabinet where antiquity says
@@ -389,7 +388,12 @@ export const BOOKMARK_1948 = {
     // (the same painted-not-seated pattern as Arabia's rump in 132), and a
     // sealed country keeps sealed politics.
     'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
-    'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV'],
+    'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV',
+    // The off-map seat (SPEC §178): the one power of the age the frame
+    // genuinely cannot reach. No cell, no armies, no wars — a court, an
+    // opinion, a treasury, and the biggest arsenal on the ledger. Opened
+    // like every court: click its flag in the ledger of nations.
+    'USA'],
   // Standing rivalries (SPEC §73): no peace, only armistice lines — and the
   // Arab cold war between Cairo and the Hashemite bloc (non-adjacent, so it
   // chills opinions without opening a land war).
@@ -427,6 +431,24 @@ export const BOOKMARK_1948 = {
           + 'Recognition is as far as this age goes — and it is further than most of it got.',
       },
     ],
+  },
+  // The arms market (SPEC §179). Nothing on this map from Cairo to Tel Aviv
+  // rolls a tank or a fighter out of its own works: the arsenals are the
+  // exporters of the age, and everyone else signs a weapons transfer
+  // agreement with ONE of them — opened at the supplier's regard, cut by
+  // cooling, war, or a §100 embargo. `starting` is the treaty system of
+  // 15 May: the Anglo-Egyptian, Anglo-Jordanian and Anglo-Iraqi treaties,
+  // the French army's mandate-era clients, the Truman doctrine's two, and
+  // Britain's oil concession in the east. Israel starts under nobody, which
+  // was always the point of the Embargo modifier below; the First Truce card
+  // signs Prague, and 1955 signs Moscow over Cairo.
+  armsMarket: {
+    arsenals: ['USA', 'SOV', 'UK', 'FRA', 'CZE'],
+    starting: {
+      EGY: 'UK', JOR: 'UK', IRQ: 'UK', IRN: 'UK',
+      SYR: 'FRA', LEB: 'FRA',
+      TUR: 'USA', GRC: 'USA',
+    },
   },
   activeProvinces: MODERN_PROVINCES,
   // One-time save migration: preserve any development the player added above
@@ -1147,6 +1169,30 @@ export const BOOKMARK_1948 = {
     }
     setOpinion(g, 'EGY', 'JOR', -40); setOpinion(g, 'JOR', 'EGY', -40); // rival ambitions
     setOpinion(g, 'UK', 'JOR', 100);  setOpinion(g, 'JOR', 'UK', 100);
+    // The world's regard on 15 May (SPEC §178/§179), and the arms market it
+    // prices. Washington recognized in eleven minutes and embargoed both
+    // sides; Moscow voted for partition and lets Prague sell; Prague sells to
+    // whoever pays; Paris keeps its quays open and its options too; Bevin's
+    // London arms the other camp. The numbers put Prague within an event's
+    // reach of the signing bar and everyone else honestly short of it.
+    setOpinion(g, 'USA', 'ISR', 40);  setOpinion(g, 'ISR', 'USA', 60);
+    setOpinion(g, 'USA', 'UK', 90);   setOpinion(g, 'UK', 'USA', 90);
+    for (const t of ['EGY', 'JOR', 'IRQ', 'SAU']) setOpinion(g, 'USA', t, 30);
+    setOpinion(g, 'SOV', 'ISR', 40);  setOpinion(g, 'ISR', 'SOV', 30);
+    setOpinion(g, 'SOV', 'USA', -80); setOpinion(g, 'USA', 'SOV', -80);
+    setOpinion(g, 'CZE', 'ISR', 45);  setOpinion(g, 'ISR', 'CZE', 50);
+    setOpinion(g, 'FRA', 'ISR', 40);  setOpinion(g, 'ISR', 'FRA', 40);
+    setOpinion(g, 'UK', 'ISR', -30);  setOpinion(g, 'ISR', 'UK', -40);
+    setOpinion(g, 'UK', 'EGY', 70);   setOpinion(g, 'UK', 'IRQ', 75);
+    // …and the rest of the starting book's warmth, or the §179 liveness
+    // sweep reads an unseeded 0 as a cold supplier and cuts every pipeline
+    // in the first month. Each supplier stands comfortably above the floor
+    // with its own clients, and honestly below the signing bar with anyone
+    // else's.
+    setOpinion(g, 'UK', 'IRN', 60);
+    setOpinion(g, 'FRA', 'SYR', 55);  setOpinion(g, 'FRA', 'LEB', 65);
+    setOpinion(g, 'USA', 'TUR', 65);  setOpinion(g, 'USA', 'GRC', 65);
+    h.adjust(ctx, 'USA', { treasury: 500 });
 
     // --- Starting modifiers. ---
     h.addTagModifier(ctx, 'ISR', {
@@ -1260,6 +1306,9 @@ export const BOOKMARK_1948 = {
     BUL: { name: 'Georgi Dimitrov', title: 'Chairman', gov: 3, infl: 3, mar: 1, age: 66 },
     ROU: { name: 'Petru Groza', title: 'President of the Council', gov: 2, infl: 3, mar: 1, age: 64 },
     SOV: { name: 'Joseph Stalin', title: 'General Secretary', gov: 4, infl: 5, mar: 3, age: 69 },
+    // The off-map seat (SPEC §178): the recognition came from this desk,
+    // eleven minutes after the declaration and over his own State Department.
+    USA: { name: 'Harry S. Truman', title: 'President', gov: 4, infl: 4, mar: 3, age: 64 },
   },
 
   missions: {

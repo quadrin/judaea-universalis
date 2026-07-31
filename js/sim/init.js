@@ -8,6 +8,7 @@ import {
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
+  isOffmapTag, armsSupplierOf, armsDealState, armsGate, isArsenal, armsMarketOn,
   thawProgress, thawQuiet, reconciled, haveAffinity,
   declaredRivals, rivalDeclareInfo, declareRivalCore, renounceRivalCore, reconcileRivalryCore,
   retireAffinityCore, secedeTagCore,
@@ -40,7 +41,7 @@ import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
-import { getPowersInfo, courtPowerCore, askPowerCore, signPactCore, leavePactCore, signTradeCore } from './powers.js';
+import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
@@ -210,7 +211,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tagAliases: {}, // three letters a greater crown retired → who wears them now (SPEC §135)
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
-    powers: {}, // standings with the powers beyond the map (SPEC §55)
+    armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §179)
     rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
   };
@@ -349,7 +350,49 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     try {
       if (bookmark && typeof bookmark.setup === 'function') bookmark.setup(ctx);
     } catch (e) { console.warn('[sim/init] bookmark.setup failed:', e); }
+    // The opening arms book (SPEC §179): the treaty system the chapter
+    // starts under, seeded after setup so scripted opinions are already in.
+    try { seedArmsDeals(ctx); } catch (e) { console.warn('[sim/init] seedArmsDeals failed:', e); }
   }
+  // Off-map seats (SPEC §178), on every bind: a save from before a seat
+  // existed loads into a world that has one — the same backfill §55 once ran
+  // for its standings book, pointed the other way. Seats are created with
+  // the ordinary tag shape; the stipend and the court arrive with the next
+  // monthly tick.
+  try {
+    const active = bookmark && Array.isArray(bookmark.activeTags) ? bookmark.activeTags : [];
+    for (const key of active) {
+      const d = tagDef(ctx, key);
+      if (!d.offmap || game.tags[key]) continue;
+      game.tags[key] = {
+        tag: key,
+        name: d.name || key,
+        color: Array.isArray(d.color) ? d.color.slice() : [128, 128, 128],
+        religion: d.religion, culture: d.culture,
+        alive: true, ai: key !== game.playerTag,
+        treasury: 0, income: 0, expenses: 0, loans: 0,
+        manpower: 0, maxManpower: 0,
+        stability: 0, legitimacy: 50, warExhaustion: 0,
+        points: { gov: 0, infl: 0, mar: 0 },
+        ideas: { ...(d.ideas || {}) },
+        reforms: { mil: 0, civ: 0, rel: 0 },
+        advisors: { gov: null, infl: null, mar: null },
+        aggression: 0, courtCand: {}, modifiers: [],
+        atWarWith: [], allies: [], guarantees: [], opinion: {},
+        govType: (bookmark && bookmark.govTypes && bookmark.govTypes[key])
+          || (DEFINES.GOV_OF || {})[key] || 'republic',
+        electionIn: 48,
+        claims: [], claimFabrications: [], overlord: null,
+        heir: null, regency: false, missionIdx: 0,
+        aiState: {},
+        tech: {
+          gov: Math.max(0, num(bookmark && bookmark.techBase, 3) | 0),
+          infl: Math.max(0, num(bookmark && bookmark.techBase, 3) | 0),
+          mar: Math.max(0, num(bookmark && bookmark.techBase, 3) | 0),
+        },
+      };
+    }
+  } catch (e) { console.warn('[sim/init] seat backfill failed:', e); }
   // Standing rivalries (SPEC §73): pairs the era names as natural enemies.
   // Any pair the bookmark's setup left un-authored is seeded at the cold
   // baseline so the enmity is live from the first month — authored opinions
@@ -584,6 +627,20 @@ export const simHelpers = {
   },
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
+  },
+  // The arms market's pen for scripted history (SPEC §179): set or read the
+  // book directly — the Messerschmitts landed whatever the cabinet thought.
+  setArmsDeal(ctx, client, supplier) {
+    try { return setArmsDealCore(ctx, L(ctx, client), L(ctx, supplier)); } catch (e) { return false; }
+  },
+  armsSupplier(ctx, tag) {
+    try { return armsSupplierOf(ctx, L(ctx, tag)); } catch (e) { return null; }
+  },
+  // A scripted embargo (SPEC §100/§179): the general signs something. Runs
+  // the ordinary declaration, so the trade bite, the opinion hit and the
+  // arms-pipeline cutoff all follow from the one signature.
+  declareEmbargo(ctx, from, to) {
+    try { return declareEmbargoCore(ctx, L(ctx, from), L(ctx, to)); } catch (e) { return { ok: false }; }
   },
   // Fire a scripted event by id, once (SPEC §32). The same machinery the
   // bookmarks' local fireEventById uses — exposed so event effects and
@@ -986,9 +1043,13 @@ export function gameActions(ctx) {
       }
       // Some pacts are never signed (SPEC §96): the bookmark's own bar comes
       // before every other reason, because no amount of goodwill lifts it.
+      // An off-map seat (SPEC §178) is barred before even that: an ally who
+      // can never march is no ally, whatever anybody's opinion says.
+      const seatBar = isOffmapTag(ctx, tag) || isOffmapTag(ctx, me);
       const allyBar = allianceBarred(ctx, me, tag);
       let whyNotAlly = '';
-      if (allyBar) whyNotAlly = allyBar;
+      if (seatBar) whyNotAlly = 'They are beyond the map — an ally who can never march is no ally.';
+      else if (allyBar) whyNotAlly = allyBar;
       else if (allied) whyNotAlly = 'We are already allied.';
       else if (atWarWithUs) whyNotAlly = 'We are at war with them.';
       else if (ourClient) whyNotAlly = 'They are already our client kingdom.';
@@ -1007,7 +1068,8 @@ export function gameActions(ctx) {
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
       const cb = casusBelli(ctx, me, tag);
       let whyNotWar = '';
-      if (atWarWithUs) whyNotWar = 'We are already at war with them.';
+      if (seatBar) whyNotWar = 'No army on this map can reach them.';
+      else if (atWarWithUs) whyNotWar = 'We are already at war with them.';
       else if (recognized(ctx, me, tag)) whyNotWar = 'We recognize them — the recognition must be renounced first.';
       else if (ourClient) whyNotWar = 'They are our client kingdom.';
       else if (ourOverlord) whyNotWar = 'They are our overlord.';
@@ -1066,6 +1128,10 @@ export function gameActions(ctx) {
           marriage = { married: mi.married, can: mi.can, why: mi.why, cost: mi.cost };
         } catch (e) { marriage = null; }
       }
+      // The arms market (SPEC §179): only surfaced where a bookmark declares
+      // one, and only against an arsenal court or our current supplier.
+      let arms = null;
+      try { arms = armsInfo(ctx, me, tag); } catch (e) { arms = null; }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -1102,6 +1168,8 @@ export function gameActions(ctx) {
         marriage,
         recognition,
         embargo,
+        arms,
+        offmap: isOffmapTag(ctx, tag),
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
   };
@@ -1478,9 +1546,13 @@ export function gameActions(ctx) {
         }
         let whyNot = '';
         if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
+        // Aircraft are an import (SPEC §179): the same gate the sim enforces,
+        // spoken on the button before the click finds it out.
+        const shut = armsGate(ctx, g.playerTag);
+        if (!whyNot && shut) whyNot = shut.charAt(0).toUpperCase() + shut.slice(1) + '.';
         const queued = queuedUnitCount(ctx, provId, 'wing', g.playerTag);
         if (!whyNot && wings.length + queued >= cap) whyNot = 'The hangars are full or already committed (' + cap + ' wings).';
-        else if (num(t.treasury) < num(AIR.wingCost, 40)) whyNot = 'Not enough talents (' + num(AIR.wingCost, 40) + ' needed).';
+        else if (!whyNot && num(t.treasury) < num(AIR.wingCost, 40)) whyNot = 'Not enough talents (' + num(AIR.wingCost, 40) + ' needed).';
         return {
           wings, queued, cap, targets,
           cost: num(AIR.wingCost, 40), upkeep: num(AIR.wingUpkeep, 1), range: num(AIR.rangeHops, 2),
@@ -1595,45 +1667,32 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('unitDetails', 'getUnitDetails failed', e); return null; }
     },
 
-    // ---- the powers beyond the map (SPEC §55) --------------------------------
-    getPowers() {
-      try { return getPowersInfo(ctx, g.playerTag); } catch (e) { warnOnce('getPowers', e); return []; }
-    },
-    courtPower(powerId) {
+    // ---- the arms market (SPEC §179) -----------------------------------------
+    getArmsStatus() {
       try {
-        const res = courtPowerCore(ctx, g.playerTag, String(powerId));
-        if (!res.ok) { say('The envoys stay home', res.why + '.', 'bad'); return; }
-        say('Envoys received', 'Our standing with ' + res.name + ' rises to ' + Math.round(res.standing)
-          + (res.rival ? ' — and ' + res.rival + '\'s patron takes note.' : '.'), 'good');
-      } catch (e) { warnOnce('courtPower', 'courtPower failed', e); }
+        if (!armsMarketOn(ctx)) return null;
+        const me = g.playerTag;
+        if (isArsenal(ctx, me)) return { arsenal: true };
+        const st = armsDealState(ctx, me);
+        const sup = st.supplier && g.tags[st.supplier] ? g.tags[st.supplier] : null;
+        return {
+          arsenal: false,
+          supplier: st.supplier, supplierName: sup ? (sup.name || st.supplier) : st.supplier,
+          live: st.live, why: st.why,
+          regard: st.supplier ? Math.round(opinionOf(ctx, st.supplier, me)) : 0,
+          floor: num((ctx.DEFINES.ARMS || {}).floor, 25),
+        };
+      } catch (e) { warnOnce('getArmsStatus', 'getArmsStatus failed', e); return null; }
     },
-    askPower(powerId, askId) {
+    signArmsDeal(tag) {
       try {
-        const res = askPowerCore(ctx, g.playerTag, String(powerId), String(askId));
-        if (!res.ok) { say('The favor is refused', res.why + '.', 'bad'); return; }
-        say('The favor is granted', res.power + ': ' + res.name.toLowerCase() + '.', 'good');
-      } catch (e) { warnOnce('askPower', 'askPower failed', e); }
-    },
-    signPowerPact(powerId) {
-      try {
-        const res = signPactCore(ctx, g.playerTag, String(powerId));
-        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
-        say('A pact is signed', res.power + ': ' + res.name + '. Their bloc is ours — and the rival\'s door closes.', 'good');
-      } catch (e) { warnOnce('signPowerPact', 'signPowerPact failed', e); }
-    },
-    leavePowerPact(powerId) {
-      try {
-        const res = leavePactCore(ctx, g.playerTag, String(powerId));
-        if (!res.ok) { say('No pact', res.why + '.', 'bad'); return; }
-        say('The pact is ended', 'We walk out of the alignment with ' + res.power + '. They will remember.', 'info');
-      } catch (e) { warnOnce('leavePowerPact', 'leavePowerPact failed', e); }
-    },
-    signPowerTrade(powerId) {
-      try {
-        const res = signTradeCore(ctx, g.playerTag, String(powerId));
+        const res = signArmsDealCore(ctx, g.playerTag, String(tag));
         if (!res.ok) { say('No agreement', res.why + '.', 'bad'); return; }
-        say('Trade opens', res.power + ': ' + res.name + '. The monthly flow starts at once.', 'good');
-      } catch (e) { warnOnce('signPowerTrade', 'signPowerTrade failed', e); }
+        const dropped = res.dropped && g.tags[res.dropped]
+          ? ' ' + (g.tags[res.dropped].name || res.dropped) + ' is told last, and coldly.' : '';
+        say('The arsenal opens', res.supplier + ' signs the weapons transfer agreement ('
+          + res.cost + ' talents): their patterns are ours to raise.' + dropped, 'good');
+      } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
     },
 
     // ---- loans (frozen contract) -------------------------------------------
@@ -2456,6 +2515,10 @@ export function gameActions(ctx) {
             provs++;
             dev += devTotal(p);
           }
+          // An off-map seat (SPEC §178) owns no cell; its weight in the world
+          // is the def's own number, and the ledger prints it honestly.
+          const om = tagDef(ctx, tag).offmap;
+          if (om) dev += num(om.dev, 0);
           let troops = 0;
           for (const a of armiesOf(ctx, tag)) troops += num(a.men);
           const bd = incomeBreakdown(ctx, tag);
@@ -3253,7 +3316,17 @@ export function reviveGame(saved) {
   if (!saved.truces) saved.truces = {};
   if (saved.difficulty !== 'hard') saved.difficulty = 'normal'; // pre-difficulty saves
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
-  if (!saved.powers) saved.powers = {}; // pre-powers saves (SPEC §55)
+  if (!saved.armsDeals || typeof saved.armsDeals !== 'object') saved.armsDeals = {}; // pre-§179 saves
+  // The powers beyond the map are retired (SPEC §178): drop the standings
+  // book, and strip the pact/ask modifiers whose removal path went with the
+  // system — a permanent incomeMult nobody can ever unsign is not a save
+  // feature, it is a leak.
+  if (saved.powers !== undefined) delete saved.powers;
+  for (const k of Object.keys(saved.tags)) {
+    const t = saved.tags[k];
+    if (!t || !Array.isArray(t.modifiers)) continue;
+    t.modifiers = t.modifiers.filter((m) => !(m && typeof m.id === 'string' && m.id.startsWith('power_')));
+  }
   if (!saved.rivals) saved.rivals = {}; // pre-rivalry saves (SPEC §86): nobody named yet
   if (!Array.isArray(saved.divergences)) saved.divergences = []; // pre-ledger saves (SPEC §89)
   if (!Array.isArray(saved.retiredChapters)) saved.retiredChapters = [];

@@ -9663,3 +9663,234 @@ pattern, no buttons, no purse.
   pattern, beyond-flags respecting the ceiling, the gain matching the
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
+
+## 178. The world is not beyond the map
+
+§55 built "The Powers Beyond the Map": standing bars in a panel section, an
+envoy button, asks. §172 already pulled one row out of it — the Diaspora —
+for the reason in its own title: it was not beyond the map. This section
+retires the panel entirely, because by §173 that argument had quietly
+consumed the rest of the roster. When the west got owners, France and
+Czechoslovakia became seated courts **while their power-bars kept running**
+— `ensurePowers` seeds a standing for every living tag, so France held a
+standing with France. The USSR bar shadowed the seated SOV; the 614
+khaganates shadowed the seated AVR and TRK. Of everything the system ever
+declared, all but two were on the board already, one (the UN) was never a
+country, and exactly one — the United States — was genuinely beyond the
+frame.
+
+A parallel diplomacy is not a free oddity; it is a tax on every future
+verb. Standing (0–100) ran beside opinion (−200..+200), courting beside
+`improveRelations`, pacts beside alliances, power trade beside trade
+agreements and embargoes — and the copy was always the poorer one, because
+the real ledger of verbs kept growing (§96 recognition, §100 embargoes,
+§163 courts, §164 intrigue, §165 standing) and the power panel got none of
+it. You could subvert a party in Paris but not in Washington, embargo
+London but not be embargoed by it, watch Prague's court convulse but not
+the one court whose elections mattered most to the age.
+
+**So the United States is a court now — an off-map seat.** `offmap: true`
+on its TAGS entry; seated by 1948's `activeTags`; owns no cell and never
+will. What an off-map seat is, in five rules:
+
+- **Alive without land.** `updateTagLife` exempts it the way it exempts
+  REB. A seat cannot fall, which is what "beyond the map" actually meant.
+- **Beyond every army.** `declareWar` refuses a war with an off-map seat
+  from either chair. The AI could never reach one anyway — its wars of
+  opportunity walk province adjacency — so the bar is for scripts and
+  players, and it closes the loophole rather than trusting the geometry.
+- **No alliances.** An ally who can never march is a lie in the ledger.
+  The offer is refused with its own reason, like the bookmark's bloc bars.
+- **A real court.** `courtSeats` waives its two-province floor for seats,
+  so Washington convenes the same §163 parties as everyone else — and
+  §164's reach rule already lets agents work any court at the top table,
+  so Truman's Senate can be patronized like a Seleucid one. The seat is
+  opened the way every court is opened: **from the ledger**, clicking the
+  flag chip. That chip row is the whole replacement UI for the old panel.
+- **An economy in one number.** The def carries `offmap: { dev, income }`;
+  `incomeBreakdown` returns the stipend as its own line, so the ledger,
+  the §165 standing table and the treasury tick all see the same money —
+  the United States outweighs every court of the age, which is the plain
+  1948 fact the old system modeled as a 0–100 bar. The treasury is capped
+  (a court that never spends should not compound forever), manpower and
+  force limit stay at zero (the seat sends no sons to this map), and the
+  §59 containment census skips off-map weight in both its numerators and
+  denominators — a tuned lever must not loosen because Washington exists.
+
+Everything else is the ordinary machinery, deliberately: envoys and gifts
+move its opinion, §100 lets it close its markets (the Neutrality Act IS an
+embargo, and the AI can sign one), §96 recognition replaces the old
+"press for full recognition" ask, subsidies replace "ask for credits" in
+the one direction money actually flowed, and §179 replaces the arms asks —
+which were the entire reason the powers existed.
+
+**The migration.** `js/sim/powers.js` and `js/data/powers.js` are deleted;
+the panel section, its `uiTerms.powers` titles, the wiki block, the
+`powerIn` ledger row and the tick pass go with them. Pre-§178 saves carry
+`game.powers` and possibly mounted `power_pact_*` / `power_*` modifiers
+whose removal path died with the system: `reviveGame` drops the book and
+strips those modifiers, and `makeCtx` seats any off-map tag the bookmark
+declares that the save predates — so a 1947-vintage save loads into a
+world that has a Washington, exactly as §55's own backfill once ran the
+other way. The 614 khaganate asks (a wartime host for gold, tribute for
+the rear) fold into the verbs the seated TRK and AVR already answer:
+alliance and the call to arms, gifts and subsidies.
+
+- **Regression contract**: `smoke112` — the USA is seated, alive, landless
+  and top-table in 1948; it survives `updateTagLife`; war and alliance are
+  refused with reasons; its court convenes and answers intrigue; the
+  ledger row and stipend agree with `incomeBreakdown`; a pre-§178 save
+  revives with the seat present, the book gone and the pact modifiers
+  stripped; and the ancient chapters seat nothing off-map. `smoke34` and
+  `smoke36` (the §55/§57 contracts) become tombstones asserting the old
+  machinery is really gone; `smoke106` keeps its §172 claims without the
+  deleted import. The balance harness needed one premise told: a seat's
+  zero manpower is its design, not a famine, so `autorun` skips off-map
+  tags in the anomaly flags — with that, 1948 comes back **none**, and the
+  full sweep matches the accepted families except 132's long-accepted JUD
+  flag reading SNOWBALL, which reproduces on the clean pre-§178 tree at
+  the harness seed (the §160 drift class again, not this section's).
+
+## 179. The arsenal is somebody else's
+
+§154 priced an air force at what it displaces. This section prices it at
+what it was in 1948: **an import**. The 101 Squadron flew Avia S-199s out
+of crates from Žatec; the Legion's guns and officers were British; Egypt's
+Spitfires were British; and the pattern of every armored battalion in the
+theater was decided in somebody else's capital. Nothing on this map from
+Cairo to Damascus to Tel Aviv could roll a tank or a fighter out of its own
+works — and the game let every one of them do it for talents, as if the
+Negev had a Renault works the sources forgot.
+
+**The arms market** (`bookmark.armsMarket`, declared by 1948 alone). The
+bookmark names its **arsenals** — USA, SOV, UK, FRA, CZE, the states whose
+works actually exported in this period. Everyone else is a **client**: to
+raise the gated arms — air wings, and armor (below) — a client needs a
+standing **weapons transfer agreement** with an arsenal.
+
+- **One supplier at a time.** The pattern an army is built on is one
+  country's — spares, calibers, doctrine and the men who teach it. Signing
+  with a second drops the first, and the first notices (−10 opinion).
+- **Signed in the supplier's court.** The agreement rides the supplier's
+  own panel (open it from the ledger, §178), and the bar is the
+  **supplier's regard for you** — you are asking to be sold to, so it is
+  their opinion of you (≥ 50) that opens the door, not yours of them. The
+  signing fee lands in the supplier's treasury: the money is real and it
+  moves.
+- **It lives only while the friendship does.** The pipeline dies — with a
+  notice — when the supplier's regard drops below the floor (25), when war
+  comes between the two courts, when the supplier is gone, or when the
+  supplier signs a §100 embargo: an embargo IS the cutoff, which is what
+  1967 was — de Gaulle did not march on anybody, he signed something. But a
+  standing deal also **anchors** the supplier's monthly drift at 40 (§57's
+  pact floor, reborn): purchasing missions and spares contracts keep a door
+  from swinging shut by pure neglect, so a pipeline dies the loud ways —
+  war, embargo, a scripted rupture striking below the floor in one blow —
+  and not because two AI courts forgot each other. Without the anchor,
+  ordinary drift toward zero cut every treaty-system deal inside four
+  years and the region quietly disarmed itself before its own wars.
+- **The opening book is the treaty system of May '48.** Egypt, Transjordan
+  and Iraq under Britain (the Anglo-Egyptian, Anglo-Jordanian and
+  Anglo-Iraqi treaties — the Legion had British officers ON the board
+  already); Syria and Lebanon under France; Turkey and Greece under the
+  Truman doctrine; Iran under Britain. **Israel under nobody** — the state
+  opens inside the §58 `arms_embargo` modifier with the market shut, which
+  was always the historical opening position and is now a mechanical one.
+  The script bootstraps the rest: the First Truce card signs ISR→CZE in
+  both of its answers (the Messerschmitts landed regardless of what the
+  cabinet thought of Bernadotte's count), and the 1955 arms-race card
+  signs EGY→SOV, the deal that actually ended the era.
+- **The AI plays it.** A clientless AI court signs monthly with the
+  friendliest arsenal that will have it, paying the same fee at the same
+  bar; arsenal AI is passive — a market, not a policy — and its §100
+  embargo AI is the policy. The gate sits in `recruitRegiment` and
+  `raiseAirWing` themselves, so the AI cannot build around it any more
+  than the player can.
+
+**Armor is an arm now, not a costume.** The §29 pattern table already
+calls generation-5 cavalry "Armored Corps" — and then hands it identical
+battle math at 25 talents, so the 1948 chapter's tanks were rifle brigades
+in a different font. Now: mounted regiments at pattern 5+ are **armor**.
+In the **shock phase** the side with the armor advantage adds
+`ceil(net / 2)` pips, capped at 3 — §154's signed-quantity design brought
+down to the ground, fire belonging to the sky and shock to the tanks, and
+one Sherman platoon against nothing being worth the pip cover always was.
+An armored regiment prices at 50 and four months (an `ARMOR` defines
+block, every threshold tunable). Every earlier chapter has a tech ceiling
+of 13 or lower — pattern 3 at best — so no cataphract, no dragoon and no
+seed of the seven tuned campaigns can see any of this arithmetic.
+
+The recruit buttons carry the gate and say why when it is shut ("no arms
+supplier — win an arsenal court's favor first"); the Host tab names your
+supplier and its temperature; the supplier's court panel carries the
+agreement chip with the full terms in the tooltip.
+
+- **Regression contract**: `smoke113` — the market gates wings and armor
+  for clients and not for arsenals; the starting book matches the treaty
+  system; signing pays the supplier and switching costs the old one;
+  regard, war and embargo each kill a live pipeline with notice; the AI
+  signs its own deals and builds only behind them; armor pips scale, cap,
+  and appear only in shock; the armor price and months read from DEFINES;
+  and a pre-§179 save loads with the book intact and every antique
+  chapter's cavalry untouched.
+
+## 180. The textile factory
+
+The chapter's script mentions it exactly once. `ev_i_eshkol`, June 1963,
+in a subordinate clause: "in the south something unphotographed hums at
+Dimona." This section is that hum as an arc and a fork, because it is the
+largest single decision the state made in the whole period and the game
+had no card for it — while the province itself has sat on the map since
+§141, opening **Egyptian**, in the deep Negev the state must first win.
+
+Five cards, one fork. The arc is gated the way the thing was actually
+gated: on Paris, and on money, and on the desert being yours.
+
+1. **`ev_i_dimona_offer`** (October 1957 — the Sèvres debt, a year old).
+   Fires only if Israel owns Dimona and the French pipeline is warm (FRA
+   is the supplier, or her regard ≥ 55). Break ground — 150 talents, 20
+   influence, and **The Program**, a standing modifier that quietly eats
+   5% of everything until the arc resolves — or decline, and the card
+   does not come back: a state that passes on 1957's terms is a different
+   state, and the fork records it by never opening.
+2. **`ev_i_dimona_cover`** (December 1960 — the U-2 frame, the State
+   Department's question). The answer on the record: **"It is a textile
+   factory"** — the cover holds, Washington's regard −15, and the flag
+   remembers the sentence — or Ben-Gurion's Knesset formula, "for
+   peaceful purposes," which admits the reactor and costs less regard,
+   because a half-truth spoken in parliament is a different instrument
+   than a tarpaulin.
+3. **`ev_i_dimona_visits`** (May 1963 — Kennedy's letters, every one of
+   them polite). Curated Saturdays for American scientists (+15 regard,
+   the tour shows what the schedule permits) or refusal (−20, and the
+   letters get shorter).
+4. **`ev_i_dimona_ready`** (triggered, 1966 or later). **The Basement.**
+   Three roads out, and the fork `the_basement` records which was taken:
+   - *"We will not be the first to introduce them"* — *nuclear_opacity*:
+     a permanent deterrent (1), and the modifier on the ledger is named
+     **The Textile Factory**, because by 1966 the joke WAS the policy.
+   - *The open test* — *the_open_test*: deterrent (2), and the world
+     recoils — every arsenal court's regard −40, aggression +20, and
+     whatever pipeline feeds you will probably die of the opinion floor
+     it just fell through. Stronger, and priced like it.
+   - *Seal the basement* — *the_sealed_basement*: the scientists disperse
+     to the universities (+20 governance and influence points), no
+     deterrent, The Program ends. All three roads end the 5% drain.
+5. **`ev_i_dimona_vanunu`** (October 1986, opacity only). The technician
+   talks to the Sunday Times; ambiguity survives its own photograph. One
+   answer; the world's regard dips; the deterrent does not.
+
+**What a deterrent is.** `resolveTagAdd(ctx, tag, 'deterrent')`, read in
+exactly one place: the `needed` ratio in `aiConsiderWar`, beside §165
+deference — a hostile court wants ×(1 + 0.6·deterrent) more edge before an
+opportunistic war on a state whose desert hums. Scripted wars ignore it:
+Yom Kippur fires on its date whatever sits in the basement, which is the
+period's own bitter finding about what the basement bought and what it
+did not.
+
+- **Regression contract**: `smoke114` — the offer gates on Dimona's owner
+  and the French pipeline and prices the ground-breaking; The Program
+  drains until resolution and not after; each road sets its marker, its
+  deterrent and its bill; the deterrent multiplies the AI's needed ratio
+  and leaves scripted declarations alone; Vanunu fires only under
+  opacity; and the fork registry knows all three roads.

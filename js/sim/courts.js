@@ -46,7 +46,7 @@
 // holding the same throne.
 
 import {
-  num, clamp, chronicle, armiesOf, tagDef, livingTag, changeOwnerCore,
+  num, clamp, chronicle, armiesOf, tagDef, livingTag, changeOwnerCore, isOffmapTag,
 } from './military.js';
 import { rulerDies } from './realm.js';
 import { fireRevolt } from './unrest.js';
@@ -280,7 +280,9 @@ export function courtSeats(ctx, tag) {
   if (tag === g.playerTag) return null; // factions.js owns this throne
   const t = g.tags[tag];
   if (!t || !t.alive) return null;
-  if (provinceCount(ctx, tag) < COURT.minProvinces) return null;
+  // An off-map seat (SPEC §178) owns no cell and convenes anyway — watching
+  // Washington's parties is most of what the ledger's chip is FOR.
+  if (!isOffmapTag(ctx, tag) && provinceCount(ctx, tag) < COURT.minProvinces) return null;
   return archetypeFor(ctx, tag);
 }
 

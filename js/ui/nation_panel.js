@@ -194,10 +194,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
       </div>
-      <div class="pp-build hidden" data-ref="powersBlock" data-tab="world">
-        <div class="pp-build-title" data-ref="powersTitle">The Powers Beyond the Map</div>
-        <div class="np-powers" data-ref="powers"></div>
-      </div>
       <div class="pp-build hidden" data-ref="instBlock" data-tab="world">
         <div class="pp-build-title" data-ref="instTitle">The World's Way of Doing Things</div>
         <div class="np-factions" data-ref="institutions"></div>
@@ -294,40 +290,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      const ppact = e.target.closest('[data-power-pact]');
-      if (ppact) {
-        if (!actions) return;
-        const active = ppact.classList.contains('np-power-active');
-        if (active && typeof actions.leavePowerPact === 'function') {
-          try { actions.leavePowerPact(ppact.dataset.powerPact); } catch (err) { warnOnce('np-leavePact', err); }
-        } else if (!active && !ppact.classList.contains('disabled') && typeof actions.signPowerPact === 'function') {
-          try { actions.signPowerPact(ppact.dataset.powerPact); } catch (err) { warnOnce('np-signPact', err); }
-        }
-        refresh();
-        return;
-      }
-      const ptrade = e.target.closest('[data-power-trade]');
-      if (ptrade) {
-        if (actions && !ptrade.classList.contains('disabled') && !ptrade.classList.contains('np-power-active')
-            && typeof actions.signPowerTrade === 'function') {
-          try { actions.signPowerTrade(ptrade.dataset.powerTrade); } catch (err) { warnOnce('np-signTrade', err); }
-        }
-        refresh();
-        return;
-      }
-      const pcourt = e.target.closest('[data-power-court]');
-      if (pcourt) {
-        if (!pcourt.classList.contains('disabled') && actions && typeof actions.courtPower === 'function') {
-          try { actions.courtPower(pcourt.dataset.powerCourt); } catch (err) { warnOnce('np-courtPower', err); }
-        }
-        refresh();
-        return;
-      }
-      const pask = e.target.closest('[data-power-ask]');
-      if (pask) {
-        if (!pask.classList.contains('disabled') && actions && typeof actions.askPower === 'function') {
-          const [pid, aid] = String(pask.dataset.powerAsk).split(':');
-          try { actions.askPower(pid, aid); } catch (err) { warnOnce('np-askPower', err); }
+      // The working verbs on a foreign court's own panel (SPEC §178/§179):
+      // envoys, gifts, and the weapons transfer agreement.
+      const npDip = e.target.closest('[data-np-dip]');
+      if (npDip && viewTag) {
+        if (!npDip.classList.contains('disabled') && actions) {
+          const fn = { improve: 'improveRelations', gift: 'sendGift', arms: 'signArmsDeal' }[npDip.dataset.npDip];
+          try { if (fn && typeof actions[fn] === 'function') actions[fn](viewTag); }
+          catch (err) { warnOnce('np-dip-' + npDip.dataset.npDip, err); }
         }
         refresh();
         return;
@@ -452,7 +422,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.characterTitle, terms.character || 'The Character of the Realm');
     setText(refs.missionsTitle, terms.missions || 'Missions');
     setText(refs.factionsTitle, terms.factions || 'Estates');
-    setText(refs.powersTitle, terms.powers || 'The Powers Beyond the Map');
     setText(refs.courtTitle, terms.court || 'The Court');
 
     setHtml(refs.flag, flagChip(tag, DEFINES, 22, false, g));
@@ -677,7 +646,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshSacred(self);
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
-    refreshPowers(self);
     refreshTech(t, self);
     refreshLedger(self);
     refreshReforms(t, self);
@@ -700,58 +668,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
     // Last, because it reads the `hidden` state every section above just set.
     refreshTabs();
-  }
-
-  // The powers beyond the map (SPEC §55): standing, an envoy button, and the
-  // asks that standing unlocks. Player's own realm only — foreign courts keep
-  // their dealings with the great to themselves.
-  function refreshPowers(self) {
-    let list = [];
-    if (self && actions && typeof actions.getPowers === 'function') {
-      try { list = actions.getPowers() || []; } catch (e) { warnOnce('getPowers', e); }
-    }
-    refs.powersBlock.classList.toggle('hidden', !list.length);
-    if (!list.length) return;
-    setHtml(refs.powers, list.map((p) => {
-      const courtTT = p.blurb + '\n――――――\nSend an envoy: ' + p.court.cost + ' influence points → +'
-        + p.court.gain + ' standing' + (p.court.rivalName ? ' (chills ' + p.court.rivalName + ')' : '')
-        + (p.court.whyNot ? '\n' + p.court.whyNot : '');
-      const rel = [];
-      if (p.pact) {
-        const tt = p.pact.desc + '\n――――――\nNeeds standing ' + p.pact.need
-          + (p.pact.monthly ? ' · +' + p.pact.monthly + ' talents/month' : '')
-          + '\nSigning chills the rival bloc; the pact dissolves if standing rots.'
-          + (p.pact.active ? '\nThe pact stands — click to walk out of it.' : (p.pact.whyNot ? '\n' + p.pact.whyNot : ''));
-        rel.push(`<button class="np-power-ask${p.pact.active ? ' np-power-active' : p.pact.can ? '' : ' disabled'}" data-power-pact="${esc(p.id)}" data-tt="${esc(tt)}">${p.pact.active ? '★ ' : ''}${esc(p.pact.name)}</button>`);
-      }
-      if (p.trade) {
-        const tt = p.trade.desc + '\n――――――\nNeeds standing ' + p.trade.need
-          + (p.trade.monthly ? ' · +' + p.trade.monthly + ' talents/month' : '')
-          + '\nLapses if the friendship grows cold.'
-          + (p.trade.active ? '\nThe agreement stands.' : (p.trade.whyNot ? '\n' + p.trade.whyNot : ''));
-        rel.push(`<button class="np-power-ask${p.trade.active ? ' np-power-active' : p.trade.can ? '' : ' disabled'}" data-power-trade="${esc(p.id)}" data-tt="${esc(tt)}">${p.trade.active ? '⚖ ' : ''}${esc(p.trade.name)}</button>`);
-      }
-      const asks = rel.join('') + p.asks.map((a) => {
-        const costBits = Object.entries(a.cost || {})
-          .filter(([, v]) => v > 0)
-          .map(([k, v]) => v + ' ' + (k === 'treasury' ? 'talents' : k === 'mar' ? 'martial' : k === 'gov' ? 'governance' : 'influence'));
-        const tt = a.desc + '\n――――――\nNeeds standing ' + a.need
-          + (costBits.length ? ' · costs ' + costBits.join(', ') : '')
-          + (a.whyNot ? '\n' + a.whyNot : '');
-        return `<button class="np-power-ask${a.can ? '' : ' disabled'}" data-power-ask="${esc(p.id)}:${esc(a.id)}" data-tt="${esc(tt)}">${esc(a.name)}${a.cdLeft ? ' (' + a.cdLeft + 'mo)' : ''}</button>`;
-      }).join('');
-      return `
-      <div class="np-power">
-        <div class="np-power-head">
-          <span class="dot" style="background:${rgb(p.color)}"></span>
-          <span class="np-power-name" data-tt="${esc(p.blurb)}">${esc(p.name)}</span>
-          <span class="np-power-standing" data-tt="Our standing, 0–100. It drifts back toward the old climate each month.">${p.standing}</span>
-          <span class="np-power-bar"><span class="np-power-fill" style="width:${Math.max(0, Math.min(100, p.standing))}%"></span></span>
-          <button class="np-power-court${p.court.can ? '' : ' disabled'}" data-power-court="${esc(p.id)}" data-tt="${esc(courtTT)}">Envoy</button>
-        </div>
-        ${asks ? `<div class="np-power-asks">${asks}</div>` : ''}
-      </div>`;
-    }).join(''));
   }
 
   function setAct(btn, can, tt) {
@@ -1117,6 +1033,39 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const nameOf = (tag) => esc((g.tags[tag] && g.tags[tag].name) || (TAGS[tag] && TAGS[tag].name) || tag);
     let html = '';
 
+    // The working verbs, on the panel itself (SPEC §178): an off-map seat has
+    // no province to click, so the court a ledger chip opens must carry its
+    // own envoys — and once it does, every foreign court gets the same row.
+    if (!self && actions && typeof actions.getDiplomacy === 'function') {
+      let d = null;
+      try { d = actions.getDiplomacy(who); } catch (e) { d = null; }
+      if (d) {
+        const btn = (key, label, can, tt, on) =>
+          `<button class="pp-dip${can ? '' : ' disabled'}${on ? ' pp-dip-on' : ''}" data-np-dip="${key}" data-tt="${esc(tt)}">${label}</button>`;
+        let row = btn('improve', 'Improve Relations', d.canImprove,
+          d.whyNotImprove || d.improveCost + ' influence points → their opinion of us +15.');
+        row += btn('gift', 'Send Gift', d.canGift,
+          d.whyNotGift || d.giftCost + ' talents → their opinion of us +20.');
+        if (d.arms && (d.arms.offered || d.arms.isSupplier)) {
+          const a = d.arms;
+          if (a.isSupplier) {
+            row += btn('', a.live ? '★ Our Arms Supplier' : '✂ The Pipeline Is Cut', false,
+              a.live
+                ? 'The weapons transfer agreement stands: their patterns — aircraft and armor — are ours to raise. It lives while their regard stays above ' + a.floor + ', and dies to war or embargo.'
+                : (a.lapseWhy || 'The agreement is suspended.'), a.live);
+          } else {
+            row += btn('arms', 'Weapons Transfer Agreement', a.can,
+              'Buy the right to raise their patterns — the aircraft and armor our own works cannot build.'
+              + '\n――――――\nTheir regard for us: ' + a.theirRegard + ' (need ' + a.need + ') · signing fee ' + a.cost + ' talents.'
+              + '\nOne supplier at a time'
+              + (a.currentSupplierName ? ' — signing drops ' + a.currentSupplierName + ' (' + a.switchOpinion + ' with them).' : '.')
+              + (a.whyNot ? '\n' + a.whyNot + '.' : ''));
+          }
+        }
+        html += `<div class="np-dip-sec">Envoys</div><div class="pp-diplo-btns np-dip-verbs">${row}</div>`;
+      }
+    }
+
     const allies = (t.allies || []).filter((a) => g.tags[a] && g.tags[a].alive);
     html += `<div class="np-dip-sec">Allies</div>`;
     html += allies.length
@@ -1308,7 +1257,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
       + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
       + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
-    setHtml(refs.tech, html + unitLine);
+    // The arms pipeline (SPEC §179): who feeds the arsenal, and how warmly.
+    let armsLine = '';
+    if (actions && typeof actions.getArmsStatus === 'function') {
+      let ast = null;
+      try { ast = actions.getArmsStatus(); } catch (e) { ast = null; }
+      if (ast && !ast.arsenal) {
+        armsLine = ast.supplier
+          ? `<div class="np-tech-unit" data-tt="${esc((ast.live
+            ? 'The weapons transfer agreement stands: their aircraft and armor are ours to raise. It lives while their regard stays above ' + ast.floor + '.'
+            : 'The pipeline is cut: ' + (ast.why || 'the agreement is suspended') + '.')
+            + '\nTheir regard for us: ' + ast.regard + '.')}">`
+            + `Arms supplier: <b>${esc(ast.supplierName || ast.supplier)}</b>${ast.live ? '' : ' <span class="neg">✂ cut</span>'}</div>`
+          : `<div class="np-tech-unit" data-tt="${esc('Aircraft and armor are imports, and nobody sells to us. Court an arsenal power — their regard opens the market — and sign a weapons transfer agreement at their court (open it from the ledger).')}">`
+            + `Arms supplier: <span class="neg">none — the market is shut</span></div>`;
+      }
+    }
+    setHtml(refs.tech, html + unitLine + armsLine);
   }
 
   // The military ladder's unlock milestones: each pattern generation as a

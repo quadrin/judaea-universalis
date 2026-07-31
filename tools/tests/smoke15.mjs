@@ -140,6 +140,7 @@ console.log('== squadron commanders ==');
   game.provinces[home].buildings = ['airfield'];
   isr.treasury = 200;
   game.airwings = {}; // v5.9 seeds 101 Squadron (SPEC §58); test a fresh sky
+  ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE'); // §179: wings are imports; this suite is about commanders
   mil.raiseAirWing(ctx, 'ISR', home);
   for (let i = 0; i < DEFINES.BASE.unitRecruitMonths.wing; i++) monthlyRecruitment(ctx);
   const wing = Object.values(game.airwings)[0];

@@ -445,6 +445,17 @@ static site, the zero dependencies, or the missing build step changes.
   shipyards, the routes through the harbor — and the treasury starts falling
   toward the crisis clock. Both are public, both are reversible, and the Arab
   League's boycott of Israel is exactly this, played by the AI.
+- **The arsenal is somebody else's.** Nothing in the 1948 theater builds its
+  own tanks or aircraft: armor and air wings are imports, raised only under a
+  weapons transfer agreement with an arsenal state — America, Russia, Britain,
+  France, Czechoslovakia — signed at the supplier's regard and cut by cooling,
+  war, or embargo (1967 is de Gaulle signing something). The Arab states open
+  under the real treaty system; Israel opens under nobody and buys its way from
+  Prague to Paris to Washington. The United States itself sits off the map but
+  on the ledger: click its flag there and Truman's court opens like any other —
+  courtable, embargo-capable, intrigue-able, unconquerable. And at the end of
+  the French road, if you hold the deep Negev, something can rise at Dimona
+  that the budget calls a textile factory.
 - **No rifle brigades at Masada.** Every age now declares how far up the
   technology ladder it can climb: the ancient bookmarks stop at professional
   legions, 614 at thematic regulars, and only 1948 reaches rifle brigades and

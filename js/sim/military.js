@@ -189,6 +189,67 @@ export function tagDef(ctx, tag) {
   if (!tweak) return base || {};
   return { ...(base || {}), ...tweak };
 }
+// Off-map seats (SPEC §178): courts the frame cannot reach. A seat is a real
+// tag whose def carries `offmap` — alive without land, beyond every army,
+// barred from alliances, but a court, an opinion and a treasury like any.
+export function isOffmapTag(ctx, tag) {
+  return !!tagDef(ctx, tag).offmap;
+}
+
+// ------------------------------------------------------- the arms market
+// SPEC §179: where the bookmark declares `armsMarket`, only its arsenal
+// states raise the gated arms (air wings, armor) from their own works;
+// everyone else needs a standing weapons transfer agreement with ONE
+// supplier at a time. The book is `game.armsDeals = { client: supplier }` —
+// saves carry it for free. Liveness is re-derived rather than stored, so
+// regard, war, a §100 embargo or the supplier's fall each shut the pipeline
+// the month they happen, with nothing to desynchronize.
+export function armsMarketOn(ctx) {
+  return !!(ctx && ctx.bookmark && ctx.bookmark.armsMarket);
+}
+export function isArsenal(ctx, tag) {
+  const m = ctx && ctx.bookmark && ctx.bookmark.armsMarket;
+  return !!(m && Array.isArray(m.arsenals) && m.arsenals.indexOf(tag) >= 0);
+}
+export function armsDealBook(ctx) {
+  const g = ctx.game;
+  if (!g.armsDeals || typeof g.armsDeals !== 'object') g.armsDeals = {};
+  return g.armsDeals;
+}
+// The client's pipeline, and whether it currently feeds: { supplier, live, why }.
+export function armsDealState(ctx, tag) {
+  const g = ctx.game;
+  const sup = armsDealBook(ctx)[tag];
+  if (!sup) return { supplier: null, live: false, why: 'no agreement stands' };
+  const s = g.tags[sup];
+  const A = ctx.DEFINES.ARMS || {};
+  if (!s || !s.alive) return { supplier: sup, live: false, why: 'the supplier is no more' };
+  const t = g.tags[tag];
+  if (t && (t.atWarWith || []).indexOf(sup) >= 0) {
+    return { supplier: sup, live: false, why: 'we are at war with ' + (s.name || sup) };
+  }
+  if (g.embargoes && g.embargoes[sup + '>' + tag]) {
+    return { supplier: sup, live: false, why: (s.name || sup) + ' has closed its markets to us' };
+  }
+  if (opinionOf(ctx, sup, tag) < num(A.floor, 25)) {
+    return { supplier: sup, live: false, why: 'our standing in ' + (s.name || sup) + ' sank too low' };
+  }
+  return { supplier: sup, live: true, why: '' };
+}
+export function armsSupplierOf(ctx, tag) {
+  const st = armsDealState(ctx, tag);
+  return st.live ? st.supplier : null;
+}
+// May this court raise the imported arms this month? '' when yes, else the
+// reason. Chapters that declare no market always answer yes.
+export function armsGate(ctx, tag) {
+  if (!armsMarketOn(ctx)) return '';
+  if (isArsenal(ctx, tag)) return '';
+  const st = armsDealState(ctx, tag);
+  if (st.live) return '';
+  return st.supplier ? st.why : 'no arms supplier — win an arsenal court\'s favor first';
+}
+
 export function tagGen(ctx, tag) {
   const t = ctx.game.tags[tag];
   return cappedGen(num(t && t.tech && t.tech.mar, 0), ctx && ctx.bookmark);
@@ -567,7 +628,8 @@ function moraleDamage(X, Y, rollX, rollY) {
   return (0.16 + 0.045 * edge) * ratio * X.disc;
 }
 function sideStats(ctx, armies, phase) {
-  let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0;
+  let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0, armor = 0;
+  const minArmorGen = num((ctx.DEFINES.ARMOR || {}).minGen, 5);
   const tags = new Set();
   for (const a of armies) {
     men += a.men;
@@ -575,6 +637,9 @@ function sideStats(ctx, armies, phase) {
     discW += disciplineOf(ctx, a.tag) * armyPowerOf(ctx, a) * a.men;
     if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
     gen = Math.max(gen, num(a.gen, 0));
+    // The tanks on this side (SPEC §179): mounted regiments in a pattern
+    // that means armor. A cataphract column counts zero by construction.
+    if (num(a.gen, 0) >= minArmorGen) armor += num(a.regiments && a.regiments.cav);
     tags.add(a.tag);
   }
   for (const t of tags) hill = Math.max(hill, resolveTagAdd(ctx, t, 'hillDefBonus'));
@@ -582,7 +647,7 @@ function sideStats(ctx, armies, phase) {
     men,
     morale: men > 0 ? moraleW / men : 0,
     disc: men > 0 ? discW / men : 1,
-    pip, hill, gen,
+    pip, hill, gen, armor,
     tags: [...tags],
   };
 }
@@ -659,8 +724,14 @@ function battleRound(ctx, b) {
   const net = airNet(ctx, b.prov, A.tags, D.tags);
   const airA = airPips(ctx, net);
   const airD = airPips(ctx, -net);
-  const docA = doctrinePips(A.gen, phase, false) + airA;
-  const docD = doctrinePips(D.gen, phase, true) + airD;
+  // SPEC §179: armor is the shock phase's own signed quantity — fire belongs
+  // to the sky, shock to the tanks. One subtraction, so one side's pips are
+  // the other's absence of them, exactly as the air term above.
+  const armorNet = A.armor - D.armor;
+  const armA = phase === 'shock' ? armorPips(ctx, armorNet) : 0;
+  const armD = phase === 'shock' ? armorPips(ctx, -armorNet) : 0;
+  const docA = doctrinePips(A.gen, phase, false) + airA + armA;
+  const docD = doctrinePips(D.gen, phase, true) + airD + armD;
   const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0) + docA;
   const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0) + docD;
   const casOnAtk = casualtiesInflicted(D, A, rollD, rollA);
@@ -668,7 +739,7 @@ function battleRound(ctx, b) {
   const mdOnAtk = moraleDamage(D, A, rollD, rollA);
   const mdOnDef = moraleDamage(A, D, rollA, rollD);
   // Battle-window feed: yesterday's dice and the running butcher's bill.
-  b.last = { phase, rollA, rollD, airA, airD };
+  b.last = { phase, rollA, rollD, airA, airD, armA, armD };
   b.casAtk = num(b.casAtk) + casOnAtk;
   b.casDef = num(b.casDef) + casOnDef;
   applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
@@ -841,6 +912,17 @@ export function airPips(ctx, net) {
   return Math.min(AIRC(ctx, 'dieCap', 4), Math.ceil(net / per));
 }
 
+// Armor pips (SPEC §179): §154's signed-quantity design on the ground. The
+// side with the net advantage in pattern-5+ mounted regiments — tanks, not
+// horses — adds shock-phase pips; the other side, by the same subtraction,
+// adds none. Ancient chapters cap at pattern 3 and can never see this term.
+export function armorPips(ctx, net) {
+  if (!Number.isFinite(net) || net <= 0) return 0;
+  const AR = ctx.DEFINES.ARMOR || {};
+  const per = Math.max(1, num(AR.pipsPer, 2));
+  return Math.min(num(AR.pipCap, 3), Math.ceil(net / per));
+}
+
 // The old boolean, kept because it is the honest answer to the question it
 // asks — is there any cover here at all — and because content and tests read
 // it that way.
@@ -997,6 +1079,9 @@ export function raiseAirWing(ctx, tag, provId, kind) {
   if (!t || !t.alive || !p) return { ok: false, why: 'invalid province or tag' };
   if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
   if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
+  // SPEC §179: aircraft are an import for everyone but the arsenal states.
+  const shut = armsGate(ctx, tag);
+  if (shut) return { ok: false, why: shut };
   const cost = AIRC(ctx, 'wingCost', 90);
   if (num(t.treasury) < cost) return { ok: false, why: 'not enough talents (' + cost + ' needed)' };
   if (airWingsAt(ctx, provId).length + queuedUnitCount(ctx, provId, 'wing', tag) >= AIRC(ctx, 'wingsPerField', 2)) {
@@ -1641,6 +1726,7 @@ export function updateTagLife(ctx) {
   for (const k of Object.keys(g.tags)) {
     if (k === 'REB') continue; // REB always alive
     const t = g.tags[k];
+    if (isOffmapTag(ctx, k)) { t.alive = true; continue; } // a seat cannot fall (SPEC §178)
     const was = !!t.alive;
     t.alive = !!(owned[k] || armiesOf(ctx, k).length);
     if (was && !t.alive) {
@@ -1749,7 +1835,17 @@ export function recruitRegiment(ctx, tag, provId, type) {
   if (!t || !p) return { ok: false, why: 'invalid province or tag' };
   if (type !== 'inf' && type !== 'cav') return { ok: false, why: 'unknown unit type' };
   const costs = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.regCost) || {};
-  const cost = num(costs[type], type === 'cav' ? 25 : 10);
+  // Armor (SPEC §179): the mounted arm at pattern 5+ is tanks — priced like
+  // them, fitted slower than a horse squadron, and importable only. In a
+  // chapter with an arms market a client raises it through a live weapons
+  // transfer agreement or not at all.
+  const AR = ctx.DEFINES.ARMOR || {};
+  const armor = type === 'cav' && tagGen(ctx, tag) >= num(AR.minGen, 5);
+  if (armor) {
+    const shut = armsGate(ctx, tag);
+    if (shut) return { ok: false, why: shut };
+  }
+  const cost = armor ? num(AR.cost, 50) : num(costs[type], type === 'cav' ? 25 : 10);
   const regSize = B(ctx, 'regSize', 1000);
   if (num(t.treasury) <= -100) return { ok: false, why: 'the treasury is exhausted' };
   if (num(t.manpower) < regSize) return { ok: false, why: 'not enough manpower' };
@@ -1757,6 +1853,7 @@ export function recruitRegiment(ctx, tag, provId, type) {
   t.manpower = num(t.manpower) - regSize;
   const queued = queueUnitRecruitment(ctx, tag, provId, type, {
     cost, manpower: regSize, gen: tagGen(ctx, tag),
+    months: armor ? num(AR.months, 4) : undefined,
   });
   return queued ? { ok: true, queued } : { ok: false, why: 'the regiment could not be scheduled' };
 }
@@ -2672,6 +2769,13 @@ export function declareWar(ctx, atk, def, name, cb) {
   const A = g.tags[atk], D = g.tags[def];
   const cbType = typeof cb === 'string' ? cb : cb && cb.type;
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
+  // An off-map seat is beyond every army (SPEC §178). The AI's wars of
+  // opportunity walk province adjacency and could never pick one anyway;
+  // this bar is for scripts and players, and it trusts nothing.
+  if (isOffmapTag(ctx, atk) || isOffmapTag(ctx, def)) {
+    warnOnce('dw-offmap:' + atk + ':' + def, 'declareWar refused: off-map seat', atk, def);
+    return null;
+  }
   if (truceActive(ctx, atk, def)) return null; // the ink on the treaty is still wet
   // A recognized state is a state you are at peace with (SPEC §96): the
   // recognition must be renounced in the open before the guns can be aimed.

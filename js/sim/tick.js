@@ -21,7 +21,7 @@ import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
-import { monthlyPowers } from './powers.js';
+import { monthlyArms } from './arms.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
@@ -133,7 +133,7 @@ function monthlyBlock(ctx) {
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('opinions', () => monthlyOpinionDrift(ctx));
-  safe('powers', () => monthlyPowers(ctx)); // standings cool toward the old climate (SPEC §55)
+  safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §179)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   safe('elimination', () => checkElimination(ctx));

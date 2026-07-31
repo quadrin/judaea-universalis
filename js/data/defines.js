@@ -166,6 +166,7 @@ export const DEFINES = {
     POL: { aggression: 0.1, caution: 2.0 },
     CZE: { aggression: 0.1, caution: 2.0 },
     SOV: { aggression: 0.2, caution: 1.8, ponderous: true },
+    USA: { aggression: 0.05, caution: 2.0, ponderous: true },
     GER: { aggression: 0.05, caution: 2.0 },
     AUT: { aggression: 0.05, caution: 2.0 },
     HUN: { aggression: 0.1, caution: 2.0 },
@@ -242,6 +243,7 @@ export const DEFINES = {
     // with one answer, which is still the republic succession rule.
     FRA: 'republic', POR: 'republic', POL: 'republic', CZE: 'republic',
     SOV: 'republic', GER: 'republic', AUT: 'republic', HUN: 'republic',
+    USA: 'republic',
     YUG: 'republic', ALB: 'republic', BUL: 'republic', ROU: 'republic',
     IRL: 'republic', SUI: 'republic',
     SPA: 'monarchy', NLD: 'monarchy', DEN: 'monarchy', SWE: 'monarchy',
@@ -976,6 +978,21 @@ export const DEFINES = {
       description: 'Armed to the teeth and party to nothing.',
       ideas: {},
     },
+    // ---- off-map seats (SPEC §178): courts the frame cannot reach ----
+    // An off-map seat is a real tag with no cell on the board: alive without
+    // land, beyond every army, no alliances — but a court, an opinion, a
+    // treasury, and every civil verb. `offmap.dev/income` is its economy in
+    // one number, read by the ledger, the §165 standing table and the
+    // monthly stipend; `treasuryCap` keeps a court that never spends from
+    // compounding forever.
+    USA: {
+      name: 'The United States', color: [60, 90, 160], religion: 'christianity', culture: 'germanic', capital: '',
+      offmap: { dev: 420, income: 60 }, // the §101 hoard cap bounds the idle treasury
+
+      description: 'Recognition came in eleven minutes; arms did not. Half the '
+        + 'world\'s industry, on the far side of an ocean the map does not cross.',
+      ideas: {},
+    },
     REB: {
       name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
@@ -1046,6 +1063,33 @@ export const DEFINES = {
     perWing: 0.5,          // talents/month per air wing (on top of wingUpkeep)
     shipMult: 1.5,         // oil-fired hulls: ship upkeep multiplier at gen 5+
     importMult: 2,         // fuel bill multiplier with no controlled oil province
+  },
+
+  // Armor (SPEC §179): mounted regiments at pattern `minGen`+ are tanks, not
+  // horses — a shock-phase die advantage on §154's signed-quantity design,
+  // and a price that reflects a battalion of Shermans rather than a squadron
+  // of dragoons. Ancient chapters cap at pattern 3, so none of this exists
+  // for them by construction.
+  ARMOR: {
+    minGen: 5,             // first pattern generation that reads as armor
+    cost: 50,              // talents to raise one armored regiment (vs regCost.cav)
+    months: 4,             // training/fitting time (vs unitRecruitMonths.cav)
+    pipsPer: 2,            // net armor regiments per shock-phase pip
+    pipCap: 3,             // most pips armor advantage can add
+  },
+
+  // The arms market (SPEC §179): where a bookmark declares `armsMarket`, only
+  // its arsenal states build the gated arms (air wings, armor) from their own
+  // works; everyone else needs a standing weapons transfer agreement with one
+  // supplier at a time, signed at the supplier's regard bar and alive only
+  // while the friendship is.
+  ARMS: {
+    need: 50,              // supplier's opinion of the client required to sign
+    floor: 25,             // pipeline dies when their regard falls below this
+    anchor: 40,            // a live deal anchors the supplier's drift here (§57's pact floor, reborn)
+    cost: 50,              // signing fee, paid into the supplier's treasury
+    switchOpinion: -10,    // what the dropped supplier thinks of the switch
+    signCdMonths: 6,       // no re-signing churn inside this window
   },
 
   BASE: {

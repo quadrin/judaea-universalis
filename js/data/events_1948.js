@@ -695,6 +695,8 @@ export const EVENTS_1948 = [
             id: 'czech_arms', name: 'The Czech Arms', months: -1, effects: { disciplineMult: 1.1 },
           });
           ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000 });
+          // The first pipeline (SPEC §179): Prague sells, and the market opens.
+          ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');
           ctx.helpers.chronicle(ctx, 'peace', 'The First Truce: four weeks of quiet guns, and the arms ships land by night.');
         }),
       },
@@ -706,6 +708,9 @@ export const EVENTS_1948 = [
             id: 'czech_arms', name: 'The Czech Arms, Rushed to the Line', months: -1, effects: { disciplineMult: 1.05 },
           });
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, stability: -1 });
+          // The crates land either way (SPEC §179): the cabinet's view of
+          // Bernadotte's count was never Prague's concern.
+          ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');
           ctx.helpers.chronicle(ctx, 'peace', 'The First Truce is ordered — and ignored: the guns never quite stop.');
         }),
       },
@@ -1548,6 +1553,15 @@ export const EVENTS_1948 = [
               id: 'czech_arms', name: 'The Czech Arms Agreement', months: 36,
               effects: { disciplineMult: 1.08, reinforceMult: 1.1 },
             });
+            // Cairo changes suppliers (SPEC §179): the deal is signed in
+            // Prague and owned in Moscow — London's treaty is done. And the
+            // bloc that now arms Egypt stops selling to Israel: the eastern
+            // regard drops through the pipeline floor, and Jerusalem had
+            // better be courting Paris already.
+            ctx.helpers.setArmsDeal(ctx, 'EGY', 'SOV');
+            setOpinionDelta(ctx.game, 'SOV', 'ISR', -50);
+            setOpinionDelta(ctx.game, 'CZE', 'ISR', -50);
+            setOpinionDelta(ctx.game, 'UK', 'EGY', -40);
           }
           if (ctx.game.tags.ISR) {
             ctx.helpers.adjust(ctx, 'ISR', { manpower: 3000, mar: 25 });
@@ -1557,6 +1571,250 @@ export const EVENTS_1948 = [
             });
           }
           ctx.helpers.chronicle(ctx, 'war', 'The Egyptian–Czechoslovak agreement turns the armed armistice into a regional arms race.');
+        }),
+      },
+    ],
+  },
+
+  // ── THE PARIS AXIS AND THE TEXTILE FACTORY, 1954–86 (SPEC §179/§180) ──────
+  // The supplier question, and the question the supplier makes possible.
+  // Prague closes in the fifties; Paris opens; and at the end of the French
+  // road, in the deep Negev the state had to win first, something hums.
+  {
+    id: 'ev_i_paris_axis',
+    title: 'The Paris Axis',
+    desc: 'The east is closing — Prague answers slowly, and the tone from Moscow '
+      + 'has changed. In Paris a young director-general of the Defense Ministry '
+      + 'finds a different climate entirely: France is fighting in Algeria, blames '
+      + 'Cairo for it, and has discovered it shares an enemy. Nobody says alliance. '
+      + 'The word used is "procurement."',
+    forTag: 'ISR',
+    date: { y: 1954, m: 8 },
+    when: (ctx) => alive(ctx, 'ISR') && alive(ctx, 'FRA'),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send Peres to Paris',
+        tooltip: 'France becomes the arms supplier: her regard rises to at least 55 and the weapons transfer agreement is signed — the Czech book closes. −15 influence points for the mission that never officially happened.',
+        effects: guard('ev_i_paris_axis:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { infl: -15 });
+          setOpinionAtLeast(ctx.game, 'FRA', 'ISR', 55);
+          setOpinionAtLeast(ctx.game, 'ISR', 'FRA', 55);
+          ctx.helpers.setArmsDeal(ctx, 'ISR', 'FRA');
+          ctx.game.flags.parisAxis = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'The Paris axis: French patterns, French spares, and a friendship conducted entirely in warehouses.');
+        }),
+      },
+      {
+        label: 'The east still sells — for now',
+        tooltip: 'Keep the Czech pipeline while it lasts. History gives it about a year.',
+        effects: guard('ev_i_paris_axis:1', (ctx) => {
+          ctx.helpers.chronicle(ctx, 'diplo', 'Jerusalem keeps buying through Prague, and counts the months on its fingers.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_dimona_offer',
+    title: 'What France Owes',
+    desc: 'The Suez account is being settled in an unlisted currency. In a Paris '
+      + 'still smarting from the canal, the atomic energy commissariat is '
+      + 'authorized to discuss with Israel what it discusses with nobody: a '
+      + 'reactor, heavy water, and engineers — at Dimona, at the end of a road '
+      + 'that goes nowhere else, in a desert the state had to conquer before it '
+      + 'could keep secrets there. The cost is not the kind a treasury notices '
+      + 'once. It is the kind it notices every month for ten years.',
+    forTag: 'ISR',
+    major: true,
+    trigger: safeTrigger('ev_i_dimona_offer', (ctx) =>
+      dateGE(ctx, 1957, 10) && alive(ctx, 'ISR') && alive(ctx, 'FRA')
+      && ctx.helpers.controls(ctx, 'ISR', 'Dimona')
+      && (ctx.helpers.armsSupplier(ctx, 'ISR') === 'FRA'
+        || (ctx.game.tags.FRA.opinion && (ctx.game.tags.FRA.opinion.ISR || 0) >= 55))),
+    maxYear: 1965,
+    aiOption: 1,
+    options: [
+      {
+        label: 'Break ground in the Negev',
+        tooltip: 'Israel: −150 talents, −20 influence points, and The Program — 5% of all income, quietly, until the arc resolves. The fork opens: what rises at Dimona is for a later cabinet to name.',
+        effects: guard('ev_i_dimona_offer:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -150, infl: -20 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'dimona_program', name: 'The Program', months: -1,
+            effects: { incomeMult: 0.95 },
+          });
+          ctx.game.flags.dimonaStarted = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Ground is broken at Dimona for a works the budget does not mention and the road does not explain.');
+        }),
+      },
+      {
+        label: 'A young state has other bills',
+        tooltip: 'Decline. The offer was priced in 1957\'s gratitude, and it is not made twice.',
+        effects: guard('ev_i_dimona_offer:1', (ctx) => {
+          ctx.game.flags.dimonaDeclined = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The commissariat\'s offer is allowed to lapse; the desert keeps only its ordinary secrets.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_dimona_cover',
+    title: 'The Textile Factory',
+    desc: 'An American U-2 has photographed the Negev, and the State Department '
+      + 'has stopped pretending not to understand the pictures. A dome does not '
+      + 'look like anything else. The ambassador is asked, in the mild voice '
+      + 'Washington uses for serious questions, what exactly Israel is building '
+      + 'at the end of that road.',
+    forTag: 'ISR',
+    date: { y: 1960, m: 12 },
+    major: true,
+    when: (ctx) => !!ctx.game.flags.dimonaStarted && alive(ctx, 'USA'),
+    aiOption: 1,
+    options: [
+      {
+        label: '"It is a textile factory"',
+        tooltip: 'The cover story, delivered with a straight face. Washington\'s regard −15 — they know, and they know you know they know — but the program stays deniable and the flag remembers the sentence.',
+        effects: guard('ev_i_dimona_cover:0', (ctx) => {
+          setOpinionDelta(ctx.game, 'USA', 'ISR', -15);
+          ctx.game.flags.dimonaCover = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'Asked about the dome at Dimona, Israel describes a textile factory. Nobody writes the answer down without smiling.');
+        }),
+      },
+      {
+        label: '"A research reactor, for peaceful purposes"',
+        tooltip: 'Ben-Gurion\'s Knesset formula: admit the reactor, promise the peace. Washington\'s regard −5; legitimacy +5 — a half-truth spoken in parliament is a different instrument than a tarpaulin.',
+        effects: guard('ev_i_dimona_cover:1', (ctx) => {
+          setOpinionDelta(ctx.game, 'USA', 'ISR', -5);
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 5 });
+          ctx.game.flags.dimonaAdmitted = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'The Prime Minister tells the Knesset the Negev reactor is for peaceful purposes, in a sentence built to be quoted exactly.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_dimona_visits',
+    title: 'The President\'s Letters',
+    desc: 'Kennedy writes the way other presidents telephone: precisely, repeatedly, '
+      + 'and on the record. He wants American scientists inside Dimona on a '
+      + 'schedule, and each letter is politer and shorter than the last. The '
+      + 'visits can be managed — the schedule is drawn by the hosts, and a '
+      + 'basement does not tour — but refusing the letters means reading the '
+      + 'next one from a colder desk.',
+    forTag: 'ISR',
+    date: { y: 1963, m: 5 },
+    when: (ctx) => !!ctx.game.flags.dimonaStarted && alive(ctx, 'USA'),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Curated Saturdays',
+        tooltip: 'Admit the visitors on the hosts\' schedule. Washington\'s regard +15; the tour shows what the itinerary permits.',
+        effects: guard('ev_i_dimona_visits:0', (ctx) => {
+          setOpinionDelta(ctx.game, 'USA', 'ISR', 15);
+          ctx.game.flags.dimonaToured = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'American scientists tour Dimona on Saturdays arranged with great care, and find exactly what the schedule intends.');
+        }),
+      },
+      {
+        label: 'The desert is not on the itinerary',
+        tooltip: 'Refuse. Washington\'s regard −20, and the letters get shorter.',
+        effects: guard('ev_i_dimona_visits:1', (ctx) => {
+          setOpinionDelta(ctx.game, 'USA', 'ISR', -20);
+          ctx.game.flags.dimonaRefusedVisits = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'The President\'s letters go unanswered on the question of visits; the next one arrives typed, without the fountain pen.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_dimona_ready',
+    title: 'The Basement',
+    desc: 'Nine years of drained budgets, French engineers, and a road that goes '
+      + 'nowhere else, and the thing at the end of it is finished. What exists '
+      + 'under Dimona is now a fact; the cabinet\'s question is what KIND of '
+      + 'fact. A thing declared deters most and costs most. A thing implied '
+      + 'deters nearly as much and cannot be photographed. A thing sealed costs '
+      + 'nothing further and deters nobody.',
+    forTag: 'ISR',
+    major: true,
+    trigger: safeTrigger('ev_i_dimona_ready', (ctx) =>
+      dateGE(ctx, 1966, 6) && !!ctx.game.flags.dimonaStarted && alive(ctx, 'ISR')),
+    aiOption: 0,
+    options: [
+      {
+        label: '"We will not be the first to introduce them"',
+        tooltip: 'Opacity, the policy the joke grew into: a permanent deterrent (opportunistic AI wars against Israel need ×1.6 the edge). The Program\'s drain ends. The modifier on the ledger is named what the cover story was.',
+        effects: guard('ev_i_dimona_ready:0', (ctx) => {
+          ctx.helpers.removeModifier(ctx, 'ISR', 'dimona_program');
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'the_basement', name: 'The Textile Factory', months: -1,
+            effects: { deterrent: 1 },
+          });
+          ctx.game.flags.dimonaOpaque = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Israel announces it will not be the first to introduce nuclear weapons to the Middle East, in a sentence engineered to stay true whatever is true.');
+        }),
+      },
+      {
+        label: 'Test it where the world can see',
+        tooltip: 'Declare: deterrent ×2.2 against opportunistic wars — and every arsenal court\'s regard −40, aggression +20, and whatever pipeline feeds you will probably die of the fall. Stronger, and priced like it.',
+        effects: guard('ev_i_dimona_ready:1', (ctx) => {
+          ctx.helpers.removeModifier(ctx, 'ISR', 'dimona_program');
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'the_basement', name: 'The Device, Declared', months: -1,
+            effects: { deterrent: 2 },
+          });
+          const t = ctx.game.tags.ISR;
+          if (t) t.aggression = Math.min(100, (t.aggression || 0) + 20);
+          for (const arsenal of ['USA', 'SOV', 'UK', 'FRA', 'CZE']) {
+            if (alive(ctx, arsenal)) setOpinionDelta(ctx.game, arsenal, 'ISR', -40);
+          }
+          ctx.game.flags.dimonaDeclared = true;
+          ctx.helpers.chronicle(ctx, 'era', 'A flash over the Negev ends every ambiguity at once. The deterrent is total; so is the bill.');
+        }),
+      },
+      {
+        label: 'Seal the basement',
+        tooltip: 'The scientists disperse to the universities: +20 governance and +20 influence points, the drain ends, and the desert keeps a cheaper secret. No deterrent.',
+        effects: guard('ev_i_dimona_ready:2', (ctx) => {
+          ctx.helpers.removeModifier(ctx, 'ISR', 'dimona_program');
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 20, infl: 20 });
+          ctx.game.flags.dimonaShelved = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The works at Dimona are sealed at the last door; the physicists go to the universities and teach, brilliantly, about other things.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_dimona_vanunu',
+    title: 'The Technician',
+    desc: 'A former technician from the Negev works has talked to the Sunday Times, '
+      + 'with photographs. The story runs to sixty column inches and every '
+      + 'chancellery reads it twice. Nothing in the doctrine changes — the whole '
+      + 'design of ambiguity is that it survives its own photograph — but the '
+      + 'sentence "we will not be the first" is now read aloud in a different tone.',
+    forTag: 'ISR',
+    date: { y: 1986, m: 10 },
+    when: (ctx) => !!ctx.game.flags.dimonaOpaque,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Say nothing, again',
+        tooltip: 'Ambiguity holds — it was built to. Legitimacy −5 for the headlines; the deterrent does not move.',
+        effects: guard('ev_i_dimona_vanunu:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -5 });
+          ctx.game.flags.vanunuPublished = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The Sunday Times prints the basement. Jerusalem declines to confirm the existence of the newspaper.');
+        }),
+      },
+      {
+        label: 'Bring him home',
+        tooltip: 'The operation with the yacht and the sedative: −20 influence points, and London\'s regard −10 for the liberty taken on its soil. The trial is closed, the story runs anyway, and the sentence "we will not be the first" survives them both.',
+        effects: guard('ev_i_dimona_vanunu:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { infl: -20 });
+          if (alive(ctx, 'UK')) setOpinionDelta(ctx.game, 'UK', 'ISR', -10);
+          ctx.game.flags.vanunuPublished = true;
+          ctx.game.flags.vanunuSeized = true;
+          ctx.helpers.chronicle(ctx, 'era', 'The technician is brought home by yacht, tried behind a door, and the basement stays exactly as photographed: implied.');
         }),
       },
     ],
@@ -3504,6 +3762,90 @@ export const EVENTS_1948 = [
       },
     ],
   },
+  // ── THE GENERAL SIGNS SOMETHING: THE SUPPLIER PIVOT OF 1967–68 (SPEC §179)
+  // France armed Israel for thirteen years and cut it off in a week. The
+  // embargo card fires only in a world where the Paris axis actually stood;
+  // the American card is the door out, and it opens at Washington's regard,
+  // not by right.
+  {
+    id: 'ev_i_degaulle_embargo',
+    title: 'The General\'s Embargo',
+    desc: 'De Gaulle warned against firing the first shot, and the first shot has '
+      + 'been fired. The response is not a fleet or a note; it is paperwork. '
+      + 'Export licenses die in committee, the Mirage airframes already paid for '
+      + 'stay in Bordeaux, and the ministry that built the axis stops returning '
+      + 'its calls. Thirteen years of French patterns are now thirteen years of '
+      + 'French spare parts, running out.',
+    forTag: 'ISR',
+    major: true,
+    trigger: safeTrigger('ev_i_degaulle_embargo', (ctx) =>
+      dateGE(ctx, 1967, 6) && !!ctx.game.flags.sixDayWar && alive(ctx, 'FRA')
+      && ctx.helpers.armsSupplier(ctx, 'ISR') === 'FRA'),
+    maxYear: 1969,
+    aiOption: 0,
+    options: [
+      {
+        label: 'So be it',
+        tooltip: 'Take it standing. France closes its markets — the §100 embargo, signed for real — and the pipeline dies of it. Paris\'s regard −40 on top of the signature; the airframes stay in Bordeaux.',
+        effects: guard('ev_i_degaulle_embargo:0', (ctx) => {
+          ctx.helpers.declareEmbargo(ctx, 'FRA', 'ISR');
+          setOpinionDelta(ctx.game, 'FRA', 'ISR', -40);
+          ctx.game.flags.degaulleEmbargo = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'France embargoes the state it armed: the general does not march on anybody, he signs something.');
+        }),
+      },
+      {
+        label: 'Work the gray channels',
+        tooltip: 'Pay the middlemen who still answer: −60 talents. The embargo lands anyway and the pipeline still dies — but crated spares keep the squadrons flying (+5% discipline for 24 months), and Paris is not further offended.',
+        effects: guard('ev_i_degaulle_embargo:1', (ctx) => {
+          ctx.helpers.declareEmbargo(ctx, 'FRA', 'ISR');
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -60 });
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'gray_spares', name: 'The Gray Channels', months: 24, effects: { disciplineMult: 1.05 },
+          });
+          ctx.game.flags.degaulleEmbargo = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'France embargoes the state it armed; the state quietly buys its own spare parts back through third flags.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_i_american_era',
+    title: 'The American Era',
+    desc: 'The French door is shut and the shelves behind it are emptying. There is '
+      + 'exactly one arsenal left whose politics could open: Washington has watched '
+      + 'the six days, re-read its Middle East file, and begun using the phrase '
+      + '"regional balance" in a tone that means aircraft. The Phantom is not '
+      + 'subtle, and neither is the price.',
+    forTag: 'ISR',
+    trigger: safeTrigger('ev_i_american_era', (ctx) =>
+      dateGE(ctx, 1968, 1) && !!ctx.game.flags.degaulleEmbargo && alive(ctx, 'USA')
+      && !ctx.helpers.armsSupplier(ctx, 'ISR')
+      && (ctx.game.tags.USA.opinion && (ctx.game.tags.USA.opinion.ISR || 0) >= 45)),
+    maxYear: 1975,
+    aiOption: 0,
+    options: [
+      {
+        label: 'Sign in Washington',
+        tooltip: 'The weapons transfer agreement with the United States: −80 talents for the first Phantom contract, their regard rises to at least 55, and the American pipeline opens.',
+        effects: guard('ev_i_american_era:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -80 });
+          setOpinionAtLeast(ctx.game, 'USA', 'ISR', 55);
+          ctx.helpers.setArmsDeal(ctx, 'ISR', 'USA');
+          ctx.game.flags.americanEra = true;
+          ctx.helpers.chronicle(ctx, 'diplo', 'The American era opens: Phantoms, Pattons, and a supplier on the far side of an ocean the map does not cross.');
+        }),
+      },
+      {
+        label: 'Not on those terms',
+        tooltip: 'Wait. The market stays shut until somebody\'s regard is won the slow way.',
+        effects: guard('ev_i_american_era:1', (ctx) => {
+          ctx.helpers.chronicle(ctx, 'diplo', 'Jerusalem declines the first Washington terms and goes on cannibalizing Mirages for parts.');
+        }),
+      },
+    ],
+  },
+
   // ── THE FEDAYEEN YEARS: KARAMEH, AMMAN, AND THE ROAD TO BEIRUT, 1968–71 ───
   // Between the Six Days and the October War the most consequential fighting
   // in the region was not between states. An organization that lost its

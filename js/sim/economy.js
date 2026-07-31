@@ -7,7 +7,6 @@ import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
-import { powerFlows } from './powers.js';
 import { pilgrimageIncome } from './sacred.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
@@ -224,10 +223,14 @@ export function incomeBreakdown(ctx, tag) {
     if (s.to === tag) out.subsIn += num(s.amount);
     if (s.from === tag) out.subsOut += num(s.amount);
   }
-  // Aid and trade from the powers beyond the map (SPEC §57): pact funding
-  // and standing trade agreements, a monthly flow like any other.
-  try { out.powerIn = powerFlows(ctx, tag); } catch (e) { out.powerIn = 0; }
-  out.net = out.income + out.tributeIn + out.subsIn + out.powerIn
+  // An off-map seat's economy in one number (SPEC §178): the stipend its def
+  // declares, riding the breakdown so the ledger, the standing table and the
+  // treasury all see the same money. Zero for every court on the map.
+  try {
+    const om = tagDef(ctx, tag).offmap;
+    out.offmapIn = om ? num(om.income, 0) : 0;
+  } catch (e) { out.offmapIn = 0; }
+  out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn
     - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.interest;
   return out;
 }
@@ -270,7 +273,7 @@ export function monthlySubsidies(ctx) {
 // income, never below the floor. A treasury is a war chest, not a bank.
 export function hoardCap(ctx, tag) {
   const bd = incomeBreakdown(ctx, tag);
-  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.powerIn || 0));
+  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.offmapIn || 0));
   return Math.max(B(ctx, 'hoardCapFloor', 150), gross * B(ctx, 'hoardCapMonths', 18));
 }
 // The month's bleed off a hoard past the cap — reported so the ledger can
@@ -279,7 +282,7 @@ export function hoardBleed(ctx, tag, breakdown) {
   const t = ctx.game.tags[tag];
   if (!t) return 0;
   const bd = breakdown || incomeBreakdown(ctx, tag);
-  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.powerIn || 0));
+  const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.offmapIn || 0));
   const cap = Math.max(B(ctx, 'hoardCapFloor', 150), gross * B(ctx, 'hoardCapMonths', 18));
   const excess = num(t.treasury) - cap;
   if (!(excess > 0)) return 0;
@@ -294,7 +297,7 @@ export function runMonthlyEconomy(ctx) {
       if (!t || !t.alive || tag === 'REB') { if (t) { t.income = 0; t.expenses = 0; } continue; }
       const bd = incomeBreakdown(ctx, tag);
       const opened = num(t.treasury);
-      t.income = Math.round((bd.income + bd.tributeIn + (bd.powerIn || 0)) * 100) / 100;
+      t.income = Math.round((bd.income + bd.tributeIn + (bd.offmapIn || 0)) * 100) / 100;
       t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
@@ -356,7 +359,7 @@ export function explainIncome(ctx, tag) {
     if (bd.tributeIn > 0) rows.push({ label: 'Tribute from clients', value: r2(bd.tributeIn) });
     if (bd.tributeOut > 0) rows.push({ label: 'Tribute to our overlord', value: r2(-bd.tributeOut) });
     if (bd.subsIn > 0) rows.push({ label: 'Subsidies & reparations in', value: r2(bd.subsIn) });
-    if (bd.powerIn > 0) rows.push({ label: 'The powers: aid & trade', value: r2(bd.powerIn) });
+    if (bd.offmapIn > 0) rows.push({ label: 'The home economy, beyond the frame', value: r2(bd.offmapIn) });
     if (bd.subsOut > 0) rows.push({ label: 'Subsidies & reparations out', value: r2(-bd.subsOut) });
     if (bd.overLimit > 0) {
       rows.push({ label: 'Army maintenance', value: r2(-(bd.maint - bd.overLimit)) });

@@ -1061,17 +1061,35 @@ const RISING_LABELS = {
     const gen = cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
     const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
-    const months = (base.unitRecruitMonths && base.unitRecruitMonths[type]) || (type === 'cav' ? 3 : 2);
+    // Armor (SPEC §179): at pattern 5+ the mounted arm is tanks — priced and
+    // fitted like them, and raised only through a live arms pipeline.
+    const AR = (ctx && ctx.DEFINES && ctx.DEFINES.ARMOR) || {};
+    const armor = type === 'cav' && gen >= (Number.isFinite(AR.minGen) ? AR.minGen : 5);
+    if (armor) cost = Number.isFinite(AR.cost) ? AR.cost : 50;
+    const months = armor ? (Number.isFinite(AR.months) ? AR.months : 4)
+      : (base.unitRecruitMonths && base.unitRecruitMonths[type]) || (type === 'cav' ? 3 : 2);
     setHtml(btn, `${glyph} ${label} — ${cost} ${icon('coins', 'icon-xs')} · ${months}m`);
+    let armsShut = '';
+    if (armor && actions && typeof actions.getArmsStatus === 'function') {
+      let ast = null;
+      try { ast = actions.getArmsStatus(); } catch (e) { ast = null; }
+      if (ast && !ast.arsenal && !ast.live) {
+        armsShut = ast.supplier
+          ? 'The pipeline is cut: ' + (ast.why || 'the agreement is suspended')
+          : 'No arms supplier — win an arsenal court\'s favor and sign a weapons transfer agreement';
+      }
+    }
     let reason = null;
     if (!t) reason = 'No nation to recruit for';
     else if (p.impassable) reason = 'Impassable wasteland';
     else if (p.owner !== g.playerTag) reason = 'You do not own this province';
     else if (p.controller !== g.playerTag) reason = 'Province is under enemy occupation';
+    else if (armsShut) reason = armsShut;
     else if ((t.treasury || 0) < cost) reason = `Not enough talents (${cost} needed)`;
     btn.classList.toggle('disabled', !!reason);
     btn.dataset.tt = reason
-      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents. Muster takes ${months} months; this province trains one queued unit at a time.`;
+      || `Recruit ${fmtInt(base.regSize || 1000)} men — a regiment of ${label} — for ${cost} talents. Muster takes ${months} months; this province trains one queued unit at a time.`
+      + (armor ? ' Armor is an import: the pipeline that feeds it must stay warm.' : '');
   }
 
   function refreshRecruitmentQueue(g) {

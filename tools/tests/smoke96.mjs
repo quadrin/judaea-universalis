@@ -133,7 +133,7 @@ console.log('== an ordinary realm is unaffected ==');
     const w = boot(id, tag);
     const t = w.game.tags[tag];
     const bd = incomeBreakdown(w.ctx, tag);
-    const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.powerIn || 0));
+    const gross = Math.max(0, bd.income + bd.tributeIn + (bd.subsIn || 0) + (bd.offmapIn || 0));
     t.treasury = Math.min(100, Math.max(0, gross * 2)); // comfortably under the cap
     runMonthlyEconomy(w.ctx);
     const ledger = Math.round(((t.income || 0) - (t.expenses || 0)) * 100) / 100;

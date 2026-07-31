@@ -10,7 +10,6 @@ import { icon, divider, flagChip } from './icons.js';
 import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
-import { POWERS } from '../data/powers.js';
 import { communitiesBetween, openAt } from '../data/diaspora.js';
 
 // Calendar month index with no year zero (mirror of sim/events.js — the wiki
@@ -193,8 +192,10 @@ export function createWiki({ DEFINES, getCtx }) {
         ${g && (g.clocks || []).length ? `<div class="wiki-kv"><span class="wiki-k">The danger clock</span><span class="wiki-v">${g.clocks.map((c) => esc(fmtMonth(c) + ' — ' + c.label)).join('<br>')}</span></div>` : ''}
       </div>`;
     }).join('');
-    const powers = (POWERS[b.id] || []).map((p) =>
-      `<div class="wiki-kv"><span class="wiki-k">${esc(p.name)}</span><span class="wiki-v">${esc(p.blurb || '')}</span></div>`).join('');
+    // The arms market (SPEC §179): the arsenal courts whose works export,
+    // read straight from the bookmark that declares them.
+    const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
+      .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
     // The communities of the dispersion (SPEC §172), for the chapters that can
     // write to them, largest first. Read straight from the same table the map
     // reads, so the Compendium cannot drift from what the game will actually
@@ -265,7 +266,9 @@ export function createWiki({ DEFINES, getCtx }) {
         ${rivalries ? `<div class="wiki-sec">Standing rivalries</div>
         <div class="wiki-dim">Old hatreds that never cool to neutral — the AI treats war between these courts as the era's weather.</div>
         ${rivalries}` : ''}
-        ${powers ? `<div class="wiki-sec">The powers beyond the map</div>${powers}` : ''}
+        ${arsenals ? `<div class="wiki-sec">The arms market</div>
+        <div class="wiki-dim">Aircraft and armor are imports. Only these arsenal courts build them at home; everyone else signs a weapons transfer agreement with one of them — opened at the supplier's regard, and cut by cooling, war, or embargo. The world beyond the frame sits in the ledger: click any flag there to open its court.</div>
+        ${arsenals}` : ''}
         ${communities ? `<div class="wiki-sec">The communities of the dispersion</div>
         <div class="wiki-dim">On the map, not beyond it. Click the province they live in to write to them — for letters, for silver, for a word with their patrons, or for their sons. Every one of them lives under somebody else's law.</div>
         ${communities}` : ''}`,

@@ -17,7 +17,6 @@ const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const sacred = await import(R + '/js/sim/sacred.js');
 const weather = await import(R + '/js/sim/weather.js');
 const diaspora = await import(R + '/js/sim/diaspora.js');
-const { POWERS } = await import(R + '/js/data/powers.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -258,14 +257,13 @@ console.log('== §170 the eye ==');
 
 console.log('== §172 the dispersion is on the map, not beyond it ==');
 {
-  // REGRESSION: the Diaspora off-map power is gone, and the three ancient
-  // Jewish chapters declare no off-map power at all.
-  ok(!POWERS['167bce'] && !POWERS['66ce'] && !POWERS['132ce'],
-    'REGRESSION: no off-map power remains in the three ancient Jewish chapters');
-  for (const k of Object.keys(POWERS)) {
-    ok(!(POWERS[k] || []).some((pw) => pw && pw.id === 'DIA'),
-      `${k}: the DIA power is gone from the panel`);
-  }
+  // REGRESSION: the Diaspora off-map power is gone. §178 then retired the
+  // whole POWERS roster, so the strongest possible form of this claim now
+  // holds by construction: the data file itself no longer exists, and the
+  // dispersion cannot regress into a panel that isn't there.
+  let powersGone = false;
+  try { await import(R + '/js/data/powers.js'); } catch (e) { powersGone = true; }
+  ok(powersGone, 'REGRESSION: the whole off-map POWERS roster is retired (§178) — DIA cannot return to it');
 }
 {
   const { game, ctx, actions, tag } = boot('66ce');

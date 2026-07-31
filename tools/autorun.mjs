@@ -160,6 +160,10 @@ async function runBookmark(entry, rawGeom) {
     const s = start[t], e = end[t];
     if (!s || !e) continue;
     const flags = [];
+    // An off-map seat (SPEC §178) owns no cell, fields no men and cannot
+    // die: zero manpower is its design, not a famine, and every flag here
+    // measures a thing a seat deliberately does not have.
+    if (DEFINES.TAGS[t] && DEFINES.TAGS[t].offmap) continue;
     if (!game.tags[t].alive) flags.push('DEAD');
     // Real snowballs grow by whole regions; a 2-province minor scripted up to 4
     // is history, not imbalance — hence the absolute-growth floor.

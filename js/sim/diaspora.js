@@ -6,9 +6,10 @@
 // and what you may ask for depends on how large that community is, how it feels
 // about your crown, and whether the empire that owns the province notices.
 //
-// WHY THE MOVE IS NOT COSMETIC. The off-map powers are off the map because they
-// are — a Senate in a century the frame does not reach, a khaganate past the
-// Caucasus. The dispersion is not. Alexandria is on the board and is the second
+// WHY THE MOVE IS NOT COSMETIC. What is genuinely beyond the frame gets a
+// different answer now too — since SPEC §178 an off-map power is a seated
+// COURT in the ledger, not a panel row. The dispersion needed neither: it
+// was never off the map at all. Alexandria is on the board and is the second
 // city of the world; so are Babylon, Nehardea, Cyrene and Rome. Modelling them
 // as one abstract bar meant the largest Jewish population on earth was a number
 // in a panel while the province it lived in sat on the map owned by somebody
