@@ -61,7 +61,7 @@ ok(/Eleazar ben Ananias/.test(heirTxt), 'heir line shows: ' + heirTxt.trim().sli
 const rulerTitle = (await page.locator('.np-ruler-title').textContent()) || '';
 ok(/age 53/.test(rulerTitle), 'ruler age shown: ' + rulerTitle);
 const missionRows = await page.locator('.np-mn').count();
-ok(missionRows === 11, 'eleven JUD missions on the tree (SPEC §177, grown by §179 and §183): ' + missionRows);
+ok(missionRows === 15, 'fifteen JUD missions on the tree (SPEC §177, grown by §179, §183 and §188): ' + missionRows);
 const clientRows = (await page.locator('#nation-panel').textContent()) || '';
 ok(true, 'nation panel rendered');
 await page.screenshot({ path: OUT + 'v15-nation.png' });
@@ -168,7 +168,8 @@ await page.close();
   await p2.waitForSelector('.nation-card');
   const nCards = await p2.locator('.nation-card').count();
   const playableTag = await p2.locator('.nation-card').first().getAttribute('data-tag');
-  ok(nCards === 1 && playableTag === 'JUD', '132 CE offers only Judaea: ' + nCards + ' (' + playableTag + ')');
+  // Two chairs since SPEC §185 seated Adiabene beside the rising.
+  ok(nCards === 2 && playableTag === 'JUD', '132 CE offers Judaea first, Adiabene beside it (SPEC §185): ' + nCards + ' (' + playableTag + ')');
   await p2.locator('.nation-card').first().click();
   await p2.waitForFunction(() => !!window._ctx);
   await p2.waitForTimeout(600);

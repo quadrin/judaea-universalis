@@ -10456,3 +10456,82 @@ roster.
   feature where they had to: `smoke3` (fifteen at 67), while `smoke16`'s
   raw index into the 132/614 tables still lands on the Third House
   untouched, because every insertion in those tables came after it.
+
+## 188. The heavy chapters take their turn — the cannon, the granaries, and the letters east
+
+§187 thickened the thin trees and left the three heaviest chapters alone,
+because five test files pinned their mission tables and the risk budget
+was spent. This section is the other half of the pass, done deliberately:
+the Great Revolt, Bar Kokhba and 1948 get the same treatment — six forks,
+six expansion branches, six roads-not-taken — and the pins move with the
+feature, which is what pins are for.
+
+**Three decisions were already forks and never said so.** `ev_menahem` set
+a marker when the pretender lived and nothing when history won;
+`ev2_letters` — the Nasi's own surviving words, wheat under requisition
+and chains promised — recorded neither the iron nor the mercy;
+`ev_i_altalena` sank or landed the Irgun's rifles without writing either
+afternoon down. All three now mark both roads, carry their `historical`
+line, and close: the daggers are reckoned with when the state finally
+decides what Masada is to it (fold the knife-men in, or let the rock keep
+its own Passovers), the letters are billed two winters later by whichever
+delegation the road produced (the weary districts, or the quartermasters
+with the other ledger), and the Altalena is answered in 1953, when the
+founding story has become policy — commissions for the men the cannon
+fired on, or the old undergrounds keeping their own tables.
+
+**Three questions the chapters never dealt.** The granaries of Jerusalem:
+Josephus says the stores could have outlasted years of siege and that the
+factions burned them fighting each other — the famine of 70 was paid for
+in advance, by the besieged. The fork seals them under one guard with a
+published ledger, or lets each faction feed its own; the terminal reads
+the decision back when the ring closes, and a city that sealed its stores
+is a different siege problem. The letters east: 115 was the dispersion's
+war without the land, 132 the land's without the dispersion, and nobody
+knows why the second held back — so the chapter can now send the letters
+Babylonia never got, and then answer the harder question that marches in
+behind the volunteers (citizens or guests?). The refusal road is one card
+long by design, on the 167-charter precedent: the historical silence,
+kept on purpose, is the end of the question. And the shilumim: the
+January 1952 vote with the windows breaking — the hardest major decision
+in the state's first decade, and the game never dealt it. Sign at
+Luxembourg and build the second decade on transfer goods the square never
+forgives, or refuse and reprint the austerity books for a principle;
+seven years later the official history has to put a sentence over the
+ledger either way. The Eshkol succession card learned to check the road:
+on the refusal there is no reparations economy for the treasurer to
+inherit, so the boom modifier now guards on the marker instead of
+assuming 1952 went the way it went.
+
+**The expansion the wars reached for.** Six branches, every target the
+era's own grievance: the Revolt answers the cities that slaughtered
+their Jews in the first month (Scythopolis, Gadara, Pella) and brings
+the client king's country into the rising (Gamala, which had already
+chosen); Bar Kokhba reaches the sea history denied him (Joppa and the
+governor's own Caesarea) and burns out the Arabian legion's nest (Medaba,
+Bostra); Israel clears the strip to Rafah and takes the Hebron hills
+Allon begged the cabinet for in October 1948. All `controls()` checks
+over provinces the tag does not start with — verified against the 66
+base map and the §63 invasion lines, which is how Machaerus (merged away
+since §47) and Gadora (the revolt's own Perea) were caught and kept out
+of the 132 target lists.
+
+**The pins moved with the feature.** smoke2 (fifteen at 66 and at 132),
+smoke112 (fifteen), uitest2 (fifteen medallions in the browser), and
+smoke111 — whose index arithmetic is the load-bearing one: ten
+objectives, hypotheticals from index ten, the §188 forks' medallions
+standing OPEN at boot beside the chain's own root, because they are
+roots (their markers imply no parent road), and the cols/rows vectors
+extended with the new seats. smoke16's raw index into the 132 table
+still lands the Third House at five untouched, because every insertion
+came after seven. smoke116's worlds set the six new markers — the
+pretender lives, the stores sealed, the mercy written, the dispersion
+called, the cargo ashore, the ledger refused — and all fifty-one roads
+not taken pay.
+
+- **Regression contract**: `smoke83` — 127 roads, six new forks' markers
+  written by live cards, all six terminals present, the one-card refusal
+  road declared terminal-equal-entry, no new gaps. `smoke117` — the six
+  new entries badge. `smoke85`/`smoke39`/`smoke48` — every new card
+  two-optioned with per-option marks, aiOption pinned to the historical
+  course, and no decider that dies cold.

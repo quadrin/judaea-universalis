@@ -826,6 +826,28 @@ export const BOOKMARK_66 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 15 }),
       },
+      // The war carried outward (SPEC §188): the cities that killed their
+      // Jews, and the client kingdom whose towns came over one by one.
+      {
+        id: 'jm_decapolis', name: 'Answer the Cities',
+        icon: 'amphora', col: 0, row: 3, requires: ['jm_samaria'],
+        desc: 'Take Scythopolis, Gadara and Pella — the Greek cities that slaughtered '
+          + 'their Jewish neighbors in the first month of the war.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ['Scythopolis', 'Gadara', 'Pella']
+          .every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 'jm_kings_country', name: 'The King\'s Country Rises',
+        icon: 'mountain', col: 2, row: 3, requires: ['jm_coastal_road'],
+        desc: 'Take Gamala and Caesarea Philippi — the client king\'s own towns, where '
+          + 'Gamala has already chosen the revolt over its king.',
+        rewardText: '+2,000 manpower — the Golan villages enlist.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Gamala')
+          && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Philippi'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 2000 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks, standing in the tree as hypotheticals: checks read
       // the markers the fork cards themselves set — one source of truth.
@@ -861,6 +883,28 @@ export const BOOKMARK_66 = {
         rewardText: '+25 martial points, +1,500 manpower.',
         check: (ctx) => anyFlag(ctx, 'roadHeldOpen', 'roadShut', 'roseWithTheEast'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25, manpower: 1500 }),
+      },
+      {
+        id: 'hy_royal_robes', name: 'A King in Royal Robes', hypothetical: true,
+        fork: '66ce/the_royal_robes',
+        icon: 'star4', col: 4, row: 3,
+        desc: 'When Menahem enters the Temple courts in royal dress (July 66), spare the '
+          + 'pretender history struck down on the Ophel: arm the Sicarii and let the '
+          + 'revolt keep its king of the knives — and, eventually, answer for him.',
+        rewardText: '+20 martial points.',
+        check: (ctx) => anyFlag(ctx, 'menahemLives'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 20 }),
+      },
+      {
+        id: 'hy_granaries', name: 'The Sealed Granaries', hypothetical: true,
+        fork: '66ce/the_granaries_of_the_city',
+        icon: 'granary', col: 4, row: 4,
+        desc: 'Hold Jerusalem in the faction winter (68) and do what no faction did: seal '
+          + 'the stores of the city under one guard with a published ledger, so the siege, '
+          + 'if it comes, besieges a city that can wait.',
+        rewardText: '+1 stability, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'storesSealed'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 10 }),
       },
     ],
     ROM: [

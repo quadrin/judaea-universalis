@@ -727,7 +727,11 @@ export const EVENTS_1948 = [
       + 'beach is loaded.',
     forTag: 'ISR',
     date: { y: 1948, m: 6 },
+    major: true,
     aiOption: 0,
+    historical: 'The cannon fired — Ben-Gurion called it holy afterwards — and the ship '
+      + 'burned off the Tel Aviv beach with sixteen dead. There was no second army in '
+      + 'Israel from that afternoon on, and no argument about it that anyone could win.',
     options: [
       {
         label: 'One state, one army — fire',
@@ -736,6 +740,7 @@ export const EVENTS_1948 = [
           ctx.helpers.adjust(ctx, 'ISR', { stability: 1, legitimacy: -5 });
           ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', -20);
           ctx.helpers.factionShift(ctx, 'ISR', 'coalition', 10);
+          ctx.helpers.setFlag(ctx, 'altalenaShelled', true);
           ctx.helpers.chronicle(ctx, 'era', 'The Altalena burns off Tel Aviv: one state, one army.');
         }),
       },
@@ -747,6 +752,10 @@ export const EVENTS_1948 = [
           ctx.helpers.adjust(ctx, 'ISR', { stability: -1 });
           ctx.helpers.factionShift(ctx, 'ISR', 'revisionists', 15);
           ctx.helpers.factionShift(ctx, 'ISR', 'coalition', -10);
+          ctx.helpers.setFlag(ctx, 'altalenaAshore', true);
+          ctx.helpers.chronicle(ctx, 'era', 'The Altalena\'s cargo comes ashore under a '
+            + 'negotiated flag: the rifles join the war, and the question of who commands '
+            + 'them is left open, on purpose, by everyone.');
         }),
       },
     ],
@@ -3213,9 +3222,14 @@ export const EVENTS_1948 = [
           if (!alive(ctx, 'ISR')) return;
           ctx.helpers.setRuler(ctx, 'ISR', { name: 'Levi Eshkol', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 67 });
           ctx.helpers.adjust(ctx, 'ISR', { stability: 1 });
-          ctx.helpers.addTagModifier(ctx, 'ISR', {
-            id: 'reparations_boom', name: 'The Reparations Economy', months: 36, effects: { incomeMult: 1.05 },
-          });
+          // On the road where the shilumim were refused (SPEC §119) there is
+          // no reparations economy for the treasurer to inherit — the boom is
+          // the road's own, not the succession's.
+          if (!ctx.helpers.getFlag(ctx, 'shilumimRefused')) {
+            ctx.helpers.addTagModifier(ctx, 'ISR', {
+              id: 'reparations_boom', name: 'The Reparations Economy', months: 36, effects: { incomeMult: 1.05 },
+            });
+          }
           ctx.helpers.chronicle(ctx, 'ruler', 'Ben-Gurion retires to Sde Boker; Levi Eshkol becomes Prime Minister of Israel.');
         }),
       },
@@ -5735,6 +5749,252 @@ export const EVENTS_1948 = [
           g.flags.secondIntifada = true;
           g.flags.tabaTrack = true;
           ctx.helpers.chronicle(ctx, 'era', 'The line is held and the table is kept: the negotiators stay in the room at Taba while the country tells them, loudly, what it thinks of the room.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE CANNON, AND THE LEDGER (SPEC §119) ═══════════════════════════════
+  // Two forks the chapter carried as single afternoons and never charted.
+  // The Altalena was already a decision (ev_i_altalena) with no reckoning:
+  // the state that fired on its own arms ship settled the question of who
+  // commands for a generation, and the state that negotiated the cargo
+  // ashore kept the question. And the shilumim: the January 1952 Knesset
+  // debate — reparations from Germany, seven years after — with Begin on
+  // the balcony and stones coming through the windows, is the hardest
+  // major decision in the state's first decade and the game never dealt
+  // it. The absorption fork (§171) says what the doubled population was
+  // paid for WITH; this one asks whom the payment could be taken FROM.
+  {
+    id: 'ev_i_what_one_army_meant',
+    title: 'What One Army Meant',
+    desc: 'Five years on, the afternoon off the Tel Aviv beach has become a founding '
+      + 'story, and founding stories are policy. The officer corps is being rebuilt for '
+      + 'a smaller budget, the undergrounds\' veterans are middle-aged, and the cabinet '
+      + 'table divides over what, exactly, was settled that day.\n\n'
+      + 'If the cannon fired, the question is what to do with the men it fired on — '
+      + 'whether the state that proved its monopoly can now afford to be generous with '
+      + 'the proof. If the cargo came ashore under a negotiated flag, the question has '
+      + 'never closed at all: every crisis since has produced men who remember that '
+      + 'once, when it mattered, there were two answers to the question of who '
+      + 'commands.',
+    forTag: 'ISR',
+    major: true,
+    minYear: 1953,
+    maxYear: 1956,
+    trigger: safeTrigger('ev_i_one_army_meant', (ctx) => alive(ctx, 'ISR')
+      && (ctx.helpers.getFlag(ctx, 'altalenaShelled') || ctx.helpers.getFlag(ctx, 'altalenaAshore'))
+      && !ctx.helpers.getFlag(ctx, 'oneArmyReckoned')),
+    aiOption: 0,
+    historical: 'The monopoly held and was slowly allowed to stop being a wound: the '
+      + 'Irgun\'s veterans entered the army, the Knesset, and eventually the government '
+      + '— thirty years later, one of them formed it.',
+    options: [
+      {
+        label: 'The army above the parties, and the wound closed',
+        tooltip: 'Shelled: commissions and pensions for the men the cannon fired on — '
+          + '+1 stability, the Revisionists +15, "The Army Above the Parties" (−0.5 unrest '
+          + 'everywhere, permanent). Ashore: the open question is closed late — the militia '
+          + 'battalions are folded into the line at last, +1 stability, −5 legitimacy.',
+        effects: guard('ev_i_one_army_meant:0', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'altalenaShelled')) {
+            h.adjust(ctx, 'ISR', { stability: 1 });
+            h.factionShift(ctx, 'ISR', 'revisionists', 15);
+            h.addTagModifier(ctx, 'ISR', {
+              id: 'army_above_parties', name: 'The Army Above the Parties', months: -1,
+              effects: { unrestAll: -0.5 },
+            });
+            h.chronicle(ctx, 'era', 'The men the cannon fired on are commissioned, '
+              + 'pensioned, and promoted on the record, and the founding story acquires '
+              + 'its second half: the monopoly was the point, not the enemies.');
+          } else {
+            h.adjust(ctx, 'ISR', { stability: 1, legitimacy: -5 });
+            h.chronicle(ctx, 'era', 'The militia battalions are folded into the line five '
+              + 'years late, by negotiation, with everyone watching everyone sign. The '
+              + 'question of who commands is closed the expensive way: eventually.');
+          }
+          h.setFlag(ctx, 'oneArmyReckoned', true);
+          h.setFlag(ctx, 'armyWoundClosed', true);
+        }),
+      },
+      {
+        label: 'The old undergrounds keep their own tables',
+        tooltip: 'The veterans\' networks stay networks. Shelled: the wound is left open — '
+          + 'the Revisionists −10, +0.5 unrest everywhere for 60 months, +15 governance '
+          + 'points (nobody is paid off). Ashore: the second loyalty becomes a standing '
+          + 'fact — +1 unrest everywhere for 60 months, and every crisis re-asks the '
+          + 'question.',
+        effects: guard('ev_i_one_army_meant:1', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'altalenaShelled')) {
+            h.adjust(ctx, 'ISR', { gov: 15 });
+            h.factionShift(ctx, 'ISR', 'revisionists', -10);
+            h.addTagModifier(ctx, 'ISR', {
+              id: 'the_open_wound', name: 'The Open Wound', months: 60,
+              effects: { unrestAll: 0.5 },
+            });
+            h.chronicle(ctx, 'era', 'No commissions, no pensions, no second half to the '
+              + 'founding story. The state saves the money and keeps the wound, and the '
+              + 'veterans\' tables keep their own minutes.');
+          } else {
+            h.addTagModifier(ctx, 'ISR', {
+              id: 'the_second_loyalty', name: 'The Second Loyalty', months: 60,
+              effects: { unrestAll: 1 },
+            });
+            h.chronicle(ctx, 'era', 'The old undergrounds keep their own tables, their own '
+              + 'funds, and their own answer to the question of who commands, and every '
+              + 'crisis of the decade re-asks it on schedule.');
+          }
+          h.setFlag(ctx, 'oneArmyReckoned', true);
+          h.setFlag(ctx, 'oldTablesKept', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_i_the_shilumim',
+    title: 'The Shilumim',
+    desc: 'The arithmetic is on one page: the state has doubled its population, the '
+      + 'treasury is running on austerity coupons, and across the sea there is a German '
+      + 'government prepared to pay — goods, ships, machinery, oil — three billion '
+      + 'marks against a crime that has no price. The word chosen is shilumim, '
+      + 'payments, because the other words will not sit in a sentence.\n\n'
+      + 'Outside the Knesset the square is full and Begin is speaking: there are things '
+      + 'a Jew does not sell, and the dead are first among them. Stones are already '
+      + 'coming through the chamber windows. Inside, the arithmetic stays on the page, '
+      + 'and the men who survived what the payment is for sit on both sides of the '
+      + 'vote.',
+    forTag: 'ISR',
+    date: { y: 1952, m: 1 },
+    major: true,
+    aiOption: 0,
+    historical: 'The Knesset approved negotiations 61–50 with the windows breaking, the '
+      + 'Luxembourg Agreement was signed in September, and the payments underwrote the '
+      + 'ports, the power grid, the merchant fleet and the railways of the state\'s '
+      + 'second decade.',
+    options: [
+      {
+        label: 'Sign. The dead would not vote to keep us poor',
+        tooltip: 'The Luxembourg road: +300 treasury over the agreement and "The Shilumim" '
+          + '(+12% income, 144 months) as the ports and the grid rise on the transfer '
+          + 'goods. −10 legitimacy, the Revisionists −25, and +1.5 unrest everywhere for '
+          + '12 months — the square empties slowly, and it does not forgive.',
+        effects: guard('ev_i_shilumim:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ISR', { treasury: 300, legitimacy: -10 });
+          h.addTagModifier(ctx, 'ISR', {
+            id: 'the_shilumim', name: 'The Shilumim', months: 144,
+            effects: { incomeMult: 1.12 },
+          });
+          h.addTagModifier(ctx, 'ISR', {
+            id: 'the_broken_windows', name: 'The Broken Windows', months: 12,
+            effects: { unrestAll: 1.5 },
+          });
+          h.factionShift(ctx, 'ISR', 'revisionists', -25);
+          h.setFlag(ctx, 'shilumimSigned', true);
+          h.chronicle(ctx, 'era', 'The agreement is signed at Luxembourg by men who do not '
+            + 'shake hands. The first cargoes are cranes and rails and generators, and the '
+            + 'state builds its second decade with them, keeping the invoices forever.');
+        }),
+      },
+      {
+        label: 'Refuse. There are things a state does not invoice',
+        tooltip: 'The road not taken: +15 legitimacy, the Revisionists +25, +1 stability '
+          + '— the square empties singing — and "The Long Austerity" (−8% income, 96 '
+          + 'months): the coupons stay, the camps wait longer, and the state pays for its '
+          + 'principle in the currency principles are paid in.',
+        effects: guard('ev_i_shilumim:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ISR', { legitimacy: 15, stability: 1 });
+          h.addTagModifier(ctx, 'ISR', {
+            id: 'the_long_austerity', name: 'The Long Austerity', months: 96,
+            effects: { incomeMult: 0.92 },
+          });
+          h.factionShift(ctx, 'ISR', 'revisionists', 25);
+          h.setFlag(ctx, 'shilumimRefused', true);
+          h.chronicle(ctx, 'era', 'The Knesset refuses the payments and the square empties '
+            + 'singing. The austerity books are reprinted for another decade, and the '
+            + 'refusal is filed where the state keeps the things it is — which is not the '
+            + 'treasury.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_i_what_the_shilumim_built',
+    title: 'What the Shilumim Built',
+    desc: 'Seven years on, the decision of the broken windows has become infrastructure '
+      + '— or its absence. The ledger is public either way: what the ports moved, what '
+      + 'the grid carried, what the camps became and when, and under it all the '
+      + 'question the square shouted through the glass, which has not aged: what was it '
+      + 'worth, and to whom, and does the answer change when the trains it bought run '
+      + 'on time.\n\n'
+      + 'The treasury wants the record read one way and the veterans of the square the '
+      + 'other, and the cabinet must put a sentence in the decade\'s official history — '
+      + 'which is being written now, by the winners of the argument, as official '
+      + 'histories are.',
+    forTag: 'ISR',
+    major: true,
+    minYear: 1959,
+    maxYear: 1963,
+    trigger: safeTrigger('ev_i_shilumim_built', (ctx) => alive(ctx, 'ISR')
+      && (ctx.helpers.getFlag(ctx, 'shilumimSigned') || ctx.helpers.getFlag(ctx, 'shilumimRefused'))
+      && !ctx.helpers.getFlag(ctx, 'shilumimReckoned')),
+    aiOption: 0,
+    historical: 'The payments ran to 1965 and built much of the state\'s heavy '
+      + 'infrastructure; the argument about them ran longer, and was inherited intact '
+      + 'by the children of both sides.',
+    options: [
+      {
+        label: 'Pour the record into the towns and the ports',
+        tooltip: 'Signed: the transfer decade is capitalised — +150 treasury, +1 stability, '
+          + 'and "The Built Decade" (+8% income, 60 months). Refused: what austerity built '
+          + 'slowly is finished slowly — +1 stability, "The Long Way Built" (+4% income, 60 '
+          + 'months), and +10 legitimacy: it is all, every rail of it, the state\'s own.',
+        effects: guard('ev_i_shilumim_built:0', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'shilumimSigned')) {
+            h.adjust(ctx, 'ISR', { treasury: 150, stability: 1 });
+            h.addTagModifier(ctx, 'ISR', {
+              id: 'the_built_decade', name: 'The Built Decade', months: 60,
+              effects: { incomeMult: 1.08 },
+            });
+            h.chronicle(ctx, 'era', 'The transfer decade is poured into the towns and the '
+              + 'ports, and the official history prints the tonnage tables next to a '
+              + 'paragraph, carefully drafted, about the price of them.');
+          } else {
+            h.adjust(ctx, 'ISR', { stability: 1, legitimacy: 10 });
+            h.addTagModifier(ctx, 'ISR', {
+              id: 'the_long_way_built', name: 'The Long Way Built', months: 60,
+              effects: { incomeMult: 1.04 },
+            });
+            h.chronicle(ctx, 'era', 'The decade\'s official history prints a shorter '
+              + 'tonnage table and a longer sentence: what stands, stands unmortgaged. '
+              + 'The camps took three years longer to empty, and the history prints '
+              + 'that too, because nobody would let it not.');
+          }
+          h.setFlag(ctx, 'shilumimReckoned', true);
+          h.setFlag(ctx, 'decadeCapitalised', true);
+        }),
+      },
+      {
+        label: 'Let the argument stand in the record, both sides',
+        tooltip: 'The official history prints the debate verbatim instead of a verdict: '
+          + '+10 governance points, +5 legitimacy — and the Revisionists are reconciled to '
+          + 'the record (+10) whichever road was taken, because the record shows them '
+          + 'saying what they said.',
+        effects: guard('ev_i_shilumim_built:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ISR', { gov: 10, legitimacy: 5 });
+          h.factionShift(ctx, 'ISR', 'revisionists', 10);
+          h.setFlag(ctx, 'shilumimReckoned', true);
+          h.setFlag(ctx, 'argumentStands', true);
+          h.chronicle(ctx, 'era', 'The official history prints the broken-windows debate '
+            + 'verbatim, both sides, no verdict. It is the most read chapter in the book, '
+            + 'and both sides assign it, each certain of what it shows.');
         }),
       },
     ],

@@ -255,6 +255,16 @@ static site, the zero dependencies, or the missing build step changes.
   era's own: the Decapolis grants, Jannaeus' coast, the twelve cities of Moab,
   the Ladder of Tyre, the King's Highway, the granary of Egypt, and the coast
   road out of the Samaritan hills.
+- **The heavy chapters take their turn.** The Great Revolt, Bar Kokhba and 1948
+  get the same pass: Menahem's royal robes and the granaries of Jerusalem
+  (sealed under one ledger, or burned by the factions before Titus ever
+  closes the ring), the Nasi's letters — iron or mercy, billed either way two
+  winters later — and the letters east that Babylonia never got, the Altalena
+  answered five years after the cannon, and the shilumim vote with the windows
+  breaking. Beside them, the conquests the wars reached for: the cities that
+  killed their Jews, the client king's Golan, Bar Kokhba's port and the
+  Arabian legion's nest, the strip to Rafah and the Hebron hills Allon begged
+  for.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes

@@ -540,6 +540,31 @@ export const BOOKMARK_132 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
       },
+      // The war carried past the hills (SPEC §188): the revolt history kept
+      // landlocked and inland reaches for the sea and the legion's nest.
+      {
+        id: 'j2_the_coast', name: 'The Governor\'s Sea',
+        icon: 'ship', col: 1, row: 1, requires: ['j2_maul'],
+        desc: 'Take Joppa and Caesarea Maritima — the revolt history kept landlocked '
+          + 'reaches the sea, and the governor\'s own seat.',
+        rewardText: '+100 talents (the harbor customs), +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Joppa')
+          && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10 }),
+      },
+      {
+        id: 'j2_arabia', name: 'The Legion\'s Nest',
+        icon: 'horseshoe', col: 1, row: 2, requires: ['j2_aelia'],
+        desc: 'Take Medaba and Bostra — the base of the Arabian legion, so the next '
+          + 'column against the Nasi musters a province further away.',
+        rewardText: '"The Highway Cut": +1 hill-country defense for 36 months.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Medaba')
+          && ctx.helpers.controls(ctx, 'JUD', 'Bostra'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_highway_cut', name: 'The Highway Cut', months: 36,
+          effects: { hillDefBonus: 1 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -576,6 +601,28 @@ export const BOOKMARK_132 = {
         rewardText: '+25 influence points.',
         check: (ctx) => anyFlag(ctx, 'doubtSuppressed', 'doubtPreserved', 'doubtCanonized'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 25 }),
+      },
+      {
+        id: 'hy_nasis_letters', name: 'Mercy Is Also Policy', hypothetical: true,
+        fork: '132ce/the_nasis_letters',
+        icon: 'quill', col: 3, row: 3,
+        desc: 'When the Nasi\'s letters go out (winter 132), write the ones the caves never '
+          + 'held: the villages fed first, the chains left in the armory — and the other '
+          + 'ledger arrives two winters later, because mercy has a price in wheat.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'lettersMercy'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 }),
+      },
+      {
+        id: 'hy_letters_east', name: 'The Letters East', hypothetical: true,
+        fork: '132ce/the_letters_east',
+        icon: 'diaspora', col: 4, row: 0,
+        desc: 'Answer 117 the way the land never did: send the letters east to Babylonia '
+          + '(133), and let the dispersion be counted in the Redemption — volunteers at '
+          + 'the smugglers\' fords, and a second question marching in behind them.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20 }),
       },
     ],
     ROM: [
