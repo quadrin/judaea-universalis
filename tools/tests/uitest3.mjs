@@ -55,7 +55,7 @@ ok(!(await page.locator('[data-ref="export"], [data-ref="import"]').count()),
 // It used to read "Jewish-only" and it meant the same thing until SPEC §136
 // added the Keepers, whose player keeps a different Torah and is still not the
 // empire — Byzantium has a court, factions and a victory branch in that chapter
-// and is deliberately not on offer. SPEC §184 widened the rosters to every
+// and is deliberately not on offer. SPEC §185 widened the rosters to every
 // SEATED Jewish court: Adiabene in the four chapters where the house is on
 // the map, and Agrippa's kingdom in 66. (529's Galilee stays off the roster —
 // it is a landless community, deferred by design until the 556 rising.)

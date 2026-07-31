@@ -10160,7 +10160,42 @@ it, and is what will hear the next one.
   and 132), `smoke3` (nine at 67), `uitest2` (eleven medallions in the
   browser).
 
-## 184. Every seated Jewish court is a chair
+## 184. The fork card wears its badge
+
+§183 put the roads not taken in the mission tree, where a player plans.
+This section puts the same knowledge on the table, where a player decides:
+every event card that OPENS a road of the §119 path tree — every `entry`
+the tree declares, ninety-one road-entries across some seventy distinct
+cards — now wears a badge as it is dealt. A dashed violet chip above the
+title, the same spectral dress as the tree's hypothetical medallions,
+reading "the road forks here"; its tooltip asks the fork's own question
+("Does the House fall, or does the Second Kingdom begin?") and points at
+the Chronicle's Road Not Taken page, where the roads it opens are already
+charted. A turning of the age should feel like one while it is being
+turned, not only in the ledger afterwards.
+
+One lookup serves every surface. `entryFork(chapterId, eventId)` lives in
+`chapter_paths.js` beside the tree it is built from — lazy, frozen, and
+impossible to disagree with §119, because it IS §119 indexed by card. The
+event window asks it directly; the Compendium asks it for the events list
+and the event page (which also gains a "The road forks" row printing the
+question); and the multiplayer host resolves it before the card travels,
+sending guests `fork: { question }` in the `{t:'event'}` payload — a guest
+has no chapter context of its own, so the badge crosses the wire already
+answered, like the §70 decider line and the §128 option mask before it.
+Foreign-decider notices keep the badge: the road forks for the age whether
+or not the choice is ours.
+
+- **Regression contract**: `smoke117` — every road entry the tree declares
+  resolves to its own fork with a question to ask; a canonical non-fork
+  card, an unknown id, a null chapter, the shared pool, and another
+  chapter's cards all stay bare; the records come back frozen. `uitest39`
+  deals `ev_house_that_stood` through the sim's own `fireEvent` in a real
+  browser and reads the chip off the live modal — exactly one badge, the
+  right label, the fork's question in the tooltip — then deals
+  `ev_vespasian_arrives` and checks it stays bare, with no page errors.
+
+## 185. Every seated Jewish court is a chair
 
 The house rule stands exactly as §136 restated it — every chapter is
 played from an Israelite side, and the empire is never offered — but the

@@ -438,7 +438,7 @@ export const BOOKMARK_132 = {
     ROM: { name: 'Hadrian', title: 'Emperor', gov: 4, infl: 3, mar: 3, age: 56 },
     JUD: { name: 'Simon bar Kosiba', title: 'Nasi Israel', gov: 2, infl: 3, mar: 5, age: 45 },
     PAR: { name: 'Vologases III', title: 'King of Kings', gov: 2, infl: 3, mar: 2, age: 50 },
-    // The restored client (SPEC §184): Mebarsapes fought Trajan in 116 and
+    // The restored client (SPEC §185): Mebarsapes fought Trajan in 116 and
     // the record goes quiet after Hadrian gave the kingdom back; the game
     // keeps him seated, older, with an heir from the dynasty's name-stock.
     ADI: {
@@ -647,7 +647,7 @@ export const BOOKMARK_132 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { gov: 25, legitimacy: 10 }),
       },
     ],
-    // The restored house's tree (SPEC §184): rebuild what Trajan burned,
+    // The restored house's tree (SPEC §185): rebuild what Trajan burned,
     // shelter what the west loses, and never give an emperor a reason.
     ADI: [
       {
@@ -910,7 +910,7 @@ export const BOOKMARK_132 = {
     h.adjust(ctx, 'ROM', { treasury: 500, manpower: 25000, stability: 2, legitimacy: 40 });
     h.adjust(ctx, 'PAR', { treasury: 180, stability: 1, legitimacy: 20 });
     h.adjust(ctx, 'ARM', { treasury: 30 });
-    // The restored house (SPEC §184): rebuilt, solvent, and careful.
+    // The restored house (SPEC §185): rebuilt, solvent, and careful.
     h.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 });
 
     // --- Opinions. Parthia watches with interest; Armenia balances. -----------
@@ -918,7 +918,7 @@ export const BOOKMARK_132 = {
     setOpinion(g, 'PAR', 'ROM', -80);  setOpinion(g, 'ROM', 'PAR', -70);
     setOpinion(g, 'PAR', 'JUD', 30);   setOpinion(g, 'JUD', 'PAR', 50);
     setOpinion(g, 'ARM', 'ROM', 20);   setOpinion(g, 'ARM', 'PAR', 30);
-    // Adiabene remembered its converted kings (SPEC §184) — and Trajan.
+    // Adiabene remembered its converted kings (SPEC §185) — and Trajan.
     setOpinion(g, 'ADI', 'JUD', 70);   setOpinion(g, 'JUD', 'ADI', 60);
     setOpinion(g, 'ADI', 'PAR', 70);   setOpinion(g, 'PAR', 'ADI', 50);
     setOpinion(g, 'ADI', 'ROM', -60);  setOpinion(g, 'ROM', 'ADI', -30);
@@ -1043,7 +1043,7 @@ export const BOOKMARK_132 = {
           return;
         }
       } else if (g.playerTag === who(ctx, 'ADI')) {
-        // The restored house's contract (SPEC §184): no second Trajan, no
+        // The restored house's contract (SPEC §185): no second Trajan, no
         // second fall — be seated at Arbela when the west's verdict is read.
         const adi = g.tags[who(ctx, 'ADI')];
         const adiAlive = !!(adi && adi.alive !== false);

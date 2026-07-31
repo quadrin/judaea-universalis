@@ -516,7 +516,7 @@ export const BOOKMARK_40 = {
       name: 'Orodes II', title: 'King of Kings', gov: 3, infl: 3, mar: 3, age: 57,
       heir: { name: 'Pacorus', gov: 2, infl: 3, mar: 4, age: 24 },
     },
-    // The Tigris client (SPEC §184): the dynasty between Abdissares' coins
+    // The Tigris client (SPEC §185): the dynasty between Abdissares' coins
     // and the conversion, seated by plausible succession.
     ADI: {
       name: 'Izates', title: 'King', gov: 2, infl: 3, mar: 2, age: 42,
@@ -718,7 +718,7 @@ export const BOOKMARK_40 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15, stability: 1 }),
       },
     ],
-    // The Tigris kingdom's tree (SPEC §184): ride the tide, bank the tolls,
+    // The Tigris kingdom's tree (SPEC §185): ride the tide, bank the tolls,
     // and be standing when the ebb finds out who could swim.
     ADI: [
       {
@@ -843,7 +843,7 @@ export const BOOKMARK_40 = {
     h.adjust(ctx, 'PTO', { treasury: 300, stability: 1, legitimacy: 45 });
     h.adjust(ctx, 'NAB', { treasury: 180, stability: 1 });
     h.adjust(ctx, 'ARM', { treasury: 80, stability: -1, legitimacy: 25 });
-    // The Tigris client (SPEC §184): riding Parthia's high tide, and paid for it.
+    // The Tigris client (SPEC §185): riding Parthia's high tide, and paid for it.
     h.adjust(ctx, 'ADI', { treasury: 70, legitimacy: 20 });
 
     setOpinion(g, 'HER', 'ATG', -180); setOpinion(g, 'ATG', 'HER', -180);
@@ -931,7 +931,7 @@ export const BOOKMARK_40 = {
       if (!g || g.over || g.result) return;
       const me = g.playerTag;
       if (me === 'ADI') {
-        // The Tigris client's contract (SPEC §184): ride the tide, survive
+        // The Tigris client's contract (SPEC §185): ride the tide, survive
         // the ebb, and be seated when the age settles its accounts.
         const adi = g.tags.ADI;
         const adiAlive = !!(adi && adi.alive !== false);

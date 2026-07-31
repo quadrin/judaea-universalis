@@ -608,7 +608,7 @@ export const BOOKMARK_67 = {
       heir: { name: 'Artavasdes II', gov: 2, infl: 3, mar: 2, age: 25 },
     },
     PAR: { name: 'Phraates III', title: 'King of Kings', gov: 2, infl: 3, mar: 3, age: 45 },
-    // The Tigris client (SPEC §184): the record between Abdissares' coins and
+    // The Tigris client (SPEC §185): the record between Abdissares' coins and
     // Izates' conversion is a dynasty of names; the game seats the plausible one.
     ADI: {
       name: 'Abdissares II', title: 'King', gov: 2, infl: 2, mar: 3, age: 44,
@@ -815,7 +815,7 @@ export const BOOKMARK_67 = {
         },
       },
     ],
-    // The Tigris kingdom's tree (SPEC §184): a client house between Armenia's
+    // The Tigris kingdom's tree (SPEC §185): a client house between Armenia's
     // wreck and Parthia's peace, living on the road and weighing the yoke.
     ADI: [
       {
@@ -938,7 +938,7 @@ export const BOOKMARK_67 = {
     h.adjust(ctx, 'ROM', { treasury: 600, stability: 2, legitimacy: 60 });
     h.adjust(ctx, 'CMG', { treasury: 80, manpower: 2500, stability: 1, legitimacy: 55 });
     h.adjust(ctx, 'ITU', { treasury: 60, manpower: 1800, stability: 1, legitimacy: 50 });
-    // The Tigris client (SPEC §184): solvent on the road's tolls, newly out
+    // The Tigris client (SPEC §185): solvent on the road's tolls, newly out
     // from under Tigranes and glad of a lighter yoke.
     h.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 15 });
 
@@ -1036,7 +1036,7 @@ export const BOOKMARK_67 = {
       if (!g || g.over || g.result) return;
       const me = g.playerTag;
       if (me === 'ADI') {
-        // The Tigris client's contract (SPEC §184): endure the settlement of
+        // The Tigris client's contract (SPEC §185): endure the settlement of
         // the East with the house seated and the road still paying.
         const adi = g.tags.ADI;
         const adiAlive = !!(adi && adi.alive !== false);

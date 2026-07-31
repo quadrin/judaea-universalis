@@ -625,7 +625,7 @@ export const BOOKMARK_66 = {
     h.adjust(ctx, 'NAB', { treasury: 80, stability: 1 });
     h.adjust(ctx, 'PAR', { treasury: 200, stability: 1, legitimacy: 20 });
     h.adjust(ctx, 'ARM', { treasury: 30 });
-    // The convert kingdom (SPEC §184): rich enough on the road's tolls to
+    // The convert kingdom (SPEC §185): rich enough on the road's tolls to
     // matter, devoted enough to Jerusalem to be watched from Ctesiphon.
     h.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 15 });
 
@@ -637,7 +637,7 @@ export const BOOKMARK_66 = {
     setOpinion(g, 'AGR', 'ROM', 150);  setOpinion(g, 'ROM', 'AGR', 150);
     setOpinion(g, 'AGR', 'JUD', -50);  setOpinion(g, 'JUD', 'AGR', -75);
     setOpinion(g, 'PAR', 'JUD', 40);   setOpinion(g, 'JUD', 'PAR', 60);
-    // The house of Monobazus (SPEC §184): converts whose princes are already
+    // The house of Monobazus (SPEC §185): converts whose princes are already
     // riding west, watched narrowly by both empires.
     setOpinion(g, 'ADI', 'JUD', 90);   setOpinion(g, 'JUD', 'ADI', 80);
     setOpinion(g, 'ADI', 'PAR', 80);   setOpinion(g, 'PAR', 'ADI', 60);
@@ -937,7 +937,7 @@ export const BOOKMARK_66 = {
         },
       },
     ],
-    // The last Herodian's tree (SPEC §184): a client king's war is fought at
+    // The last Herodian's tree (SPEC §185): a client king's war is fought at
     // court as much as in the field — keep the north, keep Rome's regard,
     // and be standing when the verdict is read.
     AGR: [
@@ -1033,7 +1033,7 @@ export const BOOKMARK_66 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 25 }),
       },
     ],
-    // The house beyond the Tigris (SPEC §184): a convert kingdom's chapter —
+    // The house beyond the Tigris (SPEC §185): a convert kingdom's chapter —
     // feed the west, keep the King of Kings sweet, and weigh the yoke.
     ADI: [
       {
@@ -1240,7 +1240,7 @@ export const BOOKMARK_66 = {
           return;
         }
       } else if (g.playerTag === who(ctx, 'AGR')) {
-        // The client's contract (SPEC §184): be standing, at home, when the
+        // The client's contract (SPEC §185): be standing, at home, when the
         // verdict is read — however the verdict goes.
         const agrTag = g.tags[who(ctx, 'AGR')];
         const agrAlive = !!(agrTag && agrTag.alive !== false);
@@ -1287,7 +1287,7 @@ export const BOOKMARK_66 = {
           return;
         }
       } else if (g.playerTag === who(ctx, 'ADI')) {
-        // The convert kingdom's contract (SPEC §184): the house endures the
+        // The convert kingdom's contract (SPEC §185): the house endures the
         // war that burned the west — freer or richer than it began.
         const adiTag = g.tags[who(ctx, 'ADI')];
         const adiAlive = !!(adiTag && adiTag.alive !== false);

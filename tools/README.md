@@ -825,7 +825,18 @@ keeps the §177 ladder pin true. The suite also enforces one-medallion-per-cell
 on every player tree — the check that found the §177/§179 curriculum nodes
 stacking two-deep at 167 and 132, which is why three of those now declare rows.
 
-SPEC §184 makes every seated Jewish court a playable standard — `ADI` in
+SPEC §184 badges the fork cards at the table. `entryFork(chapterId, eventId)`
+in `chapter_paths.js` is the single lookup behind the event window's chip, the
+Compendium's badge and row, and the multiplayer payload's pre-resolved
+`fork: { question }` — it is the §119 tree indexed by entry card, so it cannot
+drift from the chains. If you add a fork, its entry gets the badge for free;
+if you rename an entry card, `smoke83` still fails first (the card no longer
+exists) and `smoke117` holds the lookup itself: every declared entry resolves
+to its own fork, everything else — other chapters' cards, the shared pool,
+nulls — stays bare. `uitest39` deals a fork card and a plain card through
+`helpers.fireEvent` in a real browser and reads the chip off the live modal.
+
+SPEC §185 makes every seated Jewish court a playable standard — `ADI` in
 67 BCE, 40 BCE, 66 CE and 132 CE, `AGR` in 66 CE — and the roster pins moved
 with it: `smoke23` and `uitest3` now expect
 `HAS / HYR,ARI,ADI / HER,ATG,ADI / JUD,AGR,ADI / JUD,ADI / SAM / JUD / ISR`,
@@ -835,7 +846,7 @@ Adiabene's and Agrippa's roads beside the principals'. The batch re-measured
 the harness on the four touched chapters, 8 years, and found the v6.9
 accepted-anomaly line above had already drifted on the base tree: 132 ran
 `JUD: SNOWBALL` at the parent commit with the doc still saying "132 none".
-Post-§184 the four chapters read: 67 `SEL: DEAD` (accepted, and ROM's
+Post-§185 the four chapters read: 67 `SEL: DEAD` (accepted, and ROM's
 snowball happens not to fire this stream) · 40 none · 66 none (AGR's
 accepted bleed closes — the client now starts with the opinions and the
 small treasury the chapter always implied) · 132 `JUD: BLEEDING` (the
@@ -843,11 +854,11 @@ RNG-stream shift flips the base tree's SNOWBALL to the historical
 direction; all-AI Bar Kokhba losing ground is the record, not a wound).
 No new anomaly class appears on any of the four.
 
-The full battery at §184: 115 of 116 headless suites ALL PASS, and
+The full battery at §185: 115 of 116 headless suites ALL PASS, and
 `uitest3` passes in a real browser with the widened rosters card for card.
 The one red suite, `smoke90`, fails IDENTICALLY on the pre-change tree
 (a worktree at the parent commit, same command): its 167 crown-cost run
 loses three cards to seeded drift (`ev_sc_the_bid_for_a_province`,
 `ev_sc_quartered_on_the_city`, `ev_jerusalem_terms`) against an allowance
-of two, on both trees, byte for byte — pre-existing, not a §184
+of two, on both trees, byte for byte — pre-existing, not a §185
 regression, and it needs its own pass.

@@ -166,7 +166,7 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 67 BCE — the ev4_v_* strand pays both brothers' chains off one world,
-  // and the Tigris client's road pays off the same unrenamed west (§184).
+  // and the Tigris client's road pays off the same unrenamed west (§185).
   const { game, ctx } = booted.get('67bce');
   Object.assign(game.flags, { eagleRefused: true, neverRenamed: true });
   realm.checkMissions(ctx);
@@ -192,7 +192,7 @@ function expectAllDone(g, bookmark, tags, label) {
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
   // through the wave rule in a single monthly pass — and the client courts'
-  // roads (§184) pay off the same standing House.
+  // roads (§185) pay off the same standing House.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, { secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true });
   realm.checkMissions(ctx);
@@ -200,7 +200,7 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 132 CE — redemption, the accession, and the recorded doubt, three deep;
-  // the restored house's mint (§184) reads the same redemption.
+  // the restored house's mint (§185) reads the same redemption.
   const { game, ctx } = booted.get('132ce');
   Object.assign(game.flags, { redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true });
   realm.checkMissions(ctx);

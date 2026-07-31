@@ -594,7 +594,7 @@ export const ERA_IDEA_GROUPS = {
     ],
   },
 
-  // ---- the client courts (SPEC §184) --------------------------------------
+  // ---- the client courts (SPEC §185) --------------------------------------
   // Adiabene's arts, taught across the four chapters it can be played in.
   // The governing art changes faith with the house — the old kingdom before
   // the conversion, the proselyte crown after it; the road and the horse

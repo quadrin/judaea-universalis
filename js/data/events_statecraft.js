@@ -180,7 +180,7 @@ const SEATS = {
   '167bce:SEL': { strict: 'court', worldly: 'cities', soldiers: 'phalanx' },
   '67bce:HYR': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'antipater' },
   '67bce:ARI': { strict: 'pharisees', worldly: 'sadducees', soldiers: 'captains' },
-  // Adiabene's strict seat changes faith with the house (SPEC §184): the
+  // Adiabene's strict seat changes faith with the house (SPEC §185): the
   // fire priests guard the ancestral thing before the conversion, the
   // proselyte court after it — same role, different altar.
   '67bce:ADI': { strict: 'magi', worldly: 'caravans', soldiers: 'riders' },
