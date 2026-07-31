@@ -13,6 +13,9 @@ const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
+// The registry attaches each chapter's political map (SPEC §173); a raw
+// bookmark import boots an unowned west. One import wires every bookmark.
+await import(R + '/js/data/compendium.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
 const {
@@ -130,9 +133,12 @@ const saharaId = idOf('Sahara');
 
 console.log('== sealed frontiers refuse every column ==');
 {
+  // SPEC §173: the sealed cells carry their real sovereign now (SOV), and
+  // the expedition mechanic must refuse them for the same reasons as before —
+  // impassable and unsettleable. Owned land refuses it twice over.
   const phasis = prov('Phasis');
-  ok(phasis.owner === 'WASTE' && phasis.impassable && phasis.settleable === false,
-    'the Soviet Caucasus is sealed in 1948: closed, not colonizable');
+  ok(phasis.owner === 'SOV' && phasis.impassable && phasis.settleable === false,
+    'the Soviet Caucasus is sealed in 1948: closed, owned, not colonizable');
   const info = expeditionInfo(ctx, 'UK', idOf('Phasis'));
   ok(!info.show && !info.can, 'no expedition control appears on a sealed border');
   const alb = prov('Dyrrhachium');

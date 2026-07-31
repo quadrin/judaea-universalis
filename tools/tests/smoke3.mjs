@@ -84,7 +84,10 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // desert, Upper Egypt and Berenice — eleven new imperial provinces.
   // 66 with the v5.0 frame; v5.4 adds the empire's west — Italy, Sicily,
   // Tripolitania, the Balkans, northern Anatolia and Colchis (+20).
-  ok(rom && rom.provs === 86 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // SPEC §173 adds the west that was WASTE: the Maghreb, Hispania, Gaul,
+  // Britannia, the Danube and the Moesian coast — 83 more, at levy shares
+  // that keep them from being 83 more armies.
+  ok(rom && rom.provs === 169 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

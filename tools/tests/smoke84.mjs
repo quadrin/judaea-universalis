@@ -138,6 +138,17 @@ console.log('== §121: played forward, the silence is gone ==');
       }
       if (game.paused) game.paused = false;
       if (game.over) game.over = false;
+      // The premise's hand reaches the chapter's last year too (SPEC §173):
+      // the terminal card at 6/6 asks whether the LINE survived the century,
+      // not whether a §87 rebel band happened to hold the walls that
+      // particular June. The yearly prop-up below resets the capital each
+      // January; on seeds where a rising flickers through Jerusalem in the
+      // spring of 6 CE, the dated card's one firing day found REB on the
+      // walls and the whole assertion turned into a claim about the seed.
+      if (game.date.y === 6 && game.date.m === 5 && game.date.d === 29) {
+        const jer6 = ctx.prov('Jerusalem');
+        if (jer6) { jer6.owner = 'HAS'; jer6.controller = 'HAS'; jer6.siege = null; }
+      }
     }
     // The line survives its own chapter — which is the premise, not a cheat:
     // the question was what happens to a campaign that got this far.

@@ -9,6 +9,9 @@ const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
 const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');
+// The registry attaches each chapter's political map (SPEC §173); a raw
+// bookmark import boots an unowned west. One import wires every bookmark.
+await import(R + '/js/data/compendium.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
 const { initGame, makeCtx, gameActions, reconcileGameProvinces } = await import(R + '/js/sim/init.js');
 const { settlementInfo } = await import(R + '/js/sim/economy.js');
@@ -75,10 +78,13 @@ for (const p of modern.provinces) {
 ok(unowned === 0, 'no 1948 theater province is unowned');
 ok(walled === 0, 'no 1948 theater province is impassable');
 ok(empty === 0, 'no 1948 theater province is uninhabited (nothing hatches)');
-ok(['Dyrrhachium', 'Phasis', 'Caucasian Albania'].every((n) => {
+// SPEC §173: sealed no longer means ownerless. The three closed borders
+// carry their real 1948 sovereigns — Hoxha's Albania, the Soviet Caucasus —
+// and stay impassable, which is what "sealed" actually meant all along.
+ok(['Dyrrhachium', 'Phasis', 'Caucasian Albania'].every((n, i) => {
   const p = modern.provinces[idOf(n)];
-  return p && p.owner === 'WASTE' && p.impassable;
-}), 'the sealed borders stand closed in 1948');
+  return p && p.owner === ['ALB', 'SOV', 'SOV'][i] && p.impassable;
+}), 'the sealed borders stand closed in 1948 — and owned');
 ok(Object.entries(DESERTS).every(([name, tag]) => {
   const p = modern.provinces[idOf(name)];
   return p && p.owner === tag && p.habitation === 'frontier' && p.settleable !== false;

@@ -3,7 +3,7 @@
 // DOM-free.
 
 import {
-  num, clamp, B, devTotal, regCount, armiesOf, armiesInProv, isHostile, sameSide,
+  num, clamp, B, devTotal, levyOf, regCount, armiesOf, armiesInProv, isHostile, sameSide,
   canEnter, issueMove, mergeInto, recruitRegiment, bfsDistances, disciplineOf,
   resolveTagMult,
   breakAllianceCore, assaultInfo, doAssault,
@@ -114,7 +114,9 @@ function aiRecruit(ctx, tag, hints, fraction) {
   let ownDev = 0;
   for (let i = 1; i < ctx.game.provinces.length; i++) {
     const p = ctx.game.provinces[i];
-    if (p && !p.impassable && p.owner === tag) ownDev += devTotal(p);
+    // Levy-weighted (SPEC §173): the AI garrisons the realm it can draw on,
+    // through the same lens as the force limit that caps this below.
+    if (p && !p.impassable && p.owner === tag) ownDev += devTotal(p) * levyOf(p);
   }
   desired = Math.max(desired, Math.ceil(ownDev * 0.3));
   // Arms race: a neighbor wearing real infamy (>= 20) is armed against,
@@ -677,7 +679,12 @@ function hegemonContainment(ctx) {
     const p = g.provinces[i];
     const o = g.tags[p && p.owner];
     if (!p || p.impassable || !o || !o.alive) continue;
-    const d = devTotal(p);
+    // Levy-weighted (SPEC §173): the census counts the world the wars are
+    // fought with. Un-weighted, the owned west would grow the denominator by
+    // a third and quietly loosen a tuned anti-snowball lever — a player's
+    // share of the settled world must mean what it meant before the west
+    // had owners.
+    const d = devTotal(p) * levyOf(p);
     world += d;
     const root = blocOf(p.owner);
     bloc[root] = num(bloc[root]) + d;

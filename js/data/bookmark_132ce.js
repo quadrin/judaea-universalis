@@ -128,7 +128,13 @@ export const BOOKMARK_132 = {
     MLI: 'JUD',
   },
 
-  activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX'],
+  activeTags: ['ROM', 'JUD', 'PAR', 'ARM', 'OSR', 'ADI', 'CHX',
+    // The political west (SPEC §173): Hadrian's world one conquest wider —
+    // Dacia is a province now, so its tag rests, and the steppe peoples
+    // Trajan never finished with hold the grass.
+    'GRM', 'CAL', 'HIB',
+    'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
+    'BOS', 'SCY', 'SRM', 'VEN'],
   // Standing rivalries (SPEC §73): Trajan's Parthian war is a decade old and
   // Hadrian's peace is a truce of exhaustion, not friendship.
   rivalries: [['ROM', 'PAR']],
@@ -325,6 +331,9 @@ export const BOOKMARK_132 = {
     JUD: { name: 'Simon bar Kosiba', title: 'Nasi Israel', gov: 2, infl: 3, mar: 5, age: 45 },
     PAR: { name: 'Vologases III', title: 'King of Kings', gov: 2, infl: 3, mar: 2, age: 50 },
     ARM: { name: 'Vologases of Armenia', title: 'King', gov: 2, infl: 2, mar: 2, age: 40 },
+    // The political west (SPEC §173): the Bosporan client crown in the year
+    // its coins stop — Cotys II dies as this chapter opens.
+    BOS: { name: 'Cotys II', title: 'King of the Bosporus', gov: 2, infl: 2, mar: 2, age: 45 },
   },
 
   // Linear mission chains (realm panel).

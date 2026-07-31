@@ -192,11 +192,12 @@ for (const n of IRN_LANDS) OWNERS[n] = 'IRN';
 for (const n of UK_LANDS) OWNERS[n] = 'UK';
 for (const n of GRC_LANDS) OWNERS[n] = 'GRC';
 for (const n of ITA_LANDS) OWNERS[n] = 'ITA';
-// v5.4: the sealed borders of 1948 — Hoxha's Albania and the Soviet Caucasus
-// are closed frontiers, not playfields: no one crosses, no one owns.
-OWNERS['Dyrrhachium'] = 'WASTE';
-OWNERS['Phasis'] = 'WASTE';
-OWNERS['Caucasian Albania'] = 'WASTE';
+// CORRECTED (SPEC §173): these three used to be marked WASTE — "closed
+// frontiers, not playfields" — which conflated sealed with ownerless. Hoxha's
+// Albania and the Georgian and Azerbaijani SSRs were emphatically somebody's;
+// the political map (js/data/political_maps.js) seats ALB and SOV on them,
+// and the border stays closed the honest way: a Stalinist state at 0.05
+// aggression crosses into nothing.
 
 // ---- faiths and tongues, nineteen centuries on -------------------------------
 const RELIGIONS = {};
@@ -364,7 +365,20 @@ export const BOOKMARK_1948 = {
     + 'half centuries after Betar fell, there is again a Jewish state — for exactly as '
     + 'long as it can defend itself.',
 
-  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC', 'ITA'],
+  activeTags: ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU', 'TUR', 'IRN', 'UK', 'GRC', 'ITA',
+    // The political west (SPEC §173): the Europe of May 1948, seated by
+    // js/data/political_maps.js — Marshall-plan west, people's-republic east,
+    // occupied middle. Nobody here marches on the Levant; every court here
+    // convenes, elects, dies and is chronicled like any other.
+    //
+    // ALB is deliberately NOT seated: Albania's one cell is sealed
+    // (impassable), so a seated ALB would be a court with a flag and nothing
+    // the simulation can count — the harness flags it DEAD from the first
+    // month. Dyrrhachium wears Albania's color and name from the TAGS catalog
+    // (the same painted-not-seated pattern as Arabia's rump in 132), and a
+    // sealed country keeps sealed politics.
+    'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
+    'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV'],
   // Standing rivalries (SPEC §73): no peace, only armistice lines — and the
   // Arab cold war between Cairo and the Hashemite bloc (non-adjacent, so it
   // chills opinions without opening a land war).
@@ -580,6 +594,65 @@ export const BOOKMARK_1948 = {
     // Byblos, Sidon and Tyre — which this chapter renders as English exonyms
     // exactly as it renders Aleppo, Beirut and Nablus. Lydda keeps the form
     // the events of 1948 are written under.
+    //
+    // -- SPEC §173: the western frame in its 1948 names. Same rule as Memphis
+    // -> Cairo throughout: a cell answers to the metropolis that actually
+    // governs its ground in 1948, not to the dig site the seed sits on —
+    // Lutetia is Paris, Aquincum is Budapest, and the cell around dead
+    // Sarmizegetusa answers to Hunedoara. French North Africa wears the
+    // administrative names of 1948 (Bône, Bougie), because those are the
+    // 15-May originals here. Where the classical name IS the 1948 name
+    // (Ravenna, Ancona) nothing is written.
+    'Carthago': 'Tunis', 'Hadrumetum': 'Sousse', 'Thysdrus': 'El Djem',
+    'Tacape': 'Gabès', 'Capsa': 'Gafsa', 'Theveste': 'Tébessa',
+    'Hippo Regius': 'Bône', 'Cirta': 'Constantine', 'Saldae': 'Bougie',
+    'Icosium': 'Algiers', 'Caesarea Mauretaniae': 'Cherchell',
+    'Portus Magnus': 'Oran', 'Volubilis': 'Meknès', 'Tingis': 'Tangier',
+    'Sala': 'Rabat', 'Atlas': 'Marrakesh', 'Gaetulia': 'Ouarzazate',
+    'Garama': 'Sebha',
+    'Gades': 'Cádiz', 'Corduba': 'Córdoba', 'Hispalis': 'Seville',
+    'Malaca': 'Málaga', 'Carthago Nova': 'Cartagena', 'Toletum': 'Madrid',
+    'Emerita': 'Mérida', 'Olisipo': 'Lisbon', 'Bracara': 'Braga',
+    'Asturica': 'Oviedo', 'Tarraco': 'Tarragona', 'Caesaraugusta': 'Zaragoza',
+    'Valentia': 'Valencia', 'Numantia': 'Soria', 'Salmantica': 'Salamanca',
+    'Barcino': 'Barcelona', 'Emporiae': 'Girona', 'Baleares': 'Palma',
+    'Narbo': 'Narbonne', 'Massilia': 'Marseille', 'Nemausus': 'Nîmes',
+    'Tolosa': 'Toulouse', 'Burdigala': 'Bordeaux', 'Lugdunum': 'Lyon',
+    'Augustodunum': 'Dijon', 'Avaricum': 'Bourges', 'Limonum': 'Poitiers',
+    'Condate': 'Rennes', 'Darioritum': 'Vannes', 'Lutetia': 'Paris',
+    'Rotomagus': 'Rouen', 'Samarobriva': 'Amiens', 'Gesoriacum': 'Boulogne',
+    'Durocortorum': 'Reims', 'Augusta Treverorum': 'Trier',
+    'Colonia Agrippina': 'Cologne', 'Mogontiacum': 'Frankfurt',
+    'Argentorate': 'Strasbourg', 'Batavia': 'Amsterdam',
+    'Vesontio': 'Besançon', 'Genava': 'Geneva',
+    'Augusta Vindelicorum': 'Munich', 'Virunum': 'Klagenfurt',
+    'Mediolanum': 'Milan', 'Genua': 'Genoa', 'Bononia': 'Bologna',
+    'Pisae': 'Pisa', 'Aquileia': 'Trieste', 'Aleria': 'Bastia',
+    'Caralis': 'Cagliari', 'Turris Libisonis': 'Sassari',
+    'Britannia': 'Birmingham', 'Londinium': 'London',
+    'Camulodunum': 'Colchester', 'Durovernum': 'Canterbury',
+    'Venta Belgarum': 'Southampton', 'Corinium': 'Bristol',
+    'Isca Dumnoniorum': 'Exeter', 'Dumnonia': 'Plymouth',
+    'Isca Silurum': 'Cardiff', 'Cambria': 'Caernarfon', 'Deva': 'Liverpool',
+    'Lindum': 'Lincoln', 'Eboracum': 'York', 'Brigantia': 'Newcastle',
+    'Caledonia': 'Glasgow', 'Caledonia Ultima': 'Inverness',
+    'Hibernia': 'Dublin', 'Hibernia Occidentalis': 'Galway', 'Mumu': 'Cork',
+    'Chatti': 'Kassel', 'Teutoburgium': 'Hanover', 'Frisia': 'Groningen',
+    'Semnones': 'Berlin', 'Boiohaemum': 'Prague',
+    'Cimbria': 'Aarhus', 'Selandia': 'Copenhagen', 'Scandia': 'Malmö',
+    'Gothiscandza': 'Gdańsk', 'Aestii': 'Kaunas',
+    'Salona': 'Split', 'Delminium': 'Sarajevo', 'Siscia': 'Zagreb',
+    'Carnuntum': 'Vienna', 'Aquincum': 'Budapest', 'Sirmium': 'Novi Sad',
+    'Singidunum': 'Belgrade', 'Naissus': 'Niš', 'Serdica': 'Sofia',
+    'Philippopolis': 'Plovdiv', 'Novae': 'Ruse', 'Tomis': 'Constanța',
+    'Sarmizegetusa': 'Hunedoara', 'Napoca': 'Cluj',
+    'Tyras': 'Odessa', 'Olbia': 'Mykolaiv', 'Chersonesus': 'Sevastopol',
+    'Panticapaeum': 'Kerch', 'Phanagoria': 'Krasnodar',
+    'Tauria': 'Simferopol', 'Tanais': 'Rostov', 'Scythia': 'Kryvyi Rih',
+    'Sarmatia': 'Kharkov', 'Roxolania': 'Stalingrad', 'Aorsia': 'Astrakhan',
+    'Borysthenia': 'Gomel', 'Venedia': 'Minsk', 'Rha': 'Penza',
+    'Hyperborea': 'Moscow', 'Ripaea': 'Kuybyshev',
+    'Dyrrhachium': 'Durrës', 'Phasis': 'Batumi', 'Caucasian Albania': 'Baku',
   },
 
   // Where these courts actually sit in 1948 (SPEC §141). A tag's static seat
@@ -762,8 +835,11 @@ export const BOOKMARK_1948 = {
     'Libyan Desert': false,
     'Arabian Desert': false,
     'Syrian Desert': false,
-    // v5.4: the sealed borders — no army enters Hoxha's Albania or the
-    // Soviet Caucasus in this chapter.
+    // The sealed borders — no army enters Hoxha's Albania or the Soviet
+    // Caucasus in this chapter. SPEC §173 gave these three their real owners
+    // (ALB, SOV), so the map stops calling them nobody's; the impassable flag
+    // is what "sealed" actually means, and it stays. The hatch over a
+    // sovereign color now reads exactly right: somebody's, and shut.
     'Dyrrhachium': true,
     'Phasis': true,
     'Caucasian Albania': true,
@@ -1148,6 +1224,30 @@ export const BOOKMARK_1948 = {
     IRN: { name: 'Mohammad Reza Pahlavi', title: 'Shah', gov: 2, infl: 3, mar: 2, age: 28 },
     UK: { name: 'Clement Attlee', title: 'Prime Minister', gov: 4, infl: 3, mar: 2, age: 65 },
     ITA: { name: 'Alcide De Gasperi', title: 'Prime Minister', gov: 4, infl: 3, mar: 1, age: 67 },
+    // The political west (SPEC §173): the governments of 15 May 1948, to the
+    // week. Wilhelmina abdicates in September with Juliana named; Gottwald
+    // has held Prague since February; Tildy has until July; Dimitrov has a
+    // year to live and Stalin has five.
+    FRA: { name: 'Vincent Auriol', title: 'President', gov: 3, infl: 3, mar: 2, age: 63 },
+    SPA: { name: 'Francisco Franco', title: 'Caudillo', gov: 3, infl: 2, mar: 3, age: 55 },
+    POR: { name: 'António de Oliveira Salazar', title: 'President of the Council', gov: 4, infl: 2, mar: 1, age: 59 },
+    NLD: { name: 'Wilhelmina', title: 'Queen', gov: 3, infl: 3, mar: 1, age: 67,
+      heir: { name: 'Juliana', gov: 3, infl: 3, mar: 1, age: 39 } },
+    DEN: { name: 'Frederik IX', title: 'King', gov: 2, infl: 2, mar: 2, age: 48 },
+    SWE: { name: 'Gustaf V', title: 'King', gov: 2, infl: 2, mar: 1, age: 89,
+      heir: { name: 'Gustaf VI Adolf', gov: 3, infl: 3, mar: 1, age: 65 } },
+    SUI: { name: 'Enrico Celio', title: 'President of the Confederation', gov: 3, infl: 2, mar: 1, age: 59 },
+    IRL: { name: 'John A. Costello', title: 'Taoiseach', gov: 3, infl: 3, mar: 1, age: 56 },
+    GER: { name: 'The Control Council', title: 'Occupation Authority', gov: 2, infl: 1, mar: 0, age: 50 },
+    AUT: { name: 'Karl Renner', title: 'President', gov: 4, infl: 3, mar: 0, age: 77 },
+    POL: { name: 'Bolesław Bierut', title: 'President', gov: 2, infl: 2, mar: 1, age: 56 },
+    CZE: { name: 'Klement Gottwald', title: 'President', gov: 2, infl: 3, mar: 1, age: 51 },
+    HUN: { name: 'Zoltán Tildy', title: 'President', gov: 2, infl: 2, mar: 1, age: 58 },
+    YUG: { name: 'Josip Broz Tito', title: 'Marshal', gov: 4, infl: 4, mar: 4, age: 56 },
+    ALB: { name: 'Enver Hoxha', title: 'General Secretary', gov: 2, infl: 2, mar: 2, age: 39 },
+    BUL: { name: 'Georgi Dimitrov', title: 'Chairman', gov: 3, infl: 3, mar: 1, age: 66 },
+    ROU: { name: 'Petru Groza', title: 'President of the Council', gov: 2, infl: 3, mar: 1, age: 64 },
+    SOV: { name: 'Joseph Stalin', title: 'General Secretary', gov: 4, infl: 5, mar: 3, age: 69 },
   },
 
   missions: {

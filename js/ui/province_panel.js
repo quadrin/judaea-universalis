@@ -377,9 +377,18 @@ const RISING_LABELS = {
         + ' — unintegrated minorities drive unrest.';
     }
 
-    // Dev, autonomy, sites
+    // Dev, autonomy, sites. The levy share (SPEC §173) rides the development
+    // row rather than hiding behind it: a far province shows what the crown
+    // can actually draw, because §145's rule cuts both ways — the number on
+    // the chrome must be the number the treasury moves.
     const dev = p.dev || {};
-    setText(refs.dev, `${dev.tax || 0} / ${dev.prod || 0} / ${dev.mp || 0}`);
+    const levy = Number.isFinite(p.levy) && p.levy > 0 && p.levy < 1 ? p.levy : 1;
+    setText(refs.dev, `${dev.tax || 0} / ${dev.prod || 0} / ${dev.mp || 0}`
+      + (levy < 1 ? ` · levy ${levy === 0.1 ? '⅒' : '⅕'}` : ''));
+    refs.dev.parentElement.dataset.tt = levy < 1
+      ? 'Tax / Production / Manpower development.\nLevy share ' + (levy === 0.1 ? '⅒ — a standing frontier: the men and the taxes are spent holding the line.'
+        : '⅕ — a governed interior far from the wars: the crown draws a fifth of what the rolls say.')
+      : 'Tax / Production / Manpower development';
     const mine = p.owner === g.playerTag && p.controller === g.playerTag;
     refs.devBtnsRow.classList.toggle('hidden', !mine);
     if (mine) {

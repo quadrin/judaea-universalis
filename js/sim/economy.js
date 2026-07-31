@@ -1,7 +1,7 @@
 // Judaea Universalis — economy: monthly income/expenses, manpower, income breakdown.
 // DOM-free.
 
-import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef } from './military.js';
+import { num, clamp, B, regCount, resolveTagMult, armiesOf, airWingsOf, hasBuilding, buildingFace, devTotal, levyOf, forceLimitOf, changeOwnerCore, resolveDisplayName, tagDef } from './military.js';
 import { POP_PER_DEV, addPopulation } from './population.js';
 import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
@@ -80,7 +80,10 @@ export function adminExpense(ctx, tag) {
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.owner !== tag || p.controller !== tag) continue;
-    dev += devTotal(p);
+    // Arm's-length rule (SPEC §173): a province the crown draws a fifth from
+    // costs a fifth to govern, or the far west would be a pure liability and
+    // the levy share a tax with no other side.
+    dev += devTotal(p) * levyOf(p);
   }
   return Math.max(0, dev - B(ctx, 'adminFreeDev', 0)) * perDev
     * resolveTagMult(ctx, tag, 'adminMult');
@@ -109,9 +112,12 @@ function ownIncome(ctx, tag) {
     // all sit on the same quay. A hostile squadron riding off the port does it
     // ship by ship; a declared blockade does it to every port at once.
     const port = isCoastal(ctx, i) && (blockade < 1 || blockadedBy(ctx, i)) ? blockade : 1;
-    out.tax += num(p.dev && p.dev.tax) * (1 - autonomy) * (taxPerDev / 12) * provMult(p, 'taxMult') * market * port;
+    // The levy share (SPEC §173): what the far provinces remit after their
+    // own garrisons, grain doles and governors are paid.
+    const lev = levyOf(p);
+    out.tax += num(p.dev && p.dev.tax) * lev * (1 - autonomy) * (taxPerDev / 12) * provMult(p, 'taxMult') * market * port;
     const shipyard = hasBuilding(p, 'shipyard') ? 1.15 : 1;
-    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * (prodMult / 12) * provMult(p, 'prodMult') * market * shipyard * port;
+    out.prod += goodPrice(ctx, p.good) * num(p.dev && p.dev.prod) * lev * (prodMult / 12) * provMult(p, 'prodMult') * market * shipyard * port;
   }
   out.mult = resolveTagMult(ctx, tag, 'incomeMult');
   out.base = out.tax + out.prod;
@@ -316,7 +322,7 @@ export function maxManpowerOf(ctx, tag) {
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.owner !== tag) continue;
-    mp += num(p.dev && p.dev.mp) * mpPerDev;
+    mp += num(p.dev && p.dev.mp) * mpPerDev * levyOf(p); // the men the crown can CALL (SPEC §173)
   }
   return Math.round(mp * resolveTagMult(ctx, tag, 'manpowerMult'));
 }

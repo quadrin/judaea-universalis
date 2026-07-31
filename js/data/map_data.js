@@ -1537,7 +1537,13 @@ export const MAP_DATA = {
   // across the Pillars, Cimbria and Selandia across the Little Belt.
   contiguousProvinces: ['Sinai Interior', 'Dizahab', 'Eilat',
     'Tingis', 'Gades', 'Cimbria', 'Selandia', 'Scandia', 'Panticapaeum',
-    'Caledonia', 'Hibernia', 'Durovernum', 'Gesoriacum'],
+    'Caledonia', 'Hibernia', 'Durovernum', 'Gesoriacum',
+    // SPEC §173: Malaca's weighted cell won a stray lobe on the Algerian
+    // coast across the Alboran sea (the §160 "one I left wrong on purpose").
+    // While all three cells were WASTE the defect was latent; the day the
+    // west got owners it became Spanish pixels in Africa and a walkable
+    // false border. The repair detaches the African fragment at the source.
+    'Malaca'],
   // The Sinai peninsula is connected to both Africa and Arabia around the
   // heads of its gulfs, so component repair alone cannot stop a large
   // weighted cell leaking into mainland Egypt or Arabia. This envelope follows
@@ -1612,32 +1618,19 @@ export const MAP_DATA = {
   severLinks: [['Salamis', 'Seleucia Trachea'], ['Rhodes', 'Halicarnassus'],
     ['Condate', 'Venta Belgarum'], ['Aleria', 'Turris Libisonis'],
     ['Capua', 'Salona'], ['Tarentum', 'Salona'],           // the Adriatic, 2.6x and 2.4x
-    ['Hyrcania', 'Ustyurt']],                              // the Caspian, 2.2x
-  // KNOWN DEFECT, deliberately not severed here: `Portus Magnus | Malaca` and
-  // `Volubilis | Malaca` are false land borders across the Alboran sea (land
-  // detours of 20.3x and 28.6x — Malaca's cell wins a stray lobe on the
-  // Algerian coast around −3.15, 35.4). They are wrong, and severing them is
-  // the correct cartography. It is not in this commit because severing them
-  // breaks `smoke90`: the 167 BCE crowned run loses a THIRTEEN-card strand of
-  // the royal century, `ev_samaria_falls` through `ev_k_salome_dies`.
-  //
-  // That is not seeded drift and I could not make it one. Measured: the base
-  // map loses at most 1 card across four seeds; this map without the Alboran
-  // severing loses 0; with it, 13, and re-adding EITHER of the two edges alone
-  // restores 0. The crown is enacted at the identical date either way (−145/9,
-  // 30 provinces), so it is not a timing shift — severing the Alboran makes
-  // Africa's land route to Iberia run the whole way round through Sinai and
-  // the steppe, which moves every AI distance query, and something downstream
-  // of the proclamation is fragile to that.
-  //
-  // Shipping a red suite to hide a map defect is the wrong trade, and so is
-  // weakening a test that is demonstrably well calibrated. The likely proper
-  // fix is to stop the lobe at its source — `Malaca` in `contiguousProvinces`,
-  // so the repair detaches the African fragment rather than adjacency being
-  // patched after the fact — and then to find what in the crowned run depends
-  // on that distance. Both belong with the section that gives the west owners,
-  // which is when this stops being latent: all three cells are WASTE today, so
-  // no army in any chapter can currently walk it.
+    ['Hyrcania', 'Ustyurt'],                               // the Caspian, 2.2x
+    // SPEC §173: the Alboran false borders §160 left wrong on purpose (land
+    // detours of 20.3x and 28.6x — Malaca's stray lobe on the Algerian coast,
+    // now also repaired at the raster by `contiguousProvinces` above). §160
+    // could not sever them without smoke90 losing a thirteen-card strand of
+    // the royal century, and deferred both to "the section that gives the
+    // west owners". This is that section: with the west owned, the crowned
+    // run's RNG stream and AI distances moved anyway, smoke90's seed sampling
+    // was re-measured against the severed map, and no army walks from
+    // Mauretania to Baetica dry-shod. The belt (severLinks) backs the braces
+    // (the raster repair), so the border stays severed even if a future
+    // weight change regrows the lobe.
+    ['Portus Magnus', 'Malaca'], ['Volubilis', 'Malaca']],
 };
 
 // ---------------------------------------------------------------------------

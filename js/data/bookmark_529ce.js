@@ -143,8 +143,13 @@ const BYZ_LANDS = [
   'Corinth', 'Athens', 'Sparta', 'Gortyn', 'Rhodes', 'Halicarnassus',
   'Dyrrhachium', 'Thessalonica', 'Hadrianopolis', 'Byzantion',
   'Nicaea', 'Smyrna', 'Ancyra', 'Sinope', 'Trapezus', 'Phasis',
-  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae',
-  'Oea', 'Leptis Magna', 'Macomades',
+  // CORRECTED (SPEC §173): this list used to reach Rome, Sicily and
+  // Tripolitania — the west Justinian holds only in the histories his own
+  // reign has not written yet. In the spring of 529 Italy and Sicily are
+  // Athalaric's, Carthage and the Syrtic shore are Hilderic's, and Belisarius
+  // is a young officer on the PERSIAN front. The political map
+  // (js/data/political_maps.js) seats the Ostrogoths and Vandals on that
+  // ground; the reconquest is a war the player gets to watch — or prevent.
 ];
 const SAS_LANDS = [
   'Seleucia-Ctesiphon', 'Babylon', 'Nehardea', 'Uruk', 'Charax', 'Ecbatana',
@@ -285,6 +290,16 @@ export const BOOKMARK_529 = {
         + 'city it may not live in: the academy at Tiberias, the town that closed the '
         + 'Talmud, and a patriarchate the emperor let lapse.',
     },
+    // The era's lens on the western tags (SPEC §139, §173): the same three
+    // letters, the state the sixth century actually knows under them.
+    CAL: { name: 'The Picts', description: 'The painted peoples beyond the old wall, whom Columba has not yet visited.' },
+    SUE: {
+      name: 'The Sueves', capital: 'Bracara',
+      description: 'The Suebic kingdom of Gallaecia: a migration that stopped, took the land, and kept the name.',
+    },
+    MAU: { name: 'The Moorish Kingdoms', description: 'Masuna\'s "kingdom of the Moors and Romans", Iaudas in the Aures: what the Vandals never held and the reconquest will learn about.' },
+    LMB: { capital: 'Carnuntum' }, // Wacho rules from the middle Danube; Italy is thirty years away
+    CIM: { name: 'The Danes', description: 'The new lords of the Cimbric sea: Chlochilaich\'s raid is eight years old and Gaul remembers it.' },
   },
 
   blurb: 'Justinian has ruled two years and has already legislated the Keepers out of the '
@@ -307,7 +322,14 @@ export const BOOKMARK_529 = {
   // is four hill provinces or it is nothing.
   activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya'],
 
-  activeTags: ['SAM', 'BYZ', 'JUD', 'GHA', 'SAS'],
+  activeTags: ['SAM', 'BYZ', 'JUD', 'GHA', 'SAS',
+    // The political west (SPEC §173): the successor kingdoms four years
+    // before Belisarius sails, seated by js/data/political_maps.js. The
+    // reconquest is not scripted; the courts, wars and successions of §163
+    // decide whether an Amal Italy is still there to be taken.
+    'OST', 'VAN', 'MAU', 'GRM', 'VIS', 'SUE', 'FRK', 'BGD', 'ARO',
+    'BRT', 'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
+    'GEP', 'LMB', 'BGR', 'SLV'],
   // Standing rivalries (SPEC §73): the era's weather. The Ghassanid phylarchate
   // is the instrument Justinian actually used against the mountain, which makes
   // GHA an antagonist here rather than the background client it is in 614.
@@ -641,6 +663,19 @@ export const BOOKMARK_529 = {
     JUD: { name: 'Mar Zutra', title: 'Head of the Academy', gov: 3, infl: 3, mar: 1, age: 51 },
     GHA: { name: 'al-Harith ibn Jabalah', title: 'Phylarch', gov: 2, infl: 3, mar: 4, age: 40 },
     SAS: { name: 'Kavad I', title: 'King of Kings', gov: 3, infl: 3, mar: 3, age: 56 },
+    // The political west (SPEC §173), Procopius' cast list: a child on
+    // Theodoric's throne with his mother actually governing; the mild Vandal
+    // whose deposition next year is Justinian's casus belli; the last
+    // Burgundian king; the last free Visigoth of the Balti line; the four
+    // sons of Clovis, eldest named.
+    OST: { name: 'Athalaric', title: 'King of the Goths and Romans', gov: 1, infl: 1, mar: 0, age: 13 },
+    VAN: { name: 'Hilderic', title: 'King of the Vandals and Alans', gov: 2, infl: 2, mar: 1, age: 68,
+      heir: { name: 'Gelimer', gov: 2, infl: 1, mar: 3, age: 45 } },
+    VIS: { name: 'Amalaric', title: 'King', gov: 1, infl: 2, mar: 2, age: 27 },
+    FRK: { name: 'Theuderic I', title: 'King of the Franks', gov: 3, infl: 3, mar: 4, age: 44 },
+    BGD: { name: 'Godomar II', title: 'King', gov: 2, infl: 2, mar: 2, age: 45 },
+    LMB: { name: 'Wacho', title: 'King', gov: 2, infl: 3, mar: 3, age: 40 },
+    MAU: { name: 'Masuna', title: 'King of the Moors and Romans', gov: 3, infl: 2, mar: 3, age: 50 },
   },
 
   missions: {

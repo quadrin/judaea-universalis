@@ -55,10 +55,19 @@ static site, the zero dependencies, or the missing build step changes.
 
 ## What's in the slice
 
-- Province map from Greece and Cyrenaica to Persepolis, from Ionia to the Hejaz
-  (~148 permanent cells, Judaea at city/district density), GPU-generated
-  province-ID texture, EU4-style mapmode shaders, heightmap relief, parchment
-  crossfade at strategic zoom.
+- Province map of the whole Roman world — the Atlantic to the Caspian, Britain
+  to the Sahara (~307 permanent cells, Judaea at city/district density),
+  GPU-generated province-ID texture, EU4-style mapmode shaders, heightmap
+  relief, parchment crossfade at strategic zoom.
+- A political west in every chapter: eight per-era maps seat some 65 courts on
+  the ground beyond the old frame — Carthage, Masinissa's Numidia and the
+  Arverni hegemony in 167 BCE; the Ostrogoths, Vandals, Franks and Moorish
+  kings in 529 (Justinian no longer holds an Italy he hadn't reconquered yet);
+  the Avar khaganate and the Sclaveni in 614; Stalin's Europe in 1948, Paris
+  to Moscow under their 1948 names. Every one is a living AI court — convening,
+  electing, dying, fighting its own wars — and every western province carries a
+  levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine legions stay on the
+  Rhine instead of doubling the army it brings to Judaea.
 - Mapmodes: political, terrain, religion, culture, development, unrest.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
@@ -268,7 +277,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 106 headless sim suites and 37
+  marching. The full verification battery — 107 headless sim suites and 37
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
