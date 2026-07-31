@@ -842,3 +842,12 @@ small treasury the chapter always implied) · 132 `JUD: BLEEDING` (the
 RNG-stream shift flips the base tree's SNOWBALL to the historical
 direction; all-AI Bar Kokhba losing ground is the record, not a wound).
 No new anomaly class appears on any of the four.
+
+The full battery at §184: 115 of 116 headless suites ALL PASS, and
+`uitest3` passes in a real browser with the widened rosters card for card.
+The one red suite, `smoke90`, fails IDENTICALLY on the pre-change tree
+(a worktree at the parent commit, same command): its 167 crown-cost run
+loses three cards to seeded drift (`ev_sc_the_bid_for_a_province`,
+`ev_sc_quartered_on_the_city`, `ev_jerusalem_terms`) against an allowance
+of two, on both trees, byte for byte — pre-existing, not a §184
+regression, and it needs its own pass.
