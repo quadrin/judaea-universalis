@@ -280,7 +280,7 @@ export function courtSeats(ctx, tag) {
   if (tag === g.playerTag) return null; // factions.js owns this throne
   const t = g.tags[tag];
   if (!t || !t.alive) return null;
-  // An off-map seat (SPEC §178) owns no cell and convenes anyway — watching
+  // An off-map seat (SPEC §180) owns no cell and convenes anyway — watching
   // Washington's parties is most of what the ledger's chip is FOR.
   if (!isOffmapTag(ctx, tag) && provinceCount(ctx, tag) < COURT.minProvinces) return null;
   return archetypeFor(ctx, tag);

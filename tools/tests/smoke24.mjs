@@ -37,7 +37,7 @@ const israel = game.tags.ISR;
 israel.treasury = 1000;
 israel.points.gov = 500;
 israel.manpower = Math.max(israel.manpower, 10000);
-// SPEC §179: armor and wings are imports, and Israel opens with the market
+// SPEC §181: armor and wings are imports, and Israel opens with the market
 // shut. This suite is about the FIFO queue, not the market (smoke113), so
 // sign the scripted pipeline before ordering the production line.
 ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');

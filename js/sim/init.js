@@ -211,7 +211,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
     tagAliases: {}, // three letters a greater crown retired → who wears them now (SPEC §135)
     chronicle: [{ y: start.y, m: start.m, kind: 'era', text: 'The chronicle opens: ' + ((bookmark && bookmark.name) || 'a new age') + '.' }],
     subsidies: [], // monthly flows between courts: gifts of policy, debts of defeat (SPEC §24)
-    armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §179)
+    armsDeals: {}, // who feeds whose arsenal: { client: supplier } (SPEC §181)
     rngSeed, rngState: rngSeed,
     ui: { selectedProv: 0, selectedArmy: null, selectedArmies: [], selectedFleet: null, selectedWing: null },
   };
@@ -350,11 +350,11 @@ export function makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark, events, 
     try {
       if (bookmark && typeof bookmark.setup === 'function') bookmark.setup(ctx);
     } catch (e) { console.warn('[sim/init] bookmark.setup failed:', e); }
-    // The opening arms book (SPEC §179): the treaty system the chapter
+    // The opening arms book (SPEC §181): the treaty system the chapter
     // starts under, seeded after setup so scripted opinions are already in.
     try { seedArmsDeals(ctx); } catch (e) { console.warn('[sim/init] seedArmsDeals failed:', e); }
   }
-  // Off-map seats (SPEC §178), on every bind: a save from before a seat
+  // Off-map seats (SPEC §180), on every bind: a save from before a seat
   // existed loads into a world that has one — the same backfill §55 once ran
   // for its standings book, pointed the other way. Seats are created with
   // the ordinary tag shape; the stipend and the court arrive with the next
@@ -628,7 +628,7 @@ export const simHelpers = {
   setFlag(ctx, key, val) {
     ctx.game.flags[key] = val;
   },
-  // The arms market's pen for scripted history (SPEC §179): set or read the
+  // The arms market's pen for scripted history (SPEC §181): set or read the
   // book directly — the Messerschmitts landed whatever the cabinet thought.
   setArmsDeal(ctx, client, supplier) {
     try { return setArmsDealCore(ctx, L(ctx, client), L(ctx, supplier)); } catch (e) { return false; }
@@ -636,7 +636,7 @@ export const simHelpers = {
   armsSupplier(ctx, tag) {
     try { return armsSupplierOf(ctx, L(ctx, tag)); } catch (e) { return null; }
   },
-  // A scripted embargo (SPEC §100/§179): the general signs something. Runs
+  // A scripted embargo (SPEC §100/§181): the general signs something. Runs
   // the ordinary declaration, so the trade bite, the opinion hit and the
   // arms-pipeline cutoff all follow from the one signature.
   declareEmbargo(ctx, from, to) {
@@ -1043,7 +1043,7 @@ export function gameActions(ctx) {
       }
       // Some pacts are never signed (SPEC §96): the bookmark's own bar comes
       // before every other reason, because no amount of goodwill lifts it.
-      // An off-map seat (SPEC §178) is barred before even that: an ally who
+      // An off-map seat (SPEC §180) is barred before even that: an ally who
       // can never march is no ally, whatever anybody's opinion says.
       const seatBar = isOffmapTag(ctx, tag) || isOffmapTag(ctx, me);
       const allyBar = allianceBarred(ctx, me, tag);
@@ -1128,7 +1128,7 @@ export function gameActions(ctx) {
           marriage = { married: mi.married, can: mi.can, why: mi.why, cost: mi.cost };
         } catch (e) { marriage = null; }
       }
-      // The arms market (SPEC §179): only surfaced where a bookmark declares
+      // The arms market (SPEC §181): only surfaced where a bookmark declares
       // one, and only against an arsenal court or our current supplier.
       let arms = null;
       try { arms = armsInfo(ctx, me, tag); } catch (e) { arms = null; }
@@ -1546,7 +1546,7 @@ export function gameActions(ctx) {
         }
         let whyNot = '';
         if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
-        // Aircraft are an import (SPEC §179): the same gate the sim enforces,
+        // Aircraft are an import (SPEC §181): the same gate the sim enforces,
         // spoken on the button before the click finds it out.
         const shut = armsGate(ctx, g.playerTag);
         if (!whyNot && shut) whyNot = shut.charAt(0).toUpperCase() + shut.slice(1) + '.';
@@ -1667,7 +1667,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('unitDetails', 'getUnitDetails failed', e); return null; }
     },
 
-    // ---- the arms market (SPEC §179) -----------------------------------------
+    // ---- the arms market (SPEC §181) -----------------------------------------
     getArmsStatus() {
       try {
         if (!armsMarketOn(ctx)) return null;
@@ -2515,7 +2515,7 @@ export function gameActions(ctx) {
             provs++;
             dev += devTotal(p);
           }
-          // An off-map seat (SPEC §178) owns no cell; its weight in the world
+          // An off-map seat (SPEC §180) owns no cell; its weight in the world
           // is the def's own number, and the ledger prints it honestly.
           const om = tagDef(ctx, tag).offmap;
           if (om) dev += num(om.dev, 0);
@@ -3316,8 +3316,8 @@ export function reviveGame(saved) {
   if (!saved.truces) saved.truces = {};
   if (saved.difficulty !== 'hard') saved.difficulty = 'normal'; // pre-difficulty saves
   if (!saved.diploCooldowns) saved.diploCooldowns = {}; // pre-diplomacy saves
-  if (!saved.armsDeals || typeof saved.armsDeals !== 'object') saved.armsDeals = {}; // pre-§179 saves
-  // The powers beyond the map are retired (SPEC §178): drop the standings
+  if (!saved.armsDeals || typeof saved.armsDeals !== 'object') saved.armsDeals = {}; // pre-§181 saves
+  // The powers beyond the map are retired (SPEC §180): drop the standings
   // book, and strip the pact/ask modifiers whose removal path went with the
   // system — a permanent incomeMult nobody can ever unsign is not a save
   // feature, it is a leak.

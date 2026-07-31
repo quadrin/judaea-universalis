@@ -1061,7 +1061,7 @@ const RISING_LABELS = {
     const gen = cappedGen((t && t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const label = genName(gen, type) || (type === 'inf' ? 'Infantry' : 'Cavalry');
     const glyph = icon(type === 'inf' ? 'shield' : 'horseshoe');
-    // Armor (SPEC §179): at pattern 5+ the mounted arm is tanks — priced and
+    // Armor (SPEC §181): at pattern 5+ the mounted arm is tanks — priced and
     // fitted like them, and raised only through a live arms pipeline.
     const AR = (ctx && ctx.DEFINES && ctx.DEFINES.ARMOR) || {};
     const armor = type === 'cav' && gen >= (Number.isFinite(AR.minGen) ? AR.minGen : 5);

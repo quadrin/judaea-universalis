@@ -223,7 +223,7 @@ export function incomeBreakdown(ctx, tag) {
     if (s.to === tag) out.subsIn += num(s.amount);
     if (s.from === tag) out.subsOut += num(s.amount);
   }
-  // An off-map seat's economy in one number (SPEC §178): the stipend its def
+  // An off-map seat's economy in one number (SPEC §180): the stipend its def
   // declares, riding the breakdown so the ledger, the standing table and the
   // treasury all see the same money. Zero for every court on the map.
   try {

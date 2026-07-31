@@ -1,4 +1,4 @@
-// Headless regression — SPEC §178: the world is not beyond the map.
+// Headless regression — SPEC §180: the world is not beyond the map.
 //
 // The off-map powers panel is retired; the one power the frame genuinely
 // cannot reach — the United States — is a COURT now: a seated tag with no
@@ -10,7 +10,7 @@
 //   - Washington convenes a §163 court despite owning nothing;
 //   - the ledger row, the §165 standing table and incomeBreakdown all read
 //     the same off-map economy;
-//   - a pre-§178 save revives with the powers book dropped, the orphaned
+//   - a pre-§180 save revives with the powers book dropped, the orphaned
 //     power_* modifiers stripped, and the missing seat backfilled;
 //   - the ancient chapters seat nothing off-map, and the old machinery is
 //     really gone.
@@ -103,7 +103,7 @@ console.log('== a real court, from the ledger ==');
   ok(order.indexOf('USA') >= 0 && order.indexOf('USA') < 8, 'the seat sits at the top table of the age (§165)');
 }
 
-console.log('== the migration: a pre-§178 save ==');
+console.log('== the migration: a pre-§180 save ==');
 {
   const { game } = boot('1948ce', 'ISR');
   const saved = JSON.parse(JSON.stringify(game));
@@ -115,7 +115,7 @@ console.log('== the migration: a pre-§178 save ==');
   ok(revived && revived.powers === undefined, 'the powers book is dropped on revive');
   ok(!revived.tags.ISR.modifiers.some((m) => m && String(m.id).startsWith('power_')),
     'the orphaned pact modifier is stripped — no permanent bonus without an owner');
-  ok(revived.armsDeals && typeof revived.armsDeals === 'object', 'the arms book defaults in (§179)');
+  ok(revived.armsDeals && typeof revived.armsDeals === 'object', 'the arms book defaults in (§181)');
   const ERA = ERAS.find((e) => e.bookmark.id === '1948ce');
   const ctx2 = makeCtx({ game: revived, DEFINES, MAP_DATA, geom, bus, bookmark: ERA.bookmark, events: ERA.events });
   ok(!!ctx2.game.tags.USA && ctx2.game.tags.USA.alive, 'makeCtx seats the missing USA on bind');
@@ -133,5 +133,5 @@ console.log('== the old machinery is really gone; the old chapters seat nothing 
   ok(typeof actions.getPowers !== 'function', 'and the getPowers action is gone from the contract');
 }
 
-console.log(failures ? `smoke112: ${failures} FAILURES` : 'smoke112: ALL PASS');
+console.log(failures ? `smoke115: ${failures} FAILURES` : 'smoke115: ALL PASS');
 process.exit(failures ? 1 : 0);

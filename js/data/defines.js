@@ -978,7 +978,7 @@ export const DEFINES = {
       description: 'Armed to the teeth and party to nothing.',
       ideas: {},
     },
-    // ---- off-map seats (SPEC §178): courts the frame cannot reach ----
+    // ---- off-map seats (SPEC §180): courts the frame cannot reach ----
     // An off-map seat is a real tag with no cell on the board: alive without
     // land, beyond every army, no alliances — but a court, an opinion, a
     // treasury, and every civil verb. `offmap.dev/income` is its economy in
@@ -1065,7 +1065,7 @@ export const DEFINES = {
     importMult: 2,         // fuel bill multiplier with no controlled oil province
   },
 
-  // Armor (SPEC §179): mounted regiments at pattern `minGen`+ are tanks, not
+  // Armor (SPEC §181): mounted regiments at pattern `minGen`+ are tanks, not
   // horses — a shock-phase die advantage on §154's signed-quantity design,
   // and a price that reflects a battalion of Shermans rather than a squadron
   // of dragoons. Ancient chapters cap at pattern 3, so none of this exists
@@ -1078,7 +1078,7 @@ export const DEFINES = {
     pipCap: 3,             // most pips armor advantage can add
   },
 
-  // The arms market (SPEC §179): where a bookmark declares `armsMarket`, only
+  // The arms market (SPEC §181): where a bookmark declares `armsMarket`, only
   // its arsenal states build the gated arms (air wings, armor) from their own
   // works; everyone else needs a standing weapons transfer agreement with one
   // supplier at a time, signed at the supplier's regard bar and alive only

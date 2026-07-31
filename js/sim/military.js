@@ -189,7 +189,7 @@ export function tagDef(ctx, tag) {
   if (!tweak) return base || {};
   return { ...(base || {}), ...tweak };
 }
-// Off-map seats (SPEC §178): courts the frame cannot reach. A seat is a real
+// Off-map seats (SPEC §180): courts the frame cannot reach. A seat is a real
 // tag whose def carries `offmap` — alive without land, beyond every army,
 // barred from alliances, but a court, an opinion and a treasury like any.
 export function isOffmapTag(ctx, tag) {
@@ -197,7 +197,7 @@ export function isOffmapTag(ctx, tag) {
 }
 
 // ------------------------------------------------------- the arms market
-// SPEC §179: where the bookmark declares `armsMarket`, only its arsenal
+// SPEC §181: where the bookmark declares `armsMarket`, only its arsenal
 // states raise the gated arms (air wings, armor) from their own works;
 // everyone else needs a standing weapons transfer agreement with ONE
 // supplier at a time. The book is `game.armsDeals = { client: supplier }` —
@@ -637,7 +637,7 @@ function sideStats(ctx, armies, phase) {
     discW += disciplineOf(ctx, a.tag) * armyPowerOf(ctx, a) * a.men;
     if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
     gen = Math.max(gen, num(a.gen, 0));
-    // The tanks on this side (SPEC §179): mounted regiments in a pattern
+    // The tanks on this side (SPEC §181): mounted regiments in a pattern
     // that means armor. A cataphract column counts zero by construction.
     if (num(a.gen, 0) >= minArmorGen) armor += num(a.regiments && a.regiments.cav);
     tags.add(a.tag);
@@ -724,7 +724,7 @@ function battleRound(ctx, b) {
   const net = airNet(ctx, b.prov, A.tags, D.tags);
   const airA = airPips(ctx, net);
   const airD = airPips(ctx, -net);
-  // SPEC §179: armor is the shock phase's own signed quantity — fire belongs
+  // SPEC §181: armor is the shock phase's own signed quantity — fire belongs
   // to the sky, shock to the tanks. One subtraction, so one side's pips are
   // the other's absence of them, exactly as the air term above.
   const armorNet = A.armor - D.armor;
@@ -912,7 +912,7 @@ export function airPips(ctx, net) {
   return Math.min(AIRC(ctx, 'dieCap', 4), Math.ceil(net / per));
 }
 
-// Armor pips (SPEC §179): §154's signed-quantity design on the ground. The
+// Armor pips (SPEC §181): §154's signed-quantity design on the ground. The
 // side with the net advantage in pattern-5+ mounted regiments — tanks, not
 // horses — adds shock-phase pips; the other side, by the same subtraction,
 // adds none. Ancient chapters cap at pattern 3 and can never see this term.
@@ -1079,7 +1079,7 @@ export function raiseAirWing(ctx, tag, provId, kind) {
   if (!t || !t.alive || !p) return { ok: false, why: 'invalid province or tag' };
   if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
   if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
-  // SPEC §179: aircraft are an import for everyone but the arsenal states.
+  // SPEC §181: aircraft are an import for everyone but the arsenal states.
   const shut = armsGate(ctx, tag);
   if (shut) return { ok: false, why: shut };
   const cost = AIRC(ctx, 'wingCost', 90);
@@ -1726,7 +1726,7 @@ export function updateTagLife(ctx) {
   for (const k of Object.keys(g.tags)) {
     if (k === 'REB') continue; // REB always alive
     const t = g.tags[k];
-    if (isOffmapTag(ctx, k)) { t.alive = true; continue; } // a seat cannot fall (SPEC §178)
+    if (isOffmapTag(ctx, k)) { t.alive = true; continue; } // a seat cannot fall (SPEC §180)
     const was = !!t.alive;
     t.alive = !!(owned[k] || armiesOf(ctx, k).length);
     if (was && !t.alive) {
@@ -1835,7 +1835,7 @@ export function recruitRegiment(ctx, tag, provId, type) {
   if (!t || !p) return { ok: false, why: 'invalid province or tag' };
   if (type !== 'inf' && type !== 'cav') return { ok: false, why: 'unknown unit type' };
   const costs = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.regCost) || {};
-  // Armor (SPEC §179): the mounted arm at pattern 5+ is tanks — priced like
+  // Armor (SPEC §181): the mounted arm at pattern 5+ is tanks — priced like
   // them, fitted slower than a horse squadron, and importable only. In a
   // chapter with an arms market a client raises it through a live weapons
   // transfer agreement or not at all.
@@ -2769,7 +2769,7 @@ export function declareWar(ctx, atk, def, name, cb) {
   const A = g.tags[atk], D = g.tags[def];
   const cbType = typeof cb === 'string' ? cb : cb && cb.type;
   if (!A || !D) { warnOnce('dw:' + atk + ':' + def, 'declareWar: unknown tag', atk, def); return null; }
-  // An off-map seat is beyond every army (SPEC §178). The AI's wars of
+  // An off-map seat is beyond every army (SPEC §180). The AI's wars of
   // opportunity walk province adjacency and could never pick one anyway;
   // this bar is for scripts and players, and it trusts nothing.
   if (isOffmapTag(ctx, atk) || isOffmapTag(ctx, def)) {

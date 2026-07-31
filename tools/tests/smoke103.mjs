@@ -85,7 +85,7 @@ console.log('== pips scale, cap, and land in every phase ==');
   ok(mil.airPips(ctx, 100) === DEFINES.AIR.dieCap, 'and it caps at ' + DEFINES.AIR.dieCap);
   const src = readFileSync(R + '/js/sim/military.js', 'utf8');
   ok(!/phase === 'fire' && air/.test(src), 'the fire-phase-only restriction is gone from the roll');
-  // §179 later added the armor term to the same sum — the claim held here is
+  // §181 later added the armor term to the same sum — the claim held here is
   // that airA rides the roll unconditionally, whatever else joins it.
   ok(/const docA = doctrinePips\(A\.gen, phase, false\) \+ airA \+ armA;/.test(src),
     'and the pips are added in whatever phase is being resolved');
@@ -212,7 +212,7 @@ console.log('== raising a wing picks an arm, and the AI wins the air first ==');
   if (!Array.isArray(p.buildings)) p.buildings = [];
   if (p.buildings.indexOf('airfield') < 0) p.buildings.push('airfield');
   game.tags.ISR.treasury = 5000;
-  // §179: wings are imports and Israel opens with the market shut. This
+  // §181: wings are imports and Israel opens with the market shut. This
   // suite is about which ARM an order picks, not how it is bought
   // (smoke113), so sign the scripted pipeline first.
   ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');

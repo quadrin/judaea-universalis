@@ -160,7 +160,7 @@ async function runBookmark(entry, rawGeom) {
     const s = start[t], e = end[t];
     if (!s || !e) continue;
     const flags = [];
-    // An off-map seat (SPEC §178) owns no cell, fields no men and cannot
+    // An off-map seat (SPEC §180) owns no cell, fields no men and cannot
     // die: zero manpower is its design, not a famine, and every flag here
     // measures a thing a seat deliberately does not have.
     if (DEFINES.TAGS[t] && DEFINES.TAGS[t].offmap) continue;

@@ -133,7 +133,7 @@ function monthlyBlock(ctx) {
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
   safe('opinions', () => monthlyOpinionDrift(ctx));
-  safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §179)
+  safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
   safe('elimination', () => checkElimination(ctx));

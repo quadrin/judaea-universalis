@@ -1,4 +1,4 @@
-// Judaea Universalis — the weapons transfer agreements (SPEC §179). DOM-free.
+// Judaea Universalis — the weapons transfer agreements (SPEC §181). DOM-free.
 //
 // Nothing on the 1948 map from Cairo to Tel Aviv could roll a tank or a
 // fighter out of its own works: the pattern of every armored battalion in

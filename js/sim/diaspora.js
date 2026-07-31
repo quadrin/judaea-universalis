@@ -7,7 +7,7 @@
 // about your crown, and whether the empire that owns the province notices.
 //
 // WHY THE MOVE IS NOT COSMETIC. What is genuinely beyond the frame gets a
-// different answer now too — since SPEC §178 an off-map power is a seated
+// different answer now too — since SPEC §180 an off-map power is a seated
 // COURT in the ledger, not a panel row. The dispersion needed neither: it
 // was never off the map at all. Alexandria is on the board and is the second
 // city of the world; so are Babylon, Nehardea, Cyrene and Rome. Modelling them

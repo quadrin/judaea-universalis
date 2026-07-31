@@ -1012,7 +1012,7 @@ export const FLAGS = {
   SUI:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
     `<path d="M10.4 5.6h3.2v4.8h4.8v3.2h-4.8v4.8h-3.2v-4.8H5.6v-3.2h4.8Z" fill="#f2f4f4" stroke="none"/>`,
-  // The off-map seat (SPEC §178): the 48-star field, at chip scale.
+  // The off-map seat (SPEC §180): the 48-star field, at chip scale.
   USA:
     `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="#f2f4f4" stroke="none"/>` +
     `<path d="M0.6 3.9h22.8M0.6 10.4h22.8M0.6 16.9h22.8" stroke="#b5342c" stroke-width="3.3" fill="none"/>` +

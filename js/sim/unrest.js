@@ -282,7 +282,7 @@ export function monthlyOpinionDrift(ctx) {
       let target = allied ? 60
         : weaving ? num(V.incorporateOpinion, 80)
           : (areRivals(ctx, tag, other) ? num(B(ctx, 'rivalOpinion', -60)) : 0);
-      // A live arms pipeline anchors its supplier's regard (SPEC §179), the
+      // A live arms pipeline anchors its supplier's regard (SPEC §181), the
       // way §57's pacts once floored a standing: purchasing missions, spares
       // contracts and attachés keep the door from swinging shut by pure
       // neglect. Death stays available the loud ways — war, embargo, and the

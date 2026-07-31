@@ -1,11 +1,11 @@
-// Headless regression — SPEC §55, retired by SPEC §178.
+// Headless regression — SPEC §55, retired by SPEC §180.
 //
 // This suite pinned "The Powers Beyond the Map": standing bars, courting
 // with the Cold War seesaw, ask gates, monthly drift, and the pre-powers
-// save backfill. §178 retired the whole system — the one power the frame
+// save backfill. §180 retired the whole system — the one power the frame
 // genuinely could not reach (the United States) is a seated off-map COURT
 // now, and every other row of the old panel was a shadow copy of a tag the
-// board already held. The §178 seat contract lives in smoke112; the §179
+// board already held. The §180 seat contract lives in smoke115; the §181
 // arms-market contract (the reason the powers existed) lives in smoke113.
 //
 // What remains here is the tombstone's own duty: assert the old machinery
@@ -18,7 +18,7 @@ const ok = (cond, msg) => {
   else { failures++; console.error('  FAIL', msg); }
 };
 
-console.log('== §55 is retired (§178) ==');
+console.log('== §55 is retired (§180) ==');
 {
   let simGone = false;
   try { await import(R + '/js/sim/powers.js'); } catch (e) { simGone = true; }

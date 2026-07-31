@@ -967,7 +967,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'nuclear_opacity', name: 'The Textile Factory',
             marker: 'dimonaOpaque', entry: 'ev_i_dimona_offer',
             terminal: 'ev_i_dimona_ready',
-            note: 'SPEC §180. The historical road: "we will not be the first to introduce '
+            note: 'SPEC §182. The historical road: "we will not be the first to introduce '
               + 'them," a sentence engineered to stay true whatever is true. A permanent '
               + 'deterrent, named after its own cover story.',
           }),
@@ -975,7 +975,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_open_test', name: 'A Flash Over the Negev',
             marker: 'dimonaDeclared', entry: 'ev_i_dimona_offer',
             terminal: 'ev_i_dimona_ready',
-            note: 'SPEC §180. Declared, tested, undeniable — the stronger deterrent at the '
+            note: 'SPEC §182. Declared, tested, undeniable — the stronger deterrent at the '
               + 'full diplomatic price: every arsenal recoils and the pipeline probably '
               + 'dies of it.',
           }),
@@ -983,7 +983,7 @@ export const CHAPTER_PATHS = Object.freeze([
             id: 'the_sealed_basement', name: 'The Last Door',
             marker: 'dimonaShelved', entry: 'ev_i_dimona_offer',
             terminal: 'ev_i_dimona_ready',
-            note: 'SPEC §180. Nine years of budgets sealed behind a door; the physicists '
+            note: 'SPEC §182. Nine years of budgets sealed behind a door; the physicists '
               + 'disperse to the universities and the state keeps a cheaper secret.',
           }),
         ],

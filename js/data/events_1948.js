@@ -695,7 +695,7 @@ export const EVENTS_1948 = [
             id: 'czech_arms', name: 'The Czech Arms', months: -1, effects: { disciplineMult: 1.1 },
           });
           ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000 });
-          // The first pipeline (SPEC §179): Prague sells, and the market opens.
+          // The first pipeline (SPEC §181): Prague sells, and the market opens.
           ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');
           ctx.helpers.chronicle(ctx, 'peace', 'The First Truce: four weeks of quiet guns, and the arms ships land by night.');
         }),
@@ -708,7 +708,7 @@ export const EVENTS_1948 = [
             id: 'czech_arms', name: 'The Czech Arms, Rushed to the Line', months: -1, effects: { disciplineMult: 1.05 },
           });
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, stability: -1 });
-          // The crates land either way (SPEC §179): the cabinet's view of
+          // The crates land either way (SPEC §181): the cabinet's view of
           // Bernadotte's count was never Prague's concern.
           ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');
           ctx.helpers.chronicle(ctx, 'peace', 'The First Truce is ordered — and ignored: the guns never quite stop.');
@@ -1553,7 +1553,7 @@ export const EVENTS_1948 = [
               id: 'czech_arms', name: 'The Czech Arms Agreement', months: 36,
               effects: { disciplineMult: 1.08, reinforceMult: 1.1 },
             });
-            // Cairo changes suppliers (SPEC §179): the deal is signed in
+            // Cairo changes suppliers (SPEC §181): the deal is signed in
             // Prague and owned in Moscow — London's treaty is done. And the
             // bloc that now arms Egypt stops selling to Israel: the eastern
             // regard drops through the pipeline floor, and Jerusalem had
@@ -1576,7 +1576,7 @@ export const EVENTS_1948 = [
     ],
   },
 
-  // ── THE PARIS AXIS AND THE TEXTILE FACTORY, 1954–86 (SPEC §179/§180) ──────
+  // ── THE PARIS AXIS AND THE TEXTILE FACTORY, 1954–86 (SPEC §181/§182) ──────
   // The supplier question, and the question the supplier makes possible.
   // Prague closes in the fifties; Paris opens; and at the end of the French
   // road, in the deep Negev the state had to win first, something hums.
@@ -3762,7 +3762,7 @@ export const EVENTS_1948 = [
       },
     ],
   },
-  // ── THE GENERAL SIGNS SOMETHING: THE SUPPLIER PIVOT OF 1967–68 (SPEC §179)
+  // ── THE GENERAL SIGNS SOMETHING: THE SUPPLIER PIVOT OF 1967–68 (SPEC §181)
   // France armed Israel for thirteen years and cut it off in a week. The
   // embargo card fires only in a world where the Paris axis actually stood;
   // the American card is the door out, and it opens at Washington's regard,

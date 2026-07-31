@@ -90,7 +90,7 @@ export function standingScore(ctx, tag) {
     // are different verbs, and the score has to know the difference).
     dev += devTotal(p) * (p.controller && p.controller !== tag ? 0.35 : 1);
   }
-  // An off-map seat (SPEC §178) owns no cell; its weight is its def's own
+  // An off-map seat (SPEC §180) owns no cell; its weight is its def's own
   // number — which is how the United States outweighs every court of 1948,
   // and how §164's reach rule knows everyone has heard of it.
   const om = tagDef(ctx, tag).offmap;

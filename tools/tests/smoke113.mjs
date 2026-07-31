@@ -1,4 +1,4 @@
-// Headless regression — SPEC §179: the arsenal is somebody else's.
+// Headless regression — SPEC §181: the arsenal is somebody else's.
 //
 // Where a bookmark declares an arms market, only its arsenal states raise
 // the gated arms (air wings, armor) from their own works; everyone else
@@ -18,7 +18,7 @@
 //   - armor prices and fitting time read from DEFINES.ARMOR, armorPips
 //     scale and cap, the pips land in the SHOCK phase of a real battle,
 //     and the ancient chapters can never see any of it;
-//   - reviveGame defaults the book for pre-§179 saves.
+//   - reviveGame defaults the book for pre-§181 saves.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
 const { DEFINES } = await import(R + '/js/data/defines.js');
@@ -198,7 +198,7 @@ console.log('== the save contract ==');
   const saved = JSON.parse(JSON.stringify(game));
   delete saved.armsDeals;
   const revived = reviveGame(saved);
-  ok(revived && revived.armsDeals && typeof revived.armsDeals === 'object', 'a pre-§179 save gets an empty book, not a crash');
+  ok(revived && revived.armsDeals && typeof revived.armsDeals === 'object', 'a pre-§181 save gets an empty book, not a crash');
 }
 
 console.log(failures ? `smoke113: ${failures} FAILURES` : 'smoke113: ALL PASS');

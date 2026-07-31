@@ -257,13 +257,13 @@ console.log('== §170 the eye ==');
 
 console.log('== §172 the dispersion is on the map, not beyond it ==');
 {
-  // REGRESSION: the Diaspora off-map power is gone. §178 then retired the
+  // REGRESSION: the Diaspora off-map power is gone. §180 then retired the
   // whole POWERS roster, so the strongest possible form of this claim now
   // holds by construction: the data file itself no longer exists, and the
   // dispersion cannot regress into a panel that isn't there.
   let powersGone = false;
   try { await import(R + '/js/data/powers.js'); } catch (e) { powersGone = true; }
-  ok(powersGone, 'REGRESSION: the whole off-map POWERS roster is retired (§178) — DIA cannot return to it');
+  ok(powersGone, 'REGRESSION: the whole off-map POWERS roster is retired (§180) — DIA cannot return to it');
 }
 {
   const { game, ctx, actions, tag } = boot('66ce');

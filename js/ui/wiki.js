@@ -192,7 +192,7 @@ export function createWiki({ DEFINES, getCtx }) {
         ${g && (g.clocks || []).length ? `<div class="wiki-kv"><span class="wiki-k">The danger clock</span><span class="wiki-v">${g.clocks.map((c) => esc(fmtMonth(c) + ' — ' + c.label)).join('<br>')}</span></div>` : ''}
       </div>`;
     }).join('');
-    // The arms market (SPEC §179): the arsenal courts whose works export,
+    // The arms market (SPEC §181): the arsenal courts whose works export,
     // read straight from the bookmark that declares them.
     const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');

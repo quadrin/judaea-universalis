@@ -389,7 +389,7 @@ export const BOOKMARK_1948 = {
     // sealed country keeps sealed politics.
     'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
     'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV',
-    // The off-map seat (SPEC §178): the one power of the age the frame
+    // The off-map seat (SPEC §180): the one power of the age the frame
     // genuinely cannot reach. No cell, no armies, no wars — a court, an
     // opinion, a treasury, and the biggest arsenal on the ledger. Opened
     // like every court: click its flag in the ledger of nations.
@@ -432,7 +432,7 @@ export const BOOKMARK_1948 = {
       },
     ],
   },
-  // The arms market (SPEC §179). Nothing on this map from Cairo to Tel Aviv
+  // The arms market (SPEC §181). Nothing on this map from Cairo to Tel Aviv
   // rolls a tank or a fighter out of its own works: the arsenals are the
   // exporters of the age, and everyone else signs a weapons transfer
   // agreement with ONE of them — opened at the supplier's regard, cut by
@@ -1169,7 +1169,7 @@ export const BOOKMARK_1948 = {
     }
     setOpinion(g, 'EGY', 'JOR', -40); setOpinion(g, 'JOR', 'EGY', -40); // rival ambitions
     setOpinion(g, 'UK', 'JOR', 100);  setOpinion(g, 'JOR', 'UK', 100);
-    // The world's regard on 15 May (SPEC §178/§179), and the arms market it
+    // The world's regard on 15 May (SPEC §180/§181), and the arms market it
     // prices. Washington recognized in eleven minutes and embargoed both
     // sides; Moscow voted for partition and lets Prague sell; Prague sells to
     // whoever pays; Paris keeps its quays open and its options too; Bevin's
@@ -1184,7 +1184,7 @@ export const BOOKMARK_1948 = {
     setOpinion(g, 'FRA', 'ISR', 40);  setOpinion(g, 'ISR', 'FRA', 40);
     setOpinion(g, 'UK', 'ISR', -30);  setOpinion(g, 'ISR', 'UK', -40);
     setOpinion(g, 'UK', 'EGY', 70);   setOpinion(g, 'UK', 'IRQ', 75);
-    // …and the rest of the starting book's warmth, or the §179 liveness
+    // …and the rest of the starting book's warmth, or the §181 liveness
     // sweep reads an unseeded 0 as a cold supplier and cuts every pipeline
     // in the first month. Each supplier stands comfortably above the floor
     // with its own clients, and honestly below the signing bar with anyone
@@ -1306,7 +1306,7 @@ export const BOOKMARK_1948 = {
     BUL: { name: 'Georgi Dimitrov', title: 'Chairman', gov: 3, infl: 3, mar: 1, age: 66 },
     ROU: { name: 'Petru Groza', title: 'President of the Council', gov: 2, infl: 3, mar: 1, age: 64 },
     SOV: { name: 'Joseph Stalin', title: 'General Secretary', gov: 4, infl: 5, mar: 3, age: 69 },
-    // The off-map seat (SPEC §178): the recognition came from this desk,
+    // The off-map seat (SPEC §180): the recognition came from this desk,
     // eleven minutes after the declaration and over his own State Department.
     USA: { name: 'Harry S. Truman', title: 'President', gov: 4, infl: 4, mar: 3, age: 64 },
   },

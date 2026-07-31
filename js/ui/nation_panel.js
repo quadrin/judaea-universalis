@@ -290,7 +290,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The working verbs on a foreign court's own panel (SPEC §178/§179):
+      // The working verbs on a foreign court's own panel (SPEC §180/§181):
       // envoys, gifts, and the weapons transfer agreement.
       const npDip = e.target.closest('[data-np-dip]');
       if (npDip && viewTag) {
@@ -1033,7 +1033,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const nameOf = (tag) => esc((g.tags[tag] && g.tags[tag].name) || (TAGS[tag] && TAGS[tag].name) || tag);
     let html = '';
 
-    // The working verbs, on the panel itself (SPEC §178): an off-map seat has
+    // The working verbs, on the panel itself (SPEC §180): an off-map seat has
     // no province to click, so the court a ledger chip opens must carry its
     // own envoys — and once it does, every foreign court gets the same row.
     if (!self && actions && typeof actions.getDiplomacy === 'function') {
@@ -1257,7 +1257,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + (u.nextAt != null ? 'Military tech ' + u.nextAt + ' unlocks ' + u.nextInf + '.' : 'No newer pattern exists.')
       + (selfDoct ? '\nDoctrines:\n' + selfDoct : ''))}">`
       + `Armies muster as <b>${esc(u.inf)}</b> &amp; <b>${esc(u.cav)}</b></div>` : '';
-    // The arms pipeline (SPEC §179): who feeds the arsenal, and how warmly.
+    // The arms pipeline (SPEC §181): who feeds the arsenal, and how warmly.
     let armsLine = '';
     if (actions && typeof actions.getArmsStatus === 'function') {
       let ast = null;

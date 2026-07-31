@@ -39,7 +39,7 @@ const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_1948, events
 const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_1948, events: EVENTS_1948 });
 const actions = gameActions(ctx);
 const isr = game.tags.ISR;
-// SPEC §179: aircraft are imports now, and Israel opens with the market
+// SPEC §181: aircraft are imports now, and Israel opens with the market
 // shut. This suite is about what wings DO, not how they are bought — the
 // arms-market contract lives in smoke113 — so sign the scripted pipeline.
 ctx.helpers.setArmsDeal(ctx, 'ISR', 'CZE');

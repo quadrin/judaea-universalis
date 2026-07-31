@@ -1,4 +1,4 @@
-// Headless regression — SPEC §180: the textile factory.
+// Headless regression — SPEC §182: the textile factory.
 //
 // The chapter's script mentioned the reactor once, in a subordinate clause.
 // It is an arc and a fork now, gated the way the thing was actually gated:

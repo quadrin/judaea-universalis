@@ -173,7 +173,7 @@ function aiRecruit(ctx, tag, hints, fraction) {
     // A cavalry arm rides with the foot: every fourth regiment raised is
     // horse when the treasury can bear its price (2.5× an infantryman's).
     let type = cur % 4 === 3 && num(t.treasury) > 150 ? 'cav' : 'inf';
-    // Armor is an import (SPEC §179): a client with no live pipeline raises
+    // Armor is an import (SPEC §181): a client with no live pipeline raises
     // foot instead of stalling the whole muster on a shut market.
     if (type === 'cav' && tagGen(ctx, tag) >= num((ctx.DEFINES.ARMOR || {}).minGen, 5)
       && armsGate(ctx, tag)) type = 'inf';
@@ -537,7 +537,7 @@ function aiConsiderWar(ctx, tag) {
       // nothing from anybody — so a quiet campaign runs on the numbers this
       // line had before the file existed.
       / attentionThreat(ctx, tgt)
-      // …and a state whose desert hums (SPEC §180) is one nobody starts a
+      // …and a state whose desert hums (SPEC §182) is one nobody starts a
       // war of opportunity against on the old arithmetic. Zero everywhere
       // until the one arc that sets it; scripted declarations never ask.
       * (1 + 0.6 * resolveTagAdd(ctx, tgt, 'deterrent'));
@@ -1490,7 +1490,7 @@ function aiAirPower(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || num(t.tech && t.tech.mar) < 19) return;
-  // Aircraft are an import (SPEC §179): with the market shut there is no
+  // Aircraft are an import (SPEC §181): with the market shut there is no
   // squadron to buy and no point pouring a runway for one.
   if (armsGate(ctx, tag)) return;
   const AIR = ctx.DEFINES.AIR || {};

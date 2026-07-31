@@ -9664,7 +9664,7 @@ pattern, no buttons, no purse.
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
 
-## 178. The world is not beyond the map
+## 180. The world is not beyond the map
 
 §55 built "The Powers Beyond the Map": standing bars in a panel section, an
 envoy button, asks. §172 already pulled one row out of it — the Diaspora —
@@ -9721,12 +9721,12 @@ Everything else is the ordinary machinery, deliberately: envoys and gifts
 move its opinion, §100 lets it close its markets (the Neutrality Act IS an
 embargo, and the AI can sign one), §96 recognition replaces the old
 "press for full recognition" ask, subsidies replace "ask for credits" in
-the one direction money actually flowed, and §179 replaces the arms asks —
+the one direction money actually flowed, and §181 replaces the arms asks —
 which were the entire reason the powers existed.
 
 **The migration.** `js/sim/powers.js` and `js/data/powers.js` are deleted;
 the panel section, its `uiTerms.powers` titles, the wiki block, the
-`powerIn` ledger row and the tick pass go with them. Pre-§178 saves carry
+`powerIn` ledger row and the tick pass go with them. Pre-§180 saves carry
 `game.powers` and possibly mounted `power_pact_*` / `power_*` modifiers
 whose removal path died with the system: `reviveGame` drops the book and
 strips those modifiers, and `makeCtx` seats any off-map tag the bookmark
@@ -9736,10 +9736,10 @@ other way. The 614 khaganate asks (a wartime host for gold, tribute for
 the rear) fold into the verbs the seated TRK and AVR already answer:
 alliance and the call to arms, gifts and subsidies.
 
-- **Regression contract**: `smoke112` — the USA is seated, alive, landless
+- **Regression contract**: `smoke115` — the USA is seated, alive, landless
   and top-table in 1948; it survives `updateTagLife`; war and alliance are
   refused with reasons; its court convenes and answers intrigue; the
-  ledger row and stipend agree with `incomeBreakdown`; a pre-§178 save
+  ledger row and stipend agree with `incomeBreakdown`; a pre-§180 save
   revives with the seat present, the book gone and the pact modifiers
   stripped; and the ancient chapters seat nothing off-map. `smoke34` and
   `smoke36` (the §55/§57 contracts) become tombstones asserting the old
@@ -9748,10 +9748,10 @@ alliance and the call to arms, gifts and subsidies.
   zero manpower is its design, not a famine, so `autorun` skips off-map
   tags in the anomaly flags — with that, 1948 comes back **none**, and the
   full sweep matches the accepted families except 132's long-accepted JUD
-  flag reading SNOWBALL, which reproduces on the clean pre-§178 tree at
+  flag reading SNOWBALL, which reproduces on the clean pre-§180 tree at
   the harness seed (the §160 drift class again, not this section's).
 
-## 179. The arsenal is somebody else's
+## 181. The arsenal is somebody else's
 
 §154 priced an air force at what it displaces. This section prices it at
 what it was in 1948: **an import**. The 101 Squadron flew Avia S-199s out
@@ -9772,7 +9772,7 @@ standing **weapons transfer agreement** with an arsenal.
   country's — spares, calibers, doctrine and the men who teach it. Signing
   with a second drops the first, and the first notices (−10 opinion).
 - **Signed in the supplier's court.** The agreement rides the supplier's
-  own panel (open it from the ledger, §178), and the bar is the
+  own panel (open it from the ledger, §180), and the bar is the
   **supplier's regard for you** — you are asking to be sold to, so it is
   their opinion of you (≥ 50) that opens the door, not yours of them. The
   signing fee lands in the supplier's treasury: the money is real and it
@@ -9831,10 +9831,10 @@ agreement chip with the full terms in the tooltip.
   regard, war and embargo each kill a live pipeline with notice; the AI
   signs its own deals and builds only behind them; armor pips scale, cap,
   and appear only in shock; the armor price and months read from DEFINES;
-  and a pre-§179 save loads with the book intact and every antique
+  and a pre-§181 save loads with the book intact and every antique
   chapter's cavalry untouched.
 
-## 180. The textile factory
+## 182. The textile factory
 
 The chapter's script mentions it exactly once. `ev_i_eshkol`, June 1963,
 in a subordinate clause: "in the south something unphotographed hums at
