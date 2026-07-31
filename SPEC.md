@@ -4377,7 +4377,7 @@ stopped, because every one of those tables is keyed by tag.
   the crown's. The Kingdom of Israel gets four (settle the crown, muster the
   kingdom, the land of the twelve, build rather than hold) and the restored
   Hasmonean crown three; forming resets the chain to its first line. Those four
-  are now the SPINE of a per-chapter tree — see §188 for the branches.
+  are now the SPINE of a per-chapter tree — see §189 for the branches.
 - **Its own payoff**: each crown now pays differently — coin, men and
   ministries (`bonus.grant`) plus a second permanent modifier that says what
   that kingdom is FOR. The Kingdom of Israel's Law Is the Charter (manpower,
@@ -10458,7 +10458,69 @@ roster.
   raw index into the 132/614 tables still lands on the Third House
   untouched, because every insertion in those tables came after it.
 
-## 188. The crown speaks in the age it was crowned in
+## 188. The ideas belong to the ladders that sell them
+
+§175 sorted twenty sections into six tabs by what each section IS, and the
+reform trees read as constitutional — the crown's own business — so they went
+onto Crown beside faith, tongue and capital. Then §179 gave that same block its
+second half: the chapter's Ideas of the Age, every group locked behind a NAMED
+RUNG of a technology ladder, each locked card saying so in words — *Unlocked at
+The Third Wall (8)*. The rung it names is printed on Coin. So the screen that
+told you what you could not buy yet and the screen that told you how close you
+were to being able to were two different screens, and a purchase meant Crown →
+Coin → Crown. EU4 never had that problem, because the ladders and the ideas
+they open are one window.
+
+### The move
+
+The ideas block — all of it, the three universal reform trees AND the age's own
+groups — is one `data-tab="coin"` section templated immediately below
+Technology. The tab filter only hides sections; it never reorders them, so
+template order is render order: each ladder prints its level, its rung name and
+its progress bar, and directly underneath sits the group whose lock card names
+that rung. The block is titled **Ideas** rather than Reforms — it has sold both
+halves since §179, and the panel's own vocabulary has read `data-idea`,
+`getIdeas`, `IDEA_TREES` since §20 — and the Coin tab's tooltip owns what the
+tab now holds ("…the technologies silver buys — and the ideas those ladders
+sell").
+
+**It lands in all eight bookmarks because there is nothing per-bookmark to
+land.** The panel is one template harvested once in `build()` (§175's
+load-bearing rule), so a chapter has exactly one say over the strip: what it
+CALLS a tab, through `uiTerms` — 1948 carries the block under Economy, and
+every other chapter under Coin. And the reason one screen is the right screen
+holds in every chapter rather than in the one it was noticed in: every
+universal tree and all fifty-four era-idea slots across the eight chapters
+price and unlock off gov/infl/mar, the three ladders printed above them —
+§179's `unlock.ladder === point` invariant is what makes that a fact about the
+data and not a coincidence of the current tables.
+
+### What did not move
+
+Crown keeps the realm's own facts — faith, tongue, capital, government,
+stability, legitimacy, the years, the chapters — and keeps them *unhidden*,
+which is what lets it survive being one section lighter: `tabHasContent` counts
+a `pp-grid` only while a row of it shows, and those rows are unconditional. The
+buy paths are untouched: the same `data-idea` / `data-eraidea` probes, in the
+same delegated chain, behind the same tab probe that still runs first. A
+foreign court's read-only pips travel with the block and render from
+`t.reforms` / `t.eraIdeas` exactly as before, one tab over.
+
+- **Regression contract**: `smoke119` — the `np-reforms` host resolves to the
+  Technology block's tab and is templated below it, Crown carries it no longer,
+  the block reads Ideas and the tab tooltip says so, every declared tab still
+  owns a section, Crown keeps an unhidden anchor, all three buy paths keep
+  their probes with the tab probe still first, and — for every playable side of
+  all eight chapters — every era group and every universal tree unlocks and
+  prices off one of the three printed ladders. `uitest38` measures it in the
+  browser, where a bounding box is the only honest answer: hidden on Crown,
+  visible on Coin beside the ladders, its box BELOW theirs, the three tree
+  buttons and the Ideas of the Age strip both present. `smoke109`'s tab
+  contract (every section names a declared tab, no tab is dead, the shell is
+  never re-templated) is unchanged and still passes, and `uitest8` / `uitest37`
+  hold the Coin tab's buy path to one press as before.
+
+## 189. The crown speaks in the age it was crowned in
 
 §102 gave the Kingdom of Israel a programme of its own so that proclaiming
 the greater crown would fill the mission panel instead of emptying it. It
@@ -10520,7 +10582,7 @@ chapters' own sides now claim at both 67 and 40 — the crown gave way and
 asked for something else (Nabataea brought to heel, which is the same
 chapter's other unpaid bill).
 
-- **Regression contract**: `smoke119` — the static shape (spine plus three
+- **Regression contract**: `smoke120` — the static shape (spine plus three
   per chapter, no branch crossing a chapter line, the kit on every mission,
   seats in the branch columns, prerequisites resolving inside their own
   chapter's chain, the spine's order still a subset of the ladder's), the

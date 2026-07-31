@@ -2579,7 +2579,9 @@ export function gameActions(ctx) {
         // EU4 announces an unlocked idea-group slot.
         for (const gdef of eraIdeaGroupsFor(ctx.bookmark, g.playerTag, t)) {
           if (gdef.unlock.ladder === catKey && gdef.unlock.level === t.tech[catKey]) {
-            say('An idea of the age unlocks', gdef.name + ' may now be pursued — see Reforms.', 'good');
+            // SPEC §188: the Ideas block is directly under the ladders, so the
+            // card this rung just opened is on the screen the buyer is looking at.
+            say('An idea of the age unlocks', gdef.name + ' may now be pursued — see Ideas, just below the ladders.', 'good');
           }
         }
       } catch (e) { warnOnce('buyTech', 'buyTech failed', e); }

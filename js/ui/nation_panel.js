@@ -41,11 +41,17 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // a tab that is empty six times out of eight is worse than no tab at all, and
 // Missions (SPEC §177) holds the mission tree and steps aside at a foreign
 // court, after the verdict, and in a chapter whose tag has no chain.
+//
+// Ideas ride with the ladders, not with the crown (SPEC §188). The reform
+// trees and the chapter's Ideas of the Age are bought with monarch points and
+// unlocked by named technology rungs, so they sit under the Technology block
+// on Coin in every bookmark — the EU4 window, where the ladders and what they
+// sell are one screen. Crown keeps what it is: the realm's own facts.
 const TABS = [
   { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, and what this chapter asks of you.' },
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
-  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, and the technologies silver buys.' },
+  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, the technologies silver buys — and the ideas those ladders sell.' },
   { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
@@ -117,10 +123,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <div class="pp-build" data-tab="crown">
-        <div class="pp-build-title">Reforms</div>
-        <div class="np-reforms" data-ref="reforms"></div>
-      </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
@@ -162,6 +164,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build" data-tab="coin">
         <div class="pp-build-title">Technology</div>
         <div class="np-techs" data-ref="tech"></div>
+      </div>
+      <!-- The ideas sit UNDER the ladders that sell them (SPEC §188): the
+           universal reform trees and the chapter's own Ideas of the Age, in
+           every bookmark, on the same tab as the technology they unlock from. -->
+      <div class="pp-build" data-tab="coin">
+        <div class="pp-build-title">Ideas</div>
+        <div class="np-reforms" data-ref="reforms"></div>
       </div>
 
       <!-- ── THE HOST ──────────────────────────────────────────────────── -->
@@ -1351,9 +1360,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // Three reform trees: tier pips, the next reform's name and price, one
-  // buy button per tree. Renders nothing on sims without getIdeas.
-  // Foreign courts show their pips read-only, straight from t.reforms.
+  // The ideas (SPEC §188), rendered under the Technology block on Coin in
+  // every bookmark: three reform trees — tier pips, the next reform's name and
+  // price, one buy button per tree — and then the chapter's Ideas of the Age,
+  // which the ladders directly above them unlock. Renders nothing on sims
+  // without getIdeas. Foreign courts show their pips read-only, straight from
+  // t.reforms.
   function refreshReforms(t, self) {
     if (!refs.reforms) return;
     if (!self) {

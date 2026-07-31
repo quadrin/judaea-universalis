@@ -1,32 +1,35 @@
-// Headless regression — SPEC §188: the crown speaks in the age it was crowned in.
+// Headless regression — SPEC §188: the ideas ride with the ladders that sell
+// them, in every bookmark.
 //
-// The Kingdom of Israel is formable in six chapters and used to read the same
-// four missions in all of them. §188 keeps those four as the SPINE and hangs a
-// three-mission BRANCH per chapter off the crowning, selected by the new
-// `chapters` field through `chapterChain`. This suite holds both ends of it:
+// §175 sorted the panel's twenty sections into six tabs by what each one IS,
+// and the reform trees read as constitutional, so they went to Crown. Then
+// §179 grew the same block a second half — the chapter's Ideas of the Age,
+// each one locked behind a NAMED RUNG of a technology ladder — and the lock
+// card ("Unlocked at The Third Wall (8)") was on one tab while the ladder that
+// answers it was on another. This suite holds the move: the whole ideas block
+// renders under the Technology block, on the same tab, in all eight chapters.
 //
-//   STATIC — every chapter reads spine + its own three and nothing else; no
-//   branch leaks across a chapter line; every branch mission carries the kit
-//   (icon, a desc that teaches the route, rewardText, check, reward), seats
-//   itself in the branch columns clear of the spine, and names prerequisites
-//   that exist in its own chapter's chain. The spine keeps the old ladder's
-//   order, because an old save's `missionIdx` is a prefix of exactly that.
+// Three contracts:
 //
-//   LIVE — the engine hands each chapter its own chain (and the same array
-//   twice, since the monthly pass and the panel both ask); nothing on a
-//   branch is accomplished by the act of proclamation ("no free lunch"); and
-//   EVERY branch mission pays when the world its desc promises is built by
-//   hand. A province misspelled in a check would make a mission no campaign
-//   can ever be paid for — this is the test that hears it.
+//   1. THE BLOCK MOVED, AND IT MOVED UNDER THE LADDERS. The `np-reforms` host
+//      is on the technology tab, below the `np-techs` host in the template
+//      (which is render order — the tab filter only hides, it never reorders),
+//      and no section on Crown carries it any more.
+//   2. NOTHING ELSE MOVED. Crown still owns a section that renders in every
+//      chapter, so the tab cannot vanish under a player; every tab still owns
+//      at least one section; and both buy paths (`data-idea`, `data-eraidea`)
+//      are still probed in the delegated click chain, so the move is a move
+//      and not a rewrite.
+//   3. EVERY IDEA IS PAID BY A LADDER PRINTED ABOVE IT — IN EVERY BOOKMARK.
+//      The three universal trees and every chapter's era groups all price and
+//      unlock off gov/infl/mar, the three ladders the Technology block prints
+//      directly above them, for every playable side of every chapter. That is
+//      what makes one screen the right screen rather than a tidier one.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
-const { DEFINES } = await import(R + '/js/data/defines.js');
-const { MAP_DATA } = await import(R + '/js/data/map_data.js');
+const { readFileSync } = await import('fs');
+const { IDEA_TREES } = await import(R + '/js/data/ideas.js');
+const { eraIdeaGroupsFor } = await import(R + '/js/data/era_ideas.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
-const { FORMABLES } = await import(R + '/js/data/formables.js');
-const { bus } = await import(R + '/js/core/bus.js');
-const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
-const { switchTagCore } = await import(R + '/js/sim/military.js');
-const realm = await import(R + '/js/sim/realm.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -34,232 +37,125 @@ const ok = (cond, msg) => {
   else { failures++; console.error('  FAIL', msg); }
 };
 
-const N = MAP_DATA.provinces.length;
-const geom = {
-  neighbors: Array.from({ length: N + 1 }, () => new Set()),
-  centroids: [null, ...MAP_DATA.provinces.map((p) => {
-    const [x, y] = MAP_DATA.project(p.lon, p.lat);
-    return { x, y };
-  })],
-  areas: new Int32Array(N + 1), bbox: [], coastal: [], offshore: [],
-};
+const PANEL = readFileSync(R + '/js/ui/nation_panel.js', 'utf8');
+const CSS = readFileSync(R + '/styles.css', 'utf8');
 
-const CHAPTERS = ['167bce', '67bce', '40bce', '66ce', '132ce', '614ce'];
-const SPINE = ['mli_the_crowning', 'mli_the_muster', 'mli_the_land', 'mli_the_house'];
-const crown = FORMABLES.find((f) => f.id === 'form_mli_jud');
-const crownHas = FORMABLES.find((f) => f.id === 'form_mli_has');
-const branchOf = (id) => crown.missions.filter((m) => Array.isArray(m.chapters)
-  && m.chapters.indexOf(id) >= 0);
-
-// The chapter's own Israelite side takes the crown. In 67 and 40 the road runs
-// through the restored Hasmonean crown first (HYR → HAS → MLI); the sim does
-// not care which banner the realm wore on the way, so the test does not either.
-function proclaim(chapterId, tagOverride) {
-  const era = ERAS.find((e) => e.bookmark.id === chapterId);
-  const tag = tagOverride || era.bookmark.playableTags[0].tag;
-  const game = initGame({
-    DEFINES, MAP_DATA, geom, bookmark: era.bookmark, events: era.events,
-    playerTag: tag, rngSeed: 11,
-  });
-  const ctx = makeCtx({
-    game, DEFINES, MAP_DATA, geom, bus, bookmark: era.bookmark, events: era.events,
-  });
-  game.wars = [];
-  for (const k of Object.keys(game.tags)) if (game.tags[k]) game.tags[k].atWarWith = [];
-  switchTagCore(ctx, tag, 'MLI');
-  game.playerTag = 'MLI';
-  const t = game.tags.MLI;
-  t.missionIdx = 0; t.missionsDone = [];
-  return { game, ctx, era, from: tag };
+// The template is one string literal in build(). Each section is a wrapper
+// carrying `data-tab`; a host belongs to the last wrapper opened before it.
+const TEMPLATE = PANEL.slice(PANEL.indexOf('el.innerHTML = `'), PANEL.indexOf('el.querySelectorAll(\'[data-ref]\')'));
+function tabOf(hostClass) {
+  const at = TEMPLATE.indexOf(hostClass);
+  if (at < 0) return null;
+  const before = TEMPLATE.slice(0, at);
+  const marks = [...before.matchAll(/data-tab="([a-z]+)"/g)];
+  return marks.length ? marks[marks.length - 1][1] : null;
 }
-const doneSet = (game) => new Set(game.tags.MLI.missionsDone || []);
-const grant = (ctx, names) => { for (const n of names) ctx.helpers.changeOwner(ctx, n, 'MLI'); };
-const stand = (ctx, name, v) => { const p = ctx.prov(name); if (p) p.dia = { standing: v }; };
 
-// ---------------------------------------------------------------- static
-console.log('== §188 static: one spine, six branches, nothing crossing ==');
+// ---------------------------------------------------------------------------
+console.log('== §188: the ideas render under the ladders ==');
 {
-  ok(crown.missions === crownHas.missions,
-    'both roads to the crown read the same programme');
-  const spine = crown.missions.filter((m) => !Array.isArray(m.chapters));
-  ok(spine.length === 4 && spine.map((m) => m.id).join() === SPINE.join(),
-    'the spine is the four a kingdom does anywhere, in the order the ladder had them');
-  ok(spine[1].requires[0] === 'mli_the_crowning' && spine[2].requires[0] === 'mli_the_crowning'
-    && spine[3].requires[0] === 'mli_the_land',
-    '  and its prerequisites are a subset of the old ladder (missionIdx keeps its meaning)');
+  const techTab = tabOf('class="np-techs"');
+  const ideasTab = tabOf('class="np-reforms"');
+  ok(techTab === 'coin', 'the Technology block is on the Coin tab: ' + techTab);
+  ok(ideasTab === techTab, 'and the ideas block is on the same tab: ' + ideasTab);
+  ok(ideasTab !== 'crown', 'Crown no longer carries the ideas');
 
-  const seen = new Set();
-  for (const id of CHAPTERS) {
-    const branch = branchOf(id);
-    ok(branch.length === 3, id + ' adds three missions of its own');
-    for (const m of branch) {
-      ok(m.chapters.length === 1 && m.chapters[0] === id,
-        '  ' + m.id + ' belongs to ' + id + ' alone');
-      ok(!seen.has(m.id), '  ' + m.id + ' is a mission id nothing else claims');
-      seen.add(m.id);
-      ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 60 && !!m.rewardText
-        && typeof m.check === 'function' && typeof m.reward === 'function',
-        '  ' + m.id + ' carries icon, a desc that teaches the route, rewardText, check, reward');
-      ok(Number.isFinite(m.col) && m.col >= 2 && m.col <= 3 && Number.isFinite(m.row),
-        '  ' + m.id + ' seats itself in the branch columns: col ' + m.col + ', row ' + m.row);
+  // Render order is template order — the tab filter is display:none on the
+  // sections of other tabs and reorders nothing — so a lock card reading
+  // "Unlocked at The Third Wall (8)" sits below the ladder that shows the 8.
+  const techAt = TEMPLATE.indexOf('class="np-techs"');
+  const ideasAt = TEMPLATE.indexOf('class="np-reforms"');
+  ok(techAt > 0 && ideasAt > techAt, 'the ideas are templated BELOW the ladders');
+  ok(!/display:\s*flex[^}]*order:/.test(CSS.slice(CSS.indexOf('.np-techs'), CSS.indexOf('.np-techs') + 200)),
+    'and nothing in the stylesheet reorders them back');
+
+  // The block title the player reads. It always sold both halves — the three
+  // universal trees and the age's own groups — and under the ladders it says
+  // so in the panel's own vocabulary (`data-idea`, `getIdeas`, IDEA_TREES).
+  const block = TEMPLATE.slice(TEMPLATE.lastIndexOf('<div class="pp-build"', ideasAt), ideasAt);
+  ok(/pp-build-title">Ideas</.test(block), 'the block is titled Ideas: '
+    + (block.match(/pp-build-title">([^<]*)</) || [])[1]);
+
+  // The Coin tab's tooltip has to own what the tab now holds, or the strip
+  // lies about where a player should look.
+  const coinTT = (PANEL.match(/id: 'coin',[^\n]*tt: '([^']*)'/) || [])[1] || '';
+  ok(/idea/i.test(coinTT), 'and the tab tooltip says the ideas are there: ' + coinTT);
+}
+
+// ---------------------------------------------------------------------------
+console.log('== §188: nothing else moved ==');
+{
+  const used = [...TEMPLATE.matchAll(/data-tab="([a-z]+)"/g)].map((m) => m[1]);
+  const TAB_IDS = [...PANEL.matchAll(/^\s*\{ id: '([a-z]+)', label: '/gm)].map((m) => m[1]);
+  const empty = TAB_IDS.filter((t) => used.indexOf(t) < 0);
+  ok(empty.length === 0, 'every declared tab still owns a section'
+    + (empty.length ? ' (' + empty.join(', ') + ')' : ' (' + TAB_IDS.length + ' tabs)'));
+
+  // Crown must keep an anchor that renders in EVERY chapter, or losing the
+  // ideas would let the tab itself disappear under a player (`tabHasContent`
+  // counts a pp-grid only when a row of it is unhidden — the realm's facts
+  // are unconditional, the chapter block is not).
+  const crownGrid = TEMPLATE.indexOf('<div class="pp-grid" data-tab="crown">');
+  ok(crownGrid > 0, 'Crown still opens with its unhidden vitals grid');
+  const grid = TEMPLATE.slice(crownGrid, TEMPLATE.indexOf('</div>\n      <div', crownGrid));
+  ok(/data-ref="religion"/.test(grid) && !/class="pp-row hidden"[^>]*data-ref="religion"/.test(grid),
+    '  whose religion row is never hidden, so the tab cannot vanish');
+
+  // The move is a move: the same delegated probes, the same actions.
+  const clickBody = PANEL.slice(PANEL.indexOf("el.addEventListener('click'"), PANEL.indexOf('function refreshTabs'));
+  ok(/closest\('\[data-idea\]'\)/.test(clickBody) && /actions\.buyIdea/.test(clickBody),
+    'the reform buy path is untouched');
+  ok(/closest\('\[data-eraidea\]'\)/.test(clickBody) && /actions\.buyEraIdea/.test(clickBody),
+    'and so is the era-idea buy path');
+  ok(/closest\('\[data-tech\]'\)/.test(clickBody) && /actions\.buyTech/.test(clickBody),
+    'and the ladders they now sit under still buy');
+  ok(/data-tab-go/.test(clickBody.slice(0, clickBody.indexOf("closest('[data-act]"))),
+    'the tab probe is still first in the chain (SPEC §175)');
+}
+
+// ---------------------------------------------------------------------------
+console.log('== §188: for all bookmarks, every idea is paid by a ladder above it ==');
+{
+  const LADDERS = ['gov', 'infl', 'mar']; // exactly what the Technology block prints
+  const treePoints = Object.keys(IDEA_TREES).map((k) => IDEA_TREES[k].point);
+  ok(treePoints.every((p) => LADDERS.indexOf(p) >= 0),
+    'the three universal trees price off the three ladders: ' + treePoints.join('/'));
+
+  let chapters = 0;
+  let groups = 0;
+  const bad = [];
+  const empty = [];
+  for (const era of ERAS) {
+    const bm = era.bookmark;
+    chapters++;
+    for (const row of bm.playableTags || []) {
+      const list = eraIdeaGroupsFor(bm, row.tag, null);
+      if (!list.length) { empty.push(bm.id + '/' + row.tag); continue; }
+      for (const gd of list) {
+        groups++;
+        if (LADDERS.indexOf(gd.point) < 0) bad.push(bm.id + '/' + gd.key + ' pays in ' + gd.point);
+        if (!gd.unlock || LADDERS.indexOf(gd.unlock.ladder) < 0) {
+          bad.push(bm.id + '/' + gd.key + ' unlocks off ' + (gd.unlock && gd.unlock.ladder));
+        }
+      }
     }
   }
-  ok(seen.size === 18, 'eighteen chapter missions in all (' + seen.size + ')');
+  ok(chapters === 8, 'eight chapters checked: ' + chapters);
+  ok(!empty.length, 'every playable side of every chapter has a curriculum to show'
+    + (empty.length ? ' (none: ' + empty.join(', ') + ')' : ''));
+  ok(!bad.length, groups + ' era-idea slots, all of them unlocked and paid by a printed ladder'
+    + (bad.length ? ' (' + bad.slice(0, 4).join('; ') + ')' : ''));
 
-  for (const id of CHAPTERS) {
-    const list = realm.chapterChain(crown.missions, id);
-    const ids = list.map((m, i) => realm.missionId(m, i));
-    ok(list.length === 7 && ids.slice(0, 4).join() === SPINE.join(),
-      id + ': the chain is the spine, in table order, plus three (' + list.length + ')');
-    const foreign = list.filter((m) => Array.isArray(m.chapters) && m.chapters.indexOf(id) < 0);
-    ok(!foreign.length, id + ': no other age\'s mission is offered here');
-    const seats = list.map((m) => m.col + ':' + m.row);
-    ok(new Set(seats).size === seats.length, id + ': every node seats in its own cell');
-    const dangling = [];
-    for (const m of list) {
-      for (const rid of (m.requires || [])) if (ids.indexOf(String(rid)) < 0) dangling.push(m.id + '→' + rid);
-    }
-    ok(!dangling.length, id + ': every prerequisite is in this chapter\'s own chain ('
-      + (dangling.join(', ') || 'all resolve') + ')');
-  }
-}
-
-// ---------------------------------------------------------------- the engine
-console.log('== §188 engine: the chapter filter is wired, and it only speaks when asked ==');
-{
-  for (const id of CHAPTERS) {
-    const w = proclaim(id);
-    const list = realm.missionsFor(w.ctx, 'MLI');
-    ok(Array.isArray(list) && list.length === 7,
-      id + ': the proclaimed crown is handed a seven-mission tree');
-    ok(list === realm.missionsFor(w.ctx, 'MLI'),
-      id + ': and the same array twice — the monthly pass and the panel agree');
-    const mine = new Set(branchOf(id).map((m) => m.id));
-    ok(list.filter((m) => mine.has(m.id)).length === 3,
-      id + ': the three it is handed are this chapter\'s');
-  }
-  const has = FORMABLES.find((f) => f.id === 'form_has_hyr');
-  ok(realm.chapterChain(has.missions, '67bce') === has.missions,
-    'a chain that names no chapters is handed back untouched (the Hasmonean crown)');
-  const w = proclaim('66ce');
-  ok(realm.chapterChain(crown.missions, 'nosuchchapter').length === 4,
-    'and a chapter the crown does not belong to reads the spine alone');
-  ok(!realm.missionsFor(w.ctx, 'NAB'), 'no chain is invented for a tag that has none');
-}
-{
-  // What the panel is handed (SPEC §177's shape, for the crown's own tree).
-  const w = proclaim('132ce');
-  const view = gameActions(w.ctx).getMissions();
-  ok(view.length === 7, 'the panel is handed the whole chapter tree (' + view.length + ' medallions)');
-  const byId = {};
-  for (const m of view) byId[m.id] = m;
-  ok(byId.mli_the_crowning.status === 'current' && byId.mli_132_colony.status === 'locked',
-    '  the crowning is the open root and the chapter branch waits on it');
-  ok(byId.mli_132_third_house.requiresNames.join() === 'The Colony Unmade',
-    '  prerequisites come back as names the panel can print');
-  ok(view.every((m) => !m.hypothetical),
-    '  and the crown\'s tree carries no roads not taken — those stay with the chapter\'s own side');
-}
-
-// ------------------------------------------------------------- no free lunch
-console.log('== §188 live: proclamation accomplishes nothing on the branch ==');
-for (const id of CHAPTERS) {
-  const w = proclaim(id);
-  w.game.tags.MLI.stability = 3;
-  realm.checkMissions(w.ctx);
-  const mine = new Set(branchOf(id).map((m) => m.id));
-  const free = [...doneSet(w.game)].filter((x) => mine.has(x));
-  ok(!free.length, id + ': no chapter mission completes on the day of the crowning ('
-    + (free.join(', ') || 'none') + ')');
-}
-
-// ------------------------------------------------------------ completability
-// Build the world each branch names — provinces held, empires broken or bound,
-// the treasury full, the communities won — and let the ordinary monthly pass
-// pay for it. Anything that stays unpaid here is content no campaign can reach.
-console.log('== §188 live: every chapter mission pays when its world arrives ==');
-function expectAllPaid(w, id) {
-  realm.checkMissions(w.ctx);
-  realm.checkMissions(w.ctx);
-  const done = doneSet(w.game);
-  const missing = branchOf(id).map((m) => m.id).filter((x) => !done.has(x));
-  ok(!missing.length, id + ': every chapter mission paid ('
-    + (missing.length ? 'missing ' + missing.join(', ') : 'three done') + ')');
-}
-
-{ // 167 BCE — the Seleucid throne finished, the harbours taken, Rome friendly.
-  const w = proclaim('167bce');
-  grant(w.ctx, ['Jerusalem', 'Joppa', 'Azotus', 'Gaza']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.SEL.alive = false;
-  w.game.tags.ROM.opinion = Object.assign({}, w.game.tags.ROM.opinion, { MLI: 60 });
-  expectAllPaid(w, '167bce');
-}
-{ // 67 BCE — the cities of the Jordan, Petra brought to heel, Babylonia answering.
-  const w = proclaim('67bce');
-  grant(w.ctx, ['Scythopolis', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia', 'Petra', 'Bostra']);
-  w.game.tags.MLI.stability = 3;
-  stand(w.ctx, 'Babylon', 78);
-  expectAllPaid(w, '67bce');
-}
-{ // 40 BCE — the groves, the harbour bought and built, the east bound in writing.
-  const w = proclaim('40bce');
-  grant(w.ctx, ['Jericho', 'Engaddi', 'Caesarea Maritima', 'Dora']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.MLI.treasury = 900;
-  w.game.tags.MLI.allies = ['PAR'];
-  stand(w.ctx, 'Seleucia-Ctesiphon', 74);
-  expectAllPaid(w, '40bce');
-  // 900 banked, +120 from the groves, −250 sunk in the moles.
-  ok(Math.round(w.game.tags.MLI.treasury) === 770, '  and the harbour was actually paid for ('
-    + Math.round(w.game.tags.MLI.treasury) + ' talents left of 900)');
-}
-{ // 66 CE — the procurators' coast, the House unburned, the tetrarchy taken in.
-  const w = proclaim('66ce');
-  grant(w.ctx, ['Caesarea Maritima', 'Ptolemais', 'Joppa', 'Ascalon', 'Jerusalem',
-    'Caesarea Philippi', 'Batanea', 'Tiberias']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.MLI.treasury = 900;
-  if (w.game.tags.AGR) w.game.tags.AGR.alive = false;
-  ok(w.ctx.prov('Jerusalem').wonder === 'temple',
-    '  the Second House is still standing in this chapter, as it is until 70');
-  expectAllPaid(w, '66ce');
-}
-{ // 132 CE — the colony unmade, the House raised on a bare Mount, Rome two-handed.
-  const w = proclaim('132ce');
-  grant(w.ctx, ['Jerusalem', 'Caesarea Maritima', 'Sebaste', 'Emmaus', 'Lydda']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.MLI.treasury = 900;
-  w.game.tags.PAR.atWarWith = ['ROM'];
-  ok(!w.ctx.prov('Jerusalem').wonder, '  the Mount starts bare in this chapter');
-  expectAllPaid(w, '132ce');
-  ok(w.ctx.prov('Jerusalem').wonder === 'temple', '  and the Third House now stands on it');
-  ok(w.game.tags.MLI.treasury <= 900 - 300, '  paid for out of the treasury ('
-    + Math.round(w.game.tags.MLI.treasury) + ' talents left of 900)');
-}
-{ // 132 CE again — a House the chapter's own side already raised is endowed,
-  // not billed a second time (the crown must not charge for a standing Temple).
-  const w = proclaim('132ce');
-  grant(w.ctx, ['Jerusalem', 'Caesarea Maritima', 'Sebaste', 'Emmaus', 'Lydda']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.MLI.treasury = 900;
-  w.game.tags.PAR.atWarWith = ['ROM'];
-  w.ctx.prov('Jerusalem').wonder = 'temple';
-  realm.checkMissions(w.ctx);
-  realm.checkMissions(w.ctx);
-  ok(doneSet(w.game).has('mli_132_third_house'), '132ce: a standing House still completes it');
-  ok(w.game.tags.MLI.treasury >= 900, '  and the silver stays banked ('
-    + Math.round(w.game.tags.MLI.treasury) + ' talents)');
-}
-{ // 614 CE — the altar, the Exilarchate, and the road up from Arabia watched.
-  const w = proclaim('614ce');
-  grant(w.ctx, ['Jerusalem', 'Nehardea', 'Babylon', 'Aila', 'Petra', 'Bostra']);
-  w.game.tags.MLI.stability = 3;
-  w.game.tags.MLI.treasury = 900;
-  w.ctx.helpers.spawnArmy(w.ctx, 'MLI', 'Jerusalem', { inf: 22 });
-  expectAllPaid(w, '614ce');
-  ok(w.ctx.prov('Jerusalem').wonder === 'temple',
-    '  and the House stands on a Mount that has been empty since Titus');
+  // A chapter may rename the tabs (SPEC §52) — 1948 calls Coin the Economy.
+  // The ideas travel with whatever that chapter calls the tab they are on;
+  // what must not happen is a bookmark renaming Crown as though they were
+  // still there while the block sits somewhere else.
+  const ideasTerm = (PANEL.match(/id: 'coin', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
+  ok(ideasTerm[2] === 'tabCoin', 'the ideas\' tab reads its label from uiTerms.' + ideasTerm[2]);
+  const renamed = ERAS.filter((e) => e.bookmark.uiTerms && e.bookmark.uiTerms.tabCrown);
+  const missing = renamed.filter((e) => !e.bookmark.uiTerms.tabCoin).map((e) => e.bookmark.id);
+  ok(!missing.length, 'every chapter that renames the tabs names the ideas\' tab too'
+    + (missing.length ? ' (' + missing.join(', ') + ')' : ' (' + renamed.length + ' renaming chapter(s))'));
 }
 
 console.log(failures ? failures + ' FAILURES' : 'ALL PASS');

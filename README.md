@@ -223,7 +223,10 @@ static site, the zero dependencies, or the missing build step changes.
   People in Arms faces the Arab Legion — fifty-one groups across the eight
   chapters, three tiers each, bought with the ladder's own point, with locked
   cards that tell you exactly which rung opens them ("Unlocked at The Third
-  Wall (8)"). The AI buys its side's curriculum on the same terms, and every
+  Wall (8)") — and they are read where they are bought: the Ideas block sits
+  directly under the Technology block on the same tab of the realm panel, in
+  every chapter, so the card naming a rung and the ladder climbing toward it
+  are one screen. The AI buys its side's curriculum on the same terms, and every
   playable side's mission tree grew two branches that assign it: master the
   era's named art, and take up its ideas.
 - **The mission tree shows the roads not taken.** Every playable side's tree

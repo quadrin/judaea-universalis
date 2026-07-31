@@ -670,7 +670,7 @@ export function monthlyHolySites(ctx) {
 // an old save, a test forcing a chain forward — is honored by seeding the
 // first missionIdx missions as done, which is what it always meant.
 //
-// A crown's own chain may also speak per chapter (SPEC §188): a mission that
+// A crown's own chain may also speak per chapter (SPEC §189): a mission that
 // declares `chapters: ['66ce', …]` is offered only in those, one that declares
 // none is offered wherever the crown is formable. The Kingdom of Israel is
 // formable in six chapters and the ages do not ask the same things of it, so

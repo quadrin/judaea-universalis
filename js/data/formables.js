@@ -67,7 +67,7 @@ function devOf(ctx, tag) {
   return dev;
 }
 
-// ---- what a chapter's own missions ask after (SPEC §188) --------------------
+// ---- what a chapter's own missions ask after (SPEC §189) --------------------
 // Province names are the canon keys the map ships with; a chapter that renames
 // one for its era (Straton's Tower, Shechem) renames the LABEL, so the checks
 // go on saying Caesarea Maritima and the prose says what the age said.
@@ -120,7 +120,7 @@ function raiseTheThirdHouse(ctx) {
   ctx.helpers.adjust(ctx, 'MLI', { legitimacy: 20, gov: 25 });
 }
 
-// ---- the Kingdom of Israel's own programme (SPEC §188) ----------------------
+// ---- the Kingdom of Israel's own programme (SPEC §189) ----------------------
 // The crown is formable in six chapters, and until now it read the same four
 // missions in all of them: settle the crown, muster the kingdom, hold the
 // land, build rather than merely hold. Those four are what a kingdom does
@@ -527,7 +527,7 @@ const MLI_614 = [
   },
 ];
 
-// One table, six readings (SPEC §188). `chapterChain` hands each chapter the
+// One table, six readings (SPEC §189). `chapterChain` hands each chapter the
 // spine plus its own branch; the formables below carry the whole thing, so a
 // crown proclaimed in any of the six finds a full tree waiting.
 const MLI_MISSIONS = [
