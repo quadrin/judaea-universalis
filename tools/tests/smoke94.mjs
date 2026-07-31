@@ -551,12 +551,22 @@ console.log('== nobody is succeeded by an ancient in 1948 (SPEC §143) ==');
   ok(MIL.courtNamePool(w167.ctx, 'HAS') === G.israelite,
     '  and the Hasmoneans are still Hasmonean');
 
-  // A chapter that names no pool is untouched: the culture group still decides.
+  // A chapter that names no pool is untouched: the resolution chain decides.
+  // Since SPEC §173 that chain has two rungs — an era-bounded court may carry
+  // its own STATIC pool (an Ostrogoth is named from the gothic pen in any
+  // century that seats one, and no century seats one twice), and only then
+  // does the culture group answer. What this pins is that the CHAPTER
+  // declared nothing: 529 has no tagTweaks.names, and every pool below
+  // resolves from the catalog alone.
   const w529 = boot('529ce', 'SAM');
+  ok(!Object.values(w529.bookmark.tagTweaks || {}).some((tw) => tw && tw.names),
+    '529 itself still names no pool for anybody');
   for (const t of w529.bookmark.activeTags) {
-    const cul = DEFINES.CULTURES[(DEFINES.TAGS[t] || {}).culture] || {};
-    ok(MIL.courtNamePool(w529.ctx, t) === (G[cul.group] || G.hellenic),
-      '529 leaves ' + t + ' on its culture group (' + cul.group + ')');
+    const d = DEFINES.TAGS[t] || {};
+    const cul = DEFINES.CULTURES[d.culture] || {};
+    const expect = (d.names && G[d.names]) || G[cul.group] || G.hellenic;
+    ok(MIL.courtNamePool(w529.ctx, t) === expect,
+      '529 leaves ' + t + ' on its own pen (' + (d.names || cul.group) + ')');
   }
 }
 

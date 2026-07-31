@@ -137,7 +137,15 @@ export const BOOKMARK_40 = {
     + 'can hold, Petra can be bargained with, and in Rome there is a Senate that hates a '
     + 'vacuum more than it loves any king.',
 
-  activeTags: ['HER', 'ATG', 'ROM', 'PAR', 'NAB', 'PTO', 'ARM', 'OSR', 'ADI', 'CHX'],
+  activeTags: ['HER', 'ATG', 'ROM', 'PAR', 'NAB', 'PTO', 'ARM', 'OSR', 'ADI', 'CHX',
+    // The political west (SPEC §173): the triumviral west — Caesar's Gaul
+    // held down, Bocchus' Mauretania holding both shores of everything, and
+    // the Danube in Burebista's wreckage. Seated by js/data/political_maps.js.
+    'MAU', 'GRM', 'LUS',
+    'NOR', 'BRT', 'CAL', 'HIB',
+    'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
+    'DLM', 'SCO', 'DRD', 'THR', 'DAC',
+    'BOS', 'SCY', 'SRM', 'VEN'],
   // Standing rivalries (SPEC §73): the Parthian flood IS the chapter — the
   // two empires stay each other's natural war.
   rivalries: [['ROM', 'PAR']],
@@ -405,6 +413,13 @@ export const BOOKMARK_40 = {
     PTO: { name: 'Cleopatra VII Philopator', title: 'Pharaoh', gov: 4, infl: 5, mar: 2, age: 29 },
     NAB: { name: 'Malichus I', title: 'King', gov: 2, infl: 2, mar: 2, age: 45 },
     ARM: { name: 'Artavasdes II', title: 'King', gov: 2, infl: 3, mar: 2, age: 45 },
+    // The political west (SPEC §173): Bocchus the durable, who outlived
+    // Jugurtha's whole story and will leave both Mauretanias to Octavian;
+    // Asander, who murdered his way onto the Bosporan throne and will keep it
+    // thirty years; and one of the four kings Burebista's Dacia broke into.
+    MAU: { name: 'Bocchus II', title: 'King', gov: 3, infl: 3, mar: 2, age: 55 },
+    BOS: { name: 'Asander', title: 'Archon of the Bosporus', gov: 3, infl: 2, mar: 3, age: 62 },
+    DAC: { name: 'Cotiso', title: 'King', gov: 2, infl: 2, mar: 3, age: 35 },
   },
 
   missions: {

@@ -169,11 +169,23 @@ export const BOOKMARK_67 = {
   activeTags: [
     'HYR', 'ARI', 'ROM', 'SEL', 'PTO', 'NAB', 'ARM', 'PAR',
     'OSR', 'ADI', 'CHX', 'CMG', 'ITU', 'PNT',
+    // The political west (SPEC §173): Sertorius three years buried, Gaul one
+    // generation from Caesar, Burebista's Dacia rising. Seated by
+    // js/data/political_maps.js.
+    'NUM', 'MAU', 'GRM', 'MAS', 'LUS',
+    'AVN', 'AED', 'SEQ', 'BLG', 'ARO', 'AQT', 'NOR', 'BOI',
+    'BRT', 'CAL', 'HIB',
+    'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
+    'DLM', 'SCO', 'DRD', 'THR', 'DAC',
+    'BOS', 'SCY', 'SRM', 'VEN',
   ],
   // Standing rivalries (SPEC §73): Rome and Parthia begin the century of
   // wars over the Euphrates line, and Tigranes' Armenia contests the same
-  // marches with the Arsacids.
-  rivalries: [['ROM', 'PAR'], ['ARM', 'PAR']],
+  // marches with the Arsacids. In the west (SPEC §173), Burebista has begun
+  // the wars that will empty the Boii country, and the Dalmatian federation
+  // wants its port back.
+  rivalries: [['ROM', 'PAR'], ['ARM', 'PAR'],
+    ['DAC', 'BOI'], ['DAC', 'SCO'], ['DLM', 'ROM'], ['AED', 'SEQ']],
   // Historical friends (SPEC §86): Aretas marched for Hyrcanus and went home
   // again — Nabataea is the brothers' natural friend either way. Rome's
   // friendship is real for whichever brother courts it, and the Arsacid
@@ -495,6 +507,14 @@ export const BOOKMARK_67 = {
     ITU: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 58 },
     // v5.4: the old lion, restored at Zela this very year, waiting for Pompey
     PNT: { name: 'Mithridates VI Eupator', title: 'King', gov: 3, infl: 4, mar: 4, age: 68 },
+    // The political west (SPEC §173): the three crowned heads worth naming.
+    // Burebista is a decade into making one Dacia out of many; Hiempsal sits
+    // where Pompey's own settlement put him; Machares governs the Bosporus
+    // for Rome and against his father, which will shortly kill him.
+    DAC: { name: 'Burebista', title: 'King', gov: 4, infl: 3, mar: 5, age: 44 },
+    NUM: { name: 'Hiempsal II', title: 'King', gov: 3, infl: 2, mar: 2, age: 50,
+      heir: { name: 'Juba', gov: 2, infl: 2, mar: 3, age: 18 } },
+    BOS: { name: 'Machares', title: 'King in the Bosporus', gov: 2, infl: 2, mar: 2, age: 35 },
   },
 
   // Linear mission chains (realm panel).

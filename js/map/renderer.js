@@ -206,6 +206,9 @@ int idAt(ivec2 ip){ return provinceOf(cellIdAt(ip)); }
 int flagsOf(int id){
   return int(texelFetch(uFlagsTex, ivec2(id, 0), 0).r * 255.0 + 0.5);
 }
+int classOf(int id){
+  return int(texelFetch(uLookA, ivec2(id, 0), 0).a * 255.0 + 0.5);
+}
 void main(){
   vec2 map = uOffsetScale.xy + vClip * uOffsetScale.zw;
   vec2 uv = map / uMapSize;
@@ -309,14 +312,18 @@ void main(){
     int idR = idAt(ip + ivec2(b1, 0));
     int idD = idAt(ip + ivec2(0, b1));
     bool provB = (idR != id && idR != 0) || (idD != id && idD != 0);
-    int cSelf = flags >> 3;
+    // Owner class rides lookA's alpha byte (SPEC §173) — the flags byte's
+    // 5-bit field topped out at 30 owners and one era now seats nearly fifty;
+    // two clamped neighbors lost the border between them. Alpha was uploaded
+    // as a constant 255 and never read, so the full 8-bit class costs nothing.
+    int cSelf = classOf(id);
     int iL = idAt(ip - ivec2(b1, 0));
     int iU = idAt(ip - ivec2(0, b1));
     bool ctryB =
-      (idR != 0 && (flagsOf(idR) >> 3) != cSelf) ||
-      (idD != 0 && (flagsOf(idD) >> 3) != cSelf) ||
-      (iL != 0 && (flagsOf(iL) >> 3) != cSelf) ||
-      (iU != 0 && (flagsOf(iU) >> 3) != cSelf);
+      (idR != 0 && classOf(idR) != cSelf) ||
+      (idD != 0 && classOf(idD) != cSelf) ||
+      (iL != 0 && classOf(iL) != cSelf) ||
+      (iU != 0 && classOf(iU) != cSelf);
     float bs = mix(1.0, 1.55, uPaper);
     if (provB) col = mix(col, vec3(0.14, 0.11, 0.08), clamp(${fN(CFG.BORDER_PROV)} * bs, 0.0, 0.85));
     if (ctryB) col = mix(col, vec3(0.09, 0.065, 0.05), clamp(${fN(CFG.BORDER_CTRY)} * bs, 0.0, 0.92));
@@ -962,12 +969,16 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
         p0[id * 4 + k] = v;
         s0[id * 4 + k] = v;
       }
-      p0[id * 4 + 3] = 255;
+      // Owner class in lookA's alpha (SPEC §173): 8 bits, 254 owners, 255
+      // reserved for WASTE. It lived in bits 3..7 of the flags byte until the
+      // catalog outgrew 31 tags (v5.4) and then one ERA outgrew 31 live
+      // courts (§173) — at which point Math.min clamped two real owners into
+      // one class and the border between them silently vanished. The alpha
+      // byte was uploaded as a constant 255 and read by nobody.
+      const cls = pr.owner === 'WASTE' ? 255 : Math.min(254, tagKeys.indexOf(pr.owner) + 1);
+      p0[id * 4 + 3] = cls;
       s0[id * 4 + 3] = 255;
-      // 5-bit class field: WASTE takes the reserved top slot so the catalog's
-      // growth past 31 tags (v5.4) can never clamp two real owners together.
-      const cls = pr.owner === 'WASTE' ? 31 : Math.min(30, tagKeys.indexOf(pr.owner) + 1);
-      let fl = cls << 3;
+      let fl = 0;
       // The cross-hatch means "uninhabited or impassable", which is what the
       // flag contract at the top of this file says and what a player reads it
       // as: empty ground. It used to also fire on `owner === 'WASTE'`, and
@@ -979,8 +990,8 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
       // clause started painting Carthage, Lugdunum, Londinium and the whole
       // Roman west with the Sahara's hatch — reading as "nothing lives here"
       // across ground carrying 1,060 development. Unowned is a fact about
-      // sovereignty; uninhabited is a fact about people. The class field below
-      // already says the first (WASTE takes slot 31, so the political mapmode
+      // sovereignty; uninhabited is a fact about people. The class channel
+      // already says the first (WASTE takes 255, so the political mapmode
       // still greys it as unclaimed); this bit says the second.
       if (pr.impassable || pr.habitation === 'uninhabited') fl |= 2;
       f0[id] = fl;

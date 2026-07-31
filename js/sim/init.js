@@ -88,6 +88,26 @@ function bookmarkField(bookmark, field, source, inheritParent = true) {
   return undefined;
 }
 
+// The era's political map (SPEC §173): a second overlay UNDER the chapter's
+// own tables, attached by the registry (compendium.js sets bookmark.political)
+// so the bookmarks keep their zero-import property and the registry stays the
+// one place the pairing is written down. Chapter first, political map second,
+// base atlas last — a chapter can always overrule a cell, and the base atlas
+// stays WASTE. Same latentParent inheritance as bookmarkField.
+//
+// `political === undefined` means the bookmark never went through the
+// registry (a consumer imported the bookmark file directly) — which boots a
+// world with an unowned west and no levy table, silently. Warn once: the two
+// suites that legitimately boot raw import compendium for the attachment.
+function politicalField(bookmark, field, source) {
+  if (bookmark && bookmark.political === undefined) {
+    warnOnce('political:' + (bookmark.id || '?'),
+      'bookmark', bookmark.id, 'has no political attachment — booted outside '
+      + 'the registry? compendium.js attaches the SPEC §173 maps');
+  }
+  return bookmarkField(bookmark && bookmark.political, field, source);
+}
+
 function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
   const s = source || {};
   let x = 0, y = 0;
@@ -105,7 +125,14 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
   const maxGarrison = fort * B({ DEFINES }, 'fortGarrisonPerLevel', 1000);
   const eraName = bookmarkField(bookmark, 'provinceNames', s, false) || null;
   const dt = bookmarkField(bookmark, 'devTweaks', s) || null;
-  const owner = bookmarkField(bookmark, 'owners', s) || s.owner || 'WASTE';
+  const owner = bookmarkField(bookmark, 'owners', s)
+    || politicalField(bookmark, 'owners', s) || s.owner || 'WASTE';
+  // The levy share (SPEC §173): what this owner can actually draw on here.
+  // 1 wherever neither the chapter nor the political map says otherwise —
+  // which is every province the eight campaigns were tuned against.
+  const levyOverride = bookmarkField(bookmark, 'levies', s);
+  const levy = Number.isFinite(levyOverride) ? levyOverride
+    : num(politicalField(bookmark, 'levies', s), 1);
   const dev = {
     tax: num(dt && dt.tax, num(s.dev && s.dev.tax)),
     prod: num(dt && dt.prod, num(s.dev && s.dev.prod)),
@@ -121,11 +148,14 @@ function makeProvinceState({ DEFINES, MAP_DATA, geom, bookmark, source, id }) {
     // caravan country pump oil in 1948.
     terrain: bookmarkField(bookmark, 'terrains', s) || s.terrain,
     good: bookmarkField(bookmark, 'goods', s) || s.good,
-    religion: bookmarkField(bookmark, 'religions', s) || s.religion,
-    culture: bookmarkField(bookmark, 'cultures', s) || s.culture,
+    religion: bookmarkField(bookmark, 'religions', s)
+      || politicalField(bookmark, 'religions', s) || s.religion,
+    culture: bookmarkField(bookmark, 'cultures', s)
+      || politicalField(bookmark, 'cultures', s) || s.culture,
     dev,
     owner,
     controller: owner,
+    levy,
     habitation,
     settleable: typeof settleableOverride === 'boolean' ? settleableOverride : s.settleable !== false,
     autonomy: 0.25, unrest: 0, revoltProgress: 0,

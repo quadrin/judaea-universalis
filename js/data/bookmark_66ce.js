@@ -163,7 +163,14 @@ export const BOOKMARK_66 = {
     + 'Syria watches, and waits, and counts his legions. Four years of fire begin now.',
 
   // Tags of other eras (SEL, PTO, HAS, HYR, ARI) never enter this game.
-  activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX'],
+  activeTags: ['ROM', 'JUD', 'PAR', 'NAB', 'ARM', 'AGR', 'OSR', 'ADI', 'CHX',
+    // The political west (SPEC §173): everyone outside Nero's empire — the
+    // free Germans, the client Bosporus, the Sarmatian steppe, and Dacia
+    // waiting for Decebalus. Rome's own west arrives through the political
+    // map with its levy shares, which is why it can arrive at all.
+    'GRM', 'CAL', 'HIB',
+    'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
+    'DAC', 'BOS', 'SCY', 'SRM', 'VEN'],
   // Standing rivalries (SPEC §73): Corbulo's Armenian war just closed; the
   // Euphrates rivalry only pauses.
   rivalries: [['ROM', 'PAR']],
@@ -529,6 +536,9 @@ export const BOOKMARK_66 = {
     },
     ARM: { name: 'Tiridates I', title: 'King', gov: 2, infl: 3, mar: 2, age: 45 },
     AGR: { name: 'Agrippa II', title: 'King', gov: 2, infl: 4, mar: 1, age: 38 },
+    // The political west (SPEC §173): the client king of the straits, whose
+    // grain fleet matters to Rome more than most provinces do.
+    BOS: { name: 'Cotys I', title: 'King of the Bosporus', gov: 2, infl: 2, mar: 2, age: 50 },
   },
 
   // Linear mission chains (realm panel). check/reward run through ctx.helpers.

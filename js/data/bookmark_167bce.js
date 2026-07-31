@@ -167,11 +167,29 @@ export const BOOKMARK_167 = {
     // Dormant at the opening date; the long campaign can watch the Seleucid
     // empire break into actual states instead of abstract debuffs.
     'CMG', 'OSR', 'CHX', 'CYZ', 'ITU',
+    // The political west (SPEC §173): the year after Pydna, with Carthage
+    // nineteen years from the fire and the Arverni at their height. Seated by
+    // js/data/political_maps.js; none of them is scripted, all of them are
+    // played — courts, wars, successions and all.
+    'CAR', 'NUM', 'MAU', 'GRM', 'MAS', 'CTB', 'LUS',
+    'AVN', 'AED', 'SEQ', 'BLG', 'ARO', 'NOR', 'BOI',
+    'BRT', 'CAL', 'HIB',
+    'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
+    'DLM', 'SCO', 'DRD', 'THR', 'DAC',
+    'BOS', 'SCY', 'SRM', 'VEN',
   ],
   // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and
   // Mithridates' Parthia is already probing the Seleucid east.
-  rivalries: [['SEL', 'PTO'], ['SEL', 'PAR'], ['ROM', 'SEL']],
+  rivalries: [['SEL', 'PTO'], ['SEL', 'PAR'], ['ROM', 'SEL'],
+    // The west's own weather (SPEC §173): Masinissa's lawsuits against a
+    // Carthage forbidden to answer them, and the Arverni-Aedui contest for
+    // Gaul. Rome's Iberian wars are NOT seeded as standing rivalries: the
+    // harness showed a rivalry-fed Lusitania eating five Spanish provinces
+    // that Rome's east-rallying AI never once marched to defend — Viriathus
+    // winning the whole war instead of a decade of it. Left to opinion drift,
+    // the raids stay possible without being destiny.
+    ['NUM', 'CAR'], ['AVN', 'AED']],
   // Historical friends (SPEC §86): pairs whose bond can outlive a quarrel,
   // so a grudge between them matures back toward warmth instead of setting
   // hard. The Roman treaty of 161 is the era's one real friendship, and it
@@ -666,6 +684,12 @@ export const BOOKMARK_167 = {
     CHX: { name: 'Hyspaosines', title: 'King', gov: 3, infl: 2, mar: 3, age: 35 },
     CYZ: { name: 'Antiochus IX Cyzicenus', title: 'Basileus', gov: 2, infl: 2, mar: 4, age: 22 },
     ITU: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 35 },
+    // The political west (SPEC §173). One crowned head is worth naming: the
+    // old king of Numidia, thirty-five years into eating Carthage by lawsuit,
+    // who will still lead cavalry in person past eighty. Everyone else takes
+    // the plain ruling council initGame seats.
+    NUM: { name: 'Masinissa', title: 'King', gov: 4, infl: 3, mar: 5, age: 71,
+      heir: { name: 'Micipsa', gov: 3, infl: 2, mar: 2, age: 40 } },
   },
 
   // Linear mission chains (realm panel).

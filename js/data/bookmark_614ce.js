@@ -102,7 +102,11 @@ const BYZ_LANDS = [
   'Cyrene', 'Marmarica', 'Paraetonium', 'Syene', 'Berenice',
   // v5.4: the wider frame — Italy and Sicily (the Ravenna exarchate's south),
   // Tripolitania, the Balkan and Anatolian themes, the City itself, Lazica.
-  'Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae',
+  // CORRECTED (SPEC §173): Capua is not in this list any more — the plain of
+  // Campania answered to the Lombard dukes of Benevento by 614, and Naples
+  // was the Byzantine enclave inside it, which at this cell size means the
+  // cell is Lombard. The political map seats LMB there.
+  'Roma', 'Tarentum', 'Brundisium', 'Rhegium', 'Panormus', 'Syracusae',
   'Oea', 'Leptis Magna', 'Macomades',
   'Dyrrhachium', 'Thessalonica', 'Hadrianopolis', 'Byzantion',
   'Nicaea', 'Smyrna', 'Ancyra', 'Sinope', 'Trapezus', 'Phasis',
@@ -203,7 +207,25 @@ export const BOOKMARK_614 = {
     'Machaerus': 'Medaba', 'Masada': 'Engaddi',
   },
 
-  activeTags: ['BYZ', 'SAS', 'JUD', 'GHA', 'RSH'],
+  // The era's lens on the western tags (SPEC §139, §173).
+  tagTweaks: {
+    CAL: { name: 'The Picts', description: 'The kingdom beyond the old wall, a generation after Columba came to Iona.' },
+    CIM: { name: 'The Danes', description: 'The sea-kings of the Cimbric shore, whom Frankish annals already know by name.' },
+    MAU: { name: 'The Moorish Kingdoms', description: 'Altava\'s world: the kings the exarchate pays, fights, and cannot replace.' },
+    SAX: {
+      name: 'The English Kingdoms', capital: 'Britannia',
+      description: 'Æthelfrith\'s generation: seven crowns on a Christian island, most of them still pagan.',
+    },
+  },
+
+  activeTags: ['BYZ', 'SAS', 'JUD', 'GHA', 'RSH',
+    // The political west (SPEC §173): the world Heraclius is losing the year
+    // Jerusalem falls — Chlothar's Gaul, Sisebut's Spain, Lombard Italy, the
+    // khaganate on the Danube and the Turks he will one day ride to meet.
+    // Seated by js/data/political_maps.js.
+    'LMB', 'FRK', 'VIS', 'MAU', 'GRM', 'ARO',
+    'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
+    'AVA', 'SLV', 'TRK', 'BGR'],
   // Standing rivalries (SPEC §73): once the jihad state wakes it is the
   // standing enemy of both empires — the truces of the 640s do not soften
   // Medina toward Constantinople or Ctesiphon, so the conquest resumes when
@@ -549,6 +571,19 @@ export const BOOKMARK_614 = {
     JUD: { name: 'Nehemiah ben Hushiel', title: 'Prince of the Return', gov: 2, infl: 3, mar: 3, age: 30 },
     GHA: { name: 'Jabala', title: 'Phylarch', gov: 2, infl: 2, mar: 3, age: 42 },
     RSH: { name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 41 },
+    // The political west (SPEC §173): Chlothar has ruled ALL the Franks for
+    // one year; Sisebut — scholar, poet, and the king whose forced baptisms
+    // this chapter's own refugees are fleeing — for two; Agilulf has two
+    // left; Æthelfrith dies at the Idle in two more. The Avar khagan of these
+    // years is Bayan's second son, whom no source names.
+    FRK: { name: 'Chlothar II', title: 'King of the Franks', gov: 3, infl: 3, mar: 3, age: 30 },
+    VIS: { name: 'Sisebut', title: 'King', gov: 4, infl: 3, mar: 3, age: 40 },
+    LMB: { name: 'Agilulf', title: 'King', gov: 3, infl: 3, mar: 3, age: 60,
+      heir: { name: 'Adaloald', gov: 1, infl: 1, mar: 1, age: 12 } },
+    SAX: { name: 'Æthelfrith', title: 'King of Bernicia and Deira', gov: 2, infl: 1, mar: 4, age: 42 },
+    AVA: { name: 'The Khagan', title: 'Khagan of the Avars', gov: 2, infl: 3, mar: 4, age: 45 },
+    TRK: { name: 'Sheguy', title: 'Yabghu Khagan', gov: 3, infl: 3, mar: 3, age: 40 },
+    HIB: { name: 'Máel Cobo mac Áedo', title: 'High King', gov: 2, infl: 2, mar: 2, age: 40 },
   },
 
   missions: {

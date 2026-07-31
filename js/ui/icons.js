@@ -658,6 +658,344 @@ export const FLAGS = {
     `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#1a6a3c" stroke="none"/>` +
     `<path d="${starPath(12, 12, 8, 4.8, 2.4)}" fill="#b5342c" stroke="none"/>` +
     `<circle cx="12" cy="12" r="1.5" fill="#d9a520" stroke="none"/>`,
+
+  // --- the political west (SPEC §173) -------------------------------------
+  // One emblem per new court, same coin-die hand as the rest of the file:
+  // where a people left a device (Tanit's sign, the Pictish crescent-and-rod,
+  // the draco, the Dulo tamga, the iron crown) it is drawn; where they left
+  // none, the emblem is the thing their neighbors knew them by.
+  // Carthage: the sign of Tanit under the crescent, off every stele in the tophet.
+  CAR:
+    `<path d="M15.5 4.2a5.4 5.4 0 10-7 .1 6.6 6.6 0 017-.1Z" ${ACC}/>` +
+    `<circle cx="12" cy="9.2" r="2.3" ${SIL}/>` +
+    `<path d="M5.6 12.6h12.8v1.7H5.6Z" ${SIL}/>` +
+    `<path d="M8.2 14.3h7.6L18 20.4H6Z" ${SIL}/>`,
+  // Numidia: the free horse of the royal coinage.
+  NUM:
+    `<path d="M6 19.6c.2-3.2 1.2-5.6 3-7.2l-2.6-.6c-1-.3-1.5-1-1.5-2 .9.3 1.8.4 2.7.3 1.9-.2 3.5.1 4.8.9l3.2-2.6.4-2.9 1.6 2.4 2.2.6c-.6 1-1.4 1.5-2.4 1.6l-1 2.4c1 1.7 1.6 4.1 1.7 7.1h-2.1c-.4-2.3-1.1-4.1-2.1-5.4-1 .8-2.2 1.3-3.6 1.4-.4 1.1-.5 2.4-.4 4Z" ${SIL}/>`,
+  // Mauretania: the crescent over the Atlas, the far west's own sky.
+  MAU:
+    `<path d="M14.8 3.4a4.8 4.8 0 10.1 5.9 5.8 5.8 0 01-.1-5.9Z" ${ACC}/>` +
+    `<path d="M2.8 19.8 8 10.4l3 4.6 3-5.4 7.2 10.2Z" ${SIL}/>` +
+    `<path d="M5.6 19.8 8 15.4l1.6 2.5" ${DET}/>`,
+  // The Garamantes: the chariot wheel of the desert crossings, rock-carved
+  // from the Fezzan to the Atlas.
+  GRM:
+    `<circle cx="12" cy="12" r="7.2" ${SIL}/>` +
+    `<circle cx="12" cy="12" r="1.7" ${ACC}/>` +
+    `<path d="M12 4.8v14.4M4.8 12h14.4M6.9 6.9l10.2 10.2M17.1 6.9 6.9 17.1" ${DET}/>`,
+  // Massalia: the galley prow that carried the west's oldest Greeks.
+  MAS:
+    `<path d="M3.8 13.6h13.4l3.4-2.8-1 4.4c-2.2 1.9-5 2.8-8.4 2.8-2.8 0-5.3-.6-7.4-1.9Z" ${SIL}/>` +
+    `<path d="M6.2 13.6V8.8l2.2 1.2V7.4l2.4 1.4V6l2.6 1.6" ${DET}/>` +
+    `<circle cx="16.4" cy="12.2" r="0.7" fill="${FO}" stroke="none"/>` +
+    `<path d="M4.2 19.4c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0" ${DET}/>`,
+  // The Celtiberians: the round caetra and the falcata that kept Numantia.
+  CTB:
+    `<circle cx="12" cy="9.4" r="5.8" ${SIL}/>` +
+    `<circle cx="12" cy="9.4" r="1.6" ${ACC}/>` +
+    `<path d="M12 3.6v11.6M6.2 9.4h11.6" ${DET}/>` +
+    `<path d="M5.4 20.6c2.5.2 4.6-.3 6.4-1.5 1.6-1.1 2.6-2.5 3-4.2l1.8 1c-.5 2.2-1.8 4-3.9 5.2-1.9 1.1-4.3 1.4-7.3.9Z" ${ACC}/>`,
+  // Lusitania: crossed javelins behind the small shield of the raiding bands.
+  LUS:
+    `<path d="M5.2 4.6 18.4 19.2M18.8 4.6 5.6 19.2" fill="none" stroke="${FP}" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M5.2 4.6l2.6.5-.9 2.4Z M18.8 4.6l-2.6.5.9 2.4Z" ${ACC}/>` +
+    `<circle cx="12" cy="12" r="4.2" ${SIL}/>` +
+    `<circle cx="12" cy="12" r="1.2" ${ACC}/>`,
+  // The Arverni: the boar of the Gaulish standards, bristles up.
+  AVN:
+    `<path d="M4.2 14.6c0-3 1.9-4.9 5.6-5.7l1.6-2.1 1 1.9c2.4 0 4.3.5 5.7 1.6l2.1-.6-1 2c.4.6.6 1.3.6 2.1 0 .8-.3 1.5-.8 2.2h-2.6l-.4 1.6h-1.8l-.3-1.4H9.4l-.4 1.4H7.2L6.9 16c-1.8-.2-2.7-.7-2.7-1.4Z" ${SIL}/>` +
+    `<path d="M9.8 8.9l1-1.5 1 1.6M12.6 8.9l1.2-1.3.7 1.7" ${DET}/>` +
+    `<circle cx="16.9" cy="13.1" r="0.5" fill="${FO}" stroke="none"/>`,
+  // The Aedui: the vergobret's torc, ends open — power handed over yearly.
+  AED:
+    `<path d="M12 4.6a7.4 7.4 0 017.4 7.4c0 2.6-1 4.8-2.9 6.4l-1.3-1.6c1.5-1.2 2.2-2.8 2.2-4.8a5.4 5.4 0 10-10.8 0c0 2 .7 3.6 2.2 4.8l-1.3 1.6c-1.9-1.6-2.9-3.8-2.9-6.4A7.4 7.4 0 0112 4.6Z" ${ACC}/>` +
+    `<circle cx="8.1" cy="17.6" r="1.6" ${SIL}/>` +
+    `<circle cx="15.9" cy="17.6" r="1.6" ${SIL}/>`,
+  // The Sequani: the carnyx, the boar-headed trumpet of the Gaulish charge.
+  SEQ:
+    `<path d="M10.9 20.4V8.2c0-2 .8-3.4 2.4-4.2l.9 1.7c-1 .6-1.5 1.4-1.5 2.5v12.2Z" ${SIL}/>` +
+    `<path d="M13.3 4c1.7-.9 3.3-.9 4.9 0l-1.1 2.1-1.9-.4-.5 1.3Z" ${SIL}/>` +
+    `<circle cx="16.6" cy="5" r="0.5" fill="${FO}" stroke="none"/>` +
+    `<path d="M9.2 20.4h5.4" ${ACC}/>`,
+  // The Belgae: the sheaf of spears of the bravest third.
+  BLG:
+    `<path d="M12 3.2v17M7.4 5.2l3 15M16.6 5.2l-3 15" fill="none" stroke="${FP}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="M12 3.2l1.2 2.4h-2.4Z M7.4 5.2l1.7 2.1-2.3.5Z M16.6 5.2l.6 2.6-2.3-.5Z" ${ACC}/>` +
+    `<rect x="6.8" y="15.2" width="10.4" height="1.7" rx="0.85" ${ACC}/>`,
+  // The Armoricans: the leather sail of the Veneti, riding the tide.
+  ARO:
+    `<path d="M11.2 3.6h1.6v13h-1.6Z" ${ACC}/>` +
+    `<path d="M12.8 4.8c3.4.8 5.6 2.6 6.6 5.4l-6.6 1.2Z" ${SIL}/>` +
+    `<path d="M11.2 4.8c-3.4.8-5.6 2.6-6.6 5.4l6.6 1.2Z" ${SIL}/>` +
+    `<path d="M4 18.2c1.4-1 2.8-1 4.2 0 1.4 1 2.7 1 4 0 1.4-1 2.7-1 4 0 1.3 1 2.6 1 3.9 0" ${DET}/>`,
+  // The Aquitani: the oak of the deep-forest country between river and mountains.
+  AQT:
+    `<path d="M11.1 20.2v-5.4c-3.2-.4-5.4-2-6.4-4.8 1.4.2 2.6 0 3.8-.6-1.2-1-1.8-2.3-1.8-3.9 1.6.7 3 .8 4.2.4.4-1.2 1.1-2.1 2.1-2.7.4 1.2 1.1 2.1 2.1 2.7 1.4.2 2.7 0 3.9-.7 0 1.7-.7 3-2 3.9 1.2.7 2.5 1 3.8.8-1 2.9-3.2 4.5-6.5 4.9v5.4Z" ${SIL}/>` +
+    `<path d="M8 20.2h8" ${ACC}/>`,
+  // Noricum: the sword on the anvil — the steel every legion bought.
+  NOR:
+    `<path d="M11.2 2.8h1.6v8h-1.6Z" ${SIL}/>` +
+    `<path d="M8.6 5h6.8v1.5H8.6Z" ${ACC}/>` +
+    `<path d="M6.4 13.4h11.2v2.4h-3.4v2h2.4v2H7.4v-2h2.4v-2H6.4Z" ${SIL}/>`,
+  // The Boii: the bull of the herds that named Bohemia.
+  BOI:
+    `<path d="M4.4 5.2c.3 2.9 1.7 4.6 4.2 5.2M19.6 5.2c-.3 2.9-1.7 4.6-4.2 5.2" fill="none" stroke="${FG}" stroke-width="2" stroke-linecap="round"/>` +
+    `<path d="M8 9.6c.6-1.6 1.9-2.4 4-2.4s3.4.8 4 2.4c.9 2.1.9 4.2 0 6.2-.8 1.9-2.2 2.9-4 2.9s-3.2-1-4-2.9c-.9-2-.9-4.1 0-6.2Z" ${SIL}/>` +
+    `<circle cx="10.2" cy="11.4" r="0.6" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13.8" cy="11.4" r="0.6" fill="${FO}" stroke="none"/>` +
+    `<path d="M10.6 15.4c.9.6 1.9.6 2.8 0" ${DET}/>`,
+  // The Britons: the La Tène triskele of the island bronzes.
+  BRT:
+    `<circle cx="12" cy="12" r="8" ${SIL}/>` +
+    `<path d="M12 12c0-3 1.3-4.9 3.9-5.7M12 12c2.6 1.5 3.4 3.7 2.3 6.3M12 12c-2.6 1.5-4.7 1.2-6.2-1" fill="none" stroke="${FO}" stroke-width="1.8" stroke-linecap="round"/>` +
+    `<circle cx="12" cy="12" r="1.3" ${ACC}/>`,
+  // Caledonia: the crescent and V-rod, cut on symbol stones nobody has read.
+  CAL:
+    `<path d="M4.6 10.2a7.6 7.6 0 0114.8 0l-2 .5a5.6 5.6 0 00-10.8 0Z" ${SIL}/>` +
+    `<path d="M6.2 16.8 12 8.4l5.8 8.4" fill="none" stroke="${FG}" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M6.2 16.8l-.3 2.6 2.1-1.4ZM17.8 16.8l.3 2.6-2.1-1.4Z" ${ACC}/>`,
+  // Hibernia: the triple spiral, older on that island than every kingdom of it.
+  HIB:
+    `<path d="M12 11.2c-.1-2.4 1-3.9 3.2-4.4 2 .5 3 1.8 3 3.9-.4 1.7-1.4 2.6-3 2.6" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>` +
+    `<path d="M12.7 12.4c2.1 1.2 2.6 3 1.7 5.1-1.7 1.3-3.4 1.3-5-.1-.9-1.5-.7-2.8.5-3.9" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>` +
+    `<path d="M11.3 12.4c-2-1.3-4-1.1-5.8.7-.4 2.1.4 3.6 2.3 4.5" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>` +
+    `<circle cx="12" cy="12" r="1" ${ACC}/>`,
+  // The Suebi: the knot itself, combed high on every free head.
+  SUE:
+    `<path d="M9.4 20.4c-1.9-3.4-2.4-6.8-1.5-10.2.8-3 2.5-5 5.1-6 2 .6 3.2 1.9 3.6 3.9.3 1.8-.4 3.1-2.1 3.9-1.5.5-2.7.1-3.6-1.1-.6-1.1-.4-2.1.6-2.9" fill="none" stroke="${FP}" stroke-width="1.8" stroke-linecap="round"/>` +
+    `<path d="M13 4.2c1.6-.9 3.2-1 4.8-.3l-1.2 2.2c-1.1-.5-2.1-.4-3.2.2Z" ${ACC}/>`,
+  // The Cherusci: the forest where the eagles went down — three standards, one broken.
+  CHE:
+    `<path d="M6 4.4v15.8M18 4.4v15.8" fill="none" stroke="${FP}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="M12 4.4v6.2l-2.6 3.2" fill="none" stroke="${FP}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<circle cx="6" cy="4" r="1.3" ${ACC}/>` +
+    `<circle cx="18" cy="4" r="1.3" ${ACC}/>` +
+    `<circle cx="12" cy="4" r="1.3" ${ACC}/>` +
+    `<path d="M4.4 20.2h15.2" ${ACC}/>`,
+  // The Chatti: the shield and the spade — others go to battle, these go to war.
+  CHA:
+    `<rect x="5" y="4.6" width="8.6" height="12.4" rx="1.6" ${SIL}/>` +
+    `<path d="M9.3 6.4v8.8M6.8 10.8h5" ${DET}/>` +
+    `<path d="M16.6 4.2h1.7v9h-1.7Z" ${ACC}/>` +
+    `<path d="M15.4 13.2h4.1l-.7 4.4h-2.7Z" ${ACC}/>`,
+  // The Frisii: the terp above the tide — a house the sea walks around.
+  FRS:
+    `<path d="M6.4 13.8c.6-2.6 2.5-3.9 5.6-3.9s5 1.3 5.6 3.9Z" ${SIL}/>` +
+    `<path d="M9.8 9.9 12 6.4l2.2 3.5" ${SIL}/>` +
+    `<path d="M3.6 16.4c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0" ${DET}/>` +
+    `<path d="M4.4 19.2c1.3-.9 2.7-.9 4 0 1.3.9 2.6.9 3.9 0 1.3-.9 2.6-.9 3.9 0 1.3.9 2.6.9 3.9 0" ${DET}/>`,
+  // The Cimbri: the brazen bull the priestesses carried to the Raudine plain.
+  CIM:
+    `<path d="M3.8 4.6c.4 3.2 2 5.1 4.8 5.7M20.2 4.6c-.4 3.2-2 5.1-4.8 5.7" fill="none" stroke="${FP}" stroke-width="2.1" stroke-linecap="round"/>` +
+    `<path d="M8.4 10.9c.7-1.4 1.9-2.1 3.6-2.1s2.9.7 3.6 2.1c.8 1.7.8 3.4 0 5.1-.7 1.6-1.9 2.4-3.6 2.4s-2.9-.8-3.6-2.4c-.8-1.7-.8-3.4 0-5.1Z" ${ACC}/>` +
+    `<circle cx="10.4" cy="12.6" r="0.55" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13.6" cy="12.6" r="0.55" fill="${FO}" stroke="none"/>`,
+  // The Suiones: the ship-kings' hull, strong in oars and men.
+  SCN:
+    `<path d="M3.6 13.2c2.6 1.2 5.4 1.8 8.4 1.8s5.8-.6 8.4-1.8c-.6 2.2-1.8 3.9-3.6 5.1H7.2c-1.8-1.2-3-2.9-3.6-5.1Z" ${SIL}/>` +
+    `<path d="M4.6 12.6c-.9-1.5-.8-3 .3-4.5M19.4 12.6c.9-1.5.8-3-.3-4.5" fill="none" stroke="${FG}" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M7.6 13.9v2.6M10.5 14.4v3M13.5 14.4v3M16.4 13.9v2.6" ${DET}/>`,
+  // The Gothones: the ring-hilted spear of the kings at the river mouth.
+  GOT:
+    `<path d="M11.2 7.2h1.6v13h-1.6Z" ${SIL}/>` +
+    `<path d="M12 2.4l2.2 4.8h-4.4Z" ${ACC}/>` +
+    `<circle cx="12" cy="14.8" r="2.9" fill="none" stroke="${FG}" stroke-width="1.5"/>`,
+  // The Aestii: the amber they alone gather, strung above the sea.
+  AES:
+    `<path d="M4.2 8.4c2.4 1.9 5 2.9 7.8 2.9s5.4-1 7.8-2.9" fill="none" stroke="${FP}" stroke-width="1.4" stroke-linecap="round"/>` +
+    `<circle cx="7.2" cy="10.4" r="1.5" ${ACC}/>` +
+    `<circle cx="12" cy="11.6" r="2" ${ACC}/>` +
+    `<circle cx="16.8" cy="10.4" r="1.5" ${ACC}/>` +
+    `<path d="M4.4 17.4c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.3 1 2.6 1 3.9 0" ${DET}/>`,
+  // The Delmatae: the hill fort ringed with dry stone, five times conquered.
+  DLM:
+    `<path d="M3.4 19.6 12 5.2l8.6 14.4Z" ${SIL}/>` +
+    `<path d="M8.6 13.6h6.8v2.6H8.6Z" ${ACC}/>` +
+    `<path d="M9.8 13.6v2.6M12 13.6v2.6M14.2 13.6v2.6" ${DET}/>`,
+  // The Scordisci: the thureos shield that reached Delphi twice.
+  SCO:
+    `<path d="M8.2 3.6h7.6c.8 2.8 1.2 5.6 1.2 8.4s-.4 5.6-1.2 8.4H8.2c-.8-2.8-1.2-5.6-1.2-8.4s.4-5.6 1.2-8.4Z" ${SIL}/>` +
+    `<path d="M12 5v14" ${DET}/>` +
+    `<path d="M10.4 12c0-1.1.5-1.7 1.6-1.7s1.6.6 1.6 1.7-.5 1.7-1.6 1.7-1.6-.6-1.6-1.7Z" ${ACC}/>`,
+  // Dardania: the watchtower above Macedon's road.
+  DRD:
+    `<path d="M8.6 20.2V9.4H7.2V6.6h2.2V4.8h1.8v1.8h1.6V4.8h1.8v1.8h2.2v2.8h-1.4v10.8Z" ${SIL}/>` +
+    `<path d="M11 13.2h2v3.4h-2Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M5.4 20.2h13.2" ${ACC}/>`,
+  // Thrace: the pelta and the two javelins of the peltast.
+  THR:
+    `<path d="M5.2 10.4a6.8 6.8 0 0113.6 0c0 1.9-.6 3.4-1.9 4.6-1-1.7-2.1-2.6-3.4-2.6-.8 0-1.3.4-1.5 1.1-.2-.7-.7-1.1-1.5-1.1-1.3 0-2.4.9-3.4 2.6-1.3-1.2-1.9-2.7-1.9-4.6Z" ${SIL}/>` +
+    `<path d="M6.8 17.2 17.6 6.8M6.8 6.8l10.8 10.4" fill="none" stroke="${FG}" stroke-width="1.4" stroke-linecap="round"/>` +
+    `<path d="M17.6 6.8l.5-2.4-2.3.7ZM6.8 6.8l-.5-2.4 2.3.7Z" ${ACC}/>`,
+  // Dacia: the draco — wolf's head, serpent's tail, wind for a voice.
+  DAC:
+    `<path d="M4.6 8.2c1.5-1.7 3.2-2.3 5.2-1.8l1.6-1.6.4 1.9c1.1.5 1.8 1.3 2.1 2.4l-2.2 1.4c-.7-.9-1.5-1.4-2.5-1.4l-1.2 1.2-.6-1.5c-1 .1-1.9.5-2.8 1.2Z" ${SIL}/>` +
+    `<path d="M13.6 8.6c2.4.4 4 1.5 4.9 3.3.9 1.9.7 3.8-.7 5.7-1.2 1.6-2.9 2.4-5 2.4-1.7 0-3.1-.5-4.2-1.6l1.5-1.7c.8.7 1.7 1.1 2.7 1.1 1.3 0 2.4-.5 3.1-1.5.8-1.1.9-2.2.4-3.4-.6-1.2-1.7-2-3.3-2.3Z" ${ACC}/>` +
+    `<circle cx="7.6" cy="7.9" r="0.5" fill="${FO}" stroke="none"/>`,
+  // The Bosporan Kingdom: the Spartocid trident-tamga of the straits.
+  BOS:
+    `<path d="M11.2 6.4h1.6v13.8h-1.6Z" ${SIL}/>` +
+    `<path d="M6.4 4.2c.4 3 1.5 4.9 3.4 5.6M17.6 4.2c-.4 3-1.5 4.9-3.4 5.6" fill="none" stroke="${FP}" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<path d="M12 2.8l1.5 3.3h-3Z" ${ACC}/>` +
+    `<circle cx="12" cy="17.2" r="2.1" fill="none" stroke="${FG}" stroke-width="1.4"/>`,
+  // Scythia: the drawn bow and the gorytos that emptied itself and left.
+  SCY:
+    `<path d="M4.6 9.8c2.4-2.2 4.9-3.3 7.4-3.3s5 1.1 7.4 3.3l-1.4 1.6c-2-1.9-4-2.9-6-2.9s-4 1-6 2.9Z" ${SIL}/>` +
+    `<path d="M4.6 9.8 12 12.6l7.4-2.8" ${DET}/>` +
+    `<path d="M11.2 6.4h1.6v11.8h-1.6Z" ${ACC}/>` +
+    `<path d="M12 20.6l-1.8-2.4h3.6Z" ${ACC}/>`,
+  // Sarmatia: the tamga of the lance-bearing clans.
+  SRM:
+    `<circle cx="12" cy="7.4" r="3.4" fill="none" stroke="${FP}" stroke-width="1.8"/>` +
+    `<path d="M12 10.8v9.4M12 15.2 7.4 20.2M12 15.2l4.6 5" fill="none" stroke="${FP}" stroke-width="1.8" stroke-linecap="round"/>`,
+  // The Venedae: the pine forest east of everyone's maps.
+  VEN:
+    `<path d="M7.4 20.2V17c-2.3-.5-3.8-1.7-4.4-3.6 1 .2 1.9.1 2.7-.3-.9-.8-1.4-1.8-1.4-3 1.1.5 2.1.6 3 .3.3-1 .9-1.7 1.8-2.2.9.5 1.5 1.2 1.8 2.2.9.3 1.9.2 3-.3 0 1.2-.5 2.2-1.4 3 .8.4 1.7.5 2.7.3-.6 1.9-2.1 3.1-4.4 3.6v3.2Z" ${SIL}/>` +
+    `<path d="M14.8 20.2v-2.4c-1.8-.4-2.9-1.3-3.4-2.8.8.2 1.5.1 2.1-.2-.7-.6-1-1.4-1-2.3.8.4 1.6.4 2.3.2.2-.8.7-1.3 1.4-1.7.7.4 1.2.9 1.4 1.7.7.2 1.5.2 2.3-.2 0 .9-.3 1.7-1 2.3.6.3 1.3.4 2.1.2-.5 1.5-1.6 2.4-3.4 2.8v2.4Z" ${SIL}/>`,
+  // The Ostrogoths: the Amal eagle of the cloisonné fibulae, wings squared.
+  OST:
+    `<path d="M12 3.4c1.1 0 1.8.7 1.8 1.8l-.1 1 2.9-.7c1.6-.4 2.6.2 3 1.7l-3.6 2.2.1 8.2-2.2 2.8h-3.8l-2.2-2.8.1-8.2L4.4 7.2c.4-1.5 1.4-2.1 3-1.7l2.9.7-.1-1c0-1.1.7-1.8 1.8-1.8Z" ${SIL}/>` +
+    `<path d="M9.8 10.2h4.4M9.8 13h4.4M9.8 15.8h4.4" ${DET}/>` +
+    `<circle cx="12" cy="5.4" r="0.5" fill="${FO}" stroke="none"/>`,
+  // The Vandals: the sail that took Carthage's sea and Rome's grain.
+  VAN:
+    `<path d="M11.2 3.4h1.6v11.4h-1.6Z" ${ACC}/>` +
+    `<path d="M5.4 4.8h13.2c-.8 2.1-1.2 4-1.2 5.7 0 1.1.2 2.3.5 3.5H6.1c.3-1.2.5-2.4.5-3.5 0-1.7-.4-3.6-1.2-5.7Z" ${SIL}/>` +
+    `<path d="M3.8 16.6h16.4l-2.6 3.6H6.4Z" ${SIL}/>` +
+    `<path d="M10.9 7h2.2M12 5.9v2.2" fill="none" stroke="${FO}" stroke-width="1" stroke-linecap="round"/>`,
+  // The Visigoths: Toledo's votive crown, hung above the altar on chains.
+  VIS:
+    `<path d="M7 4.2l1.6 3.6M17 4.2l-1.6 3.6M12 3.4v4" ${DET}/>` +
+    `<path d="M6.4 7.8h11.2v4.4c-1.9.8-3.7 1.2-5.6 1.2s-3.7-.4-5.6-1.2Z" ${ACC}/>` +
+    `<path d="M8.4 13.4v3.2M12 13.9v3.6M15.6 13.4v3.2" ${DET}/>` +
+    `<circle cx="8.4" cy="17.8" r="0.9" ${SIL}/>` +
+    `<circle cx="12" cy="18.7" r="0.9" ${SIL}/>` +
+    `<circle cx="15.6" cy="17.8" r="0.9" ${SIL}/>`,
+  // The Franks: the francisca, thrown once, at the start, to break the line.
+  FRK:
+    `<path d="M10.9 6.8 8.2 20.2h1.9l2.3-11.9Z" ${SIL}/>` +
+    `<path d="M10.4 7.6c-.6-2.2.2-3.7 2.4-4.4 1.9-.6 3.6-.3 5.2.9-1.1 2.4-2.9 3.7-5.4 3.9Z" ${ACC}/>`,
+  // Burgundy: the law-book under the crown — the code that outlived the kingdom.
+  BGD:
+    `<path d="M5.6 9.2c1.9-1.8 4-2.7 6.4-2.7s4.5.9 6.4 2.7l-.9 1.6c-1.7-1.6-3.5-2.4-5.5-2.4s-3.8.8-5.5 2.4Z" ${ACC}/>` +
+    `<circle cx="12" cy="7.2" r="1.4" ${SIL}/>` +
+    `<path d="M6.4 12.6h11.2v7.2H6.4Z" ${SIL}/>` +
+    `<path d="M12 12.6v7.2M8.2 14.8h2M13.8 14.8h2M8.2 16.8h2M13.8 16.8h2" ${DET}/>`,
+  // The Gepids: the great eagle buckle of the Tisza graves.
+  GEP:
+    `<path d="M12 4.2c2.6 0 4.4 1.2 5.4 3.6.9 2.2.7 4.4-.6 6.6l-2-1.2c.9-1.6 1.1-3.1.5-4.6-.6-1.6-1.7-2.4-3.3-2.4s-2.7.8-3.3 2.4c-.6 1.5-.4 3 .5 4.6l-2 1.2c-1.3-2.2-1.5-4.4-.6-6.6 1-2.4 2.8-3.6 5.4-3.6Z" ${SIL}/>` +
+    `<path d="M9.4 15.4h5.2l-1 4.8h-3.2Z" ${ACC}/>` +
+    `<circle cx="12" cy="8.4" r="0.6" fill="${FO}" stroke="none"/>`,
+  // The Lombards: the Iron Crown — a band of gold around a nail of iron.
+  LMB:
+    `<path d="M5.4 9.4h13.2v6.8H5.4Z" ${ACC}/>` +
+    `<path d="M5.4 9.4c2.2-.9 4.4-1.3 6.6-1.3s4.4.4 6.6 1.3" fill="none" stroke="${FO}" stroke-width="0.9"/>` +
+    `<circle cx="8.2" cy="12.8" r="1" ${SIL}/>` +
+    `<circle cx="12" cy="12.8" r="1" ${SIL}/>` +
+    `<circle cx="15.8" cy="12.8" r="1" ${SIL}/>` +
+    `<path d="M11.3 11h1.4v3.6h-1.4Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M10.2 12.1h3.6v1.4h-3.6Z" fill="${FO}" stroke="none"/>`,
+  // The Saxons: the two seaxes, points down, the island's new heraldry.
+  SAX:
+    `<path d="M6.2 4.4c3.2 3.9 4.6 8.4 4.2 13.4l-1.7 2c-.9-5.6-2.3-10.2-4.3-13.9Z" ${SIL}/>` +
+    `<path d="M17.8 4.4c-3.2 3.9-4.6 8.4-4.2 13.4l1.7 2c.9-5.6 2.3-10.2 4.3-13.9Z" ${SIL}/>` +
+    `<path d="M8.7 17.8l1.7 2M15.3 17.8l-1.7 2" fill="none" stroke="${FG}" stroke-width="1.6" stroke-linecap="round"/>`,
+  // The Avar Khaganate: the horse-tail tug before the ring.
+  AVA:
+    `<path d="M11.2 3.2h1.6v17.4h-1.6Z" ${ACC}/>` +
+    `<circle cx="12" cy="4.6" r="1.6" fill="none" stroke="${FG}" stroke-width="1.3"/>` +
+    `<path d="M12.8 7.2c2.4.4 3.9 1.6 4.6 3.6-1.6 1.5-3.1 2.6-4.6 3.4M11.2 7.2c-2.4.4-3.9 1.6-4.6 3.6 1.6 1.5 3.1 2.6 4.6 3.4" fill="none" stroke="${FP}" stroke-width="1.6" stroke-linecap="round"/>`,
+  // The Sclaveni: the broad axe and the oak sprig of the river peoples.
+  SLV:
+    `<path d="M11.1 8.2 9.4 20.2h2l1.4-11.6Z" ${SIL}/>` +
+    `<path d="M10.6 8.8C9.6 6.7 10 5.1 11.8 4c1.7-1 3.4-1 5.1 0-.6 2.6-2.1 4.2-4.5 4.8Z" ${ACC}/>` +
+    `<path d="M6.2 13.2c1.5-.2 2.6.3 3.3 1.5-1.3.8-2.5.7-3.6-.2Z" ${SIL}/>` +
+    `<path d="M5.4 16.6c1.3-.4 2.4-.1 3.3.9-1.1 1-2.3 1.1-3.5.4Z" ${SIL}/>`,
+  // The Western Turks: the wolf standard of the Ashina above the bow.
+  TRK:
+    `<path d="M11.2 6.6h1.6v13.6h-1.6Z" ${ACC}/>` +
+    `<path d="M9 6.6c-.4-1.9.2-3.2 1.8-3.9l.9 1.5c1-.5 2-.5 3 0l1.3-1.1c.9 1.2.9 2.4 0 3.5-.9 1-2.1 1.4-3.7 1.2C10.9 7.7 9.8 7.3 9 6.6Z" ${SIL}/>` +
+    `<circle cx="13.4" cy="4.9" r="0.5" fill="${FO}" stroke="none"/>` +
+    `<path d="M6.4 13.4c1.7-1.6 3.6-2.4 5.6-2.4s3.9.8 5.6 2.4l-1.2 1.4c-1.4-1.3-2.9-2-4.4-2s-3 .7-4.4 2Z" ${SIL}/>`,
+  // The Bulgar Hordes: the Dulo tamga — IYI, cut on every stone they left.
+  BGR:
+    `<path d="M6.6 5.4v13.2M17.4 5.4v13.2" fill="none" stroke="${FP}" stroke-width="1.9" stroke-linecap="round"/>` +
+    `<path d="M12 9.4v9.2M12 9.4 8.8 5.6M12 9.4l3.2-3.8" fill="none" stroke="${FG}" stroke-width="1.9" stroke-linecap="round"/>`,
+  // -- 1948: the real flags, same muted palette as the rest of the chapter --
+  FRA:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#1d3c6e" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>`,
+  SPA:
+    `<rect x="0.6" y="0.6" width="22.8" height="5.7" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="6.3" width="22.8" height="11.4" fill="#d9a520" stroke="none"/>` +
+    `<rect x="0.6" y="17.7" width="22.8" height="5.7" fill="#b5342c" stroke="none"/>` +
+    `<path d="M5.2 9.4h4v4.4h-4Z" fill="#b5342c" stroke="none"/>`,
+  POR:
+    `<rect x="0.6" y="0.6" width="9.1" height="22.8" fill="#1a6a3c" stroke="none"/>` +
+    `<rect x="9.7" y="0.6" width="13.7" height="22.8" fill="#b5342c" stroke="none"/>` +
+    `<circle cx="9.7" cy="12" r="3.4" fill="none" stroke="#d9a520" stroke-width="1.3"/>` +
+    `<circle cx="9.7" cy="12" r="1.3" fill="#f2f4f4" stroke="none"/>`,
+  NLD:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#1d3c6e" stroke="none"/>`,
+  DEN:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
+    `<path d="M8.8 0.6v22.8M0.6 12h22.8" stroke="#f2f4f4" stroke-width="3.4" fill="none"/>`,
+  SWE:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#1d4e9c" stroke="none"/>` +
+    `<path d="M8.8 0.6v22.8M0.6 12h22.8" stroke="#d9a520" stroke-width="3.4" fill="none"/>`,
+  POL:
+    `<rect x="0.6" y="0.6" width="22.8" height="11.4" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="12" width="22.8" height="11.4" fill="#b5342c" stroke="none"/>`,
+  CZE:
+    `<rect x="0.6" y="0.6" width="22.8" height="11.4" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="12" width="22.8" height="11.4" fill="#b5342c" stroke="none"/>` +
+    `<path d="M0.6 0.6 13 12 0.6 23.4Z" fill="#1d3c6e" stroke="none"/>`,
+  SOV:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
+    star5(7.4, 5.8, 1.9, '#d9a520') +
+    `<path d="M8.2 16.9a5.3 5.3 0 017.2-7.2 6.6 6.6 0 00-4.3 2.9 6.6 6.6 0 00-2.9 4.3Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M9.6 14.5 16.8 7.3l1.5 1.5-7.2 7.2Z" fill="#d9a520" stroke="none"/>` +
+    `<path d="M15.5 9.9l2.6 2.6-1.3 1.3-2.6-2.6Z" fill="#d9a520" stroke="none"/>`,
+  GER:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#141414" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#d9a520" stroke="none"/>`,
+  AUT:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>`,
+  HUN:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#2c7a3f" stroke="none"/>`,
+  YUG:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#1d4e9c" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    star5(12, 12, 3.4, '#b5342c') +
+    star5(12, 12, 2.3, '#d9a520'),
+  ALB:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
+    `<path d="M12 5.2c1 1.8 2.4 2.7 4.2 2.9l-2.2 1.6 3.8.4-2.8 1.9 3.4 1.2-3.2 1 2.2 2.2-3.2-.6 1 3-3.2-2.4-3.2 2.4 1-3-3.2.6 2.2-2.2-3.2-1 3.4-1.2-2.8-1.9 3.8-.4-2.2-1.6c1.8-.2 3.2-1.1 4.2-2.9Z" fill="#141414" stroke="none"/>`,
+  BUL:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>`,
+  ROU:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#1d3c6e" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#d9a520" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>`,
+  IRL:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#d97a30" stroke="none"/>`,
+  SUI:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
+    `<path d="M10.4 5.6h3.2v4.8h4.8v3.2h-4.8v4.8h-3.2v-4.8H5.6v-3.2h4.8Z" fill="#f2f4f4" stroke="none"/>`,
 };
 
 function escText(s) {

@@ -107,17 +107,18 @@ export function computeMapmodeColors(ctx, mode) {
 
   const TAGS = (DEFINES && DEFINES.TAGS) || {};
   const tradeIdx = mode === 'trade' ? tradeIndex() : null;
-  // Owner class rides a 5-bit field in the flags byte (renderer contract:
-  // bits 3..7; differing classes draw the country border). DEFINES.TAGS has
-  // outgrown 31 keys (v5.4), so classes index the LIVE game's tags — any one
-  // era seats far fewer than 30 courts — with 31 reserved for WASTE. Indexing
-  // the full catalog clamped IRN/UK/ITA/UAR into one class and their shared
-  // borders vanished.
+  // Owner class rides lookA's ALPHA byte (renderer contract, SPEC §173:
+  // differing classes draw the country border; 255 is WASTE). It was a 5-bit
+  // field in the flags byte until v5.4's catalog outgrew 31 keys, and then
+  // indexing the LIVE game's tags outgrew 31 too — a §173 era seats nearly
+  // fifty courts, and the Math.min clamp fused every court past the thirtieth
+  // into one class: the Cherusci and the Chatti touched with no line between
+  // them. Alpha is 8 bits, uploaded all along, and was read by nobody.
   const liveKeys = Object.keys(game.tags || {});
   const tagClass = (t) => {
-    if (t === 'WASTE') return 31;
+    if (t === 'WASTE') return 255;
     const i = liveKeys.indexOf(t);
-    return i >= 0 ? Math.min(30, i + 1) : 0; // unknown -> 0
+    return i >= 0 ? Math.min(254, i + 1) : 0; // unknown -> 0
   };
   const tagColor = (t) =>
     (game.tags[t] && game.tags[t].color) || (TAGS[t] && TAGS[t].color) || GRAY;
@@ -168,7 +169,7 @@ export function computeMapmodeColors(ctx, mode) {
     if (!p) continue;
     let cA = GRAY;
     let cB = null;
-    let fl = tagClass(p.owner) << 3;
+    let fl = 0;
     if (p.impassable || p.habitation === 'uninhabited') fl |= 2; // hatch in every mode
 
     switch (mode) {
@@ -306,6 +307,9 @@ export function computeMapmodeColors(ctx, mode) {
 
     setRGB(primary, id, cA);
     setRGB(secondary, id, cB || cA);
+    // Owner class in lookA's alpha (renderer contract, SPEC §173): the
+    // country-border test compares this byte between neighboring provinces.
+    primary[id * 4 + 3] = tagClass(p.owner);
     flags[id] = fl;
   }
 

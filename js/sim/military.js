@@ -29,6 +29,23 @@ export function devTotal(p) {
   if (!p || !p.dev) return 0;
   return num(p.dev.tax) + num(p.dev.prod) + num(p.dev.mp);
 }
+// The levy share (SPEC §173): the fraction of a province's development its
+// owner can actually draw on for the wars this game stages. 1 for every
+// province the eight campaigns were tuned against; 0.2 for the political
+// maps' governed interior; 0.1 for a standing frontier — the Rhine army
+// exists on the map precisely so that it cannot march east. Set once at
+// initGame from the era's political map and constant for the campaign:
+// conquering the far west hands any crown exactly what it handed Rome.
+// Reads in five places — manpower pool, force limit, tax, production,
+// administration — plus the two censuses that must weigh the same political
+// world those five make: hegemon containment and the AI's establishment
+// floor. Local facts (supply, sieges, rebel size, peace pricing, development
+// itself) stay physical. Missing field = 1, so every save from before this
+// section is unchanged.
+export function levyOf(p) {
+  const v = p && p.levy;
+  return Number.isFinite(v) && v > 0 && v < 1 ? v : 1;
+}
 // Buildings only work for their owner: an occupied province yields nothing
 // from its market, granary or shrine (walls' fort bump is one-time, physical).
 export function hasBuilding(p, key) {
@@ -192,7 +209,7 @@ export function forceLimitOf(ctx, tag) {
   for (let i = 1; i < g.provinces.length; i++) {
     const p = g.provinces[i];
     if (!p || p.impassable || p.owner !== tag) continue;
-    dev += devTotal(p);
+    dev += devTotal(p) * levyOf(p); // the establishment the realm can DRAW on (SPEC §173)
   }
   return Math.max(4, Math.round(
     (num(bal.forceLimitBase, 8) + dev * num(bal.forceLimitPerDev, 0.15))
@@ -2104,6 +2121,43 @@ export const GENERAL_NAMES = {
   greek_modern: ['Alexandros Papagos', 'Thrasyvoulos Tsakalotos', 'Konstantinos Ventiris', 'Solon Ghikas', 'Stylianos Kitrilakis', 'Dimitrios Giantzis', 'Georgios Grivas', 'Napoleon Zervas'],
   british:   ['Bernard Montgomery', 'William Slim', 'John Crocker', 'Miles Dempsey', 'Gordon MacMillan', 'Evelyn Barker', 'Alan Cunningham', 'Hugh Stockwell'],
   iranian_modern: ['Ali Razmara', 'Fazlollah Zahedi', 'Hassan Arfa', 'Ahmad Amir-Ahmadi', 'Morteza Yazdanpanah', 'Nader Batmanghelich', 'Abdollah Hedayat', 'Mohammad Daftari'],
+  // -- the political west (SPEC §173): the courts of the §160 ground. --
+  // Ancient pools by culture group, attested men only (Polybius, Caesar,
+  // Livy, Tacitus, Appian); the late-antique and 1948 pools are per-court
+  // `names` keys, same standard as the four §143 added — people who actually
+  // held commands or offices in the years their chapters run.
+  celtic:    ['Brennus', 'Dumnorix', 'Orgetorix', 'Ambiorix', 'Cingetorix', 'Viridomarus', 'Camulogenus', 'Correus'],
+  iberian:   ['Indibilis', 'Mandonius', 'Caros', 'Rhetogenes', 'Avarus', 'Corocotta', 'Istolatius', 'Punicus'],
+  punic:     ['Hanno', 'Hasdrubal', 'Mago', 'Bomilcar', 'Himilco', 'Carthalo', 'Gisgo', 'Maharbal'],
+  libyan:    ['Gulussa', 'Mastanabal', 'Adherbal', 'Gauda', 'Bocchar', 'Tacfarinas', 'Firmus', 'Iabdas'],
+  germanic:  ['Arminius', 'Segestes', 'Inguiomerus', 'Maroboduus', 'Catualda', 'Vannius', 'Segimerus', 'Chariovalda'],
+  thracian:  ['Sitalces', 'Cotys', 'Rhescuporis', 'Seuthes', 'Amadocus', 'Teres', 'Rhoemetalces', 'Dromichaetes'],
+  illyrian:  ['Agron', 'Genthius', 'Bato', 'Pinnes', 'Scerdilaidas', 'Epulon', 'Plator', 'Ballaios'],
+  scythian:  ['Scilurus', 'Palacus', 'Saumacus', 'Spadines', 'Farzoios', 'Inismeus', 'Susagus', 'Rasparaganus'],
+  gothic:    ['Totila', 'Witigis', 'Teia', 'Gelimer', 'Tzazon', 'Sisenand', 'Suinthila', 'Wamba'],
+  frankish:  ['Theudebert', 'Chlothar', 'Childebert', 'Sigibert', 'Mummolus', 'Butilinus', 'Chramn', 'Guntram'],
+  saxon:     ['Penda', 'Edwin', 'Raedwald', 'Cerdic', 'Cynric', 'Ceawlin', 'Ida', 'Hengest'],
+  gaelic:    ['Niall', 'Conall', 'Domnall', 'Aed', 'Fergus', 'Cathal', 'Diarmait', 'Congal'],
+  slavic:    ['Ardagastus', 'Peiragastus', 'Musokios', 'Dauritas', 'Samo', 'Mezamir', 'Chatzon', 'Perbundos'],
+  turkic:    ['Bayan', 'Tardu', 'Istami', 'Ziebel', 'Kubrat', 'Organa', 'Sandilch', 'Zabergan'],
+  french_modern: ['Alphonse Juin', 'Jean de Lattre de Tassigny', 'Marie-Pierre Koenig', 'Antoine Béthouart', 'Joseph de Monsabert', 'Raoul Salan', 'Georges Revers', 'Charles Léchères'],
+  spanish_modern: ['José Enrique Varela', 'Juan Yagüe', 'José Moscardó', 'Agustín Muñoz Grandes', 'Carlos Asensio', 'Juan Vigón', 'Fidel Dávila', 'Alfredo Kindelán'],
+  portuguese_modern: ['Óscar Carmona', 'Francisco Craveiro Lopes', 'Fernando dos Santos Costa', 'Júlio Botelho Moniz', 'Humberto Delgado', 'Américo Tomás', 'António de Spínola', 'Manuel Gomes de Araújo'],
+  dutch_modern: ['Simon Spoor', 'Hendrik Kruls', 'Dirk Buurman van Vreeden', 'Conrad Helfrich', 'Willem Drees', 'Louis Beel', 'Dirk Stikker', 'Hubertus van Mook'],
+  danish_modern: ['Ebbe Gørtz', 'Hans Hedtoft', 'Vilhelm Buhl', 'Knud Kristensen', 'Erik Eriksen', 'H.C. Hansen', 'Erik With', 'Viggo Kampmann'],
+  swedish_modern: ['Helge Jung', 'Nils Swedlund', 'Bengt Nordenskiöld', 'Tage Erlander', 'Östen Undén', 'Per Edvin Sköld', 'Dag Hammarskjöld', 'Bertil Ohlin'],
+  german_modern: ['Konrad Adenauer', 'Kurt Schumacher', 'Theodor Heuss', 'Ludwig Erhard', 'Ernst Reuter', 'Jakob Kaiser', 'Erich Ollenhauer', 'Max Brauer'],
+  austrian_modern: ['Karl Renner', 'Leopold Figl', 'Theodor Körner', 'Adolf Schärf', 'Julius Raab', 'Karl Gruber', 'Oskar Helmer', 'Emil Liebitzky'],
+  polish_modern: ['Michał Rola-Żymierski', 'Zygmunt Berling', 'Władysław Anders', 'Stanisław Maczek', 'Stanisław Sosabowski', 'Marian Spychalski', 'Stanisław Popławski', 'Bolesław Bierut'],
+  czech_modern: ['Ludvík Svoboda', 'Karel Klapálek', 'Bohumil Boček', 'Heliodor Píka', 'Klement Gottwald', 'Antonín Zápotocký', 'Edvard Beneš', 'Jan Masaryk'],
+  soviet:    ['Georgy Zhukov', 'Ivan Konev', 'Konstantin Rokossovsky', 'Aleksandr Vasilevsky', 'Rodion Malinovsky', 'Semyon Timoshenko', 'Ivan Bagramyan', 'Vasily Chuikov'],
+  hungarian_modern: ['László Sólyom', 'Péter Veres', 'Zoltán Tildy', 'Lajos Dinnyés', 'Mátyás Rákosi', 'Mihály Farkas', 'István Bata', 'Árpád Szakasits'],
+  yugoslav_modern: ['Koča Popović', 'Peko Dapčević', 'Arso Jovanović', 'Ivan Gošnjak', 'Aleksandar Ranković', 'Edvard Kardelj', 'Milovan Đilas', 'Svetozar Vukmanović'],
+  albanian_modern: ['Mehmet Shehu', 'Beqir Balluku', 'Spiro Moisiu', 'Koçi Xoxe', 'Bedri Spahiu', 'Haxhi Lleshi', 'Omer Nishani', 'Myslim Peza'],
+  bulgarian_modern: ['Georgi Damyanov', 'Dobri Terpeshev', 'Vasil Kolarov', 'Vulko Chervenkov', 'Anton Yugov', 'Georgi Dimitrov', 'Petar Panchevski', 'Ivan Mihaylov'],
+  romanian_modern: ['Emil Bodnăraș', 'Mihail Lascăr', 'Leontin Sălăjan', 'Constantin Vasiliu-Rășcanu', 'Petru Groza', 'Gheorghe Gheorghiu-Dej', 'Ion Gheorghe Maurer', 'Constantin Pârvulescu'],
+  irish_modern: ['Richard Mulcahy', 'Daniel McKenna', 'Seán MacEoin', 'Frank Aiken', 'John A. Costello', 'Seán MacBride', 'Seán Lemass', 'Liam Archer'],
+  swiss_modern: ['Henri Guisan', 'Louis de Montmollin', 'Jakob Huber', 'Karl Kobelt', 'Max Petitpierre', 'Enrico Celio', 'Ernst Nobs', 'Philipp Etter'],
 };
 
 // Which of those a court draws its people from (SPEC §143). The pool was keyed
@@ -4944,7 +4998,7 @@ function refreshReleasedManpower(ctx, tag) {
   let max = 0;
   for (let i = 1; i < ctx.game.provinces.length; i++) {
     const p = ctx.game.provinces[i];
-    if (p && !p.impassable && p.owner === tag) max += num(p.dev && p.dev.mp) * mpPerDev;
+    if (p && !p.impassable && p.owner === tag) max += num(p.dev && p.dev.mp) * mpPerDev * levyOf(p);
   }
   t.maxManpower = Math.round(max * resolveTagMult(ctx, tag, 'manpowerMult'));
   t.manpower = Math.max(num(t.manpower), Math.min(Math.max(2000, t.maxManpower), 6000));

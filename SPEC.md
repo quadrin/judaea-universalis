@@ -9084,3 +9084,160 @@ have to be earned.
 `POWERS` for the three ancient Jewish chapters is now empty, and the panel
 section hides itself when a chapter declares no off-map power — which is
 correct, because there was never anything else in it for them.
+
+## 173. The west gets owners, and the levy is what pays for it
+
+§160 closed with a seam it named out loud: 133 new cells from the Atlantic to
+the Volga, every one deliberately WASTE, because "the base owner is what every
+bookmark inherits unless its `owners` table overrides, so shipping these as ROM
+would hand Rome ninety-odd provinces in every chapter at once. That is not a
+cartography change; it is a balance change to eight tuned campaigns, and it
+belongs in its own section with its own harness run." This is that section.
+
+**Eight political maps** (`js/data/political_maps.js`), one per bookmark,
+covering the same 130 ownable cells, merged UNDER each chapter's own tables —
+the registry attaches them (`compendium.js` sets `bookmark.political`, the same
+place the event pairing lives, so the bookmarks keep their zero-import
+property), and `initGame` reads chapter first, political map second, base atlas
+last. A chapter can always overrule a cell, and the base atlas stays WASTE.
+Latent cells inherit through `latentParent` exactly as chapter tables do, so
+`'Britannia': 'UK'` answers for Londinium in 1948 without naming it.
+
+**Sixty-five new courts**, each with an emblem (`icons.js` FLAGS — Tanit's
+sign for Carthage, the Pictish crescent-and-V-rod, the draco, the Dulo tamga,
+the Iron Crown, and eighteen real 1948 flags), a constitution (`GOV_OF` — the
+Aedui elect a vergobret, Tacitus' Suiones and Gothones obey kings and their
+neighbors will not), a temperament (`PERSONALITIES` — the Avars ponderous, the
+1948 west at 0.05 aggression because nobody in Paris marches on the Levant), a
+faith and tongue, and a general-name pool that is not the hellenic fallback:
+twenty-seven new pools in `GENERAL_NAMES`, attested men only, from Maharbal to
+Mummolus to Máel Cobo to de Lattre de Tassigny. A dead king in Carthage seats
+Hasdrubal, not Nikanor — §143's bug class, closed before it opened.
+
+None of it is scripted. The courts convene under §163, come apart under §163,
+elect and crown under §98, and fight their own §144 wars: the reconquest of
+Italy is not an event chain, it is a Justinian with a fleet and an Ostrogothic
+succession crisis in the same decade, which is roughly what it was.
+
+### The levy is what pays for it
+
+Unchecked, giving Rome its west in 66 CE is **+87% manpower** on the raw rolls
+(measured: +98% on manpower dev, +75% on force-limit dev) — in the one chapter
+Rome is the antagonist of, describing an army that never existed, because the
+Rhine legions were the reason the Rhine stayed put. So a province now carries
+the share of itself its owner can actually draw on:
+
+- **1** — every province the eight campaigns were tuned against (no entry in
+  any table; `levyOf` returns 1 for every save ever written)
+- **0.2** — governed interior: taxed, quiet, its garrison its own
+- **0.1** — standing frontier: the men are already spent holding the line
+
+Which band depends on the century: Hispania is a frontier in 167 BCE (two
+praetorian armies bleed for it every summer) and an interior in 66 CE (one
+legion, mostly roads); the Rhine, the Danube, Britannia and occupied Germany
+hold the 0.1 the era they carry legions or occupation statutes. The share is
+set at initGame from the era's map and constant for the campaign — conquering
+the far west hands any crown exactly what it handed Rome, so the anti-snowball
+tuning cannot be farmed sideways.
+
+It reads in five places — manpower pool, force limit, tax, production, and the
+administration bill (symmetric, or the far west would be a pure liability) —
+plus the two censuses that must weigh the same political world: hegemon
+containment (unweighted, the owned west would grow the world denominator by a
+third and quietly loosen a tuned lever) and the AI's establishment floor.
+Local facts stay physical: supply, sieges, rebel size, peace pricing and
+development itself never see the share.
+
+**Measured on the shipped tables** (smoke107 pins the corridor): Rome's 83 new
+provinces in 66 CE come to **+16.0% manpower and +14.6% force limit**. The
+all-AI harness, run per chapter against a clean-worktree baseline at identical
+length: 167 (12y), 40, 132 and 614 come back with **no anomalies**; 66's `AGR
+BLEEDING` reproduces on the baseline tree byte-for-flag (pre-existing, not
+this section's); 529's `JUD DEAD` is §162's dormant Galilee, dead by design
+until the praetorium rising; and 67's long-accepted `SEL DEAD` stands while
+its companion flag moved from `ITU BLEEDING` to `HYR BLEEDING` — the same
+civil-war chapter flagging a different weary belligerent after 130 new cells
+moved every RNG stream, which is the drift class §160's smoke81 note already
+described. Two findings DID come out of the harness and were fixed rather
+than accepted. Seeding ROM–LUS and ROM–CTB as standing rivalries handed
+Lusitania five Spanish provinces per half-century, because Rome's AI rallies
+east and never once marched to defend Baetica — Viriathus winning the whole
+war instead of a decade of it; the Iberian wars are left to opinion drift,
+possible but not destiny (smoke78's "Rome does not sit still" is green again,
+30 → 32 over the royal century). And a seated Albania flagged `DEAD` from its
+first month — its one cell is sealed, so the court owned nothing the
+simulation can count. ALB paints Dyrrhachium and is deliberately not seated:
+a sealed country keeps sealed politics, on the same painted-not-seated
+pattern as Arabia's 132 rump.
+
+### Three of the eight are corrections, not fills
+
+- **529**: the chapter's own owners table gave Justinian Rome, Sicily and
+  Tripolitania in the second year of his reign — the west he holds only in
+  histories his reign has not written yet. Belisarius sails in 533. Italy,
+  Dalmatia and Provence are Athalaric's (Amalasuintha governing), Carthage and
+  the islands are Hilderic's (his deposition next year is the casus belli),
+  and the interior Maghreb answers to the Moorish kings the Vandals never
+  broke — Masuna's actual title, "king of the Moors and Romans", on his
+  actual 508 inscription. Burgundy gets its last five years; the Gepids keep
+  Transylvania; the chapter loses about 100 development of Byzantine Italy at
+  full levy and the harness stayed clean.
+- **614**: Capua was Benevento's, not the exarch's; Liguria, the Pentapolis
+  and Sardinia were imperial and are now drawn so; Spania survives at Malaca
+  at the 0.1 enclave share; and the Balkans behind Thessalonica are what the
+  sources mourn — an Avar ring from Sirmium to the steppe and Sclaveni in the
+  cities, with Byzantine Salona, Philippopolis and Cherson holding as 0.1
+  enclaves at the end of sea lanes. Africa alone is interior at 0.2, which is
+  why Africa is where Heraclius came from.
+- **1948**: Dyrrhachium, Phasis and Caucasian Albania were WASTE — "sealed
+  borders", conflating shut with ownerless. They are ALB and SOV now, still
+  impassable (sealed means sealed), the hatch over a sovereign color reading
+  exactly right. The whole west wears its 15-May names — Lutetia is Paris,
+  Aquincum is Budapest, Roxolania is Stalingrad — under the same
+  metropolis rule as Memphis → Cairo.
+
+Where no state existed, none was invented: the Baleares in 167 (the slingers
+hire out to everyone and answer to no one), Gaetulia beyond the limes in 66,
+the far Volga forest until the Slavs reach it. Unowned-but-passable stands,
+per §160: passage is not possession.
+
+### What the seam dragged out from under the map
+
+- **The border field was five bits.** The country-border shader compared
+  `flags >> 3` — 30 owner classes plus WASTE — and mapmodes clamped live tags
+  past the thirtieth into one class: the Cherusci and the Chatti would have
+  touched with no line between them, silently, in every §173 era (167 seats
+  49 courts). The class now rides lookA's ALPHA byte (8 bits, 254 owners,
+  255 = WASTE), which was uploaded as a constant 255 and read by nobody.
+  One texel fetch the shader was already paying for; no new texture.
+- **The Alboran defect stopped being latent.** §160 left `Portus Magnus |
+  Malaca` and `Volubilis | Malaca` unsevered — Malaca's stray lobe on the
+  Algerian coast — because severing them broke smoke90's thirteen-card royal
+  strand, and deferred the fix to "the section that gives the west owners".
+  Owned, the lobe would have been Spanish pixels in Africa and a walkable
+  false border. Fixed at the source (`Malaca` in `contiguousProvinces`, so
+  the raster repair detaches the African fragment) with the severed pair as
+  the belt to those braces; the snapshot regenerated; smoke90 re-measured
+  green across its seed sample — with the west owned, every AI distance moved
+  anyway, and the fragility §160 could not localize did not reproduce.
+- **Two pre-existing orphans, seen and left.** 132 CE inherits six Nabataean
+  cells (Oboda to Tayma) from the base atlas with NAB unseated — provincia
+  Arabia is 26 years old that spring and those cells should be Rome's; and
+  529 owns Yathrib and Khaybar to a dormant RSH by design. Both predate this
+  section; the first belongs to whoever next opens the 132 chapter.
+
+- **Regression contract**: `smoke107` boots all eight eras and asserts every
+  painted cell resolves to a seated court, the coverage floor, the levy
+  bands (old cells exactly 1, new cells 0.2/0.1), Rome's 83 and the +16%/+15%
+  corridor, all three chapters' corrections, the 1948 names, the >31-court
+  class field, the name-pool fallback rule, and Masinissa. `smoke3` pins
+  Rome's 169-province ledger row; `smoke29`/`smoke41` pin the sealed borders
+  as owned-and-shut; `smoke46` requires emblem art for every seated tag, which
+  is now sixty-five more than it was. Two older suites needed their premises
+  told about this section rather than their claims changed: `smoke94`'s "529
+  names no pool" now resolves through the static per-court pens first (that
+  is the catalog's chain, and the chapter still declares nothing), and
+  `smoke84`'s forward-play extends its own the-line-survives hand into the
+  chapter's final spring — on the new RNG stream a §87 rising held Jerusalem
+  the one June the terminal card checks, which made a 63,000-tick assertion
+  into a claim about a seed.
