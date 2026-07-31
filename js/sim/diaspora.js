@@ -33,7 +33,7 @@
 // PLAYER-ONLY, and only for a Jewish crown, on the same rule as §34's estates.
 
 import {
-  num, clamp, chronicle, addOpinion, livingTag,
+  num, clamp, chronicle, addOpinion, livingTag, devTotal,
   setDiploCd, diploCdActive, diploCdMonthsLeft,
 } from './military.js';
 import { DIASPORA, DIASPORA_ASKS, openAt } from '../data/diaspora.js';
@@ -184,9 +184,16 @@ export function communityInfo(ctx, provId) {
   } catch (e) { warnOnce('info', 'communityInfo failed', e); return null; }
 }
 
-function yieldOf(ask, def) {
+// What one ask of this community, in this province, is worth. Silver is
+// pegged to the HOST province's development (SPEC §176): the half-shekel is
+// gathered out of what the community's city is worth, so Alexandria at dev 28
+// sends real money, a desert port sends a gesture, and a city that is sacked
+// — or that grows — sends what it currently has. `treasuryPer` (flat per
+// size) is still honoured for any content that declares it.
+function yieldOf(ctx, p, ask, def) {
+  const silver = num(ask.treasuryPer) + num(ask.treasuryPerDev) * devTotal(p);
   return {
-    treasury: Math.round(num(ask.treasuryPer) * def.size),
+    treasury: Math.round(silver * def.size),
     manpower: Math.round(num(ask.manpowerPer) * def.size),
     infl: Math.round(num(ask.inflPer) * def.size),
     opinion: Math.round(num(ask.opinionPer) * def.size),
@@ -200,7 +207,7 @@ function askInfo(ctx, p, def, ask) {
   const me = g.playerTag;
   const t = g.tags[me];
   const st = ensureCommunity(ctx, p, def);
-  const gain = yieldOf(ask, def);
+  const gain = yieldOf(ctx, p, ask, def);
   const out = {
     id: ask.id,
     name: ask.name,

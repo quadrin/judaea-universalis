@@ -18,11 +18,22 @@
 // establishment and the absorbed that outlasted everyone involved, and it is
 // the reason the reparations agreement of 1952 was signed over riots.
 //
-// SO: capacity against cohesion, four cards, no free answer. Take them fast and
-// the camps and the ration book cost you order and money; take them slowly and
-// you are a state that turned Jews away, which costs you the thing the state
-// says it is for. The chain reads the ordinary treasury and unrest the engine
-// already keeps, and it writes flags the §66 pen and the Road Not Taken read.
+// SO: capacity against cohesion, five cards, no free answer. Take them fast
+// and the camps and the ration book cost you order and money; take them slowly
+// and you are a state that turned Jews away, which costs you the thing the
+// state says it is for. The chain reads the ordinary treasury and unrest the
+// engine already keeps, and it writes flags the §66 pen and the Road Not Taken
+// read.
+//
+// The fifth card is the east (SPEC §176). The §172 communities of Mesopotamia
+// are ON this chapter's board — Baghdad, Hilla, Fallujah, Erbil — and their
+// windows in js/data/diaspora.js now close in 1952, because that is what
+// happened: the Denaturalisation Law of March 1950 opened a one-year exit,
+// the property freeze of March 1951 took everything not already carried, and
+// the airlift flew the oldest continuously settled diaspora on earth to Lod
+// entire. The card is Israel's end of it — whether the airlift runs flat out
+// into camps that do not exist, or is metered to what the tents can hold
+// while Baghdad's registry runs on Baghdad's clock.
 
 const _warned = new Set();
 function warnOnce(key, e) {
@@ -57,6 +68,15 @@ function flag(ctx, key) {
 function treasury(ctx, tag) {
   const t = ctx.game.tags[tag];
   return t ? (Number.isFinite(t.treasury) ? t.treasury : 0) : 0;
+}
+function nudgeOpinion(g, a, b, d) {
+  try {
+    const ta = g.tags && g.tags[a];
+    if (!ta) return;
+    if (!ta.opinion || typeof ta.opinion !== 'object') ta.opinion = {};
+    const cur = Number.isFinite(ta.opinion[b]) ? ta.opinion[b] : 0;
+    ta.opinion[b] = Math.max(-200, Math.min(200, cur + d));
+  } catch (e) { warnOnce('nudgeOpinion', e); }
 }
 
 export const EVENTS_1948_ABSORPTION = [
@@ -112,6 +132,117 @@ export const EVENTS_1948_ABSORPTION = [
           h.factionShift(ctx, me, 'coalition', -8);
           h.setFlag(ctx, 'absorptionQuota', true);
           h.chronicle(ctx, 'era', 'A quota is set on immigration: sixty thousand a year, until there is somewhere to put them.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_ab_ezra_and_nehemiah',
+    title: 'Ezra and Nehemiah',
+    desc: 'Baghdad has passed a law with a clock in it: any Jew may leave Iraq — '
+      + 'freely, legally, forever — who renounces his citizenship within the year. '
+      + 'The government expects a few thousand malcontents and a community shrunk to '
+      + 'a governable quiet. Instead the community registers almost entire: a hundred '
+      + 'and twenty thousand people, older in the land between the rivers than '
+      + 'Baghdad, older than Islam — the Jews of the first exile, who wrote the '
+      + 'Talmud there — sitting on suitcases, waiting for charter aircraft that do '
+      + 'not yet exist, while the clock runs. Sana\'a\'s forty-nine thousand have '
+      + 'already come out through Aden on aircraft borrowed from an Alaskan airline. '
+      + 'Damascus\'s remnant is sealed behind an exit ban and coming out in rowboats '
+      + 'or not at all. And everyone understands that when Baghdad\'s registry '
+      + 'closes, a second law will follow it about the property of those who signed. '
+      + 'The camps at home hold a hundred thousand already. The Absorption '
+      + 'Department asks, in writing, what it is supposed to do with a second '
+      + 'Jerusalem\'s worth of arrivals. There is no good answer, and the clock '
+      + 'does not care.',
+    forTag: 'player',
+    major: true,
+    date: { y: 1950, m: 3 },
+    trigger: safeTrigger('ev_ab_ezra_and_nehemiah', (ctx) => {
+      const me = israel(ctx);
+      if (!me || !isPlayer(ctx, me)) return false;
+      // The law is Baghdad's to pass: a Baghdad that is not Iraq's — conquered,
+      // or the crown fallen — passes no law, and the card stays in the drawer.
+      const irq = who(ctx, 'IRQ');
+      const t = ctx.game.tags[irq];
+      if (!t || !t.alive) return false;
+      const p = ctx.prov ? ctx.prov('Seleucia-Ctesiphon') : null;
+      return !!p && p.owner === irq;
+    }),
+    aiOption: 0,
+    historical: 'The Denaturalisation Law of 4 March 1950 opened a one-year window; '
+      + 'the property-freeze law of 10 March 1951 closed the accounts the day the '
+      + 'registry peaked. Operations Ezra and Nehemiah flew some 120,000 Jews from '
+      + 'Baghdad to Lod by early 1952, ending twenty-five centuries of Babylonian '
+      + 'Jewry; Operation Magic Carpet had already brought Yemen\'s community out '
+      + 'through Aden in 1949-50. Syria\'s community, halved by flight after 1947, '
+      + 'was forbidden to follow: its remnant lived under an exit ban into the 1990s.',
+    options: [
+      {
+        label: 'Every seat on every aircraft, until it is done',
+        tooltip: 'The airlift takes the community entire while the window is open: '
+          + '−80 treasury for the charters, +2,000 reserves as the young men clear the '
+          + 'camps first, and +12% manpower and +8% growth for two years as the rest '
+          + 'arrive — with the ma\'abarot filling faster than they can be built (+0.6 '
+          + 'unrest, same two years). Baghdad keeps everything it froze (+120 to Iraq, '
+          + '−15 opinion both ways) and finds it has traded its merchant class for a '
+          + 'warehouse receipt.',
+        effects: guard('ev_ab_ezra_and_nehemiah:0', (ctx) => {
+          const h = ctx.helpers;
+          const me = israel(ctx);
+          const irq = who(ctx, 'IRQ');
+          h.adjust(ctx, me, { treasury: -80, manpower: 2000 });
+          h.addTagModifier(ctx, me, {
+            id: 'ezra_and_nehemiah', name: 'Ezra and Nehemiah', months: 24,
+            effects: { manpowerMult: 1.12, growthMult: 1.08, unrestAll: 0.6 },
+          });
+          if (ctx.game.tags[irq] && ctx.game.tags[irq].alive) {
+            h.adjust(ctx, irq, { treasury: 120 });
+            nudgeOpinion(ctx.game, irq, me, -15);
+            nudgeOpinion(ctx.game, me, irq, -15);
+            h.addProvinceModifier(ctx, 'Seleucia-Ctesiphon', {
+              id: 'the_frozen_property', name: 'The Frozen Property', months: 120,
+              effects: { prodMult: 0.92 },
+            });
+          }
+          h.setFlag(ctx, 'easternAirlift', true);
+          h.chronicle(ctx, 'era', 'Ezra and Nehemiah: the community of the first exile '
+            + 'comes home entire, one suitcase apiece, and the east of the dispersion '
+            + 'goes out behind them.');
+        }),
+      },
+      {
+        label: 'The camps cannot take a city at once — sixty thousand now, the rest by turns',
+        tooltip: 'The airlift is metered to what the tents can hold: +6% manpower and '
+          + '+4% growth for two years and the treasury is spared. But the registry runs '
+          + 'on Baghdad\'s deadline, not ours: those still queued when it closes are '
+          + 'stateless in the state that made them so. −8 legitimacy, +2 unrest in '
+          + 'Baghdad for three years, and every community still on the board hears that '
+          + 'the ships were made to wait (−6 standing).',
+        effects: guard('ev_ab_ezra_and_nehemiah:1', (ctx) => {
+          const h = ctx.helpers;
+          const me = israel(ctx);
+          h.addTagModifier(ctx, me, {
+            id: 'the_metered_airlift', name: 'The Metered Airlift', months: 24,
+            effects: { manpowerMult: 1.06, growthMult: 1.04 },
+          });
+          h.adjust(ctx, me, { legitimacy: -8 });
+          h.addProvinceModifier(ctx, 'Seleucia-Ctesiphon', {
+            id: 'the_stranded_registry', name: 'The Stranded of the Registry',
+            months: 36, effects: { unrest: 2 },
+          });
+          // The dispersion hears. Standing lives on the province record
+          // (js/sim/diaspora.js keeps it there so it saves for free), so a
+          // zero-import package can reach it directly.
+          for (const p of ctx.game.provinces) {
+            if (p && p.dia && Number.isFinite(p.dia.standing)) {
+              p.dia.standing = Math.max(0, p.dia.standing - 6);
+            }
+          }
+          h.setFlag(ctx, 'easternAirliftStaggered', true);
+          h.chronicle(ctx, 'era', 'The airlift is metered to the camps: sixty thousand '
+            + 'a year, while Baghdad\'s registry runs on Baghdad\'s clock.');
         }),
       },
     ],

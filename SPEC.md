@@ -9459,3 +9459,104 @@ needs.
   in `MODE_PARAMS`, is safe on a bare context, separates all five community
   sizes monotonically, and hatches Alexandria in 132 CE but not Babylon.
   `uitest38` measures the rest in a browser, where layout actually happens.
+
+## 176. The half-shekel is weighed, and the east empties
+
+Two fixes to §172's dispersion, reported from play as one complaint — "the
+diaspora money thing is too strong" — and one anachronism found while fixing
+it. They share a section because they share a root: the communities were
+modelled as places, but their silver was minted and their windows in the
+modern chapter never closed.
+
+### The silver is weighed, not minted
+
+The silver ask paid a flat 22 talents per point of community size, every 30
+months, at 5 influence a letter. Alexandria at size five was 110 talents on a
+clock shorter than most wars — against a tax system where one point of tax
+development pays one talent a **year**, so one ask of one community out-earned
+the annual tax rolls of a mid-sized realm, and a crown that worked the list
+could float its whole treasury on the dispersion without holding a province
+more. That is backwards twice: it out-earned the game, and it paid the same
+for Berenice — five development points of desert port — as for a fifth of the
+second city of the world.
+
+So the half-shekel is **gathered out of what the community's city is worth**:
+`treasuryPerDev: 0.4` per point of the host province's *current* development,
+still scaled by size, on a 60-month clock — a generation's patience, not a
+festival's. Alexandria (dev 28, size 5) sends 56 talents where it sent 110;
+Babylon (dev 15, size 4) sends 24 where it sent 88; Berenice sends 2, which
+is what a size-one congregation in a dev-5 port has to send. With the doubled
+cooldown the sustained rate lands at roughly a quarter of what shipped. Two
+dynamics come free: a sacked city sends less until it recovers, and 1948
+Baghdad — dev 28 under its own name — sends more than ancient Hilla, which is
+the right shape for the century in both directions. The rate reads through
+`devTotal` at ask time (`yieldOf` takes the province now); the flat
+`treasuryPer` is still honoured for any content that declares it, and the
+other three asks keep their per-size rates — letters were never the exploit.
+
+### The east empties
+
+The windows §172 called load-bearing had a hole where the twentieth century
+should be. Nine eastern entries shipped `until: null` — "still there" — so the
+1948 chapter offered the Jews of Salonica five years after the deportations,
+and Baghdad as a standing silver farm through the very decades in which the
+real community was denaturalised, frozen out of its property, airlifted to
+Lod entire, and gone. The chapter that owns the absorption of those arrivals
+(§171) was also the chapter most flattered by pretending they had never left.
+
+The closes are data now, each on its own date, exactly as 117 is:
+
+- **Iraq, 1952** — Babylon, Nehardea, Seleucia-Ctesiphon, Arbela. The
+  Denaturalisation Law of March 1950 opens a one-year exit; the property
+  freeze of March 1951 takes everything not already carried; Ezra and
+  Nehemiah fly out some 120,000 people by early 1952. Twenty-five centuries,
+  ended in fourteen months of charter flights.
+- **Syria, 1950** — Damascus, and Nisibis (Qamishli is on the Jazira's
+  Syrian side in this chapter). Halved by flight after the Aleppo pogrom and
+  the war, then sealed under an exit ban that runs into the 1990s: hostages
+  in the literal sense, not correspondents.
+- **Salonica, 1943** — deported to Auschwitz five years before the chapter
+  opens. Shut before 1948 begins, which the mapmode shows from the first
+  day: hatched, not forgotten, per §175's own rule.
+- **Lebanon, 1968** — Tyre. The one Arab republic whose community *grows*
+  after 1948, taking in Syrian and Iraqi refugees, until the 1958 crisis
+  starts the decline and the aftermath of 1967 finishes it.
+- **Iran, 1979** — Susa and Ecbatana. Iran is not Iraq: the community thins
+  toward Tehran and Tel Aviv but stands — synagogues open, dues collected —
+  until the Revolution, which the chapter's 2005 horizon reaches.
+
+Rome, Antioch, Byzantion and Corinth stay open. Nobody was expelled from Rome
+or Istanbul, and a window that closed itself out of tidiness would be the
+same lie in the other direction. The timing does honest work inside the
+chapter: through the 1948-51 war years the eastern communities are still
+present and still answer — which is the history, and is when their sons and
+silver mattered — and then they go out on their own clock whatever the player
+does, because a community's destruction was never something the player's
+paperwork could veto (§172 accepted this for the Kitos War; 1952 is the same
+rule). On an old save the next read simply finds the window shut.
+
+**And the chapter plays Israel's end of it.** A fifth card in the absorption
+chain, `ev_ab_ezra_and_nehemiah`, dated to the Denaturalisation Law (March
+1950), firing for a player Israel while Baghdad is still Iraq's to legislate
+for — a conquered or fallen Baghdad passes no law, and the card stays in the
+drawer. Two answers, priced like the rest of the chain: fly them out entire
+(−80 treasury for the charters, +2,000 reserves, two years of +12% manpower
+/ +8% growth with the ma'abarot overflowing at +0.6 unrest; Iraq keeps the
+frozen property, +120 talents against a ten-year −8% production drag on a
+Baghdad that traded its merchant class for a warehouse receipt), or meter
+the airlift to the camps (+6%/+4% quietly — but the registry runs on
+Baghdad's deadline, not Israel's: −8 legitimacy, three years of unrest among
+the stranded of Baghdad, and −6 standing with every community still on the
+board, written straight onto the province records a zero-import package can
+reach, because the dispersion hears that the ships were made to wait).
+
+- **Regression contract**: `smoke110` pins the ask data (60-month clock,
+  dev-pegged rate, no flat rate left), the arithmetic (Babylon pays
+  dev × size × 0.4 exactly, and less than the 88 it used to; Rome and Cyrene,
+  both size 3, differ by their cities; ten points of growth raise the
+  gathering by four talents a size point), every modern close date and the
+  ancient years none of them may disturb, the 1948 chapter's reads (Salonica
+  unwritable and hatched from the first day, Baghdad writable in May 1948
+  and gone by 1953, Iran standing until 1979, the era page listing Babylon
+  but not Salonica), and both answers of the new card — including that it
+  will not fire once Baghdad is not Iraq's.

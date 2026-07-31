@@ -41,6 +41,25 @@
 // Leontopolis is a temple Vespasian closes in 73. Babylon and Nehardea go the
 // other way: they outlast everything, which is why the centre of the Jewish
 // world moves east, and why the 614 chapter can still write to them.
+//
+// AND THE EAST HAS AN END TOO (SPEC §176). The first draft left the eastern
+// windows open forever, which handed the 1948 chapter a dispersion that no
+// longer existed to be written to: Salonica five years after the deportations,
+// and Baghdad as a standing silver farm through decades in which the real
+// community was stripped, airlifted and gone. So the modern closes are on the
+// list now, each on its own date, the same way 117 is. Iraq ends in 1952 —
+// the Denaturalisation Law of March 1950 opens a one-year exit and Operations
+// Ezra and Nehemiah fly the community out entire, twenty-five centuries in
+// fourteen months of charters. Syria's halved community is sealed under an
+// exit ban by 1950 — hostages in the literal sense, not correspondents.
+// Lebanon, the one Arab republic whose community GROWS after 1948, holds
+// until the aftermath of 1967; Iran thins but stands until the Revolution in
+// 1979. Rome and the Turkish cities stay open: nobody is expelled from Rome
+// or Istanbul, and a window that closed itself out of tidiness would be the
+// same lie in the other direction. The 1948 chapter plays the departure it
+// can see — the asks still work while the communities are still there, which
+// in 1948-51 they were, and the absorption chain (events_1948_absorption.js)
+// answers for where they went.
 
 export const DIASPORA = [
   // ── Egypt ────────────────────────────────────────────────────────────────
@@ -87,57 +106,73 @@ export const DIASPORA = [
       + 'exposed when Syria turns.',
   },
   {
+    // Halved by flight after the Aleppo pogrom of 1947 and the war; the
+    // remnant is sealed under an exit ban that runs into the 1990s — held
+    // hostage, not writing letters. The window shuts in 1950.
     prov: 'Damascus', name: 'The Jews of Damascus', size: 2,
-    from: -200, until: null, start: 50,
+    from: -200, until: 1950, start: 50,
     blurb: 'A community large enough that Josephus makes its massacre a number, and old '
       + 'enough that Paul is sent there to find synagogues already waiting.',
   },
   {
+    // Lebanon is the one Arab republic whose community GROWS after 1948,
+    // taking in Syrian and Iraqi refugees — until the 1958 crisis starts the
+    // decline and the aftermath of 1967 finishes it.
     prov: 'Tyre', name: 'The Jews of Tyre', size: 1,
-    from: -200, until: null, start: 40,
+    from: -200, until: 1968, start: 40,
     blurb: 'Merchants and dyers in a city that has never quite decided whether the '
       + 'people up the coast are neighbours or competitors.',
   },
   // ── Mesopotamia and Persia: the half that outlasts everything ────────────
+  // …until 1952. The four Iraqi windows close together: registration under
+  // the Denaturalisation Law opens in March 1950, the property freeze of
+  // March 1951 takes everything not already carried, and Ezra and Nehemiah
+  // fly the community to Lod entire by early 1952. The oldest continuously
+  // settled diaspora on earth ends in fourteen months of charter flights.
   {
     prov: 'Babylon', name: 'The Jews of Babylon', size: 4,
-    from: -580, until: null, start: 60,
+    from: -580, until: 1952, start: 60,
     blurb: 'Five centuries settled and counting. They did not come back when they were '
       + 'invited to, and they have never stopped sending the half-shekel.',
   },
   {
     prov: 'Nehardea', name: 'The Academy at Nehardea', size: 3,
-    from: -580, until: null, start: 65,
+    from: -580, until: 1952, start: 65,
     blurb: 'Where the half-shekel of the whole east is gathered before it goes up, behind '
       + 'walls the community garrisons itself. In time the law will be written here.',
   },
   {
     prov: 'Seleucia-Ctesiphon', name: 'The Jews of the Twin Cities', size: 3,
-    from: -280, until: null, start: 55,
+    from: -280, until: 1952, start: 55,
     blurb: 'At the King of Kings\' own doorstep, which is the whole of their advantage and '
       + 'the whole of their danger.',
   },
   {
     prov: 'Arbela', name: 'The House of Adiabene', size: 2,
-    from: -20, until: null, start: 75,
+    from: -20, until: 1952, start: 75,
     blurb: 'Not a community but a converted royal house: Queen Helena and her sons, who '
       + 'endowed Jerusalem, fed it in the famine, and sent men to die on its walls.',
   },
   {
+    // Qamishli sits on the Syrian side of the Jazira in 1948: it goes out
+    // with Damascus, under the same ban.
     prov: 'Nisibis', name: 'The Jews of Nisibis', size: 2,
-    from: -100, until: null, start: 55,
+    from: -100, until: 1950, start: 55,
     blurb: 'The strongpoint on the road east, where the Temple tax of the eastern '
       + 'communities is banked under guard before the caravan takes it up.',
   },
+  // Iran is not Iraq: the community thins toward Tehran and Tel Aviv after
+  // 1948, but it stands — synagogues open, dues collected — until the
+  // Revolution. Both Persian windows close in 1979.
   {
     prov: 'Susa', name: 'The Jews of Susa', size: 1,
-    from: -400, until: null, start: 50,
+    from: -400, until: 1979, start: 50,
     blurb: 'Shushan the palace, where the story is set that the eastern communities read '
       + 'aloud once a year and everyone else has to have explained.',
   },
   {
     prov: 'Ecbatana', name: 'The Jews of Ecbatana', size: 1,
-    from: -400, until: null, start: 45,
+    from: -400, until: 1979, start: 45,
     blurb: 'In the summer capital of dead empires, keeping the calendar and the accounts '
       + 'of whoever is currently ruling.',
   },
@@ -150,8 +185,12 @@ export const DIASPORA = [
       + 'the mood turns.',
   },
   {
+    // Deported to Auschwitz in the spring and summer of 1943. The window is
+    // already shut when the 1948 chapter opens, and the map hatches it
+    // (§175) — the first draft left Salonica writable five years after,
+    // which was not an oversight this game could keep.
     prov: 'Thessalonica', name: 'The Jews of Salonica', size: 2,
-    from: -140, until: null, start: 40,
+    from: -140, until: 1943, start: 40,
     blurb: 'On the road that carries everything between the two halves of the empire, '
       + 'which is why every traveller with news stops here first.',
   },
@@ -176,7 +215,8 @@ export const DIASPORA = [
 ];
 
 // What a community will do for a crown, and what asking costs it. Sizes scale
-// the yield; standing gates access.
+// the yield — silver also by the host province's development (§176) — and
+// standing gates access.
 export const DIASPORA_ASKS = [
   {
     id: 'silver',
@@ -186,10 +226,17 @@ export const DIASPORA_ASKS = [
       + 'caravan instead of with the pilgrims.',
     need: 35,
     standing: -12,
-    cd: 30,
+    cd: 60,
     infl: 5,
-    // per point of size
-    treasuryPer: 22,
+    // Per point of size × the HOST province's development (SPEC §176). The
+    // half-shekel is gathered out of what the community's city is worth: a
+    // flat per-size rate paid Berenice like a small Alexandria and every ask
+    // like a mint, and at 22 a size point on a 30-month clock the dispersion
+    // out-earned the realm's own tax rolls. Now Alexandria at dev 28 sends
+    // real silver, a desert port at dev 5 sends a gesture, and a city that
+    // is sacked — or grows — sends what it has. The clock is a generation's
+    // patience, not a festival's.
+    treasuryPerDev: 0.4,
     risk: 0.15,
   },
   {
