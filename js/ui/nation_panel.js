@@ -298,7 +298,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The working verbs on a foreign court's own panel (SPEC §180/§181/§184):
+      // The working verbs on a foreign court's own panel (SPEC §180/§181/§186):
       // envoys, gifts, the weapons transfer agreement, and the aid petition.
       const npDip = e.target.closest('[data-np-dip]');
       if (npDip && viewTag) {
@@ -1080,7 +1080,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
               + (a.whyNot ? '\n' + a.whyNot + '.' : ''));
           }
         }
-        // Financial aid (SPEC §184): petition a donor court's purse, or watch
+        // Financial aid (SPEC §186): petition a donor court's purse, or watch
         // the package we already won run its term.
         if (d.aid && (d.aid.offered || d.aid.flowing)) {
           const ai = d.aid;

@@ -346,6 +346,11 @@ export const BOOKMARK_67 = {
       'Win: by 60 BCE stand unified with Jerusalem, no Roman collar. A client crown by 55 BCE is the lesser verdict.',
       'Lose: the dynasty extinguished, or Jerusalem in the rival\'s hands when the ledger closes.',
     ],
+    ADI: [
+      'Win: the house stands in 60 BCE — Arbela held through Armenia\'s fall and Pompey\'s settlement.',
+      'Win: the greater verdict — stand free of every overlord, or stand rich on the road\'s custom.',
+      'Lose: the house between the rivers falls — every province gone.',
+    ],
   },
 
   // The court factions (SPEC §34): the realm's internal parties. The engine
@@ -498,6 +503,62 @@ export const BOOKMARK_67 = {
         },
       },
     ],
+    ADI: [
+      {
+        id: 'magi', name: 'The Fire Priests of Arbela',
+        desc: 'The altars older than the house\'s new prayers: the Magi keep the old fires and watch the court\'s westward drift with narrowed eyes.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.3 : -0.5; },
+        boon: { name: 'The Old Rites Steady the Land', text: '−0.5 unrest everywhere', effects: { unrestAll: -0.5 } },
+        bane: { name: 'The Altars Murmur', text: '−0.2 legitimacy a month', effects: { legitimacyAdd: -0.2 } },
+        appease: { label: 'Honor the fires (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Magi Ask Whose Gods Keep This House',
+          text: 'The fire priests have buried three generations of this dynasty by the old rites, '
+            + 'and they have counted the sabbath lamps multiplying in the palace windows. They ask '
+            + 'for the festivals kept publicly, at the king\'s expense, in the king\'s presence.',
+          grant: { label: 'The king attends the fires', cost: { treasury: 80 } },
+          refuse: { label: 'The house prays as it pleases', tooltip: 'The altars remember who stopped coming.' },
+        },
+      },
+      {
+        id: 'caravans', name: 'The Caravan Lords',
+        desc: 'The masters of the Tigris fords and the Gulf Road\'s northern tolls: silk east, silver west, and no patience for wars that close either.',
+        drift(ctx, t) {
+          return (t.atWarWith || []).length ? -0.6 : 0.4;
+        },
+        boon: { name: 'The Tolls Flow', text: '+10% income', effects: { incomeMult: 1.1 } },
+        bane: { name: 'The Roads Go Around', text: '−10% income', effects: { incomeMult: 0.9 } },
+        appease: { label: 'Remit a season\'s tolls (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Caravans Want the Fords Guarded',
+          text: 'Armenia\'s collapse has filled the roads with unpaid soldiers, and the lords of '
+            + 'the caravans are blunt: a kingdom that lives on transit lives on safety. Guards '
+            + 'at every ford, or the silk finds a southern crossing.',
+          grant: { label: 'Guards at the fords', cost: { treasury: 70 } },
+          refuse: { label: 'The road pays for its own guards', tooltip: 'The southern crossing prospers.' },
+        },
+      },
+      {
+        id: 'riders', name: 'The Riders of Arbela',
+        desc: 'The armored horse of the Tigris bank — the arm every overlord values, and the pride of every landed family.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.1;
+        },
+        boon: { name: 'The Lances Sharp', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Families Keep Their Sons', text: '−12% manpower', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'Barding and remounts (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Riders Ask for a War Worth Riding To',
+          text: 'Tigranes is broken, Pompey is far away, and the landed families have armored '
+            + 'sons with nothing to charge. Pay for the muster they keep, or point it at '
+            + 'something — the lances do not care greatly which.',
+          grant: { label: 'Pay for the muster', cost: { treasury: 80 } },
+          refuse: { label: 'The lances wait on the house\'s word', tooltip: 'The families count the seasons.' },
+        },
+      },
+    ],
   },
   playableTags: [
     {
@@ -517,6 +578,14 @@ export const BOOKMARK_67 = {
         + 'money, Nabataean lances, and time itself — every season the war drags on brings '
         + 'Pompey\'s settlement of the East one season closer. Unify the kingdom fast, and '
         + 'dig in deep enough that even Rome prefers to deal.',
+    },
+    {
+      tag: 'ADI',
+      difficulty: 'Hard',
+      blurb: 'The kingdom of the Tigris fords, barely out from under Tigranes\' shadow and '
+        + 'already bowing to the King of Kings. Two provinces, the Gulf Road\'s northern '
+        + 'tolls, and a court where the fire priests watch the house drift toward the God '
+        + 'of Israel — keep the yoke light, the caravans moving, and the west in view.',
     },
   ],
 
@@ -539,6 +608,12 @@ export const BOOKMARK_67 = {
       heir: { name: 'Artavasdes II', gov: 2, infl: 3, mar: 2, age: 25 },
     },
     PAR: { name: 'Phraates III', title: 'King of Kings', gov: 2, infl: 3, mar: 3, age: 45 },
+    // The Tigris client (SPEC §185): the record between Abdissares' coins and
+    // Izates' conversion is a dynasty of names; the game seats the plausible one.
+    ADI: {
+      name: 'Abdissares II', title: 'King', gov: 2, infl: 2, mar: 3, age: 44,
+      heir: { name: 'Izates', gov: 2, infl: 3, mar: 2, age: 15 },
+    },
     CMG: { name: 'Antiochus I Theos', title: 'King', gov: 4, infl: 4, mar: 2, age: 31 },
     ITU: { name: 'Ptolemy son of Mennaeus', title: 'Tetrarch and High Priest', gov: 3, infl: 3, mar: 2, age: 58 },
     // v5.4: the old lion, restored at Zela this very year, waiting for Pompey
@@ -740,6 +815,79 @@ export const BOOKMARK_67 = {
         },
       },
     ],
+    // The Tigris kingdom's tree (SPEC §185): a client house between Armenia's
+    // wreck and Parthia's peace, living on the road and weighing the yoke.
+    ADI: [
+      {
+        id: 't4_fords', name: 'The Fords of the Zab',
+        icon: 'coins', col: 1,
+        desc: 'Every bale that crosses the Tigris pays the house. Bank 150 talents of the road\'s custom.',
+        rewardText: '"The Caravan Custom": +10% trade for 24 months.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 150,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'caravan_custom', name: 'The Caravan Custom', months: 24, effects: { tradeMult: 1.1 },
+        }),
+      },
+      {
+        id: 't4_riders_mustered', name: 'The Riders Mustered',
+        icon: 'horseshoe', col: 0, requires: ['t4_fords'],
+        desc: 'Armenia\'s collapse leaves the fords to whoever can hold them. Put six thousand men under the house\'s standards.',
+        rewardText: '"The Lances of the Bank": +8% morale for 24 months.',
+        check: (ctx) => totalMen(ctx, 'ADI') >= 6000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'lances_of_the_bank', name: 'The Lances of the Bank', months: 24, effects: { moraleMult: 1.08 },
+        }),
+      },
+      {
+        id: 't4_kings_regard', name: 'The King of Kings\' Regard',
+        icon: 'laurel', col: 2, requires: ['t4_fords'],
+        desc: 'Phraates counts his clients by their usefulness. Reach his full regard — opinion of the house at +100.',
+        rewardText: '+15 legitimacy, +25 influence points.',
+        check: (ctx) => {
+          const par = ctx.game.tags.PAR;
+          return ((par && par.opinion && par.opinion.ADI) || 0) >= 100;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, infl: 25 }),
+      },
+      {
+        id: 't4_nehardea', name: 'The Silver of Nehardea',
+        icon: 'diaspora', col: 1, requires: ['t4_fords'],
+        desc: 'The half-shekels of Babylonia travel to Jerusalem under the house\'s guard. Bank 300 talents and the depositors\' trust with them.',
+        rewardText: '"The Deposits of Nehardea": +5% income permanently.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 300,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'deposits_of_nehardea', name: 'The Deposits of Nehardea', months: -1, effects: { incomeMult: 1.05 },
+        }),
+      },
+      {
+        id: 't4_hired_art', name: 'The Art of the Companies',
+        icon: 'helmet', col: 0, requires: ['t4_riders_mustered'],
+        desc: 'The age fights with professionals. Reach Military 6 — The Hired Companies.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25 }),
+      },
+      {
+        id: 't4_wisdom', name: 'The Wisdom of Two Rivers',
+        icon: 'lamp', col: 2, requires: ['t4_kings_regard'],
+        desc: 'A small court between empires needs every art of both. Take up three ideas of the age.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_west_unrenamed', name: 'The West They Never Renamed', hypothetical: true,
+        fork: '67bce/pompeys_arbitration',
+        icon: 'laurel', col: 3, row: 0,
+        desc: 'If the brothers\' kingdom is never filed under a Roman name — one crown, Jerusalem '
+          + 'held, the eagle kept out — then the road from Arbela still ends at a free city, '
+          + 'and the house\'s westward prayers have an address no clerk can move.',
+        rewardText: '+50 talents, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'neverRenamed'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 10 }),
+      },
+    ],
   },
 
   // Pre-existing works (SPEC §58): the harbors the Hellenistic kings built
@@ -790,6 +938,9 @@ export const BOOKMARK_67 = {
     h.adjust(ctx, 'ROM', { treasury: 600, stability: 2, legitimacy: 60 });
     h.adjust(ctx, 'CMG', { treasury: 80, manpower: 2500, stability: 1, legitimacy: 55 });
     h.adjust(ctx, 'ITU', { treasury: 60, manpower: 1800, stability: 1, legitimacy: 50 });
+    // The Tigris client (SPEC §185): solvent on the road's tolls, newly out
+    // from under Tigranes and glad of a lighter yoke.
+    h.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 15 });
 
     // --- Opinions. -------------------------------------------------------------
     setOpinion(g, 'HYR', 'ARI', -180); setOpinion(g, 'ARI', 'HYR', -180);
@@ -801,6 +952,8 @@ export const BOOKMARK_67 = {
     setOpinion(g, 'SEL', 'ROM', -30);
     setOpinion(g, 'CMG', 'SEL', -40);  setOpinion(g, 'SEL', 'CMG', -30);
     setOpinion(g, 'ITU', 'SEL', -50);  setOpinion(g, 'SEL', 'ITU', -40);
+    setOpinion(g, 'ADI', 'PAR', 70);   setOpinion(g, 'PAR', 'ADI', 50);
+    setOpinion(g, 'ADI', 'ARM', -60);  setOpinion(g, 'ARM', 'ADI', -30);
 
     // --- Starting modifiers. ----------------------------------------------------
     // Pompey is finishing the pirates and Mithridates: Rome's eastern legions
@@ -843,6 +996,7 @@ export const BOOKMARK_67 = {
     h.spawnArmy(ctx, 'PTO', 'Alexandria', { inf: 8, cav: 2, name: 'Army of Egypt' });
     h.spawnArmy(ctx, 'ARM', 'Tigranocerta', { inf: 5, name: 'Army of Tigranes' });
     h.spawnArmy(ctx, 'PAR', 'Seleucia-Ctesiphon', { inf: 12, cav: 6, name: 'Royal Army of Parthia' });
+    h.spawnArmy(ctx, 'ADI', 'Arbela', { inf: 2, cav: 2, name: 'The Riders of Arbela' });
     h.spawnArmy(ctx, 'ROM', 'Tarsus', {
       inf: 10, cav: 2, name: 'Legions of Cilicia',
       general: { name: 'Afranius', fire: 2, shock: 3, maneuver: 2 },
@@ -881,6 +1035,44 @@ export const BOOKMARK_67 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return;
       const me = g.playerTag;
+      if (me === 'ADI') {
+        // The Tigris client's contract (SPEC §185): endure the settlement of
+        // the East with the house seated and the road still paying.
+        const adi = g.tags.ADI;
+        const adiAlive = !!(adi && adi.alive !== false);
+        const adiProvs = adiAlive ? h.countControlled(ctx, 'ADI', {}) : 0;
+        if (adiProvs === 0) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The House Between the Rivers Falls',
+            text: 'Arbela is taken and the fords have new masters. A kingdom that lived by '
+              + 'being useful has been found, finally, unnecessary.',
+            score: 0,
+          });
+          return;
+        }
+        if (dateGE(g.date, -60, 1) && adiAlive && h.controls(ctx, 'ADI', 'Arbela')) {
+          const free = !adi.overlord;
+          const rich = (adi.treasury || 0) >= 300;
+          h.endGame(ctx, {
+            result: 'win',
+            title: free ? 'A Crown Without a Yoke' : 'The Road Held',
+            text: (free
+              ? 'Tigranes is broken, Pompey has come and gone, and the house of Arbela owes '
+                + 'tribute to nobody: the King of Kings\' writ stops at the Zab. '
+              : 'Tigranes is broken, Pompey has come and gone, and the house of Arbela is '
+                + 'still seated — client, solvent, and unburned. ')
+              + (rich
+                ? 'The fords pay a full treasury, and the caravan lords name the king\'s peace '
+                  + 'in their contracts as a thing with a price.'
+                : 'The road still crosses at the house\'s fords, and that has outlasted every '
+                  + 'empire that promised more.'),
+            score: 100 + (free ? 30 : 0) + (rich ? 20 : 0),
+          });
+          return;
+        }
+        return;
+      }
       if (me !== 'HYR' && me !== 'ARI') return;
       const rivalTag = me === 'HYR' ? 'ARI' : 'HYR';
       const mine = g.tags[me];

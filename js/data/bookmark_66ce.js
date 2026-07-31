@@ -289,6 +289,16 @@ export const BOOKMARK_66 = {
       'Win: erase the revolt — Judaea reduced to nothing (before 70 CE for the triumph).',
       'Lose: Jerusalem still defiant in 74 CE while Parthia arms.',
     ],
+    AGR: [
+      'Win: still a king in 71 CE — alive, seated at Caesarea Philippi, the home provinces held.',
+      'Win: the richer verdict — end the war with the kingdom whole and Rome still devoted.',
+      'Lose: a king without a country — the capital gone and the royal army scattered, or nothing left at all.',
+    ],
+    ADI: [
+      'Win: the house stands in 71 CE — Arbela held through the war that burned the west.',
+      'Win: the greater verdict — stand free of the King of Kings, or stand rich while Judaea still lives.',
+      'Lose: the fall of the house — every province gone, the converts\' kingdom erased.',
+    ],
   },
 
   // The court factions (SPEC §34): the realm's internal parties. The engine
@@ -403,6 +413,127 @@ export const BOOKMARK_66 = {
         },
       },
     ],
+    AGR: [
+      {
+        id: 'pious', name: 'The Pious of the Land',
+        desc: 'The synagogues of Batanea and the Golan villages: Jewish subjects watching their Jewish king march with the men besieging Jerusalem.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const judTag = (g.tagAliases && g.tagAliases.JUD) || 'JUD';
+          const jud = g.tags[judTag];
+          return jud && jud.alive && (t.atWarWith || []).indexOf(judTag) >= 0 ? -0.6 : 0.4;
+        },
+        boon: { name: 'The Villages Keep Faith', text: '−0.75 unrest everywhere', effects: { unrestAll: -0.75 } },
+        bane: { name: 'The Synagogues Turn Away', text: '−0.25 legitimacy a month', effects: { legitimacyAdd: -0.25 } },
+        appease: { label: 'Endow the houses of prayer (60 talents)', cost: { treasury: 60 } },
+        demand: {
+          title: 'The Pious Ask Whose King You Are',
+          text: 'A delegation from the villages — greybeards, a scribe, a boy who walked from Gamala '
+            + '— asks the question the whole kingdom whispers: when the House burns, will the king '
+            + 'of the Jews be found among the men holding torches? They ask for bread for the '
+            + 'refugees and a word they can carry home.',
+          grant: { label: 'Bread, and the word', cost: { treasury: 80 } },
+          refuse: { label: 'The king answers to Rome', tooltip: 'The villages remember the answer.' },
+        },
+      },
+      {
+        id: 'stewards', name: 'The Stewards of the House',
+        desc: 'Berenice\'s estates, the palace secretaries, the grain contracts: the machinery that makes a small kingdom rich and keeps it obedient.',
+        drift(ctx, t) { return (t.treasury || 0) >= 0 ? 0.3 : -0.6; },
+        boon: { name: 'The Estates Deliver', text: '+8% income', effects: { incomeMult: 1.08 } },
+        bane: { name: 'The Ledgers Close', text: '−12% reinforcement', effects: { reinforceMult: 0.88 } },
+        appease: { label: 'Confirm their leases (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Stewards Present the Grain Contracts',
+          text: 'The war is eating the kingdom\'s surplus: Rome\'s quartermasters buy at the price '
+            + 'they name, and the stewards want the difference made good from the treasury — or '
+            + 'leave to sell to whoever pays. They are very correct about it. They are always '
+            + 'very correct.',
+          grant: { label: 'Make the difference good', cost: { treasury: 100 } },
+          refuse: { label: 'The kingdom eats first', tooltip: 'The surplus finds quieter roads.' },
+        },
+      },
+      {
+        id: 'babylonians', name: 'The Babylonian Horse',
+        desc: 'Zamaris\' colony in Batanea — Jewish lancers settled three generations ago to hold the road, now the spine of the royal army under Philip ben Jacimus.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.2;
+        },
+        boon: { name: 'The Lancers Drill', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Colony Sits Its Horses', text: '−8% morale', effects: { moraleMult: 0.92 } },
+        appease: { label: 'Remounts and pay (60 talents)', cost: { treasury: 60 } },
+        demand: {
+          title: 'The Horse Asks for Its Arrears',
+          text: 'Philip\'s troopers have charged for the king at Jerusalem and been called traitors '
+            + 'for it in both directions. What the colony wants is what soldiers always want — '
+            + 'pay, remounts, and their king seen once in the camp instead of the palace.',
+          grant: { label: 'Ride to the camp with the pay chests', cost: { treasury: 90 } },
+          refuse: { label: 'Loyalty is the rent for Batanea', tooltip: 'The squadrons remember the rent.' },
+        },
+      },
+    ],
+    ADI: [
+      {
+        id: 'proselytes', name: 'The Proselyte House',
+        desc: 'The converts of the royal family and the court that prays toward Jerusalem: Helena\'s memory, the princes\' zeal, and the palace in the holy city.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
+          return jud && jud.alive ? 0.4 : -0.6;
+        },
+        boon: { name: 'The Covenant Kept', text: '+0.2 legitimacy a month', effects: { legitimacyAdd: 0.2 } },
+        bane: { name: 'The Court Doubts the Crown', text: '−0.25 legitimacy a month, +0.5 unrest', effects: { legitimacyAdd: -0.25, unrestAll: 0.5 } },
+        appease: { label: 'Silver for the holy city (60 talents)', cost: { treasury: 60 } },
+        demand: {
+          title: 'The Proselytes Ask for the West',
+          text: 'The letters from Jerusalem read like Lamentations, and the court that took the '
+            + 'covenant wants more than prayers sent west — grain, silver, and leave for the '
+            + 'young men who keep slipping across the Euphrates anyway.',
+          grant: { label: 'Open the granaries', cost: { treasury: 100 } },
+          refuse: { label: 'Arbela cannot feed two kingdoms', tooltip: 'The young men go regardless, angrier.' },
+        },
+      },
+      {
+        id: 'caravans', name: 'The Caravan Lords',
+        desc: 'The masters of the Gulf Road\'s northern tolls: silk, spices and Tyrian silver moving through Arbela and Nisibis under the King of Kings\' peace.',
+        drift(ctx, t) {
+          return (t.atWarWith || []).length ? -0.6 : 0.4;
+        },
+        boon: { name: 'The Tolls Flow', text: '+10% income', effects: { incomeMult: 1.1 } },
+        bane: { name: 'The Roads Go Around', text: '−10% income', effects: { incomeMult: 0.9 } },
+        appease: { label: 'Remit a season\'s tolls (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Caravans Want the Peace Kept',
+          text: 'War in the west has doubled every escort\'s price, and the lords of the road are '
+            + 'blunt: a small kingdom astride a great road lives by being boring. They ask for '
+            + 'guards at the fords and no adventures the King of Kings has not blessed.',
+          grant: { label: 'Guards at the fords', cost: { treasury: 70 } },
+          refuse: { label: 'The road serves the house, not the house the road', tooltip: 'The escorts\' prices double again.' },
+        },
+      },
+      {
+        id: 'riders', name: 'The Riders of Arbela',
+        desc: 'The armored horse of the Tigris bank — the arm Parthia values, the reason a small kingdom keeps its crown, and the pride of every landed family.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.1;
+        },
+        boon: { name: 'The Lances Sharp', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Families Keep Their Sons', text: '−12% manpower', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'Barding and remounts (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Riders Ask for a War Worth Riding To',
+          text: 'The landed families armed their sons for the King of Kings\' wars and have watched '
+            + 'two seasons of other people\'s glory. Pay for the muster they keep, or point it at '
+            + 'something — the lances do not care greatly which.',
+          grant: { label: 'Pay for the muster', cost: { treasury: 80 } },
+          refuse: { label: 'The lances wait on the house\'s word', tooltip: 'The families count the seasons.' },
+        },
+      },
+    ],
   },
   playableTags: [
     {
@@ -412,6 +543,22 @@ export const BOOKMARK_66 = {
         + 'empire — but Cestius must cross Beth Horon, Galilee can be walled, and in three '
         + 'years Rome will be busy murdering its own emperors. Survive to 71 with Jerusalem '
         + 'and the Temple standing, and Vespasian may find a client king cheaper than a war.',
+    },
+    {
+      tag: 'AGR',
+      difficulty: 'Moderate',
+      blurb: 'The last Herodian. You warned Jerusalem in the Xystus and the city answered with '
+        + 'stones; now your Jewish kingdom marches beside the legions against your own people, '
+        + 'Gamala watches for its moment, and every month of war asks the same question — how '
+        + 'much of a king survives being useful? Keep the north, and outlive the fire.',
+    },
+    {
+      tag: 'ADI',
+      difficulty: 'Hard',
+      blurb: 'The house beyond the Tigris that took the God of Israel. Two provinces, the '
+        + 'King of Kings for an overlord, and kinsmen already riding for Jerusalem — Arbela '
+        + 'must weigh grain for the holy city against a Parthia that reads its letters, and '
+        + 'decide what a convert kingdom owes when the House itself is burning.',
     },
   ],
 
@@ -478,6 +625,9 @@ export const BOOKMARK_66 = {
     h.adjust(ctx, 'NAB', { treasury: 80, stability: 1 });
     h.adjust(ctx, 'PAR', { treasury: 200, stability: 1, legitimacy: 20 });
     h.adjust(ctx, 'ARM', { treasury: 30 });
+    // The convert kingdom (SPEC §185): rich enough on the road's tolls to
+    // matter, devoted enough to Jerusalem to be watched from Ctesiphon.
+    h.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 15 });
 
     // --- Opinions. PAR–ROM hostile; NAB and AGR pro-Roman; PAR quietly sympathetic. ---
     setOpinion(g, 'JUD', 'ROM', -180); setOpinion(g, 'ROM', 'JUD', -150);
@@ -487,6 +637,11 @@ export const BOOKMARK_66 = {
     setOpinion(g, 'AGR', 'ROM', 150);  setOpinion(g, 'ROM', 'AGR', 150);
     setOpinion(g, 'AGR', 'JUD', -50);  setOpinion(g, 'JUD', 'AGR', -75);
     setOpinion(g, 'PAR', 'JUD', 40);   setOpinion(g, 'JUD', 'PAR', 60);
+    // The house of Monobazus (SPEC §185): converts whose princes are already
+    // riding west, watched narrowly by both empires.
+    setOpinion(g, 'ADI', 'JUD', 90);   setOpinion(g, 'JUD', 'ADI', 80);
+    setOpinion(g, 'ADI', 'PAR', 80);   setOpinion(g, 'PAR', 'ADI', 60);
+    setOpinion(g, 'ADI', 'ROM', -40);  setOpinion(g, 'ROM', 'ADI', -25);
     // Post-Rhandeia: Tiridates was crowned by Nero weeks before the start date —
     // Armenia is formally amicable with Rome while remaining an Arsacid house.
     setOpinion(g, 'ARM', 'ROM', 15);  setOpinion(g, 'ARM', 'PAR', 40);
@@ -537,6 +692,10 @@ export const BOOKMARK_66 = {
 
     // Neutral powers keep token forces at home.
     h.spawnArmy(ctx, 'NAB', 'Petra', { inf: 4, cav: 2, name: 'Army of Malichus II' });
+    h.spawnArmy(ctx, 'ADI', 'Arbela', {
+      inf: 2, cav: 3, name: 'The Riders of Arbela',
+      general: { name: 'Kenedaeus', fire: 1, shock: 3, maneuver: 2 },
+    });
     h.spawnArmy(ctx, 'PAR', 'Seleucia-Ctesiphon', {
       inf: 12, cav: 8, name: 'Royal Army of Parthia',
       general: { name: 'Monaeses', fire: 2, shock: 3, maneuver: 3 },
@@ -572,6 +731,12 @@ export const BOOKMARK_66 = {
     },
     ARM: { name: 'Tiridates I', title: 'King', gov: 2, infl: 3, mar: 2, age: 45 },
     AGR: { name: 'Agrippa II', title: 'King', gov: 2, infl: 4, mar: 1, age: 38 },
+    // The converted house (Josephus, AJ XX): Monobazus II, Izates' brother,
+    // who sent his kinsmen to fight at Beth Horon and his grain to the city.
+    ADI: {
+      name: 'Monobazus II', title: 'King', gov: 2, infl: 3, mar: 2, age: 52,
+      heir: { name: 'Izates bar Monobazus', gov: 2, infl: 2, mar: 3, age: 24 },
+    },
     // The political west (SPEC §173): the client king of the straits, whose
     // grain fleet matters to Rome more than most provinces do.
     BOS: { name: 'Cotys I', title: 'King of the Bosporus', gov: 2, infl: 2, mar: 2, age: 50 },
@@ -772,6 +937,201 @@ export const BOOKMARK_66 = {
         },
       },
     ],
+    // The last Herodian's tree (SPEC §185): a client king's war is fought at
+    // court as much as in the field — keep the north, keep Rome's regard,
+    // and be standing when the verdict is read.
+    AGR: [
+      {
+        id: 'am_kings_speech', name: 'The Words in the Xystus',
+        icon: 'scroll', col: 1,
+        desc: 'You told Jerusalem what sixty thousand men mean. Master the arts of being heard: reach Influence 6 — The Diaspora\'s Silver.',
+        rewardText: '+25 influence points, +10 legitimacy.',
+        check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).infl | 0) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'am_babylonian_horse', name: 'The Babylonian Horse',
+        icon: 'horseshoe', col: 0, requires: ['am_kings_speech'],
+        desc: 'Zamaris\' colony holds the road for the House of Herod. Put five thousand men under the royal standards.',
+        rewardText: '"Zamaris\' Colonists": +5% discipline for 24 months.',
+        check: (ctx) => totalMen(ctx, 'AGR') >= 5000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'zamaris_colonists', name: 'Zamaris\' Colonists', months: 24, effects: { disciplineMult: 1.05 },
+        }),
+      },
+      {
+        id: 'am_cities_nero_gave', name: 'The Cities Nero Gave',
+        icon: 'ship', col: 2, requires: ['am_kings_speech'],
+        desc: 'Tiberias and Tarichaea are yours by the emperor\'s own grant, and the rebels hold both. Take back the lake.',
+        rewardText: 'The lake\'s revenues: +75 talents, +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'AGR', 'Tiberias') && ctx.helpers.controls(ctx, 'AGR', 'Tarichaea'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 75, legitimacy: 10 }),
+      },
+      {
+        id: 'am_kings_country', name: 'Hold the King\'s Country',
+        icon: 'mountain', col: 0, requires: ['am_babylonian_horse'],
+        desc: 'Gamala watches for its moment and the Golan villages count the war\'s dead. Keep every home province under the royal standard.',
+        rewardText: '+1 stability — the north answers to the king.',
+        check: (ctx) => ['Caesarea Philippi', 'Batanea', 'Gamala']
+          .every((n) => ctx.helpers.controls(ctx, 'AGR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { stability: 1 }),
+      },
+      {
+        id: 'am_provisioned_kingdom', name: 'The Provisioned Kingdom',
+        icon: 'grain', col: 1, requires: ['am_kings_country'],
+        desc: 'A client is kept for what it delivers. Reach Government 7 — The Provisioned City — and deliver.',
+        rewardText: '"The Granaries of Batanea": +10% manpower for 24 months.',
+        check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).gov | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'granaries_of_batanea', name: 'The Granaries of Batanea', months: 24, effects: { manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'am_clients_curriculum', name: 'The Client\'s Curriculum',
+        icon: 'lamp', col: 2, requires: ['am_cities_nero_gave'],
+        desc: 'A king who survives empires studies them. Take up three ideas of the age.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags.AGR) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'am_outlives_the_war', name: 'A Kingdom That Outlives the War',
+        icon: 'laurel', col: 1, requires: ['am_provisioned_kingdom', 'am_clients_curriculum'],
+        desc: 'End the Great Revolt still seated at Caesarea Philippi — whoever won it.',
+        rewardText: '"The Loyal Client": +10% income permanently, +15 legitimacy.',
+        check: (ctx) => !findJudRomWar(ctx.game) && ctx.helpers.controls(ctx, 'AGR', 'Caesarea Philippi'),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'AGR', {
+            id: 'loyal_client', name: 'The Loyal Client', months: -1, effects: { incomeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15 });
+        },
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_two_crowns', name: 'Two Crowns of Israel', hypothetical: true,
+        fork: '66ce/how_the_revolt_ends',
+        icon: 'temple', col: 4, row: 0,
+        desc: 'If the Second Kingdom stands while you still reign in the north, the land Josephus '
+          + 'buried holds two Jewish crowns at once — the free one at Jerusalem and yours, the '
+          + 'one that chose the empire and lived.',
+        rewardText: '+1 stability, +20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'secondKingdom')
+          && !!(ctx.game.tags.AGR && ctx.game.tags.AGR.alive !== false)
+          && ctx.helpers.controls(ctx, 'AGR', 'Caesarea Philippi'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { stability: 1, legitimacy: 20 }),
+      },
+      {
+        id: 'hy_worth_more_standing', name: 'The Kingdom Worth Keeping', hypothetical: true,
+        fork: '66ce/what_kind_of_kingdom',
+        icon: 'scales', col: 4, row: 1, requires: ['hy_two_crowns'],
+        desc: 'Every clause of your reign argues that a client is cheaper than a province. If the '
+          + 'House that stood must decide what kind of kingdom it is, you already know the '
+          + 'answer you would give — wait to hear the one Jerusalem gives.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => anyFlag(ctx, 'kingdomOfTheAltar', 'commonwealthOfTheChamber', 'worthMoreStanding'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { gov: 25 }),
+      },
+    ],
+    // The house beyond the Tigris (SPEC §185): a convert kingdom's chapter —
+    // feed the west, keep the King of Kings sweet, and weigh the yoke.
+    ADI: [
+      {
+        id: 'dm_queens_granaries', name: 'The Queen\'s Granaries',
+        icon: 'grain', col: 1,
+        desc: 'Helena bought Egyptian grain for a starving Jerusalem within living memory. Fill the treasury to 150 talents — the house must be able to feed the west again.',
+        rewardText: '"Helena\'s Charity": +10% growth for 24 months, +10 legitimacy.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 150,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'helenas_charity', name: 'Helena\'s Charity', months: 24, effects: { growthMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 10 });
+        },
+      },
+      {
+        id: 'dm_princes_ride', name: 'The Princes Ride West',
+        icon: 'horseshoe', col: 0, requires: ['dm_queens_granaries'],
+        desc: 'Kinsmen of Monobazus fought at the ascent of Beth Horon. Stand openly with Jerusalem — at war with Rome, or its court\'s devoted friend.',
+        rewardText: '"The Princes at the Ascent": +10% morale for 24 months, +25 martial points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const adi = g.tags.ADI || {};
+          const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
+          return (adi.atWarWith || []).indexOf('ROM') >= 0
+            || ((jud && jud.opinion && jud.opinion.ADI) || 0) >= 100;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'princes_at_the_ascent', name: 'The Princes at the Ascent', months: 24, effects: { moraleMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { mar: 25 });
+        },
+      },
+      {
+        id: 'dm_northern_tolls', name: 'The Tolls of the Gulf Road',
+        icon: 'coins', col: 2, requires: ['dm_queens_granaries'],
+        desc: 'Silk and spices cross the Tigris at your fords. Bank 300 talents of the road\'s custom.',
+        rewardText: '"The Northern Tolls": +10% trade permanently.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 300,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'northern_tolls', name: 'The Northern Tolls', months: -1, effects: { tradeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'dm_school_at_nisibis', name: 'The School at Nisibis',
+        icon: 'lamp', col: 2, requires: ['dm_northern_tolls'],
+        desc: 'Judah ben Bathyra teaches at Nisibis, and a kingdom that keeps the Law must learn to read it: reach Government 6 — The Korban Treasury.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).gov | 0) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'dm_wisdom_of_rivers', name: 'The Wisdom of Two Rivers',
+        icon: 'scroll', col: 1, requires: ['dm_queens_granaries'],
+        desc: 'A court that prays toward Jerusalem and bows toward Ctesiphon needs every art of both. Take up three ideas of the age.',
+        rewardText: '+25 influence points.',
+        check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 25 }),
+      },
+      {
+        id: 'dm_yoke_weighed', name: 'The Yoke, Weighed',
+        icon: 'scales', col: 0, requires: ['dm_princes_ride'],
+        desc: 'A client house ends one of two ways: devoted beyond suspicion, or free. Reach the King of Kings\' full regard — or stand without an overlord.',
+        rewardText: '+15 legitimacy, +25 martial points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const adi = g.tags.ADI || {};
+          const par = g.tags.PAR;
+          return !adi.overlord || ((par && par.opinion && par.opinion.ADI) || 0) >= 120;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, mar: 25 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_grain_ships', name: 'The Grain Ships Come Again', hypothetical: true,
+        fork: '66ce/how_the_revolt_ends',
+        icon: 'temple', col: 4, row: 0,
+        desc: 'If the Second Kingdom stands, the house that fed Jerusalem in the famine feeds a '
+          + 'free city in its triumph — Helena\'s road from the Tigris to the Temple courts, '
+          + 'open in both directions at last.',
+        rewardText: '+50 talents, +15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'secondKingdom')
+          && !!(ctx.game.tags.ADI && ctx.game.tags.ADI.alive !== false),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 }),
+      },
+      {
+        id: 'hy_road_past_arbela', name: 'The Road Home Runs Past Arbela', hypothetical: true,
+        fork: '66ce/the_flank_of_trajans_war',
+        icon: 'horseshoe', col: 4, row: 1, requires: ['hy_grain_ships'],
+        desc: 'If a Jewish kingdom sits on Trajan\'s road home, the army that took Ctesiphon '
+          + 'must march back through the Tigris kingdoms — and the house of the converts '
+          + 'holds a ford on that road, with the whole war\'s weight in its answer.',
+        rewardText: '+25 martial points, +1,000 manpower.',
+        check: (ctx) => anyFlag(ctx, 'roadHeldOpen', 'roadShut', 'roseWithTheEast'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25, manpower: 1000 }),
+      },
+    ],
   },
 
   aiHints: {
@@ -876,6 +1236,91 @@ export const BOOKMARK_66 = {
               + 'Parthia arms and the provinces whisper. The emperor recalls his commanders '
               + 'in disgrace and accepts what no Roman will call a defeat — aloud.',
             score: 0,
+          });
+          return;
+        }
+      } else if (g.playerTag === who(ctx, 'AGR')) {
+        // The client's contract (SPEC §185): be standing, at home, when the
+        // verdict is read — however the verdict goes.
+        const agrTag = g.tags[who(ctx, 'AGR')];
+        const agrAlive = !!(agrTag && agrTag.alive !== false);
+        const agrProvs = agrAlive ? h.countControlled(ctx, 'AGR', {}) : 0;
+        const seated = agrAlive && h.controls(ctx, 'AGR', 'Caesarea Philippi');
+        if (agrProvs === 0) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The Last Herodian',
+            text: 'The kingdom is gone — to the rebels, to the province, it no longer matters '
+              + 'which. A hundred years after the Senate named his great-grandfather king, '
+              + 'the House of Herod ends as it began: in Rome, at dinner, telling stories.',
+            score: 0,
+          });
+          return;
+        }
+        if (!seated && totalMen(ctx, 'AGR') < 1000) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'A King Without a Country',
+            text: 'Caesarea Philippi is lost and the Babylonian horse is scattered. Rome will '
+              + 'find you an income and a title; it will not find you a kingdom. The client '
+              + 'who could not hold his own north has told the empire what clients are for.',
+            score: Math.max(0, agrProvs * 5),
+          });
+          return;
+        }
+        if (dateGE(g.date, 71, 1) && seated && agrProvs >= 3) {
+          const lakeToo = h.controls(ctx, 'AGR', 'Tiberias') && h.controls(ctx, 'AGR', 'Tarichaea');
+          h.endGame(ctx, {
+            result: 'win',
+            title: lakeToo ? 'The Kingdom Enlarged' : 'The Kingdom Kept',
+            text: lakeToo
+              ? 'The war is decided and the last Herodian is still a king — with the lake '
+                + 'towns under his standard and the emperor in his debt. Vespasian pays the '
+                + 'loyalty of 66 in territory, and the kingdom in the north grows larger than '
+                + 'anything his father ruled.'
+              : 'The war is decided and the last Herodian is still a king. The home provinces '
+                + 'held, the horse rode where it was asked, and the empire has learned again '
+                + 'what a loyal client is worth. The kingdom keeps its crown for as long as '
+                + 'its king keeps breathing — which is the only tenure the age offers anyone.',
+            score: lakeToo ? 150 : 110,
+          });
+          return;
+        }
+      } else if (g.playerTag === who(ctx, 'ADI')) {
+        // The convert kingdom's contract (SPEC §185): the house endures the
+        // war that burned the west — freer or richer than it began.
+        const adiTag = g.tags[who(ctx, 'ADI')];
+        const adiAlive = !!(adiTag && adiTag.alive !== false);
+        const adiProvs = adiAlive ? h.countControlled(ctx, 'ADI', {}) : 0;
+        if (adiProvs === 0) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The Fall of the House of Monobazus',
+            text: 'Arbela is taken and the converts\' kingdom is erased. In Jerusalem the tomb '
+              + 'Helena built stands over an empty title; whatever the letters cost, nobody '
+              + 'will write from Adiabene again.',
+            score: 0,
+          });
+          return;
+        }
+        if (dateGE(g.date, 71, 1) && adiAlive && h.controls(ctx, 'ADI', 'Arbela')) {
+          const free = !adiTag.overlord;
+          const judStands = judAlive && judProvs > 0;
+          h.endGame(ctx, {
+            result: 'win',
+            title: free ? 'A Crown Without a Yoke' : 'The House Between the Rivers',
+            text: (free
+              ? 'The house of Monobazus ends the war owing tribute to nobody: the King of '
+                + 'Kings\' writ stops at the Zab, and the tolls of the Gulf Road pay a free '
+                + 'crown. '
+              : 'The house of Monobazus is still seated at Arbela when the war\'s verdict is '
+                + 'read — client, convert, and unburned. ')
+              + (judStands
+                ? 'And the road west still ends somewhere: Judaea lives, and the grain ships '
+                  + 'of the queen\'s house sail again.'
+                : 'The road west now ends at a ruin — and the house that fed Jerusalem keeps '
+                  + 'its faith in a world that burned the address.'),
+            score: 100 + (free ? 40 : 0) + (judStands ? 20 : 0),
           });
           return;
         }

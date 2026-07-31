@@ -4,6 +4,7 @@ import { DEFINES } from './js/data/defines.js';
 import { MAP_DATA, validateMapData } from './js/data/map_data.js';
 import { buildProvinceMapping } from './js/data/map_profile.js';
 import { ERAS } from './js/data/compendium.js';
+import { entryFork } from './js/data/chapter_paths.js';
 import { bus } from './js/core/bus.js';
 import { initRenderer } from './js/map/renderer.js';
 import { createCamera } from './js/map/camera.js';
@@ -304,6 +305,13 @@ async function boot() {
           const t = ctx && ctx.game.tags[p.decider];
           deciderName = (t && t.name) || p.decider || null;
         }
+        // The fork badge travels resolved (SPEC §184): a guest has no chapter
+        // context, so the host sends the fork's question or nothing.
+        let fork = null;
+        try {
+          const fk = entryFork(ctx && ctx.bookmark && ctx.bookmark.id, ev.id);
+          if (fk) fork = { question: fk.question };
+        } catch (e) { /* a card without a badge is still a card */ }
         toGuests({
           t: 'event',
           p: {
@@ -313,6 +321,7 @@ async function boot() {
             world: ev.world === true,
             deciderName,
             options,
+            fork,
           },
         });
       });

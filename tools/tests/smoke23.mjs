@@ -58,12 +58,14 @@ function regiments(game, tag) {
 
 console.log('== every standard has a campaign contract ==');
 ok(DEFINES.RELIGIONS.judaism.name === 'Judaism', 'the Jewish religion is displayed as Judaism');
+// SPEC §185: every seated Jewish court of every chapter is on the roster —
+// Adiabene wherever the house is on the map, and the last Herodian in 66.
 for (const [id, file, exp, expectedTags] of [
   ['167bce', 'bookmark_167bce', 'BOOKMARK_167', ['HAS']],
-  ['67bce', 'bookmark_67bce', 'BOOKMARK_67', ['HYR', 'ARI']],
-  ['40bce', 'bookmark_40bce', 'BOOKMARK_40', ['HER', 'ATG']],
-  ['66ce', 'bookmark_66ce', 'BOOKMARK_66', ['JUD']],
-  ['132ce', 'bookmark_132ce', 'BOOKMARK_132', ['JUD']],
+  ['67bce', 'bookmark_67bce', 'BOOKMARK_67', ['HYR', 'ARI', 'ADI']],
+  ['40bce', 'bookmark_40bce', 'BOOKMARK_40', ['HER', 'ATG', 'ADI']],
+  ['66ce', 'bookmark_66ce', 'BOOKMARK_66', ['JUD', 'AGR', 'ADI']],
+  ['132ce', 'bookmark_132ce', 'BOOKMARK_132', ['JUD', 'ADI']],
   ['614ce', 'bookmark_614ce', 'BOOKMARK_614', ['JUD']],
   ['1948ce', 'bookmark_1948', 'BOOKMARK_1948', ['ISR']],
 ]) {

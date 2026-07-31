@@ -300,6 +300,11 @@ export const BOOKMARK_40 = {
       'Win: still hold Jerusalem, alive, in 36 BCE — the last Hasmonean ends standing up.',
       'Lose: Jerusalem gone and fewer than 3,000 men — Rome uses the axe for kings.',
     ],
+    ADI: [
+      'Win: the house stands in 36 BCE — Arbela held through the tide and the ebb.',
+      'Win: the greater verdict — stand free of every overlord, or stand rich on the road\'s custom.',
+      'Lose: the house between the rivers falls — every province gone.',
+    ],
   },
 
   // The court factions (SPEC §34): the realm's internal parties. The engine
@@ -416,6 +421,63 @@ export const BOOKMARK_40 = {
         },
       },
     ],
+    ADI: [
+      {
+        id: 'magi', name: 'The Fire Priests of Arbela',
+        desc: 'The altars older than the house\'s new prayers: the Magi keep the old fires and count the sabbath lamps in the palace windows.',
+        drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.3 : -0.5; },
+        boon: { name: 'The Old Rites Steady the Land', text: '−0.5 unrest everywhere', effects: { unrestAll: -0.5 } },
+        bane: { name: 'The Altars Murmur', text: '−0.2 legitimacy a month', effects: { legitimacyAdd: -0.2 } },
+        appease: { label: 'Honor the fires (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Magi Ask Whose Gods Ride With Pacorus',
+          text: 'The King of Kings\' war is blessed at the fire altars, and the priests notice '
+            + 'which blessings this court attends. They ask for the festivals kept publicly, '
+            + 'at the king\'s expense, in the king\'s presence — while the tide is high and '
+            + 'everyone is watching.',
+          grant: { label: 'The king attends the fires', cost: { treasury: 80 } },
+          refuse: { label: 'The house prays as it pleases', tooltip: 'The altars remember who stopped coming.' },
+        },
+      },
+      {
+        id: 'caravans', name: 'The Caravan Lords',
+        desc: 'The masters of the Tigris fords: Pacorus\' conquests have moved the customs frontier west, and every mile of it is profit.',
+        drift(ctx, t) {
+          return (t.atWarWith || []).length ? -0.6 : 0.4;
+        },
+        boon: { name: 'The Tolls Flow', text: '+10% income', effects: { incomeMult: 1.1 } },
+        bane: { name: 'The Roads Go Around', text: '−10% income', effects: { incomeMult: 0.9 } },
+        appease: { label: 'Remit a season\'s tolls (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Caravans Ask What Happens After',
+          text: 'The lords of the road have seen tides before. They ask — quietly, while the '
+            + 'lances are still winning — what the house intends when Rome pushes back across '
+            + 'the Euphrates: guards at the fords, and no debts to the losing side.',
+          grant: { label: 'Guards at the fords', cost: { treasury: 70 } },
+          refuse: { label: 'The tide will hold', tooltip: 'The lords remember who said so.' },
+        },
+      },
+      {
+        id: 'riders', name: 'The Riders of Arbela',
+        desc: 'The armored horse of the Tigris bank — never worth more than now, with Pacorus in Syria and every ford a muster point.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.1;
+        },
+        boon: { name: 'The Lances Sharp', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Families Keep Their Sons', text: '−12% manpower', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'Barding and remounts (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Riders Want to Join the Tide',
+          text: 'Pacorus is handing out Syria, and the landed families can hear it happening '
+            + 'from here. Pay for the muster and lead it somewhere, or watch the boldest '
+            + 'sons ride west under somebody else\'s banner.',
+          grant: { label: 'Pay for the muster', cost: { treasury: 80 } },
+          refuse: { label: 'The house does not chase floods', tooltip: 'The boldest sons ride anyway.' },
+        },
+      },
+    ],
   },
   playableTags: [
     {
@@ -434,6 +496,14 @@ export const BOOKMARK_40 = {
         + 'Rome will come back with the Idumean on a leash. Hold Jerusalem, outlast Antony\'s '
         + 'attention, and make the dynasty\'s last stand its finest.',
     },
+    {
+      tag: 'ADI',
+      difficulty: 'Hard',
+      blurb: 'Parthia\'s tide has crested the Euphrates, and the house of Arbela rides it: '
+        + 'the King of Kings\' favorite client, the Gulf Road\'s northern tolls, and lances '
+        + 'the whole war wants. But tides recede — Gindarus is two summers away — and a '
+        + 'client who rose with the flood must learn to stand on the ebb.',
+    },
   ],
 
   rulers: {
@@ -445,6 +515,12 @@ export const BOOKMARK_40 = {
     PAR: {
       name: 'Orodes II', title: 'King of Kings', gov: 3, infl: 3, mar: 3, age: 57,
       heir: { name: 'Pacorus', gov: 2, infl: 3, mar: 4, age: 24 },
+    },
+    // The Tigris client (SPEC §185): the dynasty between Abdissares' coins
+    // and the conversion, seated by plausible succession.
+    ADI: {
+      name: 'Izates', title: 'King', gov: 2, infl: 3, mar: 2, age: 42,
+      heir: { name: 'Monobazus', gov: 2, infl: 2, mar: 3, age: 16 },
     },
     PTO: { name: 'Cleopatra VII Philopator', title: 'Pharaoh', gov: 4, infl: 5, mar: 2, age: 29 },
     NAB: { name: 'Malichus I', title: 'King', gov: 2, infl: 2, mar: 2, age: 45 },
@@ -642,6 +718,77 @@ export const BOOKMARK_40 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15, stability: 1 }),
       },
     ],
+    // The Tigris kingdom's tree (SPEC §185): ride the tide, bank the tolls,
+    // and be standing when the ebb finds out who could swim.
+    ADI: [
+      {
+        id: 't5_tide_riders', name: 'The Tide\'s Riders',
+        icon: 'horseshoe', col: 1,
+        desc: 'Pacorus is in Syria and every ford is a muster point. Put six thousand men under the house\'s standards.',
+        rewardText: '"The Tide\'s Riders": +8% morale for 24 months.',
+        check: (ctx) => totalMen(ctx, 'ADI') >= 6000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'tides_riders', name: 'The Tide\'s Riders', months: 24, effects: { moraleMult: 1.08 },
+        }),
+      },
+      {
+        id: 't5_customs_frontier', name: 'The Customs Frontier Moves West',
+        icon: 'coins', col: 2, requires: ['t5_tide_riders'],
+        desc: 'Every conquest of Pacorus moves the tolls west with it. Bank 200 talents of the widened road\'s custom.',
+        rewardText: '"The Caravan Custom": +10% trade for 24 months.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 200,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'caravan_custom', name: 'The Caravan Custom', months: 24, effects: { tradeMult: 1.1 },
+        }),
+      },
+      {
+        id: 't5_pacorus_favor', name: 'The Prince\'s Favor',
+        icon: 'laurel', col: 0, requires: ['t5_tide_riders'],
+        desc: 'Pacorus counts his clients by their lances. Reach the King of Kings\' full regard — opinion of the house at +100.',
+        rewardText: '+15 legitimacy, +25 influence points.',
+        check: (ctx) => {
+          const par = ctx.game.tags.PAR;
+          return ((par && par.opinion && par.opinion.ADI) || 0) >= 100;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, infl: 25 }),
+      },
+      {
+        id: 't5_after_gindarus', name: 'After Gindarus',
+        icon: 'mountain', col: 0, requires: ['t5_pacorus_favor'],
+        desc: 'The tide breaks somewhere in Syria, one summer soon. Be seated at Arbela when the survivors ride home — from the middle of 38, still holding.',
+        rewardText: '+1 stability — the ebb found the house standing.',
+        check: (ctx) => dateGE(ctx.game.date, -37, 6) && ctx.helpers.controls(ctx, 'ADI', 'Arbela'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { stability: 1 }),
+      },
+      {
+        id: 't5_hired_art', name: 'The Veterans\' Price',
+        icon: 'helmet', col: 2, requires: ['t5_customs_frontier'],
+        desc: 'The age fights with professionals. Reach Military 6 — The Hired Veterans.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25 }),
+      },
+      {
+        id: 't5_wisdom', name: 'The Wisdom of Two Rivers',
+        icon: 'lamp', col: 1, requires: ['t5_tide_riders'],
+        desc: 'A small court between empires needs every art of both. Take up three ideas of the age.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_crown_east_lives_with', name: 'The Crown the East Could Live With', hypothetical: true,
+        fork: '40bce/who_wears_the_crown',
+        icon: 'laurel', col: 3, row: 0,
+        desc: 'If the last Hasmonean holds Jerusalem — the crown war won, the Idumean broken — '
+          + 'then the kingdom at the road\'s western end stays a kingdom the east can trade '
+          + 'with, pray toward, and reach without a Roman stamp on every bale.',
+        rewardText: '+50 talents, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'hasmoneanHolds'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 10 }),
+      },
+    ],
   },
 
   // Pre-existing works (SPEC §58): the old royal harbors still work.
@@ -696,6 +843,8 @@ export const BOOKMARK_40 = {
     h.adjust(ctx, 'PTO', { treasury: 300, stability: 1, legitimacy: 45 });
     h.adjust(ctx, 'NAB', { treasury: 180, stability: 1 });
     h.adjust(ctx, 'ARM', { treasury: 80, stability: -1, legitimacy: 25 });
+    // The Tigris client (SPEC §185): riding Parthia's high tide, and paid for it.
+    h.adjust(ctx, 'ADI', { treasury: 70, legitimacy: 20 });
 
     setOpinion(g, 'HER', 'ATG', -180); setOpinion(g, 'ATG', 'HER', -180);
     setOpinion(g, 'ROM', 'HER', 80);   setOpinion(g, 'HER', 'ROM', 100);
@@ -703,6 +852,8 @@ export const BOOKMARK_40 = {
     setOpinion(g, 'ATG', 'PAR', 100);  setOpinion(g, 'PAR', 'ATG', 80);
     setOpinion(g, 'NAB', 'HER', -20);  setOpinion(g, 'HER', 'NAB', 20);
     setOpinion(g, 'PTO', 'ROM', 60);   setOpinion(g, 'ROM', 'PTO', 40);
+    setOpinion(g, 'ADI', 'PAR', 80);   setOpinion(g, 'PAR', 'ADI', 60);
+    setOpinion(g, 'ADI', 'ROM', -50);  setOpinion(g, 'ROM', 'ADI', -30);
 
     // Antony is busy with Octavian and Fulvia's war: Rome watches its coast
     // until the Senate acts (ev5_senate lifts this).
@@ -747,6 +898,7 @@ export const BOOKMARK_40 = {
     h.spawnArmy(ctx, 'PTO', 'Alexandria', { inf: 8, cav: 2, name: 'Army of Egypt' });
     h.spawnArmy(ctx, 'NAB', 'Petra', { inf: 5, cav: 3, name: 'Army of Malichus' });
     h.spawnArmy(ctx, 'ARM', 'Tigranocerta', { inf: 4, name: 'Army of Artavasdes' });
+    h.spawnArmy(ctx, 'ADI', 'Arbela', { inf: 2, cav: 2, name: 'The Riders of Arbela' });
 
     h.notify(ctx, {
       title: "Herod's Rise",
@@ -778,6 +930,44 @@ export const BOOKMARK_40 = {
       const h = ctx.helpers;
       if (!g || g.over || g.result) return;
       const me = g.playerTag;
+      if (me === 'ADI') {
+        // The Tigris client's contract (SPEC §185): ride the tide, survive
+        // the ebb, and be seated when the age settles its accounts.
+        const adi = g.tags.ADI;
+        const adiAlive = !!(adi && adi.alive !== false);
+        const adiProvs = adiAlive ? h.countControlled(ctx, 'ADI', {}) : 0;
+        if (adiProvs === 0) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The House Between the Rivers Falls',
+            text: 'Arbela is taken and the fords have new masters. The tide the house rode '
+              + 'has receded over it, and the road counts out its tolls to somebody else.',
+            score: 0,
+          });
+          return;
+        }
+        if (dateGE(g.date, -36, 1) && adiAlive && h.controls(ctx, 'ADI', 'Arbela')) {
+          const free = !adi.overlord;
+          const rich = (adi.treasury || 0) >= 300;
+          h.endGame(ctx, {
+            result: 'win',
+            title: free ? 'A Crown Without a Yoke' : 'The Ebb Found the House Standing',
+            text: (free
+              ? 'Pacorus is dead, the tide is out, and the house of Arbela owes tribute to '
+                + 'nobody: the King of Kings\' writ stops at the Zab. '
+              : 'Pacorus is dead and the tide is out, and the house of Arbela is still '
+                + 'seated — client, solvent, and unburned. ')
+              + (rich
+                ? 'The fords pay a full treasury, and the caravan lords write the king\'s '
+                  + 'peace into their contracts as a thing with a price.'
+                : 'The road still crosses at the house\'s fords, which has outlasted every '
+                  + 'empire that promised more.'),
+            score: 100 + (free ? 30 : 0) + (rich ? 20 : 0),
+          });
+          return;
+        }
+        return;
+      }
       if (me !== 'HER' && me !== 'ATG') return;
       const rivalTag = me === 'HER' ? 'ATG' : 'HER';
       const mine = g.tags[me];

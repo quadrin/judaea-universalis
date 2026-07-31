@@ -1,4 +1,4 @@
-// Judaea Universalis — financial aid from the donor courts (SPEC §184). DOM-free.
+// Judaea Universalis — financial aid from the donor courts (SPEC §186). DOM-free.
 //
 // §180 retired "ask for credits" with the note that subsidies cover the one
 // direction money actually flowed — and then left subsidies a payer's verb.

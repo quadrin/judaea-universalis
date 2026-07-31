@@ -493,7 +493,7 @@ export const BOOKMARK_1948 = {
       TUR: 'USA', GRC: 'USA',
     },
   },
-  // Financial aid (SPEC §184). The other thing the great powers signed:
+  // Financial aid (SPEC §186). The other thing the great powers signed:
   // credits. Washington's Export-Import loan reached Tel Aviv in January
   // '49, London's subvention paid the Legion, Paris propped its mandate
   // clients — and Prague, arsenal though it was, funded nobody: it sold.

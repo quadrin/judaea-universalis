@@ -232,6 +232,11 @@ export const BOOKMARK_132 = {
       'Win: reduce the Nasi\'s state to nothing.',
       'Lose: the war still open when the Senate counts the mauled legions.',
     ],
+    ADI: [
+      'Win: the house stands in 136 CE — Arbela held while the west burns.',
+      'Win: the greater verdict — stand free of the King of Kings, or stand rich while the Nasi\'s state still lives.',
+      'Lose: the fall of the house — every province gone, and no second restoration.',
+    ],
   },
 
   // The court factions (SPEC §34): the realm's internal parties. The engine
@@ -345,6 +350,66 @@ export const BOOKMARK_132 = {
         },
       },
     ],
+    ADI: [
+      {
+        id: 'proselytes', name: 'The Proselyte House',
+        desc: 'The court that keeps the covenant of the converted kings — thinner since Trajan\'s war, and holding the memory harder for it.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
+          return jud && jud.alive ? 0.4 : -0.6;
+        },
+        boon: { name: 'The Covenant Kept', text: '+0.2 legitimacy a month', effects: { legitimacyAdd: 0.2 } },
+        bane: { name: 'The Court Doubts the Crown', text: '−0.25 legitimacy a month, +0.5 unrest', effects: { legitimacyAdd: -0.25, unrestAll: 0.5 } },
+        appease: { label: 'Silver for the west (60 talents)', cost: { treasury: 60 } },
+        demand: {
+          title: 'The Proselytes Read the Nasi\'s Letters',
+          text: 'The letters from the hill country are copied in every synagogue east of the '
+            + 'Euphrates, and the court that took the covenant wants an answer sent — grain, '
+            + 'silver, and leave for the young men who keep crossing anyway.',
+          grant: { label: 'Open the granaries', cost: { treasury: 100 } },
+          refuse: { label: 'Arbela buried its dead already', tooltip: 'The young men go regardless, angrier.' },
+        },
+      },
+      {
+        id: 'caravans', name: 'The Caravan Lords',
+        desc: 'The masters of the Gulf Road\'s northern tolls, rebuilding warehouses Trajan burned and pricing every rumor of the next war.',
+        drift(ctx, t) {
+          return (t.atWarWith || []).length ? -0.6 : 0.4;
+        },
+        boon: { name: 'The Tolls Flow', text: '+10% income', effects: { incomeMult: 1.1 } },
+        bane: { name: 'The Roads Go Around', text: '−10% income', effects: { incomeMult: 0.9 } },
+        appease: { label: 'Remit a season\'s tolls (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Caravans Want No Second Trajan',
+          text: 'The lords of the road rebuilt once and remember exactly what it cost. They ask '
+            + 'for guards at the fords, no letters that could be read in Antioch, and nothing '
+            + '— nothing — that gives an emperor a reason to cross the Euphrates again.',
+          grant: { label: 'Guards, and discretion', cost: { treasury: 70 } },
+          refuse: { label: 'The house writes what it must', tooltip: 'The warehouses stay half-stocked.' },
+        },
+      },
+      {
+        id: 'riders', name: 'The Riders of Arbela',
+        desc: 'The armored horse of the Tigris bank, remounted since the last war — the arm that makes a restored client worth restoring.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          if ((t.treasury || 0) < 0) return -0.7;
+          return (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive) ? 0.5 : -0.1;
+        },
+        boon: { name: 'The Lances Sharp', text: '+5% discipline', effects: { disciplineMult: 1.05 } },
+        bane: { name: 'The Families Keep Their Sons', text: '−12% manpower', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'Barding and remounts (50 talents)', cost: { treasury: 50 } },
+        demand: {
+          title: 'The Riders Count What Trajan Took',
+          text: 'The landed families rebuilt their studs from Median stock and buried a generation '
+            + 'doing it. Pay for the muster they keep, or explain to them why the house needs '
+            + 'lances at all if it never means to use them.',
+          grant: { label: 'Pay for the muster', cost: { treasury: 80 } },
+          refuse: { label: 'The lances wait on the house\'s word', tooltip: 'The families count the seasons.' },
+        },
+      },
+    ],
   },
   playableTags: [
     {
@@ -357,6 +422,15 @@ export const BOOKMARK_132 = {
         + 'and the heartland to 136, and even Rome may prefer a tributary prince to a '
         + 'second desert.',
     },
+    {
+      tag: 'ADI',
+      difficulty: 'Hard',
+      blurb: 'Sixteen years ago Trajan\'s columns burned through the house of the converts; '
+        + 'Hadrian\'s withdrawal gave it back its crown. Now the west rises again, and the '
+        + 'letters cross the Euphrates asking what Arbela remembers. Rebuild what the last '
+        + 'war broke, keep the King of Kings sweet, and decide — again — what the covenant '
+        + 'costs.',
+    },
   ],
 
   // Courts of 132 CE.
@@ -364,6 +438,13 @@ export const BOOKMARK_132 = {
     ROM: { name: 'Hadrian', title: 'Emperor', gov: 4, infl: 3, mar: 3, age: 56 },
     JUD: { name: 'Simon bar Kosiba', title: 'Nasi Israel', gov: 2, infl: 3, mar: 5, age: 45 },
     PAR: { name: 'Vologases III', title: 'King of Kings', gov: 2, infl: 3, mar: 2, age: 50 },
+    // The restored client (SPEC §185): Mebarsapes fought Trajan in 116 and
+    // the record goes quiet after Hadrian gave the kingdom back; the game
+    // keeps him seated, older, with an heir from the dynasty's name-stock.
+    ADI: {
+      name: 'Mebarsapes', title: 'King', gov: 2, infl: 2, mar: 3, age: 58,
+      heir: { name: 'Monobazus', gov: 3, infl: 2, mar: 2, age: 22 },
+    },
     ARM: { name: 'Vologases of Armenia', title: 'King', gov: 2, infl: 2, mar: 2, age: 40 },
     // The political west (SPEC §173): the Bosporan client crown in the year
     // its coins stop — Cotys II dies as this chapter opens.
@@ -566,6 +647,83 @@ export const BOOKMARK_132 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { gov: 25, legitimacy: 10 }),
       },
     ],
+    // The restored house's tree (SPEC §185): rebuild what Trajan burned,
+    // shelter what the west loses, and never give an emperor a reason.
+    ADI: [
+      {
+        id: 'b2_house_rebuilt', name: 'The House Rebuilt',
+        icon: 'bricks', col: 1,
+        desc: 'Trajan\'s war burned the warehouses and Hadrian\'s peace gave back the crown. Bank 150 talents — the restoration must pay for itself.',
+        rewardText: '"The Restoration": +10% growth for 24 months.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 150,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_restoration', name: 'The Restoration', months: 24, effects: { growthMult: 1.1 },
+        }),
+      },
+      {
+        id: 'b2_refuge_east', name: 'A Refuge East of the Rivers',
+        icon: 'diaspora', col: 0, requires: ['b2_house_rebuilt'],
+        desc: 'Whatever happens in the hill country, the survivors will walk east. Keep the realm steady enough to take them — stability at +2.',
+        rewardText: 'The settled refugees: +2,000 manpower.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { manpower: 2000 }),
+      },
+      {
+        id: 'b2_letters_west', name: 'The Letters From the West',
+        icon: 'quill', col: 2, requires: ['b2_house_rebuilt'],
+        desc: 'The Nasi\'s state knows who remembers it. Reach the devoted friendship of the court at war — its opinion of the house at +100.',
+        rewardText: '+25 influence points, +10 legitimacy.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
+          return !!(jud && jud.alive) && ((jud.opinion && jud.opinion.ADI) || 0) >= 100;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 25, legitimacy: 10 }),
+      },
+      {
+        id: 'b2_silver_redemption', name: 'Silver for the Redemption',
+        icon: 'coins', col: 2, requires: ['b2_letters_west'],
+        desc: 'The mint in the hills strikes over Roman denarii; the metal must come from somewhere. Bank 300 talents while the Nasi\'s state still lives.',
+        rewardText: '"The Western Accounts": +5% income permanently.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
+          return !!(jud && jud.alive) && ((g.tags.ADI || {}).treasury || 0) >= 300;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'western_accounts', name: 'The Western Accounts', months: -1, effects: { incomeMult: 1.05 },
+        }),
+      },
+      {
+        id: 'b2_princes_companies', name: 'The Prince\'s Companies',
+        icon: 'helmet', col: 0, requires: ['b2_refuge_east'],
+        desc: 'The age\'s war is fought by organized companies. Reach Military 6 — The Prince\'s Companies.',
+        rewardText: '+25 martial points.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).mar | 0) >= 6,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25 }),
+      },
+      {
+        id: 'b2_wisdom', name: 'The Wisdom of Two Rivers',
+        icon: 'lamp', col: 1, requires: ['b2_house_rebuilt'],
+        desc: 'A restored court between empires needs every art of both. Take up three ideas of the age.',
+        rewardText: '+25 governance points.',
+        check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
+      },
+      // ── The roads not taken (SPEC §183) ─────────────────────────────────
+      {
+        id: 'hy_mint_of_redemption', name: 'The Mint Reads Redemption', hypothetical: true,
+        fork: '132ce/how_the_revolt_ends',
+        icon: 'coins', col: 4, row: 0,
+        desc: 'If the era of the Redemption becomes real — Rome\'s peace signed, the Nasi\'s '
+          + 'state standing — then the house\'s silver crosses to a free Jerusalem, and the '
+          + 'converts\' kingdom banks in a currency dated by the Redemption of Israel.',
+        rewardText: '+50 talents, +15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'redemptionEra')
+          && !!(ctx.game.tags.ADI && ctx.game.tags.ADI.alive !== false),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 }),
+      },
+    ],
   },
 
   // Who actually lives here (SPEC §56, §104). The hill country is homogeneous
@@ -752,12 +910,18 @@ export const BOOKMARK_132 = {
     h.adjust(ctx, 'ROM', { treasury: 500, manpower: 25000, stability: 2, legitimacy: 40 });
     h.adjust(ctx, 'PAR', { treasury: 180, stability: 1, legitimacy: 20 });
     h.adjust(ctx, 'ARM', { treasury: 30 });
+    // The restored house (SPEC §185): rebuilt, solvent, and careful.
+    h.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 });
 
     // --- Opinions. Parthia watches with interest; Armenia balances. -----------
     setOpinion(g, 'JUD', 'ROM', -190); setOpinion(g, 'ROM', 'JUD', -170);
     setOpinion(g, 'PAR', 'ROM', -80);  setOpinion(g, 'ROM', 'PAR', -70);
     setOpinion(g, 'PAR', 'JUD', 30);   setOpinion(g, 'JUD', 'PAR', 50);
     setOpinion(g, 'ARM', 'ROM', 20);   setOpinion(g, 'ARM', 'PAR', 30);
+    // Adiabene remembered its converted kings (SPEC §185) — and Trajan.
+    setOpinion(g, 'ADI', 'JUD', 70);   setOpinion(g, 'JUD', 'ADI', 60);
+    setOpinion(g, 'ADI', 'PAR', 70);   setOpinion(g, 'PAR', 'ADI', 50);
+    setOpinion(g, 'ADI', 'ROM', -60);  setOpinion(g, 'ROM', 'ADI', -30);
 
     // --- Starting modifiers. ---------------------------------------------------
     // Years of preparation: hidden armories, tunnels, a real chain of command.
@@ -803,6 +967,7 @@ export const BOOKMARK_132 = {
       inf: 10, cav: 8, name: 'Royal Army of Parthia',
     });
     h.spawnArmy(ctx, 'ARM', 'Tigranocerta', { inf: 3, name: 'Army of Armenia' });
+    h.spawnArmy(ctx, 'ADI', 'Arbela', { inf: 2, cav: 2, name: 'The Riders of Arbela' });
 
     h.notify(ctx, {
       title: 'The Bar Kokhba Revolt',
@@ -874,6 +1039,45 @@ export const BOOKMARK_132 = {
               + 'the property of the house of Israel, and care nothing for your brothers." '
               + 'The letters stop. The caves keep them for eighteen centuries.',
             score: Math.max(0, judProvs * 5),
+          });
+          return;
+        }
+      } else if (g.playerTag === who(ctx, 'ADI')) {
+        // The restored house's contract (SPEC §185): no second Trajan, no
+        // second fall — be seated at Arbela when the west's verdict is read.
+        const adi = g.tags[who(ctx, 'ADI')];
+        const adiAlive = !!(adi && adi.alive !== false);
+        const adiProvs = adiAlive ? h.countControlled(ctx, 'ADI', {}) : 0;
+        if (adiProvs === 0) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The Fall of the House of Monobazus',
+            text: 'Arbela is taken, and this time there is no Hadrian to give the crown '
+              + 'back. The converts\' kingdom ends as a paragraph in other people\'s '
+              + 'histories, and the synagogues east of the rivers pray for a house that '
+              + 'no longer answers.',
+            score: 0,
+          });
+          return;
+        }
+        if (dateGE(g.date, 136, 1) && adiAlive && h.controls(ctx, 'ADI', 'Arbela')) {
+          const free = !adi.overlord;
+          const judStands = judAlive && judProvs > 0;
+          h.endGame(ctx, {
+            result: 'win',
+            title: free ? 'A Crown Without a Yoke' : 'The House Restored, and Kept',
+            text: (free
+              ? 'The house of the converts ends the war owing tribute to nobody: the King '
+                + 'of Kings\' writ stops at the Zab, and what Trajan burned stands rebuilt '
+                + 'under a free crown. '
+              : 'The house of the converts is still seated at Arbela when the west\'s '
+                + 'verdict is read — client, rebuilt, and unburned a second time. ')
+              + (judStands
+                ? 'And the letters still have somewhere to go: the Nasi\'s state lives, '
+                  + 'and the western accounts stay open.'
+                : 'The letters from the west have stopped; the house keeps the covenant '
+                  + 'in a world that burned the correspondents.'),
+            score: 100 + (free ? 40 : 0) + (judStands ? 20 : 0),
           });
           return;
         }

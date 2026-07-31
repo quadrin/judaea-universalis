@@ -1147,7 +1147,7 @@ export function gameActions(ctx) {
       // one, and only against an arsenal court or our current supplier.
       let arms = null;
       try { arms = armsInfo(ctx, me, tag); } catch (e) { arms = null; }
-      // Financial aid (SPEC §184): only surfaced where the bookmark names
+      // Financial aid (SPEC §186): only surfaced where the bookmark names
       // donor courts, and only against a donor or the purse we already lean on.
       let aid = null;
       try { aid = aidInfo(ctx, me, tag); } catch (e) { aid = null; }
@@ -1719,7 +1719,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
     },
 
-    // ---- financial aid (SPEC §184) -------------------------------------------
+    // ---- financial aid (SPEC §186) -------------------------------------------
     requestAid(tag) {
       try {
         const res = requestAidCore(ctx, g.playerTag, String(tag));

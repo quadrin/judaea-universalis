@@ -1021,6 +1021,33 @@ export const CHAPTER_PATHS = Object.freeze([
 
 ]);
 
+// The cards that open a road (SPEC §184). Every road's `entry` above, indexed
+// so the event window, the multiplayer mirror and the Compendium can badge a
+// fork card the moment it is dealt — the badge is read off the tree itself,
+// so it can never disagree with §119 or drift from the chains. Lazy, built
+// once; an entry shared by several roads of one fork resolves to that fork.
+let _entryIndex = null;
+export function entryFork(chapterId, eventId) {
+  if (!chapterId || !eventId) return null;
+  if (!_entryIndex) {
+    _entryIndex = new Map();
+    for (const ch of CHAPTER_PATHS) {
+      for (const fk of ch.forks) {
+        for (const rd of fk.roads) {
+          if (!rd.entry) continue;
+          const key = ch.id + '/' + rd.entry;
+          if (!_entryIndex.has(key)) {
+            _entryIndex.set(key, Object.freeze({
+              chapter: ch.id, fork: fk.id, question: fk.question, roads: fk.roads.length,
+            }));
+          }
+        }
+      }
+    }
+  }
+  return _entryIndex.get(String(chapterId) + '/' + String(eventId)) || null;
+}
+
 // Roads that knowingly have no ending yet, with why. A test asserts this list
 // matches reality exactly: close one of these and forget to remove it here, or
 // let a new road go unfinished, and the suite fails. It is a to-do list the

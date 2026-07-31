@@ -1092,7 +1092,7 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
-  // Financial aid (SPEC §184): where a bookmark names its donor courts, any
+  // Financial aid (SPEC §186): where a bookmark names its donor courts, any
   // other court may petition one for aid — granted at the donor's regard,
   // sized to the donor's own purse, and flowing down the §24 subsidy pipe.
   // A granted package runs its term (a voted credit clears); only war or a

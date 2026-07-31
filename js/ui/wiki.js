@@ -10,6 +10,7 @@ import { icon, divider, flagChip } from './icons.js';
 import { ERAS, GENERIC_EVENTS } from '../data/compendium.js';
 import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
+import { entryFork } from '../data/chapter_paths.js';
 import { communitiesBetween, openAt } from '../data/diaspora.js';
 
 // Calendar month index with no year zero (mirror of sim/events.js — the wiki
@@ -90,8 +91,12 @@ export function createWiki({ DEFINES, getCtx }) {
     : '<div class="wiki-opt-tip wiki-dim">Its consequences are written only in the chronicle.</div>'}
       </div>`).join('');
   }
-  function badges(ev) {
-    return (ev.world ? '<span class="wiki-badge wiki-badge-world">world history</span>' : '')
+  function badges(ev, chapterId) {
+    // A card that opens a road of the §119 path tree wears the fork badge
+    // (SPEC §184) — same rule, same source, as the event window's chip.
+    const fk = chapterId ? entryFork(chapterId, ev.id) : null;
+    return (fk ? `<span class="wiki-badge wiki-badge-fork" data-tt="${esc(fk.question)}">${icon('split', 'icon-xs')} the road forks</span>` : '')
+      + (ev.world ? '<span class="wiki-badge wiki-badge-world">world history</span>' : '')
       + (ev.major ? '<span class="wiki-badge">major</span>' : '')
       + (ev.once === false ? '<span class="wiki-badge">recurring</span>' : '')
       + (ev.decider && typeof ev.decider !== 'function'
@@ -196,7 +201,7 @@ export function createWiki({ DEFINES, getCtx }) {
     // read straight from the bookmark that declares them.
     const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
-    // Financial aid (SPEC §184): the donor courts whose purses can be
+    // Financial aid (SPEC §186): the donor courts whose purses can be
     // petitioned, from the same bookmark declaration the sim plays.
     const donors = (b.financialAid && Array.isArray(b.financialAid.donors) ? b.financialAid.donors : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
@@ -327,7 +332,7 @@ export function createWiki({ DEFINES, getCtx }) {
     const rows = scriptedOf(era).map((ev) => `
       <div class="wiki-card-row wiki-link" data-go="event:${esc(b.id)}|${esc(ev.id)}">
         <div class="wiki-row-year">${ev.date ? esc(String(Math.abs(ev.date.y)) + (ev.date.y < 0 ? ' BCE' : '')) : icon('alert', 'icon-xs')}</div>
-        <div class="wiki-row-main"><div class="wiki-row-title">${esc(ev.title || ev.id)} ${badges(ev)}</div>
+        <div class="wiki-row-main"><div class="wiki-row-title">${esc(ev.title || ev.id)} ${badges(ev, b.id)}</div>
           <div class="wiki-dim">${esc(fireLabel(ev))} · ${(ev.options || []).length} option${(ev.options || []).length === 1 ? '' : 's'}</div></div>
         <div class="wiki-row-go">›</div>
       </div>`).join('');
@@ -350,13 +355,15 @@ export function createWiki({ DEFINES, getCtx }) {
     const list = eraId === 'generic' ? GENERIC_EVENTS : (eraOf(eraId) ? eraOf(eraId).events : []);
     const ev = list.find((e) => e && e.id === evId);
     if (!ev) return pageHome();
+    const fk = eraId === 'generic' ? null : entryFork(eraId, evId);
     return {
       title: ev.title || ev.id,
       sub: '',
       body: `
-        <div class="wiki-badges">${badges(ev)}</div>
+        <div class="wiki-badges">${badges(ev, eraId)}</div>
         <div class="wiki-desc">${esc(ev.desc || '')}</div>
-        ${kv(fireDetail(ev).concat(audienceRows(ev)))}
+        ${kv(fireDetail(ev).concat(audienceRows(ev))
+    .concat(fk ? [['The road forks', fk.question]] : []))}
         <div class="wiki-sec">The choices &amp; their consequences</div>
         ${optionListHtml(ev)}`,
     };
