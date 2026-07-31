@@ -9664,6 +9664,86 @@ pattern, no buttons, no purse.
   tick). `uitest2` counts the six medallions on the tree; `uitest8` and
   `uitest37` hold the Coin tab's buy path to one press, unchanged.
 
+## 178. The road to the crown was longer than the game
+
+Reported: the Kingdom of Israel regressed — the Davidic king does not ascend.
+Four defects, one system, and the first is an arithmetic error this spec
+itself made in §148.
+
+### The arc did not fit the chapter
+
+§148 gated "The House That Is Not David's" on twenty years of chapter, and
+justified the number by measuring the chapters: "twenty years fits inside
+every chapter that can reach this card with room to spare — the tightest is
+66 with 34." It had measured ONE CARD OF A TWO-CARD ARC. The marriage's
+whole payoff is the son, twenty-two years later, and a crown is worth
+proclaiming only while the chapter is alive to see it: 20 + 22 is 42, so in
+the Great Revolt's 34-year chapter the son could arrive no earlier than
+108 CE — eight years past the horizon, into a world whose every other card
+had retired — and in 67 BCE (span 42) he landed on the horizon year itself,
+reachable only by a campaign that missed nothing for four decades. The road
+to the game's endgame crown was, in its two shortest chapters, longer than
+the game.
+
+The gate now bends to the chapter (`generationGate`): twenty years where
+the chapter has room for the whole arc — gate + `SON_YEARS` (22, fixed by
+the card's own text: he is twenty-six, in the chancery since eighteen) +
+`PROCLAMATION_YEARS` (5) — and where it does not, the largest gate that
+still lets the son arrive with a reign to spare, floored at four so the
+§148 first-summer bug can never return. 167 (107 years), 40 BCE (50),
+132 (298) and 614 (86) keep their twenty; 67 BCE asks at fifteen; 66 CE
+asks at seven — two years after the negotiated peace of 71, which is
+exactly when a client kingdom that survived its own war gets asked what it
+is. The helper is `chapterSpan` (init.js), the companion to §148's
+`chapterYears` and for the same reason: a shared package cannot see the
+bookmark, so the contract has to carry the question.
+
+### Seating him did not seat him
+
+"Seat him. The house of David returns to the throne it left" raised
+`davidicThrone` and left the old king on the panel — the ascension the
+chronicle recorded had not happened anywhere the sim could see. The option
+now crowns the son through `setRuler`: Zerubbabel, for the last son of
+Jehoiachin's line to govern in Jerusalem, aged and statted from the card's
+own biography (twenty-six, eight years in the chancery, the eastern
+correspondence done very well, no field command ever — 3/4/1), under the
+sitting title. The old house's designated heir goes with the old house.
+132's grandson card is the same defect with a different verb: "let the
+succession PASS to him" now seats Yehoyakhin bar Kosiba as HEIR (4/3/1,
+thirty-one, a treasury man), and the ordinary succession machinery crowns
+him when the present reign ends. 614 was always right — David ben Zakkai
+takes the throne by `setRuler` — and is untouched.
+
+### The postponed question never returned
+
+The fourth answer's tooltip says the objection stays live; its comment says
+a later reign may take it up; §138's design says deferral is a
+postponement, not a settlement. Once-semantics made all three false — the
+card retired at first firing whatever was answered. It is `once: false` now
+on a 180-month cooldown: every road that settles the question shuts it by
+flag (`davidicAnswered`), so only the Hasmonean non-answer reopens it, a
+reign later. The §89 ledger already dedupes by event id, so a re-asked
+question cannot double-write the divergence record.
+
+### The proclaimed king was not styled by his crown
+
+Proclaiming the Kingdom of Israel — the formable whose first requirement is
+a son of David on the throne — left the proclaimer titled whatever he was
+titled before. `bonus.rulerTitle` now exists on the formables table, and
+the formation path applies it unless the sitting title already names the
+crown: the 614 coronation's "King of Israel, of the House of David"
+outranks the formable's plain "King of Israel" and must not be shortened
+by it.
+
+- **Regression contract**: `smoke93` grows a fourth act — the 66 CE gate at
+  its boundary (not asked at six years and eleven months, asked at seven),
+  67 BCE at fifteen, the 167 cap unchanged at twenty; the seated son on the
+  throne by name with the heir cleared; the grandson as heir and crowned by
+  `rulerDies` through the ordinary machinery; the deferred question
+  re-queued by `checkTriggeredEvents` after its cooldown and not before;
+  and the proclamation retitle, including the guard that leaves 614's
+  fuller style standing.
+
 ## 179. The rungs have names, and the ladders sell ideas
 
 §177 dressed the ladders in EU4's numbers; this section gives them EU4's

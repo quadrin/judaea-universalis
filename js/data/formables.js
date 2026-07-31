@@ -319,6 +319,10 @@ export const FORMABLES = [
       // The endgame crown pays like one: a full treasury, the levies of a
       // kingdom, and the ministries of a state that has stopped improvising.
       grant: { treasury: 300, manpower: 8000, gov: 60, infl: 60, mar: 60 },
+      // The man who proclaims Israel is styled by it (SPEC §178). The 614
+      // coronation's fuller "King of Israel, of the House of David" already
+      // says Israel and is left standing.
+      rulerTitle: 'King of Israel',
       modifier: {
         id: 'crown_of_david', name: 'The Crown of David', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },
@@ -359,6 +363,8 @@ export const FORMABLES = [
       // The endgame crown pays like one: a full treasury, the levies of a
       // kingdom, and the ministries of a state that has stopped improvising.
       grant: { treasury: 300, manpower: 8000, gov: 60, infl: 60, mar: 60 },
+      // The man who proclaims Israel is styled by it (SPEC §178).
+      rulerTitle: 'King of Israel',
       modifier: {
         id: 'crown_of_david', name: 'The Crown of David', months: -1,
         effects: { incomeMult: 1.1, moraleMult: 1.05, unrestAll: -0.5 },

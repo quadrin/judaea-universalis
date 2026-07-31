@@ -24,9 +24,11 @@
 // So the crown of Israel now costs a dynasty rather than a war, and the cheapest
 // road to it is Herod's: marry the line and wait a generation for the grandson.
 //
-// STRUCTURE. Two cards. The first asks the question once, when a Jewish crown
-// has grown large enough for it to bite, and its four answers are the four
-// answers the period actually produced. The second collects on the marriage a
+// STRUCTURE. Two cards. The first asks the question when a Jewish crown has
+// grown large enough for it to bite — and asks it again, a reign later, if
+// the court's answer was no answer, because that is what the deferral's own
+// tooltip promises (SPEC §178). Its four answers are the four answers the
+// period actually produced. The second collects on the marriage a
 // generation later, because a wedding is not a pedigree — the son is.
 //
 // STANDING DOWN. Two chapters own this question already and ask it better, with
@@ -51,8 +53,43 @@ function ownArcRuns(ctx) {
 }
 
 // A generation, which is what the card claims for itself in its own first line
-// (SPEC §148).
+// (SPEC §148) — and the CAP, not the constant (SPEC §178). The son of the
+// marriage takes SON_YEARS more to grow into his pedigree, and a crown of
+// Israel is worth proclaiming only with a few years left to wear it, so the
+// full dynasty road costs gate + SON_YEARS + PROCLAMATION_YEARS. §148 sized
+// the gate against the chapters and found "room to spare — the tightest is 66
+// with 34"; it had measured one card of a two-card arc. Twenty plus
+// twenty-two is forty-two, so in the Great Revolt's 34-year chapter the son
+// could arrive no earlier than 108 CE — eight years past the horizon, into a
+// world whose every other card had gone quiet — and in 67 BCE he landed on
+// the horizon year itself, reachable only by a campaign that missed nothing.
+// The road to the game's endgame crown was, in its two shortest chapters,
+// longer than the game.
 const GENERATION_YEARS = 20;
+// Fixed by the second card's own text: he is twenty-six, in the chancery
+// since he was eighteen.
+const SON_YEARS = 22;
+// Room to actually proclaim the crown the arc exists to unlock.
+const PROCLAMATION_YEARS = 5;
+// Never again the first summer (SPEC §148): whatever the chapter's length,
+// a rising is not asked about its pedigree while the revolt is still news.
+const GENERATION_FLOOR = 4;
+
+// A generation OF THIS CHAPTER: twenty years where the chapter has room for
+// the whole arc, and where it does not, the largest gate that still lets the
+// son arrive with a reign's worth of years to spare. 167 (107 years), 40 BCE
+// (50), 132 (298) and 614 (86) keep their twenty; 67 BCE (42) asks at
+// fifteen; 66 CE (34) asks at seven — which is two years after the negotiated
+// peace of 71, exactly when a client kingdom that survived its own war would
+// be asked what it is. A chapter with no horizon has no deadline, so the cap
+// stands.
+function generationGate(ctx) {
+  const h = ctx.helpers;
+  const span = (h && typeof h.chapterSpan === 'function') ? h.chapterSpan(ctx) : NaN;
+  if (!Number.isFinite(span)) return GENERATION_YEARS;
+  return Math.max(GENERATION_FLOOR,
+    Math.min(GENERATION_YEARS, span - SON_YEARS - PROCLAMATION_YEARS));
+}
 
 // A crown big enough — AND OLD ENOUGH — for the question to bite: sovereign,
 // seated in Jerusalem, past the point where it is plainly a rising rather than
@@ -66,19 +103,21 @@ const GENERATION_YEARS = 20;
 // question has been asked for a generation*. A rising that has overrun ten
 // provinces in its first summer satisfies none of that.
 //
-// So the gate now asks for each of the things the card says out loud. The
-// generation is the load-bearing one: twenty years fits inside every chapter
-// that can reach this card with room to spare — 167 runs 107 years, 66 runs 34,
-// 614 runs 86 — and it puts the question where the history put it. The
-// Maccabean revolt opens in 167; Simon wins independence in 142 and Aristobulus
-// takes the diadem in 104. The quarrel about whether the house of Joarib may
-// wear it belongs to that century, not to its first campaign season.
+// So the gate asks for each of the things the card says out loud. The
+// generation is the load-bearing one, and it bends to the chapter
+// (generationGate above): long chapters wait the full twenty years, and the
+// short ones ask as late as they can while still leaving the marriage its
+// payoff. The quarrel about whether the house of Joarib may wear the diadem
+// belongs to the Hasmonean century, not to its first campaign season — and
+// the quarrel about the house of the Great Revolt belongs to the client
+// kingdom the peace left standing, which had thirty-four years, not a
+// hundred.
 function seatedCrown(ctx) {
   const t = T(ctx);
   if (!t || t.overlord) return false;
   const h = ctx.helpers;
   // "…has been asked in the street for a generation."
-  if (h.chapterYears(ctx) < GENERATION_YEARS) return false;
+  if (h.chapterYears(ctx) < generationGate(ctx)) return false;
   // "…the succession is orderly." A regency is the opposite of that.
   if (t.regency) return false;
   // "…the crown is secure." A throne at nought legitimacy in an unsettled
@@ -134,6 +173,14 @@ export const EVENTS_DAVID = [
     forTag: 'player',
     major: true,
     maxYear: 1799,
+    // The fourth answer postpones rather than settles — its own tooltip says
+    // the objection stays live and its own comment promises a later reign may
+    // take the question up. Under once-semantics that promise was false: the
+    // card retired at first firing whatever was answered (SPEC §178). So it
+    // is repeatable, on a reign's cooldown; every road that actually settles
+    // the question shuts it by flag, and only the deferral leaves it open.
+    once: false,
+    cooldownMonths: 180,
     trigger: (ctx) => {
       try {
         if (!jewishCrown(ctx) || flag(ctx, 'davidicAnswered') || ownArcRuns(ctx)) return false;
@@ -288,7 +335,7 @@ export const EVENTS_DAVID = [
         const y0 = Number((ctx.game.flags || {}).davidicMarriageYear);
         if (!Number.isFinite(y0)) return false;
         // A generation, and a court steady enough to hold a succession.
-        return (ctx.game.date.y - y0) >= 22 && seatedCrown(ctx);
+        return (ctx.game.date.y - y0) >= SON_YEARS && seatedCrown(ctx);
       } catch (e) { return false; }
     },
     aiOption: 0,
@@ -298,16 +345,32 @@ export const EVENTS_DAVID = [
     options: [
       {
         label: 'Seat him. The house of David returns to the throne it left',
-        tooltip: 'What the marriage was arranged for, collected: +35 legitimacy and +0.3 a month '
-          + 'permanently, −1 unrest everywhere, and no rival can ever again say this house has no '
-          + 'title to what it holds. It is also the requirement for proclaiming the Kingdom of '
-          + 'Israel, which is the united monarchy and therefore David\'s. The price is the one the '
-          + 'Babylonians came to name: a recognised Exilarchate interest in every succession after '
-          + 'this one. −1 authority.',
+        tooltip: 'What the marriage was arranged for, collected: the son of the marriage takes '
+          + 'the throne — a chancery king, better with a letter than a levy — with +35 legitimacy '
+          + 'and +0.3 a month permanently, −1 unrest everywhere, and no rival can ever again say '
+          + 'this house has no title to what it holds. It is also the requirement for proclaiming '
+          + 'the Kingdom of Israel, which is the united monarchy and therefore David\'s. The price '
+          + 'is the one the Babylonians came to name: a recognised Exilarchate interest in every '
+          + 'succession after this one. −1 authority.',
         effects: (ctx) => {
           try {
             const h = ctx.helpers;
             const me = ctx.game.playerTag;
+            // Seating him means seating him (SPEC §178): the card used to
+            // raise the flag and leave the old king on the panel, which read
+            // as the ascension not happening — because it hadn't. He takes
+            // the throne under his regnal name: Zerubbabel, for the last son
+            // of Jehoiachin's line to govern in Jerusalem. The stats are the
+            // card's own biography — eight years in the chancery, the
+            // eastern correspondence done very well, no field command ever.
+            const old = (ctx.game.tags[me] && ctx.game.tags[me].ruler) || {};
+            h.setRuler(ctx, me, {
+              name: 'Zerubbabel', title: old.title || 'King',
+              gov: 3, infl: 4, mar: 1, age: 26,
+            });
+            // The old house's designated heir went with the old house; the
+            // succession machinery will find the new one among David's line.
+            h.setHeir(ctx, me, null);
             h.adjust(ctx, me, { legitimacy: 35, stability: 1 });
             h.addTagModifier(ctx, me, {
               id: 'the_line_of_jehoiachin', name: 'The Line of Jehoiachin', months: -1,

@@ -29,8 +29,9 @@ const { ERAS } = await import(R + '/js/data/compendium.js');
 const { FORMABLES } = await import(R + '/js/data/formables.js');
 const { EVENTS_DAVID } = await import(R + '/js/data/events_house_of_david.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
-const { initGame, makeCtx } = await import(R + '/js/sim/init.js');
-const { allowedOptions } = await import(R + '/js/sim/events.js');
+const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
+const { allowedOptions, checkTriggeredEvents, resolveEventOption } = await import(R + '/js/sim/events.js');
+const { EVENTS_132_KOSIBA } = await import(R + '/js/data/events_132ce_kosiba.js');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -313,6 +314,118 @@ console.log('== the chapters that ask it in their own voice ==');
   const v = greatCrown('614ce', 'JUD', 640);
   v.game.flags.oneCrownBothCentres = true;
   ok(HOUSE.trigger(v.ctx) === false, '614: it stands down for the line of Jehoiachin');
+}
+
+// ---------------------------------------------------------------------------
+// SPEC §178 — the road to the crown was longer than the game. §148 sized the
+// generation gate against the chapters and measured one card of a two-card
+// arc: 20 (the question) + 22 (the son) is 42, so in 66 CE (span 34) the son
+// could arrive no earlier than 108 — eight years past the horizon — and in
+// 67 BCE he landed on the horizon year itself. The gate now bends to the
+// chapter; the seated son is a real king; the deferred question returns; the
+// proclamation styles its proclaimer.
+console.log('== §178: the road fits the chapter ==');
+{
+  // 66 CE: span 34 → gate 7. The question comes two years after the
+  // negotiated peace of 71, not twenty years into a 34-year chapter.
+  const w = greatCrown('66ce', 'JUD', 73);
+  w.game.date = { y: 73, m: 5, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === false, '66 CE at six years and eleven months: not asked');
+  w.game.date = { y: 73, m: 6, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === true, '  at seven — two years after the peace of 71 — asked');
+  HOUSE.options[0].effects(w.ctx);
+  w.game.date = { y: 95, m: 6, d: 1 };
+  ok(SON.trigger(w.ctx) === true,
+    'and the son arrives at 95, inside a chapter whose horizon is 100');
+}
+{
+  // 67 BCE: span 42 → gate 15. The arc used to complete at the horizon
+  // year −25 at the theoretical earliest; now the son can arrive by −30.
+  const w = greatCrown('67bce', 'HYR', -52);
+  w.game.date = { y: -53, m: 4, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === false, '67 BCE at fourteen years: not asked');
+  w.game.date = { y: -52, m: 4, d: 1 };
+  ok(HOUSE.trigger(w.ctx) === true, '  at fifteen, it is');
+  // (167 keeps the full twenty — the §148 boundary walk above is unchanged.)
+}
+
+console.log('== §178: seating him means seating him ==');
+{
+  const w = greatCrown('167bce', 'HAS', -120);
+  HOUSE.options[0].effects(w.ctx);
+  w.game.date = { y: -96, m: 6, d: 1 };
+  w.game.tags.HAS.heir = { name: 'Somebody Else', gov: 2, infl: 2, mar: 2, age: 20 };
+  const seat = SON.options.findIndex((o) => /Seat him/.test(o.label));
+  SON.options[seat].effects(w.ctx);
+  const r = w.game.tags.HAS.ruler;
+  ok(!!r && r.name === 'Zerubbabel' && r.age === 26,
+    'the son takes the throne by name, at the card\'s own age');
+  ok(w.game.tags.HAS.heir === null,
+    '  and the old house\'s designated heir goes with the old house');
+}
+{
+  // 132's verb is "pass": heir today, crowned by the ordinary machinery
+  // when the present reign ends.
+  const w = boot('132ce', 'JUD', 200);
+  const grand = EVENTS_132_KOSIBA.find((e) => e && e.id === 'ev_bk_the_grandson');
+  const pass = grand.options.findIndex((o) => /succession pass/.test(o.label));
+  grand.options[pass].effects(w.ctx);
+  const h = w.game.tags.JUD.heir;
+  ok(!!h && h.name === 'Yehoyakhin bar Kosiba' && h.age === 31,
+    '132: the grandson stands first in the succession');
+  ok(!!w.game.flags.davidicThrone, '  and the shared flag is already up');
+  w.ctx.helpers.rulerDies(w.ctx, 'JUD', 'has died');
+  ok(!!w.game.tags.JUD.ruler && w.game.tags.JUD.ruler.name === 'Yehoyakhin bar Kosiba',
+    '  and the ordinary machinery crowns him when the reign ends');
+}
+
+console.log('== §178: the postponed question returns ==');
+{
+  const w = greatCrown('167bce', 'HAS', -120);
+  checkTriggeredEvents(w.ctx);
+  const mine = w.game.pendingEvents.filter((pe) => pe.eventId === HOUSE.id);
+  ok(mine.length === 1, 'the pipeline queues the question');
+  const defer = HOUSE.options.findIndex((o) => /stands on what it won/.test(o.label));
+  resolveEventOption(w.ctx, mine[0].instanceId, defer);
+  ok(!!w.game.flags.davidicDeferred && !w.game.flags.davidicAnswered,
+    '  the Hasmonean non-answer defers rather than settles');
+  w.game.pendingEvents.length = 0;
+  checkTriggeredEvents(w.ctx);
+  ok(w.game.pendingEvents.every((pe) => pe.eventId !== HOUSE.id),
+    '  and the chamber does not ask again the same month');
+  w.game.date = { y: -106, m: 6, d: 1 };
+  checkTriggeredEvents(w.ctx);
+  ok(w.game.pendingEvents.every((pe) => pe.eventId !== HOUSE.id),
+    '  nor fourteen years on');
+  w.game.date = { y: -105, m: 6, d: 1 };
+  checkTriggeredEvents(w.ctx);
+  const again = w.game.pendingEvents.find((pe) => pe.eventId === HOUSE.id);
+  ok(!!again, 'a reign later, it asks again — the §138 postponement is real now');
+  const ezek = HOUSE.options.findIndex((o) => /A prince, not a king/.test(o.label));
+  resolveEventOption(w.ctx, again.instanceId, ezek);
+  w.game.pendingEvents.length = 0;
+  w.game.date = { y: -80, m: 6, d: 1 };
+  checkTriggeredEvents(w.ctx);
+  ok(w.game.pendingEvents.every((pe) => pe.eventId !== HOUSE.id),
+    '  while a real answer shuts it for good');
+}
+
+console.log('== §178: the proclamation styles the king ==');
+{
+  const w = greatCrown('167bce', 'HAS', -120);
+  w.game.flags.davidicThrone = true;
+  gameActions(w.ctx).enactDecision('form_mli_has');
+  ok(w.game.playerTag === 'MLI', 'the Kingdom of Israel is proclaimed through the decision surface');
+  ok(!!w.game.tags.MLI.ruler && w.game.tags.MLI.ruler.title === 'King of Israel',
+    '  and the proclaimer is styled King of Israel');
+}
+{
+  const w = greatCrown('167bce', 'HAS', -120);
+  w.game.flags.davidicThrone = true;
+  w.game.tags.HAS.ruler.title = 'King of Israel, of the House of David';
+  gameActions(w.ctx).enactDecision('form_mli_has');
+  ok(!!w.game.tags.MLI && w.game.tags.MLI.ruler.title === 'King of Israel, of the House of David',
+    'the 614 coronation\'s fuller style is not shortened by the proclamation');
 }
 
 console.log(failures ? `smoke93: ${failures} FAIL` : 'smoke93: ALL PASS');
