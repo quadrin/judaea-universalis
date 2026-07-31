@@ -506,7 +506,7 @@ export const BOOKMARK_167 = {
       },
       {
         id: 'warparty', name: 'The Brothers\' Captains',
-        priestly: false, // hill commanders; the office is not theirs to take (SPEC §186)
+        priestly: false, // hill commanders; the office is not theirs to take (SPEC §190)
         desc: 'Judas\' commanders and the young men of the ascents: the war party, hungriest when the war stalls.',
         drift(ctx, t) {
           const g = ctx.game;

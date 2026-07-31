@@ -223,15 +223,18 @@ static site, the zero dependencies, or the missing build step changes.
   People in Arms faces the Arab Legion — fifty-one groups across the eight
   chapters, three tiers each, bought with the ladder's own point, with locked
   cards that tell you exactly which rung opens them ("Unlocked at The Third
-  Wall (8)"). The AI buys its side's curriculum on the same terms, and every
+  Wall (8)") — and they are read where they are bought: the Ideas block sits
+  directly under the Technology block on the same tab of the realm panel, in
+  every chapter, so the card naming a rung and the ladder climbing toward it
+  are one screen. The AI buys its side's curriculum on the same terms, and every
   playable side's mission tree grew two branches that assign it: master the
   era's named art, and take up its ideas.
 - **The mission tree shows the roads not taken.** Every playable side's tree
   now carries the chapter's alternate-history forks as standing hypotheticals —
-  thirty spectral medallions across the eight chapters naming the pages history
-  never wrote (a Jewish king seated at Antioch, the coast subjugated, the eagle
-  refused, the House that stood, the Levant without a Lebanon), each desc
-  teaching exactly what state of the world makes those cards arrive, each
+  forty-five spectral medallions across the eight chapters naming the pages
+  history never wrote (a Jewish king seated at Antioch, the coast subjugated,
+  the eagle refused, the House that stood, the Levant without a Lebanon), each
+  desc teaching exactly what state of the world makes those cards arrive, each
   paying a bonus on arrival. They complete off the same flags the fork cards
   themselves set, and they are counted apart — "2 of 7 accomplished · 1 of 6
   roads history never took" — because a hypothetical no campaign reaches is
@@ -240,6 +243,21 @@ static site, the zero dependencies, or the missing build step changes.
   violet badge — "the road forks here" — whose tooltip asks the fork's own
   question, in singleplayer, on multiplayer guests' mirrored cards, and on
   the same card's page in the Compendium.
+- **The thin trees made thick.** The lighter chapters caught up on forks,
+  major decisions and conquest branches: Herod's Rise grew from two forks to
+  five (Cleopatra's demand for the balsam groves of Jericho, the musters of
+  Actium with the verdict read at Rhodes, and the old man in Babylon on the
+  Hasmonean road), the war of the brothers from three to seven (the price of
+  Petra coming due under a Roman survey, Crassus at the treasury doors on his
+  way to Carrhae, and the sovereign kingdom's two Roman civil wars, now
+  charted), and the Persian Gambit from four to seven (the Exilarchate under
+  one crown or two houses, the caliph's categories renegotiated in the fitna,
+  and the Other Israel — the first Israelite state ever positioned to repeal
+  Justinian's statutes against the Keepers of Gerizim, or keep them running
+  under a new seal). Thirteen expansion missions beside them, every target the
+  era's own: the Decapolis grants, Jannaeus' coast, the twelve cities of Moab,
+  the Ladder of Tyre, the King's Highway, the granary of Egypt, and the coast
+  road out of the Samaritan hills.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes
@@ -498,6 +516,19 @@ static site, the zero dependencies, or the missing build step changes.
   courtable, embargo-capable, intrigue-able, unconquerable. And at the end of
   the French road, if you hold the deep Negev, something can rise at Dimona
   that the budget calls a textile factory.
+- **The purse is somebody else's too.** The other thing the great powers
+  signed was credits: in 1948 any court may petition Washington, Moscow,
+  London or Paris for financial aid from the donor's own panel — granted at
+  the donor's regard for you, sized to the donor's own purse (the American
+  package is the deep one, which is the plain 1948 fact), and paid monthly
+  for a year down the ordinary subsidy pipe. Asking leaves a mark, each
+  donor hears one petition every thirty months, and a granted package runs
+  its term whatever the friendship does after — only war or an embargo
+  stops the checks. The AI petitions too, when it is poor: the British
+  subvention that paid the Arab Legion emerges from the seeded book instead
+  of being scripted. Israel's own road is the historical one — court Truman
+  past the bar and the Export-Import credits of January '49 arrive on
+  schedule, or mend two years of fences with London for a smaller purse.
 - **No rifle brigades at Masada.** Every age now declares how far up the
   technology ladder it can climb: the ancient bookmarks stop at professional
   legions, 614 at thematic regulars, and only 1948 reaches rifle brigades and
@@ -512,6 +543,21 @@ static site, the zero dependencies, or the missing build step changes.
   convening, the age keeps stating its objectives — and the crown brings its
   own payoff (coin, men, ministries and a modifier that says what this kingdom
   is FOR) plus a fresh mission chain addressed to the new identity.
+- **The crown speaks in the age it was crowned in.** The Kingdom of Israel can
+  be proclaimed in six of the eight chapters, and it used to read the same four
+  missions in all of them. Those four are still the spine — settle the crown,
+  muster the kingdom, hold the land of the twelve, build rather than merely
+  hold — but each chapter now hangs three of its own off the crowning: finish
+  the Seleucid throne and take Simon's harbours in 167 BCE; hold the Greek
+  cities of the Jordan, bring Petra under the crown and get an answer out of
+  Babylonia in 67; keep the balsam groves Cleopatra took and build the harbour
+  Herod would have built in 40; take the procurators' coast, absorb the last
+  Herodian's tetrarchy and endow a House that never burned in 66; unmake Aelia
+  between the sea and the Jordan and raise the Third House in 132; raise the
+  altar on the swept Mount, reach the Exilarchate and watch the southern road
+  in 614. Eighteen in all — and because the Third House is now one of them,
+  taking the greater crown no longer costs you the mission the chapter is
+  about.
 - **Playable on a phone, properly.** The handheld pass: one tools button in the
   topbar opens a sheet with the chronicle, the ledger, the primer, the quill
   and your saved campaigns — a phone could not previously save its own game,

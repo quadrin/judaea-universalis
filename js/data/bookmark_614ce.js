@@ -700,6 +700,42 @@ export const BOOKMARK_614 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
       },
+      // The empty ground made specific (SPEC §187): where a kingdom actually
+      // marches when neither empire can field an army — the Phoenician coast,
+      // the King's Highway, and the granary the Persians showed the way to.
+      {
+        id: 'p_phoenicia', name: 'The Ladder of Tyre',
+        icon: 'walls', col: 0, row: 3, requires: ['p_walls_manned'],
+        desc: 'Take Tyre and Sidon — the fortified coast that has flanked every army '
+          + 'that ever marched on Jerusalem from the north.',
+        rewardText: '+100 talents (the purple and the customs), +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Tyre')
+          && ctx.helpers.controls(ctx, 'JUD', 'Sidon'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10 }),
+      },
+      {
+        id: 'p_kings_highway', name: 'The King\'s Highway',
+        icon: 'horseshoe', col: 2, row: 3, requires: ['p_rule_of_law'],
+        desc: 'Take Damascus and Bostra — the two ends of the road every conqueror of '
+          + 'this country has used, held for once from the middle.',
+        rewardText: '"The Highway Held": +8% income, permanently.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Damascus')
+          && ctx.helpers.controls(ctx, 'JUD', 'Bostra'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_highway_held', name: 'The Highway Held', months: -1,
+          effects: { incomeMult: 1.08 },
+        }),
+      },
+      {
+        id: 'p_granary', name: 'The Granary of the World',
+        icon: 'grain', col: 1, row: 4, requires: ['p_coast'],
+        desc: 'Take Alexandria and Pelusium — the wheat that fed Constantinople, and the '
+          + 'largest Jewish city on earth outside the Land, under the crown\'s law.',
+        rewardText: '+150 talents, +2,000 manpower — the diaspora of Egypt enlists.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Alexandria')
+          && ctx.helpers.controls(ctx, 'JUD', 'Pelusium'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, manpower: 2000 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -747,6 +783,39 @@ export const BOOKMARK_614 = {
         rewardText: '+20 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'davidCrowned', 'davidDeclined'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20 }),
+      },
+      {
+        id: 'hy_exilarchate', name: 'The Other Half of the People', hypothetical: true,
+        fork: '614ce/the_exilarchate',
+        icon: 'diaspora', col: 4, row: 0, requires: ['hy_whose_century'],
+        desc: 'Grow to a Levantine power while Persia comes apart, and the question no '
+          + 'generation since the First House could ask arrives: one Jewish government over '
+          + 'both centres — the Exilarch under Jerusalem, or two houses, one people.',
+        rewardText: '+20 influence points, +10 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'oneCrownBothCentres', 'twoHousesOnePeople'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_caliphs_categories', name: 'What the Caliph Will Sign', hypothetical: true,
+        fork: '614ce/the_caliphs_categories',
+        icon: 'scroll', col: 4, row: 1, requires: ['hy_whose_century'],
+        desc: 'Still be standing when the new power out of the south offers its two '
+          + 'categories — submission, or treaty on the Nubian pattern — and answer as a '
+          + 'state: the tribute signed, or both categories refused to the envoy\'s face.',
+        rewardText: '+20 governance points.',
+        check: (ctx) => anyFlag(ctx, 'theTreatyState', 'refusedTheCategory'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 20 }),
+      },
+      {
+        id: 'hy_other_israel', name: 'The Other Israel', hypothetical: true,
+        fork: '614ce/the_other_israel',
+        icon: 'mountain', col: 4, row: 2,
+        desc: 'Govern Jerusalem and Neapolis under one crown, and inherit Justinian\'s '
+          + 'statutes against the Keepers of Gerizim — the first Israelite state ever in a '
+          + 'position to repeal them, or to keep them running under a new seal.',
+        rewardText: '+15 legitimacy, +1 stability.',
+        check: (ctx) => anyFlag(ctx, 'twoTorahsPeace', 'oldQuarrelKept'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15, stability: 1 }),
       },
     ],
     BYZ: [

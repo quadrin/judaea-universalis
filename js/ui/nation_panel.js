@@ -41,11 +41,17 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // a tab that is empty six times out of eight is worse than no tab at all, and
 // Missions (SPEC §177) holds the mission tree and steps aside at a foreign
 // court, after the verdict, and in a chapter whose tag has no chain.
+//
+// Ideas ride with the ladders, not with the crown (SPEC §188). The reform
+// trees and the chapter's Ideas of the Age are bought with monarch points and
+// unlocked by named technology rungs, so they sit under the Technology block
+// on Coin in every bookmark — the EU4 window, where the ladders and what they
+// sell are one screen. Crown keeps what it is: the realm's own facts.
 const TABS = [
   { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, and what this chapter asks of you.' },
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
-  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, and the technologies silver buys.' },
+  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, the technologies silver buys — and the ideas those ladders sell.' },
   { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
@@ -117,10 +123,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <div class="pp-build" data-tab="crown">
-        <div class="pp-build-title">Reforms</div>
-        <div class="np-reforms" data-ref="reforms"></div>
-      </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
@@ -162,6 +164,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-build" data-tab="coin">
         <div class="pp-build-title">Technology</div>
         <div class="np-techs" data-ref="tech"></div>
+      </div>
+      <!-- The ideas sit UNDER the ladders that sell them (SPEC §188): the
+           universal reform trees and the chapter's own Ideas of the Age, in
+           every bookmark, on the same tab as the technology they unlock from. -->
+      <div class="pp-build" data-tab="coin">
+        <div class="pp-build-title">Ideas</div>
+        <div class="np-reforms" data-ref="reforms"></div>
       </div>
 
       <!-- ── THE HOST ──────────────────────────────────────────────────── -->
@@ -309,12 +318,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The working verbs on a foreign court's own panel (SPEC §180/§181):
-      // envoys, gifts, and the weapons transfer agreement.
+      // The working verbs on a foreign court's own panel (SPEC §180/§181/§186):
+      // envoys, gifts, the weapons transfer agreement, and the aid petition.
       const npDip = e.target.closest('[data-np-dip]');
       if (npDip && viewTag) {
         if (!npDip.classList.contains('disabled') && actions) {
-          const fn = { improve: 'improveRelations', gift: 'sendGift', arms: 'signArmsDeal' }[npDip.dataset.npDip];
+          const fn = { improve: 'improveRelations', gift: 'sendGift', arms: 'signArmsDeal', aid: 'requestAid' }[npDip.dataset.npDip];
           try { if (fn && typeof actions[fn] === 'function') actions[fn](viewTag); }
           catch (err) { warnOnce('np-dip-' + npDip.dataset.npDip, err); }
         }
@@ -968,7 +977,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.sacred, html);
   }
 
-  // Whose reading of the Law this realm administers (SPEC §186). The needle,
+  // Whose reading of the Law this realm administers (SPEC §190). The needle,
   // the two houses that are arguing over it, what the pair of them come to,
   // whether the man at the altar keeps the Law the crown has ruled for, and
   // every dispute still open with the price of ruling it either way. Appears
@@ -1188,6 +1197,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
               + (a.whyNot ? '\n' + a.whyNot + '.' : ''));
           }
         }
+        // Financial aid (SPEC §186): petition a donor court's purse, or watch
+        // the package we already won run its term.
+        if (d.aid && (d.aid.offered || d.aid.flowing)) {
+          const ai = d.aid;
+          if (ai.flowing) {
+            row += btn('', '★ Their Aid Flows', false,
+              'The package stands: ' + ai.amount + ' talents a month, ' + ai.monthsLeft
+              + ' months to run. A voted credit clears whatever their regard does — only war or an embargo between us stops the checks.', true);
+          } else {
+            row += btn('aid', 'Request Financial Aid', ai.can,
+              'Petition their treasury: ' + ai.amount + ' talents a month for ' + ai.months
+              + ' months, sized to their own purse.'
+              + '\n――――――\nTheir regard for us: ' + ai.theirRegard + ' (need ' + ai.need + ') · the mission costs ' + ai.infl + ' influence.'
+              + '\nAsking leaves a mark (' + ai.askOpinion + ' regard) — one purse at a time, one petition per donor every ' + ai.cdMonths + ' months.'
+              + (ai.whyNot ? '\n' + ai.whyNot + '.' : ''));
+          }
+        }
         html += `<div class="np-dip-sec">Envoys</div><div class="pp-diplo-btns np-dip-verbs">${row}</div>`;
       }
     }
@@ -1235,7 +1261,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       for (const s of flows) {
         const out = s.from === who;
         const other = out ? s.to : s.from;
-        html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
+        html += `<div class="np-dip-row" data-tt="${s.reparation ? 'War reparations' : s.aid ? 'Foreign aid' : 'A subsidy'}: ${s.amount} talents a month, ${s.monthsLeft} months remaining">`
           + `${chip(other)}<span class="np-dip-name">${nameOf(other)}</span>`
           + `<span class="np-dip-ws ${out ? 'neg' : 'pos'}">${out ? '−' : '+'}${s.amount}/mo · ${s.monthsLeft}m</span></div>`;
       }
@@ -1442,9 +1468,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // Three reform trees: tier pips, the next reform's name and price, one
-  // buy button per tree. Renders nothing on sims without getIdeas.
-  // Foreign courts show their pips read-only, straight from t.reforms.
+  // The ideas (SPEC §188), rendered under the Technology block on Coin in
+  // every bookmark: three reform trees — tier pips, the next reform's name and
+  // price, one buy button per tree — and then the chapter's Ideas of the Age,
+  // which the ladders directly above them unlock. Renders nothing on sims
+  // without getIdeas. Foreign courts show their pips read-only, straight from
+  // t.reforms.
   function refreshReforms(t, self) {
     if (!refs.reforms) return;
     if (!self) {

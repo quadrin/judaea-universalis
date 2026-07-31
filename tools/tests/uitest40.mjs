@@ -1,4 +1,4 @@
-// UI verification — SPEC §186: the quarrel of the two schools renders in the
+// UI verification — SPEC §190: the quarrel of the two schools renders in the
 // Faith tab of the realm panel, and its buttons rule.
 //
 // The assertion this suite exists for is the LAST one: clicking a side of a
@@ -45,7 +45,7 @@ ok(await page.locator('#nation-panel [data-ref="sacredBlock"]:not(.hidden)').cou
 ok(await page.locator('#nation-panel [data-ref="schoolsBlock"].hidden').count() === 1,
   'and the Law and Its Readers is hidden — the Hasideans still hold the pious seat');
 {
-  // REGRESSION (§186): the High Priesthood offered itself to every seat at
+  // REGRESSION (§190): the High Priesthood offered itself to every seat at
   // court, so the Brothers' Captains — hill commanders — were on the ballot.
   const seats = await page.locator('#nation-panel [data-ref="sacred"] .np-seat-btn').allTextContents();
   ok(!seats.some((s) => /Captains/.test(s)),

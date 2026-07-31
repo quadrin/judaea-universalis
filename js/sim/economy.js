@@ -249,7 +249,7 @@ export function monthlySubsidies(ctx) {
     if (num(payer.treasury) <= -150) {
       if (s.from === g.playerTag || s.to === g.playerTag) {
         ctx.bus.emit('notify', {
-          title: s.reparation ? 'Reparations default' : 'A subsidy lapses',
+          title: s.reparation ? 'Reparations default' : s.aid ? 'The aid dries up' : 'A subsidy lapses',
           text: (payer.name || s.from) + ' can no longer pay ' + (taker.name || s.to) + '.',
           type: s.to === g.playerTag ? 'bad' : 'info',
         });
@@ -260,7 +260,7 @@ export function monthlySubsidies(ctx) {
     if (s.monthsLeft > 0) keep.push(s);
     else if (s.from === g.playerTag || s.to === g.playerTag) {
       ctx.bus.emit('notify', {
-        title: s.reparation ? 'Reparations paid in full' : 'A subsidy ends',
+        title: s.reparation ? 'Reparations paid in full' : s.aid ? 'The aid package ends' : 'A subsidy ends',
         text: 'The agreed flow from ' + (payer.name || s.from) + ' to ' + (taker.name || s.to) + ' is complete.',
         type: 'info',
       });

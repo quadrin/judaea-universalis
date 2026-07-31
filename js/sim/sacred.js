@@ -183,7 +183,7 @@ export function highPriest(ctx) {
 // with the price of seating them — the party gains, the others lose, because
 // there is one office.
 //
-// `priestly: false` is content's veto (SPEC §186). The first cut of this panel
+// `priestly: false` is content's veto (SPEC §190). The first cut of this panel
 // offered the office to every seat at court, which put the Brothers' Captains
 // and the House of Antipater on the list of candidates for the High
 // Priesthood — one a company of hill commanders, the other an Idumean family
@@ -273,7 +273,7 @@ export function pilgrimageIncome(ctx, tag) {
     }
     if (holy <= 0) return 0;
     // `pilgrimMult` is the ordinary modifier stream's handle on the festivals
-    // (SPEC §186): the water-drawing ruling, the ashes of the heifer, and a
+    // (SPEC §190): the water-drawing ruling, the ashes of the heifer, and a
     // breach with the priestly houses all reach the ascents through it, so the
     // player sees a doctrinal quarrel land on a number they watch every month.
     let v = holy * SACRED.pilgrimPerHolyDev * resolveTagMult(ctx, tag, 'pilgrimMult');

@@ -201,6 +201,10 @@ export function createWiki({ DEFINES, getCtx }) {
     // read straight from the bookmark that declares them.
     const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
+    // Financial aid (SPEC §186): the donor courts whose purses can be
+    // petitioned, from the same bookmark declaration the sim plays.
+    const donors = (b.financialAid && Array.isArray(b.financialAid.donors) ? b.financialAid.donors : [])
+      .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
     // The communities of the dispersion (SPEC §172), for the chapters that can
     // write to them, largest first. Read straight from the same table the map
     // reads, so the Compendium cannot drift from what the game will actually
@@ -274,6 +278,9 @@ export function createWiki({ DEFINES, getCtx }) {
         ${arsenals ? `<div class="wiki-sec">The arms market</div>
         <div class="wiki-dim">Aircraft and armor are imports. Only these arsenal courts build them at home; everyone else signs a weapons transfer agreement with one of them — opened at the supplier's regard, and cut by cooling, war, or embargo. The world beyond the frame sits in the ledger: click any flag there to open its court.</div>
         ${arsenals}` : ''}
+        ${donors ? `<div class="wiki-sec">The donor courts</div>
+        <div class="wiki-dim">Money can be asked for. Petition one of these courts from its own panel and, if its regard for you is high enough, a package sized to its purse flows for a year — Washington's is the deep one. Asking leaves a mark, one purse at a time, and only war or an embargo stops a granted package early.</div>
+        ${donors}` : ''}
         ${communities ? `<div class="wiki-sec">The communities of the dispersion</div>
         <div class="wiki-dim">On the map, not beyond it. Click the province they live in to write to them — for letters, for silver, for a word with their patrons, or for their sons. Every one of them lives under somebody else's law.</div>
         ${communities}` : ''}`,

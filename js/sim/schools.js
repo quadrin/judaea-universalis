@@ -1,4 +1,4 @@
-// Judaea Universalis — the quarrel of the two schools (SPEC §186). DOM-free.
+// Judaea Universalis — the quarrel of the two schools (SPEC §190). DOM-free.
 //
 // §34 gave the court parties an approval bar each and a lever to raise it.
 // That is the right engine for five estates who want five different things,

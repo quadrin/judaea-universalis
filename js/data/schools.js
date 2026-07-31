@@ -1,4 +1,4 @@
-// Judaea Universalis — the quarrel of the two schools (SPEC §186). Content
+// Judaea Universalis — the quarrel of the two schools (SPEC §190). Content
 // package: zero imports, read by js/sim/schools.js and nothing else.
 //
 // WHAT WAS MISSING. The Pharisees and the Sadducees were in this game as two
@@ -246,7 +246,7 @@ export const READING = {
   },
 };
 
-// What the two houses do to a realm TOGETHER (SPEC §186). The court states are
+// What the two houses do to a realm TOGETHER (SPEC §190). The court states are
 // read off both approvals at once, which is the thing five separate estate
 // bars structurally could not say: that a crown with one devoted party and one
 // broken one is in a WORSE position than a crown both parties merely tolerate.
