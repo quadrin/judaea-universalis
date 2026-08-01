@@ -11530,7 +11530,182 @@ wide ribbon, and a court's holdings should read as subordinate to its name.
   apart, the parts in the subordinate tier; zoom past 1.1 and the province
   names come back with no part labels over them.
 
-## 200. Every chapter argues about something
+## 200. The trees grow to the size of their chapters, and the clients get their own wars
+
+§196 ended with the principals at 13–18 nodes and the client chairs at
+11–14, and then somebody put a screenshot of EU4's Prussian tree next to
+one of ours. Thirty medallions against fifteen; the Commonwealth's sixty
+against our eighteen. The comparison is not a vanity metric — it is a
+statement about how much of a chapter the panel actually describes. The
+167 chapter runs a hundred and seventy-three years and had seven
+objectives in it. The Bar Kokhba chapter runs to 425 and stopped asking
+for anything after the third century of its span. A tree that finishes
+before the chapter does is a tree that stops being a plan and becomes a
+receipt.
+
+So: **every playable side grown to 18–23 nodes** (278 across the fifteen
+playable sides, up from 201), **five new forks** with ten new cards behind them,
+and — the thing the roster has never once offered — **two wars of
+independence a player can declare**.
+
+### The wars a client can start
+
+`vassalIndependence` (§61) has always let an AI vassal that despises its
+overlord sever the bond and declare; no card anywhere let a *player* do
+it. Two chapters had the moment sitting unused. Agrippa II held his crown
+from Rome through the one year Rome was eating its own emperors — Galba
+in the Forum, Otho by the Praetorians' leave, Vitellius over the Alps,
+and every cohort that could garrison Batanea besieging Jerusalem or
+marching on Italy. Adiabene held its crown from a King of Kings who spent
+most of the first century fighting his own nobility, with the tribute
+convoy two seasons unacknowledged. **The Client's War** and **The Crown
+Between the Rivers** are those two moments, and both do exactly what the
+AI rule does, in the same order: the bond breaks *first*
+(`overlord = null`), then `declareWar(…, 'independence')`, so the
+overlord can only put the yoke back on through the subjugation clause at
+the table. The loyal road is not a null option — it pays a permanent
+confirmed-client modifier and raises the overlord's regard past devotion
+— and each terminal reads the road back a decade later, when the Flavian
+clerks audit the East and the caravan lords audit the crown.
+
+What the declaration then does is the engine's own arithmetic, and it is
+better than anything scripted for it: played forward three years, Agrippa's
+war of independence is absorbed into the war Rome is already fighting, and
+the ledger reads `AGR −2, JUD +2, ROM −2`. The last Herodian ends the pass
+as a co-belligerent of the rising he spent the historical war helping to
+suppress, because that is what the war-merging rule says happens when two
+courts declare on the same empire in the same decade. Nothing had to be
+written to make that story; it fell out of `declareWar`.
+
+### Three decisions the chapters never dealt
+
+**The diadem** (167): the house governed for two generations as high
+priests and then Aristobulus put on a crown, and the quarrel about
+whether one head may wear the mitre and the diadem outlived the dynasty
+that started it. The fork takes the crown, or leaves the linen band in
+its box and governs a kingdom in everything but the word — in which case
+the Pharisees never rise, because there is nothing to rise against.
+**The testament** (40): Herod rewrote his will six times and the last
+version divided the realm in three, Augustus ratified it, Archelaus lost
+his third within a decade, and the province of Judaea is what the
+division produced. One heir or three tetrarchs — three being, as the
+imperial secretaries note helpfully at dinner, three men Rome can replace
+one at a time. **The apostate's offer** (132): the chapter runs to 425,
+which means it contains the one moment in seven centuries when the Roman
+state itself proposed to rebuild the Temple. Julian ordered it in 363 to
+win an argument with the Galileans, the works began under Alypius, and
+the project died in Persia with the emperor four months later. The game
+had never dealt it. Take the imperial funds and the imperial architect
+and have the House standing for reasons entirely somebody else's, or
+refuse in three lines that get copied for eight hundred years.
+
+### What the growth is made of
+
+Every new objective is the era's own record, not filler. 167 gets the
+Akra starved out, the embassy to a Senate that had never heard of this
+people, Idumea under the covenant, Simon's anchor on the coinage, the
+hired Pisidians, and Salome's nine quiet years. 66 gets the Third Wall
+that Rome made Agrippa stop building, the half-shekel of the world as a
+treasury, and the ships at Joppa given a harbour to shelter in. 132 gets
+the mint that dates the calendar, the academies out of the caves, the
+patriarch's office that outlived the war by two centuries, and the fixed
+reckoning — because a people that can be cut off from its own festivals
+has a frontier through the middle of it. 529 gets a Samaritan state with
+a treasury, a priesthood, the Jordan line and a census that refuses to be
+a footnote. 614 gets the desert frontier being assembled in the Hijaz
+while two empires bleed each other white. 1948 gets the absorption, the
+Water Carrier, the deterrent frontier, the boom, and the first Arab
+capital that deals with the state as a state.
+
+### Three bugs the growth walked into
+
+Writing content at this volume found three defects the suite could not see,
+and each one now has a check standing over it.
+
+**A stray comma is a hole, not a syntax error.** Moving the new cards into
+place left `},,` before a closing bracket in four packages — an *elision*,
+which JavaScript accepts silently. `filter` and `map` skip holes, so the
+obvious guard ("does any card come back undefined?") reported four clean
+arrays; `find` walks into them and hands `undefined` to its predicate. One
+misplaced comma per file took out five suites at once with stack traces
+pointing at innocent code twenty lines away, and the first two hours of
+diagnosis went into arrays that were, according to every measurement taken,
+perfectly fine. `smoke129` now walks every era chain by index (`i in chain`),
+which is the only test that sees a hole.
+
+**A card with both a date and a trigger has its trigger ignored.** All five
+terminals were written with `date` *and* `trigger`, so each would have fired
+on its calendar month whether or not the fork was ever answered — a verdict
+on a decision nobody made. `smoke74` has held that rule since §104 and it
+caught all five; they carry `minYear`/`maxYear` windows now, which is what
+the engine actually honours beside a trigger.
+
+**Cards appended to a package land inside its victory strand.** `smoke66`
+reads each chapter's strand as "the banner comment to the end of the file",
+so four fork terminals appended at the tail were being held to the strand's
+rule — nothing fires under a yoke or with the capital lost — which is right
+for a victory strand and wrong for a fork terminal whose whole job may be to
+report that the rising failed and the yoke went back on. The cards moved
+above the banner, where the chapter's ordinary body is.
+
+### The bug the growth was hiding, and the check that now hears it
+
+Writing conquest branches at this volume walked straight into a class of
+defect the suite could not see. **Every chapter folds the map its own
+way** — §47 merged Masada into Engedi and Machaerus into Medaba before
+Jannaeus built them, Tiberias is founded in 20 CE, Caesarea is Herod's to
+build — so a mission target that reads perfectly in the table can name a
+province its own chapter never seats. That mission is then uncompletable
+*for ever*, silently, and nothing in the suite would say so. Four of the
+new branches had it (167's Gerizim and its desert keys, both brothers'
+Galilee, Herod's own harbour) and they are repointed at ground those
+chapters actually have: Beth-Shean's gap, the Engedi shore and the
+Peraean crossing, Jotapata instead of a Tiberias that does not exist yet,
+and a Sharon-shore harbour built from Dora and Joppa.
+
+`smoke129` now resolves **every province every mission of every playable
+side names**, through `ctx.prov` — the same lookup `controls()` uses, so
+the §25 era renames and the `p.canon` aliases resolve rather than being
+reported as holes. Fifteen sides, every target seated. The first draft of
+that check compared display names and produced eight false positives in
+1948 alone, which is its own lesson: a guard that does not resolve the
+way the sim resolves is a guard that reports the sim as broken.
+
+- **Regression contract**: `smoke129` — the eleven principal counts, the
+  spare-column rule for roads and the five-column ceiling for everything,
+  one node per cell on every playable side, every §200 node declaring col
+  AND row, every named province live in its own chapter, the five forks
+  charted with both markers written and both terminals dealing two
+  answers, each entry writing exactly one marker per option and refusing
+  to deal twice, the independence rule live in both directions (bond
+  severed before the declaration, `cb === 'independence'`, regard
+  collapsed; and the loyal road leaving the bond and declaring nothing),
+  and the whole 167 branch paying when its world is built; plus the
+  elision guard — every era chain walked by index, because a hole is
+  invisible to `filter` and lethal to `find`. `smoke116` — 73 roads not
+  taken, the new markers in the completability worlds. `smoke74` — the
+  date-and-trigger rule, which caught all five terminals. `smoke66` — the
+  strand rule, which is why the new cards sit above the banner rather than
+  after it. `smoke79` — its 66 CE playthrough asserted that no band held
+  Jerusalem at the arbitrary month its thirty-year loop stopped on, which
+  is not the §112 claim; it now runs the burnout window out first and
+  asserts what §112 actually promises, which passes on both the old tree
+  and this one.
+  `smoke83` — 137 roads, ten new markers all written by live cards, no
+  new gaps. `smoke39` — the five terminals were caught single-optioned by
+  the v6.1 rule and now deal a real choice apiece (brief the audit or
+  answer when asked; swear the succession or let it stand on itself),
+  with the road-dependent settlement hoisted into a shared verdict
+  function so both options settle the same fork. The moved pins:
+  `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
+  (21 nodes with the cols/rows vectors extended), `smoke112` (21),
+  `smoke126` (the §196 chairs re-counted), `uitest2` (21 medallions,
+  verified in a real browser). `smoke16`'s raw index into the 132/614
+  tables still lands on the Third House at five, because every insertion
+  went in after it. On the tree merged with main's §197-§199 the battery
+  is 129 of 129 headless suites ALL PASS.
+
+## 201. Every chapter argues about something
 
 §190 built the quarrel engine for one quarrel — the Pharisees and the
 Sadducees — and then seven other chapters sat there with a Faith tab
@@ -11596,7 +11771,7 @@ reach further, because the office panel now appears at courts §190 never
 looked at: Herod's Idumean family and hired swords, and Antigonus'
 Parthian party, come off a ballot they were never eligible for.
 
-- **Regression contract**: `smoke121` grows a §200 section that walks all
+- **Regression contract**: `smoke121` grows a §201 section that walks all
   eight bookmarks — the declared quarrel is the one that convenes, both
   its sides are real seats of that court, the needle is labelled at both
   ends with the chapter's own names, every chapter opens *Unruled*, and

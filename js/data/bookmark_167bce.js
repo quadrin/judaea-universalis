@@ -388,7 +388,7 @@ export const BOOKMARK_167 = {
     ],
   },
 
-  // Whose reading of the Law each court administers (SPEC §190/§200). The
+  // Whose reading of the Law each court administers (SPEC §190/§201). The
   // Hasmonean pair arrive in this chapter in 140 BCE, when §127 hands the
   // court over from the Hasideans to the parties Josephus first names then;
   // the Seleucids argue about other things entirely.
@@ -840,6 +840,127 @@ export const BOOKMARK_167 = {
         check: (ctx) => eraTiers(ctx.game.tags.HAS) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { infl: 25, legitimacy: 15 }),
       },
+      // ── The state the revolt became (SPEC §197) ─────────────────────────
+      // This chapter runs to 6 CE: the whole Hasmonean state, from the hill
+      // bands to the kingdom Pompey ended. The objectives above win the war;
+      // these are what the dynasty did with the century it won.
+      {
+        id: 'hm_akra', name: 'The Citadel',
+        icon: 'tower', col: 1, row: 1, requires: ['hm_hills'],
+        desc: 'The Seleucid garrison in the Akra overlooks the Temple court and has done for '
+          + 'twenty years. It cannot be stormed; it can only be starved. Hold Jerusalem with '
+          + 'twelve thousand men in the field.',
+        rewardText: '"The Citadel Taken": +1 stability, −1 unrest in Jerusalem permanently.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HAS', 'Jerusalem') && totalMen(ctx, 'HAS') >= 12000,
+        reward: (ctx) => {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'the_citadel_taken', name: 'The Citadel Taken', months: -1, effects: { unrest: -1 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { stability: 1 });
+        },
+      },
+      {
+        id: 'hm_senate_letter', name: 'The Letter to the Senate',
+        icon: 'scroll', col: 1, row: 2, requires: ['hm_akra'],
+        desc: 'Judas sent Eupolemus and Jason to Rome and came home with a treaty of '
+          + 'friendship addressed to a people the Senate had never heard of. Reach Rome\'s '
+          + 'regard at +50 — the Republic writes to this house as to a nation.',
+        rewardText: '+30 influence points, +10 legitimacy.',
+        check: (ctx) => {
+          const rom = ctx.game.tags.ROM;
+          return ((rom && rom.opinion && rom.opinion.HAS) || 0) >= 50;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { infl: 30, legitimacy: 10 }),
+      },
+      {
+        id: 'hm_gerizim', name: 'The Gate Between the Valleys',
+        icon: 'mountain', col: 1, row: 3, requires: ['hm_senate_letter'],
+        desc: 'Scythopolis holds the one gap where the Jordan valley opens into the plain, '
+          + 'and whoever sits in it decides whether Judaea and Galilee are one country or two '
+          + 'with a Greek city between them. Take Beth-Shean.',
+        rewardText: '+75 talents, +15 governance points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HAS', 'Scythopolis'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { treasury: 75, gov: 15 }),
+      },
+      {
+        id: 'hm_idumea', name: 'Idumea Under the Covenant',
+        icon: 'altar', col: 0, row: 4, requires: ['hm_learn_from_kings'],
+        desc: 'Hyrcanus took the southern hill country and gave its people the choice the '
+          + 'chronicles record without comment: the covenant, or the road out. Hold Hebron '
+          + 'and Adora — and inherit the Idumean houses, whatever they cost later.',
+        rewardText: '"The Idumean Levies": +12% manpower permanently.',
+        check: (ctx) => ['Hebron', 'Adora'].every((n) => ctx.helpers.controls(ctx, 'HAS', n)),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'idumean_levies', name: 'The Idumean Levies', months: -1, effects: { manpowerMult: 1.12 },
+        }),
+      },
+      {
+        id: 'hm_galilee', name: 'Galilee Brought In',
+        icon: 'grain', col: 1, row: 4, requires: ['hm_gerizim'],
+        desc: 'The north is Jewish in patches and Ituraean in the rest of it, and every road '
+          + 'from Ptolemais to the lake belongs to somebody else. Hold Sepphoris and '
+          + 'Gischala, and the Galilee becomes a country this state can raise soldiers in.',
+        rewardText: '+2,500 manpower, +15 martial points.',
+        check: (ctx) => ['Sepphoris', 'Gischala'].every((n) => ctx.helpers.controls(ctx, 'HAS', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { manpower: 2500, mar: 15 }),
+      },
+      {
+        id: 'hm_own_port', name: 'A Harbour of Our Own',
+        icon: 'ship', col: 2, row: 4, requires: ['hm_covenant_renewed'],
+        desc: 'Simon took Joppa and put an anchor on the coinage, which is a landlocked '
+          + 'people announcing that it has stopped being one. Hold Joppa and Jamnia.',
+        rewardText: '"The Anchor on the Coins": +10% trade permanently, +50 talents.',
+        check: (ctx) => ['Joppa', 'Jamnia'].every((n) => ctx.helpers.controls(ctx, 'HAS', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'anchor_on_the_coins', name: 'The Anchor on the Coins', months: -1, effects: { tradeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { treasury: 50 });
+        },
+      },
+      {
+        id: 'hm_desert_keys', name: 'The Keys of the Desert',
+        icon: 'walls', col: 0, row: 5, requires: ['hm_idumea'],
+        desc: 'The shore of the salt sea at Engedi and the Peraean crossing at Gadora: the '
+          + 'country a dynasty holds when it wants to be able to lose Jerusalem and go on '
+          + 'existing. Take and hold both.',
+        rewardText: '"The Desert Marches": +1 stability, +5% morale permanently.',
+        check: (ctx) => ['Engaddi', 'Gadora'].every((n) => ctx.helpers.controls(ctx, 'HAS', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'the_desert_marches', name: 'The Desert Marches', months: -1, effects: { moraleMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { stability: 1 });
+        },
+      },
+      {
+        id: 'hm_hired_ranks', name: 'The Hired Ranks',
+        icon: 'helmet', col: 1, row: 5, requires: ['hm_galilee'],
+        desc: 'Every Hellenistic kingdom is a treasury that rents an army, and by Jannaeus\' '
+          + 'reign this one is too — Pisidians and Cilicians in the pay of a high priest. '
+          + 'Reach Military 7 — The Greek Art of War.',
+        rewardText: '"The Foreign Companies": +6% discipline permanently.',
+        check: (ctx) => (((ctx.game.tags.HAS || {}).tech || {}).mar | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'the_foreign_companies', name: 'The Foreign Companies', months: -1, effects: { disciplineMult: 1.06 },
+        }),
+      },
+      {
+        id: 'hm_queens_peace', name: 'The Queen\'s Peace',
+        icon: 'dove', col: 2, row: 5, requires: ['hm_own_port'],
+        desc: 'Salome Alexandra reigned nine years, made peace with the schools her husband '
+          + 'crucified, doubled the army and fought nobody. Bring the realm to +3 stability '
+          + 'and 80 legitimacy — a state that has stopped needing to win anything.',
+        rewardText: '"The Nine Quiet Years": +10% income and −0.5 unrest everywhere, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags.HAS || {};
+          return (t.stability || 0) >= 3 && (t.legitimacy || 0) >= 80;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'the_nine_quiet_years', name: 'The Nine Quiet Years', months: -1,
+          effects: { incomeMult: 1.1, unrestAll: -0.5 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The chapter's fork cards (SPEC §119), standing in the tree as
       // hypotheticals: each names a page history never wrote, the desc says
@@ -921,7 +1042,19 @@ export const BOOKMARK_167 = {
           && ctx.game.retiredChapters.some((r) => r && r.id === 'ev_royal_expedition'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { gov: 25, stability: 1 }),
       },
-    ],
+          {
+        id: 'hy_mitre_alone', name: 'The Mitre Alone', hypothetical: true,
+        fork: '167bce/the_diadem',
+        icon: 'scales', col: 3, row: 3,
+        desc: 'Govern a kingdom in everything but the word: reach the century in which every '
+          + 'neighbour is ruled by a diadem, and put the linen band back in its box. The '
+          + 'quarrel between the mitre and the crown that outlived the dynasty never starts, '
+          + 'because there is nothing for the schools to rise against.',
+        rewardText: '+2 stability, +40 governance points.',
+        check: (ctx) => anyFlag(ctx, 'priesthoodAlone'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HAS', { stability: 2, gov: 40 }),
+      },
+],
     SEL: [
       // The king's tree (SPEC §177): the war in Judaea down one side, the
       // kingdom's own housekeeping down the other, converging on the army

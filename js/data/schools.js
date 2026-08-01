@@ -1,4 +1,4 @@
-// Judaea Universalis — the religious quarrels (SPEC §190, §200). Content
+// Judaea Universalis — the religious quarrels (SPEC §190, §201). Content
 // package: zero imports, read by js/sim/schools.js and nothing else.
 //
 // WHAT WAS MISSING. §190 built this for one quarrel: the Pharisees and the

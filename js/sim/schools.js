@@ -1,6 +1,6 @@
-// Judaea Universalis — the religious quarrels (SPEC §190, §200). DOM-free.
+// Judaea Universalis — the religious quarrels (SPEC §190, §201). DOM-free.
 //
-// §190 built this for one quarrel and §200 made it every chapter's. The
+// §190 built this for one quarrel and §201 made it every chapter's. The
 // arithmetic below is unchanged and shared; which two seats are arguing, what
 // they are arguing about and what either answer costs all come from the
 // chapter's own entry in js/data/schools.js, resolved through the bookmark.
@@ -105,7 +105,7 @@ for (const q of Object.values(QUARRELS)) {
 
 function monthIndex(d) { return d.y * 12 + (d.m - 1); }
 
-// Which quarrel this court is having (SPEC §200). The bookmark maps a tag to a
+// Which quarrel this court is having (SPEC §201). The bookmark maps a tag to a
 // quarrel id — `schools: { HER: 'fence_and_gate' }` — because whose argument a
 // court is in is a fact about that court and belongs beside its estates. A
 // bookmark that declares nothing falls back to the Hasmonean pair, which is
@@ -632,7 +632,7 @@ export function schoolsReport(ctx) {
         // The fifth state is the absence of the other four, so it is named
         // from the quarrel's own two sides rather than from a fixed phrase —
         // "the houses coexist" is the right sentence in 140 BCE and a very
-        // strange one about an Israeli cabinet (SPEC §200).
+        // strange one about an Israeli cabinet (SPEC §201).
         key: '', name: 'Neither Side Owns the Chamber', good: false,
         text: seats.hi.name + ' and ' + seats.lo.name + ' are both still in the room.',
         blurb: 'Nothing extra either way — which is itself an achievement once the rulings start.',

@@ -44,23 +44,23 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  ok(v.length === 15, 'fifteen nodes (six objectives + the §179 curriculum + the §192 expansion + the §183/§192 roads not taken): ' + v.length);
+  ok(v.length === 21, 'twenty-one nodes (six objectives + the §179 curriculum + the §192/§197 expansion + the §183/§192 roads not taken): ' + v.length);
   // Only the chain's own root is workable among the era's objectives; the
   // §183 hypotheticals are standing invitations, so their roots open too.
-  ok(v[0].status === 'current' && v.slice(1, 10).every((m) => m.status === 'locked'),
+  ok(v[0].status === 'current' && v.slice(1, 16).every((m) => m.status === 'locked'),
     'only the root is workable among the objectives at start: ' + v.map((m) => m.status).join(','));
-  ok(v[10].hypothetical && v[10].status === 'current'
-    && v[11].status === 'locked' && v[12].status === 'locked'
-    && v[13].status === 'current' && v[14].status === 'current',
+  ok(v[16].hypothetical && v[16].status === 'current'
+    && v[17].status === 'locked' && v[18].status === 'locked'
+    && v[19].status === 'current' && v[20].status === 'current',
     'the hypothetical roots stand open (the §192 forks are roots too), the children wait: '
-    + v.slice(10).map((m) => m.id + '=' + m.status).join(','));
-  ok(v.slice(0, 10).every((m) => !m.hypothetical) && v.slice(10).every((m) => m.hypothetical),
+    + v.slice(16).map((m) => m.id + '=' + m.status).join(','));
+  ok(v.slice(0, 16).every((m) => !m.hypothetical) && v.slice(16).every((m) => m.hypothetical),
     'the roads not taken are flagged hypothetical, the objectives are not');
   ok(v[0].requires.length === 0 && v[1].requires.join(',') === 'jm_arm_the_nation',
     'requires resolved to ids');
   ok(v[1].requiresNames.join(',') === 'Arm the Nation', 'and to names for the tooltip');
-  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
-  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,0,1,2,3,4',
+  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,1,0,2,1,2,0,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
+  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,4,4,4,5,5,5,0,1,2,3,4',
     'rows derived one below the deepest parent (declared rows stick): ' + v.map((m) => m.row).join(','));
   ok(v.every((m) => m.icon), 'every node wears an icon');
 }

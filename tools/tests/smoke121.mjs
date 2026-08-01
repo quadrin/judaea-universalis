@@ -1,4 +1,4 @@
-// Headless regression — SPEC §190 and §200: the religious quarrels.
+// Headless regression — SPEC §190 and §201: the religious quarrels.
 //
 // The assertions this file exists for are the GATE and the TRADE. The gate:
 // a quarrel must arrive when its two sides arrive and not before, which in the
@@ -8,7 +8,7 @@
 // crown can rule six times and keep both constituencies is not a quarrel, it
 // is a menu.
 //
-// §200 made the system every chapter's, so the last section walks all eight
+// §201 made the system every chapter's, so the last section walks all eight
 // bookmarks: the declared quarrel is seated, both its sides are real seats of
 // that court, every ruling is a documented fork, and both poles are reachable.
 import { readFileSync } from 'fs';
@@ -112,9 +112,9 @@ function holdCourt(ctx, game, tag, hi, lo, months) {
 console.log('== the gate: the quarrel arrives when the houses do ==');
 {
   // The Hasmonean pair specifically: silent wherever they are not the two
-  // seats arguing, which after §200 means every chapter that has a quarrel of
+  // seats arguing, which after §201 means every chapter that has a quarrel of
   // its own — and 167 for its first twenty-seven years, until §127 hands the
-  // court over. Each chapter's OWN quarrel is walked in the §200 section below.
+  // court over. Each chapter's OWN quarrel is walked in the §201 section below.
   const EXPECT = {
     '167bce': false, // the Hasideans and the Hellenizers hold this court until 140
     '67bce': true, // both brothers seat both houses from the first month
@@ -374,7 +374,7 @@ console.log('== nothing here reaches an AI hand, and nothing here is authored so
   ok(!actions.issueRuling('omer', 'hi').ok, 'and no ruling can be given');
   ok(schools.leanOfLaw(ctx) === 0, 'and the Law leans nowhere');
 }
-console.log('== §200: every chapter has its own quarrel, and every quarrel is real ==');
+console.log('== §201: every chapter has its own quarrel, and every quarrel is real ==');
 {
   // Which court is having which argument, and where. This is the map the rest
   // of the section checks against the actual bookmarks — if a bookmark stops
@@ -513,7 +513,7 @@ console.log('== §200: every chapter has its own quarrel, and every quarrel is r
   ok(!/ascents/i.test(actions.getSchools().court.text), 'and the panel line says so too');
 }
 {
-  // The two seats §200 had to add, and what they are worth.
+  // The two seats §201 had to add, and what they are worth.
   const her = boot('40bce', { tag: 'HER' });
   run(her.ctx, 1);
   const seats = (her.bm.factions.HER || []).map((d) => d.id);

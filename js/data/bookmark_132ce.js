@@ -239,7 +239,7 @@ export const BOOKMARK_132 = {
     ],
   },
 
-  // Akiva's schools and the Nasi's war office (SPEC §200), which agreed for
+  // Akiva's schools and the Nasi's war office (SPEC §201), which agreed for
   // three years and are the two halves of every document the caves gave back.
   schools: { JUD: 'star_and_schools' },
 
@@ -569,6 +569,94 @@ export const BOOKMARK_132 = {
           effects: { hillDefBonus: 1 },
         }),
       },
+      // ── The three centuries after the war (SPEC §197) ───────────────────
+      // This chapter runs to 425. The objectives above fight Hadrian; these
+      // are what a state that survives him has to do with the Christianizing
+      // empire, the academies, and the longest span in the game.
+      {
+        id: 'j2_the_mint', name: 'The Mint of the Redemption',
+        icon: 'coins', col: 1, row: 4, requires: ['j2_third_temple'],
+        desc: 'The rising overstruck Roman denarii with the Temple façade and dated them by '
+          + 'the Redemption of Israel, which is a state announcing a calendar. Bank 400 '
+          + 'talents and make the coinage the country\'s own.',
+        rewardText: '"Year One of the Redemption": +10% income and +0.2 legitimacy a month, permanent.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 400,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'year_one_of_the_redemption', name: 'Year One of the Redemption', months: -1,
+          effects: { incomeMult: 1.1, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'j2_the_academies', name: 'The Academies Rebuilt',
+        icon: 'lamp', col: 2, row: 4, requires: ['j2_state_in_hiding'],
+        desc: 'Hadrian executed the teachers and banned the ordination, and the Law survived '
+          + 'in caves for a generation. Reach Influence 8 — the schools out of hiding, '
+          + 'endowed, and teaching in daylight.',
+        rewardText: '"The Schools in Daylight": −0.75 unrest everywhere, +25 governance points.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).infl | 0) >= 8,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_schools_in_daylight', name: 'The Schools in Daylight', months: -1,
+            effects: { unrestAll: -0.75 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+        },
+      },
+      {
+        id: 'j2_the_whole_land', name: 'The Whole Land',
+        icon: 'flag', col: 0, row: 4, requires: ['j2_ambush_doctrine'],
+        desc: 'Bar Kokhba\'s state governed the hill country and the chronicles will not say '
+          + 'how far it reached. Hold twenty provinces at once and settle the question the '
+          + 'documents left open.',
+        rewardText: '+150 talents, +2 stability.',
+        check: (ctx) => ctx.helpers.countControlled(ctx, 'JUD', {}) >= 20,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, stability: 2 }),
+      },
+      {
+        id: 'j2_the_patriarchs_house', name: 'The Patriarch\'s House',
+        icon: 'scroll', col: 2, row: 5, requires: ['j2_the_academies'],
+        desc: 'The Nasi\'s office outlived the war by two centuries and collected the '
+          + 'dispersion\'s tax with imperial sanction until the empire abolished it in 429. '
+          + 'Reach 85 legitimacy and +3 stability — an office the centuries cannot abolish.',
+        rewardText: '"The Office That Held": +0.3 legitimacy a month, +10% income, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return (t.legitimacy || 0) >= 85 && (t.stability || 0) >= 3;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_office_that_held', name: 'The Office That Held', months: -1,
+          effects: { legitimacyAdd: 0.3, incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'j2_the_calendar', name: 'The Calendar Fixed',
+        icon: 'star4', col: 1, row: 5, requires: ['j2_the_mint'],
+        desc: 'While the court proclaims the new moon by witnesses, every community outside '
+          + 'its reach depends on couriers who can be stopped. Reach Government 8 and publish '
+          + 'the reckoning — a people that can be cut off from its own festivals is a people '
+          + 'with a frontier through the middle of it.',
+        rewardText: '"The Fixed Reckoning": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_fixed_reckoning', name: 'The Fixed Reckoning', months: -1,
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'j2_the_sea_and_the_road', name: 'The Sea and the Road',
+        icon: 'shipyard', col: 0, row: 5, requires: ['j2_the_whole_land'],
+        desc: 'A state in the hills can be blockaded by anyone who owns the coast. Hold Joppa '
+          + 'and Caesarea Maritima — the harbour the governors ruled from, and the port the '
+          + 'rising never reached.',
+        rewardText: '"The Coast Taken": +15% trade permanently, +100 talents.',
+        check: (ctx) => ['Joppa', 'Caesarea Maritima'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_coast_taken', name: 'The Coast Taken', months: -1, effects: { tradeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
+        },
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -628,7 +716,19 @@ export const BOOKMARK_132 = {
         check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20 }),
       },
-    ],
+          {
+        id: 'hy_apostates_offer', name: 'The Apostate\'s Offer', hypothetical: true,
+        fork: '132ce/the_apostates_offer',
+        icon: 'temple', col: 4, row: 1,
+        desc: 'Survive to 363 and a Roman emperor will offer to rebuild the Temple — with '
+          + 'imperial funds and an imperial architect — to win an argument with the '
+          + 'Galileans. Reach the year the offer is made and answer it: the works on the '
+          + 'platform, or a refusal copied for eight hundred years.',
+        rewardText: '+30 legitimacy, +50 influence points.',
+        check: (ctx) => anyFlag(ctx, 'julianTemple', 'julianRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 30, infl: 50 }),
+      },
+],
     ROM: [
       {
         id: 'r2_contain', name: 'Contain the Rising',
@@ -825,7 +925,19 @@ export const BOOKMARK_132 = {
         check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 20, manpower: 1000 }),
       },
-    ],
+          {
+        id: 'hy_apostates_offer', name: 'The Offer From the West', hypothetical: true,
+        fork: '132ce/the_apostates_offer',
+        icon: 'temple', col: 4, row: 1,
+        desc: 'If the house between the rivers is still standing in 363, it will hear that a '
+          + 'Roman emperor has offered to rebuild the House in Jerusalem — and that the '
+          + 'answer was given without Arbela being asked. The silver crosses either way; '
+          + 'what changes is what it is crossing toward.',
+        rewardText: '+60 talents, +20 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'julianTemple', 'julianRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 20 }),
+      },
+],
   },
 
   // Who actually lives here (SPEC §56, §104). The hill country is homogeneous

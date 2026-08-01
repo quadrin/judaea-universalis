@@ -1022,7 +1022,7 @@ export const BOOKMARK_1948 = {
       'Lose: the Legion broken west of the river.',
     ],
   },
-  // The letter of June 1947 (SPEC §200), and everything the state postponed by
+  // The letter of June 1947 (SPEC §201), and everything the state postponed by
   // signing it. Jordan's court is not having this argument.
   schools: { ISR: 'status_quo' },
 
@@ -1030,7 +1030,7 @@ export const BOOKMARK_1948 = {
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {
     ISR: [
-      // The seat this chapter was missing (SPEC §200). On 19 June 1947
+      // The seat this chapter was missing (SPEC §201). On 19 June 1947
       // Ben-Gurion, Rabbi Fishman and Greenbaum wrote to Agudat Yisrael
       // promising four things — the sabbath as the state's day of rest, kosher
       // state kitchens, rabbinical jurisdiction in marriage, and autonomy for
@@ -1493,6 +1493,104 @@ export const BOOKMARK_1948 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Hebron')
           && ctx.helpers.controls(ctx, 'ISR', 'Bethlehem'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, manpower: 1000 }),
+      },
+      // ── The state after the war (SPEC §197) ─────────────────────────────
+      // The chapter runs to 2000. The objectives above win 1948; these are
+      // the first five decades — the absorption, the water, the deterrent
+      // frontier, the economy and the peace treaties.
+      {
+        id: 'i_the_ingathering', name: 'The Ingathering',
+        icon: 'diaspora', col: 0, row: 4, requires: ['i_one_army'],
+        desc: 'The state doubled its population in three years out of the camps of Europe and '
+          + 'the cities of the Arab world, and housed most of it in tents. Reach +2 stability '
+          + 'with 400 in the treasury — absorb them without breaking.',
+        rewardText: '"The Absorption": +15% growth and +12% manpower, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.ISR || {};
+          return (t.stability || 0) >= 2 && (t.treasury || 0) >= 400;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_absorption', name: 'The Absorption', months: -1,
+          effects: { growthMult: 1.15, manpowerMult: 1.12 },
+        }),
+      },
+      {
+        id: 'i_the_water', name: 'The Water Carrier',
+        icon: 'granary', col: 1, row: 4, requires: ['i_state_that_thinks'],
+        desc: 'The Negev is half the country and none of the rainfall. Reach Government 8 and '
+          + 'bank 500 talents: the National Water Carrier is the largest thing this state '
+          + 'builds in its first twenty years, and it is what makes the south a place.',
+        rewardText: '"The Carrier": +12% income and +10% growth, permanent.',
+        check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).gov | 0) >= 8
+          && ((ctx.game.tags.ISR || {}).treasury || 0) >= 500,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_carrier', name: 'The Water Carrier', months: -1,
+          effects: { incomeMult: 1.12, growthMult: 1.1 },
+        }),
+      },
+      {
+        id: 'i_the_deterrent_frontier', name: 'The Frontier That Deters',
+        icon: 'plane', col: 2, row: 4, requires: ['i_gaza'],
+        desc: 'The 1949 lines are nine miles wide at the waist and every capital in the '
+          + 'region knows the number. Reach Military 8 with 60,000 under arms — the frontier '
+          + 'holds because crossing it is arithmetic nobody likes.',
+        rewardText: '"The Standing Army": +10% discipline and +8% morale, permanent.',
+        check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).mar | 0) >= 8
+          && totalMen(ctx, 'ISR') >= 60000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_standing_army', name: 'The Standing Army', months: -1,
+          effects: { disciplineMult: 1.1, moraleMult: 1.08 },
+        }),
+      },
+      {
+        id: 'i_the_second_decade', name: 'The Economy of the Second Decade',
+        icon: 'market', col: 1, row: 5, requires: ['i_the_water'],
+        desc: 'Austerity, ration books and a currency nobody wanted, and then — somehow — an '
+          + 'industrial economy. Bank 800 talents: the decade in which the state stops being '
+          + 'a relief operation.',
+        rewardText: '"The Boom": +15% income permanently, +1 stability.',
+        check: (ctx) => ((ctx.game.tags.ISR || {}).treasury || 0) >= 800,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'the_boom', name: 'The Boom', months: -1, effects: { incomeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { stability: 1 });
+        },
+      },
+      {
+        id: 'i_a_treaty_with_a_neighbour', name: 'A Treaty With a Neighbour',
+        icon: 'dove', col: 0, row: 5, requires: ['i_the_ingathering'],
+        desc: 'Armistice lines are not peace and everyone signing them in 1949 said so. Bring '
+          + 'any neighbouring court to +100 regard — the first Arab capital that deals with '
+          + 'this state as a state changes what the region is.',
+        rewardText: '"Recognised": +0.3 legitimacy a month and −0.75 unrest everywhere, permanent.',
+        check: (ctx) => {
+          const g = ctx.game;
+          return ['EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU'].some((k) => {
+            const t = g.tags[k];
+            return !!t && t.alive !== false && ((t.opinion && t.opinion.ISR) || 0) >= 100;
+          });
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'recognised', name: 'Recognised', months: -1,
+          effects: { legitimacyAdd: 0.3, unrestAll: -0.75 },
+        }),
+      },
+      {
+        id: 'i_the_state_at_fifty', name: 'The State at Fifty',
+        icon: 'star8', col: 2, row: 5, requires: ['i_the_deterrent_frontier'],
+        desc: 'Half a century after the declaration in the museum hall on Rothschild '
+          + 'Boulevard: reach 90 legitimacy and +3 stability, and the question stops being '
+          + 'whether this country survives and becomes what it is for.',
+        rewardText: '"Fifty Years": +10% income, +0.25 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.ISR || {};
+          return (t.legitimacy || 0) >= 90 && (t.stability || 0) >= 3;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'fifty_years', name: 'Fifty Years', months: -1,
+          effects: { incomeMult: 1.1, legitimacyAdd: 0.25 },
+        }),
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers

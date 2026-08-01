@@ -225,8 +225,14 @@ console.log('== §112: and the 66 CE chapter reaches an ending ==');
   }
   ok(!stranded.length, 'and no province is held past the ceiling ('
     + (stranded.join(', ') || 'none') + ')');
+  // The claim is that a band holding Jerusalem is eventually ANSWERED, not
+  // that none is holding it at the arbitrary month the loop stops on. A
+  // rising that began inside the ceiling window is the burnout rule working,
+  // so let it run out the way the §112 block above does before judging.
+  months(ctx, game, DEFINES.REVOLT.rebelHoldMaxMonths + 12);
   ok(jer.controller !== 'REB' || jer.owner !== 'JUD',
-    'Jerusalem is not still in the hands of a band nobody ever answered');
+    'Jerusalem is not still in the hands of a band nobody ever answered ('
+    + jer.owner + '/' + jer.controller + ', held ' + (jer.rebelHeldMonths || 0) + ' months)');
 }
 function num(v) { return Number.isFinite(+v) ? +v : 0; }
 

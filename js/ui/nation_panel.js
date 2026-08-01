@@ -1063,7 +1063,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refs.schoolsBlock.classList.toggle('hidden', !rep);
     if (!rep) return;
     // Each chapter's quarrel names itself: The Fence and the Gate under Herod,
-    // The Star and the Schools in 132, The Status Quo in 1948 (SPEC §200).
+    // The Star and the Schools in 132, The Status Quo in 1948 (SPEC §201).
     setText(refs.schoolsTitle, rep.title || 'The Law and Its Readers');
 
     // ── the needle: the same instrument the doctrine axes use, because it is

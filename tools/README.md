@@ -1103,3 +1103,96 @@ uitest37, uitest38 (its §188 section rewritten to the split), uitest41
 (new) — all come back ALL PASS on SwiftShader with zero page errors. On
 the tree merged with §195 and §196, the battery is **127 of 127
 headless suites ALL PASS**.
+
+Since §200 (the trees grow to the size of their chapters): every playable
+side out to 18–23 mission nodes — 278 across the fifteen playable sides, up
+from 201 — plus five new forks with ten new cards, including the two wars of independence
+the roster never offered (Agrippa against Rome in the year of the four
+emperors, Adiabene against the King of Kings). Both follow the §61 vassal
+rule exactly: the bond severs first, then `declareWar(…, 'independence')`,
+so the overlord can only restore the yoke through the subjugation clause.
+The other three forks are the diadem (167), Herod's testament (40) and
+Julian's offer to rebuild the Temple in 363 (132).
+
+The pass found four defect classes the suite could not previously see.
+Chapters fold the map their own way (§47 merges, era foundings), so a
+mission naming a province its own chapter never seats is uncompletable for
+ever, silently — four new branches had it and are repointed at ground those
+chapters have, and `smoke129` now resolves every province every mission of
+every playable side names through `ctx.prov`, the same lookup `controls()`
+uses, so era renames and `p.canon` aliases resolve instead of reading as
+holes. A stray comma before a closing bracket is an ELISION rather than a
+syntax error: `filter` and `map` skip holes silently while `find` walks into
+one and hands `undefined` to its predicate, so one misplaced comma in each
+of four packages took out five suites with stack traces pointing at innocent
+code — `smoke129` now walks every era chain by index, which is the only
+check that sees a hole. `smoke74`'s date-and-trigger rule caught all five
+new terminals (a card with both has its trigger silently ignored, so each
+would have fired on its month whether or not the fork was answered); they
+carry era windows now. And `smoke66` reads a chapter's victory strand as
+"banner to end of file", so cards appended at the tail inherit the strand's
+sovereign-and-capital rule — the new fork terminals moved above the banner,
+where the chapter body is.
+
+Measured against the parent commit, 8-year harness on all eight bookmarks:
+the anomaly set is exactly the documented accepted families and nothing
+else — `67 SEL DEAD`, `40 OSR/HER/ATG BLEEDING`, `529 JUD DEAD + SAM
+DEBT-SPIRAL` (the v6.9 self-limiting spiral), the other five clean — with
+zero stderr on every run. The new thresholds sit past what an AI reaches in
+an eight-year window, so the trees grew reasons for a player without moving
+the AI's furniture.
+
+`smoke129` is the new contract; `smoke39` caught the five new terminals
+single-optioned before any of it ran (v6.1: anything the player answers
+offers at least two answers) and they now deal a real choice apiece. The
+moved pins: `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
+(21 nodes, cols/rows vectors extended), `smoke112` (21), `smoke116` (73
+roads not taken), `smoke126` (the §196 chairs re-counted), `uitest2` (21
+medallions). On the tree merged with main's §197-§199 the battery is **129 of 129 headless suites ALL PASS**, their smoke127 and smoke128
+and this section's smoke129 all included.
+
+---
+
+## §201 — every chapter argues about something
+
+§190 built the quarrel engine for the Pharisees and the Sadducees and left
+seven chapters with a Faith tab that showed an expectation gauge, a pilgrim
+road and nothing about the argument each of them is actually about. The
+engine is unchanged; the content became a table of quarrels keyed by id,
+and each bookmark maps its courts to one (`schools: { HER: 'fence_and_gate' }`).
+The poles were renamed `oral`/`written` to `hi`/`lo`, matching the doctrine
+axes — in 1948 neither side is an oral tradition.
+
+Seven quarrels: the Hasmonean pair (167 from 140 BCE, both brothers in 67),
+Herod's Sanhedrin against his imported priesthood, the offering for Caesar
+and what followed it in 66, Akiva's schools against the Nasi's war office in
+132, the Samaritan Council of Seven against the Gerizim priesthood in 529,
+the academies against a restored altar in 614, and the letter of June in
+1948. Two courts had no second religious seat and both absences were bugs:
+Herod's roster was the one court in the game where the altar had no voice,
+in the reign that rebuilt the Temple, and 1948 had three secular seats and
+nobody who could have signed the status quo letter. They gain **the House of
+Boethus** and **the Religious Bloc**, with estate ground and — because §197
+requires every seated party to be askable — authored asks apiece.
+
+Two latent Hasmonean assumptions came out with the generalization, both now
+regression-tested: the shared breach line charged `pilgrimMult` against
+ascents a Temple-less chapter does not have (a quarrel may now override the
+shared effects and text, and 1948 does), and the office branch would have
+docked an Israeli cabinet legitimacy every month for not appointing a High
+Priest — it is gated on §169's own Temple test now, which is the same
+anachronism that gate was built for arriving by a different door. The
+`priestly: false` sweep also reached further, because the office panel now
+appears at courts §190 never looked at: Herod's Idumean family and hired
+swords and Antigonus' Parthian party come off a ballot they were never
+eligible for.
+
+`smoke121` is the contract, grown a §201 section that walks all eight
+bookmarks — the declared quarrel convenes, both its sides are real seats of
+that court, the needle is labelled at both ends with the chapter's own
+names, every chapter opens *Unruled*, no ruling id collides across chapters,
+and ruling every dispute one way reaches the pole in every quarrel.
+`uitest40` drives two chapters in a real browser: the Hasmonean quarrel in
+167 and the Status Quo in 1948, two headings and two sets of poles. Merged
+with main's §197-§200 the battery is **129 of 129 headless suites ALL
+PASS**, `smoke127`, `smoke128` and `smoke129` all included.

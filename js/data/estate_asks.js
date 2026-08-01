@@ -112,7 +112,7 @@ export const ESTATE_ASKS = {
     { kind: 'blessing', name: 'The Court Gives Its Sanction', text: 'Seventy-one judgments have weight; delivered for the crown, they are legitimacy in its purest coinage.' },
     { kind: 'calm', name: 'The Law Courts Sit', text: 'Justice seen in every gate is the cheapest garrison the country has.' },
   ],
-  // The two seats §200 added, which this table's own contract requires be
+  // The two seats §201 added, which this table's own contract requires be
   // authored: a party with ground is a party that can be asked. Herod's
   // Alexandrian priesthood has an office and money and no villages, so it
   // gives exactly what such a house gives — the altar's word, and silver.
