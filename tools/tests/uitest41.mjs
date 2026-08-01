@@ -1,6 +1,6 @@
-// UI verification — SPEC §195: the estates can be asked, in a real browser.
+// UI verification — SPEC §196: the estates can be asked, in a real browser.
 //
-// The headless suite (smoke125) proves the arithmetic; this one proves the
+// The headless suite (smoke126) proves the arithmetic; this one proves the
 // three things only a browser can:
 //
 //   1. The court renders the new anatomy — every estate row carries its

@@ -11122,6 +11122,80 @@ start is 40-50, so the men have to be earned across years of standing.
   Rome-hosted additions refuse silver at 66 CE opening standing; and no new
   community will send men on day one, at 66 CE or in 1948.
 
+## 195. A community with no cell is written to from its host's own court
+
+§194 widened the sea and stopped at the map's edge, and the 1948 chapter's
+two biggest hosts sit past it. England is ON the map — Londinium is a live
+cell named London — but its community's window opens at the 1656
+Resettlement, twelve centuries after the last chapter that could have
+clicked it, so §194's sweep never reached it. And the United States is not
+on the map at all: the frame ends at the Atlantic, and Truman's court is an
+off-map seat in the ledger (§180) — which in 1948 hosts **the largest Jewish
+community there has ever been**, the one that filled the appeal, ran the
+procurement network, crewed Machal and had Truman's ear. A dispersion model
+of 1948 without American Jewry is not a model of 1948.
+
+**The seat is the new idea; everything else is §172 unchanged.** A diaspora
+entry now names exactly one seat: `prov` (a cell, as before) or `tag` (a
+court — SPEC §195). A court-hosted community stores its standing on the host
+tag the way a cell community rides its province, drifts on the same monthly
+rule toward the same target arithmetic (`standingTargetFor` — the host is
+named instead of read off an owner), offers the same four asks priced by the
+same table, and answers the same crown test: Jewish, human, alive. Silver is
+dev-pegged (§176) and a court has no cell to read, so a tag entry carries a
+stand-in `dev` — America's is 40, the richest host on the list, pricing one
+gathering at 80 talents on the five-year clock: real money beside §186's
+government credits without double-writing them, because the appeal and the
+Export-Import Bank were different purses in fact. The reprisal roll stands
+too, and lands where a reprisal can land: a cell community's province takes
+the unrest; a court community pays on the ledger — standing, and the host's
+regard — which is what the seized ships and indicted buyers of the
+procurement network actually cost. Two entries use it: **The Jews of London**
+(Londinium, size 3, from 1656 — an ordinary cell seat whose window simply
+starts late) and **The Jews of America** (tag USA, size 5 — the one peer
+Alexandria ever gets, from 1880).
+
+**The panel is where §180 already keeps an off-map power's envoys.** A
+foreign court's Abroad tab grows a **Dispersion** section, Jewish crowns
+only (the sim returns null for everyone else and the section hides): a
+court-hosted community renders its full §172 block there — standing bar,
+drift target, the four asks as buttons — because there is no cell to click;
+a community living on that court's soil renders as a row naming it and its
+standing, and clicking the row runs the same selection a map click makes, so
+the nation panel closes and the province panel's existing block does the
+work. Nothing is written twice. The section is generic, which is the quiet
+payoff: Attlee's Britain lists London beside **Tripoli — because the
+British Military Administration really did hold Tripolitania in 1948** —
+France lists Marseille, Tunis, Constantine and Morocco, and in 66 CE Rome's
+own panel becomes a census of the communities the revolt is gambling with.
+
+**The Machal exception, deliberately.** §194 pinned that no new community
+sends men on day one. America does: it opens at 60, past the volunteer bar,
+because the flyers and gunners of 1948 really did come off those docks while
+the State Department's embargo stood. It is a single shot — the ask spends
+20 standing, the recovery is years, and the clock is 48 months — and it is
+the entry's whole opening argument: 2,100 men, once, when the war is new.
+Everything else obeys the §194 envelope: London opens at 45 under Bevin's
+government and will not send men or silver on day one; America's silver is
+80 talents once per five years against a 28-talent monthly gross; the
+intercession is +30 regard with Washington on a three-year clock, priced at
+15 influence and a 20% chance of scandal — a slow historical lever toward
+§186's aid bar and the arms threshold, not a faucet. And the all-AI harness
+still cannot see any of it: `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after, anomalies and all.
+
+- **Regression contract**: `smoke125` — the two windows touch 1948 and no
+  other chapter; the tag seat answers the nation panel with provId 0 and
+  four asks; silver is the stand-in dev × size; Machal arrives on day one
+  and cannot be repeated; London refuses its sons; a forced reprisal drops
+  Washington's regard and touches no province anywhere; the diaspora report
+  addresses America by its host; Egypt's letters are refused at the door;
+  and the panel wiring (Dispersion section, `askTagCommunity` buttons, jump
+  rows through `setSelectedProv`, the Compendium's "under" label) is pinned
+  at the source. `smoke124` — the §194 pins re-pinned for the two new seats
+  (37 entries, exactly one seat each). `smoke109`/`smoke110`/`smoke106` —
+  unchanged and green.
+
 - **Regression contract**: `smoke124` — every entry's cell exists on the map
   (the table finally has a typo guard), the fifteen windows are pinned date
   by date, the Punic gap holds (no community under the 167 chapter's living
@@ -11135,7 +11209,7 @@ start is 40-50, so the men have to be earned across years of standing.
   `smoke110`, `smoke106` — unchanged and green: the east's dates and the
   ask machinery are exactly what they were.
 
-## 195. The estates can be asked
+## 196. The estates can be asked
 
 §167 gave every party ground: a strength in every province, an influence
 share at court, a colour on the estates mapmode. And then it spent all of it
@@ -11149,7 +11223,7 @@ appeased, offended and fought over, and they could never be **asked**.
 
 ### Favor is a bank, approval is a mood
 
-`t.estateFavor` (SPEC §195, `js/sim/factions.js`) rides beside the approval
+`t.estateFavor` (SPEC §196, `js/sim/factions.js`) rides beside the approval
 table and heals beside it: 0-100 per seated party, seeded at 10, inherited
 through `succeeds` like the mood is (§127 — the crown's credit with the
 Hasideans did not expire when the record started calling them Pharisees).
@@ -11200,7 +11274,7 @@ hear the crown — favor above the ask's price, and the degenerate cases
 Player-only, like everything else at the court (§33/§34): AI realms keep
 their politics offstage, and the harness cannot feel any of it.
 
-- **Regression contract**: `smoke125` — the bank seeds, fills by band at
+- **Regression contract**: `smoke126` — the bank seeds, fills by band at
   the pinned rates, drains under hostility and survives a save round-trip;
   every authored ask pair is valid (known kinds, no duplicate kind in a
   pair, every bookmark id covered); the ask spends exactly its price, pays
@@ -11211,7 +11285,7 @@ their politics offstage, and the harness cannot feel any of it.
   table at all. `smoke18` — §81's ladder and §167's influence factor,
   unchanged and green beside the new fields.
 
-## 196. The reforms come home to the Crown
+## 197. The reforms come home to the Crown
 
 §188 moved the whole ideas block — the three universal reform trees AND the
 chapter's Ideas of the Age — onto Coin under the Technology ladders, and for
@@ -11258,6 +11332,6 @@ chapter.
   every bookmark) holds verbatim. `uitest38` — the browser's bounding-box
   answer: reforms visible on Crown with three buy buttons, era ideas
   visible on Coin BELOW the ladders, neither visible on the other's tab.
-  `uitest41` — the §195 court: the favor row and both ask buttons render
+  `uitest41` — the §196 court: the favor row and both ask buttons render
   per estate, a banked ask spends and toasts, and "Their ground" flips the
   map to the estates mode with the bar's lit button following.

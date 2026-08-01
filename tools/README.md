@@ -301,12 +301,12 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
-`smoke125.mjs` owns the SPEC §195 estate favor bank and the asks (the seed,
+`smoke126.mjs` owns the SPEC §196 estate favor bank and the asks (the seed,
 the band rates, the one-object promise/payment contract, the ground scaling
 measured by handing the crown the coast, the gates, the AI silence).
-`smoke119.mjs` was rewritten in place to hold §196's split — the reform
+`smoke119.mjs` was rewritten in place to hold §197's split — the reform
 trees on Crown, the Ideas of the Age with the ladders — keeping §188's
-all-bookmark audit verbatim. `uitest41.mjs` drives the §195 court in a real
+all-bookmark audit verbatim. `uitest41.mjs` drives the §196 court in a real
 browser: the ground line and favor figure per estate, the one-press ask with
 its toast, and the "Their ground" lever lighting the estates button on the
 mapmode bar (which now follows the bus event rather than its own clicks).
@@ -1048,13 +1048,32 @@ zero guarded warnings. On the tree merged with §194 the battery is
 **124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
 smoke124 both included.
 
-The SPEC §195–196 batch (the estates can be asked; the reforms come home to
-the Crown) is player-only on both halves and measured as such: `monthlyFactions`
-returns before the favor bank for every AI hand, the asks live behind the same
-gate, and the reforms move is a panel-template affair the sim never reads.
-`node tools/autorun.mjs 4 66ce` and `4 1948ce` against a clean-HEAD baseline
-worktree are **byte-identical**, anomalies and all. The full headless battery
-runs 125 of 125 ALL PASS (smoke125 new, smoke119 rewritten in place to the
-§196 contract), and the browser suites the batch touches — uitest8, uitest15,
-uitest37, uitest38 (its §188 section rewritten to the split), uitest41 (new) —
-all come back ALL PASS on SwiftShader. Zero page errors in every browser run.
+Since §195 (a community with no cell is written to from its host's court):
+the dispersion gained a second kind of seat — `tag` instead of `prov` — for
+hosts past the map's edge, and a Dispersion section on foreign courts'
+Abroad tabs: a court-hosted community (the Jews of America, on Truman's
+§180 off-map seat) carries its full ask block there, and communities living
+on that court's soil render as rows that jump to their province (Attlee's
+Britain lists London beside Tripoli, the BMA being the 1948 fact). London
+(from 1656) and America (size 5, stand-in dev 40, opening 60 — past the
+volunteer bar on day one, deliberately: Machal) are the two entries. The
+harness still cannot see any of it — `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after — and a browser pass over both panels
+renders the section with no page errors. `smoke125` is the new contract,
+and `smoke124`'s §194 pins moved with the feature (37 entries, exactly one
+seat each). On the tree merged with the world backdrop above, the battery
+is **125 of 125 headless suites ALL PASS**.
+
+The SPEC §196–197 batch (the estates can be asked; the reforms come home
+to the Crown) is player-only on both halves and measured as such:
+`monthlyFactions` returns before the favor bank for every AI hand, the asks
+live behind the same gate, and the reforms move is a panel-template affair
+the sim never reads. `node tools/autorun.mjs 4 66ce` and `4 1948ce` against
+a clean-HEAD baseline worktree are **byte-identical**, anomalies and all.
+`smoke126` is the new contract (numbered after §195's smoke125, which
+landed on main first), `smoke119` is rewritten in place to the §197
+contract, and the browser suites the batch touches — uitest8, uitest15,
+uitest37, uitest38 (its §188 section rewritten to the split), uitest41
+(new) — all come back ALL PASS on SwiftShader with zero page errors. On
+the tree merged with §195, the battery is **126 of 126 headless suites
+ALL PASS**.

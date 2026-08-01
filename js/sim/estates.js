@@ -236,7 +236,7 @@ export function localEstateUnrest(ctx, p) {
   } catch (e) { warnOnce('localUnrest', 'localEstateUnrest failed', e); return null; }
 }
 
-// Where one party's ground actually IS (SPEC §195): the provinces of the
+// Where one party's ground actually IS (SPEC §196): the provinces of the
 // realm it is dominant on — its colour on the estates mapmode — counted, and
 // the best of them named, ordered by development. This is the line that lets
 // the realm panel say "their ground: 12 provinces, strongest in Jerusalem,

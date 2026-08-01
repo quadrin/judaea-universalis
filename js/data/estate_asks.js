@@ -1,4 +1,4 @@
-// Judaea Universalis — what the estates can be asked for (SPEC §195). Content
+// Judaea Universalis — what the estates can be asked for (SPEC §196). Content
 // package: zero imports, read by js/sim/factions.js.
 //
 // WHY THIS FILE EXISTS. §167 gave every party ground — a strength in every

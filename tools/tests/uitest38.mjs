@@ -87,7 +87,7 @@ console.log('== a tab shows its own sections and hides the rest ==');
   ok(vitalCount === 4, 'four pinned numbers: ' + vitalCount);
 }
 
-console.log('== the ideas are split by what unlocks them (SPEC §196) ==');
+console.log('== the ideas are split by what unlocks them (SPEC §197) ==');
 {
   // The reform trees are the realm's own constitution and live on Crown; the
   // Ideas of the Age are each locked behind a named rung and keep the Coin

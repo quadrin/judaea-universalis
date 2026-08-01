@@ -365,7 +365,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 124 headless sim suites and 40
+  marching. The full verification battery — 125 headless sim suites and 40
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
@@ -677,7 +677,7 @@ static site, the zero dependencies, or the missing build step changes.
   money, which is the largest thing the state did in its first decade and was
   previously one line about schoolhouses.
 - **Write to the dispersion.** The Diaspora used to be one row in a panel with a
-  bar on it. It is thirty-five communities on the map now — Alexandria, Babylon,
+  bar on it. It is thirty-seven communities now — Alexandria, Babylon,
   Nehardea, Antioch, Cyrene, Rome, the House of Adiabene, the temple at
   Leontopolis, and the sea's whole western half besides: Smyrna and Tarsus,
   Athens and the Kinsmen at Sparta, Rhodes and Crete, Campania and Sicily,
@@ -694,7 +694,14 @@ static site, the zero dependencies, or the missing build step changes.
   expulsions of 1306-1541 mean the 1948 map draws half that sea as memory,
   hatched where Sepharad and Sicily and Rhodes once answered, while the
   Maghreb's windows close on their own dates (Tripoli 1952, Constantine 1962,
-  Tunis 1967) and Morocco's never quite does.
+  Tunis 1967) and Morocco's never quite does. And the dispersion reaches past
+  the map's own edge: London (from the Resettlement of 1656) and the Jews of
+  America — the largest community there has ever been, seated on Truman's
+  off-map court — are written to from their host's own panel, where a foreign
+  court's Abroad tab now lists every community under its flag. Their sons
+  answer on day one in 1948, because Machal did; Attlee's Britain lists
+  Tripoli beside London, because the British Military Administration really
+  held it.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad
