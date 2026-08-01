@@ -11434,7 +11434,7 @@ chapter.
   per estate, a banked ask spends and toasts, and "Their ground" flips the
   map to the estates mode with the bar's lit button following.
 
-## 199. The court has only so many envoys
+## 201. The court has only so many envoys
 
 Reported: free four nations out of a beaten enemy at the peace table, then eat
 them one after another, and the realm grows faster than any war would have
@@ -11559,7 +11559,7 @@ all eight bookmarks, is **byte-identical** — not the same anomaly set, the sam
 file. The AI never forms a bond on its own initiative, so the only courts that
 ever meet the ceiling are the ones a player is spending.
 
-- **Regression contract**: `smoke128` — the capacity arithmetic in each of its
+- **Regression contract**: `smoke130` — the capacity arithmetic in each of its
   four terms and both ceilings; the load per bond kind and the four things that
   are not seats; the gates (ours full, *theirs* full, recognition exempt) and
   the peace table pushing a winner over anyway; the monthly bill in influence
@@ -11570,8 +11570,8 @@ ever meet the ceiling are the ones a player is spending.
   its seat, unjoining both houses and costing what it costs; the release stamp, the
   decade's bar, its being a memory of one court rather than a constitution, and
   its expiry; the collar keeping the seat its alliance held; the seeded-world
-  invariant across all eight bookmarks; the 1948 gate; and a pre-§199 save with
-  none of the new fields reading as an empty chancery. `uitest42` — the browser's
+  invariant across all eight bookmarks; the 1948 gate; and a pre-§201 save with
+  none of the new fields reading as an empty chancery. `uitest43` — the browser's
   answer: the Chancery block on The World counting seats and moving when a bond
   is written, the annulment live where a dead plate used to sit and the count
   falling back when it is pressed, an overstretched chancery naming itself, and

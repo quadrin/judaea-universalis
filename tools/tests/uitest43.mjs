@@ -1,6 +1,6 @@
-// UI verification — SPEC §199: the chancery, in a real browser.
+// UI verification — SPEC §201: the chancery, in a real browser.
 //
-// The headless suite (smoke128) proves the arithmetic. This one proves the
+// The headless suite (smoke130) proves the arithmetic. This one proves the
 // three things only a browser can:
 //
 //   1. The realm panel carries a Chancery block on The World: seats spent
@@ -188,5 +188,5 @@ console.log('== the collars chafe, and the panel shows it ==');
 
 ok(!errors.length, 'no console errors: ' + errors.slice(0, 2).join(' | '));
 await browser.close();
-console.log(failures ? `uitest42: ${failures} FAILURES` : 'uitest42: ALL PASS');
+console.log(failures ? `uitest43: ${failures} FAILURES` : 'uitest43: ALL PASS');
 process.exit(failures ? 1 : 0);

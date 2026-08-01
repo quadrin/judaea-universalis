@@ -3126,7 +3126,7 @@ export const DIPLO = {
   marryHeirBonus: 1,      // each living royal marriage adds this ×base heir chance...
   marryHeirCap: 3,        // ...capped at this multiple of the base
   marryWarBreakOpinion: -40, // drawing the sword on kin is not forgotten
-  // …and neither is being sent home (SPEC §199). A match was the one bond
+  // …and neither is being sent home (SPEC §201). A match was the one bond
   // this game gave no way out of, which was survivable while bonds were free
   // and is a trap now that they take a seat: four early weddings would clog a
   // chancery for the rest of the campaign. Annulment costs less than a war
@@ -3898,7 +3898,7 @@ export function royalMarriageInfo(ctx, tag, other) {
     out.why = 'Arranging the match takes ' + DIPLO.marryCost + ' influence points.';
     return out;
   }
-  // A match is a standing bond, and both houses have to keep it (SPEC §199).
+  // A match is a standing bond, and both houses have to keep it (SPEC §201).
   const room = chanceryFullWhy(ctx, tag, true) || chanceryFullWhy(ctx, other, false);
   if (room) { out.why = room; return out; }
   out.can = true;
@@ -3921,7 +3921,7 @@ export function royalMarriageCore(ctx, tag, other) {
     + ' are joined in marriage.');
   return { ok: true, name: them.name || other };
 }
-// The match sent home (SPEC §199). The mirror of breakAllianceCore: mutual
+// The match sent home (SPEC §201). The mirror of breakAllianceCore: mutual
 // removal, and the other court remembers the insult. War's annulment
 // (breakMarriagesForWar, below) is the same act performed with an army, and
 // costs more.
@@ -3963,7 +3963,7 @@ export function breakAllianceCore(ctx, breaker, other) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The chancery (SPEC §199): a court has only so many envoys.
+// The chancery (SPEC §201): a court has only so many envoys.
 //
 // Every verb in the diplomacy block wrote a bond that then cost nothing to
 // keep. Guarantees, alliances, marriages and subsidies were one-off purchases
@@ -4094,7 +4094,7 @@ export function clientStrain(ctx, lord, pre) {
   return out;
 }
 // A court freed at OUR table does not kneel to the hand that freed it — not
-// while the people who saw it happen are alive (SPEC §199). Returns the months
+// while the people who saw it happen are alive (SPEC §201). Returns the months
 // still to run, or 0.
 export function freedCollarMonthsLeft(ctx, tag, by) {
   const t = ctx.game.tags[tag];
@@ -4293,7 +4293,7 @@ export function clientOfferInfo(ctx, me, them) {
   } else if (mine.overlord) out.why = 'A client kingdom does not keep client kingdoms of its own.';
   else if ((mine.atWarWith || []).indexOf(them) >= 0) out.why = 'We are at war with them.';
   else if (!allied) out.why = 'Only a sworn ally would hear such an offer.';
-  // The freed do not kneel to the hand that freed them (SPEC §199). Liberating
+  // The freed do not kneel to the hand that freed them (SPEC §201). Liberating
   // a people at the table and collaring it in the same generation is the one
   // move this mechanism exists to stop being free: the gratitude §174 paid for
   // is not a down payment on a collar, and everyone at that table remembers.
@@ -5767,7 +5767,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     }
     if (seat && !t.dynamicCapital) t.dynamicCapital = seat.canon || seat.name;
     refreshReleasedManpower(ctx, row.tag);
-    // Who freed them, and when (SPEC §199). The gratitude below is real and it
+    // Who freed them, and when (SPEC §201). The gratitude below is real and it
     // is not a down payment: the same hand may not offer this court a collar
     // for a generation, which is what stopped "free four states, collar them
     // with their own gratitude, and eat them one by one" from being the

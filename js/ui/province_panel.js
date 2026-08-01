@@ -860,7 +860,7 @@ const RISING_LABELS = {
     refs.dipStatus.classList.toggle('pos', cls === 'pos');
     refs.dipStatus.classList.toggle('neg', cls === 'neg');
 
-    // The chancery (SPEC §199): a standing bond takes a seat, and the seats
+    // The chancery (SPEC §201): a standing bond takes a seat, and the seats
     // are counted. Appended to every verb that writes one, so the cost of an
     // establishment is on the button and not only in the refusal.
     const seatLine = d.chancery
@@ -880,7 +880,7 @@ const RISING_LABELS = {
       refs.dipMarry.classList.toggle('pp-dip-on', !!d.marriage.married);
       if (d.marriage.married) {
         // A match takes a chancery seat like any other standing bond (SPEC
-        // §199), so it needs a way out that is not a war.
+        // §201), so it needs a way out that is not a war.
         setText(refs.dipMarry, 'Annul the Match');
         refs.dipMarry.classList.remove('disabled');
         refs.dipMarry.dataset.tt = 'Our houses are joined in marriage: the dynasty is likelier to be '
@@ -1018,7 +1018,7 @@ const RISING_LABELS = {
               + 'than us, or in a war they cannot win. Asking anyway costs the influence and '
               + 'their goodwill.')
           : '')
-        // The collar keeps the seat the alliance already held (SPEC §199) —
+        // The collar keeps the seat the alliance already held (SPEC §201) —
         // what it adds is strain, and strain is what a union runs out of.
         + (d.chancery
           ? '\nThe collar takes the chancery seat the alliance held. Held together with others, '

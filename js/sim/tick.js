@@ -135,7 +135,7 @@ function monthlyBlock(ctx) {
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
-  safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §199)
+  safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §201)
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
   safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)

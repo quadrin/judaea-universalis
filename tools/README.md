@@ -310,18 +310,18 @@ all-bookmark audit verbatim. `uitest41.mjs` drives the §197 court in a real
 browser: the ground line and favor figure per estate, the one-press ask with
 its toast, and the "Their ground" lever lighting the estates button on the
 mapmode bar (which now follows the bus event rather than its own clicks).
-`smoke128.mjs` owns the SPEC §199 chancery: the seat arithmetic, the load and
+`smoke130.mjs` owns the SPEC §201 chancery: the seat arithmetic, the load and
 the four things that are not seats, the gates on both sides of the table, the
 monthly bill in influence and opinion, the client strain and its floor, the
 annulment, the decade a freed court will not kneel to the hand that freed it,
-and the seeded-world invariant across all eight bookmarks. `uitest42.mjs`
+and the seeded-world invariant across all eight bookmarks. `uitest43.mjs`
 drives the same section in a real browser: the Chancery block on The World
 counting seats and moving when a bond is written, the annulment as a live
 button where a dead "Houses Joined" plate used to sit, an overstretched
 chancery naming itself, and the alliance button carrying the refusal in words.
 
-**The §199 harness note is that there is no harness note.** `node
-tools/autorun.mjs 8`, run on the pre-§199 tree and on this one in the same
+**The §201 harness note is that there is no harness note.** `node
+tools/autorun.mjs 8`, run on the pre-§201 tree and on this one in the same
 environment, produced **byte-identical output** — every bookmark, every
 trajectory, every anomaly flag, not merely the same accepted families. That is
 the section's own contract working: no bookmark seats a court over its
@@ -330,7 +330,7 @@ tightest fit on the map), no seeded client system carries strain (`freeClients`
 is 3 because the King of Kings holds exactly three), and the AI never opens a
 bond on its own initiative — so the only court that ever meets the ceiling is
 one a player is spending. If a future edit makes this harness move, look at the
-chancery's dials before the armies: `smoke128`'s seeded-world clause is the
+chancery's dials before the armies: `smoke130`'s seeded-world clause is the
 canary and it fails loudly.
 
 ## UI battery state (v6.8)

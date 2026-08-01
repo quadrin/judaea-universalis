@@ -1,4 +1,4 @@
-// Headless regression — SPEC §199: the chancery has only so many envoys.
+// Headless regression — SPEC §201: the chancery has only so many envoys.
 //
 // A standing bond used to be a purchase: pay once, keep forever, and the
 // optimal number of alliances, guarantees, marriages and subsidies was "all of
@@ -433,12 +433,12 @@ console.log('== an old save has no chancery fields, and does not need any ==');
   delete jud.diploStrained;
   delete jud.freedBy;
   delete game.subsidies;
-  ok(mil.diploLoad(ctx, 'JUD').seats === 0, 'a pre-§199 tag reads as an empty chancery');
+  ok(mil.diploLoad(ctx, 'JUD').seats === 0, 'a pre-§201 tag reads as an empty chancery');
   ok(mil.clientStrain(ctx, 'JUD').strain === 0, 'and carries no strain');
   ok(mil.freedCollarMonthsLeft(ctx, 'JUD', 'ROM') === 0, 'and remembers no liberation');
   mil.monthlyChancery(ctx);
   ok(true, 'and the monthly pass runs over it without complaint');
 }
 
-console.log(failures ? `smoke128: ${failures} FAILURES` : 'smoke128: ALL PASS');
+console.log(failures ? `smoke130: ${failures} FAILURES` : 'smoke130: ALL PASS');
 process.exit(failures ? 1 : 0);
