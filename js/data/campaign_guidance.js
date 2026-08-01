@@ -250,6 +250,7 @@ export const CAMPAIGN_GUIDANCE = {
       clocks: [
         { y: 617, m: 6, label: 'Persia weighs the price of keeping its Jewish ally' },
         { y: 622, m: 4, label: 'Heraclius launches the great counteroffensive' },
+        { y: 628, m: 2, label: 'Persia signs its peace and goes home — the war with the Empire stays ours' },
       ],
     },
     BYZ: {

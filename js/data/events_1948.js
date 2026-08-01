@@ -1464,10 +1464,21 @@ export const EVENTS_1948 = [
         label: 'The lines become the map',
         tooltip: 'The war ends on the classical 1949 armistice lines. Israel keeps occupied Galilee, Lod, the southern plain and Negev/Arabah cells inside those lines; occupied Gaza, Sinai, the West Bank, Golan and foreign territory return to their prior owners. Every court: −2 war exhaustion.',
         effects: guard('ev_i_armistice:0', (ctx) => {
-          ctx.helpers.endWar(ctx, 'EGY', 'ISR', 'def', {
-            keep: (p) => p.controller === 'ISR'
-              && ARMISTICE_1949_ISR_GAINS.has(p.canon || p.name),
-          });
+          // Rhodes was four agreements, not one — Egypt in February, Lebanon in
+          // March, Jordan in April, Syria in July — and a scripted peace binds
+          // the courts that sign it (SPEC §193). So every delegation on the
+          // island initials its own map against the same line, and the last
+          // signature is the one that ends the war.
+          const war = findWar(ctx.game, 'EGY', 'ISR');
+          const enemies = war
+            ? ((war.attackers || []).indexOf('ISR') >= 0 ? war.defenders : war.attackers).slice()
+            : [];
+          for (const t of enemies) {
+            ctx.helpers.endWar(ctx, t, 'ISR', 'def', {
+              keep: (p) => p.controller === 'ISR'
+                && ARMISTICE_1949_ISR_GAINS.has(p.canon || p.name),
+            });
+          }
           for (const t of ['ISR', 'EGY', 'JOR', 'SYR', 'LEB', 'IRQ', 'SAU']) {
             if (!ctx.game.tags[t]) continue;
             ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });

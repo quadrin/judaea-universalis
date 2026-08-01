@@ -10934,3 +10934,73 @@ not taken pay.
   new entries badge. `smoke85`/`smoke39`/`smoke48` — every new card
   two-optioned with per-option marks, aiOption pinned to the historical
   course, and no decider that dies cold.
+
+## 193. The peace they signed is not the peace we signed
+
+`helpers.endWar(a, b, …)` names two courts and dissolved the whole war standing
+around them. Six chapters never noticed, because in six chapters the two courts
+named *were* the war. The 614 chapter is the one where they are not: the Return
+fights Byzantium on Persia's side, and in February 628 Kavad II murders his
+father in a dungeon, buys his throne with a white peace, and the engine marched
+Judaea out of a war it had not lost, had not signed anything to end, and was
+holding Jerusalem in. The report was shorter than the diagnosis — *when another
+country white-peaces we should still be able to stay in the war* — and it is
+the whole rule: a scripted peace binds the courts that signed it.
+
+**The two courts settle their own fronts and nobody else's.** Occupations
+between them revert, or the sword keeps what it holds and its own country can
+reach (§116, §174 — the settlement's territorial half is now one function,
+`settleFronts`, called by both roads). A five-year truce binds the departing
+party — the court and the clients that came in under its banner — to every
+court on the side it leaves, the `_settledWars` ledger records those pairs so
+stale cards of their war retire, and every other front keeps its lines. Judaea's
+own conquests are not handed back at somebody else's table, and are not annexed
+at it either: a treaty Persia signs cannot give Persia the towns Judaea stormed.
+
+**Who goes home is arithmetic, not authorship.** A court leaves when the
+settlement has emptied the far side of its enemies. Persia's only enemy was
+Byzantium, so Persia goes; Byzantium still faces Judaea, so Byzantium stays,
+and the war it stays in is the one it was already fighting — same object, same
+name, one belligerent lighter. Both leave when the war was only ever these two,
+and it dissolves exactly as it always did, which is why the other six chapters'
+terminal cards (Antioch, Rome-sues, Hadrian's tributary prince) are untouched:
+Agrippa is Rome's client and goes home under Rome's banner, so the 66 CE war is
+a pair even at three names. And when *neither* can leave — each still faces
+courts it has not settled with — the whole war ends, because nothing here can
+hold one court at war and at peace with the same coalition, and that is where
+this function came in. No content hits that case; the fallback exists so an
+unforeseen one degrades to the old behavior rather than to a new bug.
+
+**What is left is not the war the great powers were fighting.** The battle
+ledger (`_bs`) and the scripted swings (`eventScore`) went home with the courts
+that earned them — Nineveh is not a defeat Judaea suffered — and the war goal
+lapses if the departure took one of its principals. A fight to the death
+(`noNegotiation`) was the signatories' oath to swear and theirs to break: the
+courts that stayed may send envoys. What the armies actually hold still counts
+for everything it did, because occupation score is read off the map and not out
+of a ledger. So the court that stayed inherits the pen (`sideLeaderOf` promotes
+it), gets the full congress rather than a junior's withdrawal (§74), and can
+fight on or sue for peace — which is the agency the report asked for, in both
+directions.
+
+**Rhodes was four agreements, not one.** Egypt in February, Lebanon in March,
+Jordan in April, Syria in July: the armistice card used to spend a single
+`endWar(EGY, ISR)` on the whole coalition, which under this rule would have
+released Egypt and left five courts in the field. It now walks the war's own
+enemy list and initials one map per delegation against the same 1949 line, and
+the last signature is the one that ends the war. Every other multi-court script
+in the tree was already written this way — Agranat's disengagement loop, the
+Suez withdrawal, the Lebanon settlements, each guarded by its own `findWar` —
+and they now do what they always read as doing: strike exactly one court per
+call.
+
+- **Regression contract**: `smoke123` — Persia goes and the Return keeps the
+  war, the truce and the reverted occupations are the signatories' alone, the
+  Return's own front is untouched, the remnant's ledger is cleared and its
+  table is a full congress; the Rhodes loop strikes one court per call with the
+  other fronts keeping their lines; a bilateral war still ends whole; the sword
+  cuts only between the two parties; clients go home under their crown; and the
+  unseparable pair still ends the whole war. `smoke23`/`smoke82`/`smoke20` —
+  the 1949 lines, and the courts they leave at peace, are exactly what they
+  were. `smoke59` — clearing the 614 stage now takes a settlement per pair,
+  which is the feature seen from a test's side.

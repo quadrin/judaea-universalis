@@ -18,7 +18,7 @@ import {
   clientOfferInfo, offerClientshipCore,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
-  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, endWarBySword, GENERAL_NAMES, courtNamePool, engageIfNeeded,
+  sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, settleScriptedPeace, GENERAL_NAMES, courtNamePool, engageIfNeeded,
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
@@ -593,15 +593,18 @@ export const simHelpers = {
     return declareWar(ctx, L(ctx, atk), L(ctx, def), name, cb);
   },
   // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
-  // ends the war between a and b by the sword — winnersKey 'att'/'def' or
-  // null/undefined for a white peace where every occupation reverts.
+  // settles the war between a and b by the sword — winnersKey 'att'/'def' or
+  // null/undefined for a white peace where every occupation reverts. It binds
+  // the two courts named and nobody else (SPEC §193): allies who signed nothing
+  // keep the war, and the war only dissolves when the pair was all of it.
   endWar(ctx, a, b, winnersKey, opts) {
     const g = ctx.game;
     a = L(ctx, a); b = L(ctx, b);
     for (const w of (g.wars || []).slice()) {
       const all = (w.attackers || []).concat(w.defenders || []);
       if (all.indexOf(a) < 0 || all.indexOf(b) < 0) continue;
-      endWarBySword(ctx, w, winnersKey === 'att' || winnersKey === 'def' ? winnersKey : null, opts);
+      settleScriptedPeace(ctx, w, a, b,
+        winnersKey === 'att' || winnersKey === 'def' ? winnersKey : null, opts);
       return true;
     }
     return false;

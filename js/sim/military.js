@@ -5166,14 +5166,12 @@ function annexable(ctx, war, winners, losers) {
   return keepable;
 }
 
-// winners actually annex; everything else returns to its owner. Scripted
-// concessions use it — "Judea keeps its hills" must not mean all of Syria.
-export function endWarBySword(ctx, war, winnersKey, opts) {
+// The territorial half of a settlement, and the only place the sword's rules
+// live. `participants` bounds the pass: the whole war when a war ends, and one
+// pair of parties when a scripted peace settles two courts and leaves the war
+// standing (SPEC §193).
+function settleFronts(ctx, war, winnersKey, winners, losers, participants, keep) {
   const g = ctx.game;
-  const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
-  const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
-  const participants = war.attackers.concat(war.defenders);
-  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
   // SPEC §116: what the winners' own soil can actually reach. `null` means the
   // rule does not apply here (no adjacency data), not that nothing is keepable.
   // A scripted settlement that supplies its own `keep` predicate has already
@@ -5217,6 +5215,17 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
+}
+
+// winners actually annex; everything else returns to its owner. Scripted
+// concessions use it — "Judea keeps its hills" must not mean all of Syria.
+export function endWarBySword(ctx, war, winnersKey, opts) {
+  const g = ctx.game;
+  const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
+  const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
+  const participants = war.attackers.concat(war.defenders);
+  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
+  settleFronts(ctx, war, winnersKey, winners, losers, participants, keep);
   dissolveWar(ctx, war);
   const endText = (war.name || 'The war') + ' has ended'
     + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.');
@@ -5231,6 +5240,107 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     });
   } else {
     ctx.bus.emit('notify', { title: 'News from abroad', text: endText, type: 'info' });
+  }
+}
+
+// ── A scripted peace binds the courts that signed it (SPEC §193) ────────────
+// `helpers.endWar(a, b, …)` names two courts, and it used to dissolve the whole
+// war standing around them. So when Kavad II bought his throne with a white
+// peace in 628, the Return's war went off the books with Persia's: an ally that
+// had signed nothing, lost nothing and was holding Jerusalem got marched home
+// because somebody else's king was murdered in a dungeon. A war here is a list
+// of belligerents. The two courts settle their own fronts and go home; whoever
+// is still facing an enemy keeps the war, and keeps the right to end it at
+// their own table.
+//
+// Who goes home is arithmetic, not authorship. A court leaves when the
+// settlement has emptied the far side of its enemies — Persia's only enemy was
+// Byzantium, so Persia goes; Byzantium still faces Judaea, so Byzantium stays,
+// and the Rhodes-style loop that settles a coalition one court at a time still
+// strikes exactly one court per call. Both leave when the war was only ever
+// these two, and then it ends exactly as it always did. Neither can leave when
+// each still faces courts it has not settled with — nothing here can hold a
+// court at war and at peace with the same coalition — and that case ends the
+// whole war, which is where this function came in.
+export function settleScriptedPeace(ctx, war, a, b, winnersKey, opts) {
+  const g = ctx.game;
+  const alive = (t) => !!(g.tags[t] && g.tags[t].alive);
+  const aOnAtt = war.attackers.indexOf(a) >= 0;
+  const bOnAtt = war.attackers.indexOf(b) >= 0;
+  // Named on the same side, or one of them not in this war at all: not a pair
+  // this rule can separate.
+  if (aOnAtt === bOnAtt) return endWarBySword(ctx, war, winnersKey, opts);
+  const aSide = aOnAtt ? war.attackers : war.defenders;
+  const bSide = aOnAtt ? war.defenders : war.attackers;
+  // Each signatory's party: itself, and the clients that came in under its
+  // banner and go home under it (SPEC §74).
+  const partyOf = (t, side) => [t].concat(vassalsOf(ctx, t).filter((v) => side.indexOf(v) >= 0));
+  const aParty = partyOf(a, aSide);
+  const bParty = partyOf(b, bSide);
+  const aRest = aSide.filter((t) => aParty.indexOf(t) < 0 && alive(t));
+  const bRest = bSide.filter((t) => bParty.indexOf(t) < 0 && alive(t));
+  if (!aRest.length === !bRest.length) return endWarBySword(ctx, war, winnersKey, opts);
+  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
+  const attParty = aOnAtt ? aParty : bParty;
+  const defParty = aOnAtt ? bParty : aParty;
+  const winners = winnersKey === 'att' ? attParty : winnersKey === 'def' ? defParty : [];
+  const losers = winnersKey === 'att' ? defParty : winnersKey === 'def' ? attParty : [];
+  settleFronts(ctx, war, winnersKey, winners, losers, aParty.concat(bParty), keep);
+  // Exactly one signatory has run out of enemies; it and its clients go home,
+  // settling whatever else they hold at status quo (withdrawFromWar), truced to
+  // the side they leave behind.
+  const leaver = bRest.length ? b : a;
+  const stayer = leaver === a ? b : a;
+  const leaverParty = leaver === a ? aParty : bParty;
+  withdrawFromWar(ctx, war, leaver);
+  // What is left is not the war the two great powers were fighting. Their
+  // battles and their scripted swings went home with them, and a fight to the
+  // death was their oath to swear and theirs to break — the courts that stayed
+  // may send envoys. What the armies actually hold still counts for everything
+  // it did: that is read off the map, not the ledger.
+  war._bs = { att: 0, def: 0 };
+  if (war.eventScore) war.eventScore = { att: 0, def: 0 };
+  if (war.goal && (leaverParty.indexOf(war.goal.attacker) >= 0
+    || leaverParty.indexOf(war.goal.defender) >= 0)) war.goal = null;
+  war._goalScore = 0;
+  war._goalTick = { ...g.date };
+  if (war.noNegotiation) { war.noNegotiation = false; war._negOpened = true; }
+  // Score the war the courts that stayed are actually fighting, now rather than
+  // at the next month's tick: the peace table opens the moment the news lands.
+  if (war.attackers.length && war.defenders.length) {
+    const att = sideGross(ctx, war, 'att');
+    const def = sideGross(ctx, war, 'def');
+    for (const t of war.attackers) war.warscore[t] = Math.round(clamp(att - def, -100, 100));
+    for (const t of war.defenders) war.warscore[t] = Math.round(clamp(def - att, -100, 100));
+  }
+  const nm = (t) => (g.tags[t] && g.tags[t].name) || t;
+  const text = nm(leaver) + ' and ' + nm(stayer) + ' make their peace, and '
+    + (war.name || 'the war') + ' goes on without ' + nm(leaver) + '.';
+  chronicle(ctx, 'peace', text);
+  // A side emptied by the departure has no war left to fight — belt and braces;
+  // the arithmetic above already keeps a court on the side that stays.
+  if (!war.attackers.length || !war.defenders.length) {
+    dissolveWar(ctx, war);
+    return;
+  }
+  if (opts && opts.silent) return;
+  const pt = g.playerTag;
+  if (war.attackers.indexOf(pt) >= 0 || war.defenders.indexOf(pt) >= 0) {
+    const foes = enemySideOf(war, pt).filter(alive).map(nm).join(', ');
+    ctx.bus.emit('notify', {
+      title: 'The war goes on',
+      text: text + ' We are still at war with ' + foes
+        + ' — and free to fight on, or to send our own envoys to the peace table.',
+      type: 'war',
+    });
+  } else if (leaverParty.indexOf(pt) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'We leave the war',
+      text: text + ' A five-year truce binds us to them.',
+      type: 'good',
+    });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text, type: 'info' });
   }
 }
 

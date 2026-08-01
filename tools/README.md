@@ -946,3 +946,30 @@ tank and a gun flying at once; the province panel's three recruit buttons named
 Rifle Brigades / Armored Corps / Gun Regiments, each with its own face; and a
 live battle window showing 10 rifles + 4 guns against 5 rifles + 5 tanks with a
 `+3 arms` chip on the gun line in the fire phase — passes with no page errors.
+
+Since §193 (a scripted peace binds the courts that signed it): `helpers.endWar`
+settles the two courts it NAMES and leaves the war standing for everyone else,
+so a chapter card can no longer march an ally home from a war it never signed
+away — 614's February 628 is the case that named the rule. Two harness-visible
+consequences. Rhodes now signs one map per delegation instead of spending a
+single `endWar(EGY, ISR)` on the whole coalition, and the 8-year 1948 run comes
+out of it unmoved: same anomalies, same per-nation trajectories, the same 32
+battles, and only the war line differs — five courts now settle out where one
+dissolution used to cover them. And the `war` bus event has always been three
+things — a declaration, an
+ending, and a court settling OUT of a war that goes on (SPEC §67/§74/§193) —
+while the counter bucketed the third as a declaration. The 1948 line therefore
+read `8 started` for three wars the moment the armistice went per-pair. It now
+reports `3 started, 1 ended, 5 settled out`, which is what §67 and §74 have
+been doing quietly since v6.9.
+
+Measured against the parent commit: `node tools/autorun.mjs 8` is identical on
+every bookmark, anomalies and all (67 SEL DEAD + HYR BLEEDING · 40 OSR/HER/ATG
+BLEEDING · 529 JUD DEAD — the documented families), and `node tools/autorun.mjs
+16 614ce` — long enough to walk past Khosrow's murder — matches the parent
+nation for nation, because the all-AI stream settles the great war through the
+ordinary AI table years before 628 is on the calendar. That run is also the
+counter's own witness: what it used to report as `2 started, 1 ended` was one
+war ending and two courts settling out of others, and it now says so. The battery is **123 of 123 headless suites ALL PASS**; `smoke123`
+is the new contract, and `smoke59`'s 614 stage-clearing moved with the feature
+(it takes a settlement per pair now, which is the rule seen from a test's side).
