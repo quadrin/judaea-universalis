@@ -317,22 +317,24 @@ export const BOOKMARK_529 = {
   // belongs to the Empire.
   tagTweaks: {
     JUD: {
-      name: 'Galilee',
+      name: 'Galilee', adj: 'Galilean',
       capital: 'Tiberias',
       description: 'What is left of the nation, around a lake sixty miles north of the '
         + 'city it may not live in: the academy at Tiberias, the town that closed the '
         + 'Talmud, and a patriarchate the emperor let lapse.',
     },
     // The era's lens on the western tags (SPEC §139, §173): the same three
-    // letters, the state the sixth century actually knows under them.
-    CAL: { name: 'The Picts', description: 'The painted peoples beyond the old wall, whom Columba has not yet visited.' },
+    // letters, the state the sixth century actually knows under them. A renamed
+    // court renames its adjective too, or the map would write GALILEE at home
+    // and "Judaean Egypt" abroad (SPEC §5.6).
+    CAL: { name: 'The Picts', adj: 'Pictish', description: 'The painted peoples beyond the old wall, whom Columba has not yet visited.' },
     SUE: {
-      name: 'The Sueves', capital: 'Bracara',
+      name: 'The Sueves', adj: 'Suevic', capital: 'Bracara',
       description: 'The Suebic kingdom of Gallaecia: a migration that stopped, took the land, and kept the name.',
     },
-    MAU: { name: 'The Moorish Kingdoms', description: 'Masuna\'s "kingdom of the Moors and Romans", Iaudas in the Aures: what the Vandals never held and the reconquest will learn about.' },
+    MAU: { name: 'The Moorish Kingdoms', adj: 'Moorish', description: 'Masuna\'s "kingdom of the Moors and Romans", Iaudas in the Aures: what the Vandals never held and the reconquest will learn about.' },
     LMB: { capital: 'Carnuntum' }, // Wacho rules from the middle Danube; Italy is thirty years away
-    CIM: { name: 'The Danes', description: 'The new lords of the Cimbric sea: Chlochilaich\'s raid is eight years old and Gaul remembers it.' },
+    CIM: { name: 'The Danes', adj: 'Danish', description: 'The new lords of the Cimbric sea: Chlochilaich\'s raid is eight years old and Gaul remembers it.' },
   },
 
   blurb: 'Justinian has ruled two years and has already legislated the Keepers out of the '

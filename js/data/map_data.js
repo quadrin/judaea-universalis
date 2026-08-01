@@ -1449,6 +1449,100 @@ const PROVINCES = [
 ];
 
 // ---------------------------------------------------------------------------
+// Regions — the named lands this map is written in (SPEC §5.6).
+//
+// A realm is not a blob with one middle. Judaea holding Greece is Judaea AND
+// Judaean Greece, and the nation label used to average the two together and
+// land in the sea between them: the centre of mass of a country in two places
+// points at neither of them. So the nation tier names a court once per REGION
+// it holds — its own name over the region its seat is in, "[Adjective]
+// [Region]" over every other one it holds enough of to read.
+//
+// The lines are geographic, not political, and therefore the same in 167 BCE
+// and in 1948, because the ground is. Where a modern state is finer than a
+// classical region (Portugal inside Hispania, the Netherlands on the Rhine)
+// nothing is lost: the label sits at the court's OWN holdings inside the
+// region, so PORTUGAL still prints over Portugal. A region only supplies the
+// word for somebody else's ground.
+//
+// Two boundaries are worth stating because a reader will check them. The
+// Jordan is a boundary: everything west of it (with the Galilee panhandle) is
+// Judaea, everything east — Peraea, the Golan, the Decapolis, Moab, the Hauran
+// — is Transjordan, which is what makes AGRIPPA II print over the Golan and
+// TRANSJORDAN over Amman without either needing a table of its own. And the
+// Negev is its own land rather than the tail of either, because it has
+// belonged with Petra and with Beersheba in different centuries of this game.
+//
+// Every province belongs to exactly one region; validateMapData holds that.
+// ---------------------------------------------------------------------------
+
+const REGIONS = {
+  'Judaea': ['Jerusalem', 'Jericho', 'Emmaus', 'Lydda', 'Joppa', 'Masada', 'Engaddi',
+    'Sepphoris', 'Jotapata', 'Tiberias', 'Tarichaea', 'Gischala',
+    'Gaza', 'Ascalon', 'Azotus', 'Jamnia', 'Hebron', 'Adora', 'Sebaste', 'Neapolis',
+    'Antipatris', 'Caesarea Maritima', 'Dora', 'Ptolemais', 'Scythopolis',
+    'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
+    'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
+    'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Khan Yunis', 'Rafah',
+    'Kiryat Shmona'],
+  'Transjordan': ['Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
+    'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara'],
+  'Negev': ['Oboda', 'Aila', 'Kadesh Barnea', 'Beersheba', 'Arad', 'Dimona',
+    'Mitzpe Ramon', 'Paran', 'Eilat'],
+  'Phoenicia': ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus'],
+  'Syria': ['Damascus', 'Chalcis', 'Emesa', 'Apamea', 'Antioch', 'Seleucia Pieria',
+    'Laodicea', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata', 'Dura-Europos',
+    'Syrian Desert', 'Rutba'],
+  'Arabia': ['Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
+    'Arabian Desert'],
+  'Egypt': ['Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis', 'Memphis',
+    'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Syene', 'Berenice', 'Paraetonium',
+    'Libyan Desert', 'Eastern Desert', 'Sinai Interior', 'Dizahab'],
+  'Cyrenaica': ['Cyrene', 'Marmarica'],
+  'Cyprus': ['Salamis', 'Paphos'],
+  'Anatolia': ['Tarsus', 'Melitene', 'Iconium', 'Tyana', 'Pisidia', 'Attalia',
+    'Seleucia Trachea', 'Caesarea Mazaca', 'Nicaea', 'Smyrna', 'Ancyra', 'Sinope',
+    'Trapezus', 'Halicarnassus'],
+  'Armenia': ['Tigranocerta', 'Sophene', 'Amida'],
+  'Caucasus': ['Phasis', 'Caucasian Albania'],
+  'Assyria': ['Edessa', 'Carrhae', 'Nisibis', 'Singara', 'Hatra', 'Arbela', 'Assur'],
+  'Babylonia': ['Seleucia-Ctesiphon', 'Babylon', 'Nehardea', 'Uruk', 'Charax'],
+  'Persia': ['Ecbatana', 'Gazaca', 'Susa', 'Persepolis', 'Gabae', 'Hyrcania'],
+  'Greece': ['Corinth', 'Athens', 'Sparta', 'Thessalonica', 'Gortyn', 'Rhodes'],
+  'Thrace': ['Hadrianopolis', 'Byzantion', 'Philippopolis', 'Serdica', 'Novae'],
+  'Illyria': ['Dyrrhachium', 'Salona', 'Delminium', 'Siscia', 'Sirmium', 'Singidunum',
+    'Naissus'],
+  'Dacia': ['Sarmizegetusa', 'Napoca', 'Tomis'],
+  'Pannonia': ['Carnuntum', 'Aquincum', 'Virunum'],
+  'Italy': ['Roma', 'Capua', 'Tarentum', 'Brundisium', 'Rhegium', 'Mediolanum', 'Genua',
+    'Bononia', 'Ravenna', 'Pisae', 'Ancona', 'Aquileia'],
+  'Sicily': ['Panormus', 'Syracusae'],
+  'Sardinia': ['Caralis', 'Turris Libisonis', 'Aleria'],
+  'Africa': ['Carthago', 'Hadrumetum', 'Thysdrus', 'Tacape', 'Capsa', 'Theveste',
+    'Hippo Regius', 'Cirta', 'Oea', 'Leptis Magna', 'Macomades'],
+  'Mauretania': ['Saldae', 'Icosium', 'Caesarea Mauretaniae', 'Portus Magnus', 'Volubilis',
+    'Tingis', 'Sala', 'Atlas', 'Gaetulia'],
+  'Sahara': ['Sahara', 'Western Sahara', 'Numidian Sahara', 'Garama'],
+  'Hispania': ['Gades', 'Corduba', 'Hispalis', 'Malaca', 'Carthago Nova', 'Toletum',
+    'Emerita', 'Olisipo', 'Bracara', 'Asturica', 'Tarraco', 'Caesaraugusta', 'Valentia',
+    'Numantia', 'Salmantica', 'Barcino', 'Emporiae', 'Baleares'],
+  'Gaul': ['Narbo', 'Massilia', 'Nemausus', 'Tolosa', 'Burdigala', 'Lugdunum',
+    'Augustodunum', 'Avaricum', 'Limonum', 'Condate', 'Darioritum', 'Lutetia', 'Rotomagus',
+    'Samarobriva', 'Gesoriacum', 'Durocortorum', 'Augusta Treverorum', 'Vesontio', 'Genava'],
+  'Britain': ['Britannia', 'Londinium', 'Camulodunum', 'Durovernum', 'Venta Belgarum',
+    'Corinium', 'Isca Dumnoniorum', 'Dumnonia', 'Isca Silurum', 'Cambria', 'Deva', 'Lindum',
+    'Eboracum', 'Brigantia', 'Caledonia', 'Caledonia Ultima'],
+  'Hibernia': ['Hibernia', 'Hibernia Occidentalis', 'Mumu'],
+  'Germania': ['Colonia Agrippina', 'Mogontiacum', 'Argentorate', 'Batavia',
+    'Augusta Vindelicorum', 'Chatti', 'Teutoburgium', 'Frisia', 'Semnones', 'Boiohaemum'],
+  'Scandinavia': ['Cimbria', 'Selandia', 'Scandia'],
+  'Venedia': ['Gothiscandza', 'Aestii', 'Venedia'],
+  'Scythia': ['Tyras', 'Olbia', 'Chersonesus', 'Panticapaeum', 'Phanagoria', 'Tauria',
+    'Tanais', 'Scythia', 'Borysthenia'],
+  'Sarmatia': ['Sarmatia', 'Roxolania', 'Aorsia', 'Rha', 'Hyperborea', 'Ripaea', 'Ustyurt'],
+};
+
+// ---------------------------------------------------------------------------
 // Height primitives (renderer; all coords lon/lat). The cap is
 // MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, which is what
 // made this frame drawable at all: v5.4 had filled the old cap of 32 exactly,
@@ -1563,6 +1657,9 @@ export const MAP_DATA = {
     ],
   },
   provinces: PROVINCES,
+  // The named lands (SPEC §5.6): region -> canonical province names. Labels
+  // read it; nothing in the sim does.
+  regions: REGIONS,
   // MAINLAND first: `onLand` and the ID pass both scan in this order, and it
   // is the ring that answers for most of the frame.
   coast: {
@@ -1739,6 +1836,26 @@ export function validateMapData() {
           warnings.push(`seeds too close (${d.toFixed(2)} map units): ${provs[i].name} / ${provs[j].name}`);
         }
       }
+    }
+
+    // Regions (SPEC §5.6): a partition, not a covering. A province in no
+    // region would be labelled by its own name at the nation tier, and one in
+    // two would be counted twice toward both — either way the map lies about
+    // who holds what, so both are warnings and the harness holds them at zero.
+    const regioned = new Map();
+    for (const [region, members] of Object.entries(MAP_DATA.regions || {})) {
+      if (!Array.isArray(members) || !members.length) {
+        warnings.push(`region '${region}' is empty`);
+        continue;
+      }
+      for (const nm of members) {
+        if (!names.has(nm)) warnings.push(`region '${region}' references unknown province '${nm}'`);
+        else if (regioned.has(nm)) warnings.push(`${nm}: in two regions ('${regioned.get(nm)}' and '${region}')`);
+        else regioned.set(nm, region);
+      }
+    }
+    for (const p of provs) {
+      if (!regioned.has(p.name)) warnings.push(`${p.name}: belongs to no region`);
     }
 
     for (const link of MAP_DATA.extraLinks.concat(MAP_DATA.seaLinks || [])) {

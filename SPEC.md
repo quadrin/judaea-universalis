@@ -85,9 +85,14 @@ DEFINES = {
     AGR: {name:'Kingdom of Agrippa II', color:[214,120,120], religion:'judaism', culture:'galilean', capital:'Caesarea Philippi'},
     REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
     WASTE:{name:'Wasteland',      color:[70,66,60]},
+    // every tag also carries adj:'Roman'|'Judaean'|'Israeli'|… — the adjective the map
+    //   names its foreign holdings with (SPEC §5.6, §197). No rule derives Dutch from
+    //   The Netherlands, so it is declared, here and in any chapter `tagTweaks` rename.
     // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
     //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
-    //   description:'one-liner for start screen / tooltips'
+    //   description:'one-liner for start screen / tooltips',
+    //   homeRegion:'Italy' — where the court's own name belongs when its capital is
+    //   deliberately somewhere else (ROM plays from Antioch, UK from Cyprus)
   },
   BASE: {  // balance constants, sim reads these — defines agent sets sane values
     regSize:1000, regCost:{inf:10, cav:25}, maintPerReg:0.35,
@@ -111,6 +116,9 @@ DEFINES = {
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
   provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
+  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§197: the named
+                                        // lands. A PARTITION of provinces — every cell in
+                                        // exactly one region; labels read it, the sim never does
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
            lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
   rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
@@ -147,7 +155,9 @@ Galilee dome, Carmel, Jordan rift basin (Galilee→Dead Sea→Arabah), Edomite p
 `validateMapData()` → array of warning strings (empty = ok). Must check: every seed lands
 inside a land polygon (point-in-polygon), seeds ≥ 6 map-units apart, every `owner` is a known
 tag, every terrain/good/religion/culture key exists in the pinned DEFINES key lists (hardcode
-the key lists locally to avoid importing defines), extraLinks names resolve.
+the key lists locally to avoid importing defines), extraLinks names resolve, and `regions`
+partitions the province table (no cell in two regions, none in none, no region naming a cell
+the atlas does not have).
 
 ### Canonical province table (names are EXACT strings; content agent references them)
 
@@ -293,9 +303,18 @@ Chips, arrows and picking all share the interpolated position.
 
 `{ update(ctx, camera, mapmode) }` — ctx may be null pre-game (then clear). Absolutely
 positioned divs in `#labels-layer` (pointer-events:none). Zoom ≥ ~1.1: province names at
-centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: tag
-names (owner-weighted centroid over owned provinces, size ~ sqrt(total area), letter-spaced
-serif caps in darkened tag color). Recompute cheaply every call (N≈100); reuse divs.
+centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: nation
+names, letter-spaced serif caps in darkened tag color — **one per region a court holds**
+(`MAP_DATA.regions`), not one per court. The court's own name goes over its home region
+(`TAGS[tag].homeRegion`, else its capital's region, else its largest part); every other part
+reads `"[TAGS[tag].adj] [Region]"` — Judaean Greece, Israeli Britain, Hasmonean Egypt — in the
+`.mlabel-part` tier. Each part anchors at the pixel-mass centroid of the largest cell near that
+part's own centre of mass, never at the centre of mass itself: an average of a coastline is
+water (SPEC §197). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
+survives at whole-map zoom; parts size by their own area and hide below a higher floor. Also
+exports `tagLabelParts(ctx, geom, MAP_DATA) -> [{tag, region, home, text, x, y, area, realm,
+color}]`, the same placement with no DOM (the harness reads it). Recompute cheaply every call
+(N≈300); reuse divs.
 
 ## 6. Sim package — `js/sim/*` (one agent; public API pinned, internals free)
 
@@ -11307,3 +11326,79 @@ tables never notice.
   the same loops that covered the old. `smoke2`, `smoke3`, `smoke111`,
   `smoke112`, `uitest2` — untouched and green, because the principals'
   tables did not move by a single index.
+
+## 197. The country's name goes where the country is
+
+The nation tier drew one label per court, at the owner-weighted centroid of
+every province it owned. That is the centre of mass of a realm, and the centre
+of mass of a realm in two places is in neither of them. A Judaea holding the
+Levant and Greece wrote **JUDAEA** across the open Mediterranean — over water
+it did not own, hundreds of miles from either half of itself, in letters sized
+by the sum of both. It is not a rounding error and no nudge fixes it: the
+number is an average over parts that are not one place.
+
+It was never only the reported case. Measured on the real raster over the eight
+bookmarks' opening positions, the old rule put **19 of 249** labels in the sea
+— Rome's among them in 167 BCE, 67 BCE and 40 BCE, because an empire drawn
+around a sea has its middle in the sea.
+
+**One label per region, not per court.** `MAP_DATA.regions` divides the 307
+cells into 35 named lands — Judaea, Transjordan, Negev, Phoenicia, Syria,
+Arabia, Egypt, Anatolia, Greece, Italy, Gaul, Hispania, Britain, Germania,
+Scythia and the rest — a partition, held by `validateMapData`, so every cell
+answers to exactly one. A court is then named once per region it holds: its own
+name over home, and over everything else **"[Adjective] [Region]"** — Judaean
+Greece, Israeli Britain, Hasmonean Egypt, Roman Judaea, Transjordanian Judaea in
+1948. Home is the region the court declares (`homeRegion`), else the one its
+capital sits in, else — a court in exile — the largest thing it holds. Two
+courts declare: Rome, played from Antioch, still writes ROME in Italy; Britain,
+whose 1948 seat on this map is Cyprus, still writes BRITAIN in Britain.
+
+The lines are geographic and therefore the same in every century, which is the
+only way one table can serve 167 BCE and 1948 at once. The Jordan is a boundary
+(so Agrippa II's name sits on the Golan and Transjordan's on Amman, with no
+per-tag table); the Negev is its own land, because it has belonged with Petra
+and with Beersheba in different centuries of this game. Where a modern state is
+finer than a classical region — Portugal inside Hispania, the Netherlands on the
+Rhine — nothing is lost: a label sits on the court's OWN holdings inside the
+region, so PORTUGAL still prints over Portugal, and the region only ever
+supplies the word for somebody else's ground.
+
+**The adjective is declared, not derived.** No rule turns The Netherlands into
+Dutch. All 109 tags carry `adj`, and a chapter that renames a court renames its
+adjective with it (SPEC §139) — 529's Galilee is *Galilean* abroad, not Judaean,
+which is the same class of error as calling the Keepers Jews. The fallback for a
+tag that somehow has none is the possessive.
+
+**The anchor is a cell, not an average.** Each part is placed at the pixel-mass
+centroid of the largest cell near that part's own centre of mass — big and
+central both, scored with a falloff over the part's own radius, so a scatter
+picks its mainland and a compact realm picks the cell it was already pointing
+at. The centre of mass itself is not used, not even clamped into that cell:
+splitting by region and keeping the clamped average still landed in the water 13
+to 20 times in 505. Anchoring on the cell lands there **0 times in 505**.
+
+Sizing keeps the country first. A part is sized by its own ground, but the home
+name by sqrt(sqrt(part)·sqrt(realm)) — the geometric mean of the two. At the
+whole-map zoom Rome's Italy is ten pixels of ground and would have vanished
+while ROMAN GAUL printed beside it, which is exactly backwards. Foreign parts
+also clear a higher floor (13.5px against 11.5px) and print in a tighter,
+lighter tier (`.mlabel-part`): two words at the tag tier's tracking is a very
+wide ribbon, and a court's holdings should read as subordinate to its name.
+
+- **Regression contract**: `smoke127` — the regions partition the atlas and
+  `validateMapData` says so; every tag and every chapter rename declares an
+  adjective; over all eight bookmarks on the real geometry snapshot, all 505
+  nation labels are on land, each anchored on a cell its own court holds, with
+  exactly one home label per court — *and the rule it replaced is re-run on the
+  same boards and asserted to fail*, so the bug stays visible to the suite that
+  fixed it. Then the three words the section was asked for, each on a live
+  board: Judaean Greece, Hasmonean Egypt, Israeli Britain — plus ROME in Italy,
+  BRITAIN in Britain, and Galilean Egypt in 529. `uitest41` — the same claim
+  against the raster the player is looking at rather than the coastline
+  polygons: every nation label drawn in the browser is handed back to
+  `provIdAt`, and the pixel underneath it must belong to the court whose name
+  is written there (a label in the sea has no province under it at all). Judaea
+  holding Greece and Egypt writes all three names, four hundred screen pixels
+  apart, the parts in the subordinate tier; zoom past 1.1 and the province
+  names come back with no part labels over them.
