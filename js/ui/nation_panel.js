@@ -202,7 +202,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-factions" data-ref="sacred"></div>
       </div>
       <div class="pp-build hidden" data-ref="schoolsBlock" data-tab="faith">
-        <div class="pp-build-title">The Law and Its Readers</div>
+        <div class="pp-build-title" data-ref="schoolsTitle">The Law and Its Readers</div>
         <div class="np-factions" data-ref="schools"></div>
       </div>
 
@@ -1062,6 +1062,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     refs.schoolsBlock.classList.toggle('hidden', !rep);
     if (!rep) return;
+    // Each chapter's quarrel names itself: The Fence and the Gate under Herod,
+    // The Star and the Schools in 132, The Status Quo in 1948 (SPEC §201).
+    setText(refs.schoolsTitle, rep.title || 'The Law and Its Readers');
 
     // ── the needle: the same instrument the doctrine axes use, because it is
     // the same kind of fact — a realm's standing answer to a live question.
@@ -1078,9 +1081,9 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + `<div class="np-dox-top"><span class="np-dox-name">The Reading</span>`
       + `<span class="np-dox-label np-dox-${cls}">${esc(r.label)}</span></div>`
       + `<div class="np-dox-bar">`
-      + `<span class="np-dox-pole">${esc(r.writtenPole)}</span>`
+      + `<span class="np-dox-pole">${esc(r.loPole)}</span>`
       + `<span class="np-dox-track"><i class="np-dox-needle np-dox-n-${cls}" style="left:${pct}%"></i></span>`
-      + `<span class="np-dox-pole">${esc(r.oralPole)}</span>`
+      + `<span class="np-dox-pole">${esc(r.hiPole)}</span>`
       + `</div>`
       + (r.text ? `<div class="np-fac-effect ${r.score > 0 ? 'pos' : 'neg'}">${esc(r.text)}</div>` : '')
       + `</div>`;
@@ -1120,7 +1123,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (side) {
         html += `<div class="np-faction np-rule-done" data-tt="${esc(base + '\n――――――\n' + side.blurb)}">`
           + `<div class="np-fac-top"><span class="np-fac-name">${esc(q.name)}</span>`
-          + `<span class="np-fac-state ${q.given === 'oral' ? 'pos' : 'neg'}">ruled</span></div>`
+          + `<span class="np-fac-state ${q.given === 'hi' ? 'pos' : 'neg'}">ruled</span></div>`
           + `<div class="np-fac-effect">${esc(side.label)} — ${esc(side.text)}</div>`
           + `</div>`;
         continue;
@@ -1129,8 +1132,8 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         const o = q[k];
         const tt = o.label + '\n' + o.blurb + '\n――――――\n' + o.name + ': ' + o.text
           + '\nCosts ' + (q.fullPrice || q.price) + '. '
-          + (k === 'oral' ? rep.houses[0].name : rep.houses[1].name) + ' +' + q.swing + ', '
-          + (k === 'oral' ? rep.houses[1].name : rep.houses[0].name) + ' −' + q.swing + '.'
+          + (k === 'hi' ? rep.houses[0].name : rep.houses[1].name) + ' +' + q.swing + ', '
+          + (k === 'hi' ? rep.houses[1].name : rep.houses[0].name) + ' −' + q.swing + '.'
           + (q.can ? '' : '\n' + (q.whyNot || ''));
         return `<button class="pp-build-btn np-seat-btn np-rule-${k}${q.can ? '' : ' disabled'}"`
           + ` data-ruling="${esc(q.id)}" data-side="${k}" data-tt="${esc(tt)}"><span>${esc(o.label)}</span></button>`;
@@ -1139,7 +1142,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + `<div class="np-fac-top"><span class="np-fac-name">${esc(q.name)}</span>`
         + `<span class="np-fac-state">${esc(q.price)}</span></div>`
         + `<div class="np-fac-effect">${esc(q.question)}</div>`
-        + `<div class="np-fac-effect np-seat-btns">${btn('written')}${btn('oral')}</div>`
+        + `<div class="np-fac-effect np-seat-btns">${btn('lo')}${btn('hi')}</div>`
         + `</div>`;
     }
     setHtml(refs.schools, html);

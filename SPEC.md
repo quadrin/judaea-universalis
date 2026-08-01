@@ -11705,6 +11705,95 @@ way the sim resolves is a guard that reports the sim as broken.
   went in after it. On the tree merged with main's §197-§199 the battery
   is 129 of 129 headless suites ALL PASS.
 
+## 201. Every chapter argues about something
+
+§190 built the quarrel engine for one quarrel — the Pharisees and the
+Sadducees — and then seven other chapters sat there with a Faith tab
+showing an expectation gauge, a pilgrim road and nothing whatever about
+the argument each of them is actually about. Every one of them has such
+an argument, in the sources, with two named sides and a ruler who had to
+rule. This section makes the system every chapter's.
+
+**The engine did not change.** The reading, the fixed ruling swing, the
+four chamber states, the office alignment and the breach cards are the
+same arithmetic §190 shipped. What moved is that the *content* is now a
+table of quarrels keyed by id, and a bookmark maps each of its courts to
+one — `schools: { HER: 'fence_and_gate' }` — beside the estates it is a
+fact about. A court whose bookmark names none has none. The poles were
+renamed from `oral`/`written` to **`hi`/`lo`**, matching the doctrine
+axes (§85), because in 1948 neither side is an oral tradition; `hi` is by
+convention the side that would move the practice and `lo` the side that
+keeps it as received, and nothing in the engine cares which.
+
+**The seven quarrels.** *The Law and Its Readers* (167 from 140 BCE,
+and both brothers in 67) is §190's, unchanged. *The Fence and the Gate*
+(40 BCE) sets Herod's Sanhedrin against Herod's own imported priesthood,
+over the golden eagle, Hillel's prosbul, the Passover that fell on a
+sabbath, the man who asked on one foot, the eighteen decrees, and whether
+the office is held for life or granted at the crown's pleasure. *What
+the Law Requires of Us Now* (66 CE) starts where the war did — the
+offering for Caesar — and runs through the sabbath and the sword, the
+bonds in the record office, the sacred shekels, and the stone in the
+middle wall. *The Star and the Schools* (132 CE) is Akiva's schools
+against the Nasi's war office: the date on the documents, the students of
+the houses, the seventh year under arms, the stones on the Mount, and
+"neither help us nor hinder us". *The Mountain and the Book* (529 CE) is
+the Samaritans' own and not a borrowed Jewish one — Baba Rabba's Council
+of Seven, three of them laymen, against a priesthood that IS this
+community's constitution. *The Altar and the Academy* (614 CE) asks what
+happens when the Mount is clear for the first time in five centuries and
+both the authorities that governed without it arrive at once. *The Status
+Quo* (1948) is the letter of June 1947 and the four hundred.
+
+**Two courts had no second religious seat, and both absences were bugs.**
+Herod's roster ran Sanhedrin, family, mercenaries — the one court in the
+game where the altar had no voice, in the reign that rebuilt the Temple.
+It gains **the House of Boethus**, the Alexandrian priesthood Herod
+fetched, married into and appointed precisely because it had no following
+in the country; its estate ground is the Mount, the capital and the
+developed coast, and uniquely among the priestly parties it is *negative*
+in the countryside, which is the whole reason he chose them. 1948 ran
+Coalition, Revisionists, Kibbutzim — three secular seats and nobody who
+could have signed the status quo letter. It gains **the Religious Bloc**.
+
+**What the generalization forced.** Two things in §190 were quietly
+Hasmonean and had to be found. The chamber's `breachLo` and `schism`
+lines charge `pilgrimMult`, which in a chapter with no Temple is a
+penalty on an income stream that does not exist and a line of panel text
+about a mountain nobody is climbing — so a quarrel may override the
+shared effects and text, and 1948 does, re-pointing both at growth and
+manpower. And the office branch charged legitimacy for a vacant High
+Priesthood under a custodial reading, which in 1948 would have docked a
+cabinet every month for failing to appoint one: it is now gated on §169's
+own Temple test, which is the same anachronism that gate was built for
+arriving by a different door. The `priestly: false` sweep also had to
+reach further, because the office panel now appears at courts §190 never
+looked at: Herod's Idumean family and hired swords, and Antigonus'
+Parthian party, come off a ballot they were never eligible for.
+
+- **Regression contract**: `smoke121` grows a §201 section that walks all
+  eight bookmarks — the declared quarrel is the one that convenes, both
+  its sides are real seats of that court, the needle is labelled at both
+  ends with the chapter's own names, every chapter opens *Unruled*, and
+  each carries at least four disputes. Then: every bookmark's `schools`
+  map names a quarrel that exists and seats both of its sides; every
+  quarrel has two complete poles, four named chamber states and two
+  breach cards that are forks; every ruling is documented, priced, and
+  pushes both ways; ruling every dispute one way reaches the pole in
+  every quarrel; and the ruling ids do not collide across chapters, which
+  they cannot be allowed to do because the stored side is keyed by id
+  alone. Plus the two regressions the generalization created and closed —
+  1948 is charged nothing against ascents it does not have and no cabinet
+  is docked for an unappointed High Priest — and the two new seats exist,
+  carry geography, and sit on the right side of the priesthood ballot.
+  `smoke127` holds the other contract a new seat has to meet: §197 requires
+  every seated party of every chapter to be askable, so the Boethusians and
+  the Religious Bloc carry authored asks — the altar's sanction and the
+  Alexandrian purse for a house with an office and no villages; the quiet of
+  the religious quarters and a supply of very literate clerks for the parties
+  that signed the letter. `uitest40` drives the Hasmonean quarrel AND 1948's
+  in a real browser: two chapters, two headings, two sets of poles.
+
 ## 202. The court has only so many envoys
 
 Reported: free four nations out of a beaten enemy at the peace table, then eat

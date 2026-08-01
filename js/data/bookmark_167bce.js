@@ -388,6 +388,12 @@ export const BOOKMARK_167 = {
     ],
   },
 
+  // Whose reading of the Law each court administers (SPEC §190/§201). The
+  // Hasmonean pair arrive in this chapter in 140 BCE, when §127 hands the
+  // court over from the Hasideans to the parties Josephus first names then;
+  // the Seleucids argue about other things entirely.
+  schools: { HAS: 'sages_and_houses' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {

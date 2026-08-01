@@ -1029,10 +1029,56 @@ export const BOOKMARK_1948 = {
       'Lose: the Legion broken west of the river.',
     ],
   },
+  // The letter of June 1947 (SPEC §201), and everything the state postponed by
+  // signing it. Jordan's court is not having this argument.
+  schools: { ISR: 'status_quo' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {
     ISR: [
+      // The seat this chapter was missing (SPEC §201). On 19 June 1947
+      // Ben-Gurion, Rabbi Fishman and Greenbaum wrote to Agudat Yisrael
+      // promising four things — the sabbath as the state's day of rest, kosher
+      // state kitchens, rabbinical jurisdiction in marriage, and autonomy for
+      // the religious schools — and that letter is the closest thing Israel
+      // has to a constitution on the question it has argued about ever since.
+      // The court had three secular seats and nobody to have signed it.
+      {
+        id: 'rabbinate', name: 'The Religious Bloc',
+        priestly: false, // there is no altar in this chapter and no office to seat
+        desc: 'Mizrachi and Agudat Yisrael, the Chief Rabbinate behind them: they signed the '
+          + 'letter of June, they are in the cabinet, and they want to know what the word '
+          + 'Jewish is doing in the phrase "Jewish state".',
+        drift(ctx, t) {
+          // They are a coalition partner, not a movement: order and a kept
+          // bargain warm them, and legislation that touches the four
+          // undertakings does not.
+          const f = ctx.game.flags || {};
+          const base = (t.stability || 0) >= 1 ? 0.35 : -0.4;
+          return f.yeshivaExemption ? base + 0.3 : f.noExemption ? base - 0.4 : base;
+        },
+        boon: {
+          name: 'The Bargain Holds',
+          text: '−0.8 unrest everywhere, +0.2 legitimacy a month',
+          effects: { unrestAll: -0.8, legitimacyAdd: 0.2 },
+        },
+        bane: {
+          name: 'A Quarter of the Country Turns Away',
+          text: '+1 unrest everywhere, −8% manpower',
+          effects: { unrestAll: 1, manpowerMult: 0.92 },
+        },
+        appease: { label: 'Honour the letter of June (40 governance points)', cost: { gov: 40 } },
+        demand: {
+          title: 'The Rabbinate Asks What Was Promised',
+          text: 'They did not ask for a theocracy and they are not asking now. They are asking '
+            + 'whether the four undertakings of June are policy or were merely a signature — '
+            + 'the sabbath, the kitchens, the courts of marriage, the schools. The answer, they '
+            + 'point out, decides whether their people regard this government as theirs.',
+          grant: { label: 'The undertakings stand', cost: { gov: 50 } },
+          refuse: { label: 'The Knesset legislates', tooltip: 'They stop treating the state\'s institutions as theirs.' },
+        },
+      },
       {
         id: 'coalition', name: 'The Coalition',
         desc: 'Mapai and the cabinet: the men and women who ran the Yishuv and now must run a state under fire.',

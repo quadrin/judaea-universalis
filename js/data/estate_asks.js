@@ -112,6 +112,14 @@ export const ESTATE_ASKS = {
     { kind: 'blessing', name: 'The Court Gives Its Sanction', text: 'Seventy-one judgments have weight; delivered for the crown, they are legitimacy in its purest coinage.' },
     { kind: 'calm', name: 'The Law Courts Sit', text: 'Justice seen in every gate is the cheapest garrison the country has.' },
   ],
+  // The two seats §201 added, which this table's own contract requires be
+  // authored: a party with ground is a party that can be asked. Herod's
+  // Alexandrian priesthood has an office and money and no villages, so it
+  // gives exactly what such a house gives — the altar's word, and silver.
+  boethusians: [
+    { kind: 'blessing', name: 'The Vestments Bless the Builder', text: 'The high priest the king appointed reads the king\'s name into the service, in the Temple the king is paying for. Nobody present mistakes the arrangement, and it works anyway.' },
+    { kind: 'coin', name: 'The Alexandrian Purse', text: 'The family did not arrive poor and the office has not made them poorer. What they cannot give in men they give in talents, punctually.' },
+  ],
   street: [
     { kind: 'men', name: 'The City Takes Up Staves', text: 'The crowd that can unmake a king can also fill a muster, when it loves him.' },
     { kind: 'calm', name: 'The Street Goes Home', text: 'The men who lead the chanting can also end it, and this month they end it.' },
@@ -143,6 +151,10 @@ export const ESTATE_ASKS = {
   kibbutzim: [
     { kind: 'men', name: 'The Kibbutzim Mobilize', text: 'The settlements empty into the brigades: everyone between sixteen and fifty, and the tractors too.' },
     { kind: 'hands', name: 'The Land Is Worked', text: 'Double shifts in the fields and the packing houses: the movement feeds the state.' },
+  ],
+  rabbinate: [
+    { kind: 'calm', name: 'The Rabbis Counsel Patience', text: 'A word from the pulpits of the old yishuv and the religious quarters, and neighbourhoods that would not hear a government minister go quietly about their week.' },
+    { kind: 'counsel', name: 'The Yeshivot Send Clerks', text: 'Men trained since childhood to argue a text to the letter turn out to be very good indeed at a ministry\'s paperwork, and the parties can supply them by the hundred.' },
   ],
   coalition: [
     { kind: 'counsel', name: 'The Coalition Holds', text: 'The parties of government trade their quarrels for a working majority, and the state\'s business moves.' },

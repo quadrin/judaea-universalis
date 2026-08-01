@@ -1,4 +1,9 @@
-// Judaea Universalis — the quarrel of the two schools (SPEC §190). DOM-free.
+// Judaea Universalis — the religious quarrels (SPEC §190, §201). DOM-free.
+//
+// §190 built this for one quarrel and §201 made it every chapter's. The
+// arithmetic below is unchanged and shared; which two seats are arguing, what
+// they are arguing about and what either answer costs all come from the
+// chapter's own entry in js/data/schools.js, resolved through the bookmark.
 //
 // §34 gave the court parties an approval bar each and a lever to raise it.
 // That is the right engine for five estates who want five different things,
@@ -17,11 +22,16 @@
 //                   both poles: the schools buy the country, the houses buy
 //                   the treasury, and neither buys both.
 //
-//   THE RULINGS     Six recorded disputes (js/data/schools.js). Each is given
-//                   once, permanently, for points; each grants a named
-//                   modifier for the rest of the campaign; each raises one
-//                   house and drops the other by the same fixed swing, so no
-//                   entry can be authored soft enough to be free.
+//   THE RULINGS     The chapter's own recorded disputes (js/data/schools.js) —
+//                   the Omer count and the red heifer in the Hasmonean
+//                   chapters, the golden eagle and the prosbul under Herod,
+//                   the offering for Caesar in 66, the date on the documents
+//                   in 132, the reckoning of the feasts on Gerizim, the first
+//                   fire on a restored Mount, the letter of June in 1948. Each
+//                   is given once, permanently, for points; each grants a
+//                   named modifier for the rest of the campaign; each raises
+//                   one side and drops the other by the same fixed swing, so
+//                   no entry can be authored soft enough to be free.
 //
 //   THE COURT       What the two houses do TOGETHER — concord, one-sided
 //                   breach, or schism. This is the read that two independent
@@ -36,20 +46,23 @@
 //                   single most quoted fact about the late Second Temple, and
 //                   it now costs what it should.
 //
-//   THE BREACH      A house on the floor for two years deals its card: the
-//                   citrons at the water-gate, or the Temple strongroom that
-//                   declines to open. Both are forks, not punishments.
+//   THE BREACH      A side on the floor for two years deals its card: the
+//                   citrons at the water-gate, the golden eagle, the lot that
+//                   fell on a stonecutter, the test at the muster, the feast
+//                   proclaimed late, the morning they would light it, the four
+//                   hundred. Both poles have one; all of them are forks rather
+//                   than punishments.
 //
 // Player's own realm only, on the same rule as §34's estates and §169's
 // office: an AI court's theology is its own business. Everything fails soft —
-// a chapter that does not seat both houses never sees any of it, which is
-// most of them.
+// a court whose bookmark declares no quarrel, or which does not seat both of
+// its quarrel's sides, never sees any of it.
 
 import { num, clamp, chronicle } from './military.js';
 import { factionApproval, shiftFaction, factionDefs, factionState } from './factions.js';
 import { templeStands } from './sacred.js';
 import { fireEvent } from './events.js';
-import { SCHOOL_IDS, RULINGS, READING, COURT_STATES, BREACH_CRISES } from '../data/schools.js';
+import { QUARRELS, DEFAULT_QUARREL, COURT_EFFECTS, COURT_TEXT } from '../data/schools.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -73,30 +86,44 @@ export const SCHOOLS = {
   // The office, measured against the reading.
   officeAligned: 0.3, // legitimacy a month when the priest's house is the crown's reading
   officeAtOdds: -0.35, // …and when it is the other one
-  vacancyUnderHouses: -0.3, // an empty office under a written reading: the houses need a priest
+  vacancyUnderLo: -0.3, // an empty office under a `lo` reading: the custodians need a priest
   // The breach cards.
   breachMonthsToCrisis: 24,
   crisisCdMonths: 120,
 };
 
-const RULING_BY_ID = new Map(RULINGS.map((r) => [r.id, r]));
+// Every ruling in the game, by id, across every quarrel. Ids are unique by
+// construction and the loader below says so out loud rather than letting one
+// chapter's dispute silently answer another chapter's.
+const RULING_BY_ID = new Map();
+for (const q of Object.values(QUARRELS)) {
+  for (const r of q.rulings || []) {
+    if (RULING_BY_ID.has(r.id)) warnOnce('dup:' + r.id, 'two quarrels declare the ruling id', r.id);
+    RULING_BY_ID.set(r.id, r);
+  }
+}
 
 function monthIndex(d) { return d.y * 12 + (d.m - 1); }
 
-// Which two seats are the schools. The bookmark may name them — a chapter that
-// calls its parties something else still gets the whole system by declaring
-// `schools: { oral, written }` — and otherwise they are the ids the sources
-// use, which is what both chapters that seat them already call them.
-function schoolIds(ctx) {
-  const named = ctx.bookmark && ctx.bookmark.schools;
-  const oral = (named && named.oral) || SCHOOL_IDS.oral;
-  const written = (named && named.written) || SCHOOL_IDS.written;
-  return { oral, written };
+// Which quarrel this court is having (SPEC §201). The bookmark maps a tag to a
+// quarrel id — `schools: { HER: 'fence_and_gate' }` — because whose argument a
+// court is in is a fact about that court and belongs beside its estates. A
+// bookmark that declares nothing falls back to the Hasmonean pair, which is
+// how the two chapters §190 shipped for keep working without an edit.
+function quarrelFor(ctx, tag) {
+  const table = ctx.bookmark && ctx.bookmark.schools;
+  if (table && typeof table === 'object') {
+    const named = table[tag];
+    if (typeof named === 'string') return QUARRELS[named] || null;
+    if (named === false) return null; // a court explicitly given no quarrel
+    if (!Object.prototype.hasOwnProperty.call(table, tag)) return null;
+  }
+  return QUARRELS[DEFAULT_QUARREL] || null;
 }
 
-// The quarrel convenes where BOTH houses sit at the player's own court, under
-// a human hand. In the 167 chapter that is 140 BCE onward and not before it
-// (§127 hands the court over from the Hasideans and the Hellenizers on that
+// The quarrel convenes where BOTH of its sides sit at the player's own court,
+// under a human hand. In the 167 chapter that is 140 BCE onward and not before
+// it (§127 hands the court over from the Hasideans and the Hellenizers on that
 // year), which is also when Josephus first names the three schools — so the
 // system arrives in the campaign on the year the sources produce it, without
 // anything anywhere having to know that was the intention.
@@ -106,14 +133,27 @@ export function schoolsSeated(ctx) {
     const tag = g.playerTag;
     const t = g.tags[tag];
     if (!t || !t.alive || t.ai) return null;
+    const q = quarrelFor(ctx, tag);
+    if (!q) return null;
     const defs = factionDefs(ctx, tag);
     if (!Array.isArray(defs) || !defs.length) return null;
-    const ids = schoolIds(ctx);
-    const oral = defs.find((d) => d && d.id === ids.oral);
-    const written = defs.find((d) => d && d.id === ids.written);
-    if (!oral || !written) return null;
-    return { oral, written, oralId: ids.oral, writtenId: ids.written };
+    const hi = defs.find((d) => d && d.id === q.hi.seat);
+    const lo = defs.find((d) => d && d.id === q.lo.seat);
+    if (!hi || !lo) return null;
+    return { quarrel: q, hi, lo, hiId: q.hi.seat, loId: q.lo.seat };
   } catch (e) { warnOnce('seated', 'schoolsSeated failed', e); return null; }
+}
+
+// A state's effects and its printed line, with the quarrel's overrides on top
+// (1948 has no ascents to charge, so it re-points the breach and the schism at
+// things that chapter actually has).
+function courtEffects(q, key) {
+  const over = q && q.stateEffects && q.stateEffects[key];
+  return over || COURT_EFFECTS[key];
+}
+function courtTextOf(q, key) {
+  const over = q && q.stateText && q.stateText[key];
+  return over || COURT_TEXT[key];
 }
 
 // ─────────────────────────────────────────────────────────────── the state
@@ -135,17 +175,17 @@ export function rulingsGiven(ctx) {
     const s = ctx.game && ctx.game.schools;
     const table = s && s.rulings;
     if (!table) return out;
-    for (const r of RULINGS) {
-      const side = table[r.id];
-      if (side === 'oral' || side === 'written') out[r.id] = side;
+    for (const id of RULING_BY_ID.keys()) {
+      const side = table[id];
+      if (side === 'hi' || side === 'lo') out[id] = side;
     }
   } catch (e) { warnOnce('given', 'rulingsGiven failed', e); }
   return out;
 }
 
 // The reading: the sum of what the crown has ruled, plus whatever the breach
-// cards swung, clamped to the poles. Positive is the schools, negative is the
-// houses, and a crown that has ruled on nothing reads zero — undecided, not
+// cards swung, clamped to the poles. Positive is the `hi` pole and negative
+// the `lo`; a crown that has ruled on nothing reads zero — undecided, not
 // balanced. Pure: computed from stored sides on every call, so no save is
 // migrated and a mid-campaign load reads exactly what the campaign ruled.
 export function readingScore(ctx) {
@@ -165,38 +205,50 @@ export function readingScore(ctx) {
 
 export function readingBand(score) {
   const s = num(score);
-  if (s >= SCHOOLS.committedAt) return 'schools';
-  if (s >= SCHOOLS.leaningAt) return 'toSchools';
-  if (s <= -SCHOOLS.committedAt) return 'houses';
-  if (s <= -SCHOOLS.leaningAt) return 'toHouses';
+  if (s >= SCHOOLS.committedAt) return 'hi';
+  if (s >= SCHOOLS.leaningAt) return 'toHi';
+  if (s <= -SCHOOLS.committedAt) return 'lo';
+  if (s <= -SCHOOLS.leaningAt) return 'toLo';
   return 'mid';
 }
 
-const BAND_LABEL = {
-  schools: 'The schools\' Law',
-  toSchools: 'Leaning to the schools',
-  mid: 'Unruled',
-  toHouses: 'Leaning to the houses',
-  houses: 'The houses\' Law',
-};
+// The band's label is the quarrel's own pole name, because "the schools' Law"
+// is the right sentence in 140 BCE and the wrong one in 1948. Only the middle
+// is shared, and only because an unruled crown reads the same in every century.
+function bandLabel(band, q) {
+  if (band === 'mid' || !q) return 'Unruled';
+  const pole = band === 'hi' || band === 'toHi' ? q.hi : q.lo;
+  const name = (pole && pole.name) || '';
+  return (band === 'hi' || band === 'lo') ? name : 'Leaning: ' + name;
+}
 
 // The one-line read the rest of the sim and the content can gate on:
-// `leanOfLaw(ctx) >= 6` is a realm that has committed to the schools.
+// `leanOfLaw(ctx) >= 6` is a realm that has committed to its quarrel's `hi`.
 export function leanOfLaw(ctx) {
   return schoolsSeated(ctx) ? readingScore(ctx) : 0;
 }
 
-// Both houses' standing, and what the two of them come to together.
+// Both sides' standing, and what the two of them come to together.
 function courtRead(ctx, seats) {
   const tag = ctx.game.playerTag;
-  const oral = num(factionApproval(ctx, tag, seats.oralId), 50);
-  const written = num(factionApproval(ctx, tag, seats.writtenId), 50);
+  const q = seats.quarrel;
+  const hi = num(factionApproval(ctx, tag, seats.hiId), 50);
+  const lo = num(factionApproval(ctx, tag, seats.loId), 50);
   let key = '';
-  if (oral >= SCHOOLS.concordAt && written >= SCHOOLS.concordAt) key = 'concord';
-  else if (oral <= SCHOOLS.schismAt && written <= SCHOOLS.schismAt) key = 'schism';
-  else if (oral <= SCHOOLS.brokenAt && written >= SCHOOLS.backedAt) key = 'breachOral';
-  else if (written <= SCHOOLS.brokenAt && oral >= SCHOOLS.backedAt) key = 'breachWritten';
-  return { oral, written, key, def: key ? COURT_STATES[key] : null };
+  if (hi >= SCHOOLS.concordAt && lo >= SCHOOLS.concordAt) key = 'concord';
+  else if (hi <= SCHOOLS.schismAt && lo <= SCHOOLS.schismAt) key = 'schism';
+  else if (hi <= SCHOOLS.brokenAt && lo >= SCHOOLS.backedAt) key = 'breachHi';
+  else if (lo <= SCHOOLS.brokenAt && hi >= SCHOOLS.backedAt) key = 'breachLo';
+  const words = key && q.states ? q.states[key] : null;
+  return {
+    hi, lo, key,
+    def: key ? {
+      name: (words && words.name) || key,
+      blurb: (words && words.blurb) || '',
+      text: courtTextOf(q, key),
+      effects: courtEffects(q, key),
+    } : null,
+  };
 }
 
 // Scale the reading's authored effect block by how far out the realm actually
@@ -275,7 +327,7 @@ export function issueRulingCore(ctx, rulingId, side) {
     if (!seats) return { ok: false, why: 'The two schools do not sit at our court.' };
     const ruling = RULING_BY_ID.get(String(rulingId));
     if (!ruling) return { ok: false, why: 'No such question is before the court.' };
-    if (side !== 'oral' && side !== 'written') return { ok: false, why: 'The court must come down on one side.' };
+    if (side !== 'hi' && side !== 'lo') return { ok: false, why: 'The court must come down on one side.' };
     const why = rulingBlocker(ctx, ruling);
     if (why) return { ok: false, why };
 
@@ -295,8 +347,8 @@ export function issueRulingCore(ctx, rulingId, side) {
     // One reading wins and the other house pays for it, every time and by the
     // same amount. This is the line that makes the axis a choice rather than a
     // shopping list.
-    const winner = side === 'oral' ? seats.oralId : seats.writtenId;
-    const loser = side === 'oral' ? seats.writtenId : seats.oralId;
+    const winner = side === 'hi' ? seats.hiId : seats.loId;
+    const loser = side === 'hi' ? seats.loId : seats.hiId;
     shiftFaction(ctx, g.playerTag, winner, SCHOOLS.rulingSwing);
     shiftFaction(ctx, g.playerTag, loser, -SCHOOLS.rulingSwing);
     chronicle(ctx, 'faith', 'The court rules on ' + ruling.name + ': ' + chosen.blurb);
@@ -306,8 +358,8 @@ export function issueRulingCore(ctx, rulingId, side) {
       side,
       label: chosen.label,
       blurb: chosen.blurb,
-      house: (side === 'oral' ? seats.oral.name : seats.written.name) || winner,
-      other: (side === 'oral' ? seats.written.name : seats.oral.name) || loser,
+      house: (side === 'hi' ? seats.hi.name : seats.lo.name) || winner,
+      other: (side === 'hi' ? seats.lo.name : seats.hi.name) || loser,
       swing: SCHOOLS.rulingSwing,
       reading: readingScore(ctx),
     };
@@ -320,7 +372,7 @@ export function issueRulingCore(ctx, rulingId, side) {
 // ─────────────────────────────────────────────────────────── the breach card
 function dealBreachCard(ctx, which, seats) {
   const g = ctx.game;
-  const spec = BREACH_CRISES[which];
+  const spec = seats.quarrel.crises && seats.quarrel.crises[which];
   if (!ctx.dynEvents || !spec) return;
   const tag = g.playerTag;
   g.flags._dynEvN = num(g.flags._dynEvN, 0) + 1;
@@ -340,8 +392,8 @@ function dealBreachCard(ctx, which, seats) {
           if (Number.isFinite(opt.treasury)) t.treasury = num(t.treasury) + opt.treasury;
           if (Number.isFinite(opt.legitimacy)) t.legitimacy = clamp(num(t.legitimacy, 50) + opt.legitimacy, 0, 100);
           if (Number.isFinite(opt.stability)) t.stability = clamp(num(t.stability) + opt.stability, -3, 3);
-          if (Number.isFinite(opt.oral)) shiftFaction(ctx, tag, seats.oralId, opt.oral);
-          if (Number.isFinite(opt.written)) shiftFaction(ctx, tag, seats.writtenId, opt.written);
+          if (Number.isFinite(opt.hi)) shiftFaction(ctx, tag, seats.hiId, opt.hi);
+          if (Number.isFinite(opt.lo)) shiftFaction(ctx, tag, seats.loId, opt.lo);
           if (Number.isFinite(opt.push)) {
             // A card's swing is not a ruling — it has no dispute to store — so
             // it rides its own persisted term and the reading sums both.
@@ -380,9 +432,9 @@ export function monthlySchools(ctx) {
     // ruling cannot be lost by anything that touches the modifier list. These
     // carry no `months`: tickModifiers leaves an undated modifier alone, and a
     // ruling of the court is not a mood that wears off.
-    for (const r of RULINGS) {
+    for (const r of seats.quarrel.rulings) {
       const side = s.rulings[r.id];
-      if (side !== 'oral' && side !== 'written') continue;
+      if (side !== 'hi' && side !== 'lo') continue;
       setMod(t, 'ruling_' + r.id, {
         id: 'ruling_' + r.id,
         name: r[side].name,
@@ -393,7 +445,7 @@ export function monthlySchools(ctx) {
     // ---- the reading -----------------------------------------------------
     const score = readingScore(ctx);
     const mag = Math.abs(score) / SCHOOLS.max;
-    const pole = score > 0 ? READING.oral : READING.written;
+    const pole = score > 0 ? seats.quarrel.hi : seats.quarrel.lo;
     setMod(t, 'schools_reading', mag > 0 ? {
       id: 'schools_reading',
       name: pole.name,
@@ -412,8 +464,8 @@ export function monthlySchools(ctx) {
     // from him, and the fix was never available at the price he wanted.
     if (mag >= SCHOOLS.leaningAt / SCHOOLS.max) {
       const pull = SCHOOLS.readingPull * mag;
-      shiftFaction(ctx, g.playerTag, score > 0 ? seats.oralId : seats.writtenId, pull);
-      shiftFaction(ctx, g.playerTag, score > 0 ? seats.writtenId : seats.oralId, -pull);
+      shiftFaction(ctx, g.playerTag, score > 0 ? seats.hiId : seats.loId, pull);
+      shiftFaction(ctx, g.playerTag, score > 0 ? seats.loId : seats.hiId, -pull);
     }
 
     // ---- what the two houses come to together ----------------------------
@@ -430,7 +482,7 @@ export function monthlySchools(ctx) {
     // that party is a school, the crown has a priest who either does or does
     // not perform the rites the crown has ruled for, and the country can tell.
     const hp = t.highPriest;
-    const priestHouse = hp && (hp.faction === seats.oralId ? 1 : hp.faction === seats.writtenId ? -1 : 0);
+    const priestHouse = hp && (hp.faction === seats.hiId ? 1 : hp.faction === seats.loId ? -1 : 0);
     let office = null;
     if (priestHouse && Math.abs(score) >= SCHOOLS.leaningAt) {
       const aligned = (priestHouse > 0) === (score > 0);
@@ -440,22 +492,27 @@ export function monthlySchools(ctx) {
         months: 2,
         effects: { legitimacyAdd: aligned ? SCHOOLS.officeAligned : SCHOOLS.officeAtOdds },
       };
-    } else if (!hp && score <= -SCHOOLS.leaningAt) {
-      // The houses' Law with nobody in the office is the one combination that
-      // cannot work: their whole case is that the Temple governs, and there is
-      // nobody in the Temple to govern.
+    } else if (!hp && score <= -SCHOOLS.leaningAt && templeStands(ctx)) {
+      // A custodial reading with nobody in the office is the one combination
+      // that cannot work: the whole case for that side is that the altar
+      // governs, and there is nobody at the altar to govern.
+      //
+      // The Temple test is not decoration. Without it, a 1948 cabinet that has
+      // ruled for the Rabbinate would be charged legitimacy every month for
+      // failing to appoint a High Priest — which is precisely the anachronism
+      // §169's own gate exists to catch, arriving by a different door.
       office = {
         id: 'schools_office',
-        name: 'The Houses\' Law, and No Priest to Keep It',
+        name: (seats.quarrel.lo.name || 'That Reading') + ', and No Priest to Keep It',
         months: 2,
-        effects: { legitimacyAdd: SCHOOLS.vacancyUnderHouses },
+        effects: { legitimacyAdd: SCHOOLS.vacancyUnderLo },
       };
     }
     setMod(t, 'schools_office', office);
 
     // ---- the breach, and the card it eventually deals ---------------------
-    for (const which of ['oral', 'written']) {
-      const broken = court.key === (which === 'oral' ? 'breachOral' : 'breachWritten');
+    for (const which of ['hi', 'lo']) {
+      const broken = court.key === (which === 'hi' ? 'breachHi' : 'breachLo');
       s.breach[which] = broken ? num(s.breach[which]) + 1 : 0;
       if (!broken || s.breach[which] < SCHOOLS.breachMonthsToCrisis) continue;
       if (!s.crisisAt || typeof s.crisisAt !== 'object') s.crisisAt = {};
@@ -490,13 +547,14 @@ export function schoolsReport(ctx) {
     const score = readingScore(ctx);
     const band = readingBand(score);
     const mag = Math.abs(score) / SCHOOLS.max;
-    const pole = score > 0 ? READING.oral : score < 0 ? READING.written : null;
+    const q = seats.quarrel;
+    const pole = score > 0 ? q.hi : score < 0 ? q.lo : null;
     const court = courtRead(ctx, seats);
     const now = monthIndex(g.date);
     const cd = Math.max(0, Math.ceil(num(s.lastRulingAt, -Infinity) + SCHOOLS.rulingCdMonths - now));
 
     const marks = [];
-    for (const r of RULINGS) {
+    for (const r of q.rulings) {
       const side = given[r.id];
       if (side) marks.push({ text: r.name + ': ' + r[side].label + '.', d: num(r[side].push) });
     }
@@ -522,13 +580,13 @@ export function schoolsReport(ctx) {
     const hp = t.highPriest;
     let office = null;
     if (hp) {
-      const fromOral = hp.faction === seats.oralId;
-      const fromWritten = hp.faction === seats.writtenId;
-      if (fromOral || fromWritten) {
-        const aligned = Math.abs(score) < SCHOOLS.leaningAt ? null : (fromOral === (score > 0));
+      const fromHi = hp.faction === seats.hiId;
+      const fromLo = hp.faction === seats.loId;
+      if (fromHi || fromLo) {
+        const aligned = Math.abs(score) < SCHOOLS.leaningAt ? null : (fromHi === (score > 0));
         office = {
           name: hp.name,
-          house: (fromOral ? seats.oral.name : seats.written.name) || hp.faction,
+          house: (fromHi ? seats.hi.name : seats.lo.name) || hp.faction,
           aligned,
           text: aligned === null
             ? 'The crown has ruled on nothing, so the office contradicts nothing.'
@@ -537,29 +595,32 @@ export function schoolsReport(ctx) {
               : 'The priest performs rites the crown has ruled against: ' + SCHOOLS.officeAtOdds + ' legitimacy a month.',
         };
       }
-    } else if (score <= -SCHOOLS.leaningAt) {
+    } else if (score <= -SCHOOLS.leaningAt && templeStands(ctx)) {
       office = {
         name: '', house: '', aligned: false,
-        text: 'The houses\' Law with an empty office: ' + SCHOOLS.vacancyUnderHouses + ' legitimacy a month on top of the ordinary vacancy.',
+        text: (q.lo.name || 'That reading') + ' with an empty office: ' + SCHOOLS.vacancyUnderLo
+          + ' legitimacy a month on top of the ordinary vacancy.',
       };
     }
 
     return {
+      title: q.title || 'The Law and Its Readers',
+      quarrel: q.id,
       reading: {
         score,
         band,
         max: SCHOOLS.max,
-        label: BAND_LABEL[band],
-        oralPole: seats.oral.name || 'The schools',
-        writtenPole: seats.written.name || 'The houses',
+        label: bandLabel(band, q),
+        hiPole: seats.hi.name || q.hi.name,
+        loPole: seats.lo.name || q.lo.name,
         name: pole ? pole.name : '',
         text: pole ? pole.text + (mag < 1 ? ' — at ' + Math.round(mag * 100) + '% while the reading stands here' : '') : '',
-        blurb: pole ? pole.blurb : READING.mid.blurb,
+        blurb: pole ? pole.blurb : (q.mid || 'The court has ruled on nothing yet.'),
         marks,
       },
       houses: [
-        house(seats.oral, seats.oralId, court.oral),
-        house(seats.written, seats.writtenId, court.written),
+        house(seats.hi, seats.hiId, court.hi),
+        house(seats.lo, seats.loId, court.lo),
       ],
       court: court.def ? {
         key: court.key,
@@ -568,13 +629,17 @@ export function schoolsReport(ctx) {
         blurb: court.def.blurb,
         good: court.key === 'concord',
       } : {
-        key: '', name: 'The Houses Coexist', good: false,
-        text: 'Neither house owns this court and neither has left it.',
+        // The fifth state is the absence of the other four, so it is named
+        // from the quarrel's own two sides rather than from a fixed phrase —
+        // "the houses coexist" is the right sentence in 140 BCE and a very
+        // strange one about an Israeli cabinet (SPEC §201).
+        key: '', name: 'Neither Side Owns the Chamber', good: false,
+        text: seats.hi.name + ' and ' + seats.lo.name + ' are both still in the room.',
         blurb: 'Nothing extra either way — which is itself an achievement once the rulings start.',
       },
       office,
       cooldown: cd,
-      rulings: RULINGS.map((r) => {
+      rulings: q.rulings.map((r) => {
         const side = given[r.id];
         const whyNot = rulingBlocker(ctx, r);
         const price = costText(r.cost, true);
@@ -596,8 +661,8 @@ export function schoolsReport(ctx) {
           fullPrice,
           can: !side && !whyNot,
           whyNot: side ? '' : whyNot,
-          oral: opt('oral'),
-          written: opt('written'),
+          hi: opt('hi'),
+          lo: opt('lo'),
           swing: SCHOOLS.rulingSwing,
         };
       }),

@@ -349,6 +349,11 @@ export const BOOKMARK_614 = {
     ],
   },
 
+  // The Mount is clear for the first time in five centuries (SPEC §201), and
+  // the two authorities that governed Jewish life without it both arrive to
+  // find out what happens now.
+  schools: { JUD: 'altar_and_academy' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {

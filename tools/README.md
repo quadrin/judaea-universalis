@@ -1172,3 +1172,49 @@ moved pins: `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
 roads not taken), `smoke126` (the §196 chairs re-counted), `uitest2` (21
 medallions). On the tree merged with main's §197-§199 the battery is **129 of 129 headless suites ALL PASS**, their smoke127 and smoke128
 and this section's smoke129 all included.
+
+---
+
+## §201 — every chapter argues about something
+
+§190 built the quarrel engine for the Pharisees and the Sadducees and left
+seven chapters with a Faith tab that showed an expectation gauge, a pilgrim
+road and nothing about the argument each of them is actually about. The
+engine is unchanged; the content became a table of quarrels keyed by id,
+and each bookmark maps its courts to one (`schools: { HER: 'fence_and_gate' }`).
+The poles were renamed `oral`/`written` to `hi`/`lo`, matching the doctrine
+axes — in 1948 neither side is an oral tradition.
+
+Seven quarrels: the Hasmonean pair (167 from 140 BCE, both brothers in 67),
+Herod's Sanhedrin against his imported priesthood, the offering for Caesar
+and what followed it in 66, Akiva's schools against the Nasi's war office in
+132, the Samaritan Council of Seven against the Gerizim priesthood in 529,
+the academies against a restored altar in 614, and the letter of June in
+1948. Two courts had no second religious seat and both absences were bugs:
+Herod's roster was the one court in the game where the altar had no voice,
+in the reign that rebuilt the Temple, and 1948 had three secular seats and
+nobody who could have signed the status quo letter. They gain **the House of
+Boethus** and **the Religious Bloc**, with estate ground and — because §197
+requires every seated party to be askable — authored asks apiece.
+
+Two latent Hasmonean assumptions came out with the generalization, both now
+regression-tested: the shared breach line charged `pilgrimMult` against
+ascents a Temple-less chapter does not have (a quarrel may now override the
+shared effects and text, and 1948 does), and the office branch would have
+docked an Israeli cabinet legitimacy every month for not appointing a High
+Priest — it is gated on §169's own Temple test now, which is the same
+anachronism that gate was built for arriving by a different door. The
+`priestly: false` sweep also reached further, because the office panel now
+appears at courts §190 never looked at: Herod's Idumean family and hired
+swords and Antigonus' Parthian party come off a ballot they were never
+eligible for.
+
+`smoke121` is the contract, grown a §201 section that walks all eight
+bookmarks — the declared quarrel convenes, both its sides are real seats of
+that court, the needle is labelled at both ends with the chapter's own
+names, every chapter opens *Unruled*, no ruling id collides across chapters,
+and ruling every dispute one way reaches the pole in every quarrel.
+`uitest40` drives two chapters in a real browser: the Hasmonean quarrel in
+167 and the Status Quo in 1948, two headings and two sets of poles. Merged
+with main's §197-§200 the battery is **129 of 129 headless suites ALL
+PASS**, `smoke127`, `smoke128` and `smoke129` all included.

@@ -239,6 +239,10 @@ export const BOOKMARK_132 = {
     ],
   },
 
+  // Akiva's schools and the Nasi's war office (SPEC §201), which agreed for
+  // three years and are the two halves of every document the caves gave back.
+  schools: { JUD: 'star_and_schools' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {

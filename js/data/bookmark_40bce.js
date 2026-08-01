@@ -307,12 +307,63 @@ export const BOOKMARK_40 = {
     ],
   },
 
+  // The argument of this reign (SPEC §201): the Sanhedrin Herod executed
+  // forty-five of, against the Alexandrian priesthood he imported so that the
+  // office could never be used against him. Antigonus' court is the same
+  // quarrel from the other side of the war and is left to the last Hasmonean's
+  // own three seats, which do not divide along it.
+  schools: { HER: 'fence_and_gate' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {
     HER: [
+      // The house this king invented (SPEC §201). Herod solved the Hasmonean
+      // problem — a High Priest with a claim to the throne — by fetching Simon
+      // son of Boethus out of Alexandria, marrying his daughter, and handing
+      // the office to a family that had no base in the country and therefore
+      // could never use it against him (Ant. XV.320–322). The Boethusians are
+      // named in the sources for two centuries after as the party of that
+      // arrangement, and this court had no seat for them: a roster with a
+      // Sanhedrin and no priesthood at all was the one court in the game where
+      // the altar had no voice, in the reign that rebuilt the Temple.
+      {
+        id: 'boethusians', name: 'The House of Boethus',
+        priestly: true,
+        desc: 'The high priesthood the king imported from Alexandria and married into: rich, '
+          + 'obliging, and with no following anywhere in the country — which is precisely why '
+          + 'they were chosen.',
+        drift(ctx, t) {
+          // They exist by the crown's favour and they can count. A solvent king
+          // who keeps the office in his own gift is their king; a king in debt
+          // is a king who might sell the office to somebody else.
+          const base = (t.treasury || 0) > 0 ? 0.4 : -0.5;
+          return (ctx.game.flags && ctx.game.flags.boethusDeposed) ? base - 0.5 : base;
+        },
+        boon: {
+          name: 'The Altar Blesses the Builder',
+          text: '+8% from the ascents, +0.2 legitimacy a month',
+          effects: { pilgrimMult: 1.08, legitimacyAdd: 0.2 },
+        },
+        bane: {
+          name: 'A Priesthood That Serves Reluctantly',
+          text: '−0.25 legitimacy a month, −10% from the ascents',
+          effects: { legitimacyAdd: -0.25, pilgrimMult: 0.90 },
+        },
+        appease: { label: 'Confirm the vestments and the revenues (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The Alexandrians Ask for Certainty',
+          text: 'They gave a daughter to this house and took an office their family had no claim '
+            + 'to, and they have been the priesthood nobody in the country respects ever since. '
+            + 'They would like the arrangement put beyond doubt: the office confirmed, the '
+            + 'estates entailed, and the vestments kept somewhere other than the king\'s fortress.',
+          grant: { label: 'The office is theirs', cost: { infl: 55 } },
+          refuse: { label: 'The office is mine to give', tooltip: 'They begin writing to Alexandria again.' },
+        },
+      },
       {
         id: 'kin', name: 'The House of Antipater',
+        priestly: false, // an Idumean house; the same bar as their cousins in 67 (SPEC §190)
         desc: 'Brothers, cousins and in-laws in every office you can fill — the family machine that raised you.',
         drift(ctx, t) { return (t.stability || 0) >= 1 ? 0.4 : -0.4; },
         boon: { name: 'The Family Machine', text: '+8% income', effects: { incomeMult: 1.08 } },
@@ -345,6 +396,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'swords', name: 'The Hired Swords',
+        priestly: false, // mercenaries, mostly foreign (SPEC §190)
         desc: 'Idumean bands, Cilician veterans, whoever the silver reaches: the army that is yours exactly as long as the pay is.',
         drift(ctx, t) {
           const g = ctx.game;
@@ -385,6 +437,7 @@ export const BOOKMARK_40 = {
       },
       {
         id: 'parthians', name: 'The Parthian Party',
+        priestly: false, // a foreign interest at a Jewish court (SPEC §190)
         desc: 'The courtiers who rode in with the horsemen and know exactly whose lances made you king.',
         drift(ctx, t) {
           const g = ctx.game;

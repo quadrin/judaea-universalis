@@ -1,5 +1,5 @@
-// UI verification — SPEC §190: the quarrel of the two schools renders in the
-// Faith tab of the realm panel, and its buttons rule.
+// UI verification — SPEC §190/§201: a chapter's religious quarrel renders in
+// the Faith tab of the realm panel, and its buttons rule.
 //
 // The assertion this suite exists for is the LAST one: clicking a side of a
 // dispute has to move the live game — the reading, both houses, and the row
@@ -72,8 +72,8 @@ const label = await page.locator(BLOCK + '.np-dox-label').textContent();
 ok(/Unruled/i.test(label), 'and an unruled crown reads as unruled, not balanced: ' + label);
 const disputes = await page.locator(BLOCK + '.np-seat-btns').count();
 ok(disputes === 6, `all six disputes are open — the House stands in this chapter: ${disputes}`);
-ok(await page.locator(BLOCK + '.np-rule-oral').count() === disputes
-  && await page.locator(BLOCK + '.np-rule-written').count() === disputes,
+ok(await page.locator(BLOCK + '.np-rule-hi').count() === disputes
+  && await page.locator(BLOCK + '.np-rule-lo').count() === disputes,
   'each one offers both readings, and neither is the default');
 
 console.log('== the buttons rule, and the game hears it ==');
@@ -89,7 +89,7 @@ const before = await page.evaluate(() => {
   const t = window._ctx.game.tags[window._ctx.game.playerTag];
   return { pharisees: t.factions.pharisees, sadducees: t.factions.sadducees };
 });
-await page.locator(BLOCK + '.np-rule-oral').first().click();
+await page.locator(BLOCK + '.np-rule-hi').first().click();
 await page.waitForTimeout(250);
 const after = await page.evaluate(() => {
   const t = window._ctx.game.tags[window._ctx.game.playerTag];
@@ -108,6 +108,46 @@ const ruledRows = await page.locator(BLOCK + '.np-rule-done').count();
 ok(ruledRows === 1, 'the row redraws as settled record rather than an open choice');
 const label2 = await page.locator(BLOCK + '.np-dox-label').textContent();
 ok(!/Unruled/i.test(label2), 'and the needle has moved off centre: ' + label2);
+
+console.log('== §201: a different chapter, a different argument ==');
+// The strongest evidence the generalization is real: a chapter with no Temple,
+// no ascents and no High Priest, whose quarrel is a letter from June 1947.
+await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });
+await page.evaluate(() => localStorage.clear());
+await page.reload({ waitUntil: 'networkidle' });
+await page.waitForSelector('.bm-card', { timeout: BOOT_MS });
+{
+  // The shelf is a carousel: only the current card is clickable, so walk it.
+  let found = false;
+  for (let i = 0; i < 10 && !found; i++) {
+    const cur = page.locator('.bm-card.current');
+    const txt = (await cur.textContent()) || '';
+    if (/1948/.test(txt)) { await cur.click(); found = true; break; }
+    await page.locator('.ss-next').click();
+    await page.waitForTimeout(450); // slide transition
+  }
+  ok(found, 'the 1948 chapter is on the shelf');
+}
+await page.waitForSelector('.nation-card');
+await page.locator('.nation-card').first().click(); // ISR
+await page.waitForFunction(() => !!window._ctx);
+await page.waitForTimeout(400);
+await page.locator('.tb-flag').click();
+await page.waitForSelector('#nation-panel:not(.hidden)');
+await openFaith();
+ok(await page.locator(BLOCK.trim() + ':not(.hidden)').count() === 1, '1948 carries a quarrel of its own');
+const title48 = await page.locator(BLOCK + '.pp-build-title').textContent();
+ok(title48.trim() === 'The Status Quo', 'under its own heading, not the Hasmonean one: ' + title48.trim());
+const poles48 = await page.locator(BLOCK + '.np-dox-pole').allTextContents();
+ok(poles48.length === 2 && /Religious Bloc/.test(poles48[0]) && /Kibbutzim/.test(poles48[1]),
+  'with this chapter\'s own poles: ' + poles48.join(' ←→ '));
+ok(await page.locator('#nation-panel [data-ref="sacredBlock"]:not(.hidden)').count() === 0,
+  'and no Hope and the Office beside it — there is no Temple in 1948');
+{
+  const qs = await page.locator(BLOCK + '.np-fac-name').allTextContents();
+  ok(qs.some((q) => /Letter of June/i.test(q)) && qs.some((q) => /Who Is a Jew/i.test(q)),
+    'and the disputes are the ones this chapter actually had: ' + qs.slice(2, 6).join(' · '));
+}
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));
 

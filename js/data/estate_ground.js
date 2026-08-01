@@ -58,6 +58,12 @@ export const ESTATE_GROUND = {
   kin: { base: 30, capital: 24, desert: 18, fort: 14, city: 8 },
   antipater: { base: 28, desert: 22, trade: 18, coast: 12, capital: 14 },
   sanhedrin: { base: 30, capital: 26, holy: 20, city: 14, faith: 14 },
+  // Herod's imported priesthood (SPEC §201): the Mount, the capital and the
+  // developed coast their Alexandrian money came through — and, uniquely among
+  // the priestly parties here, almost nothing in the countryside, because a
+  // house fetched from Egypt to hold an office has no villages behind it. That
+  // is the whole reason the king chose them.
+  boethusians: { base: 22, holy: 32, capital: 24, dev: 18, coast: 12, rural: -20, hills: -14 },
   street: { base: 28, capital: 30, city: 24, dev: 10, rural: -16 },
   parthians: { base: 24, desert: 20, hills: 14, alien: 12, coast: -18 },
   fighters: { base: 26, hills: 24, rural: 20, faith: 18, fort: 12, city: -8 },
@@ -68,6 +74,10 @@ export const ESTATE_GROUND = {
   kibbutzim: { base: 24, rural: 34, faith: 14, dev: -12, city: -18 },
   coalition: { base: 30, city: 22, dev: 18, capital: 14, rural: 6 },
   revisionists: { base: 26, city: 26, coast: 18, dev: 12, fort: 10, rural: -10 },
+  // The status-quo signatories (SPEC §201): strong where the old yishuv and
+  // the religious neighbourhoods are — Jerusalem, the holy towns, the dense
+  // quarters — and weakest on exactly the ground the kibbutz movement holds.
+  rabbinate: { base: 26, holy: 30, capital: 22, city: 16, faith: 18, rural: -14 },
   // ---- the client courts (SPEC §185) --------------------------------------
   // Agrippa's kingdom: the pious countryside, the stewarded estates, and the
   // military colony; Adiabene: the converted capital, the road, the horse —
