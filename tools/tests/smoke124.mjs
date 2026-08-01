@@ -86,12 +86,19 @@ console.log('== every address in the book is a cell on the map ==');
 {
   // The table is keyed on canonical province names, and nothing at write
   // time checked the key. A typo would ship a community nobody can click.
+  // §195 added a second kind of seat — `tag` instead of `prov`, a community
+  // hosted by a court (America has no cell) — so the guard checks whichever
+  // key an entry carries.
   const names = new Set(MAP_DATA.provinces.map((p) => p.name));
-  const missing = DIASPORA.filter((d) => !names.has(d.prov)).map((d) => d.prov);
-  ok(missing.length === 0, 'every community\'s prov is a canonical cell'
+  const missing = DIASPORA.filter((d) => d.prov && !names.has(d.prov)).map((d) => d.prov);
+  ok(missing.length === 0, 'every province-seated community\'s prov is a canonical cell'
     + (missing.length ? ' (missing: ' + missing.join(', ') + ')' : ' (' + DIASPORA.length + ' entries)'));
-  ok(DIASPORA.length === 35, 'thirty-five communities: twenty of §172 and fifteen of §194');
-  ok(new Set(DIASPORA.map((d) => d.prov)).size === DIASPORA.length, 'no cell carries two entries');
+  ok(DIASPORA.every((d) => (d.prov && !d.tag) || (d.tag && !d.prov)),
+    'every entry sits on exactly one seat: a cell or a court');
+  // 35 until §195 seated London and America.
+  ok(DIASPORA.length === 37, 'thirty-seven communities: twenty of §172, fifteen of §194, two of §195');
+  const seats = DIASPORA.map((d) => d.prov || ('tag:' + d.tag));
+  ok(new Set(seats).size === seats.length, 'no seat carries two entries');
   ok(DIASPORA.every((d) => d.size >= 1 && d.size <= 5), 'every size is on the 1-5 scale');
   ok(DIASPORA.every((d) => d.until === null || d.from < d.until), 'every window closes after it opens');
 }

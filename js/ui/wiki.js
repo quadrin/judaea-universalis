@@ -239,8 +239,11 @@ export function createWiki({ DEFINES, getCtx }) {
       .map((d) => {
         // The chapter's own label for the cell where they live — Seleucia-
         // Ctesiphon is Baghdad in 1948 and Memphis is Cairo, and the community
-        // is continuous in a way the label is not.
-        const where = (b.provinceNames && b.provinceNames[d.prov]) || d.prov;
+        // is continuous in a way the label is not. A court-hosted community
+        // (SPEC §195) has no cell: its address is its host.
+        const where = d.prov
+          ? ((b.provinceNames && b.provinceNames[d.prov]) || d.prov)
+          : ('under ' + tagName(d.tag));
         const late = !openAt(d, y0);
         return `<div class="wiki-kv"><span class="wiki-k">${esc(d.name)}</span>`
           + `<span class="wiki-v"><b>${esc(where)}</b>`

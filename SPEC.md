@@ -11122,6 +11122,80 @@ start is 40-50, so the men have to be earned across years of standing.
   Rome-hosted additions refuse silver at 66 CE opening standing; and no new
   community will send men on day one, at 66 CE or in 1948.
 
+## 195. A community with no cell is written to from its host's own court
+
+§194 widened the sea and stopped at the map's edge, and the 1948 chapter's
+two biggest hosts sit past it. England is ON the map — Londinium is a live
+cell named London — but its community's window opens at the 1656
+Resettlement, twelve centuries after the last chapter that could have
+clicked it, so §194's sweep never reached it. And the United States is not
+on the map at all: the frame ends at the Atlantic, and Truman's court is an
+off-map seat in the ledger (§180) — which in 1948 hosts **the largest Jewish
+community there has ever been**, the one that filled the appeal, ran the
+procurement network, crewed Machal and had Truman's ear. A dispersion model
+of 1948 without American Jewry is not a model of 1948.
+
+**The seat is the new idea; everything else is §172 unchanged.** A diaspora
+entry now names exactly one seat: `prov` (a cell, as before) or `tag` (a
+court — SPEC §195). A court-hosted community stores its standing on the host
+tag the way a cell community rides its province, drifts on the same monthly
+rule toward the same target arithmetic (`standingTargetFor` — the host is
+named instead of read off an owner), offers the same four asks priced by the
+same table, and answers the same crown test: Jewish, human, alive. Silver is
+dev-pegged (§176) and a court has no cell to read, so a tag entry carries a
+stand-in `dev` — America's is 40, the richest host on the list, pricing one
+gathering at 80 talents on the five-year clock: real money beside §186's
+government credits without double-writing them, because the appeal and the
+Export-Import Bank were different purses in fact. The reprisal roll stands
+too, and lands where a reprisal can land: a cell community's province takes
+the unrest; a court community pays on the ledger — standing, and the host's
+regard — which is what the seized ships and indicted buyers of the
+procurement network actually cost. Two entries use it: **The Jews of London**
+(Londinium, size 3, from 1656 — an ordinary cell seat whose window simply
+starts late) and **The Jews of America** (tag USA, size 5 — the one peer
+Alexandria ever gets, from 1880).
+
+**The panel is where §180 already keeps an off-map power's envoys.** A
+foreign court's Abroad tab grows a **Dispersion** section, Jewish crowns
+only (the sim returns null for everyone else and the section hides): a
+court-hosted community renders its full §172 block there — standing bar,
+drift target, the four asks as buttons — because there is no cell to click;
+a community living on that court's soil renders as a row naming it and its
+standing, and clicking the row runs the same selection a map click makes, so
+the nation panel closes and the province panel's existing block does the
+work. Nothing is written twice. The section is generic, which is the quiet
+payoff: Attlee's Britain lists London beside **Tripoli — because the
+British Military Administration really did hold Tripolitania in 1948** —
+France lists Marseille, Tunis, Constantine and Morocco, and in 66 CE Rome's
+own panel becomes a census of the communities the revolt is gambling with.
+
+**The Machal exception, deliberately.** §194 pinned that no new community
+sends men on day one. America does: it opens at 60, past the volunteer bar,
+because the flyers and gunners of 1948 really did come off those docks while
+the State Department's embargo stood. It is a single shot — the ask spends
+20 standing, the recovery is years, and the clock is 48 months — and it is
+the entry's whole opening argument: 2,100 men, once, when the war is new.
+Everything else obeys the §194 envelope: London opens at 45 under Bevin's
+government and will not send men or silver on day one; America's silver is
+80 talents once per five years against a 28-talent monthly gross; the
+intercession is +30 regard with Washington on a three-year clock, priced at
+15 influence and a 20% chance of scandal — a slow historical lever toward
+§186's aid bar and the arms threshold, not a faucet. And the all-AI harness
+still cannot see any of it: `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after, anomalies and all.
+
+- **Regression contract**: `smoke125` — the two windows touch 1948 and no
+  other chapter; the tag seat answers the nation panel with provId 0 and
+  four asks; silver is the stand-in dev × size; Machal arrives on day one
+  and cannot be repeated; London refuses its sons; a forced reprisal drops
+  Washington's regard and touches no province anywhere; the diaspora report
+  addresses America by its host; Egypt's letters are refused at the door;
+  and the panel wiring (Dispersion section, `askTagCommunity` buttons, jump
+  rows through `setSelectedProv`, the Compendium's "under" label) is pinned
+  at the source. `smoke124` — the §194 pins re-pinned for the two new seats
+  (37 entries, exactly one seat each). `smoke109`/`smoke110`/`smoke106` —
+  unchanged and green.
+
 - **Regression contract**: `smoke124` — every entry's cell exists on the map
   (the table finally has a typo guard), the fifteen windows are pinned date
   by date, the Punic gap holds (no community under the 167 chapter's living
@@ -11135,7 +11209,7 @@ start is 40-50, so the men have to be earned across years of standing.
   `smoke110`, `smoke106` — unchanged and green: the east's dates and the
   ask machinery are exactly what they were.
 
-## 195. The chairs take their turn — the client trees grown
+## 196. The chairs take their turn — the client trees grown
 
 §185 seated five client chairs — Adiabene in 67 BCE, 40 BCE, 66 CE and
 132 CE, Agrippa II in 66 CE — and gave each the minimum kit: six
@@ -11211,8 +11285,8 @@ worlds already set, which is what riding standing forks buys.
 
 **The blind spot got its check.** Twice a two-nodes-one-cell collision
 hid in a second-playable tree because the live no-collision check boots
-one side per chapter (§187 found one by hand, §183 another). Every §195
-node declares col *and* row, and `smoke125` now derives the grid for
+one side per chapter (§187 found one by hand, §183 another). Every §196
+node declares col *and* row, and `smoke126` now derives the grid for
 **every playable side of every bookmark** — the check that would have
 heard both old collisions is finally standing where they hid. The
 chains stay append-only in both directions (new objectives after the
@@ -11220,9 +11294,9 @@ last objective, new roads after the last road), so `missionsDone` keeps
 its §177 meaning and `smoke16`'s raw indices into the 132/614 principal
 tables never notice.
 
-- **Regression contract**: `smoke125` — the five chains at 11/11/12/14/11
-  with 2/2/3/4/2 roads, every §195 node dressed and seated, every
-  conquest target foreign at boot, nothing §195 accomplished on day one,
+- **Regression contract**: `smoke126` — the five chains at 11/11/12/14/11
+  with 2/2/3/4/2 roads, every §196 node dressed and seated, every
+  conquest target foreign at boot, nothing §196 accomplished on day one,
   every new branch paying its declared modifiers when the forced world
   arrives (the fords, the altars, the kingmaker, the lamp, the lances,
   the escort, the pyramids, the ledgers, the captivity's ford), the

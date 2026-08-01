@@ -1045,7 +1045,7 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
-      // ── The chair's own reach (SPEC §195): what the Tigris kingdom can
+      // ── The chair's own reach (SPEC §196): what the Tigris kingdom can
       // become when Armenia's wreck stops smoking. The house rode in
       // Tigranes' train at Tigranocerta and knows exactly what fell there.
       {

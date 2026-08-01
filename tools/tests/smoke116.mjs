@@ -201,9 +201,9 @@ function expectAllDone(g, bookmark, tags, label) {
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
   // through the wave rule in a single monthly pass — the client courts'
-  // roads (§185, grown by §195) pay off the same standing House, and the
+  // roads (§185, grown by §196) pay off the same standing House, and the
   // §192 forks (the royal robes, the granaries) by marker. The nation
-  // question (§195: Agrippa hears the answer too) rides the same cascade.
+  // question (§196: Agrippa hears the answer too) rides the same cascade.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, {
     secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,

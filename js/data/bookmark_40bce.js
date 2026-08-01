@@ -869,7 +869,7 @@ export const BOOKMARK_40 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
-      // ── The chair's own reach (SPEC §195): this chapter's span holds the
+      // ── The chair's own reach (SPEC §196): this chapter's span holds the
       // whole conversion story — Ananias at Charax, Helena's vow, a fugitive
       // King of Kings warming himself at the house's fire — and the missions
       // should ask for the deeds the chronicles actually credit it with.

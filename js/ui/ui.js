@@ -157,6 +157,10 @@ export function initUI(staticCtx) {
     onClose: () => nationPanel.close(),
     onPeaceClick(warId) { openPeaceDialog(warId); },
     onWarClick(warId) { openWarOverview(warId); },
+    // A dispersion row on a host court's panel (SPEC §195) opens the province
+    // the community lives on — the same selection the map click makes, so the
+    // nation panel closes and §172's community block does the work.
+    onProvinceClick(id) { setSelectedProv(id | 0); },
   });
   const outliner = createOutliner(els.outliner, {
     onPeaceClick(warId) { openPeaceDialog(warId); },

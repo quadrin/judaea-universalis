@@ -68,7 +68,10 @@ import { estateReport } from './estates.js';
 import { sacredReport, seatHighPriest as seatHighPriestCore, pilgrimageIncome } from './sacred.js';
 import { schoolsReport, issueRulingCore } from './schools.js';
 import { climateReport, attentionReport, harvestOdds } from './weather.js';
-import { communityInfo, diasporaReport, askCommunity as askCommunityCore } from './diaspora.js';
+import {
+  communityInfo, diasporaReport, askCommunity as askCommunityCore,
+  tagCommunityInfo, askTagCommunity as askTagCommunityCore,
+} from './diaspora.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -987,6 +990,22 @@ export const DECISIONS = {
 export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
+  // One voice for both kinds of community seat (§172 provinces, §195 courts):
+  // the ask's outcome, toasted the same whichever panel it was asked from.
+  const sayAskResult = (res) => {
+    if (!res || !res.ok) { say('No answer', (res && res.why) || 'The letter did not go.', 'bad'); return res || { ok: false }; }
+    const bits = [];
+    if (res.gain.treasury) bits.push(res.gain.treasury + ' talents');
+    if (res.gain.manpower) bits.push(res.gain.manpower + ' men');
+    if (res.gain.infl) bits.push(res.gain.infl + ' influence');
+    if (res.gain.opinion) bits.push('a word in the right ear');
+    say(res.caught ? 'The letter was read' : res.name,
+      res.caught
+        ? res.name + ' are answering to their own rulers for our request.'
+        : res.verb + (bits.length ? ' — ' + bits.join(', ') + '.' : '.'),
+      res.caught ? 'bad' : 'good');
+    return res;
+  };
   // The campaign contract as it stands NOW: the bookmark's win/loss lines
   // until the chapter's verdict is in, then a single settled line. Shared by
   // getObjectives (realm panel) and getCampaignGuidance (outliner) so no
@@ -3048,10 +3067,15 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('runIntrigue', 'runIntrigue failed', e); return { ok: false, why: 'The channel is confused.' }; }
     },
 
-    // ---- writing to the dispersion (province panel, SPEC §172) --------------
+    // ---- writing to the dispersion (province panel, SPEC §172; nation
+    // ---- panel for court-hosted seats, SPEC §195) ---------------------------
     getCommunity(provId) {
       try { return communityInfo(ctx, provId | 0); }
       catch (e) { warnOnce('getCommunity', 'getCommunity failed', e); return null; }
+    },
+    getTagCommunity(tag) {
+      try { return tagCommunityInfo(ctx, String(tag)); }
+      catch (e) { warnOnce('getTagCommunity', 'getTagCommunity failed', e); return null; }
     },
     getDiaspora() {
       try { return diasporaReport(ctx); }
@@ -3059,20 +3083,13 @@ export function gameActions(ctx) {
     },
     askCommunity(provId, askId) {
       try {
-        const res = askCommunityCore(ctx, provId | 0, String(askId));
-        if (!res.ok) { say('No answer', res.why || 'The letter did not go.', 'bad'); return res; }
-        const bits = [];
-        if (res.gain.treasury) bits.push(res.gain.treasury + ' talents');
-        if (res.gain.manpower) bits.push(res.gain.manpower + ' men');
-        if (res.gain.infl) bits.push(res.gain.infl + ' influence');
-        if (res.gain.opinion) bits.push('a word in the right ear');
-        say(res.caught ? 'The letter was read' : res.name,
-          res.caught
-            ? res.name + ' are answering to their own rulers for our request.'
-            : res.verb + (bits.length ? ' — ' + bits.join(', ') + '.' : '.'),
-          res.caught ? 'bad' : 'good');
-        return res;
+        return sayAskResult(askCommunityCore(ctx, provId | 0, String(askId)));
       } catch (e) { warnOnce('askCommunity', 'askCommunity failed', e); return { ok: false }; }
+    },
+    askTagCommunity(tag, askId) {
+      try {
+        return sayAskResult(askTagCommunityCore(ctx, String(tag), String(askId)));
+      } catch (e) { warnOnce('askTagCommunity', 'askTagCommunity failed', e); return { ok: false }; }
     },
 
     // ---- the years, and the eye (nation panel, SPEC §170) -------------------

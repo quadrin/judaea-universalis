@@ -1,37 +1,31 @@
-// Headless regression — SPEC §195: the chairs take their turn.
+// Headless regression — SPEC §195: a community with no cell is written to
+// from its host court's panel.
 //
-// §185 seated five client chairs (Adiabene in 67 BCE, 40 BCE, 66 CE and
-// 132 CE, Agrippa II in 66 CE) with the minimum kit; §187 and §192 then
-// thickened every principal tree and left the chairs at six objectives
-// apiece. §195 is the third pass: each chair grows an expansion branch
-// over ground the tag does not start with, court branches from the
-// house's own documented history, and roads not taken riding forks its
-// chapter already charts. This suite holds that growth from four sides:
-//
-//   SHAPE — the five chains carry their grown counts, every §195 node is
-//   fully dressed with a declared seat, and the append contract holds
-//   from both ends (objectives before the first hypothetical, requires
-//   resolving inside the chain, objectives never waiting on roads).
-//
-//   SEATS — one node per cell on EVERY playable side of every bookmark,
-//   not just the first-booted player. Twice (§187, §183) a collision hid
-//   in a second-playable tree exactly because the live check never looks
-//   there; this is the check that looks there.
-//
-//   GROUND — booted cold, every conquest target of the new branches is
-//   genuinely foreign, and no new node is accomplished on day one.
-//
-//   PAY — when the forced world arrives (treasuries, musters, regard,
-//   rungs, provinces), every new branch completes and its permanent
-//   modifiers seat; and the off-record rule holds — a §195 road does NOT
-//   pay when only history's own marker is set, because the medallion
-//   sells the page the chronicles do not have.
-import { DEFINES } from '../../js/data/defines.js';
-import { MAP_DATA } from '../../js/data/map_data.js';
-import { ERAS } from '../../js/data/compendium.js';
-import { bus } from '../../js/core/bus.js';
-import { initGame, makeCtx } from '../../js/sim/init.js';
-import * as realm from '../../js/sim/realm.js';
+// §194 widened the sea and stopped at the map's edge. The 1948 chapter's two
+// biggest hosts sit past it: England (a cell — London — but a community whose
+// window opens at the 1656 Resettlement, twelve centuries after the last
+// chapter that could have clicked it) and the United States, which is not on
+// the map at all — an off-map seated court (§180) hosting the largest Jewish
+// community there has ever been. So the dispersion gained a second kind of
+// seat: `tag` instead of `prov`, stored on the host tag the way a province
+// community rides its cell, served to the host's own nation panel where §180
+// already keeps an off-map power's envoys. Same asks, same standing, same
+// hostage arithmetic — the reprisal simply lands on the ledger (standing,
+// host regard) instead of a province, there being no province to trouble.
+import { readFileSync } from 'fs';
+
+const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
+const { DEFINES } = await import(R + '/js/data/defines.js');
+const { MAP_DATA } = await import(R + '/js/data/map_data.js');
+const { ERAS } = await import(R + '/js/data/compendium.js');
+const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
+const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
+const { tickDay } = await import(R + '/js/sim/tick.js');
+const { communityOf, tagCommunityOf, openAt } = await import(R + '/js/data/diaspora.js');
+
+const NATION_PANEL = readFileSync(R + '/js/ui/nation_panel.js', 'utf8');
+const UI = readFileSync(R + '/js/ui/ui.js', 'utf8');
+const WIKI = readFileSync(R + '/js/ui/wiki.js', 'utf8');
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -39,254 +33,152 @@ const ok = (cond, msg) => {
   else { failures++; console.error('  FAIL', msg); }
 };
 
-const N = MAP_DATA.provinces.length;
-const geom = {
-  neighbors: Array.from({ length: N + 1 }, () => new Set()),
-  centroids: [null, ...MAP_DATA.provinces.map((p) => {
-    const [x, y] = MAP_DATA.project(p.lon, p.lat);
-    return { x, y };
-  })],
-  areas: new Int32Array(N + 1),
-  bbox: [],
-};
-
-const era = (id) => ERAS.find((e) => e.bookmark.id === id);
-function boot(id, playerTag) {
-  const e = era(id);
-  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: e.bookmark, events: e.events, playerTag, rngSeed: 7 });
-  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: e.bookmark, events: e.events });
-  return { game, ctx };
+function loadGeom() {
+  const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
+  return {
+    neighbors: snap.neighbors.map((a) => new Set(a)),
+    centroids: snap.centroids.map((c) => (c ? { x: c[0], y: c[1] } : null)),
+    coastal: snap.coastal.map(Boolean),
+    offshore: snap.offshore.map((c) => (c ? { x: c[0], y: c[1] } : null)),
+    areas: Int32Array.from(snap.areas), bbox: [],
+  };
 }
-const doneIds = (t) => new Set(t.missionsDone || []);
-
-// The pass, chair by chair: chain size, objective/road split, the §195
-// ids, and the conquest ground each expansion branch reaches for.
-const GROWTH = [
-  {
-    id: '67bce', tag: 'ADI', nodes: 11, hypos: 2,
-    added: ['t4_bones_of_armenia', 't4_elder_client_house', 't4_peace_of_the_altars', 'hy_doors_stayed_shut'],
-    ground: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
-  },
-  {
-    id: '40bce', tag: 'ADI', nodes: 11, hypos: 2,
-    added: ['t5_kingmakers_house', 't5_queens_vow', 't5_island_the_tide_missed', 'hy_house_unpolluted'],
-    ground: ['Tyre'],
-  },
-  {
-    id: '66ce', tag: 'ADI', nodes: 12, hypos: 3,
-    added: ['dm_riders_of_two_rivers', 'dm_treasure_house', 'dm_tombs_of_kings', 'hy_city_never_starved'],
-    ground: ['Nehardea'], // Nisibis is the house's own; the mission is hold-both
-  },
-  {
-    id: '66ce', tag: 'AGR', nodes: 14, hypos: 4,
-    added: ['am_queens_estates', 'am_first_crown', 'am_emperors_ear', 'hy_other_royal_robes', 'hy_king_of_which_jews'],
-    ground: ['Chalcis'],
-  },
-  {
-    id: '132ce', tag: 'ADI', nodes: 11, hypos: 2,
-    added: ['b2_fortress_that_refused', 'b2_court_of_captivity', 'b2_houses_of_study', 'hy_letters_reach_east'],
-    ground: ['Hatra', 'Singara', 'Nehardea'],
-  },
-];
-
-// ---------------------------------------------------------------- shape
-console.log('== §195 static: the grown chains, dressed and appended ==');
-for (const gw of GROWTH) {
-  const b = era(gw.id).bookmark;
-  const list = b.missions[gw.tag];
-  const hypos = list.filter((m) => m.hypothetical);
-  ok(list.length === gw.nodes && hypos.length === gw.hypos,
-    gw.id + '/' + gw.tag + ' grew to ' + gw.nodes + ' nodes, ' + gw.hypos + ' of them roads ('
-    + list.length + ', ' + hypos.length + ')');
-  const ids = new Set(list.map((m) => m.id));
-  const hyIds = new Set(hypos.map((m) => m.id));
-  const firstHy = list.findIndex((m) => m.hypothetical);
-  const lastBase = list.reduce((last, m, i) => (m.hypothetical ? last : i), -1);
-  ok(firstHy > lastBase, gw.id + '/' + gw.tag + ' appends every road after every objective');
-  for (const id of gw.added) {
-    const m = list.find((x) => x.id === id);
-    ok(!!m, id + ' exists in the chain');
-    if (!m) continue;
-    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 60 && !!m.rewardText
-      && typeof m.check === 'function' && typeof m.reward === 'function'
-      && Number.isFinite(m.col) && Number.isFinite(m.row),
-      id + ' is fully dressed and declares its own seat (col ' + m.col + ', row ' + m.row + ')');
-    for (const rid of (m.requires || [])) {
-      ok(ids.has(rid), id + ' waits only inside its own chain (' + rid + ')');
-      if (!m.hypothetical) {
-        ok(!hyIds.has(rid), id + ' is an objective and waits on no road not taken');
-      }
+function foldGeom(raw, mapping) {
+  const N = raw.neighbors.length - 1;
+  const to = (id) => (mapping && mapping[id]) || id;
+  const neighbors = Array.from({ length: N + 1 }, () => new Set());
+  const areas = new Int32Array(N + 1);
+  const coastal = new Array(N + 1).fill(false);
+  const centroids = raw.centroids.slice();
+  const offshore = raw.offshore.slice();
+  for (let id = 1; id <= N; id++) {
+    const t = to(id);
+    areas[t] += raw.areas[id];
+    if (raw.coastal[id]) coastal[t] = true;
+    if (!offshore[t] && raw.offshore[id]) offshore[t] = raw.offshore[id];
+    for (const nb of raw.neighbors[id]) {
+      const tn = to(nb);
+      if (tn !== t) { neighbors[t].add(tn); neighbors[tn].add(t); }
     }
   }
-}
-
-// ---------------------------------------------------------------- seats
-// The derived-row arithmetic of getMissions, run over EVERY playable side
-// of every bookmark — the panel only ever draws the player's own tree, so
-// the live no-collision check (smoke116) sees one side per chapter and a
-// collision in a second-playable tree stays invisible until someone plays
-// it. §187 and §183 each found one exactly there, by hand.
-console.log('== §195 static: one node per cell on every playable side ==');
-for (const e of ERAS) {
-  const b = e.bookmark;
-  for (const p of (b.playableTags || [])) {
-    const list = b.missions && b.missions[p.tag];
-    if (!Array.isArray(list) || !list.length) continue;
-    const ids = list.map((m, i) => realm.missionId(m, i));
-    const row = [];
-    const seats = new Set();
-    let collide = null;
-    list.forEach((m, i) => {
-      const col = Math.max(0, Math.min(4, (m.col || 0) | 0));
-      let r = Number.isFinite(m.row) ? Math.max(0, m.row | 0) : null;
-      if (r === null) {
-        if (Array.isArray(m.requires) && m.requires.length) {
-          r = 0;
-          for (const rid of m.requires) {
-            const pi = ids.indexOf(String(rid));
-            if (pi >= 0 && pi < i && Number.isFinite(row[pi])) r = Math.max(r, row[pi] + 1);
-          }
-        } else r = 0;
-      }
-      row[i] = r;
-      const key = col + ':' + r;
-      if (seats.has(key)) collide = ids[i] + ' @ ' + key;
-      seats.add(key);
-    });
-    ok(!collide, b.id + '/' + p.tag + ' seats every node in its own cell'
-      + (collide ? ' (' + collide + ')' : ''));
+  for (let id = 1; id <= N; id++) {
+    if (to(id) !== id) { centroids[id] = centroids[to(id)]; offshore[id] = offshore[to(id)]; }
   }
+  return { neighbors, centroids, areas, coastal, offshore, bbox: [] };
+}
+const RAW = loadGeom();
+function boot(bookmarkId, playerTag, { seed = 13 } = {}) {
+  const era = ERAS.find((e) => e.bookmark.id === bookmarkId);
+  const bm = era.bookmark;
+  const provinceMap = buildProvinceMapping(MAP_DATA, bm);
+  const geom = foldGeom(RAW, provinceMap);
+  const tag = playerTag || bm.playableTags[0].tag;
+  const game = initGame({
+    DEFINES, MAP_DATA, geom, bookmark: bm, events: era.events, playerTag: tag, rngSeed: seed, provinceMap,
+  });
+  const ctx = makeCtx({
+    game, DEFINES, MAP_DATA, geom, bus: { emit() {}, on() {} }, bookmark: bm, events: era.events, provinceMap,
+  });
+  game.tags[tag].ai = false;
+  return { bm, game, ctx, actions: gameActions(ctx), tag };
+}
+const run = (ctx, years) => { for (let i = 0; i < years * 360; i++) tickDay(ctx); };
+
+// ---------------------------------------------------------------------------
+console.log('== the two Atlantic seats, and their windows ==');
+{
+  const lon = communityOf('Londinium');
+  ok(!!lon && lon.size === 3 && lon.from === 1656 && lon.until === null,
+    'London: size 3, from the Resettlement of 1656, still there');
+  ok(!openAt(lon, -167) && !openAt(lon, 66) && !openAt(lon, 614) && openAt(lon, 1948),
+    'and its window touches no chapter but 1948 — the medieval community\'s 1290 end falls between bookmarks');
+  const usa = tagCommunityOf('USA');
+  ok(!!usa && usa.tag === 'USA' && !usa.prov && usa.size === 5 && usa.from === 1880 && usa.until === null,
+    'America: a court seat, no cell, size 5 — the one peer Alexandria ever gets');
+  ok(usa.dev === 40 && usa.start === 60,
+    'with a stand-in development of 40 for the silver formula, opening at 60 standing');
+  ok(!openAt(usa, 614) && openAt(usa, 1948), 'open in 1948 and in no ancient chapter');
+  ok(communityOf('USA') === null, 'a tag seat never answers a province lookup');
 }
 
-// ---------------------------------------------------------------- ground
-console.log('== §195 live: the ground is foreign and the day-one table is bare ==');
-const cold = new Map();
-for (const gw of GROWTH) {
-  const key = gw.id + '/' + gw.tag;
-  const w = cold.get(gw.id) || boot(gw.id, gw.tag);
-  cold.set(gw.id, w);
-  for (const name of gw.ground) {
-    const p = w.game.provinces.find((x) => x && x.name === name);
-    ok(!!p && p.owner !== gw.tag,
-      key + ': ' + name + ' is not the chair\'s at the start (' + (p && p.owner) + ')');
-  }
-  realm.checkMissions(w.ctx);
-  const done = doneIds(w.game.tags[gw.tag]);
-  const free = gw.added.filter((id) => done.has(id));
-  ok(!free.length, key + ': no §195 node is accomplished at boot ('
-    + (free.join(', ') || 'none') + ')');
+console.log('== the court seat serves the panel ==');
+{
+  const { game, ctx, actions } = boot('1948ce', 'ISR', { seed: 11 });
+  run(ctx, 0.12);
+  const usa = actions.getTagCommunity('USA');
+  ok(!!usa && usa.name === 'The Jews of America' && usa.provId === 0 && usa.prov === null,
+    'America answers the nation panel: no province, provId 0');
+  ok(usa.hostName === 'The United States' && usa.atWar === false,
+    'hosted by The United States, which is not at war with Israel');
+  ok(Array.isArray(usa.asks) && usa.asks.length === 4, 'four asks, like any community');
+  const silver = usa.asks.find((a) => a.id === 'silver');
+  ok(silver.gain.treasury === 80, 'silver is the stand-in dev × size (0.4 × 40 × 5 = 80 talents)');
+  const word = usa.asks.find((a) => a.id === 'intercession');
+  ok(word.gain.opinion === 30, 'and a word with their patrons is worth 30 regard with Washington');
+
+  // The Machal pin — the deliberate inverse of §194's day-one gate: America
+  // opens at 60, past the volunteer bar, because the flyers and gunners of
+  // 1948 really did come off these docks while the embargo stood. London, at
+  // 45 under Bevin's government, does not.
+  game.tags.ISR.points.infl = 200;
+  const men = usa.asks.find((a) => a.id === 'volunteers');
+  ok(men.gain.manpower === 2100, 'the volunteers of a size-5 community are 2,100 men');
+  const lonC = actions.getCommunity(ctx.provId('Londinium'));
+  ok(!!lonC && lonC.name === 'The Jews of London' && lonC.host === 'UK',
+    'London is an ordinary §172 cell community under Britain');
+  ok(!lonC.asks.find((a) => a.id === 'volunteers').can,
+    'and will not send men on day one — 45 standing under the volunteer bar');
+
+  const before = game.tags.ISR.manpower;
+  const r = actions.askTagCommunity('USA', 'volunteers');
+  ok(r.ok && game.tags.ISR.manpower - before >= 2000, 'Machal arrives: the ask pays the men');
+  const again = actions.getTagCommunity('USA').asks.find((a) => a.id === 'volunteers');
+  ok(!again.can, 'and cannot be repeated: standing spent (' + r.standing + ') and the clock running');
+
+  // The court-hosted reprisal lands on the ledger, not on a map cell.
+  const st = game.tags.USA.dia;
+  st.standing = 95;
+  const opBefore = (game.tags.USA.opinion && game.tags.USA.opinion.ISR) || 0;
+  const realChance = ctx.rng.chance;
+  ctx.rng.chance = () => true; // force the letter to be read
+  const caught = actions.askTagCommunity('USA', 'letters');
+  ctx.rng.chance = realChance;
+  ok(caught.ok && caught.caught, 'a read letter is a reprisal');
+  const opAfter = (game.tags.USA.opinion && game.tags.USA.opinion.ISR) || 0;
+  ok(opAfter < opBefore, 'Washington\'s regard falls (' + opBefore + ' → ' + opAfter + ')');
+  ok(!game.provinces.some((p) => p && (p.modifiers || []).some((m) => m && m.id === 'dia_reprisal')),
+    'and no province anywhere carries the reprisal — there is no cell to trouble');
+
+  // The ledger's "who will answer us" knows the court seat.
+  const rep = actions.getDiaspora();
+  const row = (rep || []).find((x) => x.host === 'USA');
+  ok(!!row && row.provId === 0 && row.prov === 'The United States',
+    'the diaspora report carries America with provId 0, addressed by its host');
 }
 
-// ------------------------------------------------------------------- pay
-// Force each chair's whole world by hand — the parents' thresholds too,
-// because a branch pays only down an unlocked chain — then let the
-// ordinary monthly pass settle it in waves.
-console.log('== §195 live: every new branch pays when its world arrives ==');
-function force(w, tag, opts) {
-  const g = w.game;
-  const t = g.tags[tag];
-  if (opts.treasury !== undefined) t.treasury = opts.treasury;
-  if (opts.stability !== undefined) t.stability = opts.stability;
-  if (opts.legitimacy !== undefined) t.legitimacy = opts.legitimacy;
-  if (opts.tech) t.tech = { ...(t.tech || {}), ...opts.tech };
-  if (opts.tiers) t.eraIdeas = { forced_curriculum: opts.tiers };
-  if (opts.men) w.ctx.helpers.spawnArmy(w.ctx, tag, opts.at, { inf: opts.men / 1000, name: 'Forced Muster' });
-  for (const [other, val] of Object.entries(opts.regard || {})) {
-    const o = g.tags[other];
-    if (o) o.opinion = { ...(o.opinion || {}), [tag]: val };
-  }
-  for (const name of opts.grant || []) w.ctx.helpers.changeOwner(w.ctx, name, tag);
-}
-function expectPaid(w, tag, ids, label) {
-  realm.checkMissions(w.ctx);
-  realm.checkMissions(w.ctx);
-  const done = doneIds(w.game.tags[tag]);
-  const missing = ids.filter((id) => !id.startsWith('hy_') && !done.has(id));
-  ok(!missing.length, label + ': every new objective paid ('
-    + (missing.length ? 'missing ' + missing.join(', ') : 'all done') + ')');
-}
-const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
-
-{ // 67 BCE — Armenia's bones, the sister house, the reconciled altars.
-  const w = boot('67bce', 'ADI');
-  force(w, 'ADI', {
-    treasury: 400, stability: 2, tech: { mar: 6 }, tiers: 3,
-    men: 8000, at: 'Arbela', regard: { PAR: 100 },
-    grant: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
-  });
-  expectPaid(w, 'ADI', GROWTH[0].added, '67bce ADI');
-  const t = w.game.tags.ADI;
-  ok(seated(t, 'western_fords') && seated(t, 'two_altars'),
-    '67bce: the western fords and the two altars seat their permanent modifiers');
-}
-{ // 40 BCE — the kingmaker's muster, the vow banked, the island delivered.
-  const w = boot('40bce', 'ADI');
-  force(w, 'ADI', {
-    treasury: 300, tech: { mar: 6 }, tiers: 3,
-    men: 8000, at: 'Arbela', regard: { PAR: 100 },
-    grant: ['Tyre'],
-  });
-  expectPaid(w, 'ADI', GROWTH[1].added, '40bce ADI');
-  const t = w.game.tags.ADI;
-  ok(seated(t, 'kingmakers_house') && seated(t, 'lamp_over_the_door'),
-    '40bce: the kingmaker\'s house and the lamp over the door pay permanently');
-}
-{ // 66 CE — both chairs off one boot: the convert lances, the treasure
-  // cities, the pyramids; the queen's ledgers, Chalcis, the emperor's ear.
-  const w = boot('66ce', 'ADI');
-  force(w, 'ADI', {
-    treasury: 400, legitimacy: 85, tech: { gov: 6 }, tiers: 3,
-    men: 8000, at: 'Arbela', regard: { JUD: 100, PAR: 130 },
-    grant: ['Nehardea'],
-  });
-  force(w, 'AGR', {
-    treasury: 300, tech: { infl: 6, gov: 7 }, tiers: 3,
-    men: 5000, at: 'Caesarea Philippi', regard: { ROM: 200 },
-    grant: ['Chalcis'],
-  });
-  expectPaid(w, 'ADI', GROWTH[2].added, '66ce ADI');
-  expectPaid(w, 'AGR', GROWTH[3].added, '66ce AGR');
-  const adi = w.game.tags.ADI;
-  ok(seated(adi, 'convert_lances') && seated(adi, 'escort_of_the_ascents')
-    && seated(adi, 'pyramids_north_of_the_wall'),
-    '66ce: the lances, the escort and the pyramids all seat their modifiers');
-  ok(seated(w.game.tags.AGR, 'stewards_ledgers'),
-    '66ce: the stewards\' ledgers pay the client crown permanently');
-}
-{ // 132 CE — the fortress line, the captivity's ford, the sages' blessing.
-  const w = boot('132ce', 'ADI');
-  force(w, 'ADI', {
-    treasury: 400, stability: 2, tech: { mar: 6, infl: 7 }, tiers: 3,
-    regard: { JUD: 100 },
-    grant: ['Hatra', 'Singara', 'Nehardea'],
-  });
-  expectPaid(w, 'ADI', GROWTH[4].added, '132ce ADI');
-  ok(seated(w.game.tags.ADI, 'ford_of_the_captivity'),
-    '132ce: the ford of the captivity pays permanently');
+console.log('== only a Jewish crown, only while the host is seated ==');
+{
+  const { actions } = boot('1948ce', 'EGY', { seed: 7 });
+  ok(actions.getTagCommunity('USA') === null, 'Egypt has no dispersion to write to');
+  const r = actions.askTagCommunity('USA', 'letters');
+  ok(!r.ok, 'and its letters are refused at the door');
 }
 
-// ------------------------------------------------- the off-record rule
-// A §195 road is the page the chronicles do not have. Set ONLY history's
-// own marker and the medallion must stay dark: Crassus historically got
-// the gold, the statue order was historically given and refused on the
-// ground, the stores historically burned, the pretender was historically
-// struck, and the letters east were historically never sent.
-console.log('== §195 live: history\'s own road pays nothing ==');
-const HISTORY = [
-  { id: '67bce', tag: 'ADI', flags: { crassusRansom: true }, dark: 'hy_doors_stayed_shut' },
-  { id: '40bce', tag: 'ADI', flags: { statueRefused: true, statueErected: true }, dark: 'hy_house_unpolluted' },
-  { id: '66ce', tag: 'ADI', flags: { storesBurned: true }, dark: 'hy_city_never_starved' },
-  { id: '66ce', tag: 'AGR', flags: { menahemStruck: true }, dark: 'hy_other_royal_robes' },
-  { id: '132ce', tag: 'ADI', flags: { theLandAlone: true }, dark: 'hy_letters_reach_east' },
-];
-for (const h of HISTORY) {
-  const w = boot(h.id, h.tag);
-  Object.assign(w.game.flags, h.flags);
-  realm.checkMissions(w.ctx);
-  ok(!doneIds(w.game.tags[h.tag]).has(h.dark),
-    h.id + '/' + h.tag + ': ' + h.dark + ' stays dark on '
-    + Object.keys(h.flags).join('+'));
+console.log('== the panel carries the section ==');
+{
+  // Browser suites cost minutes; the wiring is pinned at the source the way
+  // smoke109 pins the province panel's copy.
+  ok(/The Dispersion<\/div>/.test(NATION_PANEL), 'the nation panel builds a Dispersion section');
+  ok(/data-np-dia=/.test(NATION_PANEL) && /askTagCommunity\(viewTag/.test(NATION_PANEL),
+    'court-seat asks are buttons wired to askTagCommunity');
+  ok(/data-np-diaprov=/.test(NATION_PANEL) && /onProvinceClick\(npDiaProv/.test(NATION_PANEL),
+    'province-seated communities are jump rows wired to onProvinceClick');
+  ok(/onProvinceClick\(id\)\s*\{\s*setSelectedProv\(id/.test(UI),
+    'and ui.js routes the jump through the same selection a map click makes');
+  ok(/under ' \+ tagName\(d\.tag\)/.test(WIKI),
+    'the Compendium addresses a court seat by its host, not by a missing cell');
 }
 
-console.log(failures ? `smoke125: ${failures} FAIL` : 'smoke125: ALL PASS');
-process.exit(failures ? 1 : 0);
+// ---------------------------------------------------------------------------
+if (failures) { console.error('\n' + failures + ' FAILURES'); process.exit(1); }
+console.log('\nALL PASS');

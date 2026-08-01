@@ -757,7 +757,7 @@ export const BOOKMARK_132 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
-      // ── The chair's own reach (SPEC §195): what a restored client does
+      // ── The chair's own reach (SPEC §196): what a restored client does
       // with the second chance — hold the line Trajan crossed, guard the
       // city where the captivity keeps court, and earn the sages' regard.
       {

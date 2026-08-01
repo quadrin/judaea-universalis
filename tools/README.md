@@ -1039,7 +1039,23 @@ zero guarded warnings. On the tree merged with §194 the battery is
 **124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
 smoke124 both included.
 
-Since §195 (the chairs take their turn): the five §185 client chairs get
+Since §195 (a community with no cell is written to from its host's court):
+the dispersion gained a second kind of seat — `tag` instead of `prov` — for
+hosts past the map's edge, and a Dispersion section on foreign courts'
+Abroad tabs: a court-hosted community (the Jews of America, on Truman's
+§180 off-map seat) carries its full ask block there, and communities living
+on that court's soil render as rows that jump to their province (Attlee's
+Britain lists London beside Tripoli, the BMA being the 1948 fact). London
+(from 1656) and America (size 5, stand-in dev 40, opening 60 — past the
+volunteer bar on day one, deliberately: Machal) are the two entries. The
+harness still cannot see any of it — `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after — and a browser pass over both panels
+renders the section with no page errors. `smoke125` is the new contract,
+and `smoke124`'s §194 pins moved with the feature (37 entries, exactly one
+seat each). On the tree merged with the world backdrop above, the battery
+is **125 of 125 headless suites ALL PASS**.
+
+Since §196 (the chairs take their turn): the five §185 client chairs get
 the §187/§192 treatment — fifteen objectives (one expansion branch per
 chair over ground the tag does not start with, court branches from the
 houses' own documented deeds) and six roads not taken riding forks the
@@ -1051,8 +1067,8 @@ principal tables did not move by a single index — `smoke2`, `smoke3`,
 40bce, 66ce and 132ce is **byte-identical** to the parent tree on all
 four — the new thresholds sit past what an AI-held chair reaches in the
 window, so the trees grew reasons for a player without moving the AI's
-furniture at all. `smoke125` is the new contract: the grown chains at
-11/11/12/14/11 with 2/2/3/4/2 roads, every §195 node dressed and seated,
+furniture at all. `smoke126` is the new contract: the grown chains at
+11/11/12/14/11 with 2/2/3/4/2 roads, every §196 node dressed and seated,
 every conquest target foreign at boot, nothing accomplished on day one,
 the forced worlds paying every declared modifier, the off-record rule
 live (a road stays dark when only history's marker is set), and the
@@ -1060,5 +1076,7 @@ one-node-per-cell guard finally run over EVERY playable side of every
 bookmark — the check §187 and §183 each wished for after finding a
 collision in a second-playable tree by hand. `smoke116` moved with the
 feature (one new world marker, `speakerForTheNation`; six new roads pay
-beside the fifty-eight old ones). The battery is **125 of 125 headless
-suites ALL PASS**.
+beside the fifty-eight old ones). On the tree merged with main's §195
+(the court-hosted communities), the battery is **126 of 126 headless
+suites ALL PASS**, their smoke125 and this section's smoke126 both
+included.

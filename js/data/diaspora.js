@@ -26,9 +26,16 @@
 //
 // EACH ENTRY:
 //   prov     canonical province name
+//   tag      INSTEAD of prov (SPEC §195): the community lives under a court,
+//            not on a cell — an off-map host like 1948's United States. It is
+//            written to from that court's own nation panel, the way §180's
+//            off-map seats carry their own envoys.
 //   name     what the panel calls them
 //   size     1-5. Scales everything they can give and how long they take to
 //            recover from giving it.
+//   dev      tag entries only: silver is pegged to the host province's
+//            development (§176), and a community with no province needs a
+//            stand-in for what its world is worth.
 //   from     the year the community is there in strength (BCE negative)
 //   until    …and the year it is not, or null for "still there"
 //   start    opening standing toward a Jewish crown, 0-100
@@ -415,6 +422,42 @@ export const DIASPORA = [
       + 'answering to whichever crown holds the pass this generation. Crowns pass; the '
       + 'community keeps the ledgers.',
   },
+  // ── The Atlantic world (SPEC §195) ───────────────────────────────────────
+  // Two hosts the 1948 chapter cannot be honest without. England expelled its
+  // medieval community in 1290 and readmitted Jews under the Protector in
+  // 1656; the gap falls between this game's bookmarks, so the single window
+  // opens at the Resettlement and tells no lie to any chapter. And the United
+  // States is not on the map at all — the frame ends at the Atlantic — but it
+  // is a seated court on the ledger (§180), and in 1948 it hosts the largest
+  // Jewish community there has ever been. A community with no cell is written
+  // to from its host court's own panel, which is where §180 already keeps the
+  // envoys of an off-map power.
+  {
+    prov: 'Londinium', name: 'The Jews of London', size: 3,
+    from: 1656, until: null, start: 45,
+    blurb: 'Bankers, tailors and members of Parliament, readmitted by Cromwell and never '
+      + 'since molested by the law — a community whose host both wrote the charter of the '
+      + 'return and closed the gates of the Land, and which argues both facts in '
+      + 'committee.',
+  },
+  {
+    // The stand-in development (§176 needs one where no cell exists) is 40,
+    // the richest host on the list: one gathering is 80 talents on the
+    // five-year clock — real money beside §186's government credits without
+    // double-writing them, because the appeal and the Export-Import Bank
+    // were different purses in fact. The risk roll is historical too: the
+    // procurement network's ships were seized and its buyers indicted, and
+    // the reprisal fell on the community's own men. And the volunteer bar is
+    // MET on day one — the one community devoted enough from the start —
+    // because Machal was: the flyers and gunners of 1948 came off these
+    // docks while the State Department's embargo stood.
+    tag: 'USA', name: 'The Jews of America', size: 5, dev: 40,
+    from: 1880, until: null, start: 60,
+    blurb: 'Five million, in the one great host that never expelled anybody: the '
+      + 'community that fills the appeal in a single dinner, argues with itself in two '
+      + 'languages, and can put a word into the White House by Tuesday. The old rules of '
+      + 'the dispersion bend here; the asks do not.',
+  },
 ];
 
 // What a community will do for a crown, and what asking costs it. Sizes scale
@@ -520,6 +563,13 @@ export function shutBy(d, year) {
 export function communityOf(provName) {
   if (!provName) return null;
   for (const d of DIASPORA) if (d.prov === provName) return d;
+  return null;
+}
+
+/** The entry hosted by a COURT rather than a cell (SPEC §195), or null. */
+export function tagCommunityOf(tag) {
+  if (!tag) return null;
+  for (const d of DIASPORA) if (d.tag === tag) return d;
   return null;
 }
 

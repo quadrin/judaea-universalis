@@ -1051,7 +1051,7 @@ export const BOOKMARK_66 = {
           ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15 });
         },
       },
-      // ── The chair's own reach (SPEC §195): the reign's documented arts —
+      // ── The chair's own reach (SPEC §196): the reign's documented arts —
       // the queen's ledgers, the advocate's brief, and the crown he held at
       // twenty-one and traded up from.
       {
@@ -1216,7 +1216,7 @@ export const BOOKMARK_66 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, mar: 25 }),
       },
-      // ── The chair's own reach (SPEC §195): the deeds Josephus credits the
+      // ── The chair's own reach (SPEC §196): the deeds Josephus credits the
       // house with — the escort of the half-shekel, the tombs by Jerusalem —
       // and the lances a convert kingdom keeps beyond its tribute-book.
       {
