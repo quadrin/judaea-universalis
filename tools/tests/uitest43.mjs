@@ -1,4 +1,4 @@
-// UI verification — SPEC §201: the chancery, in a real browser.
+// UI verification — SPEC §202: the chancery, in a real browser.
 //
 // The headless suite (smoke130) proves the arithmetic. This one proves the
 // three things only a browser can:

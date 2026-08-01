@@ -1344,7 +1344,7 @@ export const DEFINES = {
     revoltChance: 0.04,          // monthly rising roll once every condition holds
   },
 
-  // The chancery (SPEC §201): a court has only so many envoys. Every standing
+  // The chancery (SPEC §202): a court has only so many envoys. Every standing
   // bond — an alliance, a guarantee, a royal marriage, a subsidy, a client
   // kingdom — is somebody's whole career: a household kept at a foreign court,
   // a promise that must be answered when it is called. A realm keeps as many
@@ -1358,7 +1358,7 @@ export const DEFINES = {
     capacityRulerSkill: 4,    // ...and one more for a ruler this able at diplomacy
     overInfl: 2,              // influence a month per seat past the establishment
     overOpinion: 1,           // ...and what unbound courts think of it, per seat, per month
-    // The collar chafes (SPEC §201): the client kingdom's own liberty desire.
+    // The collar chafes (SPEC §202): the client kingdom's own liberty desire.
     // A crown with more collars than it can attend to — or with clients that
     // together weigh too much of it — is a crown its clients stop adoring, and
     // devotion (VASSALS.incorporateOpinion) is what a union runs on. This is

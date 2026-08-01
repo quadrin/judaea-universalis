@@ -310,7 +310,7 @@ all-bookmark audit verbatim. `uitest41.mjs` drives the §197 court in a real
 browser: the ground line and favor figure per estate, the one-press ask with
 its toast, and the "Their ground" lever lighting the estates button on the
 mapmode bar (which now follows the bus event rather than its own clicks).
-`smoke130.mjs` owns the SPEC §201 chancery: the seat arithmetic, the load and
+`smoke130.mjs` owns the SPEC §202 chancery: the seat arithmetic, the load and
 the four things that are not seats, the gates on both sides of the table, the
 monthly bill in influence and opinion, the client strain and its floor, the
 annulment, the decade a freed court will not kneel to the hand that freed it,
@@ -320,8 +320,8 @@ counting seats and moving when a bond is written, the annulment as a live
 button where a dead "Houses Joined" plate used to sit, an overstretched
 chancery naming itself, and the alliance button carrying the refusal in words.
 
-**The §201 harness note is that there is no harness note.** `node
-tools/autorun.mjs 8`, run on the pre-§201 tree and on this one in the same
+**The §202 harness note is that there is no harness note.** `node
+tools/autorun.mjs 8`, run on the pre-§202 tree and on this one in the same
 environment, produced **byte-identical output** — every bookmark, every
 trajectory, every anomaly flag, not merely the same accepted families. That is
 the section's own contract working: no bookmark seats a court over its

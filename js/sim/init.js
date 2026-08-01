@@ -1109,7 +1109,7 @@ export function gameActions(ctx) {
       }
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
-      // The chancery has only so many envoys (SPEC §201), and an alliance is a
+      // The chancery has only so many envoys (SPEC §202), and an alliance is a
       // bond BOTH courts have to staff — theirs can be the full one.
       else whyNotAlly = chanceryFullWhy(ctx, me, true) || chanceryFullWhy(ctx, tag, false);
       const cb = casusBelli(ctx, me, tag);
@@ -1131,7 +1131,7 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotGuarantee = 'We are at war with them.';
       else if (ourClient || ourOverlord) whyNotGuarantee = 'The bond of fealty already binds us.';
       else if (num(mine.points && mine.points.infl) < 50) whyNotGuarantee = 'Not enough influence (50 required).';
-      // Our word is our establishment's to keep (SPEC §201) — theirs is not
+      // Our word is our establishment's to keep (SPEC §202) — theirs is not
       // asked, because a guarantee binds only the guarantor.
       else whyNotGuarantee = chanceryFullWhy(ctx, me, true);
       let whyNotSubsidize = '';
@@ -1177,7 +1177,7 @@ export function gameActions(ctx) {
           const mi = royalMarriageInfo(ctx, me, tag);
           marriage = {
             married: mi.married, can: mi.can, why: mi.why, cost: mi.cost,
-            breakOpinion: DIPLO.marryBreakOpinion, // the annulment's price (SPEC §201)
+            breakOpinion: DIPLO.marryBreakOpinion, // the annulment's price (SPEC §202)
           };
         } catch (e) { marriage = null; }
       }
@@ -1189,7 +1189,7 @@ export function gameActions(ctx) {
       // donor courts, and only against a donor or the purse we already lean on.
       let aid = null;
       try { aid = aidInfo(ctx, me, tag); } catch (e) { aid = null; }
-      // The chancery (SPEC §201): our establishment and theirs, so a panel can
+      // The chancery (SPEC §202): our establishment and theirs, so a panel can
       // say WHY a verb is grey before the player clicks it.
       let chancery = null;
       try {
@@ -1910,7 +1910,7 @@ export function gameActions(ctx) {
     getDiplomacy(tag) {
       return getDip(tag);
     },
-    // The chancery (SPEC §201): what a court's establishment is spent on, how
+    // The chancery (SPEC §202): what a court's establishment is spent on, how
     // much of it there is, and what the collars are costing it. Answered for
     // any living court, so the ledger's foreign pages read the same as ours.
     getRelations(tag) {
@@ -2112,7 +2112,7 @@ export function gameActions(ctx) {
           + ' (+' + DIPLO.marryOpinionGain + ' opinion both ways). A married dynasty is likelier to be blessed with an heir.', 'good');
       } catch (e) { warnOnce('royalMarriage', 'royalMarriage failed', e); }
     },
-    // The match sent home (SPEC §201): the one standing bond that used to have
+    // The match sent home (SPEC §202): the one standing bond that used to have
     // no exit, which a chancery of finite seats cannot afford.
     annulMarriage(tag) {
       try {

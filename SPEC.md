@@ -11705,7 +11705,7 @@ way the sim resolves is a guard that reports the sim as broken.
   went in after it. On the tree merged with main's §197-§199 the battery
   is 129 of 129 headless suites ALL PASS.
 
-## 201. The court has only so many envoys
+## 202. The court has only so many envoys
 
 Reported: free four nations out of a beaten enemy at the peace table, then eat
 them one after another, and the realm grows faster than any war would have
@@ -11841,7 +11841,7 @@ ever meet the ceiling are the ones a player is spending.
   its seat, unjoining both houses and costing what it costs; the release stamp, the
   decade's bar, its being a memory of one court rather than a constitution, and
   its expiry; the collar keeping the seat its alliance held; the seeded-world
-  invariant across all eight bookmarks; the 1948 gate; and a pre-§201 save with
+  invariant across all eight bookmarks; the 1948 gate; and a pre-§202 save with
   none of the new fields reading as an empty chancery. `uitest43` — the browser's
   answer: the Chancery block on The World counting seats and moving when a bond
   is written, the annulment live where a dead plate used to sit and the count

@@ -550,7 +550,7 @@ export const BOOKMARK_1948 = {
   // treaties know how to write. The bar covers all three roads: the yoke at
   // the peace table, the collar offered to a small friendly neighbour in
   // peacetime (SPEC §92), and taking a client off a defeated enemy.
-  // …and the chancery's establishment goes with them (SPEC §201). The twentieth
+  // …and the chancery's establishment goes with them (SPEC §202). The twentieth
   // century answers a friend with a BLOC: this chapter's own scripts seat the
   // Arab League's joint defence and the Baghdad Pact as webs where every member
   // guarantees every other, which is the era's diplomacy working exactly as it

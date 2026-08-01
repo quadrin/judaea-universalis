@@ -1345,7 +1345,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
     }
 
-    // The chancery (SPEC §201): the establishment, what it is spent on, and
+    // The chancery (SPEC §202): the establishment, what it is spent on, and
     // what it costs to keep more bonds than it can staff. Reads for a foreign
     // court exactly as for ours — how full THEIR chancery is decides whether
     // they can swear anything to us at all.
