@@ -848,6 +848,102 @@ export const BOOKMARK_66 = {
           && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Philippi'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 2000 }),
       },
+      // ── The state the revolt has to become (SPEC §197) ──────────────────
+      // The chapter runs to 130 CE. Winning the Revolt is the first half;
+      // these are the things a surviving Jewish commonwealth would have had
+      // to build in the sixty years afterwards.
+      {
+        id: 'jm_the_third_wall', name: 'The Third Wall',
+        icon: 'walls', col: 1, row: 4, requires: ['jm_samaria'],
+        desc: 'Agrippa began a wall around the northern suburb and Rome made him stop. '
+          + 'Finish it: hold Jerusalem and reach Government 8 — The Third Wall — and the '
+          + 'city that Titus took in five months becomes a city that cannot be taken in one '
+          + 'campaigning season.',
+        rewardText: '"The Third Wall": −1 unrest in Jerusalem and +10% morale, permanent.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+          && (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8,
+        reward: (ctx) => {
+          ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'the_third_wall', name: 'The Third Wall', months: -1, effects: { unrest: -1 },
+          });
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_third_wall_host', name: 'Behind the Third Wall', months: -1, effects: { moraleMult: 1.1 },
+          });
+        },
+      },
+      {
+        id: 'jm_the_desert_forts', name: 'The Desert Forts',
+        icon: 'tower', col: 0, row: 4, requires: ['jm_decapolis'],
+        desc: 'Masada, Machaerus and the rocks above the salt sea are where this war ends if '
+          + 'it is lost. Hold them while it is being won, and they are where the state keeps '
+          + 'its treasury instead.',
+        rewardText: '"The Rocks Held": +1 stability, +75 talents.',
+        check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_rocks_held', name: 'The Rocks Held', months: -1, effects: { moraleMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1, treasury: 75 });
+        },
+      },
+      {
+        id: 'jm_the_harbour', name: 'The Governor\'s Own Harbour',
+        icon: 'shipyard', col: 2, row: 4, requires: ['jm_kings_country'],
+        desc: 'Caesarea is where the war began, in a synagogue doorway and a Greek\'s '
+          + 'workshop, and it is the only deep-water port on this coast. Take it, and Dora '
+          + 'with it.',
+        rewardText: '"The Coast Is Ours": +15% trade permanently, +100 talents.',
+        check: (ctx) => ['Caesarea Maritima', 'Dora'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_coast_is_ours', name: 'The Coast Is Ours', months: -1, effects: { tradeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
+        },
+      },
+      {
+        id: 'jm_the_treasury_of_the_house', name: 'The Treasury of the House',
+        icon: 'coins', col: 1, row: 5, requires: ['jm_the_third_wall'],
+        desc: 'Every adult Jewish male in the world sends a half-shekel here every year, and '
+          + 'Rome understood what that was — which is why Vespasian did not abolish the levy '
+          + 'but redirected it. Bank 500 talents of it.',
+        rewardText: '"The Half-Shekel of the World": +12% income permanently.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 500,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'half_shekel_of_the_world', name: 'The Half-Shekel of the World', months: -1,
+          effects: { incomeMult: 1.12 },
+        }),
+      },
+      {
+        id: 'jm_a_navy_at_joppa', name: 'The Ships at Joppa',
+        icon: 'ship', col: 2, row: 5, requires: ['jm_the_harbour'],
+        desc: 'The rebels put out from Joppa and Vespasian burned the fleet in a storm off '
+          + 'the harbour mouth. Hold Joppa and Ascalon with 400 talents banked, and this time '
+          + 'the ships have somewhere to shelter.',
+        rewardText: '"The Judaean Squadron": +10% trade, +5% morale, permanent.',
+        check: (ctx) => ['Joppa', 'Ascalon'].every((n) => ctx.helpers.controls(ctx, 'JUD', n))
+          && ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 400,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_judaean_squadron', name: 'The Judaean Squadron', months: -1,
+          effects: { tradeMult: 1.1, moraleMult: 1.05 },
+        }),
+      },
+      {
+        id: 'jm_the_commonwealth', name: 'A Commonwealth That Governs',
+        icon: 'scales', col: 0, row: 5, requires: ['jm_the_desert_forts'],
+        desc: 'A revolt is a coalition of parties that agree about Rome and nothing else. '
+          + 'Reach +3 stability and 85 legitimacy — the war has to produce a government that '
+          + 'the zealots, the priests and the notables all answer to.',
+        rewardText: '"The Second Commonwealth": −1 unrest everywhere and +0.25 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return (t.stability || 0) >= 3 && (t.legitimacy || 0) >= 85;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_second_commonwealth', name: 'The Second Commonwealth', months: -1,
+          effects: { unrestAll: -1, legitimacyAdd: 0.25 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks, standing in the tree as hypotheticals: checks read
       // the markers the fork cards themselves set — one source of truth.
@@ -1092,6 +1188,61 @@ export const BOOKMARK_66 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 25, legitimacy: 10 }),
       },
+      // ── The kingdom that has to choose (SPEC §197) ──────────────────────
+      {
+        id: 'am_the_northern_march', name: 'The Northern March',
+        icon: 'mountain', col: 0, row: 4, requires: ['am_first_crown'],
+        desc: 'Chalcis under Lebanon and the Ituraean hills behind it were Herodian country '
+          + 'before Rome parcelled them out. Hold Chalcis and Emesa — a client that polices '
+          + 'its own march is a client Rome does not garrison.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ['Chalcis', 'Emesa'].every((n) => ctx.helpers.controls(ctx, 'AGR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 'am_a_royal_capital', name: 'A Royal Capital',
+        icon: 'bricks', col: 2, row: 4, requires: ['am_queens_estates'],
+        desc: 'Caesarea Philippi was renamed Neronias for an emperor who lasted four years, '
+          + 'which is what happens when a capital is somebody else\'s compliment. Reach '
+          + 'Government 8 with 400 talents banked and build one that is the kingdom\'s own.',
+        rewardText: '"The Royal City": +8% income and +0.15 legitimacy a month, permanent.',
+        check: (ctx) => (((ctx.game.tags.AGR || {}).tech || {}).gov | 0) >= 8
+          && ((ctx.game.tags.AGR || {}).treasury || 0) >= 400,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'the_royal_city', name: 'The Royal City', months: -1,
+          effects: { incomeMult: 1.08, legitimacyAdd: 0.15 },
+        }),
+      },
+      {
+        id: 'am_the_kings_own_army', name: 'The King\'s Own Army',
+        icon: 'spears', col: 1, row: 5, requires: ['am_outlives_the_war'],
+        desc: 'Every soldier this kingdom has ever fielded has fought beside a legion. Put '
+          + 'twelve thousand men under the royal standards and reach Military 7 — an army '
+          + 'that could stand alone, whether or not it ever has to.',
+        rewardText: '"An Army of Its Own": +8% discipline and +10% manpower, permanent.',
+        check: (ctx) => totalMen(ctx, 'AGR') >= 12000
+          && (((ctx.game.tags.AGR || {}).tech || {}).mar | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'an_army_of_its_own', name: 'An Army of Its Own', months: -1,
+          effects: { disciplineMult: 1.08, manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'am_the_dynasty_continues', name: 'The Dynasty Continues',
+        icon: 'star8', col: 0, row: 5, requires: ['am_the_northern_march'],
+        desc: 'Agrippa II died childless in Rome and the house of Herod ended with him. Reach '
+          + '85 legitimacy and +3 stability: a kingdom that has an heir worth confirming is a '
+          + 'kingdom with a next century.',
+        rewardText: '"The House Continues": +0.3 legitimacy a month, −0.5 unrest everywhere, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.AGR || {};
+          return (t.legitimacy || 0) >= 85 && (t.stability || 0) >= 3;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'the_house_continues', name: 'The House Continues', months: -1,
+          effects: { legitimacyAdd: 0.3, unrestAll: -0.5 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_two_crowns', name: 'Two Crowns of Israel', hypothetical: true,
@@ -1141,7 +1292,19 @@ export const BOOKMARK_66 = {
         check: (ctx) => anyFlag(ctx, 'speakerForTheNation', 'stateNotNation'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { infl: 20, gov: 10 }),
       },
-    ],
+          {
+        id: 'hy_clients_war', name: 'The Client\'s War', hypothetical: true,
+        fork: '66ce/the_clients_war',
+        icon: 'swords', col: 3, row: 1,
+        desc: 'Rome is eating its own emperors and every cohort that could garrison this '
+          + 'kingdom is besieging Jerusalem or marching on Italy. Take the year: sever the '
+          + 'bond, declare, and be a crown held from nobody in Italy — the war the last '
+          + 'Herodian never fought, in the only year he could have won it.',
+        rewardText: '+25 legitimacy, +30 martial points.',
+        check: (ctx) => anyFlag(ctx, 'agrippaRose'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 25, mar: 30 }),
+      },
+],
     // The house beyond the Tigris (SPEC §185): a convert kingdom's chapter —
     // feed the west, keep the King of Kings sweet, and weigh the yoke.
     ADI: [
@@ -1303,7 +1466,18 @@ export const BOOKMARK_66 = {
         check: (ctx) => anyFlag(ctx, 'storesSealed'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, gov: 15 }),
       },
-    ],
+          {
+        id: 'hy_tigris_crown', name: 'The Crown Between the Rivers', hypothetical: true,
+        fork: '66ce/the_tigris_crown',
+        icon: 'star4', col: 3, row: 1,
+        desc: 'The King of Kings is fighting his own nobility and the tribute convoy has gone '
+          + 'two seasons unacknowledged. Stop remitting and start declaring: the house that '
+          + 'took the covenant becomes, for the first time since Tigranes, nobody\'s client.',
+        rewardText: '+25 legitimacy, +30 martial points.',
+        check: (ctx) => anyFlag(ctx, 'tigrisFree'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 25, mar: 30 }),
+      },
+],
   },
 
   aiHints: {

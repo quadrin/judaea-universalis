@@ -800,6 +800,100 @@ export const BOOKMARK_529 = {
           effects: { incomeMult: 1.06 },
         }),
       },
+      // ── The mountain kingdom (SPEC §197) ────────────────────────────────
+      // The Keepers' chapter runs to 614. These are what a rising that does
+      // not die in its second year has to become: a treasury, a frontier, a
+      // priesthood and a people the next century still has to count.
+      {
+        id: 's_the_treasury', name: 'The Treasury of the Mountain',
+        icon: 'coins', col: 1, row: 0, requires: [],
+        desc: 'The hill country grows olives and grain and pays its taxes to a capital that '
+          + 'legislates against it. Stop remitting and start banking: 200 talents in the '
+          + 'mountain\'s own hands.',
+        rewardText: '"The Tithe Kept Home": +10% income permanently.',
+        check: (ctx) => ((ctx.game.tags.SAM || {}).treasury || 0) >= 200,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_tithe_kept_home', name: 'The Tithe Kept Home', months: -1, effects: { incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 's_the_high_priest', name: 'The High Priest of Gerizim',
+        icon: 'altar', col: 2, row: 2, requires: ['s_kingdoms_book'],
+        desc: 'Justinian\'s statutes barred the synagogues, the inheritances and the offices, '
+          + 'and the priesthood on the mountain went on anyway. Reach 75 legitimacy — a '
+          + 'crown the priesthood has publicly anointed.',
+        rewardText: '"Anointed on the Mountain": +0.25 legitimacy a month, −0.5 unrest everywhere, permanent.',
+        check: (ctx) => ((ctx.game.tags.SAM || {}).legitimacy || 0) >= 75,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'anointed_on_the_mountain', name: 'Anointed on the Mountain', months: -1,
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 's_the_lowland_towns', name: 'The Towns Below',
+        icon: 'bricks', col: 0, row: 3, requires: ['s_second_palaestina'],
+        desc: 'A hill people that never comes down from the hills is a hill people until '
+          + 'somebody has the patience to climb. Hold Antipatris and Lydda — the plain that '
+          + 'feeds the mountain and the road that reaches it.',
+        rewardText: '+100 talents, +2,000 manpower.',
+        check: (ctx) => ['Antipatris', 'Lydda'].every((n) => ctx.helpers.controls(ctx, 'SAM', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'SAM', { treasury: 100, manpower: 2000 }),
+      },
+      {
+        id: 's_the_drilled_host', name: 'The Drilled Host',
+        icon: 'helmet', col: 2, row: 3, requires: ['s_the_high_priest'],
+        desc: 'Julianus ben Sabar\'s men were farmers with captured arms, and the field army '
+          + 'of the East went through them in a season. Reach Military 8 and put fifteen '
+          + 'thousand men under the standards.',
+        rewardText: '"The Mountain in Arms": +8% discipline and +8% morale, permanent.',
+        check: (ctx) => (((ctx.game.tags.SAM || {}).tech || {}).mar | 0) >= 8
+          && totalMen(ctx, 'SAM') >= 15000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_mountain_in_arms', name: 'The Mountain in Arms', months: -1,
+          effects: { disciplineMult: 1.08, moraleMult: 1.08 },
+        }),
+      },
+      {
+        id: 's_the_jordan_line', name: 'The Line of the Jordan',
+        icon: 'walls', col: 0, row: 4, requires: ['s_the_lowland_towns'],
+        desc: 'Every army that has ever come for this mountain came down the valley or up the '
+          + 'coast road. Hold Scythopolis and Pella and the eastern door is bolted.',
+        rewardText: '"The Valley Held": +1 stability, +6% morale permanently.',
+        check: (ctx) => ['Scythopolis', 'Pella'].every((n) => ctx.helpers.controls(ctx, 'SAM', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'SAM', {
+            id: 'the_valley_held', name: 'The Valley Held', months: -1, effects: { moraleMult: 1.06 },
+          });
+          ctx.helpers.adjust(ctx, 'SAM', { stability: 1 });
+        },
+      },
+      {
+        id: 's_a_people_the_census_counts', name: 'A People the Census Counts',
+        icon: 'quill', col: 1, row: 4, requires: ['s_coast_road'],
+        desc: 'Procopius says the Samaritans were reduced from a nation to a remnant in this '
+          + 'century, and the number he gives is a massacre in arithmetic. Reach +3 stability '
+          + 'and 20 provinces: be too large to be a footnote.',
+        rewardText: '"Not an Episode": +12% growth and +0.2 legitimacy a month, permanent.',
+        check: (ctx) => ((ctx.game.tags.SAM || {}).stability || 0) >= 3
+          && ctx.helpers.countControlled(ctx, 'SAM', {}) >= 20,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'not_an_episode', name: 'Not an Episode', months: -1,
+          effects: { growthMult: 1.12, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 's_the_statutes_repealed', name: 'The Statutes Repealed',
+        icon: 'scales', col: 2, row: 4, requires: ['s_the_drilled_host'],
+        desc: 'The disabilities are the reason this rising happened: no synagogue, no '
+          + 'inheritance, no office, no testimony. Reach Government 8 — a state that writes '
+          + 'its own law is a state whose people can inherit from each other again.',
+        rewardText: '"The Law of the Mountain": −1 unrest everywhere and +10% income, permanent.',
+        check: (ctx) => (((ctx.game.tags.SAM || {}).tech || {}).gov | 0) >= 8,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_law_of_the_mountain', name: 'The Law of the Mountain', months: -1,
+          effects: { unrestAll: -1, incomeMult: 1.1 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set.

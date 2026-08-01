@@ -736,6 +736,79 @@ export const BOOKMARK_614 = {
           && ctx.helpers.controls(ctx, 'JUD', 'Pelusium'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, manpower: 2000 }),
       },
+      // ── The century the Return has to hold (SPEC §197) ──────────────────
+      // The chapter runs to 692 — through Heraclius, the Arab conquest and
+      // the Dome. These are what a Jewish polity has to build to still be
+      // there when the third empire arrives.
+      {
+        id: 'p_the_mint_of_the_return', name: 'The Coinage of the Return',
+        icon: 'coins', col: 1, row: 5, requires: ['p_granary'],
+        desc: 'Nehemiah ben Hushiel governed Jerusalem for three years and the record of it '
+          + 'is an argument about coins. Bank 500 talents and strike a currency the whole '
+          + 'Levant has to price against.',
+        rewardText: '"The Silver of the Return": +12% income and +0.2 legitimacy a month, permanent.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 500,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'silver_of_the_return', name: 'The Silver of the Return', months: -1,
+          effects: { incomeMult: 1.12, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'p_the_desert_frontier', name: 'The Desert Frontier',
+        icon: 'walls', col: 0, row: 4, requires: ['p_phoenicia'],
+        desc: 'Every power that has ever taken this country took it from the south-east, and '
+          + 'the next one is being assembled in the Hijaz while Persia and Byzantium bleed '
+          + 'each other white. Hold Bostra and Petra before somebody else needs them.',
+        rewardText: '"The Southern Watch": +8% morale, +1 stability.',
+        check: (ctx) => ['Bostra', 'Petra'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_southern_watch', name: 'The Southern Watch', months: -1, effects: { moraleMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1 });
+        },
+      },
+      {
+        id: 'p_a_state_that_outlives_its_patron', name: 'A State That Outlives Its Patron',
+        icon: 'tower', col: 2, row: 4, requires: ['p_kings_highway'],
+        desc: 'This polity exists because Khosrow found it useful, and Khosrow will be '
+          + 'murdered by his own son in a dungeon. Reach Government 8 and +3 stability: a '
+          + 'government that does not depend on which empire is winning.',
+        rewardText: '"Standing On Its Own": −1 unrest everywhere and +10% income, permanent.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8
+          && ((ctx.game.tags[who(ctx, 'JUD')] || {}).stability || 0) >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'standing_on_its_own', name: 'Standing On Its Own', months: -1,
+          effects: { unrestAll: -1, incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'p_the_army_of_the_return', name: 'The Army of the Return',
+        icon: 'spears', col: 0, row: 5, requires: ['p_the_desert_frontier'],
+        desc: 'The Return marched with Persian columns and garrisoned with volunteers from '
+          + 'Galilee and the dispersion. Reach Military 8 with twenty thousand men — an army '
+          + 'that does not need a great power to be its spine.',
+        rewardText: '"The Host of the Return": +10% discipline and +10% manpower, permanent.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).mar | 0) >= 8
+          && totalMen(ctx, 'JUD') >= 20000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'host_of_the_return', name: 'The Host of the Return', months: -1,
+          effects: { disciplineMult: 1.1, manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'p_the_gathering', name: 'The Gathering In',
+        icon: 'diaspora', col: 2, row: 5, requires: ['p_a_state_that_outlives_its_patron'],
+        desc: 'A Jewish government in Jerusalem is a fact every community from Babylonia to '
+          + 'Spain has to have an opinion about. Reach 90 legitimacy — the exiles come to a '
+          + 'country that is worth coming to.',
+        rewardText: '"The Ingathering": +15% growth and +20% from the ascents, permanent.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).legitimacy || 0) >= 90,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_ingathering', name: 'The Ingathering', months: -1,
+          effects: { growthMult: 1.15, pilgrimMult: 1.2 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the

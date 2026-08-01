@@ -73,17 +73,17 @@ const GROWTH = [
     ground: ['Tyre'],
   },
   {
-    id: '66ce', tag: 'ADI', nodes: 12, hypos: 3,
+    id: '66ce', tag: 'ADI', nodes: 13, hypos: 4,
     added: ['dm_riders_of_two_rivers', 'dm_treasure_house', 'dm_tombs_of_kings', 'hy_city_never_starved'],
     ground: ['Nehardea'], // Nisibis is the house's own; the mission is hold-both
   },
   {
-    id: '66ce', tag: 'AGR', nodes: 14, hypos: 4,
+    id: '66ce', tag: 'AGR', nodes: 19, hypos: 5,
     added: ['am_queens_estates', 'am_first_crown', 'am_emperors_ear', 'hy_other_royal_robes', 'hy_king_of_which_jews'],
     ground: ['Chalcis'],
   },
   {
-    id: '132ce', tag: 'ADI', nodes: 11, hypos: 2,
+    id: '132ce', tag: 'ADI', nodes: 12, hypos: 3,
     added: ['b2_fortress_that_refused', 'b2_court_of_captivity', 'b2_houses_of_study', 'hy_letters_reach_east'],
     ground: ['Hatra', 'Singara', 'Nehardea'],
   },

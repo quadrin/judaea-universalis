@@ -156,6 +156,7 @@ function expectAllDone(g, bookmark, tags, label) {
   }
   Object.assign(game.flags, {
     seleucidSuccessor: true, greekJerusalem: true, westernMarch: true,
+    priesthoodAlone: true,
   });
   game.retiredChapters = [{ id: 'ev_royal_expedition', y: -162, m: 3, title: 'The Boy King Takes the Field', why: 'the war it belonged to was already settled' }];
   realm.checkMissions(ctx);
@@ -172,6 +173,7 @@ function expectAllDone(g, bookmark, tags, label) {
   Object.assign(game.flags, {
     eagleRefused: true, neverRenamed: true,
     moabKept: true, crassusRefused: true, jvBackedPompey: true, jvBackedAntony: true,
+    successionSettled: true,
   });
   realm.checkMissions(ctx);
   realm.checkMissions(ctx);
@@ -189,6 +191,7 @@ function expectAllDone(g, bookmark, tags, label) {
   Object.assign(game.flags, {
     hasmoneanHolds: true, orderNeverGiven: true,
     grovesRefused: true, sailedWithAntony: true, hyrcanusHome: true,
+    kingdomWhole: true,
   });
   realm.checkMissions(ctx);
   const her = game.tags.HER;
@@ -208,7 +211,9 @@ function expectAllDone(g, bookmark, tags, label) {
   Object.assign(game.flags, {
     secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,
     menahemLives: true, storesSealed: true, speakerForTheNation: true,
+    agrippaRose: true, tigrisFree: true,
   });
+  realm.checkMissions(ctx);
   realm.checkMissions(ctx);
   expectAllDone(game, era('66ce').bookmark, ['JUD', 'AGR', 'ADI'], '66ce');
 }
@@ -219,8 +224,9 @@ function expectAllDone(g, bookmark, tags, label) {
   const { game, ctx } = booted.get('132ce');
   Object.assign(game.flags, {
     redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true,
-    lettersMercy: true, dispersionCalled: true,
+    lettersMercy: true, dispersionCalled: true, julianRefused: true,
   });
+  realm.checkMissions(ctx);
   realm.checkMissions(ctx);
   expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }

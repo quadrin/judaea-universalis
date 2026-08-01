@@ -625,6 +625,105 @@ export const BOOKMARK_40 = {
           effects: { manpowerMult: 1.08 },
         }),
       },
+      // ── The reign, not the war (SPEC §197) ──────────────────────────────
+      // The crown war is three years; the chapter is a hundred and six. These
+      // are the things the reign is actually remembered for — the harbour,
+      // the Temple, the grain year, the fortresses, and the will.
+      {
+        id: 'h5_caesarea', name: 'A Harbour Where There Was None',
+        icon: 'shipyard', col: 1, row: 1, requires: ['h5_rome'],
+        desc: 'There is no natural anchorage on this coast between Egypt and Ptolemais, so '
+          + 'build one: hydraulic concrete sunk in open water off the Sharon shore. Hold '
+          + 'Dora and Joppa with 300 talents banked to pay for it.',
+        rewardText: '"Sebastos Harbour": +15% trade permanently, +1 stability.',
+        check: (ctx) => ['Dora', 'Joppa'].every((n) => ctx.helpers.controls(ctx, 'HER', n))
+          && ((ctx.game.tags.HER || {}).treasury || 0) >= 300,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'sebastos_harbour', name: 'Sebastos Harbour', months: -1, effects: { tradeMult: 1.15 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { stability: 1 });
+        },
+      },
+      {
+        id: 'h5_the_temple', name: 'The House Rebuilt',
+        icon: 'temple', col: 1, row: 4, requires: ['h5_one_king'],
+        desc: 'A thousand priests trained as masons so that no unconsecrated hand touched the '
+          + 'sanctuary, and the platform doubled. Hold Jerusalem with 400 talents banked and '
+          + 'Government 7 — this is an administrative feat before it is a religious one.',
+        rewardText: '"The Temple of Herod": +0.3 legitimacy a month and +20% from the ascents, permanent.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HER', 'Jerusalem')
+          && ((ctx.game.tags.HER || {}).treasury || 0) >= 400
+          && (((ctx.game.tags.HER || {}).tech || {}).gov | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_temple_of_herod', name: 'The Temple of Herod', months: -1,
+          effects: { legitimacyAdd: 0.3, pilgrimMult: 1.2 },
+        }),
+      },
+      {
+        id: 'h5_famine_year', name: 'The Grain Year',
+        icon: 'granary', col: 0, row: 4, requires: ['h5_greek_cities'],
+        desc: 'In the famine of 25 the king melted the palace plate and bought Egyptian wheat, '
+          + 'and it is the one thing his subjects never held against him. Reach +2 stability '
+          + 'with 250 talents in hand — be able to do it before it is needed.',
+        rewardText: '"The King Who Fed Them": −1 unrest everywhere permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags.HER || {};
+          return (t.stability || 0) >= 2 && (t.treasury || 0) >= 250;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_king_who_fed_them', name: 'The King Who Fed Them', months: -1, effects: { unrestAll: -1 },
+        }),
+      },
+      {
+        id: 'h5_the_fortress_ring', name: 'The Ring of Fortresses',
+        icon: 'walls', col: 2, row: 4, requires: ['h5_hauran'],
+        desc: 'Masada, Machaerus, Herodium in the hills behind Bethlehem: a king who came in '
+          + 'with Parthians behind him builds where he can be besieged rather than caught. '
+          + 'Hold Masada and Machaerus.',
+        rewardText: '"The King\'s Rocks": +8% morale, +1 stability.',
+        check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'HER', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'the_kings_rocks', name: 'The King\'s Rocks', months: -1, effects: { moraleMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { stability: 1 });
+        },
+      },
+      {
+        id: 'h5_the_friend_of_caesar', name: 'Friend and Ally',
+        icon: 'laurel', col: 1, row: 5, requires: ['h5_the_temple'],
+        desc: 'The title is a legal category and it is worth more than any province: raise '
+          + 'Rome\'s regard to +180, past devotion, and the kingdom stops being audited and '
+          + 'starts being consulted.',
+        rewardText: '"Socius et Amicus": +10% income permanently, +30 influence points.',
+        check: (ctx) => {
+          const rom = ctx.game.tags.ROM;
+          return ((rom && rom.opinion && rom.opinion.HER) || 0) >= 180;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'socius_et_amicus', name: 'Socius et Amicus', months: -1, effects: { incomeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { infl: 30 });
+        },
+      },
+      {
+        id: 'h5_a_dynasty_not_a_reign', name: 'A Dynasty, Not a Reign',
+        icon: 'star8', col: 0, row: 5, requires: ['h5_famine_year'],
+        desc: 'Everything this house has is held personally, from one man, by one emperor\'s '
+          + 'goodwill. Reach 85 legitimacy and +3 stability: make the crown outlive the head '
+          + 'wearing it.',
+        rewardText: '"The House Established": +0.25 legitimacy a month, +6% discipline, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.HER || {};
+          return (t.legitimacy || 0) >= 85 && (t.stability || 0) >= 3;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_house_established', name: 'The House Established', months: -1,
+          effects: { legitimacyAdd: 0.25, disciplineMult: 1.06 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_greater_herod', name: 'Too Large to Be a Favour', hypothetical: true,
@@ -677,7 +776,19 @@ export const BOOKMARK_40 = {
         check: (ctx) => anyFlag(ctx, 'sailedWithAntony', 'keptTheArmyHome'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { mar: 20 }),
       },
-    ],
+          {
+        id: 'hy_undivided_realm', name: 'The Undivided Realm', hypothetical: true,
+        fork: '40bce/the_testament',
+        icon: 'quill', col: 4, row: 0,
+        desc: 'Reach the end of the reign with the realm whole and hand it on that way — one '
+          + 'heir, one army, one set of accounts. The division the sixth will actually made '
+          + 'is the road by which this kingdom became a province ten years later; a crown '
+          + 'that passes entire is a crown with no third for a prefect to inherit.',
+        rewardText: '+25 legitimacy, +2 stability.',
+        check: (ctx) => anyFlag(ctx, 'kingdomWhole'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HER', { legitimacy: 25, stability: 2 }),
+      },
+],
     ATG: [
       {
         id: 'a5_army', name: 'The King\'s Muster',
@@ -765,6 +876,74 @@ export const BOOKMARK_40 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'ATG', 'Damascus'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { mar: 25, legitimacy: 10 }),
       },
+      // ── The Hasmonean restoration (SPEC §197) ───────────────────────────
+      // Antigonus is the last king of his house and the only one this game
+      // lets win. These are what a restored Hasmonean state has to do with
+      // the century the chronicles gave to somebody else.
+      {
+        id: 'a5_the_mint', name: 'The Bilingual Coin',
+        icon: 'coins', col: 1, row: 2, requires: ['a5_hired_veterans'],
+        desc: 'Your coins read Mattathias the High Priest in Hebrew on one face and King '
+          + 'Antigonus in Greek on the other, which is the whole political programme in two '
+          + 'alphabets. Bank 250 talents and strike it everywhere.',
+        rewardText: '"The Two Alphabets": +8% income and +0.15 legitimacy a month, permanent.',
+        check: (ctx) => ((ctx.game.tags.ATG || {}).treasury || 0) >= 250,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'the_two_alphabets', name: 'The Two Alphabets', months: -1,
+          effects: { incomeMult: 1.08, legitimacyAdd: 0.15 },
+        }),
+      },
+      {
+        id: 'a5_the_rocks', name: 'The Rocks of the House',
+        icon: 'walls', col: 0, row: 4, requires: ['a5_coast'],
+        desc: 'Masada is holding out against you with the Idumean\'s family inside it, and '
+          + 'Machaerus guards the road he will come back along. Take both and the restoration '
+          + 'has no back door left open.',
+        rewardText: '"No Door Left Open": +8% morale, +1 stability.',
+        check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'ATG', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'no_door_left_open', name: 'No Door Left Open', months: -1, effects: { moraleMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { stability: 1 });
+        },
+      },
+      {
+        id: 'a5_the_north_restored', name: 'The North Restored',
+        icon: 'grain', col: 1, row: 4, requires: ['a5_one_crown'],
+        desc: 'Galilee declared for your house in every generation and paid for it in every '
+          + 'generation. Hold Sepphoris, Jotapata and Gischala.',
+        rewardText: '+3,000 manpower, +1 stability.',
+        check: (ctx) => ['Sepphoris', 'Jotapata', 'Gischala'].every((n) => ctx.helpers.controls(ctx, 'ATG', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { manpower: 3000, stability: 1 }),
+      },
+      {
+        id: 'a5_the_priest_king_settled', name: 'The Priest-King Settled',
+        icon: 'scales', col: 2, row: 4, requires: ['a5_damascus'],
+        desc: 'Your house has worn both offices for eighty years and been argued with for '
+          + 'eighty years. Reach Government 7 and +2 stability: govern the quarrel instead of '
+          + 'surviving it.',
+        rewardText: '"The Settled Question": −0.75 unrest everywhere, +0.2 legitimacy a month, permanent.',
+        check: (ctx) => (((ctx.game.tags.ATG || {}).tech || {}).gov | 0) >= 7
+          && ((ctx.game.tags.ATG || {}).stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'the_settled_question', name: 'The Settled Question', months: -1,
+          effects: { unrestAll: -0.75, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'a5_terms_with_the_eagle', name: 'Terms With the Eagle',
+        icon: 'dove', col: 1, row: 5, requires: ['a5_the_north_restored'],
+        desc: 'Rome declared you an enemy and gave your crown to an Idumean. Outlast the '
+          + 'decree: raise Rome\'s regard for the restored house to +80 — a Senate that '
+          + 'ratifies what it cannot remove.',
+        rewardText: '+30 influence points, +20 legitimacy.',
+        check: (ctx) => {
+          const rom = ctx.game.tags.ROM;
+          return ((rom && rom.opinion && rom.opinion.ATG) || 0) >= 80;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { infl: 30, legitimacy: 20 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_hasmonean_holds', name: 'Mattathias, High Priest', hypothetical: true,
@@ -810,7 +989,18 @@ export const BOOKMARK_40 = {
         check: (ctx) => anyFlag(ctx, 'hyrcanusHome', 'hyrcanusPensioned'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 15 }),
       },
-    ],
+          {
+        id: 'hy_undivided_realm', name: 'A Crown That Passes Whole', hypothetical: true,
+        fork: '40bce/the_testament',
+        icon: 'quill', col: 4, row: 0,
+        desc: 'A restored house reaches the end of a long reign and answers the question that '
+          + 'destroyed the last one: does the realm pass entire, or in pieces to sons who '
+          + 'will each be confirmed separately by a foreign secretary? Hand it on whole.',
+        rewardText: '+25 legitimacy, +2 stability.',
+        check: (ctx) => anyFlag(ctx, 'kingdomWhole'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { legitimacy: 25, stability: 2 }),
+      },
+],
     // The Tigris kingdom's tree (SPEC §185): ride the tide, bank the tolls,
     // and be standing when the ebb finds out who could swim.
     ADI: [

@@ -3949,6 +3949,130 @@ export const EVENTS_167 = [
     ],
   },
 
+  // ── The diadem (SPEC §197) ────────────────────────────────────────────────
+  // The Hasmonean house governed for two generations as high priests and
+  // ethnarchs, and then Aristobulus I put on a crown — the first Jewish king
+  // since the Babylonians took the last one, and a title no reading of the
+  // Law obviously grants a son of Joarib. This chapter runs long enough to
+  // ask the question the family actually faced, and it is the fork the whole
+  // priest-king quarrel of the next two chapters descends from.
+  {
+    id: 'ev_h_the_diadem',
+    title: 'The Diadem',
+    desc: 'The land is held, the Greeks pay for their own retreat, and the ambassadors have '
+      + 'begun a problem the secretaries cannot solve: what to call you. The Romans write to '
+      + 'the High Priest and Ethnarch of the Jews. The Nabataeans, who understand only kings, '
+      + 'write to the King. Every court between the sea and the desert is ruled by somebody '
+      + 'wearing a diadem, and the ones that are not are ruled by somebody in Antioch.\n\n'
+      + 'The elders of the Assembly point out, without raising their voices, that the decree '
+      + 'confirming this house named it high priest for ever, until a trustworthy prophet '
+      + 'should arise — and that the men who wrote it were careful to leave the other title '
+      + 'out. The captains point out that an army is followed more readily by a king. Both '
+      + 'are right, and the linen band is already made, and it is on the table.',
+    forTag: 'HAS',
+    major: true,
+    minYear: -128,
+    maxYear: -95,
+    trigger: safeTrigger('ev_h_the_diadem', (ctx) => {
+      const h = ctx.helpers;
+      if (h.getFlag(ctx, 'diademAnswered')) return false;
+      if (!alive(ctx, 'HAS')) return false;
+      const t = ctx.game.tags[who(ctx, 'HAS')];
+      return !!t && !t.overlord && h.controls(ctx, 'HAS', 'Jerusalem');
+    }),
+    aiOption: 0,
+    historical: 'Aristobulus I took the diadem in 104 BCE and Josephus says he was the first '
+      + 'to do it. The Pharisees never accepted that the same head could wear the mitre and '
+      + 'the crown, and the quarrel outlived the dynasty that started it.',
+    options: [
+      {
+        label: 'Put on the diadem — a king of the Jews, and the courts may write accordingly',
+        tooltip: 'The realm becomes a kingdom in its own style. +20 legitimacy, +1 stability, '
+          + '"The Royal Style" (+8% income, +5% morale, permanent) — and the schools that '
+          + 'read the decree aloud every year do not forget what it said: +1 unrest '
+          + 'everywhere for 60 months.',
+        effects: guard('ev_h_the_diadem:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { legitimacy: 20, stability: 1 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_royal_style', name: 'The Royal Style', months: -1,
+            effects: { incomeMult: 1.08, moraleMult: 1.05 },
+          });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_mitre_and_the_crown', name: 'The Mitre and the Crown', months: 60,
+            effects: { unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'diademAnswered', true);
+          h.setFlag(ctx, 'diademTaken', true);
+          h.chronicle(ctx, 'era', 'The high priest of the Jews puts on a diadem and is '
+            + 'addressed as king by every chancery from Alexandria to Ctesiphon. In the '
+            + 'study houses the decree of the Great Assembly is read out again, slowly, '
+            + 'with the missing word left where it always was.');
+        }),
+      },
+      {
+        label: 'The mitre is enough — this house rules as it was confirmed to rule',
+        tooltip: 'The road the chronicles do not have. The priesthood alone: +2 stability, '
+          + '"The Decree Kept" (−0.75 unrest everywhere and +0.2 legitimacy a month, '
+          + 'permanent) — and the neighbours go on addressing an officer rather than a peer, '
+          + 'which costs: −8% income.',
+        effects: guard('ev_h_the_diadem:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HAS', { stability: 2 });
+          h.addTagModifier(ctx, 'HAS', {
+            id: 'the_decree_kept', name: 'The Decree Kept', months: -1,
+            effects: { unrestAll: -0.75, legitimacyAdd: 0.2, incomeMult: 0.92 },
+          });
+          h.setFlag(ctx, 'diademAnswered', true);
+          h.setFlag(ctx, 'priesthoodAlone', true);
+          h.chronicle(ctx, 'era', 'The linen band goes back in its box. The house governs a '
+            + 'kingdom in everything but the word, and the schools that would have spent a '
+            + 'century arguing about the word find something else to do — which turns out '
+            + 'to be the schools themselves.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_h_what_the_crown_became',
+    title: 'What the Crown Became',
+    desc: 'Two generations after the question was settled, the settlement is itself an '
+      + 'institution: the men who staff the court were born under it, and the men who '
+      + 'dispute it were born under it too. What the house chose has stopped being a choice '
+      + 'and started being what everybody assumes.',
+    forTag: 'HAS',
+    major: true,
+    minYear: -76,
+    maxYear: -40,
+    trigger: safeTrigger('ev_h_crown_became', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'HAS')
+        && !!(h.getFlag(ctx, 'diademTaken') || h.getFlag(ctx, 'priesthoodAlone'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Have the chancery write the settlement down as law',
+        tooltip: 'What was a decision becomes a constitution: −40 talents to publish it, '
+          + '+1 stability, and the arrangement is defended in the schools rather than '
+          + 'merely obeyed.',
+        effects: guard('ev_h_what_the_crown_became:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HAS', { treasury: -40, stability: 1 });
+          crownVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'Let custom carry it — nothing needs writing down',
+        tooltip: 'The settlement stands on habit alone. Cheaper, and every generation gets '
+          + 'to reopen it.',
+        effects: guard('ev_h_what_the_crown_became:1', (ctx) => {
+          crownVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
   // ═══ The greater victory: the world the chronicles never reached. The
   // historical spine above IS the win — survival, the lamps, the tablets of
   // brass. These events fire only in campaigns that outran the chronicle:
@@ -4512,4 +4636,34 @@ export const EVENTS_167 = [
       },
     ],
   },
+
 ];
+
+
+// The verdict of the §197 diadem fork, hoisted into the table above. What the
+// house chose is what the generation inherited; writing it down only decides
+// whether the settlement is defended or merely obeyed.
+function crownVerdict(ctx, written) {
+  const h = ctx.helpers;
+  if (h.getFlag(ctx, 'diademTaken')) {
+    h.addTagModifier(ctx, 'HAS', {
+      id: 'a_kingdom_among_kingdoms', name: 'A Kingdom Among Kingdoms', months: -1,
+      effects: { incomeMult: 1.06, disciplineMult: 1.04, unrestAll: written ? -0.25 : 0 },
+    });
+    h.adjust(ctx, 'HAS', { legitimacy: 15 });
+    h.chronicle(ctx, 'era', 'The court keeps a chancery, a fleet, mercenaries and a protocol, '
+      + 'and its neighbours deal with it as they deal with each other. The price is a '
+      + 'permanent party in its own capital that regards the whole arrangement as a '
+      + 'usurpation, and says so at every festival.');
+  } else {
+    h.addTagModifier(ctx, 'HAS', {
+      id: 'the_house_of_the_book', name: 'The House of the Book', months: -1,
+      effects: { unrestAll: -0.5, legitimacyAdd: written ? 0.2 : 0.15 },
+    });
+    h.adjust(ctx, 'HAS', { stability: 1, gov: 40 });
+    h.chronicle(ctx, 'era', 'A commonwealth governed by its priesthood and its assembly, with '
+      + 'no diadem anywhere in it, turns out to be the one form the schools will defend '
+      + 'rather than dispute. The Pharisees never rise, because there is nothing for them to '
+      + 'rise against.');
+  }
+}

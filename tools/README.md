@@ -1080,3 +1080,49 @@ beside the fifty-eight old ones). On the tree merged with main's §195
 (the court-hosted communities), the battery is **126 of 126 headless
 suites ALL PASS**, their smoke125 and this section's smoke126 both
 included.
+
+Since §197 (the trees grow to the size of their chapters): every playable
+side out to 18–23 mission nodes — 278 across the fifteen playable sides, up
+from 201 — plus five new forks with ten new cards, including the two wars of independence
+the roster never offered (Agrippa against Rome in the year of the four
+emperors, Adiabene against the King of Kings). Both follow the §61 vassal
+rule exactly: the bond severs first, then `declareWar(…, 'independence')`,
+so the overlord can only restore the yoke through the subjugation clause.
+The other three forks are the diadem (167), Herod's testament (40) and
+Julian's offer to rebuild the Temple in 363 (132).
+
+The pass found four defect classes the suite could not previously see.
+Chapters fold the map their own way (§47 merges, era foundings), so a
+mission naming a province its own chapter never seats is uncompletable for
+ever, silently — four new branches had it and are repointed at ground those
+chapters have, and `smoke127` now resolves every province every mission of
+every playable side names through `ctx.prov`, the same lookup `controls()`
+uses, so era renames and `p.canon` aliases resolve instead of reading as
+holes. A stray comma before a closing bracket is an ELISION rather than a
+syntax error: `filter` and `map` skip holes silently while `find` walks into
+one and hands `undefined` to its predicate, so one misplaced comma in each
+of four packages took out five suites with stack traces pointing at innocent
+code — `smoke127` now walks every era chain by index, which is the only
+check that sees a hole. `smoke74`'s date-and-trigger rule caught all five
+new terminals (a card with both has its trigger silently ignored, so each
+would have fired on its month whether or not the fork was answered); they
+carry era windows now. And `smoke66` reads a chapter's victory strand as
+"banner to end of file", so cards appended at the tail inherit the strand's
+sovereign-and-capital rule — the new fork terminals moved above the banner,
+where the chapter body is.
+
+Measured against the parent commit, 8-year harness on all eight bookmarks:
+the anomaly set is exactly the documented accepted families and nothing
+else — `67 SEL DEAD`, `40 OSR/HER/ATG BLEEDING`, `529 JUD DEAD + SAM
+DEBT-SPIRAL` (the v6.9 self-limiting spiral), the other five clean — with
+zero stderr on every run. The new thresholds sit past what an AI reaches in
+an eight-year window, so the trees grew reasons for a player without moving
+the AI's furniture.
+
+`smoke127` is the new contract; `smoke39` caught the five new terminals
+single-optioned before any of it ran (v6.1: anything the player answers
+offers at least two answers) and they now deal a real choice apiece. The
+moved pins: `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
+(21 nodes, cols/rows vectors extended), `smoke112` (21), `smoke116` (73
+roads not taken), `smoke126` (the §196 chairs re-counted), `uitest2` (21
+medallions). The battery is **127 of 127 headless suites ALL PASS**.

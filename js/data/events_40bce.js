@@ -2325,6 +2325,129 @@ export const EVENTS_40 = [
     ],
   },
 
+  // ── The testament (SPEC §197) ─────────────────────────────────────────────
+  // Herod rewrote his will six times and the last version divided the realm
+  // between three sons; Augustus ratified the division, Archelaus lost his
+  // third within a decade, and the province of Judaea is what the division
+  // eventually produced. A king who reaches the end of a reign in this game
+  // faces the choice the historical one made badly, and the whole shape of
+  // the next chapter is downstream of it.
+  {
+    id: 'ev5_the_testament',
+    title: 'The Testament',
+    desc: 'The reign is long enough now that the succession is the only question the court '
+      + 'has left. The sons are grown, mutually suspicious and individually plausible; the '
+      + 'Greek cities of the coast would prefer their own governor to any of them; and the '
+      + 'imperial secretaries have let it be known — helpfully, unofficially, at dinner — '
+      + 'that Caesar will ratify whatever arrangement the king puts his seal to, and that '
+      + 'Caesar finds a divided inheritance easier to ratify.\n\n'
+      + 'The council splits exactly where you would expect. The chancery wants one crown, '
+      + 'one army, one set of accounts. The family wants what families want. And somewhere '
+      + 'under both arguments sits the thing nobody says: three tetrarchs are three men '
+      + 'Rome can replace one at a time.',
+    forTag: 'HER',
+    major: true,
+    minYear: -8,
+    maxYear: 10,
+    trigger: safeTrigger('ev5_the_testament', (ctx) => {
+      const h = ctx.helpers;
+      if (h.getFlag(ctx, 'testamentAnswered')) return false;
+      if (!alive(ctx, 'HER')) return false;
+      return h.controls(ctx, 'HER', 'Jerusalem');
+    }),
+    aiOption: 1,
+    historical: 'The sixth will divided the kingdom: Archelaus took Judaea and Samaria, '
+      + 'Antipas Galilee and Peraea, Philip the north-east. Augustus confirmed it, withheld '
+      + 'the royal title from all three, and ten years later deposed Archelaus and put a '
+      + 'prefect in his place. The division is how Judaea became a province.',
+    options: [
+      {
+        label: 'One crown, undivided — the realm passes whole or not at all',
+        tooltip: 'The testament names a single heir and the council swears to it: +2 '
+          + 'stability, +20 legitimacy, "The Undivided Realm" (+8% income and +5% '
+          + 'discipline, permanent). The passed-over sons and the coastal cities both take '
+          + 'it badly: +1 unrest everywhere for 48 months.',
+        effects: guard('ev5_the_testament:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HER', { stability: 2, legitimacy: 20 });
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_undivided_realm', name: 'The Undivided Realm', months: -1,
+            effects: { incomeMult: 1.08, disciplineMult: 1.05 },
+          });
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_passed_over_sons', name: 'The Passed-Over Sons', months: 48,
+            effects: { unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'testamentAnswered', true);
+          h.setFlag(ctx, 'kingdomWhole', true);
+          h.chronicle(ctx, 'era', 'The last testament names one heir to everything from the '
+            + 'Golan to the Idumean desert, and the council swears to it in the Temple '
+            + 'court. Caesar ratifies it with a remark about how much simpler three would '
+            + 'have been, and the remark is remembered.');
+        }),
+      },
+      {
+        label: 'Divide it among the sons, and let Caesar ratify the arrangement',
+        tooltip: 'The historical course. The family is satisfied and the imperial secretaries '
+          + 'are delighted: +150 talents and +25 influence points now — and a realm that '
+          + 'cannot act as one again, "The Tetrarchies" (−10% manpower and −0.15 legitimacy '
+          + 'a month, permanent).',
+        effects: guard('ev5_the_testament:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'HER', { treasury: 150, infl: 25 });
+          h.addTagModifier(ctx, 'HER', {
+            id: 'the_tetrarchies', name: 'The Tetrarchies', months: -1,
+            effects: { manpowerMult: 0.9, legitimacyAdd: -0.15 },
+          });
+          h.setFlag(ctx, 'testamentAnswered', true);
+          h.setFlag(ctx, 'kingdomDivided', true);
+          h.chronicle(ctx, 'era', 'The realm is parcelled into thirds and every third is '
+            + 'confirmed from Rome, without the royal title. The arrangement satisfies '
+            + 'everyone in the room and nobody outside it, and the first of the three will '
+            + 'be deposed by a bureaucrat within a decade.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev5_what_the_will_produced',
+    title: 'What the Will Produced',
+    desc: 'A generation after the seal went on the testament, the arrangement it made has '
+      + 'stopped being an arrangement and become the country. The men administering it were '
+      + 'children when it was signed and cannot imagine the alternative.',
+    forTag: 'HER',
+    major: true,
+    minYear: 28,
+    maxYear: 60,
+    trigger: safeTrigger('ev5_what_the_will_produced', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'HER')
+        && !!(h.getFlag(ctx, 'kingdomWhole') || h.getFlag(ctx, 'kingdomDivided'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Bind the arrangement with an oath the whole council swears',
+        tooltip: 'The succession is sworn to in the Temple court and copied to Rome: −50 '
+          + 'talents, +15 legitimacy, and what the testament made is now what the country '
+          + 'has promised.',
+        effects: guard('ev5_what_the_will_produced:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'HER', { treasury: -50, legitimacy: 15 });
+          testamentVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'A settlement that needs swearing to is already weak',
+        tooltip: 'No oath, no ceremony, no copy to Rome. The arrangement stands on itself '
+          + 'and on whoever is holding the treasury when it is tested.',
+        effects: guard('ev5_what_the_will_produced:1', (ctx) => {
+          testamentVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
   // ═══ THE HASMONEAN RESTORATION (alternate history) ═════════════════════════
   // The strand history never wrote: Antigonus holds. Every trigger reads the
   // live world — the crown war settled, ATG alive in Jerusalem, Herod broken —
@@ -3227,4 +3350,31 @@ export const EVENTS_40 = [
       },
     ],
   },
+
 ];
+
+
+// The verdict of the §197 testament fork, hoisted into the table above.
+function testamentVerdict(ctx, sworn) {
+  const h = ctx.helpers;
+  if (h.getFlag(ctx, 'kingdomWhole')) {
+    h.addTagModifier(ctx, 'HER', {
+      id: 'a_crown_that_survived_its_founder', name: 'A Crown That Survived Its Founder',
+      months: -1, effects: { legitimacyAdd: sworn ? 0.25 : 0.2, incomeMult: 1.05 },
+    });
+    h.adjust(ctx, 'HER', { stability: 1, gov: 40 });
+    h.chronicle(ctx, 'era', 'A kingdom that passed whole through one succession is a kingdom '
+      + 'that can pass whole through the next, and the prefects who were being measured for '
+      + 'Caesarea are measured for somewhere else. There is no procurator in Jerusalem, and '
+      + 'therefore no procurator\'s riot.');
+  } else {
+    h.addTagModifier(ctx, 'HER', {
+      id: 'the_prefects_road', name: 'The Prefect\'s Road', months: -1,
+      effects: { unrestAll: sworn ? 0.35 : 0.5, incomeMult: 0.94 },
+    });
+    h.chronicle(ctx, 'era', 'Two of the three thirds are still governed by their tetrarchs '
+      + 'and the largest is governed from Caesarea by a Roman of equestrian rank, which '
+      + 'everyone has agreed to describe as continuity. The census is taken. The receipts '
+      + 'are filed. The country begins the long argument that ends in a war.');
+  }
+}

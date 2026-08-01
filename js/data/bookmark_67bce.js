@@ -753,6 +753,101 @@ export const BOOKMARK_67 = {
           effects: { incomeMult: 1.08 },
         }),
       },
+      // ── The kingdom the elder brother would inherit (SPEC §197) ─────────
+      // The chapter runs to 6 CE. Winning the war of the brothers is the
+      // first act; these are the state the winner then has to actually hold
+      // — the customs, the rocks, the council, and the Roman who decides.
+      {
+        id: 'h4_customs_houses', name: 'The Customs Houses',
+        icon: 'market', col: 1, row: 1, requires: ['h4_levy'],
+        desc: 'Antipater\'s method is not battle, it is receipts: every road out of Idumea, '
+          + 'every landing on the coast, every caravan from Petra, taxed by men who owe him. '
+          + 'Bank 250 talents of it.',
+        rewardText: '"The Fixer\'s Receipts": +8% income permanently.',
+        check: (ctx) => ((ctx.game.tags.HYR || {}).treasury || 0) >= 250,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'fixers_receipts', name: 'The Fixer\'s Receipts', months: -1, effects: { incomeMult: 1.08 },
+        }),
+      },
+      {
+        id: 'h4_desert_rocks', name: 'The Rocks in the Desert',
+        icon: 'walls', col: 0, row: 4, requires: ['h4_moab'],
+        desc: 'Masada and Machaerus were built by this house to be the last places it could '
+          + 'be driven to. Your brother\'s partisans know every path up both. Take them.',
+        rewardText: '"The Last Places": +1 stability, +6% morale permanently.',
+        check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'HYR', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'the_last_places', name: 'The Last Places', months: -1, effects: { moraleMult: 1.06 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { stability: 1 });
+        },
+      },
+      {
+        id: 'h4_the_lake_country', name: 'The Lake Country',
+        icon: 'grain', col: 1, row: 4, requires: ['h4_one_crown'],
+        desc: 'Galilee fed the brothers\' war and never chose a side in it. Hold Sepphoris, '
+          + 'Jotapata and Gischala — the north is where a restored crown finds soldiers who '
+          + 'were not at Jericho.',
+        rewardText: '+3,000 manpower, +1 stability.',
+        check: (ctx) => ['Sepphoris', 'Jotapata', 'Gischala'].every((n) => ctx.helpers.controls(ctx, 'HYR', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { manpower: 3000, stability: 1 }),
+      },
+      {
+        id: 'h4_the_sea_gates', name: 'The Sea Gates',
+        icon: 'ship', col: 2, row: 4, requires: ['h4_damascus'],
+        desc: 'Jannaeus took the coast and Pompey will give it away again unless somebody is '
+          + 'standing on it. Hold Joppa, Azotus and Ascalon.',
+        rewardText: '"The Coast Restored": +12% trade permanently, +75 talents.',
+        check: (ctx) => ['Joppa', 'Azotus', 'Ascalon'].every((n) => ctx.helpers.controls(ctx, 'HYR', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'the_coast_restored', name: 'The Coast Restored', months: -1, effects: { tradeMult: 1.12 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { treasury: 75 });
+        },
+      },
+      {
+        id: 'h4_the_council', name: 'The Council Confirmed',
+        icon: 'scales', col: 1, row: 5, requires: ['h4_the_lake_country'],
+        desc: 'Your grandmother gave the Sanhedrin to the sages and your brother would have '
+          + 'taken it back. Reach Government 7 — a court that governs through a council '
+          + 'rather than around one.',
+        rewardText: '"The Sanhedrin Seated": −0.75 unrest everywhere and +0.15 legitimacy a month, permanent.',
+        check: (ctx) => (((ctx.game.tags.HYR || {}).tech || {}).gov | 0) >= 7,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'the_sanhedrin_seated', name: 'The Sanhedrin Seated', months: -1,
+          effects: { unrestAll: -0.75, legitimacyAdd: 0.15 },
+        }),
+      },
+      {
+        id: 'h4_the_useful_brother', name: 'The Convenient Brother',
+        icon: 'laurel', col: 0, row: 5, requires: ['h4_desert_rocks'],
+        desc: 'Whichever Roman inherits the East will deal with whoever is easiest to deal '
+          + 'with. Raise Rome\'s regard for this crown to +120 — be the convenient one before '
+          + 'the question is asked.',
+        rewardText: '+30 influence points, +15 legitimacy.',
+        check: (ctx) => {
+          const rom = ctx.game.tags.ROM;
+          return ((rom && rom.opinion && rom.opinion.HYR) || 0) >= 120;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { infl: 30, legitimacy: 15 }),
+      },
+      {
+        id: 'h4_house_restored', name: 'The House Restored',
+        icon: 'star8', col: 2, row: 5, requires: ['h4_the_sea_gates'],
+        desc: 'A high priest who won a civil war is still a high priest who won a civil war. '
+          + 'Reach +2 stability and 75 legitimacy — the reign has to stop being an argument.',
+        rewardText: '"The Elder Line Vindicated": +8% income, +0.2 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.HYR || {};
+          return (t.stability || 0) >= 2 && (t.legitimacy || 0) >= 75;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'elder_line_vindicated', name: 'The Elder Line Vindicated', months: -1,
+          effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
+        }),
+      },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
         id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
@@ -824,7 +919,19 @@ export const BOOKMARK_67 = {
         check: (ctx) => anyFlag(ctx, 'jvBackedOctavian', 'jvBackedAntony'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { infl: 20 }),
       },
-    ],
+          {
+        id: 'hy_succession_settled', name: 'The Succession Written Down', hypothetical: true,
+        fork: '67bce/the_client_succession',
+        icon: 'quill', col: 4, row: 2,
+        desc: 'A client crown that gets its succession ratified in Rome before the reigning '
+          + 'head dies is a crown Rome has agreed to keep. Reach the question with a house '
+          + 'worth settling and settle it — either way it is answered, the next reign begins '
+          + 'without a Roman arbitrator invited into the room.',
+        rewardText: '+20 legitimacy, +25 governance points.',
+        check: (ctx) => anyFlag(ctx, 'successionSettled', 'successionWithheld'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HYR', { legitimacy: 20, gov: 25 }),
+      },
+],
     ARI: [
       {
         id: 'a4_army', name: 'The King\'s Army',
@@ -913,6 +1020,99 @@ export const BOOKMARK_67 = {
           && ctx.helpers.controls(ctx, 'ARI', 'Chalcis'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { manpower: 1500, legitimacy: 10 }),
       },
+      // ── The kingdom the younger brother is fighting for (SPEC §197) ─────
+      // Aristobulus holds the army, the city and the fortresses; what he does
+      // not hold is time. These are the state he has to build fast enough
+      // that Pompey's settlement finds something too solid to re-file.
+      {
+        id: 'a4_war_chest', name: 'The War Chest',
+        icon: 'coins', col: 1, row: 3, requires: ['a4_treasury'],
+        desc: 'Idumean money is buying your brother an army. Out-bank it: 350 talents in the '
+          + 'treasury, and the mercenary market can hear only one bidder.',
+        rewardText: '"The Higher Bidder": +15% reinforcement permanently.',
+        check: (ctx) => ((ctx.game.tags.ARI || {}).treasury || 0) >= 350,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'the_higher_bidder', name: 'The Higher Bidder', months: -1, effects: { reinforceMult: 1.15 },
+        }),
+      },
+      {
+        id: 'a4_rocks_held', name: 'The Rocks Held',
+        icon: 'walls', col: 0, row: 4, requires: ['a4_kings_art'],
+        desc: 'You began this war holding the desert fortresses and you intend to end it the '
+          + 'same way. Masada and Machaerus, still yours when the dust settles.',
+        rewardText: '"Dug In Deep": +1 stability, +8% morale permanently.',
+        check: (ctx) => ['Masada', 'Machaerus'].every((n) => ctx.helpers.controls(ctx, 'ARI', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'dug_in_deep', name: 'Dug In Deep', months: -1, effects: { moraleMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { stability: 1 });
+        },
+      },
+      {
+        id: 'a4_the_north', name: 'The North Secured',
+        icon: 'grain', col: 1, row: 4, requires: ['a4_war_chest'],
+        desc: 'Galilee and the hill villages are the recruiting ground your father used. Hold '
+          + 'Sepphoris, Jotapata and Gischala before the Idumeans buy them.',
+        rewardText: '+3,000 manpower, +15 martial points.',
+        check: (ctx) => ['Sepphoris', 'Jotapata', 'Gischala'].every((n) => ctx.helpers.controls(ctx, 'ARI', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { manpower: 3000, mar: 15 }),
+      },
+      {
+        id: 'a4_sea_gates', name: 'The Gates to the Sea',
+        icon: 'ship', col: 2, row: 4, requires: ['a4_priest_kings_school'],
+        desc: 'Your father\'s coast is the difference between a hill kingdom and a state with '
+          + 'customs revenue. Hold Joppa, Azotus and Ascalon.',
+        rewardText: '"The King\'s Coast": +12% trade permanently, +75 talents.',
+        check: (ctx) => ['Joppa', 'Azotus', 'Ascalon'].every((n) => ctx.helpers.controls(ctx, 'ARI', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'the_kings_coast', name: 'The King\'s Coast', months: -1, effects: { tradeMult: 1.12 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { treasury: 75 });
+        },
+      },
+      {
+        id: 'a4_too_solid_to_refile', name: 'Too Solid to Re-File',
+        icon: 'tower', col: 0, row: 5, requires: ['a4_rocks_held'],
+        desc: 'A settlement commission re-draws what it can move. Reach Government 7 and hold '
+          + 'fifteen provinces: a governed kingdom is harder to file than a disputed one.',
+        rewardText: '"A Governed Kingdom": +10% income, −0.5 unrest everywhere, permanent.',
+        check: (ctx) => (((ctx.game.tags.ARI || {}).tech || {}).gov | 0) >= 7
+          && ctx.helpers.countControlled(ctx, 'ARI', {}) >= 15,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'a_governed_kingdom', name: 'A Governed Kingdom', months: -1,
+          effects: { incomeMult: 1.1, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'a4_rome_prefers_to_deal', name: 'Rome Prefers to Deal',
+        icon: 'laurel', col: 1, row: 5, requires: ['a4_the_north'],
+        desc: 'The point of digging in is not to beat the legions; it is to make besieging '
+          + 'you a worse plan than talking to you. Raise Rome\'s regard to +120 while the '
+          + 'kingdom still stands under your own crown.',
+        rewardText: '+30 influence points, +15 legitimacy.',
+        check: (ctx) => {
+          const rom = ctx.game.tags.ROM;
+          return ((rom && rom.opinion && rom.opinion.ARI) || 0) >= 120;
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 30, legitimacy: 15 }),
+      },
+      {
+        id: 'a4_the_crown_kept', name: 'The Crown Kept',
+        icon: 'star8', col: 2, row: 5, requires: ['a4_sea_gates'],
+        desc: 'You took the crown because your brother would have dropped it. Reach +2 '
+          + 'stability and 80 legitimacy still wearing it.',
+        rewardText: '"The Younger Line Confirmed": +8% income, +0.2 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags.ARI || {};
+          return (t.stability || 0) >= 2 && (t.legitimacy || 0) >= 80;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'younger_line_confirmed', name: 'The Younger Line Confirmed', months: -1,
+          effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
+        }),
+      },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
         id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
@@ -984,7 +1184,19 @@ export const BOOKMARK_67 = {
         check: (ctx) => anyFlag(ctx, 'jvBackedOctavian', 'jvBackedAntony'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { infl: 20 }),
       },
-    ],
+          {
+        id: 'hy_succession_settled', name: 'The Succession Written Down', hypothetical: true,
+        fork: '67bce/the_client_succession',
+        icon: 'quill', col: 4, row: 2,
+        desc: 'A client crown that gets its succession ratified before the reigning head dies '
+          + 'is a crown the great power has agreed to keep. Reach the question with a house '
+          + 'worth settling and settle it — either way it is answered, the next reign begins '
+          + 'without an arbitrator invited into the room.',
+        rewardText: '+20 legitimacy, +25 governance points.',
+        check: (ctx) => anyFlag(ctx, 'successionSettled', 'successionWithheld'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 20, gov: 25 }),
+      },
+],
     // The Tigris kingdom's tree (SPEC §185): a client house between Armenia's
     // wreck and Parthia's peace, living on the road and weighing the yoke.
     ADI: [
