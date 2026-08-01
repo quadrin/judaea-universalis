@@ -201,7 +201,11 @@ export const EVENTS_66 = [
       + 'have found Jewish throats more often than Roman ones.',
     forTag: 'JUD',
     date: { y: 66, m: 7 },
+    major: true,
     aiOption: 1,
+    historical: 'Menahem was dragged from the Temple courts and killed on the Ophel; his '
+      + 'kinsman Eleazar ben Yair led the surviving Sicarii to Masada, where they stayed '
+      + 'out of the war of the nation and raided En Gedi at Passover.',
     options: [
       {
         label: 'Arm the Sicarii',
@@ -229,6 +233,7 @@ export const EVENTS_66 = [
             general: { name: 'Eleazar ben Yair', fire: 1, shock: 2, maneuver: 3 },
           });
           h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.setFlag(ctx, 'menahemStruck', true);
         }),
       },
     ],
@@ -3355,6 +3360,260 @@ export const EVENTS_66 = [
           setOpinion(ctx, 'ROM', 'JUD', -60);
           h.doctrine(ctx, 'conquest', -1);
           h.chronicle(ctx, 'era', 'The Second Kingdom takes its shape: rich, open, and armed exactly enough that no one troubles to check the arithmetic.');
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE GRANARIES, AND THE DAGGERS (SPEC §119) ═══════════════════════════
+  // Two forks the chapter always kept as texture and never charted. The
+  // granaries: Josephus says the stores of Jerusalem could have outlasted
+  // years of siege, and that the factions burned them fighting each other
+  // (BJ V.1.4-5) — the famine of 70 was self-inflicted before Titus ever
+  // closed the ring. The daggers: ev_menahem already asks whether the
+  // Sicarii are folded into the rising or driven to their rock; what it
+  // never had was the reckoning — Masada, and what the knife-men were to
+  // the state whose war they sat out (BJ IV.7.2 for En Gedi; VII.8-9 for
+  // the end).
+  {
+    id: 'ev_the_granaries_of_the_city',
+    title: 'The Granaries of the City',
+    desc: 'The storehouses of Jerusalem hold years of grain — the tithe barns, the '
+      + 'Temple stores, the private granaries of the great families, filled against '
+      + 'exactly this war. Every faction in the city has posted its own guard on its '
+      + 'own quarter\'s stores, and the guards have begun regarding the other guards '
+      + 'as the nearer enemy.\n\n'
+      + 'The quartermasters put it to the government in one sentence: the city can '
+      + 'eat for three years or argue about who eats for three months, and which of '
+      + 'the two happens is being decided now, in the granary courts, by men with '
+      + 'torches standing very close to the wheat.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 68,
+    maxYear: 72,
+    trigger: safeTrigger('ev_granaries', (ctx) => alive(ctx, 'JUD')
+      && !!findJudRomWar(ctx.game)
+      && ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
+      && !ctx.helpers.getFlag(ctx, 'granariesAnswered')),
+    aiOption: 1,
+    historical: 'The factions burned each other\'s stores in the winter of the civil war, '
+      + 'and Josephus counts the grain that could have outlasted the siege among the '
+      + 'things the city did to itself before Rome did anything at all.',
+    options: [
+      {
+        label: 'Seal the stores under one guard, and count every measure',
+        tooltip: 'The state asserts what a state is: one granary authority, sealed doors, '
+          + 'a published ledger. −20 talents and +1 unrest in Jerusalem for 12 months (every '
+          + 'faction\'s guard is dismissed and says so) — and the city can stand a siege: '
+          + '"The Sealed Granaries" (−1 unrest in Jerusalem, permanent).',
+        effects: guard('ev_granaries:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -20 });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'the_sealed_granaries', name: 'The Sealed Granaries', months: -1,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'granariesAnswered', true);
+          h.setFlag(ctx, 'storesSealed', true);
+          h.chronicle(ctx, 'era', 'The granaries of Jerusalem are sealed under one guard '
+            + 'with the ledger nailed to the door. The factions\' quartermasters protest '
+            + 'the arithmetic, which is how everyone knows it is honest.');
+        }),
+      },
+      {
+        label: 'Each faction feeds its own',
+        tooltip: 'The historical drift: every party holds its quarter\'s stores and eyes '
+          + 'the others\'. +5% morale for 12 months (each company eats well, for now) — and '
+          + 'the granary courts become a front: +2 unrest in Jerusalem for 24 months, and '
+          + 'the stores are hostage to every quarrel in the city.',
+        effects: guard('ev_granaries:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'each_feeds_its_own', name: 'Each Feeds Its Own', months: 12,
+            effects: { moraleMult: 1.05 },
+          });
+          h.addProvinceModifier(ctx, 'Jerusalem', {
+            id: 'granary_courts', name: 'The Granary Courts', months: 24,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'granariesAnswered', true);
+          h.setFlag(ctx, 'storesBurned', true);
+          h.chronicle(ctx, 'era', 'The granaries stay under faction guard, quarter by '
+            + 'quarter, torch by torch. The first store burns within the season, and each '
+            + 'side counts the other\'s ash as a victory.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_what_the_stores_were_worth',
+    title: 'What the Stores Were Worth',
+    desc: 'The ring has closed and the city is counting. What it counts depends on a '
+      + 'decision taken years ago in the granary courts, when the enemy was across the '
+      + 'valley and the wheat was near the torches.\n\n'
+      + 'A city that sealed its stores counts measures and days and finds it has both. '
+      + 'A city that let each faction feed its own counts burnt floors, and the men on '
+      + 'the walls have begun to do the second arithmetic — the one Josephus will do '
+      + 'aloud for the enemy\'s readers: what this siege would have cost the besiegers '
+      + 'if the besieged had not paid it first.',
+    forTag: 'JUD',
+    major: true,
+    trigger: safeTrigger('ev_stores_worth', (ctx) => {
+      const h = ctx.helpers;
+      if (!h.getFlag(ctx, 'storesSealed') && !h.getFlag(ctx, 'storesBurned')) return false;
+      if (h.getFlag(ctx, 'storesReckoned')) return false;
+      const p = ctx.prov('Jerusalem');
+      return !!(p && p.siege && p.siege.by && p.siege.by !== who(ctx, 'JUD') && (p.siege.days || 0) >= 30);
+    }),
+    aiOption: 0,
+    historical: 'The famine of 70 arrived years ahead of the arithmetic: the stores that '
+      + 'could have outlasted Titus were ash before he closed the ring, and the city '
+      + 'besieged itself before it was besieged.',
+    options: [
+      {
+        label: 'Open the granaries to the whole city',
+        tooltip: 'Sealed: the ration is published and the city eats by the book — "The City '
+          + 'Eats" (−2 unrest in Jerusalem, +5% morale, 24 months). Burned: what little was '
+          + 'saved is shared thin — +1 unrest for 12 months, but the sharing is remembered: '
+          + '+5 legitimacy.',
+        effects: guard('ev_stores_worth:0', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'storesSealed')) {
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'the_city_eats', name: 'The City Eats', months: 24,
+              effects: { unrest: -2 },
+            });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_city_eats_m', name: 'The City Eats', months: 24,
+              effects: { moraleMult: 1.05 },
+            });
+            h.chronicle(ctx, 'war', 'The sealed granaries open by the book, a measure a '
+              + 'mouth a day, and the ring outside the walls discovers it is besieging a '
+              + 'city that can wait.');
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: 5 });
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'the_thin_sharing', name: 'The Thin Sharing', months: 12,
+              effects: { unrest: 1 },
+            });
+            h.chronicle(ctx, 'war', 'What survived the granary courts is shared thin across '
+              + 'the whole city, and the sharing is remembered longer than the hunger.');
+          }
+          h.setFlag(ctx, 'storesReckoned', true);
+          h.setFlag(ctx, 'storesOpened', true);
+        }),
+      },
+      {
+        label: 'Ration by the fighting companies',
+        tooltip: 'The walls eat first, in either city: +8% morale for 12 months — and the '
+          + 'houses learn what the priority means. Sealed: +1 unrest for 12 months. Burned: '
+          + '+2 unrest for 24 months and −10 legitimacy — the searchers of houses again, '
+          + 'with a ledger this time.',
+        effects: guard('ev_stores_worth:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'walls_eat_first', name: 'The Walls Eat First', months: 12,
+            effects: { moraleMult: 1.08 },
+          });
+          if (h.getFlag(ctx, 'storesSealed')) {
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'the_priority', name: 'The Priority', months: 12,
+              effects: { unrest: 1 },
+            });
+            h.chronicle(ctx, 'war', 'The sealed stores ration the walls first and the '
+              + 'houses after, and the city holds — resentfully, in order, alive.');
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: -10 });
+            h.addProvinceModifier(ctx, 'Jerusalem', {
+              id: 'the_priority', name: 'The Priority', months: 24,
+              effects: { unrest: 2 },
+            });
+            h.chronicle(ctx, 'war', 'What the granary courts left goes to the walls, and '
+              + 'the searchers of houses go back to work with a ledger. The city holds the '
+              + 'enemy off with one hand and itself down with the other.');
+          }
+          h.setFlag(ctx, 'storesReckoned', true);
+          h.setFlag(ctx, 'wallsAteFirst', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_what_the_daggers_became',
+    title: 'What the Daggers Became',
+    desc: 'The rock above the Dead Sea has kept its own war all these years. Whoever '
+      + 'holds it now — the king who was armed, or the kinsman of the king who was '
+      + 'struck down — the men up there have taken no orders from the government of '
+      + 'the nation since the year the war began, and their store of Herod\'s weapons '
+      + 'is not smaller.\n\n'
+      + 'The question has aged into policy: what is Masada to the state? A garrison '
+      + 'of the stubbornest men the nation owns, waiting to be asked. Or the last '
+      + 'address of a doctrine — no ruler but God — that has never yet met a '
+      + 'government it acknowledged, including this one.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 72,
+    maxYear: 78,
+    trigger: safeTrigger('ev_daggers_became', (ctx) => alive(ctx, 'JUD')
+      && (ctx.helpers.getFlag(ctx, 'menahemLives') || ctx.helpers.getFlag(ctx, 'menahemStruck'))
+      && !ctx.helpers.getFlag(ctx, 'daggersReckoned')),
+    aiOption: 1,
+    historical: 'Nobody folded them in. The Sicarii of Masada sat out the war of the '
+      + 'nation, raided En Gedi at Passover, and ended in the year 73 in the manner '
+      + 'the whole world has heard about, leaving the storehouses full to show Rome '
+      + 'they could have held.',
+    options: [
+      {
+        label: 'Fold them into the army of the nation',
+        tooltip: 'Envoys, back pay, and amnesty written wide: −60 talents. If the king of '
+          + 'the knives lives, he comes down expensive — +2,000 manpower, +1 unrest '
+          + 'everywhere for 24 months, and his royal robes come with him. If Eleazar holds '
+          + 'the rock, the descent is quieter: +1,500 manpower, +5 legitimacy.',
+        effects: guard('ev_daggers_became:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -60 });
+          if (h.getFlag(ctx, 'menahemLives')) {
+            h.adjust(ctx, 'JUD', { manpower: 2000 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_kings_men_down', name: 'The King\'s Men Come Down', months: 24,
+              effects: { unrestAll: 1 },
+            });
+            h.chronicle(ctx, 'era', 'Menahem comes down from Masada with his men and his '
+              + 'robes, which he has not stopped wearing. The army gains two thousand '
+              + 'knives and the government gains a colleague it did not ask for.');
+          } else {
+            h.adjust(ctx, 'JUD', { manpower: 1500, legitimacy: 5 });
+            h.chronicle(ctx, 'era', 'Eleazar\'s men come down from the rock under an '
+              + 'amnesty written wide enough to cover what nobody names. The knives go '
+              + 'into the army\'s sheaths, and the rock keeps only its ghosts.');
+          }
+          h.setFlag(ctx, 'daggersReckoned', true);
+          h.setFlag(ctx, 'daggersFoldedIn', true);
+        }),
+      },
+      {
+        label: 'Let the rock keep its own',
+        tooltip: 'No envoys. The doctrine stays quarantined at its last address: −1 unrest '
+          + 'everywhere for 24 months (the quarrel stays up there) — and Masada seethes '
+          + '(+2 unrest, permanent) with every man the state exiles by not asking. The '
+          + 'raids on En Gedi resume at Passover.',
+        effects: guard('ev_daggers_became:1', (ctx) => {
+          const h = ctx.helpers;
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_quarrel_quarantined', name: 'The Quarrel Quarantined', months: 24,
+            effects: { unrestAll: -1 },
+          });
+          h.addProvinceModifier(ctx, 'Masada', {
+            id: 'the_rock_apart', name: 'The Rock Apart', months: -1,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'daggersReckoned', true);
+          h.setFlag(ctx, 'rockKeptItsOwn', true);
+          h.chronicle(ctx, 'era', 'No envoys climb the snake path. The rock keeps its own '
+            + 'war, its own doctrine and its own Passovers, and the state posts a garrison '
+            + 'at En Gedi and calls the arrangement peace.');
         }),
       },
     ],

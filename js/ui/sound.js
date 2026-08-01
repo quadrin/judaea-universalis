@@ -20,7 +20,7 @@ export function initSound(bus, getGame) {
 
   let lastLoudAt = 0;                    // timestamp of last non-click cue
   const cooldowns = Object.create(null); // category -> last play time
-  const COOLDOWN_MS = { click: 150, battle: 1200, siege: 1200, notify: 600, event: 500, war: 1500, fanfare: 400, save: 400, tick: 90, raid: 2000 };
+  const COOLDOWN_MS = { click: 150, battle: 1200, siege: 1200, notify: 600, event: 500, war: 1500, fanfare: 400, save: 400, tick: 90, raid: 2000, march: 420 };
   const warned = Object.create(null);
   const battleTags = new Map();          // provId -> Set of participant tags
 
@@ -293,6 +293,144 @@ export function initSound(bus, getGame) {
         const bt = t + 0.95 + i * 0.24;
         noise({ t: bt, dur: 0.4, attack: 0.004, gain: 0.3, type: 'lowpass', freq: 900, freqEnd: 130, q: 0.7, send: 0.5 });
         tone({ t: bt, freq: 72, glideTo: 34, glideDur: 0.3, type: 'sine', attack: 0.004, dur: 0.42, gain: 0.26 });
+      }
+    },
+
+    // ---------------------------------------------- the arms speak (SPEC §191)
+    // What an order to march sounds like, by the arm that sets the column's
+    // pace. Every one is the same two primitives the rest of this file uses —
+    // a shaped noise burst is a footfall, a hoof, or a track link; a low
+    // sawtooth held under it is an engine.
+    march() {
+      // tramping feet: four soft thuds on a walking cadence, kit rattling
+      const t = ac.currentTime;
+      for (let i = 0; i < 4; i++) {
+        const bt = t + i * 0.17;
+        noise({ t: bt, dur: 0.1, attack: 0.004, gain: 0.16, type: 'lowpass', freq: 260, freqEnd: 110, q: 0.7 });
+        noise({ t: bt + 0.02, dur: 0.05, attack: 0.003, gain: 0.035, type: 'bandpass', freq: 2600, q: 2.2 });
+      }
+    },
+    marchDrum() {
+      // the musket age marches to a drum: the same feet, a snare over them
+      sfx.march();
+      const t = ac.currentTime;
+      for (const off of [0, 0.34]) {
+        noise({ t: t + off, dur: 0.07, attack: 0.002, gain: 0.09, type: 'bandpass', freq: 1900, q: 1.2 });
+        noise({ t: t + off + 0.085, dur: 0.05, attack: 0.002, gain: 0.05, type: 'bandpass', freq: 2300, q: 1.4 });
+      }
+    },
+    marchBoots() {
+      // boots and slung rifles: heavier tread, less kit, a truck somewhere off
+      const t = ac.currentTime;
+      for (let i = 0; i < 5; i++) {
+        const bt = t + i * 0.14;
+        noise({ t: bt, dur: 0.09, attack: 0.003, gain: 0.19, type: 'lowpass', freq: 200, freqEnd: 80, q: 0.8 });
+      }
+      tone({ t, freq: 58, type: 'sawtooth', attack: 0.2, dur: 0.7, gain: 0.05, detune: 6, lpf: 240 });
+    },
+    hooves() {
+      // a canter: the four-beat gait, unevenly spaced, with a whinny of dust
+      const t = ac.currentTime;
+      const beats = [0, 0.085, 0.155, 0.24, 0.42, 0.505, 0.575, 0.66];
+      for (let i = 0; i < beats.length; i++) {
+        const bt = t + beats[i];
+        const strong = i % 4 === 0;
+        noise({ t: bt, dur: 0.075, attack: 0.002, gain: strong ? 0.26 : 0.17, type: 'bandpass', freq: 340, q: 1.6 });
+        tone({ t: bt, freq: strong ? 150 : 190, glideTo: 70, glideDur: 0.06, type: 'sine', attack: 0.002, dur: 0.09, gain: strong ? 0.2 : 0.12, detune: 0 });
+      }
+      noise({ t: t + 0.12, dur: 0.5, attack: 0.1, gain: 0.045, type: 'highpass', freq: 3200, q: 0.6 });
+    },
+    engines() {
+      // armor on the move: a diesel note that rises and settles, track links
+      // clattering over it. This is the cue the 1948 chapter is built for.
+      const t = ac.currentTime;
+      tone({ t, freq: 44, glideTo: 62, glideDur: 0.5, type: 'sawtooth', attack: 0.1, dur: 1.4, gain: 0.24, detune: 11, lpf: 300 });
+      tone({ t: t + 0.06, freq: 88, glideTo: 124, glideDur: 0.5, type: 'square', attack: 0.14, dur: 1.25, gain: 0.07, detune: 8, lpf: 380 });
+      for (let i = 0; i < 9; i++) {
+        noise({ t: t + 0.1 + i * 0.115, dur: 0.045, attack: 0.002, gain: 0.075, type: 'bandpass', freq: 2900 + (i % 3) * 400, q: 3.2 });
+      }
+    },
+    timber() {
+      // engines on ox-carts: rope creaking on a windlass, wheels on stone
+      const t = ac.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const bt = t + i * 0.3;
+        tone({ t: bt, freq: 230, glideTo: 168, glideDur: 0.26, type: 'sawtooth', attack: 0.05, dur: 0.3, gain: 0.07, detune: 12, lpf: 900 });
+        noise({ t: bt + 0.12, dur: 0.14, attack: 0.01, gain: 0.09, type: 'lowpass', freq: 420, freqEnd: 190, q: 0.9 });
+      }
+    },
+    limber() {
+      // guns coming out of park: a tractor note and the trail dropping onto
+      // the hook — one clank, and it is the loudest thing in the cue
+      const t = ac.currentTime;
+      tone({ t, freq: 52, glideTo: 72, glideDur: 0.45, type: 'sawtooth', attack: 0.12, dur: 1.0, gain: 0.16, detune: 9, lpf: 280 });
+      noise({ t: t + 0.55, dur: 0.24, attack: 0.002, gain: 0.2, type: 'bandpass', freq: 1500, q: 1.1, send: 0.4 });
+      tone({ t: t + 0.55, freq: 620, type: 'triangle', attack: 0.002, dur: 0.35, gain: 0.1, detune: 6, send: 0.5 });
+    },
+
+    // What a field sounds like when the two hosts meet, by the arm leading it.
+    clash() { sfx.battleStart(); },                       // iron on iron, as it always was
+    charge() {
+      // hooves at the gallop into a horn, then the crash of contact
+      sfx.hooves();
+      const t = ac.currentTime;
+      tone({ t: t + 0.1, freq: 175, type: 'sawtooth', attack: 0.06, dur: 0.7, gain: 0.16, detune: 10, lpf: 1200, send: 0.45 });
+      tone({ t: t + 0.28, freq: 262, type: 'sawtooth', attack: 0.05, dur: 0.6, gain: 0.11, detune: 10, lpf: 1400, send: 0.45 });
+      noise({ t: t + 0.66, dur: 0.3, attack: 0.003, gain: 0.34, type: 'bandpass', freq: 2200, freqEnd: 1100, q: 4, send: 0.4 });
+    },
+    stones() {
+      // slings and bows: whipping air, then a scatter of hits on shields
+      const t = ac.currentTime;
+      for (let i = 0; i < 5; i++) {
+        const bt = t + i * 0.055;
+        noise({ t: bt, dur: 0.12, attack: 0.004, gain: 0.09, type: 'bandpass', freq: 2400 + i * 250, freqEnd: 900, q: 4 });
+      }
+      for (let i = 0; i < 6; i++) {
+        noise({ t: t + 0.3 + i * 0.045, dur: 0.06, attack: 0.002, gain: 0.1, type: 'bandpass', freq: 800 + (i % 3) * 300, q: 2 });
+      }
+    },
+    engines_() {
+      // torsion engines: the ratchet, the release, the shock through the frame
+      const t = ac.currentTime;
+      for (let i = 0; i < 4; i++) {
+        noise({ t: t + i * 0.06, dur: 0.03, attack: 0.002, gain: 0.07, type: 'bandpass', freq: 1700, q: 5 });
+      }
+      noise({ t: t + 0.32, dur: 0.18, attack: 0.002, gain: 0.26, type: 'lowpass', freq: 1200, freqEnd: 260, q: 0.9, send: 0.4 });
+      tone({ t: t + 0.32, freq: 120, glideTo: 55, glideDur: 0.2, type: 'triangle', attack: 0.003, dur: 0.35, gain: 0.2 });
+    },
+    volley() {
+      // the musket age: a ragged rank fire, then the second rank
+      const t = ac.currentTime;
+      for (const off of [0, 0.5]) {
+        for (let i = 0; i < 7; i++) {
+          noise({ t: t + off + i * 0.012 + Math.random() * 0.02, dur: 0.13, attack: 0.002, gain: 0.13, type: 'lowpass', freq: 1800, freqEnd: 300, q: 0.8, send: 0.3 });
+        }
+        tone({ t: t + off, freq: 96, glideTo: 44, glideDur: 0.18, type: 'sine', attack: 0.003, dur: 0.3, gain: 0.2 });
+      }
+    },
+    rifleFire() {
+      // magazine rifles and a machine gun somewhere down the line
+      const t = ac.currentTime;
+      for (let i = 0; i < 14; i++) {
+        noise({ t: t + i * 0.055 + Math.random() * 0.03, dur: 0.07, attack: 0.001, gain: 0.1, type: 'bandpass', freq: 1700 + Math.random() * 900, q: 1.6, send: 0.25 });
+      }
+    },
+    cannonade() {
+      // guns firing in battery: three rounds, each a crack and a long roll
+      const t = ac.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const bt = t + i * 0.33;
+        noise({ t: bt, dur: 0.5, attack: 0.002, gain: 0.34, type: 'lowpass', freq: 1400, freqEnd: 90, q: 0.7, send: 0.55 });
+        tone({ t: bt, freq: 84, glideTo: 32, glideDur: 0.35, type: 'sine', attack: 0.003, dur: 0.55, gain: 0.3 });
+      }
+    },
+    armorFire() {
+      // tanks going in: engines under a high-velocity crack and its echo
+      sfx.engines();
+      const t = ac.currentTime;
+      for (const off of [0.35, 0.72]) {
+        noise({ t: t + off, dur: 0.16, attack: 0.001, gain: 0.32, type: 'bandpass', freq: 2600, freqEnd: 700, q: 2.5, send: 0.5 });
+        tone({ t: t + off, freq: 110, glideTo: 40, glideDur: 0.22, type: 'sine', attack: 0.002, dur: 0.4, gain: 0.24 });
       }
     },
   };
@@ -650,6 +788,23 @@ export function initSound(bus, getGame) {
     win: () => sfx.fanfareWin(),
     loss: () => sfx.lamentLoss(),
     save: () => sfx.quillScratch(),
+    // The arms, by cue key (SPEC §191) — the roster names these, sound.js
+    // owns what they are made of, and the two meet on this table.
+    march: () => sfx.march(),
+    marchDrum: () => sfx.marchDrum(),
+    marchBoots: () => sfx.marchBoots(),
+    hooves: () => sfx.hooves(),
+    engines: () => sfx.engines(),
+    timber: () => sfx.timber(),
+    limber: () => sfx.limber(),
+    clash: () => sfx.clash(),
+    charge: () => sfx.charge(),
+    stones: () => sfx.stones(),
+    engines_: () => sfx.engines_(),
+    volley: () => sfx.volley(),
+    rifleFire: () => sfx.rifleFire(),
+    cannonade: () => sfx.cannonade(),
+    armorFire: () => sfx.armorFire(),
   };
 
   function play(name) {
@@ -679,6 +834,7 @@ export function initSound(bus, getGame) {
 
   on('battleStart', 'battle', (p) => {
     // remember participants so battleEnd can tell whether WE were in it
+    let ours = null;
     try {
       const g = getGame ? getGame() : null;
       if (g && p && p.prov !== undefined) {
@@ -690,10 +846,33 @@ export function initSound(bus, getGame) {
             if (a && a.tag) tags.add(a.tag);
           }
           battleTags.set(p.prov, tags);
+          // Which side is OURS decides which cue we hear (SPEC §191): you
+          // hear your own arms go in. A battle we are not in keeps the old
+          // clash of iron, whatever is fighting in it.
+          const me = playerTag();
+          if (me) {
+            const inSide = (ids) => (ids || []).some((id) => {
+              const a = g.armies && g.armies[id];
+              return a && a.tag === me;
+            });
+            if (inSide(b.atk)) ours = p.atkCue;
+            else if (inSide(b.def)) ours = p.defCue;
+          }
         }
       }
     } catch (e) { warnOnce('battleTags', e); }
-    sfx.battleStart();
+    const cue = ours && byName[ours] ? byName[ours] : null;
+    if (cue) cue();
+    else sfx.battleStart();
+  });
+
+  // A column takes the road (SPEC §191): you hear the arm that sets its pace.
+  // Own armies only — the map is full of other people's marching.
+  on('armyMarch', 'march', (p) => {
+    const me = playerTag();
+    if (!me || !p || p.tag !== me) return;
+    const cue = p.cue && byName[p.cue] ? byName[p.cue] : null;
+    if (cue) cue();
   });
 
   on('battleEnd', 'battle', (p) => {

@@ -1569,6 +1569,23 @@ button {
     1px -1px 2px rgba(232, 220, 192, 0.85),
     -1px 1px 2px rgba(232, 220, 192, 0.85);
 }
+/* A court's foreign holdings — "JUDAEAN GREECE". Two words at the tag tier's
+   0.18em tracking is a very wide ribbon, so parts run tighter and lighter than
+   the home name: still the same hand, plainly subordinate to it. */
+.mlabel-part {
+  font-variant: small-caps;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.88;
+  text-shadow:
+    0 0 3px rgba(232, 220, 192, 0.9),
+    0 0 7px rgba(232, 220, 192, 0.5),
+    1px 1px 2px rgba(232, 220, 192, 0.85),
+    -1px -1px 2px rgba(232, 220, 192, 0.85),
+    1px -1px 2px rgba(232, 220, 192, 0.85),
+    -1px 1px 2px rgba(232, 220, 192, 0.85);
+}
 
 /* ============================================================
    Province panel — diplomacy block (foreign owners)
@@ -2311,6 +2328,69 @@ html, body {
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
 .np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
+/* their ground and their favor (SPEC §197): the map's arithmetic phrased,
+   the favor bank, and the two asks it buys */
+.np-est-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.np-est-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  background: rgba(85, 69, 46, 0.14);
+  border: 1px solid rgba(85, 69, 46, 0.4);
+  border-radius: 3px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.np-est-map:hover { color: var(--ink); border-color: rgba(85, 69, 46, 0.7); }
+.np-est-map .icon { width: 11px; height: 11px; }
+.np-fac-ground {
+  margin-top: 3px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.25;
+  font-style: italic;
+}
+.np-fac-ground .icon-k { flex: none; align-self: center; opacity: 0.7; }
+.np-fac-favor {
+  margin-top: 4px;
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+}
+.np-fac-favor-n {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-bright);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.np-fac-favor-n .icon-k { opacity: 0.8; }
+.np-ask {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  padding: 3px 6px;
+}
+.np-ask-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-ask-cost { flex: none; font-size: 10px; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+.np-ask.disabled .np-ask-cost { opacity: 0.55; }
+
 /* the doctrine axes (SPEC §85): a needle between two named poles */
 .np-doctrine { display: flex; flex-direction: column; }
 .np-dox {
@@ -2390,6 +2470,10 @@ html, body {
 .np-dip-ws.pos { color: var(--green); }
 .np-dip-ws.neg { color: var(--red-deep); }
 .np-dip-none { padding: 3px 0; font-style: italic; font-size: 12.5px; color: var(--ink-soft); opacity: 0.9; }
+/* A dispersion row on a host court's panel (SPEC §195) is a door to its
+   province, so it reads as one. */
+.np-dia-row { cursor: pointer; border-radius: 6px; padding-left: 4px; padding-right: 4px; }
+.np-dia-row:hover { background: rgba(0, 0, 0, 0.06); }
 .np-dove { flex: none; }
 
 .np-decisions { display: grid; grid-template-columns: 1fr; gap: 6px; }
@@ -2851,6 +2935,31 @@ html, body {
   font-weight: 600;
 }
 .bw-men { flex: none; font-variant-numeric: tabular-nums; font-weight: bold; }
+/* The order of battle by arm (SPEC §191): each arm's own face and its count,
+   with the composition pips the mix is earning this phase. */
+.bw-arms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.bw-arm { display: inline-flex; align-items: center; gap: 3px; }
+.bw-arm .icon { opacity: 0.85; }
+.bw-mix {
+  margin-left: auto;
+  padding: 1px 7px;
+  border: 1px solid var(--gold-dark, #8a6d1d);
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gold-dark, #8a6d1d);
+  background: rgba(201, 162, 39, 0.12);
+  white-space: nowrap;
+}
 .bw-morale { border-color: rgba(43, 32, 21, 0.4); background: rgba(43, 32, 21, 0.35); }
 .bw-cas {
   margin-top: 6px;
@@ -3004,18 +3113,10 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .np-reform-head .np-tech-rung { flex: 1; text-align: right; margin: 0 4px 0 auto; }
 
-/* the ideas of the age (SPEC §179): the EU4 idea-group cards — a locked
-   group is a dark slab naming the rung that opens it, an open one sells its
-   tiers like a reform tree */
-.np-era-title {
-  font-size: 11px;
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-  border-top: 1px dotted rgba(85, 69, 46, 0.35);
-  margin: 10px 0 6px;
-  padding-top: 7px;
-}
+/* the ideas of the age (SPEC §179/§198): the EU4 idea-group cards in their
+   own block under the Technology ladders — a locked group is a dark slab
+   naming the rung that opens it, an open one sells its tiers like a reform
+   tree */
 .np-era-locked {
   display: flex;
   flex-direction: column;

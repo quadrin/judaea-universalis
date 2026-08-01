@@ -358,111 +358,111 @@ export const DEFINES = {
       // v5.4: Roma is on the map, but the capital stays the eastern command —
       // every scripted war is eastern, and the AI rallies (and the growth
       // bonus lands) where the game is actually played.
-      name: 'Rome', color: [168, 36, 36], religion: 'roman_cult', culture: 'roman', capital: 'Antioch',
+      name: 'Rome', adj: 'Roman', homeRegion: 'Italy', color: [168, 36, 36], religion: 'roman_cult', culture: 'roman', capital: 'Antioch',
       description: 'The empire that does not forgive: legions, siegecraft, and bottomless reserves.',
       ideas: { disciplineMult: 1.12, siegeBonus: 1, reinforceMult: 1.15 },
     },
     JUD: {
-      name: 'Judaea', color: [36, 82, 158], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      name: 'Judaea', adj: 'Judaean', color: [36, 82, 158], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'A people in arms for the Temple — fierce in the hills, fragile in the field.',
       ideas: { moraleMult: 1.10, hillDefBonus: 1, manpowerMult: 0.85 },
     },
     PAR: {
-      name: 'Parthia', color: [0, 120, 110], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
+      name: 'Parthia', adj: 'Parthian', color: [0, 120, 110], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
       description: 'The rival empire beyond the Euphrates, watching Rome bleed with interest.',
       ideas: { moraleMult: 1.05 },
     },
     NAB: {
-      name: 'Nabataea', color: [196, 124, 40], religion: 'nabataean', culture: 'nabataean', capital: 'Petra',
+      name: 'Nabataea', adj: 'Nabataean', color: [196, 124, 40], religion: 'nabataean', culture: 'nabataean', capital: 'Petra',
       description: 'Caravan kings of the incense road, rich, cautious, and loyal to whoever wins.',
       ideas: { incomeMult: 1.10 },
     },
     ARM: {
-      name: 'Armenia', color: [122, 62, 150], religion: 'zoroastrianism', culture: 'armenian', capital: 'Tigranocerta',
+      name: 'Armenia', adj: 'Armenian', color: [122, 62, 150], religion: 'zoroastrianism', culture: 'armenian', capital: 'Tigranocerta',
       description: 'A mountain kingdom forever balanced between Rome and Parthia.',
       ideas: { hillDefBonus: 1 },
     },
     AGR: {
-      name: 'Kingdom of Agrippa II', color: [214, 120, 120], religion: 'judaism', culture: 'galilean', capital: 'Caesarea Philippi',
+      name: 'Kingdom of Agrippa II', adj: "Agrippa's", color: [214, 120, 120], religion: 'judaism', culture: 'galilean', capital: 'Caesarea Philippi',
       description: 'The last Herodian: a Jewish king who has cast his lot with Rome.',
       ideas: { incomeMult: 1.05 },
     },
     // --- 167 BCE era tags (Maccabean Revolt bookmark) ---
     SEL: {
-      name: 'Seleucid Empire', color: [206, 178, 80], religion: 'hellenism', culture: 'greek', capital: 'Antioch',
+      name: 'Seleucid Empire', adj: 'Seleucid', color: [206, 178, 80], religion: 'hellenism', culture: 'greek', capital: 'Antioch',
       description: 'Alexander\'s heirs in the east — vast, glittering, and coming apart at the dynastic seams.',
       ideas: { disciplineMult: 1.08, siegeBonus: 1, incomeMult: 1.05 },
     },
     PTO: {
-      name: 'Ptolemaic Egypt', color: [90, 140, 190], religion: 'egyptian', culture: 'greek', capital: 'Alexandria',
+      name: 'Ptolemaic Egypt', adj: 'Ptolemaic', color: [90, 140, 190], religion: 'egyptian', culture: 'greek', capital: 'Alexandria',
       description: 'The granary of the Mediterranean, ruled from Alexandria by Macedonian god-kings.',
       ideas: { incomeMult: 1.15, manpowerMult: 0.9 },
     },
     HAS: {
-      name: 'Hasmonean Judaea', color: [40, 96, 170], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      name: 'Hasmonean Judaea', adj: 'Hasmonean', color: [40, 96, 170], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The sons of Mattathias — priests with swords, fighting for the Law in the hills they know.',
       ideas: { moraleMult: 1.12, hillDefBonus: 1, manpowerMult: 0.8 },
     },
     // --- 67 BCE era tags (the Judaean Civil War bookmark) ---
     HYR: {
-      name: "Hyrcanus' Judaea", color: [82, 132, 196], religion: 'judaism', culture: 'judean', capital: 'Hebron',
+      name: "Hyrcanus' Judaea", adj: "Hyrcanus'", color: [82, 132, 196], religion: 'judaism', culture: 'judean', capital: 'Hebron',
       description: 'The elder brother: weak in himself, strong in Antipater\'s cunning and Nabataean silver.',
       ideas: { incomeMult: 1.1, hillDefBonus: 1 },
     },
     ARI: {
-      name: "Aristobulus' Judaea", color: [26, 60, 128], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      name: "Aristobulus' Judaea", adj: "Aristobulus'", color: [26, 60, 128], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The younger brother: the army, the fortresses, and the crown — everything but time.',
       ideas: { moraleMult: 1.1, manpowerMult: 0.9 },
     },
     OSR: {
-      name: 'Osrhoene', color: [86, 148, 132], religion: 'hellenism', culture: 'aramean', capital: 'Edessa',
+      name: 'Osrhoene', adj: 'Osrhoenian', color: [86, 148, 132], religion: 'hellenism', culture: 'aramean', capital: 'Edessa',
       description: 'The Abgarid kings of Edessa: small, shrewd, and always on the winning side eventually.',
       ideas: { incomeMult: 1.05, hillDefBonus: 1 },
     },
     ADI: {
-      name: 'Adiabene', color: [138, 96, 160], religion: 'judaism', culture: 'aramean', capital: 'Arbela',
+      name: 'Adiabene', adj: 'Adiabenian', color: [138, 96, 160], religion: 'judaism', culture: 'aramean', capital: 'Arbela',
       description: 'The kingdom beyond the Tigris whose royal house took the God of Israel — and sent grain and swords to Jerusalem.',
       ideas: { manpowerMult: 1.1, legitimacyAdd: 0.05 },
     },
     CHX: {
-      name: 'Characene', color: [92, 152, 172], religion: 'hellenism', culture: 'arab', capital: 'Charax',
+      name: 'Characene', adj: 'Characenian', color: [92, 152, 172], religion: 'hellenism', culture: 'arab', capital: 'Charax',
       description: 'Merchant kings at the head of the Gulf, growing rich on everything that floats.',
       ideas: { incomeMult: 1.15 },
     },
     CMG: {
-      name: 'Commagene', color: [176, 92, 58], religion: 'hellenism', culture: 'aramean', capital: 'Samosata',
+      name: 'Commagene', adj: 'Commagenian', color: [176, 92, 58], religion: 'hellenism', culture: 'aramean', capital: 'Samosata',
       description: 'The kingdom above the Euphrates crossings: Iranian, Hellenic, and difficult for any empire to recover.',
       ideas: { hillDefBonus: 1, incomeMult: 1.05 },
     },
     CYZ: {
-      name: 'Cyzicene Syria', color: [142, 94, 168], religion: 'hellenism', culture: 'greek', capital: 'Damascus',
+      name: 'Cyzicene Syria', adj: 'Cyzicene', color: [142, 94, 168], religion: 'hellenism', culture: 'greek', capital: 'Damascus',
       description: 'The southern Seleucid crown of Antiochus Cyzicenus — one dynasty, two kings, and a war without an arbiter.',
       ideas: { moraleMult: 1.05, reinforceMult: 0.95 },
     },
     ITU: {
-      name: 'Ituraea', color: [112, 132, 68], religion: 'hellenism', culture: 'aramean', capital: 'Chalcis',
+      name: 'Ituraea', adj: 'Ituraean', color: [112, 132, 68], religion: 'hellenism', culture: 'aramean', capital: 'Chalcis',
       description: 'The mountain tetrarchy of Chalcis: priest-kings, archers, and tolls on every road through Lebanon.',
       ideas: { hillDefBonus: 1, manpowerMult: 1.05 },
     },
     HER: {
-      name: "Herod's Judaea", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
+      name: "Herod's Judaea", adj: "Herod's", color: [148, 108, 42], religion: 'judaism', culture: 'idumean', capital: 'Hebron',
       description: 'The Idumean commoner with a Roman decree: a crown of paper, to be made iron.',
       ideas: { incomeMult: 1.1, siegeMult: 1.1 },
     },
     ATG: {
-      name: "Antigonus' Judaea", color: [30, 82, 96], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      name: "Antigonus' Judaea", adj: "Antigonus'", color: [30, 82, 96], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The last fighting Hasmonean: king and high priest, with Parthia at his back — for now.',
       ideas: { moraleMult: 1.1, hillDefBonus: 1 },
     },
     // ---- v5.4: the wider frame's ancient north ----
     PNT: {
-      name: 'Pontus', color: [0, 110, 140], religion: 'hellenism', culture: 'greek', capital: 'Sinope',
+      name: 'Pontus', adj: 'Pontic', color: [0, 110, 140], religion: 'hellenism', culture: 'greek', capital: 'Sinope',
       description: 'The kingdom of the Black Sea coast — Persian blood, Greek cities, and a long memory of Rome.',
       ideas: { moraleMult: 1.05, navalMult: 1.05 },
     },
     // ---- 614 CE: the last great war of antiquity ----
     SAM: {
-      name: 'Samaria', color: [92, 150, 196], religion: 'samaritanism', culture: 'samaritan', capital: 'Neapolis',
+      name: 'Samaria', adj: 'Samaritan', color: [92, 150, 196], religion: 'samaritanism', culture: 'samaritan', capital: 'Neapolis',
       description: 'The Shamerim — the keepers: an Israelite people with its own Torah, its own priesthood '
         + 'and its own mountain, four hill provinces deep inside a Christian empire.',
       // What four provinces of hill country actually give you: ground you know
@@ -470,33 +470,33 @@ export const DEFINES = {
       ideas: { hillDefBonus: 1, manpowerMult: 1.08, disciplineMult: 0.96 },
     },
     BYZ: {
-      name: 'Byzantium', color: [110, 48, 130], religion: 'christianity', culture: 'greek', capital: 'Antioch',
+      name: 'Byzantium', adj: 'Byzantine', homeRegion: 'Thrace', color: [110, 48, 130], religion: 'christianity', culture: 'greek', capital: 'Antioch',
       description: 'Rome that did not fall: the themes, the walls, and God\'s own empire — bleeding from every border.',
       ideas: { disciplineMult: 1.08, siegeBonus: 1 },
     },
     SAS: {
-      name: 'Sasanian Persia', color: [188, 128, 44], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
+      name: 'Sasanian Persia', adj: 'Sasanian', color: [188, 128, 44], religion: 'zoroastrianism', culture: 'persian', capital: 'Seleucia-Ctesiphon',
       description: 'The House of Sasan at high tide: the royal banner, the armored lancers, and a King of Kings who dreams of Alexander in reverse.',
       ideas: { moraleMult: 1.05, reinforceMult: 1.1 },
     },
     GHA: {
-      name: 'Ghassanids', color: [150, 44, 52], religion: 'christianity', culture: 'arab', capital: 'Bostra',
+      name: 'Ghassanids', adj: 'Ghassanid', color: [150, 44, 52], religion: 'christianity', culture: 'arab', capital: 'Bostra',
       description: 'The phylarchs of the desert edge: Rome\'s Arab shield, unpaid for a generation.',
       ideas: { moraleMult: 1.05 },
     },
     RSH: {
-      name: 'Rashidun Caliphate', color: [38, 116, 72], religion: 'islam', culture: 'arab', capital: 'Hegra',
+      name: 'Rashidun Caliphate', adj: 'Rashidun', color: [38, 116, 72], religion: 'islam', culture: 'arab', capital: 'Hegra',
       description: 'The polity rising beyond the southern map edge: mobile, zealous, and entering an exhausted imperial world.',
       ideas: { moraleMult: 1.1, manpowerMult: 1.1, reinforceMult: 1.08 },
     },
     // ---- 1948 CE: the War of Independence ----
     ISR: {
-      name: 'Israel', color: [36, 104, 196], religion: 'judaism', culture: 'israeli', capital: 'Joppa',
+      name: 'Israel', adj: 'Israeli', color: [36, 104, 196], religion: 'judaism', culture: 'israeli', capital: 'Joppa',
       description: 'A state declared between one war and the next, defended by everyone it has.',
       ideas: { moraleMult: 1.15, reinforceMult: 1.15, manpowerMult: 0.85 },
     },
     EGY: {
-      name: 'Egypt', color: [46, 128, 78], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
+      name: 'Egypt', adj: 'Egyptian', color: [46, 128, 78], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
       description: 'The largest Arab army in the field — long columns, short supply lines home.',
       ideas: { manpowerMult: 1.15 },
     },
@@ -505,63 +505,63 @@ export const DEFINES = {
       // drops the preposition in April 1949 (SPEC §107, ev_i_kingdom_of_jordan)
       // and this tag is renamed in place; one pushed back over the river keeps
       // the mandate's name.
-      name: 'Transjordan', color: [128, 72, 40], religion: 'islam', culture: 'arab_modern', capital: 'Philadelphia',
+      name: 'Transjordan', adj: 'Transjordanian', color: [128, 72, 40], religion: 'islam', culture: 'arab_modern', capital: 'Philadelphia',
       description: 'The Arab Legion: small, British-drilled, and the only army in this war that has read its own manuals.',
       ideas: { disciplineMult: 1.12 },
     },
     SYR: {
-      name: 'Syria', color: [88, 128, 104], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
+      name: 'Syria', adj: 'Syrian', color: [88, 128, 104], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
       description: 'Damascus rides south with more conviction than coordination.',
       ideas: {},
     },
     LEB: {
-      name: 'Lebanon', color: [170, 40, 66], religion: 'christianity', culture: 'arab_modern', capital: 'Berytus',
+      name: 'Lebanon', adj: 'Lebanese', color: [170, 40, 66], religion: 'christianity', culture: 'arab_modern', capital: 'Berytus',
       description: 'A merchant republic at war mostly on paper.',
       ideas: { incomeMult: 1.1 },
     },
     IRQ: {
-      name: 'Iraq', color: [72, 72, 80], religion: 'islam', culture: 'arab_modern', capital: 'Seleucia-Ctesiphon',
+      name: 'Iraq', adj: 'Iraqi', color: [72, 72, 80], religion: 'islam', culture: 'arab_modern', capital: 'Seleucia-Ctesiphon',
       description: 'An expeditionary army a long way from Baghdad.',
       ideas: { manpowerMult: 1.05 },
     },
     TUR: {
-      name: 'Turkey', color: [200, 84, 72], religion: 'islam', culture: 'turkish', capital: 'Iconium',
+      name: 'Turkey', adj: 'Turkish', color: [200, 84, 72], religion: 'islam', culture: 'turkish', capital: 'Iconium',
       description: 'Watching its southern neighbors with studied neutrality.',
       ideas: { disciplineMult: 1.05 },
     },
     GRC: {
-      name: 'Greece', color: [52, 106, 180], religion: 'hellenism', culture: 'greek', capital: 'Corinth',
+      name: 'Greece', adj: 'Greek', color: [52, 106, 180], religion: 'hellenism', culture: 'greek', capital: 'Corinth',
       description: 'The leagues and cities of Hellas — old in glory, careful in war.',
       ideas: {},
     },
     SAU: {
-      name: 'Saudi Arabia', color: [40, 116, 60], religion: 'islam', culture: 'arab_modern', capital: 'Hegra',
+      name: 'Saudi Arabia', adj: 'Saudi', color: [40, 116, 60], religion: 'islam', culture: 'arab_modern', capital: 'Hegra',
       description: 'The desert kingdom sends a token force and keeps its counsel.',
       ideas: {},
     },
     IRN: {
-      name: 'Iran', color: [136, 148, 70], religion: 'islam', culture: 'persian', capital: 'Ecbatana',
+      name: 'Iran', adj: 'Iranian', color: [136, 148, 70], religion: 'islam', culture: 'persian', capital: 'Ecbatana',
       description: 'The old empire east of the war, watching.',
       ideas: {},
     },
     UK: {
-      name: 'Britain', color: [156, 64, 92], religion: 'christianity', culture: 'greek', capital: 'Salamis',
+      name: 'Britain', adj: 'British', homeRegion: 'Britain', color: [156, 64, 92], religion: 'christianity', culture: 'greek', capital: 'Salamis',
       description: 'The departing mandatory power: a garrison on Cyprus and a schedule to keep.',
       ideas: { disciplineMult: 1.1 },
     },
     ITA: {
-      name: 'Italy', color: [46, 139, 87], religion: 'christianity', culture: 'roman', capital: 'Roma',
+      name: 'Italy', adj: 'Italian', color: [46, 139, 87], religion: 'christianity', culture: 'roman', capital: 'Roma',
       description: 'The republic reborn from the war — watching the eastern sea it once ruled.',
       ideas: { incomeMult: 1.05 },
     },
     // ---- formable crowns (SPEC §24): never in a bookmark's activeTags ----
     MLI: {
-      name: 'Kingdom of Israel', color: [46, 70, 172], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      name: 'Kingdom of Israel', adj: 'Israelite', color: [46, 70, 172], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
       description: 'The crown of David restored: won by the sword, kept by the Law.',
       ideas: { moraleMult: 1.1, incomeMult: 1.1, legitimacyAdd: 0.2 },
     },
     UAR: {
-      name: 'United Arab Republic', color: [26, 96, 54], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
+      name: 'United Arab Republic', adj: 'Arab', color: [26, 96, 54], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
       description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
       ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
     },
@@ -572,7 +572,7 @@ export const DEFINES = {
     // surviving coups than wars, and which never for one year stops
     // regarding the Golan as a temporarily mislaid province.
     SAR: {
-      name: 'Syrian Arab Republic', color: [70, 118, 92], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
+      name: 'Syrian Arab Republic', adj: 'Syrian', color: [70, 118, 92], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
       description: 'Damascus after the union: a republic of officers, and the last Arab capital that will not sign.',
       ideas: { manpowerMult: 1.08, moraleMult: 1.05, incomeMult: 0.95 },
     },
@@ -589,7 +589,7 @@ export const DEFINES = {
     // war is allying with a foreign power that happens to share his religion,
     // which is exactly the relationship the period was trying to work out.
     LUK: {
-      name: 'The Host of Lukuas', color: [150, 92, 138], religion: 'judaism', culture: 'greek', capital: 'Cyrene',
+      name: 'The Host of Lukuas', adj: "Lukuas'", color: [150, 92, 138], religion: 'judaism', culture: 'greek', capital: 'Cyrene',
       description: 'The rising of the Greek-speaking diaspora, under a king the Roman sources name twice and differently.',
       ideas: { moraleMult: 1.15, manpowerMult: 1.1, incomeMult: 0.8 },
     },
@@ -602,333 +602,333 @@ export const DEFINES = {
     //
     // -- the ancient Maghreb --
     CAR: {
-      name: 'Carthage', color: [148, 52, 96], religion: 'punic', culture: 'phoenician', capital: 'Carthago',
+      name: 'Carthage', adj: 'Carthaginian', color: [148, 52, 96], religion: 'punic', culture: 'phoenician', capital: 'Carthago',
       names: 'punic',
       description: 'The republic of the sea that lost the sea: suffetes, silver, and a treaty that forbids it a war.',
       ideas: { incomeMult: 1.1, navalMult: 1.05 },
     },
     NUM: {
-      name: 'Numidia', color: [176, 140, 72], religion: 'punic', culture: 'mauri', capital: 'Cirta',
+      name: 'Numidia', adj: 'Numidian', color: [176, 140, 72], religion: 'punic', culture: 'mauri', capital: 'Cirta',
       names: 'libyan',
       description: 'Masinissa\'s kingdom: the finest light horse in the world, and a lawsuit against Carthage every year.',
       ideas: { manpowerMult: 1.05 },
     },
     MAU: {
-      name: 'Mauretania', color: [150, 96, 44], religion: 'punic', culture: 'mauri', capital: 'Volubilis',
+      name: 'Mauretania', adj: 'Mauretanian', color: [150, 96, 44], religion: 'punic', culture: 'mauri', capital: 'Volubilis',
       names: 'libyan',
       description: 'The kings of the far west, from the Pillars to the desert\'s edge — last to be conquered, first to come back.',
       ideas: {},
     },
     GRM: {
-      name: 'The Garamantes', color: [188, 158, 96], religion: 'punic', culture: 'mauri', capital: 'Garama',
+      name: 'The Garamantes', adj: 'Garamantian', color: [188, 158, 96], religion: 'punic', culture: 'mauri', capital: 'Garama',
       names: 'libyan',
       description: 'The lords of the Fezzan oases, who carry the Sahara\'s trade and cannot be followed home.',
       ideas: { incomeMult: 1.05 },
     },
     // -- the free west: Iberia and Gaul --
     MAS: {
-      name: 'Massalia', color: [90, 140, 160], religion: 'hellenism', culture: 'greek', capital: 'Massilia',
+      name: 'Massalia', adj: 'Massaliote', color: [90, 140, 160], religion: 'hellenism', culture: 'greek', capital: 'Massilia',
       description: 'The oldest Greek city of the west: a small navy, a great harbor, and Rome\'s oldest friendship.',
       ideas: { incomeMult: 1.1 },
     },
     CTB: {
-      name: 'The Celtiberians', color: [156, 84, 48], religion: 'druidic', culture: 'celtic', capital: 'Numantia',
+      name: 'The Celtiberians', adj: 'Celtiberian', color: [156, 84, 48], religion: 'druidic', culture: 'celtic', capital: 'Numantia',
       names: 'iberian',
       description: 'The hill confederacies of the meseta. Numantia has not fallen, and will not for a generation.',
       ideas: { hillDefBonus: 1 },
     },
     LUS: {
-      name: 'Lusitania', color: [124, 110, 58], religion: 'druidic', culture: 'iberian', capital: 'Bracara',
+      name: 'Lusitania', adj: 'Lusitanian', color: [124, 110, 58], religion: 'druidic', culture: 'iberian', capital: 'Bracara',
       names: 'iberian',
       description: 'The raiders of the western hills, with the Callaeci and Astures at their backs — poor in silver, rich in war.',
       ideas: { hillDefBonus: 1, moraleMult: 1.05 },
     },
     AVN: {
-      name: 'The Arverni', color: [70, 110, 60], religion: 'druidic', culture: 'celtic', capital: 'Avaricum',
+      name: 'The Arverni', adj: 'Arvernian', color: [70, 110, 60], religion: 'druidic', culture: 'celtic', capital: 'Avaricum',
       description: 'The hegemons of Gaul: Luernius scatters gold from his chariot, and the peoples ride under his clientage.',
       ideas: { manpowerMult: 1.05 },
     },
     AED: {
-      name: 'The Aedui', color: [96, 130, 84], religion: 'druidic', culture: 'celtic', capital: 'Augustodunum',
+      name: 'The Aedui', adj: 'Aeduan', color: [96, 130, 84], religion: 'druidic', culture: 'celtic', capital: 'Augustodunum',
       description: 'The senate of Bibracte and its elected vergobret: the Arverni\'s rivals, and everyone\'s brokers.',
       ideas: {},
     },
     SEQ: {
-      name: 'The Sequani', color: [104, 124, 96], religion: 'druidic', culture: 'celtic', capital: 'Vesontio',
+      name: 'The Sequani', adj: 'Sequanian', color: [104, 124, 96], religion: 'druidic', culture: 'celtic', capital: 'Vesontio',
       description: 'The people of the Doubs and the gate of the upper Rhine, who will one day open it and regret it.',
       ideas: {},
     },
     BLG: {
-      name: 'The Belgae', color: [66, 98, 86], religion: 'druidic', culture: 'celtic', capital: 'Durocortorum',
+      name: 'The Belgae', adj: 'Belgic', color: [66, 98, 86], religion: 'druidic', culture: 'celtic', capital: 'Durocortorum',
       description: 'The bravest of the three parts, as their conqueror wrote, being furthest from the traders.',
       ideas: { moraleMult: 1.05 },
     },
     ARO: {
-      name: 'The Armoricans', color: [78, 118, 124], religion: 'druidic', culture: 'celtic', capital: 'Darioritum',
+      name: 'The Armoricans', adj: 'Armorican', color: [78, 118, 124], religion: 'druidic', culture: 'celtic', capital: 'Darioritum',
       description: 'The sea league of the west: the Veneti\'s oak ships, and every harbor between two tides.',
       ideas: { navalMult: 1.05 },
     },
     AQT: {
-      name: 'The Aquitani', color: [140, 124, 68], religion: 'druidic', culture: 'celtic', capital: 'Burdigala',
+      name: 'The Aquitani', adj: 'Aquitanian', color: [140, 124, 68], religion: 'druidic', culture: 'celtic', capital: 'Burdigala',
       description: 'The peoples between the Garonne and the mountains, nearer Iberia than Gaul in everything but the map.',
       ideas: {},
     },
     NOR: {
-      name: 'Noricum', color: [110, 120, 140], religion: 'druidic', culture: 'celtic', capital: 'Virunum',
+      name: 'Noricum', adj: 'Noric', color: [110, 120, 140], religion: 'druidic', culture: 'celtic', capital: 'Virunum',
       description: 'The kingdom of the eastern Alps, whose steel every legion buys and whose friendship every consul keeps.',
       ideas: { disciplineMult: 1.03 },
     },
     BOI: {
-      name: 'The Boii', color: [128, 140, 90], religion: 'druidic', culture: 'celtic', capital: 'Boiohaemum',
+      name: 'The Boii', adj: 'Boian', color: [128, 140, 90], religion: 'druidic', culture: 'celtic', capital: 'Boiohaemum',
       description: 'The people who named Bohemia and fought everyone from the Po to the Danube bend.',
       ideas: {},
     },
     // -- the islands --
     BRT: {
-      name: 'The Britons', color: [60, 120, 110], religion: 'druidic', culture: 'celtic', capital: 'Britannia',
+      name: 'The Britons', adj: 'Brittonic', color: [60, 120, 110], religion: 'druidic', culture: 'celtic', capital: 'Britannia',
       description: 'The kings of the tin island: chariots on the beaches, and the druids\' groves behind them.',
       ideas: {},
     },
     CAL: {
-      name: 'Caledonia', color: [90, 80, 130], religion: 'druidic', culture: 'celtic', capital: 'Caledonia',
+      name: 'Caledonia', adj: 'Caledonian', color: [90, 80, 130], religion: 'druidic', culture: 'celtic', capital: 'Caledonia',
       description: 'The peoples beyond every wall anyone will ever build, painted and unconquered.',
       ideas: { hillDefBonus: 1 },
     },
     HIB: {
-      name: 'Hibernia', color: [50, 130, 80], religion: 'druidic', culture: 'celtic', capital: 'Hibernia',
+      name: 'Hibernia', adj: 'Hibernian', color: [50, 130, 80], religion: 'druidic', culture: 'celtic', capital: 'Hibernia',
       names: 'gaelic',
       description: 'The island of kings-of-kings, where no legion ever landed and every cattle-raid is an epic.',
       ideas: {},
     },
     // -- Germania and the north --
     SUE: {
-      name: 'The Suebi', color: [100, 110, 120], religion: 'germanic_cult', culture: 'germanic', capital: 'Semnones',
+      name: 'The Suebi', adj: 'Suebic', color: [100, 110, 120], religion: 'germanic_cult', culture: 'germanic', capital: 'Semnones',
       description: 'The oldest and noblest of the Germans, by their own account, which their neighbors are made to share.',
       ideas: { moraleMult: 1.05 },
     },
     CHE: {
-      name: 'The Cherusci', color: [130, 120, 100], religion: 'germanic_cult', culture: 'germanic', capital: 'Teutoburgium',
+      name: 'The Cherusci', adj: 'Cheruscan', color: [130, 120, 100], religion: 'germanic_cult', culture: 'germanic', capital: 'Teutoburgium',
       description: 'The people of the forest where three eagles fell — feuding themselves to ruin ever since.',
       ideas: { moraleMult: 1.05 },
     },
     CHA: {
-      name: 'The Chatti', color: [110, 100, 80], religion: 'germanic_cult', culture: 'germanic', capital: 'Chatti',
+      name: 'The Chatti', adj: 'Chattian', color: [110, 100, 80], religion: 'germanic_cult', culture: 'germanic', capital: 'Chatti',
       description: 'Germans who dig trenches and post watches: others go to battle, wrote Tacitus — the Chatti go to war.',
       ideas: { disciplineMult: 1.03 },
     },
     FRS: {
-      name: 'The Frisii', color: [120, 140, 150], religion: 'germanic_cult', culture: 'germanic', capital: 'Frisia',
+      name: 'The Frisii', adj: 'Frisian', color: [120, 140, 150], religion: 'germanic_cult', culture: 'germanic', capital: 'Frisia',
       description: 'The people of the terpen and the tide, who once hanged Rome\'s tax-farmers in their own sacred grove.',
       ideas: {},
     },
     CIM: {
-      name: 'The Cimbri', color: [140, 150, 160], religion: 'germanic_cult', culture: 'germanic', capital: 'Cimbria',
+      name: 'The Cimbri', adj: 'Cimbric', color: [140, 150, 160], religion: 'germanic_cult', culture: 'germanic', capital: 'Cimbria',
       description: 'A small people with a great glory: the north that once emptied itself at Italy and nearly kept it.',
       ideas: {},
     },
     SCN: {
-      name: 'The Suiones', color: [150, 160, 140], religion: 'germanic_cult', culture: 'germanic', capital: 'Scandia',
+      name: 'The Suiones', adj: 'Suionic', color: [150, 160, 140], religion: 'germanic_cult', culture: 'germanic', capital: 'Scandia',
       description: 'The ship-kings beyond the water, strong in men, arms, and fleets — and obeyed, which amazed Tacitus.',
       ideas: { navalMult: 1.05 },
     },
     GOT: {
-      name: 'The Gothones', color: [110, 130, 150], religion: 'germanic_cult', culture: 'germanic', capital: 'Gothiscandza',
+      name: 'The Gothones', adj: 'Gothonic', color: [110, 130, 150], religion: 'germanic_cult', culture: 'germanic', capital: 'Gothiscandza',
       names: 'gothic',
       description: 'The people at the Vistula mouth, ruled by kings a little more strictly than other Germans — going somewhere.',
       ideas: {},
     },
     AES: {
-      name: 'The Aestii', color: [190, 150, 70], religion: 'germanic_cult', culture: 'germanic', capital: 'Aestii',
+      name: 'The Aestii', adj: 'Aestian', color: [190, 150, 70], religion: 'germanic_cult', culture: 'germanic', capital: 'Aestii',
       description: 'The amber-gatherers of the eastern shore, who alone farm the sea\'s gold and wonder why anyone pays.',
       ideas: {},
     },
     // -- the Danube, Illyricum and Thrace --
     DLM: {
-      name: 'The Delmatae', color: [130, 100, 120], religion: 'thracian_cult', culture: 'illyrian', capital: 'Delminium',
+      name: 'The Delmatae', adj: 'Delmatian', color: [130, 100, 120], religion: 'thracian_cult', culture: 'illyrian', capital: 'Delminium',
       description: 'The hill federation behind the Adriatic shore, which Rome will declare conquered five separate times.',
       ideas: { hillDefBonus: 1 },
     },
     SCO: {
-      name: 'The Scordisci', color: [100, 80, 100], religion: 'thracian_cult', culture: 'illyrian', capital: 'Singidunum',
+      name: 'The Scordisci', adj: 'Scordiscan', color: [100, 80, 100], religion: 'thracian_cult', culture: 'illyrian', capital: 'Singidunum',
       description: 'The Celts of the Save mouth who broke Macedon\'s marches and marched on Delphi for the second time.',
       ideas: {},
     },
     DRD: {
-      name: 'Dardania', color: [90, 90, 120], religion: 'thracian_cult', culture: 'illyrian', capital: 'Naissus',
+      name: 'Dardania', adj: 'Dardanian', color: [90, 90, 120], religion: 'thracian_cult', culture: 'illyrian', capital: 'Naissus',
       description: 'The kingdom above Macedon, its oldest enemy and most patient one.',
       ideas: { hillDefBonus: 1 },
     },
     THR: {
-      name: 'Thrace', color: [170, 90, 110], religion: 'thracian_cult', culture: 'thracian', capital: 'Philippopolis',
+      name: 'Thrace', adj: 'Thracian', color: [170, 90, 110], religion: 'thracian_cult', culture: 'thracian', capital: 'Philippopolis',
       names: 'thracian',
       description: 'The Odrysian kingdom: horsemen, peltasts and gold-masked kings between two empires\' roads.',
       ideas: { moraleMult: 1.05 },
     },
     DAC: {
-      name: 'Dacia', color: [196, 110, 44], religion: 'thracian_cult', culture: 'thracian', capital: 'Sarmizegetusa',
+      name: 'Dacia', adj: 'Dacian', color: [196, 110, 44], religion: 'thracian_cult', culture: 'thracian', capital: 'Sarmizegetusa',
       names: 'thracian',
       description: 'The mountain kingdom of the Getae, which believes itself immortal and will make Rome test it.',
       ideas: { hillDefBonus: 1, moraleMult: 1.05 },
     },
     // -- the Pontic world --
     BOS: {
-      name: 'The Bosporan Kingdom', color: [70, 130, 170], religion: 'hellenism', culture: 'greek', capital: 'Panticapaeum',
+      name: 'The Bosporan Kingdom', adj: 'Bosporan', color: [70, 130, 170], religion: 'hellenism', culture: 'greek', capital: 'Panticapaeum',
       description: 'The grain kings of the straits: the oldest Greek monarchy, and the longest-lived client crown there will ever be.',
       ideas: { incomeMult: 1.1 },
     },
     SCY: {
-      name: 'Scythia', color: [150, 130, 60], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Tauria',
+      name: 'Scythia', adj: 'Scythian', color: [150, 130, 60], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Tauria',
       names: 'scythian',
       description: 'The royal Scythians of the peninsula, farming now, taxing the Greeks, and remembering the whole steppe.',
       ideas: { moraleMult: 1.05 },
     },
     SRM: {
-      name: 'Sarmatia', color: [120, 100, 50], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sarmatia',
+      name: 'Sarmatia', adj: 'Sarmatian', color: [120, 100, 50], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sarmatia',
       names: 'scythian',
       description: 'The lance-bearing peoples who took the grass from the Scythians: Roxolani, Aorsi, and the ones after them.',
       ideas: { moraleMult: 1.05 },
     },
     VEN: {
-      name: 'The Venedae', color: [100, 120, 100], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Venedia',
+      name: 'The Venedae', adj: 'Venedic', color: [100, 120, 100], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Venedia',
       description: 'The forest people east of the Germans, whom every geographer names and none has met.',
       ideas: {},
     },
     // -- the late-antique west (529, 614) --
     OST: {
-      name: 'The Ostrogoths', color: [90, 90, 160], religion: 'christianity', culture: 'germanic', capital: 'Ravenna',
+      name: 'The Ostrogoths', adj: 'Ostrogothic', color: [90, 90, 160], religion: 'christianity', culture: 'germanic', capital: 'Ravenna',
       names: 'gothic',
       description: 'Theodoric\'s Italy under Theodoric\'s grandchild: Roman consuls, Gothic spears, and a regent holding both.',
       ideas: { disciplineMult: 1.05 },
     },
     VAN: {
-      name: 'The Vandals', color: [60, 100, 140], religion: 'christianity', culture: 'germanic', capital: 'Carthago',
+      name: 'The Vandals', adj: 'Vandal', color: [60, 100, 140], religion: 'christianity', culture: 'germanic', capital: 'Carthago',
       names: 'gothic',
       description: 'The kingdom of Carthage and the islands: the one barbarian crown that took to the sea, and Rome\'s grain with it.',
       ideas: { navalMult: 1.1 },
     },
     VIS: {
-      name: 'The Visigoths', color: [150, 120, 40], religion: 'christianity', culture: 'germanic', capital: 'Toletum',
+      name: 'The Visigoths', adj: 'Visigothic', color: [150, 120, 40], religion: 'christianity', culture: 'germanic', capital: 'Toletum',
       names: 'gothic',
       description: 'The kingdom of Toledo: Roman law in Gothic hands, and councils that crown and uncrown kings.',
       ideas: {},
     },
     FRK: {
-      name: 'The Franks', color: [40, 80, 140], religion: 'christianity', culture: 'germanic', capital: 'Lutetia',
+      name: 'The Franks', adj: 'Frankish', color: [40, 80, 140], religion: 'christianity', culture: 'germanic', capital: 'Lutetia',
       names: 'frankish',
       description: 'Clovis\' heirs at Paris: the one barbarian crown baptized into the bishops\' church, and the one that lasts.',
       ideas: { disciplineMult: 1.05, manpowerMult: 1.05 },
     },
     BGD: {
-      name: 'Burgundy', color: [140, 70, 50], religion: 'christianity', culture: 'germanic', capital: 'Lugdunum',
+      name: 'Burgundy', adj: 'Burgundian', color: [140, 70, 50], religion: 'christianity', culture: 'germanic', capital: 'Lugdunum',
       names: 'frankish',
       description: 'The kingdom of the Rhône with the best law-code and the worst borders of its generation.',
       ideas: {},
     },
     GEP: {
-      name: 'The Gepids', color: [120, 90, 60], religion: 'christianity', culture: 'germanic', capital: 'Singidunum',
+      name: 'The Gepids', adj: 'Gepid', color: [120, 90, 60], religion: 'christianity', culture: 'germanic', capital: 'Singidunum',
       names: 'gothic',
       description: 'The Goths\' slower cousins, holding the Tisza and Transylvania until worse horsemen come.',
       ideas: {},
     },
     LMB: {
-      name: 'The Lombards', color: [80, 130, 120], religion: 'christianity', culture: 'germanic', capital: 'Mediolanum',
+      name: 'The Lombards', adj: 'Lombard', color: [80, 130, 120], religion: 'christianity', culture: 'germanic', capital: 'Mediolanum',
       names: 'gothic',
       description: 'The long-beards: last of the wandering nations, and the ones who will keep what they take of Italy.',
       ideas: { moraleMult: 1.05 },
     },
     SAX: {
-      name: 'The Saxons', color: [160, 140, 110], religion: 'germanic_cult', culture: 'germanic', capital: 'Teutoburgium',
+      name: 'The Saxons', adj: 'Saxon', color: [160, 140, 110], religion: 'germanic_cult', culture: 'germanic', capital: 'Teutoburgium',
       names: 'saxon',
       description: 'The seax-bearers of the old shore and the new island: seven kingdoms where Britannia was.',
       ideas: { moraleMult: 1.05 },
     },
     AVA: {
-      name: 'The Avar Khaganate', color: [170, 80, 40], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sirmium',
+      name: 'The Avar Khaganate', adj: 'Avar', color: [170, 80, 40], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sirmium',
       names: 'turkic',
       description: 'The ring on the middle Danube: tribute from two emperors, the Slavs for infantry, and the whole steppe behind.',
       ideas: { moraleMult: 1.05, reinforceMult: 1.05 },
     },
     SLV: {
-      name: 'The Sclaveni', color: [110, 150, 70], religion: 'steppe_cults', culture: 'slavic', capital: 'Venedia',
+      name: 'The Sclaveni', adj: 'Sclavene', color: [110, 150, 70], religion: 'steppe_cults', culture: 'slavic', capital: 'Venedia',
       names: 'slavic',
       description: 'The many peoples of the rivers, ruled by no one, stopped by nothing, and settling everything they cross.',
       ideas: { manpowerMult: 1.1 },
     },
     TRK: {
-      name: 'The Western Turks', color: [80, 120, 190], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sarmatia',
+      name: 'The Western Turks', adj: 'Turkic', color: [80, 120, 190], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Sarmatia',
       names: 'turkic',
       description: 'The khaganate of the far grass, whose yabghu will one day ride to Tiflis to meet an emperor.',
       ideas: { moraleMult: 1.05 },
     },
     BGR: {
-      name: 'The Bulgar Hordes', color: [140, 110, 160], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Phanagoria',
+      name: 'The Bulgar Hordes', adj: 'Bulgar', color: [140, 110, 160], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Phanagoria',
       names: 'turkic',
       description: 'Kutrigur and Utigur, Onogur and Dulo: the horsemen between the Don and the Danube delta, for rent and for themselves.',
       ideas: { moraleMult: 1.05 },
     },
     // -- 1948: the neutral hinterland of somebody else's war --
     FRA: {
-      name: 'France', color: [40, 70, 160], religion: 'christianity', culture: 'celtic', capital: 'Lutetia',
+      name: 'France', adj: 'French', color: [40, 70, 160], religion: 'christianity', culture: 'celtic', capital: 'Lutetia',
       names: 'french_modern',
       description: 'The Fourth Republic: an empire from Dunkirk to the Fezzan, and a government a season.',
       ideas: { incomeMult: 1.05 },
     },
     SPA: {
-      name: 'Spain', color: [186, 58, 34], religion: 'christianity', culture: 'iberian', capital: 'Toletum',
+      name: 'Spain', adj: 'Spanish', color: [186, 58, 34], religion: 'christianity', culture: 'iberian', capital: 'Toletum',
       names: 'spanish_modern',
       description: 'The Caudillo\'s Spain: shut out of the peace, shut into itself.',
       ideas: {},
     },
     POR: {
-      name: 'Portugal', color: [36, 116, 58], religion: 'christianity', culture: 'iberian', capital: 'Olisipo',
+      name: 'Portugal', adj: 'Portuguese', color: [36, 116, 58], religion: 'christianity', culture: 'iberian', capital: 'Olisipo',
       names: 'portuguese_modern',
       description: 'The Estado Novo: quiet, Atlantic, and older at this game than anyone.',
       ideas: {},
     },
     NLD: {
-      name: 'The Netherlands', color: [220, 120, 40], religion: 'christianity', culture: 'germanic', capital: 'Batavia',
+      name: 'The Netherlands', adj: 'Dutch', color: [220, 120, 40], religion: 'christianity', culture: 'germanic', capital: 'Batavia',
       names: 'dutch_modern',
       description: 'A trading kingdom rebuilding its docks and losing its Indies.',
       ideas: { incomeMult: 1.05 },
     },
     DEN: {
-      name: 'Denmark', color: [190, 44, 44], religion: 'christianity', culture: 'germanic', capital: 'Selandia',
+      name: 'Denmark', adj: 'Danish', color: [190, 44, 44], religion: 'christianity', culture: 'germanic', capital: 'Selandia',
       names: 'danish_modern',
       description: 'Five years occupied, three years free, and done with neutrality.',
       ideas: {},
     },
     SWE: {
-      name: 'Sweden', color: [50, 110, 170], religion: 'christianity', culture: 'germanic', capital: 'Scandia',
+      name: 'Sweden', adj: 'Swedish', color: [50, 110, 170], religion: 'christianity', culture: 'germanic', capital: 'Scandia',
       names: 'swedish_modern',
       description: 'The armed neutral of the north, untouched and intending to stay so.',
       ideas: {},
     },
     POL: {
-      name: 'Poland', color: [200, 80, 90], religion: 'christianity', culture: 'slavic', capital: 'Gothiscandza',
+      name: 'Poland', adj: 'Polish', color: [200, 80, 90], religion: 'christianity', culture: 'slavic', capital: 'Gothiscandza',
       names: 'polish_modern',
       description: 'A republic moved three hundred kilometers west, under a government it did not choose.',
       ideas: {},
     },
     CZE: {
-      name: 'Czechoslovakia', color: [84, 104, 172], religion: 'christianity', culture: 'slavic', capital: 'Boiohaemum',
+      name: 'Czechoslovakia', adj: 'Czechoslovak', color: [84, 104, 172], religion: 'christianity', culture: 'slavic', capital: 'Boiohaemum',
       names: 'czech_modern',
       description: 'The February coup is four months old; the ministers who could refuse are gone or falling from windows.',
       ideas: {},
     },
     SOV: {
-      name: 'The Soviet Union', color: [180, 28, 28], religion: 'christianity', culture: 'slavic', capital: 'Hyperborea',
+      name: 'The Soviet Union', adj: 'Soviet', color: [180, 28, 28], religion: 'christianity', culture: 'slavic', capital: 'Hyperborea',
       names: 'soviet',
       description: 'The other victor: from the Elbe to the Pacific, and its shadow over every capital between.',
       ideas: { manpowerMult: 1.15 },
     },
     GER: {
-      name: 'Occupied Germany', color: [50, 50, 54], religion: 'christianity', culture: 'germanic', capital: 'Mogontiacum',
+      name: 'Occupied Germany', adj: 'German', color: [50, 50, 54], religion: 'christianity', culture: 'germanic', capital: 'Mogontiacum',
       names: 'german_modern',
       description: 'Four zones, no army, and an airlift keeping half a capital alive.',
       ideas: {},
     },
     AUT: {
-      name: 'Austria', color: [168, 108, 108], religion: 'christianity', culture: 'germanic', capital: 'Carnuntum',
+      name: 'Austria', adj: 'Austrian', color: [168, 108, 108], religion: 'christianity', culture: 'germanic', capital: 'Carnuntum',
       names: 'austrian_modern',
       description: 'Occupied like Germany, treated unlike it: a republic waiting out its four garrisons.',
       ideas: {},
@@ -937,43 +937,43 @@ export const DEFINES = {
       // No Magyar culture exists at this game's scale; the Pannonian basin
       // reads under the coarse Slavic label its neighbors share, and the
       // court's own name pool keeps the country's actual tongue.
-      name: 'Hungary', color: [116, 148, 86], religion: 'christianity', culture: 'slavic', capital: 'Aquincum',
+      name: 'Hungary', adj: 'Hungarian', color: [116, 148, 86], religion: 'christianity', culture: 'slavic', capital: 'Aquincum',
       names: 'hungarian_modern',
       description: 'A republic being swallowed by its own interior ministry, one salami slice at a time.',
       ideas: {},
     },
     YUG: {
-      name: 'Yugoslavia', color: [86, 96, 150], religion: 'christianity', culture: 'slavic', capital: 'Singidunum',
+      name: 'Yugoslavia', adj: 'Yugoslav', color: [86, 96, 150], religion: 'christianity', culture: 'slavic', capital: 'Singidunum',
       names: 'yugoslav_modern',
       description: 'Tito\'s federation, four days from being read out of the Cominform.',
       ideas: {},
     },
     ALB: {
-      name: 'Albania', color: [130, 40, 44], religion: 'islam', culture: 'illyrian', capital: 'Dyrrhachium',
+      name: 'Albania', adj: 'Albanian', color: [130, 40, 44], religion: 'islam', culture: 'illyrian', capital: 'Dyrrhachium',
       names: 'albanian_modern',
       description: 'The smallest people\'s republic, and the most walled-in.',
       ideas: {},
     },
     BUL: {
-      name: 'Bulgaria', color: [90, 150, 110], religion: 'christianity', culture: 'slavic', capital: 'Serdica',
+      name: 'Bulgaria', adj: 'Bulgarian', color: [90, 150, 110], religion: 'christianity', culture: 'slavic', capital: 'Serdica',
       names: 'bulgarian_modern',
       description: 'The people\'s republic at the Straits\' back door.',
       ideas: {},
     },
     ROU: {
-      name: 'Romania', color: [200, 170, 70], religion: 'christianity', culture: 'thracian', capital: 'Tomis',
+      name: 'Romania', adj: 'Romanian', color: [200, 170, 70], religion: 'christianity', culture: 'thracian', capital: 'Tomis',
       names: 'romanian_modern',
       description: 'A king abdicated at gunpoint five months ago; the People\'s Republic is one year old.',
       ideas: {},
     },
     IRL: {
-      name: 'Ireland', color: [20, 140, 60], religion: 'christianity', culture: 'celtic', capital: 'Hibernia',
+      name: 'Ireland', adj: 'Irish', color: [20, 140, 60], religion: 'christianity', culture: 'celtic', capital: 'Hibernia',
       names: 'irish_modern',
       description: 'Declaring itself a republic this very year, and staying out of everything else.',
       ideas: {},
     },
     SUI: {
-      name: 'Switzerland', color: [200, 60, 70], religion: 'christianity', culture: 'germanic', capital: 'Genava',
+      name: 'Switzerland', adj: 'Swiss', color: [200, 60, 70], religion: 'christianity', culture: 'germanic', capital: 'Genava',
       names: 'swiss_modern',
       description: 'Armed to the teeth and party to nothing.',
       ideas: {},
@@ -986,7 +986,7 @@ export const DEFINES = {
     // monthly stipend; `treasuryCap` keeps a court that never spends from
     // compounding forever.
     USA: {
-      name: 'The United States', color: [60, 90, 160], religion: 'christianity', culture: 'germanic', capital: '',
+      name: 'The United States', adj: 'American', color: [60, 90, 160], religion: 'christianity', culture: 'germanic', capital: '',
       offmap: { dev: 420, income: 60 }, // the §101 hoard cap bounds the idle treasury
 
       description: 'Recognition came in eleven minutes; arms did not. Half the '
@@ -994,12 +994,12 @@ export const DEFINES = {
       ideas: {},
     },
     REB: {
-      name: 'Rebels', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
+      name: 'Rebels', adj: 'Rebel', color: [96, 96, 96], religion: 'hellenism', culture: 'greek', capital: '',
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
       ideas: { moraleMult: 1.05 },
     },
     WASTE: {
-      name: 'Wasteland', color: [70, 66, 60],
+      name: 'Wasteland', adj: 'Waste', color: [70, 66, 60],
       description: 'Trackless desert where armies go to die.',
     },
   },
@@ -1109,12 +1109,31 @@ export const DEFINES = {
     aiFloor: 30,           // an AI court petitions when its treasury runs under this
   },
 
+  // The land roster (SPEC §191): three arms answering each other in a
+  // triangle, scored once per phase from each side's own mix. `scale` turns
+  // the raw matchup number (js/data/units.js) into die pips; `cap` is the most
+  // a composition can ever be worth, so an all-guns host beats a line without
+  // deciding the battle before the dice are thrown.
+  ARMS_TRIANGLE: {
+    scale: 2,              // pips per unit of matchup edge (floored, so a
+                           // balanced host against a balanced host reads 0)
+    cap: 2,                // most pips the triangle itself can add in a phase
+    // The answer to armor, and it is a COUNT, not a proportion (SPEC §191).
+    // Four anti-tank regiments against four tanks is four anti-tank
+    // regiments against four tanks, whatever fraction of the army they are.
+    atPer: 2,              // engaged tanks per fire-phase pip for the guns
+    atCap: 3,              // most pips the guns can earn against armor
+  },
+
   BASE: {
     regSize: 1000,                     // men per regiment
-    regCost: { inf: 10, cav: 25 },     // talents to recruit one regiment
+    // Talents to recruit one regiment. The shot arm sits between the foot and
+    // the horse: engines and their teams cost more than men and less than
+    // remounts (armor prices separately — ARMOR.cost above).
+    regCost: { inf: 10, cav: 25, art: 18 },
     // Every province trains/fits one queued military unit at a time. Paused
     // time never advances these clocks.
-    unitRecruitMonths: { inf: 2, cav: 3, ship: 6, wing: 4 },
+    unitRecruitMonths: { inf: 2, cav: 3, art: 3, ship: 6, wing: 4 },
     maintPerReg: 0.35,                 // talents/month upkeep per regiment (× the pattern's upkeep mult)
     // Administration (SPEC §52): governing costs money, and more realm costs
     // more. Every point of owned development beyond the free allowance bills

@@ -68,9 +68,15 @@ function boot(playerTag, seed) {
 }
 const EV = (id) => EVENTS_614.find((e) => e && e.id === id);
 // The great war and the JUD–SAS alliance tangle every 614 court; clear the
-// stage so a synthetic client war can be declared cleanly.
+// stage so a synthetic client war can be declared cleanly. A scripted peace
+// binds the courts that signed it (SPEC §193), so Persia's settlement with
+// Byzantium leaves the Return's own war standing: the stage takes a
+// settlement per pair now, and the loop below says so rather than assuming it.
 function clearStage(ctx, g) {
-  ctx.helpers.endWar(ctx, 'SAS', 'BYZ', null);
+  for (let guard = 0; guard < 8 && (g.wars || []).length; guard++) {
+    const w = g.wars[0];
+    ctx.helpers.endWar(ctx, w.attackers[0], w.defenders[0], null);
+  }
   g.tags.JUD.allies = (g.tags.JUD.allies || []).filter((t) => t !== 'SAS');
   g.tags.SAS.allies = (g.tags.SAS.allies || []).filter((t) => t !== 'JUD');
 }

@@ -1,4 +1,4 @@
-// UI verification — SPEC §190/§191: a chapter's religious quarrel renders in
+// UI verification — SPEC §190/§200: a chapter's religious quarrel renders in
 // the Faith tab of the realm panel, and its buttons rule.
 //
 // The assertion this suite exists for is the LAST one: clicking a side of a
@@ -109,7 +109,7 @@ ok(ruledRows === 1, 'the row redraws as settled record rather than an open choic
 const label2 = await page.locator(BLOCK + '.np-dox-label').textContent();
 ok(!/Unruled/i.test(label2), 'and the needle has moved off centre: ' + label2);
 
-console.log('== §191: a different chapter, a different argument ==');
+console.log('== §200: a different chapter, a different argument ==');
 // The strongest evidence the generalization is real: a chapter with no Temple,
 // no ascents and no High Priest, whose quarrel is a letter from June 1947.
 await page.goto('http://127.0.0.1:8613/', { waitUntil: 'networkidle' });

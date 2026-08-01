@@ -147,7 +147,7 @@ console.log('== the missions read the same state ==');
 {
   const t = game.tags.JUD;
   const list = realm.missionsFor(ctx, 'JUD');
-  ok(list.length === 11, 'the chain grew to eleven (§179 curriculum, §183 hypotheticals): ' + list.length);
+  ok(list.length === 15, 'the chain grew to fifteen (§179 curriculum, §183 hypotheticals, §192 expansion): ' + list.length);
   const arts = list.find((m) => m.id === 'jm_roman_manner');
   const mind = list.find((m) => m.id === 'jm_mind_of_the_nation');
   ok(!!arts && !!mind, 'the curriculum missions exist');

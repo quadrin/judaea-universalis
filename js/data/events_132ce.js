@@ -468,7 +468,11 @@ export const EVENTS_132 = [
       + 'runs the revolt like an estate steward with a sword, and the hills obey.',
     forTag: 'JUD',
     date: { y: 132, m: 11 },
+    major: true,
     aiOption: 0,
+    historical: 'The letters from the Judaean Desert caves are the threats: wheat under '
+      + 'requisition, the men of Tekoa to be seized, chains promised in the Nasi\'s own '
+      + 'hand. The revolt was administered, and the administration was fear.',
     options: [
       {
         label: 'Punishment will be exacted',
@@ -480,6 +484,7 @@ export const EVENTS_132 = [
             effects: { disciplineMult: 1.05 },
           });
           h.adjust(ctx, 'JUD', { legitimacy: -5 });
+          h.setFlag(ctx, 'lettersIronFist', true);
         }),
       },
       {
@@ -487,6 +492,7 @@ export const EVENTS_132 = [
         tooltip: 'Mercy is also policy: +5 legitimacy.',
         effects: guard('ev2_letters:1', (ctx) => {
           ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+          ctx.helpers.setFlag(ctx, 'lettersMercy', true);
         }),
       },
     ],
@@ -2311,6 +2317,255 @@ export const EVENTS_132 = [
             id: 'sealed_gates', name: 'Sealed Gates', months: 12,
             effects: { taxMult: 0.9 },
           });
+        }),
+      },
+    ],
+  },
+
+  // ═══ THE LETTERS, AND THE EAST (SPEC §119) ════════════════════════════════
+  // Two forks the chapter carried as single cards and never charted. The
+  // Nasi's letters were already a decision (ev2_letters) with no reckoning:
+  // the discipline that held the hills to the end, or the mercy the weary
+  // wanted — either way, somebody collects. And the question the revolt's
+  // own silence poses: 115-117 was the diaspora's war without the land;
+  // 132 was the land's war without the diaspora. Nobody knows why the
+  // second held back, which is exactly what makes it a fork: the letters
+  // east were never sent, and this chapter can send them.
+  {
+    id: 'ev2_what_the_letters_bought',
+    title: 'What the Letters Bought',
+    desc: 'Two winters of the Nasi\'s administration have produced a ledger, and the '
+      + 'ledger has produced a delegation. If the letters were iron, the delegation is '
+      + 'the commanders of the weary districts, asking — carefully, in writing, in the '
+      + 'plural — whether the punishments that held the line last winter are the same '
+      + 'punishments thinning it this one. If the villages were fed first, the '
+      + 'delegation is the quartermasters, with the other ledger: mercy has a price in '
+      + 'wheat, and the wheat is running ahead of the war.\n\n'
+      + 'Either way the Nasi must answer the question his own letters raised: what '
+      + 'kind of obedience does a redemption run on?',
+    forTag: 'JUD',
+    major: true,
+    minYear: 134,
+    maxYear: 137,
+    trigger: safeTrigger('ev2_letters_bought', (ctx) => alive(ctx, 'JUD')
+      && (ctx.helpers.getFlag(ctx, 'lettersIronFist') || ctx.helpers.getFlag(ctx, 'lettersMercy'))
+      && !ctx.helpers.getFlag(ctx, 'lettersReckoned')),
+    aiOption: 0,
+    historical: 'The letters never softened. The hills obeyed to the end, the deserters '
+      + 'were promised chains, and when Betar fell the discipline had outlasted the wheat, '
+      + 'the wells, and very nearly the people.',
+    options: [
+      {
+        label: 'The Nasi relents nothing',
+        tooltip: 'Iron road: the discipline is renewed to the end — "The Hills Obey" (+5% '
+          + 'discipline, permanent), −5 legitimacy, +1 unrest everywhere for 24 months. '
+          + 'Mercy road: the quartermasters are overruled and the requisitions begin late '
+          + 'and hard — −50 talents, +4% discipline for 24 months.',
+        effects: guard('ev2_letters_bought:0', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'lettersIronFist')) {
+            h.adjust(ctx, 'JUD', { legitimacy: -5 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_hills_obey', name: 'The Hills Obey', months: -1,
+              effects: { disciplineMult: 1.05 },
+            });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_weary_districts', name: 'The Weary Districts', months: 24,
+              effects: { unrestAll: 1 },
+            });
+            h.chronicle(ctx, 'era', 'The delegation of the weary districts is answered in '
+              + 'the Nasi\'s own hand, in the Nasi\'s own manner. The hills go on obeying, '
+              + 'which is not the same as agreeing, and both facts hold to the end.');
+          } else {
+            h.adjust(ctx, 'JUD', { treasury: -50 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_late_requisitions', name: 'The Late Requisitions', months: 24,
+              effects: { disciplineMult: 1.04 },
+            });
+            h.chronicle(ctx, 'era', 'The quartermasters\' ledger is answered with '
+              + 'requisitions after all — late, hard, and signed in the hand everyone '
+              + 'recognises. Mercy turns out to have been a schedule, not a policy.');
+          }
+          h.setFlag(ctx, 'lettersReckoned', true);
+          h.setFlag(ctx, 'nasiRelentedNothing', true);
+        }),
+      },
+      {
+        label: 'Amnesty for the weary, and the ledger closed',
+        tooltip: 'Iron road: the chains are struck off and the deserters walk home — +10 '
+          + 'legitimacy, −4% discipline for 24 months, −1 unrest everywhere for 24 months. '
+          + 'Mercy road: the policy is confirmed as policy — +5 legitimacy, and the '
+          + 'villages\' sons stay: +8% manpower for 24 months.',
+        effects: guard('ev2_letters_bought:1', (ctx) => {
+          const h = ctx.helpers;
+          if (h.getFlag(ctx, 'lettersIronFist')) {
+            h.adjust(ctx, 'JUD', { legitimacy: 10 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_chains_struck', name: 'The Chains Struck Off', months: 24,
+              effects: { disciplineMult: 0.96, unrestAll: -1 },
+            });
+            h.chronicle(ctx, 'era', 'The amnesty is read in every district the letters '
+              + 'threatened, and the men in irons walk home. The army is a little softer '
+              + 'and the country considerably more willing, and the Nasi has made the one '
+              + 'trade the letters never priced.');
+          } else {
+            h.adjust(ctx, 'JUD', { legitimacy: 5 });
+            h.addTagModifier(ctx, 'JUD', {
+              id: 'the_villages_sons', name: 'The Villages\' Sons', months: 24,
+              effects: { manpowerMult: 1.08 },
+            });
+            h.chronicle(ctx, 'era', 'The ledger of mercy is confirmed as the government\'s '
+              + 'own policy, in writing, over the seal. The villages send their sons to a '
+              + 'war that feeds their mothers, which is the oldest recruitment there is.');
+          }
+          h.setFlag(ctx, 'lettersReckoned', true);
+          h.setFlag(ctx, 'wearyAmnestied', true);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev2_the_letters_east',
+    title: 'The Letters East',
+    desc: 'Fifteen years ago the dispersion rose — Cyrene, Cyprus, Egypt, Mesopotamia — '
+      + 'and the land did not. The land\'s teachers forbade it, and the communities that '
+      + 'burned know the sequence by heart. Now the land has risen, the Nasi\'s coins '
+      + 'say Redemption, and the couriers wait on a question nobody has asked out loud '
+      + 'until this council: do the letters go east?\n\n'
+      + 'Beyond the Euphrates are the communities of Babylonia — untouched in the last '
+      + 'war, rich, armed by Parthian sufferance, and holding a memory: when their '
+      + 'brothers rose, Judaea watched. The men around the table can draft the letter '
+      + 'in an hour. What they are actually drafting is the answer to 117, and every '
+      + 'man present knows which two words the east is owed and cannot decide whether '
+      + 'this government can afford to write them.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 133,
+    maxYear: 135,
+    trigger: safeTrigger('ev2_letters_east', (ctx) => alive(ctx, 'JUD')
+      && !!findJudRomWar(ctx.game)
+      && !ctx.helpers.getFlag(ctx, 'lettersEastAnswered')
+      && dateGE(ctx, 133, 3)),
+    aiOption: 1,
+    historical: 'The letters were never sent, or never answered — the sources are silent '
+      + 'either way. The revolt stayed Judaean from first to last, and the diaspora that '
+      + 'had bled alone in 117 sat out 132 as the land had sat out 117.',
+    options: [
+      {
+        label: 'Write them: come, and be counted in the Redemption',
+        tooltip: 'The couriers ride east with the merchants: −80 talents in fees and '
+          + 'bribes, and "The Road From the East" (+12% manpower, 36 months) as the '
+          + 'volunteers thread the frontier. Parthia\'s opinion +15 — the King of Kings '
+          + 'enjoys watching Rome\'s recruiting problem — and Rome\'s staff arithmetic '
+          + 'grows an eastern column.',
+        effects: guard('ev2_letters_east:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: -80 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_road_from_the_east', name: 'The Road From the East', months: 36,
+            effects: { manpowerMult: 1.12 },
+          });
+          if (alive(ctx, 'PAR')) {
+            const par = ctx.game.tags[who(ctx, 'PAR')];
+            if (par) {
+              if (!par.opinion) par.opinion = {};
+              const me = who(ctx, 'JUD');
+              par.opinion[me] = Math.min(200, (par.opinion[me] || 0) + 15);
+            }
+          }
+          h.setFlag(ctx, 'lettersEastAnswered', true);
+          h.setFlag(ctx, 'dispersionCalled', true);
+          h.chronicle(ctx, 'diplomacy', 'The letters go east with the wool caravans, '
+            + 'sewn into saddle linings: come, and be counted in the Redemption. The '
+            + 'first volunteers cross at the smugglers\' fords before the answer does.');
+        }),
+      },
+      {
+        label: 'The land\'s war is the land\'s. No letters',
+        tooltip: 'The historical silence, kept on purpose: +5 legitimacy (the coins say '
+          + 'Israel, and Israel is here), and the east is spared the reprisals a failed '
+          + 'call would buy it — the communities of Babylonia stay whole whatever happens '
+          + 'in these hills.',
+        effects: guard('ev2_letters_east:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { legitimacy: 5 });
+          h.setFlag(ctx, 'lettersEastAnswered', true);
+          h.setFlag(ctx, 'theLandAlone', true);
+          h.chronicle(ctx, 'era', 'No letters go east. The war stays the land\'s own, '
+            + 'as the last one stayed the dispersion\'s, and the ledger between them — '
+            + 'two wars, two silences — is left open for some later century to read.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev2_what_the_east_answered',
+    title: 'What the East Answered',
+    desc: 'They came. Not the fifty thousand of the optimists\' draft letter, but '
+      + 'companies of them — sons of Nehardea and Nisibis with their own weapons and '
+      + 'their own Aramaic, walking the last stretch of the smugglers\' road at night. '
+      + 'And with them, a question the council did not draft: what are they, in this '
+      + 'army and after it?\n\n'
+      + 'They rose to a letter that said Redemption. Some mean to farm the land it '
+      + 'promised; all of them left families under a king who tolerates their leaving '
+      + 'exactly as long as it embarrasses Rome and not one hour longer.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 134,
+    maxYear: 138,
+    trigger: safeTrigger('ev2_east_answered', (ctx) => alive(ctx, 'JUD')
+      && !!ctx.helpers.getFlag(ctx, 'dispersionCalled')
+      && !ctx.helpers.getFlag(ctx, 'eastReckoned')),
+    aiOption: 0,
+    historical: 'No such companies ever marched; the road from the east was never opened. '
+      + 'What Babylonia sent the revolt, if anything, went unrecorded even by the side '
+      + 'that recorded everything.',
+    options: [
+      {
+        label: 'Seat them in the host, land them in the land',
+        tooltip: 'Citizens, not guests: +2,000 manpower now, and "The Eastern Companies" '
+          + '(+5% discipline, 36 months) — veterans of nothing, stubborn as scripture. '
+          + '−60 talents in land grants, and Parthia\'s opinion −20: the King of Kings '
+          + 'counts his departed subjects differently once they stop coming home.',
+        effects: guard('ev2_east_answered:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { manpower: 2000, treasury: -60 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_eastern_companies', name: 'The Eastern Companies', months: 36,
+            effects: { disciplineMult: 1.05 },
+          });
+          if (alive(ctx, 'PAR')) {
+            const par = ctx.game.tags[who(ctx, 'PAR')];
+            if (par) {
+              if (!par.opinion) par.opinion = {};
+              const me = who(ctx, 'JUD');
+              par.opinion[me] = Math.max(-200, (par.opinion[me] || 0) - 20);
+            }
+          }
+          h.setFlag(ctx, 'eastReckoned', true);
+          h.setFlag(ctx, 'eastSeated', true);
+          h.chronicle(ctx, 'era', 'The eastern companies are seated in the host and landed '
+            + 'in the land, and the letters home say so. The next companies bring their '
+            + 'families, which is how a call for soldiers becomes an ingathering.');
+        }),
+      },
+      {
+        label: 'Send them home with honor when the season ends',
+        tooltip: 'Soldiers, not settlers: their pay in silver, their names in the record, '
+          + 'and the road home kept open — +1,200 manpower for the campaigns they serve, '
+          + '+10 influence points (the communities of the east are owed nothing and know '
+          + 'it), and Parthia\'s opinion holds.',
+        effects: guard('ev2_east_answered:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { manpower: 1200, infl: 10 });
+          h.setFlag(ctx, 'eastReckoned', true);
+          h.setFlag(ctx, 'eastSentHome', true);
+          h.chronicle(ctx, 'era', 'The eastern companies serve their seasons and are sent '
+            + 'home with silver and citations, and the King of Kings finds nothing in the '
+            + 'arrangement to build a grievance on. The ledger of 117 is marked paid — in '
+            + 'the east\'s own coin, on the east\'s own terms.');
         }),
       },
     ],

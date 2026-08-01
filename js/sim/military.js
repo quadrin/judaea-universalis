@@ -6,6 +6,12 @@ import {
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
 import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
+// The land roster (SPEC §191): three arms, their faces, their gaits, and the
+// triangle they answer each other in. Pure data + pure functions.
+import {
+  ARMS, ARM, armShares, armEdge, armEdgeText, dominantArm, unitBattleCue,
+  MOUNTED_TERRAIN,
+} from '../data/units.js';
 import { queueUnitRecruitment, queuedUnitCount } from './recruitment.js';
 // doctrine.js is deliberately self-contained (no military.js import), so this
 // stays one-way: an affinity may be gated on the realm's character (SPEC §86).
@@ -296,7 +302,21 @@ export function armiesInProv(ctx, provId) {
 }
 export function regCount(a) {
   if (!a || !a.regiments) return 0;
-  return num(a.regiments.inf) + num(a.regiments.cav);
+  // Three arms since SPEC §191; a pre-§191 army has no `art` key and num()
+  // reads it as the zero it always was.
+  return num(a.regiments.inf) + num(a.regiments.cav) + num(a.regiments.art);
+}
+// A column marches at the pace of its slowest arm (SPEC §191): horse alone
+// outruns foot, and one gun train sets the pace of everything it travels with.
+export function armSpeedOf(army) {
+  const r = army && army.regiments;
+  let mult = 0;
+  for (const a of ARMS) {
+    if (num(r && r[a]) <= 0) continue;
+    const s = num(ARM[a] && ARM[a].speed, 1);
+    mult = mult === 0 ? s : Math.min(mult, s);
+  }
+  return mult === 0 ? 1 : mult;
 }
 
 // ---------------------------------------------------------------- diplomacy
@@ -422,7 +442,10 @@ export function hopDays(ctx, fromId, destId, army) {
   const p = ctx.byId(destId);
   const terr = p && ctx.DEFINES.TERRAINS ? ctx.DEFINES.TERRAINS[p.terrain] : null;
   const mc = terr ? num(terr.moveCost, 1.2) : 1.2;
-  const spd = army ? genSpeed(num(army.gen, 0)) : 1;
+  // Pattern × arm (SPEC §25 × §191): the age sets the pace, the slowest arm
+  // in the column keeps it. A pure horse raid outruns the same men walking by
+  // a quarter; put one gun battery in and the whole column gives back a sixth.
+  const spd = army ? genSpeed(num(army.gen, 0)) * armSpeedOf(army) : 1;
   // Interdiction (SPEC §154): a column marching into a ring the enemy owns
   // the sky over moves slower, because that is what happened to the Egyptian
   // and Iraqi columns. Two net wings against it cost a quarter of its speed,
@@ -463,7 +486,8 @@ export function spawnArmy(ctx, tag, provName, opts) {
   if (!g.tags[tag]) { warnOnce('spawnt:' + tag, 'spawnArmy: unknown tag', tag); return 0; }
   let inf = Math.max(0, Math.round(num(o.inf, 0)));
   const cav = Math.max(0, Math.round(num(o.cav, 0)));
-  if (inf + cav <= 0) inf = 1;
+  const art = Math.max(0, Math.round(num(o.art, 0))); // SPEC §191; absent in every older caller
+  if (inf + cav + art <= 0) inf = 1;
   const regSize = B(ctx, 'regSize', 1000);
   const id = g.nextArmyId++;
   const mm = maxMoraleOf(ctx, tag);
@@ -477,8 +501,8 @@ export function spawnArmy(ctx, tag, provName, opts) {
     id, tag,
     name: o.name || ((g.tags[tag].name || tag) + ' Army'),
     prov: pid, path: [], moveDaysLeft: 0,
-    regiments: { inf, cav },
-    men: (inf + cav) * regSize,
+    regiments: { inf, cav, art },
+    men: (inf + cav + art) * regSize,
     morale: mm, maxMorale: mm,
     general: leader,
     gen: Number.isFinite(o.gen) ? (o.gen | 0) : tagGen(ctx, tag), // unit pattern (SPEC §22)
@@ -550,7 +574,25 @@ function startBattle(ctx, provId, atkArmies, defArmies) {
   for (const a of atkArmies) a.inBattle = true;
   for (const a of defArmies) a.inBattle = true;
   g.battles.push(b);
-  ctx.bus.emit('battleStart', { prov: provId });
+  // What the field SOUNDS like (SPEC §191): the arms that lead the two hosts,
+  // so a cavalry charge into a gun line is not the same noise as two spear
+  // walls meeting. Summed across each side, because the sound of a battle is
+  // the sound of everybody in it.
+  const lead = (armies) => {
+    const regs = { inf: 0, cav: 0, art: 0 };
+    let gen = 0;
+    for (const a of armies) {
+      for (const arm of ARMS) regs[arm] += num(a.regiments && a.regiments[arm]);
+      gen = Math.max(gen, num(a.gen, 0));
+    }
+    return { arm: dominantArm(regs), gen };
+  };
+  const la = lead(atkArmies), ld = lead(defArmies);
+  ctx.bus.emit('battleStart', {
+    prov: provId,
+    atkArm: la.arm, atkGen: la.gen, defArm: ld.arm, defGen: ld.gen,
+    atkCue: unitBattleCue(la.gen, la.arm), defCue: unitBattleCue(ld.gen, ld.arm),
+  });
 }
 function endBattle(ctx, b, winKey) {
   const g = ctx.game;
@@ -631,15 +673,24 @@ function sideStats(ctx, armies, phase) {
   let men = 0, moraleW = 0, discW = 0, pip = 0, hill = 0, gen = 0, armor = 0;
   const minArmorGen = num((ctx.DEFINES.ARMOR || {}).minGen, 5);
   const tags = new Set();
+  // The side's whole order of battle by arm (SPEC §191), counted in regiments
+  // across every stack on the field — a mix, not a per-army thing, because the
+  // guns of one army cover the line of the one beside it.
+  const regs = { inf: 0, cav: 0, art: 0 };
+  let modernArt = 0;
   for (const a of armies) {
     men += a.men;
     moraleW += num(a.morale) * a.men;
     discW += disciplineOf(ctx, a.tag) * armyPowerOf(ctx, a) * a.men;
     if (a.general) pip = Math.max(pip, num(a.general[phase], 0));
     gen = Math.max(gen, num(a.gen, 0));
+    for (const arm of ARMS) regs[arm] += num(a.regiments && a.regiments[arm]);
     // The tanks on this side (SPEC §181): mounted regiments in a pattern
     // that means armor. A cataphract column counts zero by construction.
-    if (num(a.gen, 0) >= minArmorGen) armor += num(a.regiments && a.regiments.cav);
+    if (num(a.gen, 0) >= minArmorGen) {
+      armor += num(a.regiments && a.regiments.cav);
+      modernArt += num(a.regiments && a.regiments.art);
+    }
     tags.add(a.tag);
   }
   for (const t of tags) hill = Math.max(hill, resolveTagAdd(ctx, t, 'hillDefBonus'));
@@ -647,7 +698,14 @@ function sideStats(ctx, armies, phase) {
     men,
     morale: men > 0 ? moraleW / men : 0,
     disc: men > 0 ? discW / men : 1,
-    pip, hill, gen, armor,
+    pip, hill, gen, armor, // `armor` stays §181's COUNT: armorPips nets them
+    regs,
+    shares: armShares(regs),
+    // The side's mounted arm reads as armor when its tanks are most of it —
+    // one veteran Sherman troop attached to a horse column does not make the
+    // column armor, and does not cost the enemy their braced line.
+    armorArm: armor > 0 && armor >= regs.cav * 0.5,
+    artModern: modernArt > 0 && modernArt >= regs.art * 0.5,
     tags: [...tags],
   };
 }
@@ -728,10 +786,21 @@ function battleRound(ctx, b) {
   // to the sky, shock to the tanks. One subtraction, so one side's pips are
   // the other's absence of them, exactly as the air term above.
   const armorNet = A.armor - D.armor;
-  const armA = phase === 'shock' ? armorPips(ctx, armorNet) : 0;
-  const armD = phase === 'shock' ? armorPips(ctx, -armorNet) : 0;
-  const docA = doctrinePips(A.gen, phase, false) + airA + armA;
-  const docD = doctrinePips(D.gen, phase, true) + airD + armD;
+  // The ground answers armor too (SPEC §191). §181's quantity term is the
+  // tanks; a mountain is where the tanks cannot go around, so the pips it
+  // earns are cut by the same table that takes the charge away from horse.
+  const rough = MOUNTED_TERRAIN[(p && p.terrain) || ''] || null;
+  const roughArmor = (n) => (rough ? Math.floor(n * rough.armor) : n);
+  const armA = phase === 'shock' ? roughArmor(armorPips(ctx, armorNet)) : 0;
+  const armD = phase === 'shock' ? roughArmor(armorPips(ctx, -armorNet)) : 0;
+  // SPEC §191: what each side's MIX is worth against the other's, this phase.
+  // Unlike air and armor this is not a signed quantity — both sides read their
+  // own row of the table, so a host of guns and a host of horse can each be
+  // earning pips in the phase that belongs to them.
+  const mixA = armPips(ctx, phase, A, D, p && p.terrain);
+  const mixD = armPips(ctx, phase, D, A, p && p.terrain);
+  const docA = doctrinePips(A.gen, phase, false) + airA + armA + mixA;
+  const docD = doctrinePips(D.gen, phase, true) + airD + armD + mixD;
   const rollA = ctx.rng.int(10) + A.pip + (hilly ? A.hill : 0) + docA;
   const rollD = ctx.rng.int(10) + D.pip + defBonus + (hilly ? D.hill : 0) + docD;
   const casOnAtk = casualtiesInflicted(D, A, rollD, rollA);
@@ -739,7 +808,7 @@ function battleRound(ctx, b) {
   const mdOnAtk = moraleDamage(D, A, rollD, rollA);
   const mdOnDef = moraleDamage(A, D, rollA, rollD);
   // Battle-window feed: yesterday's dice and the running butcher's bill.
-  b.last = { phase, rollA, rollD, airA, airD, armA, armD };
+  b.last = { phase, rollA, rollD, airA, airD, armA, armD, mixA, mixD };
   b.casAtk = num(b.casAtk) + casOnAtk;
   b.casDef = num(b.casDef) + casOnDef;
   applySideDamage(atk, A.men, casOnAtk, mdOnAtk);
@@ -921,6 +990,48 @@ export function armorPips(ctx, net) {
   const AR = ctx.DEFINES.ARMOR || {};
   const per = Math.max(1, num(AR.pipsPer, 2));
   return Math.min(num(AR.pipCap, 3), Math.ceil(net / per));
+}
+
+// Composition pips (SPEC §191): what MY arms are worth against THEIRS in this
+// phase, on the ground we are standing on. Rounded down, never negative, and
+// capped — a mix is an edge, not a verdict. §181's armorPips answers the
+// question "who has more tanks"; this one answers "what is each side's army
+// FOR", and the two are deliberately different halves.
+export function armPips(ctx, phase, mine, theirs, terrain) {
+  const T = ctx.DEFINES.ARMS_TRIANGLE || {};
+  const raw = armEdge(phase,
+    { shares: mine.shares, armor: mine.armorArm, artModern: mine.artModern },
+    { shares: theirs.shares, armor: theirs.armorArm, artModern: theirs.artModern },
+    terrain || '');
+  // Floored on purpose: a mix has to be a real commitment before the dice
+  // notice it, so two ordinary balanced hosts read zero rather than both
+  // rolling a pip that cancels.
+  const triangle = clamp(Math.floor(raw * num(T.scale, 2)), 0, Math.max(0, num(T.cap, 2)));
+  return triangle + antiArmorPips(ctx, phase, mine, theirs);
+}
+
+// The guns against the tanks (SPEC §191): a count, not a share. Every `atPer`
+// tanks that our anti-tank guns can actually engage — never more than we have
+// guns for — is a fire-phase pip. This is the third of armor's three counters,
+// beside §154's sky and the ground itself.
+export function antiArmorPips(ctx, phase, mine, theirs) {
+  if (phase !== 'fire') return 0;
+  if (!theirs.armorArm || !mine.artModern) return 0;
+  const T = ctx.DEFINES.ARMS_TRIANGLE || {};
+  const guns = num(mine.regs && mine.regs.art);
+  const tanks = num(theirs.armor);
+  const engaged = Math.min(guns, tanks);
+  if (engaged <= 0) return 0;
+  const per = Math.max(1, num(T.atPer, 2));
+  return Math.min(num(T.atCap, 3), Math.ceil(engaged / per));
+}
+
+// The same read in words, for the battle window's tooltip.
+export function armPipsText(ctx, phase, mine, theirs, terrain) {
+  return armEdgeText(phase,
+    { shares: mine.shares, armor: mine.armorArm, artModern: mine.artModern },
+    { shares: theirs.shares, armor: theirs.armorArm, artModern: theirs.artModern },
+    terrain || '');
 }
 
 // The old boolean, kept because it is the honest answer to the question it
@@ -1182,17 +1293,20 @@ export function battleInfo(ctx, provId) {
     let men = 0, mw = 0, pipF = 0, pipS = 0, gen = 0;
     const rows = [];
     const tags = [];
+    const regs = { inf: 0, cav: 0, art: 0 };
     for (const a of armies) {
       men += a.men;
       mw += num(a.morale) * a.men;
       if (a.general) { pipF = Math.max(pipF, num(a.general.fire)); pipS = Math.max(pipS, num(a.general.shock)); }
       if (tags.indexOf(a.tag) < 0) tags.push(a.tag);
       gen = Math.max(gen, num(a.gen, 0));
+      for (const arm of ARMS) regs[arm] += num(a.regiments && a.regiments[arm]);
       rows.push({
         id: a.id, tag: a.tag, name: a.name || ('Army ' + a.id),
         men: a.men,
         inf: (a.regiments && a.regiments.inf) || 0,
         cav: (a.regiments && a.regiments.cav) || 0,
+        art: (a.regiments && a.regiments.art) || 0,
         gen: num(a.gen, 0),
         morale: num(a.morale), maxMorale: Math.max(0.01, num(a.maxMorale, 1)),
         general: a.general ? {
@@ -1206,6 +1320,11 @@ export function battleInfo(ctx, provId) {
       morale: men > 0 ? mw / men : 0,
       pips: { fire: pipF, shock: pipS },
       gen,
+      // The order of battle by arm (SPEC §191), and the stats the triangle
+      // reads. `stats` is the same shape sideStats returns, so the window can
+      // score the matchup for the phase it is showing.
+      regs: { ...regs },
+      stats: sideStats(ctx, armies, b.last ? b.last.phase : 'fire'),
       doctrines: doctrinesFor(gen).map((d) => ({ key: d.key, name: d.name, desc: d.desc })),
       air: airCoverFor(ctx, provId, tags),
       casualties: Math.round(num(key === 'atk' ? b.casAtk : b.casDef)),
@@ -1214,6 +1333,14 @@ export function battleInfo(ctx, provId) {
   };
   const atk = side('atk');
   const def = side('def');
+  const phaseNow = b.last ? b.last.phase : 'fire';
+  const terrainKey = (p && p.terrain) || '';
+  atk.mix = armPips(ctx, phaseNow, atk.stats, def.stats, terrainKey);
+  def.mix = armPips(ctx, phaseNow, def.stats, atk.stats, terrainKey);
+  atk.mixText = armPipsText(ctx, phaseNow, atk.stats, def.stats, terrainKey);
+  def.mixText = armPipsText(ctx, phaseNow, def.stats, atk.stats, terrainKey);
+  delete atk.stats;
+  delete def.stats;
   return {
     prov: provId,
     provName: p ? p.name : '#' + provId,
@@ -1586,9 +1713,27 @@ export function monthlyReinforce(ctx) {
     const effective = Math.max(1, Math.ceil(a.men / regSize));
     if (regCount(a) > effective + 2) {
       let drop = regCount(a) - (effective + 1);
-      const dropInf = Math.min(a.regiments.inf, Math.ceil(drop * a.regiments.inf / Math.max(1, regCount(a))));
-      a.regiments.inf -= dropInf; drop -= dropInf;
-      a.regiments.cav = Math.max(0, a.regiments.cav - Math.max(0, drop));
+      // Struck proportionally across the three arms (SPEC §191): an army that
+      // has lost half its men has lost half of each of them. The shares are
+      // taken against the original total, so a second pass — foot first —
+      // clears whatever rounding left standing.
+      const total = Math.max(1, regCount(a));
+      for (const arm of ARMS) {
+        if (drop <= 0) break;
+        const have = num(a.regiments[arm]);
+        if (have <= 0) continue;
+        const take = Math.min(have, Math.max(0, Math.floor(drop * have / total)), drop);
+        a.regiments[arm] = have - take;
+        drop -= take;
+      }
+      for (const arm of ARMS) {
+        if (drop <= 0) break;
+        const have = num(a.regiments[arm]);
+        if (have <= 0) continue;
+        const take = Math.min(have, drop);
+        a.regiments[arm] = have - take;
+        drop -= take;
+      }
       if (regCount(a) < 1) a.regiments.inf = 1;
     }
     if (num(a.oosMonths) > 0) continue; // no line home, no recruits (SPEC §82)
@@ -1833,7 +1978,7 @@ export function recruitRegiment(ctx, tag, provId, type) {
   const t = g.tags[tag];
   const p = ctx.byId(provId);
   if (!t || !p) return { ok: false, why: 'invalid province or tag' };
-  if (type !== 'inf' && type !== 'cav') return { ok: false, why: 'unknown unit type' };
+  if (ARMS.indexOf(type) < 0) return { ok: false, why: 'unknown unit type' };
   const costs = (ctx.DEFINES.BASE && ctx.DEFINES.BASE.regCost) || {};
   // Armor (SPEC §181): the mounted arm at pattern 5+ is tanks — priced like
   // them, fitted slower than a horse squadron, and importable only. In a
@@ -1845,7 +1990,8 @@ export function recruitRegiment(ctx, tag, provId, type) {
     const shut = armsGate(ctx, tag);
     if (shut) return { ok: false, why: shut };
   }
-  const cost = armor ? num(AR.cost, 50) : num(costs[type], type === 'cav' ? 25 : 10);
+  const dfltCost = type === 'cav' ? 25 : type === 'art' ? 18 : 10;
+  const cost = armor ? num(AR.cost, 50) : num(costs[type], dfltCost);
   const regSize = B(ctx, 'regSize', 1000);
   if (num(t.treasury) <= -100) return { ok: false, why: 'the treasury is exhausted' };
   if (num(t.manpower) < regSize) return { ok: false, why: 'not enough manpower' };
@@ -1867,21 +2013,38 @@ export function splitArmyCore(ctx, army) {
   const R = regCount(army);
   if (R < 2) return 0;
   const newRegs = Math.floor(R / 2);
-  const inf = num(army.regiments.inf), cav = num(army.regiments.cav);
-  let newInf = Math.round(inf * newRegs / R);
-  newInf = clamp(newInf, Math.max(0, newRegs - cav), Math.min(inf, newRegs));
-  const newCav = newRegs - newInf;
+  // The detachment takes half of each arm (SPEC §191), largest-remainder so
+  // the three shares sum to exactly newRegs and neither half ever goes
+  // negative — a two-regiment army of one gun and one horse splits into one
+  // of each, not into two of something.
+  const have = { inf: num(army.regiments.inf), cav: num(army.regiments.cav), art: num(army.regiments.art) };
+  const take = {};
+  let assigned = 0;
+  for (const arm of ARMS) {
+    take[arm] = Math.min(have[arm], Math.floor(have[arm] * newRegs / R));
+    assigned += take[arm];
+  }
+  // hand out what rounding left over, biggest remaining arm first
+  const rest = ARMS.slice().sort((x, y) => (have[y] - take[y]) - (have[x] - take[x]));
+  for (const arm of rest) {
+    if (assigned >= newRegs) break;
+    const room = Math.min(have[arm] - take[arm], newRegs - assigned);
+    take[arm] += room;
+    assigned += room;
+  }
   const newMen = Math.floor(num(army.men) * newRegs / R);
   if (newMen < 1) return 0; // too hollowed out to divide
-  army.regiments.inf = inf - newInf;
-  army.regiments.cav = cav - newCav;
+  const newInf = take.inf, newCav = take.cav, newArt = take.art;
+  army.regiments.inf = have.inf - newInf;
+  army.regiments.cav = have.cav - newCav;
+  army.regiments.art = have.art - newArt;
   army.men = Math.max(0, num(army.men) - newMen);
   const id = g.nextArmyId++;
   const det = {
     id, tag: army.tag,
     name: (army.name || 'Army') + ' — Detachment',
     prov: army.prov, path: [], moveDaysLeft: 0,
-    regiments: { inf: newInf, cav: newCav },
+    regiments: { inf: newInf, cav: newCav, art: newArt },
     men: newMen,
     morale: num(army.morale), maxMorale: num(army.maxMorale, 3),
     general: null,
@@ -1927,8 +2090,7 @@ export function mergeInto(ctx, fromId, intoId) {
   into.morale = totalMen > 0 ? (num(f.morale) * f.men + num(into.morale) * into.men) / totalMen : into.morale;
   // Mixed patterns blend by weight of men — merging levies into legions dilutes them.
   into.gen = totalMen > 0 ? Math.round((num(f.gen, 0) * f.men + num(into.gen, 0) * into.men) / totalMen) : num(into.gen, 0);
-  into.regiments.inf = num(into.regiments.inf) + num(f.regiments.inf);
-  into.regiments.cav = num(into.regiments.cav) + num(f.regiments.cav);
+  for (const arm of ARMS) into.regiments[arm] = num(into.regiments[arm]) + num(f.regiments[arm]);
   into.men = totalMen;
   if (!into.general && f.general) into.general = f.general;
   removeArmy(ctx, fromId);
@@ -5004,14 +5166,12 @@ function annexable(ctx, war, winners, losers) {
   return keepable;
 }
 
-// winners actually annex; everything else returns to its owner. Scripted
-// concessions use it — "Judea keeps its hills" must not mean all of Syria.
-export function endWarBySword(ctx, war, winnersKey, opts) {
+// The territorial half of a settlement, and the only place the sword's rules
+// live. `participants` bounds the pass: the whole war when a war ends, and one
+// pair of parties when a scripted peace settles two courts and leaves the war
+// standing (SPEC §193).
+function settleFronts(ctx, war, winnersKey, winners, losers, participants, keep) {
   const g = ctx.game;
-  const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
-  const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
-  const participants = war.attackers.concat(war.defenders);
-  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
   // SPEC §116: what the winners' own soil can actually reach. `null` means the
   // rule does not apply here (no adjacency data), not that nothing is keepable.
   // A scripted settlement that supplies its own `keep` predicate has already
@@ -5055,6 +5215,17 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
       changeControllerCore(ctx, p, p.owner);
     }
   }
+}
+
+// winners actually annex; everything else returns to its owner. Scripted
+// concessions use it — "Judea keeps its hills" must not mean all of Syria.
+export function endWarBySword(ctx, war, winnersKey, opts) {
+  const g = ctx.game;
+  const winners = winnersKey === 'att' ? war.attackers : winnersKey === 'def' ? war.defenders : [];
+  const losers = winnersKey === 'att' ? war.defenders : winnersKey === 'def' ? war.attackers : [];
+  const participants = war.attackers.concat(war.defenders);
+  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
+  settleFronts(ctx, war, winnersKey, winners, losers, participants, keep);
   dissolveWar(ctx, war);
   const endText = (war.name || 'The war') + ' has ended'
     + (winners.length ? ' — the field belongs to ' + winners.map((t) => (g.tags[t] && g.tags[t].name) || t).join(', ') + '.' : ' in exhaustion.');
@@ -5069,6 +5240,107 @@ export function endWarBySword(ctx, war, winnersKey, opts) {
     });
   } else {
     ctx.bus.emit('notify', { title: 'News from abroad', text: endText, type: 'info' });
+  }
+}
+
+// ── A scripted peace binds the courts that signed it (SPEC §193) ────────────
+// `helpers.endWar(a, b, …)` names two courts, and it used to dissolve the whole
+// war standing around them. So when Kavad II bought his throne with a white
+// peace in 628, the Return's war went off the books with Persia's: an ally that
+// had signed nothing, lost nothing and was holding Jerusalem got marched home
+// because somebody else's king was murdered in a dungeon. A war here is a list
+// of belligerents. The two courts settle their own fronts and go home; whoever
+// is still facing an enemy keeps the war, and keeps the right to end it at
+// their own table.
+//
+// Who goes home is arithmetic, not authorship. A court leaves when the
+// settlement has emptied the far side of its enemies — Persia's only enemy was
+// Byzantium, so Persia goes; Byzantium still faces Judaea, so Byzantium stays,
+// and the Rhodes-style loop that settles a coalition one court at a time still
+// strikes exactly one court per call. Both leave when the war was only ever
+// these two, and then it ends exactly as it always did. Neither can leave when
+// each still faces courts it has not settled with — nothing here can hold a
+// court at war and at peace with the same coalition — and that case ends the
+// whole war, which is where this function came in.
+export function settleScriptedPeace(ctx, war, a, b, winnersKey, opts) {
+  const g = ctx.game;
+  const alive = (t) => !!(g.tags[t] && g.tags[t].alive);
+  const aOnAtt = war.attackers.indexOf(a) >= 0;
+  const bOnAtt = war.attackers.indexOf(b) >= 0;
+  // Named on the same side, or one of them not in this war at all: not a pair
+  // this rule can separate.
+  if (aOnAtt === bOnAtt) return endWarBySword(ctx, war, winnersKey, opts);
+  const aSide = aOnAtt ? war.attackers : war.defenders;
+  const bSide = aOnAtt ? war.defenders : war.attackers;
+  // Each signatory's party: itself, and the clients that came in under its
+  // banner and go home under it (SPEC §74).
+  const partyOf = (t, side) => [t].concat(vassalsOf(ctx, t).filter((v) => side.indexOf(v) >= 0));
+  const aParty = partyOf(a, aSide);
+  const bParty = partyOf(b, bSide);
+  const aRest = aSide.filter((t) => aParty.indexOf(t) < 0 && alive(t));
+  const bRest = bSide.filter((t) => bParty.indexOf(t) < 0 && alive(t));
+  if (!aRest.length === !bRest.length) return endWarBySword(ctx, war, winnersKey, opts);
+  const keep = opts && typeof opts.keep === 'function' ? opts.keep : null;
+  const attParty = aOnAtt ? aParty : bParty;
+  const defParty = aOnAtt ? bParty : aParty;
+  const winners = winnersKey === 'att' ? attParty : winnersKey === 'def' ? defParty : [];
+  const losers = winnersKey === 'att' ? defParty : winnersKey === 'def' ? attParty : [];
+  settleFronts(ctx, war, winnersKey, winners, losers, aParty.concat(bParty), keep);
+  // Exactly one signatory has run out of enemies; it and its clients go home,
+  // settling whatever else they hold at status quo (withdrawFromWar), truced to
+  // the side they leave behind.
+  const leaver = bRest.length ? b : a;
+  const stayer = leaver === a ? b : a;
+  const leaverParty = leaver === a ? aParty : bParty;
+  withdrawFromWar(ctx, war, leaver);
+  // What is left is not the war the two great powers were fighting. Their
+  // battles and their scripted swings went home with them, and a fight to the
+  // death was their oath to swear and theirs to break — the courts that stayed
+  // may send envoys. What the armies actually hold still counts for everything
+  // it did: that is read off the map, not the ledger.
+  war._bs = { att: 0, def: 0 };
+  if (war.eventScore) war.eventScore = { att: 0, def: 0 };
+  if (war.goal && (leaverParty.indexOf(war.goal.attacker) >= 0
+    || leaverParty.indexOf(war.goal.defender) >= 0)) war.goal = null;
+  war._goalScore = 0;
+  war._goalTick = { ...g.date };
+  if (war.noNegotiation) { war.noNegotiation = false; war._negOpened = true; }
+  // Score the war the courts that stayed are actually fighting, now rather than
+  // at the next month's tick: the peace table opens the moment the news lands.
+  if (war.attackers.length && war.defenders.length) {
+    const att = sideGross(ctx, war, 'att');
+    const def = sideGross(ctx, war, 'def');
+    for (const t of war.attackers) war.warscore[t] = Math.round(clamp(att - def, -100, 100));
+    for (const t of war.defenders) war.warscore[t] = Math.round(clamp(def - att, -100, 100));
+  }
+  const nm = (t) => (g.tags[t] && g.tags[t].name) || t;
+  const text = nm(leaver) + ' and ' + nm(stayer) + ' make their peace, and '
+    + (war.name || 'the war') + ' goes on without ' + nm(leaver) + '.';
+  chronicle(ctx, 'peace', text);
+  // A side emptied by the departure has no war left to fight — belt and braces;
+  // the arithmetic above already keeps a court on the side that stays.
+  if (!war.attackers.length || !war.defenders.length) {
+    dissolveWar(ctx, war);
+    return;
+  }
+  if (opts && opts.silent) return;
+  const pt = g.playerTag;
+  if (war.attackers.indexOf(pt) >= 0 || war.defenders.indexOf(pt) >= 0) {
+    const foes = enemySideOf(war, pt).filter(alive).map(nm).join(', ');
+    ctx.bus.emit('notify', {
+      title: 'The war goes on',
+      text: text + ' We are still at war with ' + foes
+        + ' — and free to fight on, or to send our own envoys to the peace table.',
+      type: 'war',
+    });
+  } else if (leaverParty.indexOf(pt) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'We leave the war',
+      text: text + ' A five-year truce binds us to them.',
+      type: 'good',
+    });
+  } else {
+    ctx.bus.emit('notify', { title: 'News from abroad', text, type: 'info' });
   }
 }
 

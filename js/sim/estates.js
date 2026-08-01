@@ -236,6 +236,42 @@ export function localEstateUnrest(ctx, p) {
   } catch (e) { warnOnce('localUnrest', 'localEstateUnrest failed', e); return null; }
 }
 
+// Where one party's ground actually IS (SPEC §197): the provinces of the
+// realm it is dominant on — its colour on the estates mapmode — counted, and
+// the best of them named, ordered by development. This is the line that lets
+// the realm panel say "their ground: 12 provinces, strongest in Jerusalem,
+// Gophna, Hebron" and mean exactly what the map paints. A party dominant
+// nowhere still gets its strongest ground named, because "nowhere" is an
+// answer the panel must phrase rather than a row it may drop.
+export function estateGroundSummary(ctx, tag, fid, cap = 3) {
+  try {
+    const g = ctx.game;
+    const live = livingTag(ctx, tag);
+    const seats = seatsFor(ctx, live);
+    if (!seats || !seats.length) return null;
+    const mine = [];
+    const best = [];
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== live) continue;
+      const own = estateStrength(ctx, p, fid);
+      const row = { name: p.name, v: own, dev: devTotal(p) };
+      best.push(row);
+      const dom = dominantEstate(ctx, p, seats);
+      if (dom && dom.id === fid) mine.push(row);
+    }
+    if (!best.length) return null;
+    const pick = (mine.length ? mine : best)
+      .sort((a, b) => (b.dev - a.dev) || (b.v - a.v)).slice(0, cap);
+    return {
+      count: mine.length,
+      total: best.length,
+      dominant: mine.length > 0,
+      names: pick.map((x) => x.name),
+    };
+  } catch (e) { warnOnce('ground:' + fid, 'estateGroundSummary failed', e); return null; }
+}
+
 // The province panel's read: every seated party's strength on this ground,
 // strongest first.
 export function estateReport(ctx, p) {

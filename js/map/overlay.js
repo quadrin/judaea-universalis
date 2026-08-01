@@ -3,8 +3,13 @@
 // so everything lands on the same screen points as the GL map underneath.
 
 import { traceSupply } from '../sim/supply.js';
+// The land roster (SPEC §191): every banner wears the face of the arm that
+// leads it, at the pattern it was raised to.
+import { dominantArm, unitGlyphKey, unitGlyphPath } from '../data/units.js';
 
-const CHIP_W = 46;
+// Wider since SPEC §191: the standard now carries a soldier's face as well as
+// a strength, and both have to be legible at strategic zoom.
+const CHIP_W = 56;
 const CHIP_H = 20;
 const MORALE_H = 3;
 const FLEET_W = 32;
@@ -38,6 +43,20 @@ const STAR8_PATH = new Path2D(
   'M6 0L2.31 0.96L4.24 4.24L0.96 2.31L0 6L-0.96 2.31L-4.24 4.24L-2.31 0.96' +
   'L-6 0L-2.31 -0.96L-4.24 -4.24L-0.96 -2.31L0 -6L0.96 -2.31L4.24 -4.24L2.31 -0.96Z'
 );
+// The eighteen soldiers (SPEC §191), compiled once and kept: the roster's own
+// 24×24 path data, handed straight to Path2D. Built lazily so a glyph a
+// campaign never fields is never constructed.
+const unitPathCache = new Map();
+function unitPath2D(gen, arm) {
+  const key = unitGlyphKey(gen, arm);
+  let p = unitPathCache.get(key);
+  if (p === undefined) {
+    try { p = new Path2D(unitGlyphPath(gen, arm)); }
+    catch (e) { warnOnce('glyph:' + key, 'unit glyph failed to compile', key, e); p = null; }
+    unitPathCache.set(key, p);
+  }
+  return p;
+}
 
 const warned = new Set();
 function warnOnce(key, ...msg) {
@@ -824,6 +843,43 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     }
   }
 
+  // How large the roster's 24-unit grid is drawn on a counter.
+  const GLYPH_PX = 13;
+
+  // One soldier, stroked in the standard's own white, on whatever cloth the
+  // age flies. The glyph is authored on a 24×24 grid, so the transform is a
+  // scale — and the line width is divided back out so a spear at thirteen
+  // pixels is as heavy a line as a tank at thirteen pixels.
+  function drawUnitGlyph(ch, gx, gy) {
+    let regs = null;
+    if (ch.armies.length === 1) regs = ch.army.regiments;
+    else {
+      regs = { inf: 0, cav: 0, art: 0 };
+      for (const ar of ch.armies) {
+        const r = ar.regiments || {};
+        regs.inf += r.inf || 0; regs.cav += r.cav || 0; regs.art += r.art || 0;
+      }
+    }
+    const gen = Math.max(0, ch.army.gen | 0);
+    const path = unitPath2D(gen, dominantArm(regs));
+    if (!path) return;
+    const s = GLYPH_PX / 24;
+    x2.save();
+    x2.translate(gx, gy);
+    x2.scale(s, s);
+    x2.lineWidth = 1.7 / s;
+    x2.lineJoin = 'round';
+    x2.lineCap = 'round';
+    // A dark pass under the pale one, so the face reads on a light banner as
+    // well as a dark one without knowing which it is standing on.
+    x2.strokeStyle = 'rgba(12,8,4,0.55)';
+    x2.stroke(path);
+    x2.lineWidth = 1.3 / s;
+    x2.strokeStyle = 'rgba(255,252,244,0.95)';
+    x2.stroke(path);
+    x2.restore();
+  }
+
   // Army standard: pole + swallow-tailed pennant in the tag color. The cloth
   // ripples while marching (and breathes gently at rest); the hit box is
   // unchanged from the old rounded-rect chips, so picking is unaffected.
@@ -906,40 +962,21 @@ export function createOverlay(canvas, geom, MAP_DATA, DEFINES) {
     x2.textBaseline = 'middle';
     x2.shadowColor = 'rgba(0,0,0,0.6)';
     x2.shadowBlur = 2;
+    // The men ride to the right of the soldier's face, which now always has
+    // one — so the number starts past the glyph rather than centered in the
+    // whole cloth.
+    const glyphW = GLYPH_PX + 2;
+    const textFrom = clothX + glyphW;
     const textX = gen === 3
-      ? clothX + (ch.w - (clothX - x)) * 0.36 // the pennon narrows to its point
-      : (clothX + x + ch.w - notch) * 0.5;
+      ? textFrom + (ch.w - (textFrom - x)) * 0.30 // the pennon narrows to its point
+      : (textFrom + x + ch.w - notch) * 0.5;
     x2.fillText(fmtMen(ch.men), textX, y + CHIP_H * 0.5 + 0.5 + sway * 0.4);
     x2.shadowBlur = 0;
-    // Modern unit glyph (SPEC §25): armor if the stack rides, rifles if it walks.
-    if (gen >= 4) {
-      let cav = 0, inf = 0;
-      for (const ar of ch.armies) {
-        cav += (ar.regiments && ar.regiments.cav) || 0;
-        inf += (ar.regiments && ar.regiments.inf) || 0;
-      }
-      const gx = clothX + 2, gy = y + 2;
-      x2.strokeStyle = 'rgba(255,255,255,0.9)';
-      x2.fillStyle = 'rgba(255,255,255,0.9)';
-      x2.lineWidth = 1;
-      if (cav >= Math.max(1, inf)) {
-        // a tank in eight pixels: hull, turret, barrel
-        x2.fillRect(gx, gy + 2.5, 7, 2.6);
-        x2.fillRect(gx + 2, gy + 0.8, 3, 2);
-        x2.beginPath();
-        x2.moveTo(gx + 5, gy + 1.7);
-        x2.lineTo(gx + 8.5, gy + 1.7);
-        x2.stroke();
-      } else {
-        // crossed rifles
-        x2.beginPath();
-        x2.moveTo(gx, gy + 0.5);
-        x2.lineTo(gx + 6.5, gy + 5);
-        x2.moveTo(gx + 6.5, gy + 0.5);
-        x2.lineTo(gx, gy + 5);
-        x2.stroke();
-      }
-    }
+    // The soldier's face (SPEC §191): the arm that leads this stack, at the
+    // pattern it was raised to. A spear at 167 BCE, a cataphract under the
+    // Hasmoneans, a tank in 1948 — the counter says what the host IS, not
+    // merely how many men are in it.
+    drawUnitGlyph(ch, clothX + 1.5, y + (CHIP_H - GLYPH_PX) * 0.5 + sway * 0.3);
     // morale bar (men-weighted across the whole stack)
     const frac = Math.min(1, Math.max(0, ch.moraleW / Math.max(0.01, ch.maxMoraleW)));
     x2.fillStyle = 'rgba(10,8,4,0.85)';

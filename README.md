@@ -71,6 +71,10 @@ static site, the zero dependencies, or the missing build step changes.
   electing, dying, fighting its own wars — and every western province carries a
   levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine legions stay on the
   Rhine instead of doubling the army it brings to Judaea.
+- Map labels that name the ground: zoom in for province names, out for nations —
+  one name per *region* a court holds rather than one per court, so a realm in two
+  places reads **JUDAEA** at home and **JUDAEAN GREECE** across the sea instead of
+  averaging the two into one label floating in the water between them.
 - Mapmodes: political, diplomatic, trade, terrain, religion, culture,
   development, unrest, estates, and the dispersion — where the Jewish
   communities of the diaspora are, how large, and how they regard your crown.
@@ -78,6 +82,19 @@ static site, the zero dependencies, or the missing build step changes.
   Host, Faith, World — so the ruler, the four numbers you watch and the five
   levers stay put while twenty sections take turns underneath them.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
+- Three land arms with eighteen soldiers between them, and each one has a face,
+  a gait and a weakness. **The foot** holds the line, **the horse** breaks it,
+  **the shot** — slingers, archers, bolt engines, naphtha crews, cannon,
+  anti-tank guns — outranges both. They answer each other in a triangle: the
+  shot breaks a formed line, the line brakes a charge, the charge rides down
+  the shot. Every pattern flies its own emblem on the map (a spear at 167 BCE,
+  a barded cataphract under the Hasmoneans, a tank in 1948), marches at its
+  own pace — a column keeps its slowest arm's, so an ordinary hop is four days
+  for horse, five for foot and six once the guns are along — and makes its own
+  noise when you put it on the road or into the line: tramping feet, a
+  four-beat canter of hooves, diesel and track clatter. Armor is the century's
+  exception: nothing on foot stops it, and the guns, the sky and broken ground
+  are what do.
 - Flagship system: unrest → revolt, plus a ~25-event scripted chain from Josephus
   (Beth Horon, Vespasian's landing, the Zealot coup, the Year of the Four Emperors, the Temple).
 - Win/loss per side; alt-history window for a surviving Judaea.
@@ -258,6 +275,16 @@ static site, the zero dependencies, or the missing build step changes.
   era's own: the Decapolis grants, Jannaeus' coast, the twelve cities of Moab,
   the Ladder of Tyre, the King's Highway, the granary of Egypt, and the coast
   road out of the Samaritan hills.
+- **The heavy chapters take their turn.** The Great Revolt, Bar Kokhba and 1948
+  get the same pass: Menahem's royal robes and the granaries of Jerusalem
+  (sealed under one ledger, or burned by the factions before Titus ever
+  closes the ring), the Nasi's letters — iron or mercy, billed either way two
+  winters later — and the letters east that Babylonia never got, the Altalena
+  answered five years after the cannon, and the shilumim vote with the windows
+  breaking. Beside them, the conquests the wars reached for: the cities that
+  killed their Jews, the client king's Golan, Bar Kokhba's port and the
+  Arabian legion's nest, the strip to Rafah and the Hebron hills Allon begged
+  for.
 - Seven chapters spanning twenty-one centuries: the Maccabean Revolt (167 BCE),
   the Judaean Civil War (67 BCE), Herod's Rise (40 BCE), the Great Revolt (66 CE),
   the Bar Kokhba Revolt (132 CE), the Persian Gambit (614 CE — Jerusalem changes
@@ -342,7 +369,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 117 headless sim suites and 39
+  marching. The full verification battery — 125 headless sim suites and 40
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
@@ -654,9 +681,12 @@ static site, the zero dependencies, or the missing build step changes.
   money, which is the largest thing the state did in its first decade and was
   previously one line about schoolhouses.
 - **Write to the dispersion.** The Diaspora used to be one row in a panel with a
-  bar on it. It is twenty communities on the map now — Alexandria, Babylon,
+  bar on it. It is thirty-seven communities now — Alexandria, Babylon,
   Nehardea, Antioch, Cyrene, Rome, the House of Adiabene, the temple at
-  Leontopolis — and you reach them by clicking the province they live in. Ask
+  Leontopolis, and the sea's whole western half besides: Smyrna and Tarsus,
+  Athens and the Kinsmen at Sparta, Rhodes and Crete, Campania and Sicily,
+  Carthage, Tripoli and Constantine, Sepharad, Marseille and the farthest west
+  at Volubilis — and you reach them by clicking the province they live in. Ask
   for letters (what a congregation at the centre of an empire hears before the
   provinces do), for silver, for a word with their patrons, or for their sons.
   What you can ask depends on how big they are, how they regard your crown, and
@@ -664,7 +694,18 @@ static site, the zero dependencies, or the missing build step changes.
   request can be intercepted, and when it is, the reprisal falls on them and
   they remember whose asking caused it. Alexandria's community ends in 117 with
   the Kitos War and Babylon's outlasts everything, so where your friends are
-  changes across a long campaign.
+  changes across a long campaign — the Aegean deportations of 1944 and the
+  expulsions of 1306-1541 mean the 1948 map draws half that sea as memory,
+  hatched where Sepharad and Sicily and Rhodes once answered, while the
+  Maghreb's windows close on their own dates (Tripoli 1952, Constantine 1962,
+  Tunis 1967) and Morocco's never quite does. And the dispersion reaches past
+  the map's own edge: London (from the Resettlement of 1656) and the Jews of
+  America — the largest community there has ever been, seated on Truman's
+  off-map court — are written to from their host's own panel, where a foreign
+  court's Abroad tab now lists every community under its flag. Their sons
+  answer on day one in 1948, because Machal did; Attlee's Britain lists
+  Tripoli beside London, because the British Military Administration really
+  held it.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

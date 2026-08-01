@@ -99,7 +99,7 @@ ok((g1.tags.JUD.modifiers || []).some((m) => m.id === 'levies_of_zion'), 'missio
 const ml = a1.getMissions();
 // Eight nodes since SPEC §179 grew the chain its curriculum branches,
 // eleven since §183 seated the roads not taken beside them.
-ok(ml.length === 11 && ml[0].status === 'done' && ml.some((m) => m.status === 'current'), 'getMissions statuses: ' + ml.map((m) => m.status).join(','));
+ok(ml.length === 15 && ml[0].status === 'done' && ml.some((m) => m.status === 'current'), 'getMissions statuses: ' + ml.map((m) => m.status).join(','));
 
 console.log('== claims & casus belli ==');
 const t1 = g1.tags.JUD;
@@ -226,7 +226,7 @@ console.log('== 132 CE bookmark boots and runs ==');
   ok(g4.tags.ROM.ruler.name === 'Hadrian' && g4.tags.JUD.ruler.name === 'Simon bar Kosiba', 'rulers seated');
   const war = g4.wars.find((w) => w.noNegotiation);
   ok(!!war, 'scripted war exists and is closed to negotiation');
-  ok(a4.getMissions().length === 11, 'JUD 132 missions present (incl. the Third House, SPEC §32, the §179 curriculum, and the §183 roads not taken)');
+  ok(a4.getMissions().length === 15, 'JUD 132 missions present (incl. the Third House, SPEC §32, the §179 curriculum, the §192 expansion, and the §183/§192 roads not taken)');
   const men = mil.armiesOf(c4, 'JUD').reduce((s, a) => s + a.men, 0);
   ok(men >= 20000, 'JUD starts with a real host: ' + men);
   tickMonths(c4, 6);

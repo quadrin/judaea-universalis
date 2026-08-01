@@ -200,18 +200,27 @@ function expectAllDone(g, bookmark, tags, label) {
 }
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
-  // through the wave rule in a single monthly pass — and the client courts'
-  // roads (§185) pay off the same standing House.
+  // through the wave rule in a single monthly pass — the client courts'
+  // roads (§185, grown by §196) pay off the same standing House, and the
+  // §192 forks (the royal robes, the granaries) by marker. The nation
+  // question (§196: Agrippa hears the answer too) rides the same cascade.
   const { game, ctx } = booted.get('66ce');
-  Object.assign(game.flags, { secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true });
+  Object.assign(game.flags, {
+    secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,
+    menahemLives: true, storesSealed: true, speakerForTheNation: true,
+  });
   realm.checkMissions(ctx);
   expectAllDone(game, era('66ce').bookmark, ['JUD', 'AGR', 'ADI'], '66ce');
 }
 
-{ // 132 CE — redemption, the accession, and the recorded doubt, three deep;
+{ // 132 CE — redemption, the accession, the recorded doubt, three deep,
+  // and the §192 forks (the Nasi's letters, the letters east) by marker;
   // the restored house's mint (§185) reads the same redemption.
   const { game, ctx } = booted.get('132ce');
-  Object.assign(game.flags, { redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true });
+  Object.assign(game.flags, {
+    redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true,
+    lettersMercy: true, dispersionCalled: true,
+  });
   realm.checkMissions(ctx);
   expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }
@@ -237,7 +246,10 @@ function expectAllDone(g, bookmark, tags, label) {
 { // 1948 — Dimona and the question by marker; the Levant without a Lebanon
   // by standing in most of what was Lebanon.
   const { game, ctx } = booted.get('1948ce');
-  Object.assign(game.flags, { dimonaOpaque: true, oneCitizenship: true });
+  Object.assign(game.flags, {
+    dimonaOpaque: true, oneCitizenship: true,
+    altalenaAshore: true, shilumimRefused: true,
+  });
   game.tags.LEB.alive = false;
   grant(ctx, 'ISR', ['Tyre', 'Sidon', 'Berytus', 'Byblos']);
   realm.checkMissions(ctx);

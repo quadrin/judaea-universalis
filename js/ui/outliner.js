@@ -1,6 +1,10 @@
 // js/ui/outliner.js — right-side outliner: armies, battles, sieges, wars (SPEC §8.2).
 import { esc, fmtMen, signed, warnOnce } from './format.js';
-import { icon, flagChip } from './icons.js';
+import { icon, flagChip, unitIcon } from './icons.js';
+import { armGenName, dominantArm } from '../data/units.js';
+// The pace a column keeps (SPEC §191) — the sim's own function, so the number
+// the outliner prints is the number `hopDays` actually divides by.
+import { armSpeedOf } from '../sim/military.js';
 
 export function createOutliner(el, {
   onArmyClick, onFleetClick, onWingClick, onFocusProv, onPeaceClick, onWarClick, onBattleClick,
@@ -214,10 +218,19 @@ export function createOutliner(el, {
         ? `\n✂ OUT OF SUPPLY ${a.oosMonths | 0} month${(a.oosMonths | 0) > 1 ? 's' : ''} — no reinforcements, slow rally, mounting attrition.\nSelect the army to see where the line is cut.`
         : (a.supplyVia === 'port' ? '\n⚓ Supplied by sea' : '');
       const flagsTxt = (a.inBattle ? '\n⚔ In battle' : '') + (a.retreating ? '\n↩ Retreating' : '') + supplyTxt;
-      const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${regs.inf || 0} infantry, ${regs.cav || 0} cavalry\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
+      // The three arms by their pattern names (SPEC §191), and the face of
+      // whichever leads the column, in the row itself.
+      const aGen = a.gen | 0;
+      const comp = ['inf', 'cav', 'art'].filter((k) => (regs[k] | 0) > 0)
+        .map((k) => `${regs[k] | 0} × ${armGenName(aGen, k)}`).join(', ') || 'a skeleton formation';
+      const paceMult = armSpeedOf(a);
+      const paceTxt = Math.abs(paceMult - 1) > 0.01
+        ? `\nMarches at ${Math.round(paceMult * 100)}% of foot — a column keeps its slowest arm's pace.` : '';
+      const face = unitIcon(aGen, dominantArm(regs), 'icon-row');
+      const tt = `${a.name || 'Army'} — at ${provName(g, a.prov)}\n${comp}${paceTxt}\nMorale: ${(a.morale || 0).toFixed(1)} / ${(a.maxMorale || 0).toFixed(1)}${gen}${flagsTxt}`;
       html += `
         <div class="ol-row ol-army${sel ? ' sel' : ''}${oos ? ' ol-oos' : ''}" data-army="${a.id}" data-tt="${esc(tt)}">
-          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${esc(a.name || ('Army ' + a.id))}</span>
+          <span class="ol-name">${a.inBattle ? icon('swords', 'icon-row') + ' ' : a.retreating ? icon('retreat', 'icon-row') + ' ' : ''}${oos ? '<span class="ol-oos-badge">✂</span> ' : ''}${face} ${esc(a.name || ('Army ' + a.id))}</span>
           <span class="ol-men">${fmtMen(a.men)}</span>
           <span class="morale"><span class="morale-fill" style="width:${moralePct}%"></span></span>
           ${sel ? armyActionsHtml(a) : ''}

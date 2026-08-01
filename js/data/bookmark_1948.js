@@ -1022,7 +1022,7 @@ export const BOOKMARK_1948 = {
       'Lose: the Legion broken west of the river.',
     ],
   },
-  // The letter of June 1947 (SPEC §191), and everything the state postponed by
+  // The letter of June 1947 (SPEC §200), and everything the state postponed by
   // signing it. Jordan's court is not having this argument.
   schools: { ISR: 'status_quo' },
 
@@ -1030,7 +1030,7 @@ export const BOOKMARK_1948 = {
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {
     ISR: [
-      // The seat this chapter was missing (SPEC §191). On 19 June 1947
+      // The seat this chapter was missing (SPEC §200). On 19 June 1947
       // Ben-Gurion, Rabbi Fishman and Greenbaum wrote to Agudat Yisrael
       // promising four things — the sabbath as the state's day of rest, kosher
       // state kitchens, rabbinical jurisdiction in marriage, and autonomy for
@@ -1472,6 +1472,28 @@ export const BOOKMARK_1948 = {
         check: (ctx) => eraTiers(ctx.game.tags.ISR) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
       },
+      // Past the armistice lines (SPEC §192): the two operations the cabinet
+      // stopped — the strip cleared, and the hills Allon asked for in October.
+      {
+        id: 'i_gaza', name: 'The Strip',
+        icon: 'flag', col: 2, row: 3, requires: ['i_yoav'],
+        desc: 'Take Gaza and Rafah — clear the expeditionary force\'s last foothold, the '
+          + 'operation history stopped at the armistice table.',
+        rewardText: '+20 martial points, +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Gaza')
+          && ctx.helpers.controls(ctx, 'ISR', 'Rafah'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 20, legitimacy: 10 }),
+      },
+      {
+        id: 'i_hebron_hills', name: 'The Hills of Hebron',
+        icon: 'mountain', col: 1, row: 3, requires: ['i_jerusalem_road'],
+        desc: 'Take Hebron and Bethlehem — the southern hills Allon begged the cabinet '
+          + 'for in October 1948, taken here before the maps harden.',
+        rewardText: '+15 legitimacy, +1,000 manpower.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Hebron')
+          && ctx.helpers.controls(ctx, 'ISR', 'Bethlehem'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, manpower: 1000 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set, or mirror their triggers exactly.
@@ -1525,6 +1547,28 @@ export const BOOKMARK_1948 = {
           return best === me && count[me] >= 4;
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25 }),
+      },
+      {
+        id: 'hy_altalena', name: 'The Negotiated Flag', hypothetical: true,
+        fork: '1948ce/the_altalena',
+        icon: 'ship', col: 3, row: 3,
+        desc: 'When the Irgun\'s arms ship stands off Tel Aviv (June 1948), hold the '
+          + 'cannon\'s fire history ordered: the cargo comes ashore under a negotiated '
+          + 'flag, and the question of who commands stays open — on purpose.',
+        rewardText: '+20 martial points.',
+        check: (ctx) => anyFlag(ctx, 'altalenaAshore'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 20 }),
+      },
+      {
+        id: 'hy_shilumim', name: 'The Refused Ledger', hypothetical: true,
+        fork: '1948ce/the_shilumim',
+        icon: 'coins', col: 4, row: 0,
+        desc: 'When the shilumim come to the vote with the windows breaking (January '
+          + '1952), refuse what the Knesset signed: no payments, the austerity books '
+          + 'reprinted, and everything that stands standing unmortgaged.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'shilumimRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15 }),
       },
     ],
     JOR: [

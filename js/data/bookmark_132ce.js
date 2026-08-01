@@ -239,7 +239,7 @@ export const BOOKMARK_132 = {
     ],
   },
 
-  // Akiva's schools and the Nasi's war office (SPEC §191), which agreed for
+  // Akiva's schools and the Nasi's war office (SPEC §200), which agreed for
   // three years and are the two halves of every document the caves gave back.
   schools: { JUD: 'star_and_schools' },
 
@@ -544,6 +544,31 @@ export const BOOKMARK_132 = {
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
       },
+      // The war carried past the hills (SPEC §192): the revolt history kept
+      // landlocked and inland reaches for the sea and the legion's nest.
+      {
+        id: 'j2_the_coast', name: 'The Governor\'s Sea',
+        icon: 'ship', col: 1, row: 1, requires: ['j2_maul'],
+        desc: 'Take Joppa and Caesarea Maritima — the revolt history kept landlocked '
+          + 'reaches the sea, and the governor\'s own seat.',
+        rewardText: '+100 talents (the harbor customs), +10 legitimacy.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Joppa')
+          && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10 }),
+      },
+      {
+        id: 'j2_arabia', name: 'The Legion\'s Nest',
+        icon: 'horseshoe', col: 1, row: 2, requires: ['j2_aelia'],
+        desc: 'Take Medaba and Bostra — the base of the Arabian legion, so the next '
+          + 'column against the Nasi musters a province further away.',
+        rewardText: '"The Highway Cut": +1 hill-country defense for 36 months.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Medaba')
+          && ctx.helpers.controls(ctx, 'JUD', 'Bostra'),
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_highway_cut', name: 'The Highway Cut', months: 36,
+          effects: { hillDefBonus: 1 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -580,6 +605,28 @@ export const BOOKMARK_132 = {
         rewardText: '+25 influence points.',
         check: (ctx) => anyFlag(ctx, 'doubtSuppressed', 'doubtPreserved', 'doubtCanonized'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 25 }),
+      },
+      {
+        id: 'hy_nasis_letters', name: 'Mercy Is Also Policy', hypothetical: true,
+        fork: '132ce/the_nasis_letters',
+        icon: 'quill', col: 3, row: 3,
+        desc: 'When the Nasi\'s letters go out (winter 132), write the ones the caves never '
+          + 'held: the villages fed first, the chains left in the armory — and the other '
+          + 'ledger arrives two winters later, because mercy has a price in wheat.',
+        rewardText: '+15 legitimacy.',
+        check: (ctx) => anyFlag(ctx, 'lettersMercy'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 }),
+      },
+      {
+        id: 'hy_letters_east', name: 'The Letters East', hypothetical: true,
+        fork: '132ce/the_letters_east',
+        icon: 'diaspora', col: 4, row: 0,
+        desc: 'Answer 117 the way the land never did: send the letters east to Babylonia '
+          + '(133), and let the dispersion be counted in the Redemption — volunteers at '
+          + 'the smugglers\' fords, and a second question marching in behind them.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20 }),
       },
     ],
     ROM: [
@@ -714,6 +761,45 @@ export const BOOKMARK_132 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
+      // ── The chair's own reach (SPEC §196): what a restored client does
+      // with the second chance — hold the line Trajan crossed, guard the
+      // city where the captivity keeps court, and earn the sages' regard.
+      {
+        id: 'b2_fortress_that_refused', name: 'The Fortress That Refused Trajan',
+        icon: 'walls', col: 0, row: 3, requires: ['b2_princes_companies'],
+        desc: 'Hatra threw the last emperor back from its walls while this house burned; '
+          + 'Singara watched his columns pass twice. Take both, and the desert line the '
+          + 'next Trajan must cross belongs to the client he would come to burn.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ['Hatra', 'Singara']
+          .every((n) => ctx.helpers.controls(ctx, 'ADI', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 'b2_court_of_captivity', name: 'Where the Captivity Keeps Court',
+        icon: 'diaspora', col: 2, row: 3, requires: ['b2_silver_redemption'],
+        desc: 'Nehardea sits ringed by the Euphrates and its own walls, the oldest Jewish city '
+          + 'of the east, and the silver the mint depends on crosses at its fords. Hold it, '
+          + 'and the captivity\'s own court convenes under the house\'s protection.',
+        rewardText: '"The Ford of the Captivity": +5% trade permanently, +10 influence points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ADI', 'Nehardea'),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'ford_of_the_captivity', name: 'The Ford of the Captivity', months: -1, effects: { tradeMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 10 });
+        },
+      },
+      {
+        id: 'b2_houses_of_study', name: 'The Houses of Study',
+        icon: 'scroll', col: 1, row: 2, requires: ['b2_wisdom'],
+        desc: 'The generation the war scatters will carry the Law east, and the academies it '
+          + 'founds will need patrons before they have names. Reach Influence 7 — The Sages\' '
+          + 'Blessing — and the house\'s table is where the scholars eat.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).infl | 0) >= 7,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_mint_of_redemption', name: 'The Mint Reads Redemption', hypothetical: true,
@@ -726,6 +812,18 @@ export const BOOKMARK_132 = {
         check: (ctx) => anyFlag(ctx, 'redemptionEra')
           && !!(ctx.game.tags.ADI && ctx.game.tags.ADI.alive !== false),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 }),
+      },
+      {
+        id: 'hy_letters_reach_east', name: 'The Letters Reach the East', hypothetical: true,
+        fork: '132ce/the_letters_east',
+        icon: 'quill', col: 3, row: 0,
+        desc: '115 was the dispersion\'s war without the land; 132 is the land\'s without the '
+          + 'dispersion. If the Nasi\'s letters cross the Euphrates this time, they are read '
+          + 'aloud at Arbela first — and the house that buried Trajan\'s war answers with the '
+          + 'lances it rebuilt from Median stock.',
+        rewardText: '+20 martial points, +1,000 manpower.',
+        check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 20, manpower: 1000 }),
       },
     ],
   },

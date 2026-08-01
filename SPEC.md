@@ -85,9 +85,14 @@ DEFINES = {
     AGR: {name:'Kingdom of Agrippa II', color:[214,120,120], religion:'judaism', culture:'galilean', capital:'Caesarea Philippi'},
     REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
     WASTE:{name:'Wasteland',      color:[70,66,60]},
+    // every tag also carries adj:'Roman'|'Judaean'|'Israeli'|… — the adjective the map
+    //   names its foreign holdings with (SPEC §5.6, §199). No rule derives Dutch from
+    //   The Netherlands, so it is declared, here and in any chapter `tagTweaks` rename.
     // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
     //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
-    //   description:'one-liner for start screen / tooltips'
+    //   description:'one-liner for start screen / tooltips',
+    //   homeRegion:'Italy' — where the court's own name belongs when its capital is
+    //   deliberately somewhere else (ROM plays from Antioch, UK from Cyprus)
   },
   BASE: {  // balance constants, sim reads these — defines agent sets sane values
     regSize:1000, regCost:{inf:10, cav:25}, maintPerReg:0.35,
@@ -111,6 +116,9 @@ DEFINES = {
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
   provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
+  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§199: the named
+                                        // lands. A PARTITION of provinces — every cell in
+                                        // exactly one region; labels read it, the sim never does
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
            lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
   rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
@@ -147,7 +155,9 @@ Galilee dome, Carmel, Jordan rift basin (Galilee→Dead Sea→Arabah), Edomite p
 `validateMapData()` → array of warning strings (empty = ok). Must check: every seed lands
 inside a land polygon (point-in-polygon), seeds ≥ 6 map-units apart, every `owner` is a known
 tag, every terrain/good/religion/culture key exists in the pinned DEFINES key lists (hardcode
-the key lists locally to avoid importing defines), extraLinks names resolve.
+the key lists locally to avoid importing defines), extraLinks names resolve, and `regions`
+partitions the province table (no cell in two regions, none in none, no region naming a cell
+the atlas does not have).
 
 ### Canonical province table (names are EXACT strings; content agent references them)
 
@@ -293,9 +303,18 @@ Chips, arrows and picking all share the interpolated position.
 
 `{ update(ctx, camera, mapmode) }` — ctx may be null pre-game (then clear). Absolutely
 positioned divs in `#labels-layer` (pointer-events:none). Zoom ≥ ~1.1: province names at
-centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: tag
-names (owner-weighted centroid over owned provinces, size ~ sqrt(total area), letter-spaced
-serif caps in darkened tag color). Recompute cheaply every call (N≈100); reuse divs.
+centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: nation
+names, letter-spaced serif caps in darkened tag color — **one per region a court holds**
+(`MAP_DATA.regions`), not one per court. The court's own name goes over its home region
+(`TAGS[tag].homeRegion`, else its capital's region, else its largest part); every other part
+reads `"[TAGS[tag].adj] [Region]"` — Judaean Greece, Israeli Britain, Hasmonean Egypt — in the
+`.mlabel-part` tier. Each part anchors at the pixel-mass centroid of the largest cell near that
+part's own centre of mass, never at the centre of mass itself: an average of a coastline is
+water (SPEC §199). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
+survives at whole-map zoom; parts size by their own area and hide below a higher floor. Also
+exports `tagLabelParts(ctx, geom, MAP_DATA) -> [{tag, region, home, text, x, y, area, realm,
+color}]`, the same placement with no DOM (the harness reads it). Recompute cheaply every call
+(N≈300); reuse divs.
 
 ## 6. Sim package — `js/sim/*` (one agent; public API pinned, internals free)
 
@@ -10699,7 +10718,819 @@ quarrel lands on a number the player watches every month.
   record, both approvals, the modifier, the settled row and the needle —
   with no page errors.
 
-## 191. Every chapter argues about something
+## 191. Every arm has a face, a gait, and a weakness
+
+Two arms, and one of them was a costume. `cav` was a 25-talent infantryman
+that happened to be called Cataphract Horse; it moved at the same pace as
+the foot beside it, hit with the same math, made the same noise, and wore
+the same banner. §181 noticed half of this and made the 1948 mounted arm
+into armor with a price and a shock-phase quantity — but a Sherman battalion
+and a squadron of Noble Cavalry were still, mechanically, the same unit with
+different names, and neither of them had a picture. The counters said `12k`
+and nothing else. This section gives the land war a **roster**: three arms,
+six patterns each, eighteen soldiers with faces, gaits, sounds, and a
+triangle they answer each other in.
+
+### The three arms
+
+| | what it is | pace | speaks in |
+|---|---|---|---|
+| `inf` | **the foot** — the line | 1.0 | holding, and braking a charge |
+| `cav` | **the mounted** — the shock | 1.25 | the shock phase |
+| `art` | **the shot** — the missile | 0.85 | the fire phase |
+
+`art` is the new one, and it is not "artillery" — it is *the missile arm*,
+which every century on this map had: **Slinger Bands** (the shepherd's arm,
+and Judaea's own), **Archer Companies**, **Bolt Engines** (the legion's
+scorpiones), **Naphtha Crews** (the siphon, and fire that water does not put
+out), **Field Batteries**, **Gun Regiments**. The foot and horse columns
+were already written (§22's `UNIT_GENS`); the shot's names sit beside them
+in the same table, and `js/data/units.js` owns what an arm can *do*.
+
+### The triangle
+
+The phase clock already implied it. The shot speaks in the fire phase, the
+charge in the shock phase, and the foot's business is standing there while
+both happen:
+
+> the shot breaks the line · the line brakes the charge · the charge rides
+> down the shot
+
+Scored as a matchup table over each side's arm **shares**, once per phase,
+each side reading its own row — so an edge is never double-counted, and a
+host of guns and a host of horse can both be earning pips in the phase that
+belongs to them. Floored and capped (`ARMS_TRIANGLE.scale`, `.cap`): two
+ordinary balanced hosts read **zero**, because a mix has to be a real
+commitment before the dice notice it. A pure spear wall against pure horse
+is +2 in shock; three archers in ten against a formed line is +1 in fire.
+
+**One exception, and it is the whole twentieth century.** At pattern 5 the
+mounted arm is armor (§181), and armor does not lose to a braced line — a
+rifle company does not stop a Sherman by forming square, so the foot's +1.6
+against horse becomes +0.2 against tanks, and armor's own shock row replaces
+the horse's. Armor's three counters are named instead:
+
+- **the guns**, and this one is a *count*, not a share — four anti-tank
+  regiments against four tanks is four anti-tank regiments against four
+  tanks, whatever fraction of the army they are. Every `atPer` engaged
+  tanks (never more tanks than we have guns for) is a fire-phase pip, to
+  `atCap`. §181's design language, pointed the other way.
+- **the sky**, which §154 already built and this section did not touch.
+- **the ground**. `MOUNTED_TERRAIN` takes the charge away from cavalry in
+  hills, mountains, marsh and wasteland — and takes more of it from armor,
+  because a tank that cannot go around a mountain is a pillbox burning
+  fuel. It cuts §181's armor pips at the call site as well as the triangle,
+  so the whole armor advantage answers to the map it is standing on.
+
+§181's `armorPips` is untouched and still answers "who has more tanks"; the
+triangle answers "what is each side's army FOR". They are deliberately
+different halves, and the battle window prints them on separate lines.
+
+### The gait
+
+A column marches at the pace of its **slowest arm**, multiplied into §25's
+pattern speed. Pure horse outruns the same men walking by a quarter; put one
+gun battery in and the whole column gives back a sixth. Over a typical hop
+that is four days for horse, five for foot, six for a gun train. This is the
+first time in the game that what an army is made of changes where it can be
+tomorrow — and it is the reason a raiding column and a siege train are now
+different objects rather than the same object with different labels.
+
+The magnitudes are deliberately modest, and that was measured rather than
+guessed. The first draft priced the shot at 0.75, which meant that once the
+AI's establishment held its 10% of guns, nearly every stack in the world
+contained one and nearly every army everywhere marched a quarter slower —
+a global throttle on AI campaigning dressed up as a unit trait. `smoke79`
+caught it: the 66 CE thirty-year run reached its ending a beat later and
+left Jerusalem in a band's hands at the snapshot. A tradeoff a player feels
+when they attach the guns is the goal; a tax on every march in the game is
+not.
+
+### The face
+
+Eighteen silhouettes, authored once as path data on the 24×24 grid
+`icons.js` already uses, and drawn twice: `new Path2D()` on the map's canvas
+and `<path d>` in the panels. A Drilled Spearman on a recruit button is the
+exact shape that will fly on that regiment's standard.
+
+|  | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| foot | club & hide shield | **spear** & round shield | gladius & scutum | kite shield | crossed muskets | crossed rifles |
+| horse | **horse's head** | head & lance | barded cataphract | couched lance | head & sabre | **tank** |
+| shot | whirling sling | drawn bow | bolt engine | siphon & flame | cannon | gun & split trail |
+
+The standard carries the face of the arm that **leads** the host — and that
+is deliberately not "most regiments". Every real army in this game is mostly
+foot, so a plurality rule would put a spear on every standard in every
+century and the tank glyph would never once be drawn. A host that is 30%
+horse IS a cavalry host (that arm decides its battle and sets its pace); a
+host that is 35% guns is a gun line; foot leads everything else, which is
+most things, which is correct. The exact composition is always one hover
+away — outliner row, unit inspector, battle window.
+
+### The sound
+
+The move order and the battle both make the noise of the arm that leads.
+Same two primitives the rest of `sound.js` uses — a shaped noise burst is a
+footfall, a hoof, or a track link; a held low sawtooth is an engine:
+
+- **marching**: tramping feet · feet under a drum (musket age) · boots and
+  a truck somewhere off (modern) · a four-beat canter of **hooves** ·
+  **diesel and track clatter** (armor) · creaking timber and rope (engines
+  on ox-carts) · a tractor and the trail dropping on the hook (limbered guns).
+- **going in**: iron on iron · hooves into a horn and then the crash of
+  contact · slings whipping and stones on shields · the torsion ratchet and
+  release · ragged rank fire · magazine rifles and a machine gun down the
+  line · guns firing in battery · engines under a high-velocity crack.
+
+You hear your **own** side's arms — the map is full of other people's
+marching, and a battle we are not in keeps the old clash of iron.
+
+### What did not change
+
+Every antique chapter caps at pattern 3, so no cataphract, no dragoon and
+none of the seven tuned campaigns can see an anti-tank gun or a tank. The
+save format gains one key: `regiments.art`, absent on every older save and
+read as the zero it always was (`reviveGame` writes it in so a save
+round-trips whole). §181's prices, gates, pips and its whole regression
+contract are untouched.
+
+- **Regression contract**: `smoke122` — the roster is three arms deep with
+  a distinct name, glyph and cue for all eighteen patterns and no glyph
+  shared by two; the triangle scores spear-vs-horse, horse-vs-shot and
+  shot-vs-line in the right phases and reads zero for balanced hosts;
+  armor beats unsupported foot, the braced line stops being an answer to
+  it, the guns answer it by count, and broken ground cuts both the
+  triangle and §181's own pips; a column marches at its slowest arm and
+  `hopDays` agrees; recruiting, splitting, merging, reinforcing and the
+  AI muster all round-trip three arms; the lead-arm rule puts the tank on
+  a host that is a third armor and the spear on one that is not; a real
+  1948 battle carries `mixA`/`mixD` in the right phases while §181's
+  `armA`/`armD` keep their own meaning; the march order emits the leading
+  arm's cue once, and 1948's armor pulls out on an engine; and a pre-§191
+  save loads with no guns rather than a crash. `smoke103` (§154) needed its
+  source-text pin widened: it spelled out the whole `docA` sum, so adding a
+  fourth term to that line read as a regression. It now ends at `airA` — the
+  claim it exists for is that air rides the roll unconditionally, not how
+  many neighbours the term has, and the narrowed pin still fails the moment
+  `airA` is made phase-conditional again.
+
+## 192. The heavy chapters take their turn — the cannon, the granaries, and the letters east
+
+§187 thickened the thin trees and left the three heaviest chapters alone,
+because five test files pinned their mission tables and the risk budget
+was spent. This section is the other half of the pass, done deliberately:
+the Great Revolt, Bar Kokhba and 1948 get the same treatment — six forks,
+six expansion branches, six roads-not-taken — and the pins move with the
+feature, which is what pins are for.
+
+**Three decisions were already forks and never said so.** `ev_menahem` set
+a marker when the pretender lived and nothing when history won;
+`ev2_letters` — the Nasi's own surviving words, wheat under requisition
+and chains promised — recorded neither the iron nor the mercy;
+`ev_i_altalena` sank or landed the Irgun's rifles without writing either
+afternoon down. All three now mark both roads, carry their `historical`
+line, and close: the daggers are reckoned with when the state finally
+decides what Masada is to it (fold the knife-men in, or let the rock keep
+its own Passovers), the letters are billed two winters later by whichever
+delegation the road produced (the weary districts, or the quartermasters
+with the other ledger), and the Altalena is answered in 1953, when the
+founding story has become policy — commissions for the men the cannon
+fired on, or the old undergrounds keeping their own tables.
+
+**Three questions the chapters never dealt.** The granaries of Jerusalem:
+Josephus says the stores could have outlasted years of siege and that the
+factions burned them fighting each other — the famine of 70 was paid for
+in advance, by the besieged. The fork seals them under one guard with a
+published ledger, or lets each faction feed its own; the terminal reads
+the decision back when the ring closes, and a city that sealed its stores
+is a different siege problem. The letters east: 115 was the dispersion's
+war without the land, 132 the land's without the dispersion, and nobody
+knows why the second held back — so the chapter can now send the letters
+Babylonia never got, and then answer the harder question that marches in
+behind the volunteers (citizens or guests?). The refusal road is one card
+long by design, on the 167-charter precedent: the historical silence,
+kept on purpose, is the end of the question. And the shilumim: the
+January 1952 vote with the windows breaking — the hardest major decision
+in the state's first decade, and the game never dealt it. Sign at
+Luxembourg and build the second decade on transfer goods the square never
+forgives, or refuse and reprint the austerity books for a principle;
+seven years later the official history has to put a sentence over the
+ledger either way. The Eshkol succession card learned to check the road:
+on the refusal there is no reparations economy for the treasurer to
+inherit, so the boom modifier now guards on the marker instead of
+assuming 1952 went the way it went.
+
+**The expansion the wars reached for.** Six branches, every target the
+era's own grievance: the Revolt answers the cities that slaughtered
+their Jews in the first month (Scythopolis, Gadara, Pella) and brings
+the client king's country into the rising (Gamala, which had already
+chosen); Bar Kokhba reaches the sea history denied him (Joppa and the
+governor's own Caesarea) and burns out the Arabian legion's nest (Medaba,
+Bostra); Israel clears the strip to Rafah and takes the Hebron hills
+Allon begged the cabinet for in October 1948. All `controls()` checks
+over provinces the tag does not start with — verified against the 66
+base map and the §63 invasion lines, which is how Machaerus (merged away
+since §47) and Gadora (the revolt's own Perea) were caught and kept out
+of the 132 target lists.
+
+**The pins moved with the feature.** smoke2 (fifteen at 66 and at 132),
+smoke112 (fifteen), uitest2 (fifteen medallions in the browser), and
+smoke111 — whose index arithmetic is the load-bearing one: ten
+objectives, hypotheticals from index ten, the §188 forks' medallions
+standing OPEN at boot beside the chain's own root, because they are
+roots (their markers imply no parent road), and the cols/rows vectors
+extended with the new seats. smoke16's raw index into the 132 table
+still lands the Third House at five untouched, because every insertion
+came after seven. smoke116's worlds set the six new markers — the
+pretender lives, the stores sealed, the mercy written, the dispersion
+called, the cargo ashore, the ledger refused — and all fifty-one roads
+not taken pay.
+
+- **Regression contract**: `smoke83` — 127 roads, six new forks' markers
+  written by live cards, all six terminals present, the one-card refusal
+  road declared terminal-equal-entry, no new gaps. `smoke117` — the six
+  new entries badge. `smoke85`/`smoke39`/`smoke48` — every new card
+  two-optioned with per-option marks, aiOption pinned to the historical
+  course, and no decider that dies cold.
+
+## 193. The peace they signed is not the peace we signed
+
+`helpers.endWar(a, b, …)` names two courts and dissolved the whole war standing
+around them. Six chapters never noticed, because in six chapters the two courts
+named *were* the war. The 614 chapter is the one where they are not: the Return
+fights Byzantium on Persia's side, and in February 628 Kavad II murders his
+father in a dungeon, buys his throne with a white peace, and the engine marched
+Judaea out of a war it had not lost, had not signed anything to end, and was
+holding Jerusalem in. The report was shorter than the diagnosis — *when another
+country white-peaces we should still be able to stay in the war* — and it is
+the whole rule: a scripted peace binds the courts that signed it.
+
+**The two courts settle their own fronts and nobody else's.** Occupations
+between them revert, or the sword keeps what it holds and its own country can
+reach (§116, §174 — the settlement's territorial half is now one function,
+`settleFronts`, called by both roads). A five-year truce binds the departing
+party — the court and the clients that came in under its banner — to every
+court on the side it leaves, the `_settledWars` ledger records those pairs so
+stale cards of their war retire, and every other front keeps its lines. Judaea's
+own conquests are not handed back at somebody else's table, and are not annexed
+at it either: a treaty Persia signs cannot give Persia the towns Judaea stormed.
+
+**Who goes home is arithmetic, not authorship.** A court leaves when the
+settlement has emptied the far side of its enemies. Persia's only enemy was
+Byzantium, so Persia goes; Byzantium still faces Judaea, so Byzantium stays,
+and the war it stays in is the one it was already fighting — same object, same
+name, one belligerent lighter. Both leave when the war was only ever these two,
+and it dissolves exactly as it always did, which is why the other six chapters'
+terminal cards (Antioch, Rome-sues, Hadrian's tributary prince) are untouched:
+Agrippa is Rome's client and goes home under Rome's banner, so the 66 CE war is
+a pair even at three names. And when *neither* can leave — each still faces
+courts it has not settled with — the whole war ends, because nothing here can
+hold one court at war and at peace with the same coalition, and that is where
+this function came in. No content hits that case; the fallback exists so an
+unforeseen one degrades to the old behavior rather than to a new bug.
+
+**What is left is not the war the great powers were fighting.** The battle
+ledger (`_bs`) and the scripted swings (`eventScore`) went home with the courts
+that earned them — Nineveh is not a defeat Judaea suffered — and the war goal
+lapses if the departure took one of its principals. A fight to the death
+(`noNegotiation`) was the signatories' oath to swear and theirs to break: the
+courts that stayed may send envoys. What the armies actually hold still counts
+for everything it did, because occupation score is read off the map and not out
+of a ledger. So the court that stayed inherits the pen (`sideLeaderOf` promotes
+it), gets the full congress rather than a junior's withdrawal (§74), and can
+fight on or sue for peace — which is the agency the report asked for, in both
+directions.
+
+**Rhodes was four agreements, not one.** Egypt in February, Lebanon in March,
+Jordan in April, Syria in July: the armistice card used to spend a single
+`endWar(EGY, ISR)` on the whole coalition, which under this rule would have
+released Egypt and left five courts in the field. It now walks the war's own
+enemy list and initials one map per delegation against the same 1949 line, and
+the last signature is the one that ends the war. Every other multi-court script
+in the tree was already written this way — Agranat's disengagement loop, the
+Suez withdrawal, the Lebanon settlements, each guarded by its own `findWar` —
+and they now do what they always read as doing: strike exactly one court per
+call.
+
+- **Regression contract**: `smoke123` — Persia goes and the Return keeps the
+  war, the truce and the reverted occupations are the signatories' alone, the
+  Return's own front is untouched, the remnant's ledger is cleared and its
+  table is a full congress; the Rhodes loop strikes one court per call with the
+  other fronts keeping their lines; a bilateral war still ends whole; the sword
+  cuts only between the two parties; clients go home under their crown; and the
+  unseparable pair still ends the whole war. `smoke23`/`smoke82`/`smoke20` —
+  the 1949 lines, and the courts they leave at peace, are exactly what they
+  were. `smoke59` — clearing the 614 stage now takes a settlement per pair,
+  which is the feature seen from a test's side.
+
+## 194. The sea has a western half
+
+§172 put twenty communities on the board and called the windows load-bearing,
+and both claims held. But look at where the twenty stood: ten east of Cyprus,
+five in Egypt and Cyrenaica, four on the European shore — Rome, Salonica,
+Corinth, Byzantion — and **nothing at all west of Sicily**. The dispersion
+this game modelled was the eastern one, which is the half its chapters march
+through; the Mediterranean one, the half that made "Greek-speaking Jew" a
+category, was four cells deep on a map that has since grown to hold the whole
+sea (§160, §173).
+
+The period's own documents enumerate what was missing, and they are address
+lists. When Simon's envoys came home in 139 BCE, Rome circulated a letter to
+the free cities commanding that the Jews be left in peace, and 1 Maccabees 15
+prints the addresses: Sparta, Rhodes, Gortyna, Caria, Pamphylia, Cyprus,
+Cyrene. Agrippa's letter in Philo (Legatio 281-2) makes the same survey a
+century later: Pamphylia, Cilicia, Attica, Argos, Corinth, Euboea, Crete. The
+game held the eastern half of the address book and its own sources kept
+printing the western half.
+
+**Fifteen entries** (`js/data/diaspora.js`), same schema, same rules, each
+keyed to a canonical cell that already exists and answers for every era:
+
+- **Asia Minor** — Tarsus (the third Antiochus' garrison colonists, and a
+  Jewish son who writes letters to three other communities on this list) and
+  Smyrna (citizens of Ionia since Antiochus II, to the Greek cities' standing
+  fury).
+- **Greece and the islands** — Athens, Sparta (the Kinsmen: Areus' letter to
+  the High Priest claiming shared descent from Abraham, renewed by treaty,
+  and the refuge where the deposed Jason came to die), Rhodes and Gortyn,
+  both named in the consul's circular.
+- **Italy and Sicily** — Capua (Campania, where the east steps ashore: the
+  grain fleet, Puteoli's congregations, the Jews who held Naples' walls
+  against Belisarius in 536) and Syracusae (the painted catacombs, and more
+  papal letters than any governor got).
+- **Africa west of Cyrene** — Carthago (no Punic community attested, so the
+  window opens with the captives of 70 — four years into the Great Revolt's
+  own chapter, which is when the story says the west received them), Oea,
+  Cirta, Volubilis (the farthest west: a rabbi's daughter's Hebrew epitaph at
+  the edge of the inhabited world).
+- **Sepharad and Gaul** — Corduba (attested the way the west attests things,
+  by legislation against them: Elvira's canons around 305), Massilia (twice a
+  Gregory: the refugees of 576, the rebuke of 591), Narbo.
+
+**The windows do the era-work, as §172 demands.** Four kinds of close, none
+of them decoration. The Aegean deportations of 1944 shut Rhodes (the last
+boats of July) and Crete (the Jews of Chania, entire, torpedoed on 9 June)
+beside Salonica's 1943 — the 1948 map hatches all three from its first day.
+The expulsions close the Latin west centuries before the modern chapter:
+Narbonne 1306, Sepharad 1492, Sicily 1493, Naples 1541 — so the 1948
+dispersion map draws that whole shore as memory, which is §175's hatch rule
+doing exactly what it was built for. The Maghreb closes the way §176 closed
+the east, one date per flag, each the year the community actually went:
+Tripoli 1952 (the Iraq rule applied west — the pogroms, then thirty thousand
+sail and independence closes the gate on a remnant), Constantine 1962 (French
+citizens by decree; when France goes they go with it, in one summer), Tunis
+1967 (the exodus of independence made final the week of the June war). And
+four windows stay open on the file's own anti-tidiness rule — Smyrna, Athens
+(half the community survived on papers the police chief and the archbishop
+forged, and 1948's writable Greece is Athens, not Salonica), Massilia (in the
+1948 chapter the port is the departure's own pier), Volubilis (Morocco, the
+one community of the Arab world that never entirely goes). Two closes land
+*inside* long campaigns the way 117 does: Sparta goes out with Alaric at 396
+under a Bar Kokhba continuation that runs to 430, and Tarsus goes out at 650
+under a Persian-Gambit continuation that watches the Arab wars empty Cilicia.
+
+**What each chapter feels.** 167 BCE opens with 18 communities instead of 13
+and reaches 29 over its span instead of 20 (`smoke109` re-pinned, with the
+arithmetic in the margin). 132 CE regains a Mediterranean: the Kitos War
+took Alexandria, Memphis, Cyrene, Berenice and Cyprus off the board in 117,
+which used to leave Bar Kokhba a dispersion that was all east — but Asia
+Minor, Greece, Italy and Africa were exactly the communities the rising of
+115 did not burn, and now they are there to write to. The Byzantine chapters
+double, 14 to 28, and the new west is their own sixth century — Justinian's
+Africa, Gregory's Sicily, Sisebut's Spain forcibly baptizing the very
+community the 614 player can write to, which is §172's hostage problem with
+a date on it. 1948 goes from 13 writable communities to 20, and the seven
+new ones are the Maghreb and the survivors — the actual reservoir of the
+state's first decade — while the hatched Aegean and the hatched Latin west
+say what the map should say.
+
+**What deliberately did not change.** No rule, no ask, no yield: fifteen rows
+of data through the §172/§175/§176 machinery, sizes 1-3 all (nothing new
+rivals Alexandria or Babylon — the centre of gravity stays east, which is the
+history). `DEFINES.DIASPORA` — §133's *territory* list, the cells a "every
+Jewish province" peace clause must not hand over — is untouched, because
+none of the new cells carries `judaism` as its map religion. The Kitos fire
+list (`events_66ce_after.js`) is untouched, because the new communities are
+the part of the dispersion that did not rise. And the all-AI harness cannot
+see any of it: the dispersion is player-only (§172), `initGame` never reads
+the table, and `node tools/autorun.mjs 4 66ce` / `4 1948ce` before and after
+the change are **byte-identical**, anomalies and all.
+
+**Not overpowered, measured.** The whole new set, farmed on every cooldown at
+theoretical maximum, gathers 0.6-2.1 talents a month of silver by chapter —
+**2-7% of gross income where the crown is solvent** (67 BCE 2%, 40 BCE 7%,
+66 CE 7%, 1948 4%); the pauper chapters' larger shares are shares of gross
+incomes of 2-6 talents and are dominated by the *old* set regardless
+(Alexandria alone, at dev 28 × size 5, out-earns the whole new fifteen). The
+war chapters cannot farm what they gained: every 66/132 addition is
+Rome-hosted, the war bar (need +15) sits above the new opening standings
+(40-50) for silver and men both, and the standing target a Roman-hosted
+community drifts toward while the war runs (start − 25, ~30) sits below even
+the letters bar — one opening letter each, then they sink under it, which is
+§172's hostage design doing its work. 614's west doubles but splits: the
+Byzantine-hosted majority is war-locked the same way, and the farmable
+remainder under the Lombard, Visigothic, Moorish and Frankish crowns
+sustains about one talent and two influence a month — a wider lifeline for
+the chapter that is *about* the lifeline, not a break. And no new community
+anywhere sends its sons on day one: the volunteer bar is 55 and every new
+start is 40-50, so the men have to be earned across years of standing.
+
+- **Balance pins** (in `smoke124`, so the envelope survives future edits):
+  no new community outranks size 3 or opens above 50 standing; the seven
+  Rome-hosted additions refuse silver at 66 CE opening standing; and no new
+  community will send men on day one, at 66 CE or in 1948.
+
+## 195. A community with no cell is written to from its host's own court
+
+§194 widened the sea and stopped at the map's edge, and the 1948 chapter's
+two biggest hosts sit past it. England is ON the map — Londinium is a live
+cell named London — but its community's window opens at the 1656
+Resettlement, twelve centuries after the last chapter that could have
+clicked it, so §194's sweep never reached it. And the United States is not
+on the map at all: the frame ends at the Atlantic, and Truman's court is an
+off-map seat in the ledger (§180) — which in 1948 hosts **the largest Jewish
+community there has ever been**, the one that filled the appeal, ran the
+procurement network, crewed Machal and had Truman's ear. A dispersion model
+of 1948 without American Jewry is not a model of 1948.
+
+**The seat is the new idea; everything else is §172 unchanged.** A diaspora
+entry now names exactly one seat: `prov` (a cell, as before) or `tag` (a
+court — SPEC §195). A court-hosted community stores its standing on the host
+tag the way a cell community rides its province, drifts on the same monthly
+rule toward the same target arithmetic (`standingTargetFor` — the host is
+named instead of read off an owner), offers the same four asks priced by the
+same table, and answers the same crown test: Jewish, human, alive. Silver is
+dev-pegged (§176) and a court has no cell to read, so a tag entry carries a
+stand-in `dev` — America's is 40, the richest host on the list, pricing one
+gathering at 80 talents on the five-year clock: real money beside §186's
+government credits without double-writing them, because the appeal and the
+Export-Import Bank were different purses in fact. The reprisal roll stands
+too, and lands where a reprisal can land: a cell community's province takes
+the unrest; a court community pays on the ledger — standing, and the host's
+regard — which is what the seized ships and indicted buyers of the
+procurement network actually cost. Two entries use it: **The Jews of London**
+(Londinium, size 3, from 1656 — an ordinary cell seat whose window simply
+starts late) and **The Jews of America** (tag USA, size 5 — the one peer
+Alexandria ever gets, from 1880).
+
+**The panel is where §180 already keeps an off-map power's envoys.** A
+foreign court's Abroad tab grows a **Dispersion** section, Jewish crowns
+only (the sim returns null for everyone else and the section hides): a
+court-hosted community renders its full §172 block there — standing bar,
+drift target, the four asks as buttons — because there is no cell to click;
+a community living on that court's soil renders as a row naming it and its
+standing, and clicking the row runs the same selection a map click makes, so
+the nation panel closes and the province panel's existing block does the
+work. Nothing is written twice. The section is generic, which is the quiet
+payoff: Attlee's Britain lists London beside **Tripoli — because the
+British Military Administration really did hold Tripolitania in 1948** —
+France lists Marseille, Tunis, Constantine and Morocco, and in 66 CE Rome's
+own panel becomes a census of the communities the revolt is gambling with.
+
+**The Machal exception, deliberately.** §194 pinned that no new community
+sends men on day one. America does: it opens at 60, past the volunteer bar,
+because the flyers and gunners of 1948 really did come off those docks while
+the State Department's embargo stood. It is a single shot — the ask spends
+20 standing, the recovery is years, and the clock is 48 months — and it is
+the entry's whole opening argument: 2,100 men, once, when the war is new.
+Everything else obeys the §194 envelope: London opens at 45 under Bevin's
+government and will not send men or silver on day one; America's silver is
+80 talents once per five years against a 28-talent monthly gross; the
+intercession is +30 regard with Washington on a three-year clock, priced at
+15 influence and a 20% chance of scandal — a slow historical lever toward
+§186's aid bar and the arms threshold, not a faucet. And the all-AI harness
+still cannot see any of it: `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after, anomalies and all.
+
+- **Regression contract**: `smoke125` — the two windows touch 1948 and no
+  other chapter; the tag seat answers the nation panel with provId 0 and
+  four asks; silver is the stand-in dev × size; Machal arrives on day one
+  and cannot be repeated; London refuses its sons; a forced reprisal drops
+  Washington's regard and touches no province anywhere; the diaspora report
+  addresses America by its host; Egypt's letters are refused at the door;
+  and the panel wiring (Dispersion section, `askTagCommunity` buttons, jump
+  rows through `setSelectedProv`, the Compendium's "under" label) is pinned
+  at the source. `smoke124` — the §194 pins re-pinned for the two new seats
+  (37 entries, exactly one seat each). `smoke109`/`smoke110`/`smoke106` —
+  unchanged and green.
+
+- **Regression contract**: `smoke124` — every entry's cell exists on the map
+  (the table finally has a typo guard), the fifteen windows are pinned date
+  by date, the Punic gap holds (no community under the 167 chapter's living
+  Carthaginian court, a community from 70), Sparta answers 66 and 132 and is
+  gone before the Keepers, 529 opens at 28, the 66 CE panel serves Athens
+  and the Kinsmen four asks each, the 1948 Maghreb goes out 1952/1962/1967
+  in play while Volubilis still answers in 1975, the 1948 map hatches
+  Rhodes, Crete and the expelled west while Marseille and Morocco read as
+  living, and the §172/§176 pins (117, 1952, five sizes at 66 CE) hold.
+  `smoke109` — the 167 BCE era-page counts, re-pinned 13→18 and 20→29.
+  `smoke110`, `smoke106` — unchanged and green: the east's dates and the
+  ask machinery are exactly what they were.
+
+## 196. The chairs take their turn — the client trees grown
+
+§185 seated five client chairs — Adiabene in 67 BCE, 40 BCE, 66 CE and
+132 CE, Agrippa II in 66 CE — and gave each the minimum kit: six
+objectives, the curriculum pair, one or two roads not taken. Then §187
+thickened the thin principal trees, §192 the heavy ones, and both passes
+walked around the chairs on the §187 risk-budget logic. Re-run the census
+after §192 and the shape is backwards a third time: the principals stand
+at seven to eleven objectives with three to seven roads apiece, and the
+sides added *specifically so somebody would play them* still ask six
+questions each — not one of them a conquest, every tree finishable
+without ever marching past the start screen's own provinces. The §187
+sentence applies verbatim: the side the player finishes fastest is
+exactly the one that needs more reasons to keep playing it.
+
+Same grammar, five chairs, one deliberate restraint: **three branches and
+one or two roads each** — fifteen objectives and six roads in all — and
+§185's own rule kept throughout, *no new fork charted*. The trees grow by
+riding what the chapters already ask, which is why `chapter_paths.js`,
+`smoke83` and `smoke117` do not move at all.
+
+**The expansion the east actually reached for.** Every conquest branch
+is a `controls()` check over ground the chair does not start with, and
+every target is the era's own grievance seen from the east bank. 67 BCE
+picks Armenia's bones — Tigranocerta, where the house rode in Tigranes'
+train and watched Lucullus break the city, and Amida beside it — then
+swallows the sister client house at Edessa and Carrhae, gated on the
+King of Kings' full regard, because a door needs one keeper and Osrhoene
+is the other. 40 BCE takes Tyre: Pacorus took Syria to the sea's edge
+and the island alone refused the tide, so the client that delivers it
+finishes the overlord's war for him. 66 CE guards the half-shekel at its
+source — Josephus banks Babylonia's Temple silver at Nehardea and
+Nisibis until the escort of ten thousands can ride, the house owns one
+treasure-city and the branch asks for both. 132 CE holds the line Trajan
+crossed — Hatra, whose walls threw the last emperor back while this
+house burned, and Singara that watched his columns pass — and takes
+Nehardea again a chapter later, when the city ringed by the Euphrates
+is where the captivity keeps court. Agrippa retakes Chalcis, the crown
+Claudius gave him at twenty-one and the one he traded up from.
+
+**The court branches are the house's documented deeds.** The 40 BCE
+span holds the whole conversion story, so the chapter now asks for it:
+eight thousand lances mustered — enough to ride a fugitive King of
+Kings home to Ctesiphon as a king, which is the Artabanus affair as a
+mission — and 250 talents banked against the famine the queen mother
+will meet under a Nazirite vow, paying out as the lamp she set over the
+Sanctuary door. 66 CE raises her pyramids three stadia north of the
+wall (legitimacy at 80 while a Jewish court still stands to keep them)
+and arms the house beyond its tribute-book with the kinsmen who charged
+at Beth Horon. 67 BCE reconciles the two altars — stability at +2 in
+the court where the Magi count the sabbath lamps in the palace windows.
+132 CE reaches the era's Influence 7 rung, The Sages' Blessing, for the
+academies the scattered generation will found. And Agrippa's three are
+the reign's own arts: Berenice's grain contracts at Besara priced as a
+300-talent treasury, the advocate king's standing at Rome — asked at
++180, *past* devotion, because §185 starts the client at 150 and a
+mission must ask for something the boot state has not already paid —
+and the first crown above.
+
+**The roads ride the standing forks, and stay off the record.** Six new
+hypotheticals, every one a fork some principal already answers, read
+again from the client's chair: Crassus' shut doors mean the Nehardea
+deposits were never in the room he emptied (67); the order never given
+keeps an unpolluted address for prayers the house has not yet learned
+(40); the sealed granaries make the queen's charity the city's own
+habit, and Menahem alive makes two men in royal robes with one of them
+never crowned by anyone (66); the nation question reaches Agrippa's own
+synagogues either way it is answered, so his road completes on either
+marker of the all-alternate fork while the granaries and the robes pay
+only off the record; and the letters east are read aloud at Arbela
+first (132). `smoke116`'s worlds needed exactly one new marker
+(`speakerForTheNation`) — every other road pays off flags the §187/§192
+worlds already set, which is what riding standing forks buys.
+
+**The blind spot got its check.** Twice a two-nodes-one-cell collision
+hid in a second-playable tree because the live no-collision check boots
+one side per chapter (§187 found one by hand, §183 another). Every §196
+node declares col *and* row, and `smoke126` now derives the grid for
+**every playable side of every bookmark** — the check that would have
+heard both old collisions is finally standing where they hid. The
+chains stay append-only in both directions (new objectives after the
+last objective, new roads after the last road), so `missionsDone` keeps
+its §177 meaning and `smoke16`'s raw indices into the 132/614 principal
+tables never notice.
+
+- **Regression contract**: `smoke126` — the five chains at 11/11/12/14/11
+  with 2/2/3/4/2 roads, every §196 node dressed and seated, every
+  conquest target foreign at boot, nothing §196 accomplished on day one,
+  every new branch paying its declared modifiers when the forced world
+  arrives (the fords, the altars, the kingmaker, the lamp, the lances,
+  the escort, the pyramids, the ledgers, the captivity's ford), the
+  every-playable-side seat guard, and the off-record rule live: each new
+  road stays dark when only history's own marker is set. `smoke116` —
+  the worlds pay the six new roads beside the fifty-eight old ones, and
+  the append/spare-column/fork-naming statics cover the new nodes by
+  the same loops that covered the old. `smoke2`, `smoke3`, `smoke111`,
+  `smoke112`, `uitest2` — untouched and green, because the principals'
+  tables did not move by a single index.
+
+## 197. The estates can be asked
+
+§167 gave every party ground: a strength in every province, an influence
+share at court, a colour on the estates mapmode. And then it spent all of it
+on pressure. Influence scaled their boons and banes; a hostile party rioted
+its own provinces; the mapmode showed you whose country you were standing in.
+Every line of that runs one way — the estates lean on the crown. A player who
+spent thirty years keeping the Pharisees devoted got a passive modifier and a
+green bar, and the map that knows exactly where the Pharisees are strong
+answered no question the player could act on. The estates could be courted,
+appeased, offended and fought over, and they could never be **asked**.
+
+### Favor is a bank, approval is a mood
+
+`t.estateFavor` (SPEC §197, `js/sim/factions.js`) rides beside the approval
+table and heals beside it: 0-100 per seated party, seeded at 10, inherited
+through `succeeds` like the mood is (§127 — the crown's credit with the
+Hasideans did not expire when the record started calling them Pharisees).
+It fills monthly from the warmth band — devoted +1, loyal +0.5, content
++0.15 — and drains while the party is against you (discontent −0.5, hostile
+−1.5). It is deliberately NOT the approval number: spending approval to ask
+a service would make every ask an insult, cooling the very party that just
+did the crown a favor. CK's favors and EU4's estate loyalty live apart for
+the same reason.
+
+Asking spends the bank and nothing else. There is no cooldown table: favor
+accrues slowly enough that the bank IS the throttle (a devoted party funds
+one 30-favor ask roughly every two and a half years), and an ask that grants
+a timed modifier refreshes its own slot rather than stacking.
+
+### What they give is what their ground can deliver
+
+Every payoff is scaled by `influenceScale` — the party's development-weighted
+share of the realm against an even split, clamped 0.6-1.4 — which is the
+§167 number the estates mapmode paints. This is the line that makes the map
+a promise rather than a diagnostic: take the Greek coast and the
+Hellenizers' subscription is worth two-fifths more; lose the hills and the
+villages' levy thins. The panel prints the same arithmetic in words — the
+share, and the provinces where the party is strongest, named — so the row
+and the mapmode can be read against each other, and a "Their ground" lever
+on the Estates block flips the map to the estates mode directly (the
+mapmode bar follows the bus event rather than its own clicks, so the lit
+button cannot lie).
+
+Seven ask kinds (`js/data/estate_asks.js`, magnitudes authored once in
+`ASK_KINDS`): **coin** (months of the realm's income, at once — read off
+`t.income`, the tag's own cached ledger, so no import edge into the economy;
+`sacred.js` already imports this module), **men** (a share of maximum
+manpower, at once), **hands** (+income% for a year), **zeal** (+morale% for
+a year), **calm** (−unrest everywhere for a year), **blessing** (legitimacy,
+at once), **counsel** (monarch points of the party's own flavor). Two asks
+per party, authored id by id for all forty-six parties the eight bookmarks
+and the client chairs seat — the Cities Vote a Crown of Gold, the Kibbutzim
+Mobilize, the Legions' veterans re-enlist — with a generic fallback pair so
+a future chapter that seats an unwritten party degrades to plain words, not
+silence. A bookmark may also author `asks` directly on a faction def:
+content owns the politics, the engine owns the arithmetic.
+
+The gates live in one place (`askBlocker`, the same contract the
+appeasement lever keeps): approval above 40 — a party in despair will not
+hear the crown — favor above the ask's price, and the degenerate cases
+(full muster rolls, legitimacy at its height) refuse rather than waste.
+Player-only, like everything else at the court (§33/§34): AI realms keep
+their politics offstage, and the harness cannot feel any of it.
+
+- **Regression contract**: `smoke127` — the bank seeds, fills by band at
+  the pinned rates, drains under hostility and survives a save round-trip;
+  every authored ask pair is valid (known kinds, no duplicate kind in a
+  pair, every bookmark id covered); the ask spends exactly its price, pays
+  exactly what its tooltip promised (the payoff object serves both), scales
+  with the ground share, refuses below the approval floor and on an empty
+  bank, refreshes rather than stacks its modifier; the demand/appease
+  machinery of §34 is untouched beside it; and the AI hand shows no favor
+  table at all. `smoke18` — §81's ladder and §167's influence factor,
+  unchanged and green beside the new fields.
+
+## 198. The reforms come home to the Crown
+
+§188 moved the whole ideas block — the three universal reform trees AND the
+chapter's Ideas of the Age — onto Coin under the Technology ladders, and for
+half the block the argument was airtight: every era group is locked behind a
+NAMED RUNG of a ladder, the lock card names it in words, and the rung it
+names is printed directly above. One window, like EU4's.
+
+For the other half the argument was only symmetry. The universal trees are
+locked behind nothing: no rung opens them, no lock card names a ladder, and
+the one thing they share with the era groups — being paid in gov/infl/mar —
+they share with half the levers in the game. They are the realm's own
+constitution, enacted whenever the points are minted, and a player looking
+for them looked where the realm's own facts live: on Crown, beside faith,
+tongue, capital and government, where §175 put them in the first place.
+
+### The split
+
+The **Reforms** block returns to Crown (templated after The Chapters, its
+pre-§188 seat), carrying the three universal trees and their buy path
+(`data-idea`) with it. The **Ideas of the Age** become their own block on
+Coin, still templated directly below Technology — template order is render
+order, §188's own load-bearing rule — with the §179 tooltip on the block
+title and the same lock cards and buy path (`data-eraidea`). Each block owns
+its own host (`refs.reforms` on Crown, `refs.eraIdeas` on Coin) and its own
+refresh; the era block hides itself when there is nothing to show, which for
+every playable side of every chapter is never (§188's audit), and at a
+foreign court means the visited realm has taken up no era idea yet. Foreign
+pips render read-only in both places exactly as before, one tab apart. The
+in-block `np-era-title` divider retires — the block title does its work.
+
+What §188 proved stays proven: the era groups still price and unlock off
+the three printed ladders in every bookmark, the tab strip still renames
+per chapter through `uiTerms`, and the delegated click chain still probes
+the tab strip first. Crown cannot go blank (its vitals grid is
+unconditional) and now cannot go stale either — the reform trees render for
+player and foreigner alike, so the tab carries a live section in every
+chapter.
+
+- **Regression contract**: `smoke119` — rewritten to hold the split: the
+  reform-tree host resolves to Crown, the era host to Coin below the
+  ladders, both buy paths keep their probes behind the tab probe, every
+  declared tab still owns a section, and the §188 audit (every era group
+  and every universal tree priced and unlocked off a printed ladder, in
+  every bookmark) holds verbatim. `uitest38` — the browser's bounding-box
+  answer: reforms visible on Crown with three buy buttons, era ideas
+  visible on Coin BELOW the ladders, neither visible on the other's tab.
+  `uitest41` — the §197 court: the favor row and both ask buttons render
+  per estate, a banked ask spends and toasts, and "Their ground" flips the
+  map to the estates mode with the bar's lit button following.
+
+## 199. The country's name goes where the country is
+
+The nation tier drew one label per court, at the owner-weighted centroid of
+every province it owned. That is the centre of mass of a realm, and the centre
+of mass of a realm in two places is in neither of them. A Judaea holding the
+Levant and Greece wrote **JUDAEA** across the open Mediterranean — over water
+it did not own, hundreds of miles from either half of itself, in letters sized
+by the sum of both. It is not a rounding error and no nudge fixes it: the
+number is an average over parts that are not one place.
+
+It was never only the reported case. Measured on the real raster over the eight
+bookmarks' opening positions, the old rule put **19 of 249** labels in the sea
+— Rome's among them in 167 BCE, 67 BCE and 40 BCE, because an empire drawn
+around a sea has its middle in the sea.
+
+**One label per region, not per court.** `MAP_DATA.regions` divides the 307
+cells into 35 named lands — Judaea, Transjordan, Negev, Phoenicia, Syria,
+Arabia, Egypt, Anatolia, Greece, Italy, Gaul, Hispania, Britain, Germania,
+Scythia and the rest — a partition, held by `validateMapData`, so every cell
+answers to exactly one. A court is then named once per region it holds: its own
+name over home, and over everything else **"[Adjective] [Region]"** — Judaean
+Greece, Israeli Britain, Hasmonean Egypt, Roman Judaea, Transjordanian Judaea in
+1948. Home is the region the court declares (`homeRegion`), else the one its
+capital sits in, else — a court in exile — the largest thing it holds. Two
+courts declare: Rome, played from Antioch, still writes ROME in Italy; Britain,
+whose 1948 seat on this map is Cyprus, still writes BRITAIN in Britain.
+
+The lines are geographic and therefore the same in every century, which is the
+only way one table can serve 167 BCE and 1948 at once. The Jordan is a boundary
+(so Agrippa II's name sits on the Golan and Transjordan's on Amman, with no
+per-tag table); the Negev is its own land, because it has belonged with Petra
+and with Beersheba in different centuries of this game. Where a modern state is
+finer than a classical region — Portugal inside Hispania, the Netherlands on the
+Rhine — nothing is lost: a label sits on the court's OWN holdings inside the
+region, so PORTUGAL still prints over Portugal, and the region only ever
+supplies the word for somebody else's ground.
+
+**The adjective is declared, not derived.** No rule turns The Netherlands into
+Dutch. All 109 tags carry `adj`, and a chapter that renames a court renames its
+adjective with it (SPEC §139) — 529's Galilee is *Galilean* abroad, not Judaean,
+which is the same class of error as calling the Keepers Jews. The fallback for a
+tag that somehow has none is the possessive.
+
+**The anchor is a cell, not an average.** Each part is placed at the pixel-mass
+centroid of the largest cell near that part's own centre of mass — big and
+central both, scored with a falloff over the part's own radius, so a scatter
+picks its mainland and a compact realm picks the cell it was already pointing
+at. The centre of mass itself is not used, not even clamped into that cell:
+splitting by region and keeping the clamped average still landed in the water 13
+to 20 times in 505. Anchoring on the cell lands there **0 times in 505**.
+
+Sizing keeps the country first. A part is sized by its own ground, but the home
+name by sqrt(sqrt(part)·sqrt(realm)) — the geometric mean of the two. At the
+whole-map zoom Rome's Italy is ten pixels of ground and would have vanished
+while ROMAN GAUL printed beside it, which is exactly backwards. Foreign parts
+also clear a higher floor (13.5px against 11.5px) and print in a tighter,
+lighter tier (`.mlabel-part`): two words at the tag tier's tracking is a very
+wide ribbon, and a court's holdings should read as subordinate to its name.
+
+- **Regression contract**: `smoke128` — the regions partition the atlas and
+  `validateMapData` says so; every tag and every chapter rename declares an
+  adjective; over all eight bookmarks on the real geometry snapshot, all 505
+  nation labels are on land, each anchored on a cell its own court holds, with
+  exactly one home label per court — *and the rule it replaced is re-run on the
+  same boards and asserted to fail*, so the bug stays visible to the suite that
+  fixed it. Then the three words the section was asked for, each on a live
+  board: Judaean Greece, Hasmonean Egypt, Israeli Britain — plus ROME in Italy,
+  BRITAIN in Britain, and Galilean Egypt in 529. `uitest42` — the same claim
+  against the raster the player is looking at rather than the coastline
+  polygons: every nation label drawn in the browser is handed back to
+  `provIdAt`, and the pixel underneath it must belong to the court whose name
+  is written there (a label in the sea has no province under it at all). Judaea
+  holding Greece and Egypt writes all three names, four hundred screen pixels
+  apart, the parts in the subordinate tier; zoom past 1.1 and the province
+  names come back with no part labels over them.
+
+## 200. Every chapter argues about something
 
 §190 built the quarrel engine for one quarrel — the Pharisees and the
 Sadducees — and then seven other chapters sat there with a Faith tab
@@ -10765,7 +11596,7 @@ reach further, because the office panel now appears at courts §190 never
 looked at: Herod's Idumean family and hired swords, and Antigonus'
 Parthian party, come off a ballot they were never eligible for.
 
-- **Regression contract**: `smoke121` grows a §191 section that walks all
+- **Regression contract**: `smoke121` grows a §200 section that walks all
   eight bookmarks — the declared quarrel is the one that convenes, both
   its sides are real seats of that court, the needle is labelled at both
   ends with the chapter's own names, every chapter opens *Unruled*, and
@@ -10780,4 +11611,10 @@ Parthian party, come off a ballot they were never eligible for.
   1948 is charged nothing against ascents it does not have and no cabinet
   is docked for an unappointed High Priest — and the two new seats exist,
   carry geography, and sit on the right side of the priesthood ballot.
-  `uitest40` still drives the Hasmonean quarrel in a real browser.
+  `smoke127` holds the other contract a new seat has to meet: §197 requires
+  every seated party of every chapter to be askable, so the Boethusians and
+  the Religious Bloc carry authored asks — the altar's sanction and the
+  Alexandrian purse for a house with an office and no villages; the quiet of
+  the religious quarters and a supply of very literate clerks for the parties
+  that signed the letter. `uitest40` drives the Hasmonean quarrel AND 1948's
+  in a real browser: two chapters, two headings, two sets of poles.

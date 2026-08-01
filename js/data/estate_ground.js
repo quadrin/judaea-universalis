@@ -58,7 +58,7 @@ export const ESTATE_GROUND = {
   kin: { base: 30, capital: 24, desert: 18, fort: 14, city: 8 },
   antipater: { base: 28, desert: 22, trade: 18, coast: 12, capital: 14 },
   sanhedrin: { base: 30, capital: 26, holy: 20, city: 14, faith: 14 },
-  // Herod's imported priesthood (SPEC §191): the Mount, the capital and the
+  // Herod's imported priesthood (SPEC §200): the Mount, the capital and the
   // developed coast their Alexandrian money came through — and, uniquely among
   // the priestly parties here, almost nothing in the countryside, because a
   // house fetched from Egypt to hold an office has no villages behind it. That
@@ -74,7 +74,7 @@ export const ESTATE_GROUND = {
   kibbutzim: { base: 24, rural: 34, faith: 14, dev: -12, city: -18 },
   coalition: { base: 30, city: 22, dev: 18, capital: 14, rural: 6 },
   revisionists: { base: 26, city: 26, coast: 18, dev: 12, fort: 10, rural: -10 },
-  // The status-quo signatories (SPEC §191): strong where the old yishuv and
+  // The status-quo signatories (SPEC §200): strong where the old yishuv and
   // the religious neighbourhoods are — Jerusalem, the holy towns, the dense
   // quarters — and weakest on exactly the ground the kibbutz movement holds.
   rabbinate: { base: 26, holy: 30, capital: 22, city: 16, faith: 18, rural: -14 },

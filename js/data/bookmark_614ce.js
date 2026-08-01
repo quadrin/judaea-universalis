@@ -243,11 +243,11 @@ export const BOOKMARK_614 = {
 
   // The era's lens on the western tags (SPEC §139, §173).
   tagTweaks: {
-    CAL: { name: 'The Picts', description: 'The kingdom beyond the old wall, a generation after Columba came to Iona.' },
-    CIM: { name: 'The Danes', description: 'The sea-kings of the Cimbric shore, whom Frankish annals already know by name.' },
-    MAU: { name: 'The Moorish Kingdoms', description: 'Altava\'s world: the kings the exarchate pays, fights, and cannot replace.' },
+    CAL: { name: 'The Picts', adj: 'Pictish', description: 'The kingdom beyond the old wall, a generation after Columba came to Iona.' },
+    CIM: { name: 'The Danes', adj: 'Danish', description: 'The sea-kings of the Cimbric shore, whom Frankish annals already know by name.' },
+    MAU: { name: 'The Moorish Kingdoms', adj: 'Moorish', description: 'Altava\'s world: the kings the exarchate pays, fights, and cannot replace.' },
     SAX: {
-      name: 'The English Kingdoms', capital: 'Britannia',
+      name: 'The English Kingdoms', adj: 'English', capital: 'Britannia',
       description: 'Æthelfrith\'s generation: seven crowns on a Christian island, most of them still pagan.',
     },
   },
@@ -349,7 +349,7 @@ export const BOOKMARK_614 = {
     ],
   },
 
-  // The Mount is clear for the first time in five centuries (SPEC §191), and
+  // The Mount is clear for the first time in five centuries (SPEC §200), and
   // the two authorities that governed Jewish life without it both arrive to
   // find out what happens now.
   schools: { JUD: 'altar_and_academy' },

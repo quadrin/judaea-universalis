@@ -301,6 +301,15 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
+`smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,
+the band rates, the one-object promise/payment contract, the ground scaling
+measured by handing the crown the coast, the gates, the AI silence).
+`smoke119.mjs` was rewritten in place to hold §198's split — the reform
+trees on Crown, the Ideas of the Age with the ladders — keeping §188's
+all-bookmark audit verbatim. `uitest41.mjs` drives the §197 court in a real
+browser: the ground line and favor figure per estate, the one-press ask with
+its toast, and the "Their ground" lever lighting the estates button on the
+mapmode bar (which now follows the bus event rather than its own clicks).
 
 ## UI battery state (v6.8)
 
@@ -877,3 +886,220 @@ regiment, while Paris pays it from net its books actually clear (FRA
 treasury 234→232). Every other row is byte-identical to the pre-§186 tree —
 Israel reaches no donor's bar without a player courting it, which is the
 design — and the accepted family stays `1948 none`.
+
+SPEC §191 gives the land war three arms instead of two. `js/data/units.js` is
+the new source of truth — the arm table, the shot's pattern names, the matchup
+triangle, the eighteen faces as bare `d` strings, and the sound cue keys — and
+it imports only `tech.js`, so the sim, the map's canvas and the SVG icon set
+all read one table. Three things are worth knowing before touching it.
+
+**The faces are path data, not markup.** `UNIT_GLYPHS` holds one `d` string per
+pattern, all subpaths in it, because the same string is handed to `new Path2D()`
+in `overlay.js` and dropped into a `<path d>` by `icons.js`' `unitIcon()`. A
+`<circle>` or a `fill=` attribute in there breaks the canvas silently — every
+face is arcs and lines only, and `smoke122` asserts it (`/^M/`, no `<>`).
+
+**The triangle and §181's armor are different halves, on purpose.**
+`armorPips` still answers "who has more tanks" as a signed quantity and still
+lands in `b.last.armA/armD`; `armPips` answers "what is each side's army FOR"
+from the arm shares and lands in `mixA/mixD`. Nothing double-counts because
+each side scores its own row of `MATCHUPS`. The anti-armor term inside
+`armPips` is deliberately a COUNT (`antiArmorPips`), not a share: four
+anti-tank regiments against four tanks have to be worth something whatever
+fraction of the host they are, and a share-product buries them at 0.1.
+
+**The gait is the part that reaches the whole world.** A column marches at its
+slowest arm, so the moment the AI establishment holds any guns, most stacks
+everywhere contain one. The first draft priced the shot at 0.75 and that alone
+flipped `smoke79`'s thirty-year 66 CE run: a global quarter-speed tax on AI
+campaigning, wearing a unit trait's clothes. Confirmed by neutralising the
+table (all arms 1.0 → suite green), then shipped at 0.85/1.25, which keeps the
+tradeoff visible on the clock (4 days horse / 5 foot / 6 with guns) without
+throttling the world. If a later pass wants slower guns, re-measure `smoke79`
+and the harness, not just `smoke122`.
+
+The AI picks its arm by DEFICIT against a 75/15/10 establishment, not off a
+regiment-count residue. The residue version shipped first and produced 5%
+artillery in one chapter and 25% in another purely from where each realm's
+muster happened to sit modulo eight — a court whose count landed wrong fielded
+a host the triangle answers outright.
+
+The batch measured the harness on three chapters, 8 years, against the parent
+commit: 167 BCE none → none, 1948 none → none, 66 CE none → `AGR: BLEEDING`.
+Battle counts moved both ways on the stream shift (167 down 162→118, 1948 down
+53→29, 66 up 83→108), which is the signature of a reseeded RNG rather than a
+direction. Agrippa's flag is the mild kind: three provinces at start and three
+at the end, treasury UP (40→60), a brigade still standing (3.8k men against the
+base tree's 990) and an income line a talent under water because of it — the
+client keeps its army in this stream instead of shedding it at the §52 poverty
+threshold. Accepted and recorded; it is not a wound and it is not new physics.
+
+One inherited pin needed widening. `smoke103` (§154) asserted the whole text
+of `const docA = doctrinePips(A.gen, phase, false) + airA + armA;` — §181 had
+already had to update it once when it added `armA`, and §191 adding `mixA` made
+it read as a regression a third time. It now pins up to `airA` and stops: the
+claim that suite exists for is that air rides the roll unconditionally, not how
+many neighbours the term has. Verified the narrowed pin still bites by making
+`airA` phase-conditional again — it fails, which is the whole point of it.
+
+The full battery at §191, measured on the tree merged with main's
+§186-§190: **122 of 122 headless suites ALL PASS**, including `smoke90`,
+whose 167 crown-cost drift documented above happens to land inside its
+allowance on this stream (it is stream-sensitive, not fixed — treat the note
+above as still open). The roster landed while §186-§190 were being written,
+so it yields the numbering: this section is §191 and its suite is `smoke122`.
+Nothing else overlapped — the aid pipe and the schools never touch
+`regiments`, and none of main's four new suites reads a unit pattern. `smoke122` is the new contract for this section, and a
+browser pass over the three §191 surfaces — the map counters with a rifle, a
+tank and a gun flying at once; the province panel's three recruit buttons named
+Rifle Brigades / Armored Corps / Gun Regiments, each with its own face; and a
+live battle window showing 10 rifles + 4 guns against 5 rifles + 5 tanks with a
+`+3 arms` chip on the gun line in the fire phase — passes with no page errors.
+
+Since §193 (a scripted peace binds the courts that signed it): `helpers.endWar`
+settles the two courts it NAMES and leaves the war standing for everyone else,
+so a chapter card can no longer march an ally home from a war it never signed
+away — 614's February 628 is the case that named the rule. Two harness-visible
+consequences. Rhodes now signs one map per delegation instead of spending a
+single `endWar(EGY, ISR)` on the whole coalition, and the 8-year 1948 run comes
+out of it unmoved: same anomalies, same per-nation trajectories, the same 32
+battles, and only the war line differs — five courts now settle out where one
+dissolution used to cover them. And the `war` bus event has always been three
+things — a declaration, an
+ending, and a court settling OUT of a war that goes on (SPEC §67/§74/§193) —
+while the counter bucketed the third as a declaration. The 1948 line therefore
+read `8 started` for three wars the moment the armistice went per-pair. It now
+reports `3 started, 1 ended, 5 settled out`, which is what §67 and §74 have
+been doing quietly since v6.9.
+
+Measured against the parent commit: `node tools/autorun.mjs 8` is identical on
+every bookmark, anomalies and all (67 SEL DEAD + HYR BLEEDING · 40 OSR/HER/ATG
+BLEEDING · 529 JUD DEAD — the documented families), and `node tools/autorun.mjs
+16 614ce` — long enough to walk past Khosrow's murder — matches the parent
+nation for nation, because the all-AI stream settles the great war through the
+ordinary AI table years before 628 is on the calendar. That run is also the
+counter's own witness: what it used to report as `2 started, 1 ended` was one
+war ending and two courts settling out of others, and it now says so. The battery is **123 of 123 headless suites ALL PASS**; `smoke123`
+is the new contract, and `smoke59`'s 614 stage-clearing moved with the feature
+(it takes a settlement per pair now, which is the rule seen from a test's side).
+
+Since §194 (the sea has a western half): fifteen Mediterranean communities
+join the dispersion — Asia Minor and the islands, Greece, Italy and Sicily,
+Africa west of Cyrene, Sepharad and Gaul — pure data through the §172/§175/
+§176 machinery, each keyed to a cell that exists and windowed on its own
+history (the consul's circular of 139 BCE at one end; 1306/1492/1493/1541,
+the 1944 deportations and the Maghreb's 1952/1962/1967 at the other). The
+harness cannot see it: the dispersion is player-only, and `node
+tools/autorun.mjs 4 66ce` / `4 1948ce` are **byte-identical** before and
+after the change, anomalies and all. `smoke109`'s era-page counts re-pinned
+with the arithmetic in the margin (167 BCE opens 13→18, spans 20→29); the
+battery is **124 of 124 headless suites ALL PASS**; `smoke124` is the new
+contract.
+
+The §194 set was then measured for power, chapter by chapter, against the
+§176 tuning (every open community's four asks summed at boot, theoretical
+full-farm, next to `incomeBreakdown` gross): new-set silver is 2-7% of gross
+where the crown is solvent, the pauper chapters are dominated by the old
+eastern set regardless (Alexandria alone out-earns the whole new fifteen),
+the 66/132 additions are all Rome-hosted and war-locked below their own ask
+bars, 614's farmable western remainder sustains ~1 talent and ~2 influence a
+month, and no new community sends men on day one anywhere. The envelope is
+pinned in `smoke124` (size ≤ 3, start ≤ 50, the war gate at 66 CE, the
+volunteer bar at 66 and 1948) so a future edit cannot quietly move it.
+
+The world-backdrop batch (eight new content packages, ninety-five dated
+`world: true` cards: `events_167bce_republic.js`, `events_67bce_world.js`,
+`events_40bce_world.js`, `events_66ce_world.js`, `events_132ce_west.js`,
+`events_529ce_world.js`, `events_614ce_west.js`, `events_1948_coldwar.js`)
+gives every chapter the OTHER half of its century — the Republic's own wars
+from Andriscus to Spartacus, Caesar's Gaul, the Augustan west to the
+Teutoburg, the Flavian frontiers to Dacia Capta, the western spine of the
+third-to-fifth centuries (Abritus, Adrianople, the frozen Rhine, the sack of
+410), the age of Justinian's successions from Gelimer's coup to Heraclius'
+fleet, the Christian West legislating about the Jews from Sisebut to the
+Seventeenth Toledo, and the cold war from the Berlin airlift to the flag
+coming down. All of it follows §104's admission rule (it happens whichever
+way the revolt went) and §111's transfer discipline (the only ownership
+changes are the ones the inter-chapter atlases already assumed: Macedonia
+−148, Numantia −133, Caesar's Gaul −52, Dacia 106, and the evacuation of
+Dacia 271 — each by explicit list, off the named losers only). One test pin
+moved with the content, exactly as it should: smoke74's "next world event
+after 370" is now Adrianople (378), not Cunctos populos (380).
+
+Measured against the parent commit, 8-year harness: five bookmarks
+byte-identical or drift-only, and the anomaly set stays inside the accepted
+families — 67's come-and-go HYR bleed closes (SEL DEAD stands), 40 and the
+rest unchanged, and 529 re-adds the v6.9-documented SAM DEBT-SPIRAL
+(self-limiting: income converges positive while debt-desertion sheds the
+host). Zero stderr on every run. The long runs, each against a baseline
+worktree where the README documents no prior number: `105 167bce` reports
+ROM+PAR SNOWBALL (the §111 target outcome, verbatim); `295 132ce` retires
+OSR/ADI/CHX (the documented third-century client deaths) with GOT going
+1 → 3 on the evacuation of Dacia; `92 529ce` comes back a strict subset of
+its baseline (JUD SNOWBALL on both trees — the §162 rising — while the
+baseline's GHA and BGD deaths do not happen here); `82 614ce` is clean;
+`45 67bce` adds the flags the Alesia card exists to create (ROM SNOWBALL
+returns — the long-documented scripted-annexation class — and the free
+Gallic tribes end as they ended); and `55 1948ce` keeps IRQ's pre-existing
+gulf-arc snowball while the one-province bleeding flag migrates POR → SUI
+with the stream (the hovering class swapping members). A catch-up
+firecheck boots all eight chapters at their horizons: 95/95 cards fire,
+zero guarded warnings. On the tree merged with §194 the battery is
+**124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
+smoke124 both included.
+
+Since §195 (a community with no cell is written to from its host's court):
+the dispersion gained a second kind of seat — `tag` instead of `prov` — for
+hosts past the map's edge, and a Dispersion section on foreign courts'
+Abroad tabs: a court-hosted community (the Jews of America, on Truman's
+§180 off-map seat) carries its full ask block there, and communities living
+on that court's soil render as rows that jump to their province (Attlee's
+Britain lists London beside Tripoli, the BMA being the 1948 fact). London
+(from 1656) and America (size 5, stand-in dev 40, opening 60 — past the
+volunteer bar on day one, deliberately: Machal) are the two entries. The
+harness still cannot see any of it — `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after — and a browser pass over both panels
+renders the section with no page errors. `smoke125` is the new contract,
+and `smoke124`'s §194 pins moved with the feature (37 entries, exactly one
+seat each). On the tree merged with the world backdrop above, the battery
+is **125 of 125 headless suites ALL PASS**.
+
+Since §196 (the chairs take their turn): the five §185 client chairs get
+the §187/§192 treatment — fifteen objectives (one expansion branch per
+chair over ground the tag does not start with, court branches from the
+houses' own documented deeds) and six roads not taken riding forks the
+chapters already chart. No new fork was drawn, so `chapter_paths.js`,
+`smoke83` and `smoke117` stand exactly as §192 left them, and the
+principal tables did not move by a single index — `smoke2`, `smoke3`,
+`smoke16`, `smoke111`, `smoke112` all green unmoved. The AI symmetry
+(§102) was measured, not assumed: `node tools/autorun.mjs 8` on 67bce,
+40bce, 66ce and 132ce is **byte-identical** to the parent tree on all
+four — the new thresholds sit past what an AI-held chair reaches in the
+window, so the trees grew reasons for a player without moving the AI's
+furniture at all. `smoke126` is the new contract: the grown chains at
+11/11/12/14/11 with 2/2/3/4/2 roads, every §196 node dressed and seated,
+every conquest target foreign at boot, nothing accomplished on day one,
+the forced worlds paying every declared modifier, the off-record rule
+live (a road stays dark when only history's marker is set), and the
+one-node-per-cell guard finally run over EVERY playable side of every
+bookmark — the check §187 and §183 each wished for after finding a
+collision in a second-playable tree by hand. `smoke116` moved with the
+feature (one new world marker, `speakerForTheNation`; six new roads pay
+beside the fifty-eight old ones). On the tree merged with main's §195
+(the court-hosted communities), the battery is **126 of 126 headless
+suites ALL PASS**, their smoke125 and this section's smoke126 both
+included.
+
+The SPEC §197–198 batch (the estates can be asked; the reforms come home
+to the Crown) is player-only on both halves and measured as such:
+`monthlyFactions` returns before the favor bank for every AI hand, the asks
+live behind the same gate, and the reforms move is a panel-template affair
+the sim never reads. `node tools/autorun.mjs 4 66ce` and `4 1948ce` against
+a clean-HEAD baseline worktree are **byte-identical**, anomalies and all.
+`smoke127` is the new contract (renumbered twice as main's §195 and
+§196 landed first), `smoke119` is rewritten in place to the §198
+contract, and the browser suites the batch touches — uitest8, uitest15,
+uitest37, uitest38 (its §188 section rewritten to the split), uitest41
+(new) — all come back ALL PASS on SwiftShader with zero page errors. On
+the tree merged with §195 and §196, the battery is **127 of 127
+headless suites ALL PASS**.

@@ -388,7 +388,7 @@ export const BOOKMARK_167 = {
     ],
   },
 
-  // Whose reading of the Law each court administers (SPEC §190/§191). The
+  // Whose reading of the Law each court administers (SPEC §190/§200). The
   // Hasmonean pair arrive in this chapter in 140 BCE, when §127 hands the
   // court over from the Hasideans to the parties Josephus first names then;
   // the Seleucids argue about other things entirely.

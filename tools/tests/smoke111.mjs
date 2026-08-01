@@ -44,22 +44,23 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  ok(v.length === 11, 'eleven nodes (six objectives + the §179 curriculum + the §183 roads not taken): ' + v.length);
+  ok(v.length === 15, 'fifteen nodes (six objectives + the §179 curriculum + the §192 expansion + the §183/§192 roads not taken): ' + v.length);
   // Only the chain's own root is workable among the era's objectives; the
   // §183 hypotheticals are standing invitations, so their roots open too.
-  ok(v[0].status === 'current' && v.slice(1, 8).every((m) => m.status === 'locked'),
+  ok(v[0].status === 'current' && v.slice(1, 10).every((m) => m.status === 'locked'),
     'only the root is workable among the objectives at start: ' + v.map((m) => m.status).join(','));
-  ok(v[8].hypothetical && v[8].status === 'current'
-    && v[9].status === 'locked' && v[10].status === 'locked',
-    'the hypothetical root stands open, its children wait: '
-    + v.slice(8).map((m) => m.id + '=' + m.status).join(','));
-  ok(v.slice(0, 8).every((m) => !m.hypothetical) && v.slice(8).every((m) => m.hypothetical),
+  ok(v[10].hypothetical && v[10].status === 'current'
+    && v[11].status === 'locked' && v[12].status === 'locked'
+    && v[13].status === 'current' && v[14].status === 'current',
+    'the hypothetical roots stand open (the §192 forks are roots too), the children wait: '
+    + v.slice(10).map((m) => m.id + '=' + m.status).join(','));
+  ok(v.slice(0, 10).every((m) => !m.hypothetical) && v.slice(10).every((m) => m.hypothetical),
     'the roads not taken are flagged hypothetical, the objectives are not');
   ok(v[0].requires.length === 0 && v[1].requires.join(',') === 'jm_arm_the_nation',
     'requires resolved to ids');
   ok(v[1].requiresNames.join(',') === 'Arm the Nation', 'and to names for the tooltip');
-  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
-  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,0,1,2',
+  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
+  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,0,1,2,3,4',
     'rows derived one below the deepest parent (declared rows stick): ' + v.map((m) => m.row).join(','));
   ok(v.every((m) => m.icon), 'every node wears an icon');
 }
@@ -69,8 +70,8 @@ console.log('== branches advance independently; the prefix does not lie ==');
   for (let i = 0; i < 31; i++) tickDay(ctx);
   ok(actions.getMissions()[0].status === 'done', 'the root completes on the monthly pass');
   const open = actions.getMissions().filter((m) => m.status === 'current').map((m) => m.id);
-  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands',
-    'three branches open at once (plus the standing hypothetical): ' + open.join(','));
+  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands,hy_royal_robes,hy_granaries',
+    'three branches open at once (plus the standing hypotheticals): ' + open.join(','));
   // Complete a LATER branch first: the Parthian mission, by opinion.
   game.tags.PAR.opinion = game.tags.PAR.opinion || {};
   game.tags.PAR.opinion.JUD = 90;

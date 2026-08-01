@@ -97,8 +97,16 @@ async function runBookmark(entry, rawGeom) {
   game.tags[playable].ai = true; // nobody home: the whole world runs itself
   game.paused = false;
 
-  const counters = { warsStarted: 0, warsEnded: 0, battles: 0 };
-  const onWar = (p) => { if (p && p.ended) counters.warsEnded++; else counters.warsStarted++; };
+  const counters = { warsStarted: 0, warsEnded: 0, warsLeft: 0, battles: 0 };
+  // A 'war' event is one of three things: a declaration, a war ending, and a
+  // court settling out of one that goes on without it (SPEC §67/§74/§193).
+  // The third used to be counted as a declaration, which read as phantom wars
+  // in the 1948 line the moment Rhodes started signing one map per delegation.
+  const onWar = (p) => {
+    if (p && p.ended) counters.warsEnded++;
+    else if (p && p.left) counters.warsLeft++;
+    else counters.warsStarted++;
+  };
   const onBattle = () => { counters.battles++; };
   bus.on('war', onWar);
   bus.on('battleStart', onBattle);
@@ -185,7 +193,9 @@ async function runBookmark(entry, rawGeom) {
       + '  ' + (flags.join(',') || '-'),
     );
   }
-  console.log(`wars: ${counters.warsStarted} started, ${counters.warsEnded} ended · battles: ${counters.battles}`
+  console.log(`wars: ${counters.warsStarted} started, ${counters.warsEnded} ended`
+    + (counters.warsLeft ? `, ${counters.warsLeft} settled out` : '')
+    + ` · battles: ${counters.battles}`
     + ` · date reached: ${game.date.y}/${game.date.m}`);
   return { id, flags: flagsOut, counters };
 }
