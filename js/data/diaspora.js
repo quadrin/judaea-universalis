@@ -60,6 +60,27 @@
 // can see — the asks still work while the communities are still there, which
 // in 1948-51 they were, and the absorption chain (events_1948_absorption.js)
 // answers for where they went.
+//
+// AND THE SEA HAS A WESTERN HALF (SPEC §194). The first list stopped, with
+// its chapters' centre of gravity, at Cyprus: ten communities east of the
+// island, five in Egypt and Cyrenaica, and the whole European shore held four
+// cells — Rome, Salonica, Corinth, Byzantion — with nothing at all west of
+// Sicily. The period's own documents enumerate more. When Simon's envoys came
+// home in 139 BCE, Rome circulated a letter to the free cities commanding
+// that the Jews be left in peace, and the address list (1 Macc 15) is a map
+// of the Greek sea: Sparta, Rhodes, Gortyna, Caria, Pamphylia, Cyprus,
+// Cyrene. Agrippa's letter in Philo (Legatio 281-2) makes the same survey a
+// century later — Cilicia, Attica, Argos, Corinth, Euboea, Crete. So the
+// address book carries its western half now: Asia Minor and the islands,
+// Greece, Italy and Sicily, Africa west of Cyrene, Sepharad and Gaul. Same
+// rules, same honesty about the ends — the Aegean deportations of 1944 close
+// Rhodes and Crete the way 1943 closed Salonica; the expulsions close the
+// Latin west centuries before the modern chapter (France 1306, Sepharad
+// 1492, Sicily 1493, Naples 1541), so the 1948 dispersion map draws that
+// whole shore as memory, hatched per §175 rather than forgotten; and the
+// Maghreb closes the way the east closes, one date per flag, while Volubilis
+// stays open, because Morocco is the one community of the Arab world that
+// never entirely goes.
 
 export const DIASPORA = [
   // ── Egypt ────────────────────────────────────────────────────────────────
@@ -123,6 +144,33 @@ export const DIASPORA = [
     blurb: 'Merchants and dyers in a city that has never quite decided whether the '
       + 'people up the coast are neighbours or competitors.',
   },
+  // …and Asia Minor, where the attestation is the period's own paperwork:
+  // Antiochus III plants two thousand Jewish families westward as garrison
+  // colonists (Josephus, Ant. 12.147), and the Ionian cities spend the next
+  // two centuries petitioning to have their Jews' citizenship unsaid, all the
+  // way to Agrippa's tribunal — and losing.
+  {
+    // On stone to the end — the Jewish epitaphs of Cilicia run into the sixth
+    // century — and then the Arab wars turn the province into the devastated
+    // march between two empires, and the window shuts with the cities
+    // themselves.
+    prov: 'Tarsus', name: 'The Jews of Tarsus', size: 2,
+    from: -200, until: 650, start: 45,
+    blurb: 'Settled westward by the kings, who knew that garrison colonists who keep '
+      + 'covenants are worth the land they cost. A city of Stoics and linen-weavers — one '
+      + 'of its Jewish sons will spend his life writing letters to Corinth, Thessalonica '
+      + 'and Rome.',
+  },
+  {
+    // Izmir's community was never expelled: it thins toward Israel after 1948
+    // on its own feet, like Istanbul's, and the window stays open on the same
+    // rule as Rome's.
+    prov: 'Smyrna', name: 'The Jews of Smyrna', size: 2,
+    from: -250, until: null, start: 40,
+    blurb: 'Citizens of Ionia since the second Antiochus said they were — a grant the '
+      + 'Greek cities have petitioned every power since to unsay, and none has. The '
+      + 'harbour hears everything the Aegean carries, and repeats most of it.',
+  },
   // ── Mesopotamia and Persia: the half that outlasts everything ────────────
   // …until 1952. The four Iraqi windows close together: registration under
   // the Denaturalisation Law opens in March 1950, the property freeze of
@@ -185,6 +233,27 @@ export const DIASPORA = [
       + 'the mood turns.',
   },
   {
+    // In 536 the Jews of Naples hold their stretch of the walls against
+    // Belisarius to the end — Procopius says so, a little surprised. The
+    // kingdom of Naples expels them in 1541, the last expulsion of the Latin
+    // west, and the window carries Campania to it and no further.
+    prov: 'Capua', name: 'The Jews of Campania', size: 2,
+    from: -50, until: 1541, start: 40,
+    blurb: 'Campania is where the east steps ashore in Italy: the grain fleet docks here, '
+      + 'and every envoy, pretender and rumour out of Judaea lands among these '
+      + 'congregations days before Rome has heard.',
+  },
+  {
+    // Held longer than almost anywhere in the Latin west — and then the
+    // Decree of 1492 runs wherever Aragon rules, and the island's dozens of
+    // communities go out together in the winter of 1493.
+    prov: 'Syracusae', name: 'The Jews of Sicily', size: 2,
+    from: -50, until: 1493, start: 40,
+    blurb: 'Dyers, quarrymen and dealers in a Greek city under Roman law, their dead in '
+      + 'painted catacombs beside everyone else\'s. Popes will write more letters about '
+      + 'Sicily\'s Jews than about its governors.',
+  },
+  {
     // Deported to Auschwitz in the spring and summer of 1943. The window is
     // already shut when the 1948 chapter opens, and the map hatches it
     // (§175) — the first draft left Salonica writable five years after,
@@ -207,10 +276,144 @@ export const DIASPORA = [
       + 'touch, hearing everything from both of them.',
   },
   {
+    // Half of Athens' Jews survived the occupation on papers the police chief
+    // and the archbishop forged for them, and the community stands today — so
+    // the window stays open, and 1948's writable Greece is Athens, not
+    // Salonica, which is the plain postwar fact.
+    prov: 'Athens', name: 'The Jews of Athens', size: 1,
+    from: -100, until: null, start: 40,
+    blurb: 'A small congregation in the city of the schools, which pays them the '
+      + 'compliment it pays everybody: it argues with them daily in the agora, and keeps '
+      + 'an altar spare in case it has missed a god.',
+  },
+  {
+    // The record in Laconia fades out of the late Roman centuries, and Alaric
+    // burns what is left of the city in 396. Kept open past that, the window
+    // would put a writable Sparta in Justinian's Greece, which nobody attests.
+    prov: 'Sparta', name: 'The Kinsmen at Sparta', size: 1,
+    from: -170, until: 396, start: 50,
+    blurb: 'The kings here once wrote to the High Priest that Spartans and Jews are '
+      + 'brothers, both of the stock of Abraham — an embassy\'s genealogy, gravely renewed '
+      + 'by treaty ever since. When a deposed High Priest had nowhere left in the world, '
+      + 'he came here to die on the strength of it.',
+  },
+  {
+    // Deported on the last boats of July 1944 — seventeen hundred people, the
+    // longest run any deportation made, and the war over within the year. The
+    // same rule as Salonica: the 1948 map hatches it.
+    prov: 'Rhodes', name: 'The Jews of Rhodes', size: 1,
+    from: -170, until: 1944, start: 40,
+    blurb: 'A congregation in the island republic whose harbour law is the sea\'s law and '
+      + 'whose news is the sea\'s news. Rome\'s letter commanding the free cities to leave '
+      + 'the Jews in peace went to Rhodes by name.',
+  },
+  {
+    // The last community of Crete — the Jews of Chania, entire — went down
+    // with the ship deporting them, torpedoed on 9 June 1944. Twenty-one
+    // centuries end in one hull, and the window ends with them.
+    prov: 'Gortyn', name: 'The Jews of Crete', size: 1,
+    from: -170, until: 1944, start: 40,
+    blurb: 'Island Jews on the grain road between Alexandria and Greece, named in Rome\'s '
+      + 'circular beside Gortyna\'s own magistrates. A historian of the great revolt will '
+      + 'marry a daughter of this community.',
+  },
+  {
     prov: 'Byzantion', name: 'The Jews of Byzantion', size: 1,
     from: -100, until: null, start: 40,
     blurb: 'A modest congregation in a well-placed town — which in a few centuries will '
       + 'be the least modest position in the world to hold.',
+  },
+  // ── Africa west of Cyrene ────────────────────────────────────────────────
+  // The Maghreb ends the way the east ends (§176): one date per flag, each
+  // the year the community actually went. Tripoli 1952 — the pogroms of 1945
+  // and 1948, then thirty thousand sail for Haifa in three years and Libyan
+  // independence closes the gate on a remnant: the Iraq rule, applied west.
+  // Constantine 1962 — Algeria's Jews are French citizens by decree, and when
+  // France goes they go with it, entire, in one summer. Tunis 1967 — the
+  // exodus that begins at independence becomes final the week of the June
+  // war, with the Great Synagogue's furniture burning in the street. Only
+  // Volubilis stays open: Morocco thins from a quarter-million toward a
+  // remnant, but it is the one community of the Arab world that never
+  // entirely goes.
+  {
+    // Punic Carthage attests no community; Roman Carthage does, thickly — a
+    // Jewish necropolis at Gamart, and Africa's church fathers arguing
+    // against the synagogue for whole careers. The window opens with the
+    // captives of 70, four years into the Great Revolt's own chapter, which
+    // is when the story says the west received them.
+    prov: 'Carthago', name: 'The Jews of Carthage', size: 3,
+    from: 70, until: 1967, start: 45,
+    blurb: 'The refounded city is Rome\'s Africa, second in the west only to Rome — and '
+      + 'its community, the story runs, was swelled by captives of the fallen House sold '
+      + 'west. Africa\'s lawyers will spend whole careers arguing against them, which is '
+      + 'its own kind of respect.',
+  },
+  {
+    prov: 'Oea', name: 'The Jews of Tripolitania', size: 2,
+    from: -50, until: 1952, start: 45,
+    blurb: 'Traders on the Tripoli shore, with cousins in the hill country who farm the '
+      + 'terraces, keep the Law, and have never seen a city. Empires hold this coast '
+      + 'lightly; the communities hold on regardless.',
+  },
+  {
+    prov: 'Cirta', name: 'The Jews of Cirta', size: 2,
+    from: 200, until: 1962, start: 40,
+    blurb: 'Jews of the Numidian capital, leaving Latin epitaphs like any other citizens '
+      + 'of the stone-cutting town. They will outlast the kings, the legions, the Vandals '
+      + 'and the conquest, and leave only when the last empire does.',
+  },
+  {
+    // The oldest Hebrew inscription of the far west is a woman's epitaph
+    // here — Matrona, a rabbi's daughter. When the roads move to Fez, the
+    // community moves with them; the canonical cell carries it the way
+    // Memphis carries Cairo.
+    prov: 'Volubilis', name: 'The Jews of the Farthest West', size: 2,
+    from: 200, until: null, start: 45,
+    blurb: 'Past here there is only ocean. A tombstone in Hebrew at the edge of the '
+      + 'inhabited world marks the community at the end of every road — and at the end of '
+      + 'every era on this map, it is still there.',
+  },
+  // ── Sepharad and Gaul ────────────────────────────────────────────────────
+  // The Latin west closes by expulsion, centuries before the modern chapter:
+  // 1306 takes Narbonne with the rest of Philip's France, the Decree of 1492
+  // takes Sepharad and, in 1493, Sicily, and Naples follows in 1541. So the
+  // 1948 dispersion map draws this whole shore as memory — hatched, per
+  // §175's rule, not forgotten. The one window still open on it is
+  // Marseille, and that is not a courtesy: in the 1948 chapter the port is
+  // the departure's own pier, the camps above the harbour shipping the
+  // Maghreb's and Europe's Jews east.
+  {
+    // Attested the way the west attests things: by legislation against them.
+    // The bishops in council at Elvira write their canons around 305;
+    // Sisebut's forced baptisms fall in the very years the 614 chapter
+    // plays — a community whose host is converting it by force is exactly
+    // the hostage problem §172 built; and the Decree of 1492 closes it.
+    prov: 'Corduba', name: 'The Jews of Sepharad', size: 2,
+    from: 300, until: 1492, start: 45,
+    blurb: 'The community calls the country Sepharad and will one day insist its fathers '
+      + 'came west with the first exile. The bishops in council have already ruled that '
+      + 'Christians must stop dining with them — a canon nobody needs against dinners '
+      + 'that are not happening.',
+  },
+  {
+    // Twice attested by a Gregory: Tours' — the refugees of Clermont's
+    // forced conversions row for Marseille in 576 — and the Great's,
+    // rebuking the bishops of Arles and Marseille in 591 for baptisms at
+    // sword-point. Open to the end, because the community is.
+    prov: 'Massilia', name: 'The Jews of Massilia', size: 1,
+    from: 450, until: null, start: 40,
+    blurb: 'The old Greek port takes in whoever the interior drives out, to the fury of '
+      + 'the interior\'s bishops and the quiet satisfaction of the port\'s shipowners. A '
+      + 'community that lives with one foot on the pier.',
+  },
+  {
+    // Septimania: Visigothic while Spain is, so Sisebut's statutes reach
+    // here too — and French by 1306, when the general expulsion closes it.
+    prov: 'Narbo', name: 'The Jews of Narbonne', size: 1,
+    from: 460, until: 1306, start: 40,
+    blurb: 'Merchants and vine-growers of the Gothic province between Spain and Gaul, '
+      + 'answering to whichever crown holds the pass this generation. Crowns pass; the '
+      + 'community keeps the ledgers.',
   },
 ];
 

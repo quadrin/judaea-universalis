@@ -11004,3 +11004,109 @@ call.
   the 1949 lines, and the courts they leave at peace, are exactly what they
   were. `smoke59` — clearing the 614 stage now takes a settlement per pair,
   which is the feature seen from a test's side.
+
+## 194. The sea has a western half
+
+§172 put twenty communities on the board and called the windows load-bearing,
+and both claims held. But look at where the twenty stood: ten east of Cyprus,
+five in Egypt and Cyrenaica, four on the European shore — Rome, Salonica,
+Corinth, Byzantion — and **nothing at all west of Sicily**. The dispersion
+this game modelled was the eastern one, which is the half its chapters march
+through; the Mediterranean one, the half that made "Greek-speaking Jew" a
+category, was four cells deep on a map that has since grown to hold the whole
+sea (§160, §173).
+
+The period's own documents enumerate what was missing, and they are address
+lists. When Simon's envoys came home in 139 BCE, Rome circulated a letter to
+the free cities commanding that the Jews be left in peace, and 1 Maccabees 15
+prints the addresses: Sparta, Rhodes, Gortyna, Caria, Pamphylia, Cyprus,
+Cyrene. Agrippa's letter in Philo (Legatio 281-2) makes the same survey a
+century later: Pamphylia, Cilicia, Attica, Argos, Corinth, Euboea, Crete. The
+game held the eastern half of the address book and its own sources kept
+printing the western half.
+
+**Fifteen entries** (`js/data/diaspora.js`), same schema, same rules, each
+keyed to a canonical cell that already exists and answers for every era:
+
+- **Asia Minor** — Tarsus (the third Antiochus' garrison colonists, and a
+  Jewish son who writes letters to three other communities on this list) and
+  Smyrna (citizens of Ionia since Antiochus II, to the Greek cities' standing
+  fury).
+- **Greece and the islands** — Athens, Sparta (the Kinsmen: Areus' letter to
+  the High Priest claiming shared descent from Abraham, renewed by treaty,
+  and the refuge where the deposed Jason came to die), Rhodes and Gortyn,
+  both named in the consul's circular.
+- **Italy and Sicily** — Capua (Campania, where the east steps ashore: the
+  grain fleet, Puteoli's congregations, the Jews who held Naples' walls
+  against Belisarius in 536) and Syracusae (the painted catacombs, and more
+  papal letters than any governor got).
+- **Africa west of Cyrene** — Carthago (no Punic community attested, so the
+  window opens with the captives of 70 — four years into the Great Revolt's
+  own chapter, which is when the story says the west received them), Oea,
+  Cirta, Volubilis (the farthest west: a rabbi's daughter's Hebrew epitaph at
+  the edge of the inhabited world).
+- **Sepharad and Gaul** — Corduba (attested the way the west attests things,
+  by legislation against them: Elvira's canons around 305), Massilia (twice a
+  Gregory: the refugees of 576, the rebuke of 591), Narbo.
+
+**The windows do the era-work, as §172 demands.** Four kinds of close, none
+of them decoration. The Aegean deportations of 1944 shut Rhodes (the last
+boats of July) and Crete (the Jews of Chania, entire, torpedoed on 9 June)
+beside Salonica's 1943 — the 1948 map hatches all three from its first day.
+The expulsions close the Latin west centuries before the modern chapter:
+Narbonne 1306, Sepharad 1492, Sicily 1493, Naples 1541 — so the 1948
+dispersion map draws that whole shore as memory, which is §175's hatch rule
+doing exactly what it was built for. The Maghreb closes the way §176 closed
+the east, one date per flag, each the year the community actually went:
+Tripoli 1952 (the Iraq rule applied west — the pogroms, then thirty thousand
+sail and independence closes the gate on a remnant), Constantine 1962 (French
+citizens by decree; when France goes they go with it, in one summer), Tunis
+1967 (the exodus of independence made final the week of the June war). And
+four windows stay open on the file's own anti-tidiness rule — Smyrna, Athens
+(half the community survived on papers the police chief and the archbishop
+forged, and 1948's writable Greece is Athens, not Salonica), Massilia (in the
+1948 chapter the port is the departure's own pier), Volubilis (Morocco, the
+one community of the Arab world that never entirely goes). Two closes land
+*inside* long campaigns the way 117 does: Sparta goes out with Alaric at 396
+under a Bar Kokhba continuation that runs to 430, and Tarsus goes out at 650
+under a Persian-Gambit continuation that watches the Arab wars empty Cilicia.
+
+**What each chapter feels.** 167 BCE opens with 18 communities instead of 13
+and reaches 29 over its span instead of 20 (`smoke109` re-pinned, with the
+arithmetic in the margin). 132 CE regains a Mediterranean: the Kitos War
+took Alexandria, Memphis, Cyrene, Berenice and Cyprus off the board in 117,
+which used to leave Bar Kokhba a dispersion that was all east — but Asia
+Minor, Greece, Italy and Africa were exactly the communities the rising of
+115 did not burn, and now they are there to write to. The Byzantine chapters
+double, 14 to 28, and the new west is their own sixth century — Justinian's
+Africa, Gregory's Sicily, Sisebut's Spain forcibly baptizing the very
+community the 614 player can write to, which is §172's hostage problem with
+a date on it. 1948 goes from 13 writable communities to 20, and the seven
+new ones are the Maghreb and the survivors — the actual reservoir of the
+state's first decade — while the hatched Aegean and the hatched Latin west
+say what the map should say.
+
+**What deliberately did not change.** No rule, no ask, no yield: fifteen rows
+of data through the §172/§175/§176 machinery, sizes 1-3 all (nothing new
+rivals Alexandria or Babylon — the centre of gravity stays east, which is the
+history). `DEFINES.DIASPORA` — §133's *territory* list, the cells a "every
+Jewish province" peace clause must not hand over — is untouched, because
+none of the new cells carries `judaism` as its map religion. The Kitos fire
+list (`events_66ce_after.js`) is untouched, because the new communities are
+the part of the dispersion that did not rise. And the all-AI harness cannot
+see any of it: the dispersion is player-only (§172), `initGame` never reads
+the table, and `node tools/autorun.mjs 4 66ce` / `4 1948ce` before and after
+the change are **byte-identical**, anomalies and all.
+
+- **Regression contract**: `smoke124` — every entry's cell exists on the map
+  (the table finally has a typo guard), the fifteen windows are pinned date
+  by date, the Punic gap holds (no community under the 167 chapter's living
+  Carthaginian court, a community from 70), Sparta answers 66 and 132 and is
+  gone before the Keepers, 529 opens at 28, the 66 CE panel serves Athens
+  and the Kinsmen four asks each, the 1948 Maghreb goes out 1952/1962/1967
+  in play while Volubilis still answers in 1975, the 1948 map hatches
+  Rhodes, Crete and the expelled west while Marseille and Morocco read as
+  living, and the §172/§176 pins (117, 1952, five sizes at 66 CE) hold.
+  `smoke109` — the 167 BCE era-page counts, re-pinned 13→18 and 20→29.
+  `smoke110`, `smoke106` — unchanged and green: the east's dates and the
+  ask machinery are exactly what they were.

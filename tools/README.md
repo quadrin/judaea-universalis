@@ -973,3 +973,16 @@ counter's own witness: what it used to report as `2 started, 1 ended` was one
 war ending and two courts settling out of others, and it now says so. The battery is **123 of 123 headless suites ALL PASS**; `smoke123`
 is the new contract, and `smoke59`'s 614 stage-clearing moved with the feature
 (it takes a settlement per pair now, which is the rule seen from a test's side).
+
+Since §194 (the sea has a western half): fifteen Mediterranean communities
+join the dispersion — Asia Minor and the islands, Greece, Italy and Sicily,
+Africa west of Cyrene, Sepharad and Gaul — pure data through the §172/§175/
+§176 machinery, each keyed to a cell that exists and windowed on its own
+history (the consul's circular of 139 BCE at one end; 1306/1492/1493/1541,
+the 1944 deportations and the Maghreb's 1952/1962/1967 at the other). The
+harness cannot see it: the dispersion is player-only, and `node
+tools/autorun.mjs 4 66ce` / `4 1948ce` are **byte-identical** before and
+after the change, anomalies and all. `smoke109`'s era-page counts re-pinned
+with the arithmetic in the margin (167 BCE opens 13→18, spans 20→29); the
+battery is **124 of 124 headless suites ALL PASS**; `smoke124` is the new
+contract.
