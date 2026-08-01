@@ -159,6 +159,30 @@ console.log('== a letter actually goes to the new addresses ==');
     'the Kinsmen at Sparta are on the 66 CE board');
   ok(!actions.getCommunity(ctx.provId('Carthago')),
     'Carthage is not — the window opens with the captives of 70');
+
+  // §194 must not move the tuning. The new entries follow the file's own
+  // curve — nothing rivals the great nodes, nobody opens devoted — and the
+  // war chapter cannot farm its new Roman-hosted communities: the war bar
+  // (need +15) sits above their opening standing for silver, and nobody's
+  // sons come at all. Measured at authoring: the whole new set's theoretical
+  // silver is 2-7% of gross income in the solvent chapters, and the war
+  // gates lock the rest.
+  const NEW15 = ['Tarsus', 'Smyrna', 'Athens', 'Sparta', 'Rhodes', 'Gortyn', 'Capua',
+    'Syracusae', 'Carthago', 'Oea', 'Cirta', 'Volubilis', 'Corduba', 'Massilia', 'Narbo'];
+  ok(NEW15.every((p) => communityOf(p).size <= 3),
+    'no new community outranks size 3 — Alexandria and Babylon keep the centre of gravity');
+  ok(NEW15.every((p) => communityOf(p).start <= 50),
+    'no new community opens above 50 standing — devotion has to be earned');
+  for (const prov of ['Capua', 'Syracusae', 'Smyrna', 'Gortyn', 'Rhodes', 'Athens', 'Tarsus']) {
+    const c = actions.getCommunity(ctx.provId(prov));
+    ok(!!c && c.atWar && !c.asks.find((a) => a.id === 'silver').can,
+      prov + ' will not gather silver for a crown its empire is fighting — not at opening standing');
+  }
+  const anyMen = NEW15
+    .map((p) => actions.getCommunity(ctx.provId(p)))
+    .filter(Boolean)
+    .some((c) => c.asks.find((a) => a.id === 'volunteers').can);
+  ok(!anyMen, 'and none of the new communities sends its sons on day one');
 }
 
 console.log('== 1948: the Maghreb is writable, the Aegean is memory ==');
@@ -169,6 +193,13 @@ console.log('== 1948: the Maghreb is writable, the Aegean is memory ==');
   for (const prov of ['Carthago', 'Oea', 'Cirta', 'Volubilis', 'Smyrna', 'Athens', 'Massilia']) {
     ok(!!actions.getCommunity(ctx.provId(prov)), prov + ' can be written to in 1948');
   }
+  // Writable is not farmable: at peace-time standing nobody's sons come on
+  // day one here either — the volunteer bar (55) sits above every new
+  // community's opening standing, in the modern chapter as in the ancient.
+  ok(!['Carthago', 'Oea', 'Cirta', 'Volubilis', 'Smyrna', 'Athens', 'Massilia']
+    .map((p) => actions.getCommunity(ctx.provId(p)))
+    .some((c) => c && c.asks.find((a) => a.id === 'volunteers').can),
+    'no new community sends men to the 1948 war on day one — devotion has to be built first');
   // …each Maghreb window closing on its own date, west of the eastern trio.
   game.date.y = 1953;
   ok(!actions.getCommunity(ctx.provId('Oea')), 'Tripoli goes out with Baghdad, by 1953');

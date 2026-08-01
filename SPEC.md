@@ -11098,6 +11098,30 @@ see any of it: the dispersion is player-only (§172), `initGame` never reads
 the table, and `node tools/autorun.mjs 4 66ce` / `4 1948ce` before and after
 the change are **byte-identical**, anomalies and all.
 
+**Not overpowered, measured.** The whole new set, farmed on every cooldown at
+theoretical maximum, gathers 0.6-2.1 talents a month of silver by chapter —
+**2-7% of gross income where the crown is solvent** (67 BCE 2%, 40 BCE 7%,
+66 CE 7%, 1948 4%); the pauper chapters' larger shares are shares of gross
+incomes of 2-6 talents and are dominated by the *old* set regardless
+(Alexandria alone, at dev 28 × size 5, out-earns the whole new fifteen). The
+war chapters cannot farm what they gained: every 66/132 addition is
+Rome-hosted, the war bar (need +15) sits above the new opening standings
+(40-50) for silver and men both, and the standing target a Roman-hosted
+community drifts toward while the war runs (start − 25, ~30) sits below even
+the letters bar — one opening letter each, then they sink under it, which is
+§172's hostage design doing its work. 614's west doubles but splits: the
+Byzantine-hosted majority is war-locked the same way, and the farmable
+remainder under the Lombard, Visigothic, Moorish and Frankish crowns
+sustains about one talent and two influence a month — a wider lifeline for
+the chapter that is *about* the lifeline, not a break. And no new community
+anywhere sends its sons on day one: the volunteer bar is 55 and every new
+start is 40-50, so the men have to be earned across years of standing.
+
+- **Balance pins** (in `smoke124`, so the envelope survives future edits):
+  no new community outranks size 3 or opens above 50 standing; the seven
+  Rome-hosted additions refuse silver at 66 CE opening standing; and no new
+  community will send men on day one, at 66 CE or in 1948.
+
 - **Regression contract**: `smoke124` — every entry's cell exists on the map
   (the table finally has a typo guard), the fifteen windows are pinned date
   by date, the Punic gap holds (no community under the 167 chapter's living
