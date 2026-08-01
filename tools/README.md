@@ -998,6 +998,47 @@ month, and no new community sends men on day one anywhere. The envelope is
 pinned in `smoke124` (size ≤ 3, start ≤ 50, the war gate at 66 CE, the
 volunteer bar at 66 and 1948) so a future edit cannot quietly move it.
 
+The world-backdrop batch (eight new content packages, ninety-five dated
+`world: true` cards: `events_167bce_republic.js`, `events_67bce_world.js`,
+`events_40bce_world.js`, `events_66ce_world.js`, `events_132ce_west.js`,
+`events_529ce_world.js`, `events_614ce_west.js`, `events_1948_coldwar.js`)
+gives every chapter the OTHER half of its century — the Republic's own wars
+from Andriscus to Spartacus, Caesar's Gaul, the Augustan west to the
+Teutoburg, the Flavian frontiers to Dacia Capta, the western spine of the
+third-to-fifth centuries (Abritus, Adrianople, the frozen Rhine, the sack of
+410), the age of Justinian's successions from Gelimer's coup to Heraclius'
+fleet, the Christian West legislating about the Jews from Sisebut to the
+Seventeenth Toledo, and the cold war from the Berlin airlift to the flag
+coming down. All of it follows §104's admission rule (it happens whichever
+way the revolt went) and §111's transfer discipline (the only ownership
+changes are the ones the inter-chapter atlases already assumed: Macedonia
+−148, Numantia −133, Caesar's Gaul −52, Dacia 106, and the evacuation of
+Dacia 271 — each by explicit list, off the named losers only). One test pin
+moved with the content, exactly as it should: smoke74's "next world event
+after 370" is now Adrianople (378), not Cunctos populos (380).
+
+Measured against the parent commit, 8-year harness: five bookmarks
+byte-identical or drift-only, and the anomaly set stays inside the accepted
+families — 67's come-and-go HYR bleed closes (SEL DEAD stands), 40 and the
+rest unchanged, and 529 re-adds the v6.9-documented SAM DEBT-SPIRAL
+(self-limiting: income converges positive while debt-desertion sheds the
+host). Zero stderr on every run. The long runs, each against a baseline
+worktree where the README documents no prior number: `105 167bce` reports
+ROM+PAR SNOWBALL (the §111 target outcome, verbatim); `295 132ce` retires
+OSR/ADI/CHX (the documented third-century client deaths) with GOT going
+1 → 3 on the evacuation of Dacia; `92 529ce` comes back a strict subset of
+its baseline (JUD SNOWBALL on both trees — the §162 rising — while the
+baseline's GHA and BGD deaths do not happen here); `82 614ce` is clean;
+`45 67bce` adds the flags the Alesia card exists to create (ROM SNOWBALL
+returns — the long-documented scripted-annexation class — and the free
+Gallic tribes end as they ended); and `55 1948ce` keeps IRQ's pre-existing
+gulf-arc snowball while the one-province bleeding flag migrates POR → SUI
+with the stream (the hovering class swapping members). A catch-up
+firecheck boots all eight chapters at their horizons: 95/95 cards fire,
+zero guarded warnings. On the tree merged with §194 the battery is
+**124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
+smoke124 both included.
+
 Since §195 (a community with no cell is written to from its host's court):
 the dispersion gained a second kind of seat — `tag` instead of `prov` — for
 hosts past the map's edge, and a Dispersion section on foreign courts'
@@ -1009,6 +1050,7 @@ Britain lists London beside Tripoli, the BMA being the 1948 fact). London
 volunteer bar on day one, deliberately: Machal) are the two entries. The
 harness still cannot see any of it — `node tools/autorun.mjs 4 1948ce` is
 **byte-identical** before and after — and a browser pass over both panels
-renders the section with no page errors. The battery is **125 of 125
-headless suites ALL PASS**; `smoke125` is the new contract, and `smoke124`'s
-§194 pins moved with the feature (37 entries, exactly one seat each).
+renders the section with no page errors. `smoke125` is the new contract,
+and `smoke124`'s §194 pins moved with the feature (37 entries, exactly one
+seat each). On the tree merged with the world backdrop above, the battery
+is **125 of 125 headless suites ALL PASS**.
