@@ -14,8 +14,9 @@ import {
   retireAffinityCore, secedeTagCore,
   allianceBarred, recognized, recognitionInfo, recognizeCore, renounceRecognitionCore, recognizeCd,
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
-  incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore,
+  incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
+  chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
   sideComponents, warGoalInfo, monthsBetween, armiesInProv, devTotal, battleInfo, settleScriptedPeace, GENERAL_NAMES, courtNamePool, engageIfNeeded,
@@ -1108,6 +1109,9 @@ export function gameActions(ctx) {
       }
       else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
+      // The chancery has only so many envoys (SPEC §199), and an alliance is a
+      // bond BOTH courts have to staff — theirs can be the full one.
+      else whyNotAlly = chanceryFullWhy(ctx, me, true) || chanceryFullWhy(ctx, tag, false);
       const cb = casusBelli(ctx, me, tag);
       let whyNotWar = '';
       if (seatBar) whyNotWar = 'No army on this map can reach them.';
@@ -1127,10 +1131,14 @@ export function gameActions(ctx) {
       else if (atWarWithUs) whyNotGuarantee = 'We are at war with them.';
       else if (ourClient || ourOverlord) whyNotGuarantee = 'The bond of fealty already binds us.';
       else if (num(mine.points && mine.points.infl) < 50) whyNotGuarantee = 'Not enough influence (50 required).';
+      // Our word is our establishment's to keep (SPEC §199) — theirs is not
+      // asked, because a guarantee binds only the guarantor.
+      else whyNotGuarantee = chanceryFullWhy(ctx, me, true);
       let whyNotSubsidize = '';
       if (subOut) whyNotSubsidize = 'A subsidy already flows (' + subOut.monthsLeft + ' months left).';
       else if (atWarWithUs) whyNotSubsidize = 'We are at war with them.';
       else if (num(mine.treasury) < 60) whyNotSubsidize = 'The treasury is too thin (60 talents in hand required).';
+      else whyNotSubsidize = chanceryFullWhy(ctx, me, true);
       // Incorporation (SPEC §61): a willing client can join the realm outright.
       let inc = null;
       if (ourClient) {
@@ -1167,7 +1175,10 @@ export function gameActions(ctx) {
       if (mechanicOn(ctx, 'royalMarriage')) {
         try {
           const mi = royalMarriageInfo(ctx, me, tag);
-          marriage = { married: mi.married, can: mi.can, why: mi.why, cost: mi.cost };
+          marriage = {
+            married: mi.married, can: mi.can, why: mi.why, cost: mi.cost,
+            breakOpinion: DIPLO.marryBreakOpinion, // the annulment's price (SPEC §199)
+          };
         } catch (e) { marriage = null; }
       }
       // The arms market (SPEC §181): only surfaced where a bookmark declares
@@ -1178,6 +1189,20 @@ export function gameActions(ctx) {
       // donor courts, and only against a donor or the purse we already lean on.
       let aid = null;
       try { aid = aidInfo(ctx, me, tag); } catch (e) { aid = null; }
+      // The chancery (SPEC §199): our establishment and theirs, so a panel can
+      // say WHY a verb is grey before the player clicks it.
+      let chancery = null;
+      try {
+        if (chanceryOn(ctx)) {
+          const ours = diploLoad(ctx, me);
+          const theirs = diploLoad(ctx, tag);
+          chancery = {
+            seats: ours.seats, capacity: ours.capacity, over: ours.over, free: ours.free,
+            theirSeats: theirs.seats, theirCapacity: theirs.capacity, theirFree: theirs.free,
+            freedByUsMonths: freedCollarMonthsLeft(ctx, tag, me),
+          };
+        }
+      } catch (e) { chancery = null; }
       return {
         tag, name: them.name || tag,
         color: Array.isArray(them.color) ? them.color.slice() : [128, 128, 128],
@@ -1216,6 +1241,7 @@ export function gameActions(ctx) {
         embargo,
         arms,
         aid,
+        chancery,
         offmap: isOffmapTag(ctx, tag),
       };
     } catch (e) { warnOnce('getDiplomacy', 'getDiplomacy failed', e); return null; }
@@ -1884,6 +1910,34 @@ export function gameActions(ctx) {
     getDiplomacy(tag) {
       return getDip(tag);
     },
+    // The chancery (SPEC §199): what a court's establishment is spent on, how
+    // much of it there is, and what the collars are costing it. Answered for
+    // any living court, so the ledger's foreign pages read the same as ours.
+    getRelations(tag) {
+      try {
+        const who = livingTag(ctx, tag || g.playerTag);
+        const t = g.tags[who];
+        if (!t || !t.alive) return null;
+        const load = diploLoad(ctx, who);
+        const strain = clientStrain(ctx, who);
+        return {
+          on: load.on,
+          tag: who,
+          seats: load.seats,
+          capacity: load.capacity,
+          free: load.free,
+          over: load.over,
+          overInfl: load.over * DIP(ctx, 'overInfl', 2),
+          overOpinion: load.over * DIP(ctx, 'overOpinion', 1),
+          bonds: load.bonds.map((b) => ({ kind: b.kind, label: b.label, tag: b.tag, name: b.name })),
+          strain: strain.strain,
+          strainFloor: strain.floor,
+          clients: strain.clients,
+          clientShare: strain.share,
+          freeClients: DIP(ctx, 'freeClients', 3),
+        };
+      } catch (e) { warnOnce('getRelations', 'getRelations failed', e); return null; }
+    },
     improveRelations(tag) {
       try {
         const d = getDip(tag);
@@ -2057,6 +2111,17 @@ export function gameActions(ctx) {
         say('The houses are joined', 'Our house is wed to that of ' + res.name
           + ' (+' + DIPLO.marryOpinionGain + ' opinion both ways). A married dynasty is likelier to be blessed with an heir.', 'good');
       } catch (e) { warnOnce('royalMarriage', 'royalMarriage failed', e); }
+    },
+    // The match sent home (SPEC §199): the one standing bond that used to have
+    // no exit, which a chancery of finite seats cannot afford.
+    annulMarriage(tag) {
+      try {
+        const res = annulMarriageCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('Annulment', res.why, 'bad'); return; }
+        say('The match is annulled', 'The bride goes home to ' + res.name
+          + ' and the seat at our chancery is free again (' + res.opinion
+          + ' opinion). Neither house will forget how this was done.', 'info');
+      } catch (e) { warnOnce('annulMarriage', 'annulMarriage failed', e); }
     },
     // Incorporation (SPEC §61): begin weaving a devoted client into the realm.
     incorporateVassal(tag) {

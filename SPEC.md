@@ -11433,3 +11433,146 @@ chapter.
   `uitest41` — the §197 court: the favor row and both ask buttons render
   per estate, a banked ask spends and toasts, and "Their ground" flips the
   map to the estates mode with the bar's lit button following.
+
+## 199. The court has only so many envoys
+
+Reported: free four nations out of a beaten enemy at the peace table, then eat
+them one after another, and the realm grows faster than any war would have
+grown it. The chain was mechanical and every link was working as written.
+§174 made liberation cost no infamy — a people that frees itself has conquered
+nobody — and the same clause pays a released court **+100 opinion of its
+liberator** at the moment of its founding. §92's collar wants a sworn ally at
+opinion 120 who is at most half our size, which four grateful statelets are by
+construction. §61's union then takes their land at **half a conquest's**
+infamy. The whole road cost influence and patience and nothing else, because
+in this game a standing bond had never cost anything to *keep*.
+
+That is the deeper problem, and the exploit was only its loudest symptom.
+Guarantees, alliances, royal marriages and subsidies were one-off purchases:
+pay the influence once, hold the bond forever, feel nothing. The optimal
+number of every one of them was therefore *all of them*, and a court could sit
+at the middle of a web of twelve obligations it would never be asked to
+honour and never be judged for holding.
+
+A standing bond is not a purchase. It is an **establishment**: a household
+kept at a foreign court, a promise somebody has to answer the day it is
+called. So a realm now has SEATS, it staffs as many bonds as it has seats, and
+what it keeps past them is billed monthly.
+
+### The chancery (`DEFINES.DIPLOMACY`, military.js)
+
+- **Seats** (`diploCapacity`): `capacityBase` (4), one more per `capacityPerTech`
+  (3) points of influence technology to a ceiling of `capacityTechMax` (3), one
+  more for a ruler whose influence skill reaches `capacityRulerSkill` (4), plus
+  anything an idea, reform or event has added through the ordinary additive
+  modifier pipe (`diploSeats`). Five or six in the ancient chapters, seven or
+  eight for Byzantium — a bigger chancery is a thing states learn.
+- **The load** (`diploBonds`/`diploLoad`): one seat per living alliance,
+  guarantee we extend, royal marriage, voluntary outgoing subsidy, and client
+  kingdom. Four things are deliberately NOT seats: a guarantee somebody extends
+  to *us* (the guarantor pays for it), reparations and a donor's aid (flows
+  nobody chose), and the collar we ourselves wear (a client kingdom is a seat
+  its LORD staffs — a bill is never sent to the collared crown).
+- **The gates**: the chancery's own verbs — alliance, guarantee, marriage,
+  subsidy — need a free seat, and where the bond binds both courts, both
+  chanceries are asked. "Their chancery is full; they have no envoy to spare
+  for us" is now a real answer to an alliance offer, and it is the first thing
+  in this game that makes an AI court's own diplomatic commitments visible as a
+  constraint on the player. **Recognition (§96) is exempt** — it binds nobody
+  to fight for anybody, so a full chancery can still sign a peace.
+- **The peace table never asks.** A treaty is force, not diplomacy: the
+  subjugation clause and §76's client transfer land on the winner whatever its
+  establishment can staff, and the winner simply carries the overage. That is
+  the whole split — the chancery cannot *take* you over, and the table can.
+- **Past the establishment**: `overInfl` (2) influence a month per excess seat,
+  out of the same pool that buys claims, unions and towns; and `overOpinion`
+  (1) a month with every court that owes us nothing — the courts we are
+  actually serving are not the ones who think less of us for serving them. The
+  player is told once on each crossing, in both directions.
+
+### Every seat has a way out
+
+An alliance could always be broken, a guarantee withdrawn, a subsidy stopped —
+and a **royal marriage could not**, which was survivable while bonds were free
+and is a trap the moment they take a seat: four early weddings would clog a
+chancery for the rest of the campaign, and the only exit in the code was a war
+with the in-laws. `annulMarriageCore` is the mirror of `breakAllianceCore` —
+mutual removal, `DIPLO.marryBreakOpinion` (−35) at their court, the seat back
+— and the panel's **Houses Joined** plate becomes an **Annul the Match**
+button, on the same on/off pattern the guarantee and subsidy buttons already
+use. War's annulment (−40, §62) stays the dearer road, because it should be.
+
+### The collar chafes
+
+Seats bound the breadth. The client kingdom needed its own brake, because the
+farm above spends a seat per state and would otherwise simply spend all of
+them. `clientStrain` is this game's liberty desire, read off the two things
+EU4 reads it off: how many collars the crown holds, and how much of the crown
+they are between them.
+
+    strain = max(0, clients − freeClients) × strainPerClient
+           + max(0, clientDev/ourDev − strainFreeShare) × strainPerShare   (≤ strainMax)
+
+Every client's opinion of its overlord falls by `strain` a month toward a floor
+of `−10 × strain`, no deeper than `−60`. It sours; it does not revolt — §61's
+rising needs −75, and strain alone can never reach it. What it does reach is
+the ground below **80** (`VASSALS.incorporateOpinion`, what a union needs to
+begin) and below **60** (`incorporateKeepOpinion`, what it needs to survive),
+which is the whole point: a wide client empire can be *held* and cannot be
+*digested*. Climbing one client back out of that with gifts and envoys is
+possible and is meant to be — it costs years and the influence the union
+itself wants, and each completed union eases the strain on the rest.
+
+`freeClients` is 3 and that is not an arbitrary allowance: it is the King of
+Kings' own client system — Osrhoene, Adiabene and Characene ride in Parthia's
+train in four bookmarks — and Byzantium's Ghassanids. A working client system
+of small tributaries is the era's furniture, and the strain starts past it.
+
+### The freed do not kneel to the hand that freed them
+
+The stamp is one line in `executePeaceDeal`: a court released at the table
+records `freedBy` (who, and when). For `freedCollarMonths` (120) that court
+will not hear an offer of protection **from that same court** — everyone at
+that table remembers, and a crown that frees a people and collars it in the
+same generation is not believed the next time it frees anybody. The gratitude
+of §174 is untouched: it is real, it buys alliances and access, and it is not a
+down payment on a collar. Another court's offer is another court's business,
+and a decade on the bar is simply gone.
+
+### What does not move
+
+**1948 switches the section off** (`mechanics.diploCapacity: false`, beside the
+`clientKingdoms: false` it already had). The twentieth century answers a friend
+with a bloc: that chapter's own scripts seat the Arab League's joint defence
+and the Baghdad Pact as webs where every member guarantees every other, which
+is the era's diplomacy working exactly as it did and not an overreach to be
+fined. A relations limit there would put six capitals permanently over their
+establishment on the day the League convenes.
+
+**And the seeded world fits inside its own establishment.** Every court every
+bookmark seats opens at or under capacity with room to spare (Parthia at 4 of
+5 in 40 BCE is the tightest), and no seeded client system carries any strain at
+all — which is what `freeClients: 3` was chosen to guarantee. This section is
+invisible to a campaign nobody has gone shopping in, and the harness proves it
+rather than suggesting it: `node tools/autorun.mjs 8`, before and after, over
+all eight bookmarks, is **byte-identical** — not the same anomaly set, the same
+file. The AI never forms a bond on its own initiative, so the only courts that
+ever meet the ceiling are the ones a player is spending.
+
+- **Regression contract**: `smoke128` — the capacity arithmetic in each of its
+  four terms and both ceilings; the load per bond kind and the four things that
+  are not seats; the gates (ours full, *theirs* full, recognition exempt) and
+  the peace table pushing a winner over anyway; the monthly bill in influence
+  and in opinion, the bound courts exempt from it, and the one notice per
+  crossing; strain absent inside the allowance and biting past it, twenty years
+  of it landing exactly on the floor and no further, incorporation unreachable
+  as a result and independence still out of its reach; the annulment freeing
+  its seat, unjoining both houses and costing what it costs; the release stamp, the
+  decade's bar, its being a memory of one court rather than a constitution, and
+  its expiry; the collar keeping the seat its alliance held; the seeded-world
+  invariant across all eight bookmarks; the 1948 gate; and a pre-§199 save with
+  none of the new fields reading as an empty chancery. `uitest42` — the browser's
+  answer: the Chancery block on The World counting seats and moving when a bond
+  is written, the annulment live where a dead plate used to sit and the count
+  falling back when it is pressed, an overstretched chancery naming itself, and
+  the alliance button carrying the refusal in words.

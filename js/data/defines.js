@@ -1344,6 +1344,40 @@ export const DEFINES = {
     revoltChance: 0.04,          // monthly rising roll once every condition holds
   },
 
+  // The chancery (SPEC §199): a court has only so many envoys. Every standing
+  // bond — an alliance, a guarantee, a royal marriage, a subsidy, a client
+  // kingdom — is somebody's whole career: a household kept at a foreign court,
+  // a promise that must be answered when it is called. A realm keeps as many
+  // as its establishment can staff; the ones past that are paid for out of the
+  // same purse that buys claims, unions and towns, and the world reads a crown
+  // with too many irons in the fire as a crown whose word is thin.
+  DIPLOMACY: {
+    capacityBase: 4,          // seats every court's establishment has...
+    capacityPerTech: 3,       // ...one more per this many points of influence technology...
+    capacityTechMax: 3,       // ...to at most this many from tech...
+    capacityRulerSkill: 4,    // ...and one more for a ruler this able at diplomacy
+    overInfl: 2,              // influence a month per seat past the establishment
+    overOpinion: 1,           // ...and what unbound courts think of it, per seat, per month
+    // The collar chafes (SPEC §199): the client kingdom's own liberty desire.
+    // A crown with more collars than it can attend to — or with clients that
+    // together weigh too much of it — is a crown its clients stop adoring, and
+    // devotion (VASSALS.incorporateOpinion) is what a union runs on. This is
+    // the brake on releasing an enemy's provinces as states and then eating
+    // them one after another: three are a policy, six are a rebellion waiting.
+    // Three is not an arbitrary allowance: it is the King of Kings' own client
+    // system (Osrhoene, Adiabene and Characene ride in Parthia's train in four
+    // bookmarks) and Byzantium's Ghassanids. A working client system of small
+    // tributaries is the era's furniture, and the strain starts past it.
+    freeClients: 3,           // collars a crown holds without strain...
+    strainPerClient: 2,       // ...and the monthly chafe per client past that
+    strainFreeShare: 0.5,     // their combined development against ours before it tells...
+    strainPerShare: 8,        // ...and per point of that share past it
+    strainMax: 8,             // the most the collar chafes in one month
+    strainFloorPer: 10,       // how deep it carries a client's regard, per point of strain...
+    strainFloorMax: 60,       // ...and no deeper than this: strain sours, it does not revolt
+    freedCollarMonths: 120,   // a court freed at our own table will not kneel to us for a decade
+  },
+
   UNREST: {
     heathen: 3,                // province religion in a different group than owner's
     sameGroupHeretic: 1.5,     // same religious group, different religion

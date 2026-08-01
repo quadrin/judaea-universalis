@@ -3126,6 +3126,13 @@ export const DIPLO = {
   marryHeirBonus: 1,      // each living royal marriage adds this ×base heir chance...
   marryHeirCap: 3,        // ...capped at this multiple of the base
   marryWarBreakOpinion: -40, // drawing the sword on kin is not forgotten
+  // …and neither is being sent home (SPEC §199). A match was the one bond
+  // this game gave no way out of, which was survivable while bonds were free
+  // and is a trap now that they take a seat: four early weddings would clog a
+  // chancery for the rest of the campaign. Annulment costs less than a war
+  // between kin and more than breaking a mere alliance — Herod's household
+  // is the argument for the number.
+  marryBreakOpinion: -35,
 };
 export function opinionOf(ctx, whose, of) {
   const t = ctx.game.tags[whose];
@@ -3891,6 +3898,9 @@ export function royalMarriageInfo(ctx, tag, other) {
     out.why = 'Arranging the match takes ' + DIPLO.marryCost + ' influence points.';
     return out;
   }
+  // A match is a standing bond, and both houses have to keep it (SPEC §199).
+  const room = chanceryFullWhy(ctx, tag, true) || chanceryFullWhy(ctx, other, false);
+  if (room) { out.why = room; return out; }
   out.can = true;
   return out;
 }
@@ -3910,6 +3920,22 @@ export function royalMarriageCore(ctx, tag, other) {
   chronicle(ctx, 'ruler', 'The houses of ' + (me.name || tag) + ' and ' + (them.name || other)
     + ' are joined in marriage.');
   return { ok: true, name: them.name || other };
+}
+// The match sent home (SPEC §199). The mirror of breakAllianceCore: mutual
+// removal, and the other court remembers the insult. War's annulment
+// (breakMarriagesForWar, below) is the same act performed with an army, and
+// costs more.
+export function annulMarriageCore(ctx, tag, other) {
+  const g = ctx.game;
+  const a = g.tags[tag], b = g.tags[other];
+  if (!a || !b) return { ok: false, why: 'No such court.' };
+  if (!marriedTo(ctx, tag, other) && !marriedTo(ctx, other, tag)) {
+    return { ok: false, why: 'Our houses are not joined.' };
+  }
+  a.marriages = (a.marriages || []).filter((k) => k !== other);
+  b.marriages = (b.marriages || []).filter((k) => k !== tag);
+  addOpinion(ctx, other, tag, DIPLO.marryBreakOpinion);
+  return { ok: true, name: b.name || other, opinion: DIPLO.marryBreakOpinion };
 }
 // Drawing the sword on kin annuls the match — and is not forgotten.
 export function breakMarriagesForWar(ctx, a, b) {
@@ -3934,6 +3960,230 @@ export function breakAllianceCore(ctx, breaker, other) {
   b.allies = (b.allies || []).filter((x) => x !== breaker);
   addOpinion(ctx, other, breaker, DIPLO.breakOpinion);
   return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The chancery (SPEC §199): a court has only so many envoys.
+//
+// Every verb in the diplomacy block wrote a bond that then cost nothing to
+// keep. Guarantees, alliances, marriages and subsidies were one-off purchases
+// of influence and gold, so the optimal number of every one of them was "all
+// of them" — and the client kingdom, whose road runs alliance → collar →
+// union, could be farmed: free four states out of a beaten enemy at the table
+// (no infamy, §174), collar them with the gratitude the liberation itself
+// paid for, and eat them one after another at half a conquest's odium.
+//
+// A standing bond is not a purchase, it is an ESTABLISHMENT: a household kept
+// at a foreign court, a promise somebody has to answer when it is called. So
+// a realm has SEATS, it staffs as many bonds as it has seats, and the ones
+// past that are paid for monthly out of the same influence that buys claims,
+// unions and towns — while every court that owes us nothing reads a crown
+// with too many irons in the fire as a crown whose word is thin.
+//
+// Two rules, one purse:
+//   * the chancery's own verbs need a free seat, and the peace table never
+//     does — a treaty is force, not diplomacy, and a subjugation clause may
+//     put a winner over its own establishment;
+//   * a client past the free allowance CHAFES: its regard for its overlord
+//     sinks toward a floor set by the strain, which is exactly the number the
+//     §61 union is built on. Three clients are a policy; six are a rebellion
+//     with a waiting list.
+// ─────────────────────────────────────────────────────────────────────────────
+export function DIP(ctx, key, fallback) {
+  const d = ctx && ctx.DEFINES && ctx.DEFINES.DIPLOMACY;
+  const v = d ? d[key] : undefined;
+  return Number.isFinite(v) ? v : fallback;
+}
+// Not every age counts its irons (SPEC §52's gate). The twentieth century
+// answers a friend with a bloc — the 1948 chapter's own scripts seat the Arab
+// League and the Baghdad Pact as six-member webs of mutual guarantee, which is
+// the era's diplomacy and not an overreach to be fined. `diploCapacity: false`
+// switches the whole section off, establishment, strain and all.
+export function chanceryOn(ctx) { return mechanicOn(ctx, 'diploCapacity'); }
+
+// What the establishment can staff: a base every court has, a seat for every
+// few points of influence technology (a bigger chancery is a thing states
+// learn), one for a ruler who is good at this, and whatever a reform, an idea
+// or an event has added through the ordinary modifier pipe (`diploSeats`).
+export function diploCapacity(ctx, tag) {
+  const t = ctx.game.tags[tag];
+  if (!t) return 0;
+  let seats = DIP(ctx, 'capacityBase', 4);
+  const step = Math.max(1, DIP(ctx, 'capacityPerTech', 3));
+  seats += Math.min(DIP(ctx, 'capacityTechMax', 3),
+    Math.floor(Math.max(0, num(t.tech && t.tech.infl)) / step));
+  if (t.ruler && num(t.ruler.infl) >= DIP(ctx, 'capacityRulerSkill', 4)) seats += 1;
+  seats += Math.round(resolveTagAdd(ctx, tag, 'diploSeats'));
+  return Math.max(1, Math.round(seats));
+}
+// One row per seat spent. A guarantee somebody extends to US is their seat and
+// not ours; reparations and a donor's aid are flows this court never chose, so
+// neither costs it an envoy; and being somebody's client is a bond the LORD
+// staffs — a collared crown is not billed for its own collar.
+export function diploBonds(ctx, tag) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  const out = [];
+  if (!t) return out;
+  const living = (k) => k && k !== tag && g.tags[k] && g.tags[k].alive;
+  const nameOf = (k) => (g.tags[k] && g.tags[k].name) || k;
+  const seen = new Set();
+  const add = (kind, label, k) => {
+    const key = kind + ':' + k;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ kind, label, tag: k, name: nameOf(k) });
+  };
+  for (const k of t.allies || []) if (living(k)) add('ally', 'Alliance', k);
+  for (const k of t.guarantees || []) if (living(k)) add('guarantee', 'Guarantee', k);
+  for (const k of t.marriages || []) if (living(k)) add('marriage', 'Royal marriage', k);
+  for (const s of g.subsidies || []) {
+    if (!s || s.from !== tag || s.reparation || s.aid) continue;
+    if (living(s.to)) add('subsidy', 'Subsidy', s.to);
+  }
+  for (const k of vassalsOf(ctx, tag)) if (living(k)) add('client', 'Client kingdom', k);
+  return out;
+}
+// The whole read, for the gates and for the panel.
+export function diploLoad(ctx, tag) {
+  const on = chanceryOn(ctx);
+  const bonds = diploBonds(ctx, tag);
+  const capacity = diploCapacity(ctx, tag);
+  return {
+    on, bonds, capacity,
+    seats: bonds.length,
+    free: Math.max(0, capacity - bonds.length),
+    over: on ? Math.max(0, bonds.length - capacity) : 0,
+  };
+}
+// Is there a seat for one more? Returns the refusal in words, or '' — phrased
+// from our side of the table or theirs, because both courts must staff a bond
+// that binds them both.
+export function chanceryFullWhy(ctx, tag, mine) {
+  if (!chanceryOn(ctx)) return '';
+  const l = diploLoad(ctx, tag);
+  if (l.seats < l.capacity) return '';
+  const name = (ctx.game.tags[tag] && ctx.game.tags[tag].name) || tag;
+  return mine
+    ? 'Our chancery is full — ' + l.seats + ' standing bonds and seats for ' + l.capacity
+      + '. End one, or grow the establishment, before we swear another.'
+    : 'The chancery of ' + name + ' is full — ' + l.seats + ' standing bonds of ' + l.capacity
+      + '. They have no envoy to spare for us.';
+}
+// The collar chafes: a client kingdom's own liberty desire, read off the same
+// two things EU4 reads it off — how many collars the crown holds, and how much
+// of the crown they are between them.
+// `pre` is the monthly pass's shared arithmetic (one province sweep for every
+// court instead of one per client); every other caller omits it and pays the
+// ordinary price.
+export function clientStrain(ctx, lord, pre) {
+  const out = { on: chanceryOn(ctx), clients: 0, share: 0, strain: 0, floor: 0 };
+  const clients = (pre && pre.clients) || vassalsOf(ctx, lord);
+  out.clients = clients.length;
+  if (!out.on || !clients.length) return out;
+  const devOf = (pre && pre.devOf) || ((k) => devOfTag(ctx, k));
+  const mine = Math.max(1, devOf(lord));
+  let theirs = 0;
+  for (const k of clients) theirs += devOf(k);
+  out.share = Math.round((theirs / mine) * 100) / 100;
+  const raw = Math.max(0, clients.length - DIP(ctx, 'freeClients', 3)) * DIP(ctx, 'strainPerClient', 2)
+    + Math.max(0, out.share - DIP(ctx, 'strainFreeShare', 0.5)) * DIP(ctx, 'strainPerShare', 8);
+  out.strain = Math.round(Math.min(DIP(ctx, 'strainMax', 8), raw) * 10) / 10;
+  out.floor = -Math.min(DIP(ctx, 'strainFloorMax', 60),
+    Math.round(out.strain * DIP(ctx, 'strainFloorPer', 10)));
+  return out;
+}
+// A court freed at OUR table does not kneel to the hand that freed it — not
+// while the people who saw it happen are alive (SPEC §199). Returns the months
+// still to run, or 0.
+export function freedCollarMonthsLeft(ctx, tag, by) {
+  const t = ctx.game.tags[tag];
+  const f = t && t.freedBy;
+  if (!f || f.by !== by) return 0;
+  const total = DIP(ctx, 'freedCollarMonths', 120);
+  const since = monthsBetween({ y: num(f.y), m: num(f.m, 1) }, ctx.game.date);
+  return Math.max(0, Math.round(total - since));
+}
+// Monthly: the establishment is paid for, the world reads the overreach, and
+// the collars chafe. Runs before the ordinary opinion drift.
+export function monthlyChancery(ctx) {
+  const g = ctx.game;
+  if (!chanceryOn(ctx)) return;
+  // One sweep of the map and one of the courts, shared by every strain read
+  // below — the alternative is a province pass per client per month.
+  const dev = Object.create(null);
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || !p.owner) continue;
+    dev[p.owner] = num(dev[p.owner]) + devTotal(p);
+  }
+  const devOf = (k) => num(dev[k]);
+  const clientsOf = Object.create(null);
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || !t.alive || !t.overlord) continue;
+    (clientsOf[t.overlord] = clientsOf[t.overlord] || []).push(k);
+  }
+  for (const tag of Object.keys(g.tags)) {
+    const t = g.tags[tag];
+    if (!t || !t.alive || tag === 'REB') continue;
+    const load = diploLoad(ctx, tag);
+    if (load.over > 0) {
+      // The envoys past the establishment are paid out of the influence that
+      // would have bought a claim, a union or a town.
+      if (t.points) {
+        t.points.infl = Math.max(0, num(t.points.infl) - load.over * DIP(ctx, 'overInfl', 2));
+      }
+      // …and every court we owe nothing reads the overreach. Courts already
+      // bound to us are the ones being served, so they are not the ones who
+      // think less of us for it.
+      const bite = load.over * DIP(ctx, 'overOpinion', 1);
+      if (bite > 0) {
+        const bound = new Set(load.bonds.map((b) => b.tag));
+        if (t.overlord) bound.add(t.overlord);
+        for (const other of Object.keys(g.tags)) {
+          const o = g.tags[other];
+          if (!o || !o.alive || other === tag || other === 'REB' || bound.has(other)) continue;
+          if (!o.opinion) o.opinion = {};
+          o.opinion[tag] = clamp(num(o.opinion[tag]) - bite, -200, 200);
+        }
+      }
+    }
+    // The notice, once per crossing, and only to the court a player holds.
+    const strained = load.over > 0;
+    if (!!t.diploStrained !== strained) {
+      t.diploStrained = strained;
+      if (tag === g.playerTag && ctx.bus) {
+        ctx.bus.emit('notify', strained ? {
+          title: 'The chancery is overstretched',
+          text: 'We keep ' + load.seats + ' standing bonds and have seats for ' + load.capacity
+            + '. The ' + load.over + ' beyond the establishment cost '
+            + (load.over * DIP(ctx, 'overInfl', 2)) + ' influence a month, and courts that owe us '
+            + 'nothing think a little less of us every month we keep them.',
+          type: 'bad',
+        } : {
+          title: 'The chancery is in order',
+          text: 'Our standing bonds are back inside the establishment (' + load.seats
+            + ' of ' + load.capacity + '). The envoys are paid for.',
+          type: 'good',
+        });
+      }
+    }
+    // The collars chafe. Strain sours a client toward a floor and no further:
+    // it is what makes a wide client empire undigestible (the §61 union needs
+    // devotion), not a machine for manufacturing risings.
+    const clients = clientsOf[tag] || [];
+    const cs = clientStrain(ctx, tag, { clients, devOf });
+    if (cs.strain > 0) {
+      for (const k of clients) {
+        const c = g.tags[k];
+        if (!c || !c.alive) continue;
+        if (!c.opinion) c.opinion = {};
+        const v = num(c.opinion[tag]);
+        if (v > cs.floor) c.opinion[tag] = clamp(Math.max(cs.floor, v - cs.strain), -200, 200);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------- peace
@@ -4043,6 +4293,17 @@ export function clientOfferInfo(ctx, me, them) {
   } else if (mine.overlord) out.why = 'A client kingdom does not keep client kingdoms of its own.';
   else if ((mine.atWarWith || []).indexOf(them) >= 0) out.why = 'We are at war with them.';
   else if (!allied) out.why = 'Only a sworn ally would hear such an offer.';
+  // The freed do not kneel to the hand that freed them (SPEC §199). Liberating
+  // a people at the table and collaring it in the same generation is the one
+  // move this mechanism exists to stop being free: the gratitude §174 paid for
+  // is not a down payment on a collar, and everyone at that table remembers.
+  else if (freedCollarMonthsLeft(ctx, them, me) > 0) {
+    const left = freedCollarMonthsLeft(ctx, them, me);
+    out.why = 'We freed them at the peace table. A crown that frees a people and collars it in '
+      + 'the same generation is not believed the next time it frees anybody ('
+      + Math.round(left / 12) + ' year' + (Math.round(left / 12) === 1 ? '' : 's')
+      + ' before the offer can be made).';
+  }
   else if (share > DIPLO.clientOfferDevShare) {
     out.why = 'They are too great to be anyone\'s client (' + out.theirDev
       + ' development against our ' + out.myDev + '; we need to be twice their size).';
@@ -5506,6 +5767,12 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     }
     if (seat && !t.dynamicCapital) t.dynamicCapital = seat.canon || seat.name;
     refreshReleasedManpower(ctx, row.tag);
+    // Who freed them, and when (SPEC §199). The gratitude below is real and it
+    // is not a down payment: the same hand may not offer this court a collar
+    // for a generation, which is what stopped "free four states, collar them
+    // with their own gratitude, and eat them one by one" from being the
+    // cheapest expansion in the game.
+    t.freedBy = { by: byTag, y: g.date.y, m: g.date.m };
     addOpinion(ctx, row.tag, byTag, 100);
     addOpinion(ctx, byTag, row.tag, 50);
     addOpinion(ctx, row.tag, info.enemyLeader, -100);

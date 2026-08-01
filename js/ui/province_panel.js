@@ -194,7 +194,8 @@ const RISING_LABELS = {
       }
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
-        war: 'declareWarOn', incorporate: 'incorporateVassal', marry: 'royalMarriage',
+        war: 'declareWarOn', incorporate: 'incorporateVassal',
+        marry: b.classList.contains('pp-dip-on') ? 'annulMarriage' : 'royalMarriage',
         guarantee: b.classList.contains('pp-dip-on') ? 'revokeGuarantee' : 'guaranteeNation',
         subsidize: b.classList.contains('pp-dip-on') ? 'cancelSubsidy' : 'sendSubsidy',
         rival: b.classList.contains('pp-dip-on') ? 'renounceRival' : 'declareRival',
@@ -859,25 +860,40 @@ const RISING_LABELS = {
     refs.dipStatus.classList.toggle('pos', cls === 'pos');
     refs.dipStatus.classList.toggle('neg', cls === 'neg');
 
+    // The chancery (SPEC §199): a standing bond takes a seat, and the seats
+    // are counted. Appended to every verb that writes one, so the cost of an
+    // establishment is on the button and not only in the refusal.
+    const seatLine = d.chancery
+      ? `\nA standing bond: our chancery holds ${d.chancery.seats} of ${d.chancery.capacity} seats`
+        + (d.chancery.over > 0 ? ` — ${d.chancery.over} beyond the establishment already.` : '.')
+      : '';
+
     setDipBtn(refs.dipImprove, d.canImprove, d.whyNotImprove,
       `Improve relations: ${d.improveCost} influence points → +15 opinion`);
     setDipBtn(refs.dipGift, d.canGift, d.whyNotGift,
       `Send a gift: ${d.giftCost} talents from the treasury → +20 opinion`);
     setDipBtn(refs.dipAlly, d.canAlly, d.whyNotAlly,
-      'Offer a formal alliance — a refusal sours relations for six months');
+      'Offer a formal alliance — a refusal sours relations for six months' + seatLine);
     // Royal marriage (SPEC §62): hidden entirely in the ages without it.
     refs.dipMarry.classList.toggle('hidden', !d.marriage);
     if (d.marriage) {
+      refs.dipMarry.classList.toggle('pp-dip-on', !!d.marriage.married);
       if (d.marriage.married) {
-        setText(refs.dipMarry, 'Houses Joined');
-        refs.dipMarry.classList.add('disabled');
-        refs.dipMarry.dataset.tt = 'Our houses are joined in marriage: the dynasty is likelier to be blessed with an heir. War between us would annul it — and not be forgiven.';
+        // A match takes a chancery seat like any other standing bond (SPEC
+        // §199), so it needs a way out that is not a war.
+        setText(refs.dipMarry, 'Annul the Match');
+        refs.dipMarry.classList.remove('disabled');
+        refs.dipMarry.dataset.tt = 'Our houses are joined in marriage: the dynasty is likelier to be '
+          + 'blessed with an heir. War between us would annul it — and not be forgiven.'
+          + '\n――――――\nSend the match home: the seat it holds at our chancery comes free, and '
+          + `their court's regard for us falls ${Math.abs(d.marriage.breakOpinion || 35)}.`;
       } else {
         setText(refs.dipMarry, 'Royal Marriage');
         setDipBtn(refs.dipMarry, d.marriage.can, d.marriage.why,
           `Arrange a royal marriage: ${d.marriage.cost} influence points → +25 opinion both ways, `
           + 'and each living marriage raises the chance of an heir appearing (capped at ×3). '
-          + 'War between married houses annuls the match at a heavy cost in opinion.');
+          + 'War between married houses annuls the match at a heavy cost in opinion.'
+          + seatLine);
       }
     }
     // Recognition (SPEC §96): hidden entirely in the ages that do not use it.
@@ -946,7 +962,7 @@ const RISING_LABELS = {
     } else {
       setDipBtn(refs.dipGuarantee, d.canGuarantee, d.whyNotGuarantee,
         'Guarantee their independence: 50 influence points → +15 opinion, and any attacker on them fights us too.'
-        + (d.theyGuarantee ? '\nThey guarantee us.' : ''));
+        + (d.theyGuarantee ? '\nThey guarantee us.' : '') + seatLine);
     }
     refs.dipSubsidize.classList.toggle('pp-dip-on', !!d.subsidyOut);
     setText(refs.dipSubsidize, d.subsidyOut ? 'End Subsidy' : 'Send Subsidy');
@@ -962,7 +978,8 @@ const RISING_LABELS = {
     } else {
       setDipBtn(refs.dipSubsidize, d.canSubsidize, d.whyNotSubsidize,
         'Subsidize their court: 10 talents a month for a year → +20 opinion.'
-        + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : ''));
+        + (d.subsidyIn ? `\nThey pay US ${d.subsidyIn.amount}/month (${d.subsidyIn.monthsLeft} months${d.subsidyIn.reparation ? ', reparations' : ''}).` : '')
+        + seatLine);
     }
     // Declared rivalries (SPEC §86): the same button names an enemy or unsays
     // it. Hidden where the age already decided — a standing rivalry belongs
@@ -1000,6 +1017,12 @@ const RISING_LABELS = {
             : '▸ They will refuse — devotion alone is not enough unless they are much smaller '
               + 'than us, or in a war they cannot win. Asking anyway costs the influence and '
               + 'their goodwill.')
+          : '')
+        // The collar keeps the seat the alliance already held (SPEC §199) —
+        // what it adds is strain, and strain is what a union runs out of.
+        + (d.chancery
+          ? '\nThe collar takes the chancery seat the alliance held. Held together with others, '
+            + 'the collars chafe: every client\'s regard sinks, and a union needs devotion.'
           : '');
       setDipBtn(refs.dipProtect, co.can, co.why, terms);
     }

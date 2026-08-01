@@ -4,7 +4,7 @@ import {
   moveArmiesDaily, tickBattles, tickSieges, monthlyReinforce, monthlyMoraleRecovery,
   monthlyAttrition, monthlyGarrisons, updateWarscores, updateTagLife, checkElimination,
   sweepAirfields, flyPendingRaids, monthlyIncorporation, monthlyClaimFabrications,
-  declaredRivals, num,
+  monthlyChancery, declaredRivals, num,
 } from './military.js';
 import { runMonthlyEconomy, monthlyManpower, monthlyConstruction, monthlySettlement, monthlyExpeditions, yearlyGrowth, monthlySubsidies } from './economy.js';
 import { monthlyUnrest, monthlyWarExhaustion, monthlyOpinionDrift, tickModifiers } from './unrest.js';
@@ -135,6 +135,7 @@ function monthlyBlock(ctx) {
   safe('trigEvents', () => checkTriggeredEvents(ctx));
   safe('ai', () => runMonthlyAI(ctx));
   safe('warExh', () => monthlyWarExhaustion(ctx));
+  safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §199)
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
   safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)

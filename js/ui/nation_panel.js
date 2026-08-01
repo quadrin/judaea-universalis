@@ -1345,6 +1345,54 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       }
     }
 
+    // The chancery (SPEC §199): the establishment, what it is spent on, and
+    // what it costs to keep more bonds than it can staff. Reads for a foreign
+    // court exactly as for ours — how full THEIR chancery is decides whether
+    // they can swear anything to us at all.
+    if (actions && typeof actions.getRelations === 'function') {
+      let rel = null;
+      try { rel = actions.getRelations(who); } catch (e) { rel = null; }
+      if (rel && rel.on) {
+        const us = self ? 'our' : 'their';
+        const spend = rel.bonds.length
+          ? rel.bonds.map((b) => '  ' + b.label + ' — ' + b.name).join('\n')
+          : '  nothing standing';
+        let tt = 'Every standing bond is somebody\'s whole career: an alliance, a guarantee, '
+          + 'a royal marriage, a subsidy, a client kingdom.\n――――――\n' + spend
+          + '\n――――――\nSeats come from the establishment, from influence technology, and from a '
+          + 'ruler who is good at this.';
+        tt += rel.over > 0
+          ? '\nBeyond it: ' + rel.over + ' bond' + (rel.over === 1 ? '' : 's')
+            + ' — ' + rel.overInfl + ' influence a month, and every court that owes '
+            + (self ? 'us' : 'them') + ' nothing thinks ' + rel.overOpinion
+            + ' less of ' + (self ? 'us' : 'them') + ' a month.'
+          : '\nThe peace table can still put ' + (self ? 'us' : 'them')
+            + ' over it — a treaty is force, not diplomacy.';
+        if (rel.clients) {
+          tt += '\n――――――\nClient kingdoms: ' + rel.clients + ' (' + rel.freeClients
+            + ' are held without strain), together ' + Math.round(rel.clientShare * 100)
+            + '% of ' + us + ' development.';
+          tt += rel.strain > 0
+            ? '\nThe collars chafe: every client\'s regard falls ' + rel.strain
+              + ' a month toward ' + rel.strainFloor + '. A union needs devotion, so a wide '
+              + 'client empire cannot be digested — only held.'
+            : '\nThe collars sit easy.';
+        }
+        const cls = rel.over > 0 ? 'neg' : rel.free ? '' : 'pos';
+        html += `<div class="np-dip-sec">The Chancery</div>`
+          + `<div class="np-dip-row" data-tt="${esc(tt)}"><span class="np-dip-name">`
+          + `${rel.over > 0 ? 'Overstretched' : rel.free ? 'Standing bonds' : 'Every seat spoken for'}`
+          + `</span><span class="np-dip-ws ${cls}">${rel.seats} / ${rel.capacity}</span></div>`;
+        if (rel.strain > 0) {
+          html += `<div class="np-dip-row" data-tt="${esc('The client kingdoms\' own regard sinks '
+            + rel.strain + ' a month toward ' + rel.strainFloor + ' while there are this many of them '
+            + '(or while they weigh this much of the realm). Fewer collars, or a bigger realm, eases it.')}">`
+            + `<span class="np-dip-name">The collars chafe</span>`
+            + `<span class="np-dip-ws neg">−${rel.strain}/mo → ${rel.strainFloor}</span></div>`;
+        }
+      }
+    }
+
     const allies = (t.allies || []).filter((a) => g.tags[a] && g.tags[a].alive);
     html += `<div class="np-dip-sec">Allies</div>`;
     html += allies.length

@@ -550,9 +550,16 @@ export const BOOKMARK_1948 = {
   // treaties know how to write. The bar covers all three roads: the yoke at
   // the peace table, the collar offered to a small friendly neighbour in
   // peacetime (SPEC §92), and taking a client off a defeated enemy.
+  // …and the chancery's establishment goes with them (SPEC §199). The twentieth
+  // century answers a friend with a BLOC: this chapter's own scripts seat the
+  // Arab League's joint defence and the Baghdad Pact as webs where every member
+  // guarantees every other, which is the era's diplomacy working exactly as it
+  // did and not an overreach to be fined. A relations limit here would put six
+  // capitals permanently over their own establishment on the day the League
+  // convenes. The other seven chapters keep it.
   mechanics: {
     conversion: false, royalMarriage: false, coalitions: false, succession: false,
-    clientKingdoms: false,
+    clientKingdoms: false, diploCapacity: false,
   },
 
   // Black gold (SPEC §52): the age's prize goods. Kirkuk behind Arbela,

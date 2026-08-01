@@ -133,6 +133,21 @@ static site, the zero dependencies, or the missing build step changes.
   the old master keeps its capital, remembers the loss, and plots reconquest. Liberation
   earns no infamy. The same congress can transfer one of the enemy's direct client kingdoms
   to you intact — its land, ruler and army survive while its tribute and war duty change hands.
+- **The chancery has only so many envoys.** A standing bond is an establishment, not a
+  purchase: every alliance, guarantee, royal marriage, subsidy and client kingdom takes one
+  of your realm's seats (four, plus influence technology, plus a ruler who is good at this).
+  With the seats spent, the next offer is refused — and so is theirs, because a court whose
+  own chancery is full has no envoy to spare for you. What you keep past the establishment is
+  billed monthly in influence, and every court that owes you nothing thinks a little less of
+  you for it. The peace table is the exception, because a treaty is force and not diplomacy:
+  a subjugation clause lands on you whatever your establishment can staff. Client kingdoms
+  bring their own pressure on top — hold more collars than you can attend to, or collars that
+  weigh too much of the realm, and every client's regard sinks toward a floor below what a
+  union needs, so a wide client empire can be held but not digested. And a state you freed at
+  your own table will not kneel to the hand that freed it for a generation, which is what
+  stopped "free four nations, collar them with their own gratitude, and eat them one by one"
+  from being the cheapest expansion in the game. The 1948 chapter, whose diplomacy is blocs
+  and pacts, keeps none of this.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
@@ -481,6 +496,19 @@ static site, the zero dependencies, or the missing build step changes.
   it costs no infamy at all. They say yes on devotion alone if they adore you,
   and at a lower bar if they're much smaller or fighting a war they can't win.
   Ask and be refused, and they won't hear it again for five years.
+- **…but a court has only so many envoys.** Every standing bond — alliance,
+  guarantee, royal marriage, subsidy, client kingdom — occupies one seat of a
+  realm's diplomatic establishment, and the establishment is small: four seats,
+  plus what influence technology and a capable ruler add. Fill it and the next
+  offer is refused, by you or by them; keep more than it can staff and the
+  extra envoys are paid for monthly in influence while every court you owe
+  nothing thinks less of you for the sprawl. Client kingdoms chafe on top of
+  that: past three collars — the King of Kings' own client system is the
+  measure — or once your clients together weigh half the realm, every one of
+  them cools month by month toward a floor below what an incorporation needs.
+  You can hold a wide client empire. You cannot swallow it. And a nation you
+  freed at the peace table will not accept your collar for a generation: the
+  gratitude liberation earns is real, and it is not a down payment.
 - **Recognition, not alliance.** In 1948 no Arab capital will sign a military
   pact with Israel — not at the start, not after a warm decade, not after the
   treaty on the lawn. What is on offer instead is the thing that actually got
