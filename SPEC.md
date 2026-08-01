@@ -11703,4 +11703,4 @@ way the sim resolves is a guard that reports the sim as broken.
   verified in a real browser). `smoke16`'s raw index into the 132/614
   tables still lands on the Third House at five, because every insertion
   went in after it. On the tree merged with main's §197-§199 the battery
-  is 130 of 130 headless suites ALL PASS.
+  is 129 of 129 headless suites ALL PASS.

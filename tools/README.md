@@ -1148,5 +1148,5 @@ offers at least two answers) and they now deal a real choice apiece. The
 moved pins: `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
 (21 nodes, cols/rows vectors extended), `smoke112` (21), `smoke116` (73
 roads not taken), `smoke126` (the §196 chairs re-counted), `uitest2` (21
-medallions). On the tree merged with main's §197-§199 the battery is **130 of 130 headless suites ALL PASS**, their smoke127 and
-smoke128 and this section's smoke129 all included.
+medallions). On the tree merged with main's §197-§199 the battery is **129 of 129 headless suites ALL PASS**, their smoke127 and smoke128
+and this section's smoke129 all included.
