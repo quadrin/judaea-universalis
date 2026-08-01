@@ -85,9 +85,14 @@ DEFINES = {
     AGR: {name:'Kingdom of Agrippa II', color:[214,120,120], religion:'judaism', culture:'galilean', capital:'Caesarea Philippi'},
     REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
     WASTE:{name:'Wasteland',      color:[70,66,60]},
+    // every tag also carries adj:'Roman'|'Judaean'|'Israeli'|… — the adjective the map
+    //   names its foreign holdings with (SPEC §5.6, §199). No rule derives Dutch from
+    //   The Netherlands, so it is declared, here and in any chapter `tagTweaks` rename.
     // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
     //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
-    //   description:'one-liner for start screen / tooltips'
+    //   description:'one-liner for start screen / tooltips',
+    //   homeRegion:'Italy' — where the court's own name belongs when its capital is
+    //   deliberately somewhere else (ROM plays from Antioch, UK from Cyprus)
   },
   BASE: {  // balance constants, sim reads these — defines agent sets sane values
     regSize:1000, regCost:{inf:10, cav:25}, maintPerReg:0.35,
@@ -111,6 +116,9 @@ DEFINES = {
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
   provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
+  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§199: the named
+                                        // lands. A PARTITION of provinces — every cell in
+                                        // exactly one region; labels read it, the sim never does
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
            lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
   rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
@@ -147,7 +155,9 @@ Galilee dome, Carmel, Jordan rift basin (Galilee→Dead Sea→Arabah), Edomite p
 `validateMapData()` → array of warning strings (empty = ok). Must check: every seed lands
 inside a land polygon (point-in-polygon), seeds ≥ 6 map-units apart, every `owner` is a known
 tag, every terrain/good/religion/culture key exists in the pinned DEFINES key lists (hardcode
-the key lists locally to avoid importing defines), extraLinks names resolve.
+the key lists locally to avoid importing defines), extraLinks names resolve, and `regions`
+partitions the province table (no cell in two regions, none in none, no region naming a cell
+the atlas does not have).
 
 ### Canonical province table (names are EXACT strings; content agent references them)
 
@@ -293,9 +303,18 @@ Chips, arrows and picking all share the interpolated position.
 
 `{ update(ctx, camera, mapmode) }` — ctx may be null pre-game (then clear). Absolutely
 positioned divs in `#labels-layer` (pointer-events:none). Zoom ≥ ~1.1: province names at
-centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: tag
-names (owner-weighted centroid over owned provinces, size ~ sqrt(total area), letter-spaced
-serif caps in darkened tag color). Recompute cheaply every call (N≈100); reuse divs.
+centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: nation
+names, letter-spaced serif caps in darkened tag color — **one per region a court holds**
+(`MAP_DATA.regions`), not one per court. The court's own name goes over its home region
+(`TAGS[tag].homeRegion`, else its capital's region, else its largest part); every other part
+reads `"[TAGS[tag].adj] [Region]"` — Judaean Greece, Israeli Britain, Hasmonean Egypt — in the
+`.mlabel-part` tier. Each part anchors at the pixel-mass centroid of the largest cell near that
+part's own centre of mass, never at the centre of mass itself: an average of a coastline is
+water (SPEC §199). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
+survives at whole-map zoom; parts size by their own area and hide below a higher floor. Also
+exports `tagLabelParts(ctx, geom, MAP_DATA) -> [{tag, region, home, text, x, y, area, realm,
+color}]`, the same placement with no DOM (the harness reads it). Recompute cheaply every call
+(N≈300); reuse divs.
 
 ## 6. Sim package — `js/sim/*` (one agent; public API pinned, internals free)
 
@@ -11308,7 +11327,210 @@ tables never notice.
   `smoke112`, `uitest2` — untouched and green, because the principals'
   tables did not move by a single index.
 
-## 197. The trees grow to the size of their chapters, and the clients get their own wars
+## 197. The estates can be asked
+
+§167 gave every party ground: a strength in every province, an influence
+share at court, a colour on the estates mapmode. And then it spent all of it
+on pressure. Influence scaled their boons and banes; a hostile party rioted
+its own provinces; the mapmode showed you whose country you were standing in.
+Every line of that runs one way — the estates lean on the crown. A player who
+spent thirty years keeping the Pharisees devoted got a passive modifier and a
+green bar, and the map that knows exactly where the Pharisees are strong
+answered no question the player could act on. The estates could be courted,
+appeased, offended and fought over, and they could never be **asked**.
+
+### Favor is a bank, approval is a mood
+
+`t.estateFavor` (SPEC §197, `js/sim/factions.js`) rides beside the approval
+table and heals beside it: 0-100 per seated party, seeded at 10, inherited
+through `succeeds` like the mood is (§127 — the crown's credit with the
+Hasideans did not expire when the record started calling them Pharisees).
+It fills monthly from the warmth band — devoted +1, loyal +0.5, content
++0.15 — and drains while the party is against you (discontent −0.5, hostile
+−1.5). It is deliberately NOT the approval number: spending approval to ask
+a service would make every ask an insult, cooling the very party that just
+did the crown a favor. CK's favors and EU4's estate loyalty live apart for
+the same reason.
+
+Asking spends the bank and nothing else. There is no cooldown table: favor
+accrues slowly enough that the bank IS the throttle (a devoted party funds
+one 30-favor ask roughly every two and a half years), and an ask that grants
+a timed modifier refreshes its own slot rather than stacking.
+
+### What they give is what their ground can deliver
+
+Every payoff is scaled by `influenceScale` — the party's development-weighted
+share of the realm against an even split, clamped 0.6-1.4 — which is the
+§167 number the estates mapmode paints. This is the line that makes the map
+a promise rather than a diagnostic: take the Greek coast and the
+Hellenizers' subscription is worth two-fifths more; lose the hills and the
+villages' levy thins. The panel prints the same arithmetic in words — the
+share, and the provinces where the party is strongest, named — so the row
+and the mapmode can be read against each other, and a "Their ground" lever
+on the Estates block flips the map to the estates mode directly (the
+mapmode bar follows the bus event rather than its own clicks, so the lit
+button cannot lie).
+
+Seven ask kinds (`js/data/estate_asks.js`, magnitudes authored once in
+`ASK_KINDS`): **coin** (months of the realm's income, at once — read off
+`t.income`, the tag's own cached ledger, so no import edge into the economy;
+`sacred.js` already imports this module), **men** (a share of maximum
+manpower, at once), **hands** (+income% for a year), **zeal** (+morale% for
+a year), **calm** (−unrest everywhere for a year), **blessing** (legitimacy,
+at once), **counsel** (monarch points of the party's own flavor). Two asks
+per party, authored id by id for all forty-six parties the eight bookmarks
+and the client chairs seat — the Cities Vote a Crown of Gold, the Kibbutzim
+Mobilize, the Legions' veterans re-enlist — with a generic fallback pair so
+a future chapter that seats an unwritten party degrades to plain words, not
+silence. A bookmark may also author `asks` directly on a faction def:
+content owns the politics, the engine owns the arithmetic.
+
+The gates live in one place (`askBlocker`, the same contract the
+appeasement lever keeps): approval above 40 — a party in despair will not
+hear the crown — favor above the ask's price, and the degenerate cases
+(full muster rolls, legitimacy at its height) refuse rather than waste.
+Player-only, like everything else at the court (§33/§34): AI realms keep
+their politics offstage, and the harness cannot feel any of it.
+
+- **Regression contract**: `smoke127` — the bank seeds, fills by band at
+  the pinned rates, drains under hostility and survives a save round-trip;
+  every authored ask pair is valid (known kinds, no duplicate kind in a
+  pair, every bookmark id covered); the ask spends exactly its price, pays
+  exactly what its tooltip promised (the payoff object serves both), scales
+  with the ground share, refuses below the approval floor and on an empty
+  bank, refreshes rather than stacks its modifier; the demand/appease
+  machinery of §34 is untouched beside it; and the AI hand shows no favor
+  table at all. `smoke18` — §81's ladder and §167's influence factor,
+  unchanged and green beside the new fields.
+
+## 198. The reforms come home to the Crown
+
+§188 moved the whole ideas block — the three universal reform trees AND the
+chapter's Ideas of the Age — onto Coin under the Technology ladders, and for
+half the block the argument was airtight: every era group is locked behind a
+NAMED RUNG of a ladder, the lock card names it in words, and the rung it
+names is printed directly above. One window, like EU4's.
+
+For the other half the argument was only symmetry. The universal trees are
+locked behind nothing: no rung opens them, no lock card names a ladder, and
+the one thing they share with the era groups — being paid in gov/infl/mar —
+they share with half the levers in the game. They are the realm's own
+constitution, enacted whenever the points are minted, and a player looking
+for them looked where the realm's own facts live: on Crown, beside faith,
+tongue, capital and government, where §175 put them in the first place.
+
+### The split
+
+The **Reforms** block returns to Crown (templated after The Chapters, its
+pre-§188 seat), carrying the three universal trees and their buy path
+(`data-idea`) with it. The **Ideas of the Age** become their own block on
+Coin, still templated directly below Technology — template order is render
+order, §188's own load-bearing rule — with the §179 tooltip on the block
+title and the same lock cards and buy path (`data-eraidea`). Each block owns
+its own host (`refs.reforms` on Crown, `refs.eraIdeas` on Coin) and its own
+refresh; the era block hides itself when there is nothing to show, which for
+every playable side of every chapter is never (§188's audit), and at a
+foreign court means the visited realm has taken up no era idea yet. Foreign
+pips render read-only in both places exactly as before, one tab apart. The
+in-block `np-era-title` divider retires — the block title does its work.
+
+What §188 proved stays proven: the era groups still price and unlock off
+the three printed ladders in every bookmark, the tab strip still renames
+per chapter through `uiTerms`, and the delegated click chain still probes
+the tab strip first. Crown cannot go blank (its vitals grid is
+unconditional) and now cannot go stale either — the reform trees render for
+player and foreigner alike, so the tab carries a live section in every
+chapter.
+
+- **Regression contract**: `smoke119` — rewritten to hold the split: the
+  reform-tree host resolves to Crown, the era host to Coin below the
+  ladders, both buy paths keep their probes behind the tab probe, every
+  declared tab still owns a section, and the §188 audit (every era group
+  and every universal tree priced and unlocked off a printed ladder, in
+  every bookmark) holds verbatim. `uitest38` — the browser's bounding-box
+  answer: reforms visible on Crown with three buy buttons, era ideas
+  visible on Coin BELOW the ladders, neither visible on the other's tab.
+  `uitest41` — the §197 court: the favor row and both ask buttons render
+  per estate, a banked ask spends and toasts, and "Their ground" flips the
+  map to the estates mode with the bar's lit button following.
+
+## 199. The country's name goes where the country is
+
+The nation tier drew one label per court, at the owner-weighted centroid of
+every province it owned. That is the centre of mass of a realm, and the centre
+of mass of a realm in two places is in neither of them. A Judaea holding the
+Levant and Greece wrote **JUDAEA** across the open Mediterranean — over water
+it did not own, hundreds of miles from either half of itself, in letters sized
+by the sum of both. It is not a rounding error and no nudge fixes it: the
+number is an average over parts that are not one place.
+
+It was never only the reported case. Measured on the real raster over the eight
+bookmarks' opening positions, the old rule put **19 of 249** labels in the sea
+— Rome's among them in 167 BCE, 67 BCE and 40 BCE, because an empire drawn
+around a sea has its middle in the sea.
+
+**One label per region, not per court.** `MAP_DATA.regions` divides the 307
+cells into 35 named lands — Judaea, Transjordan, Negev, Phoenicia, Syria,
+Arabia, Egypt, Anatolia, Greece, Italy, Gaul, Hispania, Britain, Germania,
+Scythia and the rest — a partition, held by `validateMapData`, so every cell
+answers to exactly one. A court is then named once per region it holds: its own
+name over home, and over everything else **"[Adjective] [Region]"** — Judaean
+Greece, Israeli Britain, Hasmonean Egypt, Roman Judaea, Transjordanian Judaea in
+1948. Home is the region the court declares (`homeRegion`), else the one its
+capital sits in, else — a court in exile — the largest thing it holds. Two
+courts declare: Rome, played from Antioch, still writes ROME in Italy; Britain,
+whose 1948 seat on this map is Cyprus, still writes BRITAIN in Britain.
+
+The lines are geographic and therefore the same in every century, which is the
+only way one table can serve 167 BCE and 1948 at once. The Jordan is a boundary
+(so Agrippa II's name sits on the Golan and Transjordan's on Amman, with no
+per-tag table); the Negev is its own land, because it has belonged with Petra
+and with Beersheba in different centuries of this game. Where a modern state is
+finer than a classical region — Portugal inside Hispania, the Netherlands on the
+Rhine — nothing is lost: a label sits on the court's OWN holdings inside the
+region, so PORTUGAL still prints over Portugal, and the region only ever
+supplies the word for somebody else's ground.
+
+**The adjective is declared, not derived.** No rule turns The Netherlands into
+Dutch. All 109 tags carry `adj`, and a chapter that renames a court renames its
+adjective with it (SPEC §139) — 529's Galilee is *Galilean* abroad, not Judaean,
+which is the same class of error as calling the Keepers Jews. The fallback for a
+tag that somehow has none is the possessive.
+
+**The anchor is a cell, not an average.** Each part is placed at the pixel-mass
+centroid of the largest cell near that part's own centre of mass — big and
+central both, scored with a falloff over the part's own radius, so a scatter
+picks its mainland and a compact realm picks the cell it was already pointing
+at. The centre of mass itself is not used, not even clamped into that cell:
+splitting by region and keeping the clamped average still landed in the water 13
+to 20 times in 505. Anchoring on the cell lands there **0 times in 505**.
+
+Sizing keeps the country first. A part is sized by its own ground, but the home
+name by sqrt(sqrt(part)·sqrt(realm)) — the geometric mean of the two. At the
+whole-map zoom Rome's Italy is ten pixels of ground and would have vanished
+while ROMAN GAUL printed beside it, which is exactly backwards. Foreign parts
+also clear a higher floor (13.5px against 11.5px) and print in a tighter,
+lighter tier (`.mlabel-part`): two words at the tag tier's tracking is a very
+wide ribbon, and a court's holdings should read as subordinate to its name.
+
+- **Regression contract**: `smoke128` — the regions partition the atlas and
+  `validateMapData` says so; every tag and every chapter rename declares an
+  adjective; over all eight bookmarks on the real geometry snapshot, all 505
+  nation labels are on land, each anchored on a cell its own court holds, with
+  exactly one home label per court — *and the rule it replaced is re-run on the
+  same boards and asserted to fail*, so the bug stays visible to the suite that
+  fixed it. Then the three words the section was asked for, each on a live
+  board: Judaean Greece, Hasmonean Egypt, Israeli Britain — plus ROME in Italy,
+  BRITAIN in Britain, and Galilean Egypt in 529. `uitest42` — the same claim
+  against the raster the player is looking at rather than the coastline
+  polygons: every nation label drawn in the browser is handed back to
+  `provIdAt`, and the pixel underneath it must belong to the court whose name
+  is written there (a label in the sea has no province under it at all). Judaea
+  holding Greece and Egypt writes all three names, four hundred screen pixels
+  apart, the parts in the subordinate tier; zoom past 1.1 and the province
+  names come back with no part labels over them.
+
+## 200. The trees grow to the size of their chapters, and the clients get their own wars
 
 §196 ended with the principals at 13–18 nodes and the client chairs at
 11–14, and then somebody put a screenshot of EU4's Prussian tree next to
@@ -11408,7 +11630,7 @@ arrays; `find` walks into them and hands `undefined` to its predicate. One
 misplaced comma per file took out five suites at once with stack traces
 pointing at innocent code twenty lines away, and the first two hours of
 diagnosis went into arrays that were, according to every measurement taken,
-perfectly fine. `smoke127` now walks every era chain by index (`i in chain`),
+perfectly fine. `smoke129` now walks every era chain by index (`i in chain`),
 which is the only test that sees a hole.
 
 **A card with both a date and a trigger has its trigger ignored.** All five
@@ -11441,7 +11663,7 @@ chapters actually have: Beth-Shean's gap, the Engedi shore and the
 Peraean crossing, Jotapata instead of a Tiberias that does not exist yet,
 and a Sharon-shore harbour built from Dora and Joppa.
 
-`smoke127` now resolves **every province every mission of every playable
+`smoke129` now resolves **every province every mission of every playable
 side names**, through `ctx.prov` — the same lookup `controls()` uses, so
 the §25 era renames and the `p.canon` aliases resolve rather than being
 reported as holes. Fifteen sides, every target seated. The first draft of
@@ -11449,9 +11671,9 @@ that check compared display names and produced eight false positives in
 1948 alone, which is its own lesson: a guard that does not resolve the
 way the sim resolves is a guard that reports the sim as broken.
 
-- **Regression contract**: `smoke127` — the eleven principal counts, the
+- **Regression contract**: `smoke129` — the eleven principal counts, the
   spare-column rule for roads and the five-column ceiling for everything,
-  one node per cell on every playable side, every §197 node declaring col
+  one node per cell on every playable side, every §200 node declaring col
   AND row, every named province live in its own chapter, the five forks
   charted with both markers written and both terminals dealing two
   answers, each entry writing exactly one marker per option and refusing
@@ -11477,6 +11699,8 @@ way the sim resolves is a guard that reports the sim as broken.
   function so both options settle the same fork. The moved pins:
   `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
   (21 nodes with the cols/rows vectors extended), `smoke112` (21),
-  `smoke126` (the §196 chairs re-counted), `uitest2` (21 medallions).
-  `smoke16`'s raw index into the 132/614 tables still lands on the Third
-  House at five, because every insertion went in after it.
+  `smoke126` (the §196 chairs re-counted), `uitest2` (21 medallions,
+  verified in a real browser). `smoke16`'s raw index into the 132/614
+  tables still lands on the Third House at five, because every insertion
+  went in after it. On the tree merged with main's §197-§199 the battery
+  is 130 of 130 headless suites ALL PASS.

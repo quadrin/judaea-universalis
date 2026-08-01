@@ -7,9 +7,10 @@
 // ordinary tag-modifier stream. Player-only, the same rule as ultimatums
 // (SPEC §33): AI realms keep their politics offstage. DOM-free.
 
-import { num, clamp, contentForTag } from './military.js';
+import { num, clamp, contentForTag, chronicle } from './military.js';
 import { fireEvent } from './events.js';
-import { influenceScale, registerSeatSource, registerApprovalSource } from './estates.js';
+import { influenceScale, estateInfluence, estateGroundSummary, registerSeatSource, registerApprovalSource } from './estates.js';
+import { ESTATE_ASKS, ASK_FALLBACK, ASK_KINDS } from '../data/estate_asks.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -30,6 +31,33 @@ export const FACTION = {
   demandGrant: 12,  // approval for granting a demand…
   demandRefuse: -8, // …and the cost of sending it away
 };
+
+// Favor (SPEC §197): the credit an estate extends a crown that keeps it warm.
+// Approval is a mood and favor is a BANK — the mood fills it, the crown spends
+// it on asks, and the two must not be one number or every ask would also be an
+// insult (spending "approval" would cool the very party that just did you a
+// service). It accrues monthly by warmth band, decays while the party is
+// against you, and what an ask PAYS is scaled by the party's share of the
+// realm's ground (influenceScale, SPEC §167) — which is the estates mapmode
+// made into a promise: take the coast and the Hellenizers' silver is worth
+// more, lose the hills and the villages' levy thins.
+export const FAVOR = {
+  seed: 10, // a new court extends a token of credit, not a war chest
+  cap: 100,
+  gainDevoted: 1,
+  gainLoyal: 0.5,
+  gainContent: 0.15,
+  gainDiscontent: -0.5,
+  gainHostile: -1.5,
+  askFloor: 40, // at or below this approval they will not hear an ask at all
+};
+
+function favorGain(state) {
+  return state === 'devoted' ? FAVOR.gainDevoted
+    : state === 'loyal' ? FAVOR.gainLoyal
+      : state === 'hostile' ? FAVOR.gainHostile
+        : state === 'discontent' ? FAVOR.gainDiscontent : FAVOR.gainContent;
+}
 
 function monthIndex(d) { return d.y * 12 + (d.m - 1); }
 
@@ -95,7 +123,19 @@ export function ensureFactions(ctx, tag) {
   if (!defs) return null;
   const t = ctx.game.tags[tag];
   if (!t.factions || typeof t.factions !== 'object') t.factions = {};
+  // The favor bank rides beside the approval table and heals the same way:
+  // an old save without one wakes up with every party at the seed, exactly
+  // like a new campaign (SPEC §197).
+  if (!t.estateFavor || typeof t.estateFavor !== 'object') t.estateFavor = {};
   for (const d of defs) {
+    if (d && d.id && !Number.isFinite(t.estateFavor[d.id])) {
+      // Credit follows the seat like the mood does (SPEC §127): the Pharisees
+      // inherit whatever the Hasideans had banked, because they are the same
+      // men and the crown's debts to them did not expire with the name.
+      const from = d.succeeds && Number.isFinite(t.estateFavor[d.succeeds])
+        ? t.estateFavor[d.succeeds] : null;
+      t.estateFavor[d.id] = clamp(from === null ? FAVOR.seed : from, 0, FAVOR.cap);
+    }
     if (d && d.id && !Number.isFinite(t.factions[d.id])) {
       // A party that succeeds another inherits where it stood (SPEC §127).
       // The Pharisees are not a new constituency introduced to a court that
@@ -302,6 +342,13 @@ export function monthlyFactions(ctx) {
       const boonId = 'faction_' + def.id + '_boon';
       const baneId = 'faction_' + def.id + '_bane';
       const profile = effectProfile(app);
+      // The favor bank fills from the mood (SPEC §197): a devoted party
+      // extends credit twice as fast as a loyal one, a hostile one calls
+      // its credit in three times as fast as a discontent one lets it lapse.
+      if (t.estateFavor) {
+        t.estateFavor[def.id] = clamp(
+          num(t.estateFavor[def.id], FAVOR.seed) + favorGain(profile.state), 0, FAVOR.cap);
+      }
       // …times what this party actually holds of the realm (SPEC §167). An
       // estate whose ground you do not rule is an estate whose mood barely
       // reaches the ledger; one that holds half your development is one you
@@ -371,6 +418,129 @@ export function appeaseFactionCore(ctx, tag, fid) {
   return { ok: true, name: def.name, approval: Math.round(table[fid]) };
 }
 
+// ---------------------------------------------------------------------------
+// The asks (SPEC §197): what a trusted estate can be leaned on FOR.
+//
+// A bookmark may author `asks` directly on a faction def (content owns the
+// politics); otherwise the party's id finds its authored pair in
+// js/data/estate_asks.js, and an id nobody has written asks for degrades to
+// the generic fallback rather than to silence.
+function asksFor(def) {
+  const authored = def && Array.isArray(def.asks) && def.asks.length ? def.asks : null;
+  const list = authored || ESTATE_ASKS[def && def.id] || ASK_FALLBACK;
+  return list.filter((a) => a && a.kind && ASK_KINDS[a.kind]);
+}
+
+// One ask keeps one modifier slot: asking again refreshes the clock rather
+// than stacking the effect — favor is the throttle, not a cooldown table.
+function setAskModifier(t, def, ask, effects, months) {
+  const id = 'ask_' + def.id + '_' + ask.kind;
+  t.modifiers = (t.modifiers || []).filter((m) => m && m.id !== id);
+  t.modifiers.push({ id, name: ask.name, months, effects });
+}
+
+// What one ask would grant RIGHT NOW, measured against the realm as it
+// stands — the same object serves the tooltip and the grant, so the promise
+// and the payment cannot disagree. Every payoff is scaled by the party's
+// share of the realm's ground (influenceScale, SPEC §167): this is the line
+// that makes the estates mapmode a promise. `t.income` and `t.maxManpower`
+// are the tag's own monthly-cached figures, so no import edge into the
+// economy is needed (sacred.js already imports this module).
+function askPayoff(ctx, tag, def, ask) {
+  const t = ctx.game.tags[tag];
+  const k = ASK_KINDS[ask.kind];
+  if (!t || !k) return null;
+  const scale = influenceScale(ctx, tag, def.id);
+  switch (ask.kind) {
+    case 'coin': {
+      const amt = Math.max(k.floor, Math.round(num(t.income) * k.incomeMonths * scale));
+      return { text: '+' + amt + ' talents, at once', apply() { t.treasury = num(t.treasury) + amt; } };
+    }
+    case 'men': {
+      const amt = Math.max(k.floor, Math.round(num(t.maxManpower) * k.share * scale));
+      return {
+        text: '+' + amt.toLocaleString('en-US') + ' manpower, at once',
+        apply() { t.manpower = clamp(num(t.manpower) + amt, 0, Math.max(0, num(t.maxManpower))); },
+      };
+    }
+    case 'blessing': {
+      const amt = Math.round(k.legitimacy * scale);
+      return { text: '+' + amt + ' legitimacy, at once', apply() { t.legitimacy = clamp(num(t.legitimacy, 50) + amt, 0, 100); } };
+    }
+    case 'counsel': {
+      const pt = ask.point || k.point || 'gov';
+      const amt = Math.round(k.points * scale);
+      const ptName = pt === 'mar' ? 'martial' : pt === 'infl' ? 'influence' : 'governance';
+      return { text: '+' + amt + ' ' + ptName + ' points', apply() { t.points[pt] = clamp(num(t.points[pt]) + amt, 0, 999); } };
+    }
+    case 'hands': {
+      const mult = 1 + k.incomeMult * scale;
+      return {
+        text: '+' + Math.round((mult - 1) * 100) + '% income for ' + k.months + ' months',
+        apply() { setAskModifier(t, def, ask, { incomeMult: mult }, k.months); },
+      };
+    }
+    case 'zeal': {
+      const mult = 1 + k.moraleMult * scale;
+      return {
+        text: '+' + Math.round((mult - 1) * 100) + '% morale for ' + k.months + ' months',
+        apply() { setAskModifier(t, def, ask, { moraleMult: mult }, k.months); },
+      };
+    }
+    case 'calm': {
+      const amt = Math.round(k.unrest * scale * 10) / 10;
+      return {
+        text: '−' + amt + ' unrest everywhere for ' + k.months + ' months',
+        apply() { setAskModifier(t, def, ask, { unrestAll: -amt }, k.months); },
+      };
+    }
+    default: return null;
+  }
+}
+
+// Why this ask cannot be made right now, or '' when it can — the ONE place
+// the gates live, so the disabled-tooltip and the click path never disagree
+// (the same contract appeaseBlocker keeps for its lever).
+function askBlocker(ctx, t, def, ask) {
+  const k = ASK_KINDS[ask.kind];
+  const app = num(t.factions && t.factions[def.id], 50);
+  if (app <= FAVOR.askFloor) {
+    return 'They are in no mood to be asked (approval ' + Math.round(app)
+      + ' — above ' + FAVOR.askFloor + ' required).';
+  }
+  const have = num(t.estateFavor && t.estateFavor[def.id], 0);
+  if (have < k.favor) return 'Not enough favor banked (' + Math.floor(have) + ' of ' + k.favor + ').';
+  if (ask.kind === 'men') {
+    if (num(t.maxManpower) <= 0) return 'The realm has no muster rolls to add to.';
+    if (num(t.manpower) >= num(t.maxManpower)) return 'The muster rolls are already full.';
+  }
+  if (ask.kind === 'blessing' && num(t.legitimacy, 50) >= 100) {
+    return 'The crown\'s standing is already beyond question.';
+  }
+  return '';
+}
+
+// The ask lever (realm panel): spend banked favor, receive what this party's
+// ground can actually deliver.
+export function askEstateCore(ctx, tag, fid, askKind) {
+  const defs = activeDefs(ctx, tag);
+  const def = defs && defs.find((d) => d && d.id === fid);
+  if (!def) return { ok: false, why: 'No such party sits at our court.' };
+  const t = ctx.game.tags[tag];
+  if (!ensureFactions(ctx, tag)) return { ok: false, why: 'The court is not in session.' };
+  const ask = asksFor(def).find((a) => a.kind === askKind);
+  if (!ask) return { ok: false, why: 'They have nothing of that kind to give.' };
+  const why = askBlocker(ctx, t, def, ask);
+  if (why) return { ok: false, why };
+  const pay = askPayoff(ctx, tag, def, ask);
+  if (!pay) return { ok: false, why: 'They have nothing of that kind to give.' };
+  t.estateFavor[fid] = clamp(num(t.estateFavor[fid], 0) - ASK_KINDS[ask.kind].favor, 0, FAVOR.cap);
+  pay.apply();
+  chronicle(ctx, 'politics', def.name + ' grant what the crown asked: '
+    + ask.name + ' (' + pay.text + ').');
+  return { ok: true, name: def.name, ask: ask.name, granted: pay.text };
+}
+
 // The panel's read: every faction with approval, state, what the devotion
 // grants and the hostility costs, and whether the appeasement lever can pull.
 export function getFactionsInfo(ctx) {
@@ -381,6 +551,10 @@ export function getFactionsInfo(ctx) {
   const t = g.tags[tag];
   const table = ensureFactions(ctx, tag);
   if (!table) return null;
+  // One province walk for the shares, one per party for its named ground —
+  // the same arithmetic the estates mapmode paints (SPEC §167/§197).
+  let shares = null;
+  try { shares = estateInfluence(ctx, tag); } catch (e) { warnOnce('shares', 'estateInfluence failed', e); }
   return defs.filter((d) => d && d.id).map((def) => {
     const app = Math.round(num(table[def.id], 50));
     const profile = effectProfile(app);
@@ -388,7 +562,27 @@ export function getFactionsInfo(ctx) {
     const whyNot = appeaseBlocker(ctx, t, def.id, cost);
     const active = profile.kind === 'boon' ? def.boon : profile.kind === 'bane' ? def.bane : null;
     const strength = profile.scale >= 1 ? 'full' : profile.scale > 0 ? 'half' : '';
+    let ground = null;
+    try { ground = estateGroundSummary(ctx, tag, def.id); } catch (e) { warnOnce('gs:' + def.id, 'ground summary failed', e); }
     return {
+      favor: Math.floor(num(t.estateFavor && t.estateFavor[def.id], 0)),
+      favorCap: FAVOR.cap,
+      favorGain: favorGain(profile.state),
+      influencePct: shares && Number.isFinite(shares[def.id]) ? Math.round(shares[def.id] * 100) : null,
+      ground,
+      asks: asksFor(def).map((a) => {
+        const blocked = askBlocker(ctx, t, def, a);
+        const pay = askPayoff(ctx, tag, def, a);
+        return {
+          key: a.kind,
+          name: a.name,
+          text: a.text || '',
+          favorCost: ASK_KINDS[a.kind].favor,
+          grants: pay ? pay.text : '',
+          ready: !blocked,
+          whyNot: blocked,
+        };
+      }),
       id: def.id,
       name: def.name || def.id,
       desc: def.desc || '',

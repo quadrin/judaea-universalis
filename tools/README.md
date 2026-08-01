@@ -301,6 +301,15 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
+`smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,
+the band rates, the one-object promise/payment contract, the ground scaling
+measured by handing the crown the coast, the gates, the AI silence).
+`smoke119.mjs` was rewritten in place to hold §198's split — the reform
+trees on Crown, the Ideas of the Age with the ladders — keeping §188's
+all-bookmark audit verbatim. `uitest41.mjs` drives the §197 court in a real
+browser: the ground line and favor figure per estate, the one-press ask with
+its toast, and the "Their ground" lever lighting the estates button on the
+mapmode bar (which now follows the bus event rather than its own clicks).
 
 ## UI battery state (v6.8)
 
@@ -1081,7 +1090,21 @@ beside the fifty-eight old ones). On the tree merged with main's §195
 suites ALL PASS**, their smoke125 and this section's smoke126 both
 included.
 
-Since §197 (the trees grow to the size of their chapters): every playable
+The SPEC §197–198 batch (the estates can be asked; the reforms come home
+to the Crown) is player-only on both halves and measured as such:
+`monthlyFactions` returns before the favor bank for every AI hand, the asks
+live behind the same gate, and the reforms move is a panel-template affair
+the sim never reads. `node tools/autorun.mjs 4 66ce` and `4 1948ce` against
+a clean-HEAD baseline worktree are **byte-identical**, anomalies and all.
+`smoke127` is the new contract (renumbered twice as main's §195 and
+§196 landed first), `smoke119` is rewritten in place to the §198
+contract, and the browser suites the batch touches — uitest8, uitest15,
+uitest37, uitest38 (its §188 section rewritten to the split), uitest41
+(new) — all come back ALL PASS on SwiftShader with zero page errors. On
+the tree merged with §195 and §196, the battery is **127 of 127
+headless suites ALL PASS**.
+
+Since §200 (the trees grow to the size of their chapters): every playable
 side out to 18–23 mission nodes — 278 across the fifteen playable sides, up
 from 201 — plus five new forks with ten new cards, including the two wars of independence
 the roster never offered (Agrippa against Rome in the year of the four
@@ -1095,14 +1118,14 @@ The pass found four defect classes the suite could not previously see.
 Chapters fold the map their own way (§47 merges, era foundings), so a
 mission naming a province its own chapter never seats is uncompletable for
 ever, silently — four new branches had it and are repointed at ground those
-chapters have, and `smoke127` now resolves every province every mission of
+chapters have, and `smoke129` now resolves every province every mission of
 every playable side names through `ctx.prov`, the same lookup `controls()`
 uses, so era renames and `p.canon` aliases resolve instead of reading as
 holes. A stray comma before a closing bracket is an ELISION rather than a
 syntax error: `filter` and `map` skip holes silently while `find` walks into
 one and hands `undefined` to its predicate, so one misplaced comma in each
 of four packages took out five suites with stack traces pointing at innocent
-code — `smoke127` now walks every era chain by index, which is the only
+code — `smoke129` now walks every era chain by index, which is the only
 check that sees a hole. `smoke74`'s date-and-trigger rule caught all five
 new terminals (a card with both has its trigger silently ignored, so each
 would have fired on its month whether or not the fork was answered); they
@@ -1119,10 +1142,11 @@ zero stderr on every run. The new thresholds sit past what an AI reaches in
 an eight-year window, so the trees grew reasons for a player without moving
 the AI's furniture.
 
-`smoke127` is the new contract; `smoke39` caught the five new terminals
+`smoke129` is the new contract; `smoke39` caught the five new terminals
 single-optioned before any of it ran (v6.1: anything the player answers
 offers at least two answers) and they now deal a real choice apiece. The
 moved pins: `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
 (21 nodes, cols/rows vectors extended), `smoke112` (21), `smoke116` (73
 roads not taken), `smoke126` (the §196 chairs re-counted), `uitest2` (21
-medallions). The battery is **127 of 127 headless suites ALL PASS**.
+medallions). On the tree merged with main's §197-§199 the battery is **130 of 130 headless suites ALL PASS**, their smoke127 and
+smoke128 and this section's smoke129 all included.
