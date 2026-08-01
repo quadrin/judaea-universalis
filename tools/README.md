@@ -974,6 +974,30 @@ war ending and two courts settling out of others, and it now says so. The batter
 is the new contract, and `smoke59`'s 614 stage-clearing moved with the feature
 (it takes a settlement per pair now, which is the rule seen from a test's side).
 
+Since §194 (the sea has a western half): fifteen Mediterranean communities
+join the dispersion — Asia Minor and the islands, Greece, Italy and Sicily,
+Africa west of Cyrene, Sepharad and Gaul — pure data through the §172/§175/
+§176 machinery, each keyed to a cell that exists and windowed on its own
+history (the consul's circular of 139 BCE at one end; 1306/1492/1493/1541,
+the 1944 deportations and the Maghreb's 1952/1962/1967 at the other). The
+harness cannot see it: the dispersion is player-only, and `node
+tools/autorun.mjs 4 66ce` / `4 1948ce` are **byte-identical** before and
+after the change, anomalies and all. `smoke109`'s era-page counts re-pinned
+with the arithmetic in the margin (167 BCE opens 13→18, spans 20→29); the
+battery is **124 of 124 headless suites ALL PASS**; `smoke124` is the new
+contract.
+
+The §194 set was then measured for power, chapter by chapter, against the
+§176 tuning (every open community's four asks summed at boot, theoretical
+full-farm, next to `incomeBreakdown` gross): new-set silver is 2-7% of gross
+where the crown is solvent, the pauper chapters are dominated by the old
+eastern set regardless (Alexandria alone out-earns the whole new fifteen),
+the 66/132 additions are all Rome-hosted and war-locked below their own ask
+bars, 614's farmable western remainder sustains ~1 talent and ~2 influence a
+month, and no new community sends men on day one anywhere. The envelope is
+pinned in `smoke124` (size ≤ 3, start ≤ 50, the war gate at 66 CE, the
+volunteer bar at 66 and 1948) so a future edit cannot quietly move it.
+
 The world-backdrop batch (eight new content packages, ninety-five dated
 `world: true` cards: `events_167bce_republic.js`, `events_67bce_world.js`,
 `events_40bce_world.js`, `events_66ce_world.js`, `events_132ce_west.js`,
@@ -1011,5 +1035,6 @@ Gallic tribes end as they ended); and `55 1948ce` keeps IRQ's pre-existing
 gulf-arc snowball while the one-province bleeding flag migrates POR → SUI
 with the stream (the hovering class swapping members). A catch-up
 firecheck boots all eight chapters at their horizons: 95/95 cards fire,
-zero guarded warnings. The battery is **123 of 123 headless suites ALL
-PASS**, smoke74's moved pin included.
+zero guarded warnings. On the tree merged with §194 the battery is
+**124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
+smoke124 both included.

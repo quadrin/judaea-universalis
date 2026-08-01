@@ -365,7 +365,7 @@ static site, the zero dependencies, or the missing build step changes.
   Event choices print their consequences instead of hiding them behind hover.
   H opens a one-page primer, winning enemies send ultimatums you may accept or
   refuse, and a battle going wrong has a Withdraw button — shattered, but
-  marching. The full verification battery — 117 headless sim suites and 39
+  marching. The full verification battery — 124 headless sim suites and 40
   Playwright browser suites — ships in `tools/tests/`.
 - Armies can be stood down from the outliner when the treasury needs relief;
   troops demobilized in controlled home territory mostly return to manpower.
@@ -677,9 +677,12 @@ static site, the zero dependencies, or the missing build step changes.
   money, which is the largest thing the state did in its first decade and was
   previously one line about schoolhouses.
 - **Write to the dispersion.** The Diaspora used to be one row in a panel with a
-  bar on it. It is twenty communities on the map now — Alexandria, Babylon,
+  bar on it. It is thirty-five communities on the map now — Alexandria, Babylon,
   Nehardea, Antioch, Cyrene, Rome, the House of Adiabene, the temple at
-  Leontopolis — and you reach them by clicking the province they live in. Ask
+  Leontopolis, and the sea's whole western half besides: Smyrna and Tarsus,
+  Athens and the Kinsmen at Sparta, Rhodes and Crete, Campania and Sicily,
+  Carthage, Tripoli and Constantine, Sepharad, Marseille and the farthest west
+  at Volubilis — and you reach them by clicking the province they live in. Ask
   for letters (what a congregation at the centre of an empire hears before the
   provinces do), for silver, for a word with their patrons, or for their sons.
   What you can ask depends on how big they are, how they regard your crown, and
@@ -687,7 +690,11 @@ static site, the zero dependencies, or the missing build step changes.
   request can be intercepted, and when it is, the reprisal falls on them and
   they remember whose asking caused it. Alexandria's community ends in 117 with
   the Kitos War and Babylon's outlasts everything, so where your friends are
-  changes across a long campaign.
+  changes across a long campaign — the Aegean deportations of 1944 and the
+  expulsions of 1306-1541 mean the 1948 map draws half that sea as memory,
+  hatched where Sepharad and Sicily and Rhodes once answered, while the
+  Maghreb's windows close on their own dates (Tripoli 1952, Constantine 1962,
+  Tunis 1967) and Morocco's never quite does.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad

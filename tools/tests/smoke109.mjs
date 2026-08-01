@@ -160,10 +160,13 @@ console.log('== the era window is computed in exactly one place ==');
   const e167 = ERAS.find((e) => e.bookmark.id === '167bce');
   const atStart = communitiesAt(e167.bookmark.startDate.y);
   const overRun = communitiesBetween(e167.bookmark.startDate.y, spanOf(e167));
-  ok(atStart.length === 13 && overRun.length === 20,
-    '167 BCE: 13 communities on the opening date, ' + overRun.length + ' over the chapter');
+  // 13 and 20 until §194 widened the sea: the Mediterranean entries put five
+  // more on the opening date (Smyrna, Tarsus, Sparta, Rhodes, Crete) and four
+  // more inside the span (Athens, Campania, Sicily, Tripolitania).
+  ok(atStart.length === 18 && overRun.length === 29,
+    '167 BCE: 18 communities on the opening date, ' + overRun.length + ' over the chapter');
   ok(!atStart.some((d) => d.prov === 'Leontopolis') && overRun.some((d) => d.prov === 'Leontopolis'),
-    'Leontopolis is one of the seven the old filter hid');
+    'Leontopolis is one of the communities the old opening-date filter hid');
   ok(overRun[0].size >= overRun[overRun.length - 1].size, 'and the list is still largest-first');
 
   // A chapter after the Kitos War must not advertise what that war destroyed.
