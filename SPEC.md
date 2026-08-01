@@ -86,7 +86,7 @@ DEFINES = {
     REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
     WASTE:{name:'Wasteland',      color:[70,66,60]},
     // every tag also carries adj:'Roman'|'Judaean'|'Israeli'|… — the adjective the map
-    //   names its foreign holdings with (SPEC §5.6, §197). No rule derives Dutch from
+    //   names its foreign holdings with (SPEC §5.6, §199). No rule derives Dutch from
     //   The Netherlands, so it is declared, here and in any chapter `tagTweaks` rename.
     // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
     //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
@@ -116,7 +116,7 @@ DEFINES = {
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
   provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
-  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§197: the named
+  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§199: the named
                                         // lands. A PARTITION of provinces — every cell in
                                         // exactly one region; labels read it, the sim never does
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
@@ -310,7 +310,7 @@ names, letter-spaced serif caps in darkened tag color — **one per region a cou
 reads `"[TAGS[tag].adj] [Region]"` — Judaean Greece, Israeli Britain, Hasmonean Egypt — in the
 `.mlabel-part` tier. Each part anchors at the pixel-mass centroid of the largest cell near that
 part's own centre of mass, never at the centre of mass itself: an average of a coastline is
-water (SPEC §197). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
+water (SPEC §199). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
 survives at whole-map zoom; parts size by their own area and hide below a higher floor. Also
 exports `tagLabelParts(ctx, geom, MAP_DATA) -> [{tag, region, home, text, x, y, area, realm,
 color}]`, the same placement with no DOM (the harness reads it). Recompute cheaply every call
@@ -11327,7 +11327,7 @@ tables never notice.
   `smoke112`, `uitest2` — untouched and green, because the principals'
   tables did not move by a single index.
 
-## 197. The country's name goes where the country is
+## 199. The country's name goes where the country is
 
 The nation tier drew one label per court, at the owner-weighted centroid of
 every province it owned. That is the centre of mass of a realm, and the centre
@@ -11386,7 +11386,7 @@ also clear a higher floor (13.5px against 11.5px) and print in a tighter,
 lighter tier (`.mlabel-part`): two words at the tag tier's tracking is a very
 wide ribbon, and a court's holdings should read as subordinate to its name.
 
-- **Regression contract**: `smoke127` — the regions partition the atlas and
+- **Regression contract**: `smoke128` — the regions partition the atlas and
   `validateMapData` says so; every tag and every chapter rename declares an
   adjective; over all eight bookmarks on the real geometry snapshot, all 505
   nation labels are on land, each anchored on a cell its own court holds, with
@@ -11394,7 +11394,7 @@ wide ribbon, and a court's holdings should read as subordinate to its name.
   same boards and asserted to fail*, so the bug stays visible to the suite that
   fixed it. Then the three words the section was asked for, each on a live
   board: Judaean Greece, Hasmonean Egypt, Israeli Britain — plus ROME in Italy,
-  BRITAIN in Britain, and Galilean Egypt in 529. `uitest41` — the same claim
+  BRITAIN in Britain, and Galilean Egypt in 529. `uitest42` — the same claim
   against the raster the player is looking at rather than the coastline
   polygons: every nation label drawn in the browser is handed back to
   `provIdAt`, and the pixel underneath it must belong to the court whose name

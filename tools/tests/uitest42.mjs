@@ -1,6 +1,6 @@
-// UI verification — SPEC §197: the nation label sits on the ground it names.
+// UI verification — SPEC §199: the nation label sits on the ground it names.
 //
-// The headless suite (smoke127) proves the placement against the atlas
+// The headless suite (smoke128) proves the placement against the atlas
 // coastline. This proves it against the thing the player actually sees: the
 // province raster in the GPU texture. For every nation label drawn at
 // strategic zoom, the pixel under it is asked who owns it — `provIdAt` on the

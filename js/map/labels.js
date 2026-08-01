@@ -61,7 +61,7 @@ function adjectiveOf(def, live, name) {
 
 // The nation tier's placements, with no DOM in sight: one entry per region a
 // court holds. `home` marks the part that carries the plain country name.
-// Exported for the headless harness (smoke127). Recomputed every frame like
+// Exported for the headless harness (smoke128). Recomputed every frame like
 // the tier it replaced: measured at 0.077 ms over the 1948 board (307 cells,
 // 59 parts), half a percent of a 60fps frame, so nothing is cached and nothing
 // can go stale behind a conquest.
@@ -147,7 +147,7 @@ export function tagLabelParts(ctx, geom, MAP_DATA) {
       // bookmarks' opening positions, the old whole-realm average sat in the sea
       // 19 times in 249; splitting by region and then keeping the centre of mass
       // (clamped into the anchor cell) still sat in it 13-20 times in 505; this
-      // rule sat in it 0 times in 505. smoke127 holds that zero.
+      // rule sat in it 0 times in 505. smoke128 holds that zero.
       const ac = geom.centroids[anchor];
       const isHome = part.region === home;
       out.push({
