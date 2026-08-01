@@ -2504,6 +2504,256 @@ export const EVENTS_66 = [
     ],
   },
 
+  // ── The clients' own wars (SPEC §197) ─────────────────────────────────────
+  // Two seated Jewish courts of this chapter hold their crowns from somebody
+  // else, and the Revolt is the one moment in either dynasty's life when the
+  // holder is looking elsewhere. Both cards are the same question asked of a
+  // client in a year of imperial distraction, and both answer it the way the
+  // engine already answers it for AI vassals (SPEC §61): the bond breaks
+  // FIRST, the war follows, and the overlord can only put the yoke back on at
+  // the peace table.
+  {
+    id: 'ev_ag_the_clients_war',
+    title: 'The Client\'s War',
+    desc: 'The dispatches from the west stop making sense. Galba is dead in the Forum, Otho '
+      + 'reigns by the Praetorians\' leave, Vitellius is over the Alps, and the legates of '
+      + 'the East have begun writing to each other rather than to Rome. Your secretaries lay '
+      + 'the arithmetic out without comment: every cohort that could garrison this kingdom is '
+      + 'either besieging Jerusalem or marching on Italy, and the men doing the besieging are '
+      + 'about to acclaim their own commander.\n\n'
+      + 'Berenice says it first, because she always says it first. The house of Herod has been '
+      + 'a Roman convenience for a hundred years — vestments argued for in chambers, cities '
+      + 'granted and withdrawn by men who could not find Batanea on a survey — and there will '
+      + 'not be another year like this one. The Babylonian horse are in the courtyard. Philip '
+      + 'ben Jacimus is waiting to be told where to ride, and would rather it were not '
+      + 'Jerusalem again.',
+    forTag: 'AGR',
+    major: true,
+    minYear: 69,
+    maxYear: 71,
+    trigger: safeTrigger('ev_ag_the_clients_war', (ctx) => {
+      const g = ctx.game;
+      const agr = g.tags && g.tags.AGR;
+      if (!agr || agr.alive === false) return false;
+      if (ctx.helpers.getFlag(ctx, 'clientsWarAnswered')) return false;
+      // Only while Rome's hands are full: the great war running, or the year
+      // the emperors ate each other still on the calendar.
+      const rom = g.tags && g.tags.ROM;
+      return !!rom && rom.alive !== false
+        && (!!findJudRomWar(g) || !!(g.firedEvents && g.firedEvents.ev_year_of_four_emperors))
+        && !(agr.atWarWith || []).some((e) => e === 'ROM');
+    }),
+    aiOption: 1,
+    historical: 'Agrippa II never wavered. He lent his troops to Vespasian, went to Rome with '
+      + 'Titus, was made praetor, and died there around the turn of the century — the last '
+      + 'Herodian, and a Roman office-holder to the end.',
+    options: [
+      {
+        label: 'The crown comes out of Rome\'s gift and into our own hands',
+        tooltip: 'The bond is severed and the war declared the moment the letter is sealed — '
+          + 'Rome can only put the yoke back on at the peace table. The royal army takes the '
+          + 'field with "The Kingdom Declared" (+10% morale, +15% manpower for 36 months), '
+          + '+15 legitimacy — and Rome\'s regard collapses.',
+        effects: guard('ev_ag_the_clients_war:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const agr = g.tags && g.tags.AGR;
+          if (agr) agr.overlord = null;
+          h.declareWar(ctx, 'AGR', 'ROM', 'Agrippa\'s War of Independence', 'independence');
+          h.addTagModifier(ctx, 'AGR', {
+            id: 'the_kingdom_declared', name: 'The Kingdom Declared', months: 36,
+            effects: { moraleMult: 1.1, manpowerMult: 1.15 },
+          });
+          h.adjust(ctx, 'AGR', { legitimacy: 15 });
+          const rom = g.tags && g.tags.ROM;
+          if (rom) rom.opinion = { ...(rom.opinion || {}), AGR: -150 };
+          h.setFlag(ctx, 'clientsWarAnswered', true);
+          h.setFlag(ctx, 'agrippaRose', true);
+          h.chronicle(ctx, 'era', 'The last of the Herods declares that the kingdom of his '
+            + 'great-grandfather is held from God and from nobody in Italy. The Babylonian '
+            + 'horse ride north out of the Golan, and for the first time in a century the '
+            + 'house of Herod is at war with the power that made it.');
+        }),
+      },
+      {
+        label: 'This house was made by Rome and is kept by it',
+        tooltip: 'The historical course. The kingdom stays what it has always been and is '
+          + 'paid for it: "The Confirmed Client" (+10% income permanently), +25 governance '
+          + 'points, and Rome\'s regard raised to devotion.',
+        effects: guard('ev_ag_the_clients_war:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.addTagModifier(ctx, 'AGR', {
+            id: 'the_confirmed_client', name: 'The Confirmed Client', months: -1,
+            effects: { incomeMult: 1.1 },
+          });
+          h.adjust(ctx, 'AGR', { gov: 25 });
+          const rom = g.tags && g.tags.ROM;
+          if (rom) rom.opinion = { ...(rom.opinion || {}), AGR: 190 };
+          h.setFlag(ctx, 'clientsWarAnswered', true);
+          h.setFlag(ctx, 'agrippaKeptFaith', true);
+          h.chronicle(ctx, 'era', 'The king writes to the commander of the eastern legions '
+            + 'offering everything the kingdom has, and means it. The letter is remembered '
+            + 'in Rome for thirty years, which is precisely what it was written to be.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_ag_what_the_flavians_found',
+    title: 'What the Flavians Found',
+    desc: 'The war in the south is over however it ended, and a dynasty that was a legate '
+      + 'eighteen months ago now audits the East. The clerks work through the client kingdoms '
+      + 'the way clerks do — not asking who was loyal, but what each crown costs to keep and '
+      + 'what it would cost to replace with a procurator and a road.',
+    forTag: 'AGR',
+    major: true,
+    minYear: 75,
+    maxYear: 100,
+    trigger: safeTrigger('ev_ag_flavians', (ctx) => {
+      const h = ctx.helpers;
+      return !!(h.getFlag(ctx, 'agrippaRose') || h.getFlag(ctx, 'agrippaKeptFaith'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send the kingdom\'s own books to Rome ahead of the clerks',
+        tooltip: 'An audit answered before it is asked. −60 talents and +15 influence '
+          + 'points, and whatever the file says about 69 it says in our handwriting.',
+        effects: guard('ev_ag_what_the_flavians_found:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'AGR', { treasury: -60, infl: 15 });
+          agrippaVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'This house answers questions when they are asked',
+        tooltip: 'Nothing volunteered, nothing spent. The clerks reach their conclusions '
+          + 'about the year of the four emperors unassisted, and file them.',
+        effects: guard('ev_ag_what_the_flavians_found:1', (ctx) => {
+          agrippaVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_dm_the_tigris_crown',
+    title: 'The Crown Between the Rivers',
+    desc: 'The King of Kings is at war in the west with his own nobility, as the Arsacids '
+      + 'usually are, and the tribute convoy from Arbela has gone unacknowledged for two '
+      + 'seasons. The caravan lords notice such things before anyone: the road\'s tolls are '
+      + 'being collected by this house, guarded by this house\'s riders, and remitted to a '
+      + 'court that currently cannot spare a squadron to ask why.\n\n'
+      + 'The proselyte house puts it in the language it prefers. A kingdom that took the '
+      + 'covenant, that buried its queen mother beside Jerusalem, that sent its princes to '
+      + 'fight at the ascent of Beth Horon — whose is it? The Magi, when there were Magi '
+      + 'here, would have said: whoever the fires are lit for. The answer has changed, and '
+      + 'the tribute-book has not.',
+    forTag: 'ADI',
+    major: true,
+    minYear: 68,
+    maxYear: 74,
+    trigger: safeTrigger('ev_dm_the_tigris_crown', (ctx) => {
+      const g = ctx.game;
+      const adi = g.tags && g.tags.ADI;
+      if (!adi || adi.alive === false) return false;
+      if (ctx.helpers.getFlag(ctx, 'tigrisCrownAnswered')) return false;
+      const par = g.tags && g.tags.PAR;
+      return !!par && par.alive !== false && adi.overlord === 'PAR'
+        && !(adi.atWarWith || []).some((e) => e === 'PAR');
+    }),
+    aiOption: 1,
+    historical: 'Adiabene stayed in the King of Kings\' train. It sent men to Jerusalem and '
+      + 'kept its tribute current, and the arrangement held until Trajan burned through it '
+      + 'in 116 — at which point being Parthia\'s client was no protection at all.',
+    options: [
+      {
+        label: 'The house crowns itself, and the road pays its own king',
+        tooltip: 'The bond is severed and the war declared at once; the King of Kings can '
+          + 'only restore it at the table. "The Crown Between the Rivers" (+10% morale, '
+          + '+0.2 legitimacy a month for 36 months) and +20 legitimacy — against a Parthia '
+          + 'that will remember.',
+        effects: guard('ev_dm_the_tigris_crown:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const adi = g.tags && g.tags.ADI;
+          if (adi) adi.overlord = null;
+          h.declareWar(ctx, 'ADI', 'PAR', 'The War of the Tigris Crown', 'independence');
+          h.addTagModifier(ctx, 'ADI', {
+            id: 'crown_between_rivers', name: 'The Crown Between the Rivers', months: 36,
+            effects: { moraleMult: 1.1, legitimacyAdd: 0.2 },
+          });
+          h.adjust(ctx, 'ADI', { legitimacy: 20 });
+          const par = g.tags && g.tags.PAR;
+          if (par) par.opinion = { ...(par.opinion || {}), ADI: -140 };
+          h.setFlag(ctx, 'tigrisCrownAnswered', true);
+          h.setFlag(ctx, 'tigrisFree', true);
+          h.chronicle(ctx, 'era', 'Arbela stops remitting and starts declaring. The riders of '
+            + 'the Tigris bank take the fords in the house\'s own name, and the convert '
+            + 'kingdom becomes, for the first time since Tigranes, nobody\'s client.');
+        }),
+      },
+      {
+        label: 'The yoke is what keeps the road open',
+        tooltip: 'The historical course. Tribute current, regard restored, and the caravans '
+          + 'insured by the greater peace: "The King of Kings\' Peace" (+10% trade '
+          + 'permanently) and +25 influence points.',
+        effects: guard('ev_dm_the_tigris_crown:1', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          h.addTagModifier(ctx, 'ADI', {
+            id: 'king_of_kings_peace', name: 'The King of Kings\' Peace', months: -1,
+            effects: { tradeMult: 1.1 },
+          });
+          h.adjust(ctx, 'ADI', { infl: 25 });
+          const par = g.tags && g.tags.PAR;
+          if (par) par.opinion = { ...(par.opinion || {}), ADI: 130 };
+          h.setFlag(ctx, 'tigrisCrownAnswered', true);
+          h.setFlag(ctx, 'tigrisKept', true);
+          h.chronicle(ctx, 'era', 'The convoy goes out with two seasons\' arrears and a letter '
+            + 'of exquisite courtesy. The caravan lords sleep better; the proselyte house '
+            + 'notes that the question was asked, which is not nothing, and waits.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_dm_what_the_road_paid',
+    title: 'What the Road Paid',
+    desc: 'A generation on, the accounts of the choice are in: what the fords earned, what '
+      + 'the crown cost, and which of the two the caravan lords would choose again.',
+    forTag: 'ADI',
+    major: true,
+    minYear: 84,
+    maxYear: 110,
+    trigger: safeTrigger('ev_dm_road_paid', (ctx) => {
+      const h = ctx.helpers;
+      return !!(h.getFlag(ctx, 'tigrisFree') || h.getFlag(ctx, 'tigrisKept'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Let the caravan lords read the accounts aloud',
+        tooltip: 'The road\'s own masters audit the crown\'s choice in open court: +20 '
+          + 'governance points, and the verdict lands with the merchants behind it.',
+        effects: guard('ev_dm_what_the_road_paid:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'ADI', { gov: 20 });
+          tigrisVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'The accounts are the king\'s business',
+        tooltip: 'The books stay in the palace. The verdict is the same arithmetic; the '
+          + 'lords of the road simply have to guess at it, and price the guess.',
+        effects: guard('ev_dm_what_the_road_paid:1', (ctx) => {
+          tigrisVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
   // ═══ The Second Kingdom: the victory timeline, 70–96 CE ═══════════════════
   // The mirror of the aftermath strand above. Where those events presuppose
   // Rome's victory (templeBurned, ROM on the ground), these presuppose
@@ -3618,4 +3868,78 @@ export const EVENTS_66 = [
       },
     ],
   },
+
 ];
+
+
+// The verdicts of the §197 forks. Declared after the table and hoisted into
+// it: both options of each terminal settle the SAME road-dependent outcome
+// (the fork is what the crown chose years ago, not what it says at the
+// audit), and the option only decides how well the reading goes.
+function agrippaVerdict(ctx, briefed) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  const agr = g.tags && g.tags.AGR;
+  const kept = briefed ? 1.05 : 1;
+  if (h.getFlag(ctx, 'agrippaRose') && agr && !agr.overlord) {
+    h.addTagModifier(ctx, 'AGR', {
+      id: 'the_crown_that_answered', name: 'The Crown That Answered', months: -1,
+      effects: { legitimacyAdd: 0.15, unrestAll: -0.5, incomeMult: kept },
+    });
+    h.adjust(ctx, 'AGR', { legitimacy: 20 });
+    h.chronicle(ctx, 'era', 'The audit finds a kingdom in the north that fought the empire '
+      + 'and is still standing, and files it under the heading Rome keeps for such things: '
+      + 'too expensive this decade. The house of Herod ends the century as something no '
+      + 'Herod was ever allowed to be.');
+  } else if (h.getFlag(ctx, 'agrippaRose')) {
+    h.addTagModifier(ctx, 'AGR', {
+      id: 'the_yoke_replaced', name: 'The Yoke Replaced', months: briefed ? 84 : 120,
+      effects: { incomeMult: 0.9, unrestAll: 0.5 },
+    });
+    h.chronicle(ctx, 'era', 'The rising is in the file, the subjugation clause is in the '
+      + 'treaty, and the kingdom is kept — on terms written by men who now have the measure '
+      + 'of it. Every grant since Claudius is re-read as a loan.');
+  } else {
+    h.addTagModifier(ctx, 'AGR', {
+      id: 'praetor_of_the_east', name: 'The Praetorian Ornaments', months: -1,
+      effects: { incomeMult: 1.05 * kept, legitimacyAdd: 0.1 },
+    });
+    h.adjust(ctx, 'AGR', { treasury: 100 });
+    h.chronicle(ctx, 'era', 'The loyal client is confirmed in everything he holds and given '
+      + 'the ornaments of a praetor besides. He will die in Rome, old, rich, and the last of '
+      + 'his house — the audit\'s verdict being that a king who costs nothing is worth keeping.');
+  }
+}
+
+function tigrisVerdict(ctx, public_) {
+  const h = ctx.helpers;
+  const g = ctx.game;
+  const adi = g.tags && g.tags.ADI;
+  if (h.getFlag(ctx, 'tigrisFree') && adi && !adi.overlord) {
+    h.addTagModifier(ctx, 'ADI', {
+      id: 'the_road_pays_its_own', name: 'The Road Pays Its Own King', months: -1,
+      effects: { incomeMult: public_ ? 1.12 : 1.1, legitimacyAdd: 0.1 },
+    });
+    h.chronicle(ctx, 'era', 'The tolls of the Gulf Road cross no frontier before they reach '
+      + 'Arbela, and the difference is the whole of the house\'s new wealth. The King of '
+      + 'Kings has other rebellions; this one is filed as a border.');
+  } else if (h.getFlag(ctx, 'tigrisFree')) {
+    h.addTagModifier(ctx, 'ADI', {
+      id: 'the_arrears_of_a_rising', name: 'The Arrears of a Rising', months: 120,
+      effects: { incomeMult: 0.88 },
+    });
+    h.chronicle(ctx, 'era', 'The yoke is back on, and heavier: the arrears of the rising are '
+      + 'assessed with interest, and the fords are garrisoned by men who are not the '
+      + 'house\'s. The road still pays. It simply pays somebody else.');
+  } else {
+    h.addTagModifier(ctx, 'ADI', {
+      id: 'the_insured_caravans', name: 'The Insured Caravans', months: -1,
+      effects: { tradeMult: public_ ? 1.1 : 1.08, unrestAll: -0.25 },
+    });
+    h.adjust(ctx, 'ADI', { treasury: 80 });
+    h.chronicle(ctx, 'era', 'Two generations of unbroken tribute buy what tribute buys: a '
+      + 'frontier nobody tests, escorts nobody prices for war, and a court that is asked its '
+      + 'opinion in Ctesiphon. The covenant is kept in the synagogues and the accounts are '
+      + 'kept in Aramaic, and both balance.');
+  }
+}

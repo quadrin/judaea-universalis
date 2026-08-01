@@ -1569,6 +1569,23 @@ button {
     1px -1px 2px rgba(232, 220, 192, 0.85),
     -1px 1px 2px rgba(232, 220, 192, 0.85);
 }
+/* A court's foreign holdings — "JUDAEAN GREECE". Two words at the tag tier's
+   0.18em tracking is a very wide ribbon, so parts run tighter and lighter than
+   the home name: still the same hand, plainly subordinate to it. */
+.mlabel-part {
+  font-variant: small-caps;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.88;
+  text-shadow:
+    0 0 3px rgba(232, 220, 192, 0.9),
+    0 0 7px rgba(232, 220, 192, 0.5),
+    1px 1px 2px rgba(232, 220, 192, 0.85),
+    -1px -1px 2px rgba(232, 220, 192, 0.85),
+    1px -1px 2px rgba(232, 220, 192, 0.85),
+    -1px 1px 2px rgba(232, 220, 192, 0.85);
+}
 
 /* ============================================================
    Province panel — diplomacy block (foreign owners)

@@ -85,9 +85,14 @@ DEFINES = {
     AGR: {name:'Kingdom of Agrippa II', color:[214,120,120], religion:'judaism', culture:'galilean', capital:'Caesarea Philippi'},
     REB: {name:'Rebels',          color:[96,96,96],   religion:'hellenism',  culture:'greek', capital:''},
     WASTE:{name:'Wasteland',      color:[70,66,60]},
+    // every tag also carries adj:'Roman'|'Judaean'|'Israeli'|… — the adjective the map
+    //   names its foreign holdings with (SPEC §5.6, §199). No rule derives Dutch from
+    //   The Netherlands, so it is declared, here and in any chapter `tagTweaks` rename.
     // each may also carry: ideas:{disciplineMult, moraleMult, siegeBonus, hillDefBonus,
     //   incomeMult, manpowerMult, reinforceMult} (all optional, default 1 or 0),
-    //   description:'one-liner for start screen / tooltips'
+    //   description:'one-liner for start screen / tooltips',
+    //   homeRegion:'Italy' — where the court's own name belongs when its capital is
+    //   deliberately somewhere else (ROM plays from Antioch, UK from Cyprus)
   },
   BASE: {  // balance constants, sim reads these — defines agent sets sane values
     regSize:1000, regCost:{inf:10, cav:25}, maintPerReg:0.35,
@@ -111,6 +116,9 @@ DEFINES = {
 MAP_DATA = {
   MAP_W, MAP_H, LON0, LON1, LAT0, LAT1, project(lon,lat),
   provinces: [ ...see schema... ],      // id = index+1; renderer cap 512
+  regions: { 'Judaea': ['Jerusalem', ...], 'Greece': [...], ... },  // §5.6/§199: the named
+                                        // lands. A PARTITION of provinces — every cell in
+                                        // exactly one region; labels read it, the sim never does
   coast: { land: [ [ [lon,lat], ... ], ... ],   // filled land polygons (mainland(s), Cyprus, Arabia edge)
            lakes: [ ...same, punched out... ] },// Dead Sea, Sea of Galilee, Lake Urmia(optional)
   rivers: [ { name, width:1..3, points:[[lon,lat],...] }, ... ],  // Nile+Delta arms, Jordan, Litani, Orontes, Euphrates, Tigris, Balikh/Khabur optional
@@ -147,7 +155,9 @@ Galilee dome, Carmel, Jordan rift basin (Galilee→Dead Sea→Arabah), Edomite p
 `validateMapData()` → array of warning strings (empty = ok). Must check: every seed lands
 inside a land polygon (point-in-polygon), seeds ≥ 6 map-units apart, every `owner` is a known
 tag, every terrain/good/religion/culture key exists in the pinned DEFINES key lists (hardcode
-the key lists locally to avoid importing defines), extraLinks names resolve.
+the key lists locally to avoid importing defines), extraLinks names resolve, and `regions`
+partitions the province table (no cell in two regions, none in none, no region naming a cell
+the atlas does not have).
 
 ### Canonical province table (names are EXACT strings; content agent references them)
 
@@ -293,9 +303,18 @@ Chips, arrows and picking all share the interpolated position.
 
 `{ update(ctx, camera, mapmode) }` — ctx may be null pre-game (then clear). Absolutely
 positioned divs in `#labels-layer` (pointer-events:none). Zoom ≥ ~1.1: province names at
-centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: tag
-names (owner-weighted centroid over owned provinces, size ~ sqrt(total area), letter-spaced
-serif caps in darkened tag color). Recompute cheaply every call (N≈100); reuse divs.
+centroids, font scaled by sqrt(area)·zoom, clamped 9-22px, hidden if < 9. Zoom < ~1.1: nation
+names, letter-spaced serif caps in darkened tag color — **one per region a court holds**
+(`MAP_DATA.regions`), not one per court. The court's own name goes over its home region
+(`TAGS[tag].homeRegion`, else its capital's region, else its largest part); every other part
+reads `"[TAGS[tag].adj] [Region]"` — Judaean Greece, Israeli Britain, Hasmonean Egypt — in the
+`.mlabel-part` tier. Each part anchors at the pixel-mass centroid of the largest cell near that
+part's own centre of mass, never at the centre of mass itself: an average of a coastline is
+water (SPEC §199). Home labels size by sqrt(sqrt(part)·sqrt(realm)) so a big empire's name
+survives at whole-map zoom; parts size by their own area and hide below a higher floor. Also
+exports `tagLabelParts(ctx, geom, MAP_DATA) -> [{tag, region, home, text, x, y, area, realm,
+color}]`, the same placement with no DOM (the harness reads it). Recompute cheaply every call
+(N≈300); reuse divs.
 
 ## 6. Sim package — `js/sim/*` (one agent; public API pinned, internals free)
 
@@ -11307,6 +11326,7 @@ tables never notice.
   the same loops that covered the old. `smoke2`, `smoke3`, `smoke111`,
   `smoke112`, `uitest2` — untouched and green, because the principals'
   tables did not move by a single index.
+
 ## 197. The estates can be asked
 
 §167 gave every party ground: a strength in every province, an influence
@@ -11433,6 +11453,257 @@ chapter.
   `uitest41` — the §197 court: the favor row and both ask buttons render
   per estate, a banked ask spends and toasts, and "Their ground" flips the
   map to the estates mode with the bar's lit button following.
+
+## 199. The country's name goes where the country is
+
+The nation tier drew one label per court, at the owner-weighted centroid of
+every province it owned. That is the centre of mass of a realm, and the centre
+of mass of a realm in two places is in neither of them. A Judaea holding the
+Levant and Greece wrote **JUDAEA** across the open Mediterranean — over water
+it did not own, hundreds of miles from either half of itself, in letters sized
+by the sum of both. It is not a rounding error and no nudge fixes it: the
+number is an average over parts that are not one place.
+
+It was never only the reported case. Measured on the real raster over the eight
+bookmarks' opening positions, the old rule put **19 of 249** labels in the sea
+— Rome's among them in 167 BCE, 67 BCE and 40 BCE, because an empire drawn
+around a sea has its middle in the sea.
+
+**One label per region, not per court.** `MAP_DATA.regions` divides the 307
+cells into 35 named lands — Judaea, Transjordan, Negev, Phoenicia, Syria,
+Arabia, Egypt, Anatolia, Greece, Italy, Gaul, Hispania, Britain, Germania,
+Scythia and the rest — a partition, held by `validateMapData`, so every cell
+answers to exactly one. A court is then named once per region it holds: its own
+name over home, and over everything else **"[Adjective] [Region]"** — Judaean
+Greece, Israeli Britain, Hasmonean Egypt, Roman Judaea, Transjordanian Judaea in
+1948. Home is the region the court declares (`homeRegion`), else the one its
+capital sits in, else — a court in exile — the largest thing it holds. Two
+courts declare: Rome, played from Antioch, still writes ROME in Italy; Britain,
+whose 1948 seat on this map is Cyprus, still writes BRITAIN in Britain.
+
+The lines are geographic and therefore the same in every century, which is the
+only way one table can serve 167 BCE and 1948 at once. The Jordan is a boundary
+(so Agrippa II's name sits on the Golan and Transjordan's on Amman, with no
+per-tag table); the Negev is its own land, because it has belonged with Petra
+and with Beersheba in different centuries of this game. Where a modern state is
+finer than a classical region — Portugal inside Hispania, the Netherlands on the
+Rhine — nothing is lost: a label sits on the court's OWN holdings inside the
+region, so PORTUGAL still prints over Portugal, and the region only ever
+supplies the word for somebody else's ground.
+
+**The adjective is declared, not derived.** No rule turns The Netherlands into
+Dutch. All 109 tags carry `adj`, and a chapter that renames a court renames its
+adjective with it (SPEC §139) — 529's Galilee is *Galilean* abroad, not Judaean,
+which is the same class of error as calling the Keepers Jews. The fallback for a
+tag that somehow has none is the possessive.
+
+**The anchor is a cell, not an average.** Each part is placed at the pixel-mass
+centroid of the largest cell near that part's own centre of mass — big and
+central both, scored with a falloff over the part's own radius, so a scatter
+picks its mainland and a compact realm picks the cell it was already pointing
+at. The centre of mass itself is not used, not even clamped into that cell:
+splitting by region and keeping the clamped average still landed in the water 13
+to 20 times in 505. Anchoring on the cell lands there **0 times in 505**.
+
+Sizing keeps the country first. A part is sized by its own ground, but the home
+name by sqrt(sqrt(part)·sqrt(realm)) — the geometric mean of the two. At the
+whole-map zoom Rome's Italy is ten pixels of ground and would have vanished
+while ROMAN GAUL printed beside it, which is exactly backwards. Foreign parts
+also clear a higher floor (13.5px against 11.5px) and print in a tighter,
+lighter tier (`.mlabel-part`): two words at the tag tier's tracking is a very
+wide ribbon, and a court's holdings should read as subordinate to its name.
+
+- **Regression contract**: `smoke128` — the regions partition the atlas and
+  `validateMapData` says so; every tag and every chapter rename declares an
+  adjective; over all eight bookmarks on the real geometry snapshot, all 505
+  nation labels are on land, each anchored on a cell its own court holds, with
+  exactly one home label per court — *and the rule it replaced is re-run on the
+  same boards and asserted to fail*, so the bug stays visible to the suite that
+  fixed it. Then the three words the section was asked for, each on a live
+  board: Judaean Greece, Hasmonean Egypt, Israeli Britain — plus ROME in Italy,
+  BRITAIN in Britain, and Galilean Egypt in 529. `uitest42` — the same claim
+  against the raster the player is looking at rather than the coastline
+  polygons: every nation label drawn in the browser is handed back to
+  `provIdAt`, and the pixel underneath it must belong to the court whose name
+  is written there (a label in the sea has no province under it at all). Judaea
+  holding Greece and Egypt writes all three names, four hundred screen pixels
+  apart, the parts in the subordinate tier; zoom past 1.1 and the province
+  names come back with no part labels over them.
+
+## 200. The trees grow to the size of their chapters, and the clients get their own wars
+
+§196 ended with the principals at 13–18 nodes and the client chairs at
+11–14, and then somebody put a screenshot of EU4's Prussian tree next to
+one of ours. Thirty medallions against fifteen; the Commonwealth's sixty
+against our eighteen. The comparison is not a vanity metric — it is a
+statement about how much of a chapter the panel actually describes. The
+167 chapter runs a hundred and seventy-three years and had seven
+objectives in it. The Bar Kokhba chapter runs to 425 and stopped asking
+for anything after the third century of its span. A tree that finishes
+before the chapter does is a tree that stops being a plan and becomes a
+receipt.
+
+So: **every playable side grown to 18–23 nodes** (278 across the fifteen
+playable sides, up from 201), **five new forks** with ten new cards behind them,
+and — the thing the roster has never once offered — **two wars of
+independence a player can declare**.
+
+### The wars a client can start
+
+`vassalIndependence` (§61) has always let an AI vassal that despises its
+overlord sever the bond and declare; no card anywhere let a *player* do
+it. Two chapters had the moment sitting unused. Agrippa II held his crown
+from Rome through the one year Rome was eating its own emperors — Galba
+in the Forum, Otho by the Praetorians' leave, Vitellius over the Alps,
+and every cohort that could garrison Batanea besieging Jerusalem or
+marching on Italy. Adiabene held its crown from a King of Kings who spent
+most of the first century fighting his own nobility, with the tribute
+convoy two seasons unacknowledged. **The Client's War** and **The Crown
+Between the Rivers** are those two moments, and both do exactly what the
+AI rule does, in the same order: the bond breaks *first*
+(`overlord = null`), then `declareWar(…, 'independence')`, so the
+overlord can only put the yoke back on through the subjugation clause at
+the table. The loyal road is not a null option — it pays a permanent
+confirmed-client modifier and raises the overlord's regard past devotion
+— and each terminal reads the road back a decade later, when the Flavian
+clerks audit the East and the caravan lords audit the crown.
+
+What the declaration then does is the engine's own arithmetic, and it is
+better than anything scripted for it: played forward three years, Agrippa's
+war of independence is absorbed into the war Rome is already fighting, and
+the ledger reads `AGR −2, JUD +2, ROM −2`. The last Herodian ends the pass
+as a co-belligerent of the rising he spent the historical war helping to
+suppress, because that is what the war-merging rule says happens when two
+courts declare on the same empire in the same decade. Nothing had to be
+written to make that story; it fell out of `declareWar`.
+
+### Three decisions the chapters never dealt
+
+**The diadem** (167): the house governed for two generations as high
+priests and then Aristobulus put on a crown, and the quarrel about
+whether one head may wear the mitre and the diadem outlived the dynasty
+that started it. The fork takes the crown, or leaves the linen band in
+its box and governs a kingdom in everything but the word — in which case
+the Pharisees never rise, because there is nothing to rise against.
+**The testament** (40): Herod rewrote his will six times and the last
+version divided the realm in three, Augustus ratified it, Archelaus lost
+his third within a decade, and the province of Judaea is what the
+division produced. One heir or three tetrarchs — three being, as the
+imperial secretaries note helpfully at dinner, three men Rome can replace
+one at a time. **The apostate's offer** (132): the chapter runs to 425,
+which means it contains the one moment in seven centuries when the Roman
+state itself proposed to rebuild the Temple. Julian ordered it in 363 to
+win an argument with the Galileans, the works began under Alypius, and
+the project died in Persia with the emperor four months later. The game
+had never dealt it. Take the imperial funds and the imperial architect
+and have the House standing for reasons entirely somebody else's, or
+refuse in three lines that get copied for eight hundred years.
+
+### What the growth is made of
+
+Every new objective is the era's own record, not filler. 167 gets the
+Akra starved out, the embassy to a Senate that had never heard of this
+people, Idumea under the covenant, Simon's anchor on the coinage, the
+hired Pisidians, and Salome's nine quiet years. 66 gets the Third Wall
+that Rome made Agrippa stop building, the half-shekel of the world as a
+treasury, and the ships at Joppa given a harbour to shelter in. 132 gets
+the mint that dates the calendar, the academies out of the caves, the
+patriarch's office that outlived the war by two centuries, and the fixed
+reckoning — because a people that can be cut off from its own festivals
+has a frontier through the middle of it. 529 gets a Samaritan state with
+a treasury, a priesthood, the Jordan line and a census that refuses to be
+a footnote. 614 gets the desert frontier being assembled in the Hijaz
+while two empires bleed each other white. 1948 gets the absorption, the
+Water Carrier, the deterrent frontier, the boom, and the first Arab
+capital that deals with the state as a state.
+
+### Three bugs the growth walked into
+
+Writing content at this volume found three defects the suite could not see,
+and each one now has a check standing over it.
+
+**A stray comma is a hole, not a syntax error.** Moving the new cards into
+place left `},,` before a closing bracket in four packages — an *elision*,
+which JavaScript accepts silently. `filter` and `map` skip holes, so the
+obvious guard ("does any card come back undefined?") reported four clean
+arrays; `find` walks into them and hands `undefined` to its predicate. One
+misplaced comma per file took out five suites at once with stack traces
+pointing at innocent code twenty lines away, and the first two hours of
+diagnosis went into arrays that were, according to every measurement taken,
+perfectly fine. `smoke129` now walks every era chain by index (`i in chain`),
+which is the only test that sees a hole.
+
+**A card with both a date and a trigger has its trigger ignored.** All five
+terminals were written with `date` *and* `trigger`, so each would have fired
+on its calendar month whether or not the fork was ever answered — a verdict
+on a decision nobody made. `smoke74` has held that rule since §104 and it
+caught all five; they carry `minYear`/`maxYear` windows now, which is what
+the engine actually honours beside a trigger.
+
+**Cards appended to a package land inside its victory strand.** `smoke66`
+reads each chapter's strand as "the banner comment to the end of the file",
+so four fork terminals appended at the tail were being held to the strand's
+rule — nothing fires under a yoke or with the capital lost — which is right
+for a victory strand and wrong for a fork terminal whose whole job may be to
+report that the rising failed and the yoke went back on. The cards moved
+above the banner, where the chapter's ordinary body is.
+
+### The bug the growth was hiding, and the check that now hears it
+
+Writing conquest branches at this volume walked straight into a class of
+defect the suite could not see. **Every chapter folds the map its own
+way** — §47 merged Masada into Engedi and Machaerus into Medaba before
+Jannaeus built them, Tiberias is founded in 20 CE, Caesarea is Herod's to
+build — so a mission target that reads perfectly in the table can name a
+province its own chapter never seats. That mission is then uncompletable
+*for ever*, silently, and nothing in the suite would say so. Four of the
+new branches had it (167's Gerizim and its desert keys, both brothers'
+Galilee, Herod's own harbour) and they are repointed at ground those
+chapters actually have: Beth-Shean's gap, the Engedi shore and the
+Peraean crossing, Jotapata instead of a Tiberias that does not exist yet,
+and a Sharon-shore harbour built from Dora and Joppa.
+
+`smoke129` now resolves **every province every mission of every playable
+side names**, through `ctx.prov` — the same lookup `controls()` uses, so
+the §25 era renames and the `p.canon` aliases resolve rather than being
+reported as holes. Fifteen sides, every target seated. The first draft of
+that check compared display names and produced eight false positives in
+1948 alone, which is its own lesson: a guard that does not resolve the
+way the sim resolves is a guard that reports the sim as broken.
+
+- **Regression contract**: `smoke129` — the eleven principal counts, the
+  spare-column rule for roads and the five-column ceiling for everything,
+  one node per cell on every playable side, every §200 node declaring col
+  AND row, every named province live in its own chapter, the five forks
+  charted with both markers written and both terminals dealing two
+  answers, each entry writing exactly one marker per option and refusing
+  to deal twice, the independence rule live in both directions (bond
+  severed before the declaration, `cb === 'independence'`, regard
+  collapsed; and the loyal road leaving the bond and declaring nothing),
+  and the whole 167 branch paying when its world is built; plus the
+  elision guard — every era chain walked by index, because a hole is
+  invisible to `filter` and lethal to `find`. `smoke116` — 73 roads not
+  taken, the new markers in the completability worlds. `smoke74` — the
+  date-and-trigger rule, which caught all five terminals. `smoke66` — the
+  strand rule, which is why the new cards sit above the banner rather than
+  after it. `smoke79` — its 66 CE playthrough asserted that no band held
+  Jerusalem at the arbitrary month its thirty-year loop stopped on, which
+  is not the §112 claim; it now runs the burnout window out first and
+  asserts what §112 actually promises, which passes on both the old tree
+  and this one.
+  `smoke83` — 137 roads, ten new markers all written by live cards, no
+  new gaps. `smoke39` — the five terminals were caught single-optioned by
+  the v6.1 rule and now deal a real choice apiece (brief the audit or
+  answer when asked; swear the succession or let it stand on itself),
+  with the road-dependent settlement hoisted into a shared verdict
+  function so both options settle the same fork. The moved pins:
+  `smoke2` (21 at 66, 22 at 132), `smoke3` (23 at 67), `smoke111`
+  (21 nodes with the cols/rows vectors extended), `smoke112` (21),
+  `smoke126` (the §196 chairs re-counted), `uitest2` (21 medallions,
+  verified in a real browser). `smoke16`'s raw index into the 132/614
+  tables still lands on the Third House at five, because every insertion
+  went in after it. On the tree merged with main's §197-§199 the battery
+  is 129 of 129 headless suites ALL PASS.
 
 ## 201. The court has only so many envoys
 

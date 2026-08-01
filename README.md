@@ -71,6 +71,10 @@ static site, the zero dependencies, or the missing build step changes.
   electing, dying, fighting its own wars — and every western province carries a
   levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine legions stay on the
   Rhine instead of doubling the army it brings to Judaea.
+- Map labels that name the ground: zoom in for province names, out for nations —
+  one name per *region* a court holds rather than one per court, so a realm in two
+  places reads **JUDAEA** at home and **JUDAEAN GREECE** across the sea instead of
+  averaging the two into one label floating in the water between them.
 - Mapmodes: political, diplomatic, trade, terrain, religion, culture,
   development, unrest, estates, and the dispersion — where the Jewish
   communities of the diaspora are, how large, and how they regard your crown.

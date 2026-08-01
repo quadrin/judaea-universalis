@@ -1820,6 +1820,128 @@ export const EVENTS_132 = [
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ── The apostate's offer (SPEC §197) ──────────────────────────────────────
+  // This chapter runs to 425, which means it contains the one moment in seven
+  // centuries when the Roman state itself proposed to rebuild the Temple.
+  // Julian ordered it in 363, work began at the platform, and the project died
+  // in Persia with the emperor four months later. The game has never dealt the
+  // question, and it is the sharpest counterfactual the chapter owns: an offer
+  // from a power that wants the House standing for reasons entirely its own.
+  {
+    id: 'ev_j_the_apostates_offer',
+    title: 'The Apostate\'s Offer',
+    desc: 'The emperor is a philosopher in a soldier\'s cloak who has spent two years '
+      + 'unbuilding his uncle\'s religion, and he has arrived at the Jews the way a debater '
+      + 'arrives at his best argument. The Galileans, he writes, say the House was thrown '
+      + 'down for ever and cannot rise. Let it rise. Let the sacrifices resume. Let the '
+      + 'prophecy be answered with masonry.\n\n'
+      + 'He is offering imperial funds, an official of comital rank to run the works, and '
+      + 'the platform itself. He is also marching for Ctesiphon in the spring, and every '
+      + 'estimate of the Persian war that reaches this court reaches it in the same '
+      + 'dispatch as the offer. The elders ask the question in the room: whose House is it, '
+      + 'if it is built to win somebody else\'s argument — and does that matter more than '
+      + 'the fact that it would be standing?',
+    forTag: 'JUD',
+    major: true,
+    minYear: 362,
+    maxYear: 366,
+    trigger: safeTrigger('ev_j_apostates_offer', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'JUD') && !h.getFlag(ctx, 'julianAnswered');
+    }),
+    aiOption: 0,
+    historical: 'The Jews of the empire answered yes, and enthusiastically: Ammianus records '
+      + 'the works beginning under Alypius of Antioch. Fireballs — most likely gas in the '
+      + 'old vaults — drove the workmen off, Julian died at Samarra in June 363, and his '
+      + 'Christian successors buried the project so thoroughly that the next emperor to '
+      + 'mention the site mentioned it as a ruin that must stay one.',
+    options: [
+      {
+        label: 'Take the offer. Let the House rise, and let the reasons be his',
+        tooltip: 'Imperial funds and an imperial architect: +150 talents, +25 legitimacy, '
+          + '"The Works on the Platform" (+15% growth and +0.3 legitimacy a month for 60 '
+          + 'months). Every church in the East is now an enemy of this project: +1 unrest '
+          + 'everywhere for 60 months.',
+        effects: guard('ev_j_the_apostates_offer:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { treasury: 150, legitimacy: 25 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'works_on_the_platform', name: 'The Works on the Platform', months: 60,
+            effects: { growthMult: 1.15, legitimacyAdd: 0.3 },
+          });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'the_churches_answer', name: 'The Churches Answer', months: 60,
+            effects: { unrestAll: 1 },
+          });
+          h.setFlag(ctx, 'julianAnswered', true);
+          h.setFlag(ctx, 'julianTemple', true);
+          h.chronicle(ctx, 'era', 'Imperial couriers carry the order to Jerusalem and the '
+            + 'first stones are cleared from the platform inside the month. Jews come from '
+            + 'Babylonia and from Spain to carry rubble with their hands, and the bishops of '
+            + 'three provinces write to each other in a tone none of them has used before.');
+        }),
+      },
+      {
+        label: 'This House will not be raised to settle an emperor\'s quarrel',
+        tooltip: 'The offer is declined in writing, courteously, with reasons the schools can '
+          + 'defend for a thousand years: +2 stability, +50 influence points, "The House Not '
+          + 'Built by Caesar" (+0.25 legitimacy a month and −0.5 unrest everywhere, '
+          + 'permanent) — and no imperial silver.',
+        effects: guard('ev_j_the_apostates_offer:1', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'JUD', { stability: 2, infl: 50 });
+          h.addTagModifier(ctx, 'JUD', {
+            id: 'not_built_by_caesar', name: 'The House Not Built by Caesar', months: -1,
+            effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+          });
+          h.setFlag(ctx, 'julianAnswered', true);
+          h.setFlag(ctx, 'julianRefused', true);
+          h.chronicle(ctx, 'era', 'The reply is three lines long and is copied for eight '
+            + 'hundred years. The House will be rebuilt when it is rebuilt, and not as an '
+            + 'exhibit in an argument between two sorts of Greek. Julian reads it, and is '
+            + 'reported to have laughed, and to have been angry afterwards.');
+        }),
+      },
+    ],
+  },
+
+  {
+    id: 'ev_j_what_julian_left',
+    title: 'What Julian Left',
+    desc: 'The apostate has been dead for a generation, the empire is Christian again and '
+      + 'means it this time, and the men who legislate for it have read the file on 363 '
+      + 'with great attention. Whatever was begun then is now a fact somebody must rule on.',
+    forTag: 'JUD',
+    major: true,
+    minYear: 392,
+    maxYear: 420,
+    trigger: safeTrigger('ev_j_what_julian_left', (ctx) => {
+      const h = ctx.helpers;
+      return alive(ctx, 'JUD')
+        && !!(h.getFlag(ctx, 'julianTemple') || h.getFlag(ctx, 'julianRefused'));
+    }),
+    aiOption: 0,
+    options: [
+      {
+        label: 'Send advocates to the imperial court before the rescript is drafted',
+        tooltip: 'The lawyers of Theodosius are met by lawyers: −60 talents and +20 '
+          + 'influence points, and the ruling on 363 is argued rather than received.',
+        effects: guard('ev_j_what_julian_left:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -60, infl: 20 });
+          julianVerdict(ctx, true);
+        }),
+      },
+      {
+        label: 'Let the Christian century rule as it will',
+        tooltip: 'No embassy, no advocates, no expense. The rescript is drafted by men who '
+          + 'have only the file to go on, and the file is what it is.',
+        effects: guard('ev_j_what_julian_left:1', (ctx) => {
+          julianVerdict(ctx, false);
+        }),
+      },
+    ],
+  },
+
   // THE STANDING STATE, 136–166. The victory strand deepened: the world where
   // the Nasi's Israel holds Jerusalem and must now do the thing no revolt
   // rehearses — govern. Gated on judaeaStands() with date floors; the shared
@@ -2570,4 +2692,32 @@ export const EVENTS_132 = [
       },
     ],
   },
+
 ];
+
+
+// The verdict of the §197 apostate fork, hoisted into the table above.
+function julianVerdict(ctx, argued) {
+  const h = ctx.helpers;
+  if (h.getFlag(ctx, 'julianTemple')) {
+    h.addTagModifier(ctx, 'JUD', {
+      id: 'the_house_that_stood_through', name: 'The House the Century Inherited', months: -1,
+      effects: { legitimacyAdd: 0.2, pilgrimMult: argued ? 1.2 : 1.15 },
+    });
+    h.adjust(ctx, 'JUD', { legitimacy: 20 });
+    h.chronicle(ctx, 'era', 'A working sanctuary is a harder thing to legislate away than a '
+      + 'ruin, and the codes settle for surrounding it with disabilities instead of removing '
+      + 'it. The ascents run again, taxed at every gate, and the century that meant to end '
+      + 'this argument merely files it.');
+  } else {
+    h.addTagModifier(ctx, 'JUD', {
+      id: 'the_refusal_remembered', name: 'The Refusal Remembered', months: -1,
+      effects: { unrestAll: -0.4, legitimacyAdd: argued ? 0.2 : 0.15 },
+    });
+    h.adjust(ctx, 'JUD', { infl: 40 });
+    h.chronicle(ctx, 'era', 'The refusal has become the schools\' favorite proof text: this '
+      + 'people did not take the empire\'s scaffolding when the empire offered it, and '
+      + 'therefore owes the empire nothing for the ruin. Even the bishops find it difficult '
+      + 'to argue with, and mostly stop trying.');
+  }
+}

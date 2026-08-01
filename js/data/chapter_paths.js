@@ -168,6 +168,29 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_diadem',
+        question: 'The house governs a country. Does its head put on a crown?',
+        roads: [
+          Object.freeze({
+            id: 'diadem_taken', name: 'The Diadem',
+            marker: 'diademTaken', entry: 'ev_h_the_diadem',
+            terminal: 'ev_h_what_the_crown_became',
+            historical: 'Aristobulus I took it in 104 BCE, and Josephus says he was the first.',
+            note: 'SPEC §197. A king of the Jews for the first time since Zedekiah, addressed as '
+              + 'a peer by every chancery — and a permanent party at home that reads the Great '
+              + 'Assembly\'s decree aloud every year with the missing word left where it was.',
+          }),
+          Object.freeze({
+            id: 'priesthood_alone', name: 'The Mitre Alone',
+            marker: 'priesthoodAlone', entry: 'ev_h_the_diadem',
+            terminal: 'ev_h_what_the_crown_became',
+            note: 'SPEC §197. The road the chronicles do not have: a commonwealth governed by '
+              + 'priesthood and assembly, with no diadem for the schools to dispute — so the '
+              + 'quarrel that outlived the dynasty never starts.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -507,6 +530,29 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_testament',
+        question: 'The reign ends. Does the realm pass whole, or in thirds?',
+        roads: [
+          Object.freeze({
+            id: 'kingdom_whole', name: 'The Undivided Realm',
+            marker: 'kingdomWhole', entry: 'ev5_the_testament',
+            terminal: 'ev5_what_the_will_produced',
+            note: 'SPEC §197. One heir, one army, one set of accounts — and no third of a '
+              + 'kingdom for a prefect to inherit ten years later, which is the road by which '
+              + 'Judaea historically became a province.',
+          }),
+          Object.freeze({
+            id: 'kingdom_divided', name: 'The Tetrarchies',
+            marker: 'kingdomDivided', entry: 'ev5_the_testament',
+            terminal: 'ev5_what_the_will_produced',
+            historical: 'The sixth will divided it three ways; Augustus ratified the division '
+              + 'and withheld the royal title from all three.',
+            note: 'SPEC §197. The sons satisfied, the secretaries delighted, and a realm that '
+              + 'cannot act as one again — three men Rome can replace one at a time.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -717,6 +763,52 @@ export const CHAPTER_PATHS = Object.freeze([
           }),
         ],
       }),
+      Object.freeze({
+        id: 'the_clients_war',
+        question: 'Rome is eating its own emperors. Does the last Herodian keep faith with it?',
+        roads: [
+          Object.freeze({
+            id: 'agrippa_rose', name: 'The Client\'s War',
+            marker: 'agrippaRose', entry: 'ev_ag_the_clients_war',
+            terminal: 'ev_ag_what_the_flavians_found',
+            note: 'SPEC §197. The independence war the roster never offered: the bond severed '
+              + 'first and the war declared after, on the §61 vassal rule, in the one year of '
+              + 'the dynasty\'s life when every cohort that could garrison it is somewhere else.',
+          }),
+          Object.freeze({
+            id: 'agrippa_kept_faith', name: 'The Confirmed Client',
+            marker: 'agrippaKeptFaith', entry: 'ev_ag_the_clients_war',
+            terminal: 'ev_ag_what_the_flavians_found',
+            historical: 'Agrippa II lent Vespasian his troops, went to Rome with Titus, was made '
+              + 'praetor, and died there the last of his house.',
+            note: 'SPEC §197. The letter remembered in Rome for thirty years, which is precisely '
+              + 'what it was written to be.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_tigris_crown',
+        question: 'The King of Kings is fighting his own nobility. Whose is the convert kingdom?',
+        roads: [
+          Object.freeze({
+            id: 'tigris_free', name: 'The Crown Between the Rivers',
+            marker: 'tigrisFree', entry: 'ev_dm_the_tigris_crown',
+            terminal: 'ev_dm_what_the_road_paid',
+            note: 'SPEC §197. Arbela stops remitting and starts declaring — the second '
+              + 'independence war of the chapter, and the first time since Tigranes that the '
+              + 'house between the rivers is nobody\'s client.',
+          }),
+          Object.freeze({
+            id: 'tigris_kept', name: 'The King of Kings\' Peace',
+            marker: 'tigrisKept', entry: 'ev_dm_the_tigris_crown',
+            terminal: 'ev_dm_what_the_road_paid',
+            historical: 'Adiabene stayed in the Arsacid train, and it was no protection at all '
+              + 'when Trajan came through in 116.',
+            note: 'SPEC §197. Tribute current, frontier untested, escorts unpriced for war — '
+              + 'the arrangement a kingdom astride a great road is built to want.',
+          }),
+        ],
+      }),
     ],
   }),
 
@@ -908,6 +1000,30 @@ export const CHAPTER_PATHS = Object.freeze([
             note: 'SPEC §192. The historical silence, kept on purpose, one card long by '
               + 'design: refusing is the end of the question, the east is spared the '
               + 'reprisals a failed call would buy, and the ledger of 117 stays open.',
+          }),
+        ],
+      }),
+      Object.freeze({
+        id: 'the_apostates_offer',
+        question: 'A Roman emperor offers to rebuild the Temple to win an argument. Is it taken?',
+        roads: [
+          Object.freeze({
+            id: 'julian_temple', name: 'The Works on the Platform',
+            marker: 'julianTemple', entry: 'ev_j_the_apostates_offer',
+            terminal: 'ev_j_what_julian_left',
+            historical: 'The Jews of the empire answered yes and the works began under Alypius; '
+              + 'the fires in the vaults and Julian\'s death at Samarra ended it in months.',
+            note: 'SPEC §197. Imperial funds, an imperial architect, and every church in the '
+              + 'East an enemy of the project — a House raised to settle somebody else\'s '
+              + 'quarrel, and standing either way.',
+          }),
+          Object.freeze({
+            id: 'julian_refused', name: 'The House Not Built by Caesar',
+            marker: 'julianRefused', entry: 'ev_j_the_apostates_offer',
+            terminal: 'ev_j_what_julian_left',
+            note: 'SPEC §197. A three-line refusal copied for eight hundred years: this House '
+              + 'will be rebuilt when it is rebuilt, and not as an exhibit in an argument '
+              + 'between two sorts of Greek.',
           }),
         ],
       }),
