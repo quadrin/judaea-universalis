@@ -87,29 +87,34 @@ console.log('== a tab shows its own sections and hides the rest ==');
   ok(vitalCount === 4, 'four pinned numbers: ' + vitalCount);
 }
 
-console.log('== the ideas ride with the ladders (SPEC §188) ==');
+console.log('== the ideas are split by what unlocks them (SPEC §196) ==');
 {
-  // The lock cards read "Unlocked at The Third Wall (8)"; the ladder that
-  // answers them prints the 8. Both on one screen, the ladders above.
-  const ideas = page.locator('#nation-panel [data-ref="reforms"]');
+  // The reform trees are the realm's own constitution and live on Crown; the
+  // Ideas of the Age are each locked behind a named rung and keep the Coin
+  // screen, where the lock card and the ladder that answers it share a
+  // window. A bounding box is the only honest answer to "which screen".
+  const reforms = page.locator('#nation-panel [data-ref="reforms"]');
+  const eras = page.locator('#nation-panel [data-ref="eraIdeasBlock"]');
   const tech = page.locator('#nation-panel [data-ref="tech"]');
   await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
   await page.waitForTimeout(150);
-  ok(!(await ideas.isVisible()), 'Crown no longer shows them');
+  ok(await reforms.isVisible(), 'Crown shows the reform trees');
+  ok(!(await eras.isVisible()), '  and not the Ideas of the Age');
+  const buys = await page.locator('#nation-panel [data-idea]:visible').count();
+  ok(buys === 3, '  the three trees keep their buy buttons here: ' + buys);
 
   await page.locator('#nation-panel .np-tab[data-tab-go="coin"]').click();
   await page.waitForTimeout(150);
-  ok(await tech.isVisible() && await ideas.isVisible(),
-    'Coin shows the ladders and the ideas together');
+  ok(await tech.isVisible() && await eras.isVisible(),
+    'Coin shows the ladders and the Ideas of the Age together');
+  ok(!(await reforms.isVisible()), '  and not the reform trees');
   const boxes = await page.evaluate(() => {
     const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
-    return { tech: r('tech').top, ideas: r('reforms').top };
+    return { tech: r('tech').top, eras: r('eraIdeas').top };
   });
-  ok(boxes.ideas > boxes.tech, 'and the ideas are drawn BELOW the ladders that unlock them');
-  const buys = await page.locator('#nation-panel [data-idea]').count();
-  ok(buys === 3, 'the three reform trees keep their buy buttons here: ' + buys);
-  ok(await page.locator('#nation-panel .np-era-title').count() >= 1,
-    'and the chapter\'s Ideas of the Age came with them');
+  ok(boxes.eras > boxes.tech, 'and the era ideas are drawn BELOW the ladders that unlock them');
+  ok(await page.locator('#nation-panel [data-ref="eraIdeas"] .np-reform, #nation-panel [data-ref="eraIdeas"] .np-era-locked').count() >= 1,
+    'the chapter\'s curriculum is on the board (open groups or lock cards)');
 }
 
 console.log('== the panel keeps updating after a switch ==');

@@ -301,6 +301,15 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
+`smoke125.mjs` owns the SPEC §195 estate favor bank and the asks (the seed,
+the band rates, the one-object promise/payment contract, the ground scaling
+measured by handing the crown the coast, the gates, the AI silence).
+`smoke119.mjs` was rewritten in place to hold §196's split — the reform
+trees on Crown, the Ideas of the Age with the ladders — keeping §188's
+all-bookmark audit verbatim. `uitest41.mjs` drives the §195 court in a real
+browser: the ground line and favor figure per estate, the one-press ask with
+its toast, and the "Their ground" lever lighting the estates button on the
+mapmode bar (which now follows the bus event rather than its own clicks).
 
 ## UI battery state (v6.8)
 
@@ -1038,3 +1047,14 @@ firecheck boots all eight chapters at their horizons: 95/95 cards fire,
 zero guarded warnings. On the tree merged with §194 the battery is
 **124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
 smoke124 both included.
+
+The SPEC §195–196 batch (the estates can be asked; the reforms come home to
+the Crown) is player-only on both halves and measured as such: `monthlyFactions`
+returns before the favor bank for every AI hand, the asks live behind the same
+gate, and the reforms move is a panel-template affair the sim never reads.
+`node tools/autorun.mjs 4 66ce` and `4 1948ce` against a clean-HEAD baseline
+worktree are **byte-identical**, anomalies and all. The full headless battery
+runs 125 of 125 ALL PASS (smoke125 new, smoke119 rewritten in place to the
+§196 contract), and the browser suites the batch touches — uitest8, uitest15,
+uitest37, uitest38 (its §188 section rewritten to the split), uitest41 (new) —
+all come back ALL PASS on SwiftShader. Zero page errors in every browser run.

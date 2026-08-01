@@ -44,7 +44,7 @@ import { explainUnrest } from './unrest.js';
 import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
-import { factionApproval, shiftFaction, appeaseFactionCore, getFactionsInfo } from './factions.js';
+import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
 import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
 import { aidInfo, requestAidCore } from './aid.js';
@@ -2989,6 +2989,15 @@ export function gameActions(ctx) {
         if (!res.ok) { say('The court is cold', res.why || 'They will not hear us.', 'bad'); return; }
         say('An estate courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
       } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
+    },
+    // The ask (SPEC §195): spend the favor an estate has banked, receive what
+    // its ground can deliver.
+    askEstate(factionId, askKind) {
+      try {
+        const res = askEstateCore(ctx, g.playerTag, String(factionId), String(askKind));
+        if (!res.ok) { say('They will not be asked', res.why || 'They will not hear us.', 'bad'); return; }
+        say('An estate delivers', res.name + ' grant it: ' + res.ask + ' — ' + res.granted + '.', 'good');
+      } catch (e) { warnOnce('askEstate', 'askEstate failed', e); }
     },
 
     // ---- the world's way of doing things (nation panel, SPEC §166) -----------

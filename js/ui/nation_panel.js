@@ -43,16 +43,19 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // Missions (SPEC §177) holds the mission tree and steps aside at a foreign
 // court, after the verdict, and in a chapter whose tag has no chain.
 //
-// Ideas ride with the ladders, not with the crown (SPEC §188). The reform
-// trees and the chapter's Ideas of the Age are bought with monarch points and
-// unlocked by named technology rungs, so they sit under the Technology block
-// on Coin in every bookmark — the EU4 window, where the ladders and what they
-// sell are one screen. Crown keeps what it is: the realm's own facts.
+// The ideas are split by what unlocks them (SPEC §196, refining §188). The
+// chapter's Ideas of the Age are each locked behind a NAMED RUNG of a
+// technology ladder, so they stay under the Technology block on Coin — the
+// EU4 window, where the lock card and the ladder that answers it are one
+// screen. The three universal REFORM trees have no such lock: they are the
+// realm's own constitution, gated by nothing but the points the crown minted,
+// so they sit on Crown with the rest of what the realm IS — faith, tongue,
+// capital, government, reforms.
 const TABS = [
-  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, and what this chapter asks of you.' },
+  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the reforms it has enacted, and what this chapter asks of you.' },
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
-  { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, the advisors, what is brewing, and the decisions in your gift.' },
-  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, the technologies silver buys — and the ideas those ladders sell.' },
+  { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
+  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, the technologies silver buys — and the ideas of the age those ladders unlock.' },
   { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
@@ -124,6 +127,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
+      <!-- The reform trees live with the crown (SPEC §196): the realm's own
+           constitution, gated by nothing but points — unlike the Ideas of the
+           Age, which stay on Coin under the ladders that unlock them. -->
+      <div class="pp-build" data-tab="crown">
+        <div class="pp-build-title">Reforms</div>
+        <div class="np-reforms" data-ref="reforms"></div>
+      </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
@@ -133,7 +143,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
 
       <!-- ── THE COURT ─────────────────────────────────────────────────── -->
       <div class="pp-build hidden" data-ref="factionsBlock" data-tab="court">
-        <div class="pp-build-title" data-ref="factionsTitle">Estates</div>
+        <div class="pp-build-title np-est-head"><span data-ref="factionsTitle">Estates</span><button class="np-est-map" data-est-map data-tt="Paint the map by whose ground each province is (SPEC §167). What an estate holds decides what its favor is worth.">${icon('scales')}<span>Their ground</span></button></div>
         <div class="np-factions" data-ref="factions"></div>
       </div>
       <div class="pp-build hidden" data-ref="foreignCourtBlock" data-tab="court">
@@ -166,12 +176,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">Technology</div>
         <div class="np-techs" data-ref="tech"></div>
       </div>
-      <!-- The ideas sit UNDER the ladders that sell them (SPEC §188): the
-           universal reform trees and the chapter's own Ideas of the Age, in
-           every bookmark, on the same tab as the technology they unlock from. -->
-      <div class="pp-build" data-tab="coin">
-        <div class="pp-build-title">Ideas</div>
-        <div class="np-reforms" data-ref="reforms"></div>
+      <!-- The Ideas of the Age sit UNDER the ladders that unlock them
+           (SPEC §188/§196): every group is locked behind a named rung, and
+           the rung it names is printed directly above. The universal reform
+           trees have no such lock and live on Crown. -->
+      <div class="pp-build hidden" data-ref="eraIdeasBlock" data-tab="coin">
+        <div class="pp-build-title" data-tt="${esc('The ideas of this age (SPEC §179): arts the chapter itself argued about, each unlocked by a named rung of a technology ladder above and bought tier by tier with its point.')}">Ideas of the Age</div>
+        <div class="np-reforms" data-ref="eraIdeas"></div>
       </div>
 
       <!-- ── THE HOST ──────────────────────────────────────────────────── -->
@@ -281,6 +292,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           try { actions.appeaseFaction(fac.dataset.appease); } catch (err) { warnOnce('np-appease', err); }
         }
         refresh();
+        return;
+      }
+      // The ask (SPEC §195): spend an estate's banked favor on what its
+      // ground can deliver.
+      const askBtn = e.target.closest('[data-ask]');
+      if (askBtn) {
+        if (!askBtn.classList.contains('disabled') && actions && typeof actions.askEstate === 'function') {
+          try { actions.askEstate(askBtn.dataset.askFid, askBtn.dataset.ask); } catch (err) { warnOnce('np-ask', err); }
+        }
+        refresh();
+        return;
+      }
+      // "Their ground" (SPEC §195): flip the map to the estates mode, so the
+      // shares and asks in this section can be read off actual provinces. No
+      // refresh — a mapmode changes no game state.
+      const estMap = e.target.closest('[data-est-map]');
+      if (estMap) {
+        try { if (ctx && ctx.bus) ctx.bus.emit('mapmode', 'estates'); } catch (err) { warnOnce('np-estmap', err); }
         return;
       }
       const dis = e.target.closest('[data-dismiss-adv]');
@@ -679,6 +708,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshTech(t, self);
     refreshLedger(self);
     refreshReforms(t, self);
+    refreshEraIdeas(t, self);
     refreshCourt(t, self);
 
     // The four numbers you always want, pinned above the tabs (SPEC §175).
@@ -919,12 +949,40 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + '\n――――――\nCurrent: ' + (f.activeText || 'No estate effect.');
       const lever = f.appeaseLabel + ' — +' + (f.appeaseGain || 10) + ' approval';
       const btnTt = f.canAppease ? lever : (f.whyNot || '') + '\n' + lever;
+      // Their ground (SPEC §195): the same arithmetic the estates mapmode
+      // paints, phrased — share of the realm, and where they are strongest.
+      const g = f.ground;
+      const groundBits = [];
+      if (Number.isFinite(f.influencePct)) groundBits.push(f.influencePct + '% of the realm’s ground');
+      if (g && g.names && g.names.length) {
+        groundBits.push((g.dominant ? 'strongest in ' : 'dominant nowhere — nearest it in ') + g.names.join(', '));
+      }
+      const groundTt = 'Their strength on every province follows what the province IS — town or country, coast or'
+        + ' hills, faith, trade, forts, holy ground (SPEC §167). Their share of the realm’s development scales their'
+        + ' boons, their banes, and what their favor pays when asked. Conquest moves it.'
+        + (g ? '\nTheir colour on the estates mapmode: ' + g.count + ' of ' + g.total + ' provinces.' : '');
+      // The favor bank and the asks it buys (SPEC §195).
+      const gainTxt = (f.favorGain > 0 ? '+' : '−') + Math.abs(f.favorGain) + ' a month';
+      const favorTt = 'The credit this estate extends a crown that keeps it warm: +1 a month while devoted,'
+        + ' +0.5 loyal, +0.15 content — draining while they are against you (−0.5 discontent, −1.5 hostile).'
+        + '\nSpend it on their asks. What an ask pays scales with their share of the realm’s ground: the more of'
+        + ' the map is theirs, the more they can deliver.\nNow: ' + gainTxt + '.';
+      const asks = (f.asks || []).map((a) => {
+        const terms = a.name + ' — costs ' + a.favorCost + ' favor.\n' + (a.text ? a.text + '\n' : '')
+          + 'They would grant: ' + (a.grants || 'nothing') + '.';
+        const askTt = a.ready ? terms : (a.whyNot || '') + '\n――――――\n' + terms;
+        return `<button class="pp-build-btn np-ask${a.ready ? '' : ' disabled'}" data-ask="${esc(a.key)}"`
+          + ` data-ask-fid="${esc(f.id)}" data-tt="${esc(askTt)}">`
+          + `<span class="np-ask-name">${esc(a.name)}</span><span class="np-ask-cost">${a.favorCost}</span></button>`;
+      }).join('');
       return `<div class="np-faction" data-tt="${esc(tt)}">`
         + `<div class="np-fac-top"><span class="np-fac-name">${esc(f.name)}</span>`
         + `<span class="np-fac-state ${cls}">${esc(f.state)} · ${f.approval}</span>`
         + `<button class="pp-build-btn np-fac-btn${f.canAppease ? '' : ' disabled'}" data-appease="${esc(f.id)}" data-tt="${esc(btnTt)}">${icon('laurel')}</button></div>`
         + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${f.state}" style="width:${Math.max(2, Math.min(100, f.approval))}%"></div></div>`
         + `<div class="np-fac-effect ${cls}">${esc(f.activeText || 'No estate effect.')}</div>`
+        + `<div class="np-fac-ground" data-tt="${esc(groundTt)}">${icon('mountain', 'icon-k')}<span>${esc(groundBits.join(' · ') || 'No ground in the realm')}</span></div>`
+        + `<div class="np-fac-favor"><span class="np-fac-favor-n" data-tt="${esc(favorTt)}">${icon('laurel', 'icon-k')}Favor ${f.favor}</span>${asks}</div>`
         + `</div>`;
     }).join(''));
   }
@@ -1480,36 +1538,25 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // The ideas (SPEC §188), rendered under the Technology block on Coin in
-  // every bookmark: three reform trees — tier pips, the next reform's name and
-  // price, one buy button per tree — and then the chapter's Ideas of the Age,
-  // which the ladders directly above them unlock. Renders nothing on sims
-  // without getIdeas. Foreign courts show their pips read-only, straight from
-  // t.reforms.
+  // The reform trees (SPEC §20/§196), rendered on Crown in every bookmark:
+  // tier pips, the next reform's name and price, one buy button per tree.
+  // They are the realm's own constitution — gated by nothing but monarch
+  // points — which is why they live with faith, tongue and capital rather
+  // than with the ladders (the Ideas of the Age keep those, below, because
+  // each of THOSE is locked behind a named rung). Renders nothing on sims
+  // without getIdeas. Foreign courts show their pips read-only, straight
+  // from t.reforms.
   function refreshReforms(t, self) {
     if (!refs.reforms) return;
     if (!self) {
       const owned = t.reforms || {};
-      let html = Object.keys(IDEA_TREES).map((key) => {
+      setHtml(refs.reforms, Object.keys(IDEA_TREES).map((key) => {
         const tree = IDEA_TREES[key];
         const have = owned[key] | 0;
         const pips = tree.tiers.map((ti, i) =>
           `<span class="np-pip${i < have ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
         return `<div class="np-reform"><div class="np-reform-head"><b>${esc(tree.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-      }).join('');
-      // Their ideas of the age (SPEC §179), read straight off t.eraIdeas —
-      // pips only, no lock cards: a foreign ladder is their business.
-      const groups = eraIdeaGroupsFor(ctx && ctx.bookmark, t.tag, t);
-      const taken = groups.filter((gd) => ((t.eraIdeas || {})[gd.key] | 0) > 0);
-      if (taken.length) {
-        html += `<div class="np-era-title">Ideas of the Age</div>` + taken.map((gd) => {
-          const n = Math.max(0, Math.min(gd.tiers.length, (t.eraIdeas || {})[gd.key] | 0));
-          const pips = gd.tiers.map((ti, i) =>
-            `<span class="np-pip${i < n ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-          return `<div class="np-reform"><div class="np-reform-head">${icon(gd.icon || 'lamp', 'icon-k')}<b>${esc(gd.name)}</b><span class="np-pips">${pips}</span></div></div>`;
-        }).join('');
-      }
-      setHtml(refs.reforms, html);
+      }).join(''));
       return;
     }
     let trees = null;
@@ -1518,7 +1565,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }
     if (!trees) { setHtml(refs.reforms, ''); return; }
     const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
-    let html = trees.map((tr) => {
+    setHtml(refs.reforms, trees.map((tr) => {
       const pips = tr.tiers.map((ti) =>
         `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
       const next = tr.tiers[tr.owned];
@@ -1532,41 +1579,60 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
             ${next ? `${esc(next.name)} <span class="np-reform-cost">${tr.cost} ${esc(tr.point)}</span>` : 'Complete'}
           </button>
         </div>`;
-    }).join('');
-    // The ideas of the age (SPEC §179): the chapter's own groups, each behind
-    // a named rung of its ladder. A locked group is the EU4 card — a dark
-    // slab that says what opens it — and an open one sells its tiers like
-    // any reform tree.
-    let eras = null;
-    if (actions && typeof actions.getEraIdeas === 'function') {
-      try { eras = actions.getEraIdeas(); } catch (e) { warnOnce('np-getEraIdeas', e); }
-    }
-    if (Array.isArray(eras) && eras.length) {
-      html += `<div class="np-era-title" data-tt="${esc('The ideas of this age (SPEC §179): four arts the chapter itself argued about, '
-        + 'each unlocked by a rung of the matching technology ladder and bought tier by tier with its point.')}">Ideas of the Age</div>`;
-      html += eras.map((er) => {
-        if (!er.unlocked) {
-          return `<div class="np-reform np-era-locked" data-tt="${esc(er.name + ' — ' + er.desc + '\n' + er.unlockDetail)}">
-            <div class="np-era-lock-name">${icon(er.icon || 'lamp', 'icon-k')}${esc(er.name)}</div>
-            <div class="np-era-lock-at">${esc(er.unlockText)}</div>
-          </div>`;
-        }
-        const pips = er.tiers.map((ti) =>
-          `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
-        const next = er.tiers[er.owned];
-        const tt = next
-          ? `${er.desc}\n${next.name} — ${next.desc}\nCosts ${er.cost} ${ptName[er.point] || er.point} points.${er.canBuy ? '' : '\n' + er.whyNot}`
-          : `${er.desc}\n${er.whyNot}`;
-        return `
-        <div class="np-reform">
-          <div class="np-reform-head">${icon(er.icon || 'lamp', 'icon-k')}<b>${esc(er.name)}</b><span class="np-pips">${pips}</span></div>
-          <button class="pp-build-btn np-reform-btn${er.canBuy ? '' : ' disabled'}" data-eraidea="${esc(er.key)}" data-tt="${esc(tt)}">
-            ${next ? `${esc(next.name)} <span class="np-reform-cost">${er.cost} ${esc(er.point)}</span>` : 'Complete'}
-          </button>
-        </div>`;
+    }).join(''));
+  }
+
+  // The ideas of the age (SPEC §179/§196), rendered under the Technology
+  // block on Coin: the chapter's own groups, each behind a named rung of its
+  // ladder. A locked group is the EU4 card — a dark slab that says what opens
+  // it, directly below the ladder that answers it — and an open one sells its
+  // tiers like any reform tree. Foreign courts show the groups they have
+  // taken up, pips only: a foreign ladder is their business. The block hides
+  // itself when there is nothing to show.
+  function refreshEraIdeas(t, self) {
+    if (!refs.eraIdeas) return;
+    let html = '';
+    if (!self) {
+      const groups = eraIdeaGroupsFor(ctx && ctx.bookmark, t.tag, t);
+      const taken = groups.filter((gd) => ((t.eraIdeas || {})[gd.key] | 0) > 0);
+      html = taken.map((gd) => {
+        const n = Math.max(0, Math.min(gd.tiers.length, (t.eraIdeas || {})[gd.key] | 0));
+        const pips = gd.tiers.map((ti, i) =>
+          `<span class="np-pip${i < n ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+        return `<div class="np-reform"><div class="np-reform-head">${icon(gd.icon || 'lamp', 'icon-k')}<b>${esc(gd.name)}</b><span class="np-pips">${pips}</span></div></div>`;
       }).join('');
+    } else {
+      let eras = null;
+      if (actions && typeof actions.getEraIdeas === 'function') {
+        try { eras = actions.getEraIdeas(); } catch (e) { warnOnce('np-getEraIdeas', e); }
+      }
+      const ptName = { mar: 'martial', gov: 'government', infl: 'influence' };
+      if (Array.isArray(eras) && eras.length) {
+        html = eras.map((er) => {
+          if (!er.unlocked) {
+            return `<div class="np-reform np-era-locked" data-tt="${esc(er.name + ' — ' + er.desc + '\n' + er.unlockDetail)}">
+              <div class="np-era-lock-name">${icon(er.icon || 'lamp', 'icon-k')}${esc(er.name)}</div>
+              <div class="np-era-lock-at">${esc(er.unlockText)}</div>
+            </div>`;
+          }
+          const pips = er.tiers.map((ti) =>
+            `<span class="np-pip${ti.owned ? ' on' : ''}" data-tt="${esc(ti.name + ' — ' + ti.desc)}"></span>`).join('');
+          const next = er.tiers[er.owned];
+          const tt = next
+            ? `${er.desc}\n${next.name} — ${next.desc}\nCosts ${er.cost} ${ptName[er.point] || er.point} points.${er.canBuy ? '' : '\n' + er.whyNot}`
+            : `${er.desc}\n${er.whyNot}`;
+          return `
+          <div class="np-reform">
+            <div class="np-reform-head">${icon(er.icon || 'lamp', 'icon-k')}<b>${esc(er.name)}</b><span class="np-pips">${pips}</span></div>
+            <button class="pp-build-btn np-reform-btn${er.canBuy ? '' : ' disabled'}" data-eraidea="${esc(er.key)}" data-tt="${esc(tt)}">
+              ${next ? `${esc(next.name)} <span class="np-reform-cost">${er.cost} ${esc(er.point)}</span>` : 'Complete'}
+            </button>
+          </div>`;
+        }).join('');
+      }
     }
-    setHtml(refs.reforms, html);
+    refs.eraIdeasBlock.classList.toggle('hidden', !html);
+    setHtml(refs.eraIdeas, html);
   }
 
   function refreshDecisions() {

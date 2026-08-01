@@ -11134,3 +11134,130 @@ start is 40-50, so the men have to be earned across years of standing.
   `smoke109` — the 167 BCE era-page counts, re-pinned 13→18 and 20→29.
   `smoke110`, `smoke106` — unchanged and green: the east's dates and the
   ask machinery are exactly what they were.
+
+## 195. The estates can be asked
+
+§167 gave every party ground: a strength in every province, an influence
+share at court, a colour on the estates mapmode. And then it spent all of it
+on pressure. Influence scaled their boons and banes; a hostile party rioted
+its own provinces; the mapmode showed you whose country you were standing in.
+Every line of that runs one way — the estates lean on the crown. A player who
+spent thirty years keeping the Pharisees devoted got a passive modifier and a
+green bar, and the map that knows exactly where the Pharisees are strong
+answered no question the player could act on. The estates could be courted,
+appeased, offended and fought over, and they could never be **asked**.
+
+### Favor is a bank, approval is a mood
+
+`t.estateFavor` (SPEC §195, `js/sim/factions.js`) rides beside the approval
+table and heals beside it: 0-100 per seated party, seeded at 10, inherited
+through `succeeds` like the mood is (§127 — the crown's credit with the
+Hasideans did not expire when the record started calling them Pharisees).
+It fills monthly from the warmth band — devoted +1, loyal +0.5, content
++0.15 — and drains while the party is against you (discontent −0.5, hostile
+−1.5). It is deliberately NOT the approval number: spending approval to ask
+a service would make every ask an insult, cooling the very party that just
+did the crown a favor. CK's favors and EU4's estate loyalty live apart for
+the same reason.
+
+Asking spends the bank and nothing else. There is no cooldown table: favor
+accrues slowly enough that the bank IS the throttle (a devoted party funds
+one 30-favor ask roughly every two and a half years), and an ask that grants
+a timed modifier refreshes its own slot rather than stacking.
+
+### What they give is what their ground can deliver
+
+Every payoff is scaled by `influenceScale` — the party's development-weighted
+share of the realm against an even split, clamped 0.6-1.4 — which is the
+§167 number the estates mapmode paints. This is the line that makes the map
+a promise rather than a diagnostic: take the Greek coast and the
+Hellenizers' subscription is worth two-fifths more; lose the hills and the
+villages' levy thins. The panel prints the same arithmetic in words — the
+share, and the provinces where the party is strongest, named — so the row
+and the mapmode can be read against each other, and a "Their ground" lever
+on the Estates block flips the map to the estates mode directly (the
+mapmode bar follows the bus event rather than its own clicks, so the lit
+button cannot lie).
+
+Seven ask kinds (`js/data/estate_asks.js`, magnitudes authored once in
+`ASK_KINDS`): **coin** (months of the realm's income, at once — read off
+`t.income`, the tag's own cached ledger, so no import edge into the economy;
+`sacred.js` already imports this module), **men** (a share of maximum
+manpower, at once), **hands** (+income% for a year), **zeal** (+morale% for
+a year), **calm** (−unrest everywhere for a year), **blessing** (legitimacy,
+at once), **counsel** (monarch points of the party's own flavor). Two asks
+per party, authored id by id for all forty-six parties the eight bookmarks
+and the client chairs seat — the Cities Vote a Crown of Gold, the Kibbutzim
+Mobilize, the Legions' veterans re-enlist — with a generic fallback pair so
+a future chapter that seats an unwritten party degrades to plain words, not
+silence. A bookmark may also author `asks` directly on a faction def:
+content owns the politics, the engine owns the arithmetic.
+
+The gates live in one place (`askBlocker`, the same contract the
+appeasement lever keeps): approval above 40 — a party in despair will not
+hear the crown — favor above the ask's price, and the degenerate cases
+(full muster rolls, legitimacy at its height) refuse rather than waste.
+Player-only, like everything else at the court (§33/§34): AI realms keep
+their politics offstage, and the harness cannot feel any of it.
+
+- **Regression contract**: `smoke125` — the bank seeds, fills by band at
+  the pinned rates, drains under hostility and survives a save round-trip;
+  every authored ask pair is valid (known kinds, no duplicate kind in a
+  pair, every bookmark id covered); the ask spends exactly its price, pays
+  exactly what its tooltip promised (the payoff object serves both), scales
+  with the ground share, refuses below the approval floor and on an empty
+  bank, refreshes rather than stacks its modifier; the demand/appease
+  machinery of §34 is untouched beside it; and the AI hand shows no favor
+  table at all. `smoke18` — §81's ladder and §167's influence factor,
+  unchanged and green beside the new fields.
+
+## 196. The reforms come home to the Crown
+
+§188 moved the whole ideas block — the three universal reform trees AND the
+chapter's Ideas of the Age — onto Coin under the Technology ladders, and for
+half the block the argument was airtight: every era group is locked behind a
+NAMED RUNG of a ladder, the lock card names it in words, and the rung it
+names is printed directly above. One window, like EU4's.
+
+For the other half the argument was only symmetry. The universal trees are
+locked behind nothing: no rung opens them, no lock card names a ladder, and
+the one thing they share with the era groups — being paid in gov/infl/mar —
+they share with half the levers in the game. They are the realm's own
+constitution, enacted whenever the points are minted, and a player looking
+for them looked where the realm's own facts live: on Crown, beside faith,
+tongue, capital and government, where §175 put them in the first place.
+
+### The split
+
+The **Reforms** block returns to Crown (templated after The Chapters, its
+pre-§188 seat), carrying the three universal trees and their buy path
+(`data-idea`) with it. The **Ideas of the Age** become their own block on
+Coin, still templated directly below Technology — template order is render
+order, §188's own load-bearing rule — with the §179 tooltip on the block
+title and the same lock cards and buy path (`data-eraidea`). Each block owns
+its own host (`refs.reforms` on Crown, `refs.eraIdeas` on Coin) and its own
+refresh; the era block hides itself when there is nothing to show, which for
+every playable side of every chapter is never (§188's audit), and at a
+foreign court means the visited realm has taken up no era idea yet. Foreign
+pips render read-only in both places exactly as before, one tab apart. The
+in-block `np-era-title` divider retires — the block title does its work.
+
+What §188 proved stays proven: the era groups still price and unlock off
+the three printed ladders in every bookmark, the tab strip still renames
+per chapter through `uiTerms`, and the delegated click chain still probes
+the tab strip first. Crown cannot go blank (its vitals grid is
+unconditional) and now cannot go stale either — the reform trees render for
+player and foreigner alike, so the tab carries a live section in every
+chapter.
+
+- **Regression contract**: `smoke119` — rewritten to hold the split: the
+  reform-tree host resolves to Crown, the era host to Coin below the
+  ladders, both buy paths keep their probes behind the tab probe, every
+  declared tab still owns a section, and the §188 audit (every era group
+  and every universal tree priced and unlocked off a printed ladder, in
+  every bookmark) holds verbatim. `uitest38` — the browser's bounding-box
+  answer: reforms visible on Crown with three buy buttons, era ideas
+  visible on Coin BELOW the ladders, neither visible on the other's tab.
+  `uitest41` — the §195 court: the favor row and both ask buttons render
+  per estate, a banked ask spends and toasts, and "Their ground" flips the
+  map to the estates mode with the bar's lit button following.

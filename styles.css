@@ -2311,6 +2311,69 @@ html, body {
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
 .np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
+/* their ground and their favor (SPEC §195): the map's arithmetic phrased,
+   the favor bank, and the two asks it buys */
+.np-est-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.np-est-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 10px;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  background: rgba(85, 69, 46, 0.14);
+  border: 1px solid rgba(85, 69, 46, 0.4);
+  border-radius: 3px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.np-est-map:hover { color: var(--ink); border-color: rgba(85, 69, 46, 0.7); }
+.np-est-map .icon { width: 11px; height: 11px; }
+.np-fac-ground {
+  margin-top: 3px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.25;
+  font-style: italic;
+}
+.np-fac-ground .icon-k { flex: none; align-self: center; opacity: 0.7; }
+.np-fac-favor {
+  margin-top: 4px;
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+}
+.np-fac-favor-n {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-bright);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.np-fac-favor-n .icon-k { opacity: 0.8; }
+.np-ask {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  padding: 3px 6px;
+}
+.np-ask-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-ask-cost { flex: none; font-size: 10px; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+.np-ask.disabled .np-ask-cost { opacity: 0.55; }
+
 /* the doctrine axes (SPEC §85): a needle between two named poles */
 .np-doctrine { display: flex; flex-direction: column; }
 .np-dox {
@@ -3029,18 +3092,10 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .np-reform-head .np-tech-rung { flex: 1; text-align: right; margin: 0 4px 0 auto; }
 
-/* the ideas of the age (SPEC §179): the EU4 idea-group cards — a locked
-   group is a dark slab naming the rung that opens it, an open one sells its
-   tiers like a reform tree */
-.np-era-title {
-  font-size: 11px;
-  font-variant: small-caps;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-  border-top: 1px dotted rgba(85, 69, 46, 0.35);
-  margin: 10px 0 6px;
-  padding-top: 7px;
-}
+/* the ideas of the age (SPEC §179/§196): the EU4 idea-group cards in their
+   own block under the Technology ladders — a locked group is a dark slab
+   naming the rung that opens it, an open one sells its tiers like a reform
+   tree */
 .np-era-locked {
   display: flex;
   flex-direction: column;

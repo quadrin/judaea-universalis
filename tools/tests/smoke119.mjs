@@ -1,30 +1,31 @@
-// Headless regression — SPEC §188: the ideas ride with the ladders that sell
-// them, in every bookmark.
+// Headless regression — SPEC §196 (refining §188): the ideas are split by
+// what unlocks them, in every bookmark.
 //
-// §175 sorted the panel's twenty sections into six tabs by what each one IS,
-// and the reform trees read as constitutional, so they went to Crown. Then
-// §179 grew the same block a second half — the chapter's Ideas of the Age,
-// each one locked behind a NAMED RUNG of a technology ladder — and the lock
-// card ("Unlocked at The Third Wall (8)") was on one tab while the ladder that
-// answers it was on another. This suite holds the move: the whole ideas block
-// renders under the Technology block, on the same tab, in all eight chapters.
+// §188 moved the whole ideas block onto Coin under the Technology ladders,
+// and for the chapter's Ideas of the Age the argument was airtight: every
+// group is locked behind a NAMED RUNG, the lock card names it, and the rung
+// it names is printed directly above. For the three universal reform trees
+// the argument was only symmetry — no rung opens them, no lock card names a
+// ladder; they are the realm's own constitution and belong with the realm's
+// own facts. §196 splits the block: the reform trees come home to Crown, the
+// Ideas of the Age keep the ladders. This suite holds the split.
 //
 // Three contracts:
 //
-//   1. THE BLOCK MOVED, AND IT MOVED UNDER THE LADDERS. The `np-reforms` host
-//      is on the technology tab, below the `np-techs` host in the template
-//      (which is render order — the tab filter only hides, it never reorders),
-//      and no section on Crown carries it any more.
-//   2. NOTHING ELSE MOVED. Crown still owns a section that renders in every
-//      chapter, so the tab cannot vanish under a player; every tab still owns
-//      at least one section; and both buy paths (`data-idea`, `data-eraidea`)
-//      are still probed in the delegated click chain, so the move is a move
-//      and not a rewrite.
-//   3. EVERY IDEA IS PAID BY A LADDER PRINTED ABOVE IT — IN EVERY BOOKMARK.
-//      The three universal trees and every chapter's era groups all price and
-//      unlock off gov/infl/mar, the three ladders the Technology block prints
-//      directly above them, for every playable side of every chapter. That is
-//      what makes one screen the right screen rather than a tidier one.
+//   1. THE SPLIT, EXACTLY. The reform-tree host is on Crown; the era-idea
+//      host is on Coin, templated BELOW the `np-techs` host (template order
+//      is render order — the tab filter only hides, it never reorders), so
+//      a lock card reading "Unlocked at The Third Wall (8)" still sits
+//      below the ladder that shows the 8. Each block wears its own title.
+//   2. NOTHING ELSE MOVED. Every declared tab still owns a section; Crown
+//      still opens with its unhidden vitals grid; and all three buy paths
+//      (`data-idea`, `data-eraidea`, `data-tech`) keep their probes in the
+//      delegated click chain, behind the tab probe that runs first.
+//   3. EVERY ERA IDEA IS PAID BY A LADDER PRINTED ABOVE IT — IN EVERY
+//      BOOKMARK. The §188 audit holds verbatim: the universal trees and
+//      every chapter's era groups all price and unlock off gov/infl/mar,
+//      for every playable side of every chapter. That is what keeps Coin
+//      the right screen for the half of the block that stayed.
 const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
 const { readFileSync } = await import('fs');
 const { IDEA_TREES } = await import(R + '/js/data/ideas.js');
@@ -38,52 +39,57 @@ const ok = (cond, msg) => {
 };
 
 const PANEL = readFileSync(R + '/js/ui/nation_panel.js', 'utf8');
-const CSS = readFileSync(R + '/styles.css', 'utf8');
 
 // The template is one string literal in build(). Each section is a wrapper
 // carrying `data-tab`; a host belongs to the last wrapper opened before it.
 const TEMPLATE = PANEL.slice(PANEL.indexOf('el.innerHTML = `'), PANEL.indexOf('el.querySelectorAll(\'[data-ref]\')'));
-function tabOf(hostClass) {
-  const at = TEMPLATE.indexOf(hostClass);
+function tabOf(marker) {
+  const at = TEMPLATE.indexOf(marker);
   if (at < 0) return null;
   const before = TEMPLATE.slice(0, at);
   const marks = [...before.matchAll(/data-tab="([a-z]+)"/g)];
   return marks.length ? marks[marks.length - 1][1] : null;
 }
-
-// ---------------------------------------------------------------------------
-console.log('== §188: the ideas render under the ladders ==');
-{
-  const techTab = tabOf('class="np-techs"');
-  const ideasTab = tabOf('class="np-reforms"');
-  ok(techTab === 'coin', 'the Technology block is on the Coin tab: ' + techTab);
-  ok(ideasTab === techTab, 'and the ideas block is on the same tab: ' + ideasTab);
-  ok(ideasTab !== 'crown', 'Crown no longer carries the ideas');
-
-  // Render order is template order — the tab filter is display:none on the
-  // sections of other tabs and reorders nothing — so a lock card reading
-  // "Unlocked at The Third Wall (8)" sits below the ladder that shows the 8.
-  const techAt = TEMPLATE.indexOf('class="np-techs"');
-  const ideasAt = TEMPLATE.indexOf('class="np-reforms"');
-  ok(techAt > 0 && ideasAt > techAt, 'the ideas are templated BELOW the ladders');
-  ok(!/display:\s*flex[^}]*order:/.test(CSS.slice(CSS.indexOf('.np-techs'), CSS.indexOf('.np-techs') + 200)),
-    'and nothing in the stylesheet reorders them back');
-
-  // The block title the player reads. It always sold both halves — the three
-  // universal trees and the age's own groups — and under the ladders it says
-  // so in the panel's own vocabulary (`data-idea`, `getIdeas`, IDEA_TREES).
-  const block = TEMPLATE.slice(TEMPLATE.lastIndexOf('<div class="pp-build"', ideasAt), ideasAt);
-  ok(/pp-build-title">Ideas</.test(block), 'the block is titled Ideas: '
-    + (block.match(/pp-build-title">([^<]*)</) || [])[1]);
-
-  // The Coin tab's tooltip has to own what the tab now holds, or the strip
-  // lies about where a player should look.
-  const coinTT = (PANEL.match(/id: 'coin',[^\n]*tt: '([^']*)'/) || [])[1] || '';
-  ok(/idea/i.test(coinTT), 'and the tab tooltip says the ideas are there: ' + coinTT);
+function blockTitleAbove(marker) {
+  const at = TEMPLATE.indexOf(marker);
+  if (at < 0) return null;
+  const block = TEMPLATE.slice(TEMPLATE.lastIndexOf('<div class="pp-build', at), at);
+  return (block.match(/pp-build-title[^>]*>(?:<[^>]+>)*([^<]*)</) || [])[1] || null;
 }
 
 // ---------------------------------------------------------------------------
-console.log('== §188: nothing else moved ==');
+console.log('== §196: the reform trees are on Crown, the era ideas keep the ladders ==');
+{
+  const reformsTab = tabOf('data-ref="reforms"');
+  const erasTab = tabOf('data-ref="eraIdeas"');
+  const techTab = tabOf('class="np-techs"');
+  ok(reformsTab === 'crown', 'the reform-tree host is on Crown: ' + reformsTab);
+  ok(techTab === 'coin', 'the Technology block is on Coin: ' + techTab);
+  ok(erasTab === 'coin', 'and the Ideas of the Age stay beside it: ' + erasTab);
+
+  // Render order is template order — the tab filter is display:none on the
+  // sections of other tabs and reorders nothing — so the lock card reading
+  // "Unlocked at The Third Wall (8)" sits below the ladder that shows the 8.
+  const techAt = TEMPLATE.indexOf('class="np-techs"');
+  const erasAt = TEMPLATE.indexOf('data-ref="eraIdeas"');
+  ok(techAt > 0 && erasAt > techAt, 'the era ideas are templated BELOW the ladders');
+
+  // Each half wears its own name now that they are two blocks.
+  ok(blockTitleAbove('data-ref="reforms"') === 'Reforms',
+    'the Crown block is titled Reforms: ' + blockTitleAbove('data-ref="reforms"'));
+  ok(blockTitleAbove('data-ref="eraIdeas"') === 'Ideas of the Age',
+    'the Coin block is titled Ideas of the Age: ' + blockTitleAbove('data-ref="eraIdeas"'));
+
+  // The tab tooltips have to own what each tab now holds, or the strip lies
+  // about where a player should look.
+  const crownTT = (PANEL.match(/id: 'crown',[^\n]*tt: '([^']*)'/) || [])[1] || '';
+  const coinTT = (PANEL.match(/id: 'coin',[^\n]*tt: '([^']*)'/) || [])[1] || '';
+  ok(/reform/i.test(crownTT), 'the Crown tooltip claims the reforms: ' + crownTT);
+  ok(/idea/i.test(coinTT), 'and the Coin tooltip claims the ideas of the age: ' + coinTT);
+}
+
+// ---------------------------------------------------------------------------
+console.log('== §196: nothing else moved ==');
 {
   const used = [...TEMPLATE.matchAll(/data-tab="([a-z]+)"/g)].map((m) => m[1]);
   const TAB_IDS = [...PANEL.matchAll(/^\s*\{ id: '([a-z]+)', label: '/gm)].map((m) => m[1]);
@@ -91,8 +97,7 @@ console.log('== §188: nothing else moved ==');
   ok(empty.length === 0, 'every declared tab still owns a section'
     + (empty.length ? ' (' + empty.join(', ') + ')' : ' (' + TAB_IDS.length + ' tabs)'));
 
-  // Crown must keep an anchor that renders in EVERY chapter, or losing the
-  // ideas would let the tab itself disappear under a player (`tabHasContent`
+  // Crown must keep an anchor that renders in EVERY chapter (`tabHasContent`
   // counts a pp-grid only when a row of it is unhidden — the realm's facts
   // are unconditional, the chapter block is not).
   const crownGrid = TEMPLATE.indexOf('<div class="pp-grid" data-tab="crown">');
@@ -101,20 +106,20 @@ console.log('== §188: nothing else moved ==');
   ok(/data-ref="religion"/.test(grid) && !/class="pp-row hidden"[^>]*data-ref="religion"/.test(grid),
     '  whose religion row is never hidden, so the tab cannot vanish');
 
-  // The move is a move: the same delegated probes, the same actions.
+  // The split is a split: the same delegated probes, the same actions.
   const clickBody = PANEL.slice(PANEL.indexOf("el.addEventListener('click'"), PANEL.indexOf('function refreshTabs'));
   ok(/closest\('\[data-idea\]'\)/.test(clickBody) && /actions\.buyIdea/.test(clickBody),
     'the reform buy path is untouched');
   ok(/closest\('\[data-eraidea\]'\)/.test(clickBody) && /actions\.buyEraIdea/.test(clickBody),
     'and so is the era-idea buy path');
   ok(/closest\('\[data-tech\]'\)/.test(clickBody) && /actions\.buyTech/.test(clickBody),
-    'and the ladders they now sit under still buy');
+    'and the ladders the era ideas sit under still buy');
   ok(/data-tab-go/.test(clickBody.slice(0, clickBody.indexOf("closest('[data-act]"))),
     'the tab probe is still first in the chain (SPEC §175)');
 }
 
 // ---------------------------------------------------------------------------
-console.log('== §188: for all bookmarks, every idea is paid by a ladder above it ==');
+console.log('== §188 audit: for all bookmarks, every era idea is paid by a ladder above it ==');
 {
   const LADDERS = ['gov', 'infl', 'mar']; // exactly what the Technology block prints
   const treePoints = Object.keys(IDEA_TREES).map((k) => IDEA_TREES[k].point);
@@ -147,14 +152,16 @@ console.log('== §188: for all bookmarks, every idea is paid by a ladder above i
     + (bad.length ? ' (' + bad.slice(0, 4).join('; ') + ')' : ''));
 
   // A chapter may rename the tabs (SPEC §52) — 1948 calls Coin the Economy.
-  // The ideas travel with whatever that chapter calls the tab they are on;
-  // what must not happen is a bookmark renaming Crown as though they were
-  // still there while the block sits somewhere else.
-  const ideasTerm = (PANEL.match(/id: 'coin', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
-  ok(ideasTerm[2] === 'tabCoin', 'the ideas\' tab reads its label from uiTerms.' + ideasTerm[2]);
+  // Both halves of the old block travel with whatever their chapters call
+  // their tabs; what must not happen is a bookmark renaming one of the two
+  // as though the split had not occurred.
+  const coinTerm = (PANEL.match(/id: 'coin', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
+  ok(coinTerm[2] === 'tabCoin', 'the era ideas\' tab reads its label from uiTerms.' + coinTerm[2]);
+  const crownTerm = (PANEL.match(/id: 'crown', label: '([A-Za-z]+)', term: '([A-Za-z]+)'/) || []);
+  ok(crownTerm[2] === 'tabCrown', 'and the reforms\' tab from uiTerms.' + crownTerm[2]);
   const renamed = ERAS.filter((e) => e.bookmark.uiTerms && e.bookmark.uiTerms.tabCrown);
   const missing = renamed.filter((e) => !e.bookmark.uiTerms.tabCoin).map((e) => e.bookmark.id);
-  ok(!missing.length, 'every chapter that renames the tabs names the ideas\' tab too'
+  ok(!missing.length, 'every chapter that renames the tabs names both halves\' tabs'
     + (missing.length ? ' (' + missing.join(', ') + ')' : ' (' + renamed.length + ' renaming chapter(s))'));
 }
 
