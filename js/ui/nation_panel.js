@@ -59,7 +59,7 @@ const TABS = [
 ];
 const DEFAULT_TAB = 'crown';
 
-export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick }) {
+export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarClick, onProvinceClick }) {
   let ctx = null;
   let actions = null;
   let viewTag = null; // null = the player's own realm; a tag = a foreign court
@@ -331,6 +331,19 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
+      // Writing to the dispersion from the host court's panel (SPEC §195):
+      // the asks of a court-hosted community, and the jump rows for the
+      // communities living on this court's soil.
+      const npDia = e.target.closest('[data-np-dia]');
+      if (npDia && viewTag) {
+        if (!npDia.classList.contains('disabled') && actions && typeof actions.askTagCommunity === 'function') {
+          try { actions.askTagCommunity(viewTag, npDia.dataset.npDia); } catch (err) { warnOnce('np-dia', err); }
+        }
+        refresh();
+        return;
+      }
+      const npDiaProv = e.target.closest('[data-np-diaprov]');
+      if (npDiaProv && onProvinceClick) { onProvinceClick(npDiaProv.dataset.npDiaprov | 0); return; }
       const pc = e.target.closest('[data-peace]');
       if (pc && onPeaceClick) { onPeaceClick(pc.dataset.peace); return; }
       const wr = e.target.closest('[data-war]');
@@ -1216,6 +1229,61 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           }
         }
         html += `<div class="np-dip-sec">Envoys</div><div class="pp-diplo-btns np-dip-verbs">${row}</div>`;
+      }
+    }
+
+    // Writing to the dispersion, from the host's own court (SPEC §195). A
+    // court-hosted community — America has no cell — carries its full ask
+    // block here, exactly where §180 keeps an off-map seat's envoys; a
+    // community living on this court's soil is a row that jumps to its
+    // province, where §172's panel already does the work. Jewish crowns
+    // only: the sim returns null for everyone else and the section hides.
+    if (!self && actions) {
+      let dia = null;
+      try { dia = typeof actions.getTagCommunity === 'function' ? actions.getTagCommunity(who) : null; } catch (e) { dia = null; }
+      let hosted = [];
+      try {
+        const rep = typeof actions.getDiaspora === 'function' ? actions.getDiaspora() : null;
+        hosted = (rep || []).filter((r) => r && r.host === who && r.provId);
+      } catch (e) { hosted = []; }
+      if (dia || hosted.length) {
+        html += `<div class="np-dip-sec">The Dispersion</div>`;
+        if (dia) {
+          const band = dia.standing >= 75 ? 'devoted' : dia.standing >= 55 ? 'loyal'
+            : dia.standing <= 25 ? 'hostile' : dia.standing <= 40 ? 'discontent' : 'content';
+          const cls = dia.standing >= 55 ? 'pos' : dia.standing <= 40 ? 'neg' : '';
+          const whyTt = dia.blurb + '\n――――――\nHow they regard this crown, and why:\n'
+            + (dia.why || []).map((r) => '  ' + r.label + ' ' + (r.value >= 0 ? '+' : '') + r.value).join('\n')
+            + '\nStanding drifts toward ' + (dia.target === null ? 'nothing' : dia.target) + ' a little every month.'
+            + '\nThey live under ' + dia.hostName + ', and every favour we ask puts them at risk from it.';
+          html += `<div class="np-faction" data-tt="${esc(whyTt)}">`
+            + `<div class="np-fac-top"><span class="np-fac-name">${esc(dia.name)}</span>`
+            + `<span class="np-fac-state ${cls}">${dia.standing}${dia.target !== null && dia.target !== dia.standing ? ' → ' + dia.target : ''}</span></div>`
+            + `<div class="np-fac-bar"><div class="np-fac-fill np-fac-${band}" style="width:${Math.max(2, Math.min(100, dia.standing))}%"></div></div>`
+            + `<div class="np-fac-effect">${esc('Size ' + dia.size + ' of 5.'
+              + (dia.atWar ? ' We are at war with their state: they will want to be surer of us, and the risk to them is doubled.' : ''))}</div>`
+            + `</div>`;
+          html += `<div class="pp-diplo-btns np-dip-verbs">` + (dia.asks || []).map((a) => {
+            const bits = [];
+            if (a.gain.treasury) bits.push(a.gain.treasury + ' talents');
+            if (a.gain.manpower) bits.push(a.gain.manpower + ' men');
+            if (a.gain.infl) bits.push(a.gain.infl + ' influence');
+            if (a.gain.opinion) bits.push('+' + a.gain.opinion + ' with ' + dia.hostName);
+            const tt = a.desc
+              + '\n――――――\nGives ' + (bits.join(', ') || 'nothing')
+              + '.\nCosts them ' + Math.abs(a.standingCost) + ' standing'
+              + (a.infl ? ' and us ' + a.infl + ' influence' : '')
+              + '.\nNeeds ' + a.need + ' standing. Risk of the letter being read: '
+              + Math.round(a.risk * 100) + '% — and the reprisal falls on them.'
+              + (a.can ? '' : '\n' + (a.whyNot || ''));
+            return `<button class="pp-dip${a.can ? '' : ' disabled'}" data-np-dia="${esc(a.id)}" data-tt="${esc(tt)}">${esc(a.name)}</button>`;
+          }).join('') + `</div>`;
+        }
+        for (const r of hosted) {
+          html += `<div class="np-dip-row np-dia-row" data-np-diaprov="${r.provId}" data-tt="${esc('A community of the dispersion on this court\'s soil — standing ' + r.standing + ' of 100. Click to open ' + r.prov + '; the letters are written from the province.')}">`
+            + `<span class="np-dip-name">${esc(r.name)}</span>`
+            + `<span class="np-dip-ws${r.standing >= 55 ? ' pos' : r.standing <= 40 ? ' neg' : ''}">${esc(r.prov)} · ${r.standing}</span></div>`;
+        }
       }
     }
 

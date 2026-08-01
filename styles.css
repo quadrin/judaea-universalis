@@ -2390,6 +2390,10 @@ html, body {
 .np-dip-ws.pos { color: var(--green); }
 .np-dip-ws.neg { color: var(--red-deep); }
 .np-dip-none { padding: 3px 0; font-style: italic; font-size: 12.5px; color: var(--ink-soft); opacity: 0.9; }
+/* A dispersion row on a host court's panel (SPEC §195) is a door to its
+   province, so it reads as one. */
+.np-dia-row { cursor: pointer; border-radius: 6px; padding-left: 4px; padding-right: 4px; }
+.np-dia-row:hover { background: rgba(0, 0, 0, 0.06); }
 .np-dove { flex: none; }
 
 .np-decisions { display: grid; grid-template-columns: 1fr; gap: 6px; }

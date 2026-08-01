@@ -997,3 +997,18 @@ bars, 614's farmable western remainder sustains ~1 talent and ~2 influence a
 month, and no new community sends men on day one anywhere. The envelope is
 pinned in `smoke124` (size ≤ 3, start ≤ 50, the war gate at 66 CE, the
 volunteer bar at 66 and 1948) so a future edit cannot quietly move it.
+
+Since §195 (a community with no cell is written to from its host's court):
+the dispersion gained a second kind of seat — `tag` instead of `prov` — for
+hosts past the map's edge, and a Dispersion section on foreign courts'
+Abroad tabs: a court-hosted community (the Jews of America, on Truman's
+§180 off-map seat) carries its full ask block there, and communities living
+on that court's soil render as rows that jump to their province (Attlee's
+Britain lists London beside Tripoli, the BMA being the 1948 fact). London
+(from 1656) and America (size 5, stand-in dev 40, opening 60 — past the
+volunteer bar on day one, deliberately: Machal) are the two entries. The
+harness still cannot see any of it — `node tools/autorun.mjs 4 1948ce` is
+**byte-identical** before and after — and a browser pass over both panels
+renders the section with no page errors. The battery is **125 of 125
+headless suites ALL PASS**; `smoke125` is the new contract, and `smoke124`'s
+§194 pins moved with the feature (37 entries, exactly one seat each).
