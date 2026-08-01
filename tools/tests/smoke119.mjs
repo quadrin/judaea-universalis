@@ -1,4 +1,4 @@
-// Headless regression — SPEC §197 (refining §188): the ideas are split by
+// Headless regression — SPEC §198 (refining §188): the ideas are split by
 // what unlocks them, in every bookmark.
 //
 // §188 moved the whole ideas block onto Coin under the Technology ladders,
@@ -7,7 +7,7 @@
 // it names is printed directly above. For the three universal reform trees
 // the argument was only symmetry — no rung opens them, no lock card names a
 // ladder; they are the realm's own constitution and belong with the realm's
-// own facts. §197 splits the block: the reform trees come home to Crown, the
+// own facts. §198 splits the block: the reform trees come home to Crown, the
 // Ideas of the Age keep the ladders. This suite holds the split.
 //
 // Three contracts:
@@ -58,7 +58,7 @@ function blockTitleAbove(marker) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('== §197: the reform trees are on Crown, the era ideas keep the ladders ==');
+console.log('== §198: the reform trees are on Crown, the era ideas keep the ladders ==');
 {
   const reformsTab = tabOf('data-ref="reforms"');
   const erasTab = tabOf('data-ref="eraIdeas"');
@@ -89,7 +89,7 @@ console.log('== §197: the reform trees are on Crown, the era ideas keep the lad
 }
 
 // ---------------------------------------------------------------------------
-console.log('== §197: nothing else moved ==');
+console.log('== §198: nothing else moved ==');
 {
   const used = [...TEMPLATE.matchAll(/data-tab="([a-z]+)"/g)].map((m) => m[1]);
   const TAB_IDS = [...PANEL.matchAll(/^\s*\{ id: '([a-z]+)', label: '/gm)].map((m) => m[1]);

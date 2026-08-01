@@ -301,12 +301,12 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
-`smoke126.mjs` owns the SPEC §196 estate favor bank and the asks (the seed,
+`smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,
 the band rates, the one-object promise/payment contract, the ground scaling
 measured by handing the crown the coast, the gates, the AI silence).
-`smoke119.mjs` was rewritten in place to hold §197's split — the reform
+`smoke119.mjs` was rewritten in place to hold §198's split — the reform
 trees on Crown, the Ideas of the Age with the ladders — keeping §188's
-all-bookmark audit verbatim. `uitest41.mjs` drives the §196 court in a real
+all-bookmark audit verbatim. `uitest41.mjs` drives the §197 court in a real
 browser: the ground line and favor figure per estate, the one-press ask with
 its toast, and the "Their ground" lever lighting the estates button on the
 mapmode bar (which now follows the bus event rather than its own clicks).
@@ -1064,16 +1064,42 @@ and `smoke124`'s §194 pins moved with the feature (37 entries, exactly one
 seat each). On the tree merged with the world backdrop above, the battery
 is **125 of 125 headless suites ALL PASS**.
 
-The SPEC §196–197 batch (the estates can be asked; the reforms come home
+Since §196 (the chairs take their turn): the five §185 client chairs get
+the §187/§192 treatment — fifteen objectives (one expansion branch per
+chair over ground the tag does not start with, court branches from the
+houses' own documented deeds) and six roads not taken riding forks the
+chapters already chart. No new fork was drawn, so `chapter_paths.js`,
+`smoke83` and `smoke117` stand exactly as §192 left them, and the
+principal tables did not move by a single index — `smoke2`, `smoke3`,
+`smoke16`, `smoke111`, `smoke112` all green unmoved. The AI symmetry
+(§102) was measured, not assumed: `node tools/autorun.mjs 8` on 67bce,
+40bce, 66ce and 132ce is **byte-identical** to the parent tree on all
+four — the new thresholds sit past what an AI-held chair reaches in the
+window, so the trees grew reasons for a player without moving the AI's
+furniture at all. `smoke126` is the new contract: the grown chains at
+11/11/12/14/11 with 2/2/3/4/2 roads, every §196 node dressed and seated,
+every conquest target foreign at boot, nothing accomplished on day one,
+the forced worlds paying every declared modifier, the off-record rule
+live (a road stays dark when only history's marker is set), and the
+one-node-per-cell guard finally run over EVERY playable side of every
+bookmark — the check §187 and §183 each wished for after finding a
+collision in a second-playable tree by hand. `smoke116` moved with the
+feature (one new world marker, `speakerForTheNation`; six new roads pay
+beside the fifty-eight old ones). On the tree merged with main's §195
+(the court-hosted communities), the battery is **126 of 126 headless
+suites ALL PASS**, their smoke125 and this section's smoke126 both
+included.
+
+The SPEC §197–198 batch (the estates can be asked; the reforms come home
 to the Crown) is player-only on both halves and measured as such:
 `monthlyFactions` returns before the favor bank for every AI hand, the asks
 live behind the same gate, and the reforms move is a panel-template affair
 the sim never reads. `node tools/autorun.mjs 4 66ce` and `4 1948ce` against
 a clean-HEAD baseline worktree are **byte-identical**, anomalies and all.
-`smoke126` is the new contract (numbered after §195's smoke125, which
-landed on main first), `smoke119` is rewritten in place to the §197
+`smoke127` is the new contract (renumbered twice as main's §195 and
+§196 landed first), `smoke119` is rewritten in place to the §198
 contract, and the browser suites the batch touches — uitest8, uitest15,
 uitest37, uitest38 (its §188 section rewritten to the split), uitest41
 (new) — all come back ALL PASS on SwiftShader with zero page errors. On
-the tree merged with §195, the battery is **126 of 126 headless suites
-ALL PASS**.
+the tree merged with §195 and §196, the battery is **127 of 127
+headless suites ALL PASS**.

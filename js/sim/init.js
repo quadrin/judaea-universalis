@@ -3009,7 +3009,7 @@ export function gameActions(ctx) {
         say('An estate courted', res.name + ' warms to the crown (approval ' + res.approval + ').', 'good');
       } catch (e) { warnOnce('appease', 'appeaseFaction failed', e); }
     },
-    // The ask (SPEC §196): spend the favor an estate has banked, receive what
+    // The ask (SPEC §197): spend the favor an estate has banked, receive what
     // its ground can deliver.
     askEstate(factionId, askKind) {
       try {

@@ -1045,6 +1045,48 @@ export const BOOKMARK_67 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
+      // ── The chair's own reach (SPEC §196): what the Tigris kingdom can
+      // become when Armenia's wreck stops smoking. The house rode in
+      // Tigranes' train at Tigranocerta and knows exactly what fell there.
+      {
+        id: 't4_bones_of_armenia', name: 'The Bones of Tigranocerta',
+        icon: 'tower', col: 0, row: 3, requires: ['t4_riders_mustered'],
+        desc: 'The house rode to Tigranocerta in Tigranes\' train and watched Lucullus break it. '
+          + 'The deportees have walked home and the southern marches answer to nobody. Take '
+          + 'Tigranocerta and Amida — the overlord\'s wreck is the client\'s inheritance.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ['Tigranocerta', 'Amida']
+          .every((n) => ctx.helpers.controls(ctx, 'ADI', n)),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 't4_elder_client_house', name: 'The Elder Client House',
+        icon: 'split', col: 2, row: 3, requires: ['t4_kings_regard'],
+        desc: 'Osrhoene keeps the western crossing as the King of Kings\' other door-keeper, '
+          + 'and two door-keepers is one more than any door needs. Take Edessa and Carrhae — '
+          + 'a house in full regard may be forgiven for swallowing its sister.',
+        rewardText: '"The Western Fords": +5% trade permanently, +15 influence points.',
+        check: (ctx) => ['Edessa', 'Carrhae']
+          .every((n) => ctx.helpers.controls(ctx, 'ADI', n)),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'western_fords', name: 'The Western Fords', months: -1, effects: { tradeMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 15 });
+        },
+      },
+      {
+        id: 't4_peace_of_the_altars', name: 'The Peace of the Two Altars',
+        icon: 'flame', col: 1, row: 2, requires: ['t4_wisdom'],
+        desc: 'The Magi have buried three generations of this house by the old rites and counted '
+          + 'every sabbath lamp in the palace windows. Bring the realm to +2 stability — a court '
+          + 'where the old fires and the new prayers stop watching each other.',
+        rewardText: '"The Two Altars": −0.25 unrest everywhere permanently.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'two_altars', name: 'The Two Altars', months: -1, effects: { unrestAll: -0.25 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_west_unrenamed', name: 'The West They Never Renamed', hypothetical: true,
@@ -1056,6 +1098,18 @@ export const BOOKMARK_67 = {
         rewardText: '+50 talents, +10 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'neverRenamed'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_doors_stayed_shut', name: 'The Doors Stayed Shut', hypothetical: true,
+        fork: '67bce/the_proconsuls_bill',
+        icon: 'temple', col: 3, row: 1,
+        desc: 'If Jerusalem seals its treasury for the record and Crassus marches for the '
+          + 'Euphrates unpaid, then the half-shekels of Babylonia — banked at Nehardea, '
+          + 'carried over the house\'s fords — were never in the room he emptied, and the '
+          + 'east\'s silver keeps crossing with no proconsul\'s clerk to weigh it.',
+        rewardText: '+50 talents, +15 influence points.',
+        check: (ctx) => anyFlag(ctx, 'crassusRefused'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, infl: 15 }),
       },
     ],
   },

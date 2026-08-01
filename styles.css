@@ -2311,7 +2311,7 @@ html, body {
 .np-fac-fill.np-fac-hostile { background: var(--red-deep, #8a2f2a); }
 .np-fac-effect { margin-top: 3px; color: var(--ink-soft); font-size: 10px; line-height: 1.25; }
 
-/* their ground and their favor (SPEC §196): the map's arithmetic phrased,
+/* their ground and their favor (SPEC §197): the map's arithmetic phrased,
    the favor bank, and the two asks it buys */
 .np-est-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .np-est-map {
@@ -3096,7 +3096,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .np-reform-head .np-tech-rung { flex: 1; text-align: right; margin: 0 4px 0 auto; }
 
-/* the ideas of the age (SPEC §179/§197): the EU4 idea-group cards in their
+/* the ideas of the age (SPEC §179/§198): the EU4 idea-group cards in their
    own block under the Technology ladders — a locked group is a dark slab
    naming the rung that opens it, an open one sells its tiers like a reform
    tree */

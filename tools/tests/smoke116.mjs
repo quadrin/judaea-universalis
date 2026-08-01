@@ -201,12 +201,13 @@ function expectAllDone(g, bookmark, tags, label) {
 
 { // 66 CE — the Second Kingdom and both of its dependent questions cascade
   // through the wave rule in a single monthly pass — the client courts'
-  // roads (§185) pay off the same standing House, and the §192 forks (the
-  // royal robes, the granaries) by marker.
+  // roads (§185, grown by §196) pay off the same standing House, and the
+  // §192 forks (the royal robes, the granaries) by marker. The nation
+  // question (§196: Agrippa hears the answer too) rides the same cascade.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, {
     secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,
-    menahemLives: true, storesSealed: true,
+    menahemLives: true, storesSealed: true, speakerForTheNation: true,
   });
   realm.checkMissions(ctx);
   expectAllDone(game, era('66ce').bookmark, ['JUD', 'AGR', 'ADI'], '66ce');

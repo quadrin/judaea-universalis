@@ -32,7 +32,7 @@ export const FACTION = {
   demandRefuse: -8, // …and the cost of sending it away
 };
 
-// Favor (SPEC §196): the credit an estate extends a crown that keeps it warm.
+// Favor (SPEC §197): the credit an estate extends a crown that keeps it warm.
 // Approval is a mood and favor is a BANK — the mood fills it, the crown spends
 // it on asks, and the two must not be one number or every ask would also be an
 // insult (spending "approval" would cool the very party that just did you a
@@ -125,7 +125,7 @@ export function ensureFactions(ctx, tag) {
   if (!t.factions || typeof t.factions !== 'object') t.factions = {};
   // The favor bank rides beside the approval table and heals the same way:
   // an old save without one wakes up with every party at the seed, exactly
-  // like a new campaign (SPEC §196).
+  // like a new campaign (SPEC §197).
   if (!t.estateFavor || typeof t.estateFavor !== 'object') t.estateFavor = {};
   for (const d of defs) {
     if (d && d.id && !Number.isFinite(t.estateFavor[d.id])) {
@@ -342,7 +342,7 @@ export function monthlyFactions(ctx) {
       const boonId = 'faction_' + def.id + '_boon';
       const baneId = 'faction_' + def.id + '_bane';
       const profile = effectProfile(app);
-      // The favor bank fills from the mood (SPEC §196): a devoted party
+      // The favor bank fills from the mood (SPEC §197): a devoted party
       // extends credit twice as fast as a loyal one, a hostile one calls
       // its credit in three times as fast as a discontent one lets it lapse.
       if (t.estateFavor) {
@@ -419,7 +419,7 @@ export function appeaseFactionCore(ctx, tag, fid) {
 }
 
 // ---------------------------------------------------------------------------
-// The asks (SPEC §196): what a trusted estate can be leaned on FOR.
+// The asks (SPEC §197): what a trusted estate can be leaned on FOR.
 //
 // A bookmark may author `asks` directly on a faction def (content owns the
 // politics); otherwise the party's id finds its authored pair in
@@ -552,7 +552,7 @@ export function getFactionsInfo(ctx) {
   const table = ensureFactions(ctx, tag);
   if (!table) return null;
   // One province walk for the shares, one per party for its named ground —
-  // the same arithmetic the estates mapmode paints (SPEC §167/§196).
+  // the same arithmetic the estates mapmode paints (SPEC §167/§197).
   let shares = null;
   try { shares = estateInfluence(ctx, tag); } catch (e) { warnOnce('shares', 'estateInfluence failed', e); }
   return defs.filter((d) => d && d.id).map((def) => {

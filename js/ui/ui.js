@@ -32,7 +32,7 @@ function buildMapmodeBar(bar, bus) {
     `<button class="mm-btn${m.id === 'political' ? ' active' : ''}" data-mode="${m.id}" data-tt="${m.name} mapmode">${m.ico}</button>`
   ).join('');
   // The lit button follows the EVENT, not the click: the realm panel's
-  // "Their ground" lever (SPEC §196) switches to the estates mode from
+  // "Their ground" lever (SPEC §197) switches to the estates mode from
   // outside this bar, and a bar that only watched its own clicks would keep
   // the old button lit and lie about what the map is showing.
   bus.on('mapmode', (m) => {

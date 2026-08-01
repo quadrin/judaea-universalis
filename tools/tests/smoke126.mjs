@@ -1,26 +1,37 @@
-// Headless regression — SPEC §196: the estates can be asked.
+// Headless regression — SPEC §196: the chairs take their turn.
 //
-// §167 gave every party ground and spent all of it on pressure; this suite
-// holds the other half of the bargain. Favor is a BANK beside the approval
-// mood: it seeds, fills by warmth band at pinned rates, drains under
-// hostility, heals into old saves, and is inherited through `succeeds` like
-// the mood is. Spending it on an ask pays EXACTLY what the tooltip promised
-// (one payoff object serves both), scaled by the party's share of the
-// realm's ground — the §167 number the estates mapmode paints — which is
-// asserted here the only honest way: hand the crown the coast and watch the
-// moneyed party's subscription grow. The gates live in one place; the AI
-// keeps its politics offstage; §34's demand/appease machinery is untouched
-// beside all of it (smoke18 stays green on the same court).
-const R = new URL('../..', import.meta.url).pathname.replace(/\/$/, '');
-const { DEFINES } = await import(R + '/js/data/defines.js');
-const { MAP_DATA } = await import(R + '/js/data/map_data.js');
-const { bus } = await import(R + '/js/core/bus.js');
-const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
-const { EVENTS_66 } = await import(R + '/js/data/events_66ce.js');
-const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
-const fac = await import(R + '/js/sim/factions.js');
-const est = await import(R + '/js/sim/estates.js');
-const { ESTATE_ASKS, ASK_FALLBACK, ASK_KINDS } = await import(R + '/js/data/estate_asks.js');
+// §185 seated five client chairs (Adiabene in 67 BCE, 40 BCE, 66 CE and
+// 132 CE, Agrippa II in 66 CE) with the minimum kit; §187 and §192 then
+// thickened every principal tree and left the chairs at six objectives
+// apiece. §196 is the third pass: each chair grows an expansion branch
+// over ground the tag does not start with, court branches from the
+// house's own documented history, and roads not taken riding forks its
+// chapter already charts. This suite holds that growth from four sides:
+//
+//   SHAPE — the five chains carry their grown counts, every §196 node is
+//   fully dressed with a declared seat, and the append contract holds
+//   from both ends (objectives before the first hypothetical, requires
+//   resolving inside the chain, objectives never waiting on roads).
+//
+//   SEATS — one node per cell on EVERY playable side of every bookmark,
+//   not just the first-booted player. Twice (§187, §183) a collision hid
+//   in a second-playable tree exactly because the live check never looks
+//   there; this is the check that looks there.
+//
+//   GROUND — booted cold, every conquest target of the new branches is
+//   genuinely foreign, and no new node is accomplished on day one.
+//
+//   PAY — when the forced world arrives (treasuries, musters, regard,
+//   rungs, provinces), every new branch completes and its permanent
+//   modifiers seat; and the off-record rule holds — a §196 road does NOT
+//   pay when only history's own marker is set, because the medallion
+//   sells the page the chronicles do not have.
+import { DEFINES } from '../../js/data/defines.js';
+import { MAP_DATA } from '../../js/data/map_data.js';
+import { ERAS } from '../../js/data/compendium.js';
+import { bus } from '../../js/core/bus.js';
+import { initGame, makeCtx } from '../../js/sim/init.js';
+import * as realm from '../../js/sim/realm.js';
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -28,240 +39,254 @@ const ok = (cond, msg) => {
   else { failures++; console.error('  FAIL', msg); }
 };
 
-// ---------------------------------------------------------------------------
-console.log('== the ask book is complete and well-formed ==');
-{
-  const badPairs = [];
-  for (const [id, list] of Object.entries(ESTATE_ASKS)) {
-    if (!Array.isArray(list) || list.length !== 2) { badPairs.push(id + ' is not a pair'); continue; }
-    if (new Set(list.map((a) => a && a.kind)).size !== 2) badPairs.push(id + ' repeats a kind');
-    for (const a of list) {
-      if (!a || !ASK_KINDS[a.kind]) badPairs.push(id + ' names an unknown kind');
-      else if (!a.name || !a.text) badPairs.push(id + ' is missing its words');
-      else if (a.point && ['gov', 'infl', 'mar'].indexOf(a.point) < 0) badPairs.push(id + ' pays an unknown point');
-    }
-  }
-  ok(!badPairs.length, Object.keys(ESTATE_ASKS).length + ' authored pairs, all valid'
-    + (badPairs.length ? ' (' + badPairs.slice(0, 3).join('; ') + ')' : ''));
-  ok(Array.isArray(ASK_FALLBACK) && ASK_FALLBACK.length === 2
-    && ASK_FALLBACK.every((a) => a && ASK_KINDS[a.kind] && a.name && a.text),
-    'and the fallback pair is a valid pair too');
-
-  // Every party every bookmark seats has its OWN words — the fallback is for
-  // chapters not yet written, not for the eight that are.
-  const files = ['bookmark_167bce.js', 'bookmark_67bce.js', 'bookmark_40bce.js', 'bookmark_66ce.js',
-    'bookmark_132ce.js', 'bookmark_529ce.js', 'bookmark_614ce.js', 'bookmark_1948.js'];
-  const missing = new Set();
-  for (const f of files) {
-    const m = await import(R + '/js/data/' + f);
-    const bm = Object.values(m).find((v) => v && v.factions);
-    for (const list of Object.values((bm && bm.factions) || {})) {
-      for (const d of list || []) if (d && d.id && !ESTATE_ASKS[d.id]) missing.add(d.id);
-    }
-  }
-  ok(!missing.size, 'every seated party of all eight chapters is authored'
-    + (missing.size ? ' (missing: ' + [...missing].join(', ') + ')' : ''));
-}
-
-// ---------------------------------------------------------------------------
-console.log('== the bank seeds, fills by band, drains under hostility ==');
 const N = MAP_DATA.provinces.length;
 const geom = {
-  neighbors: Array.from({ length: N + 1 }, (_, i) => {
-    const s = new Set();
-    if (i > 1) s.add(i - 1);
-    if (i >= 1 && i < N) s.add(i + 1);
-    return s;
-  }),
+  neighbors: Array.from({ length: N + 1 }, () => new Set()),
   centroids: [null, ...MAP_DATA.provinces.map((p) => {
     const [x, y] = MAP_DATA.project(p.lon, p.lat);
     return { x, y };
   })],
-  areas: new Int32Array(N + 1), bbox: [],
+  areas: new Int32Array(N + 1),
+  bbox: [],
 };
-const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66, events: EVENTS_66, playerTag: 'JUD', rngSeed: 77 });
-const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events: EVENTS_66 });
-const actions = gameActions(ctx);
-const t = game.tags.JUD;
 
-fac.monthlyFactions(ctx);
-ok(t.estateFavor && Object.keys(t.estateFavor).length === 3,
-  'the favor table seeds beside the approval table');
-ok(Math.abs(t.estateFavor.zealots - (fac.FAVOR.seed + fac.FAVOR.gainContent)) < 0.0001,
-  'a content court opens at the seed and banks its first +0.15: ' + t.estateFavor.zealots.toFixed(2));
-
-// The four other bands, each measured as one month's delta from a reset bank.
-// (Approval drifts a hair inside the month; the band it lands in does not.)
-const bandDelta = (app) => {
-  t.factions.zealots = app;
-  t.estateFavor.zealots = 50;
-  game.pendingEvents.length = 0; // a despairing estate also sends its demand; not this suite's business
-  fac.monthlyFactions(ctx);
-  return t.estateFavor.zealots - 50;
-};
-ok(Math.abs(bandDelta(90) - fac.FAVOR.gainDevoted) < 0.0001, 'devoted banks +' + fac.FAVOR.gainDevoted + ' a month');
-ok(Math.abs(bandDelta(70) - fac.FAVOR.gainLoyal) < 0.0001, 'loyal banks +' + fac.FAVOR.gainLoyal);
-ok(Math.abs(bandDelta(30) - fac.FAVOR.gainDiscontent) < 0.0001, 'discontent drains ' + fac.FAVOR.gainDiscontent);
-ok(Math.abs(bandDelta(10) - fac.FAVOR.gainHostile) < 0.0001, 'hostile drains ' + fac.FAVOR.gainHostile);
-
-// An old save has factions but no favor: it wakes at the seed, not at zero.
-delete t.estateFavor;
-fac.ensureFactions(ctx, 'JUD');
-ok(t.estateFavor && t.estateFavor.zealots === fac.FAVOR.seed,
-  'a pre-§196 save heals to the seed on the next court session');
-const json = JSON.parse(JSON.stringify(game.tags.JUD));
-ok(json.estateFavor && json.estateFavor.zealots === fac.FAVOR.seed,
-  'and the bank is plain data — it rides a save round-trip untouched');
-
-// ---------------------------------------------------------------------------
-console.log('== the panel row carries the map\'s arithmetic ==');
-{
-  t.factions.zealots = 50; // the band tests above left them hostile; this section is about the bank
-  game.pendingEvents.length = 0;
-  const rows = actions.getFactions();
-  ok(rows.every((r) => Number.isFinite(r.favor) && Number.isFinite(r.favorGain) && Array.isArray(r.asks) && r.asks.length === 2),
-    'every row carries favor, its monthly gain, and two asks');
-  ok(rows.every((r) => Number.isFinite(r.influencePct) && r.influencePct >= 0 && r.influencePct <= 100),
-    'every row carries its share of the realm\'s ground: '
-    + rows.map((r) => r.id + ' ' + r.influencePct + '%').join(', '));
-  const sum = rows.reduce((a, r) => a + r.influencePct, 0);
-  ok(Math.abs(sum - 100) <= 2, 'the shares are shares — they sum to ~100: ' + sum);
-  ok(rows.every((r) => r.ground && r.ground.names.length > 0 && r.ground.count <= r.ground.total),
-    'every row names the provinces where the party is strongest');
-  ok(rows.every((r) => r.asks.every((a) => a.name && a.text && a.grants && Number.isFinite(a.favorCost))),
-    'every ask states its words, its price and what it would grant');
-  ok(rows.every((r) => r.asks.every((a) => !a.ready && /favor/i.test(a.whyNot))),
-    'at the opening bank of 10, every ask is priced out and says so');
+const era = (id) => ERAS.find((e) => e.bookmark.id === id);
+function boot(id, playerTag) {
+  const e = era(id);
+  const game = initGame({ DEFINES, MAP_DATA, geom, bookmark: e.bookmark, events: e.events, playerTag, rngSeed: 7 });
+  const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: e.bookmark, events: e.events });
+  return { game, ctx };
 }
+const doneIds = (t) => new Set(t.missionsDone || []);
 
-// ---------------------------------------------------------------------------
-console.log('== the ask spends its price and pays its promise ==');
-{
-  t.factions.zealots = 85;
-  t.estateFavor.zealots = 100;
-  const scale = est.influenceScale(ctx, 'JUD', 'zealots');
-  ok(Math.abs(scale - 1) > 0.01, 'the zealots do not hold an even share, so the scale is live: ' + scale.toFixed(3));
+// The pass, chair by chair: chain size, objective/road split, the §196
+// ids, and the conquest ground each expansion branch reaches for.
+const GROWTH = [
+  {
+    id: '67bce', tag: 'ADI', nodes: 11, hypos: 2,
+    added: ['t4_bones_of_armenia', 't4_elder_client_house', 't4_peace_of_the_altars', 'hy_doors_stayed_shut'],
+    ground: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
+  },
+  {
+    id: '40bce', tag: 'ADI', nodes: 11, hypos: 2,
+    added: ['t5_kingmakers_house', 't5_queens_vow', 't5_island_the_tide_missed', 'hy_house_unpolluted'],
+    ground: ['Tyre'],
+  },
+  {
+    id: '66ce', tag: 'ADI', nodes: 12, hypos: 3,
+    added: ['dm_riders_of_two_rivers', 'dm_treasure_house', 'dm_tombs_of_kings', 'hy_city_never_starved'],
+    ground: ['Nehardea'], // Nisibis is the house's own; the mission is hold-both
+  },
+  {
+    id: '66ce', tag: 'AGR', nodes: 14, hypos: 4,
+    added: ['am_queens_estates', 'am_first_crown', 'am_emperors_ear', 'hy_other_royal_robes', 'hy_king_of_which_jews'],
+    ground: ['Chalcis'],
+  },
+  {
+    id: '132ce', tag: 'ADI', nodes: 11, hypos: 2,
+    added: ['b2_fortress_that_refused', 'b2_court_of_captivity', 'b2_houses_of_study', 'hy_letters_reach_east'],
+    ground: ['Hatra', 'Singara', 'Nehardea'],
+  },
+];
 
-  // zeal: a timed modifier, promised and paid at 1 + 0.06 × scale.
-  const row = actions.getFactions().find((r) => r.id === 'zealots');
-  const zeal = row.asks.find((a) => a.key === 'zeal');
-  ok(zeal && zeal.ready, 'with 100 banked and the court devoted, the ask is ready');
-  const res = fac.askEstateCore(ctx, 'JUD', 'zealots', 'zeal');
-  ok(res.ok && res.granted === zeal.grants, 'the toast repeats the tooltip verbatim: ' + res.granted);
-  ok(Math.abs(t.estateFavor.zealots - (100 - ASK_KINDS.zeal.favor)) < 0.0001,
-    'the price was exactly ' + ASK_KINDS.zeal.favor + ' favor');
-  let mods = (t.modifiers || []).filter((m) => m && m.id === 'ask_zealots_zeal');
-  ok(mods.length === 1 && Math.abs(mods[0].effects.moraleMult - (1 + ASK_KINDS.zeal.moraleMult * scale)) < 0.0001,
-    'the modifier is the authored magnitude times the party\'s ground: ×' + mods[0].effects.moraleMult.toFixed(4));
-  mods[0].months = 3; // run the clock down, then ask again
-  const res2 = fac.askEstateCore(ctx, 'JUD', 'zealots', 'zeal');
-  mods = (t.modifiers || []).filter((m) => m && m.id === 'ask_zealots_zeal');
-  ok(res2.ok && mods.length === 1 && mods[0].months === ASK_KINDS.zeal.months,
-    'asking again refreshes the one slot rather than stacking a second');
-
-  // men: instant manpower, clamped to the ceiling.
-  t.estateFavor.zealots = 100;
-  t.manpower = 1000;
-  const menRow = actions.getFactions().find((r) => r.id === 'zealots').asks.find((a) => a.key === 'men');
-  const expectMen = Math.max(ASK_KINDS.men.floor, Math.round(t.maxManpower * ASK_KINDS.men.share * scale));
-  ok(menRow.grants.indexOf(expectMen.toLocaleString('en-US')) >= 0,
-    'the men ask promises the ground-scaled levy: ' + menRow.grants);
-  const before = t.manpower;
-  const res3 = fac.askEstateCore(ctx, 'JUD', 'zealots', 'men');
-  ok(res3.ok && t.manpower - before === expectMen, 'and pays exactly that: +' + (t.manpower - before));
-
-  // coin: months of the cached ledger income, floored for the destitute.
-  t.factions.notables = 85;
-  t.estateFavor.notables = 100;
-  t.income = 0;
-  let coinRow = actions.getFactions().find((r) => r.id === 'notables').asks.find((a) => a.key === 'coin');
-  ok(coinRow.grants.indexOf('+' + ASK_KINDS.coin.floor + ' talents') >= 0,
-    'a destitute ledger still pays the floor: ' + coinRow.grants);
-  t.income = 40;
-  const nScale = est.influenceScale(ctx, 'JUD', 'notables');
-  const expectCoin = Math.max(ASK_KINDS.coin.floor, Math.round(40 * ASK_KINDS.coin.incomeMonths * nScale));
-  coinRow = actions.getFactions().find((r) => r.id === 'notables').asks.find((a) => a.key === 'coin');
-  ok(coinRow.grants.indexOf('+' + expectCoin + ' talents') >= 0,
-    'a working ledger promises months of income times their ground: ' + coinRow.grants);
-  const purse = t.treasury;
-  const nName = actions.getFactions().find((r) => r.id === 'notables').name;
-  const res4 = fac.askEstateCore(ctx, 'JUD', 'notables', 'coin');
-  ok(res4.ok && Math.round(t.treasury - purse) === expectCoin, 'and the treasury sees that exact figure');
-  ok((game.chronicle || []).some((c) => c.kind === 'politics' && c.text.indexOf(nName) >= 0 && c.text.indexOf('+' + expectCoin) >= 0),
-    'the chronicle records who granted what');
-}
-
-// ---------------------------------------------------------------------------
-console.log('== what they can give follows the map ==');
-{
-  // Hand the crown the coast — the act §167 was built around — and the
-  // moneyed party's ground share, and therefore its subscription, grows.
-  const beforeRow = actions.getFactions().find((r) => r.id === 'notables');
-  const beforePct = beforeRow.influencePct;
-  const beforeCoin = Math.round(40 * ASK_KINDS.coin.incomeMonths * est.influenceScale(ctx, 'JUD', 'notables'));
-  const taken = [];
-  for (let i = 1; i < game.provinces.length && taken.length < 6; i++) {
-    const p = game.provinces[i];
-    if (p && !p.impassable && p.owner === 'ROM' && p.terrain === 'coast') { p.owner = 'JUD'; taken.push(p.name); }
-  }
-  ok(taken.length >= 3, 'the crown takes the Greek coast: ' + taken.join(', '));
-  const afterRow = actions.getFactions().find((r) => r.id === 'notables');
-  const afterCoin = Math.round(40 * ASK_KINDS.coin.incomeMonths * est.influenceScale(ctx, 'JUD', 'notables'));
-  ok(afterRow.influencePct > beforePct,
-    'the moneyed party\'s share of the realm grows: ' + beforePct + '% → ' + afterRow.influencePct + '%');
-  ok(afterCoin > beforeCoin,
-    'and with it what its favor pays: ' + beforeCoin + ' → ' + afterCoin + ' talents');
-  ok(afterRow.ground.count > 0 && afterRow.ground.names.length > 0,
-    'the row names its new ground: ' + afterRow.ground.names.join(', '));
-  for (const nm of taken) { // put the map back for the gates below
-    const p = game.provinces.find((x) => x && x.name === nm);
-    if (p) p.owner = 'ROM';
+// ---------------------------------------------------------------- shape
+console.log('== §196 static: the grown chains, dressed and appended ==');
+for (const gw of GROWTH) {
+  const b = era(gw.id).bookmark;
+  const list = b.missions[gw.tag];
+  const hypos = list.filter((m) => m.hypothetical);
+  ok(list.length === gw.nodes && hypos.length === gw.hypos,
+    gw.id + '/' + gw.tag + ' grew to ' + gw.nodes + ' nodes, ' + gw.hypos + ' of them roads ('
+    + list.length + ', ' + hypos.length + ')');
+  const ids = new Set(list.map((m) => m.id));
+  const hyIds = new Set(hypos.map((m) => m.id));
+  const firstHy = list.findIndex((m) => m.hypothetical);
+  const lastBase = list.reduce((last, m, i) => (m.hypothetical ? last : i), -1);
+  ok(firstHy > lastBase, gw.id + '/' + gw.tag + ' appends every road after every objective');
+  for (const id of gw.added) {
+    const m = list.find((x) => x.id === id);
+    ok(!!m, id + ' exists in the chain');
+    if (!m) continue;
+    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 60 && !!m.rewardText
+      && typeof m.check === 'function' && typeof m.reward === 'function'
+      && Number.isFinite(m.col) && Number.isFinite(m.row),
+      id + ' is fully dressed and declares its own seat (col ' + m.col + ', row ' + m.row + ')');
+    for (const rid of (m.requires || [])) {
+      ok(ids.has(rid), id + ' waits only inside its own chain (' + rid + ')');
+      if (!m.hypothetical) {
+        ok(!hyIds.has(rid), id + ' is an objective and waits on no road not taken');
+      }
+    }
   }
 }
 
-// ---------------------------------------------------------------------------
-console.log('== the gates hold, in one place ==');
-{
-  t.factions.priesthood = 85;
-  t.estateFavor.priesthood = 5;
-  let res = fac.askEstateCore(ctx, 'JUD', 'priesthood', 'blessing');
-  ok(!res.ok && /favor/i.test(res.why), 'an empty bank refuses: ' + res.why);
-  t.estateFavor.priesthood = 100;
-  t.factions.priesthood = 35;
-  res = fac.askEstateCore(ctx, 'JUD', 'priesthood', 'blessing');
-  ok(!res.ok && /mood|approval/i.test(res.why), 'a despairing party will not hear an ask: ' + res.why);
-  t.factions.priesthood = 85;
-  t.legitimacy = 100;
-  res = fac.askEstateCore(ctx, 'JUD', 'priesthood', 'blessing');
-  ok(!res.ok, 'a blessing with nothing to bless refuses rather than wastes: ' + res.why);
-  t.legitimacy = 60;
-  t.factions.zealots = 85;
-  t.estateFavor.zealots = 100;
-  t.manpower = t.maxManpower;
-  res = fac.askEstateCore(ctx, 'JUD', 'zealots', 'men');
-  ok(!res.ok && /muster/i.test(res.why), 'a full muster refuses the levy: ' + res.why);
-  res = fac.askEstateCore(ctx, 'JUD', 'zealots', 'nothing');
-  ok(!res.ok, 'an unknown kind fails soft');
-  res = fac.askEstateCore(ctx, 'JUD', 'nobody', 'coin');
-  ok(!res.ok, 'an unseated party fails soft');
-  const rowTip = actions.getFactions().find((r) => r.id === 'zealots').asks.find((a) => a.key === 'men');
-  ok(!rowTip.ready && rowTip.whyNot === res.why || /muster/i.test(rowTip.whyNot),
-    'the disabled tooltip gives the click path\'s own reason: ' + rowTip.whyNot);
+// ---------------------------------------------------------------- seats
+// The derived-row arithmetic of getMissions, run over EVERY playable side
+// of every bookmark — the panel only ever draws the player's own tree, so
+// the live no-collision check (smoke116) sees one side per chapter and a
+// collision in a second-playable tree stays invisible until someone plays
+// it. §187 and §183 each found one exactly there, by hand.
+console.log('== §196 static: one node per cell on every playable side ==');
+for (const e of ERAS) {
+  const b = e.bookmark;
+  for (const p of (b.playableTags || [])) {
+    const list = b.missions && b.missions[p.tag];
+    if (!Array.isArray(list) || !list.length) continue;
+    const ids = list.map((m, i) => realm.missionId(m, i));
+    const row = [];
+    const seats = new Set();
+    let collide = null;
+    list.forEach((m, i) => {
+      const col = Math.max(0, Math.min(4, (m.col || 0) | 0));
+      let r = Number.isFinite(m.row) ? Math.max(0, m.row | 0) : null;
+      if (r === null) {
+        if (Array.isArray(m.requires) && m.requires.length) {
+          r = 0;
+          for (const rid of m.requires) {
+            const pi = ids.indexOf(String(rid));
+            if (pi >= 0 && pi < i && Number.isFinite(row[pi])) r = Math.max(r, row[pi] + 1);
+          }
+        } else r = 0;
+      }
+      row[i] = r;
+      const key = col + ':' + r;
+      if (seats.has(key)) collide = ids[i] + ' @ ' + key;
+      seats.add(key);
+    });
+    ok(!collide, b.id + '/' + p.tag + ' seats every node in its own cell'
+      + (collide ? ' (' + collide + ')' : ''));
+  }
 }
 
-// ---------------------------------------------------------------------------
-console.log('== the AI keeps its politics offstage ==');
-{
-  const game2 = initGame({ DEFINES, MAP_DATA, geom, bookmark: BOOKMARK_66, events: EVENTS_66, playerTag: 'JUD', rngSeed: 78 });
-  const ctx2 = makeCtx({ game: game2, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events: EVENTS_66 });
-  game2.tags.JUD.ai = true;
-  fac.monthlyFactions(ctx2);
-  ok(!game2.tags.JUD.estateFavor, 'no favor table under an AI hand');
-  const res = fac.askEstateCore(ctx2, 'JUD', 'zealots', 'men');
-  ok(!res.ok, 'and no ask either: ' + res.why);
-  ok(!(game2.tags.JUD.modifiers || []).some((m) => m && String(m.id).startsWith('ask_')),
-    'no ask modifiers appear on the harness\'s stream');
+// ---------------------------------------------------------------- ground
+console.log('== §196 live: the ground is foreign and the day-one table is bare ==');
+const cold = new Map();
+for (const gw of GROWTH) {
+  const key = gw.id + '/' + gw.tag;
+  const w = cold.get(gw.id) || boot(gw.id, gw.tag);
+  cold.set(gw.id, w);
+  for (const name of gw.ground) {
+    const p = w.game.provinces.find((x) => x && x.name === name);
+    ok(!!p && p.owner !== gw.tag,
+      key + ': ' + name + ' is not the chair\'s at the start (' + (p && p.owner) + ')');
+  }
+  realm.checkMissions(w.ctx);
+  const done = doneIds(w.game.tags[gw.tag]);
+  const free = gw.added.filter((id) => done.has(id));
+  ok(!free.length, key + ': no §196 node is accomplished at boot ('
+    + (free.join(', ') || 'none') + ')');
 }
 
-console.log(failures ? failures + ' FAILURES' : 'ALL PASS');
+// ------------------------------------------------------------------- pay
+// Force each chair's whole world by hand — the parents' thresholds too,
+// because a branch pays only down an unlocked chain — then let the
+// ordinary monthly pass settle it in waves.
+console.log('== §196 live: every new branch pays when its world arrives ==');
+function force(w, tag, opts) {
+  const g = w.game;
+  const t = g.tags[tag];
+  if (opts.treasury !== undefined) t.treasury = opts.treasury;
+  if (opts.stability !== undefined) t.stability = opts.stability;
+  if (opts.legitimacy !== undefined) t.legitimacy = opts.legitimacy;
+  if (opts.tech) t.tech = { ...(t.tech || {}), ...opts.tech };
+  if (opts.tiers) t.eraIdeas = { forced_curriculum: opts.tiers };
+  if (opts.men) w.ctx.helpers.spawnArmy(w.ctx, tag, opts.at, { inf: opts.men / 1000, name: 'Forced Muster' });
+  for (const [other, val] of Object.entries(opts.regard || {})) {
+    const o = g.tags[other];
+    if (o) o.opinion = { ...(o.opinion || {}), [tag]: val };
+  }
+  for (const name of opts.grant || []) w.ctx.helpers.changeOwner(w.ctx, name, tag);
+}
+function expectPaid(w, tag, ids, label) {
+  realm.checkMissions(w.ctx);
+  realm.checkMissions(w.ctx);
+  const done = doneIds(w.game.tags[tag]);
+  const missing = ids.filter((id) => !id.startsWith('hy_') && !done.has(id));
+  ok(!missing.length, label + ': every new objective paid ('
+    + (missing.length ? 'missing ' + missing.join(', ') : 'all done') + ')');
+}
+const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
+
+{ // 67 BCE — Armenia's bones, the sister house, the reconciled altars.
+  const w = boot('67bce', 'ADI');
+  force(w, 'ADI', {
+    treasury: 400, stability: 2, tech: { mar: 6 }, tiers: 3,
+    men: 8000, at: 'Arbela', regard: { PAR: 100 },
+    grant: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
+  });
+  expectPaid(w, 'ADI', GROWTH[0].added, '67bce ADI');
+  const t = w.game.tags.ADI;
+  ok(seated(t, 'western_fords') && seated(t, 'two_altars'),
+    '67bce: the western fords and the two altars seat their permanent modifiers');
+}
+{ // 40 BCE — the kingmaker's muster, the vow banked, the island delivered.
+  const w = boot('40bce', 'ADI');
+  force(w, 'ADI', {
+    treasury: 300, tech: { mar: 6 }, tiers: 3,
+    men: 8000, at: 'Arbela', regard: { PAR: 100 },
+    grant: ['Tyre'],
+  });
+  expectPaid(w, 'ADI', GROWTH[1].added, '40bce ADI');
+  const t = w.game.tags.ADI;
+  ok(seated(t, 'kingmakers_house') && seated(t, 'lamp_over_the_door'),
+    '40bce: the kingmaker\'s house and the lamp over the door pay permanently');
+}
+{ // 66 CE — both chairs off one boot: the convert lances, the treasure
+  // cities, the pyramids; the queen's ledgers, Chalcis, the emperor's ear.
+  const w = boot('66ce', 'ADI');
+  force(w, 'ADI', {
+    treasury: 400, legitimacy: 85, tech: { gov: 6 }, tiers: 3,
+    men: 8000, at: 'Arbela', regard: { JUD: 100, PAR: 130 },
+    grant: ['Nehardea'],
+  });
+  force(w, 'AGR', {
+    treasury: 300, tech: { infl: 6, gov: 7 }, tiers: 3,
+    men: 5000, at: 'Caesarea Philippi', regard: { ROM: 200 },
+    grant: ['Chalcis'],
+  });
+  expectPaid(w, 'ADI', GROWTH[2].added, '66ce ADI');
+  expectPaid(w, 'AGR', GROWTH[3].added, '66ce AGR');
+  const adi = w.game.tags.ADI;
+  ok(seated(adi, 'convert_lances') && seated(adi, 'escort_of_the_ascents')
+    && seated(adi, 'pyramids_north_of_the_wall'),
+    '66ce: the lances, the escort and the pyramids all seat their modifiers');
+  ok(seated(w.game.tags.AGR, 'stewards_ledgers'),
+    '66ce: the stewards\' ledgers pay the client crown permanently');
+}
+{ // 132 CE — the fortress line, the captivity's ford, the sages' blessing.
+  const w = boot('132ce', 'ADI');
+  force(w, 'ADI', {
+    treasury: 400, stability: 2, tech: { mar: 6, infl: 7 }, tiers: 3,
+    regard: { JUD: 100 },
+    grant: ['Hatra', 'Singara', 'Nehardea'],
+  });
+  expectPaid(w, 'ADI', GROWTH[4].added, '132ce ADI');
+  ok(seated(w.game.tags.ADI, 'ford_of_the_captivity'),
+    '132ce: the ford of the captivity pays permanently');
+}
+
+// ------------------------------------------------- the off-record rule
+// A §196 road is the page the chronicles do not have. Set ONLY history's
+// own marker and the medallion must stay dark: Crassus historically got
+// the gold, the statue order was historically given and refused on the
+// ground, the stores historically burned, the pretender was historically
+// struck, and the letters east were historically never sent.
+console.log('== §196 live: history\'s own road pays nothing ==');
+const HISTORY = [
+  { id: '67bce', tag: 'ADI', flags: { crassusRansom: true }, dark: 'hy_doors_stayed_shut' },
+  { id: '40bce', tag: 'ADI', flags: { statueRefused: true, statueErected: true }, dark: 'hy_house_unpolluted' },
+  { id: '66ce', tag: 'ADI', flags: { storesBurned: true }, dark: 'hy_city_never_starved' },
+  { id: '66ce', tag: 'AGR', flags: { menahemStruck: true }, dark: 'hy_other_royal_robes' },
+  { id: '132ce', tag: 'ADI', flags: { theLandAlone: true }, dark: 'hy_letters_reach_east' },
+];
+for (const h of HISTORY) {
+  const w = boot(h.id, h.tag);
+  Object.assign(w.game.flags, h.flags);
+  realm.checkMissions(w.ctx);
+  ok(!doneIds(w.game.tags[h.tag]).has(h.dark),
+    h.id + '/' + h.tag + ': ' + h.dark + ' stays dark on '
+    + Object.keys(h.flags).join('+'));
+}
+
+console.log(failures ? `smoke126: ${failures} FAIL` : 'smoke126: ALL PASS');
 process.exit(failures ? 1 : 0);

@@ -43,7 +43,7 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // Missions (SPEC §177) holds the mission tree and steps aside at a foreign
 // court, after the verdict, and in a chapter whose tag has no chain.
 //
-// The ideas are split by what unlocks them (SPEC §197, refining §188). The
+// The ideas are split by what unlocks them (SPEC §198, refining §188). The
 // chapter's Ideas of the Age are each locked behind a NAMED RUNG of a
 // technology ladder, so they stay under the Technology block on Coin — the
 // EU4 window, where the lock card and the ladder that answers it are one
@@ -127,7 +127,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
-      <!-- The reform trees live with the crown (SPEC §197): the realm's own
+      <!-- The reform trees live with the crown (SPEC §198): the realm's own
            constitution, gated by nothing but points — unlike the Ideas of the
            Age, which stay on Coin under the ladders that unlock them. -->
       <div class="pp-build" data-tab="crown">
@@ -177,7 +177,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-techs" data-ref="tech"></div>
       </div>
       <!-- The Ideas of the Age sit UNDER the ladders that unlock them
-           (SPEC §188/§197): every group is locked behind a named rung, and
+           (SPEC §188/§198): every group is locked behind a named rung, and
            the rung it names is printed directly above. The universal reform
            trees have no such lock and live on Crown. -->
       <div class="pp-build hidden" data-ref="eraIdeasBlock" data-tab="coin">
@@ -294,7 +294,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The ask (SPEC §196): spend an estate's banked favor on what its
+      // The ask (SPEC §197): spend an estate's banked favor on what its
       // ground can deliver.
       const askBtn = e.target.closest('[data-ask]');
       if (askBtn) {
@@ -304,7 +304,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // "Their ground" (SPEC §196): flip the map to the estates mode, so the
+      // "Their ground" (SPEC §197): flip the map to the estates mode, so the
       // shares and asks in this section can be read off actual provinces. No
       // refresh — a mapmode changes no game state.
       const estMap = e.target.closest('[data-est-map]');
@@ -962,7 +962,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + '\n――――――\nCurrent: ' + (f.activeText || 'No estate effect.');
       const lever = f.appeaseLabel + ' — +' + (f.appeaseGain || 10) + ' approval';
       const btnTt = f.canAppease ? lever : (f.whyNot || '') + '\n' + lever;
-      // Their ground (SPEC §196): the same arithmetic the estates mapmode
+      // Their ground (SPEC §197): the same arithmetic the estates mapmode
       // paints, phrased — share of the realm, and where they are strongest.
       const g = f.ground;
       const groundBits = [];
@@ -974,7 +974,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         + ' hills, faith, trade, forts, holy ground (SPEC §167). Their share of the realm’s development scales their'
         + ' boons, their banes, and what their favor pays when asked. Conquest moves it.'
         + (g ? '\nTheir colour on the estates mapmode: ' + g.count + ' of ' + g.total + ' provinces.' : '');
-      // The favor bank and the asks it buys (SPEC §196).
+      // The favor bank and the asks it buys (SPEC §197).
       const gainTxt = (f.favorGain > 0 ? '+' : '−') + Math.abs(f.favorGain) + ' a month';
       const favorTt = 'The credit this estate extends a crown that keeps it warm: +1 a month while devoted,'
         + ' +0.5 loyal, +0.15 content — draining while they are against you (−0.5 discontent, −1.5 hostile).'
@@ -1606,7 +1606,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // The reform trees (SPEC §20/§197), rendered on Crown in every bookmark:
+  // The reform trees (SPEC §20/§198), rendered on Crown in every bookmark:
   // tier pips, the next reform's name and price, one buy button per tree.
   // They are the realm's own constitution — gated by nothing but monarch
   // points — which is why they live with faith, tongue and capital rather
@@ -1650,7 +1650,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // The ideas of the age (SPEC §179/§197), rendered under the Technology
+  // The ideas of the age (SPEC §179/§198), rendered under the Technology
   // block on Coin: the chapter's own groups, each behind a named rung of its
   // ladder. A locked group is the EU4 card — a dark slab that says what opens
   // it, directly below the ladder that answers it — and an open one sells its
