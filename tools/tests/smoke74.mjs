@@ -211,7 +211,9 @@ console.log('== §104: the world keeps happening ==');
     'the world clock in a 200 CE campaign points at the next thing that happens ('
     + (nxt ? nxt.date.y : 'nothing') + ')');
   game.date.y = 370;
-  ok(nextWorldEvent(ctx) && nextWorldEvent(ctx).date.y === 380,
+  // The next thing that happens after 370 is Adrianople (events_132ce_west.js,
+  // 378) — the pin moved when the western spine landed, exactly as it should.
+  ok(nextWorldEvent(ctx) && nextWorldEvent(ctx).date.y === 378,
     'and still does in 370');
 }
 
