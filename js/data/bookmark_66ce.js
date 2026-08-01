@@ -301,6 +301,12 @@ export const BOOKMARK_66 = {
     ],
   },
 
+  // The war was begun by a ruling (SPEC §191): the offering for Caesar, and
+  // every question the revolt asked afterwards. Agrippa's court watched that
+  // argument from outside it, which is his whole tragedy and not a quarrel he
+  // was allowed to have.
+  schools: { JUD: 'sacrifice_for_caesar' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {

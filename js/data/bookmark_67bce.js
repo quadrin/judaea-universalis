@@ -353,6 +353,11 @@ export const BOOKMARK_67 = {
     ],
   },
 
+  // Both brothers inherited the same argument (SPEC §190/§191) — and the same
+  // two houses, standing at opposite ends of it. Adiabene's court is having a
+  // different quarrel in a different language and is given none of this.
+  schools: { HYR: 'sages_and_houses', ARI: 'sages_and_houses' },
+
   // The court factions (SPEC §34): the realm's internal parties. The engine
   // ticks them for the human player alone; the AI keeps its politics offstage.
   factions: {

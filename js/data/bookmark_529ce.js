@@ -402,6 +402,11 @@ export const BOOKMARK_529 = {
     ],
   },
 
+  // The Samaritan quarrel is its own (SPEC §191): Baba Rabba's Council of
+  // Seven, three of them laymen, against a priesthood that IS this community's
+  // constitution.
+  schools: { SAM: 'mountain_and_book' },
+
   // The court factions (SPEC §34). Three of these are documented institutions
   // and the fourth is a documented position, which is unusual — most chapters
   // have to invent at least one party. The Council of Seven is dated variously
