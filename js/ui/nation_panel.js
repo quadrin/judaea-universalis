@@ -45,18 +45,27 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 //
 // The ideas are split by what unlocks them (SPEC §198, refining §188). The
 // chapter's Ideas of the Age are each locked behind a NAMED RUNG of a
-// technology ladder, so they stay under the Technology block on Coin — the
-// EU4 window, where the lock card and the ladder that answers it are one
-// screen. The three universal REFORM trees have no such lock: they are the
-// realm's own constitution, gated by nothing but the points the crown minted,
-// so they sit on Crown with the rest of what the realm IS — faith, tongue,
-// capital, government, reforms.
+// technology ladder, so they stay under the Technology block — the EU4
+// window, where the lock card and the ladder that answers it are one screen.
+// The three universal REFORM trees have no such lock: they are the realm's
+// own constitution, gated by nothing but the points the crown minted, so they
+// sit on Crown with the rest of what the realm IS — faith, tongue, capital,
+// government, reforms, and the character its wars have argued it into.
+//
+// §203 finished that sort by asking of each remaining section what it is
+// rather than where it was first written: the tab is named **Technology**
+// after the ladders that are its subject and not after the purse that pays
+// for them; the DOCTRINE NEEDLES are what the realm has become and belong on
+// Crown rather than under the army that pushed them; and the WORLD'S WAY OF
+// DOING THINGS is a levels-of-gov/infl/mar affair — it taxes every rung of
+// every ladder — so it folds in beside the Ideas of the Age, under the
+// ladders it surcharges, instead of sitting a tab away among the treaties.
 const TABS = [
-  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the reforms it has enacted, and what this chapter asks of you.' },
+  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the character its wars have given it, the reforms it has enacted, and what this chapter asks of you.' },
   { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
-  { id: 'coin', label: 'Coin', term: 'tabCoin', tt: 'The purse and the ledger: treasury, debt, the technologies silver buys — and the ideas of the age those ladders unlock.' },
-  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, exhaustion, and the character your wars have given the realm.' },
+  { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the ideas of the age those rungs unlock.' },
+  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, and how hard the fighting has worn the realm.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
 ];
@@ -127,9 +136,19 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
         <div class="np-chapter" data-ref="chapter"></div>
       </div>
+      <!-- The character of the realm (SPEC §203). The needles are not a fact
+           about the army — the army only pushed them, and so did every ruling,
+           every estate bought off and every card answered. They are what the
+           realm has BECOME, which is the Crown's subject, and they read here
+           against faith, tongue and government rather than against a
+           manpower pool. -->
+      <div class="pp-build hidden" data-ref="doctrineBlock" data-tab="crown">
+        <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
+        <div class="np-doctrine" data-ref="doctrine"></div>
+      </div>
       <!-- The reform trees live with the crown (SPEC §198): the realm's own
            constitution, gated by nothing but points — unlike the Ideas of the
-           Age, which stay on Coin under the ladders that unlock them. -->
+           Age, which stay on Technology under the ladders that unlock them. -->
       <div class="pp-build" data-tab="crown">
         <div class="pp-build-title">Reforms</div>
         <div class="np-reforms" data-ref="reforms"></div>
@@ -163,26 +182,37 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="np-decisions" data-ref="decisions"></div>
       </div>
 
-      <!-- ── THE COIN ──────────────────────────────────────────────────── -->
-      <div class="pp-grid" data-tab="coin">
+      <!-- ── THE TECHNOLOGY ────────────────────────────────────────────── -->
+      <div class="pp-grid" data-tab="tech">
         <div class="pp-row" data-ref="treasuryRow"><span class="pp-k">${icon('coins', 'icon-k')}Treasury</span><span class="pp-v" data-ref="treasury"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('borrow', 'icon-k')}Loans</span><span class="pp-v" data-ref="loans"></span></div>
       </div>
-      <div class="pp-build hidden" data-ref="ledgerBlock" data-tab="coin">
+      <div class="pp-build hidden" data-ref="ledgerBlock" data-tab="tech">
         <div class="pp-build-title">The Ledger</div>
         <div class="np-ledger" data-ref="ledger"></div>
       </div>
-      <div class="pp-build" data-tab="coin">
+      <div class="pp-build" data-tab="tech">
         <div class="pp-build-title">Technology</div>
         <div class="np-techs" data-ref="tech"></div>
       </div>
-      <!-- The Ideas of the Age sit UNDER the ladders that unlock them
-           (SPEC §188/§198): every group is locked behind a named rung, and
-           the rung it names is printed directly above. The universal reform
-           trees have no such lock and live on Crown. -->
-      <div class="pp-build hidden" data-ref="eraIdeasBlock" data-tab="coin">
-        <div class="pp-build-title" data-tt="${esc('The ideas of this age (SPEC §179): arts the chapter itself argued about, each unlocked by a named rung of a technology ladder above and bought tier by tier with its point.')}">Ideas of the Age</div>
-        <div class="np-reforms" data-ref="eraIdeas"></div>
+      <!-- The age's own arts, in one block UNDER the ladders (SPEC §203,
+           holding §188/§198): both halves are levels-of-gov/infl/mar business.
+           The world's way of doing things is what surcharges every rung above
+           — the red banner on the ladders is this block's other end — and each
+           Idea of the Age is locked behind a named rung printed directly
+           above. The universal reform trees have no such lock and live on
+           Crown. Either half may be empty; the block itself steps aside only
+           when both are. -->
+      <div class="pp-build hidden" data-ref="ageBlock" data-tab="tech">
+        <div class="pp-build-title" data-tt="${esc('What the age itself offers (SPEC §179/§203): the ways of doing things the world has invented and this realm may take up, and the arts the chapter argued about — each unlocked by a named rung of a ladder above and bought tier by tier with its point.')}">Ideas of the Age</div>
+        <div class="np-age-part hidden" data-ref="instBlock">
+          <div class="np-age-sub" data-ref="instTitle">The World’s Way of Doing Things</div>
+          <div class="np-factions" data-ref="institutions"></div>
+        </div>
+        <div class="np-age-part hidden" data-ref="eraIdeasBlock">
+          <div class="np-age-sub" data-ref="eraIdeasTitle">The Arts of This Chapter</div>
+          <div class="np-reforms" data-ref="eraIdeas"></div>
+        </div>
       </div>
 
       <!-- ── THE HOST ──────────────────────────────────────────────────── -->
@@ -190,10 +220,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
-      </div>
-      <div class="pp-build hidden" data-ref="doctrineBlock" data-tab="war">
-        <div class="pp-build-title" data-ref="characterTitle">The Character of the Realm</div>
-        <div class="np-doctrine" data-ref="doctrine"></div>
       </div>
 
       <!-- ── THE FAITH ─────────────────────────────────────────────────── -->
@@ -219,10 +245,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       <div class="pp-diplo" data-tab="world">
         <div class="pp-diplo-title">Diplomacy</div>
         <div data-ref="diploBody"></div>
-      </div>
-      <div class="pp-build hidden" data-ref="instBlock" data-tab="world">
-        <div class="pp-build-title" data-ref="instTitle">The World's Way of Doing Things</div>
-        <div class="np-factions" data-ref="institutions"></div>
       </div>`;
     el.querySelectorAll('[data-ref]').forEach((n) => { refs[n.dataset.ref] = n; });
     el.dataset.tab = tab;
@@ -722,6 +744,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshLedger(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
+    // Both halves of the age block have had their say; the block itself is
+    // present exactly when one of them is (SPEC §203). Ordered after both,
+    // never inside either — each half hides on its own evidence and neither
+    // knows the other exists.
+    refs.ageBlock.classList.toggle('hidden',
+      refs.instBlock.classList.contains('hidden') && refs.eraIdeasBlock.classList.contains('hidden'));
     refreshCourt(t, self);
 
     // The four numbers you always want, pinned above the tabs (SPEC §175).
@@ -1148,9 +1176,12 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.schools, html);
   }
 
-  // The world's way of doing things (SPEC §166). Every institution alive in
-  // this chapter, where it stands in this realm, and what refusing it costs.
-  // Player's own realm only: what another court has taken up is its business.
+  // The world's way of doing things (SPEC §166), the upper half of the age
+  // block on Technology (SPEC §203). Every institution alive in this chapter,
+  // where it stands in this realm, and what refusing it costs — printed under
+  // the ladders it surcharges, because the surcharge is the whole of what
+  // refusing costs. Player's own realm only: what another court has taken up
+  // is its business.
   function refreshInstitutions(self) {
     let rep = null;
     if (self && actions && typeof actions.getInstitutions === 'function') {
@@ -1561,7 +1592,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     let html = '';
     if (info.instPct > 0) {
       html += `<div class="np-tech-pen" data-tt="${esc('Institutions the world has taken up and this realm has not (SPEC §166).'
-        + '\nEvery level of every ladder costs +' + info.instPct + '% until they are embraced — see The World tab.')}">`
+        + '\nEvery level of every ladder costs +' + info.instPct + '% until they are embraced — they are listed below, under Ideas of the Age.')}">`
         + `${icon('alert', 'icon-row')}<span>Institutions penalty</span><b>+${info.instPct}%</b></div>`;
     }
     html += info.rows.map((r) => {
@@ -1701,13 +1732,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     }).join(''));
   }
 
-  // The ideas of the age (SPEC §179/§198), rendered under the Technology
-  // block on Coin: the chapter's own groups, each behind a named rung of its
+  // The ideas of the age (SPEC §179/§198), the lower half of the age block on
+  // Technology: the chapter's own groups, each behind a named rung of its
   // ladder. A locked group is the EU4 card — a dark slab that says what opens
   // it, directly below the ladder that answers it — and an open one sells its
   // tiers like any reform tree. Foreign courts show the groups they have
-  // taken up, pips only: a foreign ladder is their business. The block hides
-  // itself when there is nothing to show.
+  // taken up, pips only: a foreign ladder is their business. The half hides
+  // itself when there is nothing to show, and the block above it hides when
+  // both halves have.
   function refreshEraIdeas(t, self) {
     if (!refs.eraIdeas) return;
     let html = '';

@@ -78,9 +78,13 @@ static site, the zero dependencies, or the missing build step changes.
 - Mapmodes: political, diplomatic, trade, terrain, religion, culture,
   development, unrest, estates, and the dispersion — where the Jewish
   communities of the diaspora are, how large, and how they regard your crown.
-- The realm panel is six tabs behind a pinned header — Crown, Court, Coin,
-  Host, Faith, World — so the ruler, the four numbers you watch and the five
-  levers stay put while twenty sections take turns underneath them.
+- The realm panel is seven tabs behind a pinned header — Crown, Missions,
+  Court, Technology, Host, Faith, World — so the ruler, the four numbers you
+  watch and the five levers stay put while twenty sections take turns
+  underneath them. Each section is filed by what it *is*: the doctrine needles
+  are a portrait of the realm and hang on Crown beside faith and tongue, and
+  the world's way of doing things is a surcharge on every rung of every ladder
+  and so is listed under the ladders it taxes.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
 - Three land arms with eighteen soldiers between them, and each one has a face,
   a gait and a weakness. **The foot** holds the line, **the horse** breaks it,

@@ -320,6 +320,17 @@ counting seats and moving when a bond is written, the annulment as a live
 button where a dead "Houses Joined" plate used to sit, an overstretched
 chancery naming itself, and the alliance button carrying the refusal in words.
 
+`smoke131.mjs` owns the SPEC §203 panel sort: the ladders' tab declared as
+`tech`/Technology/`tabTech` with the stylesheet's filter rule following it and
+no `coin` left anywhere (panel, stylesheet, or a bookmark's `uiTerms`); the
+doctrine needles resolving to Crown between the realm's facts and its reforms;
+the institutions folded in under the ladders inside the Ideas of the Age block
+with the surcharge banner no longer naming another tab; and the four ways
+nothing went blank, including the folded block hiding only when both halves
+have. `uitest38.mjs` grew the browser's answer to the same three moves, and
+`uitest8.mjs` drives the ladders through the renamed tab. Neither §203 nor its
+suites touch the sim: `node tools/autorun.mjs 8` is unaffected by a tab.
+
 **The §202 harness note is that there is no harness note.** `node
 tools/autorun.mjs 8`, run on the pre-§202 tree and on this one in the same
 environment, produced **byte-identical output** — every bookmark, every

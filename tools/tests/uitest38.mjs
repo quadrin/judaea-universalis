@@ -90,9 +90,10 @@ console.log('== a tab shows its own sections and hides the rest ==');
 console.log('== the ideas are split by what unlocks them (SPEC §198) ==');
 {
   // The reform trees are the realm's own constitution and live on Crown; the
-  // Ideas of the Age are each locked behind a named rung and keep the Coin
-  // screen, where the lock card and the ladder that answers it share a
-  // window. A bounding box is the only honest answer to "which screen".
+  // Ideas of the Age are each locked behind a named rung and keep the
+  // Technology screen, where the lock card and the ladder that answers it
+  // share a window. A bounding box is the only honest answer to "which
+  // screen".
   const reforms = page.locator('#nation-panel [data-ref="reforms"]');
   const eras = page.locator('#nation-panel [data-ref="eraIdeasBlock"]');
   const tech = page.locator('#nation-panel [data-ref="tech"]');
@@ -103,10 +104,10 @@ console.log('== the ideas are split by what unlocks them (SPEC §198) ==');
   const buys = await page.locator('#nation-panel [data-idea]:visible').count();
   ok(buys === 3, '  the three trees keep their buy buttons here: ' + buys);
 
-  await page.locator('#nation-panel .np-tab[data-tab-go="coin"]').click();
+  await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
   await page.waitForTimeout(150);
   ok(await tech.isVisible() && await eras.isVisible(),
-    'Coin shows the ladders and the Ideas of the Age together');
+    'Technology shows the ladders and the Ideas of the Age together');
   ok(!(await reforms.isVisible()), '  and not the reform trees');
   const boxes = await page.evaluate(() => {
     const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
@@ -117,12 +118,75 @@ console.log('== the ideas are split by what unlocks them (SPEC §198) ==');
     'the chapter\'s curriculum is on the board (open groups or lock cards)');
 }
 
+console.log('== the last three sections are filed by what they are (SPEC §203) ==');
+{
+  // The tab strip says Technology, not Coin.
+  const strip = await page.locator('#nation-panel .np-tab').allTextContents();
+  ok(strip.some((s) => /technology/i.test(s)) && !strip.some((s) => /^coin$/i.test(s)),
+    'the strip reads ' + strip.join(' · '));
+
+  // The needles are a portrait of the realm, so they hang on Crown — with
+  // the realm's own facts above them and the constitution below.
+  const character = page.locator('#nation-panel [data-ref="doctrineBlock"]');
+  await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
+  await page.waitForTimeout(150);
+  ok(await character.isVisible(), 'Crown shows The Character of the Realm');
+  const axes = await page.locator('#nation-panel [data-ref="doctrine"] .np-dox').count();
+  ok(axes >= 3, '  with its needles on the board: ' + axes);
+  const crownOrder = await page.evaluate(() => {
+    const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
+    return { facts: r('religion').top, needles: r('doctrine').top, reforms: r('reforms').top };
+  });
+  ok(crownOrder.needles > crownOrder.facts && crownOrder.reforms > crownOrder.needles,
+    '  drawn between the realm\'s facts and its reforms');
+
+  await page.locator('#nation-panel .np-tab[data-tab-go="war"]').click();
+  await page.waitForTimeout(150);
+  ok(!(await character.isVisible()), 'the Host no longer carries it');
+  ok(await page.locator('#nation-panel [data-ref="manpower"]').isVisible(),
+    '  and still has its own numbers, so the tab did not go blank');
+
+  // The world's way of doing things is a tax on the ladders, so it is filed
+  // under them — inside the Ideas of the Age block, above the chapter's own.
+  const inst = page.locator('#nation-panel [data-ref="instBlock"]');
+  const ageBlock = page.locator('#nation-panel [data-ref="ageBlock"]');
+  await page.locator('#nation-panel .np-tab[data-tab-go="world"]').click();
+  await page.waitForTimeout(150);
+  ok(!(await inst.isVisible()), 'The World no longer carries the institutions');
+  ok(await page.locator('#nation-panel .pp-diplo').isVisible(),
+    '  and keeps its treaties, so that tab did not go blank either');
+
+  await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
+  await page.waitForTimeout(150);
+  ok(await ageBlock.isVisible(), 'Technology carries the age block');
+  if (await inst.isVisible()) {
+    const folded = await page.evaluate(() => {
+      const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
+      return {
+        ladders: r('tech').bottom,
+        inst: r('institutions').top,
+        eras: r('eraIdeas').top,
+        titles: document.querySelectorAll('#nation-panel [data-ref="ageBlock"] .pp-build-title').length,
+        subs: document.querySelectorAll('#nation-panel [data-ref="ageBlock"] .np-age-sub').length,
+      };
+    });
+    ok(folded.inst > folded.ladders, '  the institutions are drawn below the ladders they surcharge');
+    ok(folded.eras > folded.inst, '  and the chapter\'s own ideas below them');
+    ok(folded.titles === 1 && folded.subs === 2,
+      '  one block title over two subheads: ' + folded.titles + '/' + folded.subs);
+    ok(await page.locator('#nation-panel [data-ref="institutions"] .np-faction').count() >= 1,
+      '  with the institutions themselves listed');
+  } else {
+    ok(true, '  (no institution has arisen in this chapter yet — nothing to fold)');
+  }
+}
+
 console.log('== the panel keeps updating after a switch ==');
 {
   // A tab implementation that re-templated the panel would detach every node
   // in `refs`, and the panel would freeze without saying so. Run the clock and
   // watch a pinned number move.
-  await page.locator('#nation-panel .np-tab[data-tab-go="coin"]').click();
+  await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
   await page.waitForTimeout(120);
   const before = await page.locator('#nation-panel [data-ref="treasury"]').textContent();
   await page.evaluate(() => {
