@@ -869,6 +869,50 @@ export const BOOKMARK_40 = {
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
       },
+      // ── The chair's own reach (SPEC §195): this chapter's span holds the
+      // whole conversion story — Ananias at Charax, Helena's vow, a fugitive
+      // King of Kings warming himself at the house's fire — and the missions
+      // should ask for the deeds the chronicles actually credit it with.
+      {
+        id: 't5_kingmakers_house', name: 'A King of Kings, Restored',
+        icon: 'flag', col: 1, row: 2, requires: ['t5_tide_riders'],
+        desc: 'One winter a King of Kings arrives at the fords with nothing but his fugitives, '
+          + 'and the house that shelters him crowns its own overlord. Keep eight thousand '
+          + 'lances mustered — enough to ride a guest home to Ctesiphon as a king.',
+        rewardText: '"The Kingmaker\'s House": +0.1 legitimacy a month permanently, +15 influence points.',
+        check: (ctx) => totalMen(ctx, 'ADI') >= 8000,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'kingmakers_house', name: 'The Kingmaker\'s House', months: -1, effects: { legitimacyAdd: 0.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 15 });
+        },
+      },
+      {
+        id: 't5_queens_vow', name: 'The Queen\'s Vow',
+        icon: 'grain', col: 2, row: 3, requires: ['t5_customs_frontier'],
+        desc: 'A famine is coming to Jerusalem in the queen mother\'s lifetime, and she will meet '
+          + 'it under a Nazirite vow — grain from Alexandria, figs from Cyprus, at any price the '
+          + 'captains name. Bank 250 talents so the vow can be paid when it is sworn.',
+        rewardText: '"The Lamp Over the Door": +5% from the ascents permanently, +10 legitimacy.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 250,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'lamp_over_the_door', name: 'The Lamp Over the Door', months: -1, effects: { pilgrimMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 10 });
+        },
+      },
+      {
+        id: 't5_island_the_tide_missed', name: 'The Island the Tide Broke On',
+        icon: 'ship', col: 1, row: 3, requires: ['t5_kingmakers_house'],
+        desc: 'Pacorus took Syria to the sea\'s edge and Tyre alone refused the tide — no fleet, '
+          + 'no mole, no patience for island arithmetic. Take Tyre, and lay the one city the '
+          + 'invasion could not reach at the King of Kings\' feet.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'ADI', 'Tyre'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_crown_east_lives_with', name: 'The Crown the East Could Live With', hypothetical: true,
@@ -880,6 +924,18 @@ export const BOOKMARK_40 = {
         rewardText: '+50 talents, +10 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'hasmoneanHolds'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 10 }),
+      },
+      {
+        id: 'hy_house_unpolluted', name: 'A House Unpolluted', hypothetical: true,
+        fork: '40bce/the_statue',
+        icon: 'altar', col: 3, row: 1,
+        desc: 'A merchant named Ananias will teach the Law at Charax in this chapter\'s span, and '
+          + 'the house\'s new prayers will need an address. If the year of Gaius passes with the '
+          + 'order never given — or refused in writing before it is asked — the Temple the queen '
+          + 'mother will adorn is never threatened with an emperor\'s face.',
+        rewardText: '+15 legitimacy, +10 influence points.',
+        check: (ctx) => anyFlag(ctx, 'orderNeverGiven', 'refusedInAdvance'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { legitimacy: 15, infl: 10 }),
       },
     ],
   },

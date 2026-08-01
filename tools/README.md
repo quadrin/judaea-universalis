@@ -1038,3 +1038,27 @@ firecheck boots all eight chapters at their horizons: 95/95 cards fire,
 zero guarded warnings. On the tree merged with §194 the battery is
 **124 of 124 headless suites ALL PASS**, smoke74's moved pin and §194's
 smoke124 both included.
+
+Since §195 (the chairs take their turn): the five §185 client chairs get
+the §187/§192 treatment — fifteen objectives (one expansion branch per
+chair over ground the tag does not start with, court branches from the
+houses' own documented deeds) and six roads not taken riding forks the
+chapters already chart. No new fork was drawn, so `chapter_paths.js`,
+`smoke83` and `smoke117` stand exactly as §192 left them, and the
+principal tables did not move by a single index — `smoke2`, `smoke3`,
+`smoke16`, `smoke111`, `smoke112` all green unmoved. The AI symmetry
+(§102) was measured, not assumed: `node tools/autorun.mjs 8` on 67bce,
+40bce, 66ce and 132ce is **byte-identical** to the parent tree on all
+four — the new thresholds sit past what an AI-held chair reaches in the
+window, so the trees grew reasons for a player without moving the AI's
+furniture at all. `smoke125` is the new contract: the grown chains at
+11/11/12/14/11 with 2/2/3/4/2 roads, every §195 node dressed and seated,
+every conquest target foreign at boot, nothing accomplished on day one,
+the forced worlds paying every declared modifier, the off-record rule
+live (a road stays dark when only history's marker is set), and the
+one-node-per-cell guard finally run over EVERY playable side of every
+bookmark — the check §187 and §183 each wished for after finding a
+collision in a second-playable tree by hand. `smoke116` moved with the
+feature (one new world marker, `speakerForTheNation`; six new roads pay
+beside the fifty-eight old ones). The battery is **125 of 125 headless
+suites ALL PASS**.

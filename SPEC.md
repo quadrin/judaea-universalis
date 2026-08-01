@@ -11134,3 +11134,102 @@ start is 40-50, so the men have to be earned across years of standing.
   `smoke109` — the 167 BCE era-page counts, re-pinned 13→18 and 20→29.
   `smoke110`, `smoke106` — unchanged and green: the east's dates and the
   ask machinery are exactly what they were.
+
+## 195. The chairs take their turn — the client trees grown
+
+§185 seated five client chairs — Adiabene in 67 BCE, 40 BCE, 66 CE and
+132 CE, Agrippa II in 66 CE — and gave each the minimum kit: six
+objectives, the curriculum pair, one or two roads not taken. Then §187
+thickened the thin principal trees, §192 the heavy ones, and both passes
+walked around the chairs on the §187 risk-budget logic. Re-run the census
+after §192 and the shape is backwards a third time: the principals stand
+at seven to eleven objectives with three to seven roads apiece, and the
+sides added *specifically so somebody would play them* still ask six
+questions each — not one of them a conquest, every tree finishable
+without ever marching past the start screen's own provinces. The §187
+sentence applies verbatim: the side the player finishes fastest is
+exactly the one that needs more reasons to keep playing it.
+
+Same grammar, five chairs, one deliberate restraint: **three branches and
+one or two roads each** — fifteen objectives and six roads in all — and
+§185's own rule kept throughout, *no new fork charted*. The trees grow by
+riding what the chapters already ask, which is why `chapter_paths.js`,
+`smoke83` and `smoke117` do not move at all.
+
+**The expansion the east actually reached for.** Every conquest branch
+is a `controls()` check over ground the chair does not start with, and
+every target is the era's own grievance seen from the east bank. 67 BCE
+picks Armenia's bones — Tigranocerta, where the house rode in Tigranes'
+train and watched Lucullus break the city, and Amida beside it — then
+swallows the sister client house at Edessa and Carrhae, gated on the
+King of Kings' full regard, because a door needs one keeper and Osrhoene
+is the other. 40 BCE takes Tyre: Pacorus took Syria to the sea's edge
+and the island alone refused the tide, so the client that delivers it
+finishes the overlord's war for him. 66 CE guards the half-shekel at its
+source — Josephus banks Babylonia's Temple silver at Nehardea and
+Nisibis until the escort of ten thousands can ride, the house owns one
+treasure-city and the branch asks for both. 132 CE holds the line Trajan
+crossed — Hatra, whose walls threw the last emperor back while this
+house burned, and Singara that watched his columns pass — and takes
+Nehardea again a chapter later, when the city ringed by the Euphrates
+is where the captivity keeps court. Agrippa retakes Chalcis, the crown
+Claudius gave him at twenty-one and the one he traded up from.
+
+**The court branches are the house's documented deeds.** The 40 BCE
+span holds the whole conversion story, so the chapter now asks for it:
+eight thousand lances mustered — enough to ride a fugitive King of
+Kings home to Ctesiphon as a king, which is the Artabanus affair as a
+mission — and 250 talents banked against the famine the queen mother
+will meet under a Nazirite vow, paying out as the lamp she set over the
+Sanctuary door. 66 CE raises her pyramids three stadia north of the
+wall (legitimacy at 80 while a Jewish court still stands to keep them)
+and arms the house beyond its tribute-book with the kinsmen who charged
+at Beth Horon. 67 BCE reconciles the two altars — stability at +2 in
+the court where the Magi count the sabbath lamps in the palace windows.
+132 CE reaches the era's Influence 7 rung, The Sages' Blessing, for the
+academies the scattered generation will found. And Agrippa's three are
+the reign's own arts: Berenice's grain contracts at Besara priced as a
+300-talent treasury, the advocate king's standing at Rome — asked at
++180, *past* devotion, because §185 starts the client at 150 and a
+mission must ask for something the boot state has not already paid —
+and the first crown above.
+
+**The roads ride the standing forks, and stay off the record.** Six new
+hypotheticals, every one a fork some principal already answers, read
+again from the client's chair: Crassus' shut doors mean the Nehardea
+deposits were never in the room he emptied (67); the order never given
+keeps an unpolluted address for prayers the house has not yet learned
+(40); the sealed granaries make the queen's charity the city's own
+habit, and Menahem alive makes two men in royal robes with one of them
+never crowned by anyone (66); the nation question reaches Agrippa's own
+synagogues either way it is answered, so his road completes on either
+marker of the all-alternate fork while the granaries and the robes pay
+only off the record; and the letters east are read aloud at Arbela
+first (132). `smoke116`'s worlds needed exactly one new marker
+(`speakerForTheNation`) — every other road pays off flags the §187/§192
+worlds already set, which is what riding standing forks buys.
+
+**The blind spot got its check.** Twice a two-nodes-one-cell collision
+hid in a second-playable tree because the live no-collision check boots
+one side per chapter (§187 found one by hand, §183 another). Every §195
+node declares col *and* row, and `smoke125` now derives the grid for
+**every playable side of every bookmark** — the check that would have
+heard both old collisions is finally standing where they hid. The
+chains stay append-only in both directions (new objectives after the
+last objective, new roads after the last road), so `missionsDone` keeps
+its §177 meaning and `smoke16`'s raw indices into the 132/614 principal
+tables never notice.
+
+- **Regression contract**: `smoke125` — the five chains at 11/11/12/14/11
+  with 2/2/3/4/2 roads, every §195 node dressed and seated, every
+  conquest target foreign at boot, nothing §195 accomplished on day one,
+  every new branch paying its declared modifiers when the forced world
+  arrives (the fords, the altars, the kingmaker, the lamp, the lances,
+  the escort, the pyramids, the ledgers, the captivity's ford), the
+  every-playable-side seat guard, and the off-record rule live: each new
+  road stays dark when only history's own marker is set. `smoke116` —
+  the worlds pay the six new roads beside the fifty-eight old ones, and
+  the append/spare-column/fork-naming statics cover the new nodes by
+  the same loops that covered the old. `smoke2`, `smoke3`, `smoke111`,
+  `smoke112`, `uitest2` — untouched and green, because the principals'
+  tables did not move by a single index.
