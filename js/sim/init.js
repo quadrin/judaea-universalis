@@ -49,7 +49,9 @@ import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFa
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
 import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
 import { aidInfo, requestAidCore } from './aid.js';
-import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
+import {
+  seedPop, popTotal, popTension, addPopulation, communityLabel, shiftPopToReligion,
+} from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
 import { queuedUnitCount, unitRecruitMonths } from './recruitment.js';
 import { buildProvinceMapping } from '../data/map_profile.js';
@@ -544,6 +546,22 @@ export const simHelpers = {
     const p = ctx.prov(provName);
     if (!p) return;
     addPopulation(p, entry);
+    resolveDisplayName(ctx, p);
+  },
+  // A card that gives a province a new faith gives its PEOPLE one (SPEC §210).
+  // Since §56 every province carries a makeup, and the makeup — not the label
+  // — is what communal unrest, the religion mapmode's stripe and every share
+  // trigger read; `normalizePop` would also write the old majority's faith
+  // straight back over a province whose paint alone had been changed. This is
+  // the CARD's hand, immediate and by decree: the player's own missionaries go
+  // through the `convertProvince` action and twelve months of realm.js, which
+  // lands on the same `shiftPopToReligion`.
+  changeFaith(ctx, provName, religion) {
+    const p = ctx.prov(provName);
+    if (!p || !religion) return;
+    if (Array.isArray(p.pop) && p.pop.length) shiftPopToReligion(p, religion, 1);
+    else p.religion = religion;
+    p.conversion = null; // whatever the missionaries were doing here is done
     resolveDisplayName(ctx, p);
   },
   // Standing forces at the bookmark's opening (SPEC §58): fleets riding at
