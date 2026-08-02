@@ -13062,8 +13062,11 @@ road changed the government would be a menu; this one is a question.
   six-seed three-century all-AI 132 chapter whose accession now adopts a
   constitution in year 18 and which still lands every seed on exactly one
   road, and `smoke105`, §163's court suite, which is where an archetype read
-  wrongly would show. The battery is **133 of 136 headless suites ALL PASS**;
-  the three that fail (`smoke107`, `smoke126`, `smoke129`) fail identically on
-  the parent commit and belong to §208's Himyar seating. `uitest12` reads the
-  Government row off a live browser in both a 1948 republic and a 67 BCE
-  theocracy, unchanged.
+  wrongly would show. Before the merge the battery was **133 of 136 headless
+  suites ALL PASS**, the three failures (`smoke107`, `smoke126`, `smoke129`)
+  failing identically on the parent commit and belonging to §208's Himyar
+  seating; on the merged tree — which renumbered this section under Beta
+  Israel's §209 and took that section's repairs to those same three suites —
+  it is **137 of 137, zero failures**, Beta Israel's own `smoke136` included.
+  `uitest12` reads the Government row off a live browser in both a 1948
+  republic and a 67 BCE theocracy, unchanged.
