@@ -165,13 +165,17 @@ console.log('== the political east and south (SPEC §205) ==');
   ok(at('Dodekaschoinos').owner === 'KSH', '66: the Nile corridor is Kushite ground');
 }
 {
-  // Kaleb's Yemen: a conquest across a sea, held at the enclave share.
+  // Kaleb's Yemen (§208): the conquest is four years old and the negus rules
+  // it the way Procopius says he did — through a client crowned at Zafar.
+  // The owner is the native court now, so the terraces pay the ordinary
+  // levy; what is thin about the client kingdom is the yoke, and the yoke
+  // is modeled where a yoke lives (tribute, bond, garrison party).
   const { game } = boot('529ce');
   const at = (n) => game.provinces.find((p) => p && p.canon === n);
-  ok(at('Muza').owner === 'AXM' && at('Zafar').owner === 'AXM' && at('Najran').owner === 'AXM',
-    '529: the incense country answers to the negus, four years after the crossing');
-  ok(levyOf(at('Muza')) === 0.1 && levyOf(at('Zafar')) === 0.1,
-    '529: and it is garrison-thin — the enclave share, like Byzantine Spania');
+  ok(at('Muza').owner === 'HMY' && at('Zafar').owner === 'HMY' && at('Najran').owner === 'HMY',
+    '529: the incense country answers to the client the negus crowned (§208)');
+  ok(levyOf(at('Muza')) === 0.2 && levyOf(at('Zafar')) === 0.2,
+    '529: the native court assesses its own terraces at the governed rate, not the garrison\'s 0.1');
   ok(at('Najran').religion === 'christianity',
     '529: Najran keeps the faith its martyrs died for');
   ok(at('Carmana').owner === 'SAS' && at('Mazun').owner === 'SAS',

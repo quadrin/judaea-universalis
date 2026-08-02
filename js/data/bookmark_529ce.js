@@ -1228,7 +1228,7 @@ export const BOOKMARK_529 = {
     HMY: [
       {
         id: 'h_kings_companies', name: 'The King\'s Own Companies',
-        icon: 'spears', col: 0,
+        icon: 'spears', col: 0, row: 0,
         desc: 'The garrison in your capital answers the negus, and shortly nobody. Field six '
           + 'thousand men who answer the crown — a client with an army of its own is a '
           + 'kingdom in waiting.',
@@ -1241,7 +1241,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 'h_customs_of_the_sea', name: 'The Customs of the Sea',
-        icon: 'coins', col: 1,
+        icon: 'coins', col: 1, row: 0,
         desc: 'Every empire that ever wanted this country wanted it for the ledgers of Aden '
           + 'and Mawza. Bank 250 talents the tribute never reaches — the monsoon pays '
           + 'whoever holds the harbors, and the harbors are yours.',
@@ -1254,7 +1254,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 'h_tribute_of_one_word', name: 'A Tribute of One Word',
-        icon: 'scales', col: 2, requires: ['h_kings_companies'],
+        icon: 'scales', col: 2, row: 0, requires: ['h_kings_companies'],
         desc: 'Procopius\' phrase for how the conquest ends: a tribute agreed by a court '
           + 'strong enough not to pay it, remitted as a word both sides pretend is a fact. '
           + 'Be free of the yoke — by the garrison\'s mutiny, the negus\' distraction, or '
