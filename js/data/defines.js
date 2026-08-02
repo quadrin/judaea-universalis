@@ -74,7 +74,7 @@ export const DEFINES = {
   // trajectory in its documented family.
   MISSION_PACE_MONTHS: 2,
 
-  // The world rolls for it (SPEC §209). A card marked `roll: true` is a
+  // The world rolls for it (SPEC §210). A card marked `roll: true` is a
   // foreign court's own question with no answer this table can give, so the
   // campaign draws one instead of asking. This is the weight on the recorded
   // course — the option `aiOption` names — with the remainder split evenly

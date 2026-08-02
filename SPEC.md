@@ -12703,7 +12703,7 @@ the ordinary §163 seed drift the §205 pass already documented.
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
 
-## 209. Not every foreign question is a question — the world rolls for it
+## 210. Not every foreign question is a question — the world rolls for it
 
 §70 gave the engine the rule that a foreign court's decision is not ours to
 make, and 381 cards took it. Twenty-five did not, and they were the ones
@@ -12787,7 +12787,7 @@ labelled "the recorded course" rather than "the historical course",
 because on a rolled card the record is the likelier half of a draw and not
 a promise.
 
-- **Regression contract**: `smoke136` — the notice and its drawn course
+- **Regression contract**: `smoke137` — the notice and its drawn course
   through the pending entry, the bus payload, the acknowledgment and a
   save round-trip; the weight at 0/1 and over two thousand rolls; the same
   seed rolling the same course; an unrolled card leaving the stream
