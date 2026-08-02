@@ -13038,3 +13038,9 @@ side, because the conversion card is dated to 126 BCE and the run closes in
   unconverted Idumea and keeping a converted one; the win-condition count and
   `hm_idumea` surviving; and `changeFaith` idempotent, no-op on a missing
   faith, and silent on an unknown province.
+  Verified on the merged tree, after this section was renumbered twice out of
+  main's way (§208 went to the strait, §209 to Beta Israel): **137 of 137
+  headless suites ALL PASS**. The two chapters never touched — main's work
+  landed in 529 CE, on the client courts and on the dispersion; this one is
+  167 BCE and the makeup — and `js/sim/population.js`, the one file both
+  sides opened, merged without a hand on it.
