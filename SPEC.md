@@ -13203,8 +13203,8 @@ road changed the government would be a menu; this one is a question.
   wrongly would show. Before the merge the battery was **133 of 136 headless
   suites ALL PASS**, the three failures (`smoke107`, `smoke126`, `smoke129`)
   failing identically on the parent commit and belonging to §208's Himyar
-  seating; on the merged tree — which renumbered this section under Beta
-  Israel's §209 and took that section's repairs to those same three suites —
-  it is **137 of 137, zero failures**, Beta Israel's own `smoke136` included.
-  `uitest12` reads the Government row off a live browser in both a 1948
-  republic and a 67 BCE theocracy, unchanged.
+  seating; on the merged tree — which renumbered this section twice, under
+  Beta Israel's §209 and then under Idumea's §210, and took §209's repairs to
+  those same three suites — it is **138 of 138, zero failures**, both of those
+  sections' own suites included. `uitest12` reads the Government row off a
+  live browser in both a 1948 republic and a 67 BCE theocracy, unchanged.
