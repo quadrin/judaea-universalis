@@ -1,4 +1,4 @@
-// js/data/programs.js — the works of one's own (SPEC §212). DOM-free data +
+// js/data/programs.js — the works of one's own (SPEC §213). DOM-free data +
 // pure helpers, the era_ideas.js pattern: one module owns the whole table.
 //
 // §181 priced an air force and an armored corps at what they were in 1948 —
@@ -19,7 +19,7 @@
 //     is about: Žatec in 1948, an embargo in 1967, and a fighter of one's
 //     own two decades later.
 //
-// Contracts (pinned by smoke139):
+// Contracts (pinned by smoke140):
 // - program keys are globally unique (effects resolve from the flat registry,
 //   because applyReformsToTag has a tag but no bookmark);
 // - every unlock level sits inside the bookmark's base..ceiling window, so
@@ -110,7 +110,7 @@ export const ARMS_PROGRAMS = {
     unlock: { ladder: 'mar', level: 24 }, needs: ['kfir', 'merkava'],
     cost: 420, points: 260, months: 48, strain: 8,
     works: 'wing',
-    // The one program the age argued about (SPEC §212): it flies, and the
+    // The one program the age argued about (SPEC §213): it flies, and the
     // capital that pays for it would rather it did not.
     desc: 'Not a foreign airframe improved — an aircraft of this state\'s own drawing, at the top of '
       + 'the ladder and the top of the budget. It flies beautifully. The capital whose money is building it '
@@ -239,7 +239,7 @@ export function ownWorksOf(t) {
 }
 
 // Does this court build every arm the market gates? Then it needs nobody —
-// and, per §212, anybody may need it.
+// and, per §213, anybody may need it.
 export function selfSufficientWorks(t) {
   const own = ownWorksOf(t);
   for (const arm of GATED_ARMS) if (!own.has(arm)) return false;

@@ -202,7 +202,7 @@ export function createWiki({ DEFINES, getCtx }) {
     // read straight from the bookmark that declares them.
     const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
-    // The works of one's own (SPEC §212): the courts this chapter lets build
+    // The works of one's own (SPEC §213): the courts this chapter lets build
     // weapons at home, and what each of them may build, read from the same
     // roster the sim plays. The compendium cannot drift from the game.
     const progTable = ARMS_PROGRAMS_BY_BOOKMARK[b.id] || null;

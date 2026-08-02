@@ -138,7 +138,7 @@ function monthlyBlock(ctx) {
   safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §202)
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
-  safe('programs', () => monthlyPrograms(ctx)); // …and the shops at home get a month older (SPEC §212)
+  safe('programs', () => monthlyPrograms(ctx)); // …and the shops at home get a month older (SPEC §213)
   safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));
