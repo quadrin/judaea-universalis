@@ -84,7 +84,7 @@ export function mechanicOn(ctx, key) {
 }
 
 // ------------------------------------------------------------ constitutions
-// What a court's government DOES, read off `DEFINES.GOV_TYPES` (SPEC §212).
+// What a court's government DOES, read off `DEFINES.GOV_TYPES` (SPEC §213).
 //
 // There used to be four governments and the engine asked about them by name:
 // `govType === 'republic'` in four places, `govType !== 'theocracy'` in one,
@@ -2149,7 +2149,7 @@ export function switchTagCore(ctx, from, to) {
   delete nt.flag; // a variant banner dies with the old identity — the new tag flies its own
   // The new crown brings its constitution (SPEC §25): a proclaimed republic
   // votes, a proclaimed kingdom crowns — and whatever the new banner's
-  // constitution says about inheriting (SPEC §212) is applied here rather than
+  // constitution says about inheriting (SPEC §213) is applied here rather than
   // left over from the old one, so a realm that formed out of a government
   // with no heirs does not carry a stale one into a crown.
   const gov = (ctx.DEFINES.GOV_OF || {})[to];
@@ -3930,7 +3930,7 @@ export function royalMarriageInfo(ctx, tag, other) {
   // which is the honest arrangement.
   //
   // Each government now declares whether it is a house (`dynastic`, SPEC
-  // §212), so the adopted constitutions answer for themselves: a Temple-State
+  // §213), so the adopted constitutions answer for themselves: a Temple-State
   // and a Patriarchate are houses, and the Lot and No Ruler but God — which
   // are the two that abolished the idea of anybody inheriting anything — are
   // not, which is the same sentence read forward.

@@ -1188,7 +1188,7 @@ export const EVENTS_40 = [
       effects: guard('ev5_augustus:0', (ctx) => {
         const rom = ctx.game.tags.ROM;
         if (!rom || !rom.alive) return;
-        // Through the helper (SPEC §212), so the constitution's own effects
+        // Through the helper (SPEC §213), so the constitution's own effects
         // are folded into the realm rather than left reading the last one's.
         ctx.helpers.setGovernment(ctx, 'ROM', 'monarchy');
         ctx.helpers.setRuler(ctx, 'ROM', { name: 'Augustus', title: 'Princeps', gov: 5, infl: 5, mar: 4, age: 36 });

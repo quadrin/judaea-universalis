@@ -57,7 +57,7 @@
 // steer, including content nobody has written yet.
 //
 // And each of the four IS the government from the day it is adopted (SPEC
-// §212): the realm's own constitution changes with it, so a Judaea that drew
+// §213): the realm's own constitution changes with it, so a Judaea that drew
 // the lot reads The Lot in the panel, never names an heir, refills the office
 // without a succession crisis, and cannot be married into by anybody — which
 // is what abolishing hereditary priestly power actually costs a state. Before
