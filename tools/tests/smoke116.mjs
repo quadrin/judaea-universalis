@@ -50,7 +50,7 @@ function boot(era, playerTag) {
 const era = (id) => ERAS.find((e) => e.bookmark.id === id);
 const hyposOf = (list) => (list || []).filter((m) => m && m.hypothetical);
 const doneHy = (t) => (t.missionsDone || []).filter((id) => /^hy_/.test(id));
-// The §206 drumbeat: one completion a pass, then the chain rests. Where this
+// The §207 drumbeat: one completion a pass, then the chain rests. Where this
 // suite means "let the months go by until everything satisfiable has paid",
 // it pumps the monthly pass — each call is one synthetic month, and a big
 // forced world needs a run of them, not a pair.
@@ -112,7 +112,7 @@ for (const e of ERAS) {
   const playerTag = e.bookmark.playableTags[0].tag;
   const s = boot(e, playerTag);
   booted.set(e.bookmark.id, s);
-  // Pump past the §206 rests: an era objective satisfiable at boot absorbs
+  // Pump past the §207 rests: an era objective satisfiable at boot absorbs
   // a pass, and a genuinely free road must not get to hide behind it.
   pump(s.ctx, 16);
   const free = [];
@@ -137,7 +137,7 @@ for (const e of ERAS) {
 // -------------------------------------------------------------- completability
 // Reach each road's world-state by hand — markers set, provinces held, the
 // war settled early — then let the ordinary monthly pass pay for it. Since
-// §206 the pass banks ONE mission and rests between, so a forced world is
+// §207 the pass banks ONE mission and rests between, so a forced world is
 // paid off over a long run of pumped months; 40 BCE still needs a second
 // world, and its first must be fully paid while Antigonus lives.
 console.log('== §183 live: every road pays when the world it names arrives ==');
@@ -214,7 +214,7 @@ function expectAllDone(g, bookmark, tags, label) {
   // the same standing House, and the §192 forks (the royal robes, the
   // granaries) by marker. The nation question (§196: Agrippa hears the
   // answer too) pays over the same pumped months; each court drums at its
-  // own §206 pace, so the run covers the longest chain among them.
+  // own §207 pace, so the run covers the longest chain among them.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, {
     secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,

@@ -60,7 +60,7 @@ export const DEFINES = {
     annexGov: 50,  // governance points to annex once the frontier is planted
   },
 
-  // The drumbeat of accomplishment (SPEC §206). A realm banks at most one
+  // The drumbeat of accomplishment (SPEC §207). A realm banks at most one
   // mission a month, and after each one its chain rests this many months
   // before the next may complete — so a chapter's objectives land as a
   // drumbeat across its years rather than a volley in its first season.

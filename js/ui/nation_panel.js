@@ -912,7 +912,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const hypo = list.filter((m) => m.hypothetical);
     const doneN = base.filter((m) => m.status === 'done').length;
     const hypoDone = hypo.filter((m) => m.status === 'done').length;
-    // The drumbeat (SPEC §206): while the chain rests from its last
+    // The drumbeat (SPEC §207): while the chain rests from its last
     // accomplishment, say so — a satisfied medallion that has not landed
     // is the pace at work, not a broken check.
     let paceNote = '';

@@ -58,7 +58,7 @@ function boot(id, playerTag) {
   return { game, ctx };
 }
 const doneIds = (t) => new Set(t.missionsDone || []);
-// The §206 drumbeat: one completion a pass, then the chain rests — a forced
+// The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
 const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
@@ -173,7 +173,7 @@ for (const gw of GROWTH) {
     ok(!!p && p.owner !== gw.tag,
       key + ': ' + name + ' is not the chair\'s at the start (' + (p && p.owner) + ')');
   }
-  // Pump past the §206 rests so a free node cannot hide behind an era
+  // Pump past the §207 rests so a free node cannot hide behind an era
   // objective that absorbs the first pass.
   pump(w.ctx, 16);
   const done = doneIds(w.game.tags[gw.tag]);
@@ -203,7 +203,7 @@ function force(w, tag, opts) {
   for (const name of opts.grant || []) w.ctx.helpers.changeOwner(w.ctx, name, tag);
 }
 function expectPaid(w, tag, ids, label) {
-  pump(w.ctx, 60); // parents' thresholds too — one §206 beat at a time
+  pump(w.ctx, 60); // parents' thresholds too — one §207 beat at a time
   const done = doneIds(w.game.tags[tag]);
   const missing = ids.filter((id) => !id.startsWith('hy_') && !done.has(id));
   ok(!missing.length, label + ': every new objective paid ('

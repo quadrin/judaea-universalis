@@ -39,7 +39,7 @@ function boot(playerTag, seed) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events });
   return { game, ctx, actions: gameActions(ctx) };
 }
-// The §206 drumbeat: one completion a pass, then the chain rests. Where this
+// The §207 drumbeat: one completion a pass, then the chain rests. Where this
 // suite means "let the months go by until the pass has paid", it pumps —
 // each call is one synthetic month.
 const pump = (c, n) => { for (let i = 0; i < n; i++) realm.checkMissions(c); };
@@ -78,7 +78,7 @@ console.log('== branches advance independently; the prefix does not lie ==');
   ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands,hy_royal_robes,hy_granaries',
     'three branches open at once (plus the standing hypotheticals): ' + open.join(','));
   // Complete a LATER branch first: the Parthian mission, by opinion. The
-  // root's completion above left the chain resting (§206), so wait it out.
+  // root's completion above left the chain resting (§207), so wait it out.
   game.tags.PAR.opinion = game.tags.PAR.opinion || {};
   game.tags.PAR.opinion.JUD = 90;
   pump(ctx, PACE + 1);

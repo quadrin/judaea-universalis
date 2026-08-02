@@ -75,7 +75,7 @@ function proclaim(chapterId, tagOverride) {
 const doneSet = (game) => new Set(game.tags.MLI.missionsDone || []);
 const grant = (ctx, names) => { for (const n of names) ctx.helpers.changeOwner(ctx, n, 'MLI'); };
 const stand = (ctx, name, v) => { const p = ctx.prov(name); if (p) p.dia = { standing: v }; };
-// The §206 drumbeat: one completion a pass, then the chain rests — a forced
+// The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
 const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
@@ -169,7 +169,7 @@ console.log('== §189 live: proclamation accomplishes nothing on the branch ==')
 for (const id of CHAPTERS) {
   const w = proclaim(id);
   w.game.tags.MLI.stability = 3;
-  // Pump past the §206 rests: a spine mission satisfiable at the crowning
+  // Pump past the §207 rests: a spine mission satisfiable at the crowning
   // absorbs a pass, and a free branch node must not get to hide behind it.
   pump(w.ctx, 24);
   const mine = new Set(branchOf(id).map((m) => m.id));
@@ -184,7 +184,7 @@ for (const id of CHAPTERS) {
 // pay for it. Anything that stays unpaid here is content no campaign can reach.
 console.log('== §189 live: every chapter mission pays when its world arrives ==');
 function expectAllPaid(w, id) {
-  pump(w.ctx, 40); // spine + branch, one §206 beat at a time
+  pump(w.ctx, 40); // spine + branch, one §207 beat at a time
   const done = doneSet(w.game);
   const missing = branchOf(id).map((m) => m.id).filter((x) => !done.has(x));
   ok(!missing.length, id + ': every chapter mission paid ('

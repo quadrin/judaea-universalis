@@ -9617,7 +9617,7 @@ monthly pass keeps its three-step guard, but as three completion WAVES
 judged against each wave's opening state: parallel branches may land in the
 same wave, a cascade straight to the capstone stays impossible, and the AI
 earns its branches on the same terms as the player (§102's symmetry,
-untouched). (The waves were retired in §206 for a slower drum — one
+untouched). (The waves were retired in §207 for a slower drum — one
 completion a month, with a rest between beats.)
 
 **The retrofit rule for the shipped chains: never stricter.** Every branched
@@ -12319,7 +12319,7 @@ Addis Ababa, Meroe or Kabul marches on the Levant.
   firing day, and ownership stays untouched so a genuine conquest still
   changes the answer.
 
-## 206. The drumbeat of accomplishment
+## 207. The drumbeat of accomplishment
 
 A mission completed the instant its condition did, and the monthly pass ran
 up to three waves deep (§177), so a realm that qualified for several at once
@@ -12378,7 +12378,7 @@ run its life.
 
 **The record.** `t.missionRest` is the months still owed, ticked down by
 the monthly pass, written only when a completion happens, and carried by
-the save; `reviveGame` seats 0 on a pre-§206 save, so old campaigns owe
+the save; `reviveGame` seats 0 on a pre-§207 save, so old campaigns owe
 nothing. A resting month still runs `writeMissionState`, so the §177
 prefix contract (a hand-moved `missionIdx` means "the first N are done")
 holds mid-rest too. A proclamation (§102/§189) resets the chain's record
@@ -12403,9 +12403,9 @@ back exactly the documented families: 167 none · 67 SEL DEAD · 40 none ·
 (the come-and-go line) · 1948 ISR BLEEDING (the §205 harness-seed flag,
 already sampled as seed drift).
 
-- **Regression contract**: `smoke133` owns the rule — one a pass with three
+- **Regression contract**: `smoke134` owns the rule — one a pass with three
   satisfiable, the cadence `pace+1` exactly, no rest charged for hungry
-  months, the rest riding the save and a pre-§206 save owing none, the
+  months, the rest riding the save and a pre-§207 save owing none, the
   bookmark override with one-a-month surviving pace 0, and the prefix
   contract mid-rest. The content suites that force a world and "let the
   ordinary monthly pass pay for it" (smoke111/116/120/126/129) now pump

@@ -756,7 +756,7 @@ function writeMissionState(t, list, done) {
   t.missionIdx = prefix;
 }
 
-// The pace of the drumbeat (SPEC §206): how many months a chain rests after
+// The pace of the drumbeat (SPEC §207): how many months a chain rests after
 // a completion before the next may land. The era's own arc may retune it —
 // a bookmark's `missionPaceMonths` answers before the DEFINES default.
 export function missionPaceMonths(ctx) {
@@ -783,7 +783,7 @@ export function checkMissions(ctx) {
     try {
       const tree = isMissionTree(list);
       const done = missionDoneSet(t, list);
-      // ONE completion a month, then the chain rests (SPEC §206). The old
+      // ONE completion a month, then the chain rests (SPEC §207). The old
       // guard ran up to three WAVES a pass, so a prepared realm banked a
       // whole branch — parents, children, parallel roots — in a single
       // morning, and every chapter opened with a volley of medallions. Now

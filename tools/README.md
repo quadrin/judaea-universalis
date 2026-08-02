@@ -342,7 +342,7 @@ one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
 carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
 now holds it.
 
-`smoke133.mjs` owns the SPEC §206 drumbeat: one mission completion per realm
+`smoke134.mjs` owns the SPEC §207 drumbeat: one mission completion per realm
 per monthly pass, then a rest of `MISSION_PACE_MONTHS` before the next may
 land. If you write a suite that forces a world and expects the pass to pay
 for it, do what smoke111/116/120/126/129 now do — pump `checkMissions` in a
@@ -365,7 +365,7 @@ change, and the accepted set is unchanged. Every §205 court ends its era's
 run unflagged. BOOT_MS doubled to 480s with the frame (the ID pass is 46.0M
 texels × 373 seeds now); dump-geometry's timeout doubled with it.
 
-SPEC §206 (the mission drumbeat: one completion a month, a 2-month rest
+SPEC §207 (the mission drumbeat: one completion a month, a 2-month rest
 between) re-ran the full 8-year harness and came back exactly the §205
 families — 167 none · 67 SEL DEAD · 40 none · 66 none · 132 none · 529 JUD
 DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING · 1948 ISR BLEEDING (the

@@ -3281,7 +3281,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
-    // The drumbeat (SPEC §206): how long the player's chain still rests after
+    // The drumbeat (SPEC §207): how long the player's chain still rests after
     // its last accomplishment, so the panel can say why a satisfied mission
     // has not landed yet. Null when the player has no chain at all.
     getMissionPace() {
@@ -3672,7 +3672,7 @@ export function reviveGame(saved) {
     // Ladder-era saves carry no done list; missionDoneSet seeds it from
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
-    if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§206 saves owe no rest
+    if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
