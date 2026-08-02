@@ -3486,10 +3486,27 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 #nation-panel[data-tab='crown'] [data-tab]:not([data-tab='crown']),
 #nation-panel[data-tab='missions'] [data-tab]:not([data-tab='missions']),
 #nation-panel[data-tab='court'] [data-tab]:not([data-tab='court']),
-#nation-panel[data-tab='coin'] [data-tab]:not([data-tab='coin']),
+#nation-panel[data-tab='tech'] [data-tab]:not([data-tab='tech']),
 #nation-panel[data-tab='war'] [data-tab]:not([data-tab='war']),
 #nation-panel[data-tab='faith'] [data-tab]:not([data-tab='faith']),
 #nation-panel[data-tab='world'] [data-tab]:not([data-tab='world']) { display: none !important; }
+
+/* The two halves of the age block (SPEC §203). One block title — Ideas of the
+   Age — over the world's way of doing things and the chapter's own arts, which
+   are different machines (a spread to embrace, tiers to buy) doing the same
+   job under the ladders. The subhead is a rank below `.pp-build-title` and
+   carries no rule of its own: the block already drew one, and a second line
+   across a narrow panel reads as two blocks, which is the thing being undone. */
+.np-age-sub {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  opacity: 0.78;
+  margin: 2px 0 3px;
+}
+.np-age-part + .np-age-part { margin-top: 9px; }
 
 /* The High Priesthood's candidates (SPEC §175). `.np-fac-btn` is a 26px icon
    square and four call sites genuinely want that; this is the fifth, whose

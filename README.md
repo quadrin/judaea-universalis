@@ -61,7 +61,7 @@ static site, the zero dependencies, or the missing build step changes.
 - Province map of the whole classical world — the Atlantic to the edge of
   India's approaches, Britain to the Horn of Africa: all of Iran to the
   Makran and Merv, all of Ethiopia to the lakes, Nubia, Arabia entire, the
-  Sahel to the Gulf of Guinea (~373 permanent cells, Judaea at city/district
+  Sahel to the Gulf of Guinea (~374 permanent cells, Judaea at city/district
   density), GPU-generated province-ID texture, EU4-style mapmode shaders,
   heightmap relief, parchment crossfade at strategic zoom.
 - A political west — and, beyond the Euphrates and the cataracts, a political
@@ -86,9 +86,16 @@ static site, the zero dependencies, or the missing build step changes.
 - Mapmodes: political, diplomatic, trade, terrain, religion, culture,
   development, unrest, estates, and the dispersion — where the Jewish
   communities of the diaspora are, how large, and how they regard your crown.
-- The realm panel is six tabs behind a pinned header — Crown, Court, Coin,
-  Host, Faith, World — so the ruler, the four numbers you watch and the five
-  levers stay put while twenty sections take turns underneath them.
+- The realm panel is seven tabs behind a pinned header — Crown, Missions,
+  Court, Technology, Host, Faith, World — so the ruler, the four numbers you
+  watch and the five levers stay put while twenty sections take turns
+  underneath them. Each section is filed by what it *is*: the doctrine needles
+  are a portrait of the realm and hang on Crown beside faith and tongue; the
+  world's way of doing things is a surcharge on every rung of every ladder and
+  so is listed under the ladders it taxes; the chapter you are living through
+  is what history asks of you and sits above the mission tree that asks the
+  rest; and the patterns your three arms muster as are the army's business,
+  read on the Host even though the ladders that buy them are on Technology.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
 - Three land arms with eighteen soldiers between them, and each one has a face,
   a gait and a weakness. **The foot** holds the line, **the horse** breaks it,

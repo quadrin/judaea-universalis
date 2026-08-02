@@ -140,7 +140,7 @@ console.log('== buying a technology takes ONE press, refresh mid-press ==');
   const before = await page.evaluate(() => window._ctx.game.tags.JUD.tech.gov);
   const cls = (await page.locator('[data-tech="gov"]').getAttribute('class')) || '';
   ok(!cls.includes('disabled'), 'the Advance button is live');
-  ok(await pressWithRefresh('[data-tech="gov"]', 'coin'), 'the panel was told to rebuild mid-press');
+  ok(await pressWithRefresh('[data-tech="gov"]', 'tech'), 'the panel was told to rebuild mid-press');
   const after = await page.evaluate(() => window._ctx.game.tags.JUD.tech.gov);
   ok(after === before + 1,
     'one press advanced the ladder exactly one level (' + before + ' \u2192 ' + after + ')');

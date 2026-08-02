@@ -269,11 +269,15 @@ export const BOOKMARK_1948 = {
     // no host, and the chapter that already says Cabinet where antiquity says
     // Court should not then say Faith over a section about the Temple that has
     // been gone for nineteen centuries — Faith hides itself here anyway,
-    // because no Temple stands, but the other five have to read as 1948.
+    // because no Temple stands, but the others have to read as 1948.
+    //
+    // Technology is the one tab this chapter does NOT re-dress (SPEC §203).
+    // The tab used to be Coin here and Economy there, two dresses for the
+    // purse; it is named for the ladders now, and a 1948 cabinet and a
+    // Hasmonean court call those the same thing.
     tabCrown: 'State',
     tabMissions: 'Objectives',
     tabCourt: 'Cabinet',
-    tabCoin: 'Economy',
     tabWar: 'Defence',
     tabWorld: 'Abroad',
   },

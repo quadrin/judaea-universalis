@@ -11937,6 +11937,150 @@ ever meet the ceiling are the ones a player is spending.
   falling back when it is pressed, an overstretched chancery naming itself, and
   the alliance button carrying the refusal in words.
 
+## 203. Every section is filed by what it is
+
+§175 cut a twenty-section realm panel into tabs and §198 finished the ideas,
+and the sort was right in almost every case because it asked the right
+question: not *where was this written* but *what is it*. Three sections were
+still answering the first question.
+
+**The Character of the Realm sat under the Host.** The doctrine needles
+(§85) had gone there because a war is the loudest thing that moves them, and
+a player looking for what the realm had become found it filed under manpower
+and regiments — as though *Identity and Pluralism* were an army statistic.
+It is not: the needles move on rulings, on estates bought off, on cards
+answered in peacetime, on the schools' quarrel (§190), and the army is one
+contributor among several. They are a portrait of the realm, which is the
+Crown's subject, and they now hang there — after faith, tongue, capital and
+government, before the Reforms, which is the other half of the same sentence:
+here is what this realm has become, and here is the constitution it enacted
+while becoming it. The block keeps `uiTerms.character`, so 1948 still calls it
+the National Character.
+
+**The world's way of doing things sat on The World.** §166's institutions had
+been filed with the treaties on the strength of the word *world*, and the
+mechanics say something else entirely: an institution this realm has not taken
+up is a **surcharge on every level of every ladder**, and that is the whole of
+what refusing one costs. So the red banner announcing the surcharge was on the
+technology screen, the list of what to do about it was a tab away, and the
+banner had to end with directions — *see The World tab*. It is levels-of-
+gov/infl/mar business and it belongs with the levels. The institutions fold
+into the **Ideas of the Age** block, directly under the ladders they tax and
+above the chapter's own groups, each half under its own subhead — a spread to
+embrace is not a tier to buy, and the block says so in two words rather than
+by being two blocks. One block, one title, and the banner now points down its
+own screen.
+
+**And the tab was called Coin.** It held the treasury and the ledger, so the
+name was not wrong; it also held the three ladders, the institutions and the
+age's ideas, which is what a player actually opens it to do. A tab is named
+for its subject, and the purse is what pays for the subject. It is
+**Technology** now (`id: 'tech'`, `uiTerms.tabTech`) in every chapter — 1948's
+`tabCoin: 'Economy'` retires rather than becoming `tabTech: 'Technology'`,
+because a Hasmonean court and a modern cabinet call the ladders the same
+thing, and a re-dressing that changes nothing is a key that can go stale
+silently. The treasury row and the ledger stay exactly where they are, first
+on the tab: what a rung costs and what the realm can pay is one question.
+
+### What the moves cannot break
+
+A tab that loses a section must not go blank. The Host keeps its vitals grid —
+manpower, armies, war exhaustion, three rows never hidden — and The World
+keeps the Diplomacy block, which every chapter renders; `tabHasContent`
+(§175) counts a grid only when a row of it is unhidden, and both anchors are
+unconditional. The folded block is the one new hiding rule in the panel: each
+half still hides on its own evidence (no institution has arisen yet; a foreign
+court has taken up no era idea), and the block around them hides only when
+**both** have, decided once after both refreshers have run rather than inside
+either — neither half knows the other exists. Every lever travelled with its
+section: `data-embrace`, `data-eraidea`, `data-tech` and `data-idea` keep
+their probes in the delegated chain behind the tab probe that still runs
+first, and the panel is still templated exactly once in `build()`.
+
+- **Regression contract**: `smoke131` — the new suite: the tab declared as
+  `tech`/Technology/`tabTech` with the stylesheet's filter rule following it
+  and no `coin` left in the panel, the stylesheet or any bookmark's `uiTerms`;
+  the doctrine host resolving to Crown, templated between the realm's facts
+  and the reforms, still reading its title from `uiTerms.character` and still
+  hidden at a foreign court; the institutions host resolving to the technology
+  tab, below the ladders and inside the era-ideas block under its own subhead,
+  gone from The World, with the surcharge banner no longer naming another tab
+  and the embrace probe intact; and the four ways nothing went blank — every
+  tab owning a section, the Host's three unhidden rows, The World's Diplomacy
+  block, and the folded block's AND. `smoke119` — the §198 split re-pinned to
+  the renamed tab, plus a new clause that no bookmark re-dresses a tab the
+  strip no longer reads. `uitest38` — the browser's bounding-box answer: the
+  strip reading Technology, the needles visible on Crown between religion and
+  the reforms and gone from the Host (which still shows its manpower), the
+  institutions gone from The World (which still shows its treaties) and drawn
+  on Technology below the ladders and above the chapter's own ideas, under one
+  block title and two subheads. `uitest8` — the ladders, the buy and the
+  ledger column, driven through the renamed tab.
+
+## 204. The chapter is not a fact about the realm
+
+§203 sorted three sections by asking what each one IS. Two were left, and the
+same question answers both.
+
+**The Chapters sat on Crown.** Crown is what the realm is — faith, tongue,
+capital, government, the character its wars argued it into, the constitution
+it enacted. A chapter is none of those. It is what history is asking of this
+realm right now: three objectives, a seal at the end, a clock. The tab that
+already answers that question in the other tense — what the era offers, branch
+by branch, forever — was one across. The chapter block moves to **Missions**
+and is templated **above** the tree: the century first, then the whole era's
+offer. Crown's tooltip stops claiming the chapter and Missions' claims both.
+It stays the player's alone and stays hidden until a chapter is running, so
+the Missions tab can now be carried by either half — a chapter with no chain
+shows the chapter, a chain with no chapter shows the tree.
+
+**The patterns sat under the ladders.** The military card carried three things
+the ladder buys but does not describe: the line naming what the three arms
+muster as, the milestone strip of rungs and the patterns each unlocks (with
+its doctrine in the tooltip), and §181's arms pipeline — who sells this realm
+the aircraft and armor it cannot forge. Those are facts about the **army**.
+They move to the Host under **How We Muster** (a title that reads in every
+century, which "the host" does not — 1948 calls the tab Defence), below the
+host's own three numbers, in the order a player reads them: what we muster as
+now, which rungs muster the next, and where the metal comes from.
+
+What a buyer needs at the moment of buying stays at the ladder. The military
+card's tooltip gains one line — *Military 9 musters Legionaries — the patterns
+are under Host* — naming the tab in **that chapter's own word for it**
+(`uiTerms.tabWar`, so 1948 reads *under Defence*). That is the §203 rule about
+banners pointing at other tabs honoured rather than broken: the pointer is one
+clause inside a tooltip that already had to say what the next rung costs, not
+a section whose answer lives elsewhere.
+
+### One report, two hosts
+
+`refreshTech` still calls `getTech()` exactly once a pass and now writes two
+sections from it — `refs.tech` on Technology, `refs.patterns` on the Host,
+through a `setPatterns` helper that hides the Host block when the string is
+empty (a sim with no tech report, a chapter whose ceiling leaves no milestone
+to draw). Asking the sim twice for the same object because the answer is drawn
+in two places would be a fetch per tab rather than a fetch per pass. A foreign
+court shows what it always showed — its three levels on Technology, its one
+pattern line on the Host — and no arms pipeline, which is ours to see.
+
+Neither tab can go blank: Crown keeps seven unhidden rows plus two blocks that
+render for anyone, and the Host's three rows are unconditional.
+
+- **Regression contract**: `smoke132` — the new suite: the chapter host
+  resolving to Missions above the tree, still hidden at a foreign court and
+  still reading `uiTerms.chapters`, with the two tab tooltips swapping the
+  claim; the patterns host on the war tab under its title and below the
+  vitals grid, `milestoneStrip` called once and only into the Host block, the
+  arms line gone from the ladder card, the foreign path split across both
+  hosts; the military card's musters line and its `uiTerms.tabWar` pointer;
+  and one `getTech()` a pass, the Host block hiding on an empty string, every
+  tab still owning a section. `uitest38` — the browser's answer: The Chapters
+  gone from Crown (which still shows its facts and reforms) and drawn above
+  the tree on Missions, the patterns and the strip gone from Technology
+  (whose military card still names what the next rung musters) and drawn on
+  the Host under its own numbers. `uitest8` — the pattern line and the strip
+  read on the Host, the ladders bought on Technology. `uitest31` — the §113
+  chapters panel, opened on the tab that now holds it.
 ## 205. The frame holds all of Iran and all of Ethiopia, and the court that pays for it
 
 §160 grew the frame west and north until it held the whole Roman world, and

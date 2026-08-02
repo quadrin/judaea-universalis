@@ -321,7 +321,27 @@ counting seats and moving when a bond is written, the annulment as a live
 button where a dead "Houses Joined" plate used to sit, an overstretched
 chancery naming itself, and the alliance button carrying the refusal in words.
 
-Since v7.4 (SPEC §205: the frame holds all of Iran and all of Ethiopia; 66
+`smoke131.mjs` owns the SPEC §203 panel sort: the ladders' tab declared as
+`tech`/Technology/`tabTech` with the stylesheet's filter rule following it and
+no `coin` left anywhere (panel, stylesheet, or a bookmark's `uiTerms`); the
+doctrine needles resolving to Crown between the realm's facts and its reforms;
+the institutions folded in under the ladders inside the Ideas of the Age block
+with the surcharge banner no longer naming another tab; and the four ways
+nothing went blank, including the folded block hiding only when both halves
+have. `uitest38.mjs` grew the browser's answer to the same three moves, and
+`uitest8.mjs` drives the ladders through the renamed tab. Neither §203 nor its
+suites touch the sim: `node tools/autorun.mjs 8` is unaffected by a tab.
+
+`smoke132.mjs` owns the SPEC §204 pair: The Chapters resolving to the Missions
+tab above the tree (hidden at a foreign court, title still from
+`uiTerms.chapters`, both tab tooltips swapping the claim), and the pattern
+line, milestone strip and arms pipeline resolving to the Host under *How We
+Muster* — `milestoneStrip` called once and only into that block, the military
+card keeping a musters line that names the tab in the chapter's own word, and
+one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
+carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
+now holds it.
+Since v7.4 (SPEC §205: the frame holds all of Iran and all of Ethiopia; 67
 new cells, twelve new courts): the 8-year harness, run against a
 clean-worktree baseline in the same environment, came back with 167, 66, 132
 and 614 clean on both trees, `67 SEL DEAD` and `529 JUD DEAD + SAM
