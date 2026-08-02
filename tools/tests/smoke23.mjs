@@ -18,6 +18,7 @@ const { incomeBreakdown } = await import(R + '/js/sim/economy.js');
 const { runMonthlyAI } = await import(R + '/js/sim/ai.js');
 const { queuedUnitsOf } = await import(R + '/js/sim/recruitment.js');
 const { areRivals } = await import(R + '/js/sim/military.js');
+const { missionsFor, checkMissions } = await import(R + '/js/sim/realm.js');
 const { repairDisconnectedProvinceRaster } = await import(R + '/js/map/renderer.js');
 
 let failures = 0;
@@ -195,7 +196,20 @@ console.log('== the 1948 campaign panel grows into modern state language ==');
   game.date = { y: 1988, m: 1, d: 1 };
   game.result = 'win';
   game.tags.ISR.advisors.gov = { name: 'Moshe Carmel', skill: 3, wage: 6 };
-  ok(actions.getMissions().length === 0, 'wartime missions retire after the campaign verdict');
+  // The verdict is not an ending (SPEC §32/§83) and never was for the chain:
+  // checkMissions goes on working it after the verdict lands, banking
+  // accomplishments, paying their rewards and toasting the player. The panel
+  // read used to empty at `g.result`, so those toasts pointed at a tree that
+  // had vanished. It stands as long as the realm does, and says the same thing
+  // the sim's own record says.
+  const post = actions.getMissions();
+  ok(post.length === missionsFor(ctx, 'ISR').length && post.length > 0,
+    'the mission tree stands after the campaign verdict: ' + post.length);
+  checkMissions(ctx);
+  const banked = new Set(game.tags.ISR.missionsDone || []);
+  const drawn = actions.getMissions().filter((m) => m.status === 'done').map((m) => m.id);
+  ok(drawn.length === banked.size && drawn.every((id) => banked.has(id)),
+    'panel and sim agree on what is accomplished after the verdict: ' + drawn.length);
   ok(actions.getDecisions().some((d) => d.name === 'Run National Exercises'),
     'national decisions use modern state language');
   ok(actions.getDoctrine().axes.some((a) => a.name === 'Executive and Parliament'),

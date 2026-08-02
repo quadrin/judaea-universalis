@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
@@ -722,8 +722,22 @@ export function chapterChain(list, bookmarkId) {
   return out;
 }
 
+// Three lookups in the order a crown answers to: the chapter's own table under
+// the name this realm wears now, then the chain a formed crown brings with it
+// (SPEC §102), then — for a crown that brings none — the table the realm was
+// already working under the name it used to wear.
+//
+// That last one is the §102/§135 rule every other bookmark table already gets
+// through `contentForTag`, and missions were the one table reading the raw key.
+// A player who proclaims a greater crown whose formable carries no chain of its
+// own — Herod's JUD in 40 BCE, Jordan's UAR in 1948, Byzantium's ROM in 614 —
+// watched the whole tree vanish at the moment of the proclamation, because the
+// era's chain was filed under a name the proclamation had just deleted. The
+// formable's own chain still answers BEFORE the inherited one, so a JUD that
+// becomes MLI works Israel's chain rather than the one it has outgrown.
 export function missionsFor(ctx, tag) {
-  const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
+  const table = (ctx.bookmark && ctx.bookmark.missions) || null;
+  const own = table && table[tag];
   if (Array.isArray(own) && own.length) return own;
   for (const f of FORMABLES) {
     if (!f || f.to !== tag || !Array.isArray(f.missions) || !f.missions.length) continue;
@@ -731,6 +745,8 @@ export function missionsFor(ctx, tag) {
     const list = chapterChain(f.missions, ctx.bookmark && ctx.bookmark.id);
     if (Array.isArray(list) && list.length) return list;
   }
+  const inherited = contentForTag(ctx, table, tag);
+  if (Array.isArray(inherited) && inherited.length) return chapterChain(inherited, ctx.bookmark && ctx.bookmark.id);
   return null;
 }
 
