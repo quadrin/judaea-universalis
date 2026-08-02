@@ -436,4 +436,190 @@ export const EVENTS_40_WORLD = [
       },
     ],
   },
+
+  // ── SPEC §206: the south the frame now holds. Augustus inherits two ends
+  // of the incense road and tests both in the same three years — an army
+  // sent down the Arabian side, an army sent up the Nile — and both come
+  // back with the same lesson, which the treaty of Samos then writes down.
+  // Sources: Strabo XVI.4.22-24 and XVII.1.53-54 (his friend Gallus
+  // commanded the one and his host Petronius the other), Res Gestae 26,
+  // Pliny NH VI.181. The rule for admission is §104's: all of this happens
+  // whichever way the Judaean chapter went. ─────────────────────────────────
+
+  // ── S1 · −25 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev5_w_thirst_road',
+    title: 'The Thirst Road',
+    worldLabel: 'Aelius Gallus marches on Arabia Felix and the desert defeats him',
+    desc: 'Augustus has heard what everyone has heard: that the Arabians at the far '
+      + 'end of the incense road are the richest people in the world, that they '
+      + 'sell and never buy, and that all the coin of the empire drains south '
+      + 'through their hands. So Aelius Gallus, prefect of Egypt, takes ten '
+      + 'thousand men across the Red Sea to go and hold the warehouse. The guide '
+      + 'is Syllaeus, minister of the Nabataean king, and Strabo — who knows '
+      + 'Gallus personally and wants him blameless — swears the Nabataean led '
+      + 'the column wrong on purpose: six months on waterless detours for a '
+      + 'march of sixty days. The army takes town after town losing almost no '
+      + 'one to iron, and hundreds a week to thirst and disease. It reaches '
+      + 'Marib, lays siege for six days, and turns back two days short of the '
+      + 'frankincense country itself — beaten, says Strabo, by the sun and the '
+      + 'water, and by treachery with a name he is happy to supply. Rome never '
+      + 'tries Arabia by land again. The monsoon sea will get the trade instead, '
+      + 'and the kingdoms of the south have learned exactly what the desert is '
+      + 'worth to them.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -25, m: 3 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'ROM'),
+    historical: 'Aelius Gallus marched on Marib in 26-25 BCE and was beaten by thirst and distance (Strabo XVI.4.22-24; Res Gestae 26.5); Rome never repeated the attempt by land.',
+    options: [
+      {
+        label: 'The sun does the fighting',
+        tooltip: 'Rome −6,000 manpower and −150 talents, lost to no enemy in particular. Syllaeus is blamed at Rome (Roman opinion of Nabataea −40). Saba +1 stability, and Marib carries "The Walls That Held" (−1 unrest for 5 years): the wells outfought the legion.',
+        effects: guard('ev5_w_thirst_road:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'ROM', { manpower: -6000, treasury: -150 });
+          if (alive(ctx, 'NAB')) setOpinion(ctx, 'ROM', 'NAB', -40);
+          if (alive(ctx, 'SAB')) h.adjust(ctx, 'SAB', { stability: 1 });
+          stir(ctx, ['Marib'], {
+            id: 'walls_that_held', name: 'The Walls That Held', months: 60,
+            effects: { unrest: -1 },
+          });
+          h.setFlag(ctx, 'thirstRoad', true);
+          h.chronicle(ctx, 'era', 'Aelius Gallus marches ten thousand men to the walls of Marib and is beaten by thirst two days short of the incense country. Rome never tries Arabia by land again.');
+        }),
+      },
+    ],
+  },
+
+  // ── S2 · −25 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev5_w_kandake_war',
+    title: 'The One-Eyed Queen Comes North',
+    worldLabel: 'The Kandake of Kush sacks Syene and carries off the head of Augustus',
+    desc: 'While Gallus is losing his army to the Arabian desert, the garrisons he '
+      + 'stripped from the Nile frontier are noticed missing by the power that '
+      + 'watches it. The Kandake of Kush — the queens of Meroe rule under that '
+      + 'title, and Strabo says this one was blind in one eye and none the '
+      + 'slower for it — comes down the cataracts with thirty thousand men, '
+      + 'takes Syene, Elephantine and Philae, enslaves the townspeople, and '
+      + 'pulls down every statue of the new master of the world she can reach. '
+      + 'The bronze head of one of them goes south as plunder and is buried '
+      + 'under the doorsill of a temple in Meroe, so that every foot entering '
+      + 'tramples Augustus forever — where archaeologists will find it, staring '
+      + 'up, two thousand years on. Rome has met the other end of the Nile, and '
+      + 'it is not Egypt.',
+    forTag: 'both',
+    decider: 'KSH',
+    date: { y: -25, m: 10 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'KSH') && alive(ctx, 'ROM'),
+    historical: 'Amanirenas\' army sacked Syene and Philae in 25 BCE and carried off the emperor\'s statues (Strabo XVII.1.54); a bronze head of Augustus was excavated at Meroe in 1910, buried beneath a temple threshold.',
+    options: [
+      {
+        label: 'Bury the emperor under the doorsill',
+        tooltip: 'Syene is sacked ("The Kandake\'s Sack": +2 unrest, −30% tax for 3 years). Kush +100 talents of plunder and +1 stability; the two courts learn to hate each other (−80 / −60 opinion).',
+        effects: guard('ev5_w_kandake_war:0', (ctx) => {
+          const h = ctx.helpers;
+          stir(ctx, ['Syene'], {
+            id: 'kandake_sack', name: 'The Kandake\'s Sack', months: 36,
+            effects: { unrest: 2, taxMult: 0.7 },
+          });
+          h.adjust(ctx, 'KSH', { treasury: 100, stability: 1 });
+          setOpinion(ctx, 'KSH', 'ROM', -80);
+          setOpinion(ctx, 'ROM', 'KSH', -60);
+          h.setFlag(ctx, 'kandakeWar', true);
+          h.chronicle(ctx, 'era', 'The one-eyed Kandake comes down the cataracts, sacks Syene, and buries the head of Augustus under a temple doorsill at Meroe, face up, to be walked on forever.');
+        }),
+      },
+    ],
+  },
+
+  // ── S3 · −23 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev5_w_petronius',
+    title: 'Petronius Goes Up the Cataracts',
+    worldLabel: 'Rome burns Napata; the frontier is fixed at the first cataract',
+    desc: 'The answer comes under Gaius Petronius, the next prefect, with ten '
+      + 'thousand infantry against an enemy Strabo calls badly armed and '
+      + 'magnificently led. Petronius retakes the towns, storms the Kandake\'s '
+      + 'camps, and does what no Roman army will ever do again: marches a '
+      + 'thousand miles up the Nile and burns Napata, the old royal city of '
+      + 'Kush, sending prisoners to Augustus and selling the rest. And then he '
+      + 'comes back. There is nothing to hold — the land between the cataracts '
+      + 'feeds no army, and Meroe itself is another month\'s march past '
+      + 'everything. He garrisons the border strip, beats off the counterattack, '
+      + 'and the war settles into the shape both sides can live in. The queen\'s '
+      + 'envoys ask for terms. Petronius, says Strabo, told them to take it up '
+      + 'with Caesar; they said they did not know who Caesar was or where he '
+      + 'lived; he gave them an escort.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -23, m: 4 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'ROM') && alive(ctx, 'KSH') && !!(ctx.game.flags && ctx.game.flags.kandakeWar),
+    historical: 'Petronius\' counter-campaign of 24-22 BCE reached and burned Napata (Strabo XVII.1.54); the frontier settled at Hiera Sykaminos for three centuries.',
+    options: [
+      {
+        label: 'March to Napata and back',
+        tooltip: 'Napata is burned ("Petronius\' Fire": +2 unrest, −30% tax for 4 years). Kush −100 talents, −3,000 manpower, −1 stability. The queen\'s envoys are sent to find Caesar.',
+        effects: guard('ev5_w_petronius:0', (ctx) => {
+          const h = ctx.helpers;
+          stir(ctx, ['Napata'], {
+            id: 'petronius_fire', name: 'Petronius\' Fire', months: 48,
+            effects: { unrest: 2, taxMult: 0.7 },
+          });
+          h.adjust(ctx, 'KSH', { treasury: -100, manpower: -3000, stability: -1 });
+          h.setFlag(ctx, 'petroniusNapata', true);
+          h.chronicle(ctx, 'era', 'Petronius marches a thousand miles up the Nile, burns Napata, and comes back — there is nothing up there an army can hold. The envoys of the Kandake ask where Caesar lives.');
+        }),
+      },
+    ],
+  },
+
+  // ── S4 · −20 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev5_w_samos_treaty',
+    title: 'The Envoys Reach Samos',
+    worldLabel: 'Augustus remits the tribute: peace with Kush on the Kandake\'s terms',
+    desc: 'The escort Petronius gave them works: the Meroitic envoys find Caesar '
+      + 'wintering on Samos, dealing with embassies from India in the same '
+      + 'season, and put their case. What happens next is the strangest thing '
+      + 'in the whole war, and Strabo reports it flat: Augustus grants '
+      + 'everything they ask, and remits the tribute besides. No client king is '
+      + 'installed at Meroe. No province is organized. The frontier is drawn at '
+      + 'the first cataract with a garrisoned strip beyond it, and south of '
+      + 'that line the queens rule as they ruled before Rome existed. It is the '
+      + 'only negotiated peace Augustus ever signed with an undefeated power, '
+      + 'and it holds for three hundred years — longer than the Rhine, longer '
+      + 'than the Euphrates, longer than every frontier the legions actually '
+      + 'won. The head stays under the doorsill.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: -20, m: 5 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'ROM') && alive(ctx, 'KSH') && !!(ctx.game.flags && ctx.game.flags.kandakeWar),
+    historical: 'The Meroitic embassy reached Augustus on Samos in 21-20 BCE and the tribute was remitted (Strabo XVII.1.54); the frontier at the first cataract held for three centuries.',
+    options: [
+      {
+        label: 'Everything they ask, and the tribute besides',
+        tooltip: 'Peace on the Kandake\'s terms: Kush +1 stability, and the two courts settle into three centuries of correct relations (+50 opinion both ways). The head stays under the doorsill.',
+        effects: guard('ev5_w_samos_treaty:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'KSH', { stability: 1 });
+          setOpinion(ctx, 'KSH', 'ROM', 50);
+          setOpinion(ctx, 'ROM', 'KSH', 50);
+          h.setFlag(ctx, 'samosPeace', true);
+          h.chronicle(ctx, 'era', 'The envoys of Kush find Augustus on Samos and are granted everything they ask, the tribute remitted besides. The frontier at the cataract will outlast every one the legions won.');
+        }),
+      },
+    ],
+  },
 ];

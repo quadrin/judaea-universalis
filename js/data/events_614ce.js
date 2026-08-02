@@ -3422,4 +3422,157 @@ export const EVENTS_614 = [
       },
     ],
   },
+
+  // ── SPEC §206: the south of the same story. The chapter's spine is the
+  // last great war of antiquity and the rise that ends it; these three are
+  // that rise as the south lived it — the king who sheltered the refugees
+  // the year after this chapter opens, the governor who changed the state's
+  // religion by letter, and the one river the conquest could not take.
+  // Sources: Ibn Ishaq for the hijra to Abyssinia, al-Tabari for Badhan,
+  // the History of the Patriarchs and al-Maqrizi for the Baqt. ─────────────
+
+  // ── S1 · 615 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s_hijra_aksum',
+    title: 'A King In Whose Land No One Is Wronged',
+    worldLabel: 'The first hijra: Muhammad\'s followers find refuge at the Aksumite court',
+    desc: 'While the two empires tear at each other over the True Cross, a small '
+      + 'boat crosses the strait at the bottom of the map. A new preaching in '
+      + 'Mecca has earned its followers the attention of the Quraysh, and the '
+      + 'preacher sends the weakest of them — eleven men and four women in '
+      + 'the first sailing, more later, his own daughter among them — across '
+      + 'the water to Aksum, with an instruction the tradition preserves: '
+      + 'there is a king there in whose land no one is wronged. The Quraysh '
+      + 'send agents after them with presents for the court, asking for '
+      + 'extradition. The negus hears both sides, has the refugees recite '
+      + 'what they can of the new revelation — the tradition says it was the '
+      + 'chapter of Mary, and that he wept and drew a line on the floor with '
+      + 'his staff, saying the difference between his faith and theirs was '
+      + 'no wider than the line — and sends the presents back. The '
+      + 'refugees stay fifteen years, unwronged. Islam\'s first state '
+      + 'protection is a Christian king\'s, and neither side\'s chroniclers '
+      + 'ever forget it.',
+    forTag: 'both',
+    decider: 'AXM',
+    date: { y: 615, m: 7 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s_hijra_aksum:when', (ctx) => alive(ctx, 'AXM')),
+    historical: 'The first emigration to Abyssinia is dated 615; Ibn Ishaq preserves the Negus\' hearing, the recitation of Surat Maryam, and the refusal of extradition.',
+    options: [
+      {
+        label: 'Send the presents back',
+        tooltip: 'Aksum +1 stability, and the faith rising at Mecca remembers its first protector (+100 opinion toward Aksum, +40 back). The line on the floor is drawn.',
+        effects: guard('ev_s_hijra_aksum:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'AXM', { stability: 1 });
+          setOpinion(ctx, 'RSH', 'AXM', 100);
+          setOpinion(ctx, 'AXM', 'RSH', 40);
+          h.setFlag(ctx, 'hijraToAksum', true);
+          h.chronicle(ctx, 'era', 'The Negus hears the refugees from Mecca recite the chapter of Mary, draws a line on the floor with his staff, and sends the Quraysh\'s presents back. No one in his land is wronged.');
+        }),
+      },
+    ],
+  },
+
+  // ── S2 · 631 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s_badhan_submits',
+    title: 'The Governor Changes His Capital\'s God',
+    worldLabel: 'Badhan of Yemen submits to Medina; the abna convert and the south follows',
+    desc: 'The Persian province of Yemen ends by correspondence. Badhan, governor '
+      + 'at Sana\'a for the King of Kings, once received an instruction from '
+      + 'Ctesiphon to arrest a self-proclaimed prophet in the Hejaz and send '
+      + 'him north. The tradition relishes what happened instead: the '
+      + 'prophet informed Badhan\'s envoys, with dates, that their King of '
+      + 'Kings had just been murdered by his own son — and when the news '
+      + 'from Ctesiphon confirmed it, the governor drew the reasonable '
+      + 'conclusion about which power in Arabia now had better information. '
+      + 'With Persia devouring itself after Khosrow\'s fall, Badhan '
+      + 'transferred his allegiance, and his province, by letter; the abna '
+      + '— the half-Persian garrison sons who are all that remains of '
+      + 'Wahriz\'s convict army — went over with him, and the incense '
+      + 'country that Rome could not take by thirst and Persia took with '
+      + 'eight ships passes to Medina without a battle. The great southern '
+      + 'trade now answers to the same city as the faith.',
+    forTag: 'both',
+    decider: 'RSH',
+    date: { y: 631, m: 1 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s_badhan_submits:when', (ctx) => freeCaliphate(ctx)),
+    historical: 'Badhan\'s submission is dated to 628-631 in the tradition (al-Tabari): the governor went over on the news of Khosrow II\'s death, and the abna with him; Yemen entered the caliphate without conquest.',
+    options: [
+      {
+        label: 'The province transfers by letter',
+        tooltip: 'Yemen, the Hadramawt shore, Dioscurida and the Omani coast pass to the caliphate and take its faith; the caliphate +5 legitimacy. Not a sword drawn.',
+        effects: guard('ev_s_badhan_submits:0', (ctx) => {
+          const h = ctx.helpers;
+          const cal = who(ctx, 'RSH');
+          for (const n of ['Zafar', 'Muza', 'Eudaemon Arabia', 'Marib', 'Najran',
+            'Shabwa', 'Moscha', 'Dioscurida', 'Omana', 'Mazun']) {
+            const p = ctx.prov(n);
+            if (!p || p.impassable) continue;
+            const holder = ctx.game.tags[p.owner];
+            const sasHeld = p.owner === who(ctx, 'SAS');
+            if (sasHeld || !holder || holder.alive === false) {
+              h.changeOwner(ctx, n, cal);
+              makeMuslim(p);
+            }
+          }
+          h.adjust(ctx, cal, { legitimacy: 5 });
+          h.setFlag(ctx, 'badhanSubmits', true);
+          h.chronicle(ctx, 'era', 'Badhan of Sana\'a, reading which power in Arabia has better information, transfers the Persian south to Medina by letter; the abna convert with their governor.');
+        }),
+      },
+    ],
+  },
+
+  // ── S3 · 652 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s_baqt',
+    title: 'The River Holds at Dongola',
+    worldLabel: 'The Nubian archers stop the conquest; the Baqt is signed',
+    desc: 'The armies that took Syria, Persia and Egypt in a generation march '
+      + 'south up the Nile and meet the one enemy that stops them cold. Twice '
+      + 'the Arabs come to Makuria; the second time they besiege Dongola '
+      + 'itself, and the Nubian archers — the same bowmen the pharaohs hired '
+      + 'and Rome learned to leave alone — shoot so precisely that the '
+      + 'Arabic sources call them the pupil-smiters, archers of the eye. '
+      + 'What follows has no parallel in the whole conquest: a treaty '
+      + 'between equals. The Baqt — the name is just the old word pactum, '
+      + 'worn smooth — fixes the border at the first cataract, binds each '
+      + 'side to keep the other\'s travelers safe, and sets an exchange: '
+      + 'slaves southward-bound for grain, cloth and horses. No tribute, no '
+      + 'garrison, no governor. It will be renewed, haggled over and '
+      + 'occasionally shot at for seven hundred years — the longest-kept '
+      + 'treaty in the history of either civilization, made by the one '
+      + 'kingdom the conquest could not digest.',
+    forTag: 'both',
+    decider: 'NOB',
+    date: { y: 652, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s_baqt:when', (ctx) => alive(ctx, 'NOB') && freeCaliphate(ctx)),
+    historical: 'The Baqt followed the failed siege of Dongola in 652; the treaty of exchange and mutual protection between Makuria and Islamic Egypt held, with interruptions, into the fourteenth century.',
+    options: [
+      {
+        label: 'A treaty between equals',
+        tooltip: 'The border fixes at the cataract: any war between the caliphate and Nubia ends in a white peace, and the two courts settle into seven centuries of correct relations (+50 opinion both ways). Nubia +1 stability.',
+        effects: guard('ev_s_baqt:0', (ctx) => {
+          const h = ctx.helpers;
+          const cal = who(ctx, 'RSH');
+          const nob = who(ctx, 'NOB');
+          try { h.endWar(ctx, cal, nob, null); } catch (e) { /* no war to settle */ }
+          h.adjust(ctx, nob, { stability: 1 });
+          setOpinion(ctx, 'NOB', 'RSH', 50);
+          setOpinion(ctx, 'RSH', 'NOB', 50);
+          h.setFlag(ctx, 'baqtSigned', true);
+          h.chronicle(ctx, 'era', 'The archers of the eye hold Dongola and the conquest signs the Baqt: no tribute, no garrison, a border at the cataract kept for seven hundred years.');
+        }),
+      },
+    ],
+  },
 ];

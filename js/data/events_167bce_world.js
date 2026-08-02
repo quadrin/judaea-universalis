@@ -789,4 +789,277 @@ export const EVENTS_167_WORLD = [
       },
     ],
   },
+
+  // ── SPEC §206: the east the frame now holds. The same world clock that
+  // walks the west (Carthage, Corinth, the expulsion from Rome) walks the
+  // far side of the Seleucid world: the satrapies the king died marching to
+  // hold, the Greek kingdom beyond them, the horse peoples behind that, and
+  // the incense country the trade winds answer to. Sources inline; the rule
+  // for admission is unchanged — it must happen whichever way Judaea's war
+  // went, because none of these places has heard of Judaea's war. ──────────
+
+  // ── E1 · −148 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_w_upper_satrapies',
+    title: 'The Upper Satrapies Change Hands',
+    worldLabel: 'Mithridates of Parthia takes Media and the east; Carmania slips the Seleucid grasp',
+    desc: 'Antiochus Epiphanes died at Tabae in Persis, on the road east, marching to '
+      + 'hold exactly this. It held for sixteen years on the strength of the march. '
+      + 'Now Mithridates of Parthia — a king the geographers still file under '
+      + '"nomads" — takes Media in a single season, and with Media everything east '
+      + 'of it stops answering: the Carmanian hill country and its harbor on the '
+      + 'strait, and the two Greek provinces beyond the salt desert, Margiana of '
+      + 'the vines and Aria of the hundred villages, which the king of Bactria had '
+      + 'held since Antiochus was a hostage in Rome. The clerks at Antioch keep the '
+      + 'satrapy lists current for another generation, the way a man keeps writing '
+      + 'to a house that has stopped answering letters. Justin, who compresses '
+      + 'forty years into a paragraph, gives the whole thing five words: several '
+      + 'peoples came over to him.',
+    forTag: 'both',
+    decider: 'PAR',
+    date: { y: -148, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_w_upper_satrapies:when', (ctx) => alive(ctx, 'PAR')),
+    historical: 'Mithridates I took Media about 148 BCE and the eastern satrapies followed (Justin XLI.6; Strabo XI.9); the Seleucid east never came back.',
+    options: [
+      {
+        label: 'Several peoples come over to him',
+        tooltip: 'Carmana and Harmozeia pass from the Seleucid kingdom to Parthia; Artacoana and Antiochia Margiana pass from Bactria. Parthia +10 legitimacy; the Seleucid crown −1 stability; Bactria remembers (−60 opinion of Parthia).',
+        effects: guard('ev_w_upper_satrapies:0', (ctx) => {
+          const h = ctx.helpers;
+          const take = (names, from) => {
+            for (const n of names) {
+              const p = ctx.prov(n);
+              if (!p || p.impassable || p.owner !== who(ctx, from)) continue;
+              h.changeOwner(ctx, n, 'PAR');
+            }
+          };
+          take(['Carmana', 'Harmozeia'], 'SEL');
+          take(['Artacoana', 'Antiochia Margiana'], 'GBA');
+          h.adjust(ctx, 'PAR', { legitimacy: 10 });
+          if (alive(ctx, 'SEL')) h.adjust(ctx, 'SEL', { stability: -1 });
+          if (alive(ctx, 'GBA')) setOpinion(ctx, 'GBA', 'PAR', -60);
+          h.setFlag(ctx, 'mithridatesEast', true);
+          h.chronicle(ctx, 'era', 'Mithridates of Parthia takes Media and the upper satrapies stop answering to Antioch: Carmania, Aria, Margiana. The clerks keep the lists current for a generation anyway.');
+        }),
+      },
+    ],
+  },
+
+  // ── E2 · −145 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_w_eucratides_end',
+    title: 'The Chariot Through the Blood',
+    worldLabel: 'Eucratides of Bactria is murdered by his own son',
+    desc: 'Eucratides the Great — usurper, then king, then conqueror of more of India '
+      + 'than any Greek since Alexander — rides home from his Indian wars and is '
+      + 'killed on the road by his own son and co-regent. Justin preserves what the '
+      + 'son did next, and it is the detail the whole century keeps: he drove his '
+      + 'chariot through the blood, and ordered the body cast out unburied. A '
+      + 'kingdom of a thousand cities, Greek to the last civic decree, at the far '
+      + 'edge of the world from every other Greek — and it has learned nothing in '
+      + 'a hundred years except what the dynasties it left behind also knew: that '
+      + 'the succession is the one war you cannot win by phalanx. The horse '
+      + 'peoples north of the Jaxartes are already moving. They will not need to '
+      + 'besiege the thousand cities. They will only need the cities to keep '
+      + 'doing this.',
+    forTag: 'both',
+    decider: 'GBA',
+    date: { y: -145, m: 5 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_w_eucratides_end:when', (ctx) => alive(ctx, 'GBA')),
+    historical: 'Eucratides I was murdered by his son about 145 BCE (Justin XLI.6.5); the kingdom fought itself as the nomad migrations gathered.',
+    options: [
+      {
+        label: 'The body lies unburied',
+        tooltip: 'Bactria −2 stability, −15 legitimacy, and "The Parricide\'s Kingdom" (−5% morale for 10 years). The grass north of the river takes note.',
+        effects: guard('ev_w_eucratides_end:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'GBA', { stability: -2, legitimacy: -15 });
+          h.addTagModifier(ctx, 'GBA', {
+            id: 'parricides_kingdom', name: 'The Parricide\'s Kingdom', months: 120,
+            effects: { moraleMult: 0.95 },
+          });
+          h.setFlag(ctx, 'eucratidesMurdered', true);
+          h.chronicle(ctx, 'era', 'Eucratides of Bactria is murdered by his son, who drives his chariot through the blood and forbids the burial. The thousand cities begin to fight themselves.');
+        }),
+      },
+    ],
+  },
+
+  // ── E3 · −129 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_w_grass_breaks_in',
+    title: 'The Grass Breaks In',
+    worldLabel: 'The Saka overrun the Greek east; two Kings of Kings fall in battle',
+    desc: 'It begins far away, as these things do: a people called the Yuezhi lose a '
+      + 'war on the borders of China and move west, and everyone they land on '
+      + 'lands on someone else. By this year the wave has reached the oldest Greek '
+      + 'frontier in Asia. The kingdom of Bactria — parricide, civil war, and all '
+      + '— goes under it; travelers a generation later will describe the thousand '
+      + 'cities as walls with nomads camping in them. Parthia, which spent thirty '
+      + 'years taking the east from the Greeks, now has to hold it against the '
+      + 'grass, and the bill is terrible: Phraates falls in battle against the '
+      + 'Saka within two years, his uncle Artabanus within five. The horse '
+      + 'peoples are not an empire and cannot be treated with as one; they are '
+      + 'weather. The King of Kings\' answer, when it comes, will be the oldest '
+      + 'one in the book — pay some of them to settle, and point them at the '
+      + 'rest.',
+    forTag: 'both',
+    decider: 'PAR',
+    date: { y: -129, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_w_grass_breaks_in:when', (ctx) => alive(ctx, 'PAR')),
+    historical: 'The Saka and Yuezhi migrations destroyed Greek Bactria in the 130s BCE; Phraates II fell in battle against them in 127, Artabanus I about 124 (Justin XLII.1-2).',
+    options: [
+      {
+        label: 'They are not an empire; they are weather',
+        tooltip: 'Greek Bactria falls: its remaining provinces pass to Parthia as contested wreckage, its armies are gone. Parthia −8,000 manpower, −100 talents, −1 stability, and "The Steppe at the Door" (−7% manpower for 5 years).',
+        effects: guard('ev_w_grass_breaks_in:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          if (alive(ctx, 'GBA')) {
+            for (const n of ['Zranka', 'Phrada', 'Artacoana', 'Antiochia Margiana']) {
+              const p = ctx.prov(n);
+              if (p && !p.impassable && p.owner === who(ctx, 'GBA')) h.changeOwner(ctx, n, 'PAR');
+            }
+            for (const id of Object.keys(g.armies || {})) {
+              const a = g.armies[id];
+              if (a && a.tag === who(ctx, 'GBA')) h.removeArmy(ctx, id);
+            }
+          }
+          h.adjust(ctx, 'PAR', { manpower: -8000, treasury: -100, stability: -1 });
+          h.addTagModifier(ctx, 'PAR', {
+            id: 'steppe_at_the_door', name: 'The Steppe at the Door', months: 60,
+            effects: { manpowerMult: 0.93 },
+          });
+          h.setFlag(ctx, 'sakaBreakthrough', true);
+          h.chronicle(ctx, 'era', 'The Saka break the Greek kingdom of Bactria and pour into the Parthian east; Phraates falls in battle against them, and after him Artabanus. The grass has reached the sown.');
+        }),
+      },
+    ],
+  },
+
+  // ── E4 · −110 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_w_sakastan_settled',
+    title: 'The Land Takes Their Name',
+    worldLabel: 'Mithridates the Great settles the Saka on the Helmand: Sakastan',
+    desc: 'The second Mithridates finishes what the dead kings started, and not by '
+      + 'winning battles — by ending them. The Saka bands that broke two Kings of '
+      + 'Kings are brought to terms and given the one thing a moving people can '
+      + 'be given that stops the moving: land. The lake country of the lower '
+      + 'Helmand, old Drangiana, where the river dies in its reeds — they settle '
+      + 'it as vassals of the crown that could not beat them, which is a sentence '
+      + 'every chancery in the east reads twice. Within a generation the maps '
+      + 'surrender too: the province is Sakastan now, the land of the Saka, and '
+      + 'it will still be called that — Sistan — when every empire in this game '
+      + 'is dust. The King of Kings has learned the steppe\'s own lesson: you do '
+      + 'not defeat weather. You plant against it.',
+    forTag: 'both',
+    decider: 'PAR',
+    date: { y: -110, m: 4 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_w_sakastan_settled:when', (ctx) => {
+      if (!alive(ctx, 'PAR') || (ctx.game.tags.SAK && ctx.game.tags.SAK.alive !== false)) return false;
+      const z = ctx.prov('Zranka');
+      const f = ctx.prov('Phrada');
+      return !!((z && z.owner === who(ctx, 'PAR')) || (f && f.owner === who(ctx, 'PAR')));
+    }),
+    historical: 'Mithridates II subdued the Saka about 110 BCE and settled them in Drangiana as vassals; the province has been Sakastan — Sistan — ever since.',
+    options: [
+      {
+        label: 'Plant against the weather',
+        tooltip: 'Sakastan rises on the Helmand: the Saka horse-lords take Zranka and Phrada under their own banner, warm toward the crown that settled them (+60 opinion both ways). The 67 BCE map is being drawn.',
+        effects: guard('ev_w_sakastan_settled:0', (ctx) => {
+          const h = ctx.helpers;
+          const par = who(ctx, 'PAR');
+          const ground = ['Zranka', 'Phrada'].filter((n) => {
+            const p = ctx.prov(n);
+            return p && p.owner === par;
+          });
+          if (!ground.length) return;
+          const born = h.secedeTag(ctx, par, 'SAK', {
+            provinces: ground,
+            capital: 'Phrada',
+            share: 0.05,
+            stability: 0,
+            legitimacy: 60,
+            opinion: 60,
+            ruler: { name: 'Maues', title: 'King of the Saka', gov: 2, infl: 2, mar: 4, age: 38 },
+          });
+          if (!born) return;
+          setOpinion(ctx, 'PAR', 'SAK', 60);
+          setOpinion(ctx, 'SAK', 'PAR', 60);
+          h.setFlag(ctx, 'sakastanSettled', true);
+          h.chronicle(ctx, 'era', 'Mithridates the Great settles the Saka on the lower Helmand as vassals of the crown that could not beat them. The province is Sakastan now, and the name will outlast every empire on this map.');
+        }),
+      },
+    ],
+  },
+
+  // ── E5 · −110 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_w_house_of_raydan',
+    title: 'The House of Raydan',
+    worldLabel: 'The Himyarite highlanders break from Saba and take the sea trade',
+    desc: 'At the far end of the incense road, where the frankincense actually grows '
+      + 'and the whole apparatus of caravans and kingdoms begins, something has '
+      + 'shifted that no caravan will report for years: the highland clans around '
+      + 'the fortress of Raydan have stopped acknowledging the old mukarrib of '
+      + 'Saba. The kingdom of Saba is the oldest political fact in Arabia — the '
+      + 'dam at Marib is older than Rome — and its title has been fought over '
+      + 'before. What is different about the house of Raydan is the direction it '
+      + 'faces. Saba is a caravan state; the newcomers hold the strait and the '
+      + 'southern ports, and the sea trade to Egypt and to India is beginning to '
+      + 'learn the monsoon. The future belongs to whoever owns the coast when '
+      + 'that lesson is fully learned, and the men of Raydan — Himyar, the '
+      + 'traders will call them — have just claimed the coast.',
+    forTag: 'both',
+    decider: 'SAB',
+    date: { y: -110, m: 9 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_w_house_of_raydan:when', (ctx) => {
+      if (!alive(ctx, 'SAB') || (ctx.game.tags.HMY && ctx.game.tags.HMY.alive !== false)) return false;
+      const z = ctx.prov('Zafar');
+      return !!(z && z.owner === who(ctx, 'SAB'));
+    }),
+    historical: 'The Himyarite kingdom emerged from Saba about 110 BCE, seated at Zafar under the dynastic style dhu-Raydan, and took the southern coast as the monsoon trade rose.',
+    options: [
+      {
+        label: 'The highlanders claim the coast',
+        tooltip: 'Himyar rises at Zafar with Muza\'s roadstead; Saba keeps Marib, Najran and the caravan road, and the two crowns begin a century of contesting one title (−60 opinion both ways). The 67 BCE map is being drawn.',
+        effects: guard('ev_w_house_of_raydan:0', (ctx) => {
+          const h = ctx.helpers;
+          const sab = who(ctx, 'SAB');
+          const ground = ['Zafar', 'Muza'].filter((n) => {
+            const p = ctx.prov(n);
+            return p && p.owner === sab;
+          });
+          if (!ground.length) return;
+          const born = h.secedeTag(ctx, sab, 'HMY', {
+            provinces: ground,
+            capital: 'Zafar',
+            share: 0.25,
+            stability: 0,
+            legitimacy: 55,
+            opinion: -60,
+            ruler: { name: 'Dhu Raydan', title: 'King of Himyar', gov: 3, infl: 2, mar: 2, age: 40 },
+          });
+          if (!born) return;
+          setOpinion(ctx, 'SAB', 'HMY', -60);
+          setOpinion(ctx, 'HMY', 'SAB', -60);
+          h.setFlag(ctx, 'raydanRises', true);
+          h.chronicle(ctx, 'era', 'The highland clans around Raydan break from old Saba and take the southern ports: Himyar. The monsoon is being learned, and the newcomers hold the coast it pays.');
+        }),
+      },
+    ],
+  },
 ];

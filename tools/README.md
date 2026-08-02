@@ -341,6 +341,25 @@ card keeping a musters line that names the tab in the chapter's own word, and
 one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
 carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
 now holds it.
+Since SPEC §206 (the south and the east get their history: 27 dated world
+cards on the §205 ground): the 8-year set is byte-identical — the cards that
+fire inside any 8-year window move opinions and modifiers, not trajectories.
+The runs that §206 actually lives in are the long ones, and their accepted
+lines move BY DESIGN: `node tools/autorun.mjs 105 167bce` now reports
+`ROM SNOWBALL | PAR SNOWBALL | GBA DEAD` — the first two are §111's
+documented point, and Bactria dying is the scripted Saka breakthrough of
+−129 doing its work (Saba also ends that century at three cells because
+Himyar seceded from it on schedule; both convergences are what smoke133
+pins). `node tools/autorun.mjs 60 614ce` comes back with no anomalies and
+Persia 58→41 provinces — the southern transfer to the caliphate firing in
+real flow. `node tools/autorun.mjs 295 132ce` reports the §105-documented
+third-century client deaths (OSR/ADI/CHX — kingdoms that did not survive
+that century either) plus `HDR DEAD`, which is Shammar Yuharish's union of
+300 doing exactly what its inscription says: Himyar ends that run at eight
+cells with the frankincense country absorbed. If GBA stops dying in the
+105 run, HDR stops dying in the 295, or SAK/HMY stop appearing at all,
+look at the §206 cards before the sim.
+
 Since v7.4 (SPEC §205: the frame holds all of Iran and all of Ethiopia; 67
 new cells, twelve new courts): the 8-year harness, run against a
 clean-worktree baseline in the same environment, came back with 167, 66, 132

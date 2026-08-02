@@ -547,6 +547,61 @@ export const EVENTS_132_WORLD = [
     ],
   },
 
+  // ── SPEC §206 · 300 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_shammar_union',
+    title: 'King of Saba, dhu-Raydan, Hadramawt and Yamnat',
+    worldLabel: 'Shammar Yuharish unites the incense kingdoms under Himyar',
+    desc: 'The southern end of the world\'s oldest trade route consolidates, and the '
+      + 'title says it all. For four hundred years the incense country has been '
+      + 'a quarrel of crowns — Saba against Himyar against Hadramawt, the '
+      + 'caravan road against the monsoon ports. Shammar Yuharish of Himyar '
+      + 'ends the argument: Shabwa falls, the frankincense terraces and the '
+      + 'island of Dioscurida pass to Zafar, and the king begins writing his '
+      + 'style the way his successors will write it for two hundred years — '
+      + 'king of Saba, of dhu-Raydan, of Hadramawt and of Yamnat, the whole '
+      + 'south in one breath. It is the largest state Arabia has ever '
+      + 'produced, it commands both shores of the strait\'s approaches, and '
+      + 'the two empires to the north will spend the next three centuries '
+      + 'discovering that it, too, has opinions.',
+    forTag: 'both',
+    major: true,
+    date: { y: 300, m: 5 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'HMY'),
+    historical: 'Shammar Yuharish completed the Himyarite unification about 275-300, absorbing Hadramawt; the fourfold royal style is on his inscriptions.',
+    options: [
+      {
+        label: 'The whole south in one breath',
+        tooltip: 'Hadramawt\'s lands — Shabwa, Moscha, Dioscurida — pass to Himyar, whose crown gains the fourfold style (+10 legitimacy, +5% income permanently). The old frankincense kingdom is struck from the lists.',
+        effects: guard('ev2_shammar_union:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const hmy = who(ctx, 'HMY');
+          if (alive(ctx, 'HDR')) {
+            const hdr = who(ctx, 'HDR');
+            for (const n of ['Shabwa', 'Moscha', 'Dioscurida']) {
+              const p = ctx.prov(n);
+              if (p && !p.impassable && p.owner === hdr) h.changeOwner(ctx, n, hmy);
+            }
+            for (const id of Object.keys(g.armies || {})) {
+              const a = g.armies[id];
+              if (a && a.tag === hdr) h.removeArmy(ctx, id);
+            }
+          }
+          h.adjust(ctx, hmy, { legitimacy: 10 });
+          h.addTagModifier(ctx, hmy, {
+            id: 'fourfold_style', name: 'King of Saba, dhu-Raydan, Hadramawt and Yamnat', months: -1,
+            effects: { incomeMult: 1.05 },
+          });
+          h.setFlag(ctx, 'shammarUnion', true);
+          h.chronicle(ctx, 'era', 'Shammar Yuharish takes Shabwa and the frankincense country: one crown over the whole south, and a royal style that names every kingdom it swallowed.');
+        }),
+      },
+    ],
+  },
+
   // ── W11 · 301 ─────────────────────────────────────────────────────────────
   {
     id: 'ev2_armenia_converts',
@@ -735,6 +790,110 @@ export const EVENTS_132_WORLD = [
           h.setFlag(ctx, 'calendarHeld', false);
           if (alive(ctx, 'JUD')) h.adjust(ctx, 'JUD', { legitimacy: -8 });
           h.chronicle(ctx, 'era', 'Nicaea computes its own Easter and says why in writing: the last administrative thread between the two calendars is cut.');
+        }),
+      },
+    ],
+  },
+
+  // ── SPEC §206 · 340 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_ezana_cross',
+    title: 'The Coins Change Sign',
+    worldLabel: 'Ezana of Aksum takes the Cross; the highlands become Christian',
+    desc: 'It begins, the church historians say, with a shipwreck: two Syrian boys, '
+      + 'Frumentius and Aedesius, sole survivors of a Red Sea raid, raised at '
+      + 'the Aksumite court — the one becoming tutor to the king\'s son, then '
+      + 'regent, then quietly the founder of a church. When the boy he tutored '
+      + 'is king in his own right, Frumentius travels to Alexandria to ask '
+      + 'Athanasius for a bishop for Ethiopia, and Athanasius — never a man to '
+      + 'waste an appointment — consecrates Frumentius himself and sends him '
+      + 'back. Now Ezana, king of Aksum, conqueror in four directions, does '
+      + 'what only one other king on earth has done and stakes his crown on '
+      + 'it: the royal coinage drops the old disc and crescent of the South '
+      + 'Arabian gods and strikes the Cross instead — the first coins in the '
+      + 'world to carry it. The inscriptions stop invoking Mahrem the '
+      + 'war-god mid-reign and begin invoking the Lord of Heaven. An empire '
+      + 'at the far end of everyone\'s map has bound itself to Alexandria, '
+      + 'and it will still be Christian when every empire on this map has '
+      + 'changed its gods twice.',
+    forTag: 'both',
+    major: true,
+    date: { y: 340, m: 6 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'AXM'),
+    historical: 'Ezana converted about 330-340 under Frumentius, whom Athanasius consecrated bishop (Rufinus HE I.9-10); Aksum\'s coinage is the first in the world to carry the Cross.',
+    options: [
+      {
+        label: 'Strike the Cross on the gold',
+        tooltip: 'Aksum and all its provinces become Christian; the crown gains +1 stability, +5 legitimacy, and "The Lord of Heaven" (+20% conversion strength, permanent).',
+        effects: guard('ev2_ezana_cross:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const axm = who(ctx, 'AXM');
+          const t = g.tags[axm];
+          if (t) t.religion = 'christianity';
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (p && !p.impassable && p.owner === axm) p.religion = 'christianity';
+          }
+          h.adjust(ctx, axm, { stability: 1, legitimacy: 5 });
+          h.addTagModifier(ctx, axm, {
+            id: 'lord_of_heaven', name: 'The Lord of Heaven', months: -1,
+            effects: { convertMult: 1.2 },
+          });
+          h.setFlag(ctx, 'ezanaCross', true);
+          h.chronicle(ctx, 'era', 'Ezana of Aksum takes the Cross and strikes it on his gold — the first coins in the world to carry it. The highlands bind themselves to Alexandria.');
+        }),
+      },
+    ],
+  },
+
+  // ── SPEC §206 · 350 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_meroe_falls',
+    title: 'The Granaries of the Noba',
+    worldLabel: 'Ezana marches down the Nile; the kingdom of Kush ends',
+    desc: 'The oldest state on the map dies quietly, and the man who buries it '
+      + 'leaves the account himself, cut in stone at Aksum in three scripts. '
+      + 'Ezana marches against the Noba — herdsman clans who have pushed into '
+      + 'the Nile valley and, his inscription complains, boasted and broke '
+      + 'their oaths — and what his columns actually march through is the '
+      + 'wreck of Kush: the island of Meroe, the brick temples, the granaries '
+      + 'and the cotton fields of a kingdom that watched pharaohs come and go '
+      + 'and treated with Augustus as an equal. The army burns the granaries, '
+      + 'takes the bronze statues off their plinths, and goes home. No Kushite '
+      + 'king is recorded again, ever. What remains on the river is what '
+      + 'Ezana\'s scribes called it: the Noba — chiefdoms in the shell of a '
+      + 'kingdom, herds grazing the processional ways. In two centuries their '
+      + 'descendants will take a new god from a missionary in a reed boat and '
+      + 'build Christian kingdoms that outlast Rome. The pyramids at Meroe '
+      + 'keep their own counsel either way.',
+    forTag: 'both',
+    major: true,
+    date: { y: 350, m: 4 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'AXM') && alive(ctx, 'KSH'),
+    historical: 'Ezana\'s Nubian campaign inscription (DAE 11, c. 350) records the march through a Meroe already in Noba hands; no later Kushite king is attested.',
+    options: [
+      {
+        label: 'Burn the granaries and go home',
+        tooltip: 'The kingdom of Kush ends: the court at Meroe gives way to the Noba chiefdoms (the realm is renamed under the bow of Ta-Seti, −2 stability, −15% income permanently); Meroe and Soba carry "The Burned Granaries" (+2 unrest, −30% tax for 10 years). Aksum takes +100 talents of plunder.',
+        effects: guard('ev2_meroe_falls:0', (ctx) => {
+          const h = ctx.helpers;
+          const ksh = who(ctx, 'KSH');
+          h.adjust(ctx, ksh, { stability: -2, treasury: -150 });
+          h.rebrandTag(ctx, ksh, { name: 'The Noba', flag: 'NOB' });
+          h.addTagModifier(ctx, ksh, {
+            id: 'city_abandoned', name: 'The City Abandoned', months: -1,
+            effects: { incomeMult: 0.85 },
+          });
+          stirCities(ctx, ['Meroe', 'Soba'], 'burned_granaries', 'The Burned Granaries', 120,
+            { unrest: 2, taxMult: 0.7 });
+          h.adjust(ctx, who(ctx, 'AXM'), { treasury: 100 });
+          h.setFlag(ctx, 'meroeFalls', true);
+          h.chronicle(ctx, 'fall', 'Ezana marches through the wreck of Kush, burns the granaries of the Noba, and goes home; no Kushite king is ever recorded again. The pyramids keep their own counsel.');
         }),
       },
     ],

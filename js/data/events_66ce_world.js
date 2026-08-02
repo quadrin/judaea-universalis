@@ -362,4 +362,155 @@ export const EVENTS_66_WORLD = [
       },
     ],
   },
+
+  // ── SPEC §206: the south and the east while Judaea burns. The same
+  // admission rule as the rest of the file — it happens whichever way the
+  // revolt goes, because none of it has heard of the revolt. Sources:
+  // Seneca NQ VI.8 and Pliny NH VI.181 for the Nile reconnaissance; the
+  // Periplus Maris Erythraei for itself; Josephus BJ VII.244-251 for the
+  // Alans, in the same book as the fall of Masada. ─────────────────────────
+
+  // ── S1 · 67 ───────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_sudd_report',
+    title: 'The Map Stops at the Marsh',
+    worldLabel: 'Nero\'s centurions return from the White Nile; the Ethiopian war is filed away',
+    desc: 'Two centurions of the praetorian guard have been away south for two '
+      + 'years on the strangest errand of the reign: sent by Nero, with letters '
+      + 'of passage from the king of Kush, to find where the Nile comes from — '
+      + 'and, Pliny adds dryly, to survey the approaches, because among the '
+      + 'wars the emperor was contemplating was one against Ethiopia. Seneca '
+      + 'heard their report himself and wrote it down. They passed Meroe, they '
+      + 'passed the last herds and the last birds, and then they came to a '
+      + 'marsh that the world could not cross: reeds to the horizon, water '
+      + 'with no channel, mud that would carry neither a boat nor a boot, '
+      + 'inhabited by nothing anyone could name. There, they told the '
+      + 'philosopher, we saw two rocks with an immense force of river falling '
+      + 'between them — and there they turned around. The report is filed. The '
+      + 'Ethiopian war is quietly filed with it: past the Kandake\'s kingdom '
+      + 'there is nothing to conquer but water and grass, and the emperor who '
+      + 'wanted the war has a year to live.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 67, m: 2 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'ROM'),
+    historical: 'Nero\'s praetorian reconnaissance ascended the Nile past Meroe and was stopped by the Sudd (Seneca NQ VI.8.3-4); Pliny (NH VI.181) says it scouted for a planned Ethiopian war that died with Nero.',
+    options: [
+      {
+        label: 'File the report; shelve the war',
+        tooltip: 'Kush +1 stability — the marsh is a better wall than any treaty — and the two courts\' correct relations warm a little (+20 Kushite opinion of Rome). The map south of Meroe stays blank.',
+        effects: guard('ev_fw_sudd_report:0', (ctx) => {
+          const h = ctx.helpers;
+          if (alive(ctx, 'KSH')) {
+            h.adjust(ctx, 'KSH', { stability: 1 });
+            const t = ctx.game.tags[who(ctx, 'KSH')];
+            if (t) {
+              if (!t.opinion) t.opinion = {};
+              t.opinion[who(ctx, 'ROM')] = Math.min(200, (t.opinion[who(ctx, 'ROM')] || 0) + 20);
+            }
+          }
+          h.setFlag(ctx, 'suddReport', true);
+          h.chronicle(ctx, 'era', 'Nero\'s centurions come back from the White Nile with a report of a marsh no army can cross; the Ethiopian war is filed away, and the map south of Meroe stays blank.');
+        }),
+      },
+    ],
+  },
+
+  // ── S2 · 70 ───────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_periplus',
+    title: 'The Sea Gets a Handbook',
+    worldLabel: 'A Greek merchant of Egypt writes down the monsoon trade, port by port',
+    desc: 'Somewhere in Egypt, a Greek merchant who has made the run himself sits '
+      + 'down and writes the most useful book of the century: a working pilot '
+      + 'of the southern sea, port by port, king by king, cargo by cargo. '
+      + 'Adulis, where the ivory comes down from the Aksumite highlands and '
+      + 'the ruler is Zoscales — tight with his goods, the author notes, but '
+      + 'otherwise a fine man, and schooled in Greek. Muza, humming with '
+      + 'shipowners. Eudaemon Arabia, which an emperor wrecked within living '
+      + 'memory. The frankincense shore, where the harvest is worked by the '
+      + 'king\'s convicts and the air itself is said to sicken the crews. '
+      + 'Omana on the Persian side; Dioscurida of the dragon\'s blood, rented '
+      + 'out by the Hadrami king. And through all of it the great fact the '
+      + 'book exists to teach: that the open-sea monsoon run to India, with '
+      + 'the wind named for the pilot Hippalus who first trusted it, has made '
+      + 'the whole coasting world one market. Nobody important will read it '
+      + 'for centuries. Every captain will.',
+    forTag: 'both',
+    decider: 'ROM',
+    date: { y: 70, m: 9 },
+    world: true,
+    aiOption: 0,
+    historical: 'The Periplus of the Erythraean Sea, written by an anonymous Egyptian Greek merchant about 50-70 CE, is the surviving handbook of the monsoon trade and names Zoscales, Charibael and Eleazus.',
+    options: [
+      {
+        label: 'Every captain reads it',
+        tooltip: 'The handbook trade: Adulis, Muza, Eudaemon Arabia, Omana and Moscha carry "The Merchant\'s Handbook" (+15% tax, +10% production for 10 years), and every incense crown still standing gains "The Monsoon Learned" (+10% trade for 10 years).',
+        effects: guard('ev_fw_periplus:0', (ctx) => {
+          const h = ctx.helpers;
+          stir(ctx, ['Adulis', 'Muza', 'Eudaemon Arabia', 'Omana', 'Moscha'], {
+            id: 'merchants_handbook', name: 'The Merchant\'s Handbook', months: 120,
+            effects: { taxMult: 1.15, prodMult: 1.1 },
+          });
+          for (const t of ['AXM', 'HMY', 'HDR', 'OMA', 'CHX']) {
+            if (!alive(ctx, t)) continue;
+            h.addTagModifier(ctx, t, {
+              id: 'monsoon_learned', name: 'The Monsoon Learned', months: 120,
+              effects: { tradeMult: 1.1 },
+            });
+          }
+          h.setFlag(ctx, 'periplusWritten', true);
+          h.chronicle(ctx, 'era', 'A Greek merchant of Egypt writes the monsoon sea down port by port, king by king. Nobody important will read it for centuries; every captain will.');
+        }),
+      },
+    ],
+  },
+
+  // ── S3 · 72 ───────────────────────────────────────────────────────────────
+  {
+    id: 'ev_fw_alans_gates',
+    title: 'The Alans Come Through the Gates',
+    worldLabel: 'The steppe rides through Hyrcania into Media; a king\'s ransom is paid from a rope',
+    desc: 'Josephus breaks off his own war to report it, in the same book as '
+      + 'Masada: the Alans — a Scythian people, he explains, from around the '
+      + 'Tanais and the Maeotic lake — have come through the iron gates of the '
+      + 'Caspian shore in enormous force, by arrangement with the king of '
+      + 'Hyrcania, who holds the pass and opened it. They flood Media '
+      + 'unresisted, empty a country full of cattle and of no soldiers, and '
+      + 'catch the Parthian king\'s son Pacorus so unprepared that his harem '
+      + 'and his baggage are taken and he ransoms them back for a hundred '
+      + 'talents. Tiridates of Armenia — the same Tiridates Nero crowned in '
+      + 'the theater at Rome — does stand and fight, and survives capture by '
+      + 'the width of a sword-stroke: a lasso settles over him and he cuts the '
+      + 'rope in time. The riders go home the way they came, loaded, '
+      + 'unbeaten, unpunished. The lesson lands in two capitals at once: the '
+      + 'Arsacid east has a door in it, and the man who holds Hyrcania holds '
+      + 'the hinge.',
+    forTag: 'both',
+    decider: 'PAR',
+    date: { y: 72, m: 6 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'PAR'),
+    historical: 'The Alan invasion of 72 CE through the Caspian Gates, admitted by the king of Hyrcania, ravaged Media and Armenia; Pacorus ransomed his household and Tiridates cut a lasso to escape (Josephus BJ VII.244-251).',
+    options: [
+      {
+        label: 'Cut the rope and count the cost',
+        tooltip: 'Parthia −6,000 manpower and −100 talents; Armenia −2,000 manpower. Hyrcania carries "The Gates Stood Open" (+2 unrest for 2 years) — the pass-holder let them in, and the crown knows it.',
+        effects: guard('ev_fw_alans_gates:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'PAR', { manpower: -6000, treasury: -100 });
+          if (alive(ctx, 'ARM')) h.adjust(ctx, 'ARM', { manpower: -2000 });
+          stir(ctx, ['Hyrcania'], {
+            id: 'gates_stood_open', name: 'The Gates Stood Open', months: 24,
+            effects: { unrest: 2 },
+          });
+          h.setFlag(ctx, 'alansThroughGates', true);
+          h.chronicle(ctx, 'era', 'The Alans ride through the Caspian Gates by the Hyrcanian king\'s leave, empty Media, and go home unbeaten; a Parthian prince ransoms his harem and the king of Armenia cuts a lasso from his own neck.');
+        }),
+      },
+    ],
+  },
 ];
