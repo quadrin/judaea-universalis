@@ -215,7 +215,7 @@ export const EVENTS_614_DAVID = [
           h.doctrine(ctx, 'authority', 3);
           h.doctrine(ctx, 'zeal', -1);
           // The Hasmonean answer takes the Hasmonean constitution with it
-          // (SPEC §213): a crown out of a war, with no title under it.
+          // (SPEC §214): a crown out of a war, with no title under it.
           h.setGovernment(ctx, 'JUD', 'diadem');
           h.setFlag(ctx, 'davidAnswered', true);
           h.setFlag(ctx, 'davidRefused', true);

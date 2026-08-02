@@ -1,4 +1,4 @@
-// Headless regression — SPEC §213: the constitutions a fork adopts.
+// Headless regression — SPEC §214: the constitutions a fork adopts.
 //
 // THE COMPLAINT. Five chapters ask a playable court what kind of state it is —
 // the Hasmonean diadem (167), the second government (66), the accession of the
@@ -83,7 +83,7 @@ const STARTERS = ['monarchy', 'republic', 'theocracy', 'tribal'];
 const ADOPTED = ['sanhedrin', 'lot', 'jubilee', 'noRuler',
   'priestKing', 'gerousia', 'diadem', 'davidic', 'dyarchy', 'nasi'];
 
-console.log('== §213: every government declares what it is ==');
+console.log('== §214: every government declares what it is ==');
 {
   const G = DEFINES.GOV_TYPES;
   for (const key of STARTERS.concat(ADOPTED)) {
@@ -122,7 +122,7 @@ console.log('== §213: every government declares what it is ==');
   }
 }
 
-console.log('== §213: the engine reads the table, not the four old names ==');
+console.log('== §214: the engine reads the table, not the four old names ==');
 {
   const SOURCES = ['js/sim/realm.js', 'js/sim/crisis.js', 'js/sim/revolt.js',
     'js/sim/military.js', 'js/sim/courts.js', 'js/ui/nation_panel.js'];
@@ -143,7 +143,7 @@ console.log('== §213: the engine reads the table, not the four old names ==');
     '  and answers the rules from that fallback');
 }
 
-console.log('== §213: the rules bite — succession, marriage, the crisis that cannot open ==');
+console.log('== §214: the rules bite — succession, marriage, the crisis that cannot open ==');
 {
   // A child heir under a constitution that seats councils, and under one that
   // does not. Same death, two different states afterwards.
@@ -234,7 +234,7 @@ console.log('== §213: the rules bite — succession, marriage, the crisis that 
   }
 }
 
-console.log('== §213: no court silently becomes a monarchy ==');
+console.log('== §214: no court silently becomes a monarchy ==');
 {
   // courts.js has four party-sets and there are fourteen governments. Each one
   // names the set it convenes; an unnamed one would read as King's Men.
@@ -252,7 +252,7 @@ console.log('== §213: no court silently becomes a monarchy ==');
   }
 }
 
-console.log('== §213: every fork option lands on its constitution, fired live ==');
+console.log('== §214: every fork option lands on its constitution, fired live ==');
 {
   // 66 CE — the second government (SPEC §130). Four settlements, four states.
   {
@@ -333,7 +333,7 @@ console.log('== §213: every fork option lands on its constitution, fired live =
   }
 }
 
-console.log('== §213: the roads are wired at the call site, where they can be read ==');
+console.log('== §214: the roads are wired at the call site, where they can be read ==');
 {
   // Same rule as the road markers (smoke83): a government written through a
   // table in a header is invisible to a reader checking the chapter's own text.
@@ -362,7 +362,7 @@ console.log('== §213: the roads are wired at the call site, where they can be r
   }
 }
 
-console.log('== §213: the helper refuses what it cannot do ==');
+console.log('== §214: the helper refuses what it cannot do ==');
 {
   const w = boot('66ce', 'JUD', 75);
   const realWarn = console.warn; let warned = 0;
@@ -384,5 +384,5 @@ console.log('== §213: the helper refuses what it cannot do ==');
   ok(simHelpers.setGovernment(w.ctx, 'JUD', 'jubilee') === true, 'adopting the same constitution twice is quiet');
 }
 
-console.log(failures ? `\n${failures} FAILURES` : '\nsmoke140: ALL PASS');
+console.log(failures ? `\n${failures} FAILURES` : '\nsmoke141: ALL PASS');
 process.exit(failures ? 1 : 0);

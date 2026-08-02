@@ -1166,7 +1166,7 @@ renderer.render → overlay.draw → labels.update.
   forming a nation adopts the new crown's constitution (a proclaimed UAR
   votes; the Kingdom of Israel crowns). Realm-panel Government row shows the
   type and the election countdown; elections are chronicled and toasted.
-  **Since §213 these four are the constitutions a bookmark can START with,
+  **Since §214 these four are the constitutions a bookmark can START with,
   not the whole list** — a chapter's fork can adopt one of ten more, and
   the succession rules are declared on the government rather than matched
   against its name.
@@ -13300,7 +13300,7 @@ a promise.
   historical course, still world history, and carrying no §89 record.
   smoke39, smoke48 and smoke76 pass with their sweeps untouched — the
   cards keep every option and every `aiOption` pin they had.
-## 213. The fork decides what the state IS, not only what it does
+## 214. The fork decides what the state IS, not only what it does
 
 Five chapters ask a playable court what kind of state it is, and the
 questions are among the best-written things in the game: the Hasmonean
@@ -13431,7 +13431,7 @@ offered in public and declined in public, changes what the kingdom BELIEVES and
 not what it is, and the realm keeps the constitution it had. A fork whose every
 road changed the government would be a menu; this one is a question.
 
-- **Regression contract**: `smoke140` — the table (every government named,
+- **Regression contract**: `smoke141` — the table (every government named,
   described, effective and archetyped; the four starting constitutions pinned
   to the effects they were balanced with; no two names alike); no
   `govType === '...'` comparison left in any file that decides one of the

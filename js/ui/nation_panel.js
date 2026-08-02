@@ -566,7 +566,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           : (minor ? ' — <span class="np-dim2">a minor; their succession would mean a regency</span>' : '')));
       refs.heirRow.classList.remove('hidden');
     } else {
-      // What this constitution does about a death (SPEC §213). An elective
+      // What this constitution does about a death (SPEC §214). An elective
       // government counts down to the vote; one that does not inherit at all
       // says so, because "no designated heir" is a warning under a crown and
       // simply a description of the Lot.
@@ -590,7 +590,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setText(refs.culture, (cul && cul.name) || titleCase(t.culture));
     refs.cultureDot.style.background = rgb(cul && cul.color);
     // Government type (SPEC §25): the constitution, with elections counted
-    // down. A chapter's fork can adopt one of its own (SPEC §213), and the row
+    // down. A chapter's fork can adopt one of its own (SPEC §214), and the row
     // is where the answer shows: a Judaea that took the Lot reads The Lot.
     const gov = (DEFINES.GOV_TYPES || {})[t.govType];
     if (gov) {
