@@ -13603,3 +13603,81 @@ road changed the government would be a menu; this one is a question.
   suites — it is **140 of 140, zero failures**, all four of those sections'
   own suites included. `uitest12` reads the Government row off a
   live browser in both a 1948 republic and a 67 BCE theocracy, unchanged.
+
+## 215. The tree stands as long as the realm does
+
+Two reports of the same sentence — *the mission tree keeps disappearing
+midgame* — and two different bugs under it. Neither had anything to do with
+the tree itself, which is why the tree looked innocent both times: what
+failed was the question the panel asks about it.
+
+**The verdict is not an ending, except to `getMissions`.** `endGame` has said
+so since v5.8 (§32): a dated verdict landing on a realm that still stands is
+chronicled as a great moment, the wars keep running, and the sandbox chapters
+(§83) are the second act it opens — *the campaign continues*, in the
+notification's own words. `checkMissions` has always agreed. It has no
+`g.result` guard and never did; after the verdict it goes on working the
+chain, banking one accomplishment a month at §207's pace, paying every
+reward, and toasting the player by name.
+
+`getMissions` opened with `if (g.result) return []`.
+
+So a 66 CE Agrippa who is standing when the verdict is read — which is what
+his chain (§185) is *about*, and which in a seeded run lands in 71 — kept
+playing for as many centuries as he liked, collecting *Mission complete — The
+Words in the Xystus* for a tree that had left the panel. The Missions tab
+still had the chapter block above it, so it did not even read as broken; it
+read as a game that had quietly decided the era's offer was withdrawn. The
+neighbouring read had the right shape all along: `liveObjectives` answers a
+decided campaign with one settled line — *the verdict is ours, the campaign
+sails on* — because a verdict REWRITES what a block says and does not delete
+the block.
+
+The tree now retires when the REALM does (`t.alive === false`), which is the
+condition the monthly pass has always used. The panel and the sim ask the same
+question and get the same answer, which is the whole of the fix.
+
+**A crown that brings no chain of its own used to delete the tree.** §102 and
+§135 are two halves of one rule: a formed nation remembers the tags it was, so
+the era's content addressed to its predecessor keeps answering to it
+(`contentForTag`, reading a bookmark table down the lineage), and a card
+holding the name the chapter was written with can find who wears it now
+(`livingTag`). Objectives, estates, courts, institutions, intrigue and the
+event decider all go through one or the other.
+
+`missionsFor` read `bookmark.missions[tag]` by raw key — the one bookmark
+table left on the wrong side of §102. It has a second lookup for a formed
+crown that carries its own chain, and three of the nine formables carry none:
+
+- **Herod proclaims the Kingdom of Judaea** (40 BCE, `form_jud_her`) — 26
+  medallions to zero.
+- **Jordan joins the United Arab Republic** (1948, `form_uar_jor`) — 7 to zero.
+- **Byzantium restores the Roman name** (614, `form_rom_byz`) — 7 to zero.
+
+In each the chain was filed under a name the proclamation had just deleted,
+and the tree went out with it — at the exact moment the player had done
+something big enough to earn a new crown. `missionsFor` is three lookups now,
+in the order a crown answers to: the chapter's table under the name this realm
+wears now, then the chain the formable brings with it, then the table it was
+already working under the name it used to wear. The formable's own chain
+answering SECOND rather than last is what keeps a Judaea that becomes Israel
+on Israel's seven-mission chapter tree (§189) instead of the twenty-seven it
+has outgrown, and the inherited table answering at all is what keeps Herod's
+twenty-six on the panel through the proclamation, accomplishments and all —
+the record survives the rename already, because `switchTagCore` clones the
+tag whole.
+
+- **Regression contract**: `smoke142` — both halves, failing ten ways on the
+  parent commit and passing on this one. The verdict: Agrippa's tree unchanged
+  by a win and by a loss, the monthly pass still banking and toasting after the
+  verdict with the panel drawing exactly what it banked, the rest of the tree
+  still workable, §207's rest still counted, and the tree gone the moment the
+  realm is not alive. The crown: all three chainless proclamations keeping
+  their trees and their banked ids, the memoized array still handed to the
+  monthly pass and the panel alike, and the control — 66 CE Judaea proclaiming
+  Israel is handed the crown's own seven and not Judaea's twenty-seven, with
+  no chain invented for a tag that never had one. `smoke23`'s 1948 line moved
+  with the rule: the 1988 panel no longer asserts an empty tree but that the
+  tree stands and says what the sim's own record says. `smoke2`, `smoke3`,
+  `smoke73`, `smoke111`, `smoke112`, `smoke116`, `smoke120` and `smoke126` —
+  every other suite that reads a chain — pass unmoved.

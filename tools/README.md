@@ -1394,3 +1394,19 @@ seats fall back to the King's Men, and smoke141's court section says so by
 name. If a new fork road adopts one, write `setGovernment` at the option's own
 call site and name the constitution in its tooltip; both are checked as text,
 on the same reasoning as smoke83's road markers.
+
+## The tree stands as long as the realm does (SPEC §215)
+
+`smoke142` is the new headless suite, and it is a bug-fix contract rather than
+a feature's: it holds the two conditions under which the mission tree may
+leave the panel. It may leave when the realm dies. It may not leave because a
+chapter verdict landed (`endGame` keeps the campaign running and
+`checkMissions` keeps working the chain — the panel read was the only surface
+that treated `g.result` as an ending), and it may not leave because the player
+proclaimed a crown whose formable carries no chain of its own (`missionsFor`
+now falls back down the §102 lineage the way every other bookmark table
+already does, after the formable's own chain rather than before it).
+
+If you add a formable, it does not need a `missions` list — the crown will
+keep the chain the realm was already working. If you give it one, that chain
+wins, and `smoke120`'s §189 section is where a chapter filter goes wrong.

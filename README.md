@@ -813,6 +813,16 @@ static site, the zero dependencies, or the missing build step changes.
   ensemble in 1948, where Hava Nagila itself takes a turn as the refrain.
   Speaker and note buttons (bottom-left) mute the lot or just the music;
   both choices persist.
+- **The mission tree stays on the board.** Two ways it used to vanish from a
+  campaign still being played. Winning your chapter emptied it — even though
+  the verdict deliberately leaves the campaign running, and the sim went on
+  quietly completing missions and toasting you for a tree no longer on any
+  screen. And proclaiming a crown that carries no chain of its own — Herod's
+  Kingdom of Judaea, Jordan's United Arab Republic, Byzantium's restored Rome
+  — took the tree with it, because the era's chain was filed under the name
+  the proclamation had just retired. The tree now leaves the panel when the
+  realm does, and a new crown that brings no chain keeps the one you were
+  already working, accomplishments and all.
 
 ## Architecture
 

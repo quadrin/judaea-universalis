@@ -3307,12 +3307,20 @@ export function gameActions(ctx) {
     // The tree the panel draws: every mission with its id, grid seat and
     // prerequisites resolved to names. A ladder comes back as one column of
     // rows with implicit parent links, so the same renderer draws both.
+    // The tree retires when the REALM does, not when the chapter's verdict
+    // lands. `endGame` chronicles a verdict and says so in as many words —
+    // the campaign continues (SPEC §32/§83) — and `checkMissions` never
+    // stopped working the chain: it goes on banking accomplishments, paying
+    // their rewards and toasting the player. This read was the one surface
+    // that treated the verdict as an ending, so a realm that won its chapter
+    // in 71 and played on kept getting "Mission complete —" for a tree that
+    // had vanished from the panel. `liveObjectives` is the pattern: the
+    // verdict rewrites what a block says, it does not delete the block.
     getMissions() {
       try {
-        if (g.result) return [];
         const list = missionsFor(ctx, g.playerTag);
         const t = g.tags[g.playerTag];
-        if (!Array.isArray(list) || !t) return [];
+        if (!Array.isArray(list) || !t || t.alive === false) return [];
         const tree = isMissionTree(list);
         const done = missionDoneSet(t, list);
         const ids = list.map((m, i) => missionId(m, i));
