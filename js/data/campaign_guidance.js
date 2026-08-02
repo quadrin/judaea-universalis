@@ -238,6 +238,22 @@ export const CAMPAIGN_GUIDANCE = {
         { y: 532, m: 1, label: 'Samaria must be quiet, or the assessment is a fiction' },
       ],
     },
+    // The kingdom beyond the strait (SPEC §208).
+    HMY: {
+      system: 'A client crown, a foreign garrison, and one reckoning',
+      opening: [
+        'Muster your own companies before 533 — the garrison’s mutiny lands on whoever cannot outnumber it.',
+        'Bank the customs of Aden and Mawza; the tribute is a percentage, the strongbox is a policy.',
+        'Keep the House of Yazan warm: the covenant is your legitimacy and the highlands are your manpower, and they are the same party.',
+      ],
+      clocks: [
+        { y: 533, m: 6, label: 'The garrison chooses its own judgment — Abraha moves' },
+        { y: 540, m: 6, label: 'The two empires go to war, and both write south for allies' },
+        { y: 548, m: 4, label: 'The dam calls for the kingdoms — Marib’s great repair' },
+        { y: 570, m: 11, label: 'The reckoning: eight ships, if the country is worth so little' },
+        { y: 575, m: 7, label: 'The dam, if nobody kept it' },
+      ],
+    },
   },
   '614ce': {
     JUD: {

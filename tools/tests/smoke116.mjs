@@ -237,11 +237,17 @@ function expectAllDone(g, bookmark, tags, label) {
   expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }
 
-{ // 529 CE — the mountain, the letter, and the Taheb.
+{ // 529 CE — the mountain, the letter, and the Taheb; the client court's
+  // roads (SPEC §208) read the Keepers' own markers from the far end of
+  // the one sea, so the same forced world pays them — plus the 556 rising
+  // marker Himyar's synagogues hear about from the pepper merchants.
   const { game, ctx } = booted.get('529ce');
-  Object.assign(game.flags, { gerizimCleared: true, ctesiphonPromised: true, tahebAwaited: true });
+  Object.assign(game.flags, {
+    gerizimCleared: true, ctesiphonPromised: true, tahebAwaited: true,
+    roseWithTheJews: true,
+  });
   pump(ctx, 120);
-  expectAllDone(game, era('529ce').bookmark, ['SAM'], '529ce');
+  expectAllDone(game, era('529ce').bookmark, ['SAM', 'HMY'], '529ce');
 }
 
 { // 614 CE — the century, its three dependents, and the §187 forks: the

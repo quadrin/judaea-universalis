@@ -199,6 +199,11 @@ const SEATS = {
   '132ce:ADI': { strict: 'proselytes', worldly: 'caravans', soldiers: 'riders' },
   '529ce:SAM': { strict: 'priesthood', worldly: 'council', soldiers: 'crowned' },
   '529ce:BYZ': { strict: 'church', worldly: 'landowners', soldiers: 'army' },
+  // The kingdom beyond the strait (SPEC §208): the House of Yazan guards the
+  // covenant, the incense houses live on the monsoon, and the qayls' levies
+  // are the only army the country has ever fielded — the garrison at Zafar
+  // is somebody else's soldiers, which is the chapter's whole problem.
+  '529ce:HMY': { strict: 'yazanids', worldly: 'incense_houses', soldiers: 'qayls' },
   '614ce:JUD': { strict: 'priests', worldly: 'exilarch', soldiers: 'fighters' },
   '614ce:BYZ': { strict: 'church', worldly: 'demes', soldiers: 'army' },
 };

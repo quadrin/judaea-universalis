@@ -89,6 +89,15 @@ export const ESTATE_GROUND = {
   magi: { base: 26, rural: 24, hills: 18, alien: 14, capital: 10, trade: -10 },
   caravans: { base: 26, trade: 30, city: 20, dev: 14, desert: 10, rural: -14 },
   riders: { base: 26, rural: 22, fort: 18, hills: 14, dev: 8, city: -10 },
+  // The court at Zafar (SPEC §208). The garrison holds the capital and the
+  // conquest's coast — `alien` because with the covenant on the crown the
+  // Christian harbors are exactly where the negus' party is at home. The
+  // House of Yazan is the faith's own highlands; the qayls are the castles
+  // above the terraces; the incense houses are the harbors and the road.
+  negus_men: { base: 22, capital: 26, fort: 22, coast: 14, alien: 14, rural: -16, hills: -10 },
+  yazanids: { base: 26, hills: 26, faith: 24, rural: 18, capital: 10, coast: -12 },
+  qayls: { base: 28, hills: 28, rural: 24, desert: 14, dev: -10, city: -16 },
+  incense_houses: { base: 24, coast: 30, trade: 26, city: 20, dev: 14, rural: -18, hills: -12 },
 
   // ---- the empires and the neighbours -------------------------------------
   senate: { base: 28, capital: 28, city: 22, dev: 20, rural: -14 },

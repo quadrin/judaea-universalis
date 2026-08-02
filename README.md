@@ -231,14 +231,20 @@ static site, the zero dependencies, or the missing build step changes.
 - **Every seated Jewish court is a chair.** The rosters offer every Jewish
   nation a chapter puts on the map, not only the rebels: Adiabene — the house
   beyond the Tigris whose kings took the God of Israel — is playable in
-  67 BCE, 40 BCE, 66 CE and 132 CE, and Agrippa II's kingdom fights its
-  impossible war as a playable standard in 66 CE. Each carries its own court
+  67 BCE, 40 BCE, 66 CE and 132 CE; Agrippa II's kingdom fights its
+  impossible war as a playable standard in 66 CE; and in 529 the client
+  kingdom of Himyar — the house beyond the strait that took the same God a
+  century before the negus broke it for the choice — plays the far end of
+  the Keepers' century: a Christian client crown on a Jewish country, an
+  Aksumite garrison that history says will mutiny, and eight convict ships
+  due in 570 for whatever is still broken. Each carries its own court
   of estates (Arbela's Fire Priests give way to the Proselyte House as the
   dynasty converts; Agrippa seats the Pious, the Stewards and the Babylonian
-  Horse), its own mission tree with roads not taken, its own ideas of the
+  Horse; Zafar seats the Negus' Men against the House of Yazan), its own
+  mission tree with roads not taken, its own ideas of the
   age, first-moves guidance, and a dated client's contract — be seated at
-  Arbela, or Caesarea Philippi, when the age reads its verdict, and freer or
-  richer for the bonuses.
+  Arbela, or Caesarea Philippi, or Zafar, when the age reads its verdict,
+  and freer or richer for the bonuses.
 - Conquest has a price: infamy that sours every court, defensive coalitions that
   league against a rampaging conqueror, and overextension unrest when too much of
   the realm is freshly seized land.

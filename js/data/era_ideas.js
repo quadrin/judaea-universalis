@@ -413,6 +413,40 @@ export const ERA_IDEA_GROUPS = {
     ],
   },
 
+  // 529 CE, the kingdom beyond the strait (SPEC §208): the client court at
+  // Zafar studies its own survival — the customs, the castles, and the
+  // formula the covenant's kings signed with.
+  incense_crown: {
+    name: 'The Incense Crown', icon: 'coins', point: 'gov',
+    unlock: { ladder: 'gov', level: 9 },
+    desc: 'The customs of Aden and Mawza and the caravan assessments of the inland road: the money every empire crossed a sea for.',
+    tiers: [
+      { name: 'The Customs of the Two Seas', desc: 'The harbor dues collected by the crown\'s own weighers: +8% income.', effects: { incomeMult: 1.08 } },
+      { name: 'The Caravan Assessments', desc: 'Every camel on the inland road pays at Shabwa\'s old rates: +10% trade.', effects: { tradeMult: 1.1 } },
+      { name: 'The King\'s Storehouses', desc: 'Granaries against the bad monsoon, and a country that knows it: −0.25 unrest everywhere.', effects: { unrestAll: -0.25 } },
+    ],
+  },
+  qayls_of_the_mist: {
+    name: 'The Qayls of the Mist', icon: 'spears', point: 'mar',
+    unlock: { ladder: 'mar', level: 10 },
+    desc: 'The lords of the highland castles and their tower-by-tower levies: the only army this country has ever fielded.',
+    tiers: [
+      { name: 'The Highland Musters', desc: 'The castles owe the crown their spears, counted and sworn: +10% manpower.', effects: { manpowerMult: 1.1 } },
+      { name: 'The Passes Held', desc: 'Every road up from the Tihama runs under somebody\'s tower: +1 to hill-country defense.', effects: { hillDefBonus: 1 } },
+      { name: 'The Oath of the Spears', desc: 'The levies sworn to the crown rather than to the season: +8% morale.', effects: { moraleMult: 1.08 } },
+    ],
+  },
+  rahmanan_formula: {
+    name: 'The Formula of Rahmanan', icon: 'scroll', point: 'infl',
+    unlock: { ladder: 'infl', level: 10 },
+    desc: 'The invocation the kings signed with for a century and a half — the Merciful, Lord of the heavens — and everything it binds.',
+    tiers: [
+      { name: 'The Style Proclaimed', desc: 'The old formula back at the head of every inscription: +0.15 legitimacy a month.', effects: { legitimacyAdd: 0.15 } },
+      { name: 'The Synagogue and the Court', desc: 'The covenant\'s congregations and the crown\'s law in one hand: −0.5 unrest everywhere.', effects: { unrestAll: -0.5 } },
+      { name: 'The Letters to Tiberias', desc: 'The academies write back, and the whole dispersion reads the correspondence: +5% income, +5% trade.', effects: { incomeMult: 1.05, tradeMult: 1.05 } },
+    ],
+  },
+
   // 529 CE, the empire's side: Justinian's spring — the Codex is published
   // the very month the rising begins.
   codex_of_laws: {
@@ -714,6 +748,7 @@ export const ERA_IDEAS_BY_BOOKMARK = {
   '529ce': {
     SAM: ['mountain_of_blessing', 'villages_of_the_hills', 'keepers_law', 'baba_rabbas_inheritance'],
     BYZ: ['two_fronts_purse', 'federate_lances', 'codex_of_laws'],
+    HMY: ['incense_crown', 'qayls_of_the_mist', 'rahmanan_formula'],
   },
   '614ce': {
     JUD: ['exilarchs_silver', 'kings_covenant', 'remnants_walls', 'rule_of_the_academies'],
