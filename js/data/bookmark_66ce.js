@@ -65,6 +65,64 @@ function eraTiers(t) {
   return n;
 }
 
+// ── What the civil band reads (SPEC §211) ───────────────────────────────────
+// The court under whatever name it wears this month (SPEC §135), never
+// undefined: a check that throws is swallowed and the mission quietly becomes
+// content nobody can finish.
+function crown(ctx, tag) {
+  try { return (ctx.game.tags && ctx.game.tags[who(ctx, tag)]) || {}; } catch (e) { warnOnce('crown', e); return {}; }
+}
+
+// The weight of the land itself: development over OWNED ground, not
+// controlled. A province the legions are standing in is still the state's, and
+// the ledger it belongs to does not change hands with the siege lines
+// (SPEC §146) — which is the difference between a realm that has been invaded
+// and a realm that has been dismembered.
+function ownedDev(ctx, tag) {
+  try {
+    const g = ctx.game;
+    const t = who(ctx, tag);
+    let n = 0;
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== t) continue;
+      const d = p.dev || {};
+      n += (d.tax | 0) + (d.prod | 0) + (d.mp | 0);
+    }
+    return n;
+  } catch (e) { warnOnce('ownedDev', e); return 0; }
+}
+
+// Where the world files this court in its own ranking of the powers
+// (SPEC §165) — 0 is first. Negative before the first quarterly refresh has
+// run, which is why every reader below asks for `>= 0` first: at the opening
+// bell nobody has been ranked at all.
+function standingRank(ctx, tag) {
+  try {
+    const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+    return ord.indexOf(who(ctx, tag));
+  } catch (e) { warnOnce('standingRank', e); return -1; }
+}
+
+// What another court thinks of us, asked under whatever names the two of us
+// are filed under now (SPEC §135) — with the chapter's own name as the
+// fallback, because a table written in 66 keys its scripted regard by it.
+function regard(ctx, from, of) {
+  try {
+    const t = (ctx.game.tags && ctx.game.tags[who(ctx, from)]) || null;
+    const op = (t && t.opinion) || {};
+    const live = op[who(ctx, of)];
+    const v = Number.isFinite(live) ? live : op[of];
+    return Number.isFinite(v) ? v : 0;
+  } catch (e) { warnOnce('regard', e); return 0; }
+}
+
+// The court's own two numbers (SPEC §34, §197) — approval is a mood, favor is
+// a bank — are read INLINE by the column-2 checks below rather than through a
+// wrapper, deliberately: the §211 suite reads the source of every government
+// and region check to prove it never touches state the engine fills in for the
+// player's hand alone, and a helper name would hide the very thing it audits.
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -961,6 +1019,131 @@ export const BOOKMARK_66 = {
           effects: { unrestAll: -1, legitimacyAdd: 0.25 },
         }),
       },
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
+      // The provisional government that actually governed: it appointed
+      // district commanders, walled towns, struck silver to the Tyrian
+      // weight, wrote east, and could never make its three parties into one
+      // council. None of these wait on the war and the war does not wait on
+      // them — the columns are drawn at the bottom of the grid, which is
+      // layout and not sequence.
+      {
+        id: 'jm_the_generals_of_the_districts', name: 'The Generals of the Districts',
+        icon: 'quill', col: 0, row: 6, civil: 'govt',
+        desc: 'When Cestius\' column broke on the descent from Beth Horon the assembly met in the '
+          + 'Temple court and did the thing no rising before it had done: it appointed governors. '
+          + 'Josephus took the two Galilees and Gamala, Joseph ben Gorion and Ananus the high priest '
+          + 'the city, John the Essene had Thamna with Lydda, Joppa and Emmaus, Eleazar ben Ananias '
+          + 'Idumaea, Manasseh the Peraea. Take two rungs of The Art of Rule — a revolt that '
+          + 'commissions district commanders and expects their accounts has stopped being a riot.',
+        rewardText: '"The Commissions of the Assembly": −0.5 unrest everywhere permanently, +25 governance points.',
+        check: (ctx) => (((crown(ctx, 'JUD').reforms || {}).civ | 0) >= 2),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'commissions_of_the_assembly', name: 'The Commissions of the Assembly',
+            months: -1, effects: { unrestAll: -0.5 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+        },
+      },
+      {
+        id: 'jm_the_nineteen_towns', name: 'The Nineteen Towns',
+        icon: 'bricks', col: 0, row: 7, civil: 'govt', requires: ['jm_the_generals_of_the_districts'],
+        desc: 'In one winter Josephus walled Jotapata, Bersabe, Selamin, Caphareccho, Japha and '
+          + 'Sigoph, Mount Tabor, Tarichaeae and Tiberias and Gischala and the caves above Arbela, '
+          + 'and in the Gaulanitis Seleucia, Sogane and Gamala — nineteen places, paid for out of '
+          + 'the district\'s own revenues and not from Jerusalem. Carry the realm to 145 development '
+          + 'with the country steady at +2 stability: this war is fought out of the country\'s '
+          + 'surplus, or it is fought out of the Temple\'s strongbox until there is none.',
+        rewardText: '"The Walled Country": +10% income and +5% force limit, permanent.',
+        check: (ctx) => ownedDev(ctx, 'JUD') >= 145 && (crown(ctx, 'JUD').stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_walled_country', name: 'The Walled Country', months: -1,
+          effects: { incomeMult: 1.1, forceLimitMult: 1.05 },
+        }),
+      },
+      {
+        id: 'jm_the_third_power', name: 'The Third Power of the East',
+        icon: 'flag', col: 1, row: 6, civil: 'region',
+        desc: 'The shekel of Year One is struck to the Tyrian weight, fourteen grams of silver with '
+          + '"Jerusalem the Holy" on the reverse, because a state that mints is a state other states '
+          + 'have to price. The courts that keep ledgers begin filing Judaea where they file Nabataea '
+          + 'and Armenia — a power, not a province in arrears. Stand among the first three courts of '
+          + 'the world in the standing of the powers, behind nobody but the empires themselves.',
+        rewardText: '"A Power, Not a Province": +1 diplomatic seat permanently, +20 influence points.',
+        check: (ctx) => { const i = standingRank(ctx, 'JUD'); return i >= 0 && i < 3; },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'a_power_not_a_province', name: 'A Power, Not a Province',
+            months: -1, effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 20 });
+        },
+      },
+      {
+        id: 'jm_the_letters_beyond_the_euphrates', name: 'The Letters Beyond the Euphrates',
+        icon: 'scroll', col: 1, row: 7, civil: 'region', requires: ['jm_the_third_power'],
+        desc: 'Nero had crowned Tiridates in Rome that same year and the Euphrates was quiet, which is '
+          + 'the one thing the revolt could not afford. The great communities sat '
+          + 'inside Parthia at Nehardea and Nisibis, Adiabene\'s princes had already ridden west to '
+          + 'Beth Horon, and Josephus wrote his first account of the war in Aramaic for precisely '
+          + 'that audience. Hold the first three seats of the standing while the King of Kings\' '
+          + 'regard for us stands at +60: this war is winnable only while the eastern frontier is a '
+          + 'question Rome has to keep answering.',
+        rewardText: '"The Ear of Ctesiphon": +10% trade permanently, +1,500 manpower.',
+        check: (ctx) => {
+          const i = standingRank(ctx, 'JUD');
+          return i >= 0 && i < 3 && regard(ctx, 'PAR', 'JUD') >= 60;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_ear_of_ctesiphon', name: 'The Ear of Ctesiphon',
+            months: -1, effects: { tradeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { manpower: 1500 });
+        },
+      },
+      {
+        id: 'jm_the_altar_and_the_knives', name: 'The Altar and the Knives',
+        icon: 'altar', col: 2, row: 6, civil: 'court',
+        desc: 'Eleazar the Temple captain stopped the offering made for Caesar and the war began '
+          + 'inside the priestly courses; in the same season the sicarii took Masada, burned the '
+          + 'debt archive, and murdered Ananias the high priest where he was hiding in the aqueduct '
+          + 'of Herod\'s palace. Bring the Zealots and the Temple Priesthood both to 65 approval at '
+          + 'once — the two parties whose quarrel with each other, and not Rome\'s ramps, is what '
+          + 'finally burned the city.',
+        rewardText: '"The Courses and the Bands": +0.2 legitimacy a month and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => {
+          const f = crown(ctx, 'JUD').factions || {};
+          return (f.zealots || 0) >= 65 && (f.priesthood || 0) >= 65;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_courses_and_the_bands', name: 'The Courses and the Bands', months: -1,
+          effects: { legitimacyAdd: 0.2, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'jm_the_council_of_the_nation', name: 'The Council of the Nation',
+        icon: 'speaker', col: 2, row: 7, civil: 'court', requires: ['jm_the_altar_and_the_knives'],
+        desc: 'By the winter of 68 there were three governments inside one wall — Ananus and the '
+          + 'notables in the upper city, Eleazar ben Simon on the Temple mount, John of Gischala in '
+          + 'between — and each burned the others\' granaries rather than serve under a command it '
+          + 'had not chosen. The war party wants the war and the men of property want the door left '
+          + 'open, so nobody can have everything: hold all three at 65 approval in the same month, '
+          + 'with thirty of the priesthood\'s favor banked and unspent. One council, one treasury, '
+          + 'and an order that arrives where it is sent as an order.',
+        rewardText: '"One Voice in the City": +0.3 legitimacy a month and +8% income, permanent.',
+        check: (ctx) => {
+          const t = crown(ctx, 'JUD');
+          const f = t.factions || {};
+          const bank = t.estateFavor || {};
+          return (f.zealots || 0) >= 65 && (f.notables || 0) >= 65
+            && (f.priesthood || 0) >= 65 && (bank.priesthood || 0) >= 30;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'one_voice_in_the_city', name: 'One Voice in the City', months: -1,
+          effects: { legitimacyAdd: 0.3, incomeMult: 1.08 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks, standing in the tree as hypotheticals: checks read
       // the markers the fork cards themselves set — one source of truth.
@@ -1260,6 +1443,123 @@ export const BOOKMARK_66 = {
           effects: { legitimacyAdd: 0.3, unrestAll: -0.5 },
         }),
       },
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
+      // The client's own half of the reign, which is most of it: what he
+      // built, what his chancery could do without a procurator, where the
+      // world ranked him, and the one Jewish prerogative Rome left in his
+      // hands. None of it is war, and all of it is the reason the last
+      // Herodian died in bed.
+      {
+        id: 'am_the_kings_building', name: 'The King\'s Building',
+        icon: 'bricks', col: 0, row: 6, civil: 'govt',
+        desc: 'Agrippa spent where a client could be seen spending: a theatre and an amphitheatre '
+          + 'at Berytus, with baths and colonnades and games he paid for out of his own revenues — '
+          + 'a Roman colony, not a Jewish town, and Josephus says his own subjects hated him for '
+          + 'stripping his kingdom to adorn a foreign city. At home the same money enlarged '
+          + 'Caesarea Philippi. Carry the kingdom to 33 development and hold it at +1 stability: '
+          + 'a client is worth keeping in proportion to what there is of it.',
+        rewardText: '"The King Builds": +8% income permanently, +15 governance points.',
+        check: (ctx) => ownedDev(ctx, 'AGR') >= 33 && (crown(ctx, 'AGR').stability || 0) >= 1,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'AGR', {
+            id: 'the_king_builds', name: 'The King Builds', months: -1, effects: { incomeMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'AGR', { gov: 15 });
+        },
+      },
+      {
+        id: 'am_a_chancery_of_its_own', name: 'A Chancery of Its Own',
+        icon: 'quill', col: 0, row: 7, civil: 'govt', requires: ['am_the_kings_building'],
+        desc: 'A client kingdom is a set of revenues Rome has agreed not to collect itself, and it '
+          + 'lasts exactly as long as it stays cheaper than a procurator — Judaea learned in 6 CE '
+          + 'what the other answer costs. Take two rungs of The Art of Rule and carry the house to '
+          + '95 legitimacy: a kingdom that keeps its own registers, judges its own cases and can '
+          + 'name its own heir gives the Palatine nothing that needs fixing.',
+        rewardText: '"Cheaper Than a Procurator": −8% administration and +0.2 legitimacy a month, permanent.',
+        check: (ctx) => (((crown(ctx, 'AGR').reforms || {}).civ | 0) >= 2)
+          && (crown(ctx, 'AGR').legitimacy || 0) >= 95,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'cheaper_than_a_procurator', name: 'Cheaper Than a Procurator', months: -1,
+          effects: { adminMult: 0.92, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'am_the_client_among_the_powers', name: 'The Client Among the Powers',
+        icon: 'flag', col: 1, row: 6, civil: 'region',
+        desc: 'Chalcis at twenty-one, then Philip\'s tetrarchy with Abila and Arca, then Tiberias, '
+          + 'Tarichaeae, Julias and fourteen villages from Nero: every grant a promotion in a '
+          + 'hierarchy nobody ever wrote down. Write it down. Stand among the first five courts of '
+          + 'the world in the standing of the powers — ahead of Armenia, ahead of Osroene, ahead of '
+          + 'every other crown Rome and Ctesiphon keep in the space between them.',
+        rewardText: '"The Ranked Crown": +1 diplomatic seat permanently, +20 influence points.',
+        check: (ctx) => { const i = standingRank(ctx, 'AGR'); return i >= 0 && i < 5; },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'AGR', {
+            id: 'the_ranked_crown', name: 'The Ranked Crown', months: -1, effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'AGR', { infl: 20 });
+        },
+      },
+      {
+        id: 'am_the_nations_verdict', name: 'The Nation\'s Own Verdict',
+        icon: 'dove', col: 1, row: 7, civil: 'region', requires: ['am_the_client_among_the_powers'],
+        desc: 'You stood on the roof of the Hasmonean palace above the Xystus and told them what '
+          + 'sixty thousand men mean, and Jerusalem answered with stones and burned your sister\'s '
+          + 'house. Your cavalry rode with Vespasian afterwards. Keep the first five seats of the '
+          + 'standing until the Jewish court across the border no longer files this house among its '
+          + 'enemies — regard at nought or better. A king of the Jews whom the Jews merely tolerate '
+          + 'has done what no other Herodian managed.',
+        rewardText: '"The Verdict Withheld": −0.75 unrest everywhere permanently, +15 legitimacy.',
+        check: (ctx) => {
+          const i = standingRank(ctx, 'AGR');
+          return i >= 0 && i < 5 && regard(ctx, 'JUD', 'AGR') >= 0;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'AGR', {
+            id: 'the_verdict_withheld', name: 'The Verdict Withheld', months: -1,
+            effects: { unrestAll: -0.75 },
+          });
+          ctx.helpers.adjust(ctx, 'AGR', { legitimacy: 15 });
+        },
+      },
+      {
+        id: 'am_the_queens_standing', name: 'The Queen\'s Standing',
+        icon: 'coins', col: 2, row: 6, civil: 'court',
+        desc: 'Berenice was the richer half of the house — the estates at Besara on the edge of the '
+          + 'Great Plain, the grain contracts, the Nazirite vow she walked barefoot to discharge '
+          + 'while Florus\' tribunal sat in front of the palace — and within a decade she was on the '
+          + 'Palatine with Titus until Rome made him send her away. Bring the Stewards of the House '
+          + 'to 70 approval with thirty of their favor banked: the machinery that makes a small '
+          + 'kingdom rich has to owe the crown something, not merely draw wages from it.',
+        rewardText: '"The Queen\'s Ledgers": +10% income and +1 diplomatic seat, permanent.',
+        check: (ctx) => {
+          const t = crown(ctx, 'AGR');
+          return ((t.factions || {}).stewards || 0) >= 70
+            && ((t.estateFavor || {}).stewards || 0) >= 30;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'the_queens_ledgers', name: 'The Queen\'s Ledgers', months: -1,
+          effects: { incomeMult: 1.1, diploSeats: 1 },
+        }),
+      },
+      {
+        id: 'am_the_gift_of_the_high_priesthood', name: 'The Gift of the High Priesthood',
+        icon: 'altar', col: 2, row: 7, civil: 'court', requires: ['am_the_queens_standing'],
+        desc: 'Claudius left the house the custody of the vestments and the right to name the high '
+          + 'priest, and Agrippa used it six times: Ishmael ben Phabi, Joseph Kabi, Ananus ben '
+          + 'Ananus — deposed after three months for the stoning of James — Jesus ben Damnaeus, '
+          + 'Jesus ben Gamaliel, Matthias ben Theophilus. It is the only Jewish thing about this '
+          + 'kingship Jerusalem could not ignore, and it buys nothing from the villages while the '
+          + 'king\'s squadrons are in the siege lines. Bring the Pious of the Land to 60 approval — '
+          + 'which no amount of endowment will do until this house has stopped making war on its '
+          + 'own nation.',
+        rewardText: '"The King\'s Own Nomination": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => ((crown(ctx, 'AGR').factions || {}).pious || 0) >= 60,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'AGR', {
+          id: 'the_kings_own_nomination', name: 'The King\'s Own Nomination',
+          months: -1, effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_two_crowns', name: 'Two Crowns of Israel', hypothetical: true,
@@ -1445,6 +1745,71 @@ export const BOOKMARK_66 = {
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
           id: 'pyramids_north_of_the_wall', name: 'The Pyramids North of the Wall',
           months: -1, effects: { legitimacyAdd: 0.1 },
+        }),
+      },
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
+      // Three strands the house can work from the first month, none of them
+      // waiting on the other and none of them waiting on the war in the
+      // west: what a convert kingdom has to build, where it stands between
+      // two empires, and whether the covenant belongs to the court or only
+      // to the crown that took it.
+      {
+        id: 'dm_the_five_sons_of_izates', name: 'The Five Sons of Izates',
+        icon: 'quill', col: 0, row: 4, civil: 'govt',
+        desc: 'Izates sent five sons to Jerusalem to learn the language and the Law exactly, and in '
+          + 'the end sent his mother\'s bones and his own after them. Ananias the merchant had '
+          + 'taught the women of the palace first and told the king he could keep the covenant '
+          + 'uncircumcised; Eleazar the Galilean walked in with a scroll and told him that reading '
+          + 'the Law is not keeping it. A kingdom that has taken a foreign covenant must build the '
+          + 'schools and the courts that hold it — take a rung of The Art of Rule and two of The '
+          + 'Voice of Heaven.',
+        rewardText: '"The Law Read in Arbela": +0.2 legitimacy a month and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => {
+          const r = crown(ctx, 'ADI').reforms || {};
+          return (r.civ | 0) >= 1 && (r.rel | 0) >= 2;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_law_read_in_arbela', name: 'The Law Read in Arbela', months: -1,
+          effects: { legitimacyAdd: 0.2, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'dm_between_two_empires', name: 'Between the Two Empires',
+        icon: 'flag', col: 1, row: 4, civil: 'region',
+        desc: 'Arbela lies a few days from Ctesiphon and a whole season from Antioch, and the house '
+          + 'has already chosen once: Izates sheltered Artabanus when the Parthian nobility drove '
+          + 'him out, put him back on his throne, and was paid in Nisibis and the right to wear the '
+          + 'upright tiara. Do it a second time without paying twice. Hold a seat among the first '
+          + 'five courts of the world while Rome\'s court no longer files this house among its '
+          + 'enemies — a small kingdom on a great road lives by being counted and not resented.',
+        rewardText: '"The Road Both Empires Use": +12% trade and +1 diplomatic seat, permanent.',
+        check: (ctx) => {
+          const i = standingRank(ctx, 'ADI');
+          return i >= 0 && i < 5 && regard(ctx, 'ROM', 'ADI') >= 0;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_road_both_empires_use', name: 'The Road Both Empires Use', months: -1,
+          effects: { tradeMult: 1.12, diploSeats: 1 },
+        }),
+      },
+      {
+        id: 'dm_the_court_that_prays_west', name: 'The Court That Prays West',
+        icon: 'altar', col: 2, row: 4, civil: 'court',
+        desc: 'Helena kept the Nazirite vow fourteen years and bought Egyptian grain and Cypriot '
+          + 'figs for a Jerusalem in famine; Izates was circumcised against his mother\'s advice and '
+          + 'his first teacher\'s; Monobazus sent the kinsmen Kenedaeus and Monobazus to fight at '
+          + 'the ascent of Beth Horon. Bring the Proselyte House to 70 approval with twenty-five of '
+          + 'its favor banked — a conversion that belongs only to the crown dies with the king who '
+          + 'made it.',
+        rewardText: '"The Covenant of the House": +0.25 legitimacy a month and +5% manpower, permanent.',
+        check: (ctx) => {
+          const t = crown(ctx, 'ADI');
+          return ((t.factions || {}).proselytes || 0) >= 70
+            && ((t.estateFavor || {}).proselytes || 0) >= 25;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_covenant_of_the_house', name: 'The Covenant of the House', months: -1,
+          effects: { legitimacyAdd: 0.25, manpowerMult: 1.05 },
         }),
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────

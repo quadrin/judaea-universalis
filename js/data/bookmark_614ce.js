@@ -817,6 +817,148 @@ export const BOOKMARK_614 = {
           effects: { growthMult: 1.15, pilgrimMult: 1.2 },
         }),
       },
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
+      // A Return governed on Persian sufferance has three problems that are
+      // not the war: what the government becomes, where it stands among the
+      // powers, and who at home is paying for it. Three strands, two deep,
+      // parallel to the campaign rather than after it — none of these waits
+      // on Jerusalem, because none of them waited on Jerusalem in 614.
+      {
+        id: 'p_the_rolls_of_the_return', name: 'The Rolls of the Return',
+        icon: 'quill', col: 0, row: 6, civil: 'govt',
+        desc: 'Nehemiah ben Hushiel governed a city that first had to be told who its '
+          + 'people were: Galileans who came down with Shahrbaraz\'s column, Babylonians '
+          + 'who came for the altar, and the families of Jerusalem itself, whom Hadrian\'s '
+          + 'edict had kept out of the city for four hundred and eighty years. Take the '
+          + 'census and seat the governors — the first two rungs of the Art of Rule — '
+          + 'over six districts of your own.',
+        rewardText: '"The Community Rolls": +10% income and +10% manpower, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return (((t.reforms || {}).civ) | 0) >= 2
+            && ctx.helpers.countOwned(ctx, 'JUD', {}) >= 6;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_community_rolls', name: 'The Community Rolls', months: -1,
+          effects: { incomeMult: 1.1, manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'p_the_walls_titus_threw_down', name: 'The Walls Titus Threw Down',
+        icon: 'bricks', col: 0, row: 7, civil: 'govt', requires: ['p_the_rolls_of_the_return'],
+        desc: 'Titus levelled the walls in 70; the Empress Eudocia raised them again in '
+          + 'the 440s; and the Persian miners went through them in twenty days in May 614, '
+          + 'which is the whole argument for owning your own masonry. Bring the realm to '
+          + 'ninety points of worked land with 250 talents still in the chest — the '
+          + 'governor\'s assessor comes for the tribute whether or not the masons are paid.',
+        rewardText: '"The Walls Raised Again": +1 to hill-country defense and −0.5 unrest everywhere, permanently.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const tag = who(ctx, 'JUD');
+          const t = g.tags[tag] || {};
+          if ((t.treasury || 0) < 250) return false;
+          let dev = 0;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
+            dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
+          }
+          return dev >= 90;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'walls_raised_again', name: 'The Walls Raised Again', months: -1,
+          effects: { hillDefBonus: 1, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'p_the_letters_east_and_south', name: 'Letters East and South',
+        icon: 'note', col: 1, row: 6, civil: 'region',
+        desc: 'A government in Jerusalem writes to a people that is mostly somewhere else: '
+          + 'to the oasis farmers of Khaybar and Yathrib, to the Jewish south of Arabia that '
+          + 'Aksum broke in 525, and to Alexandria, which holds more Jews than the Land does. '
+          + 'Stand in three bonds at once — allies and clients together — so that the Return '
+          + 'is a party to the age and not merely a client of Ctesiphon.',
+        rewardText: '"The Letters Go Out": +1 diplomatic seat and +5% income, permanently.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const tag = who(ctx, 'JUD');
+          const t = g.tags[tag] || {};
+          let bonds = ((t.allies || []).length) | 0;
+          for (const k of Object.keys(g.tags || {})) {
+            const o = g.tags[k];
+            if (o && o.alive !== false && o.overlord === tag) bonds++;
+          }
+          return bonds >= 3;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'letters_east_and_south', name: 'The Letters Go Out', months: -1,
+          effects: { diploSeats: 1, incomeMult: 1.05 },
+        }),
+      },
+      {
+        id: 'p_between_two_empires', name: 'Between Two Empires',
+        icon: 'scales', col: 1, row: 7, civil: 'region', requires: ['p_the_letters_east_and_south'],
+        desc: 'Persia kept the Return for three years and then worked out that a Christian '
+          + 'Jerusalem was cheaper to administer, and nothing in 617 made Ctesiphon pay for '
+          + 'the arithmetic. Stand among the three first powers of the world — a court that '
+          + 'cannot be handed back in a clause, because the clause would cost more than the '
+          + 'city is worth.',
+        rewardText: '"Weighed With the Powers": +1 deterrence and +0.2 legitimacy a month, permanently; +25 influence points.',
+        check: (ctx) => {
+          const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+          const i = ord.indexOf(who(ctx, 'JUD'));
+          return i >= 0 && i < 3;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'weighed_with_the_powers', name: 'Weighed With the Powers', months: -1,
+            effects: { deterrent: 1, legitimacyAdd: 0.2 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 25 });
+        },
+      },
+      {
+        id: 'p_the_exilarchs_purse', name: 'The Exilarch\'s Purse',
+        icon: 'coins', col: 2, row: 6, civil: 'court',
+        desc: 'The oldest Jewish power on earth is not in Jerusalem. It is the Exilarch at '
+          + 'Mahoza, with Sura and Pumbedita behind him and the assessment of Babylonian '
+          + 'Jewry in his hands, and the house that will seat Bostanai within a decade does '
+          + 'not give — it lends, and only to a government that looks like it will still be '
+          + 'there. Bank forty-five points of the Exilarch\'s credit.',
+        rewardText: '"The Purse of Mahoza": +10% income, permanently; +200 talents and +20 influence points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return ((t.estateFavor || {}).exilarch || 0) >= 45;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'purse_of_mahoza', name: 'The Purse of Mahoza', months: -1,
+            effects: { incomeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, infl: 20 });
+        },
+      },
+      {
+        id: 'p_the_twenty_four_courses', name: 'The Twenty-Four Courses',
+        icon: 'flame', col: 2, row: 7, civil: 'court', requires: ['p_the_exilarchs_purse'],
+        desc: 'Twenty-four priestly courses served the House in rotation, and the lists were '
+          + 'still being cut into synagogue walls at Caesarea five centuries after there was '
+          + 'anything left to serve; Eleazar ha-Kallir was setting them to verse while the '
+          + 'Persian army was on the coast road. Bring the priests of the Mount to devotion — '
+          + 'eighty approval — and the courses are a rota again instead of a genealogy.',
+        rewardText: '"The Courses Restored": +0.3 legitimacy a month and −0.5 unrest everywhere, permanently; +25 governance points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return ((t.factions || {}).priests || 0) >= 80;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_twenty_four_courses', name: 'The Courses Restored', months: -1,
+            effects: { legitimacyAdd: 0.3, unrestAll: -0.5 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+        },
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -950,7 +1092,7 @@ export const BOOKMARK_614 = {
       // and the army it drilled for 622.
       {
         id: 'b_reform', name: 'The Empire Reorganized',
-        icon: 'scales', col: 0, requires: ['b_line'],
+        icon: 'scales', col: 0, row: 2, requires: ['b_line'],
         desc: 'Half the coinage, all of it paid to soldiers: reach Government 11 — The Rule of the Learned.',
         rewardText: '"The Reform": +8% income for 36 months.',
         check: (ctx) => (((ctx.game.tags.BYZ || {}).tech || {}).gov | 0) >= 11,
@@ -960,7 +1102,7 @@ export const BOOKMARK_614 = {
       },
       {
         id: 'b_army_of_622', name: 'The Army of 622',
-        icon: 'helmet', col: 2, requires: ['b_fleet'],
+        icon: 'helmet', col: 2, row: 3, requires: ['b_fleet'],
         desc: 'Take up three ideas of the age — the counteroffensive is trained before it is fought.',
         rewardText: '+25 martial points, +10 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.BYZ) >= 3,

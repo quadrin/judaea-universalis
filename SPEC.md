@@ -13045,6 +13045,162 @@ side, because the conversion card is dated to 126 BCE and the run closes in
   167 BCE and the makeup — and `js/sim/population.js`, the one file both
   sides opened, merged without a hand on it.
 
+
+## 211. The tree is not only the war
+
+§102 built mission chains, §177 turned them into trees, §200 grew them to the
+size of their chapters and §207 slowed them to a drumbeat. All four of those
+sections improved the *shape* of the trees and none of them looked at what the
+trees actually **ask**. Audited across the whole game before this section:
+
+    101 of 258 objectives were conquest checks
+    39% were purely martial — map, host, or war score and nothing else
+    court missions:        0
+    institution missions:  0
+    standing missions:     0
+    faith missions:        3   (two of them the formable's Temple)
+
+A chapter's tree was its war ladder with two study rungs bolted on — *reach
+Military N* and *take up three ideas of the age*, copied into all fifteen
+playable chains. Meanwhile the sim was ticking estates and their favor (§197),
+court factions (§34), institutions and who had embraced them (§166), a
+quarterly ranking of the powers (§165), a chancery with a seat budget (§202),
+schools, doctrines, development and works — **every month, for every realm,
+and no mission in the game had ever read any of it.** EU4's trees spend most
+of their width on exactly that material. Ours spent none.
+
+### The civil band: three strands, two deep
+
+Every playable chain gains a band at the foot of its grid, marked in the data
+with `civil` and seated one strand per column:
+
+- **col 0 — the government.** What the state becomes: institutions embraced,
+  reforms taken, the land developed, the revenue that is nobody else's to
+  remit.
+- **col 1 — the region.** Where the realm stands among its neighbours: its
+  rank among the powers, the regard of a named court, the bonds and clients.
+- **col 2 — the court.** The estates and the men in the room: faction
+  approval, the favor bank, the priesthood, the succession.
+
+**Layout depth is not dependency depth.** Every strand root declares no
+prerequisite, so the whole band is workable from the opening month even though
+it is drawn beneath six rows of war — Simon was writing to Rome while the Akra
+was still garrisoned, and the tree should let a player say so. A strand's
+second node waits only on its own root, never on the war, so a stalled siege
+never holds the chancery hostage and the band advances in parallel with §177's
+existing branches.
+
+Eighty-one new objectives across sixteen chains — six on each principal,
+three on each client chair, including the Himyarite court §208 seated while
+this section was in flight. The band is strictly **additive**: no existing
+mission was modified, reseated or made to wait on a new one, so every save's
+`missionsDone` and every `missionIdx` prefix keeps its meaning.
+
+### The AI wall, and why the court is on the other side of it
+
+`monthlyFactions` runs for `g.playerTag` alone. Booting every chapter all-AI
+for sixty months and reading the tag back proves what that means: `estateFavor`
+and `factions` are **empty**, `advisors` is empty (the AI never hires),
+`messianic` is zero, `schools` is absent. An AI's court does not exist — not an
+empty one, an absent one.
+
+So the band is split by reachability, which is the whole reason it is three
+strands and not one:
+
+- **The government and the region are earned by everybody.** Their checks read
+  only state the probe found in an AI hand — `t.embraced.length` (3–12 by
+  month sixty), `g.standing.order` rank (5–13), reforms, development,
+  treasury, regard, clients. §102's symmetry is intact: the AI works the same
+  two strands on the same terms, and the harness shows it doing so.
+- **The court is the player's**, by §34's standing decision that the AI keeps
+  its politics offstage. It is therefore **fenced**: nothing outside col 2 may
+  declare a col-2 prerequisite, so an AI chain never stalls against a court it
+  does not have. Under §207 a failed check charges no rest, so an AI simply
+  walks past the strand every month at no cost.
+
+The fence is the load-bearing invariant of this section, and it is verified by
+**behaviour, not by reading source**. The first draft of the suite pattern-
+matched check sources for `estateFavor|factions|advisors`, which four of the
+eight chapters defeated without trying: their checks call the file's own local
+`approval()` and `favor()` wrappers, so the forbidden field name never appears
+in the source at all. The suite now boots each chapter **with somebody else on
+the throne and the chain's tag on the AI hand** — the true condition, under
+which `activeDefs` refuses the court however the table is filled in — and
+asserts the government and region strands still pay while the court cannot.
+
+### Measured
+
+Two metrics, before and after. The suite's own, over every playable chain's
+objectives:
+
+    before   110 of 205 read the map or the host   (54%)
+    after    117 of 297                            (39%)
+
+And the full audit that opened this section, over every chain in the game
+including the formables':
+
+    objectives       258  →  350
+    purely martial   101 (39%)  →  103 (29%)
+    court              0  →  27
+    the people         6  →  20
+    diplomatic        24  →  40
+    economic          36  →  46
+    conquest         101  →  106
+
+The war did not shrink; the rest of the state arrived beside it. Martial
+objectives moved by two and conquest by five, all of them §208's own new
+Himyarite chain rather than this section's band, while the tree grew by
+eighty-one civil nodes. The 8-year balance harness returns the documented
+anomaly families unchanged, which is expected: the band pays modifiers and
+points, and nothing in it declares a war.
+
+### Two bugs the section found on its way past
+
+Writing seventy-eight nodes against the existing trees turned up two faults
+that had been shipping for several sections, both of the class this codebase
+keeps rediscovering: **content that is silently absent rather than loudly
+broken.**
+
+- **A prerequisite that named nothing.** ARI's `a4_sea_gates` declared
+  `requires: ['a4_priest_kings_school']`; the mission is
+  `a4_priest_kings_charter`. A `requires` pointing at an id that does not
+  exist can never be satisfied, so the node and its child — two of
+  Aristobulus' court branch — were unreachable in every campaign since they
+  were written, and nothing threw: the panel simply drew a medallion that
+  never opened. `smoke138` now walks **every chain in the game** and asserts
+  every prerequisite names a mission that exists.
+- **Six chains stacking two medallions in one cell.** The seat check that
+  §183, §196 and §200 each added walks PLAYABLE sides only, because the panel
+  draws the player's own tree and nobody else's. Under that blind spot,
+  Seleucid, Roman (132), Byzantine (529 and 614) and Jordanian chains had
+  each grown two siblings of one parent in one column, deriving the same row.
+  Invisible today and a landmine the day a chapter makes one of those tags
+  playable. All six are seated, and `smoke138` now runs the seat arithmetic
+  over every chain — with the engine's real ladder/tree branch, since a
+  ladder seats one node per row in column zero and applying the tree
+  derivation to one reports collisions that are not there.
+
+- **Regression contract**: `smoke138` owns the section — every playable chain
+  covers all three strands; every civil node is dressed, seated in its
+  strand's own column, and appended ahead of the roads not taken; the band is
+  additive and the court is fenced; nothing civil completes at boot; **every
+  civil node pays in a maximal realm** (every dial to its stop — the failure
+  this catches is dead content, a check reading a field no campaign writes,
+  and none of those throw); and the AI-hand run proves the wall. Two traps
+  worth carrying forward. The maximal realm must be **sustained** rather than
+  snapshotted — the missions above the band pay out as they complete and some
+  of those rewards shift a faction, so a one-shot maximal realm decays out
+  from under the band and reads a perfectly good court mission as dead. And
+  the AI-hand run must leave the court table **absent**, not full: force it
+  full and any check reading `t.factions` directly instead of through
+  `factionApproval` fakes its own reachability, which is precisely the
+  distinction that run exists to draw. The suite also runs every civil
+  **reward** for real and reads the effect keys off the modifiers it actually
+  seats: smoke85 harvests the engine's vocabulary out of `js/sim/` but checks
+  it against the event packages only, so a misspelled key on a *mission*
+  reward had never been checked by anything — the tooltip promises +10%
+  income, the reward runs without throwing, and nothing happens.
+
 ## 212. Not every foreign question is a question — the world rolls for it
 
 §70 gave the engine the rule that a foreign court's decision is not ours to

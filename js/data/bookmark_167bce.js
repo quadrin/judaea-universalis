@@ -977,6 +977,201 @@ export const BOOKMARK_167 = {
           effects: { incomeMult: 1.1, unrestAll: -0.5 },
         }),
       },
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
+      // Everything above is the war and the ground it took. These three
+      // strands are the other half of the century: what the state became
+      // (col 0), where it stood among the kings (col 1), and who was in the
+      // room when it decided anything (col 2). None of them waits on the war
+      // — no root here declares a prerequisite, because Simon was writing to
+      // Rome while the Akra was still garrisoned. Columns 0 and 1 read state
+      // the AI keeps too (SPEC §102); column 2 reads the court, which the
+      // engine ticks for the player alone (SPEC §34), so nothing outside it
+      // depends on it and an AI chain never stalls there.
+      {
+        id: 'hm_chancery_of_simon', name: 'The Chancery of Simon',
+        civil: 'govt',
+        icon: 'quill', col: 0, row: 6,
+        desc: 'From the one hundred and seventieth year of the Greeks the contracts of '
+          + 'Judaea were dated "in the first year of Simon, great high priest, commander '
+          + 'and leader of the Jews" — a rising in the hills discovering that a state is '
+          + 'mostly clerks, and that the clerks have to be ours and not Antioch\'s. This '
+          + 'chapter opens with two of the age\'s institutions already taken up, the city '
+          + 'and the coin. Take up a third.',
+        rewardText: '"The Clerks of the Nation": administration costs −10% permanently, +25 governance points.',
+        check: (ctx) => {
+          try {
+            const t = ctx.game.tags[who(ctx, 'HAS')] || {};
+            return ((t.embraced || []).length) >= 3;
+          } catch (e) { warnOnce('hm_chancery_of_simon', e); return false; }
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'clerks_of_the_nation', name: 'The Clerks of the Nation', months: -1,
+            effects: { adminMult: 0.9 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { gov: 25 });
+        },
+      },
+      {
+        id: 'hm_yoke_taken_away', name: 'The Yoke Taken Away',
+        civil: 'govt',
+        icon: 'coins', col: 0, row: 7, requires: ['hm_chancery_of_simon'],
+        desc: '"The yoke of the Gentiles was taken away from Israel" is how the chronicle '
+          + 'records a tax remission: Demetrius let the tribute go because he needed the '
+          + 'Judaean hills quiet, and Antiochus VII went further and gave Simon leave to '
+          + 'strike coin with his own stamp — then took the grant back, which is why the '
+          + 'first Hasmonean money is John Hyrcanus\' small bronze, a generation late. '
+          + 'Carry eighty points of development and two hundred talents at once: a '
+          + 'revenue that is nobody else\'s to remit.',
+        rewardText: '"The Tribute Remitted": +8% income and +15% development growth, permanently.',
+        check: (ctx) => {
+          try {
+            const g = ctx.game;
+            const me = who(ctx, 'HAS');
+            const t = g.tags[me] || {};
+            if ((t.treasury || 0) < 200) return false;
+            let dev = 0;
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.owner !== me) continue;
+              const d = p.dev || {};
+              dev += (d.tax | 0) + (d.prod | 0) + (d.mp | 0);
+            }
+            return dev >= 80;
+          } catch (e) { warnOnce('hm_yoke_taken_away', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'the_tribute_remitted', name: 'The Tribute Remitted', months: -1,
+          effects: { incomeMult: 1.08, growthMult: 1.15 },
+        }),
+      },
+      {
+        id: 'hm_among_the_powers', name: 'A People the Chanceries Have Heard Of',
+        civil: 'region',
+        icon: 'flag', col: 1, row: 6,
+        desc: 'Jonathan wrote to Sparta claiming a kinship traced through Abraham, and '
+          + 'Simon sent Numenius to Rome; the Senate answered by writing to Ptolemy, to '
+          + 'Demetrius, to Attalus, to Arsaces and to the free cities that the Jews were '
+          + 'its friends and were not to be harmed. Stand among the five first courts of '
+          + 'the world — the standing the realm panel prints, which counts development, '
+          + 'revenue and clients and not only men under arms.',
+        rewardText: '"Friends of the Senate and People": +1 diplomatic seat, +20 influence points.',
+        check: (ctx) => {
+          try {
+            const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+            const i = ord.indexOf(who(ctx, 'HAS'));
+            return i >= 0 && i < 5;
+          } catch (e) { warnOnce('hm_among_the_powers', e); return false; }
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'friends_of_the_senate', name: 'Friends of the Senate and People', months: -1,
+            effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { infl: 20 });
+        },
+      },
+      {
+        id: 'hm_treaties_renewed', name: 'The Shield of a Thousand Minas',
+        civil: 'region',
+        icon: 'shield', col: 1, row: 7, requires: ['hm_among_the_powers'],
+        desc: 'Numenius carried a gold shield weighing a thousand minas to Rome to have '
+          + 'the friendship confirmed, and Hyrcanus had it confirmed again — the Senate '
+          + 'ordering Antiochus to give Joppa and Gezer back, which he did not. The house '
+          + 'lasted because it kept bonds running in both directions at once: an equal it '
+          + 'could call on, and a people that answered to it without having been annexed. '
+          + 'Hold one alliance and one client court at the same time.',
+        rewardText: '"The Senate\'s Letter": foreign courts want a wider margin before they march on us '
+          + '(+0.5 deterrent), +20 influence points.',
+        check: (ctx) => {
+          try {
+            const g = ctx.game;
+            const me = who(ctx, 'HAS');
+            const t = g.tags[me] || {};
+            if (((t.allies || []).length) < 1) return false;
+            for (const k of Object.keys(g.tags)) {
+              const o = g.tags[k];
+              if (o && o.alive && o.overlord === me) return true;
+            }
+            return false;
+          } catch (e) { warnOnce('hm_treaties_renewed', e); return false; }
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HAS', {
+            id: 'the_senates_letter', name: 'The Senate\'s Letter', months: -1,
+            effects: { deterrent: 0.5 },
+          });
+          ctx.helpers.adjust(ctx, 'HAS', { infl: 20 });
+        },
+      },
+      {
+        id: 'hm_great_assembly', name: 'The Bronze Tablets',
+        civil: 'court',
+        icon: 'speaker', col: 2, row: 6,
+        desc: 'On the eighteenth of Elul in the year 172, the priests, the people, the '
+          + 'rulers of the nation and the elders of the country resolved in one assembly '
+          + 'that Simon should be their leader and high priest for ever, until a '
+          + 'trustworthy prophet should arise — and had the decree cut into bronze and '
+          + 'set up in the Temple precinct, where everyone could read who had agreed to '
+          + 'what. Bring both halves of the court to 65 approval at once: the pious party '
+          + 'and the great houses, under whichever names the year gives them.',
+        rewardText: '"The Decree of the Assembly": +0.25 legitimacy a month and −0.5 unrest everywhere, permanently.',
+        check: (ctx) => {
+          try {
+            const h = ctx.helpers;
+            if (!h || typeof h.factionAtLeast !== 'function') return false;
+            // The assembly asks the same two rooms either side of the 140
+            // handover (SPEC §127), and the §130 reader follows the court
+            // across it: ask after the Hasideans once they are gone and the
+            // Pharisees answer, after the Hellenizers and the Sadducees do.
+            // It is also the fence — no court convenes for an AI hand, so it
+            // reads null there however the table is filled in (SPEC §34).
+            return h.factionAtLeast(ctx, 'HAS', 'hasideans', 65)
+              && h.factionAtLeast(ctx, 'HAS', 'hellenizers', 65);
+          } catch (e) { warnOnce('hm_great_assembly', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'decree_of_the_assembly', name: 'The Decree of the Assembly', months: -1,
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'hm_banquet_of_hyrcanus', name: 'What Was Said at the Banquet',
+        civil: 'court',
+        icon: 'scales', col: 2, row: 7, requires: ['hm_great_assembly'],
+        desc: 'Hyrcanus feasted the Pharisees and asked them to name any fault in him, and '
+          + 'one Eleazar told him to lay down the priesthood, because his mother had been '
+          + 'a prisoner of war. He abolished their rulings, punished the men who kept them '
+          + 'and went over to the Sadducees — a quarrel that outlived him, through '
+          + 'Jannaeus\' eight hundred crosses to Salome handing the schools their kingdom '
+          + 'back. Choose as he chose: the great houses at 80 approval with 50 favor '
+          + 'banked. The men of the gymnasium and the men of the Temple treasury are one '
+          + 'interest under two names, and the seat passes from the first to the second '
+          + 'in 140.',
+        rewardText: '"The Houses Fund the Crown": +10% income and +12% from the ascents, permanently.',
+        check: (ctx) => {
+          try {
+            const h = ctx.helpers;
+            if (!h || typeof h.factionAtLeast !== 'function') return false;
+            // Asked under the older name so the §130 reader can walk the
+            // succession forward: the Hellenizers hold the seat until 140 and
+            // the Sadducees inherit it after. Null for an AI hand, which
+            // convenes no court at all (SPEC §34).
+            if (!h.factionAtLeast(ctx, 'HAS', 'hellenizers', 80)) return false;
+            // Favor is the credit an estate banks with a crown that keeps it
+            // warm; there is no reader for it, so it comes off the tag —
+            // reached only once the line above has established a court sits,
+            // and read under whichever of the two names is seated now.
+            const v = (ctx.game.tags[who(ctx, 'HAS')] || {}).estateFavor || {};
+            const favor = Number.isFinite(v.sadducees) ? v.sadducees : v.hellenizers;
+            return Number.isFinite(favor) && favor >= 50;
+          } catch (e) { warnOnce('hm_banquet_of_hyrcanus', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HAS', {
+          id: 'the_houses_fund_the_crown', name: 'The Houses Fund the Crown', months: -1,
+          effects: { incomeMult: 1.1, pilgrimMult: 1.12 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The chapter's fork cards (SPEC §119), standing in the tree as
       // hypotheticals: each names a page history never wrote, the desc says
@@ -1126,7 +1321,7 @@ export const BOOKMARK_167 = {
       // grows two more rooms — the siege park, and the King's program.
       {
         id: 'sm_royal_foundries', name: 'The Royal Foundries',
-        icon: 'flame', col: 0, requires: ['sm_order'],
+        icon: 'flame', col: 0, row: 2, requires: ['sm_order'],
         desc: 'Rebuild the siege park of the kings: reach Military 5 — The Siege Train.',
         rewardText: '"The Siege Park": +15% siege progress for 24 months.',
         check: (ctx) => (((ctx.game.tags.SEL || {}).tech || {}).mar | 0) >= 5,
