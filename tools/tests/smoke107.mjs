@@ -168,10 +168,17 @@ console.log('== the political east and south (SPEC §205) ==');
   // Kaleb's Yemen: a conquest across a sea, held at the enclave share.
   const { game } = boot('529ce');
   const at = (n) => game.provinces.find((p) => p && p.canon === n);
-  ok(at('Muza').owner === 'AXM' && at('Zafar').owner === 'AXM' && at('Najran').owner === 'AXM',
-    '529: the incense country answers to the negus, four years after the crossing');
-  ok(levyOf(at('Muza')) === 0.1 && levyOf(at('Zafar')) === 0.1,
-    '529: and it is garrison-thin — the enclave share, like Byzantine Spania');
+  // SPEC §208: the incense country answers to the negus the way Procopius
+  // I.20 says it did — through the client king he crowned, not as province
+  // rows. This suite reads only what the map paints (its boot never runs
+  // setup), so the Aksumite yoke on the seated court is smoke135's claim;
+  // here the cells belong to the client and pay the ordinary assessment,
+  // because what is thin about the client kingdom is the yoke — the
+  // tribute, the bond, the garrison party — not its own terraces.
+  ok(at('Muza').owner === 'HMY' && at('Zafar').owner === 'HMY' && at('Najran').owner === 'HMY',
+    '529: the incense country answers to the negus through the client he crowned');
+  ok(levyOf(at('Muza')) === 0.2 && levyOf(at('Zafar')) === 0.2,
+    '529: and its own terraces pay the ordinary assessment — the yoke is the tribute, not the levy');
   ok(at('Najran').religion === 'christianity',
     '529: Najran keeps the faith its martyrs died for');
   ok(at('Carmana').owner === 'SAS' && at('Mazun').owner === 'SAS',
