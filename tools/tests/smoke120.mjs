@@ -74,7 +74,12 @@ function proclaim(chapterId, tagOverride) {
 }
 const doneSet = (game) => new Set(game.tags.MLI.missionsDone || []);
 const grant = (ctx, names) => { for (const n of names) ctx.helpers.changeOwner(ctx, n, 'MLI'); };
-const stand = (ctx, name, v) => { const p = ctx.prov(name); if (p) p.dia = { standing: v }; };
+// Standing is filed per crown since SPEC §216 — the fixture writes the book
+// of the crown whose missions are under test.
+const stand = (ctx, name, v) => {
+  const p = ctx.prov(name);
+  if (p) p.dia = { by: { [ctx.game.playerTag]: { standing: v, asked: 0 } } };
+};
 // The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
 const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
