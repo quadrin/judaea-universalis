@@ -3992,6 +3992,8 @@ export const EVENTS_1948 = [
       + 'four airliners to a desert strip and dare the King to object. The Arab '
       + 'Legion\'s artillery answers the dare.',
     forTag: 'both',
+    decider: 'JOR',
+    roll: true,
     date: { y: 1970, m: 9 },
     world: true,
     major: true,

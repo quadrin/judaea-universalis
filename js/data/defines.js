@@ -74,6 +74,17 @@ export const DEFINES = {
   // trajectory in its documented family.
   MISSION_PACE_MONTHS: 2,
 
+  // The world rolls for it (SPEC §212). A card marked `roll: true` is a
+  // foreign court's own question with no answer this table can give, so the
+  // campaign draws one instead of asking. This is the weight on the recorded
+  // course — the option `aiOption` names — with the remainder split evenly
+  // among the roads the chronicles did not take. Two times in three, because
+  // a chapter's world spine is history first and a dice game second: the
+  // Caliphate usually raises the leaves on the lances, and sometimes fights
+  // Siffin to the finish. Set to 1 to pin every roll back to the record; set
+  // to 0.5 for an honest coin.
+  EVENT_ROLL_RECORDED: 0.667,
+
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly
   // war-declaration chance; caution scales retreat thresholds and how early a
   // realm sues for peace; ponderous marks a great power — slow to anger,
