@@ -65,7 +65,7 @@ function eraTiers(t) {
   return n;
 }
 
-// ── What the civil band reads (SPEC §210) ───────────────────────────────────
+// ── What the civil band reads (SPEC §211) ───────────────────────────────────
 // The court under whatever name it wears this month (SPEC §135), never
 // undefined: a check that throws is swallowed and the mission quietly becomes
 // content nobody can finish.
@@ -119,7 +119,7 @@ function regard(ctx, from, of) {
 
 // The court's own two numbers (SPEC §34, §197) — approval is a mood, favor is
 // a bank — are read INLINE by the column-2 checks below rather than through a
-// wrapper, deliberately: the §210 suite reads the source of every government
+// wrapper, deliberately: the §211 suite reads the source of every government
 // and region check to prove it never touches state the engine fills in for the
 // player's hand alone, and a helper name would hide the very thing it audits.
 
@@ -1019,7 +1019,7 @@ export const BOOKMARK_66 = {
           effects: { unrestAll: -1, legitimacyAdd: 0.25 },
         }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // The provisional government that actually governed: it appointed
       // district commanders, walled towns, struck silver to the Tyrian
       // weight, wrote east, and could never make its three parties into one
@@ -1443,7 +1443,7 @@ export const BOOKMARK_66 = {
           effects: { legitimacyAdd: 0.3, unrestAll: -0.5 },
         }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // The client's own half of the reign, which is most of it: what he
       // built, what his chancery could do without a procurator, where the
       // world ranked him, and the one Jewish prerogative Rome left in his
@@ -1747,7 +1747,7 @@ export const BOOKMARK_66 = {
           months: -1, effects: { legitimacyAdd: 0.1 },
         }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // Three strands the house can work from the first month, none of them
       // waiting on the other and none of them waiting on the war in the
       // west: what a convert kingdom has to build, where it stands between

@@ -49,11 +49,11 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  // 16 war-and-curriculum objectives, then the §210 civil band's six, then
+  // 16 war-and-curriculum objectives, then the §211 civil band's six, then
   // the five roads not taken.
   const WAR = 16, CIVIL = 22;
-  ok(v.length === 27, 'twenty-seven nodes (the §192/§197 tree + the §210 civil band + the §183/§192 roads not taken): ' + v.length);
-  // Only the chain's own root is workable among the war objectives; the §210
+  ok(v.length === 27, 'twenty-seven nodes (the §192/§197 tree + the §211 civil band + the §183/§192 roads not taken): ' + v.length);
+  // Only the chain's own root is workable among the war objectives; the §211
   // strand roots are workable from turn one by design (they wait on nothing),
   // and the §183 hypotheticals are standing invitations, so their roots open.
   ok(v[0].status === 'current' && v.slice(1, WAR).every((m) => m.status === 'locked'),
@@ -88,7 +88,7 @@ console.log('== branches advance independently; the prefix does not lie ==');
   ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,'
     + 'jm_the_generals_of_the_districts,jm_the_third_power,jm_the_altar_and_the_knives,'
     + 'hy_house_stands,hy_royal_robes,hy_granaries',
-    'three war branches open at once, plus the three §210 strand roots and the '
+    'three war branches open at once, plus the three §211 strand roots and the '
     + 'standing hypotheticals: ' + open.join(','));
   // Complete a LATER branch first: the Parthian mission, by opinion. The
   // root's completion above left the chain resting (§207), so wait it out.

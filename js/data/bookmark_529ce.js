@@ -1130,7 +1130,7 @@ export const BOOKMARK_529 = {
           effects: { unrestAll: -1, incomeMult: 1.1 },
         }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // Everything above this line is ground. These six are the other half of
       // a state, and they are parallel to the war rather than after it: three
       // strands two deep, none of them requiring a province to be taken.
@@ -1531,7 +1531,7 @@ export const BOOKMARK_529 = {
         check: (ctx) => eraTiers(ctx.game.tags[who(ctx, 'HMY')]) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { gov: 25, legitimacy: 10 }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // Three strand roots, each workable from the opening month: what the
       // kingdom becomes (col 0), where it stands between its patron and the
       // King of Kings (col 1), and the covenant nobility whose kingdom this

@@ -64,7 +64,7 @@ const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx);
 
 // The pass, chair by chair: chain size, objective/road split, the §196
 // ids, and the conquest ground each expansion branch reaches for. The node
-// counts include the §210 civil band (three nodes on each chair, six on AGR).
+// counts include the §211 civil band (three nodes on each chair, six on AGR).
 const GROWTH = [
   {
     id: '67bce', tag: 'ADI', nodes: 14, hypos: 2,

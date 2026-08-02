@@ -1644,7 +1644,7 @@ export const BOOKMARK_1948 = {
           effects: { incomeMult: 1.1, legitimacyAdd: 0.25 },
         }),
       },
-      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // ── The civil band (SPEC §211) ──────────────────────────────────────
       // Three strands that run beside the war rather than after it: what the
       // state becomes (col 0), where it stands among the courts (col 1), and
       // what its own parties will bear (col 2). No root waits on a battle.

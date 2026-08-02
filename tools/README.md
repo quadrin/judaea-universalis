@@ -342,7 +342,7 @@ one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
 carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
 now holds it.
 
-`smoke137.mjs` owns the SPEC §210 civil band: the three strands (`civil:
+`smoke138.mjs` owns the SPEC §211 civil band: the three strands (`civil:
 'govt'|'region'|'court'`) every playable chain now carries beside its war
 ladder. Two of its mechanisms are worth knowing before you read a failure in
 it. Its pay test builds a **maximal realm** — every dial to its stop, the

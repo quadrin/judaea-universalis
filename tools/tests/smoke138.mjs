@@ -1,11 +1,11 @@
-// Headless regression — SPEC §210: the civil half of the mission tree.
+// Headless regression — SPEC §211: the civil half of the mission tree.
 //
 // The trees were war ladders. Audited before this section: 101 of 258
 // objectives were conquest checks, 39% of them purely martial, and NOTHING
 // in the game read the court, the estates, the institutions or a realm's
 // standing among the powers — all of which the sim ticks every month.
 //
-// §210 gives every playable chain a three-strand civil band, marked in the
+// §211 gives every playable chain a three-strand civil band, marked in the
 // data with `civil`: 'govt' (col 0, what the state becomes), 'region'
 // (col 1, its place among its neighbours), 'court' (col 2, the estates and
 // the men around the throne). This suite holds four contracts:
@@ -80,7 +80,7 @@ const STRANDS = { govt: 0, region: 1, court: 2 };
 // `approval()`/`favor()` wrappers defeats any such regex.)
 
 // ---------------------------------------------------------------- shape
-console.log('== §210 static: every playable chain grew a civil band ==');
+console.log('== §211 static: every playable chain grew a civil band ==');
 ok(CHAINS.length >= 15, 'the game offers ' + CHAINS.length + ' playable chains');
 for (const c of CHAINS) {
   const key = c.id + '/' + c.tag;
@@ -128,7 +128,7 @@ for (const c of CHAINS) {
 }
 
 // ---------------------------------------------------------------- fencing
-console.log('== §210 static: the court strand is fenced and the band is additive ==');
+console.log('== §211 static: the court strand is fenced and the band is additive ==');
 for (const c of CHAINS) {
   const key = c.id + '/' + c.tag;
   const civil = civilOf(c.list);
@@ -207,7 +207,7 @@ console.log('== every chain in the game seats one node per cell ==');
 // Every chain in the game, not only the playable ones and not only the ids a
 // given section added. A `requires` naming a mission that does not exist
 // locks that node and everything under it out of the game permanently, and
-// nothing throws: the panel just draws a medallion that never opens. §210
+// nothing throws: the panel just draws a medallion that never opens. §211
 // found one that had been shipping for several sections — ARI's `a4_sea_gates`
 // waiting on `a4_priest_kings_school` when the mission is `..._charter`,
 // which had quietly killed two nodes of Aristobulus' court branch.
@@ -239,7 +239,7 @@ console.log('== every prerequisite in the game names a mission that exists ==');
 // throwing, and nothing happens. Seventy-eight new rewards is exactly the
 // wrong moment to leave that unchecked, so this runs each civil reward for
 // real and reads the keys off the modifiers it actually seats.
-console.log('== §210: every civil reward seats keys the engine reads ==');
+console.log('== §211: every civil reward seats keys the engine reads ==');
 {
   const TAG_KEYS = new Set();
   const simDir = new URL('../../js/sim/', import.meta.url);
@@ -294,7 +294,7 @@ console.log('== §210: every civil reward seats keys the engine reads ==');
 }
 
 // ------------------------------------------------------------ no free lunch
-console.log('== §210 live: nothing civil is accomplished at boot ==');
+console.log('== §211 live: nothing civil is accomplished at boot ==');
 const booted = new Map();
 for (const c of CHAINS) {
   const key = c.id + '/' + c.tag;
@@ -311,7 +311,7 @@ for (const c of CHAINS) {
 // Every dial to its stop. A civil node that does not pay HERE cannot be paid
 // by any campaign — the check is reading a field that is never written, or
 // asking for a number the engine cannot reach.
-console.log('== §210 live: every civil objective pays in a maximal realm ==');
+console.log('== §211 live: every civil objective pays in a maximal realm ==');
 // The dials, re-asserted before EVERY pass. They have to be sustained rather
 // than set once: the missions above the band pay out as they complete, and
 // some of those rewards shift a faction or spend a treasury — so a snapshot
@@ -412,7 +412,7 @@ for (const c of CHAINS) {
 // Under a maximal realm the government and the region must STILL pay (§102:
 // the AI earns its branches), and the court must NOT (§34: its politics are
 // the player's alone), which is what makes col 2 a fenced leaf strand.
-console.log('== §210 live: the AI earns the government and the region, never the court ==');
+console.log('== §211 live: the AI earns the government and the region, never the court ==');
 for (const c of CHAINS) {
   const key = c.id + '/' + c.tag;
   const others = (c.era.bookmark.playableTags || []).map((p) => p.tag).filter((x) => x !== c.tag);
@@ -437,7 +437,7 @@ for (const c of CHAINS) {
 
 // ------------------------------------------------------------- the balance
 // The point of the section, measured: the trees are no longer war ladders.
-console.log('== §210: the martial share of the trees ==');
+console.log('== §211: the martial share of the trees ==');
 {
   const MARTIAL = /warscore|warScore|atWarWith|controls\(|countControlled|holds\(|totalMen|\.men\b/i;
   let martial = 0, total = 0;
@@ -453,5 +453,5 @@ console.log('== §210: the martial share of the trees ==');
   ok(pct <= 45, 'the war is no longer the majority of what a chapter asks (' + pct + '%)');
 }
 
-console.log(failures ? `smoke137: ${failures} FAIL` : 'smoke137: ALL PASS');
+console.log(failures ? `smoke138: ${failures} FAIL` : 'smoke138: ALL PASS');
 process.exit(failures ? 1 : 0);
