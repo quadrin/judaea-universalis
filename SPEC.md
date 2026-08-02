@@ -12900,4 +12900,9 @@ discipline — baseline is the §206 merge commit run on the same machine):
   card's schema through the registry; `smoke2`'s Jewish conversion of
   Dura-Europos passes unchanged, which is the no-drift-table case proving
   the mercy clause touches only ages that declare resistance. Full
-  battery after the section: **134 suites, 0 failures.**
+  battery after the section: **134 suites, 0 failures** — and after the
+  merge that renumbered it under the drumbeat's §207 and the client
+  court's §208, the merged tree runs **136 of 136** with the 8-year
+  anomaly families exactly the documented ones (§207's own 614 JUD
+  come-and-go line included), the two §208 suite premises told about the
+  client court, and the HMY mission tree's row-0 collision seated.
