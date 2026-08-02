@@ -808,7 +808,7 @@ export const EVENTS_1948_REGION = [
           const g = ctx.game;
           if (!alive(ctx, 'IRN')) return;
           const irn = g.tags.IRN;
-          ctx.helpers.setGovernment(ctx, 'IRN', 'theocracy'); // SPEC §209
+          ctx.helpers.setGovernment(ctx, 'IRN', 'theocracy'); // SPEC §210
           irn.heir = null;
           irn.regency = false;
           h.rebrandTag(ctx, 'IRN', { name: 'Islamic Republic of Iran', flag: 'IRN_IR' });

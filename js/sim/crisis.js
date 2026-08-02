@@ -115,7 +115,7 @@ export const SUCCESSION_CRISIS = {
   name: 'The Succession',
   // Modern constitutions do not have this problem: 1948 turns it off with
   // `mechanics.succession: false`. Nor does any constitution that does not
-  // inherit (SPEC §209): a republic elects, the Lot draws, and an assembly
+  // inherit (SPEC §210): a republic elects, the Lot draws, and an assembly
   // that acknowledges no sovereign has nothing to leave anybody. Nobody riots
   // over a ballot, and nobody claims a seat that was never property.
   applies(ctx, tag) {
