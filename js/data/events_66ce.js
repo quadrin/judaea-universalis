@@ -2087,6 +2087,8 @@ export const EVENTS_66 = [
       + 'an emperor should die standing. Titus succeeds without a sword drawn: the first '
       + 'son to follow his father in the principate\'s history.',
     forTag: 'both',
+    decider: 'ROM',
+    roll: true,
     date: { y: 79, m: 6 },
     world: true,
     major: true,
@@ -2223,6 +2225,8 @@ export const EVENTS_66 = [
       + 'they will tell it otherwise, and not kindly. His brother does not wait for the '
       + 'body to cool before riding to the praetorian camp.',
     forTag: 'both',
+    decider: 'ROM',
+    roll: true,
     date: { y: 81, m: 9 },
     world: true,
     major: true,
@@ -2413,6 +2417,8 @@ export const EVENTS_66 = [
       + 'childless, moderate — a caretaker chosen precisely because he threatens no one. '
       + 'The informers of the fiscus go very quiet, very fast.',
     forTag: 'both',
+    decider: 'ROM',
+    roll: true,
     date: { y: 96, m: 9 },
     world: true,
     major: true,

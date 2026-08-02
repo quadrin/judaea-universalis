@@ -1601,6 +1601,8 @@ export const EVENTS_132 = [
       + 'The stoic keeps Rome; the pleasant one can be sent east, where the couriers '
       + 'already ride in relays, because the King of Kings has chosen his moment too.',
     forTag: 'both',
+    decider: 'ROM',
+    roll: true,
     date: { y: 161, m: 3 },
     world: true,
     major: true,
@@ -1645,6 +1647,8 @@ export const EVENTS_132 = [
       + 'detachment the Danube can spare, down roads that pass one by one through '
       + 'Palestine.',
     forTag: 'both',
+    decider: 'PAR',
+    roll: true,
     date: { y: 161, m: 10 },
     world: true,
     major: true,
@@ -1733,6 +1737,8 @@ export const EVENTS_132 = [
       + 'the colonist in Aelia and the weaver in Tiberias. The physicians name it after '
       + 'the reign. The gravediggers do not name it at all.',
     forTag: 'both',
+    decider: 'ROM',
+    roll: true,
     date: { y: 166, m: 3 },
     world: true,
     major: true,

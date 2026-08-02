@@ -3040,6 +3040,8 @@ export const EVENTS_167 = [
       + 'strikes the same line from its ledgers — the one where the kingdom of the '
       + 'Greeks was still counted among the powers of the earth.',
     forTag: 'both',
+    decider: 'PAR',
+    roll: true,
     date: { y: -129, m: 3 },
     world: true,
     major: true,

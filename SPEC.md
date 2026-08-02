@@ -12702,3 +12702,99 @@ the ordinary §163 seed drift the §205 pass already documented.
   (whose roster table never covered 529), smoke101 and smoke112 (whose
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
+
+## 209. Not every foreign question is a question — the world rolls for it
+
+§70 gave the engine the rule that a foreign court's decision is not ours to
+make, and 381 cards took it. Twenty-five did not, and they were the ones
+that needed it most: cards addressed to everybody, offering two answers,
+where BOTH answers belonged to a court no chapter lets anybody sit in. A
+Jewish player in 653 was stopping the game to rule on whether Uthman burns
+the variant leaves of the Qur'an. In 79 he decided whether Rome deifies
+Vespasian; in 161, whether Marcus Aurelius rules with a colleague; in 680,
+whether Yazid's oath is collected again in public; in 691, whether
+al-Hajjaj's catapults pause for the sanctuary at Mecca. The answers were
+not even a fork — the world came out the same shape either way, one road
+costing the foreign treasury a hundred talents and the other costing it
+five points of legitimacy — so the card was a modal that paused the
+campaign to ask a question with no wrong answer, about somebody else's
+empire.
+
+**The rule.** An event may declare `roll: true` beside its `decider`. The
+card is then a §70 notice — one acknowledging button, the deciding court
+named — but the course is DRAWN at fire time instead of pinned: the
+recorded course (whatever `aiOption` names) carries `EVENT_ROLL_RECORDED`
+of the weight, and the roads the chronicles did not take split the
+remainder. The default is 0.667, two times in three, because a chapter's
+world spine is history first and a dice game second: the Caliphate usually
+raises the leaves on the lances at Siffin, and sometimes fights it to the
+finish. Set the define to 1 to pin every roll back onto the record; set it
+to 0.5 for an honest coin.
+
+**The engine** (`courseFor`, events.js) sits under both places a course was
+being chosen — the notice pinned for a player audience, and the silent
+resolve for an AI one — so a rolled card takes the same road whoever is
+watching. `recordedCourse` is the old pin, factored out and unchanged: a
+card that does not ask for a roll draws no numbers, which is why every
+existing save, replay and multiplayer relay pulls exactly the sequence it
+pulled before this section. The draw uses the campaign's own seeded stream
+(`ctx.rng`), so it is the world's roll and not the machine's: the same seed
+rolls the same course, the host draws once and the relay carries the
+result, and the drawn index rides `pendingEvents` into the save exactly as
+a pinned one does. §128's option mask is applied first — a roll can only
+land on a road this world actually offers.
+
+One clause of §70 is deliberately inverted. A decider erased from the world
+hands its choice BACK to the player, on the reasoning that whoever
+inherited the throne is the closest thing it has to a court; a rolled card
+does not, because the reasoning does not survive the inversion. A Caliphate
+written out of the world does not make the standardizing of the Qur'an a
+Jewish decision — it makes it nobody's, which is what the roll is for. The
+notice names no court in that case and the modal says "another court".
+
+**What is rolled, and what is not.** The test is whether either road is an
+act of the player's own state. Twenty-five cards fail it in both directions
+at once and are now rolls: the ambush in Media that killed Sidetes (167);
+the three Flavian deaths and deifications, Vespasian to Nerva (66); the
+philosopher's accession, Vologases' moment on the Euphrates and the
+Antonine plague's severity (132); seventeen cards of the caliphal and
+Roman spine from Uthman's codices to the stones of al-Hajjaj, the whole
+strand the 614 chapter watches from Tiberias (614); and Black September,
+which is King Hussein's decision and Amman's cost (1948).
+
+The near misses stayed choices, and the line is the same one each time —
+one of the two roads is ours. `ev_p_dome_rock` looks like a caliphal card
+and is not: what differs between its roads is whether the Return's
+liturgical poets answer the gold octagon with grief or with liturgy.
+`ev_vesuvius` and `ev_calumnia_sublata` offer Rome's act against the Jewish
+street's reading of it. 132's world package (Avidius Cassius, Pescennius
+Niger, Palmyra, Julian's commission) and 67's (Pharsalus, the Ides, the
+Parthian flood, Actium) are Rome's news and Jerusalem's answer — which
+claimant to back, whether to clear the foundations — which is the most
+interesting decision either chapter offers. `ev_i_second_exodus` asks how
+a destroyed state's people leave, and leaving is their act. And
+`ev_i_secession` is wholly Cairo's and Damascus's but keeps its question
+anyway: its two roads are not one world at two prices — one of them mints
+the Syrian Arab Republic that every later Syrian card answers to — and it
+carries a §89 `historical` record, which marks it as a fork the ledger is
+watching. Forks are not rolled for.
+
+**The chrome.** The modal is §70's, unchanged: "The decision belongs to the
+Caliphate — we may only take note." The Compendium tells the two apart —
+a rolled card wears a dotted "the world rolls" badge, its audience block
+says the course is drawn when the card fires, and its recorded option is
+labelled "the recorded course" rather than "the historical course",
+because on a rolled card the record is the likelier half of a draw and not
+a promise.
+
+- **Regression contract**: `smoke136` — the notice and its drawn course
+  through the pending entry, the bus payload, the acknowledgment and a
+  save round-trip; the weight at 0/1 and over two thousand rolls; the same
+  seed rolling the same course; an unrolled card leaving the stream
+  untouched; the erased decider staying a notice while the deciding court
+  keeps its choice; the AI audience rolling too; and, across all five
+  chapters that ship one, every rolled card naming a court of its own
+  roster that no standard of that chapter sits in, still recording its
+  historical course, still world history, and carrying no §89 record.
+  smoke39, smoke48 and smoke76 pass with their sweeps untouched — the
+  cards keep every option and every `aiOption` pin they had.

@@ -149,6 +149,36 @@ function maskIdx(allowed, idx, count) {
   return allowed.indexOf(i) >= 0 ? i : allowed[0];
 }
 
+// The recorded course: the option `aiOption` names (an index, or a function of
+// the world), snapped onto the mask.
+function recordedCourse(ctx, ev, allowed) {
+  let idx = 0;
+  try {
+    idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
+  } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
+  return maskIdx(allowed, idx, ev.options.length);
+}
+
+// The course a card takes when nobody at this table decides it (SPEC §209).
+// A `roll: true` card is a foreign court's own question whose answers differ
+// in cost and flavour rather than in what happens, so the campaign's own
+// seeded stream answers it: the recorded course carries `EVENT_ROLL_RECORDED`
+// of the weight and the roads the chronicles did not take split the rest. The
+// stream is only touched for a card that asks for it, so every existing save,
+// replay and multiplayer relay draws exactly the numbers it drew before.
+function courseFor(ctx, ev, allowed) {
+  const rec = recordedCourse(ctx, ev, allowed);
+  if (ev.roll !== true || !ctx.rng) return rec;
+  const pool = (allowed && allowed.length ? allowed.slice() : ev.options.map((_, i) => i))
+    .filter((i) => ev.options[i]);
+  const others = pool.filter((i) => i !== rec);
+  if (!others.length) return rec;
+  const w = Number(ctx.DEFINES && ctx.DEFINES.EVENT_ROLL_RECORDED);
+  const weight = Number.isFinite(w) ? Math.max(0, Math.min(1, w)) : 0.667;
+  if (ctx.rng.chance(weight)) return rec;
+  return others[ctx.rng.int(others.length)];
+}
+
 // Fire an event now (popup for the player, silent auto-pick for the AI).
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
@@ -203,19 +233,24 @@ export function fireEvent(ctx, ev) {
     // mandate republic, to the republic that left the union, or to the union
     // itself, and the card is a notice either way. A static string still
     // works exactly as before.
+    //
+    // SPEC §209 adds the second half of the same thought: a card marked
+    // `roll: true` is a foreign question this table cannot answer at all, so
+    // it is a notice even where an erased court would have handed the choice
+    // back — a Caliphate rewritten out of the world does not make the
+    // standardizing of the Qur'an the player's decision. The course is drawn
+    // rather than pinned; the modal is the same single button either way.
     let decider = ev.decider;
     if (typeof decider === 'function') {
       try { decider = decider(ctx); } catch (e) { warnOnce('decid:' + ev.id, 'decider() threw for', ev.id, e); decider = null; }
     }
     if (decider) decider = livingTag(ctx, decider);
-    if (decider && decider !== player && g.tags[decider]) {
-      let idx = 0;
-      try {
-        idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
-      } catch (e) { warnOnce('decider:' + ev.id, 'aiOption threw for', ev.id, e); }
+    if (decider && decider !== player && (g.tags[decider] || ev.roll === true)) {
       pe.notice = true;
-      pe.optIdx = maskIdx(allowed, idx, ev.options.length);
-      pe.decider = decider;
+      pe.optIdx = courseFor(ctx, ev, allowed);
+      // A court the world no longer knows names nobody; the modal says "another
+      // court" rather than three letters out of the era's roster.
+      if (g.tags[decider]) pe.decider = decider;
     }
     if (allowed) pe.allowed = allowed.slice();
     g.pendingEvents.push(pe);
@@ -227,12 +262,9 @@ export function fireEvent(ctx, ev) {
     });
     return;
   }
-  // AI resolves silently
-  let idx = 0;
-  try {
-    idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
-  } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
-  const opt = ev.options[maskIdx(allowed, idx, ev.options.length)] || ev.options[0];
+  // AI resolves silently — on its recorded course, or on the roll (SPEC §209)
+  // where the card says the answer was never anybody's to script.
+  const opt = ev.options[courseFor(ctx, ev, allowed)] || ev.options[0];
   try {
     if (opt && typeof opt.effects === 'function') opt.effects(ctx);
   } catch (e) { warnOnce('fx:' + ev.id, 'event effects threw for', ev.id, e); }

@@ -74,18 +74,25 @@ export function createWiki({ DEFINES, getCtx }) {
     // A card may resolve its decider at fire time (SPEC §105); the wiki reads
     // the chain cold, with no world to resolve against, so it names the court
     // the card is written for and leaves the runtime to pick the successor.
+    // A rolled card (SPEC §209) names the same court and a different answer:
+    // nobody at the table gets the question, and the course is drawn.
     if (ev.decider && typeof ev.decider !== 'function') {
       rows.push(['The choice belongs to', tagName(ev.decider)
-        + ' — any other player is only notified of their course']);
+        + (ev.roll === true
+          ? ' — and the world rolls it when the card fires, weighted toward the record'
+          : ' — any other player is only notified of their course')]);
     }
     return rows;
   }
   function optionListHtml(ev) {
     const aiIdx = typeof ev.aiOption === 'function' ? -1 : (ev.aiOption | 0);
+    const histLabel = ev.roll === true
+      ? '<span class="wiki-hist" data-tt="What the chronicles record — and the likelier half of the roll.">the recorded course</span>'
+      : '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>';
     return (ev.options || []).map((o, i) => `
       <div class="wiki-opt">
         <div class="wiki-opt-label">${icon('star4', 'icon-xs')} ${esc(o.label || 'Continue')}
-          ${i === aiIdx ? '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>' : ''}
+          ${i === aiIdx ? histLabel : ''}
         </div>
         ${o.tooltip ? `<div class="wiki-opt-tip">${esc(o.tooltip)}</div>`
     : '<div class="wiki-opt-tip wiki-dim">Its consequences are written only in the chronicle.</div>'}
@@ -100,7 +107,9 @@ export function createWiki({ DEFINES, getCtx }) {
       + (ev.major ? '<span class="wiki-badge">major</span>' : '')
       + (ev.once === false ? '<span class="wiki-badge">recurring</span>' : '')
       + (ev.decider && typeof ev.decider !== 'function'
-        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '');
+        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '')
+      + (ev.roll === true
+        ? '<span class="wiki-badge wiki-badge-roll" data-tt="No answer this table can give — the world draws one.">the world rolls</span>' : '');
   }
   function kv(rows) {
     return rows.map(([k, v]) => `<div class="wiki-kv"><span class="wiki-k">${esc(k)}</span><span class="wiki-v">${esc(v)}</span></div>`).join('');
