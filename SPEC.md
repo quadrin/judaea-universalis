@@ -13334,11 +13334,11 @@ long campaign leaves a court rich, peaceful and high on the ladder.
   market — and `smoke103`/`smoke14` keep theirs about wings and airfields.
   Verified on the merged tree, after this section was renumbered three times
   out of main's way (§209 went to Beta Israel, §210 to Idumea's gods, §211 to
-  the civil band on every chain): **138 of 138
-  headless suites ALL PASS**, `uitest44` green in a real browser, and the
-  8-year harness byte-identical to main alone — the same eight families,
-  including the `167bce PAR: BLEEDING` that §210 documented as its own. The
-  two lines of work never touched: main's landed in 132/167 CE and the
-  dispersion, this one in 1948 on the arms market, and `js/data/defines.js`
-  and `js/sim/init.js` — the only two files both sides opened — merged
-  without a hand on them.
+  the civil band on every chain): **139 of 139 headless suites ALL PASS**,
+  `uitest44` green in a real browser, and the 8-year harness byte-identical
+  to main alone — the same families, including the `167bce PAR: BLEEDING`
+  that §210 documented as its own. The lines of work never touched: main's
+  landed in 132/167 CE, the dispersion and the mission trees, this one in
+  1948 on the arms market, and the five files both sides opened
+  (`js/data/defines.js`, `js/data/bookmark_1948.js`, `js/sim/init.js`,
+  `js/ui/nation_panel.js`, `tools/README.md`) merged without a hand on them.
