@@ -1253,6 +1253,9 @@ export const BOOKMARK_529 = {
         }),
       },
       {
+        // `row: 0` is load-bearing: an undeclared row lands one below the
+        // deepest parent (getMissions), which would seat this at 2:1 on top
+        // of the covenant mission — smoke126/129 hold the grid.
         id: 'h_tribute_of_one_word', name: 'A Tribute of One Word',
         icon: 'scales', col: 2, row: 0, requires: ['h_kings_companies'],
         desc: 'Procopius\' phrase for how the conquest ends: a tribute agreed by a court '
