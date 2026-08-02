@@ -9,7 +9,7 @@
 // v6.8 (SPEC §160): west to the Atlantic and north to Britain — the whole
 // Roman world, the Maghreb, Iberia, Gaul, the home islands, the Rhine and
 // Danube, the Pontic steppe and the Caspian's whole rim.
-// v7.4 (SPEC §203): east to hold ALL of Iran (the Makran shore, Sistan and
+// v7.4 (SPEC §205): east to hold ALL of Iran (the Makran shore, Sistan and
 // the Khorasan marches to 63.5°E) and south to hold ALL of Ethiopia (the
 // highlands to 3°N) — and with them everything the rectangle must then carry:
 // Nubia and the middle Nile, the Horn and the Gulf of Aden, Arabia entire
@@ -25,7 +25,7 @@
 // SwiftShader, the weakest thing that will ever run this (SPEC §157) — 7264
 // still fits. The texture bill at this frame is ~629 MB in the §158–159
 // narrowed formats (smoke104 keeps the arithmetic executable); the §156
-// costing said a frame this size was affordable and not worth it, and §203
+// costing said a frame this size was affordable and not worth it, and §205
 // is the section where it became worth it. Neither number is what makes a
 // map: the coastline below is, and it is the part traced by hand.
 const MAP_W = 7264;
@@ -1666,7 +1666,7 @@ const PROVINCES = [
   P('Ustyurt', 52.00, 43.50, 1.80, 'WASTE', 'wasteland', 'salt', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
     { impassable: true }),
 
-  // --- v7.4: the eastern and southern frame (SPEC §203) ---------------------
+  // --- v7.4: the eastern and southern frame (SPEC §205) ---------------------
   // Appended, so no save ID shifts. These cells exist because the frame moved
   // to hold all of Iran and all of Ethiopia — and everything the rectangle
   // then carries: Nubia, the Horn, Arabia entire, the Oxus lands, the Sahel.
@@ -1674,7 +1674,7 @@ const PROVINCES = [
   // every bookmark inherits, and handing Parthia its whole east (or Kush its
   // whole Nile) in the base atlas would rewrite eight tuned campaigns at
   // once. js/data/political_maps.js seats the courts per era, with the levy
-  // shares that pay for them (SPEC §173, §203).
+  // shares that pay for them (SPEC §173, §205).
   //
   // -- Ariana: the Iranian east from Carmania to the Makran and Herat -------
   P('Carmana', 57.05, 30.10, 1.40, 'WASTE', 'drylands', 'livestock', 'zoroastrianism', 'persian', 3, 3, 3, 0,
@@ -1922,7 +1922,7 @@ const REGIONS = {
     'Tanais', 'Scythia', 'Borysthenia'],
   'Sarmatia': ['Sarmatia', 'Roxolania', 'Aorsia', 'Rha', 'Hyperborea', 'Ripaea', 'Ustyurt',
     'Massagetae', 'Issedones', 'Kyzylkum'],
-  // -- v7.4 (SPEC §203): the named lands of the eastern and southern frame --
+  // -- v7.4 (SPEC §205): the named lands of the eastern and southern frame --
   'Ariana': ['Carmana', 'Harmozeia', 'Tis', 'Pura', 'Makuran', 'Zranka', 'Phrada',
     'Artacoana', 'Dasht-e Kavir', 'Dasht-e Lut'],
   'Margiana': ['Antiochia Margiana', 'Nisa', 'Hecatompylos', 'Chorasmia', 'Dahae', 'Karakum'],
@@ -1940,7 +1940,7 @@ const REGIONS = {
 
 // ---------------------------------------------------------------------------
 // Height primitives (renderer; all coords lon/lat). The cap is
-// MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, 80 since §203
+// MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, 80 since §205
 // (the eastern and southern frame wanted twelve ranges §157's headroom could
 // not hold; the uniform budget holds 80 with room, and smoke104 checks it).
 // v5.4 had filled the old cap of 32 exactly, so an extended map would have
@@ -2013,7 +2013,7 @@ const HEIGHT_PRIMITIVES = [
   { type: 'dome',  c: [52.80, 43.60], r: 1.20, h: 0.35 },                    // the Ustyurt plateau
   { type: 'dome',  c: [45.20, 53.20], r: 2.00, h: 0.22 },                    // the Volga upland
   { type: 'dome',  c: [34.50, 55.40], r: 2.40, h: 0.18 },                    // the Valdai rise
-  // --- v7.4: the mountains of the eastern and southern frame (SPEC §203).
+  // --- v7.4: the mountains of the eastern and southern frame (SPEC §205).
   // §157's 64 was filled to 59 by v6.8 and this frame needs a dozen more, so
   // the renderer's cap rises to 80 — still comfortably inside the guaranteed
   // 224-vec4 uniform floor smoke104 checks (80×2+16 = 176).
@@ -2052,10 +2052,10 @@ export const MAP_DATA = {
     // west got owners it became Spanish pixels in Africa and a walkable
     // false border. The repair detaches the African fragment at the source.
     'Malaca',
-    // SPEC §203: the two famous straits of the new frame are each a few
+    // SPEC §205: the two famous straits of the new frame are each a few
     // pixels of water, and a weighted cell steps over a few pixels. Both
     // sides of Bab el-Mandeb and Hormuz hold to their own shore, and the
-    // island cell keeps to its island. Measured on the first §203 raster,
+    // island cell keeps to its island. Measured on the first §205 raster,
     // three more cells won Malaca-class stray lobes across open water —
     // Gerrha across the Persian Gulf to the Carmanian shore, Asir across
     // the Red Sea to the African one, Danakil back across the Assab-Mocha
@@ -2079,7 +2079,7 @@ export const MAP_DATA = {
       [32.53, 31.08], [34.28, 31.36], [34.99, 29.55],
       [34.25, 27.70], [32.52, 29.94],
     ],
-    // SPEC §203: the Rub al-Khali is the empty quarter, not the coasts. Its
+    // SPEC §205: the Rub al-Khali is the empty quarter, not the coasts. Its
     // huge weighted cell reached BOTH Arabian shores on the first raster —
     // sealing Oman off the Gulf road and Dhofar off the Hadhramaut one — and
     // no army ever failed to march a coast because the interior was empty.
@@ -2104,7 +2104,7 @@ export const MAP_DATA = {
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
   // Land ferries/bridges only — armies may walk these.
-  // SPEC §203: the Oxus road — Chorasmia's walled oases are ringed by the
+  // SPEC §205: the Oxus road — Chorasmia's walled oases are ringed by the
   // Karakum and Kyzylkum on the map exactly as in life, and in life the road
   // in was the river through the sands. First actual use of this facility.
   extraLinks: [['Antiochia Margiana', 'Chorasmia']],
@@ -2127,7 +2127,7 @@ export const MAP_DATA = {
     // Dalmatia. (No Alboran ferry — those two still share a false land border,
     // see the note on severLinks below.)
     ['Tarentum', 'Salona'],
-    // v7.4 (SPEC §203): the crossings of the eastern and southern frame. The
+    // v7.4 (SPEC §205): the crossings of the eastern and southern frame. The
     // Periplus' own ferry at Bab el-Mandeb (the strait's shortest crossing,
     // Avalites to Muza), the strait of Hormuz, and the run out to Dioscurida
     // from the Horn.
@@ -2173,7 +2173,7 @@ export const MAP_DATA = {
     // (the raster repair), so the border stays severed even if a future
     // weight change regrows the lobe.
     ['Portus Magnus', 'Malaca'], ['Volubilis', 'Malaca'],
-    // SPEC §203: the belt to the contiguousProvinces braces above — both new
+    // SPEC §205: the belt to the contiguousProvinces braces above — both new
     // straits stay water even if a future weight change regrows a lobe, and
     // the three measured stray-lobe crossings (Gerrha over the Gulf, Asir
     // over the Red Sea twice, the Assab-Mocha narrows) stay severed too.
@@ -2195,12 +2195,12 @@ const RELIGION_KEYS = ['judaism', 'samaritanism', 'hellenism', 'roman_cult', 'na
   // v6.8: the western and northern frame (SPEC §160). Base-atlas keys only —
   // christianity, islam and the rest still arrive through bookmark overlays.
   'druidic', 'germanic_cult', 'punic', 'thracian_cult', 'steppe_cults',
-  // v7.4: the eastern and southern frame (SPEC §203).
+  // v7.4: the eastern and southern frame (SPEC §205).
   'kushite', 'south_arabian', 'african_cults'];
 const CULTURE_KEYS = ['judean', 'galilean', 'samaritan', 'idumean', 'nabataean', 'arab', 'aramean',
   'phoenician', 'greek', 'egyptian', 'roman', 'armenian', 'persian',
   'celtic', 'iberian', 'mauri', 'germanic', 'thracian', 'illyrian', 'sarmatian',
-  // v7.4 (SPEC §203)
+  // v7.4 (SPEC §205)
   'kushite', 'aksumite', 'south_arabian', 'cushitic', 'west_african'];
 
 function pointInPolygon(lon, lat, poly) {

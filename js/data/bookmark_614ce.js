@@ -260,7 +260,7 @@ export const BOOKMARK_614 = {
     'LMB', 'FRK', 'VIS', 'MAU', 'GRM', 'ARO',
     'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
     'AVA', 'SLV', 'TRK', 'BGR',
-    // The political east and south (SPEC §203): Christian Nubia, Aksum
+    // The political east and south (SPEC §205): Christian Nubia, Aksum
     // without its sea, the Beja between them.
     'NOB', 'BLM', 'AXM'],
   // Standing rivalries (SPEC §73): once the jihad state wakes it is the

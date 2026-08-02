@@ -432,7 +432,7 @@ export const BOOKMARK_1948 = {
     // sealed country keeps sealed politics.
     'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
     'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV',
-    // The political east and south (SPEC §203): the sovereigns of the new
+    // The political east and south (SPEC §205): the sovereigns of the new
     // frame — the Negus, the Imam, the Sultan, the King of Afghanistan,
     // one-year-old Pakistan, and Tubman's Liberia. The colonial south rides
     // under FRA and UK, which are already seated.
@@ -749,7 +749,7 @@ export const BOOKMARK_1948 = {
     'Borysthenia': 'Gomel', 'Venedia': 'Minsk', 'Rha': 'Penza',
     'Hyperborea': 'Moscow', 'Ripaea': 'Kuybyshev',
     'Dyrrhachium': 'Durrës', 'Phasis': 'Batumi', 'Caucasian Albania': 'Baku',
-    // -- SPEC §203: the eastern and southern frame in its 1948 names, same
+    // -- SPEC §205: the eastern and southern frame in its 1948 names, same
     // metropolis rule. Where the classical name IS the 1948 name (Aksum,
     // Marib, Najran, Ogaden, Danakil) nothing is written.
     'Carmana': 'Kerman', 'Harmozeia': 'Bandar Abbas', 'Tis': 'Chabahar',
@@ -811,7 +811,7 @@ export const BOOKMARK_1948 = {
     ITA: { names: 'italian' },
     UK: { names: 'british' },
     IRN: { names: 'iranian_modern' },
-    // SPEC §203: the ancient mart of Omana is the Sultanate now — same name,
+    // SPEC §205: the ancient mart of Omana is the Sultanate now — same name,
     // its own century's court (the static 'arab' pool is the Periplus-era
     // one, correct everywhere else OMA is seated).
     OMA: { names: 'omani_modern' },
@@ -1444,7 +1444,7 @@ export const BOOKMARK_1948 = {
     // The off-map seat (SPEC §180): the recognition came from this desk,
     // eleven minutes after the declaration and over his own State Department.
     USA: { name: 'Harry S. Truman', title: 'President', gov: 4, infl: 4, mar: 3, age: 64 },
-    // The political east and south (SPEC §203), to the same week: the Imam
+    // The political east and south (SPEC §205), to the same week: the Imam
     // was murdered in February and Ahmad took the ruin; Jinnah has four
     // months to live, with Liaquat carrying the government already.
     ETH: { name: 'Haile Selassie', title: 'Emperor', gov: 4, infl: 4, mar: 2, age: 55 },

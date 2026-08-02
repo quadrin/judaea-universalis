@@ -214,7 +214,7 @@ export const BOOKMARK_67 = {
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
     'DLM', 'SCO', 'DRD', 'THR', 'DAC',
     'BOS', 'SCY', 'SRM', 'VEN',
-    // The political east and south (SPEC §203): the Kandake's Kush, the
+    // The political east and south (SPEC §205): the Kandake's Kush, the
     // incense crowns, Sakastan on the Helmand, the walled Oxus oases.
     'KSH', 'SAB', 'HMY', 'HDR', 'SAK', 'CHO',
   ],

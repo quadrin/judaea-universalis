@@ -2400,7 +2400,7 @@ export const GENERAL_NAMES = {
   gaelic:    ['Niall', 'Conall', 'Domnall', 'Aed', 'Fergus', 'Cathal', 'Diarmait', 'Congal'],
   slavic:    ['Ardagastus', 'Peiragastus', 'Musokios', 'Dauritas', 'Samo', 'Mezamir', 'Chatzon', 'Perbundos'],
   turkic:    ['Bayan', 'Tardu', 'Istami', 'Ziebel', 'Kubrat', 'Organa', 'Sandilch', 'Zabergan'],
-  // -- the political east and south (SPEC §203): same standard again. The
+  // -- the political east and south (SPEC §205): same standard again. The
   // ancient pools are attested rulers — Meroitic kings and kandakes from the
   // royal chronology, Nubian kings from the Silko inscription to the baqt,
   // Aksumite negusts from the coinage and the Periplus, Sayhadic mukarribs

@@ -1026,7 +1026,7 @@ export const FLAGS = {
     star5(3.6, 3.2, 1.1, '#f2f4f4') +
     star5(8.9, 3.2, 1.1, '#f2f4f4') +
     star5(6.2, 6.6, 1.1, '#f2f4f4'),
-  // ---- the political east and south (SPEC §203) ----
+  // ---- the political east and south (SPEC §205) ----
   // Same rule as §173: where a court left an emblem it is drawn; where it
   // left none, the thing its neighbors knew it by.
   // Kush: the Meroitic pyramids of the royal cemetery, steep-sided, the

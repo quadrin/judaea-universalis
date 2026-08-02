@@ -365,7 +365,7 @@ export const BOOKMARK_529 = {
     'OST', 'VAN', 'MAU', 'GRM', 'VIS', 'SUE', 'FRK', 'BGD', 'ARO',
     'BRT', 'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
     'GEP', 'LMB', 'BGR', 'SLV',
-    // The political east and south (SPEC §203): Kaleb's Aksum holding the
+    // The political east and south (SPEC §205): Kaleb's Aksum holding the
     // Yemen it took four years ago, the Nubian kings and the Blemmyes on
     // the Nile, the Hephthalites over the Oxus.
     'NOB', 'BLM', 'AXM', 'HEP'],
@@ -721,7 +721,7 @@ export const BOOKMARK_529 = {
     BGD: { name: 'Godomar II', title: 'King', gov: 2, infl: 2, mar: 2, age: 45 },
     LMB: { name: 'Wacho', title: 'King', gov: 2, infl: 3, mar: 3, age: 40 },
     MAU: { name: 'Masuna', title: 'King of the Moors and Romans', gov: 3, infl: 2, mar: 3, age: 50 },
-    // The political east and south (SPEC §203): the negus who crossed the
+    // The political east and south (SPEC §205): the negus who crossed the
     // strait four years ago, with the viceroy he left at Zafar named — and
     // Abraha, who will depose that viceroy, waiting in the same army.
     AXM: { name: 'Kaleb', title: 'Negus of Aksum and Himyar', gov: 3, infl: 3, mar: 4, age: 45,

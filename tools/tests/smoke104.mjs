@@ -61,10 +61,10 @@ const MEASURED_MAX_TEXTURE = 8192;
   ok(MAP_DATA.LON0 <= -11 && MAP_DATA.LAT1 >= 58,
     '  and it reaches Britain and Ireland: lon ' + MAP_DATA.LON0 + '..' + MAP_DATA.LON1
     + ', lat ' + MAP_DATA.LAT0 + '..' + MAP_DATA.LAT1);
-  // SPEC §203: the frame holds ALL of Iran (its easternmost ground is
+  // SPEC §205: the frame holds ALL of Iran (its easternmost ground is
   // ~63.33°E) and ALL of Ethiopia (its southern tip is ~3.40°N).
   ok(MAP_DATA.LON1 >= 63.4 && MAP_DATA.LAT0 <= 3.35,
-    '  and all of Iran and all of Ethiopia, which is what §203 grew it for');
+    '  and all of Iran and all of Ethiopia, which is what §205 grew it for');
   // The long axis is what a MAX_TEXTURE_SIZE ceiling actually binds.
   ok(Math.max(MAP_DATA.MAP_W, MAP_DATA.MAP_H) <= MEASURED_MAX_TEXTURE,
     'and its long axis fits the MEASURED 8192 ceiling, not the 4096 the comment assumed');
@@ -102,7 +102,7 @@ console.log('== the frame that was costed, against the frame that shipped ==');
 {
   // §156 costed lon -25..54 / lat 0..60 at 948 MB in RGBA8 and 694 narrowed,
   // and called the memory the blocker; §160 shipped the cheaper frame that
-  // reached the home islands and judged the rest "not worth it". §203 is the
+  // reached the home islands and judged the rest "not worth it". §205 is the
   // section where the southeast BECAME worth it — all of Iran and all of
   // Ethiopia — and this frame now costs most of what §156 was refused over.
   // The judgement changed; the arithmetic stayed executable, which is the
@@ -119,7 +119,7 @@ console.log('== the frame that was costed, against the frame that shipped ==');
     + MB(shipped).toFixed(0) + ' — what its margin still buys is the Urals, west '
     + 'Africa\'s bulge and the equator, and that is still not worth it');
   ok(MB(shipped) < 700,
-    '  and the §203 bill stays under the 694 MB the §156 costing was refused at');
+    '  and the §205 bill stays under the 694 MB the §156 costing was refused at');
 }
 
 // ---------------------------------------------------------------------------

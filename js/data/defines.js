@@ -176,7 +176,7 @@ export const DEFINES = {
     ROU: { aggression: 0.1, caution: 2.0 },
     IRL: { aggression: 0.05, caution: 2.0 },
     SUI: { aggression: 0.05, caution: 2.0 },
-    // -- the political east and south (SPEC §203). Missing tags default {1,1}.
+    // -- the political east and south (SPEC §205). Missing tags default {1,1}.
     // Kush raids Roman Egypt when Rome looks away (the Kandake sacked Syene
     // in 25 BCE) but is no conqueror; Aksum is a rising trading crown that
     // will one day cross the strait in force; the incense kingdoms are rich,
@@ -273,7 +273,7 @@ export const DEFINES = {
     YUG: 'republic', ALB: 'republic', BUL: 'republic', ROU: 'republic',
     IRL: 'republic', SUI: 'republic',
     SPA: 'monarchy', NLD: 'monarchy', DEN: 'monarchy', SWE: 'monarchy',
-    // -- the political east and south (SPEC §203) --
+    // -- the political east and south (SPEC §205) --
     // Kush is the one place on this map a crowned QUEEN is the constitution
     // (the Kandakes of Meroe), which the monarchy rule carries; Saba's
     // mukarrib and Aksum's negus are crowned heads; the Blemmyes and the
@@ -339,7 +339,7 @@ export const DEFINES = {
     punic:          { name: 'Punic Cults',           color: [176, 108, 76],  group: 'pagan' },
     thracian_cult:  { name: 'Thracian Cults',        color: [148, 118, 168], group: 'pagan' },
     steppe_cults:   { name: 'Steppe Cults',          color: [166, 152, 104], group: 'pagan' },
-    // -- the eastern and southern frame (SPEC §203) --
+    // -- the eastern and southern frame (SPEC §205) --
     // Same rule as §160: a base atlas that reaches Meroe and calls the
     // Kandake's realm Egyptian-cult, or reaches Marib and calls the mukarrib
     // Nabataean, is lying where a player can check. Amun of Napata kept his
@@ -383,7 +383,7 @@ export const DEFINES = {
     // and the 1948 map inherits half of Europe from. No base-atlas cell
     // carries it — it arrives through the political maps' culture overlays.
     slavic:     { name: 'Slavic',     color: [122, 158, 92],  group: 'slavic' },
-    // -- the eastern and southern frame (SPEC §203) --
+    // -- the eastern and southern frame (SPEC §205) --
     // Meroitic Nubia; the Ge'ez highlands; the Sayhadic kingdoms of the
     // incense country; the lowland Cushitic peoples of the Horn (Beja, Afar,
     // Somali ancestors — one coarse banner at this scale); and the Sahel and
@@ -1039,7 +1039,7 @@ export const DEFINES = {
       description: 'Armed to the teeth and party to nothing.',
       ideas: {},
     },
-    // ---- the political east and south (SPEC §203): the courts of the new
+    // ---- the political east and south (SPEC §205): the courts of the new
     // frame. Same contract as §173: every one exists because a political map
     // seats it somewhere in some century, none appears in a chapter that does
     // not list it in activeTags, and none holds a province at the old world's

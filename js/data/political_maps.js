@@ -1,5 +1,5 @@
 // js/data/political_maps.js — who rules the west, century by century
-// (SPEC §173) — and, since §203, the east and the south: the same eight maps
+// (SPEC §173) — and, since §205, the east and the south: the same eight maps
 // now also seat the courts of the ground the v7.4 frame added, from Kush and
 // Aksum and the incense kingdoms to Sakastan, Margiana and the 1948 south.
 //
@@ -110,7 +110,7 @@ const BRITAIN = ['Britannia'];
 const CALEDONIA = ['Caledonia'];
 const HIBERNIA = ['Hibernia'];
 
-// The eastern and southern frame (SPEC §203). Impassable wastes (the Kavir
+// The eastern and southern frame (SPEC §205). Impassable wastes (the Kavir
 // and Lut, the Karakum and Kyzylkum, the Rub al-Khali, the Nubian desert,
 // the Sudd, the deep Sahara, the Great Forest) are never dealt, on the
 // standing rule the Ustyurt and the Spanish Sahara already follow: a sealed
@@ -233,7 +233,7 @@ const MAP_167 = deal({
   BOS: PONTIC_GREEK,
   SRM: STEPPE_FAR,                            // the Roxolani and Aorsi, new lords of the grass
   VEN: ['Venedia'],                           // the Venedae of Ptolemy III.5
-  // -- the east and south (SPEC §203) --
+  // -- the east and south (SPEC §205) --
   // Antiochus IV dies at Tabae in Persis THIS YEAR, on an anabasis to hold
   // exactly these satrapies: Carmania is Seleucid on paper and slipping.
   // Eucratides has usurped Bactria and holds Margiana, Aria and the Helmand
@@ -251,7 +251,7 @@ const MAP_167 = deal({
   // No state, honestly: the Balearic slingers hire out to everyone and answer
   // to no one (Carthage lost the islands in 206, Rome takes them in 123), and
   // the far forest is Herodotus' blank margin for another seven centuries.
-  // §203's ground keeps the same rule: the Horn ports answer each to its own
+  // §205's ground keeps the same rule: the Horn ports answer each to its own
   // chief (Periplus 14, three centuries early and still true), the proto-
   // Aksumite highlands are chiefdoms between D'mt and Aksum, the Gedrosian
   // and Omani coasts, inner Arabia and the whole Sahel are peoples, not
@@ -317,7 +317,7 @@ const MAP_67 = deal({
   SCY: STEPPE_NEAR,
   SRM: STEPPE_FAR,
   VEN: ['Venedia'],
-  // -- the east and south (SPEC §203) --
+  // -- the east and south (SPEC §205) --
   // Mithridates II retook Aria and Margiana from the Sakas a generation ago
   // and settled them on the Helmand as vassals — Sakastan is now a country's
   // name. Carmania and the Parthyene heartland are Arsacid interior; Himyar
@@ -380,7 +380,7 @@ const MAP_40 = deal({
   SCY: STEPPE_NEAR.concat(['Olbia', 'Tyras']), // Olbia half-ruined by Burebista, under Scythian protection
   SRM: STEPPE_FAR,
   VEN: ['Venedia'],
-  // -- the east and south (SPEC §203): the 67 BCE board, one generation on.
+  // -- the east and south (SPEC §205): the 67 BCE board, one generation on.
   // Phraates III's east holds; the Indo-Scythian house on the Helmand is at
   // its height between Maues' heirs and Gondophares.
   PAR: IRAN_SE.concat(IRAN_NE, IRAN_PARTHYENE),
@@ -432,7 +432,7 @@ const MAP_66 = deal({
   SCY: STEPPE_NEAR.concat(['Olbia']),          // the late Scythians of Neapolis; Olbia under their walls
   SRM: STEPPE_FAR,                             // the Roxolani raid Moesia the winter after this
   VEN: ['Venedia'],
-  // -- the east and south (SPEC §203): the Periplus' own map, dated within a
+  // -- the east and south (SPEC §205): the Periplus' own map, dated within a
   // generation of this bookmark. Zoscales rules Aksum and Adulis (Periplus
   // 5); Charibael, "king of the two tribes, the Homerites and Sabaeans,"
   // rules from Zafar (23) — so Saba does not appear apart; Eleazus rules the
@@ -492,7 +492,7 @@ const MAP_132 = deal({
   SCY: ['Tauria', 'Scythia'],
   SRM: STEPPE_FAR,                             // the Iazyges and Roxolani, Trajan's unfinished business
   VEN: ['Venedia'],
-  // -- the east and south (SPEC §203): the 66 CE board two generations on.
+  // -- the east and south (SPEC §205): the 66 CE board two generations on.
   // The Indo-Parthian house is a Sistan rump now (the Kushans have its east,
   // beyond the frame) but Sakastan itself it keeps for another century;
   // Aksum under Gadarat's line is reaching for the strait; the dual crown
@@ -570,7 +570,7 @@ const MAP_529 = deal({
     'Chersonesus', 'Panticapaeum'],            // Justin's Bosporan protectorate (Procop. Wars I.12)
   BGR: ['Tauria', 'Scythia', 'Tanais', 'Phanagoria'].concat(STEPPE_FAR), // Kutrigur and Utigur hordes
   SLV: ['Tyras', 'Olbia', 'Venedia', 'Borysthenia'], // the Antes and Sclaveni of the river country
-  // -- the east and south (SPEC §203) --
+  // -- the east and south (SPEC §205) --
   // Kavad's Persia holds its whole east, and Mazun — Sasanian Oman — is an
   // attested province of it; the Margiana frontier pays the Hephthalites the
   // tribute Peroz's death fixed, and Chorasmia answers to the White Huns.
@@ -618,7 +618,7 @@ const MAP_529 = deal({
   SPAIN_ALL, GAUL_ALL, ITALY_NORTH, GAUL_ARMORICA, BRITAIN, HIBERNIA,
   DANUBE_ILLYRIA, DANUBE_PANNONIA, DANUBE_MOESIA, DANUBE_THRACE,
   ['Naissus', 'Singidunum', 'Chersonesus', 'Panticapaeum', 'Tomis'],
-  // §203: Christian Aksum (Ezana took the Cross two centuries ago) and the
+  // §205: Christian Aksum (Ezana took the Cross two centuries ago) and the
   // Najran of the martyrs of 523, whose avenging is why Kaleb crossed at
   // all. Nubia's kings are still pagan — Julian's mission sails in 543.
   AKSUM_CORE, ['Shewa', 'Najran'],
@@ -674,9 +674,9 @@ const MAP_614 = deal({
     'Semnones', 'Boiohaemum',                  // the Elbe and Bohemian Slavs
     'Venedia', 'Borysthenia'],
   TRK: STEPPE_FAR.concat(['Rha'],              // the Western Turks; Ziebel rides to Tiflis in 627
-    ['Chorasmia', 'Massagetae']),              // §203: the Oxus lands, khaganate ground since the 560s
+    ['Chorasmia', 'Massagetae']),              // §205: the Oxus lands, khaganate ground since the 560s
   BGR: ['Tanais', 'Phanagoria', 'Tauria'],     // the Onogurs; Kubrat's uncle holds the straits' shore
-  // -- the east and south (SPEC §203) --
+  // -- the east and south (SPEC §205) --
   // Khosrow II's Persia at its last high tide: the whole Iranian east, Mazun,
   // and the Yemen Wahriz took in 570 — a garrison of abna at Sana'a and a
   // signature everywhere else, which is what the 0.1 band is for. The
@@ -715,7 +715,7 @@ const MAP_614 = deal({
   SPAIN_ALL, GAUL_ALL, ITALY_NORTH, ITALY_ISLES, GAUL_ARMORICA,
   BRITAIN, CALEDONIA, HIBERNIA,
   DANUBE_ILLYRIA, DANUBE_THRACE, ['Novae', 'Tomis', 'Chersonesus', 'Panticapaeum'],
-  // §203: Christendom's southern reach — Aksum's church, the Najran the
+  // §205: Christendom's southern reach — Aksum's church, the Najran the
   // Persians tax but do not touch, and the Nubian kingdoms Julian and
   // Longinus baptized between 543 and 580.
   AKSUM_CORE, ['Shewa', 'Najran'], NUBIA_NILE,
@@ -741,7 +741,7 @@ const MAP_1948 = deal({
       AFRICA_PUNIC, AFRICA_NUMID, AFRICA_MASAESYLI, // Tunisia and Algeria
       ['Volubilis', 'Sala', 'Atlas', 'Gaetulia', // the Moroccan protectorate
         'Garama'],                             // the Fezzan, under French military administration
-      // §203: French West and Equatorial Africa — the AOF from the upper
+      // §205: French West and Equatorial Africa — the AOF from the upper
       // Niger to Lake Chad, Cameroun under trusteeship — and the Côte
       // Française des Somalis at the strait.
       ['Bambuk', 'Guinea Highlands', 'Nigritae', 'Air', 'Agisymba',
@@ -751,7 +751,7 @@ const MAP_1948 = deal({
     ['Tingis']),                               // the Spanish protectorate and Tangier's hour of occupation
   POR: ['Olisipo', 'Bracara'],
   UK: BRITAIN.concat(CALEDONIA,                // and every latent city beneath them
-    // §203: the empire's south and east — the Anglo-Egyptian Sudan (one
+    // §205: the empire's south and east — the Anglo-Egyptian Sudan (one
     // color at this scale, and it is not Cairo's), the Gold Coast and
     // Nigeria, both Somalilands (the ex-Italian one under British Military
     // Administration until the 1950 trusteeship), Eritrea under the same
@@ -761,7 +761,7 @@ const MAP_1948 = deal({
       'Malao', 'Opone', 'Azania', 'Adulis',
       'Eudaemon Arabia', 'Shabwa', 'Dioscurida']),
   IRL: HIBERNIA,                               // the Republic, declared this very year
-  // §203: the sovereign south and east of 1948, by treaty line.
+  // §205: the sovereign south and east of 1948, by treaty line.
   ETH: ['Aksum', 'Tana', 'Shewa', 'Kaffa', 'Danakil',
     'Ogaden'],                                 // handed back from the BMA this very September
   LBR: ['Kru Coast'],                          // Africa's other sovereign, Tubman's Liberia
@@ -793,7 +793,7 @@ const MAP_1948 = deal({
     'Tauria', 'Scythia', 'Sarmatia', 'Roxolania', 'Aorsia',
     'Borysthenia', 'Venedia', 'Rha', 'Hyperborea', 'Ripaea',
     'Phasis', 'Caucasian Albania',             // CORRECTIONS: the Georgian and Azerbaijani SSRs
-    // §203: the Turkmen, Uzbek and Kazakh SSRs the new frame reaches.
+    // §205: the Turkmen, Uzbek and Kazakh SSRs the new frame reaches.
     'Nisa', 'Antiochia Margiana', 'Dahae', 'Chorasmia', 'Massagetae', 'Issedones'],
 }, [
   // Disarmed under occupation statute: the German zones and Austria.
@@ -806,7 +806,7 @@ const MAP_1948 = deal({
     DANUBE_ILLYRIA, DANUBE_PANNONIA, DANUBE_MOESIA, DANUBE_THRACE, DACIA,
     ['Naissus', 'Phasis'],                     // Georgia keeps its old church
     PONTIC_GREEK, PONTIC_WEST, STEPPE_NEAR, STEPPE_FAR, FOREST_FAR,
-    // §203: the Ethiopian church on its highlands (and Eritrea's), and the
+    // §205: the Ethiopian church on its highlands (and Eritrea's), and the
     // mission-and-coast Christianity of British West Africa and Liberia.
     AKSUM_CORE, ['Shewa', 'Kaffa'],
     ['Kru Coast', 'Volta', 'Niger Delta', 'Theon Ochema']),
@@ -814,7 +814,7 @@ const MAP_1948 = deal({
     AFRICA_PUNIC, AFRICA_NUMID, AFRICA_MASAESYLI, AFRICA_MOOR,
     ['Gaetulia', 'Garama',
       'Dyrrhachium', 'Caucasian Albania'],     // Albania and the Azerbaijani SSR
-    // §203: the Muslim south and east of 1948 — the Sudan and the Sahel,
+    // §205: the Muslim south and east of 1948 — the Sudan and the Sahel,
     // the Horn's lowlands, all Arabia, Iran's east, Afghanistan, Pakistan's
     // Makran, and Soviet Central Asia (sixteen years into the atheist
     // campaigns, and the census still says this).
@@ -839,7 +839,7 @@ MAP_1948.cultures = Object.assign(
     'Borysthenia', 'Venedia', 'Rha', 'Hyperborea', 'Ripaea', 'Aestii',
   ].map((n) => ({ [n]: 'slavic' })),
   { Tomis: 'thracian' }, // the Dobruja is Romania's
-  // §203: the Arab world of 1948 speaks its own century's tongue — the
+  // §205: the Arab world of 1948 speaks its own century's tongue — the
   // Sudan's river towns included; the Beja, the Horn and Central Asia keep
   // their own rows.
   ...['Macoraba', 'Asir', 'Yamama', 'Najran', 'Marib', 'Zafar', 'Muza',

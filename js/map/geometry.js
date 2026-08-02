@@ -126,7 +126,7 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
     // Berenice to Eilat. One assertion in smoke30 caught it, by luck, because
     // it happened to name Eilat's shoreline.
     //
-    // The landlocked floor exists because SPEC §203 moved the east edge past
+    // The landlocked floor exists because SPEC §205 moved the east edge past
     // the Caspian: at 63.5°E nothing cuts it, so the sea that used to "run off
     // the frame" became a closed hole in the mainland — and Hyrcania's harbor,
     // coastal flag and offshore anchor would have vanished with no other

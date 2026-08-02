@@ -11937,7 +11937,7 @@ ever meet the ceiling are the ones a player is spending.
   falling back when it is pressed, an overstretched chancery naming itself, and
   the alliance button carrying the refusal in words.
 
-## 203. The frame holds all of Iran and all of Ethiopia, and the court that pays for it
+## 205. The frame holds all of Iran and all of Ethiopia, and the court that pays for it
 
 §160 grew the frame west and north until it held the whole Roman world, and
 §173 seated the courts of that ground. This section is the same pair of moves
@@ -11959,7 +11959,7 @@ and the Gulf of Guinea coast from Cape Mesurado to the Chariot of the Gods.
 The coast is now 997 points across 13 masses (the §160 ring grown, plus
 Socotra; the Caspian's 47 left the ring for the lake list). Measured against
 Natural Earth 10m: median 1.6 km, p90 9.0, same as §160's tracing — the
-first-draft §203 outliers (the Benadir coast an inland degree, the Beja
+first-draft §205 outliers (the Benadir coast an inland degree, the Beja
 shore, Foul Bay, the Qamar and Sawqirah bights) were corrected against the
 measurement, and the map's worst vertex is still the *deliberate* one, the
 66 CE shoreline at the head of the Persian Gulf. Sixteen rivers, from the whole in-frame
@@ -12074,7 +12074,7 @@ edits, which is what "executable arithmetic" was for.
 
 ### Audited the way §160 taught, before shipping instead of after
 
-**Adjacency diffing first.** Across the whole frame change, §203 altered
+**Adjacency diffing first.** Across the whole frame change, §205 altered
 exactly **four** edges between pre-existing provinces, all removals, none
 additions: `Arabian Desert | Gerrha` and `Sinai Interior | Eastern Desert`
 (both pairs inert — hemmed by the new Yamama and Rub al-Khali cells, and
@@ -12087,7 +12087,7 @@ moving with the frame (§160 measured that pair at 1.0x, a genuine
 neighbour; both still route in two hops through Scythia, and nothing the
 chapters stage crosses there).
 
-**Then the stray-lobe audit, on the real raster.** Sampling every §203-cell
+**Then the stray-lobe audit, on the real raster.** Sampling every §205-cell
 adjacency against the coast polygons found five water-crossing borders. One
 cleared: `Hyrcania | Dahae` walks the Gorgan corner of the Caspian the way
 Genua|Pisae walks its gulf. Four were Malaca-class stray lobes and are
@@ -12101,7 +12101,7 @@ Bab el-Mandeb and Hormuz ferries intact, Dioscurida an island with no land
 neighbour at all.
 
 **Then the §160 connectivity question, asked on purpose this time.** The
-first §203 raster answered it badly: 291 of 373 reachable from Byzantion,
+first §205 raster answered it badly: 291 of 373 reachable from Byzantion,
 under smoke104's 80% floor — and the shortfall was not islands. Three real
 strandings, each fixed with the least invasive tool that fits:
 
@@ -12125,7 +12125,7 @@ strandings, each fixed with the least invasive tool that fits:
 
 Garama also came back ringed by waste — and the OLD snapshot shows it always
 was (its only §160 neighbors were the two impassable Saharas). The court
-that "cannot be followed home" is prior art, not a §203 stranding, and it
+that "cannot be followed home" is prior art, not a §205 stranding, and it
 stands. After the fixes: **322 of 374 reachable (86.1%)**, the remainder
 being islands, the deserts, and the Garamantes. Measured boots on
 SwiftShader at the final frame: 141s to the start screen against §160's
@@ -12137,14 +12137,14 @@ tools/autorun.mjs 8`, both trees, same machine): 167, 66, 132 and 614 come
 back with **no anomalies on either tree**; `67 SEL DEAD` and `529 JUD DEAD
 + SAM DEBT-SPIRAL` reproduce **identically** (all three accepted by
 design); and the set got *smaller* — the baseline's `40 OSR/HER/ATG
-BLEEDING` cluster does not appear on the §203 tree. One new flag appeared
+BLEEDING` cluster does not appear on the §205 tree. One new flag appeared
 and was run down rather than accepted on faith: `1948 ISR BLEEDING` on the
 harness seed — the all-AI War of Independence going badly for Israel on
-that one draw. Sampled on three more seeds per smoke81's rule, the §203
+that one draw. Sampled on three more seeds per smoke81's rule, the §205
 tree's 1948 runs clean on all three (22 provinces held, demobilized,
 treasury positive, no flags): the flag is the §160 drift class — 66 new
 cells move every province-ordered draw — not a balance change, and nothing
-in §203 touches a 1948 Levant table. The twelve new courts themselves sit
+in §205 touches a 1948 Levant table. The twelve new courts themselves sit
 exactly as tuned: every one ends its era's run unflagged, and nobody in
 Addis Ababa, Meroe or Kabul marches on the Levant.
 
@@ -12152,10 +12152,10 @@ Addis Ababa, Meroe or Kabul marches on the Levant.
   13 masses, simple/disjoint/contained) and `coastfit` measures it (median
   1.6 km); `validateMapData` returns zero warnings at 374 cells, the region
   partition covering all ten new lands; `smoke107` extends automatically —
-  its NEW-cell set is "everything from Carthago on", so every §203 cell
+  its NEW-cell set is "everything from Carthago on", so every §205 cell
   submits to the same coverage, levy-band and seated-court assertions, and
   Rome's 83 and the +16.0%/+14.6% corridor came back to the digit — and
-  gains a §203 block of its own: the Periplus cast seated in 66 (and the
+  gains a §205 block of its own: the Periplus cast seated in 66 (and the
   Horn ports deliberately NOT), Kaleb's Yemen at the 0.1 enclave share with
   Christian Najran, Persian Yemen at the same share in 614 with baptized
   Nubia and Turk Chorasmia, Mecca beside the dormant caliphate seed, and

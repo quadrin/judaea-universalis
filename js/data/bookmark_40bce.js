@@ -182,7 +182,7 @@ export const BOOKMARK_40 = {
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
     'DLM', 'SCO', 'DRD', 'THR', 'DAC',
     'BOS', 'SCY', 'SRM', 'VEN',
-    // The political east and south (SPEC §203).
+    // The political east and south (SPEC §205).
     'KSH', 'SAB', 'HMY', 'HDR', 'SAK', 'CHO'],
   // Standing rivalries (SPEC §73): the Parthian flood IS the chapter — the
   // two empires stay each other's natural war.

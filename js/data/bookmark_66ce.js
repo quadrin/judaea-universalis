@@ -206,7 +206,7 @@ export const BOOKMARK_66 = {
     'GRM', 'CAL', 'HIB',
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
     'DAC', 'BOS', 'SCY', 'SRM', 'VEN',
-    // The political east and south (SPEC §203): the Periplus' own cast —
+    // The political east and south (SPEC §205): the Periplus' own cast —
     // Zoscales' Aksum, Charibael's Himyar-and-Saba, Eleazus' Hadramawt,
     // Omana on the strait, Gondophares' house in Sakastan, and the Kandake
     // whose treasurer Philip baptized.
@@ -751,7 +751,7 @@ export const BOOKMARK_66 = {
     // The political west (SPEC §173): the client king of the straits, whose
     // grain fleet matters to Rome more than most provinces do.
     BOS: { name: 'Cotys I', title: 'King of the Bosporus', gov: 2, infl: 2, mar: 2, age: 50 },
-    // The political east and south (SPEC §203): the Periplus' own cast, and
+    // The political east and south (SPEC §205): the Periplus' own cast, and
     // the reigning Kandake of the royal chronology.
     KSH: { name: 'Amanikhatashan', title: 'Kandake', gov: 3, infl: 2, mar: 3, age: 40 },
     AXM: { name: 'Zoscales', title: 'Negus', gov: 3, infl: 3, mar: 2, age: 45 },

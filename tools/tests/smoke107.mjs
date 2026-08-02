@@ -146,7 +146,7 @@ console.log('== three of the eight are corrections ==');
     '1948: and the names are the 15-May originals, not today\'s');
 }
 
-console.log('== the political east and south (SPEC §203) ==');
+console.log('== the political east and south (SPEC §205) ==');
 {
   // The Periplus map: Zoscales at Aksum, Charibael's two-tribes union
   // carrying Saba's Marib, Eleazus' island, Omana on the Persian side —

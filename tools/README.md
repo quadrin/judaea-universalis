@@ -158,7 +158,7 @@ Since v6.8 (SPEC §160) the boot is minutes, not seconds — the ID pass is one
 fullscreen draw over every texel against every seed, and this runs on
 SwiftShader. Measured at v6.8: 74s to the start screen, 104s to a live
 campaign (25.0M texels × 307 seeds), against 17s and 47s on the pre-§160
-tree. The §203 frame is 46.0M × 373 — about 2.2× that work again — so the
+tree. The §205 frame is 46.0M × 373 — about 2.2× that work again — so the
 timeouts in `dump-geometry.mjs` doubled with it. A slow dump is the frame's
 cost and not a flaky selector.
 
@@ -321,7 +321,7 @@ counting seats and moving when a bond is written, the annulment as a live
 button where a dead "Houses Joined" plate used to sit, an overstretched
 chancery naming itself, and the alliance button carrying the refusal in words.
 
-Since v7.4 (SPEC §203: the frame holds all of Iran and all of Ethiopia; 66
+Since v7.4 (SPEC §205: the frame holds all of Iran and all of Ethiopia; 66
 new cells, twelve new courts): the 8-year harness, run against a
 clean-worktree baseline in the same environment, came back with 167, 66, 132
 and 614 clean on both trees, `67 SEL DEAD` and `529 JUD DEAD + SAM
@@ -331,7 +331,7 @@ smaller. The one new flag, `1948 ISR BLEEDING` on the harness seed, was
 sampled across three further seeds and did not reproduce on any (22
 provinces held, demobilized, no flags): it is the §160 drift class — a
 bigger province list moves every province-ordered draw — not a 1948 balance
-change, and the accepted set is unchanged. Every §203 court ends its era's
+change, and the accepted set is unchanged. Every §205 court ends its era's
 run unflagged. BOOT_MS doubled to 480s with the frame (the ID pass is 46.0M
 texels × 373 seeds now); dump-geometry's timeout doubled with it.
 

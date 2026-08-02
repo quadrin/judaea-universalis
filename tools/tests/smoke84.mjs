@@ -149,9 +149,9 @@ console.log('== §121: played forward, the silence is gone ==');
         const jer6 = ctx.prov('Jerusalem');
         if (jer6) { jer6.owner = 'HAS'; jer6.controller = 'HAS'; jer6.siege = null; }
       }
-      // Same hand, same reason, generalized (SPEC §203): the continuation's
+      // Same hand, same reason, generalized (SPEC §205): the continuation's
       // dated cards all ask lineContinues/lineSurvives — is the line still
-      // its own master — and on the §203 stream (67 new cells move every
+      // its own master — and on the §205 stream (67 new cells move every
       // draw) a §87 rising's band held the CONTROLLER flag of a city the
       // line owns on the firing days of three different cards (-63 the
       // commission, -53 Carrhae, -40 the flood). Rather than a patch per

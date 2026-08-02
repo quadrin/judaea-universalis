@@ -27,7 +27,7 @@ const SNAPSHOT = resolve(ROOT, 'tools', 'geom-snapshot.json');
 // rather than a flaky selector. The ID pass is one fullscreen draw over every
 // texel against every seed — and this dump runs it on SwiftShader, a software
 // rasteriser. Measured at v6.8: 74s to the start screen and 104s to a live
-// campaign (25.0M × 307). The §203 frame is 46.0M texels × 373 seeds, about
+// campaign (25.0M × 307). The §205 frame is 46.0M texels × 374 seeds, about
 // 2.2× that work again, so the timeout doubles with it. A real GPU does this
 // in a fraction; the timeout has to survive the machine that does not.
 const BOOT_TIMEOUT = 600000;
