@@ -148,7 +148,10 @@ function isWellKnown(ctx, target) {
   return mine >= 8;
 }
 
-function cdKey(kind, target) { return 'intrigue:' + kind + ':' + target; }
+// Per ACTOR as well as per channel and target (SPEC §216): two courts run
+// their own agents, and at a table with two Jewish states one crown's
+// operation used to go cold on the other's.
+function cdKey(actor, kind, target) { return actor + '>intrigue:' + kind + ':' + target; }
 
 // ------------------------------------------------------------------- the read
 //
@@ -190,8 +193,8 @@ export function intrigueInfo(ctx, tag, target, kind, fid) {
       out.whyNot = 'Our agents have no way into ' + ((o.name) || live) + ' — no border, no war, no treaty.';
       return out;
     }
-    if (diploCdActive(ctx, cdKey(kind, live))) {
-      out.whyNot = 'That channel is cold (' + diploCdMonthsLeft(ctx, cdKey(kind, live)) + ' months).';
+    if (diploCdActive(ctx, cdKey(tag, kind, live))) {
+      out.whyNot = 'That channel is cold (' + diploCdMonthsLeft(ctx, cdKey(tag, kind, live)) + ' months).';
       return out;
     }
     if (num(t.points && t.points.infl) < spec.infl) { out.whyNot = 'Not enough influence points (' + spec.infl + ' required).'; return out; }
@@ -241,7 +244,7 @@ export function runIntrigue(ctx, tag, target, kind, fid) {
   const oname = (o && o.name) || live;
   t.points.infl = num(t.points.infl) - spec.infl;
   t.treasury = num(t.treasury) - spec.gold;
-  setDiploCd(ctx, cdKey(kind, live), spec.cooldownMonths);
+  setDiploCd(ctx, cdKey(tag, kind, live), spec.cooldownMonths);
 
   const seats = courtSeats(ctx, live) || [];
   const def = seats.find((d) => d && d.id === fid);

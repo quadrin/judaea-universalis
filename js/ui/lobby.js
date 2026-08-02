@@ -1,8 +1,9 @@
 // js/ui/lobby.js — multiplayer lobby (SPEC §18, §93, §216). The host runs the
-// world; everyone who joins either rules the host's nation at their side —
-// one realm, many hands on the tiller — or takes a Jewish throne of their own
-// out of the chapter's own list of standards, which is the same table with the
-// brothers on opposite sides of it.
+// world; everyone who joins takes a Jewish throne of their own out of the
+// chapter's own list of standards — the same table with the brothers on
+// opposite sides of it — or, seated beside the host, rules the host's nation
+// at their side: one realm, many hands on the tiller. A chapter with one
+// standard can only do the second.
 //
 // Joining used to mean copying a three-kilobyte offer blob into a chat window
 // and copying an equally long reply back. Now the host mints a six-character
@@ -16,7 +17,7 @@
 import { esc, warnOnce } from './format.js';
 import { icon, flagChip } from './icons.js';
 import { createPeer } from '../net/rtc.js';
-import { chapterChairs, resolveSeat } from '../net/mp_state.js';
+import { chapterChairs, resolveSeat, defaultSeat, SHARED } from '../net/mp_state.js';
 import {
   isRoomCloudOn, roomEndpoint, roomCreate, roomFetch, roomAnswer, prettyRoom, normalizeRoom,
 } from '../net/cloud.js';
@@ -163,6 +164,19 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
     return (live && live.name) || (TAGS[tag] && TAGS[tag].name) || tag;
   }
   const sharedChair = () => hostPeers.every((g) => seatOf(g) === hostTag);
+  // The campaign changed under the seating — a different chapter, a different
+  // throne for the host, a save whose world has fewer standards left. A guest
+  // who asked to sit beside the host stays there; anybody else takes a fresh
+  // throne rather than being silently folded into the host's (SPEC §216).
+  function reseatGuests() {
+    const seats = chairs();
+    for (const guest of hostPeers) {
+      if (guest.seat === SHARED) continue;
+      if (guest.seat !== hostTag && seats.indexOf(guest.seat) >= 0) continue;
+      guest.seat = defaultSeat(hostTag, seats,
+        hostPeers.filter((o) => o !== guest).map((o) => seatOf(o)));
+    }
+  }
 
   // One payload per guest: the roster is the same for everybody, but which
   // chair is YOURS is not.
@@ -233,7 +247,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
         <div class="mp-row"><label>Chapter</label><select data-ref="bm">${bmOpts}</select></div>
         <div class="mp-row"><label>Your nation</label><select data-ref="tag">${tagOpts}</select></div>
         <div class="mp-hint">${playable.length > 1
-    ? 'Everyone who joins rules this nation with you, unless you give them a throne of their own below.'
+    ? 'Everyone who joins takes another of this chapter\'s standards — seat them beside you below to share this one instead.'
     : 'Everyone who joins rules this nation with you — this chapter has one standard.'}</div>`;
     }
     if (hostSaveRows === null) return '<div class="mp-hint">Reading the shelf…</div>';
@@ -263,7 +277,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       const seat = seatOf(g);
       const picker = seats.length > 1 ? `
         <select class="mp-seat" data-seat="${g.id}">
-          <option value=""${seat === hostTag ? ' selected' : ''}>Beside you — ${esc(chairName(hostTag))}</option>
+          <option value="${SHARED}"${seat === hostTag ? ' selected' : ''}>Beside you — ${esc(chairName(hostTag))}</option>
           ${seats.filter((t) => t !== hostTag).map((t) =>
     `<option value="${esc(t)}"${t === seat ? ' selected' : ''}>${esc(chairName(t))}</option>`).join('')}
         </select>` : '';
@@ -324,6 +338,8 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
         // Render first: it is the pass that moves the throne onto the new
         // chapter's list, and a payload sent before it would name the old one.
         renderHost();
+        reseatGuests();
+        renderHost();
         hostBroadcastLobby();
       });
     }
@@ -333,7 +349,7 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
         hostTag = String(e.target.value);
         // A guest sitting on the throne the host just took is beside them now,
         // not on a chair that no longer exists to be taken twice.
-        for (const g of hostPeers) if (g.seat === hostTag) g.seat = '';
+        reseatGuests();
         renderHost();
         hostBroadcastLobby();
       });
@@ -416,9 +432,11 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
       return;
     }
     hostSave = resolved;
-    // The save owns the throne: whoever the campaign was being played as is
-    // who everyone rules together.
+    // The save owns the host's throne: whoever the campaign was being played
+    // as is who the host continues as. The guests take whichever of the
+    // chapter's other standards that world still has standing.
     hostTag = resolved.game.playerTag;
+    reseatGuests();
     renderHost();
     hostBroadcastLobby();
   }
@@ -439,6 +457,9 @@ export function createLobby({ DEFINES, bookmarks, onHostStart, onGuestStart, sav
   function newGuestSlot() {
     guestSeq += 1;
     const guest = { id: guestSeq, peer: null, seat: '', tag: '', open: false };
+    // Seated before they are shown: their own standard where the chapter
+    // has one to give, beside the host where it does not (SPEC §216).
+    guest.seat = defaultSeat(hostTag, chairs(), hostPeers.map((o) => seatOf(o)));
     guest.peer = createPeer({
       initiator: true,
       onMessage: (m) => hostOnGuestMessage(guest, m),

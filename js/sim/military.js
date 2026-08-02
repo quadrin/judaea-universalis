@@ -3831,7 +3831,9 @@ export function claimFabricationInfo(ctx, tag, provId) {
     out.whyNot = 'Our agents are forging the case (' + out.monthsLeft + ' month'
       + (out.monthsLeft === 1 ? '' : 's') + ' remaining).';
   } else {
-    const cdKey = 'claim:' + p.owner;
+    // Per FORGER as well as per target (SPEC §216): two courts do not share
+    // one set of agents, and at a table with two Jewish states they used to.
+    const cdKey = tag + '>claim:' + p.owner;
     if (diploCdActive(ctx, cdKey)) {
       out.whyNot = 'Our forgers need time (' + diploCdMonthsLeft(ctx, cdKey)
         + ' months before another claim on ' + ((g.tags[p.owner] && g.tags[p.owner].name) || p.owner) + ').';
@@ -3856,7 +3858,7 @@ export function startClaimFabrication(ctx, tag, provId) {
     monthsLeft: CLAIM_FABRICATION.months,
   });
   addOpinion(ctx, p.owner, tag, CLAIM_FABRICATION.opinionHit);
-  setDiploCd(ctx, 'claim:' + p.owner, CLAIM_FABRICATION.cooldownMonths);
+  setDiploCd(ctx, tag + '>claim:' + p.owner, CLAIM_FABRICATION.cooldownMonths);
   return {
     ok: true,
     name: p.name,

@@ -102,7 +102,11 @@ function allied(ctx, a, b) {
 // not been seeded yet, and reads as nothing rather than as its opening value.
 function standingAt(ctx, name) {
   const p = ctx.prov && ctx.prov(name);
-  return (p && p.dia && Number.isFinite(p.dia.standing)) ? p.dia.standing : 0;
+  // Filed per crown since SPEC §216 (two Jewish states may be played at one
+  // table, and Alexandria's warmth toward one is not its warmth toward the
+  // other). A zero-import package reads the record of the crown that is asking.
+  const rec = p && p.dia && p.dia.by && p.dia.by[ctx.game.playerTag];
+  return rec && Number.isFinite(rec.standing) ? rec.standing : 0;
 }
 function templeStands(ctx) {
   if (ctx.game.flags && ctx.game.flags.templeBurned) return false;

@@ -1079,6 +1079,16 @@ export function gameActions(ctx) {
 
   // ---- diplomacy (frozen action contract) ---------------------------------
   const dipKey = (them, kind) => g.playerTag + '>' + them + ':' + kind;
+  // Every cooldown book is per COURT (SPEC §216). `dipKey` already had the
+  // acting realm in it; the books below did not, and at a table with two
+  // Jewish states that meant one shared clock — a guest holding a festival
+  // shut the host's out for two years, one court's forgers tied up the other's,
+  // and an envoy rebuffed in Amman rebuffed both crowns at once. The rule is
+  // now the same everywhere: whoever acts, in the key. (A campaign carried
+  // across this change forgets whatever was still cooling in these four books,
+  // once.)
+  const decisionCd = (key) => g.playerTag + '>decision:' + key;
+  const peaceCd = (war, leader) => g.playerTag + '>peace:' + war.id + (leader ? ':' + leader : '');
   // Single source of truth for gating: the actions re-derive this instead of
   // trusting whatever state the UI captured when it rendered.
   const getDip = (tag) => {
@@ -2264,7 +2274,7 @@ export function gameActions(ctx) {
         // Rebuffed envoys cool per court (SPEC §67): a door slammed in Amman
         // does not close the one in Damascus.
         info.envoyMonthsLeft = diploCdMonthsLeft(ctx,
-          'peace:' + war.id + (info.separate ? ':' + info.enemyLeader : ''));
+          peaceCd(war, info.separate ? info.enemyLeader : null));
         return info;
       } catch (e) { warnOnce('peaceInfo', 'getPeaceInfo failed', e); return null; }
     },
@@ -2287,7 +2297,7 @@ export function gameActions(ctx) {
         // fight-to-the-death wars. Whether the enemy listens is another
         // matter (evaluatePeaceDeal), and the AI keeps its own counsel.
         const scope = peaceDealInfo(ctx, war, me, deal && deal.enemy);
-        const cdKey = 'peace:' + war.id + (scope.separate ? ':' + scope.enemyLeader : '');
+        const cdKey = peaceCd(war, scope.separate ? scope.enemyLeader : null);
         if (diploCdActive(ctx, cdKey)) {
           say('Envoys rebuffed', 'That court will not receive our envoys again yet ('
             + diploCdMonthsLeft(ctx, cdKey) + ' months).', 'bad');
@@ -2363,7 +2373,7 @@ export function gameActions(ctx) {
           },
           goal, weHold, theyHold,
           noNegotiation: !!war.noNegotiation,
-          envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
+          envoyMonthsLeft: diploCdMonthsLeft(ctx, peaceCd(war, null)),
         };
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
     },
@@ -3411,7 +3421,7 @@ export function gameActions(ctx) {
           const authored = ctx.bookmark && ctx.bookmark.decisionText
             && ctx.bookmark.decisionText[key];
           const copy = authored || {};
-          const cdKey = 'decision:' + key;
+          const cdKey = decisionCd(key);
           let whyNot = '';
           if (diploCdActive(ctx, cdKey)) {
             whyNot = 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.';
@@ -3484,7 +3494,7 @@ export function gameActions(ctx) {
         const copy = (ctx.bookmark && ctx.bookmark.decisionText
           && ctx.bookmark.decisionText[key]) || {};
         const displayName = copy.name || d.name;
-        const cdKey = 'decision:' + key;
+        const cdKey = decisionCd(key);
         if (diploCdActive(ctx, cdKey)) {
           say(displayName, 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.', 'bad');
           return;
@@ -3781,6 +3791,21 @@ export function reviveGame(saved) {
     t.ai = k !== saved.playerTag;
   }
   saved.humanTags = [saved.playerTag]; // multiplayer roster never survives a reload
+  // The dispersion's standing is filed per crown since SPEC §216. A campaign
+  // written before that carries one flat `{standing, asked}` pair per
+  // community, and it was the protagonist's — file it under that crown so a
+  // save crosses the change with every letter it ever wrote intact.
+  const fileDia = (rec) => {
+    if (!rec || typeof rec !== 'object' || !Number.isFinite(rec.standing)) return;
+    if (!rec.by || typeof rec.by !== 'object') rec.by = {};
+    if (!rec.by[saved.playerTag]) {
+      rec.by[saved.playerTag] = { standing: rec.standing, asked: num(rec.asked) };
+    }
+    delete rec.standing;
+    delete rec.asked;
+  };
+  for (const p of saved.provinces || []) if (p) fileDia(p.dia);
+  for (const k of Object.keys(saved.tags || {})) fileDia(saved.tags[k].dia);
   for (let i = 1; i < saved.provinces.length; i++) {
     const p = saved.provinces[i];
     if (p && p.conversion === undefined) p.conversion = null;

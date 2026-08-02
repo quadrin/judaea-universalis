@@ -214,14 +214,14 @@ static site, the zero dependencies, or the missing build step changes.
   You can host a **new** campaign or **continue a saved one** — pick it off the shelf in
   the lobby and your friends join the war already in progress, on the saved date with the
   saved armies.
-  Two ways to share a world, chosen per guest in the lobby. **Together**, the default:
-  everyone rules the host's nation — any player can move the armies, spend the treasury
-  and steer the clock, story event cards appear on every screen, the host makes the
-  choice, and every toast the realm receives reaches all players. Or **a throne each**,
-  from the chapter's own list of standards: Hyrcanus against Aristobulus, Herod against
-  Antigonus, Judaea beside Agrippa's kingdom or Adiabene, Samaria beside Himyar. Then
-  each of you rules your own realm — your own court, your own missions, your own armies,
-  and your own event cards to answer — in the one world, on the host's clock.
+  Two ways to share a world, chosen per guest in the lobby. **A throne each** is the
+  default wherever the chapter has more than one standard: Hyrcanus against Aristobulus,
+  Herod against Antigonus, Judaea beside Agrippa's kingdom or Adiabene, Samaria beside
+  Himyar. Each of you rules your own realm — your own treasury, court, missions, armies
+  and event cards to answer — in the one world, on the host's clock. Or seat a guest
+  **beside you** and you share a nation: any player can move the armies, spend the
+  treasury and steer the clock, story cards appear on every screen with the host
+  making the choice, and every toast the realm receives reaches all of you.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,
   swipe) instead of a wall of cards.
 - Wars that actually end: annihilating or utterly dominating an enemy closes the war

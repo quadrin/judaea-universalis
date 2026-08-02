@@ -1449,3 +1449,17 @@ Aristobulan army through the host, and `ev4_embassy_ari` — a real card from th
 chapter's own chain — dealt to the guest with live buttons whose answer lands
 in the host's world. `uitest5` is the co-op suite and is deliberately untouched:
 the default table is still one realm and many hands on the tiller.
+
+The suite grew a second half after the first table played it and reported that
+one player's spending came out of the other's purse. It did not — every action
+already ran under the guest's own crown, and `smoke143` proves it action by
+action — but the *books* did not follow: five cooldown ledgers keyed by what was
+acted upon with nobody in the key as the actor, so the guest's festival shut the
+host's out, one court's forgers idled the other's, and an envoy rebuffed
+rebuffed both. The dispersion was worse than a key: standing was one number per
+community, so both crowns courted Alexandria out of one bar.
+
+If you add a cooldown, **put the acting realm in the key**. If you add anything
+a crown earns with somebody outside its own borders, ask whether a second crown
+would share it. The sweep that found these lives in the suite's second half:
+after the guest acts, the host must still be able to do the same thing.

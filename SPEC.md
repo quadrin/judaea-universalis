@@ -13705,20 +13705,30 @@ sitting in" — the cards, the court, and the relays that carry both.
 
 ### The seating
 
-The lobby's Players block gets one select per guest: **beside you** (the
-host's own throne, the default and the whole of the v1.8 table) or any other
-standard in the chapter's `playableTags`. A chapter with one standard shows no
-select at all — 167 BCE, 614 CE and 1948 have nothing to choose between. The
-two decisions are pure functions in `js/net/mp_state.js`, so they are testable
-without two browsers and a data channel:
+The lobby's Players block gets one select per guest: any standard in the
+chapter's `playableTags`, or **beside you** on the host's own throne, which is
+the v1.8 co-op table. A chapter with one standard shows no select at all —
+167 BCE, 614 CE and 1948 have nothing to choose between. The decisions are
+pure functions in `js/net/mp_state.js`, so they are testable without two
+browsers and a data channel:
 
 - `chapterChairs(bookmark, tags)` — the chapter's standards, filtered to the
   ones a world can actually seat. Hosting from a SAVE (§93) passes that
   campaign's `game.tags`: a court annexed six years before the save was
   written is not on the menu, because a chair nobody can sit in is not a chair.
-- `resolveSeat(seat, hostTag, chairs)` — an empty pick, a pick equal to the
-  host's chair, or a pick this campaign cannot seat all resolve to the host's
-  throne. The pick becomes a chair at Begin and nowhere else.
+- `resolveSeat(seat, hostTag, chairs)` — `'shared'`, a pick equal to the host's
+  chair, or a pick this campaign cannot seat all resolve to the host's throne.
+  The pick becomes a chair at Begin and nowhere else.
+- `defaultSeat(hostTag, chairs, taken)` — where a guest sits before anybody
+  touches the picker: the first standard the chapter offers that the host is
+  not on, then the next for each guest after that, and `'shared'` where the
+  chapter has only one. **This is the second default.** The first was
+  `'shared'`, on the reasoning that separate thrones should be opt-in — and the
+  first table to play it came back reporting that one player's spending came
+  out of the other's treasury, which is exactly what one throne means and
+  exactly what they had not chosen. A picker one line down a lobby is not a
+  choice most tables will find; the default has to be the thing the chapter is
+  about. Sharing is still one click away, and the roster says which it is.
 
 The host's own select moves guests off the throne it takes; the lobby payload
 is minted **per guest** now (`hostLobbyPayload(guest)`) because the roster is
@@ -13794,6 +13804,35 @@ emptying the roster, and an empty chair is not a human one.
   — the fixed course where the card carries one, its first road otherwise —
   because a pending event nobody can answer would sit in `pendingEvents` for
   the rest of the campaign.
+
+### Every clock a court keeps is that court's clock
+
+Seating two realms found a class of bug nothing else could: a book keyed by
+what was acted UPON, with nobody in the key as the actor. Invisible for as long
+as a campaign had one player; wrong the moment it had two. Five of them, all on
+player-only paths — which is why none of this moves the balance harness:
+
+- `decision:<key>` → `<crown>>decision:<key>`. The guest holds a grand
+  festival and the host cannot hold one for two years.
+- `claim:<owner>` → `<crown>>claim:<owner>`. One court's forgers were the
+  other's: a guest fabricating a case against Nabataea idled the host's agents.
+- `intrigue:<kind>:<target>` → prefixed with the actor. Two crowns running
+  agents into the same foreign court shared one cold channel.
+- `dia:<ask>:<seat>` → prefixed with the crown that wrote the letter.
+- `peace:<war>[:leader]` → prefixed with the court suing. An envoy rebuffed on
+  the guest's terms rebuffed the host's too.
+
+**And the dispersion needed more than a key.** Standing was one number per
+community — `p.dia.standing`, the community's regard for *the* Jewish crown,
+which was a safe thing to assume while there could only be one. With two, both
+players courted Alexandria out of one bar: an ask by either spent the other's
+credit, and the mapmode painted one warmth for both. The record now files by
+crown (`p.dia.by[tag]`, and `host.dia.by[tag]` for §195's court-hosted seats),
+`monthlyDiaspora` drifts once per seated Jewish crown, and the three readers
+outside the module — the dispersion mapmode, a formable's requirement, the 1948
+card that cools every community at once — read the crown that is asking.
+`reviveGame` files a pre-§216 save's flat pair under the protagonist, so a
+campaign crosses the change with every letter it ever wrote intact.
 
 ### What this deliberately does not do
 

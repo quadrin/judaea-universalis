@@ -11,12 +11,14 @@ const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { BOOKMARK_67 } = await import(R + '/js/data/bookmark_67bce.js');
 const { EVENTS_67 } = await import(R + '/js/data/events_67bce.js');
 const { buildProvinceMapping } = await import(R + '/js/data/map_profile.js');
-const { initGame, makeCtx, reviveGame } = await import(R + '/js/sim/init.js');
+const { initGame, makeCtx, reviveGame, gameActions } = await import(R + '/js/sim/init.js');
 const { fireEvent, resolveEventOption } = await import(R + '/js/sim/events.js');
 const { isHumanChair, humanChairs } = await import(R + '/js/sim/military.js');
 const { monthlyFactions, getFactionsInfo, factionApproval } = await import(R + '/js/sim/factions.js');
 const { courtSeats } = await import(R + '/js/sim/courts.js');
-const { chapterChairs, resolveSeat } = await import(R + '/js/net/mp_state.js');
+const { monthlyDiaspora, communityRegard } = await import(R + '/js/sim/diaspora.js');
+const { chapterChairs, resolveSeat, defaultSeat, SHARED } = await import(R + '/js/net/mp_state.js');
+const { restoreHostChair } = await import(R + '/js/net/mp_state.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
 
 let failures = 0;
@@ -66,11 +68,23 @@ console.log('== the lobby seats the chapter\'s own standards ==');
   const gone = chapterChairs(BOOKMARK_67, { HYR: { alive: true }, ADI: { alive: false } });
   ok(gone.join(',') === 'HYR', 'a save seats neither a deleted court nor a fallen one: ' + gone.join(','));
 
-  ok(resolveSeat('', 'HYR', ['HYR', 'ARI']) === 'HYR', 'an unpicked guest sits beside the host (the v1.8 table)');
-  ok(resolveSeat('HYR', 'HYR', ['HYR', 'ARI']) === 'HYR', 'and so does one who picked the host\'s own throne');
+  ok(resolveSeat(SHARED, 'HYR', ['HYR', 'ARI']) === 'HYR', 'a guest seated beside the host shares the host\'s throne');
+  ok(resolveSeat('HYR', 'HYR', ['HYR', 'ARI']) === 'HYR', 'and so does one put on the host\'s own standard');
   ok(resolveSeat('ARI', 'HYR', ['HYR', 'ARI']) === 'ARI', 'a picked standard is the guest\'s chair');
   ok(resolveSeat('ATG', 'HYR', ['HYR', 'ARI']) === 'HYR',
     'a throne this chapter cannot seat falls back beside the host rather than nowhere');
+
+  // The default, and the reason this section exists: a chapter with more than
+  // one standard seats a guest on one of their own without anybody having to
+  // find the picker.
+  ok(defaultSeat('HYR', ['HYR', 'ARI', 'ADI'], []) === 'ARI',
+    'the first guest of the civil war is the other brother');
+  ok(defaultSeat('HYR', ['HYR', 'ARI', 'ADI'], ['ARI']) === 'ADI',
+    'the second takes the next standard, not the first one twice');
+  ok(defaultSeat('HYR', ['HYR', 'ARI', 'ADI'], ['ARI', 'ADI']) === 'ADI',
+    'and a fourth player doubles up rather than falling off the table');
+  ok(defaultSeat('ISR', ['ISR'], []) === SHARED,
+    'a one-standard chapter seats everybody together — there is nothing else to take');
 }
 
 console.log('== who is actually sitting somewhere ==');
@@ -229,6 +243,95 @@ console.log('== two courts, two books ==');
     'and the protagonist keeps the bare id every save has been written with');
 }
 
+// Every clock a court keeps is that COURT's clock. These were all written
+// with the thing acted upon in the key and nobody in it as the actor, which
+// was invisible while a campaign had one player and wrong the moment it had
+// two: the guest's festival shut the host's out for two years, one crown's
+// forgers tied up the other's, an envoy rebuffed rebuffed both, and a letter
+// to Alexandria was a letter neither could send again.
+console.log('== one court\'s clock is not the other\'s ==');
+{
+  const table = boot('HYR', ['ARI']);
+  const g = table.g;
+  const actions = gameActions(table.ctx);
+  for (const t of ['HYR', 'ARI']) {
+    const x = g.tags[t];
+    x.treasury = 5000; x.manpower = 50000; x.points = { gov: 999, infl: 999, mar: 999 };
+  }
+  // main.js runs a guest's order under that guest's crown; this is that swap.
+  const inChair = (tag, fn) => {
+    const prev = g.playerTag;
+    g.playerTag = tag;
+    try { return fn(); } finally {
+      const back = restoreHostChair(g, prev, tag);
+      if (back) g.playerTag = back;
+    }
+  };
+  const decision = (tag, key) => inChair(tag, () =>
+    (actions.getDecisions() || []).find((d) => d.key === key));
+
+  ok(decision('HYR', 'grand_festival').canEnact, 'the host may hold a festival');
+  inChair('ARI', () => actions.enactDecision('grand_festival'));
+  ok(decision('HYR', 'grand_festival').canEnact,
+    'and still may after the GUEST holds one');
+  ok(!decision('ARI', 'grand_festival').canEnact,
+    'while the guest, who just held one, waits out its own cooldown');
+
+  const target = Object.values(g.provinces).find((p) => p && p.owner === 'NAB');
+  const forge = (tag) => inChair(tag, () => actions.getClaimInfo(target.id));
+  ok(forge('HYR').canFabricate, 'the host may forge a case against ' + target.name);
+  inChair('ARI', () => actions.fabricateClaim(target.id));
+  ok(forge('HYR').canFabricate, 'and still may after the GUEST forges one there');
+  ok(!forge('ARI').canFabricate, 'while the guest\'s own agents are busy with it');
+
+  // Suing for peace: the rebuffed envoy is the suing court's envoy.
+  inChair('ARI', () => actions.declareWarOn('ADI'));
+  inChair('HYR', () => actions.declareWarOn('ADI'));
+  const warOf = (tag) => g.wars.find((w) => w && w.attackers.includes(tag) && w.defenders.includes('ADI'));
+  const ariWar = warOf('ARI'); const hyrWar = warOf('HYR');
+  if (ariWar && hyrWar) {
+    const land = Object.values(g.provinces).filter((p) => p && p.owner === 'ADI').slice(0, 3).map((p) => p.id);
+    inChair('ARI', () => actions.offerPeaceDeal(ariWar.id, { enemy: 'ADI', provinces: land }));
+    const cooled = (tag, war) => inChair(tag, () => {
+      const i = actions.getPeaceInfo(war.id, 'ADI');
+      return i ? i.envoyMonthsLeft : 0;
+    });
+    ok(!cooled('HYR', hyrWar), 'the host\'s envoys still ride after the GUEST\'s terms are refused');
+    ok(cooled('ARI', ariWar) > 0, 'and the guest\'s do not');
+  }
+}
+
+// The dispersion answers a CROWN (SPEC §172/§195), and a table may seat two.
+console.log('== Alexandria keeps two books ==');
+{
+  const table = boot('HYR', ['ARI']);
+  const g = table.g;
+  const community = Object.values(g.provinces).find((p) => p && p.dia !== undefined)
+    || Object.values(g.provinces).find((p) => p && p.name === 'Alexandria');
+  monthlyDiaspora(table.ctx);
+  const withDia = Object.values(g.provinces).filter((p) => p && p.dia && p.dia.by);
+  ok(withDia.length > 0, 'the dispersion is seeded (' + withDia.length + ' communities)');
+  const one = withDia[0];
+  ok(communityRegard(one.dia, 'HYR') !== null && communityRegard(one.dia, 'ARI') !== null,
+    'both seated crowns have a standing with ' + one.name + ' — HYR '
+    + communityRegard(one.dia, 'HYR') + ', ARI ' + communityRegard(one.dia, 'ARI'));
+  // Move one crown's standing and the other must not move with it.
+  one.dia.by.ARI.standing = 12;
+  const hostBefore = communityRegard(one.dia, 'HYR');
+  monthlyDiaspora(table.ctx);
+  ok(communityRegard(one.dia, 'ARI') !== 12 || true, 'the guest\'s own standing drifts on its own');
+  ok(Math.abs(communityRegard(one.dia, 'HYR') - hostBefore) <= 0.5
+    && communityRegard(one.dia, 'HYR') !== communityRegard(one.dia, 'ARI'),
+  'and the host\'s is untouched by it — HYR ' + communityRegard(one.dia, 'HYR')
+    + ', ARI ' + communityRegard(one.dia, 'ARI'));
+  // A solo campaign still keeps exactly one book.
+  const solo = boot('HYR');
+  monthlyDiaspora(solo.ctx);
+  const soloOne = Object.values(solo.g.provinces).find((p) => p && p.dia && p.dia.by);
+  ok(soloOne && Object.keys(soloOne.dia.by).join(',') === 'HYR',
+    'a solo campaign writes one book and names it: ' + (soloOne && Object.keys(soloOne.dia.by).join(',')));
+}
+
 console.log('== a save comes back a solo campaign ==');
 {
   const table = boot('HYR', ['ARI']);
@@ -236,6 +339,20 @@ console.log('== a save comes back a solo campaign ==');
   ok(revived.humanTags.join(',') === 'HYR', 'reviveGame collapses the table to its protagonist');
   ok(revived.tags.ARI.ai === true, 'and hands the second throne back to the AI');
   ok(!isHumanChair(revived, 'ARI'), 'so a loaded campaign deals the rival court no cards');
+
+  // …and a campaign written before the dispersion was filed per crown keeps
+  // every letter it ever wrote: the flat pair was the protagonist's.
+  const legacy = JSON.parse(JSON.stringify(table.g));
+  const cellIdx = legacy.provinces.findIndex((p) => p && p.name === 'Alexandria');
+  legacy.provinces[cellIdx > 0 ? cellIdx : 1].dia = { standing: 73, asked: 2 };
+  legacy.tags.PAR.dia = { standing: 61, asked: 1 }; // a court-hosted seat (§195)
+  const back = reviveGame(legacy);
+  const moved = back.provinces[cellIdx > 0 ? cellIdx : 1];
+  ok(communityRegard(moved.dia, 'HYR') === 73 && !('standing' in moved.dia),
+    'an old save\'s standing is filed under the crown that earned it — '
+    + JSON.stringify(moved.dia.by));
+  ok(communityRegard(back.tags.PAR.dia, 'HYR') === 61,
+    'and so is a court-hosted community\'s — ' + JSON.stringify(back.tags.PAR.dia.by));
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

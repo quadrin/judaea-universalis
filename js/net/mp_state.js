@@ -51,12 +51,30 @@ export function chapterChairs(bookmark, tags) {
   return out;
 }
 
-// The chair a guest actually takes. `seat` is what the host picked for them:
-// '' (or anything the campaign cannot seat) means beside the host on the
-// host's own throne, which is the co-op table v1.8 shipped and still the
-// default. A seat equal to the host's chair is that same thing said twice.
+// The chair a guest actually takes. `seat` is what the host picked for them,
+// and `'shared'` is the explicit pick that puts them beside the host on the
+// host's own throne — the co-op table v1.8 shipped. Anything the campaign
+// cannot seat falls back there too.
 export function resolveSeat(seat, hostTag, chairs) {
-  if (!seat || seat === hostTag) return hostTag;
+  if (!seat || seat === SHARED || seat === hostTag) return hostTag;
   if (Array.isArray(chairs) && chairs.indexOf(seat) < 0) return hostTag;
   return seat;
+}
+export const SHARED = 'shared';
+
+// Where a guest sits before anybody touches the picker. A chapter that seats
+// more than one Jewish standard gives them one of their own — the first the
+// chapter offers that the host is not on, and the next one for each guest
+// after that, so a table fills up with the brothers on opposite sides of it
+// rather than three hands on one tiller. A one-standard chapter has nothing
+// to offer and everybody rules it together.
+//
+// (This is the second default. The first was `shared`, and it was wrong: the
+// picker is one line in a lobby people scroll past, so the table people
+// actually got was the one they were trying to leave.)
+export function defaultSeat(hostTag, chairs, taken) {
+  const free = (Array.isArray(chairs) ? chairs : []).filter((t) => t && t !== hostTag);
+  if (!free.length) return SHARED;
+  const used = Array.isArray(taken) ? taken : [];
+  return free.find((t) => used.indexOf(t) < 0) || free[free.length - 1];
 }

@@ -88,9 +88,14 @@ const reply = await guest.locator('[data-ref="reply"]').inputValue();
 ok(reply.startsWith('JU2.'), 'reply code is packed too');
 ok(reply.length < 260, 'and just as short (' + reply.length + ' chars)');
 
-console.log('== host accepts; guest joins the shared throne ==');
+console.log('== host accepts; the host seats the guest beside itself ==');
 await host.fill('[data-ref="reply"]', reply);
 await host.locator('[data-ref="accept"]').click();
+// Since SPEC §216 a guest lands on a throne of its own wherever the chapter
+// has one to give — 66 CE has three. This suite is the CO-OP table, which is
+// now the explicit pick rather than the default, so it is picked.
+await host.waitForSelector('.mp-seat', { timeout: 20000 });
+await host.selectOption('.mp-seat', 'shared');
 await host.waitForFunction(() => {
   const rows = [...document.querySelectorAll('.mp-player')];
   return rows.length >= 2 && rows.every((r) => /Judaea/.test(r.textContent));
@@ -100,7 +105,7 @@ await guest.waitForFunction(() => {
   const w = document.querySelector('[data-ref="pickwrap"]');
   return w && /rule it together/.test(w.textContent);
 }, null, { timeout: 10000 });
-ok(await guest.locator('[data-pick]').count() === 0, 'guest has no nation pick — the realm is shared');
+ok(await guest.locator('[data-pick]').count() === 0, 'guest has no nation pick of its own — the host seats the table');
 await host.screenshot({ path: OUT + 'v18-lobby-host.png' });
 
 console.log('== begin the campaign ==');

@@ -71,14 +71,20 @@ await host.waitForSelector('.mp-seat', { timeout: 20000 });
 ok(true, 'the connected guest brings a seat picker with it');
 await guest.waitForFunction(() => {
   const w = document.querySelector('[data-ref="pickwrap"]');
-  return w && /rule it together/.test(w.textContent);
+  return w && /your own throne/.test(w.textContent) && /Aristobulus/.test(w.textContent);
 }, null, { timeout: 10000 });
-ok(true, 'and starts beside the host — the default table is still co-op');
+ok(true, 'and lands on Aristobulus without anybody touching the picker — the default is a throne each');
 
-console.log('== the host seats them on Aristobulus ==');
+console.log('== the picker moves them, both ways ==');
 const seatOpts = await host.locator('.mp-seat option').allTextContents();
 ok(seatOpts.length === 3 && /Beside you/.test(seatOpts[0]),
   "the chapter's other standards are on the menu: " + JSON.stringify(seatOpts));
+await host.selectOption('.mp-seat', 'shared');
+await guest.waitForFunction(() => {
+  const w = document.querySelector('[data-ref="pickwrap"]');
+  return w && /rule it together/.test(w.textContent);
+}, null, { timeout: 10000 });
+ok(true, 'seated beside the host, the guest is told the realm is shared');
 await host.selectOption('.mp-seat', 'ARI');
 await host.waitForFunction(() => {
   const rows = [...document.querySelectorAll('.mp-player')];

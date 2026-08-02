@@ -234,10 +234,15 @@ export const EVENTS_1948_ABSORPTION = [
           });
           // The dispersion hears. Standing lives on the province record
           // (js/sim/diaspora.js keeps it there so it saves for free), so a
-          // zero-import package can reach it directly.
+          // zero-import package can reach it directly — filed per crown since
+          // SPEC §216, and this is news that reaches every crown they have
+          // ever had dealings with.
           for (const p of ctx.game.provinces) {
-            if (p && p.dia && Number.isFinite(p.dia.standing)) {
-              p.dia.standing = Math.max(0, p.dia.standing - 6);
+            const by = p && p.dia && p.dia.by;
+            if (!by) continue;
+            for (const crown of Object.keys(by)) {
+              const rec = by[crown];
+              if (rec && Number.isFinite(rec.standing)) rec.standing = Math.max(0, rec.standing - 6);
             }
           }
           h.setFlag(ctx, 'easternAirliftStaggered', true);
