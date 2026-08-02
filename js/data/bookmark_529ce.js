@@ -1228,7 +1228,7 @@ export const BOOKMARK_529 = {
     HMY: [
       {
         id: 'h_kings_companies', name: 'The King\'s Own Companies',
-        icon: 'spears', col: 0,
+        icon: 'spears', col: 0, row: 0,
         desc: 'The garrison in your capital answers the negus, and shortly nobody. Field six '
           + 'thousand men who answer the crown — a client with an army of its own is a '
           + 'kingdom in waiting.',
@@ -1241,7 +1241,7 @@ export const BOOKMARK_529 = {
       },
       {
         id: 'h_customs_of_the_sea', name: 'The Customs of the Sea',
-        icon: 'coins', col: 1,
+        icon: 'coins', col: 1, row: 0,
         desc: 'Every empire that ever wanted this country wanted it for the ledgers of Aden '
           + 'and Mawza. Bank 250 talents the tribute never reaches — the monsoon pays '
           + 'whoever holds the harbors, and the harbors are yours.',
