@@ -60,6 +60,20 @@ export const DEFINES = {
     annexGov: 50,  // governance points to annex once the frontier is planted
   },
 
+  // The drumbeat of accomplishment (SPEC §207). A realm banks at most one
+  // mission a month, and after each one its chain rests this many months
+  // before the next may complete — so a chapter's objectives land as a
+  // drumbeat across its years rather than a volley in its first season.
+  // A bookmark may override with its own `missionPaceMonths`; 0 disables
+  // the rest (the one-a-month rule always holds). Tuned at 2, not 3: the
+  // war-score missions are TRANSIENT conditions, and the 8-year harness
+  // showed a 3-month rest pushing Masters of the Ascents past its war-score
+  // window on the seeded 167 run — the +25 martial points came 14 months
+  // late and the knife-edge Maccabean run tipped from survival to DEAD. A
+  // 2-month rest lands it inside the window and keeps every seeded
+  // trajectory in its documented family.
+  MISSION_PACE_MONTHS: 2,
+
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly
   // war-declaration chance; caution scales retreat thresholds and how early a
   // realm sues for peace; ponderous marks a great power — slow to anger,

@@ -70,6 +70,9 @@ function deal(w, cardId, optIdx) {
   return true;
 }
 const done = (t) => new Set(t.missionsDone || []);
+// The §207 drumbeat: one completion a pass, then the chain rests — a forced
+// world is paid off over a run of pumped months, not a handful of passes.
+const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
 // The five §200 forks: chapter, fork id, the entry that deals it, the two
 // markers its options set, and the terminal that reads them back.
@@ -324,7 +327,9 @@ for (const [key, ids] of Object.entries(NEW_OBJECTIVES)) {
   for (const [key, ids] of Object.entries(NEW_OBJECTIVES)) {
     const [id, tag] = key.split('/');
     const w = boot(id, tag);
-    realm.checkMissions(w.ctx);
+    // Pump past the §207 rests so a free node cannot hide behind an era
+    // objective that absorbs the first pass.
+    pump(w.ctx, 16);
     const d = done(w.game.tags[tag]);
     for (const x of ids) if (d.has(x)) free.push(key + '/' + x);
   }
@@ -349,7 +354,7 @@ for (const [key, ids] of Object.entries(NEW_OBJECTIVES)) {
   w.game.tags.ROM.opinion = { ...(w.game.tags.ROM.opinion || {}), HAS: 60 };
   for (const n of ['Jerusalem', 'Scythopolis', 'Hebron', 'Adora', 'Sepphoris', 'Gischala',
     'Joppa', 'Jamnia', 'Engaddi', 'Gadora']) w.ctx.helpers.changeOwner(w.ctx, n, 'HAS');
-  for (let i = 0; i < 4; i++) realm.checkMissions(w.ctx);
+  pump(w.ctx, 60); // nine objectives and their §207 rests
   const d = done(t);
   const unpaid = NEW_OBJECTIVES['167bce/HAS'].filter((x) => !d.has(x));
   ok(!unpaid.length, '167bce HAS: the whole §200 branch pays ('

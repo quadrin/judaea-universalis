@@ -59,13 +59,16 @@ ok(!(await page.locator('[data-ref="export"], [data-ref="import"]').count()),
 // SEATED Jewish court: Adiabene in the four chapters where the house is on
 // the map, and Agrippa's kingdom in 66. (529's Galilee stays off the roster —
 // it is a landless community, deferred by design until the 556 rising.)
+// SPEC §208 seats the §185 rule's southern case: Himyar, the kingdom whose
+// royal house took the God of Israel, is on the 529 map as Kaleb's client
+// and therefore on the 529 roster beside the Keepers.
 const expectedRosters = [
   ['HAS'],
   ['HYR', 'ARI', 'ADI'],
   ['HER', 'ATG', 'ADI'],
   ['JUD', 'AGR', 'ADI'],
   ['JUD', 'ADI'],
-  ['SAM'],
+  ['SAM', 'HMY'],
   ['JUD'],
   ['ISR'],
 ];

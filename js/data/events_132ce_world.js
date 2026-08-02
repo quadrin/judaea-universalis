@@ -849,7 +849,7 @@ export const EVENTS_132_WORLD = [
     ],
   },
 
-  // ── SPEC §207 · 345 ───────────────────────────────────────────────────────
+  // ── SPEC §209 · 345 ───────────────────────────────────────────────────────
   {
     id: 'ev2_takkaze_refusers',
     title: 'Behind the Takkaze',
@@ -1101,7 +1101,7 @@ export const EVENTS_132_WORLD = [
     ],
   },
 
-  // ── SPEC §207 · 384 ───────────────────────────────────────────────────────
+  // ── SPEC §209 · 384 ───────────────────────────────────────────────────────
   {
     id: 'ev2_himyar_rahmanan',
     title: 'The Inscriptions Change Their God',

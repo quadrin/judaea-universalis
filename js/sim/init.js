@@ -42,7 +42,7 @@ import {
 import { navalGenName } from '../data/tech.js';
 import { maxManpowerOf, explainIncome, incomeBreakdown, LOAN_SIZE, LOAN_INTEREST_PER_MONTH, MAX_LOANS, developInfo, developCore, DEV_KINDS, settlementInfo, settlementStart, expeditionInfo, expeditionStart, annexInfo, annexCore } from './economy.js';
 import { explainUnrest } from './unrest.js';
-import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked } from './realm.js';
+import { rulerDies, missionsFor, missionId, isMissionTree, missionDoneSet, missionUnlocked, missionPaceMonths } from './realm.js';
 import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
@@ -3281,6 +3281,20 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
+    // The drumbeat (SPEC §207): how long the player's chain still rests after
+    // its last accomplishment, so the panel can say why a satisfied mission
+    // has not landed yet. Null when the player has no chain at all.
+    getMissionPace() {
+      try {
+        const t = g.tags[g.playerTag];
+        if (!t || !missionsFor(ctx, g.playerTag)) return null;
+        return {
+          rest: Math.max(0, num(t.missionRest, 0) | 0),
+          pace: missionPaceMonths(ctx),
+        };
+      } catch (e) { warnOnce('getMissionPace', 'getMissionPace failed', e); return null; }
+    },
+
     // ---- sandbox chapters (SPEC §83): the second act after the verdict ------
     getChapter() {
       try { return chapterView(ctx); } catch (e) { warnOnce('getChapter', 'getChapter failed', e); return null; }
@@ -3658,6 +3672,7 @@ export function reviveGame(saved) {
     // Ladder-era saves carry no done list; missionDoneSet seeds it from
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
+    if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age

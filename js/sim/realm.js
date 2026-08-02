@@ -260,7 +260,7 @@ export function monthlyIntegration(ctx) {
       // share. The label still flips with the majority, and the AI does not
       // re-target a province already under its own faith — which is how a
       // Jewish Galilee outlives the program that "converted" it, and how the
-      // ambas keep the Beta Israel (SPEC §207).
+      // ambas keep the Beta Israel (SPEC §209).
       if (Array.isArray(p.pop) && p.pop.length) {
         const cfg = ctx.bookmark && ctx.bookmark.faithDrift
           && ctx.bookmark.faithDrift[owner.religion];
@@ -765,6 +765,15 @@ function writeMissionState(t, list, done) {
   t.missionIdx = prefix;
 }
 
+// The pace of the drumbeat (SPEC §207): how many months a chain rests after
+// a completion before the next may land. The era's own arc may retune it —
+// a bookmark's `missionPaceMonths` answers before the DEFINES default.
+export function missionPaceMonths(ctx) {
+  const b = ctx.bookmark;
+  if (b && Number.isFinite(b.missionPaceMonths)) return Math.max(0, b.missionPaceMonths | 0);
+  return Math.max(0, num(ctx.DEFINES && ctx.DEFINES.MISSION_PACE_MONTHS, 0) | 0);
+}
+
 export function checkMissions(ctx) {
   const g = ctx.game;
   const all = ctx.bookmark && ctx.bookmark.missions;
@@ -775,6 +784,7 @@ export function checkMissions(ctx) {
     if (g.tags[k] && g.tags[k].alive && missionsFor(ctx, k)) tags.add(k);
   }
   if (!tags.size) return;
+  const pace = missionPaceMonths(ctx);
   for (const tag of tags) {
     const t = g.tags[tag];
     const list = missionsFor(ctx, tag);
@@ -782,38 +792,42 @@ export function checkMissions(ctx) {
     try {
       const tree = isMissionTree(list);
       const done = missionDoneSet(t, list);
-      // Up to three completion WAVES a month — the ladder's old guard, kept:
-      // finishing a mission can unlock children a realm already qualifies
-      // for, and they should not wait a month per generation, but a cascade
-      // straight to the capstone stays impossible. Unlocks are judged
-      // against the wave's OPENING state (a completion only feeds the next
-      // wave), so depth is genuinely capped at three; parallel branches may
-      // each complete in the same wave — that is the point of branches.
-      let waves = 0;
-      let moved = true;
-      while (moved && waves++ < 3) {
-        moved = false;
-        const opened = new Set(done);
-        for (let i = 0; i < list.length; i++) {
-          const m = list[i];
-          if (!m || typeof m.check !== 'function') continue;
-          const id = missionId(m, i);
-          if (done.has(id)) continue;
-          if (!missionUnlocked(list, i, opened, tree)) continue;
-          let ok = false;
-          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
-          if (!ok) continue;
-          try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
-          done.add(id);
-          moved = true;
-          if (tag === g.playerTag) {
-            ctx.bus.emit('notify', {
-              title: 'Mission complete — ' + (m.name || id),
-              text: m.rewardText || 'The realm advances.',
-              type: 'good',
-            });
-          }
+      // ONE completion a month, then the chain rests (SPEC §207). The old
+      // guard ran up to three WAVES a pass, so a prepared realm banked a
+      // whole branch — parents, children, parallel roots — in a single
+      // morning, and every chapter opened with a volley of medallions. Now
+      // the first satisfied mission in table order completes, the rest of
+      // the chain waits its turn, and after each accomplishment the chain
+      // rests `missionPaceMonths` before the next may land. A month whose
+      // checks all fail charges no rest — waiting on the world is not
+      // resting from it. The AI keeps §102's symmetry: its chains march to
+      // the same drum.
+      const rest = Math.max(0, num(t.missionRest, 0) | 0);
+      if (rest > 0) {
+        t.missionRest = rest - 1;
+        writeMissionState(t, list, done);
+        continue;
+      }
+      for (let i = 0; i < list.length; i++) {
+        const m = list[i];
+        if (!m || typeof m.check !== 'function') continue;
+        const id = missionId(m, i);
+        if (done.has(id)) continue;
+        if (!missionUnlocked(list, i, done, tree)) continue;
+        let ok = false;
+        try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+        if (!ok) continue;
+        try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
+        done.add(id);
+        if (pace > 0) t.missionRest = pace;
+        if (tag === g.playerTag) {
+          ctx.bus.emit('notify', {
+            title: 'Mission complete — ' + (m.name || id),
+            text: m.rewardText || 'The realm advances.',
+            type: 'good',
+          });
         }
+        break;
       }
       writeMissionState(t, list, done);
     } catch (e) { warnOnce('missions:' + tag, 'missions failed for', tag, e); }

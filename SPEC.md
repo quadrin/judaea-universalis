@@ -9617,7 +9617,8 @@ monthly pass keeps its three-step guard, but as three completion WAVES
 judged against each wave's opening state: parallel branches may land in the
 same wave, a cascade straight to the capstone stays impossible, and the AI
 earns its branches on the same terms as the player (§102's symmetry,
-untouched).
+untouched). (The waves were retired in §207 for a slower drum — one
+completion a month, with a rest between beats.)
 
 **The retrofit rule for the shipped chains: never stricter.** Every branched
 mission's `requires` is a subset of its old ladder predecessors, so any
@@ -12460,7 +12461,248 @@ lives, and each documented one was re-run:
   true`, which is what they historically are — other courts' choices,
   dealt to the player as news.
 
-## 207. Beta Israel, the thirty-third day, and the arrivals hall
+## 207. The drumbeat of accomplishment
+
+A mission completed the instant its condition did, and the monthly pass ran
+up to three waves deep (§177), so a realm that qualified for several at once
+banked them all in one morning. Every chapter therefore opened with a
+volley: measured on the 8-year all-AI harness, Byzantium completed The Line,
+The Fleet and The Reform in the opening month of 614 — three medallions,
+one day; Rome banked three of its five Bar Kokhba answers in one pass of
+September 133; Jordan finished five of its seven 1948 missions inside nine
+months, two of them together in the third. The chains were tuned as a
+chapter's arc and they were resolving as its overture.
+
+**The rule.** `checkMissions` now banks at most ONE mission per realm per
+monthly pass — the first satisfied mission in table order — and after each
+completion the chain rests `MISSION_PACE_MONTHS` (DEFINES, 2) before the
+next may land, so the fastest possible cadence is one accomplishment a
+quarter. A month whose checks all fail charges no rest: waiting on the world
+is not resting from it, and the month the world answers, the mission lands
+at once. The first completion of a campaign is deliberately un-gated — the
+opening beat (Arm the Nation on a 26,000-man boot, The Host in Bar Kokhba's
+first spring) is the system teaching itself, and smoke2 has always pinned
+it. A bookmark may retune the drum with its own `missionPaceMonths`; 0
+disables the rest, and nothing disables one-a-month.
+
+The waves are gone, and with them §177's "three generations a pass" guard —
+one-a-month is strictly stronger. Trees stay trees: parallel branches still
+advance independently and a stalled siege still does not hold the building
+program hostage; the branches now take turns LANDING, which is a different
+thing. Ties go to table order, so a chain's early objectives outrank the
+§183 hypotheticals appended behind them. The AI keeps §102's symmetry — its
+chains march to the same drum, which is why the harness numbers above moved
+for Byzantium and Rome, not just for the player. And the pace deliberately
+does NOT hold a completion hostage to a fleeting condition twice: a war
+score that spikes and lapses during a rest simply waits for the world to
+offer it again, the same way it waited for the war in the first place. The
+one real cost of the section is that a perfectly-played short chain now
+takes `(n−1) × (pace+1)` months of calendar; at pace 2 the seven-mission
+Roman suppression ladder needs a year and a half where it once needed one
+morning, which is the point.
+
+**Why 2 and not 3.** The first draft shipped a 3-month rest, and the 8-year
+harness caught what that does to a TRANSIENT condition on a knife-edge run:
+on the seeded 167 trajectory, Masters of the Ascents (+10 war score, a
+number that comes and goes with the fighting) had its window at month 11,
+the 3-month rest held the chain until month 13, the war score had already
+dipped — and the mission waited for the next spike at month 25. Fourteen
+months without the +25 martial points, on the one seed where the all-AI
+Maccabean revolt was already down to three hill provinces and a negative
+treasury, tipped it from survival to DEAD — a flag no accepted family
+carries. A pace sweep on that seed (0/1/2/3) came back alive, alive,
+alive-at-the-baseline-numbers, dead: the 2-month rest expires inside the
+war-score window and the whole seeded trajectory returns to its documented
+family. The lesson generalizes past the seed: the war-score missions are
+the transient ones, and every month of rest is a month of exposure to
+their windows closing. Two is the widest drum that never cost a harness
+run its life.
+
+**The record.** `t.missionRest` is the months still owed, ticked down by
+the monthly pass, written only when a completion happens, and carried by
+the save; `reviveGame` seats 0 on a pre-§207 save, so old campaigns owe
+nothing. A resting month still runs `writeMissionState`, so the §177
+prefix contract (a hand-moved `missionIdx` means "the first N are done")
+holds mid-rest too. A proclamation (§102/§189) resets the chain's record
+but not its breath — a crown proclaimed mid-rest waits out the rest before
+its first new-chain accomplishment, which reads correctly: the realm that
+took the crown is the realm that just did something.
+
+**The panel.** While the chain rests, the missions tab's summary line says
+so — "the realm consolidates — the next may complete in N months" via
+`getMissionPace` — because a satisfied medallion that has not landed must
+read as the pace at work, not a broken check.
+
+**Measured.** The same 8-year harness after the section, at pace 2:
+Byzantium's three opening medallions land in months 1, 4 and 7; Rome's Bar
+Kokhba ladder runs 17, 20, 23, 26, 38 where it ran 17, 17, 17, 21, 38;
+Jordan's five spread 3, 6, 9, 12, 83 where they bunched 3, 3, 8, 9, 83; and
+the Maccabean chain reads 5, 8, 11 where it read 5, 7, 11. Chains history
+already spaced — Hyrcanus' four completions in the brothers' war — came
+back to the month, because the pace only bites bursts. The anomaly set came
+back exactly the documented families: 167 none · 67 SEL DEAD · 40 none ·
+66 none · 132 none · 529 JUD DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING
+(the come-and-go line) · 1948 ISR BLEEDING (the §205 harness-seed flag,
+already sampled as seed drift).
+
+- **Regression contract**: `smoke134` owns the rule — one a pass with three
+  satisfiable, the cadence `pace+1` exactly, no rest charged for hungry
+  months, the rest riding the save and a pre-§207 save owing none, the
+  bookmark override with one-a-month surviving pace 0, and the prefix
+  contract mid-rest. The content suites that force a world and "let the
+  ordinary monthly pass pay for it" (smoke111/116/120/126/129) now pump
+  that pass — each call is one synthetic month, and a big forced world is
+  paid off over a run of them rather than a pair; their no-free-lunch
+  sections pump too, so a free node cannot hide behind an era objective
+  absorbing the first beat. smoke2, smoke3, smoke7 and smoke16 pass
+  untouched: single completions, fail-then-succeed re-checks and forced
+  `missionIdx` seeds never met the rest.
+
+## 208. The kingdom beyond the strait takes its chair
+
+§185's rule is that every SEATED Jewish court is on offer, and the 529
+chapter has been quietly violating its spirit from the other direction:
+the one Jewish kingdom of its century was not merely off the roster, it
+was off the map. Himyar — the kingdom whose royal house took the God of
+Israel around 380 (Abikarib As'ad to Yusuf, the Rahmanan formula at the
+head of every royal inscription for a century and a half) — sat inside
+the 529 frame as eight Aksumite provinces, because §205 seated the negus'
+conquest as ownership. Procopius I.20 says otherwise, and says it
+plainly: Kaleb broke Yusuf, set **Sumyafa Ashwa** (his Esimiphaios) *over
+the Himyarites* as a tribute-paying king, and sailed home. A client
+court, not a province row. This section seats that court and offers it —
+the exact ADI parallel, one sea further south: §185's chair is "the
+kingdom beyond the Tigris whose royal house took the God of Israel", and
+this one is the kingdom beyond the strait that did the same and lost a
+war about it four years before the chapter opens.
+
+**The seating.** The 529 political map moves `YEMEN_SABA + YEMEN_HIMYAR +
+HADRAMAWT` from AXM to HMY; Aksum keeps its highlands and Shewa. The
+bookmark's setup fastens the yoke (`overlord: 'AXM'`) the way it fastens
+the Ghassanid one, so the §24 tribute, the §168 age clocks and the AI's
+independence arithmetic all arrive free. The Yemen cells leave the
+frontier-levy list: the 0.1 band was the measure of AKSUM'S reach across
+a sea, and the owner is now the native court assessing its own terraces —
+what is thin about the client kingdom is the yoke, and the yoke is
+modeled where a yoke lives (the tribute, the bond, and the garrison
+party), not by starving the whole province row. 614's Persian Yemen keeps
+its 0.1: the abna really were enclaves. The faiths overlay stops lying by
+omission at the same time: Zafar (the Jewish kings' own capital, whatever
+church the conquest built in it) and the Marib interior carry `judaism`;
+the conquest's coast carries the Cross it verifiably had — Najran of the
+martyrs, Muza the crossing's roadstead, Aden two centuries after
+Theophilos built there (Philostorgius III.4), Dioscurida with the
+Persian-sent clergy Cosmas describes in this very generation; the
+Hadramawt mainland keeps the old cults exactly as the base atlas deals
+it.
+
+**The single-religion-key compromise, again.** The static define keeps
+`south_arabian` — the 66 CE frame seats a pre-conversion Himyar and must
+go on doing so — and the 529 chapter's `tagTweaks` seat `judaism` on the
+tag, which is §185's Adiabene compromise pointed south: the tag carries
+the covenant the kings took, and the nuance the one religion key cannot
+say — a Christian client crown on a Jewish country's throne — lives in
+the court, where nuance belongs.
+
+**The chair's kit,** per the §185 checklist, paid in full: a
+`playableTags` row (Hard, behind the Keepers' Very Hard); Win/Lose
+`objectives`; a court of four documented parties — the **Negus' Men**
+(the garrison Procopius says Kaleb left, with the name of the man it will
+follow instead already known), the **House of Yazan** (the old nobility
+of the covenant, keepers of the genealogies that will produce Sayf son of
+Dhi Yazan), the **Qayls of the Mist** (the castle lords the royal
+inscriptions count allegiance by), and the **Houses of the Incense Sea**
+(the harbor merchants with a professional indifference to theology) —
+each with ground in `ESTATE_GROUND`, asks in `ESTATE_ASKS`, and a
+statecraft `SEATS` row (strict: yazanids, worldly: incense_houses,
+soldiers: qayls — the garrison is somebody else's soldiers, which is the
+chapter's whole problem); a `CAMPAIGN_GUIDANCE` entry whose clock runs
+Abraha 533, the empires' war 540, the great repair 548, the reckoning
+570, the dam 575; an era-ideas curriculum of three groups (the Incense
+Crown open at the chapter's base gov 9, the Qayls of the Mist at mar 10,
+the Formula of Rahmanan at infl 10); Sumyafa seated with an heir of the
+old royal style; and armies, treasury, opinions and modifiers in setup —
+including Abraha himself, waiting in the negus' Army of the Crossing at
+Adulis, which the AXM rulers comment has been promising since §205.
+
+**The client's century** is the mission tree: an army of the crown's own,
+the customs banked, the yoke reduced to Procopius' one-word tribute, the
+dam at Marib held and budgeted (`himyarDamKept`), the martyrs' city quiet
+at +2 stability — a kingdom of two faiths that does not do 523 again in
+either direction — the covenant back in the royal style at 70 legitimacy,
+the other shore of the Gulf, the pretense kept past 545, and a country
+worth too much to hand to eight hundred prisoners by 565. The two §179
+curriculum branches assign the era's named rungs, and the §183 tail reads
+the Keepers' own markers from the far end of the one sea — the mountain
+answered, the Persian file, the two houses heard from the south — §185's
+no-new-fork economy exactly.
+
+**The three §206 southern cards stop narrating past the live court.**
+Abraha's mutiny of 533 fires while the conquest is still a conquest
+(Zafar Aksum's, or a client still yoked) and adapts to who holds the
+country: an AI client gets the garrison's king and loses the yoke — the
+history, delivered — while a player's court keeps its throne, loses the
+yoke, and inherits the garrison's fury (negus_men −35, a hostile party
+where a scripted deposition would have been a stolen chair); a client
+that already won free retires the card unfired. The eight ships of 570
+sail exactly where the card's own transfer clause would take something —
+Aksum's ground, a still-yoked client (which falls with its patron, onto
+the 614 map), or a dead holder's — and yield otherwise: a free Himyar is
+not worth a fleet, and a Himyar already in the King of Kings' clientele
+needs no conquering, because the §168 ages engine absorbs it on its own
+clock. The dam of 575 becomes a budget line rather than a fate: the
+card's own text says every kingdom of the south repaired it as the price
+of calling itself one, so a living court that has paid that price and
+still holds Marib is a world where the breach has nothing to break.
+
+**The reckoning** is the §185 client contract dated to November 570, the
+month the convict fleet sailed: alive and seated at Zafar wins, graded —
+free, whole and covenanted is the full style again (the Kings of Saba and
+Dhu Raydan, 200); free alone means no ships come (170); still yoked but
+still seated is the client that outlived the word (120); the capital in
+other hands at the reckoning, or elimination in any year, loses.
+
+### What the harness says
+
+The 8-year set returns **exactly the documented family** — `529 JUD DEAD
++ SAM DEBT-SPIRAL` — after one balance lesson the first draft paid for:
+seating the south with armies its books could not carry flagged both
+courts BLEEDING (Aksum −0.5→−1.2 on four highland cells and six
+regiments). The fixes are the ordinary-levy argument above, the Crossing
+trimmed to three regiments, AI recruit targets sized to the books (6/4),
+and Aksum's customs house carried by a permanent Trade of Adulis modifier
+— Kosmas Indicopleustes sailed those waters the year of the crossing and
+describes the ivory, the gold of Sasu and the emeralds himself.
+
+The 91-year run (to 620, three seeds) keeps the pre-§208 baseline's
+shared family — JUD SNOWBALL, GHA DEAD, both present before this section
+— and on the primary seed delivers the south's own history through the
+live simulation rather than the script: Abraha's card fires June 533 and
+crowns him on a freed AI Himyar; Persia vassalizes the kingdom in the
+540s; the incorporation clause retires it in 575 ("the client crown is
+retired with honors"); the dam breaks the same summer; and the run ends
+with Zafar Persian — the 614 opening, reached by a road nobody wrote
+(the Wahriz card, correctly, retires: the fleet does not sail against
+the King of Kings' own client). The second seed converges the same way;
+the third ends with a living, free Himyar at 620 — the counterfactual
+the chair exists to play for, occurring at plausible rates. The primary
+seed's OST SNOWBALL and VIS DEAD do not recur on either resample and are
+the ordinary §163 seed drift the §205 pass already documented.
+
+- **Regression contract**: `smoke135` — the roster is SAM,HMY with the
+  covenant on the 529 lens and the pre-conversion define untouched; the
+  client boots yoked, seated, ruled, garrisoned at the ordinary levy with
+  the faith overlay in place, and pays nothing at boot; the mutiny's three
+  worlds (AI crowned, player's throne kept with the garrison hostile, the
+  free court unfired); the fleet's arithmetic (spares the free and the
+  Persian-cliented, takes the yoked onto the 614 map); the kept dam; and
+  the four graded reckonings plus mid-century elimination. `smoke116`
+  grows the 529 completability world to pay Himyar's roads beside the
+  Keepers'; `uitest3` offers the widened roster card for card. smoke23
+  (whose roster table never covered 529), smoke101 and smoke112 (whose
+  loops pick the new chair up from `playableTags` automatically), and
+  smoke133/134 pass with their assertions untouched.
+## 209. Beta Israel, the thirty-third day, and the arrivals hall
 
 §206 gave the §205 ground its world spine; this section gives it the
 threads the game's own subject runs on — the ones a player of this
@@ -12519,8 +12761,8 @@ the file's header says so.
   is the section's engineering argument, the same shape as §206's
   secession pair: **the 529 chapter's opening premise — Kaleb's crossing
   against a Jewish king of Himyar, the martyrs of Najran already avenged,
-  no HMY court on the board — is now a thing a long 132 campaign watches
-  get built.** Dhu Nuwas is this card's line's last act; smoke134 pins
+  the client crowned at Zafar under the Aksumite yoke (§208) — is now a
+  thing a long 132 campaign watches get built.** Dhu Nuwas is this card's line's last act; smoke136 pins
   the 529 and 614 political maps against exactly that aftermath.
 
 **Lag BaOmer is the set's one player-facing card** (`ev2_lag_baomer`,
@@ -12617,14 +12859,14 @@ discipline — baseline is the §206 merge commit run on the same machine):
   BY DESIGN inside that identical verdict: Lag BaOmer fires at 133.5 and
   the AI lights the fires (+5 legitimacy, a year of morale) — the one
   dated card this section puts inside any chapter's first decade.
-- `node tools/autorun.mjs 55 1948ce`: every §207 card fires in real flow
+- `node tools/autorun.mjs 55 1948ce`: every §209 card fires in real flow
   (probed through the day loop — `airportDoctrine`, `dergTakesAddis`,
   `operationMoses`, `operationSolomon` all set by 1992, Mengistu on the
   throne from 1974, 22,000 Beta Israel souls counted in the four arrival
   towns, "The Ones Left Behind" planted 1984 and lifted 1991). The
   harness seed adds one flag the baseline lacks — `LEB: BLEEDING`, ending
   −0.3 income with 2,900 more troops than baseline's clean +2.8 — and it
-  is the §160 drift class, not a Lebanon tax: no §207 card touches LEB in
+  is the §160 drift class, not a Lebanon tax: no §209 card touches LEB in
   its AI path (the Lod reprisal option is the player's, not the AI's),
   and on three sampled seeds per smoke81's rule LEB comes back clean,
   SNOWBALL (fifteen provinces — the opposite direction), and clean. The
@@ -12639,10 +12881,10 @@ discipline — baseline is the §206 merge commit run on the same machine):
   at eight cells and **Jewish** — the 384 card doing on the long clock
   exactly what it was written to do — with Aksum Christian beside it and
   the Beta Israel a 7% remnant on Tana behind the `house_of_israel`
-  modifier, where the pre-§207 completion bug had wiped them to zero by
+  modifier, where the pre-§209 completion bug had wiped them to zero by
   392.
 
-- **Regression contract**: `smoke134` — the window arithmetic on both
+- **Regression contract**: `smoke136` — the window arithmetic on both
   sides of every boundary (not-yet for 132's opening, open 529/614/1948,
   shut from 1991, era ledger agreeing on both sides of the airlift); the
   withdrawal gate (no card before Ezana's flag) and its real population;

@@ -89,7 +89,7 @@
 // stays open, because Morocco is the one community of the Arab world that
 // never entirely goes.
 //
-// AND THE NILE HAS A SPRING (SPEC §207). When §203 carried the frame south
+// AND THE NILE HAS A SPRING (SPEC §209). When §203 carried the frame south
 // to the Ethiopian highlands, it carried it to the one community this list
 // could not have held before: the Beta Israel of the Semien and the Tana
 // country, who kept the Orit without ever hearing of the Talmud, and who
@@ -124,7 +124,7 @@ export const DIASPORA = [
     blurb: 'Older than the Ptolemies and older than the Greeks: Jewish soldiers and '
       + 'traders in the old capital, on papyrus, in Aramaic, since the Persians.',
   },
-  // ── The roof of Africa (SPEC §207) ───────────────────────────────────────
+  // ── The roof of Africa (SPEC §209) ───────────────────────────────────────
   {
     // The Beta Israel. Their origin is genuinely argued — refusers of Ezana's
     // conversion withdrawing upcountry, Agaw judaizers of the following

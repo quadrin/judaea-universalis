@@ -575,18 +575,24 @@ const MAP_529 = deal({
   // attested province of it; the Margiana frontier pays the Hephthalites the
   // tribute Peroz's death fixed, and Chorasmia answers to the White Huns.
   // Four years ago Kaleb of Aksum crossed the strait and broke Jewish
-  // Himyar: the whole incense country answers to the negus (through Sumyafa
-  // Ashwa his viceroy — Procopius I.20 — with Abraha's mutiny two years
-  // out), Christian Najran under his protection. Kush is a century and a
-  // half gone: the Nubian kings hold the river, the Blemmyes the desert.
-  // Mecca stays WASTE here like the rest of the tribal Hejaz — this chapter
-  // keeps RSH deliberately unseated (its Yathrib and Khaybar are a dormant
-  // pre-§160 note), and the Quraysh caravan town is a people, not a court.
+  // Himyar. The incense country still answers to the negus, but not as
+  // provinces: Procopius I.20 is explicit that Kaleb set a king OVER the
+  // Himyarites — Sumyafa Ashwa, his tribute-paying client — and sailed
+  // home, leaving a garrison whose own judgment (Abraha's mutiny, two
+  // years out) is the next chapter of the story. So the client court is
+  // SEATED (SPEC §208): HMY holds the whole incense country under an
+  // Aksumite yoke the bookmark's setup fastens, Christian Najran under the
+  // negus' protection inside it. Kush is a century and a half gone: the
+  // Nubian kings hold the river, the Blemmyes the desert. Mecca stays
+  // WASTE here like the rest of the tribal Hejaz — this chapter keeps RSH
+  // deliberately unseated (its Yathrib and Khaybar are a dormant pre-§160
+  // note), and the Quraysh caravan town is a people, not a court.
   SAS: IRAN_SE.concat(IRAN_MAKRAN, IRAN_SAKASTAN, IRAN_NE, IRAN_PARTHYENE, OMAN_CELLS),
   HEP: ['Chorasmia', 'Massagetae'],
   NOB: NUBIA_NILE,
   BLM: ['Blemmyae'],
-  AXM: AKSUM_CORE.concat(['Shewa'], YEMEN_SABA, YEMEN_HIMYAR, HADRAMAWT),
+  AXM: AKSUM_CORE.concat(['Shewa']),
+  HMY: YEMEN_SABA.concat(YEMEN_HIMYAR, HADRAMAWT),
   WASTE: ['Semnones', 'Boiohaemum',            // the emptied Elbe lands between migrations
     'Rha', 'Hyperborea', 'Ripaea',
     'Dahae', 'Issedones', 'Macoraba', 'Asir', 'Yamama', // the tribes between the powers
@@ -595,13 +601,17 @@ const MAP_529 = deal({
 }, [
   // Justinian's actual frontier: the lower Danube and the Tauric outposts,
   // raided yearly by the hordes this map finally names. Persia's Margiana
-  // carries the Hephthalite tribute-frontier; Aksum's Yemen is a conquest
-  // across a sea, four years old and garrison-thin — Abraha is about to
-  // prove exactly how thin.
+  // carries the Hephthalite tribute-frontier. The Yemen cells leave this
+  // list with §208: the 0.1 band was the measure of AKSUM'S reach across a
+  // sea — an owner garrison-thin on somebody else's country — and the owner
+  // is now the native client court, which assesses its own terraces at the
+  // ordinary rate. What is thin about the client kingdom is the YOKE, and
+  // the yoke is modeled where a yoke lives: the tribute, the overlord bond,
+  // and the garrison party inside the court. (614 keeps its Persian Yemen
+  // at 0.1 — the abna really were enclaves at the end of the world.)
   'Novae', 'Tomis', 'Chersonesus', 'Panticapaeum',
   ...IRAN_NE,
-  ...YEMEN_SABA, ...YEMEN_HIMYAR, ...HADRAMAWT,
-], faiths('christianity',
+], Object.assign(faiths('christianity',
   // The christian west, 529: everything a bishop reaches — Frankish Gaul
   // (baptized with Clovis), Visigothic and Suevic Iberia and the Ostrogothic
   // and Vandal south (Arian crowns over Nicene provinces — the game's one
@@ -621,8 +631,21 @@ const MAP_529 = deal({
   // §205: Christian Aksum (Ezana took the Cross two centuries ago) and the
   // Najran of the martyrs of 523, whose avenging is why Kaleb crossed at
   // all. Nubia's kings are still pagan — Julian's mission sails in 543.
-  AKSUM_CORE, ['Shewa', 'Najran'],
-));
+  // §208 adds the conquest's coast: Muza is the roadstead the crossing
+  // landed at; Aden's church is two centuries old by 529 (Philostorgius
+  // III.4 — Theophilos "the Indian" built at Aden and Zafar under
+  // Constantius); and Dioscurida keeps the Christians with Persian-sent
+  // clergy that Cosmas Indicopleustes describes in this very generation.
+  AKSUM_CORE, ['Shewa', 'Najran', 'Muza', 'Eudaemon Arabia', 'Dioscurida'],
+),
+// §208: the faiths of the broken kingdom itself. A century and a half of
+// the monotheist crown (Abikarib As'ad to Yusuf, the Rahmanan formula on
+// every royal inscription) does not vanish in four years of viceroyalty:
+// Zafar — the Jewish kings' own capital, whatever church the conquest
+// built in it — and the Marib interior keep the faith of the house, which
+// is the ground the chapter's Himyarite court stands on. The Hadramawt
+// mainland keeps the old cults, exactly as the base atlas deals it.
+faiths('judaism', ['Zafar', 'Marib'])));
 
 // ---------------------------------------------------------------------------
 // 614 CE — the year Jerusalem falls to Persia.

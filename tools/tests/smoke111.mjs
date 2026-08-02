@@ -39,6 +39,11 @@ function boot(playerTag, seed) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: BOOKMARK_66, events });
   return { game, ctx, actions: gameActions(ctx) };
 }
+// The §207 drumbeat: one completion a pass, then the chain rests. Where this
+// suite means "let the months go by until the pass has paid", it pumps —
+// each call is one synthetic month.
+const pump = (c, n) => { for (let i = 0; i < n; i++) realm.checkMissions(c); };
+const PACE = DEFINES.MISSION_PACE_MONTHS | 0;
 
 console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
@@ -72,10 +77,11 @@ console.log('== branches advance independently; the prefix does not lie ==');
   const open = actions.getMissions().filter((m) => m.status === 'current').map((m) => m.id);
   ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands,hy_royal_robes,hy_granaries',
     'three branches open at once (plus the standing hypotheticals): ' + open.join(','));
-  // Complete a LATER branch first: the Parthian mission, by opinion.
+  // Complete a LATER branch first: the Parthian mission, by opinion. The
+  // root's completion above left the chain resting (§207), so wait it out.
   game.tags.PAR.opinion = game.tags.PAR.opinion || {};
   game.tags.PAR.opinion.JUD = 90;
-  realm.checkMissions(ctx);
+  pump(ctx, PACE + 1);
   const st = Object.fromEntries(actions.getMissions().map((m) => [m.id, m.status]));
   ok(st.jm_diaspora === 'done', 'a later branch completed early');
   ok(st.jm_samaria === 'locked', 'while its neighbour still waits on the coast');

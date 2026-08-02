@@ -1650,7 +1650,7 @@ export const EVENTS_1948_REGION = [
     ],
   },
 
-  // ── SPEC §207 · the mountain kingdom's fall, and the Beta Israel ──────────
+  // ── SPEC §209 · the mountain kingdom's fall, and the Beta Israel ──────────
   // Three dated world cards carry the arc the Tana window (js/data/diaspora.js)
   // needs the 1948 chapter to be able to see: the Derg takes Addis, the famine
   // roads carry the Beta Israel to Sudan, and Operation Solomon empties the

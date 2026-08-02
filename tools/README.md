@@ -341,6 +341,17 @@ card keeping a musters line that names the tab in the chapter's own word, and
 one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
 carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
 now holds it.
+
+`smoke134.mjs` owns the SPEC §207 drumbeat: one mission completion per realm
+per monthly pass, then a rest of `MISSION_PACE_MONTHS` before the next may
+land. If you write a suite that forces a world and expects the pass to pay
+for it, do what smoke111/116/120/126/129 now do — pump `checkMissions` in a
+loop (each call is one synthetic month) instead of calling it twice, and pump
+the no-free-lunch sections too, or a free node hides behind whichever era
+objective absorbs the first beat. Note the rule the suite pins hardest: a
+month whose checks all FAIL charges no rest, so the fail-then-fix idiom
+(smoke16's Third House) still completes on the very next call.
+
 Since SPEC §206 (the south and the east get their history: 27 dated world
 cards on the §205 ground): the 8-year set is byte-identical — the cards that
 fire inside any 8-year window move opinions and modifiers, not trajectories.
@@ -373,6 +384,19 @@ bigger province list moves every province-ordered draw — not a 1948 balance
 change, and the accepted set is unchanged. Every §205 court ends its era's
 run unflagged. BOOT_MS doubled to 480s with the frame (the ID pass is 46.0M
 texels × 373 seeds now); dump-geometry's timeout doubled with it.
+
+SPEC §207 (the mission drumbeat: one completion a month, a 2-month rest
+between) re-ran the full 8-year harness and came back exactly the §205
+families — 167 none · 67 SEL DEAD · 40 none · 66 none · 132 none · 529 JUD
+DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING · 1948 ISR BLEEDING (the
+harness-seed flag §205 already sampled as drift). The number worth
+remembering is the one that set the pace: a first draft with a THREE-month
+rest pushed the 167 chain's war-score mission past its transient window on
+the harness seed (month 11 → month 25), and fourteen reward-starved months
+tipped the knife-edge all-AI Maccabean run to HAS DEAD — a flag no accepted
+family carries. A pace sweep (0/1/2/3 → alive/alive/alive/dead) picked 2.
+If a future edit makes an underdog die in the harness, check whether a
+war-score mission slid out of its window before blaming the armies.
 
 **The §202 harness note is that there is no harness note.** `node
 tools/autorun.mjs 8`, run on the pre-§202 tree and on this one in the same

@@ -95,9 +95,9 @@ console.log('== every address in the book is a cell on the map ==');
     + (missing.length ? ' (missing: ' + missing.join(', ') + ')' : ' (' + DIASPORA.length + ' entries)'));
   ok(DIASPORA.every((d) => (d.prov && !d.tag) || (d.tag && !d.prov)),
     'every entry sits on exactly one seat: a cell or a court');
-  // 35 until §195 seated London and America; 37 until §207 seated the Beta
+  // 35 until §195 seated London and America; 37 until §209 seated the Beta
   // Israel at Tana.
-  ok(DIASPORA.length === 38, 'thirty-eight communities: twenty of §172, fifteen of §194, two of §195, and the Beta Israel of §207');
+  ok(DIASPORA.length === 38, 'thirty-eight communities: twenty of §172, fifteen of §194, two of §195, and the Beta Israel of §209');
   const seats = DIASPORA.map((d) => d.prov || ('tag:' + d.tag));
   ok(new Set(seats).size === seats.length, 'no seat carries two entries');
   ok(DIASPORA.every((d) => d.size >= 1 && d.size <= 5), 'every size is on the 1-5 scale');
@@ -143,7 +143,7 @@ console.log('== the west the Byzantine chapters were missing ==');
   // Balkans east of the Aegean. The sixth-century Mediterranean — Gregory's
   // letters about Sicily, Justinian's Africa, Sisebut's Spain — doubles it.
   const at529 = communitiesAt(529).map((d) => d.prov);
-  ok(at529.length === 29, '529 opens with 29 communities on the board, up from 14 (§194 doubled the west; §207 adds the highlands)');
+  ok(at529.length === 29, '529 opens with 29 communities on the board, up from 14 (§194 doubled the west; §209 adds the highlands)');
   for (const prov of ['Corduba', 'Massilia', 'Narbo', 'Carthago', 'Syracusae', 'Capua', 'Gortyn', 'Tarsus', 'Tana']) {
     ok(at529.indexOf(prov) >= 0, prov + ' is among them');
   }

@@ -210,10 +210,20 @@ export function createWiki({ DEFINES, getCtx }) {
     // reads, so the Compendium cannot drift from what the game will actually
     // offer — which is the whole contract this page is under.
     const y0 = (b.startDate && Number.isFinite(b.startDate.y)) ? b.startDate.y : null;
+    // Through the chapter's own lens (SPEC §139, §208): a bookmark's
+    // tagTweaks may seat a religion the static define cannot — 529's Himyar
+    // carries the covenant on the era's tag while the define keeps the
+    // pre-conversion south for 66 CE — and the sim's own gate
+    // (jewishCrown in js/sim/diaspora.js) reads the LIVE tag religion, so
+    // this page must read the same lens or the Compendium promises less
+    // than the game delivers.
     const jewishStandard = (b.playableTags || []).some((row) => {
       const tag = row && (typeof row === 'string' ? row : row.tag);
       const def = tag && DEFINES.TAGS ? DEFINES.TAGS[tag] : null;
-      return !!(def && def.religion === 'judaism');
+      const tweak = tag && b.tagTweaks
+        && Object.prototype.hasOwnProperty.call(b.tagTweaks, tag) ? b.tagTweaks[tag] : null;
+      const religion = (tweak && tweak.religion) || (def && def.religion);
+      return religion === 'judaism';
     });
     // SPEC §175: the CHAPTER's span, not its opening instant. This page tested
     // `startDate` alone, so 167 BCE — which runs to 6 CE — listed thirteen
