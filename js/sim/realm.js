@@ -82,7 +82,7 @@ function electWinner(ctx, tag) {
 // heir, or lets an unrelated courtier seize power. Elective governments hold an
 // emergency election instead; a government with no regency never seats a child
 // (SPEC §25); and a government whose seat is not inherited at all fills it by
-// its own rule and opens no crisis (SPEC §210) — the lot is cast again, the
+// its own rule and opens no crisis (SPEC §211) — the lot is cast again, the
 // assembly names a convener, and nobody's claim was at stake. Which branch a
 // court takes is declared on its government type and read from there. Exposed
 // so scripted events (Nero, Mattathias) can kill rulers through this machinery.
@@ -122,7 +122,7 @@ export function rulerDies(ctx, tag, causeText) {
     t.legitimacy = clamp(num(t.legitimacy) - 15, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. The elders will not anoint a child: ${nr.name} takes the ${title.toLowerCase()} while ${t.heir.name} comes of age. (−15 legitimacy)`;
   } else if (govHas(ctx, tag, 'drawn')) {
-    // Nobody inherits here, so nobody's claim died with them (SPEC §210). The
+    // Nobody inherits here, so nobody's claim died with them (SPEC §211). The
     // constitution names the next man by its own rule and the state carries
     // on — the one succession in this engine that is not a wound.
     const nr = rollCourtier(ctx, tag);
@@ -191,7 +191,7 @@ export function monthlySuccession(ctx) {
         }
       }
       // A constitution that does not inherit has no heir to age and no
-      // council to seat (SPEC §210) — the Lot draws, the assembly convenes,
+      // council to seat (SPEC §211) — the Lot draws, the assembly convenes,
       // the republic votes, and none of them is waiting for anybody's son.
       if (govHas(ctx, tag, 'heirless')) {
         t.heir = null;

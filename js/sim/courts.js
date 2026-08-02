@@ -266,7 +266,7 @@ const ARCHETYPES = {
 // The constitution a court keeps, defaulting the way the rest of the engine
 // defaults: a tag with no declared government is a monarchy.
 //
-// There are more governments than there are party-sets (SPEC §210), and there
+// There are more governments than there are party-sets (SPEC §211), and there
 // should be: the four sets above are a coverage device for forty AI courts,
 // while the adopted constitutions are authored answers to one chapter's
 // question. So a government NAMES the set it convenes (`archetype`) instead of
