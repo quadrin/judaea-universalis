@@ -181,6 +181,59 @@ console.log('== the last three sections are filed by what they are (SPEC §203) 
   }
 }
 
+console.log('== the chapter and the patterns follow the same rule (SPEC §204) ==');
+{
+  // A chapter is what history asks of this realm, so it sits with the tree
+  // that asks the rest of it — not among the realm's own facts.
+  const chapter = page.locator('#nation-panel [data-ref="chapterBlock"]');
+  await page.locator('#nation-panel .np-tab[data-tab-go="crown"]').click();
+  await page.waitForTimeout(150);
+  ok(!(await chapter.isVisible()), 'Crown no longer carries The Chapters');
+  ok(await page.locator('#nation-panel [data-ref="religion"]').isVisible()
+    && await page.locator('#nation-panel [data-ref="reforms"]').isVisible(),
+    '  and still has its facts and its reforms');
+
+  await page.locator('#nation-panel .np-tab[data-tab-go="missions"]').click();
+  await page.waitForTimeout(150);
+  ok(await page.locator('#nation-panel [data-ref="missionsBlock"]').isVisible(),
+    'Missions shows the tree');
+  if (await chapter.isVisible()) {
+    const order = await page.evaluate(() => {
+      const r = (s) => document.querySelector('#nation-panel [data-ref="' + s + '"]').getBoundingClientRect();
+      return { chapter: r('chapterBlock').top, tree: r('missionsBlock').top };
+    });
+    ok(order.tree > order.chapter, '  with the chapter above it — the century, then the era');
+  } else {
+    ok(true, '  (no chapter is running yet in this campaign)');
+  }
+
+  // The patterns, the milestones and the pipeline describe the army, so they
+  // are drawn on the Host and no longer under the ladders that buy them.
+  const patterns = page.locator('#nation-panel [data-ref="patternsBlock"]');
+  await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
+  await page.waitForTimeout(150);
+  ok(!(await patterns.isVisible()), 'Technology no longer draws the patterns');
+  ok(await page.locator('#nation-panel [data-ref="tech"] .np-ms').count() === 0,
+    '  nor the milestone strip inside a ladder card');
+  const marTip = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll('#nation-panel [data-ref="tech"] .np-techrow')];
+    const mar = rows.find((r) => r.querySelector('[data-tech="mar"]'));
+    return mar ? (mar.querySelector('.np-tech-head') || {}).dataset.tt || '' : '';
+  });
+  ok(/musters/.test(marTip) && /Host|Defence/.test(marTip),
+    '  but the military card still says what the next rung musters, and where to look');
+
+  await page.locator('#nation-panel .np-tab[data-tab-go="war"]').click();
+  await page.waitForTimeout(150);
+  ok(await patterns.isVisible(), 'the Host draws them');
+  const line = (await page.locator('#nation-panel [data-ref="patterns"] .np-tech-unit').first().textContent()) || '';
+  ok(/muster/i.test(line), '  the pattern line: ' + line.trim());
+  ok(await page.locator('#nation-panel [data-ref="patterns"] .np-ms').count() >= 1,
+    '  and the milestone strip');
+  ok(await page.locator('#nation-panel [data-ref="manpower"]').isVisible(),
+    '  above them, the host\'s own numbers');
+}
+
 console.log('== the panel keeps updating after a switch ==');
 {
   // A tab implementation that re-templated the panel would detach every node

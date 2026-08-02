@@ -331,6 +331,16 @@ have. `uitest38.mjs` grew the browser's answer to the same three moves, and
 `uitest8.mjs` drives the ladders through the renamed tab. Neither §203 nor its
 suites touch the sim: `node tools/autorun.mjs 8` is unaffected by a tab.
 
+`smoke132.mjs` owns the SPEC §204 pair: The Chapters resolving to the Missions
+tab above the tree (hidden at a foreign court, title still from
+`uiTerms.chapters`, both tab tooltips swapping the claim), and the pattern
+line, milestone strip and arms pipeline resolving to the Host under *How We
+Muster* — `milestoneStrip` called once and only into that block, the military
+card keeping a musters line that names the tab in the chapter's own word, and
+one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
+carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
+now holds it.
+
 **The §202 harness note is that there is no harness note.** `node
 tools/autorun.mjs 8`, run on the pre-§202 tree and on this one in the same
 environment, produced **byte-identical output** — every bookmark, every

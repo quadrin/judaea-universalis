@@ -49,10 +49,18 @@ await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
 await page.waitForTimeout(150);
 const techBtns = await page.locator('[data-tech]').count();
 ok(techBtns === 3, 'three ladders shown: ' + techBtns);
-const unitLine = (await page.locator('.np-tech-unit').textContent()) || '';
-ok(unitLine.includes('Drilled Spearmen'), 'unit pattern line: ' + unitLine.trim());
 const lvls = await page.locator('.np-tech-lvl').allTextContents();
 ok(lvls.join(',') === '5,5,5', 'JUD levels 5/5/5: ' + lvls.join(','));
+// SPEC §204: what the ladders BUY is the host's business — the pattern line
+// and the milestone strip render on the Host, one tab over.
+await page.locator('#nation-panel .np-tab[data-tab-go="war"]').click();
+await page.waitForTimeout(150);
+const unitLine = (await page.locator('[data-ref="patterns"] .np-tech-unit').first().textContent()) || '';
+ok(unitLine.includes('Drilled Spearmen'), 'unit pattern line, on the Host: ' + unitLine.trim());
+ok(await page.locator('[data-ref="patterns"] .np-ms').count() >= 1,
+  'and the milestone strip travelled with it');
+await page.locator('#nation-panel .np-tab[data-tab-go="tech"]').click();
+await page.waitForTimeout(150);
 
 console.log('== buying a level through the panel ==');
 await page.evaluate(() => { window._ctx.game.tags.JUD.points.gov = 999; });

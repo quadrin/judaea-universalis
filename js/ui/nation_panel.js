@@ -40,8 +40,9 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // chapter (Decisions, Technology, Armies, Diplomacy) and so never vanish;
 // Faith may, because the Temple does not stand in most of these centuries and
 // a tab that is empty six times out of eight is worse than no tab at all, and
-// Missions (SPEC §177) holds the mission tree and steps aside at a foreign
-// court, after the verdict, and in a chapter whose tag has no chain.
+// Missions (SPEC §177) holds what history asks of this realm — the chapter it
+// is living through and the tree of what the era offers — and steps aside at
+// a foreign court, and when a chapter has neither to show.
 //
 // The ideas are split by what unlocks them (SPEC §198, refining §188). The
 // chapter's Ideas of the Age are each locked behind a NAMED RUNG of a
@@ -60,12 +61,18 @@ import { eraIdeaGroupsFor } from '../data/era_ideas.js';
 // DOING THINGS is a levels-of-gov/infl/mar affair — it taxes every rung of
 // every ladder — so it folds in beside the Ideas of the Age, under the
 // ladders it surcharges, instead of sitting a tab away among the treaties.
+//
+// §204 carried the same question through the last two: THE CHAPTERS is what
+// history asks of this realm, not a fact about the realm, so it joins the
+// mission tree it shares a question with; and the PATTERNS the arms muster
+// as, the rungs that unlock the next ones and the arms pipeline are the
+// army's own facts, bought on Technology and described on the Host.
 const TABS = [
-  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the character its wars have given it, the reforms it has enacted, and what this chapter asks of you.' },
-  { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'The mission tree: what history offers this realm, branch by branch, and what each accomplishment pays.' },
+  { id: 'crown', label: 'Crown', term: 'tabCrown', tt: 'The realm itself: faith, tongue, capital, the throne’s standing at home, the character its wars have given it, and the reforms it has enacted.' },
+  { id: 'missions', label: 'Missions', term: 'tabMissions', tt: 'What history asks of this realm: the chapter it is living through, and the mission tree branch by branch with what each accomplishment pays.' },
   { id: 'court', label: 'Court', term: 'tabCourt', tt: 'Who is at the table: the estates, their favor and their ground, the advisors, what is brewing, and the decisions in your gift.' },
   { id: 'tech', label: 'Technology', term: 'tabTech', tt: 'The ladders and the silver that buys them: treasury, debt, the three levels, the world’s way of doing things, and the ideas of the age those rungs unlock.' },
-  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, and how hard the fighting has worn the realm.' },
+  { id: 'war', label: 'Host', term: 'tabWar', tt: 'The army: manpower, regiments, how hard the fighting has worn the realm, the patterns it musters as, and who supplies them.' },
   { id: 'faith', label: 'Faith', term: 'tabFaith', tt: 'The Temple and its offices — the expectation, the High Priesthood, the pilgrim roads, and whose reading of the Law the realm administers.' },
   { id: 'world', label: 'World', term: 'tabWorld', tt: 'Everyone else: your rank among the powers, what they think of you, your treaties, and the age the world is in.' },
 ];
@@ -132,10 +139,6 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row hidden" data-ref="yearsRow"><span class="pp-k">${icon('grain', 'icon-k')}The years</span><span class="pp-v" data-ref="years"></span></div>
         <div class="pp-row hidden" data-ref="absorbRow"><span class="pp-k">${icon('alert', 'icon-k')}Direct rule</span><span class="pp-v neg" data-ref="absorb"></span></div>
       </div>
-      <div class="pp-build hidden" data-ref="chapterBlock" data-tab="crown">
-        <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
-        <div class="np-chapter" data-ref="chapter"></div>
-      </div>
       <!-- The character of the realm (SPEC §203). The needles are not a fact
            about the army — the army only pushed them, and so did every ruling,
            every estate bought off and every card answered. They are what the
@@ -155,6 +158,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       </div>
 
       <!-- ── THE MISSIONS (SPEC §177) ──────────────────────────────────── -->
+      <!-- What history asks of this realm, in both tenses (SPEC §204): the
+           chapter it is living through now, above the tree of everything the
+           era offers it. The Chapters block sat on Crown, which is the
+           realm's own facts, and the two questions are different ones —
+           what this realm IS, and what is being asked of it. -->
+      <div class="pp-build hidden" data-ref="chapterBlock" data-tab="missions">
+        <div class="pp-build-title" data-ref="chaptersTitle">The Chapters</div>
+        <div class="np-chapter" data-ref="chapter"></div>
+      </div>
       <div class="pp-build" data-ref="missionsBlock" data-tab="missions">
         <div class="pp-build-title" data-ref="missionsTitle">Missions</div>
         <div class="np-mtree-host" data-ref="missions"></div>
@@ -220,6 +232,17 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-row"><span class="pp-k">${icon('spears', 'icon-k')}<span data-ref="manpowerLabel">Manpower</span></span><span class="pp-v" data-ref="manpower"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('shield', 'icon-k')}Armies</span><span class="pp-v" data-ref="armies"></span></div>
         <div class="pp-row"><span class="pp-k">${icon('flame', 'icon-k')}War exhaustion</span><span class="pp-v" data-ref="warExh"></span></div>
+      </div>
+      <!-- What the host is made of (SPEC §204): the patterns its three arms
+           are raised to, the military rungs that unlock the next ones, and
+           who sells it the aircraft and armor it cannot forge (§181). All
+           three are bought on Technology and all three describe the ARMY, so
+           they read here — the ladder card keeps a line naming the pattern
+           its next level musters, which is what a buyer needs at the moment
+           of buying. -->
+      <div class="pp-build hidden" data-ref="patternsBlock" data-tab="war">
+        <div class="pp-build-title">How We Muster</div>
+        <div class="np-techs" data-ref="patterns"></div>
       </div>
 
       <!-- ── THE FAITH ─────────────────────────────────────────────────── -->
@@ -1560,10 +1583,15 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // the institutions surcharge as a banner across the top, then one card per
   // ladder — the level in a badge, what the ladder has already paid, a
   // progress bar filling toward the next level's price with the months to
-  // affordability in its tooltip, the ahead-of-age markup in red — and under
-  // the military card a milestone strip of the pattern generations with the
-  // doctrine each one learns, struck through where the age itself ends.
-  // Foreign courts show their levels and pattern, with no buy buttons.
+  // affordability in its tooltip, and the ahead-of-age markup in red.
+  // Foreign courts show their levels, with no buy buttons.
+  //
+  // What the ladders BUY — the patterns the three arms muster as, the
+  // milestone strip of rungs that unlock the next ones, the arms pipeline
+  // (§181) — is the host's business and renders on the Host tab (SPEC §204).
+  // One `getTech()` call feeds both hosts: they are two faces of one report,
+  // and asking the sim twice a refresh for the same object to fill two
+  // sections would be a fetch per tab rather than a fetch per pass.
   const TECH_ICONS = { gov: 'scales', infl: 'scroll', mar: 'swords' };
   function refreshTech(t, self) {
     if (!refs.tech) return;
@@ -1574,21 +1602,23 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         `<div class="np-reform"><div class="np-reform-head"><b>${names[k]}</b>`
         + `<span class="np-tech-rung">${esc(techLevelName(ctx && ctx.bookmark, k, th[k] | 0))}</span>`
         + `<span class="np-tech-lvl">${th[k] | 0}</span></div></div>`).join('');
+      setHtml(refs.tech, rows);
+      // Their patterns are a fact about their army, so they render where ours
+      // do — the one line a foreign court has ever shown here.
       const gi = cappedGen(th.mar | 0, ctx && ctx.bookmark);
       const doct = doctrinesFor(gi).map((d) => `${d.name} — ${d.desc}`).join('\n');
-      setHtml(refs.tech, rows
-        + `<div class="np-tech-unit" data-tt="${esc('The patterns their armies are raised to — three arms (SPEC §191).'
-          + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as `
-          + ['inf', 'cav', 'art'].map((a) =>
-            `${unitIcon(gi, a, 'icon-sm')} <b>${esc(armGenName(gi, a))}</b>`).join(', ')
-          + '</div>');
+      setPatterns(`<div class="np-tech-unit" data-tt="${esc('The patterns their armies are raised to — three arms (SPEC §191).'
+        + (doct ? '\nDoctrines:\n' + doct : ''))}">Armies muster as `
+        + ['inf', 'cav', 'art'].map((a) =>
+          `${unitIcon(gi, a, 'icon-sm')} <b>${esc(armGenName(gi, a))}</b>`).join(', ')
+        + '</div>');
       return;
     }
     let info = null;
     if (actions && typeof actions.getTech === 'function') {
       try { info = actions.getTech(); } catch (e) { warnOnce('np-getTech', e); }
     }
-    if (!info) { setHtml(refs.tech, ''); return; }
+    if (!info) { setHtml(refs.tech, ''); setPatterns(''); return; }
     let html = '';
     if (info.instPct > 0) {
       html += `<div class="np-tech-pen" data-tt="${esc('Institutions the world has taken up and this realm has not (SPEC §166).'
@@ -1609,16 +1639,24 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         : r.ahead
           ? `<span class="np-tech-era np-te-ahead" data-tt="${esc('Racing history: buying level ' + (r.level + 1) + ' before the age expects it costs +' + r.aheadPct + '%.')}">+${r.aheadPct}%</span>`
           : `<span class="np-tech-era" data-tt="${esc('Keeping pace: the age expects level ' + r.eraBase + '.')}">age ${r.eraBase}</span>`;
+      // The milestone strip moved to the Host with the patterns it names
+      // (SPEC §204), and a buyer still needs to know what the next rung
+      // musters at the moment of buying — so the military card says it in
+      // one line, and names the tab in that chapter's own word for it.
+      const musters = r.key === 'mar' && info.unit && info.unit.nextAt != null
+        ? `\nMilitary ${info.unit.nextAt} musters ${info.unit.nextInf} — the patterns are under `
+          + (((ctx.bookmark && ctx.bookmark.uiTerms) || {}).tabWar || 'Host') + '.'
+        : '';
       return `<div class="np-techrow">
-        <div class="np-tech-head" data-tt="${esc(head)}">${icon(TECH_ICONS[r.key] || 'scroll', 'icon-k')}<b>${esc(r.name)}</b>${era}<span class="np-tech-lvl">${r.level}</span></div>
-        <div class="np-tech-rung" data-tt="${esc(head)}">${esc(r.levelName || '')}</div>
+        <div class="np-tech-head" data-tt="${esc(head + musters)}">${icon(TECH_ICONS[r.key] || 'scroll', 'icon-k')}<b>${esc(r.name)}</b>${era}<span class="np-tech-lvl">${r.level}</span></div>
+        <div class="np-tech-rung" data-tt="${esc(head + musters)}">${esc(r.levelName || '')}</div>
         <div class="np-tech-bar" data-tt="${esc(barTT)}"><i class="np-tech-fill${capped ? ' np-tf-cap' : ''}" style="width:${fill}%"></i><span class="np-tech-bar-num">${capped ? '—' : r.have + ' / ' + r.cost}</span></div>
-        <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(head + (r.whyNot ? '\n' + r.whyNot : ''))}">
+        <button class="pp-build-btn np-reform-btn${r.canBuy ? '' : ' disabled'}" data-tech="${esc(r.key)}" data-tt="${esc(head + musters + (r.whyNot ? '\n' + r.whyNot : ''))}">
           ${capped ? 'The ladder ends here' : `Advance to ${r.level + 1}${r.nextName ? ' — ' + esc(r.nextName) : ''}${r.ahead ? ' ⚠' : ''}`}${capped ? '' : ` <span class="np-reform-cost">${r.cost} ${esc(r.point)}</span>`}
         </button>
-        ${r.key === 'mar' ? milestoneStrip(info) : ''}
       </div>`;
     }).join('');
+    setHtml(refs.tech, html);
     const u = info.unit;
     const selfGen = cappedGen((t.tech && t.tech.mar) | 0, ctx && ctx.bookmark);
     const selfDoct = doctrinesFor(selfGen).map((d) => `${d.name} — ${d.desc}`).join('\n');
@@ -1650,7 +1688,16 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
             + `Arms supplier: <span class="neg">none — the market is shut</span></div>`;
       }
     }
-    setHtml(refs.tech, html + unitLine + armsLine);
+    setPatterns(unitLine + milestoneStrip(info) + armsLine);
+  }
+
+  // The Host's own half of the technology report (SPEC §204). Empty means the
+  // block steps aside: a sim without getTech, a chapter whose ceiling leaves
+  // no milestone to draw, a court we cannot see the armies of.
+  function setPatterns(html) {
+    if (!refs.patterns) return;
+    refs.patternsBlock.classList.toggle('hidden', !html);
+    setHtml(refs.patterns, html);
   }
 
   // The military ladder's unlock milestones: each pattern generation as a

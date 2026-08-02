@@ -47,11 +47,15 @@ const PANEL = readFileSync(R + '/js/ui/nation_panel.js', 'utf8');
 const CSS = readFileSync(R + '/styles.css', 'utf8');
 const TEMPLATE = PANEL.slice(PANEL.indexOf('el.innerHTML = `'), PANEL.indexOf('el.querySelectorAll(\'[data-ref]\')'));
 
-// A host belongs to the last `data-tab` wrapper opened before it (smoke119's
-// reading of the same template).
+// A host belongs to its own wrapper's `data-tab` when the tag carries one —
+// attribute order inside a tag is nobody's contract — and otherwise to the
+// last wrapper opened before it (smoke119's reading of the same template).
 function tabOf(marker) {
   const at = TEMPLATE.indexOf(marker);
   if (at < 0) return null;
+  const tag = TEMPLATE.slice(TEMPLATE.lastIndexOf('<', at), TEMPLATE.indexOf('>', at) + 1);
+  const own = /data-tab="([a-z]+)"/.exec(tag);
+  if (own) return own[1];
   const marks = [...TEMPLATE.slice(0, at).matchAll(/data-tab="([a-z]+)"/g)];
   return marks.length ? marks[marks.length - 1][1] : null;
 }
@@ -169,8 +173,9 @@ console.log('== nothing went blank ==');
 
   // `tabHasContent` counts a pp-grid only when one of its rows is unhidden,
   // so the two tabs that lost a block need an anchor that is never hidden.
-  const hostGrid = TEMPLATE.slice(TEMPLATE.indexOf('<div class="pp-grid" data-tab="war">'));
-  const hostRows = hostGrid.slice(0, hostGrid.indexOf('</div>\n\n')).match(/<div class="pp-row"/g) || [];
+  const hostGrid = TEMPLATE.indexOf('<div class="pp-grid" data-tab="war">');
+  const hostEnd = TEMPLATE.indexOf('data-tab=', hostGrid + 40);
+  const hostRows = TEMPLATE.slice(hostGrid, hostEnd).match(/<div class="pp-row"/g) || [];
   ok(hostRows.length >= 3, 'the Host keeps ' + hostRows.length + ' unhidden rows — the tab cannot vanish');
   ok(/<div class="pp-diplo" data-tab="world">/.test(TEMPLATE),
     'and The World keeps its Diplomacy block, which is never hidden');

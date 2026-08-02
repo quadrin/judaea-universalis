@@ -12016,3 +12016,68 @@ first, and the panel is still templated exactly once in `build()`.
   on Technology below the ladders and above the chapter's own ideas, under one
   block title and two subheads. `uitest8` — the ladders, the buy and the
   ledger column, driven through the renamed tab.
+
+## 204. The chapter is not a fact about the realm
+
+§203 sorted three sections by asking what each one IS. Two were left, and the
+same question answers both.
+
+**The Chapters sat on Crown.** Crown is what the realm is — faith, tongue,
+capital, government, the character its wars argued it into, the constitution
+it enacted. A chapter is none of those. It is what history is asking of this
+realm right now: three objectives, a seal at the end, a clock. The tab that
+already answers that question in the other tense — what the era offers, branch
+by branch, forever — was one across. The chapter block moves to **Missions**
+and is templated **above** the tree: the century first, then the whole era's
+offer. Crown's tooltip stops claiming the chapter and Missions' claims both.
+It stays the player's alone and stays hidden until a chapter is running, so
+the Missions tab can now be carried by either half — a chapter with no chain
+shows the chapter, a chain with no chapter shows the tree.
+
+**The patterns sat under the ladders.** The military card carried three things
+the ladder buys but does not describe: the line naming what the three arms
+muster as, the milestone strip of rungs and the patterns each unlocks (with
+its doctrine in the tooltip), and §181's arms pipeline — who sells this realm
+the aircraft and armor it cannot forge. Those are facts about the **army**.
+They move to the Host under **How We Muster** (a title that reads in every
+century, which "the host" does not — 1948 calls the tab Defence), below the
+host's own three numbers, in the order a player reads them: what we muster as
+now, which rungs muster the next, and where the metal comes from.
+
+What a buyer needs at the moment of buying stays at the ladder. The military
+card's tooltip gains one line — *Military 9 musters Legionaries — the patterns
+are under Host* — naming the tab in **that chapter's own word for it**
+(`uiTerms.tabWar`, so 1948 reads *under Defence*). That is the §203 rule about
+banners pointing at other tabs honoured rather than broken: the pointer is one
+clause inside a tooltip that already had to say what the next rung costs, not
+a section whose answer lives elsewhere.
+
+### One report, two hosts
+
+`refreshTech` still calls `getTech()` exactly once a pass and now writes two
+sections from it — `refs.tech` on Technology, `refs.patterns` on the Host,
+through a `setPatterns` helper that hides the Host block when the string is
+empty (a sim with no tech report, a chapter whose ceiling leaves no milestone
+to draw). Asking the sim twice for the same object because the answer is drawn
+in two places would be a fetch per tab rather than a fetch per pass. A foreign
+court shows what it always showed — its three levels on Technology, its one
+pattern line on the Host — and no arms pipeline, which is ours to see.
+
+Neither tab can go blank: Crown keeps seven unhidden rows plus two blocks that
+render for anyone, and the Host's three rows are unconditional.
+
+- **Regression contract**: `smoke132` — the new suite: the chapter host
+  resolving to Missions above the tree, still hidden at a foreign court and
+  still reading `uiTerms.chapters`, with the two tab tooltips swapping the
+  claim; the patterns host on the war tab under its title and below the
+  vitals grid, `milestoneStrip` called once and only into the Host block, the
+  arms line gone from the ladder card, the foreign path split across both
+  hosts; the military card's musters line and its `uiTerms.tabWar` pointer;
+  and one `getTech()` a pass, the Host block hiding on an empty string, every
+  tab still owning a section. `uitest38` — the browser's answer: The Chapters
+  gone from Crown (which still shows its facts and reforms) and drawn above
+  the tree on Missions, the patterns and the strip gone from Technology
+  (whose military card still names what the next rung musters) and drawn on
+  the Host under its own numbers. `uitest8` — the pattern line and the strip
+  read on the Host, the ladders bought on Technology. `uitest31` — the §113
+  chapters panel, opened on the tab that now holds it.

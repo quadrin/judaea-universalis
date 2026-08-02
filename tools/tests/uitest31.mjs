@@ -123,6 +123,11 @@ ok(!!chapter && chapter.slots.join(',') === 'territorial,internal,diplomatic',
 await dismissEvents(page);
 await page.locator('.tb-flag').click();
 await page.waitForTimeout(300);
+// SPEC §204: The Chapters moved off Crown onto Missions — a chapter is what
+// history asks of this realm, which is the question the tree answers in the
+// other tense. The panel opens on Crown, so open the tab that holds it.
+await page.locator('#nation-panel .np-tab[data-tab-go="missions"]').click();
+await page.waitForTimeout(150);
 const panel = await page.evaluate(() => {
   const block = document.querySelector('[data-ref="chapterBlock"]');
   return {
@@ -130,9 +135,12 @@ const panel = await page.evaluate(() => {
     head: (block && (block.querySelector('.np-ch-head') || {}).textContent) || '',
     rows: block ? block.querySelectorAll('.np-mission').length : 0,
     reward: (block && (block.querySelector('.np-ch-reward') || {}).textContent) || '',
+    onScreen: !!(block && block.getClientRects().length),
+    tab: block ? block.getAttribute('data-tab') : null,
   };
 });
 ok(panel.visible, 'the realm panel shows "The Chapters"');
+ok(panel.onScreen && panel.tab === 'missions', '  on the Missions tab, with a box on the screen');
 ok(panel.rows === 3 && /Chapter 1/.test(panel.head), 'the three objectives are listed under the chapter head');
 ok(/Seal:/.test(panel.reward), 'the seal (permanent reward) is printed');
 await page.screenshot({ path: OUT + 'chapters-panel.png' });

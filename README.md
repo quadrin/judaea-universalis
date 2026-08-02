@@ -82,9 +82,12 @@ static site, the zero dependencies, or the missing build step changes.
   Court, Technology, Host, Faith, World — so the ruler, the four numbers you
   watch and the five levers stay put while twenty sections take turns
   underneath them. Each section is filed by what it *is*: the doctrine needles
-  are a portrait of the realm and hang on Crown beside faith and tongue, and
-  the world's way of doing things is a surcharge on every rung of every ladder
-  and so is listed under the ladders it taxes.
+  are a portrait of the realm and hang on Crown beside faith and tongue; the
+  world's way of doing things is a surcharge on every rung of every ladder and
+  so is listed under the ladders it taxes; the chapter you are living through
+  is what history asks of you and sits above the mission tree that asks the
+  rest; and the patterns your three arms muster as are the army's business,
+  read on the Host even though the ladders that buy them are on Technology.
 - Pausable daily tick (5 speeds), monthly economy/manpower, armies, battles, sieges, attrition.
 - Three land arms with eighteen soldiers between them, and each one has a face,
   a gait and a weakness. **The foot** holds the line, **the horse** breaks it,
