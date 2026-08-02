@@ -965,7 +965,7 @@ export const BOOKMARK_167 = {
           effects: { incomeMult: 1.1, unrestAll: -0.5 },
         }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // Everything above is the war and the ground it took. These three
       // strands are the other half of the century: what the state became
       // (col 0), where it stood among the kings (col 1), and who was in the

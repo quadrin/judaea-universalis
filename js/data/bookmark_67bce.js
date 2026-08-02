@@ -856,7 +856,7 @@ export const BOOKMARK_67 = {
           effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
         }),
       },
-      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // ── The civil band (SPEC §210): the state, the region, the court ────
       // Antipater's cause is not won in the field and never was going to be.
       // It is won in the register, in the letters that go out to six courts
       // at once, and in the room where the sages sit — the three widths an
@@ -1238,7 +1238,7 @@ export const BOOKMARK_67 = {
           effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
         }),
       },
-      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // ── The civil band (SPEC §210): the state, the region, the court ────
       // The younger brother's case is that he is the better king, and that
       // is not a thing the Jericho road can settle. It is settled in the
       // coinage, in the courts that answer his letters, and in the room
@@ -1543,7 +1543,7 @@ export const BOOKMARK_67 = {
           id: 'two_altars', name: 'The Two Altars', months: -1, effects: { unrestAll: -0.25 },
         }),
       },
-      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // ── The civil band (SPEC §210): the state, the region, the court ────
       // Three standing invitations, none of them waiting on a war and none
       // of them waiting on each other. The house between the rivers is not
       // a conquest problem: it is a customs house with a dynasty attached,

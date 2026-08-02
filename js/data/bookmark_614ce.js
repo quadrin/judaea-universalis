@@ -817,7 +817,7 @@ export const BOOKMARK_614 = {
           effects: { growthMult: 1.15, pilgrimMult: 1.2 },
         }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // A Return governed on Persian sufferance has three problems that are
       // not the war: what the government becomes, where it stands among the
       // powers, and who at home is paying for it. Three strands, two deep,

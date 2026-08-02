@@ -49,7 +49,7 @@ function who(ctx, tag) {
   return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
 }
 
-// What the crown's own survey adds up to (SPEC §208): the development standing
+// What the crown's own survey adds up to (SPEC §210): the development standing
 // on the land it owns, not the land its armies are standing on. A content
 // package imports nothing, so it walks the province table itself.
 function realmDev(ctx, tag) {
@@ -101,7 +101,7 @@ function clientsOf(ctx, tag) {
 // in, `t.factions[fid]`, and favor is the credit it has banked with the crown,
 // `t.estateFavor[fid]` — are read INLINE by the court strand below rather than
 // through a wrapper. The engine ticks both for the human player alone, so the
-// §208 audit reads the source of every check to prove the government and the
+// §210 audit reads the source of every check to prove the government and the
 // region strands never touch them; a helper would hide exactly the thing that
 // audit exists to see.
 
@@ -842,7 +842,7 @@ export const BOOKMARK_40 = {
           effects: { legitimacyAdd: 0.25, disciplineMult: 1.06 },
         }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // Three strands that run beside the war rather than after it: what the
       // government becomes, where the kingdom stands among the courts of the
       // East, and the court at home — which in the end cost this house more
@@ -1173,7 +1173,7 @@ export const BOOKMARK_40 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { infl: 30, legitimacy: 20 }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // The legitimist case, made in three places at once: the government the
       // house already built and has to keep working, the patron and the
       // communities beyond the river, and the estates of the nation itself —
@@ -1442,7 +1442,7 @@ export const BOOKMARK_40 = {
         check: (ctx) => ctx.helpers.controls(ctx, 'ADI', 'Tyre'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // Three things a client house does that have nothing to do with the
       // tide: it governs the country behind its fords, it stays worth more
       // standing than taken to both empires at once, and it manages what it

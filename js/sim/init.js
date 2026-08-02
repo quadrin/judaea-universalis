@@ -3275,7 +3275,7 @@ export function gameActions(ctx) {
             // dress it as a page history never wrote.
             hypothetical: !!m.hypothetical,
             // Which strand of the civil band this belongs to, if any (SPEC
-            // §208): 'govt', 'region' or 'court'. Layout already separates
+            // §210): 'govt', 'region' or 'court'. Layout already separates
             // them by column; the panel names them so the column reads.
             civil: m.civil || '',
             status: done.has(id) ? 'done'

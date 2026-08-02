@@ -659,7 +659,7 @@ export const BOOKMARK_132 = {
           ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
         },
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // The tree above is the war. This is the three years the war bought,
       // and it is the better documented half: what the caves gave back was
       // not a battle report but a government's filing — land leases, a
@@ -1039,7 +1039,7 @@ export const BOOKMARK_132 = {
         check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).infl | 0) >= 7,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // A client chair is not a small kingdom; it is a different job. Three
       // strands for the three things this house is actually for — an
       // accounting Trajan burned and Hadrian handed back, an arrangement with

@@ -910,7 +910,7 @@ export const BOOKMARK_529 = {
           effects: { unrestAll: -1, incomeMult: 1.1 },
         }),
       },
-      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
       // Everything above this line is ground. These six are the other half of
       // a state, and they are parallel to the war rather than after it: three
       // strands two deep, none of them requiring a province to be taken.

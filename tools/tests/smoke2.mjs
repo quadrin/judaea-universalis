@@ -226,7 +226,7 @@ console.log('== 132 CE bookmark boots and runs ==');
   ok(g4.tags.ROM.ruler.name === 'Hadrian' && g4.tags.JUD.ruler.name === 'Simon bar Kosiba', 'rulers seated');
   const war = g4.wars.find((w) => w.noNegotiation);
   ok(!!war, 'scripted war exists and is closed to negotiation');
-  ok(a4.getMissions().length === 28, 'JUD 132 missions present (incl. the Third House, SPEC §32, the §179 curriculum, the §192/§197 expansion, the §208 civil band, and the §183/§192/§197 roads not taken)');
+  ok(a4.getMissions().length === 28, 'JUD 132 missions present (incl. the Third House, SPEC §32, the §179 curriculum, the §192/§197 expansion, the §210 civil band, and the §183/§192/§197 roads not taken)');
   const men = mil.armiesOf(c4, 'JUD').reduce((s, a) => s + a.men, 0);
   ok(men >= 20000, 'JUD starts with a real host: ' + men);
   tickMonths(c4, 6);

@@ -12558,7 +12558,7 @@ already sampled as seed drift).
   untouched: single completions, fail-then-succeed re-checks and forced
   `missionIdx` seeds never met the rest.
 
-## 208. The tree is not only the war
+## 210. The tree is not only the war
 
 §102 built mission chains, §177 turned them into trees, §200 grew them to the
 size of their chapters and §207 slowed them to a drumbeat. All four of those
@@ -12678,7 +12678,7 @@ broken.**
   exist can never be satisfied, so the node and its child — two of
   Aristobulus' court branch — were unreachable in every campaign since they
   were written, and nothing threw: the panel simply drew a medallion that
-  never opened. `smoke135` now walks **every chain in the game** and asserts
+  never opened. `smoke137` now walks **every chain in the game** and asserts
   every prerequisite names a mission that exists.
 - **Six chains stacking two medallions in one cell.** The seat check that
   §183, §196 and §200 each added walks PLAYABLE sides only, because the panel
@@ -12686,12 +12686,12 @@ broken.**
   Seleucid, Roman (132), Byzantine (529 and 614) and Jordanian chains had
   each grown two siblings of one parent in one column, deriving the same row.
   Invisible today and a landmine the day a chapter makes one of those tags
-  playable. All six are seated, and `smoke135` now runs the seat arithmetic
+  playable. All six are seated, and `smoke137` now runs the seat arithmetic
   over every chain — with the engine's real ladder/tree branch, since a
   ladder seats one node per row in column zero and applying the tree
   derivation to one reports collisions that are not there.
 
-- **Regression contract**: `smoke135` owns the section — every playable chain
+- **Regression contract**: `smoke137` owns the section — every playable chain
   covers all three strands; every civil node is dressed, seated in its
   strand's own column, and appended ahead of the roads not taken; the band is
   additive and the court is fenced; nothing civil completes at boot; **every
