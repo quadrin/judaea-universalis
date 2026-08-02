@@ -1531,6 +1531,86 @@ export const BOOKMARK_529 = {
         check: (ctx) => eraTiers(ctx.game.tags[who(ctx, 'HMY')]) >= 3,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { gov: 25, legitimacy: 10 }),
       },
+      // ── The civil band (SPEC §210) ──────────────────────────────────────
+      // Three strand roots, each workable from the opening month: what the
+      // kingdom becomes (col 0), where it stands between its patron and the
+      // King of Kings (col 1), and the covenant nobility whose kingdom this
+      // was before the strait was crossed (col 2). Columns 0 and 1 read
+      // state an AI hand keeps too; column 2 is the player's court (§34) and
+      // nothing outside it waits on it.
+      {
+        id: 'h_the_terraces_and_the_channels', name: 'The Terraces and the Channels',
+        icon: 'grain', civil: 'govt', col: 0, row: 4,
+        desc: 'Himyar is a mountain kingdom that eats because somebody maintains the works: '
+          + 'the sluices at Marib, the terraces cut into the Sarawat, the cisterns under '
+          + 'Zafar. Every dynasty that let the silt win lost the highlands with it. Carry '
+          + 'sixty points of development and two hundred and fifty talents at once — a '
+          + 'revenue that survives the year the incense caravans do not come.',
+        rewardText: '"The Waters Held": +10% income and +8% development growth, permanently.',
+        check: (ctx) => {
+          try {
+            const g = ctx.game;
+            const me = who(ctx, 'HMY');
+            const t = g.tags[me] || {};
+            if ((t.treasury || 0) < 250) return false;
+            let dev = 0;
+            for (let i = 1; i < g.provinces.length; i++) {
+              const p = g.provinces[i];
+              if (!p || p.impassable || p.owner !== me) continue;
+              const d = p.dev || {};
+              dev += (d.tax | 0) + (d.prod | 0) + (d.mp | 0);
+            }
+            return dev >= 60;
+          } catch (e) { warnOnce('h_the_terraces_and_the_channels', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_waters_held', name: 'The Waters Held', months: -1,
+          effects: { incomeMult: 1.1, growthMult: 1.08 },
+        }),
+      },
+      {
+        id: 'h_a_name_on_both_shores', name: 'A Name on Both Shores',
+        icon: 'ship', civil: 'region', col: 1, row: 4,
+        desc: 'The kings of Himyar styled themselves lords of the highlands, the coast, and '
+          + 'the Arabs of the desert, and for a century the chanceries of Ctesiphon and '
+          + 'Constantinople both wrote to Zafar as to a power rather than a province. Stand '
+          + 'among the world\'s first fifteen courts — the standing the realm panel keeps, '
+          + 'which counts a kingdom\'s revenue and clients and not only its spears.',
+        rewardText: '"Written To as a Power": +1 diplomatic seat and +8% trade, permanently.',
+        check: (ctx) => {
+          try {
+            const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+            const i = ord.indexOf(who(ctx, 'HMY'));
+            return i >= 0 && i < 15;
+          } catch (e) { warnOnce('h_a_name_on_both_shores', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'written_to_as_a_power', name: 'Written To as a Power', months: -1,
+          effects: { diploSeats: 1, tradeMult: 1.08 },
+        }),
+      },
+      {
+        id: 'h_the_line_that_kept_the_covenant', name: 'The Line That Kept the Covenant',
+        icon: 'altar', civil: 'court', col: 2, row: 4,
+        desc: 'The House of Yazan fought for Yusuf at the strait and lost, and its castles '
+          + 'in the misty heights still hold the memory of a Jewish kingdom in South Arabia '
+          + 'that the Aksumite garrison at Zafar is there to prevent. A crown that wants the '
+          + 'old nobility rather than merely its silence must earn it: bring the Yazanids to '
+          + 'seventy approval with forty of their favor banked.',
+        rewardText: '"The Old Line Answers": +0.3 legitimacy a month and +10% manpower, permanently.',
+        check: (ctx) => {
+          try {
+            const t = ctx.game.tags[who(ctx, 'HMY')] || {};
+            const approval = ctx.helpers.faction(ctx, 'HMY', 'yazanids');
+            const favor = ((t.estateFavor || {}).yazanids) | 0;
+            return approval !== null && approval >= 70 && favor >= 40;
+          } catch (e) { warnOnce('h_the_line_that_kept_the_covenant', e); return false; }
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_old_line_answers', name: 'The Old Line Answers', months: -1,
+          effects: { legitimacyAdd: 0.3, manpowerMult: 1.1 },
+        }),
+      },
       // ── The roads not taken (SPEC §183), the §185 way: no new fork is
       // charted — the south reads the markers the Keepers' own cards set,
       // because the one sea carries the news both directions. ─────────────

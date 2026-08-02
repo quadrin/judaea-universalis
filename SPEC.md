@@ -12951,10 +12951,11 @@ second node waits only on its own root, never on the war, so a stalled siege
 never holds the chancery hostage and the band advances in parallel with §177's
 existing branches.
 
-Seventy-eight new objectives across fifteen chains. The band is strictly
-**additive**: no existing mission was modified, reseated or made to wait on a
-new one, so every save's `missionsDone` and every `missionIdx` prefix keeps
-its meaning.
+Eighty-one new objectives across sixteen chains — six on each principal,
+three on each client chair, including the Himyarite court §208 seated while
+this section was in flight. The band is strictly **additive**: no existing
+mission was modified, reseated or made to wait on a new one, so every save's
+`missionsDone` and every `missionIdx` prefix keeps its meaning.
 
 ### The AI wall, and why the court is on the other side of it
 
@@ -12994,23 +12995,23 @@ Two metrics, before and after. The suite's own, over every playable chain's
 objectives:
 
     before   110 of 205 read the map or the host   (54%)
-    after    111 of 283                            (39%)
+    after    117 of 297                            (39%)
 
 And the full audit that opened this section, over every chain in the game
 including the formables':
 
-    objectives       258  →  336
-    purely martial   101 (39%)  →  101 (30%)
-    court              0  →  26
-    the people         6  →  19
-    diplomatic        24  →  37
-    economic          36  →  45
-    conquest         101  →  102
+    objectives       258  →  350
+    purely martial   101 (39%)  →  103 (29%)
+    court              0  →  27
+    the people         6  →  20
+    diplomatic        24  →  40
+    economic          36  →  46
+    conquest         101  →  106
 
-The war did not shrink; the rest of the state arrived beside it. The martial
-count is the same 101 it always was, and conquest moved by exactly one — a
-single new region objective that counts clients — while the tree grew by
-seventy-eight civil nodes. The 8-year balance harness returns the documented
+The war did not shrink; the rest of the state arrived beside it. Martial
+objectives moved by two and conquest by five, all of them §208's own new
+Himyarite chain rather than this section's band, while the tree grew by
+eighty-one civil nodes. The 8-year balance harness returns the documented
 anomaly families unchanged, which is expected: the band pays modifiers and
 points, and nothing in it declares a war.
 
