@@ -130,6 +130,21 @@ function setOpinion(ctx, a, b, val) {
   t.opinion[b] = Math.max(-200, Math.min(200, val));
 }
 
+// The airlift cards put real people on real cells (SPEC §56): the arrivals
+// land split across whichever of the old arrival towns Israel actually holds
+// when the aircraft come in. Returns how many towns received anyone, so a
+// card can tell a landing from a state with no ground to land on.
+function landOlim(ctx, n) {
+  const towns = ['Lydda', 'Joppa', 'Jerusalem', 'Beersheba']
+    .filter((t) => ctx.helpers.controls(ctx, 'ISR', t));
+  if (!towns.length) return 0;
+  const each = Math.round(n / towns.length);
+  for (const t of towns) {
+    ctx.helpers.addPopulation(ctx, t, { r: 'judaism', c: 'cushitic', n: each });
+  }
+  return towns.length;
+}
+
 // The map may have diverged: Egypt may be the UAR, and Damascus may answer to
 // SYR (the mandate republic), SAR (the republic of 1961) or the union itself.
 // Every card below resolves its cast at runtime rather than assuming an atlas.
@@ -1630,6 +1645,175 @@ export const EVENTS_1948_REGION = [
           h.adjust(ctx, 'ETH', { legitimacy: 5 });
           h.setFlag(ctx, 'eritreaAnnexed', true);
           h.chronicle(ctx, 'era', 'The Eritrean assembly, police at the doors, votes itself out of existence; the sergeant in the hills has already fired the first shots of a thirty-year answer.');
+        }),
+      },
+    ],
+  },
+
+  // ── SPEC §207 · the mountain kingdom's fall, and the Beta Israel ──────────
+  // Three dated world cards carry the arc the Tana window (js/data/diaspora.js)
+  // needs the 1948 chapter to be able to see: the Derg takes Addis, the famine
+  // roads carry the Beta Israel to Sudan, and Operation Solomon empties the
+  // mountains in thirty-six hours — the one diaspora window on this ledger
+  // that closes by coming HOME rather than by murder or a shut gate.
+  {
+    id: 'ev_s48_derg',
+    title: 'The Creeping Coup',
+    worldLabel: 'The Derg deposes the King of Kings',
+    desc: 'It takes all summer, one arrest at a time — a committee of junior '
+      + 'officers nobody has heard of detaining the cabinet minister by minister, '
+      + 'politely, while the palace pretends it is not happening. What finishes it '
+      + 'is film: the famine in Wollo, hidden for a year, cut against banquet '
+      + 'footage from the palace and broadcast to a capital that had been told '
+      + 'there was no famine. On 12 September the officers read the deposition '
+      + 'order to the Elect of God, King of Kings, Conquering Lion of the Tribe of '
+      + 'Judah, and drive him from his palace in the back seat of a small blue '
+      + 'Volkswagen. A line that counted two hundred and twenty-five kings from '
+      + 'Solomon ends in traffic. Within a year he is dead in custody; the '
+      + 'announcement says circulatory failure. The committee keeps the empire '
+      + 'and shoots its way to a chairman.',
+    forTag: 'both',
+    decider: 'ETH',
+    major: true,
+    date: { y: 1974, m: 9 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_derg:when', (ctx) => alive(ctx, 'ETH')),
+    historical: 'The creeping coup ran through the summer of 1974; Haile Selassie '
+      + 'was deposed on 12 September and died in custody in August 1975 — his '
+      + 'remains were found under a palace latrine slab in 1992. Mengistu Haile '
+      + 'Mariam, one of the committee\'s original strongmen, held sole power from '
+      + 'February 1977 and fled to Harare in May 1991, a week before the rebels '
+      + 'took Addis.',
+    options: [
+      {
+        label: 'The committee reads the deposition order',
+        tooltip: 'Ethiopia: the Solomonic line ends (−20 legitimacy, −2 stability) '
+          + 'and "The Derg" governs permanently (+20% manpower, −15% income, +1 '
+          + 'unrest everywhere); the war in the north hardens (Massawa\'s shore +2 '
+          + 'unrest for 200 months); Moscow warms and Washington cools.',
+        effects: guard('ev_s48_derg:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'ETH')) return;
+          const t = ctx.game.tags.ETH;
+          if (t && t.ruler && String(t.ruler.name).indexOf('Selassie') >= 0) {
+            h.setRuler(ctx, 'ETH', { name: 'Mengistu Haile Mariam', title: 'Chairman of the Derg', gov: 2, infl: 2, mar: 4, age: 37 });
+          }
+          h.adjust(ctx, 'ETH', { legitimacy: -20, stability: -2 });
+          h.addTagModifier(ctx, 'ETH', {
+            id: 'the_derg', name: 'The Derg', months: -1,
+            effects: { manpowerMult: 1.2, incomeMult: 0.85, unrestAll: 1 },
+          });
+          unrestAcross(ctx, 'ETH', ['Adulis'], {
+            id: 'war_in_the_north', name: 'The War in the North', months: 200,
+            effects: { unrest: 2 },
+          });
+          if (alive(ctx, 'SOV')) { setOpinion(ctx, 'ETH', 'SOV', 60); setOpinion(ctx, 'SOV', 'ETH', 60); }
+          if (alive(ctx, 'USA')) { setOpinion(ctx, 'ETH', 'USA', -40); setOpinion(ctx, 'USA', 'ETH', -40); }
+          h.setFlag(ctx, 'dergTakesAddis', true);
+          h.chronicle(ctx, 'fall', 'The Derg deposes Haile Selassie in the back seat of a Volkswagen: the line that counted its kings from Solomon ends, and a committee with a firing range governs the mountains.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_s48_operation_moses',
+    title: 'Operation Moses',
+    worldLabel: 'The Beta Israel walk out; the airlift begins at Khartoum',
+    desc: 'The famine has emptied the weaving villages of Gondar, and the Beta '
+      + 'Israel — who have been asking since the airlifts of the fifties whether '
+      + 'the ingathering includes them, and getting answers that shame the '
+      + 'askers — stop asking. They walk: families, whole villages, weeks on foot '
+      + 'to the border camps of a Sudan that must never be seen to help them, '
+      + 'burying their dead beside the track. Then, for seven weeks, an unmarked '
+      + 'charter lifts from Khartoum in the dark, an agreement everyone involved '
+      + 'will deny on oath: Boeings full of people who have never seen a '
+      + 'lightbulb, bound for the runway at Lod. Eight thousand come home. '
+      + 'Then a man speaks to journalists, the Arab capitals read it at breakfast, '
+      + 'and Sudan shuts the door with the operation half done — families cut in '
+      + 'half at an airstrip, the strong flown out and the mothers still in the '
+      + 'tents.',
+    forTag: 'both',
+    decider: 'ISR',
+    major: true,
+    date: { y: 1984, m: 11 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_operation_moses:when', (ctx) => alive(ctx, 'ISR')),
+    historical: 'Some 8,000 Beta Israel were flown from Khartoum to Israel between '
+      + '21 November 1984 and 5 January 1985, when disclosure forced Nimeiry to '
+      + 'halt the flights; roughly 4,000 had died on the walk to Sudan. The CIA\'s '
+      + 'Operation Sheba lifted out several hundred more that March; some 15,000 '
+      + 'remained behind until 1991.',
+    options: [
+      {
+        label: 'The charters fly while Khartoum can deny them',
+        tooltip: 'Israel: −60 talents for the charters and +8 legitimacy — eight '
+          + 'thousand of the Beta Israel land at Lod before the leak closes the '
+          + 'door. Tana carries "The Ones Left Behind" (+1 unrest) until the rest '
+          + 'can follow.',
+        effects: guard('ev_s48_operation_moses:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'ISR')) return;
+          h.adjust(ctx, 'ISR', { treasury: -60, legitimacy: 8 });
+          landOlim(ctx, 8000);
+          h.addProvinceModifier(ctx, 'Tana', {
+            id: 'the_ones_left_behind', name: 'The Ones Left Behind', months: 84,
+            effects: { unrest: 1 },
+          });
+          h.setFlag(ctx, 'operationMoses', true);
+          h.chronicle(ctx, 'era', 'Operation Moses: eight thousand of the Beta Israel walk to Sudan and fly to Lod in denied charters — until a press conference closes the door on the half still in the tents.');
+        }),
+      },
+    ],
+  },
+  {
+    id: 'ev_s48_operation_solomon',
+    title: 'Thirty-Six Hours',
+    worldLabel: 'Operation Solomon empties the mountains',
+    desc: 'The chairman has fled to Harare, the rebels are in the suburbs of Addis, '
+      + 'and the government of Ethiopia consists, for practical purposes, of an '
+      + 'acting president with one thing left to sell. Thirty-five million '
+      + 'dollars changes hands with a state that will not exist by the weekend, '
+      + 'and for a day and a half the sky between Addis and Lod is a conveyor: '
+      + 'thirty-four aircraft with the seats stripped out, boarding by families, '
+      + 'no baggage but what a hand can hold. One 747 lifts off with more human '
+      + 'beings aboard than any aircraft has carried before or since, and lands '
+      + 'with more still — some are born on the way. Fourteen thousand people; '
+      + 'thirty-six hours. On the ledger of the dispersion it is the strangest '
+      + 'entry of all: the one window that closes not with a massacre or a '
+      + 'sealed gate, but because the whole community is home.',
+    forTag: 'both',
+    decider: 'ISR',
+    major: true,
+    date: { y: 1991, m: 5 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_operation_solomon:when', (ctx) => alive(ctx, 'ISR')),
+    historical: '14,325 people were flown out on 24-25 May 1991, days before the '
+      + 'EPRDF took Addis Ababa; the El Al 747 that carried 1,088 passengers '
+      + 'still holds the record — several were born aloft. The community\'s '
+      + 'window on the dispersion ledger closes with it (js/data/diaspora.js, '
+      + 'until: 1991).',
+    options: [
+      {
+        label: 'Strip the seats out',
+        tooltip: 'Israel: −120 talents (the fee, the fleet) and +10 legitimacy; '
+          + 'fourteen thousand land in a day and a half (+500 reserves, and "The '
+          + 'Absorption of the Highlands": +3% growth, +0.3 unrest for 24 months). '
+          + '"The Ones Left Behind" lifts from Tana — there is no one left behind.',
+        effects: guard('ev_s48_operation_solomon:0', (ctx) => {
+          const h = ctx.helpers;
+          if (!alive(ctx, 'ISR')) return;
+          h.adjust(ctx, 'ISR', { treasury: -120, legitimacy: 10, manpower: 500 });
+          landOlim(ctx, 14000);
+          h.removeModifier(ctx, 'Tana', 'the_ones_left_behind');
+          h.addTagModifier(ctx, 'ISR', {
+            id: 'absorption_of_the_highlands', name: 'The Absorption of the Highlands', months: 24,
+            effects: { growthMult: 1.03, unrestAll: 0.3 },
+          });
+          h.setFlag(ctx, 'operationSolomon', true);
+          h.chronicle(ctx, 'era', 'Operation Solomon: thirty-four aircraft, thirty-six hours, fourteen thousand people — the Beta Israel come home entire, and the oldest window on the southern ledger closes from the inside.');
         }),
       },
     ],

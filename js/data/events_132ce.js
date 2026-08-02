@@ -559,6 +559,58 @@ export const EVENTS_132 = [
     ],
   },
 
+  // ── 10b · SPEC §207 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_lag_baomer',
+    title: 'The Thirty-Third Day',
+    desc: 'Between Passover and Shavuot the schools count the omer, sheaf by sheaf, '
+      + 'seven weeks of it — and this year the count has been kept against the '
+      + 'dying. The students of Akiva have been going out to the war and not coming '
+      + 'back, in numbers the tradition will remember as a plague and will not '
+      + 'describe more plainly. On the thirty-third day of the count, the dying '
+      + 'stops. Perhaps a front quietens; perhaps the sickness burns out; the study '
+      + 'houses do not inquire too closely into a mercy. By evening there are fires '
+      + 'on the ridgelines — the same hills that carried the new-moon beacons '
+      + 'before the enemy learned to read them — and under the fires, the '
+      + 'betrothals and the haircuts that seven mourning weeks postponed. The '
+      + 'court must decide what tomorrow is: a festival of the redemption, or one '
+      + 'drawn breath in a count that is not finished.',
+    forTag: 'JUD',
+    date: { y: 133, m: 5 },
+    when: safeTrigger('ev2_lag_baomer', (ctx) => alive(ctx, 'JUD')),
+    aiOption: 0,
+    historical: 'b. Yevamot 62b: twenty-four thousand students of Akiva died between '
+      + 'Passover and Shavuot, and the omer weeks became a semi-mourning that '
+      + 'breaks on the thirty-third day — Lag BaOmer. Read since the nineteenth '
+      + 'century as a memory of the revolt\'s losses; the bonfires and the Meron '
+      + 'pilgrimage joined the day later, and the new-moon signal fires of '
+      + 'm. Rosh Hashanah 2:2-4 are older than either.',
+    options: [
+      {
+        label: 'Light the fires — the dying has stopped',
+        tooltip: 'A festival by order of the Nasi: +5 legitimacy, and "The Thirty-Third Day": +8% morale for 12 months.',
+        effects: guard('ev2_lag_baomer:0', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 5 });
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'thirty_third_day', name: 'The Thirty-Third Day', months: 12,
+            effects: { moraleMult: 1.08 },
+          });
+        }),
+      },
+      {
+        label: 'One breath, and the count goes on',
+        tooltip: 'The schools\' stricter reading — the mourning holds to Shavuot: +1 stability, and "The Count Is Kept": +10% conversion strength for 12 months.',
+        effects: guard('ev2_lag_baomer:1', (ctx) => {
+          ctx.helpers.adjust(ctx, 'JUD', { stability: 1 });
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'count_is_kept', name: 'The Count Is Kept', months: 12,
+            effects: { convertMult: 1.1 },
+          });
+        }),
+      },
+    ],
+  },
+
   // ── 11 ────────────────────────────────────────────────────────────────────
   {
     id: 'ev2_akiva',

@@ -849,6 +849,65 @@ export const EVENTS_132_WORLD = [
     ],
   },
 
+  // ── SPEC §207 · 345 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_takkaze_refusers',
+    title: 'Behind the Takkaze',
+    worldLabel: 'Those who refuse the Cross withdraw into the Semien',
+    desc: 'The king\'s new god has a tithe, a bishop and a court calendar, and not '
+      + 'everyone in the highlands will have him. The old faith of the plateau was '
+      + 'never one thing — Mahrem of the king\'s line, the Sabaean moon, and, in '
+      + 'the valleys around the lake, something much older and much more '
+      + 'particular: communities that keep the Sabbath of Israel, slaughter '
+      + 'clean, and read the Orit in Ge\'ez. The court now calls all of these '
+      + 'ayhud, which settles nothing. Rather than take the Cross the way the '
+      + 'king took it — onto the coinage, over the whole country at once — they '
+      + 'go up: across the Takkaze gorge, onto the ambas of the Semien, mountain '
+      + 'tables with a spring and a grain-pit and one path a boy with a spear '
+      + 'can hold. The crown\'s chroniclers will spend the next thousand years '
+      + 'announcing their final defeat.',
+    forTag: 'both',
+    decider: 'AXM',
+    date: { y: 345, m: 3 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'AXM') && !!ctx.game.flags.ezanaCross,
+    historical: 'The origin of the Beta Israel is genuinely contested — refusers of '
+      + 'Ezana\'s conversion, Agaw judaizers of the following centuries, or an older '
+      + 'Israelite seed, as the community\'s own tradition holds; the first '
+      + 'unambiguous outside attestations are medieval, in chronicles that call '
+      + 'them ayhud. The withdrawal-after-Ezana telling is one respectable '
+      + 'reconstruction, and it is the one this game\'s own spine supplies: the '
+      + 'dispersion ledger (js/data/diaspora.js) opens their window here and '
+      + 'closes it on 24-25 May 1991.',
+    options: [
+      {
+        label: 'Let the mountains keep them',
+        tooltip: 'A share of Tana\'s people hold to the older covenant and withdraw '
+          + 'upcountry: the lake country gains a Jewish community (the dispersion '
+          + 'ledger opens a window at Tana) and carries "The House of Israel in the '
+          + 'Mountains" (+0.5 unrest, permanent) — a war the crown will re-win once '
+          + 'a generation without ever finishing it.',
+        effects: guard('ev2_takkaze_refusers:0', (ctx) => {
+          const h = ctx.helpers;
+          const p = ctx.prov && ctx.prov('Tana');
+          if (p && Array.isArray(p.pop) && p.pop.length) {
+            let total = 0;
+            for (const e of p.pop) total += (e && e.n > 0) ? e.n : 0;
+            const n = Math.round(total * 0.25);
+            if (n > 0) h.addPopulation(ctx, 'Tana', { r: 'judaism', c: 'cushitic', n });
+          }
+          h.addProvinceModifier(ctx, 'Tana', {
+            id: 'house_of_israel', name: 'The House of Israel in the Mountains', months: -1,
+            effects: { unrest: 0.5 },
+          });
+          h.setFlag(ctx, 'betaIsraelWithdrawn', true);
+          h.chronicle(ctx, 'era', 'Those who refuse Ezana\'s Cross withdraw across the Takkaze into the Semien; the court calls them ayhud, and the mountains keep them.');
+        }),
+      },
+    ],
+  },
+
   // ── SPEC §206 · 350 ───────────────────────────────────────────────────────
   {
     id: 'ev2_meroe_falls',
@@ -1037,6 +1096,80 @@ export const EVENTS_132_WORLD = [
           }
           h.setFlag(ctx, 'cunctosPopulos', true);
           h.chronicle(ctx, 'era', 'Theodosius makes Nicene Christianity the religion of the empire and the rest a crime; the legal order of four centuries is inverted.');
+        }),
+      },
+    ],
+  },
+
+  // ── SPEC §207 · 384 ───────────────────────────────────────────────────────
+  {
+    id: 'ev2_himyar_rahmanan',
+    title: 'The Inscriptions Change Their God',
+    worldLabel: 'The kings of Himyar turn to the God of Israel',
+    desc: 'For eight hundred years the dedications of the south have opened with the '
+      + 'same address: Almaqah of Saba, Athtar, Ta\'lab, the temple bulls and the '
+      + 'ibex friezes. This year the royal inscriptions of Zafar simply stop '
+      + 'naming them. Malkikarib Yuha\'min and his sons dedicate instead to '
+      + 'Rahmanan, the Merciful, Lord of Heaven — no image, no bull, no consort — '
+      + 'and the court\'s new house of prayer is called mikrab, which is a '
+      + 'synagogue\'s word. The polite fiction of a neutral monotheism lasts '
+      + 'exactly as long as nobody asks the court\'s teachers where the formulas '
+      + 'came from; the stones themselves will shortly run to "Lord of the Jews" '
+      + 'and end amen. The kingdom of the incense terraces has, with no legion '
+      + 'within a thousand miles of it, taken up the covenant of Israel — and '
+      + 'across the strait sits a crown that took the Cross forty years ago. Two '
+      + 'shores, two scriptures, one strait between them.',
+    forTag: 'both',
+    decider: 'HMY',
+    major: true,
+    date: { y: 384, m: 6 },
+    world: true,
+    aiOption: 0,
+    when: (ctx) => alive(ctx, 'HMY'),
+    historical: 'From 384 the royal inscriptions of Himyar drop the old gods for '
+      + 'Rahmanan, "the Merciful, lord of heaven" (Malkikarib Yuha\'min\'s '
+      + 'dedications); the judaizing character sharpens under his successors — '
+      + 'mikrab dedications, "lord of the Jews", the Hebrew amen — and Islamic-era '
+      + 'tradition remembers Abu Karib As\'ad converting with two rabbis of '
+      + 'Yathrib. Dhu Nuwas, the Jewish king whose massacre of Najran\'s '
+      + 'Christians in 523 brought Kaleb\'s invasion of 525, is this line\'s last '
+      + 'act — which is exactly where the 529 chapter opens.',
+    options: [
+      {
+        label: 'Rahmanan, and no image beside him',
+        tooltip: 'Himyar and all its provinces take the covenant of Israel (+5 '
+          + 'legitimacy, +1 stability, and "Rahmanan, Lord of Heaven": +15% '
+          + 'conversion strength, permanent); the strait becomes a confessional '
+          + 'border, and Aksum and Himyar cool 20 toward each other. Kaleb\'s '
+          + 'crossing — the 529 chapter\'s opening premise — is the bill for this '
+          + 'card, a hundred and forty years out.',
+        effects: guard('ev2_himyar_rahmanan:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const hmy = who(ctx, 'HMY');
+          const t = g.tags[hmy];
+          if (t) t.religion = 'judaism';
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (p && !p.impassable && p.owner === hmy) p.religion = 'judaism';
+          }
+          h.adjust(ctx, hmy, { legitimacy: 5, stability: 1 });
+          h.addTagModifier(ctx, hmy, {
+            id: 'rahmanan', name: 'Rahmanan, Lord of Heaven', months: -1,
+            effects: { convertMult: 1.15 },
+          });
+          const axm = who(ctx, 'AXM');
+          const ta = g.tags[axm];
+          if (ta && ta.alive !== false) {
+            if (!ta.opinion) ta.opinion = {};
+            ta.opinion[hmy] = Math.max(-200, (ta.opinion[hmy] || 0) - 20);
+            if (t) {
+              if (!t.opinion) t.opinion = {};
+              t.opinion[axm] = Math.max(-200, (t.opinion[axm] || 0) - 20);
+            }
+          }
+          h.setFlag(ctx, 'himyarJudaism', true);
+          h.chronicle(ctx, 'era', 'The royal inscriptions of Zafar stop naming the old gods: Himyar\'s kings dedicate to Rahmanan, Lord of Heaven, and the court\'s new house of prayer is called by a synagogue\'s word.');
         }),
       },
     ],

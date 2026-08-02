@@ -4135,7 +4135,68 @@ export const EVENTS_1948 = [
     ],
   },
 
-  // ── MUNICH AND THE YOM KIPPUR WAR, 1972–74 ────────────────────────────────
+  // ── LOD, MUNICH AND THE YOM KIPPUR WAR, 1972–74 ───────────────────────────
+  {
+    id: 'ev_i_lod_airport',
+    title: 'The Arrivals Hall',
+    worldLabel: 'The Lod airport massacre',
+    desc: 'The 30 May flight from Rome lands a little before midnight, and three '
+      + 'young men in the baggage crowd open their violin cases. They are Japanese, '
+      + 'of an army nobody in the hall has heard of, recruited by the Popular Front '
+      + 'for exactly that reason: no list would have caught them, no profile fits '
+      + 'them. Grenades and rifle fire in a closed hall; twenty-six dead, and the '
+      + 'count is its own commentary — seventeen of them Puerto Rican pilgrims come '
+      + 'to walk where their scriptures happened, and among the others Aharon '
+      + 'Katzir, one of the country\'s great scientists, whose brother will be '
+      + 'President within the year. One gunman survives his own grenade. The state '
+      + 'that promised the ingathering must now answer for the room the ingathering '
+      + 'arrives in.',
+    forTag: 'ISR',
+    date: { y: 1972, m: 5 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_i_lod_airport:when', (ctx) => alive(ctx, 'ISR')),
+    historical: 'Three Japanese Red Army gunmen recruited by the PFLP-EO killed 26 '
+      + 'people and wounded some 80 at Lod on 30 May 1972; Kozo Okamoto survived, '
+      + 'was sentenced to life, and went free in the 1985 exchange. Air-passenger '
+      + 'screening as the world now knows it descends largely from the overhaul '
+      + 'that followed.',
+    options: [
+      {
+        label: 'Harden every gate the state owns',
+        tooltip: 'Israel: −60 talents, and Lydda carries "The Hardened Gates" '
+          + 'permanently (−1 unrest): the airline becomes the hardest target in the '
+          + 'sky, and every airport on earth eventually learns the drill.',
+        effects: guard('ev_i_lod_airport:0', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { treasury: -60 });
+          ctx.helpers.addProvinceModifier(ctx, 'Lydda', {
+            id: 'the_hardened_gates', name: 'The Hardened Gates', months: -1,
+            effects: { unrest: -1 },
+          });
+          ctx.game.flags.airportDoctrine = true;
+          ctx.helpers.chronicle(ctx, 'era', 'Twenty-six dead in the arrivals hall at Lod; the answer is a security doctrine the whole world\'s airports will eventually copy.');
+        }),
+      },
+      {
+        label: 'The senders, not the sent',
+        tooltip: 'Israel: +10 martial points and the answer goes to the senders\' '
+          + 'camps (Tyre and Sidon +1 unrest for 12 months) — and −5 legitimacy '
+          + 'where the answer lands wrong.',
+        effects: guard('ev_i_lod_airport:1', (ctx) => {
+          if (!alive(ctx, 'ISR')) return;
+          ctx.helpers.adjust(ctx, 'ISR', { mar: 10, legitimacy: -5 });
+          if (alive(ctx, 'LEB')) {
+            unrestAcross(ctx, 'LEB', ['Tyre', 'Sidon'], {
+              id: 'the_answer_north', name: 'The Answer in the North', months: 12,
+              effects: { unrest: 1 },
+            });
+          }
+          ctx.helpers.chronicle(ctx, 'era', 'Twenty-six dead in the arrivals hall at Lod; the answer falls on the camps that sent the senders.');
+        }),
+      },
+    ],
+  },
   {
     id: 'ev_i_munich',
     title: 'Eleven Athletes',

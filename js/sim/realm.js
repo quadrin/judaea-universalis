@@ -254,9 +254,18 @@ export function monthlyIntegration(ctx) {
       p.conversion = null;
       // With a makeup (SPEC §56), conversion moves PEOPLE — every foreign
       // community adopts the state faith and the majority follows; without
-      // one, the old binary flip stands.
-      if (Array.isArray(p.pop) && p.pop.length) shiftPopToReligion(p, owner.religion, 1);
-      else p.religion = owner.religion;
+      // one, the old binary flip stands. The communities the age's own drift
+      // table marks as resisting (SPEC §104) are not taken to the last
+      // household even by a funded mission: they keep their resistance's
+      // share. The label still flips with the majority, and the AI does not
+      // re-target a province already under its own faith — which is how a
+      // Jewish Galilee outlives the program that "converted" it, and how the
+      // ambas keep the Beta Israel (SPEC §207).
+      if (Array.isArray(p.pop) && p.pop.length) {
+        const cfg = ctx.bookmark && ctx.bookmark.faithDrift
+          && ctx.bookmark.faithDrift[owner.religion];
+        shiftPopToReligion(p, owner.religion, 1, (cfg && cfg.resistedBy) || null);
+      } else p.religion = owner.religion;
       p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'religious_tension');
       if (p.owner === g.playerTag) {
         const rel = ctx.DEFINES.RELIGIONS ? ctx.DEFINES.RELIGIONS[p.religion] : null;

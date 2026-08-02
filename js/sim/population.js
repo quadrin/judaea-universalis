@@ -147,14 +147,18 @@ export function popTension(ctx, p, owner) {
 
 // Conversion's hand on the makeup: a fraction of every foreign-faith
 // community adopts the state religion (keeping its culture). The centuries
-// of missionaries move people, not map paint.
-export function shiftPopToReligion(p, religion, fraction) {
+// of missionaries move people, not map paint. `keep` (optional) maps a
+// source religion to the share of that community a program cannot take —
+// the same resistance the ambient drift respects (SPEC §104): even a funded
+// mission does not convert a resisting community to the last household.
+export function shiftPopToReligion(p, religion, fraction, keep) {
   if (!Array.isArray(p.pop) || !p.pop.length) return;
   const f = clamp(num(fraction, 1), 0, 1);
   const moved = [];
   for (const e of p.pop) {
     if (e.r === religion) continue;
-    const n = Math.round(e.n * f);
+    const hold = keep ? clamp(num(keep[e.r], 0), 0, 1) : 0;
+    const n = Math.round(e.n * f * (1 - hold));
     if (n <= 0) continue;
     e.n -= n;
     moved.push({ r: religion, c: e.c, n });
