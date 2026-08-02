@@ -3317,7 +3317,9 @@ export const EVENTS_167 = [
     historical: 'Hyrcanus gave Idumea the Law or the road. They took the Law — and a '
       + 'century later an Idumean house held the throne in Jerusalem.',
     desc: 'Adora and Marisa have opened their gates, and with them all Idumea — the old '
-      + 'south country of Esau, pressed against Judah since the exile. Hyrcanus has '
+      + 'south country of Esau, pressed against Judah since the exile and still '
+      + 'swearing by Qos of the high places, whose name stands in half the names on '
+      + 'the ostraca of Marisa. Hyrcanus has '
       + 'done what no conqueror of the age does: he has offered the conquered not '
       + 'tribute but kinship. Let them be circumcised and live by the laws of the '
       + 'Jews, and they may keep their land and be counted Israel; or let them go. '
@@ -3335,7 +3337,7 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Under the Law, or out of the land',
-        tooltip: 'Idumea becomes Israel: +1,500 manpower, +10 legitimacy; "The Idumean Levies" (+10% manpower, 24 months); Hebron and Adora chafe under the new Law (+1 unrest, 36 months).',
+        tooltip: 'Idumea becomes Israel: Hebron and Adora pass to the faith of Jerusalem, +1,500 manpower, +10 legitimacy; "The Idumean Levies" (+10% manpower, 24 months). The new brethren chafe under the new Law (+1 unrest, 36 months) — where the old gods cost 3.',
         effects: guard('ev_idumea_policy:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { manpower: 1500, legitimacy: 10 });
@@ -3344,6 +3346,11 @@ export const EVENTS_167 = [
             effects: { manpowerMult: 1.1 },
           });
           for (const name of ['Hebron', 'Adora']) {
+            // The covenant moves PEOPLE, not paint (SPEC §210): the Idumeans
+            // of the makeup become Jews of Idumean stock, which is exactly
+            // what Josephus says happened and exactly what the unrest
+            // breakdown has been charging for since the chapter opened.
+            h.changeFaith(ctx, name, 'judaism');
             h.addProvinceModifier(ctx, name, {
               id: 'idumea_under_the_law', name: 'Idumea Under the Law', months: 36,
               effects: { unrest: 1 },
@@ -3358,7 +3365,7 @@ export const EVENTS_167 = [
       },
       {
         label: 'Tributaries, not brethren',
-        tooltip: 'The south pays and keeps its gods: +10 governance; Hebron and Adora pay double ("Idumean Tribute": +20% tax, permanent) — and send no sons to the muster.',
+        tooltip: 'The south pays and keeps its gods: +10 governance; Hebron and Adora pay double ("Idumean Tribute": +20% tax, permanent) — and send no sons to the muster, and go on costing the heathen unrest of a foreign altar for as long as you hold them.',
         effects: guard('ev_idumea_policy:1', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { gov: 10 });
@@ -3369,6 +3376,11 @@ export const EVENTS_167 = [
             });
           }
           h.setFlag(ctx, 'idumeaTributary', true);
+          h.notify(ctx, {
+            title: 'Tributaries, Not Brethren', type: 'info', provName: 'Adora',
+            text: 'Qos keeps his high places and the south keeps its double assessment. '
+              + 'The rolls will read Idumean for as long as the tribute is paid.',
+          });
         }),
       },
     ],

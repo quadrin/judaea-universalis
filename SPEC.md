@@ -12906,6 +12906,144 @@ discipline — baseline is the §206 merge commit run on the same machine):
   anomaly families exactly the documented ones (§207's own 614 JUD
   come-and-go line included), the two §208 suite premises told about the
   client court, and the HMY mission tree's row-0 collision seated.
+## 210. Idumea has its own gods until somebody gives it the Law
+
+`ev_idumea_policy` is the 167 chapter's cleanest fork. Hyrcanus takes the
+south country and offers the conquered not tribute but kinship — the covenant
+or the road, an offer no other conqueror of the age made — and Josephus writes
+that from that time forth they were none other than Jews. Until this section
+the card converted nothing. Adora and Hebron opened the chapter already
+painted Judaism, because the base atlas is drawn for 66 CE and by 66 CE they
+had been Jewish for a century and a half; the road they took is *why* the
+atlas reads that way. So the card that made them Jewish arrived at a map which
+had already agreed with it, handed out manpower and legitimacy, and left the
+province colours exactly where it found them — and the other road,
+"Tributaries, not brethren", took away a faith the ground had never had. Both
+roads ended on the same map, which is the definition of a fork that is not
+one.
+
+**The faith.** `DEFINES.RELIGIONS.idumean` — *Idumean Cults*, group `pagan`,
+`[140, 74, 92]`. The god is Qos, whose name is half the Idumean names on the
+Marisa ostraca and stands at the head of Herod's own family tree. The group is
+the entire mechanical claim: Judaism is `judaic`, so an Idumean province under
+a Jewish crown reads **heathen** and not heretic — Gerizim is this map's
+heretic case and this is emphatically not it. The key is `idumean`, the same
+word as the culture, exactly as `nabataean` has always been both; religions
+and cultures are separate namespaces and the pair reads as one people.
+
+**Where it is seated, and where it is not.** In the 167 chapter only, through
+that bookmark's `religions` overlay — `map_data.js` is untouched, and
+`RELIGION_KEYS` (base-atlas keys only, by its own comment) does not grow. A
+§210 that reached into the atlas would have handed the other seven campaigns
+an unconverted Idumea in centuries where the conversion is a settled fact, so
+67, 40, 66, 132, 529, 614 and 1948 all still open with a Jewish south. The
+chapter seats two cells, which is all of Idumea at this map's resolution:
+Adora, and Hebron — 1 Maccabees 5:65 has Judas storming Hebron among the towns
+of the sons of Esau, and Josephus lists it as Idumean when Hyrcanus takes it,
+so Hebron takes the `cultures` overlay too and stops being Judean for this
+chapter. The latent Negev cells (Arad, Beersheba, Dimona, Kiryat Gat) need no
+entry: §47's province folding has them inside Adora, Oboda and Ascalon in 167,
+and they inherit through `latentParent` in any chapter that activates them.
+
+**The fork is now a trade.** A homogeneous foreign-faith province under a
+Jewish crown is worth `heathen` (3) × share (1.0) × un-integration (1.0) in
+the §56 communal breakdown, so from the moment the Hasmoneans take Idumea the
+south stands at a standing **+3 unrest each**, and it stands there for as long
+as the crown does nothing about it. Against that:
+
+- **Under the Law, or out of the land** converts both provinces and replaces
+  the 3 with the card's own *Idumea Under the Law* — **+1 for 36 months**, and
+  then nothing. The manpower, the legitimacy and the Levies are unchanged; the
+  reason to take the road is now on the map.
+- **Tributaries, not brethren** keeps the +20% assessment forever and keeps
+  the +3 forever with it. That is the trade the chroniclers' dry margin note is
+  about: the cheap answer is cheap every month, and it never stops being
+  charged.
+
+Neither road is free and neither is obviously right, which is the first time
+that has been true of this card. The 3 is deliberately calibrated as a drag
+and not as a fuse: with the era's stability it nets about 2.2, and
+`unrestRevoltThreshold` is 5, so an unconverted Idumea is a standing tax on
+the realm's patience and its overextension arithmetic rather than a rising
+waiting to happen — until a long war's exhaustion is stacked on top of it,
+which is exactly when a crown should be regretting the cheap answer.
+
+**People, not paint (`helpers.changeFaith`).** Since §56 a province is a
+makeup, and the makeup — not the label — is what the communal unrest rows, the
+religion mapmode's minority stripe and every `shareOf` trigger read. A card
+that assigns `p.religion` and stops has changed a colour: the unrest goes on
+being charged against the old community, and the next `normalizePop` — an
+immigration card, an ambient-drift tick (§104) — writes the old majority's
+faith straight back over it. So the covenant goes through a new helper,
+`changeFaith(ctx, provName, religion)`, which runs the same
+`shiftPopToReligion` the missionaries run in `realm.js`, clears any conversion
+project standing in the province, and re-resolves the §66 display name. The
+Idumeans of the makeup become Jews **of Idumean stock** — the culture does not
+move, which is the whole historical point and the reason there is an Idumean
+house on the throne three generations later. It is the card's hand, immediate
+and by decree; the player's own missionaries reach the same place through the
+`convertProvince` action and twelve months.
+
+**Two knock-ons, both wanted.** The Terms from Antioch end the revolt with
+`keep: (p) => p.religion === 'judaism'` — "Judaea keeps the provinces of the
+faith it holds; every other occupied town returns to the kingdom of the
+Greeks", which is what the tooltip has always said and what it now does to
+Idumea: a south country taken but never given the Law goes back at the peace.
+That is a reason to refuse the decree, and it has a way around it — convert
+the two cells with your own missionaries before the envoys arrive and they
+stay, because by then they are provinces of the faith. Second, Idumea leaves
+the Jewish column that both 167 win conditions count (6 for *Heirs of David*,
+5 for the timed independence of 140). The map opens with 20 provinces of the
+faith, so neither threshold moves within reach or out of it; `hm_idumea`
+itself asks for control and not for conversion, and banks either way.
+
+**The other end of the charge, which was not designed and is right anyway.**
+The intended cost lands on a Jewish crown. But the same two cells open the
+chapter under the SELEUCID king, and there the section makes them *quieter*:
+3.16 unrest to 1.66, because the heathen row (3) becomes the same-group
+heretic row (1.5) the moment the province stops being Jewish. Antiochus'
+quarrel was with the Law and not with Qos — the decree that opens this chapter
+is aimed at one faith on the map — and two pagan cults are a heresy to one
+another where the Law is a heathenism. The Nabataean and Egyptian cults under
+a Greek crown have always read exactly this way; Idumea joins them, and the
+map now agrees with the premise of its own chapter.
+
+**Measured.** That second change is present from the opening month of every
+run, so the seeded 8-year all-AI harness diverges globally from day one —
+different unrest, different revolt rolls, different draws off the shared
+stream, 114 battles becoming 132 and Gaulish tribes that never heard of Qos
+ending the run on different numbers. At the documented seed the anomaly line
+is `167bce PAR: BLEEDING` — the two-province Parthian outpost of the v5.3
+accepted set — and the Hasmoneans grow 3→4 provinces and live. A 15-seed
+sweep across both trees says that flag is drift and not this section: it
+bleeds on 6 of 15 seeds before and 5 of 15 after, and flips in BOTH directions
+on individual seeds (42 bleeds only before, 555 only after). The chapter's own
+court throws an occasional seeded flag on either tree — HAS BLEEDING and HAS
+SNOWBALL once each on the base, HAS DEAD once here — and the one DEAD was
+traced rather than assumed: on that seed the AI Hasmoneans never take Hebron
+or Adora at all, in EITHER tree, so the charge this section adds was never
+levied on them. What the harness window actually exercises is the Seleucid
+side, because the conversion card is dated to 126 BCE and the run closes in
+159.
+
+- **Regression contract**: `smoke137` owns the section — the faith declared,
+  grouped pagan and coloured clear of every neighbour it shares a border with;
+  the 167 chapter seating it while the base atlas and four later chapters stay
+  Jewish; the +3 charged under a Jewish crown and read as heathen rather than
+  heretic, AND the 1.5 charged under the Greek one, where the same two cells
+  actually open and the Law is the heathenism; the covenant moving the makeup
+  to 1.0 Judaism while the culture
+  stays Idumean, with the standing 3 replaced by the card's 1; the tributary
+  road keeping both the tax and the charge; the decree handing back an
+  unconverted Idumea and keeping a converted one; the win-condition count and
+  `hm_idumea` surviving; and `changeFaith` idempotent, no-op on a missing
+  faith, and silent on an unknown province.
+  Verified on the merged tree, after this section was renumbered twice out of
+  main's way (§208 went to the strait, §209 to Beta Israel): **137 of 137
+  headless suites ALL PASS**. The two chapters never touched — main's work
+  landed in 529 CE, on the client courts and on the dispersion; this one is
+  167 BCE and the makeup — and `js/sim/population.js`, the one file both
+  sides opened, merged without a hand on it.
 
 ## 211. Not every foreign question is a question — the world rolls for it
 
