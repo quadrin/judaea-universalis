@@ -3323,6 +3323,10 @@ export function gameActions(ctx) {
             // §119 path tree standing in the mission tree, so the panel can
             // dress it as a page history never wrote.
             hypothetical: !!m.hypothetical,
+            // Which strand of the civil band this belongs to, if any (SPEC
+            // §211): 'govt', 'region' or 'court'. Layout already separates
+            // them by column; the panel names them so the column reads.
+            civil: m.civil || '',
             status: done.has(id) ? 'done'
               : missionUnlocked(list, i, done, tree) ? 'current' : 'locked',
           };

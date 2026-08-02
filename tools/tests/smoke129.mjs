@@ -106,11 +106,12 @@ for (const e of ERAS) {
   }
 }
 // The principals — the sides the chapter is named for — carry the full growth.
+// These counts include the §211 civil band (six nodes on every principal).
 const PRINCIPALS = [
-  ['167bce', 'HAS', 23], ['67bce', 'HYR', 23], ['67bce', 'ARI', 23],
-  ['40bce', 'HER', 20], ['40bce', 'ATG', 19], ['66ce', 'JUD', 21],
-  ['66ce', 'AGR', 19], ['132ce', 'JUD', 22], ['529ce', 'SAM', 18],
-  ['614ce', 'JUD', 23], ['1948ce', 'ISR', 20],
+  ['167bce', 'HAS', 29], ['67bce', 'HYR', 29], ['67bce', 'ARI', 29],
+  ['40bce', 'HER', 26], ['40bce', 'ATG', 25], ['66ce', 'JUD', 27],
+  ['66ce', 'AGR', 25], ['132ce', 'JUD', 28], ['529ce', 'SAM', 24],
+  ['614ce', 'JUD', 29], ['1948ce', 'ISR', 26],
 ];
 for (const [id, tag, n] of PRINCIPALS) {
   const list = era(id).bookmark.missions[tag];

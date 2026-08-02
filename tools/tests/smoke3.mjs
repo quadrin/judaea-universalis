@@ -180,7 +180,7 @@ console.log('== 67 BCE: the Judaean Civil War ==');
   ok(!!war && !war.noNegotiation, 'the brothers\' war exists and is NEGOTIABLE');
   ok(!war.attackers.includes('NAB') && !war.defenders.includes('NAB'), 'NAB not yet in the war');
   ok(g.tags.HYR.ruler.name === 'Hyrcanus II' && g.tags.ROM.ruler.name === 'Pompeius Magnus', 'courts seated');
-  ok(a.getMissions().length === 23, 'HYR missions present (five objectives + the §179 curriculum + the §187/§197 expansion + the §183/§187/§197 roads not taken)');
+  ok(a.getMissions().length === 29, 'HYR missions present (five objectives + the §179 curriculum + the §187/§197 expansion + the §211 civil band + the §183/§187/§197 roads not taken)');
 
   // play to mid -66, paying Aretas' price when asked (option 0 everywhere)
   tickAndPlay(ctx, a, 14);

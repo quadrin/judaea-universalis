@@ -954,7 +954,11 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         : m.status === 'current' ? 'The realm may work at this now.'
           : 'Locked — first: ' + (m.requiresNames && m.requiresNames.length
             ? m.requiresNames.join(', ') : 'the missions before it') + '.';
+      const strand = m.civil === 'govt' ? 'The Government'
+        : m.civil === 'region' ? 'The Region'
+          : m.civil === 'court' ? 'The Court' : '';
       const tt = m.name
+        + (strand ? '\n' + strand + ' — what the realm becomes while the war is fought.' : '')
         + (m.hypothetical ? '\nA road history never took — the cards exist if the realm can reach them.' : '')
         + '\n' + (m.desc || '')
         + (m.rewardText ? '\nReward: ' + m.rewardText : '')
