@@ -1501,6 +1501,8 @@ export const EVENTS_614 = [
       + 'on the registers, stipends from the conquered land, an empire administered '
       + 'from tent-cities that have begun, awkwardly, to become capitals.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 653, m: 9 },
     world: true,
     when: freeCaliphate, // the imperial chronicle belongs to a sovereign caliphate
@@ -1555,6 +1557,8 @@ export const EVENTS_614 = [
       + 'in Damascus launches anyway, and Constantia learns what the new flag looks '
       + 'like from its own harbor.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 654, m: 6 },
     world: true,
     // A governor with no coast builds no fleet: the card needs a sovereign
@@ -1617,6 +1621,8 @@ export const EVENTS_614 = [
       + 'it is contested. If no Arab fleet exists in this world, the chroniclers '
       + 'record instead a summer of Roman squadrons burning empty Syrian slipways.',
     forTag: 'both',
+    decider: 'BYZ',
+    roll: true,
     date: { y: 655, m: 8 },
     world: true,
     when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ'), // two navies, or no battle worth a card
@@ -1686,6 +1692,8 @@ export const EVENTS_614 = [
       + 'crime. The empire of the conquests, having run out of enemies it is willing '
       + 'to name, turns inward.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 656, m: 6 },
     world: true,
     when: freeCaliphate,
@@ -1740,6 +1748,8 @@ export const EVENTS_614 = [
       + 'stop. The arbitration begins. And the men who wanted neither caliph walk '
       + 'out of the camp declaring that judgment belongs to God alone.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 657, m: 7 },
     world: true,
     when: freeCaliphate,
@@ -1829,6 +1839,8 @@ export const EVENTS_614 = [
       + 'Jerusalem, and prays at Golgotha and Gethsemane so the whole city can watch. '
       + 'The capital is Damascus now. Medina keeps the tombs.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 661, m: 1 },
     world: true,
     when: freeCaliphate,
@@ -1936,6 +1948,8 @@ export const EVENTS_614 = [
       + 'gilded bronze from the Pantheon\'s roof; then Syracuse, where he plans to '
       + 'move the empire\'s center and the empire declines to follow.',
     forTag: 'both',
+    decider: 'BYZ',
+    roll: true,
     date: { y: 663, m: 7 },
     world: true,
     when: (ctx) => alive(ctx, 'BYZ'),
@@ -1994,6 +2008,8 @@ export const EVENTS_614 = [
       + 'the cavalry rides into Anatolia and comes back with plunder and captives, '
       + 'regular as harvest.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 664, m: 5 },
     world: true,
     when: freeCaliphate,
@@ -2059,6 +2075,8 @@ export const EVENTS_614 = [
       + 'Bosporus. His son Constantine, seventeen and already harder than the father, '
       + 'sails from Constantinople to collect the crown and the corpse.',
     forTag: 'both',
+    decider: 'BYZ',
+    roll: true,
     date: { y: 668, m: 9 },
     world: true,
     when: (ctx) => alive(ctx, 'BYZ'),
@@ -2111,6 +2129,8 @@ export const EVENTS_614 = [
       + 'Whoever holds Constantinople is now besieged by a calendar as much as by a '
       + 'fleet.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 670, m: 4 },
     world: true,
     // The great expedition needs everything at once: a sovereign caliphate,
@@ -2252,6 +2272,8 @@ export const EVENTS_614 = [
       + 'dromons close with the wintering fleet and set the water itself alight; '
       + 'sailors who dive from their burning decks surface in a burning sea.',
     forTag: 'both',
+    decider: 'BYZ',
+    roll: true,
     date: { y: 678, m: 6 },
     world: true,
     when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ')
@@ -2316,6 +2338,8 @@ export const EVENTS_614 = [
       + 'yearly. For the first time since the columns came out of Arabia, the tide '
       + 'visibly stops.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 679, m: 3 },
     world: true,
     when: (ctx) => freeCaliphate(ctx) && alive(ctx, 'BYZ')
@@ -2373,6 +2397,8 @@ export const EVENTS_614 = [
       + 'other name, and the pious of Medina and Kufa say the word aloud and never '
       + 'forgive it.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 680, m: 5 },
     world: true,
     when: freeCaliphate,
@@ -2417,6 +2443,8 @@ export const EVENTS_614 = [
       + 'of the water. Damascus has won the field. What it has lost will take '
       + 'centuries to count.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 680, m: 10 },
     world: true,
     when: freeCaliphate,
@@ -2472,6 +2500,8 @@ export const EVENTS_614 = [
       + 'the Umayyad house can salvage from a Syria that plague and famine are '
       + 'working through like a second army.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 683, m: 7 },
     world: true,
     when: freeCaliphate,
@@ -2587,6 +2617,8 @@ export const EVENTS_614 = [
       + 'the creed in fine Kufic circles. Where every currency on earth carries a '
       + 'sovereign\'s face, the caliph\'s carries the caliph\'s God.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 685, m: 4 },
     world: true,
     when: freeCaliphate,
@@ -2718,6 +2750,8 @@ export const EVENTS_614 = [
       + 'fighting at the sanctuary door. The Second Fitna is over. What remains is not '
       + 'the community of Medina grown large; it is an empire, and it knows it.',
     forTag: 'both',
+    decider: 'RSH',
+    roll: true,
     date: { y: 692, m: 11 },
     world: true,
     // No Second Fitna, no siege of Mecca to end it.

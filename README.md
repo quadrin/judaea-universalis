@@ -171,6 +171,13 @@ static site, the zero dependencies, or the missing build step changes.
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
   course simply happens. Play the deciding nation and the full choice is yours.
+  And where both answers belonged to a court nobody can play — whether Uthman burns
+  the variant leaves, whether Rome deifies Vespasian, whether al-Hajjaj's catapults
+  pause for the sanctuary at Mecca — the campaign rolls for it instead of asking:
+  the recorded course two times in three, the road the chronicles did not take the
+  rest. Twenty-five such cards, from the ambush that killed Sidetes to Black
+  September. The roll is the campaign's own seeded stream, so a replay, a reload
+  and a multiplayer guest all see the same world.
 - **The Compendium** (📖 on the title screen): the game's own wiki, generated live from
   the data — every chapter with its timeline and every event's printed consequences,
   the playable standards with their guidance and win/loss contracts, every nation of
