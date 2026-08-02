@@ -194,6 +194,23 @@ export const ESTATE_ASKS = {
     { kind: 'men', name: 'The Horse Comes Down', text: 'The hill squadrons answer the summons with remounts to spare.' },
     { kind: 'zeal', name: 'The Lance Is Sharpened', text: 'The riders school the host in the wheeling charge of the uplands.' },
   ],
+  // The court at Zafar (SPEC §208).
+  negus_men: [
+    { kind: 'zeal', name: 'The Garrison Drills the Host', text: 'The men who broke a kingdom teach the crown\'s companies how they did it.' },
+    { kind: 'calm', name: 'The Church Preaches Order', text: 'The conquest\'s pulpits, kept warm, preach obedience to the crown that keeps them.' },
+  ],
+  yazanids: [
+    { kind: 'blessing', name: 'The Genealogies Acclaim', text: 'The old house reads the crown into the line of the covenant\'s kings, and the highlands hear it read.' },
+    { kind: 'men', name: 'The Covenant\'s Villages Muster', text: 'Where the Law is kept, the terraces send their sons for a crown the house has blessed.' },
+  ],
+  qayls: [
+    { kind: 'men', name: 'The Castles Empty', text: 'The qayls bring their spears down from the misty heights, tower by tower, oath by oath.' },
+    { kind: 'zeal', name: 'The War Songs Sung', text: 'The levies fight the way the songs say their grandfathers did, which is most of the way to its being true.' },
+  ],
+  incense_houses: [
+    { kind: 'coin', name: 'The Harbors Subscribe', text: 'Aden and Mawza advance the crown a season\'s customs, against a quiet sea.' },
+    { kind: 'hands', name: 'The Monsoon Works for the Crown', text: 'Their factors carry the crown\'s cargoes at the family rate, both monsoons.' },
+  ],
 
   // ---- the empires and the neighbours -------------------------------------
   senate: [

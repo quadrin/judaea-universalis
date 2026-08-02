@@ -928,16 +928,25 @@ export const EVENTS_529_WORLD = [
     world: true,
     major: true,
     aiOption: 0,
+    // SPEC §208: the client court is seated now, so the mutiny lands on the
+    // live map. The card fires while the conquest is still a conquest —
+    // Zafar either held by Aksum outright or by a Himyar still wearing the
+    // yoke. A client that already won free has no viceroyalty to mutiny
+    // against, and the card retires into the divergence ledger.
     when: safeTrigger('ev529_w_abraha:when', (ctx) => {
       if (!alive(ctx, 'AXM')) return false;
       const z = ctx.prov('Zafar');
-      return !!(z && z.owner === who(ctx, 'AXM'));
+      if (!z) return false;
+      if (z.owner === who(ctx, 'AXM')) return true;
+      if (z.owner !== who(ctx, 'HMY')) return false;
+      const t = ctx.game.tags[who(ctx, 'HMY')];
+      return !!(t && t.alive !== false && t.overlord === who(ctx, 'AXM'));
     }),
     historical: 'Abraha deposed Sumyafa Ashwa about 531-535 and defeated two Aksumite armies sent against him; he thereafter paid Kaleb nominal tribute (Procopius, Wars I.20).',
     options: [
       {
         label: 'Agree to call the word a fact',
-        tooltip: 'Aksum −1 stability and "The Viceroy\'s Word" (−7% income permanently — the Yemen remits a phrase). The conquest across the sea becomes a pretense that will outlast most facts.',
+        tooltip: 'Aksum −1 stability and "The Viceroy\'s Word" (−7% income permanently — the Yemen remits a phrase). The yoke on Himyar is cut either way; an AI court gets Abraha for a king, a player\'s court keeps its throne and inherits the garrison\'s fury.',
         effects: guard('ev529_w_abraha:0', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'AXM', { stability: -1 });
@@ -945,8 +954,27 @@ export const EVENTS_529_WORLD = [
             id: 'viceroys_word', name: 'The Viceroy\'s Word', months: -1,
             effects: { incomeMult: 0.93 },
           });
+          // The mutiny reaches the client court (SPEC §208). The bond to
+          // Aksum dies here whoever ends up on top: Abraha's whole
+          // arrangement is that the tribute becomes a word. On an AI
+          // Himyar the garrison's man takes the crown, which is what
+          // happened; on a player's the crown holds but the negus' men
+          // stop being anybody's instrument but their own — the same
+          // history, heard from the throne it happened to.
+          const hmy = who(ctx, 'HMY');
+          const t = ctx.game.tags[hmy];
+          if (t && t.alive !== false && t.overlord === who(ctx, 'AXM')) {
+            t.overlord = null;
+            if (t.ai) {
+              h.setRuler(ctx, hmy, { name: 'Abraha', title: 'King of Himyar', gov: 3, infl: 3, mar: 4, age: 40 });
+              setOpinion(ctx, 'HMY', 'AXM', -40);
+              setOpinion(ctx, 'AXM', 'HMY', -40);
+            } else {
+              try { h.factionShift(ctx, hmy, 'negus_men', -35); } catch (e) { warnOnce('ev529_w_abraha:shift', e); }
+            }
+          }
           h.setFlag(ctx, 'abrahaViceroy', true);
-          h.chronicle(ctx, 'era', 'Abraha deposes the viceroy at Zafar, destroys the army sent to correct him, and thereafter remits to Aksum a tribute consisting of the word "tribute".');
+          h.chronicle(ctx, 'era', 'Abraha and the garrison stop answering across the strait: the army sent to correct them goes over, the next is destroyed, and the Yemen thereafter remits to Aksum a tribute consisting of the word "tribute".');
         }),
       },
     ],
@@ -1034,22 +1062,47 @@ export const EVENTS_529_WORLD = [
     world: true,
     major: true,
     aiOption: 0,
-    when: safeTrigger('ev529_w_wahriz:when', (ctx) => alive(ctx, 'SAS')),
+    // SPEC §208: the fleet's own arithmetic — eight ships of convicts is
+    // the price of a country already broken, and the card fires exactly
+    // where its own transfer clause would take something: Zafar held by
+    // Aksum, by a client still under the Aksumite yoke, or by nobody
+    // living. A free Himyar is not worth a fleet (Ctesiphon's council was
+    // barely persuaded to spend prisoners); a Himyar already in the King
+    // of Kings' own clientele needs no conquering — the §168 ages engine
+    // absorbs it on its own clock, which is the abna's story told by the
+    // simulation instead of the script (the 91-year harness did exactly
+    // that: vassalized in the 540s, incorporated in 575, the 614 map).
+    when: safeTrigger('ev529_w_wahriz:when', (ctx) => {
+      if (!alive(ctx, 'SAS')) return false;
+      const z = ctx.prov('Zafar');
+      if (!z) return false;
+      if (z.owner === who(ctx, 'AXM')) return true;
+      const holder = ctx.game.tags[z.owner];
+      if (!holder || holder.alive === false) return true;
+      return z.owner === who(ctx, 'HMY') && holder.overlord === who(ctx, 'AXM');
+    }),
     historical: 'Khosrow I sent Wahriz with a convict fleet about 570-575; Masruq son of Abraha fell to Wahriz\'s arrow and Yemen became a Sasanian province held by the abna (al-Tabari; the tradition\'s date for the Prophet\'s birth is the same year).',
     options: [
       {
         label: 'One arrow, strung by another man\'s hands',
-        tooltip: 'The incense country — Zafar, Muza, Aden, Marib, Najran, the Hadramawt shore and Dioscurida — passes to the King of Kings. Persia −100 talents for the fleet; Aksum −1 stability and a cold rage (−80 opinion of Persia).',
+        tooltip: 'The incense country — Zafar, Muza, Aden, Marib, Najran, the Hadramawt shore and Dioscurida — passes to the King of Kings, from Aksum\'s hands or a yoked client\'s. Persia −100 talents for the fleet; Aksum −1 stability and a cold rage (−80 opinion of Persia).',
         effects: guard('ev529_w_wahriz:0', (ctx) => {
           const h = ctx.helpers;
           const sas = who(ctx, 'SAS');
           const axm = who(ctx, 'AXM');
+          const hmy = who(ctx, 'HMY');
+          const hmyT = ctx.game.tags[hmy];
+          // A client still under the Aksumite yoke falls with the patron
+          // (SPEC §208) — the abna replace the viceroyalty, not the free
+          // kingdom the `when` gate already spared.
+          const yokedClient = !!(hmyT && hmyT.alive !== false && hmyT.overlord === axm);
           for (const n of ['Zafar', 'Muza', 'Eudaemon Arabia', 'Marib', 'Najran',
             'Shabwa', 'Moscha', 'Dioscurida']) {
             const p = ctx.prov(n);
             if (!p || p.impassable) continue;
             const holder = ctx.game.tags[p.owner];
-            if (p.owner === axm || !holder || holder.alive === false) h.changeOwner(ctx, n, sas);
+            if (p.owner === axm || (yokedClient && p.owner === hmy)
+              || !holder || holder.alive === false) h.changeOwner(ctx, n, sas);
           }
           h.adjust(ctx, sas, { treasury: -100 });
           if (alive(ctx, 'AXM')) {
@@ -1089,6 +1142,18 @@ export const EVENTS_529_WORLD = [
     date: { y: 575, m: 7 },
     world: true,
     aiOption: 0,
+    // SPEC §208: the breach is a budget line, not a fate. The card's own
+    // text says every kingdom of the south repaired the dam as the price
+    // of calling itself one — so a living court that has paid that price
+    // (the §208 mission sets `himyarDamKept`) and still holds Marib is a
+    // world where the works are somebody's budget, and the breach stands
+    // repaired instead of standing open.
+    when: safeTrigger('ev529_w_marib_breaks:when', (ctx) => {
+      if (!ctx.helpers.getFlag(ctx, 'himyarDamKept')) return true;
+      const p = ctx.prov('Marib');
+      const t = ctx.game.tags[who(ctx, 'HMY')];
+      return !(p && t && t.alive !== false && p.owner === who(ctx, 'HMY'));
+    }),
     historical: 'The Marib dam\'s final breach and abandonment fell in the 570s-580s, after Abraha\'s great repair of 548 (CIH 541); Quran 34:15-19 preserves the memory of the dispersal.',
     options: [
       {

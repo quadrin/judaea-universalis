@@ -293,6 +293,14 @@ export const BOOKMARK_529 = {
       'Caesarea Maritima': 'Qisri', 'Joppa': 'Yafo',
     },
     MLI: 'JUD',
+    // The Sayhadic pen (SPEC §208): the client kingdom writes its country
+    // in its own names, not the Periplus' Greek — Aden for the merchants'
+    // harbor, Mawza for the roadstead, Sumhuram for the frankincense port
+    // the excavators found under Moscha, Suqutra for the island.
+    HMY: {
+      'Eudaemon Arabia': 'Aden', 'Muza': 'Mawza',
+      'Moscha': 'Sumhuram', 'Dioscurida': 'Suqutra',
+    },
     // No Byzantine pen: the era's names above are already the Empire's.
   },
 
@@ -335,6 +343,21 @@ export const BOOKMARK_529 = {
     MAU: { name: 'The Moorish Kingdoms', adj: 'Moorish', description: 'Masuna\'s "kingdom of the Moors and Romans", Iaudas in the Aures: what the Vandals never held and the reconquest will learn about.' },
     LMB: { capital: 'Carnuntum' }, // Wacho rules from the middle Danube; Italy is thirty years away
     CIM: { name: 'The Danes', adj: 'Danish', description: 'The new lords of the Cimbric sea: Chlochilaich\'s raid is eight years old and Gaul remembers it.' },
+    // The kingdom beyond the strait (SPEC §208). The static define carries
+    // `south_arabian` because the 66 CE frame seats a pre-conversion Himyar;
+    // by 529 the house has kept the God of Israel for a century and a half —
+    // Abikarib As'ad to Yusuf, the Rahmanan formula on every royal
+    // inscription — and four years of a viceroy's church at Zafar do not
+    // undo it. Same single-religion-key compromise as Adiabene (SPEC §185):
+    // the tag carries the covenant the kings took, and the 529 nuance — a
+    // Christian client crown on a Jewish country's throne — lives in the
+    // court, where nuance belongs.
+    HMY: {
+      religion: 'judaism',
+      description: 'The kingdom whose kings took the God of Israel and lost the war about it: '
+        + 'broken by the negus four years ago, held by the client he crowned, garrisoned by '
+        + 'the army that will shortly stop answering him.',
+    },
   },
 
   blurb: 'Justinian has ruled two years and has already legislated the Keepers out of the '
@@ -365,10 +388,12 @@ export const BOOKMARK_529 = {
     'OST', 'VAN', 'MAU', 'GRM', 'VIS', 'SUE', 'FRK', 'BGD', 'ARO',
     'BRT', 'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
     'GEP', 'LMB', 'BGR', 'SLV',
-    // The political east and south (SPEC §205): Kaleb's Aksum holding the
-    // Yemen it took four years ago, the Nubian kings and the Blemmyes on
-    // the Nile, the Hephthalites over the Oxus.
-    'NOB', 'BLM', 'AXM', 'HEP'],
+    // The political east and south (SPEC §205): the Nubian kings and the
+    // Blemmyes on the Nile, the Hephthalites over the Oxus — and the far
+    // end of the Red Sea seated as the two courts it actually was (SPEC
+    // §208): Kaleb's Aksum on its highlands, and the client kingdom of
+    // Himyar he left at Zafar when he sailed home.
+    'NOB', 'BLM', 'AXM', 'HEP', 'HMY'],
   // Standing rivalries (SPEC §73): the era's weather. The Ghassanid phylarchate
   // is the instrument Justinian actually used against the mountain, which makes
   // GHA an antagonist here rather than the background client it is in 614.
@@ -405,6 +430,15 @@ export const BOOKMARK_529 = {
       'Win: the rising put down and Samaria quiet — Neapolis held, the mountain garrisoned, by 532.',
       'Win: reach +50 war score against the rising.',
       'Lose: Palaestina Prima lost — Caesarea and Neapolis both out of imperial hands.',
+    ],
+    // The reckoning of 570 (SPEC §208): the year the eight ships sailed for
+    // a broken country. The client contract is dated the way the §185
+    // chairs are — alive and seated is the bar, freer and whole is the
+    // grade.
+    HMY: [
+      'Win: be a kingdom in 570 — alive and seated at Zafar when the ships would have come; free of every yoke for the full verdict.',
+      'Win: the crown of the covenant — free, the incense country whole, and 70 legitimacy: the Kings of Saba and Dhu Raydan again.',
+      'Lose: the country passed from hand to hand — the state dead, or Zafar another\'s at the reckoning.',
     ],
   },
 
@@ -563,6 +597,110 @@ export const BOOKMARK_529 = {
         },
       },
     ],
+    // The court at Zafar (SPEC §208). Every party here is documented: the
+    // garrison Procopius says Kaleb left (and names the man it will follow
+    // instead), the Yazanid house that will produce Sayf son of Dhi Yazan,
+    // the qayls whose castles the royal inscriptions count allegiance by,
+    // and the merchant houses of the harbors the Periplus priced. What no
+    // party can say out loud — and every one is arranged around — is that
+    // the crown itself is the conquest's.
+    HMY: [
+      {
+        id: 'negus_men', name: 'The Negus\' Men',
+        desc: 'The Aksumite garrison at Zafar and the church the conquest built there. They '
+          + 'crowned this king, they can uncrown him, and Procopius already knows the name of '
+          + 'the soldier they will follow when they stop taking orders from across the strait.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const lordAlive = !!(t.overlord && g.tags[t.overlord] && g.tags[t.overlord].alive);
+          if ((t.atWarWith || []).some((e) => e === 'AXM' || e === t.overlord)) return -0.7;
+          return lordAlive ? 0.35 : -0.4;
+        },
+        boon: { name: 'The Strait Held Open', text: '+12% reinforcement — the negus\' spears are a crossing away', effects: { reinforceMult: 1.12 } },
+        bane: { name: 'The Garrison\'s Own Judgment', text: '−8% morale — soldiers who answer elsewhere, or nowhere', effects: { moraleMult: 0.92 } },
+        appease: { label: 'The garrison\'s donative (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Garrison Asks for Its Arrears',
+          text: 'The men who broke Yusuf\'s army have been paid in promises since the fleet went '
+            + 'home, and they have noticed that the customs of Aden do not cross the strait '
+            + 'either. They are not threatening anybody. They are observing, in formation, that '
+            + 'a garrison is loyal to whoever pays it, and that at present nobody does.',
+          grant: { label: 'The arrears in full', cost: { treasury: 120 } },
+          refuse: { label: 'The negus\' men are the negus\' bill', tooltip: 'They begin to consider whose men they are.' },
+        },
+      },
+      {
+        id: 'yazanids', name: 'The House of Yazan',
+        desc: 'The old nobility of the covenant — the line that fought for Yusuf at the strait '
+          + 'and buried him in it. They keep the Law, the genealogies, and a precise account '
+          + 'of what the crown owes the God of Israel. Their grandsons will fetch a fleet.',
+        drift(ctx, t) {
+          const free = !t.overlord;
+          return (free ? 0.4 : -0.35) + ((t.legitimacy || 0) >= 60 ? 0.15 : 0);
+        },
+        boon: { name: 'The Old Line Blesses', text: '+0.3 legitimacy a month', effects: { legitimacyAdd: 0.3 } },
+        bane: { name: 'The Highlands Remember Yusuf', text: '−12% manpower — the covenant\'s villages stay home', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'Honor the martyrs of the strait (40 influence points)', cost: { infl: 40 } },
+        demand: {
+          title: 'The House Asks Whose Crown This Is',
+          text: 'They do not dispute that the king is king; the negus settled that argument with '
+            + 'a fleet. They ask a smaller question, in writing, with the genealogies attached: '
+            + 'whether the crown of Saba and Dhu Raydan still answers to the God whose name is '
+            + 'on every royal inscription for a hundred and fifty years, or to the one the '
+            + 'garrison\'s church was built for. They are prepared to wait one generation for '
+            + 'the answer. Not two.',
+          grant: { label: 'The covenant is the crown\'s', cost: { gov: 50 } },
+          refuse: { label: 'The crown answers the age it lives in', tooltip: 'The genealogies are put away. Not burned.' },
+        },
+      },
+      {
+        id: 'qayls', name: 'The Qayls of the Mist',
+        desc: 'The lords of the highland castles — the misty heights the war songs name. Their '
+          + 'levies are the only army this country has ever actually fielded, and their '
+          + 'allegiance is a rent the crown pays yearly, in spoil or in respect.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+          return ((t.treasury || 0) > 0 ? 0.25 : -0.45) + (atWar ? 0.2 : -0.1);
+        },
+        boon: { name: 'The Spears Come Down', text: '+8% morale', effects: { moraleMult: 1.08 } },
+        bane: { name: 'The Castles Shut Their Gates', text: '−12% manpower', effects: { manpowerMult: 0.88 } },
+        appease: { label: 'The crown\'s respect, in kind (40 martial points)', cost: { mar: 40 } },
+        demand: {
+          title: 'The Qayls Ask for the Share',
+          text: 'The castles put four thousand men at the strait for Yusuf and got back a foreign '
+            + 'king and a tribute assessment. They are not sentimental about which God the crown '
+            + 'keeps — several keep two themselves — but they are exact about the share of every '
+            + 'customs season, and the share has been crossing the water. They would like it to '
+            + 'stop crossing.',
+          grant: { label: 'The share stays in the hills', cost: { treasury: 100 } },
+          refuse: { label: 'The assessment stands', tooltip: 'The gates are counted again, from outside.' },
+        },
+      },
+      {
+        id: 'incense_houses', name: 'The Houses of the Incense Sea',
+        desc: 'The merchant houses of Aden and Mawza and the caravan masters of the inland road: '
+          + 'the monsoon, the customs, and a professional indifference to theology. Every '
+          + 'empire that has ever wanted this country wanted it for their ledgers.',
+        drift(ctx, t) {
+          const g = ctx.game;
+          const atWar = (t.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+          return (atWar ? -0.45 : 0.3) + ((t.treasury || 0) > 0 ? 0.15 : -0.25);
+        },
+        boon: { name: 'The Monsoon Kept', text: '+9% income', effects: { incomeMult: 1.09 } },
+        bane: { name: 'The Roads Go North by Land', text: '−9% income', effects: { incomeMult: 0.91 } },
+        appease: { label: 'Remit the harbor dues (80 talents)', cost: { treasury: 80 } },
+        demand: {
+          title: 'The Houses Ask for a Quiet Sea',
+          text: 'They have traded under the Jewish kings, the negus\' viceroy, and whatever is '
+            + 'coming next, and they can price each regime to the talent: what ruins them is '
+            + 'not any of these but a season when the strait is a war. They are asking the '
+            + 'crown to buy the peace of the water, from whoever is selling it this year.',
+          grant: { label: 'Buy the peace of the strait', cost: { infl: 50 } },
+          refuse: { label: 'The sea is not for sale', tooltip: 'The houses begin pricing the next regime.' },
+        },
+      },
+    ],
   },
 
   playableTags: [
@@ -574,6 +712,21 @@ export const BOOKMARK_529 = {
         + 'garrisoned, with a church on it. Your co-religionists number in the hundreds of '
         + 'thousands and every rising has made that number smaller. Nobody is coming. Win '
         + 'here and the bar is not a border — it is whether there are any of you left.',
+    },
+    // The second chair (SPEC §208), on the §185 rule: every seated Jewish
+    // court is on offer, and this chapter now seats one — the kingdom whose
+    // royal house took the God of Israel a century before Kaleb crossed to
+    // break it. The Keepers' chapter stays the Keepers'; this is the same
+    // sixth century heard from the far end of the map's one sea.
+    {
+      tag: 'HMY',
+      difficulty: 'Hard',
+      blurb: 'Four years ago the negus broke your king at the strait and crowned a client '
+        + 'in his place. You are the client: a Christian crown on a Jewish country, an '
+        + 'Aksumite garrison in your capital that Procopius already knows will mutiny, a '
+        + 'tribute crossing the water, and a house in the highlands keeping the genealogies '
+        + 'until the crown remembers whose it is. In 570 the eight ships come for a broken '
+        + 'country. Be a kingdom instead.',
     },
   ],
   // The empire is NOT playable, and that is the house rule rather than an
@@ -605,6 +758,12 @@ export const BOOKMARK_529 = {
     // instrument, not the background.
     if (g.tags.GHA) g.tags.GHA.overlord = 'BYZ';
 
+    // The client kingdom answers Aksum (SPEC §208): Procopius I.20 — Kaleb
+    // set Sumyafa Ashwa over the Himyarites, took his tribute, and sailed
+    // home. The yoke is the chapter's opening fact in the south the way the
+    // statutes are in the north; what the player does about it is the game.
+    if (g.tags.HMY) g.tags.HMY.overlord = 'AXM';
+
     // The rising. It is a war from the first month because the legislation is
     // already law: this chapter does not open with a decision to revolt, it
     // opens with a decision about what kind of revolt it is.
@@ -634,6 +793,14 @@ export const BOOKMARK_529 = {
     h.adjust(ctx, 'JUD', { manpower: 4000, stability: 1, legitimacy: 40 });
     h.adjust(ctx, 'SAS', { treasury: 400, manpower: 22000, stability: 1, legitimacy: 60 });
     h.adjust(ctx, 'GHA', { treasury: 60, manpower: 5000 });
+    // The south (SPEC §208): the incense customs are real money and the
+    // crown's title to them is not — a client king with a full strongbox
+    // and 35 legitimacy is the entire situation in one line (the deltas
+    // ride the engine's base 50: −15 seats the crown at 35, where the
+    // covenant mission's bar of 70 is a reign's work away). Aksum is four
+    // years into digesting a conquest across a sea.
+    h.adjust(ctx, 'HMY', { treasury: 120, manpower: 7000, stability: 0, legitimacy: -15 });
+    h.adjust(ctx, 'AXM', { treasury: 250, manpower: 14000, stability: 1, legitimacy: 15 });
 
     // --- Opinions. Four centuries of schism, and one empire. ---
     setOpinion(g, 'SAM', 'BYZ', -190); setOpinion(g, 'BYZ', 'SAM', -160);
@@ -643,6 +810,17 @@ export const BOOKMARK_529 = {
     setOpinion(g, 'JUD', 'BYZ', -90);  setOpinion(g, 'BYZ', 'JUD', -70);
     setOpinion(g, 'BYZ', 'SAS', -120); setOpinion(g, 'SAS', 'BYZ', -120);
     setOpinion(g, 'GHA', 'BYZ', 70);   setOpinion(g, 'BYZ', 'GHA', 60);
+    // The south (SPEC §208). The client resents the yoke short of the −75
+    // that fires an AI independence war on its own — the breaking of the
+    // bond belongs to Abraha's card and to the player. Justinian courts the
+    // whole Red Sea against Persia (the Julianus embassy is two years out);
+    // Persia files the incense country under "eventually". And the two
+    // communities of the one God write to each other: the priests the
+    // hagiographers put at Najran came from Tiberias.
+    setOpinion(g, 'HMY', 'AXM', -70);  setOpinion(g, 'AXM', 'HMY', -20);
+    setOpinion(g, 'HMY', 'BYZ', 20);   setOpinion(g, 'BYZ', 'HMY', 30);
+    setOpinion(g, 'HMY', 'SAS', -20);  setOpinion(g, 'SAS', 'HMY', -10);
+    setOpinion(g, 'JUD', 'HMY', 40);   setOpinion(g, 'HMY', 'JUD', 40);
 
     // --- Starting modifiers. ---
     // The statutes are the enemy's opening move and they are already in force
@@ -661,6 +839,26 @@ export const BOOKMARK_529 = {
     h.addTagModifier(ctx, 'BYZ', {
       id: 'the_great_projects', name: 'The Great Projects', months: 60,
       effects: { incomeMult: 0.92, adminMult: 1.15 },
+    });
+    // The south's opening wound (SPEC §208): the war of 525 took the army
+    // that lost it, and the men who would have remustered it are dead at
+    // the strait or gone up to the castles. Five years of thin levies, and
+    // the trade the monsoon never stopped paying underneath.
+    h.addTagModifier(ctx, 'HMY', {
+      id: 'the_year_of_the_strait', name: 'The Year of the Strait', months: 60,
+      effects: { manpowerMult: 0.85, unrestAll: 0.5 },
+    });
+    h.addTagModifier(ctx, 'HMY', {
+      id: 'the_monsoon_ledger', name: 'The Monsoon Ledger', months: -1,
+      effects: { tradeMult: 1.05 },
+    });
+    // Kaleb's Aksum at its commercial peak: Kosmas Indicopleustes sailed
+    // these waters the very year of the crossing and describes the Adulis
+    // trade himself — ivory, the gold of Sasu, emeralds for India. Four
+    // highland cells understate the customs house; this carries it.
+    h.addTagModifier(ctx, 'AXM', {
+      id: 'the_trade_of_adulis', name: 'The Trade of Adulis', months: -1,
+      effects: { incomeMult: 1.25 },
     });
 
     // --- Starting armies. ---
@@ -687,6 +885,21 @@ export const BOOKMARK_529 = {
       general: { name: 'al-Harith ibn Jabalah', fire: 2, shock: 3, maneuver: 4 },
     });
     h.spawnArmy(ctx, 'SAS', 'Nisibis', { inf: 8, cav: 4, name: 'The Marzban\'s Host' });
+    // The south (SPEC §208): the client crown's own companies at the
+    // capital, the qayls' levies at the dam — and across the strait, in the
+    // negus' own port, the army of the conquest with its future mutineer
+    // already named. Procopius calls Abraha a slave-born man of business;
+    // the bookmark's rulers table has been calling him "waiting in the same
+    // army" since §205, and here is the army.
+    h.spawnArmy(ctx, 'HMY', 'Zafar', {
+      inf: 3, name: 'The King\'s Companies',
+      general: { name: 'Sumyafa Ashwa', fire: 1, shock: 2, maneuver: 2 },
+    });
+    h.spawnArmy(ctx, 'HMY', 'Marib', { inf: 2, name: 'The Qayls\' Levies' });
+    h.spawnArmy(ctx, 'AXM', 'Adulis', {
+      inf: 2, cav: 1, name: 'The Army of the Crossing',
+      general: { name: 'Abraha', fire: 2, shock: 3, maneuver: 3 },
+    });
     // No Watch of Tiberias: there is no state here to raise one (SPEC §162).
     // The Galilee's two regiments are spawned by the rising that creates it.
 
@@ -721,11 +934,18 @@ export const BOOKMARK_529 = {
     BGD: { name: 'Godomar II', title: 'King', gov: 2, infl: 2, mar: 2, age: 45 },
     LMB: { name: 'Wacho', title: 'King', gov: 2, infl: 3, mar: 3, age: 40 },
     MAU: { name: 'Masuna', title: 'King of the Moors and Romans', gov: 3, infl: 2, mar: 3, age: 50 },
-    // The political east and south (SPEC §205): the negus who crossed the
-    // strait four years ago, with the viceroy he left at Zafar named — and
-    // Abraha, who will depose that viceroy, waiting in the same army.
+    // The political east and south (SPEC §205, §208): the negus who crossed
+    // the strait four years ago — his title is the claim, the client court
+    // below is the arithmetic — and Abraha, who will depose that client,
+    // waiting in the same army (see setup: the Army of the Crossing).
     AXM: { name: 'Kaleb', title: 'Negus of Aksum and Himyar', gov: 3, infl: 3, mar: 4, age: 45,
       heir: { name: 'Wa\'zeb', gov: 2, infl: 2, mar: 2, age: 20 } },
+    // Procopius' Esimiphaios: a Himyarite noble who took the conquest's
+    // faith and the conquest's crown, and governs a country that kept the
+    // other one. The heir carries a royal name of the old style — the house
+    // has more genealogy than power, which is the whole court in one line.
+    HMY: { name: 'Sumyafa Ashwa', title: 'King of Himyar', gov: 3, infl: 2, mar: 2, age: 50,
+      heir: { name: 'Ma\'dikarib', gov: 2, infl: 2, mar: 3, age: 24 } },
   },
 
   missions: {
@@ -1140,6 +1360,219 @@ export const BOOKMARK_529 = {
         reward: (ctx) => ctx.helpers.adjust(ctx, 'BYZ', { infl: 25, legitimacy: 10 }),
       },
     ],
+    // ── The client's century (SPEC §208) ──────────────────────────────────
+    // The arc the sources give the south: an army of its own, the customs
+    // banked, the yoke reduced to a word, the dam kept, the martyrs' city
+    // quiet, the covenant back in the royal style — and in 570, when the
+    // eight ships come for a broken country, a kingdom instead. The grid
+    // reads left to right the way the reign would: spears, silver, crown.
+    HMY: [
+      {
+        id: 'h_kings_companies', name: 'The King\'s Own Companies',
+        icon: 'spears', col: 0, row: 0,
+        desc: 'The garrison in your capital answers the negus, and shortly nobody. Field six '
+          + 'thousand men who answer the crown — a client with an army of its own is a '
+          + 'kingdom in waiting.',
+        rewardText: '"The Qayls Mustered": +10% manpower for 24 months.',
+        check: (ctx) => totalMen(ctx, 'HMY') >= 6000,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_qayls_mustered', name: 'The Qayls Mustered', months: 24,
+          effects: { manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 'h_customs_of_the_sea', name: 'The Customs of the Sea',
+        icon: 'coins', col: 1, row: 0,
+        desc: 'Every empire that ever wanted this country wanted it for the ledgers of Aden '
+          + 'and Mawza. Bank 250 talents the tribute never reaches — the monsoon pays '
+          + 'whoever holds the harbors, and the harbors are yours.',
+        rewardText: '"The Incense Ledger": +8% income, permanently.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'HMY')] || {}).treasury || 0) >= 250,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_incense_ledger', name: 'The Incense Ledger', months: -1,
+          effects: { incomeMult: 1.08 },
+        }),
+      },
+      {
+        // `row: 0` is load-bearing: an undeclared row lands one below the
+        // deepest parent (getMissions), which would seat this at 2:1 on top
+        // of the covenant mission — smoke126/129 hold the grid.
+        id: 'h_tribute_of_one_word', name: 'A Tribute of One Word',
+        icon: 'scales', col: 2, row: 0, requires: ['h_kings_companies'],
+        desc: 'Procopius\' phrase for how the conquest ends: a tribute agreed by a court '
+          + 'strong enough not to pay it, remitted as a word both sides pretend is a fact. '
+          + 'Be free of the yoke — by the garrison\'s mutiny, the negus\' distraction, or '
+          + 'your own war of independence.',
+        rewardText: '+15 legitimacy, +20 influence points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'HMY')];
+          return !!(t && t.alive !== false && !t.overlord);
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { legitimacy: 15, infl: 20 }),
+      },
+      {
+        id: 'h_dam_at_marib', name: 'The Dam at Marib',
+        icon: 'bricks', col: 0, row: 1, requires: ['h_kings_companies'],
+        desc: 'Not a wall but a system, thirteen hundred years old, which every kingdom of '
+          + 'the south has repaired as the price of calling itself one. Hold Marib and '
+          + 'reach Government 10 — a crown whose assessors can budget the sluices.',
+        rewardText: '"The Sluices Kept": +10% growth permanently — and the dam does not break on your watch.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HMY', 'Marib')
+          && ((((ctx.game.tags[who(ctx, 'HMY')] || {}).tech || {}).gov | 0) >= 10),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HMY', {
+            id: 'the_sluices_kept', name: 'The Sluices Kept', months: -1,
+            effects: { growthMult: 1.1 },
+          });
+          // The §206 card reads this: a kingdom that budgets the works is a
+          // world where the breach of 575 has nothing to break.
+          ctx.helpers.setFlag(ctx, 'himyarDamKept', true);
+        },
+      },
+      {
+        id: 'h_peace_of_najran', name: 'The Peace of Najran',
+        icon: 'lamp', col: 1, row: 1, requires: ['h_customs_of_the_sea'],
+        desc: 'The martyrs\' city is why the negus crossed at all, and it watches every move '
+          + 'a crown of the other faith makes. Hold Najran at +2 stability — a kingdom of '
+          + 'two faiths that does not do 523 again, in either direction.',
+        rewardText: '"The Two Faiths of the South": −0.5 unrest everywhere, permanently.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HMY', 'Najran')
+          && ((ctx.game.tags[who(ctx, 'HMY')] || {}).stability || 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_two_faiths_of_the_south', name: 'The Two Faiths of the South', months: -1,
+          effects: { unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'h_crown_of_the_covenant', name: 'The Crown of the Covenant',
+        icon: 'altar', col: 2, row: 1, requires: ['h_tribute_of_one_word'],
+        desc: 'For a century and a half the royal style invoked Rahmanan, the Merciful, the '
+          + 'Lord of the heavens — the formula of the kings who took the God of Israel. '
+          + 'Reach 70 legitimacy: a crown the House of Yazan will write back into the '
+          + 'genealogies.',
+        rewardText: '"Rahmanan in the Style": +0.25 legitimacy a month, permanently.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'HMY')] || {}).legitimacy || 0) >= 70,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'rahmanan_in_the_style', name: 'Rahmanan in the Style', months: -1,
+          effects: { legitimacyAdd: 0.25 },
+        }),
+      },
+      {
+        id: 'h_other_shore', name: 'The Other Shore of the Gulf',
+        icon: 'ship', col: 0, row: 2, requires: ['h_dam_at_marib'],
+        desc: 'Mazun — Sasanian Oman — watches the strait of Hormuz the way you watch the '
+          + 'Bab al-Mandab, and the King of Kings files the incense country under '
+          + '"eventually". Take Omana and Mazun and the file is filed the other way.',
+        rewardText: '+100 talents, +15 martial points.',
+        check: (ctx) => ctx.helpers.controls(ctx, 'HMY', 'Omana')
+          && ctx.helpers.controls(ctx, 'HMY', 'Mazun'),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { treasury: 100, mar: 15 }),
+      },
+      {
+        id: 'h_pretense_kept', name: 'The Pretense Kept',
+        icon: 'shield', col: 1, row: 2, requires: ['h_tribute_of_one_word'],
+        desc: 'Freedom is a fact the year you take it and a pretense every year after, kept '
+          + 'by both courts agreeing not to test it. Reach 545 free, at peace with a '
+          + 'living Aksum — the word outlasting the fleet that could dispute it.',
+        rewardText: '+1 stability, +15 influence points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const t = g.tags[who(ctx, 'HMY')];
+          const axm = g.tags[who(ctx, 'AXM')];
+          if (!t || t.alive === false || t.overlord) return false;
+          if (!axm || axm.alive === false) return false;
+          if ((t.atWarWith || []).indexOf(who(ctx, 'AXM')) !== -1) return false;
+          return dateGE(g.date, 545, 1);
+        },
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { stability: 1, infl: 15 }),
+      },
+      {
+        id: 'h_kingdom_counted', name: 'A Kingdom the Century Counts',
+        icon: 'quill', col: 2, row: 2, requires: ['h_crown_of_the_covenant'],
+        desc: 'In the history that happened, a prince of this house toured the courts of the '
+          + 'north begging a fleet, and got eight ships of convicts because the country was '
+          + 'not worth more. Reach 565 free, seated at Zafar, with eight provinces — a '
+          + 'country worth too much to hand to eight hundred prisoners.',
+        rewardText: '"No Ships From the North": +6% morale and +0.2 legitimacy a month, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'HMY')];
+          return !!(t && t.alive !== false && !t.overlord)
+            && dateGE(ctx.game.date, 565, 1)
+            && ctx.helpers.controls(ctx, 'HMY', 'Zafar')
+            && ctx.helpers.countOwned(ctx, 'HMY', {}) >= 8;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'no_ships_from_the_north', name: 'No Ships From the North', months: -1,
+          effects: { moraleMult: 1.06, legitimacyAdd: 0.2 },
+        }),
+      },
+      // The age's curriculum (SPEC §179, §185): the era's named rung and its
+      // ideas, same two branches every chair carries.
+      {
+        id: 'h_drilled_spears', name: 'The Musters of the Mist',
+        icon: 'helmet', col: 0, row: 3, requires: ['h_kings_companies'],
+        desc: 'The qayls\' levies won the war songs and lost the war. Reach Military 10 — '
+          + 'The Hill Musters — and the castles drill to one pattern under the crown\'s '
+          + 'own captains.',
+        rewardText: '"The Drilled Spears": +5% discipline for 24 months.',
+        check: (ctx) => ((((ctx.game.tags[who(ctx, 'HMY')] || {}).tech || {}).mar | 0)) >= 10,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HMY', {
+          id: 'the_drilled_spears', name: 'The Drilled Spears', months: 24,
+          effects: { disciplineMult: 1.05 },
+        }),
+      },
+      {
+        id: 'h_kings_book_south', name: 'The King\'s Book of the South',
+        icon: 'scroll', col: 1, row: 3, requires: ['h_customs_of_the_sea'],
+        desc: 'A client court that means to outlive its patron studies everything at once: '
+          + 'the customs, the castles, the formula of the kings. Take up three ideas of '
+          + 'the age.',
+        rewardText: '+25 governance points, +10 legitimacy.',
+        check: (ctx) => eraTiers(ctx.game.tags[who(ctx, 'HMY')]) >= 3,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The roads not taken (SPEC §183), the §185 way: no new fork is
+      // charted — the south reads the markers the Keepers' own cards set,
+      // because the one sea carries the news both directions. ─────────────
+      {
+        id: 'hy_the_other_mountain', name: 'The Other Mountain Answered', hypothetical: true,
+        fork: '529ce/the_mountain',
+        icon: 'mountain', col: 3, row: 0,
+        desc: 'There is a church on Gerizim\'s summit and a church in Zafar\'s royal quarter, '
+          + 'and both were built to say the same thing. If the Keepers answer their mountain '
+          + '— either way — the court at Zafar hears that the question CAN be answered.',
+        rewardText: '+10 legitimacy, +10 influence points.',
+        check: (ctx) => anyFlag(ctx, 'gerizimCleared', 'gerizimLeft')
+          && !!(ctx.game.tags[who(ctx, 'HMY')] && ctx.game.tags[who(ctx, 'HMY')].alive !== false),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { legitimacy: 10, infl: 10 }),
+      },
+      {
+        id: 'hy_the_persian_file', name: 'The Persian File', hypothetical: true,
+        fork: '529ce/ctesiphon',
+        icon: 'quill', col: 3, row: 1,
+        desc: 'If the Keepers\' refugees reach Ctesiphon — whatever they offer, whatever is '
+          + 'answered — the chancery that hears them keeps files on every country an empire '
+          + 'might want, and the incense country\'s file gets a new page. Forty years early, '
+          + 'the south learns what a Persian answer costs.',
+        rewardText: '+20 influence points.',
+        check: (ctx) => anyFlag(ctx, 'ctesiphonPromised', 'sentTheYoungMen', 'ctesiphonRefused')
+          && !!(ctx.game.tags[who(ctx, 'HMY')] && ctx.game.tags[who(ctx, 'HMY')].alive !== false),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { infl: 20 }),
+      },
+      {
+        id: 'hy_two_houses_heard', name: 'The Two Houses, Heard From the South', hypothetical: true,
+        fork: '529ce/the_two_houses',
+        icon: 'lamp', col: 4, row: 0,
+        desc: 'When Caesarea rises in 556 — together, alone, or held indoors — the synagogues '
+          + 'of the south hear it from the pepper merchants inside a season. A kingdom that '
+          + 'keeps the covenant learns what the covenant\'s other keepers just paid, and '
+          + 'writes to Tiberias accordingly.',
+        rewardText: '+10 legitimacy, +10 influence points.',
+        check: (ctx) => anyFlag(ctx, 'roseWithTheJews', 'roseAlone', 'quarterKeptShut')
+          && !!(ctx.game.tags[who(ctx, 'HMY')] && ctx.game.tags[who(ctx, 'HMY')].alive !== false),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'HMY', { legitimacy: 10, infl: 10 }),
+      },
+    ],
   },
 
   aiHints: {
@@ -1148,6 +1581,13 @@ export const BOOKMARK_529 = {
     GHA: { rally: ['Bostra'], targetRegiments: 10 },
     SAS: { rally: ['Nisibis'], targetRegiments: 35 },
     JUD: { rally: ['Tiberias'], targetRegiments: 5 },
+    // The south (SPEC §208): the client keeps its spears at the capital the
+    // garrison also holds; the negus keeps his at the port the crossing
+    // sails from. Both targets are sized to the books — the harness bled
+    // both courts at higher ones, and a standing army the customs cannot
+    // pay is the Abraha story told as a bug instead of a card.
+    HMY: { rally: ['Zafar'], targetRegiments: 6 },
+    AXM: { rally: ['Adulis', 'Aksum'], targetRegiments: 4 },
     REB: { rally: [], targetRegiments: 0 },
   },
 
@@ -1241,6 +1681,84 @@ export const BOOKMARK_529 = {
               + 'the dispatches from the East are getting shorter. The prefect writes that '
               + 'the situation is contained. He writes it from Scythopolis.',
             score: 0,
+          });
+          return;
+        }
+      } else if (g.playerTag === who(ctx, 'HMY')) {
+        // The client contract, dated the §185 way (SPEC §208): the reckoning
+        // is November 570, the month the eight ships sailed in the history
+        // that happened. Alive and seated is the bar; freer and whole is
+        // the grade.
+        const t = g.tags[who(ctx, 'HMY')];
+        const hmyAlive = !!(t && t.alive !== false);
+        const hmyProvs = hmyAlive ? h.countOwned(ctx, 'HMY', {}) : 0;
+        if (!hmyAlive || (hmyProvs === 0 && totalMen(ctx, 'HMY') < 1000)) {
+          h.endGame(ctx, {
+            result: 'loss',
+            title: 'The Banners of Raydan Cast Down',
+            text: 'The country passes to whoever wanted it most that season, and the '
+              + 'chroniclers of three empires each give it a sentence. The genealogies '
+              + 'go up to the castles with the families that kept them, which is where '
+              + 'a Persian officer\'s clerk will find them, forty years on, filed under '
+              + 'antiquities.',
+            score: 0,
+          });
+          return;
+        }
+        if (dateGE(g.date, 570, 11)) {
+          if (!h.controls(ctx, 'HMY', 'Zafar')) {
+            h.endGame(ctx, {
+              result: 'loss',
+              title: 'A Country of Other Men\'s Fleets',
+              text: 'It ends the way it began: a foreign fleet and a local claimant, and '
+                + 'the capital answering to neither of them in its own name. The abna '
+                + 'will hold Sana\'a for two generations, the negus\' church will keep '
+                + 'its roof a while longer, and the kingdom of the covenant is a story '
+                + 'the caravan masters tell in the past tense.',
+              score: 0,
+            });
+            return;
+          }
+          const free = !t.overlord;
+          const whole = ['Zafar', 'Muza', 'Eudaemon Arabia', 'Najran', 'Marib',
+            'Shabwa', 'Moscha', 'Dioscurida'].every((n) => h.controls(ctx, 'HMY', n));
+          if (free && whole && (t.legitimacy || 0) >= 70) {
+            h.endGame(ctx, {
+              result: 'win',
+              title: 'The Kings of Saba and Dhu Raydan',
+              text: 'The full style again, on stone: King of Saba and Dhu Raydan and '
+                + 'Hadramawt and Yamnat and their Arabs of the highlands and the coast — '
+                + 'and above it the formula of Rahmanan, unbroken from Abikarib to this '
+                + 'reign, as though the fleet of 525 were a hard winter the country had. '
+                + 'No ships come in 570. There is nothing here for convicts to take: '
+                + 'the kingdom is somebody\'s, and the somebody is home.',
+              score: 200,
+            });
+            return;
+          }
+          if (free) {
+            h.endGame(ctx, {
+              result: 'win',
+              title: 'No Ships From the North',
+              text: 'Sayf son of Dhi Yazan does not tour the courts of the north in this '
+                + 'history, because there is nothing to beg back: the crown at Zafar '
+                + 'answers nobody, pays nobody, and buries its own kings. The King of '
+                + 'Kings\' war council files the incense country under "expensive" and '
+                + 'sends the eight ships nowhere.',
+              score: 170,
+            });
+            return;
+          }
+          h.endGame(ctx, {
+            result: 'win',
+            title: 'The Client That Outlived the Word',
+            text: 'Still crowned, still tributary — to somebody; the ledgers have changed '
+              + 'hands twice — and still here, which is more than the viceroyalty was '
+              + 'ever expected to manage. A client kingdom that reaches 570 seated at '
+              + 'its own capital has beaten the arithmetic that priced it at eight '
+              + 'shiploads of prisoners. The genealogies stay in the palace. The '
+              + 'question they ask stays open.',
+            score: 120,
           });
           return;
         }
