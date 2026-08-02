@@ -1394,3 +1394,42 @@ seats fall back to the King's Men, and smoke141's court section says so by
 name. If a new fork road adopts one, write `setGovernment` at the option's own
 call site and name the constitution in its tooltip; both are checked as text,
 on the same reasoning as smoke83's road markers.
+
+## Two Jewish states at one table (SPEC §216)
+
+`smoke143` is the headless half: the lobby's two pure decisions
+(`chapterChairs` / `resolveSeat` in `js/net/mp_state.js` — which of a
+chapter's standards a campaign can seat, and what an unpicked or impossible
+pick falls back to), the chair rule itself (`isHumanChair` / `humanChairs` in
+`sim/military.js`), a card addressed to a seated rival court being dealt to it
+rather than resolving itself, the §70 decider notice measured against the
+audience instead of the host, `factions.js` and `courts.js` dividing the map at
+the seated chairs, the two courts' demand books not colliding on the
+`pharisees` id both brothers of 67 BCE authored, and a mid-table save reviving
+as a solo campaign.
+
+Every section of that suite has its single-chair twin, and that is the thing to
+keep true when touching any of it: `humanTags` is `[playerTag]` in solo play,
+in every save and in every autorun, so all of this is a no-op unless a guest is
+actually sitting somewhere else. If a change here moves a solo campaign, it is
+wrong — the balance harness is the second opinion, and it came back **byte
+identical on all eight bookmarks** (`node tools/autorun.mjs 8`, diffed against
+the parent tree).
+
+It caught one, and it is the trap to know about if you generalize anything else
+from "the player" to "a seated chair". An autorun empties the protagonist chair
+by setting `ai` on it, so a rule rewritten as "not a human chair, therefore a
+foreign court" is TRUE of that tag in the harness — `courts.js` began convening
+three parties for a court that has never had any, the seeded stream moved, and
+every trajectory on every bookmark moved a little with it. `courtSeats` keeps
+excluding `g.playerTag` unconditionally and only adds the guests; smoke143
+pins it.
+
+`uitest45` is the browser half and needs two contexts, so it is the slowest
+suite in the battery: 67 BCE hosted as Hyrcanus with the guest seated on
+Aristobulus over real WebRTC (the hand-carried invite flow, no cloud), both
+chairs human, each convening its own estates, the guest marching an
+Aristobulan army through the host, and `ev4_embassy_ari` — a real card from the
+chapter's own chain — dealt to the guest with live buttons whose answer lands
+in the host's world. `uitest5` is the co-op suite and is deliberately untouched:
+the default table is still one realm and many hands on the tiller.

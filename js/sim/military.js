@@ -231,6 +231,41 @@ export function isOffmapTag(ctx, tag) {
   return !!tagDef(ctx, tag).offmap;
 }
 
+// Who is actually being PLAYED (SPEC §216). A campaign has one protagonist
+// chair — `playerTag`, the throne the chapter is written around — but a
+// multiplayer table may seat a second Jewish state beside it, and every
+// system that asks "is anybody home here?" has to mean the whole table
+// rather than the host's own throne.
+//
+// `humanTags` is the roster (SPEC §18) and it is `[playerTag]` in every solo
+// campaign, every save (`reviveGame` collapses it) and every harness run — so
+// the loops below run exactly once, over exactly the tag they ran over before,
+// unless a guest is sitting somewhere else. The `ai` flag is the second half
+// of the test on purpose: an all-AI balance autorun sets it on the player tag
+// to empty the chair, and an empty chair is not a human one.
+export function isHumanChair(game, tag) {
+  if (!game || !tag || !game.tags || !game.tags[tag]) return false;
+  if (game.tags[tag].ai) return false;
+  if (tag === game.playerTag) return true;
+  return Array.isArray(game.humanTags) && game.humanTags.indexOf(tag) >= 0;
+}
+
+// Every seated human chair, protagonist first. Deduped, and filtered to tags
+// the world still has — a formable can delete a chair mid-campaign.
+export function humanChairs(game) {
+  if (!game || !game.tags) return [];
+  const out = [];
+  const seen = new Set();
+  const add = (tag) => {
+    if (!tag || seen.has(tag) || !game.tags[tag]) return;
+    seen.add(tag);
+    out.push(tag);
+  };
+  add(game.playerTag);
+  if (Array.isArray(game.humanTags)) for (const tag of game.humanTags) add(tag);
+  return out;
+}
+
 // ------------------------------------------------------- the arms market
 // SPEC §181: where the bookmark declares `armsMarket`, only its arsenal
 // states raise the gated arms (air wings, armor) from their own works;

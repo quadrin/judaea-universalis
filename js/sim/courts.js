@@ -2,8 +2,9 @@
 //
 // WHY THIS FILE EXISTS. `js/sim/factions.js` opens by saying it out loud:
 // "Player-only, the same rule as ultimatums: AI realms keep their politics
-// offstage." `activeDefs` returns null for every tag that is not
-// `g.playerTag`, so `factionApproval` reads null for Antioch, `shiftFaction`
+// offstage." `activeDefs` returns null for every tag nobody is sitting in
+// (`g.playerTag`, plus a multiplayer guest's own throne — SPEC §216), so
+// `factionApproval` reads null for Antioch, `shiftFaction`
 // is a no-op against Rome, and `monthlyFactions` returns on its first line for
 // thirty-nine of the forty courts on the map. Foreign powers could go bankrupt
 // and could lose a king, because those two clocks were written for everybody —
@@ -41,12 +42,13 @@
 // own panel shows the bars that produced it. The player did not cause it and
 // cannot be blamed for it — which is exactly what makes it worth exploiting.
 //
-// The player's own court is untouched. `factions.js` still owns it; this
-// module returns immediately for `g.playerTag` so the two can never both be
+// A played court is untouched. `factions.js` still owns it; this module
+// returns immediately for every seated chair so the two can never both be
 // holding the same throne.
 
 import {
   num, clamp, chronicle, armiesOf, tagDef, livingTag, changeOwnerCore, isOffmapTag,
+  isHumanChair,
 } from './military.js';
 import { rulerDies } from './realm.js';
 import { fireRevolt } from './unrest.js';
@@ -281,13 +283,21 @@ function archetypeFor(ctx, tag) {
   return ARCHETYPES[(def && def.archetype) || gov] || ARCHETYPES.monarchy;
 }
 
-// Every court on the map except the player's, the rebels, and the rumps.
+// Every court on the map except the played ones, the rebels, and the rumps.
 // `livingTag` forwarding means a court that took a greater crown keeps the
 // parties it had under the old name, exactly as §102 keeps the player's.
 export function courtSeats(ctx, tag) {
   const g = ctx.game;
   if (!g || !tag || tag === 'REB' || tag === 'WASTE') return null;
-  if (tag === g.playerTag) return null; // factions.js owns this throne
+  // factions.js owns every throne somebody is sitting in (SPEC §216) — the
+  // protagonist's, and a multiplayer guest's rival Jewish crown beside it.
+  // Two political engines on one court would each be half of it.
+  //
+  // The protagonist chair is excluded whether or not anybody is home, which is
+  // the rule this file shipped with: a balance autorun empties that chair by
+  // setting `ai`, and the harness is calibrated against a world where the
+  // empty chair convenes NEITHER court. Only the second clause is new.
+  if (tag === g.playerTag || isHumanChair(g, tag)) return null;
   const t = g.tags[tag];
   if (!t || !t.alive) return null;
   // An off-map seat (SPEC §180) owns no cell and convenes anyway — watching
@@ -520,7 +530,7 @@ function defectProvince(ctx, tag) {
   let taker = null;
   for (const k of neighbors) {
     const o = g.tags[k];
-    if (!o || !o.alive || k === g.playerTag || k === 'REB') continue;
+    if (!o || !o.alive || k === g.playerTag || isHumanChair(g, k) || k === 'REB') continue;
     if ((o.atWarWith || []).includes(tag)) continue;
     const kin = (p.religion && o.religion === p.religion ? 1 : 0) + (p.culture && o.culture === p.culture ? 1 : 0);
     if (kin <= 0) continue;

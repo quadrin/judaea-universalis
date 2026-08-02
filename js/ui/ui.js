@@ -1599,6 +1599,10 @@ export function initUI(staticCtx) {
   // these to the {t:'event'} / {t:'eventDone'} messages).
   function showRemoteEvent(p) { try { eventModal.showRemote(p); } catch (e) { warnOnce('remoteEvent', e); } }
   function closeRemoteEvent(instanceId) { try { eventModal.closeRemote(instanceId); } catch (e) { warnOnce('remoteEventDone', e); } }
+  // A multiplayer host sweeps its own chair after running a guest's order
+  // (SPEC §216) — a card fired under the borrowed crown was never offered to
+  // this screen.
+  function rescanEvents() { try { eventModal.rescan(); } catch (e) { warnOnce('rescanEvents', e); } }
 
-  return { showStartScreen, bindGame, showRemoteEvent, closeRemoteEvent };
+  return { showStartScreen, bindGame, showRemoteEvent, closeRemoteEvent, rescanEvents };
 }

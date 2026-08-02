@@ -2,7 +2,7 @@
 // content package via ctx.events; effects run through ctx.helpers. DOM-free.
 
 import { noteEventChoice, noteRetired } from './divergence.js';
-import { livingTag } from './military.js';
+import { livingTag, isHumanChair } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -203,7 +203,19 @@ export function fireEvent(ctx, ev) {
   // it is compared to the chair the player is sitting in.
   const audience = (ev.forTag === 'both' || ev.forTag === 'player')
     ? player : livingTag(ctx, ev.forTag);
-  const playerSees = audience === player;
+  // A card is answered by whoever is SITTING in the chair it is addressed to
+  // (SPEC §216). In a solo campaign that is the protagonist chair and nothing
+  // else, which is why `audience === player` comes first and unconditionally:
+  // an all-AI harness run empties the chair without emptying the table, and
+  // its cards must keep queueing for the drain that has always taken them.
+  //
+  // A multiplayer guest on its own Jewish throne is the second half. Its
+  // chapter's cards — `forTag: 'ARI'` while the host holds Hyrcanus — used to
+  // resolve silently on the recorded course, because nobody was thought to be
+  // home there. Somebody is. `isHumanChair` is false for every tag in a solo
+  // campaign, so this adds a reader and never moves one.
+  const playerSees = audience === player
+    || (audience !== player && isHumanChair(g, audience));
   // Which answers this world actually offers (SPEC §128). An option may
   // declare `when(ctx)`, and a card whose answers depend on the state is a
   // different card from one that lists every answer and prices the impossible
@@ -245,7 +257,12 @@ export function fireEvent(ctx, ev) {
       try { decider = decider(ctx); } catch (e) { warnOnce('decid:' + ev.id, 'decider() threw for', ev.id, e); decider = null; }
     }
     if (decider) decider = livingTag(ctx, decider);
-    if (decider && decider !== player && (g.tags[decider] || ev.roll === true)) {
+    // Against the AUDIENCE, not against the host's chair: a card dealt to a
+    // guest's throne whose decider IS that throne is their choice to make,
+    // and one whose decider is a foreign court is a notice to them exactly as
+    // it would be to the protagonist. In a solo campaign the two are the same
+    // tag, so this reads identically to the line it replaced.
+    if (decider && decider !== audience && (g.tags[decider] || ev.roll === true)) {
       pe.notice = true;
       pe.optIdx = courseFor(ctx, ev, allowed);
       // A court the world no longer knows names nobody; the modal says "another

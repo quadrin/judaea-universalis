@@ -216,9 +216,27 @@ async function boot() {
   // server. Host runs the sim and broadcasts snapshots; guests mirror the
   // world, run read-only queries locally, and send their orders as commands
   // that the host executes under the guest's chair (playerTag swap).
-  const mp = { role: null, guests: [], peer: null, myTag: null, lastSnapAt: 0, snapDirty: false };
+  const mp = {
+    role: null, guests: [], peer: null, myTag: null,
+    lastSnapAt: 0, snapDirty: false, capturing: false, hostChair: null,
+  };
   const MP_QUERY_RE = /^(get|explain|can|evaluate)/;
   window._mp = mp; // debug/test handle
+
+  // The roster the sim reads (SPEC §18, §216): the host's chair first, then
+  // every chair a guest is sitting in — one entry per throne however many
+  // hands are on it, because `humanTags` answers "is anybody home", not "how
+  // many".
+  const mpHumanTags = (hostTag, guests) => [hostTag]
+    .concat(guests.map((g) => g.tag))
+    .filter((t, i, a) => t && a.indexOf(t) === i);
+
+  // The host's OWN chair, even mid-swap. A guest's order runs with the host's
+  // `playerTag` set to that guest's throne, and a card fired inside that
+  // window — an order that provokes one, an effect that chains into another —
+  // would otherwise read as addressed to the host and reach its guest
+  // read-only, with nobody left able to answer it.
+  const hostChairTag = () => (mp.capturing && mp.hostChair) || (ctx && ctx.game.playerTag);
 
   function hostRunGuestCommand(guest, m) {
     if (!ctx || !actions || !m || typeof m.name !== 'string') return;
@@ -233,6 +251,8 @@ async function boot() {
       if (ev === 'notify') { captured.push(payload || {}); return; }
       return origEmit(ev, payload);
     };
+    mp.capturing = true;
+    mp.hostChair = prevTag;
     g.playerTag = guest.tag;
     try {
       actions[m.name](...(Array.isArray(m.args) ? m.args : []));
@@ -244,8 +264,14 @@ async function boot() {
       const restoreTag = restoreHostChair(g, prevTag, guest.tag);
       if (restoreTag) g.playerTag = restoreTag;
       bus.emit = origEmit;
+      mp.capturing = false;
+      mp.hostChair = null;
     }
     if (captured.length) guest.peer.send({ t: 'toast', items: captured });
+    // A guest's order can put a card on OUR table — an ultimatum answered, a
+    // war declared on us. It was dealt while the bus believed the guest was
+    // the player, so this screen was not offered it; the sweep collects it.
+    ui.rescanEvents();
     mp.snapDirty = true;
     colorsDirty = true;
   }
@@ -261,36 +287,74 @@ async function boot() {
           if (i >= 0) mp.guests.splice(i, 1);
           // hand the nation back to the AI unless another guest shares it
           const stillHuman = (t) => t === ctx.game.playerTag || mp.guests.some((o) => o.tag === t);
-          if (ctx && ctx.game.tags[guest.tag] && !stillHuman(guest.tag)) {
-            ctx.game.tags[guest.tag].ai = true;
-            ctx.game.humanTags = [ctx.game.playerTag].concat(mp.guests.map((o) => o.tag));
+          const left = ctx && ctx.game.tags[guest.tag];
+          if (left && !stillHuman(guest.tag)) {
+            left.ai = true;
+            ctx.game.humanTags = mpHumanTags(ctx.game.playerTag, mp.guests);
+            // A card left standing in an abandoned chair has nobody to answer
+            // it and would sit in `pendingEvents` for the rest of the
+            // campaign. Close it on the departed court's behalf: the fixed
+            // course where the card carries one (a §70 notice), its first road
+            // otherwise.
+            for (const pe of (ctx.game.pendingEvents || []).slice()) {
+              if (!pe || pe.forTag !== guest.tag) continue;
+              actions.chooseEventOption(pe.instanceId, Number.isFinite(pe.optIdx) ? pe.optIdx : 0);
+            }
           }
-          bus.emit('notify', { title: 'A player has left', text: 'Their nation reverts to the AI.', type: 'bad' });
+          bus.emit('notify', {
+            title: 'A player has left',
+            text: (left && left.name ? left.name + ' reverts' : 'Their nation reverts') + ' to the AI.',
+            type: 'bad',
+          });
           if (!mp.guests.length) mp.role = null; // the campaign carries on solo
         },
       });
     }
-    // One realm, shared eyes: everything the host's chair sees goes to the
-    // guests too. Toasts raised by a guest's own command are captured before
-    // they reach the bus, so this never double-sends. Registered once.
+    // Shared eyes, per chair (SPEC §216). Everything the host's chair sees
+    // goes to the guests who SIT in that chair; a guest on a Jewish throne of
+    // its own is a court in its own right and reads its own dispatches, not
+    // ours. Toasts raised by a guest's own command are captured before they
+    // reach the bus and routed back to that guest, so this never double-sends.
+    // Registered once.
     if (!mp._relaysBound) {
       mp._relaysBound = true;
       const toGuests = (msg) => { if (mp.role === 'host') for (const guest of mp.guests) guest.peer.send(msg); };
+      const toChair = (tag, msg) => {
+        if (mp.role !== 'host' || !tag) return;
+        for (const guest of mp.guests) if (guest.tag === tag) guest.peer.send(msg);
+      };
+      // A verdict ends the world rather than a realm: everyone at the table
+      // is in it, whichever throne they are sitting on.
       bus.on('gameover', (p) => toGuests({ t: 'over', p: p || {} }));
-      bus.on('notify', (p) => toGuests({ t: 'toast', items: [p || {}] }));
+      bus.on('notify', (p) => toChair(hostChairTag(), { t: 'toast', items: [p || {}] }));
       bus.on('tagSwitched', (p) => {
         if (!p || typeof p.from !== 'string' || typeof p.to !== 'string') return;
         remapGuestChairs(mp.guests, p.from, p.to);
       });
-      // Event cards: guests see the card read-only; effects are functions and
-      // never cross the wire — only the display fields do. A foreign-decider
-      // notice (SPEC §70) is collapsed to its fixed course before it travels,
-      // so guests see exactly the single-button card the host sees.
+      // Event cards travel to the chair they are ADDRESSED to (SPEC §216).
+      // Effects are functions and never cross the wire — only the display
+      // fields do. A foreign-decider notice (SPEC §70) is collapsed to its
+      // fixed course before it travels, so the far end sees exactly the
+      // single-button card the host would see.
+      //
+      // Who answers it follows from who is sitting where. A guest sharing the
+      // host's throne mirrors it read-only — the host holds that realm's pen,
+      // the v1.8 rule. A guest on its OWN throne is the only human that chair
+      // has, so the buttons are live and its answer comes back as an ordinary
+      // command, run on the host under that chair.
       bus.on('event', (p) => {
         if (!p || !p.event) return;
         const ev = p.event;
+        const audience = p.forTag;
+        const hostChair = hostChairTag();
+        const readers = mp.guests.filter((guest) => guest.tag === audience);
+        if (!readers.length) return; // a card for a court nobody at this table holds
+        const theirs = audience !== hostChair; // …then the chair is a guest's own
+        // Indices stay the event's own: the mask below renames positions, and
+        // an answer that travels has to name the option, not its place in a
+        // filtered list.
         let options = (Array.isArray(ev.options) ? ev.options : [])
-          .map((o) => ({ label: o && o.label, tooltip: o && o.tooltip }));
+          .map((o, i) => ({ label: o && o.label, tooltip: o && o.tooltip, idx: i }));
         let deciderName = null;
         // The guest mirrors the host's card, so it mirrors the host's mask
         // too (SPEC §128) — a spectator watching an accession should see the
@@ -312,7 +376,7 @@ async function boot() {
           const fk = entryFork(ctx && ctx.bookmark && ctx.bookmark.id, ev.id);
           if (fk) fork = { question: fk.question };
         } catch (e) { /* a card without a badge is still a card */ }
-        toGuests({
+        const card = {
           t: 'event',
           p: {
             instanceId: p.instanceId,
@@ -322,8 +386,23 @@ async function boot() {
             deciderName,
             options,
             fork,
+            mine: theirs, // live buttons: this chair has no other human in it
           },
-        });
+        };
+        for (const guest of readers) guest.peer.send(card);
+        // The world pauses for every card (SPEC §6.5), and a card the host
+        // cannot see would otherwise pause it for no visible reason. Say whose
+        // dispatch we are all waiting on — unless we are inside that guest's
+        // own order, where the bus is theirs and the note would go back to the
+        // court it is about.
+        if (theirs && !mp.capturing) {
+          const t = ctx && ctx.game.tags[audience];
+          bus.emit('notify', {
+            title: 'A dispatch reaches ' + ((t && t.name) || audience),
+            text: 'The world waits while they answer it.',
+            type: 'info',
+          });
+        }
       });
       bus.on('eventResolved', (p) => toGuests({ t: 'eventDone', instanceId: p && p.instanceId }));
     }
@@ -375,9 +454,12 @@ async function boot() {
       provinceMap: activeProvinceMap,
     });
     if (resumed) game.playerTag = hostTag;
-    game.humanTags = [hostTag].concat(guests.map((g) => g.tag))
-      .filter((t, i, a) => a.indexOf(t) === i);
-    for (const t of game.humanTags) if (game.tags[t]) game.tags[t].ai = false;
+    // The lobby's seating, checked against the world that actually exists: a
+    // throne this campaign has no tag for seats its guest beside the host
+    // rather than nowhere at all (SPEC §216).
+    for (const g of guests) if (!game.tags[g.tag]) g.tag = hostTag;
+    game.humanTags = mpHumanTags(hostTag, guests).filter((t) => game.tags[t]);
+    for (const t of game.humanTags) game.tags[t].ai = false;
     document.getElementById('start-screen').classList.add('hidden');
     startGame(game, entry);
     mpBindHost(guests);
@@ -385,10 +467,15 @@ async function boot() {
     for (const g of guests) {
       g.peer.send({ t: 'start', bookmarkId: entry.bookmark.id, yourTag: g.tag, game: json });
     }
+    const ownThrones = guests.filter((g) => g.tag !== hostTag)
+      .map((g) => (game.tags[g.tag] && game.tags[g.tag].name) || g.tag)
+      .filter((n, i, a) => a.indexOf(n) === i);
     bus.emit('notify', {
       title: resumed ? 'The campaign continues' : 'The campaign begins',
       text: guests.length + (guests.length === 1 ? ' player has' : ' players have')
-        + ' joined your world' + (resumed ? ', as it stands' : '') + '.',
+        + ' joined your world' + (resumed ? ', as it stands' : '') + '.'
+        + (ownThrones.length ? ' ' + ownThrones.join(' and ')
+          + (ownThrones.length === 1 ? ' is' : ' are') + ' theirs to rule.' : ''),
       type: 'good',
     });
   }

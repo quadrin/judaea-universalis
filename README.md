@@ -207,15 +207,21 @@ static site, the zero dependencies, or the missing build step changes.
   instead of teleporting, battles rock and spark, sieges smoke — and clicking a battle (on
   the map or in the outliner) opens a live battle window with the day's dice, both hosts
   army by army, morale and the running butcher's bill.
-- Co-op multiplayer: the host's browser runs the world and friends join over a direct
+- Multiplayer: the host's browser runs the world and friends join over a direct
   WebRTC link by typing a six-character invite code like `KFR-2M9` (⚔ Multiplayer on the
   title screen) — there is nothing to send back. With no cloud configured it falls back to
   the original hand-carried codes, so the game still plays with nothing behind it.
   You can host a **new** campaign or **continue a saved one** — pick it off the shelf in
   the lobby and your friends join the war already in progress, on the saved date with the
-  saved armies. Everyone rules the host's nation together — any player can move the armies,
-  spend the treasury, and steer the clock. Story event cards appear on every screen;
-  the host makes the choice, and every toast the realm receives reaches all players.
+  saved armies.
+  Two ways to share a world, chosen per guest in the lobby. **Together**, the default:
+  everyone rules the host's nation — any player can move the armies, spend the treasury
+  and steer the clock, story event cards appear on every screen, the host makes the
+  choice, and every toast the realm receives reaches all players. Or **a throne each**,
+  from the chapter's own list of standards: Hyrcanus against Aristobulus, Herod against
+  Antigonus, Judaea beside Agrippa's kingdom or Adiabene, Samaria beside Himyar. Then
+  each of you rules your own realm — your own court, your own missions, your own armies,
+  and your own event cards to answer — in the one world, on the host's clock.
 - A title screen that breathes: one chapter at a time in a sliding carousel (arrows, dots,
   swipe) instead of a wall of cards.
 - Wars that actually end: annihilating or utterly dominating an enemy closes the war

@@ -13603,3 +13603,171 @@ road changed the government would be a menu; this one is a question.
   suites — it is **140 of 140, zero failures**, all four of those sections'
   own suites included. `uitest12` reads the Government row off a
   live browser in both a 1948 republic and a 67 BCE theocracy, unchanged.
+
+## 216. Two Jewish states at one table
+
+§185 finished widening the offer: every seated Jewish court of every bookmark
+is a chair, and five of the eight chapters seat more than one — the brothers
+of 67 BCE, Herod against Antigonus in 40 BCE, Judaea beside Agrippa's kingdom
+and Adiabene in 66 CE, Judaea and Adiabene in 132, Samaria and Himyar in 529.
+Multiplayer could not reach any of it. §18 shipped ONE table shape, co-op:
+`for (const g of ready) g.tag = hostTag` in the lobby's Begin handler, with the
+file's own header saying so above it — "everyone who joins rules the host's
+nation at their side". Two friends who wanted to play the civil war as the
+civil war had to play it in two separate campaigns and compare screenshots.
+
+The world was already most of the way there. `game.humanTags` has been the
+roster since v1.8 and the AI has keyed off `t.ai` since long before that;
+`hostRunGuestCommand` has always executed a guest's order under a scoped
+`playerTag` swap, so a guest's orders were never really the host's; and §57's
+war diplomacy already refuses to auto-settle a war ANY human belligerent is in
+"a guest's war: no auto-deal". What was missing was the seating, and then the
+places that said "the player's throne" where they meant "a throne somebody is
+sitting in" — the cards, the court, and the relays that carry both.
+
+### The seating
+
+The lobby's Players block gets one select per guest: **beside you** (the
+host's own throne, the default and the whole of the v1.8 table) or any other
+standard in the chapter's `playableTags`. A chapter with one standard shows no
+select at all — 167 BCE, 614 CE and 1948 have nothing to choose between. The
+two decisions are pure functions in `js/net/mp_state.js`, so they are testable
+without two browsers and a data channel:
+
+- `chapterChairs(bookmark, tags)` — the chapter's standards, filtered to the
+  ones a world can actually seat. Hosting from a SAVE (§93) passes that
+  campaign's `game.tags`: a court annexed six years before the save was
+  written is not on the menu, because a chair nobody can sit in is not a chair.
+- `resolveSeat(seat, hostTag, chairs)` — an empty pick, a pick equal to the
+  host's chair, or a pick this campaign cannot seat all resolve to the host's
+  throne. The pick becomes a chair at Begin and nowhere else.
+
+The host's own select moves guests off the throne it takes; the lobby payload
+is minted **per guest** now (`hostLobbyPayload(guest)`) because the roster is
+common but which chair is YOURS is not, and it carries `shared`, `hostTag`,
+`hostName` and a named roster so the join screen can say either "you will rule
+it together with the host" or "your own throne, beside the host's Hyrcanus'
+Judaea". `MP_PROTO` is 3.
+
+### The chair rule
+
+`isHumanChair(game, tag)` and `humanChairs(game)` in `sim/military.js` are the
+one lookup, and their contract is the reason this section is invisible to every
+existing campaign: `humanTags` is `[playerTag]` in a solo game, in every save
+(`reviveGame` collapses the roster) and in every balance autorun, so
+`isHumanChair` is true for the protagonist and false for everything else, and
+`humanChairs` yields exactly one tag. `ai` is the second half of the test on
+purpose — an all-AI harness run empties the protagonist's chair without
+emptying the roster, and an empty chair is not a human one.
+
+- **The cards.** `fireEvent` dealt a card only when `audience === playerTag`;
+  a card addressed to a seated guest — `forTag: 'ARI'` while the host holds
+  Hyrcanus — resolved silently on its recorded course, which is to say the
+  second player's own chapter played itself. It is now dealt to whoever holds
+  the chair it names, and `decider` (§70) is measured against that AUDIENCE
+  rather than against the host: a card decided by the guest's own court is
+  their choice, a card decided by Rome is a notice to them exactly as it is to
+  the host. The world still stops for it, because the host's clock is the only
+  clock (§18).
+- **The court.** `factions.js` was player-only and `courts.js` (§163) ran the
+  foreign-court model on everything else, the two of them dividing the map at
+  `g.playerTag`. They divide it at `isHumanChair` now, so a guest's throne
+  convenes the estates its bookmark authored for it — content that until now
+  needed a solo campaign to reach — and the §163 archetypes step aside from it.
+  `courts.js` keeps its old exclusion of the protagonist chair *unconditionally*
+  and only ADDS the seated guests: an all-AI autorun empties that chair by
+  setting `ai`, and every figure in `tools/README.md` was measured against a
+  world where the empty chair convenes NEITHER court. Reading it as "not human,
+  therefore foreign" hands it three parties, moves the seeded stream, and moves
+  every trajectory in the harness with it — measured, and the reason the rule
+  is written twice.
+  `monthlyFactions` holds one session per seated chair. Both demand books are
+  per court: the protagonist keeps the bare faction id every save has been
+  written with, another chair's parties are filed beneath their own tag, and
+  the "one card on the table at a time" gate counts only cards addressed to
+  that court. Hyrcanus and Aristobulus both authored a party called
+  `pharisees`; sharing one book, either brother's demand would have cooled the
+  other's for two years.
+- **The relays** (`main.js`). Toasts and event cards go to the chair they
+  belong to: `toChair(hostChair, …)` for the host's own news, and a card to the
+  guests sitting where it is addressed. A guest sharing the host's throne
+  mirrors it read-only exactly as before — the host holds that realm's pen —
+  while a guest on its OWN throne gets live buttons (`mine: true`), because
+  nobody else is in that chair to answer for them. The answer travels back as
+  an ordinary `{t:'cmd', name:'chooseEventOption'}` and runs on the host under
+  that crown, so the effects still never cross the wire. Option indices travel
+  with the options (`idx`), since a §128 mask renames positions and an answer
+  has to name the option rather than its place in a filtered list. A verdict
+  (`{t:'over'}`) still reaches everyone: it ends the world, not a realm. When a
+  card is dealt to a chair the host cannot see, the host is told whose dispatch
+  the world is waiting on.
+- **The borrowed crown.** A guest's order runs on the host with `playerTag`
+  set to that guest's throne, so anything the order FIRES is dealt inside that
+  window and the two ends of it both need saying. `hostChairTag()` reports the
+  host's own chair through the swap — read off the live `playerTag`, a card for
+  the guest would look like the host's and reach them read-only, unanswerable
+  by anybody at the table. And the host sweeps its own chair afterwards
+  (`ui.rescanEvents()` → `createEventModal.rescan`, which also learned to look
+  in `dynEvents`), because a card put on the HOST's table under the borrowed
+  crown — an ultimatum answered, a war declared on us — was emitted while the
+  bus said somebody else was the player, and the queue never heard it.
+- **Leaving.** A guest who drops still hands its nation back to the AI unless
+  another guest shares it, and now also closes any card standing in that chair
+  — the fixed course where the card carries one, its first road otherwise —
+  because a pending event nobody can answer would sit in `pendingEvents` for
+  the rest of the campaign.
+
+### What this deliberately does not do
+
+The second chair is a full campaign — its own realm, court, missions,
+economy, armies, diplomacy and cards — with five documented edges, all of them
+the old single-protagonist assumptions rather than new ones:
+
+- A card addressed to `'both'` or `'player'` (491 and 72 of the shipped cards)
+  is addressed to the PROTAGONIST chair. `firedEvents` is global and a card fires
+  once, so dealing one card to two chairs would double its effects; a chapter
+  that wants both sides to be asked something addresses each side by tag, which
+  is what the rival chains already do.
+- Peace between two human courts is still weighed by the receiving court's own
+  evaluator (`evaluatePeaceDeal`). Two players at war can end it, but the loser
+  does not get a card asking them to sign — the §38 table is a one-human
+  table.
+- `g.chapters` (§83's second act) and the §98 crisis clock stay the
+  protagonist's: both hang off the campaign's single verdict rather than off a
+  tag. So do the two chapter-flavour engines that read `g.playerTag` all the
+  way down — the schools' quarrel (§190) and the sacred office (§169). Their
+  LEVERS work for a guest, because a lever is a command and a command runs
+  under that guest's crown; it is the monthly drift that stays with the
+  protagonist's chair. Threading a tag through both is a refactor, not a
+  seating change, and it is where the next pass at this would start.
+- A played court is not an intrigue target. `runIntrigue` buys agents through
+  `courtSeats`, which has always returned null for the protagonist's own
+  throne, and a guest's throne now answers the same way — you cannot buy a
+  party at a table somebody is sitting at. Symmetrical between the two
+  players, and the same protection the protagonist has always had. The one
+  place that had to follow rather than inherit is `moveTheRoom`
+  (`institutions.js`), where an institution's faction shifts now reach a
+  guest's authored estates instead of falling between the two engines.
+- Tick-time news is generated under the host's chair, so a rival guest's
+  toasts are the ones its own orders raise. Their realm's state is on their
+  screen — panels, ledger, war overview, all read locally off the mirror under
+  their own `playerTag` — but the running commentary is not relayed to them,
+  because it is not about them.
+
+- **Regression contract**: `smoke143` — the lobby's two pure decisions (all
+  three civil-war thrones on offer, a one-standard chapter offering one, a save
+  refusing a fallen court, every fallback landing beside the host); the chair
+  rule and its solo/harness/deleted-tag twins; a card dealt to a seated rival
+  court and resolved by it, against the same card resolving itself silently in
+  a solo campaign; the decider notice measured against the audience; the court
+  convening for a guest while `courts.js` steps aside, the emptied protagonist
+  chair convening neither court, and the two demand books not colliding on
+  `pharisees`; and a mid-table save coming back a solo campaign. The balance
+  harness is the second opinion and the one that caught the court rule:
+  `node tools/autorun.mjs 8` against the parent tree came back **byte identical
+  on all eight bookmarks**. `uitest45` drives it in two real browsers: 67 BCE hosted as
+  Hyrcanus with the guest seated on Aristobulus, both chairs human and neither
+  AI, the guest ordering its OWN army and steering its own court, a card
+  addressed to the guest's throne arriving with live buttons and its answer
+  landing on the host. `uitest5` is the co-op suite and is unchanged, which is
+  the point: the default table is still one realm and many hands on the tiller.

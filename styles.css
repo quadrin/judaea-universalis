@@ -2661,6 +2661,20 @@ html, body {
   border-radius: 3px;
 }
 .mp-player { display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 3px 0; }
+/* Which throne a guest takes (SPEC §216) — the same select as the chapter's,
+   sized to sit inside a player row rather than beside a label. */
+.mp-seat {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: rgba(255, 252, 240, 0.6);
+  border: 1px solid rgba(43, 32, 21, 0.4);
+  border-radius: 3px;
+}
+.mp-player.mp-other { color: var(--ink-soft); font-size: 12px; padding-left: 4px; }
 .mp-code {
   display: block;
   width: 100%;
