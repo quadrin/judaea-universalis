@@ -201,6 +201,18 @@ export const BOOKMARK_167 = {
   mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
   activeProvinces: ['Modi\'in Hills'],
 
+  // The south country still swears by Qos (SPEC §208). The base atlas draws
+  // Idumea Jewish because that is what it was by 66 CE, and it was that way
+  // because of a decision this chapter has not made yet: Hyrcanus' covenant,
+  // around 112 BCE, which `ev_idumea_policy` puts in the player's hands. Until
+  // then the two Idumean cells of this map are a heathen faith under whoever
+  // holds them — a standing cost the covenant buys off and the tribute does
+  // not. Hebron goes with them: 1 Maccabees 5:65 has Judas storming it among
+  // the towns of the sons of Esau, and Josephus lists it as Idumean when
+  // Hyrcanus takes it.
+  religions: { 'Hebron': 'idumean', 'Adora': 'idumean' },
+  cultures: { 'Hebron': 'idumean' },
+
   blurb: 'The king has decreed one law for all his peoples: the daily offering has ceased, '
     + 'the scrolls burn, and on the altar of the Lord stands an abomination sacred to Olympian '
     + 'Zeus. In the village of Modein an old priest has killed the king’s officer beside '

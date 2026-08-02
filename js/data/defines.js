@@ -331,6 +331,13 @@ export const DEFINES = {
     hellenism:      { name: 'Hellenism',             color: [196, 170, 86], group: 'pagan' },
     roman_cult:     { name: 'Roman State Cult',      color: [178, 62, 56],  group: 'pagan' },
     nabataean:      { name: 'Nabataean Cult',        color: [206, 128, 60], group: 'pagan' },
+    // The god of the south country (SPEC §208): Qos, whose name is half the
+    // Idumean names on the Marisa ostraca and stands at the head of Herod's
+    // own family tree. It exists so that Hyrcanus' offer — the covenant or
+    // the road — has something to convert FROM. The base atlas keeps Idumea
+    // Jewish, because by 66 CE it had been for a century and a half; only the
+    // 167 chapter seats the old cult, through its `religions` overlay.
+    idumean:        { name: 'Idumean Cults',         color: [140, 74, 92],  group: 'pagan' },
     zoroastrianism: { name: 'Zoroastrianism',        color: [150, 84, 168], group: 'iranic' },
     egyptian:       { name: 'Egyptian Cults',        color: [72, 152, 130], group: 'pagan' },
     christianity:   { name: 'Christianity',          color: [172, 68, 100], group: 'christian' },

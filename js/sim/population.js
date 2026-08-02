@@ -183,6 +183,9 @@ const DEMONYMS = {
   judaism: 'Jews', samaritanism: 'Samaritans', hellenism: 'Greeks',
   roman_cult: 'Romans', nabataean: 'Nabataeans', zoroastrianism: 'Zoroastrians',
   egyptian: 'Egyptians', christianity: 'Christians', islam: 'Muslims',
+  // Before the covenant (SPEC §208), the south country reads as a people and
+  // not as a cult — they are the ones being offered the Law.
+  idumean: 'Idumeans',
   // The gentiles who kept the sabbath and the ethics without taking
   // circumcision (SPEC §104). They are not a faith with a temple; they are
   // the pool both missions fished in, and they read as people, not as a key.

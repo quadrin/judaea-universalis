@@ -757,6 +757,22 @@ static site, the zero dependencies, or the missing build step changes.
   answer on day one in 1948, because Machal did; Attlee's Britain lists
   Tripoli beside London, because the British Military Administration really
   held it.
+- **Idumea has its own gods.** Hyrcanus' famous offer to the conquered south —
+  the covenant or the road, kinship instead of tribute — used to convert a
+  country the map had already drawn as Jewish, because the atlas is painted for
+  66 CE and by then it had been Jewish for a century and a half. In the
+  Maccabean chapter Adora and Hebron now swear by Qos, whose name is half the
+  Idumean names on the Marisa ostraca and stands at the head of Herod's family
+  tree, and a foreign altar under a Jewish crown costs what a foreign altar
+  costs: a standing +3 unrest in each, from the day you take the south until
+  the day you do something about it. Take the covenant and the people convert,
+  not the paint — they become Jews of Idumean stock, which is exactly how an
+  Idumean house ends up on the throne three generations later — and the
+  standing 3 becomes a 1 that expires. Leave them tributaries and you keep the
+  double assessment and the unrest together, forever. It bites at the peace
+  table too: the Terms from Antioch return everything that is not of the faith,
+  so an Idumea you took but never converted goes back to Antioch with the rest
+  of the occupied towns — unless your own missionaries got there first.
 - The sound of the age, synthesized from nothing (no audio files): parchment
   and chimes for events, clashing steel for battles, horns for war and bells
   for good news — under a sweeping generative score. A warm string pad
