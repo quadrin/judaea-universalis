@@ -42,6 +42,69 @@ function eraTiers(t) {
   return n;
 }
 
+// A crown answers to the name it wears NOW (SPEC §135): the local wrapper the
+// content packages keep over livingTag, so a predicate written against the
+// three letters this chapter shipped with survives a proclaimed greater crown.
+function who(ctx, tag) {
+  return (ctx && ctx.helpers && ctx.helpers.livingTag) ? ctx.helpers.livingTag(ctx, tag) : tag;
+}
+
+// What the crown's own survey adds up to (SPEC §208): the development standing
+// on the land it owns, not the land its armies are standing on. A content
+// package imports nothing, so it walks the province table itself.
+function realmDev(ctx, tag) {
+  let dev = 0;
+  try {
+    const g = ctx.game;
+    const t = who(ctx, tag);
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== t) continue;
+      const d = p.dev || {};
+      dev += (d.tax | 0) + (d.prod | 0) + (d.mp | 0);
+    }
+  } catch (e) { warnOnce('realmDev:' + tag, e); }
+  return dev;
+}
+
+// Where a crown stands among the powers: the quarterly ranking, counted from
+// zero, or -1 before the world has taken its first count of anybody.
+function standingRank(ctx, tag) {
+  try {
+    const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+    return ord.indexOf(who(ctx, tag));
+  } catch (e) { warnOnce('standingRank:' + tag, e); return -1; }
+}
+
+// What one court thinks of another, and how many crowns answer to this one.
+function regard(ctx, from, of) {
+  try {
+    const t = ctx.game.tags[who(ctx, from)];
+    return ((t && t.opinion) || {})[who(ctx, of)] || 0;
+  } catch (e) { warnOnce('regard:' + from, e); return 0; }
+}
+
+function clientsOf(ctx, tag) {
+  let n = 0;
+  try {
+    const g = ctx.game;
+    const t = who(ctx, tag);
+    for (const k of Object.keys(g.tags || {})) {
+      const o = g.tags[k];
+      if (o && o.alive !== false && o.overlord === t) n += 1;
+    }
+  } catch (e) { warnOnce('clientsOf:' + tag, e); }
+  return n;
+}
+
+// The court's two numbers (SPEC §34, §197) — approval is the mood a party is
+// in, `t.factions[fid]`, and favor is the credit it has banked with the crown,
+// `t.estateFavor[fid]` — are read INLINE by the court strand below rather than
+// through a wrapper. The engine ticks both for the human player alone, so the
+// §208 audit reads the source of every check to prove the government and the
+// region strands never touch them; a helper would hide exactly the thing that
+// audit exists to see.
+
 function setOpinion(game, a, b, val) {
   try {
     const ta = game.tags && game.tags[a];
@@ -779,6 +842,117 @@ export const BOOKMARK_40 = {
           effects: { legitimacyAdd: 0.25, disciplineMult: 1.06 },
         }),
       },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // Three strands that run beside the war rather than after it: what the
+      // government becomes, where the kingdom stands among the courts of the
+      // East, and the court at home — which in the end cost this house more
+      // than Antigonus ever did.
+      {
+        id: 'h5_the_arts_of_the_kingdom', name: 'The Arts of the Kingdom',
+        icon: 'quill', col: 0, row: 6, civil: 'govt',
+        desc: 'Nicolaus of Damascus ran this chancery — a Peripatetic who wrote a hundred and '
+          + 'forty-four books of universal history between embassies — and the king\'s sons went '
+          + 'to Rome to be fostered in Asinius Pollio\'s house. A client kingdom is administered '
+          + 'in the age\'s own arts or it is administered badly. Embrace three institutions of '
+          + 'the age: the two the world already had, and one this kingdom goes out and learns.',
+        rewardText: '"The Damascene\'s Chancery": administration a tenth cheaper, +5% income, permanently.',
+        check: (ctx) => (((ctx.game.tags.HER || {}).embraced) || []).length >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_damascenes_chancery', name: 'The Damascene\'s Chancery', months: -1,
+          effects: { adminMult: 0.9, incomeMult: 1.05 },
+        }),
+      },
+      {
+        id: 'h5_the_remitted_third', name: 'The Remitted Third',
+        icon: 'coins', col: 0, row: 7, civil: 'govt', requires: ['h5_the_arts_of_the_kingdom'],
+        desc: 'In 20 the king stood up before the assembly and remitted a third of that year\'s '
+          + 'taxes; in 14 he remitted a quarter, and said plainly that he wanted goodwill more '
+          + 'than the money. He could afford it because of what the crown owned outright — the '
+          + 'balsam groves at Jericho, half the copper of Cyprus on lease from Augustus. Raise '
+          + 'the realm to 130 development with 450 talents banked: remit from strength or not at all.',
+        rewardText: '"The Remitted Third": +10% town growth, −0.5 unrest everywhere, permanently.',
+        check: (ctx) => realmDev(ctx, 'HER') >= 130
+          && ((ctx.game.tags.HER || {}).treasury || 0) >= 450,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_remitted_third', name: 'The Remitted Third', months: -1,
+          effects: { growthMult: 1.1, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'h5_among_the_powers', name: 'Among the Powers',
+        icon: 'flag', col: 1, row: 6, civil: 'region',
+        desc: 'He endowed the Olympic games in perpetuity and was made their president for it, '
+          + 'gave Antioch its colonnaded street two and a half miles long, roofed the temple of '
+          + 'Apollo at Rhodes and walled Byblos — and Augustus is supposed to have said the '
+          + 'kingdom was too small for the man. Standing cannot be besieged and it cannot be '
+          + 'inherited. Stand among the four first powers of the world.',
+        rewardText: '"The King the East Consulted": +1 diplomatic seat, +20 influence points.',
+        check: (ctx) => {
+          const i = standingRank(ctx, 'HER');
+          return i >= 0 && i < 4;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'the_king_the_east_consulted', name: 'The King the East Consulted', months: -1,
+            effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { infl: 20 });
+        },
+      },
+      {
+        id: 'h5_the_peace_with_petra', name: 'The Peace With Petra',
+        icon: 'dove', col: 1, row: 7, civil: 'region', requires: ['h5_among_the_powers'],
+        desc: 'In the flight of 40 he rode for Petra to borrow the ransom for his brother '
+          + 'Phasael, not yet knowing Phasael had dashed his own head against the prison wall, '
+          + 'and Malichus sent messengers to the border forbidding him to enter Arabia at all. '
+          + 'Twelve years later he was collecting Nabataean tribute for Cleopatra and fighting '
+          + 'them at Philadelphia. Raise Petra\'s regard to +60 and hold one sworn alliance.',
+        rewardText: '"The Petra Settlement": +8% trade permanently, +100 talents of caravan custom.',
+        check: (ctx) => regard(ctx, 'NAB', 'HER') >= 60
+          && ((ctx.game.tags.HER || {}).allies || []).length >= 1,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HER', {
+            id: 'the_petra_settlement', name: 'The Petra Settlement', months: -1,
+            effects: { tradeMult: 1.08 },
+          });
+          ctx.helpers.adjust(ctx, 'HER', { treasury: 100 });
+        },
+      },
+      {
+        id: 'h5_the_alexandrian_priesthood', name: 'The Priesthood He Imported',
+        icon: 'altar', col: 2, row: 6, civil: 'court',
+        desc: 'Simon son of Boethus was a priest in Alexandria with a beautiful daughter and no '
+          + 'following whatever in this country, which is exactly what the office needed: the '
+          + 'king married the daughter and handed Simon the high priesthood, and the Hasmonean '
+          + 'problem — a high priest with a claim to the throne — stopped existing (Ant. XV.320). '
+          + 'Hold the House of Boethus at 70 approval; a bought altar is paid for every month.',
+        rewardText: '"The Vestments in the King\'s Keeping": +0.25 legitimacy a month, +10% from the ascents, permanently.',
+        check: (ctx) => (((ctx.game.tags.HER || {}).factions || {}).boethusians || 0) >= 70,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'vestments_in_the_kings_keeping', name: 'The Vestments in the King\'s Keeping',
+          months: -1, effects: { legitimacyAdd: 0.25, pilgrimMult: 1.1 },
+        }),
+      },
+      {
+        id: 'h5_the_court_that_ate_its_own', name: 'The Court That Ate Its Own',
+        icon: 'scales', col: 2, row: 7, civil: 'court', requires: ['h5_the_alexandrian_priesthood'],
+        desc: 'Mariamne executed in 29, her mother Alexandra the year after, the two sons she '
+          + 'bore him strangled at Sebaste in 7, Antipater five days before the king\'s own '
+          + 'death — Augustus is supposed to have said it was safer to be Herod\'s pig than his '
+          + 'son. The family and the seventy-one destroyed each other through him because he '
+          + 'never held both at once. Bank 40 favour with the House of Antipater while the '
+          + 'Sanhedrin stands at 60 approval.',
+        rewardText: '"The King\'s Peace at Home": −1 unrest everywhere, +0.2 legitimacy a month, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags.HER || {};
+          return ((t.estateFavor || {}).kin || 0) >= 40
+            && ((t.factions || {}).sanhedrin || 0) >= 60;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HER', {
+          id: 'the_kings_peace_at_home', name: 'The King\'s Peace at Home', months: -1,
+          effects: { unrestAll: -1, legitimacyAdd: 0.2 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_greater_herod', name: 'Too Large to Be a Favour', hypothetical: true,
@@ -999,6 +1173,116 @@ export const BOOKMARK_40 = {
         },
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ATG', { infl: 30, legitimacy: 20 }),
       },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // The legitimist case, made in three places at once: the government the
+      // house already built and has to keep working, the patron and the
+      // communities beyond the river, and the estates of the nation itself —
+      // which are the one asset an Idumean with a Senate decree cannot buy.
+      {
+        id: 'a5_the_registers_of_the_nation', name: 'The Registers of the Nation',
+        icon: 'scroll', col: 0, row: 6, civil: 'govt',
+        desc: 'The house has governed through toparchies and a council of elders for eighty '
+          + 'years and banked the nation\'s silver in the Temple, and every Hasmonean who fought '
+          + 'a war fought it out of a system his grandfather built. Antigonus inherited the '
+          + 'system and perhaps three years to prove it still runs. Take three reforms of the '
+          + 'Art of Rule — the census, the governors, the granaries of state.',
+        rewardText: '"The Nation\'s Registers": +8% income, −0.5 unrest everywhere, permanently.',
+        check: (ctx) => (((ctx.game.tags.ATG || {}).reforms || {}).civ | 0) >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'the_nations_registers', name: 'The Nation\'s Registers', months: -1,
+          effects: { incomeMult: 1.08, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'a5_the_silver_in_the_rocks', name: 'The Silver in the Rocks',
+        icon: 'tower', col: 0, row: 7, civil: 'govt', requires: ['a5_the_registers_of_the_nation'],
+        desc: 'Hyrcania, Alexandrium, Machaerus, Masada: your house put its treasuries where the '
+          + 'road up is single file, because a dynasty invaded four times in a century keeps its '
+          + 'reserve above the invasion and its accounts out of the invader\'s hands. Raise the '
+          + 'realm to 280 development with 450 talents banked — the whole country working, and '
+          + 'the silver sitting on a rock.',
+        rewardText: '"The Silver in the Rocks": upkeep a tenth cheaper, +6% income, permanently.',
+        check: (ctx) => realmDev(ctx, 'ATG') >= 280
+          && ((ctx.game.tags.ATG || {}).treasury || 0) >= 450,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'the_silver_in_the_rocks', name: 'The Silver in the Rocks', months: -1,
+          effects: { maintMult: 0.9, incomeMult: 1.06 },
+        }),
+      },
+      {
+        id: 'a5_the_king_of_kings_regard', name: 'The Lances That Crowned You',
+        icon: 'horseshoe', col: 1, row: 6, civil: 'region',
+        desc: 'Pacorus and Barzapharnes put you on the throne, and the price was a promise of '
+          + 'talents and noblewomen that no treasury in Jerusalem could actually have paid; '
+          + 'Lysanias of Chalcis, whose father married into your house, brokered it. A crown '
+          + 'given by lances is rented until the lender says otherwise. Raise Parthia\'s regard '
+          + 'for the restored house to +100 — a patron who has stopped counting.',
+        rewardText: '"The Lances Remember": +10% manpower permanently, +20 martial points.',
+        check: (ctx) => regard(ctx, 'PAR', 'ATG') >= 100,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'the_lances_remember', name: 'The Lances Remember', months: -1,
+            effects: { manpowerMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { mar: 20 });
+        },
+      },
+      {
+        id: 'a5_beyond_the_euphrates', name: 'Beyond the River',
+        icon: 'diaspora', col: 1, row: 7, civil: 'region', requires: ['a5_the_king_of_kings_regard'],
+        desc: 'Nehardea and Nisibis gather the half-shekel of the eastern communities and convoy '
+          + 'it to Jerusalem under armed escort, tens of thousands of men moving at once, because '
+          + 'the road is not safe and the money is not small. That is a constituency no Idumean '
+          + 'can buy and no legion can garrison. Swear a second alliance, or take a client crown '
+          + 'of your own: a house with friends is a house Rome must negotiate with.',
+        rewardText: '"Friends Beyond the River": +1 diplomatic seat, +2,000 men of the eastern communities.',
+        check: (ctx) => ((ctx.game.tags.ATG || {}).allies || []).length >= 2
+          || clientsOf(ctx, 'ATG') >= 1,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'friends_beyond_the_river', name: 'Friends Beyond the River', months: -1,
+            effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { manpower: 2000 });
+        },
+      },
+      {
+        id: 'a5_the_courses_of_the_altar', name: 'The Courses of the Altar',
+        icon: 'altar', col: 2, row: 6, civil: 'court',
+        desc: 'Twenty-four courses serve in rotation, a week apiece, and the men who keep them '
+          + 'watch their king work: when Sosius\' soldiers came over the wall in 37 the priests '
+          + 'went on with the offering while the fighting reached the courts. A king who is also '
+          + 'high priest is judged by professionals. Hold the priesthood at 75 approval — the '
+          + 'ephod is an office before it is an argument.',
+        rewardText: '"The Ephod Sits Straight": +0.25 legitimacy a month, −0.5 unrest everywhere, permanently.',
+        check: (ctx) => (((ctx.game.tags.ATG || {}).factions || {}).priesthood || 0) >= 75,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ATG', {
+          id: 'the_ephod_sits_straight', name: 'The Ephod Sits Straight', months: -1,
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'a5_the_nations_own', name: 'The Nation\'s Own',
+        icon: 'speaker', col: 2, row: 7, civil: 'court', requires: ['a5_the_courses_of_the_altar'],
+        desc: 'The city cheered the horsemen in at the Fish Gate, and three years later the '
+          + 'country came up for Pentecost and fought the legions in the outer court rather than '
+          + 'take an Idumean. That is the whole Hasmonean argument — the nation\'s own estates '
+          + 'prefer their own — and it is worth more than a legion right up to the day it is '
+          + 'worth nothing. Bank 40 favour with the priesthood and hold the street at 70.',
+        rewardText: '"The Nation\'s Own": +12% manpower permanently, +1 stability.',
+        check: (ctx) => {
+          const t = ctx.game.tags.ATG || {};
+          return ((t.estateFavor || {}).priesthood || 0) >= 40
+            && ((t.factions || {}).street || 0) >= 70;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ATG', {
+            id: 'the_nations_own', name: 'The Nation\'s Own', months: -1,
+            effects: { manpowerMult: 1.12 },
+          });
+          ctx.helpers.adjust(ctx, 'ATG', { stability: 1 });
+        },
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_hasmonean_holds', name: 'Mattathias, High Priest', hypothetical: true,
@@ -1157,6 +1441,65 @@ export const BOOKMARK_40 = {
         rewardText: '+100 talents, +15 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ADI', 'Tyre'),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
+      },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // Three things a client house does that have nothing to do with the
+      // tide: it governs the country behind its fords, it stays worth more
+      // standing than taken to both empires at once, and it manages what it
+      // prays to in front of the men who hold its lances.
+      {
+        id: 't5_the_arts_of_arbela', name: 'The Arts of Two Empires',
+        icon: 'bricks', col: 0, row: 4, civil: 'govt',
+        desc: 'Arbela was a Seleucid town before it was a Parthian client and it kept the arts '
+          + 'of both — Greek accounts on the same table as Aramaic contracts, and a customs house '
+          + 'that will take payment in whichever empire\'s coin came up the road last. Embrace '
+          + 'three institutions of the age and raise the house\'s land to 45 development: fords '
+          + 'are worth exactly what the country behind them is worth.',
+        rewardText: '"The Arts of Two Empires": +8% income, administration a tenth cheaper, permanently.',
+        check: (ctx) => (((ctx.game.tags.ADI || {}).embraced) || []).length >= 3
+          && realmDev(ctx, 'ADI') >= 45,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_arts_of_two_empires', name: 'The Arts of Two Empires', months: -1,
+          effects: { incomeMult: 1.08, adminMult: 0.9 },
+        }),
+      },
+      {
+        id: 't5_between_the_empires', name: 'Read in Both Chanceries',
+        icon: 'scales', col: 1, row: 4, civil: 'region',
+        desc: 'This house\'s whole business is being worth more standing than taken, to both '
+          + 'sides at once: it will shelter a beaten King of Kings and be paid in Nisibis for it, '
+          + 'and the queen mother will be buried in a pyramid-topped tomb outside Jerusalem, well '
+          + 'inside the Roman half of the world. Bring Rome\'s regard for Arbela to +25 — off the '
+          + 'enemy list entirely — and stand among the seven first powers.',
+        rewardText: '"Read in Both Chanceries": +1 diplomatic seat and +10% trade, permanently.',
+        check: (ctx) => {
+          const i = standingRank(ctx, 'ADI');
+          return regard(ctx, 'ROM', 'ADI') >= 25 && i >= 0 && i < 7;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'read_in_both_chanceries', name: 'Read in Both Chanceries', months: -1,
+          effects: { diploSeats: 1, tradeMult: 1.1 },
+        }),
+      },
+      {
+        id: 't5_the_old_fires', name: 'The Old Fires and the New Prayers',
+        icon: 'flame', col: 2, row: 4, civil: 'court',
+        desc: 'A merchant named Ananias will teach the women of Charax and then the king himself, '
+          + 'and Eleazar the Galilean will tell him that reading the Law is not the same as '
+          + 'keeping it — after which the nobles of Adiabene raise two revolts against a king who '
+          + 'left the ancestral fires, calling in Abias the Arab and then Vologaeses (Ant. '
+          + 'XX.75–91). Hold the fire priests at 70 approval with 35 favour banked among the '
+          + 'caravan lords: change what the house prays to without losing the men who fund it.',
+        rewardText: '"The Fires Kept, the Lamps Lit": −1 unrest everywhere, +0.2 legitimacy a month, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags.ADI || {};
+          return ((t.factions || {}).magi || 0) >= 70
+            && ((t.estateFavor || {}).caravans || 0) >= 35;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_fires_and_the_lamps', name: 'The Fires Kept, the Lamps Lit', months: -1,
+          effects: { unrestAll: -1, legitimacyAdd: 0.2 },
+        }),
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {

@@ -856,6 +856,123 @@ export const BOOKMARK_67 = {
           effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
         }),
       },
+      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // Antipater's cause is not won in the field and never was going to be.
+      // It is won in the register, in the letters that go out to six courts
+      // at once, and in the room where the sages sit — the three widths an
+      // EU4 tree spends most of itself on, and the three this chapter has
+      // never once asked for. None of them waits on the war.
+      {
+        id: 'h4_the_ethnarchs_register', name: 'The Ethnarch\'s Register',
+        icon: 'quill', civil: 'govt', col: 0, row: 6,
+        desc: 'Hyrcanus never governed a day of his own reign; Antipater governed it for '
+          + 'him, and when Caesar\'s decrees finally named the elder brother ethnarch in '
+          + '47 BCE it was Phasael who held Jerusalem and the boy Herod who held Galilee. '
+          + 'Build the office before the title arrives: enact Census & Taxation and '
+          + 'Provincial Governors — a country counted, and a familiar hand in every district.',
+        rewardText: '"The Ethnarch\'s Register": +6% income and −0.25 unrest everywhere, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'HYR')] || {}).reforms || {}).civ | 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'ethnarchs_register', name: 'The Ethnarch\'s Register', months: -1,
+          effects: { incomeMult: 1.06, unrestAll: -0.25 },
+        }),
+      },
+      {
+        id: 'h4_the_roads_of_the_ascents', name: 'The Roads of the Ascents',
+        icon: 'shrine', civil: 'govt', col: 0, row: 7, requires: ['h4_the_ethnarchs_register'],
+        desc: 'Three times a year the whole country walks to Jerusalem, and every ford, inn '
+          + 'and gate on the way is a revenue nobody has troubled to administer. A high '
+          + 'priest who is also a government is the one man in the Levant who can. Enact '
+          + 'Public Rites, Missionary Zeal and Sanctified Courts — the Voice of Heaven made '
+          + 'a department of state, with the ascents as its ledger.',
+        rewardText: '"The Custom of the Ascents": +12% from the ascents and +5% income, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'HYR')] || {}).reforms || {}).rel | 0) >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'custom_of_the_ascents', name: 'The Custom of the Ascents', months: -1,
+          effects: { pilgrimMult: 1.12, incomeMult: 1.05 },
+        }),
+      },
+      {
+        id: 'h4_the_second_friend', name: 'The Second Friend',
+        icon: 'dove', civil: 'region', col: 1, row: 6,
+        desc: 'Antipater married Cypros, a woman of an Arab noble house, and that marriage '
+          + 'is the entire reason Aretas\' lances ever crossed into Judaea. But one sworn '
+          + 'friend is a faction, and Petra is already sworn. Bring a second crown into '
+          + 'alliance with this cause — Ptolemy of Chalcis, the Commagenian, Alexandria, '
+          + 'whoever will sign — and the war of the brothers stops being a family matter.',
+        rewardText: '"The Idumean\'s Letters": +1 diplomatic seat, permanent; +20 influence points.',
+        check: (ctx) => ((ctx.game.tags[warTag(ctx.game, 'HYR')] || {}).allies || []).length >= 2,
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'idumeans_letters', name: 'The Idumean\'s Letters', months: -1,
+            effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { infl: 20 });
+        },
+      },
+      {
+        id: 'h4_the_regard_of_the_east', name: 'The Regard of the East',
+        icon: 'speaker', civil: 'region', col: 1, row: 7, requires: ['h4_the_second_friend'],
+        desc: 'The elder brother\'s one real weapon is that he is easy to deal with, and '
+          + 'the Idumean has spent a decade making that pay: gifts down the Petra road, '
+          + 'letters to Antioch, a standing welcome for anybody travelling through. Stand '
+          + 'well with three courts at once — Nabataea, Rome, the Seleucid rump, Egypt, '
+          + 'Chalcis, Commagene, Parthia or Armenia, any three at +50 regard or better.',
+        rewardText: '"The Convenient Court": nobody\'s cheap war, permanent; +25 influence points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const me = warTag(g, 'HYR');
+          let n = 0;
+          for (const k of ['ROM', 'NAB', 'PTO', 'SEL', 'ITU', 'CMG', 'PAR', 'ARM']) {
+            const o = g.tags[k];
+            if (o && o.alive && ((o.opinion && o.opinion[me]) || 0) >= 50) n++;
+          }
+          return n >= 3;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'the_convenient_court', name: 'The Convenient Court', months: -1,
+            effects: { deterrent: 0.5 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { infl: 25 });
+        },
+      },
+      {
+        id: 'h4_the_sages_in_council', name: 'The Sages in Council',
+        icon: 'lamp', civil: 'court', col: 2, row: 6,
+        desc: 'Salome Alexandra gave the Pharisees the Sanhedrin and then died, and her '
+          + 'younger son moved to take it back inside the month. The sages are the elder '
+          + 'line\'s natural party and they are watching to learn whether that is worth '
+          + 'anything to them. Bring the Pharisees to devotion — approval at 80 — and every '
+          + 'synagogue in the land preaches the succession as law rather than as an opinion.',
+        rewardText: '"The Synagogues Preach the Elder Line": −0.5 unrest everywhere and +0.15 legitimacy a month, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'HYR')] || {}).factions || {}).pharisees || 0) >= 80,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'HYR', {
+          id: 'sages_in_council', name: 'The Synagogues Preach the Elder Line', months: -1,
+          effects: { unrestAll: -0.5, legitimacyAdd: 0.15 },
+        }),
+      },
+      {
+        id: 'h4_offices_for_the_sons', name: 'Offices for the Sons',
+        icon: 'note', civil: 'court', col: 2, row: 7, requires: ['h4_the_sages_in_council'],
+        desc: 'The Idumean presents his bill with perfect courtesy: Phasael over Jerusalem, '
+          + 'the boy Herod over Galilee, and a father\'s quiet observation that every court '
+          + 'needs able men. Carry the house of Antipater\'s credit to 45 and seat a man of '
+          + 'government at the council. The administration this reign is remembered for was '
+          + 'never staffed by priests.',
+        rewardText: '"The Idumean Administration": +6% income permanently; +40 governance points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[warTag(ctx.game, 'HYR')] || {};
+          return ((t.estateFavor || {}).antipater || 0) >= 45 && !!(t.advisors && t.advisors.gov);
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'HYR', {
+            id: 'idumean_administration', name: 'The Idumean Administration', months: -1,
+            effects: { incomeMult: 1.06 },
+          });
+          ctx.helpers.adjust(ctx, 'HYR', { gov: 40 });
+        },
+      },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
         id: 'hy_eagle_refused', name: 'The Eagle Refused', hypothetical: true,
@@ -1068,7 +1185,7 @@ export const BOOKMARK_67 = {
       },
       {
         id: 'a4_sea_gates', name: 'The Gates to the Sea',
-        icon: 'ship', col: 2, row: 4, requires: ['a4_priest_kings_school'],
+        icon: 'ship', col: 2, row: 4, requires: ['a4_priest_kings_charter'],
         desc: 'Your father\'s coast is the difference between a hill kingdom and a state with '
           + 'customs revenue. Hold Joppa, Azotus and Ascalon.',
         rewardText: '"The King\'s Coast": +12% trade permanently, +75 talents.',
@@ -1120,6 +1237,125 @@ export const BOOKMARK_67 = {
           id: 'younger_line_confirmed', name: 'The Younger Line Confirmed', months: -1,
           effects: { incomeMult: 1.08, legitimacyAdd: 0.2 },
         }),
+      },
+      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // The younger brother's case is that he is the better king, and that
+      // is not a thing the Jericho road can settle. It is settled in the
+      // coinage, in the courts that answer his letters, and in the room
+      // where the captains and the great houses sit counting. None of these
+      // waits on the war either; all three are how he wins the argument.
+      {
+        id: 'a4_the_diadem_and_the_ephod', name: 'The Diadem and the Ephod',
+        icon: 'shrine', civil: 'govt', col: 0, row: 6,
+        desc: 'Aristobulus wears the diadem and the ephod together, as his father Jannaeus '
+          + 'did and as his mother, being a woman, never could: the coins struck in his name '
+          + 'read in Hebrew Yehudah the High Priest and the Council of the Jews, while every '
+          + 'letter written about him in Greek calls him king. A crown that is also an altar '
+          + 'has to be seen at prayer. Enact Public Rites and Missionary Zeal — the Voice of '
+          + 'Heaven, spoken by the one man wearing both.',
+        rewardText: '"The Priest-King Crowned": +0.2 legitimacy a month, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'ARI')] || {}).reforms || {}).rel | 0) >= 2,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'priest_king_crowned', name: 'The Priest-King Crowned', months: -1,
+          effects: { legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'a4_the_kings_purse', name: 'The King\'s Purse',
+        icon: 'market', civil: 'govt', col: 0, row: 7, requires: ['a4_the_diadem_and_the_ephod'],
+        desc: 'Four hundred talents handed to Scaurus sent fifty thousand Nabataeans home '
+          + 'from the walls of Jerusalem, and no birthright in the Levant ever bought as '
+          + 'much. Make the purse a system rather than a windfall: Drilled Ranks, Standing '
+          + 'Levies and Siegecraft enacted, and 500 talents lying ready for the next time '
+          + 'the mercenary market has something worth buying.',
+        rewardText: '"The Higher Wage": −10% maintenance and +8% reinforcement, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags[warTag(ctx.game, 'ARI')] || {};
+          return (((t.reforms || {}).mil | 0) >= 3) && (t.treasury || 0) >= 500;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'the_higher_wage', name: 'The Higher Wage', months: -1,
+          effects: { maintMult: 0.9, reinforceMult: 1.08 },
+        }),
+      },
+      {
+        id: 'a4_the_quarrel_with_petra', name: 'The Quarrel with Petra',
+        icon: 'dove', civil: 'region', col: 1, row: 6,
+        desc: 'Aretas III came down for the elder brother with fifty thousand men and penned '
+          + 'the younger on the Temple hill through a Passover; the siege lifted only when '
+          + 'Scaurus took his four hundred talents, and Aristobulus cut up the Nabataean rear '
+          + 'guard at Papyron as it went home. Six thousand dead is a grudge, not a policy. '
+          + 'Bring Petra\'s regard for this crown up to +25.',
+        rewardText: '"The Peace After Papyron": +5% manpower recovery permanently; +25 influence points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const nab = g.tags.NAB;
+          return ((nab && nab.opinion && nab.opinion[warTag(g, 'ARI')]) || 0) >= 25;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'peace_after_papyron', name: 'The Peace After Papyron', months: -1,
+            effects: { manpowerMult: 1.05 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { infl: 25 });
+        },
+      },
+      {
+        id: 'a4_the_second_throne', name: 'The Second Throne of the East',
+        icon: 'scales', civil: 'region', col: 1, row: 7, requires: ['a4_the_quarrel_with_petra'],
+        desc: 'The ledger of the powers opens with Rome and then argues about the rest of '
+          + 'the page. Stand second in the whole of it — ahead of Phraates, ahead of '
+          + 'Alexandria, ahead of Tigranes\' wreck, and ahead of the brother whose only '
+          + 'surviving argument is that he was born first.',
+        rewardText: '"The Second Throne": nobody\'s cheap war, permanent; +15 legitimacy.',
+        check: (ctx) => {
+          const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+          const i = ord.indexOf(warTag(ctx.game, 'ARI'));
+          return i >= 0 && i < 2;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'second_throne_of_the_east', name: 'The Second Throne of the East', months: -1,
+            effects: { deterrent: 0.75 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { legitimacy: 15 });
+        },
+      },
+      {
+        id: 'a4_the_twenty_two_fortresses', name: 'Twenty-Two Fortresses',
+        icon: 'spears', civil: 'court', col: 2, row: 6,
+        desc: 'Twenty-two strongholds declared for Aristobulus inside a single week — his '
+          + 'father\'s garrisons, bought with his father\'s reputation, and the reputation is '
+          + 'now spent. A fortress that declared once can declare twice. Bring the King\'s '
+          + 'Captains to devotion — approval at 80 — and that week stops being a debt the '
+          + 'crown is still servicing.',
+        rewardText: '"The Garrisons Sworn": +6% morale and +5% force limit, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'ARI')] || {}).factions || {}).captains || 0) >= 80,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ARI', {
+          id: 'garrisons_sworn', name: 'The Garrisons Sworn', months: -1,
+          effects: { moraleMult: 1.06, forceLimitMult: 1.05 },
+        }),
+      },
+      {
+        id: 'a4_the_deeds_sealed', name: 'The Deeds Sealed',
+        icon: 'note', civil: 'court', col: 2, row: 7, requires: ['a4_the_twenty_two_fortresses'],
+        desc: 'Nine years of the queen\'s Pharisees cost the great priestly houses land, '
+          + 'offices and precedence, and they backed the younger son to have all three back. '
+          + 'The deeds are drawn and waiting on a seal. Bank the Sadducees\' credit to 45 and '
+          + 'seat a soldier at the council: a court of priests and paymasters can bless a war '
+          + 'and pay for it, and settle nothing whatever between the two.',
+        rewardText: '"The Great Houses Bound": +6% income permanently; +40 martial points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[warTag(ctx.game, 'ARI')] || {};
+          return ((t.estateFavor || {}).sadducees || 0) >= 45 && !!(t.advisors && t.advisors.mar);
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ARI', {
+            id: 'great_houses_bound', name: 'The Great Houses Bound', months: -1,
+            effects: { incomeMult: 1.06 },
+          });
+          ctx.helpers.adjust(ctx, 'ARI', { mar: 40 });
+        },
       },
       // ── The roads not taken (SPEC §183): the ev4_v_* strand, charted ────
       {
@@ -1305,6 +1541,70 @@ export const BOOKMARK_67 = {
         check: (ctx) => ((ctx.game.tags.ADI || {}).stability || 0) >= 2,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
           id: 'two_altars', name: 'The Two Altars', months: -1, effects: { unrestAll: -0.25 },
+        }),
+      },
+      // ── The civil band (SPEC §208): the state, the region, the court ────
+      // Three standing invitations, none of them waiting on a war and none
+      // of them waiting on each other. The house between the rivers is not
+      // a conquest problem: it is a customs house with a dynasty attached,
+      // a client with two possible masters, and a court in the middle of
+      // quietly changing its religion.
+      {
+        id: 't4_the_register_of_the_fords', name: 'The Register of the Fords',
+        icon: 'note', civil: 'govt', col: 0, row: 4,
+        desc: 'A kingdom that lives on other people\'s cargo is governed with a pen or it is '
+          + 'not governed at all: the crossings counted, the districts held by men the king '
+          + 'can name, and grain in store against the season the caravans do not come. Enact '
+          + 'the first three reforms of the Art of Rule — Census & Taxation, Provincial '
+          + 'Governors, Granaries of State — and Arbela is a government, not a toll gate.',
+        rewardText: '"The Assessed Crossings": +8% trade and −0.25 unrest everywhere, permanent.',
+        check: (ctx) => (((ctx.game.tags[warTag(ctx.game, 'ADI')] || {}).reforms || {}).civ | 0) >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'assessed_crossings', name: 'The Assessed Crossings', months: -1,
+          effects: { tradeMult: 1.08, unrestAll: -0.25 },
+        }),
+      },
+      {
+        id: 't4_between_two_kings', name: 'Between Two Kings',
+        icon: 'scales', civil: 'region', col: 1, row: 4,
+        desc: 'Adiabene\'s whole art is being necessary to whichever power is stronger this '
+          + 'decade. Within a lifetime this house will put an Arsacid back on his throne with '
+          + 'its own lances, and then watch its princes go to Rome as hostages when the other '
+          + 'side of the ledger comes due — and be forgiven both. Hold the King of Kings\' '
+          + 'regard at +80 while Rome\'s stands at +50: two friendships, neither of which is '
+          + 'an alliance.',
+        rewardText: '"The House Between Two Kings": +1 diplomatic seat and nobody\'s cheap war, permanent.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const me = warTag(g, 'ADI');
+          const par = g.tags.PAR;
+          const rom = g.tags.ROM;
+          return ((par && par.opinion && par.opinion[me]) || 0) >= 80
+            && ((rom && rom.opinion && rom.opinion[me]) || 0) >= 50;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'house_between_two_kings', name: 'The House Between Two Kings', months: -1,
+          effects: { diploSeats: 1, deterrent: 0.5 },
+        }),
+      },
+      {
+        id: 't4_the_lamps_in_the_windows', name: 'The Lamps in the Palace Windows',
+        icon: 'shrine', civil: 'court', col: 2, row: 4,
+        desc: 'A generation from now a merchant named Ananias will teach the king\'s women at '
+          + 'Charax Spasinu, Queen Helena will spend the treasury on Egyptian grain for a '
+          + 'starving Jerusalem and be buried in a tomb north of its wall, and her son Izates '
+          + 'will be circumcised against the advice of every counsellor he has. The fire '
+          + 'priests are already counting sabbath lamps in the palace windows. Keep the old '
+          + 'altars warm while the house prays west: the Magi at 65 approval, 35 of their '
+          + 'credit banked, and neither rite asked to give way to the other.',
+        rewardText: '"The Two Prayers": −0.4 unrest everywhere and +0.15 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags[warTag(ctx.game, 'ADI')] || {};
+          return ((t.factions || {}).magi || 0) >= 65 && ((t.estateFavor || {}).magi || 0) >= 35;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_two_prayers', name: 'The Two Prayers', months: -1,
+          effects: { unrestAll: -0.4, legitimacyAdd: 0.15 },
         }),
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────

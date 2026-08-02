@@ -659,6 +659,143 @@ export const BOOKMARK_132 = {
           ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
         },
       },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // The tree above is the war. This is the three years the war bought,
+      // and it is the better documented half: what the caves gave back was
+      // not a battle report but a government's filing — land leases, a
+      // requisition for a festival, tithe rulings, and the names of the men
+      // who answered for a village. Three strands, each workable from the
+      // first month, because the Nasi's state administered and fought at the
+      // same time and so must this one.
+      {
+        id: 'j2_the_nasis_leases', name: 'The Leases of the Nasi',
+        icon: 'grain', civil: 'govt', col: 0, row: 6,
+        desc: 'What the wadis gave back was paperwork: contracts letting crown land at Ein Gedi '
+          + 'to tenants who pay their rent in wheat, drawn in the name of Shimon bar Kosiba, '
+          + 'Nasi Israel, witnessed, and dated by the year of the redemption of Israel. Land '
+          + 'cannot be let until it has been surveyed and it cannot be surveyed by a raiding '
+          + 'party. Bring the realm to 110 development and be the landlord the leases say you are.',
+        rewardText: '"The Nasi\'s Leases": +10% growth permanently, and +150 talents from the first year\'s rents.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const tag = who(ctx, 'JUD');
+          let dev = 0;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
+            dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
+          }
+          return dev >= 110;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_nasis_leases', name: 'The Nasi\'s Leases', months: -1,
+            effects: { growthMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 150 });
+        },
+      },
+      {
+        id: 'j2_the_parnasim', name: 'The Administrators of the Villages',
+        icon: 'scales', civil: 'govt', col: 0, row: 7, requires: ['j2_the_nasis_leases'],
+        desc: 'The letters name the men who ran the country: Yehonatan bar Ba\'yan and Masabala '
+          + 'bar Shim\'on at Ein Gedi, the administrators of Beth Mashiko, the parnasim who '
+          + 'answered for wheat, for wood and for a missing cow — and who are told, in the '
+          + 'Nasi\'s own hand, that they sit comfortably eating the property of the house of '
+          + 'Israel while their brothers hold the line. Take the first three rungs of the Art of '
+          + 'Rule — the census, the governors, the granaries of state.',
+        rewardText: '"The Parnasim": −15% administration and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).reforms || {}).civ | 0) >= 3,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'the_parnasim', name: 'The Parnasim', months: -1,
+          effects: { adminMult: 0.85, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'j2_the_king_of_kings', name: 'The Hope of a Parthian Winter',
+        icon: 'horseshoe', civil: 'region', col: 1, row: 6,
+        desc: 'The rising\'s one strategic prayer was east. Rome and Ctesiphon had fought over '
+          + 'Armenia and Mesopotamia within living memory, and a King of Kings who moved would '
+          + 'pull the legions off the hill country as surely as a victory would. Vologases III '
+          + 'had the Alans on his northern road and did not move. Bring his regard of the Nasi\'s '
+          + 'state to +70 and buy the winter the revolt never got.',
+        rewardText: '"The Understanding With the East": +1 diplomatic seat, permanent; +25 influence points.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const par = g.tags[who(ctx, 'PAR')];
+          return !!(par && par.alive) && (((par.opinion || {})[who(ctx, 'JUD')]) || 0) >= 70;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'understanding_with_the_east', name: 'The Understanding With the East',
+            months: -1, effects: { diploSeats: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 25 });
+        },
+      },
+      {
+        id: 'j2_among_the_powers', name: 'A Name Among the Powers',
+        icon: 'laurel', civil: 'region', col: 1, row: 7, requires: ['j2_the_king_of_kings'],
+        desc: 'The coins read Shimon, Prince of Israel on one face and Eleazar the Priest or '
+          + 'For the Freedom of Jerusalem on the other, and every one of them was struck over '
+          + 'the emperor\'s own silver: a state addressing the world in its own name, on the '
+          + 'world\'s own metal, dated by its own era. Dio counts fifty fortresses and nine '
+          + 'hundred and eighty-five villages taken before Rome was done answering it. Stand '
+          + 'among the first six powers of the age and be answered as one.',
+        rewardText: '"Reckoned With the Powers": +1 deterrent — the courts that count think twice — and +15 legitimacy.',
+        check: (ctx) => {
+          const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+          const i = ord.indexOf(who(ctx, 'JUD'));
+          return i >= 0 && i < 6;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'reckoned_with_the_powers', name: 'Reckoned With the Powers',
+            months: -1, effects: { deterrent: 1 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+        },
+      },
+      {
+        id: 'j2_the_star_out_of_jacob', name: 'The Star Out of Jacob',
+        icon: 'speaker', civil: 'court', col: 2, row: 6,
+        desc: 'Akiva read Balaam\'s oracle over him — a star shall step forth out of Jacob — and '
+          + 'taught his students that this was the King Messiah; it is where the name Bar Kokhba '
+          + 'comes from, and the academies argued about it for the next four centuries. The '
+          + 'endorsement is what turns a competent commander into a redemption. Bring the sages '
+          + 'to 75 approval and have it said out loud.',
+        rewardText: '"The Star Out of Jacob": +5% morale and +0.2 legitimacy a month, permanent; +20 influence points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return ((t.factions || {}).sages || 0) >= 75;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'JUD', {
+            id: 'the_star_out_of_jacob', name: 'The Star Out of Jacob', months: -1,
+            effects: { moraleMult: 1.05, legitimacyAdd: 0.2 },
+          });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 20 });
+        },
+      },
+      {
+        id: 'j2_the_four_species', name: 'Palm Branches for the Camp',
+        icon: 'altar', civil: 'court', col: 2, row: 7, requires: ['j2_the_star_out_of_jacob'],
+        desc: 'One of the letters is a requisition order: Shimon sends two donkeys to Yehudah '
+          + 'bar Menashe at Qiryat Arabaya and tells him to have palm branches and citrons '
+          + 'packed off to the camp, myrtle and willow found nearer to hand, and the whole lot '
+          + 'tithed before it moves — and, in the same breath, that no one is to harm the '
+          + 'Galileans billeted with him. A state that supplies a festival to an army in the '
+          + 'field is governing. Bank 40 favor with the villages that grow it.',
+        rewardText: '"The Camp Keeps the Festival": +10% manpower and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'JUD')] || {};
+          return ((t.estateFavor || {}).villages || 0) >= 40;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
+          id: 'camp_keeps_the_festival', name: 'The Camp Keeps the Festival', months: -1,
+          effects: { manpowerMult: 1.1, unrestAll: -0.5 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set. Appended after the curriculum so the
@@ -783,7 +920,7 @@ export const BOOKMARK_132 = {
       // the province Hadrian means to have afterward.
       {
         id: 'r2_engineers_war', name: 'The Engineers\' War',
-        icon: 'walls', col: 0, requires: ['r2_shephelah'],
+        icon: 'walls', col: 0, row: 3, requires: ['r2_shephelah'],
         desc: 'Fight the hills with the manual: reach Military 8 — The Fortified Villages.',
         rewardText: '"The Method Perfected": +15% siege progress for 24 months.',
         check: (ctx) => (((ctx.game.tags.ROM || {}).tech || {}).mar | 0) >= 8,
@@ -901,6 +1038,81 @@ export const BOOKMARK_132 = {
         rewardText: '+25 governance points, +10 legitimacy.',
         check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).infl | 0) >= 7,
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
+      },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // A client chair is not a small kingdom; it is a different job. Three
+      // strands for the three things this house is actually for — an
+      // accounting Trajan burned and Hadrian handed back, an arrangement with
+      // Ctesiphon that is the only reason there is still a crown here, and a
+      // court that took the covenant a century ago and has been asked to pay
+      // for it ever since. All three are roots: none of them waits on a war.
+      {
+        id: 'b2_the_ledger_of_arbela', name: 'The Ledger of Arbela',
+        icon: 'market', civil: 'govt', col: 0, row: 4,
+        desc: 'In 116 Trajan\'s columns came down the Tigris and made this kingdom the province '
+          + 'of Assyria; the warehouses burned, the tolls stopped, and two years later Hadrian '
+          + 'went home and handed the crown back to a house whose accounts no longer existed. '
+          + 'Arbela and Nisibis are the assessed wealth of the east and someone has to count '
+          + 'them again. Bring the realm to 55 development — restoration is a survey before it '
+          + 'is a monument.',
+        rewardText: '"The Ledger Restored": +10% growth and +10% income, permanent.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const tag = who(ctx, 'ADI');
+          let dev = 0;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
+            dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
+          }
+          return dev >= 55;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'the_ledger_restored', name: 'The Ledger Restored', months: -1,
+          effects: { growthMult: 1.1, incomeMult: 1.1 },
+        }),
+      },
+      {
+        id: 'b2_the_kings_regard', name: 'The Regard of the King of Kings',
+        icon: 'dove', civil: 'region', col: 1, row: 4,
+        desc: 'Mebarsapes held Adiabene for the Arsacids, lost it to Trajan, and has it again '
+          + 'only because an emperor decided Mesopotamia was not worth the garrisons. What keeps '
+          + 'a crown on this bank of the Tigris is not the lances but the arrangement with '
+          + 'Ctesiphon, and Vologases III has Armenia, the Alans and his own nobility to think '
+          + 'about before he thinks about Arbela. Bring the King of Kings\' regard of the house '
+          + 'to +90.',
+        rewardText: '"The Arrangement With Ctesiphon": +1 diplomatic seat and +0.25 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const par = g.tags[who(ctx, 'PAR')];
+          return !!(par && par.alive) && (((par.opinion || {})[who(ctx, 'ADI')]) || 0) >= 90;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
+          id: 'arrangement_with_ctesiphon', name: 'The Arrangement With Ctesiphon',
+          months: -1, effects: { diploSeats: 1, legitimacyAdd: 0.25 },
+        }),
+      },
+      {
+        id: 'b2_the_covenant_of_the_converts', name: 'The Covenant of the Converts',
+        icon: 'shrine', civil: 'court', col: 2, row: 4,
+        desc: 'Izates took the covenant against his mother\'s advice and his teacher\'s caution, '
+          + 'and Helena went to Jerusalem, bought grain in Alexandria and dried figs in Cyprus '
+          + 'when the famine came, and was buried with her sons in the tombs north of the city. '
+          + 'That is the whole political capital of this house and it is a hundred years old. '
+          + 'Bring the proselyte court to devotion — approval at 80 — and it is capital again '
+          + 'rather than an heirloom.',
+        rewardText: '"The Covenant Kept in the East": +0.3 legitimacy a month, permanent, and +30 influence points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'ADI')] || {};
+          return ((t.factions || {}).proselytes || 0) >= 80;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ADI', {
+            id: 'covenant_kept_in_the_east', name: 'The Covenant Kept in the East',
+            months: -1, effects: { legitimacyAdd: 0.3 },
+          });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 30 });
+        },
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {

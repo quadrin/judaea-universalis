@@ -49,23 +49,33 @@ console.log('== the tree view: layout, statuses, prerequisites ==');
 const { game, ctx, actions } = boot('JUD', 42);
 {
   const v = actions.getMissions();
-  ok(v.length === 21, 'twenty-one nodes (six objectives + the §179 curriculum + the §192/§197 expansion + the §183/§192 roads not taken): ' + v.length);
-  // Only the chain's own root is workable among the era's objectives; the
-  // §183 hypotheticals are standing invitations, so their roots open too.
-  ok(v[0].status === 'current' && v.slice(1, 16).every((m) => m.status === 'locked'),
-    'only the root is workable among the objectives at start: ' + v.map((m) => m.status).join(','));
-  ok(v[16].hypothetical && v[16].status === 'current'
-    && v[17].status === 'locked' && v[18].status === 'locked'
-    && v[19].status === 'current' && v[20].status === 'current',
+  // 16 war-and-curriculum objectives, then the §208 civil band's six, then
+  // the five roads not taken.
+  const WAR = 16, CIVIL = 22;
+  ok(v.length === 27, 'twenty-seven nodes (the §192/§197 tree + the §208 civil band + the §183/§192 roads not taken): ' + v.length);
+  // Only the chain's own root is workable among the war objectives; the §208
+  // strand roots are workable from turn one by design (they wait on nothing),
+  // and the §183 hypotheticals are standing invitations, so their roots open.
+  ok(v[0].status === 'current' && v.slice(1, WAR).every((m) => m.status === 'locked'),
+    'only the root is workable among the war objectives at start: ' + v.map((m) => m.status).join(','));
+  ok(v.slice(WAR, CIVIL).every((m) => m.civil)
+    && v[WAR].status === 'current' && v[WAR + 1].status === 'locked'
+    && v[WAR + 2].status === 'current' && v[WAR + 3].status === 'locked'
+    && v[WAR + 4].status === 'current' && v[WAR + 5].status === 'locked',
+    'each civil strand opens at its root and its second node waits: '
+    + v.slice(WAR, CIVIL).map((m) => m.id + '=' + m.status).join(','));
+  ok(v[CIVIL].hypothetical && v[CIVIL].status === 'current'
+    && v[CIVIL + 1].status === 'locked' && v[CIVIL + 2].status === 'locked'
+    && v[CIVIL + 3].status === 'current' && v[CIVIL + 4].status === 'current',
     'the hypothetical roots stand open (the §192 forks are roots too), the children wait: '
-    + v.slice(16).map((m) => m.id + '=' + m.status).join(','));
-  ok(v.slice(0, 16).every((m) => !m.hypothetical) && v.slice(16).every((m) => m.hypothetical),
+    + v.slice(CIVIL).map((m) => m.id + '=' + m.status).join(','));
+  ok(v.slice(0, CIVIL).every((m) => !m.hypothetical) && v.slice(CIVIL).every((m) => m.hypothetical),
     'the roads not taken are flagged hypothetical, the objectives are not');
   ok(v[0].requires.length === 0 && v[1].requires.join(',') === 'jm_arm_the_nation',
     'requires resolved to ids');
   ok(v[1].requiresNames.join(',') === 'Arm the Nation', 'and to names for the tooltip');
-  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,1,0,2,1,2,0,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
-  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,4,4,4,5,5,5,0,1,2,3,4',
+  ok(v.map((m) => m.col).join(',') === '1,0,1,2,1,0,3,2,0,2,1,0,2,1,2,0,0,0,1,1,2,2,4,4,4,4,4', 'cols: ' + v.map((m) => m.col).join(','));
+  ok(v.map((m) => m.row).join(',') === '0,1,1,1,2,2,2,2,3,3,4,4,4,5,5,5,6,7,6,7,6,7,0,1,2,3,4',
     'rows derived one below the deepest parent (declared rows stick): ' + v.map((m) => m.row).join(','));
   ok(v.every((m) => m.icon), 'every node wears an icon');
 }
@@ -75,8 +85,11 @@ console.log('== branches advance independently; the prefix does not lie ==');
   for (let i = 0; i < 31; i++) tickDay(ctx);
   ok(actions.getMissions()[0].status === 'done', 'the root completes on the monthly pass');
   const open = actions.getMissions().filter((m) => m.status === 'current').map((m) => m.id);
-  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,hy_house_stands,hy_royal_robes,hy_granaries',
-    'three branches open at once (plus the standing hypotheticals): ' + open.join(','));
+  ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,'
+    + 'jm_the_generals_of_the_districts,jm_the_third_power,jm_the_altar_and_the_knives,'
+    + 'hy_house_stands,hy_royal_robes,hy_granaries',
+    'three war branches open at once, plus the three §208 strand roots and the '
+    + 'standing hypotheticals: ' + open.join(','));
   // Complete a LATER branch first: the Parthian mission, by opinion. The
   // root's completion above left the chain resting (§207), so wait it out.
   game.tags.PAR.opinion = game.tags.PAR.opinion || {};

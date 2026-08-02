@@ -910,6 +910,147 @@ export const BOOKMARK_529 = {
           effects: { unrestAll: -1, incomeMult: 1.1 },
         }),
       },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // Everything above this line is ground. These six are the other half of
+      // a state, and they are parallel to the war rather than after it: three
+      // strands two deep, none of them requiring a province to be taken.
+      // The chapter's victory counts PEOPLE, so its civil band counts the
+      // things a people is made of — the book and the schools that copy it,
+      // the fields it may not legally inherit, the courts abroad that have to
+      // answer its letters, and the parties at home that have to agree on
+      // what survival is worth.
+      {
+        id: 's_the_schools_of_the_scroll', name: 'The Schools of the Scroll',
+        civil: 'govt',
+        icon: 'scroll', col: 0, row: 5,
+        desc: 'The Torah of the Keepers is copied in a script Jerusalem stopped using before '
+          + 'the exile, and the schools that copy it are Marqah\'s — the Memar, and the Durran '
+          + 'hymns his father Amram Darah left, out of the revival the tradition credits to '
+          + 'Baba Rabba. In April of this year Justinian published a bound codex of his own '
+          + 'law. A people whose entire title is a book had better be able to look its own law '
+          + 'up: take up six of the institutions of the age.',
+        rewardText: '"The Copyists of Neapolis": −10% cost of administering the realm '
+          + 'and +0.15 legitimacy a month, permanently.',
+        check: (ctx) => (((ctx.game.tags[who(ctx, 'SAM')] || {}).embraced) || []).length >= 6,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_copyists_of_neapolis', name: 'The Copyists of Neapolis', months: -1,
+          effects: { adminMult: 0.9, legitimacyAdd: 0.15 },
+        }),
+      },
+      {
+        id: 's_the_terraces_of_the_hills', name: 'The Terraces of the Hill Country',
+        civil: 'govt',
+        icon: 'grain', col: 0, row: 6, requires: ['s_the_schools_of_the_scroll'],
+        desc: 'Procopius says the best land in Palaestina went out of cultivation after the '
+          + 'statutes, and gives the reason without meaning to praise anybody: the men who '
+          + 'worked it had been told in law that nothing they planted could pass to a son. '
+          + 'This is olives and barley on terrace walls somebody\'s grandfather stacked by '
+          + 'hand. Give them a reason to stack more — 70 development across the realm, with '
+          + 'Neapolis still the Keepers\'.',
+        rewardText: '"The Terraces Worked Again": +10% income and +8% growth, permanently.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const me = who(ctx, 'SAM');
+          let dev = 0;
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (!p || p.impassable || p.owner !== me) continue;
+            const d = p.dev || {};
+            dev += (d.tax | 0) + (d.prod | 0) + (d.mp | 0);
+          }
+          return dev >= 70 && ctx.helpers.controls(ctx, 'SAM', 'Neapolis');
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_terraces_worked_again', name: 'The Terraces Worked Again', months: -1,
+          effects: { incomeMult: 1.1, growthMult: 1.08 },
+        }),
+      },
+      {
+        id: 's_the_road_to_ctesiphon', name: 'The Road to Ctesiphon',
+        civil: 'region',
+        icon: 'speaker', col: 1, row: 5,
+        desc: 'Malalas has the survivors of this rising going east to Kavad with an offer of '
+          + 'fifty thousand men, and eighty-five years from now the Keepers who are left will '
+          + 'open their gates to Chosroes and be remembered for it. A patron is not a friend. '
+          + 'It is the only thing on the far side of a border from an empire that has '
+          + 'legislated you out of your own fields. Bring the King of Kings to +40 regard.',
+        rewardText: '"The Ear at Ctesiphon": +1 deterrent and +10% manpower, permanently.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const sas = g.tags[who(ctx, 'SAS')];
+          const op = (sas && sas.opinion) || {};
+          return ((op[who(ctx, 'SAM')]) | 0) >= 40;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_ear_at_ctesiphon', name: 'The Ear at Ctesiphon', months: -1,
+          effects: { deterrent: 1, manpowerMult: 1.1 },
+        }),
+      },
+      {
+        id: 's_the_synagogues_of_the_coast', name: 'The Synagogues of the Coast',
+        civil: 'region',
+        icon: 'diaspora', col: 1, row: 6, requires: ['s_the_road_to_ctesiphon'],
+        desc: 'The community is not only on the mountain. There is a Samaritan quarter at '
+          + 'Caesarea that started both of the risings, there are Samaritans at Scythopolis '
+          + 'and in Alexandria and the Delta towns, and the oldest stone this diaspora has '
+          + 'left anywhere is on Delos, where it calls them the Israelites who send their '
+          + 'offerings to holy Argarizein. A people the chanceries have to answer is harder '
+          + 'to legislate away: stand among the ten first powers of the world.',
+        rewardText: '"The Chanceries Write to Neapolis": +1 diplomatic seat and +6% income, permanently.',
+        check: (ctx) => {
+          const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+          const i = ord.indexOf(who(ctx, 'SAM'));
+          return i >= 0 && i < 10;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_chanceries_write', name: 'The Chanceries Write to Neapolis', months: -1,
+          effects: { diploSeats: 1, incomeMult: 1.06 },
+        }),
+      },
+      {
+        id: 's_the_line_of_phinehas', name: 'The Line of Phinehas',
+        civil: 'court',
+        icon: 'shrine', col: 2, row: 5,
+        desc: 'The office is older than the quarrel with Jerusalem: Aaron, Eleazar, Phinehas, '
+          + 'and after them a list of names the chronicles keep in strict order because the '
+          + 'calendar is calculated from it and the festivals are announced by whoever is '
+          + 'holding it. He will bless a rising — there is nothing in the Torah he keeps about '
+          + 'anointing a king. Bring the High Priesthood to 70 approval with 50 favour banked, '
+          + 'and settle in writing what the crown is.',
+        rewardText: '"The Calendar Announced from the Mountain": +25% pilgrim income '
+          + 'and +0.25 legitimacy a month, permanently.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'SAM')] || {};
+          const favor = (t.estateFavor && t.estateFavor.priesthood) || 0;
+          return favor >= 50 && ctx.helpers.factionAtLeast(ctx, 'SAM', 'priesthood', 70);
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'SAM', {
+          id: 'the_calendar_announced', name: 'The Calendar Announced from the Mountain', months: -1,
+          effects: { pilgrimMult: 1.25, legitimacyAdd: 0.25 },
+        }),
+      },
+      {
+        id: 's_what_relief_costs', name: 'What Relief Costs',
+        civil: 'court',
+        icon: 'split', col: 2, row: 6, requires: ['s_the_line_of_phinehas'],
+        desc: 'The statutes bar the community from inheriting, from testifying, from any '
+          + 'office, and there has always been one way out of them, which is to stop being '
+          + 'Samaritan: Arsenius did it and died rich and near the throne. The Crowned Party '
+          + 'wants the war that makes the statutes unenforceable and the Quietists want the '
+          + 'arithmetic read aloud, and neither of them is lying. Hold both at 60 approval at '
+          + 'once — the community has to agree what it will pay before somebody agrees for it.',
+        rewardText: '+1 stability, and "The Community Decides": −0.75 unrest everywhere '
+          + 'and +10% manpower, permanently.',
+        check: (ctx) => ctx.helpers.factionAtLeast(ctx, 'SAM', 'quietists', 60)
+          && ctx.helpers.factionAtLeast(ctx, 'SAM', 'crowned', 60),
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'SAM', {
+            id: 'the_community_decides', name: 'The Community Decides', months: -1,
+            effects: { unrestAll: -0.75, manpowerMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'SAM', { stability: 1 });
+        },
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set.
@@ -982,7 +1123,7 @@ export const BOOKMARK_529 = {
       // Codex — the empire's answer to every rising is more law, better paid.
       {
         id: 'b_codex', name: 'The Codex Published',
-        icon: 'scroll', col: 0, requires: ['b_neapolis'],
+        icon: 'scroll', col: 0, row: 2, requires: ['b_neapolis'],
         desc: 'One law for the whole world: reach Government 12 — The Codex of Laws.',
         rewardText: '"The Codex": −0.5 unrest everywhere for 36 months.',
         check: (ctx) => (((ctx.game.tags.BYZ || {}).tech || {}).gov | 0) >= 12,

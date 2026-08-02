@@ -342,6 +342,25 @@ one `getTech()` a pass feeding both hosts. `uitest38.mjs` and `uitest8.mjs`
 carry the browser half; `uitest31.mjs` opens the chapters panel on the tab that
 now holds it.
 
+`smoke135.mjs` owns the SPEC §208 civil band: the three strands (`civil:
+'govt'|'region'|'court'`) every playable chain now carries beside its war
+ladder. Two of its mechanisms are worth knowing before you read a failure in
+it. Its pay test builds a **maximal realm** — every dial to its stop, the
+whole map owned — and asserts every civil node completes there; a node that
+does not is dead content, which is the one mission bug that never throws. That
+realm has to be **re-asserted before every pass**, because the missions above
+the band pay out as they complete and some of those rewards shift a faction or
+spend a treasury, so a snapshot decays out from under the band it is testing.
+And its AI-hand run boots each chapter **with somebody else on the throne**, to
+prove the government and region strands are earnable without a court:
+`monthlyFactions` runs for the player alone, so that run must leave the court
+table *absent* rather than full — fill it and any check reading `t.factions`
+directly instead of through `factionApproval` will fake its own reachability.
+Adding missions to a playable chain means updating the exact node counts in
+`smoke129`'s PRINCIPALS, `smoke126`'s GROWTH, and the index-based layout
+assertions in `smoke111` (which pin the whole col/row string), plus the
+totals in `smoke2` and `smoke3`.
+
 `smoke134.mjs` owns the SPEC §207 drumbeat: one mission completion per realm
 per monthly pass, then a rest of `MISSION_PACE_MONTHS` before the next may
 land. If you write a suite that forces a world and expects the pass to pay

@@ -1644,6 +1644,136 @@ export const BOOKMARK_1948 = {
           effects: { incomeMult: 1.1, legitimacyAdd: 0.25 },
         }),
       },
+      // ── The civil band (SPEC §208) ──────────────────────────────────────
+      // Three strands that run beside the war rather than after it: what the
+      // state becomes (col 0), where it stands among the courts (col 1), and
+      // what its own parties will bear (col 2). No root waits on a battle.
+      // The court strand reads the §34 politics the engine convenes for a
+      // human hand alone, so nothing outside column two waits on it and an
+      // AI Israel never stalls against a cabinet it does not hold.
+      {
+        id: 'i_the_first_knesset', name: 'The First Knesset',
+        icon: 'speaker', civil: 'govt', col: 0, row: 6,
+        desc: 'On 25 January 1949, with the armistice talks still running on Rhodes, 86.9 '
+          + 'percent of the electorate voted; twelve lists took the 120 seats, the Constituent '
+          + 'Assembly met in Jerusalem on 14 February, and two days later it renamed itself the '
+          + 'Knesset and declined to write a constitution — the Harari resolution of June 1950 '
+          + 'put that off to be done chapter by chapter, and it is still being put off. Embrace '
+          + 'twelve of the age\'s institutions: a state has to be built out of something.',
+        rewardText: '"The Transition Law": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'ISR')] || {}).embraced || []).length >= 12,
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_transition_law', name: 'The Transition Law', months: -1,
+          effects: { legitimacyAdd: 0.25, unrestAll: -0.5 },
+        }),
+      },
+      {
+        id: 'i_mamlachtiut', name: 'Mamlachtiut',
+        icon: 'scales', civil: 'govt', col: 0, row: 7, requires: ['i_the_first_knesset'],
+        desc: 'Dov Yosef\'s ration book arrived in April 1949 and the country lived on it for a '
+          + 'decade — an egg a week, ninety grams of chicken, and a black market everybody used '
+          + 'and nobody defended. Against that ledger Ben-Gurion built what he called '
+          + 'mamlachtiut: the Palmach staff dissolved by order in November 1948, the parties\' '
+          + 'school streams abolished by the Education Law of 1953, the labour exchanges taken '
+          + 'into the state in 1959 — every instrument the movements owned except the clinics '
+          + 'the Histadrut would not surrender. Take two civil reforms with the country at +2 '
+          + 'stability.',
+        rewardText: '"Mamlachtiut": +10% income permanently, and +30 governance points.',
+        check: (ctx) => {
+          const t = ctx.game.tags[who(ctx, 'ISR')] || {};
+          return (((t.reforms || {}).civ) | 0) >= 2 && (t.stability || 0) >= 2;
+        },
+        reward: (ctx) => {
+          ctx.helpers.addTagModifier(ctx, 'ISR', {
+            id: 'mamlachtiut', name: 'Mamlachtiut', months: -1, effects: { incomeMult: 1.1 },
+          });
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 30 });
+        },
+      },
+      {
+        id: 'i_the_seat_at_lake_success', name: 'The Seat at Lake Success',
+        icon: 'laurel', civil: 'region', col: 1, row: 6,
+        desc: 'The Security Council recommended admission at Lake Success on 4 March 1949, '
+          + 'having refused it in December, and the Assembly voted at Flushing Meadow on 11 May: '
+          + 'thirty-seven for, twelve against, nine abstaining. Abba Eban was thirty-four, and had '
+          + 'to give the assurances about Resolutions 181 and 194 out loud before the count. Stand '
+          + 'among the first five courts the world ranks — a country of a million people, counted '
+          + 'with the powers.',
+        rewardText: '"The Fifty-Ninth Flag": +1 diplomatic seat and +0.2 legitimacy a month, permanent.',
+        check: (ctx) => {
+          const ord = (ctx.game.standing && ctx.game.standing.order) || [];
+          const i = ord.indexOf(who(ctx, 'ISR'));
+          return i >= 0 && i < 5;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_fifty_ninth_flag', name: 'The Fifty-Ninth Flag', months: -1,
+          effects: { diploSeats: 1, legitimacyAdd: 0.2 },
+        }),
+      },
+      {
+        id: 'i_the_arms_road', name: 'The Arms Road',
+        icon: 'spears', civil: 'region', col: 1, row: 7, requires: ['i_the_seat_at_lake_success'],
+        desc: 'Washington embargoed weapons to the whole region on 5 December 1947 and London went '
+          + 'on filling Egyptian and Iraqi contracts under treaty, so the state bought where it '
+          + 'could: Ehud Avriel signed in Prague, and all that summer the transports flew rifles '
+          + 'and Czech-built Messerschmitts out of Žatec. Prague closed after the Slánský trial, '
+          + 'Peres opened Paris in 1954, de Gaulle shut it in 1967. Bring one of the five arsenals '
+          + '— Prague, Paris, Moscow, Washington, London — to +50 regard: a state with no arsenal '
+          + 'of its own has to be liked by somebody who has one.',
+        rewardText: '"A Supplier Somewhere": +8% discipline and +10% reinforcement, permanent.',
+        check: (ctx) => {
+          const g = ctx.game;
+          const me = who(ctx, 'ISR');
+          return ['CZE', 'FRA', 'SOV', 'USA', 'UK'].some((k) => {
+            const o = g.tags[k];
+            return !!o && o.alive !== false && ((o.opinion && o.opinion[me]) || 0) >= 50;
+          });
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'a_supplier_somewhere', name: 'A Supplier Somewhere', months: -1,
+          effects: { disciplineMult: 1.08, reinforceMult: 1.1 },
+        }),
+      },
+      {
+        id: 'i_the_letter_of_june', name: 'The Letter of June',
+        icon: 'scroll', civil: 'court', col: 2, row: 6,
+        desc: 'The government of a state not three years old fell in February 1951 over whose '
+          + 'schools would teach the Yemenite children in the transit camps, and it fell because '
+          + 'the letter of 19 June 1947 was a bargain about exactly that — the sabbath, the '
+          + 'kitchens, the courts of marriage, the schools, signed by Ben-Gurion, Rabbi Fishman '
+          + 'and Greenbaum a year before there was a state to bind. Hold the two signatures that '
+          + 'hold a cabinet: the religious bloc and the coalition, both at 70 approval.',
+        rewardText: '"The Status Quo": −0.6 unrest everywhere and +8% growth, permanent.',
+        check: (ctx) => {
+          const f = (ctx.game.tags[who(ctx, 'ISR')] || {}).factions || {};
+          return (f.rabbinate || 0) >= 70 && (f.coalition || 0) >= 70;
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_status_quo', name: 'The Status Quo', months: -1,
+          effects: { unrestAll: -0.6, growthMult: 1.08 },
+        }),
+      },
+      {
+        id: 'i_the_second_israel', name: 'The Second Israel',
+        icon: 'diaspora', civil: 'court', col: 2, row: 7, requires: ['i_the_letter_of_june'],
+        desc: 'They came out of Baghdad under the denaturalization law of March 1950 with fifty '
+          + 'dinars and no citizenship, out of Aden on the Alaska Airlines charters, out of '
+          + 'Tripoli and Casablanca — and most of them went into the ma\'abarot, a hundred and '
+          + 'twenty-seven camps holding some two hundred and twenty thousand people at the 1951 '
+          + 'peak, housed in part on German money the Knesset voted to go and negotiate for, '
+          + 'sixty-one to fifty, on 9 January 1952, with the windows breaking. In July 1959 Wadi '
+          + 'Salib answered. Hold all four blocs of the court at 65: a state that ingathers a '
+          + 'people has to find it a chair.',
+        rewardText: '"The Second Israel": +10% manpower and +8% income, permanent.',
+        check: (ctx) => {
+          const f = (ctx.game.tags[who(ctx, 'ISR')] || {}).factions || {};
+          return ['rabbinate', 'coalition', 'revisionists', 'kibbutzim'].every((k) => (f[k] || 0) >= 65);
+        },
+        reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
+          id: 'the_second_israel', name: 'The Second Israel', months: -1,
+          effects: { manpowerMult: 1.1, incomeMult: 1.08 },
+        }),
+      },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       // The §119 forks as standing hypotheticals; checks read the markers
       // the fork cards themselves set, or mirror their triggers exactly.
@@ -1769,7 +1899,7 @@ export const BOOKMARK_1948 = {
       // and the statecraft of the kingdom that means to keep what it holds.
       {
         id: 'jr_conscript_kingdom', name: 'The National Service',
-        icon: 'helmet', col: 0, requires: ['jr_latrun'],
+        icon: 'helmet', col: 0, row: 2, requires: ['jr_latrun'],
         desc: 'The Legion cannot stay small forever: reach Military 21 — The Conscript Army.',
         rewardText: '"The Expanded Legion": +10% manpower for 24 months.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JOR')] || {}).tech || {}).mar | 0) >= 21,
