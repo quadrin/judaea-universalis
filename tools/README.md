@@ -352,7 +352,7 @@ objective absorbs the first beat. Note the rule the suite pins hardest: a
 month whose checks all FAIL charges no rest, so the fail-then-fix idiom
 (smoke16's Third House) still completes on the very next call.
 
-`smoke136.mjs` owns the SPEC §209 works: the program table audited against
+`smoke138.mjs` owns the SPEC §211 works: the program table audited against
 1948's own base..ceiling window (every unlock a military rung, every
 prerequisite on the same court's roster and opening no later than what needs
 it, every effects key one the sim consumes, every `works` an arm §181 gates)
@@ -363,7 +363,7 @@ touches a treasury — and delivered permanently into `t.ideas`); the arm-by-arm
 gate, where a delivered Nesher opens `raiseAirWing` while `recruitRegiment`
 still refuses the tanks; the sale in both directions with the §181 fee landing
 in the treasury that paid for the shops; the Lavi's two endings; the AI's
-one-at-a-time rule and its bankruptcy branch; and a pre-§209 save reviving with
+one-at-a-time rule and its bankruptcy branch; and a pre-§211 save reviving with
 an empty book. If you add a program, that suite is where its numbers are
 checked — and note that Israel's only prerequisite-free work is the Uzi, so a
 test that wants two lines running has to deliver it first.
@@ -377,7 +377,7 @@ import" to "We build our own aircraft" to "…aircraft and armor — and sell to
 others" as works land, and 167 BCE drawing no block at all while its Host keeps
 How We Muster.
 
-Since SPEC §209 (the works of one's own): the 8-year set is **byte-identical**
+Since SPEC §211 (the works of one's own): the 8-year set is **byte-identical**
 on every bookmark, and so is `node tools/autorun.mjs 57 1948ce` — no AI court
 reaches mar 20 with a comfortable purse inside either window, because `aiTech`
 will not race the age and this chapter's AI spends its martial points on

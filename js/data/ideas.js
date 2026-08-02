@@ -50,7 +50,7 @@ export function ideaCost(tier) { // tier index 0..4
 // Rebuild tag.ideas = the tag's static national bonuses (DEFINES.TAGS[tag].ideas)
 // merged with everything its enacted reforms grant, everything its tech
 // levels confer (SPEC §22), every era-idea tier it has taken up (SPEC §179),
-// and every arms program its own shops have delivered (SPEC §209). Pure; call
+// and every arms program its own shops have delivered (SPEC §211). Pure; call
 // after any change to t.reforms, t.tech, t.eraIdeas or t.programs.
 export function applyReformsToTag(DEFINES, t, tagKey) {
   const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[tagKey] && DEFINES.TAGS[tagKey].ideas) || {};

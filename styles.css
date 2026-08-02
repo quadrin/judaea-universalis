@@ -3145,7 +3145,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   text-align: center;
 }
 
-/* the works of one's own (SPEC §209): the arms-program cards under How We
+/* the works of one's own (SPEC §211): the arms-program cards under How We
    Muster — a locked one reuses the §179 dark slab above, a live one carries
    its months and a progress bar, a delivered one is a quiet lit line */
 .np-progs { font-size: 12.5px; }

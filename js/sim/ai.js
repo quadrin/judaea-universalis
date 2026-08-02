@@ -1542,7 +1542,7 @@ function aiAirPower(ctx, tag) {
   const t = g.tags[tag];
   if (!t || num(t.tech && t.tech.mar) < 19) return;
   // Aircraft are an import (SPEC §181): with the market shut — and no
-  // aircraft works of our own (SPEC §209) — there is no squadron to buy and
+  // aircraft works of our own (SPEC §211) — there is no squadron to buy and
   // no point pouring a runway for one.
   if (armsGate(ctx, tag, 'wing')) return;
   const AIR = ctx.DEFINES.AIR || {};

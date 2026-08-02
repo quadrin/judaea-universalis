@@ -12703,7 +12703,7 @@ the ordinary §163 seed drift the §205 pass already documented.
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
 
-## 209. The works of one's own
+## 211. The works of one's own
 
 §181 answered the question the chapter had been getting wrong — a 1948 air
 wing and a 1948 armored regiment are **imports**, decided in somebody
@@ -12811,16 +12811,16 @@ seceded from — while a **formed crown** keeps everything, because
 state under a new name. And it does not pay for work in progress:
 `computeProgramEffects` folds only the delivered.
 
-The 8-year harness is **byte-identical** to the pre-§209 tree on every
+The 8-year harness is **byte-identical** to the pre-§211 tree on every
 bookmark, including 1948, and the 57-year 1948 run is identical too — which
 is the section's own honest report on its AI. No court reaches mar 20 with a
 comfortable purse inside those windows, because `aiTech` will not race the
 age and this chapter's AI spends its martial points on reforms and era ideas
 first. These are player decisions in practice, and rare AI ones; the AI path
-is real (smoke136 drives it) rather than aspirational, and it fires when a
+is real (smoke138 drives it) rather than aspirational, and it fires when a
 long campaign leaves a court rich, peaceful and high on the ladder.
 
-- **Regression contract**: `smoke136` — the table (unique keys, every unlock
+- **Regression contract**: `smoke138` — the table (unique keys, every unlock
   a military rung inside 1948's own 19..24 window, every prerequisite on the
   same court's roster and opening no later than what needs it, every effects
   key one the sim consumes, every `works` an arm §181 gates, and no other
@@ -12830,7 +12830,7 @@ long campaign leaves a court rich, peaceful and high on the ladder.
   delivery); the point of it (the aircraft works opening `raiseAirWing` while
   `recruitRegiment` still refuses the tanks, then both); the sale in both
   directions with the fee landing in the right treasury; the Lavi's two
-  endings; the AI's one-at-a-time and its bankruptcy branch; and a pre-§209
+  endings; the AI's one-at-a-time and its bankruptcy branch; and a pre-§211
   save reviving with an empty book and every antique chapter untouched.
   `smoke113` keeps its §181 claims verbatim — the market it pins is the same
   market — and `smoke103`/`smoke14` keep theirs about wings and airfields.

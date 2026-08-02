@@ -494,7 +494,7 @@ export const BOOKMARK_1948 = {
   // Britain's oil concession in the east. Israel starts under nobody, which
   // was always the point of the Embargo modifier below; the First Truce card
   // signs Prague, and 1955 signs Moscow over Cairo.
-  // The other half of that sentence is SPEC §209, and it lives with the
+  // The other half of that sentence is SPEC §211, and it lives with the
   // ideas rather than here: js/data/programs.js holds this chapter's roster
   // of weapons a court can develop at HOME — the Uzi, the Nesher, the
   // Merkava, the Lavi, Helwan's aircraft — each opened by a rung of the
