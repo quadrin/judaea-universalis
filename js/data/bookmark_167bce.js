@@ -201,7 +201,7 @@ export const BOOKMARK_167 = {
   mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
   activeProvinces: ['Modi\'in Hills'],
 
-  // The south country still swears by Qos (SPEC §209). The base atlas draws
+  // The south country still swears by Qos (SPEC §210). The base atlas draws
   // Idumea Jewish because that is what it was by 66 CE, and it was that way
   // because of a decision this chapter has not made yet: Hyrcanus' covenant,
   // around 112 BCE, which `ev_idumea_policy` puts in the player's hands. Until

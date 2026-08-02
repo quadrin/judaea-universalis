@@ -12702,7 +12702,7 @@ the ordinary §163 seed drift the §205 pass already documented.
   (whose roster table never covered 529), smoke101 and smoke112 (whose
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
-## 209. Idumea has its own gods until somebody gives it the Law
+## 210. Idumea has its own gods until somebody gives it the Law
 
 `ev_idumea_policy` is the 167 chapter's cleanest fork. Hyrcanus takes the
 south country and offers the conquered not tribute but kinship — the covenant
@@ -12730,7 +12730,7 @@ and cultures are separate namespaces and the pair reads as one people.
 **Where it is seated, and where it is not.** In the 167 chapter only, through
 that bookmark's `religions` overlay — `map_data.js` is untouched, and
 `RELIGION_KEYS` (base-atlas keys only, by its own comment) does not grow. A
-§209 that reached into the atlas would have handed the other seven campaigns
+§210 that reached into the atlas would have handed the other seven campaigns
 an unconverted Idumea in centuries where the conversion is a settled fact, so
 67, 40, 66, 132, 529, 614 and 1948 all still open with a Jewish south. The
 chapter seats two cells, which is all of Idumea at this map's resolution:
@@ -12822,7 +12822,7 @@ levied on them. What the harness window actually exercises is the Seleucid
 side, because the conversion card is dated to 126 BCE and the run closes in
 159.
 
-- **Regression contract**: `smoke136` owns the section — the faith declared,
+- **Regression contract**: `smoke137` owns the section — the faith declared,
   grouped pagan and coloured clear of every neighbour it shares a border with;
   the 167 chapter seating it while the base atlas and four later chapters stay
   Jewish; the +3 charged under a Jewish crown and read as heathen rather than

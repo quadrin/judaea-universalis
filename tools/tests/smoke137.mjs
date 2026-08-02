@@ -1,11 +1,11 @@
-// Headless smoke test §209: Idumea has its own gods until somebody gives it
+// Headless smoke test §210: Idumea has its own gods until somebody gives it
 // the Law.
 //
 // `ev_idumea_policy` is the 167 chapter's cleanest fork — the covenant or the
 // road — and before this section it converted nothing: the base atlas draws
 // Adora and Hebron Jewish, because that is what they were by 66 CE, so the
 // card that made them Jewish arrived at a map which had already agreed with
-// it. §209 seats the old cult of Qos in the 167 chapter only, which turns the
+// it. §210 seats the old cult of Qos in the 167 chapter only, which turns the
 // fork into a trade: the covenant buys off a standing heathen charge, the
 // tribute pays it forever. This suite pins the whole chain — the faith, where
 // it is seated, where it is NOT, what it costs, what each road does to the
@@ -115,7 +115,7 @@ console.log('== 167 seats the old cult; every later chapter is already Jewish ==
     ok(shareOf(p, 'idumean') === 1, '167: ' + n + ' is wholly Idumean in the makeup');
   }
   // The base atlas is drawn for 66 CE and MUST NOT move — the conversion is a
-  // fact by every later chapter's start date, and a §209 that reached into
+  // fact by every later chapter's start date, and a §210 that reached into
   // map_data would have unconverted Idumea for the other seven campaigns.
   const base = MAP_DATA.provinces.filter((p) => IDUMEA.includes(p.name));
   ok(base.length === 2 && base.every((p) => p.religion === 'judaism'),
@@ -131,7 +131,7 @@ console.log('== before the card, the south costs what a foreign altar costs ==')
 {
   const w = boot('167bce');
   // Idumea opens Seleucid, which is heathen ground under a Greek crown too —
-  // the change §209 makes is what happens when a JEWISH crown takes it.
+  // the change §210 makes is what happens when a JEWISH crown takes it.
   for (const n of IDUMEA.concat(['Jerusalem'])) w.ctx.helpers.changeOwner(w.ctx, n, 'HAS');
   for (const n of IDUMEA) {
     const rows = rowsOf(w, n);

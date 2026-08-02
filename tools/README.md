@@ -352,11 +352,11 @@ objective absorbs the first beat. Note the rule the suite pins hardest: a
 month whose checks all FAIL charges no rest, so the fail-then-fix idiom
 (smoke16's Third House) still completes on the very next call.
 
-`smoke136.mjs` owns the SPEC §209 conversion: the Idumean cult of Qos seated
+`smoke137.mjs` owns the SPEC §210 conversion: the Idumean cult of Qos seated
 in the 167 chapter only, the standing heathen charge it puts on the south
 country, and `ev_idumea_policy` moving the makeup rather than the paint. Two
 traps if you touch this. First, the base atlas MUST stay Jewish at Adora and
-Hebron — the suite asserts `MAP_DATA` directly, because a §209 that leaked
+Hebron — the suite asserts `MAP_DATA` directly, because a §210 that leaked
 into the atlas would hand the other seven chapters an unconverted Idumea in
 centuries where the conversion is a settled fact. Second, any card that gives
 a province a faith must go through `helpers.changeFaith` and not through
@@ -364,7 +364,7 @@ a province a faith must go through `helpers.changeFaith` and not through
 next `normalizePop` writes the old majority's faith back over a province whose
 label alone was changed.
 
-Since SPEC §209 (Idumea keeps the cult of Qos until the covenant): the seeded
+Since SPEC §210 (Idumea keeps the cult of Qos until the covenant): the seeded
 8-year 167 run is NOT byte-identical with the runs before it, and that is
 expected. Hebron and Adora open the chapter under the Seleucids, where a pagan
 cult is a same-group heretic (1.5) and the Law was a heathenism (3), so the

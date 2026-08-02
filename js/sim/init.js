@@ -548,7 +548,7 @@ export const simHelpers = {
     addPopulation(p, entry);
     resolveDisplayName(ctx, p);
   },
-  // A card that gives a province a new faith gives its PEOPLE one (SPEC §209).
+  // A card that gives a province a new faith gives its PEOPLE one (SPEC §210).
   // Since §56 every province carries a makeup, and the makeup — not the label
   // — is what communal unrest, the religion mapmode's stripe and every share
   // trigger read; `normalizePop` would also write the old majority's faith
