@@ -13300,6 +13300,149 @@ a promise.
   historical course, still world history, and carrying no §89 record.
   smoke39, smoke48 and smoke76 pass with their sweeps untouched — the
   cards keep every option and every `aiOption` pin they had.
+
+## 213. The works of one's own
+
+§181 answered the question the chapter had been getting wrong — a 1948 air
+wing and a 1948 armored regiment are **imports**, decided in somebody
+else's capital and cut off the month that capital changes its mind. It did
+not answer the next question, which is the one the century is actually
+about: *and then what?* The chapter had a mechanic for being embargoed and
+none for doing anything about it. Israel could court Paris, be sold to,
+watch de Gaulle sign in 1967, and then court somebody else — forever. The
+101st flew Avia S-199s out of crates in 1948 and the same state was flying
+an aircraft of its own drawing off its own runways in 1986. That arc had no
+representation at all.
+
+**An arms program** (`js/data/programs.js`, `t.programs`) is a named weapon
+system a court develops at home. It opens at a rung of the **military
+ladder** and behind whatever its own shops delivered first; beginning it
+costs talents and martial points; while it runs it bills a **development
+line** every month; and years later it **delivers**, permanently. The
+book is `{ key: monthsLeft }` — absent is unstarted, positive is in the
+shops, zero is delivered — so saves carry the whole system as plain
+numbers and every reader over it is a pure function.
+
+A delivered work is worth two things:
+
+- **Effects**, folded into `tag.ideas` by `applyReformsToTag` beside the
+  reform trees, the ladders and the era ideas. Same contract, same
+  resolver, nothing new to consume them.
+- **`works`** — the §181-gated arm this court can build from now on in its
+  own shops. This is the whole point of the section. `armsGate` takes the
+  arm it is being asked about, so the Nesher buys the sky and not the
+  ground: a state that has built its own fighter raises wings with no
+  supplier on earth and **still cannot raise a tank**. The two halves are
+  bought separately because they were.
+
+**Israel's eight, in the order the ladder reaches them.** The Uzi (mar 20)
+— stamped, cheap, the first thing the state's own shops made in quantity
+and the first thing they sold abroad. The Shafrir (21) — an air-to-air
+missile designed at home because the sellers would not sell one, which
+made every imported airframe worth more than its seller intended. The
+Gabriel and the boats (21) — a sea-skimming missile and small fast hulls,
+and the first missile action in the history of navies. The Nesher (22) —
+**the §181 answer to §181**: the fighter the supplier was paid for and
+never delivered, built anyway; an overhaul shop becomes a manufacturer and
+the sky stops being something another capital can switch off. The Merkava
+(23) — engine forward, crew behind it, a door in the back: a tank laid out
+by a state that could replace the tank and not the four men in it. The
+Kfir (23) — the same airframe around a bigger engine, and the first
+aircraft this state ever sold to anyone. The Ofek and the Shavit (24) — a
+satellite and a rocket to put it up, launching westward against the turn of
+the earth at a cost in payload, because everything eastward is somebody's
+airspace. And the Lavi (24), below.
+
+**Egypt gets two, and they are priced to fail.** Helwan's aircraft and the
+rockets of Al-Qahir were real, were announced from a reviewing stand, and
+ran out of money — a German design bureau, an Austrian engine team, a
+prototype over the desert, and a treasury that had to choose between the
+works and the army. They sit at mar 22 with strains of 4 and 3.5 against
+Egypt's own books on purpose. The AI branch that closes a line when the
+purse turns over is Helwan's entire history in four lines of code. Jordan
+gets none, which is also a claim: the Legion was somebody else's equipment
+and stayed that way.
+
+**The Lavi is the one the age argued about.** It needs the Kfir *and* the
+Merkava — an aircraft industry and a tank industry — sits at the age's own
+ceiling, costs 420 talents and 260 martial points, and bills 8 a month for
+four years, which is more than most of this chapter's courts clear in a
+month. It flies. And it is the only program with a **cancel** verb that is
+worth pressing: abandoning a line returns 40% of the talents and 25% of the
+points, and the Lavi alone carries `cancelOpinion` — the capital whose money
+was building it is *pleased*, +20. Finishing it costs that regard instead
+(`opinion: { USA: −20 }`), because an aircraft of your own is an aircraft
+you are not buying from the country paying for it. The Knesset settled that
+argument 12–11; here it is a button, and both answers are defensible.
+
+**And the works can be sold.** A court that builds every gated arm needs no
+supplier — and joins §181's exporters. `armsExporters` is the bookmark's
+declared arsenals *plus* whoever has built their way onto the list, so a
+self-sufficient Israel is signable by Amman, at Israel's regard, for a fee
+that lands in the treasury that paid for the shops. `armsSignGate` refuses
+that state a signature of its own for the one reason that is a boast: *our
+own works build every pattern we need.* The AI reads the same list, so a
+clientless court will court the new supplier like any other.
+
+### What it costs, and what it cannot break
+
+The development line is **a row on the ledger, not a withdrawal**. It rides
+`incomeBreakdown` as `develop` — so `explainIncome` names it ("The works,
+still building"), `t.expenses` includes it, the AI's own *can this realm pay
+its bills* reads it, and the treasury pays it exactly once. `monthlyPrograms`
+moves clocks and nothing else. It stops the month the work delivers: a
+delivered work is an asset, not a bill.
+
+The shops hold `PROGRAMS.maxAtOnce` (2) lines together, so the roster is a
+sequence of decisions rather than a shopping list. The AI runs **one** at a
+time, cheapest first, never at war, and only with the floor still standing
+after it pays — and abandons the line the month its treasury goes negative.
+
+Three things the section deliberately does not do. It does not touch a
+chapter that declares no `armsPrograms` table, which is all seven of the
+others: a Hasmonean foundry is not this mechanic, and `armsGate` answers ''
+in every antique era exactly as §181 left it. It does not travel with a
+**secession** — an idea of the age is in people's heads and walks out with
+them, a tank line is a building, and it is standing in the country that was
+seceded from — while a **formed crown** keeps everything, because
+`switchTagCore` carries the whole tag and the Kingdom of Israel is the same
+state under a new name. And it does not pay for work in progress:
+`computeProgramEffects` folds only the delivered.
+
+The 8-year harness is **byte-identical** to the pre-§213 tree on every
+bookmark, including 1948, and the 57-year 1948 run is identical too — which
+is the section's own honest report on its AI. No court reaches mar 20 with a
+comfortable purse inside those windows, because `aiTech` will not race the
+age and this chapter's AI spends its martial points on reforms and era ideas
+first. These are player decisions in practice, and rare AI ones; the AI path
+is real (smoke140 drives it) rather than aspirational, and it fires when a
+long campaign leaves a court rich, peaceful and high on the ladder.
+
+- **Regression contract**: `smoke140` — the table (unique keys, every unlock
+  a military rung inside 1948's own 19..24 window, every prerequisite on the
+  same court's roster and opening no later than what needs it, every effects
+  key one the sim consumes, every `works` an arm §181 gates, and no other
+  chapter with works at all); the five refusals in their own words and the
+  roster following a formed crown through its lineage; the arc (charged once,
+  billed as a ledger row, delivered permanently, the line stopping on
+  delivery); the point of it (the aircraft works opening `raiseAirWing` while
+  `recruitRegiment` still refuses the tanks, then both); the sale in both
+  directions with the fee landing in the right treasury; the Lavi's two
+  endings; the AI's one-at-a-time and its bankruptcy branch; and a pre-§213
+  save reviving with an empty book and every antique chapter untouched.
+  `smoke113` keeps its §181 claims verbatim — the market it pins is the same
+  market — and `smoke103`/`smoke14` keep theirs about wings and airfields.
+  Verified on the merged tree, after this section was renumbered four times
+  out of main's way — §209 to Beta Israel, §210 to Idumea's gods, §211 to the
+  civil band on every chain, §212 to the world's own dice: **140 of 140
+  headless suites ALL PASS**,
+  `uitest44` green in a real browser, and the 8-year harness byte-identical
+  to main alone — the same families, including the `167bce PAR: BLEEDING`
+  that §210 documented as its own. The lines of work never touched: main's
+  landed in 132/167 CE, the dispersion and the mission trees, this one in
+  1948 on the arms market, and the five files both sides opened
+  (`js/data/defines.js`, `js/data/bookmark_1948.js`, `js/sim/init.js`,
+  `js/ui/nation_panel.js`, `tools/README.md`) merged without a hand on them.
 ## 214. The fork decides what the state IS, not only what it does
 
 Five chapters ask a playable court what kind of state it is, and the

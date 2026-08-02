@@ -194,7 +194,7 @@ function aiRecruit(ctx, tag, hints, fraction) {
       // Armor is an import (SPEC §181): a client with no live pipeline skips
       // the mounted arm rather than stalling the whole muster on a shut
       // market. The foot is never gated, so the muster always has an answer.
-      if (type === 'cav' && armorNow && armsGate(ctx, tag)) continue;
+      if (type === 'cav' && armorNow && armsGate(ctx, tag, 'armor')) continue;
       // A treasury that cannot bear the dearer arms buys the cheap one.
       if (num(t.treasury) < priceOf(type) * 3) continue;
       const gap = MIX[type] - have[type] / total;
@@ -1541,9 +1541,10 @@ function aiAirPower(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
   if (!t || num(t.tech && t.tech.mar) < 19) return;
-  // Aircraft are an import (SPEC §181): with the market shut there is no
-  // squadron to buy and no point pouring a runway for one.
-  if (armsGate(ctx, tag)) return;
+  // Aircraft are an import (SPEC §181): with the market shut — and no
+  // aircraft works of our own (SPEC §213) — there is no squadron to buy and
+  // no point pouring a runway for one.
+  if (armsGate(ctx, tag, 'wing')) return;
   const AIR = ctx.DEFINES.AIR || {};
   const capName = tagDef(ctx, tag).capital;
   const cap = capName && ctx.prov ? ctx.prov(capName) : null;

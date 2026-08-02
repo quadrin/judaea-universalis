@@ -3145,6 +3145,36 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   text-align: center;
 }
 
+/* the works of one's own (SPEC §213): the arms-program cards under How We
+   Muster — a locked one reuses the §179 dark slab above, a live one carries
+   its months and a progress bar, a delivered one is a quiet lit line */
+.np-progs { font-size: 12.5px; }
+.np-prog { margin-bottom: 8px; }
+.np-prog-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+.np-prog-state {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.np-prog-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.np-prog-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(24, 21, 16, 0.75);
+  border: 1px solid rgba(85, 69, 46, 0.5);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.np-prog-bar > span { display: block; height: 100%; background: var(--gold-bright); }
+.np-prog-done .np-prog-head b { color: var(--gold-bright); }
+
 /* the ledger (SPEC §177): EU4's economy lines, in talents a month */
 .np-ledger { font-size: 12.5px; }
 .np-led-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px; }

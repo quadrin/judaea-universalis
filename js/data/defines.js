@@ -1385,6 +1385,21 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
+  // The works of one's own (SPEC §213): the other answer to §181's import.
+  // A court develops a named weapon system at home — opened by a rung of the
+  // military ladder, begun for talents and martial points, billed monthly
+  // while the shops run, and delivered years later. The per-program numbers
+  // live with the programs (js/data/programs.js); these are the dials that
+  // apply to all of them.
+  PROGRAMS: {
+    maxAtOnce: 2,          // programs a court may have in the shops together
+    cancelRefund: 0.4,     // share of the opening cost returned when one is abandoned
+    cancelPoints: 0.25,    // …and of the martial points
+    aiTreasuryFloor: 150,  // an AI court begins nothing below this reserve
+    aiPointFloor: 80,      // …nor with fewer martial points than the price plus this
+    aiOne: true,           // and it runs ONE at a time, whatever maxAtOnce allows
+  },
+
   // Financial aid (SPEC §186): where a bookmark names its donor courts, any
   // other court may petition one for aid — granted at the donor's regard,
   // sized to the donor's own purse, and flowing down the §24 subsidy pipe.

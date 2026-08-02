@@ -397,6 +397,40 @@ both directions on individual seeds. If you re-tune anything here, sweep seeds
 before believing a single run — the 167 chapter's own court sits close enough
 to the line to throw a one-seed flag on either tree.
 
+`smoke140.mjs` owns the SPEC §213 works: the program table audited against
+1948's own base..ceiling window (every unlock a military rung, every
+prerequisite on the same court's roster and opening no later than what needs
+it, every effects key one the sim consumes, every `works` an arm §181 gates)
+and every other chapter proven to have no works at all; the five refusals in
+their own words; the arc (charged once at the start, billed thereafter as the
+`develop` row of `incomeBreakdown` — `monthlyPrograms` moves clocks and never
+touches a treasury — and delivered permanently into `t.ideas`); the arm-by-arm
+gate, where a delivered Nesher opens `raiseAirWing` while `recruitRegiment`
+still refuses the tanks; the sale in both directions with the §181 fee landing
+in the treasury that paid for the shops; the Lavi's two endings; the AI's
+one-at-a-time rule and its bankruptcy branch; and a pre-§213 save reviving with
+an empty book. If you add a program, that suite is where its numbers are
+checked — and note that Israel's only prerequisite-free work is the Uzi, so a
+test that wants two lines running has to deliver it first.
+
+`uitest44.mjs` drives the same section in a real browser: The Works of Our Own
+drawn on the Host below How We Muster, a locked card naming its rung and the
+Lavi naming the two works it owes, one press starting a line (months, progress
+bar, Abandon button, and the monthly bill appearing in the block) and one press
+closing it again, the summary line flipping from "Every gated arm is still an
+import" to "We build our own aircraft" to "…aircraft and armor — and sell to
+others" as works land, and 167 BCE drawing no block at all while its Host keeps
+How We Muster.
+
+Since SPEC §213 (the works of one's own): the 8-year set is **byte-identical**
+on every bookmark, and so is `node tools/autorun.mjs 57 1948ce` — no AI court
+reaches mar 20 with a comfortable purse inside either window, because `aiTech`
+will not race the age and this chapter's AI spends its martial points on
+reforms and era ideas first. That is the honest report, not a bug: the works
+are a player decision in practice and a rare AI one. If a future tuning pass
+loosens the AI's point spending and 1948's trajectories start moving, the
+programs are the first place to look.
+
 Since SPEC §206 (the south and the east get their history: 27 dated world
 cards on the §205 ground): the 8-year set is byte-identical — the cards that
 fire inside any 8-year window move opinions and modifiers, not trajectories.
