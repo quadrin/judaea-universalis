@@ -22,7 +22,7 @@ import { checkDateEvents, checkTriggeredEvents } from './events.js';
 import { runMonthlyAI } from './ai.js';
 import { fleetsDaily, merchantVoyagesDaily, monthlyNavy } from './navy.js';
 import { monthlyRecruitment } from './recruitment.js';
-import { monthlyArms } from './arms.js';
+import { monthlyArms, monthlyPrograms } from './arms.js';
 import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
@@ -138,6 +138,7 @@ function monthlyBlock(ctx) {
   safe('chancery', () => monthlyChancery(ctx)); // the establishment is paid for, and the collars chafe (SPEC §202)
   safe('opinions', () => monthlyOpinionDrift(ctx));
   safe('arms', () => monthlyArms(ctx)); // pipelines lapse, and the AI signs its own (SPEC §181)
+  safe('programs', () => monthlyPrograms(ctx)); // …and the shops at home get a month older (SPEC §209)
   safe('aid', () => monthlyAid(ctx)); // war and embargo stop the checks, and the poor petition (SPEC §186)
   safe('warscore', () => updateWarscores(ctx));
   safe('tagLife', () => updateTagLife(ctx));

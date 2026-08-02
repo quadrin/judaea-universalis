@@ -47,7 +47,10 @@ import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
-import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
+import {
+  armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals,
+  programsInfo, startProgramCore, cancelProgramCore,
+} from './arms.js';
 import { aidInfo, requestAidCore } from './aid.js';
 import { seedPop, popTotal, popTension, addPopulation, communityLabel } from './population.js';
 import { campaignGuidance } from '../data/campaign_guidance.js';
@@ -262,6 +265,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
+      programs: {}, // the works of one's own, none yet (SPEC §209)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -1636,7 +1640,7 @@ export function gameActions(ctx) {
         if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
         // Aircraft are an import (SPEC §181): the same gate the sim enforces,
         // spoken on the button before the click finds it out.
-        const shut = armsGate(ctx, g.playerTag);
+        const shut = armsGate(ctx, g.playerTag, 'wing');
         if (!whyNot && shut) whyNot = shut.charAt(0).toUpperCase() + shut.slice(1) + '.';
         const queued = queuedUnitCount(ctx, provId, 'wing', g.playerTag);
         if (!whyNot && wings.length + queued >= cap) whyNot = 'The hangars are full or already committed (' + cap + ' wings).';
@@ -1787,6 +1791,33 @@ export function gameActions(ctx) {
         say('The arsenal opens', res.supplier + ' signs the weapons transfer agreement ('
           + res.cost + ' talents): their patterns are ours to raise.' + dropped, 'good');
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
+    },
+
+    // ---- the works of one's own (SPEC §209) ---------------------------------
+    // The other answer to §181's import: a roster of named weapon systems
+    // this court can develop at home, each behind a rung of the military
+    // ladder and the works that came before it. Null where the chapter (or
+    // this court) has no shops, so the panel block hides on one test.
+    getArmsPrograms() {
+      try { return programsInfo(ctx, g.playerTag); } catch (e) { warnOnce('getArmsPrograms', 'getArmsPrograms failed', e); return null; }
+    },
+    startArmsProgram(key) {
+      try {
+        const res = startProgramCore(ctx, g.playerTag, String(key));
+        if (!res.ok) { say('Not yet', res.why.charAt(0).toUpperCase() + res.why.slice(1) + '.', 'bad'); return; }
+        say('The shops take the order', res.name + ' — ' + res.months + ' months of work, and '
+          + res.strain + ' talents a month until it flies or fails.', 'good');
+      } catch (e) { warnOnce('startArmsProgram', 'startArmsProgram failed', e); }
+    },
+    cancelArmsProgram(key) {
+      try {
+        const res = cancelProgramCore(ctx, g.playerTag, String(key));
+        if (!res.ok) { say('Nothing to stop', res.why.charAt(0).toUpperCase() + res.why.slice(1) + '.', 'bad'); return; }
+        const pleased = res.pleased && res.pleased.length
+          ? ' ' + res.pleased.join(' and ') + ' is relieved, and says so warmly.' : '';
+        say('The line closes', res.name + ' is abandoned: ' + res.refund + ' talents and '
+          + res.points + ' martial points come back. The rest was the price of finding out.' + pleased, 'info');
+      } catch (e) { warnOnce('cancelArmsProgram', 'cancelArmsProgram failed', e); }
     },
 
     // ---- financial aid (SPEC §186) -------------------------------------------
@@ -3549,6 +3580,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
+      programs: {}, // the works of one's own, none yet (SPEC §209)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -3675,6 +3707,7 @@ export function reviveGame(saved) {
     if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
+    if (!t.programs || typeof t.programs !== 'object') t.programs = {}; // pre-§209 saves own no works
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};

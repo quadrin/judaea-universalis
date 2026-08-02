@@ -7,6 +7,9 @@ import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
+// The works of one's own (SPEC §209): the development line every program
+// still in the shops bills monthly. Pure data, so no cycle.
+import { programStrain } from '../data/programs.js';
 import { pilgrimageIncome } from './sacred.js';
 
 export const LOAN_SIZE = 150;            // talents received / repaid per loan
@@ -160,7 +163,7 @@ export function tradeIncome(ctx, tag) {
 export function incomeBreakdown(ctx, tag) {
   const g = ctx.game;
   const t = g.tags[tag];
-  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, interest: 0, trade: 0, pilgrims: 0, net: 0 };
+  const out = { tax: 0, prod: 0, mult: 1, base: 0, income: 0, tributeIn: 0, tributeOut: 0, maint: 0, fuel: 0, admin: 0, develop: 0, interest: 0, trade: 0, pilgrims: 0, net: 0 };
   if (!t) return out;
   Object.assign(out, ownIncome(ctx, tag));
   try { out.trade = tradeIncome(ctx, tag); } catch (e) { out.trade = 0; }
@@ -213,6 +216,10 @@ export function incomeBreakdown(ctx, tag) {
   // with the age and the realm respectively.
   out.fuel = fuelExpense(ctx, tag);
   out.admin = adminExpense(ctx, tag);
+  // Development (SPEC §209): what the shops cost while they are still
+  // shops. Zero in every chapter that builds no works of its own, and zero
+  // the month a program delivers — a delivered work is an asset, not a bill.
+  out.develop = programStrain(t);
   out.interest = Math.max(0, Math.round(num(t.loans))) * LOAN_INTEREST_PER_MONTH;
   // Subsidies & reparations (SPEC §24): monthly flows between courts. Both
   // sides read the same list, so the transfer balances by construction.
@@ -231,7 +238,7 @@ export function incomeBreakdown(ctx, tag) {
     out.offmapIn = om ? num(om.income, 0) : 0;
   } catch (e) { out.offmapIn = 0; }
   out.net = out.income + out.tributeIn + out.subsIn + out.offmapIn
-    - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.interest;
+    - out.tributeOut - out.subsOut - out.maint - out.fuel - out.admin - out.develop - out.interest;
   return out;
 }
 
@@ -298,7 +305,7 @@ export function runMonthlyEconomy(ctx) {
       const bd = incomeBreakdown(ctx, tag);
       const opened = num(t.treasury);
       t.income = Math.round((bd.income + bd.tributeIn + (bd.offmapIn || 0)) * 100) / 100;
-      t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, interest & tribute folded in
+      t.expenses = Math.round((bd.maint + bd.fuel + bd.admin + bd.develop + bd.interest + bd.tributeOut) * 100) / 100; // fuel, admin, the works, interest & tribute folded in
       t.treasury = num(t.treasury) + bd.net;
       // The court consumes what the country cannot justify holding (SPEC §101).
       const bleed = hoardBleed(ctx, tag, bd);
@@ -369,6 +376,7 @@ export function explainIncome(ctx, tag) {
     }
     if (bd.fuel > 0) rows.push({ label: 'Fuel', value: r2(-bd.fuel) });
     if (bd.admin > 0) rows.push({ label: 'Administration', value: r2(-bd.admin) });
+    if (bd.develop > 0) rows.push({ label: 'The works, still building', value: r2(-bd.develop) });
     if (bd.interest > 0) rows.push({ label: 'Loan interest', value: r2(-bd.interest) });
     const bleed = hoardBleed(ctx, tag, bd);
     if (bleed > 0.005) rows.push({ label: 'The court consumes (reserve past its means)', value: r2(-bleed) });

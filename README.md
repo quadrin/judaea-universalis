@@ -600,6 +600,22 @@ static site, the zero dependencies, or the missing build step changes.
   courtable, embargo-capable, intrigue-able, unconquerable. And at the end of
   the French road, if you hold the deep Negev, something can rise at Dimona
   that the budget calls a textile factory.
+- **…until the works are yours.** The other answer to an embargo is to build
+  the thing yourself, and 1948 lets you: eight named programs, each opened by
+  a rung of the military ladder and by whatever your shops delivered before
+  it, each paid for in talents, martial points and years of a monthly
+  development line on the ledger. The Uzi, the Shafrir, the Gabriel and the
+  missile boats, the Nesher (the fighter the supplier was paid for and never
+  delivered, built anyway), the Merkava, the Kfir, the Ofek — and the Lavi,
+  which needs an aircraft industry *and* a tank industry, sits at the top of
+  the ladder and the top of the budget, and can be abandoned mid-flight for
+  Washington's gratitude, exactly as the Knesset abandoned it 12–11. A
+  delivered work ends the import for **its own arm only**: your own fighter
+  buys the sky and not the ground. Build both and you need no supplier at
+  all — and other courts start signing weapons transfer agreements with
+  *you*, at your regard, for a fee that lands in your treasury. Nasser's
+  Helwan is on the same table, priced against Egypt's own books, and the AI
+  closes a line the month its purse turns over, which is what happened.
 - **The purse is somebody else's too.** The other thing the great powers
   signed was credits: in 1948 any court may petition Washington, Moscow,
   London or Paris for financial aid from the donor's own panel — granted at
