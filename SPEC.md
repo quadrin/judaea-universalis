@@ -12319,6 +12319,148 @@ Addis Ababa, Meroe or Kabul marches on the Levant.
   firing day, and ownership stays untouched so a genuine conquest still
   changes the answer.
 
+## 206. The south and the east get their history
+
+§205 drew all of Iran and all of Ethiopia and seated twelve courts on the
+new ground; this section gives that ground the thing every older region of
+the map already had — **its own dated world events**. Twenty-seven cards
+across seven existing packages (no new files, so smoke83's SOURCES map is
+untouched), every one a `world: true` card with a date and a named decider,
+so §70 deals each as a single-button notice naming the court whose choice
+it dramatizes, and §121's horizon can never strand one — a date IS a
+window. The admission rule is §104's, stated in each package header: every
+one of these happens whichever way Judaea's war went, because none of these
+places has heard of Judaea's war.
+
+**The 167 chain's east** (`events_167bce_world.js`, five cards): the upper
+satrapies passing to Mithridates I in −148 — Carmania off the Seleucids,
+Aria and Margiana off Bactria (Justin XLI.6, Strabo XI.9); Eucratides
+murdered by his son in −145, the chariot driven through the blood (Justin
+XLI.6.5); the Saka breakthrough of −129 that kills Greek Bactria as a
+state and two Kings of Kings in five years (Justin XLII.1-2); and then the
+two cards that are the section's engineering argument — **Sakastan settled
+in −110** and **Himyar rising at Zafar in −110**, both implemented as
+`secedeTag` (the LUK mechanism, §129: neither tag is in the 167 bookmark's
+activeTags; the events raise them at runtime). A 167 campaign played
+forward now CONVERGES on the political map the 67 BCE chapter opens with —
+SAK on the Helmand, HMY holding Zafar and Muza, Saba reduced to Marib and
+Najran — and smoke133 reads the convergence claim straight from the 67
+map's own table.
+
+**The Kandake's war** (`events_40bce_world.js`, four cards): Aelius Gallus
+beaten by the thirst road two days short of the frankincense country in
+−25 (Strabo XVI.4.22-24; Res Gestae 26.5 — Rome's one land attempt on
+Arabia, never repeated); the one-eyed queen sacking Syene the same year
+and burying the bronze head of Augustus under a temple doorsill at Meroe,
+face up, where the excavators found it in 1910 (Strabo XVII.1.54);
+Petronius burning Napata in −23 and coming back because there is nothing
+up there an army can hold; and the treaty of Samos in −20 — the only
+negotiated peace Augustus ever signed with an undefeated power, the
+tribute remitted, the frontier it drew outlasting every one the legions
+won. The arc is gated in sequence on the `kandakeWar` flag: no Petronius
+without a sack, no Samos without a war, and smoke133 proves the middle
+card refuses to fire first.
+
+**While Judaea burns** (`events_66ce_world.js`, three cards): Nero's
+praetorians back from the Sudd in 67 with the report Seneca took down
+himself (NQ VI.8.3) and the Ethiopian war Pliny says it scouted for (NH
+VI.181) quietly filed with it; the Periplus written down about 70 — the
+one §206 card whose subject is the §205 economy itself, paying the
+handbook ports and every incense crown a ten-year trade modifier; and the
+Alans riding through the Caspian Gates in 72 by the Hyrcanian king's
+leave, from the same book of Josephus as Masada (BJ VII.244-251), Pacorus
+ransoming his harem and Tiridates cutting the lasso from his own neck.
+
+**The spine's south** (`events_132ce_world.js`, three cards slotted into
+the §104 world spine in chronological place): Shammar Yuharish's fourfold
+style in 300 — Hadramawt's cells pass to Himyar and the engine's own
+`updateTagLife` retires the landless kingdom with its "banners are cast
+down" line, no bespoke death code; **Ezana taking the Cross in 340**
+(Rufinus HE I.9-10), the first coinage in the world to carry it, done in
+the same idiom as the spine's existing Armenia and Constantine cards; and
+**the fall of Meroe in 350** (the DAE 11 inscription), where Kush is not
+deleted but REBRANDED — `rebrandTag` to "The Noba" under the bow-of-
+Ta-Seti emblem the NOB flag already carries — because that is what the
+ground did: chiefdoms in the shell of a kingdom, and two centuries later
+Julian's converts.
+
+**The Keepers' far south** (`events_529ce_world.js`, four cards): Abraha
+deposing Kaleb's viceroy in 533 and remitting "a tribute consisting of
+the word tribute" (Procopius I.20 — the card is a permanent −7% income on
+Aksum, the conquest-across-a-sea becoming a pretense); Julian baptizing
+Nobatia in 543 from the cave where he taught up to his neck in water
+(John of Ephesus HE IV.6-7 — NOB and its cells convert, which is the
+state 614 opens them in); Wahriz's eight-ship convict fleet taking Yemen
+for the King of Kings about 570 (al-Tabari — the whole incense country
+transfers to SAS, which is the state 614 opens IT in; smoke133 reads both
+convergence claims from the 614 map's table); and the Marib dam giving
+way for the last time about 575 (after CIH 541's great repair of 548),
+the gardens of Saba silting to desert under a permanent province
+modifier, We made them into tales.
+
+**The conquest's south** (`events_614ce.js`, three cards): the first
+hijra in 615 — the Negus hearing the chapter of Mary and drawing his line
+on the floor, Islam's first state protection a Christian king's (the
+dormant RSH's opinion of Aksum set to +100 the year after the chapter
+opens); Badhan transferring the Persian south to Medina by letter in 631
+(al-Tabari), the abna converting with their governor — the one §206
+transfer gated on `freeCaliphate`, so a world where the rise never
+happened retires it silently; and **the Baqt of 652**, where the decider
+is NOB — the archers of the eye hold Dongola, any war between the
+caliphate and Nubia settles white through `endWar`, and the longest-kept
+treaty in either civilization's history begins. The 614 chapter now
+carries the rise of Islam as the south lived it, not only as the Levant
+did.
+
+**The region's other histories, continued south** (`events_1948_region.js`,
+five cards, the §105 convention extended): Mossadegh's nationalization in
+1951 and the boycott years (−15% Iranian income for 28 months), the 28th
+of Mordad in 1953 ending them — gated on the nationalization having
+happened, +40 UK and US opinion and −10 legitimacy, "the foreign hand
+acquires its modern meaning"; Eritrea federated to the Crown in 1952
+(Adulis transfers UK → ETH on the real BMA handover date) and the
+federation abolished in 1962 with the long war's first shots already
+fired; and the Sana'a revolution of September 1962, which is really an
+Egypt card — seventy thousand men into the mountains, "Our Vietnam" (−8%
+income, −7% manpower for five years), the army the June morning of 1967
+finds still there.
+
+### What the harness says
+
+The 8-year set is **byte-identical** to §205's — the three cards that fire
+inside any 8-year window (the Sudd report, the hijra, Abraha) move
+opinions and modifiers, not trajectories. The long runs are where §206
+lives, and each documented one was re-run:
+
+- `node tools/autorun.mjs 105 167bce` — the Hasmonean-century run now
+  reports `ROM SNOWBALL | PAR SNOWBALL | GBA DEAD`. The first two are the
+  §111-documented point of the run; **GBA DEAD is §206 working as
+  written** — Bactria dies to the Saka breakthrough of −129 on schedule,
+  Saba ends the century at three cells because Himyar took its coast, and
+  Sakastan stands where the 67 chapter expects it.
+- `node tools/autorun.mjs 60 614ce` — **no anomalies**, and Persia ends
+  the run at 41 provinces from 58: the southern transfer to the caliphate
+  firing in real flow, with Nubia and Aksum riding the century unflagged.
+- `node tools/autorun.mjs 295 132ce` — the §105-documented third-century
+  client deaths (OSR, ADI, CHX), plus `HDR DEAD`: Shammar's union of 300
+  doing what its inscription says. Himyar ends the run at eight cells with
+  the frankincense country absorbed; Kush ends it alive, renamed, and
+  four cells poorer in name only — the Noba holding the shell.
+
+- **Regression contract**: `smoke133` — all twenty-seven cards present in
+  their own chapters as dated world cards dated after their chapter opens;
+  the 167 arc fired in sequence through the real scheduler surface with
+  both secessions raising living courts on the exact cells the 67 map
+  seats them; the Kandake arc's flag-gating (no Petronius before the
+  sack); the spine's conversion, union and rebrand; the 529 tail's two
+  convergences read from the 614 table; Badhan and the Baqt behind the
+  caliphate gate; and the 1948 south's own sequence (no Mordad without a
+  nationalization, the boycott modifier arriving and lapsing). `smoke85`
+  holds the schema of every card automatically through the registry;
+  `smoke39`'s two-answer rule is satisfied by every card being `world:
+  true`, which is what they historically are — other courts' choices,
+  dealt to the player as news.
+
 ## 207. The drumbeat of accomplishment
 
 A mission completed the instant its condition did, and the monthly pass ran

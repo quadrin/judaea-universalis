@@ -1387,4 +1387,251 @@ export const EVENTS_1948_REGION = [
       },
     ],
   },
+
+  // ── SPEC §206: the region's other histories, at the map's new edges. The
+  // chapter's own rule (§105) extends south and east: the arcs of the powers
+  // the §205 frame seated — Tehran's oil decade, the Negus' federation and
+  // what he did to it, and the war in the Yemeni mountains that bled Egypt
+  // white before 1967. Same convention as the rest of the file: raw tags on
+  // purpose (this chapter's subject is which banner each capital flies), and
+  // every card happens whichever way the Palestine war went. ────────────────
+
+  // ── Y1 · 1951 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s48_mossadegh',
+    title: 'The Concession Is Cancelled',
+    worldLabel: 'Iran nationalizes the oil; the Royal Navy answers with a blockade of lawyers',
+    desc: 'The largest industrial enterprise in the Middle East — the refinery at '
+      + 'Abadan, the fields, the pipelines, the company town with its English '
+      + 'lawns — belongs, by a concession signed under another shah in another '
+      + 'age, to a company in which His Majesty\'s Government holds the '
+      + 'controlling share. In March the Majlis votes nationalization; in '
+      + 'April the author of the bill, Mohammad Mossadegh — an old '
+      + 'aristocrat who conducts politics from an iron bedstead, weeping and '
+      + 'fainting with formidable precision — becomes prime minister to '
+      + 'carry it out. Britain does not send the fleet, or rather sends it '
+      + 'only to hover: the answer is an embargo enforced by injunction, '
+      + 'insurers, and the simple fact that nobody else owns tankers. The '
+      + 'refinery runs down; the technicians sail home; the treasury '
+      + 'empties month by month while the old man argues Iran\'s case at '
+      + 'The Hague and wins, at the United Nations and wins, and at the '
+      + 'bank and loses.',
+    forTag: 'both',
+    decider: 'IRN',
+    date: { y: 1951, m: 5 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_mossadegh:when', (ctx) => alive(ctx, 'IRN')),
+    historical: 'The Majlis nationalized Anglo-Iranian in March 1951 and Mossadegh took office in April; the British embargo shut Abadan down by September and Iran\'s oil revenue fell to nearly nothing.',
+    options: [
+      {
+        label: 'Win at The Hague, lose at the bank',
+        tooltip: 'Iran gains "The Boycott Years" (−15% income for 28 months) and −1 stability, but +10 legitimacy — the concession\'s end is the most popular act of the reign. London is furious (UK opinion of Iran −60).',
+        effects: guard('ev_s48_mossadegh:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'IRN', { stability: -1, legitimacy: 10 });
+          h.addTagModifier(ctx, 'IRN', {
+            id: 'boycott_years', name: 'The Boycott Years', months: 28,
+            effects: { incomeMult: 0.85 },
+          });
+          setOpinion(ctx, 'UK', 'IRN', -60);
+          h.setFlag(ctx, 'oilNationalized', true);
+          h.chronicle(ctx, 'era', 'Iran nationalizes the oil and the old man on the iron bedstead wins every court but the bank: Abadan runs down, and the boycott years begin.');
+        }),
+      },
+    ],
+  },
+
+  // ── Y2 · 1952 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s48_eritrea_federated',
+    title: 'A Federation With One Partner',
+    worldLabel: 'The UN federates Eritrea with Ethiopia under the imperial crown',
+    desc: 'The last piece of the Italian empire is disposed of by resolution. '
+      + 'Eritrea — ex-Italian, British-administered since 1941, and split '
+      + 'down the middle between unionists who look to the highlands and '
+      + 'independents who look to the sea — is federated to Ethiopia by UN '
+      + 'Resolution 390A: an autonomous unit with its own elected assembly, '
+      + 'its own flag, its own official languages, "under the sovereignty '
+      + 'of the Ethiopian Crown." The Emperor\'s men fly to Asmara for the '
+      + 'ceremony; the arrangement gives Haile Selassie what four hundred '
+      + 'years of highland kings never had, a coastline; and every clause '
+      + 'about autonomy is written in a document whose only guarantor is '
+      + 'the sovereign it limits. Diplomats note the design flaw politely '
+      + 'and move on. The design flaw is the next forty years of the '
+      + 'region\'s history.',
+    forTag: 'both',
+    decider: 'ETH',
+    date: { y: 1952, m: 9 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_eritrea_federated:when', (ctx) => {
+      if (!alive(ctx, 'ETH')) return false;
+      const p = ctx.prov('Adulis');
+      return !!(p && p.owner === 'UK');
+    }),
+    historical: 'UN Resolution 390A(V) federated Eritrea with Ethiopia; the British Military Administration handed over in September 1952.',
+    options: [
+      {
+        label: 'Under the sovereignty of the Crown',
+        tooltip: 'Massawa and the Eritrean shore pass from British administration to Ethiopia; the empire gains its coastline (+5 legitimacy). The autonomy clauses have one guarantor.',
+        effects: guard('ev_s48_eritrea_federated:0', (ctx) => {
+          const h = ctx.helpers;
+          h.changeOwner(ctx, 'Adulis', 'ETH');
+          h.adjust(ctx, 'ETH', { legitimacy: 5 });
+          h.setFlag(ctx, 'eritreaFederated', true);
+          h.chronicle(ctx, 'era', 'The UN federates Eritrea to the Ethiopian Crown: the empire gains a coastline, and the autonomy clauses gain a guarantor who is also their only threat.');
+        }),
+      },
+    ],
+  },
+
+  // ── Y3 · 1953 ─────────────────────────────────────────────────────────────
+  {
+    id: 'ev_s48_mordad',
+    title: 'The 28th of Mordad',
+    worldLabel: 'The Mossadegh government falls in a royalist coup; the Shah flies home',
+    desc: 'It takes four days and two tries. The first attempt misfires — the '
+      + 'officer delivering the dismissal decree is arrested at the prime '
+      + 'minister\'s door, and the Shah, without waiting for the morning, '
+      + 'flies his own plane to Baghdad and on to Rome, where he is '
+      + 'photographed at a café table looking like a man rehearsing exile. '
+      + 'Then, on the 28th of Mordad by Tehran\'s calendar, the second try '
+      + 'takes: crowds hired and otherwise, led by the strongmen of the '
+      + 'wrestling clubs, converge from the bazaar; army units decide, '
+      + 'street by street, which orders they recognize; and by evening the '
+      + 'radio has changed hands, the old man is in a cellar awaiting a '
+      + 'polite treason trial, and the Shah is flying home to a throne he '
+      + 'will hold for twenty-five years and never quite trust again. The '
+      + 'oil returns as a consortium — the British share diluted with '
+      + 'American — and the words "foreign hand", already old in Persian '
+      + 'politics, acquire their modern meaning.',
+    forTag: 'both',
+    decider: 'IRN',
+    date: { y: 1953, m: 8 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_mordad:when', (ctx) => alive(ctx, 'IRN') && !!(ctx.game.flags && ctx.game.flags.oilNationalized)),
+    historical: 'The coup of 19 August 1953 (28 Mordad) removed Mossadegh after a first failed attempt and the Shah\'s flight to Rome; the oil returned as a consortium in 1954.',
+    options: [
+      {
+        label: 'The radio changes hands by evening',
+        tooltip: 'The boycott ends and the consortium signs: Iran +1 stability, the Boycott Years lapse, and the western capitals warm (+40 UK and US opinion). The words "foreign hand" acquire their modern meaning (−10 legitimacy).',
+        effects: guard('ev_s48_mordad:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'IRN', { stability: 1, legitimacy: -10 });
+          h.removeModifier(ctx, 'IRN', 'boycott_years');
+          setOpinion(ctx, 'UK', 'IRN', 40);
+          setOpinion(ctx, 'USA', 'IRN', 40);
+          h.setFlag(ctx, 'mordadCoup', true);
+          h.chronicle(ctx, 'era', 'The second try takes: the Mossadegh government falls on the 28th of Mordad, the Shah flies home, and the oil returns as a consortium. The foreign hand acquires its modern meaning.');
+        }),
+      },
+    ],
+  },
+
+  // ── Y4 · 1962 · September ─────────────────────────────────────────────────
+  {
+    id: 'ev_s48_sanaa_officers',
+    title: 'The Imam Is Dead a Week',
+    worldLabel: 'Revolution at Sana\'a: republic in the lowlands, Imamate in the mountains, Egypt in the middle',
+    desc: 'Imam Ahmad — who survived his father\'s assassination, a palace coup, '
+      + 'and by legend so many attempts on his own life that the tribes '
+      + 'called him the Djinn — dies at last in his bed, and his heir lasts '
+      + 'a week. Tanks under Colonel Sallal shell the palace at Sana\'a; a '
+      + 'Yemen Arab Republic is proclaimed over the radio; and the new '
+      + 'Imam, al-Badr, climbs out of a back window and into the northern '
+      + 'mountains, where the tribes are already gathering for the counter- '
+      + 'revolution. Then the region arrives. Nasser, needing a victory at '
+      + 'a manageable distance, sends first a battalion, then a division, '
+      + 'then seventy thousand men into mountains that have never obeyed a '
+      + 'lowland government of any description; Saudi silver and Jordanian '
+      + 'rifles come down the wadis to the royalists; and Egypt settles '
+      + 'into the war its own officers will call, without affection, our '
+      + 'Vietnam — the army\'s best formations, its poison-gas squadrons '
+      + 'and its budget bleeding into the Yemen for five years, until a '
+      + 'June morning in 1967 finds them still there.',
+    forTag: 'both',
+    decider: 'YEM',
+    date: { y: 1962, m: 9 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_sanaa_officers:when', (ctx) => alive(ctx, 'YEM')),
+    historical: 'Imam Ahmad died on 19 September 1962 and Sallal\'s coup followed on the 26th; the civil war drew in some 70,000 Egyptian troops against Saudi-backed royalists and ran past 1967.',
+    options: [
+      {
+        label: 'Republic on the radio, Imamate in the hills',
+        tooltip: 'Yemen −2 stability and "The War in the Mountains" (+3 unrest across its provinces for 5 years). If Egypt stands, it is drawn in: −150 talents, and "Our Vietnam" (−8% income and −7% manpower for 5 years).',
+        effects: guard('ev_s48_sanaa_officers:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'YEM', { stability: -2 });
+          unrestAcross(ctx, 'YEM', ['Zafar', 'Muza', 'Marib'], {
+            id: 'war_in_mountains', name: 'The War in the Mountains', months: 60,
+            effects: { unrest: 3 },
+          });
+          if (alive(ctx, 'EGY')) {
+            h.adjust(ctx, 'EGY', { treasury: -150 });
+            h.addTagModifier(ctx, 'EGY', {
+              id: 'our_vietnam', name: 'Our Vietnam', months: 60,
+              effects: { incomeMult: 0.92, manpowerMult: 0.93 },
+            });
+            setOpinion(ctx, 'SAU', 'EGY', -80);
+          }
+          h.setFlag(ctx, 'yemenRevolution', true);
+          h.chronicle(ctx, 'era', 'The Imam is dead a week when the tanks shell the palace: republic in the lowlands, Imamate in the mountains, and Egypt marching seventy thousand men into the war its officers will call our Vietnam.');
+        }),
+      },
+    ],
+  },
+
+  // ── Y5 · 1962 · November ──────────────────────────────────────────────────
+  {
+    id: 'ev_s48_eritrea_annexed',
+    title: 'The Federation With One Partner Ends',
+    worldLabel: 'The Eritrean assembly votes itself out of existence; the long war begins',
+    desc: 'The design flaw matures on schedule. Ten years of imperial pressure — '
+      + 'the Eritrean flag banned, the languages of administration changed, '
+      + 'the assembly\'s powers filed away one by one — end in November '
+      + '1962 with the assembly, police at the doors, voting to abolish '
+      + 'the federation and itself, and Eritrea becomes the empire\'s '
+      + 'fourteenth province. The UN, guarantor of the arrangement, files '
+      + 'no objection; the resolution had no enforcement clause, and the '
+      + 'Emperor is by now the continent\'s elder statesman, host of the '
+      + 'new Organization of African Unity. But the fuse is already lit: '
+      + 'a year before the vote, a police sergeant named Hamid Idris '
+      + 'Awate fired the first shots in the hills near Agordat, and the '
+      + 'war he started will outlive the Emperor, his successors, and '
+      + 'very nearly the century — thirty years to prove the diplomats\' '
+      + 'polite note correct.',
+    forTag: 'both',
+    decider: 'ETH',
+    date: { y: 1962, m: 11 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev_s48_eritrea_annexed:when', (ctx) => {
+      if (!alive(ctx, 'ETH')) return false;
+      const p = ctx.prov('Adulis');
+      return !!(p && p.owner === 'ETH');
+    }),
+    historical: 'The Eritrean assembly voted the federation\'s abolition on 14 November 1962; the armed struggle dated from Awate\'s first action at Mount Adal in September 1961 and ran to 1991.',
+    options: [
+      {
+        label: 'The fourteenth province',
+        tooltip: 'Massawa and the Eritrean shore carry "The Long War Begins" (+3 unrest, −10% tax for 10 years); Ethiopia +5 legitimacy now, and a mark history will collect on.',
+        effects: guard('ev_s48_eritrea_annexed:0', (ctx) => {
+          const h = ctx.helpers;
+          unrestAcross(ctx, 'ETH', ['Adulis'], {
+            id: 'long_war_begins', name: 'The Long War Begins', months: 120,
+            effects: { unrest: 3, taxMult: 0.9 },
+          });
+          h.adjust(ctx, 'ETH', { legitimacy: 5 });
+          h.setFlag(ctx, 'eritreaAnnexed', true);
+          h.chronicle(ctx, 'era', 'The Eritrean assembly, police at the doors, votes itself out of existence; the sergeant in the hills has already fired the first shots of a thirty-year answer.');
+        }),
+      },
+    ],
+  },
 ];

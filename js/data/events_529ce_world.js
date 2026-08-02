@@ -895,4 +895,219 @@ export const EVENTS_529_WORLD = [
       },
     ],
   },
+
+  // ── SPEC §206: the south while the Keepers keep. The chapter opens four
+  // years after Kaleb's crossing, and the far end of the map keeps moving
+  // through its whole span: the viceroy who stops answering, the missionary
+  // in the cave, the dam, and the eight ships that end four centuries of
+  // Aksumite reach. Sources: Procopius Wars I.19-20, John of Ephesus HE
+  // IV.6-7, CIH 541 and the dam inscriptions, al-Tabari on the deacon's
+  // fleet. Same admission rule: none of this asks how Samaria's war went. ──
+
+  // ── S1 · 533 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev529_w_abraha',
+    title: 'The Viceroy Stops Answering',
+    worldLabel: 'Abraha takes Himyar from Kaleb\'s viceroy; the tribute becomes a word',
+    desc: 'Four years ago the negus crossed the strait, broke the Jewish king of '
+      + 'Himyar, and left a viceroy at Zafar with an Aksumite garrison. Now the '
+      + 'garrison has decided it prefers its own judgment: a soldier named '
+      + 'Abraha — Procopius, who is following all of this from Justinian\'s '
+      + 'council, calls him a slave-born man of business — deposes the viceroy '
+      + 'and takes the country. Kaleb sends an army; it goes over to Abraha. '
+      + 'He sends another; it is destroyed. And then the accounting settles '
+      + 'into the oldest shape in the world: Abraha, secure, sends the negus '
+      + 'tribute — Procopius\' phrase is that he agreed to pay it, having '
+      + 'become strong enough not to — and the tribute is a word, and both '
+      + 'courts agree to pretend the word is a fact. The conquest across the '
+      + 'sea has lasted eight years as a conquest. As a pretense it will last '
+      + 'a generation, which is longer than most facts.',
+    forTag: 'both',
+    decider: 'AXM',
+    date: { y: 533, m: 6 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev529_w_abraha:when', (ctx) => {
+      if (!alive(ctx, 'AXM')) return false;
+      const z = ctx.prov('Zafar');
+      return !!(z && z.owner === who(ctx, 'AXM'));
+    }),
+    historical: 'Abraha deposed Sumyafa Ashwa about 531-535 and defeated two Aksumite armies sent against him; he thereafter paid Kaleb nominal tribute (Procopius, Wars I.20).',
+    options: [
+      {
+        label: 'Agree to call the word a fact',
+        tooltip: 'Aksum −1 stability and "The Viceroy\'s Word" (−7% income permanently — the Yemen remits a phrase). The conquest across the sea becomes a pretense that will outlast most facts.',
+        effects: guard('ev529_w_abraha:0', (ctx) => {
+          const h = ctx.helpers;
+          h.adjust(ctx, 'AXM', { stability: -1 });
+          h.addTagModifier(ctx, 'AXM', {
+            id: 'viceroys_word', name: 'The Viceroy\'s Word', months: -1,
+            effects: { incomeMult: 0.93 },
+          });
+          h.setFlag(ctx, 'abrahaViceroy', true);
+          h.chronicle(ctx, 'era', 'Abraha deposes the viceroy at Zafar, destroys the army sent to correct him, and thereafter remits to Aksum a tribute consisting of the word "tribute".');
+        }),
+      },
+    ],
+  },
+
+  // ── S2 · 543 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev529_w_julian_nubia',
+    title: 'The Missionary in the Cave',
+    worldLabel: 'Julian baptizes Nobatia; the Nile above the cataract takes the Cross',
+    desc: 'The mission that converts a thousand years of Nile kingdoms begins as a '
+      + 'court intrigue between an emperor and his wife. Justinian prepares a '
+      + 'mission to the Nubian kings — of his own Chalcedonian persuasion. '
+      + 'Theodora, whose sympathies run the other way, gets her man there '
+      + 'first: John of Ephesus tells, with open admiration, how the empress '
+      + 'wrote ahead to the duke of the Thebaid and arranged for the '
+      + 'emperor\'s embassy to be politely, thoroughly delayed while the '
+      + 'presbyter Julian went up the river. What Julian endures for the '
+      + 'faith is the detail the historian keeps: a heat so terrible that '
+      + 'from the third hour to the tenth he sat teaching in a cave, up to '
+      + 'his neck in water, clothed in nothing but a linen cloth. It works. '
+      + 'The king of the Nobades and his nobles are baptized; the temples of '
+      + 'Isis at Philae, the last pagan sanctuary of the classical world, '
+      + 'have already been closed at the emperor\'s order; and the river '
+      + 'kingdoms above the cataract begin four centuries as the southern '
+      + 'bastion of a church their converter\'s own empire calls heretical.',
+    forTag: 'both',
+    decider: 'NOB',
+    date: { y: 543, m: 8 },
+    world: true,
+    aiOption: 0,
+    when: safeTrigger('ev529_w_julian_nubia:when', (ctx) => alive(ctx, 'NOB')),
+    historical: 'Julian\'s mission baptized the Nobadae about 543, Theodora having outmaneuvered Justinian\'s rival embassy (John of Ephesus, HE IV.6-7); Longinus completed the work to Alodia by 580.',
+    options: [
+      {
+        label: 'Teach from the water',
+        tooltip: 'Nubia and its provinces become Christian; the kingdom gains +1 stability and the two courts of the Nile and the Bosporus warm (+40 opinion both ways).',
+        effects: guard('ev529_w_julian_nubia:0', (ctx) => {
+          const h = ctx.helpers;
+          const g = ctx.game;
+          const nob = who(ctx, 'NOB');
+          const t = g.tags[nob];
+          if (t) t.religion = 'christianity';
+          for (let i = 1; i < g.provinces.length; i++) {
+            const p = g.provinces[i];
+            if (p && !p.impassable && p.owner === nob) p.religion = 'christianity';
+          }
+          h.adjust(ctx, nob, { stability: 1 });
+          if (alive(ctx, 'BYZ')) {
+            setOpinion(ctx, 'NOB', 'BYZ', 40);
+            setOpinion(ctx, 'BYZ', 'NOB', 40);
+          }
+          h.setFlag(ctx, 'nubiaBaptized', true);
+          h.chronicle(ctx, 'era', 'The presbyter Julian teaches from a cave up to his neck in water, and the king of the Nobades is baptized: the Nile above the cataract takes the Cross it will hold for a thousand years.');
+        }),
+      },
+    ],
+  },
+
+  // ── S3 · 570 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev529_w_wahriz',
+    title: 'Eight Ships for a Kingdom',
+    worldLabel: 'Wahriz takes Yemen for the King of Kings; Aksum loses its sea',
+    desc: 'It ends the way it began — with a foreign fleet and a local claimant. A '
+      + 'Himyarite prince of the old line, Sayf son of Dhi Yazan, tours the '
+      + 'courts of the north asking someone, anyone, to put the Ethiopians '
+      + 'out of his country. Constantinople declines: the Aksumites are '
+      + 'fellow Christians and nominal allies. Ctesiphon\'s war council is '
+      + 'against it too — too far, too little worth taking — until, the '
+      + 'story goes, the argument that carries the day is that the '
+      + 'expedition can be made entirely out of things the King of Kings can '
+      + 'afford to lose: eight ships, and eight hundred men from the '
+      + 'prisons. Two ships sink on the way. The commander is Wahriz, an '
+      + 'old man of the old families; at the decisive battle he asks which '
+      + 'rider is the Ethiopian king, takes one shot with the bow he has to '
+      + 'have strung for him, and puts it through Masruq\'s forehead. Six '
+      + 'hundred convicts take a country four Roman emperors courted. The '
+      + 'abna — the sons, half-Persian garrison children — will hold '
+      + 'Sana\'a for two generations, and the far end of Arabia is a '
+      + 'Sasanian province the year a boy named Muhammad is born in Mecca.',
+    forTag: 'both',
+    decider: 'SAS',
+    date: { y: 570, m: 11 },
+    world: true,
+    major: true,
+    aiOption: 0,
+    when: safeTrigger('ev529_w_wahriz:when', (ctx) => alive(ctx, 'SAS')),
+    historical: 'Khosrow I sent Wahriz with a convict fleet about 570-575; Masruq son of Abraha fell to Wahriz\'s arrow and Yemen became a Sasanian province held by the abna (al-Tabari; the tradition\'s date for the Prophet\'s birth is the same year).',
+    options: [
+      {
+        label: 'One arrow, strung by another man\'s hands',
+        tooltip: 'The incense country — Zafar, Muza, Aden, Marib, Najran, the Hadramawt shore and Dioscurida — passes to the King of Kings. Persia −100 talents for the fleet; Aksum −1 stability and a cold rage (−80 opinion of Persia).',
+        effects: guard('ev529_w_wahriz:0', (ctx) => {
+          const h = ctx.helpers;
+          const sas = who(ctx, 'SAS');
+          const axm = who(ctx, 'AXM');
+          for (const n of ['Zafar', 'Muza', 'Eudaemon Arabia', 'Marib', 'Najran',
+            'Shabwa', 'Moscha', 'Dioscurida']) {
+            const p = ctx.prov(n);
+            if (!p || p.impassable) continue;
+            const holder = ctx.game.tags[p.owner];
+            if (p.owner === axm || !holder || holder.alive === false) h.changeOwner(ctx, n, sas);
+          }
+          h.adjust(ctx, sas, { treasury: -100 });
+          if (alive(ctx, 'AXM')) {
+            h.adjust(ctx, 'AXM', { stability: -1 });
+            setOpinion(ctx, 'AXM', 'SAS', -80);
+          }
+          h.setFlag(ctx, 'wahrizYemen', true);
+          h.chronicle(ctx, 'era', 'Wahriz\'s convict fleet takes Yemen for the King of Kings with one aimed arrow; Aksum loses its sea, and the far end of Arabia is Persian the year Muhammad is born.');
+        }),
+      },
+    ],
+  },
+
+  // ── S4 · 575 ──────────────────────────────────────────────────────────────
+  {
+    id: 'ev529_w_marib_breaks',
+    title: 'The Dam Gives Way for the Last Time',
+    worldLabel: 'The great dam at Marib is abandoned; the gardens of Saba go under the sand',
+    desc: 'The oldest working thing in the world stops working. The dam at Marib '
+      + 'is not a wall but a system — a sluice-and-spillway engine of packed '
+      + 'earth and dressed stone that has caught the mountain floods and '
+      + 'watered the twin gardens of Saba for thirteen hundred years, and '
+      + 'which every kingdom in the south, whatever its gods, has repaired as '
+      + 'the price of calling itself a kingdom. Abraha\'s own inscription on '
+      + 'the last great repair reads like a state budget: so many thousands '
+      + 'of workmen fed, so many camels slaughtered, the embassies of Rome '
+      + 'and Persia and Aksum received at the works. Now the works are '
+      + 'nobody\'s budget. The garrison state of the abna repairs frontiers, '
+      + 'not sluices; the floods come; the breach stands. The gardens that '
+      + 'fed sixty generations silt to desert within one, and the tribes '
+      + 'that farmed them scatter north along the caravan roads — a '
+      + 'dispersal Arabia will remember as the moment its old world ended, '
+      + 'and a later scripture will cite as the judgment on Saba: We made '
+      + 'them into tales.',
+    forTag: 'both',
+    decider: 'SAS',
+    date: { y: 575, m: 7 },
+    world: true,
+    aiOption: 0,
+    historical: 'The Marib dam\'s final breach and abandonment fell in the 570s-580s, after Abraha\'s great repair of 548 (CIH 541); Quran 34:15-19 preserves the memory of the dispersal.',
+    options: [
+      {
+        label: 'The breach stands',
+        tooltip: 'Marib carries "The Broken Dam" permanently (−40% tax, −30% production, +2 unrest), and Zafar and Najran carry "The Tribes Scatter" (+1 unrest for 5 years). The old south ends.',
+        effects: guard('ev529_w_marib_breaks:0', (ctx) => {
+          const h = ctx.helpers;
+          stir(ctx, ['Marib'], {
+            id: 'broken_dam', name: 'The Broken Dam', months: -1,
+            effects: { taxMult: 0.6, prodMult: 0.7, unrest: 2 },
+          });
+          stir(ctx, ['Zafar', 'Najran'], {
+            id: 'tribes_scatter', name: 'The Tribes Scatter', months: 60,
+            effects: { unrest: 1 },
+          });
+          h.setFlag(ctx, 'maribBroken', true);
+          h.chronicle(ctx, 'era', 'The dam at Marib gives way for the last time and no kingdom repairs it; the gardens of Saba silt to desert and the tribes scatter north. We made them into tales.');
+        }),
+      },
+    ],
+  },
 ];

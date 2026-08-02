@@ -250,9 +250,17 @@ static site, the zero dependencies, or the missing build step changes.
 - The world keeps moving after the local chapter turns: a separate world-history
   clock follows Parthia, Roman civil wars, Actium and Augustus, Hadrian's
   succession, the rise of the Rashidun Caliphate, and the coups, pacts, unions,
-  and wars of the 1950s. These events launch pressure against the realm that
-  actually holds a region; they do not hand historical provinces across a map
-  the player has already changed.
+  and wars of the 1950s — and, since the map grew south and east, the far
+  ends of it too: the Saka breaking Greek Bactria and Sakastan taking its
+  name, Himyar rising out of old Saba, the one-eyed Kandake burying the head
+  of Augustus under a temple doorsill and getting her treaty on Samos, the
+  Periplus written down port by port, Ezana's Cross and the fall of Meroe,
+  Kaleb's Yemen lost to Abraha and then to Wahriz's eight convict ships, the
+  hijra to the king in whose land no one is wronged, Badhan's province
+  transferred by letter, the Nubian archers signing the Baqt at Dongola, and
+  the 1950s of Tehran, Asmara and Sana'a. These events launch pressure
+  against the realm that actually holds a region; they do not hand
+  historical provinces across a map the player has already changed.
 - Technology: three ladders (government, influence, military) bought with monarch
   points, EU4-style — keeping pace with the age is cheap, racing ahead costs +50% a
   level. Military tech is the biggest lever on the battlefield and unlocks new
