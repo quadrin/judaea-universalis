@@ -74,7 +74,7 @@ export function createWiki({ DEFINES, getCtx }) {
     // A card may resolve its decider at fire time (SPEC §105); the wiki reads
     // the chain cold, with no world to resolve against, so it names the court
     // the card is written for and leaves the runtime to pick the successor.
-    // A rolled card (SPEC §211) names the same court and a different answer:
+    // A rolled card (SPEC §212) names the same court and a different answer:
     // nobody at the table gets the question, and the course is drawn.
     if (ev.decider && typeof ev.decider !== 'function') {
       rows.push(['The choice belongs to', tagName(ev.decider)

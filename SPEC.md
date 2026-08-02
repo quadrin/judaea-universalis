@@ -13045,7 +13045,7 @@ side, because the conversion card is dated to 126 BCE and the run closes in
   167 BCE and the makeup — and `js/sim/population.js`, the one file both
   sides opened, merged without a hand on it.
 
-## 211. Not every foreign question is a question — the world rolls for it
+## 212. Not every foreign question is a question — the world rolls for it
 
 §70 gave the engine the rule that a foreign court's decision is not ours to
 make, and 381 cards took it. Twenty-five did not, and they were the ones
@@ -13129,7 +13129,7 @@ labelled "the recorded course" rather than "the historical course",
 because on a rolled card the record is the likelier half of a draw and not
 a promise.
 
-- **Regression contract**: `smoke138` — the notice and its drawn course
+- **Regression contract**: `smoke139` — the notice and its drawn course
   through the pending entry, the bus payload, the acknowledgment and a
   save round-trip; the weight at 0/1 and over two thousand rolls; the same
   seed rolling the same course; an unrolled card leaving the stream
