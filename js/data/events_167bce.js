@@ -3344,7 +3344,7 @@ export const EVENTS_167 = [
             effects: { manpowerMult: 1.1 },
           });
           for (const name of ['Hebron', 'Adora']) {
-            // The covenant moves PEOPLE, not paint (SPEC §208): the Idumeans
+            // The covenant moves PEOPLE, not paint (SPEC §209): the Idumeans
             // of the makeup become Jews of Idumean stock, which is exactly
             // what Josephus says happened and exactly what the unrest
             // breakdown has been charging for since the chapter opened.
