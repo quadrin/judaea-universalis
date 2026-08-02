@@ -912,6 +912,18 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const hypo = list.filter((m) => m.hypothetical);
     const doneN = base.filter((m) => m.status === 'done').length;
     const hypoDone = hypo.filter((m) => m.status === 'done').length;
+    // The drumbeat (SPEC §206): while the chain rests from its last
+    // accomplishment, say so — a satisfied medallion that has not landed
+    // is the pace at work, not a broken check.
+    let paceNote = '';
+    if (actions && typeof actions.getMissionPace === 'function') {
+      try {
+        const p = actions.getMissionPace();
+        if (p && p.rest > 0) {
+          paceNote = ` · <span class="np-mt-pace">the realm consolidates — the next may complete in ${p.rest} month${p.rest === 1 ? '' : 's'}</span>`;
+        }
+      } catch (e) { warnOnce('np-getMissionPace', e); }
+    }
     const cells = list.map((m) => {
       const state = m.status === 'done' ? 'Accomplished.'
         : m.status === 'current' ? 'The realm may work at this now.'
@@ -931,6 +943,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.missions,
       `<div class="np-mt-sum">${doneN} of ${base.length} accomplished`
       + (hypo.length ? ` · <span class="np-mt-hypo-sum">${hypoDone} of ${hypo.length} roads history never took</span>` : '')
+      + paceNote
       + '</div>'
       + `<div class="np-mtree" style="--mt-cols:${cols}">${svg}${cells}</div>`);
   }

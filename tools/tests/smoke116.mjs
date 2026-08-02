@@ -50,6 +50,11 @@ function boot(era, playerTag) {
 const era = (id) => ERAS.find((e) => e.bookmark.id === id);
 const hyposOf = (list) => (list || []).filter((m) => m && m.hypothetical);
 const doneHy = (t) => (t.missionsDone || []).filter((id) => /^hy_/.test(id));
+// The §206 drumbeat: one completion a pass, then the chain rests. Where this
+// suite means "let the months go by until everything satisfiable has paid",
+// it pumps the monthly pass — each call is one synthetic month, and a big
+// forced world needs a run of them, not a pair.
+const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
 // ---------------------------------------------------------------- static
 console.log('== §183 static: every hypothetical is a charted fork, appended, seated ==');
@@ -107,7 +112,9 @@ for (const e of ERAS) {
   const playerTag = e.bookmark.playableTags[0].tag;
   const s = boot(e, playerTag);
   booted.set(e.bookmark.id, s);
-  realm.checkMissions(s.ctx);
+  // Pump past the §206 rests: an era objective satisfiable at boot absorbs
+  // a pass, and a genuinely free road must not get to hide behind it.
+  pump(s.ctx, 16);
   const free = [];
   for (const tag of Object.keys(e.bookmark.missions || {})) {
     const t = s.game.tags[tag];
@@ -129,8 +136,10 @@ for (const e of ERAS) {
 
 // -------------------------------------------------------------- completability
 // Reach each road's world-state by hand — markers set, provinces held, the
-// war settled early — then let the ordinary monthly pass pay for it. Two
-// passes: wave depth caps at three per pass, and 40 BCE needs a second world.
+// war settled early — then let the ordinary monthly pass pay for it. Since
+// §206 the pass banks ONE mission and rests between, so a forced world is
+// paid off over a long run of pumped months; 40 BCE still needs a second
+// world, and its first must be fully paid while Antigonus lives.
 console.log('== §183 live: every road pays when the world it names arrives ==');
 function grant(ctx, tag, names) {
   for (const n of names) ctx.helpers.changeOwner(ctx, n, tag);
@@ -159,8 +168,7 @@ function expectAllDone(g, bookmark, tags, label) {
     priesthoodAlone: true,
   });
   game.retiredChapters = [{ id: 'ev_royal_expedition', y: -162, m: 3, title: 'The Boy King Takes the Field', why: 'the war it belonged to was already settled' }];
-  realm.checkMissions(ctx);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('167bce').bookmark, ['HAS'], '167bce');
   ok((t.modifiers || []).some((m) => m.id === 'the_harbors_taken'), '167bce: the coast paid its modifier');
   ok((t.modifiers || []).some((m) => m.id === 'hy_successor_state'), '167bce: the successor state pays permanently');
@@ -175,8 +183,7 @@ function expectAllDone(g, bookmark, tags, label) {
     moabKept: true, crassusRefused: true, jvBackedPompey: true, jvBackedAntony: true,
     successionSettled: true,
   });
-  realm.checkMissions(ctx);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('67bce').bookmark, ['HYR', 'ARI', 'ADI'], '67bce');
   ok((game.tags.HYR.modifiers || []).some((m) => m.id === 'hy_unrenamed_crown')
     && (game.tags.ARI.modifiers || []).some((m) => m.id === 'hy_unrenamed_crown'),
@@ -193,28 +200,28 @@ function expectAllDone(g, bookmark, tags, label) {
     grovesRefused: true, sailedWithAntony: true, hyrcanusHome: true,
     kingdomWhole: true,
   });
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   const her = game.tags.HER;
   her.overlord = null;
   game.tags.ATG.alive = false;
   grant(ctx, 'HER', ['Jerusalem', 'Damascus']);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('40bce').bookmark, ['HER', 'ATG', 'ADI'], '40bce');
 }
 
-{ // 66 CE — the Second Kingdom and both of its dependent questions cascade
-  // through the wave rule in a single monthly pass — the client courts'
-  // roads (§185, grown by §196) pay off the same standing House, and the
-  // §192 forks (the royal robes, the granaries) by marker. The nation
-  // question (§196: Agrippa hears the answer too) rides the same cascade.
+{ // 66 CE — the Second Kingdom and both of its dependent questions pay off
+  // one forced world — the client courts' roads (§185, grown by §196) read
+  // the same standing House, and the §192 forks (the royal robes, the
+  // granaries) by marker. The nation question (§196: Agrippa hears the
+  // answer too) pays over the same pumped months; each court drums at its
+  // own §206 pace, so the run covers the longest chain among them.
   const { game, ctx } = booted.get('66ce');
   Object.assign(game.flags, {
     secondKingdom: true, kingdomOfTheAltar: true, roadHeldOpen: true,
     menahemLives: true, storesSealed: true, speakerForTheNation: true,
     agrippaRose: true, tigrisFree: true,
   });
-  realm.checkMissions(ctx);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('66ce').bookmark, ['JUD', 'AGR', 'ADI'], '66ce');
 }
 
@@ -226,15 +233,14 @@ function expectAllDone(g, bookmark, tags, label) {
     redemptionEra: true, beitKosibaSettled: true, doubtPreserved: true,
     lettersMercy: true, dispersionCalled: true, julianRefused: true,
   });
-  realm.checkMissions(ctx);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('132ce').bookmark, ['JUD', 'ADI'], '132ce');
 }
 
 { // 529 CE — the mountain, the letter, and the Taheb.
   const { game, ctx } = booted.get('529ce');
   Object.assign(game.flags, { gerizimCleared: true, ctesiphonPromised: true, tahebAwaited: true });
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('529ce').bookmark, ['SAM'], '529ce');
 }
 
@@ -245,7 +251,7 @@ function expectAllDone(g, bookmark, tags, label) {
     charterDavidic: true, altarRestored: true, tookTheEmptyGround: true, davidCrowned: true,
     twoHousesOnePeople: true, theTreatyState: true, twoTorahsPeace: true,
   });
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('614ce').bookmark, ['JUD'], '614ce');
 }
 
@@ -258,7 +264,7 @@ function expectAllDone(g, bookmark, tags, label) {
   });
   game.tags.LEB.alive = false;
   grant(ctx, 'ISR', ['Tyre', 'Sidon', 'Berytus', 'Byblos']);
-  realm.checkMissions(ctx);
+  pump(ctx, 120);
   expectAllDone(game, era('1948ce').bookmark, ['ISR'], '1948ce');
   ok((game.tags.ISR.modifiers || []).some((m) => m.id === 'hy_certain_ambiguity'),
     '1948ce: a certain ambiguity settles over the state');

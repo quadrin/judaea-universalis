@@ -9617,7 +9617,8 @@ monthly pass keeps its three-step guard, but as three completion WAVES
 judged against each wave's opening state: parallel branches may land in the
 same wave, a cascade straight to the capstone stays impossible, and the AI
 earns its branches on the same terms as the player (§102's symmetry,
-untouched).
+untouched). (The waves were retired in §206 for a slower drum — one
+completion a month, with a rest between beats.)
 
 **The retrofit rule for the shipped chains: never stricter.** Every branched
 mission's `requires` is a subset of its old ladder predecessors, so any
@@ -12317,3 +12318,100 @@ Addis Ababa, Meroe or Kabul marches on the Levant.
   crown owns its capital, a band does not hold the walls on any card's one
   firing day, and ownership stays untouched so a genuine conquest still
   changes the answer.
+
+## 206. The drumbeat of accomplishment
+
+A mission completed the instant its condition did, and the monthly pass ran
+up to three waves deep (§177), so a realm that qualified for several at once
+banked them all in one morning. Every chapter therefore opened with a
+volley: measured on the 8-year all-AI harness, Byzantium completed The Line,
+The Fleet and The Reform in the opening month of 614 — three medallions,
+one day; Rome banked three of its five Bar Kokhba answers in one pass of
+September 133; Jordan finished five of its seven 1948 missions inside nine
+months, two of them together in the third. The chains were tuned as a
+chapter's arc and they were resolving as its overture.
+
+**The rule.** `checkMissions` now banks at most ONE mission per realm per
+monthly pass — the first satisfied mission in table order — and after each
+completion the chain rests `MISSION_PACE_MONTHS` (DEFINES, 2) before the
+next may land, so the fastest possible cadence is one accomplishment a
+quarter. A month whose checks all fail charges no rest: waiting on the world
+is not resting from it, and the month the world answers, the mission lands
+at once. The first completion of a campaign is deliberately un-gated — the
+opening beat (Arm the Nation on a 26,000-man boot, The Host in Bar Kokhba's
+first spring) is the system teaching itself, and smoke2 has always pinned
+it. A bookmark may retune the drum with its own `missionPaceMonths`; 0
+disables the rest, and nothing disables one-a-month.
+
+The waves are gone, and with them §177's "three generations a pass" guard —
+one-a-month is strictly stronger. Trees stay trees: parallel branches still
+advance independently and a stalled siege still does not hold the building
+program hostage; the branches now take turns LANDING, which is a different
+thing. Ties go to table order, so a chain's early objectives outrank the
+§183 hypotheticals appended behind them. The AI keeps §102's symmetry — its
+chains march to the same drum, which is why the harness numbers above moved
+for Byzantium and Rome, not just for the player. And the pace deliberately
+does NOT hold a completion hostage to a fleeting condition twice: a war
+score that spikes and lapses during a rest simply waits for the world to
+offer it again, the same way it waited for the war in the first place. The
+one real cost of the section is that a perfectly-played short chain now
+takes `(n−1) × (pace+1)` months of calendar; at pace 2 the seven-mission
+Roman suppression ladder needs a year and a half where it once needed one
+morning, which is the point.
+
+**Why 2 and not 3.** The first draft shipped a 3-month rest, and the 8-year
+harness caught what that does to a TRANSIENT condition on a knife-edge run:
+on the seeded 167 trajectory, Masters of the Ascents (+10 war score, a
+number that comes and goes with the fighting) had its window at month 11,
+the 3-month rest held the chain until month 13, the war score had already
+dipped — and the mission waited for the next spike at month 25. Fourteen
+months without the +25 martial points, on the one seed where the all-AI
+Maccabean revolt was already down to three hill provinces and a negative
+treasury, tipped it from survival to DEAD — a flag no accepted family
+carries. A pace sweep on that seed (0/1/2/3) came back alive, alive,
+alive-at-the-baseline-numbers, dead: the 2-month rest expires inside the
+war-score window and the whole seeded trajectory returns to its documented
+family. The lesson generalizes past the seed: the war-score missions are
+the transient ones, and every month of rest is a month of exposure to
+their windows closing. Two is the widest drum that never cost a harness
+run its life.
+
+**The record.** `t.missionRest` is the months still owed, ticked down by
+the monthly pass, written only when a completion happens, and carried by
+the save; `reviveGame` seats 0 on a pre-§206 save, so old campaigns owe
+nothing. A resting month still runs `writeMissionState`, so the §177
+prefix contract (a hand-moved `missionIdx` means "the first N are done")
+holds mid-rest too. A proclamation (§102/§189) resets the chain's record
+but not its breath — a crown proclaimed mid-rest waits out the rest before
+its first new-chain accomplishment, which reads correctly: the realm that
+took the crown is the realm that just did something.
+
+**The panel.** While the chain rests, the missions tab's summary line says
+so — "the realm consolidates — the next may complete in N months" via
+`getMissionPace` — because a satisfied medallion that has not landed must
+read as the pace at work, not a broken check.
+
+**Measured.** The same 8-year harness after the section, at pace 2:
+Byzantium's three opening medallions land in months 1, 4 and 7; Rome's Bar
+Kokhba ladder runs 17, 20, 23, 26, 38 where it ran 17, 17, 17, 21, 38;
+Jordan's five spread 3, 6, 9, 12, 83 where they bunched 3, 3, 8, 9, 83; and
+the Maccabean chain reads 5, 8, 11 where it read 5, 7, 11. Chains history
+already spaced — Hyrcanus' four completions in the brothers' war — came
+back to the month, because the pace only bites bursts. The anomaly set came
+back exactly the documented families: 167 none · 67 SEL DEAD · 40 none ·
+66 none · 132 none · 529 JUD DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING
+(the come-and-go line) · 1948 ISR BLEEDING (the §205 harness-seed flag,
+already sampled as seed drift).
+
+- **Regression contract**: `smoke133` owns the rule — one a pass with three
+  satisfiable, the cadence `pace+1` exactly, no rest charged for hungry
+  months, the rest riding the save and a pre-§206 save owing none, the
+  bookmark override with one-a-month surviving pace 0, and the prefix
+  contract mid-rest. The content suites that force a world and "let the
+  ordinary monthly pass pay for it" (smoke111/116/120/126/129) now pump
+  that pass — each call is one synthetic month, and a big forced world is
+  paid off over a run of them rather than a pair; their no-free-lunch
+  sections pump too, so a free node cannot hide behind an era objective
+  absorbing the first beat. smoke2, smoke3, smoke7 and smoke16 pass
+  untouched: single completions, fail-then-succeed re-checks and forced
+  `missionIdx` seeds never met the rest.

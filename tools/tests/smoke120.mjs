@@ -75,6 +75,9 @@ function proclaim(chapterId, tagOverride) {
 const doneSet = (game) => new Set(game.tags.MLI.missionsDone || []);
 const grant = (ctx, names) => { for (const n of names) ctx.helpers.changeOwner(ctx, n, 'MLI'); };
 const stand = (ctx, name, v) => { const p = ctx.prov(name); if (p) p.dia = { standing: v }; };
+// The §206 drumbeat: one completion a pass, then the chain rests — a forced
+// world is paid off over a run of pumped months, not a pair of passes.
+const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
 // ---------------------------------------------------------------- static
 console.log('== §189 static: one spine, six branches, nothing crossing ==');
@@ -166,7 +169,9 @@ console.log('== §189 live: proclamation accomplishes nothing on the branch ==')
 for (const id of CHAPTERS) {
   const w = proclaim(id);
   w.game.tags.MLI.stability = 3;
-  realm.checkMissions(w.ctx);
+  // Pump past the §206 rests: a spine mission satisfiable at the crowning
+  // absorbs a pass, and a free branch node must not get to hide behind it.
+  pump(w.ctx, 24);
   const mine = new Set(branchOf(id).map((m) => m.id));
   const free = [...doneSet(w.game)].filter((x) => mine.has(x));
   ok(!free.length, id + ': no chapter mission completes on the day of the crowning ('
@@ -179,8 +184,7 @@ for (const id of CHAPTERS) {
 // pay for it. Anything that stays unpaid here is content no campaign can reach.
 console.log('== §189 live: every chapter mission pays when its world arrives ==');
 function expectAllPaid(w, id) {
-  realm.checkMissions(w.ctx);
-  realm.checkMissions(w.ctx);
+  pump(w.ctx, 40); // spine + branch, one §206 beat at a time
   const done = doneSet(w.game);
   const missing = branchOf(id).map((m) => m.id).filter((x) => !done.has(x));
   ok(!missing.length, id + ': every chapter mission paid ('
@@ -245,8 +249,7 @@ function expectAllPaid(w, id) {
   w.game.tags.MLI.treasury = 900;
   w.game.tags.PAR.atWarWith = ['ROM'];
   w.ctx.prov('Jerusalem').wonder = 'temple';
-  realm.checkMissions(w.ctx);
-  realm.checkMissions(w.ctx);
+  pump(w.ctx, 40);
   ok(doneSet(w.game).has('mli_132_third_house'), '132ce: a standing House still completes it');
   ok(w.game.tags.MLI.treasury >= 900, '  and the silver stays banked ('
     + Math.round(w.game.tags.MLI.treasury) + ' talents)');
