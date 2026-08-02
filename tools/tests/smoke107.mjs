@@ -165,7 +165,6 @@ console.log('== the political east and south (SPEC §205) ==');
   ok(at('Dodekaschoinos').owner === 'KSH', '66: the Nile corridor is Kushite ground');
 }
 {
-  // Kaleb's Yemen: a conquest across a sea, held at the enclave share.
   const { game } = boot('529ce');
   const at = (n) => game.provinces.find((p) => p && p.canon === n);
   // SPEC §208: the incense country answers to the negus the way Procopius

@@ -12702,6 +12702,210 @@ the ordinary §163 seed drift the §205 pass already documented.
   (whose roster table never covered 529), smoke101 and smoke112 (whose
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
+## 209. Beta Israel, the thirty-third day, and the arrivals hall
+
+§206 gave the §205 ground its world spine; this section gives it the
+threads the game's own subject runs on — the ones a player of this
+particular game will go looking for by name. Four threads, seven cards,
+one new dispersion window, one sim clause, and no new content packages —
+every card lives in a file its chapter already reads, so smoke83's
+SOURCES map is untouched.
+
+**The Beta Israel are the thirty-eighth community** (js/data/diaspora.js,
+seated at Tana). The origin question is handled the way this file handles
+every contested attestation: the hedge is written on the entry itself.
+Their origin is genuinely argued — refusers of Ezana's conversion, Agaw
+judaizers of the following centuries, or an older Israelite seed as the
+community's own tradition holds — and the first unambiguous outside
+attestation is medieval, in royal chronicles that call them *ayhud* and
+announce their final defeat once a generation. So the game takes its own
+spine at its word: the window opens in **345**, the year the 132 chapter's
+new withdrawal card fires (five years after `ev2_ezana_cross` strikes the
+Cross on the coinage), and closes in **1991**, the year the community
+actually went — the same one-date-per-flag honesty as Iraq's 1952 and
+Salonica's 1943 (§176). Size 2, start 40: nobody outranks the great nodes
+(§194's curve), and the start is *devotion in isolation* — a community
+that keeps the Sigd fast of longing for Jerusalem without knowing, for a
+thousand years at a stretch, whether any other Israel is left alive, is
+devoted to a ledger it cannot read. The window arithmetic gives every
+chapter the right answer for free: not-yet for Bar Kokhba (345 is inside
+the 132 chapter's SPAN, so a long campaign watches it open — but the 132
+*opening* predates it), open for the Keepers, the 614 chapter and 1948,
+shut from Operation Solomon on. It is the one window on the whole ledger
+that closes by *coming home* rather than by murder or a sealed gate, and
+the file's header says so.
+
+**Two cards join the 132 world spine** (`events_132ce_world.js`, both
+`world: true`, both `when`-gated, §104's admission rule as ever):
+
+- `ev2_takkaze_refusers` (**345**, decider AXM, gated on the `ezanaCross`
+  flag — a withdrawal needs a Cross to refuse): a quarter of Tana's
+  people become a real `judaism`/`cushitic` population on the cell (the
+  same 20%-of-total mechanism as Armenia's conversion card, SPEC §56),
+  Tana carries "The House of Israel in the Mountains" (+0.5 unrest,
+  permanent — the war the crown re-wins once a generation without ever
+  finishing), and the flag `betaIsraelWithdrawn` is set. The dispersion
+  window opens on this card's year whether or not the card ever fires —
+  data does not wait on drama (§176's rule), but a campaign that reaches
+  345 watches the reason happen.
+
+- `ev2_himyar_rahmanan` (**384**, decider HMY, gated on a living Himyar):
+  the royal inscriptions of Zafar drop Almaqah and Athtar for **Rahmanan,
+  Lord of Heaven** — Malkikarib Yuha'min's dedications, the *mikrab* that
+  is a synagogue's word, the formulas that will shortly run to "Lord of
+  the Jews" and end *amen*. Himyar's crown and cells take `judaism`
+  wholesale (the exact mechanism of Ezana's card, for the same
+  legibility), the crown gains +5 legitimacy, +1 stability and a
+  permanent +15% conversion strength, and the strait becomes a
+  confessional border: Aksum and Himyar cool 20 toward each other. This
+  is the section's engineering argument, the same shape as §206's
+  secession pair: **the 529 chapter's opening premise — Kaleb's crossing
+  against a Jewish king of Himyar, the martyrs of Najran already avenged,
+  the client crowned at Zafar under the Aksumite yoke (§208) — is now a
+  thing a long 132 campaign watches get built.** Dhu Nuwas is this card's line's last act; smoke136 pins
+  the 529 and 614 political maps against exactly that aftermath.
+
+**Lag BaOmer is the set's one player-facing card** (`ev2_lag_baomer`,
+`events_132ce.js`, dated **133.5**, `forTag: 'JUD'`). The omer weeks kept
+against the dying of Akiva's students — b. Yevamot 62b's twenty-four
+thousand, read since the nineteenth century as a memory of the revolt's
+losses — and the break in the dying on the thirty-third day. Two real
+answers per smoke39's rule, neither free: the Nasi proclaims the festival
+(+5 legitimacy, +8% morale for a year — the fires on the ridgelines that
+carried the new-moon beacons of m. Rosh Hashanah 2 before the enemy
+learned to read them), or the schools keep the stricter count (+1
+stability, +10% conversion strength — the mourning holds to Shavuot). The
+first draft carried `date` + `trigger` and **smoke74 caught it**: the
+engine silently ignores `trigger` on dated cards, dated cards gate with
+`when`, and the suite exists precisely so that contract cannot be
+violated quietly. The card obeys it now, and the catch is recorded here
+because it is the section's one first-draft defect that a test found
+rather than a reader.
+
+**The 1948 chapter gets the arrivals hall and the mountain arc** — four
+world cards, three of them in `events_1948_region.js` where the §206
+south already lives, one in the main chain beside the era it belongs to:
+
+- `ev_i_lod_airport` (**1972.5**, `events_1948.js`, immediately before
+  Munich — the section header now reads "LOD, MUNICH AND THE YOM KIPPUR
+  WAR", and Munich's own desc, which had carried the massacre in a
+  subordinate clause when it had no card of its own, now reads as the
+  callback it always should have been). Twenty-six dead in the arrivals
+  hall, seventeen of them Puerto Rican pilgrims, Aharon Katzir among the
+  others; the gunmen Japanese, recruited by the PFLP precisely because no
+  profile fits them. Two answers: harden every gate the state owns (−60
+  talents, Lydda carries "The Hardened Gates" permanently at −1 unrest —
+  the screening doctrine every airport on earth eventually copies;
+  `aiOption` 0, because that is what happened), or answer in the senders'
+  camps (+10 martial, −5 legitimacy, Tyre and Sidon stirred for a year).
+
+- `ev_s48_derg` (**1974.9**, decider ETH): the creeping coup, one
+  arrest at a time, and the Elect of God driven from his palace in the
+  back seat of a Volkswagen. The ruler swap runs on the same guard as
+  Black September's Nasser check — only a throne still Selassie's is
+  emptied — and what replaces it governs permanently: "The Derg" (+20%
+  manpower, −15% income, +1 unrest everywhere), the war in the north
+  hardened at Massawa, the Cold War realignment written as absolute
+  opinion both ways (Moscow 60, Washington −40), the Solomonic
+  legitimacy gone (−20, −2 stability).
+
+- `ev_s48_operation_moses` (**1984.11**, decider ISR) and
+  `ev_s48_operation_solomon` (**1991.5**, decider ISR): the famine walk
+  to Sudan and the denied charters out of Khartoum; then the thirty-six
+  hours, the $35M paid to a state that would not exist by the weekend,
+  and the 747 that still holds the record. The arc has real plumbing:
+  Moses lands **8,000 real people** — `judaism`/`cushitic` population
+  split across whichever of Lydda, Joppa, Jerusalem and Beersheba Israel
+  actually controls (`landOlim`, the §56 rule that events move people) —
+  and leaves "The Ones Left Behind" on Tana (+1 unrest, 84 months, the
+  operation cut in half by a press conference); Solomon lands 14,000
+  more, **lifts that modifier** (there is no one left behind), pays −120
+  talents for +10 legitimacy, +500 reserves and a 24-month absorption
+  strain, and closes the ledger's window from the inside. Both are
+  `world: true`: the windows close in data whoever plays, so the cards
+  that narrate the closing must fire whoever plays (§104).
+
+**One sim clause rode along, because the content exposed it** (js/sim/
+realm.js, js/sim/population.js). The ambient faith drift has always had the
+core clause — "a community has a core that does not go... a mechanic that
+lets one vanish is telling a lie about all of them" — but the ACTIVE
+conversion program's completion converted every foreign community
+wholesale: `shiftPopToReligion(p, religion, 1)`, no mercy, one funded
+12-month mission emptying what the drift engine promises three centuries
+of preaching could not. The takkaze card made it visible (Aksum's AI
+converted Tana and the Beta Israel were gone by 392 — the one community
+whose entire story is surviving exactly that), but the lie was general: a
+Jewish Galilee under a Roman program got the same treatment. The
+completion now respects the age's own `resistedBy` table (SPEC §104):
+`shiftPopToReligion` takes an optional `keep` map and a resisting
+community retains its resistance's share — 35% under a 132 Christian
+program, 72% under 614's Islam — while unresisting communities convert
+entire and the label still flips with the new majority, so the mechanic's
+player-facing promise ("a province converted") stays kept, and the AI does
+not re-target a province already under its own faith. Ages with no drift
+table for the converting faith are untouched (smoke2's Jewish conversion
+of Dura runs to the digit). Measured through the real day loop: Tana's
+Beta Israel now ride a 260-year all-AI run at a 7% remnant instead of
+vanishing — the mountains keep them, which is the historical sentence the
+whole arc exists to say.
+
+**Measured** (tools/autorun.mjs, harness seed, §205's baseline-vs-branch
+discipline — baseline is the §206 merge commit run on the same machine):
+
+- `node tools/autorun.mjs 8` (all chapters): the anomaly sets are
+  **identical to baseline** — 67's `SEL DEAD`, 529's `JUD DEAD` + `SAM
+  DEBT-SPIRAL`, 1948's `ISR BLEEDING` on the harness seed, all §111/§205
+  documented; nothing else flags on either tree. The 132 run itself moves
+  BY DESIGN inside that identical verdict: Lag BaOmer fires at 133.5 and
+  the AI lights the fires (+5 legitimacy, a year of morale) — the one
+  dated card this section puts inside any chapter's first decade.
+- `node tools/autorun.mjs 55 1948ce`: every §209 card fires in real flow
+  (probed through the day loop — `airportDoctrine`, `dergTakesAddis`,
+  `operationMoses`, `operationSolomon` all set by 1992, Mengistu on the
+  throne from 1974, 22,000 Beta Israel souls counted in the four arrival
+  towns, "The Ones Left Behind" planted 1984 and lifted 1991). The
+  harness seed adds one flag the baseline lacks — `LEB: BLEEDING`, ending
+  −0.3 income with 2,900 more troops than baseline's clean +2.8 — and it
+  is the §160 drift class, not a Lebanon tax: no §209 card touches LEB in
+  its AI path (the Lod reprisal option is the player's, not the AI's),
+  and on three sampled seeds per smoke81's rule LEB comes back clean,
+  SNOWBALL (fifteen provinces — the opposite direction), and clean. The
+  modern 55-year free-for-all is simply chaotic per seed; the sampled
+  runs also show `AFG BLEEDING` twice and `NLD BLEEDING` once on seeds
+  the baseline never ran, which is what that chaos looks like from other
+  chairs.
+- `node tools/autorun.mjs 295 132ce`: the anomaly set got **smaller** —
+  `ADI: DEAD | CHX: DEAD | HDR: DEAD`, the §105/§206-documented deaths,
+  with the baseline's fourth flag (`OSR: DEAD`) gone: Osrhoene rides this
+  tree's third century out alive at one cell. Himyar ends the run alive
+  at eight cells and **Jewish** — the 384 card doing on the long clock
+  exactly what it was written to do — with Aksum Christian beside it and
+  the Beta Israel a 7% remnant on Tana behind the `house_of_israel`
+  modifier, where the pre-§209 completion bug had wiped them to zero by
+  392.
+
+- **Regression contract**: `smoke136` — the window arithmetic on both
+  sides of every boundary (not-yet for 132's opening, open 529/614/1948,
+  shut from 1991, era ledger agreeing on both sides of the airlift); the
+  withdrawal gate (no card before Ezana's flag) and its real population;
+  the Rahmanan card's conversion, modifier, opinion break and the
+  529/614 political-map premise it writes toward; both Lag BaOmer
+  answers; both Lod answers; the Derg's guarded ruler swap and absolute
+  realignment; the Moses→Solomon arc to the person (8,000 + 14,000
+  landed, the Tana modifier planted and lifted, +500 reserves); and the
+  mercy clause measured at the completion site (20% → 7%, label still
+  flips, the unresisting majority still converts entire). `smoke124`'s
+  counts moved with the entry (37 → 38 communities; 529 and 614 open at
+  29) and Tana joined its spot-check list; `smoke85` holds every new
+  card's schema through the registry; `smoke2`'s Jewish conversion of
+  Dura-Europos passes unchanged, which is the no-drift-table case proving
+  the mercy clause touches only ages that declare resistance. Full
+  battery after the section: **134 suites, 0 failures** — and after the
+  merge that renumbered it under the drumbeat's §207 and the client
+  court's §208, the merged tree runs **136 of 136** with the 8-year
+  anomaly families exactly the documented ones (§207's own 614 JUD
+  come-and-go line included), the two §208 suite premises told about the
+  client court, and the HMY mission tree's row-0 collision seated.
 ## 210. Idumea has its own gods until somebody gives it the Law
 
 `ev_idumea_policy` is the 167 chapter's cleanest fork. Hyrcanus takes the

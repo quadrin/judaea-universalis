@@ -88,6 +88,19 @@
 // Maghreb closes the way the east closes, one date per flag, while Volubilis
 // stays open, because Morocco is the one community of the Arab world that
 // never entirely goes.
+//
+// AND THE NILE HAS A SPRING (SPEC §209). When §203 carried the frame south
+// to the Ethiopian highlands, it carried it to the one community this list
+// could not have held before: the Beta Israel of the Semien and the Tana
+// country, who kept the Orit without ever hearing of the Talmud, and who
+// did not reliably know — for a thousand years at a stretch — whether any
+// other Israel was left alive. Their window opens where the 132 chapter's
+// own world spine puts it (ev2_takkaze_refusers, 345: the withdrawal of
+// those who refused Ezana's Cross) and closes the way the east closes, on
+// the year the community actually went: Operation Solomon, 24-25 May 1991,
+// the whole remnant to Lod in thirty-six hours. The 1948 chapter plays both
+// airlifts (events_1948_region.js), and the honest hedge about the origin
+// is written on the entry itself.
 
 export const DIASPORA = [
   // ── Egypt ────────────────────────────────────────────────────────────────
@@ -110,6 +123,27 @@ export const DIASPORA = [
     from: -300, until: 117, start: 45,
     blurb: 'Older than the Ptolemies and older than the Greeks: Jewish soldiers and '
       + 'traders in the old capital, on papyrus, in Aramaic, since the Persians.',
+  },
+  // ── The roof of Africa (SPEC §209) ───────────────────────────────────────
+  {
+    // The Beta Israel. Their origin is genuinely argued — refusers of Ezana's
+    // conversion withdrawing upcountry, Agaw judaizers of the following
+    // centuries, or an older Israelite seed, as the community's own tradition
+    // holds; the first unambiguous outside attestation is medieval, in royal
+    // chronicles that call them ayhud and announce their final defeat once a
+    // generation. This game takes its own spine at its word: the window opens
+    // the year the 132 chapter's withdrawal card fires (ev2_takkaze_refusers,
+    // 345), five years after Ezana strikes the Cross on his gold, and closes
+    // on the year the community actually went — Operation Solomon, 24-25 May
+    // 1991, 14,325 people in thirty-six hours, the whole remnant to Lod.
+    // Start 40: devotion in isolation, toward a ledger they do not know
+    // exists.
+    prov: 'Tana', name: 'The Beta Israel', size: 2,
+    from: 345, until: 1991, start: 40,
+    blurb: 'Behind the Takkaze, on mountain ambas the empires cannot be bothered to '
+      + 'climb: a people who keep the Orit without the Talmud, with monks, with the '
+      + 'Sigd fast of longing for Jerusalem — and with no way of knowing, for a '
+      + 'thousand years at a stretch, whether any other Israel is left alive.',
   },
   // ── Cyrenaica ────────────────────────────────────────────────────────────
   {
