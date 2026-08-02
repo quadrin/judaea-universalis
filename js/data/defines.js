@@ -218,7 +218,7 @@ export const DEFINES = {
     LBR: { aggression: 0.05, caution: 2.0 },
   },
 
-  // Government types (SPEC §25, §211). Effects fold into tag.ideas like reforms
+  // Government types (SPEC §25, §212). Effects fold into tag.ideas like reforms
   // and tech; the succession behaviour is DECLARED HERE and read by realm.js,
   // crisis.js, revolt.js and the marriage table rather than string-matched
   // against four names, because there are no longer four.
@@ -238,7 +238,7 @@ export const DEFINES = {
   //             would have ended up with Great Houses and King's Men
   //
   // The first four are the constitutions a realm can START with. Everything
-  // below them is a constitution a chapter's fork ADOPTS (SPEC §211): the
+  // below them is a constitution a chapter's fork ADOPTS (SPEC §212): the
   // roads of the §119 tree that decide what a state IS, each one wearing its
   // own name in the realm panel instead of all four answers reading Theocracy.
   GOV_TYPES: {

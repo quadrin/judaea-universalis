@@ -782,7 +782,7 @@ export const simHelpers = {
     const c = ctx.game.constitutions;
     return (c && c[String(era || '')]) || '';
   },
-  // …and what that settlement makes the STATE (SPEC §211). `setConstitution`
+  // …and what that settlement makes the STATE (SPEC §212). `setConstitution`
   // records the answer for the content that reads it; this one applies it to
   // the realm, so the choice is a fact about the government and not only a key
   // in a store: the panel's Government row, the succession rules, whether

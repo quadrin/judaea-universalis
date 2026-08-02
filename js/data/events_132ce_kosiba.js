@@ -193,7 +193,7 @@ function constitution(ctx) {
 // site and not from in here: smoke83 reads content packages as text to prove
 // every road on the path tree is still set by a live card, and a marker
 // written through a helper is invisible to it. The GOVERNMENT each road adopts
-// (SPEC §211) is written at the call site for the same reason and one more:
+// (SPEC §212) is written at the call site for the same reason and one more:
 // the four answers to this question are four different states, and a table in
 // this header would let them drift apart from the cards that describe them.
 function adopt(ctx, name) {
