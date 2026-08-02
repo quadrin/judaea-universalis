@@ -10,7 +10,10 @@
 // long axis; v5.4 sat at 0.62 of its own fit-the-map zoom and this keeps that
 // margin, so "zoomed all the way out" looks the same distance past the edges
 // as it always has instead of clamping with Britain still off-screen.
-const MIN_ZOOM = 0.14;
+// v7.4 (SPEC §203): 7264×6337 — same rule again. 1440/7264 needs 0.198 to fit
+// the long axis; 0.62 of that keeps the margin, so the whole frame from
+// Britain to the Makran still fits a laptop screen.
+const MIN_ZOOM = 0.12;
 const MAX_ZOOM = 8;
 const CLICK_SLOP_PX = 5;
 

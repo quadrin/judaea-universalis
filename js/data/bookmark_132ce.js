@@ -168,7 +168,9 @@ export const BOOKMARK_132 = {
     // Trajan never finished with hold the grass.
     'GRM', 'CAL', 'HIB',
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
-    'BOS', 'SCY', 'SRM', 'VEN'],
+    'BOS', 'SCY', 'SRM', 'VEN',
+    // The political east and south (SPEC §203).
+    'KSH', 'AXM', 'HMY', 'HDR', 'OMA', 'SAK', 'CHO'],
   // Standing rivalries (SPEC §73): Trajan's Parthian war is a decade old and
   // Hadrian's peace is a truce of exhaustion, not friendship.
   rivalries: [['ROM', 'PAR']],

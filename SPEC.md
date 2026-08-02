@@ -11936,3 +11936,240 @@ ever meet the ceiling are the ones a player is spending.
   is written, the annulment live where a dead plate used to sit and the count
   falling back when it is pressed, an overstretched chancery naming itself, and
   the alliance button carrying the refusal in words.
+
+## 203. The frame holds all of Iran and all of Ethiopia, and the court that pays for it
+
+§160 grew the frame west and north until it held the whole Roman world, and
+§173 seated the courts of that ground. This section is the same pair of moves
+aimed the other way: **east until the rectangle holds all of Iran, south until
+it holds all of Ethiopia** — and then the courts of everything the rectangle
+must therefore carry, because a frame is a rectangle and geography is not.
+Iran's easternmost ground is ~63.33°E and Ethiopia's southern tip ~3.40°N, so
+the map is now **lon 11°W–63.5°E, lat 3–58°N at 7264 × 6337** — the same
+density every version since v5.0 has shipped (97.5 px/°lon, 115.2 px/°lat),
+so nothing sized in map units moved, again.
+
+What the rectangle then carries: Nubia and the middle Nile to the confluence,
+the Ethiopian highlands and the Horn to Cape Guardafui, the Gulf of Aden and
+Bab el-Mandeb, Arabia entire — Asir, Yemen, the Hadhramaut, Dhofar, Oman to
+Ras al-Hadd — the strait of Hormuz with both shores, the Makran coast,
+Sistan, Herat and Merv and the Oxus down to the Aral, and, on the far side of
+the same rectangle, the Sahel from the Niger bend past Lake Chad to Darfur
+and the Gulf of Guinea coast from Cape Mesurado to the Chariot of the Gods.
+The coast is now 997 points across 13 masses (the §160 ring grown, plus
+Socotra; the Caspian's 47 left the ring for the lake list). Measured against
+Natural Earth 10m: median 1.6 km, p90 9.0, same as §160's tracing — the
+first-draft §203 outliers (the Benadir coast an inland degree, the Beja
+shore, Foul Bay, the Qamar and Sawqirah bights) were corrected against the
+measurement, and the map's worst vertex is still the *deliberate* one, the
+66 CE shoreline at the head of the Persian Gulf. Sixteen rivers, from the whole in-frame
+Nile (White Nile in at the south edge, the Sudd, the confluence, the great
+S-bend) and the Blue Nile out of Lake Tana to Ptolemy's Nigir, the Oxus, the
+Helmand dying in its Hamun and the Karun joining at Charax's gulf-head.
+Twelve relief primitives — the Ethiopian highlands, the Sarawat, the Hajar,
+the Kopet Dagh, the Makran ranges, the Danakil drawn as the below-sea basin
+it is — for which MAX_HEIGHT_PRIMS rises 64 → 80, still inside the
+guaranteed 224-vec4 floor smoke104 checks (80×2+16 = 176). One new island,
+and it is the right one: Socotra, the Periplus' Dioscurida.
+
+**The Caspian left the mainland ring.** At 53.5°E the east edge cut it, so
+v5.4–v6.8 drew it as a notch of the MAINLAND polygon, open where it ran off
+the map; at 63.5°E nothing cuts it, a hole cannot live in a simple ring, and
+it moved to the lake list as the closed inland sea it geographically is —
+same tracing, plus the Turkmen–Gorgan shore the frame edge used to stand in
+for. That would have silently cost Hyrcania its harbor: `computeGeometry`'s
+§160 rule was *open sea = water that runs off the frame*, and the Caspian no
+longer does. The rule gains the clause the Caspian now needs: **a landlocked
+body over 3 sq° is an inland sea, not a lake**. Measured on this map the
+Caspian is ~39 sq° and the Aral ~6.9; every genuine lake — Van, Urmia,
+Tatta, the Dead Sea, Galilee, and the new Tana, Turkana, Chad and Hamun — is
+under 1. Doubled margin on both sides, in square degrees, so it survives the
+next frame too.
+
+Two new straits are drawn a few pixels wide on the Messina rule and crossed
+only by ferry: Bab el-Mandeb (the Periplus' own crossing, Avalites to Muza)
+and Hormuz (Harmozeia to Mazun), with Dioscurida reached from Opone. All
+three sides sit in `contiguousProvinces` and both straits in `severLinks` —
+the §173 belt-and-braces, applied at birth instead of after an audit.
+
+### The cells, and the courts
+
+**67 new cells** (374 total, renderer cap 512 — 66 planned, plus the
+Dodekaschoinos the connectivity audit below demanded), every one WASTE in
+the base atlas on §160's unchanged rule, every one carrying real terrain, goods, faith
+and tongue: three new religions (`kushite`, `south_arabian` — which
+pre-Christian Aksum genuinely shared with Saba — and `african_cults`) and
+five new cultures (`kushite`, `aksumite`, `cushitic`, `south_arabian`,
+`west_african`). Twelve of the 66 are impassable — the Kavir and Lut, the
+Karakum and Kyzylkum, the Rub al-Khali, the Nubian desert, the deep-Sahara
+band (Majabat, Tanezrouft, Tenere, Tibesti), the Great Forest, and the Sudd,
+which is the one with a source: it stopped Nero's centurions (Seneca NQ
+VI.8), and now it stops armies. Ten new named lands partition them (Ariana,
+Margiana, Arabia Felix, Oman, Nubia, Aethiopia, Nigritia, Guinea, plus
+Arabia and Sarmatia grown), so the label tier reads PARTHIAN MARGIANA and
+IRANIAN ARIANA without a table.
+
+**Twelve seated courts** (`political_maps.js`, same eight maps, same levy
+arithmetic): Kush under its Kandakes, every ancient era; Aksum from 66 CE —
+Zoscales is *in the Periplus*, which is dated within a generation of that
+bookmark; Saba, then Himyar beside it from 67 BCE, then Charibael's "king of
+the two tribes" union carrying both in 66 and 132; Eleazus' Hadramawt with
+Dioscurida across the water; Omana as the mart of the Persian side from 66;
+Sakastan from 67 BCE (the Saka settled on the Helmand a generation before);
+Greco-Bactria in 167 (Eucratides holds Margiana, Aria and the Helmand lands
+the year Antiochus IV dies at Tabae marching east); Chorasmia throughout;
+the Nubian kingdoms and the Blemmyes where Kush used to be in 529 and 614;
+the Hephthalites over the Oxus in 529 with the Turks replacing them in 614;
+and 1948's sovereign south — Haile Selassie's Ethiopia (Ogaden returned that
+very September), Ahmad's Yemen, Said bin Taimur's Oman, Zahir Shah's
+Afghanistan, one-year-old Pakistan with Jinnah dying and Liaquat named, and
+Tubman's Liberia — while the colonial south rides under the FRA and UK
+already seated (AOF/AEF and the Côte des Somalis; the Anglo-Egyptian Sudan,
+both Somalilands and Eritrea under the BMA, Aden, the Gold Coast and
+Nigeria) and Soviet Central Asia under SOV. Frontier (0.1) bands are the
+same grammar §173 used: the Seleucid far east in 167 (what the king died
+marching to hold), Parthia's Aria-Margiana in every Arsacid era (the Saka
+wound), Aksum's Yemen in 529 (a four-year-old conquest across a sea —
+Abraha is about to prove how thin), Persia's Yemen in 614 (the abna at
+Sana'a, a signature everywhere else), and the Sasanian-Turk Margiana line.
+
+Three deliberate absences, because a political map that invents a kingdom is
+lying where a player can check: the Horn ports stay WASTE in every ancient
+era — the Periplus says *in so many words* that Avalites, Malao and Opone
+are "not subject to a king, but each mart ruled by its own chief" (§14);
+Mecca (Macoraba, Ptolemy's name) stays WASTE in 529 rather than joining the
+dormant RSH seed, because that chapter deliberately keeps RSH unseated; and
+Belgium is not a tag at all — the Congo's only in-frame ground is the sealed
+Great Forest, and the standing rule (the Ustyurt, the Spanish Sahara) is
+that a base-impassable waste is never dealt.
+
+Every new court has the full §173 kit: emblem (the Meroitic pyramids under
+Amun's disc, the bow of Ta-Seti, the Aksum stele, Almaqah's bull between
+ibex horns, the Shabwa incense burner, the Saka cap, the Bactrian elephant,
+the Hephthalite tamga, and five real 1948 flags), constitution, temperament,
+name pool (attested only: kandakes from the Meroitic chronology, negusts
+from the coinage, mukarribs from the Marib inscriptions, Saka kings from
+their coins, and the 1948 south's actual soldiers and ministers), and —
+where the year is loud — a seated ruler: the Kandake and Zoscales and
+Charibael and Eleazus in 66, Kaleb "Negus of Aksum and Himyar" with Wa'zeb
+named in 529, Haile Selassie and Jinnah in 1948.
+
+### What the numbers cost, and what moved underneath
+
+The texture bill is **~629 MB** in the §158–159 narrowed formats — §156
+costed a comparable frame at 694 MB and §160 judged it "not worth it"; this
+is the section where the southeast became worth it, and smoke104's
+arithmetic block now says exactly that instead of asserting the old
+judgement. The long axis (7264) still fits the measured 8192. The ID pass is
+46.0M texels × 373 seeds ≈ 2.2× §160's work, so the SwiftShader boot roughly
+doubles; `dump-geometry`'s timeout doubles with it, and the §160 note stands:
+the boot path, not the cartography, is the thing to fix next.
+
+The camera floor drops by the same ratio it always has (`MIN_ZOOM` 0.14 →
+0.12), so zoomed-all-the-way-out still holds the whole frame on a laptop.
+`smoke104` pins the density unchanged, adds the reaches-Iran-and-Ethiopia
+line beside the reaches-Britain one, and re-anchors the §156 comparison; its
+memory ledger and uniform-floor checks pass at the new numbers without
+edits, which is what "executable arithmetic" was for.
+
+### Audited the way §160 taught, before shipping instead of after
+
+**Adjacency diffing first.** Across the whole frame change, §203 altered
+exactly **four** edges between pre-existing provinces, all removals, none
+additions: `Arabian Desert | Gerrha` and `Sinai Interior | Eastern Desert`
+(both pairs inert — hemmed by the new Yamama and Rub al-Khali cells, and
+§160's own "added, both impassable" note reversed), `Gabae | Hyrcania` —
+which is the Dasht-e Kavir claiming the ground between them, and is
+*correct*: the salt desert is why the real road to Hyrcania ran through
+Media, and Ecbatana–Hyrcania still carries it — and `Tauria | Tanais`, a
+one-cell contact around the Maeotic shore lost to the domain warp's phase
+moving with the frame (§160 measured that pair at 1.0x, a genuine
+neighbour; both still route in two hops through Scythia, and nothing the
+chapters stage crosses there).
+
+**Then the stray-lobe audit, on the real raster.** Sampling every §203-cell
+adjacency against the coast polygons found five water-crossing borders. One
+cleared: `Hyrcania | Dahae` walks the Gorgan corner of the Caspian the way
+Genua|Pisae walks its gulf. Four were Malaca-class stray lobes and are
+fixed at the source and severed as belt — `Gerrha | Harmozeia` straight
+across the Persian Gulf, `Asir | Blemmyae` and `Asir | Adulis` across the
+Red Sea, `Muza | Danakil` across the Assab–Mocha narrows — with `Gerrha`,
+`Asir` and `Danakil` joining `contiguousProvinces` so the repair detaches
+each fragment before adjacency exists to patch. The snapshot was
+regenerated after the fix and all four pairs came back severed, the
+Bab el-Mandeb and Hormuz ferries intact, Dioscurida an island with no land
+neighbour at all.
+
+**Then the §160 connectivity question, asked on purpose this time.** The
+first §203 raster answered it badly: 291 of 373 reachable from Byzantion,
+under smoke104's 80% floor — and the shortfall was not islands. Three real
+strandings, each fixed with the least invasive tool that fits:
+
+- **Egypt and Kush were not neighbors.** The impassable Nubian Desert's cell
+  sat ON the Nile between Syene and Napata — a wall across the one road
+  every army between them ever marched. The fix is a cell, because the
+  ground is real: the **Dodekaschoinos**, Lower Nubia's river strip, seeded
+  on the water with the desert's seed moved east of it (374 cells now, and
+  NUBIA_NILE carries it through every political map).
+- **The Rub al-Khali sealed both Arabian coasts.** Its weighted cell reached
+  the Gulf shore AND the Hadhramaut one, cutting Oman off the Gerrha road
+  and Dhofar off the Shabwa road. It has a `provinceRasterRegions` envelope
+  now — the same tool that holds Sinai — keeping the empty quarter empty
+  and the coasts walkable: measured after, Gerrha|Mazun, Moscha|Shabwa and
+  Moscha|Omana are all land neighbors, which they geographically are.
+- **Chorasmia was an island in the sand.** Ringed by the Karakum and
+  Kyzylkum on the map exactly as in life — and in life the road in was the
+  Oxus through the sands. `extraLinks` (declared in §20 and empty ever
+  since) carries its first actual entry: the Amul road,
+  `Antiochia Margiana | Chorasmia`.
+
+Garama also came back ringed by waste — and the OLD snapshot shows it always
+was (its only §160 neighbors were the two impassable Saharas). The court
+that "cannot be followed home" is prior art, not a §203 stranding, and it
+stands. After the fixes: **322 of 374 reachable (86.1%)**, the remainder
+being islands, the deserts, and the Garamantes. Measured boots on
+SwiftShader at the final frame: 141s to the start screen against §160's
+74s — the predicted ~2.2× — and BOOT_MS doubles to 480s across the browser
+battery.
+
+**Then the harness, against a clean-worktree baseline** (`node
+tools/autorun.mjs 8`, both trees, same machine): 167, 66, 132 and 614 come
+back with **no anomalies on either tree**; `67 SEL DEAD` and `529 JUD DEAD
++ SAM DEBT-SPIRAL` reproduce **identically** (all three accepted by
+design); and the set got *smaller* — the baseline's `40 OSR/HER/ATG
+BLEEDING` cluster does not appear on the §203 tree. One new flag appeared
+and was run down rather than accepted on faith: `1948 ISR BLEEDING` on the
+harness seed — the all-AI War of Independence going badly for Israel on
+that one draw. Sampled on three more seeds per smoke81's rule, the §203
+tree's 1948 runs clean on all three (22 provinces held, demobilized,
+treasury positive, no flags): the flag is the §160 drift class — 66 new
+cells move every province-ordered draw — not a balance change, and nothing
+in §203 touches a 1948 Levant table. The twelve new courts themselves sit
+exactly as tuned: every one ends its era's run unflagged, and nobody in
+Addis Ababa, Meroe or Kabul marches on the Levant.
+
+- **Regression contract**: `coastcheck` holds the grown ring (997 vertices,
+  13 masses, simple/disjoint/contained) and `coastfit` measures it (median
+  1.6 km); `validateMapData` returns zero warnings at 374 cells, the region
+  partition covering all ten new lands; `smoke107` extends automatically —
+  its NEW-cell set is "everything from Carthago on", so every §203 cell
+  submits to the same coverage, levy-band and seated-court assertions, and
+  Rome's 83 and the +16.0%/+14.6% corridor came back to the digit — and
+  gains a §203 block of its own: the Periplus cast seated in 66 (and the
+  Horn ports deliberately NOT), Kaleb's Yemen at the 0.1 enclave share with
+  Christian Najran, Persian Yemen at the same share in 614 with baptized
+  Nubia and Turk Chorasmia, Mecca beside the dormant caliphate seed, and
+  the 1948 south by treaty line under its 1948 names (Addis Ababa, Kerman,
+  Riyadh, Khartoum, the Ogaden returned); `smoke130`'s
+  seeded-chancery invariant holds over the twelve new courts (none opens a
+  bond); the snapshot is regenerated from the browser raster per
+  tools/README.md, and the §160 connectivity questions (Byzantion's reach,
+  Britain an island) are re-asked against it. One older suite needed its
+  premise told about this section rather than its claim changed, and it is
+  the same suite §173 told the same thing: `smoke84`'s 175-year probe found
+  a §87 rising's band holding Jerusalem's controller flag on the firing
+  days of three dated continuation cards on the new stream. Its premise
+  hand — "the line survived" — now runs monthly instead of twice: while the
+  crown owns its capital, a band does not hold the walls on any card's one
+  firing day, and ownership stays untouched so a genuine conquest still
+  changes the answer.

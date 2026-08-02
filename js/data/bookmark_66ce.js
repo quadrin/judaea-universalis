@@ -205,7 +205,12 @@ export const BOOKMARK_66 = {
     // map with its levy shares, which is why it can arrive at all.
     'GRM', 'CAL', 'HIB',
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
-    'DAC', 'BOS', 'SCY', 'SRM', 'VEN'],
+    'DAC', 'BOS', 'SCY', 'SRM', 'VEN',
+    // The political east and south (SPEC §203): the Periplus' own cast —
+    // Zoscales' Aksum, Charibael's Himyar-and-Saba, Eleazus' Hadramawt,
+    // Omana on the strait, Gondophares' house in Sakastan, and the Kandake
+    // whose treasurer Philip baptized.
+    'KSH', 'AXM', 'HMY', 'HDR', 'OMA', 'SAK', 'CHO'],
   // Standing rivalries (SPEC §73): Corbulo's Armenian war just closed; the
   // Euphrates rivalry only pauses.
   rivalries: [['ROM', 'PAR']],
@@ -746,6 +751,12 @@ export const BOOKMARK_66 = {
     // The political west (SPEC §173): the client king of the straits, whose
     // grain fleet matters to Rome more than most provinces do.
     BOS: { name: 'Cotys I', title: 'King of the Bosporus', gov: 2, infl: 2, mar: 2, age: 50 },
+    // The political east and south (SPEC §203): the Periplus' own cast, and
+    // the reigning Kandake of the royal chronology.
+    KSH: { name: 'Amanikhatashan', title: 'Kandake', gov: 3, infl: 2, mar: 3, age: 40 },
+    AXM: { name: 'Zoscales', title: 'Negus', gov: 3, infl: 3, mar: 2, age: 45 },
+    HMY: { name: 'Charibael', title: 'King of the Two Tribes', gov: 3, infl: 3, mar: 2, age: 50 },
+    HDR: { name: 'Eleazus', title: 'King of the Frankincense Country', gov: 2, infl: 3, mar: 1, age: 48 },
   },
 
   // Linear mission chains (realm panel). check/reward run through ctx.helpers.

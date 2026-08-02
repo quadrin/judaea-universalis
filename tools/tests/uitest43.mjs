@@ -13,7 +13,7 @@
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp') + '/');
 const { chromium } = require('playwright');
-const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 
 let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  PASS', msg); else { failures++; console.error('  FAIL', msg); } };

@@ -113,8 +113,9 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
   const offshore = new Array(N + 1).fill(null);
   if (idArray && idArray.length >= W * H) {
     // Open sea = an id-0 component that RUNS OFF THE FRAME and is bigger than
-    // any lake. A landlocked pool is a lake however large; a body the frame
-    // clips is part of the world ocean however small its visible piece.
+    // any lake — OR a landlocked body big enough to be an inland SEA. A pond
+    // the frame clips is part of the world ocean however small its visible
+    // piece; a landlocked pool is a lake unless it is the size of a sea.
     //
     // This used to be a size test alone — "≥1% of the map" — and that is a
     // fraction of something that changes. SPEC §160 grew the frame 2.8× and
@@ -125,16 +126,21 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
     // Berenice to Eilat. One assertion in smoke30 caught it, by luck, because
     // it happened to name Eilat's shoreline.
     //
-    // Both tests below are scale-free. Measured across the frame change, they
-    // classify every component identically on the old frame and the new one:
-    // Mediterranean-Atlantic, Caspian, Persian Gulf and Red Sea all reach an
-    // edge; Van, Urmia, Tatta, the Dead Sea and Galilee are all landlocked and
-    // all under 1 sq°. The area floor is in square degrees rather than pixels
-    // so it survives a density change too, not just a frame change.
+    // The landlocked floor exists because SPEC §203 moved the east edge past
+    // the Caspian: at 63.5°E nothing cuts it, so the sea that used to "run off
+    // the frame" became a closed hole in the mainland — and Hyrcania's harbor,
+    // coastal flag and offshore anchor would have vanished with no other
+    // symptom, the same failure §160 documents for the Gulf. Measured on this
+    // map: the Caspian is ~39 sq° and the Aral ~6.9; every genuine lake — Van,
+    // Urmia, Tatta, the Dead Sea, Galilee, Tana, Turkana, Chad, the Hamun —
+    // is under 1. A 3 sq° floor splits the two families with a doubled margin
+    // on both sides. All thresholds are in square degrees, so they survive
+    // frame and density changes alike.
     const sea = new Uint8Array(W * H); // 1 = open sea
     const seen = new Uint8Array(W * H);
     const pxPerDeg2 = (W / (MAP_DATA.LON1 - MAP_DATA.LON0)) * (H / (MAP_DATA.LAT1 - MAP_DATA.LAT0));
     const MIN_SEA_PX = Math.max(1, Math.round(2.0 * pxPerDeg2)); // 2 sq° — above every lake on this map
+    const MIN_INLAND_SEA_PX = Math.max(1, Math.round(3.0 * pxPerDeg2)); // 3 sq° — the Caspian and Aral, no lake
     const comp = new Int32Array(W * H); // scratch: current component's pixels
     for (let start = 0; start < W * H; start++) {
       if (idArray[start] !== 0 || seen[start]) continue;
@@ -152,7 +158,9 @@ export function computeGeometry(idArray, MAP_DATA, provinceMap) {
         if (y > 0) tryPx(i - W);
         if (y + 1 < H) tryPx(i + W);
       }
-      if (offFrame && n >= MIN_SEA_PX) for (let k = 0; k < n; k++) sea[comp[k]] = 1;
+      if ((offFrame && n >= MIN_SEA_PX) || n >= MIN_INLAND_SEA_PX) {
+        for (let k = 0; k < n; k++) sea[comp[k]] = 1;
+      }
     }
     const offX = new Float64Array(N + 1);
     const offY = new Float64Array(N + 1);

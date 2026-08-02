@@ -176,6 +176,32 @@ export const DEFINES = {
     ROU: { aggression: 0.1, caution: 2.0 },
     IRL: { aggression: 0.05, caution: 2.0 },
     SUI: { aggression: 0.05, caution: 2.0 },
+    // -- the political east and south (SPEC §203). Missing tags default {1,1}.
+    // Kush raids Roman Egypt when Rome looks away (the Kandake sacked Syene
+    // in 25 BCE) but is no conqueror; Aksum is a rising trading crown that
+    // will one day cross the strait in force; the incense kingdoms are rich,
+    // walled and cautious — their wars are over the roads, not the map. The
+    // Saka marches raid because raiding is the economy; Greco-Bactria is a
+    // ponderous Hellenistic power at the end of its logistics.
+    KSH: { aggression: 0.8, caution: 1.2 },
+    AXM: { aggression: 0.9, caution: 1.05 },
+    BLM: { aggression: 1.3, caution: 0.8 },
+    SAB: { aggression: 0.5, caution: 1.5 },
+    HMY: { aggression: 0.7, caution: 1.3 },
+    HDR: { aggression: 0.4, caution: 1.6 },
+    OMA: { aggression: 0.4, caution: 1.6 },
+    SAK: { aggression: 1.25, caution: 0.85 },
+    GBA: { aggression: 0.9, caution: 1.1, ponderous: true },
+    CHO: { aggression: 0.4, caution: 1.6 },
+    HEP: { aggression: 1.25, caution: 0.85, ponderous: true },
+    NOB: { aggression: 0.7, caution: 1.3 },
+    // 1948's south is scenery with courts, like its west: nobody in Addis
+    // Ababa or Kabul marches on the Levant.
+    ETH: { aggression: 0.1, caution: 2.0 },
+    YEM: { aggression: 0.1, caution: 2.0 },
+    AFG: { aggression: 0.05, caution: 2.0 },
+    PAK: { aggression: 0.1, caution: 2.0 },
+    LBR: { aggression: 0.05, caution: 2.0 },
   },
 
   // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
@@ -247,6 +273,18 @@ export const DEFINES = {
     YUG: 'republic', ALB: 'republic', BUL: 'republic', ROU: 'republic',
     IRL: 'republic', SUI: 'republic',
     SPA: 'monarchy', NLD: 'monarchy', DEN: 'monarchy', SWE: 'monarchy',
+    // -- the political east and south (SPEC §203) --
+    // Kush is the one place on this map a crowned QUEEN is the constitution
+    // (the Kandakes of Meroe), which the monarchy rule carries; Saba's
+    // mukarrib and Aksum's negus are crowned heads; the Blemmyes and the
+    // Saka marches field every tent's sons. 1948: Ethiopia, Yemen, Oman,
+    // Afghanistan are thrones; Pakistan and Liberia answer the republic rule.
+    KSH: 'monarchy', AXM: 'monarchy', SAB: 'monarchy', HMY: 'monarchy',
+    HDR: 'monarchy', OMA: 'monarchy', GBA: 'monarchy', CHO: 'monarchy',
+    NOB: 'monarchy', HEP: 'monarchy',
+    BLM: 'tribal', SAK: 'tribal',
+    ETH: 'monarchy', YEM: 'monarchy', AFG: 'monarchy',
+    PAK: 'republic', LBR: 'republic',
   },
 
   // Trade goods: price in talents per unit of production
@@ -301,6 +339,17 @@ export const DEFINES = {
     punic:          { name: 'Punic Cults',           color: [176, 108, 76],  group: 'pagan' },
     thracian_cult:  { name: 'Thracian Cults',        color: [148, 118, 168], group: 'pagan' },
     steppe_cults:   { name: 'Steppe Cults',          color: [166, 152, 104], group: 'pagan' },
+    // -- the eastern and southern frame (SPEC §203) --
+    // Same rule as §160: a base atlas that reaches Meroe and calls the
+    // Kandake's realm Egyptian-cult, or reaches Marib and calls the mukarrib
+    // Nabataean, is lying where a player can check. Amun of Napata kept his
+    // own priesthood at Jebel Barkal; the South Arabian pantheon (Almaqah,
+    // Athtar) was shared by Saba, Himyar, Hadramawt AND pre-Christian Aksum,
+    // which is the one claim `south_arabian` makes; `african_cults` is the
+    // Sahel and the forest, grouped pagan like the rest.
+    kushite:        { name: 'Kushite Cults',         color: [178, 128, 60],  group: 'pagan' },
+    south_arabian:  { name: 'South Arabian Cults',   color: [188, 148, 88],  group: 'pagan' },
+    african_cults:  { name: 'African Rites',         color: [138, 124, 78],  group: 'pagan' },
   },
 
   // Cultures: groups israelite, syrian, hellenic, arab, egyptian, latin, iranian, armenian
@@ -334,6 +383,18 @@ export const DEFINES = {
     // and the 1948 map inherits half of Europe from. No base-atlas cell
     // carries it — it arrives through the political maps' culture overlays.
     slavic:     { name: 'Slavic',     color: [122, 158, 92],  group: 'slavic' },
+    // -- the eastern and southern frame (SPEC §203) --
+    // Meroitic Nubia; the Ge'ez highlands; the Sayhadic kingdoms of the
+    // incense country; the lowland Cushitic peoples of the Horn (Beja, Afar,
+    // Somali ancestors — one coarse banner at this scale); and the Sahel and
+    // forest west of the Nile. The Horn and Sahel share the `african` group
+    // the way the four Israelite cultures share theirs; `south_arabian`
+    // rides the arab group, which is what a governor's census made of it.
+    kushite:       { name: 'Kushite',        color: [186, 122, 58],  group: 'african' },
+    aksumite:      { name: 'Aksumite',       color: [152, 108, 66],  group: 'african' },
+    cushitic:      { name: 'Cushitic',       color: [172, 140, 84],  group: 'african' },
+    west_african:  { name: 'West African',   color: [128, 110, 62],  group: 'african' },
+    south_arabian: { name: 'South Arabian',  color: [200, 150, 70],  group: 'arab' },
     // -- far eras (SPEC §22) --
     israeli:    { name: 'Israeli',       color: [40, 110, 200],  group: 'israeli' },
     arab_modern: { name: 'Arab',         color: [96, 140, 84],   group: 'arab_modern' },
@@ -976,6 +1037,116 @@ export const DEFINES = {
       name: 'Switzerland', adj: 'Swiss', color: [200, 60, 70], religion: 'christianity', culture: 'germanic', capital: 'Genava',
       names: 'swiss_modern',
       description: 'Armed to the teeth and party to nothing.',
+      ideas: {},
+    },
+    // ---- the political east and south (SPEC §203): the courts of the new
+    // frame. Same contract as §173: every one exists because a political map
+    // seats it somewhere in some century, none appears in a chapter that does
+    // not list it in activeTags, and none holds a province at the old world's
+    // full levy.
+    //
+    // -- the Nile above Egypt --
+    KSH: {
+      name: 'Kush', adj: 'Kushite', color: [164, 96, 44], religion: 'kushite', culture: 'kushite', capital: 'Meroe',
+      names: 'kushite',
+      description: 'The kingdom of Meroe: iron, gold, archers, and a line of warrior queens Rome learned to leave alone.',
+      ideas: { moraleMult: 1.05 },
+    },
+    NOB: {
+      name: 'Nubia', adj: 'Nubian', color: [150, 88, 56], religion: 'kushite', culture: 'kushite', capital: 'Napata',
+      names: 'nubian',
+      description: 'The kingdoms where Kush was — Nobatia, Makuria, Alodia — soon to take the Cross and hold it a thousand years.',
+      ideas: { hillDefBonus: 1 },
+    },
+    BLM: {
+      name: 'The Blemmyes', adj: 'Blemmyan', color: [186, 140, 76], religion: 'kushite', culture: 'cushitic', capital: 'Blemmyae',
+      names: 'kushite',
+      description: 'The camel-lords of the eastern desert, raiders of the Nile valley whom no treaty holds for long.',
+      ideas: { moraleMult: 1.05 },
+    },
+    // -- the highlands and the Horn --
+    AXM: {
+      name: 'Aksum', adj: 'Aksumite', color: [120, 84, 40], religion: 'south_arabian', culture: 'aksumite', capital: 'Aksum',
+      names: 'aksumite',
+      description: 'The rising crown of the highlands: ivory and gold out of Adulis, stelae over the plateau, and a fleet on the strait.',
+      ideas: { incomeMult: 1.1 },
+    },
+    // -- Arabia Felix: the incense kingdoms --
+    SAB: {
+      name: 'Saba', adj: 'Sabaean', color: [180, 130, 50], religion: 'south_arabian', culture: 'south_arabian', capital: 'Marib',
+      names: 'south_arabian',
+      description: 'The oldest of the incense crowns: the great dam at Marib, and a queen the scriptures remember.',
+      ideas: { incomeMult: 1.1 },
+    },
+    HMY: {
+      name: 'Himyar', adj: 'Himyarite', color: [156, 106, 48], religion: 'south_arabian', culture: 'south_arabian', capital: 'Zafar',
+      names: 'south_arabian',
+      description: 'The highland kingdom of Zafar, gathering the old crowns of the south one by one — and, centuries on, the God of Israel.',
+      ideas: { incomeMult: 1.05, hillDefBonus: 1 },
+    },
+    HDR: {
+      name: 'Hadramawt', adj: 'Hadrami', color: [140, 116, 64], religion: 'south_arabian', culture: 'south_arabian', capital: 'Shabwa',
+      names: 'south_arabian',
+      description: 'The kingdom of the wadi and the frankincense groves: Shabwa taxes every camel, and Dioscurida answers to it across the water.',
+      ideas: { incomeMult: 1.1 },
+    },
+    OMA: {
+      name: 'Oman', adj: 'Omani', color: [172, 66, 52], religion: 'nabataean', culture: 'arab', capital: 'Omana',
+      description: 'The far corner of Arabia: pearl banks, smelted copper, and harbors that watch the strait.',
+      ideas: { navalMult: 1.05 },
+    },
+    // -- the Iranian east --
+    SAK: {
+      name: 'Sakastan', adj: 'Saka', color: [150, 120, 170], religion: 'zoroastrianism', culture: 'sarmatian', capital: 'Phrada',
+      names: 'saka',
+      description: 'The Saka horse-lords settled on the Helmand: the King of Kings\' most dangerous vassals, and sometimes his kings.',
+      ideas: { moraleMult: 1.05 },
+    },
+    GBA: {
+      name: 'Bactria', adj: 'Bactrian', color: [96, 150, 158], religion: 'hellenism', culture: 'greek', capital: 'Antiochia Margiana',
+      description: 'The Greek kingdom of the thousand cities, ruling to the edge of the map and past it, elephants and all.',
+      ideas: { disciplineMult: 1.05, incomeMult: 1.05 },
+    },
+    CHO: {
+      name: 'Chorasmia', adj: 'Chorasmian', color: [130, 140, 100], religion: 'zoroastrianism', culture: 'persian', capital: 'Chorasmia',
+      names: 'iranian',
+      description: 'The walled oases of the lower Oxus, older than every empire that has claimed them and outliving each.',
+      ideas: {},
+    },
+    HEP: {
+      name: 'The Hephthalites', adj: 'Hephthalite', color: [160, 100, 80], religion: 'steppe_cults', culture: 'sarmatian', capital: 'Chorasmia',
+      names: 'turkic',
+      description: 'The White Huns: the horde that killed a King of Kings in battle and bills his heirs yearly for the lesson.',
+      ideas: { moraleMult: 1.05, reinforceMult: 1.05 },
+    },
+    // -- 1948: the south of somebody else's war --
+    ETH: {
+      name: 'Ethiopia', adj: 'Ethiopian', color: [60, 110, 60], religion: 'christianity', culture: 'aksumite', capital: 'Shewa',
+      names: 'ethiopian_modern',
+      description: 'The Lion of Judah restored: the one African empire on the map, seven years back on its own throne.',
+      ideas: {},
+    },
+    YEM: {
+      name: 'Yemen', adj: 'Yemeni', color: [130, 40, 40], religion: 'islam', culture: 'arab_modern', capital: 'Zafar',
+      description: 'The Mutawakkilite Kingdom: an imam murdered in February, his son crowned on the ruin, the gates kept shut.',
+      ideas: { hillDefBonus: 1 },
+    },
+    AFG: {
+      name: 'Afghanistan', adj: 'Afghan', color: [70, 90, 70], religion: 'islam', culture: 'persian', capital: 'Artacoana',
+      names: 'afghan_modern',
+      description: 'The buffer state that buried two empires, minding its own valleys.',
+      ideas: { hillDefBonus: 1 },
+    },
+    PAK: {
+      name: 'Pakistan', adj: 'Pakistani', color: [40, 100, 66], religion: 'islam', culture: 'persian', capital: 'Makuran',
+      names: 'pakistani_modern',
+      description: 'One year old and already at war in Kashmir — its Makran marches the only corner this map reaches.',
+      ideas: {},
+    },
+    LBR: {
+      name: 'Liberia', adj: 'Liberian', color: [46, 66, 130], religion: 'christianity', culture: 'west_african', capital: 'Kru Coast',
+      names: 'liberian_modern',
+      description: 'The oldest republic in Africa, and in 1948 one of its two sovereign states.',
       ideas: {},
     },
     // ---- off-map seats (SPEC §180): courts the frame cannot reach ----

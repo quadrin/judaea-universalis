@@ -6,7 +6,7 @@ import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/tmp/pw') + '/');
 const { chromium } = require('playwright');
 
-const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
 async function pickBookmark(page, nameFrag) {

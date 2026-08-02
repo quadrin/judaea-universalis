@@ -58,19 +58,27 @@ static site, the zero dependencies, or the missing build step changes.
 
 ## What's in the slice
 
-- Province map of the whole Roman world — the Atlantic to the Caspian, Britain
-  to the Sahara (~307 permanent cells, Judaea at city/district density),
-  GPU-generated province-ID texture, EU4-style mapmode shaders, heightmap
-  relief, parchment crossfade at strategic zoom.
-- A political west in every chapter: eight per-era maps seat some 65 courts on
-  the ground beyond the old frame — Carthage, Masinissa's Numidia and the
-  Arverni hegemony in 167 BCE; the Ostrogoths, Vandals, Franks and Moorish
-  kings in 529 (Justinian no longer holds an Italy he hadn't reconquered yet);
-  the Avar khaganate and the Sclaveni in 614; Stalin's Europe in 1948, Paris
-  to Moscow under their 1948 names. Every one is a living AI court — convening,
-  electing, dying, fighting its own wars — and every western province carries a
-  levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine legions stay on the
-  Rhine instead of doubling the army it brings to Judaea.
+- Province map of the whole classical world — the Atlantic to the edge of
+  India's approaches, Britain to the Horn of Africa: all of Iran to the
+  Makran and Merv, all of Ethiopia to the lakes, Nubia, Arabia entire, the
+  Sahel to the Gulf of Guinea (~373 permanent cells, Judaea at city/district
+  density), GPU-generated province-ID texture, EU4-style mapmode shaders,
+  heightmap relief, parchment crossfade at strategic zoom.
+- A political west — and, beyond the Euphrates and the cataracts, a political
+  east and south — in every chapter: eight per-era maps seat some 77 courts
+  on the ground beyond the original theater. Carthage, Masinissa's Numidia
+  and the Arverni hegemony in 167 BCE; Kush under its warrior queens, the
+  Periplus' own cast of 66 CE (Zoscales' Aksum, Charibael's Himyar-and-Saba,
+  Eleazus' frankincense kingdom), Sakastan and Greco-Bactria on the Helmand;
+  the Ostrogoths, Vandals, Franks and Moorish kings in 529 (Justinian no
+  longer holds an Italy he hadn't reconquered yet — and Kaleb of Aksum holds
+  the Yemen he took four years before); the Avar khaganate and the Sclaveni
+  in 614; Stalin's Europe in 1948, Paris to Moscow under their 1948 names,
+  with Haile Selassie's Ethiopia, the Imam's Yemen and one-year-old Pakistan
+  at the map's new edges. Every one is a living AI court — convening,
+  electing, dying, fighting its own wars — and every province beyond the
+  theater carries a levy share (1 / 0.2 / 0.1 by century) so Rome's Rhine
+  legions stay on the Rhine instead of doubling the army it brings to Judaea.
 - Map labels that name the ground: zoom in for province names, out for nations —
   one name per *region* a court holds rather than one per court, so a realm in two
   places reads **JUDAEA** at home and **JUDAEAN GREECE** across the sea instead of

@@ -1026,6 +1026,117 @@ export const FLAGS = {
     star5(3.6, 3.2, 1.1, '#f2f4f4') +
     star5(8.9, 3.2, 1.1, '#f2f4f4') +
     star5(6.2, 6.6, 1.1, '#f2f4f4'),
+  // ---- the political east and south (SPEC §203) ----
+  // Same rule as §173: where a court left an emblem it is drawn; where it
+  // left none, the thing its neighbors knew it by.
+  // Kush: the Meroitic pyramids of the royal cemetery, steep-sided, the
+  // sun-disc of Amun of Napata above them.
+  KSH:
+    `<circle cx="12" cy="5.4" r="2.1" ${ACC}/>` +
+    `<path d="M2.9 19.6 7.2 9.8l4.3 9.8Z" ${SIL}/>` +
+    `<path d="M8.1 19.6 12 10.6l3.9 9Z" ${SIL}/>` +
+    `<path d="M12.5 19.6 16.8 9.8l4.3 9.8Z" ${SIL}/>`,
+  // Nubia: the drawn bow of Ta-Seti, the Land of the Bow — the oldest name
+  // any neighbor ever gave the middle Nile.
+  NOB:
+    `<path d="M6.2 4.6c4.4 2.6 6.6 5.1 6.6 7.4s-2.2 4.8-6.6 7.4c-.7.4-1.1.9-1.4 1.6l-1.4-.7c.4-.9 1-1.6 1.9-2.1 3.8-2.3 5.7-4.3 5.7-6.2s-1.9-3.9-5.7-6.2c-.9-.5-1.5-1.2-1.9-2.1l1.4-.7c.3.7.7 1.2 1.4 1.6Z" ${SIL}/>` +
+    `<path d="M4.6 3.6v16.8" ${DET}/>` +
+    `<path d="M6.8 11.4h10.6v1.2H6.8Z" ${ACC}/>` +
+    `<path d="M20.6 12l-4.4-1.9v3.8Z" ${ACC}/>`,
+  // The Blemmyes: crossed camel-lances over the desert moon.
+  BLM:
+    `<path d="M13.1 3.4a4.4 4.4 0 10.1 5.4 5.4 5.4 0 01-.1-5.4Z" ${ACC}/>` +
+    `<path d="M5.2 8.4 17.4 20.6M6.4 7.6l1.8 1.8M5.2 8.4l-.6-2.4 2.4.6Z" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>` +
+    `<path d="M18.8 8.4 6.6 20.6M17.6 7.6l-1.8 1.8M18.8 8.4l.6-2.4-2.4.6Z" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>`,
+  // Aksum: the great stele of the royal field, its false door at the foot,
+  // the crescent-and-disc of Astar at the crown.
+  AXM:
+    `<path d="M14.6 4.0a2.9 2.9 0 10-5.2.1 3.6 3.6 0 015.2-.1Z" ${ACC}/>` +
+    `<path d="M9.4 20.4V7.6c0-1.6.9-2.6 2.6-2.6s2.6 1 2.6 2.6v12.8Z" ${SIL}/>` +
+    `<path d="M10.8 18.2h2.4v2.2h-2.4Z" fill="${FO}" stroke="none"/>` +
+    `<path d="M9.4 8.6h5.2M9.4 11.6h5.2M9.4 14.6h5.2" ${DET}/>` +
+    `<path d="M6.6 20.4h10.8v1.4H6.6Z" ${ACC}/>`,
+  // Saba: the bull's head of Almaqah between the ibex horns of the temple
+  // friezes — off every altar from Marib to Sirwah.
+  SAB:
+    `<path d="M4.6 4.8c2.2.4 3.7 1.5 4.5 3.3l-1.9 1.2C6 7.9 5.1 6.9 4.4 6.3Z" ${ACC}/>` +
+    `<path d="M19.4 4.8c-2.2.4-3.7 1.5-4.5 3.3l1.9 1.2c1.2-1.4 2.1-2.4 2.8-3Z" ${ACC}/>` +
+    `<path d="M12 6.6c2.6 0 4.2 1.3 4.8 3.9.3 1.4 0 2.9-.9 4.5-.8 1.4-1.4 2.8-1.7 4.2h-4.4c-.3-1.4-.9-2.8-1.7-4.2-.9-1.6-1.2-3.1-.9-4.5.6-2.6 2.2-3.9 4.8-3.9Z" ${SIL}/>` +
+    `<circle cx="10.3" cy="11.2" r="0.7" fill="${FO}" stroke="none"/>` +
+    `<circle cx="13.7" cy="11.2" r="0.7" fill="${FO}" stroke="none"/>` +
+    `<path d="M10.6 16.2h2.8" ${DET}/>`,
+  // Himyar: the crowned eagle of the Zafar reliefs over the crescent.
+  HMY:
+    `<path d="M12 4.2c1 0 1.7.7 1.7 1.6 0 .6-.3 1.1-.7 1.4.8 1.2 1.2 2.8 1.1 4.8-.1 1.9-.6 3.5-1.4 4.7h-1.4c-.8-1.2-1.3-2.8-1.4-4.7-.1-2 .3-3.6 1.1-4.8-.4-.3-.7-.8-.7-1.4 0-.9.7-1.6 1.7-1.6Z" ${SIL}/>` +
+    `<path d="M11.2 7.6C9 7.9 7.4 9 6.5 10.9c-.7 1.5-.9 3.2-.5 5.2 1.2-.7 2.1-1.5 2.8-2.5l.5 2.2 1.7-1.2Z" ${SIL}/>` +
+    `<path d="M12.8 7.6c2.2.3 3.8 1.4 4.7 3.3.7 1.5.9 3.2.5 5.2-1.2-.7-2.1-1.5-2.8-2.5l-.5 2.2-1.7-1.2Z" ${SIL}/>` +
+    `<path d="M16 18.3a4.6 4.6 0 01-8 0c1.3.6 2.6.9 4 .9s2.7-.3 4-.9Z" ${ACC}/>`,
+  // Hadramawt: the incense burner of the Shabwa altars, coals alight.
+  HDR:
+    `<path d="M8.4 9.2h7.2l-1 3.4h-5.2Z" ${SIL}/>` +
+    `<path d="M10.9 12.6h2.2v4h-2.2Z" ${SIL}/>` +
+    `<path d="M7.4 16.6h9.2v2H7.4Z" ${SIL}/>` +
+    `<path d="M9.6 7.4c.3-1 .1-1.8-.5-2.6 1.2.2 1.9.9 2.1 2.1M14.4 7.4c-.3-1-.1-1.8.5-2.6-1.2.2-1.9.9-2.1 2.1" ${DET}/>` +
+    `<circle cx="10.2" cy="8.2" r="0.7" ${ACC}/>` +
+    `<circle cx="13.8" cy="8.2" r="0.7" ${ACC}/>` +
+    `<circle cx="12" cy="7.4" r="0.7" ${ACC}/>`,
+  // Oman: the dhow that worked the strait before anyone wrote its name.
+  OMA:
+    `<path d="M5.2 15.8h13.6l-2.6 3.8H7.8Z" ${SIL}/>` +
+    `<path d="M12.6 4.4c3.4 1.9 5.2 4.9 5.4 9l-.9.9H12.6Z" ${ACC}/>` +
+    `<path d="M11.4 6.2v8.1" ${DET}/>` +
+    `<path d="M4.2 17.4c1.6 1 3.2 1 4.8 0 1.6 1 3.2 1 4.8 0 1.6 1 3.2 1 4.8 0" fill="none" stroke="${FO}" stroke-width="0.7"/>`,
+  // Sakastan: the pointed cap of the Saka tigraxauda, tall on every coin
+  // and carving that ever named them.
+  SAK:
+    `<path d="M12 3.2c1.4 2.8 2.2 5.6 2.4 8.4h-4.8c.2-2.8 1-5.6 2.4-8.4Z" ${SIL}/>` +
+    `<path d="M8.4 11.6h7.2l1.6 3.4H6.8Z" ${SIL}/>` +
+    `<path d="M6.4 15h11.2v1.8c-1.9.9-3.8 1.3-5.6 1.3s-3.7-.4-5.6-1.3Z" ${ACC}/>` +
+    `<path d="M8.4 18.4c1.2.5 2.4.7 3.6.7s2.4-.2 3.6-.7v2.2h-7.2Z" ${SIL}/>`,
+  // Bactria: the war elephant of the royal tetradrachms.
+  GBA:
+    `<path d="M5 18.9c.1-3.6 1-6.2 2.8-7.9 1.3-1.2 3-1.8 5-1.8 2.2 0 3.9.7 5.1 2.1 1 1.2 1.5 2.7 1.5 4.5l-1.9 1.2c-.4-.6-.6-1.4-.6-2.4-.9.8-1.4 1.9-1.4 3.2 0 .4 0 .8.1 1.1h-2c-.1-.4-.1-.8-.1-1.2 0-.9.2-1.8.5-2.5h-3.4c-.5.9-.8 2.1-.9 3.7Z" ${SIL}/>` +
+    `<path d="M17.5 11.3c.8-.6 1.2-1.4 1.2-2.4-.9.1-1.7.5-2.3 1.1" ${SIL}/>` +
+    `<circle cx="15.9" cy="11.8" r="0.4" fill="${FO}" stroke="none"/>` +
+    `<path d="M8.6 8.4c.9-2 2.1-3.4 3.7-4.2l.9 1.8c-1.2.6-2.1 1.6-2.8 3" ${ACC}/>`,
+  // Chorasmia: the walled oasis of the lower Oxus — towered ramparts square
+  // to the desert, the tamga of its kings over the gate.
+  CHO:
+    `<path d="M4.6 9.4h14.8v10H4.6Z" ${SIL}/>` +
+    `<path d="M4.6 9.4V6.8h2.6v2.6M10.7 9.4V6.8h2.6v2.6M16.8 9.4V6.8h2.6v2.6" ${SIL}/>` +
+    `<path d="M10.6 19.4v-4.6h2.8v4.6" fill="${FO}" stroke="none"/>` +
+    `<path d="M12 3.2v2.4M10.8 4.4h2.4" fill="none" stroke="${FG}" stroke-width="1.3" stroke-linecap="round"/>`,
+  // The Hephthalites: the crescent-and-trident tamga of their drachms.
+  HEP:
+    `<path d="M12 20.2V9.6M7.4 5.2v3.2c0 1.6.9 2.6 2.4 2.9M16.6 5.2v3.2c0 1.6-.9 2.6-2.4 2.9M12 4.6v5" fill="none" stroke="${FP}" stroke-width="1.9" stroke-linecap="round"/>` +
+    `<path d="M8.2 17.2a4.6 4.6 0 007.6 0" fill="none" stroke="${FG}" stroke-width="1.7" stroke-linecap="round"/>`,
+  // -- 1948: the real flags, same muted palette as the chapter's west --
+  ETH:
+    `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="0.6" y="8.2" width="22.8" height="7.6" fill="#d9a520" stroke="none"/>` +
+    `<rect x="0.6" y="15.8" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
+    `<path d="M9.4 8.6c1.7-.9 3.5-.9 5.2 0l1.5 4.2c-.5 1.9-1.5 3-3 3.4h-2.2c-1.5-.4-2.5-1.5-3-3.4Z" fill="#b5342c" stroke="none"/>` +
+    `<path d="M12.4 9.2c.9.4 1.5 1.1 1.8 2.1M10.2 14.2h3.6" stroke="#d9a520" stroke-width="0.8" fill="none"/>`,
+  YEM:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#b5342c" stroke="none"/>` +
+    `<path d="M15.7 7.1a5.6 5.6 0 100 9.8 6.8 6.8 0 010-9.8Z" fill="#f2f4f4" stroke="none"/>` +
+    star5(16.2, 12, 1.7, '#f2f4f4'),
+  AFG:
+    `<rect x="0.6" y="0.6" width="7.6" height="22.8" fill="#141414" stroke="none"/>` +
+    `<rect x="8.2" y="0.6" width="7.6" height="22.8" fill="#b5342c" stroke="none"/>` +
+    `<rect x="15.8" y="0.6" width="7.6" height="22.8" fill="#2c7a3f" stroke="none"/>` +
+    `<circle cx="12" cy="12" r="3.4" fill="none" stroke="#f2f4f4" stroke-width="0.9"/>` +
+    `<path d="M10.4 13.6c0-1.9.5-3.2 1.6-4 1.1.8 1.6 2.1 1.6 4Z" fill="#f2f4f4" stroke="none"/>`,
+  PAK:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" rx="3.2" fill="#2c7a3f" stroke="none"/>` +
+    `<rect x="0.6" y="0.6" width="5.7" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<path d="M16.9 6.7a5.9 5.9 0 100 10.6 7.2 7.2 0 010-10.6Z" fill="#f2f4f4" stroke="none"/>` +
+    star5(17.6, 9.4, 1.6, '#f2f4f4'),
+  LBR:
+    `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="#f2f4f4" stroke="none"/>` +
+    `<path d="M0.6 4.5h22.8M0.6 10.9h22.8M0.6 17.3h22.8" stroke="#b5342c" stroke-width="3.2" fill="none"/>` +
+    `<rect x="0.6" y="0.6" width="9.8" height="9.5" fill="#1d3c6e" stroke="none"/>` +
+    star5(5.5, 5.3, 2.6, '#f2f4f4'),
 };
 
 function escText(s) {

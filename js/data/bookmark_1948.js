@@ -432,6 +432,11 @@ export const BOOKMARK_1948 = {
     // sealed country keeps sealed politics.
     'FRA', 'SPA', 'POR', 'NLD', 'DEN', 'SWE', 'SUI', 'IRL',
     'GER', 'AUT', 'POL', 'CZE', 'HUN', 'YUG', 'BUL', 'ROU', 'SOV',
+    // The political east and south (SPEC §203): the sovereigns of the new
+    // frame — the Negus, the Imam, the Sultan, the King of Afghanistan,
+    // one-year-old Pakistan, and Tubman's Liberia. The colonial south rides
+    // under FRA and UK, which are already seated.
+    'ETH', 'YEM', 'OMA', 'AFG', 'PAK', 'LBR',
     // The off-map seat (SPEC §180): the one power of the age the frame
     // genuinely cannot reach. No cell, no armies, no wars — a court, an
     // opinion, a treasury, and the biggest arsenal on the ledger. Opened
@@ -744,6 +749,28 @@ export const BOOKMARK_1948 = {
     'Borysthenia': 'Gomel', 'Venedia': 'Minsk', 'Rha': 'Penza',
     'Hyperborea': 'Moscow', 'Ripaea': 'Kuybyshev',
     'Dyrrhachium': 'Durrës', 'Phasis': 'Batumi', 'Caucasian Albania': 'Baku',
+    // -- SPEC §203: the eastern and southern frame in its 1948 names, same
+    // metropolis rule. Where the classical name IS the 1948 name (Aksum,
+    // Marib, Najran, Ogaden, Danakil) nothing is written.
+    'Carmana': 'Kerman', 'Harmozeia': 'Bandar Abbas', 'Tis': 'Chabahar',
+    'Pura': 'Iranshahr', 'Zranka': 'Zabol', 'Makuran': 'Turbat',
+    'Phrada': 'Farah', 'Artacoana': 'Herat',
+    'Antiochia Margiana': 'Mary', 'Nisa': 'Ashgabat',
+    'Hecatompylos': 'Damghan', 'Chorasmia': 'Urgench', 'Dahae': 'Nebit-Dag',
+    'Massagetae': 'Aralsk', 'Issedones': 'Aktyubinsk',
+    'Macoraba': 'Mecca', 'Asir': 'Abha', 'Yamama': 'Riyadh',
+    'Zafar': 'Sanaa', 'Muza': 'Hodeida', 'Eudaemon Arabia': 'Aden',
+    'Shabwa': 'Mukalla', 'Moscha': 'Salalah', 'Dioscurida': 'Socotra',
+    'Omana': 'Muscat', 'Mazun': 'Sohar',
+    'Napata': 'Dongola', 'Meroe': 'Atbara', 'Soba': 'Khartoum',
+    'Dodekaschoinos': 'Wadi Halfa',
+    'Blemmyae': 'Port Sudan', 'Noba': 'El Obeid', 'Jebel Marra': 'El Fasher',
+    'Adulis': 'Massawa', 'Tana': 'Gondar', 'Shewa': 'Addis Ababa',
+    'Kaffa': 'Jimma', 'Avalites': 'Djibouti', 'Malao': 'Berbera',
+    'Opone': 'Hafun', 'Azania': 'Kismayu',
+    'Nigritae': 'Timbuktu', 'Air': 'Agadez', 'Agisymba': 'Fort-Lamy',
+    'Bambuk': 'Bamako', 'Guinea Highlands': 'Kankan', 'Kru Coast': 'Monrovia',
+    'Volta': 'Accra', 'Niger Delta': 'Lagos', 'Theon Ochema': 'Douala',
   },
 
   // Where these courts actually sit in 1948 (SPEC §141). A tag's static seat
@@ -784,6 +811,10 @@ export const BOOKMARK_1948 = {
     ITA: { names: 'italian' },
     UK: { names: 'british' },
     IRN: { names: 'iranian_modern' },
+    // SPEC §203: the ancient mart of Omana is the Sultanate now — same name,
+    // its own century's court (the static 'arab' pool is the Periplus-era
+    // one, correct everywhere else OMA is seated).
+    OMA: { names: 'omani_modern' },
   },
 
   // The victors' pens wait on both the schoolhouse and the settlers (SPEC
@@ -1413,6 +1444,16 @@ export const BOOKMARK_1948 = {
     // The off-map seat (SPEC §180): the recognition came from this desk,
     // eleven minutes after the declaration and over his own State Department.
     USA: { name: 'Harry S. Truman', title: 'President', gov: 4, infl: 4, mar: 3, age: 64 },
+    // The political east and south (SPEC §203), to the same week: the Imam
+    // was murdered in February and Ahmad took the ruin; Jinnah has four
+    // months to live, with Liaquat carrying the government already.
+    ETH: { name: 'Haile Selassie', title: 'Emperor', gov: 4, infl: 4, mar: 2, age: 55 },
+    YEM: { name: 'Ahmad bin Yahya', title: 'Imam', gov: 2, infl: 2, mar: 2, age: 57 },
+    OMA: { name: 'Said bin Taimur', title: 'Sultan', gov: 2, infl: 2, mar: 1, age: 37 },
+    AFG: { name: 'Mohammed Zahir Shah', title: 'King', gov: 3, infl: 2, mar: 1, age: 33 },
+    PAK: { name: 'Muhammad Ali Jinnah', title: 'Governor-General', gov: 4, infl: 4, mar: 1, age: 71,
+      heir: { name: 'Liaquat Ali Khan', gov: 3, infl: 3, mar: 2, age: 52 } },
+    LBR: { name: 'William Tubman', title: 'President', gov: 3, infl: 3, mar: 1, age: 52 },
   },
 
   missions: {

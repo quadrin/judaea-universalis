@@ -1,32 +1,38 @@
 // js/data/map_data.js — Judaea Universalis: the Roman world, 66 CE.
 // Owns MAP_DATA (SPEC §2, §4) and validateMapData(). DOM-free, zero imports.
-// Frame: lon 11°W–53.5°E, lat 23.5–58°N. Equirectangular, y=0 at north.
+// Frame: lon 11°W–63.5°E, lat 3–58°N. Equirectangular, y=0 at north.
 
 // v5.0: the frame grows all around — west to Cyrenaica and Greece, south to
 // the Hejaz and Upper Egypt, east to Persis and the lower Gulf.
 // v5.4: the frame grows again — west to Rome, Sicily and Tripolitania, north
 // to the Black Sea, the Bosporus, the Caucasus rim and the south Caspian.
-// v6.8 (SPEC §160): west to the Atlantic and north to Britain. The frame now
-// holds the whole Roman world — the Maghreb, Iberia, Gaul, the home islands,
-// the Rhine and Danube, the Pontic steppe and the Caspian's whole rim.
+// v6.8 (SPEC §160): west to the Atlantic and north to Britain — the whole
+// Roman world, the Maghreb, Iberia, Gaul, the home islands, the Rhine and
+// Danube, the Pontic steppe and the Caspian's whole rim.
+// v7.4 (SPEC §203): east to hold ALL of Iran (the Makran shore, Sistan and
+// the Khorasan marches to 63.5°E) and south to hold ALL of Ethiopia (the
+// highlands to 3°N) — and with them everything the rectangle must then carry:
+// Nubia and the middle Nile, the Horn and the Gulf of Aden, Arabia entire
+// from the Hejaz to Ras al-Hadd, the Persian Gulf's two mouths, Margiana and
+// the Oxus, the Aral, and the Sahel from the Niger bend to Lake Chad.
 //
-// Density is unchanged, again: ~97.5 px/°lon and ~115.2 px/°lat, exactly the
-// numbers v5.0 and v5.4 shipped. Only the world got bigger, so nothing sized
-// in map units — seed spacing, sprite scale, label metrics — had to move.
+// Density is unchanged, a fourth time: ~97.5 px/°lon and ~115.2 px/°lat,
+// exactly the numbers v5.0 shipped. Only the world got bigger, so nothing
+// sized in map units — seed spacing, sprite scale, label metrics — had to
+// move.
 //
-// The two ceilings this frame was blocked on are both measured now, not
-// assumed. MAX_TEXTURE_SIZE is 8192 on SwiftShader, the weakest thing that
-// will ever run this (SPEC §157) — 6288 fits with room to spare, where the
-// 4096 in this comment for five versions was a guess and wrong by double. And
-// the memory bill came down from 948 MB to 326 at this frame once the ID plane
-// went to RG8 and relief to R8 (SPEC §158–159). Neither of those is what makes
-// a map: the coastline below is, and it is the part that had to be traced by
-// hand.
-const MAP_W = 6288;
-const MAP_H = 3975;
+// The ceilings stay measured, not assumed. MAX_TEXTURE_SIZE is 8192 on
+// SwiftShader, the weakest thing that will ever run this (SPEC §157) — 7264
+// still fits. The texture bill at this frame is ~629 MB in the §158–159
+// narrowed formats (smoke104 keeps the arithmetic executable); the §156
+// costing said a frame this size was affordable and not worth it, and §203
+// is the section where it became worth it. Neither number is what makes a
+// map: the coastline below is, and it is the part traced by hand.
+const MAP_W = 7264;
+const MAP_H = 6337;
 const LON0 = -11.0;
-const LON1 = 53.5;
-const LAT0 = 23.5;
+const LON1 = 63.5;
+const LAT0 = 3.0;
 const LAT1 = 58.0;
 
 function project(lon, lat) {
@@ -50,18 +56,21 @@ function project(lon, lat) {
 //
 // The ring is traced with the water always on the same side, entering and
 // leaving each sea rather than jumping: Mediterranean, Adriatic, Aegean,
-// Marmara, Black Sea, the Maeotic lake (Azov), the whole Caspian, the Gulfs of
-// Suez and Aqaba, the Red Sea, the head of the Persian Gulf (66 CE, near
-// Charax), the Atlantic, the North Sea and the Baltic. Frame edges close it.
+// Marmara, Black Sea, the Maeotic lake (Azov), the Gulfs of Suez and Aqaba,
+// the whole Red Sea, the Gulf of Aden and the Arabian Sea, the Persian Gulf
+// with both its mouths (the head near Charax is the 66 CE shoreline), the
+// Gulf of Guinea, the Atlantic, the North Sea and the Baltic. Frame edges
+// close it. (v7.4: the Caspian left the ring — landlocked at this frame, it
+// lives with the lakes as the closed inland sea it geographically is.)
 //
 // Because it is one loop, an edit anywhere in it can make it cross itself, and
 // a crossed ring fills inside-out over the crossed lobe with no other symptom.
 // `node tools/coastcheck.mjs` is the guard: it holds simplicity, disjointness
 // and containment, and draws the mask so the result can be looked at.
 //
-// The Bosporus, Dardanelles, Messina, Dover and Bonifacio straits are drawn a
-// few pixels wide so the seas stay connected water; armies cross only by
-// seaLink ferries.
+// The Bosporus, Dardanelles, Messina, Dover, Bonifacio, Bab el-Mandeb and
+// Hormuz straits are drawn a few pixels wide so the seas stay connected
+// water; armies cross only by seaLink ferries.
 // ---------------------------------------------------------------------------
 
 const MAINLAND = [
@@ -148,8 +157,54 @@ const MAINLAND = [
   [-9.88, 30.63], [-9.60, 30.42],                                 // Cape Ghir, the Sous mouth
   [-10.18, 29.38], [-10.70, 29.00],                               // the Ifni shore, the Draa approaches
   [-11.00, 28.70],                                                // cut at the west edge, above Cape Draa
-  // Frame: west edge down, south edge east to the Red Sea shore
-  [-11.00, 23.50], [35.55, 23.50],
+  // v7.4: the west edge runs south past the Saharan shore — the coast bulges
+  // west of 11°W from Cape Draa to Liberia, so the frame edge is the boundary
+  // until the Guinea coast swings back inside it at Cape Mount.
+  [-11.00, 6.70],
+  // The Gulf of Guinea coast, eastward: the Grain, Ivory, Gold and Slave
+  // coasts of the later charts — in 66 CE the shore below the charts' edge.
+  [-10.79, 6.28], [-10.02, 5.85],                                 // Cape Mesurado, the Kru shore
+  [-9.00, 5.00], [-7.72, 4.37],                                   // Cape Palmas
+  [-6.60, 4.75], [-5.25, 5.05],                                   // the Ivory shore
+  [-4.02, 5.25], [-3.10, 5.08],                                   // the Ebrie lagoons
+  [-2.09, 4.74],                                                  // Cape Three Points
+  [-1.25, 5.08], [-0.20, 5.55],                                   // the Gold Coast
+  [0.65, 5.80], [1.25, 6.13],                                     // the Volta mouth, the Keta lagoon
+  [2.45, 6.35], [3.40, 6.42],                                     // the Slave Coast lagoons
+  [4.55, 6.20], [5.30, 5.55],                                     // the bight of Benin
+  [6.08, 4.28],                                                   // the Niger's delta, Cape Formoso
+  [7.15, 4.42], [8.30, 4.80],                                     // the Oil Rivers, the Calabar estuary
+  [8.98, 4.10],                                                   // Ambas bay, under the Chariot of the Gods
+  [9.62, 3.92],                                                   // the Wouri estuary (Douala)
+  [9.88, 3.00],                                                   // cut at the south edge, by Campo
+  // Frame: south edge east across the forest, the lakes country and the
+  // Cushitic marches to the Indian Ocean shore of Azania
+  [46.50, 3.00],
+  // The Azanian and Somali coast, northeastward to the Horn
+  [47.30, 4.15], [48.05, 4.95],                                   // the Benadir shore
+  [48.53, 5.35], [49.15, 6.55],                                   // Hobyo
+  [49.85, 7.98], [50.55, 9.30],                                   // Eyl, the Hafun approaches
+  [51.40, 10.45],                                                 // Ras Hafun — Africa's easternmost cape
+  [51.28, 11.82],                                                 // Cape Aromata (Guardafui)
+  // The Gulf of Aden's south shore, westward: the far-side ports of the
+  // Periplus — Opone behind, Malao, Avalites at the strait
+  [50.60, 11.95], [49.18, 11.28],                                 // Bosaso
+  [47.95, 11.15], [46.55, 10.70],                                 // the Maydh shore
+  [45.01, 10.44],                                                 // Malao (Berbera)
+  [44.25, 10.42], [43.47, 11.36],                                 // Zeila
+  [43.15, 11.59], [42.55, 11.53],                                 // the gulf of Tadjoura
+  [43.10, 11.98],                                                 // Obock, the strait approaches
+  [43.32, 12.48],                                                 // Ras Siyyan — Bab el-Mandeb, African side
+  // The African Red Sea shore, northwestward: the Danakil coast, Adulis,
+  // the Beja shore, to Berenice where the old frame's coast begins
+  [42.73, 13.02], [42.00, 13.70],                                 // Assab, the Danakil shore
+  [41.20, 14.55], [40.20, 14.95],                                 // the Buri approaches
+  [39.72, 15.15], [39.47, 15.62],                                 // Adulis' bay, Massawa
+  [39.12, 16.55], [38.62, 17.75],                                 // the Dahlak-facing shore
+  [37.60, 18.60], [37.33, 19.10],                                 // Suakin
+  [37.22, 19.62], [37.05, 20.60],                                 // Port Sudan's roadstead
+  [36.85, 21.60], [36.55, 22.20],                                 // the Beja shore
+  [35.58, 23.25],                                                 // toward Foul Bay
   // Egyptian Red Sea coast, northward past Berenice
   [35.48, 23.90], [35.05, 24.55], [34.62, 25.30],
   [34.30, 26.10], [34.10, 26.40], [33.95, 26.70], [33.85, 27.25], [33.55, 27.80],
@@ -172,10 +227,40 @@ const MAINLAND = [
   [35.05, 29.33], [34.90, 28.90], [34.80, 28.45], [34.78, 28.05],
   [35.15, 27.55], [35.55, 27.30], [36.10, 26.55], [36.50, 26.10], [36.90, 25.55],
   [37.20, 25.10], [37.60, 24.65], [38.05, 24.05],                 // toward Yanbu
-  [38.55, 23.70], [38.80, 23.50],                                 // cut at the south edge
-  // Frame: south edge east to the corner, up the east edge to the lower Gulf
-  [53.50, 23.50], [53.50, 24.10],
-  // The lower Gulf shore, westward: the Trucial coast and the Qatar thumb
+  [38.55, 23.70],
+  // v7.4: the Arabian Red Sea coast continues south — the Hejaz shore, the
+  // Asir, the Tihama of the incense kingdoms — to the strait.
+  [39.05, 22.70], [39.15, 21.48],                                 // Jeddah's roadstead
+  [39.80, 20.30], [41.08, 19.13],                                 // the Asir shore
+  [41.80, 17.90], [42.55, 16.90],                                 // the farther Tihama
+  [42.62, 15.75], [42.93, 14.80],                                 // the Sabaean coast, Muza's roadstead
+  [43.20, 13.95], [43.25, 13.32],                                 // Mocha's shore
+  [43.48, 12.68],                                                 // Bab el-Mandeb, Arabian side
+  // The south Arabian coast, eastward: Eudaemon Arabia, the Hadhramaut
+  // shore, the incense terraces of Dhofar, to Arabia's eastern cape
+  [44.30, 12.62], [45.03, 12.78],                                 // Eudaemon Arabia (Aden)
+  [45.95, 13.30], [47.40, 13.65],                                 // the Abyan and Ahwar shore
+  [48.18, 13.98], [49.13, 14.53],                                 // Qana's coast, Mukalla
+  [50.20, 14.95], [51.24, 15.21],                                 // the Mahra shore
+  [52.23, 15.65],                                                 // Cape Syagros (Ras Fartak)
+  [52.50, 16.05], [53.55, 16.80],                                 // the Qamar bay
+  [54.10, 17.02], [54.70, 16.98],                                 // Moscha (Salalah), Mirbat
+  [55.45, 17.60], [56.30, 18.20],                                 // the Sawqirah bight
+  [57.70, 19.00], [57.75, 19.80],                                 // the Duqm shore
+  [58.55, 20.40],                                                 // Masirah fused to its shore
+  [59.10, 21.35], [59.58, 21.90],                                 // the sands' seaward edge
+  [59.80, 22.52],                                                 // Ras al-Hadd — Arabia's eastern cape
+  // The Gulf of Oman shore, northwestward to the strait
+  [59.45, 22.75], [58.59, 23.62],                                 // Qalhat, Muscat
+  [57.85, 23.95], [56.75, 24.36],                                 // the Batinah shore, Sohar
+  [56.36, 25.20], [56.27, 25.65],                                 // the Shimaliyah coast
+  [56.38, 26.20],                                                 // Ras Musandam — the strait of Hormuz
+  // The Persian Gulf's south shore, southwestward: the pirate coast of the
+  // later charts, the pearl banks, to the Qatar thumb
+  [56.05, 25.95], [55.95, 25.75],                                 // the Musandam west side
+  [55.55, 25.55], [55.28, 25.28],                                 // the Trucial lagoons (Dubai)
+  [54.90, 24.85], [54.38, 24.45],                                 // Abu Dhabi's islands, fused
+  [53.60, 24.08],                                                 // the Khor al-Udaid shore
   [52.60, 24.20], [51.90, 24.45], [51.60, 24.60],
   [51.55, 25.90], [51.20, 26.10], [51.10, 25.55], [50.85, 24.90], // Qatar
   [50.55, 25.05], [50.20, 25.60], [50.05, 26.35],                 // the Bahrain bay shore
@@ -186,38 +271,27 @@ const MAINLAND = [
   // Elamite / Persian shore, southeastward to the east edge
   [48.00, 30.45], [48.50, 30.25], [49.00, 30.10], [49.50, 30.00], [50.00, 29.90],
   [50.60, 29.45], [50.85, 28.95],                                 // Bushehr
-  [51.60, 28.30], [52.40, 27.65], [53.10, 27.05], [53.50, 26.85], // the Persis shore
-  // v5.4: frame east edge up to the Caspian's southeast shore
-  [53.50, 36.55],
-  // The south Caspian shore, westward: Hyrcania, Tabaristan, Gilan
-  [53.00, 36.72], [52.20, 36.62], [51.40, 36.72], [50.60, 36.90],
-  [50.00, 37.15], [49.55, 37.45],
-  // The Caspian west shore, northward: Talysh, the Kura mouth, Absheron, Derbent
-  [49.30, 37.90], [48.90, 38.40], [48.85, 38.90], [49.15, 39.40],
-  [49.35, 39.85], [50.30, 40.25],                                 // the Absheron peninsula (Baku)
-  [49.80, 40.60], [49.55, 41.10], [48.95, 41.55], [48.55, 42.00],
-  [48.29, 42.06],                                                 // the Caspian Gates (Derbent)
-  // v6.8: the Caspian's whole rim, now that the frame clears it. The old top
-  // edge cut it in half across the Great Caucasus; it is a closed inland sea
-  // here, open only where the east edge clips the Turkmen shore.
-  [47.85, 42.60], [47.50, 42.98],                                 // the Dagestan shore
-  [47.60, 43.60], [47.55, 43.95],                                 // the Sulak and Terek mouths
-  [47.15, 44.45], [47.35, 45.35],                                 // the Kizlyar bay, the Nogai flats
-  [47.95, 45.65], [48.60, 45.75],                                 // the Rha's (Volga) delta, western arm
-  [49.10, 46.05], [49.55, 46.40],                                 // the delta front
-  [50.30, 46.75], [51.20, 46.95],                                 // the north Caspian's flat shore
-  [51.90, 47.05],                                                 // the Rhymnus' (Ural) mouth
-  [52.60, 46.65], [53.10, 45.95],                                 // the Kaydak inlet, simplified
-  [52.20, 45.45], [51.60, 45.32],                                 // the Buzachi thumb
-  [50.28, 44.51], [50.90, 44.00],                                 // the Mangyshlak cape and its gulf
-  [51.15, 43.65], [51.75, 43.10],                                 // the Kazakh bay
-  [52.35, 42.55], [52.70, 41.85],                                 // the Kara-Bogaz bar, drawn closed
-  [52.97, 40.60], [52.97, 40.02],                                 // the Krasnovodsk shoulder
-  [53.12, 39.44], [53.30, 38.80],                                 // the Cheleken spit
-  [53.50, 38.10],                                                 // the Turkmen shore, cut at the east edge
-  // Frame: east edge north to the corner, then the top edge west across the
-  // Sarmatian plain to the Baltic. Everything below this line is land.
-  [53.50, 58.00], [24.35, 58.00],
+  [51.60, 28.30], [52.40, 27.65], [53.10, 27.05],                 // the Persis shore
+  // v7.4: the Persian coast continues past the old frame — the Carmanian
+  // shore, Qeshm fused to it on the Euboea rule, the strait of Hormuz, and
+  // the Makran coast of Gedrosia to the east edge.
+  [53.85, 26.75], [54.65, 26.52],                                 // the Laristan shore, Bandar-e Lengeh
+  [55.25, 26.58],                                                 // Qeshm's western point, fused
+  [55.95, 26.65], [56.28, 26.90],                                 // Qeshm's seaward shore
+  [56.62, 27.02],                                                 // Harmozeia's bay (Bandar Abbas)
+  [56.95, 26.80], [57.35, 26.30],                                 // the Kuhestak shore
+  [57.77, 25.65],                                                 // Jask
+  [58.80, 25.45], [60.10, 25.32],                                 // the Makran shore
+  [60.62, 25.28],                                                 // Tis (Chabahar)
+  [61.60, 25.12], [62.33, 25.12],                                 // the Gwatar bay, Gwadar
+  [63.05, 25.22],                                                 // toward Pasni
+  [63.50, 25.28],                                                 // the Makran coast, cut at the east edge
+  // Frame: east edge north to the corner — Gedrosia, Arachosia's marches,
+  // Margiana and the steppe all run off the map's east — then the top edge
+  // west across the Sarmatian plain to the Baltic. The Caspian no longer
+  // touches this edge: with the frame at 63.5°E it is landlocked, and it
+  // lives with the lakes below as the closed inland sea it geographically is.
+  [63.50, 58.00], [24.35, 58.00],
   // v6.8: the Baltic's east shore — the gulf of Riga, Courland, the amber
   // coast of the Aestii, and the Suebian sea's south shore westward.
   [24.30, 57.72], [24.38, 57.30],                                 // the Livonian shore
@@ -576,6 +650,13 @@ const CYPRUS = [
   [32.70, 35.18], [32.45, 35.15],                                 // Morphou bay
 ];
 
+// Socotra — Dioscurida of the Periplus, the dragon's-blood island off the
+// Horn. The one new landmass of the v7.4 frame that is genuinely an island.
+const SOCOTRA = [
+  [53.30, 12.70], [53.78, 12.66], [54.20, 12.70], [54.52, 12.58],
+  [54.38, 12.35], [53.85, 12.30], [53.42, 12.42],
+];
+
 const LAKES = [
   // Dead Sea
   [
@@ -599,6 +680,58 @@ const LAKES = [
   [
     [33.15, 39.05], [33.50, 38.95], [33.42, 38.55], [33.10, 38.68],
   ],
+  // v7.4: the Caspian, whole and landlocked. The v6.8 frame cut it at 53.5°E
+  // and drew it as a notch of the mainland ring, open at the map's edge; at
+  // 63.5°E nothing cuts it, so it is what it geographically is — a closed
+  // inland sea. The tracing is v5.4/v6.8's own, unchanged, plus the southeast
+  // shore (Cheleken to the Gorgan bay) the old edge used to stand in for.
+  // computeGeometry classifies it open sea by AREA (a landlocked body over
+  // ~3 sq° is an inland sea, not a lake), so Hyrcania keeps its harbor.
+  [
+    // the south shore, westward: Hyrcania, Tabaristan, Gilan
+    [54.02, 36.88], [53.40, 36.70], [52.20, 36.62], [51.40, 36.72], [50.60, 36.90],
+    [50.00, 37.15], [49.55, 37.45],
+    // the west shore, northward: Talysh, the Kura mouth, Absheron, Derbent
+    [49.30, 37.90], [48.90, 38.40], [48.85, 38.90], [49.15, 39.40],
+    [49.35, 39.85], [50.30, 40.25],
+    [49.80, 40.60], [49.55, 41.10], [48.95, 41.55], [48.55, 42.00],
+    [48.29, 42.06],
+    [47.85, 42.60], [47.50, 42.98], [47.60, 43.60], [47.55, 43.95],
+    [47.15, 44.45], [47.35, 45.35],
+    // the north shore, eastward: the Rha's delta, the Rhymnus' mouth
+    [47.95, 45.65], [48.60, 45.75], [49.10, 46.05], [49.55, 46.40],
+    [50.30, 46.75], [51.20, 46.95], [51.90, 47.05],
+    // the east shore, southward: Mangyshlak, the Kara-Bogaz bar, Cheleken
+    [52.60, 46.65], [53.10, 45.95], [52.20, 45.45], [51.60, 45.32],
+    [50.28, 44.51], [50.90, 44.00], [51.15, 43.65], [51.75, 43.10],
+    [52.35, 42.55], [52.70, 41.85], [52.97, 40.60], [52.97, 40.02],
+    [53.12, 39.44], [53.30, 38.80],
+    // the southeast shore the old frame edge cut: the Turkmen coast, the
+    // Atrek's mouth, the Gorgan bay
+    [53.62, 38.30], [53.90, 37.70], [53.85, 37.30],
+  ],
+  // The Aral — the Oxus' own sea, over the inland-sea floor like the Caspian
+  [
+    [58.40, 45.15], [58.30, 44.30], [58.65, 43.75], [59.35, 43.60], [60.15, 43.70],
+    [60.90, 43.95], [61.25, 44.45], [61.05, 45.10], [61.35, 45.65], [61.55, 46.10],
+    [61.00, 46.40], [60.25, 46.45], [59.55, 46.28], [58.95, 45.92], [58.55, 45.60],
+  ],
+  // Lake Tana, the Blue Nile's spring
+  [
+    [36.92, 12.28], [37.30, 12.35], [37.58, 12.18], [37.52, 11.85], [37.15, 11.72], [36.88, 11.95],
+  ],
+  // Lake Turkana, clipped just above the south edge so it stays landlocked
+  [
+    [35.85, 4.55], [36.12, 4.40], [36.05, 3.55], [36.18, 3.10], [35.90, 3.10], [35.82, 3.85],
+  ],
+  // The Hamun of Sistan, where the Helmand dies
+  [
+    [61.05, 31.40], [61.45, 31.28], [61.32, 30.88], [60.95, 31.02],
+  ],
+  // Lake Chad — Ptolemy's lake beyond the desert, where the Chari dies
+  [
+    [13.60, 13.90], [14.40, 14.10], [14.90, 13.75], [14.60, 13.15], [13.85, 13.25],
+  ],
 ];
 
 // ---------------------------------------------------------------------------
@@ -606,13 +739,99 @@ const LAKES = [
 // ---------------------------------------------------------------------------
 
 const RIVERS = [
+  // v7.4: the Nile carries its whole in-frame length now — the White Nile in
+  // at the south edge, the Sudd it barely survives, the confluence at the
+  // site of Soba/Khartoum, the six cataracts' great S-bend past Napata, and
+  // only then the Egypt every earlier frame started with.
   {
     name: 'Nile', width: 3,
     points: [
+      [31.62, 3.05], [31.60, 4.85], [30.55, 6.50], [30.50, 7.90],   // Bahr al-Jabal, into the Sudd
+      [31.05, 9.35], [31.66, 9.55],                                 // out of the marsh at Malakal
+      [32.10, 11.50], [32.48, 13.20], [32.55, 15.60],               // the White Nile reach, the confluence
+      [33.43, 16.55], [33.98, 17.70],                               // past Meroe's island, the Atbara mouth
+      [33.90, 18.90], [33.32, 19.54],                               // toward Abu Hamed
+      [32.30, 19.15], [31.85, 18.55],                               // the great bend, past Napata
+      [31.00, 18.85], [30.48, 19.17],                               // the Dongola reach
+      [30.45, 20.20], [30.90, 21.05], [31.35, 21.79],               // the cataract country
+      [31.63, 22.34], [32.20, 22.95],
       [32.87, 23.50], [32.90, 24.09], [32.75, 24.70], [32.55, 25.15],
       [32.60, 25.50], [32.64, 25.72], [32.72, 26.19], [32.24, 26.05], [31.70, 26.56],
       [31.18, 27.18], [30.75, 28.10], [31.10, 29.07], [31.25, 29.85], [31.20, 30.20],
     ],
+  },
+  {
+    name: 'Blue Nile', width: 2,
+    points: [
+      [37.20, 11.68],                                               // out of Lake Tana
+      [37.85, 11.15], [38.10, 10.55], [37.60, 9.95],                // the gorge around Gojjam
+      [36.60, 10.10], [35.55, 10.70], [34.70, 11.55],
+      [33.95, 12.65], [33.20, 13.70], [32.90, 14.75], [32.55, 15.60],
+    ],
+  },
+  {
+    name: 'Atbara', width: 1,
+    points: [[38.40, 13.55], [37.45, 14.55], [36.40, 15.55], [35.20, 16.65], [33.98, 17.70]],
+  },
+  {
+    name: 'Awash', width: 1,
+    points: [[38.65, 8.95], [39.35, 9.30], [40.05, 9.90], [40.80, 10.70], [41.40, 11.10], [41.78, 11.22]],
+  },
+  {
+    name: 'Omo', width: 1,
+    points: [[37.45, 8.60], [36.90, 7.40], [36.30, 6.30], [36.10, 5.30], [36.00, 4.62]],
+  },
+  {
+    name: 'Jubba', width: 1,
+    points: [[42.10, 4.20], [42.35, 3.60], [42.55, 3.05]],
+  },
+  {
+    name: 'Shebelle', width: 1,
+    points: [[39.85, 7.10], [40.90, 6.30], [42.10, 5.55], [43.40, 4.85], [44.80, 3.85], [45.50, 3.05]],
+  },
+  // The Nigir of Ptolemy: up out of the Guinea highlands, north to the
+  // desert's edge, the bend at the caravan crossing, and down to its delta.
+  {
+    name: 'Nigir', width: 2,
+    points: [
+      [-10.60, 9.25], [-9.95, 10.60], [-8.30, 12.20], [-6.30, 13.80],
+      [-4.80, 15.20], [-3.55, 16.30], [-2.85, 16.90],               // toward the bend
+      [-1.45, 16.92], [0.00, 16.45], [0.95, 15.55],                 // the bend, turning south
+      [2.10, 14.30], [3.30, 12.60], [4.40, 10.60], [5.55, 8.60],
+      [6.30, 6.60], [6.08, 4.35],                                   // to the delta
+    ],
+  },
+  {
+    name: 'Chari', width: 1,
+    points: [[16.80, 9.00], [15.90, 10.50], [15.20, 11.90], [14.72, 12.98]],
+  },
+  // The rivers of the Iranian east and the Oxus world
+  {
+    name: 'Oxus', width: 3,
+    points: [
+      [63.50, 39.10], [62.85, 39.65], [62.30, 40.10], [61.55, 40.75],
+      [60.85, 41.25], [60.30, 41.85], [60.05, 42.60], [59.75, 43.20], [59.62, 43.60],
+    ],
+  },
+  {
+    name: 'Murghab', width: 1,
+    points: [[63.35, 35.55], [62.85, 36.20], [62.35, 36.85], [61.97, 37.58], [61.70, 38.15]],
+  },
+  {
+    name: 'Hari', width: 1,
+    points: [[63.50, 34.28], [62.20, 34.38], [61.30, 34.55], [60.95, 35.30], [60.70, 36.10], [60.48, 37.00], [60.42, 37.52]],
+  },
+  {
+    name: 'Helmand', width: 2,
+    points: [[63.50, 30.60], [62.55, 30.75], [61.85, 30.92], [61.44, 31.15]],
+  },
+  {
+    name: 'Atrek', width: 1,
+    points: [[58.30, 37.15], [57.30, 37.60], [56.20, 37.85], [55.10, 37.95], [54.30, 37.70], [53.92, 37.42]],
+  },
+  {
+    name: 'Karun', width: 1,
+    points: [[49.55, 32.60], [49.05, 32.05], [48.70, 31.55], [48.67, 31.30], [48.20, 30.90], [47.72, 30.62]],
   },
   {
     name: 'Nile (Rosetta arm)', width: 2,
@@ -1446,6 +1665,168 @@ const PROVINCES = [
     { habitation: 'frontier', settleable: false }),
   P('Ustyurt', 52.00, 43.50, 1.80, 'WASTE', 'wasteland', 'salt', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
     { impassable: true }),
+
+  // --- v7.4: the eastern and southern frame (SPEC §203) ---------------------
+  // Appended, so no save ID shifts. These cells exist because the frame moved
+  // to hold all of Iran and all of Ethiopia — and everything the rectangle
+  // then carries: Nubia, the Horn, Arabia entire, the Oxus lands, the Sahel.
+  // OWNERSHIP IS DELIBERATELY WASTE, on §160's rule: the base owner is what
+  // every bookmark inherits, and handing Parthia its whole east (or Kush its
+  // whole Nile) in the base atlas would rewrite eight tuned campaigns at
+  // once. js/data/political_maps.js seats the courts per era, with the levy
+  // shares that pay for them (SPEC §173, §203).
+  //
+  // -- Ariana: the Iranian east from Carmania to the Makran and Herat -------
+  P('Carmana', 57.05, 30.10, 1.40, 'WASTE', 'drylands', 'livestock', 'zoroastrianism', 'persian', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Harmozeia', 56.35, 27.30, 1.10, 'WASTE', 'coast', 'spices', 'zoroastrianism', 'persian', 3, 5, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Tis', 60.60, 25.55, 1.30, 'WASTE', 'coast', 'fish', 'zoroastrianism', 'persian', 2, 3, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Pura', 60.35, 27.40, 1.50, 'WASTE', 'drylands', 'dates', 'zoroastrianism', 'persian', 2, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Makuran', 62.85, 26.30, 1.40, 'WASTE', 'mountains', 'livestock', 'zoroastrianism', 'persian', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Zranka', 61.20, 30.80, 1.20, 'WASTE', 'farmland', 'grain', 'zoroastrianism', 'persian', 3, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Phrada', 62.15, 32.40, 1.40, 'WASTE', 'drylands', 'livestock', 'zoroastrianism', 'persian', 2, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Artacoana', 62.20, 34.55, 1.20, 'WASTE', 'farmland', 'grain', 'zoroastrianism', 'persian', 4, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Dasht-e Kavir', 54.80, 34.30, 2.00, 'WASTE', 'wasteland', 'salt', 'zoroastrianism', 'persian', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Dasht-e Lut', 58.80, 31.30, 2.00, 'WASTE', 'wasteland', 'salt', 'zoroastrianism', 'persian', 1, 1, 1, 0,
+    { impassable: true }),
+  // -- Margiana, Parthyene and the Oxus world -------------------------------
+  P('Antiochia Margiana', 61.95, 37.58, 1.10, 'WASTE', 'farmland', 'grain', 'zoroastrianism', 'persian', 4, 5, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Nisa', 58.35, 37.85, 1.20, 'WASTE', 'drylands', 'wine', 'zoroastrianism', 'persian', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Hecatompylos', 57.00, 35.85, 1.30, 'WASTE', 'drylands', 'livestock', 'zoroastrianism', 'persian', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Chorasmia', 60.60, 41.90, 1.50, 'WASTE', 'farmland', 'grain', 'zoroastrianism', 'persian', 3, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Dahae', 55.20, 39.80, 1.70, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Karakum', 58.50, 39.60, 2.20, 'WASTE', 'wasteland', 'salt', 'zoroastrianism', 'persian', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Kyzylkum', 62.30, 43.60, 2.10, 'WASTE', 'wasteland', 'salt', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Massagetae', 59.20, 47.50, 1.90, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 1, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Issedones', 59.50, 52.50, 2.10, 'WASTE', 'steppe', 'livestock', 'steppe_cults', 'sarmatian', 1, 1, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  // -- Arabia's interior and the Hejaz south --------------------------------
+  P('Macoraba', 39.85, 21.45, 1.30, 'WASTE', 'drylands', 'incense', 'nabataean', 'arab', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Asir', 42.50, 19.20, 1.50, 'WASTE', 'hills', 'livestock', 'nabataean', 'arab', 2, 2, 3, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Yamama', 46.75, 24.60, 1.70, 'WASTE', 'desert', 'dates', 'nabataean', 'arab', 2, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Rub al-Khali', 50.50, 20.00, 2.40, 'WASTE', 'wasteland', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
+    { impassable: true }),
+  // -- Arabia Felix: the incense kingdoms -----------------------------------
+  P('Najran', 44.20, 17.55, 1.20, 'WASTE', 'drylands', 'incense', 'south_arabian', 'south_arabian', 3, 4, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Marib', 45.35, 15.45, 1.10, 'WASTE', 'drylands', 'incense', 'south_arabian', 'south_arabian', 4, 6, 3, 1,
+    { habitation: 'town', settleable: false }),
+  P('Zafar', 44.40, 14.15, 1.00, 'WASTE', 'hills', 'incense', 'south_arabian', 'south_arabian', 4, 5, 4, 0,
+    { habitation: 'town', settleable: false }),
+  P('Muza', 43.35, 13.60, 0.95, 'WASTE', 'coast', 'spices', 'south_arabian', 'south_arabian', 3, 5, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Eudaemon Arabia', 45.05, 12.95, 0.95, 'WASTE', 'coast', 'spices', 'south_arabian', 'south_arabian', 3, 5, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Shabwa', 47.05, 15.35, 1.30, 'WASTE', 'desert', 'incense', 'south_arabian', 'south_arabian', 3, 5, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Moscha', 54.10, 17.35, 1.30, 'WASTE', 'coast', 'incense', 'south_arabian', 'south_arabian', 2, 4, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Dioscurida', 53.90, 12.50, 1.00, 'WASTE', 'coast', 'incense', 'south_arabian', 'south_arabian', 1, 3, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- Oman -----------------------------------------------------------------
+  P('Omana', 58.45, 23.55, 1.20, 'WASTE', 'coast', 'fish', 'nabataean', 'arab', 3, 4, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Mazun', 56.60, 24.35, 1.20, 'WASTE', 'farmland', 'dates', 'nabataean', 'arab', 3, 4, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  // -- Nubia: the middle Nile -----------------------------------------------
+  P('Napata', 31.85, 18.70, 1.30, 'WASTE', 'drylands', 'livestock', 'kushite', 'kushite', 3, 3, 3, 0,
+    { habitation: 'town', settleable: false }),
+  P('Meroe', 33.72, 16.80, 1.10, 'WASTE', 'drylands', 'grain', 'kushite', 'kushite', 4, 5, 4, 0,
+    { habitation: 'town', settleable: false }),
+  P('Soba', 32.75, 15.30, 1.20, 'WASTE', 'farmland', 'grain', 'kushite', 'kushite', 3, 4, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Blemmyae', 35.60, 20.60, 1.60, 'WASTE', 'desert', 'livestock', 'kushite', 'cushitic', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  // The Dodekaschoinos: Lower Nubia's river strip, the twelve-schoinoi land
+  // between the first and second cataracts. It is the one walkable road
+  // between Egypt and Kush — every army either way marched it — so its cell
+  // exists to keep Syene and Napata neighbors while the desert on both banks
+  // stays the wall it really was. (Seeded on the river; the Nubian Desert's
+  // seed sits east of it so the waste cannot claim the water road.)
+  P('Dodekaschoinos', 31.85, 22.40, 1.00, 'WASTE', 'desert', 'grain', 'kushite', 'kushite', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Nubian Desert', 34.30, 21.20, 1.60, 'WASTE', 'wasteland', 'salt', 'kushite', 'kushite', 1, 1, 1, 0,
+    { impassable: true }),
+  // The marsh that stopped Nero's centurions (Seneca NQ VI.8): the White
+  // Nile disappears into it, and so does every army that tries.
+  P('The Sudd', 31.00, 8.20, 2.00, 'WASTE', 'marsh', 'fish', 'african_cults', 'kushite', 1, 1, 1, 0,
+    { impassable: true }),
+  // -- Aethiopia: the highlands and the Horn --------------------------------
+  P('Aksum', 38.72, 14.12, 1.00, 'WASTE', 'mountains', 'livestock', 'south_arabian', 'aksumite', 4, 4, 4, 0,
+    { habitation: 'town', settleable: false }),
+  P('Adulis', 39.50, 15.40, 0.95, 'WASTE', 'coast', 'spices', 'south_arabian', 'aksumite', 3, 5, 2, 0,
+    { habitation: 'town', settleable: false }),
+  P('Tana', 37.40, 12.60, 1.20, 'WASTE', 'mountains', 'grain', 'south_arabian', 'aksumite', 3, 3, 3, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Shewa', 38.80, 9.30, 1.30, 'WASTE', 'mountains', 'grain', 'south_arabian', 'aksumite', 3, 3, 4, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Kaffa', 36.40, 7.50, 1.40, 'WASTE', 'hills', 'spices', 'african_cults', 'aksumite', 2, 3, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Danakil', 40.80, 13.30, 1.60, 'WASTE', 'desert', 'salt', 'african_cults', 'cushitic', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Avalites', 43.10, 10.80, 1.20, 'WASTE', 'coast', 'incense', 'african_cults', 'cushitic', 2, 3, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Malao', 45.05, 9.90, 1.30, 'WASTE', 'coast', 'incense', 'african_cults', 'cushitic', 2, 3, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Opone', 50.80, 10.30, 1.50, 'WASTE', 'coast', 'incense', 'african_cults', 'cushitic', 1, 3, 1, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Ogaden', 44.30, 7.60, 1.80, 'WASTE', 'drylands', 'livestock', 'african_cults', 'cushitic', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Azania', 44.40, 4.20, 1.60, 'WASTE', 'drylands', 'livestock', 'african_cults', 'cushitic', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  // -- Nigritia: the Sahel from the Niger bend to Darfur --------------------
+  P('Nigritae', -4.20, 16.20, 1.70, 'WASTE', 'steppe', 'grain', 'african_cults', 'west_african', 2, 2, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Air', 8.20, 18.20, 1.80, 'WASTE', 'desert', 'salt', 'african_cults', 'mauri', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Agisymba', 15.30, 13.10, 1.80, 'WASTE', 'steppe', 'livestock', 'african_cults', 'west_african', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Jebel Marra', 24.30, 13.30, 1.70, 'WASTE', 'hills', 'livestock', 'african_cults', 'west_african', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Noba', 29.80, 13.00, 1.70, 'WASTE', 'drylands', 'livestock', 'african_cults', 'kushite', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Majabat', -6.80, 20.80, 2.20, 'WASTE', 'wasteland', 'salt', 'african_cults', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Tanezrouft', 1.20, 21.50, 2.20, 'WASTE', 'wasteland', 'salt', 'african_cults', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Tenere', 11.50, 18.80, 2.20, 'WASTE', 'wasteland', 'salt', 'african_cults', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  P('Tibesti', 17.80, 21.20, 2.00, 'WASTE', 'wasteland', 'salt', 'african_cults', 'mauri', 1, 1, 1, 0,
+    { impassable: true }),
+  // -- Guinea: the forest coast and the gold country ------------------------
+  P('Bambuk', -10.20, 12.90, 1.50, 'WASTE', 'hills', 'silver', 'african_cults', 'west_african', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Guinea Highlands', -9.10, 9.40, 1.60, 'WASTE', 'hills', 'timber', 'african_cults', 'west_african', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Kru Coast', -9.30, 5.80, 1.40, 'WASTE', 'coast', 'fish', 'african_cults', 'west_african', 1, 2, 1, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Volta', -1.20, 7.60, 1.50, 'WASTE', 'farmland', 'grain', 'african_cults', 'west_african', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Niger Delta', 6.30, 5.40, 1.30, 'WASTE', 'marsh', 'fish', 'african_cults', 'west_african', 2, 3, 2, 0,
+    { habitation: 'rural', settleable: false }),
+  P('Theon Ochema', 9.60, 4.75, 1.30, 'WASTE', 'mountains', 'timber', 'african_cults', 'west_african', 1, 2, 2, 0,
+    { habitation: 'frontier', settleable: false }),
+  P('Great Forest', 17.00, 4.40, 2.50, 'WASTE', 'marsh', 'timber', 'african_cults', 'west_african', 1, 1, 1, 0,
+    { impassable: true }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1494,7 +1875,7 @@ const REGIONS = {
     'Laodicea', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata', 'Dura-Europos',
     'Syrian Desert', 'Rutba'],
   'Arabia': ['Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
-    'Arabian Desert'],
+    'Arabian Desert', 'Macoraba', 'Asir', 'Yamama', 'Rub al-Khali'],
   'Egypt': ['Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis', 'Memphis',
     'Arsinoe', 'Oxyrhynchus', 'Thebes', 'Myos Hormos', 'Syene', 'Berenice', 'Paraetonium',
     'Libyan Desert', 'Eastern Desert', 'Sinai Interior', 'Dizahab'],
@@ -1539,16 +1920,33 @@ const REGIONS = {
   'Venedia': ['Gothiscandza', 'Aestii', 'Venedia'],
   'Scythia': ['Tyras', 'Olbia', 'Chersonesus', 'Panticapaeum', 'Phanagoria', 'Tauria',
     'Tanais', 'Scythia', 'Borysthenia'],
-  'Sarmatia': ['Sarmatia', 'Roxolania', 'Aorsia', 'Rha', 'Hyperborea', 'Ripaea', 'Ustyurt'],
+  'Sarmatia': ['Sarmatia', 'Roxolania', 'Aorsia', 'Rha', 'Hyperborea', 'Ripaea', 'Ustyurt',
+    'Massagetae', 'Issedones', 'Kyzylkum'],
+  // -- v7.4 (SPEC §203): the named lands of the eastern and southern frame --
+  'Ariana': ['Carmana', 'Harmozeia', 'Tis', 'Pura', 'Makuran', 'Zranka', 'Phrada',
+    'Artacoana', 'Dasht-e Kavir', 'Dasht-e Lut'],
+  'Margiana': ['Antiochia Margiana', 'Nisa', 'Hecatompylos', 'Chorasmia', 'Dahae', 'Karakum'],
+  'Arabia Felix': ['Najran', 'Marib', 'Zafar', 'Muza', 'Eudaemon Arabia', 'Shabwa',
+    'Moscha', 'Dioscurida'],
+  'Oman': ['Omana', 'Mazun'],
+  'Nubia': ['Napata', 'Meroe', 'Soba', 'Dodekaschoinos', 'Blemmyae', 'Nubian Desert', 'The Sudd'],
+  'Aethiopia': ['Aksum', 'Adulis', 'Tana', 'Shewa', 'Kaffa', 'Danakil', 'Avalites',
+    'Malao', 'Opone', 'Ogaden', 'Azania'],
+  'Nigritia': ['Nigritae', 'Air', 'Agisymba', 'Jebel Marra', 'Noba', 'Majabat',
+    'Tanezrouft', 'Tenere', 'Tibesti'],
+  'Guinea': ['Bambuk', 'Guinea Highlands', 'Kru Coast', 'Volta', 'Niger Delta',
+    'Theon Ochema', 'Great Forest'],
 };
 
 // ---------------------------------------------------------------------------
 // Height primitives (renderer; all coords lon/lat). The cap is
-// MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, which is what
-// made this frame drawable at all: v5.4 had filled the old cap of 32 exactly,
-// so an extended map would have rendered the Alps, the Pyrenees and the Atlas
-// as flat plates with one console line to explain it. smoke104 holds the two
-// numbers together; validateMapData warns against the same 64.
+// MAX_HEIGHT_PRIMS in js/map/renderer.js — 64 since SPEC §157, 80 since §203
+// (the eastern and southern frame wanted twelve ranges §157's headroom could
+// not hold; the uniform budget holds 80 with room, and smoke104 checks it).
+// v5.4 had filled the old cap of 32 exactly, so an extended map would have
+// rendered the Alps, the Pyrenees and the Atlas as flat plates with one
+// console line to explain it. smoke104 holds the two numbers together;
+// validateMapData warns against the same 80.
 // ---------------------------------------------------------------------------
 
 const HEIGHT_PRIMITIVES = [
@@ -1615,6 +2013,22 @@ const HEIGHT_PRIMITIVES = [
   { type: 'dome',  c: [52.80, 43.60], r: 1.20, h: 0.35 },                    // the Ustyurt plateau
   { type: 'dome',  c: [45.20, 53.20], r: 2.00, h: 0.22 },                    // the Volga upland
   { type: 'dome',  c: [34.50, 55.40], r: 2.40, h: 0.18 },                    // the Valdai rise
+  // --- v7.4: the mountains of the eastern and southern frame (SPEC §203).
+  // §157's 64 was filled to 59 by v6.8 and this frame needs a dozen more, so
+  // the renderer's cap rises to 80 — still comfortably inside the guaranteed
+  // 224-vec4 uniform floor smoke104 checks (80×2+16 = 176).
+  { type: 'dome',  c: [38.40, 10.60], r: 3.00, h: 1.00 },                    // the Ethiopian highlands
+  { type: 'ridge', a: [39.70, 23.60], b: [43.70, 13.80], h: 0.95, w: 0.85 }, // the Sarawat: Asir into Yemen
+  { type: 'ridge', a: [46.80, 15.20], b: [52.20, 16.30], h: 0.55, w: 0.60 }, // the Hadhramaut plateau
+  { type: 'ridge', a: [56.10, 26.10], b: [59.30, 22.95], h: 0.85, w: 0.55 }, // the Hajar of Oman
+  { type: 'ridge', a: [54.20, 37.80], b: [60.90, 35.30], h: 0.85, w: 0.60 }, // the Kopet Dagh
+  { type: 'ridge', a: [57.50, 26.90], b: [63.30, 26.60], h: 0.75, w: 0.80 }, // the Makran ranges
+  { type: 'ridge', a: [57.20, 34.20], b: [60.20, 29.60], h: 0.80, w: 0.80 }, // the east-Iranian rim (Qohestan)
+  { type: 'dome',  c: [46.80, 9.60], r: 1.90, h: 0.55 },                     // the Somali plateau
+  { type: 'basin', a: [40.00, 14.60], b: [41.90, 11.90], h: -0.35, w: 0.55 },// the Danakil depression
+  { type: 'dome',  c: [17.80, 20.90], r: 1.10, h: 0.75 },                    // the Tibesti massif
+  { type: 'dome',  c: [8.40, 17.90], r: 0.80, h: 0.55 },                     // the Air massif
+  { type: 'dome',  c: [24.30, 13.10], r: 0.80, h: 0.60 },                    // Jebel Marra
 ];
 
 // ---------------------------------------------------------------------------
@@ -1637,7 +2051,17 @@ export const MAP_DATA = {
     // While all three cells were WASTE the defect was latent; the day the
     // west got owners it became Spanish pixels in Africa and a walkable
     // false border. The repair detaches the African fragment at the source.
-    'Malaca'],
+    'Malaca',
+    // SPEC §203: the two famous straits of the new frame are each a few
+    // pixels of water, and a weighted cell steps over a few pixels. Both
+    // sides of Bab el-Mandeb and Hormuz hold to their own shore, and the
+    // island cell keeps to its island. Measured on the first §203 raster,
+    // three more cells won Malaca-class stray lobes across open water —
+    // Gerrha across the Persian Gulf to the Carmanian shore, Asir across
+    // the Red Sea to the African one, Danakil back across the Assab-Mocha
+    // narrows — so all three hold to the shore their seed sits on.
+    'Avalites', 'Muza', 'Harmozeia', 'Mazun', 'Dioscurida',
+    'Gerrha', 'Asir', 'Danakil'],
   // The Sinai peninsula is connected to both Africa and Arabia around the
   // heads of its gulfs, so component repair alone cannot stop a large
   // weighted cell leaking into mainland Egypt or Arabia. This envelope follows
@@ -1655,6 +2079,16 @@ export const MAP_DATA = {
       [32.53, 31.08], [34.28, 31.36], [34.99, 29.55],
       [34.25, 27.70], [32.52, 29.94],
     ],
+    // SPEC §203: the Rub al-Khali is the empty quarter, not the coasts. Its
+    // huge weighted cell reached BOTH Arabian shores on the first raster —
+    // sealing Oman off the Gulf road and Dhofar off the Hadhramaut one — and
+    // no army ever failed to march a coast because the interior was empty.
+    // The envelope holds it inland; the coastal strips fall to Gerrha, Mazun,
+    // Omana, Moscha and Shabwa, whose shores they are.
+    'Rub al-Khali': [
+      [44.80, 21.80], [54.80, 23.00], [55.60, 20.00],
+      [52.50, 17.60], [47.80, 16.80], [45.00, 17.80],
+    ],
   },
   provinces: PROVINCES,
   // The named lands (SPEC §5.6): region -> canonical province names. Labels
@@ -1664,13 +2098,16 @@ export const MAP_DATA = {
   // is the ring that answers for most of the frame.
   coast: {
     land: [MAINLAND, BRITAIN, HIBERNIA, SICILY, SARDINIA, CORSICA, CYPRUS,
-      CRETE, BALEARES, SCANDIA, DANISH_ISLES, RHODES],
+      CRETE, BALEARES, SCANDIA, DANISH_ISLES, RHODES, SOCOTRA],
     lakes: LAKES,
   },
   rivers: RIVERS,
   heightPrimitives: HEIGHT_PRIMITIVES,
-  // Land ferries/bridges only — armies may walk these. (None at present.)
-  extraLinks: [],
+  // Land ferries/bridges only — armies may walk these.
+  // SPEC §203: the Oxus road — Chorasmia's walled oases are ringed by the
+  // Karakum and Kyzylkum on the map exactly as in life, and in life the road
+  // in was the river through the sands. First actual use of this facility.
+  extraLinks: [['Antiochia Margiana', 'Chorasmia']],
   // Sea crossings: shown nowhere in land adjacency — armies need ships
   // (embark -> sail -> disembark). Kept as data for AI hints and tooltips.
   // v5.4 adds the three famous ferries of the new frame: Otranto (the via
@@ -1690,6 +2127,14 @@ export const MAP_DATA = {
     // Dalmatia. (No Alboran ferry — those two still share a false land border,
     // see the note on severLinks below.)
     ['Tarentum', 'Salona'],
+    // v7.4 (SPEC §203): the crossings of the eastern and southern frame. The
+    // Periplus' own ferry at Bab el-Mandeb (the strait's shortest crossing,
+    // Avalites to Muza), the strait of Hormuz, and the run out to Dioscurida
+    // from the Horn.
+    ['Avalites', 'Muza'], ['Harmozeia', 'Mazun'], ['Dioscurida', 'Opone'],
+    // The Adulis-Muza run is the Periplus' main Red Sea crossing, and the
+    // one Kaleb's army sailed in 525.
+    ['Adulis', 'Muza'],
   ],
   // Accidental raster adjacencies across open water (the province-ID Voronoi
   // cells touch where the real coastlines do not): severed in geometry.js.
@@ -1727,7 +2172,14 @@ export const MAP_DATA = {
     // Mauretania to Baetica dry-shod. The belt (severLinks) backs the braces
     // (the raster repair), so the border stays severed even if a future
     // weight change regrows the lobe.
-    ['Portus Magnus', 'Malaca'], ['Volubilis', 'Malaca']],
+    ['Portus Magnus', 'Malaca'], ['Volubilis', 'Malaca'],
+    // SPEC §203: the belt to the contiguousProvinces braces above — both new
+    // straits stay water even if a future weight change regrows a lobe, and
+    // the three measured stray-lobe crossings (Gerrha over the Gulf, Asir
+    // over the Red Sea twice, the Assab-Mocha narrows) stay severed too.
+    ['Avalites', 'Muza'], ['Harmozeia', 'Mazun'],
+    ['Gerrha', 'Harmozeia'], ['Asir', 'Blemmyae'], ['Asir', 'Adulis'],
+    ['Muza', 'Danakil'], ['Adulis', 'Muza']],
 };
 
 // ---------------------------------------------------------------------------
@@ -1742,10 +2194,14 @@ const GOOD_KEYS = ['grain', 'wine', 'olive_oil', 'dates', 'balsam', 'incense', '
 const RELIGION_KEYS = ['judaism', 'samaritanism', 'hellenism', 'roman_cult', 'nabataean', 'zoroastrianism', 'egyptian',
   // v6.8: the western and northern frame (SPEC §160). Base-atlas keys only —
   // christianity, islam and the rest still arrive through bookmark overlays.
-  'druidic', 'germanic_cult', 'punic', 'thracian_cult', 'steppe_cults'];
+  'druidic', 'germanic_cult', 'punic', 'thracian_cult', 'steppe_cults',
+  // v7.4: the eastern and southern frame (SPEC §203).
+  'kushite', 'south_arabian', 'african_cults'];
 const CULTURE_KEYS = ['judean', 'galilean', 'samaritan', 'idumean', 'nabataean', 'arab', 'aramean',
   'phoenician', 'greek', 'egyptian', 'roman', 'armenian', 'persian',
-  'celtic', 'iberian', 'mauri', 'germanic', 'thracian', 'illyrian', 'sarmatian'];
+  'celtic', 'iberian', 'mauri', 'germanic', 'thracian', 'illyrian', 'sarmatian',
+  // v7.4 (SPEC §203)
+  'kushite', 'aksumite', 'south_arabian', 'cushitic', 'west_african'];
 
 function pointInPolygon(lon, lat, poly) {
   let inside = false;
@@ -1783,8 +2239,8 @@ export function validateMapData() {
     // when §157 raised the renderer to 64, which meant the FIRST primitive
     // this frame added would have been reported as over a cap that no longer
     // existed. smoke104 asserts the two agree, so the copy cannot drift again.
-    if (MAP_DATA.heightPrimitives.length > 64) {
-      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 64`);
+    if (MAP_DATA.heightPrimitives.length > 80) {
+      warnings.push(`heightPrimitives count ${MAP_DATA.heightPrimitives.length} exceeds max 80`);
     }
 
     const names = new Set();

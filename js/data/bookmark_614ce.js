@@ -259,7 +259,10 @@ export const BOOKMARK_614 = {
     // Seated by js/data/political_maps.js.
     'LMB', 'FRK', 'VIS', 'MAU', 'GRM', 'ARO',
     'CAL', 'HIB', 'SAX', 'FRS', 'CIM', 'SCN', 'AES',
-    'AVA', 'SLV', 'TRK', 'BGR'],
+    'AVA', 'SLV', 'TRK', 'BGR',
+    // The political east and south (SPEC §203): Christian Nubia, Aksum
+    // without its sea, the Beja between them.
+    'NOB', 'BLM', 'AXM'],
   // Standing rivalries (SPEC §73): once the jihad state wakes it is the
   // standing enemy of both empires — the truces of the 640s do not soften
   // Medina toward Constantinople or Ctesiphon, so the conquest resumes when

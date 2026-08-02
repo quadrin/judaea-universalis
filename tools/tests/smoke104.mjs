@@ -61,6 +61,10 @@ const MEASURED_MAX_TEXTURE = 8192;
   ok(MAP_DATA.LON0 <= -11 && MAP_DATA.LAT1 >= 58,
     '  and it reaches Britain and Ireland: lon ' + MAP_DATA.LON0 + '..' + MAP_DATA.LON1
     + ', lat ' + MAP_DATA.LAT0 + '..' + MAP_DATA.LAT1);
+  // SPEC §203: the frame holds ALL of Iran (its easternmost ground is
+  // ~63.33°E) and ALL of Ethiopia (its southern tip is ~3.40°N).
+  ok(MAP_DATA.LON1 >= 63.4 && MAP_DATA.LAT0 <= 3.35,
+    '  and all of Iran and all of Ethiopia, which is what §203 grew it for');
   // The long axis is what a MAX_TEXTURE_SIZE ceiling actually binds.
   ok(Math.max(MAP_DATA.MAP_W, MAP_DATA.MAP_H) <= MEASURED_MAX_TEXTURE,
     'and its long axis fits the MEASURED 8192 ceiling, not the 4096 the comment assumed');
@@ -97,9 +101,12 @@ console.log('== what the renderer actually allocates ==');
 console.log('== the frame that was costed, against the frame that shipped ==');
 {
   // §156 costed lon -25..54 / lat 0..60 at 948 MB in RGBA8 and 694 narrowed,
-  // and called the memory the blocker. The frame that shipped is the cheaper
-  // one that still reaches the home islands. Both numbers stay executable, so
-  // the next person to propose a frame gets arithmetic rather than a memory.
+  // and called the memory the blocker; §160 shipped the cheaper frame that
+  // reached the home islands and judged the rest "not worth it". §203 is the
+  // section where the southeast BECAME worth it — all of Iran and all of
+  // Ethiopia — and this frame now costs most of what §156 was refused over.
+  // The judgement changed; the arithmetic stayed executable, which is the
+  // point: the next person to propose a frame still gets numbers.
   const bigW = Math.round(79 * pxPerLon), bigH = Math.round(60 * pxPerLat);
   const bigTexels = bigW * bigH;
   const bigBill = bigTexels * 4 * (4 / 3) * 2 + bigTexels * 2 + bigTexels;
@@ -107,10 +114,12 @@ console.log('== the frame that was costed, against the frame that shipped ==');
     'the §156 proposal fits the ceiling too (' + bigW + '×' + bigH + ')');
   const texels = MAP_DATA.MAP_W * MAP_DATA.MAP_H;
   const shipped = texels * 4 * (4 / 3) * 2 + texels * 2 + texels;
-  ok(MB(bigBill) - MB(shipped) > 250,
-    '  and costs ' + MB(bigBill).toFixed(0) + ' MB against this frame\'s '
-    + MB(shipped).toFixed(0) + ' — the extra ' + (MB(bigBill) - MB(shipped)).toFixed(0)
-    + ' MB buys the Urals and the Sahara\'s far side, and was not worth it');
+  ok(MB(bigBill) > MB(shipped),
+    '  §156\'s frame costs ' + MB(bigBill).toFixed(0) + ' MB against this frame\'s '
+    + MB(shipped).toFixed(0) + ' — what its margin still buys is the Urals, west '
+    + 'Africa\'s bulge and the equator, and that is still not worth it');
+  ok(MB(shipped) < 700,
+    '  and the §203 bill stays under the 694 MB the §156 costing was refused at');
 }
 
 // ---------------------------------------------------------------------------

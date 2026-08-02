@@ -2400,6 +2400,21 @@ export const GENERAL_NAMES = {
   gaelic:    ['Niall', 'Conall', 'Domnall', 'Aed', 'Fergus', 'Cathal', 'Diarmait', 'Congal'],
   slavic:    ['Ardagastus', 'Peiragastus', 'Musokios', 'Dauritas', 'Samo', 'Mezamir', 'Chatzon', 'Perbundos'],
   turkic:    ['Bayan', 'Tardu', 'Istami', 'Ziebel', 'Kubrat', 'Organa', 'Sandilch', 'Zabergan'],
+  // -- the political east and south (SPEC §203): same standard again. The
+  // ancient pools are attested rulers — Meroitic kings and kandakes from the
+  // royal chronology, Nubian kings from the Silko inscription to the baqt,
+  // Aksumite negusts from the coinage and the Periplus, Sayhadic mukarribs
+  // from the Marib inscriptions, Saka/Indo-Parthian kings from their coins.
+  kushite:   ['Teriteqas', 'Amanirenas', 'Amanishakheto', 'Natakamani', 'Amanitore', 'Shorkaror', 'Amanikhabale', 'Teqorideamani'],
+  nubian:    ['Silko', 'Aburni', 'Eirpanome', 'Tokiltoeton', 'Qalidurut', 'Merkurios', 'Zacharias', 'Kyriakos'],
+  aksumite:  ['Zoscales', 'Gadarat', 'Adhebah', 'Sembrouthes', 'Endubis', 'Aphilas', 'Ousanas', 'Kaleb'],
+  south_arabian: ['Karibil Watar', 'Yada il Bayyin', 'Dhamar Ali', 'Ilsharah Yahdib', 'Nasha Karib', 'Alhan Nahfan', 'Shammar Yuharish', 'Yasir Yuhanim'],
+  saka:      ['Maues', 'Azes', 'Azilises', 'Spalirises', 'Vonones', 'Spalahores', 'Gondophares', 'Abdagases'],
+  ethiopian_modern: ['Abebe Aregai', 'Mulugeta Bulli', 'Kebbede Guebret', 'Abiye Abebe', 'Merid Mengesha', 'Assefa Ayene', 'Iyasu Mengesha', 'Aklilu Habte-Wold'],
+  afghan_modern: ['Shah Mahmud Khan', 'Shah Wali Khan', 'Mohammed Daoud Khan', 'Sardar Mohammed Naim', 'Asadullah Seraj', 'Mohammed Akbar Khan', 'Abdul Hakim Khan', 'Mir Zaman Khan'],
+  pakistani_modern: ['Frank Messervy', 'Douglas Gracey', 'Akbar Khan', 'Ayub Khan', 'Iskander Mirza', 'Muhammad Musa', 'Azam Khan', 'Sher Ali Khan'],
+  liberian_modern: ['William Tubman', 'Edwin Barclay', 'Clarence Simpson', 'William Tolbert', 'Gabriel Dennis', 'James Cooper', 'Charles Brewer', 'Momolu Dukuly'],
+  omani_modern: ['Tariq bin Taimur', 'Ahmad bin Ibrahim', 'Shihab bin Faisal', 'Fahr bin Taimur', 'Sulaiman bin Himyar', 'Ghalib bin Ali', 'Talib bin Ali', 'Isa bin Salih'],
   french_modern: ['Alphonse Juin', 'Jean de Lattre de Tassigny', 'Marie-Pierre Koenig', 'Antoine Béthouart', 'Joseph de Monsabert', 'Raoul Salan', 'Georges Revers', 'Charles Léchères'],
   spanish_modern: ['José Enrique Varela', 'Juan Yagüe', 'José Moscardó', 'Agustín Muñoz Grandes', 'Carlos Asensio', 'Juan Vigón', 'Fidel Dávila', 'Alfredo Kindelán'],
   portuguese_modern: ['Óscar Carmona', 'Francisco Craveiro Lopes', 'Fernando dos Santos Costa', 'Júlio Botelho Moniz', 'Humberto Delgado', 'Américo Tomás', 'António de Spínola', 'Manuel Gomes de Araújo'],

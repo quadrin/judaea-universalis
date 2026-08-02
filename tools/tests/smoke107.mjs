@@ -146,6 +146,72 @@ console.log('== three of the eight are corrections ==');
     '1948: and the names are the 15-May originals, not today\'s');
 }
 
+console.log('== the political east and south (SPEC §203) ==');
+{
+  // The Periplus map: Zoscales at Aksum, Charibael's two-tribes union
+  // carrying Saba's Marib, Eleazus' island, Omana on the Persian side —
+  // and Kush under the Kandake in every ancient era.
+  const { game } = boot('66ce');
+  const at = (n) => game.provinces.find((p) => p && p.canon === n);
+  ok(at('Aksum').owner === 'AXM' && game.tags.AXM && game.tags.AXM.alive,
+    '66: Zoscales\' Aksum is seated on its highlands');
+  ok(at('Marib').owner === 'HMY' && at('Zafar').owner === 'HMY',
+    '66: the king of the two tribes carries Saba and Himyar as one');
+  ok(at('Dioscurida').owner === 'HDR', '66: Dioscurida answers to the frankincense king');
+  ok(at('Omana').owner === 'OMA' && at('Meroe').owner === 'KSH',
+    '66: Omana is a court and the Kandake reigns at Meroe');
+  ok(at('Avalites').owner === 'WASTE' && at('Malao').owner === 'WASTE',
+    '66: the Horn ports are "each under its own chief" (Periplus 14) — no invented kingdom');
+  ok(at('Dodekaschoinos').owner === 'KSH', '66: the Nile corridor is Kushite ground');
+}
+{
+  // Kaleb's Yemen: a conquest across a sea, held at the enclave share.
+  const { game } = boot('529ce');
+  const at = (n) => game.provinces.find((p) => p && p.canon === n);
+  ok(at('Muza').owner === 'AXM' && at('Zafar').owner === 'AXM' && at('Najran').owner === 'AXM',
+    '529: the incense country answers to the negus, four years after the crossing');
+  ok(levyOf(at('Muza')) === 0.1 && levyOf(at('Zafar')) === 0.1,
+    '529: and it is garrison-thin — the enclave share, like Byzantine Spania');
+  ok(at('Najran').religion === 'christianity',
+    '529: Najran keeps the faith its martyrs died for');
+  ok(at('Carmana').owner === 'SAS' && at('Mazun').owner === 'SAS',
+    '529: the King of Kings holds his east, Mazun included');
+  ok(at('Napata').owner === 'NOB' && at('Blemmyae').owner === 'BLM',
+    '529: the Nubian kings and the Blemmyes hold where Kush was');
+}
+{
+  // Persian Yemen and the Turk frontier, the year Jerusalem falls.
+  const { game } = boot('614ce');
+  const at = (n) => game.provinces.find((p) => p && p.canon === n);
+  ok(at('Eudaemon Arabia').owner === 'SAS' && levyOf(at('Eudaemon Arabia')) === 0.1,
+    '614: Persian Yemen is enclaves at the end of the world, at 0.1');
+  ok(at('Chorasmia').owner === 'TRK', '614: the Turks hold the Oxus lands');
+  ok(at('Napata').religion === 'christianity',
+    '614: Nubia was baptized between 543 and 580');
+  ok(at('Macoraba').owner === 'RSH',
+    '614: Mecca sits with the dormant caliphate seed, beside its Yathrib');
+}
+{
+  // 1948's sovereign south, by treaty line, in its own names.
+  const { game } = boot('1948ce');
+  const at = (n) => game.provinces.find((p) => p && p.canon === n);
+  ok(at('Shewa').owner === 'ETH' && at('Shewa').name === 'Addis Ababa',
+    '1948: the Lion of Judah reigns at Addis Ababa');
+  ok(at('Ogaden').owner === 'ETH', '1948: the Ogaden came back that September');
+  ok(at('Adulis').owner === 'UK' && at('Eudaemon Arabia').owner === 'UK',
+    '1948: Eritrea is BMA ground and Aden is a Colony');
+  ok(at('Carmana').owner === 'IRN' && at('Carmana').name === 'Kerman',
+    '1948: Iran\'s east is Iranian, under its 1948 names');
+  ok(at('Makuran').owner === 'PAK' && at('Artacoana').owner === 'AFG',
+    '1948: one-year-old Pakistan holds the Makran marches, the King of Afghanistan his west');
+  ok(at('Yamama').owner === 'SAU' && at('Yamama').name === 'Riyadh',
+    '1948: Riyadh is Ibn Saud\'s');
+  ok(at('Zafar').owner === 'YEM' && at('Zafar').name === 'Sanaa',
+    '1948: the Imam keeps his capital');
+  ok(at('Soba').owner === 'UK' && at('Soba').name === 'Khartoum',
+    '1948: the condominium flies one color at this scale, and it is not Cairo\'s');
+}
+
 console.log('== the courts are real ==');
 {
   const { game, bookmark } = boot('167bce');

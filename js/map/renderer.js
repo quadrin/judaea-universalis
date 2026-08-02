@@ -56,7 +56,10 @@ const MAX_PROVINCE_SEEDS = 512;
 // guarantees every WebGL2 device — so it fits the floor rather than a hope
 // about hardware, which is the lesson of §156. `initRenderer` measures the
 // real number anyway and says so if a device cannot hold it.
-const MAX_HEIGHT_PRIMS = 64;
+// 64 since SPEC §157; 80 since §203 (the eastern and southern frame's twelve
+// new ranges). 80×2+16 = 176 vec4 stays inside the guaranteed GLES 3.0 floor
+// of 224 that smoke104 checks, and the device's real budget is queried below.
+const MAX_HEIGHT_PRIMS = 80;
 
 const fN = (x) => x.toFixed(4);
 const f3 = (c) => c.map(fN).join(', ');

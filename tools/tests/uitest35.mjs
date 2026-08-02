@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
 // these suites run on SwiftShader. Measured: 74s to the carousel against 17s
 // before. Every wait after it is unaffected (the nation cards land ~1s later),
 // so this one constant is the whole of the change.
-const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 

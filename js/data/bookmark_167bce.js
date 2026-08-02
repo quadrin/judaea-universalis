@@ -225,6 +225,10 @@ export const BOOKMARK_167 = {
     'SUE', 'CHE', 'CHA', 'FRS', 'CIM', 'SCN', 'GOT', 'AES',
     'DLM', 'SCO', 'DRD', 'THR', 'DAC',
     'BOS', 'SCY', 'SRM', 'VEN',
+    // The political east and south (SPEC §203): the year the king died at
+    // Tabae marching to hold his own far satrapies. Seated by
+    // js/data/political_maps.js, same contract as the west.
+    'KSH', 'SAB', 'HDR', 'GBA', 'CHO',
   ],
   // Standing rivalries (SPEC §73): the era's weather. The Sixth Syrian War
   // just ended with Antiochus humiliated at Eleusis (SEL–PTO, SEL–ROM), and

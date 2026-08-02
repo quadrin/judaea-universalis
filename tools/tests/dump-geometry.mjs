@@ -25,13 +25,12 @@ const SNAPSHOT = resolve(ROOT, 'tools', 'geom-snapshot.json');
 
 // v6.8: the waits are minutes, not seconds, and that is the frame's real cost
 // rather than a flaky selector. The ID pass is one fullscreen draw over every
-// texel against every seed — 25.0M × 307 at this frame against 8.9M × 174 at
-// the last one, about five times the work — and this dump runs it on
-// SwiftShader, a software rasteriser. Measured here: 74s to the start screen
-// and 104s to a live campaign, against 17s and 47s on the pre-§160 tree in the
-// same environment. A real GPU does this in a fraction of it; the timeout has
-// to survive the machine that does not.
-const BOOT_TIMEOUT = 300000;
+// texel against every seed — and this dump runs it on SwiftShader, a software
+// rasteriser. Measured at v6.8: 74s to the start screen and 104s to a live
+// campaign (25.0M × 307). The §203 frame is 46.0M texels × 373 seeds, about
+// 2.2× that work again, so the timeout doubles with it. A real GPU does this
+// in a fraction; the timeout has to survive the machine that does not.
+const BOOT_TIMEOUT = 600000;
 
 async function pickBookmark(page, nameFrag) {
   await page.waitForSelector('.bm-card', { timeout: BOOT_TIMEOUT });

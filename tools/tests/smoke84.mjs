@@ -149,6 +149,24 @@ console.log('== §121: played forward, the silence is gone ==');
         const jer6 = ctx.prov('Jerusalem');
         if (jer6) { jer6.owner = 'HAS'; jer6.controller = 'HAS'; jer6.siege = null; }
       }
+      // Same hand, same reason, generalized (SPEC §203): the continuation's
+      // dated cards all ask lineContinues/lineSurvives — is the line still
+      // its own master — and on the §203 stream (67 new cells move every
+      // draw) a §87 rising's band held the CONTROLLER flag of a city the
+      // line owns on the firing days of three different cards (-63 the
+      // commission, -53 Carrhae, -40 the flood). Rather than a patch per
+      // date, the premise's hand runs monthly: while the crown OWNS its
+      // capital, a band does not hold the walls on any card's one firing
+      // day. Ownership is untouched, so a genuine conquest still changes
+      // the answer — which is the whole difference between the premise and
+      // a cheat.
+      if (game.date.d === 29) {
+        const jerM = ctx.prov('Jerusalem');
+        if (jerM && jerM.owner === 'HAS' && jerM.controller !== 'HAS') {
+          jerM.controller = 'HAS';
+          jerM.siege = null;
+        }
+      }
     }
     // The line survives its own chapter — which is the premise, not a cheat:
     // the question was what happens to a campaign that got this far.

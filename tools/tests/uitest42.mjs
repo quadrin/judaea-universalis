@@ -12,7 +12,7 @@ const require = createRequire((process.env.JU_PW_DIR || '/tmp/pw') + '/');
 const { chromium } = require('playwright');
 // SPEC §160: the boot is one fullscreen pass over 25.0M texels against 307
 // seeds, on SwiftShader. See uitest11 for the measurement behind this number.
-const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 240000);
+const BOOT_MS = Number(process.env.JU_BOOT_TIMEOUT || 480000);
 const OUT = (process.env.JU_OUT || '/tmp') + '/';
 
 let failures = 0;
