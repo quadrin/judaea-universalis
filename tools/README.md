@@ -352,6 +352,32 @@ objective absorbs the first beat. Note the rule the suite pins hardest: a
 month whose checks all FAIL charges no rest, so the fail-then-fix idiom
 (smoke16's Third House) still completes on the very next call.
 
+`smoke137.mjs` owns the SPEC §210 conversion: the Idumean cult of Qos seated
+in the 167 chapter only, the standing heathen charge it puts on the south
+country, and `ev_idumea_policy` moving the makeup rather than the paint. Two
+traps if you touch this. First, the base atlas MUST stay Jewish at Adora and
+Hebron — the suite asserts `MAP_DATA` directly, because a §210 that leaked
+into the atlas would hand the other seven chapters an unconverted Idumea in
+centuries where the conversion is a settled fact. Second, any card that gives
+a province a faith must go through `helpers.changeFaith` and not through
+`p.religion =`: since §56 the communal-unrest rows read the MAKEUP, and the
+next `normalizePop` writes the old majority's faith back over a province whose
+label alone was changed.
+
+Since SPEC §210 (Idumea keeps the cult of Qos until the covenant): the seeded
+8-year 167 run is NOT byte-identical with the runs before it, and that is
+expected. Hebron and Adora open the chapter under the Seleucids, where a pagan
+cult is a same-group heretic (1.5) and the Law was a heathenism (3), so the
+two cells start 1.5 unrest quieter than they used to from the first month —
+which moves revolt rolls, which moves the shared RNG stream, which moves the
+whole world. `node tools/autorun.mjs 8 167bce` now reports `167bce PAR:
+BLEEDING`, the v5.3-accepted two-province Parthian outpost, and the Hasmoneans
+grow 3→4 and live. A 15-seed sweep across both trees pins that flag as drift
+rather than as this section: 6 of 15 seeds before, 5 of 15 after, flipping in
+both directions on individual seeds. If you re-tune anything here, sweep seeds
+before believing a single run — the 167 chapter's own court sits close enough
+to the line to throw a one-seed flag on either tree.
+
 `smoke138.mjs` owns the SPEC §211 works: the program table audited against
 1948's own base..ceiling window (every unlock a military rung, every
 prerequisite on the same court's roster and opening no later than what needs
