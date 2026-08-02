@@ -764,6 +764,38 @@ export const simHelpers = {
     const c = ctx.game.constitutions;
     return (c && c[String(era || '')]) || '';
   },
+  // …and what that settlement makes the STATE (SPEC §209). `setConstitution`
+  // records the answer for the content that reads it; this one applies it to
+  // the realm, so the choice is a fact about the government and not only a key
+  // in a store: the panel's Government row, the succession rules, whether
+  // there is a house here to marry into, and the parties a foreign court
+  // convenes all move with it.
+  //
+  // Content used to do this by assigning `t.govType` in the effects body,
+  // which worked for the four starting constitutions and would silently skip
+  // both of the things a new one needs — the election clock, and rebuilding
+  // `t.ideas` so the government's own effects fold in with the reforms.
+  setGovernment(ctx, tag, govType) {
+    try {
+      const key = L(ctx, tag);
+      const t = ctx.game.tags[key];
+      const def = ((ctx.DEFINES && ctx.DEFINES.GOV_TYPES) || {})[String(govType || '')];
+      if (!t) {
+        warnOnce('setGovernment:tag:' + tag, 'no such court to give a constitution to', tag);
+        return false;
+      }
+      if (!def) {
+        warnOnce('setGovernment:gov:' + govType, 'no such government', govType);
+        return false;
+      }
+      if (t.govType === govType) return true;
+      t.govType = String(govType);
+      if (def.elects) t.electionIn = 48;
+      if (def.heirless) { t.heir = null; t.regency = false; t.regencyTitle = null; }
+      applyReformsToTag(ctx.DEFINES, t, key);
+      return true;
+    } catch (e) { warnOnce('setGovernment', 'setGovernment failed', e); return false; }
+  },
   // The doctrine axes (SPEC §85). `axis` reads the realm's character on one
   // of the four tensions (-10..+10) so a trigger can ask what KIND of realm
   // this is, not merely how much of the map it holds; `doctrine` is the

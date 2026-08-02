@@ -265,10 +265,20 @@ const ARCHETYPES = {
 
 // The constitution a court keeps, defaulting the way the rest of the engine
 // defaults: a tag with no declared government is a monarchy.
+//
+// There are more governments than there are party-sets (SPEC §209), and there
+// should be: the four sets above are a coverage device for forty AI courts,
+// while the adopted constitutions are authored answers to one chapter's
+// question. So a government NAMES the set it convenes (`archetype`) instead of
+// matching one by id — otherwise a Temple-State or a Patriarchate, being
+// neither of the four names, would quietly seat the Great Houses and the
+// King's Men, and the fourth-century Sanhedrin would have a war party of
+// magnates in it.
 function archetypeFor(ctx, tag) {
   const t = ctx.game.tags[tag];
   const gov = (t && t.govType) || 'monarchy';
-  return ARCHETYPES[gov] || ARCHETYPES.monarchy;
+  const def = ((ctx.DEFINES && ctx.DEFINES.GOV_TYPES) || {})[gov];
+  return ARCHETYPES[(def && def.archetype) || gov] || ARCHETYPES.monarchy;
 }
 
 // Every court on the map except the player's, the rebels, and the rumps.

@@ -26,7 +26,7 @@
 // `revoltType` stamp and reads as `peasant` in the UI.
 
 import {
-  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf, tagDef,
+  num, clamp, B, isHostile, spawnArmy, changeControllerCore, armiesOf, tagDef, govHas,
 } from './military.js';
 import { axisOf } from './doctrine.js';
 import { rollCourtier } from './realm.js';
@@ -78,11 +78,14 @@ export function dispossessedOf(ctx, p) {
   return best ? best.tag : null;
 }
 
-// A throne worth challenging: a crown (not a republic — those have ballots
-// for this) whose legitimacy has gone or whose regent is holding the seat.
+// A throne worth challenging: a crown (not an elective government — those have
+// ballots for this) whose legitimacy has gone or whose regent is holding the
+// seat. A constitution that does not inherit still qualifies, and deliberately:
+// the pretender against a state that acknowledges no king is Menahem coming
+// into the Temple courts in royal dress, which is the oldest story here.
 export function throneIsWeak(ctx, tag) {
   const t = ctx.game.tags[tag];
-  if (!t || !t.alive || t.govType === 'republic') return false;
+  if (!t || !t.alive || govHas(ctx, tag, 'elects')) return false;
   return num(t.legitimacy, 100) < R(ctx, 'pretenderLegitimacy', 40) || !!t.regency;
 }
 

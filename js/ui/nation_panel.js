@@ -566,9 +566,16 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           : (minor ? ' — <span class="np-dim2">a minor; their succession would mean a regency</span>' : '')));
       refs.heirRow.classList.remove('hidden');
     } else {
-      if (t.govType === 'republic') {
+      // What this constitution does about a death (SPEC §209). An elective
+      // government counts down to the vote; one that does not inherit at all
+      // says so, because "no designated heir" is a warning under a crown and
+      // simply a description of the Lot.
+      const govT = (DEFINES.GOV_TYPES || {})[t.govType] || {};
+      if (govT.elects) {
         const months = Math.max(0, Math.round(t.electionIn || 0));
         setHtml(refs.heirRow, `Constitutional succession — the next election is in <b>${months} month${months === 1 ? '' : 's'}</b>.`);
+      } else if (govT.heirless) {
+        setHtml(refs.heirRow, `Constitutional succession — nothing is inherited here: ${esc(govT.vacancy || 'the constitution names the next')}.`);
       } else {
         setHtml(refs.heirRow, '<span class="np-lost">No designated heir</span> — a sudden death would shake the realm.');
       }
@@ -582,11 +589,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const cul = (DEFINES.CULTURES || {})[t.culture];
     setText(refs.culture, (cul && cul.name) || titleCase(t.culture));
     refs.cultureDot.style.background = rgb(cul && cul.color);
-    // Government type (SPEC §25): the constitution, with elections counted down.
+    // Government type (SPEC §25): the constitution, with elections counted
+    // down. A chapter's fork can adopt one of its own (SPEC §209), and the row
+    // is where the answer shows: a Judaea that took the Lot reads The Lot.
     const gov = (DEFINES.GOV_TYPES || {})[t.govType];
     if (gov) {
-      const months = t.govType === 'republic' ? Math.max(0, Math.round(t.electionIn || 0)) : 0;
-      setText(refs.govType, gov.name + (t.govType === 'republic' ? ` · vote in ${months}m` : ''));
+      const months = gov.elects ? Math.max(0, Math.round(t.electionIn || 0)) : 0;
+      setText(refs.govType, gov.name + (gov.elects ? ` · vote in ${months}m` : ''));
       refs.govRow.dataset.tt = gov.desc || gov.name;
     } else {
       setText(refs.govType, titleCase(t.govType || 'monarchy'));

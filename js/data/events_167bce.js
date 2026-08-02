@@ -3987,7 +3987,9 @@ export const EVENTS_167 = [
     options: [
       {
         label: 'Put on the diadem — a king of the Jews, and the courts may write accordingly',
-        tooltip: 'The realm becomes a kingdom in its own style. +20 legitimacy, +1 stability, '
+        tooltip: 'The realm\'s constitution becomes DIADEM AND MITRE — a priest-king, +25% '
+          + 'conversion, an envoy every chancery understands, and +0.25 unrest everywhere '
+          + 'for as long as it stands. +20 legitimacy, +1 stability, '
           + '"The Royal Style" (+8% income, +5% morale, permanent) — and the schools that '
           + 'read the decree aloud every year do not forget what it said: +1 unrest '
           + 'everywhere for 60 months.',
@@ -4002,6 +4004,7 @@ export const EVENTS_167 = [
             id: 'the_mitre_and_the_crown', name: 'The Mitre and the Crown', months: 60,
             effects: { unrestAll: 1 },
           });
+          h.setGovernment(ctx, 'HAS', 'priestKing');
           h.setFlag(ctx, 'diademAnswered', true);
           h.setFlag(ctx, 'diademTaken', true);
           h.chronicle(ctx, 'era', 'The high priest of the Jews puts on a diadem and is '
@@ -4012,10 +4015,12 @@ export const EVENTS_167 = [
       },
       {
         label: 'The mitre is enough — this house rules as it was confirmed to rule',
-        tooltip: 'The road the chronicles do not have. The priesthood alone: +2 stability, '
+        tooltip: 'The road the chronicles do not have. The realm\'s constitution becomes '
+          + 'PRIESTHOOD AND ASSEMBLY: −0.4 unrest everywhere for a settlement nobody '
+          + 'disputes, and +2 stability, '
           + '"The Decree Kept" (−0.75 unrest everywhere and +0.2 legitimacy a month, '
           + 'permanent) — and the neighbours go on addressing an officer rather than a peer, '
-          + 'which costs: −8% income.',
+          + 'which costs: −8% income and an envoy.',
         effects: guard('ev_h_the_diadem:1', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'HAS', { stability: 2 });
@@ -4023,6 +4028,7 @@ export const EVENTS_167 = [
             id: 'the_decree_kept', name: 'The Decree Kept', months: -1,
             effects: { unrestAll: -0.75, legitimacyAdd: 0.2, incomeMult: 0.92 },
           });
+          h.setGovernment(ctx, 'HAS', 'gerousia');
           h.setFlag(ctx, 'diademAnswered', true);
           h.setFlag(ctx, 'priesthoodAlone', true);
           h.chronicle(ctx, 'era', 'The linen band goes back in its box. The house governs a '

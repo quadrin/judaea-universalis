@@ -2617,10 +2617,10 @@ export const EVENTS_1948 = [
       effects: guard('ev_i_free_officers:0', (ctx) => {
         const egy = ctx.game.tags.EGY;
         if (!egy || !egy.alive) return;
-        egy.govType = 'republic';
-        egy.electionIn = 48;
-        egy.heir = null;
-        egy.regency = false;
+        // The constitution through the helper (SPEC §209): the election
+        // clock starts, the heir and the council go, and the republic's own
+        // effects fold into the realm instead of the kingdom's.
+        ctx.helpers.setGovernment(ctx, 'EGY', 'republic');
         // The kingdom's green crescent comes down with the king: the state is
         // the Republic of Egypt now, under the Arab Liberation tricolor.
         ctx.helpers.rebrandTag(ctx, 'EGY', { name: 'Republic of Egypt', flag: 'EGY_REP' });
@@ -2821,9 +2821,7 @@ export const EVENTS_1948 = [
           });
           return;
         }
-        irq.govType = 'republic';
-        irq.heir = null;
-        irq.regency = false;
+        ctx.helpers.setGovernment(ctx, 'IRQ', 'republic'); // SPEC §209
         // The Hashemite colors come down in Baghdad: the Republic of Iraq
         // raises Qasim's tricolor with the red star of the revolution.
         ctx.helpers.rebrandTag(ctx, 'IRQ', { name: 'Republic of Iraq', flag: 'IRQ_REP' });

@@ -1296,3 +1296,22 @@ and ruling every dispute one way reaches the pole in every quarrel.
 167 and the Status Quo in 1948, two headings and two sets of poles. Merged
 with main's §197-§200 the battery is **129 of 129 headless suites ALL
 PASS**, `smoke127`, `smoke128` and `smoke129` all included.
+
+## The constitutions a fork adopts (SPEC §209)
+
+`smoke136` is the new headless suite. It holds three things that are easy to
+break from different directions: the GOV_TYPES table (every government named,
+described, effective and archetyped, with the four STARTING constitutions
+pinned to the effects every bookmark is balanced against), the rule that no
+file decides a succession question by matching a government NAME — it greps
+`realm.js`, `crisis.js`, `revolt.js`, `military.js`, `courts.js` and
+`nation_panel.js` for `govType === '...'` in code — and every option of the five
+fork cards that ask what kind of state this is — sixteen of them, fifteen
+adopting a constitution — fired through the live cards rather than read off a
+table in the suite.
+
+If a new government is added, it needs `archetype` or the §163 foreign-court
+seats fall back to the King's Men, and smoke136's court section says so by
+name. If a new fork road adopts one, write `setGovernment` at the option's own
+call site and name the constitution in its tooltip; both are checked as text,
+on the same reasoning as smoke83's road markers.

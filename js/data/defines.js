@@ -218,29 +218,119 @@ export const DEFINES = {
     LBR: { aggression: 0.05, caution: 2.0 },
   },
 
-  // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
-  // tech; succession behavior lives in realm.js (republics elect every four
-  // years and know no regencies; theocracies never crown a child).
+  // Government types (SPEC §25, §209). Effects fold into tag.ideas like reforms
+  // and tech; the succession behaviour is DECLARED HERE and read by realm.js,
+  // crisis.js, revolt.js and the marriage table rather than string-matched
+  // against four names, because there are no longer four.
+  //
+  // THE RULES, all positive and all defaulting to off:
+  //   elects    the nation votes on a clock; an emergency vote fills a death
+  //   heirless  no heir is ever designated (a court that does not inherit)
+  //   regency   a child heir is covered by a council; without it an elder
+  //             takes the seat and the heir waits their turn
+  //   dynastic  there is a HOUSE here, so it can be married into (SPEC §133)
+  //   drawn     a vacancy is filled by the constitution's own rule rather
+  //             than by a claim — so it opens no succession crisis, and
+  //             `vacancy` is the line the chronicle prints when it happens
+  //   archetype which of the four party-sets a FOREIGN court of this kind
+  //             convenes (SPEC §163); a constitution with no archetype would
+  //             silently be read as a monarchy, which is how the Sanhedrin
+  //             would have ended up with Great Houses and King's Men
+  //
+  // The first four are the constitutions a realm can START with. Everything
+  // below them is a constitution a chapter's fork ADOPTS (SPEC §209): the
+  // roads of the §119 tree that decide what a state IS, each one wearing its
+  // own name in the realm panel instead of all four answers reading Theocracy.
   GOV_TYPES: {
     monarchy: {
       name: 'Monarchy',
       desc: 'Crown and dynasty: heirs succeed, and the throne slowly accrues legitimacy.',
       effects: { legitimacyAdd: 0.05 },
+      regency: true, dynastic: true, archetype: 'monarchy',
     },
     republic: {
       name: 'Republic',
       desc: 'Elected government: the nation votes every four years, no heirs and no regencies — and civic economies prosper (+5% income).',
       effects: { incomeMult: 1.05 },
+      elects: true, heirless: true, archetype: 'republic',
     },
     theocracy: {
       name: 'Theocracy',
       desc: 'Rule by the anointed: successors are chosen from among the elders — never a child regency — and the faith spreads with authority (+20% conversion).',
       effects: { convertMult: 1.2 },
+      dynastic: true, archetype: 'theocracy',
     },
     tribal: {
       name: 'Tribal Confederation',
       desc: 'Chiefs and elders: every tent sends its sons (+10% manpower).',
       effects: { manpowerMult: 1.1 },
+      regency: true, archetype: 'tribal',
+    },
+
+    // ── The settlement after the Great Revolt (SPEC §130, 66 CE) ──────────
+    sanhedrin: {
+      name: 'Temple-State',
+      desc: 'High Priest, Sanhedrin, and the constitution Judaea kept under Persia and the Ptolemies: the only arrangement in the room with four centuries of practice behind it. The elders never anoint a child, the priestly houses inherit, and everyone already knows how it is supposed to work (+25% conversion, −0.25 unrest everywhere).',
+      effects: { convertMult: 1.25, unrestAll: -0.25 },
+      dynastic: true, archetype: 'theocracy',
+    },
+    lot: {
+      name: 'The Lot',
+      desc: 'The High Priesthood filled as the Zealots filled it in 67 — by lot, from the whole priesthood, God choosing rather than four families. Nobody inherits and nobody is in office long enough to promise anything to anybody: no heirs, no succession crisis, and a chancery no foreign court can plan around (−0.5 unrest everywhere, −1 envoy).',
+      effects: { unrestAll: -0.5, diploSeats: -1 },
+      heirless: true, drawn: true, archetype: 'theocracy',
+      vacancy: 'the lot is cast again',
+    },
+    jubilee: {
+      name: 'The Jubilee',
+      desc: 'Leviticus 25 as the constitution: liberty proclaimed, the debts gone, the land reverting, and the assembly that enforces it renewing its officers by vote. A countryside that owns something turns out for it, and the credit system never comes back (+10% manpower, −5% income).',
+      effects: { manpowerMult: 1.1, incomeMult: 0.95 },
+      elects: true, heirless: true, archetype: 'republic',
+    },
+    noRuler: {
+      name: 'No Ruler but God',
+      desc: 'Judas the Galilean\'s doctrine, implemented: no sovereign, no census, no tribute to anyone. Men who acknowledge no king fight like it, and every neighbour must deal with a polity that has no address (+8% morale, −2 envoys).',
+      effects: { moraleMult: 1.08, diploSeats: -2 },
+      heirless: true, drawn: true, archetype: 'theocracy',
+      vacancy: 'the assembly names a convener and calls him nothing else',
+    },
+
+    // ── What the house that won the war becomes (SPEC §197, §130) ─────────
+    priestKing: {
+      name: 'Diadem and Mitre',
+      desc: 'The high priest of the Jews wearing a crown as well — a peer of every chancery from Alexandria to Ctesiphon, and a quarrel with the study houses that will outlive the dynasty that started it (+25% conversion, +1 envoy, +0.25 unrest everywhere).',
+      effects: { convertMult: 1.25, diploSeats: 1, unrestAll: 0.25 },
+      regency: true, dynastic: true, archetype: 'theocracy',
+    },
+    gerousia: {
+      name: 'Priesthood and Assembly',
+      desc: 'The mitre without the diadem: a commonwealth governed by the priesthood and the elders, exactly as the decree confirming the house worded it. There is no crown for the schools to dispute — and the neighbours go on addressing an officer rather than a peer (−0.4 unrest everywhere, −1 envoy).',
+      effects: { unrestAll: -0.4, diploSeats: -1 },
+      dynastic: true, archetype: 'theocracy',
+    },
+    diadem: {
+      name: 'The Diadem',
+      desc: 'A crown taken out of a war by the house that won it, with no priestly title and no Davidic descent under it. Every chancery understands a king; the objection is made at home, in writing, in every generation (+0.05 legitimacy a month, +1 envoy, +4% morale).',
+      effects: { legitimacyAdd: 0.05, diploSeats: 1, moraleMult: 1.04 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    davidic: {
+      name: 'The House of David',
+      desc: 'The line of Jehoiachin on the throne, by marriage or by coronation: the one claim in the Jewish world that nobody argues with, and an expectation the state must live beside for ever (+0.12 legitimacy a month, −0.25 unrest everywhere).',
+      effects: { legitimacyAdd: 0.12, unrestAll: -0.25 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    dyarchy: {
+      name: 'The Two Houses',
+      desc: 'Prince and priest, both hereditary, exactly as the coinage implied — the Hasmonean collapse run in reverse. Two offices means two successions to go wrong and no arbiter above either, and the second household is paid for out of the same treasury (+0.08 legitimacy a month, −5% income).',
+      effects: { legitimacyAdd: 0.08, incomeMult: 0.95 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    nasi: {
+      name: 'The Patriarchate',
+      desc: 'Ezekiel\'s prince: a hereditary office engineered not to be a monarchy, holding no priestly office and taking none of the people\'s land. It binds the house in writing, and it is heard wherever the letters of the Nasi are read (+0.1 legitimacy a month, +1 envoy, +10% conversion).',
+      effects: { legitimacyAdd: 0.1, diploSeats: 1, convertMult: 1.1 },
+      dynastic: true, archetype: 'theocracy',
     },
   },
   // Default government per tag; bookmarks may override (bookmark.govTypes —

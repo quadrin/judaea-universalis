@@ -177,7 +177,7 @@ function awakenCaliphate(ctx) {
   const r = ctx.game.tags.RSH;
   if (!r) return false;
   r.alive = true;
-  r.govType = 'theocracy';
+  h.setGovernment(ctx, 'RSH', 'theocracy'); // SPEC §209
   h.setRuler(ctx, 'RSH', {
     name: 'Abu Bakr', title: 'Successor to the Messenger', gov: 3, infl: 4, mar: 3, age: 59,
   });

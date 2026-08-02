@@ -83,6 +83,32 @@ export function mechanicOn(ctx, key) {
   return !m || m[key] !== false;
 }
 
+// ------------------------------------------------------------ constitutions
+// What a court's government DOES, read off `DEFINES.GOV_TYPES` (SPEC §209).
+//
+// There used to be four governments and the engine asked about them by name:
+// `govType === 'republic'` in four places, `govType !== 'theocracy'` in one,
+// and `gt === 'monarchy' || gt === 'theocracy'` at the marriage table. That is
+// a workable shape for a closed set of four and the wrong one the moment a
+// chapter's fork can ADOPT a constitution — every new government would arrive
+// as an unrecognised string, be treated as a monarchy by every one of those
+// tests, and be a label in the panel rather than a fact about the realm.
+//
+// So the rules are declared beside the names and read from there. An unknown
+// or missing government still falls back to `monarchy`, which is what the rest
+// of the engine has always defaulted to, and every rule is a positive flag
+// defaulting to OFF — so a government that declares nothing behaves like the
+// plainest possible crown rather than like nothing at all.
+export function govDef(ctx, tag) {
+  const types = (ctx && ctx.DEFINES && ctx.DEFINES.GOV_TYPES) || {};
+  const t = ctx && ctx.game && ctx.game.tags && ctx.game.tags[tag];
+  const key = (t && t.govType) || 'monarchy';
+  return types[key] || types.monarchy || {};
+}
+export function govHas(ctx, tag, rule) {
+  return !!govDef(ctx, tag)[rule];
+}
+
 // ---------------------------------------------------------------- chronicle
 // The running record of the world (SPEC §21). Entries are plain data on
 // game.chronicle — saves and MP snapshots carry them for free; the Chronicle
@@ -2122,12 +2148,15 @@ export function switchTagCore(ctx, from, to) {
   nt.color = Array.isArray(def.color) ? def.color.slice() : nt.color;
   delete nt.flag; // a variant banner dies with the old identity — the new tag flies its own
   // The new crown brings its constitution (SPEC §25): a proclaimed republic
-  // votes, a proclaimed kingdom crowns.
+  // votes, a proclaimed kingdom crowns — and whatever the new banner's
+  // constitution says about inheriting (SPEC §209) is applied here rather than
+  // left over from the old one, so a realm that formed out of a government
+  // with no heirs does not carry a stale one into a crown.
   const gov = (ctx.DEFINES.GOV_OF || {})[to];
   if (gov && gov !== nt.govType) {
     nt.govType = gov;
     nt.electionIn = 48;
-    if (gov === 'republic') { nt.heir = null; nt.regency = false; }
+    if (((ctx.DEFINES.GOV_TYPES || {})[gov] || {}).heirless) { nt.heir = null; nt.regency = false; }
   }
   g.tags[to] = nt;
   delete g.tags[from];
@@ -3899,8 +3928,13 @@ export function royalMarriageInfo(ctx, tag, other) {
   // The heir bonus (realm.js) still only reaches houses that HAVE heirs, so a
   // theocracy marries for the alliance and the warmth and not for the cradle,
   // which is the honest arrangement.
-  const dynastic = (gt) => gt === 'monarchy' || gt === 'theocracy';
-  if (!dynastic(me.govType) || !dynastic(them.govType)) {
+  //
+  // Each government now declares whether it is a house (`dynastic`, SPEC
+  // §209), so the adopted constitutions answer for themselves: a Temple-State
+  // and a Patriarchate are houses, and the Lot and No Ruler but God — which
+  // are the two that abolished the idea of anybody inheriting anything — are
+  // not, which is the same sentence read forward.
+  if (!govHas(ctx, tag, 'dynastic') || !govHas(ctx, other, 'dynastic')) {
     out.why = 'A match joins two houses, and one of these courts has none to join.';
     return out;
   }

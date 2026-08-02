@@ -163,7 +163,7 @@ export const EVENTS_614_DAVID = [
     options: [
       {
         label: 'Let him be crowned. The house of David returns to the throne of Israel',
-        tooltip: 'The Exilarch takes the crown and the kingdom dates its documents from the restoration. +40 legitimacy, +4 stability, +0.4 legitimacy a month, Exilarch\'s house +50, Priests +30, and every Jewish community on earth hears within the year (+20% income). It also means the days have come, and they have not: a permanent +3 unrest as an expectation the state cannot meet, renewed in every generation.',
+        tooltip: 'The Exilarch takes the crown and the kingdom dates its documents from the restoration. The realm becomes THE HOUSE OF DAVID (+0.12 legitimacy a month, −0.25 unrest everywhere), +40 legitimacy, +4 stability, +0.4 legitimacy a month, Exilarch\'s house +50, Priests +30, and every Jewish community on earth hears within the year (+20% income). It also means the days have come, and they have not: a permanent +3 unrest as an expectation the state cannot meet, renewed in every generation.',
         effects: guard('ev_d_crown:0', (ctx) => {
           const h = ctx.helpers;
           const t = ctx.game.tags.JUD;
@@ -180,6 +180,7 @@ export const EVENTS_614_DAVID = [
           h.factionShift(ctx, 'JUD', 'fighters', -25);
           h.doctrine(ctx, 'zeal', 3);
           h.doctrine(ctx, 'authority', 2);
+          h.setGovernment(ctx, 'JUD', 'davidic');
           h.setFlag(ctx, 'davidAnswered', true);
           h.setFlag(ctx, 'davidCrowned', true);
           // The shared title (SPEC §138).
@@ -204,7 +205,7 @@ export const EVENTS_614_DAVID = [
       },
       {
         label: 'The throne was won in a war and stays with the house that won it',
-        tooltip: 'The Hasmonean answer, given knowingly and with the precedent on the table. +3 authority, +30 with the army, no change of ruler — and the same objection that ran against the Hasmoneans for a century, now in writing, with a living claimant to attach it to. −20 legitimacy, Exilarch\'s house −45, +2 unrest in the east.',
+        tooltip: 'The Hasmonean answer, given knowingly and with the precedent on the table. The realm becomes THE DIADEM — a crown out of a war with no title under it (+0.05 legitimacy a month, +4% morale, +1 envoy). +3 authority, +30 with the army, no change of ruler — and the same objection that ran against the Hasmoneans for a century, now in writing, with a living claimant to attach it to. −20 legitimacy, Exilarch\'s house −45, +2 unrest in the east.',
         effects: guard('ev_d_crown:2', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: -20 });
@@ -213,6 +214,9 @@ export const EVENTS_614_DAVID = [
           h.factionShift(ctx, 'JUD', 'exilarch', -45);
           h.doctrine(ctx, 'authority', 3);
           h.doctrine(ctx, 'zeal', -1);
+          // The Hasmonean answer takes the Hasmonean constitution with it
+          // (SPEC §209): a crown out of a war, with no title under it.
+          h.setGovernment(ctx, 'JUD', 'diadem');
           h.setFlag(ctx, 'davidAnswered', true);
           h.setFlag(ctx, 'davidRefused', true);
           h.chronicle(ctx, 'era', 'The reigning house keeps the throne it won. The Exilarch is confirmed in every honour except the one, and the sages begin writing about the Hasmoneans again.');

@@ -1166,6 +1166,10 @@ renderer.render → overlay.draw → labels.update.
   forming a nation adopts the new crown's constitution (a proclaimed UAR
   votes; the Kingdom of Israel crowns). Realm-panel Government row shows the
   type and the election countdown; elections are chronicled and toasted.
+  **Since §209 these four are the constitutions a bookmark can START with,
+  not the whole list** — a chapter's fork can adopt one of ten more, and
+  the succession rules are declared on the government rather than matched
+  against its name.
 - **Era units on the map** (SPEC §25, `army.gen` consumed by the overlay and
   the movement/siege math):
   - **Banners wear their age**: antiquity flies the swallow-tailed standard
@@ -12702,3 +12706,160 @@ the ordinary §163 seed drift the §205 pass already documented.
   (whose roster table never covered 529), smoke101 and smoke112 (whose
   loops pick the new chair up from `playableTags` automatically), and
   smoke133/134 pass with their assertions untouched.
+
+## 209. The fork decides what the state IS, not only what it does
+
+Five chapters ask a playable court what kind of state it is, and the
+questions are among the best-written things in the game: the Hasmonean
+diadem (§197 — does the head of the house that governs a country put on a
+crown?), the second government (§130 — temple-state, the lot, the Jubilee,
+no ruler but God), the accession of the house of Kosiba (§134 — crown,
+Davidic marriage, two hereditary houses, or Ezekiel's prince), the crown at
+Neapolis (§136 — a people that never had a king is offered one), and the
+line of Jehoiachin (§126 — a throne in Jerusalem and a man with the pedigree
+for it, in one polity, for the first time since 586 BCE).
+
+**Every road of every one of them left the realm a Theocracy.** The panel's
+Government row read Theocracy before the fork and Theocracy after it,
+whichever answer was given. The roads differed in their tag modifiers, their
+factions and the content they steered — real differences, and the reason the
+forks are good — but not in what the state was. A Judaea that had abolished
+hereditary priestly power by drawing lots that afternoon went on designating
+heirs the following spring, could be married into by any court in the East,
+and brewed a §98 succession crisis over an office nobody inherited. The one
+decision in the chapter that was explicitly about the constitution was the
+one thing that did not touch the constitution.
+
+### Ten constitutions, and the rules declared beside the names
+
+`DEFINES.GOV_TYPES` grows from four to fourteen. The four a bookmark can boot
+with are untouched, effects and all — this section adds constitutions, it does
+not re-tune the ones every chapter is balanced against. The ten below them are
+what a fork ADOPTS, each with its own name in the panel, its own description,
+its own dividend and its own price — several serve more than one chapter,
+because a crown taken out of a war is the same institution in 132 as in 529:
+
+- **Temple-State** (66, the temple-state) — High Priest, Sanhedrin, the four
+  houses; +25% conversion, −0.25 unrest.
+- **The Lot** (66, the lottery) — nobody inherits and nobody is in office long
+  enough to promise anything; −0.5 unrest, −1 envoy.
+- **The Jubilee** (66, the Jubilee) — the assembly that enforces Leviticus 25
+  renews its officers by vote; +10% manpower, −5% income.
+- **No Ruler but God** (66, no ruler but God) — no sovereign, no census, no
+  address; +8% morale, −2 envoys.
+- **Diadem and Mitre** (167, the diadem taken) — the priest-king; +25%
+  conversion, +1 envoy, and +0.25 unrest for the quarrel that outlived the
+  dynasty.
+- **Priesthood and Assembly** (167, the mitre alone; 529, the crown refused) —
+  the commonwealth the decree actually worded; −0.4 unrest, −1 envoy, because
+  the neighbours address an officer rather than a peer.
+- **The Diadem** (132, the crown; 529, the king at Neapolis; 614, the throne
+  kept by the house that won it) — a crown out of a war with no title under
+  it; +0.05 legitimacy/mo, +1 envoy, +4% morale.
+- **The House of David** (132, the marriage; 614, the crown of David) —
+  +0.12 legitimacy/mo, −0.25 unrest.
+- **The Two Houses** (132, prince and priest both hereditary) —
+  +0.08 legitimacy/mo, −5% income for the second household.
+- **The Patriarchate** (132, Ezekiel's prince) — +0.1 legitimacy/mo,
+  +10% conversion, +1 envoy.
+
+**The rules are data now.** There used to be four governments and the engine
+asked about them by name: `govType === 'republic'` in four places,
+`govType !== 'theocracy'` at the regency, `monarchy || theocracy` at the
+marriage table. That is a workable shape for a closed set of four and exactly
+the wrong one the moment a fork can adopt a fifth — every new constitution
+would arrive as an unrecognised string, be read as a monarchy by every one of
+those tests, and be a label rather than a fact. So each government declares
+what it does, all positive and all defaulting to off: `elects` (votes on a
+clock), `heirless` (never designates an heir), `regency` (a child heir gets a
+council rather than an elder bridging to them), `dynastic` (there is a house
+here, so §133's marriage table can join it), `drawn` (a vacancy is filled by
+the constitution's own rule, with `vacancy` naming how), and `archetype` (which
+of §163's four party-sets a FOREIGN court of this kind convenes). `govDef` and
+`govHas` in `sim/military.js` are the one lookup; realm, crisis, revolt, the
+marriage table, `courts.js` and the realm panel all read it, and an unknown
+government still falls back to `monarchy`, which is what the rest of the engine
+has always defaulted to.
+
+Three behaviours are new because the table can now say them:
+
+- **The drawn seat.** A death under the Lot or under No Ruler but God costs
+  five legitimacy, no stability, and opens no succession crisis — the lot is
+  cast again, the assembly names a convener, and nobody's claim died with the
+  incumbent. Every other death in this engine is a wound; this is the one that
+  is not, and it is the mechanical content of "hereditary priestly power ends
+  in an afternoon".
+- **No house to join.** The Lot, No Ruler but God and the Jubilee cannot be
+  married into, because there is nothing to marry. §133's widening stands
+  otherwise: every other Jewish constitution here is `dynastic`, including the
+  two commonwealths, because the high priesthood stayed in a house even where
+  the crown did not.
+- **No court silently becomes a monarchy.** `archetypeFor` reads the declared
+  archetype rather than matching a party-set by government id, so an AI-run
+  Temple-State convenes the Priesthood, the Zealous and the Notables instead of
+  the King's Men and the Great Houses.
+
+**`helpers.setGovernment(ctx, tag, gov)`** is how content adopts one: it sets
+the type, starts the election clock where the constitution votes, clears the
+heir and the council where it does not inherit, and rebuilds `t.ideas` through
+`applyReformsToTag` so the government's effects fold in with the reforms. Cards
+used to assign `t.govType` in the effects body — which worked for the four and
+silently skipped both of those last two steps. The five that already did it by
+hand move onto the helper in this pass (Augustus' Rome, the Free Officers'
+Egypt, Qasim's Iraq, the Iranian Revolution and the Rashidun awakening); each
+had been leaving the previous constitution's effects folded into `t.ideas`
+until something unrelated rebuilt them. The call is written literally at
+each road's own call site, on the same rule as the §119 road markers: a
+government written through a table in a file header is invisible to a reader
+checking the chapter's own text, and the four answers to one question are four
+different states that must not drift from the cards describing them. Every
+option's tooltip names the constitution it adopts, because the tooltip is the
+contract with the player and this is now part of the price.
+
+**Two forks that look constitutional and are not,** both left alone on
+purpose. `what_kind_of_kingdom` (66) says in its own worldLabels that the
+Second Kingdom becomes a sacral monarchy or a council republic — but §130's
+header already draws this line and draws it correctly: *that* fork is about
+character and `the_second_government` is about the constitution, and they can
+both fire in one campaign. A government is one field; if both wrote it the
+later would silently overwrite the earlier, and a state whose constitution
+store reads `templeState` would show as a council republic. And
+`the_charter` (167) grants Jerusalem a polis charter — a council, an
+assembly, a register of enrolled citizens — over a Temple state whose crown
+is untouched by it, which is the card's whole argument and the reason its
+refusal is phrased as *the city has a constitution, it was given at Sinai*.
+The realm's government is not what either of those questions is asking about.
+
+**The 614 exception, deliberately.** The line of Jehoiachin has three answers
+and only two of them are constitutional: the crown taken (the House of David)
+and the crown kept by the house that won the war (the Diadem — the tooltip
+already called it the Hasmonean answer). The middle road, where the crown is
+offered in public and declined in public, changes what the kingdom BELIEVES and
+not what it is, and the realm keeps the constitution it had. A fork whose every
+road changed the government would be a menu; this one is a question.
+
+- **Regression contract**: `smoke136` — the table (every government named,
+  described, effective and archetyped; the four starting constitutions pinned
+  to the effects they were balanced with; no two names alike); no
+  `govType === '...'` comparison left in any file that decides one of the
+  rules; the rules biting (the child regency taken and refused, the drawn seat
+  costing five legitimacy and no crisis, fifty years of the Lot naming no heir,
+  the Jubilee's clock reaching a vote, the marriage table answering per
+  constitution, the crisis that cannot open); three parties from the named
+  archetype for a foreign court under all fourteen; and all sixteen options of
+  the five fork cards fired through the live cards, the fifteen that adopt
+  landing on their constitution and the one that does not leaving the realm as
+  it was — plus the helper refusing an unknown government or an unknown court and
+  saying so. `smoke89` (§130's store), `smoke83` and `smoke117` (the road
+  markers and the fork badges), `smoke13`, `smoke40` and `smoke2` pass
+  unmoved: the store, the markers and the starting constitutions are all
+  exactly where they were. The two suites that would have caught this batch
+  changing the world rather than describing it both pass too — `smoke81`, the
+  six-seed three-century all-AI 132 chapter whose accession now adopts a
+  constitution in year 18 and which still lands every seed on exactly one
+  road, and `smoke105`, §163's court suite, which is where an archetype read
+  wrongly would show. The battery is **133 of 136 headless suites ALL PASS**;
+  the three that fail (`smoke107`, `smoke126`, `smoke129`) fail identically on
+  the parent commit and belong to §208's Himyar seating. `uitest12` reads the
+  Government row off a live browser in both a 1948 republic and a 67 BCE
+  theocracy, unchanged.
