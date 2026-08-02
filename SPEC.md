@@ -12907,7 +12907,7 @@ discipline — baseline is the §206 merge commit run on the same machine):
   come-and-go line included), the two §208 suite premises told about the
   client court, and the HMY mission tree's row-0 collision seated.
 
-## 210. Not every foreign question is a question — the world rolls for it
+## 211. Not every foreign question is a question — the world rolls for it
 
 §70 gave the engine the rule that a foreign court's decision is not ours to
 make, and 381 cards took it. Twenty-five did not, and they were the ones
@@ -12991,7 +12991,7 @@ labelled "the recorded course" rather than "the historical course",
 because on a rolled card the record is the likelier half of a draw and not
 a promise.
 
-- **Regression contract**: `smoke137` — the notice and its drawn course
+- **Regression contract**: `smoke138` — the notice and its drawn course
   through the pending entry, the bus payload, the acknowledgment and a
   save round-trip; the weight at 0/1 and over two thousand rolls; the same
   seed rolling the same course; an unrolled card leaving the stream

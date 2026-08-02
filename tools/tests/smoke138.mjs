@@ -1,4 +1,4 @@
-// Headless regression — SPEC §210: the world rolls for it. A foreign court's
+// Headless regression — SPEC §211: the world rolls for it. A foreign court's
 // card marked `roll: true` is a question nobody at this table can answer, so
 // the campaign's own seeded stream answers it: the notice's course is DRAWN at
 // fire time — the recorded course (aiOption) weighted by EVENT_ROLL_RECORDED,

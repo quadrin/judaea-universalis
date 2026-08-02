@@ -159,7 +159,7 @@ function recordedCourse(ctx, ev, allowed) {
   return maskIdx(allowed, idx, ev.options.length);
 }
 
-// The course a card takes when nobody at this table decides it (SPEC §210).
+// The course a card takes when nobody at this table decides it (SPEC §211).
 // A `roll: true` card is a foreign court's own question whose answers differ
 // in cost and flavour rather than in what happens, so the campaign's own
 // seeded stream answers it: the recorded course carries `EVENT_ROLL_RECORDED`
@@ -234,7 +234,7 @@ export function fireEvent(ctx, ev) {
     // itself, and the card is a notice either way. A static string still
     // works exactly as before.
     //
-    // SPEC §210 adds the second half of the same thought: a card marked
+    // SPEC §211 adds the second half of the same thought: a card marked
     // `roll: true` is a foreign question this table cannot answer at all, so
     // it is a notice even where an erased court would have handed the choice
     // back — a Caliphate rewritten out of the world does not make the
@@ -262,7 +262,7 @@ export function fireEvent(ctx, ev) {
     });
     return;
   }
-  // AI resolves silently — on its recorded course, or on the roll (SPEC §210)
+  // AI resolves silently — on its recorded course, or on the roll (SPEC §211)
   // where the card says the answer was never anybody's to script.
   const opt = ev.options[courseFor(ctx, ev, allowed)] || ev.options[0];
   try {
