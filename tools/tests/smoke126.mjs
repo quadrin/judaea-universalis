@@ -63,30 +63,31 @@ const doneIds = (t) => new Set(t.missionsDone || []);
 const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
 
 // The pass, chair by chair: chain size, objective/road split, the §196
-// ids, and the conquest ground each expansion branch reaches for.
+// ids, and the conquest ground each expansion branch reaches for. The node
+// counts include the §211 civil band (three nodes on each chair, six on AGR).
 const GROWTH = [
   {
-    id: '67bce', tag: 'ADI', nodes: 11, hypos: 2,
+    id: '67bce', tag: 'ADI', nodes: 14, hypos: 2,
     added: ['t4_bones_of_armenia', 't4_elder_client_house', 't4_peace_of_the_altars', 'hy_doors_stayed_shut'],
     ground: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
   },
   {
-    id: '40bce', tag: 'ADI', nodes: 11, hypos: 2,
+    id: '40bce', tag: 'ADI', nodes: 14, hypos: 2,
     added: ['t5_kingmakers_house', 't5_queens_vow', 't5_island_the_tide_missed', 'hy_house_unpolluted'],
     ground: ['Tyre'],
   },
   {
-    id: '66ce', tag: 'ADI', nodes: 13, hypos: 4,
+    id: '66ce', tag: 'ADI', nodes: 16, hypos: 4,
     added: ['dm_riders_of_two_rivers', 'dm_treasure_house', 'dm_tombs_of_kings', 'hy_city_never_starved'],
     ground: ['Nehardea'], // Nisibis is the house's own; the mission is hold-both
   },
   {
-    id: '66ce', tag: 'AGR', nodes: 19, hypos: 5,
+    id: '66ce', tag: 'AGR', nodes: 25, hypos: 5,
     added: ['am_queens_estates', 'am_first_crown', 'am_emperors_ear', 'hy_other_royal_robes', 'hy_king_of_which_jews'],
     ground: ['Chalcis'],
   },
   {
-    id: '132ce', tag: 'ADI', nodes: 12, hypos: 3,
+    id: '132ce', tag: 'ADI', nodes: 15, hypos: 3,
     added: ['b2_fortress_that_refused', 'b2_court_of_captivity', 'b2_houses_of_study', 'hy_letters_reach_east'],
     ground: ['Hatra', 'Singara', 'Nehardea'],
   },
