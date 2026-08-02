@@ -1,4 +1,4 @@
-// Judaea Universalis — where the arms come from (SPEC §181, §211). DOM-free.
+// Judaea Universalis — where the arms come from (SPEC §181, §212). DOM-free.
 // Two halves of one subject: what a court buys abroad, and what it builds at
 // home. The verbs for both live here; the readers for both live in
 // military.js (the gate) and js/data/programs.js (the table).
@@ -20,7 +20,7 @@
 // The gate itself sits inside recruitRegiment/raiseAirWing (military.js),
 // so the AI cannot build around it any more than the player can. This
 // module owns the verbs: signing, switching, the monthly liveness sweep,
-// and the AI's own deal-seeking — and, below, §211's answer to all of it:
+// and the AI's own deal-seeking — and, below, §212's answer to all of it:
 // beginning, abandoning and delivering the works of one's own.
 
 import {
@@ -56,7 +56,7 @@ export function armsSignGate(ctx, client, supplier) {
   if (!armsMarketOn(ctx)) return 'this age has no arms market';
   if (!c || !c.alive || !s || !s.alive) return 'no such court';
   if (client === supplier) return 'our own works are the question';
-  // Who may sell (SPEC §211): the bookmark's exporters, and any court that
+  // Who may sell (SPEC §212): the bookmark's exporters, and any court that
   // has built the works for every gated arm. Who need not buy: the same two.
   if (!isArsenal(ctx, supplier) && !isSelfArsenal(ctx, supplier)) return 'their works export nothing';
   if (isArsenal(ctx, client)) return 'our own arsenal builds every pattern we need';
@@ -118,7 +118,7 @@ export function armsInfo(ctx, me, other) {
     if (!them) return null;
     const book = armsDealBook(ctx);
     const isCurrent = book[me] === other;
-    // A court that built its own works exports like any arsenal (SPEC §211),
+    // A court that built its own works exports like any arsenal (SPEC §212),
     // so its panel carries the signature chip too.
     const sells = isArsenal(ctx, other) || isSelfArsenal(ctx, other);
     const weSell = isArsenal(ctx, me) || isSelfArsenal(ctx, me);
@@ -169,7 +169,7 @@ export function monthlyArms(ctx) {
     }
   }
   // Who is selling this month — the declared arsenals plus anyone who has
-  // built their way onto the list (SPEC §211). Read once: it cannot change
+  // built their way onto the list (SPEC §212). Read once: it cannot change
   // inside this pass, and it walks every court to answer.
   const exporters = armsExporters(ctx);
   for (const tag of Object.keys(g.tags)) {
@@ -203,7 +203,7 @@ export function seedArmsDeals(ctx) {
   }
 }
 
-// ================================================================ SPEC §211
+// ================================================================ SPEC §212
 // The works of one's own. The verbs above buy the pattern from somebody
 // else's capital; these build it here. The book is `t.programs = { key:
 // monthsLeft }` — absent is unstarted, positive is in the shops, 0 is
@@ -434,7 +434,7 @@ function aiPrograms(ctx) {
   }
 }
 
-// The development line, for the ledger and the AI's own books (SPEC §211).
+// The development line, for the ledger and the AI's own books (SPEC §212).
 export function programExpense(ctx, tag) {
   if (!armsProgramsOn(ctx && ctx.bookmark)) return 0;
   const t = ctx.game.tags[tag];

@@ -1,4 +1,4 @@
-// Headless regression — SPEC §211: the works of one's own. §181 made the air
+// Headless regression — SPEC §212: the works of one's own. §181 made the air
 // wing and the armored regiment an IMPORT; this is what a state does about
 // it. An arms program is a named weapon system developed at home, opened by a
 // rung of the military ladder and by whatever the shops delivered before it:
@@ -26,7 +26,7 @@
 //   little of the thinking come back, and the capital that was paying for it
 //   is pleased. Finishing it costs that regard instead.
 //
-//   THE SAVE — a pre-§211 save loads with an empty book and every antique
+//   THE SAVE — a pre-§212 save loads with an empty book and every antique
 //   chapter's cavalry and hangars untouched.
 import { DEFINES } from '../../js/data/defines.js';
 import { MAP_DATA } from '../../js/data/map_data.js';
@@ -161,7 +161,7 @@ console.log('== the roster: whose shops, and what the panel is told ==');
   ok(armsProgramsFor(era.bookmark, 'ISR', w.game.tags.ISR).length === 8, 'Israel is offered eight works');
   ok(armsProgramsFor(era.bookmark, 'JOR', w.game.tags.JOR).length === 0, 'Jordan is offered none');
   ok(programsInfo(w.ctx, 'JOR') === null, 'and its panel block gets null, so it hides on one test');
-  // A formed crown keeps its founder's shops (SPEC §102/§211).
+  // A formed crown keeps its founder's shops (SPEC §102/§212).
   const lineage = { ...w.game.tags.ISR, lineage: ['ISR'] };
   ok(armsProgramsFor(era.bookmark, 'MLI', lineage).length === 8,
     'the Kingdom of Israel inherits Israel\'s roster through its lineage');
@@ -401,7 +401,7 @@ console.log('== the effects fold, and the saves ==');
   ok(Object.keys(computeProgramEffects({ ghost_program: 0 })).length === 0,
     'and a key this build no longer knows is ignored, not crashed on');
 
-  // A pre-§211 save has no book at all.
+  // A pre-§212 save has no book at all.
   const w = world('ISR');
   const saved = JSON.parse(JSON.stringify(w.game));
   for (const k of Object.keys(saved.tags)) delete saved.tags[k].programs;
@@ -411,7 +411,7 @@ console.log('== the effects fold, and the saves ==');
   });
   ok(Object.keys(saved.tags).every((k) => saved.tags[k].programs
     && Object.keys(saved.tags[k].programs).length === 0),
-  'a pre-§211 save revives with an empty book on every court');
+  'a pre-§212 save revives with an empty book on every court');
   ok(!isSelfArsenal(revived, 'ISR') && armsGate(revived, 'ISR', 'wing') !== '',
     'owning no works, and gated exactly as §181 left it');
   ok(ownWorksOf(saved.tags.ISR).size === 0 && programStrain(saved.tags.ISR) === 0,
@@ -449,5 +449,5 @@ console.log('== the world still turns: a year of real months with a line running
   ok(Number.isFinite(t.treasury), 'and the treasury stays a number');
 }
 
-console.log(failures === 0 ? '\nsmoke138 OK' : '\nsmoke138 FAILED (' + failures + ')');
+console.log(failures === 0 ? '\nsmoke139 OK' : '\nsmoke139 FAILED (' + failures + ')');
 process.exit(failures === 0 ? 0 : 1);

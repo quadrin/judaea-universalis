@@ -6,7 +6,7 @@ import {
   doctrinePips, doctrineSiegeMult, doctrinesFor,
 } from '../data/tech.js';
 import { JEWISH_INTEGRATED_NAMES, SAMARITAN_INTEGRATED_NAMES, TAG_INTEGRATED_NAMES } from '../data/integrated_names.js';
-// The works of one's own (SPEC §211): pure readers over t.programs, so the
+// The works of one's own (SPEC §212): pure readers over t.programs, so the
 // §181 gate can ask whether this court builds the arm itself.
 import { ownWorksOf, selfSufficientWorks } from '../data/programs.js';
 // The land roster (SPEC §191): three arms, their faces, their gaits, and the
@@ -251,7 +251,7 @@ export function armsSupplierOf(ctx, tag) {
 }
 
 // ------------------------------------------------- the works of one's own
-// SPEC §211: the other answer to the import. A delivered arms program can
+// SPEC §212: the other answer to the import. A delivered arms program can
 // carry `works` — a §181-gated arm this court builds in its own shops from
 // then on, whatever any supplier thinks. Both readers answer from tag state
 // alone, so anything in the sim may ask.
@@ -284,7 +284,7 @@ export function armsExporters(ctx) {
 
 // May this court raise the imported arms this month? '' when yes, else the
 // reason. Chapters that declare no market always answer yes — and so does an
-// arm the court's own shops have learned to build (SPEC §211). Callers that
+// arm the court's own shops have learned to build (SPEC §212). Callers that
 // name no arm ask the old question: is the pipeline open at all?
 export function armsGate(ctx, tag, arm) {
   if (!armsMarketOn(ctx)) return '';
@@ -1231,7 +1231,7 @@ export function raiseAirWing(ctx, tag, provId, kind) {
   if (p.owner !== tag || p.controller !== tag) return { ok: false, why: 'the field is not in our hands' };
   if (!hasAirfield(p)) return { ok: false, why: 'no airfield here' };
   // SPEC §181: aircraft are an import for everyone but the arsenal states —
-  // and for everyone whose own shops have not learned to build them (§211).
+  // and for everyone whose own shops have not learned to build them (§212).
   const shut = armsGate(ctx, tag, 'wing');
   if (shut) return { ok: false, why: shut };
   const cost = AIRC(ctx, 'wingCost', 90);
@@ -2024,7 +2024,7 @@ export function recruitRegiment(ctx, tag, provId, type) {
   // Armor (SPEC §181): the mounted arm at pattern 5+ is tanks — priced like
   // them, fitted slower than a horse squadron, and importable only. In a
   // chapter with an arms market a client raises it through a live weapons
-  // transfer agreement, its own tank works (SPEC §211), or not at all.
+  // transfer agreement, its own tank works (SPEC §212), or not at all.
   const AR = ctx.DEFINES.ARMOR || {};
   const armor = type === 'cav' && tagGen(ctx, tag) >= num(AR.minGen, 5);
   if (armor) {
@@ -2322,7 +2322,7 @@ export function secedeTagCore(ctx, from, to, opts = {}) {
     ideas: { ...(def.ideas || {}) },
     reforms: { ...(parent.reforms || { mil: 0, civ: 0, rel: 0 }) },
     eraIdeas: { ...(parent.eraIdeas || {}) },
-    // …but NOT the works (SPEC §211). An idea of the age is in people's
+    // …but NOT the works (SPEC §212). An idea of the age is in people's
     // heads and walks out with them; a tank line is a building, and it is
     // standing in the country that was seceded FROM. A formed crown is the
     // other case entirely — it is the same state under a new name, and
@@ -5694,7 +5694,7 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     ideas: { ...(def.ideas || {}) },
     reforms: { mil: 0, civ: 0, rel: 0 },
     eraIdeas: {}, // a state born new has taken up none of the age's ideas
-    programs: {}, // …and owns no works (SPEC §211)
+    programs: {}, // …and owns no works (SPEC §212)
     tech: {
       gov: Math.max(0, num(tech.gov, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),
       infl: Math.max(0, num(tech.infl, num(ctx.bookmark && ctx.bookmark.techBase, 3)) | 0),

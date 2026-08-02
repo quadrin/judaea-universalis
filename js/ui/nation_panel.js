@@ -244,7 +244,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">How We Muster</div>
         <div class="np-techs" data-ref="patterns"></div>
       </div>
-      <!-- What we build ourselves (SPEC §211): the other half of the arms
+      <!-- What we build ourselves (SPEC §212): the other half of the arms
            line above. The pipeline says whose works feed this host; this says
            which of them are ours. Player's realm only — a foreign court's
            drawing office is not a thing an ambassador reads off a card. -->
@@ -387,7 +387,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // The works of one's own (SPEC §211): one probe to begin a program,
+      // The works of one's own (SPEC §212): one probe to begin a program,
       // one to abandon one that is still in the shops.
       const progGo = e.target.closest('[data-program]');
       if (progGo) {
@@ -1738,7 +1738,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     setHtml(refs.patterns, html);
   }
 
-  // The works of one's own (SPEC §211), directly under How We Muster: the
+  // The works of one's own (SPEC §212), directly under How We Muster: the
   // chapter's roster of named weapon systems this realm can develop at home.
   // A locked card is the §179 dark slab, saying what opens it (a rung of the
   // military ladder, and whatever the shops must deliver first); an open one
@@ -1814,7 +1814,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   }
 
   // One program's effects in the panel's own words. Only keys the roster
-  // actually uses (SPEC §211 pins the list), so nothing prints raw.
+  // actually uses (SPEC §212 pins the list), so nothing prints raw.
   const EFFECT_WORDS = {
     milPowerMult: 'army strength', disciplineMult: 'discipline', manpowerMult: 'manpower',
     moraleMult: 'morale', navalMult: 'fleet strength', reinforceMult: 'reinforcement speed',

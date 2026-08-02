@@ -1284,7 +1284,7 @@ export const DEFINES = {
     signCdMonths: 6,       // no re-signing churn inside this window
   },
 
-  // The works of one's own (SPEC §211): the other answer to §181's import.
+  // The works of one's own (SPEC §212): the other answer to §181's import.
   // A court develops a named weapon system at home — opened by a rung of the
   // military ladder, begun for talents and martial points, billed monthly
   // while the shops run, and delivered years later. The per-program numbers

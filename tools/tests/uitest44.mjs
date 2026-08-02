@@ -1,6 +1,6 @@
-// UI verification — SPEC §211: the works of one's own, in a real browser.
+// UI verification — SPEC §212: the works of one's own, in a real browser.
 //
-// The headless suite (smoke138) proves the arithmetic. This one proves the
+// The headless suite (smoke139) proves the arithmetic. This one proves the
 // four things only a browser can:
 //
 //   1. The Host tab carries a "The Works of Our Own" block, directly under

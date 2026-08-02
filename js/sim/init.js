@@ -267,7 +267,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
-      programs: {}, // the works of one's own, none yet (SPEC §211)
+      programs: {}, // the works of one's own, none yet (SPEC §212)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -1811,7 +1811,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
     },
 
-    // ---- the works of one's own (SPEC §211) ---------------------------------
+    // ---- the works of one's own (SPEC §212) ---------------------------------
     // The other answer to §181's import: a roster of named weapon systems
     // this court can develop at home, each behind a rung of the military
     // ladder and the works that came before it. Null where the chapter (or
@@ -3598,7 +3598,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
-      programs: {}, // the works of one's own, none yet (SPEC §211)
+      programs: {}, // the works of one's own, none yet (SPEC §212)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -3725,7 +3725,7 @@ export function reviveGame(saved) {
     if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
-    if (!t.programs || typeof t.programs !== 'object') t.programs = {}; // pre-§211 saves own no works
+    if (!t.programs || typeof t.programs !== 'object') t.programs = {}; // pre-§212 saves own no works
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};

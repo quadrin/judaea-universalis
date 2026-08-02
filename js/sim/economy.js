@@ -7,7 +7,7 @@ import { blockadedBy, isCoastal, MERCHANT_SHIP_INCOME } from './navy.js';
 import { embargoTradeMult, blockadeIncomeMult, blockadedState } from './embargo.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { genUpkeepMult } from '../data/tech.js';
-// The works of one's own (SPEC §211): the development line every program
+// The works of one's own (SPEC §212): the development line every program
 // still in the shops bills monthly. Pure data, so no cycle.
 import { programStrain } from '../data/programs.js';
 import { pilgrimageIncome } from './sacred.js';
@@ -216,7 +216,7 @@ export function incomeBreakdown(ctx, tag) {
   // with the age and the realm respectively.
   out.fuel = fuelExpense(ctx, tag);
   out.admin = adminExpense(ctx, tag);
-  // Development (SPEC §211): what the shops cost while they are still
+  // Development (SPEC §212): what the shops cost while they are still
   // shops. Zero in every chapter that builds no works of its own, and zero
   // the month a program delivers — a delivered work is an asset, not a bill.
   out.develop = programStrain(t);
