@@ -13154,6 +13154,58 @@ eighty-one civil nodes. The 8-year balance harness returns the documented
 anomaly families unchanged, which is expected: the band pays modifiers and
 points, and nothing in it declares a war.
 
+### The crown was the one tree the pass missed
+
+The band above walks `bookmark.missions`. The Kingdom of Israel does not live
+there — it lives in `FORMABLES`, because it is a crown a campaign *becomes*
+rather than a side a campaign *starts as* — so the pass went straight past the
+one chain a player reaches by doing the hardest thing in the game. What that
+concealed was worse than a missing band:
+
+    the chapter you leave behind   24–29 nodes
+    the crown you proclaim          7 nodes
+
+**Taking the greater crown shrank the objectives panel by two thirds.** §189
+built the crown's table as one spine of four read six ways, plus a branch of
+three per chapter, and nothing since had grown either half while the chapter
+trees around them tripled.
+
+The spine goes to fifteen: five more rungs of what a united monarchy does in
+any century — the fortresses, the standing host that does not go home at
+harvest, the succession that every Jewish monarchy in these six chapters died
+of before a foreigner got to it, the ingathering, and the king's peace, which
+is the hardest thing a state in this corridor ever did and which Salome
+Alexandra managed for nine years — plus the same three-strand civil band. Each
+chapter's branch goes from three to seven. **Every chapter's crown now reads
+22 nodes instead of 7.**
+
+Two constraints shaped the spine, and both are why it could not simply be
+copied from a chapter's band:
+
+- **It must read the same in six centuries.** The chapters' technology
+  baselines are two hundred years apart, so a rung asking for "Military 7" is a
+  formality in 614 and out of reach in 167. The spine reads RELATIVE to the
+  bookmark's own `techBase` (`techAbove`, `marAbove`), which is what lets one
+  table be legible in all six.
+- **It may not name a single estate.** A formed crown inherits the court of the
+  tag it grew out of (§127), so the room holds Hasideans and Hellenizers in
+  167 and the Exilarch's men in 614. The court strand therefore asks the WHOLE
+  court — every estate in the room at once, whoever they are — which is both
+  era-neutral and the truer question to put to a united monarchy.
+
+`smoke138` grew the section to match: it proclaims the crown in each of the six
+chapters and runs the same contracts, and its pay test covers **all 22 nodes**
+rather than the band alone, because a stub tree is exactly where dead content
+hides. Doing that surfaced three limits in the maximal realm itself, all now
+fixed and all of the same shape — a dial the engine has that the fixture was
+not turning: it never seated an **heir** (so every succession rung read as
+dead), never **converted** the provinces it granted (so every chain counting
+land "keeping the Law" read as dead), and populated the court from the
+bookmark's table, which a formed crown is not in — so it asked the engine's own
+`factionDefs` instead. `smoke120` keeps the §189 contract and its hand-built
+per-chapter worlds, now scoped to the three nodes those worlds were written
+for; the complete pay claim belongs to smoke138.
+
 ### Two bugs the section found on its way past
 
 Writing seventy-eight nodes against the existing trees turned up two faults

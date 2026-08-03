@@ -356,8 +356,20 @@ prove the government and region strands are earnable without a court:
 `monthlyFactions` runs for the player alone, so that run must leave the court
 table *absent* rather than full — fill it and any check reading `t.factions`
 directly instead of through `factionApproval` will fake its own reachability.
+It also owns the crown: `MLI` lives in `FORMABLES` rather than a bookmark, so
+it is proclaimed per chapter and checked there — and its pay test covers the
+whole 22-node chain, not just the band, because a stub tree is where dead
+content hides. Three things the maximal realm has to do that are easy to
+forget when extending it: seat an **heir** (succession rungs are dead
+without one), **convert** the provinces it grants to the tag's own religion
+(several chains count land "keeping the Law", not land held), and resolve the
+court through the engine's `factionDefs` rather than the bookmark's table —
+a formed crown inherits its origin's court and appears in no bookmark's
+`factions` at all.
+
 Adding missions to a playable chain means updating the exact node counts in
-`smoke129`'s PRINCIPALS, `smoke126`'s GROWTH, and the index-based layout
+`smoke129`'s PRINCIPALS, `smoke126`'s GROWTH, `smoke120`'s spine/branch/chain
+census for the crown, and the index-based layout
 assertions in `smoke111` (which pin the whole col/row string), plus the
 totals in `smoke2` and `smoke3`.
 

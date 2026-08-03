@@ -40,6 +40,9 @@ import { bus } from '../../js/core/bus.js';
 import { initGame, makeCtx } from '../../js/sim/init.js';
 import { liveInstitutions, universalInstitutions } from '../../js/sim/institutions.js';
 import * as realm from '../../js/sim/realm.js';
+import { FORMABLES } from '../../js/data/formables.js';
+import { switchTagCore } from '../../js/sim/military.js';
+import { factionDefs } from '../../js/sim/factions.js';
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -340,8 +343,16 @@ function remax(w, tag, { court = true } = {}) {
   t.embraced = [...new Set(inst)];
   if (court) {
     // The court at its warmest — player-only state, for the col-2 strand.
+    // Ask the ENGINE which estates are in this tag's room rather than the
+    // bookmark's table: a formed crown (SPEC §127) inherits the court of the
+    // tag it grew out of and appears in no bookmark's `factions` at all, so
+    // reading the table leaves its court empty and its whole court strand
+    // reads as dead content.
     t.estateFavor = t.estateFavor || {}; t.factions = t.factions || {};
-    for (const d of ((bookmark.factions || {})[tag] || [])) {
+    let defs = [];
+    try { defs = factionDefs(ctx, tag) || []; } catch (e) { defs = []; }
+    if (!defs.length) defs = ((bookmark.factions || {})[tag] || []);
+    for (const d of defs) {
       if (!d || !d.id) continue;
       t.estateFavor[d.id] = 100;
       t.factions[d.id] = 100;
@@ -352,6 +363,9 @@ function remax(w, tag, { court = true } = {}) {
       mar: { name: 'The Marshal', skill: 6 },
     };
     t.messianic = 100;
+    if (!t.heir) {
+      t.heir = { name: 'The Heir', gov: 4, infl: 4, mar: 4, age: 24 };
+    }
   } else {
     // An AI hand has no court at all — not an empty one, an absent one.
     t.estateFavor = {}; t.factions = {};
@@ -376,6 +390,11 @@ function maximalGround(w, tag) {
     const p = g.provinces[i];
     if (!p || p.impassable) continue;
     p.owner = tag; p.controller = tag;
+    // A realm at its stop has finished converting: several chains count
+    // provinces "keeping the Law" rather than merely held, and owning the map
+    // without the faith leaves those unreachable however long the pass runs.
+    const faith = (g.tags[tag] || {}).religion;
+    if (faith) p.religion = faith;
     p.dev = { tax: 12, prod: 12, mp: 12 };
     p.buildings = ['market', 'walls', 'temple', 'granary', 'shipyard'];
     if (p.dia && typeof p.dia === 'object') p.dia.standing = 100;
@@ -433,6 +452,130 @@ for (const c of CHAINS) {
   ok(reached.length < court.length,
     key + ': the court strand is genuinely the player\'s ('
     + (court.length - reached.length) + ' of ' + court.length + ' out of an AI\'s reach)');
+}
+
+// ------------------------------------------------------------ the crown
+// The Kingdom of Israel is a playable chain too — the moment it is proclaimed
+// it is the tree the player reads — but it lives in FORMABLES rather than in a
+// bookmark's `missions`, so the §211 pass above walks straight past it. That
+// was how the crown ended up the one side in the game with no civil band, and
+// worse: taking the greater crown SHRANK the objectives panel from the
+// chapter's twenty-odd nodes to seven. Same contracts, applied to the chain a
+// player actually inherits when the crown goes on.
+console.log('== §211: the crown carries a civil band in every chapter it is formable in ==');
+{
+  const crown = FORMABLES.find((f) => f && f.to === 'MLI' && Array.isArray(f.missions) && f.missions.length);
+  ok(!!crown, 'the Kingdom of Israel carries a mission table');
+  const CROWN_CHAPTERS = ['167bce', '67bce', '40bce', '66ce', '132ce', '614ce'];
+
+  // Proclaim the crown: the chapter's own side takes it, exactly as a campaign
+  // would. `seatFor` decides who is holding the throne — pass a foreign tag to
+  // model an AI hand, which is what puts the court out of reach.
+  function proclaim(chapterId, { aiHand = false } = {}) {
+    const e = ERAS.find((x) => x.bookmark.id === chapterId);
+    const from = e.bookmark.playableTags[0].tag;
+    const w = boot(e, from);
+    w.game.wars = [];
+    for (const k of Object.keys(w.game.tags)) if (w.game.tags[k]) w.game.tags[k].atWarWith = [];
+    switchTagCore(w.ctx, from, 'MLI');
+    const t = w.game.tags.MLI;
+    t.missionIdx = 0; t.missionsDone = []; t.missionRest = 0;
+    if (aiHand) {
+      // Somebody else on the throne, the crown on the AI hand — the true
+      // condition under which `activeDefs` refuses the court.
+      const other = Object.keys(w.game.tags).find((k) => k !== 'MLI' && w.game.tags[k] && w.game.tags[k].alive);
+      w.game.playerTag = other;
+      t.ai = true;
+    } else {
+      w.game.playerTag = 'MLI';
+    }
+    return w;
+  }
+
+  for (const id of CROWN_CHAPTERS) {
+    const list = realm.chapterChain(crown.missions, id);
+    const civil = civilOf(list);
+    const kinds = new Set(civil.map((m) => m.civil));
+    ok(list.length >= 18, id + '/MLI: the crown reads ' + list.length
+      + ' nodes — no longer a stub beside the chapter it replaced');
+    ok(civil.length >= 3 && kinds.has('govt') && kinds.has('region') && kinds.has('court'),
+      id + '/MLI: covers the government, the region AND the court (' + [...kinds].join(', ') + ')');
+    for (const m of civil) {
+      ok(m.col === STRANDS[m.civil],
+        id + '/MLI/' + m.id + ': the ' + m.civil + ' strand sits in its own column');
+    }
+    // The court fence and the strand rule, on the filtered chain.
+    const courtIds = new Set(civil.filter((m) => m.civil === 'court').map((m) => m.id));
+    const hostages = list.filter((m) => !courtIds.has(m.id)
+      && (m.requires || []).some((r) => courtIds.has(String(r))));
+    ok(!hostages.length, id + '/MLI: nothing outside the court waits on the court ('
+      + (hostages.map((m) => m.id).join(', ') || 'fenced') + ')');
+    // Seats, on the chain a chapter actually renders.
+    const ids = list.map((m, i) => realm.missionId(m, i));
+    const row = [];
+    const seats = new Set();
+    let collide = null;
+    list.forEach((m, i) => {
+      const col = Math.max(0, Math.min(4, (m.col || 0) | 0));
+      let r = Number.isFinite(m.row) ? Math.max(0, m.row | 0) : null;
+      if (r === null) {
+        if (Array.isArray(m.requires) && m.requires.length) {
+          r = 0;
+          for (const rid of m.requires) {
+            const pi = ids.indexOf(String(rid));
+            if (pi >= 0 && pi < i && Number.isFinite(row[pi])) r = Math.max(r, row[pi] + 1);
+          }
+        } else r = 0;
+      }
+      row[i] = r;
+      const k = col + ':' + r;
+      if (seats.has(k)) collide = ids[i] + ' @ ' + k;
+      seats.add(k);
+    });
+    ok(!collide, id + '/MLI: seats every node in its own cell' + (collide ? ' (' + collide + ')' : ''));
+  }
+
+  console.log('== §211: nothing on the crown is free on the day of the crowning ==');
+  for (const id of CROWN_CHAPTERS) {
+    const w = proclaim(id);
+    const list = realm.chapterChain(crown.missions, id);
+    pump(w.ctx, 24);
+    const done = doneIds(w.game.tags.MLI);
+    const free = civilOf(list).filter((m) => done.has(m.id));
+    ok(!free.length, id + '/MLI: no civil objective completes at the proclamation ('
+      + (free.map((m) => m.id).join(', ') || 'none') + ')');
+  }
+
+  console.log('== §211: every node of the crown pays in a maximal realm ==');
+  for (const id of CROWN_CHAPTERS) {
+    const w = proclaim(id);
+    const list = realm.chapterChain(crown.missions, id);
+    maximalGround(w, 'MLI');
+    for (let i = 0; i < 500; i++) { remax(w, 'MLI'); realm.checkMissions(w.ctx); }
+    const done = doneIds(w.game.tags.MLI);
+    // The whole chain, not only the band: a stub tree hid its own dead content.
+    const unpaid = list.filter((m) => !done.has(m.id));
+    ok(!unpaid.length, id + '/MLI: every objective paid ('
+      + (unpaid.length ? 'DEAD CONTENT: ' + unpaid.map((m) => m.id).join(', ')
+        : list.length + ' paid') + ')');
+  }
+
+  console.log('== §211: an AI-held crown earns the government and the region, never the court ==');
+  for (const id of CROWN_CHAPTERS) {
+    const w = proclaim(id, { aiHand: true });
+    const list = realm.chapterChain(crown.missions, id);
+    maximalGround(w, 'MLI');
+    for (let i = 0; i < 500; i++) { remax(w, 'MLI', { court: false }); realm.checkMissions(w.ctx); }
+    const done = doneIds(w.game.tags.MLI);
+    const civil = civilOf(list);
+    const missed = civil.filter((m) => m.civil !== 'court' && !done.has(m.id));
+    ok(!missed.length, id + '/MLI: an AI hand still earns the government and the region ('
+      + (missed.map((m) => m.id).join(', ') || 'earned') + ')');
+    const court = civil.filter((m) => m.civil === 'court');
+    const reached = court.filter((m) => done.has(m.id));
+    ok(reached.length < court.length, id + '/MLI: the court strand stays the player\'s ('
+      + (court.length - reached.length) + ' of ' + court.length + ' out of reach)');
+  }
 }
 
 // ------------------------------------------------------------- the balance
