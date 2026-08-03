@@ -5442,7 +5442,25 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       + releaseRows.reduce((s, r) => s + num(r.dev), 0)
       + transferRows.reduce((s, r) => s + num(r.dev), 0);
     const capDev = peaceDevCap(ctx, info);
-    if (chosenDev > capDev) {
+    // A state annexed WHOLE is not a state dismembered (SPEC §220).
+    //
+    // The cap prices how much may be stripped from a realm that goes on
+    // existing afterwards, and for a realm it is right. For a RUMP it was a
+    // trap with no floor to it: the ceiling is 40% of what the enemy still
+    // holds, so it shrinks with them, and a court reduced to one province of
+    // more than 25 development could never be annexed at any war score by any
+    // combination of demands — there is no smaller package than its last
+    // province, and the ceiling can only fall. A total victory over a
+    // one-province state ended in a treaty that handed the province back.
+    //
+    // So the budget does not price a treaty that leaves nothing behind. What
+    // gates that is war score, and war score alone is a real gate: it is
+    // clamped to 100, and land is 0.9 a point (1.25× for an alien faith), so
+    // the most that can ever be annexed entire is about 110 development. A
+    // rump always fits. An empire never does.
+    const sideDev = num(info.theirSideDev);
+    const annexedWhole = sideDev > 0 && chosenDev >= sideDev - 0.5;
+    if (chosenDev > capDev && !annexedWhole) {
       acceptable = false;
       reason = `No single treaty could strip so much land — the nations would not bear it (${chosenDev} development asked, ${capDev} is the most one settlement will carry).`;
     } else {

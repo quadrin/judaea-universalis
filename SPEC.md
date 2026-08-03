@@ -14203,3 +14203,55 @@ can be watched; this hands away a whole country between two frames.
   press and struck on the second — on the very client its §218 sections make.
   `node tools/autorun.mjs 8` against the parent tree is **byte identical on all
   eight bookmarks**: no AI court strikes a collar, exactly as none grants one.
+
+## 220. A state annexed whole is not a state dismembered
+
+Reported from a campaign: a court beaten down to its last province, that
+province occupied, the war won outright — and the peace table handed it back.
+
+The rule doing it is §69's **one dismemberment budget**, and for a realm it is
+right: no single treaty may strip more than `peaceMaxDevShare` (40%) of what
+the losing side still holds, because "the nations would not bear it". The
+trouble is that the ceiling is a fraction of a shrinking thing. Reduce a court
+to one province and the budget is 40% of that province — always less than the
+province — so there is no package small enough to fit and no war score high
+enough to matter. A one-province state worth more than the floor of 25
+development could not be annexed **at all**, by anyone, ever. The only states
+cheap enough to finish off were the ones too small to want.
+
+So the budget stops pricing a treaty that leaves nothing behind:
+
+- **The exception** (`evaluatePeaceDeal`): if the demanded package — cessions,
+  released states and transferred clients together — takes every point of
+  development the enemy side still holds, the dev cap does not apply. Annexing
+  a country entire is not dismembering it; there is no remainder for the
+  nations to bear.
+- **What gates it instead** is war score, and it is a real gate rather than a
+  formality. Score is clamped to ±100 and land is priced at 0.9 per point of
+  development (×1.25 for a faith outside our own), so the most that can ever be
+  taken entire is about 110 development of co-religionist land — less across a
+  religious border. A rump always fits inside that. An empire never does:
+  Rome in 66 CE, occupied to the last acre, prices out at **9,255** war score.
+- **It is exactly "everything", not "a lot".** Give the same rump a second town
+  to survive on and the same demand for the same province is dismemberment
+  again, refused by the same cap. That control is in the suite because it is
+  the whole distinction.
+- **The AI still builds its own ultimatums under the old ceiling**
+  (`buildAiPeaceProvinces` is unchanged), the way §69 leaves releases out of
+  them: the AI accepts a total annexation it cannot pay for the war to refuse,
+  and never proposes one. So no all-AI trajectory moves — `node
+  tools/autorun.mjs 8` is byte identical on all eight bookmarks.
+
+One thing this does not change: a court's protectors. A war declared on a
+client is the overlord's war too, and their weight counts in the side's
+development — which lifts the ceiling far above any rump anyway. The trap only
+ever closed on a state with nobody behind it, which is exactly the state a
+total victory produces.
+
+- **Regression contract**: `smoke38` — the rump alone with its last province
+  worth more than the cap and the treaty accepted anyway; one war-score point
+  short and it is refused for the price rather than the ceiling; the treaty
+  executed, the province changing hands and the court passing into memory; the
+  narrowness control (a second town restores the cap); and Rome occupied entire
+  still refused, with the price of everything measured against the ceiling war
+  score can reach.
