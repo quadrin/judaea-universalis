@@ -249,6 +249,14 @@ static site, the zero dependencies, or the missing build step changes.
   auction, and a prophet in the desert whom arresting would not disperse. Every one has two
   or three answers with a real price on both sides, and the whole pool speaks as one channel
   so a campaign that has outrun its own chapter still has something to answer.
+- **And one card is gated on a town rather than on a century.** Somewhere in the first ten
+  years of most chapters, a letter arrives four months stale from Tingis, where the purple is
+  boiled: a Jew called Ikus who teaches boys their numbers has proved something he cannot get
+  anyone to restate, and has stopped losing wagers — not seldom, but never. The town concluded
+  Jewish magic and flogged him in the market. Send for the man, send for the theorem and never
+  mind the man, send a letter under your seal and a purse for his back, or agree that Tingis
+  is a long way from here. Roughly two campaigns in five ever see it, and 1948 never does —
+  by then the map calls the town Tangier.
 - A war overview (score broken into battles / occupation / war goal / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and the saved-campaign shelf.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID

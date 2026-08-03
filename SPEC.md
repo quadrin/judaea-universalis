@@ -14507,3 +14507,114 @@ was before.
   deal behaving exactly as before, subjugation clearing our side of the table
   too; and the peacetime deed with its three refusals, its two roads to a
   recipient, its gratitude, and its gentler mark on the ground.
+
+## 223. The margins of the chronicle
+
+Every card in this game is gated on something the game is *about*: a date, a
+war, a crown, a faith, the size of the realm. There is one more thing a card
+can be gated on, and until now nothing was: whether the world in front of the
+player still contains a particular small place.
+
+`js/data/events_marginalia.js` is where those live — the notes in the margin,
+registered beside the generic pool in the era registry so every chapter plays
+them, and belonging to none of them. One card so far.
+
+### A theorem out of Tingis
+
+A letter comes up from the west, four months stale. In Tingis, where the purple
+is boiled, a Jew called Ikus who teaches boys their numbers has proved
+something — the writer calls it a theorem and admits he cannot restate it — and
+since proving it he has not lost a wager. Not seldom: never. He took the
+dice-players, then the men who lend against cargoes, then the men accustomed to
+standing on the profitable side of that arrangement. The town did not conclude
+that he could reckon better than it could. The town concluded Jewish magic, and
+flogged him at a post in the market.
+
+Four answers, and the court is a thousand miles away from all of them: **send
+for the man** (−40 talents for his passage and the town's fine; *Ikus of
+Tingis* sits down with the assessors — +5% income for eight years), **send for
+the theorem and never mind the man** (a fair copy carried east by a clerk who
+does not understand a line of it: +15 governance), **a letter under our seal
+and a purse for his back** (−25 talents, +5 legitimacy — a crown that answers
+for one Jew in a town it will never see is a crown the rest of them can write
+to), or **Tingis is a long way from here**.
+
+### The province is the window
+
+The card carries no `minYear` and no `maxYear`. What it carries instead is a
+walk of the province list looking for a cell **labelled** `Tingis`, and that
+one test does the whole job of an era window:
+
+- Seven chapters have the town, and the card may be dealt in all of them.
+- **1948 does not.** §24's era names rewrite the western frame into the names
+  of the year — Lutetia is Paris, Memphis is Cairo, and Tingis is Tangier — so
+  the walk finds nothing and the card never comes up. That is the right answer
+  for the right reason, and the suite proves it is the reason: rename that same
+  cell back inside a running 1948 campaign and the card opens.
+- The test is the **label**, not the canonical name. `ctx.prov('Tingis')` would
+  answer with Tangier, because a renamed province keeps answering to the name
+  the map shipped with (§24 again) — and the question this card asks is the one
+  a player would ask looking at their own map.
+- A chapter that folded the cell away entirely gets the answer free:
+  `map_profile`'s merges leave a `null` where the province would have been.
+
+The other half of the gate is the chapter's own first **ten years**, measured
+with `chapterYears` (§148) rather than against a year, because a shared card
+does not know which century it is in until it is asked. Open in the opening
+month, open one month short of ten years, shut on the tenth anniversary to the
+month, and shut for the rest of the campaign after that.
+
+### Bounded like the easter egg it is
+
+Once a campaign (`once` defaults true), one town, one decade, and 0.5% a month
+inside it — across at most 120 months that is a **45% chance of ever being
+dealt**, which is the density an easter egg wants: often enough to be found,
+rare enough that finding it is worth something. (Twenty seeded campaigns of
+66 CE walked through the real scheduler: twelve dealt it, eight never did,
+earliest month 7 and latest month 113.) Nothing it hands over is large enough
+to be a strategy.
+
+Two deliberate placements. It is registered **beside** the generic pool rather
+than inside it, because that pool's era banding — ten antique cards, ten
+modern, two timeless — is an invariant with a suite of its own (`smoke32`), and
+a card gated on a province belongs to no band. And it is appended **last** in
+every chapter's chain, so every other card is offered its month in exactly the
+order it was offered before.
+
+Its recorded course (`aiOption: 3`) is the empty one — no court of this period
+sent anybody to Mauretania over an arithmetician — so an all-AI harness run
+answers it with an option that moves no number.
+
+### Not one number out of the stream
+
+`ev.chance` is how the generic pool rolls and it is the obvious way to write
+this. It is also wrong here, and the balance harness said so: a roll every
+month for ten years, in every campaign of every chapter, advances the seeded
+stream's position for everything drawn after it. Measured against the parent
+tree, adding one 0.5% card that mostly does not fire moved battles, wars and
+anomaly flags on every bookmark — 167 BCE alone came back with 91 battles
+instead of 106 — because a card that exists is a card that rolls.
+
+So the odds live in the trigger, and the number they compare against is not
+drawn. `freeDraw` reads where the stream currently **stands** (`game.rngState`,
+which already varies with everything this campaign has done) and runs murmur3's
+finalizer over it mixed with the month. Reading advances nothing. The result is
+the same per-campaign variety a roll would give, deterministic across a save, a
+replay and a multiplayer relay because `rngState` is part of the saved game —
+and `node tools/autorun.mjs 8` against the parent tree is **byte identical on
+all eight bookmarks**.
+
+The gate is exported apart from the draw (`ikusWindow`, `IKUS_ODDS`) because
+they are two separate claims, and a suite that could only see them multiplied
+together would have to roll a hundred times to test a window.
+
+- **Regression contract**: `smoke148` — registration in all eight chapters and
+  last in each; the town present in seven maps and absent from the eighth, with
+  the rename control that proves the gate is the town rather than the year; the
+  ten-year window on both sides of the year-zero line; a decade of monthly
+  checks leaving `rngState` exactly where it found it and answering the same
+  way twice; twenty seeded campaigns walked twenty years each through the real
+  scheduler, with every arrival inside the first decade and some campaigns
+  never dealt it at all; each of the four answers against its own tooltip; and
+  the recorded course moving neither a talent, a point, a modifier nor a line
+  of the chronicle.
