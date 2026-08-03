@@ -193,6 +193,19 @@ static site, the zero dependencies, or the missing build step changes.
   for a decade, so it is not a move to make twice. It costs no influence at all: the price is
   the client. The one thing that refuses it is a war, because a client that walks out of one
   has not been freed, it has deserted.
+- **The peace table runs both ways now, and there is a deed that needs no table.** Every
+  term used to point one direction — you could demand provinces, gold, reparations, a
+  humiliation, a collar — so a realm that was *losing* had exactly one move, a white peace,
+  and one answer: *they believe they are winning, and will not settle for nothing*. That is
+  not how these wars ended. Now you can lay your own provinces on the table beside what you
+  ask, and any of them will do: not just what their armies occupy, not just what they can
+  march to, not just what is worth having. Colonised wasteland, a frontier cell, your own
+  capital. Each is credited at exactly what they would have paid to take it, the treaty
+  settles on the difference, and they sign when the offer covers what their war has earned
+  — or refuse and name the number. And outside a war entirely, **Give It Away** on your own
+  province hands it to the court that governs next door or to one you are sworn to: no war,
+  no treaty, no price, and a court that will not forget it. Not while an enemy stands in the
+  province, not while a war is running, and never the last province of the realm.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical

@@ -1549,3 +1549,28 @@ identical. And if the chapter already has a mission table under the target tag
 `missionsFor`, which is the intended behaviour and not a bug to route around;
 nodes already satisfied on the day of the proclamation complete on the next
 monthly pass.
+
+## A treaty that runs both ways (SPEC §222)
+
+`smoke147` owns it: the concession list at the peace table, the losing crown
+buying its ending, the net ledger, and the peacetime deed.
+
+Two traps if you read a failure in it.
+
+Its `losing()` helper builds the war **by hand** after `declareWar` — forcing
+`attackers`/`defenders` to one court each — for the reason smoke38's §220
+section documents: a war declared on a client drags the protector in, and a
+protector's development changes every number the table computes.
+
+And its peacetime section opens by asserting a province *cannot* be given away,
+which is not a bug in the fixture. This suite runs on the synthetic bead
+geometry, where "next door" means the neighbouring province id, so a fresh
+Judaea is genuinely bound to nobody and adjacent to nobody who governs. The
+section then opens each road to a recipient in turn — a neighbour, then an
+ally — which is a better test of the rule than a map where both happen to be
+true at once.
+
+The claim that keeps the harness still is narrow and worth preserving: a deal
+with no `concessions` in it runs through arithmetic identical to the old code
+(`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
+so no AI ever offers or expects one.

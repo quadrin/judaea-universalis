@@ -15,6 +15,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
   let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
   let freeArmed = ''; // client kingdom whose collar-striking has been armed (SPEC §219)
+  let cedeArmed = 0; // province whose gift has been armed (SPEC §222)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
 const RISING_LABELS = {
@@ -114,6 +115,14 @@ const RISING_LABELS = {
         <div class="pp-constr" data-ref="releaseRow"></div>
         <div class="pp-build-grid pp-build-one">
           <button class="pp-build-btn" data-release="1" data-ref="releaseBtn">${icon('laurel')}<span data-ref="releaseLabel">Release as a Client Kingdom</span></button>
+        </div>
+      </div>
+      <div class="pp-build hidden" data-ref="cedeBlock">
+        <div class="pp-build-title">Give It Away</div>
+        <div class="pp-constr" data-ref="cedeRow"></div>
+        <div class="pp-cede-to"><select class="peace-to" data-ref="cedeTo"></select></div>
+        <div class="pp-build-grid pp-build-one">
+          <button class="pp-build-btn" data-cede="1" data-ref="cedeBtn">${icon('scroll')}<span data-ref="cedeLabel">Cede the Province</span></button>
         </div>
       </div>
       <div class="pp-build hidden" data-ref="wasteBlock">
@@ -263,6 +272,23 @@ const RISING_LABELS = {
       }
       releaseArmed = 0;
       try { actions.releaseClientState(provId); } catch (err) { warnOnce('release-client', err); }
+      refresh();
+    });
+    refs.cedeBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-cede]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      if (typeof actions.cedeProvince !== 'function') return;
+      const to = refs.cedeTo.value;
+      if (!to) return;
+      if (cedeArmed !== provId) {
+        const armedId = provId;
+        cedeArmed = armedId;
+        setTimeout(() => { if (cedeArmed === armedId) { cedeArmed = 0; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      cedeArmed = 0;
+      try { actions.cedeProvince(provId, to); } catch (err) { warnOnce('cede-province', err); }
       refresh();
     });
     refs.wasteBlock.addEventListener('click', (e) => {
@@ -571,6 +597,8 @@ const RISING_LABELS = {
     refreshCommunity();
     // …and its opposite (SPEC §218): the province that is handed its own crown
     refreshRelease();
+    // …and the plainer opposite (SPEC §222): the province handed to a neighbour
+    refreshCession();
     // The unclaimed waste (SPEC §64): expedition, plantation, annexation
     refreshWasteland();
 
@@ -727,6 +755,37 @@ const RISING_LABELS = {
       ? (armed ? 'Tap again to let it go. Walk away and the offer lapses.\n――――――\n' + terms : terms)
       : `${info.why}\n――――――\n${terms}`;
     if (!info.can && releaseArmed === provId) releaseArmed = 0;
+  }
+
+  // Give it away (SPEC §222): a province handed to a neighbour or a patron,
+  // with no war and no treaty. Absent wherever there is nobody to give it to.
+  function refreshCession() {
+    let info = null;
+    if (actions && typeof actions.getCession === 'function') {
+      try { info = actions.getCession(provId); } catch (e) { warnOnce('getCession', e); info = null; }
+    }
+    const show = !!info && (info.recipients || []).length > 0;
+    refs.cedeBlock.classList.toggle('hidden', !show);
+    if (!show) { if (cedeArmed === provId) cedeArmed = 0; return; }
+    const armed = cedeArmed === provId && info.can;
+    setHtml(refs.cedeRow,
+      `${icon('scroll')}<span class="pp-constr-name">${esc(info.name)} passes out of the realm</span>`
+      + `<span class="pp-constr-left">${info.dev} dev</span>`);
+    const opts = info.recipients.map((r) => `<option value="${esc(r.tag)}">${esc(r.name)}`
+      + `${r.bond ? ' (' + esc(r.bond) + ')' : r.adjacent ? ' (next door)' : ''}</option>`).join('');
+    setHtml(refs.cedeTo, opts);
+    const chosen = info.recipients.find((r) => r.tag === refs.cedeTo.value) || info.recipients[0];
+    setText(refs.cedeLabel, armed ? 'Give it away for good?' : 'Cede the Province');
+    refs.cedeBtn.classList.toggle('disabled', !info.can);
+    refs.cedeBtn.classList.toggle('pp-build-sure', armed);
+    const terms = `Hand ${esc(info.name)} to ${esc(chosen ? chosen.name : 'them')} — no war, no treaty, no price.\n`
+      + `${info.dev} development leaves the realm for good. Their court remembers it: `
+      + `+${info.gratitude} opinion, and no infamy for anybody — nobody was conquered.\n`
+      + 'The province keeps everything it has and answers elsewhere from the day it is signed.';
+    refs.cedeBtn.dataset.tt = info.can
+      ? (armed ? 'Press again to sign it away. Walk away and the offer lapses.\n――――――\n' + terms : terms)
+      : `${info.why}\n――――――\n${terms}`;
+    if (!info.can && cedeArmed === provId) cedeArmed = 0;
   }
 
   // The unclaimed waste (SPEC §64): send soldiers to camp in ownerless

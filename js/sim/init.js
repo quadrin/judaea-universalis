@@ -18,6 +18,7 @@ import {
   clientOfferInfo, offerClientshipCore,
   releasableClients, releaseClientInfo, releaseClientCore,
   freeClientInfo, freeClientCore,
+  cedeProvinceInfo, cedeProvinceCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
@@ -3034,6 +3035,21 @@ export function gameActions(ctx) {
           + 'again for ' + Math.round(res.collarMonths / 12) + ' years.'
           + (res.lostWeaving ? ' The union we were weaving dies with the bond.' : ''), 'good');
       } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
+    },
+
+    // ---- a province handed over without a war (SPEC §222) --------------------
+    getCession(provId) {
+      try { return cedeProvinceInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('cessionInfo', 'getCession failed', e); return null; }
+    },
+    cedeProvince(provId, toTag) {
+      try {
+        const res = cedeProvinceCore(ctx, g.playerTag, provId, toTag);
+        if (!res.ok) { say('The deed is not signed', res.why, 'bad'); return; }
+        say('A province given away', res.name + ' answers to ' + res.toName + ' from today — '
+          + res.dev + ' development, handed over with no war and no treaty. Their court will '
+          + 'not forget it (+' + res.gratitude + ' opinion).', 'good');
+      } catch (e) { warnOnce('cedeProvince', 'cedeProvince failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------

@@ -14346,3 +14346,101 @@ and complete on the next pass.
   forwarding address), and the two debts that must NOT come with the banner:
   Rome's alliance and the dead king's truces. `node tools/autorun.mjs 8` is
   byte identical on all eight bookmarks — the AI cannot reach any of it.
+
+## 222. A treaty that runs both ways, and a deed that needs no treaty
+
+Every term at the peace table ran one direction. A court could **demand**:
+provinces it occupied, gold, reparations, a humiliation, a subjugation, a
+release, a client. What it could not do was **offer** — and a realm that is
+losing has nothing else to do. Its whole table was a white peace and the
+sentence *they believe they are winning, and will not settle for nothing*.
+
+That is not how the wars of this period ended. They ended with a border
+province, a corridor, a coastal city — the losing crown buying an ending with
+the thing the winner came for. This section gives that back, and then takes the
+same idea outside the war entirely.
+
+### At the table: what we lay down beside what we ask
+
+`peaceDealInfo` returns `concessions` alongside `provinces` — **every province
+we own**, and the breadth is deliberate rather than careless:
+
+- not only what they occupy, because a treaty writes down more than the front
+  line;
+- not only what they can reach: §116 exists to stop an army *selling* far-off
+  land it happens to be standing in, and nothing needs to stop a crown from
+  giving away its own;
+- not only what is worth having. Colonised waste (§64), a frontier cell, the
+  capital itself — a crown that is losing may put any of it on the table,
+  because the alternative is losing it anyway.
+
+Each is priced at **what they would have paid to demand it** — the same
+formula, their claims and their faith — so one province is worth the same at
+this table whichever way it moves. There is no escalation ladder on the offered
+side: `priceProvincePackage` makes each further demand dearer because a
+congress resists a long list, and nothing resists a gift.
+
+`evaluatePeaceDeal` then settles one ledger: `net = cost − offered`. Above zero
+we are demanding, and the old rules apply unchanged (the dismemberment cap,
+then `myWs >= net`). At or below zero we are paying, and the rule is the
+plainest one there is: **they accept what covers what they have won.** Offer
+past their score and it is taken; offer under it and the refusal names the
+number — *they have won more than that (25 offered, 60 is what their war has
+earned)*. A treaty may do both at once, which is how a war that went badly in
+the north and well in the south actually settles.
+
+What the land takes with it is what conquest takes: the integration ledger
+starts over, autonomy rises, `recent_conquest` lands on it. Two differences,
+both deliberate. **We** record the grudge (§67), because it is our loss to
+remember. And **nobody gains infamy** — the world does not count as a conqueror
+a court that was handed something at a table it did not dictate. Being paid is
+not taking.
+
+### Without a table: a province handed over in peacetime
+
+The same idea with no war attached (`cedeProvinceInfo` / `cedeProvinceCore`,
+the *Give It Away* block on our own province's panel): a crown may decide a
+province is worth more as a friendship than as a district, and hand it over.
+The Golan to a patron, a frontier cell to the neighbour who actually garrisons
+it, the town a stronger crown has been asking after for a decade.
+
+Any province of ours, colonised waste included. It goes to a court that
+**governs beside it** or one we are already **bound to** (ally, client,
+overlord) — a crown settles a border, pays a patron or endows a client; it does
+not post a deed to a stranger on the far side of the world. Their regard rises
+by `giftOpinionBase` + development, to a ceiling of 60: the largest thing one
+court can say to another without an army, scaled by what was actually said.
+No infamy, no grudge, no price.
+
+Three refusals, and each is a rule rather than a guard rail:
+
+- **not while an enemy army is standing in it** — what happens to that province
+  is a treaty now, and the treaty is at the table;
+- **not while we are at war with anybody** — a province gifted to a friend on
+  the eve of losing it is not diplomacy, it is hiding the silver, and every
+  court watching would say so;
+- **not the last province of the realm** — there would be nobody left to sign
+  the deed.
+
+The province arrives under its new crown restive but not conquered: `ceded`
+(+1 unrest, twelve months) rather than `recent_conquest`, and autonomy at half
+rather than three fifths. It was given, not taken, and the people can tell.
+
+### What does not move
+
+The AI neither offers concessions nor asks for them: `buildAiPeaceProvinces`
+builds the same package it always did, and a deal with no `concessions` in it
+runs through arithmetic identical to the old code — `offered` is zero and `net`
+is `cost`. So `node tools/autorun.mjs 8` is byte identical on all eight
+bookmarks, and every AI-vs-AI settlement in every harness history is the one it
+was before.
+
+- **Regression contract**: `smoke147` — the offer list (every province we own,
+  the occupied one, the colonised waste, the capital, and one province priced
+  the same in both directions); the white peace refused, too little refused
+  with the number, enough accepted; the land moving with its marks, our grudge,
+  nobody's infamy, and the chronicle naming who gave what; a treaty that
+  demands and concedes at once settling on the difference; a concession-free
+  deal behaving exactly as before, subjugation clearing our side of the table
+  too; and the peacetime deed with its three refusals, its two roads to a
+  recipient, its gratitude, and its gentler mark on the ground.

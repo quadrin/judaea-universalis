@@ -1748,6 +1748,13 @@ export const DEFINES = {
     strainFloorPer: 10,       // how deep it carries a client's regard, per point of strain...
     strainFloorMax: 60,       // ...and no deeper than this: strain sours, it does not revolt
     freedCollarMonths: 120,   // a court freed at our own table will not kneel to us for a decade
+    // A province handed over in peacetime (SPEC §222). A gift of ground is the
+    // largest thing one court can say to another without an army, and it is
+    // remembered accordingly — scaled by what was given, because a frontier
+    // cell and a city are not the same sentence.
+    giftOpinionBase: 15,
+    giftOpinionPerDev: 1,
+    giftOpinionMax: 60,
   },
 
   UNREST: {

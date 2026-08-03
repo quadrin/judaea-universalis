@@ -2535,6 +2535,10 @@ html, body {
 .peace-dim { font-size: 11.5px; color: var(--ink-soft); opacity: 0.85; font-variant: normal; letter-spacing: 0; }
 .peace-none { padding: 2px 0 4px; font-style: italic; }
 .peace-provs { max-height: 180px; overflow-y: auto; }
+/* What we lay on the table ourselves (SPEC §222): the same rows, reading the
+   other way — the credit is green because it buys the peace, not red because
+   it is a loss. The loss is on the map. */
+.peace-give .peace-prov-cost { color: var(--green); }
 .peace-prov {
   display: flex;
   align-items: center;
@@ -3600,3 +3604,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 .np-rule-lo:not(.disabled):hover { border-left-color: #a992d6; }
 /* …and a dispute the court has already settled reads as record, not as choice. */
 .np-faction.np-rule-done { opacity: 0.72; }
+
+/* The recipient picker on a province being given away (SPEC §222). */
+.pp-cede-to { margin-bottom: 6px; }
+.pp-cede-to select { width: 100%; }
