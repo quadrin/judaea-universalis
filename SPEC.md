@@ -14293,6 +14293,22 @@ grudges held against it. What is inherited is a name and a colour. The
 claimant's own realm — its wars, its treasury, its bonds — is untouched, because
 `switchTagCore` builds the new court out of the claimant and always did.
 
+### A crown nobody can see is a crown nobody plans for
+
+The first cut hid `form_agr_jud` until Agrippa's house fell, because the
+listing gate and the banner gate were the same line. That is correct about
+enactment and wrong about the panel: every other crown in the game sits in the
+decisions list from the first day with its requirements ticked or not, which is
+how a player learns it exists and plays toward it. This one was invisible until
+the moment it was already earned.
+
+A formable may now declare itself `contested` — its court is ON the map — and
+it stays listed while that court lives, greyed, with the row about the rival's
+house unticked. Nothing about enactment changes: the row is a real requirement,
+`formableList` still refuses an unmet checklist, and `switchTagCore` refuses a
+flying banner besides. The Compendium already listed the crown on both nations'
+pages under *Crowns*; this is about the panel a player is actually looking at.
+
 **The AI keeps the older rule** (`aiFormNation` still refuses any tag that
 exists at all). An AI court re-branding into a dead neighbour's name mid-chapter
 would orphan the scripted arcs that address courts by tag — the same reason the

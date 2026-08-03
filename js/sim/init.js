@@ -1372,7 +1372,14 @@ export function gameActions(ctx) {
       // not taken — it is a line in the chronicle, and a crown standing on its
       // ground may take it up. The AI keeps the older rule and only claims
       // banners that have never been worn.
-      if (g.tags[f.to] && g.tags[f.to].alive !== false) continue;
+      //
+      // A `contested` crown is one whose court is ON the map, and it stays in
+      // the list while that court lives, greyed, with the row that says so
+      // unticked — because a decision a player cannot see is a decision that
+      // does not exist. It cannot be enacted while the banner flies: the row
+      // is a real requirement and `switchTagCore` refuses besides.
+      const held = g.tags[f.to];
+      if (held && held.alive !== false && !f.contested) continue;
       const rows = (f.requires || []).map((r) => {
         let ok = false;
         try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }

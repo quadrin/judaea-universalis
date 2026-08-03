@@ -141,10 +141,17 @@ console.log('== the crown of a fallen court (SPEC §221) ==');
   const act3 = gameActions(ctx3);
   const mil = await import(R + '/js/sim/military.js');
 
-  // While Agrippa reigns, his banner is his.
+  // While Agrippa reigns his banner is his — but the crown is VISIBLE from the
+  // first day, because a decision a player cannot see is a decision that does
+  // not exist. It is listed, greyed, with the row about his house unticked.
   ok(!!g3.tags.AGR && g3.tags.AGR.alive, 'Agrippa II opens the chapter alive');
-  ok(!act3.getDecisions().some((d) => d.key === 'form_agr_jud'),
-    'and no other court is offered his crown while he flies it');
+  const early = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
+  ok(!!early, 'his crown is in the decisions from the first day, contested');
+  ok(early && !early.canEnact, 'and cannot be taken while he flies it: ' + (early && early.whyNot));
+  ok(early && /house of Herod is ended/.test(early.desc) && early.desc.includes('✗'),
+    'the checklist says what is missing');
+  act3.enactDecision('form_agr_jud');
+  ok(!!g3.tags.JUD && g3.tags.AGR.alive, 'and enacting it early changes nothing');
 
   // Take his kingdom the way it would be taken: every province of it.
   const his = [];

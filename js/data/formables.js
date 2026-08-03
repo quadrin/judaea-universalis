@@ -722,6 +722,10 @@ export const FORMABLES = [
       + 'Rome kept this kingdom for two generations because a client is cheaper than a '
       + 'province. Let it go on being cheaper, and let it be ours.',
     bookmarks: ['66ce'],
+    // His court is on the map from the first day, so the crown stays in the
+    // decisions list while he lives — greyed, with the row about his house
+    // unticked. A crown nobody can see is a crown nobody can plan for.
+    contested: true,
     requires: [
       {
         label: 'Hold Caesarea Philippi, the seat of his kingdom',
