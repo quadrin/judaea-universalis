@@ -27,6 +27,7 @@ import { FORMABLES } from '../data/formables.js';
 import { LOAN_SIZE, developCore, developInfo, DEV_KINDS } from './economy.js';
 import { popTotal, popTension } from './population.js';
 import { queuedUnitCount, queuedUnitsOf } from './recruitment.js';
+import { emptyQuarter, outlawsRisen } from './outlaws.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -310,12 +311,36 @@ function besiegingHere(ctx, army) {
   return isHostile(ctx, army.tag, p.controller);
 }
 
-function runRebelAI(ctx) {
+// A band that has arrived somewhere worth stopping (SPEC §217): ownerless
+// frontier at the rim, held, strong enough to be a garrison, and a campaign
+// that has not already produced its robbers' court.
+function canSettleWaste(ctx, army, p) {
+  if (!emptyQuarter(ctx, p)) return false;
+  const min = Math.max(1, num((ctx.DEFINES.OUTLAW || {}).men, 1000));
+  if (num(army.men) < min) return false;
+  return !outlawsRisen(ctx);
+}
+
+export function runRebelAI(ctx) {
   const g = ctx.game;
   for (const a of armiesOf(ctx, 'REB')) {
     if (busy(a) || a.men <= 0) continue;
     const here = ctx.byId(a.prov);
     if (here && here.controller !== 'REB') continue; // siege in place
+    // …and a band that has taken ownerless frontier at the rim of the world
+    // has arrived (SPEC §217). There is no crown here to rise against, no
+    // garrison coming, and nothing on the far side worth the march: it stays,
+    // and if it stays long enough it stops being a band at all.
+    //
+    // Only a band that could actually found something, and only until this
+    // campaign has had its one court. Both halves are load-bearing rather than
+    // decorative: ownerless ground is where §112's burn-out does NOT reach, so
+    // anything parked there is parked for good, and a parked band holds one of
+    // the eight ownerless-host slots `raiseRising` allows the whole world.
+    // Stragglers wander on exactly as they did, and once the robbers have
+    // risen everybody reverts to the old rule — which is why the balance
+    // harness cannot tell this section is here.
+    if (here && canSettleWaste(ctx, a, here)) continue;
     const dists = bfsDistances(ctx, a.prov, () => true, 8);
     let best = 0, bestDist = Infinity;
     for (let i = 1; i < g.provinces.length; i++) {

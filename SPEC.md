@@ -13888,3 +13888,113 @@ the old single-protagonist assumptions rather than new ones:
   addressed to the guest's throne arriving with live buttons and its answer
   landing on the host. `uitest5` is the co-op suite and is unchanged, which is
   the point: the default table is still one realm and many hands on the tiller.
+
+## 217. The band that stopped moving
+
+A player sent in a screenshot of Mauretania: three thousand rebels standing in
+the ownerless grey south of the Atlas, a flag on ground no court on the map has
+ever claimed, and one line of comment — *I like that rebels can settle
+wasteland.*
+
+Nothing in the game had ever been written to do that. It falls out of three
+rules that were each right on their own:
+
+- **§160** put 130 unowned-but-passable cells on the map and wrote the rule
+  that opened them: *passage is not possession — entering unowned ground takes
+  nothing and claims nothing.* True of every court there is.
+- **`isHostile` answers yes for REB against anything**, which is what makes a
+  rising a rising. Including, it turns out, against the nobody who governs the
+  empty quarter. So a band that wanders out to Gaetulia lays siege to the sand,
+  and — fort 0, garrison 0 — takes it.
+- **§112's burn-out only reaches a rising against a LIVING owner.** Ownerless
+  land is explicitly somebody else's problem, and it always was. A band that
+  takes a patch of nothing holds it for the rest of the campaign.
+
+Three correct rules, and between them a band with a flag, a province, and no
+ending. That is not a bug and this section does not fix it. It gives it the
+ending it was obviously asking for.
+
+### λῃσταί and πειραταί
+
+A band that has taken ownerless frontier at the rim of the world stops
+marching — the rebel AI used to send it straight back toward the nearest cell
+with a crown's colour on it — and if it is still standing there two years
+later it stops being a rising. The camp becomes a state: a name, a chief, a
+constitution, a colour on the political map, and one province of harsh
+frontier that no chancery in the world has an address for.
+
+Which state depends on where it stopped, and the game already knows: inland it
+is **The Lestai** under an *archilestes*, on a coast it is **The Peiratai**
+under an *archipirata*, proclaimed with three hulls because a corsair court
+without ships is a joke with no punchline. Both words are the sources' own.
+Josephus calls Hezekiah of the Galilean border, Eleazar ben Dinai (twenty
+years in the hills) and Tholomaeus λῃσταί, in the same breath as Athronges the
+shepherd who put on a diadem; the Cilicians who took Delos in a day had
+citadels, arsenals, a thousand ships and their own understandings with three
+kings before Rome handed one man the entire Mediterranean to be rid of them.
+The chief is one of six the sources name, per identity, and both courts govern
+under the same new constitution — **The Company**, which takes `GOV_TYPES` from
+fourteen to fifteen and is the first entry on that table nobody ADOPTS: §214's
+ten are what a fork chooses, and this one you are born under or not at all.
+Nothing inherited, nothing voted; the men keep the chief who feeds them and
+take another when he stops. It has the shortest succession on the map and −2
+envoys, because there is nobody to write to.
+
+Both fly an emblem of their own, because the fallback for a tag without one is
+a chip with three letters in it and all but two of the other 126 tags have
+better than that: a sica for the brigands — the short curved knife the sicarii
+took their name from — and for the corsairs a galley under sail with the
+painted eye on the bow and the bronze ram at the waterline.
+
+### Bounded like the easter egg it is
+
+Every gate here exists so that a campaign which never produces one draws
+exactly the world it drew before:
+
+- **The empty quarter only.** Ownerless AND passable AND `uninhabited` or
+  `frontier` — 37 cells in 167 BCE, the rim from Caledonia to Azania. The same
+  ownerless belt holds 67 towns and cities, Carthage and Corduba among them,
+  and a rising that takes one of those has taken a *city*, which is a balance
+  event and somebody
+  else's section. Rebels may sit in Carthage for eight years; they found
+  nothing.
+- **One per campaign.** A map that fills up with robber kingdoms is not an
+  easter egg, it is a mechanic.
+- **No dice.** The identity is read off the water, faith and tongue off the
+  province, the chief off the province id. A section that rolled for its chief
+  would shift every seeded draw after it in every campaign that never saw it.
+
+The two gates on the AI half are the load-bearing ones, and the first pass got
+them wrong. Standing a band still on ownerless ground is not free: it is the
+one place burn-out cannot reach, so a parked band is parked *for good*, and it
+holds one of the eight ownerless-host slots `raiseRising` allows the whole
+world at once. The 66 CE harness found it immediately — three stragglers of
+some 230 men each, parked in the Blemmyae desert between Egypt and Kush
+forever, and Kush's, Aksum's and Judaea's eight-year numbers all moved with
+them (no province counts, no flags — the tell was two decimal places). So a band
+stops only if it is strong enough to found something (1,000 men, the same
+number §64 detaches to hold a camp), and only until this campaign has had its
+court. Stragglers drift on as they always did; after the robbers rise
+everybody reverts to the old rule.
+
+### What it does not touch
+
+The court is an ordinary AI court from the moment it is seated — it recruits,
+it can be fought, it can be conquered, and `updateTagLife` casts its banners
+down like anyone else's. It brings no missions, no cards, no chain, and no
+claim on anybody. One province of 1/1/1 frontier at the edge of the world buys
+a very small state, which is the point: this is a joke the map tells, not a
+power the player has to answer.
+
+- **Regression contract**: `smoke144` — the ground (the rim yes, an ownerless
+  city no, an ownerless town no, impassable deep desert no, a governed
+  province no); the clock and the three things that stop it (the band leaves,
+  the ground is lost, the band is too small); what gets founded, down to the
+  chief being a man the sources name and the seeded stream ending the month on
+  the exact value it started it on; the corsair branch with its hulls; the
+  control (eight years of rebels in Carthage, and a rising on a crown's own
+  province still answering to §112 alone); one per campaign; both AI gates,
+  each against its own control; and a robbers' court surviving a save, still
+  holding ground that loading does not re-wall. The balance harness is the
+  second opinion and the one that wrote the AI gates: `node tools/autorun.mjs 8`
+  against the parent tree comes back **byte identical on all eight bookmarks**.

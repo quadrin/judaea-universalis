@@ -517,6 +517,14 @@ static site, the zero dependencies, or the missing build step changes.
   co-religionist neighbor, and peasants — the biggest hosts and the most
   brittle. Each can send a demands card: buy the province back from itself,
   marry the claim into the house, seal a writ of toleration.
+- **And a rising can walk off the edge of the governed world.** Nobody governs
+  the frontier at the rim — Gaetulia, Scythia, the Danakil — so nobody comes for
+  a band that takes it. One that is still standing there two years later stops
+  being a rising: the camp becomes a state, λῃσταί inland under an *archilestes*,
+  πειραταί on a coast under an *archipirata* and three hulls, governed by the
+  shortest constitution on the map (the men keep the chief who feeds them). Once
+  a campaign, at most, and only out where there was nothing — rebels may sit in
+  Carthage for eight years and found nothing at all.
 - **The Road Not Taken** (Chronicle → second tab): your campaign set beside
   the record it was given. Every turning where this age chose otherwise — what
   the chronicles say, what you did — every scripted chapter that never got
