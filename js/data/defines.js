@@ -1691,6 +1691,16 @@ export const DEFINES = {
     revoltOpinion: -75,          // at/below this a client may rise for independence
     revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's
     revoltChance: 0.04,          // monthly rising roll once every condition holds
+    // Releasing a client state (SPEC §218): the other end of the same loop. A
+    // crown may let go of a piece of its OWN realm on purpose and seat a crown
+    // on it — the land governs itself and pays what a client pays, and it comes
+    // home only the long way, through incorporateOpinion above.
+    releaseBase: 40,             // influence to seat a crown on land of our own...
+    releasePerDev: 1,            // ...plus one per point of development that walks out
+    releaseMaxShare: 0.5,        // and never more of the realm than the realm keeps
+    releaseGratitude: 60,        // what a court thinks of the hand that crowned it...
+    releaseRegard: 25,           // ...and what that hand thinks of the court it made
+    releaseGuard: 2,             // regiments the new court musters at its own seat
   },
 
   // The chancery (SPEC §202): a court has only so many envoys. Every standing

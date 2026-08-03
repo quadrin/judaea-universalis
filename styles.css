@@ -1727,6 +1727,15 @@ button {
 .pp-build-btn:active { filter: brightness(0.92); }
 .pp-build-btn.disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; }
 .pp-build-btn.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }
+/* One verb, one row: a block with a single button does not read as half a pair. */
+.pp-build-grid.pp-build-one { grid-template-columns: 1fr; }
+/* Armed (SPEC §218). Two taps, and the second one is the colour of a decision
+   that does not come back — the same red the saves shelf arms Delete with. */
+.pp-build-btn.pp-build-sure {
+  color: var(--parch-hi);
+  background: linear-gradient(180deg, #7a2a1c, var(--red-deep));
+  border-color: var(--red-deep);
+}
 
 /* province panel — assault button inside the siege block */
 .pp-assault {

@@ -13,6 +13,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let actions = null;
   let provId = 0;
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
+  let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
 const RISING_LABELS = {
@@ -105,6 +106,13 @@ const RISING_LABELS = {
           <button class="pp-build-btn" data-integ="convert" data-ref="integConv">${icon('altar')}<span>Convert Faith</span></button>
           <button class="pp-build-btn" data-integ="integrate" data-ref="integInteg">${icon('scroll')}<span>Integrate</span></button>
           <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
+        </div>
+      </div>
+      <div class="pp-build hidden" data-ref="releaseBlock">
+        <div class="pp-build-title">A Crown of Its Own</div>
+        <div class="pp-constr" data-ref="releaseRow"></div>
+        <div class="pp-build-grid pp-build-one">
+          <button class="pp-build-btn" data-release="1" data-ref="releaseBtn">${icon('laurel')}<span data-ref="releaseLabel">Release as a Client Kingdom</span></button>
         </div>
       </div>
       <div class="pp-build hidden" data-ref="wasteBlock">
@@ -225,6 +233,25 @@ const RISING_LABELS = {
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
       refresh();
     });
+    // Two taps, not a confirm dialog (the idiom the saves shelf uses): the
+    // first arms the button and names what walks out, the second does it, and
+    // walking away disarms it. Handing a province its own crown is not
+    // something to lose to a mis-tap.
+    refs.releaseBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-release]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      if (typeof actions.releaseClientState !== 'function') return;
+      if (releaseArmed !== provId) {
+        const armedId = provId;
+        releaseArmed = armedId;
+        setTimeout(() => { if (releaseArmed === armedId) { releaseArmed = 0; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      releaseArmed = 0;
+      try { actions.releaseClientState(provId); } catch (err) { warnOnce('release-client', err); }
+      refresh();
+    });
     refs.wasteBlock.addEventListener('click', (e) => {
       const b = e.target instanceof Element ? e.target.closest('[data-waste]') : null;
       if (!b || b.classList.contains('disabled') || !actions) return;
@@ -316,6 +343,7 @@ const RISING_LABELS = {
 
   function open(id) {
     provId = id | 0;
+    releaseArmed = 0; // a new province arrives with nothing armed (SPEC §218)
     if (!provId) { close(); return; }
     el.classList.remove('hidden');
     refresh();
@@ -528,6 +556,8 @@ const RISING_LABELS = {
     // Integration (v1.5): autonomy & conversion for owned provinces
     refreshIntegration();
     refreshCommunity();
+    // …and its opposite (SPEC §218): the province that is handed its own crown
+    refreshRelease();
     // The unclaimed waste (SPEC §64): expedition, plantation, annexation
     refreshWasteland();
 
@@ -641,6 +671,49 @@ const RISING_LABELS = {
         `${icon('bricks')}<span class="pp-constr-name">Settlers arriving</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
     }
+  }
+
+  // Release a client state (SPEC §218): the ground under this province could
+  // carry a crown of its own. Absent — not greyed — wherever the question does
+  // not arise: land of our own people, our capital, or an age without clients.
+  function refreshRelease() {
+    let info = null;
+    if (actions && typeof actions.getClientRelease === 'function') {
+      try { info = actions.getClientRelease(provId); } catch (e) { warnOnce('getClientRelease', e); info = null; }
+    }
+    refs.releaseBlock.classList.toggle('hidden', !info);
+    if (!info) { if (releaseArmed === provId) releaseArmed = 0; return; }
+    const armed = releaseArmed === provId && info.can;
+    const towns = info.provNames.length;
+    const verb = info.kind === 'enlarge' ? 'joins' : info.kind === 'restore' ? 'rises again in' : 'is raised in';
+    setHtml(refs.releaseRow,
+      `${icon('flag')}<span class="pp-constr-name">${esc(info.name)} ${esc(verb)} `
+      + `${esc(info.provNames.join(', '))}</span>`
+      + `<span class="pp-constr-left">${info.dev} dev · ${info.cost} infl</span>`);
+    setText(refs.releaseLabel, armed
+      ? 'Let it go for good?'
+      : info.kind === 'enlarge' ? 'Add to the Client Kingdom' : 'Release as a Client Kingdom');
+    refs.releaseBtn.classList.toggle('disabled', !info.can);
+    refs.releaseBtn.classList.toggle('pp-build-sure', armed);
+    const terms = (info.kind === 'enlarge'
+      ? `Hand ${towns === 1 ? 'this town' : 'these ' + towns + ' towns'} to ${info.name}, `
+        + `which already answers to us — ${info.cost} influence.\n`
+        + 'Their land, their tribute and their levies all grow; the bond is one we already staff.'
+      : `Seat a crown on ${towns === 1 ? 'this province' : 'these ' + towns + ' provinces'} — `
+        + `${info.cost} influence.\n`
+        + `${info.name} ${info.kind === 'restore' ? 'is restored' : 'is proclaimed'} at `
+        + `${info.seat || info.provNames[0]} with its own court, its own laws and its own levies. `
+        + `It becomes our client kingdom on the day it is made: ${info.tribute}% of its income is ours, `
+        + 'our wars are its wars, and it may be woven into the realm again once it is devoted enough '
+        + `(opinion ${info.needOpinion}+; it starts at ${info.gratitude} for the hand that crowned it).\n`
+        + 'Costs NO infamy — nobody was conquered. It takes a chancery seat, and the collars chafe '
+        + 'when they are many.')
+      + `\n――――――\n${info.dev} development of our ${info.realmDev} walks out `
+      + `(${Math.round(info.share * 100)}% of the realm; a grant may not pass ${Math.round(info.maxShare * 100)}%).`;
+    refs.releaseBtn.dataset.tt = info.can
+      ? (armed ? 'Tap again to let it go. Walk away and the offer lapses.\n――――――\n' + terms : terms)
+      : `${info.why}\n――――――\n${terms}`;
+    if (!info.can && releaseArmed === provId) releaseArmed = 0;
   }
 
   // The unclaimed waste (SPEC §64): send soldiers to camp in ownerless

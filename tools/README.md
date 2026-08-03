@@ -1463,3 +1463,34 @@ If you add a cooldown, **put the acting realm in the key**. If you add anything
 a crown earns with somebody outside its own borders, ask whether a second crown
 would share it. The sweep that found these lives in the suite's second half:
 after the guest acts, the host must still be able to do the same thing.
+
+## A crown of its own (SPEC §218)
+
+`smoke145` owns releasing a client state: the two abstractions a grant is made
+out of, the five things that can never be granted, the five refusals in words,
+the grant itself, contiguity against the real map, the second grant enlarging
+the first client, determinism, the save, and the action as the panel presses
+it.
+
+Three things to know before you read a failure in it.
+
+It boots from the geometry **snapshot** rather than a stub, for the reason
+smoke77 documents: the contiguity rule is invisible on an empty adjacency
+graph, and this section leans on it twice (the Decapolis and Greece are the two
+pockets of one identity, and only one of them may be offered).
+
+Its setups **make peace first**. Every chapter opens with its own war running,
+and a grant is a peacetime act by design (the rule §61 already applies to
+weaving a union, pointed the other way) — so a section that forgets `peace(ctx)`
+fails with the wartime refusal rather than with anything it was testing.
+
+And its determinism section is the canary for the harness claim. Nothing in
+§218 touches the seeded stream: the state's tag is a hash of identity and
+bookmark, its ethnarch a hash of tag and seat. A granting campaign and a
+non-granting one must draw the same next three numbers, and two campaigns on
+different seeds must seat the same court under the same man. If you make any
+of it roll, that suite fails and `node tools/autorun.mjs 8` stops being byte
+identical — which it is, on all eight bookmarks, because no AI court ever
+grants a crown out of its own realm. The one call site is the player's own
+action, and smoke145 reads the AI half of `js/sim/` as text to keep it that
+way.

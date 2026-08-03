@@ -5738,7 +5738,12 @@ export function settleScriptedPeace(ctx, war, a, b, winnersKey, opts) {
   }
 }
 
-function ensureReleasedCourt(ctx, row, enemyTag) {
+// The court a release row seats, made if it does not exist yet. `templateTag`
+// is the realm the land is leaving — the peace table's loser (SPEC §69/§76) or,
+// since SPEC §218, the crown that let go of it — and it is read for nothing but
+// the age's institutions: a state born in 66 CE does not start with 3 BCE's
+// technology because its people never held a throne of their own.
+function ensureReleasedCourt(ctx, row, templateTag) {
   const g = ctx.game;
   let t = g.tags[row.tag];
   if (t) {
@@ -5746,7 +5751,7 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     return t;
   }
   const def = (ctx.DEFINES.TAGS || {})[row.tag] || {};
-  const template = g.tags[enemyTag] || {};
+  const template = g.tags[templateTag] || {};
   const seat = ctx.byId(row.capitalId) || ctx.byId((row.provIds || [])[0]);
   const tech = template.tech || {};
   t = {
@@ -5783,10 +5788,13 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     claims: [], claimFabrications: [], overlord: null,
     heir: null, regency: false, missionIdx: 0,
     aiState: {},
-    ruler: { name: 'Council of the New State', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
+    ruler: row.ruler
+      ? { ...row.ruler }
+      : { name: 'Council of the New State', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
     releaseIdentity: row.releaseIdentity || null,
     dynamicCapital: seat ? (seat.canon || seat.name) : null,
-    description: 'A state created at the peace table from the lands and institutions of its people.',
+    description: row.description
+      || 'A state created at the peace table from the lands and institutions of its people.',
   };
   g.tags[row.tag] = t;
   return t;
@@ -5803,6 +5811,298 @@ function refreshReleasedManpower(ctx, tag) {
   }
   t.maxManpower = Math.round(max * resolveTagMult(ctx, tag, 'manpowerMult'));
   t.manpower = Math.max(num(t.manpower), Math.min(Math.max(2000, t.maxManpower), 6000));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Release a client state (SPEC §218): the crown lets go on purpose.
+//
+// Every road to a client kingdom ran through somebody ELSE's realm — the peace
+// table's subjugation clause, §76's transfer of an enemy's vassal, §92's collar
+// offered to a sovereign ally. None of them does the thing an over-extended
+// crown actually wants: hand a piece of its own realm a crown of its own, and
+// keep the tribute. Until now the only answers to a province that costs more to
+// hold than it yields were to hold it anyway or to lose it to a rising.
+//
+// WHICH piece is decided by the two abstractions the peace table already
+// reasons with, and no third one: a fallen court whose era-start homeland we
+// are sitting on can be restored on that homeland, and land whose people are
+// not our people can become a new state of its own culture and faith. What
+// CANNOT be released is as much of the section as what can:
+//
+//   * the capital, ever — a realm may dismember itself, not behead itself;
+//   * a living court's old homeland — handing Antioch back to the Seleucids
+//     is a cession, and a cession is agreed at a table with THEM;
+//   * our own people — a state carved out of our own faith and kind is a
+//     secession (SPEC §105), and secessions are suffered, not granted;
+//   * occupied land — a province an enemy army is standing in is not ours to
+//     give away, whatever the map says about who owns it.
+//
+// The bond that results is an ordinary client kingdom from the first day: it
+// takes a chancery seat (SPEC §202), its collar chafes with the others, it pays
+// the tribute, it follows us to war, and it comes home only through the union
+// §61 already knows how to weave.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Who sits on the throne we have just made. Deterministic on purpose — nothing
+// in this whole section touches the seeded stream, so a replay, a reload and a
+// guest's mirror all seat the same man in the same town. `Ethnarch` is the word
+// the ancient east used for precisely this office: a nation's own ruler, under
+// somebody else's crown.
+function grantedRuler(ctx, row) {
+  const pool = courtNamePool(ctx, row.tag) || [];
+  const h = stableStateHash(String(row.tag) + '|' + String(row.capitalId || 0));
+  return {
+    name: (pool.length ? pool[h % pool.length] : null) || 'The Ethnarch',
+    title: 'Ethnarch', gov: 2, infl: 2, mar: 2, age: 45,
+  };
+}
+
+function releaseGrantRow(ctx, tag, ids, kind, extra) {
+  const V = ctx.DEFINES.VASSALS || {};
+  const g = ctx.game;
+  const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
+  const t = g.tags[tag];
+  const def = (ctx.DEFINES.TAGS || {})[tag] || {};
+  return {
+    tag,
+    name: (extra && extra.name) || (t && t.name) || def.name || tag,
+    kind, // 'restore' (a fallen court), 'create' (a new one), 'enlarge' (a client of ours)
+    origin: (extra && extra.origin) || 'historical',
+    culture: extra && extra.culture,
+    religion: extra && extra.religion,
+    releaseIdentity: extra && extra.releaseIdentity,
+    color: extra && extra.color,
+    capitalId: (extra && extra.capitalId) || ids[0] || 0,
+    provIds: ids,
+    provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
+    dev: Math.round(dev),
+    cost: Math.round(num(V.releaseBase, 40) + dev * num(V.releasePerDev, 1)),
+    description: 'A state seated by the crown that let go of its ground, and holding it as a client kingdom.',
+  };
+}
+
+// Every state this realm could seat a crown on, out of its own land.
+export function releasableClients(ctx, tag) {
+  const g = ctx.game;
+  const out = [];
+  const me = g.tags[tag];
+  if (!me || !me.alive) return out;
+  if (!mechanicOn(ctx, 'clientKingdoms')) return out; // SPEC §142
+  const capital = tagDef(ctx, tag).capital || me.dynamicCapital || null;
+  const byNation = {};
+  const held = [];
+  const assigned = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    if (p.controller !== tag) continue; // occupied land is not ours to give
+    if (capital && (p.canon || p.name) === capital) continue;
+    held.push(i);
+    const born0 = eraOwnerOf(ctx, p);
+    const born = born0 ? livingTag(ctx, born0) : null; // a formed crown is still us (SPEC §135)
+    if (!born || born === tag || born === 'WASTE' || born === 'REB') continue;
+    if (isOffmapTag(ctx, born)) continue;
+    const t = g.tags[born];
+    // A living court's homeland is a cession, not a release — unless the court
+    // is already ours, in which case this is the same client growing.
+    if (t && t.alive && t.overlord !== tag) continue;
+    if (!t && !(ctx.DEFINES.TAGS || {})[born]) continue;
+    (byNation[born] = byNation[born] || []).push(i);
+  }
+  for (const born of Object.keys(byNation)) {
+    // One piece of connected land (SPEC §109) — a client seated in two places
+    // it cannot march between is a census category with a flag.
+    const ids = contiguousRelease(ctx, born, byNation[born]);
+    if (!ids.length) continue;
+    for (const id of ids) assigned.add(id);
+    const t = g.tags[born];
+    out.push(releaseGrantRow(ctx, born, ids, t && t.alive ? 'enlarge' : 'restore'));
+  }
+
+  // The rest is divisible by the durable identity — culture and faith — the
+  // same way the peace table divides an enemy's land, with one rule of its own:
+  // our OWN people are not a state waiting to happen.
+  const byIdentity = {};
+  for (const i of held) {
+    if (assigned.has(i)) continue;
+    const p = g.provinces[i];
+    if (!p.culture || !p.religion) continue;
+    if (sameKind(ctx.DEFINES, p.culture, me.culture) && p.religion === me.religion) continue;
+    const identity = culturalStateIdentity(p.culture, p.religion);
+    (byIdentity[identity] = byIdentity[identity] || []).push(i);
+  }
+  const reserved = new Set(Object.keys(g.tags || {}));
+  for (const identity of Object.keys(byIdentity)) {
+    let standing = null;
+    for (const k of Object.keys(g.tags)) {
+      if (g.tags[k] && g.tags[k].releaseIdentity === identity) { standing = k; break; }
+    }
+    const ids = contiguousRelease(ctx, standing, byIdentity[identity]);
+    if (!ids.length) continue;
+    let seat = ctx.byId(ids[0]);
+    for (const id of ids) {
+      const p = ctx.byId(id);
+      if (p && (!seat || devTotal(p) > devTotal(seat))) seat = p;
+    }
+    const sample = seat || ctx.byId(ids[0]);
+    const culture = sample && sample.culture;
+    const religion = sample && sample.religion;
+    const newTag = culturalStateTag(ctx, identity, reserved);
+    reserved.add(newTag);
+    if (newTag === tag) continue;
+    const existing = g.tags[newTag];
+    if (existing && existing.alive && existing.overlord !== tag) continue; // theirs, not ours
+    const cultureDef = (ctx.DEFINES.CULTURES || {})[culture] || {};
+    const baseColor = Array.isArray(cultureDef.color) ? cultureDef.color : [112, 118, 126];
+    const shade = (stableStateHash(identity) % 31) - 15;
+    const color = baseColor.map((v, idx) => clamp(Math.round(v + shade + (idx === 2 ? 12 : 0)), 24, 224));
+    const name = existing && existing.name
+      ? existing.name
+      : ((cultureDef.name || 'Free') + ' State of ' + ((seat && seat.name) || 'the Provinces'));
+    out.push(releaseGrantRow(ctx, newTag, ids,
+      existing && existing.alive ? 'enlarge' : existing ? 'restore' : 'create', {
+        name,
+        origin: 'cultural',
+        culture,
+        religion,
+        releaseIdentity: identity,
+        color,
+        capitalId: seat && seat.id,
+      }));
+  }
+  out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  return out;
+}
+
+// The grant anchored at one province — which state this ground would become,
+// what it costs, and, when it cannot be made, why in words. Returns null where
+// the question does not arise at all (not our province, no state in it, or an
+// age that keeps no clients): the control disappears rather than sit disabled.
+export function releaseClientInfo(ctx, tag, provId) {
+  const g = ctx.game;
+  const me = g.tags[tag];
+  const p = ctx.byId(provId);
+  if (!me || !me.alive || !p || p.impassable || p.owner !== tag) return null;
+  if (!mechanicOn(ctx, 'clientKingdoms')) return null;
+  let row = null;
+  for (const r of releasableClients(ctx, tag)) {
+    if (r.provIds.indexOf(p.id) >= 0) { row = r; break; }
+  }
+  if (!row) return null;
+  const V = ctx.DEFINES.VASSALS || {};
+  const realm = devOfTag(ctx, tag);
+  const share = realm > 0 ? row.dev / realm : 1;
+  const out = {
+    ...row,
+    can: false,
+    why: '',
+    realmDev: Math.round(realm),
+    share: Math.round(share * 100) / 100,
+    maxShare: num(V.releaseMaxShare, 0.5),
+    infl: Math.round(num(me.points && me.points.infl)),
+    gratitude: Math.round(num(V.releaseGratitude, 60)),
+    tribute: Math.round(num(PEACE.tributeShare, 0.15) * 100),
+    needOpinion: Math.round(num((ctx.DEFINES.VASSALS || {}).incorporateOpinion, 80)),
+    seat: !!row.capitalId && ctx.byId(row.capitalId) ? ctx.byId(row.capitalId).name : (row.provNames[0] || ''),
+  };
+  const atWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (me.overlord) {
+    out.why = 'A client kingdom does not keep client kingdoms of its own.';
+  } else if (atWar) {
+    out.why = 'Not in wartime. A crown that carves up its own realm with an enemy in the field '
+      + 'is not granting a throne — it is losing one.';
+  } else if (share > out.maxShare) {
+    out.why = 'That is more of the realm than the realm would keep (' + row.dev
+      + ' development of our ' + out.realmDev + '; no grant may pass '
+      + Math.round(out.maxShare * 100) + '%).';
+  } else {
+    // A client we already hold is already staffed: enlarging it takes no new
+    // envoy, because it is not a new bond (SPEC §202).
+    const full = row.kind === 'enlarge' ? '' : chanceryFullWhy(ctx, tag, true);
+    if (full) out.why = full;
+    else if (out.infl < row.cost) {
+      out.why = 'Seating a crown takes ' + row.cost + ' influence points (we have ' + out.infl + ').';
+    }
+  }
+  out.can = !out.why;
+  return out;
+}
+
+// Let it go. The land changes hands, a court is seated on it — or the client
+// that already holds the identity grows — and the collar is fastened in the
+// same act. Nobody is conquered, so nobody abroad counts it against us.
+export function releaseClientCore(ctx, tag, provId) {
+  const info = releaseClientInfo(ctx, tag, provId);
+  if (!info) return { ok: false, why: 'There is no state here to raise.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[tag];
+  me.points.infl = num(me.points.infl) - info.cost;
+  const t = ensureReleasedCourt(ctx, info, tag);
+  const wasAlive = !!t.alive;
+  const given = [];
+  let seat = null;
+  for (const id of info.provIds) {
+    const p = ctx.byId(id);
+    if (!p || p.owner !== tag) continue;
+    // A change of sovereign starts the ledger over (SPEC §66) — and this land
+    // is not being conquered, it is being handed its own government, so the
+    // conqueror's marks come off rather than on.
+    p.integration = 0;
+    p.integrating = null;
+    changeOwnerCore(ctx, p, info.tag);
+    changeControllerCore(ctx, p, info.tag);
+    p.autonomy = Math.min(num(p.autonomy, 0.25), 0.25); // it governs itself now
+    p.conversion = null;
+    p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+    given.push(p.name);
+    if (!seat || devTotal(p) > devTotal(seat)) seat = p;
+  }
+  if (!given.length) return { ok: false, why: 'There is no state here to raise.' };
+  if (!wasAlive) {
+    // A court rising from nothing: its own house, and none of the dead one's
+    // quarrels. It keeps no alliance of its own, because a client does not.
+    t.alive = true;
+    t.warExhaustion = 0;
+    t.stability = Math.max(num(t.stability), 0);
+    t.legitimacy = clamp(Math.max(num(t.legitimacy), 50), 0, 100);
+    t.treasury = Math.max(num(t.treasury), 25);
+    t.atWarWith = [];
+    for (const al of (t.allies || []).slice()) breakAllianceCore(ctx, info.tag, al);
+    t.allies = [];
+    t.ruler = grantedRuler(ctx, info);
+    t.freedBy = null; // it was not freed; it was seated
+  }
+  t.overlord = tag;
+  t.incorporating = null;
+  if (seat && !t.dynamicCapital) t.dynamicCapital = seat.canon || seat.name;
+  refreshReleasedManpower(ctx, info.tag);
+  addOpinion(ctx, info.tag, tag, num(V.releaseGratitude, 60));
+  addOpinion(ctx, tag, info.tag, num(V.releaseRegard, 25));
+  const guard = Math.max(0, Math.round(num(V.releaseGuard, 2)));
+  if (!wasAlive && seat && guard && !armiesOf(ctx, info.tag).length) {
+    spawnArmy(ctx, info.tag, seat.name, { inf: guard, name: 'Guard of ' + (t.name || info.tag) });
+  }
+  const myName = me.name || tag;
+  const theirName = t.name || info.tag;
+  chronicle(ctx, 'era', info.kind === 'enlarge'
+    ? myName + ' adds ' + given.join(', ') + ' to the client kingdom of ' + theirName + '.'
+    : myName + ' lets go of ' + given.join(', ') + ': ' + theirName
+      + ' is raised as a client kingdom, with its own court and its own laws, and the tribute owed to us.');
+  ctx.bus.emit('provinceOwner', {});
+  return {
+    ok: true,
+    tag: info.tag,
+    name: theirName,
+    kind: info.kind,
+    cost: info.cost,
+    dev: info.dev,
+    provNames: given,
+    seat: seat ? seat.name : '',
+    ruler: t.ruler && t.ruler.name,
+    title: t.ruler && t.ruler.title,
+  };
 }
 
 export function executePeaceDeal(ctx, war, byTag, deal) {

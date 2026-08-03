@@ -13998,3 +13998,121 @@ power the player has to answer.
   holding ground that loading does not re-wall. The balance harness is the
   second opinion and the one that wrote the AI gates: `node tools/autorun.mjs 8`
   against the parent tree comes back **byte identical on all eight bookmarks**.
+
+## 218. A crown of its own — releasing a client state
+
+Three roads led to a client kingdom and every one of them ran through somebody
+else's country: the peace table's subjugation clause, §76's transfer of
+an enemy's vassal, and §92's collar offered to a sovereign ally. A crown that
+wanted a client had to go and take one.
+
+Which left the commonest position in the game with no move in it. A realm
+that has won a long war is holding towns of somebody else's people, at 0.6
+autonomy, paying a heathen assessment in unrest, three centuries from
+integrating — and the only two answers were to hold them anyway or to lose
+them to a rising. The one thing the ancient east actually did with that
+ground, over and over, is the one thing the game could not express: hand it
+its own crown and keep the tribute. Rome did it with Herod, with Agrippa, with
+half the Anatolian dynasts; Parthia's whole western frontier is Osrhoene,
+Adiabene and Characene doing it; Hyrcanus did it to Idumea before he thought
+better of it.
+
+So a province of ours may now be let go on purpose. From the province panel,
+under **A Crown of Its Own**, one button seats a state on the ground the
+province stands in — and fastens the collar in the same act, because a crown
+that is granted is granted by somebody.
+
+### Which ground, and which state
+
+The two abstractions the peace table already reasons with, and no third one
+(`releasableClients`, military.js):
+
+- **restore** — a fallen court whose era-start homeland we are sitting on
+  rises again on that homeland, under its own name and colour. `eraOwnerOf`
+  answers this off the bookmark's own `owners` table, so nothing new is stored;
+- **create** — land whose people are not our people becomes a new state of its
+  own culture and faith, with the deterministic `Fxxx` tag and `releaseIdentity`
+  §76 already mints, so a later grant finds the same state instead of inventing
+  a second one;
+- **enlarge** — and when that state already exists and already answers to us,
+  a further grant of the same identity joins it rather than founding a rival.
+  It costs no new chancery seat: it is not a new bond.
+
+Every grant is resolved to **one piece of connected land** (§109's
+`contiguousRelease`) before it is offered, and an existing client grows along
+its own border.
+
+### What may not be let go
+
+As much of the section as what may:
+
+- **the capital, ever.** A realm may dismember itself; it may not behead
+  itself. The same rule §69 wrote for the enemy's capital, pointed at ours.
+- **a living court's old homeland.** Handing Antioch to a Seleucid empire that
+  still stands is a *cession*, and a cession is agreed at a table with them.
+  Their ground is still releasable — as a state of its own people, which is a
+  different thing and says so.
+- **our own people.** A province of our faith and our kind of culture (§110's
+  `sameKind`) is in no grant anywhere. A state carved out of our own people is
+  a **secession** (§105), and secessions are suffered, not granted.
+- **occupied ground.** A province an enemy army is standing in is not ours to
+  give away, whatever the map says about who owns it.
+- **the whole realm.** No single grant may pass `releaseMaxShare` (0.5) of our
+  development. Half is what a crown may give away; the other half is what makes
+  it a crown.
+
+And four gates on the crown rather than the ground: the age must keep client
+kingdoms at all (§142 — the control disappears in 1948 rather than sitting
+there refused), we must not be somebody's client ourselves, we must be at peace
+(the rule §61 already applies to weaving a union, pointed the other way), and
+the chancery must have a seat for the bond (§202). The price is
+`releaseBase` + `releasePerDev` × development in influence — 40 and 1, so a
+50-development province package costs 90 and the towns that are worth keeping
+are the ones that are expensive to hand over.
+
+### What the grant does
+
+The provinces change owner and controller; autonomy drops to its own (0.25 or
+better — it governs itself now), integration starts over, any conversion under
+way is void, and the conqueror's `recent_conquest` mark comes **off**: nobody
+conquered anybody. The court is seated with the age's institutions (§76's
+`ensureReleasedCourt`, whose template is now simply the realm the land is
+leaving), a floor of 25 talents, muster rolls off its own provinces, a guard of
+two regiments at its seat, and an **ethnarch** — the word the ancient east used
+for exactly this office, a nation's own ruler under somebody else's crown —
+drawn from its own culture's name pool.
+
+Then it is an ordinary client kingdom, from the first day and by the ordinary
+rules: 15% of its income is ours, its wars are ours, it holds a chancery seat,
+its collar chafes with the others (§202), and it comes home only through the
+union §61 already knows how to weave. It starts at `releaseGratitude` (60)
+toward the hand that crowned it, twenty short of the devotion incorporation
+needs — close enough to be worth courting, far enough that a grant is not a
+laundry cycle. **No infamy**: the world does not fear a crown that gives land
+away.
+
+### No dice, and no AI
+
+Nothing in the section touches the seeded stream. The state's tag is a hash of
+identity and bookmark, its ethnarch a hash of tag and seat, so a replay, a
+reload and a multiplayer guest all seat the same man in the same town. And no
+AI court ever grants a crown out of its own realm — the one call site is the
+player's own action — which is why the balance harness cannot see this section
+at all.
+
+- **Regression contract**: `smoke145` — what may be let go and what may not
+  (the capital, our own people anywhere in any row, a living court's homeland,
+  occupied ground, half the realm); the restoration of a Nabataea we conquered
+  ourselves, under its own name; the five refusals in their own words; 1948
+  offering nothing at all; the grant itself (owner, controller, autonomy, the
+  mark that comes off, the influence spent, no infamy, the ethnarch, the guard,
+  both opinions, the chancery seat, the chronicle, the tribute running and the
+  union available); one piece of connected land against the real geometry, with
+  the Decapolis and Greece as the two pockets; the second grant enlarging the
+  first client instead of founding a rival; determinism (a granting campaign
+  and a non-granting one draw the same next three numbers, and a differently
+  seeded campaign seats the same court under the same man); the save and the
+  reload; the player-only call site; and the action as the panel presses it,
+  including a refusal that is reported rather than half-applied. `node
+  tools/autorun.mjs 8` against the parent tree is **byte identical on all eight
+  bookmarks**, which is the section's own claim about the AI working.

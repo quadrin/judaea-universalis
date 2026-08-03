@@ -16,6 +16,7 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
+  releasableClients, releaseClientInfo, releaseClientCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
@@ -2968,6 +2969,35 @@ export function gameActions(ctx) {
           + ((g.tags[g.playerTag] && g.tags[g.playerTag].name) || g.playerTag)
           + ' as a client kingdom — asked for, not fought for.');
       } catch (e) { warnOnce('offerClientship', 'offerClientship failed', e); }
+    },
+
+    // ---- releasing a client state (SPEC §218) --------------------------------
+    // The whole list, for anything that wants to reason about the realm's own
+    // loose ends; the panel asks about one province at a time.
+    getClientReleases() {
+      try { return releasableClients(ctx, g.playerTag); }
+      catch (e) { warnOnce('clientReleases', 'getClientReleases failed', e); return []; }
+    },
+    getClientRelease(provId) {
+      try { return releaseClientInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('clientRelease', 'getClientRelease failed', e); return null; }
+    },
+    releaseClientState(provId) {
+      try {
+        const res = releaseClientCore(ctx, g.playerTag, provId);
+        if (!res.ok) { say('The grant is refused', res.why, 'bad'); return; }
+        if (res.kind === 'enlarge') {
+          say('The client kingdom grows', res.provNames.join(', ') + ' pass'
+            + (res.provNames.length === 1 ? 'es' : '') + ' to ' + res.name
+            + ', which already answers to us (' + res.cost + ' influence). Their tribute rises with them.',
+          'good');
+          return;
+        }
+        say('A crown of its own', res.name + ' is raised in ' + res.provNames.join(', ')
+          + ' under ' + (res.title || 'a ruler') + ' ' + (res.ruler || 'of its own')
+          + ' (' + res.cost + ' influence). It governs itself, pays us tribute and follows us to war — '
+          + 'and nobody was conquered, so nobody abroad counts it against us.', 'good');
+      } catch (e) { warnOnce('releaseClient', 'releaseClientState failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------

@@ -167,6 +167,22 @@ static site, the zero dependencies, or the missing build step changes.
   stopped "free four nations, collar them with their own gratitude, and eat them one by one"
   from being the cheapest expansion in the game. The 1948 chapter, whose diplomacy is blocs
   and pacts, keeps none of this.
+- **A crown of its own.** Every road to a client kingdom used to run through somebody else's
+  country — subjugate them at the peace table, take an enemy's vassal at a congress, offer an
+  ally the collar. So a realm sitting on foreign towns it will never digest had two answers,
+  hold them or lose them, and never the one the ancient east actually used: hand the ground
+  its own crown and keep the tribute. Now a province of yours can be **released as a client
+  kingdom** from its own panel. A court you conquered rises again on its own homeland under
+  its own name; land whose people are not your people becomes a new state of its culture and
+  faith, seated at its best town under an **ethnarch** of its own; and a second grant of the
+  same people joins the client you already made instead of founding a rival to it. The land
+  goes at its own autonomy with the conqueror's mark struck off, pays you the client's 15%,
+  follows you to war, takes a chancery seat — and can be woven back into the realm years
+  later, once it is devoted enough. It costs influence and no infamy at all: nobody was
+  conquered. What you may never let go of is the capital, a living court's old homeland
+  (that is a cession, and it is agreed at a table with them), ground an enemy army is
+  standing in, more than half the realm at once — or your own people, because a state carved
+  out of your own is a secession and secessions are suffered rather than granted.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
