@@ -27,6 +27,7 @@ import { monthlyAid } from './aid.js';
 import { monthlySupply } from './supply.js';
 import { monthlyChapters } from './chapters.js';
 import { monthlyPretenders, monthlyRisings } from './revolt.js';
+import { monthlyOutlaws } from './outlaws.js';
 import { monthlyCrises } from './crisis.js';
 import { monthlyEmbargoAI } from './embargo.js';
 
@@ -114,6 +115,7 @@ function monthlyBlock(ctx) {
   safe('unrest', () => monthlyUnrest(ctx)); // includes revolt progression & rebel spawns
   safe('pretenders', () => monthlyPretenders(ctx)); // a claim in the field bleeds the throne (SPEC §87)
   safe('risings', () => monthlyRisings(ctx)); // and a band nobody answers burns out (SPEC §112)
+  safe('outlaws', () => monthlyOutlaws(ctx)); // …unless it is standing where there is nobody to answer it (SPEC §217)
   safe('succession', () => monthlySuccession(ctx));
   safe('crises', () => monthlyCrises(ctx)); // what has been brewing gets a month older (SPEC §98)
   safe('embargo', () => monthlyEmbargoAI(ctx)); // the pressure short of war (SPEC §100)

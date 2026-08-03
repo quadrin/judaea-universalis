@@ -402,6 +402,25 @@ export const FLAGS = {
     `<rect x="5.9" y="3.4" width="1.5" height="17.4" rx="0.7" ${ACC}/>` +
     `<path d="M7.4 4.9h10.2l-1.5 1.8 1.6 1.5-2 .8 1.1 2-2.5-.6-1.3 1.8-1-1.6H7.4Z" ${SIL}/>` +
     `<path d="M9.7 5.6v4.2" ${DET}/>`,
+  // The Lestai (SPEC §217): the sica, the short curved knife a highway robber
+  // carried up his sleeve and the one the sicarii were named for — blade
+  // sweeping up out of a gold grip, no standard and no scabbard.
+  LST:
+    `<path d="M8.1 17.8c1.9-4.6 4.6-8 8.1-10.2-.7 4.3-2.6 7.6-5.8 9.9Z" ${SIL}/>` +
+    `<path d="M14.6 8.7c-2.2 1.9-3.9 4.3-5.1 7.1" ${DET}/>` +
+    `<path d="M6.2 16.8l4.1 1.7-.8 1.9-4.1-1.7Z" ${ACC}/>` +
+    `<rect x="3.4" y="18.4" width="2.6" height="2.6" rx="1.1" transform="rotate(22.6 4.7 19.7)" ${ACC}/>`,
+  // The Peiratai (SPEC §217): a galley under sail, the bronze ram at the
+  // waterline and the painted eye on the bow, over open water nobody patrols.
+  PIR:
+    `<rect x="11.3" y="2.6" width="1.4" height="11" rx="0.7" ${ACC}/>` +
+    `<path d="M7.6 3.6h8.8v.9H7.6Z" ${ACC}/>` +
+    `<path d="M8.1 4.5h7.8c.5 2.5.2 4.6-.9 6.2H9c-1.1-1.6-1.4-3.7-.9-6.2Z" ${SIL}/>` +
+    `<path d="M4.6 13.6h15.6c-.8 3.3-3.1 5-6.9 5h-3.4c-2.9 0-4.7-1.7-5.3-5Z" ${SIL}/>` +
+    `<path d="M4.6 13.6 1.6 14l1.9 2.4 2.9-1Z" ${ACC}/>` +
+    `<ellipse cx="8.4" cy="15.2" rx="1.5" ry="1" ${ACC}/>` +
+    `<circle cx="8.4" cy="15.2" r="0.45" fill="${FO}" stroke="none"/>` +
+    `<path d="M3.8 20.6c1.6-1.1 3.2-1.1 4.8 0s3.2 1.1 4.8 0 3.2-1.1 4.8 0" fill="none" stroke="${FP}" stroke-width="1.2" stroke-linecap="round"/>`,
   // Byzantium: the chi-rho of the labarum, gold on parchment roundel.
   BYZ:
     `<circle cx="12" cy="12" r="8.2" ${SIL}/>` +

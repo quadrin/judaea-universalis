@@ -56,17 +56,27 @@ import { EVENTS_1948_LEVANT } from './events_1948_levant.js';
 import { EVENTS_1948_QUESTION } from './events_1948_question.js';
 import { EVENTS_1948_GULF } from './events_1948_gulf.js';
 import { GENERIC_EVENTS } from './events_generic.js';
+import { EVENTS_MARGINALIA } from './events_marginalia.js';
 import { EVENTS_ANNEX } from './events_annexation.js';
 import { EVENTS_DAVID } from './events_house_of_david.js';
 import { EVENTS_STATECRAFT } from './events_statecraft.js';
 import { POLITICAL_MAPS } from './political_maps.js';
 
-// The shared pool every ANTIQUE chapter plays (SPEC §126). The omens and the
+// What EVERY chapter plays, 1948 included: the omens, and the margins
+// (SPEC §223). Marginalia rides BESIDE the generic pool rather than inside it
+// because that pool's own era banding — ten antique cards, ten modern, two
+// timeless — is an invariant of its own, and a card gated on a province
+// belongs to neither band. It is appended LAST so every other card is offered
+// its month in exactly the order it was offered before — and the card itself
+// takes nothing out of the seeded stream, so the order is all there is to keep.
+const SHARED = GENERIC_EVENTS.concat(EVENTS_MARGINALIA);
+
+// The shared pool every ANTIQUE chapter plays on top of it (SPEC §126). The omens and the
 // annexation question travel together: both are keyed on the player rather
 // than on a chapter, both ask something any Jewish state large enough to
 // conquer will eventually face, and neither belongs to 1948 — which plays the
-// omens alone, because a modern state does not rule on circumcision or the
-// road. The `maxYear: 1799` on every annexation card is the belt to this
+// shared pool alone, because a modern state does not rule on circumcision or
+// the road. The `maxYear: 1799` on every annexation card is the belt to this
 // braces: the registry says where the pool goes, and the cards say when.
 // The house of David travels with them (SPEC §138): the crown of Israel is
 // the united monarchy and the united monarchy is David's, so every chapter
@@ -80,7 +90,7 @@ import { POLITICAL_MAPS } from './political_maps.js';
 // grown rather than by year, so a campaign that outruns its sources still has
 // something to answer. Antique-only for the same reason the annexation
 // question is: tax farmers and desert prophets do not belong to 1948.
-const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, EVENTS_STATECRAFT, GENERIC_EVENTS);
+const ANTIQUE = EVENTS_ANNEX.concat(EVENTS_DAVID, EVENTS_STATECRAFT, SHARED);
 
 // The political maps ride the registry (SPEC §173), exactly as the event
 // pairing does: the bookmarks stay zero-import content packages, and the one
@@ -133,7 +143,7 @@ export const ERAS = [
   // Cohen, Tehran in 1979, and the northern border it produced. The cold
   // war package is the superpowers' own weather — Berlin to the flag
   // coming down — that the chapter's arms deals and aliyah waves hang from.
-  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, GENERIC_EVENTS) },
+  { bookmark: withPolitical(BOOKMARK_1948), events: EVENTS_1948.concat(EVENTS_1948_ABSORPTION, EVENTS_1948_REGION, EVENTS_1948_COLDWAR, EVENTS_1948_LEVANT, EVENTS_1948_QUESTION, EVENTS_1948_GULF, SHARED) },
 ];
 
 // The shared pool by itself (the wiki's "omens and incidents" page tells it

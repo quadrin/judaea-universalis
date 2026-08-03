@@ -167,6 +167,45 @@ static site, the zero dependencies, or the missing build step changes.
   stopped "free four nations, collar them with their own gratitude, and eat them one by one"
   from being the cheapest expansion in the game. The 1948 chapter, whose diplomacy is blocs
   and pacts, keeps none of this.
+- **A crown of its own.** Every road to a client kingdom used to run through somebody else's
+  country — subjugate them at the peace table, take an enemy's vassal at a congress, offer an
+  ally the collar. So a realm sitting on foreign towns it will never digest had two answers,
+  hold them or lose them, and never the one the ancient east actually used: hand the ground
+  its own crown and keep the tribute. Now a province of yours can be **released as a client
+  kingdom** from its own panel. A court you conquered rises again on its own homeland under
+  its own name; land whose people are not your people becomes a new state of its culture and
+  faith, seated at its best town under an **ethnarch** of its own; and a second grant of the
+  same people joins the client you already made instead of founding a rival to it. The land
+  goes at its own autonomy with the conqueror's mark struck off, pays you the client's 15%,
+  follows you to war, takes a chancery seat — and can be woven back into the realm years
+  later, once it is devoted enough. It costs influence and no infamy at all: nobody was
+  conquered. What you may never let go of is the capital, a living court's old homeland
+  (that is a cession, and it is agreed at a table with them), ground an enemy army is
+  standing in, more than half the realm at once — or your own people, because a state carved
+  out of your own is a secession and secessions are suffered rather than granted.
+- **And the collar comes off.** A client kingdom used to have exactly three exits and none of
+  them was yours: you died, you ate them, or they rose and won. **Release Them** now sits
+  beside Incorporate on the client's own panel and does the opposite thing — nothing moves
+  except the fealty. They keep every province at the autonomy it had, every regiment where it
+  was standing, their court, their treasury and their laws, and walk off with the lot. The
+  tribute stops, your chancery seat comes back, the collars you keep chafe less for it, and
+  they remember the hand that struck it — though they will not take that hand's collar again
+  for a decade, so it is not a move to make twice. It costs no influence at all: the price is
+  the client. The one thing that refuses it is a war, because a client that walks out of one
+  has not been freed, it has deserted.
+- **The peace table runs both ways now, and there is a deed that needs no table.** Every
+  term used to point one direction — you could demand provinces, gold, reparations, a
+  humiliation, a collar — so a realm that was *losing* had exactly one move, a white peace,
+  and one answer: *they believe they are winning, and will not settle for nothing*. That is
+  not how these wars ended. Now you can lay your own provinces on the table beside what you
+  ask, and any of them will do: not just what their armies occupy, not just what they can
+  march to, not just what is worth having. Colonised wasteland, a frontier cell, your own
+  capital. Each is credited at exactly what they would have paid to take it, the treaty
+  settles on the difference, and they sign when the offer covers what their war has earned
+  — or refuse and name the number. And outside a war entirely, **Give It Away** on your own
+  province hands it to the court that governs next door or to one you are sworn to: no war,
+  no treaty, no price, and a court that will not forget it. Not while an enemy stands in the
+  province, not while a war is running, and never the last province of the realm.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical
@@ -187,6 +226,18 @@ static site, the zero dependencies, or the missing build step changes.
   screen alone, where campaigns are chosen rather than fought.
 - Mortal rulers with heirs, regencies and succession crises; mission trees per playable
   nation; a shared pool of random events; holy sites and wonders that pay their keeper.
+- **A crown can be taken from the court that wore it.** Forming a nation used to require a
+  banner nobody had *ever* flown, which quietly reserved every crown on the map for the
+  court that started with it — beat that court out of existence and its name sat in the
+  records forever, unusable. Now a banner is free when nobody is flying it, and the crown
+  the rule exists for is Agrippa II's. The last Herodian spent his life as king of a Golan
+  valley and two towns Nero was feeling generous about, while his family asked Caesar for
+  Judaea entire; play him, put the rising down, hold Jerusalem and the country at Jericho,
+  Sepphoris and Tiberias, and — with Caesar content, or having stopped asking him — you
+  **proclaim the Kingdom of Judaea** and are styled King of the Jews. It pays like a kingdom
+  rather than a client: levies, a treasury, and the custody of the vestments that made the
+  Herodian title worth more than a governorship. The dead court's debts do not come with its
+  name, so nobody inherits a rival's alliances along with the crown.
 - **Statecraft**: twenty repeatable decisions that arrive because you rule, not because the
   weather turned — and they open as the realm grows. A small state argues about judges who
   disagree on ancestral custom, a garrison nobody has paid, and a second city that wants a
@@ -198,6 +249,14 @@ static site, the zero dependencies, or the missing build step changes.
   auction, and a prophet in the desert whom arresting would not disperse. Every one has two
   or three answers with a real price on both sides, and the whole pool speaks as one channel
   so a campaign that has outrun its own chapter still has something to answer.
+- **And one card is gated on a town rather than on a century.** Somewhere in the first ten
+  years of most chapters, a letter arrives four months stale from Tingis, where the purple is
+  boiled: a Jew called Ikus who teaches boys their numbers has proved something he cannot get
+  anyone to restate, and has stopped losing wagers — not seldom, but never. The town concluded
+  Jewish magic and flogged him in the market. Send for the man, send for the theorem and never
+  mind the man, send a letter under your seal and a purse for his back, or agree that Tingis
+  is a long way from here. Roughly two campaigns in five ever see it, and 1948 never does —
+  by then the map calls the town Tangier.
 - A war overview (score broken into battles / occupation / war goal / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and the saved-campaign shelf.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID
@@ -521,6 +580,14 @@ static site, the zero dependencies, or the missing build step changes.
   co-religionist neighbor, and peasants — the biggest hosts and the most
   brittle. Each can send a demands card: buy the province back from itself,
   marry the claim into the house, seal a writ of toleration.
+- **And a rising can walk off the edge of the governed world.** Nobody governs
+  the frontier at the rim — Gaetulia, Scythia, the Danakil — so nobody comes for
+  a band that takes it. One that is still standing there two years later stops
+  being a rising: the camp becomes a state, λῃσταί inland under an *archilestes*,
+  πειραταί on a coast under an *archipirata* and three hulls, governed by the
+  shortest constitution on the map (the men keep the chief who feeds them). Once
+  a campaign, at most, and only out where there was nothing — rebels may sit in
+  Carthage for eight years and found nothing at all.
 - **The Road Not Taken** (Chronicle → second tab): your campaign set beside
   the record it was given. Every turning where this age chose otherwise — what
   the chronicles say, what you did — every scripted chapter that never got

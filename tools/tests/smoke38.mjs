@@ -97,6 +97,121 @@ console.log('== peace: escalating packages, the alien surcharge, the dev cap =='
   }
 }
 
+console.log('== a state annexed whole is not a state dismembered (SPEC §220) ==');
+{
+  // The reported case: a court beaten down to one province, that province
+  // occupied, the war won outright — and a cap that shrinks with them.
+  const { game, ctx } = boot('JUD');
+  disarmWorld(game);
+  let rump = null;
+  for (let i = 1; i < game.provinces.length; i++) {
+    const p = game.provinces[i];
+    if (!p || p.impassable || p.owner !== 'AGR') continue;
+    if (!rump) { rump = p; continue; }
+    p.owner = 'JUD'; p.controller = 'JUD';
+  }
+  rump.dev = { tax: 14, prod: 14, mp: 12 }; // a real city, not a village
+  rump.controller = 'JUD';
+  // Alone: Agrippa is Rome's client in this chapter, and a war declared on a
+  // client is the protecting crown's war too — which would put Rome's own
+  // weight into `theirSideDev` and lift the cap far above the demand. The bug
+  // being fixed belongs to a rump with nobody behind it.
+  game.tags.AGR.overlord = null;
+  mil.declareWar(ctx, 'JUD', 'AGR', 'The Last Province');
+  const war = ctx.game.wars.find((w) => w.attackers.includes('JUD') && w.defenders.includes('AGR'));
+  war.defenders = ['AGR']; // the protectors go home; this is the rump's own war
+  war.attackers = ['JUD'];
+  war.warscore = { JUD: 100, AGR: -100 };
+  for (const k of Object.keys(game.tags)) if (game.tags[k]) game.tags[k].atWarWith = [];
+  game.tags.JUD.atWarWith = ['AGR'];
+  game.tags.AGR.atWarWith = ['JUD'];
+  ok(war.defenders.length === 1, 'the rump stands alone: ' + war.defenders.join(', '));
+  const info = mil.peaceDealInfo(ctx, war, 'JUD', 'AGR');
+  const all = info.provinces.map((r) => r.id);
+  const dev = info.provinces.reduce((s, r) => s + r.dev, 0);
+  ok(dev > mil.peaceDevCap(ctx, info),
+    `their last province is worth more than the cap (${dev} dev against ${mil.peaceDevCap(ctx, info)})`);
+  const ev = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: all });
+  ok(ev.acceptable, 'and taking it whole is accepted anyway: ' + ev.reason);
+
+  // War score is the gate that remains, and it is a real one.
+  war.warscore.JUD = ev.cost - 1;
+  const poor = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: all });
+  ok(!poor.acceptable && /war score does not cover/.test(poor.reason),
+    'one point short and it is refused for score, not for the cap: ' + poor.reason);
+  war.warscore.JUD = 100;
+
+  ok(info.theirSideDev === dev, 'the rump holds nothing else to leave behind');
+
+  // And the treaty actually annexes it: this is the whole point of the report.
+  {
+    const { game: g2, ctx: c2 } = boot('JUD');
+    disarmWorld(g2);
+    let r2 = null;
+    for (let i = 1; i < g2.provinces.length; i++) {
+      const p = g2.provinces[i];
+      if (!p || p.impassable || p.owner !== 'AGR') continue;
+      if (!r2) { r2 = p; continue; }
+      p.owner = 'JUD'; p.controller = 'JUD';
+    }
+    r2.dev = { tax: 14, prod: 14, mp: 12 };
+    r2.controller = 'JUD';
+    g2.tags.AGR.overlord = null;
+    mil.declareWar(c2, 'JUD', 'AGR', 'The Last Province');
+    const w2 = g2.wars.find((w) => w.attackers.includes('JUD') && w.defenders.includes('AGR'));
+    w2.defenders = ['AGR']; w2.attackers = ['JUD'];
+    w2.warscore = { JUD: 100, AGR: -100 };
+    for (const k of Object.keys(g2.tags)) if (g2.tags[k]) g2.tags[k].atWarWith = [];
+    g2.tags.JUD.atWarWith = ['AGR']; g2.tags.AGR.atWarWith = ['JUD'];
+    for (const a of mil.armiesOf(c2, 'AGR')) mil.removeArmy(c2, a.id); // beaten in the field, too
+    mil.executePeaceDeal(c2, w2, 'JUD', { provinces: [r2.id] });
+    ok(r2.owner === 'JUD' && r2.controller === 'JUD', 'the province changes hands at the treaty');
+    mil.updateTagLife(c2);
+    ok(g2.tags.AGR.alive === false, 'and the court that held nothing else passes into memory');
+    ok(!g2.wars.some((w) => w.id === w2.id), 'the war is over');
+  }
+
+  // The exception is exactly "everything", not "a lot". Give them a second
+  // town to survive on and the same demand is dismemberment again.
+  // A SMALL one: the cap is 40% of what they hold, so a large gift would
+  // simply raise the ceiling above the demand and prove nothing.
+  let spare = null;
+  for (let i = 1; i < game.provinces.length; i++) {
+    const p = game.provinces[i];
+    if (!p || p.impassable || p.owner !== 'JUD' || p.id === rump.id) continue;
+    if (!spare || mil.devTotal(p) < mil.devTotal(spare)) spare = p;
+  }
+  spare.owner = 'AGR';
+  const info2 = mil.peaceDealInfo(ctx, war, 'JUD', 'AGR');
+  ok(info2.theirSideDev > dev, 'they hold something to be left behind now');
+  const evPart = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: [rump.id] });
+  ok(!evPart.acceptable && /No single treaty/.test(evPart.reason),
+    'and the same province, taken from a state that survives it, is refused by the cap: '
+    + evPart.reason);
+}
+{
+  // The other half of the claim, and the reason the exception is safe: an
+  // empire cannot be annexed whole, because war score is clamped to 100 and
+  // land is priced by development. Rome occupied to the last acre still
+  // prices out an order of magnitude past anything a war can earn.
+  const { game, ctx } = boot('JUD');
+  disarmWorld(game);
+  mil.declareWar(ctx, 'JUD', 'ROM', 'The Whole World');
+  const war = ctx.game.wars.find((w) => w.attackers.includes('JUD') && w.defenders.includes('ROM'));
+  war.warscore.JUD = 100;
+  for (let i = 1; i < game.provinces.length; i++) {
+    const p = game.provinces[i];
+    if (p && !p.impassable && p.owner === 'ROM') p.controller = 'JUD'; // every last acre occupied
+  }
+  const info = mil.peaceDealInfo(ctx, war, 'JUD', 'ROM');
+  const all = info.provinces.map((r) => r.id);
+  const asked = info.provinces.reduce((s, r) => s + r.dev, 0);
+  const price = mil.priceProvincePackage(ctx, info.provinces);
+  const ev = mil.evaluatePeaceDeal(ctx, war, 'JUD', { provinces: all });
+  ok(!ev.acceptable, `Rome occupied entire is still refused (${asked} dev asked): ` + ev.reason);
+  ok(price > 100 * 5, `the price of everything is beyond any war (${price} war score against a ceiling of 100)`);
+}
+
 console.log('== infamy: slower decay at war, subjugation counted ==');
 {
   const { game, ctx } = boot('JUD');

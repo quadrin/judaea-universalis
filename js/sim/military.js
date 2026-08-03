@@ -2207,11 +2207,49 @@ export function mergeInto(ctx, fromId, intoId) {
 // ruler, modifiers...) but takes the new banner's name and color; the caller
 // rebuilds t.ideas afterwards (applyReformsToTag) so the new static national
 // ideas replace the old.
+// A banner nobody is flying may be taken up (SPEC §221) — but it arrives with
+// none of the dead court's debts. Everything the world still had written down
+// against the old wearer is struck: the alliances and guarantees others recorded
+// with it, the marriages, the truces and the cooldowns, the subsidies, the
+// opinions and the grudges. Without this, a crown claimed from a fallen court
+// would inherit its friendships — the Kingdom of Agrippa II was Rome's ally in
+// every copy of Rome's own ledger, and a revolt that took the crown would have
+// found itself allied to the empire it was fighting.
+function freeBanner(ctx, tag) {
+  const g = ctx.game;
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || k === tag) continue;
+    for (const list of ['allies', 'guarantees', 'marriages', 'atWarWith']) {
+      if (Array.isArray(t[list])) t[list] = t[list].filter((x) => x !== tag);
+    }
+    if (t.overlord === tag) t.overlord = null;
+    if (t.opinion) delete t.opinion[tag];
+    if (t.grudges) delete t.grudges[tag];
+  }
+  if (Array.isArray(g.subsidies)) {
+    g.subsidies = g.subsidies.filter((s) => s && s.from !== tag && s.to !== tag);
+  }
+  for (const book of [g.truces, g.diploCooldowns, g.flags && g.flags._settledWars]) {
+    if (!book) continue;
+    for (const key of Object.keys(book)) {
+      if (String(key).split(/[|:>]/).indexOf(tag) >= 0) delete book[key];
+    }
+  }
+  delete g.tags[tag];
+}
 export function switchTagCore(ctx, from, to) {
   const g = ctx.game;
   const old = g.tags[from];
   const def = (ctx.DEFINES.TAGS || {})[to];
-  if (!old || !def || g.tags[to]) return false; // the target banner must be free
+  if (!old || !def) return false;
+  // The target banner must be free — which means nobody is FLYING it, not that
+  // it has never been flown (SPEC §221). A court that has fallen holds no
+  // province and no army; its name is a line in the chronicle, and a crown that
+  // has taken its ground may take that too.
+  const fallen = g.tags[to];
+  if (fallen && fallen.alive !== false) return false;
+  if (fallen) freeBanner(ctx, to);
   const nt = JSON.parse(JSON.stringify(old));
   nt.tag = to;
   // The crown is new; the country is not (SPEC §102). A formed nation
@@ -2670,7 +2708,11 @@ export function incorporateInfo(ctx, tag, vassalTag) {
   const V = ctx.DEFINES.VASSALS || {};
   const me = g.tags[tag];
   const them = g.tags[vassalTag];
-  const out = { can: false, why: '', cost: 0, dev: 0, months: 0, opinion: 0, needOpinion: num(V.incorporateOpinion, 80), inProgress: 0 };
+  const out = {
+    can: false, why: '', cost: 0, dev: 0, months: 0, opinion: 0,
+    needOpinion: num(V.incorporateOpinion, 80), inProgress: 0,
+    max: Math.max(1, Math.round(num(V.incorporateMax, 999))), capped: false,
+  };
   if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
   if (them.overlord !== tag) { out.why = 'They are not our client kingdom.'; return out; }
   let dev = 0;
@@ -2679,7 +2721,15 @@ export function incorporateInfo(ctx, tag, vassalTag) {
     if (p && !p.impassable && p.owner === vassalTag) dev += devTotal(p);
   }
   out.dev = dev;
-  out.cost = Math.round(num(V.incorporateBase, 75) + dev * num(V.incorporatePerDev, 2.5));
+  // The price has a ceiling, and the ceiling is the one every monarch-point
+  // pool already has (999). Without it a great client's union was not merely
+  // dear, it was arithmetically unreachable: the influence needed could not be
+  // held in the treasury it is paid from, so the button sat there forever
+  // reading "Weaving two realms into one takes 2,183 influence points" at a
+  // court whose pool stops at 999.
+  const raw = Math.round(num(V.incorporateBase, 75) + dev * num(V.incorporatePerDev, 2.5));
+  out.cost = Math.min(raw, out.max);
+  out.capped = raw > out.cost;
   out.months = Math.max(1, Math.round(num(V.incorporateMonthsBase, 12) + dev * num(V.incorporateMonthsPerDev, 0.5)));
   out.opinion = Math.round(opinionOf(ctx, vassalTag, tag));
   if (them.incorporating && them.incorporating.by === tag) {
@@ -4480,6 +4530,215 @@ export function offerClientshipCore(ctx, me, them) {
   return { ok: true, accepted: true, name, dev: info.theirDev };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Strike the collar (SPEC §219): a client kingdom let go.
+//
+// §218 gave a crown the way IN to a client kingdom out of its own land. There
+// was never a way out. A collar came off exactly three ways and none of them
+// was the lord's to choose: the lord died and `updateTagLife` freed its
+// clients, the lord ate them (§61's union), or they rose and won the
+// independence war the AI declares by breaking the bond first. A crown could
+// take a client, buy a client, be given a client and make a client — and could
+// not, under any circumstance, simply let one go.
+//
+// So this is Incorporate's mirror, and it sits beside it. Nothing moves except
+// the fealty: the freed court keeps every province, every regiment, its ruler,
+// its treasury and its institutions, and walks off with them. What the lord
+// gets back is the chancery seat (SPEC §202) and one less collar to chafe the
+// rest; what it gives up is the tribute and the war duty.
+//
+// Two rules worth stating because they are not obvious:
+//
+//   * No influence, because the price is the client. Every other bond in the
+//     chancery is billed for what it costs to KEEP; this is the one act whose
+//     whole cost is what it gives away.
+//   * It is not gated on the age. §142's `clientKingdoms` switch stops a
+//     chapter MAKING clients — it says nothing about unmaking them, and a
+//     chapter that inherits a collar and then retires the institution must
+//     still be able to take it off.
+// ─────────────────────────────────────────────────────────────────────────────
+export function freeClientInfo(ctx, lord, clientTag) {
+  const g = ctx.game;
+  const me = g.tags[lord];
+  const them = g.tags[clientTag];
+  if (!me || !them || !them.alive || lord === clientTag || them.overlord !== lord) return null;
+  const V = ctx.DEFINES.VASSALS || {};
+  let provinces = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === clientTag) provinces++;
+  }
+  const load = diploLoad(ctx, lord);
+  const strain = clientStrain(ctx, lord);
+  const out = {
+    tag: clientTag,
+    name: them.name || clientTag,
+    dev: Math.round(devOfTag(ctx, clientTag)),
+    provinces,
+    armies: armiesOf(ctx, clientTag).length,
+    gratitude: Math.round(num(V.freeGratitude, 80)),
+    opinion: Math.round(opinionOf(ctx, clientTag, lord)),
+    collarMonths: Math.round(DIP(ctx, 'freedCollarMonths', 120)),
+    // A union half-woven dies with the bond it was weaving, and the influence
+    // already spent on it is spent (the same terms `monthlyIncorporation` has
+    // always unravelled on).
+    incorporating: them.incorporating && them.incorporating.by === lord
+      ? Math.max(0, them.incorporating.monthsLeft | 0) : 0,
+    seats: load.seats,
+    capacity: load.capacity,
+    clients: strain.clients,
+    strain: strain.strain,
+    can: false,
+    why: '',
+  };
+  const meAtWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  const themAtWar = (them.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (meAtWar || themAtWar) {
+    out.why = 'Not in wartime. A client that walks out of a war we are fighting has not been '
+      + 'freed — it has deserted, and everyone on both sides will read it that way.';
+  }
+  out.can = !out.why;
+  return out;
+}
+
+// Let them go. The bond ends and nothing else does.
+export function freeClientCore(ctx, lord, clientTag) {
+  const info = freeClientInfo(ctx, lord, clientTag);
+  if (!info) return { ok: false, why: 'They are not our client kingdom.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[lord];
+  const them = g.tags[clientTag];
+  them.overlord = null;
+  them.incorporating = null;
+  addOpinion(ctx, clientTag, lord, num(V.freeGratitude, 80));
+  // The freed do not kneel to the hand that freed them (SPEC §202). The rule
+  // was written for a court freed at somebody else's expense at the peace
+  // table; it belongs here twice over, because without it a lord could strike
+  // the collar and offer it back the same afternoon.
+  them.freedBy = { by: lord, y: g.date.y, m: g.date.m };
+  chronicle(ctx, 'era', (me.name || lord) + ' strikes the collar from '
+    + (them.name || clientTag) + ': the tribute ends, the crown stands, and the '
+    + 'kingdom answers to nobody.');
+  ctx.bus.emit('provinceOwner', {}); // the diplomatic map is drawn off the bond
+  return {
+    ok: true,
+    tag: clientTag,
+    name: them.name || clientTag,
+    dev: info.dev,
+    provinces: info.provinces,
+    lostWeaving: info.incorporating,
+    collarMonths: info.collarMonths,
+    gratitude: info.gratitude,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A province handed over without a war (SPEC §222).
+//
+// The peace table's other half. Land changes hands at a congress because
+// somebody won; it also changes hands because a crown decides a province is
+// worth more as a friendship than as a district — the Golan to a patron, a
+// frontier cell to the neighbour who actually garrisons it, the town a stronger
+// crown has been asking after for a decade. There was no way to say any of it.
+//
+// Same principle as the table: ANY province of ours, colonised waste included.
+// Three things it will not do — it will not hand over ground an enemy army is
+// standing in (that is a treaty, and the treaty is elsewhere), it will not do
+// it while we are at war with anybody (a province gifted to a friend on the eve
+// of losing it is not diplomacy, it is hiding the silver), and it will not
+// leave the realm with nothing.
+// ─────────────────────────────────────────────────────────────────────────────
+export function cedeProvinceInfo(ctx, tag, provId) {
+  const g = ctx.game;
+  const me = g.tags[tag];
+  const p = ctx.byId(provId);
+  if (!me || !me.alive || !p || p.owner !== tag) return null;
+  const D = (ctx.DEFINES && ctx.DEFINES.DIPLOMACY) || {};
+  let held = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const q = g.provinces[i];
+    if (q && !q.impassable && q.owner === tag) held++;
+  }
+  // Who it could go to: a court that governs next door, or one we are already
+  // bound to. A crown does not post a deed to a stranger on the far side of
+  // the world; it settles a border, pays a patron, or endows a client.
+  const nb = (ctx.geom && ctx.geom.neighbors && ctx.geom.neighbors[provId]) || [];
+  const near = new Set();
+  for (const n of nb) {
+    const q = ctx.byId(n);
+    if (q && q.owner && q.owner !== tag && q.owner !== 'WASTE' && q.owner !== 'REB') near.add(q.owner);
+  }
+  const bound = new Set([...(me.allies || []), ...vassalsOf(ctx, tag)]);
+  if (me.overlord) bound.add(me.overlord);
+  const recipients = [];
+  for (const k of new Set([...near, ...bound])) {
+    const t = g.tags[k];
+    if (!t || !t.alive || k === tag || k === 'REB' || isOffmapTag(ctx, k)) continue;
+    if ((me.atWarWith || []).indexOf(k) >= 0) continue;
+    recipients.push({
+      tag: k, name: t.name || k,
+      adjacent: near.has(k),
+      bond: bound.has(k) ? (t.overlord === tag ? 'our client' : me.overlord === k ? 'our overlord' : 'our ally') : '',
+      opinion: Math.round(opinionOf(ctx, k, tag)),
+    });
+  }
+  recipients.sort((a, b) => (b.adjacent ? 1 : 0) - (a.adjacent ? 1 : 0) || a.name.localeCompare(b.name));
+  const dev = devTotal(p);
+  const out = {
+    provId, name: p.name, dev,
+    recipients,
+    gratitude: Math.round(Math.min(num(D.giftOpinionMax, 60),
+      num(D.giftOpinionBase, 15) + dev * num(D.giftOpinionPerDev, 1))),
+    can: false, why: '',
+  };
+  const atWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (p.controller !== tag) {
+    out.why = 'A foreign army is standing in it. What happens to this province is a treaty now, '
+      + 'and a treaty is signed at the table.';
+  } else if (atWar) {
+    out.why = 'Not in wartime. A province handed to a friend on the eve of losing it is not '
+      + 'diplomacy — and every court watching would call it what it is.';
+  } else if (held <= 1) {
+    out.why = 'It is the last of the realm. There would be nobody left to sign the deed.';
+  } else if (!recipients.length) {
+    out.why = 'There is nobody to give it to: no court governs beside it, and we are bound to none.';
+  }
+  out.can = !out.why;
+  return out;
+}
+
+export function cedeProvinceCore(ctx, tag, provId, toTag) {
+  const info = cedeProvinceInfo(ctx, tag, provId);
+  if (!info) return { ok: false, why: 'That province is not ours to give.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const row = info.recipients.find((r) => r.tag === toTag);
+  if (!row) return { ok: false, why: 'That court cannot receive it.' };
+  const g = ctx.game;
+  const D = (ctx.DEFINES && ctx.DEFINES.DIPLOMACY) || {};
+  const p = ctx.byId(provId);
+  const me = g.tags[tag];
+  p.integration = 0; // a change of sovereign starts the ledger over (SPEC §66)
+  p.integrating = null;
+  p.conversion = null;
+  changeOwnerCore(ctx, p, toTag);
+  changeControllerCore(ctx, p, toTag);
+  // Not a conquest and not a homecoming: a district told it answers elsewhere
+  // now. Gentler than `recent_conquest`, and it ends.
+  p.autonomy = Math.max(num(p.autonomy, 0.25), 0.5);
+  p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'ceded' && m.id !== 'recent_conquest');
+  p.modifiers.push({ id: 'ceded', name: 'Newly Ceded', months: 12, effects: { unrest: 1 } });
+  addOpinion(ctx, toTag, tag, info.gratitude);
+  // Nobody is a conqueror for accepting a gift, and we keep no grudge over
+  // land we gave away with our own hand.
+  const theirName = row.name;
+  chronicle(ctx, 'diplomacy', (me.name || tag) + ' cedes ' + p.name + ' to ' + theirName
+    + ' — no war, no treaty, and no army within a week\'s march of it.');
+  ctx.bus.emit('provinceOwner', {});
+  return { ok: true, name: p.name, to: toTag, toName: theirName, dev: info.dev, gratitude: info.gratitude };
+}
+
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }
@@ -5030,6 +5289,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
   const et = enemyLeader ? g.tags[enemyLeader] : null;
   const me = g.tags[byTag];
   const myRel = me ? me.religion : null;
+  const myCapital = tagDef(ctx, byTag).capital || (me && me.dynamicCapital) || null;
   const provinces = [];
   let enemyLeaderDev = 0;
   let theirSideDev = 0;
@@ -5061,6 +5321,43 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     });
   }
   provinces.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  // What we may GIVE (SPEC §222). Every term at this table used to run one
+  // way: a court could demand, and if it had nothing to demand with it could
+  // offer a white peace and be told the enemy's blood was up. A realm that is
+  // LOSING had no move at all — no way to buy an ending with a border
+  // province, which is how most wars in the period actually ended.
+  //
+  // Any province we own is on the table, and that is deliberate rather than
+  // careless: not only what they occupy (a treaty writes down more than the
+  // front line), not only what they can reach (§116 exists to stop an army
+  // SELLING far-off land it happens to stand in — nothing needs to stop a
+  // crown from giving away its own), and not only what is worth having.
+  // Colonised waste, a frontier cell, the capital itself: a crown that is
+  // losing may put any of it on the table, because the alternative is losing
+  // it anyway. The price is what THEY would have paid to take it, so one
+  // province is worth the same at this table whichever way it moves.
+  const concessions = [];
+  const theirRel = et ? et.religion : null;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.owner !== byTag || !enemyLeader) continue;
+    let cost = provDemandCost(ctx, p, enemyLeader);
+    let discount = '';
+    if (hasClaim(ctx, enemyLeader, i)) {
+      cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.claimDiscount));
+      discount = 'claim';
+    } else if (theirRel && p.religion === theirRel) {
+      cost = Math.max(PEACE.provCostMin, Math.round(cost * PEACE.faithDiscount));
+      discount = 'faith';
+    }
+    concessions.push({
+      id: i, name: p.name, dev: devTotal(p), cost, discount,
+      occupied: p.controller !== byTag,
+      capital: !!(myCapital && (p.canon || p.name) === myCapital),
+      impassable: !!p.impassable,
+    });
+  }
+  concessions.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
   // SPEC §116: a demand has to be somewhere. Occupation is not the whole of a
   // claim — the land also has to touch the country claiming it, counting the
   // other demands as they connect. Without this the table would sell whatever
@@ -5157,6 +5454,9 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     enemyLeader, enemyName: et ? (et.name || enemyLeader) : '',
     enemyWarExhaustion: et ? num(et.warExhaustion) : 0,
     provinces,
+    // What we may offer them (SPEC §222): any province of ours, priced at what
+    // they would have paid to take it.
+    concessions,
     theirSideDev,
     maxGold: Math.floor(rawMax / PEACE.goldStep) * PEACE.goldStep,
     goldStep: PEACE.goldStep,
@@ -5287,6 +5587,22 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       cost += row.cost;
     }
   }
+  // What we put on the table ourselves (SPEC §222). Priced in the same
+  // currency as everything else and credited against the total, so one ledger
+  // settles a treaty that runs in both directions: a province we hand over is
+  // worth exactly what they would have spent taking it. No escalation ladder
+  // here — `priceProvincePackage` makes each further DEMAND dearer because a
+  // congress resists a long list, and nothing resists a gift.
+  const conceded = [];
+  let offered = 0;
+  if (!subjugate) {
+    for (const id of Array.isArray(d.concessions) ? d.concessions : []) {
+      const row = (info.concessions || []).find((r) => r.id === (id | 0));
+      if (!row || conceded.indexOf(row) >= 0) continue;
+      conceded.push(row);
+      offered += num(row.cost);
+    }
+  }
   const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
   // Humiliation and reparations are the congress's instruments, not a
@@ -5296,8 +5612,10 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const reparations = !!d.reparations && !info.exit;
   if (reparations) cost += PEACE.reparationsCost;
   const white = !chosen.length && !releaseRows.length && !transferRows.length
-    && gold <= 0 && !humiliate && !subjugate && !reparations;
+    && !conceded.length && gold <= 0 && !humiliate && !subjugate && !reparations;
   const enemyWs = -info.myWs;
+  // The net of the table: what we ask, less what we lay down beside it.
+  const net = cost - offered;
   let acceptable, reason;
   if (white) {
     // A fresh grudge does not go home for nothing: in a war's first year the
@@ -5326,20 +5644,50 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       + releaseRows.reduce((s, r) => s + num(r.dev), 0)
       + transferRows.reduce((s, r) => s + num(r.dev), 0);
     const capDev = peaceDevCap(ctx, info);
-    if (chosenDev > capDev) {
+    // A state annexed WHOLE is not a state dismembered (SPEC §220).
+    //
+    // The cap prices how much may be stripped from a realm that goes on
+    // existing afterwards, and for a realm it is right. For a RUMP it was a
+    // trap with no floor to it: the ceiling is 40% of what the enemy still
+    // holds, so it shrinks with them, and a court reduced to one province of
+    // more than 25 development could never be annexed at any war score by any
+    // combination of demands — there is no smaller package than its last
+    // province, and the ceiling can only fall. A total victory over a
+    // one-province state ended in a treaty that handed the province back.
+    //
+    // So the budget does not price a treaty that leaves nothing behind. What
+    // gates that is war score, and war score alone is a real gate: it is
+    // clamped to 100, and land is 0.9 a point (1.25× for an alien faith), so
+    // the most that can ever be annexed entire is about 110 development. A
+    // rump always fits. An empire never does.
+    const sideDev = num(info.theirSideDev);
+    const annexedWhole = sideDev > 0 && chosenDev >= sideDev - 0.5;
+    if (chosenDev > capDev && !annexedWhole) {
       acceptable = false;
       reason = `No single treaty could strip so much land — the nations would not bear it (${chosenDev} development asked, ${capDev} is the most one settlement will carry).`;
-    } else {
-      acceptable = info.myWs > 0 && cost <= info.myWs;
+    } else if (net > 0) {
+      acceptable = info.myWs > 0 && net <= info.myWs;
       reason = acceptable
         ? 'Our position compels them to accept.'
-        : `Our war score does not cover such demands (${cost} asked, ${Math.max(0, info.myWs)} held).`;
+        : `Our war score does not cover such demands (${net} asked, ${Math.max(0, info.myWs)} held).`;
+    } else {
+      // We are the ones paying (SPEC §222). A court accepts what covers what
+      // it has already won — no more, and no less. Offering past their score
+      // is always taken; offering under it is refused in the plainest terms
+      // there are, which is the number they think the war is worth.
+      acceptable = -net >= enemyWs;
+      reason = acceptable
+        ? (enemyWs > 0
+          ? 'It covers what they have won. They will sign.'
+          : 'They have won nothing, and are handed something. They will sign.')
+        : `They have won more than that (${-net} offered, ${enemyWs} is what their war has earned).`;
     }
   }
   return {
-    cost, acceptable, reason, gold, humiliate, subjugate, reparations,
+    cost, net, offered, acceptable, reason, gold, humiliate, subjugate, reparations,
     provinces: chosen.map((c) => c.id),
     provinceTo,
+    concessions: conceded.map((c) => c.id), concessionRows: conceded,
     release: releaseRows.map((r) => r.tag), releaseRows,
     transferVassals: transferRows.map((r) => r.tag), transferRows,
   };
@@ -5738,7 +6086,12 @@ export function settleScriptedPeace(ctx, war, a, b, winnersKey, opts) {
   }
 }
 
-function ensureReleasedCourt(ctx, row, enemyTag) {
+// The court a release row seats, made if it does not exist yet. `templateTag`
+// is the realm the land is leaving — the peace table's loser (SPEC §69/§76) or,
+// since SPEC §218, the crown that let go of it — and it is read for nothing but
+// the age's institutions: a state born in 66 CE does not start with 3 BCE's
+// technology because its people never held a throne of their own.
+function ensureReleasedCourt(ctx, row, templateTag) {
   const g = ctx.game;
   let t = g.tags[row.tag];
   if (t) {
@@ -5746,7 +6099,7 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     return t;
   }
   const def = (ctx.DEFINES.TAGS || {})[row.tag] || {};
-  const template = g.tags[enemyTag] || {};
+  const template = g.tags[templateTag] || {};
   const seat = ctx.byId(row.capitalId) || ctx.byId((row.provIds || [])[0]);
   const tech = template.tech || {};
   t = {
@@ -5783,10 +6136,13 @@ function ensureReleasedCourt(ctx, row, enemyTag) {
     claims: [], claimFabrications: [], overlord: null,
     heir: null, regency: false, missionIdx: 0,
     aiState: {},
-    ruler: { name: 'Council of the New State', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
+    ruler: row.ruler
+      ? { ...row.ruler }
+      : { name: 'Council of the New State', title: 'Council', gov: 2, infl: 2, mar: 2, age: 50 },
     releaseIdentity: row.releaseIdentity || null,
     dynamicCapital: seat ? (seat.canon || seat.name) : null,
-    description: 'A state created at the peace table from the lands and institutions of its people.',
+    description: row.description
+      || 'A state created at the peace table from the lands and institutions of its people.',
   };
   g.tags[row.tag] = t;
   return t;
@@ -5803,6 +6159,298 @@ function refreshReleasedManpower(ctx, tag) {
   }
   t.maxManpower = Math.round(max * resolveTagMult(ctx, tag, 'manpowerMult'));
   t.manpower = Math.max(num(t.manpower), Math.min(Math.max(2000, t.maxManpower), 6000));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Release a client state (SPEC §218): the crown lets go on purpose.
+//
+// Every road to a client kingdom ran through somebody ELSE's realm — the peace
+// table's subjugation clause, §76's transfer of an enemy's vassal, §92's collar
+// offered to a sovereign ally. None of them does the thing an over-extended
+// crown actually wants: hand a piece of its own realm a crown of its own, and
+// keep the tribute. Until now the only answers to a province that costs more to
+// hold than it yields were to hold it anyway or to lose it to a rising.
+//
+// WHICH piece is decided by the two abstractions the peace table already
+// reasons with, and no third one: a fallen court whose era-start homeland we
+// are sitting on can be restored on that homeland, and land whose people are
+// not our people can become a new state of its own culture and faith. What
+// CANNOT be released is as much of the section as what can:
+//
+//   * the capital, ever — a realm may dismember itself, not behead itself;
+//   * a living court's old homeland — handing Antioch back to the Seleucids
+//     is a cession, and a cession is agreed at a table with THEM;
+//   * our own people — a state carved out of our own faith and kind is a
+//     secession (SPEC §105), and secessions are suffered, not granted;
+//   * occupied land — a province an enemy army is standing in is not ours to
+//     give away, whatever the map says about who owns it.
+//
+// The bond that results is an ordinary client kingdom from the first day: it
+// takes a chancery seat (SPEC §202), its collar chafes with the others, it pays
+// the tribute, it follows us to war, and it comes home only through the union
+// §61 already knows how to weave.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Who sits on the throne we have just made. Deterministic on purpose — nothing
+// in this whole section touches the seeded stream, so a replay, a reload and a
+// guest's mirror all seat the same man in the same town. `Ethnarch` is the word
+// the ancient east used for precisely this office: a nation's own ruler, under
+// somebody else's crown.
+function grantedRuler(ctx, row) {
+  const pool = courtNamePool(ctx, row.tag) || [];
+  const h = stableStateHash(String(row.tag) + '|' + String(row.capitalId || 0));
+  return {
+    name: (pool.length ? pool[h % pool.length] : null) || 'The Ethnarch',
+    title: 'Ethnarch', gov: 2, infl: 2, mar: 2, age: 45,
+  };
+}
+
+function releaseGrantRow(ctx, tag, ids, kind, extra) {
+  const V = ctx.DEFINES.VASSALS || {};
+  const g = ctx.game;
+  const dev = ids.reduce((s, id) => s + devTotal(ctx.byId(id) || {}), 0);
+  const t = g.tags[tag];
+  const def = (ctx.DEFINES.TAGS || {})[tag] || {};
+  return {
+    tag,
+    name: (extra && extra.name) || (t && t.name) || def.name || tag,
+    kind, // 'restore' (a fallen court), 'create' (a new one), 'enlarge' (a client of ours)
+    origin: (extra && extra.origin) || 'historical',
+    culture: extra && extra.culture,
+    religion: extra && extra.religion,
+    releaseIdentity: extra && extra.releaseIdentity,
+    color: extra && extra.color,
+    capitalId: (extra && extra.capitalId) || ids[0] || 0,
+    provIds: ids,
+    provNames: ids.map((id) => { const q = ctx.byId(id); return q ? q.name : null; }).filter(Boolean),
+    dev: Math.round(dev),
+    cost: Math.round(num(V.releaseBase, 40) + dev * num(V.releasePerDev, 1)),
+    description: 'A state seated by the crown that let go of its ground, and holding it as a client kingdom.',
+  };
+}
+
+// Every state this realm could seat a crown on, out of its own land.
+export function releasableClients(ctx, tag) {
+  const g = ctx.game;
+  const out = [];
+  const me = g.tags[tag];
+  if (!me || !me.alive) return out;
+  if (!mechanicOn(ctx, 'clientKingdoms')) return out; // SPEC §142
+  const capital = tagDef(ctx, tag).capital || me.dynamicCapital || null;
+  const byNation = {};
+  const held = [];
+  const assigned = new Set();
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (!p || p.impassable || p.owner !== tag) continue;
+    if (p.controller !== tag) continue; // occupied land is not ours to give
+    if (capital && (p.canon || p.name) === capital) continue;
+    held.push(i);
+    const born0 = eraOwnerOf(ctx, p);
+    const born = born0 ? livingTag(ctx, born0) : null; // a formed crown is still us (SPEC §135)
+    if (!born || born === tag || born === 'WASTE' || born === 'REB') continue;
+    if (isOffmapTag(ctx, born)) continue;
+    const t = g.tags[born];
+    // A living court's homeland is a cession, not a release — unless the court
+    // is already ours, in which case this is the same client growing.
+    if (t && t.alive && t.overlord !== tag) continue;
+    if (!t && !(ctx.DEFINES.TAGS || {})[born]) continue;
+    (byNation[born] = byNation[born] || []).push(i);
+  }
+  for (const born of Object.keys(byNation)) {
+    // One piece of connected land (SPEC §109) — a client seated in two places
+    // it cannot march between is a census category with a flag.
+    const ids = contiguousRelease(ctx, born, byNation[born]);
+    if (!ids.length) continue;
+    for (const id of ids) assigned.add(id);
+    const t = g.tags[born];
+    out.push(releaseGrantRow(ctx, born, ids, t && t.alive ? 'enlarge' : 'restore'));
+  }
+
+  // The rest is divisible by the durable identity — culture and faith — the
+  // same way the peace table divides an enemy's land, with one rule of its own:
+  // our OWN people are not a state waiting to happen.
+  const byIdentity = {};
+  for (const i of held) {
+    if (assigned.has(i)) continue;
+    const p = g.provinces[i];
+    if (!p.culture || !p.religion) continue;
+    if (sameKind(ctx.DEFINES, p.culture, me.culture) && p.religion === me.religion) continue;
+    const identity = culturalStateIdentity(p.culture, p.religion);
+    (byIdentity[identity] = byIdentity[identity] || []).push(i);
+  }
+  const reserved = new Set(Object.keys(g.tags || {}));
+  for (const identity of Object.keys(byIdentity)) {
+    let standing = null;
+    for (const k of Object.keys(g.tags)) {
+      if (g.tags[k] && g.tags[k].releaseIdentity === identity) { standing = k; break; }
+    }
+    const ids = contiguousRelease(ctx, standing, byIdentity[identity]);
+    if (!ids.length) continue;
+    let seat = ctx.byId(ids[0]);
+    for (const id of ids) {
+      const p = ctx.byId(id);
+      if (p && (!seat || devTotal(p) > devTotal(seat))) seat = p;
+    }
+    const sample = seat || ctx.byId(ids[0]);
+    const culture = sample && sample.culture;
+    const religion = sample && sample.religion;
+    const newTag = culturalStateTag(ctx, identity, reserved);
+    reserved.add(newTag);
+    if (newTag === tag) continue;
+    const existing = g.tags[newTag];
+    if (existing && existing.alive && existing.overlord !== tag) continue; // theirs, not ours
+    const cultureDef = (ctx.DEFINES.CULTURES || {})[culture] || {};
+    const baseColor = Array.isArray(cultureDef.color) ? cultureDef.color : [112, 118, 126];
+    const shade = (stableStateHash(identity) % 31) - 15;
+    const color = baseColor.map((v, idx) => clamp(Math.round(v + shade + (idx === 2 ? 12 : 0)), 24, 224));
+    const name = existing && existing.name
+      ? existing.name
+      : ((cultureDef.name || 'Free') + ' State of ' + ((seat && seat.name) || 'the Provinces'));
+    out.push(releaseGrantRow(ctx, newTag, ids,
+      existing && existing.alive ? 'enlarge' : existing ? 'restore' : 'create', {
+        name,
+        origin: 'cultural',
+        culture,
+        religion,
+        releaseIdentity: identity,
+        color,
+        capitalId: seat && seat.id,
+      }));
+  }
+  out.sort((a, b) => b.dev - a.dev || a.name.localeCompare(b.name));
+  return out;
+}
+
+// The grant anchored at one province — which state this ground would become,
+// what it costs, and, when it cannot be made, why in words. Returns null where
+// the question does not arise at all (not our province, no state in it, or an
+// age that keeps no clients): the control disappears rather than sit disabled.
+export function releaseClientInfo(ctx, tag, provId) {
+  const g = ctx.game;
+  const me = g.tags[tag];
+  const p = ctx.byId(provId);
+  if (!me || !me.alive || !p || p.impassable || p.owner !== tag) return null;
+  if (!mechanicOn(ctx, 'clientKingdoms')) return null;
+  let row = null;
+  for (const r of releasableClients(ctx, tag)) {
+    if (r.provIds.indexOf(p.id) >= 0) { row = r; break; }
+  }
+  if (!row) return null;
+  const V = ctx.DEFINES.VASSALS || {};
+  const realm = devOfTag(ctx, tag);
+  const share = realm > 0 ? row.dev / realm : 1;
+  const out = {
+    ...row,
+    can: false,
+    why: '',
+    realmDev: Math.round(realm),
+    share: Math.round(share * 100) / 100,
+    maxShare: num(V.releaseMaxShare, 0.5),
+    infl: Math.round(num(me.points && me.points.infl)),
+    gratitude: Math.round(num(V.releaseGratitude, 60)),
+    tribute: Math.round(num(PEACE.tributeShare, 0.15) * 100),
+    needOpinion: Math.round(num((ctx.DEFINES.VASSALS || {}).incorporateOpinion, 80)),
+    seat: !!row.capitalId && ctx.byId(row.capitalId) ? ctx.byId(row.capitalId).name : (row.provNames[0] || ''),
+  };
+  const atWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (me.overlord) {
+    out.why = 'A client kingdom does not keep client kingdoms of its own.';
+  } else if (atWar) {
+    out.why = 'Not in wartime. A crown that carves up its own realm with an enemy in the field '
+      + 'is not granting a throne — it is losing one.';
+  } else if (share > out.maxShare) {
+    out.why = 'That is more of the realm than the realm would keep (' + row.dev
+      + ' development of our ' + out.realmDev + '; no grant may pass '
+      + Math.round(out.maxShare * 100) + '%).';
+  } else {
+    // A client we already hold is already staffed: enlarging it takes no new
+    // envoy, because it is not a new bond (SPEC §202).
+    const full = row.kind === 'enlarge' ? '' : chanceryFullWhy(ctx, tag, true);
+    if (full) out.why = full;
+    else if (out.infl < row.cost) {
+      out.why = 'Seating a crown takes ' + row.cost + ' influence points (we have ' + out.infl + ').';
+    }
+  }
+  out.can = !out.why;
+  return out;
+}
+
+// Let it go. The land changes hands, a court is seated on it — or the client
+// that already holds the identity grows — and the collar is fastened in the
+// same act. Nobody is conquered, so nobody abroad counts it against us.
+export function releaseClientCore(ctx, tag, provId) {
+  const info = releaseClientInfo(ctx, tag, provId);
+  if (!info) return { ok: false, why: 'There is no state here to raise.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[tag];
+  me.points.infl = num(me.points.infl) - info.cost;
+  const t = ensureReleasedCourt(ctx, info, tag);
+  const wasAlive = !!t.alive;
+  const given = [];
+  let seat = null;
+  for (const id of info.provIds) {
+    const p = ctx.byId(id);
+    if (!p || p.owner !== tag) continue;
+    // A change of sovereign starts the ledger over (SPEC §66) — and this land
+    // is not being conquered, it is being handed its own government, so the
+    // conqueror's marks come off rather than on.
+    p.integration = 0;
+    p.integrating = null;
+    changeOwnerCore(ctx, p, info.tag);
+    changeControllerCore(ctx, p, info.tag);
+    p.autonomy = Math.min(num(p.autonomy, 0.25), 0.25); // it governs itself now
+    p.conversion = null;
+    p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+    given.push(p.name);
+    if (!seat || devTotal(p) > devTotal(seat)) seat = p;
+  }
+  if (!given.length) return { ok: false, why: 'There is no state here to raise.' };
+  if (!wasAlive) {
+    // A court rising from nothing: its own house, and none of the dead one's
+    // quarrels. It keeps no alliance of its own, because a client does not.
+    t.alive = true;
+    t.warExhaustion = 0;
+    t.stability = Math.max(num(t.stability), 0);
+    t.legitimacy = clamp(Math.max(num(t.legitimacy), 50), 0, 100);
+    t.treasury = Math.max(num(t.treasury), 25);
+    t.atWarWith = [];
+    for (const al of (t.allies || []).slice()) breakAllianceCore(ctx, info.tag, al);
+    t.allies = [];
+    t.ruler = grantedRuler(ctx, info);
+    t.freedBy = null; // it was not freed; it was seated
+  }
+  t.overlord = tag;
+  t.incorporating = null;
+  if (seat && !t.dynamicCapital) t.dynamicCapital = seat.canon || seat.name;
+  refreshReleasedManpower(ctx, info.tag);
+  addOpinion(ctx, info.tag, tag, num(V.releaseGratitude, 60));
+  addOpinion(ctx, tag, info.tag, num(V.releaseRegard, 25));
+  const guard = Math.max(0, Math.round(num(V.releaseGuard, 2)));
+  if (!wasAlive && seat && guard && !armiesOf(ctx, info.tag).length) {
+    spawnArmy(ctx, info.tag, seat.name, { inf: guard, name: 'Guard of ' + (t.name || info.tag) });
+  }
+  const myName = me.name || tag;
+  const theirName = t.name || info.tag;
+  chronicle(ctx, 'era', info.kind === 'enlarge'
+    ? myName + ' adds ' + given.join(', ') + ' to the client kingdom of ' + theirName + '.'
+    : myName + ' lets go of ' + given.join(', ') + ': ' + theirName
+      + ' is raised as a client kingdom, with its own court and its own laws, and the tribute owed to us.');
+  ctx.bus.emit('provinceOwner', {});
+  return {
+    ok: true,
+    tag: info.tag,
+    name: theirName,
+    kind: info.kind,
+    cost: info.cost,
+    dev: info.dev,
+    provNames: given,
+    seat: seat ? seat.name : '',
+    ruler: t.ruler && t.ruler.name,
+    title: t.ruler && t.ruler.title,
+  };
 }
 
 export function executePeaceDeal(ctx, war, byTag, deal) {
@@ -5844,6 +6492,33 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
       addOpinion(ctx, recip, byTag, 10);
     }
   }
+  // What WE hand over (SPEC §222). The mirror of the block above, and it takes
+  // the same marks: the new owner starts the integration ledger over and the
+  // land arrives restive. Two differences, both deliberate. WE record the
+  // grudge, because it is our loss to remember — and nobody gains infamy: the
+  // world does not count as a conqueror a court that was handed something at a
+  // table it did not dictate. Being paid is not taking.
+  const ourTerms = [];
+  const givenNames = [];
+  if (info.enemyLeader) {
+    for (const row of ev.concessionRows || []) {
+      const p = ctx.byId(row.id);
+      if (!p || p.owner !== byTag) continue;
+      p.integration = 0;
+      p.integrating = null;
+      recordGrudge(ctx, byTag, info.enemyLeader, row.id);
+      changeOwnerCore(ctx, p, info.enemyLeader);
+      changeControllerCore(ctx, p, info.enemyLeader);
+      p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
+      p.conversion = null;
+      p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+      p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
+      const et2 = g.tags[info.enemyLeader];
+      if (et2 && Array.isArray(et2.claims)) et2.claims = et2.claims.filter((c) => c !== row.id);
+      givenNames.push(p.name);
+    }
+  }
+  if (givenNames.length) ourTerms.push('cedes ' + givenNames.join(', '));
   if (cededNames.length) terms.push('cedes ' + cededNames.join(', '));
   for (const tag of Object.keys(cededToClient)) {
     terms.push('cedes ' + cededToClient[tag].join(', ') + ' to '
@@ -5992,15 +6667,25 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     terms.push('is humiliated before the nations');
   }
   const participants = war.attackers.concat(war.defenders);
+  // A treaty may now run in both directions (SPEC §222), so every summary
+  // below is two clauses: what the enemy does, and what we do. Either may be
+  // empty; only both empty is a white peace.
+  const myName = (g.tags[byTag] && g.tags[byTag].name) || byTag;
+  const ourClause = ourTerms.length ? myName + ' ' + ourTerms.join('; ') + '.' : '';
+  const bothClauses = (enemyClause, whiteText) => {
+    if (enemyClause && ourClause) return enemyClause + ' ' + ourClause;
+    return enemyClause || ourClause || whiteText;
+  };
   if (info.exit) {
     // The junior partner withdraws (SPEC §74): its cessions are already
     // applied above; now it settles its own front and leaves. The leader's
     // war continues on every front, occupations and all.
     withdrawFromWar(ctx, war, byTag);
-    const summary = terms.length
-      ? (g.tags[byTag] ? g.tags[byTag].name : byTag) + ' ' + terms.map((t) => 'the enemy ' + t).join('; ')
-        + ' — and withdraws from the war.'
-      : (g.tags[byTag] ? g.tags[byTag].name : byTag) + ' withdraws from the war; occupations on its front revert.';
+    const summary = bothClauses(
+      terms.length
+        ? myName + ' ' + terms.map((t) => 'the enemy ' + t).join('; ') + ' — and withdraws from the war.'
+        : '',
+      myName + ' withdraws from the war; occupations on its front revert.');
     chronicle(ctx, 'peace', 'A withdrawal: ' + summary + ' '
       + (info.leaderName || 'The coalition') + ' fights on.');
     if (participants.indexOf(g.playerTag) >= 0 || byTag === g.playerTag) {
@@ -6016,9 +6701,9 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     // One court leaves the table; the war goes on without them. Status quo
     // and truces are theirs alone — every other front keeps its occupations.
     releaseFromWar(ctx, war, info.enemyLeader, byTag);
-    const summary = terms.length
-      ? (info.enemyName || 'They') + ' ' + terms.join('; ') + ' and leaves the war.'
-      : (info.enemyName || 'They') + ' leaves the war; occupations between us revert.';
+    const summary = bothClauses(
+      terms.length ? (info.enemyName || 'They') + ' ' + terms.join('; ') + ' and leaves the war.' : '',
+      (info.enemyName || 'They') + ' leaves the war; occupations between us revert.');
     chronicle(ctx, 'peace', 'A separate peace: ' + summary);
     if (participants.indexOf(g.playerTag) >= 0) {
       ctx.bus.emit('notify', {
@@ -6047,9 +6732,9 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     delete g.truces[key];
     if (g.flags && g.flags._settledWars) delete g.flags._settledWars[key];
   }
-  const summary = terms.length
-    ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.'
-    : 'A white peace: every occupation reverts.';
+  const summary = bothClauses(
+    terms.length ? (info.enemyName || 'The enemy') + ' ' + terms.join('; ') + '.' : '',
+    'A white peace: every occupation reverts.');
   chronicle(ctx, 'peace', war.name + ' ends. ' + summary);
   if (participants.indexOf(g.playerTag) >= 0) {
     ctx.bus.emit('notify', {

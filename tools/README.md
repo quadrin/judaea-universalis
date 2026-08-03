@@ -356,8 +356,20 @@ prove the government and region strands are earnable without a court:
 `monthlyFactions` runs for the player alone, so that run must leave the court
 table *absent* rather than full — fill it and any check reading `t.factions`
 directly instead of through `factionApproval` will fake its own reachability.
+It also owns the crown: `MLI` lives in `FORMABLES` rather than a bookmark, so
+it is proclaimed per chapter and checked there — and its pay test covers the
+whole 22-node chain, not just the band, because a stub tree is where dead
+content hides. Three things the maximal realm has to do that are easy to
+forget when extending it: seat an **heir** (succession rungs are dead
+without one), **convert** the provinces it grants to the tag's own religion
+(several chains count land "keeping the Law", not land held), and resolve the
+court through the engine's `factionDefs` rather than the bookmark's table —
+a formed crown inherits its origin's court and appears in no bookmark's
+`factions` at all.
+
 Adding missions to a playable chain means updating the exact node counts in
-`smoke129`'s PRINCIPALS, `smoke126`'s GROWTH, and the index-based layout
+`smoke129`'s PRINCIPALS, `smoke126`'s GROWTH, `smoke120`'s spine/branch/chain
+census for the crown, and the index-based layout
 assertions in `smoke111` (which pin the whole col/row string), plus the
 totals in `smoke2` and `smoke3`.
 
@@ -1463,3 +1475,114 @@ If you add a cooldown, **put the acting realm in the key**. If you add anything
 a crown earns with somebody outside its own borders, ask whether a second crown
 would share it. The sweep that found these lives in the suite's second half:
 after the guest acts, the host must still be able to do the same thing.
+
+## A crown of its own (SPEC §218)
+
+`smoke145` owns releasing a client state: the two abstractions a grant is made
+out of, the five things that can never be granted, the five refusals in words,
+the grant itself, contiguity against the real map, the second grant enlarging
+the first client, determinism, the save, and the action as the panel presses
+it.
+
+Three things to know before you read a failure in it.
+
+It boots from the geometry **snapshot** rather than a stub, for the reason
+smoke77 documents: the contiguity rule is invisible on an empty adjacency
+graph, and this section leans on it twice (the Decapolis and Greece are the two
+pockets of one identity, and only one of them may be offered).
+
+Its setups **make peace first**. Every chapter opens with its own war running,
+and a grant is a peacetime act by design (the rule §61 already applies to
+weaving a union, pointed the other way) — so a section that forgets `peace(ctx)`
+fails with the wartime refusal rather than with anything it was testing.
+
+And its determinism section is the canary for the harness claim. Nothing in
+§218 touches the seeded stream: the state's tag is a hash of identity and
+bookmark, its ethnarch a hash of tag and seat. A granting campaign and a
+non-granting one must draw the same next three numbers, and two campaigns on
+different seeds must seat the same court under the same man. If you make any
+of it roll, that suite fails and `node tools/autorun.mjs 8` stops being byte
+identical — which it is, on all eight bookmarks, because no AI court ever
+grants a crown out of its own realm. The one call site is the player's own
+action, and smoke145 reads the AI half of `js/sim/` as text to keep it that
+way.
+
+## The collar comes off (SPEC §219)
+
+`smoke146` owns releasing a client kingdom. Its central assertion is an
+`inventory()` helper — every province with its controller and autonomy, every
+regiment with its strength and station, the ruler, treasury, manpower,
+technology, reforms and constitution, serialized before and after — and the
+test is that the string is IDENTICAL across the release. If you ever make this
+act move anything besides `overlord`, that is where it will fail, and it is
+supposed to.
+
+Three things to know if you touch it.
+
+It builds its subject with §218 (`withClient()` seats a Phoenician state on the
+coast and then frees it), so a break in `releaseClientCore` fails this suite in
+its setup rather than in an assertion. Read smoke145 first when both go red.
+
+Its 66 CE section is the age clause, not decoration: Rome opens the Great
+Revolt holding Agrippa by script, and the point is that a collar can be struck
+in a chapter whose `clientKingdoms` switch is on OR off — §142 gates making
+clients, never unmaking them. If you add a mechanic gate to `freeClientInfo`,
+that section is what tells you.
+
+And its strain section collars living courts until it is one past
+`DIPLOMACY.freeClients` rather than naming three tags, because which small
+courts are alive in 167 BCE is a bookmark detail that has moved before. The
+first draft named ITU, which is not seated in that chapter, and quietly tested
+three collars against a three-collar allowance.
+
+`uitest47` carries the browser half of both §218 and §219 in one boot — the
+grant makes the client, the last section lets it go — which is worth keeping
+that way: booting this frame on SwiftShader costs more than every assertion in
+the suite put together.
+
+## A banner nobody is flying (SPEC §221)
+
+`smoke11` grew the section, and it is the suite to run after touching
+`switchTagCore`, `formableList` or `FORMABLES`.
+
+The assertion worth knowing about is not the crown, it is the debt. Bonds
+recorded against a court survive it — `diploBonds` skips the dead rather than
+forgetting them — so the suite deliberately gives the doomed court an ally
+before killing it and checks the entry is gone once the banner changes hands.
+If `freeBanner` is ever weakened, the failure reads "the dead revolt's
+alliances do not come with its name" rather than as something mysterious three
+sections later.
+
+Two things a new formable of this shape needs. It must be player-only: the AI
+still refuses any tag that exists at all (`aiFormNation` was deliberately left
+on the older gate), which is what keeps `node tools/autorun.mjs 8` byte
+identical. And if the chapter already has a mission table under the target tag
+— 66 CE has one under `JUD` — the formed crown inherits it through
+`missionsFor`, which is the intended behaviour and not a bug to route around;
+nodes already satisfied on the day of the proclamation complete on the next
+monthly pass.
+
+## A treaty that runs both ways (SPEC §222)
+
+`smoke147` owns it: the concession list at the peace table, the losing crown
+buying its ending, the net ledger, and the peacetime deed.
+
+Two traps if you read a failure in it.
+
+Its `losing()` helper builds the war **by hand** after `declareWar` — forcing
+`attackers`/`defenders` to one court each — for the reason smoke38's §220
+section documents: a war declared on a client drags the protector in, and a
+protector's development changes every number the table computes.
+
+And its peacetime section opens by asserting a province *cannot* be given away,
+which is not a bug in the fixture. This suite runs on the synthetic bead
+geometry, where "next door" means the neighbouring province id, so a fresh
+Judaea is genuinely bound to nobody and adjacent to nobody who governs. The
+section then opens each road to a recipient in turn — a neighbour, then an
+ally — which is a better test of the rule than a map where both happen to be
+true at once.
+
+The claim that keeps the harness still is narrow and worth preserving: a deal
+with no `concessions` in it runs through arithmetic identical to the old code
+(`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
+so no AI ever offers or expects one.

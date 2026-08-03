@@ -13,6 +13,9 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let actions = null;
   let provId = 0;
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
+  let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
+  let freeArmed = ''; // client kingdom whose collar-striking has been armed (SPEC §219)
+  let cedeArmed = 0; // province whose gift has been armed (SPEC §222)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
 const RISING_LABELS = {
@@ -107,6 +110,21 @@ const RISING_LABELS = {
           <button class="pp-build-btn hidden" data-integ="settle" data-ref="integSettle">${icon('bricks')}<span>Settle the Land</span></button>
         </div>
       </div>
+      <div class="pp-build hidden" data-ref="releaseBlock">
+        <div class="pp-build-title">A Crown of Its Own</div>
+        <div class="pp-constr" data-ref="releaseRow"></div>
+        <div class="pp-build-grid pp-build-one">
+          <button class="pp-build-btn" data-release="1" data-ref="releaseBtn">${icon('laurel')}<span data-ref="releaseLabel">Release as a Client Kingdom</span></button>
+        </div>
+      </div>
+      <div class="pp-build hidden" data-ref="cedeBlock">
+        <div class="pp-build-title">Give It Away</div>
+        <div class="pp-constr" data-ref="cedeRow"></div>
+        <div class="pp-cede-to"><select class="peace-to" data-ref="cedeTo"></select></div>
+        <div class="pp-build-grid pp-build-one">
+          <button class="pp-build-btn" data-cede="1" data-ref="cedeBtn">${icon('scroll')}<span data-ref="cedeLabel">Cede the Province</span></button>
+        </div>
+      </div>
       <div class="pp-build hidden" data-ref="wasteBlock">
         <div class="pp-build-title">The Unclaimed Waste</div>
         <div class="pp-constr hidden" data-ref="wasteCampRow"></div>
@@ -174,6 +192,7 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
           <button class="pp-dip" data-dip="protect" data-ref="dipProtect">Offer Our Protection</button>
           <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
+          <button class="pp-dip" data-dip="free" data-ref="dipFree">Release Them</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip" data-dip="rival" data-ref="dipRival">Name as Rival</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
@@ -192,6 +211,16 @@ const RISING_LABELS = {
         refresh();
         return;
       }
+      // Striking a collar hands away a whole country (SPEC §219), so it arms
+      // first and acts second — §218's idiom, for the same reason.
+      if (b.dataset.dip === 'free' && freeArmed !== dipTag) {
+        const armedTag = dipTag;
+        freeArmed = armedTag;
+        setTimeout(() => { if (freeArmed === armedTag) { freeArmed = ''; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      if (b.dataset.dip === 'free') freeArmed = '';
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
         war: 'declareWarOn', incorporate: 'incorporateVassal',
@@ -203,6 +232,7 @@ const RISING_LABELS = {
         embargo: 'embargoState',
         unembargo: 'liftEmbargo',
         protect: 'offerClientship',
+        free: 'freeClientState',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
@@ -223,6 +253,42 @@ const RISING_LABELS = {
           : b.dataset.integ === 'integrate' ? 'integrateProvince' : 'convertProvince';
       try { if (typeof actions[fn] === 'function') actions[fn](provId); }
       catch (err) { warnOnce('integ-' + b.dataset.integ, err); }
+      refresh();
+    });
+    // Two taps, not a confirm dialog (the idiom the saves shelf uses): the
+    // first arms the button and names what walks out, the second does it, and
+    // walking away disarms it. Handing a province its own crown is not
+    // something to lose to a mis-tap.
+    refs.releaseBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-release]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      if (typeof actions.releaseClientState !== 'function') return;
+      if (releaseArmed !== provId) {
+        const armedId = provId;
+        releaseArmed = armedId;
+        setTimeout(() => { if (releaseArmed === armedId) { releaseArmed = 0; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      releaseArmed = 0;
+      try { actions.releaseClientState(provId); } catch (err) { warnOnce('release-client', err); }
+      refresh();
+    });
+    refs.cedeBlock.addEventListener('click', (e) => {
+      const b = e.target instanceof Element ? e.target.closest('[data-cede]') : null;
+      if (!b || b.classList.contains('disabled') || !actions) return;
+      if (typeof actions.cedeProvince !== 'function') return;
+      const to = refs.cedeTo.value;
+      if (!to) return;
+      if (cedeArmed !== provId) {
+        const armedId = provId;
+        cedeArmed = armedId;
+        setTimeout(() => { if (cedeArmed === armedId) { cedeArmed = 0; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      cedeArmed = 0;
+      try { actions.cedeProvince(provId, to); } catch (err) { warnOnce('cede-province', err); }
       refresh();
     });
     refs.wasteBlock.addEventListener('click', (e) => {
@@ -316,6 +382,7 @@ const RISING_LABELS = {
 
   function open(id) {
     provId = id | 0;
+    releaseArmed = 0; // a new province arrives with nothing armed (SPEC §218)
     if (!provId) { close(); return; }
     el.classList.remove('hidden');
     refresh();
@@ -528,6 +595,10 @@ const RISING_LABELS = {
     // Integration (v1.5): autonomy & conversion for owned provinces
     refreshIntegration();
     refreshCommunity();
+    // …and its opposite (SPEC §218): the province that is handed its own crown
+    refreshRelease();
+    // …and the plainer opposite (SPEC §222): the province handed to a neighbour
+    refreshCession();
     // The unclaimed waste (SPEC §64): expedition, plantation, annexation
     refreshWasteland();
 
@@ -641,6 +712,80 @@ const RISING_LABELS = {
         `${icon('bricks')}<span class="pp-constr-name">Settlers arriving</span>` +
         `<span class="pp-constr-left">${m} month${m === 1 ? '' : 's'} left</span>`);
     }
+  }
+
+  // Release a client state (SPEC §218): the ground under this province could
+  // carry a crown of its own. Absent — not greyed — wherever the question does
+  // not arise: land of our own people, our capital, or an age without clients.
+  function refreshRelease() {
+    let info = null;
+    if (actions && typeof actions.getClientRelease === 'function') {
+      try { info = actions.getClientRelease(provId); } catch (e) { warnOnce('getClientRelease', e); info = null; }
+    }
+    refs.releaseBlock.classList.toggle('hidden', !info);
+    if (!info) { if (releaseArmed === provId) releaseArmed = 0; return; }
+    const armed = releaseArmed === provId && info.can;
+    const towns = info.provNames.length;
+    const verb = info.kind === 'enlarge' ? 'joins' : info.kind === 'restore' ? 'rises again in' : 'is raised in';
+    setHtml(refs.releaseRow,
+      `${icon('flag')}<span class="pp-constr-name">${esc(info.name)} ${esc(verb)} `
+      + `${esc(info.provNames.join(', '))}</span>`
+      + `<span class="pp-constr-left">${info.dev} dev · ${info.cost} infl</span>`);
+    setText(refs.releaseLabel, armed
+      ? 'Let it go for good?'
+      : info.kind === 'enlarge' ? 'Add to the Client Kingdom' : 'Release as a Client Kingdom');
+    refs.releaseBtn.classList.toggle('disabled', !info.can);
+    refs.releaseBtn.classList.toggle('pp-build-sure', armed);
+    const terms = (info.kind === 'enlarge'
+      ? `Hand ${towns === 1 ? 'this town' : 'these ' + towns + ' towns'} to ${info.name}, `
+        + `which already answers to us — ${info.cost} influence.\n`
+        + 'Their land, their tribute and their levies all grow; the bond is one we already staff.'
+      : `Seat a crown on ${towns === 1 ? 'this province' : 'these ' + towns + ' provinces'} — `
+        + `${info.cost} influence.\n`
+        + `${info.name} ${info.kind === 'restore' ? 'is restored' : 'is proclaimed'} at `
+        + `${info.seat || info.provNames[0]} with its own court, its own laws and its own levies. `
+        + `It becomes our client kingdom on the day it is made: ${info.tribute}% of its income is ours, `
+        + 'our wars are its wars, and it may be woven into the realm again once it is devoted enough '
+        + `(opinion ${info.needOpinion}+; it starts at ${info.gratitude} for the hand that crowned it).\n`
+        + 'Costs NO infamy — nobody was conquered. It takes a chancery seat, and the collars chafe '
+        + 'when they are many.')
+      + `\n――――――\n${info.dev} development of our ${info.realmDev} walks out `
+      + `(${Math.round(info.share * 100)}% of the realm; a grant may not pass ${Math.round(info.maxShare * 100)}%).`;
+    refs.releaseBtn.dataset.tt = info.can
+      ? (armed ? 'Tap again to let it go. Walk away and the offer lapses.\n――――――\n' + terms : terms)
+      : `${info.why}\n――――――\n${terms}`;
+    if (!info.can && releaseArmed === provId) releaseArmed = 0;
+  }
+
+  // Give it away (SPEC §222): a province handed to a neighbour or a patron,
+  // with no war and no treaty. Absent wherever there is nobody to give it to.
+  function refreshCession() {
+    let info = null;
+    if (actions && typeof actions.getCession === 'function') {
+      try { info = actions.getCession(provId); } catch (e) { warnOnce('getCession', e); info = null; }
+    }
+    const show = !!info && (info.recipients || []).length > 0;
+    refs.cedeBlock.classList.toggle('hidden', !show);
+    if (!show) { if (cedeArmed === provId) cedeArmed = 0; return; }
+    const armed = cedeArmed === provId && info.can;
+    setHtml(refs.cedeRow,
+      `${icon('scroll')}<span class="pp-constr-name">${esc(info.name)} passes out of the realm</span>`
+      + `<span class="pp-constr-left">${info.dev} dev</span>`);
+    const opts = info.recipients.map((r) => `<option value="${esc(r.tag)}">${esc(r.name)}`
+      + `${r.bond ? ' (' + esc(r.bond) + ')' : r.adjacent ? ' (next door)' : ''}</option>`).join('');
+    setHtml(refs.cedeTo, opts);
+    const chosen = info.recipients.find((r) => r.tag === refs.cedeTo.value) || info.recipients[0];
+    setText(refs.cedeLabel, armed ? 'Give it away for good?' : 'Cede the Province');
+    refs.cedeBtn.classList.toggle('disabled', !info.can);
+    refs.cedeBtn.classList.toggle('pp-build-sure', armed);
+    const terms = `Hand ${esc(info.name)} to ${esc(chosen ? chosen.name : 'them')} — no war, no treaty, no price.\n`
+      + `${info.dev} development leaves the realm for good. Their court remembers it: `
+      + `+${info.gratitude} opinion, and no infamy for anybody — nobody was conquered.\n`
+      + 'The province keeps everything it has and answers elsewhere from the day it is signed.';
+    refs.cedeBtn.dataset.tt = info.can
+      ? (armed ? 'Press again to sign it away. Walk away and the offer lapses.\n――――――\n' + terms : terms)
+      : `${info.why}\n――――――\n${terms}`;
+    if (!info.can && cedeArmed === provId) cedeArmed = 0;
   }
 
   // The unclaimed waste (SPEC §64): send soldiers to camp in ownerless
@@ -1036,11 +1181,40 @@ const RISING_LABELS = {
         ? (inc.suspended ? `Held by war… ${inc.inProgress}m` : `Incorporating… ${inc.inProgress}m`)
         : 'Incorporate');
       setDipBtn(refs.dipIncorporate, inc.can, inc.why,
-        `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
+        (inc.capped
+          ? `The price is at its ceiling: ${inc.max} influence points, whatever their size. A realm's `
+            + `points stop at ${inc.max}, so a union costing more than that could never be paid for at all.\n`
+          : '')
+        + `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
         + `(${inc.dev} development).\nTheir court must be nearly devoted — opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed — and both at peace the whole way: `
         + `war or cooling affection unravels the work and the influence is lost.\n`
         + `On completion their lands, treasury and people join the realm; the world counts absorption at half a conquest's infamy.`);
     }
+    // Striking the collar (SPEC §219): Incorporate's mirror, and the only way
+    // out of a client kingdom that is the lord's own to choose. Two taps,
+    // because it hands away a whole country.
+    const fr = d.freedom;
+    refs.dipFree.classList.toggle('hidden', !fr);
+    if (fr) {
+      const armed = freeArmed === dipTag && fr.can;
+      setText(refs.dipFree, armed ? 'Let them go for good?' : 'Release Them');
+      refs.dipFree.classList.toggle('pp-dip-sure', armed);
+      const terms = `Strike the collar: ${fr.name} answers to nobody.\n`
+        + `It costs nothing, because the price is the client. Their ${fr.provinces} `
+        + `${fr.provinces === 1 ? 'province' : 'provinces'} (${fr.dev} development)`
+        + `${fr.armies ? `, their ${fr.armies === 1 ? 'army' : 'armies'}` : ''}, their court and `
+        + `their laws go with them; the tribute and the war duty end.\n`
+        + `Their regard for us rises ${fr.gratitude} — and they will not take our collar again `
+        + `for ${Math.round(fr.collarMonths / 12)} years, so it is not a move to make twice.\n`
+        + `The chancery gets the seat back (${fr.seats} of ${fr.capacity} spent)`
+        + `${fr.strain > 0 ? `, and the collars we keep chafe less for it` : ''}.`
+        + (fr.incorporating
+          ? `\nThe union we are weaving (${fr.incorporating} months to run) dies with the bond, and the influence it cost is spent.`
+          : '');
+      setDipBtn(refs.dipFree, fr.can, fr.why, armed
+        ? 'Press again to let them go. Walk away and the offer lapses.\n――――――\n' + terms
+        : terms);
+    } else if (freeArmed && freeArmed === dipTag) freeArmed = '';
     // Fabricate claim: per-province, priced in influence.
     let ci = null;
     if (actions && typeof actions.getClaimInfo === 'function') {

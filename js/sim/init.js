@@ -16,6 +16,9 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
+  releasableClients, releaseClientInfo, releaseClientCore,
+  freeClientInfo, freeClientCore,
+  cedeProvinceInfo, cedeProvinceCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
@@ -1205,8 +1208,11 @@ export function gameActions(ctx) {
       else whyNotSubsidize = chanceryFullWhy(ctx, me, true);
       // Incorporation (SPEC §61): a willing client can join the realm outright.
       let inc = null;
+      // …and its mirror (SPEC §219): the collar struck off instead.
+      let freedom = null;
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
+        try { freedom = freeClientInfo(ctx, me, tag); } catch (e) { freedom = null; }
       }
       // Embargo and blockade (SPEC §100): the pressure short of war, in the
       // ages that use it.
@@ -1298,7 +1304,14 @@ export function gameActions(ctx) {
         incorporate: inc ? {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
-          suspended: !!inc.suspended,
+          suspended: !!inc.suspended, capped: !!inc.capped, max: inc.max,
+        } : null,
+        freedom: freedom ? {
+          can: freedom.can, why: freedom.why, name: freedom.name, dev: freedom.dev,
+          provinces: freedom.provinces, armies: freedom.armies, gratitude: freedom.gratitude,
+          collarMonths: freedom.collarMonths, incorporating: freedom.incorporating,
+          seats: freedom.seats, capacity: freedom.capacity,
+          clients: freedom.clients, strain: freedom.strain,
         } : null,
         marriage,
         recognition,
@@ -1356,7 +1369,18 @@ export function gameActions(ctx) {
     for (const f of FORMABLES) {
       if (f.from !== g.playerTag) continue;
       if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
-      if (g.tags[f.to]) continue; // that banner already flies elsewhere
+      // Somebody is flying that banner (SPEC §221). A FALLEN court's name is
+      // not taken — it is a line in the chronicle, and a crown standing on its
+      // ground may take it up. The AI keeps the older rule and only claims
+      // banners that have never been worn.
+      //
+      // A `contested` crown is one whose court is ON the map, and it stays in
+      // the list while that court lives, greyed, with the row that says so
+      // unticked — because a decision a player cannot see is a decision that
+      // does not exist. It cannot be enacted while the banner flies: the row
+      // is a real requirement and `switchTagCore` refuses besides.
+      const held = g.tags[f.to];
+      if (held && held.alive !== false && !f.contested) continue;
       const rows = (f.requires || []).map((r) => {
         let ok = false;
         try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }
@@ -2985,6 +3009,64 @@ export function gameActions(ctx) {
           + ((g.tags[g.playerTag] && g.tags[g.playerTag].name) || g.playerTag)
           + ' as a client kingdom — asked for, not fought for.');
       } catch (e) { warnOnce('offerClientship', 'offerClientship failed', e); }
+    },
+
+    // ---- releasing a client state (SPEC §218) --------------------------------
+    // The whole list, for anything that wants to reason about the realm's own
+    // loose ends; the panel asks about one province at a time.
+    getClientReleases() {
+      try { return releasableClients(ctx, g.playerTag); }
+      catch (e) { warnOnce('clientReleases', 'getClientReleases failed', e); return []; }
+    },
+    getClientRelease(provId) {
+      try { return releaseClientInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('clientRelease', 'getClientRelease failed', e); return null; }
+    },
+    releaseClientState(provId) {
+      try {
+        const res = releaseClientCore(ctx, g.playerTag, provId);
+        if (!res.ok) { say('The grant is refused', res.why, 'bad'); return; }
+        if (res.kind === 'enlarge') {
+          say('The client kingdom grows', res.provNames.join(', ') + ' pass'
+            + (res.provNames.length === 1 ? 'es' : '') + ' to ' + res.name
+            + ', which already answers to us (' + res.cost + ' influence). Their tribute rises with them.',
+          'good');
+          return;
+        }
+        say('A crown of its own', res.name + ' is raised in ' + res.provNames.join(', ')
+          + ' under ' + (res.title || 'a ruler') + ' ' + (res.ruler || 'of its own')
+          + ' (' + res.cost + ' influence). It governs itself, pays us tribute and follows us to war — '
+          + 'and nobody was conquered, so nobody abroad counts it against us.', 'good');
+      } catch (e) { warnOnce('releaseClient', 'releaseClientState failed', e); }
+    },
+
+    // ---- striking the collar (SPEC §219) ------------------------------------
+    freeClientState(tag) {
+      try {
+        const res = freeClientCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('The collar stays on', res.why, 'bad'); return; }
+        say('A crown released', res.name + ' answers to nobody: ' + res.provinces
+          + (res.provinces === 1 ? ' province' : ' provinces') + ' and ' + res.dev
+          + ' development leave our house with them, and the tribute ends. They will not '
+          + 'forget it (+' + res.gratitude + ' opinion) — and they will not take our collar '
+          + 'again for ' + Math.round(res.collarMonths / 12) + ' years.'
+          + (res.lostWeaving ? ' The union we were weaving dies with the bond.' : ''), 'good');
+      } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
+    },
+
+    // ---- a province handed over without a war (SPEC §222) --------------------
+    getCession(provId) {
+      try { return cedeProvinceInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('cessionInfo', 'getCession failed', e); return null; }
+    },
+    cedeProvince(provId, toTag) {
+      try {
+        const res = cedeProvinceCore(ctx, g.playerTag, provId, toTag);
+        if (!res.ok) { say('The deed is not signed', res.why, 'bad'); return; }
+        say('A province given away', res.name + ' answers to ' + res.toName + ' from today — '
+          + res.dev + ' development, handed over with no war and no treaty. Their court will '
+          + 'not forget it (+' + res.gratitude + ' opinion).', 'good');
+      } catch (e) { warnOnce('cedeProvince', 'cedeProvince failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------

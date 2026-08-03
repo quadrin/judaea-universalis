@@ -59,6 +59,15 @@ export const DEFINES = {
     treasury: 50,  // talents of supplies to put the columns on the trail
     annexGov: 50,  // governance points to annex once the frontier is planted
   },
+  // The robbers' court (SPEC §217). A rising that takes ownerless frontier at
+  // the rim of the world and is still standing on it two years later stops
+  // being a rising. Bounded like the easter egg it is: one per campaign.
+  OUTLAW: {
+    months: 24,   // consecutive months of ownerless ground held, band present
+    men: 1000,    // the band has to still be a garrison, not a straggler
+    treasury: 40, // what a generation of tolls and ransoms comes to
+    ships: 3,     // hulls a corsair court is proclaimed with
+  },
 
   // The drumbeat of accomplishment (SPEC §207). A realm banks at most one
   // mission a month, and after each one its chain rests this many months
@@ -343,6 +352,15 @@ export const DEFINES = {
       effects: { legitimacyAdd: 0.1, diploSeats: 1, convertMult: 1.1 },
       dynastic: true, archetype: 'theocracy',
     },
+
+    // ── The constitution of a band that stopped moving (SPEC §217) ─────────
+    company: {
+      name: 'The Company',
+      desc: 'No crown, no assembly, no seat any chancery has an address for: the men keep the chief who feeds them and take another when he stops. Nothing is inherited and nothing is voted, which makes the succession the shortest on the map and the diplomacy the hardest (+8% morale, −2 envoys).',
+      effects: { moraleMult: 1.08, diploSeats: -2 },
+      heirless: true, drawn: true, archetype: 'republic',
+      vacancy: 'the company keeps whoever is still standing',
+    },
   },
   // Default government per tag; bookmarks may override (bookmark.govTypes —
   // Rome is a republic until the emperors).
@@ -360,6 +378,7 @@ export const DEFINES = {
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     REB: 'tribal',
+    LST: 'company', PIR: 'company', // SPEC §217
     // -- the political west (SPEC §173) --
     // Carthage's suffetes and Massalia's timouchoi are elected; the Aedui
     // choose a vergobret for a single year (Caesar BG I.16). Tacitus says the
@@ -1291,6 +1310,28 @@ export const DEFINES = {
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
       ideas: { moraleMult: 1.05 },
     },
+    // The robbers' court (SPEC §217): the two states a rising can found if it
+    // walks off the edge of the governed world and stops there. Neither is
+    // seated by any bookmark — they exist only if a campaign produces one, and
+    // a campaign produces at most one. Faith, tongue and seat come off the
+    // ground they rose on; what is here is the name, the colour and the trade.
+    LST: {
+      name: 'The Lestai', adj: 'Brigand', color: [122, 62, 56], religion: 'hellenism', culture: 'greek', capital: '',
+      description: 'Λῃσταί — the word the sources use for men who are not quite '
+        + 'an army and not quite a crime. Hezekiah held the Galilean border, Eleazar '
+        + 'ben Dinai the hills for twenty years, and Athronges put on a diadem while '
+        + 'herding somebody else\'s sheep. Given ground nobody governs and time nobody '
+        + 'spends on them, the difference between a band and a kingdom is a generation.',
+      ideas: { moraleMult: 1.1, siegeMult: 1.1, adminMult: 0.8 },
+    },
+    PIR: {
+      name: 'The Peiratai', adj: 'Corsair', color: [46, 76, 88], religion: 'hellenism', culture: 'greek', capital: '',
+      description: 'The Cilicians had citadels, arsenals, a thousand ships and their '
+        + 'own understandings with three kings before Rome gave one man the entire sea '
+        + 'to be rid of them. A coast nobody patrols does not stay empty; it grows a '
+        + 'power, and the power charges for passage.',
+      ideas: { moraleMult: 1.08, navalMult: 1.2, tradeMult: 1.15, adminMult: 0.8 },
+    },
     WASTE: {
       name: 'Wasteland', adj: 'Waste', color: [70, 66, 60],
       description: 'Trackless desert where armies go to die.',
@@ -1643,6 +1684,14 @@ export const DEFINES = {
     incorporateKeepOpinion: 60,  // ...but once begun, only real disaffection (below this) unravels the weaving
     incorporateBase: 75,         // influence points to begin the union...
     incorporatePerDev: 2.5,      // ...plus per point of the client's development
+    // ...and never past what a treasury of points can hold. Every monarch-point
+    // pool in the sim is clamped to 999, so a union priced above that was not
+    // expensive — it was impossible, and silently so. The formula runs out at
+    // ~370 development, which is precisely the class of client this term is
+    // FOR: Seleucid Syria (843), Byzantium (1082), Sasanian Persia (610) and
+    // Rome (744-1874) are all courts a peace table can yoke and no crown could
+    // ever afford to absorb.
+    incorporateMax: 999,
     incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...
     incorporateMonthsPerDev: 0.5, // ...and longer for every point of their development
     incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest
@@ -1650,6 +1699,21 @@ export const DEFINES = {
     revoltOpinion: -75,          // at/below this a client may rise for independence
     revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's
     revoltChance: 0.04,          // monthly rising roll once every condition holds
+    // Releasing a client state (SPEC §218): the other end of the same loop. A
+    // crown may let go of a piece of its OWN realm on purpose and seat a crown
+    // on it — the land governs itself and pays what a client pays, and it comes
+    // home only the long way, through incorporateOpinion above.
+    releaseBase: 40,             // influence to seat a crown on land of our own...
+    releasePerDev: 1,            // ...plus one per point of development that walks out
+    releaseMaxShare: 0.5,        // and never more of the realm than the realm keeps
+    releaseGratitude: 60,        // what a court thinks of the hand that crowned it...
+    releaseRegard: 25,           // ...and what that hand thinks of the court it made
+    releaseGuard: 2,             // regiments the new court musters at its own seat
+    // …and the collar struck off again (SPEC §219). The other way out of the
+    // loop above, and the only one that was ever the LORD's to choose: a client
+    // may be let go with everything it has. It costs no influence, because the
+    // price is the client. What it earns is remembered for a long time.
+    freeGratitude: 80,           // what a crown thinks of the hand that struck its collar
   },
 
   // The chancery (SPEC §202): a court has only so many envoys. Every standing
@@ -1684,6 +1748,13 @@ export const DEFINES = {
     strainFloorPer: 10,       // how deep it carries a client's regard, per point of strain...
     strainFloorMax: 60,       // ...and no deeper than this: strain sours, it does not revolt
     freedCollarMonths: 120,   // a court freed at our own table will not kneel to us for a decade
+    // A province handed over in peacetime (SPEC §222). A gift of ground is the
+    // largest thing one court can say to another without an army, and it is
+    // remembered accordingly — scaled by what was given, because a frontier
+    // cell and a city are not the same sentence.
+    giftOpinionBase: 15,
+    giftOpinionPerDev: 1,
+    giftOpinionMax: 60,
   },
 
   UNREST: {
