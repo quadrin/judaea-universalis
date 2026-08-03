@@ -709,64 +709,68 @@ export const FORMABLES = [
       },
     },
   },
-  // ---- the last Herodian's crown, taken by the men who beat him -------------
+  // ---- the client king who is given the whole country ----------------------
   {
-    id: 'form_agr_jud',
-    from: 'JUD', to: 'AGR',
-    name: 'Take the Crown of Agrippa',
-    desc: 'The last Herodian stood on the Xystus and told Jerusalem what sixty thousand '
-      + 'men mean, and Jerusalem did not listen. Now his capital at Panias is yours, his '
-      + 'Golan is yours, and his house is ended — so take the thing itself: not a council '
-      + 'of the revolt but a KINGDOM, with the Galilee and the Golan under one Jewish crown '
-      + 'and the Temple\'s own patronage, which was always the Herodian half of the bargain. '
-      + 'Rome kept this kingdom for two generations because a client is cheaper than a '
-      + 'province. Let it go on being cheaper, and let it be ours.',
+    id: 'form_jud_agr',
+    from: 'AGR', to: 'JUD',
+    name: 'Proclaim the Kingdom of Judaea',
+    desc: 'You told them on the Xystus what sixty thousand men mean, and they threw '
+      + 'stones at you for it. You were right, and being right has taken everything: '
+      + 'the rising is finished, the country is quiet, and the men who called you Rome\'s '
+      + 'creature are dead or scattered. So take the title your great-grandfather held '
+      + 'and your family has been asking Caesar for ever since — not the tetrarchy of a '
+      + 'Golan valley and two towns Nero happened to be feeling generous about, but '
+      + 'JUDAEA: Jerusalem, the Temple whose High Priest you already name, and the whole '
+      + 'of the country. A client kingdom is cheaper than a province. Prove it.',
     bookmarks: ['66ce'],
-    // His court is on the map from the first day, so the crown stays in the
-    // decisions list while he lives — greyed, with the row about his house
-    // unticked. A crown nobody can see is a crown nobody can plan for.
+    // The banner is the revolt's while the revolt lives (SPEC §221), so the
+    // crown sits in the panel, greyed, from the first day of the chapter.
     contested: true,
     requires: [
       {
-        label: 'Hold Caesarea Philippi, the seat of his kingdom',
-        check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Caesarea Philippi'),
+        label: 'The rising is ended — no court flies the banner of Judaea',
+        check: (ctx) => !ctx.game.tags.JUD || ctx.game.tags.JUD.alive === false,
       },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
       {
-        label: 'Hold the king\'s country: Batanea and Gamala',
-        check: (ctx, tag) => holdsAll(ctx, tag, ['Batanea', 'Gamala']),
+        // The country the rising held, not the coast Rome governs from:
+        // Caesarea Maritima is the procurator's own seat, and a client king
+        // taking it from Caesar is a different chapter entirely.
+        label: 'Hold the country: Jericho, Sepphoris and Tiberias',
+        check: (ctx, tag) => holdsAll(ctx, tag, ['Jericho', 'Sepphoris', 'Tiberias']),
       },
+      { label: 'Own and control ten provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 10 },
       {
-        // The crown carried the custody of the vestments and the naming of the
-        // High Priest. A claimant who does not hold the Temple claims half of it.
-        label: 'Hold Jerusalem, whose priesthood the crown names',
-        check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem'),
+        // The crown of Judaea is Rome's to give — or, for a house that has
+        // stopped asking, ours to take. Either road, and the label says both.
+        label: 'Caesar is content with us (Rome 50+), or we answer to nobody',
+        check: (ctx, tag) => {
+          const rom = ctx.game.tags.ROM;
+          const regard = rom && rom.opinion ? (rom.opinion[tag] || 0) : 0;
+          return (rom && rom.alive && regard >= 50) || independent(ctx, tag);
+        },
       },
-      {
-        label: 'The house of Herod is ended — no court flies his banner',
-        check: (ctx) => !ctx.game.tags.AGR || ctx.game.tags.AGR.alive === false,
-      },
-      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
-      { label: 'Hold twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
-      { label: 'Stability 1', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 1 },
       { label: 'Legitimacy 40', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 40 },
+      { label: 'Stability 1', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 1 },
     ],
     bonus: {
-      legitimacy: 20, stability: 1,
-      // What this particular crown is FOR (SPEC §102): a client kingdom is a
-      // set of revenues Rome agreed not to collect itself. It pays in coin,
-      // towns and standing — and pointedly not in men, which is the whole
-      // difference between this crown and the one at the end of the chapter.
-      grant: { treasury: 200, gov: 30, infl: 50 },
-      rulerTitle: 'King',
+      legitimacy: 25, stability: 1,
+      // Not the client's chancery this time (SPEC §221) — a kingdom's levies,
+      // a kingdom's treasury, and the ministries to run a whole country.
+      grant: { treasury: 150, manpower: 3000, gov: 40, infl: 40 },
+      // The title Rome conferred, and the one the family spent a century
+      // asking for.
+      rulerTitle: 'King of the Jews',
       modifier: {
-        id: 'agrippas_peace', name: "Agrippa's Peace", months: -1,
-        effects: { incomeMult: 1.12, unrestAll: -0.5 },
+        id: 'the_whole_country', name: 'The Whole Country', months: -1,
+        effects: { incomeMult: 1.1, manpowerMult: 1.1 },
       },
       modifier2: {
-        // The only crown in the game that hands a realm another envoy: the
-        // client king's whole art was the chancery (SPEC §202).
-        id: 'the_kings_chancery', name: "The King's Chancery", months: -1,
-        effects: { diploSeats: 1, tradeMult: 1.08 },
+        // Claudius left the house the custody of the vestments and the naming
+        // of the High Priest. It is the whole reason this crown is not merely
+        // a Roman governorship with a diadem on it.
+        id: 'custody_of_the_vestments', name: 'The Custody of the Vestments', months: -1,
+        effects: { legitimacyAdd: 0.2, unrestAll: -0.5 },
       },
     },
   },

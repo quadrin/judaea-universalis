@@ -131,79 +131,83 @@ ai.runMonthlyAI(ctx2);
 ok(!!g2.tags.HAS && !g2.tags.HYR, 'the AI Hyrcanus proclaims Hasmonean Judaea');
 
 // SPEC §221 — a banner nobody is flying may be taken up, and the crown the
-// rule exists for: the revolt that beats the last Herodian and takes his.
+// rule exists for: the client king who ends the rising and is given the whole
+// country. Judaea's banner is the revolt's while the revolt lives; when it
+// falls, the house that put it down may take the name.
 console.log('== the crown of a fallen court (SPEC §221) ==');
 {
   const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
-  const geom3 = makeGeom();
-  const g3 = initGame({ DEFINES, MAP_DATA, geom: geom3, bookmark: BOOKMARK_66, events: [], playerTag: 'JUD', rngSeed: 66 });
-  const ctx3 = makeCtx({ game: g3, DEFINES, MAP_DATA, geom: geom3, bus, bookmark: BOOKMARK_66, events: [] });
-  const act3 = gameActions(ctx3);
-  const mil = await import(R + '/js/sim/military.js');
+  const geom4 = makeGeom();
+  const g4 = initGame({ DEFINES, MAP_DATA, geom: geom4, bookmark: BOOKMARK_66, events: [], playerTag: 'AGR', rngSeed: 67 });
+  const ctx4 = makeCtx({ game: g4, DEFINES, MAP_DATA, geom: geom4, bus, bookmark: BOOKMARK_66, events: [] });
+  const act4 = gameActions(ctx4);
+  const mil4 = await import(R + '/js/sim/military.js');
 
-  // While Agrippa reigns his banner is his — but the crown is VISIBLE from the
-  // first day, because a decision a player cannot see is a decision that does
-  // not exist. It is listed, greyed, with the row about his house unticked.
-  ok(!!g3.tags.AGR && g3.tags.AGR.alive, 'Agrippa II opens the chapter alive');
-  const early = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
-  ok(!!early, 'his crown is in the decisions from the first day, contested');
-  ok(early && !early.canEnact, 'and cannot be taken while he flies it: ' + (early && early.whyNot));
-  ok(early && /house of Herod is ended/.test(early.desc) && early.desc.includes('✗'),
-    'the checklist says what is missing');
-  act3.enactDecision('form_agr_jud');
-  ok(!!g3.tags.JUD && g3.tags.AGR.alive, 'and enacting it early changes nothing');
+  const dec0 = act4.getDecisions().find((d) => d.key === 'form_jud_agr');
+  ok(!!dec0, 'Agrippa II has a crown to work toward from the first day');
+  ok(dec0 && !dec0.canEnact && /rising is ended/.test(dec0.desc),
+    'refused while the revolt flies the banner: ' + (dec0 && dec0.whyNot));
 
-  // Take his kingdom the way it would be taken: every province of it.
-  const his = [];
-  for (let i = 1; i < g3.provinces.length; i++) {
-    const p = g3.provinces[i];
-    if (p && !p.impassable && p.owner === 'AGR') his.push(p);
+  // Somebody's ledger records a bond with the revolt — the trap the banner rule
+  // exists to disarm. Without `freeBanner`, the house that takes the name would
+  // inherit the dead court's friendships.
+  g4.tags.PAR.allies = ['JUD'];
+  g4.tags.JUD.allies = ['PAR'];
+
+  // The rising is put down — every province of it, the §220 way — and the
+  // country is held.
+  for (let i = 1; i < g4.provinces.length; i++) {
+    const p = g4.provinces[i];
+    if (!p || p.impassable) continue;
+    if (p.owner === 'JUD') { p.owner = 'AGR'; p.controller = 'AGR'; }
+    if (p.owner === 'AGR') p.controller = 'AGR';
   }
-  ok(his.length === 3, "the king's country is Caesarea Philippi, Batanea and Gamala: " + his.map((p) => p.name).join(', '));
-  for (const p of his) { p.owner = 'JUD'; p.controller = 'JUD'; }
-  for (const a of mil.armiesOf(ctx3, 'AGR')) mil.removeArmy(ctx3, a.id);
-  mil.updateTagLife(ctx3);
-  ok(g3.tags.AGR.alive === false, 'the house of Herod is ended');
+  for (const a of mil4.armiesOf(ctx4, 'JUD')) mil4.removeArmy(ctx4, a.id);
+  mil4.updateTagLife(ctx4);
+  ok(g4.tags.JUD.alive === false, 'the rising is ended');
+  g4.tags.AGR.legitimacy = 40;
+  g4.tags.AGR.stability = 1;
+  g4.tags.ROM.opinion = g4.tags.ROM.opinion || {};
+  g4.tags.ROM.opinion.AGR = 60; // Caesar is content
+  const dec = act4.getDecisions().find((d) => d.key === 'form_jud_agr');
+  ok(dec && dec.canEnact, 'and with Caesar content and the country held, the crown is his'
+    + (dec && dec.canEnact ? '' : ': ' + dec.desc.split('\n').filter((l) => l.includes('✗')).join(' / ')));
 
-  // Rome's ledger still records the alliance it had with him — the trap the
-  // banner rule exists to disarm.
-  ok((g3.tags.ROM.allies || []).indexOf('AGR') >= 0, "Rome's ledger still lists the dead king as an ally");
+  act4.enactDecision('form_jud_agr');
+  const jud = g4.tags.JUD;
+  ok(!!jud && !g4.tags.AGR && g4.playerTag === 'JUD', 'the Kingdom of Judaea is proclaimed');
+  ok(jud.ruler && jud.ruler.title === 'King of the Jews', 'and its king is styled for it: ' + (jud.ruler && jud.ruler.title));
+  ok((jud.modifiers || []).some((m) => m.id === 'the_whole_country')
+    && (jud.modifiers || []).some((m) => m.id === 'custody_of_the_vestments'),
+  'the crown pays in country and in Temple');
+  ok(g4.tagAliases && g4.tagAliases.AGR === 'JUD', 'and the chapter finds the house under its new name');
+  ok((g4.tags.PAR.allies || []).indexOf('JUD') < 0,
+    'and the dead revolt\'s alliances do not come with its name (SPEC §221)');
+  ok(!Object.keys(g4.truces || {}).some((k) => k.split('|').indexOf('JUD') >= 0),
+    'nor its truces');
 
-  let dec = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
-  ok(!!dec, 'with nobody flying it, the crown is offered');
-  const jud = g3.tags.JUD;
-  for (let i = 1; i < g3.provinces.length; i++) {
-    const p = g3.provinces[i];
-    if (p && !p.impassable && p.owner === 'JUD') p.controller = 'JUD';
+  // The other road: a house that has stopped asking Caesar.
+  const geom5 = makeGeom();
+  const g5 = initGame({ DEFINES, MAP_DATA, geom: geom5, bookmark: BOOKMARK_66, events: [], playerTag: 'AGR', rngSeed: 68 });
+  const ctx5 = makeCtx({ game: g5, DEFINES, MAP_DATA, geom: geom5, bus, bookmark: BOOKMARK_66, events: [] });
+  const act5 = gameActions(ctx5);
+  const mil5 = await import(R + '/js/sim/military.js');
+  for (let i = 1; i < g5.provinces.length; i++) {
+    const p = g5.provinces[i];
+    if (!p || p.impassable) continue;
+    if (p.owner === 'JUD') { p.owner = 'AGR'; p.controller = 'AGR'; }
+    if (p.owner === 'AGR') p.controller = 'AGR';
   }
-  jud.stability = 1;
-  jud.legitimacy = 40;
-  jud.overlord = null;
-  dec = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
-  ok(dec && dec.canEnact, 'and once the country is held it can be taken: ' + (dec && dec.whyNot));
-
-  const beforeInfl = jud.points.infl;
-  act3.enactDecision('form_agr_jud');
-  const agr = g3.tags.AGR;
-  ok(!!agr && !g3.tags.JUD && g3.playerTag === 'AGR', 'the realm takes the name: Kingdom of Agrippa II');
-  ok(agr.name === DEFINES.TAGS.AGR.name && agr.govType === 'monarchy',
-    'with the banner\'s own name and constitution: ' + agr.name + ', ' + agr.govType);
-  ok(agr.ruler && agr.ruler.title === 'King', 'and the man on the throne is styled by it');
-  ok((agr.modifiers || []).some((m) => m.id === 'agrippas_peace')
-    && (agr.modifiers || []).some((m) => m.id === 'the_kings_chancery'),
-    'the crown pays in coin and standing');
-  ok(mil.diploCapacity(ctx3, 'AGR') > mil.diploCapacity(ctx3, 'ROM') - 99
-    && (agr.modifiers || []).some((m) => m.effects && m.effects.diploSeats === 1),
-    'including the envoy no other crown grants');
-  ok(agr.points.infl === beforeInfl + 50, 'and the founding grant is paid');
-
-  // The debts of the dead king are NOT inherited.
-  ok((g3.tags.ROM.allies || []).indexOf('AGR') < 0,
-    'Rome is not suddenly allied to the revolt that took the crown');
-  ok(!Object.keys(g3.truces || {}).some((k) => k.split('|').indexOf('AGR') >= 0 && k.split('|').indexOf('ROM') >= 0)
-    || (g3.tags.AGR.atWarWith || []).indexOf('ROM') >= 0,
-    'and no dead king\'s truce shelters it from the war it is fighting');
-  ok(g3.tagAliases && g3.tagAliases.JUD === 'AGR', 'the chapter\'s cards find it under its old name (SPEC §135)');
+  for (const a of mil5.armiesOf(ctx5, 'JUD')) mil5.removeArmy(ctx5, a.id);
+  mil5.updateTagLife(ctx5);
+  g5.tags.AGR.legitimacy = 40;
+  g5.tags.AGR.stability = 1;
+  g5.tags.ROM.opinion = { AGR: -100 }; // Caesar is furious
+  ok(!act5.getDecisions().find((d) => d.key === 'form_jud_agr').canEnact,
+    'a client whose patron is furious may not simply take the title');
+  g5.tags.AGR.overlord = null; // …unless it has stopped being a client at all
+  ok(act5.getDecisions().find((d) => d.key === 'form_jud_agr').canEnact,
+    'but a house that answers to nobody takes it anyway');
 }
 
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');

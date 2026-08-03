@@ -14279,12 +14279,12 @@ line in the chronicle, and a crown standing on its ground may take that too.
 ### The banner arrives with none of the dead king's debts
 
 This is the part that is not bookkeeping. The world writes things down about
-courts, and those entries survive the court: Rome's own ledger lists the
-Kingdom of Agrippa II among its allies in the 66 CE bookmark, and it goes on
-listing it after Agrippa is gone, because `diploBonds` simply skips the dead
-rather than forgetting them. Hand that banner to somebody and the entry wakes
-up — a revolt that took the crown would have found itself **allied to the
-empire it was fighting**, with a truce to match.
+courts, and those entries survive the court: alliances, guarantees, marriages
+and truces recorded against a name go on being recorded after the name's owner
+falls, because `diploBonds` simply skips the dead rather than forgetting them.
+Hand that banner to somebody and the entries wake up — a house that took a
+fallen rival's crown would find itself **holding the dead court's friendships**,
+including with courts it is currently fighting.
 
 So `freeBanner` strikes the record before the crown changes hands: every
 alliance, guarantee and marriage other courts recorded with it, every truce and
@@ -14295,7 +14295,7 @@ claimant's own realm — its wars, its treasury, its bonds — is untouched, bec
 
 ### A crown nobody can see is a crown nobody plans for
 
-The first cut hid `form_agr_jud` until Agrippa's house fell, because the
+The first cut hid a contested crown until its rival's house fell, because the
 listing gate and the banner gate were the same line. That is correct about
 enactment and wrong about the panel: every other crown in the game sits in the
 decisions list from the first day with its requirements ticked or not, which is
@@ -14304,7 +14304,10 @@ the moment it was already earned.
 
 A formable may now declare itself `contested` — its court is ON the map — and
 it stays listed while that court lives, greyed, with the row about the rival's
-house unticked. Nothing about enactment changes: the row is a real requirement,
+house unticked. `form_jud_agr` is the crown that needs it: Judaea's banner
+belongs to the revolt from the first day of the chapter, and an Agrippa who
+cannot see the title he is playing for has no reason to play for it. Nothing
+about enactment changes: the row is a real requirement,
 `formableList` still refuses an unmet checklist, and `switchTagCore` refuses a
 flying banner besides. The Compendium already listed the crown on both nations'
 pages under *Crowns*; this is about the panel a player is actually looking at.
@@ -14315,37 +14318,45 @@ would orphan the scripted arcs that address courts by tag — the same reason th
 dynastic restorations ship player-only — and it keeps every all-AI trajectory
 exactly where it was.
 
-### The crown the rule exists for: Agrippa's
+### The crown the rule exists for: Agrippa's own
 
-`form_agr_jud` (66 CE, JUD → AGR, player-only): the revolt that beat the last
-Herodian may take his crown instead of merely his country. It asks for his seat
-at **Caesarea Philippi**, the king's country of **Batanea and Gamala**,
-**Jerusalem** — whose High Priest that crown had the naming of, which is half of
-what the title was worth — a house of Herod that is ended, twelve provinces,
-independence, stability 1 and legitimacy 40.
+`form_jud_agr` (66 CE, AGR → JUD, player-only): the client king who ends the
+rising and is given the whole country. Agrippa II stood on the Xystus and told
+Jerusalem what sixty thousand men mean, and they threw stones at him for it; he
+spent the rest of his life as the last Herodian, king of a Golan valley and two
+towns Nero happened to be feeling generous about. His family had been asking
+Caesar for Judaea entire since his great-grandfather held it. Rome's answer,
+historically, was a praetorian province. This is the other answer.
 
-What it pays is what a client kingdom was: 200 talents, 30 governance and 50
-influence at the founding, **Agrippa's Peace** (+12% income, −0.5 unrest
-everywhere) and **The King's Chancery** (+8% trade and one more envoy — the only
-crown in the game that widens the establishment §202 counts). Pointedly no
-manpower: a client kingdom is a set of revenues Rome agreed not to collect
-itself, and the difference between this crown and the Kingdom of Israel at the
-end of the chapter is that one of them is for fighting.
+It asks that **the rising be ended** — no court flying the banner of Judaea,
+which since §220 is a thing a total victory can actually finish — that he hold
+**Jerusalem**, whose High Priest that house already names, the country at
+**Jericho, Sepphoris and Tiberias** (not Caesarea Maritima: the procurator's
+own seat is Rome's, and a client king taking it from Caesar is a different
+chapter), ten provinces, legitimacy 40 and stability 1. And it asks for the
+title's owner: **Caesar content with us (Rome 50+), or a house that answers to
+nobody** — the crown of Judaea is Rome's to give, or, for a family that has
+stopped asking, ours to take. Both roads are live and the label names both.
 
-It brings no mission chain of its own, so `missionsFor` finds the chapter's
-`missions.AGR` under the name the realm now wears (§204/§215) and the panel
-fills with the king's own programme — the royal capital, the king's own army,
-a chancery of its own. That is deliberate: taking a crown means taking its
-argument about what the country is for. A few of its nodes are already true the
-day it is proclaimed (the cities Nero gave are held by the men who took them),
-and complete on the next pass.
+What it pays is a kingdom rather than a client's chancery: 150 talents, 3,000
+men on the rolls, 40 governance and 40 influence, **The Whole Country** (+10%
+income, +10% manpower) and **The Custody of the Vestments** (+0.2 legitimacy a
+month, −0.5 unrest everywhere) — Claudius left the house the vestments and the
+naming of the High Priest, and that is the whole reason this crown is not a
+Roman governorship with a diadem on it. The man is styled **King of the Jews**,
+which is the title Rome actually conferred.
 
-- **Regression contract**: `smoke11` — the crown refused while Agrippa reigns,
-  offered once his house is ended, the requirement rows, the switch (name,
-  constitution, royal style, both modifiers, the founding grant, the §135
-  forwarding address), and the two debts that must NOT come with the banner:
-  Rome's alliance and the dead king's truces. `node tools/autorun.mjs 8` is
-  byte identical on all eight bookmarks — the AI cannot reach any of it.
+It brings no chain of its own, so `missionsFor` finds the chapter's `missions.JUD`
+under the name the realm now wears (§204/§215).
+
+- **Regression contract**: `smoke11` — the crown visible from the first day and
+  refused while the revolt flies the banner, the rising ended and the crown
+  taken, the requirement rows including both roads to the title (Caesar's
+  favour, or a house that answers to nobody), the switch (name, royal style,
+  both modifiers, the founding grant, the §135 forwarding address), and the
+  debts that must NOT come with the banner: the dead court's alliances and its
+  truces. `node tools/autorun.mjs 8` is byte identical on all eight bookmarks —
+  the AI cannot reach any of it.
 
 ## 222. A treaty that runs both ways, and a deed that needs no treaty
 

@@ -1533,19 +1533,19 @@ the suite put together.
 `smoke11` grew the section, and it is the suite to run after touching
 `switchTagCore`, `formableList` or `FORMABLES`.
 
-The assertion worth knowing about is not the crown, it is the debt. Rome's
-66 CE ledger lists the Kingdom of Agrippa II among its allies, and it keeps
-listing it after Agrippa falls, because `diploBonds` skips the dead rather than
-forgetting them. The suite checks that entry is still there *before* the
-proclamation and gone after it — so if `freeBanner` is ever weakened, the
-failure reads "Rome is not suddenly allied to the revolt that took the crown"
-rather than as something mysterious three sections later.
+The assertion worth knowing about is not the crown, it is the debt. Bonds
+recorded against a court survive it — `diploBonds` skips the dead rather than
+forgetting them — so the suite deliberately gives the doomed court an ally
+before killing it and checks the entry is gone once the banner changes hands.
+If `freeBanner` is ever weakened, the failure reads "the dead revolt's
+alliances do not come with its name" rather than as something mysterious three
+sections later.
 
 Two things a new formable of this shape needs. It must be player-only: the AI
 still refuses any tag that exists at all (`aiFormNation` was deliberately left
 on the older gate), which is what keeps `node tools/autorun.mjs 8` byte
 identical. And if the chapter already has a mission table under the target tag
-— 66 CE has 25 nodes under `AGR` — the formed crown inherits it through
+— 66 CE has one under `JUD` — the formed crown inherits it through
 `missionsFor`, which is the intended behaviour and not a bug to route around;
 nodes already satisfied on the day of the proclamation complete on the next
 monthly pass.

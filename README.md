@@ -230,13 +230,14 @@ static site, the zero dependencies, or the missing build step changes.
   banner nobody had *ever* flown, which quietly reserved every crown on the map for the
   court that started with it — beat that court out of existence and its name sat in the
   records forever, unusable. Now a banner is free when nobody is flying it, and the crown
-  the rule exists for is the last Herodian's: a Judaea that has taken **Caesarea Philippi,
-  Batanea and Gamala** from Agrippa II, holds Jerusalem and has ended his house may stop
-  being a council of the revolt and become the **Kingdom of Agrippa II** — the Galilee and
-  the Golan under one Jewish crown, with the Temple patronage that was always the Herodian
-  half of the bargain. It pays like the client kingdom it was: coin, trade, quiet, and an
-  extra envoy for the chancery — and pointedly not a single soldier. The dead king's debts
-  do not come with his name, so the revolt does not wake up allied to Rome.
+  the rule exists for is Agrippa II's. The last Herodian spent his life as king of a Golan
+  valley and two towns Nero was feeling generous about, while his family asked Caesar for
+  Judaea entire; play him, put the rising down, hold Jerusalem and the country at Jericho,
+  Sepphoris and Tiberias, and — with Caesar content, or having stopped asking him — you
+  **proclaim the Kingdom of Judaea** and are styled King of the Jews. It pays like a kingdom
+  rather than a client: levies, a treasury, and the custody of the vestments that made the
+  Herodian title worth more than a governorship. The dead court's debts do not come with its
+  name, so nobody inherits a rival's alliances along with the crown.
 - **Statecraft**: twenty repeatable decisions that arrive because you rule, not because the
   weather turned — and they open as the realm grows. A small state argues about judges who
   disagree on ancestral custom, a garrison nobody has paid, and a second city that wants a
