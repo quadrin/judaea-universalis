@@ -1,6 +1,56 @@
 // Small, DOM-free multiplayer state transitions. Keeping these outside main.js
 // makes chair changes testable without standing up two browsers and a data channel.
 
+// Run a guest's order under that guest's crown, and let NOTHING out until the
+// crown is back where it belongs (SPEC §216).
+//
+// This is the shape of the bug a real table reported as "my friend spent money
+// and it spent my money", and it was never the money: the order already ran on
+// the guest's realm, and smoke143 proves that action by action. It was the
+// SCREEN. Every action ends by emitting `actionTaken`; `ui.js` answers that by
+// refreshing the topbar, the realm panel, the outliner and the nation panel,
+// and all four draw whichever realm `game.playerTag` names. Fired from inside
+// the swap, they drew the GUEST's — so the host watched their own treasury and
+// their own monarch points turn into somebody else's every time their friend
+// did anything at all.
+//
+// So the swap holds the bus. `notify` is the guest's own news and goes back to
+// them; everything else waits in `replay()`, which the caller runs once it is
+// sitting down again. Nothing on this bus feeds an answer back into the action,
+// so the delay changes nothing except who the screen believes it is.
+export function runUnderChair({ game, bus, chair, run, onError }) {
+  const notify = [];
+  const queued = [];
+  const origEmit = bus.emit.bind(bus);
+  const prev = game.playerTag;
+  bus.emit = (ev, payload) => {
+    if (ev === 'notify') { notify.push(payload || {}); return undefined; }
+    queued.push([ev, payload]);
+    return undefined;
+  };
+  game.playerTag = chair;
+  try {
+    run();
+  } catch (e) {
+    if (onError) onError(e);
+  } finally {
+    // A formable may replace the commanded tag while the order runs. Restore
+    // the old chair only if it still exists; `tagSwitched` remaps the guest.
+    const back = restoreHostChair(game, prev, chair);
+    if (back) game.playerTag = back;
+    bus.emit = origEmit;
+  }
+  return {
+    notify,
+    replay() {
+      for (const [ev, payload] of queued) {
+        try { origEmit(ev, payload); } catch (e) { if (onError) onError(e); }
+      }
+      return queued.length;
+    },
+  };
+}
+
 export function restoreHostChair(game, previousTag, commandedTag) {
   if (!game || !game.tags) return null;
   if (previousTag && game.tags[previousTag]) return previousTag;

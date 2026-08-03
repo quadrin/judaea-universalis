@@ -18,7 +18,7 @@ const { monthlyFactions, getFactionsInfo, factionApproval } = await import(R + '
 const { courtSeats } = await import(R + '/js/sim/courts.js');
 const { monthlyDiaspora, communityRegard } = await import(R + '/js/sim/diaspora.js');
 const { chapterChairs, resolveSeat, defaultSeat, SHARED } = await import(R + '/js/net/mp_state.js');
-const { restoreHostChair } = await import(R + '/js/net/mp_state.js');
+const { restoreHostChair, runUnderChair } = await import(R + '/js/net/mp_state.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
 
 let failures = 0;
@@ -241,6 +241,56 @@ console.log('== two courts, two books ==');
     'the guest\'s cooldowns are filed beneath their own tag: ' + Object.keys(cd).join(','));
   ok(Object.keys(cd).some((k) => k.indexOf(':') < 0),
     'and the protagonist keeps the bare id every save has been written with');
+}
+
+// The bug a real table found, and the only one of these the sim was innocent
+// of: while the host runs a guest's order the host's chair is BORROWED, and
+// anything that reaches the bus in that window makes the host's own panels
+// redraw as the guest. `actionTaken` — which every single action emits, and
+// which `ui.js` answers by refreshing the topbar, the realm panel, the
+// outliner and the nation panel — did exactly that, so the host watched their
+// treasury and their monarch points turn into their friend's every time the
+// friend did anything.
+console.log('== no listener ever sees the host in somebody else\'s chair ==');
+{
+  const table = boot('HYR', ['ARI']);
+  const g = table.g;
+  const actions = gameActions(table.ctx);
+  g.tags.HYR.treasury = 9000; g.tags.ARI.treasury = 3000;
+  for (const t of ['HYR', 'ARI']) g.tags[t].points = { gov: 500, infl: 500, mar: 500 };
+
+  // A listener that records what the world looked like when it was called —
+  // which is what every panel in ui.js is.
+  const seen = [];
+  const liveBus = {
+    emit(ev, payload) { seen.push({ ev, chair: g.playerTag, purse: g.tags[g.playerTag].treasury }); return payload; },
+    on() { return () => {}; },
+  };
+  const busCtx = { ...table.ctx, bus: liveBus, game: g };
+  const busActions = gameActions(busCtx);
+
+  const order = runUnderChair({
+    game: g,
+    bus: liveBus,
+    chair: 'ARI',
+    run: () => busActions.sendGift('NAB'),
+  });
+  ok(seen.length === 0, 'nothing at all reaches the bus while the chair is borrowed');
+  ok(g.playerTag === 'HYR', 'and the host is sitting down again the moment the order is over');
+  const replayed = order.replay();
+  ok(replayed > 0, 'the order\'s events are replayed afterwards (' + replayed + ')');
+  ok(seen.length && seen.every((s) => s.chair === 'HYR'),
+    'and every one of them is heard by a host that is itself: '
+    + JSON.stringify(seen.map((s) => s.ev + '@' + s.chair)));
+  ok(seen.every((s) => s.purse === 9000),
+    'a panel refreshing on any of them draws the host\'s own purse, not the guest\'s');
+  ok(seen.some((s) => s.ev === 'actionTaken'),
+    'including `actionTaken`, which is the one that repaints all four panels');
+  ok(order.notify.length > 0 && !seen.some((s) => s.ev === 'notify'),
+    'the guest\'s own news goes back to the guest instead (' + order.notify.length + ' toast)');
+  ok(Math.round(g.tags.ARI.treasury) < 3000 && Math.round(g.tags.HYR.treasury) === 9000,
+    'and the gift was paid for by the guest, as it always was — host ' + Math.round(g.tags.HYR.treasury)
+    + ', guest ' + Math.round(g.tags.ARI.treasury));
 }
 
 // Every clock a court keeps is that COURT's clock. These were all written

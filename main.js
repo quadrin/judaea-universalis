@@ -19,7 +19,9 @@ import { tickDay } from './js/sim/tick.js';
 import { initUI } from './js/ui/ui.js';
 import { initSound } from './js/ui/sound.js';
 import { createLobby } from './js/ui/lobby.js';
-import { remapGuestChairs, resolveSnapshotChair, restoreHostChair } from './js/net/mp_state.js';
+import {
+  remapGuestChairs, resolveSnapshotChair, restoreHostChair, runUnderChair,
+} from './js/net/mp_state.js';
 import {
   isCloudOn, cloudEndpoint, cloudHealth, untrustedEndpoint, trustLinkEndpoint,
   playerKey, setPlayerKey, prettyKey, normalizeKey,
@@ -243,31 +245,25 @@ async function boot() {
     if (MP_QUERY_RE.test(m.name) || typeof actions[m.name] !== 'function') return;
     const g = ctx.game;
     if (!guest || !g.tags[guest.tag]) return;
-    const prevTag = g.playerTag;
-    const captured = [];
-    const origEmit = bus.emit.bind(bus);
-    // While a guest's order runs, its toasts belong to the guest, not our screen.
-    bus.emit = (ev, payload) => {
-      if (ev === 'notify') { captured.push(payload || {}); return; }
-      return origEmit(ev, payload);
-    };
+    // The order runs under the guest's crown and the bus is held shut until
+    // ours is back under us — `runUnderChair` is where that rule lives, and
+    // why (SPEC §216: the host's own panels used to redraw as the guest).
     mp.capturing = true;
-    mp.hostChair = prevTag;
-    g.playerTag = guest.tag;
-    try {
-      actions[m.name](...(Array.isArray(m.args) ? m.args : []));
-    } catch (e) {
-      console.warn('[mp] guest command failed:', m.name, e);
-    } finally {
-      // A formable may replace the commanded tag while the action runs. Restore
-      // the old host chair only if it still exists; tagSwitched remaps guest.tag.
-      const restoreTag = restoreHostChair(g, prevTag, guest.tag);
-      if (restoreTag) g.playerTag = restoreTag;
-      bus.emit = origEmit;
-      mp.capturing = false;
-      mp.hostChair = null;
-    }
-    if (captured.length) guest.peer.send({ t: 'toast', items: captured });
+    mp.hostChair = g.playerTag;
+    const order = runUnderChair({
+      game: g,
+      bus,
+      chair: guest.tag,
+      run: () => actions[m.name](...(Array.isArray(m.args) ? m.args : [])),
+      onError: (e) => console.warn('[mp] guest command failed:', m.name, e),
+    });
+    mp.capturing = false;
+    mp.hostChair = null;
+    if (order.notify.length) guest.peer.send({ t: 'toast', items: order.notify });
+    // Now that we are sitting down again: everything the order raised, in the
+    // order it raised it. A card dealt in here reaches its guest through the
+    // ordinary relay, and our own panels redraw as ourselves.
+    order.replay();
     // A guest's order can put a card on OUR table — an ultimatum answered, a
     // war declared on us. It was dealt while the bus believed the guest was
     // the player, so this screen was not offered it; the sweep collects it.
