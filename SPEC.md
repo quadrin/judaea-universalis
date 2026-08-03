@@ -13776,12 +13776,35 @@ emptying the roster, and an empty chair is not a human one.
   that court. Hyrcanus and Aristobulus both authored a party called
   `pharisees`; sharing one book, either brother's demand would have cooled the
   other's for two years.
-- **The relays** (`main.js`). Toasts and event cards go to the chair they
-  belong to: `toChair(hostChair, …)` for the host's own news, and a card to the
-  guests sitting where it is addressed. A guest sharing the host's throne
-  mirrors it read-only exactly as before — the host holds that realm's pen —
-  while a guest on its OWN throne gets live buttons (`mine: true`), because
-  nobody else is in that chair to answer for them. The answer travels back as
+- **Whose card, and whose clock.** A card is answered by whoever the card
+  LANDS ON, which is two rules rather than one:
+  - **A court's own decision** — its effects fall on one realm, so the player
+    sitting in that realm answers and nobody else. A guest sharing the host's
+    throne still mirrors the host's read-only (the v1.8 rule: one realm, one
+    pen); a guest on its own throne gets live buttons.
+  - **Nobody's court** — world history (`world: true`) and §70's foreign-decider
+    notice, which is an acknowledgement rather than a choice. These go to EVERY
+    chair with live buttons and the first player to answer answers for the
+    table: resolution is by `instanceId`, so the second click finds nothing
+    pending and does nothing. `eventResolved` takes the card off every other
+    table (`createEventModal.closeResolved`), local copy and mirrored copy
+    alike.
+  - The ANSWER runs under `pe.forTag` — the chair the card was dealt to — and
+    not under the hand that clicked it. For a court's decision they are the
+    same chair; for world history they are not, and a guest acknowledging
+    Rome's business must not make Rome's business happen to Aristobulus.
+  - **The clock.** A card pauses the world for the whole table, and
+    `togglePause` will not start it again while a dispatch is unanswered at
+    another seated chair — one crown running the months out from under the
+    other's decision is the multiplayer shape of losing a turn. Our own open
+    card already blocks the key and the button, and a solo campaign has no
+    other chair, so this costs a single player nothing. The two clock controls
+    are also the only ones a guest runs optimistically on its own mirror
+    (`togglePause`, `setSpeed`): a guest never ticks, so its clock is display
+    until the snapshot lands, and a round trip is long enough to read as a
+    dropped press. If the host declines, the next snapshot puts it straight.
+- **The relays** (`main.js`). Toasts go to the chair they belong to:
+  `toChair(hostChair, …)` for the host's own news. The answer travels back as
   an ordinary `{t:'cmd', name:'chooseEventOption'}` and runs on the host under
   that crown, so the effects still never cross the wire. Option indices travel
   with the options (`idx`), since a §128 mask renames positions and an answer

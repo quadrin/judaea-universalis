@@ -23,7 +23,7 @@ import {
   chronicle as chronicleCore, modernizeInfo, modernizeArmyCore, tagGen, switchTagCore,
   hasAirfield, airWingsAt, airWingsOf, raiseAirWing, rebaseAirWing, raidTargets, airRaidCore, orderAirRaid,
   hireWingLeaderCore, withdrawFromBattle, buildingFace, mechanicOn,
-  armSpeedOf,
+  armSpeedOf, isHumanChair,
 } from './military.js';
 // The land roster (SPEC §191): the shot arm's names, and the cue a column of
 // each pattern makes when it takes the road.
@@ -1477,6 +1477,23 @@ export function gameActions(ctx) {
       ctx.bus.emit('speed', g.speed);
     },
     togglePause() {
+      // Nobody starts the clock while a dispatch is unanswered at ANOTHER
+      // chair (SPEC §216). A card pauses the world for the whole table, and
+      // the player reading it is not always the player with a hand on the
+      // clock — without this, one crown could run the months out from under
+      // the other's decision. Our own open card already blocks the key and
+      // the button, and in a solo campaign there is no other chair, so this
+      // is a multiplayer rule that costs a single campaign nothing.
+      if (g.paused) {
+        const waiting = (g.pendingEvents || []).find((pe) => pe
+          && pe.forTag !== g.playerTag && isHumanChair(g, pe.forTag));
+        if (waiting) {
+          const t = g.tags[waiting.forTag];
+          say('The world waits', 'A dispatch is still on the table at '
+            + ((t && t.name) || waiting.forTag) + '.', 'info');
+          return;
+        }
+      }
       g.paused = !g.paused;
       ctx.bus.emit('pause', g.paused);
     },
