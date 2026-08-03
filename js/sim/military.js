@@ -2207,11 +2207,49 @@ export function mergeInto(ctx, fromId, intoId) {
 // ruler, modifiers...) but takes the new banner's name and color; the caller
 // rebuilds t.ideas afterwards (applyReformsToTag) so the new static national
 // ideas replace the old.
+// A banner nobody is flying may be taken up (SPEC §221) — but it arrives with
+// none of the dead court's debts. Everything the world still had written down
+// against the old wearer is struck: the alliances and guarantees others recorded
+// with it, the marriages, the truces and the cooldowns, the subsidies, the
+// opinions and the grudges. Without this, a crown claimed from a fallen court
+// would inherit its friendships — the Kingdom of Agrippa II was Rome's ally in
+// every copy of Rome's own ledger, and a revolt that took the crown would have
+// found itself allied to the empire it was fighting.
+function freeBanner(ctx, tag) {
+  const g = ctx.game;
+  for (const k of Object.keys(g.tags)) {
+    const t = g.tags[k];
+    if (!t || k === tag) continue;
+    for (const list of ['allies', 'guarantees', 'marriages', 'atWarWith']) {
+      if (Array.isArray(t[list])) t[list] = t[list].filter((x) => x !== tag);
+    }
+    if (t.overlord === tag) t.overlord = null;
+    if (t.opinion) delete t.opinion[tag];
+    if (t.grudges) delete t.grudges[tag];
+  }
+  if (Array.isArray(g.subsidies)) {
+    g.subsidies = g.subsidies.filter((s) => s && s.from !== tag && s.to !== tag);
+  }
+  for (const book of [g.truces, g.diploCooldowns, g.flags && g.flags._settledWars]) {
+    if (!book) continue;
+    for (const key of Object.keys(book)) {
+      if (String(key).split(/[|:>]/).indexOf(tag) >= 0) delete book[key];
+    }
+  }
+  delete g.tags[tag];
+}
 export function switchTagCore(ctx, from, to) {
   const g = ctx.game;
   const old = g.tags[from];
   const def = (ctx.DEFINES.TAGS || {})[to];
-  if (!old || !def || g.tags[to]) return false; // the target banner must be free
+  if (!old || !def) return false;
+  // The target banner must be free — which means nobody is FLYING it, not that
+  // it has never been flown (SPEC §221). A court that has fallen holds no
+  // province and no army; its name is a line in the chronicle, and a crown that
+  // has taken its ground may take that too.
+  const fallen = g.tags[to];
+  if (fallen && fallen.alive !== false) return false;
+  if (fallen) freeBanner(ctx, to);
   const nt = JSON.parse(JSON.stringify(old));
   nt.tag = to;
   // The crown is new; the country is not (SPEC §102). A formed nation

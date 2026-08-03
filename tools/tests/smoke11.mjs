@@ -130,5 +130,74 @@ g2.tags.HYR.legitimacy = 70;
 ai.runMonthlyAI(ctx2);
 ok(!!g2.tags.HAS && !g2.tags.HYR, 'the AI Hyrcanus proclaims Hasmonean Judaea');
 
+// SPEC §221 — a banner nobody is flying may be taken up, and the crown the
+// rule exists for: the revolt that beats the last Herodian and takes his.
+console.log('== the crown of a fallen court (SPEC §221) ==');
+{
+  const { BOOKMARK_66 } = await import(R + '/js/data/bookmark_66ce.js');
+  const geom3 = makeGeom();
+  const g3 = initGame({ DEFINES, MAP_DATA, geom: geom3, bookmark: BOOKMARK_66, events: [], playerTag: 'JUD', rngSeed: 66 });
+  const ctx3 = makeCtx({ game: g3, DEFINES, MAP_DATA, geom: geom3, bus, bookmark: BOOKMARK_66, events: [] });
+  const act3 = gameActions(ctx3);
+  const mil = await import(R + '/js/sim/military.js');
+
+  // While Agrippa reigns, his banner is his.
+  ok(!!g3.tags.AGR && g3.tags.AGR.alive, 'Agrippa II opens the chapter alive');
+  ok(!act3.getDecisions().some((d) => d.key === 'form_agr_jud'),
+    'and no other court is offered his crown while he flies it');
+
+  // Take his kingdom the way it would be taken: every province of it.
+  const his = [];
+  for (let i = 1; i < g3.provinces.length; i++) {
+    const p = g3.provinces[i];
+    if (p && !p.impassable && p.owner === 'AGR') his.push(p);
+  }
+  ok(his.length === 3, "the king's country is Caesarea Philippi, Batanea and Gamala: " + his.map((p) => p.name).join(', '));
+  for (const p of his) { p.owner = 'JUD'; p.controller = 'JUD'; }
+  for (const a of mil.armiesOf(ctx3, 'AGR')) mil.removeArmy(ctx3, a.id);
+  mil.updateTagLife(ctx3);
+  ok(g3.tags.AGR.alive === false, 'the house of Herod is ended');
+
+  // Rome's ledger still records the alliance it had with him — the trap the
+  // banner rule exists to disarm.
+  ok((g3.tags.ROM.allies || []).indexOf('AGR') >= 0, "Rome's ledger still lists the dead king as an ally");
+
+  let dec = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
+  ok(!!dec, 'with nobody flying it, the crown is offered');
+  const jud = g3.tags.JUD;
+  for (let i = 1; i < g3.provinces.length; i++) {
+    const p = g3.provinces[i];
+    if (p && !p.impassable && p.owner === 'JUD') p.controller = 'JUD';
+  }
+  jud.stability = 1;
+  jud.legitimacy = 40;
+  jud.overlord = null;
+  dec = act3.getDecisions().find((d) => d.key === 'form_agr_jud');
+  ok(dec && dec.canEnact, 'and once the country is held it can be taken: ' + (dec && dec.whyNot));
+
+  const beforeInfl = jud.points.infl;
+  act3.enactDecision('form_agr_jud');
+  const agr = g3.tags.AGR;
+  ok(!!agr && !g3.tags.JUD && g3.playerTag === 'AGR', 'the realm takes the name: Kingdom of Agrippa II');
+  ok(agr.name === DEFINES.TAGS.AGR.name && agr.govType === 'monarchy',
+    'with the banner\'s own name and constitution: ' + agr.name + ', ' + agr.govType);
+  ok(agr.ruler && agr.ruler.title === 'King', 'and the man on the throne is styled by it');
+  ok((agr.modifiers || []).some((m) => m.id === 'agrippas_peace')
+    && (agr.modifiers || []).some((m) => m.id === 'the_kings_chancery'),
+    'the crown pays in coin and standing');
+  ok(mil.diploCapacity(ctx3, 'AGR') > mil.diploCapacity(ctx3, 'ROM') - 99
+    && (agr.modifiers || []).some((m) => m.effects && m.effects.diploSeats === 1),
+    'including the envoy no other crown grants');
+  ok(agr.points.infl === beforeInfl + 50, 'and the founding grant is paid');
+
+  // The debts of the dead king are NOT inherited.
+  ok((g3.tags.ROM.allies || []).indexOf('AGR') < 0,
+    'Rome is not suddenly allied to the revolt that took the crown');
+  ok(!Object.keys(g3.truces || {}).some((k) => k.split('|').indexOf('AGR') >= 0 && k.split('|').indexOf('ROM') >= 0)
+    || (g3.tags.AGR.atWarWith || []).indexOf('ROM') >= 0,
+    'and no dead king\'s truce shelters it from the war it is fighting');
+  ok(g3.tagAliases && g3.tagAliases.JUD === 'AGR', 'the chapter\'s cards find it under its old name (SPEC §135)');
+}
+
 console.log(failures ? `\n${failures} FAILURES` : '\nALL PASS');
 process.exit(failures ? 1 : 0);

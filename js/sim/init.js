@@ -1368,7 +1368,11 @@ export function gameActions(ctx) {
     for (const f of FORMABLES) {
       if (f.from !== g.playerTag) continue;
       if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
-      if (g.tags[f.to]) continue; // that banner already flies elsewhere
+      // Somebody is flying that banner (SPEC §221). A FALLEN court's name is
+      // not taken — it is a line in the chronicle, and a crown standing on its
+      // ground may take it up. The AI keeps the older rule and only claims
+      // banners that have never been worn.
+      if (g.tags[f.to] && g.tags[f.to].alive !== false) continue;
       const rows = (f.requires || []).map((r) => {
         let ok = false;
         try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }

@@ -1527,3 +1527,25 @@ three collars against a three-collar allowance.
 grant makes the client, the last section lets it go — which is worth keeping
 that way: booting this frame on SwiftShader costs more than every assertion in
 the suite put together.
+
+## A banner nobody is flying (SPEC §221)
+
+`smoke11` grew the section, and it is the suite to run after touching
+`switchTagCore`, `formableList` or `FORMABLES`.
+
+The assertion worth knowing about is not the crown, it is the debt. Rome's
+66 CE ledger lists the Kingdom of Agrippa II among its allies, and it keeps
+listing it after Agrippa falls, because `diploBonds` skips the dead rather than
+forgetting them. The suite checks that entry is still there *before* the
+proclamation and gone after it — so if `freeBanner` is ever weakened, the
+failure reads "Rome is not suddenly allied to the revolt that took the crown"
+rather than as something mysterious three sections later.
+
+Two things a new formable of this shape needs. It must be player-only: the AI
+still refuses any tag that exists at all (`aiFormNation` was deliberately left
+on the older gate), which is what keeps `node tools/autorun.mjs 8` byte
+identical. And if the chapter already has a mission table under the target tag
+— 66 CE has 25 nodes under `AGR` — the formed crown inherits it through
+`missionsFor`, which is the intended behaviour and not a bug to route around;
+nodes already satisfied on the day of the proclamation complete on the next
+monthly pass.

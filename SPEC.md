@@ -14255,3 +14255,78 @@ total victory produces.
   narrowness control (a second town restores the cap); and Rome occupied entire
   still refused, with the price of everything measured against the ceiling war
   score can reach.
+
+## 221. A banner nobody is flying may be taken up
+
+Forming a nation asked that the target banner be **free**, and free meant the
+tag did not exist:
+
+    if (!old || !def || g.tags[to]) return false; // the target banner must be free
+
+For every crown in the game that was the same question as "is anybody flying
+it", because those banners are minted by the proclamation itself — MLI, UAR,
+SAR, and a JUD that does not exist in 40 BCE. It stops being the same question
+the moment a crown is one a court on the map already wears. Beat that court out
+of existence and its name stays in `game.tags` forever with `alive: false`,
+which is how a fallen court is recorded — so the banner was reserved in
+perpetuity for a king with no country, no army and no chancery.
+
+The rule is now the sentence it always meant: a banner is free when **nobody is
+flying it**. A court that has fallen holds no province and no army (that is
+precisely what `updateTagLife` checks before it strikes one off), its name is a
+line in the chronicle, and a crown standing on its ground may take that too.
+
+### The banner arrives with none of the dead king's debts
+
+This is the part that is not bookkeeping. The world writes things down about
+courts, and those entries survive the court: Rome's own ledger lists the
+Kingdom of Agrippa II among its allies in the 66 CE bookmark, and it goes on
+listing it after Agrippa is gone, because `diploBonds` simply skips the dead
+rather than forgetting them. Hand that banner to somebody and the entry wakes
+up — a revolt that took the crown would have found itself **allied to the
+empire it was fighting**, with a truce to match.
+
+So `freeBanner` strikes the record before the crown changes hands: every
+alliance, guarantee and marriage other courts recorded with it, every truce and
+diplomatic cooldown keyed to its name, its subsidies, and the opinions and
+grudges held against it. What is inherited is a name and a colour. The
+claimant's own realm — its wars, its treasury, its bonds — is untouched, because
+`switchTagCore` builds the new court out of the claimant and always did.
+
+**The AI keeps the older rule** (`aiFormNation` still refuses any tag that
+exists at all). An AI court re-branding into a dead neighbour's name mid-chapter
+would orphan the scripted arcs that address courts by tag — the same reason the
+dynastic restorations ship player-only — and it keeps every all-AI trajectory
+exactly where it was.
+
+### The crown the rule exists for: Agrippa's
+
+`form_agr_jud` (66 CE, JUD → AGR, player-only): the revolt that beat the last
+Herodian may take his crown instead of merely his country. It asks for his seat
+at **Caesarea Philippi**, the king's country of **Batanea and Gamala**,
+**Jerusalem** — whose High Priest that crown had the naming of, which is half of
+what the title was worth — a house of Herod that is ended, twelve provinces,
+independence, stability 1 and legitimacy 40.
+
+What it pays is what a client kingdom was: 200 talents, 30 governance and 50
+influence at the founding, **Agrippa's Peace** (+12% income, −0.5 unrest
+everywhere) and **The King's Chancery** (+8% trade and one more envoy — the only
+crown in the game that widens the establishment §202 counts). Pointedly no
+manpower: a client kingdom is a set of revenues Rome agreed not to collect
+itself, and the difference between this crown and the Kingdom of Israel at the
+end of the chapter is that one of them is for fighting.
+
+It brings no mission chain of its own, so `missionsFor` finds the chapter's
+`missions.AGR` under the name the realm now wears (§204/§215) and the panel
+fills with the king's own programme — the royal capital, the king's own army,
+a chancery of its own. That is deliberate: taking a crown means taking its
+argument about what the country is for. A few of its nodes are already true the
+day it is proclaimed (the cities Nero gave are held by the men who took them),
+and complete on the next pass.
+
+- **Regression contract**: `smoke11` — the crown refused while Agrippa reigns,
+  offered once his house is ended, the requirement rows, the switch (name,
+  constitution, royal style, both modifiers, the founding grant, the §135
+  forwarding address), and the two debts that must NOT come with the banner:
+  Rome's alliance and the dead king's truces. `node tools/autorun.mjs 8` is
+  byte identical on all eight bookmarks — the AI cannot reach any of it.

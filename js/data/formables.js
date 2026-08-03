@@ -709,6 +709,63 @@ export const FORMABLES = [
       },
     },
   },
+  // ---- the last Herodian's crown, taken by the men who beat him -------------
+  {
+    id: 'form_agr_jud',
+    from: 'JUD', to: 'AGR',
+    name: 'Take the Crown of Agrippa',
+    desc: 'The last Herodian stood on the Xystus and told Jerusalem what sixty thousand '
+      + 'men mean, and Jerusalem did not listen. Now his capital at Panias is yours, his '
+      + 'Golan is yours, and his house is ended — so take the thing itself: not a council '
+      + 'of the revolt but a KINGDOM, with the Galilee and the Golan under one Jewish crown '
+      + 'and the Temple\'s own patronage, which was always the Herodian half of the bargain. '
+      + 'Rome kept this kingdom for two generations because a client is cheaper than a '
+      + 'province. Let it go on being cheaper, and let it be ours.',
+    bookmarks: ['66ce'],
+    requires: [
+      {
+        label: 'Hold Caesarea Philippi, the seat of his kingdom',
+        check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Caesarea Philippi'),
+      },
+      {
+        label: 'Hold the king\'s country: Batanea and Gamala',
+        check: (ctx, tag) => holdsAll(ctx, tag, ['Batanea', 'Gamala']),
+      },
+      {
+        // The crown carried the custody of the vestments and the naming of the
+        // High Priest. A claimant who does not hold the Temple claims half of it.
+        label: 'Hold Jerusalem, whose priesthood the crown names',
+        check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem'),
+      },
+      {
+        label: 'The house of Herod is ended — no court flies his banner',
+        check: (ctx) => !ctx.game.tags.AGR || ctx.game.tags.AGR.alive === false,
+      },
+      { label: 'Owe fealty to no one', check: (ctx, tag) => independent(ctx, tag) },
+      { label: 'Hold twelve provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 12 },
+      { label: 'Stability 1', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 1 },
+      { label: 'Legitimacy 40', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 40 },
+    ],
+    bonus: {
+      legitimacy: 20, stability: 1,
+      // What this particular crown is FOR (SPEC §102): a client kingdom is a
+      // set of revenues Rome agreed not to collect itself. It pays in coin,
+      // towns and standing — and pointedly not in men, which is the whole
+      // difference between this crown and the one at the end of the chapter.
+      grant: { treasury: 200, gov: 30, infl: 50 },
+      rulerTitle: 'King',
+      modifier: {
+        id: 'agrippas_peace', name: "Agrippa's Peace", months: -1,
+        effects: { incomeMult: 1.12, unrestAll: -0.5 },
+      },
+      modifier2: {
+        // The only crown in the game that hands a realm another envoy: the
+        // client king's whole art was the chancery (SPEC §202).
+        id: 'the_kings_chancery', name: "The King's Chancery", months: -1,
+        effects: { diploSeats: 1, tradeMult: 1.08 },
+      },
+    },
+  },
   // ---- the Kingdom of Israel: the endgame crown of every Jewish arc ----------
   {
     id: 'form_mli_jud',
