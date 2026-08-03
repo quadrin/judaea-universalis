@@ -140,8 +140,12 @@ console.log('== §215 the crown: a proclamation that brings no chain keeps the o
   ok(switchTagCore(ctx, 'JUD', 'MLI'), '66 CE Judaea proclaims the Kingdom of Israel');
   game.playerTag = 'MLI';
   const view = actions.getMissions();
-  ok(view.length === 7 && view.length !== judaean,
-    '  the crown is handed its own seven-mission chapter tree, not Judaea\'s ' + judaean);
+  // §211 deepened the crown from seven nodes to twenty-two — the claim here is
+  // that it reads its OWN tree rather than inheriting the chapter side's, so
+  // the number moves with that section and the inequality is the real check.
+  ok(view.length === 22 && view.length !== judaean,
+    '  the crown is handed its own twenty-two mission chapter tree, not Judaea\'s '
+    + judaean + ' (' + view.length + ')');
   ok(view.some((m) => m.id === 'mli_the_crowning'),
     '  the crowning is on it — the formable\'s chain answers before the inherited one');
   ok(!realm.missionsFor(ctx, 'NAB'), 'and no chain is invented for a tag that never had one');
