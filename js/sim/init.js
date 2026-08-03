@@ -1303,7 +1303,7 @@ export function gameActions(ctx) {
         incorporate: inc ? {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
-          suspended: !!inc.suspended,
+          suspended: !!inc.suspended, capped: !!inc.capped, max: inc.max,
         } : null,
         freedom: freedom ? {
           can: freedom.can, why: freedom.why, name: freedom.name, dev: freedom.dev,

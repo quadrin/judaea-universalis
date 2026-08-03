@@ -1684,6 +1684,14 @@ export const DEFINES = {
     incorporateKeepOpinion: 60,  // ...but once begun, only real disaffection (below this) unravels the weaving
     incorporateBase: 75,         // influence points to begin the union...
     incorporatePerDev: 2.5,      // ...plus per point of the client's development
+    // ...and never past what a treasury of points can hold. Every monarch-point
+    // pool in the sim is clamped to 999, so a union priced above that was not
+    // expensive — it was impossible, and silently so. The formula runs out at
+    // ~370 development, which is precisely the class of client this term is
+    // FOR: Seleucid Syria (843), Byzantium (1082), Sasanian Persia (610) and
+    // Rome (744-1874) are all courts a peace table can yoke and no crown could
+    // ever afford to absorb.
+    incorporateMax: 999,
     incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...
     incorporateMonthsPerDev: 0.5, // ...and longer for every point of their development
     incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest

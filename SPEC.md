@@ -2487,7 +2487,12 @@ live edges, all keyed to the client's OPINION of its overlord
   `monthlyIncorporation`, military.js; the Incorporate button in the
   diplomacy block): a client that has come to nearly LOVE its overlord
   (opinion ≥ 80), both courts at peace, can begin the union — a heavy
-  influence price up front (75 + 2.5 × its development), then
+  influence price up front (75 + 2.5 × its development, to a ceiling of
+  `incorporateMax` 999, which is the ceiling every monarch-point pool
+  already has: above it a union is not dear, it is unpayable, and the
+  formula runs out at ~370 development — Seleucid Syria, Byzantium,
+  Sasanian Persia and Rome are all courts a peace table can yoke and no
+  crown could otherwise afford to absorb), then
   12 + dev/2 MONTHS of weaving that unravels (influence lost) if war
   touches either court, the bond breaks, or their affection cools below
   the gate. On completion its lands join the realm at ≥ 0.5 autonomy

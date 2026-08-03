@@ -1122,7 +1122,11 @@ const RISING_LABELS = {
         ? (inc.suspended ? `Held by war… ${inc.inProgress}m` : `Incorporating… ${inc.inProgress}m`)
         : 'Incorporate');
       setDipBtn(refs.dipIncorporate, inc.can, inc.why,
-        `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
+        (inc.capped
+          ? `The price is at its ceiling: ${inc.max} influence points, whatever their size. A realm's `
+            + `points stop at ${inc.max}, so a union costing more than that could never be paid for at all.\n`
+          : '')
+        + `Begin incorporating the client kingdom: ${inc.cost} influence points now, then ${inc.months} months of union `
         + `(${inc.dev} development).\nTheir court must be nearly devoted — opinion ${inc.opinion >= 0 ? '+' : ''}${inc.opinion} of ${inc.needOpinion}+ needed — and both at peace the whole way: `
         + `war or cooling affection unravels the work and the influence is lost.\n`
         + `On completion their lands, treasury and people join the realm; the world counts absorption at half a conquest's infamy.`);

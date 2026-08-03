@@ -2670,7 +2670,11 @@ export function incorporateInfo(ctx, tag, vassalTag) {
   const V = ctx.DEFINES.VASSALS || {};
   const me = g.tags[tag];
   const them = g.tags[vassalTag];
-  const out = { can: false, why: '', cost: 0, dev: 0, months: 0, opinion: 0, needOpinion: num(V.incorporateOpinion, 80), inProgress: 0 };
+  const out = {
+    can: false, why: '', cost: 0, dev: 0, months: 0, opinion: 0,
+    needOpinion: num(V.incorporateOpinion, 80), inProgress: 0,
+    max: Math.max(1, Math.round(num(V.incorporateMax, 999))), capped: false,
+  };
   if (!me || !them || !them.alive) { out.why = 'No such court.'; return out; }
   if (them.overlord !== tag) { out.why = 'They are not our client kingdom.'; return out; }
   let dev = 0;
@@ -2679,7 +2683,15 @@ export function incorporateInfo(ctx, tag, vassalTag) {
     if (p && !p.impassable && p.owner === vassalTag) dev += devTotal(p);
   }
   out.dev = dev;
-  out.cost = Math.round(num(V.incorporateBase, 75) + dev * num(V.incorporatePerDev, 2.5));
+  // The price has a ceiling, and the ceiling is the one every monarch-point
+  // pool already has (999). Without it a great client's union was not merely
+  // dear, it was arithmetically unreachable: the influence needed could not be
+  // held in the treasury it is paid from, so the button sat there forever
+  // reading "Weaving two realms into one takes 2,183 influence points" at a
+  // court whose pool stops at 999.
+  const raw = Math.round(num(V.incorporateBase, 75) + dev * num(V.incorporatePerDev, 2.5));
+  out.cost = Math.min(raw, out.max);
+  out.capped = raw > out.cost;
   out.months = Math.max(1, Math.round(num(V.incorporateMonthsBase, 12) + dev * num(V.incorporateMonthsPerDev, 0.5)));
   out.opinion = Math.round(opinionOf(ctx, vassalTag, tag));
   if (them.incorporating && them.incorporating.by === tag) {
