@@ -1494,3 +1494,36 @@ identical — which it is, on all eight bookmarks, because no AI court ever
 grants a crown out of its own realm. The one call site is the player's own
 action, and smoke145 reads the AI half of `js/sim/` as text to keep it that
 way.
+
+## The collar comes off (SPEC §219)
+
+`smoke146` owns releasing a client kingdom. Its central assertion is an
+`inventory()` helper — every province with its controller and autonomy, every
+regiment with its strength and station, the ruler, treasury, manpower,
+technology, reforms and constitution, serialized before and after — and the
+test is that the string is IDENTICAL across the release. If you ever make this
+act move anything besides `overlord`, that is where it will fail, and it is
+supposed to.
+
+Three things to know if you touch it.
+
+It builds its subject with §218 (`withClient()` seats a Phoenician state on the
+coast and then frees it), so a break in `releaseClientCore` fails this suite in
+its setup rather than in an assertion. Read smoke145 first when both go red.
+
+Its 66 CE section is the age clause, not decoration: Rome opens the Great
+Revolt holding Agrippa by script, and the point is that a collar can be struck
+in a chapter whose `clientKingdoms` switch is on OR off — §142 gates making
+clients, never unmaking them. If you add a mechanic gate to `freeClientInfo`,
+that section is what tells you.
+
+And its strain section collars living courts until it is one past
+`DIPLOMACY.freeClients` rather than naming three tags, because which small
+courts are alive in 167 BCE is a bookmark detail that has moved before. The
+first draft named ITU, which is not seated in that chapter, and quietly tested
+three collars against a three-collar allowance.
+
+`uitest47` carries the browser half of both §218 and §219 in one boot — the
+grant makes the client, the last section lets it go — which is worth keeping
+that way: booting this frame on SwiftShader costs more than every assertion in
+the suite put together.

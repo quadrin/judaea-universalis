@@ -4480,6 +4480,110 @@ export function offerClientshipCore(ctx, me, them) {
   return { ok: true, accepted: true, name, dev: info.theirDev };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Strike the collar (SPEC §219): a client kingdom let go.
+//
+// §218 gave a crown the way IN to a client kingdom out of its own land. There
+// was never a way out. A collar came off exactly three ways and none of them
+// was the lord's to choose: the lord died and `updateTagLife` freed its
+// clients, the lord ate them (§61's union), or they rose and won the
+// independence war the AI declares by breaking the bond first. A crown could
+// take a client, buy a client, be given a client and make a client — and could
+// not, under any circumstance, simply let one go.
+//
+// So this is Incorporate's mirror, and it sits beside it. Nothing moves except
+// the fealty: the freed court keeps every province, every regiment, its ruler,
+// its treasury and its institutions, and walks off with them. What the lord
+// gets back is the chancery seat (SPEC §202) and one less collar to chafe the
+// rest; what it gives up is the tribute and the war duty.
+//
+// Two rules worth stating because they are not obvious:
+//
+//   * No influence, because the price is the client. Every other bond in the
+//     chancery is billed for what it costs to KEEP; this is the one act whose
+//     whole cost is what it gives away.
+//   * It is not gated on the age. §142's `clientKingdoms` switch stops a
+//     chapter MAKING clients — it says nothing about unmaking them, and a
+//     chapter that inherits a collar and then retires the institution must
+//     still be able to take it off.
+// ─────────────────────────────────────────────────────────────────────────────
+export function freeClientInfo(ctx, lord, clientTag) {
+  const g = ctx.game;
+  const me = g.tags[lord];
+  const them = g.tags[clientTag];
+  if (!me || !them || !them.alive || lord === clientTag || them.overlord !== lord) return null;
+  const V = ctx.DEFINES.VASSALS || {};
+  let provinces = 0;
+  for (let i = 1; i < g.provinces.length; i++) {
+    const p = g.provinces[i];
+    if (p && !p.impassable && p.owner === clientTag) provinces++;
+  }
+  const load = diploLoad(ctx, lord);
+  const strain = clientStrain(ctx, lord);
+  const out = {
+    tag: clientTag,
+    name: them.name || clientTag,
+    dev: Math.round(devOfTag(ctx, clientTag)),
+    provinces,
+    armies: armiesOf(ctx, clientTag).length,
+    gratitude: Math.round(num(V.freeGratitude, 80)),
+    opinion: Math.round(opinionOf(ctx, clientTag, lord)),
+    collarMonths: Math.round(DIP(ctx, 'freedCollarMonths', 120)),
+    // A union half-woven dies with the bond it was weaving, and the influence
+    // already spent on it is spent (the same terms `monthlyIncorporation` has
+    // always unravelled on).
+    incorporating: them.incorporating && them.incorporating.by === lord
+      ? Math.max(0, them.incorporating.monthsLeft | 0) : 0,
+    seats: load.seats,
+    capacity: load.capacity,
+    clients: strain.clients,
+    strain: strain.strain,
+    can: false,
+    why: '',
+  };
+  const meAtWar = (me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  const themAtWar = (them.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive);
+  if (meAtWar || themAtWar) {
+    out.why = 'Not in wartime. A client that walks out of a war we are fighting has not been '
+      + 'freed — it has deserted, and everyone on both sides will read it that way.';
+  }
+  out.can = !out.why;
+  return out;
+}
+
+// Let them go. The bond ends and nothing else does.
+export function freeClientCore(ctx, lord, clientTag) {
+  const info = freeClientInfo(ctx, lord, clientTag);
+  if (!info) return { ok: false, why: 'They are not our client kingdom.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const g = ctx.game;
+  const V = ctx.DEFINES.VASSALS || {};
+  const me = g.tags[lord];
+  const them = g.tags[clientTag];
+  them.overlord = null;
+  them.incorporating = null;
+  addOpinion(ctx, clientTag, lord, num(V.freeGratitude, 80));
+  // The freed do not kneel to the hand that freed them (SPEC §202). The rule
+  // was written for a court freed at somebody else's expense at the peace
+  // table; it belongs here twice over, because without it a lord could strike
+  // the collar and offer it back the same afternoon.
+  them.freedBy = { by: lord, y: g.date.y, m: g.date.m };
+  chronicle(ctx, 'era', (me.name || lord) + ' strikes the collar from '
+    + (them.name || clientTag) + ': the tribute ends, the crown stands, and the '
+    + 'kingdom answers to nobody.');
+  ctx.bus.emit('provinceOwner', {}); // the diplomatic map is drawn off the bond
+  return {
+    ok: true,
+    tag: clientTag,
+    name: them.name || clientTag,
+    dev: info.dev,
+    provinces: info.provinces,
+    lostWeaving: info.incorporating,
+    collarMonths: info.collarMonths,
+    gratitude: info.gratitude,
+  };
+}
+
 export function enemySideOf(war, tag) {
   return war.attackers.indexOf(tag) >= 0 ? war.defenders : war.attackers;
 }

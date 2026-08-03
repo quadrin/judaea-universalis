@@ -14116,3 +14116,85 @@ at all.
   including a refusal that is reported rather than half-applied. `node
   tools/autorun.mjs 8` against the parent tree is **byte identical on all eight
   bookmarks**, which is the section's own claim about the AI working.
+
+## 219. The collar comes off — a client kingdom released
+
+§218 gave a crown the way IN to a client kingdom out of its own land. There
+was never a way out.
+
+A collar came off exactly three ways, and not one of them was the lord's to
+choose. The lord died, and `updateTagLife` freed its clients. The lord ate
+them, which is §61's union and ends the client rather than releasing it. Or
+they rose and won — the independence war the AI declares by breaking the bond
+first (`ai.js`, and note the order: free courts declare, clients cannot). A
+crown could take a client at the peace table, buy one with §92's offered
+collar, be handed one at a congress and make one out of its own provinces —
+and could not, under any circumstance, simply let one go.
+
+So this is **Incorporate's mirror**, and it sits beside it in the same block:
+**Release Them**.
+
+### Nothing moves except the fealty
+
+That is the whole section, and most of `smoke146` is an inventory taken before
+and after to prove it. The freed court keeps every province at the autonomy it
+had, every regiment where it was standing, its ruler, its treasury, its
+manpower, its technology, its reforms and its constitution, and walks off with
+all of it. No province changes hands, no army is disbanded, nobody is
+conquered, and the world counts no infamy: `overlord` becomes null and
+everything else is exactly where it was.
+
+Four things do change:
+
+- **the tribute stops**, in both ledgers, the month it is struck;
+- **the chancery seat comes back** (§202), and the collars that remain chafe
+  less for it — the strain is read off how many you hold and how much of you
+  they weigh, so releasing one eases every other;
+- **they remember it**: `freeGratitude` (80) toward the hand that struck the
+  collar, which is the largest single opinion move any peacetime act makes;
+- **they will not kneel again for a decade.** The freed mark §202 wrote for a
+  court liberated at somebody else's expense is set here too, and for the same
+  reason: without it a lord could strike the collar and offer it back the same
+  afternoon, and §92 would let him.
+
+A union half-woven dies with the bond it was weaving, on the same terms
+`monthlyIncorporation` has always unravelled on — the months are lost and so is
+the influence they cost. The button says so before it is pressed.
+
+### What it costs, and the one refusal
+
+**No influence.** Every other bond in the chancery is billed for what it costs
+to *keep*; this is the one act whose entire cost is what it gives away — a
+country, its development, its army and its tribute. Pricing it as well would be
+charging a man for the privilege of opening his hand.
+
+The one refusal is **wartime**, on either side of the bond: a client that walks
+out of a war we are fighting has not been freed, it has deserted, and everyone
+at both ends of the line reads it that way. Otherwise the only gates are the
+obvious ones — it must be a living court, it must actually be ours, and a crown
+cannot free itself.
+
+Note what is deliberately **not** a gate. §142's `clientKingdoms` switch stops a
+chapter *making* clients; it says nothing about unmaking them, and a chapter
+that inherits collars and then retires the institution must still be able to
+take them off. So Rome can let Agrippa go in 66 CE, and would be able to in an
+age that had stopped writing new clients down.
+
+### Two taps
+
+The button arms on the first press and acts on the second — §218's idiom, and
+the saves shelf's before it, for the same reason. Incorporate takes months and
+can be watched; this hands away a whole country between two frames.
+
+- **Regression contract**: `smoke146` — the inventory before and after (every
+  province, regiment, ruler, coin and institution unmoved), the four things
+  that do change, the wartime refusal on both sides of the bond and the three
+  ownership gates, the half-woven union cancelled with its months reported, the
+  §202 mark and §92 refusing the collar to a court we let go, Rome releasing a
+  scripted client in an age that still keeps them, the strain easing on the
+  collars that remain, the save, the player-only call site, and the action as
+  the panel presses it. `uitest47` grew a fifth section for the browser half —
+  the verb beside Incorporate on the client's own panel, armed on the first
+  press and struck on the second — on the very client its §218 sections make.
+  `node tools/autorun.mjs 8` against the parent tree is **byte identical on all
+  eight bookmarks**: no AI court strikes a collar, exactly as none grants one.

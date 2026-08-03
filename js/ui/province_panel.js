@@ -14,6 +14,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let provId = 0;
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
   let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
+  let freeArmed = ''; // client kingdom whose collar-striking has been armed (SPEC §219)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
 const RISING_LABELS = {
@@ -182,6 +183,7 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="subsidize" data-ref="dipSubsidize">Send Subsidy</button>
           <button class="pp-dip" data-dip="protect" data-ref="dipProtect">Offer Our Protection</button>
           <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
+          <button class="pp-dip" data-dip="free" data-ref="dipFree">Release Them</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip" data-dip="rival" data-ref="dipRival">Name as Rival</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
@@ -200,6 +202,16 @@ const RISING_LABELS = {
         refresh();
         return;
       }
+      // Striking a collar hands away a whole country (SPEC §219), so it arms
+      // first and acts second — §218's idiom, for the same reason.
+      if (b.dataset.dip === 'free' && freeArmed !== dipTag) {
+        const armedTag = dipTag;
+        freeArmed = armedTag;
+        setTimeout(() => { if (freeArmed === armedTag) { freeArmed = ''; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      if (b.dataset.dip === 'free') freeArmed = '';
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
         war: 'declareWarOn', incorporate: 'incorporateVassal',
@@ -211,6 +223,7 @@ const RISING_LABELS = {
         embargo: 'embargoState',
         unembargo: 'liftEmbargo',
         protect: 'offerClientship',
+        free: 'freeClientState',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
@@ -1114,6 +1127,31 @@ const RISING_LABELS = {
         + `war or cooling affection unravels the work and the influence is lost.\n`
         + `On completion their lands, treasury and people join the realm; the world counts absorption at half a conquest's infamy.`);
     }
+    // Striking the collar (SPEC §219): Incorporate's mirror, and the only way
+    // out of a client kingdom that is the lord's own to choose. Two taps,
+    // because it hands away a whole country.
+    const fr = d.freedom;
+    refs.dipFree.classList.toggle('hidden', !fr);
+    if (fr) {
+      const armed = freeArmed === dipTag && fr.can;
+      setText(refs.dipFree, armed ? 'Let them go for good?' : 'Release Them');
+      refs.dipFree.classList.toggle('pp-dip-sure', armed);
+      const terms = `Strike the collar: ${fr.name} answers to nobody.\n`
+        + `It costs nothing, because the price is the client. Their ${fr.provinces} `
+        + `${fr.provinces === 1 ? 'province' : 'provinces'} (${fr.dev} development)`
+        + `${fr.armies ? `, their ${fr.armies === 1 ? 'army' : 'armies'}` : ''}, their court and `
+        + `their laws go with them; the tribute and the war duty end.\n`
+        + `Their regard for us rises ${fr.gratitude} — and they will not take our collar again `
+        + `for ${Math.round(fr.collarMonths / 12)} years, so it is not a move to make twice.\n`
+        + `The chancery gets the seat back (${fr.seats} of ${fr.capacity} spent)`
+        + `${fr.strain > 0 ? `, and the collars we keep chafe less for it` : ''}.`
+        + (fr.incorporating
+          ? `\nThe union we are weaving (${fr.incorporating} months to run) dies with the bond, and the influence it cost is spent.`
+          : '');
+      setDipBtn(refs.dipFree, fr.can, fr.why, armed
+        ? 'Press again to let them go. Walk away and the offer lapses.\n――――――\n' + terms
+        : terms);
+    } else if (freeArmed && freeArmed === dipTag) freeArmed = '';
     // Fabricate claim: per-province, priced in influence.
     let ci = null;
     if (actions && typeof actions.getClaimInfo === 'function') {

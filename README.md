@@ -183,6 +183,16 @@ static site, the zero dependencies, or the missing build step changes.
   (that is a cession, and it is agreed at a table with them), ground an enemy army is
   standing in, more than half the realm at once — or your own people, because a state carved
   out of your own is a secession and secessions are suffered rather than granted.
+- **And the collar comes off.** A client kingdom used to have exactly three exits and none of
+  them was yours: you died, you ate them, or they rose and won. **Release Them** now sits
+  beside Incorporate on the client's own panel and does the opposite thing — nothing moves
+  except the fealty. They keep every province at the autonomy it had, every regiment where it
+  was standing, their court, their treasury and their laws, and walk off with the lot. The
+  tribute stops, your chancery seat comes back, the collars you keep chafe less for it, and
+  they remember the hand that struck it — though they will not take that hand's collar again
+  for a decade, so it is not a move to make twice. It costs no influence at all: the price is
+  the client. The one thing that refuses it is a war, because a client that walks out of one
+  has not been freed, it has deserted.
 - A foreign court's decision is not yours to make: events that dramatize another realm's
   choice (what Rome decrees, what the Nasi ordains, what Cairo funds) now arrive for
   everyone else as a single-button notice naming the deciding court — the historical

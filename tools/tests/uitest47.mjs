@@ -1,7 +1,10 @@
-// UI verification — SPEC §218: a crown of its own, in a real browser.
+// UI verification — SPEC §218 and §219: a crown of its own, and the collar
+// struck off again, in a real browser.
 //
-// The headless suite (smoke145) proves the arithmetic and the gates. This one
-// proves the four things only a browser can:
+// The headless suites (smoke145, smoke146) prove the arithmetic and the gates.
+// This one proves the five things only a browser can — the last of them on the
+// very client the earlier sections make, which is why both sections live in
+// one suite and one boot:
 //
 //   1. The block is ABSENT where the question does not arise — on a province
 //      of our own people and on the capital — and present on foreign ground,
@@ -12,6 +15,8 @@
 //      second is what actually hands the province away.
 //   4. After the grant the province answers to a court that answers to us —
 //      and the block is gone from a province that is no longer ours.
+//   5. That client's own panel then carries Release Them beside Incorporate,
+//      arms on the first press and lets go on the second (SPEC §219).
 import { createRequire } from 'module';
 const require = createRequire((process.env.JU_PW_DIR || '/opt/node22/lib') + '/');
 const { chromium } = require('playwright');
@@ -165,6 +170,65 @@ console.log('== and it is gone from ground that is no longer ours ==');
       ? (document.querySelector('#province-panel [data-ref="dipStatus"]') || {}).textContent || '' : '';
   });
   ok(/client kingdom/i.test(diplo), 'the diplomacy block calls it what it is: ' + diplo);
+}
+
+// SPEC §219 — and the way back out, on the same client this suite just made.
+console.log('== the collar comes off from the same block it was fastened in ==');
+{
+  const readFree = () => page.evaluate(() => {
+    const b = document.querySelector('#province-panel [data-dip="free"]');
+    if (!b || b.classList.contains('hidden')) return null;
+    return {
+      text: b.textContent.trim(),
+      disabled: b.classList.contains('disabled'),
+      armed: b.classList.contains('pp-dip-sure'),
+      tt: b.dataset.tt || '',
+      // it must sit beside Incorporate, not somewhere else in the panel
+      afterIncorporate: !!(document.querySelector('#province-panel [data-dip="incorporate"]')
+        && (document.querySelector('#province-panel [data-dip="incorporate"]')
+          .compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)),
+    };
+  });
+  await select(setup.Ptolemais);
+  let f = await readFree();
+  ok(!!f && !f.disabled, 'the client\'s own panel carries Release Them');
+  ok(f && f.afterIncorporate, 'beside Incorporate, which is the verb it mirrors');
+  ok(f && /costs nothing, because the price is the client/.test(f.tt)
+    && /answers to nobody/.test(f.tt) && /seat back/.test(f.tt),
+    'and the terms say what goes, what it costs and what comes back');
+
+  await page.locator('#province-panel [data-dip="free"]').click();
+  await page.waitForTimeout(250);
+  f = await readFree();
+  ok(f && f.armed && /Let them go for good\?/i.test(f.text), 'the first press arms it: ' + (f && f.text));
+  const held = await page.evaluate((id) => {
+    const g = window._ctx.game;
+    return (g.tags[g.provinces[id].owner] || {}).overlord;
+  }, setup.Ptolemais);
+  ok(held === 'HAS', 'and the collar is still on');
+
+  await page.locator('#province-panel [data-dip="free"]').click();
+  await page.waitForTimeout(350);
+  const out = await page.evaluate((id) => {
+    const g = window._ctx.game;
+    const p = g.provinces[id];
+    const t = g.tags[p.owner] || {};
+    return {
+      overlord: t.overlord, owner: p.owner, name: t.name,
+      freedBy: t.freedBy && t.freedBy.by,
+      clients: Object.keys(g.tags).filter((k) => g.tags[k] && g.tags[k].alive && g.tags[k].overlord === 'HAS'),
+      status: (document.querySelector('#province-panel [data-ref="dipStatus"]') || {}).textContent || '',
+      toast: [...document.querySelectorAll('.toast .toast-title')].map((n) => n.textContent).join(' | '),
+    };
+  }, setup.Ptolemais);
+  ok(out.overlord === null || out.overlord === undefined,
+    'the second press strikes it: ' + out.name + ' answers to nobody');
+  ok(out.owner !== 'HAS' && out.clients.length === 0, 'they keep their land and we keep no client');
+  ok(out.freedBy === 'HAS', 'and the campaign remembers whose hand did it');
+  ok(/crown released/i.test(out.toast), 'the toast says so: ' + out.toast);
+  ok(!/client kingdom/i.test(out.status), 'the status line stops calling them ours: ' + out.status);
+  ok((await readFree()) === null, 'and the verb is gone — there is no collar to strike twice');
+  await page.screenshot({ path: OUT + 'free-client.png' });
 }
 
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 2).join(' / ') : ''));

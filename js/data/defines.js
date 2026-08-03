@@ -1701,6 +1701,11 @@ export const DEFINES = {
     releaseGratitude: 60,        // what a court thinks of the hand that crowned it...
     releaseRegard: 25,           // ...and what that hand thinks of the court it made
     releaseGuard: 2,             // regiments the new court musters at its own seat
+    // …and the collar struck off again (SPEC §219). The other way out of the
+    // loop above, and the only one that was ever the LORD's to choose: a client
+    // may be let go with everything it has. It costs no influence, because the
+    // price is the client. What it earns is remembered for a long time.
+    freeGratitude: 80,           // what a crown thinks of the hand that struck its collar
   },
 
   // The chancery (SPEC §202): a court has only so many envoys. Every standing

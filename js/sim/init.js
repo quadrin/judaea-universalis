@@ -17,6 +17,7 @@ import {
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
   releasableClients, releaseClientInfo, releaseClientCore,
+  freeClientInfo, freeClientCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
@@ -1206,8 +1207,11 @@ export function gameActions(ctx) {
       else whyNotSubsidize = chanceryFullWhy(ctx, me, true);
       // Incorporation (SPEC §61): a willing client can join the realm outright.
       let inc = null;
+      // …and its mirror (SPEC §219): the collar struck off instead.
+      let freedom = null;
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
+        try { freedom = freeClientInfo(ctx, me, tag); } catch (e) { freedom = null; }
       }
       // Embargo and blockade (SPEC §100): the pressure short of war, in the
       // ages that use it.
@@ -1300,6 +1304,13 @@ export function gameActions(ctx) {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
           suspended: !!inc.suspended,
+        } : null,
+        freedom: freedom ? {
+          can: freedom.can, why: freedom.why, name: freedom.name, dev: freedom.dev,
+          provinces: freedom.provinces, armies: freedom.armies, gratitude: freedom.gratitude,
+          collarMonths: freedom.collarMonths, incorporating: freedom.incorporating,
+          seats: freedom.seats, capacity: freedom.capacity,
+          clients: freedom.clients, strain: freedom.strain,
         } : null,
         marriage,
         recognition,
@@ -2998,6 +3009,20 @@ export function gameActions(ctx) {
           + ' (' + res.cost + ' influence). It governs itself, pays us tribute and follows us to war — '
           + 'and nobody was conquered, so nobody abroad counts it against us.', 'good');
       } catch (e) { warnOnce('releaseClient', 'releaseClientState failed', e); }
+    },
+
+    // ---- striking the collar (SPEC §219) ------------------------------------
+    freeClientState(tag) {
+      try {
+        const res = freeClientCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('The collar stays on', res.why, 'bad'); return; }
+        say('A crown released', res.name + ' answers to nobody: ' + res.provinces
+          + (res.provinces === 1 ? ' province' : ' provinces') + ' and ' + res.dev
+          + ' development leave our house with them, and the tribute ends. They will not '
+          + 'forget it (+' + res.gratitude + ' opinion) — and they will not take our collar '
+          + 'again for ' + Math.round(res.collarMonths / 12) + ' years.'
+          + (res.lostWeaving ? ' The union we were weaving dies with the bond.' : ''), 'good');
+      } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
     },
 
     // ---- claims --------------------------------------------------------------
