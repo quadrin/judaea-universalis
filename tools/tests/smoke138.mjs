@@ -397,8 +397,10 @@ function maximalGround(w, tag) {
     if (faith) p.religion = faith;
     p.dev = { tax: 12, prod: 12, mp: 12 };
     p.buildings = ['market', 'walls', 'temple', 'granary', 'shipyard'];
-    if (p.dia && typeof p.dia === 'object') p.dia.standing = 100;
-    else p.dia = { standing: 100 };
+    // Per crown since SPEC §216.
+    if (!p.dia || typeof p.dia !== 'object') p.dia = {};
+    if (!p.dia.by || typeof p.dia.by !== 'object') p.dia.by = {};
+    p.dia.by[tag] = { standing: 100, asked: 0 };
   }
   const jer = g.provinces.find((p) => p && p.canon === 'Jerusalem');
   if (jer) jer.wonder = 'temple';

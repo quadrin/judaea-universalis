@@ -409,6 +409,40 @@ both directions on individual seeds. If you re-tune anything here, sweep seeds
 before believing a single run — the 167 chapter's own court sits close enough
 to the line to throw a one-seed flag on either tree.
 
+`smoke140.mjs` owns the SPEC §213 works: the program table audited against
+1948's own base..ceiling window (every unlock a military rung, every
+prerequisite on the same court's roster and opening no later than what needs
+it, every effects key one the sim consumes, every `works` an arm §181 gates)
+and every other chapter proven to have no works at all; the five refusals in
+their own words; the arc (charged once at the start, billed thereafter as the
+`develop` row of `incomeBreakdown` — `monthlyPrograms` moves clocks and never
+touches a treasury — and delivered permanently into `t.ideas`); the arm-by-arm
+gate, where a delivered Nesher opens `raiseAirWing` while `recruitRegiment`
+still refuses the tanks; the sale in both directions with the §181 fee landing
+in the treasury that paid for the shops; the Lavi's two endings; the AI's
+one-at-a-time rule and its bankruptcy branch; and a pre-§213 save reviving with
+an empty book. If you add a program, that suite is where its numbers are
+checked — and note that Israel's only prerequisite-free work is the Uzi, so a
+test that wants two lines running has to deliver it first.
+
+`uitest44.mjs` drives the same section in a real browser: The Works of Our Own
+drawn on the Host below How We Muster, a locked card naming its rung and the
+Lavi naming the two works it owes, one press starting a line (months, progress
+bar, Abandon button, and the monthly bill appearing in the block) and one press
+closing it again, the summary line flipping from "Every gated arm is still an
+import" to "We build our own aircraft" to "…aircraft and armor — and sell to
+others" as works land, and 167 BCE drawing no block at all while its Host keeps
+How We Muster.
+
+Since SPEC §213 (the works of one's own): the 8-year set is **byte-identical**
+on every bookmark, and so is `node tools/autorun.mjs 57 1948ce` — no AI court
+reaches mar 20 with a comfortable purse inside either window, because `aiTech`
+will not race the age and this chapter's AI spends its martial points on
+reforms and era ideas first. That is the honest report, not a bug: the works
+are a player decision in practice and a rare AI one. If a future tuning pass
+loosens the AI's point spending and 1948's trajectories start moving, the
+programs are the first place to look.
+
 Since SPEC §206 (the south and the east get their history: 27 dated world
 cards on the §205 ground): the 8-year set is byte-identical — the cards that
 fire inside any 8-year window move opinions and modifiers, not trajectories.
@@ -1353,3 +1387,202 @@ and ruling every dispute one way reaches the pole in every quarrel.
 167 and the Status Quo in 1948, two headings and two sets of poles. Merged
 with main's §197-§200 the battery is **129 of 129 headless suites ALL
 PASS**, `smoke127`, `smoke128` and `smoke129` all included.
+
+## The constitutions a fork adopts (SPEC §214)
+
+`smoke141` is the new headless suite. It holds three things that are easy to
+break from different directions: the GOV_TYPES table (every government named,
+described, effective and archetyped, with the four STARTING constitutions
+pinned to the effects every bookmark is balanced against), the rule that no
+file decides a succession question by matching a government NAME — it greps
+`realm.js`, `crisis.js`, `revolt.js`, `military.js`, `courts.js` and
+`nation_panel.js` for `govType === '...'` in code — and every option of the five
+fork cards that ask what kind of state this is — sixteen of them, fifteen
+adopting a constitution — fired through the live cards rather than read off a
+table in the suite.
+
+If a new government is added, it needs `archetype` or the §163 foreign-court
+seats fall back to the King's Men, and smoke141's court section says so by
+name. If a new fork road adopts one, write `setGovernment` at the option's own
+call site and name the constitution in its tooltip; both are checked as text,
+on the same reasoning as smoke83's road markers.
+
+## The tree stands as long as the realm does (SPEC §215)
+
+`smoke142` is the new headless suite, and it is a bug-fix contract rather than
+a feature's: it holds the two conditions under which the mission tree may
+leave the panel. It may leave when the realm dies. It may not leave because a
+chapter verdict landed (`endGame` keeps the campaign running and
+`checkMissions` keeps working the chain — the panel read was the only surface
+that treated `g.result` as an ending), and it may not leave because the player
+proclaimed a crown whose formable carries no chain of its own (`missionsFor`
+now falls back down the §102 lineage the way every other bookmark table
+already does, after the formable's own chain rather than before it).
+
+If you add a formable, it does not need a `missions` list — the crown will
+keep the chain the realm was already working. If you give it one, that chain
+wins, and `smoke120`'s §189 section is where a chapter filter goes wrong.
+
+## Two Jewish states at one table (SPEC §216)
+
+`smoke143` is the headless half: the lobby's two pure decisions
+(`chapterChairs` / `resolveSeat` in `js/net/mp_state.js` — which of a
+chapter's standards a campaign can seat, and what an unpicked or impossible
+pick falls back to), the chair rule itself (`isHumanChair` / `humanChairs` in
+`sim/military.js`), a card addressed to a seated rival court being dealt to it
+rather than resolving itself, the §70 decider notice measured against the
+audience instead of the host, `factions.js` and `courts.js` dividing the map at
+the seated chairs, the two courts' demand books not colliding on the
+`pharisees` id both brothers of 67 BCE authored, and a mid-table save reviving
+as a solo campaign.
+
+Every section of that suite has its single-chair twin, and that is the thing to
+keep true when touching any of it: `humanTags` is `[playerTag]` in solo play,
+in every save and in every autorun, so all of this is a no-op unless a guest is
+actually sitting somewhere else. If a change here moves a solo campaign, it is
+wrong — the balance harness is the second opinion, and it came back **byte
+identical on all eight bookmarks** (`node tools/autorun.mjs 8`, diffed against
+the parent tree).
+
+It caught one, and it is the trap to know about if you generalize anything else
+from "the player" to "a seated chair". An autorun empties the protagonist chair
+by setting `ai` on it, so a rule rewritten as "not a human chair, therefore a
+foreign court" is TRUE of that tag in the harness — `courts.js` began convening
+three parties for a court that has never had any, the seeded stream moved, and
+every trajectory on every bookmark moved a little with it. `courtSeats` keeps
+excluding `g.playerTag` unconditionally and only adds the guests; smoke143
+pins it.
+
+`uitest45` is the browser half and needs two contexts, so it is the slowest
+suite in the battery: 67 BCE hosted as Hyrcanus with the guest seated on
+Aristobulus over real WebRTC (the hand-carried invite flow, no cloud), both
+chairs human, each convening its own estates, the guest marching an
+Aristobulan army through the host, and `ev4_embassy_ari` — a real card from the
+chapter's own chain — dealt to the guest with live buttons whose answer lands
+in the host's world. `uitest5` is the co-op suite and is deliberately untouched:
+the default table is still one realm and many hands on the tiller.
+
+The suite grew a second half after the first table played it and reported that
+one player's spending came out of the other's purse. It did not — every action
+already ran under the guest's own crown, and `smoke143` proves it action by
+action — but the *books* did not follow: five cooldown ledgers keyed by what was
+acted upon with nobody in the key as the actor, so the guest's festival shut the
+host's out, one court's forgers idled the other's, and an envoy rebuffed
+rebuffed both. The dispersion was worse than a key: standing was one number per
+community, so both crowns courted Alexandria out of one bar.
+
+If you add a cooldown, **put the acting realm in the key**. If you add anything
+a crown earns with somebody outside its own borders, ask whether a second crown
+would share it. The sweep that found these lives in the suite's second half:
+after the guest acts, the host must still be able to do the same thing.
+
+## A crown of its own (SPEC §218)
+
+`smoke145` owns releasing a client state: the two abstractions a grant is made
+out of, the five things that can never be granted, the five refusals in words,
+the grant itself, contiguity against the real map, the second grant enlarging
+the first client, determinism, the save, and the action as the panel presses
+it.
+
+Three things to know before you read a failure in it.
+
+It boots from the geometry **snapshot** rather than a stub, for the reason
+smoke77 documents: the contiguity rule is invisible on an empty adjacency
+graph, and this section leans on it twice (the Decapolis and Greece are the two
+pockets of one identity, and only one of them may be offered).
+
+Its setups **make peace first**. Every chapter opens with its own war running,
+and a grant is a peacetime act by design (the rule §61 already applies to
+weaving a union, pointed the other way) — so a section that forgets `peace(ctx)`
+fails with the wartime refusal rather than with anything it was testing.
+
+And its determinism section is the canary for the harness claim. Nothing in
+§218 touches the seeded stream: the state's tag is a hash of identity and
+bookmark, its ethnarch a hash of tag and seat. A granting campaign and a
+non-granting one must draw the same next three numbers, and two campaigns on
+different seeds must seat the same court under the same man. If you make any
+of it roll, that suite fails and `node tools/autorun.mjs 8` stops being byte
+identical — which it is, on all eight bookmarks, because no AI court ever
+grants a crown out of its own realm. The one call site is the player's own
+action, and smoke145 reads the AI half of `js/sim/` as text to keep it that
+way.
+
+## The collar comes off (SPEC §219)
+
+`smoke146` owns releasing a client kingdom. Its central assertion is an
+`inventory()` helper — every province with its controller and autonomy, every
+regiment with its strength and station, the ruler, treasury, manpower,
+technology, reforms and constitution, serialized before and after — and the
+test is that the string is IDENTICAL across the release. If you ever make this
+act move anything besides `overlord`, that is where it will fail, and it is
+supposed to.
+
+Three things to know if you touch it.
+
+It builds its subject with §218 (`withClient()` seats a Phoenician state on the
+coast and then frees it), so a break in `releaseClientCore` fails this suite in
+its setup rather than in an assertion. Read smoke145 first when both go red.
+
+Its 66 CE section is the age clause, not decoration: Rome opens the Great
+Revolt holding Agrippa by script, and the point is that a collar can be struck
+in a chapter whose `clientKingdoms` switch is on OR off — §142 gates making
+clients, never unmaking them. If you add a mechanic gate to `freeClientInfo`,
+that section is what tells you.
+
+And its strain section collars living courts until it is one past
+`DIPLOMACY.freeClients` rather than naming three tags, because which small
+courts are alive in 167 BCE is a bookmark detail that has moved before. The
+first draft named ITU, which is not seated in that chapter, and quietly tested
+three collars against a three-collar allowance.
+
+`uitest47` carries the browser half of both §218 and §219 in one boot — the
+grant makes the client, the last section lets it go — which is worth keeping
+that way: booting this frame on SwiftShader costs more than every assertion in
+the suite put together.
+
+## A banner nobody is flying (SPEC §221)
+
+`smoke11` grew the section, and it is the suite to run after touching
+`switchTagCore`, `formableList` or `FORMABLES`.
+
+The assertion worth knowing about is not the crown, it is the debt. Bonds
+recorded against a court survive it — `diploBonds` skips the dead rather than
+forgetting them — so the suite deliberately gives the doomed court an ally
+before killing it and checks the entry is gone once the banner changes hands.
+If `freeBanner` is ever weakened, the failure reads "the dead revolt's
+alliances do not come with its name" rather than as something mysterious three
+sections later.
+
+Two things a new formable of this shape needs. It must be player-only: the AI
+still refuses any tag that exists at all (`aiFormNation` was deliberately left
+on the older gate), which is what keeps `node tools/autorun.mjs 8` byte
+identical. And if the chapter already has a mission table under the target tag
+— 66 CE has one under `JUD` — the formed crown inherits it through
+`missionsFor`, which is the intended behaviour and not a bug to route around;
+nodes already satisfied on the day of the proclamation complete on the next
+monthly pass.
+
+## A treaty that runs both ways (SPEC §222)
+
+`smoke147` owns it: the concession list at the peace table, the losing crown
+buying its ending, the net ledger, and the peacetime deed.
+
+Two traps if you read a failure in it.
+
+Its `losing()` helper builds the war **by hand** after `declareWar` — forcing
+`attackers`/`defenders` to one court each — for the reason smoke38's §220
+section documents: a war declared on a client drags the protector in, and a
+protector's development changes every number the table computes.
+
+And its peacetime section opens by asserting a province *cannot* be given away,
+which is not a bug in the fixture. This suite runs on the synthetic bead
+geometry, where "next door" means the neighbouring province id, so a fresh
+Judaea is genuinely bound to nobody and adjacent to nobody who governs. The
+section then opens each road to a recipient in turn — a neighbour, then an
+ally — which is a better test of the rule than a map where both happen to be
+true at once.
+
+The claim that keeps the harness still is narrow and worth preserving: a deal
+with no `concessions` in it runs through arithmetic identical to the old code
+(`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
+so no AI ever offers or expects one.

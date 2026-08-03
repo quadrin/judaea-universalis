@@ -176,7 +176,9 @@ export const EVENTS_529 = [
     options: [
       {
         label: 'A king is a king. Take him off the track',
-        tooltip: 'The crown is unambiguous and so is the war: +15 legitimacy, +1 stability, '
+        tooltip: 'The crown is unambiguous and so is the war: the rising\'s constitution '
+          + 'becomes THE DIADEM (+0.05 legitimacy a month, +4% morale, +1 envoy), +15 '
+          + 'legitimacy, +1 stability, '
           + '"A King in Israel" (+10% morale, +8% manpower, 36 months). The crowned party +30, '
           + 'the priesthood −25 — and the empire is no longer dealing with a tax revolt.',
         effects: guard('ev529_games:0', (ctx) => {
@@ -189,6 +191,7 @@ export const EVENTS_529 = [
           h.factionShift(ctx, 'SAM', 'crowned', 30);
           h.factionShift(ctx, 'SAM', 'priesthood', -25);
           h.doctrine(ctx, 'authority', 2);
+          h.setGovernment(ctx, 'SAM', 'diadem');
           h.setFlag(ctx, 'kingAtNeapolis', true);
           h.setFlag(ctx, 'niciasKilled', true);
           h.notify(ctx, {
@@ -202,7 +205,8 @@ export const EVENTS_529 = [
       },
       {
         label: 'Let him take the palm',
-        tooltip: 'The king keeps the diadem and loses the afternoon: +5 legitimacy only, the '
+        tooltip: 'The king keeps the diadem and loses the afternoon: the rising\'s '
+          + 'constitution is THE DIADEM either way, +5 legitimacy only, the '
           + 'crowned party +10, and the priesthood does not object (+10). A rising that can be '
           + 'negotiated with is a rising the empire may still negotiate with — but the men who '
           + 'put the diadem on him have watched him flinch in public.',
@@ -211,6 +215,7 @@ export const EVENTS_529 = [
           h.adjust(ctx, 'SAM', { legitimacy: 5 });
           h.factionShift(ctx, 'SAM', 'crowned', 10);
           h.factionShift(ctx, 'SAM', 'priesthood', 10);
+          h.setGovernment(ctx, 'SAM', 'diadem');
           h.setFlag(ctx, 'kingAtNeapolis', true);
           h.setFlag(ctx, 'niciasSpared', true);
           h.chronicle(ctx, 'ruler', 'Julianus is crowned at Neapolis, and the Christian charioteer '
@@ -220,6 +225,8 @@ export const EVENTS_529 = [
       {
         label: 'No crown. The Torah has no king in it',
         tooltip: 'The priesthood\'s answer, and the older one: no diadem, no races, no box. '
+          + 'The rising is governed by PRIESTHOOD AND ASSEMBLY (−0.4 unrest everywhere, and '
+          + 'one fewer envoy, because the empire is being asked to correspond with an office). '
           + '+20 legitimacy, the priesthood +30 and the Council of Seven +20, the crowned party '
           + '−40 — and the rising keeps the one advantage a rising without a king has, which is '
           + 'that there is nobody for the empire to send to Constantinople in a box.',
@@ -234,6 +241,7 @@ export const EVENTS_529 = [
           h.factionShift(ctx, 'SAM', 'council', 20);
           h.factionShift(ctx, 'SAM', 'crowned', -40);
           h.doctrine(ctx, 'authority', -2);
+          h.setGovernment(ctx, 'SAM', 'gerousia');
           h.setFlag(ctx, 'crownRefused', true);
           h.chronicle(ctx, 'era', 'The diadem is declined in the name of a Torah that has no king '
             + 'in it. The empire discovers that there is no one man to defeat.');

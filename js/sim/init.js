@@ -16,6 +16,9 @@ import {
   sharedWarEnemy, breakAllianceCore, truceKey, truceActive,
   incorporateInfo, incorporateCore, royalMarriageInfo, royalMarriageCore, annulMarriageCore,
   clientOfferInfo, offerClientshipCore,
+  releasableClients, releaseClientInfo, releaseClientCore,
+  freeClientInfo, freeClientCore,
+  cedeProvinceInfo, cedeProvinceCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
   casusBelli, claimFabricationInfo, startClaimFabrication,
@@ -47,7 +50,10 @@ import { crisisReport } from './crisis.js';
 import { embargoInfo, declareEmbargoCore, liftEmbargoCore, embargoesOn } from './embargo.js';
 import { factionApproval, shiftFaction, appeaseFactionCore, askEstateCore, getFactionsInfo } from './factions.js';
 import { nextWorldEvent, resolveEventOption, fireEvent as fireEventCore } from './events.js';
-import { armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals } from './arms.js';
+import {
+  armsInfo, signArmsDealCore, setArmsDeal as setArmsDealCore, seedArmsDeals,
+  programsInfo, startProgramCore, cancelProgramCore,
+} from './arms.js';
 import { aidInfo, requestAidCore } from './aid.js';
 import {
   seedPop, popTotal, popTension, addPopulation, communityLabel, shiftPopToReligion,
@@ -264,6 +270,7 @@ export function initGame({ DEFINES, MAP_DATA, geom, bookmark, events, playerTag,
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
+      programs: {}, // the works of one's own, none yet (SPEC §213)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -782,6 +789,38 @@ export const simHelpers = {
     const c = ctx.game.constitutions;
     return (c && c[String(era || '')]) || '';
   },
+  // …and what that settlement makes the STATE (SPEC §214). `setConstitution`
+  // records the answer for the content that reads it; this one applies it to
+  // the realm, so the choice is a fact about the government and not only a key
+  // in a store: the panel's Government row, the succession rules, whether
+  // there is a house here to marry into, and the parties a foreign court
+  // convenes all move with it.
+  //
+  // Content used to do this by assigning `t.govType` in the effects body,
+  // which worked for the four starting constitutions and would silently skip
+  // both of the things a new one needs — the election clock, and rebuilding
+  // `t.ideas` so the government's own effects fold in with the reforms.
+  setGovernment(ctx, tag, govType) {
+    try {
+      const key = L(ctx, tag);
+      const t = ctx.game.tags[key];
+      const def = ((ctx.DEFINES && ctx.DEFINES.GOV_TYPES) || {})[String(govType || '')];
+      if (!t) {
+        warnOnce('setGovernment:tag:' + tag, 'no such court to give a constitution to', tag);
+        return false;
+      }
+      if (!def) {
+        warnOnce('setGovernment:gov:' + govType, 'no such government', govType);
+        return false;
+      }
+      if (t.govType === govType) return true;
+      t.govType = String(govType);
+      if (def.elects) t.electionIn = 48;
+      if (def.heirless) { t.heir = null; t.regency = false; t.regencyTitle = null; }
+      applyReformsToTag(ctx.DEFINES, t, key);
+      return true;
+    } catch (e) { warnOnce('setGovernment', 'setGovernment failed', e); return false; }
+  },
   // The doctrine axes (SPEC §85). `axis` reads the realm's character on one
   // of the four tensions (-10..+10) so a trigger can ask what KIND of realm
   // this is, not merely how much of the map it holds; `doctrine` is the
@@ -1043,6 +1082,16 @@ export function gameActions(ctx) {
 
   // ---- diplomacy (frozen action contract) ---------------------------------
   const dipKey = (them, kind) => g.playerTag + '>' + them + ':' + kind;
+  // Every cooldown book is per COURT (SPEC §216). `dipKey` already had the
+  // acting realm in it; the books below did not, and at a table with two
+  // Jewish states that meant one shared clock — a guest holding a festival
+  // shut the host's out for two years, one court's forgers tied up the other's,
+  // and an envoy rebuffed in Amman rebuffed both crowns at once. The rule is
+  // now the same everywhere: whoever acts, in the key. (A campaign carried
+  // across this change forgets whatever was still cooling in these four books,
+  // once.)
+  const decisionCd = (key) => g.playerTag + '>decision:' + key;
+  const peaceCd = (war, leader) => g.playerTag + '>peace:' + war.id + (leader ? ':' + leader : '');
   // Single source of truth for gating: the actions re-derive this instead of
   // trusting whatever state the UI captured when it rendered.
   const getDip = (tag) => {
@@ -1159,8 +1208,11 @@ export function gameActions(ctx) {
       else whyNotSubsidize = chanceryFullWhy(ctx, me, true);
       // Incorporation (SPEC §61): a willing client can join the realm outright.
       let inc = null;
+      // …and its mirror (SPEC §219): the collar struck off instead.
+      let freedom = null;
       if (ourClient) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
+        try { freedom = freeClientInfo(ctx, me, tag); } catch (e) { freedom = null; }
       }
       // Embargo and blockade (SPEC §100): the pressure short of war, in the
       // ages that use it.
@@ -1252,7 +1304,14 @@ export function gameActions(ctx) {
         incorporate: inc ? {
           can: inc.can, why: inc.why, cost: inc.cost, dev: inc.dev, months: inc.months,
           opinion: inc.opinion, needOpinion: inc.needOpinion, inProgress: inc.inProgress || 0,
-          suspended: !!inc.suspended,
+          suspended: !!inc.suspended, capped: !!inc.capped, max: inc.max,
+        } : null,
+        freedom: freedom ? {
+          can: freedom.can, why: freedom.why, name: freedom.name, dev: freedom.dev,
+          provinces: freedom.provinces, armies: freedom.armies, gratitude: freedom.gratitude,
+          collarMonths: freedom.collarMonths, incorporating: freedom.incorporating,
+          seats: freedom.seats, capacity: freedom.capacity,
+          clients: freedom.clients, strain: freedom.strain,
         } : null,
         marriage,
         recognition,
@@ -1310,7 +1369,18 @@ export function gameActions(ctx) {
     for (const f of FORMABLES) {
       if (f.from !== g.playerTag) continue;
       if (f.bookmarks && ctx.bookmark && f.bookmarks.indexOf(ctx.bookmark.id) < 0) continue;
-      if (g.tags[f.to]) continue; // that banner already flies elsewhere
+      // Somebody is flying that banner (SPEC §221). A FALLEN court's name is
+      // not taken — it is a line in the chronicle, and a crown standing on its
+      // ground may take it up. The AI keeps the older rule and only claims
+      // banners that have never been worn.
+      //
+      // A `contested` crown is one whose court is ON the map, and it stays in
+      // the list while that court lives, greyed, with the row that says so
+      // unticked — because a decision a player cannot see is a decision that
+      // does not exist. It cannot be enacted while the banner flies: the row
+      // is a real requirement and `switchTagCore` refuses besides.
+      const held = g.tags[f.to];
+      if (held && held.alive !== false && !f.contested) continue;
       const rows = (f.requires || []).map((r) => {
         let ok = false;
         try { ok = !!r.check(ctx, g.playerTag); } catch (e) { warnOnce('form:' + f.id, 'requirement check failed', e); }
@@ -1654,7 +1724,7 @@ export function gameActions(ctx) {
         if (p.controller !== g.playerTag) whyNot = 'The field is in enemy hands.';
         // Aircraft are an import (SPEC §181): the same gate the sim enforces,
         // spoken on the button before the click finds it out.
-        const shut = armsGate(ctx, g.playerTag);
+        const shut = armsGate(ctx, g.playerTag, 'wing');
         if (!whyNot && shut) whyNot = shut.charAt(0).toUpperCase() + shut.slice(1) + '.';
         const queued = queuedUnitCount(ctx, provId, 'wing', g.playerTag);
         if (!whyNot && wings.length + queued >= cap) whyNot = 'The hangars are full or already committed (' + cap + ' wings).';
@@ -1805,6 +1875,33 @@ export function gameActions(ctx) {
         say('The arsenal opens', res.supplier + ' signs the weapons transfer agreement ('
           + res.cost + ' talents): their patterns are ours to raise.' + dropped, 'good');
       } catch (e) { warnOnce('signArmsDeal', 'signArmsDeal failed', e); }
+    },
+
+    // ---- the works of one's own (SPEC §213) ---------------------------------
+    // The other answer to §181's import: a roster of named weapon systems
+    // this court can develop at home, each behind a rung of the military
+    // ladder and the works that came before it. Null where the chapter (or
+    // this court) has no shops, so the panel block hides on one test.
+    getArmsPrograms() {
+      try { return programsInfo(ctx, g.playerTag); } catch (e) { warnOnce('getArmsPrograms', 'getArmsPrograms failed', e); return null; }
+    },
+    startArmsProgram(key) {
+      try {
+        const res = startProgramCore(ctx, g.playerTag, String(key));
+        if (!res.ok) { say('Not yet', res.why.charAt(0).toUpperCase() + res.why.slice(1) + '.', 'bad'); return; }
+        say('The shops take the order', res.name + ' — ' + res.months + ' months of work, and '
+          + res.strain + ' talents a month until it flies or fails.', 'good');
+      } catch (e) { warnOnce('startArmsProgram', 'startArmsProgram failed', e); }
+    },
+    cancelArmsProgram(key) {
+      try {
+        const res = cancelProgramCore(ctx, g.playerTag, String(key));
+        if (!res.ok) { say('Nothing to stop', res.why.charAt(0).toUpperCase() + res.why.slice(1) + '.', 'bad'); return; }
+        const pleased = res.pleased && res.pleased.length
+          ? ' ' + res.pleased.join(' and ') + ' is relieved, and says so warmly.' : '';
+        say('The line closes', res.name + ' is abandoned: ' + res.refund + ' talents and '
+          + res.points + ' martial points come back. The rest was the price of finding out.' + pleased, 'info');
+      } catch (e) { warnOnce('cancelArmsProgram', 'cancelArmsProgram failed', e); }
     },
 
     // ---- financial aid (SPEC §186) -------------------------------------------
@@ -2201,7 +2298,7 @@ export function gameActions(ctx) {
         // Rebuffed envoys cool per court (SPEC §67): a door slammed in Amman
         // does not close the one in Damascus.
         info.envoyMonthsLeft = diploCdMonthsLeft(ctx,
-          'peace:' + war.id + (info.separate ? ':' + info.enemyLeader : ''));
+          peaceCd(war, info.separate ? info.enemyLeader : null));
         return info;
       } catch (e) { warnOnce('peaceInfo', 'getPeaceInfo failed', e); return null; }
     },
@@ -2224,7 +2321,7 @@ export function gameActions(ctx) {
         // fight-to-the-death wars. Whether the enemy listens is another
         // matter (evaluatePeaceDeal), and the AI keeps its own counsel.
         const scope = peaceDealInfo(ctx, war, me, deal && deal.enemy);
-        const cdKey = 'peace:' + war.id + (scope.separate ? ':' + scope.enemyLeader : '');
+        const cdKey = peaceCd(war, scope.separate ? scope.enemyLeader : null);
         if (diploCdActive(ctx, cdKey)) {
           say('Envoys rebuffed', 'That court will not receive our envoys again yet ('
             + diploCdMonthsLeft(ctx, cdKey) + ' months).', 'bad');
@@ -2300,7 +2397,7 @@ export function gameActions(ctx) {
           },
           goal, weHold, theyHold,
           noNegotiation: !!war.noNegotiation,
-          envoyMonthsLeft: diploCdMonthsLeft(ctx, 'peace:' + war.id),
+          envoyMonthsLeft: diploCdMonthsLeft(ctx, peaceCd(war, null)),
         };
       } catch (e) { warnOnce('warInfo', 'getWarInfo failed', e); return null; }
     },
@@ -2897,6 +2994,64 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('offerClientship', 'offerClientship failed', e); }
     },
 
+    // ---- releasing a client state (SPEC §218) --------------------------------
+    // The whole list, for anything that wants to reason about the realm's own
+    // loose ends; the panel asks about one province at a time.
+    getClientReleases() {
+      try { return releasableClients(ctx, g.playerTag); }
+      catch (e) { warnOnce('clientReleases', 'getClientReleases failed', e); return []; }
+    },
+    getClientRelease(provId) {
+      try { return releaseClientInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('clientRelease', 'getClientRelease failed', e); return null; }
+    },
+    releaseClientState(provId) {
+      try {
+        const res = releaseClientCore(ctx, g.playerTag, provId);
+        if (!res.ok) { say('The grant is refused', res.why, 'bad'); return; }
+        if (res.kind === 'enlarge') {
+          say('The client kingdom grows', res.provNames.join(', ') + ' pass'
+            + (res.provNames.length === 1 ? 'es' : '') + ' to ' + res.name
+            + ', which already answers to us (' + res.cost + ' influence). Their tribute rises with them.',
+          'good');
+          return;
+        }
+        say('A crown of its own', res.name + ' is raised in ' + res.provNames.join(', ')
+          + ' under ' + (res.title || 'a ruler') + ' ' + (res.ruler || 'of its own')
+          + ' (' + res.cost + ' influence). It governs itself, pays us tribute and follows us to war — '
+          + 'and nobody was conquered, so nobody abroad counts it against us.', 'good');
+      } catch (e) { warnOnce('releaseClient', 'releaseClientState failed', e); }
+    },
+
+    // ---- striking the collar (SPEC §219) ------------------------------------
+    freeClientState(tag) {
+      try {
+        const res = freeClientCore(ctx, g.playerTag, tag);
+        if (!res.ok) { say('The collar stays on', res.why, 'bad'); return; }
+        say('A crown released', res.name + ' answers to nobody: ' + res.provinces
+          + (res.provinces === 1 ? ' province' : ' provinces') + ' and ' + res.dev
+          + ' development leave our house with them, and the tribute ends. They will not '
+          + 'forget it (+' + res.gratitude + ' opinion) — and they will not take our collar '
+          + 'again for ' + Math.round(res.collarMonths / 12) + ' years.'
+          + (res.lostWeaving ? ' The union we were weaving dies with the bond.' : ''), 'good');
+      } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
+    },
+
+    // ---- a province handed over without a war (SPEC §222) --------------------
+    getCession(provId) {
+      try { return cedeProvinceInfo(ctx, g.playerTag, provId); }
+      catch (e) { warnOnce('cessionInfo', 'getCession failed', e); return null; }
+    },
+    cedeProvince(provId, toTag) {
+      try {
+        const res = cedeProvinceCore(ctx, g.playerTag, provId, toTag);
+        if (!res.ok) { say('The deed is not signed', res.why, 'bad'); return; }
+        say('A province given away', res.name + ' answers to ' + res.toName + ' from today — '
+          + res.dev + ' development, handed over with no war and no treaty. Their court will '
+          + 'not forget it (+' + res.gratitude + ' opinion).', 'good');
+      } catch (e) { warnOnce('cedeProvince', 'cedeProvince failed', e); }
+    },
+
     // ---- claims --------------------------------------------------------------
     getClaimInfo(provId) {
       try {
@@ -3244,12 +3399,20 @@ export function gameActions(ctx) {
     // The tree the panel draws: every mission with its id, grid seat and
     // prerequisites resolved to names. A ladder comes back as one column of
     // rows with implicit parent links, so the same renderer draws both.
+    // The tree retires when the REALM does, not when the chapter's verdict
+    // lands. `endGame` chronicles a verdict and says so in as many words —
+    // the campaign continues (SPEC §32/§83) — and `checkMissions` never
+    // stopped working the chain: it goes on banking accomplishments, paying
+    // their rewards and toasting the player. This read was the one surface
+    // that treated the verdict as an ending, so a realm that won its chapter
+    // in 71 and played on kept getting "Mission complete —" for a tree that
+    // had vanished from the panel. `liveObjectives` is the pattern: the
+    // verdict rewrites what a block says, it does not delete the block.
     getMissions() {
       try {
-        if (g.result) return [];
         const list = missionsFor(ctx, g.playerTag);
         const t = g.tags[g.playerTag];
-        if (!Array.isArray(list) || !t) return [];
+        if (!Array.isArray(list) || !t || t.alive === false) return [];
         const tree = isMissionTree(list);
         const done = missionDoneSet(t, list);
         const ids = list.map((m, i) => missionId(m, i));
@@ -3340,7 +3503,7 @@ export function gameActions(ctx) {
           const authored = ctx.bookmark && ctx.bookmark.decisionText
             && ctx.bookmark.decisionText[key];
           const copy = authored || {};
-          const cdKey = 'decision:' + key;
+          const cdKey = decisionCd(key);
           let whyNot = '';
           if (diploCdActive(ctx, cdKey)) {
             whyNot = 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.';
@@ -3413,7 +3576,7 @@ export function gameActions(ctx) {
         const copy = (ctx.bookmark && ctx.bookmark.decisionText
           && ctx.bookmark.decisionText[key]) || {};
         const displayName = copy.name || d.name;
-        const cdKey = 'decision:' + key;
+        const cdKey = decisionCd(key);
         if (diploCdActive(ctx, cdKey)) {
           say(displayName, 'Recently enacted — ' + diploCdMonthsLeft(ctx, cdKey) + ' months before it can be repeated.', 'bad');
           return;
@@ -3571,6 +3734,7 @@ export function reconcileGameProvinces({ game, DEFINES, MAP_DATA, geom, bookmark
       ideas: { ...(d.ideas || {}) },
       reforms: { mil: 0, civ: 0, rel: 0 },
       eraIdeas: {},
+      programs: {}, // the works of one's own, none yet (SPEC §213)
       advisors: { gov: null, infl: null, mar: null },
       aggression: 0,
       courtCand: {},
@@ -3697,6 +3861,7 @@ export function reviveGame(saved) {
     if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves
     if (!t.eraIdeas || typeof t.eraIdeas !== 'object') t.eraIdeas = {}; // pre-§179 saves
+    if (!t.programs || typeof t.programs !== 'object') t.programs = {}; // pre-§213 saves own no works
     if (!t.tech) t.tech = { gov: 3, infl: 3, mar: 3 }; // pre-tech saves join the age
     if (!t.advisors) t.advisors = { gov: null, infl: null, mar: null };
     if (!t.courtCand) t.courtCand = {};
@@ -3708,6 +3873,21 @@ export function reviveGame(saved) {
     t.ai = k !== saved.playerTag;
   }
   saved.humanTags = [saved.playerTag]; // multiplayer roster never survives a reload
+  // The dispersion's standing is filed per crown since SPEC §216. A campaign
+  // written before that carries one flat `{standing, asked}` pair per
+  // community, and it was the protagonist's — file it under that crown so a
+  // save crosses the change with every letter it ever wrote intact.
+  const fileDia = (rec) => {
+    if (!rec || typeof rec !== 'object' || !Number.isFinite(rec.standing)) return;
+    if (!rec.by || typeof rec.by !== 'object') rec.by = {};
+    if (!rec.by[saved.playerTag]) {
+      rec.by[saved.playerTag] = { standing: rec.standing, asked: num(rec.asked) };
+    }
+    delete rec.standing;
+    delete rec.asked;
+  };
+  for (const p of saved.provinces || []) if (p) fileDia(p.dia);
+  for (const k of Object.keys(saved.tags || {})) fileDia(saved.tags[k].dia);
   for (let i = 1; i < saved.provinces.length; i++) {
     const p = saved.provinces[i];
     if (p && p.conversion === undefined) p.conversion = null;

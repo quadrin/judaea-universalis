@@ -1644,6 +1644,13 @@ button {
   cursor: not-allowed;
 }
 .pp-dip.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }
+/* Armed (SPEC §219), the same red the release block and the saves shelf use
+   for a second press that does not come back. */
+.pp-dip.pp-dip-sure {
+  color: var(--parch-hi);
+  background: linear-gradient(180deg, #7a2a1c, var(--red-deep));
+  border-color: var(--red-deep);
+}
 
 /* ============================================================
    v1.3: buildings, loans, assault, army actions
@@ -1727,6 +1734,15 @@ button {
 .pp-build-btn:active { filter: brightness(0.92); }
 .pp-build-btn.disabled { opacity: 0.45; filter: grayscale(0.6); cursor: not-allowed; }
 .pp-build-btn.disabled:hover { border-color: var(--gold-dim); filter: grayscale(0.6); }
+/* One verb, one row: a block with a single button does not read as half a pair. */
+.pp-build-grid.pp-build-one { grid-template-columns: 1fr; }
+/* Armed (SPEC §218). Two taps, and the second one is the colour of a decision
+   that does not come back — the same red the saves shelf arms Delete with. */
+.pp-build-btn.pp-build-sure {
+  color: var(--parch-hi);
+  background: linear-gradient(180deg, #7a2a1c, var(--red-deep));
+  border-color: var(--red-deep);
+}
 
 /* province panel — assault button inside the siege block */
 .pp-assault {
@@ -2519,6 +2535,10 @@ html, body {
 .peace-dim { font-size: 11.5px; color: var(--ink-soft); opacity: 0.85; font-variant: normal; letter-spacing: 0; }
 .peace-none { padding: 2px 0 4px; font-style: italic; }
 .peace-provs { max-height: 180px; overflow-y: auto; }
+/* What we lay on the table ourselves (SPEC §222): the same rows, reading the
+   other way — the credit is green because it buys the peace, not red because
+   it is a loss. The loss is on the map. */
+.peace-give .peace-prov-cost { color: var(--green); }
 .peace-prov {
   display: flex;
   align-items: center;
@@ -2661,6 +2681,20 @@ html, body {
   border-radius: 3px;
 }
 .mp-player { display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 3px 0; }
+/* Which throne a guest takes (SPEC §216) — the same select as the chapter's,
+   sized to sit inside a player row rather than beside a label. */
+.mp-seat {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: rgba(255, 252, 240, 0.6);
+  border: 1px solid rgba(43, 32, 21, 0.4);
+  border-radius: 3px;
+}
+.mp-player.mp-other { color: var(--ink-soft); font-size: 12px; padding-left: 4px; }
 .mp-code {
   display: block;
   width: 100%;
@@ -3145,6 +3179,36 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
   text-align: center;
 }
 
+/* the works of one's own (SPEC §213): the arms-program cards under How We
+   Muster — a locked one reuses the §179 dark slab above, a live one carries
+   its months and a progress bar, a delivered one is a quiet lit line */
+.np-progs { font-size: 12.5px; }
+.np-prog { margin-bottom: 8px; }
+.np-prog-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+.np-prog-state {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.np-prog-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.np-prog-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(24, 21, 16, 0.75);
+  border: 1px solid rgba(85, 69, 46, 0.5);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.np-prog-bar > span { display: block; height: 100%; background: var(--gold-bright); }
+.np-prog-done .np-prog-head b { color: var(--gold-bright); }
+
 /* the ledger (SPEC §177): EU4's economy lines, in talents a month */
 .np-ledger { font-size: 12.5px; }
 .np-led-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px; }
@@ -3389,6 +3453,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .wiki-badge-world { border-color: rgba(64, 116, 139, 0.55); color: #315f73; }
 .wiki-badge-decider { border-color: rgba(122, 90, 48, 0.6); color: #7a5a30; }
+.wiki-badge-roll { border-style: dotted; border-color: rgba(122, 90, 48, 0.6); color: #7a5a30; }
 .wiki-badge-fork { border-style: dashed; border-color: rgba(109, 90, 134, 0.7); color: #6d5a86; }
 .wiki-badge-fork .icon { width: 10px; height: 10px; vertical-align: -1px; }
 .wiki-badges { margin-bottom: 6px; }
@@ -3539,3 +3604,7 @@ table.ledger { width: 100%; border-collapse: collapse; font-size: 13px; }
 .np-rule-lo:not(.disabled):hover { border-left-color: #a992d6; }
 /* …and a dispute the court has already settled reads as record, not as choice. */
 .np-faction.np-rule-done { opacity: 0.72; }
+
+/* The recipient picker on a province being given away (SPEC §222). */
+.pp-cede-to { margin-bottom: 6px; }
+.pp-cede-to select { width: 100%; }

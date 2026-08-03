@@ -102,7 +102,11 @@ function allied(ctx, a, b) {
 // not been seeded yet, and reads as nothing rather than as its opening value.
 function standingAt(ctx, name) {
   const p = ctx.prov && ctx.prov(name);
-  return (p && p.dia && Number.isFinite(p.dia.standing)) ? p.dia.standing : 0;
+  // Filed per crown since SPEC §216 (two Jewish states may be played at one
+  // table, and Alexandria's warmth toward one is not its warmth toward the
+  // other). A zero-import package reads the record of the crown that is asking.
+  const rec = p && p.dia && p.dia.by && p.dia.by[ctx.game.playerTag];
+  return rec && Number.isFinite(rec.standing) ? rec.standing : 0;
 }
 function templeStands(ctx) {
   if (ctx.game.flags && ctx.game.flags.templeBurned) return false;
@@ -1585,6 +1589,71 @@ export const FORMABLES = [
       modifier2: {
         id: 'the_builder_king', name: 'The Builder King', months: -1,
         effects: { tradeMult: 1.12, legitimacyAdd: 0.1 },
+      },
+    },
+  },
+  // ---- the client king who is given the whole country ----------------------
+  {
+    id: 'form_jud_agr',
+    from: 'AGR', to: 'JUD',
+    name: 'Proclaim the Kingdom of Judaea',
+    desc: 'You told them on the Xystus what sixty thousand men mean, and they threw '
+      + 'stones at you for it. You were right, and being right has taken everything: '
+      + 'the rising is finished, the country is quiet, and the men who called you Rome\'s '
+      + 'creature are dead or scattered. So take the title your great-grandfather held '
+      + 'and your family has been asking Caesar for ever since — not the tetrarchy of a '
+      + 'Golan valley and two towns Nero happened to be feeling generous about, but '
+      + 'JUDAEA: Jerusalem, the Temple whose High Priest you already name, and the whole '
+      + 'of the country. A client kingdom is cheaper than a province. Prove it.',
+    bookmarks: ['66ce'],
+    // The banner is the revolt's while the revolt lives (SPEC §221), so the
+    // crown sits in the panel, greyed, from the first day of the chapter.
+    contested: true,
+    requires: [
+      {
+        label: 'The rising is ended — no court flies the banner of Judaea',
+        check: (ctx) => !ctx.game.tags.JUD || ctx.game.tags.JUD.alive === false,
+      },
+      { label: 'Hold Jerusalem', check: (ctx, tag) => ctx.helpers.controls(ctx, tag, 'Jerusalem') },
+      {
+        // The country the rising held, not the coast Rome governs from:
+        // Caesarea Maritima is the procurator's own seat, and a client king
+        // taking it from Caesar is a different chapter entirely.
+        label: 'Hold the country: Jericho, Sepphoris and Tiberias',
+        check: (ctx, tag) => holdsAll(ctx, tag, ['Jericho', 'Sepphoris', 'Tiberias']),
+      },
+      { label: 'Own and control ten provinces', check: (ctx, tag) => ownedControlledCount(ctx, tag) >= 10 },
+      {
+        // The crown of Judaea is Rome's to give — or, for a house that has
+        // stopped asking, ours to take. Either road, and the label says both.
+        label: 'Caesar is content with us (Rome 50+), or we answer to nobody',
+        check: (ctx, tag) => {
+          const rom = ctx.game.tags.ROM;
+          const regard = rom && rom.opinion ? (rom.opinion[tag] || 0) : 0;
+          return (rom && rom.alive && regard >= 50) || independent(ctx, tag);
+        },
+      },
+      { label: 'Legitimacy 40', check: (ctx, tag) => (ctx.game.tags[tag].legitimacy || 0) >= 40 },
+      { label: 'Stability 1', check: (ctx, tag) => (ctx.game.tags[tag].stability || 0) >= 1 },
+    ],
+    bonus: {
+      legitimacy: 25, stability: 1,
+      // Not the client's chancery this time (SPEC §221) — a kingdom's levies,
+      // a kingdom's treasury, and the ministries to run a whole country.
+      grant: { treasury: 150, manpower: 3000, gov: 40, infl: 40 },
+      // The title Rome conferred, and the one the family spent a century
+      // asking for.
+      rulerTitle: 'King of the Jews',
+      modifier: {
+        id: 'the_whole_country', name: 'The Whole Country', months: -1,
+        effects: { incomeMult: 1.1, manpowerMult: 1.1 },
+      },
+      modifier2: {
+        // Claudius left the house the custody of the vestments and the naming
+        // of the High Priest. It is the whole reason this crown is not merely
+        // a Roman governorship with a diadem on it.
+        id: 'custody_of_the_vestments', name: 'The Custody of the Vestments', months: -1,
+        effects: { legitimacyAdd: 0.2, unrestAll: -0.5 },
       },
     },
   },

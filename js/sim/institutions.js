@@ -36,6 +36,7 @@
 
 import {
   num, clamp, chronicle, livingTag, setDiploCd, diploCdActive, diploCdMonthsLeft,
+  isHumanChair,
 } from './military.js';
 import { INSTITUTIONS, UNIVERSAL_AFTER_YEARS } from '../data/institutions.js';
 import { TRADE_ROUTES } from '../data/trade.js';
@@ -474,7 +475,10 @@ function moveTheRoom(ctx, tag, inst) {
   const g = ctx.game;
   for (const [fid, d] of Object.entries(shifts)) {
     if (!Number.isFinite(d)) continue;
-    if (tag === g.playerTag) {
+    // Which engine holds this court: the authored estates for a chair somebody
+    // is sitting in (SPEC §216 — the protagonist's, and a multiplayer guest's
+    // own throne), the §163 archetypes for everybody else.
+    if (isHumanChair(g, tag) || tag === g.playerTag) {
       try { shiftFaction(ctx, tag, fid, d); } catch (e) { warnOnce('sf:' + fid, 'faction shift failed', e); }
     } else if (courtSeats(ctx, tag)) {
       try { shiftCourt(ctx, tag, fid, d); } catch (e) { warnOnce('sc:' + fid, 'court shift failed', e); }

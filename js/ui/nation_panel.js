@@ -244,6 +244,14 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         <div class="pp-build-title">How We Muster</div>
         <div class="np-techs" data-ref="patterns"></div>
       </div>
+      <!-- What we build ourselves (SPEC §213): the other half of the arms
+           line above. The pipeline says whose works feed this host; this says
+           which of them are ours. Player's realm only — a foreign court's
+           drawing office is not a thing an ambassador reads off a card. -->
+      <div class="pp-build hidden" data-ref="programsBlock" data-tab="war">
+        <div class="pp-build-title">The Works of Our Own</div>
+        <div class="np-progs" data-ref="programs"></div>
+      </div>
 
       <!-- ── THE FAITH ─────────────────────────────────────────────────── -->
       <div class="pp-build hidden" data-ref="sacredBlock" data-tab="faith">
@@ -376,6 +384,22 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       if (eraIdea) {
         if (eraIdea.classList.contains('disabled') || !actions || typeof actions.buyEraIdea !== 'function') return;
         try { actions.buyEraIdea(eraIdea.dataset.eraidea); } catch (err) { warnOnce('np-eraidea', err); }
+        refresh();
+        return;
+      }
+      // The works of one's own (SPEC §213): one probe to begin a program,
+      // one to abandon one that is still in the shops.
+      const progGo = e.target.closest('[data-program]');
+      if (progGo) {
+        if (progGo.classList.contains('disabled') || !actions || typeof actions.startArmsProgram !== 'function') return;
+        try { actions.startArmsProgram(progGo.dataset.program); } catch (err) { warnOnce('np-program', err); }
+        refresh();
+        return;
+      }
+      const progStop = e.target.closest('[data-program-stop]');
+      if (progStop) {
+        if (!actions || typeof actions.cancelArmsProgram !== 'function') return;
+        try { actions.cancelArmsProgram(progStop.dataset.programStop); } catch (err) { warnOnce('np-program-stop', err); }
         refresh();
         return;
       }
@@ -566,9 +590,16 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
           : (minor ? ' — <span class="np-dim2">a minor; their succession would mean a regency</span>' : '')));
       refs.heirRow.classList.remove('hidden');
     } else {
-      if (t.govType === 'republic') {
+      // What this constitution does about a death (SPEC §214). An elective
+      // government counts down to the vote; one that does not inherit at all
+      // says so, because "no designated heir" is a warning under a crown and
+      // simply a description of the Lot.
+      const govT = (DEFINES.GOV_TYPES || {})[t.govType] || {};
+      if (govT.elects) {
         const months = Math.max(0, Math.round(t.electionIn || 0));
         setHtml(refs.heirRow, `Constitutional succession — the next election is in <b>${months} month${months === 1 ? '' : 's'}</b>.`);
+      } else if (govT.heirless) {
+        setHtml(refs.heirRow, `Constitutional succession — nothing is inherited here: ${esc(govT.vacancy || 'the constitution names the next')}.`);
       } else {
         setHtml(refs.heirRow, '<span class="np-lost">No designated heir</span> — a sudden death would shake the realm.');
       }
@@ -582,11 +613,13 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const cul = (DEFINES.CULTURES || {})[t.culture];
     setText(refs.culture, (cul && cul.name) || titleCase(t.culture));
     refs.cultureDot.style.background = rgb(cul && cul.color);
-    // Government type (SPEC §25): the constitution, with elections counted down.
+    // Government type (SPEC §25): the constitution, with elections counted
+    // down. A chapter's fork can adopt one of its own (SPEC §214), and the row
+    // is where the answer shows: a Judaea that took the Lot reads The Lot.
     const gov = (DEFINES.GOV_TYPES || {})[t.govType];
     if (gov) {
-      const months = t.govType === 'republic' ? Math.max(0, Math.round(t.electionIn || 0)) : 0;
-      setText(refs.govType, gov.name + (t.govType === 'republic' ? ` · vote in ${months}m` : ''));
+      const months = gov.elects ? Math.max(0, Math.round(t.electionIn || 0)) : 0;
+      setText(refs.govType, gov.name + (gov.elects ? ` · vote in ${months}m` : ''));
       refs.govRow.dataset.tt = gov.desc || gov.name;
     } else {
       setText(refs.govType, titleCase(t.govType || 'monarchy'));
@@ -764,6 +797,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     refreshForeignCourt(tag, self);
     refreshDiplomacy(g, t, tag, self);
     refreshTech(t, self);
+    refreshPrograms(self);
     refreshLedger(self);
     refreshReforms(t, self);
     refreshEraIdeas(t, self);
@@ -1715,6 +1749,104 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!refs.patterns) return;
     refs.patternsBlock.classList.toggle('hidden', !html);
     setHtml(refs.patterns, html);
+  }
+
+  // The works of one's own (SPEC §213), directly under How We Muster: the
+  // chapter's roster of named weapon systems this realm can develop at home.
+  // A locked card is the §179 dark slab, saying what opens it (a rung of the
+  // military ladder, and whatever the shops must deliver first); an open one
+  // carries the price and one button; one in the shops carries its months and
+  // the button that stops it. The block hides where there are no works —
+  // every chapter but 1948, every court but the ones with drawing offices,
+  // and every foreign court.
+  function refreshPrograms(self) {
+    if (!refs.programs) return;
+    let info = null;
+    if (self && actions && typeof actions.getArmsPrograms === 'function') {
+      try { info = actions.getArmsPrograms(); } catch (e) { warnOnce('np-programs', e); }
+    }
+    const roster = info && Array.isArray(info.roster) ? info.roster : [];
+    if (!roster.length) {
+      refs.programsBlock.classList.toggle('hidden', true);
+      setHtml(refs.programs, '');
+      return;
+    }
+    // The summary line: what this realm can now build without asking anybody.
+    const head = info.works.length
+      ? `<div class="np-tech-unit" data-tt="${esc('These arms are no longer imports for us: our own shops build them, and no supplier\'s regard can switch them off.'
+        + (info.selfSufficient ? '\n\nEvery arm this age gates is ours — and other courts may now sign weapons transfer agreements with US, at our regard, for a fee that lands in our treasury.' : ''))}">`
+        + `We build our own <b>${esc(info.worksText)}</b>`
+        + (info.selfSufficient ? ' <span class="pos">— and sell to others</span>' : '')
+        + '</div>'
+      : `<div class="np-tech-unit" data-tt="${esc('Aircraft and armor are still somebody else\'s to sell us (SPEC §181). A delivered work of our own ends that for the arm it builds.')}">`
+        + 'Every gated arm is still an import</div>';
+    const strain = info.strain > 0
+      ? `<div class="np-tech-unit" data-tt="${esc('What the shops cost while they are still shops. It is a line on the ledger, and it stops the month the work delivers.')}">`
+        + `In development: <b>${esc(info.strain.toFixed(1))}</b> talents a month</div>`
+      : '';
+    const cards = roster.map((pr) => {
+      const eff = Object.keys(pr.effects || {}).length ? '\n' + effectsText(pr.effects) : '';
+      const works = pr.worksText ? '\n' + pr.worksText + '.' : '';
+      const hist = pr.year ? ' (' + pr.year + ')' : '';
+      if (pr.status === 'done') {
+        return `<div class="np-prog np-prog-done" data-tt="${esc(pr.name + hist + ' — ' + pr.desc + works + eff)}">
+          <div class="np-prog-head">${icon(pr.icon, 'icon-k')}<b>${esc(pr.name)}</b><span class="np-prog-state pos">delivered</span></div>
+        </div>`;
+      }
+      if (pr.status === 'work') {
+        const done = Math.max(0, pr.months - pr.monthsLeft);
+        const pct = pr.months > 0 ? Math.round(100 * done / pr.months) : 0;
+        return `<div class="np-prog np-prog-work" data-tt="${esc(pr.name + hist + ' — ' + pr.desc + works + eff
+          + '\n' + pr.strain + ' talents a month until it delivers.')}">
+          <div class="np-prog-head">${icon(pr.icon, 'icon-k')}<b>${esc(pr.name)}</b><span class="np-prog-state">${pr.monthsLeft} months</span></div>
+          <div class="np-prog-bar"><span style="width:${pct}%"></span></div>
+          <button class="pp-build-btn np-prog-btn" data-program-stop="${esc(pr.key)}" data-tt="${esc('Abandon the line. Part of the money and a little of the thinking come back; the rest was the price of finding out.')}">Abandon</button>
+        </div>`;
+      }
+      if (!pr.ladderReached || !pr.needsMet) {
+        const bar = !pr.ladderReached ? pr.unlockText
+          : 'After ' + pr.needs.join(' and ');
+        return `<div class="np-prog np-era-locked" data-tt="${esc(pr.name + hist + ' — ' + pr.desc + works + eff
+          + '\n' + pr.unlockText + (pr.needs.length ? '\nNeeds: ' + pr.needs.join(', ') : ''))}">
+          <div class="np-era-lock-name">${icon(pr.icon, 'icon-k')}${esc(pr.name)}</div>
+          <div class="np-era-lock-at">${esc(bar)}</div>
+        </div>`;
+      }
+      const tt = pr.name + hist + ' — ' + pr.desc + works + eff
+        + '\n' + pr.months + ' months, ' + pr.strain + ' talents a month while it runs.'
+        + (pr.canStart ? '' : '\n' + pr.whyNot.charAt(0).toUpperCase() + pr.whyNot.slice(1) + '.');
+      return `<div class="np-prog">
+        <div class="np-prog-head">${icon(pr.icon, 'icon-k')}<b>${esc(pr.name)}</b><span class="np-prog-state">${pr.months} mo</span></div>
+        <button class="pp-build-btn np-prog-btn${pr.canStart ? '' : ' disabled'}" data-program="${esc(pr.key)}" data-tt="${esc(tt)}">
+          Begin <span class="np-reform-cost">${pr.cost}t · ${pr.points} mar</span>
+        </button>
+      </div>`;
+    }).join('');
+    refs.programsBlock.classList.toggle('hidden', false);
+    setHtml(refs.programs, head + strain + cards);
+  }
+
+  // One program's effects in the panel's own words. Only keys the roster
+  // actually uses (SPEC §213 pins the list), so nothing prints raw.
+  const EFFECT_WORDS = {
+    milPowerMult: 'army strength', disciplineMult: 'discipline', manpowerMult: 'manpower',
+    moraleMult: 'morale', navalMult: 'fleet strength', reinforceMult: 'reinforcement speed',
+    incomeMult: 'income', tradeMult: 'trade', maintMult: 'maintenance',
+    forceLimitMult: 'force limit', siegeMult: 'siege progress',
+  };
+  function effectsText(eff) {
+    const bits = [];
+    for (const k of Object.keys(eff)) {
+      if (k === 'deterrent') {
+        bits.push('a standing deterrent (opportunistic wars against us need a wider edge)');
+        continue;
+      }
+      const word = EFFECT_WORDS[k];
+      if (!word) continue;
+      const pct = Math.round((eff[k] - 1) * 100);
+      bits.push((pct >= 0 ? '+' : '−') + Math.abs(pct) + '% ' + word);
+    }
+    return bits.join(', ');
   }
 
   // The military ladder's unlock milestones: each pattern generation as a

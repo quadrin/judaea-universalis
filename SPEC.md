@@ -1166,6 +1166,10 @@ renderer.render → overlay.draw → labels.update.
   forming a nation adopts the new crown's constitution (a proclaimed UAR
   votes; the Kingdom of Israel crowns). Realm-panel Government row shows the
   type and the election countdown; elections are chronicled and toasted.
+  **Since §214 these four are the constitutions a bookmark can START with,
+  not the whole list** — a chapter's fork can adopt one of ten more, and
+  the succession rules are declared on the government rather than matched
+  against its name.
 - **Era units on the map** (SPEC §25, `army.gen` consumed by the overlay and
   the movement/siege math):
   - **Banners wear their age**: antiquity flies the swallow-tailed standard
@@ -2483,7 +2487,12 @@ live edges, all keyed to the client's OPINION of its overlord
   `monthlyIncorporation`, military.js; the Incorporate button in the
   diplomacy block): a client that has come to nearly LOVE its overlord
   (opinion ≥ 80), both courts at peace, can begin the union — a heavy
-  influence price up front (75 + 2.5 × its development), then
+  influence price up front (75 + 2.5 × its development, to a ceiling of
+  `incorporateMax` 999, which is the ceiling every monarch-point pool
+  already has: above it a union is not dear, it is unpayable, and the
+  formula runs out at ~370 development — Seleucid Syria, Byzantium,
+  Sasanian Persia and Rome are all courts a peace table can yoke and no
+  crown could otherwise afford to absorb), then
   12 + dev/2 MONTHS of weaving that unravels (influence lost) if war
   touches either court, the bond breaks, or their affection cools below
   the gate. On completion its lands join the realm at ≥ 0.5 autonomy
@@ -13252,3 +13261,1249 @@ broken.**
   it against the event packages only, so a misspelled key on a *mission*
   reward had never been checked by anything — the tooltip promises +10%
   income, the reward runs without throwing, and nothing happens.
+
+## 212. Not every foreign question is a question — the world rolls for it
+
+§70 gave the engine the rule that a foreign court's decision is not ours to
+make, and 381 cards took it. Twenty-five did not, and they were the ones
+that needed it most: cards addressed to everybody, offering two answers,
+where BOTH answers belonged to a court no chapter lets anybody sit in. A
+Jewish player in 653 was stopping the game to rule on whether Uthman burns
+the variant leaves of the Qur'an. In 79 he decided whether Rome deifies
+Vespasian; in 161, whether Marcus Aurelius rules with a colleague; in 680,
+whether Yazid's oath is collected again in public; in 691, whether
+al-Hajjaj's catapults pause for the sanctuary at Mecca. The answers were
+not even a fork — the world came out the same shape either way, one road
+costing the foreign treasury a hundred talents and the other costing it
+five points of legitimacy — so the card was a modal that paused the
+campaign to ask a question with no wrong answer, about somebody else's
+empire.
+
+**The rule.** An event may declare `roll: true` beside its `decider`. The
+card is then a §70 notice — one acknowledging button, the deciding court
+named — but the course is DRAWN at fire time instead of pinned: the
+recorded course (whatever `aiOption` names) carries `EVENT_ROLL_RECORDED`
+of the weight, and the roads the chronicles did not take split the
+remainder. The default is 0.667, two times in three, because a chapter's
+world spine is history first and a dice game second: the Caliphate usually
+raises the leaves on the lances at Siffin, and sometimes fights it to the
+finish. Set the define to 1 to pin every roll back onto the record; set it
+to 0.5 for an honest coin.
+
+**The engine** (`courseFor`, events.js) sits under both places a course was
+being chosen — the notice pinned for a player audience, and the silent
+resolve for an AI one — so a rolled card takes the same road whoever is
+watching. `recordedCourse` is the old pin, factored out and unchanged: a
+card that does not ask for a roll draws no numbers, which is why every
+existing save, replay and multiplayer relay pulls exactly the sequence it
+pulled before this section. The draw uses the campaign's own seeded stream
+(`ctx.rng`), so it is the world's roll and not the machine's: the same seed
+rolls the same course, the host draws once and the relay carries the
+result, and the drawn index rides `pendingEvents` into the save exactly as
+a pinned one does. §128's option mask is applied first — a roll can only
+land on a road this world actually offers.
+
+One clause of §70 is deliberately inverted. A decider erased from the world
+hands its choice BACK to the player, on the reasoning that whoever
+inherited the throne is the closest thing it has to a court; a rolled card
+does not, because the reasoning does not survive the inversion. A Caliphate
+written out of the world does not make the standardizing of the Qur'an a
+Jewish decision — it makes it nobody's, which is what the roll is for. The
+notice names no court in that case and the modal says "another court".
+
+**What is rolled, and what is not.** The test is whether either road is an
+act of the player's own state. Twenty-five cards fail it in both directions
+at once and are now rolls: the ambush in Media that killed Sidetes (167);
+the three Flavian deaths and deifications, Vespasian to Nerva (66); the
+philosopher's accession, Vologases' moment on the Euphrates and the
+Antonine plague's severity (132); seventeen cards of the caliphal and
+Roman spine from Uthman's codices to the stones of al-Hajjaj, the whole
+strand the 614 chapter watches from Tiberias (614); and Black September,
+which is King Hussein's decision and Amman's cost (1948).
+
+The near misses stayed choices, and the line is the same one each time —
+one of the two roads is ours. `ev_p_dome_rock` looks like a caliphal card
+and is not: what differs between its roads is whether the Return's
+liturgical poets answer the gold octagon with grief or with liturgy.
+`ev_vesuvius` and `ev_calumnia_sublata` offer Rome's act against the Jewish
+street's reading of it. 132's world package (Avidius Cassius, Pescennius
+Niger, Palmyra, Julian's commission) and 67's (Pharsalus, the Ides, the
+Parthian flood, Actium) are Rome's news and Jerusalem's answer — which
+claimant to back, whether to clear the foundations — which is the most
+interesting decision either chapter offers. `ev_i_second_exodus` asks how
+a destroyed state's people leave, and leaving is their act. And
+`ev_i_secession` is wholly Cairo's and Damascus's but keeps its question
+anyway: its two roads are not one world at two prices — one of them mints
+the Syrian Arab Republic that every later Syrian card answers to — and it
+carries a §89 `historical` record, which marks it as a fork the ledger is
+watching. Forks are not rolled for.
+
+**The chrome.** The modal is §70's, unchanged: "The decision belongs to the
+Caliphate — we may only take note." The Compendium tells the two apart —
+a rolled card wears a dotted "the world rolls" badge, its audience block
+says the course is drawn when the card fires, and its recorded option is
+labelled "the recorded course" rather than "the historical course",
+because on a rolled card the record is the likelier half of a draw and not
+a promise.
+
+- **Regression contract**: `smoke139` — the notice and its drawn course
+  through the pending entry, the bus payload, the acknowledgment and a
+  save round-trip; the weight at 0/1 and over two thousand rolls; the same
+  seed rolling the same course; an unrolled card leaving the stream
+  untouched; the erased decider staying a notice while the deciding court
+  keeps its choice; the AI audience rolling too; and, across all five
+  chapters that ship one, every rolled card naming a court of its own
+  roster that no standard of that chapter sits in, still recording its
+  historical course, still world history, and carrying no §89 record.
+  smoke39, smoke48 and smoke76 pass with their sweeps untouched — the
+  cards keep every option and every `aiOption` pin they had.
+
+## 213. The works of one's own
+
+§181 answered the question the chapter had been getting wrong — a 1948 air
+wing and a 1948 armored regiment are **imports**, decided in somebody
+else's capital and cut off the month that capital changes its mind. It did
+not answer the next question, which is the one the century is actually
+about: *and then what?* The chapter had a mechanic for being embargoed and
+none for doing anything about it. Israel could court Paris, be sold to,
+watch de Gaulle sign in 1967, and then court somebody else — forever. The
+101st flew Avia S-199s out of crates in 1948 and the same state was flying
+an aircraft of its own drawing off its own runways in 1986. That arc had no
+representation at all.
+
+**An arms program** (`js/data/programs.js`, `t.programs`) is a named weapon
+system a court develops at home. It opens at a rung of the **military
+ladder** and behind whatever its own shops delivered first; beginning it
+costs talents and martial points; while it runs it bills a **development
+line** every month; and years later it **delivers**, permanently. The
+book is `{ key: monthsLeft }` — absent is unstarted, positive is in the
+shops, zero is delivered — so saves carry the whole system as plain
+numbers and every reader over it is a pure function.
+
+A delivered work is worth two things:
+
+- **Effects**, folded into `tag.ideas` by `applyReformsToTag` beside the
+  reform trees, the ladders and the era ideas. Same contract, same
+  resolver, nothing new to consume them.
+- **`works`** — the §181-gated arm this court can build from now on in its
+  own shops. This is the whole point of the section. `armsGate` takes the
+  arm it is being asked about, so the Nesher buys the sky and not the
+  ground: a state that has built its own fighter raises wings with no
+  supplier on earth and **still cannot raise a tank**. The two halves are
+  bought separately because they were.
+
+**Israel's eight, in the order the ladder reaches them.** The Uzi (mar 20)
+— stamped, cheap, the first thing the state's own shops made in quantity
+and the first thing they sold abroad. The Shafrir (21) — an air-to-air
+missile designed at home because the sellers would not sell one, which
+made every imported airframe worth more than its seller intended. The
+Gabriel and the boats (21) — a sea-skimming missile and small fast hulls,
+and the first missile action in the history of navies. The Nesher (22) —
+**the §181 answer to §181**: the fighter the supplier was paid for and
+never delivered, built anyway; an overhaul shop becomes a manufacturer and
+the sky stops being something another capital can switch off. The Merkava
+(23) — engine forward, crew behind it, a door in the back: a tank laid out
+by a state that could replace the tank and not the four men in it. The
+Kfir (23) — the same airframe around a bigger engine, and the first
+aircraft this state ever sold to anyone. The Ofek and the Shavit (24) — a
+satellite and a rocket to put it up, launching westward against the turn of
+the earth at a cost in payload, because everything eastward is somebody's
+airspace. And the Lavi (24), below.
+
+**Egypt gets two, and they are priced to fail.** Helwan's aircraft and the
+rockets of Al-Qahir were real, were announced from a reviewing stand, and
+ran out of money — a German design bureau, an Austrian engine team, a
+prototype over the desert, and a treasury that had to choose between the
+works and the army. They sit at mar 22 with strains of 4 and 3.5 against
+Egypt's own books on purpose. The AI branch that closes a line when the
+purse turns over is Helwan's entire history in four lines of code. Jordan
+gets none, which is also a claim: the Legion was somebody else's equipment
+and stayed that way.
+
+**The Lavi is the one the age argued about.** It needs the Kfir *and* the
+Merkava — an aircraft industry and a tank industry — sits at the age's own
+ceiling, costs 420 talents and 260 martial points, and bills 8 a month for
+four years, which is more than most of this chapter's courts clear in a
+month. It flies. And it is the only program with a **cancel** verb that is
+worth pressing: abandoning a line returns 40% of the talents and 25% of the
+points, and the Lavi alone carries `cancelOpinion` — the capital whose money
+was building it is *pleased*, +20. Finishing it costs that regard instead
+(`opinion: { USA: −20 }`), because an aircraft of your own is an aircraft
+you are not buying from the country paying for it. The Knesset settled that
+argument 12–11; here it is a button, and both answers are defensible.
+
+**And the works can be sold.** A court that builds every gated arm needs no
+supplier — and joins §181's exporters. `armsExporters` is the bookmark's
+declared arsenals *plus* whoever has built their way onto the list, so a
+self-sufficient Israel is signable by Amman, at Israel's regard, for a fee
+that lands in the treasury that paid for the shops. `armsSignGate` refuses
+that state a signature of its own for the one reason that is a boast: *our
+own works build every pattern we need.* The AI reads the same list, so a
+clientless court will court the new supplier like any other.
+
+### What it costs, and what it cannot break
+
+The development line is **a row on the ledger, not a withdrawal**. It rides
+`incomeBreakdown` as `develop` — so `explainIncome` names it ("The works,
+still building"), `t.expenses` includes it, the AI's own *can this realm pay
+its bills* reads it, and the treasury pays it exactly once. `monthlyPrograms`
+moves clocks and nothing else. It stops the month the work delivers: a
+delivered work is an asset, not a bill.
+
+The shops hold `PROGRAMS.maxAtOnce` (2) lines together, so the roster is a
+sequence of decisions rather than a shopping list. The AI runs **one** at a
+time, cheapest first, never at war, and only with the floor still standing
+after it pays — and abandons the line the month its treasury goes negative.
+
+Three things the section deliberately does not do. It does not touch a
+chapter that declares no `armsPrograms` table, which is all seven of the
+others: a Hasmonean foundry is not this mechanic, and `armsGate` answers ''
+in every antique era exactly as §181 left it. It does not travel with a
+**secession** — an idea of the age is in people's heads and walks out with
+them, a tank line is a building, and it is standing in the country that was
+seceded from — while a **formed crown** keeps everything, because
+`switchTagCore` carries the whole tag and the Kingdom of Israel is the same
+state under a new name. And it does not pay for work in progress:
+`computeProgramEffects` folds only the delivered.
+
+The 8-year harness is **byte-identical** to the pre-§213 tree on every
+bookmark, including 1948, and the 57-year 1948 run is identical too — which
+is the section's own honest report on its AI. No court reaches mar 20 with a
+comfortable purse inside those windows, because `aiTech` will not race the
+age and this chapter's AI spends its martial points on reforms and era ideas
+first. These are player decisions in practice, and rare AI ones; the AI path
+is real (smoke140 drives it) rather than aspirational, and it fires when a
+long campaign leaves a court rich, peaceful and high on the ladder.
+
+- **Regression contract**: `smoke140` — the table (unique keys, every unlock
+  a military rung inside 1948's own 19..24 window, every prerequisite on the
+  same court's roster and opening no later than what needs it, every effects
+  key one the sim consumes, every `works` an arm §181 gates, and no other
+  chapter with works at all); the five refusals in their own words and the
+  roster following a formed crown through its lineage; the arc (charged once,
+  billed as a ledger row, delivered permanently, the line stopping on
+  delivery); the point of it (the aircraft works opening `raiseAirWing` while
+  `recruitRegiment` still refuses the tanks, then both); the sale in both
+  directions with the fee landing in the right treasury; the Lavi's two
+  endings; the AI's one-at-a-time and its bankruptcy branch; and a pre-§213
+  save reviving with an empty book and every antique chapter untouched.
+  `smoke113` keeps its §181 claims verbatim — the market it pins is the same
+  market — and `smoke103`/`smoke14` keep theirs about wings and airfields.
+  Verified on the merged tree, after this section was renumbered four times
+  out of main's way — §209 to Beta Israel, §210 to Idumea's gods, §211 to the
+  civil band on every chain, §212 to the world's own dice: **140 of 140
+  headless suites ALL PASS**,
+  `uitest44` green in a real browser, and the 8-year harness byte-identical
+  to main alone — the same families, including the `167bce PAR: BLEEDING`
+  that §210 documented as its own. The lines of work never touched: main's
+  landed in 132/167 CE, the dispersion and the mission trees, this one in
+  1948 on the arms market, and the five files both sides opened
+  (`js/data/defines.js`, `js/data/bookmark_1948.js`, `js/sim/init.js`,
+  `js/ui/nation_panel.js`, `tools/README.md`) merged without a hand on them.
+## 214. The fork decides what the state IS, not only what it does
+
+Five chapters ask a playable court what kind of state it is, and the
+questions are among the best-written things in the game: the Hasmonean
+diadem (§197 — does the head of the house that governs a country put on a
+crown?), the second government (§130 — temple-state, the lot, the Jubilee,
+no ruler but God), the accession of the house of Kosiba (§134 — crown,
+Davidic marriage, two hereditary houses, or Ezekiel's prince), the crown at
+Neapolis (§136 — a people that never had a king is offered one), and the
+line of Jehoiachin (§126 — a throne in Jerusalem and a man with the pedigree
+for it, in one polity, for the first time since 586 BCE).
+
+**Every road of every one of them left the realm a Theocracy.** The panel's
+Government row read Theocracy before the fork and Theocracy after it,
+whichever answer was given. The roads differed in their tag modifiers, their
+factions and the content they steered — real differences, and the reason the
+forks are good — but not in what the state was. A Judaea that had abolished
+hereditary priestly power by drawing lots that afternoon went on designating
+heirs the following spring, could be married into by any court in the East,
+and brewed a §98 succession crisis over an office nobody inherited. The one
+decision in the chapter that was explicitly about the constitution was the
+one thing that did not touch the constitution.
+
+### Ten constitutions, and the rules declared beside the names
+
+`DEFINES.GOV_TYPES` grows from four to fourteen. The four a bookmark can boot
+with are untouched, effects and all — this section adds constitutions, it does
+not re-tune the ones every chapter is balanced against. The ten below them are
+what a fork ADOPTS, each with its own name in the panel, its own description,
+its own dividend and its own price — several serve more than one chapter,
+because a crown taken out of a war is the same institution in 132 as in 529:
+
+- **Temple-State** (66, the temple-state) — High Priest, Sanhedrin, the four
+  houses; +25% conversion, −0.25 unrest.
+- **The Lot** (66, the lottery) — nobody inherits and nobody is in office long
+  enough to promise anything; −0.5 unrest, −1 envoy.
+- **The Jubilee** (66, the Jubilee) — the assembly that enforces Leviticus 25
+  renews its officers by vote; +10% manpower, −5% income.
+- **No Ruler but God** (66, no ruler but God) — no sovereign, no census, no
+  address; +8% morale, −2 envoys.
+- **Diadem and Mitre** (167, the diadem taken) — the priest-king; +25%
+  conversion, +1 envoy, and +0.25 unrest for the quarrel that outlived the
+  dynasty.
+- **Priesthood and Assembly** (167, the mitre alone; 529, the crown refused) —
+  the commonwealth the decree actually worded; −0.4 unrest, −1 envoy, because
+  the neighbours address an officer rather than a peer.
+- **The Diadem** (132, the crown; 529, the king at Neapolis; 614, the throne
+  kept by the house that won it) — a crown out of a war with no title under
+  it; +0.05 legitimacy/mo, +1 envoy, +4% morale.
+- **The House of David** (132, the marriage; 614, the crown of David) —
+  +0.12 legitimacy/mo, −0.25 unrest.
+- **The Two Houses** (132, prince and priest both hereditary) —
+  +0.08 legitimacy/mo, −5% income for the second household.
+- **The Patriarchate** (132, Ezekiel's prince) — +0.1 legitimacy/mo,
+  +10% conversion, +1 envoy.
+
+**The rules are data now.** There used to be four governments and the engine
+asked about them by name: `govType === 'republic'` in four places,
+`govType !== 'theocracy'` at the regency, `monarchy || theocracy` at the
+marriage table. That is a workable shape for a closed set of four and exactly
+the wrong one the moment a fork can adopt a fifth — every new constitution
+would arrive as an unrecognised string, be read as a monarchy by every one of
+those tests, and be a label rather than a fact. So each government declares
+what it does, all positive and all defaulting to off: `elects` (votes on a
+clock), `heirless` (never designates an heir), `regency` (a child heir gets a
+council rather than an elder bridging to them), `dynastic` (there is a house
+here, so §133's marriage table can join it), `drawn` (a vacancy is filled by
+the constitution's own rule, with `vacancy` naming how), and `archetype` (which
+of §163's four party-sets a FOREIGN court of this kind convenes). `govDef` and
+`govHas` in `sim/military.js` are the one lookup; realm, crisis, revolt, the
+marriage table, `courts.js` and the realm panel all read it, and an unknown
+government still falls back to `monarchy`, which is what the rest of the engine
+has always defaulted to.
+
+Three behaviours are new because the table can now say them:
+
+- **The drawn seat.** A death under the Lot or under No Ruler but God costs
+  five legitimacy, no stability, and opens no succession crisis — the lot is
+  cast again, the assembly names a convener, and nobody's claim died with the
+  incumbent. Every other death in this engine is a wound; this is the one that
+  is not, and it is the mechanical content of "hereditary priestly power ends
+  in an afternoon".
+- **No house to join.** The Lot, No Ruler but God and the Jubilee cannot be
+  married into, because there is nothing to marry. §133's widening stands
+  otherwise: every other Jewish constitution here is `dynastic`, including the
+  two commonwealths, because the high priesthood stayed in a house even where
+  the crown did not.
+- **No court silently becomes a monarchy.** `archetypeFor` reads the declared
+  archetype rather than matching a party-set by government id, so an AI-run
+  Temple-State convenes the Priesthood, the Zealous and the Notables instead of
+  the King's Men and the Great Houses.
+
+**`helpers.setGovernment(ctx, tag, gov)`** is how content adopts one: it sets
+the type, starts the election clock where the constitution votes, clears the
+heir and the council where it does not inherit, and rebuilds `t.ideas` through
+`applyReformsToTag` so the government's effects fold in with the reforms. Cards
+used to assign `t.govType` in the effects body — which worked for the four and
+silently skipped both of those last two steps. The five that already did it by
+hand move onto the helper in this pass (Augustus' Rome, the Free Officers'
+Egypt, Qasim's Iraq, the Iranian Revolution and the Rashidun awakening); each
+had been leaving the previous constitution's effects folded into `t.ideas`
+until something unrelated rebuilt them. The call is written literally at
+each road's own call site, on the same rule as the §119 road markers: a
+government written through a table in a file header is invisible to a reader
+checking the chapter's own text, and the four answers to one question are four
+different states that must not drift from the cards describing them. Every
+option's tooltip names the constitution it adopts, because the tooltip is the
+contract with the player and this is now part of the price.
+
+**Two forks that look constitutional and are not,** both left alone on
+purpose. `what_kind_of_kingdom` (66) says in its own worldLabels that the
+Second Kingdom becomes a sacral monarchy or a council republic — but §130's
+header already draws this line and draws it correctly: *that* fork is about
+character and `the_second_government` is about the constitution, and they can
+both fire in one campaign. A government is one field; if both wrote it the
+later would silently overwrite the earlier, and a state whose constitution
+store reads `templeState` would show as a council republic. And
+`the_charter` (167) grants Jerusalem a polis charter — a council, an
+assembly, a register of enrolled citizens — over a Temple state whose crown
+is untouched by it, which is the card's whole argument and the reason its
+refusal is phrased as *the city has a constitution, it was given at Sinai*.
+The realm's government is not what either of those questions is asking about.
+
+**The 614 exception, deliberately.** The line of Jehoiachin has three answers
+and only two of them are constitutional: the crown taken (the House of David)
+and the crown kept by the house that won the war (the Diadem — the tooltip
+already called it the Hasmonean answer). The middle road, where the crown is
+offered in public and declined in public, changes what the kingdom BELIEVES and
+not what it is, and the realm keeps the constitution it had. A fork whose every
+road changed the government would be a menu; this one is a question.
+
+- **Regression contract**: `smoke141` — the table (every government named,
+  described, effective and archetyped; the four starting constitutions pinned
+  to the effects they were balanced with; no two names alike); no
+  `govType === '...'` comparison left in any file that decides one of the
+  rules; the rules biting (the child regency taken and refused, the drawn seat
+  costing five legitimacy and no crisis, fifty years of the Lot naming no heir,
+  the Jubilee's clock reaching a vote, the marriage table answering per
+  constitution, the crisis that cannot open); three parties from the named
+  archetype for a foreign court under all fourteen; and all sixteen options of
+  the five fork cards fired through the live cards, the fifteen that adopt
+  landing on their constitution and the one that does not leaving the realm as
+  it was — plus the helper refusing an unknown government or an unknown court and
+  saying so. `smoke89` (§130's store), `smoke83` and `smoke117` (the road
+  markers and the fork badges), `smoke13`, `smoke40` and `smoke2` pass
+  unmoved: the store, the markers and the starting constitutions are all
+  exactly where they were. The two suites that would have caught this batch
+  changing the world rather than describing it both pass too — `smoke81`, the
+  six-seed three-century all-AI 132 chapter whose accession now adopts a
+  constitution in year 18 and which still lands every seed on exactly one
+  road, and `smoke105`, §163's court suite, which is where an archetype read
+  wrongly would show. Before the merge the battery was **133 of 136 headless
+  suites ALL PASS**, the three failures (`smoke107`, `smoke126`, `smoke129`)
+  failing identically on the parent commit and belonging to §208's Himyar
+  seating; on the merged tree — which renumbered this section four times, in
+  turn under Beta Israel's §209, Idumea's §210, the civil band's §211 and the
+  world's own rolls at §212, and took §209's repairs to those same three
+  suites — it is **140 of 140, zero failures**, all four of those sections'
+  own suites included. `uitest12` reads the Government row off a
+  live browser in both a 1948 republic and a 67 BCE theocracy, unchanged.
+
+## 215. The tree stands as long as the realm does
+
+Two reports of the same sentence — *the mission tree keeps disappearing
+midgame* — and two different bugs under it. Neither had anything to do with
+the tree itself, which is why the tree looked innocent both times: what
+failed was the question the panel asks about it.
+
+**The verdict is not an ending, except to `getMissions`.** `endGame` has said
+so since v5.8 (§32): a dated verdict landing on a realm that still stands is
+chronicled as a great moment, the wars keep running, and the sandbox chapters
+(§83) are the second act it opens — *the campaign continues*, in the
+notification's own words. `checkMissions` has always agreed. It has no
+`g.result` guard and never did; after the verdict it goes on working the
+chain, banking one accomplishment a month at §207's pace, paying every
+reward, and toasting the player by name.
+
+`getMissions` opened with `if (g.result) return []`.
+
+So a 66 CE Agrippa who is standing when the verdict is read — which is what
+his chain (§185) is *about*, and which in a seeded run lands in 71 — kept
+playing for as many centuries as he liked, collecting *Mission complete — The
+Words in the Xystus* for a tree that had left the panel. The Missions tab
+still had the chapter block above it, so it did not even read as broken; it
+read as a game that had quietly decided the era's offer was withdrawn. The
+neighbouring read had the right shape all along: `liveObjectives` answers a
+decided campaign with one settled line — *the verdict is ours, the campaign
+sails on* — because a verdict REWRITES what a block says and does not delete
+the block.
+
+The tree now retires when the REALM does (`t.alive === false`), which is the
+condition the monthly pass has always used. The panel and the sim ask the same
+question and get the same answer, which is the whole of the fix.
+
+**A crown that brings no chain of its own used to delete the tree.** §102 and
+§135 are two halves of one rule: a formed nation remembers the tags it was, so
+the era's content addressed to its predecessor keeps answering to it
+(`contentForTag`, reading a bookmark table down the lineage), and a card
+holding the name the chapter was written with can find who wears it now
+(`livingTag`). Objectives, estates, courts, institutions, intrigue and the
+event decider all go through one or the other.
+
+`missionsFor` read `bookmark.missions[tag]` by raw key — the one bookmark
+table left on the wrong side of §102. It has a second lookup for a formed
+crown that carries its own chain, and three of the nine formables carry none:
+
+- **Herod proclaims the Kingdom of Judaea** (40 BCE, `form_jud_her`) — 26
+  medallions to zero.
+- **Jordan joins the United Arab Republic** (1948, `form_uar_jor`) — 7 to zero.
+- **Byzantium restores the Roman name** (614, `form_rom_byz`) — 7 to zero.
+
+In each the chain was filed under a name the proclamation had just deleted,
+and the tree went out with it — at the exact moment the player had done
+something big enough to earn a new crown. `missionsFor` is three lookups now,
+in the order a crown answers to: the chapter's table under the name this realm
+wears now, then the chain the formable brings with it, then the table it was
+already working under the name it used to wear. The formable's own chain
+answering SECOND rather than last is what keeps a Judaea that becomes Israel
+on Israel's seven-mission chapter tree (§189) instead of the twenty-seven it
+has outgrown, and the inherited table answering at all is what keeps Herod's
+twenty-six on the panel through the proclamation, accomplishments and all —
+the record survives the rename already, because `switchTagCore` clones the
+tag whole.
+
+- **Regression contract**: `smoke142` — both halves, failing ten ways on the
+  parent commit and passing on this one. The verdict: Agrippa's tree unchanged
+  by a win and by a loss, the monthly pass still banking and toasting after the
+  verdict with the panel drawing exactly what it banked, the rest of the tree
+  still workable, §207's rest still counted, and the tree gone the moment the
+  realm is not alive. The crown: all three chainless proclamations keeping
+  their trees and their banked ids, the memoized array still handed to the
+  monthly pass and the panel alike, and the control — 66 CE Judaea proclaiming
+  Israel is handed the crown's own seven and not Judaea's twenty-seven, with
+  no chain invented for a tag that never had one. `smoke23`'s 1948 line moved
+  with the rule: the 1988 panel no longer asserts an empty tree but that the
+  tree stands and says what the sim's own record says. `smoke2`, `smoke3`,
+  `smoke73`, `smoke111`, `smoke112`, `smoke116`, `smoke120` and `smoke126` —
+  every other suite that reads a chain — pass unmoved.
+
+## 216. Two Jewish states at one table
+
+§185 finished widening the offer: every seated Jewish court of every bookmark
+is a chair, and five of the eight chapters seat more than one — the brothers
+of 67 BCE, Herod against Antigonus in 40 BCE, Judaea beside Agrippa's kingdom
+and Adiabene in 66 CE, Judaea and Adiabene in 132, Samaria and Himyar in 529.
+Multiplayer could not reach any of it. §18 shipped ONE table shape, co-op:
+`for (const g of ready) g.tag = hostTag` in the lobby's Begin handler, with the
+file's own header saying so above it — "everyone who joins rules the host's
+nation at their side". Two friends who wanted to play the civil war as the
+civil war had to play it in two separate campaigns and compare screenshots.
+
+The world was already most of the way there. `game.humanTags` has been the
+roster since v1.8 and the AI has keyed off `t.ai` since long before that;
+`hostRunGuestCommand` has always executed a guest's order under a scoped
+`playerTag` swap, so a guest's orders were never really the host's; and §57's
+war diplomacy already refuses to auto-settle a war ANY human belligerent is in
+"a guest's war: no auto-deal". What was missing was the seating, and then the
+places that said "the player's throne" where they meant "a throne somebody is
+sitting in" — the cards, the court, and the relays that carry both.
+
+### The seating
+
+The lobby's Players block gets one select per guest: any standard in the
+chapter's `playableTags`, or **beside you** on the host's own throne, which is
+the v1.8 co-op table. A chapter with one standard shows no select at all —
+167 BCE, 614 CE and 1948 have nothing to choose between. The decisions are
+pure functions in `js/net/mp_state.js`, so they are testable without two
+browsers and a data channel:
+
+- `chapterChairs(bookmark, tags)` — the chapter's standards, filtered to the
+  ones a world can actually seat. Hosting from a SAVE (§93) passes that
+  campaign's `game.tags`: a court annexed six years before the save was
+  written is not on the menu, because a chair nobody can sit in is not a chair.
+- `resolveSeat(seat, hostTag, chairs)` — `'shared'`, a pick equal to the host's
+  chair, or a pick this campaign cannot seat all resolve to the host's throne.
+  The pick becomes a chair at Begin and nowhere else.
+- `defaultSeat(hostTag, chairs, taken)` — where a guest sits before anybody
+  touches the picker: the first standard the chapter offers that the host is
+  not on, then the next for each guest after that, and `'shared'` where the
+  chapter has only one. **This is the second default.** The first was
+  `'shared'`, on the reasoning that separate thrones should be opt-in — and the
+  first table to play it came back reporting that one player's spending came
+  out of the other's treasury, which is exactly what one throne means and
+  exactly what they had not chosen. A picker one line down a lobby is not a
+  choice most tables will find; the default has to be the thing the chapter is
+  about. Sharing is still one click away, and the roster says which it is.
+
+The host's own select moves guests off the throne it takes; the lobby payload
+is minted **per guest** now (`hostLobbyPayload(guest)`) because the roster is
+common but which chair is YOURS is not, and it carries `shared`, `hostTag`,
+`hostName` and a named roster so the join screen can say either "you will rule
+it together with the host" or "your own throne, beside the host's Hyrcanus'
+Judaea". `MP_PROTO` is 3.
+
+### The chair rule
+
+`isHumanChair(game, tag)` and `humanChairs(game)` in `sim/military.js` are the
+one lookup, and their contract is the reason this section is invisible to every
+existing campaign: `humanTags` is `[playerTag]` in a solo game, in every save
+(`reviveGame` collapses the roster) and in every balance autorun, so
+`isHumanChair` is true for the protagonist and false for everything else, and
+`humanChairs` yields exactly one tag. `ai` is the second half of the test on
+purpose — an all-AI harness run empties the protagonist's chair without
+emptying the roster, and an empty chair is not a human one.
+
+- **The cards.** `fireEvent` dealt a card only when `audience === playerTag`;
+  a card addressed to a seated guest — `forTag: 'ARI'` while the host holds
+  Hyrcanus — resolved silently on its recorded course, which is to say the
+  second player's own chapter played itself. It is now dealt to whoever holds
+  the chair it names, and `decider` (§70) is measured against that AUDIENCE
+  rather than against the host: a card decided by the guest's own court is
+  their choice, a card decided by Rome is a notice to them exactly as it is to
+  the host. The world still stops for it, because the host's clock is the only
+  clock (§18).
+- **The court.** `factions.js` was player-only and `courts.js` (§163) ran the
+  foreign-court model on everything else, the two of them dividing the map at
+  `g.playerTag`. They divide it at `isHumanChair` now, so a guest's throne
+  convenes the estates its bookmark authored for it — content that until now
+  needed a solo campaign to reach — and the §163 archetypes step aside from it.
+  `courts.js` keeps its old exclusion of the protagonist chair *unconditionally*
+  and only ADDS the seated guests: an all-AI autorun empties that chair by
+  setting `ai`, and every figure in `tools/README.md` was measured against a
+  world where the empty chair convenes NEITHER court. Reading it as "not human,
+  therefore foreign" hands it three parties, moves the seeded stream, and moves
+  every trajectory in the harness with it — measured, and the reason the rule
+  is written twice.
+  `monthlyFactions` holds one session per seated chair. Both demand books are
+  per court: the protagonist keeps the bare faction id every save has been
+  written with, another chair's parties are filed beneath their own tag, and
+  the "one card on the table at a time" gate counts only cards addressed to
+  that court. Hyrcanus and Aristobulus both authored a party called
+  `pharisees`; sharing one book, either brother's demand would have cooled the
+  other's for two years.
+- **The relays** (`main.js`). Toasts and event cards go to the chair they
+  belong to: `toChair(hostChair, …)` for the host's own news, and a card to the
+  guests sitting where it is addressed. A guest sharing the host's throne
+  mirrors it read-only exactly as before — the host holds that realm's pen —
+  while a guest on its OWN throne gets live buttons (`mine: true`), because
+  nobody else is in that chair to answer for them. The answer travels back as
+  an ordinary `{t:'cmd', name:'chooseEventOption'}` and runs on the host under
+  that crown, so the effects still never cross the wire. Option indices travel
+  with the options (`idx`), since a §128 mask renames positions and an answer
+  has to name the option rather than its place in a filtered list. A verdict
+  (`{t:'over'}`) still reaches everyone: it ends the world, not a realm. When a
+  card is dealt to a chair the host cannot see, the host is told whose dispatch
+  the world is waiting on.
+- **The borrowed crown.** A guest's order runs on the host with `playerTag`
+  set to that guest's throne, so anything the order FIRES is dealt inside that
+  window and the two ends of it both need saying. `hostChairTag()` reports the
+  host's own chair through the swap — read off the live `playerTag`, a card for
+  the guest would look like the host's and reach them read-only, unanswerable
+  by anybody at the table. And the host sweeps its own chair afterwards
+  (`ui.rescanEvents()` → `createEventModal.rescan`, which also learned to look
+  in `dynEvents`), because a card put on the HOST's table under the borrowed
+  crown — an ultimatum answered, a war declared on us — was emitted while the
+  bus said somebody else was the player, and the queue never heard it.
+- **Leaving.** A guest who drops still hands its nation back to the AI unless
+  another guest shares it, and now also closes any card standing in that chair
+  — the fixed course where the card carries one, its first road otherwise —
+  because a pending event nobody can answer would sit in `pendingEvents` for
+  the rest of the campaign.
+
+### Every clock a court keeps is that court's clock
+
+Seating two realms found a class of bug nothing else could: a book keyed by
+what was acted UPON, with nobody in the key as the actor. Invisible for as long
+as a campaign had one player; wrong the moment it had two. Five of them, all on
+player-only paths — which is why none of this moves the balance harness:
+
+- `decision:<key>` → `<crown>>decision:<key>`. The guest holds a grand
+  festival and the host cannot hold one for two years.
+- `claim:<owner>` → `<crown>>claim:<owner>`. One court's forgers were the
+  other's: a guest fabricating a case against Nabataea idled the host's agents.
+- `intrigue:<kind>:<target>` → prefixed with the actor. Two crowns running
+  agents into the same foreign court shared one cold channel.
+- `dia:<ask>:<seat>` → prefixed with the crown that wrote the letter.
+- `peace:<war>[:leader]` → prefixed with the court suing. An envoy rebuffed on
+  the guest's terms rebuffed the host's too.
+
+**And the dispersion needed more than a key.** Standing was one number per
+community — `p.dia.standing`, the community's regard for *the* Jewish crown,
+which was a safe thing to assume while there could only be one. With two, both
+players courted Alexandria out of one bar: an ask by either spent the other's
+credit, and the mapmode painted one warmth for both. The record now files by
+crown (`p.dia.by[tag]`, and `host.dia.by[tag]` for §195's court-hosted seats),
+`monthlyDiaspora` drifts once per seated Jewish crown, and the three readers
+outside the module — the dispersion mapmode, a formable's requirement, the 1948
+card that cools every community at once — read the crown that is asking.
+`reviveGame` files a pre-§216 save's flat pair under the protagonist, so a
+campaign crosses the change with every letter it ever wrote intact.
+
+### What this deliberately does not do
+
+The second chair is a full campaign — its own realm, court, missions,
+economy, armies, diplomacy and cards — with five documented edges, all of them
+the old single-protagonist assumptions rather than new ones:
+
+- A card addressed to `'both'` or `'player'` (491 and 72 of the shipped cards)
+  is addressed to the PROTAGONIST chair. `firedEvents` is global and a card fires
+  once, so dealing one card to two chairs would double its effects; a chapter
+  that wants both sides to be asked something addresses each side by tag, which
+  is what the rival chains already do.
+- Peace between two human courts is still weighed by the receiving court's own
+  evaluator (`evaluatePeaceDeal`). Two players at war can end it, but the loser
+  does not get a card asking them to sign — the §38 table is a one-human
+  table.
+- `g.chapters` (§83's second act) and the §98 crisis clock stay the
+  protagonist's: both hang off the campaign's single verdict rather than off a
+  tag. So do the two chapter-flavour engines that read `g.playerTag` all the
+  way down — the schools' quarrel (§190) and the sacred office (§169). Their
+  LEVERS work for a guest, because a lever is a command and a command runs
+  under that guest's crown; it is the monthly drift that stays with the
+  protagonist's chair. Threading a tag through both is a refactor, not a
+  seating change, and it is where the next pass at this would start.
+- A played court is not an intrigue target. `runIntrigue` buys agents through
+  `courtSeats`, which has always returned null for the protagonist's own
+  throne, and a guest's throne now answers the same way — you cannot buy a
+  party at a table somebody is sitting at. Symmetrical between the two
+  players, and the same protection the protagonist has always had. The one
+  place that had to follow rather than inherit is `moveTheRoom`
+  (`institutions.js`), where an institution's faction shifts now reach a
+  guest's authored estates instead of falling between the two engines.
+- Tick-time news is generated under the host's chair, so a rival guest's
+  toasts are the ones its own orders raise. Their realm's state is on their
+  screen — panels, ledger, war overview, all read locally off the mirror under
+  their own `playerTag` — but the running commentary is not relayed to them,
+  because it is not about them.
+
+- **Regression contract**: `smoke143` — the lobby's two pure decisions (all
+  three civil-war thrones on offer, a one-standard chapter offering one, a save
+  refusing a fallen court, every fallback landing beside the host); the chair
+  rule and its solo/harness/deleted-tag twins; a card dealt to a seated rival
+  court and resolved by it, against the same card resolving itself silently in
+  a solo campaign; the decider notice measured against the audience; the court
+  convening for a guest while `courts.js` steps aside, the emptied protagonist
+  chair convening neither court, and the two demand books not colliding on
+  `pharisees`; and a mid-table save coming back a solo campaign. The balance
+  harness is the second opinion and the one that caught the court rule:
+  `node tools/autorun.mjs 8` against the parent tree came back **byte identical
+  on all eight bookmarks**. `uitest45` drives it in two real browsers: 67 BCE hosted as
+  Hyrcanus with the guest seated on Aristobulus, both chairs human and neither
+  AI, the guest ordering its OWN army and steering its own court, a card
+  addressed to the guest's throne arriving with live buttons and its answer
+  landing on the host. `uitest5` is the co-op suite and is unchanged, which is
+  the point: the default table is still one realm and many hands on the tiller.
+
+## 217. The band that stopped moving
+
+A player sent in a screenshot of Mauretania: three thousand rebels standing in
+the ownerless grey south of the Atlas, a flag on ground no court on the map has
+ever claimed, and one line of comment — *I like that rebels can settle
+wasteland.*
+
+Nothing in the game had ever been written to do that. It falls out of three
+rules that were each right on their own:
+
+- **§160** put 130 unowned-but-passable cells on the map and wrote the rule
+  that opened them: *passage is not possession — entering unowned ground takes
+  nothing and claims nothing.* True of every court there is.
+- **`isHostile` answers yes for REB against anything**, which is what makes a
+  rising a rising. Including, it turns out, against the nobody who governs the
+  empty quarter. So a band that wanders out to Gaetulia lays siege to the sand,
+  and — fort 0, garrison 0 — takes it.
+- **§112's burn-out only reaches a rising against a LIVING owner.** Ownerless
+  land is explicitly somebody else's problem, and it always was. A band that
+  takes a patch of nothing holds it for the rest of the campaign.
+
+Three correct rules, and between them a band with a flag, a province, and no
+ending. That is not a bug and this section does not fix it. It gives it the
+ending it was obviously asking for.
+
+### λῃσταί and πειραταί
+
+A band that has taken ownerless frontier at the rim of the world stops
+marching — the rebel AI used to send it straight back toward the nearest cell
+with a crown's colour on it — and if it is still standing there two years
+later it stops being a rising. The camp becomes a state: a name, a chief, a
+constitution, a colour on the political map, and one province of harsh
+frontier that no chancery in the world has an address for.
+
+Which state depends on where it stopped, and the game already knows: inland it
+is **The Lestai** under an *archilestes*, on a coast it is **The Peiratai**
+under an *archipirata*, proclaimed with three hulls because a corsair court
+without ships is a joke with no punchline. Both words are the sources' own.
+Josephus calls Hezekiah of the Galilean border, Eleazar ben Dinai (twenty
+years in the hills) and Tholomaeus λῃσταί, in the same breath as Athronges the
+shepherd who put on a diadem; the Cilicians who took Delos in a day had
+citadels, arsenals, a thousand ships and their own understandings with three
+kings before Rome handed one man the entire Mediterranean to be rid of them.
+The chief is one of six the sources name, per identity, and both courts govern
+under the same new constitution — **The Company**, which takes `GOV_TYPES` from
+fourteen to fifteen and is the first entry on that table nobody ADOPTS: §214's
+ten are what a fork chooses, and this one you are born under or not at all.
+Nothing inherited, nothing voted; the men keep the chief who feeds them and
+take another when he stops. It has the shortest succession on the map and −2
+envoys, because there is nobody to write to.
+
+Both fly an emblem of their own, because the fallback for a tag without one is
+a chip with three letters in it and all but two of the other 126 tags have
+better than that: a sica for the brigands — the short curved knife the sicarii
+took their name from — and for the corsairs a galley under sail with the
+painted eye on the bow and the bronze ram at the waterline.
+
+### Bounded like the easter egg it is
+
+Every gate here exists so that a campaign which never produces one draws
+exactly the world it drew before:
+
+- **The empty quarter only.** Ownerless AND passable AND `uninhabited` or
+  `frontier` — 37 cells in 167 BCE, the rim from Caledonia to Azania. The same
+  ownerless belt holds 67 towns and cities, Carthage and Corduba among them,
+  and a rising that takes one of those has taken a *city*, which is a balance
+  event and somebody
+  else's section. Rebels may sit in Carthage for eight years; they found
+  nothing.
+- **One per campaign.** A map that fills up with robber kingdoms is not an
+  easter egg, it is a mechanic.
+- **No dice.** The identity is read off the water, faith and tongue off the
+  province, the chief off the province id. A section that rolled for its chief
+  would shift every seeded draw after it in every campaign that never saw it.
+
+The two gates on the AI half are the load-bearing ones, and the first pass got
+them wrong. Standing a band still on ownerless ground is not free: it is the
+one place burn-out cannot reach, so a parked band is parked *for good*, and it
+holds one of the eight ownerless-host slots `raiseRising` allows the whole
+world at once. The 66 CE harness found it immediately — three stragglers of
+some 230 men each, parked in the Blemmyae desert between Egypt and Kush
+forever, and Kush's, Aksum's and Judaea's eight-year numbers all moved with
+them (no province counts, no flags — the tell was two decimal places). So a band
+stops only if it is strong enough to found something (1,000 men, the same
+number §64 detaches to hold a camp), and only until this campaign has had its
+court. Stragglers drift on as they always did; after the robbers rise
+everybody reverts to the old rule.
+
+### What it does not touch
+
+The court is an ordinary AI court from the moment it is seated — it recruits,
+it can be fought, it can be conquered, and `updateTagLife` casts its banners
+down like anyone else's. It brings no missions, no cards, no chain, and no
+claim on anybody. One province of 1/1/1 frontier at the edge of the world buys
+a very small state, which is the point: this is a joke the map tells, not a
+power the player has to answer.
+
+- **Regression contract**: `smoke144` — the ground (the rim yes, an ownerless
+  city no, an ownerless town no, impassable deep desert no, a governed
+  province no); the clock and the three things that stop it (the band leaves,
+  the ground is lost, the band is too small); what gets founded, down to the
+  chief being a man the sources name and the seeded stream ending the month on
+  the exact value it started it on; the corsair branch with its hulls; the
+  control (eight years of rebels in Carthage, and a rising on a crown's own
+  province still answering to §112 alone); one per campaign; both AI gates,
+  each against its own control; and a robbers' court surviving a save, still
+  holding ground that loading does not re-wall. The balance harness is the
+  second opinion and the one that wrote the AI gates: `node tools/autorun.mjs 8`
+  against the parent tree comes back **byte identical on all eight bookmarks**.
+
+## 218. A crown of its own — releasing a client state
+
+Three roads led to a client kingdom and every one of them ran through somebody
+else's country: the peace table's subjugation clause, §76's transfer of
+an enemy's vassal, and §92's collar offered to a sovereign ally. A crown that
+wanted a client had to go and take one.
+
+Which left the commonest position in the game with no move in it. A realm
+that has won a long war is holding towns of somebody else's people, at 0.6
+autonomy, paying a heathen assessment in unrest, three centuries from
+integrating — and the only two answers were to hold them anyway or to lose
+them to a rising. The one thing the ancient east actually did with that
+ground, over and over, is the one thing the game could not express: hand it
+its own crown and keep the tribute. Rome did it with Herod, with Agrippa, with
+half the Anatolian dynasts; Parthia's whole western frontier is Osrhoene,
+Adiabene and Characene doing it; Hyrcanus did it to Idumea before he thought
+better of it.
+
+So a province of ours may now be let go on purpose. From the province panel,
+under **A Crown of Its Own**, one button seats a state on the ground the
+province stands in — and fastens the collar in the same act, because a crown
+that is granted is granted by somebody.
+
+### Which ground, and which state
+
+The two abstractions the peace table already reasons with, and no third one
+(`releasableClients`, military.js):
+
+- **restore** — a fallen court whose era-start homeland we are sitting on
+  rises again on that homeland, under its own name and colour. `eraOwnerOf`
+  answers this off the bookmark's own `owners` table, so nothing new is stored;
+- **create** — land whose people are not our people becomes a new state of its
+  own culture and faith, with the deterministic `Fxxx` tag and `releaseIdentity`
+  §76 already mints, so a later grant finds the same state instead of inventing
+  a second one;
+- **enlarge** — and when that state already exists and already answers to us,
+  a further grant of the same identity joins it rather than founding a rival.
+  It costs no new chancery seat: it is not a new bond.
+
+Every grant is resolved to **one piece of connected land** (§109's
+`contiguousRelease`) before it is offered, and an existing client grows along
+its own border.
+
+### What may not be let go
+
+As much of the section as what may:
+
+- **the capital, ever.** A realm may dismember itself; it may not behead
+  itself. The same rule §69 wrote for the enemy's capital, pointed at ours.
+- **a living court's old homeland.** Handing Antioch to a Seleucid empire that
+  still stands is a *cession*, and a cession is agreed at a table with them.
+  Their ground is still releasable — as a state of its own people, which is a
+  different thing and says so.
+- **our own people.** A province of our faith and our kind of culture (§110's
+  `sameKind`) is in no grant anywhere. A state carved out of our own people is
+  a **secession** (§105), and secessions are suffered, not granted.
+- **occupied ground.** A province an enemy army is standing in is not ours to
+  give away, whatever the map says about who owns it.
+- **the whole realm.** No single grant may pass `releaseMaxShare` (0.5) of our
+  development. Half is what a crown may give away; the other half is what makes
+  it a crown.
+
+And four gates on the crown rather than the ground: the age must keep client
+kingdoms at all (§142 — the control disappears in 1948 rather than sitting
+there refused), we must not be somebody's client ourselves, we must be at peace
+(the rule §61 already applies to weaving a union, pointed the other way), and
+the chancery must have a seat for the bond (§202). The price is
+`releaseBase` + `releasePerDev` × development in influence — 40 and 1, so a
+50-development province package costs 90 and the towns that are worth keeping
+are the ones that are expensive to hand over.
+
+### What the grant does
+
+The provinces change owner and controller; autonomy drops to its own (0.25 or
+better — it governs itself now), integration starts over, any conversion under
+way is void, and the conqueror's `recent_conquest` mark comes **off**: nobody
+conquered anybody. The court is seated with the age's institutions (§76's
+`ensureReleasedCourt`, whose template is now simply the realm the land is
+leaving), a floor of 25 talents, muster rolls off its own provinces, a guard of
+two regiments at its seat, and an **ethnarch** — the word the ancient east used
+for exactly this office, a nation's own ruler under somebody else's crown —
+drawn from its own culture's name pool.
+
+Then it is an ordinary client kingdom, from the first day and by the ordinary
+rules: 15% of its income is ours, its wars are ours, it holds a chancery seat,
+its collar chafes with the others (§202), and it comes home only through the
+union §61 already knows how to weave. It starts at `releaseGratitude` (60)
+toward the hand that crowned it, twenty short of the devotion incorporation
+needs — close enough to be worth courting, far enough that a grant is not a
+laundry cycle. **No infamy**: the world does not fear a crown that gives land
+away.
+
+### No dice, and no AI
+
+Nothing in the section touches the seeded stream. The state's tag is a hash of
+identity and bookmark, its ethnarch a hash of tag and seat, so a replay, a
+reload and a multiplayer guest all seat the same man in the same town. And no
+AI court ever grants a crown out of its own realm — the one call site is the
+player's own action — which is why the balance harness cannot see this section
+at all.
+
+- **Regression contract**: `smoke145` — what may be let go and what may not
+  (the capital, our own people anywhere in any row, a living court's homeland,
+  occupied ground, half the realm); the restoration of a Nabataea we conquered
+  ourselves, under its own name; the five refusals in their own words; 1948
+  offering nothing at all; the grant itself (owner, controller, autonomy, the
+  mark that comes off, the influence spent, no infamy, the ethnarch, the guard,
+  both opinions, the chancery seat, the chronicle, the tribute running and the
+  union available); one piece of connected land against the real geometry, with
+  the Decapolis and Greece as the two pockets; the second grant enlarging the
+  first client instead of founding a rival; determinism (a granting campaign
+  and a non-granting one draw the same next three numbers, and a differently
+  seeded campaign seats the same court under the same man); the save and the
+  reload; the player-only call site; and the action as the panel presses it,
+  including a refusal that is reported rather than half-applied. `node
+  tools/autorun.mjs 8` against the parent tree is **byte identical on all eight
+  bookmarks**, which is the section's own claim about the AI working.
+
+## 219. The collar comes off — a client kingdom released
+
+§218 gave a crown the way IN to a client kingdom out of its own land. There
+was never a way out.
+
+A collar came off exactly three ways, and not one of them was the lord's to
+choose. The lord died, and `updateTagLife` freed its clients. The lord ate
+them, which is §61's union and ends the client rather than releasing it. Or
+they rose and won — the independence war the AI declares by breaking the bond
+first (`ai.js`, and note the order: free courts declare, clients cannot). A
+crown could take a client at the peace table, buy one with §92's offered
+collar, be handed one at a congress and make one out of its own provinces —
+and could not, under any circumstance, simply let one go.
+
+So this is **Incorporate's mirror**, and it sits beside it in the same block:
+**Release Them**.
+
+### Nothing moves except the fealty
+
+That is the whole section, and most of `smoke146` is an inventory taken before
+and after to prove it. The freed court keeps every province at the autonomy it
+had, every regiment where it was standing, its ruler, its treasury, its
+manpower, its technology, its reforms and its constitution, and walks off with
+all of it. No province changes hands, no army is disbanded, nobody is
+conquered, and the world counts no infamy: `overlord` becomes null and
+everything else is exactly where it was.
+
+Four things do change:
+
+- **the tribute stops**, in both ledgers, the month it is struck;
+- **the chancery seat comes back** (§202), and the collars that remain chafe
+  less for it — the strain is read off how many you hold and how much of you
+  they weigh, so releasing one eases every other;
+- **they remember it**: `freeGratitude` (80) toward the hand that struck the
+  collar, which is the largest single opinion move any peacetime act makes;
+- **they will not kneel again for a decade.** The freed mark §202 wrote for a
+  court liberated at somebody else's expense is set here too, and for the same
+  reason: without it a lord could strike the collar and offer it back the same
+  afternoon, and §92 would let him.
+
+A union half-woven dies with the bond it was weaving, on the same terms
+`monthlyIncorporation` has always unravelled on — the months are lost and so is
+the influence they cost. The button says so before it is pressed.
+
+### What it costs, and the one refusal
+
+**No influence.** Every other bond in the chancery is billed for what it costs
+to *keep*; this is the one act whose entire cost is what it gives away — a
+country, its development, its army and its tribute. Pricing it as well would be
+charging a man for the privilege of opening his hand.
+
+The one refusal is **wartime**, on either side of the bond: a client that walks
+out of a war we are fighting has not been freed, it has deserted, and everyone
+at both ends of the line reads it that way. Otherwise the only gates are the
+obvious ones — it must be a living court, it must actually be ours, and a crown
+cannot free itself.
+
+Note what is deliberately **not** a gate. §142's `clientKingdoms` switch stops a
+chapter *making* clients; it says nothing about unmaking them, and a chapter
+that inherits collars and then retires the institution must still be able to
+take them off. So Rome can let Agrippa go in 66 CE, and would be able to in an
+age that had stopped writing new clients down.
+
+### Two taps
+
+The button arms on the first press and acts on the second — §218's idiom, and
+the saves shelf's before it, for the same reason. Incorporate takes months and
+can be watched; this hands away a whole country between two frames.
+
+- **Regression contract**: `smoke146` — the inventory before and after (every
+  province, regiment, ruler, coin and institution unmoved), the four things
+  that do change, the wartime refusal on both sides of the bond and the three
+  ownership gates, the half-woven union cancelled with its months reported, the
+  §202 mark and §92 refusing the collar to a court we let go, Rome releasing a
+  scripted client in an age that still keeps them, the strain easing on the
+  collars that remain, the save, the player-only call site, and the action as
+  the panel presses it. `uitest47` grew a fifth section for the browser half —
+  the verb beside Incorporate on the client's own panel, armed on the first
+  press and struck on the second — on the very client its §218 sections make.
+  `node tools/autorun.mjs 8` against the parent tree is **byte identical on all
+  eight bookmarks**: no AI court strikes a collar, exactly as none grants one.
+
+## 220. A state annexed whole is not a state dismembered
+
+Reported from a campaign: a court beaten down to its last province, that
+province occupied, the war won outright — and the peace table handed it back.
+
+The rule doing it is §69's **one dismemberment budget**, and for a realm it is
+right: no single treaty may strip more than `peaceMaxDevShare` (40%) of what
+the losing side still holds, because "the nations would not bear it". The
+trouble is that the ceiling is a fraction of a shrinking thing. Reduce a court
+to one province and the budget is 40% of that province — always less than the
+province — so there is no package small enough to fit and no war score high
+enough to matter. A one-province state worth more than the floor of 25
+development could not be annexed **at all**, by anyone, ever. The only states
+cheap enough to finish off were the ones too small to want.
+
+So the budget stops pricing a treaty that leaves nothing behind:
+
+- **The exception** (`evaluatePeaceDeal`): if the demanded package — cessions,
+  released states and transferred clients together — takes every point of
+  development the enemy side still holds, the dev cap does not apply. Annexing
+  a country entire is not dismembering it; there is no remainder for the
+  nations to bear.
+- **What gates it instead** is war score, and it is a real gate rather than a
+  formality. Score is clamped to ±100 and land is priced at 0.9 per point of
+  development (×1.25 for a faith outside our own), so the most that can ever be
+  taken entire is about 110 development of co-religionist land — less across a
+  religious border. A rump always fits inside that. An empire never does:
+  Rome in 66 CE, occupied to the last acre, prices out at **9,255** war score.
+- **It is exactly "everything", not "a lot".** Give the same rump a second town
+  to survive on and the same demand for the same province is dismemberment
+  again, refused by the same cap. That control is in the suite because it is
+  the whole distinction.
+- **The AI still builds its own ultimatums under the old ceiling**
+  (`buildAiPeaceProvinces` is unchanged), the way §69 leaves releases out of
+  them: the AI accepts a total annexation it cannot pay for the war to refuse,
+  and never proposes one. So no all-AI trajectory moves — `node
+  tools/autorun.mjs 8` is byte identical on all eight bookmarks.
+
+One thing this does not change: a court's protectors. A war declared on a
+client is the overlord's war too, and their weight counts in the side's
+development — which lifts the ceiling far above any rump anyway. The trap only
+ever closed on a state with nobody behind it, which is exactly the state a
+total victory produces.
+
+- **Regression contract**: `smoke38` — the rump alone with its last province
+  worth more than the cap and the treaty accepted anyway; one war-score point
+  short and it is refused for the price rather than the ceiling; the treaty
+  executed, the province changing hands and the court passing into memory; the
+  narrowness control (a second town restores the cap); and Rome occupied entire
+  still refused, with the price of everything measured against the ceiling war
+  score can reach.
+
+## 221. A banner nobody is flying may be taken up
+
+Forming a nation asked that the target banner be **free**, and free meant the
+tag did not exist:
+
+    if (!old || !def || g.tags[to]) return false; // the target banner must be free
+
+For every crown in the game that was the same question as "is anybody flying
+it", because those banners are minted by the proclamation itself — MLI, UAR,
+SAR, and a JUD that does not exist in 40 BCE. It stops being the same question
+the moment a crown is one a court on the map already wears. Beat that court out
+of existence and its name stays in `game.tags` forever with `alive: false`,
+which is how a fallen court is recorded — so the banner was reserved in
+perpetuity for a king with no country, no army and no chancery.
+
+The rule is now the sentence it always meant: a banner is free when **nobody is
+flying it**. A court that has fallen holds no province and no army (that is
+precisely what `updateTagLife` checks before it strikes one off), its name is a
+line in the chronicle, and a crown standing on its ground may take that too.
+
+### The banner arrives with none of the dead king's debts
+
+This is the part that is not bookkeeping. The world writes things down about
+courts, and those entries survive the court: alliances, guarantees, marriages
+and truces recorded against a name go on being recorded after the name's owner
+falls, because `diploBonds` simply skips the dead rather than forgetting them.
+Hand that banner to somebody and the entries wake up — a house that took a
+fallen rival's crown would find itself **holding the dead court's friendships**,
+including with courts it is currently fighting.
+
+So `freeBanner` strikes the record before the crown changes hands: every
+alliance, guarantee and marriage other courts recorded with it, every truce and
+diplomatic cooldown keyed to its name, its subsidies, and the opinions and
+grudges held against it. What is inherited is a name and a colour. The
+claimant's own realm — its wars, its treasury, its bonds — is untouched, because
+`switchTagCore` builds the new court out of the claimant and always did.
+
+### A crown nobody can see is a crown nobody plans for
+
+The first cut hid a contested crown until its rival's house fell, because the
+listing gate and the banner gate were the same line. That is correct about
+enactment and wrong about the panel: every other crown in the game sits in the
+decisions list from the first day with its requirements ticked or not, which is
+how a player learns it exists and plays toward it. This one was invisible until
+the moment it was already earned.
+
+A formable may now declare itself `contested` — its court is ON the map — and
+it stays listed while that court lives, greyed, with the row about the rival's
+house unticked. `form_jud_agr` is the crown that needs it: Judaea's banner
+belongs to the revolt from the first day of the chapter, and an Agrippa who
+cannot see the title he is playing for has no reason to play for it. Nothing
+about enactment changes: the row is a real requirement,
+`formableList` still refuses an unmet checklist, and `switchTagCore` refuses a
+flying banner besides. The Compendium already listed the crown on both nations'
+pages under *Crowns*; this is about the panel a player is actually looking at.
+
+**The AI keeps the older rule** (`aiFormNation` still refuses any tag that
+exists at all). An AI court re-branding into a dead neighbour's name mid-chapter
+would orphan the scripted arcs that address courts by tag — the same reason the
+dynastic restorations ship player-only — and it keeps every all-AI trajectory
+exactly where it was.
+
+### The crown the rule exists for: Agrippa's own
+
+`form_jud_agr` (66 CE, AGR → JUD, player-only): the client king who ends the
+rising and is given the whole country. Agrippa II stood on the Xystus and told
+Jerusalem what sixty thousand men mean, and they threw stones at him for it; he
+spent the rest of his life as the last Herodian, king of a Golan valley and two
+towns Nero happened to be feeling generous about. His family had been asking
+Caesar for Judaea entire since his great-grandfather held it. Rome's answer,
+historically, was a praetorian province. This is the other answer.
+
+It asks that **the rising be ended** — no court flying the banner of Judaea,
+which since §220 is a thing a total victory can actually finish — that he hold
+**Jerusalem**, whose High Priest that house already names, the country at
+**Jericho, Sepphoris and Tiberias** (not Caesarea Maritima: the procurator's
+own seat is Rome's, and a client king taking it from Caesar is a different
+chapter), ten provinces, legitimacy 40 and stability 1. And it asks for the
+title's owner: **Caesar content with us (Rome 50+), or a house that answers to
+nobody** — the crown of Judaea is Rome's to give, or, for a family that has
+stopped asking, ours to take. Both roads are live and the label names both.
+
+What it pays is a kingdom rather than a client's chancery: 150 talents, 3,000
+men on the rolls, 40 governance and 40 influence, **The Whole Country** (+10%
+income, +10% manpower) and **The Custody of the Vestments** (+0.2 legitimacy a
+month, −0.5 unrest everywhere) — Claudius left the house the vestments and the
+naming of the High Priest, and that is the whole reason this crown is not a
+Roman governorship with a diadem on it. The man is styled **King of the Jews**,
+which is the title Rome actually conferred.
+
+It brings no chain of its own, so `missionsFor` finds the chapter's `missions.JUD`
+under the name the realm now wears (§204/§215).
+
+- **Regression contract**: `smoke11` — the crown visible from the first day and
+  refused while the revolt flies the banner, the rising ended and the crown
+  taken, the requirement rows including both roads to the title (Caesar's
+  favour, or a house that answers to nobody), the switch (name, royal style,
+  both modifiers, the founding grant, the §135 forwarding address), and the
+  debts that must NOT come with the banner: the dead court's alliances and its
+  truces. `node tools/autorun.mjs 8` is byte identical on all eight bookmarks —
+  the AI cannot reach any of it.
+
+## 222. A treaty that runs both ways, and a deed that needs no treaty
+
+Every term at the peace table ran one direction. A court could **demand**:
+provinces it occupied, gold, reparations, a humiliation, a subjugation, a
+release, a client. What it could not do was **offer** — and a realm that is
+losing has nothing else to do. Its whole table was a white peace and the
+sentence *they believe they are winning, and will not settle for nothing*.
+
+That is not how the wars of this period ended. They ended with a border
+province, a corridor, a coastal city — the losing crown buying an ending with
+the thing the winner came for. This section gives that back, and then takes the
+same idea outside the war entirely.
+
+### At the table: what we lay down beside what we ask
+
+`peaceDealInfo` returns `concessions` alongside `provinces` — **every province
+we own**, and the breadth is deliberate rather than careless:
+
+- not only what they occupy, because a treaty writes down more than the front
+  line;
+- not only what they can reach: §116 exists to stop an army *selling* far-off
+  land it happens to be standing in, and nothing needs to stop a crown from
+  giving away its own;
+- not only what is worth having. Colonised waste (§64), a frontier cell, the
+  capital itself — a crown that is losing may put any of it on the table,
+  because the alternative is losing it anyway.
+
+Each is priced at **what they would have paid to demand it** — the same
+formula, their claims and their faith — so one province is worth the same at
+this table whichever way it moves. There is no escalation ladder on the offered
+side: `priceProvincePackage` makes each further demand dearer because a
+congress resists a long list, and nothing resists a gift.
+
+`evaluatePeaceDeal` then settles one ledger: `net = cost − offered`. Above zero
+we are demanding, and the old rules apply unchanged (the dismemberment cap,
+then `myWs >= net`). At or below zero we are paying, and the rule is the
+plainest one there is: **they accept what covers what they have won.** Offer
+past their score and it is taken; offer under it and the refusal names the
+number — *they have won more than that (25 offered, 60 is what their war has
+earned)*. A treaty may do both at once, which is how a war that went badly in
+the north and well in the south actually settles.
+
+What the land takes with it is what conquest takes: the integration ledger
+starts over, autonomy rises, `recent_conquest` lands on it. Two differences,
+both deliberate. **We** record the grudge (§67), because it is our loss to
+remember. And **nobody gains infamy** — the world does not count as a conqueror
+a court that was handed something at a table it did not dictate. Being paid is
+not taking.
+
+### Without a table: a province handed over in peacetime
+
+The same idea with no war attached (`cedeProvinceInfo` / `cedeProvinceCore`,
+the *Give It Away* block on our own province's panel): a crown may decide a
+province is worth more as a friendship than as a district, and hand it over.
+The Golan to a patron, a frontier cell to the neighbour who actually garrisons
+it, the town a stronger crown has been asking after for a decade.
+
+Any province of ours, colonised waste included. It goes to a court that
+**governs beside it** or one we are already **bound to** (ally, client,
+overlord) — a crown settles a border, pays a patron or endows a client; it does
+not post a deed to a stranger on the far side of the world. Their regard rises
+by `giftOpinionBase` + development, to a ceiling of 60: the largest thing one
+court can say to another without an army, scaled by what was actually said.
+No infamy, no grudge, no price.
+
+Three refusals, and each is a rule rather than a guard rail:
+
+- **not while an enemy army is standing in it** — what happens to that province
+  is a treaty now, and the treaty is at the table;
+- **not while we are at war with anybody** — a province gifted to a friend on
+  the eve of losing it is not diplomacy, it is hiding the silver, and every
+  court watching would say so;
+- **not the last province of the realm** — there would be nobody left to sign
+  the deed.
+
+The province arrives under its new crown restive but not conquered: `ceded`
+(+1 unrest, twelve months) rather than `recent_conquest`, and autonomy at half
+rather than three fifths. It was given, not taken, and the people can tell.
+
+### What does not move
+
+The AI neither offers concessions nor asks for them: `buildAiPeaceProvinces`
+builds the same package it always did, and a deal with no `concessions` in it
+runs through arithmetic identical to the old code — `offered` is zero and `net`
+is `cost`. So `node tools/autorun.mjs 8` is byte identical on all eight
+bookmarks, and every AI-vs-AI settlement in every harness history is the one it
+was before.
+
+- **Regression contract**: `smoke147` — the offer list (every province we own,
+  the occupied one, the colonised waste, the capital, and one province priced
+  the same in both directions); the white peace refused, too little refused
+  with the number, enough accepted; the land moving with its marks, our grudge,
+  nobody's infamy, and the chronicle naming who gave what; a treaty that
+  demands and concedes at once settling on the difference; a concession-free
+  deal behaving exactly as before, subjugation clearing our side of the table
+  too; and the peacetime deed with its three refusals, its two roads to a
+  recipient, its gratitude, and its gentler mark on the ground.

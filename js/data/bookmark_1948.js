@@ -494,6 +494,13 @@ export const BOOKMARK_1948 = {
   // Britain's oil concession in the east. Israel starts under nobody, which
   // was always the point of the Embargo modifier below; the First Truce card
   // signs Prague, and 1955 signs Moscow over Cairo.
+  // The other half of that sentence is SPEC §213, and it lives with the
+  // ideas rather than here: js/data/programs.js holds this chapter's roster
+  // of weapons a court can develop at HOME — the Uzi, the Nesher, the
+  // Merkava, the Lavi, Helwan's aircraft — each opened by a rung of the
+  // military ladder. A delivered work that builds a gated arm ends the
+  // import for that arm; a court that builds them all joins the arsenals
+  // below and can be signed with by anybody.
   armsMarket: {
     arsenals: ['USA', 'SOV', 'UK', 'FRA', 'CZE'],
     starting: {

@@ -2,7 +2,7 @@
 // content package via ctx.events; effects run through ctx.helpers. DOM-free.
 
 import { noteEventChoice, noteRetired } from './divergence.js';
-import { livingTag } from './military.js';
+import { livingTag, isHumanChair } from './military.js';
 
 const _warned = new Set();
 function warnOnce(key, ...args) {
@@ -149,6 +149,36 @@ function maskIdx(allowed, idx, count) {
   return allowed.indexOf(i) >= 0 ? i : allowed[0];
 }
 
+// The recorded course: the option `aiOption` names (an index, or a function of
+// the world), snapped onto the mask.
+function recordedCourse(ctx, ev, allowed) {
+  let idx = 0;
+  try {
+    idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
+  } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
+  return maskIdx(allowed, idx, ev.options.length);
+}
+
+// The course a card takes when nobody at this table decides it (SPEC §212).
+// A `roll: true` card is a foreign court's own question whose answers differ
+// in cost and flavour rather than in what happens, so the campaign's own
+// seeded stream answers it: the recorded course carries `EVENT_ROLL_RECORDED`
+// of the weight and the roads the chronicles did not take split the rest. The
+// stream is only touched for a card that asks for it, so every existing save,
+// replay and multiplayer relay draws exactly the numbers it drew before.
+function courseFor(ctx, ev, allowed) {
+  const rec = recordedCourse(ctx, ev, allowed);
+  if (ev.roll !== true || !ctx.rng) return rec;
+  const pool = (allowed && allowed.length ? allowed.slice() : ev.options.map((_, i) => i))
+    .filter((i) => ev.options[i]);
+  const others = pool.filter((i) => i !== rec);
+  if (!others.length) return rec;
+  const w = Number(ctx.DEFINES && ctx.DEFINES.EVENT_ROLL_RECORDED);
+  const weight = Number.isFinite(w) ? Math.max(0, Math.min(1, w)) : 0.667;
+  if (ctx.rng.chance(weight)) return rec;
+  return others[ctx.rng.int(others.length)];
+}
+
 // Fire an event now (popup for the player, silent auto-pick for the AI).
 export function fireEvent(ctx, ev) {
   const g = ctx.game;
@@ -173,7 +203,19 @@ export function fireEvent(ctx, ev) {
   // it is compared to the chair the player is sitting in.
   const audience = (ev.forTag === 'both' || ev.forTag === 'player')
     ? player : livingTag(ctx, ev.forTag);
-  const playerSees = audience === player;
+  // A card is answered by whoever is SITTING in the chair it is addressed to
+  // (SPEC §216). In a solo campaign that is the protagonist chair and nothing
+  // else, which is why `audience === player` comes first and unconditionally:
+  // an all-AI harness run empties the chair without emptying the table, and
+  // its cards must keep queueing for the drain that has always taken them.
+  //
+  // A multiplayer guest on its own Jewish throne is the second half. Its
+  // chapter's cards — `forTag: 'ARI'` while the host holds Hyrcanus — used to
+  // resolve silently on the recorded course, because nobody was thought to be
+  // home there. Somebody is. `isHumanChair` is false for every tag in a solo
+  // campaign, so this adds a reader and never moves one.
+  const playerSees = audience === player
+    || (audience !== player && isHumanChair(g, audience));
   // Which answers this world actually offers (SPEC §128). An option may
   // declare `when(ctx)`, and a card whose answers depend on the state is a
   // different card from one that lists every answer and prices the impossible
@@ -203,19 +245,29 @@ export function fireEvent(ctx, ev) {
     // mandate republic, to the republic that left the union, or to the union
     // itself, and the card is a notice either way. A static string still
     // works exactly as before.
+    //
+    // SPEC §212 adds the second half of the same thought: a card marked
+    // `roll: true` is a foreign question this table cannot answer at all, so
+    // it is a notice even where an erased court would have handed the choice
+    // back — a Caliphate rewritten out of the world does not make the
+    // standardizing of the Qur'an the player's decision. The course is drawn
+    // rather than pinned; the modal is the same single button either way.
     let decider = ev.decider;
     if (typeof decider === 'function') {
       try { decider = decider(ctx); } catch (e) { warnOnce('decid:' + ev.id, 'decider() threw for', ev.id, e); decider = null; }
     }
     if (decider) decider = livingTag(ctx, decider);
-    if (decider && decider !== player && g.tags[decider]) {
-      let idx = 0;
-      try {
-        idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
-      } catch (e) { warnOnce('decider:' + ev.id, 'aiOption threw for', ev.id, e); }
+    // Against the AUDIENCE, not against the host's chair: a card dealt to a
+    // guest's throne whose decider IS that throne is their choice to make,
+    // and one whose decider is a foreign court is a notice to them exactly as
+    // it would be to the protagonist. In a solo campaign the two are the same
+    // tag, so this reads identically to the line it replaced.
+    if (decider && decider !== audience && (g.tags[decider] || ev.roll === true)) {
       pe.notice = true;
-      pe.optIdx = maskIdx(allowed, idx, ev.options.length);
-      pe.decider = decider;
+      pe.optIdx = courseFor(ctx, ev, allowed);
+      // A court the world no longer knows names nobody; the modal says "another
+      // court" rather than three letters out of the era's roster.
+      if (g.tags[decider]) pe.decider = decider;
     }
     if (allowed) pe.allowed = allowed.slice();
     g.pendingEvents.push(pe);
@@ -227,12 +279,9 @@ export function fireEvent(ctx, ev) {
     });
     return;
   }
-  // AI resolves silently
-  let idx = 0;
-  try {
-    idx = typeof ev.aiOption === 'function' ? (ev.aiOption(ctx) | 0) : (ev.aiOption | 0);
-  } catch (e) { warnOnce('aiopt:' + ev.id, 'aiOption threw for', ev.id, e); }
-  const opt = ev.options[maskIdx(allowed, idx, ev.options.length)] || ev.options[0];
+  // AI resolves silently — on its recorded course, or on the roll (SPEC §212)
+  // where the card says the answer was never anybody's to script.
+  const opt = ev.options[courseFor(ctx, ev, allowed)] || ev.options[0];
   try {
     if (opt && typeof opt.effects === 'function') opt.effects(ctx);
   } catch (e) { warnOnce('fx:' + ev.id, 'event effects threw for', ev.id, e); }

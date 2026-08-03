@@ -5,6 +5,7 @@
 // multiply; everything else adds).
 import { computeTechEffects } from './tech.js';
 import { computeEraIdeaEffects } from './era_ideas.js';
+import { computeProgramEffects } from './programs.js';
 
 export const IDEA_TREES = {
   mil: {
@@ -48,8 +49,9 @@ export function ideaCost(tier) { // tier index 0..4
 
 // Rebuild tag.ideas = the tag's static national bonuses (DEFINES.TAGS[tag].ideas)
 // merged with everything its enacted reforms grant, everything its tech
-// levels confer (SPEC §22), and every era-idea tier it has taken up
-// (SPEC §179). Pure; call after any change to t.reforms, t.tech or t.eraIdeas.
+// levels confer (SPEC §22), every era-idea tier it has taken up (SPEC §179),
+// and every arms program its own shops have delivered (SPEC §213). Pure; call
+// after any change to t.reforms, t.tech, t.eraIdeas or t.programs.
 export function applyReformsToTag(DEFINES, t, tagKey) {
   const base = (DEFINES && DEFINES.TAGS && DEFINES.TAGS[tagKey] && DEFINES.TAGS[tagKey].ideas) || {};
   const merged = { ...base };
@@ -62,6 +64,7 @@ export function applyReformsToTag(DEFINES, t, tagKey) {
   fold(computeIdeaEffects(t.reforms));
   if (t.tech) fold(computeTechEffects(t.tech));
   if (t.eraIdeas) fold(computeEraIdeaEffects(t.eraIdeas));
+  if (t.programs) fold(computeProgramEffects(t.programs));
   // Government type (SPEC §25): the constitution has its price and its dividend.
   const gov = t.govType && DEFINES && DEFINES.GOV_TYPES && DEFINES.GOV_TYPES[t.govType];
   if (gov && gov.effects) fold(gov.effects);

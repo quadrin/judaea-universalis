@@ -4,10 +4,14 @@
 // arithmetic). Approval runs 0-100 and drifts monthly with the era's mood.
 // Loyalty is graduated: loyal/discontent estates apply half of their authored
 // boon/bane, devoted/hostile estates apply the full effect. Both ride the
-// ordinary tag-modifier stream. Player-only, the same rule as ultimatums
-// (SPEC §33): AI realms keep their politics offstage. DOM-free.
+// ordinary tag-modifier stream. Played courts only, the same rule as
+// ultimatums (SPEC §33): AI realms keep their politics offstage. That is one
+// court in a solo campaign and one per seated chair at a multiplayer table
+// (SPEC §216). DOM-free.
 
-import { num, clamp, contentForTag, chronicle } from './military.js';
+import {
+  num, clamp, contentForTag, chronicle, livingTag, isHumanChair, humanChairs,
+} from './military.js';
 import { fireEvent } from './events.js';
 import { influenceScale, estateInfluence, estateGroundSummary, registerSeatSource, registerApprovalSource } from './estates.js';
 import { ESTATE_ASKS, ASK_FALLBACK, ASK_KINDS } from '../data/estate_asks.js';
@@ -98,13 +102,17 @@ export function factionDefs(ctx, tag) {
   return live.length ? live : null;
 }
 
-// Factions convene only in the player's own court, and only under a human
-// hand — an AI-driven player tag (balance autoruns) has no court to hold.
+// Factions convene only in a court somebody is SITTING in, and only under a
+// human hand — an AI-driven player tag (balance autoruns) has no court to
+// hold. Every seated chair counts (SPEC §216): a multiplayer guest on the
+// rival Jewish throne has the parties its bookmark authored for it, which
+// until now were content nobody could reach without starting that campaign
+// alone. `isHumanChair` is the protagonist and nobody else in a solo game.
 function activeDefs(ctx, tag) {
   const g = ctx.game;
-  if (!g || tag !== g.playerTag) return null;
+  if (!isHumanChair(g, tag)) return null;
   const t = g.tags[tag];
-  if (!t || !t.alive || t.ai) return null;
+  if (!t.alive) return null;
   return factionDefs(ctx, tag);
 }
 
@@ -314,10 +322,15 @@ function sendDemand(ctx, tag, def) {
   try { fireEvent(ctx, ev); } catch (e) { warnOnce('demand', 'demand card failed', e); }
 }
 
-// Monthly: drift, boons and banes, and the demands of the despairing.
+// Monthly: drift, boons and banes, and the demands of the despairing. One
+// session per seated chair (SPEC §216) — in a solo campaign that is one court,
+// the protagonist's, exactly as it has always been.
 export function monthlyFactions(ctx) {
+  for (const tag of humanChairs(ctx.game)) courtSession(ctx, tag);
+}
+
+function courtSession(ctx, tag) {
   const g = ctx.game;
-  const tag = g.playerTag;
   const defs = activeDefs(ctx, tag);
   if (!defs) return; // no court convenes (AI hand, or an era without factions)
   const t = g.tags[tag];
@@ -368,12 +381,22 @@ export function monthlyFactions(ctx) {
         effects: scaledEffects(def.bane.effects, profile.scale * weight),
       } : null);
       // The demand: one card per faction per two years, never two at once.
+      // Both books are per COURT once a second chair exists: the protagonist
+      // keeps the bare faction id it has always been saved under, and another
+      // chair's parties are filed beneath their own tag so two courts that
+      // authored the same id cannot cool each other's demands — or hold each
+      // other's cards off the table.
       if (app <= FACTION.demandAt && def.demand) {
         if (!g.flags._factionDemandCd) g.flags._factionDemandCd = {};
-        const until = g.flags._factionDemandCd[def.id];
-        const onTable = (g.pendingEvents || []).some((pe) => pe && String(pe.eventId).startsWith('dyn_faction_'));
+        const cdKey = tag === g.playerTag ? def.id : tag + ':' + def.id;
+        const until = g.flags._factionDemandCd[cdKey];
+        // Through the forwarding address (SPEC §135), so a card dealt before
+        // this court took a greater crown is still recognised as its own.
+        const onTable = (g.pendingEvents || []).some((pe) => pe
+          && String(pe.eventId).startsWith('dyn_faction_')
+          && livingTag(ctx, pe.forTag) === tag);
         if (!onTable && !(Number.isFinite(until) && now < until)) {
-          g.flags._factionDemandCd[def.id] = now + FACTION.demandCdMonths;
+          g.flags._factionDemandCd[cdKey] = now + FACTION.demandCdMonths;
           sendDemand(ctx, tag, def);
         }
       }

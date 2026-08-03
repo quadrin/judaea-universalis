@@ -59,6 +59,15 @@ export const DEFINES = {
     treasury: 50,  // talents of supplies to put the columns on the trail
     annexGov: 50,  // governance points to annex once the frontier is planted
   },
+  // The robbers' court (SPEC §217). A rising that takes ownerless frontier at
+  // the rim of the world and is still standing on it two years later stops
+  // being a rising. Bounded like the easter egg it is: one per campaign.
+  OUTLAW: {
+    months: 24,   // consecutive months of ownerless ground held, band present
+    men: 1000,    // the band has to still be a garrison, not a straggler
+    treasury: 40, // what a generation of tolls and ransoms comes to
+    ships: 3,     // hulls a corsair court is proclaimed with
+  },
 
   // The drumbeat of accomplishment (SPEC §207). A realm banks at most one
   // mission a month, and after each one its chain rests this many months
@@ -73,6 +82,17 @@ export const DEFINES = {
   // 2-month rest lands it inside the window and keeps every seeded
   // trajectory in its documented family.
   MISSION_PACE_MONTHS: 2,
+
+  // The world rolls for it (SPEC §212). A card marked `roll: true` is a
+  // foreign court's own question with no answer this table can give, so the
+  // campaign draws one instead of asking. This is the weight on the recorded
+  // course — the option `aiOption` names — with the remainder split evenly
+  // among the roads the chronicles did not take. Two times in three, because
+  // a chapter's world spine is history first and a dice game second: the
+  // Caliphate usually raises the leaves on the lances, and sometimes fights
+  // Siffin to the finish. Set to 1 to pin every roll back to the record; set
+  // to 0.5 for an honest coin.
+  EVENT_ROLL_RECORDED: 0.667,
 
   // AI temperament per nation (SPEC §21). aggression multiplies the monthly
   // war-declaration chance; caution scales retreat thresholds and how early a
@@ -218,29 +238,128 @@ export const DEFINES = {
     LBR: { aggression: 0.05, caution: 2.0 },
   },
 
-  // Government types (SPEC §25). Effects fold into tag.ideas like reforms and
-  // tech; succession behavior lives in realm.js (republics elect every four
-  // years and know no regencies; theocracies never crown a child).
+  // Government types (SPEC §25, §214). Effects fold into tag.ideas like reforms
+  // and tech; the succession behaviour is DECLARED HERE and read by realm.js,
+  // crisis.js, revolt.js and the marriage table rather than string-matched
+  // against four names, because there are no longer four.
+  //
+  // THE RULES, all positive and all defaulting to off:
+  //   elects    the nation votes on a clock; an emergency vote fills a death
+  //   heirless  no heir is ever designated (a court that does not inherit)
+  //   regency   a child heir is covered by a council; without it an elder
+  //             takes the seat and the heir waits their turn
+  //   dynastic  there is a HOUSE here, so it can be married into (SPEC §133)
+  //   drawn     a vacancy is filled by the constitution's own rule rather
+  //             than by a claim — so it opens no succession crisis, and
+  //             `vacancy` is the line the chronicle prints when it happens
+  //   archetype which of the four party-sets a FOREIGN court of this kind
+  //             convenes (SPEC §163); a constitution with no archetype would
+  //             silently be read as a monarchy, which is how the Sanhedrin
+  //             would have ended up with Great Houses and King's Men
+  //
+  // The first four are the constitutions a realm can START with. Everything
+  // below them is a constitution a chapter's fork ADOPTS (SPEC §214): the
+  // roads of the §119 tree that decide what a state IS, each one wearing its
+  // own name in the realm panel instead of all four answers reading Theocracy.
   GOV_TYPES: {
     monarchy: {
       name: 'Monarchy',
       desc: 'Crown and dynasty: heirs succeed, and the throne slowly accrues legitimacy.',
       effects: { legitimacyAdd: 0.05 },
+      regency: true, dynastic: true, archetype: 'monarchy',
     },
     republic: {
       name: 'Republic',
       desc: 'Elected government: the nation votes every four years, no heirs and no regencies — and civic economies prosper (+5% income).',
       effects: { incomeMult: 1.05 },
+      elects: true, heirless: true, archetype: 'republic',
     },
     theocracy: {
       name: 'Theocracy',
       desc: 'Rule by the anointed: successors are chosen from among the elders — never a child regency — and the faith spreads with authority (+20% conversion).',
       effects: { convertMult: 1.2 },
+      dynastic: true, archetype: 'theocracy',
     },
     tribal: {
       name: 'Tribal Confederation',
       desc: 'Chiefs and elders: every tent sends its sons (+10% manpower).',
       effects: { manpowerMult: 1.1 },
+      regency: true, archetype: 'tribal',
+    },
+
+    // ── The settlement after the Great Revolt (SPEC §130, 66 CE) ──────────
+    sanhedrin: {
+      name: 'Temple-State',
+      desc: 'High Priest, Sanhedrin, and the constitution Judaea kept under Persia and the Ptolemies: the only arrangement in the room with four centuries of practice behind it. The elders never anoint a child, the priestly houses inherit, and everyone already knows how it is supposed to work (+25% conversion, −0.25 unrest everywhere).',
+      effects: { convertMult: 1.25, unrestAll: -0.25 },
+      dynastic: true, archetype: 'theocracy',
+    },
+    lot: {
+      name: 'The Lot',
+      desc: 'The High Priesthood filled as the Zealots filled it in 67 — by lot, from the whole priesthood, God choosing rather than four families. Nobody inherits and nobody is in office long enough to promise anything to anybody: no heirs, no succession crisis, and a chancery no foreign court can plan around (−0.5 unrest everywhere, −1 envoy).',
+      effects: { unrestAll: -0.5, diploSeats: -1 },
+      heirless: true, drawn: true, archetype: 'theocracy',
+      vacancy: 'the lot is cast again',
+    },
+    jubilee: {
+      name: 'The Jubilee',
+      desc: 'Leviticus 25 as the constitution: liberty proclaimed, the debts gone, the land reverting, and the assembly that enforces it renewing its officers by vote. A countryside that owns something turns out for it, and the credit system never comes back (+10% manpower, −5% income).',
+      effects: { manpowerMult: 1.1, incomeMult: 0.95 },
+      elects: true, heirless: true, archetype: 'republic',
+    },
+    noRuler: {
+      name: 'No Ruler but God',
+      desc: 'Judas the Galilean\'s doctrine, implemented: no sovereign, no census, no tribute to anyone. Men who acknowledge no king fight like it, and every neighbour must deal with a polity that has no address (+8% morale, −2 envoys).',
+      effects: { moraleMult: 1.08, diploSeats: -2 },
+      heirless: true, drawn: true, archetype: 'theocracy',
+      vacancy: 'the assembly names a convener and calls him nothing else',
+    },
+
+    // ── What the house that won the war becomes (SPEC §197, §130) ─────────
+    priestKing: {
+      name: 'Diadem and Mitre',
+      desc: 'The high priest of the Jews wearing a crown as well — a peer of every chancery from Alexandria to Ctesiphon, and a quarrel with the study houses that will outlive the dynasty that started it (+25% conversion, +1 envoy, +0.25 unrest everywhere).',
+      effects: { convertMult: 1.25, diploSeats: 1, unrestAll: 0.25 },
+      regency: true, dynastic: true, archetype: 'theocracy',
+    },
+    gerousia: {
+      name: 'Priesthood and Assembly',
+      desc: 'The mitre without the diadem: a commonwealth governed by the priesthood and the elders, exactly as the decree confirming the house worded it. There is no crown for the schools to dispute — and the neighbours go on addressing an officer rather than a peer (−0.4 unrest everywhere, −1 envoy).',
+      effects: { unrestAll: -0.4, diploSeats: -1 },
+      dynastic: true, archetype: 'theocracy',
+    },
+    diadem: {
+      name: 'The Diadem',
+      desc: 'A crown taken out of a war by the house that won it, with no priestly title and no Davidic descent under it. Every chancery understands a king; the objection is made at home, in writing, in every generation (+0.05 legitimacy a month, +1 envoy, +4% morale).',
+      effects: { legitimacyAdd: 0.05, diploSeats: 1, moraleMult: 1.04 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    davidic: {
+      name: 'The House of David',
+      desc: 'The line of Jehoiachin on the throne, by marriage or by coronation: the one claim in the Jewish world that nobody argues with, and an expectation the state must live beside for ever (+0.12 legitimacy a month, −0.25 unrest everywhere).',
+      effects: { legitimacyAdd: 0.12, unrestAll: -0.25 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    dyarchy: {
+      name: 'The Two Houses',
+      desc: 'Prince and priest, both hereditary, exactly as the coinage implied — the Hasmonean collapse run in reverse. Two offices means two successions to go wrong and no arbiter above either, and the second household is paid for out of the same treasury (+0.08 legitimacy a month, −5% income).',
+      effects: { legitimacyAdd: 0.08, incomeMult: 0.95 },
+      regency: true, dynastic: true, archetype: 'monarchy',
+    },
+    nasi: {
+      name: 'The Patriarchate',
+      desc: 'Ezekiel\'s prince: a hereditary office engineered not to be a monarchy, holding no priestly office and taking none of the people\'s land. It binds the house in writing, and it is heard wherever the letters of the Nasi are read (+0.1 legitimacy a month, +1 envoy, +10% conversion).',
+      effects: { legitimacyAdd: 0.1, diploSeats: 1, convertMult: 1.1 },
+      dynastic: true, archetype: 'theocracy',
+    },
+
+    // ── The constitution of a band that stopped moving (SPEC §217) ─────────
+    company: {
+      name: 'The Company',
+      desc: 'No crown, no assembly, no seat any chancery has an address for: the men keep the chief who feeds them and take another when he stops. Nothing is inherited and nothing is voted, which makes the succession the shortest on the map and the diplomacy the hardest (+8% morale, −2 envoys).',
+      effects: { moraleMult: 1.08, diploSeats: -2 },
+      heirless: true, drawn: true, archetype: 'republic',
+      vacancy: 'the company keeps whoever is still standing',
     },
   },
   // Default government per tag; bookmarks may override (bookmark.govTypes —
@@ -259,6 +378,7 @@ export const DEFINES = {
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
     REB: 'tribal',
+    LST: 'company', PIR: 'company', // SPEC §217
     // -- the political west (SPEC §173) --
     // Carthage's suffetes and Massalia's timouchoi are elected; the Aedui
     // choose a vergobret for a single year (Caesar BG I.16). Tacitus says the
@@ -1190,6 +1310,28 @@ export const DEFINES = {
       description: 'Brigands, zealots, and the desperate — every empire breeds them.',
       ideas: { moraleMult: 1.05 },
     },
+    // The robbers' court (SPEC §217): the two states a rising can found if it
+    // walks off the edge of the governed world and stops there. Neither is
+    // seated by any bookmark — they exist only if a campaign produces one, and
+    // a campaign produces at most one. Faith, tongue and seat come off the
+    // ground they rose on; what is here is the name, the colour and the trade.
+    LST: {
+      name: 'The Lestai', adj: 'Brigand', color: [122, 62, 56], religion: 'hellenism', culture: 'greek', capital: '',
+      description: 'Λῃσταί — the word the sources use for men who are not quite '
+        + 'an army and not quite a crime. Hezekiah held the Galilean border, Eleazar '
+        + 'ben Dinai the hills for twenty years, and Athronges put on a diadem while '
+        + 'herding somebody else\'s sheep. Given ground nobody governs and time nobody '
+        + 'spends on them, the difference between a band and a kingdom is a generation.',
+      ideas: { moraleMult: 1.1, siegeMult: 1.1, adminMult: 0.8 },
+    },
+    PIR: {
+      name: 'The Peiratai', adj: 'Corsair', color: [46, 76, 88], religion: 'hellenism', culture: 'greek', capital: '',
+      description: 'The Cilicians had citadels, arsenals, a thousand ships and their '
+        + 'own understandings with three kings before Rome gave one man the entire sea '
+        + 'to be rid of them. A coast nobody patrols does not stay empty; it grows a '
+        + 'power, and the power charges for passage.',
+      ideas: { moraleMult: 1.08, navalMult: 1.2, tradeMult: 1.15, adminMult: 0.8 },
+    },
     WASTE: {
       name: 'Wasteland', adj: 'Waste', color: [70, 66, 60],
       description: 'Trackless desert where armies go to die.',
@@ -1282,6 +1424,21 @@ export const DEFINES = {
     cost: 50,              // signing fee, paid into the supplier's treasury
     switchOpinion: -10,    // what the dropped supplier thinks of the switch
     signCdMonths: 6,       // no re-signing churn inside this window
+  },
+
+  // The works of one's own (SPEC §213): the other answer to §181's import.
+  // A court develops a named weapon system at home — opened by a rung of the
+  // military ladder, begun for talents and martial points, billed monthly
+  // while the shops run, and delivered years later. The per-program numbers
+  // live with the programs (js/data/programs.js); these are the dials that
+  // apply to all of them.
+  PROGRAMS: {
+    maxAtOnce: 2,          // programs a court may have in the shops together
+    cancelRefund: 0.4,     // share of the opening cost returned when one is abandoned
+    cancelPoints: 0.25,    // …and of the martial points
+    aiTreasuryFloor: 150,  // an AI court begins nothing below this reserve
+    aiPointFloor: 80,      // …nor with fewer martial points than the price plus this
+    aiOne: true,           // and it runs ONE at a time, whatever maxAtOnce allows
   },
 
   // Financial aid (SPEC §186): where a bookmark names its donor courts, any
@@ -1527,6 +1684,14 @@ export const DEFINES = {
     incorporateKeepOpinion: 60,  // ...but once begun, only real disaffection (below this) unravels the weaving
     incorporateBase: 75,         // influence points to begin the union...
     incorporatePerDev: 2.5,      // ...plus per point of the client's development
+    // ...and never past what a treasury of points can hold. Every monarch-point
+    // pool in the sim is clamped to 999, so a union priced above that was not
+    // expensive — it was impossible, and silently so. The formula runs out at
+    // ~370 development, which is precisely the class of client this term is
+    // FOR: Seleucid Syria (843), Byzantium (1082), Sasanian Persia (610) and
+    // Rome (744-1874) are all courts a peace table can yoke and no crown could
+    // ever afford to absorb.
+    incorporateMax: 999,
     incorporateMonthsBase: 12,   // the weaving of two realms takes at least a year...
     incorporateMonthsPerDev: 0.5, // ...and longer for every point of their development
     incorporateInfamyPerDev: 0.25, // the world counts absorption at half a conquest
@@ -1534,6 +1699,21 @@ export const DEFINES = {
     revoltOpinion: -75,          // at/below this a client may rise for independence
     revoltStrength: 0.4,         // rebel strength needed (with co-rebels), × the overlord's
     revoltChance: 0.04,          // monthly rising roll once every condition holds
+    // Releasing a client state (SPEC §218): the other end of the same loop. A
+    // crown may let go of a piece of its OWN realm on purpose and seat a crown
+    // on it — the land governs itself and pays what a client pays, and it comes
+    // home only the long way, through incorporateOpinion above.
+    releaseBase: 40,             // influence to seat a crown on land of our own...
+    releasePerDev: 1,            // ...plus one per point of development that walks out
+    releaseMaxShare: 0.5,        // and never more of the realm than the realm keeps
+    releaseGratitude: 60,        // what a court thinks of the hand that crowned it...
+    releaseRegard: 25,           // ...and what that hand thinks of the court it made
+    releaseGuard: 2,             // regiments the new court musters at its own seat
+    // …and the collar struck off again (SPEC §219). The other way out of the
+    // loop above, and the only one that was ever the LORD's to choose: a client
+    // may be let go with everything it has. It costs no influence, because the
+    // price is the client. What it earns is remembered for a long time.
+    freeGratitude: 80,           // what a crown thinks of the hand that struck its collar
   },
 
   // The chancery (SPEC §202): a court has only so many envoys. Every standing
@@ -1568,6 +1748,13 @@ export const DEFINES = {
     strainFloorPer: 10,       // how deep it carries a client's regard, per point of strain...
     strainFloorMax: 60,       // ...and no deeper than this: strain sours, it does not revolt
     freedCollarMonths: 120,   // a court freed at our own table will not kneel to us for a decade
+    // A province handed over in peacetime (SPEC §222). A gift of ground is the
+    // largest thing one court can say to another without an army, and it is
+    // remembered accordingly — scaled by what was given, because a frontier
+    // cell and a city are not the same sentence.
+    giftOpinionBase: 15,
+    giftOpinionPerDev: 1,
+    giftOpinionMax: 60,
   },
 
   UNREST: {

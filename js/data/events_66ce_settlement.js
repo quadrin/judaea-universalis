@@ -56,6 +56,14 @@
 // rather than as four booleans (SPEC §130) — it has sixty years of content to
 // steer, including content nobody has written yet.
 //
+// And each of the four IS the government from the day it is adopted (SPEC
+// §214): the realm's own constitution changes with it, so a Judaea that drew
+// the lot reads The Lot in the panel, never names an heir, refills the office
+// without a succession crisis, and cannot be married into by anybody — which
+// is what abolishing hereditary priestly power actually costs a state. Before
+// this all four answers left the realm a generic Theocracy and differed only
+// in their modifiers.
+//
 // Source spine: Josephus, BJ II.409–456 (Eleazar, the sacrifice, Menahem),
 // IV.147–157 (the lottery and Phanni), IV.314–325 (Ananus killed), IV.508 and
 // 534 (Simon bar Giora and the proclamation of liberty), II.427 (the Record
@@ -153,7 +161,7 @@ export const EVENTS_66_SETTLEMENT = [
         // Always available. An exhausted elite reaches for the last
         // arrangement that worked, and this one worked for four hundred years.
         label: 'Restore the temple-state: High Priest, Sanhedrin, the ancient constitution',
-        tooltip: 'The only settlement with a working precedent — Persia, the Ptolemies and most of the Hasmonean century ran on it. +3 stability, +20 legitimacy, +15% income and −1 unrest everywhere, permanently, because everybody knows how this is supposed to work. It also hands the country back to the four priestly houses that Pesachim 57a curses by name: Priesthood +40, Zealots −35, and the grievance that started the war is now the constitution.',
+        tooltip: 'The only settlement with a working precedent — Persia, the Ptolemies and most of the Hasmonean century ran on it. The realm becomes a TEMPLE-STATE: the houses inherit, the elders never anoint a child, +25% conversion and −0.25 unrest everywhere for as long as it stands. +3 stability, +20 legitimacy, +15% income and −1 unrest everywhere, permanently, because everybody knows how this is supposed to work. It also hands the country back to the four priestly houses that Pesachim 57a curses by name: Priesthood +40, Zealots −35, and the grievance that started the war is now the constitution.',
         effects: guard('ev_s_settlement:temple', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { stability: 3, legitimacy: 20 });
@@ -166,6 +174,7 @@ export const EVENTS_66_SETTLEMENT = [
           h.factionShift(ctx, 'JUD', 'zealots', -35);
           h.doctrine(ctx, 'authority', 1);
           adopt(ctx, 'templeState');
+          h.setGovernment(ctx, 'JUD', 'sanhedrin');
           h.setFlag(ctx, 'settlementTempleState', true);
           h.chronicle(ctx, 'era', 'The ancient constitution is restored: a High Priest, a Sanhedrin, and the four houses back in the offices their fathers held. The men who burned the debt archives in the first summer of the war are told the emergency is over.');
         }),
@@ -173,7 +182,7 @@ export const EVENTS_66_SETTLEMENT = [
       {
         label: 'Draw the High Priest by lot, as the Zealots did',
         when: safeWhen('settlement:lot', (ctx) => partyAt(ctx, 'zealots', 60)),
-        tooltip: 'Phanni ben Samuel of Aphtia was a stonecutter and had to be taught the duties. Josephus calls it the abrogation of the Law; read the other way it is the oldest principle there is, that God chooses and four families do not. Hereditary priestly power ends this afternoon: Zealots +35, Priesthood −50, Notables −20. +12 legitimacy with everyone who is not a priest, −1 stability, and no High Priest will ever again be able to promise anything to anybody, because he will not be in office long enough.',
+        tooltip: 'Phanni ben Samuel of Aphtia was a stonecutter and had to be taught the duties. Josephus calls it the abrogation of the Law; read the other way it is the oldest principle there is, that God chooses and four families do not. Hereditary priestly power ends this afternoon: Zealots +35, Priesthood −50, Notables −20. +12 legitimacy with everyone who is not a priest, −1 stability. The realm\'s constitution becomes THE LOT: no heir is ever named, no succession crisis can open because nobody inherits, no court will arrange a marriage into a seat that is drawn — and one fewer envoy, because no High Priest will ever again be able to promise anything to anybody, since he will not be in office long enough.',
         effects: guard('ev_s_settlement:lot', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 12, stability: -1 });
@@ -187,6 +196,7 @@ export const EVENTS_66_SETTLEMENT = [
           h.doctrine(ctx, 'zeal', 2);
           h.doctrine(ctx, 'authority', -1);
           adopt(ctx, 'lottery');
+          h.setGovernment(ctx, 'JUD', 'lot');
           h.setFlag(ctx, 'settlementLottery', true);
           h.chronicle(ctx, 'era', 'The High Priesthood is filled by lot. The first man drawn is a stonecutter from Aphtia who has to be shown how the vestments fasten, and four families discover in one afternoon that they are no longer anything in particular.');
         }),
@@ -194,7 +204,7 @@ export const EVENTS_66_SETTLEMENT = [
       {
         label: 'Proclaim the Jubilee: liberty in the land, and the debts are gone',
         when: safeWhen('settlement:jubilee', (ctx) => partyAt(ctx, 'zealots', 55) && partyUnder(ctx, 'notables', 45)),
-        tooltip: 'Leviticus 25, enforced — which nobody has done, because it cannot be done twice. Slaves freed, debts cancelled, land reverting: +25 legitimacy, +2 zeal, Zealots +40, and a countryside that will fight for this state because it now owns something. And the credit system is gone: −30% income for 120 months, Notables −60, Priesthood −25, and no one will lend to this government inside a generation.',
+        tooltip: 'Leviticus 25, enforced — which nobody has done, because it cannot be done twice. Slaves freed, debts cancelled, land reverting: +25 legitimacy, +2 zeal, Zealots +40, and a countryside that will fight for this state because it now owns something. And the credit system is gone: −30% income for 120 months, Notables −60, Priesthood −25, and no one will lend to this government inside a generation. The realm becomes THE JUBILEE: the assembly that enforces the law renews its officers by vote every four years, no heirs and no regencies, +10% manpower and −5% income for as long as it lasts.',
         effects: guard('ev_s_settlement:jubilee', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 25, stability: 1 });
@@ -207,6 +217,7 @@ export const EVENTS_66_SETTLEMENT = [
           h.factionShift(ctx, 'JUD', 'priesthood', -25);
           h.doctrine(ctx, 'zeal', 2);
           adopt(ctx, 'jubilee');
+          h.setGovernment(ctx, 'JUD', 'jubilee');
           h.setFlag(ctx, 'settlementJubilee', true);
           h.chronicle(ctx, 'era', 'The Jubilee is proclaimed and, for the first time in the recorded history of the law, enforced. The archives are already ash; what burns this year is the ledgers that were rebuilt from memory afterwards.');
         }),
@@ -215,7 +226,7 @@ export const EVENTS_66_SETTLEMENT = [
         label: 'No ruler but God. No tribute, no census, no king',
         when: safeWhen('settlement:noruler', (ctx) => partyAt(ctx, 'zealots', 70)
           && partyUnder(ctx, 'notables', 40) && partyUnder(ctx, 'priesthood', 40)),
-        tooltip: 'The doctrine of Judas the Galilean, held for sixty years and never once implemented, because implementing it means having no state to implement it with. No sovereign, no census, no tribute to anyone: +3 zeal, −3 authority, Zealots +50, and a country that cannot be bought, taxed at scale, or negotiated with. −40% income permanently, −2 stability, and every neighbour must deal with a polity that has no address. Menahem came into the Temple in royal dress and his own side killed him for it; this is the settlement that means it.',
+        tooltip: 'The doctrine of Judas the Galilean, held for sixty years and never once implemented, because implementing it means having no state to implement it with. No sovereign, no census, no tribute to anyone: +3 zeal, −3 authority, Zealots +50, and a country that cannot be bought, taxed at scale, or negotiated with. −40% income permanently, −2 stability. The realm\'s constitution becomes NO RULER BUT GOD: nothing inherited, nothing elected, no house to marry, +8% morale from men who acknowledge no king — and two fewer envoys, because every neighbour must deal with a polity that has no address. Menahem came into the Temple in royal dress and his own side killed him for it; this is the settlement that means it.',
         effects: guard('ev_s_settlement:noruler', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 10, stability: -2 });
@@ -229,6 +240,7 @@ export const EVENTS_66_SETTLEMENT = [
           h.doctrine(ctx, 'zeal', 3);
           h.doctrine(ctx, 'authority', -3);
           adopt(ctx, 'noRuler');
+          h.setGovernment(ctx, 'JUD', 'noRuler');
           h.setFlag(ctx, 'settlementNoRuler', true);
           h.chronicle(ctx, 'era', 'The assembly resolves that there is no ruler but God, and adjourns without appointing anybody to enforce the resolution, which is the resolution. Judas the Galilean has been dead sixty-five years and has just won the argument.');
         }),

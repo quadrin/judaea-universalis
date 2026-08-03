@@ -19,7 +19,7 @@
 // `bookmark.crises` — the era's particular way of coming apart.
 
 import {
-  num, clamp, chronicle, mechanicOn, spawnArmy, armiesOf, devTotal,
+  num, clamp, chronicle, mechanicOn, spawnArmy, armiesOf, devTotal, govHas,
 } from './military.js';
 import { fireEvent } from './events.js';
 
@@ -114,12 +114,15 @@ export const SUCCESSION_CRISIS = {
   id: 'succession',
   name: 'The Succession',
   // Modern constitutions do not have this problem: 1948 turns it off with
-  // `mechanics.succession: false`. Republics elect; nobody riots over a ballot.
+  // `mechanics.succession: false`. Nor does any constitution that does not
+  // inherit (SPEC §214): a republic elects, the Lot draws, and an assembly
+  // that acknowledges no sovereign has nothing to leave anybody. Nobody riots
+  // over a ballot, and nobody claims a seat that was never property.
   applies(ctx, tag) {
     const t = ctx.game.tags[tag];
     if (!t || !t.alive || tag === 'REB') return false;
     if (!mechanicOn(ctx, 'succession')) return false;
-    return t.govType !== 'republic';
+    return !govHas(ctx, tag, 'heirless');
   },
   // A living ruler with no son yet is a RISK, not a countdown: that alone
   // brews to the whispers and stops there (the plateau). What pushes a court

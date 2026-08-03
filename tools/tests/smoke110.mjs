@@ -229,14 +229,16 @@ console.log('== Ezra and Nehemiah: Israel\'s end of the departure ==');
   const t = game.tags[tag];
   const rome = ctx.prov('Roma');
   const legit = t.legitimacy;
-  const standing = rome.dia && rome.dia.standing;
+  // SPEC §216 files a community's regard under the crown that earned it.
+  const regard = (rec) => (rec && rec.by && rec.by[tag] ? rec.by[tag].standing : undefined);
+  const standing = regard(rome.dia);
   ok(Number.isFinite(standing), 'Rome\'s community record exists before the card');
   ev.options[1].effects(ctx);
   ok(Math.round(legit - t.legitimacy) === 8, 'a state that told Jews to wait pays 8 legitimacy');
   ok((t.modifiers || []).some((m) => m && m.id === 'the_metered_airlift'), 'the smaller airlift still runs');
   ok((ctx.prov('Seleucia-Ctesiphon').modifiers || []).some((m) => m && m.id === 'the_stranded_registry'),
     'those still queued when the registry closes are stranded in Baghdad');
-  ok(rome.dia.standing === Math.max(0, standing - 6),
+  ok(regard(rome.dia) === Math.max(0, standing - 6),
     'and every community still on the board hears that the ships were made to wait');
 }
 

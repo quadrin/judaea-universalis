@@ -49,7 +49,11 @@ export function createEventModal(el) {
     const pend = ctx.game.pendingEvents || [];
     for (const pe of pend) {
       if (!pe || !isPlayerFor(pe.forTag) || has(pe.instanceId)) continue;
-      const ev = (ctx.events || []).find((e) => e && e.id === pe.eventId);
+      // Runtime-synthesized cards (ultimatums, estate demands) live in
+      // dynEvents rather than the chapter's list, and a rescan has to find
+      // them there or they are pending forever.
+      const ev = (ctx.dynEvents && ctx.dynEvents.get(pe.eventId))
+        || (ctx.events || []).find((e) => e && e.id === pe.eventId);
       if (ev) {
         queue.push({
           instanceId: pe.instanceId, event: ev,
@@ -140,21 +144,37 @@ export function createEventModal(el) {
     maybeShow();
   }
 
-  // Read-only mirror for multiplayer guests: the same card the host sees, but
-  // the choice belongs to the host — options are shown disabled, and the card
-  // closes when the host's resolution arrives ({t:'eventDone'} -> closeRemote).
+  // The card as it reaches a multiplayer guest. Two shapes, and the host
+  // decides which by deciding who sits where (SPEC §216):
+  //
+  //   shared throne — a read-only mirror of the host's own card. The host
+  //     holds that realm's pen, so the options are disabled and the card
+  //     closes when the host's resolution arrives ({t:'eventDone'}).
+  //   their own throne (`mine`) — the buttons are live. Nobody else is in
+  //     that chair to answer for them, and the answer travels back as an
+  //     ordinary command that the host runs under their crown.
+  //
+  // Either way the effects never crossed the wire: the button reports the
+  // event's OWN option index, which is what resolves on the host's side.
   let remoteQueue = [];
   function renderRemote() {
     const p = remoteQueue[0];
     if (!p) {
+      // A card of our own may be waiting underneath — one that was already
+      // pending in the world we joined. Emptying the relayed queue must give
+      // that card the table back, not blank it.
+      if (current) { render(); el.classList.remove('hidden'); return; }
       el.classList.add('hidden');
       el.innerHTML = '';
       return;
     }
+    const mine = p.mine === true;
     const options = Array.isArray(p.options) && p.options.length ? p.options : [{ label: 'So be it.' }];
-    const opts = options.map((o) => {
+    const opts = options.map((o, i) => {
       const tip = o && o.tooltip ? String(o.tooltip) : '';
-      return `<button class="btn ev-opt" disabled${tip ? ` data-tt="${esc(tip)}"` : ''}>`
+      const idx = o && Number.isFinite(o.idx) ? o.idx : i;
+      return `<button class="btn ev-opt"${mine ? ` data-idx="${idx}"` : ' disabled'}`
+        + `${tip ? ` data-tt="${esc(tip)}"` : ''}>`
         + `<span class="ev-opt-label">${esc((o && o.label) || 'Continue')}</span>`
         + `</button>`;
     }).join('');
@@ -164,7 +184,7 @@ export function createEventModal(el) {
       ? `<div class="ev-fork" data-tt="${esc(p.fork.question)}">${icon('split', 'icon-xs')} The road forks here</div>` : '';
     el.innerHTML = `
       <div class="modal-scrim"></div>
-      <div class="ev-card ev-remote">
+      <div class="ev-card${mine ? '' : ' ev-remote'}">
         <div class="ev-orn">${divider('ev-divider')}</div>
         ${p.world ? '<div class="ev-world">World history</div>' : ''}
         ${remoteFork}
@@ -172,9 +192,25 @@ export function createEventModal(el) {
         <div class="ev-desc">${esc(p.desc || '')}</div>
         ${p.deciderName ? `<div class="ev-decider">The decision belongs to ${esc(p.deciderName)} — we may only take note.</div>` : ''}
         <div class="ev-opts">${opts}</div>
-        <div class="ev-host-note">The host speaks for the realm…</div>
+        ${mine ? '' : '<div class="ev-host-note">The host speaks for the realm…</div>'}
       </div>`;
+    if (mine) {
+      el.querySelector('.ev-opts').addEventListener('click', (e) => {
+        const b = e.target instanceof Element ? e.target.closest('[data-idx]') : null;
+        if (b) chooseRemote(p.instanceId, Number(b.dataset.idx));
+      });
+    }
     el.classList.remove('hidden');
+  }
+  // Our own card, answered from our own chair: the choice leaves for the host
+  // (`actions` is the proxy in multiplayer) and the card comes off the table
+  // here rather than waiting for the round trip to close it.
+  function chooseRemote(instanceId, idx) {
+    remoteQueue = remoteQueue.filter((q) => q.instanceId !== instanceId);
+    renderRemote();
+    try {
+      if (actions && actions.chooseEventOption) actions.chooseEventOption(instanceId, idx);
+    } catch (e) { warnOnce('chooseRemoteOption', e); }
   }
   function showRemote(p) {
     if (!p || remoteQueue.some((q) => q.instanceId === p.instanceId)) return;
@@ -189,7 +225,20 @@ export function createEventModal(el) {
     renderRemote();
   }
 
-  return { bind, onBusEvent, showRemote, closeRemote, isOpen: () => !!current || remoteQueue.length > 0 };
+  // Deal whatever is standing in our chair that we have not been dealt. The
+  // host runs a guest's order under that guest's crown (SPEC §216), and a card
+  // fired inside that window was emitted while the bus said somebody else was
+  // the player — so the queue never heard about it. One sweep afterwards is
+  // the whole of the repair.
+  function rescan() {
+    scanPending();
+    maybeShow();
+  }
+
+  return {
+    bind, onBusEvent, showRemote, closeRemote, rescan,
+    isOpen: () => !!current || remoteQueue.length > 0,
+  };
 }
 
 // -------------------------------------------------------------- game over ---

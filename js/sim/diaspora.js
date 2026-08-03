@@ -35,7 +35,7 @@
 
 import {
   num, clamp, chronicle, addOpinion, livingTag, devTotal,
-  setDiploCd, diploCdActive, diploCdMonthsLeft,
+  setDiploCd, diploCdActive, diploCdMonthsLeft, humanChairs,
 } from './military.js';
 import { DIASPORA, DIASPORA_ASKS, openAt, tagCommunityOf } from '../data/diaspora.js';
 import { expectation } from './sacred.js';
@@ -71,6 +71,16 @@ export const DIA = {
   caughtOpinion: -12,
 };
 
+// Every crown the dispersion would write back to: a seated human chair whose
+// realm keeps the covenant (SPEC §216). One in a solo campaign.
+function jewishCrowns(ctx) {
+  const g = ctx.game;
+  return humanChairs(g).filter((k) => {
+    const t = g.tags[k];
+    return t && t.alive && !t.ai && t.religion === 'judaism';
+  });
+}
+
 // Is this crown one the dispersion would write back to?
 function jewishCrown(ctx) {
   const g = ctx.game;
@@ -105,29 +115,60 @@ export function tagCommunityDef(ctx, tag) {
   return openAt(d, num(ctx.game.date.y)) ? d : null;
 }
 
-// Seed (or heal) the community's record. Stored on the PROVINCE, so it saves
-// for free and travels with the cell through every era's renaming.
-function ensureCommunity(ctx, p, def) {
+// Standing is a community's regard for A CROWN, and since §216 a table may
+// seat two Jewish states at once. The record stays exactly where it was — on
+// the province, on the host tag, saving for free — but it is filed by the
+// crown it belongs to, because Alexandria's warmth toward Hyrcanus is not
+// Alexandria's warmth toward Aristobulus, and asking a favour of them in one
+// king's name must not spend the other's credit.
+//
+// A campaign written before this carries one flat `{standing, asked}` pair,
+// which was the protagonist's; `reviveGame` files it under that crown on load,
+// so a save crosses the change with its dispersion intact.
+function crownRecord(rec, def, crown) {
+  if (!rec.by || typeof rec.by !== 'object') rec.by = {};
+  if (!rec.by[crown]) rec.by[crown] = { standing: num(def.start, 45), asked: 0 };
+  const one = rec.by[crown];
+  if (!Number.isFinite(one.standing)) one.standing = num(def.start, 45);
+  return one;
+}
+
+// Seed (or heal) the community's record for the crown that is asking.
+function ensureCommunity(ctx, p, def, crown) {
   if (!p.dia || typeof p.dia !== 'object') p.dia = {};
-  if (!Number.isFinite(p.dia.standing)) p.dia.standing = num(def.start, 45);
-  return p.dia;
+  return crownRecord(p.dia, def, crown || ctx.game.playerTag);
 }
 
 // A court-hosted community's record lives on the HOST TAG (SPEC §195) the way
 // a province community's lives on its cell: it saves for free, and it goes
 // out with the court.
-function ensureTagCommunity(host, def) {
+function ensureTagCommunity(host, def, crown) {
   if (!host.dia || typeof host.dia !== 'object') host.dia = {};
-  if (!Number.isFinite(host.dia.standing)) host.dia.standing = num(def.start, 45);
-  return host.dia;
+  return crownRecord(host.dia, def, crown);
+}
+
+// What a community thinks of a named crown, for the readers outside this
+// module (the dispersion mapmode, a formable's requirement, a card that cools
+// every community at once). `null` when nobody has ever written to them.
+export function communityRegard(rec, crown) {
+  if (!rec || !crown) return null;
+  const one = rec.by && rec.by[crown];
+  return one && Number.isFinite(one.standing) ? one.standing : null;
+}
+
+// Every crown a community has an opinion of — for the card that cools all of
+// them, and for anything else that must move a whole book at once.
+export function communityCrowns(rec) {
+  return rec && rec.by && typeof rec.by === 'object' ? Object.keys(rec.by) : [];
 }
 
 // Where this community's standing is heading, given what kind of crown we are.
 // It is deliberately readable in the panel, because a player who cannot see WHY
 // Babylon has cooled cannot do anything about it.
-export function standingTarget(ctx, p, def) {
+export function standingTarget(ctx, p, def, crown) {
   if (!p) return null;
-  return standingTargetFor(ctx, p.owner, num(p.dia && p.dia.asked), def);
+  const rec = p.dia && p.dia.by && p.dia.by[crown || ctx.game.playerTag];
+  return standingTargetFor(ctx, p.owner, num(rec && rec.asked), def);
 }
 
 // The same arithmetic with the host named directly (SPEC §195): a court-hosted
@@ -239,7 +280,7 @@ function provSeat(ctx, p, def) {
   return { p, def, hostTag: p.owner, store: ensureCommunity(ctx, p, def) };
 }
 function tagSeat(ctx, tag, def) {
-  return { p: null, def, hostTag: tag, store: ensureTagCommunity(ctx.game.tags[tag], def) };
+  return { p: null, def, hostTag: tag, store: ensureTagCommunity(ctx.game.tags[tag], def, ctx.game.playerTag) };
 }
 
 // What one ask of this community is worth. Silver is pegged to the HOST
@@ -261,8 +302,12 @@ function yieldOf(ctx, seat, ask) {
   };
 }
 
-function cdKey(ask, seat) {
-  return 'dia:' + ask.id + ':' + (seat.p ? seat.p.id : 'tag:' + seat.hostTag);
+// Per CROWN as well as per community and request (SPEC §216). The letter is
+// sent by a court, and at a table with two Jewish states both were writing to
+// the same communities out of one book — Alexandria answering Hyrcanus meant
+// Aristobulus had already asked.
+function cdKey(crown, ask, seat) {
+  return crown + '>dia:' + ask.id + ':' + (seat.p ? seat.p.id : 'tag:' + seat.hostTag);
 }
 
 function askInfo(ctx, seat, ask) {
@@ -300,8 +345,8 @@ function askInfo(ctx, seat, ask) {
       + (atWar ? ', and their empire being at war with us raises the bar' : '') + ').';
     return out;
   }
-  if (diploCdActive(ctx, cdKey(ask, seat))) {
-    out.whyNot = 'We asked them this too recently (' + diploCdMonthsLeft(ctx, cdKey(ask, seat)) + ' months).';
+  if (diploCdActive(ctx, cdKey(me, ask, seat))) {
+    out.whyNot = 'We asked them this too recently (' + diploCdMonthsLeft(ctx, cdKey(me, ask, seat)) + ' months).';
     return out;
   }
   if (ask.infl && num(t.points.infl) < ask.infl) {
@@ -334,7 +379,7 @@ function performAsk(ctx, seat, askId) {
 
   st.standing = clamp(num(st.standing) + num(ask.standing), 0, 100);
   st.asked = num(st.asked) + 1;
-  setDiploCd(ctx, cdKey(ask, seat), ask.cd);
+  setDiploCd(ctx, cdKey(me, ask, seat), ask.cd);
 
   // The hostage problem. Every favour is a favour asked of people who live
   // under somebody else's law, and when it is traced the price lands on them.
@@ -417,7 +462,7 @@ export function diasporaReport(ctx) {
       if (!p || p.impassable || p.owner === me) continue;
       const def = communityDef(ctx, p);
       if (!def) continue;
-      const st = ensureCommunity(ctx, p, def);
+      const st = ensureCommunity(ctx, p, def, me);
       rows.push({
         provId: i,
         prov: p.name,
@@ -431,7 +476,7 @@ export function diasporaReport(ctx) {
       if (!d.tag || d.tag === me) continue;
       const def = tagCommunityDef(ctx, d.tag);
       if (!def) continue;
-      const st = ensureTagCommunity(g.tags[d.tag], def);
+      const st = ensureTagCommunity(g.tags[d.tag], def, me);
       rows.push({
         provId: 0,
         prov: (g.tags[d.tag] && g.tags[d.tag].name) || d.tag,
@@ -450,8 +495,13 @@ export function diasporaReport(ctx) {
 export function monthlyDiaspora(ctx) {
   const g = ctx.game;
   if (!g || !g.provinces) return;
-  const me = jewishCrown(ctx);
-  if (!me) return;
+  // Once per seated Jewish crown (SPEC §216) — one in a solo campaign, and in
+  // that case over exactly the tag it always was.
+  for (const me of jewishCrowns(ctx)) crownMonth(ctx, me);
+}
+
+function crownMonth(ctx, me) {
+  const g = ctx.game;
   for (let i = 1; i < g.provinces.length; i++) {
     try {
       const p = g.provinces[i];
@@ -459,8 +509,8 @@ export function monthlyDiaspora(ctx) {
       const def = communityDef(ctx, p);
       if (!def) continue;
       if (p.owner === me) continue;
-      const st = ensureCommunity(ctx, p, def);
-      const target = standingTarget(ctx, p, def);
+      const st = ensureCommunity(ctx, p, def, me);
+      const target = standingTarget(ctx, p, def, me);
       if (!target) continue;
       const d = target.value - num(st.standing);
       if (Math.abs(d) < 0.01) continue;
@@ -475,7 +525,7 @@ export function monthlyDiaspora(ctx) {
     try {
       const def = tagCommunityDef(ctx, d.tag);
       if (!def) continue;
-      const st = ensureTagCommunity(g.tags[d.tag], def);
+      const st = ensureTagCommunity(g.tags[d.tag], def, me);
       const target = standingTargetFor(ctx, d.tag, num(st.asked), def);
       if (!target) continue;
       const dd = target.value - num(st.standing);

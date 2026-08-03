@@ -2,7 +2,7 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag } from './military.js';
 import { FORMABLES } from '../data/formables.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
@@ -79,8 +79,12 @@ function electWinner(ctx, tag) {
 }
 
 // The one true death path: crowns the heir, installs a regency for a child
-// heir, or lets an unrelated courtier seize power. Republics hold an emergency
-// election instead; theocracies never seat a child regency (SPEC §25). Exposed
+// heir, or lets an unrelated courtier seize power. Elective governments hold an
+// emergency election instead; a government with no regency never seats a child
+// (SPEC §25); and a government whose seat is not inherited at all fills it by
+// its own rule and opens no crisis (SPEC §214) — the lot is cast again, the
+// assembly names a convener, and nobody's claim was at stake. Which branch a
+// court takes is declared on its government type and read from there. Exposed
 // so scripted events (Nero, Mattathias) can kill rulers through this machinery.
 export function rulerDies(ctx, tag, causeText) {
   const g = ctx.game;
@@ -90,7 +94,7 @@ export function rulerDies(ctx, tag, causeText) {
   const title = old.title || 'Ruler';
   const player = tag === g.playerTag;
   let text;
-  if (t.govType === 'republic') {
+  if (govHas(ctx, tag, 'elects')) {
     const w = electWinner(ctx, tag);
     t.ruler = { name: w.name, title, gov: w.gov, infl: w.infl, mar: w.mar, age: w.age };
     t.heir = null;
@@ -103,19 +107,31 @@ export function rulerDies(ctx, tag, causeText) {
     crown(ctx, tag, t.heir, title);
     t.legitimacy = clamp(num(t.legitimacy) - 10, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. ${heirName} succeeds as ${title}. (−10 legitimacy)`;
-  } else if (t.heir && t.govType !== 'theocracy') {
+  } else if (t.heir && govHas(ctx, tag, 'regency')) {
     t.regency = true;
     t.regencyTitle = title; // restored when the heir comes of age
     t.ruler = { name: 'Regency Council', title: 'Regents for ' + t.heir.name, gov: 1, infl: 2, mar: 1, age: 0 };
     t.legitimacy = clamp(num(t.legitimacy) - 20, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. ${t.heir.name} is a child of ${Math.max(0, num(t.heir.age, 0))}; a council rules in the heir's name. (−20 legitimacy)`;
   } else if (t.heir) {
-    // Theocracy with a child heir: the elders will not anoint a minor — a
-    // senior priest takes office and the young heir waits their turn.
+    // A child heir under a constitution that seats no councils: the elders
+    // will not anoint a minor — a senior man takes office and the young heir
+    // waits their turn.
     const nr = rollCourtier(ctx, tag);
     t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: Math.max(50, nr.age) };
     t.legitimacy = clamp(num(t.legitimacy) - 15, 0, 100);
     text = `${old.name} ${causeText || 'has died'}. The elders will not anoint a child: ${nr.name} takes the ${title.toLowerCase()} while ${t.heir.name} comes of age. (−15 legitimacy)`;
+  } else if (govHas(ctx, tag, 'drawn')) {
+    // Nobody inherits here, so nobody's claim died with them (SPEC §214). The
+    // constitution names the next man by its own rule and the state carries
+    // on — the one succession in this engine that is not a wound.
+    const nr = rollCourtier(ctx, tag);
+    t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: nr.age };
+    t.heir = null;
+    t.regency = false;
+    t.legitimacy = clamp(num(t.legitimacy) - 5, 0, 100);
+    const how = govDef(ctx, tag).vacancy || 'the constitution names the next';
+    text = `${old.name} ${causeText || 'has died'}. There is no inheritance to dispute: ${how}, and ${nr.name} takes the ${title.toLowerCase()}. (−5 legitimacy)`;
   } else {
     const nr = rollCourtier(ctx, tag);
     t.ruler = { name: nr.name, title, gov: nr.gov, infl: nr.infl, mar: nr.mar, age: nr.age };
@@ -174,11 +190,16 @@ export function monthlySuccession(ctx) {
           }
         }
       }
-      // Republics vote (SPEC §25): every four years the nation chooses, and
-      // the incumbent must beat the field to stay.
-      if (t.govType === 'republic') {
+      // A constitution that does not inherit has no heir to age and no
+      // council to seat (SPEC §214) — the Lot draws, the assembly convenes,
+      // the republic votes, and none of them is waiting for anybody's son.
+      if (govHas(ctx, tag, 'heirless')) {
         t.heir = null;
         t.regency = false;
+      }
+      // Elective governments vote (SPEC §25): every four years the nation
+      // chooses, and the incumbent must beat the field to stay.
+      if (govHas(ctx, tag, 'elects')) {
         t.electionIn = num(t.electionIn, 48) - 1;
         if (t.electionIn <= 0) {
           const inc = { name: r.name, gov: num(r.gov, 2), infl: num(r.infl, 2), mar: num(r.mar, 2), age: num(r.age, 50) };
@@ -206,7 +227,7 @@ export function monthlySuccession(ctx) {
       // A court without an heir designates one, eventually. A married
       // dynasty is likelier to be blessed (SPEC §62): each living royal
       // marriage raises the monthly chance, capped.
-      if (!t.heir && !t.regency && t.govType !== 'republic' && ctx.rng.chance(heirChance(ctx, tag))) {
+      if (!t.heir && !t.regency && !govHas(ctx, tag, 'heirless') && ctx.rng.chance(heirChance(ctx, tag))) {
         const heir = rollCourtier(ctx, tag);
         heir.age = clamp(num(r.age, 45) - 26, 14, 45);
         t.heir = heir;
@@ -701,8 +722,22 @@ export function chapterChain(list, bookmarkId) {
   return out;
 }
 
+// Three lookups in the order a crown answers to: the chapter's own table under
+// the name this realm wears now, then the chain a formed crown brings with it
+// (SPEC §102), then — for a crown that brings none — the table the realm was
+// already working under the name it used to wear.
+//
+// That last one is the §102/§135 rule every other bookmark table already gets
+// through `contentForTag`, and missions were the one table reading the raw key.
+// A player who proclaims a greater crown whose formable carries no chain of its
+// own — Herod's JUD in 40 BCE, Jordan's UAR in 1948, Byzantium's ROM in 614 —
+// watched the whole tree vanish at the moment of the proclamation, because the
+// era's chain was filed under a name the proclamation had just deleted. The
+// formable's own chain still answers BEFORE the inherited one, so a JUD that
+// becomes MLI works Israel's chain rather than the one it has outgrown.
 export function missionsFor(ctx, tag) {
-  const own = ctx.bookmark && ctx.bookmark.missions && ctx.bookmark.missions[tag];
+  const table = (ctx.bookmark && ctx.bookmark.missions) || null;
+  const own = table && table[tag];
   if (Array.isArray(own) && own.length) return own;
   for (const f of FORMABLES) {
     if (!f || f.to !== tag || !Array.isArray(f.missions) || !f.missions.length) continue;
@@ -710,6 +745,8 @@ export function missionsFor(ctx, tag) {
     const list = chapterChain(f.missions, ctx.bookmark && ctx.bookmark.id);
     if (Array.isArray(list) && list.length) return list;
   }
+  const inherited = contentForTag(ctx, table, tag);
+  if (Array.isArray(inherited) && inherited.length) return chapterChain(inherited, ctx.bookmark && ctx.bookmark.id);
   return null;
 }
 

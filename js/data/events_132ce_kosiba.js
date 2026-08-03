@@ -192,7 +192,10 @@ function constitution(ctx) {
 // The store (SPEC §130). The road MARKER is written literally at each call
 // site and not from in here: smoke83 reads content packages as text to prove
 // every road on the path tree is still set by a live card, and a marker
-// written through a helper is invisible to it.
+// written through a helper is invisible to it. The GOVERNMENT each road adopts
+// (SPEC §214) is written at the call site for the same reason and one more:
+// the four answers to this question are four different states, and a table in
+// this header would let them drift apart from the cards that describe them.
 function adopt(ctx, name) {
   const h = ctx.helpers;
   h.setConstitution(ctx, ERA, name);
@@ -291,7 +294,7 @@ export const EVENTS_132_KOSIBA = [
     options: [
       {
         label: 'Take the crown. The house that won the war will wear it',
-        tooltip: 'Always available, and the simplest: king in one generation rather than the Hasmoneans\' sixty years of pretence. +25 legitimacy, +3 authority, +12% income and −1 unrest everywhere from an undivided succession. And it cannot be defended: the house has no priestly descent and no Davidic descent, the sages will say so in writing in every generation, and the writing is what survives. Sages −40, permanent.',
+        tooltip: 'Always available, and the simplest: king in one generation rather than the Hasmoneans\' sixty years of pretence. The realm becomes THE DIADEM — a crown out of a war, +0.05 legitimacy a month, +4% morale and an envoy every chancery understands. +25 legitimacy, +3 authority, +12% income and −1 unrest everywhere from an undivided succession. And it cannot be defended: the house has no priestly descent and no Davidic descent, the sages will say so in writing in every generation, and the writing is what survives. Sages −40, permanent.',
         effects: guard('ev_bk_accession:crown', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 25, stability: 1 });
@@ -303,6 +306,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'captains', 30);
           h.doctrine(ctx, 'authority', 3);
           adopt(ctx, 'crown');
+          h.setGovernment(ctx, 'JUD', 'diadem');
           h.setFlag(ctx, 'kosibaCrowned', true);
           h.chronicle(ctx, 'era', 'The house of Kosiba takes the diadem. It is done in one generation where the Hasmoneans took three, and the objection is the same objection, made earlier and by better lawyers.');
         }),
@@ -310,7 +314,7 @@ export const EVENTS_132_KOSIBA = [
       {
         label: 'Marry into David. Send to Babylonia for the line of Jehoiachin',
         when: safeWhen('accession:david', (ctx) => eastReachable(ctx)),
-        tooltip: 'Herod\'s answer, and it needs the east open, because the line is kept in Babylonia. The payoff is not the marriage — it is the grandson, so this is a generation of nothing followed by an unassailable claim: +15 legitimacy now, +0.25 a month thereafter, permanently. Whoever holds the Exilarchate now holds a standing claim on this succession. Herod\'s version of this ended with him killing his wife and, later, her sons.',
+        tooltip: 'Herod\'s answer, and it needs the east open, because the line is kept in Babylonia. The payoff is not the marriage — it is the grandson, so this is a generation of nothing followed by an unassailable claim: the realm becomes THE HOUSE OF DAVID (+0.12 legitimacy a month and −0.25 unrest everywhere on top of it), +15 legitimacy now, +0.25 a month thereafter, permanently. Whoever holds the Exilarchate now holds a standing claim on this succession. Herod\'s version of this ended with him killing his wife and, later, her sons.',
         effects: guard('ev_bk_accession:david', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 15 });
@@ -322,6 +326,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'captains', -15);
           h.doctrine(ctx, 'authority', 1);
           adopt(ctx, 'david');
+          h.setGovernment(ctx, 'JUD', 'davidic');
           h.setFlag(ctx, 'kosibaMarriedDavid', true);
           h.chronicle(ctx, 'era', 'The house sends east for a bride of the line of Jehoiachin. The contract is read out in Jerusalem and the point of it will not be born for twenty years.');
         }),
@@ -333,7 +338,7 @@ export const EVENTS_132_KOSIBA = [
         // Temple: a state that settled the courses has a priesthood organised
         // enough to be made hereditary, and one that never did has not.
         when: safeWhen('accession:two', (ctx) => flag(ctx, 'coursesChoose') || flag(ctx, 'priesthoodSettled') || factionAt(ctx, 'sages', 55)),
-        tooltip: 'The arrangement the coins implied, made permanent — and it is the Hasmonean collapse run in reverse, which nobody has tried. +3 stability, +20 legitimacy, Sages +25, −8% income for the second household. Two hereditary offices means two successions to go wrong instead of one, and the state has no arbiter above either of them.',
+        tooltip: 'The arrangement the coins implied, made permanent — and it is the Hasmonean collapse run in reverse, which nobody has tried. The realm becomes THE TWO HOUSES: +0.08 legitimacy a month and −5% income for the second household, on top of +3 stability, +20 legitimacy, Sages +25 and a further −8% income. Two hereditary offices means two successions to go wrong instead of one, and the state has no arbiter above either of them.',
         effects: guard('ev_bk_accession:two', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 20, stability: 3 });
@@ -343,6 +348,7 @@ export const EVENTS_132_KOSIBA = [
           });
           h.factionShift(ctx, 'JUD', 'sages', 25);
           adopt(ctx, 'twoHouses');
+          h.setGovernment(ctx, 'JUD', 'dyarchy');
           h.setFlag(ctx, 'kosibaTwoHouses', true);
           h.chronicle(ctx, 'era', 'Prince and priest are both made hereditary, as the coinage always implied. The Hasmoneans spent a century merging these two offices; this state has just spent a morning separating them.');
         }),
@@ -350,7 +356,7 @@ export const EVENTS_132_KOSIBA = [
       {
         label: 'The prince of Ezekiel: keep the title, and give it a constitution',
         when: safeWhen('accession:nasi', (ctx) => factionAt(ctx, 'sages', 60) || flag(ctx, 'mishnahWritten')),
-        tooltip: 'Chapters 44 to 46: a nasi who brings his offerings like any man, holds no priestly office, and — 46:16–18 — may leave his inheritance to his sons but may not take the people\'s land. A hereditary office engineered not to be a monarchy, which walks around the Davidic objection entirely because Ezekiel\'s prince was never David\'s heir. +30 legitimacy, Sages +40, −2 authority, −1 unrest everywhere, permanent. And it binds this house in writing, forever, in ways the other three do not.',
+        tooltip: 'Chapters 44 to 46: a nasi who brings his offerings like any man, holds no priestly office, and — 46:16–18 — may leave his inheritance to his sons but may not take the people\'s land. A hereditary office engineered not to be a monarchy, which walks around the Davidic objection entirely because Ezekiel\'s prince was never David\'s heir. The realm becomes THE PATRIARCHATE: +0.1 legitimacy a month, +10% conversion, an extra envoy for a house whose letters are read everywhere, and no council ever rules for a child. +30 legitimacy, Sages +40, −2 authority, −1 unrest everywhere, permanent. And it binds this house in writing, forever, in ways the other three do not.',
         effects: guard('ev_bk_accession:nasi', (ctx) => {
           const h = ctx.helpers;
           h.adjust(ctx, 'JUD', { legitimacy: 30, stability: 2 });
@@ -362,6 +368,7 @@ export const EVENTS_132_KOSIBA = [
           h.factionShift(ctx, 'JUD', 'captains', -20);
           h.doctrine(ctx, 'authority', -2);
           adopt(ctx, 'nasi');
+          h.setGovernment(ctx, 'JUD', 'nasi');
           h.setFlag(ctx, 'kosibaNasiConstitution', true);
           h.chronicle(ctx, 'era', 'The house keeps the founder\'s title and accepts the prophet\'s terms for it. It is the first Jewish constitution since the elders, and it was written by somebody who never expected it to be used.');
           // The barb: the founder's own leases are arguably the thing 46:18

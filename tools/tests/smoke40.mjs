@@ -249,6 +249,43 @@ console.log('== royal marriage: beds, cradles, and the age that has them (SPEC �
   ok((nab.opinion.JUD | 0) < 30, 'and the annulment is remembered bitterly');
   ok(Math.abs(heirChance(ctx, 'JUD') - baseChance) < 1e-9, 'the blessing fades with the match');
 }
+console.log('== the price has a ceiling, and it is the one points already have ==');
+{
+  // A small client is nowhere near it: the formula runs out at ~370 dev.
+  const { game, ctx } = boot();
+  const agr = enfeoff(game);
+  agr.opinion.JUD = 90;
+  const small = mil.incorporateInfo(ctx, 'JUD', 'AGR');
+  ok(!small.capped && small.cost === Math.round(75 + small.dev * 2.5) && small.cost < small.max,
+    `Agrippa's kingdom is priced by the formula (${small.cost} for ${small.dev} dev)`);
+
+  // Rome is the case the ceiling exists for. Yoke it — the peace table's
+  // subjugation clause does exactly this — and the raw price is several times
+  // what a court can hold.
+  const rome = game.tags.ROM;
+  rome.overlord = 'JUD';
+  rome.opinion = rome.opinion || {};
+  rome.opinion.JUD = 90;
+  const big = mil.incorporateInfo(ctx, 'JUD', 'ROM');
+  const raw = Math.round(75 + big.dev * 2.5);
+  ok(raw > big.max, `Rome's union prices out at ${raw} influence for ${big.dev} development`);
+  ok(big.capped && big.cost === big.max && big.cost === DEFINES.VASSALS.incorporateMax,
+    `and is charged at the ceiling instead: ${big.cost}`);
+
+  // The ceiling is the point pool's own, so a full treasury can now pay it —
+  // which is the whole point: above 999 the union was not dear, it was
+  // arithmetically impossible.
+  const me = game.tags.JUD;
+  me.points.infl = big.max;
+  ok(mil.incorporateInfo(ctx, 'JUD', 'ROM').can, 'a court at its point ceiling can afford it');
+  const res = mil.incorporateCore(ctx, 'JUD', 'ROM');
+  ok(res.ok && res.started && res.cost === big.max, 'and the union begins');
+  ok(me.points.infl === 0, 'for every point it had');
+  me.points.infl = big.max - 1;
+  game.tags.ROM.incorporating = null;
+  ok(!mil.incorporateInfo(ctx, 'JUD', 'ROM').can, 'one point short and it is refused, as any price is');
+}
+
 {
   // The modern age does not arrange its marriages.
   const { BOOKMARK_1948 } = await import(R + '/js/data/bookmark_1948.js');

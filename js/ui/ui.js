@@ -269,6 +269,7 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
+      concessions: [], // provinces of our own laid on the table (SPEC §222)
       provinceTo: {}, // directed spoils: demanded province -> our client in this war
       release: [], // restored, returned, or newly created states (SPEC §69/§76)
       transferVassals: [], // enemy clients whose fealty passes to us (SPEC §76)
@@ -321,6 +322,20 @@ export function initUI(staticCtx) {
         ${toPicker(p)}
         <span class="peace-prov-cost">${p.cost}</span>
       </label>`).join('');
+    // What we lay on the table ourselves (SPEC §222). Any province of ours —
+    // occupied or not, reachable or not, worth having or not — priced at what
+    // they would have paid to take it, and credited against the terms.
+    const concessionRows = (info.concessions || []).map((p) =>
+      `<label class="peace-prov" data-center="${p.id}" data-tt="${esc(p.name)} — ${p.dev} development${
+        p.occupied ? '\nTheir armies already stand in it.' : ''}${
+        p.capital ? '\nOur own capital. A crown may sign this away; it does not have to.' : ''}${
+        p.discount === 'claim' ? '\nThey hold a claim on it (it is cheap for them to take).'
+          : p.discount === 'faith' ? '\nIt keeps their faith.' : ''}\nCeding it credits ${p.cost} war score against our terms">
+        <input type="checkbox" data-concede="${p.id}">
+        <span class="peace-prov-name">${esc(p.name)} <span class="peace-dim">${p.dev} dev${
+  p.occupied ? ' · occupied' : ''}${p.capital ? ' · our capital' : ''}</span></span>
+        <span class="peace-prov-cost">−${p.cost}</span>
+      </label>`).join('');
     peaceEl.innerHTML = `
       <div class="modal-scrim"></div>
       <div class="ev-card peace-card">
@@ -343,6 +358,9 @@ export function initUI(staticCtx) {
     : `<div class="peace-dim peace-none">${info.exit
       ? 'Our own men hold no enemy land — a withdrawal now reverts every occupation on our front.'
       : 'Occupy enemy land to put it on the table.'}</div>`}
+        <div class="peace-sec">Offer provinces of our own <span class="peace-dim">(credited against the terms)</span></div>
+        ${(info.concessions || []).length ? `<div class="peace-provs peace-give">${concessionRows}</div>`
+    : '<div class="peace-dim peace-none">We hold no province to offer.</div>'}
         <div class="peace-sec">Demand payment <span class="peace-dim">(${info.goldCostPer100} war score per 100 talents)</span></div>
         <div class="peace-gold">
           <button class="btn peace-step" data-gold="-1" aria-label="Less gold">−</button>
@@ -441,6 +459,11 @@ export function initUI(staticCtx) {
         sel.disabled = deal.subjugate;
         if (deal.subjugate) sel.value = '';
       });
+      peaceEl.querySelectorAll('[data-concede]').forEach((box) => {
+        box.disabled = deal.subjugate;
+        if (deal.subjugate) box.checked = false;
+        box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
+      });
       peaceEl.querySelectorAll('[data-release]').forEach((box) => {
         box.disabled = deal.subjugate;
         if (deal.subjugate) box.checked = false;
@@ -451,14 +474,19 @@ export function initUI(staticCtx) {
         if (deal.subjugate) box.checked = false;
         box.closest('.peace-prov').classList.toggle('peace-off', deal.subjugate);
       });
-      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; }
-      const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length && deal.gold <= 0
+      if (deal.subjugate) { deal.provinces = []; deal.release = []; deal.transferVassals = []; deal.provinceTo = {}; deal.concessions = []; }
+      const white = !deal.provinces.length && !deal.release.length && !deal.transferVassals.length
+        && !deal.concessions.length && deal.gold <= 0
         && !deal.humiliate && !deal.subjugate && !deal.reparations;
       totalEl.textContent = white
         ? (info.exit
           ? 'A clean withdrawal: occupations between us and the enemy revert; the war goes on without us.'
           : 'A white peace: every occupation reverts, nothing changes hands.')
-        : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
+        : ev.net > 0
+          ? `Demands cost ${ev.net} war score — we hold ${Math.max(0, info.myWs)}.`
+          : ev.offered > 0
+            ? `We offer ${ev.offered} war score of our own land${ev.cost > 0 ? ` against ${ev.cost} demanded` : ''} — their war has earned ${Math.max(0, -info.myWs)}.`
+            : `Demands cost ${ev.cost} war score — we hold ${Math.max(0, info.myWs)}.`;
       verdictEl.textContent = ev.acceptable ? 'They will accept these terms.' : ev.reason;
       verdictEl.classList.toggle('pos', !!ev.acceptable);
       verdictEl.classList.toggle('neg', !ev.acceptable);
@@ -471,6 +499,15 @@ export function initUI(staticCtx) {
       paintDeal();
     }
 
+    peaceEl.querySelectorAll('[data-concede]').forEach((box) => {
+      box.addEventListener('change', () => {
+        const id = Number(box.dataset.concede);
+        const at = deal.concessions.indexOf(id);
+        if (box.checked && at < 0) deal.concessions.push(id);
+        else if (!box.checked && at >= 0) deal.concessions.splice(at, 1);
+        update();
+      });
+    });
     peaceEl.querySelectorAll('[data-prov]').forEach((box) => {
       box.addEventListener('change', () => {
         const id = Number(box.dataset.prov);
@@ -1599,6 +1636,10 @@ export function initUI(staticCtx) {
   // these to the {t:'event'} / {t:'eventDone'} messages).
   function showRemoteEvent(p) { try { eventModal.showRemote(p); } catch (e) { warnOnce('remoteEvent', e); } }
   function closeRemoteEvent(instanceId) { try { eventModal.closeRemote(instanceId); } catch (e) { warnOnce('remoteEventDone', e); } }
+  // A multiplayer host sweeps its own chair after running a guest's order
+  // (SPEC §216) — a card fired under the borrowed crown was never offered to
+  // this screen.
+  function rescanEvents() { try { eventModal.rescan(); } catch (e) { warnOnce('rescanEvents', e); } }
 
-  return { showStartScreen, bindGame, showRemoteEvent, closeRemoteEvent };
+  return { showStartScreen, bindGame, showRemoteEvent, closeRemoteEvent, rescanEvents };
 }

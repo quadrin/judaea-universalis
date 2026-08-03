@@ -13,6 +13,7 @@ import { tradeIndex } from '../data/trade.js';
 import { largestMinorityFaith } from '../sim/population.js';
 import { dominantEstate, seatsFor } from '../sim/estates.js';
 import { communityOf, openAt, shutBy } from '../data/diaspora.js';
+import { communityRegard } from '../sim/diaspora.js';
 const GRAY = [128, 128, 128];
 const DEV_LOW = [216, 210, 176];   // #d8d2b0
 const DEV_HIGH = [30, 122, 46];    // #1e7a2e
@@ -306,10 +307,12 @@ export function computeMapmodeColors(ctx, mode) {
           break;
         }
         if (!openAt(d, year)) { cA = DIA_PALE; break; }
-        // `p.dia.standing` is the live figure once the sim has seeded it; the
+        // The live figure once this crown has had dealings with them (SPEC
+        // §216 files standing per crown, so a guest paints its OWN warmth);
         // entry's own `start` is what it was before anybody wrote to them, and
         // is the honest answer for a crown the dispersion has no dealings with.
-        const st = (p.dia && Number.isFinite(p.dia.standing)) ? p.dia.standing : d.start;
+        const mine = communityRegard(p.dia, ctx.game.playerTag);
+        const st = mine === null ? d.start : mine;
         const warmth = Math.max(0, Math.min(1, st / 100));
         // 1 → 0.44, 5 → 1.0. The top of the ramp must LAND on 1 rather than
         // overshoot it: at 0.4 + 0.15·size, sizes 4 and 5 both clamped to full

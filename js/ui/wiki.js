@@ -12,6 +12,7 @@ import { FORMABLES } from '../data/formables.js';
 import { CAMPAIGN_GUIDANCE } from '../data/campaign_guidance.js';
 import { entryFork } from '../data/chapter_paths.js';
 import { communitiesBetween, openAt } from '../data/diaspora.js';
+import { ARMS_PROGRAMS, ARMS_PROGRAMS_BY_BOOKMARK } from '../data/programs.js';
 
 // Calendar month index with no year zero (mirror of sim/events.js — the wiki
 // may not import the sim).
@@ -74,18 +75,25 @@ export function createWiki({ DEFINES, getCtx }) {
     // A card may resolve its decider at fire time (SPEC §105); the wiki reads
     // the chain cold, with no world to resolve against, so it names the court
     // the card is written for and leaves the runtime to pick the successor.
+    // A rolled card (SPEC §212) names the same court and a different answer:
+    // nobody at the table gets the question, and the course is drawn.
     if (ev.decider && typeof ev.decider !== 'function') {
       rows.push(['The choice belongs to', tagName(ev.decider)
-        + ' — any other player is only notified of their course']);
+        + (ev.roll === true
+          ? ' — and the world rolls it when the card fires, weighted toward the record'
+          : ' — any other player is only notified of their course')]);
     }
     return rows;
   }
   function optionListHtml(ev) {
     const aiIdx = typeof ev.aiOption === 'function' ? -1 : (ev.aiOption | 0);
+    const histLabel = ev.roll === true
+      ? '<span class="wiki-hist" data-tt="What the chronicles record — and the likelier half of the roll.">the recorded course</span>'
+      : '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>';
     return (ev.options || []).map((o, i) => `
       <div class="wiki-opt">
         <div class="wiki-opt-label">${icon('star4', 'icon-xs')} ${esc(o.label || 'Continue')}
-          ${i === aiIdx ? '<span class="wiki-hist" data-tt="What an AI court (and history) does.">the historical course</span>' : ''}
+          ${i === aiIdx ? histLabel : ''}
         </div>
         ${o.tooltip ? `<div class="wiki-opt-tip">${esc(o.tooltip)}</div>`
     : '<div class="wiki-opt-tip wiki-dim">Its consequences are written only in the chronicle.</div>'}
@@ -100,7 +108,9 @@ export function createWiki({ DEFINES, getCtx }) {
       + (ev.major ? '<span class="wiki-badge">major</span>' : '')
       + (ev.once === false ? '<span class="wiki-badge">recurring</span>' : '')
       + (ev.decider && typeof ev.decider !== 'function'
-        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '');
+        ? `<span class="wiki-badge wiki-badge-decider">${esc(tagName(ev.decider))}'s choice</span>` : '')
+      + (ev.roll === true
+        ? '<span class="wiki-badge wiki-badge-roll" data-tt="No answer this table can give — the world draws one.">the world rolls</span>' : '');
   }
   function kv(rows) {
     return rows.map(([k, v]) => `<div class="wiki-kv"><span class="wiki-k">${esc(k)}</span><span class="wiki-v">${esc(v)}</span></div>`).join('');
@@ -201,6 +211,14 @@ export function createWiki({ DEFINES, getCtx }) {
     // read straight from the bookmark that declares them.
     const arsenals = (b.armsMarket && Array.isArray(b.armsMarket.arsenals) ? b.armsMarket.arsenals : [])
       .map((tag) => `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b></div>`).join('');
+    // The works of one's own (SPEC §213): the courts this chapter lets build
+    // weapons at home, and what each of them may build, read from the same
+    // roster the sim plays. The compendium cannot drift from the game.
+    const progTable = ARMS_PROGRAMS_BY_BOOKMARK[b.id] || null;
+    const programs = progTable ? Object.keys(progTable).map((tag) =>
+      `<div class="wiki-rivalry">${chip(tag, 18)} <b>${esc(tagName(tag))}</b> — `
+      + esc(progTable[tag].map((k) => (ARMS_PROGRAMS[k] ? ARMS_PROGRAMS[k].name : k)).join(', '))
+      + '</div>').join('') : '';
     // Financial aid (SPEC §186): the donor courts whose purses can be
     // petitioned, from the same bookmark declaration the sim plays.
     const donors = (b.financialAid && Array.isArray(b.financialAid.donors) ? b.financialAid.donors : [])
@@ -291,6 +309,9 @@ export function createWiki({ DEFINES, getCtx }) {
         ${arsenals ? `<div class="wiki-sec">The arms market</div>
         <div class="wiki-dim">Aircraft and armor are imports. Only these arsenal courts build them at home; everyone else signs a weapons transfer agreement with one of them — opened at the supplier's regard, and cut by cooling, war, or embargo. The world beyond the frame sits in the ledger: click any flag there to open its court.</div>
         ${arsenals}` : ''}
+        ${programs ? `<div class="wiki-sec">The works of one's own</div>
+        <div class="wiki-dim">The other answer to an embargo. These courts can develop weapons of their own design at home — each opened by a rung of the military ladder and by whatever their shops delivered before it, each paid for in talents, martial points and years. A delivered work that builds a gated arm ends the import for that arm alone; a court that builds them all needs no supplier, and can be signed with by anybody.</div>
+        ${programs}` : ''}
         ${donors ? `<div class="wiki-sec">The donor courts</div>
         <div class="wiki-dim">Money can be asked for. Petition one of these courts from its own panel and, if its regard for you is high enough, a package sized to its purse flows for a year — Washington's is the deep one. Asking leaves a mark, one purse at a time, and only war or an embargo stops a granted package early.</div>
         ${donors}` : ''}
