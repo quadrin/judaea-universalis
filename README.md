@@ -255,8 +255,9 @@ static site, the zero dependencies, or the missing build step changes.
   anyone to restate, and has stopped losing wagers — not seldom, but never. The town concluded
   Jewish magic and flogged him in the market. Send for the man, send for the theorem and never
   mind the man, send a letter under your seal and a purse for his back, or agree that Tingis
-  is a long way from here. Roughly two campaigns in five ever see it, and 1948 never does —
-  by then the map calls the town Tangier.
+  is a long way from here. Every campaign gets the letter once, on a month of its own — it
+  may reach you in your first winter or in your ninth — except 1948, which never does,
+  because by then the map calls the town Tangier.
 - A war overview (score broken into battles / occupation / war goal / events, who holds what), a
   sortable ledger of nations (L), a diplomatic map mode, and the saved-campaign shelf.
 - A painterly map: hand-inked organic province borders (sub-texel shader melt of the ID

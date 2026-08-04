@@ -18,7 +18,7 @@ const { DEFINES } = await import(R + '/js/data/defines.js');
 const { MAP_DATA } = await import(R + '/js/data/map_data.js');
 const { bus } = await import(R + '/js/core/bus.js');
 const { ERAS, GENERIC_EVENTS } = await import(R + '/js/data/compendium.js');
-const { EVENTS_MARGINALIA, ikusWindow, IKUS_ODDS } = await import(R + '/js/data/events_marginalia.js');
+const { EVENTS_MARGINALIA, ikusWindow, ikusOdds } = await import(R + '/js/data/events_marginalia.js');
 const { initGame, makeCtx, gameActions } = await import(R + '/js/sim/init.js');
 const { checkTriggeredEvents } = await import(R + '/js/sim/events.js');
 
@@ -76,8 +76,33 @@ console.log('== the card is in the margins of every chapter ==');
     'triggered, undated, and once a campaign');
   ok(!Number.isFinite(CARD.minYear) && !Number.isFinite(CARD.maxYear),
     'and carries no era window of its own — the province is the window');
-  ok(!Number.isFinite(CARD.chance) && IKUS_ODDS === 0.005,
-    'and no `chance` either: the odds are in the trigger, where they cost the stream nothing');
+  ok(!Number.isFinite(CARD.chance),
+    'and no `chance` either: the schedule is in the trigger, where it costs the stream nothing');
+  // The deadline schedule, read straight off the function: it must reach
+  // certainty exactly as the window runs out, or "every campaign" is a wish.
+  ok(Math.abs(ikusOdds(0) - 1 / 120) < 1e-12 && Math.abs(ikusOdds(60) - 1 / 60) < 1e-12
+    && ikusOdds(119) === 1 && ikusOdds(120) === 1,
+    'the odds climb 1/120 → 1/60 → 1/1 as the decade runs out');
+  // Uniform arrival is the claim the schedule exists to make. Run it against
+  // an ideal stream of draws and the month should be flat across the window.
+  {
+    const bucket = new Array(12).fill(0);
+    const TRIALS = 12000;
+    for (let t = 0; t < TRIALS; t++) {
+      // A deterministic, well-spread probe stream: no RNG in a suite.
+      let h = (t * 2654435761) >>> 0;
+      for (let m = 0; m < 120; m++) {
+        h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+        if ((h >>> 0) / 4294967296 < ikusOdds(m)) { bucket[Math.floor(m / 10)]++; break; }
+      }
+    }
+    const lo = Math.min(...bucket), hi = Math.max(...bucket);
+    ok(bucket.reduce((a, b) => a + b, 0) === TRIALS,
+      '  and it always fires inside the window — ' + TRIALS + ' of ' + TRIALS + ' probes');
+    ok(hi / lo < 1.35,
+      '  spread evenly over the ten years: every 10-month band gets '
+      + lo + '–' + hi + ' of ' + TRIALS);
+  }
   for (const era of ERAS) {
     const chain = era.events;
     ok(chain.indexOf(CARD) >= 0, era.bookmark.id + ': the margins are registered');
@@ -142,13 +167,15 @@ console.log('== the draw costs the campaign nothing ==');
   const w = boot('66ce');
   const before = w.game.rngState;
   let dealt = 0;
+  let firstYes = -1;
   for (let k = 0; k < 120; k++) {
     setAge(w, 0, k);
-    if (CARD.trigger(w.ctx)) dealt++;
+    if (CARD.trigger(w.ctx)) { dealt++; if (firstYes < 0) firstYes = k; }
   }
   ok(w.game.rngState === before,
     'a hundred and twenty monthly checks and the stream has not moved a number');
-  ok(dealt > 0, '  and the card is still dealt (' + dealt + ' of 120 months answer yes)');
+  ok(dealt > 0, '  and the card is still dealt (first yes at month '
+    + firstYes + ' of 120)');
   // Deterministic: the same state and the same month always answer the same,
   // which is what a save, a replay and a multiplayer relay all depend on.
   const again = boot('66ce');
@@ -162,9 +189,9 @@ console.log('== the draw costs the campaign nothing ==');
 
 console.log('== walked through the real scheduler, it arrives inside the decade ==');
 {
-  // Twenty seeded campaigns of 66 CE, twenty years each, answering nothing:
-  // every arrival must fall inside the first 120 months, some campaigns must
-  // see it, and not every campaign may.
+  // Twenty seeded campaigns of 66 CE, twenty years each: EVERY one must be
+  // dealt the card, every arrival must fall inside the first 120 months, and
+  // no two campaigns may be pinned to the same month.
   const months = [];
   for (let seed = 1; seed <= 20; seed++) {
     const w = boot('66ce', EVENTS_MARGINALIA, seed);
@@ -186,10 +213,19 @@ console.log('== walked through the real scheduler, it arrives inside the decade 
       + ', and the ledger agrees');
     if (at >= 0) months.push(at);
   }
-  ok(months.length > 0 && months.length < 20,
-    months.length + ' of 20 campaigns are dealt it — found often enough, never guaranteed');
+  ok(months.length === 20,
+    'all 20 campaigns are dealt it — the letter always comes');
   ok(months.every((k) => k >= 0 && k < 120),
-    'and every arrival falls inside the first ten years (latest: month ' + Math.max(...months) + ')');
+    '  inside the first ten years, every time (earliest month ' + Math.min(...months)
+    + ', latest ' + Math.max(...months) + ')');
+  // Spread, not a fixture: the deadline schedule is meant to put the arrival
+  // anywhere in the decade, so a campaign is not on rails about when.
+  ok(new Set(months).size >= 12,
+    '  and on ' + new Set(months).size + ' different months — not the same month every campaign');
+  const half = months.filter((k) => k < 60).length;
+  ok(half >= 4 && half <= 16,
+    '  spread across both halves of the window (' + half + ' in the first five years, '
+    + (20 - half) + ' in the second)');
 }
 
 console.log('== the four answers do what they say ==');

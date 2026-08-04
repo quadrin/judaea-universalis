@@ -4,12 +4,14 @@
 // size of the realm. Content package: zero imports; all effects run through
 // ctx.helpers.
 //
-// One card so far, and it is an easter egg bounded the way §217's robbers'
-// court is bounded: one town, one decade, once a campaign, nothing it hands
-// over large enough to be a strategy, and not one number taken out of the
-// seeded stream (see `freeDraw`). Its recorded course is that nothing happened
-// — which is also what happened — so an all-AI harness run answers it with an
-// empty option and `tools/autorun.mjs 8` comes back byte identical.
+// One card so far, and it is bounded the way §217's robbers' court is bounded:
+// one town, one decade, once a campaign, nothing it hands over large enough to
+// be a strategy, and not one number taken out of the seeded stream (see
+// `freeDraw`). Where it differs from that easter egg is that this one always
+// arrives — on a month of its own per campaign, but it arrives (see
+// `ikusOdds`). Its recorded course is that nothing happened — which is also
+// what happened — so an all-AI harness run answers it with an empty option and
+// `tools/autorun.mjs 8` comes back byte identical.
 
 const _warned = new Set();
 function warnOnce(key, e) {
@@ -81,14 +83,40 @@ function freeDraw(ctx, month) {
 }
 
 // The gate, apart from the draw — the month of the chapter in which this card
-// MAY be dealt, or −1. Exported because the gate and the odds are two separate
-// claims and `smoke148` holds them apart: a suite that could only see the two
-// multiplied together would have to roll a hundred times to test a window.
-export const IKUS_ODDS = 0.005;
+// MAY be dealt, or −1. Exported because the gate and the schedule are two
+// separate claims and `smoke148` holds them apart: a suite that could only see
+// the two multiplied together would have to roll a hundred times to test a
+// window.
 export function ikusWindow(ctx) {
   const m = monthOfChapter(ctx);
   if (m < 0 || !T(ctx) || !tingis(ctx)) return -1;
   return m;
+}
+
+// EVERY campaign, once, on a month of its own. The threshold is not a constant
+// — at month m of the window it is 1/(120 − m), which is the schedule that
+// makes the arrival month uniform across the ten years AND makes it certain:
+// one chance in 120 in the opening month, one in two with two months to go,
+// and one in one in the last. A card that has not come up yet grows likelier
+// precisely as fast as the window shrinks.
+//
+// A constant 0.5% was the first tuning and it was wrong for this card. It
+// dealt the letter to about two campaigns in five, which is the classic
+// easter-egg density and also means most players never meet Ikus at all —
+// wasted content, and reported as a bug the first time somebody played ten
+// years of the Maccabean chapter without seeing it.
+//
+// The obvious alternative — pick the month from the campaign seed — does not
+// work here, and the reason is worth writing down: `main.js` boots every
+// single-player campaign with the SAME hardcoded seed (20260711), so a
+// seed-derived month would be the identical month in every 167 BCE game
+// anybody ever plays. The schedule below draws against `freeDraw` instead,
+// which reads where the stream STANDS rather than the seed it started from,
+// and that has moved differently by the second month of any two campaigns
+// played differently.
+export function ikusOdds(month) {
+  const left = WINDOW_MONTHS - month;
+  return left > 0 ? 1 / left : 1;
 }
 
 export const EVENTS_MARGINALIA = [
@@ -111,16 +139,15 @@ export const EVENTS_MARGINALIA = [
     // No era window on the card, because the province IS the window — this one
     // asks the map what century it is in.
     //
-    // Roughly two campaigns in five see it at all: 0.5% a month across at most
-    // 120 months is a 45% chance of ever being dealt, which is the density an
-    // easter egg wants — often enough to be found, rare enough that finding it
-    // is worth something. The odds are carried in the trigger rather than in
+    // Given those three, the letter always comes: `ikusOdds` is the deadline
+    // schedule that spreads the arrival uniformly over the decade and still
+    // guarantees it. The odds are carried in the trigger rather than in
     // `ev.chance` so that the campaign's own stream is never touched (see
     // `freeDraw`). After the tenth year the whole card is one subtraction a
     // month: `ikusWindow` gives up on the clock before it walks the map.
     trigger: (ctx) => {
       const m = ikusWindow(ctx);
-      return m >= 0 && freeDraw(ctx, m) < IKUS_ODDS;
+      return m >= 0 && freeDraw(ctx, m) < ikusOdds(m);
     },
     // The recorded course: nothing. No court of this period sent anybody to
     // Mauretania over an arithmetician, and an option that moves no number is

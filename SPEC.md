@@ -14564,15 +14564,34 @@ does not know which century it is in until it is asked. Open in the opening
 month, open one month short of ten years, shut on the tenth anniversary to the
 month, and shut for the rest of the campaign after that.
 
-### Bounded like the easter egg it is
+### Once, always, and never on the same month
 
-Once a campaign (`once` defaults true), one town, one decade, and 0.5% a month
-inside it — across at most 120 months that is a **45% chance of ever being
-dealt**, which is the density an easter egg wants: often enough to be found,
-rare enough that finding it is worth something. (Twenty seeded campaigns of
-66 CE walked through the real scheduler: twelve dealt it, eight never did,
-earliest month 7 and latest month 113.) Nothing it hands over is large enough
-to be a strategy.
+Once a campaign (`once` defaults true), one town, one decade — and inside that
+decade it is **certain**. The threshold is not a constant: at month *m* of the
+window `ikusOdds` returns `1/(120 − m)`, which is the deadline schedule that
+spreads the arrival **uniformly** over the ten years and still guarantees it.
+One chance in 120 in the opening month, one in two with two months to go, one
+in one in the last: a letter that has not come yet grows likelier exactly as
+fast as the window shrinks. Nothing it hands over is large enough to be a
+strategy.
+
+It shipped at a flat 0.5% a month first, which dealt it to about two campaigns
+in five. That is the classic easter-egg density and it was the wrong call for
+this card: most players never met Ikus at all, and the first report back was
+ten years of the Maccabean chapter with no letter. Content nobody meets is
+wasted content.
+
+The obvious alternative — pick the month from the campaign seed — does not work
+here, and the reason is worth writing down: `main.js` boots every single-player
+campaign with the same hardcoded seed (`rngSeed: 20260711`), so a seed-derived
+month would be the identical month in every 167 BCE game anybody ever plays.
+The schedule draws against `freeDraw` instead, which reads where the stream
+*stands* rather than the seed it started from, and that has diverged by the
+second month of any two campaigns played differently. Measured: twenty seeded
+campaigns of 66 CE walked through the real scheduler are dealt it 20/20, on 17
+distinct months between month 7 and month 113; eight seeds of the 167 BCE
+chapter played day by day as Hasmonean Judaea are dealt it 8/8, between
+165 BCE and 157 BCE.
 
 Two deliberate placements. It is registered **beside** the generic pool rather
 than inside it, because that pool's era banding — ten antique cards, ten
@@ -14591,9 +14610,9 @@ answers it with an option that moves no number.
 this. It is also wrong here, and the balance harness said so: a roll every
 month for ten years, in every campaign of every chapter, advances the seeded
 stream's position for everything drawn after it. Measured against the parent
-tree, adding one 0.5% card that mostly does not fire moved battles, wars and
-anomaly flags on every bookmark — 167 BCE alone came back with 91 battles
-instead of 106 — because a card that exists is a card that rolls.
+tree, adding one such card moved battles, wars and anomaly flags on every
+bookmark — 167 BCE alone came back with 91 battles instead of 106 — because a
+card that exists is a card that rolls.
 
 So the odds live in the trigger, and the number they compare against is not
 drawn. `freeDraw` reads where the stream currently **stands** (`game.rngState`,
@@ -14604,17 +14623,18 @@ replay and a multiplayer relay because `rngState` is part of the saved game —
 and `node tools/autorun.mjs 8` against the parent tree is **byte identical on
 all eight bookmarks**.
 
-The gate is exported apart from the draw (`ikusWindow`, `IKUS_ODDS`) because
+The gate is exported apart from the schedule (`ikusWindow`, `ikusOdds`) because
 they are two separate claims, and a suite that could only see them multiplied
 together would have to roll a hundred times to test a window.
 
 - **Regression contract**: `smoke148` — registration in all eight chapters and
   last in each; the town present in seven maps and absent from the eighth, with
   the rename control that proves the gate is the town rather than the year; the
-  ten-year window on both sides of the year-zero line; a decade of monthly
-  checks leaving `rngState` exactly where it found it and answering the same
-  way twice; twenty seeded campaigns walked twenty years each through the real
-  scheduler, with every arrival inside the first decade and some campaigns
-  never dealt it at all; each of the four answers against its own tooltip; and
-  the recorded course moving neither a talent, a point, a modifier nor a line
-  of the chronicle.
+  ten-year window on both sides of the year-zero line; the schedule climbing
+  1/120 to 1/1 as the decade runs out, and 12,000 probe campaigns landing
+  uniformly across it; a decade of monthly checks leaving `rngState` exactly
+  where it found it and answering the same way twice; twenty seeded campaigns
+  walked twenty years each through the real scheduler, all twenty dealt the
+  card, inside the decade, on seventeen different months; each of the four
+  answers against its own tooltip; and the recorded course moving neither a
+  talent, a point, a modifier nor a line of the chronicle.
