@@ -21,6 +21,7 @@ const { chapterChairs, resolveSeat, defaultSeat, SHARED } = await import(R + '/j
 const { restoreHostChair, runUnderChair } = await import(R + '/js/net/mp_state.js');
 const { ERAS } = await import(R + '/js/data/compendium.js');
 
+const num = (v) => (Number.isFinite(v) ? v : 0);
 let failures = 0;
 const ok = (cond, msg) => {
   if (cond) console.log('  PASS', msg);
@@ -451,6 +452,69 @@ console.log('== Alexandria keeps two books ==');
   const soloOne = Object.values(solo.g.provinces).find((p) => p && p.dia && p.dia.by);
   ok(soloOne && Object.keys(soloOne.dia.by).join(',') === 'HYR',
     'a solo campaign writes one book and names it: ' + (soloOne && Object.keys(soloOne.dia.by).join(',')));
+}
+
+// An offer between two courts somebody is sitting in is a letter to a PERSON.
+// Every diplomatic offer in this engine is weighed by the receiving court's
+// evaluator, on `opinionOfUs` — which between two players decides for somebody
+// who is sitting right there, on a number that describes a machine's mood.
+console.log('== an offer of alliance is answered by the court it is sent to ==');
+{
+  const table = boot('HYR', ['ARI']);
+  const g = table.g;
+  const actions = gameActions(table.ctx);
+  // The brothers open at war (the bookmark's setup seeds it); an alliance
+  // needs peace between them first.
+  g.wars = [];
+  for (const k of Object.keys(g.tags)) if (g.tags[k]) { g.tags[k].atWarWith = []; g.tags[k].allies = []; }
+  const inChair = (tag, fn) => {
+    const prev = g.playerTag;
+    g.playerTag = tag;
+    try { return fn(); } finally {
+      const back = restoreHostChair(g, prev, tag);
+      if (back) g.playerTag = back;
+    }
+  };
+
+  const dip = inChair('ARI', () => actions.getDiplomacy('HYR'));
+  ok(dip && dip.canAlly && num(dip.opinionOfUs) < 0,
+    'a player may write to another player their court cannot stand (opinion '
+    + (dip && dip.opinionOfUs) + ') — willingness is theirs to express, not the AI\'s to score');
+
+  inChair('ARI', () => actions.offerAlliance('HYR'));
+  const letter = g.pendingEvents.find((pe) => pe && String(pe.eventId).startsWith('dyn_ally_'));
+  ok(!!letter && letter.forTag === 'HYR', 'the offer is DEALT to the court written to: ' + (letter && letter.forTag));
+  ok(!(g.tags.HYR.allies || []).includes('ARI'), 'and binds nothing while the letter is in transit');
+  ok(g.paused === true, 'the world waits on the answer, like any card');
+
+  inChair('HYR', () => resolveEventOption(table.ctx, letter.instanceId, 0));
+  ok((g.tags.HYR.allies || []).includes('ARI') && (g.tags.ARI.allies || []).includes('HYR'),
+    'accepted, both crowns are bound — HYR ' + JSON.stringify(g.tags.HYR.allies)
+    + ', ARI ' + JSON.stringify(g.tags.ARI.allies));
+
+  // The other answer, in the other direction.
+  for (const k of ['HYR', 'ARI']) g.tags[k].allies = [];
+  inChair('HYR', () => actions.offerAlliance('ARI'));
+  const back = g.pendingEvents.find((pe) => pe && String(pe.eventId).startsWith('dyn_ally_'));
+  ok(!!back && back.forTag === 'ARI', 'the host\'s offer reaches the guest\'s table');
+  const opinion = (g.tags.ARI.opinion || {}).HYR;
+  inChair('ARI', () => resolveEventOption(table.ctx, back.instanceId, 1));
+  ok(!(g.tags.HYR.allies || []).includes('ARI'), 'declined, nothing is bound');
+  ok((g.tags.ARI.opinion || {}).HYR === opinion,
+    'and no opinion is docked — a person saying no is not a court\'s insult');
+  const cooled = inChair('HYR', () => actions.getDiplomacy('ARI'));
+  ok(cooled && !cooled.canAlly && /stings/.test(cooled.whyNotAlly || ''),
+    'but the writer waits before writing again, so an offer cannot be spammed: '
+    + (cooled && cooled.whyNotAlly));
+
+  // A court nobody is sitting in still answers the way it always did.
+  const solo = boot('HYR');
+  const soloActions = gameActions(solo.ctx);
+  solo.g.wars = [];
+  for (const k of Object.keys(solo.g.tags)) if (solo.g.tags[k]) solo.g.tags[k].atWarWith = [];
+  soloActions.offerAlliance('NAB');
+  ok(!solo.g.pendingEvents.some((pe) => pe && String(pe.eventId).startsWith('dyn_ally_')),
+    'no card is dealt to an AI court — its own evaluator answers, exactly as before');
 }
 
 console.log('== a save comes back a solo campaign ==');

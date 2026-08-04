@@ -101,13 +101,27 @@ await guest.waitForFunction((ids) => ids.every((id) => window._ctx.game.province
 ok(true, 'the guest\'s mirror shows them held: ' + held.names.join(', '));
 
 console.log('== the guest\'s own peace table ==');
-const table = await guest.evaluate((warId) => {
-  const info = window._actions.getPeaceInfo(warId, 'ROM');
-  return info ? {
-    provinces: (info.provinces || []).map((p) => p.name || p),
-    myWs: info.myWs, envoyMonthsLeft: info.envoyMonthsLeft, noNegotiation: info.noNegotiation,
-  } : null;
-}, held.warId);
+const dump = (side) => side.evaluate((h) => {
+  const g = window._ctx.game;
+  const war = (g.wars || []).find((w) => w && w.id === h.warId);
+  const info = window._actions.getPeaceInfo(h.warId, 'ROM');
+  return {
+    chair: g.playerTag,
+    war: war ? { att: war.attackers, def: war.defenders, cb: war.cb, ws: war.warscore } : null,
+    cells: h.ids.map((id) => ({ id, name: g.provinces[id].name, owner: g.provinces[id].owner, controller: g.provinces[id].controller })),
+    info: info ? {
+      provinces: (info.provinces || []).map((p) => p.name || p),
+      myWs: info.myWs, exit: info.exit, separate: info.separate,
+      sideLeader: info.sideLeader, enemyLeader: info.enemyLeader,
+      envoyMonthsLeft: info.envoyMonthsLeft, noNegotiation: info.noNegotiation,
+    } : null,
+  };
+}, held);
+const gDump = await dump(guest);
+const hDump = await dump(host);
+console.log('  GUEST sees: ' + JSON.stringify(gDump));
+console.log('  HOST  sees: ' + JSON.stringify(hDump));
+const table = gDump.info;
 ok(!!table, 'the guest gets a peace table at all');
 ok(table && table.provinces.length >= 2,
   'and it offers the ground they hold: ' + JSON.stringify(table && table.provinces));

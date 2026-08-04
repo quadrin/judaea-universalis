@@ -1045,6 +1045,87 @@ export const DECISIONS = {
 };
 
 // ------------------------------------------------------------------ gameActions (§6.6, frozen)
+// An offer of alliance between two courts SOMEBODY IS SITTING IN (SPEC §216).
+//
+// Every diplomatic offer in this engine is weighed by the receiving court's own
+// evaluator, because the receiving court has always been a machine. Between two
+// players that is the wrong answer twice over: it decides for a person who is
+// sitting right there, and it decides on `opinionOfUs`, a number that means
+// "how the AI feels" and means nothing at all about what a human wants. So the
+// letter is DEALT to them — a card at their table, addressed to their court,
+// which under §216's routing only they can answer.
+//
+// The card is a dynamic event (§32), so its effects are functions that never
+// cross the wire; the guest sees the display fields and sends back an index.
+// Both courts are closed over rather than read off `playerTag`, because the
+// hand that answers is not the hand that wrote.
+function offerAllianceToCourt(ctx, from, to) {
+  const g = ctx.game;
+  if (!ctx.dynEvents) return false;
+  const id = 'dyn_ally_' + from + '_' + to;
+  // One letter at a time: a second offer while the first is unanswered would
+  // put two identical cards on their table.
+  if ((g.pendingEvents || []).some((pe) => pe && pe.eventId === id)) return false;
+  if (g.firedEvents) delete g.firedEvents[id]; // an offer may always be made again
+  const mine = g.tags[from];
+  const theirs = g.tags[to];
+  if (!mine || !theirs) return false;
+  const myName = mine.name || from;
+  const ev = {
+    id,
+    title: 'An Offer of Alliance',
+    desc: myName + ' proposes a bond of arms: each crown to the other\'s wars, '
+      + 'each border quiet at the other\'s back. The letter is sealed with their own '
+      + 'hand rather than an envoy\'s, and it asks for an answer rather than a favour.',
+    forTag: to,
+    major: true,
+    once: false,
+    aiOption: 1,
+    options: [
+      {
+        label: 'Take their hand — we are allies',
+        tooltip: 'The alliance binds at once. Their wars are ours and ours are theirs.',
+        effects: () => {
+          const a = g.tags[from];
+          const b = g.tags[to];
+          if (!a || !b || !a.alive || !b.alive) return;
+          if (!a.allies) a.allies = [];
+          if (!b.allies) b.allies = [];
+          if (a.allies.indexOf(to) < 0) a.allies.push(to);
+          if (b.allies.indexOf(from) < 0) b.allies.push(from);
+          ctx.bus.emit('notify', {
+            title: 'An alliance is bound',
+            text: (b.name || to) + ' and ' + (a.name || from) + ' are allies. '
+              + 'Each crown answers the other\'s wars.',
+            type: 'good',
+          });
+          try { chronicleCore(ctx, 'diplomacy', (a.name || from) + ' and ' + (b.name || to) + ' bind themselves in alliance.'); } catch (e) { /* the record is optional */ }
+        },
+      },
+      {
+        label: 'Send the letter back unsigned',
+        tooltip: 'No alliance — and no quarrel either. They will not write again for '
+          + DIPLO.allyCdMonths + ' months.',
+        effects: () => {
+          // No opinion is docked: a person saying no is not an insult the way a
+          // court's refusal is. The cooldown IS kept, and on the writer's own
+          // key (§216) — otherwise one player could deal the other a card every
+          // month until they clicked to be rid of it.
+          setDiploCd(ctx, from + '>' + to + ':ally', DIPLO.allyCdMonths);
+          ctx.bus.emit('notify', {
+            title: 'The offer is declined',
+            text: 'The letter goes back to ' + myName + ' unsigned.',
+            type: 'info',
+          });
+        },
+      },
+    ],
+  };
+  ctx.dynEvents.set(id, ev);
+  try { fireEventCore(ctx, ev); } catch (e) { warnOnce('allyOffer', 'alliance offer card failed', e); return false; }
+  return true;
+}
+
 export function gameActions(ctx) {
   const g = ctx.game;
   const say = (title, text, type) => ctx.bus.emit('notify', { title, text, type: type || 'info' });
@@ -1174,7 +1255,14 @@ export function gameActions(ctx) {
             + '% — we still hold ' + grudgeLabel + ').'
           : 'No alliance while we hold ' + grudgeLabel + ' — the lost lands are remembered.';
       }
-      else if (opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
+      // A court somebody is SITTING in answers for itself (SPEC §216), so the
+      // one bar that is the AI's own willingness comes down for it. Every bar
+      // above this line is a rule of the world — already allied, at war, a
+      // collar either way, land of theirs in our hands — and those hold for
+      // anybody. "They think too little of us" is not a rule of the world; it
+      // is a machine's opinion standing in for a person who is right there and
+      // can say no themselves.
+      else if (!isHumanChair(g, tag) && opinionOfUs < DIPLO.allyMinOpinion) whyNotAlly = 'They think too little of us (' + DIPLO.allyMinOpinion + ' opinion required).';
       else if (diploCdActive(ctx, dipKey(tag, 'ally'))) whyNotAlly = 'Our last offer still stings (' + diploCdMonthsLeft(ctx, dipKey(tag, 'ally')) + ' months).';
       // The chancery has only so many envoys (SPEC §202), and an alliance is a
       // bond BOTH courts have to staff — theirs can be the full one.
@@ -2147,6 +2235,17 @@ export function gameActions(ctx) {
         const bar = allianceBarred(ctx, g.playerTag, tag);
         if (bar) { say('Alliance', bar, 'bad'); return; }
         const me = g.playerTag;
+        // A letter to a court somebody is SITTING in is a letter to a person
+        // (SPEC §216). Their opinion of us is not the answer — they are. The
+        // offer is dealt to their table as a card, and until they answer it
+        // there is no alliance and no refusal, only a letter in transit.
+        if (tag !== me && isHumanChair(g, tag)) {
+          if (offerAllianceToCourt(ctx, me, tag)) {
+            say('The letter is sent', 'Our offer of alliance goes to ' + d.name
+              + '. The answer is theirs to give.', 'info');
+          }
+          return;
+        }
         const mine = g.tags[me], them = g.tags[tag];
         const accept = d.opinionOfUs >= DIPLO.allyAcceptOpinion ||
           (d.opinionOfUs >= DIPLO.allyMinOpinion && sharedWarEnemy(ctx, me, tag));
