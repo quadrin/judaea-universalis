@@ -86,16 +86,43 @@ await host.waitForFunction(() => (window._ctx.game.wars || []).some((w) => w && 
   null, { timeout: 10000 });
 ok(true, 'the guest declared its war of independence from the host\'s world');
 
-console.log('== the guest holds Roman ground ==');
+console.log('== the guest holds Roman ground that touches his kingdom ==');
+// SPEC §116: a demand has to be somewhere. Occupied land may only be demanded
+// where it TOUCHES the claimant's own country — otherwise the table would sell
+// whatever an army happened to be standing in. Agrippa's kingdom is the Golan
+// and Batanea, so his demands must start at his own border; the far southern
+// coast is not his to ask for however long he stands on it.
 const held = await host.evaluate(() => {
   const g = window._ctx.game;
+  const nb = window._ctx.geom.neighbors;
   const war = (g.wars || []).find((w) => w && w.cb === 'independence');
-  const land = Object.values(g.provinces).filter((p) => p && p.owner === 'ROM').slice(0, 2);
+  const mine = [];
+  for (let i = 1; i < g.provinces.length; i++) if (g.provinces[i] && g.provinces[i].owner === 'AGR') mine.push(i);
+  const touching = [];
+  for (const id of mine) {
+    for (const n of (nb[id] || [])) {
+      const q = g.provinces[n];
+      if (q && q.owner === 'ROM' && !q.impassable && touching.indexOf(n) < 0) touching.push(n);
+    }
+  }
+  const land = touching.slice(0, 2).map((id) => g.provinces[id]);
   for (const p of land) window._ctx.helpers.changeController(window._ctx, p.name, 'AGR');
+  // …and one far away, held just as hard, which the table must still refuse.
+  const far = Object.values(g.provinces).find((p) => p && p.owner === 'ROM' && touching.indexOf(p.id) < 0
+    && !mine.some((id) => (nb[p.id] || new Set()).has ? false : false));
+  const farCell = Object.values(g.provinces).find((p) => p && p.owner === 'ROM' && p.name === 'Gaza')
+    || Object.values(g.provinces).filter((p) => p && p.owner === 'ROM' && touching.indexOf(p.id) < 0)[0];
+  if (farCell) window._ctx.helpers.changeController(window._ctx, farCell.name, 'AGR');
   war.warscore = { ...(war.warscore || {}), AGR: 80 };
   window._mp.snapDirty = true;
-  return { warId: war.id, names: land.map((p) => p.name), ids: land.map((p) => p.id) };
+  return {
+    warId: war.id, names: land.map((p) => p.name), ids: land.map((p) => p.id),
+    far: farCell ? { id: farCell.id, name: farCell.name } : null,
+    agrLand: mine.length,
+  };
 });
+ok(held.ids.length > 0, 'Rome holds ground on Agrippa\'s border: ' + held.names.join(', ')
+  + ' (his realm is ' + held.agrLand + ' cells)');
 await guest.waitForFunction((ids) => ids.every((id) => window._ctx.game.provinces[id].controller === 'AGR'),
   held.ids, { timeout: 10000 });
 ok(true, 'the guest\'s mirror shows them held: ' + held.names.join(', '));
@@ -146,8 +173,10 @@ console.log('  GUEST sees: ' + JSON.stringify(gDump));
 console.log('  HOST  sees: ' + JSON.stringify(hDump));
 const table = gDump.info;
 ok(!!table, 'the guest gets a peace table at all');
-ok(table && table.provinces.length >= 2,
-  'and it offers the ground they hold: ' + JSON.stringify(table && table.provinces));
+ok(table && table.provinces.length >= held.ids.length,
+  'and it offers the bordering ground they hold: ' + JSON.stringify(table && table.provinces));
+ok(!held.far || !(table.provinces || []).includes(held.far.name),
+  'while ' + (held.far && held.far.name) + ', held but far from his kingdom, is rightly not on the table (SPEC §116)');
 ok(table && !table.envoyMonthsLeft,
   'their envoys are not cooled by anything the host did — ' + JSON.stringify(table && table.envoyMonthsLeft));
 const verdict = await guest.evaluate((h) => {
