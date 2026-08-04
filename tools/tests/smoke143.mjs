@@ -154,6 +154,77 @@ console.log('== a card is answered by whoever holds the chair it names ==');
     'their answer is the one that runs — the host executes it under their crown');
 }
 
+// Whose card is whose, and who may answer it. A court's own decision belongs
+// to the player sitting in that court; world history and a foreign court's
+// notice belong to nobody's court, so either player may answer for the table.
+console.log('== a court decides for itself; the world is anybody\'s to answer ==');
+{
+  const mine = {
+    id: 'ev_test_court_only', title: 'The Captains Want an Answer', desc: 'Ours to make.',
+    forTag: 'ARI', aiOption: 0,
+    options: [{ label: 'Yes', effects: (c) => c.helpers.setFlag(c, 'testMine', true) }, { label: 'No' }],
+  };
+  const world = {
+    id: 'ev_test_world', title: 'Rome Crosses the Rubicon', desc: 'It happened.',
+    forTag: 'both', world: true, aiOption: 0,
+    options: [{ label: 'So be it', effects: (c) => c.helpers.setFlag(c, 'testWorld', true) }],
+  };
+  const table = boot('HYR', ['ARI'], [mine, world]);
+  const g = table.g;
+
+  fireEvent(table.ctx, mine);
+  const a = g.pendingEvents.find((pe) => pe.eventId === 'ev_test_court_only');
+  ok(!!a && a.forTag === 'ARI', 'a court\'s own card is addressed to that court');
+
+  fireEvent(table.ctx, world);
+  const b = g.pendingEvents.find((pe) => pe.eventId === 'ev_test_world');
+  ok(!!b && b.forTag === 'HYR', 'world history is addressed to the protagonist chair, as it always was');
+
+  // main.js relays a world card to every chair and a court's card to its own;
+  // the rule it relays on is the card, so it is checked on the card.
+  ok(world.world === true && mine.world !== true,
+    'and the two are told apart by the card itself, not by who is at the table');
+
+  // Whoever answers a shared card, its effects land where it was ADDRESSED —
+  // main.js runs the answer under `pe.forTag`, which is what this asserts.
+  const prev = g.playerTag;
+  g.playerTag = b.forTag; // the chair the card names, not the hand that clicked
+  resolveEventOption(table.ctx, b.instanceId, 0);
+  g.playerTag = prev;
+  ok(g.flags.testWorld === true, 'a guest answering world history still runs it on the world');
+  ok(!g.pendingEvents.some((pe) => pe.instanceId === b.instanceId), 'and it comes off the table');
+  // A second click, from the other player, finds nothing left to resolve.
+  const before = JSON.stringify(g.flags);
+  resolveEventOption(table.ctx, b.instanceId, 0);
+  ok(JSON.stringify(g.flags) === before, 'the second player\'s click does nothing at all — first answer wins');
+}
+
+console.log('== nobody starts the clock on somebody else\'s decision ==');
+{
+  const card = {
+    id: 'ev_test_pause', title: 'A Question for Aristobulus', desc: 'Theirs to answer.',
+    forTag: 'ARI', aiOption: 0, options: [{ label: 'Yes' }, { label: 'No' }],
+  };
+  const table = boot('HYR', ['ARI'], [card]);
+  const g = table.g;
+  const actions = gameActions(table.ctx);
+  fireEvent(table.ctx, card);
+  ok(g.paused === true, 'the card stops the world for the whole table');
+  actions.togglePause(); // the host, with no card of its own on screen
+  ok(g.paused === true, 'and the host cannot start it again while the guest still holds the card');
+  resolveEventOption(table.ctx, g.pendingEvents[0].instanceId, 0);
+  actions.togglePause();
+  ok(g.paused === false, 'once answered, the clock is the table\'s again');
+
+  // A solo campaign is untouched: there is no other chair to wait for.
+  const solo = boot('HYR', null, [{ ...card, forTag: 'HYR' }]);
+  const soloActions = gameActions(solo.ctx);
+  fireEvent(solo.ctx, solo.ctx.events[0]);
+  ok(solo.g.paused === true, 'a solo card pauses the same way');
+  soloActions.togglePause();
+  ok(solo.g.paused === false, 'and one player may always start their own clock');
+}
+
 console.log('== a foreign decider is foreign to the chair it is dealt to ==');
 {
   // The decider IS the guest's own court: their choice, not a notice.

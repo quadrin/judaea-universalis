@@ -1610,6 +1610,10 @@ export function initUI(staticCtx) {
     bus.on('actionTaken', safe('actionTaken', () => {
       topbar.refresh(); panel.refresh(); outliner.refresh(true); nationPanel.refresh(); updatePill();
     }));
+    // A card answered anywhere comes off this table too (SPEC §216): world
+    // history and a foreign court's notice are dealt to every chair, and the
+    // first player to answer answers for all of them.
+    bus.on('eventResolved', safe('eventResolved', (p) => eventModal.closeResolved(p && p.instanceId)));
     bus.on('recruitmentComplete', safe('recruitmentComplete', () => { panel.refresh(); outliner.refresh(true); }));
     bus.on('provinceOwner', safe('provOwner', () => { panel.refresh(); outliner.refresh(); }));
     bus.on('provinceController', safe('provCtrl', () => { panel.refresh(); outliner.refresh(); }));
@@ -1635,7 +1639,7 @@ export function initUI(staticCtx) {
   // Multiplayer guests mirror the host's event cards read-only (main.js wires
   // these to the {t:'event'} / {t:'eventDone'} messages).
   function showRemoteEvent(p) { try { eventModal.showRemote(p); } catch (e) { warnOnce('remoteEvent', e); } }
-  function closeRemoteEvent(instanceId) { try { eventModal.closeRemote(instanceId); } catch (e) { warnOnce('remoteEventDone', e); } }
+  function closeRemoteEvent(instanceId) { try { eventModal.closeResolved(instanceId); } catch (e) { warnOnce('remoteEventDone', e); } }
   // A multiplayer host sweeps its own chair after running a guest's order
   // (SPEC §216) — a card fired under the borrowed crown was never offered to
   // this screen.

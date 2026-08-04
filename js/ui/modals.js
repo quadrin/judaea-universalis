@@ -235,8 +235,25 @@ export function createEventModal(el) {
     maybeShow();
   }
 
+  // Somebody else answered it. World history and a foreign court's notice go
+  // to every chair at a multiplayer table and the first click resolves them
+  // for everybody (SPEC §216) — so a card that is no longer pending must come
+  // off THIS table too, whether we were holding it as our own or mirroring it.
+  function closeResolved(instanceId) {
+    if (instanceId == null) return;
+    closeRemote(instanceId);
+    queue = queue.filter((q) => q.instanceId !== instanceId);
+    if (current && current.instanceId === instanceId) {
+      current = null;
+      el.classList.add('hidden');
+      el.innerHTML = '';
+      maybeShow();
+      if (!current) renderRemote(); // a relayed card may be waiting behind it
+    }
+  }
+
   return {
-    bind, onBusEvent, showRemote, closeRemote, rescan,
+    bind, onBusEvent, showRemote, closeRemote, closeResolved, rescan,
     isOpen: () => !!current || remoteQueue.length > 0,
   };
 }

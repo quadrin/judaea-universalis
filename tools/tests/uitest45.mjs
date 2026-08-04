@@ -203,6 +203,76 @@ ok(dates.host.d === dates.guest.d && dates.host.m === dates.guest.m,
 const stillSeated = await guest.evaluate(() => window._ctx.game.playerTag);
 ok(stillSeated === 'ARI', 'and snapshots leave the guest in its own chair');
 
+console.log('== the clock, from both sides ==');
+// Pause and speed answer under the finger on the guest, then the host's own
+// world agrees. A guest never ticks, so its clock is display until the
+// snapshot lands — but the display must not lag the press.
+await host.evaluate(() => { window._ctx.game.paused = false; window._mp.snapDirty = true; });
+await guest.waitForFunction(() => window._ctx.game.paused === false, null, { timeout: 8000 });
+await guest.evaluate(() => { window._actions.togglePause(); });
+const feltAtOnce = await guest.evaluate(() => window._ctx.game.paused);
+ok(feltAtOnce === true, 'the guest\'s pause answers on the guest at once, without waiting for the host');
+await host.waitForFunction(() => window._ctx.game.paused === true, null, { timeout: 8000 });
+ok(true, 'and the host\'s world stops with it');
+await guest.evaluate(() => { window._actions.setSpeed(4); });
+ok(await guest.evaluate(() => window._ctx.game.speed) === 4, 'so does a speed change');
+await host.waitForFunction(() => window._ctx.game.speed === 4, null, { timeout: 8000 });
+ok(true, 'and the host runs at the speed the guest asked for');
+await guest.evaluate(() => { window._actions.togglePause(); });
+await host.waitForFunction(() => window._ctx.game.paused === false, null, { timeout: 8000 });
+ok(true, 'the guest starts the clock again too');
+
+console.log('== a card at one chair holds the clock at both ==');
+await host.evaluate(() => {
+  window._ctx.helpers.fireEvent(window._ctx, 'ev4_embassy_ari'); // addressed to ARI
+});
+await guest.waitForFunction(() => {
+  const el = document.getElementById('event-modal');
+  return !el.classList.contains('hidden') && /Embassy/.test(el.textContent);
+}, null, { timeout: 10000 });
+ok(await host.evaluate(() => window._ctx.game.paused) === true, 'the guest\'s card stopped the world');
+await host.evaluate(() => { window._actions.togglePause(); });
+await host.waitForTimeout(400);
+ok(await host.evaluate(() => window._ctx.game.paused) === true,
+  'and the host cannot start it while the guest still holds the card');
+const held = await host.evaluate(() => document.getElementById('toast-container').textContent);
+ok(/world waits|still on the table/i.test(held), 'the host is told why: ' + JSON.stringify(held.slice(-90)));
+await guest.locator('#event-modal .ev-opt').first().click();
+await host.waitForFunction(() => window._ctx.game.pendingEvents.length === 0, null, { timeout: 10000 });
+await host.evaluate(() => { window._actions.togglePause(); });
+await host.waitForFunction(() => window._ctx.game.paused === false, null, { timeout: 8000 });
+ok(true, 'once answered, the host may start the clock again');
+
+console.log('== world history is anybody\'s to answer ==');
+await host.evaluate(() => {
+  const g = window._ctx.game;
+  g.paused = true;
+  window._ctx.dynEvents.set('ev_test_world_mp', {
+    id: 'ev_test_world_mp', title: 'A World Dispatch', desc: 'It happened elsewhere.',
+    forTag: 'both', world: true, aiOption: 0,
+    options: [{ label: 'So be it', effects: (c) => c.helpers.setFlag(c, 'mpWorldDone', true) }],
+  });
+  window._ctx.bus.emit('event', {
+    instanceId: 9911, event: window._ctx.dynEvents.get('ev_test_world_mp'), forTag: g.playerTag,
+  });
+  g.pendingEvents.push({ instanceId: 9911, eventId: 'ev_test_world_mp', forTag: g.playerTag });
+});
+await guest.waitForFunction(() => {
+  const el = document.getElementById('event-modal');
+  return !el.classList.contains('hidden') && /A World Dispatch/.test(el.textContent);
+}, null, { timeout: 10000 });
+ok(true, 'a world card reaches the guest as well as the host');
+ok(await guest.locator('#event-modal .ev-opt[disabled]').count() === 0,
+  'and its button is live for them — either player may answer it');
+await guest.locator('#event-modal .ev-opt').first().click();
+await host.waitForFunction(() => window._ctx.game.flags.mpWorldDone === true, null, { timeout: 10000 });
+ok(true, 'the guest answered world history for the table, and it ran on the world');
+await host.waitForFunction(() => {
+  const el = document.getElementById('event-modal');
+  return el.classList.contains('hidden') || !/A World Dispatch/.test(el.textContent);
+}, null, { timeout: 8000 });
+ok(true, 'and the host\'s own copy came off the table with it');
+
 const errs = hostErrors.concat(guestErrors).filter((e) => !/stun|ice|turn/i.test(e));
 ok(errs.length === 0, 'no page errors across both browsers: ' + JSON.stringify(errs.slice(0, 3)));
 

@@ -278,7 +278,11 @@ static site, the zero dependencies, or the missing build step changes.
   default wherever the chapter has more than one standard: Hyrcanus against Aristobulus,
   Herod against Antigonus, Judaea beside Agrippa's kingdom or Adiabene, Samaria beside
   Himyar. Each of you rules your own realm — your own treasury, court, missions, armies
-  and event cards to answer — in the one world, on the host's clock. Or seat a guest
+  and event cards to answer — in the one world, on one clock. Your court's
+  decisions are yours alone; world history and the doings of foreign courts
+  reach both of you and either can answer for the table. A card stops the
+  world for everybody, and nobody can start it again while a dispatch is still
+  open at the other throne. Or seat a guest
   **beside you** and you share a nation: any player can move the armies, spend the
   treasury and steer the clock, story cards appear on every screen with the host
   making the choice, and every toast the realm receives reaches all of you.

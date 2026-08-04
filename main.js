@@ -245,15 +245,26 @@ async function boot() {
     if (MP_QUERY_RE.test(m.name) || typeof actions[m.name] !== 'function') return;
     const g = ctx.game;
     if (!guest || !g.tags[guest.tag]) return;
-    // The order runs under the guest's crown and the bus is held shut until
-    // ours is back under us — `runUnderChair` is where that rule lives, and
-    // why (SPEC §216: the host's own panels used to redraw as the guest).
+    // An ANSWER runs under the chair the card was dealt to, not under the
+    // hand that clicked it (SPEC §216). For a court's own decision those are
+    // the same chair. For world history and a foreign court's notice — which
+    // either player may answer — they are not: the effects belong where the
+    // card was addressed, so a guest acknowledging Rome's business must not
+    // make it happen to the guest's realm.
+    let chair = guest.tag;
+    if (m.name === 'chooseEventOption' && Array.isArray(m.args)) {
+      const pe = (g.pendingEvents || []).find((x) => x && x.instanceId === m.args[0]);
+      if (pe && pe.forTag && g.tags[pe.forTag]) chair = pe.forTag;
+    }
+    // The order runs under that crown and the bus is held shut until ours is
+    // back under us — `runUnderChair` is where that rule lives, and why
+    // (SPEC §216: the host's own panels used to redraw as the guest).
     mp.capturing = true;
     mp.hostChair = g.playerTag;
     const order = runUnderChair({
       game: g,
       bus,
-      chair: guest.tag,
+      chair,
       run: () => actions[m.name](...(Array.isArray(m.args) ? m.args : [])),
       onError: (e) => console.warn('[mp] guest command failed:', m.name, e),
     });
@@ -333,19 +344,28 @@ async function boot() {
       // fixed course before it travels, so the far end sees exactly the
       // single-button card the host would see.
       //
-      // Who answers it follows from who is sitting where. A guest sharing the
-      // host's throne mirrors it read-only — the host holds that realm's pen,
-      // the v1.8 rule. A guest on its OWN throne is the only human that chair
-      // has, so the buttons are live and its answer comes back as an ordinary
-      // command, run on the host under that chair.
+      // Who answers it follows from WHOSE COURT IT LANDS ON.
+      //
+      //   a court's own decision — the player sitting in that court answers,
+      //     and nobody else: its effects land on that realm and no other hand
+      //     should be on them. A guest sharing the host's throne still mirrors
+      //     the host's read-only, the v1.8 rule — one realm, one pen.
+      //   nobody's court — world history (`world: true`) and a foreign court's
+      //     decision (§70's notice, which is an acknowledgement rather than a
+      //     choice) land on the chapter rather than on a realm. Those go to
+      //     EVERY chair with live buttons, and whichever player gets to it
+      //     first answers for the table: the card is resolved by instanceId,
+      //     so the second click finds nothing to resolve and does nothing.
       bus.on('event', (p) => {
         if (!p || !p.event) return;
         const ev = p.event;
         const audience = p.forTag;
         const hostChair = hostChairTag();
-        const readers = mp.guests.filter((guest) => guest.tag === audience);
+        const shared = ev.world === true || p.notice === true;
+        const readers = shared ? mp.guests.slice() : mp.guests.filter((guest) => guest.tag === audience);
         if (!readers.length) return; // a card for a court nobody at this table holds
-        const theirs = audience !== hostChair; // …then the chair is a guest's own
+        // Live buttons: a chair of one's own, or a card that is nobody's chair.
+        const theirs = shared || audience !== hostChair;
         // Indices stay the event's own: the mask below renames positions, and
         // an answer that travels has to name the option, not its place in a
         // filtered list.
@@ -485,12 +505,25 @@ async function boot() {
     mp.myTag = myTag;
     document.getElementById('start-screen').classList.add('hidden');
     // Orders leave for the host; questions are answered from the local mirror.
+    //
+    // The clock is the exception, and it is a feel thing (SPEC §216). Pause and
+    // speed are the two controls a player expects to answer under the finger,
+    // and a round trip to the host and back in the next snapshot is long enough
+    // to read as a dropped press — so the guest also runs them on its own
+    // mirror at once. Nothing is risked by it: a guest never ticks, so its
+    // `paused` and `speed` are display until the host's snapshot lands, and if
+    // the host declines — it will not start the clock while a dispatch is open
+    // at another chair — the very next snapshot puts the mirror straight.
+    const OPTIMISTIC = new Set(['togglePause', 'setSpeed']);
     startGame(game, entry, (local) => {
       const out = {};
       for (const k of Object.keys(local)) {
         out[k] = MP_QUERY_RE.test(k)
           ? local[k]
-          : (...args) => { mp.peer.send({ t: 'cmd', name: k, args }); };
+          : (...args) => {
+            mp.peer.send({ t: 'cmd', name: k, args });
+            if (OPTIMISTIC.has(k)) local[k](...args);
+          };
       }
       return out;
     });
