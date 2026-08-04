@@ -117,6 +117,29 @@ const dump = (side) => side.evaluate((h) => {
     } : null,
   };
 }, held);
+// Why the loop finds nothing: run its own gates, on the guest, cell by cell.
+const probe = await guest.evaluate((h) => {
+  const g = window._ctx.game;
+  const war = (g.wars || []).find((w) => w && w.id === h.warId);
+  const me = g.playerTag;
+  const mySide = war.attackers.indexOf(me) >= 0 ? war.attackers : war.defenders;
+  const theirSide = war.attackers.indexOf(me) >= 0 ? war.defenders : war.attackers;
+  const rows = h.ids.map((id) => {
+    const p = g.provinces[id];
+    return {
+      id, has: !!p, impassable: p && p.impassable,
+      owner: p && p.owner, controller: p && p.controller,
+      ownerOnTheirSide: p ? theirSide.indexOf(p.owner) >= 0 : null,
+      controllerOnMySide: p ? mySide.indexOf(p.controller) >= 0 : null,
+    };
+  });
+  return {
+    isArray: Array.isArray(g.provinces), length: g.provinces.length,
+    mySide, theirSide, rows,
+    actionsAreProxy: String(window._actions.getPeaceInfo).indexOf('peer.send') >= 0,
+  };
+}, held);
+console.log('  PROBE: ' + JSON.stringify(probe));
 const gDump = await dump(guest);
 const hDump = await dump(host);
 console.log('  GUEST sees: ' + JSON.stringify(gDump));
