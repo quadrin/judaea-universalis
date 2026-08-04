@@ -14650,10 +14650,30 @@ The gate is exported apart from the schedule (`ikusWindow`, `ikusOdds`) because
 they are two separate claims, and a suite that could only see them multiplied
 together would have to roll a hundred times to test a window.
 
+The guarantee does not rest on the distribution, and the suite proves it at
+the place it could fail: `freeDraw` returns `h / 2^32`, strictly below 1 for
+every possible stream position, and `ikusOdds(119)` is exactly 1 — so the
+comparison at the final month of the window is true whatever the campaign has
+been doing. Everything before that only decides *when* inside the decade.
+Measured at that month against 20,000 stream positions in each of the seven
+chapters that have the town: no misses. And the calendar visits months 0–119
+exactly once each before the window shuts, so the last month is one the game
+actually plays rather than one it steps over. `checkTriggeredEvents` is not
+gated on a verdict either, so a campaign that has already won or lost keeps
+dealing it.
+
+Three things still miss, and all three are the gate rather than the schedule:
+1948, where there is no Tingis; a court that no longer exists; and a campaign
+put down before the month it was going to arrive in — no card can be dealt in a
+month nobody plays.
+
 - **Regression contract**: `smoke148` — registration in all eight chapters and
   last in each; the town present in seven maps and absent from the eighth, with
   the rename control that proves the gate is the town rather than the year; the
-  ten-year window on both sides of the year-zero line; the schedule climbing
+  ten-year window on both sides of the year-zero line; the last month of that
+  window dealing the card against 20,000 stream positions in every chapter that
+  has the town, and the calendar visiting months 0–119 exactly once each; the
+  schedule climbing
   1/120 to 1/1 as the decade runs out, and 12,000 probe campaigns landing
   uniformly across it; a decade of monthly checks leaving `rngState` exactly
   where it found it and answering the same way twice; twenty seeded campaigns

@@ -159,6 +159,48 @@ console.log('== the window is the chapter\'s own first ten years ==');
   }
 }
 
+console.log('== 100% inside ten game years, and the proof is the last month ==');
+{
+  // The guarantee does not rest on a distribution. `freeDraw` returns
+  // h / 2^32, which is strictly below 1 for every possible stream position,
+  // and `ikusOdds` at the final month of the window is exactly 1 — so the
+  // comparison at month 119 is true whatever the campaign has been doing.
+  // Everything before that only decides WHEN inside the decade.
+  ok(ikusOdds(119) === 1, 'the last month of the window asks for certainty, not odds');
+
+  // Every chapter that has the town, stood at the last month of its own
+  // window, against twenty thousand different stream positions.
+  for (const era of ERAS) {
+    if (era.bookmark.id === '1948ce') continue; // no Tingis: shut by design
+    const w = boot(era.bookmark.id);
+    setAge(w, 9, 11); // month 119
+    ok(ikusWindow(w.ctx) === 119, era.bookmark.id + ': month 119 is inside the window');
+    let misses = 0;
+    for (let i = 0; i < 20000; i++) {
+      w.game.rngState = (Math.imul(i + 1, 2654435761) ^ (i << 7)) >>> 0;
+      if (!CARD.trigger(w.ctx)) misses++;
+    }
+    ok(misses === 0, '  and 20,000 stream positions all deal it there — '
+      + misses + ' misses');
+  }
+
+  // …and the campaign actually VISITS every month of that window: 120 monthly
+  // checks, numbered 0 to 119 with none skipped and none repeated. A window
+  // whose last month the calendar steps over would be a guarantee on paper.
+  for (const [eraId, label] of [['66ce', '66 CE'], ['167bce', '167 BCE'], ['40bce', '40 BCE']]) {
+    const w = boot(eraId);
+    const seen = [];
+    for (let k = 0; k < 130; k++) {
+      setAge(w, 0, k);
+      const m = ikusWindow(w.ctx);
+      if (m >= 0) seen.push(m);
+    }
+    const wanted = Array.from({ length: 120 }, (_, i) => i);
+    ok(seen.length === 120 && seen.every((m, i) => m === wanted[i]),
+      label + ': the calendar visits months 0–119 exactly once each, then shuts');
+  }
+}
+
 console.log('== the draw costs the campaign nothing ==');
 {
   // The whole reason the odds are in the trigger instead of `ev.chance`: a
