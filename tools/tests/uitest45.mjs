@@ -209,13 +209,24 @@ console.log('== the clock, from both sides ==');
 // snapshot lands — but the display must not lag the press.
 await host.evaluate(() => { window._ctx.game.paused = false; window._mp.snapDirty = true; });
 await guest.waitForFunction(() => window._ctx.game.paused === false, null, { timeout: 8000 });
-await guest.evaluate(() => { window._actions.togglePause(); });
-const feltAtOnce = await guest.evaluate(() => window._ctx.game.paused);
-ok(feltAtOnce === true, 'the guest\'s pause answers on the guest at once, without waiting for the host');
+// Measured in the SAME tick as the press: no snapshot can land between the
+// two statements, so this is the feel of the key rather than a race with the
+// network. (The wish then holds it against snapshots already in flight.)
+const feltAtOnce = await guest.evaluate(() => {
+  window._actions.togglePause();
+  return window._ctx.game.paused;
+});
+ok(feltAtOnce === true, 'the guest\'s pause answers on the guest in the same tick as the press');
+await guest.waitForTimeout(700);
+ok(await guest.evaluate(() => window._ctx.game.paused) === true,
+  'and the snapshots in flight do not undo it a moment later');
 await host.waitForFunction(() => window._ctx.game.paused === true, null, { timeout: 8000 });
 ok(true, 'and the host\'s world stops with it');
-await guest.evaluate(() => { window._actions.setSpeed(4); });
-ok(await guest.evaluate(() => window._ctx.game.speed) === 4, 'so does a speed change');
+const speedAtOnce = await guest.evaluate(() => {
+  window._actions.setSpeed(4);
+  return window._ctx.game.speed;
+});
+ok(speedAtOnce === 4, 'so does a speed change');
 await host.waitForFunction(() => window._ctx.game.speed === 4, null, { timeout: 8000 });
 ok(true, 'and the host runs at the speed the guest asked for');
 await guest.evaluate(() => { window._actions.togglePause(); });

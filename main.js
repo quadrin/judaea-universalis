@@ -221,6 +221,7 @@ async function boot() {
   const mp = {
     role: null, guests: [], peer: null, myTag: null,
     lastSnapAt: 0, snapDirty: false, capturing: false, hostChair: null,
+    clockWish: null, // a guest's unanswered pause/speed press (SPEC §216)
   };
   const MP_QUERY_RE = /^(get|explain|can|evaluate)/;
   window._mp = mp; // debug/test handle
@@ -436,6 +437,20 @@ async function boot() {
     for (const k of Object.keys(g)) delete g[k];
     Object.assign(g, snapGame);
     g.ui = keepUi;               // selections are ours, not the host's
+    // A press we have made and the host has not answered yet outlives the
+    // snapshots in flight when we made it (SPEC §216). Without this the clock
+    // is worse than slow, it is JUMPY: the guest pauses, a heartbeat sent
+    // before the order arrived unpauses the mirror a moment later, and the
+    // host's own pause lands after that — three states for one keypress. The
+    // wish is held until a snapshot agrees with it, and then let go; if the
+    // host declines (a dispatch open at another chair), the wish times out and
+    // the world the host is running wins, which is the rule everywhere else.
+    if (mp.clockWish) {
+      const stale = performance.now() - mp.clockWish.at > 2500;
+      const agreed = g.paused === mp.clockWish.paused && g.speed === mp.clockWish.speed;
+      if (stale || agreed) mp.clockWish = null;
+      else { g.paused = mp.clockWish.paused; g.speed = mp.clockWish.speed; }
+    }
     // Keep our assigned chair when it still exists. If a formable replaced it,
     // the authoritative snapshot's chair is the safe fallback.
     const snapTag = g.playerTag;
@@ -522,7 +537,11 @@ async function boot() {
           ? local[k]
           : (...args) => {
             mp.peer.send({ t: 'cmd', name: k, args });
-            if (OPTIMISTIC.has(k)) local[k](...args);
+            if (!OPTIMISTIC.has(k)) return;
+            local[k](...args);
+            // …and remember what we asked for, so the snapshots already on
+            // their way here cannot undo it before the host has answered.
+            mp.clockWish = { paused: ctx.game.paused, speed: ctx.game.speed, at: performance.now() };
           };
       }
       return out;
