@@ -149,6 +149,22 @@ export const DEFINES = {
     // formable crowns (SPEC §24)
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
+    // The constitutional crowns (SPEC §226). All ten are player-only crowns,
+    // so these are the tempers a HUMAN realm is read with by the courts around
+    // it rather than plans anybody executes — and they say what the
+    // constitution is: the two commonwealths and the temple-state are careful,
+    // the crowns take the field, and the two settlements built out of the
+    // Zealots do not stop.
+    SNH: { aggression: 0.6, caution: 1.4 },
+    GRL: { aggression: 1.1, caution: 1.0 },
+    YVL: { aggression: 0.9, caution: 1.1 },
+    HRZ: { aggression: 1.5, caution: 0.7 },
+    KHN: { aggression: 1.3, caution: 0.8 },
+    GRS: { aggression: 0.7, caution: 1.3 },
+    KTR: { aggression: 1.3, caution: 0.9 },
+    BTD: { aggression: 1.0, caution: 1.0 },
+    SHB: { aggression: 0.9, caution: 1.1 },
+    NSI: { aggression: 0.6, caution: 1.4 },
     // The republic that walked out of the union (SPEC §105): the most
     // coup-prone state in the region, and the one most convinced it is owed
     // the Golan.
@@ -380,6 +396,14 @@ export const DEFINES = {
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
+    // The ten constitutional crowns (SPEC §226). This table is not decoration
+    // for them: switchTagCore reads the new banner's government when a crown
+    // is proclaimed, so THIS is the line that makes taking the name of the
+    // Lot an act that abolishes the heir, and taking the name of the Jubilee
+    // an act that starts an election clock.
+    SNH: 'sanhedrin', GRL: 'lot', YVL: 'jubilee', HRZ: 'noRuler',
+    KHN: 'priestKing', GRS: 'gerousia',
+    KTR: 'diadem', BTD: 'davidic', SHB: 'dyarchy', NSI: 'nasi',
     HEZ: 'theocracy', // wilayat al-faqih, and a shura that chooses successors
     REB: 'tribal',
     LST: 'company', PIR: 'company', // SPEC §217
@@ -770,6 +794,65 @@ export const DEFINES = {
       name: 'United Arab Republic', adj: 'Arab', color: [26, 96, 54], religion: 'islam', culture: 'arab_modern', capital: 'Memphis',
       description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
       ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
+    },
+    // ---- the ten constitutional crowns (SPEC §226) ------------------------
+    // One banner per Jewish constitution. Each is a formable crown like the
+    // two above — never in a bookmark's activeTags — and each declares its
+    // constitution in GOV_OF below, which is how proclaiming one ADOPTS it:
+    // switchTagCore applies the new banner's government with the succession
+    // rules that go with it. The ideas are the constitution's own dividend
+    // and its own price, and they fold in ON TOP of what GOV_TYPES already
+    // grants it, so they are deliberately on a different axis from the
+    // government's own effects rather than a second helping of them.
+    SNH: {
+      name: 'The Temple-State', adj: 'Judaean', color: [58, 96, 132], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'High Priest, Sanhedrin and the four houses: the only arrangement in the room with four centuries of practice behind it.',
+      ideas: { incomeMult: 1.08, legitimacyAdd: 0.05, manpowerMult: 0.9 },
+    },
+    GRL: {
+      name: 'The Commonwealth of the Lot', adj: 'Judaean', color: [116, 86, 158], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The high priesthood filled from the urn: nobody inherits, and nobody is in office long enough to promise anything.',
+      ideas: { manpowerMult: 1.1, moraleMult: 1.06, incomeMult: 0.95 },
+    },
+    YVL: {
+      name: 'The Jubilee Commonwealth', adj: 'Judaean', color: [176, 142, 52], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'Leviticus 25 as the constitution: liberty proclaimed, the land reverting, and a countryside that owns what it fights for.',
+      ideas: { manpowerMult: 1.15, growthMult: 1.1, incomeMult: 0.9 },
+    },
+    HRZ: {
+      name: 'The Freedom of Zion', adj: 'Judaean', color: [150, 60, 54], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'No sovereign, no census, no tribute: a polity every neighbour must deal with and none of them has an address for.',
+      ideas: { moraleMult: 1.12, hillDefBonus: 1, incomeMult: 0.85 },
+    },
+    KHN: {
+      name: 'The Priest-Kingdom', adj: 'Hasmonean', color: [126, 66, 150], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The high priest of the Jews wearing a crown as well — a peer of every chancery, and a quarrel with the schools that will outlive the house.',
+      ideas: { moraleMult: 1.08, convertMult: 1.1, legitimacyAdd: 0.05 },
+    },
+    GRS: {
+      name: 'The Judaean Commonwealth', adj: 'Judaean', color: [70, 124, 110], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The mitre without the diadem: priesthood and elders, exactly as the decree confirming the house was worded.',
+      ideas: { incomeMult: 1.1, unrestAll: -0.25, growthMult: 1.05 },
+    },
+    KTR: {
+      name: 'The Crown of Judaea', adj: 'Judaean', color: [164, 120, 40], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'A crown taken out of a war by the house that won it: every chancery understands a king, and the objection is made at home in writing.',
+      ideas: { moraleMult: 1.1, disciplineMult: 1.05, manpowerMult: 0.95 },
+    },
+    BTD: {
+      name: 'The House of David', adj: 'Davidic', color: [62, 90, 190], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'The line of Jehoiachin on the throne: the one claim nobody argues with, and an expectation the state must live beside for ever.',
+      ideas: { legitimacyAdd: 0.1, unrestAll: -0.25, incomeMult: 1.05 },
+    },
+    SHB: {
+      name: 'The Two Houses', adj: 'Judaean', color: [46, 116, 128], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: 'Prince and priest, both hereditary, as the coinage implied: two successions to go wrong and no arbiter above either.',
+      ideas: { convertMult: 1.15, legitimacyAdd: 0.05, incomeMult: 0.95 },
+    },
+    NSI: {
+      name: 'The Patriarchate', adj: 'Judaean', color: [104, 126, 66], religion: 'judaism', culture: 'judean', capital: 'Jerusalem',
+      description: "Ezekiel's prince: a hereditary office engineered not to be a monarchy, heard wherever the letters of the Nasi are read.",
+      ideas: { convertMult: 1.15, incomeMult: 1.05, manpowerMult: 0.9 },
     },
     // The state that walks out of that union (SPEC §105). Syria kept the
     // name it took in 1961 for the rest of the century, through eight

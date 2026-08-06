@@ -14932,3 +14932,132 @@ off the occupier, where there is no Beirut to secede from at all.
   the new districts; and the Party of God seated with its ground, its court,
   its government and its opinions — from Beirut, from an occupier, and not
   twice.
+
+## 226. The constitution takes a name of its own
+
+Five forks in five chapters ask a playable court what kind of state it is, and
+four of them ask a Jewish one. Since §214 the answer is a fact rather than a
+label: the Government row moves with it, the succession rules move with it, a
+Judaea that filled its high priesthood by lot stopped designating heirs that
+afternoon and could no longer be married into by anybody.
+
+**And the map did not move at all.** All four settlements of 71 left the same
+three letters on it, in the same blue, under the same menorah, working the same
+chapter tree. The Temple-State and No Ruler but God were one state wearing two
+labels, and the label was in a panel row a player had to go and look at. The
+one decision in each of those chapters that is explicitly about what the
+country IS was the only decision in the game that did not give the country a
+name.
+
+### Ten constitutions, ten crowns, ten trees
+
+Every Jewish constitution is now a formable crown on the §22 machinery every
+other greater banner already uses — three letters, a name and a colour on the
+map, an emblem, national ideas, a founding payoff, and a mission tree written
+for that constitution and no other:
+
+| Crown | Constitution | Out of | Chapters |
+|---|---|---|---|
+| **SNH** The Temple-State | Temple-State | JUD | 66 |
+| **GRL** The Commonwealth of the Lot | The Lot | JUD | 66 |
+| **YVL** The Jubilee Commonwealth | The Jubilee | JUD | 66 |
+| **HRZ** The Freedom of Zion | No Ruler but God | JUD | 66 |
+| **KHN** The Priest-Kingdom | Diadem and Mitre | HAS | 167 |
+| **GRS** The Judaean Commonwealth | Priesthood and Assembly | HAS | 167 |
+| **KTR** The Crown of Judaea | The Diadem | JUD | 132, 614 |
+| **BTD** The House of David | The House of David | JUD | 132, 614 |
+| **SHB** The Two Houses | The Two Houses | JUD | 132 |
+| **NSI** The Patriarchate | The Patriarchate | JUD | 132 |
+
+**The plumbing is one line per crown in `GOV_OF`,** and it is the whole
+section. `switchTagCore` has applied the target banner's government since §25 —
+a proclaimed republic votes, a proclaimed kingdom crowns — and §214 taught that
+step the declared succession rules. So a banner that declares `lot` is a banner
+whose proclamation abolishes the heir, and one that declares `jubilee` is a
+banner whose proclamation starts an election clock. Nothing new was needed in
+the engine: the crown is the constitution because the table says which
+constitution it is.
+
+**The fork is untouched, on purpose.** It still writes the government at its
+own call site, still sets its §119 road marker, still fills §130's store. A
+player who answers The Second Government and never opens the Decisions panel
+gets exactly the game §214 shipped; the crown is the second half, offered
+afterwards, and its first requirement is the constitution itself — read off
+`govType` rather than off a flag, because that is the fact it is about. Answer
+the fork one way and one crown appears in the panel and the other three do not,
+which is `smoke151`'s live test through the real cards.
+
+### What ten different trees had to mean
+
+Each crown reads thirteen nodes: a spine of five and a branch of eight. The
+spine is written once and shared, because the first thing any of these states
+has to do is the same thing — survive its own founding, be obeyed from
+Jerusalem, put an army under the new name, run a chancery that can assess a
+village under it, and then the hard one, stop. It reads relative to the
+chapter's own technology baseline for §211's reason: these crowns stand in
+chapters seven hundred years apart. Its bars sit deliberately ABOVE what the
+crown was proclaimed on, so no rung is already ticked on the day the panel
+opens.
+
+The branch is where the constitutions stop resembling each other, and the
+branches share no node at all. The temple-state restores the twenty-four
+courses, collects the half-shekel from three continents, and is asked to be
+forgiven for being the grievance of Pesachim 57a while holding the four houses
+at 70. The Lot has to keep an honest register of every priestly house in the
+country — a harder administrative act than naming an heir — and its last rung
+is the death that is not a wound, which is the mechanical content of
+"hereditary priestly power ends in an afternoon". The Jubilee has to come
+through a sabbatical year at peace with money still in hand, and cannot
+borrow, ever. Freedom of Zion is asked for a state with no ally, no overlord
+and no address, and to survive its own Menahem. The priest-kingdom is asked to
+hold the Pharisees and the Sadducees at fifty *at once*, which the actual
+dynasty never managed. The commonwealth is asked to be dealt with on the merits
+by chanceries that would rather address a peer. The crown out of a war is asked
+for a second king of the same house. The house of David is asked to live beside
+the expectation. The two houses are asked to put two seals on every order. And
+Ezekiel's prince is asked for the one thing the other nine are not: to obey
+46:18 while the founder's own leases are in the room next door.
+
+### The road onward, and what it costs
+
+The Kingdom of Israel is the endgame of the whole Jewish arc and it is reached
+by a dynasty rather than by a war, so naming the lesser crown may not close off
+the greater one: every one of the ten keeps an MLI formable on exactly the
+terms JUD and HAS have. And proclaiming it **ends the constitution**, because
+MLI's own government is a monarchy and `switchTagCore` applies the new banner's
+— a commonwealth that finds a son of David and crowns him has answered its own
+question, which is the point and not an oversight.
+
+Three smaller consequences. All ten are player-only, for the reason the four
+dynastic restorations are: an AI court that re-branded itself mid-chapter would
+orphan the fork's own follow-on cards, every one of which is addressed to JUD
+or HAS. All ten join `JUDAEAN_HOMELAND_TAGS`, because a temple-state driven off
+the coastal plain is still a state the Judaean hills rise inside. And the
+Samaritan crown at Neapolis (§136) adopts two of these same constitutions and
+gets no banner here: SAM is not a Jewish court, its road is its own chapter's,
+and a Samaritan state flying a Judaean crown would be the one thing that whole
+fork is about not being.
+
+- **Regression contract**: `smoke151` — the table (ten adoptable Jewish
+  constitutions, ten crowns, each with a tag def, an emblem, a government, an
+  AI temper, a payoff and a chain; no two sharing three letters, a name, a
+  colour, a constitution or an emblem; none of them wearing Judaea's menorah or
+  Israel's hexagram; none of them AI-formable; none of them booted by any
+  chapter); the plumbing (each proclamation landing on its constitution, the
+  clock started where it votes, the heir gone where nothing inherits, the name,
+  the lineage and §135's forwarding address); the gate (shut on the wrong
+  constitution, open on the right one, and shutting every rival crown of the
+  same chapter); the four settlements of 71 fired through the live cards, each
+  opening exactly its own crown; the trees (thirteen nodes each, every node
+  dressed, seated, reachable and waiting only on nodes that exist, no branch
+  node shared between any two crowns, and every reward seating keys the engine
+  actually reads); nothing free on the day of the proclamation; **every node of
+  every crown paying in a maximal realm** in every chapter it is offered in,
+  which is where dead content hides; `missionsFor` returning the crown's own
+  chain rather than the chapter's; and the road onward — the MLI formable
+  present from all ten, and the constitution ending when the kingdom is
+  proclaimed over it. `smoke141` (§214's table and rules), `smoke138` (§211's
+  crown and civil bands), `smoke89` (§130's store), `smoke83`/`smoke117` (the
+  road markers and fork badges) and `smoke46`/`smoke71` (emblem art and tag
+  completeness) pass unmoved: the forks, the store, the markers and the four
+  starting constitutions are all exactly where they were.

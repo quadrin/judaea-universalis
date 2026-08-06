@@ -602,6 +602,105 @@ export const FLAGS = {
     `<rect x="6.4" y="8.4" width="11.2" height="1.6" rx="0.8" ${ACC}/>` +
     hexagram(12, 15.9, 5.1, FO, 2.5) +
     hexagram(12, 15.9, 5.1, FG, 1.3),
+  // ---- the ten constitutional crowns (SPEC §226) ----------------------------
+  // Ten banners over the same city, in the same faith, in the same blue-ish
+  // corner of the palette — so each emblem says the CONSTITUTION rather than
+  // the country, because what the state is for is the only thing that tells
+  // them apart. None of them repeats Judaea's menorah or Israel's hexagram:
+  // those two are the faith and the kingdom, and these are arrangements.
+
+  // The Temple-State: the facade of the House as the tetradrachms drew it —
+  // four columns, the architrave, the doorway, the rosette in it.
+  SNH:
+    `<path d="M4.4 8.4 12 3.6l7.6 4.8Z" ${SIL}/>` +
+    `<rect x="4.4" y="8.4" width="15.2" height="1.4" ${ACC}/>` +
+    `<path d="M5.6 9.8h1.8v7.8H5.6ZM8.4 9.8h1.8v7.8H8.4ZM13.6 9.8h1.8v7.8h-1.8ZM16.4 9.8h1.8v7.8h-1.8Z" ${SIL}/>` +
+    `<circle cx="11.8" cy="13.6" r="1.4" ${ACC}/>` +
+    `<rect x="4.4" y="17.6" width="15.2" height="1.5" ${SIL}/>` +
+    `<rect x="3.6" y="19.1" width="16.8" height="1.3" rx="0.6" ${ACC}/>`,
+  // The Commonwealth of the Lot: the urn, and the tallies standing in it —
+  // three of them, cut to different lengths, because the whole constitution
+  // is that nobody knows which comes out.
+  GRL:
+    `<path d="M10.2 10.6V5.4M12 10.6V3.6M13.8 10.6V6.4" fill="none" stroke="${FO}" stroke-width="2.4" stroke-linecap="round"/>` +
+    `<path d="M10.2 10.6V5.4M13.8 10.6V6.4" fill="none" stroke="${FP}" stroke-width="1.2" stroke-linecap="round"/>` +
+    `<path d="M12 10.6V3.6" fill="none" stroke="${FG}" stroke-width="1.2" stroke-linecap="round"/>` +
+    `<path d="M8.6 12.2c-1.5.2-2.2 1.1-2 2.6M15.4 12.2c1.5.2 2.2 1.1 2 2.6" ${DET}/>` +
+    `<rect x="8" y="10.4" width="8" height="1.7" rx="0.85" ${ACC}/>` +
+    `<path d="M9 12.1h6c.5 3.6-.9 5.9-3 7-2.1-1.1-3.5-3.4-3-7Z" ${SIL}/>` +
+    `<rect x="9.9" y="19.1" width="4.2" height="1.4" rx="0.7" ${ACC}/>`,
+  // The Jubilee Commonwealth: the ram's horn sounded on the tenth day of the
+  // seventh month, over the line of the land it proclaims liberty throughout.
+  YVL:
+    `<path d="M4.2 18.4c.5-5.8 4-9.6 10.4-11.2l5-1.3-1.1 4.6-4.6 1.2c-3.9 1-6 3.5-6.2 7.4Z" ${SIL}/>` +
+    `<path d="M14.6 7.2 19.6 5.9l-1.1 4.6Z" ${ACC}/>` +
+    `<path d="M6.6 17.4c.6-4 3.3-6.7 8-8" ${DET}/>` +
+    `<rect x="3.4" y="19.6" width="17.2" height="1.6" rx="0.8" ${ACC}/>`,
+  // The Freedom of Zion: the chalice of the revolt's own silver, which is the
+  // only coinage of the ancient world that names no man — and the year of it
+  // counted above in three points rather than in a reign.
+  HRZ:
+    `<circle cx="8.8" cy="4.6" r="0.9" ${ACC}/>` +
+    `<circle cx="12" cy="3.8" r="0.9" ${ACC}/>` +
+    `<circle cx="15.2" cy="4.6" r="0.9" ${ACC}/>` +
+    `<rect x="7.6" y="7" width="8.8" height="1.5" rx="0.75" ${ACC}/>` +
+    `<path d="M8.2 8.5h7.6l-1 5.1a2.9 2.9 0 0 1-5.6 0Z" ${SIL}/>` +
+    `<path d="M11.2 16.4h1.6v3.2h-1.6Z" ${SIL}/>` +
+    `<rect x="8.6" y="19.4" width="6.8" height="1.5" rx="0.75" ${ACC}/>`,
+  // The Priest-Kingdom: one head, two offices — the diadem above, the mitre
+  // with its gold plate beneath, and the objection is the gap between them.
+  KHN:
+    `<path d="M4.8 6.8c2.2-2.1 4.6-3.2 7.2-3.2s5 1.1 7.2 3.2l-1.1 2c-1.9-1.8-3.9-2.7-6.1-2.7s-4.2.9-6.1 2.7Z" ${ACC}/>` +
+    `<path d="M6.6 17.2c0-4.1 2.4-7 5.4-7s5.4 2.9 5.4 7Z" ${SIL}/>` +
+    `<path d="M9.2 12.8c1.7-1.1 3.9-1.1 5.6 0" ${DET}/>` +
+    `<rect x="8.2" y="14.8" width="7.6" height="2.1" rx="1.05" ${ACC}/>` +
+    `<rect x="6.1" y="17.2" width="11.8" height="1.8" rx="0.9" ${SIL}/>`,
+  // The Judaean Commonwealth: the bronze of the decree that named this house
+  // high priest for ever and left the other word out, nailed up where it can
+  // be read — which is the whole road.
+  GRS:
+    `<circle cx="12" cy="3.4" r="1.2" ${ACC}/>` +
+    `<rect x="5.4" y="4.8" width="13.2" height="13.6" rx="1" ${SIL}/>` +
+    `<rect x="6.9" y="6.2" width="10.2" height="10.8" rx="0.6" fill="none" stroke="${FG}" stroke-width="0.9"/>` +
+    `<path d="M8.4 8.4h7.2M8.4 10.4h7.2M8.4 12.4h7.2M8.4 14.4h4.4" ${DET}/>` +
+    `<rect x="4.4" y="18.6" width="15.2" height="1.6" rx="0.8" ${ACC}/>`,
+  // The Crown of Judaea: a diadem laid across the sword that won it, with no
+  // priestly title and no genealogy anywhere in the design.
+  KTR:
+    `<path d="M12 3 13.3 5.5v9.2h-2.6V5.5Z" ${SIL}/>` +
+    `<rect x="8" y="14.7" width="8" height="1.7" rx="0.85" ${ACC}/>` +
+    `<rect x="11.2" y="16.4" width="1.6" height="3.1" ${SIL}/>` +
+    `<circle cx="12" cy="20.4" r="1.5" ${ACC}/>` +
+    `<path d="M5.2 9.2c2-1.6 4.3-2.4 6.8-2.4s4.8.8 6.8 2.4l-1.1 1.9c-1.7-1.3-3.6-2-5.7-2s-4 .7-5.7 2Z" ${ACC}/>` +
+    `<path d="M5.8 10.6c-.8 1.4-1 2.9-.6 4.4M18.2 10.6c.8 1.4 1 2.9.6 4.4" ${DET}/>`,
+  // The House of David: the lyre, under the band of the line it joined — the
+  // one claim in the Jewish world nobody argues with, and the instrument the
+  // man who made it is remembered holding.
+  BTD:
+    `<path d="M6.6 6.6 7.5 3l2.3 2L12 1.8l2.2 3.2 2.3-2 .9 3.6Z" ${ACC}/>` +
+    `<rect x="6.9" y="8.2" width="10.2" height="1.6" rx="0.8" ${ACC}/>` +
+    `<path d="M7.8 19.4c-1.7-3.6-1.5-7 .5-10.2l2 1.2c-1.5 2.6-1.6 5.3-.4 8Z" ${SIL}/>` +
+    `<path d="M16.2 19.4c1.7-3.6 1.5-7-.5-10.2l-2 1.2c1.5 2.6 1.6 5.3.4 8Z" ${SIL}/>` +
+    `<path d="M9.8 9.8v9.6M12 9.8v9.6M14.2 9.8v9.6" ${DET}/>` +
+    `<rect x="6.8" y="19.4" width="10.4" height="1.6" rx="0.8" ${ACC}/>`,
+  // The Two Houses: the prince's sceptre and the priest's rod that budded,
+  // crossed and bound — two hereditary offices, and nothing above either.
+  SHB:
+    `<path d="M6.8 19.8 16.2 5M17.2 19.8 7.8 5" fill="none" stroke="${FO}" stroke-width="3.1" stroke-linecap="round"/>` +
+    `<path d="M6.8 19.8 16.2 5M17.2 19.8 7.8 5" fill="none" stroke="${FP}" stroke-width="1.7" stroke-linecap="round"/>` +
+    `<circle cx="16.6" cy="4.2" r="1.8" ${ACC}/>` +
+    star5(7.4, 4.2, 2.4, FG) +
+    `<rect x="9.6" y="11.5" width="4.8" height="1.9" rx="0.95" ${ACC}/>`,
+  // The Patriarchate: the letter under seal — the office's whole instrument,
+  // and the reason it outlived the state that adopted it by three centuries.
+  NSI:
+    `<rect x="4.9" y="4.6" width="14.2" height="2.1" rx="1.05" ${ACC}/>` +
+    `<rect x="6.2" y="6.7" width="11.6" height="9.6" ${SIL}/>` +
+    `<path d="M8 8.8h8M8 10.8h8M8 12.8h8M8 14.8h5" ${DET}/>` +
+    `<rect x="4.9" y="16.3" width="14.2" height="2.1" rx="1.05" ${ACC}/>` +
+    `<path d="M15.2 18.4v1.6" fill="none" stroke="${FO}" stroke-width="1.4"/>` +
+    `<circle cx="15.2" cy="21" r="1.9" ${ACC}/>`,
+
   // United Arab Republic (formable): the two-star pan-Arab tricolor.
   UAR:
     `<rect x="0.6" y="0.6" width="22.8" height="7.6" fill="#b5342c" stroke="none"/>` +
