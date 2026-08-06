@@ -2521,6 +2521,9 @@ export const GENERAL_NAMES = {
   // far eras (SPEC §22)
   israeli:   ['Yigael Yadin', 'Yitzhak Sadeh', 'Yigal Allon', 'Moshe Carmel', 'Shimon Avidan', 'David Shaltiel', 'Mickey Marcus', 'Yitzhak Rabin'],
   arab_modern: ['Abdullah el-Tell', 'Habis Majali', 'Fawzi al-Qawuqji', 'Ahmed Ali al-Mwawi', 'Taha al-Hashimi', 'Ismail Safwat', 'Muhammad Naguib', 'Sami al-Hinnawi'],
+  // The Party of God's own bench (SPEC §225): the founding clerics of the
+  // Beqaa, the secretaries-general, and the men who ran the military wing.
+  hezbollah: ['Abbas al-Musawi', 'Subhi al-Tufayli', 'Ragheb Harb', 'Hassan Nasrallah', 'Naim Qassem', 'Imad Mughniyeh', 'Mustafa Badreddine', 'Muhammad Yazbek'],
   turkish:   ['Kâzım Orbay', 'Salih Omurtak', 'Nuri Yamut', 'Abdurrahman Nafiz Gürman', 'Şükrü Kanatlı', 'Muzaffer Tuğsavul', 'İzzet Aksalur', 'Asım Tınaztepe'],
   // …and the four courts of 1948 that had no modern pool at all (SPEC §143),
   // so a death in Rome seated Quintus Petillius and a death in Athens seated
@@ -2676,7 +2679,7 @@ export function tagModifierFlag(ctx, tag, key) {
   if (!t || !Array.isArray(t.modifiers)) return false;
   return t.modifiers.some((m) => m && m.effects && !!m.effects[key]);
 }
-// ---------------------------------------------------------------- the crown war (SPEC §225)
+// ---------------------------------------------------------------- the crown war (SPEC §226)
 // A chapter may name two of its courts claimants to ONE crown:
 //
 //   crownWar: { claimants: ['ATG', 'HER'], of: 'Judaea' }
@@ -2714,7 +2717,7 @@ export function crownRivalOf(ctx, war, byTag) {
 // bug). The loop is bounded in case of a client-of-client chain.
 export function sideLeaderOf(ctx, war, side) {
   const g = ctx.game;
-  // A crown war's pen belongs to the claimant (SPEC §225). His protectors —
+  // A crown war's pen belongs to the claimant (SPEC §226). His protectors —
   // Rome behind Herod, Parthia behind Antigonus, and by §61 his own overlord
   // ahead of both — fight the war; they do not settle whose crown it is.
   // Without this a client claimant was handed the junior's withdrawal table
@@ -4764,7 +4767,7 @@ export function freeClientCore(ctx, lord, clientTag) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The collar thrown off from below (SPEC §225).
+// The collar thrown off from below (SPEC §226).
 //
 // §219 catalogued the ways a collar came off and noticed that not one of them
 // belonged to the court wearing it: the lord dies, the lord eats them, the lord
@@ -5614,7 +5617,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     PEACE.subjugateBase, PEACE.subjugateMax);
   const subjugateCost = Math.max(PEACE.provCostMin,
     Math.round(subjugateBaseCost * subjugateAdj.mult));
-  // The crown is one (SPEC §225). In the chapter's crown war the two courts
+  // The crown is one (SPEC §226). In the chapter's crown war the two courts
   // are two claimants to a single throne, and the argument has an answer the
   // ordinary table cannot write: the loser renounces, his whole realm comes
   // under the winner's crown, and his court passes into memory. The dev cap
@@ -5707,7 +5710,7 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     canSubjugate, whyNotSubjugate, subjugateCost,
     subjugateGoalAligned: subjugateAdj.aligned,
     subjugateGoalReason: subjugateAdj.reason,
-    // The crown war (SPEC §225): whether this war is one at all, the rival
+    // The crown war (SPEC §226): whether this war is one at all, the rival
     // claimant if we are the other, and what one kingdom costs in war score.
     crownWar: !!crown,
     crownOf: (crown || {}).of || '',
@@ -5766,7 +5769,7 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
 // deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool,
 //          unifyCrown: bool, release: [tags], transferVassals: [tags] }.
 // Subjugation supersedes province demands, releases and client transfers (a
-// client keeps its political house whole); taking the crown (SPEC §225)
+// client keeps its political house whole); taking the crown (SPEC §226)
 // supersedes subjugation and everything else, there being no court left to
 // write terms for. Returns the warscore price, whether the enemy takes it, and
 // a one-line reason.
@@ -5859,7 +5862,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   }
   // An indemnity, a humiliation and reparations all need a court to pay them
   // next month; taking the crown leaves none, so those clauses fall away with
-  // the rest (SPEC §225).
+  // the rest (SPEC §226).
   const gold = unifyCrown ? 0 : clamp(Math.round(num(d.gold)), 0, info.maxGold);
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
   // Humiliation and reparations are the congress's instruments, not a
@@ -5946,7 +5949,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   }
   return {
     cost, net, offered, acceptable, reason, gold, humiliate, subjugate, reparations,
-    unifyCrown, // the crown war's answer (SPEC §225): one kingdom, one claimant
+    unifyCrown, // the crown war's answer (SPEC §226): one kingdom, one claimant
     provinces: chosen.map((c) => c.id),
     provinceTo,
     concessions: conceded.map((c) => c.id), concessionRows: conceded,
@@ -6889,7 +6892,7 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
       + (row.fromName || oldLord) + ' to ' + (me.name || byTag) + ' at the peace table.');
     terms.push('transfers the fealty of ' + (row.name || row.tag) + ' to ' + (me.name || byTag));
   }
-  // The crown is one (SPEC §225). The loser renounces his claim, and with it
+  // The crown is one (SPEC §226). The loser renounces his claim, and with it
   // everything the claim was standing on: every province he owns comes under
   // the winner's crown at once — occupied or not, because a treaty over a
   // throne does not stop at the siege lines — and the court that fought for

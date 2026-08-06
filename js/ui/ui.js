@@ -269,7 +269,7 @@ export function initUI(staticCtx) {
     }
     const deal = {
       provinces: [], gold: 0, humiliate: false, subjugate: false, reparations: false,
-      unifyCrown: false, // the crown war's answer (SPEC §225): one kingdom, one claimant
+      unifyCrown: false, // the crown war's answer (SPEC §226): one kingdom, one claimant
       concessions: [], // provinces of our own laid on the table (SPEC §222)
       provinceTo: {}, // directed spoils: demanded province -> our client in this war
       release: [], // restored, returned, or newly created states (SPEC §69/§76)
@@ -461,7 +461,7 @@ export function initUI(staticCtx) {
       if (!ev) { closePeaceDialog(); return; }
       goldV.textContent = String(deal.gold);
       // Subjugation replaces province demands and releases: a client keeps
-      // its lands whole. Taking the crown (SPEC §225) replaces the whole
+      // its lands whole. Taking the crown (SPEC §226) replaces the whole
       // table, indemnity and humiliation included — there is no court left
       // to pay or be shamed next month.
       const whole = deal.subjugate || deal.unifyCrown;

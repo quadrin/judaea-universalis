@@ -924,7 +924,7 @@ export function buildAiPeaceDeal(ctx, war, winner, enemyTag, opts) {
     return accept(candidate, (ev) => ev.transferVassals.includes(row.tag));
   };
 
-  // The crown war has one answer and every claimant wants it (SPEC §225): if
+  // The crown war has one answer and every claimant wants it (SPEC §226): if
   // the score covers the whole kingdom, the kingdom is what the treaty says.
   // Nothing else on the table is worth a clause beside it, so this is decided
   // first and, when it takes, decided alone.

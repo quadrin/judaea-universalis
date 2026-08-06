@@ -15,7 +15,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
   let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
   let freeArmed = ''; // client kingdom whose collar-striking has been armed (SPEC §219)
-  let riseArmed = ''; // overlord whose renunciation has been armed (SPEC §225)
+  let riseArmed = ''; // overlord whose renunciation has been armed (SPEC §226)
   let cedeArmed = 0; // province whose gift has been armed (SPEC §222)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
@@ -223,7 +223,7 @@ const RISING_LABELS = {
         return;
       }
       if (b.dataset.dip === 'free') freeArmed = '';
-      // The same two taps from underneath (SPEC §225): renouncing a fealty
+      // The same two taps from underneath (SPEC §226): renouncing a fealty
       // starts a war with the crown that has been protecting us.
       if (b.dataset.dip === 'independence' && riseArmed !== dipTag) {
         const armedTag = dipTag;
@@ -1228,7 +1228,7 @@ const RISING_LABELS = {
         ? 'Press again to let them go. Walk away and the offer lapses.\n――――――\n' + terms
         : terms);
     } else if (freeArmed && freeArmed === dipTag) freeArmed = '';
-    // The collar from underneath (SPEC §225): the client's own move, shown
+    // The collar from underneath (SPEC §226): the client's own move, shown
     // only on the court that holds our leash. Two taps, because it opens a
     // war with the strongest friend we have.
     const ind = d.independence;

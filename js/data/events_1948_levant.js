@@ -74,13 +74,68 @@ function flag(ctx, key) {
   return !!(ctx.game.flags && ctx.game.flags[key]);
 }
 
-// The nine provinces that were Lebanon, north to south.
-const LEBANON = ['Tripolis', 'Byblos', 'Berytus', 'Chalcis', 'Sidon', 'Tyre',
-  'Gischala', 'Jotapata', 'Sepphoris'];
+// The provinces that were Lebanon, north to south (SPEC §225 splits the six
+// coastal cells into thirteen districts; this list is what "Lebanon" means to
+// every card in the file, so it grew with them).
+const LEBANON = ['Akkar', 'Tripolis', 'Bsharri', 'Batroun', 'Byblos', 'Jounieh',
+  'Berytus', 'Chouf', 'Heliopolis', 'Chalcis', 'Sidon', 'Nabatieh', 'Tyre',
+  'Gischala', 'Jotapata', 'Sepphoris', "Ma'alot"];
 // The Shia south and the Beqaa — where the last act happens whoever is holding it.
-const THE_SOUTH = ['Tyre', 'Sidon', 'Chalcis'];
+const THE_SOUTH = ['Tyre', 'Nabatieh', 'Sidon', 'Chalcis', 'Heliopolis'];
 // Beirut and the Christian north — the confessional question's other half.
-const MOUNT_LEBANON = ['Berytus', 'Byblos', 'Tripolis'];
+const MOUNT_LEBANON = ['Berytus', 'Jounieh', 'Byblos', 'Batroun', 'Bsharri', 'Tripolis'];
+
+// Spawn at the first listed province the tag actually controls — fronts move.
+function spawnAt(ctx, tag, provNames, opts) {
+  for (const n of provNames) {
+    if (ctx.helpers.controls(ctx, tag, n)) return ctx.helpers.spawnArmy(ctx, tag, n, opts);
+  }
+  return null;
+}
+
+// The Party of God takes the ground (SPEC §225). Baalbek's half of the Beqaa
+// and the Jabal Amil leave whoever is holding them — here that is never
+// Beirut, because in this arc there is no Beirut. Returns the tag or null: a
+// secession with no province behind it is a proclamation, and the map does not
+// model proclamations.
+const PARTY_GROUND = ['Heliopolis', 'Nabatieh'];
+function seatTheParty(ctx) {
+  const g = ctx.game;
+  if (g.tags.HEZ) return 'HEZ';
+  if (typeof ctx.helpers.secedeTag !== 'function') return null;
+  const owners = {};
+  for (const n of PARTY_GROUND) {
+    const p = ctx.prov && ctx.prov(n);
+    const o = p && p.owner;
+    if (!o || o === 'REB' || o === 'WASTE' || !alive(ctx, o)) continue;
+    owners[o] = (owners[o] || []).concat(n);
+  }
+  const beqaa = ctx.prov && ctx.prov('Heliopolis');
+  const seatOwner = beqaa && owners[beqaa.owner] ? beqaa.owner : null;
+  const from = seatOwner
+    || Object.keys(owners).sort((a, b) => owners[b].length - owners[a].length)[0];
+  if (!from) return null;
+  const seated = ctx.helpers.secedeTag(ctx, from, 'HEZ', {
+    provinces: owners[from], share: 0.04, stability: 1, legitimacy: 60,
+    ruler: { name: 'Subhi al-Tufayli', title: 'Secretary-General', gov: 3, infl: 4, mar: 3, age: 34 },
+  });
+  if (!seated) return null;
+  for (const other of Object.keys(owners)) {
+    if (other === from) continue;
+    for (const n of owners[other]) ctx.helpers.changeOwner(ctx, n, 'HEZ');
+    setOpinion(ctx, other, 'HEZ', -60);
+  }
+  // The Islamic Resistance: a cadre, not an army. It never had the men to
+  // take ground and never tried to; what it has is the ground it is standing
+  // on and a doctrine about not leaving it.
+  spawnAt(ctx, 'HEZ', ['Heliopolis', 'Nabatieh'], {
+    inf: 2, name: 'The Islamic Resistance',
+    general: { name: 'Imad Mughniyeh', fire: 2, shock: 3, maneuver: 4 },
+  });
+  if (alive(ctx, 'IRN')) { setOpinion(ctx, 'IRN', 'HEZ', 120); setOpinion(ctx, 'HEZ', 'IRN', 120); }
+  setOpinion(ctx, 'HEZ', from, -200); setOpinion(ctx, from, 'HEZ', -120);
+  return 'HEZ';
+}
 
 // Who actually holds the country, if it is not a country any more. Returns the
 // tag with the most of the nine, or null if Lebanon is alive and holding its own.
@@ -339,6 +394,11 @@ export const EVENTS_1948_LEVANT = [
           }
           h.setFlag(ctx, 'hezbollah', true);
           h.setFlag(ctx, 'hezbollahUnderOccupation', true);
+          // …and it takes the ground here too (SPEC §225). There is no
+          // Lebanese state to secede from in this world, so Baalbek's Beqaa
+          // and the Jabal Amil come off the OCCUPIER — which is the version of
+          // this that needs the least explaining to anybody.
+          seatTheParty(ctx);
           h.chronicle(ctx, 'war', 'The Revolutionary Guard reaches the Beqaa with no state\'s permission and founds the Party of God against a direct occupation — an adversary the occupation itself produced.');
         }),
       },

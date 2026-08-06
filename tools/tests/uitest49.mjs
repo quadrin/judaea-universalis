@@ -1,7 +1,7 @@
-// UI verification — SPEC §225: the crown war's clause and the client's own way
+// UI verification — SPEC §226: the crown war's clause and the client's own way
 // out, both in a real browser.
 //
-// smoke150 proves the arithmetic. This proves the two surfaces: the peace
+// smoke151 proves the arithmetic. This proves the two surfaces: the peace
 // dialog growing a "Take the whole kingdom" row in the one war the chapter is
 // about — enabled for a claimant, clearing the rest of the table when it is
 // ticked, and actually ending Antigonus at 80 war score — and Throw Off the

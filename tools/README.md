@@ -285,7 +285,7 @@ class: Ituraea is ONE province (dev 9→11) carrying a 3,000-man host, income
 60→26 over eight years. Self-limiting, no spiral, the ARM/PAR/ARI/HYR family.
 614 JUD BLEEDING is already accepted as coming and going.
 
-The SPEC §225 batch (Herod's collar, the crown war, the yoke thrown off)
+The SPEC §226 batch (Herod's collar, the crown war, the yoke thrown off)
 re-ran the full 8-year harness against the parent tree in the same
 environment. **Seven of the eight bookmarks came back byte identical, and the
 anomaly set is identical on all eight** (167 PAR BLEEDING · 67 SEL DEAD ·
@@ -329,7 +329,7 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
-`smoke150.mjs` owns the SPEC §225 batch (Herod's collar on day one, the crown
+`smoke151.mjs` owns the SPEC §226 batch (Herod's collar on day one, the crown
 war's pen and its whole-kingdom clause in both Judaean civil wars, and the
 client's own war of independence).
 `smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,

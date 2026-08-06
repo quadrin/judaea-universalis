@@ -153,6 +153,9 @@ export const DEFINES = {
     // coup-prone state in the region, and the one most convinced it is owed
     // the Golan.
     SAR: { aggression: 1.3, caution: 0.8 },
+    // An irregular with no capital to lose and a doctrine of not stopping
+    // (SPEC §225) — but it does not go looking for a second front either.
+    HEZ: { aggression: 1.5, caution: 0.7 },
     // A rising with no rear area, no treasury and nothing to negotiate with
     // (SPEC §129). It attacks because standing still is the one thing it
     // cannot afford.
@@ -377,6 +380,7 @@ export const DEFINES = {
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
+    HEZ: 'theocracy', // wilayat al-faqih, and a shura that chooses successors
     REB: 'tribal',
     LST: 'company', PIR: 'company', // SPEC §217
     // -- the political west (SPEC §173) --
@@ -777,6 +781,26 @@ export const DEFINES = {
       name: 'Syrian Arab Republic', adj: 'Syrian', color: [70, 118, 92], religion: 'islam', culture: 'arab_modern', capital: 'Damascus',
       description: 'Damascus after the union: a republic of officers, and the last Arab capital that will not sign.',
       ideas: { manpowerMult: 1.08, moraleMult: 1.05, incomeMult: 0.95 },
+    },
+    // The Party of God (SPEC §225). Fifteen hundred Revolutionary Guards came
+    // to the Beqaa through Damascus in 1982 and what they built was not
+    // another militia: it recruited from the community at the bottom of
+    // Lebanon's confessional arithmetic, paid salaries, ran clinics and
+    // schools, and kept its military wing separate from all of it. By the end
+    // of the decade Baalbek and the Jabal Amil were not administered from
+    // Beirut in any sense a map should pretend otherwise about, so this is a
+    // court and a colour rather than two province modifiers.
+    //
+    // A theocracy, because that is what wilayat al-faqih is and because the
+    // succession this game models — the elders choose, never a child regency —
+    // is how Musawi's killing was actually answered. The ideas are an
+    // irregular's: it fights above its weight on its own ground and cannot
+    // field a state's economy or a state's establishment.
+    HEZ: {
+      name: 'Hezbollah', adj: 'Hezbollah', color: [190, 162, 34], religion: 'islam', culture: 'arab_modern', capital: 'Heliopolis',
+      names: 'hezbollah',
+      description: 'A party, a clinic, a school and a military wing, on ground no capital administers.',
+      ideas: { moraleMult: 1.25, manpowerMult: 1.1, incomeMult: 0.75, forceLimitMult: 0.75 },
     },
     // The diaspora rising of 115–117 (SPEC §129). It is a SEPARATE STATE and
     // not Judaea, because that is the whole historical point of it: Cyrene,
@@ -1555,7 +1579,7 @@ export const DEFINES = {
     peaceProvStep: 0.15,     // each additional province in one deal costs +15% more
     peaceAlienMult: 1.25,    // land of another religious group costs 25% more to take
     peaceMaxDevShare: 0.4,   // no single treaty strips more than this share of the loser's dev
-    // The crown is one (SPEC §225): in a chapter's crown war — two claimants,
+    // The crown is one (SPEC §226): in a chapter's crown war — two claimants,
     // one throne — the winner may take the loser's whole kingdom at the table
     // rather than town by town. A kingdom is one thing, so it has one price,
     // and that price is war score alone.

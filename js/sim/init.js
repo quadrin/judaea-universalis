@@ -1222,7 +1222,7 @@ export function gameActions(ctx) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
         try { freedom = freeClientInfo(ctx, me, tag); } catch (e) { freedom = null; }
       }
-      // The same collar read from underneath (SPEC §225): what it would take
+      // The same collar read from underneath (SPEC §226): what it would take
       // for us to throw off theirs.
       let independence = null;
       if (ourOverlord) {
@@ -1327,7 +1327,7 @@ export function gameActions(ctx) {
           seats: freedom.seats, capacity: freedom.capacity,
           clients: freedom.clients, strain: freedom.strain,
         } : null,
-        // Our own war of independence (SPEC §225), when this court is the one
+        // Our own war of independence (SPEC §226), when this court is the one
         // holding our leash.
         independence: independence ? {
           can: independence.can, why: independence.why, name: independence.name,
@@ -3074,7 +3074,7 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
     },
 
-    // ---- the collar thrown off (SPEC §225) ----------------------------------
+    // ---- the collar thrown off (SPEC §226) ----------------------------------
     // §219's mirror from underneath: the client's own move, and the only one
     // it has. The bond breaks first, then the herald speaks.
     declareIndependence() {

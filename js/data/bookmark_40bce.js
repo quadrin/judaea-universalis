@@ -259,7 +259,7 @@ export const BOOKMARK_40 = {
     ['ATG', 'PAR', { axis: 'alignment', sign: -1 }],
     ['HER', 'NAB'], ['ATG', 'NAB'],
   ],
-  // The crown war (SPEC §225): two claimants, one throne, and a war that is
+  // The crown war (SPEC §226): two claimants, one throne, and a war that is
   // about which of them wears it rather than where the border runs. Neither
   // man's pen belongs to his protectors at the peace table — Ventidius and
   // Pacorus fight this war, they do not settle it — and at 80 war score the
@@ -1582,7 +1582,7 @@ export const BOOKMARK_40 = {
     // (15% of a small income), Rome's wars to answer, and no client kingdoms of
     // his own until he is out from under it (§61); the crown war is his own to
     // settle regardless, because a crown war's pen belongs to the claimant
-    // (SPEC §225).
+    // (SPEC §226).
     //
     // Set AFTER the declaration above: a war declared ON a client is the
     // protecting crown's war too, and Rome must not be dragged into the field

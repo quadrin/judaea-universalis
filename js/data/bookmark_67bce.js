@@ -236,7 +236,7 @@ export const BOOKMARK_67 = {
     ['HYR', 'PAR', { axis: 'alignment', sign: -1 }],
     ['ARI', 'PAR', { axis: 'alignment', sign: -1 }],
   ],
-  // The crown war (SPEC §225): Salome Alexandra's two sons are two claimants
+  // The crown war (SPEC §226): Salome Alexandra's two sons are two claimants
   // to one kingdom, and the war between them is over which of them is king —
   // not over the Shephelah. Aretas' lances fight it and do not settle it, and
   // at 80 war score the table may write what neither brother would concede at
@@ -1666,7 +1666,7 @@ export const BOOKMARK_67 = {
 
     // --- The war of the brothers. NEGOTIABLE: this is the first bookmark whose
     // central war can end at the peace table — cede, tribute, a brother bent to
-    // clienthood, or (SPEC §225, at 80 war score) the crown itself: one brother
+    // clienthood, or (SPEC §226, at 80 war score) the crown itself: one brother
     // renounces and the kingdom is one again. Aristobulus struck first,
     // historically and here.
     h.declareWar(ctx, 'ARI', 'HYR', 'The War of the Brothers');

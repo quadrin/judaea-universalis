@@ -1827,6 +1827,58 @@ const PROVINCES = [
     { habitation: 'frontier', settleable: false }),
   P('Great Forest', 17.00, 4.40, 2.50, 'WASTE', 'marsh', 'timber', 'african_cults', 'west_african', 1, 1, 1, 0,
     { impassable: true }),
+  // --- v7.7 (SPEC §225): the northern frontier at the resolution it is played
+  // Lebanon was six cells — Tyre, Sidon, Beirut, Byblos, Tripoli and the Beqaa
+  // — for a country the size of Israel's coastal plain, which the 1948 chapter
+  // then fights three wars over: the civil war of 1975, the Syrian occupation,
+  // and Peace for Galilee. Every one of them was decided at a resolution the
+  // map could not show. And the Golan was worse: Caesarea Philippi ran from
+  // the Litani across the Hermon massif to the Damascus road as ONE cell, and
+  // the label 1948 hung on Batanea — Quneitra — sat fifty kilometres east of
+  // the town it named, out in the Hauran.
+  //
+  // Sixteen districts where there were nine. Latent everywhere else, exactly
+  // like the modern Israeli cells above: their pixels, clicks and adjacency
+  // resolve to the ancient province in the seven older chapters, which are
+  // still played on the atlas they were written for.
+  //
+  // Lebanon south to north: Jabal Amil, the Chouf, the Kesrouan, the coast
+  // between Byblos and Tripoli, the Qadisha highland, the Akkar plain, and the
+  // northern Beqaa — which is Heliopolis, and keeps its own name.
+  P('Nabatieh', 35.48, 33.38, 0.62, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Tyre' }),
+  P('Chouf', 35.57, 33.68, 0.65, 'ROM', 'mountains', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Sidon' }),
+  P('Jounieh', 35.63, 33.98, 0.58, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Berytus' }),
+  P('Batroun', 35.80, 34.31, 0.88, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Byblos' }),
+  P('Bsharri', 36.05, 34.20, 0.68, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Tripolis' }),
+  P('Akkar', 36.14, 34.55, 0.72, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Tripolis' }),
+  // Heliopolis of Syria: the great temple platform, and the northern Beqaa
+  // under it. The low weight is load-bearing: Chalcis' old cell ran east to
+  // the Palmyra road because nothing is seeded on the Syrian steppe between
+  // Damascus, Emesa and Palmyra, and splitting the Beqaa in two inherits that
+  // reach rather than inventing it. A seed out there would fix the border and
+  // cost the ancient map the Damascus–Palmyra road, which is a worse trade
+  // than a wide desert cell; the pair together cover exactly the ground the
+  // one cell covered before. The one cell here with an ancient identity too large to file
+  // under a modern district name, so it keeps the ancient one and 1948 shows
+  // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
+  P('Heliopolis', 36.15, 34.00, 0.60, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Chalcis' }),
+  // The Golan, told apart: the massif, and the plateau town the atlas kept
+  // putting out in the Hauran.
+  P('Mount Hermon', 35.86, 33.42, 0.70, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
+    { latentParent: 'Caesarea Philippi' }),
+  P('Quneitra', 35.82, 33.13, 0.66, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+    { latentParent: 'Caesarea Philippi' }),
+  // And the central Upper Galilee, which Gischala held alone from the Acre
+  // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
+  P("Ma'alot", 35.27, 33.01, 0.62, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+    { latentParent: 'Ptolemais' }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -1865,15 +1917,17 @@ const REGIONS = {
     'Safed', 'Nahariya', 'Afula', 'Hadera', 'Netanya', 'Herzliya', 'Kfar Saba',
     'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
     'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Khan Yunis', 'Rafah',
-    'Kiryat Shmona'],
+    'Kiryat Shmona', "Ma'alot"],
   'Transjordan': ['Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
-    'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara'],
+    'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara',
+    'Mount Hermon', 'Quneitra'],
   'Negev': ['Oboda', 'Aila', 'Kadesh Barnea', 'Beersheba', 'Arad', 'Dimona',
     'Mitzpe Ramon', 'Paran', 'Eilat'],
-  'Phoenicia': ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus'],
+  'Phoenicia': ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Aradus',
+    'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar'],
   'Syria': ['Damascus', 'Chalcis', 'Emesa', 'Apamea', 'Antioch', 'Seleucia Pieria',
     'Laodicea', 'Beroea', 'Cyrrhus', 'Palmyra', 'Zeugma', 'Samosata', 'Dura-Europos',
-    'Syrian Desert', 'Rutba'],
+    'Syrian Desert', 'Rutba', 'Heliopolis'],
   'Arabia': ['Petra', 'Hegra', 'Tayma', 'Dumatha', 'Yathrib', 'Khaybar', 'Gerrha',
     'Arabian Desert', 'Macoraba', 'Asir', 'Yamama', 'Rub al-Khali'],
   'Egypt': ['Pelusium', 'Rhinocolura', 'Alexandria', 'Athribis', 'Leontopolis', 'Memphis',
