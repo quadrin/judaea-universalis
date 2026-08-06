@@ -15077,6 +15077,11 @@ it has changed sides.
   sent — Antigonus' provinces gone, his court in memory, the war ended — then
   Throw Off the Yoke on Rome's own panel, armed on the first press and struck on
   the second. `node tools/autorun.mjs 8` against the parent tree is **byte
-  identical on seven of the eight bookmarks, with the same anomaly set on all
-  eight**; 40 BCE moves because 40 BCE is the chapter that changed (see
-  `tools/README.md` for the reading).
+  identical on seven of the eight bookmarks**; 40 BCE moves because 40 BCE is
+  the chapter that changed, and trades one flag of its own long-accepted family
+  for another (`HER: SNOWBALL` → `HER: BLEEDING`). The clause never fires in an
+  all-AI run — 80 war score is a war visibly won — which is why 67 BCE's
+  documented stalemate is byte identical too. `tools/README.md` carries the
+  reading, including the one deliberate cause underneath the seeded drift: the
+  crown war is now settled by the claimant on his own reach (§116) rather than
+  by the patron §61 used to promote over him.

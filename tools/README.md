@@ -286,21 +286,35 @@ class: Ituraea is ONE province (dev 9→11) carrying a 3,000-man host, income
 614 JUD BLEEDING is already accepted as coming and going.
 
 The SPEC §226 batch (Herod's collar, the crown war, the yoke thrown off)
-re-ran the full 8-year harness against the parent tree in the same
-environment. **Seven of the eight bookmarks came back byte identical, and the
-anomaly set is identical on all eight** (167 PAR BLEEDING · 67 SEL DEAD ·
-529 JUD DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING · everything else none).
-40 BCE is the one that moves, and only because it is the chapter that changed:
-`HER.overlord = 'ROM'` at setup puts 15% of Herod's revenue into Rome's ledger
-from July 40, which perturbs the seeded stream from the first month. It moves
-in a healthy direction — Herod 8→10 provinces on 232 talents rather than 8→8
-on 21, Antigonus solvent at 251 rather than −135 — with the same wars started,
-ended and settled out, and the same date reached. The crown clause itself
-NEVER FIRES in an all-AI run: the planner takes it only at 80 war score, which
-is why 67 BCE (the documented brothers' stalemate) is byte identical too. If
-40 BCE ever comes back with `ATG DEAD` or `HER DEAD` and one fewer war, that is
-the clause firing, and it is the model working rather than a regression — but
-check it against this note before assuming so.
+re-ran the full 8-year harness against the parent tree in the same environment.
+**Seven of the eight bookmarks came back byte identical.** 40 BCE is the one
+that moves, and only because it is the chapter that changed: `HER.overlord =
+'ROM'` at setup puts 15% of Herod's revenue into Rome's ledger from July of 40,
+which perturbs the seeded stream from the first month.
+
+Its flag moves inside the family the chapter has always had. §225's parent run
+comes back `40bce HER: SNOWBALL` (Herod 8→14 provinces, Antigonus reduced to
+13); this one comes back `40bce HER: BLEEDING` (Herod held at 8, Antigonus at
+21, both hosts at zero by the eighth year). Both are the long-documented
+40 BCE class — *"HAS/HER/ATG bleed while their fight-to-the-death scripted wars
+run (plunder-funded underdogs)"* — and the pair has traded places on this
+bookmark before with nothing more than a redrawn province list behind it. The
+same batch against §224's tree, one commit earlier, was byte identical on seven
+bookmarks with the anomaly set identical on all eight; the northern frontier's
+ten new cells moved the draw between them.
+
+One deliberate cause sits underneath the seeded part. Before §226 the AI settled
+the crown war as ROME, because §61 promoted Herod's overlord to the head of his
+side — and Rome's reach is the Mediterranean, so the treaty it wrote could take
+half of Judaea. Now the claimant holds his own pen and demands only what his own
+territory can reach (§116), which is Idumea and a stretch of coast. A crown war
+that grinds for three years while its patron wins the wider one is the shape the
+chapter is about, and the underdog bleeding through it is the accepted flag, not
+a regression. The clause itself NEVER FIRES in an all-AI run: the planner takes
+it only at 80 war score, which is why 67 BCE (the documented brothers'
+stalemate) is byte identical too. If 40 BCE ever comes back with `ATG DEAD` or
+`HER DEAD` and one fewer war, that is the clause firing, and it is the model
+working rather than a regression — but check it against this note first.
 
 The SPEC §82–83 batch (supply lines, AI naval invasions, sandbox
 chapters) re-ran the full 8-year harness: the anomaly set came back a

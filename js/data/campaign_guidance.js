@@ -49,11 +49,11 @@ export const CAMPAIGN_GUIDANCE = {
     ARI: {
       system: 'The crown against the clock',
       opening: [
-        'Use the stronger royal army before Nabataea fully enters the war.',
+        'Use the stronger royal army before Nabataea fully enters the war — win the argument '
+          + 'outright rather than the border, and at 80 war score the table writes your '
+          + 'brother out of it and hands you the whole kingdom.',
         'Take Hebron and Adora to break Antipater’s political network.',
         'Fortify Jerusalem before Pompey’s settlement reaches Judaea.',
-        'Win the argument outright rather than the border: at 80 war score the table will '
-          + 'write your brother out of it and hand you the whole kingdom.',
       ],
       clocks: [
         { y: -66, m: 3, label: 'Nabataea may enter for Hyrcanus' },
@@ -77,14 +77,13 @@ export const CAMPAIGN_GUIDANCE = {
     HER: {
       system: 'Roman patronage versus local legitimacy',
       opening: [
-        'Keep Masada and Idumea alive while Herod seeks recognition in Rome.',
-        'You begin inside Rome\'s system, not outside it: the collar is your father\'s '
-          + 'inheritance, it costs a tenth and a half of your revenue in tribute, and it '
-          + 'means no client kingdoms of your own until you are out from under it.',
+        'Keep Masada and Idumea alive while Herod seeks recognition in Rome — you begin '
+          + 'inside Rome\'s system rather than outside it, and the collar your father earned '
+          + 'costs a tenth and a half of the revenue and forbids clients of your own.',
         'Let Roman power clear the wider war; spend your strength on the road to Jerusalem.',
-        'Secure the coast and Galilee before beginning the final siege.',
-        'The crown war is yours to settle whoever is fighting beside you — and at 80 war '
-          + 'score its table can hand you Antigonus\' whole kingdom in one clause.',
+        'Secure the coast and Galilee before the final siege — and remember the crown war is '
+          + 'yours to settle whoever fights beside you: at 80 war score its table hands you '
+          + 'Antigonus\' whole kingdom in one clause.',
       ],
       clocks: [
         { y: -40, m: 10, label: 'Herod must choose whether to sail for Rome' },
