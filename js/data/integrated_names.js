@@ -86,6 +86,17 @@ export const JEWISH_INTEGRATED_NAMES = Object.freeze({
   'Tarsus': 'Tarsos',
   'Berytus': 'Berotai',
   'Tripolis': 'Trablus',
+  // SPEC §225's districts, in the same register as the cities over them:
+  // Baalbek is the Ba'al Gad of Joshua's northern list, and the rest keep the
+  // Hebrew forms of the names they are already known by.
+  'Heliopolis': 'Ba\'al Gad',
+  'Nabatieh': 'Nabatiya',
+  'Chouf': 'Shuf',
+  'Jounieh': 'Yuniya',
+  'Batroun': 'Batrun',
+  'Akkar': 'Arka',   // the Arkite of Genesis 10:17, on the plain the district is named for
+  'Mount Hermon': 'Har Hermon',
+  'Quneitra': 'Kuneitra',
   'Emesa': 'Hims',
   'Laodicea': 'Ludkia',
   'Apamea': 'Afamia',
@@ -267,6 +278,8 @@ export const SAMARITAN_INTEGRATED_NAMES = Object.freeze({
   'Beroea': 'Halab',
   'Antioch': 'Antiokhia',
   'Chalcis': 'Halkis',
+  'Heliopolis': 'Ba\'al Gad',
+  'Mount Hermon': 'Har Hermon',
 
   // Egypt, where the community kept synagogues from the Ptolemies onward and
   // argued its case before them (Josephus, Ant. XIII.74-79). Mof rather than

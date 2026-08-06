@@ -2521,6 +2521,9 @@ export const GENERAL_NAMES = {
   // far eras (SPEC §22)
   israeli:   ['Yigael Yadin', 'Yitzhak Sadeh', 'Yigal Allon', 'Moshe Carmel', 'Shimon Avidan', 'David Shaltiel', 'Mickey Marcus', 'Yitzhak Rabin'],
   arab_modern: ['Abdullah el-Tell', 'Habis Majali', 'Fawzi al-Qawuqji', 'Ahmed Ali al-Mwawi', 'Taha al-Hashimi', 'Ismail Safwat', 'Muhammad Naguib', 'Sami al-Hinnawi'],
+  // The Party of God's own bench (SPEC §225): the founding clerics of the
+  // Beqaa, the secretaries-general, and the men who ran the military wing.
+  hezbollah: ['Abbas al-Musawi', 'Subhi al-Tufayli', 'Ragheb Harb', 'Hassan Nasrallah', 'Naim Qassem', 'Imad Mughniyeh', 'Mustafa Badreddine', 'Muhammad Yazbek'],
   turkish:   ['Kâzım Orbay', 'Salih Omurtak', 'Nuri Yamut', 'Abdurrahman Nafiz Gürman', 'Şükrü Kanatlı', 'Muzaffer Tuğsavul', 'İzzet Aksalur', 'Asım Tınaztepe'],
   // …and the four courts of 1948 that had no modern pool at all (SPEC §143),
   // so a death in Rome seated Quintus Petillius and a death in Athens seated

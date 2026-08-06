@@ -562,7 +562,7 @@ const GAZA_STRIP = ['Gaza', 'Khan Yunis', 'Rafah'];
 // the 1949 armistice lines. Rhodes may confirm these gains, but not any other
 // place an Israeli formation happens to occupy when the decision is pressed.
 const ARMISTICE_1949_ISR_GAINS = new Set([
-  'Gischala', 'Sepphoris', 'Jotapata',
+  'Gischala', 'Sepphoris', 'Jotapata', "Ma'alot",
   'Lydda', 'Beit Shemesh',
   'Ascalon', 'Azotus', 'Kiryat Gat',
   'Beersheba', 'Arad', 'Oboda', 'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
@@ -5081,7 +5081,7 @@ export const EVENTS_1948 = [
             id: 'civil_war_lebanon', name: 'The Civil War', months: -1,
             effects: { incomeMult: 0.6, manpowerMult: 0.7, unrestAll: 1 },
           });
-          unrestAcross(ctx, 'LEB', ['Berytus', 'Sidon', 'Tyre', 'Tripolis', 'Chalcis'], {
+          unrestAcross(ctx, 'LEB', ['Berytus', 'Chouf', 'Sidon', 'Tyre', 'Tripolis', 'Chalcis'], {
             id: 'the_green_line', name: 'The Green Line', months: -1, effects: { unrest: 2.5 },
           });
           const held = spawnRebels(ctx, ploBases(ctx, 'LEB', ['Berytus', 'Sidon', 'Tyre']), {
@@ -5141,7 +5141,7 @@ export const EVENTS_1948 = [
           const g = ctx.game;
           const sy = syrTag(ctx);
           if (!sy || !alive(ctx, 'LEB')) return;
-          for (const n of ['Chalcis', 'Tripolis']) {
+          for (const n of ['Chalcis', 'Heliopolis', 'Tripolis']) {
             if (ctx.helpers.controls(ctx, 'LEB', n)) ctx.helpers.changeOwner(ctx, n, sy);
           }
           ctx.helpers.adjust(ctx, sy, { mar: -20 });
@@ -5272,7 +5272,7 @@ export const EVENTS_1948 = [
           });
           // The Beqaa is a front of this war, not a war of its own (SPEC §224).
           const sy = syrTag(ctx);
-          if (sy && (ctx.helpers.controls(ctx, sy, 'Chalcis') || ctx.helpers.controls(ctx, sy, 'Tripolis'))
+          if (sy && ['Chalcis', 'Heliopolis', 'Tripolis'].some((n) => ctx.helpers.controls(ctx, sy, n))
             && !findWar(g, 'ISR', sy)) {
             clearEventTruce(ctx, 'ISR', sy);
             if (ctx.helpers.joinWar(ctx, war, sy, 'def')) {

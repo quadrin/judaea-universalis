@@ -159,6 +159,62 @@ function syrTag(ctx) {
   if (alive(ctx, 'UAR')) return 'UAR';
   return null;
 }
+// The Party of God takes the ground (SPEC §225). Baalbek's Beqaa and the
+// Jabal Amil secede from whoever is the Lebanese state; if Lebanon is gone,
+// the same two districts come off the occupier, because the thing the Guard
+// built was built under an occupation either way. Returns the tag or null —
+// a secession with no province behind it is a proclamation, and the map does
+// not model proclamations.
+const PARTY_GROUND = ['Heliopolis', 'Nabatieh'];
+function seatTheParty(ctx) {
+  const g = ctx.game;
+  if (g.tags.HEZ) return 'HEZ';
+  if (typeof ctx.helpers.secedeTag !== 'function') return null;
+  const owners = {};
+  for (const n of PARTY_GROUND) {
+    const p = ctx.prov && ctx.prov(n);
+    const o = p && p.owner;
+    if (!o || o === 'REB' || o === 'WASTE' || !alive(ctx, o)) continue;
+    owners[o] = (owners[o] || []).concat(n);
+  }
+  // The seat is Baalbek's holder where there is one — the barracks the Guard
+  // actually set up in — and otherwise whoever holds most of the ground.
+  const beqaa = ctx.prov && ctx.prov('Heliopolis');
+  const seatOwner = beqaa && owners[beqaa.owner] ? beqaa.owner : null;
+  const from = seatOwner
+    || Object.keys(owners).sort((a, b) => owners[b].length - owners[a].length)[0];
+  if (!from) return null;
+  const seated = ctx.helpers.secedeTag(ctx, from, 'HEZ', {
+    provinces: owners[from], share: 0.04, stability: 1, legitimacy: 60,
+    ruler: { name: 'Subhi al-Tufayli', title: 'Secretary-General', gov: 3, infl: 4, mar: 3, age: 34 },
+  });
+  if (!seated) return null;
+  // The rest of the ground follows, off whoever else was nominally holding it:
+  // the Beqaa and the Jabal Amil were one organisation's country whether the
+  // deeds said Beirut or Damascus.
+  for (const other of Object.keys(owners)) {
+    if (other === from) continue;
+    for (const n of owners[other]) ctx.helpers.changeOwner(ctx, n, 'HEZ');
+    setOpinion(ctx, other, 'HEZ', -60);
+  }
+  // Whose war this is, and whose it is not. Tehran pays; Damascus permits;
+  // Jerusalem is the reason it exists.
+  // The Islamic Resistance: a cadre, not an army. It never had the men to
+  // take ground and never tried to; what it has is the ground it is standing
+  // on and a doctrine about not leaving it.
+  spawnAt(ctx, 'HEZ', ['Heliopolis', 'Nabatieh'], {
+    inf: 2, name: 'The Islamic Resistance',
+    general: { name: 'Imad Mughniyeh', fire: 2, shock: 3, maneuver: 4 },
+  });
+  if (alive(ctx, 'IRN')) { setOpinion(ctx, 'IRN', 'HEZ', 120); setOpinion(ctx, 'HEZ', 'IRN', 120); }
+  const sy = syrTag(ctx);
+  if (sy && sy !== 'HEZ') { setOpinion(ctx, sy, 'HEZ', 60); setOpinion(ctx, 'HEZ', sy, 60); }
+  if (alive(ctx, 'ISR')) { setOpinion(ctx, 'HEZ', 'ISR', -200); setOpinion(ctx, 'ISR', 'HEZ', -200); }
+  setOpinion(ctx, from, 'HEZ', -60);
+  ctx.helpers.chronicle(ctx, 'war', 'Fifteen hundred Revolutionary Guards reach the Beqaa through Damascus and set up at Baalbek; the Party of God takes Baalbek and the Jabal Amil off a state that had stopped administering them, and the occupation has produced the adversary that will outlast it.');
+  return 'HEZ';
+}
+
 // Damascus as a polity in its own right — the union does not count, because
 // the whole question these cards ask is whether there is a Syria to ask.
 function syrOwn(ctx) {
@@ -169,9 +225,12 @@ function syrOwn(ctx) {
 
 const SYRIA_CORE = ['Damascus', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
   'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra', 'Syrian Desert', 'Nisibis',
-  'Caesarea Philippi', 'Batanea', 'Gamala'];
-const LEBANON = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Chalcis'];
-const SOUTH_LEBANON = ['Tyre', 'Sidon'];
+  'Caesarea Philippi', 'Mount Hermon', 'Quneitra', 'Batanea', 'Gamala'];
+// SPEC §225: the republic as thirteen districts rather than six cells.
+const LEBANON = ['Tyre', 'Nabatieh', 'Sidon', 'Chouf', 'Berytus', 'Jounieh',
+  'Byblos', 'Batroun', 'Tripolis', 'Bsharri', 'Akkar', 'Chalcis', 'Heliopolis'];
+// The security belt's ground, and the ground the rockets are fired from.
+const SOUTH_LEBANON = ['Tyre', 'Nabatieh', 'Sidon'];
 const IRAN = ['Ecbatana', 'Susa', 'Gazaca', 'Persepolis', 'Gabae', 'Hyrcania'];
 
 export const EVENTS_1948_REGION = [
@@ -981,11 +1040,11 @@ export const EVENTS_1948_REGION = [
     options: [
       {
         label: 'Baalbek: salaries, clinics, and a separate military wing',
-        tooltip: 'Hezbollah is founded. The Beqaa (Chalcis), Tyre and Sidon carry "The Party of God" permanently (+2 unrest); an Israel holding ground in Lebanon takes "The Attrition in the South" (−6% income, −4% morale) for as long as it stays; Iran −60 funds a year of it and +15 influence points. Israel gains no way to end this by taking ground — that is the point of it.',
+        tooltip: 'Hezbollah is founded — and seated: Baalbek and the Jabal Amil (Nabatieh) leave Lebanon under the Party\'s own yellow, a theocracy with an irregular\'s ideas (+25% morale, +10% reserves, −25% income, −25% force limit). The Beqaa, Baalbek, Tyre, Nabatieh and Sidon carry "The Party of God" permanently (+2 unrest); an Israel holding ground in Lebanon takes "The Attrition in the South" (−6% income, −4% morale) for as long as it stays; Iran −60 funds a year of it and +15 influence points. Israel gains no way to end this by taking ground — that is the point of it.',
         effects: guard('ev_i_hezbollah:0', (ctx) => {
           const h = ctx.helpers;
           const g = ctx.game;
-          for (const n of ['Chalcis', 'Tyre', 'Sidon']) {
+          for (const n of ['Chalcis', 'Heliopolis', 'Tyre', 'Nabatieh', 'Sidon']) {
             h.addProvinceModifier(ctx, n, {
               id: 'party_of_god', name: 'The Party of God', months: -1,
               effects: { unrest: 2 },
@@ -1001,7 +1060,14 @@ export const EVENTS_1948_REGION = [
           const sy = syrTag(ctx);
           if (sy) h.adjust(ctx, sy, { infl: 10 });
           g.flags.hezbollah = true;
-          h.chronicle(ctx, 'war', 'Fifteen hundred Revolutionary Guards reach the Beqaa through Damascus and set up at Baalbek; the occupation has produced the adversary that will outlast it.');
+          // …and it takes the ground (SPEC §225). The Party is a court on the
+          // map, not two province modifiers: Baalbek's half of the Beqaa and
+          // the Jabal Amil leave Beirut, which by 1982 is a description of
+          // where the Lebanese state was rather than a change to it. Occupied
+          // ground still secedes — the owner is Beirut whoever is standing on
+          // it — and being occupied is the whole of what this adversary
+          // learned from.
+          seatTheParty(ctx);
         }),
       },
       {

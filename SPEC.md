@@ -14825,3 +14825,110 @@ Resolved through a `syrTag` walk like the rest of the era (§105).
   treaty and a both-sides guarantor staying home; the Gulf debt outliving a
   repayment and a bankruptcy; and `capitalTaken` telling a rebel camp from a
   conquest.
+
+## 225. The northern frontier, at the resolution it is played at
+
+Lebanon was six cells. Tyre, Sidon, Beirut, Byblos, Tripoli and the Beqaa —
+for a country the size of Israel's coastal plain, which the 1948 chapter then
+fights three wars over: the civil war of 1975, the Syrian occupation of 1976,
+and Peace for Galilee in 1982. Every one of them is decided at a resolution the
+map could not show. The Chouf had no cell, so the Mountain War happened inside
+Sidon. Baalbek had no cell, so the Revolutionary Guard arrived in a province
+called Zahle. The Kesrouan and the Qadisha — the Maronite heartland, which is
+the reason there is a Lebanon at all — were Byblos and Tripoli.
+
+The Golan was worse. `Caesarea Philippi` ran from the Litani across the Hermon
+massif to the Damascus road as ONE cell, and the plateau town 1948 named on the
+map, Quneitra, was a label hung on `Batanea` — whose seed sits fifty kilometres
+east of it, out in the Hauran.
+
+### Ten cells, and every one of them latent
+
+Sixteen districts where there were nine, all through the same mechanism §47
+built for the modern Israeli cells and nothing else: a `latentParent`, so the
+pixels, the clicks and the adjacency resolve to the ancient province in the
+seven older chapters, which are still played on the atlas they were written for.
+
+South to north: **Nabatieh** (Jabal Amil, under Tyre), **Chouf** (under Sidon),
+**Jounieh** (the Kesrouan, under Beirut), **Batroun** (under Byblos),
+**Bsharri** (the Qadisha and the cedars, under Tripoli), **Akkar** (under
+Tripoli), and **Heliopolis** (the northern Beqaa, under Chalcis). On the Golan:
+**Mount Hermon** and **Quneitra**, both under Caesarea Philippi — which leaves
+Banias as what it is, the Hula springs. And in the Galilee, **Ma'alot**, the
+Tarshiha ridge, out from under a Gischala that had been holding everything from
+the Acre plain to the Hula on its own.
+
+Batanea goes back to being the country it is: 1948 shows **Hauran** over it,
+because the town it used to be labelled with is now its own cell two provinces
+west.
+
+Heliopolis keeps an ancient name where the other nine take modern ones. That is
+not inconsistency: the rule is whether the place has an identity too large to
+file under a district name, and the largest Roman temple platform in the world
+has one. 1948 shows Baalbek over it, exactly as it shows Banias over Caesarea
+Philippi.
+
+### What the ancient chapters see: nothing
+
+The invariant this section is measured against is that **the folded adjacency
+of all seven older chapters is identical to the tree before it** — 167 BCE,
+67 BCE, 40 BCE, 66 CE, 132 CE, 529 CE and 614 CE, every cell, every neighbour.
+It is not automatic. A latent seed inside its parent subdivides the parent, but
+a latent seed near the parent's edge can take pixels off a cell that is NOT its
+parent, and then the folded map is a different map.
+
+Two decisions came out of holding that line:
+
+- The new cells are **appended** to `PROVINCES`, not inserted where they belong
+  thematically. `id = index + 1`, and the file has said since v4.1 that modern
+  cells go on the end so old save IDs stay put. Inserted mid-array they shifted
+  two hundred and fifty province IDs.
+- **The Beqaa's cell keeps a low weight instead of a neighbour.** Chalcis' cell
+  always ran east to the Palmyra road, because nothing is seeded on the Syrian
+  steppe between Damascus, Emesa and Palmyra; splitting the Beqaa in two
+  inherits that reach rather than inventing it, and Heliopolis + Chalcis
+  together cover exactly the ground Chalcis covered alone. A seed out on the
+  steppe fixes the border and costs the ancient map the **Damascus–Palmyra
+  road** — folded into Palmyra it also takes Damascus–Emesa — which is a much
+  worse trade than one wide desert cell. Measured both ways; this is the one
+  that leaves the seven chapters alone.
+
+What is left is area drift: boundaries move a pixel or two where a new seed
+sits near an old edge, ~5.9k raster cells across the whole map, worst case
+Tripolis. Adjacency — which is what armies walk on — does not move at all.
+
+### Hezbollah is a court
+
+`ev_i_hezbollah` founded the Party of God as two province modifiers and a flag.
+Fifteen hundred Revolutionary Guards came to the Beqaa through Damascus in 1982
+and what they built was not another militia: it recruited from the community at
+the bottom of Lebanon's confessional arithmetic, paid salaries, ran clinics and
+schools, kept its military wing separate from all of it, and by the end of the
+decade Baalbek and the Jabal Amil were not administered from Beirut in any
+sense a map should pretend otherwise about.
+
+So `HEZ` is a tag: a colour, a court, a name pool of its own founders and
+secretaries-general, and an AI personality. A **theocracy**, because that is
+what wilayat al-faqih is and because §98's succession — the elders choose,
+never a child regency — is how Musawi's killing was actually answered. An
+irregular's ideas: +25% morale and +10% reserves against −25% income and −25%
+force limit, which is a thing that fights above its weight on its own ground
+and cannot field a state's economy or a state's establishment.
+
+It is seated by the card that founds it, on the two cells §225 added for it —
+Heliopolis and Nabatieh — through §105's `secedeTag`. The seat is Baalbek's
+holder, because Baalbek is where the barracks were; the rest of the ground
+follows off whoever else held it, which by 1982 may well be Damascus, since the
+Deterrent Force took the Beqaa in 1976. Occupied ground secedes too: the owner
+is Beirut whoever is standing on it, and being occupied is the whole of what
+this adversary learned from. The no-Lebanon arc (§113) seats it the same way
+off the occupier, where there is no Beirut to secede from at all.
+
+- **Regression contract**: `smoke150` — the ten cells registered, latent,
+  parented and regioned; every one active in 1948 and owned by the right state;
+  the folded adjacency of all seven ancient chapters identical to a stored
+  fingerprint, and the new cells invisible in them; Batanea's label and
+  Heliopolis' two names; the Lebanon lists in all three 1948 packages carrying
+  the new districts; and the Party of God seated with its ground, its court,
+  its government and its opinions — from Beirut, from an occupier, and not
+  twice.

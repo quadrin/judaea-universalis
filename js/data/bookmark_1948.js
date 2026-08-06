@@ -84,7 +84,8 @@ function anyFlag(ctx, ...keys) {
 // no-Lebanon arc's own `occupier()` reads (events_1948_levant.js), mirrored
 // here so the hypothetical completes exactly when the arc would address you.
 const LEBANON_DISTRICTS = ['Tripolis', 'Byblos', 'Berytus', 'Chalcis', 'Sidon', 'Tyre',
-  'Gischala', 'Jotapata', 'Sepphoris'];
+  'Akkar', 'Bsharri', 'Batroun', 'Jounieh', 'Chouf', 'Nabatieh', 'Heliopolis',
+  'Gischala', 'Jotapata', 'Sepphoris', "Ma'alot"];
 
 // ---- the map of May 1948, in the map's ancient names ------------------------
 const ISR_LANDS = [
@@ -133,8 +134,9 @@ const SYR_LANDS = [
   'Damascus', 'Emesa', 'Palmyra', 'Apamea', 'Beroea', 'Cyrrhus',
   'Laodicea', 'Aradus', 'Dura-Europos', 'Bostra', 'Syrian Desert',
   'Nisibis', // Qamishli — the Jazira corner is Syrian, not Iraqi
-  // the Golan approaches
-  'Caesarea Philippi', 'Batanea', 'Gamala',
+  // the Golan approaches: Banias under the Hermon, the massif itself, the
+  // plateau town at its centre, and the Hauran behind them (SPEC §225)
+  'Caesarea Philippi', 'Mount Hermon', 'Quneitra', 'Batanea', 'Gamala',
 ];
 // Chalcis is the Beqaa (era name Zahle): Lebanese, not Syrian, since Greater
 // Lebanon's 1920 borders — the republic is the coast AND the valley.
@@ -142,7 +144,14 @@ const SYR_LANDS = [
 // Galilee pocket: Arab-held on 15 May and garrisoned by Kaukji's Liberation
 // Army, carried here under the Lebanese proxy until Dekel and Hiram take it.
 const LEB_LANDS = ['Tyre', 'Sidon', 'Berytus', 'Byblos', 'Tripolis', 'Chalcis',
-  'Gischala', 'Sepphoris', 'Jotapata'];
+  // SPEC §225: the republic at the resolution its three wars are fought at —
+  // Jabal Amil, the Chouf, the Kesrouan, the Batroun coast, the Qadisha
+  // highland, the Akkar plain, and Baalbek's half of the Beqaa.
+  'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar', 'Heliopolis',
+  // Tarshiha and the Ma'alot ridge belong to the same Arab-held central
+  // Galilee pocket as Jish, Nazareth and Sakhnin, and are carried under the
+  // same Lebanese proxy until Dekel and Hiram take them.
+  'Gischala', 'Sepphoris', 'Jotapata', "Ma'alot"];
 const IRQ_LANDS = [
   'Singara', 'Hatra', 'Arbela', 'Assur', 'Seleucia-Ctesiphon', 'Babylon',
   'Nehardea', 'Uruk', 'Charax',
@@ -184,6 +193,10 @@ const MODERN_PROVINCES = [
   'Dimona', 'Mitzpe Ramon', 'Paran', 'Eilat',
   // v4.5: the neighbors' modern shapes — the panhandle, the Badia, the wells
   'Kiryat Shmona', 'Azraq', 'Rutba',
+  // v7.7 (SPEC §225): Lebanon's districts, the Golan told apart from the
+  // Hauran, and the central Upper Galilee out from under Gischala
+  'Nabatieh', 'Chouf', 'Jounieh', 'Batroun', 'Bsharri', 'Akkar', 'Heliopolis',
+  'Mount Hermon', 'Quneitra', "Ma'alot",
   // v6.7: the southern borders drawn true — the Sinai side of the 1906 line
   // and Jordan's Ghor es-Safi, so the Negev triangle wears its real edges
   'Kadesh Barnea', 'Dizahab', 'Zoara',
@@ -229,8 +242,13 @@ for (const n of JOR_LANDS.concat(EGY_LANDS, SYR_LANDS, IRQ_LANDS, TUR_LANDS, SAU
   RELIGIONS[n] = 'islam';
 }
 for (const n of ISR_LANDS) RELIGIONS[n] = 'judaism';
-for (const n of ['Tyre', 'Sidon', 'Gischala', 'Jotapata', 'Chalcis']) RELIGIONS[n] = 'islam';
+for (const n of ['Tyre', 'Sidon', 'Gischala', 'Jotapata', 'Chalcis', "Ma'alot"]) RELIGIONS[n] = 'islam';
 for (const n of ['Berytus', 'Byblos', 'Tripolis']) RELIGIONS[n] = 'christianity';
+// The confessional map, district by district (SPEC §225): the Shia south and
+// the Shia half of the Beqaa, Sunni Akkar, the Druze and Maronite mountain,
+// and the Maronite heartland from the Kesrouan to the Qadisha.
+for (const n of ['Nabatieh', 'Heliopolis', 'Akkar', 'Chouf']) RELIGIONS[n] = 'islam';
+for (const n of ['Jounieh', 'Batroun', 'Bsharri']) RELIGIONS[n] = 'christianity';
 RELIGIONS['Sepphoris'] = 'christianity'; // Nazareth's Christian plurality
 RELIGIONS['Salamis'] = 'christianity';
 RELIGIONS['Paphos'] = 'christianity';
@@ -643,7 +661,11 @@ export const BOOKMARK_1948 = {
     'Sebaste': 'Samaria', 'Adora': 'Dura', 'Gadora': 'Salt', 'Machaerus': 'Karak',
     'Medaba': 'Madaba', 'Philadelphia': 'Amman', 'Gerasa': 'Jerash',
     'Gadara': 'Irbid', 'Aila': 'Aqaba', 'Oboda': 'al-Auja',
-    'Caesarea Philippi': 'Banias', 'Batanea': 'Quneitra', 'Gamala': 'Golan',
+    // Banias under the Hermon, the Golan plateau, and — since the plateau
+    // town is now its own cell (SPEC §225) — Batanea back under the name of
+    // the country it actually is, the Hauran.
+    'Caesarea Philippi': 'Banias', 'Batanea': 'Hauran', 'Gamala': 'Golan',
+    'Heliopolis': 'Baalbek',
     'Berytus': 'Beirut', 'Tripolis': 'Tripoli', 'Aradus': 'Tartus',
     'Laodicea': 'Latakia', 'Emesa': 'Homs', 'Beroea': 'Aleppo',
     'Apamea': 'Hama', 'Bostra': 'Daraa', 'Dura-Europos': 'Deir ez-Zor',
@@ -916,6 +938,16 @@ export const BOOKMARK_1948 = {
     'Paran': { tax: 1, prod: 1, mp: 0 },
     'Eilat': { tax: 1, prod: 1, mp: 1 },
     'Kiryat Shmona': { tax: 1, prod: 1, mp: 1 },
+    'Nabatieh': { tax: 1, prod: 1, mp: 1 },
+    'Chouf': { tax: 1, prod: 1, mp: 1 },
+    'Jounieh': { tax: 2, prod: 2, mp: 1 },
+    'Batroun': { tax: 1, prod: 1, mp: 1 },
+    'Bsharri': { tax: 1, prod: 1, mp: 1 },
+    'Akkar': { tax: 1, prod: 1, mp: 1 },
+    'Heliopolis': { tax: 2, prod: 1, mp: 1 },
+    'Mount Hermon': { tax: 1, prod: 1, mp: 0 },
+    'Quneitra': { tax: 1, prod: 1, mp: 1 },
+    "Ma'alot": { tax: 1, prod: 1, mp: 1 },
     'Azraq': { tax: 1, prod: 1, mp: 1 },
     'Rutba': { tax: 1, prod: 1, mp: 1 },
     'Kadesh Barnea': { tax: 1, prod: 1, mp: 1 },
