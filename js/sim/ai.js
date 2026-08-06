@@ -566,6 +566,13 @@ function aiConsiderWar(ctx, tag) {
     if (truceActive(ctx, tag, tgt)) continue;
     if (recognized(ctx, tag, tgt)) continue; // a recognized peace is not raided (SPEC §96)
     if ((t.allies || []).indexOf(tgt) >= 0 || e.overlord === tag || t.overlord === tgt) continue;
+    // A court does not raid a realm whose independence it has pledged, or one
+    // that has pledged its own (SPEC §224). Without this the Arab League's
+    // joint defence read as a target list: every member was a neighbour, every
+    // member guaranteed every other, and the pact's own signatories opened
+    // wars of opportunity on each other that the pact then called the rest of
+    // the bloc into on both sides.
+    if ((t.guarantees || []).indexOf(tgt) >= 0 || (e.guarantees || []).indexOf(tag) >= 0) continue;
     // A disputed throne is its own invitation (SPEC §98): a court that holds a
     // succession claim rides for it whatever it thinks of the neighbors —
     // wars of succession were fought between houses that liked each other.

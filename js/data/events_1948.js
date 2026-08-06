@@ -334,6 +334,93 @@ function withdrawIsraeliSettlers(ctx, provName, returningTag) {
   return removed;
 }
 
+// ONE war, with the whole coalition in it (SPEC §224). June 1967, October 1973
+// and the Lebanon war of 1982 were each one war fought on several fronts, and
+// each used to be written as one war per capital — three separate wars called
+// "The Yom Kippur War" standing side by side in the war list, three peace
+// tables to close a single cease-fire, three war scores that could disagree
+// about who was winning. Worse: `declareWar` is refused outright, and
+// silently, by a truce still in ink, so a coalition whose members had all made
+// peace with Israel inside the last five years produced NO war at all — the
+// June 1967 cards fired, the flags were set, the Temple Mount was taken and
+// Khartoum answered a victory in a war nobody had declared. That happened in
+// three of the four seeded campaigns the balance harness runs.
+//
+// So: clear the ink (a scripted war between courts the chapter says are about
+// to fight is not a diplomatic option), open the war against the first court
+// that will take it, and enrol the rest into that same war. Returns the war,
+// or null if not one of them could be brought to it.
+function coalitionWar(ctx, isr, foes, name, isrAttacks) {
+  const g = ctx.game;
+  let war = null;
+  for (const t of foes) {
+    if (!t || !alive(ctx, t) || t === isr) continue;
+    const already = findWar(g, isr, t);
+    if (already) { war = war || already; continue; }
+    clearEventTruce(ctx, isr, t);
+    if (!war) {
+      war = isrAttacks
+        ? ctx.helpers.declareWar(ctx, isr, t, name)
+        : ctx.helpers.declareWar(ctx, t, isr, name);
+      continue;
+    }
+    ctx.helpers.joinWar(ctx, war, t,
+      (war.attackers || []).indexOf(isr) >= 0 ? 'def' : 'att');
+  }
+  return war;
+}
+// Which of the courts the card named are actually in the war it opened.
+function belligerents(ctx, foes, isr) {
+  return foes.filter((t) => t && alive(ctx, t) && findWar(ctx.game, isr, t));
+}
+// A cease-fire binds the coalition, not the capitals the card happens to name
+// (SPEC §224). With June 1967 and the Sinai campaign now ONE war each, the
+// courts that came in under somebody's guarantee — the expeditionary
+// contingents Iraq and Saudi Arabia actually sent — are in the war the
+// armistice ends. Ending it only with the principals left them in it: on the
+// harness's own seeds Amman and Cairo signed the June lines in September 1967
+// and Baghdad, Riyadh and Beirut went on fighting Israel until 1970.
+function endWarWithAll(ctx, isr, other, winnersKey, opts) {
+  const war = findWar(ctx.game, isr, other);
+  if (!war) return [];
+  const foes = ((war.attackers || []).indexOf(isr) >= 0 ? war.defenders : war.attackers).slice();
+  const signed = [];
+  for (const t of foes) {
+    if (ctx.helpers.endWar(ctx, isr, t, winnersKey, opts)) signed.push(t);
+  }
+  return signed;
+}
+
+// The Joint Defence Council stops being an army (SPEC §224). `ev_i_joint_defence`
+// writes six capitals guaranteeing each other's independence, and a guarantee
+// in this engine is a standing order to march: every guarantor joins the
+// defense of anyone its ward is attacked by, forever. Left standing, that
+// treaty of 1950 was still calling Riyadh and Baghdad onto Beirut's side of an
+// Israeli war in 1982 — a war the real League answered with a communiqué —
+// and, before Britain's Suez declaration was taken off this chapter, onto
+// Egypt's side against the whole Baghdad Pact.
+//
+// The pact dies where it died: at the separate peace. The League suspended
+// Egypt within the week of the White House lawn and moved its headquarters out
+// of Cairo, and the Council never fought another war. Struck here as what it
+// became — six signatures that no longer summon anybody.
+function retireJointDefence(ctx) {
+  const g = ctx.game;
+  const members = Array.isArray(g.flags.jointDefencePact) ? g.flags.jointDefencePact : null;
+  if (!members || !members.length) return 0;
+  let struck = 0;
+  for (const a of members) {
+    const ta = g.tags[a];
+    if (!ta || !Array.isArray(ta.guarantees)) continue;
+    const before = ta.guarantees.length;
+    ta.guarantees = ta.guarantees.filter((b) => a === b || members.indexOf(b) < 0);
+    struck += before - ta.guarantees.length;
+  }
+  g.flags.jointDefencePact = null;
+  g.flags.jointDefenceLapsed = true;
+  return struck;
+}
+
 // June 1967, both doors. Called by both options of ev_i_moked: the strike, or
 // the waiting continued until the coalition chooses the hour instead.
 function sixDayOutbreak(ctx, preempt) {
@@ -351,17 +438,29 @@ function sixDayOutbreak(ctx, preempt) {
     ctx.helpers.chronicle(ctx, 'diplomacy', 'The May crisis finds no coalition hostile enough to fight; the June that history expected does not come.');
     return;
   }
-  g.flags.jorHeldJerusalem = alive(ctx, 'JOR') && ctx.helpers.controls(ctx, 'JOR', 'Jerusalem');
+  const war = coalitionWar(ctx, 'ISR', enemies,
+    preempt ? 'The Six-Day War' : 'The June War', preempt);
+  const inWar = belligerents(ctx, enemies, 'ISR');
+  if (!war || !inWar.length) {
+    // Every road to the war was shut — a recognized peace, a client's collar,
+    // a court that cannot be fought. The crisis passes without its six days,
+    // and none of the flags the aftermath reads are set.
+    ctx.helpers.chronicle(ctx, 'diplomacy', 'The corner of June 1967 turns out to have a door in it: not one of the courts on the borders can be brought to a war, and the crisis passes into diplomacy.');
+    return;
+  }
+  g.flags.jorHeldJerusalem = alive(ctx, 'JOR') && inWar.indexOf('JOR') >= 0
+    && ctx.helpers.controls(ctx, 'JOR', 'Jerusalem');
   g.flags.sixDayWar = true;
   if (preempt) {
-    for (const t of enemies) {
-      if (!findWar(g, 'ISR', t)) ctx.helpers.declareWar(ctx, 'ISR', t, 'The Six-Day War');
+    for (const t of inWar) {
       ctx.helpers.addTagModifier(ctx, t, {
         id: 'moked', name: 'The Air Force Destroyed on the Ground', months: 12,
         effects: { moraleMult: 0.85 },
       });
-      warEventScore(ctx, 'ISR', t, 'ISR', 8);
     }
+    // One war, one score: eight points per front, awarded to the one side
+    // Israel is standing on.
+    warEventScore(ctx, 'ISR', inWar[0], 'ISR', 8 * inWar.length);
     ctx.helpers.adjust(ctx, 'ISR', { mar: 25 });
     spawnAt(ctx, 'ISR', ['Beersheba', 'Kiryat Gat', 'Gaza', 'Joppa'], {
       inf: 5, cav: 4, name: 'Southern Command',
@@ -373,8 +472,7 @@ function sixDayOutbreak(ctx, preempt) {
     });
     ctx.helpers.chronicle(ctx, 'war', 'Moked: three air forces are destroyed on the ground by mid-morning, and the Six-Day War opens with the sky already decided.');
   } else {
-    for (const t of enemies) {
-      if (!findWar(g, 'ISR', t)) ctx.helpers.declareWar(ctx, t, 'ISR', 'The June War');
+    for (const t of inWar) {
       ctx.helpers.addTagModifier(ctx, t, {
         id: 'first_blow', name: 'The First Blow', months: 6,
         effects: { moraleMult: 1.08 },
@@ -393,12 +491,15 @@ function octoberOutbreak(ctx, preempt) {
     ctx.helpers.chronicle(ctx, 'era', 'The Day of Atonement of 1973 passes without sirens; the October war belongs to a history this world declined.');
     return;
   }
-  g.flags.yomKippurWar = true;
+  // Egypt first: the war is opened by the court that crossed the Canal, and
+  // Damascus and Amman come into THAT war rather than opening their own.
   const enemies = octoberCombatants(ctx);
-  for (const t of enemies) clearEventTruce(ctx, t, 'ISR');
-  for (const t of enemies) {
-    if (!findWar(g, 'ISR', t)) ctx.helpers.declareWar(ctx, t, 'ISR', 'The Yom Kippur War');
+  const war = coalitionWar(ctx, 'ISR', enemies, 'The Yom Kippur War', false);
+  if (!war || !belligerents(ctx, enemies, 'ISR').length) {
+    ctx.helpers.chronicle(ctx, 'diplomacy', 'The fast of 1973 passes with the crossing planned and never ordered: not one of the courts that would have made the war can be brought to it.');
+    return;
   }
+  g.flags.yomKippurWar = true;
   spawnAt(ctx, e, ['Pelusium', 'Arsinoe', 'Memphis'], {
     inf: 6, cav: 3, name: 'Second and Third Armies',
     general: { name: 'Saad el-Shazly', fire: 3, shock: 2, maneuver: 3 },
@@ -420,11 +521,13 @@ function octoberOutbreak(ctx, preempt) {
     warEventScore(ctx, e, 'ISR', 'ISR', 5);
     ctx.helpers.chronicle(ctx, 'war', 'Israel preempts on the fast itself: the crossing is blunted, and the chancelleries that would have armed the defender go cold.');
   } else {
-    ctx.helpers.addTagModifier(ctx, e, {
-      id: 'the_crossing', name: 'The Crossing', months: 6,
-      effects: { moraleMult: 1.1, disciplineMult: 1.05 },
-    });
-    if (s && s !== e) {
+    if (findWar(g, 'ISR', e)) {
+      ctx.helpers.addTagModifier(ctx, e, {
+        id: 'the_crossing', name: 'The Crossing', months: 6,
+        effects: { moraleMult: 1.1, disciplineMult: 1.05 },
+      });
+    }
+    if (s && s !== e && findWar(g, 'ISR', s)) {
       ctx.helpers.addTagModifier(ctx, s, {
         id: 'golan_flood', name: 'The Golan Flood', months: 3,
         effects: { moraleMult: 1.08 },
@@ -1536,6 +1639,9 @@ export const EVENTS_1948 = [
               effects: { reinforceMult: 0.92 },
             });
           }
+          // Who signed, so the day the Council stops meaning anything knows
+          // whose signatures to strike (SPEC §224).
+          ctx.game.flags.jointDefencePact = members.slice();
           ctx.game.flags.postwarRearmament = true;
           ctx.helpers.chronicle(ctx, 'diplomacy', 'The Arab League Joint Defence Council is established: formal solidarity without a single command.');
         }),
@@ -2717,19 +2823,39 @@ export const EVENTS_1948 = [
   {
     id: 'ev_i_suez',
     title: 'Suez',
-    worldLabel: 'Canal nationalization opens the Suez Crisis',
-    desc: 'Nasser nationalizes the Suez Canal. Britain and France prepare intervention; '
-      + 'Israel weighs the Straits, the fedayeen, and a coordinated attack through Sinai. '
-      + 'The crisis occurs on schedule, but war begins only if the live states remain '
-      + 'hostile and independent enough to fight it.',
+    worldLabel: 'Nasser nationalizes the Suez Canal',
+    // The nationalization, and nothing but the nationalization (SPEC §224).
+    // This card used to be the whole Suez crisis: it declared a Sinai War for
+    // Israel and an Anglo-French Intervention for Britain, and it wrote no
+    // ending for either. The intervention was the worse half. Britain's war
+    // gathered the Baghdad Pact behind it and the Arab League's joint defence
+    // in front of it, so a punitive landing at Port Said became Britain
+    // against six capitals with no withdrawal scripted anywhere — and in every
+    // seeded campaign the balance harness ran, Britain finished the 1950s
+    // holding Damascus, or Mecca, or Asir and the Arabian Desert, which is not
+    // a thing that happened to the twentieth century.
+    //
+    // The crisis itself belongs to the four cards of the region package
+    // (`ev_i_sevres`, `ev_i_kadesh`, `ev_i_port_said`, `ev_i_suez_ultimatum`),
+    // which take it from the villa outside Paris to the American note that
+    // ends it — with a landing that costs Egypt and Britain what the landing
+    // cost, a war that Israel fights and then withdraws from, and the Straits
+    // opened for ten years. That arc is the ending this one never had.
+    desc: 'Nasser nationalizes the Suez Canal — the shares, the pilots, the tolls '
+      + 'and the offices, announced in a speech in Alexandria with a codeword in it '
+      + 'that sends engineers into the buildings while he is still talking. The '
+      + 'company is Anglo-French and the canal is Egyptian ground; London and Paris '
+      + 'begin, that week, to plan how to take it back, and Israel begins to consider '
+      + 'what it could be paid for helping them.',
+    historical: 'The canal was nationalized on 26 July 1956; the collusion at Sèvres followed in October and the fighting at the end of that month.',
     forTag: 'both',
-    date: { y: 1956, m: 10 },
+    date: { y: 1956, m: 7 },
     world: true,
     major: true,
     aiOption: 0,
     options: [{
-      label: 'The canal becomes a front',
-      tooltip: 'Nasser takes power. If Egypt and Israel remain hostile, the Sinai War begins; a surviving Britain intervenes separately. Armies fight the result normally.',
+      label: 'The canal is Egyptian',
+      tooltip: 'Nasser takes power in Cairo: Egypt +200 funds, +20 legitimacy, +40 influence points and The Canal Nationalized (+10% income for 60 months). The crisis this opens is fought — or not — by the cards that follow it.',
       effects: guard('ev_i_suez:0', (ctx) => {
         const egy = ctx.game.tags.EGY;
         if (!egy || !egy.alive) {
@@ -2742,20 +2868,11 @@ export const EVENTS_1948 = [
           id: 'suez_nationalized', name: 'The Canal Nationalized', months: 60,
           effects: { incomeMult: 1.1 },
         });
-        const opinion = egy.opinion && Number.isFinite(egy.opinion.ISR) ? egy.opinion.ISR : -200;
-        const hostile = alive(ctx, 'ISR') && opinion <= -75;
-        if (hostile && !findWar(ctx.game, 'ISR', 'EGY')) {
-          ctx.helpers.declareWar(ctx, 'ISR', 'EGY', 'The Sinai War');
-          if (ctx.helpers.controls(ctx, 'ISR', 'Rhinocolura')) {
-            ctx.helpers.spawnArmy(ctx, 'ISR', 'Rhinocolura', { inf: 6, cav: 3, name: 'Sinai Task Force' });
-          } else if (ctx.helpers.controls(ctx, 'ISR', 'Gaza')) {
-            ctx.helpers.spawnArmy(ctx, 'ISR', 'Gaza', { inf: 6, cav: 3, name: 'Sinai Task Force' });
-          }
+        for (const t of ['UK', 'FRA']) {
+          if (alive(ctx, t)) setOpinionDelta(ctx.game, t, 'EGY', -40);
         }
-        if (alive(ctx, 'UK') && !findWar(ctx.game, 'UK', 'EGY')) {
-          ctx.helpers.declareWar(ctx, 'UK', 'EGY', 'The Anglo-French Intervention');
-        }
-        ctx.helpers.chronicle(ctx, 'war', 'Egypt nationalizes the Suez Canal; the live alignments determine whether the crisis becomes war.');
+        ctx.game.flags.canalNationalized = true;
+        ctx.helpers.chronicle(ctx, 'war', 'A codeword in a speech at Alexandria puts Egyptian engineers into the canal company\'s offices while the speech is still running; the shares, the pilots and the tolls are Egyptian by the evening.');
       }),
     }],
   },
@@ -3643,13 +3760,15 @@ export const EVENTS_1948 = [
         tooltip: 'Every June-War front ends where the armies stand (Israel\'s side keeps its conquests). Israel: +15 legitimacy, −2 war exhaustion — plus the French embargo (−10% reinforcement, 24 months) and military rule (+1 unrest) in the occupied hill country and Gaza.',
         effects: guard('ev_i_lines_of_june:0', (ctx) => {
           const e = egyTag(ctx), s = syrTag(ctx);
+          // The cease-fire binds every court in the war, not the three the
+          // card can name (SPEC §224).
           for (const t of [e, 'JOR', s]) {
-            if (!t) continue;
-            const w = findWar(ctx.game, 'ISR', t);
+            const w = t && findWar(ctx.game, 'ISR', t);
             if (!w) continue;
             const side = (w.attackers || []).indexOf('ISR') >= 0 ? 'att' : 'def';
-            ctx.helpers.endWar(ctx, 'ISR', t, side);
-            ctx.helpers.adjust(ctx, t, { warExhaustion: -1 });
+            for (const signed of endWarWithAll(ctx, 'ISR', t, side)) {
+              ctx.helpers.adjust(ctx, signed, { warExhaustion: -1 });
+            }
           }
           ctx.helpers.removeModifier(ctx, 'ISR', 'straits_closed');
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, warExhaustion: -2 });
@@ -3672,9 +3791,14 @@ export const EVENTS_1948 = [
         tooltip: 'No cease-fire: the wars continue, +8 war score on every live front — but Israel −10 legitimacy, +2 war exhaustion, and the powers begin discussing the word "sanctions".',
         effects: guard('ev_i_lines_of_june:1', (ctx) => {
           const e = egyTag(ctx), s = syrTag(ctx);
-          for (const t of [e, 'JOR', s]) {
-            if (!t || !findWar(ctx.game, 'ISR', t)) continue;
-            warEventScore(ctx, 'ISR', t, 'ISR', 8);
+          // One war, one score: eight points a front, once each (SPEC §224).
+          const fronts = [e, 'JOR', s].filter((t) => t && findWar(ctx.game, 'ISR', t));
+          const seen = [];
+          for (const t of fronts) {
+            const w = findWar(ctx.game, 'ISR', t);
+            if (seen.indexOf(w) >= 0) continue;
+            seen.push(w);
+            warEventScore(ctx, 'ISR', t, 'ISR', 8 * fronts.length);
           }
           ctx.helpers.adjust(ctx, 'ISR', { legitimacy: -10, warExhaustion: 2 });
           ctx.game.flags.sixDayEnded = true;
@@ -4383,10 +4507,13 @@ export const EVENTS_1948 = [
         label: 'The commission spares no one who matters',
         tooltip: 'The wars end by disengagement (occupations revert on both fronts, −2 war exhaustion each). Golda and Dayan fall: Yitzhak Rabin — the first sabra Prime Minister — takes office. Israel: −1 stability now, +10 legitimacy kept.',
         effects: guard('ev_i_agranat:0', (ctx) => {
+          // The disengagement accords bind every court in the October war,
+          // including the contingents nobody at Kilometre 101 named (SPEC §224).
           for (const t of octoberCombatants(ctx)) {
             if (!t || !findWar(ctx.game, 'ISR', t)) continue;
-            ctx.helpers.endWar(ctx, 'ISR', t, null);
-            ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
+            for (const signed of endWarWithAll(ctx, 'ISR', t, null)) {
+              ctx.helpers.adjust(ctx, signed, { warExhaustion: -2 });
+            }
           }
           ctx.helpers.adjust(ctx, 'ISR', { warExhaustion: -2, stability: -1, legitimacy: 10 });
           ctx.helpers.setRuler(ctx, 'ISR', { name: 'Yitzhak Rabin', title: 'Prime Minister', gov: 3, infl: 3, mar: 5, age: 52 });
@@ -4398,10 +4525,13 @@ export const EVENTS_1948 = [
         label: 'Close ranks around the government',
         tooltip: 'The wars end by disengagement (−2 war exhaustion each), Golda stays — Israel: +1 stability now, but −15 legitimacy as the pavement fills with reservists who will not be told to go home.',
         effects: guard('ev_i_agranat:1', (ctx) => {
+          // The disengagement accords bind every court in the October war,
+          // including the contingents nobody at Kilometre 101 named (SPEC §224).
           for (const t of octoberCombatants(ctx)) {
             if (!t || !findWar(ctx.game, 'ISR', t)) continue;
-            ctx.helpers.endWar(ctx, 'ISR', t, null);
-            ctx.helpers.adjust(ctx, t, { warExhaustion: -2 });
+            for (const signed of endWarWithAll(ctx, 'ISR', t, null)) {
+              ctx.helpers.adjust(ctx, signed, { warExhaustion: -2 });
+            }
           }
           ctx.helpers.adjust(ctx, 'ISR', { warExhaustion: -2, stability: 1, legitimacy: -15 });
           ctx.helpers.chronicle(ctx, 'peace', 'The disengagement accords hold and the government does too — over the sound, every day louder, of the protest outside.');
@@ -4749,6 +4879,9 @@ export const EVENTS_1948 = [
           for (const t of ['SAU', 'IRQ', 'JOR', 'LEB', s]) {
             if (t && t !== e && alive(ctx, t)) setOpinionDelta(g, t, e, -60);
           }
+          if (retireJointDefence(ctx)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The Joint Defence Council of 1950 is what the expulsion actually costs: the headquarters goes to Tunis, the Council does not meet, and no capital is called to any other capital\'s war again.');
+          }
           ctx.helpers.chronicle(ctx, 'peace', 'The Egypt–Israel treaty is signed on the White House lawn: Sinai for peace, the first recognition. Israeli civilians leave with the army'
             + (evacuated ? ' (' + evacuated.toLocaleString('en-US') + ' settlers evacuated in the map\'s province model)' : '')
             + '. The League expels Egypt; Sadat has three years to live.');
@@ -4780,6 +4913,12 @@ export const EVENTS_1948 = [
           ctx.helpers.adjust(ctx, e, { legitimacy: -10 });
           setOpinionDelta(g, e, 'ISR', 40);
           setOpinionDelta(g, 'ISR', e, 40);
+          // No expulsion — and no Council either. A separate peace signed by
+          // one signatory is the end of a joint defence whichever way the
+          // League votes on the seating (SPEC §224).
+          if (retireJointDefence(ctx)) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'Cairo keeps its seat and the Joint Defence Council loses its purpose anyway: no general staff will plan a common war around a signatory who has signed its own peace.');
+          }
           ctx.helpers.chronicle(ctx, 'peace', 'A treaty of installments: the canal bank changes hands, the rest of Sinai waits on schedules — a peace, but one signed in pencil.');
         }),
       },
@@ -5118,9 +5257,10 @@ export const EVENTS_1948 = [
         effects: guard('ev_i_peace_for_galilee:0', (ctx) => {
           const g = ctx.game;
           if (!alive(ctx, 'ISR') || !alive(ctx, 'LEB')) return;
-          if (!findWar(g, 'ISR', 'LEB')) {
-            clearEventTruce(ctx, 'ISR', 'LEB');
-            ctx.helpers.declareWar(ctx, 'ISR', 'LEB', 'Peace for Galilee');
+          const war = coalitionWar(ctx, 'ISR', ['LEB'], 'Peace for Galilee', true);
+          if (!war) {
+            ctx.helpers.chronicle(ctx, 'diplomacy', 'The plan for Lebanon is read to the cabinet and taken off the table again: there is no war with Beirut to be had in this world.');
+            return;
           }
           spawnAt(ctx, 'ISR', ['Kiryat Shmona', 'Nahariya', 'Safed', 'Ptolemais'], {
             inf: 6, cav: 4, name: 'Northern Command',
@@ -5130,15 +5270,18 @@ export const EVENTS_1948 = [
             inf: 4, cav: 3, name: 'The Coastal Axis',
             general: { name: 'Amos Yaron', fire: 3, shock: 2, maneuver: 3 },
           });
+          // The Beqaa is a front of this war, not a war of its own (SPEC §224).
           const sy = syrTag(ctx);
           if (sy && (ctx.helpers.controls(ctx, sy, 'Chalcis') || ctx.helpers.controls(ctx, sy, 'Tripolis'))
             && !findWar(g, 'ISR', sy)) {
             clearEventTruce(ctx, 'ISR', sy);
-            ctx.helpers.declareWar(ctx, sy, 'ISR', 'The Beqaa');
-            ctx.helpers.addTagModifier(ctx, 'ISR', {
-              id: 'mole_cricket', name: 'The Missile Batteries Silenced', months: 12,
-              effects: { moraleMult: 1.08 },
-            });
+            if (ctx.helpers.joinWar(ctx, war, sy, 'def')) {
+              ctx.helpers.addTagModifier(ctx, 'ISR', {
+                id: 'mole_cricket', name: 'The Missile Batteries Silenced', months: 12,
+                effects: { moraleMult: 1.08 },
+              });
+              ctx.helpers.chronicle(ctx, 'war', 'The Beqaa answers: Syrian armour and the missile belt come into the Lebanon war, and the belt is gone in an afternoon.');
+            }
           }
           for (const a of ctx.helpers.armiesOf(ctx, 'REB')) {
             const pr = a && ctx.byId(a.prov);
@@ -5478,9 +5621,17 @@ export const EVENTS_1948 = [
           // engine's own visible drain: LOAN_INTEREST_PER_MONTH is 3 talents
           // each, the realm panel prints the count, and nothing clears them but
           // repayment. By 1990 Baghdad genuinely cannot pay.
+          //
+          // …and it is REMEMBERED as well as carried (SPEC §224). `loans` is a
+          // live counter that the AI's treasury management pays down whenever
+          // Baghdad is flush and a bankruptcy zeroes outright, neither of which
+          // knows what this money was borrowed for; the Gulf strand's whole
+          // chain hangs off the debt still being there in 1990, so the debt
+          // says so itself.
           const iq = g.tags.IRQ;
           if (iq) iq.loans = Math.min(5, (Number(iq.loans) || 0) + 5);
           ctx.helpers.adjust(ctx, 'IRQ', { treasury: -200, mar: 20 });
+          g.flags.gulfDebt = true;
           g.flags.iranIraqWar = true;
           ctx.helpers.chronicle(ctx, 'war', 'Baghdad tears up the river treaty and crosses the Shatt al-Arab; the fortnight becomes eight years, and the loans that pay for it will send the army south next.');
         }),

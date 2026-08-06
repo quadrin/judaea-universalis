@@ -4,7 +4,7 @@
 import { createRng } from '../core/rng.js';
 import {
   num, clamp, B, armiesOf, spawnArmy, removeArmy, disbandArmyCore, changeOwnerCore, changeControllerCore, resolveDisplayName,
-  declareWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
+  declareWar, joinWar, issueMove, mergeInto, recruitRegiment, canEnter, regCount,
   peaceDealInfo, evaluatePeaceDeal, executePeaceDeal,
   DIPLO, opinionOf, addOpinion, diploCdActive, diploCdMonthsLeft, setDiploCd,
   liveGrudge, grudgeCeiling, grudgeCeilingRaw, contentForTag, livingTag, tagDef,
@@ -620,6 +620,13 @@ export const simHelpers = {
   },
   declareWar(ctx, atk, def, name, cb) {
     return declareWar(ctx, L(ctx, atk), L(ctx, def), name, cb);
+  },
+  // A coalition war is one war (SPEC §224): open it with `declareWar`, which
+  // hands back the war, and enrol the rest of the cast here on 'att' or 'def'
+  // instead of opening a second war with the same name. Returns the war, or
+  // null where this court cannot be brought against those enemies.
+  joinWar(ctx, war, tag, side) {
+    return joinWar(ctx, war && typeof war === 'object' ? war : null, L(ctx, tag), side);
   },
   // Scripted armistice (SPEC §22 content: Hadrian's withdrawal, UN truces):
   // settles the war between a and b by the sword — winnersKey 'att'/'def' or

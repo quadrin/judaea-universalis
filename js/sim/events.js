@@ -302,6 +302,28 @@ export function checkDateEvents(ctx) {
     try {
       if (!ev || !ev.date || !canFire(ctx, ev)) continue;
       if (monthIndex(ev.date.y, ev.date.m) > now) continue;
+      // A card still on the table has not happened yet (SPEC §224). Every
+      // dated card of a month is dealt in ONE pass, and a card dealt to a
+      // human court only QUEUES — its effects run when the modal is answered.
+      // A card gated on the world its predecessor makes was therefore judged
+      // against a world in which the predecessor was still an unanswered
+      // question: it failed its `when` and RETIRED, permanently, before the
+      // player had read the card it was waiting for.
+      //
+      // The Suez arc lost three of its four cards that way in every campaign
+      // ever played. Sèvres and the Sinai campaign share October 1956, the
+      // campaign asks whether the protocol was signed, and while the protocol
+      // sits in the queue the answer is no — so Kadesh retired, and with it
+      // Port Said and the American note that ends the crisis, and what was
+      // left was a nationalization card that declared an Anglo-French war with
+      // no withdrawal written for it anywhere.
+      //
+      // `after` is a chapter saying so out loud: deal me after that card has
+      // been answered. It defers and never retires — a predecessor that is not
+      // on the table (never dealt, or already answered) does not hold anything
+      // up, so the gate costs one array scan and changes nothing for the five
+      // hundred dated cards that do not declare it.
+      if (ev.after && g.pendingEvents.some((pe) => pe.eventId === ev.after)) continue;
       // A dated battlefield chapter is a deadline, not a command to undo a
       // treaty. Once its month arrives without the required war, retire it.
       if (!requiredWarActive(ctx, ev)) { skipEvent(ctx, ev, 'the war it belonged to was already settled'); continue; }

@@ -254,6 +254,11 @@ export const EVENTS_1948_REGION = [
     major: true,
     minYear: 1956,
     maxYear: 1957,
+    // The campaign is the second half of the protocol, and both are October
+    // (SPEC §224): deal it after Sèvres has been answered, or its gate reads a
+    // world in which the protocol is still an unopened envelope and the whole
+    // rest of the crisis retires behind it.
+    after: 'ev_i_sevres',
     when: safeTrigger('ev_i_kadesh:when', (ctx) =>
       alive(ctx, 'ISR') && !!egyTag(ctx) && !!ctx.game.flags.sevresProtocol),
     decider: 'ISR',
@@ -304,6 +309,9 @@ export const EVENTS_1948_REGION = [
     major: true,
     minYear: 1956,
     maxYear: 1957,
+    // The ultimatum needs a war to be an ultimatum about, and Kadesh may still
+    // be on the table when November arrives (SPEC §224).
+    after: 'ev_i_kadesh',
     when: safeTrigger('ev_i_port_said:when', (ctx) => !!ctx.game.flags.sinaiCampaign),
     decider: 'UK',
     aiOption: 0,
@@ -374,7 +382,15 @@ export const EVENTS_1948_REGION = [
           const h = ctx.helpers;
           const g = ctx.game;
           const egy = egyTag(ctx);
-          if (egy && findWar(g, 'ISR', egy)) h.endWar(ctx, 'ISR', egy, null);
+          // "Everyone withdraws" means everyone (SPEC §224). Israel's campaign
+          // against Egypt can carry Egypt's guarantors into the war with it,
+          // and ending it with Cairo alone left Baghdad and Riyadh at war with
+          // Israel over a peninsula Israel had already given back.
+          const war = egy && findWar(g, 'ISR', egy);
+          if (war) {
+            const foes = ((war.attackers || []).indexOf('ISR') >= 0 ? war.defenders : war.attackers).slice();
+            for (const t of foes) h.endWar(ctx, 'ISR', t, null);
+          }
           if (alive(ctx, 'ISR')) {
             h.adjust(ctx, 'ISR', { legitimacy: 15, warExhaustion: -2 });
             h.addTagModifier(ctx, 'ISR', {

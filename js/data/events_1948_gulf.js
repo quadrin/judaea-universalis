@@ -59,6 +59,16 @@ function alive(ctx, tag) {
 }
 function flag(ctx, k) { return !!(ctx.game.flags && ctx.game.flags[k]); }
 function tagOf(ctx, t) { return ctx.game.tags && ctx.game.tags[t]; }
+// Damascus under whichever name the century left it (SPEC §105). The coalition
+// cards named 'SYR' outright, so the Syrian armoured brigade — the second half
+// of the point this chapter keeps making about who fought Iraq in 1991 — was
+// silently absent from every campaign in which Syria had become the SAR.
+function syrTag(ctx) {
+  if (alive(ctx, 'SAR')) return 'SAR';
+  if (alive(ctx, 'SYR')) return 'SYR';
+  if (alive(ctx, 'UAR')) return 'UAR';
+  return null;
+}
 
 function findWar(game, a, b) {
   for (const w of (game && game.wars) || []) {
@@ -114,11 +124,21 @@ function holdsCount(ctx, tag, names) {
   }
   return n;
 }
-// Is a capital in the wrong hands? The cease-fire clock turns on exactly this.
-function capitalTaken(ctx, ownerTag, capital) {
+// Is a capital in the wrong hands? The cease-fire clock turns on exactly this
+// — and the wrong hands are the OTHER SIDE'S hands (SPEC §224). This used to
+// mean any hands but the owner's, which a rebel host satisfies: the eight
+// years leave +2 unrest on Iraq, risings take Ctesiphon and Ecbatana on and
+// off through the eighties, and August 1988 then read a rebel camp on Baghdad
+// as "Iran has taken the Iraqi capital". `ev_g_the_line_broken` fired instead
+// of the cease-fire card, awarded The Gulf Decided to a state that had taken
+// nothing, and set `gulfDecided` — the flag whose whole job is to cancel the
+// Gulf strand. Three of the four seeded campaigns in the balance harness lost
+// 1990 that way; a rising is not a war aim.
+function capitalTaken(ctx, ownerTag, capital, byTag) {
   try {
     const p = ctx.prov(capital);
-    return !!p && p.controller && p.controller !== ownerTag;
+    if (!p || !p.controller || p.controller === ownerTag) return false;
+    return byTag ? p.controller === byTag : true;
   } catch (e) { return false; }
 }
 
@@ -126,9 +146,24 @@ function capitalTaken(ctx, ownerTag, capital) {
 // for with Gulf loans, the loans are the reason for Kuwait, and `t.loans` is a
 // real number the realm panel prints and the economy charges 3 talents a month
 // for. A card that says the debt is why should move the debt.
+//
+// But `t.loans` is a LIVE counter, and two systems that know nothing about
+// this chapter move it (SPEC §224): the AI's own treasury management repays a
+// loan every time a realm's coffers pass 400 talents (ai.js), and a bankruptcy
+// zeroes the whole column outright (crisis.js). So the five Gulf loans of
+// September 1980 were routinely gone by 1982 — in the balance harness Baghdad
+// was down to one by the following spring — and August 1990 then arrived to
+// find a solvent Iraq with no reason on earth to take anybody's wells. The
+// Gulf strand never ran: no invasion, no coalition, no war, in any seed.
+//
+// So the debt is remembered as well as carried. The card that borrows stamps
+// it, and only a card that settles it clears the stamp — Baghdad paying its
+// creditors is a decision this chapter asks about, not an accounting routine
+// somebody else's heuristic can perform on its behalf.
 function baghdadIsBroke(ctx) {
   const t = tagOf(ctx, 'IRQ');
   if (!t) return false;
+  if (flag(ctx, 'gulfDebt') && !flag(ctx, 'gulfDebtSettled')) return true;
   return (Number(t.loans) || 0) >= 3 || (Number(t.treasury) || 0) < -150;
 }
 
@@ -166,8 +201,8 @@ export const EVENTS_1948_GULF = [
     when: safeTrigger('ev_g_the_river_holds:when', (ctx) =>
       flag(ctx, 'iranIraqWar') && !flag(ctx, 'iranIraqEnded')
       && alive(ctx, 'IRQ') && alive(ctx, 'IRN')
-      && !capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon')
-      && !capitalTaken(ctx, 'IRN', 'Ecbatana')),
+      && !capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon', 'IRN')
+      && !capitalTaken(ctx, 'IRN', 'Ecbatana', 'IRQ')),
     decider: 'IRQ',
     aiOption: 0,
     options: [
@@ -228,7 +263,8 @@ export const EVENTS_1948_GULF = [
     major: true,
     when: safeTrigger('ev_g_the_line_broken:when', (ctx) =>
       flag(ctx, 'iranIraqWar') && !flag(ctx, 'iranIraqEnded')
-      && (capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon') || capitalTaken(ctx, 'IRN', 'Ecbatana'))),
+      && (capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon', 'IRN')
+        || capitalTaken(ctx, 'IRN', 'Ecbatana', 'IRQ'))),
     decider: 'IRQ',
     aiOption: 0,
     options: [
@@ -238,7 +274,7 @@ export const EVENTS_1948_GULF = [
         effects: guard('ev_g_the_line_broken:0', (ctx) => {
           const g = ctx.game;
           const h = ctx.helpers;
-          const iraqBroken = capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon');
+          const iraqBroken = capitalTaken(ctx, 'IRQ', 'Seleucia-Ctesiphon', 'IRN');
           const victor = iraqBroken ? 'IRN' : 'IRQ';
           for (const t of ['IRQ', 'IRN']) {
             if (alive(ctx, t)) h.removeModifier(ctx, t, 'the_longest_war');
@@ -392,6 +428,7 @@ export const EVENTS_1948_GULF = [
           });
           if (alive(ctx, 'SAU')) setOpinionDelta(g, 'SAU', 'IRQ', 30);
           g.flags.iraqDisarmed = true;
+          g.flags.gulfDebtSettled = true; // the one road out of the debt that is a decision
           h.chronicle(ctx, 'diplomacy', 'Baghdad accepts the creditors\' schedule and takes the cuts out of the army; the largest force in the region is demobilized by an accountant.');
         }),
       },
@@ -493,7 +530,8 @@ export const EVENTS_1948_GULF = [
             id: 'the_sanctions_decade', name: 'The Sanctions Decade', months: -1,
             effects: { incomeMult: 0.75, manpowerMult: 0.85, unrestAll: 1 },
           });
-          for (const t of ['SAU', 'UK', 'TUR', 'EGY', 'SYR', 'ISR']) {
+          for (const t of ['SAU', 'UK', 'TUR', 'EGY', syrTag(ctx), 'ISR']) {
+            if (!t) continue;
             if (alive(ctx, t)) setOpinionDelta(g, t, 'IRQ', -25);
           }
           g.flags.iraqWithdrew = true;
@@ -506,14 +544,23 @@ export const EVENTS_1948_GULF = [
         effects: guard('ev_g_thirty_five_states:1', (ctx) => {
           const g = ctx.game;
           const h = ctx.helpers;
-          if (!findWar(g, 'IRQ', 'SAU')) {
+          // Thirty-five states in ONE war (SPEC §224). Each contributor used to
+          // declare its own, so the hundred hours arrived as four wars named
+          // "The Coalition" standing beside each other in the list, each with
+          // its own score and its own peace table — and Baghdad could settle
+          // with Riyadh while still at war with everyone who had come to
+          // defend Riyadh.
+          let war = findWar(g, 'IRQ', 'SAU');
+          if (!war) {
             clearEventTruce(ctx, 'IRQ', 'SAU');
-            h.declareWar(ctx, 'IRQ', 'SAU', 'The Coalition');
+            war = h.declareWar(ctx, 'IRQ', 'SAU', 'The Coalition');
           }
-          for (const t of ['UK', 'EGY', 'SYR']) {
-            if (!alive(ctx, t)) continue;
+          if (!war) return;
+          const side = (war.attackers || []).indexOf('IRQ') >= 0 ? 'def' : 'att';
+          for (const t of ['UK', 'EGY', syrTag(ctx)]) {
+            if (!t || !alive(ctx, t)) continue;
             clearEventTruce(ctx, t, 'IRQ');
-            if (!findWar(g, t, 'IRQ')) h.declareWar(ctx, t, 'IRQ', 'The Coalition');
+            if (!findWar(g, t, 'IRQ')) h.joinWar(ctx, war, t, side);
           }
           // The forward field, and the wings that make the ring mean something.
           const field = ['Gerrha', 'Dumatha', 'Tayma'].find((n) => {
@@ -585,13 +632,14 @@ export const EVENTS_1948_GULF = [
             inf: 4, cav: 7, name: 'VII Corps',
             general: { name: 'Frederick Franks', fire: 4, shock: 4, maneuver: 4 },
           });
-          if (alive(ctx, 'SYR')) {
+          if (syrTag(ctx)) {
             spawnAt(ctx, 'SAU', ['Dumatha', 'Tayma', 'Yathrib'], {
               inf: 5, cav: 2, name: '9th Armoured Division',
               general: { name: 'Ali Habib', fire: 2, shock: 3, maneuver: 2 },
             });
           }
-          for (const t of ['SAU', 'UK', 'EGY', 'SYR']) {
+          for (const t of ['SAU', 'UK', 'EGY', syrTag(ctx)]) {
+            if (!t) continue;
             if (!alive(ctx, t)) continue;
             h.addTagModifier(ctx, t, {
               id: 'overwhelming_force', name: 'Overwhelming Force', months: 48,
@@ -627,7 +675,7 @@ export const EVENTS_1948_GULF = [
       if (!t) return false;
       // Broken by force, asked as a question: the coalition is standing on
       // Iraqi ground, or Baghdad's own war exhaustion has run out the string.
-      const occupied = ['SAU', 'UK', 'EGY', 'SYR'].some((c) => holdsCount(ctx, c, IRAQ_CORE) >= 1);
+      const occupied = ['SAU', 'UK', 'EGY', syrTag(ctx)].some((c) => c && holdsCount(ctx, c, IRAQ_CORE) >= 1);
       return occupied || (Number(t.warExhaustion) || 0) >= 12;
     }),
     decider: 'IRQ',
@@ -692,7 +740,7 @@ export const EVENTS_1948_GULF = [
       if (!flag(ctx, 'coalitionWar') || flag(ctx, 'gulfRisings') || flag(ctx, 'gulfHeld')) return false;
       if (!alive(ctx, 'IRQ')) return false;
       // Nobody is standing on Iraqi ground, and Iraq still holds the coast.
-      const occupied = ['SAU', 'UK', 'EGY', 'SYR'].some((c) => holdsCount(ctx, c, IRAQ_CORE) >= 1);
+      const occupied = ['SAU', 'UK', 'EGY', syrTag(ctx)].some((c) => c && holdsCount(ctx, c, IRAQ_CORE) >= 1);
       return !occupied && holdsCount(ctx, 'IRQ', GULF_COAST) >= 1;
     }),
     decider: 'IRQ',
@@ -709,7 +757,8 @@ export const EVENTS_1948_GULF = [
             id: 'the_power_that_held', name: 'The Power That Held', months: -1,
             effects: { milPowerMult: 1.15, forceLimitMult: 1.10 },
           });
-          for (const t of ['SAU', 'UK', 'TUR', 'EGY', 'SYR', 'ISR']) {
+          for (const t of ['SAU', 'UK', 'TUR', 'EGY', syrTag(ctx), 'ISR']) {
+            if (!t) continue;
             if (alive(ctx, t)) setOpinionDelta(g, t, 'IRQ', -30);
           }
           g.flags.gulfHeld = true;

@@ -38,6 +38,16 @@ eight-year window. 1948 runs clean: the coalition invades, the truces bite,
 Rhodes freezes the fighting, and the postwar guarantee/rearmament system builds
 the regional establishments instead of leaving rich states demobilized.
 
+Run the 1948 chapter out to its full length (`node tools/autorun.mjs 55 1948ce`)
+and LEB BLEEDING is in the accepted set from §224 onward. Lebanon comes out of
+1975 carrying The Civil War permanently (−40% income), the Green Line, the
+Party of God and the security belt, and it now fights the 1982 war on its own
+account rather than summoning Riyadh and Baghdad under a 1950 treaty that
+should have lapsed at Camp David. A state the chapter has dissolved into
+militias running a small deficit thirty years later is the model working. It
+does not spiral — the treasury stays near zero and debt-desertion trims the
+army — and nothing else in the chapter is flagged at 55 years.
+
 Since v2.4 (development growth) the small-token realms breathe a little
 differently: PAR's two-province western outpost in 167 BCE hovers a hair
 below break-even (accepted, same class as ARM), and ROM-in-40-BCE dropped

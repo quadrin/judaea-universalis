@@ -14681,3 +14681,147 @@ month nobody plays.
   card, inside the decade, on seventeen different months; each of the four
   answers against its own tooltip; and the recorded course moving neither a
   talent, a point, a modifier nor a line of the chronicle.
+
+## 224. One war, and the six things that were keeping it from happening
+
+The 1948 chapter's wars are coalition wars. Five armies crossed the border in
+May 1948, three air forces were destroyed on the ground in June 1967, two
+armies crossed on the fast in October 1973, thirty-five states assembled on the
+Gulf coast in 1990. The engine could not say that. `declareWar` opens a war and
+gathers, at that instant, everyone the treaties bind to it; there was no way to
+add a court to a war afterwards. So a scripted coalition had to open one war per
+capital, and the war list showed what that looks like: **three separate wars
+called "The Yom Kippur War"**, side by side, each with its own war score, its
+own peace table and its own line in the chronicle.
+
+That was the visible half. Underneath it were five more faults, each of which
+silently deleted a piece of the century — and one of which had been quietly
+handing Damascus and Mecca to Great Britain since the chapter shipped.
+
+### `joinWar`: a court brought into a war already running
+
+`joinWar(ctx, war, tag, side)` adds a belligerent to a live war with
+`declareWar`'s bookkeeping — the side arrays, both courts' `atWarWith`, the
+marriages war annuls — and **none of its alliance machinery**. A scripted
+coalition names its own cast; the courts that were dragged in by treaty were
+dragged in when the first shot was fired. It refuses for the same reasons
+`declareWar` refuses: a recognized peace (§96) is not something a third party's
+war can enrol you out of, a truce is still ink, and the yoke (§75) settles the
+quarrel it stands over.
+
+June 1967, October 1973, the Lebanon war of 1982 and the coalition of 1990 are
+now one war each. `ev_i_lines_of_june`, `ev_i_agranat` and `ev_i_suez_ultimatum`
+end them against **every court on the far side** rather than the two or three
+the card can name — otherwise the expeditionary contingents stay in a war the
+principals have signed out of, which on the harness's own seeds had Baghdad and
+Riyadh still fighting Israel in 1970 over a cease-fire signed in 1967.
+
+And the June war used to be capable of not happening at all. `declareWar` is
+refused, silently, by a truce still in ink — so a coalition that had all made
+peace with Israel inside the last five years produced **no war whatsoever**,
+while `sixDayWar` was set anyway and the Temple Mount was taken, Khartoum
+answered and Resolution 242 adopted, in a war nobody had declared. Three of the
+four seeded campaigns in the balance harness played 1967 that way. The outbreak
+helpers now clear the ink first and set the flags only if a war actually opened.
+
+### `after`: a card still on the table has not happened yet
+
+Every dated card of a month is dealt in ONE pass of `checkDateEvents`, and a
+card dealt to a human court only QUEUES — its effects run when the modal is
+answered. A card gated on the world its predecessor makes was therefore judged
+against a world in which the predecessor was still an unanswered question: it
+failed its `when` and **retired permanently**, before the player had read the
+card it was waiting for.
+
+The Suez arc lost three of its four cards that way in every campaign ever
+played. Sèvres and the Sinai campaign share October 1956; the campaign asks
+whether the protocol was signed; while the protocol sits in the queue the
+answer is no. Kadesh retired, and Port Said and the American note behind it.
+
+`after: '<event id>'` is a chapter saying so out loud — deal me once that card
+has been answered. It defers and never retires, and a predecessor that is not
+on the table (never dealt, or already answered) holds nothing up, so it costs
+one array scan and changes nothing for the several hundred dated cards that do
+not declare it. `ev_i_kadesh` declares `after: 'ev_i_sevres'`; `ev_i_port_said`
+declares `after: 'ev_i_kadesh'`. The crisis now runs October, November,
+December, and ends with the American note in March 1957.
+
+### The nationalization is not the crisis
+
+With the arc dead, all that was left of Suez was `ev_i_suez`, which declared two
+wars and wrote an ending for neither. The Anglo-French one was the ruinous half:
+Britain's declaration gathered the Baghdad Pact behind it and the Arab League's
+joint defence in front of it, so a punitive landing at Port Said became **Britain
+against six capitals with no withdrawal scripted anywhere**. In every seed the
+harness runs, Britain finished the 1950s holding Damascus, or Mecca, or Asir and
+the Arabian Desert — none of which happened to the twentieth century.
+
+`ev_i_suez` is now the nationalization and nothing else, on its real date (26
+July 1956, not October). The crisis belongs to the four cards that model it.
+
+### The pact that outlived every war it was written for
+
+`ev_i_joint_defence` gives six capitals a mutual guarantee, and a guarantee in
+this engine is a standing order to march. Left permanent, the treaty of 1950 was
+still calling Riyadh and Baghdad onto Beirut's side of an Israeli war in **1982**
+— a war the real League answered with a communiqué. Three rules, from the most
+specific to the most general:
+
+- The pact **lapses at the separate peace**. `ev_i_treaty_washington` strikes
+  the six signatures on both its answers: the League suspended Egypt within the
+  week of the White House lawn and moved its headquarters out of Cairo, and the
+  Joint Defence Council never fought another war. Expulsion or no expulsion, no
+  general staff plans a common war around a signatory who has signed its own.
+- A word given to **both** parties cannot be kept to either. A guarantor of the
+  attacker as well as the defender stays home — which is what a pact between
+  quarrelling signatories is actually worth, and which is why Jordan's war on
+  Egypt used to summon Lebanon, Iraq and Saudi Arabia onto Egypt's side under
+  the same treaty that bound them to Jordan.
+- A guarantee **does not survive the guns**: `declareWar` strikes the pledge
+  between the two principals, and the AI will not open a war of opportunity on a
+  realm it has pledged, or one that has pledged it. Without that last rule the
+  joint defence read to the AI as a target list — every member was a neighbour,
+  and every member guaranteed every other.
+
+### A debt somebody else's accounting routine paid off
+
+The Gulf strand is a causal chain: the eight years, the debt, the wells, the
+coalition, the war. Break a link and the rest does not happen, which is the
+point of it. The debt was `t.loans` — five Gulf loans taken in September 1980,
+3 talents a month each, printed in the realm panel.
+
+But `loans` is a live counter, and two systems that know nothing about this
+chapter move it: the AI repays one whenever a realm's coffers pass 400 talents,
+and a bankruptcy zeroes the column outright. Baghdad was routinely down to one
+loan by the following spring, and August 1990 arrived to find a solvent Iraq
+with no reason on earth to take anybody's wells. **The Gulf strand never ran, in
+any seed.** The debt is now remembered as well as carried: the card that borrows
+stamps it and only a card that settles it clears the stamp.
+
+### A rebel camp is not a captured capital
+
+The other half of the same failure. `capitalTaken` asked whether a capital was
+in hands other than its owner's — which a rebel host satisfies. The eight years
+leave +2 unrest on Iraq, risings take Ctesiphon and Ecbatana on and off through
+the eighties, and August 1988 read a rebel camp on Baghdad as *Iran has taken
+the Iraqi capital*: `ev_g_the_line_broken` fired instead of the cease-fire card,
+awarded The Gulf Decided to a state that had taken nothing, and set the flag
+whose entire job is to cancel the Gulf strand. It now asks whether the **enemy**
+holds the capital. A rising is not a war aim.
+
+The same chapter named `'SYR'` outright in its coalition cards, so the Syrian
+armoured brigade — the part of 1991 this file keeps insisting players forget —
+was silently absent from every campaign in which Damascus had become the SAR.
+Resolved through a `syrTag` walk like the rest of the era (§105).
+
+- **Regression contract**: `smoke149` — `joinWar`'s bookkeeping and its four
+  refusals; one war for June 1967, October 1973, Lebanon 1982 and the Gulf
+  coalition, against the three-wars-per-coalition the chapter used to produce; a
+  truced coalition still going to war, and a coalition that genuinely cannot be
+  fought leaving `sixDayWar` unset; the cease-fire cards binding every court in
+  the war; `after` deferring rather than retiring, and not deferring on a
+  predecessor that is not on the table; the whole Suez arc surviving its own
+  October and `ev_i_suez` declaring nothing; the joint defence lapsing at the
+  treaty and a both-sides guarantor staying home; the Gulf debt outliving a
+  repayment and a bankruptcy; and `capitalTaken` telling a rebel camp from a
+  conquest.

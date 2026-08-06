@@ -3133,6 +3133,16 @@ export function declareWar(ctx, atk, def, name, cb) {
   }
   const existing = warBetween(ctx, atk, def);
   if (existing) return existing;
+  // A guarantee does not survive the guns (SPEC §224). Two courts that have
+  // pledged each other's independence and then gone to war have settled the
+  // question of what the pledge was worth; leaving the pledge on the books let
+  // a mutual pact keep dragging its own signatories into each other's later
+  // wars long after the pact had been answered with an invasion.
+  for (const [x, y] of [[A, def], [D, atk]]) {
+    if (Array.isArray(x.guarantees) && x.guarantees.indexOf(y) >= 0) {
+      x.guarantees = x.guarantees.filter((t) => t !== y);
+    }
+  }
   const attackers = [atk];
   const defenders = [def];
   // A recognized peace is not a promise you can be dragged out of (SPEC §96):
@@ -3145,6 +3155,12 @@ export function declareWar(ctx, atk, def, name, cb) {
     if (attackers.indexOf(tag) >= 0 || defenders.indexOf(tag) >= 0) return;
     const foe = side === attackers ? def : atk;
     if (!bound && recognized(ctx, tag, foe)) return;
+    // Two wars between the same two courts at the same time is not a thing any
+    // peace table can settle (SPEC §224). A guarantor already fighting the
+    // principal has its own war with it; enrolling it in a second one meant
+    // ending the first left it in the second, and a scripted armistice that
+    // named the pair released them from whichever war the list reached first.
+    if (warBetween(ctx, tag, foe)) return;
     side.push(tag);
   };
   // A client's loyalty is not a formality (SPEC §61): a court that thinks
@@ -3189,6 +3205,15 @@ export function declareWar(ctx, atk, def, name, cb) {
     const gt = g.tags[k];
     if (!gt || !gt.alive || k === atk || k === def) continue;
     if (!Array.isArray(gt.guarantees) || gt.guarantees.indexOf(def) < 0) continue;
+    // A word given to BOTH parties cannot be kept to either (SPEC §224). A
+    // mutual pact — the Arab League's joint defence is the era's example, six
+    // capitals each guaranteeing the other five — used to march every member
+    // to every member's war, including the wars they fought against one
+    // another: Jordan opened a war on Egypt and Lebanon, Iraq and Saudi Arabia
+    // were called in on Egypt's side by the same treaty that bound them to
+    // Jordan. A guarantor of both sides stays home, which is what a pact
+    // between quarrelling signatories is actually worth.
+    if (gt.guarantees.indexOf(atk) >= 0) continue;
     const before = defenders.length;
     join(defenders, k);
     if (defenders.length > before && (atk === g.playerTag || def === g.playerTag || k === g.playerTag)) {
@@ -3258,6 +3283,69 @@ export function declareWar(ctx, atk, def, name, cb) {
   } else {
     // Other people's wars are still news — just quieter news.
     ctx.bus.emit('notify', { title: 'News from abroad', text: names(attackers) + ' march against ' + names(defenders) + '.', type: 'info' });
+  }
+  return war;
+}
+
+// A court brought INTO a war already running (SPEC §224). `declareWar` opens a
+// war and gathers, at that moment, everyone the treaties bind to it; there was
+// no way to add a belligerent afterwards, so a scripted coalition had to open
+// one war per capital. June 1967 was therefore three wars declared on Israel,
+// October 1973 another three, and the Lebanon war of 1982 two — three peace
+// tables, three war scores and three lines in the chronicle for one war that
+// every party understood to be one war.
+//
+// This adds a court to a war that exists, with `declareWar`'s bookkeeping and
+// none of its alliance machinery: a scripted coalition names its own members,
+// and the courts that were dragged in by treaty were dragged in when the first
+// shot was fired. `side` is 'att' or 'def'. Returns the war, or null if this
+// court cannot be enrolled against those enemies.
+export function joinWar(ctx, war, tag, side) {
+  const g = ctx.game;
+  const t = g.tags[tag];
+  if (!war || !t || !t.alive || g.wars.indexOf(war) < 0) return null;
+  if (isOffmapTag(ctx, tag)) {
+    warnOnce('jw-offmap:' + tag, 'joinWar refused: off-map seat', tag);
+    return null;
+  }
+  if (war.attackers.indexOf(tag) >= 0 || war.defenders.indexOf(tag) >= 0) return war;
+  const ours = side === 'att' ? war.attackers : war.defenders;
+  const theirs = side === 'att' ? war.defenders : war.attackers;
+  // The bars `declareWar` sets are bars on being in the war at all, not on the
+  // door you came through: a recognized peace (SPEC §96) is not something a
+  // third party's war can enrol you out of, a truce is still ink, and the yoke
+  // (SPEC §75) settles the quarrel it stands over.
+  for (const foe of theirs) {
+    if (truceActive(ctx, tag, foe) || recognized(ctx, tag, foe)) return null;
+    if (t.overlord === foe || (g.tags[foe] && g.tags[foe].overlord === tag)) return null;
+    if (warBetween(ctx, tag, foe)) return null; // one war at a time between two courts
+  }
+  ours.push(tag);
+  for (const foe of theirs) {
+    const tf = g.tags[foe];
+    if (t.atWarWith.indexOf(foe) < 0) t.atWarWith.push(foe);
+    if (tf && tf.atWarWith.indexOf(tag) < 0) tf.atWarWith.push(tag);
+    if (breakMarriagesForWar(ctx, tag, foe) && (tag === g.playerTag || foe === g.playerTag)) {
+      ctx.bus.emit('notify', {
+        title: 'A marriage annulled',
+        text: 'War sunders the joined houses of ' + ((t.name) || tag) + ' and ' + ((tf && tf.name) || foe) + '.',
+        type: 'bad',
+      });
+    }
+  }
+  const nm = (k) => (g.tags[k] && g.tags[k].name) || k;
+  chronicle(ctx, 'war', nm(tag) + ' enters ' + (war.name || 'the war')
+    + ' against ' + theirs.map(nm).join(', ') + '.');
+  ctx.bus.emit('war', {
+    id: war.id, name: war.name, joined: tag, side: side === 'att' ? 'att' : 'def',
+    attackers: war.attackers.slice(), defenders: war.defenders.slice(),
+  });
+  if (tag === g.playerTag || theirs.indexOf(g.playerTag) >= 0) {
+    ctx.bus.emit('notify', {
+      title: 'A new belligerent',
+      text: nm(tag) + ' enters ' + (war.name || 'the war') + '.',
+      type: tag === g.playerTag ? 'war' : 'bad',
+    });
   }
   return war;
 }
