@@ -285,6 +285,23 @@ class: Ituraea is ONE province (dev 9→11) carrying a 3,000-man host, income
 60→26 over eight years. Self-limiting, no spiral, the ARM/PAR/ARI/HYR family.
 614 JUD BLEEDING is already accepted as coming and going.
 
+The SPEC §225 batch (Herod's collar, the crown war, the yoke thrown off)
+re-ran the full 8-year harness against the parent tree in the same
+environment. **Seven of the eight bookmarks came back byte identical, and the
+anomaly set is identical on all eight** (167 PAR BLEEDING · 67 SEL DEAD ·
+529 JUD DEAD + SAM DEBT-SPIRAL · 614 JUD BLEEDING · everything else none).
+40 BCE is the one that moves, and only because it is the chapter that changed:
+`HER.overlord = 'ROM'` at setup puts 15% of Herod's revenue into Rome's ledger
+from July 40, which perturbs the seeded stream from the first month. It moves
+in a healthy direction — Herod 8→10 provinces on 232 talents rather than 8→8
+on 21, Antigonus solvent at 251 rather than −135 — with the same wars started,
+ended and settled out, and the same date reached. The crown clause itself
+NEVER FIRES in an all-AI run: the planner takes it only at 80 war score, which
+is why 67 BCE (the documented brothers' stalemate) is byte identical too. If
+40 BCE ever comes back with `ATG DEAD` or `HER DEAD` and one fewer war, that is
+the clause firing, and it is the model working rather than a regression — but
+check it against this note before assuming so.
+
 The SPEC §82–83 batch (supply lines, AI naval invasions, sandbox
 chapters) re-ran the full 8-year harness: the anomaly set came back a
 strict subset of the accepted families (167 PAR · 67 SEL DEAD + ARI ·
@@ -312,6 +329,9 @@ ceiling, embargo/blockade, the hoard ceiling and the formable payoffs), and
 `smoke72.mjs` owns the SPEC §95–97 batch (the pen's second half and its absorption road,
 the alliance bar and recognition, and every map-visible outcome of the
 Ba'athist, fedayeen, Lebanese and uprising arcs).
+`smoke150.mjs` owns the SPEC §225 batch (Herod's collar on day one, the crown
+war's pen and its whole-kingdom clause in both Judaean civil wars, and the
+client's own war of independence).
 `smoke127.mjs` owns the SPEC §197 estate favor bank and the asks (the seed,
 the band rates, the one-object promise/payment contract, the ground scaling
 measured by handing the crown the coast, the gates, the AI silence).

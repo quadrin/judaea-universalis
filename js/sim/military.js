@@ -2676,6 +2676,36 @@ export function tagModifierFlag(ctx, tag, key) {
   if (!t || !Array.isArray(t.modifiers)) return false;
   return t.modifiers.some((m) => m && m.effects && !!m.effects[key]);
 }
+// ---------------------------------------------------------------- the crown war (SPEC §225)
+// A chapter may name two of its courts claimants to ONE crown:
+//
+//   crownWar: { claimants: ['ATG', 'HER'], of: 'Judaea' }
+//
+// The war in which those two stand on opposite sides is a CROWN WAR. It is not
+// a quarrel over a border but over who wears the thing, and two rules follow
+// from that: neither claimant's pen belongs to his protectors (below), and the
+// table may hand the whole kingdom to whichever of them wins the argument
+// (`peaceDealInfo`). Read from the bookmark rather than stamped on the war, so
+// a campaign saved before this existed comes back with its crown war intact.
+export function crownWarOf(ctx, war) {
+  const cw = ctx && ctx.bookmark && ctx.bookmark.crownWar;
+  if (!war || !cw || !Array.isArray(cw.claimants) || cw.claimants.length !== 2) return null;
+  const [a, b] = cw.claimants;
+  const att = war.attackers || [];
+  const def = war.defenders || [];
+  const opposed = (att.indexOf(a) >= 0 && def.indexOf(b) >= 0)
+    || (att.indexOf(b) >= 0 && def.indexOf(a) >= 0);
+  return opposed ? { claimants: [a, b], of: cw.of || '' } : null;
+}
+// The court disputing `byTag`'s crown in this war — null when the war is not a
+// crown war, or when `byTag` fights in it as somebody's ally rather than as a
+// claimant. Rome and Parthia march in these wars; the crown is not theirs.
+export function crownRivalOf(ctx, war, byTag) {
+  const cw = crownWarOf(ctx, war);
+  if (!cw) return null;
+  const [a, b] = cw.claimants;
+  return byTag === a ? b : byTag === b ? a : null;
+}
 // The court that holds a war side's pen (SPEC §61/§74). Nominally the side's
 // first living member — but a client crown never outranks its own overlord at
 // the table: a war declared ON a vassal lists the vassal first and the lord
@@ -2684,6 +2714,17 @@ export function tagModifierFlag(ctx, tag, key) {
 // bug). The loop is bounded in case of a client-of-client chain.
 export function sideLeaderOf(ctx, war, side) {
   const g = ctx.game;
+  // A crown war's pen belongs to the claimant (SPEC §225). His protectors —
+  // Rome behind Herod, Parthia behind Antigonus, and by §61 his own overlord
+  // ahead of both — fight the war; they do not settle whose crown it is.
+  // Without this a client claimant was handed the junior's withdrawal table
+  // for the one war in the chapter that is about him.
+  const cw = crownWarOf(ctx, war);
+  if (cw) {
+    const claimant = (side || []).find((t) => cw.claimants.indexOf(t) >= 0
+      && g.tags[t] && g.tags[t].alive);
+    if (claimant) return claimant;
+  }
   let lead = (side || []).find((t) => g.tags[t] && g.tags[t].alive) || null;
   for (let hops = 0; lead && hops < 4; hops++) {
     const lordTag = g.tags[lead] && g.tags[lead].overlord;
@@ -4723,6 +4764,85 @@ export function freeClientCore(ctx, lord, clientTag) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// The collar thrown off from below (SPEC §225).
+//
+// §219 catalogued the ways a collar came off and noticed that not one of them
+// belonged to the court wearing it: the lord dies, the lord eats them, the lord
+// lets them go — or they rise and win, and that last road was `vassalIndependence`
+// in ai.js, which begins `if (!t.ai) continue`. A HUMAN client had no move at
+// all. It could not declare (declareWar refuses a war between lord and client,
+// §149), could not ask, and could only wait for a decision taken elsewhere.
+//
+// That was survivable while every client start was a side dish. It is not
+// survivable now that the chapters seat human players in collars on day one —
+// Adiabene rides in Parthia's train in three bookmarks with "stand free of every
+// overlord" written into its own victory text, and Herod begins his chapter as
+// Rome's client with an entire alternate-history strand (§91: `greaterHerod`)
+// gated behind sovereignty he had no way to take.
+//
+// So the client gets the AI's move, on the AI's terms: the bond breaks FIRST —
+// free courts declare, clients cannot — and what follows is an ordinary war of
+// independence, which §174 already knows how to score and to forgive. Win it and
+// the crown stands alone; lose it and the subjugation clause puts the collar
+// back on at the table, exactly as it does when the AI rises.
+// ─────────────────────────────────────────────────────────────────────────────
+export function independenceInfo(ctx, tag) {
+  const g = ctx.game;
+  const me = g.tags[tag];
+  if (!me || !me.alive || !me.overlord) return null;
+  const lordTag = me.overlord;
+  const lord = g.tags[lordTag];
+  if (!lord || !lord.alive) return null;
+  const out = {
+    tag: lordTag,
+    name: lord.name || lordTag,
+    dev: Math.round(devOfTag(ctx, lordTag)),
+    ourDev: Math.round(devOfTag(ctx, tag)),
+    // Everyone who marches when the lord calls: its other clients, and its allies.
+    allies: [...new Set(vassalsOf(ctx, lordTag).filter((v) => v !== tag)
+      .concat((lord.allies || []).filter((a) => g.tags[a] && g.tags[a].alive)))]
+      .map((k) => (g.tags[k] && g.tags[k].name) || k),
+    can: false,
+    why: '',
+  };
+  if (truceActive(ctx, tag, lordTag)) {
+    out.why = 'The ink on our truce with ' + out.name + ' is still wet.';
+  } else if ((me.atWarWith || []).some((e) => g.tags[e] && g.tags[e].alive)) {
+    // The mirror of §219's one refusal, read from the other end of the bond: a
+    // realm that breaks its word in the middle of somebody else's war is not
+    // declaring independence, it is changing sides.
+    out.why = 'Not in the middle of another war. A crown that breaks its word while its '
+      + 'levies stand in somebody else\'s line has not won its freedom — it has changed sides.';
+  }
+  out.can = !out.why;
+  return out;
+}
+// The declaration. The bond is struck before the herald speaks.
+export function declareIndependenceCore(ctx, tag) {
+  const g = ctx.game;
+  const info = independenceInfo(ctx, tag);
+  if (!info) return { ok: false, why: 'We answer to no overlord.' };
+  if (!info.can) return { ok: false, why: info.why };
+  const me = g.tags[tag];
+  const lordTag = me.overlord;
+  const lord = g.tags[lordTag];
+  me.overlord = null;
+  me.incorporating = null; // a union half-woven dies with the bond (§219's terms)
+  const war = declareWar(ctx, tag, lordTag,
+    (me.name || tag) + '’s War of Independence', 'independence');
+  if (!war) {
+    me.overlord = lordTag; // the declaration failed; the bond stands
+    return { ok: false, why: 'The herald could not be sent.' };
+  }
+  addOpinion(ctx, lordTag, tag, -80);
+  chronicle(ctx, 'era', (me.name || tag) + ' renounces the fealty of '
+    + ((lord && lord.name) || lordTag) + ': the tribute stops with the declaration, and '
+    + 'what the crown is worth is now a question for the field.');
+  ctx.bus.emit('provinceOwner', {}); // the diplomatic map is drawn off the bond
+  return { ok: true, tag: lordTag, name: (lord && lord.name) || lordTag, warId: war.id };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // A province handed over without a war (SPEC §222).
 //
 // The peace table's other half. Land changes hands at a congress because
@@ -5494,6 +5614,37 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     PEACE.subjugateBase, PEACE.subjugateMax);
   const subjugateCost = Math.max(PEACE.provCostMin,
     Math.round(subjugateBaseCost * subjugateAdj.mult));
+  // The crown is one (SPEC §225). In the chapter's crown war the two courts
+  // are two claimants to a single throne, and the argument has an answer the
+  // ordinary table cannot write: the loser renounces, his whole realm comes
+  // under the winner's crown, and his court passes into memory. The dev cap
+  // (§69) never reaches it and the province list never has to — a kingdom is
+  // one thing, so it carries one price, and that price is war score.
+  const crown = crownWarOf(ctx, war);
+  const crownRival = crownRivalOf(ctx, war, byTag);
+  const unifyCrownCost = Math.max(PEACE.provCostMin, Math.round(BAL(ctx, 'peaceCrownWarScore', 80)));
+  let canUnifyCrown = false;
+  let whyNotUnifyCrown = '';
+  if (!crownRival) {
+    whyNotUnifyCrown = 'No crown of ours is in dispute here — this war is over land, not over who wears it.';
+  } else if (exit) {
+    whyNotUnifyCrown = 'This war is not ours to settle — only its leader can dispose of a crown at the table.';
+  } else if (separate) {
+    whyNotUnifyCrown = 'A separate peace cannot dispose of a crown — that waits for the full congress.';
+  } else if (enemyLeader !== crownRival) {
+    whyNotUnifyCrown = 'The rival claimant no longer holds their side of the table.';
+  } else if (!et || !et.alive) {
+    whyNotUnifyCrown = 'There is no claimant left to renounce anything.';
+  } else if (et.overlord && g.tags[et.overlord] && g.tags[et.overlord].alive
+      && war.attackers.indexOf(et.overlord) < 0 && war.defenders.indexOf(et.overlord) < 0) {
+    // A collar the rival wears does NOT put his claim beyond this table — the
+    // pen rule above exists precisely because protectors fight crown wars
+    // without settling them, and Herod fights this one wearing Rome's. But a
+    // protector who is not in the war at all never had its protection tested,
+    // and one treaty may not delete a court it has not fought.
+    whyNotUnifyCrown = 'They stand under a protection that is not at this table — '
+      + ((g.tags[et.overlord] && g.tags[et.overlord].name) || et.overlord) + ' answers for them.';
+  } else canUnifyCrown = true;
   const releasable = (separate || exit) ? [] : releasableNations(ctx, war, byTag, enemyLeader)
     .map((row) => {
       const adj = goalReleaseAdjustment(ctx, war, byTag, row.provIds);
@@ -5556,6 +5707,13 @@ export function peaceDealInfo(ctx, war, byTag, enemyTag) {
     canSubjugate, whyNotSubjugate, subjugateCost,
     subjugateGoalAligned: subjugateAdj.aligned,
     subjugateGoalReason: subjugateAdj.reason,
+    // The crown war (SPEC §225): whether this war is one at all, the rival
+    // claimant if we are the other, and what one kingdom costs in war score.
+    crownWar: !!crown,
+    crownOf: (crown || {}).of || '',
+    crownRival,
+    crownRivalName: crownRival ? ((g.tags[crownRival] && g.tags[crownRival].name) || crownRival) : '',
+    canUnifyCrown, whyNotUnifyCrown, unifyCrownCost,
     // Nations the enemy can be forced to set free (SPEC §69/§76). A separate
     // peace cannot redraw another crown's map — releases wait for the full
     // congress, like subjugation — and a withdrawing junior frees no one.
@@ -5606,32 +5764,40 @@ export function buildAiPeaceProvinces(ctx, info, budget) {
   return { ids: chosen.map((r) => r.id), cost: priceProvincePackage(ctx, chosen) };
 }
 // deal = { provinces: [provId], gold: talents, humiliate: bool, subjugate: bool,
-//          release: [tags], transferVassals: [tags] }.
+//          unifyCrown: bool, release: [tags], transferVassals: [tags] }.
 // Subjugation supersedes province demands, releases and client transfers (a
-// client keeps its political house whole). Returns the warscore price, whether
-// the enemy takes it, and a one-line reason.
+// client keeps its political house whole); taking the crown (SPEC §225)
+// supersedes subjugation and everything else, there being no court left to
+// write terms for. Returns the warscore price, whether the enemy takes it, and
+// a one-line reason.
 export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   const d = deal || {};
   const info = peaceDealInfo(ctx, war, byTag, d.enemy); // d.enemy: separate peace (SPEC §67)
-  const subjugate = !!d.subjugate && info.canSubjugate;
+  const unifyCrown = !!d.unifyCrown && info.canUnifyCrown;
+  const subjugate = !unifyCrown && !!d.subjugate && info.canSubjugate;
+  // Either clause disposes of the whole political house, so neither leaves a
+  // remainder for the rest of the table to argue over.
+  const whole = unifyCrown || subjugate;
   const chosen = [];
   let cost = 0;
-  if (!subjugate) {
+  if (unifyCrown) {
+    cost += info.unifyCrownCost;
+  } else if (subjugate) {
+    cost += info.subjugateCost;
+  } else {
     for (const id of Array.isArray(d.provinces) ? d.provinces : []) {
       const row = info.provinces.find((r) => r.id === (id | 0));
       if (!row || chosen.indexOf(row) >= 0) continue;
       chosen.push(row);
     }
     cost += priceProvincePackage(ctx, chosen);
-  } else {
-    cost += info.subjugateCost;
   }
   // Directed spoils: each demanded province may name one of the peacemaker's
   // own clients in this war as its recipient. Recipients are re-validated
   // against the live table, so a stale or hand-edited deal cannot gift land
   // to a court outside it. Same price either way.
   const provinceTo = {};
-  if (!subjugate && d.provinceTo && typeof d.provinceTo === 'object') {
+  if (!whole && d.provinceTo && typeof d.provinceTo === 'object') {
     const legal = new Set((info.cessionRecipients || []).map((r) => r.tag));
     for (const row of chosen) {
       const to = d.provinceTo[row.id];
@@ -5642,7 +5808,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   // the provinces it would actually receive — anything the deal also cedes to
   // us is struck from the release first, and an emptied release drops out.
   const releaseRows = [];
-  if (!subjugate) {
+  if (!whole) {
     const cededIds = new Set(chosen.map((r) => r.id));
     const asked = Array.isArray(d.release) ? d.release : [];
     for (const tag of asked) {
@@ -5666,7 +5832,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   // court. Subjugating the enemy leader supersedes the transfer: one treaty
   // cannot both preserve and dismantle that political house.
   const transferRows = [];
-  if (!subjugate) {
+  if (!whole) {
     const asked = Array.isArray(d.transferVassals) ? d.transferVassals : [];
     for (const tag of asked) {
       const row = (info.transferableVassals || []).find((r) => r.tag === tag);
@@ -5683,7 +5849,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   // congress resists a long list, and nothing resists a gift.
   const conceded = [];
   let offered = 0;
-  if (!subjugate) {
+  if (!whole) {
     for (const id of Array.isArray(d.concessions) ? d.concessions : []) {
       const row = (info.concessions || []).find((r) => r.id === (id | 0));
       if (!row || conceded.indexOf(row) >= 0) continue;
@@ -5691,16 +5857,19 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
       offered += num(row.cost);
     }
   }
-  const gold = clamp(Math.round(num(d.gold)), 0, info.maxGold);
+  // An indemnity, a humiliation and reparations all need a court to pay them
+  // next month; taking the crown leaves none, so those clauses fall away with
+  // the rest (SPEC §225).
+  const gold = unifyCrown ? 0 : clamp(Math.round(num(d.gold)), 0, info.maxGold);
   cost += Math.round(gold * PEACE.goldCostPer100 / 100);
   // Humiliation and reparations are the congress's instruments, not a
   // withdrawing junior's (SPEC §74) — like subjugation and releases above.
-  const humiliate = !!d.humiliate && !info.exit;
+  const humiliate = !unifyCrown && !!d.humiliate && !info.exit;
   if (humiliate) cost += PEACE.humiliateCost;
-  const reparations = !!d.reparations && !info.exit;
+  const reparations = !unifyCrown && !!d.reparations && !info.exit;
   if (reparations) cost += PEACE.reparationsCost;
   const white = !chosen.length && !releaseRows.length && !transferRows.length
-    && !conceded.length && gold <= 0 && !humiliate && !subjugate && !reparations;
+    && !conceded.length && gold <= 0 && !humiliate && !subjugate && !unifyCrown && !reparations;
   const enemyWs = -info.myWs;
   // The net of the table: what we ask, less what we lay down beside it.
   const net = cost - offered;
@@ -5756,8 +5925,12 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
     } else if (net > 0) {
       acceptable = info.myWs > 0 && net <= info.myWs;
       reason = acceptable
-        ? 'Our position compels them to accept.'
-        : `Our war score does not cover such demands (${net} asked, ${Math.max(0, info.myWs)} held).`;
+        ? (unifyCrown
+          ? 'The argument is settled: they renounce, and the crown is one.'
+          : 'Our position compels them to accept.')
+        : unifyCrown
+          ? `A crown is not signed away by a court that still believes in the next campaign (${net} war score asked, ${Math.max(0, info.myWs)} held).`
+          : `Our war score does not cover such demands (${net} asked, ${Math.max(0, info.myWs)} held).`;
     } else {
       // We are the ones paying (SPEC §222). A court accepts what covers what
       // it has already won — no more, and no less. Offering past their score
@@ -5773,6 +5946,7 @@ export function evaluatePeaceDeal(ctx, war, byTag, deal) {
   }
   return {
     cost, net, offered, acceptable, reason, gold, humiliate, subjugate, reparations,
+    unifyCrown, // the crown war's answer (SPEC §225): one kingdom, one claimant
     provinces: chosen.map((c) => c.id),
     provinceTo,
     concessions: conceded.map((c) => c.id), concessionRows: conceded,
@@ -6714,6 +6888,59 @@ export function executePeaceDeal(ctx, war, byTag, deal) {
     chronicle(ctx, 'peace', (row.name || row.tag) + ' passes from the protection of '
       + (row.fromName || oldLord) + ' to ' + (me.name || byTag) + ' at the peace table.');
     terms.push('transfers the fealty of ' + (row.name || row.tag) + ' to ' + (me.name || byTag));
+  }
+  // The crown is one (SPEC §225). The loser renounces his claim, and with it
+  // everything the claim was standing on: every province he owns comes under
+  // the winner's crown at once — occupied or not, because a treaty over a
+  // throne does not stop at the siege lines — and the court that fought for
+  // the other answer passes into memory here rather than waiting for the
+  // month's roll call. The land arrives on a conqueror's terms all the same:
+  // the men who held Jerusalem for Antigonus are not glad to see Herod.
+  if (ev.unifyCrown && info.enemyLeader && me) {
+    const loser = info.enemyLeader;
+    const lt = g.tags[loser];
+    const takenNames = [];
+    for (let i = 1; i < g.provinces.length; i++) {
+      const p = g.provinces[i];
+      if (!p || p.impassable || p.owner !== loser) continue;
+      p.integration = 0; // a change of sovereign starts the ledger over (SPEC §66)
+      p.integrating = null;
+      recordGrudge(ctx, loser, byTag, i); // remembered, should the banner ever rise again
+      changeOwnerCore(ctx, p, byTag);
+      changeControllerCore(ctx, p, byTag);
+      p.autonomy = Math.max(num(p.autonomy, 0.25), 0.6);
+      p.conversion = null;
+      p.modifiers = (p.modifiers || []).filter((m) => m && m.id !== 'recent_conquest');
+      p.modifiers.push({ id: 'recent_conquest', name: 'Recent Conquest', months: 24, effects: { unrest: 3 } });
+      if (Array.isArray(me.claims)) me.claims = me.claims.filter((c) => c !== i);
+      takenNames.push(p.name);
+    }
+    // The host carried the claim and goes with it. Nothing of it is inherited:
+    // this treaty pays in a kingdom, and that is enough.
+    for (const a of armiesOf(ctx, loser)) removeArmy(ctx, a.id);
+    for (const id of Object.keys(g.fleets || {})) {
+      if (g.fleets[id] && g.fleets[id].tag === loser) delete g.fleets[id];
+    }
+    for (const id of Object.keys(g.airwings || {})) {
+      if (g.airwings[id] && g.airwings[id].tag === loser) delete g.airwings[id];
+    }
+    if (lt) {
+      for (const al of (lt.allies || []).slice()) breakAllianceCore(ctx, loser, al);
+      lt.alive = false;
+      lt.overlord = null;
+      lt.incorporating = null;
+      lt.atWarWith = [];
+    }
+    // The world counts a crown made whole once, and not by the acre: both
+    // claimants said the war was about one kingdom, and one kingdom is what
+    // came out of it.
+    me.aggression = num(me.aggression) + BAL(ctx, 'infamyUnifyCrown', 10);
+    chronicle(ctx, 'fall', 'The banners of ' + ((lt && lt.name) || loser) + ' come down at the '
+      + 'peace table: the crown of ' + (info.crownOf || (me.name || byTag))
+      + ' is one again, and ' + (me.name || byTag) + ' wears it.');
+    terms.push('renounces the crown — the whole kingdom, ' + takenNames.length
+      + ' province' + (takenNames.length === 1 ? '' : 's') + ' of it, passes to '
+      + (me.name || byTag));
   }
   if (ev.subjugate && info.enemyLeader && me) {
     const et = g.tags[info.enemyLeader];

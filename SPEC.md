@@ -14825,3 +14825,151 @@ Resolved through a `syrTag` walk like the rest of the era (§105).
   treaty and a both-sides guarantor staying home; the Gulf debt outliving a
   repayment and a bankruptcy; and `capitalTaken` telling a rebel camp from a
   conquest.
+
+## 225. The crown is one — the client's chapter, and the war that has an answer
+
+Two courts claiming one throne is the oldest shape in this game's material.
+Hyrcanus and Aristobulus in 67 BCE, Antigonus and Herod in 40 — each pair is a
+whole bookmark, each war is the chapter, and the engine had no idea any of it
+was happening. It saw two realms with a border dispute.
+
+Three things follow from taking the shape seriously, and one of them is a
+chapter change the other two exist to make survivable.
+
+### Herod begins the chapter wearing the collar
+
+He was Rome's client from the first day of 40 BCE, not from the day the Senate
+voted him a crown. Antipater was Caesar's man and a Roman citizen for it; the
+son inherited the arrangement along with the money and the enemies, and the
+whole reign afterwards is spent negotiating inside it — which is precisely why
+running to Rome is a plan at all rather than a fantasy. `HER.overlord = 'ROM'`
+at setup, and the chapter reads the way it always described itself two hundred
+lines further up its own file: *Herod IS Rome's client.*
+
+The order matters. The collar is fastened **after** `declareWar`, because a war
+declared ON a client is the protecting crown's war too (§61) — set it first and
+Ventidius' legions take the field in July of 40 BCE, three cards before the
+Senate has heard of him.
+
+What it costs him is what it costs anybody: 15% of a small income in tribute,
+Rome's wars to answer, and no client kingdoms of his own while he wears it
+(§61). What it cost the CHAPTER was two locked doors, and the rest of this
+section is those doors.
+
+### A crown war's pen belongs to the claimant
+
+`sideLeaderOf` promotes a client's overlord to the head of its side, and it is
+right to (§74: a war declared over a client's land is the lord's to settle).
+Applied to the War for the Crown it produces nonsense. Rome joins at
+`ev5_senate`, Rome outranks its client, and from that month Herod's own peace
+table is a **junior's withdrawal form** — the one war in the chapter that is
+about him, and he cannot sign it. The same trap waits on the other side of the
+same table for Antigonus, who would be negotiating with Rome about whether
+Herod may be king.
+
+So a chapter may name its claimants:
+
+    crownWar: { claimants: ['ATG', 'HER'], of: 'Judaea' }
+
+and the war in which those two stand on opposite sides is a **crown war**. Its
+side leaders are the claimants — not their protectors, not their overlords.
+Parthia and Rome fight this war; they do not settle whose crown it is, and
+their own tables in it are withdrawals, which is exactly what Ventidius leaving
+Syria actually was. It is read off the bookmark rather than stamped on the war,
+so a campaign saved before any of this existed comes back with its crown war
+intact.
+
+### And its table can end the argument
+
+The peace table could take towns, take tribute, take a knee — everything except
+the thing both sides say the war is for. Winning the whole kingdom was possible
+only by the §220 road: occupy every province the enemy owns and demand all of
+them at once, priced at 0.9 war score per point of development. Antigonus'
+Judaea is 230 development. There is no war score high enough. The chapter's
+central question could be answered by conquest, by an event, or by outliving
+the other man — never by the treaty that ends the war.
+
+**Take the whole kingdom** (`unifyCrown`), available only to a claimant, only
+at the full congress, and only against the rival claimant: they renounce, every
+province they own passes at once — occupied or not, because a treaty over a
+throne does not stop at the siege lines — their host disperses, and their court
+passes into memory at the table rather than at the next month's roll call.
+
+- **One price, because a kingdom is one thing**: `BALANCE.peaceCrownWarScore`,
+  80 war score, flat. Not the development list (which no score could cover), not
+  the dismemberment budget (§69, which prices what is left over — and nothing
+  is). War score is the whole gate and a real one: 80 of a possible 100 is a
+  war visibly won, and at 79 the clause is refused in the plainest terms the
+  table has.
+- **It supersedes everything.** No cessions, no releases, no client transfers,
+  no indemnity, no reparations, no humiliation — every one of those needs a
+  court to be standing next month. Ticking it clears the table, and the price
+  stays 80 whatever else was ticked.
+- **The world counts it once**: `BALANCE.infamyUnifyCrown`, 10 — near
+  subjugation's 12, and not the per-acre rate. Both claimants said the war was
+  about one kingdom; one kingdom is what came out of it. The land itself still
+  arrives on a conqueror's terms (autonomy, `recent_conquest`, the integration
+  ledger back to zero): the men who held Jerusalem for Antigonus are not glad to
+  see Herod.
+- **It is symmetric, and the AI signs it.** A claimant with the score writes it
+  into its own treaty and asks for nothing beside it — so Antigonus can take
+  Herod's kingdom exactly as Herod can take his, and a player who loses a crown
+  war badly enough loses the crown.
+- **One refusal**: a rival claimant standing under a protection that is *not in
+  this war* is beyond the clause — one treaty may not delete a court whose
+  guarantor never had its protection tested. A protector fighting on the losing
+  side is bound by the congress like anyone else, which is why Herod's own
+  collar does not put him beyond Antigonus' reach.
+
+### The collar thrown off from below
+
+§219 catalogued the ways a collar comes off and noticed that not one of them
+belonged to the court wearing it: the lord dies, the lord eats them, the lord
+lets them go — or they rise and win, and that last road is
+`vassalIndependence`, which begins `if (!t.ai) continue`. A **human** client
+had no move at all. It could not declare (`declareWar` refuses a war between
+lord and client, §149), could not ask, and could only wait for a decision taken
+somewhere else.
+
+That was survivable while every collar was something a player chose. It is not
+survivable in a chapter that seats the player in one on day one — and it was
+already not survivable for Adiabene, which rides in Parthia's train in three
+bookmarks with *stand free of every overlord* written into its own victory
+text, and for §91's `greaterHerod` strand, gated behind a sovereignty Herod now
+has no way to take.
+
+So the client gets the AI's move on the AI's terms. **Throw Off the Yoke**: the
+bond breaks FIRST — free courts declare, clients cannot — and what follows is an
+ordinary war of independence, which §174 already knows how to score (no infamy
+for the soil you are standing on) and the subjugation clause already knows how
+to end (lose it and the yoke goes back on at the table). It costs no influence
+and no points; the price is the war. Two taps, §218's idiom, because it opens a
+war with the strongest friend the realm has. The one refusal is the mirror of
+§219's: not in the middle of somebody else's war, because a crown that breaks
+its word while its levies stand in another man's line has not won its freedom,
+it has changed sides.
+
+- **Regression contract**: `smoke150` — Herod's collar on day one and the
+  legions still out of his war; §61's other half still binding him (a client
+  keeps no clients); the claimant holding his own pen with his overlord in the
+  war beside him, and the overlord holding a withdrawal form; the clause priced
+  at war score alone, refused one point short, superseding a table with every
+  other box ticked, and held off by a protection outside the war; the treaty
+  executed in both directions — Herod taking Antigonus' kingdom and Antigonus
+  taking Herod's, the host gone, the court in memory, the war over, Parthia and
+  Rome untouched; the brothers' war of 67 BCE carrying the same clause; a
+  chapter with no crown war offering none, and a hand-edited deal buying nothing
+  with the field; the AI signing it at 100 and taking towns at 70, and Rome
+  never reaching for a crown that is not its own; and the yoke thrown off —
+  refused mid-war, the bond broken before the declaration, the independence CB
+  and its §174 mark, and the action as the panel presses it, on the client tag
+  the chapters actually hand a player. `uitest49` drives the browser half in the
+  40 BCE chapter itself: Herod wearing the collar in the first frame, the clause
+  live on the crown war's table and greyed nowhere, ticking it sweeping the
+  province rows, the collar and the humiliation off the table, and the treaty
+  sent — Antigonus' provinces gone, his court in memory, the war ended — then
+  Throw Off the Yoke on Rome's own panel, armed on the first press and struck on
+  the second. `node tools/autorun.mjs 8` against the parent tree is **byte
+  identical on seven of the eight bookmarks, with the same anomaly set on all
+  eight**; 40 BCE moves because 40 BCE is the chapter that changed (see
+  `tools/README.md` for the reading).

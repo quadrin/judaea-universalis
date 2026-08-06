@@ -1555,6 +1555,12 @@ export const DEFINES = {
     peaceProvStep: 0.15,     // each additional province in one deal costs +15% more
     peaceAlienMult: 1.25,    // land of another religious group costs 25% more to take
     peaceMaxDevShare: 0.4,   // no single treaty strips more than this share of the loser's dev
+    // The crown is one (SPEC §225): in a chapter's crown war — two claimants,
+    // one throne — the winner may take the loser's whole kingdom at the table
+    // rather than town by town. A kingdom is one thing, so it has one price,
+    // and that price is war score alone.
+    peaceCrownWarScore: 80,  // war score at which a rival claimant's realm may be taken entire
+    infamyUnifyCrown: 10,    // the world counts a crown made whole once, not by the acre
     weMoraleFloor: 0.4,      // morale recovery never drops below this fraction...
     weMoraleAt: 40,          // ...which it reaches as war exhaustion approaches this
     // Standing rivalries (SPEC §73): pairs the bookmark names as the era's

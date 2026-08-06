@@ -15,6 +15,7 @@ export function createProvincePanel(el, { DEFINES, onClose }) {
   let dipTag = ''; // owner tag the diplomacy buttons currently act on
   let releaseArmed = 0; // province whose release button has been armed (SPEC §218)
   let freeArmed = ''; // client kingdom whose collar-striking has been armed (SPEC §219)
+  let riseArmed = ''; // overlord whose renunciation has been armed (SPEC §225)
   let cedeArmed = 0; // province whose gift has been armed (SPEC §222)
 // What the last rising here was about (SPEC §87). The sim stamps the province
 // with the kind; this is only how it reads.
@@ -193,6 +194,7 @@ const RISING_LABELS = {
           <button class="pp-dip" data-dip="protect" data-ref="dipProtect">Offer Our Protection</button>
           <button class="pp-dip" data-dip="incorporate" data-ref="dipIncorporate">Incorporate</button>
           <button class="pp-dip" data-dip="free" data-ref="dipFree">Release Them</button>
+          <button class="pp-dip pp-dip-war" data-dip="independence" data-ref="dipIndependence">Throw Off the Yoke</button>
           <button class="pp-dip" data-dip="claim" data-ref="dipClaim">Fabricate Claim</button>
           <button class="pp-dip" data-dip="rival" data-ref="dipRival">Name as Rival</button>
           <button class="pp-dip pp-dip-war" data-dip="war" data-ref="dipWar">Declare War</button>
@@ -221,6 +223,16 @@ const RISING_LABELS = {
         return;
       }
       if (b.dataset.dip === 'free') freeArmed = '';
+      // The same two taps from underneath (SPEC §225): renouncing a fealty
+      // starts a war with the crown that has been protecting us.
+      if (b.dataset.dip === 'independence' && riseArmed !== dipTag) {
+        const armedTag = dipTag;
+        riseArmed = armedTag;
+        setTimeout(() => { if (riseArmed === armedTag) { riseArmed = ''; refresh(); } }, 5000);
+        refresh();
+        return;
+      }
+      if (b.dataset.dip === 'independence') riseArmed = '';
       const fn = {
         improve: 'improveRelations', gift: 'sendGift', ally: 'offerAlliance', break: 'breakAlliance',
         war: 'declareWarOn', incorporate: 'incorporateVassal',
@@ -233,6 +245,7 @@ const RISING_LABELS = {
         unembargo: 'liftEmbargo',
         protect: 'offerClientship',
         free: 'freeClientState',
+        independence: 'declareIndependence',
       }[b.dataset.dip];
       try { if (fn && typeof actions[fn] === 'function') actions[fn](dipTag); }
       catch (err) { warnOnce('diplo-' + b.dataset.dip, err); }
@@ -1215,6 +1228,26 @@ const RISING_LABELS = {
         ? 'Press again to let them go. Walk away and the offer lapses.\n――――――\n' + terms
         : terms);
     } else if (freeArmed && freeArmed === dipTag) freeArmed = '';
+    // The collar from underneath (SPEC §225): the client's own move, shown
+    // only on the court that holds our leash. Two taps, because it opens a
+    // war with the strongest friend we have.
+    const ind = d.independence;
+    refs.dipIndependence.classList.toggle('hidden', !ind);
+    if (ind) {
+      const armed = riseArmed === dipTag && ind.can;
+      setText(refs.dipIndependence, armed ? 'Renounce the fealty for good?' : 'Throw Off the Yoke');
+      refs.dipIndependence.classList.toggle('pp-dip-sure', armed);
+      const terms = `Renounce our fealty to ${ind.name} and fight for it.\n`
+        + `The bond breaks first and the war follows: the tribute stops with the declaration, `
+        + `and nothing else changes hands — no province, no army, no infamy. A realm fighting `
+        + `for its own soil pays none.\n`
+        + `They are ${ind.dev} development to our ${ind.ourDev}`
+        + `${ind.allies.length ? `, and ${ind.allies.join(', ')} will answer their call` : ', and stand alone'}.\n`
+        + `Win it and the crown answers to nobody. Lose it and the yoke goes back on at the table.`;
+      setDipBtn(refs.dipIndependence, ind.can, ind.why, armed
+        ? 'Press again to renounce. Walk away and the herald is not sent.\n――――――\n' + terms
+        : terms);
+    } else if (riseArmed && riseArmed === dipTag) riseArmed = '';
     // Fabricate claim: per-province, priced in influence.
     let ci = null;
     if (actions && typeof actions.getClaimInfo === 'function') {

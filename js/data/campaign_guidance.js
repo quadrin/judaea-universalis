@@ -37,7 +37,9 @@ export const CAMPAIGN_GUIDANCE = {
       opening: [
         'Preserve the coastal customs houses that pay Antipater’s levies.',
         'Decide whether Aretas’s cavalry is worth the twelve cities he demands.',
-        'Unify the realm before Pompey can choose its ruler for you.',
+        'Unify the realm before Pompey can choose its ruler for you — and at 80 war score '
+          + 'the table will do it in one clause: your brother renounces, and the kingdom is '
+          + 'whole again under you.',
       ],
       clocks: [
         { y: -66, m: 3, label: 'Aretas names the price of Nabataean aid' },
@@ -50,6 +52,8 @@ export const CAMPAIGN_GUIDANCE = {
         'Use the stronger royal army before Nabataea fully enters the war.',
         'Take Hebron and Adora to break Antipater’s political network.',
         'Fortify Jerusalem before Pompey’s settlement reaches Judaea.',
+        'Win the argument outright rather than the border: at 80 war score the table will '
+          + 'write your brother out of it and hand you the whole kingdom.',
       ],
       clocks: [
         { y: -66, m: 3, label: 'Nabataea may enter for Hyrcanus' },
@@ -74,8 +78,13 @@ export const CAMPAIGN_GUIDANCE = {
       system: 'Roman patronage versus local legitimacy',
       opening: [
         'Keep Masada and Idumea alive while Herod seeks recognition in Rome.',
+        'You begin inside Rome\'s system, not outside it: the collar is your father\'s '
+          + 'inheritance, it costs a tenth and a half of your revenue in tribute, and it '
+          + 'means no client kingdoms of your own until you are out from under it.',
         'Let Roman power clear the wider war; spend your strength on the road to Jerusalem.',
         'Secure the coast and Galilee before beginning the final siege.',
+        'The crown war is yours to settle whoever is fighting beside you — and at 80 war '
+          + 'score its table can hand you Antigonus\' whole kingdom in one clause.',
       ],
       clocks: [
         { y: -40, m: 10, label: 'Herod must choose whether to sail for Rome' },

@@ -259,6 +259,13 @@ export const BOOKMARK_40 = {
     ['ATG', 'PAR', { axis: 'alignment', sign: -1 }],
     ['HER', 'NAB'], ['ATG', 'NAB'],
   ],
+  // The crown war (SPEC §225): two claimants, one throne, and a war that is
+  // about which of them wears it rather than where the border runs. Neither
+  // man's pen belongs to his protectors at the peace table — Ventidius and
+  // Pacorus fight this war, they do not settle it — and at 80 war score the
+  // table can write the answer both sides say they are fighting for: the
+  // loser renounces, and the kingdom is one again under the winner.
+  crownWar: { claimants: ['ATG', 'HER'], of: 'Judaea' },
 
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.
@@ -602,9 +609,13 @@ export const BOOKMARK_40 = {
       tag: 'HER',
       difficulty: 'Moderate',
       blurb: 'You hold Idumea, a rock above the Dead Sea, and a name the Senate can use. '
-        + 'Sail to Rome and come back a paper king — then make the paper true, province by '
-        + 'province, before your patrons lose interest. Rome\'s legions will break Parthia '
-        + 'for their own reasons; Jerusalem you must take for yours.',
+        + 'You also already wear Rome\'s collar — your father was Caesar\'s man and a Roman '
+        + 'citizen for it, so you begin inside the system rather than outside it, paying its '
+        + 'tribute and answering its wars. Sail to Rome and come back a paper king — then '
+        + 'make the paper true, province by province, before your patrons lose interest. '
+        + 'Rome\'s legions will break Parthia for their own reasons; Jerusalem you must take '
+        + 'for yours, and the crown war is yours to end however large the friends standing '
+        + 'behind it.',
     },
     {
       tag: 'ATG',
@@ -1562,6 +1573,25 @@ export const BOOKMARK_40 = {
         if (her && her.atWarWith.indexOf('PAR') < 0) her.atWarWith.push('PAR');
       }
     } catch (e) { warnOnce('setup:war', e); }
+
+    // Herod is Rome's client from the first day of the chapter, not from the
+    // day the Senate votes him a crown. The collar is his inheritance: Antipater
+    // was Caesar's man and a Roman citizen for it, and the son begins the war
+    // already inside the Roman system — which is what makes Rome worth running
+    // to, and what the whole reign is afterwards spent negotiating with. Tribute
+    // (15% of a small income), Rome's wars to answer, and no client kingdoms of
+    // his own until he is out from under it (§61); the crown war is his own to
+    // settle regardless, because a crown war's pen belongs to the claimant
+    // (SPEC §225).
+    //
+    // Set AFTER the declaration above: a war declared ON a client is the
+    // protecting crown's war too, and Rome must not be dragged into the field
+    // in July of 40 — Antony is busy with Fulvia's war, and the legions come
+    // when the Senate says so (ev5_senate).
+    try {
+      const her = g.tags.HER;
+      if (her && g.tags.ROM) her.overlord = 'ROM';
+    } catch (e) { warnOnce('setup:client', e); }
 
     // Alliances: Parthia stands behind Antigonus; Nabataea owes Herod money
     // and would rather not be asked.
