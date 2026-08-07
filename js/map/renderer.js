@@ -111,6 +111,7 @@ uniform sampler2D uSeedTex;
 uniform int uSeedCount;
 uniform float uWarpAmp;
 uniform float uWarpFreq;
+uniform vec2 uWarpAnchor;
 out vec4 outColor;
 ${GLSL_NOISE}
 void main(){
@@ -120,7 +121,10 @@ void main(){
   if (texture(uLand, uv).r >= 0.5) {
     // One shared domain warp for the whole pixel (NOT per seed) — borders wobble
     // organically while the weighted-Voronoi diagram stays globally consistent.
-    vec2 wv = vec2(fbm2(px * uWarpFreq), fbm2(px * uWarpFreq + vec2(37.2, 91.7)));
+    // SPEC §232: the wobble is sampled in the v5.0 frame's coordinates —
+    // the anchor is the old origin, so frame growth never re-rolls a border.
+    vec2 ap = px - uWarpAnchor;
+    vec2 wv = vec2(fbm2(ap * uWarpFreq), fbm2(ap * uWarpFreq + vec2(37.2, 91.7)));
     vec2 wp = px + (wv - 0.5) * 2.0 * uWarpAmp;
     float bd = 1e12;
     for (int i = 0; i < ${MAX_PROVINCE_SEEDS}; i++) {
@@ -825,6 +829,8 @@ export async function initRenderer(canvas, MAP_DATA, DEFINES) {
     gl.uniform1i(gl.getUniformLocation(prog, 'uSeedCount'), seedCount);
     gl.uniform1f(gl.getUniformLocation(prog, 'uWarpAmp'), CFG.WARP_AMP);
     gl.uniform1f(gl.getUniformLocation(prog, 'uWarpFreq'), CFG.WARP_FREQ);
+    const anchor = (MAP_DATA.warpAnchor || [0, 0]);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uWarpAnchor'), anchor[0], anchor[1]);
   });
   if (idOk) {
     // Buffer row 0 comes back as framebuffer row 0 == texel row v=0 == mapY 0 == NORTH
