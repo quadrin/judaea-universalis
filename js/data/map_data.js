@@ -1966,7 +1966,7 @@ const PROVINCES = [
     { latentParent: 'Zoara' }),
   P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
-  // --- SPEC §229: ground the ancient theatre had no cell for ---------------
+  // --- SPEC §230: ground the ancient theatre had no cell for ---------------
   // Appended, like every cell since §225, so no existing id moves. These are
   // NOT latent: they are provinces in all eight chapters, because the places
   // are Hellenistic and Nabataean ones the modern map merely inherited. Each

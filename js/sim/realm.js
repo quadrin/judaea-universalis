@@ -2,8 +2,9 @@
 // integration (autonomy & conversion), mission chains, and the yields of holy
 // sites & wonders. DOM-free.
 
-import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag } from './military.js';
+import { num, clamp, GENERAL_NAMES, courtNamePool, resolveTagMult, resolveTagAdd, chronicle, marriageCount, DIPLO, resolveDisplayName, mechanicOn, declaredRivals, govDef, govHas, contentForTag, isHumanChair } from './military.js';
 import { FORMABLES } from '../data/formables.js';
+import { CHAPTER_PATHS } from '../data/chapter_paths.js';
 import { TRADE_ROUTES } from '../data/trade.js';
 import { fireEvent } from './events.js';
 import { raiseCrisisTo } from './crisis.js';
@@ -776,6 +777,137 @@ export function missionDoneSet(t, list) {
   return done;
 }
 
+// ------------------------------------------------- the fork a road stands in
+// A hypothetical (SPEC §183) is one ROAD of one §119 fork standing in the
+// mission tree, and the roads of a fork are one question asked once: taking
+// one is refusing the others. Until §229 the panel never said so. A campaign
+// that watched the Temple burn kept "The House That Stood" sitting in the
+// right-hand column looking workable for another three hundred years, because
+// nothing anywhere joined the medallion to the answer the chapter had already
+// given. Now a road a sibling closed is drawn SHUT — an ✗ and the name of the
+// road the campaign actually took — and the tree reads as the record of a
+// decision instead of a list of things that have not happened yet.
+//
+// The join is `fork: 'chapterId/forkId'` (which §183 already wrote on all
+// seventy-six hypotheticals, for a tooltip, and nothing read) plus §229's
+// `road` / `roads`: WHICH of that fork's roads this medallion is. A
+// hypothetical that declares none is asking after the fork itself — reaching
+// it at all, or a shape of the map no single road owns — and never shuts.
+let FORK_INDEX = null;
+function forkIndex() {
+  if (FORK_INDEX) return FORK_INDEX;
+  FORK_INDEX = new Map();
+  try {
+    for (const c of CHAPTER_PATHS) {
+      for (const f of (c.forks || [])) FORK_INDEX.set(c.id + '/' + f.id, f);
+    }
+  } catch (e) { warnOnce('forkIndex', 'the path tree would not index', e); }
+  return FORK_INDEX;
+}
+
+// What this mission's fork has to say right now: the question it asks, the
+// road the campaign took if one has fired, and whether that road shut ours.
+// Null when the mission stands in no fork at all — which is every mission the
+// era itself asks for, and most of what the tree is.
+export function missionForkState(ctx, m) {
+  if (!m || !m.fork) return null;
+  const f = forkIndex().get(String(m.fork));
+  if (!f) return null;
+  const flags = (ctx.game && ctx.game.flags) || {};
+  const mine = [];
+  if (m.road) mine.push(String(m.road));
+  if (Array.isArray(m.roads)) for (const r of m.roads) mine.push(String(r));
+  let ours = null;
+  let other = null;
+  for (const r of (f.roads || [])) {
+    if (!r || !r.marker || !flags[r.marker]) continue;
+    if (mine.indexOf(String(r.id)) >= 0) { if (!ours) ours = r; } else if (!other) other = r;
+  }
+  return {
+    question: f.question || '',
+    // The road the campaign took, named — the thing a player wants to read off
+    // a shut medallion is not "unavailable", it is which way the age went.
+    takenName: ours ? '' : (other && other.name) || '',
+    // And when the road taken is OURS, the medallion wears the answer on its
+    // face: a fork answered is a decision, and the tree should say which one.
+    oursName: (ours && ours.name) || '',
+    shut: !!(mine.length && other && !ours),
+  };
+}
+
+// Every road this campaign has shut, ids in table order, plus everything
+// downstream of one: a branch whose root can never be earned is a branch, not
+// a node. The table is small, so the propagation is a settle loop rather than
+// a graph.
+export function missionClosedSet(ctx, list) {
+  const closed = new Set();
+  if (!Array.isArray(list) || !list.length) return closed;
+  const ids = list.map((m, i) => missionId(m, i));
+  for (let i = 0; i < list.length; i++) {
+    let st = null;
+    try { st = missionForkState(ctx, list[i]); } catch (e) { warnOnce('mfork:' + ids[i], e); }
+    if (st && st.shut) closed.add(ids[i]);
+  }
+  if (!closed.size) return closed;
+  for (let pass = 0; pass < list.length; pass++) {
+    let grew = false;
+    for (let i = 0; i < list.length; i++) {
+      const m = list[i];
+      if (closed.has(ids[i]) || !m || !Array.isArray(m.requires)) continue;
+      for (const rid of m.requires) {
+        if (!closed.has(String(rid))) continue;
+        closed.add(ids[i]); grew = true; break;
+      }
+    }
+    if (!grew) break;
+  }
+  return closed;
+}
+
+// The fork ledger (SPEC §229): every §119 question this realm's tree stands a
+// road in, in table order, with the road the campaign took and the roads it
+// refused. The tree draws medallions; this says what they were choices
+// BETWEEN — which is the half of a fork a grid of circles cannot show, because
+// the road not taken has no medallion of its own to strike through.
+//
+// A road counts as TAKEN when its marker is set, or — for the handful the tree
+// declares with no marker, where the evidence is a card the engine RETIRED
+// rather than a flag it set — when the mission standing for it is accomplished.
+export function missionForkLedger(ctx, tag) {
+  const list = missionsFor(ctx, tag);
+  const t = ctx.game.tags && ctx.game.tags[tag];
+  if (!Array.isArray(list) || !t) return [];
+  const flags = (ctx.game && ctx.game.flags) || {};
+  const done = missionDoneSet(t, list);
+  // roadId -> true, for the markerless roads an accomplished mission vouches for
+  const vouched = new Set();
+  list.forEach((m, i) => {
+    if (!m || !m.fork || !done.has(missionId(m, i))) return;
+    if (m.road) vouched.add(String(m.fork) + '/' + String(m.road));
+  });
+  const out = [];
+  const seen = new Set();
+  for (const m of list) {
+    if (!m || !m.fork || seen.has(m.fork)) continue;
+    const f = forkIndex().get(String(m.fork));
+    if (!f) continue;
+    seen.add(m.fork);
+    const roads = (f.roads || []).map((r) => ({
+      id: String(r.id),
+      name: r.name || String(r.id),
+      taken: !!((r.marker && flags[r.marker]) || vouched.has(String(m.fork) + '/' + String(r.id))),
+    }));
+    const answered = roads.some((r) => r.taken);
+    out.push({
+      id: String(m.fork),
+      question: f.question || '',
+      answered,
+      roads: roads.map((r) => ({ ...r, refused: answered && !r.taken })),
+    });
+  }
+  return out;
+}
+
 // May mission `i` be worked on? Explicit prerequisites answer first; in a
 // tree a mission without any is a root; on a ladder it needs its predecessor.
 export function missionUnlocked(list, i, done, tree) {
@@ -829,6 +961,67 @@ export function checkMissions(ctx) {
     try {
       const tree = isMissionTree(list);
       const done = missionDoneSet(t, list);
+      const closed = missionClosedSet(ctx, list);
+
+      // A SEATED chain is CLAIMED, not banked (SPEC §229). The calendar still
+      // reads every check every month, but what it writes is a READY list: the
+      // accomplishments whose terms are met right now, waiting at the panel
+      // for a hand. Nothing is paid until the medallion is clicked.
+      //
+      // The list is rebuilt from live checks each pass rather than
+      // accumulated, so it is a statement about the world as it stands and
+      // not a promise made once. A realm that qualified in March by holding
+      // Joppa and lost Joppa in April is not owed Joppa's reward — claim it
+      // while it holds. That is most of what §229 means by *harder*.
+      //
+      // `isHumanChair` and not `playerTag`, for two reasons §216 and the
+      // balance harness each supply. A multiplayer GUEST has a panel of their
+      // own (§216), so their chain must wait for their click too — under
+      // `playerTag` the host's tree waited and the guest's paid itself. And an
+      // all-AI autorun seats nobody at all, so the harness banks every chain
+      // on the calendar, which is the only thing a run with no hands can mean.
+      if (isHumanChair(g, tag)) {
+        const rest = Math.max(0, num(t.missionRest, 0) | 0);
+        if (rest > 0) t.missionRest = rest - 1;
+        const was = new Set(Array.isArray(t.missionReady) ? t.missionReady.map(String) : []);
+        const ready = [];
+        const fresh = [];
+        for (let i = 0; i < list.length; i++) {
+          const m = list[i];
+          if (!m || typeof m.check !== 'function') continue;
+          const id = missionId(m, i);
+          if (done.has(id) || closed.has(id)) continue;
+          if (!missionUnlocked(list, i, done, tree)) continue;
+          let ok = false;
+          try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
+          if (!ok) continue;
+          ready.push(id);
+          if (!was.has(id)) fresh.push(m.name || id);
+        }
+        t.missionReady = ready;
+        // Say what is newly owed — but a conquest that satisfies half a branch
+        // in one month must not produce half a branch of toasts, which is the
+        // volley §207 spent a whole section removing. One card each up to two,
+        // one card for the rest.
+        if (fresh.length && fresh.length <= 2) {
+          for (const name of fresh) {
+            ctx.bus.emit('notify', {
+              title: 'Ready to claim — ' + name,
+              text: 'Claim it on the Missions tab while the terms still hold.',
+              type: 'good',
+            });
+          }
+        } else if (fresh.length) {
+          ctx.bus.emit('notify', {
+            title: fresh.length + ' accomplishments ready to claim',
+            text: fresh.join(' · ') + '. Claim them on the Missions tab while the terms still hold.',
+            type: 'good',
+          });
+        }
+        writeMissionState(t, list, done);
+        continue;
+      }
+
       // ONE completion a month, then the chain rests (SPEC §207). The old
       // guard ran up to three WAVES a pass, so a prepared realm banked a
       // whole branch — parents, children, parallel roots — in a single
@@ -837,8 +1030,9 @@ export function checkMissions(ctx) {
       // the chain waits its turn, and after each accomplishment the chain
       // rests `missionPaceMonths` before the next may land. A month whose
       // checks all fail charges no rest — waiting on the world is not
-      // resting from it. The AI keeps §102's symmetry: its chains march to
-      // the same drum.
+      // resting from it. This is the AI's half of §102's symmetry: a court
+      // with no panel to click cannot be asked to claim, so its chains keep
+      // marching to the drum, and it earns exactly what the player earns.
       const rest = Math.max(0, num(t.missionRest, 0) | 0);
       if (rest > 0) {
         t.missionRest = rest - 1;
@@ -849,7 +1043,7 @@ export function checkMissions(ctx) {
         const m = list[i];
         if (!m || typeof m.check !== 'function') continue;
         const id = missionId(m, i);
-        if (done.has(id)) continue;
+        if (done.has(id) || closed.has(id)) continue;
         if (!missionUnlocked(list, i, done, tree)) continue;
         let ok = false;
         try { ok = !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + id, 'mission check threw', id, e); }
@@ -857,16 +1051,53 @@ export function checkMissions(ctx) {
         try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + id, 'mission reward threw', id, e); }
         done.add(id);
         if (pace > 0) t.missionRest = pace;
-        if (tag === g.playerTag) {
-          ctx.bus.emit('notify', {
-            title: 'Mission complete — ' + (m.name || id),
-            text: m.rewardText || 'The realm advances.',
-            type: 'good',
-          });
-        }
         break;
       }
       writeMissionState(t, list, done);
     } catch (e) { warnOnce('missions:' + tag, 'missions failed for', tag, e); }
   }
+}
+
+// Bank an accomplishment the player has clicked (SPEC §229). Every judgment
+// the monthly pass used to make on its own is made again HERE, at the moment
+// of the click: readiness is a view, and a view can be a month stale — the
+// province can have fallen, a sibling road can have shut this one, the chain
+// can still be resting from the last claim. Returns what happened, so the
+// panel can say why nothing did.
+export function claimMission(ctx, id) {
+  const g = ctx.game;
+  const tag = g.playerTag;
+  const t = g.tags && g.tags[tag];
+  const list = missionsFor(ctx, tag);
+  if (!t || t.alive === false || !Array.isArray(list)) return { ok: false, why: 'none' };
+  if (Math.max(0, num(t.missionRest, 0) | 0) > 0) return { ok: false, why: 'resting' };
+  const want = String(id);
+  const tree = isMissionTree(list);
+  const done = missionDoneSet(t, list);
+  const closed = missionClosedSet(ctx, list);
+  for (let i = 0; i < list.length; i++) {
+    const m = list[i];
+    if (!m) continue;
+    const mid = missionId(m, i);
+    if (mid !== want) continue;
+    if (done.has(mid)) return { ok: false, why: 'done' };
+    if (closed.has(mid)) return { ok: false, why: 'shut' };
+    if (!missionUnlocked(list, i, done, tree)) return { ok: false, why: 'locked' };
+    let ready = false;
+    try { ready = typeof m.check === 'function' && !!m.check(ctx); } catch (e) { warnOnce('mcheck:' + mid, 'mission check threw', mid, e); }
+    if (!ready) return { ok: false, why: 'unmet' };
+    try { if (typeof m.reward === 'function') m.reward(ctx); } catch (e) { warnOnce('mreward:' + mid, 'mission reward threw', mid, e); }
+    done.add(mid);
+    writeMissionState(t, list, done);
+    if (Array.isArray(t.missionReady)) t.missionReady = t.missionReady.filter((x) => String(x) !== mid);
+    const pace = missionPaceMonths(ctx);
+    if (pace > 0) t.missionRest = pace;
+    ctx.bus.emit('notify', {
+      title: 'Mission complete — ' + (m.name || mid),
+      text: m.rewardText || 'The realm advances.',
+      type: 'good',
+    });
+    return { ok: true, why: '' };
+  }
+  return { ok: false, why: 'none' };
 }

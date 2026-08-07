@@ -234,7 +234,7 @@ const MODERN_PROVINCES = [
 
 const OWNERS = {};
 for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
-// SPEC §229 added nine cells for Decapolis and Nabataean ground the ancient
+// SPEC §230 added nine cells for Decapolis and Nabataean ground the ancient
 // atlas had none for. They are not latent, so this chapter has them too, and
 // each goes with the province it was carved out of — the development came from
 // there, so the ownership does as well and no state's total moves.
@@ -677,7 +677,7 @@ export const BOOKMARK_1948 = {
   // renamed AFTER conquering them open under their 15-May originals — the
   // victors' names wait in `integratedNames` below (SPEC §66).
   provinceNames: {
-    // SPEC §229's nine cells, under the districts that hold their ground now.
+    // SPEC §230's nine cells, under the districts that hold their ground now.
     // Hippos and Abila keep the arrangement Nineveh and Heliopolis already
     // have: the ancient name is the cell's, the modern one is this chapter's.
     'Hippos': 'Wadi al-Arab', 'Abila': 'Irbid', 'Dion': 'Husn',
@@ -924,7 +924,7 @@ export const BOOKMARK_1948 = {
     'Damascus': { tax: 9, prod: 8, mp: 7 },   // …less the Ghouta (SPEC §228)
     'Beroea': { tax: 9, prod: 8, mp: 6 },         // Aleppo
     'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
-    // §229 moved these four parents' BASE development into districts the
+    // §230 moved these four parents' BASE development into districts the
     // ancient chapters now carry (Mount Hermon, Heliopolis, Akkar, Batroun).
     // 1948 already paid for those districts out of its own table, so it pins
     // the parents at the figures it has always played: the base atlas changed
@@ -946,7 +946,7 @@ export const BOOKMARK_1948 = {
     'Sebaste': { tax: 1, prod: 1, mp: 1 },
     'Hebron': { tax: 2, prod: 2, mp: 2 },
     'Ascalon': { tax: 3, prod: 3, mp: 2 },        // Ashkelon
-    'Oboda': { tax: 1, prod: 0, mp: 0 },          // Nitzana, less Elusa (SPEC §229)
+    'Oboda': { tax: 1, prod: 0, mp: 0 },          // Nitzana, less Elusa (SPEC §230)
     'Adora': { tax: 2, prod: 2, mp: 2 },          // Dura
     'Gaza': { tax: 2, prod: 2, mp: 2 },
     'Iconium': { tax: 8, prod: 7, mp: 7 },        // Konya
@@ -1043,11 +1043,11 @@ export const BOOKMARK_1948 = {
     'Laodicea': { tax: 3, prod: 4, mp: 3 },
     // Jordan: Zarqa off Amman, Mafraq off Jerash, Shobak off Ma'an, and Wadi
     // Rum off Aqaba.
-    'Gerasa': { tax: 2, prod: 2, mp: 1 },         // less Dion (SPEC §229)
-    'Petra': { tax: 3, prod: 5, mp: 2 },          // less Auara (SPEC §229)
+    'Gerasa': { tax: 2, prod: 2, mp: 1 },         // less Dion (SPEC §230)
+    'Petra': { tax: 3, prod: 5, mp: 2 },          // less Auara (SPEC §230)
     'Aila': { tax: 1, prod: 3, mp: 1 },
-    'Gadora': { tax: 1, prod: 1, mp: 1 },         // Salt, less Hesban (SPEC §229)
-    'Medaba': { tax: 1, prod: 1, mp: 1 },         // less Characmoba (SPEC §229)
+    'Gadora': { tax: 1, prod: 1, mp: 1 },         // Salt, less Hesban (SPEC §230)
+    'Medaba': { tax: 1, prod: 1, mp: 1 },         // less Characmoba (SPEC §230)
     'Machaerus': { tax: 1, prod: 1, mp: 1 },
     'Mount Hermon': { tax: 1, prod: 1, mp: 0 },
     'Quneitra': { tax: 1, prod: 1, mp: 1 },
@@ -1609,43 +1609,43 @@ export const BOOKMARK_1948 = {
         id: 'i_plain', name: 'Hold the Plain',
         icon: 'walls', col: 1,
         desc: 'Keep the coastal spine: Joppa, Caesarea Maritima and Ptolemais.',
-        rewardText: '+25 martial points.',
+        rewardText: '+60 martial points.',
         check: (ctx) => ['Joppa', 'Caesarea Maritima', 'Ptolemais'].every((n) => ctx.helpers.controls(ctx, 'ISR', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 60 }),
       },
       {
         id: 'i_jerusalem_road', name: 'The Road to Jerusalem',
         icon: 'bricks', col: 1, requires: ['i_plain'],
         desc: 'Open the corridor: take Emmaus — Latrun — or build past it.',
-        rewardText: '"The Burma Road": Jerusalem −2 unrest for 24 months.',
+        rewardText: '"The Burma Road": Jerusalem −2 unrest permanently.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Emmaus'),
         reward: (ctx) => ctx.helpers.addProvinceModifier(ctx, 'Jerusalem', {
-          id: 'burma_road', name: 'The Road Open', months: 24, effects: { unrest: -2 },
+          id: 'burma_road', name: 'The Road Open', months: -1, effects: { unrest: -2 },
         }),
       },
       {
         id: 'i_galilee', name: 'Galilee Whole',
         icon: 'mountain', col: 0, requires: ['i_plain'],
         desc: 'Take Sepphoris and Gischala — Operations Dekel and Hiram.',
-        rewardText: '+2,000 manpower (the northern villages mobilize).',
+        rewardText: '+4,000 manpower (the northern villages mobilize).',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Sepphoris') && ctx.helpers.controls(ctx, 'ISR', 'Gischala'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { manpower: 4000 }),
       },
       {
         id: 'i_yoav', name: 'Open the South',
         icon: 'swords', col: 2, requires: ['i_plain'],
         desc: 'Break the Egyptian line: take Ascalon.',
-        rewardText: '+25 martial points, +10 legitimacy.',
+        rewardText: '+60 martial points, +15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Ascalon'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 60, legitimacy: 15 }),
       },
       {
         id: 'i_eilat', name: 'The Ink Flag',
         icon: 'flag', col: 2, requires: ['i_yoav'],
         desc: 'Reach the Red Sea: take Aila — Eilat — and the state has two seas.',
-        rewardText: '+15 legitimacy, +50 talents.',
+        rewardText: '+25 legitimacy, +100 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Aila'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, treasury: 50 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 25, treasury: 100 }),
       },
       // The age's curriculum (SPEC §179): the army the militias must become,
       // and the state the institutions already are.
@@ -1653,19 +1653,19 @@ export const BOOKMARK_1948 = {
         id: 'i_one_army', name: 'One Army, One Command',
         icon: 'helmet', col: 0, requires: ['i_galilee'],
         desc: 'From militias to a general staff: reach Military 20 — The General Staff.',
-        rewardText: '"The Unified Command": +5% discipline for 24 months.',
+        rewardText: '"The Unified Command": +5% discipline permanently.',
         check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).mar | 0) >= 20,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
-          id: 'unified_command', name: 'The Unified Command', months: 24, effects: { disciplineMult: 1.05 },
+          id: 'unified_command', name: 'The Unified Command', months: -1, effects: { disciplineMult: 1.05 },
         }),
       },
       {
         id: 'i_state_that_thinks', name: 'The State That Thinks',
         icon: 'scales', col: 1, requires: ['i_jerusalem_road'],
         desc: 'Take up three ideas of the age — the institutions must outlast the emergency.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ISR) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 60, legitimacy: 15 }),
       },
       // Past the armistice lines (SPEC §192): the two operations the cabinet
       // stopped — the strip cleared, and the hills Allon asked for in October.
@@ -1674,20 +1674,20 @@ export const BOOKMARK_1948 = {
         icon: 'flag', col: 2, row: 3, requires: ['i_yoav'],
         desc: 'Take Gaza and Rafah — clear the expeditionary force\'s last foothold, the '
           + 'operation history stopped at the armistice table.',
-        rewardText: '+20 martial points, +10 legitimacy.',
+        rewardText: '+50 martial points, +15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Gaza')
           && ctx.helpers.controls(ctx, 'ISR', 'Rafah'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 20, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 50, legitimacy: 15 }),
       },
       {
         id: 'i_hebron_hills', name: 'The Hills of Hebron',
         icon: 'mountain', col: 1, row: 3, requires: ['i_jerusalem_road'],
-        desc: 'Take Hebron and Bethlehem — the southern hills Allon begged the cabinet '
-          + 'for in October 1948, taken here before the maps harden.',
-        rewardText: '+15 legitimacy, +1,000 manpower.',
+        desc: 'Take Hebron and Bethlehem — the southern hills Allon begged the cabinet for in '
+          + 'October 1948, taken here before the maps harden.',
+        rewardText: '+25 legitimacy, +2,000 manpower.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ISR', 'Hebron')
           && ctx.helpers.controls(ctx, 'ISR', 'Bethlehem'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15, manpower: 1000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 25, manpower: 2000 }),
       },
       // ── The state after the war (SPEC §197) ─────────────────────────────
       // The chapter runs to 2000. The objectives above win 1948; these are
@@ -1696,13 +1696,11 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_ingathering', name: 'The Ingathering',
         icon: 'diaspora', col: 0, row: 4, requires: ['i_one_army'],
-        desc: 'The state doubled its population in three years out of the camps of Europe and '
-          + 'the cities of the Arab world, and housed most of it in tents. Reach +2 stability '
-          + 'with 400 in the treasury — absorb them without breaking.',
+        desc: 'Reach +2 stability with 400 in the treasury — absorb them without breaking.',
         rewardText: '"The Absorption": +15% growth and +12% manpower, permanent.',
         check: (ctx) => {
           const t = ctx.game.tags.ISR || {};
-          return (t.stability || 0) >= 2 && (t.treasury || 0) >= 400;
+          return (t.stability || 0) >= 2 && (t.treasury || 0) >= 600;
         },
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
           id: 'the_absorption', name: 'The Absorption', months: -1,
@@ -1712,12 +1710,11 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_water', name: 'The Water Carrier',
         icon: 'granary', col: 1, row: 4, requires: ['i_state_that_thinks'],
-        desc: 'The Negev is half the country and none of the rainfall. Reach Government 8 and '
-          + 'bank 500 talents: the National Water Carrier is the largest thing this state '
-          + 'builds in its first twenty years, and it is what makes the south a place.',
+        desc: 'Reach Government 8 and bank 750 talents: the National Water Carrier is the '
+          + 'largest thing this state builds in its first twenty years.',
         rewardText: '"The Carrier": +12% income and +10% growth, permanent.',
         check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).gov | 0) >= 8
-          && ((ctx.game.tags.ISR || {}).treasury || 0) >= 500,
+          && ((ctx.game.tags.ISR || {}).treasury || 0) >= 750,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
           id: 'the_carrier', name: 'The Water Carrier', months: -1,
           effects: { incomeMult: 1.12, growthMult: 1.1 },
@@ -1726,12 +1723,11 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_deterrent_frontier', name: 'The Frontier That Deters',
         icon: 'plane', col: 2, row: 4, requires: ['i_gaza'],
-        desc: 'The 1949 lines are nine miles wide at the waist and every capital in the '
-          + 'region knows the number. Reach Military 8 with 60,000 under arms — the frontier '
-          + 'holds because crossing it is arithmetic nobody likes.',
+        desc: 'Reach Military 8 with 60,000 under arms — the frontier holds because crossing '
+          + 'it is arithmetic nobody likes.',
         rewardText: '"The Standing Army": +10% discipline and +8% morale, permanent.',
         check: (ctx) => (((ctx.game.tags.ISR || {}).tech || {}).mar | 0) >= 8
-          && totalMen(ctx, 'ISR') >= 60000,
+          && totalMen(ctx, 'ISR') >= 84000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
           id: 'the_standing_army', name: 'The Standing Army', months: -1,
           effects: { disciplineMult: 1.1, moraleMult: 1.08 },
@@ -1740,11 +1736,10 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_second_decade', name: 'The Economy of the Second Decade',
         icon: 'market', col: 1, row: 5, requires: ['i_the_water'],
-        desc: 'Austerity, ration books and a currency nobody wanted, and then — somehow — an '
-          + 'industrial economy. Bank 800 talents: the decade in which the state stops being '
-          + 'a relief operation.',
+        desc: 'Bank 1,200 talents: the decade in which the state stops being a relief '
+          + 'operation.',
         rewardText: '"The Boom": +15% income permanently, +1 stability.',
-        check: (ctx) => ((ctx.game.tags.ISR || {}).treasury || 0) >= 800,
+        check: (ctx) => ((ctx.game.tags.ISR || {}).treasury || 0) >= 1200,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ISR', {
             id: 'the_boom', name: 'The Boom', months: -1, effects: { incomeMult: 1.15 },
@@ -1755,9 +1750,8 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_a_treaty_with_a_neighbour', name: 'A Treaty With a Neighbour',
         icon: 'dove', col: 0, row: 5, requires: ['i_the_ingathering'],
-        desc: 'Armistice lines are not peace and everyone signing them in 1949 said so. Bring '
-          + 'any neighbouring court to +100 regard — the first Arab capital that deals with '
-          + 'this state as a state changes what the region is.',
+        desc: 'Bring any neighbouring court to +100 regard — the first Arab capital that deals '
+          + 'with this state as a state changes what the region is.',
         rewardText: '"Recognised": +0.3 legitimacy a month and −0.75 unrest everywhere, permanent.',
         check: (ctx) => {
           const g = ctx.game;
@@ -1774,9 +1768,8 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_state_at_fifty', name: 'The State at Fifty',
         icon: 'star8', col: 2, row: 5, requires: ['i_the_deterrent_frontier'],
-        desc: 'Half a century after the declaration in the museum hall on Rothschild '
-          + 'Boulevard: reach 90 legitimacy and +3 stability, and the question stops being '
-          + 'whether this country survives and becomes what it is for.',
+        desc: 'Reach 90 legitimacy and +3 stability — half a century on, the question stops '
+          + 'being whether this country survives.',
         rewardText: '"Fifty Years": +10% income, +0.25 legitimacy a month, permanent.',
         check: (ctx) => {
           const t = ctx.game.tags.ISR || {};
@@ -1798,11 +1791,7 @@ export const BOOKMARK_1948 = {
         id: 'i_the_first_knesset', name: 'The First Knesset',
         icon: 'speaker', civil: 'govt', col: 0, row: 6,
         desc: 'On 25 January 1949, with the armistice talks still running on Rhodes, 86.9 '
-          + 'percent of the electorate voted; twelve lists took the 120 seats, the Constituent '
-          + 'Assembly met in Jerusalem on 14 February, and two days later it renamed itself the '
-          + 'Knesset and declined to write a constitution — the Harari resolution of June 1950 '
-          + 'put that off to be done chapter by chapter, and it is still being put off. Embrace '
-          + 'twelve of the age\'s institutions: a state has to be built out of something.',
+          + 'percent of the electorate voted.',
         rewardText: '"The Transition Law": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
         check: (ctx) => ((ctx.game.tags[who(ctx, 'ISR')] || {}).embraced || []).length >= 12,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
@@ -1813,15 +1802,8 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_mamlachtiut', name: 'Mamlachtiut',
         icon: 'scales', civil: 'govt', col: 0, row: 7, requires: ['i_the_first_knesset'],
-        desc: 'Dov Yosef\'s ration book arrived in April 1949 and the country lived on it for a '
-          + 'decade — an egg a week, ninety grams of chicken, and a black market everybody used '
-          + 'and nobody defended. Against that ledger Ben-Gurion built what he called '
-          + 'mamlachtiut: the Palmach staff dissolved by order in November 1948, the parties\' '
-          + 'school streams abolished by the Education Law of 1953, the labour exchanges taken '
-          + 'into the state in 1959 — every instrument the movements owned except the clinics '
-          + 'the Histadrut would not surrender. Take two civil reforms with the country at +2 '
-          + 'stability.',
-        rewardText: '"Mamlachtiut": +10% income permanently, and +30 governance points.',
+        desc: 'Take two civil reforms with the country at +2 stability.',
+        rewardText: '"Mamlachtiut": +10% income permanently, and +70 governance points.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'ISR')] || {};
           return (((t.reforms || {}).civ) | 0) >= 2 && (t.stability || 0) >= 2;
@@ -1830,18 +1812,14 @@ export const BOOKMARK_1948 = {
           ctx.helpers.addTagModifier(ctx, 'ISR', {
             id: 'mamlachtiut', name: 'Mamlachtiut', months: -1, effects: { incomeMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'ISR', { gov: 30 });
+          ctx.helpers.adjust(ctx, 'ISR', { gov: 70 });
         },
       },
       {
         id: 'i_the_seat_at_lake_success', name: 'The Seat at Lake Success',
         icon: 'laurel', civil: 'region', col: 1, row: 6,
-        desc: 'The Security Council recommended admission at Lake Success on 4 March 1949, '
-          + 'having refused it in December, and the Assembly voted at Flushing Meadow on 11 May: '
-          + 'thirty-seven for, twelve against, nine abstaining. Abba Eban was thirty-four, and had '
-          + 'to give the assurances about Resolutions 181 and 194 out loud before the count. Stand '
-          + 'among the first five courts the world ranks — a country of a million people, counted '
-          + 'with the powers.',
+        desc: 'Stand among the first five courts the world ranks — a country of a million '
+          + 'people, counted with the powers.',
         rewardText: '"The Fifty-Ninth Flag": +1 diplomatic seat and +0.2 legitimacy a month, permanent.',
         check: (ctx) => {
           const ord = (ctx.game.standing && ctx.game.standing.order) || [];
@@ -1856,13 +1834,7 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_arms_road', name: 'The Arms Road',
         icon: 'spears', civil: 'region', col: 1, row: 7, requires: ['i_the_seat_at_lake_success'],
-        desc: 'Washington embargoed weapons to the whole region on 5 December 1947 and London went '
-          + 'on filling Egyptian and Iraqi contracts under treaty, so the state bought where it '
-          + 'could: Ehud Avriel signed in Prague, and all that summer the transports flew rifles '
-          + 'and Czech-built Messerschmitts out of Žatec. Prague closed after the Slánský trial, '
-          + 'Peres opened Paris in 1954, de Gaulle shut it in 1967. Bring one of the five arsenals '
-          + '— Prague, Paris, Moscow, Washington, London — to +50 regard: a state with no arsenal '
-          + 'of its own has to be liked by somebody who has one.',
+        desc: 'Bring one of the five arsenals — Prague, Paris, Moscow, Washington, London.',
         rewardText: '"A Supplier Somewhere": +8% discipline and +10% reinforcement, permanent.',
         check: (ctx) => {
           const g = ctx.game;
@@ -1880,12 +1852,8 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_letter_of_june', name: 'The Letter of June',
         icon: 'scroll', civil: 'court', col: 2, row: 6,
-        desc: 'The government of a state not three years old fell in February 1951 over whose '
-          + 'schools would teach the Yemenite children in the transit camps, and it fell because '
-          + 'the letter of 19 June 1947 was a bargain about exactly that — the sabbath, the '
-          + 'kitchens, the courts of marriage, the schools, signed by Ben-Gurion, Rabbi Fishman '
-          + 'and Greenbaum a year before there was a state to bind. Hold the two signatures that '
-          + 'hold a cabinet: the religious bloc and the coalition, both at 70 approval.',
+        desc: 'Hold the two signatures that hold a cabinet: the religious bloc and the '
+          + 'coalition, both at 70 approval.',
         rewardText: '"The Status Quo": −0.6 unrest everywhere and +8% growth, permanent.',
         check: (ctx) => {
           const f = (ctx.game.tags[who(ctx, 'ISR')] || {}).factions || {};
@@ -1899,14 +1867,8 @@ export const BOOKMARK_1948 = {
       {
         id: 'i_the_second_israel', name: 'The Second Israel',
         icon: 'diaspora', civil: 'court', col: 2, row: 7, requires: ['i_the_letter_of_june'],
-        desc: 'They came out of Baghdad under the denaturalization law of March 1950 with fifty '
-          + 'dinars and no citizenship, out of Aden on the Alaska Airlines charters, out of '
-          + 'Tripoli and Casablanca — and most of them went into the ma\'abarot, a hundred and '
-          + 'twenty-seven camps holding some two hundred and twenty thousand people at the 1951 '
-          + 'peak, housed in part on German money the Knesset voted to go and negotiate for, '
-          + 'sixty-one to fifty, on 9 January 1952, with the windows breaking. In July 1959 Wadi '
-          + 'Salib answered. Hold all four blocs of the court at 65: a state that ingathers a '
-          + 'people has to find it a chair.',
+        desc: 'Hold all four blocs of the court at 65: a state that ingathers a people has to '
+          + 'find it a chair.',
         rewardText: '"The Second Israel": +10% manpower and +8% income, permanent.',
         check: (ctx) => {
           const f = (ctx.game.tags[who(ctx, 'ISR')] || {}).factions || {};
@@ -1923,35 +1885,35 @@ export const BOOKMARK_1948 = {
       {
         id: 'hy_dimona', name: 'The Textile Factory', hypothetical: true,
         fork: '1948ce/the_basement',
+        roads: ['nuclear_opacity', 'the_open_test', 'the_sealed_basement'],
         icon: 'flame', col: 3, row: 0,
         desc: 'Hold Dimona in the deep Negev and walk the French road — Paris as your arsenal, '
-          + 'or their regard at 55 — before 1958, and something can rise there that the budget '
-          + 'calls a textile factory. What kind of fact it is answers in 1966.',
-        rewardText: '"A Certain Ambiguity": −1 unrest everywhere for 60 months.',
+          + 'or their regard at 55.',
+        rewardText: '"A Certain Ambiguity": −1 unrest everywhere permanently.',
         check: (ctx) => anyFlag(ctx, 'dimonaOpaque', 'dimonaDeclared', 'dimonaShelved'),
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ISR', {
-          id: 'hy_certain_ambiguity', name: 'A Certain Ambiguity', months: 60, effects: { unrestAll: -1 },
+          id: 'hy_certain_ambiguity', name: 'A Certain Ambiguity', months: -1, effects: { unrestAll: -1 },
         }),
       },
       {
         id: 'hy_oldest_question', name: 'The Question That Comes Back', hypothetical: true,
         fork: '1948ce/the_oldest_question',
+        roads: ['one_citizenship', 'the_settled_line', 'settled_later'],
         icon: 'scales', col: 3, row: 1,
         desc: 'Rule thirteen districts where three people in ten are not of the state\'s own '
-          + 'nation (after 1968), and the oldest question returns — one citizenship, two '
-          + 'states, or to be settled later. Every answer has a price the others do not.',
-        rewardText: '+25 governance points, +10 public mandate.',
+          + 'nation (after 1968), and the oldest question returns.',
+        rewardText: '+60 governance points, +10 public mandate.',
         check: (ctx) => anyFlag(ctx, 'oneCitizenship', 'theSettledLine', 'settledLater'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 60, legitimacy: 15 }),
       },
       {
         id: 'hy_no_lebanon', name: 'The Levant Without a Lebanon', hypothetical: true,
         fork: '1948ce/is_there_a_lebanon',
+        road: 'no_lebanon',
         icon: 'shieldCrack', col: 3, row: 2,
         desc: 'If Lebanon falls from the map and you stand in most of it — four or more of its '
-          + 'nine districts — you inherit the confessional arithmetic the Cairo Agreement was '
-          + 'written for, and the northern arc is yours to carry.',
-        rewardText: '+25 governance points — the occupier\'s ministries.',
+          + 'nine districts.',
+        rewardText: '+60 governance points — the occupier\'s ministries.',
         check: (ctx) => {
           const g = ctx.game;
           const leb = g.tags.LEB;
@@ -1969,29 +1931,29 @@ export const BOOKMARK_1948 = {
           }
           return best === me && count[me] >= 4;
         },
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { gov: 60 }),
       },
       {
         id: 'hy_altalena', name: 'The Negotiated Flag', hypothetical: true,
         fork: '1948ce/the_altalena',
+        road: 'the_cargo_ashore',
         icon: 'ship', col: 3, row: 3,
-        desc: 'When the Irgun\'s arms ship stands off Tel Aviv (June 1948), hold the '
-          + 'cannon\'s fire history ordered: the cargo comes ashore under a negotiated '
-          + 'flag, and the question of who commands stays open — on purpose.',
-        rewardText: '+20 martial points.',
+        desc: 'When the Irgun\'s arms ship stands off Tel Aviv (June 1948), hold the cannon\'s '
+          + 'fire history ordered.',
+        rewardText: '+50 martial points.',
         check: (ctx) => anyFlag(ctx, 'altalenaAshore'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { mar: 50 }),
       },
       {
         id: 'hy_shilumim', name: 'The Refused Ledger', hypothetical: true,
         fork: '1948ce/the_shilumim',
+        road: 'the_refusal',
         icon: 'coins', col: 4, row: 0,
-        desc: 'When the shilumim come to the vote with the windows breaking (January '
-          + '1952), refuse what the Knesset signed: no payments, the austerity books '
-          + 'reprinted, and everything that stands standing unmortgaged.',
-        rewardText: '+15 legitimacy.',
+        desc: 'When the shilumim come to the vote with the windows breaking (January 1952), '
+          + 'refuse what the Knesset signed.',
+        rewardText: '+25 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'shilumimRefused'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ISR', { legitimacy: 25 }),
       },
     ],
     JOR: [
@@ -1999,17 +1961,17 @@ export const BOOKMARK_1948 = {
         id: 'jr_latrun', name: 'Latrun Holds',
         icon: 'tower', col: 1,
         desc: 'Keep Emmaus — the police fort commands the road, and the Legion holds forts.',
-        rewardText: '+25 martial points.',
+        rewardText: '+60 martial points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Emmaus') && dateGE(ctx.game.date, 1948, 8),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { mar: 60 }),
       },
       {
         id: 'jr_oldcity', name: 'The Old City',
         icon: 'temple', col: 0, requires: ['jr_latrun'],
         desc: 'Take Jerusalem — the King must pray where his father could not.',
-        rewardText: '+20 legitimacy, +25 influence points.',
+        rewardText: '+30 legitimacy, +60 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JOR', 'Jerusalem'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 20, infl: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 30, infl: 60 }),
       },
       {
         id: 'jr_westbank', name: 'The Hill Country',
@@ -2023,20 +1985,20 @@ export const BOOKMARK_1948 = {
         id: 'jr_solvent', name: 'A Kingdom Solvent',
         icon: 'coins', col: 2,
         desc: 'End 1948 with a positive treasury — the Legion is paid in sterling.',
-        rewardText: '+50 talents (London approves).',
+        rewardText: '+100 talents (London approves).',
         check: (ctx) => dateGE(ctx.game.date, 1949, 1)
           && ((ctx.game.tags[who(ctx, 'JOR')] || {}).treasury || 0) > 0,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { treasury: 50 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { treasury: 100 }),
       },
       {
         id: 'jr_armistice', name: 'Something to Show',
         icon: 'scroll', col: 1, requires: ['jr_westbank'],
         desc: 'Reach 1949 holding Jerusalem or the whole hill country.',
-        rewardText: '+25 legitimacy — the only Arab crown the war made heavier.',
+        rewardText: '+40 legitimacy — the only Arab crown the war made heavier.',
         check: (ctx) => dateGE(ctx.game.date, 1949, 2)
           && (ctx.helpers.controls(ctx, 'JOR', 'Jerusalem')
             || ['Neapolis', 'Hebron', 'Jericho'].every((n) => ctx.helpers.controls(ctx, 'JOR', n))),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { legitimacy: 40 }),
       },
       // The age's curriculum (SPEC §179): the Legion's professional edge,
       // and the statecraft of the kingdom that means to keep what it holds.
@@ -2044,19 +2006,20 @@ export const BOOKMARK_1948 = {
         id: 'jr_conscript_kingdom', name: 'The National Service',
         icon: 'helmet', col: 0, row: 2, requires: ['jr_latrun'],
         desc: 'The Legion cannot stay small forever: reach Military 21 — The Conscript Army.',
-        rewardText: '"The Expanded Legion": +10% manpower for 24 months.',
+        rewardText: '"The Expanded Legion": +10% manpower permanently.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JOR')] || {}).tech || {}).mar | 0) >= 21,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JOR', {
-          id: 'expanded_legion', name: 'The Expanded Legion', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'expanded_legion', name: 'The Expanded Legion', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'jr_kingdom_of_both_banks', name: 'A Kingdom of Both Banks',
         icon: 'star8', col: 2, requires: ['jr_solvent'],
-        desc: 'Take up three ideas of the age — annexation is paperwork; absorption is statecraft.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        desc: 'Take up three ideas of the age — annexation is paperwork; absorption is '
+          + 'statecraft.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags[who(ctx, 'JOR')]) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JOR', { gov: 60, legitimacy: 15 }),
       },
     ],
   },

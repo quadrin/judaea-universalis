@@ -87,7 +87,7 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // SPEC §173 adds the west that was WASTE: the Maghreb, Hispania, Gaul,
   // Britannia, the Danube and the Moesian coast — 83 more, at levy shares
   // that keep them from being 83 more armies.
-  // SPEC §229 opens six imperial districts in the ancient chapters that had
+  // SPEC §230 opens six imperial districts in the ancient chapters that had
   // been visible only in 1948 — Arad in Idumea, and Heliopolis, Douma,
   // Salamiyah, Arca and Botrys in Syria and Phoenice — and adds four new ones
   // on Decapolis ground: Hippos, Abila, Dion and Esbus. Rome's development is
@@ -194,7 +194,15 @@ console.log('== 67 BCE: the Judaean Civil War ==');
   ok(ctx.prov('Medaba').owner === 'NAB', 'Medaba ceded to Nabataea');
   ok((g.tags.NAB.atWarWith || []).includes('ARI'), 'Aretas marches against Aristobulus');
   ok(!!ctx.helpers.getFlag(ctx, 'aretasMarches'), 'aretasMarches flag set');
-  ok(g.tags.HYR.missionIdx >= 1, 'HYR missions progressing: idx=' + g.tags.HYR.missionIdx);
+  // §229 raised the levy from nine to twelve and a half thousand and stopped
+  // paying the chain by the calendar: recruit the difference, let a month read
+  // it, and claim what the reading marks ready.
+  for (const army of Object.values(g.armies)) if (army && army.tag === 'HYR') army.men += 1500;
+  tickMonths(ctx, 1);
+  ok((g.tags.HYR.missionReady || []).length >= 1,
+    'HYR missions ready to claim: ' + (g.tags.HYR.missionReady || []).join(','));
+  ok(realm.claimMission(ctx, (g.tags.HYR.missionReady || [])[0]).ok && g.tags.HYR.missionIdx >= 1,
+    'and the claim moves the chain: idx=' + g.tags.HYR.missionIdx);
 
   // fast-forward to Pompey: tick to -64-06 and check the annexation
   while (!(g.date.y === -64 && g.date.m >= 6)) { tickMonths(ctx, 1); drainEvents(ctx, a); }

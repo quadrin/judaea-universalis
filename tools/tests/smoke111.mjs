@@ -42,7 +42,19 @@ function boot(playerTag, seed) {
 // The §207 drumbeat: one completion a pass, then the chain rests. Where this
 // suite means "let the months go by until the pass has paid", it pumps —
 // each call is one synthetic month.
-const pump = (c, n) => { for (let i = 0; i < n; i++) realm.checkMissions(c); };
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// what is ready. Where this suite means "let the months go by until everything
+// satisfiable has paid", the hand on the panel is the suite's own: one claim a
+// month, which is exactly the drum's own pace.
+const pump = (ctx, n) => {
+  for (let i = 0; i < n; i++) {
+    realm.checkMissions(ctx);
+    const t = ctx.game.tags[ctx.game.playerTag];
+    for (const id of ((t && t.missionReady) || []).slice()) {
+      if (realm.claimMission(ctx, id).ok) break;
+    }
+  }
+};
 const PACE = DEFINES.MISSION_PACE_MONTHS | 0;
 
 console.log('== the tree view: layout, statuses, prerequisites ==');
@@ -82,8 +94,15 @@ const { game, ctx, actions } = boot('JUD', 42);
 
 console.log('== branches advance independently; the prefix does not lie ==');
 {
+  // §229 asks 28,000 of the root and the chapter deals 26,000.
+  for (const a of Object.values(game.armies)) if (a && a.tag === 'JUD') a.men += 4000;
   for (let i = 0; i < 31; i++) tickDay(ctx);
-  ok(actions.getMissions()[0].status === 'done', 'the root completes on the monthly pass');
+  // §229: the monthly pass marks the satisfied root READY and pays nothing.
+  // The completion is a click, and everything downstream of it waits on that
+  // click rather than on the calendar.
+  ok(actions.getMissions()[0].status === 'ready', 'the root goes ready on the monthly pass');
+  ok(realm.claimMission(ctx, 'jm_arm_the_nation').ok, 'and the hand on the panel banks it');
+  ok(actions.getMissions()[0].status === 'done', 'the root completes when it is claimed');
   const open = actions.getMissions().filter((m) => m.status === 'current').map((m) => m.id);
   ok(open.join(',') === 'jm_throw_back,jm_coastal_road,jm_diaspora,'
     + 'jm_the_generals_of_the_districts,jm_the_third_power,jm_the_altar_and_the_knives,'

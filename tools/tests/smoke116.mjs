@@ -54,7 +54,19 @@ const doneHy = (t) => (t.missionsDone || []).filter((id) => /^hy_/.test(id));
 // suite means "let the months go by until everything satisfiable has paid",
 // it pumps the monthly pass — each call is one synthetic month, and a big
 // forced world needs a run of them, not a pair.
-const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// what is ready. Where this suite means "let the months go by until everything
+// satisfiable has paid", the hand on the panel is the suite's own: one claim a
+// month, which is exactly the drum's own pace.
+const pump = (ctx, n) => {
+  for (let i = 0; i < n; i++) {
+    realm.checkMissions(ctx);
+    const t = ctx.game.tags[ctx.game.playerTag];
+    for (const id of ((t && t.missionReady) || []).slice()) {
+      if (realm.claimMission(ctx, id).ok) break;
+    }
+  }
+};
 
 // ---------------------------------------------------------------- static
 console.log('== §183 static: every hypothetical is a charted fork, appended, seated ==');

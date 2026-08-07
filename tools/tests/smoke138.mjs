@@ -64,7 +64,19 @@ function boot(era, playerTag) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: era.bookmark, events: era.events });
   return { game, ctx, era };
 }
-const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// what is ready. Where this suite means "let the months go by until everything
+// satisfiable has paid", the hand on the panel is the suite's own: one claim a
+// month, which is exactly the drum's own pace.
+const pump = (ctx, n) => {
+  for (let i = 0; i < n; i++) {
+    realm.checkMissions(ctx);
+    const t = ctx.game.tags[ctx.game.playerTag];
+    for (const id of ((t && t.missionReady) || []).slice()) {
+      if (realm.claimMission(ctx, id).ok) break;
+    }
+  }
+};
 const civilOf = (list) => (list || []).filter((m) => m && m.civil);
 const doneIds = (t) => new Set(t.missionsDone || []);
 
@@ -96,7 +108,11 @@ for (const c of CHAINS) {
     ok(STRANDS[m.civil] !== undefined && m.col === STRANDS[m.civil],
       key + '/' + m.id + ': the ' + m.civil + ' strand sits in its own column (col ' + m.col + ')');
     ok(!m.hypothetical, key + '/' + m.id + ': is an objective, not a road not taken');
-    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 60 && !!m.rewardText
+    // §229 cut the descriptions down to the ask — the shortest civil objective
+    // in the game is now "Bring the King of Kings to +40 regard." at 38
+    // characters, and that is the section working, not a stub. The floor still
+    // catches an empty or placeholder desc, which is what it was ever for.
+    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 30 && !!m.rewardText
       && typeof m.check === 'function' && typeof m.reward === 'function'
       && Number.isFinite(m.col) && Number.isFinite(m.row),
       key + '/' + m.id + ': dressed and seated (col ' + m.col + ', row ' + m.row + ')');
@@ -415,8 +431,10 @@ for (const c of CHAINS) {
   const key = c.id + '/' + c.tag;
   const w = boot(c.era, c.tag);
   maximalGround(w, c.tag);
-  // §207 paces one completion a month, so a whole tree needs the room.
-  for (let i = 0; i < 400; i++) { remax(w, c.tag); realm.checkMissions(w.ctx); }
+  // §207 paces one completion a month, so a whole tree needs the room — and
+  // since §229 the player's half is claimed rather than banked, so the room
+  // has to be pumped with a hand on the panel.
+  for (let i = 0; i < 400; i++) { remax(w, c.tag); pump(w.ctx, 1); }
   const done = doneIds(w.game.tags[c.tag]);
   const unpaid = civilOf(c.list).filter((m) => !done.has(m.id));
   ok(!unpaid.length, key + ': every civil objective paid ('
@@ -553,7 +571,7 @@ console.log('== §211: the crown carries a civil band in every chapter it is for
     const w = proclaim(id);
     const list = realm.chapterChain(crown.missions, id);
     maximalGround(w, 'MLI');
-    for (let i = 0; i < 500; i++) { remax(w, 'MLI'); realm.checkMissions(w.ctx); }
+    for (let i = 0; i < 500; i++) { remax(w, 'MLI'); pump(w.ctx, 1); }
     const done = doneIds(w.game.tags.MLI);
     // The whole chain, not only the band: a stub tree hid its own dead content.
     const unpaid = list.filter((m) => !done.has(m.id));

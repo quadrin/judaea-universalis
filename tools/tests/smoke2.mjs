@@ -93,8 +93,16 @@ simHelpers.rulerDies(c1, 'JUD', 'has died');
 ok(g1.tags.JUD.ruler.name !== 'A Child' && !g1.tags.JUD.regency, 'heirless death seats a usurper: ' + g1.tags.JUD.ruler.name);
 
 console.log('== missions ==');
-// JUD starts with 26k men -> mission 1 (20k) completes on the first monthly tick.
-ok(g1.tags.JUD.missionIdx >= 1, 'JUD mission 1 (Arm the Nation) completed, idx=' + g1.tags.JUD.missionIdx);
+// §229 raised the ask from twenty to twenty-eight thousand, which is the point
+// of it: the chapter hands JUD 26k and the root is now something the realm has
+// to actually do. Recruit the difference, then let a month read it — and since
+// §229 a satisfied mission goes READY and pays nothing until it is claimed.
+simHelpers.spawnArmy(c1, 'JUD', 'Jerusalem', { inf: 6, name: 'The New Levies' });
+tickMonths(c1, 1);
+ok((g1.tags.JUD.missionReady || []).indexOf('jm_arm_the_nation') >= 0,
+  'JUD mission 1 (Arm the Nation) is ready to claim: ' + (g1.tags.JUD.missionReady || []).join(','));
+ok(realm.claimMission(c1, 'jm_arm_the_nation').ok, 'and the click banks it');
+ok(g1.tags.JUD.missionIdx >= 1, 'JUD mission 1 completed, idx=' + g1.tags.JUD.missionIdx);
 ok((g1.tags.JUD.modifiers || []).some((m) => m.id === 'levies_of_zion'), 'mission reward modifier applied');
 const ml = a1.getMissions();
 // Eight nodes since SPEC §179 grew the chain its curriculum branches,

@@ -137,7 +137,7 @@ export const BOOKMARK_132 = {
 
   // ...and Betar stands: the fortress village of the revolt's last stand
   // becomes its own place (it inherits Judean ownership from Emmaus).
-  // SPEC §229: the neighbours' country at the resolution Judea is played at.
+  // SPEC §230: the neighbours' country at the resolution Judea is played at.
   // Sixteen districts that have existed as cells since §225/§228 and were
   // visible only in 1948. Their development comes out of the parents they were
   // carved from (js/data/map_data.js), so no realm gains a point by the map
@@ -149,7 +149,7 @@ export const BOOKMARK_132 = {
     'Nineveh', 'Kirkuk'],
   provinceNames: {
     'Beit Shemesh': 'Betar',
-    // The §229 districts under the names their own age used.
+    // The §230 districts under the names their own age used.
     'Shobak': 'Gebalene',    // Josephus' Gobolitis, the highland of Seir
     'Wadi Rum': 'Iram',
     'Azraq': 'Basie',        // the post on the Wadi Sirhan
@@ -210,7 +210,7 @@ export const BOOKMARK_132 = {
   // The Second Temple burned in 70 CE — the Mount stands bare (SPEC §32).
   wonderTweaks: { Jerusalem: null },
   owners: {
-    // -- The §229 districts, each under the crown that holds its parent ------
+    // -- The §230 districts, each under the crown that holds its parent ------
     // Trajan annexed the Nabataean kingdom in 106; by 132 the whole south and
     // the Hauran are Provincia Arabia, so every district carved out of them is
     // Roman ground. Arad rises with Adora and the rest of Idumea.
@@ -223,7 +223,7 @@ export const BOOKMARK_132 = {
     'Azraq': 'ROM',         // with Bostra, the legionary seat of Arabia
     'Suwayda': 'ROM',       // with Bostra
     'Mount Hermon': 'ROM',  // with Caesarea Philippi
-    // …and the five §229 cells south and east of it, Provincia Arabia entire
+    // …and the five §230 cells south and east of it, Provincia Arabia entire
     'Characmoba': 'ROM',    // with Medaba
     'Auara': 'ROM',         // with Petra
     'Elusa': 'ROM',         // with Oboda
@@ -503,48 +503,48 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_host', name: 'The Prince\'s Host',
         icon: 'spears', col: 1,
-        desc: 'Field fifteen thousand men — the hideouts and armories were dug for this.',
-        rewardText: '"The Nasi\'s Levies": +10% manpower for 24 months.',
-        check: (ctx) => totalMen(ctx, 'JUD') >= 15000,
+        desc: 'Field 21,000 men — the hideouts and armories were dug for this.',
+        rewardText: '"The Nasi\'s Levies": +10% manpower permanently.',
+        check: (ctx) => totalMen(ctx, 'JUD') >= 21000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'nasi_levies', name: 'The Nasi\'s Levies', months: 24, effects: { manpowerMult: 1.1 },
+          id: 'nasi_levies', name: 'The Nasi\'s Levies', months: -1, effects: { manpowerMult: 1.1 },
         }),
       },
       {
         id: 'j2_maul', name: 'Maul the Legions',
         icon: 'swords', col: 0, requires: ['j2_host'],
-        desc: 'Reach +10 war score against Rome.',
-        rewardText: '+25 martial points.',
-        check: (ctx) => judWarscore(ctx) >= 10,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 25 }),
+        desc: 'Reach +20 war score against Rome.',
+        rewardText: '+60 martial points.',
+        check: (ctx) => judWarscore(ctx) >= 20,
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { mar: 60 }),
       },
       {
         id: 'j2_aelia', name: 'Aelia Undone',
         icon: 'temple', col: 2, requires: ['j2_host'],
         desc: 'Take Jerusalem from the colony builders.',
-        rewardText: '+20 legitimacy, +25 governance points — the coins are struck in the city itself.',
+        rewardText: '+30 legitimacy, +60 governance points — the coins are struck in the city itself.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 20, gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 30, gov: 60 }),
       },
       {
         id: 'j2_galilee', name: 'Galilee Rises',
         icon: 'mountain', col: 2, requires: ['j2_aelia'],
         desc: 'Carry the revolt north: take Sepphoris and Tiberias.',
-        rewardText: 'The north sends its sons: +2,000 manpower.',
+        rewardText: 'The north sends its sons: +4,000 manpower.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Sepphoris') && ctx.helpers.controls(ctx, 'JUD', 'Tiberias'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { manpower: 4000 }),
       },
       {
         id: 'j2_redemption', name: 'The Redemption of Israel',
         icon: 'coins', col: 0, requires: ['j2_maul'],
-        desc: 'Reach +25 war score — make Rome count the cost aloud.',
-        rewardText: '"Redemption Coinage": +15% income permanently, +15 legitimacy.',
-        check: (ctx) => judWarscore(ctx) >= 25,
+        desc: 'Reach +40 war score — make Rome count the cost aloud.',
+        rewardText: '"Redemption Coinage": +15% income permanently, +25 legitimacy.',
+        check: (ctx) => judWarscore(ctx) >= 40,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'redemption_coinage', name: 'Redemption Coinage', months: -1, effects: { incomeMult: 1.15 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25 });
         },
       },
       {
@@ -552,13 +552,14 @@ export const BOOKMARK_132 = {
         // coins showed the Temple facade — this is what they promised.
         id: 'j2_third_temple', name: 'Raise the Third House',
         icon: 'shrine', col: 1, requires: ['j2_aelia', 'j2_redemption'],
-        desc: 'Hold Jerusalem with 500 talents in the treasury and the realm steady (stability +1) — the House the coins promised.',
-        rewardText: 'The Third Temple rises: −300 talents; +20 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
+        desc: 'Hold Jerusalem with 750 talents in the treasury and the realm steady (stability '
+          + '+1) — the House the coins promised.',
+        rewardText: 'The Third Temple rises: −300 talents; +30 legitimacy, and the Temple\'s yield (+1 governance point, +0.2 legitimacy a month) returns to Jerusalem\'s keeper. A wonder stands on the map again.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Jerusalem')
-          && (ctx.game.tags.JUD.treasury || 0) >= 500
+          && (ctx.game.tags.JUD.treasury || 0) >= 750
           && (ctx.game.tags.JUD.stability || 0) >= 1,
         reward: (ctx) => {
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 20 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: -300, legitimacy: 30 });
           const p = ctx.prov && ctx.prov('Jerusalem');
           if (p) p.wonder = 'temple';
         },
@@ -572,42 +573,42 @@ export const BOOKMARK_132 = {
         id: 'j2_ambush_doctrine', name: 'The Ambush Doctrine',
         icon: 'mountain', col: 0, row: 3, requires: ['j2_maul'],
         desc: 'Make the method a doctrine: reach Military 7 — The Ambush Doctrine.',
-        rewardText: '"The Roads Are Ours": +1 to hill-country defense for 24 months.',
+        rewardText: '"The Roads Are Ours": +1 to hill-country defense permanently.',
         check: (ctx) => (((ctx.game.tags.JUD || {}).tech || {}).mar | 0) >= 7,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'roads_are_ours', name: 'The Roads Are Ours', months: 24, effects: { hillDefBonus: 1 },
+          id: 'roads_are_ours', name: 'The Roads Are Ours', months: -1, effects: { hillDefBonus: 1 },
         }),
       },
       {
         id: 'j2_state_in_hiding', name: 'The State in Hiding',
         icon: 'lamp', col: 2, requires: ['j2_galilee'],
         desc: 'Take up three ideas of the age — the letters from the wadi are a government\'s.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.JUD) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60, legitimacy: 15 }),
       },
       // The war carried past the hills (SPEC §192): the revolt history kept
       // landlocked and inland reaches for the sea and the legion's nest.
       {
         id: 'j2_the_coast', name: 'The Governor\'s Sea',
         icon: 'ship', col: 1, row: 1, requires: ['j2_maul'],
-        desc: 'Take Joppa and Caesarea Maritima — the revolt history kept landlocked '
-          + 'reaches the sea, and the governor\'s own seat.',
-        rewardText: '+100 talents (the harbor customs), +10 legitimacy.',
+        desc: 'Take Joppa and Caesarea Maritima — the revolt history kept landlocked reaches '
+          + 'the sea, and the governor\'s own seat.',
+        rewardText: '+200 talents (the harbor customs), +15 legitimacy.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Joppa')
           && ctx.helpers.controls(ctx, 'JUD', 'Caesarea Maritima'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 100, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 200, legitimacy: 15 }),
       },
       {
         id: 'j2_arabia', name: 'The Legion\'s Nest',
         icon: 'horseshoe', col: 1, row: 2, requires: ['j2_aelia'],
-        desc: 'Take Medaba and Bostra — the base of the Arabian legion, so the next '
-          + 'column against the Nasi musters a province further away.',
-        rewardText: '"The Highway Cut": +1 hill-country defense for 36 months.',
+        desc: 'Take Medaba and Bostra — the base of the Arabian legion, so the next column '
+          + 'against the Nasi musters a province further away.',
+        rewardText: '"The Highway Cut": +1 hill-country defense permanently.',
         check: (ctx) => ctx.helpers.controls(ctx, 'JUD', 'Medaba')
           && ctx.helpers.controls(ctx, 'JUD', 'Bostra'),
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
-          id: 'the_highway_cut', name: 'The Highway Cut', months: 36,
+          id: 'the_highway_cut', name: 'The Highway Cut', months: -1,
           effects: { hillDefBonus: 1 },
         }),
       },
@@ -618,11 +619,9 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_mint', name: 'The Mint of the Redemption',
         icon: 'coins', col: 1, row: 4, requires: ['j2_third_temple'],
-        desc: 'The rising overstruck Roman denarii with the Temple façade and dated them by '
-          + 'the Redemption of Israel, which is a state announcing a calendar. Bank 400 '
-          + 'talents and make the coinage the country\'s own.',
+        desc: 'Bank 600 talents and make the coinage the country\'s own.',
         rewardText: '"Year One of the Redemption": +10% income and +0.2 legitimacy a month, permanent.',
-        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 400,
+        check: (ctx) => ((ctx.game.tags[who(ctx, 'JUD')] || {}).treasury || 0) >= 600,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
           id: 'year_one_of_the_redemption', name: 'Year One of the Redemption', months: -1,
           effects: { incomeMult: 1.1, legitimacyAdd: 0.2 },
@@ -631,35 +630,30 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_academies', name: 'The Academies Rebuilt',
         icon: 'lamp', col: 2, row: 4, requires: ['j2_state_in_hiding'],
-        desc: 'Hadrian executed the teachers and banned the ordination, and the Law survived '
-          + 'in caves for a generation. Reach Influence 8 — the schools out of hiding, '
-          + 'endowed, and teaching in daylight.',
-        rewardText: '"The Schools in Daylight": −0.75 unrest everywhere, +25 governance points.',
+        desc: 'Reach Influence 8 — the schools out of hiding, endowed, and teaching in '
+          + 'daylight.',
+        rewardText: '"The Schools in Daylight": −0.75 unrest everywhere, +60 governance points.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).infl | 0) >= 8,
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'the_schools_in_daylight', name: 'The Schools in Daylight', months: -1,
             effects: { unrestAll: -0.75 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { gov: 25 });
+          ctx.helpers.adjust(ctx, 'JUD', { gov: 60 });
         },
       },
       {
         id: 'j2_the_whole_land', name: 'The Whole Land',
         icon: 'flag', col: 0, row: 4, requires: ['j2_ambush_doctrine'],
-        desc: 'Bar Kokhba\'s state governed the hill country and the chronicles will not say '
-          + 'how far it reached. Hold twenty provinces at once and settle the question the '
-          + 'documents left open.',
-        rewardText: '+150 talents, +2 stability.',
+        desc: 'Hold twenty provinces at once and settle the question the documents left open.',
+        rewardText: '+300 talents, +2 stability.',
         check: (ctx) => ctx.helpers.countControlled(ctx, 'JUD', {}) >= 20,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 150, stability: 2 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { treasury: 300, stability: 2 }),
       },
       {
         id: 'j2_the_patriarchs_house', name: 'The Patriarch\'s House',
         icon: 'scroll', col: 2, row: 5, requires: ['j2_the_academies'],
-        desc: 'The Nasi\'s office outlived the war by two centuries and collected the '
-          + 'dispersion\'s tax with imperial sanction until the empire abolished it in 429. '
-          + 'Reach 85 legitimacy and +3 stability — an office the centuries cannot abolish.',
+        desc: 'Reach 85 legitimacy and +3 stability — an office the centuries cannot abolish.',
         rewardText: '"The Office That Held": +0.3 legitimacy a month, +10% income, permanent.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
@@ -673,10 +667,8 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_calendar', name: 'The Calendar Fixed',
         icon: 'star4', col: 1, row: 5, requires: ['j2_the_mint'],
-        desc: 'While the court proclaims the new moon by witnesses, every community outside '
-          + 'its reach depends on couriers who can be stopped. Reach Government 8 and publish '
-          + 'the reckoning — a people that can be cut off from its own festivals is a people '
-          + 'with a frontier through the middle of it.',
+        desc: 'Reach Government 8 and publish the reckoning — a people that can be cut off '
+          + 'from its own festivals is a people with a frontier through the middle of.',
         rewardText: '"The Fixed Reckoning": +0.25 legitimacy a month and −0.5 unrest everywhere, permanent.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).tech || {}).gov | 0) >= 8,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
@@ -687,16 +679,15 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_sea_and_the_road', name: 'The Sea and the Road',
         icon: 'shipyard', col: 0, row: 5, requires: ['j2_the_whole_land'],
-        desc: 'A state in the hills can be blockaded by anyone who owns the coast. Hold Joppa '
-          + 'and Caesarea Maritima — the harbour the governors ruled from, and the port the '
-          + 'rising never reached.',
-        rewardText: '"The Coast Taken": +15% trade permanently, +100 talents.',
+        desc: 'Hold Joppa and Caesarea Maritima — the harbour the governors ruled from, and '
+          + 'the port the rising never reached.',
+        rewardText: '"The Coast Taken": +15% trade permanently, +200 talents.',
         check: (ctx) => ['Joppa', 'Caesarea Maritima'].every((n) => ctx.helpers.controls(ctx, 'JUD', n)),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'the_coast_taken', name: 'The Coast Taken', months: -1, effects: { tradeMult: 1.15 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: 100 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 200 });
         },
       },
       // ── The civil band (SPEC §211) ──────────────────────────────────────
@@ -710,12 +701,8 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_nasis_leases', name: 'The Leases of the Nasi',
         icon: 'grain', civil: 'govt', col: 0, row: 6,
-        desc: 'What the wadis gave back was paperwork: contracts letting crown land at Ein Gedi '
-          + 'to tenants who pay their rent in wheat, drawn in the name of Shimon bar Kosiba, '
-          + 'Nasi Israel, witnessed, and dated by the year of the redemption of Israel. Land '
-          + 'cannot be let until it has been surveyed and it cannot be surveyed by a raiding '
-          + 'party. Bring the realm to 110 development and be the landlord the leases say you are.',
-        rewardText: '"The Nasi\'s Leases": +10% growth permanently, and +150 talents from the first year\'s rents.',
+        desc: 'Bring the realm to 140 development and be the landlord the leases say you are.',
+        rewardText: '"The Nasi\'s Leases": +10% growth permanently, and +300 talents from the first year\'s rents.',
         check: (ctx) => {
           const g = ctx.game;
           const tag = who(ctx, 'JUD');
@@ -725,25 +712,21 @@ export const BOOKMARK_132 = {
             if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
             dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
           }
-          return dev >= 110;
+          return dev >= 140;
         },
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'JUD', {
             id: 'the_nasis_leases', name: 'The Nasi\'s Leases', months: -1,
             effects: { growthMult: 1.1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { treasury: 150 });
+          ctx.helpers.adjust(ctx, 'JUD', { treasury: 300 });
         },
       },
       {
         id: 'j2_the_parnasim', name: 'The Administrators of the Villages',
         icon: 'scales', civil: 'govt', col: 0, row: 7, requires: ['j2_the_nasis_leases'],
-        desc: 'The letters name the men who ran the country: Yehonatan bar Ba\'yan and Masabala '
-          + 'bar Shim\'on at Ein Gedi, the administrators of Beth Mashiko, the parnasim who '
-          + 'answered for wheat, for wood and for a missing cow — and who are told, in the '
-          + 'Nasi\'s own hand, that they sit comfortably eating the property of the house of '
-          + 'Israel while their brothers hold the line. Take the first three rungs of the Art of '
-          + 'Rule — the census, the governors, the granaries of state.',
+        desc: 'Take the first three rungs of the Art of Rule — the census, the governors, the '
+          + 'granaries of state.',
         rewardText: '"The Parnasim": −15% administration and −0.5 unrest everywhere, permanent.',
         check: (ctx) => (((ctx.game.tags[who(ctx, 'JUD')] || {}).reforms || {}).civ | 0) >= 3,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'JUD', {
@@ -754,12 +737,9 @@ export const BOOKMARK_132 = {
       {
         id: 'j2_the_king_of_kings', name: 'The Hope of a Parthian Winter',
         icon: 'horseshoe', civil: 'region', col: 1, row: 6,
-        desc: 'The rising\'s one strategic prayer was east. Rome and Ctesiphon had fought over '
-          + 'Armenia and Mesopotamia within living memory, and a King of Kings who moved would '
-          + 'pull the legions off the hill country as surely as a victory would. Vologases III '
-          + 'had the Alans on his northern road and did not move. Bring his regard of the Nasi\'s '
-          + 'state to +70 and buy the winter the revolt never got.',
-        rewardText: '"The Understanding With the East": +1 diplomatic seat, permanent; +25 influence points.',
+        desc: 'Bring his regard of the Nasi\'s state to +70 and buy the winter the revolt never '
+          + 'got.',
+        rewardText: '"The Understanding With the East": +1 diplomatic seat, permanent; +60 influence points.',
         check: (ctx) => {
           const g = ctx.game;
           const par = g.tags[who(ctx, 'PAR')];
@@ -770,19 +750,14 @@ export const BOOKMARK_132 = {
             id: 'understanding_with_the_east', name: 'The Understanding With the East',
             months: -1, effects: { diploSeats: 1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { infl: 25 });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 60 });
         },
       },
       {
         id: 'j2_among_the_powers', name: 'A Name Among the Powers',
         icon: 'laurel', civil: 'region', col: 1, row: 7, requires: ['j2_the_king_of_kings'],
-        desc: 'The coins read Shimon, Prince of Israel on one face and Eleazar the Priest or '
-          + 'For the Freedom of Jerusalem on the other, and every one of them was struck over '
-          + 'the emperor\'s own silver: a state addressing the world in its own name, on the '
-          + 'world\'s own metal, dated by its own era. Dio counts fifty fortresses and nine '
-          + 'hundred and eighty-five villages taken before Rome was done answering it. Stand '
-          + 'among the first six powers of the age and be answered as one.',
-        rewardText: '"Reckoned With the Powers": +1 deterrent — the courts that count think twice — and +15 legitimacy.',
+        desc: 'Stand among the first six powers of the age and be answered as one.',
+        rewardText: '"Reckoned With the Powers": +1 deterrent — the courts that count think twice — and +25 legitimacy.',
         check: (ctx) => {
           const ord = (ctx.game.standing && ctx.game.standing.order) || [];
           const i = ord.indexOf(who(ctx, 'JUD'));
@@ -793,18 +768,14 @@ export const BOOKMARK_132 = {
             id: 'reckoned_with_the_powers', name: 'Reckoned With the Powers',
             months: -1, effects: { deterrent: 1 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 });
+          ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25 });
         },
       },
       {
         id: 'j2_the_star_out_of_jacob', name: 'The Star Out of Jacob',
         icon: 'speaker', civil: 'court', col: 2, row: 6,
-        desc: 'Akiva read Balaam\'s oracle over him — a star shall step forth out of Jacob — and '
-          + 'taught his students that this was the King Messiah; it is where the name Bar Kokhba '
-          + 'comes from, and the academies argued about it for the next four centuries. The '
-          + 'endorsement is what turns a competent commander into a redemption. Bring the sages '
-          + 'to 75 approval and have it said out loud.',
-        rewardText: '"The Star Out of Jacob": +5% morale and +0.2 legitimacy a month, permanent; +20 influence points.',
+        desc: 'Bring the sages to 75 approval and have it said out loud.',
+        rewardText: '"The Star Out of Jacob": +5% morale and +0.2 legitimacy a month, permanent; +50 influence points.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
           return ((t.factions || {}).sages || 0) >= 75;
@@ -814,18 +785,14 @@ export const BOOKMARK_132 = {
             id: 'the_star_out_of_jacob', name: 'The Star Out of Jacob', months: -1,
             effects: { moraleMult: 1.05, legitimacyAdd: 0.2 },
           });
-          ctx.helpers.adjust(ctx, 'JUD', { infl: 20 });
+          ctx.helpers.adjust(ctx, 'JUD', { infl: 50 });
         },
       },
       {
         id: 'j2_the_four_species', name: 'Palm Branches for the Camp',
         icon: 'altar', civil: 'court', col: 2, row: 7, requires: ['j2_the_star_out_of_jacob'],
-        desc: 'One of the letters is a requisition order: Shimon sends two donkeys to Yehudah '
-          + 'bar Menashe at Qiryat Arabaya and tells him to have palm branches and citrons '
-          + 'packed off to the camp, myrtle and willow found nearer to hand, and the whole lot '
-          + 'tithed before it moves — and, in the same breath, that no one is to harm the '
-          + 'Galileans billeted with him. A state that supplies a festival to an army in the '
-          + 'field is governing. Bank 40 favor with the villages that grow it.',
+        desc: 'Bank 40 favour with the villages: the camp wants palm branches and citrons, '
+          + 'tithed before they move.',
         rewardText: '"The Camp Keeps the Festival": +10% manpower and −0.5 unrest everywhere, permanent.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'JUD')] || {};
@@ -843,69 +810,66 @@ export const BOOKMARK_132 = {
       {
         id: 'hy_redemption_era', name: 'The Years of the Redemption', hypothetical: true,
         fork: '132ce/how_the_revolt_ends',
+        road: 'redemption',
         icon: 'laurel', col: 3, row: 0,
-        desc: 'Win the war outright — Rome\'s peace signed, Jerusalem held, no overlord — and '
-          + 'stand to 137, and the documents of this state are dated by the Redemption of '
-          + 'Israel: the era history gave three years, kept.',
-        rewardText: '+1 stability, +20 legitimacy.',
+        desc: 'Win the war outright — Rome\'s peace signed, Jerusalem held, no overlord.',
+        rewardText: '+1 stability, +30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'redemptionEra'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { stability: 1, legitimacy: 30 }),
       },
       {
         id: 'hy_beit_kosiba', name: 'The House of Kosiba', hypothetical: true,
         fork: '132ce/the_accession',
         icon: 'quill', col: 3, row: 1, requires: ['hy_redemption_era'],
-        desc: 'The founder left no rule of succession. When the prince ages or dies in a '
-          + 'redeemed Judaea, the state must say what the house of Kosiba IS — crown, Davidic '
-          + 'marriage, two houses, or Ezekiel\'s prince.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        desc: 'Settle the succession the founder left no rule for — in a redeemed Judaea the '
+          + 'state must say what the house of Kosiba IS.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'beitKosibaSettled'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { gov: 60, legitimacy: 15 }),
       },
       {
         id: 'hy_akiva_grass', name: 'The Grass on Akiva\'s Cheeks', hypothetical: true,
         fork: '132ce/the_grass_on_akivas_cheeks',
+        roads: ['doubt_suppressed', 'doubt_preserved', 'doubt_canonized'],
         icon: 'note', col: 3, row: 2, requires: ['hy_beit_kosiba'],
         desc: 'Victory inverted the record: a century of the academies\' own recorded doubt '
-          + 'about the redeemer must be answered — collected, shelved, or read out at the '
-          + 'founding every year.',
-        rewardText: '+25 influence points.',
+          + 'about the redeemer must be answered.',
+        rewardText: '+60 influence points.',
         check: (ctx) => anyFlag(ctx, 'doubtSuppressed', 'doubtPreserved', 'doubtCanonized'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 60 }),
       },
       {
         id: 'hy_nasis_letters', name: 'Mercy Is Also Policy', hypothetical: true,
         fork: '132ce/the_nasis_letters',
+        road: 'the_villages_fed',
         icon: 'quill', col: 3, row: 3,
-        desc: 'When the Nasi\'s letters go out (winter 132), write the ones the caves never '
-          + 'held: the villages fed first, the chains left in the armory — and the other '
-          + 'ledger arrives two winters later, because mercy has a price in wheat.',
-        rewardText: '+15 legitimacy.',
+        desc: 'Write the letters the caves never held when the Nasi\'s post goes out in the '
+          + 'winter of 132.',
+        rewardText: '+25 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'lettersMercy'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 25 }),
       },
       {
         id: 'hy_letters_east', name: 'The Letters East', hypothetical: true,
         fork: '132ce/the_letters_east',
+        road: 'the_dispersion_called',
         icon: 'diaspora', col: 4, row: 0,
         desc: 'Answer 117 the way the land never did: send the letters east to Babylonia '
-          + '(133), and let the dispersion be counted in the Redemption — volunteers at '
-          + 'the smugglers\' fords, and a second question marching in behind them.',
-        rewardText: '+20 influence points.',
+          + '(133), and let the dispersion be counted in the Redemption.',
+        rewardText: '+50 influence points.',
         check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { infl: 50 }),
       },
           {
         id: 'hy_apostates_offer', name: 'The Apostate\'s Offer', hypothetical: true,
         fork: '132ce/the_apostates_offer',
+        roads: ['julian_temple', 'julian_refused'],
         icon: 'temple', col: 4, row: 1,
-        desc: 'Survive to 363 and a Roman emperor will offer to rebuild the Temple — with '
-          + 'imperial funds and an imperial architect — to win an argument with the '
-          + 'Galileans. Reach the year the offer is made and answer it: the works on the '
-          + 'platform, or a refusal copied for eight hundred years.',
-        rewardText: '+30 legitimacy, +50 influence points.',
+        desc: 'If the house between the rivers is still standing in 363, it will hear that a '
+          + 'Roman emperor has offered to rebuild the House in Jerusalem.',
+        rewardText: '+40 legitimacy, +120 influence points.',
         check: (ctx) => anyFlag(ctx, 'julianTemple', 'julianRefused'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 30, infl: 50 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'JUD', { legitimacy: 40, infl: 120 }),
       },
 ],
     ROM: [
@@ -913,45 +877,46 @@ export const BOOKMARK_132 = {
         id: 'r2_contain', name: 'Contain the Rising',
         icon: 'shield', col: 1,
         desc: 'Stop the bleeding: reach +10 war score against the rebels.',
-        rewardText: '+25 martial points.',
+        rewardText: '+60 martial points.',
         check: (ctx) => {
           const w = findJudRomWar(ctx.game);
           return !!w && typeof w.warscore.ROM === 'number' && w.warscore.ROM >= 10;
         },
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { mar: 60 }),
       },
       {
         id: 'r2_shephelah', name: 'Clear the Shephelah',
         icon: 'flame', col: 0, requires: ['r2_contain'],
         desc: 'Take Emmaus and Lydda; the coast road must run without escort.',
-        rewardText: 'Confiscations: +100 talents.',
+        rewardText: 'Confiscations: +200 talents.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Emmaus') && ctx.helpers.controls(ctx, 'ROM', 'Lydda'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { treasury: 100 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { treasury: 200 }),
       },
       {
         id: 'r2_hills', name: 'Into the Hills',
         icon: 'mountain', col: 0, requires: ['r2_shephelah'],
         desc: 'Take Hebron and Adora, the rising\'s southern anchor.',
-        rewardText: '"The Severan Method": +1 siege bonus for 24 months.',
+        rewardText: '"The Severan Method": +1 siege bonus permanently.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ROM', 'Hebron') && ctx.helpers.controls(ctx, 'ROM', 'Adora'),
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
-          id: 'severan_method', name: 'The Severan Method', months: 24, effects: { siegeBonus: 1 },
+          id: 'severan_method', name: 'The Severan Method', months: -1, effects: { siegeBonus: 1 },
         }),
       },
       {
         id: 'r2_muster', name: 'The Empire Answers',
         icon: 'helmet', col: 2, requires: ['r2_contain'],
-        desc: 'Field forty thousand men in the East.',
-        rewardText: '"Detachments of Every Army": +5% discipline for 12 months.',
-        check: (ctx) => totalMen(ctx, 'ROM') >= 40000,
+        desc: 'Field 56,000 men in the East.',
+        rewardText: '"Detachments of Every Army": +5% discipline permanently.',
+        check: (ctx) => totalMen(ctx, 'ROM') >= 56000,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
-          id: 'every_army', name: 'Detachments of Every Army', months: 12, effects: { disciplineMult: 1.05 },
+          id: 'every_army', name: 'Detachments of Every Army', months: -1, effects: { disciplineMult: 1.05 },
         }),
       },
       {
         id: 'r2_rift', name: 'Seal the Rift',
         icon: 'tower', col: 2, requires: ['r2_hills', 'r2_muster'],
-        desc: 'Take Jericho, Engaddi and Gadora; nothing must cross the Jordan or reach the caves.',
+        desc: 'Take Jericho, Engaddi and Gadora; nothing must cross the Jordan or reach the '
+          + 'caves.',
         rewardText: '+1 stability.',
         check: (ctx) => ['Jericho', 'Engaddi', 'Gadora'].every((n) => ctx.helpers.controls(ctx, 'ROM', n)),
         reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { stability: 1 }),
@@ -962,19 +927,20 @@ export const BOOKMARK_132 = {
         id: 'r2_engineers_war', name: 'The Engineers\' War',
         icon: 'walls', col: 0, row: 3, requires: ['r2_shephelah'],
         desc: 'Fight the hills with the manual: reach Military 8 — The Fortified Villages.',
-        rewardText: '"The Method Perfected": +15% siege progress for 24 months.',
+        rewardText: '"The Method Perfected": +15% siege progress permanently.',
         check: (ctx) => (((ctx.game.tags.ROM || {}).tech || {}).mar | 0) >= 8,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ROM', {
-          id: 'method_perfected', name: 'The Method Perfected', months: 24, effects: { siegeMult: 1.15 },
+          id: 'method_perfected', name: 'The Method Perfected', months: -1, effects: { siegeMult: 1.15 },
         }),
       },
       {
         id: 'r2_syria_palaestina', name: 'Syria Palaestina',
         icon: 'scroll', col: 2, requires: ['r2_muster'],
-        desc: 'Take up three ideas of the age — the province must be governed into a different name.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        desc: 'Take up three ideas of the age — the province must be governed into a different '
+          + 'name.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => eraTiers(ctx.game.tags.ROM) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ROM', { gov: 60, legitimacy: 15 }),
       },
     ],
     // The restored house's tree (SPEC §185): rebuild what Trajan burned,
@@ -983,42 +949,46 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_house_rebuilt', name: 'The House Rebuilt',
         icon: 'bricks', col: 1,
-        desc: 'Trajan\'s war burned the warehouses and Hadrian\'s peace gave back the crown. Bank 150 talents — the restoration must pay for itself.',
-        rewardText: '"The Restoration": +10% growth for 24 months.',
-        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 150,
+        desc: 'Trajan\'s war burned the warehouses and Hadrian\'s peace gave back the crown. '
+          + 'Bank 400 talents — the restoration must pay for itself.',
+        rewardText: '"The Restoration": +10% growth permanently.',
+        check: (ctx) => ((ctx.game.tags.ADI || {}).treasury || 0) >= 400,
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
-          id: 'the_restoration', name: 'The Restoration', months: 24, effects: { growthMult: 1.1 },
+          id: 'the_restoration', name: 'The Restoration', months: -1, effects: { growthMult: 1.1 },
         }),
       },
       {
         id: 'b2_refuge_east', name: 'A Refuge East of the Rivers',
         icon: 'diaspora', col: 0, requires: ['b2_house_rebuilt'],
-        desc: 'Whatever happens in the hill country, the survivors will walk east. Keep the realm steady enough to take them — stability at +2.',
-        rewardText: 'The settled refugees: +2,000 manpower.',
+        desc: 'Whatever happens in the hill country, the survivors will walk east. Keep the '
+          + 'realm steady enough to take them — stability at +2.',
+        rewardText: 'The settled refugees: +4,000 manpower.',
         check: (ctx) => ((ctx.game.tags.ADI || {}).stability || 0) >= 2,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { manpower: 2000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { manpower: 4000 }),
       },
       {
         id: 'b2_letters_west', name: 'The Letters From the West',
         icon: 'quill', col: 2, requires: ['b2_house_rebuilt'],
-        desc: 'The Nasi\'s state knows who remembers it. Reach the devoted friendship of the court at war — its opinion of the house at +100.',
-        rewardText: '+25 influence points, +10 legitimacy.',
+        desc: 'The Nasi\'s state knows who remembers it. Reach the devoted friendship of the '
+          + 'court at war — its opinion of the house at +100.',
+        rewardText: '+60 influence points, +15 legitimacy.',
         check: (ctx) => {
           const g = ctx.game;
           const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
           return !!(jud && jud.alive) && ((jud.opinion && jud.opinion.ADI) || 0) >= 100;
         },
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { infl: 60, legitimacy: 15 }),
       },
       {
         id: 'b2_silver_redemption', name: 'Silver for the Redemption',
         icon: 'coins', col: 2, requires: ['b2_letters_west'],
-        desc: 'The mint in the hills strikes over Roman denarii; the metal must come from somewhere. Bank 300 talents while the Nasi\'s state still lives.',
+        desc: 'The mint in the hills strikes over Roman denarii; the metal must come from '
+          + 'somewhere. Bank 450 talents while the Nasi\'s state still lives.',
         rewardText: '"The Western Accounts": +5% income permanently.',
         check: (ctx) => {
           const g = ctx.game;
           const jud = g.tags[(g.tagAliases && g.tagAliases.JUD) || 'JUD'];
-          return !!(jud && jud.alive) && ((g.tags.ADI || {}).treasury || 0) >= 300;
+          return !!(jud && jud.alive) && ((g.tags.ADI || {}).treasury || 0) >= 450;
         },
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
           id: 'western_accounts', name: 'The Western Accounts', months: -1, effects: { incomeMult: 1.05 },
@@ -1027,18 +997,20 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_princes_companies', name: 'The Prince\'s Companies',
         icon: 'helmet', col: 0, requires: ['b2_refuge_east'],
-        desc: 'The age\'s war is fought by organized companies. Reach Military 6 — The Prince\'s Companies.',
-        rewardText: '+25 martial points.',
+        desc: 'The age\'s war is fought by organized companies. Reach Military 6 — The Prince\'s '
+          + 'Companies.',
+        rewardText: '+60 martial points.',
         check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).mar | 0) >= 6,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 60 }),
       },
       {
         id: 'b2_wisdom', name: 'The Wisdom of Two Rivers',
         icon: 'lamp', col: 1, requires: ['b2_house_rebuilt'],
-        desc: 'A restored court between empires needs every art of both. Take up three ideas of the age.',
-        rewardText: '+25 governance points.',
+        desc: 'A restored court between empires needs every art of both. Take up three ideas '
+          + 'of the age.',
+        rewardText: '+60 governance points.',
         check: (ctx) => eraTiers(ctx.game.tags.ADI) >= 3,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 60 }),
       },
       // ── The chair's own reach (SPEC §196): what a restored client does
       // with the second chance — hold the line Trajan crossed, guard the
@@ -1046,38 +1018,35 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_fortress_that_refused', name: 'The Fortress That Refused Trajan',
         icon: 'walls', col: 0, row: 3, requires: ['b2_princes_companies'],
-        desc: 'Hatra threw the last emperor back from its walls while this house burned; '
-          + 'Singara watched his columns pass twice. Take both, and the desert line the '
-          + 'next Trajan must cross belongs to the client he would come to burn.',
-        rewardText: '+100 talents, +15 martial points.',
+        desc: 'Take Hatra and Singara — the desert line the next Trajan must cross, held by '
+          + 'the client he would have come to burn.',
+        rewardText: '+200 talents, +35 martial points.',
         check: (ctx) => ['Hatra', 'Singara']
           .every((n) => ctx.helpers.controls(ctx, 'ADI', n)),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, mar: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 200, mar: 35 }),
       },
       {
         id: 'b2_court_of_captivity', name: 'Where the Captivity Keeps Court',
         icon: 'diaspora', col: 2, row: 3, requires: ['b2_silver_redemption'],
-        desc: 'Nehardea sits ringed by the Euphrates and its own walls, the oldest Jewish city '
-          + 'of the east, and the silver the mint depends on crosses at its fords. Hold it, '
-          + 'and the captivity\'s own court convenes under the house\'s protection.',
-        rewardText: '"The Ford of the Captivity": +5% trade permanently, +10 influence points.',
+        desc: 'Hold Nehardea, the oldest Jewish city of the east, and the captivity keeps '
+          + 'court under this house\'s protection.',
+        rewardText: '"The Ford of the Captivity": +5% trade permanently, +25 influence points.',
         check: (ctx) => ctx.helpers.controls(ctx, 'ADI', 'Nehardea'),
         reward: (ctx) => {
           ctx.helpers.addTagModifier(ctx, 'ADI', {
             id: 'ford_of_the_captivity', name: 'The Ford of the Captivity', months: -1, effects: { tradeMult: 1.05 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { infl: 10 });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 25 });
         },
       },
       {
         id: 'b2_houses_of_study', name: 'The Houses of Study',
         icon: 'scroll', col: 1, row: 2, requires: ['b2_wisdom'],
-        desc: 'The generation the war scatters will carry the Law east, and the academies it '
-          + 'founds will need patrons before they have names. Reach Influence 7 — The Sages\' '
-          + 'Blessing — and the house\'s table is where the scholars eat.',
-        rewardText: '+25 governance points, +10 legitimacy.',
+        desc: 'Reach Influence 7 — The Sages\' Blessing — and the house\'s table is where the '
+          + 'scholars eat.',
+        rewardText: '+60 governance points, +15 legitimacy.',
         check: (ctx) => (((ctx.game.tags.ADI || {}).tech || {}).infl | 0) >= 7,
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 25, legitimacy: 10 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { gov: 60, legitimacy: 15 }),
       },
       // ── The civil band (SPEC §211) ──────────────────────────────────────
       // A client chair is not a small kingdom; it is a different job. Three
@@ -1089,12 +1058,8 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_the_ledger_of_arbela', name: 'The Ledger of Arbela',
         icon: 'market', civil: 'govt', col: 0, row: 4,
-        desc: 'In 116 Trajan\'s columns came down the Tigris and made this kingdom the province '
-          + 'of Assyria; the warehouses burned, the tolls stopped, and two years later Hadrian '
-          + 'went home and handed the crown back to a house whose accounts no longer existed. '
-          + 'Arbela and Nisibis are the assessed wealth of the east and someone has to count '
-          + 'them again. Bring the realm to 55 development — restoration is a survey before it '
-          + 'is a monument.',
+        desc: 'Bring the realm to 70 development — restoration is a survey before it is a '
+          + 'monument.',
         rewardText: '"The Ledger Restored": +10% growth and +10% income, permanent.',
         check: (ctx) => {
           const g = ctx.game;
@@ -1105,7 +1070,7 @@ export const BOOKMARK_132 = {
             if (!p || p.impassable || p.owner !== tag || !p.dev) continue;
             dev += (p.dev.tax | 0) + (p.dev.prod | 0) + (p.dev.mp | 0);
           }
-          return dev >= 55;
+          return dev >= 70;
         },
         reward: (ctx) => ctx.helpers.addTagModifier(ctx, 'ADI', {
           id: 'the_ledger_restored', name: 'The Ledger Restored', months: -1,
@@ -1115,12 +1080,7 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_the_kings_regard', name: 'The Regard of the King of Kings',
         icon: 'dove', civil: 'region', col: 1, row: 4,
-        desc: 'Mebarsapes held Adiabene for the Arsacids, lost it to Trajan, and has it again '
-          + 'only because an emperor decided Mesopotamia was not worth the garrisons. What keeps '
-          + 'a crown on this bank of the Tigris is not the lances but the arrangement with '
-          + 'Ctesiphon, and Vologases III has Armenia, the Alans and his own nobility to think '
-          + 'about before he thinks about Arbela. Bring the King of Kings\' regard of the house '
-          + 'to +90.',
+        desc: 'Bring the King of Kings\' regard of the house to +90.',
         rewardText: '"The Arrangement With Ctesiphon": +1 diplomatic seat and +0.25 legitimacy a month, permanent.',
         check: (ctx) => {
           const g = ctx.game;
@@ -1135,13 +1095,9 @@ export const BOOKMARK_132 = {
       {
         id: 'b2_the_covenant_of_the_converts', name: 'The Covenant of the Converts',
         icon: 'shrine', civil: 'court', col: 2, row: 4,
-        desc: 'Izates took the covenant against his mother\'s advice and his teacher\'s caution, '
-          + 'and Helena went to Jerusalem, bought grain in Alexandria and dried figs in Cyprus '
-          + 'when the famine came, and was buried with her sons in the tombs north of the city. '
-          + 'That is the whole political capital of this house and it is a hundred years old. '
-          + 'Bring the proselyte court to devotion — approval at 80 — and it is capital again '
-          + 'rather than an heirloom.',
-        rewardText: '"The Covenant Kept in the East": +0.3 legitimacy a month, permanent, and +30 influence points.',
+        desc: 'Bring the proselyte court to devotion — approval at 80 — and it is capital '
+          + 'again rather than an heirloom.',
+        rewardText: '"The Covenant Kept in the East": +0.3 legitimacy a month, permanent, and +70 influence points.',
         check: (ctx) => {
           const t = ctx.game.tags[who(ctx, 'ADI')] || {};
           return ((t.factions || {}).proselytes || 0) >= 80;
@@ -1151,45 +1107,43 @@ export const BOOKMARK_132 = {
             id: 'covenant_kept_in_the_east', name: 'The Covenant Kept in the East',
             months: -1, effects: { legitimacyAdd: 0.3 },
           });
-          ctx.helpers.adjust(ctx, 'ADI', { infl: 30 });
+          ctx.helpers.adjust(ctx, 'ADI', { infl: 70 });
         },
       },
       // ── The roads not taken (SPEC §183) ─────────────────────────────────
       {
         id: 'hy_mint_of_redemption', name: 'The Mint Reads Redemption', hypothetical: true,
         fork: '132ce/how_the_revolt_ends',
+        road: 'redemption',
         icon: 'coins', col: 4, row: 0,
-        desc: 'If the era of the Redemption becomes real — Rome\'s peace signed, the Nasi\'s '
-          + 'state standing — then the house\'s silver crosses to a free Jerusalem, and the '
-          + 'converts\' kingdom banks in a currency dated by the Redemption of Israel.',
-        rewardText: '+50 talents, +15 legitimacy.',
+        desc: 'Reach a real era of the Redemption: Rome\'s peace signed and the Nasi\'s state '
+          + 'standing.',
+        rewardText: '+100 talents, +25 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'redemptionEra')
           && !!(ctx.game.tags.ADI && ctx.game.tags.ADI.alive !== false),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 50, legitimacy: 15 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 100, legitimacy: 25 }),
       },
       {
         id: 'hy_letters_reach_east', name: 'The Letters Reach the East', hypothetical: true,
         fork: '132ce/the_letters_east',
+        road: 'the_dispersion_called',
         icon: 'quill', col: 3, row: 0,
-        desc: '115 was the dispersion\'s war without the land; 132 is the land\'s without the '
-          + 'dispersion. If the Nasi\'s letters cross the Euphrates this time, they are read '
-          + 'aloud at Arbela first — and the house that buried Trajan\'s war answers with the '
-          + 'lances it rebuilt from Median stock.',
-        rewardText: '+20 martial points, +1,000 manpower.',
+        desc: 'Have the land\'s war and the dispersion\'s become one — 115 rose without the '
+          + 'land, 132 without the dispersion.',
+        rewardText: '+50 martial points, +2,000 manpower.',
         check: (ctx) => anyFlag(ctx, 'dispersionCalled'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 20, manpower: 1000 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { mar: 50, manpower: 2000 }),
       },
           {
         id: 'hy_apostates_offer', name: 'The Offer From the West', hypothetical: true,
         fork: '132ce/the_apostates_offer',
+        roads: ['julian_temple', 'julian_refused'],
         icon: 'temple', col: 4, row: 1,
         desc: 'If the house between the rivers is still standing in 363, it will hear that a '
-          + 'Roman emperor has offered to rebuild the House in Jerusalem — and that the '
-          + 'answer was given without Arbela being asked. The silver crosses either way; '
-          + 'what changes is what it is crossing toward.',
-        rewardText: '+60 talents, +20 legitimacy.',
+          + 'Roman emperor has offered to rebuild the House in Jerusalem.',
+        rewardText: '+120 talents, +30 legitimacy.',
         check: (ctx) => anyFlag(ctx, 'julianTemple', 'julianRefused'),
-        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 60, legitimacy: 20 }),
+        reward: (ctx) => ctx.helpers.adjust(ctx, 'ADI', { treasury: 120, legitimacy: 30 }),
       },
 ],
   },

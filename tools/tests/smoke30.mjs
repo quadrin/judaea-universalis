@@ -58,7 +58,7 @@ ok(!!snap.coastal[idOf('Eilat')] && nb('Eilat').has(idOf('Dizahab')),
   + '(v6.7: the Sinai across the line is the Taba coast cell, no longer the distant interior)');
 
 console.log('== ancient eras fold the modern Negev into Nabataea ==');
-// SPEC §229: Paran is not one of the modern three any more. The wilderness of
+// SPEC §230: Paran is not one of the modern three any more. The wilderness of
 // Paran is a place the ancient world named, and the ancient chapters now play
 // it as its own Nabataean district — carved out of Aila, with Aila's
 // development, so nothing is created. Dimona, Mitzpe Ramon and Eilat are
@@ -70,7 +70,7 @@ ok(ancientMap[idOf('Dimona')] === idOf('Oboda')
     && ancientMap[idOf('Eilat')] === idOf('Aila'),
   'the modern Negev cells collapse into Oboda and Aila, never into waste');
 ok(ancientMap[idOf('Paran')] === idOf('Paran'),
-  'and Paran stands on its own in 66 CE (SPEC §229)');
+  'and Paran stands on its own in 66 CE (SPEC §230)');
 const ancient = initGame({
   DEFINES, MAP_DATA, geom: fakeGeom, bookmark: BOOKMARK_66, events: [],
   playerTag: 'JUD', rngSeed: 66, provinceMap: ancientMap,

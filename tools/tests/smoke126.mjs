@@ -60,7 +60,19 @@ function boot(id, playerTag) {
 const doneIds = (t) => new Set(t.missionsDone || []);
 // The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
-const pump = (ctx, n) => { for (let i = 0; i < n; i++) realm.checkMissions(ctx); };
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// what is ready. Where this suite means "let the months go by until everything
+// satisfiable has paid", the hand on the panel is the suite's own: one claim a
+// month, which is exactly the drum's own pace.
+const pump = (ctx, n) => {
+  for (let i = 0; i < n; i++) {
+    realm.checkMissions(ctx);
+    const t = ctx.game.tags[ctx.game.playerTag];
+    for (const id of ((t && t.missionReady) || []).slice()) {
+      if (realm.claimMission(ctx, id).ok) break;
+    }
+  }
+};
 
 // The pass, chair by chair: chain size, objective/road split, the §196
 // ids, and the conquest ground each expansion branch reaches for. The node
@@ -111,7 +123,9 @@ for (const gw of GROWTH) {
     const m = list.find((x) => x.id === id);
     ok(!!m, id + ' exists in the chain');
     if (!m) continue;
-    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 60 && !!m.rewardText
+    // §229 cut the descriptions down to the ask; the floor still catches an
+    // empty or placeholder desc, which is what it was ever for.
+    ok(!!m.icon && typeof m.desc === 'string' && m.desc.length > 30 && !!m.rewardText
       && typeof m.check === 'function' && typeof m.reward === 'function'
       && Number.isFinite(m.col) && Number.isFinite(m.row),
       id + ' is fully dressed and declares its own seat (col ' + m.col + ', row ' + m.row + ')');
@@ -215,7 +229,7 @@ const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
 { // 67 BCE — Armenia's bones, the sister house, the reconciled altars.
   const w = boot('67bce', 'ADI');
   force(w, 'ADI', {
-    treasury: 400, stability: 2, tech: { mar: 6 }, tiers: 3,
+    treasury: 600, stability: 2, tech: { mar: 6 }, tiers: 3,
     men: 8000, at: 'Arbela', regard: { PAR: 100 },
     grant: ['Tigranocerta', 'Amida', 'Edessa', 'Carrhae'],
   });
@@ -227,7 +241,7 @@ const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
 { // 40 BCE — the kingmaker's muster, the vow banked, the island delivered.
   const w = boot('40bce', 'ADI');
   force(w, 'ADI', {
-    treasury: 300, tech: { mar: 6 }, tiers: 3,
+    treasury: 450, tech: { mar: 6 }, tiers: 3,
     men: 8000, at: 'Arbela', regard: { PAR: 100 },
     grant: ['Tyre'],
   });
@@ -240,12 +254,12 @@ const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
   // cities, the pyramids; the queen's ledgers, Chalcis, the emperor's ear.
   const w = boot('66ce', 'ADI');
   force(w, 'ADI', {
-    treasury: 400, legitimacy: 85, tech: { gov: 6 }, tiers: 3,
+    treasury: 600, legitimacy: 85, tech: { gov: 6 }, tiers: 3,
     men: 8000, at: 'Arbela', regard: { JUD: 100, PAR: 130 },
     grant: ['Nehardea'],
   });
   force(w, 'AGR', {
-    treasury: 300, tech: { infl: 6, gov: 7 }, tiers: 3,
+    treasury: 450, tech: { infl: 6, gov: 7 }, tiers: 3,
     men: 5000, at: 'Caesarea Philippi', regard: { ROM: 200 },
     grant: ['Chalcis'],
   });
@@ -261,7 +275,7 @@ const seated = (t, id) => (t.modifiers || []).some((m) => m.id === id);
 { // 132 CE — the fortress line, the captivity's ford, the sages' blessing.
   const w = boot('132ce', 'ADI');
   force(w, 'ADI', {
-    treasury: 400, stability: 2, tech: { mar: 6, infl: 7 }, tiers: 3,
+    treasury: 600, stability: 2, tech: { mar: 6, infl: 7 }, tiers: 3,
     regard: { JUD: 100 },
     grant: ['Hatra', 'Singara', 'Nehardea'],
   });

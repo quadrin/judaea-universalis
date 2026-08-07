@@ -1645,3 +1645,35 @@ The claim that keeps the harness still is narrow and worth preserving: a deal
 with no `concessions` in it runs through arithmetic identical to the old code
 (`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
 so no AI ever offers or expects one.
+
+## What §229 does to the trajectories
+
+The mission overhaul reaches the harness through the AI, because §102's
+symmetry is preserved: a court with no panel to click still banks its chain on
+the calendar, so it now meets **harder** bars (musters ×1.4, purses ×1.5,
+development ×1.25, war score +10/+25 → +20/+40) and, when it meets them, keeps
+**permanent** modifiers where forty-nine of them used to expire. Every all-AI
+economy moves a little as a result, and the seeded runs move with them.
+
+An all-AI run seats nobody, so `isHumanChair` is false everywhere and every
+chain banks on the calendar — which is the only thing a run with no hands can
+mean, and keeps the harness measuring the sim rather than the panel.
+
+`node tools/autorun.mjs 8`, measured against §228's own tree (the re-raster
+moved the map under this comparison, so the §226 numbers this section first
+carried are not the ones to read it by). The set gets SHORTER by three:
+
+- **40 HER: BLEEDING** and **132 JUD: DEBT-SPIRAL** and **529 SAM:
+  DEBT-SPIRAL** all clear. Permanent rewards are worth more to a court that
+  can meet the bars than the expiring ones were, and these three can.
+- **167 PAR: BLEEDING**, **67 SEL: DEAD**, **529 JUD: DEAD** and **1948 ETH:
+  BLEEDING** are unchanged from §228 — all four are §228's own accepted set.
+- **67 AED: EXHAUSTED** is the one addition, and it is the smallest court on
+  the board: a three-province Aeduan chiefdom in an all-AI 67 BCE, income 0.6,
+  no army and no treasury either way, whose manpower pool now empties instead
+  of ending the run at 909. The §2.4 small-token class — GRM, MAS, CTB, LUS,
+  AVN, SEQ, BLG — drifts in and out of these lines run to run; this is one of
+  them crossing it.
+
+Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD + AED EXHAUSTED ·
+529 JUD DEAD · 1948 ETH BLEEDING · everything else clean.

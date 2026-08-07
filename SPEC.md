@@ -15337,7 +15337,139 @@ that only worked while it stayed still.
   Syria seceding from the union in one piece with all twenty-five of its
   districts.
 
-## 229. The neighbours' country, at the resolution Judea is played at
+## 229. What history asks, and what a realm is owed for doing it
+
+The mission tree was the one screen in this game that ran itself. It read the
+world every month, decided you had done something, paid you, and told you
+afterwards. Four things followed from that, and none of them was good.
+
+**It talked too much.** The descriptions were history essays with the ask
+buried somewhere inside them — a median of 196 characters, the longest 768, an
+account of Trajan at the Gulf and the melted plate of every church in the City
+wrapped around the fact that you have to hold two provinces. A tooltip is not
+a page. The Compendium is the page.
+
+**It paid too little, and not for long.** Forty-nine of the rewards were
+temporary — a manpower bonus for twenty-four months, a discipline bonus for
+two years — so the thing a chapter asked you to do bought a bonus you outlived
+inside the same chapter. The rest were flat grants of 25 points against a
+technology rung that costs 250 plus fifteen a level: seven per cent of one
+purchase, for taking Jerusalem.
+
+**It asked too little.** Twenty thousand men in a chapter that hands you
+twenty-six thousand at boot. Four hundred talents in a realm that runs a
+surplus. Half the tree completed itself while the player was reading the other
+half.
+
+**And it never said no.** A §183 hypothetical is one ROAD of one §119 fork,
+and the roads of a fork are one question asked once — but a campaign that
+watched the Temple burn in 70 kept *The House That Stood* sitting in the
+right-hand column, ungreyed, looking workable, for another three hundred and
+fifty years. Nothing anywhere joined the medallion to the answer the chapter
+had already given.
+
+### The accomplishment is claimed
+
+`checkMissions` no longer pays the player. It reads every check every month
+and writes `t.missionReady` — the accomplishments whose terms are met *right
+now* — and stops there. The medallion goes gold, breathes, says **Claim**
+under its name, and the tab strip wears the count so a reward cannot be walked
+past for a decade. `claimMission` pays it.
+
+The ready list is rebuilt from live checks each pass rather than accumulated,
+which is the whole of what §229 means by *harder*: a realm that qualified in
+March by holding Joppa and lost Joppa in April is owed nothing. Claim it while
+it holds. Every judgment is made again at the click — the province can have
+fallen, a sibling road can have shut this one, §207's drum can still be
+sounding — so readiness is a view, and a view can be a month stale. The action
+answers *why* it refused (`resting`, `unmet`, `shut`, `locked`, `done`) and
+the panel says so in words.
+
+§207's drumbeat survives, pointed at the claim rather than at the calendar:
+after each accomplishment the chain rests `missionPaceMonths` before the next
+may be banked, so the order you claim a satisfied branch in is a decision
+rather than a formality.
+
+**A chair nobody is sitting in is not asked to click.** §102's symmetry is the
+load-bearing rule here — a court with no panel earns its branches on the same
+terms as the player — so every unseated chain goes on banking one a month at
+exactly the old cadence. That half of the contract is unchanged, and
+`smoke134` now counts it on Judaea with Rome on the throne.
+
+The question the gate asks is `isHumanChair`, not `playerTag`, and the
+difference is two real cases. A multiplayer GUEST holds a chair of their own
+(§216) and has the same panel, so their chain has to wait for their click too
+— under `playerTag` the host's tree waited while the guest's paid itself, and
+the two players were playing different games. And an all-AI autorun seats
+nobody at all, so the harness banks every chain on the calendar, which is the
+only thing a run with no hands can mean.
+
+### The terms are worth meeting
+
+Every numeric bar in the game moved: musters ×1.4 (20,000 men in 66 CE becomes
+28,000), treasuries ×1.5, development ×1.25, and the war-score asks from
++10/+25 to +20/+40. Eighty-eight checks in all. Province lists and flag reads
+were left exactly as authored — those are history, and history does not scale.
+
+Every mission modifier is now **permanent**: forty-nine temporary bonuses lost
+their expiry, because what a chapter asks of a realm should be what the realm
+KEEPS. Point grants scale ×2.4 into the 25–120 band, talents and manpower
+double, legitimacy ×1.5 to a ceiling of 40. Throw Back the Governor pays sixty martial
+points where it paid twenty-five; the Freedom of Zion still mints its coinage
+and now wants +40 war score against Rome, which is a war visibly being won.
+
+Because the descriptions are generated from the checks wherever a check counts
+something, the two cannot drift: the desc says 28,000 because the check says
+28,000, in the same pass.
+
+### The road not taken is shut, and says which road was
+
+`fork: 'chapterId/forkId'` was already on all seventy-six hypotheticals — §183
+wrote it for a tooltip and nothing ever read it. §229 adds `road` / `roads`:
+which of that fork's roads this medallion IS. Seventy-one declare one (the
+other five ask after the fork itself — its `requires` gate, or a shape of the
+map no single road owns — and must never read as shut).
+
+When a sibling road fires, the medallion is **SHUT**: an ✕ on the seal, the
+name struck through, the tooltip naming the road the campaign actually took,
+and everything downstream of it shut with it — a branch whose root can never
+be earned is a branch, not a node. It cannot go ready and it refuses the claim
+by name. "Will never happen" and "has not happened yet" are different facts,
+and the old dusk said only the second one.
+
+The other half a grid cannot draw is the road with no medallion, so the
+Missions tab gains **The Forks**: one row per §119 question the tree stands in,
+the road taken with a check, the roads it cost struck through with an ✕, and
+every answer still on the table while the question is open. A fork whose own
+road was taken wears the answer on the medallion's face as well.
+
+- **Regression contract**: `smoke154` — the pass marks ready and pays nothing,
+  six idle months change no modifier, the click banks and pays and starts the
+  drum, a second click is refused, the drum gates the next claim, readiness
+  dies with the muster rolls and a stale click is refused at the sim rather
+  than at the panel, a locked node refuses by name, the ready list is derived
+  and a corrupt one is dropped on revival; the Ninth of Av shuts *The House
+  That Stood* and the two nodes under it, the shut road never goes ready and
+  refuses the claim, our own marker never shuts our own road; the ledger lists
+  every fork with its question, none answered at boot, one road taken and the
+  rest refused with no road both; and every declared road is a road its fork
+  actually has, across all eight chapters; and the contract the tables
+  themselves owe — every numeric ask cross-checked against the sentence that
+  describes it (the guard form `if (treasury < N) return false` included,
+  because it reads the same to a player), no mission modifier that expires and
+  no label that promises one, a median description of 100 characters and none
+  over 200. `smoke134` keeps §207's drum on an AI chain, where it now lives.
+  `smoke2/3/7/16/111/116/120/126/129/138/142/152` each grew the hand on the
+  panel their world-building always implied — a pumped month is now a month
+  plus a claim.
+
+The 130 missions §227's constitutional crowns landed while this section was in
+flight went through the same pass, scoped to their own ids so nothing was
+scaled twice. Their descriptions needed the mirror of it: the era chains put
+the ask first and the history after, and those tables put the history first
+with the ask in the last sentence, so the shortener takes the tail there
+rather than the head.
+## 230. The neighbours' country, at the resolution Judea is played at
 
 §225 and §228 raised the northern frontier and the three eastern states to the
 resolution the 1948 chapter fights them at. They did it under an invariant: the
@@ -15429,10 +15561,10 @@ still, and all three were fixed rather than relaxed:
 
 - `smoke150` and `smoke153` asserted that the §225/§228 cells are **not**
   provinces in the ancient chapters. That clause is what this section reverses,
-  so it now names which districts §229 opened and holds the rest still latent.
+  so it now names which districts §230 opened and holds the rest still latent.
 - `smoke107` defined "the cells §173 painted" as *everything appended after
   Carthago* — true only while nothing else was ever appended. §225, §228 and
-  §229 append Levantine districts past that mark; positionally they look like
+  §230 append Levantine districts past that mark; positionally they look like
   the western fill and they are its opposite, old ground drawn finer at levy 1.
   It reads the political map's own `owners` table now, which cannot drift.
 - `smoke30` folded Paran in with Dimona, Mitzpe Ramon and Eilat as "the modern
@@ -15486,7 +15618,7 @@ Hegra and Dumatha did not, because 1948 reads their base.
 ### What moved, and what did not
 
 Development is conserved **in every era, for every tag** — checked by booting
-all eight chapters against the pre-§229 tree and diffing the whole table, not a
+all eight chapters against the pre-§230 tree and diffing the whole table, not a
 named subset. What changed is the count and the grain:
 
 | chapter | before | after |
@@ -15512,7 +15644,7 @@ have none are the islands that never had any. The largest boundary drift is
 Dumatha at 20%, which is the Wadi Sirhan becoming its own district, and Gadara at
 56%, which is Hippos and Abila taking the ground they are named for.
 
-- **Regression contract**: `smoke154` — all twenty-five districts registered and
+- **Regression contract**: `smoke155` — all twenty-five districts registered and
   regioned, the nine new ones appended past the whole §228 atlas and none of them
   latent; every one a province in all seven ancient chapters and under the same
   crown as the province it was carved from; every realm in every chapter opening

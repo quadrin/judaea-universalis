@@ -73,11 +73,16 @@ console.log('== §215 the verdict: the chapter is decided, the tree is not ==');
   const toasts = [];
   const off = bus.on('notify', (n) => { if (n && /Mission complete/.test(n.title || '')) toasts.push(n.title); });
   game.tags.AGR.tech.infl = 6; // The Words in the Xystus asks for Influence 6
+  // §229: the pass marks it ready and the claim banks it — both halves have to
+  // go on working after the verdict, which is the whole point of this suite.
   realm.checkMissions(ctx);
+  const nowReady = (game.tags.AGR.missionReady || []).slice();
+  ok(nowReady.length === 1, 'the monthly pass still works the chain after the verdict: ' + nowReady.join());
+  realm.claimMission(ctx, nowReady[0]);
   off();
   const banked = game.tags.AGR.missionsDone || [];
   ok(banked.length === 1 && toasts.length === 1,
-    'the monthly pass still works the chain after the verdict, and still says so: ' + toasts.join());
+    'and a claim still banks and still says so: ' + toasts.join());
   const drawn = actions.getMissions().filter((m) => m.status === 'done').map((m) => m.id);
   ok(drawn.length === banked.length && drawn.every((id) => banked.indexOf(id) >= 0),
     'and the panel draws exactly what the sim banked: ' + (drawn.join() || 'nothing'));
