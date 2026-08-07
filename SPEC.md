@@ -15213,4 +15213,9 @@ fork is about not being.
   crown and civil bands), `smoke89` (§130's store), `smoke83`/`smoke117` (the
   road markers and fork badges) and `smoke46`/`smoke71` (emblem art and tag
   completeness) pass unmoved: the forks, the store, the markers and the four
-  starting constitutions are all exactly where they were.
+  starting constitutions are all exactly where they were. On the merged tree —
+  which renumbered this section once, under the crown war's §226 and its
+  `smoke151` — the battery is **152 of 152 headless suites, zero failures**,
+  the crown war's own suite included, and `node tools/autorun.mjs 8` is byte
+  identical to `origin/main` on all eight bookmarks: the ten crowns are
+  player-only, no bookmark boots one, and not one all-AI trajectory moves.
