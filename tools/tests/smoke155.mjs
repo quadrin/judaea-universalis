@@ -5,8 +5,10 @@
 // 1948 alone, under an invariant that the seven older chapters see nothing.
 // §230 is the section that opens that ground to the ancient chapters too:
 // sixteen districts that already existed as cells and were visible only in
-// 1948, and nine wholly new cells for Decapolis and Nabataean ground the atlas
-// had none for. What this suite holds:
+// 1948, and six wholly new cells for plateau and Nabataean ground the atlas
+// had none for (three more shipped and were withdrawn the same day — Hippos,
+// Abila and Dion pinched the Batanea and Gerasa display-unions into claws in
+// the chapters that merge Gamala and fold Mafraq). What this suite holds:
 //
 //   1. every §230 district is a province in all seven ancient chapters, under
 //      the crown that holds the province it was carved out of;
@@ -38,8 +40,7 @@ const snap = JSON.parse(readFileSync(R + '/tools/geom-snapshot.json', 'utf8'));
 const OPENED = ['Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
   'Azraq', 'Suwayda', 'Mount Hermon', 'Heliopolis', 'Douma', 'Salamiyah',
   'Akkar', 'Batroun', 'Nineveh', 'Kirkuk'];
-const NEW_CELLS = ['Hippos', 'Abila', 'Dion', 'Esbus', 'Characmoba', 'Auara',
-  'Elusa', 'Dedan', 'Sirhan'];
+const NEW_CELLS = ['Esbus', 'Characmoba', 'Auara', 'Elusa', 'Dedan', 'Sirhan'];
 // child -> the province its development came out of
 const CARVED = {
   'Beersheba': 'Oboda', 'Arad': 'Adora', 'Paran': 'Aila', 'Wadi Rum': 'Aila',
@@ -47,7 +48,7 @@ const CARVED = {
   'Mount Hermon': 'Caesarea Philippi', 'Heliopolis': 'Chalcis', 'Douma': 'Damascus',
   'Salamiyah': 'Emesa', 'Akkar': 'Tripolis', 'Batroun': 'Byblos',
   'Nineveh': 'Hatra', 'Kirkuk': 'Arbela',
-  'Hippos': 'Gadara', 'Abila': 'Gadara', 'Dion': 'Gerasa', 'Esbus': 'Philadelphia',
+  'Esbus': 'Philadelphia',
   'Characmoba': 'Medaba', 'Auara': 'Petra', 'Elusa': 'Oboda', 'Dedan': 'Hegra',
   'Sirhan': 'Dumatha',
 };
@@ -60,7 +61,7 @@ console.log('== the atlas is well formed ==');
   ok(!missing.length, 'every §230 district is on the map: ' + (missing.join(', ') || 'all present'));
   // The nine new cells are appended, so nothing that existed moved id.
   const lowest = Math.min(...NEW_CELLS.map((n) => byName.get(n).id));
-  ok(lowest > 407, 'the nine new cells are appended past the whole §228 atlas (lowest id ' + lowest + ')');
+  ok(lowest > 407, 'the six new cells are appended past the whole §228 atlas (lowest id ' + lowest + ')');
   // …and they are NOT latent: this section's cells are provinces everywhere.
   const latent = NEW_CELLS.filter((n) => byName.get(n).p.latentParent);
   ok(!latent.length, 'and none of them is latent: ' + (latent.join(', ') || 'all permanent'));
@@ -82,7 +83,7 @@ console.log('== the seven ancient chapters have them, under the right crown ==')
     const map = buildProvinceMapping(MAP_DATA, bm);
     const absent = OPENED.concat(NEW_CELLS)
       .filter((n) => map[byName.get(n).id] !== byName.get(n).id);
-    ok(!absent.length, bm.id + ': all twenty-five are provinces — '
+    ok(!absent.length, bm.id + ': all twenty-two are provinces — '
       + (absent.join(', ') || 'none folded away'));
     // each stands under whoever holds the ground it was carved from
     const wrong = [];

@@ -15680,6 +15680,36 @@ old shapes faked across four hundred kilometres of sand (Aila–Dumatha,
 Petra–Aila direct) are gone. No contract moved: the §228 roads, the Uvda
 route, the parent chains and every development total hold to the point.
 
+### Three of the nine withdrawn — the sown country is not the desert
+
+The seed rules above fix a cell that is ugly on its own. They cannot fix a cell
+that is ugly because of what the CHAPTERS do around it, and the three Decapolis
+cells — Hippos, Abila, Dion — turned out to be exactly that. Every chapter from
+Bar Kokhba on merges Gamala into Batanea and folds Mafraq into Gerasa, so those
+two provinces display as two-lobed unions; the three new cells carved out
+precisely the ground where the lobes joined. Batanea came out a claw with a
+thin eastern arm, Gerasa an hourglass pinched at Dion's waist — in 66 CE, where
+nothing merges, both looked fine, which is why the first screenshots caught
+nothing. No weight is right for a cell wedged between the two halves of a
+display-union: the defect is the carve itself.
+
+So the ground goes back, exactly: the three cells are deleted from the atlas
+(not made latent — a latent cell folds to ONE parent, and their pixels came
+from three, so folding could not restore the original border), Gadara and
+Gerasa take their development home, Azraq returns to §225's weight so Mafraq
+holds §228's exact shape, and the raster reassigns from the original seeds —
+Batanea, Gamala, Gadara, Gerasa and Mafraq byte-identical to the map §228
+shipped. Esbus stays: Philadelphia is whole in every chapter, so the Ammonite
+plateau has no union to pinch. The Decapolis interior returns to Gadara's
+grain, and Irbid's 1948 district goes with it — a real loss, priced against
+two misshapen provinces in seven chapters, and the district can come back the
+day someone re-cuts it along the merge seams instead of across them.
+
+The withdrawal shifts the ids of the six §230 cells that were appended after
+the three (Esbus through Sirhan, 408–413); every pre-§230 id keeps its place,
+which is the invariant the appendix rule exists to hold. `smoke155` now
+carries the six-cell contract, and Rome's 66 CE ledger row reads 176.
+
 - **Regression contract**: `smoke155` — all twenty-five districts registered and
   regioned, the nine new ones appended past the whole §228 atlas and none of them
   latent; every one a province in all seven ancient chapters and under the same

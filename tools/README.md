@@ -67,7 +67,14 @@ is `167bce PAR` and `167bce HAS`, `67bce SEL` (dead, Pompey's arc), `67bce
 ARI`, `67bce ITU`, `40bce ADI`, `132ce JUD`, `529ce JUD`, and the post-retune
 run is a strict subset of it (`167bce PAR · 67bce SEL, ITU · 40bce ADI · 529ce
 JUD` — HAS, ARI and the 132 rump drift off with the stream, as members of the
-come-and-go families do). Every one is in a family this file already documents,
+come-and-go families do). After the withdrawal of the three Decapolis cells
+(§230 again) the set re-rolls once more: `67bce SEL, ARI · 40bce ADI · 132ce
+JUD · 529ce JUD, SAM`. The one new name, `529ce SAM: DEBT-SPIRAL`, is the
+threshold catching a treasury the two prior §230 runs left at −154 and −194:
+the arc is identical in all three (income −2 recovering past zero while
+debt-desertion trims the war-bloated 9,000 to 1,000), Samaria's four cells are
+pixel-identical across them, and the flag is the ARI/HYR self-limiting class
+landing a seed's width past −200. Every one is in a family this file already documents,
 and three deserve a word because they are new *names* in an old family:
 
 - `67bce ITU` — Ituraea, two provinces and nine development, treasury 60 → 32.

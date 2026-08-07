@@ -238,7 +238,7 @@ for (const n of ISR_LANDS) OWNERS[n] = 'ISR';
 // atlas had none for. They are not latent, so this chapter has them too, and
 // each goes with the province it was carved out of — the development came from
 // there, so the ownership does as well and no state's total moves.
-for (const n of ['Hippos', 'Abila', 'Dion', 'Esbus', 'Characmoba', 'Auara']) OWNERS[n] = 'JOR';
+for (const n of ['Esbus', 'Characmoba', 'Auara']) OWNERS[n] = 'JOR';
 OWNERS['Elusa'] = 'EGY';                              // with Oboda, in the Egyptian-held Negev
 for (const n of ['Dedan', 'Sirhan']) OWNERS[n] = 'SAU'; // with Hegra and the Jawf
 for (const n of JOR_LANDS) OWNERS[n] = 'JOR';
@@ -677,10 +677,8 @@ export const BOOKMARK_1948 = {
   // renamed AFTER conquering them open under their 15-May originals — the
   // victors' names wait in `integratedNames` below (SPEC §66).
   provinceNames: {
-    // SPEC §230's nine cells, under the districts that hold their ground now.
-    // Hippos and Abila keep the arrangement Nineveh and Heliopolis already
-    // have: the ancient name is the cell's, the modern one is this chapter's.
-    'Hippos': 'Wadi al-Arab', 'Abila': 'Irbid', 'Dion': 'Husn',
+    // SPEC §230's cells, under the districts that hold their ground now —
+    // the ancient name is the cell's, the modern one is this chapter's.
     'Esbus': 'Hesban', 'Characmoba': 'Karak', 'Auara': "Ma'an",
     'Elusa': 'Halutza', 'Dedan': 'al-Ula', 'Sirhan': 'Sakakah',
     'Joppa': 'Tel Aviv-Jaffa', 'Antipatris': 'Petah Tikva', 'Dora': 'Haifa',
@@ -1043,7 +1041,7 @@ export const BOOKMARK_1948 = {
     'Laodicea': { tax: 3, prod: 4, mp: 3 },
     // Jordan: Zarqa off Amman, Mafraq off Jerash, Shobak off Ma'an, and Wadi
     // Rum off Aqaba.
-    'Gerasa': { tax: 2, prod: 2, mp: 1 },         // less Dion (SPEC §230)
+    'Gerasa': { tax: 3, prod: 3, mp: 2 },
     'Petra': { tax: 3, prod: 5, mp: 2 },          // less Auara (SPEC §230)
     'Aila': { tax: 1, prod: 3, mp: 1 },
     'Gadora': { tax: 1, prod: 1, mp: 1 },         // Salt, less Hesban (SPEC §230)

@@ -299,11 +299,7 @@ export const BOOKMARK_40 = {
     'Heliopolis': 'PAR',    // with Chalcis
     'Douma': 'PAR',         // with Damascus
     'Salamiyah': 'PAR',     // with Emesa
-    // …and the four §230 cells east of the Jordan: Antigonus holds the northern
-    // Decapolis with the Parthians behind him, Malichus the Ammonite plateau
-    'Hippos': 'ATG',        // with Gadara
-    'Abila': 'ATG',         // with Gadara
-    'Dion': 'NAB',          // with Gerasa
+    // …and the §230 cell on the Ammonite plateau: Malichus' ground
     'Esbus': 'NAB',         // with Philadelphia
     // -- Herod (HER): Idumea, the desert forts, the southern coast ------------
     'Hebron': 'HER',

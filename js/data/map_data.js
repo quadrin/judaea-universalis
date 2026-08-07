@@ -1108,8 +1108,8 @@ const PROVINCES = [
   P('Ptolemais', 35.11, 32.91, 0.75, 'ROM', 'coast', 'glass', 'hellenism', 'phoenician', 4, 5, 3, 0),
   P('Scythopolis', 35.50, 32.50, 0.80, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Pella', 35.61, 32.45, 0.80, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 3, 3, 3, 0),
-  P('Gadara', 35.68, 32.65, 0.85, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 2, 2, 2, 0),
-  P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 3, 3, 2, 0),
+  P('Gadara', 35.68, 32.65, 0.85, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 4, 4, 3, 0),
+  P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Philadelphia', 35.93, 31.95, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 2, 3, 2, 0),
   // --- Kingdom of Agrippa II (AGR) -----------------------------------------
   P('Caesarea Philippi', 35.69, 33.25, 0.80, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
@@ -1278,7 +1278,7 @@ const PROVINCES = [
   // and Iraq's western desert (the Rutbah wells on the Baghdad road).
   P('Kiryat Shmona', 35.58, 33.18, 0.62, 'AGR', 'marsh', 'fish', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Azraq', 37.20, 32.00, 1.05, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0,
+  P('Azraq', 37.20, 32.00, 1.15, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0,
     { latentParent: 'Bostra' }),
   P('Rutba', 41.50, 32.80, 1.60, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
@@ -1967,13 +1967,14 @@ const PROVINCES = [
   P('Wadi Rum', 35.72, 29.44, 0.85, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
   // --- SPEC §230: ground the ancient theatre had no cell for ---------------
-  // Appended, like every cell since §225, so no existing id moves. These are
+  // Appended, like every cell since §225, so no pre-§230 id moves. These are
   // NOT latent: they are provinces in all eight chapters, because the places
   // are Hellenistic and Nabataean ones the modern map merely inherited. Each
   // takes its development out of the province it was carved from, above.
-  P('Hippos', 35.75, 32.72, 0.75, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 1, 1, 1, 0), // out of Gadara — Susita, the ridge above the lake's south-east shore
-  P('Abila', 35.87, 32.62, 0.75, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 1, 1, 0, 0), // out of Gadara — Abila of the Decapolis, above the Yarmuk
-  P('Dion', 35.98, 32.48, 0.85, 'ROM', 'drylands', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Gerasa — the Ten Cities' eastern march, at Husn
+  // Three that shipped here — Hippos, Abila, Dion — were withdrawn the same
+  // day (§230): they carved the junction where Gamala meets Batanea and where
+  // Mafraq folds into Gerasa, and pinched those display-unions into claws in
+  // every chapter that merges them. The sown country stays at Gadara's grain.
   P('Esbus', 35.81, 31.80, 0.85, 'ROM', 'hills', 'grain', 'hellenism', 'greek', 1, 1, 1, 0), // out of Philadelphia — Heshbon of the Ammonite plateau
   P('Characmoba', 35.70, 31.18, 0.95, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Medaba — Kir of Moab, on the plateau above the Dead Sea
   P('Auara', 35.33, 29.95, 1.00, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Petra — Humayma, the cistern town of the Hisma
@@ -2019,7 +2020,7 @@ const REGIONS = {
     'Rishon LeZion', 'Rehovot', 'Modi\'in Hills', 'Jenin', 'Tulkarm', 'Qalqilya',
     'Ramallah', 'Bethlehem', 'Beit Shemesh', 'Kiryat Gat', 'Khan Yunis', 'Rafah',
     'Kiryat Shmona', "Ma'alot"],
-  'Transjordan': ['Hippos', 'Abila', 'Dion', 'Esbus', 'Characmoba', 'Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
+  'Transjordan': ['Esbus', 'Characmoba', 'Gadora', 'Machaerus', 'Pella', 'Gadara', 'Gerasa', 'Philadelphia',
     'Caesarea Philippi', 'Batanea', 'Gamala', 'Medaba', 'Bostra', 'Azraq', 'Zoara',
     'Mount Hermon', 'Quneitra',
     'Suwayda', 'Zarqa', 'Mafraq', 'Ruwayshid'],
