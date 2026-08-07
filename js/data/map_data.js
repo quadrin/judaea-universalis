@@ -1105,14 +1105,14 @@ const PROVINCES = [
   P('Antipatris', 34.93, 32.10, 0.75, 'ROM', 'farmland', 'grain', 'judaism', 'judean', 3, 4, 3, 0),
   P('Caesarea Maritima', 34.94, 32.49, 0.75, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 6, 7, 4, 0),
   P('Dora', 34.98, 32.62, 0.75, 'ROM', 'coast', 'purple_dye', 'hellenism', 'phoenician', 3, 4, 2, 0),
-  P('Ptolemais', 35.11, 32.91, 0.75, 'ROM', 'coast', 'glass', 'hellenism', 'phoenician', 4, 5, 3, 0),
+  P('Ptolemais', 35.11, 32.91, 0.82, 'ROM', 'coast', 'glass', 'hellenism', 'phoenician', 4, 5, 3, 0),
   P('Scythopolis', 35.50, 32.50, 0.80, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Pella', 35.61, 32.45, 0.80, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 3, 3, 3, 0),
-  P('Gadara', 35.68, 32.65, 0.85, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 4, 4, 3, 0),
+  P('Gadara', 35.68, 32.65, 0.75, 'ROM', 'hills', 'olive_oil', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
-  P('Philadelphia', 35.93, 31.95, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 2, 3, 2, 0),
+  P('Philadelphia', 35.93, 31.95, 0.90, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 2, 3, 2, 0),
   // --- Kingdom of Agrippa II (AGR) -----------------------------------------
-  P('Caesarea Philippi', 35.69, 33.25, 0.80, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
+  P('Caesarea Philippi', 35.69, 33.25, 0.70, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
   P('Batanea', 36.25, 32.90, 1.10, 'AGR', 'farmland', 'grain', 'judaism', 'galilean', 3, 4, 4, 0),
   P('Gamala', 35.74, 32.90, 0.75, 'AGR', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 2),
   // --- Phoenicia (ROM) ------------------------------------------------------
@@ -1124,7 +1124,7 @@ const PROVINCES = [
   P('Aradus', 35.97, 34.85, 0.85, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 3, 4, 2, 0),
   // --- Syria & Anatolia (ROM) ----------------------------------------------
   P('Damascus', 36.30, 33.51, 0.90, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 5, 5, 4, 0),
-  P('Chalcis', 35.93, 33.73, 0.85, 'ROM', 'hills', 'wine', 'hellenism', 'aramean', 2, 2, 1, 0),
+  P('Chalcis', 35.93, 33.73, 1.00, 'ROM', 'hills', 'wine', 'hellenism', 'aramean', 2, 2, 1, 0),
   P('Emesa', 36.72, 34.73, 1.00, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
   P('Apamea', 36.40, 35.42, 0.90, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 4, 0),
   P('Antioch', 36.16, 36.20, 0.75, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 9, 10, 6, 2),
@@ -1215,7 +1215,7 @@ const PROVINCES = [
   // The 1948 bookmark activates them as independent modern gameplay regions.
   P('Safed', 35.50, 32.97, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Gischala' }),
-  P('Nahariya', 35.09, 33.01, 0.65, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Nahariya', 35.10, 32.99, 0.68, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
   P('Afula', 35.29, 32.61, 0.68, 'ROM', 'farmland', 'grain', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Scythopolis' }),
@@ -1867,7 +1867,7 @@ const PROVINCES = [
   // one cell covered before. The one cell here with an ancient identity too large to file
   // under a modern district name, so it keeps the ancient one and 1948 shows
   // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
-  P('Heliopolis', 36.08, 33.90, 0.50, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
+  P('Heliopolis', 36.10, 33.92, 0.68, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
@@ -1947,7 +1947,7 @@ const PROVINCES = [
     { latentParent: 'Emesa' }),
   P('Qusayr', 36.55, 34.60, 0.60, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Douma', 36.52, 33.56, 0.60, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
+  P('Douma', 36.62, 33.66, 0.70, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
     { latentParent: 'Damascus' }),
   P('Suwayda', 36.62, 32.62, 0.68, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
