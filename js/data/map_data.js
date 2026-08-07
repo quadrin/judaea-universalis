@@ -1845,17 +1845,17 @@ const PROVINCES = [
   // Lebanon south to north: Jabal Amil, the Chouf, the Kesrouan, the coast
   // between Byblos and Tripoli, the Qadisha highland, the Akkar plain, and the
   // northern Beqaa — which is Heliopolis, and keeps its own name.
-  P('Nabatieh', 35.48, 33.38, 0.62, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Nabatieh', 35.46, 33.36, 0.52, 'ROM', 'hills', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Tyre' }),
   P('Chouf', 35.57, 33.68, 0.65, 'ROM', 'mountains', 'olive_oil', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Sidon' }),
   P('Jounieh', 35.63, 33.98, 0.58, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Berytus' }),
-  P('Batroun', 35.80, 34.31, 0.88, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 0, 0,
+  P('Batroun', 35.78, 34.28, 0.70, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 0, 0,
     { latentParent: 'Byblos' }),
-  P('Bsharri', 36.05, 34.20, 0.68, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Bsharri', 35.98, 34.15, 0.50, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Tripolis' }),
-  P('Akkar', 36.14, 34.55, 0.72, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Akkar', 36.08, 34.50, 0.58, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Tripolis' }),
   // Heliopolis of Syria: the great temple platform, and the northern Beqaa
   // under it. The low weight is load-bearing: Chalcis' old cell ran east to
@@ -1867,13 +1867,13 @@ const PROVINCES = [
   // one cell covered before. The one cell here with an ancient identity too large to file
   // under a modern district name, so it keeps the ancient one and 1948 shows
   // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
-  P('Heliopolis', 36.15, 34.00, 0.60, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
+  P('Heliopolis', 36.08, 33.90, 0.50, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
-  P('Mount Hermon', 35.86, 33.42, 0.70, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
+  P('Mount Hermon', 35.79, 33.36, 0.52, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Quneitra', 35.82, 33.13, 0.66, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Quneitra', 35.76, 33.12, 0.52, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
   // And the central Upper Galilee, which Gischala held alone from the Acre
   // plain to the Hula: Tarshiha and the villages of the Ma'alot ridge.
@@ -1943,22 +1943,22 @@ const PROVINCES = [
     { latentParent: 'Palmyra' }),
   P('Hasakah', 40.89, 36.67, 1.00, 'ADI', 'drylands', 'grain', 'zoroastrianism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Nisibis' }),
-  P('Salamiyah', 36.92, 34.9, 0.70, 'ROM', 'steppe', 'livestock', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Salamiyah', 36.90, 34.88, 0.62, 'ROM', 'steppe', 'livestock', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Qusayr', 36.58, 34.56, 1.30, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Qusayr', 36.55, 34.60, 0.60, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Douma', 36.59, 33.56, 0.90, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
+  P('Douma', 36.55, 33.58, 0.66, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
     { latentParent: 'Damascus' }),
-  P('Suwayda', 36.56, 32.69, 0.90, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Suwayda', 36.62, 32.62, 0.68, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
 
   // Jordan: the kingdom's own north (Zarqa, Mafraq), the desert road east to
   // the Iraqi frontier (Ruwayshid — out of the impassable Syrian Desert,
   // which is the cell that used to reach across the Badia), and the south
   // (Shobak, and Mudawwara on the Saudi line).
-  P('Zarqa', 36.03, 32.02, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 1, 1, 1, 0,
+  P('Zarqa', 36.00, 31.99, 0.85, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 1, 1, 1, 0,
     { latentParent: 'Philadelphia' }),
-  P('Mafraq', 36.18, 32.33, 1.30, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Mafraq', 36.12, 32.32, 0.50, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Gerasa' }),
   P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),

@@ -74,7 +74,10 @@ threshold catching a treasury the two prior §230 runs left at −154 and −194
 the arc is identical in all three (income −2 recovering past zero while
 debt-desertion trims the war-bloated 9,000 to 1,000), Samaria's four cells are
 pixel-identical across them, and the flag is the ARI/HYR self-limiting class
-landing a seed's width past −200. Every one is in a family this file already documents,
+landing a seed's width past −200. The §231 silhouette restoration (the sown
+Levant's child seeds pulled inside their own fold-families) re-rolled the
+stream once more and the set came back the smallest of the day — `167bce HAS ·
+67bce SEL, ITU · 529ce JUD` — a strict subset of the documented families. Every one is in a family this file already documents,
 and three deserve a word because they are new *names* in an old family:
 
 - `67bce ITU` — Ituraea, two provinces and nine development, treasury 60 → 32.

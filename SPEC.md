@@ -15719,3 +15719,78 @@ carries the six-cell contract, and Rome's 66 CE ledger row reads 176.
   Ghouta still two; every new cell carrying real area and neighbours from the
   raster; and the genuinely modern districts — Dimona, the Chouf, Najaf, Idlib —
   still folding away in 66 CE.
+
+## 231. The silhouettes are the map — family purity for the carved districts
+
+The user looked at Batanea and Gerasa in the Bar Kokhba chapter and said the
+shapes were ugly, and they were: Batanea a claw with a thin eastern arm, Gerasa
+an hourglass with a jagged wedge and a tail. §230's withdrawal of the three
+Decapolis cells restored both provinces to the map the branch had STARTED from
+— and they were still ugly, because the damage was older than the branch.
+Booting the pre-§225 tree beside the current one and diffing the 132 CE
+rasters point by point settled it: **§225 and §228 changed the silhouettes of
+provinces they never named.** Both sections held folded ADJACENCY identical
+and declared the residual "area drift… drives nothing but label placement."
+That was wrong. Area drift between fold-families is silhouette change, and the
+silhouette is the thing the eye reads first.
+
+The mechanism, measured (strided raster, 1 sample = 16 px): a child cell seeded
+by §225/§228 takes its ground from whatever seeds were nearest, not from its
+fold-parent — Douma took 82 samples of BATANEA's ground and 63 of Palmyra's;
+Suwayda took 54 more of Batanea's; Quneitra 24; Mafraq, shipped at weight 1.30
+against its own parent's 0.90, took 149 samples of Bostra's Hauran and 33 of
+Philadelphia's plateau. Fold Mafraq back into Gerasa and displayed Gerasa is
+2.3× its real footprint, wearing Bostra's ground as a wedge; squeeze Batanea
+from three sides and what is left is the claw. In 66 CE, where less folds,
+nothing looked wrong — which is why §225's and §228's own screenshots caught
+nothing, and why §230's withdrawal could not fix it.
+
+### The rule, and what it cost
+
+**A carved district may take ground only from its own fold-family.** A parent
+may lose ground to its own children — that is what a district IS — and never
+to another family's. Under that rule every ancient silhouette is exactly the
+pre-§225 one, minus the subdivisions the §230 activation deliberately draws
+inside it.
+
+Enforced by iteration against the real renderer: five rounds of seed pulls
+and weight cuts on thirteen §225/§228 cells (Douma, Suwayda, Mafraq, Qusayr,
+Salamiyah, Quneitra, Mount Hermon, Heliopolis, Nabatieh, Bsharri, Batroun,
+Akkar, Zarqa), each round measured by a family-purity report over the strided
+132 CE rasters, old tree against new. The two §228 cells shipped at weight
+1.30 — Mafraq and Qusayr — end at 0.50 and 0.60; the optimizer that placed
+them maximized their area under an adjacency-only constraint, and this section
+is the correction of exactly that objective. Cross-family theft in the sown
+Levant fell from 169 samples (Douma) and 192 (Mafraq) to single digits.
+Heliopolis took the longest: every neighbour this section shrank freed ground
+it then expanded into, and the validator's own weight floor of 0.5 stopped the
+knife — so its seed moved instead, out of the northern Beqaa's mouth and down
+into the corridor at (36.08, 33.90), which is what finally held it inside the
+Chalcis family.
+
+Measured after (Jaccard against the pre-§225 132 CE silhouette): **Gadara
+1.000, Batanea 0.983, Palmyra 0.984, Philadelphia 0.956, Gerasa 0.901** — and
+the provinces whose numbers sit lower (Damascus 0.456, Caesarea Philippi
+0.667, Tripolis 0.497, Medaba 0.593) are at their ceilings: their own active
+districts — the Ghouta, Mount Hermon, Arca and Botrys, Characmoba — hold the
+difference, which is subdivision, not theft.
+
+### What is left, named
+
+- **The desert quadrant is exempt on purpose.** Sirhan holds 333 samples of the
+  old Azraq steppe and Ruwayshid 261 more; the §230 retune shaped that country
+  for the eye, the user approved it, and its victims are thousand-sample
+  wastes whose silhouettes no one reads.
+- **Mesopotamia has the same disease and is out of scope.** Nineveh holds 487
+  samples of Arbela's ground, Sulaymaniyah 324 of Gazaca's, Hasakah 250 of
+  Singara's — §228's optimizer at work far from where anyone complained. The
+  same family-purity pass would fix it the same way, the day it bothers
+  someone.
+- Esbus keeps 16 samples of Medaba's edge and the Lebanese cells single-digit
+  residues — under the warp jitter's own amplitude, and chasing them further
+  is chasing noise.
+
+Regression contract: `smoke156` — the restored areas hold (Batanea, Gadara,
+Gerasa∪Mafraq, Philadelphia∪Zarqa within tolerance of their pre-§225 areas),
+the trimmed seeds stay trimmed (no §225/§228 Levant child above weight 0.70),
+and the §228 roads still run through the Ghouta.
