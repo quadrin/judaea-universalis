@@ -1004,7 +1004,7 @@ export const BOOKMARK_167 = {
         id: 'hm_yoke_taken_away', name: 'The Yoke Taken Away',
         civil: 'govt',
         icon: 'coins', col: 0, row: 7, requires: ['hm_chancery_of_simon'],
-        desc: 'Carry eighty points of development and two hundred talents at once.',
+        desc: 'Carry 100 points of development with 200 talents banked at the same time.',
         rewardText: '"The Tribute Remitted": +8% income and +15% development growth, permanently.',
         check: (ctx) => {
           try {

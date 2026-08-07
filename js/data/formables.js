@@ -298,7 +298,8 @@ const MLI_SPINE = [
   {
     id: 'mli_civil_built_kingdom', name: 'The Kingdom Built',
     icon: 'bricks', civil: 'govt', col: 0, row: 6, requires: ['mli_civil_arts_of_rule'],
-    desc: 'The House of the Name asked for two hundred and sixty points of development.',
+    desc: 'Carry 400 points of development with 900 talents still banked — a realm that '
+      + 'built the roads AND can pay for the year after it built them.',
     rewardText: '+400 talents and "The Wealth of the Kingdom": +12% income, +10% trade '
       + 'and +8% development growth, permanent.',
     check: (ctx) => devOf(ctx, 'MLI') >= 400 && treasuryOf(ctx, 'MLI') >= 900,
@@ -722,8 +723,8 @@ const MLI_40 = [
     id: 'mli_40_the_platform', name: 'The Great Enclosure',
     icon: 'temple', col: 2, row: 4, chapters: ['40bce'],
     requires: ['mli_40_the_kings_cities'],
-    desc: 'Hold Jerusalem with the House standing and six hundred talents banked, and double '
-      + 'the platform under it.',
+    desc: 'Hold Jerusalem with the House standing and 900 talents banked, and double the '
+      + 'platform under it.',
     rewardText: 'The platform is doubled: −350 talents; +40 legitimacy and "The Great '
     + 'Enclosure": +20% from the ascents and +0.25 public belief a month, permanent.',
     check: (ctx) => holds(ctx, 'MLI', 'Jerusalem') && templeStands(ctx)

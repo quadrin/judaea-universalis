@@ -1497,7 +1497,7 @@ export const BOOKMARK_529 = {
       {
         id: 'h_the_terraces_and_the_channels', name: 'The Terraces and the Channels',
         icon: 'grain', civil: 'govt', col: 0, row: 4,
-        desc: 'Carry sixty points of development and two hundred and fifty talents at once.',
+        desc: 'Carry 75 points of development with 250 talents banked at the same time.',
         rewardText: '"The Waters Held": +10% income and +8% development growth, permanently.',
         check: (ctx) => {
           try {
@@ -1541,8 +1541,8 @@ export const BOOKMARK_529 = {
       {
         id: 'h_the_line_that_kept_the_covenant', name: 'The Line That Kept the Covenant',
         icon: 'altar', civil: 'court', col: 2, row: 4,
-        desc: 'The House of Yazan fought for Yusuf at the strait and lost, and its castles in '
-          + 'the misty heights still hold the memory of a Jewish kingdom in South.',
+        desc: 'Bring the House of Yazan to 70 approval with 40 favour banked — the line that '
+          + 'fought for Yusuf at the strait, and lost, still keeps the covenant.',
         rewardText: '"The Old Line Answers": +0.3 legitimacy a month and +10% manpower, permanently.',
         check: (ctx) => {
           try {

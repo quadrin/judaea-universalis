@@ -837,8 +837,7 @@ export const BOOKMARK_614 = {
       {
         id: 'p_the_walls_titus_threw_down', name: 'The Walls Titus Threw Down',
         icon: 'bricks', col: 0, row: 7, civil: 'govt', requires: ['p_the_rolls_of_the_return'],
-        desc: 'Bring the realm to ninety points of worked land with 250 talents still in the '
-          + 'chest.',
+        desc: 'Bring the realm to 115 points of worked land with 250 talents still in the chest.',
         rewardText: '"The Walls Raised Again": +1 to hill-country defense and −0.5 unrest everywhere, permanently.',
         check: (ctx) => {
           const g = ctx.game;

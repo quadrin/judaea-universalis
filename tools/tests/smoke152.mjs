@@ -241,6 +241,9 @@ console.log('== no desc claims a number its check does not ask for ==');
     [/(?:totalMen|menOf)\([^)]*\)+\s*>=\s*(\d+)/, /([\d,]{4,})\s+(?:men|lances|troops|soldiers)\b/i, 'muster'],
     [/(?:has|jud)Warscore\(ctx\)\s*>=\s*(\d+)/, /\+(\d+) war score/i, 'war score'],
     [/treasury[^<>=]{0,20}>=\s*(\d+)/, /([\d,]{3,})\s+talents\b/i, 'treasury'],
+    // the guard form — `if (treasury < N) return false` — reads the same to a
+    // player and has to read the same in the tooltip
+    [/treasury[^<>=]{0,20}<\s*(\d+)/, /([\d,]{3,})\s+talents\b/i, 'treasury'],
     [/(?:ownedDev|realmDev)\([^)]*\)\s*>=\s*(\d+)/, /(\d{2,})\s+development\b/i, 'development'],
     [/\bdev\s*>=\s*(\d+)/, /(\d{2,})\s+development\b/i, 'development'],
   ];

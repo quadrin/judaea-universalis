@@ -1367,8 +1367,7 @@ export const BOOKMARK_40 = {
       {
         id: 't5_kingmakers_house', name: 'A King of Kings, Restored',
         icon: 'flag', col: 1, row: 2, requires: ['t5_tide_riders'],
-        desc: 'Keep eight thousand lances mustered — enough to ride a guest home to Ctesiphon '
-          + 'as a king.',
+        desc: 'Keep 11,000 lances mustered — enough to ride a guest home to Ctesiphon as a king.',
         rewardText: '"The Kingmaker\'s House": +0.1 legitimacy a month permanently, +35 influence points.',
         check: (ctx) => totalMen(ctx, 'ADI') >= 11000,
         reward: (ctx) => {

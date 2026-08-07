@@ -1646,8 +1646,8 @@ export const BOOKMARK_66 = {
       {
         id: 'dm_riders_of_two_rivers', name: 'The Riders of the Two Rivers',
         icon: 'spears', col: 0, row: 3, requires: ['dm_princes_ride'],
-        desc: 'Arm the house beyond its tribute-book — eight thousand under the standards, and '
-          + 'the King of Kings can count them however he likes.',
+        desc: 'Arm the house beyond its tribute-book — 11,000 under the standards, and the King '
+          + 'of Kings can count them however he likes.',
         rewardText: '"The Convert Lances": +5% discipline permanently, +2,000 manpower.',
         check: (ctx) => totalMen(ctx, 'ADI') >= 11000,
         reward: (ctx) => {
