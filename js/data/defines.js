@@ -149,7 +149,7 @@ export const DEFINES = {
     // formable crowns (SPEC §24)
     MLI: { aggression: 1.0, caution: 1.0 },
     UAR: { aggression: 1.2, caution: 0.9, ponderous: true },
-    // The constitutional crowns (SPEC §226). All ten are player-only crowns,
+    // The constitutional crowns (SPEC §227). All ten are player-only crowns,
     // so these are the tempers a HUMAN realm is read with by the courts around
     // it rather than plans anybody executes — and they say what the
     // constitution is: the two commonwealths and the temple-state are careful,
@@ -396,7 +396,7 @@ export const DEFINES = {
     LEB: 'republic', IRQ: 'monarchy', TUR: 'republic', SAU: 'monarchy',
     IRN: 'monarchy', UK: 'monarchy', ITA: 'republic',
     MLI: 'monarchy', UAR: 'republic', SAR: 'republic', LUK: 'monarchy',
-    // The ten constitutional crowns (SPEC §226). This table is not decoration
+    // The ten constitutional crowns (SPEC §227). This table is not decoration
     // for them: switchTagCore reads the new banner's government when a crown
     // is proclaimed, so THIS is the line that makes taking the name of the
     // Lot an act that abolishes the heir, and taking the name of the Jubilee
@@ -795,7 +795,7 @@ export const DEFINES = {
       description: 'One nation from the Gulf to the sea — for as long as its generals agree.',
       ideas: { manpowerMult: 1.2, incomeMult: 1.05 },
     },
-    // ---- the ten constitutional crowns (SPEC §226) ------------------------
+    // ---- the ten constitutional crowns (SPEC §227) ------------------------
     // One banner per Jewish constitution. Each is a formable crown like the
     // two above — never in a bookmark's activeTags — and each declares its
     // constitution in GOV_OF below, which is how proclaiming one ADOPTS it:

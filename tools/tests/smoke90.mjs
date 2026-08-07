@@ -329,7 +329,7 @@ console.log('== end to end: the crown costs the chapter nothing ==');
       if (w.game.over) w.game.over = false;
       if (takeTheCrown && !crowned && granted) {
         // The Kingdom of Israel specifically, not "the first crown on offer".
-        // §226 put nine more `form_` decisions in this panel — the ten
+        // §227 put nine more `form_` decisions in this panel — the ten
         // constitutional crowns — and two of them are formable out of HAS on
         // far easier terms than MLI's, so a run told to take any crown took
         // the Priest-Kingdom in the 90s BCE and never reached the one this

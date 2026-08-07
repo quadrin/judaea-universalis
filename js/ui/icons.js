@@ -602,7 +602,7 @@ export const FLAGS = {
     `<rect x="6.4" y="8.4" width="11.2" height="1.6" rx="0.8" ${ACC}/>` +
     hexagram(12, 15.9, 5.1, FO, 2.5) +
     hexagram(12, 15.9, 5.1, FG, 1.3),
-  // ---- the ten constitutional crowns (SPEC §226) ----------------------------
+  // ---- the ten constitutional crowns (SPEC §227) ----------------------------
   // Ten banners over the same city, in the same faith, in the same blue-ish
   // corner of the palette — so each emblem says the CONSTITUTION rather than
   // the country, because what the state is for is the only thing that tells

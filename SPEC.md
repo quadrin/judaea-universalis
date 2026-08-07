@@ -14933,7 +14933,7 @@ off the occupier, where there is no Beirut to secede from at all.
   its government and its opinions — from Beirut, from an occupier, and not
   twice.
 
-## 226. The constitution takes a name of its own
+## 227. The constitution takes a name of its own
 
 Five forks in five chapters ask a playable court what kind of state it is, and
 four of them ask a Jewish one. Since §214 the answer is a fact rather than a
@@ -14985,7 +14985,7 @@ gets exactly the game §214 shipped; the crown is the second half, offered
 afterwards, and its first requirement is the constitution itself — read off
 `govType` rather than off a flag, because that is the fact it is about. Answer
 the fork one way and one crown appears in the panel and the other three do not,
-which is `smoke151`'s live test through the real cards.
+which is `smoke152`'s live test through the real cards.
 
 ### What ten different trees had to mean
 
@@ -15038,7 +15038,7 @@ gets no banner here: SAM is not a Jewish court, its road is its own chapter's,
 and a Samaritan state flying a Judaean crown would be the one thing that whole
 fork is about not being.
 
-- **Regression contract**: `smoke151` — the table (ten adoptable Jewish
+- **Regression contract**: `smoke152` — the table (ten adoptable Jewish
   constitutions, ten crowns, each with a tag def, an emblem, a government, an
   AI temper, a payoff and a chain; no two sharing three letters, a name, a
   colour, a constitution or an emblem; none of them wearing Judaea's menorah or

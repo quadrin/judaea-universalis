@@ -1,4 +1,4 @@
-// Headless regression — SPEC §226: the constitution takes a name of its own.
+// Headless regression — SPEC §227: the constitution takes a name of its own.
 //
 // §214 made the five constitutional forks bite: the Government row moves with
 // the answer and the succession rules move with it. What it could not do is
@@ -6,7 +6,7 @@
 // letters on the map in the same blue, under the same emblem, working the same
 // chapter tree.
 //
-// §226 gives every Jewish constitution a crown of its own on the §22 formable
+// §227 gives every Jewish constitution a crown of its own on the §22 formable
 // machinery. Ten constitutions, ten banners, ten trees. The contracts:
 //
 //   THE TABLE — every constitution the four Jewish forks adopt has exactly one
@@ -105,7 +105,7 @@ const formableFor = (tag) => FORMABLES.find((f) => f && f.to === tag);
 const doneIds = (t) => new Set(t.missionsDone || []);
 
 // ------------------------------------------------------------------ the table
-console.log('== §226: ten constitutions, ten crowns, fully outfitted ==');
+console.log('== §227: ten constitutions, ten crowns, fully outfitted ==');
 {
   // Every non-starting Jewish constitution in GOV_TYPES gets a crown, and no
   // crown names a government that does not exist. The four a bookmark boots
@@ -171,7 +171,7 @@ console.log('== §226: ten constitutions, ten crowns, fully outfitted ==');
 // The load-bearing claim: proclaiming the crown adopts the constitution,
 // because switchTagCore reads GOV_OF for the target banner. If this stops
 // being true the whole section is a re-skin.
-console.log('== §226: proclaiming a crown adopts its constitution ==');
+console.log('== §227: proclaiming a crown adopts its constitution ==');
 for (const c of CROWNS) {
   const era = eraOf(c.chapters[0]);
   const w = boot(era, c.from);
@@ -199,7 +199,7 @@ for (const c of CROWNS) {
 }
 
 // ------------------------------------------------------------------ the gate
-console.log('== §226: the constitution is the first requirement of its own crown ==');
+console.log('== §227: the constitution is the first requirement of its own crown ==');
 for (const c of CROWNS) {
   const era = eraOf(c.chapters[0]);
   const f = formableFor(c.tag);
@@ -223,9 +223,9 @@ for (const c of CROWNS) {
 
 // ------------------------------------------------------- fork to crown, live
 // The four settlements of 71 through the REAL cards. This is the join between
-// §214 and §226: the card writes the constitution, the constitution opens one
+// §214 and §227: the card writes the constitution, the constitution opens one
 // crown and no other.
-console.log('== §226: the settlement of 71, fired live, opens exactly its own crown ==');
+console.log('== §227: the settlement of 71, fired live, opens exactly its own crown ==');
 {
   const era = eraOf('66ce');
   const card = era.events.find((e) => e && e.id === 'ev_s_the_second_government');
@@ -253,7 +253,7 @@ console.log('== §226: the settlement of 71, fired live, opens exactly its own c
 }
 
 // --------------------------------------------------------- ten different trees
-console.log('== §226: ten crowns, ten chains, and no two of them the same ==');
+console.log('== §227: ten crowns, ten chains, and no two of them the same ==');
 {
   const STRANDS = { govt: 0, region: 1, court: 2 };
   const branchIds = new Map();
@@ -324,7 +324,7 @@ console.log('== §226: ten crowns, ten chains, and no two of them the same ==');
 // ------------------------------------------------------------ the reward keys
 // A misspelled effect key seats a modifier the engine never reads: the tooltip
 // promises +10% income, the reward runs without throwing, and nothing happens.
-console.log('== §226: every reward seats keys the engine reads ==');
+console.log('== §227: every reward seats keys the engine reads ==');
 {
   const TAG_KEYS = new Set();
   const simDir = new URL('../../js/sim/', import.meta.url);
@@ -373,7 +373,7 @@ console.log('== §226: every reward seats keys the engine reads ==');
 // some other package already uses does not stack with it — it REPLACES it, and
 // a crown proclaimed after the 132 marriage would have quietly downgraded the
 // very thing it was celebrating. Nothing throws; the number just gets smaller.
-console.log('== §226: no crown\'s modifier lands on top of another package\'s ==');
+console.log('== §227: no crown\'s modifier lands on top of another package\'s ==');
 {
   const src = readFileSync(new URL('../../js/data/formables.js', import.meta.url), 'utf8');
   const head = src.indexOf('// ---- the constitution takes a name of its own');
@@ -486,7 +486,7 @@ function proclaim(chapterId, c) {
 }
 
 // ------------------------------------------------------------------ no free lunch
-console.log('== §226: nothing on a crown is free on the day it is proclaimed ==');
+console.log('== §227: nothing on a crown is free on the day it is proclaimed ==');
 for (const c of CROWNS) {
   for (const id of c.chapters) {
     const w = proclaim(id, c);
@@ -499,7 +499,7 @@ for (const c of CROWNS) {
 }
 
 // ---------------------------------------------------------------------- pay
-console.log('== §226: every node of every crown pays in a maximal realm ==');
+console.log('== §227: every node of every crown pays in a maximal realm ==');
 for (const c of CROWNS) {
   for (const id of c.chapters) {
     const w = proclaim(id, c);
@@ -519,7 +519,7 @@ for (const c of CROWNS) {
 // The realm panel and the monthly pass both go through missionsFor, and a
 // crown whose chain is filed only in FORMABLES is exactly the case §215 had to
 // repair once already. Ask the engine, not the file.
-console.log('== §226: the panel finds the crown\'s own chain, not the chapter\'s ==');
+console.log('== §227: the panel finds the crown\'s own chain, not the chapter\'s ==');
 for (const c of CROWNS) {
   const w = proclaim(c.chapters[0], c);
   const list = realm.missionsFor(w.ctx, c.tag);
@@ -532,7 +532,7 @@ for (const c of CROWNS) {
 }
 
 // ------------------------------------------------------------- the road onward
-console.log('== §226: the greater crown stays reachable, and ends the constitution ==');
+console.log('== §227: the greater crown stays reachable, and ends the constitution ==');
 for (const c of CROWNS) {
   const mli = FORMABLES.find((f) => f && f.from === c.tag && f.to === 'MLI');
   ok(!!mli, c.tag + ': keeps a road to the Kingdom of Israel');
@@ -551,7 +551,7 @@ for (const c of CROWNS) {
 }
 
 // ------------------------------------------------- §214 and §22 pass unmoved
-console.log('== §226: the fork, the store and the older crowns are untouched ==');
+console.log('== §227: the fork, the store and the older crowns are untouched ==');
 {
   ok(Object.keys(DEFINES.GOV_TYPES).length === 15,
     'the constitution table is still fifteen governments — §214\'s fourteen and §217\'s Company');
@@ -575,5 +575,5 @@ console.log('== §226: the fork, the store and the older crowns are untouched ==
     + (booted.join(', ') || 'all ten are formable only') + ')');
 }
 
-console.log(failures ? `smoke151: ${failures} FAIL` : 'smoke151: ALL PASS');
+console.log(failures ? `smoke152: ${failures} FAIL` : 'smoke152: ALL PASS');
 process.exit(failures ? 1 : 0);

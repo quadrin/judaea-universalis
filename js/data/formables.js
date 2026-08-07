@@ -1476,7 +1476,7 @@ function favorFloor(ctx, tag, min) {
   return vals.length >= 2 && Math.min(...vals) >= min;
 }
 
-// ---- the constitution takes a name of its own (SPEC §226) -------------------
+// ---- the constitution takes a name of its own (SPEC §227) -------------------
 // §214 gave the five constitutional forks teeth: a road that abolishes
 // hereditary priestly power abolishes it, the succession rules move with the
 // answer, and the Government row in the realm panel finally says which of the
@@ -3297,7 +3297,7 @@ const CONSTITUTION_CROWNS = [
   },
 ];
 
-// The greater crown is not closed off by naming the lesser one (SPEC §226).
+// The greater crown is not closed off by naming the lesser one (SPEC §227).
 // The Kingdom of Israel is the endgame of the whole Jewish arc and it is
 // reached by a dynasty rather than by a war, so every constitution keeps the
 // road to it on exactly the terms JUD and HAS have — and proclaiming it ENDS
@@ -3695,7 +3695,7 @@ export const FORMABLES = [
       },
     },
   },
-  // ---- the ten constitutional crowns, and the road they keep open (SPEC §226)
+  // ---- the ten constitutional crowns, and the road they keep open (SPEC §227)
   ...CONSTITUTION_CROWNS,
   israelFrom('SNH', ['66ce']),
   israelFrom('GRL', ['66ce']),

@@ -27,7 +27,7 @@ function U(ctx, key, fallback) {
 // Judaea region even after losing every bordering province. This deliberately
 // excludes diaspora kingdoms (ADI) and modern Israel (ISR): outside the ancient
 // revolt bookmarks, ordinary risings still have to touch the country's border.
-// The ten constitutional crowns (SPEC §226) are the same country under a name
+// The ten constitutional crowns (SPEC §227) are the same country under a name
 // for what it has decided to be, so they belong here for the same reason MLI
 // does — a temple-state that has been driven out of the coastal plain is still
 // a state the Judaean hills rise inside.
