@@ -18,6 +18,7 @@ import {
   clientOfferInfo, offerClientshipCore,
   releasableClients, releaseClientInfo, releaseClientCore,
   freeClientInfo, freeClientCore,
+  independenceInfo, declareIndependenceCore,
   cedeProvinceInfo, cedeProvinceCore,
   chanceryOn, diploLoad, chanceryFullWhy, clientStrain, freedCollarMonthsLeft, DIP,
   assaultInfo, doAssault, splitArmyCore, rollGeneral,
@@ -1221,6 +1222,12 @@ export function gameActions(ctx) {
         try { inc = incorporateInfo(ctx, me, tag); } catch (e) { inc = null; }
         try { freedom = freeClientInfo(ctx, me, tag); } catch (e) { freedom = null; }
       }
+      // The same collar read from underneath (SPEC §226): what it would take
+      // for us to throw off theirs.
+      let independence = null;
+      if (ourOverlord) {
+        try { independence = independenceInfo(ctx, me); } catch (e) { independence = null; }
+      }
       // Embargo and blockade (SPEC §100): the pressure short of war, in the
       // ages that use it.
       let embargo = null;
@@ -1319,6 +1326,12 @@ export function gameActions(ctx) {
           collarMonths: freedom.collarMonths, incorporating: freedom.incorporating,
           seats: freedom.seats, capacity: freedom.capacity,
           clients: freedom.clients, strain: freedom.strain,
+        } : null,
+        // Our own war of independence (SPEC §226), when this court is the one
+        // holding our leash.
+        independence: independence ? {
+          can: independence.can, why: independence.why, name: independence.name,
+          dev: independence.dev, ourDev: independence.ourDev, allies: independence.allies,
         } : null,
         marriage,
         recognition,
@@ -3059,6 +3072,19 @@ export function gameActions(ctx) {
           + 'again for ' + Math.round(res.collarMonths / 12) + ' years.'
           + (res.lostWeaving ? ' The union we were weaving dies with the bond.' : ''), 'good');
       } catch (e) { warnOnce('freeClient', 'freeClientState failed', e); }
+    },
+
+    // ---- the collar thrown off (SPEC §226) ----------------------------------
+    // §219's mirror from underneath: the client's own move, and the only one
+    // it has. The bond breaks first, then the herald speaks.
+    declareIndependence() {
+      try {
+        const res = declareIndependenceCore(ctx, g.playerTag);
+        if (!res.ok) { say('The collar stays on', res.why, 'bad'); return; }
+        say('The fealty renounced', 'We answer to ' + res.name + ' no longer. The tribute stops '
+          + 'with the declaration and the crown stands on its own — for as long as the field '
+          + 'agrees. Lose this war and the yoke can be written back on at the table.', 'war');
+      } catch (e) { warnOnce('independence', 'declareIndependence failed', e); }
     },
 
     // ---- a province handed over without a war (SPEC §222) --------------------

@@ -236,6 +236,14 @@ export const BOOKMARK_67 = {
     ['HYR', 'PAR', { axis: 'alignment', sign: -1 }],
     ['ARI', 'PAR', { axis: 'alignment', sign: -1 }],
   ],
+  // The crown war (SPEC §226): Salome Alexandra's two sons are two claimants
+  // to one kingdom, and the war between them is over which of them is king —
+  // not over the Shephelah. Aretas' lances fight it and do not settle it, and
+  // at 80 war score the table may write what neither brother would concede at
+  // twenty: the loser renounces, and Jannaeus' kingdom is whole again under
+  // the winner. The alternative history the chapter is built to offer is a
+  // civil war that ENDS before Pompey arrives to settle it for them.
+  crownWar: { claimants: ['ARI', 'HYR'], of: 'Judaea' },
 
   // Political layer for 67 BCE over map_data's 66 CE defaults. The Hasmonean
   // kingdom of Jannaeus is split between the brothers; Syria is the Seleucid
@@ -1657,8 +1665,10 @@ export const BOOKMARK_67 = {
     }
 
     // --- The war of the brothers. NEGOTIABLE: this is the first bookmark whose
-    // central war can end at the peace table — cede, tribute, or a brother
-    // bent to clienthood. Aristobulus struck first, historically and here.
+    // central war can end at the peace table — cede, tribute, a brother bent to
+    // clienthood, or (SPEC §226, at 80 war score) the crown itself: one brother
+    // renounces and the kingdom is one again. Aristobulus struck first,
+    // historically and here.
     h.declareWar(ctx, 'ARI', 'HYR', 'The War of the Brothers');
 
     // NAB allies with Hyrcanus AFTER the declaration (Aretas joins the war

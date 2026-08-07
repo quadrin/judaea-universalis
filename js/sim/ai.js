@@ -837,7 +837,7 @@ function hegemonContainment(ctx) {
 
 function blankAiDeal(enemyTag) {
   const deal = {
-    provinces: [], gold: 0, humiliate: false, subjugate: false,
+    provinces: [], gold: 0, humiliate: false, subjugate: false, unifyCrown: false,
     reparations: false, release: [], transferVassals: [],
   };
   if (enemyTag) deal.enemy = enemyTag;
@@ -923,6 +923,16 @@ export function buildAiPeaceDeal(ctx, war, winner, enemyTag, opts) {
     candidate.transferVassals.push(row.tag);
     return accept(candidate, (ev) => ev.transferVassals.includes(row.tag));
   };
+
+  // The crown war has one answer and every claimant wants it (SPEC §226): if
+  // the score covers the whole kingdom, the kingdom is what the treaty says.
+  // Nothing else on the table is worth a clause beside it, so this is decided
+  // first and, when it takes, decided alone.
+  if (info.canUnifyCrown && budget >= num(info.unifyCrownCost)) {
+    const candidate = copyAiDeal(deal);
+    candidate.unifyCrown = true;
+    if (accept(candidate, (ev) => ev.unifyCrown)) return deal;
+  }
 
   // An independence war has a political objective more exact than annexation.
   // Very aggressive courts also prefer a manageable client to many restive
@@ -1013,6 +1023,7 @@ export function describeAiPeaceDeal(ctx, war, winner, deal) {
   const info = peaceDealInfo(ctx, war, winner, deal && deal.enemy);
   const ev = evaluatePeaceDeal(ctx, war, winner, deal);
   const clauses = [];
+  if (ev.unifyCrown) clauses.push('the crown renounced and the whole kingdom surrendered');
   if (ev.subjugate) clauses.push('submission as a client kingdom');
   if (ev.provinces.length) {
     clauses.push('the cession of ' + ev.provinces.map((id) => {
