@@ -15644,6 +15644,42 @@ have none are the islands that never had any. The largest boundary drift is
 Dumatha at 20%, which is the Wadi Sirhan becoming its own district, and Gadara at
 56%, which is Hippos and Abila taking the ground they are named for.
 
+### The seeds are placed for the eye as well as the optimizer
+
+The first raster of this section was correct and ugly, and the ugliness had one
+cause with three faces. The shader's assignment is a weighted Voronoi, and the
+border between two seeds of unequal weight is not a line but an arc of a circle
+around the weaker seed — invisible where towns are dense and borders are short,
+glaring where a border is the only feature in a hundred kilometres of dune. So
+Dedan, seeded twenty pixels from Hegra at two-thirds its weight, came out as a
+soap-bubble enclave floating inside it; Iram at 0.70 against Aila's 1.10 and
+Petra's 1.20 was a near-perfect circle; and Sirhan at 1.40 with no competing
+seed in the whole quarter was an amorphous monster from Azraq to the Jawf,
+while Gebalene kept the eastward sprawl §228's optimizer had maximized into it
+back when the cell was a 1948-only district whose reach no ancient chapter
+would ever see.
+
+The §228 lesson applies to the fix as well as to the placement: the shader
+reproduces in Node in under half a second without the warp, which does not move
+adjacency — so the tuning loop is a preview picture, not a ten-minute browser
+dump per attempt. Three rules fell out, and they are the ones to reuse:
+**adjacent seeds want similar weights** (the arc flattens toward a bisector);
+**extent is set by position, not weight** (Dedan's seed is cheated down the
+valley so the pair splits the corridor, the same license Sergiopolis takes for
+Raqqa); and **an empty quarter is carried by where the seed sits on the road**
+(Sirhan's seed moved onto the wadi axis and its weight came down to parity).
+
+Measured on the re-dumped raster: Dedan 1,651 → 34,550 raster units — a
+district, not a bubble; Sirhan and Gebalene halved; Iram at twice its old size
+holding the Hisma it is named for. Five adjacency pairs died and six were born,
+and every one of the changes is a road argument, not an accident: Petra–Aila
+now runs through Auara because Humayma IS the caravan station on that road;
+Hegra–Yathrib runs through Dedan and Khaybar because that is the oasis chain
+the incense road actually hopped; and the two monster-to-monster contacts the
+old shapes faked across four hundred kilometres of sand (Aila–Dumatha,
+Petra–Aila direct) are gone. No contract moved: the §228 roads, the Uvda
+route, the parent chains and every development total hold to the point.
+
 - **Regression contract**: `smoke155` — all twenty-five districts registered and
   regioned, the nine new ones appended past the whole §228 atlas and none of them
   latent; every one a province in all seven ancient chapters and under the same

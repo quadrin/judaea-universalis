@@ -61,11 +61,14 @@ stream. What §230 holds fixed is DEVELOPMENT — every realm in every chapter
 opens on the total it always had, which `smoke155` checks tag by tag — not the
 eight-year trajectory that total then produces.
 
-Measured on the merged tree at the default eight years: `167bce PAR` and
-`167bce HAS`, `67bce SEL` (dead, Pompey's arc), `67bce ARI`, `67bce ITU`,
-`40bce ADI`, `132ce JUD`, `529ce JUD`. Every one is in a family this file
-already documents, and three deserve a word because they are new *names* in an
-old family:
+Measured on the merged tree at the default eight years — and once more after
+§230's seed retune, which re-rolls the stream again: the union of the two runs
+is `167bce PAR` and `167bce HAS`, `67bce SEL` (dead, Pompey's arc), `67bce
+ARI`, `67bce ITU`, `40bce ADI`, `132ce JUD`, `529ce JUD`, and the post-retune
+run is a strict subset of it (`167bce PAR · 67bce SEL, ITU · 40bce ADI · 529ce
+JUD` — HAS, ARI and the 132 rump drift off with the stream, as members of the
+come-and-go families do). Every one is in a family this file already documents,
+and three deserve a word because they are new *names* in an old family:
 
 - `67bce ITU` — Ituraea, two provinces and nine development, treasury 60 → 32.
   This is the two-province-outpost class that `167bce PAR` has occupied since

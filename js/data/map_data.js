@@ -1278,7 +1278,7 @@ const PROVINCES = [
   // and Iraq's western desert (the Rutbah wells on the Baghdad road).
   P('Kiryat Shmona', 35.58, 33.18, 0.62, 'AGR', 'marsh', 'fish', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Azraq', 37.20, 32.00, 1.15, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0,
+  P('Azraq', 37.20, 32.00, 1.05, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0,
     { latentParent: 'Bostra' }),
   P('Rutba', 41.50, 32.80, 1.60, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
@@ -1962,9 +1962,9 @@ const PROVINCES = [
     { latentParent: 'Gerasa' }),
   P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
-  P('Shobak', 35.55, 30.6, 1.30, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0,
+  P('Shobak', 35.55, 30.6, 1.10, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Zoara' }),
-  P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
+  P('Wadi Rum', 35.72, 29.44, 0.85, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
   // --- SPEC §230: ground the ancient theatre had no cell for ---------------
   // Appended, like every cell since §225, so no existing id moves. These are
@@ -1978,8 +1978,8 @@ const PROVINCES = [
   P('Characmoba', 35.70, 31.18, 0.95, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Medaba — Kir of Moab, on the plateau above the Dead Sea
   P('Auara', 35.33, 29.95, 1.00, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Petra — Humayma, the cistern town of the Hisma
   P('Elusa', 34.65, 31.10, 0.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0), // out of Oboda — Haluza, first of the Negev caravan towns
-  P('Dedan', 37.92, 26.62, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Hegra — the Lihyanite oasis north of Hegra
-  P('Sirhan', 38.30, 30.60, 1.40, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0), // out of Dumatha — the wadi road from the Hauran to the Jawf
+  P('Dedan', 37.70, 26.10, 1.50, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0), // out of Hegra — the Lihyanite oasis south of Hegra; seed cheated down the valley so the pair splits the corridor instead of nesting
+  P('Sirhan', 38.45, 30.85, 1.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0), // out of Dumatha — the wadi road from the Hauran to the Jawf, seeded on the wadi axis
 ];
 
 // ---------------------------------------------------------------------------
