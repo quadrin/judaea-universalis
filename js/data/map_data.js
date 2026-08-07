@@ -1112,7 +1112,7 @@ const PROVINCES = [
   P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Philadelphia', 35.93, 31.95, 0.90, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 2, 3, 2, 0),
   // --- Kingdom of Agrippa II (AGR) -----------------------------------------
-  P('Caesarea Philippi', 35.69, 33.25, 0.70, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
+  P('Caesarea Philippi', 35.69, 33.25, 0.68, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
   P('Batanea', 36.25, 32.90, 1.10, 'AGR', 'farmland', 'grain', 'judaism', 'galilean', 3, 4, 4, 0),
   P('Gamala', 35.74, 32.90, 0.75, 'AGR', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 2),
   // --- Phoenicia (ROM) ------------------------------------------------------
@@ -1215,7 +1215,7 @@ const PROVINCES = [
   // The 1948 bookmark activates them as independent modern gameplay regions.
   P('Safed', 35.50, 32.97, 0.62, 'JUD', 'hills', 'olive_oil', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Gischala' }),
-  P('Nahariya', 35.10, 32.99, 0.68, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Nahariya', 35.09, 33.04, 0.70, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Ptolemais' }),
   P('Afula', 35.29, 32.61, 0.68, 'ROM', 'farmland', 'grain', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Scythopolis' }),
@@ -1871,7 +1871,7 @@ const PROVINCES = [
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
-  P('Mount Hermon', 35.79, 33.36, 0.52, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
+  P('Mount Hermon', 35.79, 33.36, 0.50, 'AGR', 'mountains', 'livestock', 'hellenism', 'aramean', 1, 1, 0, 0,
     { latentParent: 'Caesarea Philippi' }),
   P('Quneitra', 35.74, 33.10, 0.50, 'AGR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
