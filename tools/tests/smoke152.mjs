@@ -504,8 +504,18 @@ for (const c of CROWNS) {
   for (const id of c.chapters) {
     const w = proclaim(id, c);
     maximalGround(w, c.tag);
-    // §207 paces one completion a month, so a whole tree needs the room.
-    for (let i = 0; i < 400; i++) { remax(w, c.tag); realm.checkMissions(w.ctx); }
+    // §207 paces one completion a month, so a whole tree needs the room — and
+    // since §229 a seated chain is CLAIMED rather than banked, so the room has
+    // to be pumped with a hand on the panel: one claim a month, which is
+    // exactly the drum's own pace.
+    for (let i = 0; i < 400; i++) {
+      remax(w, c.tag);
+      realm.checkMissions(w.ctx);
+      const t = w.game.tags[w.game.playerTag];
+      for (const rid of ((t && t.missionReady) || []).slice()) {
+        if (realm.claimMission(w.ctx, rid).ok) break;
+      }
+    }
     const done = doneIds(w.game.tags[c.tag]);
     const list = formableFor(c.tag).missions;
     const unpaid = list.filter((m) => !done.has(m.id));
