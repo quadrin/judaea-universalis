@@ -2294,7 +2294,7 @@ html, body {
 }
 .np-mn-hypo.np-mn-done .np-mn-medal { border-style: solid; border-color: #8a6d1a; color: #8a6d1a; }
 
-/* ── Claim and shut (SPEC §227) ─────────────────────────────────────────────
+/* ── Claim and shut (SPEC §229) ─────────────────────────────────────────────
    Two states the tree never had. READY is a reward the realm has earned and
    not yet taken: the medallion lifts off the parchment, breathes, and says
    Claim under its name, because nothing in this game should be owed to a
@@ -2368,7 +2368,7 @@ html, body {
   border-radius: 3px;
 }
 
-/* ── The Forks (SPEC §227) ──────────────────────────────────────────────────
+/* ── The Forks (SPEC §229) ──────────────────────────────────────────────────
    The either/or the grid cannot draw. One row per §119 question the tree
    stands a road in: the road taken with a check, the roads it cost struck
    through, and — while the question is still open — every answer still on

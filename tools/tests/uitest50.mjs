@@ -1,4 +1,4 @@
-// UI verification §227: the mission panel overhauled — claimed, not banked;
+// UI verification §229: the mission panel overhauled — claimed, not banked;
 // the road a sibling shut; the fork ledger.
 //
 // The headless half is smoke143. This is the half that only a browser can
@@ -41,7 +41,7 @@ await page.locator('.nation-card').first().click();
 await page.waitForFunction(() => !!window._ctx);
 await page.waitForTimeout(500);
 
-// A world worth reading: the host over §227's harder ask, and the Temple
+// A world worth reading: the host over §229's harder ask, and the Temple
 // burned so the second road of 66ce/how_the_revolt_ends has fired.
 await page.evaluate(() => {
   const ctx = window._ctx;
@@ -95,7 +95,7 @@ ok(await page.locator('#nation-panel .np-mn-done').count() === 1, 'the clicked m
 const paid = await page.evaluate(() => (window._ctx.game.tags.JUD.modifiers || []).map((m) => m.id));
 ok(paid.indexOf('levies_of_zion') >= 0, 'and the reward was paid at the click: ' + paid.join(','));
 const perm = await page.evaluate(() => (window._ctx.game.tags.JUD.modifiers || []).find((m) => m.id === 'levies_of_zion'));
-ok(perm && (perm.months | 0) === -1, 'permanently — §227 retired the expiry: months=' + (perm && perm.months));
+ok(perm && (perm.months | 0) === -1, 'permanently — §229 retired the expiry: months=' + (perm && perm.months));
 ok(await page.evaluate(() => (window._ctx.game.tags.JUD.missionRest | 0)) >= 1, 'and the chain now rests from the claim');
 
 ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));

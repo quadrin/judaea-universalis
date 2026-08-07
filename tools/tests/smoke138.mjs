@@ -64,7 +64,7 @@ function boot(era, playerTag) {
   const ctx = makeCtx({ game, DEFINES, MAP_DATA, geom, bus, bookmark: era.bookmark, events: era.events });
   return { game, ctx, era };
 }
-// §227: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
 // what is ready. Where this suite means "let the months go by until everything
 // satisfiable has paid", the hand on the panel is the suite's own: one claim a
 // month, which is exactly the drum's own pace.
@@ -108,7 +108,7 @@ for (const c of CHAINS) {
     ok(STRANDS[m.civil] !== undefined && m.col === STRANDS[m.civil],
       key + '/' + m.id + ': the ' + m.civil + ' strand sits in its own column (col ' + m.col + ')');
     ok(!m.hypothetical, key + '/' + m.id + ': is an objective, not a road not taken');
-    // §227 cut the descriptions down to the ask — the shortest civil objective
+    // §229 cut the descriptions down to the ask — the shortest civil objective
     // in the game is now "Bring the King of Kings to +40 regard." at 38
     // characters, and that is the section working, not a stub. The floor still
     // catches an empty or placeholder desc, which is what it was ever for.
@@ -432,7 +432,7 @@ for (const c of CHAINS) {
   const w = boot(c.era, c.tag);
   maximalGround(w, c.tag);
   // §207 paces one completion a month, so a whole tree needs the room — and
-  // since §227 the player's half is claimed rather than banked, so the room
+  // since §229 the player's half is claimed rather than banked, so the room
   // has to be pumped with a hand on the panel.
   for (let i = 0; i < 400; i++) { remax(w, c.tag); pump(w.ctx, 1); }
   const done = doneIds(w.game.tags[c.tag]);

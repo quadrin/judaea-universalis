@@ -3512,13 +3512,13 @@ export function gameActions(ctx) {
             // §211): 'govt', 'region' or 'court'. Layout already separates
             // them by column; the panel names them so the column reads.
             civil: m.civil || '',
-            // The fork this road stands in (SPEC §227): the question it asks,
+            // The fork this road stands in (SPEC §229): the question it asks,
             // and — when a sibling road has already answered it — the name of
             // the road this campaign actually took.
             forkQuestion: fork ? fork.question : '',
             roadTaken: fork ? fork.takenName : '',
             roadChosen: fork ? fork.oursName : '',
-            // Five states now, not three. READY is the one §227 added: the
+            // Five states now, not three. READY is the one §229 added: the
             // terms are met and the medallion is waiting for a hand. SHUT is
             // the road a sibling closed — locked forever, and drawn to say so.
             status: done.has(id) ? 'done'
@@ -3530,13 +3530,13 @@ export function gameActions(ctx) {
       } catch (e) { warnOnce('getMissions', 'getMissions failed', e); return []; }
     },
 
-    // Claim an accomplishment (SPEC §227). The sim re-decides everything at
+    // Claim an accomplishment (SPEC §229). The sim re-decides everything at
     // the click; this only carries the answer back so the panel can say why.
     claimMission(id) {
       try { return claimMission(ctx, id); } catch (e) { warnOnce('claimMission', 'claimMission failed', e); return { ok: false, why: 'none' }; }
     },
 
-    // The fork ledger (SPEC §227): the either/or behind the right-hand column
+    // The fork ledger (SPEC §229): the either/or behind the right-hand column
     // — every question this tree stands a road in, the road taken, the roads
     // refused.
     getForks() {
@@ -3936,8 +3936,8 @@ export function reviveGame(saved) {
     // missionIdx. Anything that is not an array is dropped, not trusted.
     if (t.missionsDone !== undefined && !Array.isArray(t.missionsDone)) t.missionsDone = undefined;
     if (!Number.isFinite(t.missionRest)) t.missionRest = 0; // pre-§207 saves owe no rest
-    // The ready list (SPEC §227) is derived, not earned: the next monthly pass
-    // rebuilds it from live checks. A pre-§227 save joins with none, and a
+    // The ready list (SPEC §229) is derived, not earned: the next monthly pass
+    // rebuilds it from live checks. A pre-§229 save joins with none, and a
     // corrupt one is dropped rather than trusted — nothing is paid off it.
     if (!Array.isArray(t.missionReady)) t.missionReady = [];
     if (!t.reforms) t.reforms = { mil: 0, civ: 0, rel: 0 }; // pre-reform saves

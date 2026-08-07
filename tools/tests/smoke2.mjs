@@ -93,10 +93,10 @@ simHelpers.rulerDies(c1, 'JUD', 'has died');
 ok(g1.tags.JUD.ruler.name !== 'A Child' && !g1.tags.JUD.regency, 'heirless death seats a usurper: ' + g1.tags.JUD.ruler.name);
 
 console.log('== missions ==');
-// §227 raised the ask from twenty to twenty-eight thousand, which is the point
+// §229 raised the ask from twenty to twenty-eight thousand, which is the point
 // of it: the chapter hands JUD 26k and the root is now something the realm has
 // to actually do. Recruit the difference, then let a month read it — and since
-// §227 a satisfied mission goes READY and pays nothing until it is claimed.
+// §229 a satisfied mission goes READY and pays nothing until it is claimed.
 simHelpers.spawnArmy(c1, 'JUD', 'Jerusalem', { inf: 6, name: 'The New Levies' });
 tickMonths(c1, 1);
 ok((g1.tags.JUD.missionReady || []).indexOf('jm_arm_the_nation') >= 0,

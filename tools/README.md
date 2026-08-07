@@ -1631,7 +1631,7 @@ with no `concessions` in it runs through arithmetic identical to the old code
 (`offered` is zero, `net` is `cost`), and `buildAiPeaceProvinces` is untouched,
 so no AI ever offers or expects one.
 
-## What §227 does to the trajectories
+## What §229 does to the trajectories
 
 The mission overhaul reaches the harness through the AI, because §102's
 symmetry is preserved: a court with no panel to click still banks its chain on
@@ -1654,12 +1654,12 @@ mean, and keeps the harness measuring the sim rather than the panel.
   as the one that moves, moving again, and within the family the accepted set
   has named since v2.9: Antigonus is the plunder-funded underdog fighting a
   scripted war to the death. The reason it is a spiral rather than a bleed is
-  the whole of §227 in one court — a losing realm can no longer meet the bars,
+  the whole of §229 in one court — a losing realm can no longer meet the bars,
   so it no longer collects the temporary bonuses that used to paper over its
   deficit. It does not compound: debt-desertion zeroes the host, and the run
   ends with the crown war resolved.
 - **529 JUD DEAD + SAM DEBT-SPIRAL** unchanged.
 - 115, 132, 614 and 1948 flag nothing.
 
-Accepted as of §227: 167 PAR BLEEDING · 67 SEL DEAD · 40 ATG DEBT-SPIRAL ·
+Accepted as of §229: 167 PAR BLEEDING · 67 SEL DEAD · 40 ATG DEBT-SPIRAL ·
 529 JUD DEAD + SAM DEBT-SPIRAL · everything else clean.

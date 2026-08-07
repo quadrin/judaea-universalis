@@ -289,5 +289,5 @@ console.log('== every mission modifier is permanent ==');
     + (says.length ? ': ' + says.slice(0, 4).map(([w, m]) => w + '/' + m.id).join(', ') : ''));
 }
 
-console.log(failures ? `smoke152: ${failures} FAIL` : 'smoke152: ALL PASS');
+console.log(failures ? `smoke154: ${failures} FAIL` : 'smoke154: ALL PASS');
 process.exit(failures ? 1 : 0);

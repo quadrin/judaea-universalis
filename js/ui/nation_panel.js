@@ -86,7 +86,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
   // because every lever in this panel calls refresh() the moment it fires and
   // anything derived from the DOM would be clobbered by the next rebuild.
   let tab = DEFAULT_TAB;
-  // How many accomplishments are sitting ready to claim (SPEC §227). The
+  // How many accomplishments are sitting ready to claim (SPEC §229). The
   // Missions tab wears the count, because a reward that waits for a click is
   // a reward a player can walk past for a decade if nothing says it is there.
   // Written by refreshMissions, read by refreshTabs — which runs after it.
@@ -289,7 +289,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // A medallion is a grid cell, not a <button> — the tree's whole layout is
     // grid-column/grid-row on divs. So a claimable one carries role/tabindex
     // and this turns the two keys a role="button" promises into the click the
-    // delegation below already knows how to answer (SPEC §227).
+    // delegation below already knows how to answer (SPEC §229).
     el.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       if (!(e.target instanceof Element)) return;
@@ -320,7 +320,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
         refresh();
         return;
       }
-      // Claim an accomplishment (SPEC §227). Only a READY medallion carries
+      // Claim an accomplishment (SPEC §229). Only a READY medallion carries
       // the attribute, so there is nothing to disable — the sim re-decides at
       // the click anyway, and says why when it refuses.
       const claim = e.target.closest('[data-claim]');
@@ -566,7 +566,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     if (!avail.some((t) => t.id === tab)) tab = (avail[0] || { id: DEFAULT_TAB }).id;
     el.dataset.tab = tab;
     setHtml(refs.tabs, avail.map((t) => {
-      // The claim badge (SPEC §227): the one tab that can be owed something.
+      // The claim badge (SPEC §229): the one tab that can be owed something.
       const badge = t.id === 'missions' && readyClaims
         ? `<i class="np-tab-badge">${readyClaims}</i>` : '';
       const tt = badge
@@ -821,7 +821,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     // The levers of state belong to the player alone.
     refs.acts.classList.toggle('hidden', !self);
     refs.missionsBlock.classList.toggle('hidden', !self);
-    // A foreign court owes us nothing (SPEC §227) — and refreshMissions, which
+    // A foreign court owes us nothing (SPEC §229) — and refreshMissions, which
     // is what normally writes this, does not run for one.
     if (!self) readyClaims = 0;
     refs.decisionsBlock.classList.toggle('hidden', !self);
@@ -997,7 +997,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
     const readyN = list.filter((m) => m.status === 'ready').length;
     // The drumbeat (SPEC §207): while the chain rests from its last
     // accomplishment, say so — a satisfied medallion that has not landed
-    // is the pace at work, not a broken check. Under §227 what it delays is
+    // is the pace at work, not a broken check. Under §229 what it delays is
     // the CLAIM, so the line says claim.
     let paceNote = '';
     if (actions && typeof actions.getMissionPace === 'function') {
@@ -1009,7 +1009,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       } catch (e) { warnOnce('np-getMissionPace', e); }
     }
     const cells = list.map((m) => {
-      // What the medallion is, in the one line under the rule (SPEC §227).
+      // What the medallion is, in the one line under the rule (SPEC §229).
       // READY is the state the whole section now turns on: the terms are met
       // and nothing is paid until it is clicked.
       const state = m.status === 'done' ? 'Accomplished.'
@@ -1052,7 +1052,7 @@ export function createNationPanel(el, { DEFINES, onClose, onPeaceClick, onWarCli
       + forkLedger());
   }
 
-  // The either/or behind the right-hand column (SPEC §227). A fork is one
+  // The either/or behind the right-hand column (SPEC §229). A fork is one
   // question with two or three mutually exclusive answers, and a grid of
   // medallions can only ever draw the answer a campaign reached — the roads it
   // refused have no circle of their own to strike through. This block draws

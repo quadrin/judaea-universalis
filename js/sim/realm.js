@@ -780,7 +780,7 @@ export function missionDoneSet(t, list) {
 // ------------------------------------------------- the fork a road stands in
 // A hypothetical (SPEC §183) is one ROAD of one §119 fork standing in the
 // mission tree, and the roads of a fork are one question asked once: taking
-// one is refusing the others. Until §227 the panel never said so. A campaign
+// one is refusing the others. Until §229 the panel never said so. A campaign
 // that watched the Temple burn kept "The House That Stood" sitting in the
 // right-hand column looking workable for another three hundred years, because
 // nothing anywhere joined the medallion to the answer the chapter had already
@@ -789,7 +789,7 @@ export function missionDoneSet(t, list) {
 // decision instead of a list of things that have not happened yet.
 //
 // The join is `fork: 'chapterId/forkId'` (which §183 already wrote on all
-// seventy-six hypotheticals, for a tooltip, and nothing read) plus §227's
+// seventy-six hypotheticals, for a tooltip, and nothing read) plus §229's
 // `road` / `roads`: WHICH of that fork's roads this medallion is. A
 // hypothetical that declares none is asking after the fork itself — reaching
 // it at all, or a shape of the map no single road owns — and never shuts.
@@ -864,7 +864,7 @@ export function missionClosedSet(ctx, list) {
   return closed;
 }
 
-// The fork ledger (SPEC §227): every §119 question this realm's tree stands a
+// The fork ledger (SPEC §229): every §119 question this realm's tree stands a
 // road in, in table order, with the road the campaign took and the roads it
 // refused. The tree draws medallions; this says what they were choices
 // BETWEEN — which is the half of a fork a grid of circles cannot show, because
@@ -963,7 +963,7 @@ export function checkMissions(ctx) {
       const done = missionDoneSet(t, list);
       const closed = missionClosedSet(ctx, list);
 
-      // A SEATED chain is CLAIMED, not banked (SPEC §227). The calendar still
+      // A SEATED chain is CLAIMED, not banked (SPEC §229). The calendar still
       // reads every check every month, but what it writes is a READY list: the
       // accomplishments whose terms are met right now, waiting at the panel
       // for a hand. Nothing is paid until the medallion is clicked.
@@ -972,7 +972,7 @@ export function checkMissions(ctx) {
       // accumulated, so it is a statement about the world as it stands and
       // not a promise made once. A realm that qualified in March by holding
       // Joppa and lost Joppa in April is not owed Joppa's reward — claim it
-      // while it holds. That is most of what §227 means by *harder*.
+      // while it holds. That is most of what §229 means by *harder*.
       //
       // `isHumanChair` and not `playerTag`, for two reasons §216 and the
       // balance harness each supply. A multiplayer GUEST has a panel of their
@@ -1058,7 +1058,7 @@ export function checkMissions(ctx) {
   }
 }
 
-// Bank an accomplishment the player has clicked (SPEC §227). Every judgment
+// Bank an accomplishment the player has clicked (SPEC §229). Every judgment
 // the monthly pass used to make on its own is made again HERE, at the moment
 // of the click: readiness is a view, and a view can be a month stale — the
 // province can have fallen, a sibling road can have shut this one, the chain

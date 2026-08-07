@@ -72,7 +72,7 @@ function deal(w, cardId, optIdx) {
 const done = (t) => new Set(t.missionsDone || []);
 // The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a handful of passes.
-// §227: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
 // what is ready. Where this suite means "let the months go by until everything
 // satisfiable has paid", the hand on the panel is the suite's own: one claim a
 // month, which is exactly the drum's own pace.

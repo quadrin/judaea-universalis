@@ -86,7 +86,7 @@ const stand = (ctx, name, v) => {
 };
 // The §207 drumbeat: one completion a pass, then the chain rests — a forced
 // world is paid off over a run of pumped months, not a pair of passes.
-// §227: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
 // what is ready. Where this suite means "let the months go by until everything
 // satisfiable has paid", the hand on the panel is the suite's own: one claim a
 // month, which is exactly the drum's own pace.
@@ -257,7 +257,7 @@ function expectAllPaid(w, id) {
   w.game.tags.MLI.allies = ['PAR'];
   stand(w.ctx, 'Seleucia-Ctesiphon', 74);
   expectAllPaid(w, '40bce');
-  // 900 banked, +240 from the groves (§227 doubled the silver), −250 sunk in the moles.
+  // 900 banked, +240 from the groves (§229 doubled the silver), −250 sunk in the moles.
   ok(Math.round(w.game.tags.MLI.treasury) === 890, '  and the harbour was actually paid for ('
     + Math.round(w.game.tags.MLI.treasury) + ' talents left of 900)');
 }

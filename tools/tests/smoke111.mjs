@@ -42,7 +42,7 @@ function boot(playerTag, seed) {
 // The §207 drumbeat: one completion a pass, then the chain rests. Where this
 // suite means "let the months go by until the pass has paid", it pumps —
 // each call is one synthetic month.
-// §227: a player's chain is CLAIMED, not banked — the monthly pass only marks
+// §229: a player's chain is CLAIMED, not banked — the monthly pass only marks
 // what is ready. Where this suite means "let the months go by until everything
 // satisfiable has paid", the hand on the panel is the suite's own: one claim a
 // month, which is exactly the drum's own pace.
@@ -94,10 +94,10 @@ const { game, ctx, actions } = boot('JUD', 42);
 
 console.log('== branches advance independently; the prefix does not lie ==');
 {
-  // §227 asks 28,000 of the root and the chapter deals 26,000.
+  // §229 asks 28,000 of the root and the chapter deals 26,000.
   for (const a of Object.values(game.armies)) if (a && a.tag === 'JUD') a.men += 4000;
   for (let i = 0; i < 31; i++) tickDay(ctx);
-  // §227: the monthly pass marks the satisfied root READY and pays nothing.
+  // §229: the monthly pass marks the satisfied root READY and pays nothing.
   // The completion is a click, and everything downstream of it waits on that
   // click rather than on the calendar.
   ok(actions.getMissions()[0].status === 'ready', 'the root goes ready on the monthly pass');

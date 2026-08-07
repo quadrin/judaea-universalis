@@ -73,7 +73,7 @@ console.log('== §215 the verdict: the chapter is decided, the tree is not ==');
   const toasts = [];
   const off = bus.on('notify', (n) => { if (n && /Mission complete/.test(n.title || '')) toasts.push(n.title); });
   game.tags.AGR.tech.infl = 6; // The Words in the Xystus asks for Influence 6
-  // §227: the pass marks it ready and the claim banks it — both halves have to
+  // §229: the pass marks it ready and the claim banks it — both halves have to
   // go on working after the verdict, which is the whole point of this suite.
   realm.checkMissions(ctx);
   const nowReady = (game.tags.AGR.missionReady || []).slice();

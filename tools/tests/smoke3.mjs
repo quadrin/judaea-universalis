@@ -189,7 +189,7 @@ console.log('== 67 BCE: the Judaean Civil War ==');
   ok(ctx.prov('Medaba').owner === 'NAB', 'Medaba ceded to Nabataea');
   ok((g.tags.NAB.atWarWith || []).includes('ARI'), 'Aretas marches against Aristobulus');
   ok(!!ctx.helpers.getFlag(ctx, 'aretasMarches'), 'aretasMarches flag set');
-  // §227 raised the levy from nine to twelve and a half thousand and stopped
+  // §229 raised the levy from nine to twelve and a half thousand and stopped
   // paying the chain by the calendar: recruit the difference, let a month read
   // it, and claim what the reading marks ready.
   for (const army of Object.values(g.armies)) if (army && army.tag === 'HYR') army.men += 1500;

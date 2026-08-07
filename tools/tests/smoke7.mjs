@@ -73,7 +73,7 @@ ok(w.attackers.indexOf('PAR') < 0 || !game.wars.includes(w), 'Parthia is out of 
 ok((game.tags.PAR.atWarWith || []).length === 0, 'Parthia fights no one');
 
 console.log('== missions tick ==');
-// §227: the pass marks what is ready; the completion is a click.
+// §229: the pass marks what is ready; the completion is a click.
 ok((game.tags.HER.missionReady || []).length >= 1,
   'HER missions ready to claim: ' + (game.tags.HER.missionReady || []).join(','));
 ok(realm.claimMission(ctx, (game.tags.HER.missionReady || [])[0]).ok && game.tags.HER.missionIdx >= 1,

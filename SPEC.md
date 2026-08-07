@@ -15086,7 +15086,7 @@ it has changed sides.
   crown war is now settled by the claimant on his own reach (§116) rather than
   by the patron §61 used to promote over him.
 
-## 227. What history asks, and what a realm is owed for doing it
+## 229. What history asks, and what a realm is owed for doing it
 
 The mission tree was the one screen in this game that ran itself. It read the
 world every month, decided you had done something, paid you, and told you
@@ -15126,7 +15126,7 @@ under its name, and the tab strip wears the count so a reward cannot be walked
 past for a decade. `claimMission` pays it.
 
 The ready list is rebuilt from live checks each pass rather than accumulated,
-which is the whole of what §227 means by *harder*: a realm that qualified in
+which is the whole of what §229 means by *harder*: a realm that qualified in
 March by holding Joppa and lost Joppa in April is owed nothing. Claim it while
 it holds. Every judgment is made again at the click — the province can have
 fallen, a sibling road can have shut this one, §207's drum can still be
@@ -15174,7 +15174,7 @@ something, the two cannot drift: the desc says 28,000 because the check says
 ### The road not taken is shut, and says which road was
 
 `fork: 'chapterId/forkId'` was already on all seventy-six hypotheticals — §183
-wrote it for a tooltip and nothing ever read it. §227 adds `road` / `roads`:
+wrote it for a tooltip and nothing ever read it. §229 adds `road` / `roads`:
 which of that fork's roads this medallion IS. Seventy-one declare one (the
 other five ask after the fork itself — its `requires` gate, or a shape of the
 map no single road owns — and must never read as shut).
@@ -15192,7 +15192,7 @@ the road taken with a check, the roads it cost struck through with an ✕, and
 every answer still on the table while the question is open. A fork whose own
 road was taken wears the answer on the medallion's face as well.
 
-- **Regression contract**: `smoke152` — the pass marks ready and pays nothing,
+- **Regression contract**: `smoke154` — the pass marks ready and pays nothing,
   six idle months change no modifier, the click banks and pays and starts the
   drum, a second click is refused, the drum gates the next claim, readiness
   dies with the muster rolls and a stale click is refused at the sim rather
