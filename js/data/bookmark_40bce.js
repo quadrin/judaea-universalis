@@ -182,6 +182,17 @@ export const BOOKMARK_40 = {
     },
   },
 
+  // SPEC §229: the neighbours' country at the resolution Judea is played at.
+  // Sixteen districts that have existed as cells since §225/§228 and were
+  // visible only in 1948. Their development comes out of the parents they were
+  // carved from (js/data/map_data.js), so no realm gains a point by the map
+  // being drawn finer around it.
+  activeProvinces: [
+    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
+    'Azraq', 'Suwayda', 'Mount Hermon',
+    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
+    'Nineveh', 'Kirkuk'],
+
   // The map speaks its era (SPEC §25): pre-Herodian, pre-Roman place names.
   provinceNames: {
     'Caesarea Maritima': "Straton's Tower", // Herod builds Caesarea decades later
@@ -193,6 +204,16 @@ export const BOOKMARK_40 = {
     'Tarichaea': 'Magdala',
     'Caesarea Mazaca': 'Mazaca',            // named for Caesar only in 14 CE
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
+    // The §229 districts under the names their own age used.
+    'Shobak': 'Gebalene',                   // Josephus' Gobolitis, the highland of Seir
+    'Wadi Rum': 'Iram',
+    'Azraq': 'Basie',                       // the post on the Wadi Sirhan
+    'Suwayda': 'Dionysias',                 // Soada, refounded for the god of the vine
+    'Douma': 'Ghouta',                      // the garden ring east of Damascus
+    'Salamiyah': 'Salaminias',
+    'Akkar': 'Arca',                        // Arca Caesarea, under the Lebanon
+    'Batroun': 'Botrys',
+    'Kirkuk': 'Arrapha',
   },
 
   // The victors' pens wait on the schoolhouse (SPEC §66). A Jewish pen
@@ -270,6 +291,14 @@ export const BOOKMARK_40 = {
   // Political layer of July 40 BCE. Rome's Syria is torn: Parthia holds the
   // interior, Rome clings to Cilicia and the coast. Egypt is Cleopatra's.
   owners: {
+    // -- The §229 districts, each under the crown that holds its parent ------
+    // The year Pacorus rode to the sea: the Parthian tide holds the Damascene,
+    // the Beqaa and the Hermon, so the districts carved out of them ride with it.
+    'Arad': 'HER',          // with Adora
+    'Mount Hermon': 'PAR',  // with Panion
+    'Heliopolis': 'PAR',    // with Chalcis
+    'Douma': 'PAR',         // with Damascus
+    'Salamiyah': 'PAR',     // with Emesa
     // -- Herod (HER): Idumea, the desert forts, the southern coast ------------
     'Hebron': 'HER',
     'Adora': 'HER',

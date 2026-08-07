@@ -1096,7 +1096,7 @@ const PROVINCES = [
   P('Azotus', 34.70, 31.78, 0.75, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 3, 2, 0),
   P('Jamnia', 34.75, 31.87, 0.75, 'ROM', 'farmland', 'grain', 'judaism', 'judean', 3, 3, 3, 0),
   P('Hebron', 35.10, 31.53, 0.85, 'ROM', 'hills', 'livestock', 'judaism', 'judean', 3, 3, 3, 0),
-  P('Adora', 34.95, 31.40, 0.95, 'ROM', 'hills', 'livestock', 'judaism', 'idumean', 3, 3, 3, 0),
+  P('Adora', 34.95, 31.40, 0.95, 'ROM', 'hills', 'livestock', 'judaism', 'idumean', 2, 2, 2, 0),
   P('Sebaste', 35.19, 32.28, 0.80, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
   // Name anachronism (SPEC-pinned): Flavia Neapolis was founded 72/73 CE; in 66 the
   // town below Gerizim was Shechem (Josephus' Mabartha). Rename needs a SPEC pass.
@@ -1112,20 +1112,20 @@ const PROVINCES = [
   P('Gerasa', 35.89, 32.28, 0.90, 'ROM', 'hills', 'wine', 'hellenism', 'greek', 4, 4, 3, 0),
   P('Philadelphia', 35.93, 31.95, 1.00, 'ROM', 'drylands', 'livestock', 'hellenism', 'greek', 3, 4, 3, 0),
   // --- Kingdom of Agrippa II (AGR) -----------------------------------------
-  P('Caesarea Philippi', 35.69, 33.25, 0.80, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 4, 4, 3, 0),
+  P('Caesarea Philippi', 35.69, 33.25, 0.80, 'AGR', 'hills', 'livestock', 'hellenism', 'aramean', 3, 4, 2, 0),
   P('Batanea', 36.25, 32.90, 1.10, 'AGR', 'farmland', 'grain', 'judaism', 'galilean', 3, 4, 4, 0),
   P('Gamala', 35.74, 32.90, 0.75, 'AGR', 'hills', 'olive_oil', 'judaism', 'galilean', 3, 3, 3, 2),
   // --- Phoenicia (ROM) ------------------------------------------------------
   P('Tyre', 35.25, 33.26, 0.75, 'ROM', 'coast', 'purple_dye', 'hellenism', 'phoenician', 5, 8, 3, 0),
   P('Sidon', 35.42, 33.56, 0.75, 'ROM', 'coast', 'glass', 'hellenism', 'phoenician', 4, 6, 3, 0),
   P('Berytus', 35.53, 33.88, 0.75, 'ROM', 'coast', 'timber', 'hellenism', 'phoenician', 4, 5, 3, 0),
-  P('Byblos', 35.70, 34.11, 0.75, 'ROM', 'coast', 'timber', 'hellenism', 'phoenician', 3, 4, 2, 0),
-  P('Tripolis', 35.90, 34.42, 0.80, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 3, 4, 2, 0),
+  P('Byblos', 35.70, 34.11, 0.75, 'ROM', 'coast', 'timber', 'hellenism', 'phoenician', 2, 3, 2, 0),
+  P('Tripolis', 35.90, 34.42, 0.80, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 2, 3, 1, 0),
   P('Aradus', 35.97, 34.85, 0.85, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 3, 4, 2, 0),
   // --- Syria & Anatolia (ROM) ----------------------------------------------
-  P('Damascus', 36.30, 33.51, 0.90, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 6, 7, 5, 0),
-  P('Chalcis', 35.93, 33.73, 0.85, 'ROM', 'hills', 'wine', 'hellenism', 'aramean', 3, 3, 3, 0),
-  P('Emesa', 36.72, 34.73, 1.00, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 4, 4, 4, 0),
+  P('Damascus', 36.30, 33.51, 0.90, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 5, 5, 4, 0),
+  P('Chalcis', 35.93, 33.73, 0.85, 'ROM', 'hills', 'wine', 'hellenism', 'aramean', 2, 2, 1, 0),
+  P('Emesa', 36.72, 34.73, 1.00, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
   P('Apamea', 36.40, 35.42, 0.90, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 4, 5, 4, 0),
   P('Antioch', 36.16, 36.20, 0.75, 'ROM', 'farmland', 'grain', 'hellenism', 'greek', 9, 10, 6, 2),
   P('Seleucia Pieria', 35.98, 36.10, 0.70, 'ROM', 'coast', 'fish', 'hellenism', 'greek', 3, 5, 2, 0),
@@ -1159,11 +1159,11 @@ const PROVINCES = [
   P('Salamis', 33.75, 35.12, 0.90, 'ROM', 'coast', 'timber', 'hellenism', 'greek', 4, 5, 3, 0),
   P('Paphos', 32.60, 34.85, 0.90, 'ROM', 'coast', 'wine', 'hellenism', 'greek', 3, 4, 2, 0),
   // --- Nabataea (NAB) -------------------------------------------------------
-  P('Petra', 35.44, 30.32, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 4, 8, 3, 2,
+  P('Petra', 35.44, 30.32, 1.20, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 3, 6, 2, 2,
     { wonder: 'petra' }),
-  P('Bostra', 36.48, 32.52, 1.10, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 3, 4, 3, 0),
-  P('Oboda', 34.78, 30.79, 1.30, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 3, 1, 0),
-  P('Aila', 35.08, 29.62, 1.10, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 2, 4, 1, 0),
+  P('Bostra', 36.48, 32.52, 1.10, 'NAB', 'drylands', 'grain', 'nabataean', 'nabataean', 2, 3, 1, 0),
+  P('Oboda', 34.78, 30.79, 1.30, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 2, 0, 0),
+  P('Aila', 35.08, 29.62, 1.10, 'NAB', 'desert', 'spices', 'nabataean', 'nabataean', 2, 2, 0, 0),
   P('Hegra', 37.95, 26.80, 1.80, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 2, 3, 1, 0),
   P('Dumatha', 39.87, 29.80, 2.00, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 2, 1, 0),
   P('Medaba', 35.80, 31.72, 0.95, 'NAB', 'drylands', 'livestock', 'nabataean', 'nabataean', 2, 3, 2, 0),
@@ -1172,8 +1172,8 @@ const PROVINCES = [
   P('Carrhae', 39.03, 36.87, 1.00, 'OSR', 'drylands', 'grain', 'hellenism', 'aramean', 3, 3, 3, 0),
   P('Nisibis', 41.22, 37.07, 1.10, 'ADI', 'drylands', 'grain', 'zoroastrianism', 'aramean', 4, 5, 4, 0),
   P('Singara', 41.85, 36.33, 1.20, 'PAR', 'drylands', 'livestock', 'zoroastrianism', 'aramean', 2, 3, 2, 0),
-  P('Hatra', 42.72, 35.59, 1.50, 'PAR', 'desert', 'livestock', 'hellenism', 'aramean', 2, 3, 2, 0),
-  P('Arbela', 44.01, 36.19, 1.10, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 4, 4, 4, 0),
+  P('Hatra', 42.72, 35.59, 1.50, 'PAR', 'desert', 'livestock', 'hellenism', 'aramean', 1, 2, 1, 0),
+  P('Arbela', 44.01, 36.19, 1.10, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 2, 2, 3, 0),
   P('Seleucia-Ctesiphon', 44.58, 33.10, 0.85, 'PAR', 'farmland', 'grain', 'zoroastrianism', 'aramean', 8, 9, 6, 2),
   P('Babylon', 44.42, 32.54, 0.90, 'PAR', 'farmland', 'dates', 'hellenism', 'aramean', 5, 6, 4, 0),
   P('Nehardea', 44.20, 33.37, 0.90, 'PAR', 'farmland', 'dates', 'judaism', 'judean', 4, 5, 4, 0),
@@ -1247,7 +1247,7 @@ const PROVINCES = [
     { latentParent: 'Emmaus' }),
   P('Kiryat Gat', 34.76, 31.61, 0.66, 'ROM', 'drylands', 'grain', 'hellenism', 'idumean', 1, 1, 1, 0,
     { latentParent: 'Ascalon' }),
-  P('Beersheba', 34.79, 31.25, 0.72, 'NAB', 'drylands', 'livestock', 'nabataean', 'idumean', 1, 1, 1, 0,
+  P('Beersheba', 34.79, 31.25, 0.72, 'NAB', 'drylands', 'livestock', 'nabataean', 'idumean', 1, 1, 0, 0,
     { latentParent: 'Oboda' }),
   P('Arad', 35.21, 31.26, 0.68, 'ROM', 'desert', 'salt', 'judaism', 'idumean', 1, 1, 1, 0,
     { latentParent: 'Adora' }),
@@ -1264,7 +1264,7 @@ const PROVINCES = [
     { latentParent: 'Oboda' }),
   P('Mitzpe Ramon', 34.80, 30.61, 1.00, 'NAB', 'desert', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Oboda' }),
-  P('Paran', 34.88, 29.92, 0.95, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
+  P('Paran', 34.88, 29.92, 0.95, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 0, 0, 0,
     { latentParent: 'Aila' }),
   // Seeded at the head of the gulf so the cell owns the northwest shore:
   // Eilat is the port the greater 1948 verdict marches for, not an inland box.
@@ -1278,7 +1278,7 @@ const PROVINCES = [
   // and Iraq's western desert (the Rutbah wells on the Baghdad road).
   P('Kiryat Shmona', 35.58, 33.18, 0.62, 'AGR', 'marsh', 'fish', 'judaism', 'galilean', 1, 1, 1, 0,
     { latentParent: 'Caesarea Philippi' }),
-  P('Azraq', 37.20, 32.00, 1.15, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 1, 1, 0,
+  P('Azraq', 37.20, 32.00, 1.15, 'NAB', 'desert', 'livestock', 'nabataean', 'arab', 1, 0, 0, 0,
     { latentParent: 'Bostra' }),
   P('Rutba', 41.50, 32.80, 1.60, 'PAR', 'desert', 'livestock', 'zoroastrianism', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
@@ -1362,7 +1362,7 @@ const PROVINCES = [
     { latentParent: 'Sinai Interior' }),
   P('Dizahab', 34.62, 29.42, 1.10, 'NAB', 'coast', 'fish', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Sinai Interior' }),
-  P('Zoara', 35.50, 30.90, 0.90, 'NAB', 'desert', 'salt', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Zoara', 35.50, 30.90, 0.90, 'NAB', 'desert', 'salt', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Petra' }),
 
   // --- v6.8: the western and northern frame (SPEC §160) ---------------------
@@ -1851,7 +1851,7 @@ const PROVINCES = [
     { latentParent: 'Sidon' }),
   P('Jounieh', 35.63, 33.98, 0.58, 'ROM', 'coast', 'fish', 'hellenism', 'phoenician', 1, 1, 1, 0,
     { latentParent: 'Berytus' }),
-  P('Batroun', 35.80, 34.31, 0.88, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 1, 0,
+  P('Batroun', 35.80, 34.31, 0.88, 'ROM', 'coast', 'wine', 'hellenism', 'phoenician', 1, 1, 0, 0,
     { latentParent: 'Byblos' }),
   P('Bsharri', 36.05, 34.20, 0.68, 'ROM', 'mountains', 'timber', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Tripolis' }),
@@ -1867,7 +1867,7 @@ const PROVINCES = [
   // one cell covered before. The one cell here with an ancient identity too large to file
   // under a modern district name, so it keeps the ancient one and 1948 shows
   // Baalbek over it — the same arrangement Caesarea Philippi has with Banias.
-  P('Heliopolis', 36.15, 34.00, 0.60, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Heliopolis', 36.15, 34.00, 0.60, 'ROM', 'drylands', 'grain', 'hellenism', 'aramean', 2, 1, 1, 0,
     { latentParent: 'Chalcis' }),
   // The Golan, told apart: the massif, and the plateau town the atlas kept
   // putting out in the Hauran.
@@ -1907,7 +1907,7 @@ const PROVINCES = [
   // Heliopolis does; the rest take the names 1948 knows them by.
   P('Nineveh', 43.06, 36.2, 1.15, 'PAR', 'hills', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Hatra' }),
-  P('Kirkuk', 44.24, 35.76, 0.90, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 1, 1, 1, 0,
+  P('Kirkuk', 44.24, 35.76, 0.90, 'ADI', 'hills', 'grain', 'judaism', 'aramean', 2, 2, 1, 0,
     { latentParent: 'Arbela' }),
   P('Sulaymaniyah', 44.69, 35.72, 0.80, 'ADI', 'mountains', 'livestock', 'judaism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Arbela' }),
@@ -1947,7 +1947,7 @@ const PROVINCES = [
     { latentParent: 'Emesa' }),
   P('Qusayr', 36.58, 34.56, 1.30, 'ROM', 'farmland', 'grain', 'hellenism', 'aramean', 1, 1, 1, 0,
     { latentParent: 'Emesa' }),
-  P('Douma', 36.59, 33.56, 0.90, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 1, 1, 0,
+  P('Douma', 36.59, 33.56, 0.90, 'ROM', 'farmland', 'olive_oil', 'hellenism', 'aramean', 1, 2, 1, 0,
     { latentParent: 'Damascus' }),
   P('Suwayda', 36.56, 32.69, 0.90, 'NAB', 'hills', 'wine', 'nabataean', 'nabataean', 1, 1, 1, 0,
     { latentParent: 'Bostra' }),
@@ -1962,9 +1962,9 @@ const PROVINCES = [
     { latentParent: 'Gerasa' }),
   P('Ruwayshid', 38.75, 32.5, 1.70, 'WASTE', 'desert', 'salt', 'nabataean', 'arab', 1, 1, 1, 0,
     { latentParent: 'Syrian Desert' }),
-  P('Shobak', 35.55, 30.6, 1.30, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Shobak', 35.55, 30.6, 1.30, 'NAB', 'hills', 'livestock', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Zoara' }),
-  P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 1, 0,
+  P('Wadi Rum', 35.63, 29.49, 0.70, 'NAB', 'desert', 'incense', 'nabataean', 'nabataean', 1, 1, 0, 0,
     { latentParent: 'Aila' }),
 ];
 

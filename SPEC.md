@@ -15336,3 +15336,111 @@ that only worked while it stayed still.
   the point; the oil on Kirkuk; Mosul and Raqqa over Nineveh and Rusafa; and
   Syria seceding from the union in one piece with all twenty-five of its
   districts.
+
+## 229. The neighbours' country, at the resolution Judea is played at
+
+§225 and §228 raised the northern frontier and the three eastern states to the
+resolution the 1948 chapter fights them at. They did it under an invariant: the
+seven older chapters see **nothing**, because every cell those sections added
+was latent outside 1948. That was the right bar for those sections. It is the
+wrong bar for this one, and holding it left the ancient theatre lop-sided in a
+way a player feels within a decade of any campaign.
+
+Measure the atlas by square kilometres per province and the gradient is the
+whole story. In 66 CE, Judaea is **643 km² per province**. Around it: Agrippa's
+kingdom at 2,433, Rome at 29,861, Nabataea at 45,486, Parthia at 83,767. The
+Judaean core is drawn seventy times finer than the kingdom it shares the Arabah
+with, and a hundred and thirty times finer than the empire across the Euphrates.
+The same gradient holds in 167 BCE, 67 BCE, 40 BCE, 132 CE, 529 CE and 614 CE,
+because they all read the same atlas.
+
+### What the gradient actually pays
+
+It is not a starting-position advantage, and saying so precisely matters,
+because the obvious complaint is the wrong one. Income, manpower and force limit
+are all strictly development × levy share (`js/sim/economy.js`,
+`js/sim/military.js`), and development per province is near-uniform across the
+whole map — Judaea at 10.0 against Rome's 10.2 and Parthia's 10.8. On the day a
+chapter opens, nothing is skewed.
+
+What the gradient pays is **growth and depth per unit of ground**, and all four
+mechanisms are flat per province:
+
+- `yearlyGrowth` rolls a 5% chance of +1 development on **each province, each
+  year**, whatever that province's size.
+- `settlementCost` is `40 + 35 × tier` **per province**, for a flat development
+  reward. Judaea can run fourteen settlement projects over 9,000 km²; Nabataea
+  runs ten over 455,000.
+- `developCost` is `50 + 5 × devTotal(p)` — cheaper the more finely the same
+  wealth is spread.
+- A siege is `progress += 10` a day on an unwalled town, so occupying a country
+  costs one siege per province, while the warscore it pays is weighted by
+  development.
+
+So a realm whose land is finely diced grows faster, settles more, develops
+cheaper and is slower to overrun, per square kilometre of the same ground.
+Judaea has held that advantage in every chapter — not because it was designed,
+but because the Judaean core is the part of this map that was drawn first and
+drawn closest.
+
+### Sixteen districts that were already here
+
+The cheapest half of the fix needed no cartography at all. §225 and §228 built
+thirty-three Levantine cells and left them visible only in 1948, and most of
+them stand on ground the ancient world had names for. Sixteen are activated in
+all seven ancient chapters:
+
+- **The Negev and the Arabah**: Beersheba, Arad, Paran, Zoara, and — under their
+  own age's names — Gebalene (Shobak) and Iram (Wadi Rum).
+- **The Hauran and the Hermon**: Dionysias (Suwayda), Basie (Azraq), Mount Hermon.
+- **The Beqaa and the Damascene**: Heliopolis, Ghouta (Douma), Salaminias (Salamiyah).
+- **The Phoenician back-country**: Arca (Akkar), Botrys (Batroun).
+- **Beyond the Tigris**: Nineveh and Arrapha (Kirkuk).
+
+Kadesh Barnea and Dizahab were deliberately left out. Their parent is Sinai
+Interior, which is WASTE, so activating them would not have refined a border —
+it would have handed Nabataea two provinces of ground it did not own. **This
+section changes resolution, not sovereignty**, and that is the line it holds
+everywhere: each district opens under whoever holds the province it was carved
+out of, in that chapter. 66 CE needs no `owners` line for any of them, because
+the base atlas IS the 66 CE map.
+
+### The wealth is redistributed, not duplicated
+
+§47's rule, which `smoke27` has held since: a district carved out of a province
+takes its development with it. Each of the sixteen takes its development out of
+its parent in the **base atlas** rather than per chapter — so the sum is
+conserved in all seven eras at once, and every realm opens on exactly the
+economy it always had. Nabataea is seventeen provinces on seventy-one
+development instead of ten on seventy-one; Rome is 175 provinces on 1,719
+instead of 169 on 1,719. Measured after: NAB falls from 45,486 km² per province
+to 26,759, Agrippa's kingdom from 2,433 to 1,825, Adiabene from 27,670 to
+20,763.
+
+1948 already pays for these districts out of its own table, so it is pinned:
+four parents that had no 1948 entry — Caesarea Philippi, Chalcis, Tripolis and
+Byblos — get one at the figures they have always played, and the chapter comes
+out unchanged to the point in all six states `smoke153` names.
+
+### What this cost, and what it did not
+
+Three suites were reading the map in a way that only worked while it stood
+still, and all three were fixed rather than relaxed:
+
+- `smoke150` and `smoke153` asserted that the §225/§228 cells are **not**
+  provinces in the ancient chapters. That clause is what this section reverses,
+  so it now names which districts §229 opened and holds the rest still latent.
+- `smoke107` defined "the cells §173 painted" as *everything appended after
+  Carthago* — true only while nothing else was ever appended. §225, §228 and
+  §229 append Levantine districts past that mark; positionally they look like
+  the western fill and they are its opposite, old ground drawn finer at levy 1.
+  It reads the political map's own `owners` table now, which cannot drift.
+- `smoke30` folded Paran in with Dimona, Mitzpe Ramon and Eilat as "the modern
+  Negev". The wilderness of Paran is not a twentieth-century town.
+
+The roads the §228 search existed to protect all still run.
+Seleucia-Ctesiphon–Susa, Seleucia-Ctesiphon–Ecbatana, Beroea–Carrhae and
+Carrhae–Dura-Europos are untouched. Damascus reaches Palmyra and Emesa **through
+the Ghouta** now instead of directly, which is where those roads physically ran
+— §228 could not seat a cell east of Damascus without losing the road entirely,
+and this section seats one *on* it.

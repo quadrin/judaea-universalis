@@ -30,8 +30,14 @@ function ok(cond, msg) {
 }
 
 const provs = MAP_DATA.provinces;
-const firstNew = provs.findIndex((p) => p.name === 'Carthago');
-const NEW = new Set(provs.slice(firstNew).map((p) => p.name));
+// The cells §173 PAINTED — read off the political map itself rather than by
+// position in the atlas. This used to be "everything appended after Carthago",
+// which was the same set only for as long as nothing else was ever appended.
+// §225, §228 and §229 append Levantine districts past that mark, and §229
+// makes them provinces in the ancient chapters: positionally they look like
+// the western fill, and they are the opposite of it — old ground, drawn finer,
+// at levy 1. The political map's own table is the definition that cannot drift.
+const NEW = new Set(Object.keys((POLITICAL_MAPS['66ce'] || {}).owners || {}));
 
 function boot(id) {
   const era = ERAS.find((e) => e.bookmark.id === id);

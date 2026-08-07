@@ -143,21 +143,39 @@ console.log('== the seven older chapters see nothing ==');
     }
     return nb;
   };
+  // SPEC §229 activated five of these twenty-three in the ancient chapters
+  // (Nineveh, Kirkuk, Salamiyah, Douma, Suwayda, and Shobak and Wadi Rum off
+  // the Negev side). Those are provinces in every era now, on purpose. The
+  // REST — the Islamic-era districts of Iraq and the modern Syrian and
+  // Jordanian ones — still fold away, and that is what this holds.
+  const OPENED_BY_229 = new Set(['Nineveh', 'Kirkuk', 'Salamiyah', 'Douma',
+    'Suwayda', 'Shobak', 'Wadi Rum']);
   for (const era of ERAS) {
     const id = era.bookmark.id;
     if (id === '1948ce') continue;
     const folded = foldedFor(era.bookmark);
-    const leaked = Object.keys(CELLS).filter((n) => folded.has(n));
-    ok(!leaked.length, id + ': not one of the twenty-three is a province here — '
+    const leaked = Object.keys(CELLS).filter((n) => !OPENED_BY_229.has(n) && folded.has(n));
+    ok(!leaked.length, id + ': no district this section left latent is a province here — '
       + (leaked.join(', ') || 'all folded away'));
+    const missing = [...OPENED_BY_229].filter((n) => !folded.has(n));
+    ok(!missing.length, id + ': and the seven §229 opened ARE provinces here — '
+      + (missing.join(', ') || 'all present'));
   }
-  // The three roads the placement search existed to protect. The first attempt
-  // lost all of them, and they are most of what the Parthian, Sasanian and
-  // Palmyrene arcs are about.
+  // The roads the placement search existed to protect. The first attempt lost
+  // all of them, and they are most of what the Parthian, Sasanian and
+  // Palmyrene arcs are about. Four are still one hop.
   const anc = foldedFor(ERAS.find((e) => e.bookmark.id === '66ce').bookmark);
   for (const [a, b] of [['Seleucia-Ctesiphon', 'Susa'], ['Seleucia-Ctesiphon', 'Ecbatana'],
-    ['Damascus', 'Palmyra'], ['Damascus', 'Emesa'], ['Beroea', 'Carrhae'], ['Carrhae', 'Dura-Europos']]) {
+    ['Beroea', 'Carrhae'], ['Carrhae', 'Dura-Europos']]) {
     ok(anc.get(a) && anc.get(a).has(b), '  the ' + a + '–' + b + ' road survives this section');
+  }
+  // …and two now run through the Ghouta, because that is where they always
+  // physically ran. §228 could not seat a cell east of Damascus without losing
+  // the road entirely; §229 seats Douma ON it, so Damascus reaches Palmyra and
+  // Emesa in two hops through the garden ring instead of one across a void.
+  for (const [a, via, b] of [['Damascus', 'Douma', 'Palmyra'], ['Damascus', 'Douma', 'Emesa']]) {
+    ok(anc.get(a) && anc.get(a).has(via) && anc.get(via) && anc.get(via).has(b),
+      '  the ' + a + '–' + b + ' road runs through ' + via + ' now, and still runs');
   }
   // …and the whole thing, not just the roads worth naming: every folded
   // neighbour set has to be exactly what the parents had.

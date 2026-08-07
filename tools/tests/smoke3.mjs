@@ -87,7 +87,11 @@ const EV66 = EVENTS_66.concat(GENERIC_EVENTS);
   // SPEC §173 adds the west that was WASTE: the Maghreb, Hispania, Gaul,
   // Britannia, the Danube and the Moesian coast — 83 more, at levy shares
   // that keep them from being 83 more armies.
-  ok(rom && rom.provs === 169 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
+  // SPEC §229 opens six imperial districts in the ancient chapters that had
+  // been visible only in 1948 — Arad in Idumea, and Heliopolis, Douma,
+  // Salamiyah, Arca and Botrys in Syria and Phoenice. Rome's development is
+  // unchanged; it is carved into six more pieces.
+  ok(rom && rom.provs === 175 && rom.troops > 0, 'ROM row: ' + JSON.stringify({ provs: rom.provs, troops: rom.troops }));
   ok(agr && agr.overlord === 'ROM', 'client marked in ledger');
 
   console.log('== diplomatic mapmode + peace highlight ==');

@@ -152,6 +152,10 @@ const BYZ_LANDS = [
   'Carrhae', 'Amida', 'Melitene', 'Sophene', 'Dura-Europos',
   // Arabia and the Negev road
   'Petra', 'Oboda', 'Aila', 'Rhinocolura', 'Pelusium',
+  // SPEC §229: the districts of Palaestina Tertia, Phoenice Libanensis and
+  // the Damascene, each with the province it was carved out of.
+  'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
+  'Mount Hermon', 'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
   // Anatolia, Cyprus, Egypt, and the empire's west
   'Tarsus', 'Iconium', 'Tyana', 'Pisidia', 'Attalia', 'Seleucia Trachea',
   'Caesarea Mazaca', 'Salamis', 'Paphos', 'Alexandria', 'Athribis',
@@ -173,8 +177,10 @@ const SAS_LANDS = [
   'Susa', 'Gazaca', 'Persepolis', 'Gabae', 'Gerrha', 'Hatra', 'Assur',
   'Singara', 'Arbela', 'Nisibis', 'Tigranocerta',
   'Caucasian Albania', 'Hyrcania',
+  'Nineveh', 'Kirkuk',  // SPEC §229, with Hatra and Arbela
 ];
-const GHA_LANDS = ['Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma'];
+const GHA_LANDS = ['Bostra', 'Philadelphia', 'Medaba', 'Gerasa', 'Hegra', 'Dumatha', 'Tayma',
+  'Azraq', 'Suwayda'];  // SPEC §229: the Hauran and the Sirhan ride with Bostra
 
 const OWNERS = {};
 for (const n of BYZ_LANDS) OWNERS[n] = 'BYZ';
@@ -209,7 +215,10 @@ for (const n of BYZ_LANDS.concat(GHA_LANDS)) RELIGIONS[n] = 'christianity';
 for (const n of SAS_LANDS) RELIGIONS[n] = 'christianity';
 for (const n of ['Seleucia-Ctesiphon', 'Ecbatana', 'Susa', 'Gazaca', 'Assur',
   'Singara', 'Persepolis', 'Gabae', 'Caucasian Albania', 'Hyrcania']) RELIGIONS[n] = 'zoroastrianism';
-for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela', 'Khaybar'])) RELIGIONS[n] = 'judaism';
+// Kirkuk (SPEC §229) keeps Arbela's faith: Arrapha sat inside the same
+// Adiabene whose royal house went over to the Torah, and the district was
+// carved out of Arbela, not out of the Persian interior.
+for (const n of JUD_LANDS.concat(['Nehardea', 'Arbela', 'Khaybar', 'Kirkuk'])) RELIGIONS[n] = 'judaism';
 for (const n of SAM_LANDS) RELIGIONS[n] = 'samaritanism';
 // Sebaste is the knife in the middle of Samaria: Herod's Greek foundation five
 // miles from Neapolis, still a Christian garrison town in 529. It sits in the
@@ -260,6 +269,16 @@ export const BOOKMARK_529 = {
   // The map speaks its era (SPEC §25).
   provinceNames: {
     'Byzantion': 'Constantinople',
+    // The §229 districts under the names their own age used.
+    'Shobak': 'Gebalene',             // the highland of Seir, Palaestina Tertia
+    'Wadi Rum': 'Iram',
+    'Azraq': 'Basie',                 // the post on the Wadi Sirhan
+    'Suwayda': 'Dionysias',           // Soada of the Hauran
+    'Douma': 'Ghouta',                // the garden ring east of Damascus
+    'Salamiyah': 'Salaminias',
+    'Akkar': 'Arca',                  // Arca Caesarea, under the Lebanon
+    'Batroun': 'Botrys',
+    'Kirkuk': 'Arrapha',
     'Neapolis': 'Neapolis',           // the Greek city; the Keepers' own name is below
     'Dura-Europos': 'Circesium',
     'Persepolis': 'Istakhr',
@@ -378,7 +397,16 @@ export const BOOKMARK_529 = {
   // the Christian garrison town five miles away, so leaving them folded would
   // give the community's own farmland to the thing watching it. This chapter
   // is four hill provinces or it is nothing.
-  activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya'],
+  // SPEC §229: the neighbours' country at the resolution the Galilee is played
+  // at. Sixteen districts that have existed as cells since §225/§228 and were
+  // visible only in 1948. Their development comes out of the parents they were
+  // carved from (js/data/map_data.js), so no realm gains a point by the map
+  // being drawn finer around it.
+  activeProvinces: ['Jenin', 'Tulkarm', 'Qalqilya',
+    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
+    'Azraq', 'Suwayda', 'Mount Hermon',
+    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
+    'Nineveh', 'Kirkuk'],
 
   activeTags: ['SAM', 'BYZ', 'JUD', 'GHA', 'SAS',
     // The political west (SPEC §173): the successor kingdoms four years

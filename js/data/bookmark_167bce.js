@@ -173,6 +173,18 @@ export const BOOKMARK_167 = {
     'Caesarea Mazaca': 'Mazaca',            // named for Caesar only in 14 CE
     'Seleucia-Ctesiphon': 'Seleucia-on-Tigris', // Ctesiphon is still a camp across the river
     'Modi\'in Hills': 'Modi\'in',           // the village where the revolt began
+    // The §229 districts wear the names their own age used. Seven of the
+    // sixteen already carry them (Beersheba, Arad, Paran, Zoara, Mount Hermon,
+    // Heliopolis, Nineveh); these nine were entered under the name 1948 knows.
+    'Shobak': 'Gebalene',                  // Josephus' Gobolitis, the highland of Seir
+    'Wadi Rum': 'Iram',                    // the valley of the pillars
+    'Azraq': 'Basie',                      // the post on the Wadi Sirhan
+    'Suwayda': 'Dionysias',                // Soada, refounded for the god of the vine
+    'Douma': 'Ghouta',                     // the garden ring east of Damascus
+    'Salamiyah': 'Salaminias',
+    'Akkar': 'Arca',                       // Arca Caesarea, under the Lebanon
+    'Batroun': 'Botrys',
+    'Kirkuk': 'Arrapha',
   },
 
   // The victors' pens wait on the schoolhouse (SPEC §66): the name a state
@@ -199,7 +211,18 @@ export const BOOKMARK_167 = {
   // and Modi'in, the Hasmoneans' home village, stands as its own place
   // (it inherits the rebels' ownership from Lydda, its toparchy).
   mergeProvinces: { 'Masada': 'Engaddi', 'Machaerus': 'Medaba' },
-  activeProvinces: ['Modi\'in Hills'],
+  // SPEC §229: the neighbours' country at the resolution Judea is played at.
+  // Sixteen districts that have existed as cells since §225/§228 and were
+  // visible only in 1948 — the Negev and the Arabah, the Hauran and the
+  // Hermon, the Beqaa and the Damascene, the Phoenician back-country, and
+  // Nineveh and Arrapha beyond the Tigris. Their development comes out of the
+  // parents they were carved from (js/data/map_data.js), so no realm gains a
+  // point of tax, production or manpower by being drawn finer.
+  activeProvinces: ['Modi\'in Hills',
+    'Beersheba', 'Arad', 'Paran', 'Wadi Rum', 'Zoara', 'Shobak',
+    'Azraq', 'Suwayda', 'Mount Hermon',
+    'Heliopolis', 'Douma', 'Salamiyah', 'Akkar', 'Batroun',
+    'Nineveh', 'Kirkuk'],
 
   // The south country still swears by Qos (SPEC §210). The base atlas draws
   // Idumea Jewish because that is what it was by 66 CE, and it was that way
@@ -274,6 +297,19 @@ export const BOOKMARK_167 = {
   // Caesarea Mazaca) was lost to the dynasty at Apamea in 188 BCE, but no Attalid or
   // Cappadocian tag exists — it is folded into SEL per the scenario design.
   owners: {
+    // -- The §229 districts, each under the crown that holds its parent ------
+    // The base atlas is the 66 CE map, so a district whose parent was already
+    // Seleucid in that year needs no line here; these nine changed hands
+    // between Antiochus and Nero and must say so.
+    'Arad': 'SEL',          // with Adora
+    'Mount Hermon': 'SEL',  // with Panion
+    'Heliopolis': 'SEL',    // with Chalcis
+    'Douma': 'SEL',         // with Damascus
+    'Salamiyah': 'SEL',     // with Emesa
+    'Akkar': 'SEL',         // with Tripolis
+    'Batroun': 'SEL',       // with Byblos
+    'Nineveh': 'SEL',       // with Hatra — the east is still the king's
+    'Kirkuk': 'SEL',        // with Arbela
     // -- Judea proper (SEL: the Akra garrison holds Jerusalem, fort intact) ---
     'Jerusalem': 'SEL',
     'Jericho': 'SEL',

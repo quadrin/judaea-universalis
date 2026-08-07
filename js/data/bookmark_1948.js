@@ -911,6 +911,15 @@ export const BOOKMARK_1948 = {
     'Damascus': { tax: 9, prod: 8, mp: 7 },   // …less the Ghouta (SPEC §228)
     'Beroea': { tax: 9, prod: 8, mp: 6 },         // Aleppo
     'Berytus': { tax: 9, prod: 9, mp: 5 },        // Beirut
+    // §229 moved these four parents' BASE development into districts the
+    // ancient chapters now carry (Mount Hermon, Heliopolis, Akkar, Batroun).
+    // 1948 already paid for those districts out of its own table, so it pins
+    // the parents at the figures it has always played: the base atlas changed
+    // under this chapter, and this chapter did not.
+    'Caesarea Philippi': { tax: 4, prod: 4, mp: 3 },
+    'Chalcis': { tax: 3, prod: 3, mp: 3 },
+    'Tripolis': { tax: 3, prod: 4, mp: 2 },
+    'Byblos': { tax: 3, prod: 4, mp: 2 },
     'Philadelphia': { tax: 5, prod: 5, mp: 4 },   // Amman, less Zarqa (SPEC §228)
     'Charax': { tax: 7, prod: 7, mp: 5 },         // Basra
     'Gischala': { tax: 1, prod: 1, mp: 1 },       // Jish, no longer a Safed alias

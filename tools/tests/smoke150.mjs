@@ -140,22 +140,36 @@ console.log('== the seven older chapters see nothing ==');
     }
     return nb;
   };
+  // SPEC §229 opened four of these ten in the ancient chapters — the Beqaa
+  // (Heliopolis), the Hermon, Arca and Botrys, all of them places the ancient
+  // world had names for. The other six are Ottoman and modern Lebanon and
+  // still fold away.
+  const OPENED_BY_229 = new Set(['Heliopolis', 'Mount Hermon', 'Akkar', 'Batroun']);
   for (const era of ERAS) {
     const id = era.bookmark.id;
     if (id === '1948ce') continue;
     const folded = foldedFor(era.bookmark);
-    const leaked = Object.keys(NEW_CELLS).filter((n) => folded.has(n));
-    ok(!leaked.length, id + ': not one of the ten is a province here — ' + (leaked.join(', ') || 'all folded away'));
+    const leaked = Object.keys(NEW_CELLS).filter((n) => !OPENED_BY_229.has(n) && folded.has(n));
+    ok(!leaked.length, id + ': no district this section left latent is a province here — '
+      + (leaked.join(', ') || 'all folded away'));
+    const missing = [...OPENED_BY_229].filter((n) => !folded.has(n));
+    ok(!missing.length, id + ': and the four §229 opened ARE provinces here — '
+      + (missing.join(', ') || 'all present'));
     // …and the ground they fold INTO is still bordered by exactly what it was.
     for (const parent of new Set(Object.values(NEW_CELLS))) {
       if (!folded.has(parent)) continue; // a chapter may merge the parent away
       ok(folded.get(parent).size > 0, '  ' + parent + ' still has neighbours');
     }
   }
-  // The load-bearing pair: the roads a seed on the Syrian steppe would have cost.
+  // The load-bearing pair: the roads a seed on the Syrian steppe would have
+  // cost. §229 seats Douma ON the Palmyra road — the Ghouta is where it
+  // physically ran — so both now reach in two hops instead of one, and the
+  // thing that mattered (that they reach at all) still holds.
   const anc = foldedFor(ERAS.find((e) => e.bookmark.id === '66ce').bookmark);
-  ok(anc.get('Damascus').has('Palmyra'), 'the Damascus–Palmyra road survives this section');
-  ok(anc.get('Damascus').has('Emesa'), 'and so does Damascus–Emesa');
+  ok(anc.get('Damascus').has('Douma') && anc.get('Douma').has('Palmyra'),
+    'the Damascus–Palmyra road survives this section, through the Ghouta');
+  ok(anc.get('Damascus').has('Douma') && anc.get('Douma').has('Emesa'),
+    'and so does Damascus–Emesa');
 }
 
 console.log('== the 1948 packages know the new districts are Lebanon ==');
